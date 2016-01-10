@@ -1,0 +1,9 @@
+LIBRARY         J
+
+EXPORTS
+				JInit
+				JDo
+				JSM
+				JFree
+				Jga
+				JGetLocale

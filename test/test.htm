@@ -1,0 +1,103 @@
+<html>
+<head><title>J Test Scripts</title></head>
+<body>
+
+<table width=100%><tr><td align=left valign=top>
+<font size=+3><b>J Test Scripts</b></font><br>
+Copyright (c) 2000-2008, Jsoftware Inc.<br><br>
+</td><td align=right>
+initial writing: 2000-05-05<br>last updated: 2008-02-21
+</td></tr></table>
+
+<hr>
+<p>A <i>script</i> is an ASCII text file containing J sentences;
+a <i>test script</i> is script which contains purportedly
+true J sentences.</p>
+
+<p>The J test scripts are a set of scripts that
+test the J interpreter.  Each script tests a particular
+aspect, usually a single primitive.  The scripts have names of the
+form<tt> gxxx.ijs</tt> ,<tt> </tt>where<tt> xxx </tt>
+is an encoding based on the vocabulary page of
+the J dictionary.  For example, the
+script<tt> g022.ijs </tt>
+tests the primitive<tt> >: </tt>
+(increment &#149; larger or equal), named on the basis
+that<tt> >: </tt>is group 0, row 2, and column 2.</p>
+
+<p>Test scripts require the pronoun<tt> testpath </tt>(set to
+the path where all the test scripts are stored) and the utilities in the
+script<tt> tsu.ijs</tt> .
+Test scripts can be run with either the<tt> 0!:2 </tt>or
+the<tt> 0!:3 </tt>primitive.</p>
+
+<p><tt>0!:2 </tt>runs a test script with output, stopping at the
+first result which is not all 1s, or at the first untrapped error.
+For example:</p>
+
+<pre>
+   testpath=: 'c:\dev\j\js\'    NB. set test path; note the trailing \ or /
+   0!:0 &lt;testpath,'tsu.ijs'
+   0!:2 &lt;testpath,'g022.ijs'
+   NB. >:y -----------------------------------------------------------------
+
+   (>: -: 1&+) 1=?2 3 4$2
+1
+   (>: -: 1&+) _1e9+?2 3 4$2e9
+1
+...
+</pre>
+
+<tt>0!:3 </tt>runs a test script without output, returning a result of 0
+if the script had a result which is not all 1s
+or if it contained an untrapped error, and a result of 1 otherwise.
+For example:<br>
+
+<pre>
+   testpath=: 'c:\dev\j\js\'
+   0!:0 &lt;testpath,'tsu.ijs'
+   0!:3 &lt;testpath,'g022.ijs'
+1
+</pre>
+
+<p>The J test scripts are divided into three groups (running times are
+seconds on an AMD Athlon 3200+ 2 GHz computer):</p>
+
+<table><tr><td>&nbsp;</td><td>
+<table>
+<tr>
+<td valign=bottom><b>Type</b></td><td>&nbsp;</td>
+<td valign=bottom><b>Number</b></td><td>&nbsp;</td>
+<td valign=bottom><b>Name List</b></td><td>&nbsp;</td>
+<td valign=bottom><b>Time (Seconds)</b></td>
+</tr>
+
+<tr><td>All</td><td>&nbsp;</td>
+ <td align=right>400 &nbsp; &nbsp;</td><td>&nbsp;</td><td><tt>ddall </tt></td><td>&nbsp;</td><td align=right>110 &nbsp; &nbsp;</td></tr>
+<tr><td>Ordinary</td><td>&nbsp;</td>
+ <td align=right>342 &nbsp; &nbsp;</td><td>&nbsp;</td><td><tt>ddg   </tt></td><td>&nbsp;</td><td align=right> 73 &nbsp; &nbsp;</td></tr>
+<td>Sparse Arrays</td><td>&nbsp;</td>
+ <td align=right> 46 &nbsp; &nbsp;</td><td>&nbsp;</td><td><tt>ddgsp </tt></td><td>&nbsp;</td><td align=right> 36 &nbsp; &nbsp;</td></tr>
+<td>Mapped Boxed Arrays</td><td>&nbsp;</td>
+ <td align=right> 12 &nbsp; &nbsp;</td><td>&nbsp;</td><td><tt>ddgmbx</tt></td><td>&nbsp;</td><td align=right>  1 &nbsp; &nbsp;</td></tr>
+</table>
+</td></tr></table>
+
+<p>For example, all the test scripts can be run as follows:</p>
+
+<pre>
+   testpath=: 'c:\dev\j\js\'
+   0!:1 &lt;testpath,'tsu.ijs'
+   bbb=: 0!:3 ddall
+</pre>
+
+<p>The boolean list<tt> bbb </tt>has the same length as<tt> ddall</tt> ,<tt> </tt>
+and can be used to detect which test scripts have failed.
+The bad scripts<tt> (-.bbb)#ddall </tt>can be run using<tt> 0!:2 </tt>
+to home in on the offending expressions.</p>
+
+
+
+<br><br>
+</body>
+</html>

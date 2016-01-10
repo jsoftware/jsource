@@ -1,0 +1,29 @@
+LIBRARY         J
+
+EXPORTS
+                DllGetClassObject   PRIVATE
+                DllCanUnloadNow     PRIVATE
+                DllRegisterServer   PRIVATE
+                DllUnregisterServer PRIVATE
+                JBreak              @6
+                JClear              @7
+                JDo                 @8
+                JErrorText          @9
+                JErrorTextM         @10
+                JFree               @11
+                JGet                @12
+                JGetM               @13
+                JInit               @14
+                JIsBusy             @15
+                JSet                @16
+                JSetM               @17
+                JSM                 @18
+                JGetLocale          @19
+                Jga                 @20
+                JTranspose          @21
+                JErrorTextB         @22
+                JGetB               @23
+                JSetB               @24
+                JDoR                @25
+				JGetA				@26
+				JSetA				@27	

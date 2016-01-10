@@ -1,0 +1,36 @@
+# jversion.h has 9!:14'' info
+# jversion-x.h default is in repo
+# jversion.h is your local edit copy and is not in repo
+jsrc/jversion.h
+
+# unix
+*.o
+*.so
+
+# windows - most output files go to %userprofile%\jbld\jout
+# some end up in the project folder and are marked here
+# sometimes entire project subfolders are created that should not be in repo
+*.sdf
+*.opensdf
+*.suo
+**/jconsole/**/
+**/jdll/**/
+**/tsdll/**/
+
+# windows - need to run with different versions of vs
+# following files are in repo for vs2013
+# but are not pushed to avoid getting unwanted user specific changes
+*.sln
+*.vcxproj
+*.vcxproj.*
+
+# mac
+.DS_Store
+
+#android
+android/libs/
+android/obj/
+android/jni/jsrc
+android/jni/tsdll
+
+release

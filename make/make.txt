@@ -1,0 +1,53 @@
+how to build/test j32/64 for linux/darwin/raspberry/...
+
+$jplatform (set by jvars.sh) determines compiler/link flags
+
+$jplatform is a simple name that implies OS and hardware
+
+linux     implies intel
+darwin    implies intel
+raspberry implies linux/arm/little-endian
+
+to support linux on arm big-endian you need to add support in
+build_jconsole.sh,... for a new platform (perhaps named linux_arm_be)
+
+**************************************************************************
+# commands are assumed to run in ~ and depend on jvars.sh
+
+# make sure shell scripts are executable
+chmod +x gitdev/jsource/make/*.sh
+
+# copy jvars.sh to ~ (for finding things)
+cp gitdev/jsource/make/jvars.sh .
+cat jvars.sh
+
+# read jvars.sh and edit as appropriate - other steps depend on jvars.sh
+# !!! edit platform to be appropriate for the system doing the builds !!!
+# valid platforms are: linux darwin raspberry
+
+# create clean build folders
+. jvars.sh
+$jmake/install.sh
+
+# ensure proper jsrc/jversion.h (jversion-x.h template)
+
+# build j64 binaries
+$jmake/build_jconsole.sh j64
+$jmake/build_libj.sh     j64
+$jmake/build_tsdll.sh    j64
+
+# test j64
+$j64
+   load'gitdev/jsource/test/tsu.ijs'
+...
+   RUN ddall
+
+# build/test j32 binaries the same way (j32 instead of j64)
+
+# build everything from scratch
+$jmake/build_all.sh
+
+# release clean builds to the repo release folder
+. jvars.sh
+$jmake/release.sh
+

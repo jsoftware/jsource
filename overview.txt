@@ -1,0 +1,29 @@
+examples assume ~/gitdev/jsource and builds in ~/jbld
+
+put jsource anywhere (adjust exmples etc.)
+put jbld anywhere for non-windows, but it is hardwired in windows
+
+start with latest jsource!
+cd ~
+cd gitdev/jsource
+git clone or pull
+
+jsrc/jversion.h   is not in repo
+jsrc/jversion-x.h is in repo and is a template
+copy jversion-x.h to jversion.h and edit this local copy as appropriate
+
+read license.txt and note that the jsource folder can be used under
+either a Jsoftware commercial license or under the GPL3 license.
+
+unix:    read make/make.txt
+windows: read makevs/makevs.txt
+
+be sure you can do a clean build on a supported platform
+before trying to add a new platform or make source changes
+
+currently supported platforms are: windows, linux, darwin, raspberry, android
+
+jversion.h defines are in the 9!:14'' result - edit as appropriate
+it is in .gitignore so your local changes are not pushed to the repo
+
+

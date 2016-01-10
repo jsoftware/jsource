@@ -1,0 +1,54 @@
+29 jan 2011
+
+building: linuxasm64.o macasm64.o winasm64.obj
+
+These modules support J int ops with overflow check.
+
+asm64noovf.c is the C src for the int ops without overflow.
+
+mac64 steps:
+ 1. ./create_asm_source    asm64noovf.c -> asm64noovf.s
+ 2. fix_overflow.ijs fix'' asm64noovf.s -> asm64.s 
+ 3. manually edit out asm64.s multiple overasm... labels
+ 4. ./asm64                asm64.s      -> asm64.o
+ 5. ./copy_obj             asm64.o      -> ~/dev/
+
+ fix'' creates multiple over labels with different names
+ only one is required
+
+leave is required before over ret
+
+Linux64 steps:
+ !  needs work to reflect mac64 changes
+ 1. create_asm - create asm64noovf.s from C src
+ 2. fix_overflow.ijs fix'' create linuxasm64.s
+ 3. asm_asm - create linuxasm64.o and copy to build dir
+ 4. make jconsole with the linuxasm64.o
+
+
+Win64 steps:
+ !  needs work to reflect mac64 changes
+ 1. win\create_asm.bat - create asm64noovf.asm from C src
+ 2. fix_overflow.ijs fix'' create winasm64.asm
+ 3. win\asm64.bat - create winasm64.obj and copy to build dir
+ 4. make j.dll with new winasm64.obj
+
+
+*** old stuff
+
+Procdure for building linuxasm64.o and winasm64.obj
+These modules support J int ops with overflow check.
+
+asm64noovf.c is the C src for the int ops without overflow.
+
+Win64 steps:
+ 1. win\create_asm.bat - create asm64noovf.asm from C src
+ 2. fix_overflow.ijs fix'' create winasm64.asm
+ 3. win\asm64.bat - create winasm64.obj and copy to build dir
+ 4. make j.dll with new winasm64.obj
+
+Linux64 steps:
+ 1. create_asm - create asm64noovf.s from C src
+ 2. fix_overflow.ijs fix'' create linuxasm64.s
+ 3. asm_asm - create linuxasm64.o and copy to build dir
+ 4. make jconsole with the linuxasm64.o

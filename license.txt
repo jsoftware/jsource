@@ -1,0 +1,19 @@
+
+*********************************************************************
+
+J SOURCE is all files in the distributed jsource folder.
+
+J SOURCE is Copyright 1990-2015, Jsoftware Inc.  All rights reserved.
+
+J SOURCE can be used under a commercial license from Jsoftware,
+in which case the terms and conditions of that license apply.
+
+   OR
+
+J Source can be used under GNU General Public License version 3,
+in which case the terms and conditions of that license apply.
+Additional info at http://www.gnu.org/licenses.
+
+*********************************************************************
+
+

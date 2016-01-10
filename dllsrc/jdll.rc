@@ -1,0 +1,48 @@
+/* Copyright (c) 1990-2004, Jsoftware Inc.  All rights reserved.    */
+/* Licensed to Jsoftware Inc.                                              */
+/*                                                                         */
+// jdll.rc2 - resources App Studio does not edit directly
+#ifdef APSTUDIO_INVOKED
+	#error this file is not editable by App Studio
+#endif //APSTUDIO_INVOKED
+
+#include "winver.h"
+
+1 typelib jdll.tlb 
+
+VS_VERSION_INFO     VERSIONINFO
+  FILEVERSION               701	
+  PRODUCTVERSION    701
+  FILEFLAGSMASK     VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+  FILEFLAGS         VS_FF_DEBUG|VS_FF_PRIVATEBUILD|VS_FF_PRERELEASE
+#else
+  FILEFLAGS         0 // final version
+#endif
+  FILEOS            VOS__WINDOWS32
+  FILETYPE          VFT_APP
+  FILESUBTYPE       0   // not used
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4" // Lang=US English, CharSet=Windows Multilingual
+		BEGIN 
+			VALUE "CompanyName",     "Jsoftware Inc.\0"
+			VALUE "FileDescription", "J\0"
+			VALUE "FileVersion",     "701\0"
+			VALUE "InternalName",    "J\0"
+			VALUE "LegalCopyright",  "Copyright Jsoftware Inc. 2011\0"
+			VALUE "LegalTrademarks", "J\0"
+			VALUE "OriginalFilename","J\0"
+			VALUE "ProductName",     "J\0"
+			VALUE "ProductVersion",  "701\0"
+			VALUE "OLESelfRegister", "\0"
+		END
+	END
+	BLOCK "VarFileInfo" 
+	BEGIN 
+		VALUE "Translation", 0x409, 1252
+			// English language (0x409) and the Windows ANSI codepage (1252)
+	END
+END
+

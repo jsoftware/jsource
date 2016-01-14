@@ -6,6 +6,7 @@ jsrc/jversion.h
 # unix
 *.o
 *.so
+!asm/*.o
 
 # windows - most output files go to %userprofile%\jbld\jout
 # some end up in the project folder and are marked here

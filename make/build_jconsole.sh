@@ -11,7 +11,7 @@ LINK=" $jgit/unix/libedit.a -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -
 ;;
 linux_j64)
 COMPILE=" -fPIC -O1 -DREADLINE"
-LINK=" -ledit -ldl -lncursesw -o jconsole "
+LINK=" $jgit/unix/libedit64.a -ldl -lncursesw -o jconsole "
 ;;
 raspberry_j32)
 COMPILE=" -fPIC -O1 -DREADLINE"

@@ -1,6 +1,6 @@
 examples assume ~/gitdev/jsource and builds in ~/jbld
 
-put jsource anywhere (adjust exmples etc.)
+put jsource anywhere (adjust examples etc.)
 put jbld anywhere for non-windows, but it is hardwired in windows
 
 start with latest jsource!

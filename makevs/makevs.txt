@@ -27,15 +27,17 @@ xp support will be dropped in the next year or so
 4. jbld hardwired as build folder
 
 5. create jbld folder
-start powershell
 ...> gitdev\jsource\makevs\install.bat gitdev
 
-6. edit jsrc\jversion.h as appropriate for 9!:14 result
+6. create .sln and .vcxproj files from templates
+...> gitdev\jsource\makevs\template.bat gitdev
+
+7. edit jsrc\jversion.h as appropriate for 9!:14 result
 jsrc\jversion-x.h is template for this file
 
-7. VS output files go in jbld jout folder
+8. VS output files go in jbld jout folder
 
-8. VS post build step copies new release binary to jbld
+9. VS post build step copies new release binary to jbld
 
 
 **************************************************************************

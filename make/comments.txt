@@ -1,8 +1,8 @@
 ***
 Optimization:
 Previous gcc based release versions of J were built with -O3.
-Sometimes this caused the tests to fail and a lot of work was 
-done to track down the problem and reduce the optimization 
+Sometimes this caused the tests to fail and a lot of work was
+done to track down the problem and reduce the optimization
 either in a particular file or by removing the flag that caused the
 problem. This was painful work.
 
@@ -12,8 +12,4 @@ Timing the running of the entire test suite in linux and osx showed
 negligible difference between 01 and 03. And the O3 binary was 25%
 larger.
 
-O1 is now the official level for J unix releases. 
-
-
- 
-
+O1 is now the official level for J unix releases.

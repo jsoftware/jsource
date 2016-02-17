@@ -3,7 +3,7 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -fno-strict-aliasing"
+common="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
 
 case $jplatform\_$1 in
 

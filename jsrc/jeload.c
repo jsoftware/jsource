@@ -85,26 +85,28 @@ void jepath(char* arg)
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
 #elif defined(ANDROID)
-#define AndroidPackage "com.jsoftware.android.qtide"
+#define AndroidPackage "com.jsoftware.j.android"
+ struct stat st; int qsdcard; char tmp[PLEN];
  strcpy(path,"/data/data/");
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib");
  strcat(pathdll,JDLLNAME);
- strcpy(install,"/sdcard/Android/data/");
+ strcpy(tmp, "/sdcard/Android/data");
+ qsdcard=stat(tmp,&st);
+ strcpy(install,(qsdcard)?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/");
  strcat(install,AndroidPackage);
  strcat(install,"/files");
- setenv("HOME","/sdcard",1);
+ setenv("HOME",(qsdcard)?"/storage/emulated/0":"/sdcard",1);
  if(!getenv("TMPDIR")) {
-  char tmp[PLEN];
-  struct stat st;
   strcpy(tmp, path);
-  strcat(tmp, "/files/tmp");
+  strcat(tmp, "/app_jandroid/tmp");
   if(stat(tmp,&st)) mkdir(tmp, S_IRWXU | S_IRWXG | S_IRWXO);
   chmod(tmp, S_IRWXU | S_IRWXG | S_IRWXO);
   setenv("TMPDIR",tmp,1);
  }
- strcat(path,"/files/bin");
+ chmod(getenv("TMPDIR"), S_IRWXU | S_IRWXG | S_IRWXO);
+ strcat(path,"/app_jandroid/bin");
 #else
 
 #define sz 4000

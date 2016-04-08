@@ -21,10 +21,19 @@ static char input[30000];
 /* we call to get next input */
 #ifdef READLINE
 /* readlin.h */
+#if defined(ANDROID)||defined(_WIN32)
+#include "linenoise.h"
+#define add_history    linenoiseHistoryAdd
+#define read_history   linenoiseHistoryLoad
+#define write_history  linenoiseHistorySave
+#define readline       linenoise
+#define using_history()
+#else
 int   add_history(const char *);
 int   read_history(const char *);
 int   write_history(const char *);
 char* readline(const char *);
+#endif
 
 int hist=1;
 char histfile[256];

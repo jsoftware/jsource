@@ -18,7 +18,7 @@ ifeq ($(TARGET_ARCH),arm)
   endif
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -O1 -fno-strict-aliasing -DC_64=0 -msse2 -mfpmath=sse
+  LOCAL_CFLAGS := -fPIC -O1 -fno-strict-aliasing -DC_64=0 -malign-double -msse3 -mfpmath=sse
 endif
 
 LOCAL_SRC_FILES :=  tsdll.c

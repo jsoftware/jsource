@@ -7,3 +7,6 @@ $ cd jni ; ln -s ../../jsrc jsrc ; cd ..
 $ ndk-build
 
 binaries in libs folder
+
+3. jconsole readline implemented with linenoise
+   * https://github.com/antirez/linenoise

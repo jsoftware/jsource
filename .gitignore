@@ -34,5 +34,7 @@ android/libs/
 android/obj/
 android/jni/jsrc
 android/jni/tsdll
+linenoise.c
+linenoise.h
 
 release

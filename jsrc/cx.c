@@ -1,4 +1,4 @@
-/* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
+/* Copyright 1990-2016, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Conjunctions: Explicit Definition : and Associates                      */
@@ -300,7 +300,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
   if(b)flag|=VXOPR; 
   else if(2==n&&AN(m)&&!AN(d)){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}
  }
- flag|=VFIX;
+ flag|=VFIX;  // ensures that f. will not look inside n : n
  switch(n){
   case 1:  R fdef(CCOLON, ADV,  b?xop1:xadv,0L,    num[n],0L,h, flag, RMAX,RMAX,RMAX);
   case 2:  R fdef(CCOLON, CONJ, 0L,b?xop2:jtxdefn, num[n],0L,h, flag, RMAX,RMAX,RMAX);

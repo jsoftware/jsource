@@ -51,7 +51,7 @@ F1(jtnameref){A y;L*e;V*v;
 F2(jtnamerefop){V*v;
  RZ(a&&w);
  v=VAV(w);
- R fdef(CCOLON,VERB,  jtunquote1,jtunquote, a,0L,w, VXOPCALL, v->mr,v->lr,v->rr);
+ R fdef(CCOLON,VERB,  jtunquote1,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);
 }    
 
 /* namerefop() is used by explicit defined operators when: */

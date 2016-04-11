@@ -82,6 +82,10 @@ start vs
 open project jdll\jdll.sln
 build|configuration manager
    debug64 x64 (configuration and platform)
+
+first time - put command to start jconsole in the vsxproj.user file:
+ debug|properties|config properties|debugging|command: $(outdir)\jconsole.exe
+
 debug|start debugging (check do not show this dialog again)
 jconsole starts under debugger
    i.5

@@ -45,7 +45,8 @@ j64
 
 1. build jconsole.exe
 start VS
-open project gitdev\makevs\jconsole\jconsole.sln
+open project gitdev\jsource\makevs\jconsole\jconsole.sln
+
 build|configuration manager - release64 x64 (configuration - platform)
 build|clean solution
 build|build solution

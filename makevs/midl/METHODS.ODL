@@ -1,0 +1,56 @@
+// JEXE and DLL odl methods
+
+	[helpstring("Execute string.")]
+	HRESULT Do([in] BSTR input, [out, retval] long* r);
+
+	[helpstring("Show (1) or hide (0) J EXE Server.")]
+	HRESULT Show([in] long b, [out, retval] long* r);
+
+	[helpstring("Display (1) or discard (0) J EXE Server session manager input and output.")]
+	HRESULT Log([in] long b, [out, retval] long* r);
+
+	[helpstring("Returns 0 if ready to execute a line, or an error code if not ready.")]
+	HRESULT IsBusy([out, retval] long* r);
+
+	[helpstring("Break (interrupt) J execution.")]
+	HRESULT Break([out, retval] long* r);
+
+	[helpstring("Quit causes J EXE Server to close when last object is released.")]
+	HRESULT Quit([out, retval] long* r);
+
+	[helpstring("Get variant value from J variable.")]
+	HRESULT Get([in] BSTR jname, [out] VARIANT* v, [out, retval] long* r);
+
+	[helpstring("Set variant value in J variable.")]
+	HRESULT Set([in] BSTR jname, [in] VARIANT* v, [out, retval] long* r);
+  
+	[helpstring("Get J variable description and memory addresses of shape and data.")]
+	HRESULT GetM([in] BSTR jname, [out] long* jtype, [out] long* jrank, [out] long* jshape, [out] long* jdata, [out, retval] long *r);
+
+	[helpstring("Set J variable from description and memory addresses of shape and data.")]
+	HRESULT SetM([in] BSTR jname, [in] long* jtype, [in] long* jrank, [in] long* jshape, [in] long* jdata, [out, retval] long *r);
+
+	[helpstring("Get variant with error code text.")]
+	HRESULT ErrorText([in] long error, [out] VARIANT* v, [out, retval] long *r);
+
+	[helpstring("Get memory address of error code text.")]
+	HRESULT ErrorTextM([in] long error, [out] long* text, [out, retval] long *r);
+
+	[helpstring("Clear all J memory allocations. Erases all J variables and definitions.")]
+	HRESULT Clear([out, retval] long *r);
+
+	[helpstring("Enable/disable (1/0) row-major(variant)/row-minor(J) conversions.")]
+	HRESULT Transpose([in] long b, [out, retval] long* r);
+
+	[helpstring("Get variant BSTR with error code text.")]
+	HRESULT ErrorTextB([in] long error, [out] VARIANT* v, [out, retval] long *r);
+
+	[helpstring("Get variant value from J variable (BSTR).")]
+	HRESULT GetB([in] BSTR jname, [out] VARIANT* v, [out, retval] long* r);
+
+	[helpstring("Set variant value in J variable (BSTR).")]
+	HRESULT SetB([in] BSTR jname, [in] VARIANT* v, [out, retval] long* r);
+
+	[helpstring("Execute string and return formatted output in variant BSTR.).")]
+	HRESULT DoR([in] BSTR input, [out] VARIANT* v, [out, retval] long* r);
+

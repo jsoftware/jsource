@@ -1,0 +1,32 @@
+//LIBID_JDLL
+[
+uuid(21EB05EB-1AB3-11cf-A2AC-8FF70874C460)
+    , helpstring("Iverson Software Inc. : J DLL Server")
+    , lcid(0x0000)
+    , version(3.0)
+]
+library JDLL
+    {
+    importlib("STDOLE32.TLB");
+
+    [
+    uuid(21EB05EC-1AB3-11cf-A2AC-8FF70874C460)
+        , helpstring("Definition of J DLL Server interface.")
+        , odl
+        , dual
+    ]
+    interface IJDLLServer : IDispatch
+    {
+#include "methods.odl"
+    }
+
+    //CLSID_JDLLServer
+    [
+    uuid(21EB05EA-1AB3-11cf-A2AC-8FF70874C460)
+        , helpstring("J DLL Server Type Information")
+    ]
+    coclass JDLLServer
+        {
+        interface       IJDLLServer;
+        }
+    };

@@ -73,14 +73,14 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 static GF(jtgrx){A x;I ck,d,t,*xv;
  t=AT(w); ck=c*bp(t); 
  jt->compk=ck/n; d=c/n; jt->compn=d; jt->compv=CAV(w); jt->compw=w;
- switch(t){
-  case BOX:  jt->comp=ARELATIVE(w)?compr:compa; break;
-  case C2T:  jt->comp=compu;                    break;
-  case INT:  jt->comp=c==n?compi1:compi;        break;
-  case FL:   jt->comp=c==n?compd1:compd;        break;
-  case CMPX: jt->comp=compd; jt->compn=2*d;     break;
-  case XNUM: jt->comp=compx;                    break;
-  case RAT:  jt->comp=compq;                    break;
+ switch(CTTZ(t)){
+  case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
+  case C2TX:  jt->comp=compu;                    break;
+  case INTX:  jt->comp=c==n?compi1:compi;        break;
+  case FLX:   jt->comp=c==n?compd1:compd;        break;
+  case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
+  case XNUMX: jt->comp=compx;                    break;
+  case RATX:  jt->comp=compq;                    break;
   default:   jt->comp=compc;
  }
  GA(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */

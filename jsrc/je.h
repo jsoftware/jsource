@@ -219,6 +219,7 @@ extern F1(jtpathchdir);
 extern F1(jtpathcwd);
 extern F1(jtpathdll);
 extern F1(jtpderiv1);
+extern F1(jtpeekdata);
 extern F1(jtpinv);
 extern F1(jtpix);
 extern F1(jtplt);
@@ -310,6 +311,7 @@ extern F1(jttail);
 extern F1(jttally);
 extern F1(jttco);
 extern F1(jttdot);
+extern F1(jttestcode);
 extern F1(jtthorn1);
 extern F1(jttlimq);
 extern F1(jttlims);
@@ -748,7 +750,9 @@ extern B        jtxsinit(J);
 extern B        all0(A);
 extern B        all1(A);
 extern I        atype(I);
-extern I        bp(I);
+#if AUDITBP
+extern I        bpref(I);
+#endif
 extern I        bsum(I,B*);
 extern C        cf(A);
 extern C        cl(A);
@@ -819,6 +823,7 @@ extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vdot;
 extern A        vnam;
 extern B        testb[];
+extern I        typesizes[];
 extern C        wtype[];
 extern A        xdot;
 extern A        xnam;

@@ -7,6 +7,9 @@
 #include "js.h"
 #endif
 
+#define AUDITBP 0  // Verify that bp() returns expected data
+#define AUDITCOMPILER 0  // Verify compiler features CTTZ, signed >>
+
 #if SY_WINCE
 #include "..\cesrc\cecompat.h"
 #endif
@@ -265,7 +268,6 @@
 #define VAL1            '\001'
 #define VAL2            '\002'
 
-
 #if C_LE
 #define B0000   0x00000000
 #define B0001   0x01000000
@@ -325,6 +327,29 @@
 #include "m.h"
 #include "a.h"
 #include "s.h"
+
+
+// CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
+// CTTZZ(w) does the same, but returns 32 if w is 0
+// CTLZ would be a better primitive to support, but LZCNT executes as BSR on some Intel processors,
+// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 1s)
+// since we don't require CTLZ yet, we defer that problem to another day
+#if defined(__GNUC__) || defined( __clang__)
+#define CTTZ(w) _builtin__ctzl((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#else
+#if  defined(_MSC_VER)
+#include <intrin.h>
+#if SY_64
+#define CTTZ(w) _tzcnt_u32((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#else
+static int __inline CTTZ(I w) {I c=0; _BitScanForward(&c, (UINT)w); R c;} 
+#define CTTZZ CTTZ
+#endif
+#endif
+#endif
+
 
 // JPFX("here we are\n")
 // JPF("size is %i\n", v)

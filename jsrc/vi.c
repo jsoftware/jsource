@@ -74,16 +74,16 @@ static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+283833
 static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
  if(!n||t&BOX)R hic(AR(y)*SZI,(UC*)AS(y));
- switch(t){
-  case LIT:  R hic(n,yv);
-  case C2T:  R hic2(2*n,yv);
-  case SBT:  R hic(n*SZI,yv);
-  case B01:  d=*(B*)yv; break;
-  case INT:  d=(D)*(I*)yv; break;
-  case FL: 
-  case CMPX: d=*(D*)yv; break;
-  case XNUM: d=xdouble(*(X*)yv); break;
-  case RAT:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
+ switch(CTTZ(t)){
+  case LITX:  R hic(n,yv);
+  case C2TX:  R hic2(2*n,yv);
+  case SBTX:  R hic(n*SZI,yv);
+  case B01X:  d=*(B*)yv; break;
+  case INTX:  d=(D)*(I*)yv; break;
+  case FLX: 
+  case CMPXX: d=*(D*)yv; break;
+  case XNUMX: d=xdouble(*(X*)yv); break;
+  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
  }
  R hid(d*hct);
 }
@@ -369,16 +369,16 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
  p=1<ac?m:0; q=1<wc||1<c;
  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
- switch(AT(a)){
+ switch(CTTZ(AT(a))){
   default:                SCDO(C, *wv,x!=av[j]      ); break;
-  case C2T:               SCDO(S, *wv,x!=av[j]      ); break;
-  case CMPX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
-  case XNUM:              SCDO(A, *wv,!equ(x, av[j])); break;
-  case RAT:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
-  case INT:               SCDO(I, *wv,x!=av[j]      ); break;
-  case SBT:               SCDO(SB,*wv,x!=av[j]      ); break;
-  case BOX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
-  case FL:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
+  case C2TX:               SCDO(S, *wv,x!=av[j]      ); break;
+  case CMPXX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
+  case XNUMX:              SCDO(A, *wv,!equ(x, av[j])); break;
+  case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
+  case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
+  case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
+  case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
+  case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
              else         SCDO(D, *wv,!teq(x,av[j]));
  }
  R z;

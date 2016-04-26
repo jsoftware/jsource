@@ -105,6 +105,8 @@ F2(jtforeign){I p,q;
   case XC(6,2):   R CDERIV(CIBEAM, jttsit1,      jttsit2,      1,   0,   1   );
   case XC(6,3):   R CDERIV(CIBEAM, jtdl,         0,            0,   0,   0   );
   case XC(6,4):   R CDERIV(CIBEAM, jtparsercalls,0,            RMAX,0,   0   );
+//  case XC(6,5):   R CDERIV(CIBEAM, jtpeekdata,   0,            RMAX,0,   0   );  // turn on to provide a J window into the running system
+//  case XC(6,6):   R CDERIV(CIBEAM, jttestcode,   0,            RMAX,0,   0   );  // turn on to run test code that might ASSERT & needs jt
   case XC(6,8):   R CDERIV(CIBEAM, jtqpfreq,     0,            RMAX,0,   0   );
   case XC(6,9):   R CDERIV(CIBEAM, jtqpctr,      0,            RMAX,0,   0   );
   case XC(6,10):  R CDERIV(CIBEAM, jtpmarea1,    jtpmarea2,    RMAX,RMAX,RMAX);

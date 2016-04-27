@@ -1,5 +1,5 @@
-/* Copyright 1990-2007, Jsoftware Inc.  All rights reserved.               */
-/* Licensed use only. Any other use is in violation of copyright.          */
+/* Copyright 1990-2011, Jsoftware Inc.  All rights reserved. */
+/* License in license.txt.                                   */
 /*                                                                         */
 /* Verbs: Boolean-Valued                                                   */
 
@@ -68,15 +68,25 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  if(t!=at)RZ(a=cvt(t,a));
  if(t!=wt)RZ(w=cvt(t,w));
  *za=a; *zw=w; *zc=c;
+ // The inputs have been converted to common type
  if(1<wr)R 2==wr?-2:-3;
  switch(t){
+  // calculate the number of distinct values in the range of the two operands.
+  // for strings, we just assume the worst (all codes)
+  // for ints, actually look at the data to get the range (min and #values+1).  If there is
+  // an error getting the range (da or dw==0), leave d==IMAX.  If the min is > 0, and
+  // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
+  // the SUB0 and SUB1 expressions into EBLOOP simpler
+  // We allocate an array for each result in range, so we have to get c and d right
   case INT: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} 
-            if(0<c&&c+d<=4*n){d+=c; c=0;} break;
+            if(0<c&&c+d<=4*n){d+=c;}else{*zc=c;} break;
   case C2T: d=65536; break;
   case LIT: d=256;   break;
   case B01: d=2;     break;
  }
+ // if the range of integers exceeds 4 times the length of y, revert to simple search.
+ // Also revert for continuous type.  But always use fast search for character/boolean types
  R t&B01+LIT+C2T||t&INT&&0<d&&d<=4*n ? d : -4;
 }
 

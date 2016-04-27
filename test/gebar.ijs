@@ -72,7 +72,20 @@ y=: x (i+/i.#x)}y=: ?9111$1000
 (5$1) -: ''    E. i.5
 (5$1) -: ''    E. 'abcde'
 
+NB. Application that looped forever trying to use E. on integers
+G =:0 1 2 2 3 4 4 5 5 6 7 7 8 9 10 10 11 11 11 12 12 12
+G =: G ,. 1 2 3 4 5 6 5 7 8 7 9 10 10 11 12 11 13 14 15 16 15 14
+G =: <"1 G
+joinroutes =: 4 : 0&.>
+l =. >: (y i. {: x)
+f =. 0:^:((#y)&=) (y i. {. x)
+z =. (f {. y) , x , (l }. y)
+y E. z
+y
+)
+jtree =: ([: ~.@; joinroutes)/
+12 14 -: jtree G
 
-4!:55 ;:'g ebar i j m n s t x y'
+4!:55 ;:'g ebar i j m n s t x y G jtree joinroutes '
 
 

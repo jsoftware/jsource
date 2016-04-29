@@ -67,7 +67,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  if(m&&n)RE(t=maxtype(at,wt)) else t=m?at:n?wt:B01;
  if(t!=at)RZ(a=cvt(t,a));
  if(t!=wt)RZ(w=cvt(t,w));
- *za=a; *zw=w; *zc=c;
+ *za=a; *zw=w;
  // The inputs have been converted to common type
  if(1<wr)R 2==wr?-2:-3;
  switch(t){
@@ -79,15 +79,17 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
   // the SUB0 and SUB1 expressions into EBLOOP simpler
   // We allocate an array for each result in range, so we have to get c and d right
   case INT: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
-            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} 
-            if(0<c&&c+d<=4*n){d+=c;}else{*zc=c;} break;
+            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow, but we catch that at exit
+            if(0<c&&c+d<=4*n){d+=c;} break;
   case C2T: d=65536; break;
   case LIT: d=256;   break;
   case B01: d=2;     break;
  }
- // if the range of integers exceeds 4 times the length of y, revert to simple search.
+ *zc=c;  // Now that we know c, return it
+ // if the range of integers exceeds 4 times the length of y, or if the range
+ // would require an allocation bigger than the maximum allocation, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT&&0<d&&d<=4*n ? d : -4;
+ R t&B01+LIT+C2T||t&INT&&0<d&&d<=4*n&&(d<=(jt->mmax-100)/sizeof(I)) ? d : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \

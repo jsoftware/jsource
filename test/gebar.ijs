@@ -86,6 +86,12 @@ y
 jtree =: ([: ~.@; joinroutes)/
 12 14 -: jtree G
 
-4!:55 ;:'g ebar i j m n s t x y G jtree joinroutes '
+NB. ensure intermediate buffer doesn't fail the search
+olim =: 9!:20''
+9!:21 (16e6)
+(0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8
+9!:21 olim
+
+4!:55 ;:'g ebar i j m n s t x y G jtree joinroutes olim '
 
 

@@ -248,6 +248,7 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
    SPB(yp,x,cvt(t1,SPA(wp,x)));
    R 1;
  }
+ // Now known to be non-sparse
  n=AN(w); wt=AT(w); wv=AV(w);
  if(t==wt){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
@@ -257,7 +258,9 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the C2T and BIT conversions into one block, and
  // the rest in another
- if ((t|wt)&(C2T+BIT)) {
+ if ((t|wt)&(C2T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+   // we must account for all NOUN types.  Low 8 bits have most of them, and we know type can't be sparse.  This picks up the others
+  ASSERT(!((t|wt)&(SBT+XD+XZ)),EVDOMAIN);  // No conversions for these types
   switch (CVCASE(t,wt)){  // This version doesn't use CTTZ, but it works anyway
    case CVCASE(LIT, C2T): R C1fromC2(w, yv);
    case CVCASE(C2T, LIT): R C2fromC1(w, yv);

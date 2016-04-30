@@ -8,7 +8,7 @@
 #endif
 
 #define AUDITBP 0  // Verify that bp() returns expected data
-#define AUDITCOMPILER 0  // Verify compiler features CTTZ, signed >>
+#define AUDITCOMPILER 1  // Verify compiler features CTTZ, signed >>
 
 #if SY_WINCE
 #include "..\cesrc\cecompat.h"
@@ -331,8 +331,8 @@
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0
-// CTLZ would be a better primitive to support, but LZCNT executes as BSR on some Intel processors,
-// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 1s)
+// CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
+// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
 // since we don't require CTLZ yet, we defer that problem to another day
 #if defined(__GNUC__) || defined( __clang__)
 #define CTTZ(w) _builtin__ctzl((UINT)(w))

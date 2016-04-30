@@ -29,7 +29,7 @@
  if(mn){y0=y=RCALL; RZ(y);}
  else{I d;
   d=jt->db; jt->db=0; y=RCALL; jt->db=d;
-  if(jt->jerr){y=zero; RESETERR;}
+  if(jt->jerr){if(jt->jerr==EVSTACK)RZ(y); y=zero; RESETERR;}
  } 
  yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
  if(!mn||yt&DIRECT&&RFLAG){I zn;

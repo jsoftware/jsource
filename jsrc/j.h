@@ -154,18 +154,16 @@
                                         /* including trailing 0 byte       */
 
 #if SY_WINCE
-#define NFCALL          100L            /* wince     named fn call depth   */
 #define NFDEP           200L            /* wince           fn call depth   */
 #endif
 #if SYS & SYS_MACOSX
-#define NFCALL           9000L          /* darwin    named fn call depth   */
 #define NFDEP           18000L          /* darwin          fn call depth   */
 #endif
 #ifndef NFCALL
-#define NFCALL          10000L          /* all other named fn call depth   */
 #define NFDEP           20000L          /* all other       fn call depth   */
 #endif
 
+#define NFCALL          (MAX(40,NFDEP/10))              // call depth for named calls.  They can be expensive
 #define NTSTACK         2000L           /* size of stack for temps         */
 
 #define IIDOT           0               /* modes for indexofsub()          */

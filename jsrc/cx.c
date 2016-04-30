@@ -86,8 +86,8 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,l
  LINE(sv); ASSERT(n,EVDOMAIN);
  RZ(jt->local=stcreate(2,1L,0L,0L));
  if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
- /* do not use error exit after this point; use BASSERT, BGA, BZ */
- FDEPINC(1); jt->xdefn=1;
+ FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
+ jt->xdefn=1;
  IS(xnam,a); if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  IS(ynam,w); if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
  if(jt->dotnames){
@@ -187,7 +187,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,l
     JBREAK0;
     i=ci->go;
  }}
- FDEPDEC(1);
+ FDEPDEC(1);  // OK to ASSERT now
  z=jt->jerr?0:z?ra(z):mtm;
  fa(cd);
  symfreeh(jt->local,0L); jt->local=loc; jt->asgn=0; jt->xdefn=ox;

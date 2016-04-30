@@ -55,10 +55,12 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
 
 static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
  if(neg='-'==*s){++s; --n; RZ(n);}
- RZ(19>=n);
+ for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
+ RZ(19>=n);   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
+  // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
  j=0; DO(n, RZ(t=memchr(dig,*s++,10L)); j=10*j+(t-dig););
- RZ(0<=j||neg&&j==IMIN);
- *(I*)vv=0>j||!neg?j:-j;
+ RZ(0<=j||neg&&j==IMIN);  // overflow if negative AND not the case of -2^63, whichs shows as IMIN with a negative flag
+ *(I*)vv=0>j||!neg?j:-j;   // if j<0, it must be IMIN, keep it neg; otherwise change sign if neg
  R 1;
 }     /* called only if SY_64 */
 

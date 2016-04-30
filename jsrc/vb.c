@@ -59,7 +59,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
 /* -3: rank > 2                             */
 /* -4: not discrete type or range too large */
 
-static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,m,n,t,wr,wt;
+static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,m,n,t,wr,wt,memlimit;
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(ar==wr||!ar&&1==wr,EVRANK);
@@ -70,6 +70,9 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  *za=a; *zw=w;
  // The inputs have been converted to common type
  if(1<wr)R 2==wr?-2:-3;
+ memlimit = MIN(4*n,(jt->mmax-100)/sizeof(I));  // maximum size we will allow our d to reach.  Used only for I type.
+  // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
+  // is measured in Is.  The 100 is to account for memory-manager overhead
  switch(t){
   // calculate the number of distinct values in the range of the two operands.
   // for strings, we just assume the worst (all codes)
@@ -79,17 +82,16 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
   // the SUB0 and SUB1 expressions into EBLOOP simpler
   // We allocate an array for each result in range, so we have to get c and d right
   case INT: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
-            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow, but we catch that at exit
-            if(0<c&&c+d<=4*n){d+=c;} break;
+            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
+            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case C2T: d=65536; break;
   case LIT: d=256;   break;
   case B01: d=2;     break;
  }
  *zc=c;  // Now that we know c, return it
- // if the range of integers exceeds 4 times the length of y, or if the range
- // would require an allocation bigger than the maximum allocation, revert to simple search.
+ // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT&&0<d&&d<=4*n&&(d<=(jt->mmax-100)/sizeof(I)) ? d : -4;
+ R t&B01+LIT+C2T||t&INT&&0<d&&d<=memlimit ? d : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \

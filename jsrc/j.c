@@ -55,11 +55,13 @@ DX  zeroDX={0,0};         /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
 
-char m[300];
-
-C* jeversion()
-{
-	char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
+/* version text up to first / is the J System ID and it */
+/* identifies the J Front Ends, J Engine, and J Library */
+/* and is used in Unix to find profile.ijs              */
+/* j804/j64/windows/release/a/GPL3/unknown/datetime */
+F1(jtversq){
+	char m[1000];char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
+	ASSERTMTV(w);
 	strcpy(m,"j"jversion"/");
 #if SY_64
 	strcat(m,"j64/");
@@ -76,11 +78,13 @@ C* jeversion()
 	strcat(m,"-");
 	strncat(m,d + 4,3);
 	strcat(m,__TIME__);
-	R m;
+	R cstr(m);
 }
 
-/* version text up to first / is the J System ID and it */
-/* identifies the J Front Ends, J Engine, and J Library */
-/* and is used in Unix to find profile.ijs              */
-/* j804/j64/windows/release/a/GPL3/unknown/datetime */
-F1(jtversq){ ASSERTMTV(w);R cstr(jeversion()); }
+#if SY_64
+#define bits "64"
+#else
+#define bits "32"
+#endif
+
+char jeverson[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/\f"__DATE__" "__TIME__"\n";

@@ -26,4 +26,5 @@ EXPORTS
                 JSetB               @24
                 JDoR                @25
 				JGetA				@26
-				JSetA				@27	
+				JSetA				@27
+				jeversion           @28	

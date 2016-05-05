@@ -19,6 +19,16 @@ test 0 3j4
 
 NB. x+y -----------------------------------------------------------------
 
+4 = type 5 + ''
+4 = type '' + 5
+1 = type 'a' +. (0$0)
+4 = type 'a' + (0$0)
+8 = type '' + 5.5
+16 = type '' + 3j1
+1 = type '' +. 'c'
+4 = type '' + 'c'
+'length error' -: '' + etx 1000 1000 $ 'abc'
+ 
 4 = type 1234+5678
 4 = type _1234+_5678
 4 = type 2e9
@@ -74,6 +84,9 @@ b=:3j4
 3 4 -: +.3j4
 1j1 -: 5j11 +. 3j7
 
+NB. Errors
+
+'length error' -: 'abc' + etx 4 5  NB. Agreement before domain
 'domain error' -: 'abc' + etx 4
 'domain error' -: 'abc' +~etx 4
 'domain error' -: 4     + etx <'abc'
@@ -87,6 +100,12 @@ b=:3j4
 'length error' -: 3 4   +~etx i.5 6
 'length error' -: 3 4 5 + etx i.4 3
 'length error' -: 3 4 5 +~etx i.4 3
+
+(0$0) -: (i. 0 3) +"1 (i. 0 2)  NB. No error - 0 used for cell result
+(0$0) -: (i. 0 3) +"1 2 (i. 0 2 2)  NB. No error - 0 used for cell result
+(4 0$0) -: (i. 4 0 3) +"1 2 (i. 4 2 2)  NB. No error - 0 used for cell result
+'length error' -: (i. 4 0 3) +"1 2 etx (i. 1 2 2)
+'length error' -: (i. 4 0 3) +"1 2 etx (i. 0 2 2)
 
 
 NB. x+y integer overflow handling ---------------------------------------

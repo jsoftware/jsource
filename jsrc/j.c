@@ -59,7 +59,7 @@ A   zpath=0;              /* default locale search path           */
 /* identifies the J Front Ends, J Engine, and J Library */
 /* and is used in Unix to find profile.ijs              */
 /* j804/j64/windows/release/a/GPL3/unknown/datetime */
-F1(jtversq){
+F1(jtversqx){
 	char m[1000];char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
 	ASSERTMTV(w);
 	strcpy(m,"j"jversion"/");
@@ -87,4 +87,23 @@ F1(jtversq){
 #define bits "32"
 #endif
 
-char jeverson[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/\f"__DATE__" "__TIME__"\n";
+char jeversion[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
+
+F1(jtversq){
+	char m[1000];char d[20]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
+	ASSERTMTV(w);
+	strcpy(m,jeversion+8);
+	p= m+strlen(m)-20;
+	strcpy(d,p);
+	*p=0;
+	if(' '== d[4]) d[4] = '0';
+	strncat(p,d+7,4);
+	strcat(p,"-");
+	d[3] = 0;
+	q= strstr(months,d);
+	strncat(p,3 + strstr(months,d),2);
+	strcat(p,"-");
+	strncat(p,d + 4,2);
+	strcat(p,d+11);
+	R cstr(m);
+}

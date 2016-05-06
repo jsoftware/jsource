@@ -90,7 +90,7 @@ F1(jtversqx){
 char jeversion[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
 F1(jtversq){
-	char m[1000];char d[20]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
+	char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
 	ASSERTMTV(w);
 	strcpy(m,jeversion+8);
 	p= m+strlen(m)-20;

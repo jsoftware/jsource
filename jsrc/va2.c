@@ -450,15 +450,6 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
-I atype(I cv){
- if(!(cv&VBB+VII+VDD+VZZ+VQQ+VXX+VXEQ+VXCF+VXFC))R 0;
- R cv&VBB?B01:cv&VII?INT:cv&VDD?FL:cv&VZZ?CMPX:cv&VQQ?RAT:XNUM;
-}    /* argument conversion */
-     
-I rtype(I cv){R cv&VB?B01:cv&VI?INT:cv&VD?FL:cv&VZ?CMPX:cv&VQ?RAT:cv&VX?XNUM:SBT;}
-     /* result type */
-
-     
 #define VAF(fname,ptr,fp,fm,ft)   \
  void fname(J jt,C id,I t,VF*ado,I*cv){VA2*p;  \
   if(jt->jerr==EWOV){                          \
@@ -477,12 +468,18 @@ VAF(jtvasfx,psfx, plussfxO,minussfxO,tymessfxO)
 
 #define VARCASE(e,c) (70*(e)+(c))
 
-// Analyze the verb and arguments and come up with the *ado, address of the routine to handle one
+// Table converting operand types to slot numbers in a va[] entry
+// Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
+// bitmask of RAT,CMPX,FL.  Entry 9=CMPX; otherwise entry 8=some FL, otherwise
+// entry 10 for XNUM, 11 for some RAT 
+static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
+
+// Analyze the verb and arguments and come up with *ado, address of the routine to handle one
 // list of arguments producing a list of results; and *cv, the conversion control which specifies
 // the precision inputs must be converted to, and what the result type will be.
 // The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
 // Returned value is 0 for failure, 1 for success
-B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I j,t,x;VA*q;VA2 p;
+B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.
@@ -504,25 +501,35 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I j,t,x;VA*q;VA2 p;
    case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD;     break;
   }
   RESETERR;
- }else if(at&NUMERIC&&wt&NUMERIC){
+ }else if(!((t=at|wt)&~NUMERIC)){
   // Normal case where we are not retrying: here for numeric arguments
-  t=at|wt; b=1&&t&RAT+XNUM+XD+XZ;  // b = 'indirect precision'
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
   // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPLX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
+  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
-  j=t&CMPX ? 9 : b ? (t&XZ?13:t&XD?12:t&FL?8:t&RAT?11:10) : 
-      (at&B01?0:at&INT?3:6)+(wt&B01?0:wt&INT?1:2);
-  q=va+vaptr[(UC)id];  // get va[] entry for this verb
-  p=(q->p2)[j];    // select ado,cv for this precision, copy to result
-  *ado=p.f; *cv=x=p.cv; if(b&&t&FL&&!(x&VZZ))*cv+=VDD;  // if one argument is extended precision and the other is float,
-  if (b&&t&FL&&(x&VZZ))*(I *)0=0;  // scaf - change VDD fix below ****************************************************************************************************
-    // give a float result (unless a lower precision is available, eg for comparisons)
+  if(t<CMPX) {
+   // Here for the fast and important case, where the arguments are both B01/INT/FL
+   // The index into va is atype*3 + wtype, calculated sneakily
+   p = &va[vaptr[(UC)id]].p2[(at>>1)+((at+wt)>>2)];
+   *cv = p->cv;
+  } else {
+   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
+   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
+   // the type to use
+   p = &va[vaptr[(UC)id]].p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
+   x = p->cv;
+   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
+   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
+   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
+   if((t&FL)&&!(x&(VBB|VII|VDD|VZZ))){x = (x&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
+   *cv = x;
+  }
+  *ado = p->f;   // finish getting the output values - cv was done above
  }else{
   // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-  b=!HOMO(at,wt); *cv=VB;  // b = 'inhoomogeneous types (always ~:)'; cv indicates no input conversion, boolean result
+  b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
   jt->rela=ARELATIVE(a)*(I)a;   // set flags indicating 'indirect datatype' for use during compare
   jt->relw=ARELATIVE(w)*(I)w;
   switch(id){
@@ -533,11 +540,11 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I j,t,x;VA*q;VA2 p;
    case CNE: *ado=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
                   at&LIT?(wt&LIT?(VF)neCC:(VF)neCS):wt&LIT?(VF)neSC:(VF)neSS; break;
    default:
-    // If not = ~:, it has to be a symbol operation.
+    // If not = ~:, it had better be a symbol operation.
     ASSERT(at&SBT&&wt&SBT,EVDOMAIN);
-    q=va+vaptr[(UC)id]; p=(q->p2)[12];  // fetch the 'symbol' entry
-    ASSERT(p.f,EVDOMAIN);   // not all verbs support symbols - fails if this one doesn't
-    *ado=p.f; *cv=x=p.cv;  // return the values read
+    p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
+    ASSERT(p->f,EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
+    *ado=p->f; *cv=p->cv;  // return the values read
  }}
  R 1;
 }    /* function and control for rank */
@@ -595,8 +602,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  if(t&&!sp&&an&&wn){B xn = !!(t&XNUM);
   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
   // type of conversion to XNUM in use.
-  if(t!=at)RZ(a=xn?xcvt(cv&VXEQ?XMEXMT:cv&VXFC?XMFLR:cv&VXCF?XMCEIL:XMEXACT,a):cvt(t,a));
-  if(t!=wt)RZ(w=xn?xcvt(cv&VXEQ?XMEXMT:cv&VXCF?XMFLR:cv&VXFC?XMCEIL:XMEXACT,w):cvt(t,w));
+  if(t!=at)RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
+  if(t!=wt)RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
  // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
  // rank, type, etc. using the original input block.  That's OK.
@@ -785,8 +792,8 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
  if(!(sb||yt==zt))R df1(df2(a,w,gs),fs);
  if(t){
   bb=1&&t&XNUM;
-  if(t!=at)RZ(a=bb?xcvt(cv&VXEQ?XMEXMT:cv&VXFC?XMFLR:cv&VXCF?XMCEIL:XMEXACT,a):cvt(t,a));
-  if(t!=wt)RZ(w=bb?xcvt(cv&VXEQ?XMEXMT:cv&VXCF?XMFLR:cv&VXFC?XMCEIL:XMEXACT,w):cvt(t,w));
+  if(t!=at)RZ(a=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
+  if(t!=wt)RZ(w=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
  ak=(an/nn)*bp(AT(a)); wk=(wn/nn)*bp(AT(w));  
  GA(y,yt,zn,1,0); 

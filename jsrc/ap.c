@@ -261,35 +261,48 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-
+// a is a 2-atom integer list (if not, create an empty array)
+// w is any array
+// result is a new allocation for the specified infix, with the data copied in
 static F2(jtseg){A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
- if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
- c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));
- GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;
- if(ARELATIVE(w)){A*u=AAV(z),*v=AAV(w)+m; DO(n, *u++=(A)AABS(w,*v++););}
- else MC(AV(z),CAV(w)+m*k,n*k);
+ if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;  // fetch starting index and #items
+ c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms/item of w, k=#bytes/item, zn=total # atoms in infix
+ GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate the infix.  Keep rank of w, except if atomic, make a singleton list.  Copy in shape, but change leading axis to n
+ // copy the data for the infix
+ if(ARELATIVE(w)){A*u=AAV(z),*v=AAV(w)+m; DO(n, *u++=(A)AABS(w,*v++););}  // if relative pointers, resolve to address, copy
+ else MC(AV(z),CAV(w)+m*k,n*k);   // otherwise copy the actual data
  R z;
 }
 
+// Create a shape (d,2) array holding (start,length) for each infix
 static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  RZ(w);
- p=ABS(m); n=IC(w); d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);
- GA(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;
- x=AV(z); k=0>m?p:1; j=-k; DO(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
+ p=ABS(m); n=IC(w); d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);  // n=#y, d=#infixes
+ // Allocate a block of shape (d,2) to hold the (start,length) indexes of each infix
+ GA(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;   // Allocate, install shape (d,2)
+ x=AV(z); k=0>m?p:1; j=-k; DO(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);  // Create the (start,length) sections, make sure the last one doesn't overrun
  R z;
 }
 
+// Handle x f\ y
 static DF2(jtinfix){PROLOG;DECLF;A x,z;I m; 
- PREF2(jtinfix);
- if(a==ainf)R repeat(zero,w);
- RE(m=i0(vib(a))); 
- RZ(x=ifxi(m,w));
+ PREF2(jtinfix);  // Handle looping over rank.  This returns here for each cell (including this test).
+  // the rest of this verb handles a single cell 
+ RE(m=i0(vib(a)));   // convert a to int, audit for atomic, return value in m
+ RZ(x=ifxi(m,w));   // x is the array of (start,length) of infixes
+  // If there are infixes, loop over them, applying the function
+  // This emulates (start,.length) fs@jtseg eachl w
+  // jtseg extracts an infix; fs runs the verb on it.
+  // eachl runs the verb on each items of x, applied to entire w
  if(*AS(x))z=eachl(x,w,atop(fs,ac2(jtseg)));
  else{A s;I r;
-  r=AR(w); r=MAX(0,r); GA(s,INT,r,1,0); if(r)ICPY(AV(s),AS(w),r); *AV(s)=0>m?0:m;
-  RZ(x=df1(reshape(s,filler(w)),fs));
-  z=reshape(over(zero,shape(x)),x);
+  // if there are no infixes, create a cell of fills and run the verb on it
+  // first, create a 1-atom list with the length of the fill-cell: the infix length unless that's <0: use 0 then
+  // If a was infinity (which has been converted to IMAX by vib()), use 1+the length of w
+  r=AR(w); r=MAX(0,r); GA(s,INT,r,1,0); if(r)ICPY(AV(s),AS(w),r); *AV(s)=0>m?0:(m==IMAX)?1+IC(w):m;
+  RZ(x=df1(reshape(s,filler(w)),fs));   // perform x = fs s#fill
+  z=reshape(over(zero,shape(x)),x);  // perform z = (0,$x) $ x  to return 0 infixes with the correct shape
  } 
  EPILOG(z);
 }
@@ -327,7 +340,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wd,wr,*ws,wt,zc; 
  F2RANK(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); n=IC(w);
- RE(m=i0(a)); p=m==IMIN?IMAX:ABS(m);
+ RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
  if(fs=VAV(self)->f,CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}

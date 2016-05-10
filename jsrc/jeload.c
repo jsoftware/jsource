@@ -11,26 +11,28 @@
 #else
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
 #endif
- #define JDLLNAME "\\j.dll"
+ #define JDLLNAME "j.dll"
  #define filesep '\\'
  #define filesepx "\\"
 // setfocus e required for pocketpc and doesn't hurt others
 #define ijx "11!:0'pc ijx closeok;xywh 0 0 300 200;cc e editijx rightmove bottommove ws_vscroll ws_hscroll;setfont e \"Courier New\" 12;setfocus e;pas 0 0;pgroup jijx;pshow;'[18!:4<'base'"
 
 #else
+ #include <unistd.h>
  #include <dlfcn.h>
  #define GETPROCADDRESS(h,p)	dlsym(h,p)
  #define _stdcall
  #define filesep '/'
  #define filesepx "/"
  #define ijx "11!:0'pc ijx closeok;xywh 0 0 300 200;cc e editijx rightmove bottommove ws_vscroll ws_hscroll;setfont e monospaced 12;pas 0 0;pgroup jijx;pshow;'[18!:4<'base'"
- #ifdef __MACH__ 
-  #define JDLLNAME "/libj.dylib"
+ #ifdef __MACH__
+  #define JDLLNAME "libj.dylib"
  #else
-  #define JDLLNAME "/libj.so"
+  #define JDLLNAME "libj.so"
  #endif
 #endif
 #include "j.h"
+#include "jversion.h"
 
 static void* hjdll;
 static J jt;
@@ -40,6 +42,8 @@ static JgaType jga;
 static JGetLocaleType jgetlocale;
 static char path[PLEN];
 static char pathdll[PLEN];
+static char jdllver[20];
+static int FHS=0;
 #ifdef ANDROID
 static char install[PLEN];
 #endif
@@ -90,7 +94,7 @@ void jepath(char* arg)
  strcpy(path,"/data/data/");
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
- strcat(pathdll,"/lib");
+ strcat(pathdll,"/lib/");
  strcat(pathdll,JDLLNAME);
  strcpy(tmp, "/sdcard/Android/data");
  qsdcard=stat(tmp,&st);
@@ -158,7 +162,22 @@ void jepath(char* arg)
 #endif
 #ifndef ANDROID
  strcpy(pathdll,path);
+ strcpy(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
+#ifndef _WIN32
+ struct stat st;
+ if(stat(pathdll,&st)) FHS=1;
+ if (FHS) {
+  char _jdllver[20];
+  strcpy(_jdllver,jversion);
+  strcpy(jdllver,jversion);
+  jdllver[1]='.';
+  strcpy(jdllver+2,_jdllver+1);
+  strcpy(pathdll,JDLLNAME);
+  strcat(pathdll,".");
+  strcat(pathdll,jdllver);
+ }
+#endif
 #endif
  // fprintf(stderr,"arg4 %s\n",path);
 }
@@ -187,7 +206,12 @@ int jefirst(int type,char* arg)
 		strcat(input,"(3 : '0!:0 y')<INSTALLROOT,'");
 		strcat(input,"/bin");
 #else
+  if (!FHS)
 		strcat(input,"(3 : '0!:0 y')<BINPATH,'");
+  else {
+		strcat(input,"(3 : '0!:0 y')<'/etc/j/");
+		strcat(input,jdllver);
+	}
 #endif
 		strcat(input,filesepx);
 		strcat(input,"profile.ijs'");

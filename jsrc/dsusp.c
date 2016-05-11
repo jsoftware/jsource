@@ -131,11 +131,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;I*v;
 }
 
 
-static A jtparseas(J jt,B as,A w){A*u,*v,y,z;I n;
- n=AN(w); v=AAV(w);
- GA(y,BOX,5+n,1,0); u=AAV(y);
- *u++=mark; DO(n, *u++=*v++;); *u++=mark; *u++=mark; *u++=mark; *u++=mark;
- z=parsea(y);  /* y is destroyed by parsea */
+static A jtparseas(J jt,B as,A w){A z;
+ z=parsea(w);  /* y is destroyed by parsea ??? */
  if(as&&z)ASSERT(NOUN&AT(z)&&all1(eq(one,z)),EVASSERT);
  R z;
 }

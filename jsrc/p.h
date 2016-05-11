@@ -5,12 +5,13 @@
 
 
 #define NCASES          9L           /* # of rows in cases parses table    */
-#define ACTION(f)       A  f(J jt,I b,I e,A* stack)
+#define ACTION(f)       A*  f(J jt,A* stack)
 #define TACT(f)         TA f(J jt,I b,I e,TA*stack)
 #define IS(name,val)    symbis(name,val,jt->local)
 
 typedef TA(*TAF)();
-typedef struct{I c[4];AF f;TAF vf;I b,e,k;} PT;
+typedef A*(*ACTF)();
+typedef struct{ I c[4];ACTF f; TAF vf; I b, e, k; } PT;
 
 /* c:  4-patterns for AT(x) of top 4 parser stack elements      */
 /* f:  action                                                   */
@@ -18,6 +19,7 @@ typedef struct{I c[4];AF f;TAF vf;I b,e,k;} PT;
 /* b:  beginning index in stack that action applies to          */
 /* e:  ending    index in stack that action applies to          */
 /* k:  index in stack of error indicator                        */
+// this is now used only for tacit translator
 
 extern PT       cases[];
 

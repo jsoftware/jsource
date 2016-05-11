@@ -148,7 +148,7 @@ define one of the following in the build as required
 
 // SY_ALIGN 1 for compilers requiring strict alignment
 //             e.g. if (I*)av is not allowed for arbitrary av of type C*
-#define SY_ALIGN 1 // always use 1 so all use same code
+#define SY_ALIGN 1 // always use 1 so all use same code; required by nvr stack in parser
 
 /* Windows CE target autoconfiguration: */
 #if SY_WINCE

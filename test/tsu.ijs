@@ -20,9 +20,13 @@ ddgmbx   =: testfiles 'gmbx'        NB. map boxed arrays
 ddgsp    =: testfiles 'gsp'         NB. sparse arrays
 ddg      =: ddall -. ddgmbx,ddgsp   NB. "ordinary"
 
-etx      =: 1 : 'x :: (<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)'
+etx      =: 1 : 'x :: (<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)'  NB. error message from error number
 ex       =: ". etx
 fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
+eftx     =: 1 : 'u :: ((10{a.) -.~ (13!:12) @ i. @ 0:)'   NB. full text of error message
+efx      =: ". eftx
+
+
 
 THRESHOLD=: 0 NB. allow timing tests to trigger failure 
 THRESHOLD=: 1 NB. force timing tests to pass

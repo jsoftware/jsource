@@ -145,11 +145,9 @@ typedef struct {
  B    nflag;            /* 1 if space required before name                 */
  B    nla[256];         /* namelist names mask                             */
  I    nlt;              /* namelist type  mask                             */
- A    nvra;             /* see comments in p.c                             */
- A*   nvrav;            /* see comments in p.c                             */
- A    nvrb;             /* see comments in p.c                             */
- B*   nvrbv;            /* see comments in p.c                             */
- I    nvrtop;           /* see comments in p.c                             */
+ A    nvra;             /* data blocks that are in execution somewhere     */
+ A*   nvrav;            /* AAV(jt->nvra)                                   */
+ I    nvrtop;           /* top of nvr stack; # valid entries               */
  I    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
  I    outeol;           /* output: EOL sequence code                       */

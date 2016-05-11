@@ -660,6 +660,7 @@ extern I        jtmaxtype(J,I,I);
 extern B        jtmeminit(J);
 extern A        jtmerge2(J,A,A,A,B);
 extern I        jtmult(J,I,I);
+extern A        jtnamerefacv(J, A, L*);
 extern A        jtnfs(J,I,C*);
 extern void     jtnvrredef(J,A);
 extern A        jtodom(J,I,I,I*);

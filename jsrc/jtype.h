@@ -97,34 +97,63 @@ typedef I SI;
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
 
 #define B01             (I)1L           /* B  boolean                      */
+#define B01X 0
 #define LIT             (I)2L           /* C  literal (character)          */
+#define LITX 1
 #define INT             (I)4L           /* I  integer                      */
+#define INTX 2
 #define FL              (I)8L           /* D  double (IEEE floating point) */
+#define FLX 3
 #define CMPX            (I)16L          /* Z  complex                      */
+#define CMPXX 4
 #define BOX             (I)32L          /* A  boxed                        */
+#define BOXX 5
 #define XNUM            (I)64L          /* X  extended precision integer   */
+#define XNUMX 6
 #define RAT             (I)128L         /* Q  rational number              */
+#define RATX 7
 #define BIT             (I)256L         /* BT bit boolean                  */
+#define BITX 8
 #define SB01            (I)1024L        /* P  sparse boolean               */
+#define SB01X 10
 #define SLIT            (I)2048L        /* P  sparse literal (character)   */
+#define SLITX 11
 #define SINT            (I)4096L        /* P  sparse integer               */
+#define SINTX 12
 #define SFL             (I)8192L        /* P  sparse floating point        */
+#define SFLX 13
 #define SCMPX           (I)16384L       /* P  sparse complex               */
+#define SCMPXX 14
 #define SBOX            (I)32768L       /* P  sparse boxed                 */
+#define SBOXX 15
 #define SBT             (I)65536L       /* SB symbol                       */
+#define SBTX 16
 #define C2T             (I)131072L      /* C2 unicode (2-byte characters)  */
+#define C2TX 17
 #define VERB            (I)262144L      /* V  verb                         */
+#define VERBX 18
 #define ADV             (I)524288L      /* V  adverb                       */
+#define ADVX 19
 #define CONJ            (I)1048576L     /* V  conjunction                  */
+#define CONJX 20
 #define ASGN            (I)2097152L     /* I  assignment                   */
+#define ASGNX 21
 #define MARK            (I)4194304L     /* I  end-of-stack marker          */
+#define MARKX 22
 #define SYMB            (I)8388608L     /* I  locale (symbol table)        */
+#define SYMBX 23
 #define CONW            (I)16777216L    /* CW control word                 */
+#define CONWX 24
 #define NAME            (I)33554432L    /* NM name                         */
+#define NAMEX 25
 #define LPAR            (I)67108864L    /* I  left  parenthesis            */
+#define LPARX 26
 #define RPAR            (I)134217728L   /* I  right parenthesis            */
+#define RPARX 27
 #define XD              (I)268435456L   /* DX extended floating point      */
+#define XDX 28
 #define XZ              (I)536870912L   /* ZX extended complex             */
+#define XZX 29
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)

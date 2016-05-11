@@ -137,6 +137,8 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
 }    /* 18!:31 symbol pool */
 
 
+// a is A for name, g is symbol table
+// result is L* address of the symbol-table entry for the name, or 0 if not found
 L*jtprobe(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
  RZ(a&&g);
  u=NAV(a); m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
@@ -149,6 +151,10 @@ L*jtprobe(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
   v=v->next+jt->sympv;
 }}
 
+// a is A for name
+// g is symbol table to use
+// result is L* symbol-table entry to use, also stored in jt->cursymb
+// if not found, on is created
 static L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
  u=NAV(a); m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
  if(*hv){                                 /* !*hv means (0) empty slot    */
@@ -159,20 +165,29 @@ static L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
    if(!v->next)break;                                /* (2) link list end */
    v=v->next+jt->sympv;
  }}
+// not found, create new symbol
  RZ(v=symnew(hv)); 
- v->name=ra(a);
+ v->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
  R jt->cursymb=v;
 }    /* probe for assignment */
 
+// look up a non-locative name using the locale path
+// a is the name, g is the current locale, b is 1 if we should look in local nametable first
+// result is L* symbol-table slot for the name, or 0 if none
+// side effect: if the name is found in the local symbol table, av->e in the name is set to the symbol table entry that was found
 static L*jtsyrd1(J jt,A a,A g,B b){A*v,x,y;L*e;NM*av;
- if(b&&jt->local&&(e=probe(a,jt->local))){av=NAV(a); R av->e=e;}
- RZ(g&&(y=LOCPATH(g)));
- if(e=probe(a,g))R e;
+ if(b&&jt->local&&(e=probe(a,jt->local))){av=NAV(a); R av->e=e;}  // return if found local
+ RZ(g);  // make sure there is a locale...
+ if(e=probe(a,g))R e;  // and if the name is defined there, use it.  Note av->e is not set here
+ RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
  v=AAV(y); 
- DO(AN(y), x=v[i]; if(e=probe(a,stfind(1,AN(x),CAV(x))))break;);
- R e;
+ DO(AN(y), x=v[i]; if(e=probe(a,stfind(1,AN(x),CAV(x))))break;);  // return when name found.  Create path locale if it does not exist
+ R e;  // not found
 }    /* find name a where the current locale is g */ 
 
+// u is address of indirect locative: in a__b__c, it points to the b
+// n is the length of the entire locative (4 in this example)
+// result is address of symbol table to use for name lookup (if not found, it is created)
 static A jtlocindirect(J jt,I n,C*u){A a,g=jt->global,x,y;B lcl=1;C*s,*v,*xv;I k,xn;L*e;
  s=n+u;
  while(u<s){
@@ -188,17 +203,21 @@ static A jtlocindirect(J jt,I n,C*u){A a,g=jt->global,x,y;B lcl=1;C*s,*v,*xv;I k
   ASSERTN(xn,EVLENGTH,a);
   ASSERTN(LIT&AT(x),EVDOMAIN,a); 
   ASSERTN(vlocnm(xn,xv),EVILNAME,a);
-  RZ(g=stfind(1,xn,xv));
+  RZ(g=stfind(1,xn,xv));  // find locale st, creating it if not found
  }
  R g;
 }
 
+// look up a name (either simple or locative) using the full name resolution
+// result is symbol-table slot for the name if found, or 0 if not found
+// side effect: if symb is nonzero, *symb is set to the symbol table that was the base of the path
 L*jtsyrd(J jt,A a,A*symb){A g=jt->global;I m,n;NM*v;
  RZ(a);
  n=AN(a); v=NAV(a); m=v->m;
  if(n>m)RZ(g=NMILOC&v->flag?locindirect(n-m-2,2+m+v->s):stfind(1,n-m-2,1+m+v->s))
- if(symb)*symb=g;
- R syrd1(a,g,(B)(n==m));
+   // if locative, find the indirect locale to start on, or the named locale, creating the locale if not found
+ if(symb)*symb=g;  // save the starting locale if the user wants to
+ R syrd1(a,g,(B)(n==m));  // look up the name in that locale; if not a locative, look in the local symbol table first
 }
 
 
@@ -220,7 +239,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
 F1(jtdllsymget){R dllsymaddr(w,0);}
 F1(jtdllsymdat){R dllsymaddr(w,1);}
 
-
+// look up the name w using full name resolution.  Return the value if found, abort if not found
 F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
 
 F1(jtsymbrdlock){A y;
@@ -243,22 +262,38 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
  R 1;
 }    /* check for changes to stack */
 
+// assign symbol: assign name a in symbol table g to the value w
+// Non-error result is unused (mark)
 A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  RZ(a&&w&&g);
- n=AN(a); v=NAV(a); m=v->m;
- if(n==m)ASSERT(!(jt->local&&g==jt->global&&probe(a,jt->local)),EVDOMAIN)
+ n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
+ if(n==m)ASSERT(!(jt->local&&g==jt->global&&probe(a,jt->local)),EVDOMAIN)  // if non-locative, give error if there is a private
+    // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
  else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s):stfind(1,n-m-2,s));}
- RZ(e=probeis(a,g)); 
- if(jt->db)RZ(redef(w,e));
- wt=AT(w);
+    // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
+ // Now g has the symbol table to look in
+ RZ(e=probeis(a,g));   // set e to symbol-table slot to use
+ if(jt->db)RZ(redef(w,e));  // if debug, check for changes to stack
+ wt=AT(w);   // type of the value
  if(wt&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
- x=e->val; 
- ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);
+   // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
+   // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
+   // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
+ x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
+ ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
  if(!(x&&AFNJA&AFLAG(x))){
-  RZ(w=ra(AFNJA&AFLAG(w)?w:rca(w))); 
-  nvrredef(x); 
-  fa(x); 
-  e->val=w;
+  // name to be assigned is undefined, or is defined as a normal J name
+  // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
+  // For boxed arguments, rca may create a clone of the boxing tree.  kludge It's a pity to do this if the value doesn't need to be copied
+  RZ(w=ra(AFNJA&AFLAG(w)?w:rca(w)));
+  // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
+  // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
+  // that value until its last use.  So we defer the decrementing: we call nvrredef to INCREMENT the use count if the name is
+  // extant, and then unconditionally decrement the use count.  Later, when it's safe, we will go back to decrement the
+  // use count in the values we incremented here.  Yes, this could be done a smidgen faster, but that would require another
+  // version of nvrredef, and redefinitions are rare enough to make that not worthwhile.
+  if(x){nvrredef(x); fa(x);}   // if redefinition, modify the use counts
+  e->val=w;  // Now that the old value has been taken care of, install the new value
  }else if(x!=w){  /* replacing mapped data */
   if(wt&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
@@ -266,7 +301,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   ASSERT(AM(x)>=m,EVALLOC);
   AT(x)=wt; AN(x)=wn; AR(x)=wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
  }
- e->sn=jt->slisti;
- if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;
- R mark;
+ e->sn=jt->slisti;  // Save the script in which this name was defined
+ if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled
+ R mark;   // Return not meaningful
 }    /* a: name; w: value; g: symbol table */

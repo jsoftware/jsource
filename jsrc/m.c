@@ -285,6 +285,7 @@ A jtgah(J jt,I r,A w){A z;
  R z;
 }    /* allocate header */ 
 
+// clone w, returning the address of the cloned area
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);

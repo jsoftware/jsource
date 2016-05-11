@@ -170,12 +170,11 @@ void jepath(char* arg)
  if (FHS) {
   char _jdllver[20];
   strcpy(_jdllver,jversion);
-  strcpy(jdllver,jversion);
-  jdllver[1]='.';
-  strcpy(jdllver+2,_jdllver+1);
+  jdllver[1]=jdllver[3]='.';
+  jdllver[0]=_jdllver[0];
+  jdllver[2]=_jdllver[1];
+  strcpy(jdllver+4,_jdllver+2);
   strcpy(pathdll,JDLLNAME);
-  strcat(pathdll,".");
-  strcat(pathdll,jdllver);
  }
 #endif
 #endif

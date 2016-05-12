@@ -168,14 +168,27 @@ F2(jtagenda){
  R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,fxeachv(1L,a), VGERL, mr(w),lr(w),rr(w));
 }
 
+// When u^:gerund is encountered, we replace it with a verb that comes to one of these.
+// This creates several names:
+// sv->self data; fs=sv->f (the A block for the f operand); f1=f1 in sv->f (0 if sv->f==0); f2=f2 in sv->f (0 if sv->f==0);
+//                gs=sv->g (the A block for the g operand); g1=f1 in sv->g (0 if sv->g==0); g2=f2 in sv->g (0 if sv->g==0)
+
 
 static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
  d=fdep(hv[1]); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
+// this is u^:gerund y
+// Here, f1 is the original u and g1 is the original v; hs points to the gerund
+// First, we run hv[1]->f1 on y (this is gerund v1, the selector/power);
+// then we run (sv->id)->f2 on fs (the original u) and the result of selector/power (with self set to (sv->id):
+//     sv->id is the original conjunction, executed a second time now that we have the selector/power
+//     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
+// then we execute gerund v2 on y (with self set to v2)
+// then we execute ff on the result of (v2 y), with self set to ff
 static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->h);I d; 
- d=fdep(hv[1]); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ d=fdep(hv[1]); FDEPINC(d); ff=dfss2(fs,df1(w,hv[1]),ds(sv->id),sv->id==CPOWOP?0:ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
@@ -185,10 +198,14 @@ static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->h);I d;
 }
 
 static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
- d=fdep(hv[1]); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ d=fdep(hv[1]); FDEPINC(d); ff=dfss2(fs,df2(a,w,hv[1]),ds(sv->id),sv->id==CPOWOP?0:ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
+// called for gerund} or ^:gerund forms.  id is the pseudocharacter for the conjunction (} or ^:)
+// Creates a verb that will run jtgc[rl][12] to execute the gerunds on the xy arguments, and
+// then  
+// a is the original u, w is the original v
 A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  RZ(a&&w);
  ASSERT(VERB&AT(a)&&BOX&AT(w)||BOX&AT(a)&&VERB&AT(w),EVDOMAIN);

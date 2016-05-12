@@ -222,7 +222,7 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
    if(!nf&&ng&&!AR(g)){A c,d,ft,h;I m,n;
     RE(n=i0(g));
     switch(SGN(n)){
-     case -1:   RZ(h=inv(f)); ASSERT(CPOWOP!=ID(h),EVDOMAIN); R tdot(powop(h,sc(-n)));
+     case -1:   RZ(h=inv(f)); ASSERT(CPOWOP!=ID(h),EVDOMAIN); R tdot(powop(h,sc(-n),0));
      case  0:   R tpoly(v2(0L,1L));
      case  1:
       ft=tdot(f); RZ(c=d=coeff(ft)); m=AN(c);

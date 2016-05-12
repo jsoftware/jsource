@@ -277,7 +277,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG;A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,try=0;
    k=conword(*(2+AV(w1)),s);            /* what kind of word?    */
    if(k==CTRY)try=1;                    /* try is seen           */
    if(k==CASSERT){ASSERTCW(!as,i  ); as=1;} 
-   else if(1==as){ASSERTCW(!k, i-1); as=2; --n;}
+   else if(1==as){ASSERTCW(!k, i); as=2; --n;}
    d=n+cv;                              /* address control info  */
    d->type=k?(C)k:2==as?CASSERT:CBBLOCK;/* control type          */
    d->source=(US)i;                     /* source line number    */

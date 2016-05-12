@@ -53,6 +53,9 @@ word 'lucubrations'
 
 'control error' -: ex '3 : s' [ s=: 'assert.',lf,'if. y do. 1 end.'
 'control error' -: ex '3 : s' [ s=: 'assert.',lf,'assert. 0=y',lf,'2'
+'control error' -: ex '3 : s' [ s=: 'assert. if. do. end.'
+'control error' -: ex '3 : s' [ s=: 'assert. assert.'
+
 
 s=: 0 : 0
  if. y do. 'true' else. 'false' end.

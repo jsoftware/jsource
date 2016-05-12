@@ -520,7 +520,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
  }
  if(z){*AS(z)=m; AN(z)=m*c; R cv&VRI+VRD?cvz(cv,z):z;}
  else R raze(cut2(B01&AT(a)?a:eq(scc(sep),a),w,gs));
-}    /* ;@(<@f);.n or ([: ; <@f;.n) , monad and dyad */
+}    /* ;@((<@f);.n) or ([: ; <@f;.n) , monad and dyad */
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}
 

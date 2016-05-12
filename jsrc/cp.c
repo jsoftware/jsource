@@ -61,7 +61,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  x=*AAV(gs); if(!AR(x))RE(n=i0(vib(x)));
  if(0>n){RZ(fs=inv(fs)); n=-n;}
  if(n==IMAX||1==AR(x)&&!AN(x))R powseqlim(w,fs);
- R df1(w,powop(fs,IX(n)));
+ R df1(w,powop(fs,IX(n),0));
 }    /* f^:(<n) w */
 
 static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
@@ -140,16 +140,36 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
 static DF1(jtinv1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); R z;}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); R z;}
 
-static CS2(jtply2,  df1(w,powop(amp(a,fs),gs)))
+static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)))
 
 static DF1(jtpowg1){A h=VAV(self)->h; R df1(  w,*AAV(h));}
 static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
 
-static CS1(jtpowv1,  df1(  w,powop(fs,        CALL1(g1,  w,gs))))
-static CS2(jtpowv2,  df2(a,w,powop(fs,        CALL2(g2,a,w,gs))))
-static CS2(jtpowv2a, df1(  w,powop(VAV(fs)->f,CALL2(g2,a,w,gs))))
+// When u^:v is encountered, we replace it with a verb that comes to one of these.
+// This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:
+// sv->self data; fs=sv->f (the A block for the f operand); f1=f1 in sv->f (0 if sv->f==0); f2=f2 in sv->f (0 if sv->f==0);
+//                gs=sv->g (the A block for the g operand); g1=f1 in sv->g (0 if sv->g==0); g2=f2 in sv->g (0 if sv->g==0)
+// Here, f1 is the original u and g1 is the original v
+// We call g1 (=original v), passing in y (and gs as self).  This returns v y
+// We then call powop(original u,result of v y), which is the VN case for u^:(v y) and creates a derived verb to perform that function 
+// Finally df1 treats the powop result as self, calling self/powop->f1 (the appropriate power case based on v y)
+//   with the y arg as the w operand (and self/powop included to provide access to the original u)
+// We allow v to create a gerund, but we do not allow a gerund to create a gerund.
+// here for u^:v y
+static CS1(jtpowv1,  df1(  w,powop(fs,        CALL1(g1,  w,gs),(A)1)))
+// here for x u^:y y 
+static CS2(jtpowv2,  df2(a,w,powop(fs,        CALL2(g2,a,w,gs),(A)1)))
+// here for x u@:]^:v y and x u@]v y
+static CS2(jtpowv2a, df1(  w,powop(VAV(fs)->f,CALL2(g2,a,w,gs),(A)1)))
 
-F2(jtpowop){A hs;B b,r;I m,n;V*v;
+// This executes the conjunction u^:v to produce a derived verb.  If the derived verb
+// contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop
+// to recreate a new derived verb with the function specified by the result of v.
+// The result of v could be a gerund, which would cause the process to continue, so we put the
+// kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
+// from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
+// if self is 0.
+DF2(jtpowop){A hs;B b,r;I m,n;V*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
   default: ASSERTSYS(0,"powop");
@@ -168,6 +188,7 @@ F2(jtpowop){A hs;B b,r;I m,n;V*v;
      if(CTILDE==v->id&&CFROM==ID(v->f))f2=jtindexseqlim2;
      R CDERIV(CPOWOP,f1,f2,RMAX,RMAX,RMAX);
     }
+    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error
     R gconj(a,w,CPOWOP);
    }
    RZ(hs=vib(w));

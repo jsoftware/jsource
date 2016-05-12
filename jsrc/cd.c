@@ -205,7 +205,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
     default:
      if(0>p){RZ(f=inv(f)); p=-p;}
      if(q=ispoly(f)){RE(m=i0(vib(expn2(sc(q-1),g)))); R dpoly(df1(IX(1+m),tdot(w)));}
-     R diff0(atop(powop(f,sc(p-1)),f));
+     R diff0(atop(powop(f,sc(p-1),0),f));
    }
    break;
   case CQQ:
@@ -369,7 +369,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
     default:
      if(0>p){RZ(f=inv(f)); p=-p;}
      if(q=ispoly(f)){RE(m=i0(vib(expn2(sc(q-1),g)))); R ipoly(df1(IX(1+m),tdot(w)));}
-     R intg0(atop(powop(f,sc(p-1)),f));
+     R intg0(atop(powop(f,sc(p-1),0),f));
    }
    break;
   case CQQ:

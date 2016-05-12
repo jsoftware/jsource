@@ -34,25 +34,36 @@ A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG;A y,y0,yw,z;B wb;C*v,*vv;
 #include "cr_t.h"
 }
 
+// General setup for verbs with IRS that do not go through jtirs[12]
+// A verb u["n] using this function checks to see whether it has multiple cells; if so,
+// it calls here, giving a callback; we split the arguents into cells and call the callback,
+// which is often the same original function that called here.
 A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A y,y0,ya,yw,z;B ab,b,wb;
    C*u,*uu,*v,*vv;I acn,acr,af,ak,ar,*as,at,k,mn,n=1,p,q,*s,wcn,wcr,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  if(at&SPARSE||wt&SPARSE)R sprank2(a,w,fs,lr,rr,f2);
+ // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
  ar=AR(a); as=AS(a); acr=efr(ar,lr); af=ar-acr; ab=ARELATIVE(a);
  wr=AR(w); ws=AS(w); wcr=efr(wr,rr); wf=wr-wcr; wb=ARELATIVE(w);
- if(!af&&!wf)R CALL2(f2,a,w,fs);
+ if(!af&&!wf)R CALL2(f2,a,w,fs);  // if there's only one cell, run on it, that's the result
+ // multiple cells.  Loop through them.
+ // ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
+ // Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
  RE(acn=prod(acr,as+af)); ak=acn*bp(at); u=CAV(a)-ak; NEWYA;
  RE(wcn=prod(wcr,ws+wf)); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;
+ // b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
+ // mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
+ //  from shorter-frame argument
  b=af<=wf; p=b?wf:af; q=b?af:wf; s=b?ws:as; RE(mn=prod(p,s)); RE(n=prod(p-q,s+q));
- ASSERT(!ICMP(as,ws,q),EVLENGTH);
+ ASSERT(!ICMP(as,ws,q),EVLENGTH);  // error if frames are not same as prefix
+ // Initialize y? to hold data for the first cell; but if ? is empty, set y? to a cell of fills
  if(AN(a))MOVEYA else RZ(ya=reshape(vec(INT,acr,as+af),filler(a)));
  if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,wcr,ws+wf),filler(w)));
 #define VALENCE  2
 #define TEMPLATE 0
 #include "cr_t.h"
 }
-
 
 /* Integrated Rank Support                              */
 /* f knows how to compute f"r                           */

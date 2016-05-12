@@ -139,7 +139,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,l
     ++cv; --r; 
     cv->t=cv->x=0; cv->line=line[ci->i]; ++i;
     break;
-   case CDOF:
+   case CDOF:   // do. after for.
     if(!cv->t){BZ(forinit(cv,t)); t=0;}
     ++cv->j;
     if(cv->j<cv->n){
@@ -163,9 +163,9 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,l
     if(!cv->t){BASSERT(t&&NOUN&AT(t),EVCTRL); BZ(cv->t=ra(boxopen(t))); t=0;}
     i=ci->go;
     break;
-   case CDOSEL:
+   case CDOSEL:   // do. after case. or fcase.
     BASSERT(!t||NOUN&AT(t),EVCTRL);
-    i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; 
+    i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
     t=0; 
     break;
    case CDO:

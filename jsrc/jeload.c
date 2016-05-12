@@ -162,7 +162,7 @@ void jepath(char* arg)
 #endif
 #ifndef ANDROID
  strcpy(pathdll,path);
- strcpy(pathdll,filesepx);
+ strcat(pathdll,filesepx);
  strcat(pathdll,JDLLNAME);
 #ifndef _WIN32
  struct stat st;
@@ -170,10 +170,9 @@ void jepath(char* arg)
  if (FHS) {
   char _jdllver[20];
   strcpy(_jdllver,jversion);
-  jdllver[1]=jdllver[3]='.';
   jdllver[0]=_jdllver[0];
-  jdllver[2]=_jdllver[1];
-  strcpy(jdllver+4,_jdllver+2);
+  jdllver[1]='.';
+  strcat(jdllver+2,_jdllver+1);
   strcpy(pathdll,JDLLNAME);
  }
 #endif

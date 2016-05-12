@@ -101,9 +101,9 @@ NB. Errors
 'length error' -: 3 4 5 + etx i.4 3
 'length error' -: 3 4 5 +~etx i.4 3
 
-(0$0) -: (i. 0 3) +"1 (i. 0 2)  NB. No error - 0 used for cell result
-(0$0) -: (i. 0 3) +"1 2 (i. 0 2 2)  NB. No error - 0 used for cell result
-(4 0$0) -: (i. 4 0 3) +"1 2 (i. 4 2 2)  NB. No error - 0 used for cell result
+NB. not instated yet (0$0) -: (i. 0 3) +"1 (i. 0 2)  NB. No error - 0 used for cell result
+NB. not instated yet (0$0) -: (i. 0 3) +"1 2 (i. 0 2 2)  NB. No error - 0 used for cell result
+NB. not instated yet (4 0$0) -: (i. 4 0 3) +"1 2 (i. 4 2 2)  NB. No error - 0 used for cell result
 'length error' -: (i. 4 0 3) +"1 2 etx (i. 1 2 2)
 'length error' -: (i. 4 0 3) +"1 2 etx (i. 0 2 2)
 

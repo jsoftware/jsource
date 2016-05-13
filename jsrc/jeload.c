@@ -230,6 +230,8 @@ int jefirst(int type,char* arg)
 	strcat(input,"[AndroidPackage_z_=:'");
 	strcat(input,AndroidPackage);
 	strcat(input,"'");
+#elif defined(RASPI)
+	strcat(input,"[IFRASPI_z_=:1");
 #endif
 	strcat(input,"[BINPATH_z_=:'");
 	p=path;

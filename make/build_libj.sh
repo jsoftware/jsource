@@ -20,7 +20,7 @@ LINK=" $jgit/asm/linuxasm64.o -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 raspberry_j32) # linux raspian arm
 TARGET=libj.so
-COMPILE="$common -fsigned-char -DC_64=0 -DC_CD_ARMHF"
+COMPILE="$common -fsigned-char -DC_64=0 -DC_CD_ARMHF -DRASPI"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

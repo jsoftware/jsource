@@ -14,7 +14,7 @@ COMPILE=" -fPIC -O1 -DREADLINE"
 LINK=" $jgit/unix/libedit64.a -ldl -lncursesw -o jconsole "
 ;;
 raspberry_j32)
-COMPILE=" -fPIC -O1 -DREADLINE"
+COMPILE=" -fPIC -O1 -DREADLINE -DRASPI"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 darwin_j32)

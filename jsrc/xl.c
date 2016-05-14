@@ -14,8 +14,9 @@ static B jtdolock(J jt,B lk,F f,I i,I n){ASSERT(0,EVNONCE);}
 #if SY_WIN32 && SYS&SYS_DOS && !SY_WINCE
 #define LOCK 1
 #include <sys/locking.h>
+#include <io.h>
 
-extern int _locking(int,int,long);
+// extern int _locking(int,int,long);
 
 static B jtdolock(J jt,B lk,F f,I i,I n){I e;long c;fpos_t v; fpos_t q;
  c=fgetpos(f,(fpos_t*)&q);

@@ -150,6 +150,146 @@ end.
 'control error' -: g4 etx 4
 
 
-4!:55 ;:'f0 f1 f2 f3 f4 f5 g1 g2 g3 g4 x'
+
+t =: 3 : 0
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  while. y =. y , 'd' do.
+    select. 1 [ y =. y , 'e'
+    case. 0 [ y =. y , 'f' do.
+      y =. y , 'g'
+    case. 1 [ y =. y , 'h' do.
+      y =. y , 'i'
+      break.
+      y =. y , 'j'
+    end. 
+    y =. y , 'k'
+  end.
+  y =. y , 'm'
+end.
+y , 'n'
+)
+'abdefhimcdefhimn'-: t ''
+
+t =: 3 : 0
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  while. 10 > #y =. y , 'd' do.
+    select. 1 [ y =. y , 'e'
+    case. 0 [ y =. y , 'f' do.
+      y =. y , 'g'
+    case. 1 [ y =. y , 'h' do.
+      y =. y , 'i'
+      continue.
+      y =. y , 'j'
+    end. 
+    y =. y , 'k'
+  end.
+  y =. y , 'm'
+end.
+y , 'n'
+)
+'abdefhidefhidmcdmn'-: t ''
+
+t =: 3 : 0
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  while. 20 > #y =. y , 'd' do.
+    select. 1 [ y =. y , 'e'
+    case. 0 [ y =. y , 'f' do.
+      y =. y , 'g'
+    case. 1 [ y =. y , 'h' do.
+      y =. y , 'i'
+      select. 2 [ y =. y , 'j'
+      case. 1 [ y =. y , 'k' do.
+        y =. y , 'm'
+      case. 2 [ y =. y , 'n' do.
+        y =. y , 'o'
+        break.
+        y =. y , 'p'
+      end.
+      y =. y , 'q'
+    end. 
+    y =. y , 'r'
+  end.
+  y =. y , 's'
+end.
+y , 't'
+)
+'abdefhijknoscdefhijknost'-: t ''
+t =: 3 : 0
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  while. 10 > #y =. y , 'd' do.
+    select. 1 [ y =. y , 'e'
+    case. 0 [ y =. y , 'f' do.
+      y =. y , 'g'
+    case. 1 [ y =. y , 'h' do.
+      y =. y , 'i'
+      select. 2 [ y =. y , 'j'
+      case. 1 [ y =. y , 'k' do.
+        y =. y , 'm'
+      case. 2 [ y =. y , 'n' do.
+        y =. y , 'o'
+        continue.
+        y =. y , 'p'
+      end.
+      y =. y , 'q'
+    end. 
+    y =. y , 'r'
+  end.
+  y =. y , 's'
+end.
+y , 't'
+)
+'abdefhijknodscdst'-: t ''
+t =: 3 : 0
+select. y =. y , 'z'
+select.
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  while. 20 > #y =. y , 'd' do.
+    select. 1 [ y =. y , 'e'
+    case. 0 [ y =. y , 'f' do.
+      y =. y , 'g'
+    case. 1 [ y =. y , 'h' do.
+      y =. y , 'i'
+      select. 2 [ y =. y , 'j'
+      case. 1 [ y =. y , 'k' do.
+        y =. y , 'm'
+      case. 2 [ y =. y , 'n' do.
+        y =. y , 'o'
+        break.
+        y =. y , 'p'
+      end.
+      y =. y , 'q'
+    end. 
+    y =. y , 'r'
+  end.
+  y =. y , 's'
+end.
+1
+case. 1 [ y =. y , 'y' do.
+  y =. y , 'x'
+  0
+case. 5 [ y =. y , 'B' do.
+end.
+case. 1 [ y =. y , 'w' do.
+  y =. y , 'v'
+case. 0 [ y =. y , 'u' do.
+  y =. y , 't'
+end.
+y , 'A'
+)
+'zabdefhijknoscdefhijknosyxwutA'-: t ''
+
+
+
+4!:55 ;:'f0 f1 f2 f3 f4 f5 g1 g2 g3 g4 x t'
 
 

@@ -316,6 +316,23 @@ t=: 0 : 0
 
 'control error' -: ex '3 : t'    NB. catcht nested in try
 
+t =: 3 : 0  NB. continue. in try.
+y =. y , 'a'
+for_s. 'bc' do.
+  y =. y , s
+  try.
+    y =. y , 'd'
+    continue.
+    y =. y , 'e'
+  catch.
+    y =. y , 'f'
+  end.
+  y =. y , 'g'
+end.
+y , 'h'
+)
+'abdcdh'-: t ''
+
 
 4!:55 ;:'erase f fa fb fc fd fe ff fg fh fi fj goo sub t write x y'
 

@@ -135,6 +135,23 @@ I bpref(I t){  // the old way, for reference until CTLZ is shaken down
 }}
 #endif
 
+// default CTTZ to use if there is no compiler intrinsic
+#if !defined(CTTZ)
+// Return bit #of lowest bit set in w (considering only low 32 bits)
+// if no bit set, result is undefined (1 here)
+I CTTZ(I w){
+    I t = 1;
+    if (0 == (w & 0xffff)){ w >>= 16; t += 16; }
+    if (0 == (w & 0xff)){ w >>= 8; t += 8; }
+    if (0 == (w & 0xf)){ w >>= 4; t += 4; }
+    if (0 == (w & 0x3)){ w >>= 2; t += 2; }
+    R t - (w & 1);
+}
+// same, except returns 32 if no bit set
+I CTTZZ(I w){ R w & 0xffffffff ? CTTZ(w) : 32; }
+#endif
+
+
 I bsum(I n,B*b){I q,z=0;UC*u;UI t,*v;
  v=(UI*)b; u=(UC*)&t; q=n/(255*SZI);
 #if SY_64

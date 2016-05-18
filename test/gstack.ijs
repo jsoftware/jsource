@@ -66,8 +66,8 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '($: + >:) 0'
 'stack error' -: ex '(>: + $:) 0'
 
-'domain error' -: ex 'ff^:] gg&0~`hh'   NB. now not allowed
-'domain error' -: ex '* ^:]  +&0~`- '
+'stack error' -: ex 'ff^:] gg&0~`hh'   NB. now not allowed
+'stack error' -: ex '* ^:]  +&0~`- '
 'stack error' -: ex '* ^:]  +^:]`- '
 'stack error' -: ex 't}   t=: +^:]`-'
 'stack error' -: ex 't`:0 t=: +^:]`-'

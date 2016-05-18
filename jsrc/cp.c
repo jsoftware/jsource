@@ -188,7 +188,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
      if(CTILDE==v->id&&CFROM==ID(v->f))f2=jtindexseqlim2;
      R CDERIV(CPOWOP,f1,f2,RMAX,RMAX,RMAX);
     }
-    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error
+//    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
     R gconj(a,w,CPOWOP);
    }
    RZ(hs=vib(w));

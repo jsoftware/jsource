@@ -356,7 +356,7 @@
 
 // For Gnu or its derivatives: (these have not been tested)
 //#if defined(__GNUC__) || defined( __clang__)
-//#define CTTZ(w) _builtin__ctzl((UINT)(w))
+//#define CTTZ(w) __builtin__ctzl((UINT)(w))
 //#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 //#endif
 

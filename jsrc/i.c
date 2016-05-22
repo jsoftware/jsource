@@ -119,7 +119,19 @@ static B jtevinit(J jt){A q,*v;
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
 static B jtconsinit(J jt){D y;
- jt->assert=1;
+#if AUDITCOMPILER
+// verify that CTLZ works correctly, and that all calls to BP return what they used to
+if (CTTZ(0x1000LL) != 12)*(I *)0 = 100;   // Create program check if error
+if (CTTZZ(0x80000000LL) != 31)*(I *)1 = 101;   // Create program check if error
+if (CTTZZ(0x100000002LL) != 1)*(I *)2 = 102;   // Create program check if error
+if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
+// verify that (I)x >> does sign-extension.  jtmult relies on that
+if(((-1) >> 1) != -1)*(I *)4 = 104;
+#endif
+#if AUDITBP
+DO(32, if (bp(1LL << i) != bpref(1LL << i))*(I *)5 = i;)
+#endif
+jt->assert = 1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
  y=1.0; DO(44, y*=0.5;); jt->ct=jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;

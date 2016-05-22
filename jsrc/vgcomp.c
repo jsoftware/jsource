@@ -58,15 +58,15 @@ int jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   if(t!=at)RZ(a=cvt(t,a));
   if(t!=wt)RZ(w=cvt(t,w));
   av=CAV(a); wv=CAV(w);
-  switch(t){
+  switch(CTTZ(t)){
    default:   COMPLOOQ (UC,m  );         break;
-   case C2T:  COMPLOOQ (US,m  );         break;
-   case INT:  COMPLOOQ (I, m  );         break;
-   case FL:   COMPLOOQ (D, m  );         break;
-   case CMPX: COMPLOOQ (D, m+m);         break;
-   case XNUM: COMPLOOQG(X, m, xcompare); break;
-   case RAT:  COMPLOOQG(Q, m, QCOMP   ); break;
-   case BOX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){ 
+   case C2TX:  COMPLOOQ (US,m  );         break;
+   case INTX:  COMPLOOQ (I, m  );         break;
+   case FLX:   COMPLOOQ (D, m  );         break;
+   case CMPXX: COMPLOOQ (D, m+m);         break;
+   case XNUMX: COMPLOOQG(X, m, xcompare); break;
+   case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
+   case BOXX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){ 
     case 0: {COMPDCLQ(A);int j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
     case 1: {COMPDCLQ(A);int j; DO(m, if(j=compare(        x[i],   (A)AABS(y[i],w)))R j;);} break;
     case 2: {COMPDCLQ(A);int j; DO(m, if(j=compare((A)AABS(x[i],a),        y[i]   ))R j;);} break;

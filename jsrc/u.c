@@ -8,7 +8,8 @@
 
 #if SY_64
 
-I jtmult(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x00000000ffffffff;
+#if defined(OBSOLETE)
+static I jtmultold(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x00000000ffffffff;
  if(!x||!y)R 0;
  neg=0>x!=0>y;
  if(0>x){x=-x; ASSERT(0<x,EVLIMIT);} p=m&(x>>32); q=m&x;
@@ -19,11 +20,46 @@ I jtmult(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x00000000ffffffff;
  z=c+((a+b)<<32);
  R neg?-z:z;
 }
+#endif
 
-I jtprod(J jt,I n,I*v){I*u,z;
+// If jt is 0, don't call jsignal when there is an error
+// Returns x*y, or 0 if there is an error (and jsignal might have been called)
+I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xffffffff00000000LL;
+  I const lmsb = 0x0000000080000000LL; I const hlsb = 0x0000000100000000;
+ // if each argument fits in unsigned-32, do unsigned multiply (normal case); make sure result doesn't overflow
+ if(!(hm &(x|y))){if(0 > (z = (I)((UI)x * (UI)y))){if(jt)jsignal(EVLIMIT);R 0;}}
+ // if each argument fits in signed-32, do signed multiply; no overflow possible
+ else if (!(hm &((x+0x80000000LL)|(y+0x80000000LL))))z = x * y;
+ else {
+   // if x and y BOTH have signed significance in high 32 bits, that's too big; and
+   // MAXNEG32*MAXNEG32 is as well, because it needs 65 bits to be represented.
+   // all the low 32 bits of x/y are unsigned data
+  if(((hm & (x + (x & hlsb))) && (hm & (y + (y & hlsb)))) || ((x == hm) && (y == hm))){if(jt)jsignal(EVLIMIT); R 0;}
+
+  // otherwise, do full 64-bit multiply.  Don't convert neg to pos, because the audit for positive fails on MAXNEG * 1
+  I xh = x>>32, xl = x&lm, yh = y>>32, yl = y&lm;
+  I xlyl = xl*yl;  // partial products
+  // Because only one argument can have signed significance in high 32 bits, the
+  // sum of lower partial products must fit in 96 bits.  Get bits 32..95 of that,
+  // and fail if there is significance in 64..95
+  // We need all 4 partial products, but we can calculate xh*yh and xh*yl at the same time,
+  // by multiplying xh by the entire y.
+  z = xh*y+yh*xl+((UI)xlyl>>32);
+  if ((hm & (z + lmsb))){if(jt)jsignal(EVLIMIT); R 0;}
+  // Combine bits 32..63 with 0..31 to produce the result
+  z = (z<<32) + (xlyl&lm);
+ }
+ R z;
+}
+
+I jtprod(J jt,I n,I*v){I z;
  if(1>n)R 1;
- u=v; DO(n, if(!*u++)R 0;); 
- z=*v++; DO(n-1, z=mult(z,*v++);); 
+ // We want to make sure that if any of the numbers being multiplied is 0, we return 0 with no error.
+ // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
+ // the error assertion.  Then, at the end, if the product is 0, it must mean that there was an error, and
+ // we report it then.  This way we don't need a separate pass to check for 0.
+ RZ(z=*v++); DO(n-1, RZ(v[i]);z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
+ ASSERT(z!=0,EVLIMIT)
  R z;
 }
 
@@ -60,7 +96,17 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
  R b;
 }    /* boolean mask from integers: p=(i.n)e.w */
 
-I bp(I t){
+// For each Type, the length of a data-item of that type.  The order
+// here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
+// Example: LITX is 1, so location 1 contains sizeof(C)
+extern I typesizes[] = {
+sizeof(B), sizeof(C), sizeof(I), sizeof(D), sizeof(Z), sizeof(A), sizeof(X), sizeof(Q),  // B01 LIT INT FL CMPX BOX XNUM RAT
+-1,        -1,        sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P),   // BIT - SB01 SLIT SINT SFL SCMPX SBOX
+sizeof(SB), sizeof(C2), sizeof(V), sizeof(V), sizeof(V), sizeof(C), sizeof(I), sizeof(I), // SBT C2T VERB ADV CONJ ASGN MARK SYMB
+sizeof(CW), sizeof(C), sizeof(I), sizeof(I), sizeof(DX), sizeof(ZX), -1,       -1         // CONW NAME LPAR RPAR XD XZ - -
+};
+#if AUDITBP
+I bpref(I t){  // the old way, for reference until CTLZ is shaken down
  switch(t){
   case B01:  R sizeof(B);
   case LIT:  case ASGN: case NAME: 
@@ -87,15 +133,47 @@ I bp(I t){
   default:   R -1;
 #endif
 }}
-
-I bsum(I n,B*b){I q,z=0;UC*u;UI t,*v;
- v=(UI*)b; u=(UC*)&t; q=n/(255*SZI);
-#if SY_64
- DO(q, t=0; DO(255, t+=*v++;); z+=u[0]+u[1]+u[2]+u[3]+u[4]+u[5]+u[6]+u[7];);
-#else
- DO(q, t=0; DO(255, t+=*v++;); z+=u[0]+u[1]+u[2]+u[3];);
 #endif
- u=(UC*)v; DO(n-q*255*SZI, z+=*u++;);
+
+// default CTTZ to use if there is no compiler intrinsic
+#if !defined(CTTZ)
+// Return bit #of lowest bit set in w (considering only low 32 bits)
+// if no bit set, result is undefined (1 here)
+I CTTZ(I w){
+    I t = 1;
+    if (0 == (w & 0xffff)){ w >>= 16; t += 16; }
+    if (0 == (w & 0xff)){ w >>= 8; t += 8; }
+    if (0 == (w & 0xf)){ w >>= 4; t += 4; }
+    if (0 == (w & 0x3)){ w >>= 2; t += 2; }
+    R t - (w & 1);
+}
+// same, except returns 32 if no bit set
+I CTTZZ(I w){ R w & 0xffffffff ? CTTZ(w) : 32; }
+#endif
+
+
+#if BW==64
+#define LGSZI 3
+#define ALTBYTES 0x00ff00ff00ff00ffLL
+#else
+#define LGSZI 2
+#define ALTBYTES 0x00ff00ffLL
+#endif
+
+I bsum(I n,B*b){I q=n>>LGSZI,z=0;UC*u;UI t,*v;
+ v=(UI*)b;
+ // Do word-size sections, max 255 at a time, till all finished
+ while(q>0){
+  t=0; DO(MIN(q,255), t+=*v++;); q-=255;  // sig in ffffffffffffffff
+  t=(t&ALTBYTES)+((t>>8)&ALTBYTES);   // sig in 01ff01ff01ff01ff
+#if LGSZI==3
+  t = (t>>32) + t;  // sig in xxxxxxxx03ff03ff
+#endif
+  t = (t>>16) + t;  // sig in xxxxxxxxxxxx07ff
+  z = z + (t & 0xffff);   // clear garbage, add sig
+ }
+// finish up any remnant, 7 bytes or less
+ u=(UC *)v;DO(n&((1<<LGSZI)-1), z+=*u++;);
  R z;
 }    /* sum of boolean vector b */
 

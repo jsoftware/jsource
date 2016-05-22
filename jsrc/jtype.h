@@ -157,11 +157,11 @@ typedef I SI;
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
-#define DENSE           (NOUN&~SPARSE)
 #define NUMERIC         (B01+BIT+INT+FL+CMPX+XNUM+RAT+XD+XZ+SB01+SINT+SFL+SCMPX)
 #define DIRECT          (LIT+C2T+B01+BIT+INT+FL+CMPX+SBT)
 #define JCHAR           (LIT+C2T+SLIT)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBOX+SBT)
+#define DENSE           (NOUN&~SPARSE)
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)

@@ -7,6 +7,9 @@
 #include "js.h"
 #endif
 
+// If you are porting to a new compiler or architecture, see the bottom of this file
+// for instructions on defining the CTTZ macros
+
 #if SY_WINCE
 #include "..\cesrc\cecompat.h"
 #endif
@@ -265,7 +268,6 @@
 #define VAL1            '\001'
 #define VAL2            '\002'
 
-
 #if C_LE
 #define B0000   0x00000000
 #define B0001   0x01000000
@@ -325,6 +327,61 @@
 #include "m.h"
 #include "a.h"
 #include "s.h"
+
+
+// CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
+// CTTZZ(w) does the same, but returns 32 if w is 0
+// CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
+// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
+// since we don't require CTLZ yet, we defer that problem to another day
+
+// CTTZ uses the single-instruction count-trailing-zeros instruction to convert
+// a 1-bit mask to a bit number.  If this instruction is available on your architecture/compiler,
+// you should use the compiler intrinsic to create this instruction, and define the CTTZ and CTTZZ
+// macros to use the instruction inline.  It is used enough in the J engine to make a difference.
+
+// If you set AUDITCOMPILER to 1, i.c will include code to test CTTZ (and signed shift) on startup and crash if it
+// does not perform properly, as a debugging aid.
+
+// If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
+// for the complete spec for CTTZ and CTTZZ.
+
+// For Visual Studio compilers:
+#if defined(_MSC_VER) && SY_64
+#include <intrin.h>
+#define CTTZ(w) _tzcnt_u32((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#endif
+// The same code should work on 32-bit machines, but that has not been tested
+
+// For Gnu or its derivatives: (these have not been tested)
+//#if defined(__GNUC__) || defined( __clang__)
+//#define CTTZ(w) _builtin__ctzl((UINT)(w))
+//#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+//#endif
+
+// Insert other compilers/architectures here
+
+// Insert CTLZ here if CTTZ is not available
+
+// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macro
+// CTLZ, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
+// CTTZ will be defined:
+#if defined(CTLZ) && !defined(CTTZ)
+#define CTTZ(w) (31-CTLZ((w)&-(w)))
+#define CTTZZ(w) (0xffffffff&(w) ? CTTZ(w) : 32)
+#endif
+
+// If CTTZ is not defined, the following code will use the default from u.c:
+#if !defined(CTTZ)
+extern I CTTZ(I);
+extern I CTTZZ(I);
+#endif
+
+// Set these switches for testing
+#define AUDITBP 0  // Verify that bp() returns expected data
+#define AUDITCOMPILER 0  // Verify compiler features CTTZ, signed >>
+
 
 // JPFX("here we are\n")
 // JPF("size is %i\n", v)

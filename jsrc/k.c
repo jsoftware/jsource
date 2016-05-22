@@ -6,7 +6,7 @@
 #include "j.h"
 
 #define KF1(f)          B f(J jt,A w,void*yv)
-#define CVCASE(a,b)     ((a)+1024*(b))
+#define CVCASE(a,b)     (((a)<<3)+(b))   // The main cases fit in low 8 bits of mask
 
 
 #define TOBIT(T,AS)   {T*v=(T*)wv,x; \
@@ -248,51 +248,65 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
    SPB(yp,x,cvt(t1,SPA(wp,x)));
    R 1;
  }
+ // Now known to be non-sparse
  n=AN(w); wt=AT(w); wv=AV(w);
  if(t==wt){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  GA(*y,t,n,r,s); yv=AV(*y); 
  if(t&CMPX)fillv(t,n,(C*)yv); 
  if(!n)R 1;
- switch(CVCASE(t,wt)){
-  case CVCASE(LIT, C2T ): R C1fromC2(w,yv);
-  case CVCASE(C2T, LIT ): R C2fromC1(w,yv);
-  case CVCASE(BIT ,B01 ): R cvt2bit(w,yv);
-  case CVCASE(INT ,B01 ): {I*x=    yv;B*v=(B*)wv; DO(n,*x++   =*v++;);} R 1;
-  case CVCASE(XNUM,B01 ): R XfromB(w,yv);
-  case CVCASE(RAT ,B01 ): GA(d,XNUM,n,r,s); R XfromB(w,AV(d))&&QfromX(d,yv);
-  case CVCASE(FL  ,B01 ): {D*x=(D*)yv;B*v=(B*)wv; DO(n,*x++   =*v++;);} R 1;
-  case CVCASE(CMPX,B01 ): {Z*x=(Z*)yv;B*v=(B*)wv; DO(n,x++->re=*v++;);} R 1;
-  case CVCASE(BIT ,INT ): R cvt2bit(w,yv);
-  case CVCASE(B01 ,INT ): R BfromI(w,yv);
-  case CVCASE(XNUM,INT ): R XfromI(w,yv);
-  case CVCASE(RAT ,INT ): GA(d,XNUM,n,r,s); R XfromI(w,AV(d))&&QfromX(d,yv);
-  case CVCASE(FL  ,INT ): {D*x=(D*)yv;I*v=    wv; DO(n,*x++   =(D)*v++;);} R 1;
-  case CVCASE(CMPX,INT ): {Z*x=(Z*)yv;I*v=    wv; DO(n,x++->re=(D)*v++;);} R 1;
-  case CVCASE(BIT ,FL  ): R cvt2bit(w,yv);
-  case CVCASE(B01 ,FL  ): R BfromD(w,yv);
-  case CVCASE(INT ,FL  ): R IfromD(w,yv);
-  case CVCASE(XNUM,FL  ): R XfromD(w,yv);
-  case CVCASE(RAT ,FL  ): R QfromD(w,yv);
-  case CVCASE(CMPX,FL  ): {Z*x=(Z*)yv;D t,*v=(D*)wv; DO(n, t=*v++; x++->re=t||_isnan(t)?t:0.0;);} R 1;  /* -0 to 0*/
-  case CVCASE(BIT ,CMPX): GA(d,FL,n,r,s); RZ(DfromZ(w,AV(d))); R cvt2bit(d,yv);
-  case CVCASE(B01 ,CMPX): GA(d,FL,n,r,s); RZ(DfromZ(w,AV(d))); R BfromD(d,yv);
-  case CVCASE(INT ,CMPX): GA(d,FL,n,r,s); RZ(DfromZ(w,AV(d))); R IfromD(d,yv);
-  case CVCASE(XNUM,CMPX): GA(d,FL,n,r,s); RZ(DfromZ(w,AV(d))); R XfromD(d,yv);
-  case CVCASE(RAT ,CMPX): GA(d,FL,n,r,s); RZ(DfromZ(w,AV(d))); R QfromD(d,yv);
-  case CVCASE(FL  ,CMPX): R DfromZ(w,yv);
-  case CVCASE(B01 ,XNUM): R BfromX(w,yv);
-  case CVCASE(INT ,XNUM): R IfromX(w,yv);
-  case CVCASE(RAT ,XNUM): R QfromX(w,yv);
-  case CVCASE(FL  ,XNUM): R DfromX(w,yv);
-  case CVCASE(CMPX,XNUM): GA(d,FL,  n,r,s); RZ(DfromX(w,AV(d))); R ccvt(t,d,y);
-  case CVCASE(B01 ,RAT ): GA(d,XNUM,n,r,s); RZ(XfromQ(w,AV(d))); R BfromX(d,yv);
-  case CVCASE(INT ,RAT ): GA(d,XNUM,n,r,s); RZ(XfromQ(w,AV(d))); R IfromX(d,yv);
-  case CVCASE(XNUM,RAT ): R XfromQ(w,yv);
-  case CVCASE(FL  ,RAT ): R DfromQ(w,yv);
-  case CVCASE(CMPX,RAT ): GA(d,FL,  n,r,s); RZ(DfromQ(w,AV(d))); R ccvt(t,d,y);
-  default:                ASSERT(0,EVDOMAIN);
-}}
+ // Perform the conversion based on data types
+ // For branch-table efficiency, we split the C2T and BIT conversions into one block, and
+ // the rest in another
+ if ((t|wt)&(C2T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+   // we must account for all NOUN types.  Low 8 bits have most of them, and we know type can't be sparse.  This picks up the others
+  ASSERT(!((t|wt)&(SBT+XD+XZ)),EVDOMAIN);  // No conversions for these types
+  switch (CVCASE(t,wt)){  // This version doesn't use CTTZ, but it works anyway
+   case CVCASE(LIT, C2T): R C1fromC2(w, yv);
+   case CVCASE(C2T, LIT): R C2fromC1(w, yv);
+   case CVCASE(BIT, B01): R cvt2bit(w, yv);
+   case CVCASE(BIT, INT): R cvt2bit(w, yv);
+   case CVCASE(BIT, FL): R cvt2bit(w, yv);
+   case CVCASE(BIT, CMPX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
+   default:                ASSERT(0, EVDOMAIN);
+  }
+ }
+ switch (CVCASE(CTTZ(t),CTTZ(wt))){
+  case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
+  case CVCASE(XNUMX, B01X): R XfromB(w, yv);
+  case CVCASE(RATX, B01X): GA(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
+  case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
+  case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DO(n, x++->re = *v++;); } R 1;
+  case CVCASE(B01X, INTX): R BfromI(w, yv);
+  case CVCASE(XNUMX, INTX): R XfromI(w, yv);
+  case CVCASE(RATX, INTX): GA(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
+  case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DO(n, *x++ = (D)*v++;); } R 1;
+  case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DO(n, x++->re = (D)*v++;); } R 1;
+  case CVCASE(B01X, FLX): R BfromD(w, yv);
+  case CVCASE(INTX, FLX): R IfromD(w, yv);
+  case CVCASE(XNUMX, FLX): R XfromD(w, yv);
+  case CVCASE(RATX, FLX): R QfromD(w, yv);
+  case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
+  case CVCASE(B01X, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R BfromD(d, yv);
+  case CVCASE(INTX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R IfromD(d, yv);
+  case CVCASE(XNUMX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R XfromD(d, yv);
+  case CVCASE(RATX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R QfromD(d, yv);
+  case CVCASE(FLX, CMPXX): R DfromZ(w, yv);
+  case CVCASE(B01X, XNUMX): R BfromX(w, yv);
+  case CVCASE(INTX, XNUMX): R IfromX(w, yv);
+  case CVCASE(RATX, XNUMX): R QfromX(w, yv);
+  case CVCASE(FLX, XNUMX): R DfromX(w, yv);
+  case CVCASE(CMPXX, XNUMX): GA(d, FL, n, r, s); RZ(DfromX(w, AV(d))); R ccvt(t, d, y);
+  case CVCASE(B01X, RATX): GA(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R BfromX(d, yv);
+  case CVCASE(INTX, RATX): GA(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R IfromX(d, yv);
+  case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
+  case CVCASE(FLX, RATX): R DfromQ(w, yv);
+  case CVCASE(CMPXX, RATX): GA(d, FL, n, r, s); RZ(DfromQ(w, AV(d))); R ccvt(t, d, y);
+  default:                ASSERT(0, EVDOMAIN);
+ }
+}
+
+
 
 A jtcvt(J jt,I t,A w){A y;B b;I*oq; 
  oq=jt->rank; jt->rank=0; b=ccvt(t,w,&y); jt->rank=oq; 

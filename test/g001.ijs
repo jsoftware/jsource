@@ -26,9 +26,11 @@ first  -: 'Cogito'
 second -: 'ergo'
 third  -: i.12
 
-('a_man';'j_k') =: 123 456
+('a_man';'j_k';'j_k_l';'j_k_l_m') =: 123 456 789 012
 a_man -: 123
 j_k  -: 456
+j_k_l  -: 789
+j_k_l_m  -: 012
 
 names =: ' abc def ghi'
 0 0$ (names)   =: i. 3 3
@@ -86,6 +88,15 @@ a=:12
 
 'ill-formed name'   -: ". etx '''p+9'' =. 9'
 'ill-formed name'   -: ". etx '''3ab'' =. 9'
+'ill-formed name'   -: ". etx '''p___'' =. 9'
+'ill-formed name'   -: ". etx '''p__a_b_c'' =. 9'
+'ill-formed name'   -: ". etx '''p__a_b_c_d'' =. 9'
+'ill-formed name'   -: ". etx '''p__a_b_c_d_e'' =. 9'
+'ill-formed name'   -: ". etx '''p__9ab'' =. 9'
+'ill-formed name'   -: ". etx '''p__9'' =. 9'
+'ill-formed name'   -: ". etx '''p__ab_'' =. 9'
+'ill-formed name'   -: ". etx '''p__ab__9'' =. 9'
+
 
 'domain error'      -: ". etx '(''p'';2 3  ) =. 9'
 'domain error'      -: ". etx '(''p'';3.5  ) =. 9'
@@ -203,7 +214,7 @@ fb 5
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first'
-4!:55 ;:'ghi global j_k lf local names p pqr q r second sscript'
+4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r second sscript'
 4!:55 ;:'sum t third write x y'
 
 

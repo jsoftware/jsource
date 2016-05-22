@@ -35,22 +35,16 @@ extern void grcol(I,I,I*,I,I*,I*,const I,US*,int,int,int);
 
 extern void jtmsort(J,I,I*,I*);
 
-#define IND2(x)  \
-  switch(x){                \
-   case BS00: ii=0; break;  \
-   case BS01: ii=1; break;  \
-   case BS10: ii=2; break;  \
-   case BS11: ii=3;         \
-  }
+// Convert 2 Booleans to a code 0-3
+#if C_LE
+#define IND2(x) {US xx = (x); ii = ((xx<<9)|xx)>>8;}
+#else
+#define IND2(x) {US xx = (x); ii = 0x3&((xx>>7)|xx);}
+#endif
 
-#define IND4(x)  \
-  switch(x){                                            \
-   case B0000: ii=0; break;  case B1000: ii= 8; break;  \
-   case B0001: ii=1; break;  case B1001: ii= 9; break;  \
-   case B0010: ii=2; break;  case B1010: ii=10; break;  \
-   case B0011: ii=3; break;  case B1011: ii=11; break;  \
-   case B0100: ii=4; break;  case B1100: ii=12; break;  \
-   case B0101: ii=5; break;  case B1101: ii=13; break;  \
-   case B0110: ii=6; break;  case B1110: ii=14; break;  \
-   case B0111: ii=7; break;  case B1111: ii=15;         \
-  }
+// Convert 4 Booleans to a code 0-15
+#if C_LE
+#define IND4(x) {UINT xx = (x); ii = ((xx<<27)|(xx<<18)|(xx<<9)|xx)>>24;}  // first byte (bit 0) is the MSB when a word is loaded
+#else
+#define IND4(x) {UINT xx = (x); ii = 0xf&((xx>>21)|(xx>>14)|(xx>>7)|xx);}
+#endif

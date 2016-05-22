@@ -16,7 +16,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;
  ASSERT(fs,EVVALUE); 
  ASSERT(AT(self)==AT(fs),EVDOMAIN);
- d=fdep(fs);
+ RE(d=fdep(fs));
  FDEPINC(d); ASSERT(jt->fcalln>=jt->fcalli,EVSTACK);
  if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
  lk=jt->glock||VLOCK&VAV(fs)->flag;

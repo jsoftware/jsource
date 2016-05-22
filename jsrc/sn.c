@@ -5,45 +5,58 @@
 
 #include "j.h"
 
-
-B jtvnm(J jt,I n,C*s){B b=0;C c,d,t;I j,k;
- RZ(n);
- c=*s; d=*(s+n-1);
- if(jt->dotnames&&2==n&&'.'==d&&('m'==c||'n'==c||'u'==c||'v'==c||'x'==c||'y'==c))R 1;
- RZ(CA==ctype[c]);
- c='a'; 
- DO(n, d=c; c=s[i]; t=ctype[c]; RZ(t==CA||t==C9); if(c=='_'&&d=='_'&&!b&&i!=n-1){j=1+i; b=1;});
- if(c=='_'){DO(j=n-1, if('_'==s[--j])break;); k=n-j-2; R!b&&j&&(!k||vlocnm(k,s+j+1));}
- if(!b)R 1;
- k=2; DO(n-j, c=s[j+i]; if(2>k)k+='_'==c; else{RZ(CA==ctype[c]); k=0;});
- R !k;
-}    /* validate name s, return type or 0 if error */
-
-B vlocnm(I n,C*s){C c,t; 
- if(!n)R 0;
- DO(n, t=ctype[c=s[i]]; RZ(c!='_'&&(t==CA||t==C9)););
- if(C9==ctype[*s]){RZ(1==n||'0'!=*s); DO(n, c=s[i]; RZ('0'<=c&&c<='9'););}
+// validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
+B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
+ RZ(n);  // error if empty string
+ c=*s; d=*(s+n-1);   // c = first char of name, d is the last
+ if(jt->dotnames&&2==n&&'.'==d&&('m'==c||'n'==c||'u'==c||'v'==c||'x'==c||'y'==c))R 1;  // if x. y. ..., that's OK
+ RZ(CA==ctype[c]);   // first char must be alphabetic
+ // c='a';    // Now c='this character', d='previous character'; assign c to harmless value (not needed)
+ j=0;  // Init no indirect locative found
+ // scan the string: verify all remaining characters alphameric (incl _); set j=index of first indirect locative (pointing to the __), or 0 if no ind loc
+  // (the string can't start with _)
+ DO(n, d=c; c=s[i]; t=ctype[c]; RZ(t==CA||t==C9); if(c=='_'&&d=='_'&&!j&&i!=n-1){j=i-1;});
+ // If the last char is _, any ind loc is invalid; scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
+ if(c=='_'){RZ(!j); DO(j=n-1, if('_'==s[--j])break;); RZ(j); k=n-j-2; R(!k||vlocnm(k,s+j+1));}
+ // Here last char was not _, and j is still pointed after __ if any
+ if(j==0)R 1;  // If no ind loc, OK
+ // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
+ // Also verify that any _ is preceded or followed by _
+ DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){RZ(CA==ctype[s[j+i+2]]);}else{RZ(s[j+i-1]=='_');}});
  R 1;
-}    /* validate locale name */
+}    /* validate name s, return 1 if name well-formed or 0 if error */
 
+B vlocnm(I n,C*s){C c,t;
+ if(!n)R 0;  // error is name empty
+ DO(n, t=ctype[c=s[i]]; RZ(c!='_'&&(t==CA||t==C9)););  // error if non-alphameric or _
+ if(C9==ctype[*s]){RZ('0'!=*s||1==n); DO(n, c=s[i]; RZ('0'<=c&&c<='9'););}  // if numeric locale, verify first char not '0' unless it's just 1 char; and all chars numeric
+ R 1;
+}    /* validate locale name: 1 if locale-name OK, 0 if error */
+
+// s-> a string of length n.  If the name is valid, create a NAME block for it
+// Possible errors: EVILNAME, EVLIMIT (if name too long), or memory error
 A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
+ // Discard leading and trailing blanks.  Leave t pointing to the last character
  DO(n, if(' '!=*s)break; ++s; --n;); 
  t=s+n-1;
  DO(n, if(' '!=*t)break; --t; --n;);
+ // If the name is the special x y.. or x. y. ..., return the preallocated block for that name
  c=*s;if((1==n||2==n&&'.'==s[1])&&strchr("mnuvxy",c)){
   if(1==n)R c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam;
   else    R c=='y'?ydot:c=='x'?xdot:c=='v'?vdot:c=='u'?udot:c=='n'?ndot:mdot;
  }
- ASSERT(n,EVILNAME); 
+ ASSERT(n,EVILNAME);   // error if name is empty
+ // The name may not be valid, but we will allocate a NAME block for it anyway
  GA(z,NAME,n,1,0); zv=NAV(z);
- memcpy(zv->s,s,n); *(n+zv->s)=0;
+ memcpy(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
  f=0; m=n; p=0;
- if('_'==*t){--t; while(s<t&&'_'!=*t)--t; f=NMLOC;  p=n-2-(t-s); m=n-(2+p);}
- else DO(n, if('_'==s[i]&&'_'==s[1+i]){   f=NMILOC; p=n-2-i;     m=n-(2+p); break;});
- ASSERT(m<=255&&p<=255,EVLIMIT);
- zv->flag=f;
+ // Split name into simplename and locale, verify length of each; set flag for locative/indirect locative
+ if('_'==*t){--t; while(s<t&&'_'!=*t)--t; f=NMLOC;  p=n-2-(t-s); m=n-(2+p);}  // t->_ before localename, p=#locale name, m=#simplename
+ else DO(n, if('_'==s[i]&&'_'==s[1+i]){   f=NMILOC; p=n-2-i;     m=n-(2+p); break;});  // p=#locales, m=#simplename
+ ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
+ zv->flag=f;  // Install locative flag
  zv->sn=0; zv->e=0;
- zv->m=(UC)m; zv->hash=NMHASH(m,s); 
+ zv->m=(UC)m; zv->hash=NMHASH(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
  R z;
 }    /* name from string */
 
@@ -60,29 +73,33 @@ F1(jtnfb){A y;C*s;I n;
  R nfs(n,s);
 }    /* name from scalar boxed string */
 
+// w is an A for a name; return NAME block or 0 if error
 static F1(jtstdnm){C*s;I j,n,p,q;
- RZ(w=vs(w));
- n=AN(w); s=CAV(w);
+ RZ(w=vs(w));  // convert to ASCII
+ n=AN(w); s=CAV(w);  // n = #characters, s->string
  RZ(n);
  j=0;   DO(n, if(' '!=s[j++])break;); p=j-1;
  j=n-1; DO(n, if(' '!=s[j--])break;); q=(n-2)-j;
- RZ(vnm(n-(p+q),p+s));
- R nfs(n-(p+q),p+s);
+ RZ(vnm(n-(p+q),p+s));   // Validate name
+ R nfs(n-(p+q),p+s);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
 
 F1(jtonm){A x,y; RZ(x=ope(w)); y=stdnm(x); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); R y;}
 
-
+// w is array of boxed strings; result is name class for each
 F1(jtnc){A*wv,x,y,z;I i,n,t,wd,*zv;L*v; 
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
- ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z); 
- for(i=0;i<n;++i){
-  x=0;
-  RE(y=stdnm(WVR(i)));
-  if(y&&(v=syrd(y,0L))){x=v->val; t=AT(x);}
-  zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;
+ n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);  // n=#names  wv->first box
+ ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
+ GA(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
+ for(i=0;i<n;++i){   // for each name...
+  RE(y=stdnm(WVR(i)));  // point to (the possibly relative) name, audit for validity
+  if(y){if(v=syrd(y,0L)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
+  // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
+  // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
+  //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
+  // Would have to mod locindirect too
+  zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;  // calculate the type, store in result array
  }
  R z;
 }    /* 4!:0  name class */

@@ -170,22 +170,22 @@ F2(jtagenda){
 
 
 static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
- d=fdep(hv[1]); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
 static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->h);I d; 
- d=fdep(hv[1]); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
 static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
- d=fdep(hv[1]); FDEPINC(d); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
 static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
- d=fdep(hv[1]); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
@@ -201,12 +201,12 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
 }
 
 static DF1(jtgav1){DECLF;A ff,*hv=AAV(sv->h);I d;
- d=fdep(hv[1]); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
 static DF2(jtgav2){DECLF;A ff,*hv=AAV(sv->h);I d;
- d=fdep(hv[1]); FDEPINC(d); ff=df1(df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 

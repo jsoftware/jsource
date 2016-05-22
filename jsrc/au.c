@@ -15,11 +15,12 @@ static I jtfdepger(J jt,A w){A*wv;I d=0,k,wd;
 I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
  RZ(w);
  v=VAV(w);
- if(v->fdep)R v->fdep;
+ if(v->fdep)R v->fdep;  // for speed, use previous value if it has been calculated
  if(f=v->f) d=VERB&AT(f)?fdep(f):NOUN&AT(f)&&VGERL&v->flag?fdepger(f):0;
  if(g=v->g){k=VERB&AT(g)?fdep(g):NOUN&AT(g)&&VGERR&v->flag?fdepger(g):0; d=MAX(d,k);}
  if(CFORK==v->id){k=fdep(v->h); d=MAX(d,k);}
- R v->fdep=1+d;
+ if(!jt->jerr)v->fdep=1+d;  //Save computed value for next time, but not if error; that would lose the error next time
+ R 1+d;
 }    /* function depth:  1 + max depth of components */
 
 F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}

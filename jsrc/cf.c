@@ -188,12 +188,12 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=0;V*u,*v;
   case BD(NOUN,CONJ):
   case BD(VERB,CONJ):
    f1=tvc; id=ID(w);
-   if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO))flag=VGERL;
+   if(BOX&AT(a)&&(id==CATDOT||id==CGRAVE||id==CGRCO)&&gerexact(a))flag+=VGERL;
    break;
   case BD(CONJ,NOUN):
   case BD(CONJ,VERB):
    f1=tcv; id=ID(a);
-   if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w)))flag=VGERR;
+   if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
  }
  R fdef(CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
 }

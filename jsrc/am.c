@@ -198,6 +198,53 @@ static B ger(A w){A*wv,x;I wd;
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
+// w is the contents of a presumptive AR/gerund.  Return 1 if good form for AR/gerund, 0 if not
+// we do not check the type of names, since they might become defined later
+static B gerar(J jt, A w){A x; C c;
+ I n = AN(w); 
+ // literal contents are OK if a valid name or a primitive
+ if(AT(w)==LIT) {
+  C *stg = CAV(w);
+  if(!vnm(n,stg)){
+   // not name, see if valid primitive
+   UC p = spellin(n,stg);
+   R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
+  }
+ } else if(AT(w)==BOX) {A *wv;I wd,bmin=0,bmax=0;
+  // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
+  // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
+  // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
+  // 
+  RZ(n==2);  // verify 2 boxes
+  wv = AAV(w); wd = (I)w*ARELATIVE(w); x=WVR(0); // point to pointers to boxes; point to first box contents
+  // see if first box is a special flag
+  if(LIT==AT(x) && 1>=AR(x) && 1==AN(x)){
+   c = CAV(x)[0];   // fetch that character
+   if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
+   else if(c=='2'||c=='4')bmin=bmax=2;
+   else if(c=='3')bmin=bmax=3;
+  }
+  // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
+  if(bmin==0){RZ(gerar(jt,x)); bmin=1,bmax=2;}
+  // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
+  x = WVR(1);   // point to second box
+  RZ(BOX==AT(x) && 1==AR(x));   // verify it contains a list of boxes
+  RZ(bmin<=AN(x)&&bmax>=AN(x));  // verify correct number of boxes
+  R gerexact(x);  // recursively audit the other ARs in the second box
+ } else R 0;
+ R 1;
+}
+
+B jtgerexact(J jt, A w){
+ A*wv; I wd;
+ RZ(BOX&AT(w));   // verify gerund is boxed
+ RZ(AN(w));   // verify there are boxes
+ wv = AAV(w); wd = (I)w*ARELATIVE(w);  // point to pointers to contents
+ DO(AN(w), RZ(gerar(jt, WVR(i))););   // fail if any box contains a non-gerund
+ R 1;
+}    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
+
+
 static A jtamend(J jt,A w,B ip){
  RZ(w);
  if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,RMAX,RMAX,RMAX);

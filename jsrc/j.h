@@ -346,19 +346,16 @@
 // If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
 // for the complete spec for CTTZ and CTTZZ.
 
-// For Visual Studio compilers:
-#if defined(_MSC_VER) && SY_64
+#if SY_WIN32 
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
-// The same code should work on 32-bit machines, but that has not been tested
 
-// For Gnu or its derivatives: (these have not been tested)
-//#if defined(__GNUC__) || defined( __clang__)
-//#define CTTZ(w) __builtin__ctzl((UINT)(w))
-//#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
-//#endif
+#if SY_LINUX || SY_MAC
+#define CTTZ(w) __builtin_ctzl((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#endif
 
 // Insert other compilers/architectures here
 

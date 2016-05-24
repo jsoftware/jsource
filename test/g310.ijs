@@ -291,8 +291,34 @@ f3 =: 4 : 'x+y'
 'domain error' -: (+ ~. -) etx 1 0
 'domain error' -: (~. -)   etx 1 0
 
+NB. : detection of x y etc.
 
-4!:55 ;:'a ar det dyad eq f f0 f1 f2 f3 f4'
+a =: 1 : 0
+f__u y
+)
+f =: -
+_5 -: (<'base') a 5
+
+a =: 1 : 0
+f__y m
+)
+_5 -: 5 a <'base'
+
+c =: 2 : 0
+f__u y
+)
+f =: -
+_5 -: (<'base') c [: 5
+
+c =: 2 : 0
+:
+x f__u y
+)
+f =: -
+2 -: 7 (<'base') c [: 5
+
+
+4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
 4!:55 ;:'minors monad nl p q Tv x'
 

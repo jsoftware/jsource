@@ -220,16 +220,44 @@ static DF2(xop2){A ff,x;
 }
 
 
-static B jtxop(J jt,A h){A p,x,y;B b,*pv;I*xv;
- GA(x,INT,jt->dotnames?12:6,1,0); xv=AV(x);
-                  xv[0]=(I)mnam; xv[1]=(I)nnam; xv[2]=(I)unam; xv[3]=(I)vnam; xv[ 4]=(I)xnam; xv[ 5]=(I)ynam; 
- if(jt->dotnames){xv[6]=(I)mdot; xv[7]=(I)ndot; xv[8]=(I)udot; xv[9]=(I)vdot; xv[10]=(I)xdot; xv[11]=(I)ydot;}
- RZ(y=raze(from(v2(0L,HN),h))); AT(y)=INT;
- RZ(p=eps(x,y)); pv=BAV(p);
- b=(pv[0]||pv[1]||pv[2]||pv[3])&&(pv[4]||pv[5]);
- if(!b&&jt->dotnames)b=(pv[6]||pv[7]||pv[8]||pv[9])&&(pv[10]||pv[11]);
- R b;
-}    /* whether h denotes an explicit derived function */
+// h is the compiled form of an explicit function: an array of 2*HN boxes.
+// Boxes 0&3 contain the enqueued words for the sentences, jammed together
+// We return 1 if this function refers to its x/y arguments (which also requires
+// a reference to mnuv operands)
+static B jtxop(J jt,A w){B mnuv,xy;I i,k;
+ // init flags to 'not found'
+ mnuv=xy=0;
+ // Loop through monad and dyad
+ A *wv=AAV(w); I wd=(I)w*ARELATIVE(w);
+ for(k=0;k<6;k+=3){    // for monad and dyad cases...
+  A w=WVR(k);  // w is now the box containing the words of the expdef
+  {A *wv=AAV(w);
+   I wd=(I)w*ARELATIVE(w);
+   I in=AN(w);
+   // Loop over each word, starting at beginning where the references are more likely
+   for(i=0;i<in;++i) {
+    A w=WVR(i);  // w is box containing a queue value.  If it's a name, we inspect it
+    if(AT(w)==NAME){
+     // Get length/string pointer
+     I n=AN(w); C *s=NAV(w)->s;
+     // if dotnames allowed, and last character is '.', back up 1
+     if(n){
+      if(s[n-1]=='.'&&jt->dotnames)--n;
+      // Set flags if this is a special name, or an indirect locative referring to a special name in the last position
+      if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
+       if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')mnuv=1;
+       else if(s[n-1]=='x'||s[n-1]=='y')xy=1;
+        // exit if we have seen enough
+       if(mnuv&&xy)R 1;
+      }   // 'one-character name'
+     }  // 'name is not empty'
+    } // 'is name'
+   }  // loop for each word
+  }  // namescope of new w
+ }  // loop for each valence
+ // If we didn't see xy and mnuv, it's not a derived function
+ R 0;
+}
 
 static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
  n=0; RZ(z=exta(LIT,1L,1L,300L)); s=CAV(z);

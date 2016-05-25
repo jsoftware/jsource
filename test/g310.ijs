@@ -317,6 +317,22 @@ x f__u y
 f =: -
 2 -: 7 (<'base') c [: 5
 
+svxy =: 9!:48''
+9!:49 (1)
+c =: 2 : 0
+f__u y.
+)
+f =: -
+_5 -: (<'base') c [: 5
+
+c =: 2 : 0
+:
+x. f__u 5
+)
+f =: -
+2 -: 7 (<'base') c [: 5
+
+9!:49 svxy
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'

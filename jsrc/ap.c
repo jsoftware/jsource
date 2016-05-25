@@ -244,13 +244,18 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  R ope(z);
 }    /* g\"r w for gerund g */
 
+//  f/\"r y    w is y, fs is in self
 static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  RZ(w);
- wt=AT(w); 
- if(SPARSE&wt)R scansp(w,self,jtpscan);
+ wt=AT(w);   // get type of w
+ if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
+ // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
+ // m = #cells, c=#atoms/cell, n = #items per cell
  m=prod(f,ws); c=m?AN(w)/m:prod(r,f+ws); n=r?ws[f]:1;
- y=VAV(self)->f; id=vaid(VAV(y)->f); 
+ // y is the verb u; id=pseudocharacter for it
+ y=VAV(self)->f; id=vaid(VAV(y)->f);
+ // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w
  if(2>n||!wn){if(id){jt->rank=0; R r?ca(w):reshape(over(shape(w),one),w);}else R prefix(w,self);}
  vapfx(id,wt,&ado,&cv);
  if(!ado)R prefix(w,self);
@@ -261,34 +266,54 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-
+// block a contains (start,length) of infix.  w is the A for the data.
+// Result is new block containing the extracted infix
 static F2(jtseg){A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
+ // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
- c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));
- GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;
+ c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
+ GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
+ // Copy the selected items to the new block and return the new block
  if(ARELATIVE(w)){A*u=AAV(z),*v=AAV(w)+m; DO(n, *u++=(A)AABS(w,*v++););}
  else MC(AV(z),CAV(w)+m*k,n*k);
  R z;
 }
 
+// m is the infix length (x), w is the array (y)
+// Result is A for an nx2 table of (starting item#,length) for each infix
 static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  RZ(w);
+ // p=|m, n=#items of w, d=#applications of u (depending on overlapping/nonoverlapping)
  p=ABS(m); n=IC(w); d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);
+ // Allocate result, a dx2 table; install shape
  GA(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;
+ // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
+ // repair last length if it runs off the end
  x=AV(z); k=0>m?p:1; j=-k; DO(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
  R z;
 }
 
+// Entry point for infix.  a is x, w is y, fs points to u
 static DF2(jtinfix){PROLOG;DECLF;A x,z;I m; 
  PREF2(jtinfix);
- if(a==ainf)R repeat(zero,w);
- RE(m=i0(vib(a))); 
+ // If length is infinite, convert to large integer
+ // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
+ if(a==ainf)m=IMAX;
+ else RE(m=i0(vib(a))); // get infix length as an integer
+ // Create table of infix positions
  RZ(x=ifxi(m,w));
+ // If there are infixes, apply fs@:jtseg (ac2 creates an A verb for jtseg)
  if(*AS(x))z=eachl(x,w,atop(fs,ac2(jtseg)));
- else{A s;I r;
-  r=AR(w); r=MAX(0,r); GA(s,INT,r,1,0); if(r)ICPY(AV(s),AS(w),r); *AV(s)=0>m?0:m;
+ else{A s;I r, rr;
+  // No infixes.  Create a cell of fills, apply fs to it, add a leading axis of 0 to the result
+  // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
+  // with the number of items being the infix-size if positive, or 0 if negative
+  // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
+  r=AR(w); rr=MAX(1,r); GA(s,INT,rr,1,0); if(r)ICPY(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
+  // Create fill-cell of shape s; apply u to it
   RZ(x=df1(reshape(s,filler(w)),fs));
+  // Prepend leading axis of 0 to the result
   z=reshape(over(zero,shape(x)),x);
  } 
  EPILOG(z);
@@ -495,7 +520,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
  if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
- switch(0<m0&&m0<=IC(w)?id:0){
+ switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
   case CMIN:     if(wt&    INT+FL)R movminmax(m,w,self,0); break;
   case CMAX:     if(wt&    INT+FL)R movminmax(m,w,self,1); break;
@@ -510,7 +535,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  if(!ado||!m||m>p)R infix(a,w,self);
  d=0<=m0?1+p-m:(p+m-1)/m; c=aii(w); cm=c*m; b=0>m0&&0<p%m;
  zt=rtype(cv); jt->rank=0; 
- GA(z,zt,c*d,AR(w),AS(w)); *AS(z)=d;
+ GA(z,zt,c*d,MAX(1,AR(w)),AS(w)); *AS(z)=d;
  if((t=atype(cv))&&t!=wt){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=bp(zt)*c; 
  wv=CAV(w); wk=bp(wt)*(0<=m0?c:c*m);

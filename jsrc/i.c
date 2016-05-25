@@ -121,7 +121,7 @@ static B jtevinit(J jt){A q,*v;
 static B jtconsinit(J jt){D y;
  jt->assert=1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
- y=1.0; DO(44, y*=0.5;); jt->ct=jt->fuzz=y;
+ y=1.0; DO(44, y*=0.5;); jt->ctdefault=jt->ct=jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
  jt->fdepn=NFDEP;

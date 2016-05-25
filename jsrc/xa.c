@@ -27,7 +27,7 @@ F1(jtcts){D d;
  RZ(w=cvt(FL,w)); d=*DAV(w);
  ASSERT(0<=d,EVDOMAIN); 
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
- jt->ct=d;
+ jt->ctdefault=jt->ct=d;
  R mtv;
 }
 

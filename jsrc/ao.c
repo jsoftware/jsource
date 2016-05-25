@@ -161,13 +161,16 @@ static DF2(jtkeysp){PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(j?cdot2(box(IX(1+j)),z):z);
 }
 
-static DF2(jtkeyi){PROLOG;A j,p;B*pv;I*av,c,d=-1,n,*jv;
+static DF2(jtkeyi){PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
  RZ(a&&w);
+ jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  n=IC(a); av=AV(a);
  RZ(j=grade1(a)); jv=AV(j);
  GA(p,B01,n,1,0); pv=BAV(p);
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);
- EPILOG(df2(p,from(j,w),cut(VAV(self)->f,one)));
+ z=df2(p,from(j,w),cut(VAV(self)->f,one));
+ jt->ct=ctold;
+ EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x & w */
 
 static DF2(jtkeybox){PROLOG;B b;I*wv;
@@ -224,7 +227,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
    else    DO(n, v=zv+c**xv++; DO(c, y=*wv++; *v=F; ++v;););     \
  }}
 
-static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;
+static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;D ctold=jt->ct;
  RZ(a&&w);
  at=AT(a); av0=AV(a); n=IC(a); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
@@ -242,6 +245,7 @@ static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*q
  }else{RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}
  GA(z,zt,m*c,wr,AS(w)); *AS(z)=m; zv0=AV(z);
  if(wt&FL)NAN0;
+ jt->ct=jt->ctdefault;
  switch(KCASE(d,wt)){
   case KCASE(CEQ,     B01): KACC(*v==y,    B, B, 1   ); break;
   case KCASE(CPLUSDOT,B01): KACC(*v||y,    B, B, 0   ); break;
@@ -259,6 +263,7 @@ static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*q
   case KCASE(23,      INT): KACC(*v|y,     UI,UI,0   ); break;
   case KCASE(25,      INT): KACC(~(*v^y),  UI,UI,-1  );
  }
+ jt->ct=ctold;
  if(wt&FL)NAN1;
  *AS(z)=m; AN(z)=m*c; if(pp)RZ(z=pcvt(INT,z));
  EPILOG(z);

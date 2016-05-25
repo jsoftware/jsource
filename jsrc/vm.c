@@ -99,6 +99,7 @@ F2(jtroot){A z;I t;
  z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,jtxroota);
  switch(jt->jerr){
   case EWIMAG: RESETERR; R expn2(cvt(CMPX,w),recip(cvt(CMPX,a)));
+  case EWRAT: 
   case EWIRR:  RESETERR; R expn2(cvt(FL,  w),recip(cvt(FL,  a)));
   default:     R z;
 }}

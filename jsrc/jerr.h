@@ -38,10 +38,10 @@
 #define EVNAN           33
 #define NEVM            33      /* number of event codes       */
 
-/* The following codes are never displayed to the user         */
+/* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
 
 #define EWOV            50      /* integer overflow            */
-#define EWIMAG          51      /* imaginery  result           */
+#define EWIMAG          51      /* imaginary  result           */
 #define EWIRR           52      /* irrational result           */
 #define EWRAT           53      /* rational   result           */
 #define EWDIV0          54      /* division by zero            */

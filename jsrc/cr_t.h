@@ -25,11 +25,21 @@
 #define RARGX   {if(1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
                  if(1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #endif
+
+#define EMSK(x) (1<<((x)-1))
+#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
+
 {B cc=1;C*zv;I j=0,jj=0,old;
- if(mn){y0=y=RCALL; RZ(y);}
+ if(mn){y0=y=RCALL; RZ(y);}  // if there are cells, execute on the first one
  else{I d;
+  // if there are no cells, execute on a cell of fills.  Do this quietly, because
+  // if there is an error, we just want to use a value of 0 for the result; thus debug
+  // mode off and RESETERR on failure.
+  // However, if the error is a non-computational error, like out of memory, it
+  // would be wrong to ignore it, because the verb might execute erroneously with no
+  // indication that anything unusual happened.  So fail then
   d=jt->db; jt->db=0; y=RCALL; jt->db=d;
-  if(jt->jerr){y=zero; RESETERR;}
+  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}
  } 
  yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
  if(!mn||yt&DIRECT&&RFLAG){I zn;
@@ -68,3 +78,5 @@
 
 
 #undef TEMPLATE
+#undef EXIGENTERROR
+#undef EMSK

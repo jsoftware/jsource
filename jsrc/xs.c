@@ -44,7 +44,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
  if(equ(w,one))R mtm;
  RZ(w=vs(w));
- FDEPINC(1);
+ FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
  old=jt->tbase+jt->ttop;
@@ -57,7 +57,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  }
  jt->dcs=xd; jt->tostdout=xt;
  debz();
- FDEPDEC(1);
+ FDEPDEC(1);  // ASSERT OK now
  if(3==ce){z=jt->jerr?zero:one; RESETERR; R z;}else RNE(mtm);
 }
 

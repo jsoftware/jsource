@@ -17,10 +17,10 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  ASSERT(fs,EVVALUE); 
  ASSERT(AT(self)==AT(fs),EVDOMAIN);
  d=fdep(fs);
- FDEPINC(d); ASSERT(jt->fcalln>=jt->fcalli,EVSTACK);
+ ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
  if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
  lk=jt->glock||VLOCK&VAV(fs)->flag;
- i=++jt->fcalli; 
+ i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jt->global; 
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  if(jt->db&&!lk)z=dbunquote(a,w,fs);
@@ -29,7 +29,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  jt->stswitched=jt->fcallg[i].sw0;
  if(jt->fcallg[i].flag)locdestroy(i);
  jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; 
- FDEPDEC(d); --jt->fcalli;
+ FDEPDEC(d); --jt->fcalli;  // ASSERT OK now
  if(0<jt->pmctr)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
  jt->curlocn=oln;
  jt->curname=oldn;

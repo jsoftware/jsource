@@ -198,7 +198,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // break.-in-while./continue must pop the stack if they are in a select. structure.  Then, they must pop
     // until they have popped the SELECT type.  It would be possible for the initial analysis to
     // decide whether any popping is required, but we didn't do that.
-    if(cv->w==CSELECT||cv->w==CSELECTN){
+    if(cd&&(cv->w==CSELECT||cv->w==CSELECTN)){
      rat(z);   // protect possible result from pop
      do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
     }

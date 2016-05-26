@@ -232,10 +232,13 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
  R !jt->jerr;
 }    /* most significant digit last, decimal point before last digit */
 
-
+// Convert the data in w to the type t.  A new buffer is always created (with a
+// copy of the data if w is already of the right type), and returned in *y.  Result is
+// 0 if error, 1 if success.  If the conversion loses precision, error is returned
 static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  RZ(w);
  r=AR(w); s=AS(w);
+ // Handle sparse
  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;
   case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(t,zero))); R 1;
@@ -250,6 +253,7 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  }
  // Now known to be non-sparse
  n=AN(w); wt=AT(w); wv=AV(w);
+ // If type is already correct, return a clone
  if(t==wt){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  GA(*y,t,n,r,s); yv=AV(*y); 
@@ -306,20 +310,22 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  }
 }
 
-
-
 A jtcvt(J jt,I t,A w){A y;B b;I*oq; 
  oq=jt->rank; jt->rank=0; b=ccvt(t,w,&y); jt->rank=oq; 
  ASSERT(b,EVDOMAIN);
  R y;
 }
 
-
+// Convert numeric type to lowest precision that fits.  Push fuzz/rank onto a stack,
+// and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
+// Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){A y,z=w;D ofuzz;I*oq;
  RZ(w);
  ofuzz=jt->fuzz; oq=jt->rank; 
  jt->fuzz=0;     jt->rank=0;
+ // for rationals, try converting to XNUM; otherwise stay at rational
  if(RAT&AT(w))z=ccvt(XNUM,w,&y)?y:w;
+ // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode||!(AT(w)&XNUM+RAT))z=ccvt(B01,w,&y)?y:ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w; 
  jt->fuzz=ofuzz; jt->rank=oq;
  RNE(z);

@@ -163,10 +163,11 @@ static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
   else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
 }}   /* move an argument into the result area */
 
+
 F2(jtover){A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
- if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);
- RZ(t=coerce2(&a,&w,0L));
+ if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);  // if either arg is sparse, switch to sparse code
+ RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
  if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);
  acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;

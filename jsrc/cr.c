@@ -12,6 +12,8 @@ I mr(A w){R VAV(w)->mr;}
 I lr(A w){R VAV(w)->lr;}
 I rr(A w){R VAV(w)->rr;}
 
+// effective rank: ar is rank of argument, r is rank of verb (may be negative)
+// result is rank of argument cell
 I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
 #define NEWYA   {GA(ya,at,acn,acr,as+af); uu=CAV(ya);}
@@ -74,14 +76,21 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old=jt->rank,rv[2],wr;
  R z;
 }
 
-A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr; 
+// IRS setup for dyads x op y
+// a is x, w is y
+// fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none
+// l, r are nominal ranks of fs
+// f2 is a setup verb (jtover, jtreshape, etc)
+A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr;
+ // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
  RZ(a&&w);
- ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;
- wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;
- if(!(af||wf))R CALL2(f2,a,w,fs);
- ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);
+ ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;  // get rank, effective rank, length of frame...
+ wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;     // ...for both args
+ if(!(af||wf))R CALL2(f2,a,w,fs);   // if no frame, call setup verb and return result
+ ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  /* if(af&&wf&&af!=wf)R rank2ex(a,w,fs,l,r,f2); */
- jt->rank=rv; z=CALL2(f2,a,w,fs); jt->rank=old; 
+ jt->rank=rv; z=CALL2(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+  // Not all setup verbs (*f2)() use the fs argument.  
  R z;
 }
 

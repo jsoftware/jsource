@@ -21,6 +21,7 @@ F2(jtsetfv){A q=jt->fill;I t;
 
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
+// move n fills of type t to *v
 void fillv(I t,I n,C*v){I k=bp(t);
  if     (t&RAT        )mvc(n*k,v,k,&zeroQ);
  else if(t&XNUM       )mvc(n*k,v,k,&xzero);

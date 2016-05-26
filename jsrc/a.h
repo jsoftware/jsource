@@ -28,6 +28,7 @@
 #define DECLFGH         DECLFG;        A hs=sv->h;  \
                         AF h1=hs?VAV(hs)->f1:0,h2=hs?VAV(hs)->f2:0
 
+// If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
 

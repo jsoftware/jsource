@@ -776,7 +776,6 @@ extern B        nameless(A);
 extern D        qpf(void);
 extern I        rr(A);
 extern A        relocate(I,A);
-extern I        rtype(I);
 extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern void     smmfrr(A);

@@ -174,6 +174,8 @@ static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
  R 1;
 }    /* grade"r w on integer w where c==n */
 
+// returns *base = smallest value, *top = #values (1..2 is 2 values)
+// returns 0 for *top if range is not representable in an integer
 void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=IMAX; p=IMIN;}else p=q=0;
  for(i=0;i<m;++i){

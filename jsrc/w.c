@@ -155,7 +155,7 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
       !(AT(v[4])&NAME&&(y=symbrd(v[4]),jt->etxn=jt->jerr=0,y)&&AT(y)&ADV+CONJ)) {
    // abc = abc , blah  but blah must not start with a modifier, or be a name whose value is a modifier
    // NOTE that strictly speaking we don't know the type of the name (could change during blah), so this is a kludge
-   RZ(v[3]=y=ca(ds(CAPIP)));   // create new word for append-in-place
+   RZ(v[3]=y=ca(ds(CAPIP)));   // create new word for append-in-place.  OK to overwrite v[3] because it is from ds()
    if(!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
   } else if (6 <= n) {
    if((TRBRACE(n-2) || TRBRACE(n-3) && RPAR&AT(v[n-2])) && TAIA(0,n-1) ){I c,j,p,q;
@@ -165,7 +165,7 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
     DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);  // again; skip to 3d operand
     // j now points to the third operand.  If that's pointing at the last or next-last word, we can mip
     if(!p&&!q&&j>=n-2){ 
-     RZ(v[TRBRACE(n-2)+n-3] = y = ca(ds(CAMIP)));   // create new word for modify-in-place
+     RZ(v[TRBRACE(n-2)+n-3] = y = ca(ds(CAMIP)));   // create new word for modify-in-place.  OK to overwrite v[3] because it is from ds()
      if (!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
     }
    } else if (6 < n) {   // if we matched } word  or )} word, we can't match any other special form
@@ -175,7 +175,7 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
      j=3; q=0;
      DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);  // skip to after 2nd operand - should be at }
      if(!q&&j<n-2&&TRBRACE(j)&&(TVERB(j+1,CTILDE))) {   // }~ after 2d expr
-      RZ(v[j] = y = ca(ds(CAMIP)));   // create new word for modify-in-place
+      RZ(v[j] = y = ca(ds(CAMIP)));   // create new word for modify-in-place.  OK to overwrite v[3] because it is from ds()
       if (!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
      }
     } else if(TRBRACE(3) && TVERB(n-2,CLAMIN) && TNAME(0) && TASGN(1) && TNAME(2)){A p,*yv,z1;I c,j,k,m;  // if we match }~, can't match this

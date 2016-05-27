@@ -19,26 +19,48 @@ static F2(jtth2box){A z;I n,p,q,*v,x,y;
  R z;
 }
 
+// Convert a formatted numeric string from C format to J format
+// The formatted string is pointed to by 'th2buf'
+//  b true if field is in exponential form
+//  m width of result area (0 if unknown)
+//  zv->output area
+// Result is the number of characters moved to the output area
 static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
- if(e&&(t=strchr(jt->th2buf,'e'))){
+ // If this field calls for exponential notation, and the result contains an exponent, convert the exponent
+ //  by removing leading '0' or '+'
+ if(e&&(t=strchr(jt->th2buf,'e'))){   // set t->the 'e'.  t will trace through the field
+  // exponent is e+n[n...] or e-n[n...]  Step over the e, and - if present
   ++t; t+='-'==*t;
+  // count k=the number of leading + or 0 characters in the exponent; leave c=stopper character
   k=0; while(c=*(k+t),c=='0'||c=='+')++k;
   if(k){
+   // There are +0 characters to delete.  If we ran off the end of the exponent, back up and use one 0 (which should be there already)
    if(!c||' '==c){*t++='0'; --k;}
-   while(*t=*(k+t))++t;
+   while(*t=*(k+t))++t;  // close up the skipped characters, till end of string (including the\0)
+   // t now points to trailing \0.  Set p=(field width)-(# characters copied) = #spare characters at end of field
+   // if m is 0, p is negative.  Fill to end-of-field with spaces, and append \0 if there was any fill
    p=m-(t-jt->th2buf); DO(p,*t++=' ';); if(0<=p)jt->th2buf[m]=0;
  }}
+ // point t to start of formatted string, and k to the length.  k will be the return value
  t=jt->th2buf; k=strlen(t);
  if(!e&&(s=memchr(t,'-',k))){  /* turn -0 to 0 */
-  *s=' '; 
+  // Nonexponential field containing '-' (s points to the -)
+  *s=' ';   // blank out the sign
+  // see if there is a significant digit.  If so, install _ sign.  This removes the sign from -0
   DO(k-(1+s-t), c=s[1+i]; if(c!='0'&&c!='.'){*s=CSIGN; break;});
+  // If the field was -0 in a field of unknown width, skip over the now-empty sign field
   if(!m&&' '==*s){++t; --k;}
  }
+ // If the field has fixed width and the formatted result doesn't fit, fill result area with ***
  if(m&&m<k)memset(zv,'*',m);
  else{
+  // If the field is wider than the result, install spaces (to right or left depending on exponential flag)
+  //  (I don't see why this is necessary); also advance zv to point to the result area if not exponential
   if(k<m){memset(zv+e*k,' ',m-k); if(!e)zv+=m-k;}
+  // In all cases except ***-fill, copy the result to the output area
   DO(k, c=t[i]; *zv++='-'==c?CSIGN:c;);
  }
+ // return the length of the string copied
  R k;
 }    /* c format to j format */
 
@@ -102,6 +124,11 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  R 1;
 }    /* format one rational number */
 
+// Format a single number
+// e,m,d describe the field as given below
+// s->output area
+// t is the type of the data
+// wv->the data
 static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
  switch(t){
   case B01:  sprintf(jt->th2buf,s,(D)*wv);     break;
@@ -116,23 +143,61 @@ static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
    else sprintf(jt->th2buf,s,y);
 }}   /* format one number */
 
+// format a fixed-size column.  See th2a for description of most values
+//  zk stride between result areas, in bytes
+//  zv->place to put result
+// No result: the output area is filled
 static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv){
  DO(n, fmt1(e,m,d,s,t,wv); c2j(e,m,zv); zv+=zk; wv+=wk;);
 }    /* format a column */
 
-static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;B b=0;C*u,*yv,*zv;I i,m0=m,k,p,q;
+// Create a column of results (a table) for a single field
+// Field descriptor:
+//  e is 1 if exponential, 0 if decimal
+//  m is defined width of field, or 0 to use as much as needed
+//  d is number of decimal places requested
+//  s->sprintf descriptor
+// Input info:
+//  n number of values to format
+//  t type of input values
+//  wk stride (in bytes) between values
+//  wv->first value
+// first set when we are processing the first field (to suppress the leading space between fields)
+static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;C*u,*yv,*zv;I b,i,m0=m,k,p,q;
+ // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
+  // Allocate space for all results; set shape to (n,q); zv->result area
  GA(z,LIT,p,2,0); *AS(z)=n; *(1+AS(z))=q; zv=CAV(z);
+ // If field length is fixed, format the column to that width & return it
  if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv); R z;}
+ // Otherwise, field has variable width.  Format the values one by one.
+ // q holds total length so far, p is length of allocated buffer.  ; m will hold the maximum length encountered
+ // b will be set for exponential fields only, if no result is negative
+ b = e;  // init no negative exponential values (if field is exponential).  0 if nonexponential field
  for(i=q=0;i<n;++i){
-  fmt1(e,m0,d,s,t,wv);
-  while(p<q+(I)strlen(jt->th2buf)+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}
-  u=q+zv; q+=k=c2j(e,0L,u); b=b||CSIGN==*u; zv[q++]=0; m=MAX(m,k); wv+=wk;
+  fmt1(e,m0,d,s,t,wv);  // Create the (null-terminated) string in th2buf.  m0=0
+  while(p<q+(I)strlen(jt->th2buf)+1){RZ(z=over(z,z)); p+=p; zv=CAV(z);}  // If new string overflows output area, double the output-area size
+   // u->place to put string; convert th2buf to j form in *u; k=length of string; update string pointer & null-terminate string; advance to next input value
+   u=q+zv; q+=k=c2j(e,0L,u); zv[q++]=0; wv+=wk;
+   // Exponential-field sign spacing:
+   // If the result has a negative sign, remember that fact.  If the result DOES NOT have a negative sign, then
+   // for add 1 to the field-length to account for the leading space that will be added.
+   // In any case, set m to max string length
+   if(e)if(CSIGN==*u){b=0;}else{++k;} m = MAX(m,k);
  }
- m+=!first;
+ // If this is not the first field, prepend room for a space
+ // If this is an exponential field, and none of the values were negative, retract the space we left for the negative sign
+ // kludge - this does not conform to Ye Dic, but deployed code may rely on it
+ m+=(!first) - b;
+ // Allocate final result area, an nxm table of characters.  Install shape
  GA(y,LIT,n*m,2,0); *AS(y)=n; *(1+AS(y))=m;
- yv=CAV(y); memset(yv,' ',AN(y));  u=zv; 
- if(e){yv+=!first; DO(n, q=strlen(u); MC(yv+(b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
+ // Clear result area to spaces.  Set yv-> first result string, u->first intermediate formatted string
+ yv=CAV(y); memset(yv,' ',AN(y));  u=zv;
+ // Copy the strings from the formatting area (u->) to the result area (yv->)
+ // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
+ // in the column but not in this value; advance to next input & output
+ if(e){yv+=!first; DO(n, q=strlen(u); MC(yv+(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
+ // For non-exponential, right-justify the data, step to next input & output
  else {yv+=m;      DO(n, q=strlen(u); MC(yv-q,          u,q); yv+=m; u+=1+q;);}
  EPILOG(y);
 }    /* like th2c, but allocates and returns array */
@@ -149,7 +214,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;B b
 // is jt->th2bufn (long enough to hold 1 1-cell of the result).  We calculate the needed
 // size here, by starting with a length of 500 and incrementing as required
 static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,x;
-  C*sv;D x,y;I an,*av,d,*dv,i,m,*mv,const sk=15,zk=0;Z*au;
+  C*sv;D y;I an,*av,d,*dv,i,m,*mv,zk=0;Z*au;const I sk=15;
  // b means 'all fields have a defined width'
  // zk holds the total of the field sizes
  // r='non-complex a', init length of conversion area to 500 bytes, convert a to int if it's not complex
@@ -173,7 +238,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
   if(0>m)m=-m; if(0>d)d=-d; ASSERT(0<=m&&0<=d,EVLIMIT);  // verify no overflow
   // Create sprintf format string for the field, depending on decimal/exponential form
   if(!x)sprintf(sv, "%%"FMTI"."FMTI"f",  m,d);  // %m.df
-  else    sprintf(sv, m?"%%- "FMTI"."FMTI"e" :"%%-"FMTI"."FMTI"e", m?m-1:0,d+!!(SYS&SYS_PC));  // %- m.de (m=0)  or %-m.de (m!=0)
+  else  sprintf(sv, m?"%%- "FMTI"."FMTI"e" :"%%-"FMTI"."FMTI"e", m?m-1:0,d+!!(SYS&SYS_PC));  // %- m.de (m=0)  or %-m.de (m!=0)
   // store results in output areas; advance sprintf pointer; count # bytes in fields; see if there are any unknown widths
   sv+=sk; ev[i]=x; mv[i]=m; dv[i]=d; zk+=m; b=b&&m; 
   // keep the size of the conversion buffer to a minimum of the given field width or 500+the number of decimal places (in case the values overflows the field)
@@ -181,7 +246,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
  }
  // Now that we know the conversion buffer size, allocate it
  GA(s,LIT,jt->th2bufn,1,0); jt->th2buf=CAV(s);
- // Return total line width if it is valid, 0 if not
+ // Output total line width if it is valid, 0 if not
  *zkp=b?zk:0; R 1;
 }    /* parse format control (left argument of ":) */
 

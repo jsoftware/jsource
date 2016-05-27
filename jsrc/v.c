@@ -47,16 +47,28 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  R RELOCATE(w,z);
 }
 
-static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,*as,c,f,k,n,r,*s,t,
+// ] [ and ]"n ["n, dyadic
+// length error has already been detected, in irs
+static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,*as,k,n,of,*os,r,*s,t,
   wcr,wf,wr,*ws,zn;
  RZ(a&&w);
+ // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w);
- if(left){if(af>=wf)R rat(a); r=acr; s=af+as; t=AT(a); v=CAV(a); n=AN(a);}
- else    {if(wf>=af)R rat(w); r=wcr; s=wf+ws; t=AT(w); v=CAV(w); n=AN(w);}
- RE(c=af?prod(f=af,as):prod(f=wf,ws)); RE(zn=mult(c,prod(r,s)));
- GA(z,t,zn,f+r,af?as:ws); ICPY(f+AS(z),s,r); 
- k=bp(t); mvc(k*zn,AV(z),k*n,v);
+ // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
+ // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
+ // simply keep the surviving argument intact, and  increment its use-count (why?? this does not constitute a new
+ // use).  This is the normal case.
+ if(left){if(af>=wf)R rat(a); r=acr; s=af+as; t=AT(a); v=CAV(a); n=AN(a); of=wf; os=ws;}
+ else    {if(wf>=af)R rat(w); r=wcr; s=wf+ws; t=AT(w); v=CAV(w); n=AN(w); of=af; os=as;}
+ // If the cells of the surviving arg must be replicated, do so
+ // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
+ // of=frame os->shape   of non-surviving arg
+ // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
+ // The product of these is the number of atoms of the result
+ RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
+ GA(z,t,zn,of+r,os); ICPY(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
+ k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
  R z;
 } 
 

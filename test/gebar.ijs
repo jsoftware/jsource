@@ -29,7 +29,7 @@ ebar =: 4 : 0
  z=.($y)$k=.0
  while. k<p do.
   i=.0 
-  while. i<m do. 
+  while. i<m do.
    if. (i{x)=(k+i){y do. i=.>:i else. break. end. 
   end.
   z=.(i=m) k}z

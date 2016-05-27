@@ -196,7 +196,7 @@ static DF1(ixfixedright0){A z;D old=jt->ct;V*v=VAV(self);
  R z;
 }
 
-static DF2(with2){R df1(w,powop(self,a));}
+static DF2(with2){R df1(w,powop(self,a,0));}
 
 F2(jtamp){A h=0;AF f1=on1,f2=on2;B b;C c,d=0;D old=jt->ct;I flag=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);

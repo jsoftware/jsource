@@ -25,7 +25,7 @@
                         h=sv->h; hv=AAV(sv->h); hi=a&&w?HN:0; \
                         line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
 
-typedef struct{A t,x,line;C*iv,*xv;I j,k,n;} CDATA;
+typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
 /* t     iteration array         */
@@ -35,6 +35,7 @@ typedef struct{A t,x,line;C*iv,*xv;I j,k,n;} CDATA;
 /* xv    ptr to text xyz_index   */
 /* iv    ptr to text xyz         */
 /* j     iteration index         */
+/* w     cw code                 */
 
 #define WCD            (sizeof(CDATA)/sizeof(I))
 
@@ -75,16 +76,28 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
-static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,lk,named,ox=jt->xdefn;CDATA*cv;
+// Processing of explicit definitions, line by line
+static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
   CW*ci,*cw;DC d=0;I hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0;TD*tdv;V*sv;X y;
  RE(0);
+ // z is the final result (initialized here in case there are no lines)
+ // t is the result of the current t block, or 0 if not in t block
+ // u,v are the operand(s), if this is an explicit modifier
+ // sv->text of this explicit entity, st is its type
+ // r is the count of empty stack frames that have been allocated
  z=mtm; cd=t=u=v=0; sv=VAV(self); st=AT(self);
+ // lk=this definition is locked; named=this definition is named; cl=current name, cl=current locale
  lk=jt->glock||VLOCK&sv->flag; named=VNAMED&sv->flag?1:0; cn=jt->curname; cl=jt->curlocn;
  d=named&&jt->db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
+ // If this is a verb referring to x or y, set u, v to the operands, and sv to the saved text
  if(VXOP&sv->flag){u=sv->f; v=sv->h; sv=VAV(sv->g);}
+ // If this is adv/conj, it must be 1/2 : executed with no x or y
  if(st&ADV+CONJ){u=a; v=w;}
+ // Read the first line; make sure there is one
  LINE(sv); ASSERT(n,EVDOMAIN);
+ // Create symbol table for this execution
  RZ(jt->local=stcreate(2,1L,0L,0L));
+ // If the verb contains try., allocate a stack area for it
  if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  jt->xdefn=1;
@@ -94,105 +107,163 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,l
   IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
   IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
  }
+ // ?? debugging
  if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
   jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
  }
+ // remember tbase.  We will tpop after every sentence to free blocks
  old=jt->tbase+jt->ttop; 
+ // loop over each sentence
  while(0<=i&&i<n){
+  // if performance monitor is on, collect data for it
   if(0<jt->pmctr&&C1==jt->pmrec&&named)pmrecord(cn,cl,i,a?VAL2:VAL1);
+  // ?? debugging
   if(jt->redefined&&jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
    self=jt->sitop->dcf; sv=VAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
    jt->redefined=0;
    if(i>=n)break;
   }
-  ci=i+cw;
+  // i holds the control-word number of the current control word
+  ci=i+cw;   // ci->control-word info
+  // process the control word according to its type
   switch(ci->type){
    case CTRY:
+    // try.  create a try-stack entry, step to next line
     BASSERT(tdi<NTD,EVLIMIT);
     tryinit(tdv+tdi,i,cw);
     if(jt->db)jt->db=(tdv+tdi)->d?jt->dbuser:DBTRY;
     ++tdi; ++i; 
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
+    // catch.  pop the try-stack
     if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->db=od;}else i=ci->go; break;
    case CTHROW:
+    // throw.  Create a faux error
     BASSERT(0,EWTHROW);
    case CBBLOCK:
+    // B-block (present on every sentence in the B-block)
+    // run the sentence
     tpop(old); z=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
+    // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)++i;
+    // if the error is THROW, and there is a catcht. block, go there, otherwise error
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
+    // for other error, go to the error location; if that's out of range, keep the error; if not,
+    // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
     break;
    case CASSERT:
+    // assert.  If assertions disabled, skip the line and continue
     if(!jt->assert){++i; break;}
-   case CTBLOCK: 
+    // otherwise fall through to process the line.
+   case CTBLOCK:
+    // execute and parse line as if for B block, except save the result in t
     gc(z,old); t=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)++i;
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
     break;
    case CFOR:
-   case CSELECT:
+   case CSELECT: case CSELECTN:
+    // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
+    // if it fills up, extend it by 1 as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
      else  {r=9; BGA(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
     ++cv; --r; 
-    cv->t=cv->x=0; cv->line=line[ci->i]; ++i;
+    // indicate no t result (test value for select., iteration array for for.) and clear iteration index
+    // remember the line number of the for./select.
+    cv->t=cv->x=0; cv->line=line[ci->i]; cv->w=ci->type; ++i;
     break;
-   case CDOF:
+   case CDOF:   // do. after for.
+    // do. after for. .  If this is first time, initialize the iterator
     if(!cv->t){BZ(forinit(cv,t)); t=0;}
-    ++cv->j;
-    if(cv->j<cv->n){
-     if(cv->x){A x;
+    ++cv->j;  // step to first (or next) iteration
+    if(cv->j<cv->n){  // if there are more iterations to do...
+     if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
       symbis(nfs(6+cv->k,cv->xv),x=sc(cv->j),  jt->local);
       symbis(nfs(  cv->k,cv->iv),from(x,cv->t),jt->local);
      }
-     ++i; continue;
+     ++i; continue;   // advance to next line and process it
     }
-   case CBREAKF:
+    // if there are no more iterations, fall through... (this deallocates the loop variables)
    case CENDSEL:
+    // end. for select., and do. for for. after the last iteration, must pop the stack - just once
     rat(z); unstackcv(cv); --cv; ++r; 
-    i=ci->go; 
+    i=ci->go;    // continue at new location
+    break;
+   case CBREAK:
+   case CCONT:
+    // break.-in-while./continue must pop the stack if they are in a select. structure.  Then, they must pop
+    // until they have popped the SELECT type.  It would be possible for the initial analysis to
+    // decide whether any popping is required, but we didn't do that.
+    if(cd&&(cv->w==CSELECT||cv->w==CSELECTN)){
+     rat(z);   // protect possible result from pop
+     do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
+    }
+    i=ci->go;   // After popping any select. off the stack, continue at new address
+    break;
+   case CBREAKF:
+    // break. in a for. must first pop any active select., and then pop the for.
+    // We just pop till we have popped a non-select.
+    rat(z);   // protect possible result from pop
+    do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
+    i=ci->go;     // continue at new location
     break;
    case CRETURN:
+    // return.  Increment the use-count of the result, pop the stack back to empty, set i (which will exit)
     if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}
     i=ci->go;
     break;
    case CCASE:
    case CFCASE:
+    // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
+    // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
     if(!cv->t){BASSERT(t&&NOUN&AT(t),EVCTRL); BZ(cv->t=ra(boxopen(t))); t=0;}
-    i=ci->go;
+    i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
-   case CDOSEL:
+   case CDOSEL:   // do. after case. or fcase.
+    // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
+    // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
     BASSERT(!t||NOUN&AT(t),EVCTRL);
-    i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; 
+    i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
+    // Clear t to ensure that the next case./fcase. does not think it's the first one
     t=0; 
     break;
    case CDO:
+    // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
+    // following B block if the condition is false.  Set b to 1 iff the condition is true
+    //  Start by assuming condition is true; set to move to the next line then
     ++i; b=1;
+    // If there is no t, that's true
     if(t){
-     if(SPARSE&AT(t))BZ(t=denseit(t));
-     BASSERT(NOUN&AT(t),EVCTRL);
-     switch(AN(t)?AT(t):0){
+     if(SPARSE&AT(t))BZ(t=denseit(t));   // convert sparse to dense
+     BASSERT(NOUN&AT(t),EVCTRL);    // error if t is not a noun
+     switch(AN(t)?AT(t):0){   // empty t is also true
+      // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
       case RAT:
-      case XNUM: y=*XAV(t); b=*AV(y)||1<AN(y); break;
+      case XNUM: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // true if first word 0, or multiple words
       case CMPX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break; 
       case FL:   b=0!=*DAV(t);                 break;
       case INT:  b=0!=*AV(t);                  break;
       case B01:  b=*BAV(t);
     }}
-    t=0;
-    if(b)break;
-   default:
-    JBREAK0;
-    i=ci->go;
+    t=0;  // Indicate no T block, now that we have processed it
+    if(b)break;  // if true, step to next sentence.  Otherwise
+    // fall through to...
+   default:   // including BREAK and END
+    JBREAK0;   // Check for interrupts
+    i=ci->go;  // Go to the next sentence, whatever it is
  }}
- FDEPDEC(1);  // OK to ASSERT now
- z=jt->jerr?0:z?ra(z):mtm;
- fa(cd);
+ FDEPDEC(1);
+ z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
+ fa(cd);   // deallocate the explicit-entity stack
+ // Deallocate the local symbol table; pop the locale stack and xdefn; set no assignment (to call for result display)
  symfreeh(jt->local,0L); jt->local=loc; jt->asgn=0; jt->xdefn=ox;
- tpop(_ttop);
+ tpop(_ttop);   // finish freeing memory
+ // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun
  if(z)ASSERT(st&ADV+CONJ||AT(z)&NOUN,EVSYNTAX);
+ // Give this result a short lease on life
  tpush(z);
  R z;
 }

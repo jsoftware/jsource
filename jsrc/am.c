@@ -59,25 +59,40 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
 #define CASENZ(T)  {T*zv=(T*)AV(z); DO(n, j=iv[i]; if(0>j){j+=m; ASSERT(0<=j,EVINDEX);}else ASSERT(j<m,EVINDEX);  \
                        zv[i]=*(i+(T*)aa[j]);); R z;}
 
+// Handle the case statement abc =: pqr} x,...,y,:z, with in-place operation if pqr is Boolean and abc appears on the right
 F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  RZ(w);
- RZ(w1=ca(w)); u=AAV(w1);
- p=1; m=AN(w)-3; v=AAV(w); c=i0(v[m+1]);
- DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&&NOUN&AT(x););
+ RZ(w1=ca(w)); u=AAV(w1);   // make a copy of the input, point to its value
+ // the input is a boxed list.  The last 3 values are (name pqr);(index in which abc appeared in the x,y,... or -1 if it didn't);(original sentence queue)
+ p=1; m=AN(w)-3; v=AAV(w); c=i0(v[m+1]);   // get # items in list, and index of the matching one
+ // Now audit the input names (including pqr), since we haven't properly stacked them & checked them etc.
+ // p is set to 0 if an audit fails
+ DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&&NOUN&AT(x););  // verify names defined, and are nouns
  if(p){
-  b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);
-  p=t&B01+LIT+INT+FL+CMPX&&AT(b)&NUMERIC; 
-  if(p)DO(m, y=u[i]; if(!(t==AT(y)&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});
+  b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
+  p=t&B01+LIT+INT+FL+CMPX&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
+  if(p)DO(m, y=u[i]; if(!(t==AT(y)&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
- if(!p)R parse(v[m+2]);
- if(q=2==m&&B01&AT(b)){bv=BAV(b); x=u[0]; y=u[1];}
- else{
-  if(!(INT&AT(b)))RZ(b=cvt(INT,b));
-  iv=AV(b); 
-  GA(x,INT,m,1,0); aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););
+ // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
+ if(!p)R parse(v[m+2]);   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
+ // We can do it here!  We split into two cases: Boolean pqr with two names in the list, which can never fail;
+ // and all other, which may produce index error
+ if(q=2==m&&B01&AT(b)){bv=BAV(b); x=u[0]; y=u[1];}  // fast case: exactly two names x and y
+ else{   // slow case
+  if(!(INT&AT(b)))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
+  iv=AV(b);    // iv points to the input pqr
+  GA(x,INT,m,1,0); aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
  }
- if(p=!q||0>c||1<AC(u[c]))GA(z,t,n,r,s) else z=u[c];
- switch((!q?12:p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){
+ // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
+ // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
+ // sure abc is locally defined
+ if(p=q&&0<=c&&1>=AC(u[c])) {  // passes quick check
+   p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(AAV(v[m+2])[0], jt->local);  // OK if not in explicit, or not local assignment, or name defined
+    // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
+    // then look up the symbol entry for word[0]
+ }
+ if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
+ switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
   case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
   case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
   case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
@@ -206,7 +221,7 @@ static A jtamend(J jt,A w,B ip){
 }
 
 F1(jtrbrace){R amend(w,0);}
-F1(jtamip  ){R amend(w,1);}
+DF1(jtamip){ R amend(w,!jtpiplocalerr(jt, self)); }
 
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}

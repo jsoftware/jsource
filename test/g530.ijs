@@ -192,6 +192,33 @@ g9 "0 'BIDZ'
 g10"0 'BIDZ'
 g11"0 'BIDZ'
 
+NB. Verify no local-to-global aliasing
+f10 =: 3 : 'a =. y} a,:b'
+f11 =: 3 : 'a =: y} a,:b'
+f12 =: 3 : ('a =. 2 3';'a =: y} a,:b')
+f13 =: 3 : ('a =. 2 3';'a =. y} a,:b')
+a =: 0 1 2 3
+b =: 9 8 7 6
+9 1 7 3 -: f10 1 0 1 0
+0 1 2 3 -: a
+9 8 7 6 -: b
+9 1 7 3 -: f11 1 0 1 0
+9 1 7 3 -: a
+9 8 7 6 -: b
+b =: 9 8
+'domain error' -: f12 etx 0 1
+2 8 -: f13 0 1
+
+NB. This used to fail (bad name check)
+c =: 1 2 3 4
+b =: 0 0 1 1
+c1 =: 1 2 3 4
+d1 =: 9 8 7 6
+c =: b} c1,:d1
+1 2 3 4 -: c1
+1 2 7 6 -: c
+   
+
 y=: 1 2 3
 b=: 0 1 2
 4!:55 ;:'x'
@@ -355,8 +382,22 @@ x -: (<10;20;30){abc
 y -: (<10;20;30){ab
 *./, 1 (<10;20;30)} ab = abc
 
+NB. Verify no local-to-global aliasing
+f10 =: 3 : 'a =. (0) 1} a'
+f11 =: 3 : 'a =: (0) 1} a'
+f12 =: 3 : ('a =. 2 3';'a =: (0) 1} a')
+f13 =: 3 : ('a =. 2 3';'a =. (0) 1} a')
+a =: i. 4
+0 0 2 3 -: f10''
+0 1 2 3 -: a
+0 0 2 3 -: f11''
+0 0 2 3 -: a
+'domain error' -: f12 etx ''
+2 0 -: f13''
 
-4!:55 ;:'a aa ab abc b b32 C c d dd f foo '
+
+4!:55 ;:'a aa ab abc b b32 C c c1 d d1 dd f foo '
+4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g2c g3 g3c g4 g5 g8 g9 g10 g11 goo '
 4!:55 ;:'h i ia j k p q save sp t t0 t1 t2 test x xx y yy z z1 zz '
 

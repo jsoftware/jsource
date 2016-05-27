@@ -46,18 +46,26 @@ static C sp3[4][5]={
  CESC2,  CESC2,  CESC1,   CESC2,  0,
 };   /* trigraphs */
 
+// *s is a string with length n representing a primitive.  Convert the primitive to
+// a 1-byte pseudocharacter number.  Return value of 0 means error
 C spellin(I n,C*s){C c,d,p=*s,*t;I j;
+ // p is the first character, c the second, d the third
  switch(n){
   case 1:
+   // For 1-byte characters, the pseudocharacter is the same as the character itself
    R p;
   case 2:
+   // For 2-byte characters, look the character up in the table and choose the appropriate inflection
    c=s[1]; j=c==CESC1?1:c==CESC2?2:0;
-   R j&&(t=(C*)strchr(spell[0],p)) ? spell[j][t-spell[0]] : 0;
+   R j&&(t=(C*)strchr(spell[0],p)) ? spell[j][t-spell[0]] : 0;  // if inflection is not . or :, or character not found, return error
   case 3:
    c=s[1]; d=s[2];
-   if(p==CSIGN&&d==CESC2&&'1'<=c&&c<='9')R CFCONS;
+   if(p==CSIGN&&d==CESC2&&'1'<=c&&c<='9')R CFCONS;  // lump all _0-9: as CFCONS
+   // sp3 desribes a character in a column.  Row 1 is the uninflected character, rows 2-3 give a supported inflection.  If those match,
+   // the pseudocharacter in in row 0
    if(t=(C*)strchr(sp3[1],p)){j=t-sp3[1]; R c==sp3[2][j]&&d==sp3[3][j]?sp3[0][j]:0;}
-  default:  /* note: fall through */
+  default:  /* note: fall through if character does not support 2 inflections */
+   // invalid inflection, return 0
    R 0;
 }}
 

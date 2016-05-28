@@ -191,23 +191,39 @@ F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,0L,0L,1L,jtweight),0L,1L,1L,jtpdt);
 }
 
-F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v,x;
+// #: y
+F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  RZ(w);
+ // n = #atoms, r=rank, t=type
  n=AN(w); r=AR(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
+ // Result has rank one more than the input.  If there are no atoms,
+ // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
  if(!n||t&B01)R reshape(over(shape(w),n?one:zero),w);
  if(!(t&INT)){
+  // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
   d=df2(num[2],maximum(one,aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
+  // Calculate z = ((1+d)$2) #: w
   RZ(z=abase2(reshape(increm(d),num[2]),w));
-  R t&FL&&equ(irs1(z,0L,1L,jthead),lt(w,zero))?irs1(z,0L,1L,jtbehead):z;
+  // If not float, result is exact or complex; either way, keep it
+  if(t!=FL)R z;
+  // If float, see if we had one digit too many (could happen, if the log was too close to an integer)
+  // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
+  // But we can't delete a digit if any of the values were negative - all are significant then
+  if(i0(aslash(CPLUSDOT,ravel(lt(w,zero)))))R z;
+  if(0==i0(aslash(CMAX,ravel(irs1(z,0L,1L,jthead)))))R irs1(z,0L,1L,jtbehead);
+  R z;
  }
- c=x=0; v=AV(w);
- DO(n, p=*v++; if(p==IMIN){c=SY_64?64:32; break;} x=x<p?p:x<-p?-p:x;);
- if(!c)while(x){x>>=1; ++c;}
- c=MAX(1,c);
- GA(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;
- v=n+AV(w); zv=AN(z)+BAV(z);
- DO(n, x=*--v; DO(c, *--zv=(B)(x&1); x>>=1;));
+ // Integer.  Calculate x=max magnitude encountered (minimum of 1, to leave 1 output value)
+ x=1; v=AV(w);
+// obsolete  DO(n, p=*v++; if(p==IMIN){c=SY_64?64:32; break;} x=x<p?p:x<-p?-p:x;);  // overflow happens on IMIN
+// obsolete if(!c)while(x){x>>=1; ++c;}  // count # bits in result
+// obsolete c=MAX(1,c);  // always at least 1
+ DO(n, p=*v++; x|=(UI)(p>0?p:-p););  // overflow happens on IMIN, no prob
+ for(c=0;x;x>>=1){++c;}  // count # bits in result
+ GA(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;  // Allocate result area, install shape
+ v=n+AV(w); zv=AN(z)+BAV(z);  // v->last input location (prebiased), zv->last result location (prebiased)
+ DO(n, x=*--v; DO(c, *--zv=(B)(x&1); x>>=1;));  // copy in the bits, starting with the LSB
  R z;
 }
 

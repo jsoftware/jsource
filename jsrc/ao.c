@@ -5,19 +5,28 @@
 
 #include "j.h"
 
-
+// This is the derived verb for f/. y
 static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
  RZ(w);
- r=AR(w);
+ r=AR(w);  // r = rank of w
+ // create y= ,/ w - the _2-cells of w arranged in a list
+ // we just create a header for y, pointing to the data from w
  RZ(y=gah(MAX(r-1,1),w));
- u=AS(w); v=AS(y);
- if(1>=r){*v=m=AN(w); n=1;}else{m=*u++; n=*u++; *v++=m*n; ICPY(v,u,r-2);}
+ u=AS(w); v=AS(y);   // u,v->shape of y
+ if(1>=r){*v=m=AN(w); n=1;}else{m=*u++; n=*u++; *v++=m*n; ICPY(v,u,r-2);}  // set shape of y as _2-cells of w
+ // Create x=+"0 1&i./ 2 {. $y
  RZ(x=irs2(IX(m),IX(n),0L,0L,1L,jtplus)); AR(x)=1; *AS(x)=AN(x);
- R df2(x,y,sldot(VAV(self)->f));
+ // perform x f/. y, which does the requested operation
+ RZ(x=df2(x,y,sldot(VAV(self)->f)));
+ // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
+ // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
+ // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
+// if((m==0 || n==0) && (m+n>0)){R reitem(sc(m+n-1),x);}  This change withdrawn pending further deliberation
+ R x;
 }
 
 
-#define OBQCASE(id,t)    ((id)+(256*(t)))
+#define OBQCASE(t,id)    ((t)+(256*(id)))
 
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw*u,*v,*ww=(Tw*)wv;Tz x,*zz;                  \
@@ -27,10 +36,11 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
   DO(m1, v=ww+(k+=n); u=v+n1*MIN(m-i-2,n1); init; while(v<=(u-=n1))expr; *zz++=x;);  \
  }
 
+// Derived verb for f//. y
 static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
- if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);
+ if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
  y=VAV(self)->f; y=VAV(y)->f; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; c=prod(r-2,2+s);

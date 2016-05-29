@@ -13,6 +13,9 @@ scheck ,"2 s
 
 'limit error' -: ,   etx 1 $.(3$  2e9);0 1 2;0
 'limit error' -: ,"2 etx 1 $.(>IF64{2 4 2e9;2 1e10 2e9);0 1 2;0
+'domain error' -: ($. i. 2 3) , etx 1r2
+'domain error' -: ($. i. 2 3) , etx 1r2 1r3
+'domain error' -: ($. i. 2 3) , etx 3 3 $ 1r2 1r3
 
 d=: (?6 3 5$2) * ?6 3 5 2$5
 c=: ; (i.1+r) <"1@comb&.>r=:#$d

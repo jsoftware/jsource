@@ -255,7 +255,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
- FDEPDEC(1);
+ FDEPDEC(1);  // OK to ASSERT now
  z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack
  // Deallocate the local symbol table; pop the locale stack and xdefn; set no assignment (to call for result display)

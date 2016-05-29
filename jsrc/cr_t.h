@@ -33,9 +33,16 @@
                  if(1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #endif
 
-//<<<<<<< HEAD
 #define EMSK(x) (1<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
+
+// Assignments from cr.c:
+// ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
+// ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
+// Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
+// b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
+// mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
+//  from shorter-frame argument
 
 {B cc=1;C*zv;I j=0,jj=0,old;
  if(mn){y0=y=RCALL; RZ(y);}  // if there are cells, execute on the first one
@@ -50,28 +57,7 @@
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}
  } 
 
-/*
-=======
-// Assignments from cr.c:
-// ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
-// ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
-// Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
-// b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
-// mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
-//  from shorter-frame argument
-
-{B cc=1;C*zv;I j=0,jj=0,old;
- // Execute the verb on the first cells.
- if(mn){y0=y=RCALL; RZ(y);}  // normal case, y0=y=result of first cell
- else{I d;
-  // empty arg, execution on cell of fills.  Run the verb with debug turned off.
-  d=jt->db; jt->db=0; y=RCALL; jt->db=d;
-  if(jt->jerr){y=zero; RESETERR;}  // if there is an error, clear it & use 0 as the result
- }
  // yt=type, yr=rank, ys->shape, yn=#atoms k=#bytes  of first-cell result
->>>>>>> origin/oldbugs
-*/
-
  yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
  // First shot: zip through the cells, laying the results into the output area
  // one by one.  We can do this if the results are direct (i. e. not pointers),

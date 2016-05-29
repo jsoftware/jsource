@@ -557,23 +557,30 @@ F1(jtrngstates){A*wv;I k,wd;UI**vv=jt->rngV;
  R mtv;
 }
 
-F1(jtrngseedq){ASSERTMTV(w); R jt->rngseed?jt->rngseed:sc(jt->rngS[jt->rng]);}
+// Return the seed info.  This is a scalar jt->rngS[jt->rng] unless the generator is Mersenne Twister and
+// jt->rngseed is set, in which case jt->rngseed is the vector of seed info
+F1(jtrngseedq){ASSERTMTV(w); R jt->rngseed&&MTI==jt->rng?jt->rngseed:sc(jt->rngS[jt->rng]);}
 
+// Set the vector of RNG seed info
 F1(jtrngseeds){I k,r; 
+ // Force w to integer; k=first value; r=rank
  RZ(w=vi(w)); k=*AV(w); r=AR(w);
  if(r){
+  // w is not an atom.  the RNG had better be Mersenne Twister.  Initialize using w, and save the w list
   ASSERT(1==r&&MTI==jt->rng,EVRANK);
-  fa(jt->rngseed); ra(jt->rngseed=w); 
+  ra(w); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
   mt_init_by_array(AV(w),AN(w));
  }else switch(jt->rng){
+  // atomic w.  We can use that for any generator.  Choose the current one.
   case SMI: ASSERT(k,EVDOMAIN); sm_init(k);     break;
   case GBI:                     gb_init(k);     break;
   case MTI:                     mt_init((UI)k); break;
   case DXI: ASSERT(k,EVDOMAIN); dx_init(k);     break;
   case MRI: ASSERT(k,EVDOMAIN); mr_init(k);
  }
- jt->rngS[jt->rng]=k;
- if(!r&&jt->rngseed){fa(jt->rngseed); jt->rngseed=0;} 
+ jt->rngS[jt->rng]=k;  // Save first value, in case k is atomic
+ if(!r&&MTI==jt->rng&&jt->rngseed){fa(jt->rngseed); jt->rngseed=0;}   // If k is atomic, discard jt->rngseed if there is one
+ // Now jt->rngseed is set iff the w for Mersenne Twister was a list.  jt->rngS[jt->rng] is always set.
  R mtv;
 }
 

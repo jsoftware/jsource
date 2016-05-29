@@ -9,14 +9,18 @@
 B jtvc1(J jt,I n,US*v){DO(n, RZ(255>=*v++);); R 1;}
      /* verify that 2-byte chars have high-order 0 bytes */
 
+// allocate new datablock and return the ASCII for the characters in w
+// if b is 0, raise error if high byte of unicode is not 0
 A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;
  RZ(w);
- if(LIT&AT(w))R ca(w);
- n=AN(w); wv=CAV(w);
- ASSERT(!n||C2T&AT(w),EVDOMAIN);
- GA(z,LIT,n,AR(w),AS(w)); zv=CAV(z);
+ if(LIT&AT(w))R ca(w);  // if already ASCII, clone it and return the clone
+ n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
+ ASSERT(!n||C2T&AT(w),EVDOMAIN);  // must be empty or unicode
+ GA(z,LIT,n,AR(w),AS(w)); zv=CAV(z);  // allocate ASCII area with same data shape
 #if C_LE
  if(h)DO(n, *zv++=*wv++; wv++;) else DO(n, *zv++=*wv++; ASSERT(!*wv++,EVDOMAIN);)
+ // copy the low byte of the data (if there is any).  if b==0, verify high byte is 0
+ // where low and high are depends on endianness
 #else
  if(h)DO(n, wv++; *zv++=*wv++;) else DO(n, ASSERT(!*wv++,EVDOMAIN); *zv++=*wv++;)
 #endif

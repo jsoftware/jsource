@@ -73,14 +73,14 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 static GF(jtgrx){A x;I ck,d,t,*xv;
  t=AT(w); ck=c*bp(t); 
  jt->compk=ck/n; d=c/n; jt->compn=d; jt->compv=CAV(w); jt->compw=w;
- switch(t){
-  case BOX:  jt->comp=ARELATIVE(w)?compr:compa; break;
-  case C2T:  jt->comp=compu;                    break;
-  case INT:  jt->comp=c==n?compi1:compi;        break;
-  case FL:   jt->comp=c==n?compd1:compd;        break;
-  case CMPX: jt->comp=compd; jt->compn=2*d;     break;
-  case XNUM: jt->comp=compx;                    break;
-  case RAT:  jt->comp=compq;                    break;
+ switch(CTTZ(t)){
+  case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
+  case C2TX:  jt->comp=compu;                    break;
+  case INTX:  jt->comp=c==n?compi1:compi;        break;
+  case FLX:   jt->comp=c==n?compd1:compd;        break;
+  case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
+  case XNUMX: jt->comp=compx;                    break;
+  case RATX:  jt->comp=compq;                    break;
   default:   jt->comp=compc;
  }
  GA(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
@@ -174,6 +174,8 @@ static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
  R 1;
 }    /* grade"r w on integer w where c==n */
 
+// returns *base = smallest value, *top = #values (1..2 is 2 values)
+// returns 0 for *top if range is not representable in an integer
 void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=IMAX; p=IMIN;}else p=q=0;
  for(i=0;i<m;++i){

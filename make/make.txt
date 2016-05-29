@@ -31,6 +31,10 @@ $jmake/install.sh
 
 # ensure proper jsrc/jversion.h (jversion-x.h template)
 
+# !!! makefiles do not have h file dependencies !!!
+# after h file changes, run clean.sh to rm all *.o fles for clean build
+$jmake/clean.sh
+
 # build j64 binaries
 $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64

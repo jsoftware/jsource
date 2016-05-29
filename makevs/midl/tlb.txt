@@ -1,0 +1,15 @@
+windows only
+
+jdll.tlb is a binary file encoding the com interface type library
+
+jdll.rc includes jdll.tlb
+
+midl.exe (originally mktyplib.exe) builds jdll.tlb from:
+ jdllodl.h  jdll.odl (which includes methods.odl)
+
+build.bat builds jdll.tlb binary from the 3 source files
+
+build.bat must be run under vs developer command prompt with midl as current folder
+(start>all programs>vs 2013>visual studio tools>developer command prompt)
+
+new jdll.tlb should be manually copied to dllsrc for inclusion in new build

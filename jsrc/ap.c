@@ -296,7 +296,8 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 
 // Entry point for infix.  a is x, w is y, fs points to u
 static DF2(jtinfix){PROLOG;DECLF;A x,z;I m; 
- PREF2(jtinfix);
+ PREF2(jtinfix); // Handle looping over rank.  This returns here for each cell (including this test)
+ // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer
  // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
  if(a==ainf)m=IMAX;
@@ -352,7 +353,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wd,wr,*ws,wt,zc; 
  F2RANK(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); n=IC(w);
- RE(m=i0(a)); p=m==IMIN?IMAX:ABS(m);
+ RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
  if(fs=VAV(self)->f,CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}

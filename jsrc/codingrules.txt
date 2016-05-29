@@ -1,0 +1,3 @@
+When a function encounters an error, it should call jsignal(errorcode) and then return 0.  jsignal will calculate the error line for display; the line will be displayed later.
+The normal way to call jsignal is with ASSERT(), which calls jsignal and then returns 0.  If you have cleanup to do that prevents an immediate return, you may have to call jsignal yourself.
+Whenever you call a function, you should check for a 0 return value and close down if you get one.  It is good practice to start each function with RZ(w) or RZ(a&&w) to return fast if an input is in error. 

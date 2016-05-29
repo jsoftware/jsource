@@ -8,7 +8,8 @@
 #define GINSERT         (I)3
 #define GTRAIN          (I)6
 
-#define COMPOSE(c)  ((c)==CAT||(c)==CATCO||(c)==CAMP||(c)==CAMPCO) 
+#define COMPOSE(c)  ((c)==CAT||(c)==CATCO||(c)==CAMP||(c)==CAMPCO)
+#define COMPOSECO(c)  ((c)==CATCO||(c)==CAMPCO)
 
 #define CONJCASE(a,w)   (2*!(VERB&AT(a))+!(VERB&AT(w)))
 #define NN              3               /* NOUN NOUN                       */
@@ -28,6 +29,7 @@
 #define DECLFGH         DECLFG;        A hs=sv->h;  \
                         AF h1=hs?VAV(hs)->f1:0,h2=hs?VAV(hs)->f2:0
 
+// If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
 

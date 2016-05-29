@@ -81,7 +81,7 @@ B jtpinit(J jt){A t;C*s;
  /*  :. */  pdef(COBVERSE,CONJ, 0L,        jtobverse,0,   0,   0   );
  /*  :: */  pdef(CADVERSE,CONJ, 0L,        jtadverse,0,   0,   0   );
  /*  ,  */  pdef(CCOMMA,  VERB, jtravel,   jtover,   RMAX,RMAX,RMAX);
- /*  ,* */  pdef(CAPIP,   VERB, 0L,        jtapip,   0,   RMAX,RMAX);
+ /*  ,* */  pdef(CAPIP,   VERB, 0L,        jtapip,   0,   RMAX,RMAX);  // f1 gets filled in with pointer to a name when this is used
  /*  ,. */  pdef(CCOMDOT, VERB, jttable,   jtstitch, RMAX,RMAX,RMAX);
  /*  ,: */  pdef(CLAMIN,  VERB, jtlamin1,  jtlamin2, RMAX,RMAX,RMAX);
  /*  ;  */  pdef(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX);
@@ -106,8 +106,8 @@ B jtpinit(J jt){A t;C*s;
  /*  {. */  pdef(CHEAD,   VERB, jthead,    jttake,   RMAX,1,   RMAX);
  /*  {: */  pdef(CTAIL,   VERB, jttail,    0L,       RMAX,0,   0   );
  /*  }  */  pdef(CRBRACE, ADV,  jtrbrace,  0L,       0,   0,   0   );
- /*  }* */  pdef(CAMIP,   ADV,  jtamip,    0L,       0,   0,   0   );
- /*  }* */  pdef(CCASEV,  VERB, jtcasev,   0L,       RMAX,RMAX,RMAX); 
+ /*  }* */  pdef(CAMIP,   ADV,  jtamip,    0L,       0,   0,   0   );   // f2 gets filled in with pointer to a name when this is used
+ /*  }* */  pdef(CCASEV,  VERB, jtcasev,   0L,       RMAX,RMAX,RMAX);   // f2 gets filled in with pointer to a name when this is used
  /*  }. */  pdef(CBEHEAD, VERB, jtbehead,  jtdrop,   RMAX,1,   RMAX);
  /*  }: */  pdef(CCTAIL,  VERB, jtcurtail, 0L,       RMAX,0,   0   );
  /*  "  */  pdef(CQQ,     CONJ, 0L,        jtqq,     0,   0,   0   );

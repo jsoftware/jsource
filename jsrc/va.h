@@ -8,24 +8,36 @@ typedef struct {VA2 p2[13];VA2 pins[7];VA2 ppfx[7];VA2 psfx[7];} VA;
 typedef struct {VA2 p1[6];} UA;
 
                                     /*   cv - control vector               */
-#define VBB             (I)1        /* convert arguments to B              */
-#define VII             (I)2        /* convert arguments to I              */
-#define VDD             (I)4        /* convert arguments to D              */
-#define VZZ             (I)8        /* convert arguments to Z              */
-#define VXX             (I)16       /* convert arguments to XNUM           */
-#define VQQ             (I)32       /* convert arguments to RAT            */
-#define VB              (I)256      /* result type B                       */
-#define VI              (I)512      /* result type I                       */
-#define VD              (I)1024     /* result type D                       */
-#define VZ              (I)2048     /* result type Z                       */
-#define VX              (I)4096     /* result type XNUM                    */
-#define VQ              (I)8192     /* result type RAT                     */
-#define VSB             (I)16384    /* result type SBT                     */
-#define VRD             (I)65536    /* convert result to D if possible     */
-#define VRI             (I)131072   /* convert result to I if possible     */
-#define VXEQ            (I)262144   /* convert to XNUM for = ~:            */
-#define VXCF            (I)524288   /* convert to XNUM ceiling/floor       */
-#define VXFC            (I)1048576  /* convert to XNUM floor/ceiling       */
+#define VBB             B01         /* convert arguments to B              */
+#define VII             INT         /* convert arguments to I              */
+#define VDD             FL          /* convert arguments to D              */
+#define VZZ             CMPX        /* convert arguments to Z              */
+#define Vxx             XNUM        /* convert arguments to XNUM           */
+#define VQQ             RAT         /* convert arguments to RAT            */
+#define VARGMSK         (VBB|VII|VDD|VZZ|Vxx|VQQ)  // mask for argument requested type
+#define VRESX           8           // bit position for result flags
+#define VB              (B01<<VRESX)/* result type B                       */
+#define VI              (INT<<VRESX)/* result type I                       */
+#define VD              (FL<<VRESX) /* result type D                       */
+#define VZ              (CMPX<<VRESX)/* result type Z                       */
+#define VX              (XNUM<<VRESX)/* result type XNUM                    */
+#define VQ              (RAT<<VRESX) /* result type RAT                     */
+#define VSB             (SBT<<VRESX) /* result type SBT                     */
+#define VRESMSK         (VB|VI|VD|VZ|VX|VQ|VSB)  // mask for result-type
+#define VRD             (SLIT<<VRESX)// convert result to D if possible - unused code point
+#define VRI             (SBOX<<VRESX)// convert result to I if possible - unused code point
+#define VXCVTYPEX       25          // bit position for VX conversion type
+#define VXCVTYPEMSK     (3<<VXCVTYPEX)  // mask for bit-positions hold XNUM conversion type
+#define VXX             (Vxx|(XMEXACT<<VXCVTYPEX))  // exact conversion
+#define VXEQ            (Vxx|(XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
+#define VXCF            (Vxx|(XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
+#define VXFC            (Vxx|(XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+
+// Extract the argument-conversion type from cv coming from the table
+#define atype(x) ((x)&VARGMSK)
+
+// Extract the result type from cv coming from the table
+#define rtype(x) (((x)&VRESMSK)>>VRESX)
 
 #if SY_64
 #define NOT(v)          ((v)^0x0101010101010101)

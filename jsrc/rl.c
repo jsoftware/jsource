@@ -6,7 +6,8 @@
 #include "j.h"
 
 #if !SY_WINCE
-extern int isdigit(int);
+// extern int isdigit(int);
+#include <ctype.h>
 #endif
 
 static F1(jtlnoun);

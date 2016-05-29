@@ -164,10 +164,11 @@ static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
   else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
 }}   /* move an argument into the result area */
 
+
 F2(jtover){A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
- if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);
- RZ(t=coerce2(&a,&w,0L));
+ if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);  // if either arg is sparse, switch to sparse code
+ RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
  if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);
  acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;
@@ -213,7 +214,18 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  R z;
 }    /* a,:"r w */
 
-F2(jtapip){RZ(a&&w); R AC(a)>(AFNJA&AFLAG(a)?2:1)||!(DIRECT&AT(a))?over(a,w):apipx(a,w);}
+// Return 0 if it's ok to in-place this name, 1 if not.  It's not if the name in h
+// exists (meaning it is target is local assignment) but is not defined
+I jtpiplocalerr(J jt, A self){
+  A nm = VAV(self)->h;
+  if(nm&&jt->local)R !probe(nm,jt->local);  // if name defined, and there are local names, see if it's defined
+  R 0;  // OK otherwise
+}
+
+// append-in-place.  We can only append if the buffer is not in use more than once, and if the
+// datatype is direct.  Also, we can't append if the name was a local name that is not defined,
+// since that would append-in-place to the global value
+DF2(jtapip){RZ(a&&w);R AC(a)>(AFNJA&AFLAG(a)?2:1)||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
 
 F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  RZ(a&&w);

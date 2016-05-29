@@ -127,7 +127,19 @@ testa=: 4 : 0
 (<4 5  ) testa&> '';3;5;7
 (<6 4 5) testa&> '';3;5;7; 4 5;2 3;4 3;2 5; 2 3 4;2 4 5;2 7
 
+NB. Verify no local-to-global aliasing
+f10 =: 3 : 'a =. a , 8'
+f11 =: 3 : 'a =: a , 8'
+f12 =: 3 : 'a =: a , a =. 2 3'
+f13 =: 3 : 'a =. a , a =. 2 3'
+a =: i. 4
+0 1 2 3 8 -: f10''
+0 1 2 3 -: a
+0 1 2 3 8 -: f11''
+0 1 2 3 8 -: a
+'domain error' -: f12 etx ''
+2 3 2 3 -: f13''
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 global local test testa'
+4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global local test testa'
 
 

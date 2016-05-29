@@ -64,10 +64,10 @@ define one of the following in the build as required
 #define SYS_SUNSOL2         2097152L        /* GCC                         */
 #define SYS_MACOSX          4194304L        /* GCC (CC)                    */
 
-#define SY_WIN32            0    /* any windows intel version              */
+#define SY_WIN32            0    /* any windows intel Visual Studio        */
 #define SY_WINCE            0    /* any windows ce versions                */
 #define SY_LINUX            0    /* any linux intel version                */
-#define SY_MAC              0    /* any macosx intel or powerpc version    */
+#define SY_MAC              0    /* any macosx intel (once included ppc)   */
 #define SY_MACPPC           0    /* macosx powerpc                         */
 
 #define SYS_DOS             (SYS_PC + SYS_PC386 + SYS_PCWIN)
@@ -148,7 +148,7 @@ define one of the following in the build as required
 
 // SY_ALIGN 1 for compilers requiring strict alignment
 //             e.g. if (I*)av is not allowed for arbitrary av of type C*
-#define SY_ALIGN 1 // always use 1 so all use same code
+#define SY_ALIGN 1 // always use 1 so all use same code; required by nvr stack in parser
 
 /* Windows CE target autoconfiguration: */
 #if SY_WINCE

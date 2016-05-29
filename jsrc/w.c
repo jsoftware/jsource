@@ -36,25 +36,30 @@ static ST state[10][9]={
 };
 /*         CX      CS      CA      CN      CB      C9      CD      CC      CQ   */
 
+// w points to a string
+// result is word index & length; z is (# words),(i0,l0),(i1,l1),...
+// (# words) is negated is the last word is NB.
 F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  RZ(w);
- nv=0; s=SS;
- n=AN(w); v=UAV(w); GA(z,INT,1+n+n,1,0); x=1+AV(z);
- for(i=0;i<n;++i){
-  p=state[s][wtype[v[i]]]; e=p.effect;
-  if(e==EI){
-   t&=s==S9;
-   if(t){if(!nv){nv=1; xb=b;} xe=i;}
-   else{if(nv){nv=0; *x++=xb; *x++=xe-xb;} *x++=b; *x++=i-b;}
+ nv=0; s=SS;   // set not creating numeric constant; init state (after space)
+ n=AN(w); v=UAV(w); GA(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
+  // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
+ for(i=0;i<n;++i){   // run the state machine
+  p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
+  if(e==EI){  // if 'emit'...
+   t&=s==S9;   // was previous state S9? (means we were building a number)
+   if(t){if(!nv){nv=1; xb=b;} xe=i;}   // if so, b must be set; if this is first number, remember starting index.  In any case remember presumptive ending index
+   else{if(nv){nv=0; *x++=xb; *x++=xe-xb;} *x++=b; *x++=i-b;}  // Not S9.  If a numeric constant was in progress, it ended on the word BEFORE
+    // the one ending now.  In that case, emit the numeric constant.  Then in any case emit the (nonnumeric) ending here.
   }
-  s=p.new;
-  if(e){b=i; t=s==S9;}
+  s=p.new;   // get next state
+  if(e){b=i; t=s==S9;}   // If we should move the chains, remember the new starting position, and whether we are processing a numeric
  }
- if(s==SQ){jsignal3(EVOPENQ,w,b); R 0;}
- t&=s==S9;
+ if(s==SQ){jsignal3(EVOPENQ,w,b); R 0;}  // error if open quote
+ t&=s==S9;    // finish outing the last word as above
  if(t){*x++=xb=nv?xb:b; *x++=n-xb;}
- else{if(nv){*x++=xb; *x++=xe-xb;} if(s!=SS){*x++=b; *x++=n-b;}}
- m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-m/2:m/2;
+ else{if(nv){*x++=xb; *x++=xe-xb;} if(s!=SS){*x++=b; *x++=n-b;}}  // if final state was 'spaces', there is nothing to put out
+ m=x-AV(z); *AV(z)=s==SZ||s==SNZ?-(m>>1):(m>>1);  // Calculate & install count; if last field is NB., make count negative
  R z;
 }    /* word index & length; z is (# words),(i0,l0),(i1,l1),... */
 
@@ -93,57 +98,109 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  R z;
 }
 
+// a is a name, w is an assignment type.  Result is stored into *z.
+// If the assignment type is local, the result is a copy of the name.  If the assignment type is global,
+// the result is 0.  We return 1 normally, 0 if an error was encountered
+static I jtpipname(J jt, A a, A w, A *z){
+if(*CAV(w)==CASGN)RZ(*z=ca(a))else *z=0;  // copy name, because there is no other way to free the stored value
+R 1;
+}
+
+
 #define TNAME(i)    (NAME&AT(v[i]))
 #define TASGN(i)    (ASGN&AT(v[i]))
-#define TRBRACE(i)  (y=v[i], CRBRACE==ID(y))
-#define TVERB(i,c)  (y=v[i], c      ==ID(y))
-#define TAIA(i,j)   (TASGN(1) && TNAME(i) && TNAME(j) && AN(v[i])==AN(v[j]) && \
+//#define TVERB(i,c)  (y=v[i], c      ==ID(y))  // true if this word is the given verb
+#define TVERB(i,c)  (v[i]==ds(c))  // true if this word is the given verb
+#define TRBRACE(i)  TVERB(i,CRBRACE)  // true if given word is }
+#define TAIA(i,j)   (TASGN(1) && TNAME(j) && AN(v[i])==AN(v[j]) && TNAME(i) && \
                         !memcmp(NAV(v[i])->s,NAV(v[j])->s,AN(v[i])))
+  // true if the two words are names, word 1 is assignment, and the names are equal
 
-F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
+// Convert text sentence to a sequence of words to be the queue for parsing
+// a holds the result of wordil, which is an integer list of word index & length: (# words),(i0,l0),(i1,l1)...
+// w holds the string text of the sentence
+F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  RZ(a&&w);
- s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;
- GA(z,BOX,n,1,0); x=v=AAV(z);
- for(i=0;i<n;i++){
-  wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[c]; b=0;
-  if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}
-  if(128>c&&(y=ds(e)))*x++=y;
-  else if(e==CFCONS)RZ(*x++=FCONS(connum(wl-1,wi)))
-  else switch(b?0:p){
-   default: jsignal3(EVSPELL,w,wi-s); R 0;
-   case C9: RZ(*x++=connum(wl,wi));   break;
-   case CQ: RZ(*x++=constr(wl,wi));   break;
-   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x++=nfs(wl,wi)); 
+ s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
+    // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
+ GA(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
+   // beginning-of-list pointer v, to start of list of output pointers
+ for(i=0;i<n;i++){  // for each word
+  wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
+  if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
+  if(128>c&&(y=ds(e))){*x++=y;if(e==CTILDE&&x[-2]==ds(CRBRACE))bracetilde=1;}  // If first char is ASCII, see if the form including inflections is a primitive;
+    // if so, that is the word to put into the queue.  No need to copy it
+    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
+    // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
+    // without risk of program check
+  else if(e==CFCONS)RZ(*x++=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
+  else switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
+   default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
+   case C9: RZ(*x++=connum(wl,wi));   break;   // starts with numeric, create numeric constant
+   case CQ: RZ(*x++=constr(wl,wi));   break;   // start with ', make string constant
+   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x++=nfs(wl,wi));   // starts with alphabetic, make it a name, error if invalid name
  }}
- if(6<=n && TAIA(0,n-1) && ((b=TRBRACE(n-2)) || RPAR&AT(v[n-2])&&TRBRACE(n-3))){I c,j,p,q;
-  /* abc=:pqr xyz}abc  or  abc=:pqr (xyz})abc */
-  j=2; p=q=0;
-  DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++p; else if(c&RPAR)--p; if(!p)break;);
-  DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);
-  if(!p&&!q&&j>=n-2)v[b+n-3]=ds(CAMIP);
- }else if(5<=n && TAIA(0,2)){
-  if(TVERB(3,CCOMMA) && !(AT(v[4])&ADV+CONJ) && 
-      !(AT(v[4])&NAME&&(y=symbrd(v[4]),jt->etxn=jt->jerr=0,y)&&AT(y)&ADV+CONJ))
-   v[3]=ds(CAPIP);  /* abc=: abc,blah */
-  else if(7<=n&&!(AT(v[3])&VERB+ADV+CONJ)){I c,j,q;
-   /* abc=:abc xyz}~ pqr */
-   j=3; q=0;
-   DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);
-   if(!q&&j<n-2&&TRBRACE(j)&&v[1+j]==ds(CTILDE))v[j]=ds(CAMIP);
- }}else if(7<=n && TNAME(0) && TASGN(1) && TNAME(2) && TRBRACE(3) && TVERB(n-2,CLAMIN)){A p,*yv,z1;I c,j,k,m;
-  /* abc=: pqr}x,y,:z */
-  b=1; m=(n-3)/2; 
-  j=4;      DO(m,   if(!TNAME(j)       ){b=0; break;} j+=2;);
-  j=5; if(b)DO(m-2, if(!TVERB(j,CCOMMA)){b=0; break;} j+=2;);
-  if(b){
-   GA(z1,BOX,4,1,0); x=AAV(z1);
-   GA(y,BOX,m+3,1,0); yv=AAV(y);
-   c=-1; k=AN(v[0]); s=NAV(v[0])->s;
-   j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)&&!memcmp(s,NAV(p)->s,k))c=i;);
-   yv[m]=v[2]; RZ(yv[m+1]=sc(c)); yv[m+2]=z;
-   x[0]=v[0]; x[1]=v[1]; x[2]=ds(CCASEV); x[3]=y;
-   R z1;
- }}
+
+ // We have created the queue.  Here we check for special in-place forms.  If we find one, we
+ // replace the verb/adverb with a version that performs in-place operation.
+ // We have to handle the case of abc =. inplace where abc is defined as a global name but not as a local name.
+ // In that case, the operation must NOT be done in-place, but there is no way to know
+ // until execution.  So, if the assignment is '=.', we pass the address of the target name to
+ // the inplace form, in the h field (otherwise unused).
+
+ // The game here is to make tests that fail as quickly as possible, so that this overhead
+ // falls lightly on most sentences
+ if(5 <= n) {   // no special form can be less than 5 words
+  if(TVERB(3,CCOMMA) && TAIA(0,2) && !(AT(v[4])&ADV+CONJ) && 
+      !(AT(v[4])&NAME&&(y=symbrd(v[4]),jt->etxn=jt->jerr=0,y)&&AT(y)&ADV+CONJ)) {
+   // abc = abc , blah  but blah must not start with a modifier, or be a name whose value is a modifier
+   // NOTE that strictly speaking we don't know the type of the name (could change during blah), so this is a kludge
+   RZ(v[3]=y=ca(ds(CAPIP)));   // create new word for append-in-place.  OK to overwrite v[3] because it is from ds()
+   if(!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
+  } else if (6 <= n) {
+   if((TRBRACE(n-2) || TRBRACE(n-3) && RPAR&AT(v[n-2])) && TAIA(0,n-1) ){I c,j,p,q;
+    // abc=:pqr xyz}abc  or  abc=:pqr (xyz})abc    or  abc=:pqr (xyz)}abc    or   abc=:(expr) xyz}abc     or   abc=:(expr) (xyz)} abc
+    j=2; p=q=0;   // start looking after ASGN
+    DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++p; else if(c&RPAR)--p; if(!p)break;);   // if starts with (, skip to past matching )
+    DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);  // again; skip to 3d operand
+    // j now points to the third operand.  If that's pointing at the last or next-last word, we can mip
+    if(!p&&!q&&j>=n-2){ 
+     RZ(v[TRBRACE(n-2)+n-3] = y = ca(ds(CAMIP)));   // create new word for modify-in-place.  OK to overwrite v[3] because it is from ds()
+     if (!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
+    }
+   } else if (6 < n) {   // if we matched } word  or )} word, we can't match any other special form
+    if(bracetilde && TAIA(0,2) && !(AT(v[3])&VERB+ADV+CONJ)){I c,j,q;
+     // abc=:abc xyz}~ expr  or abc=:abc (expr)}~ expr
+     // xyz must not be a primitive verb, but we don't look at the type of a name (kludge)
+     j=3; q=0;
+     DO(n-j, y=v[j++]; c=AT(y); if(c&LPAR)++q; else if(c&RPAR)--q; if(!q)break;);  // skip to after 2nd operand - should be at }
+     if(!q&&j<n-2&&TRBRACE(j)&&(TVERB(j+1,CTILDE))) {   // }~ after 2d expr
+      RZ(v[j] = y = ca(ds(CAMIP)));   // create new word for modify-in-place.  OK to overwrite v[3] because it is from ds()
+      if (!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
+     }
+    } else if(TRBRACE(3) && TVERB(n-2,CLAMIN) && TNAME(0) && TASGN(1) && TNAME(2)){A p,*yv,z1;I c,j,k,m;  // if we match }~, can't match this
+     // abc=: pqr}x,...y,:z  (must be odd # words, but that's not worth checking)
+     // Verify the form is present: alternating names and commas
+     b=1; m=(n-3)>>1;   // number of nouns x..z
+     j=4;      DO(m,   if(!TNAME(j)       ){b=0; break;} j+=2;);  // Check all names
+     j=5; if(b)DO(m-2, if(!TVERB(j,CCOMMA)){b=0; break;} j+=2;);  // Check inbetween, except after last 2 names 
+     if(b){  // if the form is right...
+      // Synthesize a new argument to replace the list of arrays, and a new sentence to execute on this argument
+      // The sentence is abc =: CCASEV (new argument)
+      // The new argument is (the list of names), then
+      // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
+      GA(z1,BOX,4,1,0); x=AAV(z1);   // Allocate the sentence, point to its data
+      GA(y,BOX,m+3,1,0); yv=AAV(y);   // Allocate the argument
+      c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
+      j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmp(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
+      yv[m]=v[2]; RZ(yv[m+1]=sc(c)); yv[m+2]=z;    // add the 3 ending elements
+      x[0]=v[0]; x[1]=v[1]; x[2]=ds(CCASEV); x[3]=y;  // build the sentence
+      R z1;  // that's what we'll execute
+     }
+    }
+   }
+  }
+ }
  R z;
 }    /* produce boxed list of words suitable for parsing */
                                                             

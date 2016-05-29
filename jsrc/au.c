@@ -33,6 +33,10 @@ DF1(jtdfs1){A s=jt->sf,z; RZ(self); z=CALL1(VAV(self)->f1,  w,jt->sf=self); jt->
 DF2(jtdfs2){A s=jt->sf,z; RZ(self); z=CALL2(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; R z;}    
      /* for monads and dyads that can possibly involve $: */
 
+A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(VAV(self)->f1,  w,self0);}
+A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,self0);}
+     // used to treat self as an argument.  Used with routines that don't really use self
+
 F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); R z;}
 F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); R z;}
 
@@ -42,6 +46,8 @@ A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, 0L, RMAX,RMAX,RMAX);}
 F1(jtdomainerr1){ASSERT(0,EVDOMAIN);}
 F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 
+// create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
+// if there has been a previous error this function returns 0
 A jtfdef(J jt,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GA(z,t,1,0,0); v=VAV(z);
@@ -73,8 +79,16 @@ B jtprimitive(J jt,A w){A x=w;V*v;
  R!VAV(x)->f;
 }    /* 1 iff w is a primitive */
 
+// w is a cut conj, f;.n
+// Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
+
 B jtboxatop(J jt,A w){A x;C c;V*v;
  RZ(w);
- x=VAV(w)->f; v=VAV(x); c=v->id;
- R COMPOSE(c)&&CBOX==ID(v->f); 
+ x=VAV(w)->f; v=VAV(x); c=v->id;   // x->f, v->value, c=id of f
+ if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
+ if(CBOX==ID(v->f)) {  // if u is <...
+   if(COMPOSECO(c))R 1;  // always OK if @: &:
+   R v->g&&VERB&AT(v->g)&&VAV(v->g)->mr==IMAX;
+ }
+ R 0; 
 }    /* 1 iff "last" function in w is <@f */

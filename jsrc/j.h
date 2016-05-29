@@ -7,6 +7,9 @@
 #include "js.h"
 #endif
 
+// If you are porting to a new compiler or architecture, see the bottom of this file
+// for instructions on defining the CTTZ macros
+
 #if SY_WINCE
 #include "..\cesrc\cecompat.h"
 #endif
@@ -154,18 +157,16 @@
                                         /* including trailing 0 byte       */
 
 #if SY_WINCE
-#define NFCALL          100L            /* wince     named fn call depth   */
 #define NFDEP           200L            /* wince           fn call depth   */
 #endif
 #if SYS & SYS_MACOSX
-#define NFCALL           9000L          /* darwin    named fn call depth   */
 #define NFDEP           18000L          /* darwin          fn call depth   */
 #endif
 #ifndef NFCALL
-#define NFCALL          10000L          /* all other named fn call depth   */
 #define NFDEP           20000L          /* all other       fn call depth   */
 #endif
 
+#define NFCALL          (MAX(40,NFDEP/10))              // call depth for named calls.  They can be expensive
 #define NTSTACK         2000L           /* size of stack for temps         */
 
 #define IIDOT           0               /* modes for indexofsub()          */
@@ -229,8 +230,8 @@
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)
 #define F2(f)           A f(J jt,A a,A w) 
-#define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}
-#define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,f);}
+#define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on it.  m=monad rank, f=function to call for monad cell
+#define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 #define HN              3L
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
@@ -264,7 +265,6 @@
 #define SZI             ((I)sizeof(I))
 #define VAL1            '\001'
 #define VAL2            '\002'
-
 
 #if C_LE
 #define B0000   0x00000000
@@ -325,6 +325,58 @@
 #include "m.h"
 #include "a.h"
 #include "s.h"
+
+
+// CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
+// CTTZZ(w) does the same, but returns 32 if w is 0
+// CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
+// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
+// since we don't require CTLZ yet, we defer that problem to another day
+
+// CTTZ uses the single-instruction count-trailing-zeros instruction to convert
+// a 1-bit mask to a bit number.  If this instruction is available on your architecture/compiler,
+// you should use the compiler intrinsic to create this instruction, and define the CTTZ and CTTZZ
+// macros to use the instruction inline.  It is used enough in the J engine to make a difference.
+
+// If you set AUDITCOMPILER to 1, i.c will include code to test CTTZ (and signed shift) on startup and crash if it
+// does not perform properly, as a debugging aid.
+
+// If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
+// for the complete spec for CTTZ and CTTZZ.
+
+#if SY_WIN32 
+#include <intrin.h>
+#define CTTZ(w) _tzcnt_u32((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#endif
+
+#if SY_LINUX || SY_MAC
+#define CTTZ(w) __builtin_ctzl((UINT)(w))
+#define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
+#endif
+
+// Insert other compilers/architectures here
+
+// Insert CTLZ here if CTTZ is not available
+
+// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macro
+// CTLZ, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
+// CTTZ will be defined:
+#if defined(CTLZ) && !defined(CTTZ)
+#define CTTZ(w) (31-CTLZ((w)&-(w)))
+#define CTTZZ(w) (0xffffffff&(w) ? CTTZ(w) : 32)
+#endif
+
+// If CTTZ is not defined, the following code will use the default from u.c:
+#if !defined(CTTZ)
+extern I CTTZ(I);
+extern I CTTZZ(I);
+#endif
+
+// Set these switches for testing
+#define AUDITBP 0  // Verify that bp() returns expected data
+#define AUDITCOMPILER 0  // Verify compiler features CTTZ, signed >>
+
 
 // JPFX("here we are\n")
 // JPF("size is %i\n", v)

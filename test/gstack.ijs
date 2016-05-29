@@ -66,7 +66,7 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '($: + >:) 0'
 'stack error' -: ex '(>: + $:) 0'
 
-'stack error' -: ex 'ff^:] gg&0~`hh'
+'stack error' -: ex 'ff^:] gg&0~`hh'   NB. now not allowed
 'stack error' -: ex '* ^:]  +&0~`- '
 'stack error' -: ex '* ^:]  +^:]`- '
 'stack error' -: ex 't}   t=: +^:]`-'
@@ -75,7 +75,12 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '128!:2~ ''128!:2~'''
 'stack error' -: ex 't 128!:2 ;~t' [ t=: '0&{:: ([ 128!:2 ;) 1&{::'
 
+p=: 3 : 0
+ m=.(3 #:@:+ [: i.@<:&.-: 2^#) y
+ c=.m <@:p;.2"1 y
+)
+'stack error' -: ex 'p;:''a b c'''
 
-4!:55 ;:'c f f5 f6 g t'
+4!:55 ;:'c f f5 f6 g t p'
 
 

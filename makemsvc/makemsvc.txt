@@ -1,0 +1,86 @@
+how to build windows binaries using command line
+**************************************************************************
+general:
+
+1. Visual Studio Express 2013 for Windows Desktop
+you are urged to use vs2013 (doesn't have to be express) if possible
+vs2012 is ok, but vs2015 has problems and is best avoided for now
+
+in theory the _xp platform toolset binaries run on xp (but not tested)
+xp support will be dropped in the next year or so
+
+2. examples use powershell, but works command prompt as well
+
+3. examples assume gitdev\jsource is the jsource folder
+
+4. jbld hardwired as build folder
+
+5. create jbld folder
+...> gitdev\jsource\makemsvc\install.bat gitdev
+
+6. edit jsrc\jversion.h as appropriate for 9!:14 result
+jsrc\jversion-x.h is template for this file
+
+7. copy binaries to release folder
+...>release.bat
+
+**************************************************************************
+j64 
+
+0. start powershell and cd to this folder
+run the batch file vcvarsx86_amd64.bat in vs2013 vc\bin\x86_amd64 folder
+
+1. build jconsole.exe
+nmake -f makefile.win x64=1 clean
+nmake -f makefile.win x64=1
+cd ..
+
+2. build j.dll
+same as for jconsole but cd into jdll
+ 
+3. build tsdll.dll -  used in test suite to validate cd 
+same as for jconsole but cd into tsdll
+
+4. run test suite
+copy jconsole.exe to jbld\j64\bin\jconsole.exe
+similarly for j.dll and tsdll.dll
+
+start powershell
+...>jbld\j64\bin\jconsole.exe
+   i.5
+   9!:14''
+...
+   testpath=:'gitdev/jsource/test/'
+   load testpath,'tsu.ijs'
+   RUN ddall NB. takes a few minutes to validate system and report problems
+
+**************************************************************************
+j32
+
+0. start powershell and cd to this folder
+run the batch file vcvars32.bat in vs2013 vc\bin folder
+
+1. build jconsole.exe
+cd jconsole
+nmake -f makefile.win clean
+nmake -f makefile.win
+cd ..
+
+2. build j.dll
+same as for jconsole but cd into jdll
+ 
+3. build tsdll.dll -  used in test suite to validate cd 
+same as for jconsole but cd into tsdll
+
+4. run test suite
+copy jconsole32.exe to jbld\j32\bin\jconsole.exe
+similarly for j32.dll and tsdll32.dll
+
+start powershell
+...>jbld\j32\bin\jconsole.exe
+   i.5
+   9!:14''
+...
+   testpath=:'gitdev/jsource/test/'
+   load testpath,'tsu.ijs'
+   RUN ddall NB. takes a few minutes to validate system and report problems

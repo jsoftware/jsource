@@ -5,6 +5,7 @@
 
 #include "j.h"
 
+#define invrecur(x) jtinv(jt,(x),1)  // call inv(), indicating recursive call
 
 static F1(jtinvamp);
 
@@ -28,12 +29,12 @@ static F2(jtfong){A f;C c;V*v;
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  RZ(w);
  v=VAV(w); RZ(f=unname(v->f)); g=v->g; RZ(h=unname(v->h));
- if(CCAP==ID(f))R fong(inv(h),inv(g));
+ if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));
  c=1&&NOUN&AT(f); b=c||consf(f);
  ASSERT(b!=consf(h),EVDOMAIN);
  RZ(k=c?f:df1(zero,b?f:h));
- RZ(gi=inv(b?amp(k,g):amp(g,k)));
- RZ(fi=inv(b?h:f));
+ RZ(gi=invrecur(b?amp(k,g):amp(g,k)));
+ RZ(fi=invrecur(b?h:f));
  if(CAMP==ID(gi)){
   v=VAV(gi); 
   if     (NOUN&AT(v->f))RZ(gi=folk(v->f,     v->g, ds(CRIGHT)))
@@ -110,8 +111,8 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CROOT:    R amp(ds(nf?CEXP:CLOG),x);
   case CEXP:     R ng&&equ(x,num[2])?ds(CROOT):amp(x,ds(nf?CLOG:CROOT));
   case CLOG:     R nf?amp(x,ds(CEXP)):amp(ds(CROOT),x);
-  case CJDOT:    R nf?atop(inv(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
-  case CRDOT:    R nf?atop(inv(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
+  case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
+  case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
   case COBVERSE: ff=VAV(h)->g; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(!AR(h))R ds(CPDERIV);
@@ -247,7 +248,9 @@ static C invf[2][29] = {
  CBASE,  CABASE, CEXEC,   CTHORN,  0 
 };
 
-F1(jtinv){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
+// Return inverse.  recur is a recursion indicator, always forced to 0 for the initial call, and
+// set to 1 here for recursive calls
+A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN); 
  id=ID(w); v=VAV(w);
@@ -268,22 +271,22 @@ F1(jtinv){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
   case CPCO:     R fdef(CPOWOP,VERB,jtplt,    0L, w,num[-1],0L, 0L, 0L,  0L,  0L  );
   case CQCO:     R eval("*/");
   case CUCO:     R amp(num[3],w);
-  case CUNDER:   R under(inv(f),g);
+  case CUNDER:   R under(invrecur(f),g);
   case CFORK:    R invfork(w);
   case CAMP:     if(nf!=ng)R invamp(w);  /* fall thru */
-  case CAT:      if(vf&&vg)R atop(inv(g),inv(f));   break;
+  case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
   case CAMPCO:
-  case CATCO:    if(vf&&vg)R atco(inv(g),inv(f));   break;
+  case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;
   case CSLASH:   if(CSTAR==ID(f))R ds(CQCO);        break;
-  case CQQ:      if(vf)R qq(inv(f),g);              break;
+  case CQQ:      if(vf)R qq(invrecur(f),g);              break;
   case COBVERSE: if(vf&&vg)R obverse(g,f);          break;
   case CSCO:     R amp(num[5],w);
   case CPOWOP:   
-   if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?inv(f):powop(0>p?f:inv(f),sc(ABS(p)));}
+   if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
    if(VGERL&v->flag)R*(1+AAV(v->h));
    break;
   case CTILDE:
-   if(nf)R inv(symbrd(f));
+   if(nf)R invrecur(symbrd(f));
    switch(ID(f)){
     case CPLUS:  R ds(CHALVE);
     case CSTAR:  R ds(CSQRT);
@@ -320,7 +323,11 @@ F1(jtinv){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
    if(CFROM==ID(f)&&CEQ==ID(g))R eval("i.\"1&1");
    break;
  }
- if(!nameless(w))R inv(fix(w));
+ // Failure - no inverse found.  If there are names in w, try fixing w and try on that.
+ // But only fix once, at the top recursion level, (1) to avoid an infinite loop if
+ // there is a circular reference that leaves names in the fixed form of w; (2) to avoid
+ // repeated fixing of lower branches, which will only be tried again when higher levells are fixed
+ if(!recur&&!nameless(w))R invrecur(fix(w));
  ASSERT(0,EVDOMAIN);
 }
 

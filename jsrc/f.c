@@ -287,29 +287,29 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 F1(jtthorn1){PROLOG;A z;
  RZ(w);
  if(!AN(w))GA(z,LIT,0,AR(w),AS(w))
- else switch(AT(w)){
+ else switch(CTTZ(AT(w))){
 #ifdef UNDER_CE
   default:   if(AT(w)&XD+XZ)z=thxqe(w); else R 0; break;
   case XNUM: case RAT:
              z=thxqe(w);                  break;
 #else
   default:   R 0;
-  case XNUM: case RAT: case XD: case XZ:
+  case XNUMX: case RATX: case XDX: case XZX:
              z=thxqe(w);                  break;
 #endif
-  case BIT:  z=thbit(w);                  break;
-  case B01:  z=thb(w);                    break;
-  case LIT:  z=ca(w);                     break;
-  case C2T:  z=rank1ex(w,0L,1L,jttoutf8); break;
-  case BOX:  z=thbox(w);                  break;
-  case SBT:  z=thsb(w);                   break;
-  case NAME: z=sfn(0,w);                  break;
-  case ASGN: z=spellout(*CAV(w));         break;
-  case INT:  case FL: case CMPX:
+  case BITX:  z=thbit(w);                  break;
+  case B01X:  z=thb(w);                    break;
+  case LITX:  z=ca(w);                     break;
+  case C2TX:  z=rank1ex(w,0L,1L,jttoutf8); break;
+  case BOXX:  z=thbox(w);                  break;
+  case SBTX:  z=thsb(w);                   break;
+  case NAMEX: z=sfn(0,w);                  break;
+  case ASGNX: z=spellout(*CAV(w));         break;
+  case INTX:  case FLX: case CMPXX:
              z=thn(w);                    break;
-  case SB01: case SINT: case SFL: case SCMPX: case SLIT: case SBOX:
+  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
              z=ths(w);                    break;
-  case VERB: case ADV:  case CONJ:
+  case VERBX: case ADVX:  case CONJX:
    switch((jt->disp)[1]){
     case 1: z=thorn1(arep(w)); break;
     case 2: z=thorn1(drep(w)); break;

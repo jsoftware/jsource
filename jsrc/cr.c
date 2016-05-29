@@ -12,6 +12,8 @@ I mr(A w){R VAV(w)->mr;}
 I lr(A w){R VAV(w)->lr;}
 I rr(A w){R VAV(w)->rr;}
 
+// effective rank: ar is rank of argument, r is rank of verb (may be negative)
+// result is rank of argument cell
 I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
 #define NEWYA   {GA(ya,at,acn,acr,as+af); uu=CAV(ya);}
@@ -34,25 +36,36 @@ A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG;A y,y0,yw,z;B wb;C*v,*vv;
 #include "cr_t.h"
 }
 
+// General setup for verbs with IRS that do not go through jtirs[12]
+// A verb u["n] using this function checks to see whether it has multiple cells; if so,
+// it calls here, giving a callback; we split the arguents into cells and call the callback,
+// which is often the same original function that called here.
 A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A y,y0,ya,yw,z;B ab,b,wb;
    C*u,*uu,*v,*vv;I acn,acr,af,ak,ar,*as,at,k,mn,n=1,p,q,*s,wcn,wcr,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  if(at&SPARSE||wt&SPARSE)R sprank2(a,w,fs,lr,rr,f2);
+ // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
  ar=AR(a); as=AS(a); acr=efr(ar,lr); af=ar-acr; ab=ARELATIVE(a);
  wr=AR(w); ws=AS(w); wcr=efr(wr,rr); wf=wr-wcr; wb=ARELATIVE(w);
- if(!af&&!wf)R CALL2(f2,a,w,fs);
+ if(!af&&!wf)R CALL2(f2,a,w,fs);  // if there's only one cell, run on it, that's the result
+ // multiple cells.  Loop through them.
+ // ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
+ // Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
  RE(acn=prod(acr,as+af)); ak=acn*bp(at); u=CAV(a)-ak; NEWYA;
  RE(wcn=prod(wcr,ws+wf)); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;
+ // b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
+ // mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
+ //  from shorter-frame argument
  b=af<=wf; p=b?wf:af; q=b?af:wf; s=b?ws:as; RE(mn=prod(p,s)); RE(n=prod(p-q,s+q));
- ASSERT(!ICMP(as,ws,q),EVLENGTH);
+ ASSERT(!ICMP(as,ws,q),EVLENGTH);  // error if frames are not same as prefix
+ // Initialize y? to hold data for the first cell; but if ? is empty, set y? to a cell of fills
  if(AN(a))MOVEYA else RZ(ya=reshape(vec(INT,acr,as+af),filler(a)));
  if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,wcr,ws+wf),filler(w)));
 #define VALENCE  2
 #define TEMPLATE 0
 #include "cr_t.h"
 }
-
 
 /* Integrated Rank Support                              */
 /* f knows how to compute f"r                           */
@@ -74,14 +87,21 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old=jt->rank,rv[2],wr;
  R z;
 }
 
-A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr; 
+// IRS setup for dyads x op y
+// a is x, w is y
+// fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none
+// l, r are nominal ranks of fs
+// f2 is a setup verb (jtover, jtreshape, etc)
+A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr;
+ // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
  RZ(a&&w);
- ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;
- wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;
- if(!(af||wf))R CALL2(f2,a,w,fs);
- ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);
+ ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;  // get rank, effective rank, length of frame...
+ wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;     // ...for both args
+ if(!(af||wf))R CALL2(f2,a,w,fs);   // if no frame, call setup verb and return result
+ ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  /* if(af&&wf&&af!=wf)R rank2ex(a,w,fs,l,r,f2); */
- jt->rank=rv; z=CALL2(f2,a,w,fs); jt->rank=old; 
+ jt->rank=rv; z=CALL2(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+  // Not all setup verbs (*f2)() use the fs argument.  
  R z;
 }
 

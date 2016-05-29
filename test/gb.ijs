@@ -226,6 +226,10 @@ _ _ _ -: asdfnotexist b. 0
 'domain error' -: - b. etx _                
 'domain error' -: ^ b. etx 0.5
 
+u =. > >: :. l
+l =. > >: :. u
+'domain error' -: u b. etx _1
+
 
 NB. n b. inverse --------------------------------------------------------
 

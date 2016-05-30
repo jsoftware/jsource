@@ -48,7 +48,7 @@ void jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
  // then, to make sure we don't increment the same use count twice by continued scanning
- DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){ra(w); *v = (A)~(I)w; break;}else if(0==~s) break; ++v;);
+ DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){ra(w); *v = (A)~(I)w; break;}else if(~0==s) break; ++v;);
 }    /* stack handling for w which is about to be redefined */
 
 // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
@@ -119,7 +119,7 @@ PT cases[] = {
  LPAR,      CAVN,      RPAR, ANY,       jtpunc,    jtvpunc,  0,2,0,
 };
 
-// Run parser, creating a new debug frame.  Explicit defs, which don't take th etime, go through jtparseas
+// Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
 F1(jtparse){A z;
  RZ(w);
  RZ(deba(DCPARSE,0L,w,0L));
@@ -287,11 +287,11 @@ exitparse:
 
  // Now that the sentence has completed, take care of some cleanup.  Names that were reassigned after
  // their value was moved onto the stack had the decrementing of the use count deferred: we decrement
- // them now (and possibly free them).  This is a bit of a kludge, because the names fall out of circulation
- // before the end of the sentence, and we should free them ASAP; but it is convenient to wait
- // till the end of the sentence, as we do here.
+ // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
+ // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
+ // we are through with the result
  v=otop+jt->nvrav;  // point to our region of the nvr area
- DO(jt->nvrtop-otop, if(1 & (I)*v)fa((A)~(I)*v); ++v;);   // perform deferred frees.  Test with LSBs in case of 32-bit systems
+ DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
  jt->nvrtop=otop;  // deallocate the region used in this routine
 
  RZ(stack);  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled

@@ -288,12 +288,13 @@ B valueisint; // set if the value we are processing is really an int
  r=AR(w)-(1==c); r=MAX(0,r); 
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
  GA(z,FL,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=DAV(z);
- RZ(mc);  // If no fields at all, exit with empty result (avoids infinite loop below)
+ if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int,
  // but only on 64-bit systems where int and float have the same size
- if(!(tryingint = sizeof(D)==sizeof(I) && AT(a)&B01+INT))RZ(a=cvt(FL,a));
+ if(!(tryingint = sizeof(D)==sizeof(I) && AT(a)&B01+INT)){RZ(a=cvt(FL,a));}
+ else if(AT(a)==B01)RZ(a=cvt(INT,a));  // If we are trying ints, we must promote Bool to int
  // Get the default value; supposedly a (D) but if we are trying ints it might be really an (I)
- a0=*DAV(a);
+ a0=DAV(a)[0];
  // loop till all results have been produced.  Some values require a restart, so we control this field-by-field
  // rather than row-by-row
  while(1){   // Loop for each field - we know there's at least one, thus n>0
@@ -339,7 +340,7 @@ B valueisint; // set if the value we are processing is really an int
      tryingint = 0;
      // Convert the default value to float
      a1 = a0; a0 = (D)*(I *)&a1;
-     // Convert all previously-read values to float.  Also convert the default value
+     // Convert all previously-read values to float.  Also converted the default value above
      // We have to use pointer aliasing to read the value in zv as an int
      DO(k, zv[i] = (D)((I *)zv)[i];)
     }

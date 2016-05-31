@@ -84,6 +84,7 @@ static F1(jtstdnm){C*s;I j,n,p,q;
  R nfs(n-(p+q),p+s);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
 
+// x is a (possibly) boxed string; result is NAME block for name x, error if invalid name
 F1(jtonm){A x,y; RZ(x=ope(w)); y=stdnm(x); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); R y;}
 
 // w is array of boxed strings; result is name class for each

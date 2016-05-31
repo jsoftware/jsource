@@ -73,17 +73,29 @@ ACTION(jtis){A f,n,v;B ger=0;C c,*s;
  n=stack[0]; v=stack[4];   // extract arguments
  if((I)stack[1]==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  if(LIT&AT(n)&&1>=AR(n)){
+  // lhs is ASCII characters, atom or list.  Convert it to words
   //ASSERT(1>=AR(n),EVRANK); must be true
-  s=CAV(n); ger=CGRAVE==*s; 
-  RZ(n=words(ger?str(AN(n)-1,1+s):n));
-  if(1==AN(n))RZ(n=head(n));
+  s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
+  RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
+  if(1==AN(n)){
+   // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
+   if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
+  }
  }
- ASSERT(AN(n)||!IC(v),EVILNAME);
+ ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
+ // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+ // depending on which type of assignment (but if there is no local symbol table, always use the global)
  f=stack[2]; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
+ // if simple assignment to a name (normal case), do it
  if(NAME&AT(n)) symbis(n,v,jt->symb);
+ // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
  else if(!AR(n))symbis(onm(n),v,jt->symb);
+ // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+ // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+ // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+ // if not AR assignment, just open each box of rhs and assign
  else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,jtisf);}
- jt->symb=0;
+ jt->symb=0;   // Restore to no symbol table selected
  stack[5]=stack[3];  // clean up stack after execution
  RNE(stack+4);  // the result is the same value that was assigned
 }

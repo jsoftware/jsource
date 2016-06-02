@@ -290,7 +290,7 @@ F1(jtthorn1){PROLOG;A z;
  else switch(CTTZ(AT(w))){
 #ifdef UNDER_CE
   default:   if(AT(w)&XD+XZ)z=thxqe(w); else R 0; break;
-  case XNUM: case RAT:
+  case XNUMX: case RAT:
              z=thxqe(w);                  break;
 #else
   default:   R 0;

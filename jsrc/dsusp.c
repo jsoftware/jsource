@@ -131,7 +131,11 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;I*v;
 }
 
 
+// Parse line & check for assertion
 static A jtparseas(J jt,B as,A w){A z;
+ // If w is 0, we don't parse, but instead raise 'noun result was required' error on the beginning of the sentence
+ if(!w){jt->sitop->dci=1; jsignal(EVNONNOUN); R 0;}
+ // normal path is to execute the sentence
  z=parsea(w);  /* y is destroyed by parsea ??? */
  if(as&&z)ASSERT(NOUN&AT(z)&&all1(eq(one,z)),EVASSERT);
  R z;
@@ -139,7 +143,7 @@ static A jtparseas(J jt,B as,A w){A z;
 
 /* parsex: parse an explicit defn line              */
 /* w  - line to be parsed                           */
-/* lk - 1 iff locked function                       */
+/* lk - 1 iff locked function; _1 
 /* ci - current row of control matrix               */
 /* c  - stack entry for dbunquote for this function */
 
@@ -147,8 +151,9 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c){A z;B as,s;DC d,t=jt->sitop;
  RZ(w);
  JATTN;
  as=ci->type==CASSERT;
- if(lk)R parseas(as,w);
+ if(lk>0)R parseas(as,w);
  RZ(d=deba(DCPARSE,0L,w,0L));
+ if(lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
  if(0==c)z=parseas(as,w);   /* anonymous or not debug */
  else{                      /* named and debug        */
   if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}

@@ -119,7 +119,7 @@ g2=: 3 : 0
  end.
 )
 
-'control error' -: g2 etx 3
+'noun result was required' -: g2 etx 3
 
 g3=: 3 : 0
 select. y
@@ -131,9 +131,9 @@ end.
 
 'one'           -: g3 1
 
-'control error' -: g3 etx 2
-'control error' -: g3 etx 3
-'control error' -: g3 etx 4
+'noun result was required' -: g3 etx 2
+'noun result was required' -: g3 etx 3
+'noun result was required' -: g3 etx 4
 
 g4=: 3 : 0
 select. y
@@ -145,9 +145,9 @@ end.
 
 'one'           -: g4 1
 
-'control error' -: g4 etx 2
-'control error' -: g4 etx 3
-'control error' -: g4 etx 4
+'noun result was required' -: g4 etx 2
+'noun result was required' -: g4 etx 3
+'noun result was required' -: g4 etx 4
 
 
 

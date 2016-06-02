@@ -241,9 +241,16 @@ NB. : -------------------------------------------------------------------
 'rank error'   -: ex '3 : (2 3 4$''a'')'
 'rank error'   -: ex '2 : (2 3$<''a'')'
 
-'syntax error' -: (3 : '+') etx 4
-
-
+'noun result was required' -: (3 : '+') etx 4
+f =: 3 : 0
+r =. y + 5
+y + undefname
+if. 0: y -: 6 do.
+  r =. r + 1
+end.
+)
+'|noun result was required: f|       y+undefname' -: efx 'f 4'
+ 
 NB. : empty defn --------------------------------------------------------
 
 f=: 3 : ''

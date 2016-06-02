@@ -76,15 +76,25 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
+
+#define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
+    /* Recreate the execution of the failing sentence, and show an error for it */ \
+    i = ti; parsex(vec(BOX, cw[ti].n, line + cw[ti].i), -1, &cw[ti], d); \
+    /* go to error loc; if we are in a try., send this error to the catch. */ \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; if (tdi){ --tdi; jt->db = od; } }  \
+    break; }
+
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
-  CW*ci,*cw;DC d=0;I hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0;TD*tdv;V*sv;X y;
+  CW *ci,*cw;DC d=0;I bi,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
  RE(0);
  // z is the final result (initialized here in case there are no lines)
  // t is the result of the current t block, or 0 if not in t block
  // u,v are the operand(s), if this is an explicit modifier
  // sv->text of this explicit entity, st is its type
  // r is the count of empty stack frames that have been allocated
+ // bi is the control-word number for the last b-block sentence executed
+ // *tci is the CW info for the last t-block sentence executed
  z=mtm; cd=t=u=v=0; sv=VAV(self); st=AT(self);
  // lk=this definition is locked; named=this definition is named; cl=current name, cl=current locale
  lk=jt->glock||VLOCK&sv->flag; named=VNAMED&sv->flag?1:0; cn=jt->curname; cl=jt->curlocn;
@@ -93,21 +103,24 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if(VXOP&sv->flag){u=sv->f; v=sv->h; sv=VAV(sv->g);}
  // If this is adv/conj, it must be 1/2 : executed with no x or y
  if(st&ADV+CONJ){u=a; v=w;}
- // Read the first line; make sure there is one
+ // Read the info for the parsed definition, including control table and number of lines
  LINE(sv); ASSERT(n,EVDOMAIN);
  // Create symbol table for this execution
  RZ(jt->local=stcreate(2,1L,0L,0L));
- // If the verb contains try., allocate a stack area for it
+ // If the verb contains try., allocate a try-stack area for it
  if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
- jt->xdefn=1;
+ jt->xdefn=1;   // Indicate explicit definition running
+ // Assign the special names x y m n u v
  IS(xnam,a); if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  IS(ynam,w); if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
  if(jt->dotnames){
   IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
   IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
  }
- // ?? debugging
+ // If we are in debug mode, and the current stack frame has the DCCALL type, set up
+ // so that the debugger can look inside this execution: point to the local symbols,
+ // to the control-word table, and to where we store the currently-executing line number
  if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
   jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
  }
@@ -117,7 +130,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  while(0<=i&&i<n){
   // if performance monitor is on, collect data for it
   if(0<jt->pmctr&&C1==jt->pmrec&&named)pmrecord(cn,cl,i,a?VAL2:VAL1);
-  // ?? debugging
+  // ?? debugging, something to do with redefinition of executing verb?
   if(jt->redefined&&jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
    self=jt->sitop->dcf; sv=VAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
    jt->redefined=0;
@@ -135,7 +148,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     ++tdi; ++i; 
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
-    // catch.  pop the try-stack
+    // catch.  pop the try-stack, go to end., reset debug state.  here should always be a try. stack here
     if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->db=od;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
@@ -145,11 +158,15 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // run the sentence
     tpop(old); z=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
     // if there is no error, or ?? debug mode, step to next line
-    if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)++i;
+    if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise error
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
     // for other error, go to the error location; if that's out of range, keep the error; if not,
     // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
+    // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
+    // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
+    // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
+    // was when the try. was encountered
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
     break;
    case CASSERT:
@@ -159,7 +176,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CTBLOCK:
     // execute and parse line as if for B block, except save the result in t
     gc(z,old); t=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
-    if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)++i;
+    if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
     break;
@@ -177,7 +194,11 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     break;
    case CDOF:   // do. after for.
     // do. after for. .  If this is first time, initialize the iterator
-    if(!cv->t){BZ(forinit(cv,t)); t=0;}
+    if(!cv->t){
+     BASSERT(t,EVCTRL);   // Error if no sentences in T-block
+     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+     BZ(forinit(cv,t)); t=0;
+    }
     ++cv->j;  // step to first (or next) iteration
     if(cv->j<cv->n){  // if there are more iterations to do...
      if(cv->x){A x;  // assign xyz and xyz_index for for_xyz.
@@ -219,13 +240,19 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CFCASE:
     // case. and fcase. are used to start a selection.  t has the result of the T block; we check to
     // make sure this is a noun, and save it on the stack in cv->t.  Then clear t
-    if(!cv->t){BASSERT(t&&NOUN&AT(t),EVCTRL); BZ(cv->t=ra(boxopen(t))); t=0;}
+    if(!cv->t){
+     BASSERT(t,EVCTRL);
+     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+     BZ(cv->t=ra(boxopen(t))); t=0;
+    }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
    case CDOSEL:   // do. after case. or fcase.
     // do. for case./fcase. evaluates the condition.  t is the result (a T block); if it is nonexistent
     // or not all 0, we advance to the next sentence (in the case); otherwise skip to next test/end
-    BASSERT(!t||NOUN&AT(t),EVCTRL);
+
+    if(t){CHECKNOUN}    // if t is not a noun, signal error on the last line executed in the T block
+
     i=t&&all0(eps(cv->t,boxopen(t)))?ci->go:1+i; // cv +./@:e. boxopen t; go to miscompare point if no match
     // Clear t to ensure that the next case./fcase. does not think it's the first one
     t=0; 
@@ -238,12 +265,14 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // If there is no t, that's true
     if(t){
      if(SPARSE&AT(t))BZ(t=denseit(t));   // convert sparse to dense
-     BASSERT(NOUN&AT(t),EVCTRL);    // error if t is not a noun
+     
+     CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
+
      switch(AN(t)?AT(t):0){   // empty t is also true
       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
       case RAT:
-      case XNUM: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // true if first word 0, or multiple words
-      case CMPX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break; 
+      case XNUM: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // rat/xnum true if first word non0, or multiple words
+      case CMPX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
       case FL:   b=0!=*DAV(t);                 break;
       case INT:  b=0!=*AV(t);                  break;
       case B01:  b=*BAV(t);
@@ -255,14 +284,16 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
+ // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
+ // If it isn't, abortively reexecute the sentence that created the noun-noun result, and flag it as error
+ // The -1 means 'flag as non-noun, don't actually execute'
+ if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(vec(BOX, cw[bi].n, line + cw[bi].i), -1, &cw[bi], d);
  FDEPDEC(1);  // OK to ASSERT now
  z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack
  // Deallocate the local symbol table; pop the locale stack and xdefn; set no assignment (to call for result display)
  symfreeh(jt->local,0L); jt->local=loc; jt->asgn=0; jt->xdefn=ox;
  tpop(_ttop);   // finish freeing memory
- // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun
- if(z)ASSERT(st&ADV+CONJ||AT(z)&NOUN,EVSYNTAX);
  // Give this result a short lease on life
  tpush(z);
  R z;
@@ -292,7 +323,7 @@ static DF2(xop2){A ff,x;
 
 
 // h is the compiled form of an explicit function: an array of 2*HN boxes.
-// Boxes 0&3 contain the enqueued words for the sentences, jammed together
+// Boxes 0&3 contain the enqueued words  for the sentences, jammed together
 // We return 1 if this function refers to its x/y arguments (which also requires
 // a reference to mnuv operands)
 static B jtxop(J jt,A w){B mnuv,xy;I i,k;

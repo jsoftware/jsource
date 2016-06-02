@@ -333,6 +333,88 @@ y , 'h'
 )
 'abdcdh'-: t ''
 
+t =: 3 : 0  NB. T block ending in nonnoun: if.
+y =. y , 'a'
+try.
+y =. y , 'b'
+if. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+catch.
+y =. y , 'f'
+end.
+y , 'g'
+)
+'abcfg' -: t''
+t =: 3 : 0  NB. T block ending in nonnoun
+y =. y , 'a'
+if. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+y , 'g'
+)
+'noun result was required' -: ex 't$0'
+
+t =: 3 : 0  NB. T block ending in nonnoun: for.
+y =. y , 'a'
+try.
+y =. y , 'b'
+for. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+catch.
+y =. y , 'f'
+end.
+y , 'g'
+)
+'abcfg' -: t''
+t =: 3 : 0  NB. T block ending in nonnoun
+y =. y , 'a'
+for. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+y , 'g'
+)
+'noun result was required' -: ex 't$0'
+
+t =: 3 : 0  NB. T block ending in nonnoun: select.
+y =. y , 'a'
+try.
+y =. y , 'b'
+select. (y =. y , 'c') , undefname case. y =. y , 'h' do. y =. y , 'd' end.
+y =. y , 'e'
+catch.
+y =. y , 'f'
+end.
+y , 'g'
+)
+'abcfg' -: t''
+t =: 3 : 0  NB. T block ending in nonnoun
+y =. y , 'a'
+select. (y =. y , 'c') , undefname case. y =. y , 'h' do. y =. y , 'd' end.
+y =. y , 'e'
+y , 'g'
+)
+'noun result was required' -: ex 't$0'
+
+
+t =: 3 : 0  NB. T block ending in nonnoun: case.
+y =. y , 'a'
+try.
+y =. y , 'b'
+select. y =. y , 'h' case. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+catch.
+y =. y , 'f'
+end.
+y , 'g'
+)
+'abhcfg' -: t''
+t =: 3 : 0  NB. T block ending in nonnoun
+y =. y , 'a'
+select. y =. y , 'h' case. (y =. y , 'c') , undefname do. y =. y , 'd' end.
+y =. y , 'e'
+y , 'g'
+)
+'noun result was required' -: ex 't$0'
+
+
 
 4!:55 ;:'erase f fa fb fc fd fe ff fg fh fi fj goo sub t write x y'
 

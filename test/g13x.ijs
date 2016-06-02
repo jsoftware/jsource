@@ -79,7 +79,7 @@ h=: 2 3&+@sum
 'length error: fex'    -: fex '2 3+4 5 6'
 'domain error: fex'    -: fex '+/1;2 3'
 'domain error: sum'    -: fex 'sum ''asdf'''
-'syntax error: g'      -: fex 'f 0'
+'noun result was required: g'      -: fex 'f 0'
 'length error: f'      -: fex 'f 2 3 4'
 'domain error: sum'    -: fex 'h ''asdf'''
 'length error: h'      -: fex 'h i.3 4'

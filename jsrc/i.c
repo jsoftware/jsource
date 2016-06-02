@@ -99,6 +99,7 @@ static B jtevinit(J jt){A q,*v;
  v[EVLOCALE ]=cstr("locale error"               );
  v[EVNAN    ]=cstr("NaN error"                  );
  v[EVNONCE  ]=cstr("nonce error"                );
+ v[EVNONNOUN]=cstr("noun result was required"          );
  v[EVSPARSE ]=cstr("non-unique sparse elements" );
  v[EVOPENQ  ]=cstr("open quote"                 );
  v[EVWSFULL ]=cstr("out of memory"              );

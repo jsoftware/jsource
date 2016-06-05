@@ -70,7 +70,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  *za=a; *zw=w;
  // The inputs have been converted to common type
  if(1<wr)R 2==wr?-2:-3;
- memlimit = MIN(4*n,(jt->mmax-100)/sizeof(I));  // maximum size we will allow our d to reach.  Used only for I type.
+ memlimit = MIN(4*n,(I)((jt->mmax-100)/sizeof(I)));  // maximum size we will allow our d to reach.  Used only for I type.
   // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
   // is measured in Is.  The 100 is to account for memory-manager overhead
  switch(t){

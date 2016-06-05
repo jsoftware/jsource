@@ -325,7 +325,7 @@
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))
 #define floor1(x)                   jtfloor1(jt,(x))
-#define fmfill(x0,x1,x2,x3,x4,x5,x6)                jtfmfill(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
+#define fmfill(x0,x1,x2,x3,x4,x5,x6) jtfmfill(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
 #define fminit(x0,x1,x2,x3,x4,x5)   jtfminit(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define fminus(x,y)                 jtfminus(jt,(x),(y))
 #define fmt02(x,y)                  jtfmt02(jt,(x),(y))

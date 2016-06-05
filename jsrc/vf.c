@@ -23,12 +23,15 @@ F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n fills of type t to *v
 void fillv(I t,I n,C*v){I k=bp(t);
- if     (t&RAT        )mvc(n*k,v,k,&zeroQ);
- else if(t&XNUM       )mvc(n*k,v,k,&xzero);
- else if(t&NUMERIC+SBT)memset(v,C0,k*n);
- else if(t&LIT        )memset(v,' ',n);
- else if(t&C2T        ){US x=32; mvc(n*k,v,k,&x);}
- else                  mvc(n*k,v,k,&mtv);
+ switch(CTTZ(t)){
+ case RATX: mvc(n*k,v,k,&zeroQ); break;
+ case XNUMX: mvc(n*k,v,k,&xzero); break;
+ case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
+  memset(v,C0,k*n); break;
+ case LITX: memset(v,' ',n); break;
+ case C2TX: {US x=32; mvc(n*k,v,k,&x); break;}
+ default: mvc(n*k,v,k,&mtv);
+ }
 }
 
 

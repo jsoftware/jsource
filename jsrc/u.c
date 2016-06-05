@@ -193,6 +193,7 @@ I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
 
 A jtcstr(J jt,C*s){R str((I)strlen(s),s);}
 
+// Return 1 iff w is the evocation of a name
 B evoke(A w){V*v=VAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
 
 I jti0(J jt,A w){RZ(w=vi(w)); ASSERT(!AR(w),EVRANK); R*AV(w);}

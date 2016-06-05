@@ -86,6 +86,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
     1!:1[1 read from keyboard */
  showerr();
  if(jt->nfe)
+  // Native Front End
   v=nfeinput(jt,*p?"input_jfe_'      '":"input_jfe_''");
  else{
   ASSERT(jt->sminput,EVBREAK); 
@@ -238,9 +239,11 @@ A _stdcall Jga(J jt, I t, I n, I r, I*s){
 void oleoutput(J jt, I n, char* s);	/* SY_WIN32 only */
 
 /* jsto - display output in output window */
+// type is mtyo of string, s->null-terminated string
 void jsto(J jt,I type,C*s){C e;I ex;
  if(jt->nfe)
  {
+  // here for Native Front End state, toggled by 15!:16
   C q[]="0 output_jfe_ (15!:18)0";
   q[0]+=(C)type;
   jt->mtyostr=s;
@@ -249,6 +252,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
   jt->breakignore=1;exec1(cstr(q));jt->breakignore=0;
   jt->jerr=e; jt->etxn=ex; 
  }else{
+  // Normal output.  Call the output routine
   if(jt->smoutput) ((outputtype)(jt->smoutput))(jt,(int)type,s);
 #if SY_WIN32 && !SY_WINCE
   if(type & MTYOFM) oleoutput(jt,strlen(s),s);	/* save output for ole */

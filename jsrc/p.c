@@ -7,6 +7,8 @@
 #include "p.h"
 
 
+#define PARSERSTKALLO (490*2)  // number of stack entries to allocate, when we allocate
+
 /* NVR - named value reference                                          */
 /* a value referenced in the parser which is the value of a name        */
 /* (that is, in some symbol table).                                     */
@@ -58,18 +60,18 @@ void jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
 // Set the word-number entry in the last stack entry to the word number that the result will go by
 // Close up any gap between the unexecuted stack elements and the result
 // Return the new stack pointer, which is the relocated beginning-of-stack
-ACTION(jtmonad1 ){RZ (stack[4] = dfs1(stack[4],stack[2])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack+2;}
-ACTION(jtmonad2 ){RZ (stack[6] = dfs1(stack[6],stack[4])); stack[7] = stack[5]; stack[4] = stack[2]; stack[2] = stack[0]; stack[5] = stack[3]; stack[3] = stack[1]; R stack+2;}
-ACTION(jtdyad   ){RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[5]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jtadv    ){RZ(stack[4] = dfs1(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
-ACTION(jtconj   ){RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jttrident){RZ(stack[6] = folk(stack[2], stack[4], stack[6])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jtbident ){RZ(stack[4] = hook(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
-ACTION(jtpunc   ){stack[5] = stack[1]; stack[4] = stack[2]; R stack+4;}  // Can't fail; use value from expr, token # from (
+ACTION(jtmonad1 ){A* stack=jt->parserstkend1; RZ (stack[4] = dfs1(stack[4],stack[2])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack+2;}
+ACTION(jtmonad2 ){A* stack=jt->parserstkend1; RZ (stack[6] = dfs1(stack[6],stack[4])); stack[7] = stack[5]; stack[4] = stack[2]; stack[2] = stack[0]; stack[5] = stack[3]; stack[3] = stack[1]; R stack+2;}
+ACTION(jtdyad   ){A* stack=jt->parserstkend1; RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[5]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
+ACTION(jtadv    ){A* stack=jt->parserstkend1; RZ(stack[4] = dfs1(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
+ACTION(jtconj   ){A* stack=jt->parserstkend1; RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
+ACTION(jttrident){A* stack=jt->parserstkend1; RZ(stack[6] = folk(stack[2], stack[4], stack[6])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
+ACTION(jtbident ){A* stack=jt->parserstkend1; RZ(stack[4] = hook(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
+ACTION(jtpunc   ){A* stack=jt->parserstkend1; stack[5] = stack[1]; stack[4] = stack[2]; R stack+4;}  // Can't fail; use value from expr, token # from (
 
 static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
 
-ACTION(jtis){A f,n,v;B ger=0;C c,*s;
+ACTION(jtis){A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1; 
  n=stack[0]; v=stack[4];   // extract arguments
  if((I)stack[1]==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  if(LIT&AT(n)&&1>=AR(n)){
@@ -147,7 +149,8 @@ F1(jtparse){A z;
 F1(jtparsea){A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
- RZ(w);
+ A *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
+ RZ(w);  // if nothing to do, it is OK to exit before we start pushing
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
@@ -183,11 +186,22 @@ F1(jtparsea){A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt-
  // never look at a stack location until we have moved from the queue to that position.
  // Each word gets two stack locations: first is the word itself, second the original word number+1
  // to use if there is an error on the word
- GA(y,BOX,2*(m+4),1,0); stack=(2*(m+1))+AAV(y);  // 4 marks: 1 at beginning, 3 at end
- stack[0] = stack[2] = stack[4] = mark;  // install initial marks.  word numbers are unused
+ // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
+ // The stack grows down
+ if(oend1-obgn >= 2*(m+4))stack=oend1-3*2;   // if we can use the previous allocation, start at the end, with 3 marks
+ else{
+   I allo = MAX(2*(m+4),PARSERSTKALLO); // number of ints to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GA(y,INT,allo,1,0);
+   jt->parserstkbgn=(A*)AV(y);   // save start of data area
+   stack=jt->parserstkbgn+allo-3*2;  // point to the ending marks
+ }
+ // We have the initial stack pointer.  Grow the stack down from there
+ stack[0] = stack[2] = stack[4] = mark;  // install initial ending marks.  word numbers are unused
 
  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
  es = 2;
+
+ // DO NOT RETURN from inside the parser loop.  Stacks must be processed.
 
  while(1){  // till no more matches possible...
   // Search for a match per the parse table.  Ordered for speed, taking into account that ) and CONJ
@@ -223,7 +237,15 @@ F1(jtparsea){A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt-
    // stack entry, then closing up any gap between the front-of-stack and the executed fragment,
    // and finally returning the new front-of-stack pointer
    *dci = (I)stack[(i&6)|1];  // set the token-in-error, using the offset encoded into i
-   if(!(stack = casefuncs[i](jt,stack)))EP  // stop parsing in case of error
+   // Save the current stack pointer for use as end+1 pointer by the next parse.  This is a design issue.  Should we
+   // take the time to store the stack pointer on every execution, or just move it back the maximum possible amount
+   // before the loop?  The maximum possible amount may be much larger than actual stack usage, making for
+   // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.  We
+   // compromise by storing the end pointer, but NOT passing the stack pointer as an argument to the action routine.
+   // The action routine will pull the stack pointer from jt.  So, it's the same number of memory operations, though perhaps a little
+   // slower because jt is not on the stack.
+   jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
+   if(!(stack = casefuncs[i](jt)))EP  // stop parsing in case of error
 
   }else{
 
@@ -305,6 +327,10 @@ exitparse:
  v=otop+jt->nvrav;  // point to our region of the nvr area
  DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
  jt->nvrtop=otop;  // deallocate the region used in this routine
+
+ jt->parserstkbgn=obgn, jt->parserstkend1=oend1;  // pop the parser stack
+
+ // NOW it is OK to return
 
  RZ(stack);  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled
 

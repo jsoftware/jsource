@@ -157,6 +157,8 @@ typedef struct {
  I    outmaxlen;        /* output: maximum line length before truncation   */
  C    outseq[3];		/* EOL: "LF" "CR" "CRLF"                           */
  I    parsercalls;      /* # times parser was called                       */
+ A*   parserstkbgn;     // &start of parser stack
+ A*   parserstkend1;    // &end+1 of parser stack
  I    peekdata;         /* our window into the interpreter                 */
  A    pma;              /* perf. monitor: data area                        */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */

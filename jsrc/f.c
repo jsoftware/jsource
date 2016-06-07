@@ -441,9 +441,11 @@ F1(jtthorn1){PROLOG;A z;
    // If we are producing byte output, we simply copy the input.
     // If we are allowed to produce C2T output, do so if the string is a list.  An array of
     // multiple U8 strings is problematic - how do you space them? - and the user should have
-    // used C2T if he wanted good-looking result
+    // used C2T if he wanted good-looking result.  What we do (at rank 1) is: check for non-ASCII; if there
+    // is any, convert to C2T BUT KEEP THE SAME LENGTH AS THE ORIGINAL (Eric wanted that).  If
+    // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
    if(!jt->thornuni)z=ca(w);
-   else z = rank1ex(w, 0L, 1L, jttoutf16);  // check list for U8 codes, return LIT or C2T
+   else z = rank1ex(w, 0L, 1L, jttoutf16r);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, just copy the input (it's not worth the time to go through

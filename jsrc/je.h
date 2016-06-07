@@ -325,6 +325,7 @@ extern F1(jttsit1);
 extern F1(jttss);
 extern F1(jttoutf8);
 extern F1(jttoutf16);
+extern F1(jttoutf16r);
 extern F1(jttoutf16x);
 extern F1(jtuco1);
 extern F1(jtunbin);

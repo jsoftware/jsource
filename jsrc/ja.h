@@ -1035,6 +1035,7 @@
 #define totient(x)                  jttotient(jt,(x))
 #define toutf8(x)                   jttoutf8(jt,(x))
 #define toutf16(x)                  jttoutf16(jt,(x))
+#define toutf16r(x)                 jttoutf16r(jt,(x))
 #define toutf16x(x)                 jttoutf16x(jt,(x))
 #define tparse(x)                   jttparse(jt,(x))
 #define tpoly(x)                    jttpoly(jt,(x))

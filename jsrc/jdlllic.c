@@ -142,7 +142,7 @@ int swapint(int n){C* p,c;
 }
 #endif
 
-F1(jtlock1){A z; C* p; C* src;
+F1(jtlock1){F1PREF;A z; C* p; C* src;
  UC c,c1,c2,k1[SK],k2[SK];    
  int r,len,xlen,maxc1,maxc2,i,j,k;
 
@@ -190,11 +190,11 @@ F1(jtlock1){A z; C* p; C* src;
  R z;
 }
 
-F2(jtlock2){ASSERT(0,EVDOMAIN);}
+F2(jtlock2){F2PREF;ASSERT(0,EVDOMAIN);}
 
-F1(jtunlock1){R unlock2(mtv,w);}
+F1(jtunlock1){F1PREF;R unlock2(mtv,w);}
 
-F2(jtunlock2){int i,j,len,tlen;UC c1,c2,k1[SK],*lp,*sp,*d;
+F2(jtunlock2){F2PREF;int i,j,len,tlen;UC c1,c2,k1[SK],*lp,*sp,*d;
  RZ(a&&w);  
  d=(UC*)CAV(w);
  tlen=(int)AN(w);

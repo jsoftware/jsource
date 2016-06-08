@@ -24,7 +24,7 @@
 
 static TA zz={0,0};
 
-static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
+static F1(jtvtokens){F1PREF;A t,*y,z;I n,*s;TA*x;
  RZ(t=tokens(vs(w))); n=AN(t); y=AAV(t);
  jt->tmonad=1; 
  GA(z,BOX,WTA*(5+n),2,0); s=AS(z); *s++=5+n; *s=WTA;
@@ -38,10 +38,10 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  R z;
 }    /* build string sentence into queue suitable for parsing */
 
-static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=*AV(w),-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
+static F1(jtcfn){F1PREF;I j; R !AR(w)&&INT&AT(w)&&(j=*AV(w),-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
-static F1(jttine){V*v; R w&&jt->tmonad&&(v=VAV(w),CP==v->f&&RT==v->h)?v->g:w;}
+static F1(jttine){F1PREF;V*v; R w&&jt->tmonad&&(v=VAV(w),CP==v->f&&RT==v->h)?v->g:w;}
      /* if monad and w = [: g ], then g; else just w itself */
 
 static I tvi(A w){A x;I i,z=-1;V*v;
@@ -56,7 +56,7 @@ static I tvi(A w){A x;I i,z=-1;V*v;
 
 static C ctab[]={CEQ,CMIN,CMAX,CPLUS,CPLUSDOT,CPLUSCO,CSTAR,CSTARDOT,CSTARCO,CMATCH,CNE,0};
 
-static F1(jtswapc){C c;
+static F1(jtswapc){F1PREF;C c;
  if(!primitive(w))R swap(w);
  c=ID(w);
  R strchr(ctab,c)?w:c==CLT?ds(CGT):c==CGT?ds(CLT):c==CLE?ds(CGE):c==CGE?ds(CLE):swap(w);
@@ -178,7 +178,7 @@ static TACT(jtvmove){A t;TA*u,x,z;
 /* b. replaces n0"_ v1 v2 by n0 v1 v2                  */
 /* c. replaces [: g ] by g, if monad                   */
 
-static F1(jtvfinal){I i;V*u,*v;
+static F1(jtvfinal){F1PREF;I i;V*u,*v;
  RZ(w);
  if(!(VERB&AT(w)))R w;
  v=VAV(w);
@@ -195,7 +195,7 @@ static F1(jtvfinal){I i;V*u,*v;
  R tine(w);
 }    
 
-F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
+F1(jttparse){F1PREF;A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
  RZ(w);
  stack=(TA*)AV(w); n=m=*AS(w)-4;
  do{
@@ -220,7 +220,7 @@ F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
  R t?vfinal(t):cfn(x);
 }
 
-F1(jtvtrans){PROLOG;A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*ttab0;
+F1(jtvtrans){F1PREF;PROLOG;A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*ttab0;
  local=jt->local; tmonad=jt->tmonad; ttab0=jt->ttab; tsubst=jt->tsubst;
  RZ(ttab[0].a=cstr("x")); ttab[0].t=ds(CLEFT);
  RZ(ttab[1].a=cstr("y")); ttab[1].t=RT; c=2;

@@ -7,7 +7,7 @@
 #include "w.h"
 
 
-static F1(jtdrr){PROLOG;A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
+static F1(jtdrr){F1PREF;PROLOG;A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN)R w;
  if(AT(w)&NAME)R sfn(0,w);
@@ -30,10 +30,10 @@ static F1(jtdrr){PROLOG;A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  EPILOG(z);
 }
 
-F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
+F1(jtdrep){F1PREF;A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 
 
-F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
+F1(jtaro){F1PREF;A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  RZ(w);
  if(FUNC&AT(w)){
   v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; 
@@ -55,10 +55,10 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  R z;
 }
 
-F1(jtarep){R box(aro(w));}
+F1(jtarep){F1PREF;R box(aro(w));}
 
 
-static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
+static F1(jtfxchar){F1PREF;A y;C c,d,id,*s;I m,n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(n,EVLENGTH);
@@ -71,7 +71,7 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
  R y;
 }
 
-F1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
+F1(jtfx){F1PREF;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
  RZ(w);
  if(LIT&AT(w))R fxchar(w);
  m=AN(w); wd=(I)w*ARELATIVE(w);
@@ -138,7 +138,7 @@ static A*jtunparse1a(J jt,I m,A*hv,A*zv){A*v,x,y;CW*u;I i,j,k;
  R zv;
 }
 
-F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
+F2(jtunparsem){F2PREF;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  RZ(a&&w);
  wv=VAV(w); h=wv->h; hv=AAV(h);
  mc=hv[1];    ms=hv[2];    m=mn=AN(mc);
@@ -161,7 +161,7 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  R z;
 }    /* convert h parameter for : definitions; open if a is 0 */
 
-static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
+static F2(jtxrep){F2PREF;A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv; 
  RZ(a&&w);
  RE(j=i0(a)); ASSERT(1==j||2==j,EVDOMAIN); j=1==j?0:HN;
  ASSERT(AT(w)&VERB+ADV+CONJ,EVDOMAIN);
@@ -181,10 +181,10 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 }    /* explicit representation -- h parameter for : definitions */
 
 
-F1(jtarx){F1RANK(0,  jtarx,0); R arep(  symbrdlock(nfb(w)));}
-F1(jtdrx){F1RANK(0,  jtdrx,0); R drep(  symbrdlock(nfb(w)));}
-F1(jttrx){F1RANK(0,  jttrx,0); R trep(  symbrdlock(nfb(w)));}
-F1(jtlrx){F1RANK(0,  jtlrx,0); R lrep(  symbrdlock(nfb(w)));}
-F1(jtprx){F1RANK(0,  jtprx,0); R prep(  symbrdlock(nfb(w)));}
+F1(jtarx){F1PREF;F1RANK(0,  jtarx,0); R arep(  symbrdlock(nfb(w)));}
+F1(jtdrx){F1PREF;F1RANK(0,  jtdrx,0); R drep(  symbrdlock(nfb(w)));}
+F1(jttrx){F1PREF;F1RANK(0,  jttrx,0); R trep(  symbrdlock(nfb(w)));}
+F1(jtlrx){F1PREF;F1RANK(0,  jtlrx,0); R lrep(  symbrdlock(nfb(w)));}
+F1(jtprx){F1PREF;F1RANK(0,  jtprx,0); R prep(  symbrdlock(nfb(w)));}
 
-F2(jtxrx){F2RANK(0,0,jtxrx,0); R xrep(a,symbrdlock(nfb(w)));}
+F2(jtxrx){F2PREF;F2RANK(0,0,jtxrx,0); R xrep(a,symbrdlock(nfb(w)));}

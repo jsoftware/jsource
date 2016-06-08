@@ -186,7 +186,7 @@ void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
  *base=q; d=p-q; *top=0>d||d==IMAX?0:1+d;
 }    /* min and max in 1.5*n comparisons */
 
-F1(jtmaxmin){I base,top;
+F1(jtmaxmin){F1PREF;I base,top;
  RZ(w);
  ASSERT(INT&AT(w),EVDOMAIN);
  irange(AN(w),AV(w),&base,&top);
@@ -280,7 +280,7 @@ static GF(jtgrc){A x;B b,q,up;I d,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
 static GF(jtgrs){R gri(m,c,n,sborder(w),zv);}    
      /* grade"r w on symbols w */
 
-F2(jtgrade1p){PROLOG;A x,z;I n,*s,*xv,*zv;
+F2(jtgrade1p){F2PREF;PROLOG;A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
  jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w);
  GA(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
@@ -296,7 +296,7 @@ F2(jtgrade1p){PROLOG;A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-F1(jtgr1){PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
+F1(jtgr1){F1PREF;PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  f=wr-r; s=AS(w); m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1;
@@ -314,10 +314,10 @@ F1(jtgr1){PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
 #define GBEGIN(G,L)  A z;int ogt=jt->compgt,olt=jt->complt; jt->compgt=G; jt->complt=L
 #define GEND(z)      jt->compgt=ogt; jt->complt=olt; R z
 
-F1(jtgrade1 ){GBEGIN( 1,-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F1(jtdgrade1){GBEGIN(-1, 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F2(jtgrade2 ){GBEGIN( 1,-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
-F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
+F1(jtgrade1 ){F1PREF;GBEGIN( 1,-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
+F1(jtdgrade1){F1PREF;GBEGIN(-1, 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
+F2(jtgrade2 ){F2PREF;GBEGIN( 1,-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
+F2(jtdgrade2){F2PREF;GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
 
 
 #define OSGT(i,j) (u[i]>u[j])
@@ -353,7 +353,7 @@ F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND
    else{DO(n, if(p1<*v)*u++=*v; ++v;); m=u-tv; c=n-m; if(j<c)R ATOMF(p1); j-=c; n=m;}  \
  }}
 
-F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
+F2(jtordstat){F2PREF;A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));
@@ -363,7 +363,7 @@ F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 
-F2(jtordstati){A t;I j,n,wt;
+F2(jtordstati){F2PREF;A t;I j,n,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade1(w));

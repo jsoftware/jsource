@@ -69,7 +69,7 @@ ACTION(jttrident){A* stack=jt->parserstkend1; RZ(stack[6] = folk(stack[2], stack
 ACTION(jtbident ){A* stack=jt->parserstkend1; RZ(stack[4] = hook(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
 ACTION(jtpunc   ){A* stack=jt->parserstkend1; stack[5] = stack[1]; stack[4] = stack[2]; R stack+4;}  // Can't fail; use value from expr, token # from (
 
-static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
+static F2(jtisf){F2PREF;R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
 
 ACTION(jtis){A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1; 
  n=stack[0]; v=stack[4];   // extract arguments
@@ -134,7 +134,7 @@ PT cases[] = {
 };
 
 // Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
-F1(jtparse){A z;
+F1(jtparse){F1PREF;A z;
  RZ(w);
  RZ(deba(DCPARSE,0L,w,0L));
  z=parsea(w);
@@ -146,7 +146,7 @@ F1(jtparse){A z;
 #define EP goto exitparse;   // exit parser, preserving current status
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
+F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
  A *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack

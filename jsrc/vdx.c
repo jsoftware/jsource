@@ -7,7 +7,7 @@
 #include "ve.h"
 
 
-DXF2(jtdxplus){DX z=zeroDX;
+DXF2(jtdxplus){F2PREF;DX z=zeroDX;
  R z;
 }
 

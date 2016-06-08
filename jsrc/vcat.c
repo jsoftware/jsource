@@ -49,7 +49,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar */
 
-static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
+static F2(jtovs){F2PREF;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
  RZ(a&&w);
  at=AT(a); ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; jt->rank=0;
@@ -119,7 +119,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){B b;I d,n,p=c*m,q,*u,*v;
  R x+k*p;
 }    /* move an argument into the result area */
 
-static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
+static F2(jtovg){F2PREF;A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
  RZ(a&&w);
  RZ(w=setfv(a,w)); RZ(coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
@@ -138,7 +138,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
  R z;
 }    /* a,w general case for array with the same type; jt->rank=0 */
 
-static F2(jtovv){A z;I m,t;
+static F2(jtovv){F2PREF;A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
  if(t&BOX){A1*u,*v;B p,q,r;
@@ -165,7 +165,7 @@ static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
 }}   /* move an argument into the result area */
 
 
-F2(jtover){A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
+F2(jtover){F2PREF;A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);  // if either arg is sparse, switch to sparse code
  RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
@@ -188,14 +188,14 @@ F2(jtover){A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,
  R z;
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-F2(jtstitch){B sp2;I ar,wr;
+F2(jtstitch){F2PREF;B sp2;I ar,wr;
  RZ(a&&w);
  ar=AR(a); wr=AR(w); sp2=(SPARSE&AT(a)||SPARSE&AT(w))&&2>=ar&&2>=wr;
  ASSERT(!ar||!wr||*AS(a)==*AS(w),EVLENGTH);
  R sp2 ? stitchsp2(a,w) : irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);
 }
 
-F1(jtlamin1){A x;I*s,*v,wcr,wf,wr; 
+F1(jtlamin1){F1PREF;A x;I*s,*v,wcr,wf,wr; 
  RZ(w);
  wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); jt->rank=0;} wf=wr-wcr;
  GA(x,INT,1+wr,1,0); v=AV(x);
@@ -203,7 +203,7 @@ F1(jtlamin1){A x;I*s,*v,wcr,wf,wr;
  R reshape(x,w);
 }    /* ,:"r w */
 
-F2(jtlamin2){A z;I ar,p,q,wr;
+F2(jtlamin2){F2PREF;A z;I ar,p,q,wr;
  RZ(a&&w); 
  ar=AR(a); p=jt->rank?jt->rank[0]:ar; 
  wr=AR(w); q=jt->rank?jt->rank[1]:wr; 
@@ -225,9 +225,9 @@ I jtpiplocalerr(J jt, A self){
 // append-in-place.  We can only append if the buffer is not in use more than once, and if the
 // datatype is direct.  Also, we can't append if the name was a local name that is not defined,
 // since that would append-in-place to the global value
-DF2(jtapip){RZ(a&&w);R AC(a)>(AFNJA&AFLAG(a)?2:1)||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
+DF2(jtapip){F2PREF;RZ(a&&w);R AC(a)>(AFNJA&AFLAG(a)?2:1)||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
 
-F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
+F2(jtapipx){F2PREF;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  RZ(a&&w);
  at=AT(a); ar=AR(a); as=AS(a);
  wt=AT(w); wr=AR(w); ws=AS(w); p=-1;

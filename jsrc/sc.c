@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
+static DF2(jtunquote){F2PREF;A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  RE(0);
  JATTN;
  v=VAV(self);
@@ -37,7 +37,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  R z;
 }
 
-static DF1(jtunquote1){R unquote(0L,w,self);}
+static DF1(jtunquote1){F1PREF;R unquote(0L,w,self);}
 
 // return ref to adv/conj/verb whose name is a and whose symbol-table entry is w
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
@@ -55,12 +55,12 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
 // For a noun, the reference points to the data, and has rank/shape info
 // For other types, we build a function ref to 'name~', and fill in the type, rank, and a pointer to the name;
 //  the name will be dereferenced when the function is executed
-F1(jtnameref){
+F1(jtnameref){F1PREF;
  RZ(w);
  R namerefacv(w,syrd(w,0L));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
-F2(jtnamerefop){V*v;
+F2(jtnamerefop){F2PREF;V*v;
  RZ(a&&w);
  v=VAV(w);
  R fdef(CCOLON,VERB,  jtunquote1,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);

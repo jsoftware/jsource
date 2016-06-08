@@ -225,14 +225,14 @@ PREFIXPFX(bw1001pfxI, UI,UI, BW1001)
 PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
 
 
-static DF1(jtprefix){DECLF;I r;
+static DF1(jtprefix){F1PREF;DECLF;I r;
  RZ(w);
  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtprefix);}
  jt->rank=0;
  R eachl(apv(IC(w),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
-static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
+static DF1(jtgprefix){F1PREF;A h,*hv,z,*zv;I m,n,r;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtgprefix);}
@@ -245,7 +245,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
 }    /* g\"r w for gerund g */
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+static DF1(jtpscan){F1PREF;A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  RZ(w);
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
@@ -268,7 +268,7 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
 
 // block a contains (start,length) of infix.  w is the A for the data.
 // Result is new block containing the extracted infix
-static F2(jtseg){A z;I c,k,m,n,*u,zn;
+static F2(jtseg){F2PREF;A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
@@ -295,7 +295,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 }
 
 // Entry point for infix.  a is x, w is y, fs points to u
-static DF2(jtinfix){PROLOG;DECLF;A x,z;I m; 
+static DF2(jtinfix){F2PREF;PROLOG;DECLF;A x,z;I m; 
  PREF2(jtinfix); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer
@@ -320,7 +320,7 @@ static DF2(jtinfix){PROLOG;DECLF;A x,z;I m;
  EPILOG(z);
 }
 
-static DF2(jtinfix2){PROLOG;A f,x,y;B af,d;I c,m,n,n1,r,*s,t; 
+static DF2(jtinfix2){F2PREF;PROLOG;A f,x,y;B af,d;I c,m,n,n1,r,*s,t; 
  PREF2(jtinfix); 
  RE(m=i0(vib(a))); t=AT(w); n=IC(w); 
  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
@@ -334,7 +334,7 @@ static DF2(jtinfix2){PROLOG;A f,x,y;B af,d;I c,m,n,n1,r,*s,t;
  EPILOG(df2(x,y,af?f:qq(f,num[-1])));
 }    /* 2 f/\w */
 
-static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
+static DF2(jtginfix){F2PREF;A h,*hv,x,z,*zv;I d,m,n;
  RE(m=i0(vib(a))); 
  RZ(x=ifxi(m,w));
  h=VAV(self)->h; hv=AAV(h); d=AN(h);
@@ -350,7 +350,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 
 #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(wd,*v++););}
 
-static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wd,wr,*ws,wt,zc; 
+static DF2(jtinfixd){F2PREF;A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wd,wr,*ws,wt,zc; 
  F2RANK(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); n=IC(w);
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
@@ -408,7 +408,7 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
  R infix(sc(m),w,fs);
 }
 
-static DF2(jtmovavg){I m;
+static DF2(jtmovavg){F2PREF;I m;
  PREF2(jtmovavg);
  RE(m=i0(vib(a)));
  if(0<m&&m<=IC(w)&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1); 
@@ -513,7 +513,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  R z;
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;VF ado;
+static DF2(jtmovfslash){F2PREF;A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;VF ado;
  PREF2(jtmovfslash);
  p=IC(w); wt=AT(w);
  RE(m0=i0(vib(a))); m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
@@ -545,9 +545,9 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  if(jt->jerr==EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 
-static DF1(jtiota1){R apv(IC(w),1L,1L);}
+static DF1(jtiota1){F1PREF;R apv(IC(w),1L,1L);}
 
-F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
+F1(jtbslash){F1PREF;A f;AF f1=jtprefix,f2=jtinfix;V*v;
  RZ(w);
  if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL, RMAX,0L,RMAX);
  v=VAV(w); f=VAV(w)->f;

@@ -76,7 +76,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  R indexofss(mode,s?a:reaxis(ifb(n,c),a),s?reaxis(ifb(n,c),w):w);
 }    /* dense i. sparse   or   sparse i. dense;  1<AR(a) */ 
 
-static F1(jtifdz){I m;
+static F1(jtifdz){F1PREF;I m;
  RZ(w);
  m=bp(AT(w))/sizeof(I); AN(w)*=m; *(1+AS(w))*=m;
  AT(w)=INT;
@@ -175,7 +175,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  R z;
 }    /* sparse i. sparse */
 
-F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
+F1(jtnubsievesp){F1PREF;A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  n=r?*(AS(w)+wr-r):1;

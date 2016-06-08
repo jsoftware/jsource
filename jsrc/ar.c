@@ -182,14 +182,14 @@ REDUCEPFX(  mininsX, X, X, XMIN  )
 REDUCEPFX(  mininsS, SB,SB,SBMIN )
 
 
-static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
+static DF1(jtred0){F1PREF;DECLF;A x;I f,r,wr,*s;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w);
  jt->rank=0;
  GA(x,AT(w),0L,r,f+s);
  R reitem(vec(INT,f,s),lamin1(df1(x,iden(fs))));
 }    /* f/"r w identity case */
 
-static DF1(jtredg){PROLOG;DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
+static DF1(jtredg){F1PREF;PROLOG;DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
@@ -236,7 +236,7 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
-DF1(jtredravel){A f,x,z;C id;I cv,n;P*wp;VF ado;
+DF1(jtredravel){F1PREF;A f,x,z;C id;I cv,n;P*wp;VF ado;
  RZ(w);
  f=VAV(self)->f;
  if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
@@ -352,7 +352,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  R z;
 }    /* f/"r w for sparse w, rank > 1, sparse axis */
 
-static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;P*wp;VF ado;
+static DF1(jtreducesp){F1PREF;A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;P*wp;VF ado;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
@@ -439,7 +439,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
 
-static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+static DF1(jtreduce){F1PREF;A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
@@ -493,7 +493,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  R z;
 }    /* ,/"r w for sparse w, 2<r */
 
-static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
+static DF1(jtredcat){F1PREF;A z;B b;I f,r,*s,*v,wr;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); jt->rank=0;
  b=1==r&&1==s[f];
@@ -506,7 +506,7 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  R z;
 }    /* ,/"r w */
 
-static DF1(jtredsemi){I f,n,r,*s,wr;
+static DF1(jtredsemi){F1PREF;I f,n,r,*s,wr;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); n=r?s[f]:1;
  if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}
@@ -514,7 +514,7 @@ static DF1(jtredsemi){I f,n,r,*s,wr;
  else R irs1(w,0L,r-1,jtbox);
 }    /* ;/"r w */
 
-static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
+static DF1(jtredstitch){F1PREF;A c,y;I f,n,r,*s,*v,wr;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  s=AS(w); n=r?s[f]:1;
@@ -534,7 +534,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
   R y;
 }}   /* ,./"r w */
 
-static DF1(jtredstiteach){A*wv,y;I n,p,r,t,wd;
+static DF1(jtredstiteach){F1PREF;A*wv,y;I n,p,r,t,wd;
  RZ(w);
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
@@ -543,7 +543,7 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t,wd;
  R box(razeh(w));
 }    /* ,.&.>/ w */
 
-static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;
+static DF1(jtredcateach){F1PREF;A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;
  RZ(w);
  wr=AR(w); ws=AS(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  n=r?ws[f]:1;
@@ -557,10 +557,10 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;
  R z;
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){R df2(a,w,VAV(self)->h);}
+static DF2(jtoprod){F2PREF;R df2(a,w,VAV(self)->h);}
 
 
-F1(jtslash){A h;AF f1=jtreduce;C c;V*v;
+F1(jtslash){F1PREF;A h;AF f1=jtreduce;C c;V*v;
  RZ(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));
  v=VAV(w); 
@@ -600,7 +600,7 @@ static AHDRR(jtmeanI,D,I){I d,i;I*y;D v,*zz;
              z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
 }}   /* based on REDUCEPFX; 2<n */
 
-DF1(jtmean){A z;I c,f,m,n,r,wn,wr,*ws,wt;
+DF1(jtmean){F1PREF;A z;I c,f,m,n,r,wn,wr,*ws,wt;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  wt=AT(w); wn=AN(w); ws=AS(w); n=r?ws[f]:1;

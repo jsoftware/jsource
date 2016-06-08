@@ -48,10 +48,10 @@ B jtsymbinit(J jt){A q;I n=40;
 }
 
 
-F1(jtlocsizeq){I*v; ASSERTMTV(w); v=jt->locsize; R v2(v[0],v[1]);}
+F1(jtlocsizeq){F1PREF;I*v; ASSERTMTV(w); v=jt->locsize; R v2(v[0],v[1]);}
      /* 9!:38 default locale size query */
 
-F1(jtlocsizes){I p,q,*v;
+F1(jtlocsizes){F1PREF;I p,q,*v;
  RZ(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
@@ -100,7 +100,7 @@ static I jtprobenum(J jt,C*u){I j;
 }    /* probe for numbered locales */
 
 
-F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,wd,*zv;
+F1(jtlocnc){F1PREF;A*wv,y,z;C c,*u;I i,m,n,wd,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  GA(z,INT,n,AR(w),AS(w)); zv=AV(z);
@@ -113,7 +113,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,wd,*zv;
  R z;
 }    /* 18!:0 locale name class */
 
-static F1(jtlocnlx){A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
+static F1(jtlocnlx){F1PREF;A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);
  if(1&m)z=nlsym(jt->stloc);
  if(2&m){
@@ -126,10 +126,10 @@ static F1(jtlocnlx){A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
  R grade2(z,ope(z));
 }
 
-F1(jtlocnl1){memset(jt->nla,C1,256); R locnlx(w);}
+F1(jtlocnl1){F1PREF;memset(jt->nla,C1,256); R locnlx(w);}
     /* 18!:1 locale name list */
 
-F2(jtlocnl2){UC*u;
+F2(jtlocnl2){F2PREF;UC*u;
  RZ(a&&w);
  ASSERT(LIT&AT(a),EVDOMAIN);
  memset(jt->nla,C0,256); 
@@ -144,10 +144,10 @@ static A jtlocale(J jt,B b,A w){A g,*wv,y;I wd;
  R g;
 }    /* last locale (symbol table) from boxed locale names */
 
-F1(jtlocpath1){A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); R LOCPATH(g);}
+F1(jtlocpath1){F1PREF;A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); R LOCPATH(g);}
      /* 18!:2  query locale path */
 
-F2(jtlocpath2){A g,x;
+F2(jtlocpath2){F2PREF;A g,x;
  F2RANK(1,0,jtlocpath2,0);
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
@@ -156,7 +156,7 @@ F2(jtlocpath2){A g,x;
 }    /* 18!:2  set locale path */
 
 
-static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
+static F2(jtloccre){F2PREF;A g,y;C*s;I n,p,*u;L*v;
  RZ(a&&w);
  if(MARK&AT(a))p=jt->locsize[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
@@ -169,7 +169,7 @@ static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
  R box(ca(y));
 }    /* create a locale named w with hash table size a */
 
-static F1(jtloccrenum){C s[20];I k=jt->stmax,p;
+static F1(jtloccrenum){F1PREF;C s[20];I k=jt->stmax,p;
  RZ(w);
  if(MARK&AT(w))p=jt->locsize[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  RZ(stcreate(1,p,k,0L));
@@ -177,14 +177,14 @@ static F1(jtloccrenum){C s[20];I k=jt->stmax,p;
  R box(cstr(s));
 }    /* create a numbered locale with hash table size n */
 
-F1(jtloccre1){
+F1(jtloccre1){F1PREF;
  RZ(w);
  if(AN(w))R rank2ex(mark,vlocnl(1,w),0L,0L,0L,jtloccre);
  ASSERT(1==AR(w),EVRANK);
  R loccrenum(mark);
 }    /* 18!:3  create locale */
 
-F2(jtloccre2){
+F2(jtloccre2){F2PREF;
  RZ(a&&w);
  if(AN(w))R rank2ex(a,vlocnl(1,w),0L,0L,0L,jtloccre);
  ASSERT(1==AR(w),EVRANK);
@@ -192,14 +192,14 @@ F2(jtloccre2){
 }    /* 18!:3  create locale with specified hash table size */
 
 
-F1(jtlocswitch){A g; 
+F1(jtlocswitch){F1PREF;A g; 
  ASSERT(!AR(w),EVRANK); 
  RZ(g=locale(1,w)); 
  jt->global=g; jt->stswitched=1;
  R mtm;
 }    /* 18!:4  switch locale */
 
-F1(jtlocname){A g=jt->global;
+F1(jtlocname){F1PREF;A g=jt->global;
  ASSERTMTV(w);
  ASSERT(g,EVLOCALE);
  R box(sfn(0,LOCNAME(g)));
@@ -211,7 +211,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
      *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:t&SYMB?6:-2;
      *zv++=(I)sfn(1,d->name);})
 
-F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
+F1(jtlocmap){F1PREF;A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
  RE(g=equ(w,zero)?jt->stloc:equ(w,one)?jt->local:locale(0,w));
@@ -228,7 +228,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
-F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv,wd;L*v;
+F1(jtlocexmark){F1PREF;A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv,wd;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  nv=AV(jt->stnum); pv=AAV(jt->stptr);

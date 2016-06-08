@@ -13,7 +13,7 @@ static I jtord(J jt,A w){I j,n,*v,z;
  R z;
 }
 
-F1(jtpinv){I m=0,n,*v;
+F1(jtpinv){F1PREF;I m=0,n,*v;
  F1RANK(1,jtpinv,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
@@ -38,7 +38,7 @@ A jtpfill(J jt,I n,A w){PROLOG;A b,z;B*bv,*v;I*wv,*zv;
  EPILOG(z);
 }
 
-static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
+static F1(jtcfd){F1PREF;A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  RZ(w);
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
@@ -76,15 +76,15 @@ static A jtdfc(J jt,I n,A w){PROLOG;A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x,wd;
  EPILOG(z);
 }    /* direct from cycle */
 
-F1(jtcdot1){F1RANK(1,jtcdot1,0); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
+F1(jtcdot1){F1PREF;F1RANK(1,jtcdot1,0); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
-F2(jtcdot2){A p;
+F2(jtcdot2){F2PREF;A p;
  F2RANK(1,RMAX,jtcdot2,0);
  RZ(p=BOX&AT(a)?dfc(IC(w),a):pfill(IC(w),a));
  R AR(w)?from(p,w):w;
 }
 
-F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
+F1(jtpparity){F1PREF;A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  RZ(x=cvt(INT,w));
  r=AR(x); s=AS(x); n=r?*(s+r-1):1; RE(m=prod(r-1,s)); v=AV(x);
  GA(y,B01,n,1,0); u=BAV(y);
@@ -99,7 +99,7 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  R z;
 }    /* permutation parity; # interchanges to get i.n */
 
-static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
+static F1(jtdfr){F1PREF;A z;I c,d,i,j,m,n,*v,*x;
  RZ(w);
  n=*(AS(w)+AR(w)-1); m=n?AN(w)/n:0; v=AV(w);
  GA(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
@@ -111,21 +111,21 @@ static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  R z;
 }    /* direct from reduced */
 
-static F1(jtrfd){A z;I j,k,n,r,*s,*x;
+static F1(jtrfd){F1PREF;A z;I j,k,n,r,*s,*x;
  RZ(z=ca(w)); x=AV(z);
  r=AR(w); s=AS(w); 
  if(n=s[r-1])DO(AN(w)/n, j=n-1; ++x; DO(n-1, k=0; DO(j--, k+=*x>x[i];); *x++=k;););
  R z;
 }    /* reduced from direct */
 
-F1(jtadot1){A y;I n;
+F1(jtadot1){F1PREF;A y;I n;
  F1RANK(1,jtadot1,0);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
  n=IC(y);
  R base2(cvt(XNUM,apv(n,n,-1L)),rfd(y));
 }
 
-F2(jtadot2){A m,p;I n;
+F2(jtadot2){F2PREF;A m,p;I n;
  RZ(a&&w);
  n=IC(w); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);

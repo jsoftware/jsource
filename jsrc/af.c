@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F1(jtunname){A x;V*v;
+F1(jtunname){F1PREF;A x;V*v;
  RZ(w); 
  v=VAV(w);
  if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->f; if(NAME&AT(x))R symbrd(x);}
@@ -32,7 +32,7 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
  R 0;
 }    /* 1 iff w contains $: */
 
-static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
+static F2(jtfixa){F2PREF;A aa,f,g,h,wf,x,y,z=w;V*v;
  RZ(a&&w);
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
  v=VAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
@@ -87,7 +87,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
 }}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
 
-F1(jtfix){PROLOG;A z;I*rv=jt->rank;
+F1(jtfix){F1PREF;PROLOG;A z;I*rv=jt->rank;
  RZ(w);
  jt->rank=0;
  RZ(jt->fxpath=reshape(sc(jt->fxi=(I)255),ace)); jt->fxpv=AAV(jt->fxpath);

@@ -13,11 +13,11 @@ I level(A w){A*wv;I d,j,wd;
  R 1+d;
 }
 
-F1(jtlevel1){RZ(w); R sc(level(w));}
+F1(jtlevel1){F1PREF;RZ(w); R sc(level(w));}
 
-F1(jtbox0){R irs1(w,0L,0L,jtbox);}
+F1(jtbox0){F1PREF;R irs1(w,0L,0L,jtbox);}
 
-F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws; 
+F1(jtbox){F1PREF;A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws; 
  RZ(w);
  ASSERT(!(SPARSE&AT(w)),EVNONCE);
  ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; 
@@ -32,9 +32,9 @@ F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws;
  R z;
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); R AN(w)&&BOX&AT(w)?rat(w):box(w);}
+F1(jtboxopen){F1PREF;RZ(w); R AN(w)&&BOX&AT(w)?rat(w):box(w);}
 
-F2(jtlink){RZ(a&&w); R over(box(a),AN(w)&&AT(w)&BOX?rat(w):box(w));}
+F2(jtlink){F2PREF;RZ(a&&w); R over(box(a),AN(w)&&AT(w)&BOX?rat(w):box(w));}
 
 static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  RZ(w);
@@ -119,7 +119,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  R z;
 }
 
-F1(jtope){PROLOG;A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
+F1(jtope){F1PREF;PROLOG;A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w); b=ARELATIVE(w);
  if(!(n&&BOX&AT(w)))R ca(w); /* {GA(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
@@ -229,7 +229,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
+F1(jtraze){F1PREF;A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
  RZ(w);
  n=AN(w); v=AAV(w); b=ARELATIVE(w); zb=b;  // n=#,w  v->w data  zb=b='boxed relative addressing'
  if(!n)R mtv;   // if empty operand, return boolean empty
@@ -279,7 +279,7 @@ F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
  R z;
 }
 
-F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
+F1(jtrazeh){F1PREF;A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
@@ -304,7 +304,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
 
 #define EXTZ    if(vv<=d+v){m=v-CAV(z); RZ(z=ext(0,z)); v=m+CAV(z); vv=CAV(z)+k*AN(z);}
 
-F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
+F2(jtrazefrom){F2PREF;A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
  RZ(a&&w);
  an=AN(a); wn=AN(w);
  if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)&&!ARELATIVE(w)&&1==AR(w)&&1<wn&&an>10*wn){

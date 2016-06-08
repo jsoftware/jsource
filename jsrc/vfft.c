@@ -50,7 +50,7 @@ floop=: 4 : 0
 static UC revb16[16]={0,8,4,12, 2,10,6,14, 1,9,5,13, 3,11,7,15};
 static UC revb[256];
 
-static F1(jtravtranspose){I i,n,s;Z t,*v;UC*iv,*jv;UI j;
+static F1(jtravtranspose){F1PREF;I i,n,s;Z t,*v;UC*iv,*jv;UI j;
  n=AN(w); v=ZAV(w);
  j=n; s=SY_64?64:32; while(1<j){j>>=1; --s;} 
  iv=(UC*)&i; jv=(UC*)&j;

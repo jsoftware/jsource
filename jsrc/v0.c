@@ -14,7 +14,7 @@
 #define QNEGATE(x)     (qminus(zeroQ,x))
 
 #define CFR(f,T,xx,fplus,ftymes,fnegate)  \
- F2(f){PROLOG;A z;I j,n;T d,*t,*u,*v;            \
+ F2(f){F2PREF;PROLOG;A z;I j,n;T d,*t,*u,*v;            \
   n=AN(w); u=(T*)AV(w);                          \
   GA(z,xx,1+n,1,0); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
@@ -29,7 +29,7 @@ static CFR(jtcfrd,D,FL,  dplus,dtymes,dnegate)
 static CFR(jtcfrx,X,XNUM,xplus,xtymes, negate)
 static CFR(jtcfrq,Q,RAT, qplus,qtymes,QNEGATE)
 
-static F1(jtrsort){A t,z;D d=jt->ct;
+static F1(jtrsort){F1PREF;A t,z;D d=jt->ct;
  RZ(w);
  jt->ct=jt->fuzz;
  t=over(mag(w),cant1(rect(w)));
@@ -38,7 +38,7 @@ static F1(jtrsort){A t,z;D d=jt->ct;
  R z;
 }
 
-static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
+static F2(jtcfrz){F2PREF;A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  RZ(w=rsort(w)); 
  n=AN(w); u=ZAV(w); 
  GA(z,CMPX,1+n,1,0); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
@@ -51,7 +51,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  R p>b?cvt(FL,z):z;
 }
 
-static F1(jtcfr){A c,r,*wv;I t,wd;
+static F1(jtcfr){F1PREF;A c,r,*wv;I t,wd;
  ASSERT(!AR(w)||2==AN(w),EVLENGTH);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  if(AR(w)){c=WVR(0); r=WVR(1);}else{c=one; r=WVR(0);}
@@ -196,7 +196,7 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
  R z;
 }    /* roots from coefficients, degree m is 2 or more */
 
-static F1(jtrfc){A r,w1;I m=0,n,t;
+static F1(jtrfc){F1PREF;A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);
  if(n){
   ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);
@@ -212,7 +212,7 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  R link(from(sc(m),w),rsort(r));
 }
 
-F1(jtpoly1){A c,e,x;
+F1(jtpoly1){F1PREF;A c,e,x;
  F1RANK(1L,jtpoly1,0L); 
  if(!(AN(w)&&BOX&AT(w)))R rfc(w);
  x=AAV0(w);
@@ -243,7 +243,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r,wd;
  R z;
 }    /* standardize multinomial right arg */
 
-static F2(jtpoly2a){A c,e,x;I m;
+static F2(jtpoly2a){F2PREF;A c,e,x;I m;
  RZ(a&&w);
  m=*(1+AS(a))-1;
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
@@ -255,7 +255,7 @@ static F2(jtpoly2a){A c,e,x;I m;
  R 1==m?pdt(irs2(x,ravel(e),0L,0L,2L,jtexpn2),c):pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
-F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
+F2(jtpoly2){F2PREF;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
  if(1<AR(a))R rank2ex(a,w,0L,1L,0L,jtpoly2);
  an=AN(a); at=AT(a); b=1&&BOX&at;
@@ -295,13 +295,13 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
 }    /* a p. w */
 
 
-F1(jtpderiv1){
+F1(jtpderiv1){F1PREF;
  F1RANK(1,jtpderiv1,0);
  if(AN(w)&&!(NUMERIC&AT(w)))RZ(w=poly1(w));
  R 1>=AN(w) ? apv(1L,0L,0L) : tymes(behead(w),apv(AN(w)-1,1L,1L));
 }    /* p.. w */
 
-F2(jtpderiv2){
+F2(jtpderiv2){F2PREF;
  F2RANK(0,1,jtpderiv2,0);
  if(!(NUMERIC&AT(w)))RZ(w=poly1(w));
  ASSERT(NUMERIC&AT(a),EVDOMAIN);

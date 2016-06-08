@@ -21,7 +21,7 @@
 
 
 #define INDF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                                      \
+ static F2(f){F2PREF;I an,n,wn;T0*av,x;T1*wv,y;                                      \
   an=AN(a); av=(T0*)AV(a);                                                    \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;             \
   if     (!AR(a)){x=*av;        DO(n,          y=*wv++; if(F(x,y))R sc(i););} \
@@ -31,7 +31,7 @@
  }
 
 #define JNDF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                                          \
+ static F2(f){F2PREF;I an,n,wn;T0*av,x;T1*wv,y;                                          \
   an=AN(a); av=(T0*)AV(a);                                                        \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
   if     (!AR(a)){x=*av; wv+=n; DO(n,          y=*--wv; if(F(x,y))R sc(n-1-i););} \
@@ -41,7 +41,7 @@
  }
 
 #define SUMF(f,T0,T1,F)  \
- static F2(f){I an,m=0,n,wn;T0*av,x;T1*wv,y;                       \
+ static F2(f){F2PREF;I an,m=0,n,wn;T0*av,x;T1*wv,y;                       \
   an=AN(a); av=(T0*)AV(a);                                         \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;  \
   if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))++m;);} \
@@ -51,7 +51,7 @@
  }
 
 #define ANYF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                             \
+ static F2(f){F2PREF;I an,n,wn;T0*av,x;T1*wv,y;                             \
   an=AN(a); av=(T0*)AV(a);                                           \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;    \
   if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))R one;);} \
@@ -61,7 +61,7 @@
  }
 
 #define ALLF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                               \
+ static F2(f){F2PREF;I an,n,wn;T0*av,x;T1*wv,y;                               \
   an=AN(a); av=(T0*)AV(a);                                             \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;      \
   if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(!F(x,y))R zero;);} \
@@ -74,7 +74,7 @@
   {if(zu==zv){I m=zv-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=i;}
 
 #define IFBF(f,T0,T1,F)  \
- static F2(f){A z;I an,n,wn,*zu,*zv;T0*av,x;T1*wv,y;                \
+ static F2(f){F2PREF;A z;I an,n,wn,*zu,*zv;T0*av,x;T1*wv,y;                \
   an=AN(a); av=(T0*)AV(a);                                          \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;   \
   RZ(z=exta(INT,1L,1L,MAX(22,n/8))); zv=AV(z); zu=zv+AN(z);         \
@@ -100,7 +100,7 @@
 #endif
 
 #define INDB(f,T0,T1,F)  \
- static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                 \
+ static F2(f){F2PREF;B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                 \
   an=AN(a); av=AV(a);                                                             \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
   q=n/SZI; r=n%SZI;                                                               \
@@ -113,7 +113,7 @@
  }
 
 #define JNDB(f,T0,T1,F)  \
- static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                             \
+ static F2(f){F2PREF;B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                             \
   an=AN(a); av=AV(a);                                                                         \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                                  \
   q=n/SZI; r=n%SZI;                                                                           \
@@ -125,7 +125,7 @@
  }
 
 #define SUMB(f,T0,T1,F)  \
- static F2(f){B*xv;I an,*av,n,p,q,r,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
+ static F2(f){F2PREF;B*xv;I an,*av,n,p,q,r,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
   an=AN(a); av=AV(a);                                                        \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
   p=n/SZI; q=p/255; r=p%255; r1=n%SZI;                                       \
@@ -147,7 +147,7 @@
  }
 
 #define ANYB(f,T0,T1,F)  \
- static F2(f){B*xv;     I an,*av,n,p,r1,  wn,*wv,x;                                 \
+ static F2(f){F2PREF;B*xv;     I an,*av,n,p,r1,  wn,*wv,x;                                 \
   an=AN(a); av=AV(a);                                                               \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n/SZI; r1=n%SZI;;                                                               \
@@ -160,7 +160,7 @@
  }
 
 #define ALLB(f,T0,T1,F)  \
- static F2(f){B*xv;C*tv;I an,*av,n,p,r1,t,wn,*wv,x;                                 \
+ static F2(f){F2PREF;B*xv;C*tv;I an,*av,n,p,r1,t,wn,*wv,x;                                 \
   an=AN(a); av=AV(a);                                                               \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n/SZI; r1=n%SZI;;                                                               \
@@ -207,7 +207,7 @@
 #endif
 
 #define IFBB(f,T0,T1,F)  \
- static F2(f){A z;B*xv,*yv;I an,*av,m=0,n,q,r,wn,*wv,x,y,*zu,*zv;                        \
+ static F2(f){F2PREF;A z;B*xv,*yv;I an,*av,m=0,n,q,r,wn,*wv,x,y,*zu,*zv;                        \
   an=AN(a); av=AV(a);                                                                    \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                             \
   q=n/SZI; r=n%SZI;                                                                      \
@@ -538,14 +538,14 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
 };
 
 
-static F2( jti0eps){R indexofsub( II0EPS,w,a);}
-static F2( jti1eps){R indexofsub( II1EPS,w,a);}
-static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}
-static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}
-static F2(jtsumeps){R indexofsub(ISUMEPS,w,a);}
-static F2(jtanyeps){R indexofsub(IANYEPS,w,a);}
-static F2(jtalleps){R indexofsub(IALLEPS,w,a);}
-static F2(jtifbeps){R indexofsub(IIFBEPS,w,a);}
+static F2( jti0eps){F2PREF;R indexofsub( II0EPS,w,a);}
+static F2( jti1eps){F2PREF;R indexofsub( II1EPS,w,a);}
+static F2( jtj0eps){F2PREF;R indexofsub( IJ0EPS,w,a);}
+static F2( jtj1eps){F2PREF;R indexofsub( IJ1EPS,w,a);}
+static F2(jtsumeps){F2PREF;R indexofsub(ISUMEPS,w,a);}
+static F2(jtanyeps){F2PREF;R indexofsub(IANYEPS,w,a);}
+static F2(jtalleps){F2PREF;R indexofsub(IALLEPS,w,a);}
+static F2(jtifbeps){F2PREF;R indexofsub(IIFBEPS,w,a);}
 
 static AF atcompX[]={   /* table for any vs. any */
   0L,0L,0L,0L,0L,0L,        0L,  jti0eps,

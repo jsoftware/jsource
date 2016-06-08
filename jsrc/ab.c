@@ -63,7 +63,7 @@ static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)(n%2-1); x+=k; DO(m, DO(d,
 
 
 #define BITWISE(f,T,op)  \
- F2(f){A z;B b;I an,ar,*as,*av,k=0,wn,wr,*ws,x;T*wv,y,*zv;             \
+ F2(f){F2PREF;A z;B b;I an,ar,*as,*av,k=0,wn,wr,*ws,x;T*wv,y,*zv;             \
   RZ(a&&w);                                                            \
   if(!(INT&AT(a)))RZ(a=cvt(INT,a));                                    \
   if(!(INT&AT(w)))RZ(w=cvt(INT,w));                                    \
@@ -92,7 +92,7 @@ BITWISE(jtbitwiserotate,UI,BWROT   )
 BITWISE(jtbitwiseshift, UI,BWSHIFT )
 BITWISE(jtbitwiseshifta,I, BWSHIFTA)
 
-DF1(jtbitwise1){R CALL2(VAV(self)->f2,zero,w,self);}
+DF1(jtbitwise1){F1PREF;R CALL2(VAV(self)->f2,zero,w,self);}
 
 
 static VF bwC[16]={bw0000CC,bw0001CC,bw0010CC,bw0011CC, bw0100CC,bw0101CC,bw0110CC,bw0111CC,
@@ -105,7 +105,7 @@ static VF bwI[16]={bw0000II,bw0001II,bw0010II,bw0011II, bw0100II,bw0101II,bw0110
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
 
-DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;VF f;
+DF2(jtbitwisechar){F2PREF;DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;VF f;
  RZ(a&&w);
  d=SZI;
  x=a; an=AN(a); ar=AR(a); as=AS(a); at=AT(a);
@@ -152,7 +152,7 @@ static VF bwinsI[16]={bw0000insI,bw0001insI,bw0010insI,bw0011insI, bw0100insI,bw
 /* m b./&.(a.i.]) w */
 /* m e. 16+i.16     */
 
-DF1(jtbitwiseinsertchar){A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
+DF1(jtbitwiseinsertchar){F1PREF;A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
  RZ(w&&self);
  wr=AR(w); c=wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->f; fs=VAV(z)->f;
  if(!(wn&&d<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);

@@ -355,7 +355,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;B c2;I i,m,wc,wr,*ws;SB*zv;
  R z;
 }    /* each row of literal array w less the trailing "blanks" is a symbol */
 
-static F1(jtsbunbox){A*wv,x,z;B c2;I i,m,n,wd;SB*zv;
+static F1(jtsbunbox){F1PREF;A*wv,x,z;B c2;I i,m,n,wd;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
  m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
@@ -369,7 +369,7 @@ static F1(jtsbunbox){A*wv,x,z;B c2;I i,m,n,wd;SB*zv;
  R z;
 }    /* each element of boxed array w is a string */
 
-static F1(jtsbunind){A z;I j,n,*zv;
+static F1(jtsbunind){F1PREF;A z;I j,n,*zv;
  RZ(z=cvt(INT,w));
  zv=AV(z); n=jt->sbun;
  DO(AN(w), j=*zv++; ASSERT(0<=j&&j<n,EVINDEX););
@@ -378,7 +378,7 @@ static F1(jtsbunind){A z;I j,n,*zv;
 }    /* w is a numeric array of symbol indices */
 
 #ifdef TMP
-F1(jtsb1){
+F1(jtsb1){F1PREF;
  A abc;
  clo=clock();
  RZ(w);
@@ -392,7 +392,7 @@ F1(jtsb1){
  R abc;
 }
 #else
-F1(jtsb1){
+F1(jtsb1){F1PREF;
  RZ(w);
  switch(AT(w)){
   default:  ASSERT(0,EVDOMAIN);
@@ -403,7 +403,7 @@ F1(jtsb1){
 #endif
 
 
-F1(jtsborder){A z;I n,*zv;SB*v;
+F1(jtsborder){F1PREF;A z;I n,*zv;SB*v;
  RZ(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
@@ -412,7 +412,7 @@ F1(jtsborder){A z;I n,*zv;SB*v;
  R z;
 }    /* order numbers for symbol array w */
 
-static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
+static F1(jtsbbox){F1PREF;A z,*zv;C*s;I n;SB*v;SBU*u;
  RZ(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
@@ -461,7 +461,7 @@ static A jtsblit(J jt,C c,A w){A z;B c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 }    /* literal array for symbol array w padded with c */
 
 
-static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
+static F1(jtsbhashstat){F1PREF;A z;I j,k,n,p,*zv;SBU*v;
  n=jt->sbun; v=jt->sbuv; p=AN(jt->sbh);
  GA(z,INT,n,1,0); zv=AV(z);
  DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){j=(j+1)%p; ++k;} *zv++=k;);
@@ -542,9 +542,9 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG;A x,*
  EPILOG(one);
 }
 
-static F1(jtsbcheck){R sbcheck1(sc(jt->sbun),sc(jt->sbsn),jt->sbu,jt->sbs,jt->sbh,sc(ROOT),sc(FILLFACTOR),sc(GAP));}
+static F1(jtsbcheck){F1PREF;R sbcheck1(sc(jt->sbun),sc(jt->sbsn),jt->sbu,jt->sbs,jt->sbh,sc(ROOT),sc(FILLFACTOR),sc(GAP));}
 
-static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
+static F1(jtsbsetdata){F1PREF;A h,s,u,*wv,x;I wd;
  RZ(w);
  ASSERTD(BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
@@ -563,7 +563,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
  R one;
 }
 
-static F1(jtsbgetdata){A z,*zv;
+static F1(jtsbgetdata){F1PREF;A z,*zv;
  GA(z,BOX,8,1,0); zv=AAV(z);
  RZ(zv[0]=sc(jt->sbun));
  RZ(zv[1]=sc(jt->sbsn));
@@ -576,7 +576,7 @@ static F1(jtsbgetdata){A z,*zv;
  R z;
 }
 
-F2(jtsb2){A z;I j,k,n;
+F2(jtsb2){F2PREF;A z;I j,k,n;
 #ifdef TMP
  I*zv;
 #endif

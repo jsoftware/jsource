@@ -51,7 +51,7 @@ static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
  R 0<=k&&(c==CBANG&&nf||c==CEXP&&ng)?1+k:0;
 }    /* 1 + degree of polynomial (0 if not poly) */
 
-static F1(jtfpolyc){A b;B*bv;I m,n;
+static F1(jtfpolyc){F1PREF;A b;B*bv;I m,n;
  RZ(b=ne(w,zero)); bv=BAV(b);
  m=n=AN(w); DO(n, if(bv[--m])break;); ++m;
  if(m<n)RZ(w=take(sc(m),w)); n=m;
@@ -74,23 +74,23 @@ static F1(jtfpolyc){A b;B*bv;I m,n;
 
 static A jtfpoly(J jt,I n,A f){I m=0>n?1:1+n; RZ(f); R fpolyc(df1(IX(m),tdot(f)));}
 
-static F1(jtfnegate){V*v; RZ(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->f)?v->g:atop(ds(CMINUS),w);}
+static F1(jtfnegate){F1PREF;V*v; RZ(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->f)?v->g:atop(ds(CMINUS),w);}
 
-static F2(jtfplus){
+static F2(jtfplus){F2PREF;
  RZ(a&&w);
  if(iscons(a)&&equ(VAV(a)->f,zero))R w;
  if(iscons(w)&&equ(VAV(w)->f,zero))R a;
  R folk(a,ds(CPLUS),w);
 }
 
-static F2(jtfminus){
+static F2(jtfminus){F2PREF;
  RZ(a&&w);
  if(iscons(a)&&equ(VAV(a)->f,zero))R fnegate(w);
  if(iscons(w)&&equ(VAV(w)->f,zero))R a;
  R folk(a,ds(CMINUS),w);
 }
 
-static F2(jtftymes){A x,y;B b,c;I k;
+static F2(jtftymes){F2PREF;A x,y;B b,c;I k;
  RZ(a&&w);
  b=iscons(a); x=VAV(a)->f;
  c=iscons(w); y=VAV(w)->f;
@@ -101,7 +101,7 @@ static F2(jtftymes){A x,y;B b,c;I k;
  R c?folk(w,ds(CSTAR),a):folk(a,ds(CSTAR),w);
 }
 
-static F1(jtdpoly){A c,e,x;I n,t;
+static F1(jtdpoly){F1PREF;A c,e,x;I n,t;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&NUMERIC+BOX,EVDOMAIN);
@@ -114,7 +114,7 @@ static F1(jtdpoly){A c,e,x;I n,t;
  R amp(box(stitch(tymes(c,e),minus(e,one))),ds(CPOLY));
 }
 
-static F1(jtipoly){A b,c,e,p=0,q=0,x;I n,t;
+static F1(jtipoly){F1PREF;A b,c,e,p=0,q=0,x;I n,t;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&NUMERIC+BOX,EVDOMAIN);
@@ -130,9 +130,9 @@ static F1(jtipoly){A b,c,e,p=0,q=0,x;I n,t;
  R p&&q?folk(p,ds(CPLUS),q):p?p:q;
 }
 
-static F1(jticube){R atco(eval("* =/~@(i.@$)"),w);}
+static F1(jticube){F1PREF;R atco(eval("* =/~@(i.@$)"),w);}
 
-static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
+static F1(jtdiffamp0){F1PREF;A f,g,h,x,y;B nf,ng;C id;V*v;
  RZ(w);
  v=VAV(w);
  f=v->f; nf=1&&NOUN&AT(f);
@@ -172,7 +172,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  R 0;
 }
 
-static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
+static F1(jtdiff0){F1PREF;A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
  RZ(w);
  v=VAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f); vf=f&&!nf;
@@ -264,7 +264,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
  R 0;
 }
 
-static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
+static F1(jtintgamp0){F1PREF;A f,g,h,x,y;B nf,ng;C id;V*v;
  RZ(w);
  v=VAV(w);
  f=v->f; nf=1&&NOUN&AT(f);
@@ -300,7 +300,7 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
 
 static F1(jtintg0); 
 
-static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
+static F2(jtintgatop){F2PREF;A df,f=a,g=w,q,x,y;I m,n;V*v;
  RZ(a&&w);
  m=ispoly(f);
  n=ispoly(g);
@@ -331,12 +331,12 @@ static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
  R 0;
 }    /* integral of a @ w */
 
-static F2(jtintgtymes){A f=a,g=w;
+static F2(jtintgtymes){F2PREF;A f=a,g=w;
  RZ(a&&w);
  R 0;
 }    /* integral of a * w */
 
-static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
+static F1(jtintg0){F1PREF;A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
  RZ(w);
  id=ID(w); v=VAV(w);
  f=v->f; nf=f&&NOUN&AT(f); if(vf=f&&!nf)fv=VAV(f);
@@ -405,9 +405,9 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
  R 0;
 }
 
-static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->f),v->g));}
+static DF1(jtddot1){F1PREF;V*v=VAV(self); R df1(w,ddot(fix(v->f),v->g));}
 
-F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
+F2(jtddot){F2PREF;A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  RZ(a&&w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w)); r=AR(w); n=AN(w); wv=AV(w);
@@ -427,7 +427,7 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
 }
 
 
-static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
+static F1(jtdiffamp){F1PREF;A f,g,h,x,y;B nf,ng;V*v;
  RZ(w);
  v=VAV(w);
  f=v->f; nf=1&&NOUN&AT(f);
@@ -453,7 +453,7 @@ static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
   R 0;
 }
 
-static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
+static F1(jtdiff){F1PREF;A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); id=v->id; r=v->mr;
@@ -506,7 +506,7 @@ static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
  R 0;
 }
 
-static F1(jtintg){ASSERT(0,EVNONCE);}
+static F1(jtintg){F1PREF;ASSERT(0,EVNONCE);}
 
 static A jtdtab(J jt,A a,I d){A h;V*v;
  RZ(a);
@@ -519,7 +519,7 @@ static A jtdtab(J jt,A a,I d){A h;V*v;
 }}
 
 
-static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
+static DF2(jtsslope){F2PREF;A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
  PREF2(jtsslope);
  fs=sv->f; m=*AV(sv->g);
  RZ(fs=1<m?dcapco(fs,sc(m-1)):atop(fs,ds(CRIGHT)));
@@ -539,7 +539,7 @@ static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
  R ope(z); /* cant2(IX(AR(w)),ope(z)); */
 }
 
-static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
+static DF1(jtderiv1){F1PREF;A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  PREF1(jtderiv1);
  v=VAV(self); RZ(fs=fix(v->f)); gs=v->g; n=AN(gs); gv=AV(gs); 
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
@@ -551,7 +551,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  RE(0); R ope(z);
 }
 
-F2(jtdcap){A z;I r,*v;
+F2(jtdcap){F2PREF;A z;I r,*v;
  RZ(a&&w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w)); v=AV(w); DO(AN(w), ASSERT(0<=v[i],EVNONCE););
@@ -560,7 +560,7 @@ F2(jtdcap){A z;I r,*v;
  R !AR(w)&&nameless(a)&&(z=dtab(a,*v))?z:CDERIV(CDCAP,jtderiv1,0L,r,0L,r);
 }
 
-F2(jtdcapco){I r,*v;
+F2(jtdcapco){F2PREF;I r,*v;
  ASSERTVN(a,w);
  RZ(w=vi(w)); v=AV(w); DO(AN(w), ASSERT(0<=v[i],EVNONCE););
  r=mr(a);

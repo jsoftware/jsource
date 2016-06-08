@@ -22,7 +22,7 @@ static A jtlev2(J jt,A a,A w,A self){A fs;
 
 static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MAX(0,n+t));}
 
-static DF1(jtlcapco1){A z;I m;V*v=VAV(self); 
+static DF1(jtlcapco1){F1PREF;A z;I m;V*v=VAV(self); 
  RZ(w); 
  m=jt->lmon; jt->lmon=efflev(0L,v->h,w); 
  z=lev1(w,self);
@@ -30,7 +30,7 @@ static DF1(jtlcapco1){A z;I m;V*v=VAV(self);
  R z;
 }
 
-static DF2(jtlcapco2){A z;I l,r;V*v=VAV(self);
+static DF2(jtlcapco2){F2PREF;A z;I l,r;V*v=VAV(self);
  RZ(a&&w);
  l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
  r=jt->lright; jt->lright=efflev(2L,v->h,w);
@@ -41,7 +41,7 @@ static DF2(jtlcapco2){A z;I l,r;V*v=VAV(self);
 }
 
 
-static F1(jtscfn){
+static F1(jtscfn){F1PREF;
  RZ(w);
  if(jt->scn==AN(jt->sca)){RZ(jt->sca=ext(1,jt->sca)); jt->scv=AV(jt->sca);}
  jt->scv[jt->scn++]=(I)w;
@@ -62,7 +62,7 @@ static A jtlevs2(J jt,A a,A w,A self){A fs;
   default: fs=VAV(self)->f; R scfn(CALL2(VAV(fs)->f2,a,w,fs));
 }}
 
-static DF1(jtscapco1){A x,z=0;I m;V*v=VAV(self);
+static DF1(jtscapco1){F1PREF;A x,z=0;I m;V*v=VAV(self);
  RZ(w); 
  m=jt->lmon; jt->lmon=efflev(0L,v->h,w);
  GA(x,INT,100,1,0); jt->scv=AV(x); jt->sca=x; jt->scn=0; 
@@ -74,7 +74,7 @@ static DF1(jtscapco1){A x,z=0;I m;V*v=VAV(self);
  R z;
 }
 
-static DF2(jtscapco2){A x,z=0;I l,r;V*v=VAV(self); 
+static DF2(jtscapco2){F2PREF;A x,z=0;I l,r;V*v=VAV(self); 
  RZ(a&&w); 
  l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
  r=jt->lright; jt->lright=efflev(2L,v->h,w);
@@ -101,6 +101,6 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  R fdef(id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, 0L, RMAX,RMAX,RMAX);
 }
 
-F2(jtlcapco){R lsub(CLCAPCO,a,w);}
-F2(jtscapco){R lsub(CSCAPCO,a,w);}
+F2(jtlcapco){F2PREF;R lsub(CLCAPCO,a,w);}
+F2(jtscapco){F2PREF;R lsub(CSCAPCO,a,w);}
 

@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F1(jtcatalog){PROLOG;A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u,wd;
+F1(jtcatalog){F1PREF;PROLOG;A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u,wd;
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
@@ -42,7 +42,7 @@ F1(jtcatalog){PROLOG;A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s
   else              DO(m, DO(an, SETJ(av[i]); u=v+j*q; DO(q, *x++=*u++;);); v+=pq;);   \
  }
 
-F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws,zn;
+F2(jtifrom){F2PREF;A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  // This routine is implemented as if it had infinite rank: if no rank is specified, it operates on the entire
  // a (and w).  This has implications for empty arguments.
@@ -120,7 +120,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
 
 #define INNER1B(T)  {T*v=(T*)wv,*x=(T*)zv; v+=*av; DO(m, *x++=*v; v+=p;);}
 
-static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf,wk,wn,wr,*ws,zn;
+static F2(jtbfrom){F2PREF;A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
@@ -271,7 +271,7 @@ static A jtafi(J jt,I n,A w){A x;
  R AN(x)?less(IX(n),pind(n,x)):ace; 
 }
 
-static F2(jtafrom){PROLOG;A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
+static F2(jtafrom){F2PREF;PROLOG;A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
@@ -306,7 +306,7 @@ static F2(jtafrom){PROLOG;A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,
  RE(y); if(b){RZ(y=ca(x=y)); RZ(y=RELOCATE(x,y));} EPILOG(y);
 }    /* a{"r w for boxed index a */
 
-F2(jtfrom){I at;
+F2(jtfrom){F2PREF;I at;
  RZ(a&&w);
  at=AT(a);
  switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
@@ -316,21 +316,21 @@ F2(jtfrom){I at;
   default: R fromss(a,w);
 }}   /* a{"r w main control */
 
-F2(jtsfrom){A ind;
+F2(jtsfrom){F2PREF;A ind;
  RE(aindex1(a,w,0L,&ind));
  R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
 }    /* (<"1 a){w */
 
-static F2(jtmapx){
+static F2(jtmapx){F2PREF;
  RZ(a&&w);
  if(!(BOX&AT(w)))R ope(a);
  R every2(box0(every2(a,box0(catalog(every(shape(w),0L,jtiota))),0L,jtover)),w,0L,jtmapx);
 }
 
-F1(jtmap){R mapx(ace,w);}
+F1(jtmap){F1PREF;R mapx(ace,w);}
 
 
-F2(jtfetch){A*av,t,x=w;I ad,n;
+F2(jtfetch){F2PREF;A*av,t,x=w;I ad,n;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a)))RZ(a=box(a));
  n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);

@@ -77,7 +77,7 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,yv[16],*
  R z;
 }    /* /:@/: w where w is boolean and items have length 2 or 4 */
 
-F1(jtranking){A y,z;C*wv;I i,k,m,n,p=0,q=0,t,wcr,wf,wk,wr,*ws,wt,*yu,*yv,*zv;
+F1(jtranking){F1PREF;A y,z;C*wv;I i,k,m,n,p=0,q=0,t,wcr,wf,wk,wr,*ws,wt,*yu,*yv,*zv;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  wt=AT(w); wv=CAV(w);

@@ -32,9 +32,9 @@
 #endif
 
 
-F1(jtsp){ASSERTMTV(w); R sc(jt->bytes);}
+F1(jtsp){F1PREF;ASSERTMTV(w); R sc(jt->bytes);}
 
-F1(jtspit){A z;I k; 
+F1(jtspit){F1PREF;A z;I k; 
  F1RANK(1,jtspit,0); 
  jt->bytesmax=k=jt->bytes;
  FDEPINC(1); z=exec1(w); FDEPDEC(1);
@@ -42,13 +42,13 @@ F1(jtspit){A z;I k;
  R sc(jt->bytesmax-k);
 }
 
-F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
+F1(jtparsercalls){F1PREF;ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-F1(jtpeekdata){ ASSERTMTV(w); R sc(jt->peekdata); }
+F1(jtpeekdata){F1PREF; ASSERTMTV(w); R sc(jt->peekdata); }
 
 // 6!:6, used to run tests that need to run in a sentence
-F1 (jttestcode) {
+F1 (jttestcode){F1PREF;
 #if defined(OBSOLETE)
 // jtmult tests
  I multops[]  = {
@@ -125,7 +125,7 @@ R sc(0);
 #if SY_WIN32
  /* defined in jdll.c */
 #else
-F1(jtts){A z;D*x;struct tm*t;struct timeval tv;
+F1(jtts){F1PREF;A z;D*x;struct tm*t;struct timeval tv;
  ASSERTMTV(w);
  gettimeofday(&tv,NULL); t=localtime((time_t*)&tv.tv_sec);
  GA(z,FL,6,1,0); x=DAV(z);
@@ -139,7 +139,7 @@ F1(jtts){A z;D*x;struct tm*t;struct timeval tv;
 }
 #endif
 
-F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
+F1(jtts0){F1PREF;A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  RZ(w);
  ASSERT(1>=AR(w),EVRANK);
  RZ(x=ts(mtv));
@@ -202,9 +202,9 @@ __int64 GetMachineCycleCount()
 */
 
 
-F1(jttss){ASSERTMTV(w); R scf(tod()-jt->tssbase);}
+F1(jttss){F1PREF;ASSERTMTV(w); R scf(tod()-jt->tssbase);}
 
-F2(jttsit2){A z;D t;I n,old;
+F2(jttsit2){F2PREF;A z;D t;I n,old;
  F2RANK(0,1,jttsit2,0);
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
@@ -216,7 +216,7 @@ F2(jttsit2){A z;D t;I n,old;
  R scf(n?t/(n*pf):0);
 }
 
-F1(jttsit1){R tsit2(one,w);}
+F1(jttsit1){F1PREF;R tsit2(one,w);}
 
 #ifdef _WIN32
 #define sleepms(i) Sleep(i)
@@ -224,7 +224,7 @@ F1(jttsit1){R tsit2(one,w);}
 #define sleepms(i) sleep((i+500)/1000)
 #endif
 
-F1(jtdl){D m,n,*v;UINT ms,s;
+F1(jtdl){F1PREF;D m,n,*v;UINT ms,s;
  RZ(w=cvt(FL,w));
  n=0; v=DAV(w); DO(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
  s=(UINT)jfloor(n); ms=(UINT)jfloor(0.5+1000*(n-s));
@@ -238,11 +238,11 @@ F1(jtdl){D m,n,*v;UINT ms,s;
 }
 
 
-F1(jtqpfreq){ASSERTMTV(w); R scf(pf);}
+F1(jtqpfreq){F1PREF;ASSERTMTV(w); R scf(pf);}
 
-F1(jtqpctr ){ASSERTMTV(w); R scf(qpc());}
+F1(jtqpctr ){F1PREF;ASSERTMTV(w); R scf(qpc());}
 
-F1(jtpmctr){D x;I q;
+F1(jtpmctr){F1PREF;D x;I q;
  RE(q=i0(w));
  ASSERT(jt->pma,EVDOMAIN);
  x=q+(D)jt->pmctr;
@@ -251,7 +251,7 @@ F1(jtpmctr){D x;I q;
  R sc(q);
 }    /* add w to pmctr */
 
-static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
+static F1(jtpmfree){F1PREF;A x,y;C*c;I m;PM*v;PM0*u;
  if(w){
   c=CAV(w); u=(PM0*)c; v=(PM*)(c+sizeof(PM0)); 
   m=u->wrapped?u->n:u->i; 
@@ -262,9 +262,9 @@ static F1(jtpmfree){A x,y;C*c;I m;PM*v;PM0*u;
  R one;
 }    /* free old data area */
 
-F1(jtpmarea1){R pmarea2(vec(B01,2L,&zeroZ),w);}
+F1(jtpmarea1){F1PREF;R pmarea2(vec(B01,2L,&zeroZ),w);}
 
-F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
+F2(jtpmarea2){F2PREF;A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  RZ(a&&w);
  ASSERT(prokey, EVDOMAIN);
  RZ(a=cvt(B01,a)); 
@@ -314,7 +314,7 @@ void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
 #endif
 }
 
-F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
+F1(jtpmunpack){F1PREF;A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;PM0*u;
  RZ(w);
  ASSERT(jt->pma,EVDOMAIN);
  if(!(INT&AT(w)))RZ(w=cvt(INT,w));
@@ -351,7 +351,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
  R z;
 }
 
-F1(jtpmstats){A x,z;I*zv;PM0*u;
+F1(jtpmstats){F1PREF;A x,z;I*zv;PM0*u;
  ASSERTMTV(w);
  GA(z,INT,6,1,0); zv=AV(z);
  if(x=jt->pma){
@@ -367,9 +367,9 @@ F1(jtpmstats){A x,z;I*zv;PM0*u;
 }
 
 
-F1(jttlimq){ASSERTMTV(w); R scf(0.001*jt->timelimit);}
+F1(jttlimq){F1PREF;ASSERTMTV(w); R scf(0.001*jt->timelimit);}
 
-F1(jttlims){D d;
+F1(jttlims){F1PREF;D d;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
  if(!(FL&AT(w)))RZ(w=cvt(FL,w));

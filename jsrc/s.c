@@ -99,7 +99,7 @@ B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
 
-F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
+F1(jtsympool){F1PREF;A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
@@ -236,13 +236,13 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
  R z;
 }    /* 15!:6 (0=flag) or 15!:14 (1=flag) */
 
-F1(jtdllsymget){R dllsymaddr(w,0);}
-F1(jtdllsymdat){R dllsymaddr(w,1);}
+F1(jtdllsymget){F1PREF;R dllsymaddr(w,0);}
+F1(jtdllsymdat){F1PREF;R dllsymaddr(w,1);}
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found
-F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
+F1(jtsymbrd){F1PREF;L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
 
-F1(jtsymbrdlock){A y;
+F1(jtsymbrdlock){F1PREF;A y;
  RZ(y=symbrd(w));
  R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
 }

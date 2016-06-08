@@ -49,7 +49,7 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
 
 static A jtlcpx(J jt,A w){RZ(w); R CALL2(jt->lcp,lp(w),w,0);}
 
-static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n,wd;
+static F1(jtltiea){F1PREF;A t,*v,*wv,x,y;B b;C c;I n,wd;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); RZ(t=spellout(CGRAVE));
  GA(y,BOX,n+n,1,0); v=AAV(y);
@@ -58,7 +58,7 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n,wd;
  R raze(y);
 }
 
-static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I wd,n;
+static F1(jtltieb){F1PREF;A pt,t,*v,*wv,x,y;B b;C c,*s;I wd,n;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GA(y,BOX,n+n,1,0); v=AAV(y);
@@ -68,16 +68,16 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I wd,n;
  R raze(y);
 }
 
-static F1(jtlsh){R over(thorn1(shape(w)),spellout(CDOLLAR));}
+static F1(jtlsh){F1PREF;R over(thorn1(shape(w)),spellout(CDOLLAR));}
 
-static F1(jtlshape){I r,*s;
+static F1(jtlshape){F1PREF;I r,*s;
  RZ(w);
  r=AR(w); s=AS(w);
  R 2==r&&(1==s[0]||1==s[1]) ? spellout((C)(1==s[1]?CCOMDOT:CLAMIN)) : !r ? mtv :
      1<r ? lsh(w) : 1<AN(w) ? mtv : spellout(CCOMMA);
 }
 
-static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
+static F1(jtlchar){F1PREF;A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  RZ(w);
  m=AN(alp); n=AN(w); j=n-m; r1=1==AR(w); u=v=CAV(w); d=*v;
  if(0<=j&&r1&&!memcmp(v+j,AV(alp),m)){ 
@@ -104,7 +104,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
  R over(b?lsh(w):lshape(w),y);
 }    /* non-empty character array */
 
-static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n,wd;
+static F1(jtlbox){F1PREF;A p,*v,*vv,*wv,x,y;B b=0;I n,wd;
  RZ(w);
  if(equ(ace,w)&&B01==AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
@@ -134,14 +134,14 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n,wd;
  R over(lshape(w),raze(y));
 }    /* non-empty boxed array */
 
-static F1(jtlnum1){A z;I t;
+static F1(jtlnum1){F1PREF;A z;I t;
  RZ(w);
  t=AT(w);
  RZ(z=t&FL+CMPX?df1(w,fit(ds(CTHORN),sc((I)18))):thorn1(w));
  R t&XNUM+RAT&&!memchr(CAV(z),t&XNUM?'x':'r',AN(z))?over(z,scc('x')):z;
 }    /* dense non-empty numeric vector */
 
-static F1(jtlnum){A b,d,t,*v,y;B p;I n;
+static F1(jtlnum){F1PREF;A b,d,t,*v,y;B p;I n;
  RZ(t=ravel(w));
  n=AN(w);
  if(7<n||1<n&&1<AR(w)){
@@ -161,7 +161,7 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
  R over(lshape(w),lnum1(t));
 }    /* dense numeric non-empty array */
 
-static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
+static F1(jtlsparse){F1PREF;A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  RZ(w);
  r=AR(w); p=PAV(w); a=SPA(p,a); e=SPA(p,e); y=SPA(p,i); x=SPA(p,x);
  bn=0; v=AS(w); DO(r, if(!*v++){bn=1; break;});
@@ -189,7 +189,7 @@ static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
  R over(lcpx(lnoun(drop(sc(j),q))),over(cstr("|:"),z));
 }    /* sparse array */
 
-static F1(jtlnoun0){A s,x;B r1;
+static F1(jtlnoun0){F1PREF;A s,x;B r1;
  RZ(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
  switch(AT(w)){
@@ -205,7 +205,7 @@ static F1(jtlnoun0){A s,x;B r1;
   case SBT:  R over(s,cstr("$s: ' '"));
 }}   /* empty dense array */
 
-static F1(jtlnoun){I t;
+static F1(jtlnoun){F1PREF;I t;
  RZ(w);
  t=AT(w);
  if(t&SPARSE)R lsparse(w);
@@ -236,7 +236,7 @@ static B laa(A a,A w){C c,d;
 
 static B lnn(A a,A w){C c; RZ(a&&w); c=cl(a); R ('x'==c||C9==ctype[c])&&C9==ctype[cf(w)];}
 
-static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I ad,n;V*v;
+static F2(jtlinsert){F2PREF;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I ad,n;V*v;
  RZ(a&&w);
  n=AN(a); av=AAV(a); ad=(I)w*ARELATIVE(a); 
  vb=VERB==AT(w); v=VAV(w); id=v->id;
@@ -267,7 +267,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I ad,n;V*
    R over(y,laa(y,t2)?over(chr[' '],t2):t2);
 }}
 
-static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
+static F1(jtlcolon){F1PREF;A*v,x,y;C*s,*s0;I m,n;
  RZ(y=unparsem(one,w));
  n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->f));
  if(2>n||2==n&&1==AN(v[0])&&':'==*CAV(v[0])){
@@ -286,7 +286,7 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  R over(x,str(4L," : 0"));
 }
 
-static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
+static F1(jtlrr){F1PREF;A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  RZ(w);
  if(AT(w)&NOUN)R lnoun(w);
  if(AT(w)&NAME)R sfn(0,w);
@@ -303,7 +303,7 @@ static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  R linsert(t,w);
 }
 
-F1(jtlrep){PROLOG;A z;
+F1(jtlrep){F1PREF;PROLOG;A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
  RE(z=lrr(w));
  if(jt->ltext)z=over(z,jt->ltext);
@@ -311,7 +311,7 @@ F1(jtlrep){PROLOG;A z;
  EPILOG(z);
 }
 
-F1(jtprep){PROLOG;A z;
+F1(jtprep){F1PREF;PROLOG;A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
  RE(z=lrr(w));
  if(jt->ltext)z=over(z,jt->ltext);

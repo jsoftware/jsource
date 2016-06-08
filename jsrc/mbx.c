@@ -140,7 +140,7 @@ static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
  R 0;
 }   /* 1 iff any leaf of w is part of SMM array a */
 
-F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t,wd;
+F2(jtsmmcar){F2PREF;A*wv,x,z;A1*zv;I n,t,wd;
  RZ(w);
  n=AN(w); t=AT(w); 
  ASSERT(t&B01+LIT+INT+FL+CMPX+BOX,EVDOMAIN);
@@ -151,7 +151,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t,wd;
  R z;
 }    /* make copy of w in SMM area of a */
 
-F2(jtsmmis){A*wv,x;A1*av;I wd,wn,wr;
+F2(jtsmmis){F2PREF;A*wv,x;A1*av;I wd,wn,wr;
  RZ(a&&w);   
  if(a==w)R a;
  wn=AN(w); wr=AR(w);
@@ -183,7 +183,7 @@ static B leafrel(A w){A*v;
  R 0;
 }    /* 1 iff a leaf of w contains a relative address */
 
-F1(jtrca){
+F1(jtrca){F1PREF;
  RZ(w);
  if(!(BOX&AT(w)))R AFSMM&AFLAG(w)?ca(w):w;
  R leafrel(w)?cpa(0,w):w;
@@ -191,7 +191,7 @@ F1(jtrca){
 
 
 
-static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
+static F1(jtsmmblkf){F1PREF;A z;I**mfree,p,q,*v,*zv;MS*x;
  RZ(w);
  mfree=SMMFREE(w);
  p=MLEN; q=0; 
@@ -223,7 +223,7 @@ static A jtsmmblku(J jt,A w){A z;I n;
  R z;
 }    /* blocks in use */
 
-F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
+F1(jtsmmblks){F1PREF;A x,y,z;I n,t,*v,*zv;
  RZ(w);
  t=AT(w); 
  ASSERT(AFNJA&AFLAG(w)&&t&BOX,EVDOMAIN);
@@ -240,7 +240,7 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
 }    /* 15!:12 all the blocks in an SMM variable as 3-column matrix */
 
 /*
-// F2(jtafr2){A x,*wv;A1*wu;
+// F2(jtafr2){F2PREF;A x,*wv;A1*wu;
 //  RZ(a&&w);
 //  wv=AAV(w); wu=A1AV(w);
 //  DO(AN(w), x=(A)AABS(wu[i],a); if(BOX&AT(x))RZ(x=afr2(a,x)); wv[i]=x;);

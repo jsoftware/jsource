@@ -101,7 +101,7 @@ static S jtattu(J jt,A w){C*s;I i,n;S z=0;
  R z;
 }    /* convert from 6-element string into 16-bit attributes */
 
-F1(jtfullname){C*s; C dirpath[1000];
+F1(jtfullname){F1PREF;C*s; C dirpath[1000];
  RZ(w=str0(w));
  s=CAV(w); DO(AN(w), if(' '!=*s)break; ++s;);
 #if SY_WINCE
@@ -115,7 +115,7 @@ F1(jtfullname){C*s; C dirpath[1000];
 
 #if !SY_WINCE
 
-F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
+F1(jtjfperm1){F1PREF;A y,fn,z;C *s;F f;int x; US *p,*q;
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  RZ(fn=toutf16x(y));
@@ -128,7 +128,7 @@ F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  R z;
 }
 
-F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
+F2(jtjfperm2){F2PREF;A y,fn;C*s;F f;int x=0;US *p;
  F2RANK(1,0,jtjfperm2,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  RZ(a=vs(a)); ASSERT(3==AN(a),EVLENGTH); 
@@ -144,7 +144,7 @@ F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
 
 #else /* SY_WINCE: */
 
-F1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
+F1(jtjfperm1){F1PREF;A y,z;C*p,*q,*s;F f; DWORD attr;
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  p=CAV(y); q=p+AN(y)-3;
@@ -156,7 +156,7 @@ F1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
  R z;
 }
 
-F2(jtjfperm2){ASSERT(0,EVNONCE);}
+F2(jtjfperm2){F2PREF;ASSERT(0,EVNONCE);}
 
 #endif
 #endif
@@ -202,7 +202,7 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
  R z;
 }
 
-F1(jtjdir){PROLOG;A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffer[10000]; C* name;
+F1(jtjdir){F1PREF;PROLOG;A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffer[10000]; C* name;
  RZ(w);
  RZ(w=vs(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w));
@@ -223,7 +223,7 @@ F1(jtjdir){PROLOG;A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffe
  EPILOG(z);
 }
 
-F1(jtjfatt1){A y,fn;F f;U x;
+F1(jtjfatt1){F1PREF;A y,fn;F f;U x;
  F1RANK(0,jtjfatt1,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  RZ(fn=toutf16x(y));
@@ -232,7 +232,7 @@ F1(jtjfatt1){A y,fn;F f;U x;
  jsignal(EVFNAME); R 0; 
 }
 
-F2(jtjfatt2){A y,fn;F f;U x;
+F2(jtjfatt2){F2PREF;A y,fn;F f;U x;
  F2RANK(1,0,jtjfatt2,0);
  RE(x=attu(a));
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
@@ -316,7 +316,7 @@ static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;s
  R z;
 }
 
-F1(jtjdir){PROLOG;A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
+F1(jtjdir){F1PREF;PROLOG;A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
  RZ(w);
  RZ(w=str0(vs(!AR(w)&&BOX&AT(w)?ope(w):w)));
  s=CAV(w);
@@ -342,11 +342,11 @@ F1(jtjdir){PROLOG;A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
 
 
 
-F1(jtjfatt1){ASSERT(0,EVNONCE);}
-F2(jtjfatt2){ASSERT(0,EVNONCE);}
+F1(jtjfatt1){F1PREF;ASSERT(0,EVNONCE);}
+F2(jtjfatt2){F2PREF;ASSERT(0,EVNONCE);}
 
 
-F1(jtjfperm1){A y;F f;
+F1(jtjfperm1){F1PREF;A y;F f;
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=str0(AAV0(w));
  if(0!=stat(CAV(y),&jt->dirstatbuf))R jerrno();
@@ -366,7 +366,7 @@ static struct tperms {C*c;I p[4];} permtab[]=
        {"-xTt",{0,S_IXOTH,S_ISVTX,S_ISVTX+S_IXOTH}},
     };
 
-F2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
+F2(jtjfperm2){F2PREF;A y;C*s;F f;int x=0,i;C*m;
  F2RANK(1,0,jtjfperm2,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=str0(AAV0(w));
  RZ(a=vs(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);
@@ -383,5 +383,5 @@ F2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
 
 
 #if ! (SYS & SYS_DOS)
-F1(jtfullname){R w;}
+F1(jtfullname){F1PREF;R w;}
 #endif

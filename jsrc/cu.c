@@ -46,20 +46,20 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd
  R z;
 }
 
-static DF1(jteach1){DECLF; R every (  w,fs,f1);}
-static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
+static DF1(jteach1){F1PREF;DECLF; R every (  w,fs,f1);}
+static DF2(jteach2){F2PREF;DECLF; R every2(a,w,fs,f2);}
 
-DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,-1L, RMAX,VAV(self)->f2);}
-DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,RMAX,-1L, VAV(self)->f2);}
+DF2(jteachl){F2PREF;RZ(a&&w&&self); R rank2ex(a,w,self,-1L, RMAX,VAV(self)->f2);}
+DF2(jteachr){F2PREF;RZ(a&&w&&self); R rank2ex(a,w,self,RMAX,-1L, VAV(self)->f2);}
 
-static DF1(jtunder1){DECLFG; R df1(  w,atop(inv(gs),amp(fs,gs)));}
-static DF2(jtunder2){DECLFG; R df2(a,w,atop(inv(gs),amp(fs,gs)));}
+static DF1(jtunder1){F1PREF;DECLFG; R df1(  w,atop(inv(gs),amp(fs,gs)));}
+static DF2(jtunder2){F2PREF;DECLFG; R df2(a,w,atop(inv(gs),amp(fs,gs)));}
 
-static DF1(jtundco1){DECLFG; R df1(  w,atop(inv(gs),ampco(fs,gs)));}
-static DF2(jtundco2){DECLFG; R df2(a,w,atop(inv(gs),ampco(fs,gs)));}
+static DF1(jtundco1){F1PREF;DECLFG; R df1(  w,atop(inv(gs),ampco(fs,gs)));}
+static DF2(jtundco2){F2PREF;DECLFG; R df2(a,w,atop(inv(gs),ampco(fs,gs)));}
 
 
-static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
+static DF1(jtunderai1){F1PREF;DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);
  if(b=LIT&AT(w)&&256<AN(w)){
         x=df1(iota(v2(128L, 2L)),fs); b=x&&256==AN(x)&&NUMERIC&AT(x);
@@ -75,7 +75,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  R z;
 }    /* f&.(a.&i.) w */
 
-F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
+F2(jtunder){F2PREF;A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=jtunder1; f2=jtunder2; r=mr(w); v=VAV(w); 
  switch(v->id){
@@ -92,7 +92,7 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
  R CDERIV(CUNDER,f1,f2,r,r,r);
 }
 
-F2(jtundco){
+F2(jtundco){F2PREF;
  ASSERTVV(a,w); 
  R CDERIV(CUNDCO,jtundco1,jtundco2,RMAX,RMAX,RMAX);
 }

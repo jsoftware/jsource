@@ -35,7 +35,7 @@ DC jtdeba(J jt,C t,A x,A y,A fs){A q;DC d;
 void jtdebz(J jt){jt->sitop=jt->sitop->dclnk;}
      /* remove     top of si stack */
 
-F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
+F1(jtsiinfo){F1PREF;A z,*zv;DC d;I c=5,n,*s;
  ASSERTMTV(w);
  n=0; d=jt->sitop; while(d){++n; d=d->dclnk;}
  GA(z,BOX,c*n,2,0); s=AS(z); s[0]=n; s[1]=c; zv=AAV(z);
@@ -164,7 +164,7 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c){A z;B as,s;DC d,t=jt->sitop;
  R z;
 }
 
-DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
+DF2(jtdbunquote){F2PREF;A t,z;B b=0,s;DC d;I i;V*sv;
  sv=VAV(self); t=sv->f; 
  RZ(d=deba(DCCALL,a,w,self));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
@@ -187,7 +187,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
 }    /* function call, debug version */
 
 
-F1(jtdbc){I k;
+F1(jtdbc){F1PREF;I k;
  RZ(w);
  if(AN(w)){
   RE(k=i0(w));
@@ -200,22 +200,22 @@ F1(jtdbc){I k;
  R mtm;
 }    /* 13!:0  clear stack; enable/disable suspension */
 
-F1(jtdbq){ASSERTMTV(w); R sc(jt->dbuser);}
+F1(jtdbq){F1PREF;ASSERTMTV(w); R sc(jt->dbuser);}
      /* 13!:17 debug flag */
 
-F1(jtdbrun ){ASSERTMTV(w); jt->dbsusact=SUSRUN;  R mtm;}
+F1(jtdbrun ){F1PREF;ASSERTMTV(w); jt->dbsusact=SUSRUN;  R mtm;}
      /* 13!:4  run again */
 
-F1(jtdbnext){ASSERTMTV(w); jt->dbsusact=SUSNEXT; R mtm;}
+F1(jtdbnext){F1PREF;ASSERTMTV(w); jt->dbsusact=SUSNEXT; R mtm;}
      /* 13!:5  run next */
 
-F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; jt->dbresult=ra(w); R mtm;}
+F1(jtdbret ){F1PREF;RZ(w); jt->dbsusact=SUSRET; jt->dbresult=ra(w); R mtm;}
      /* 13!:6  exit with result */
 
-F1(jtdbjump){RE(jt->dbjump=i0(w)); jt->dbsusact=SUSJUMP; R mtm;}
+F1(jtdbjump){F1PREF;RE(jt->dbjump=i0(w)); jt->dbsusact=SUSJUMP; R mtm;}
      /* 13!:7  resume at line n (return result error if out of range) */
 
-static F2(jtdbrr){DC d;
+static F2(jtdbrr){F2PREF;DC d;
  RE(0);
  d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  /* must be explicit verb */
@@ -224,11 +224,11 @@ static F2(jtdbrr){DC d;
  R mtm;
 }
 
-F1(jtdbrr1 ){R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
-F2(jtdbrr2 ){R dbrr(a, w);}
+F1(jtdbrr1 ){F1PREF;R dbrr(0L,w);}   /* 13!:9   re-run with arg(s) */
+F2(jtdbrr2 ){F2PREF;R dbrr(a, w);}
 
-F1(jtdbtrapq){ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
+F1(jtdbtrapq){F1PREF;ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); jt->dbtrap=AN(w)?ra(w):0L; R mtm;}
+F1(jtdbtraps){F1PREF;RZ(w=vs(w)); fa(jt->dbtrap); jt->dbtrap=AN(w)?ra(w):0L; R mtm;}
      /* 13!:15 set trap */

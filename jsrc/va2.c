@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "ve.h"
+#include "vcomp.h"
 
 
 static VA va[]={
@@ -387,58 +388,175 @@ C jtvaid(J jt,A w){A x;C c;I k;V*v;
 
 static A jtva2(J,A,A,C);
 
+// Support for Speedy Singletons
+// If each argument has just one atom, come here to perform the operation with the minimum
+// of overhead, including conversion overhead.
+#define CHECKSSING(a,w,f) RZ(a&&w); if(!((AT(a)|AT(w))&~(B01+INT+FL)) && AN(a)==1 && AN(w)==1)R f(jt,a,w);
+// tell if 
+#define INPLACEABLE(a) 0
+
+#define SSINGENC(a,w) ((a)+((w)>>2))
+#define SSINGBB SSINGENC(B01,B01)
+#define SSINGBI SSINGENC(B01,INT)
+#define SSINGBF SSINGENC(B01,FL)
+#define SSINGIB SSINGENC(INT,B01)
+#define SSINGII SSINGENC(INT,INT)
+#define SSINGIF SSINGENC(INT,FL)
+#define SSINGFB SSINGENC(FL,B01)
+#define SSINGFI SSINGENC(FL,INT)
+#define SSINGFF SSINGENC(FL,FL)
+
+#define SSRDB(w) (*(B *)CAV(w))
+#define SSRDI(w) (*(I *)CAV(w))
+#define SSRDF(w) (*(D *)CAV(w))
+#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
+
+#define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
+jt->rank = 0;  /* We don't need jt->rank, but the protocol is that the routine that might use it clears it */ \
+/* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
+/* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
+/* change the type of this block when we get the result type */ \
+{I ra = AR(a); I rw = AR(w);  /* get rank */ \
+if (ra >= rw){  \
+    if (INPLACEABLE(a)){ z = a; AT(z) = FL; } \
+    else if (INPLACEABLE(w) && ra == rw){ z = w; AT(z) = FL; } \
+    else GA(z, FL, 1, ra, AS(a)); \
+} \
+else{ \
+    if (INPLACEABLE(w)){ z = w; AT(z) = FL; } \
+    else GA(z, FL, 1, rw, AS(w)); \
+} \
+} /* We have the output block */
+
+
+#define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); B zv;  \
+jt->rank = 0;  /* We don't need jt->rank, but the protocol is that the routine that might use it clears it */ \
+/* Establish the output area.  If this produces an atom, it will be one or zero, so do nothing here. */ \
+/* Otherwise, if this operation is in-placeable, reuse an in-placeable operand if */ \
+/* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
+{I ra = AR(a); I rw = AR(w); \
+if (ra + rw == 0)z = 0; \
+else if (ra >= rw){ \
+    if (INPLACEABLE(a)){ z = a; AT(z) = B01; } \
+    else if (INPLACEABLE(w) && ra == rw){ z = w; AT(z) = B01; } \
+    else GA(z, B01, 1, ra, AS(a)); \
+} \
+else{ \
+    if (INPLACEABLE(w)){ z = w; AT(z) = B01; } \
+    else GA(z, B01, 1, rw, AS(w)); \
+} \
+} /* We have the output block, or 0 if we are returning an atom */
+
+// speedy singleton routines: each argument has one atom.  The shapes may be
+// any length, but we know they contain all 1s, so we don't care about jt->rank except to clear it
+A jtssplus(J jt, A a, A w){SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: SSSTORE(SSRDB(a)+SSRDB(w),z,INT,I) R z;
+  case SSINGBF: SSSTORE(SSRDB(a)+SSRDF(w),z,FL,D) R z;
+  case SSINGFB: SSSTORE(SSRDF(a)+SSRDB(w),z,FL,D) R z;
+  case SSINGIF: SSSTORE(SSRDI(a)+SSRDF(w),z,FL,D) R z;
+  case SSINGFI: SSSTORE(SSRDF(a)+SSRDI(w),z,FL,D) R z;
+  case SSINGBI: 
+   {B av = SSRDB(a); I wv = SSRDI(w); I zv = av+wv;
+   if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   R z;}
+  case SSINGIB:
+   {I av = SSRDI(a); B wv = SSRDB(w); I zv = av + wv;
+   if (zv<av)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   R z;}
+  case SSINGII:
+   {I av = SSRDI(a); I wv = SSRDI(w); I zv = av + wv;
+   if (((zv^av)&(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   R z;}
+  case SSINGFF:
+   {D av = SSRDF(a); D wv = SSRDF(w);
+   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN);
+   SSSTORE(av+wv,z,FL,D)  R z;}
+ }
+}
+
+A jtsslt(J jt, A a, A w){SSCOMPPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: zv=SSRDB(a)<SSRDB(w); break;
+  case SSINGBF: zv=TLT(SSRDB(a),SSRDF(w)); break;
+  case SSINGFB: zv=TLT(SSRDF(a),SSRDB(w)); break;
+  case SSINGIF: zv=TLT((D)SSRDI(a),SSRDF(w)); break;
+  case SSINGFI: zv=TLT(SSRDF(a),(D)SSRDI(w)); break;
+  case SSINGBI: zv=SSRDB(a)<SSRDI(w); break;
+  case SSINGIB: zv=SSRDI(a)<SSRDB(w); break;
+  case SSINGII: zv=SSRDI(a)<SSRDI(w); break;
+  case SSINGFF: zv=TLT(SSRDF(a),SSRDF(w)); break;
+ }
+ // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
+ // just store the value in it.  If there is no output block, return zero or one depending on the result
+ if(z==0)R zv?one:zero;
+ BAV(z)[0] = zv; R z;
+}
+
+
+
+
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
-F2(jtbitwise0000){R va2(a,w,(C)16);}
-F2(jtbitwise0001){R va2(a,w,(C)17);}
-F2(jtbitwise0010){R va2(a,w,(C)18);}
-F2(jtbitwise0011){R va2(a,w,(C)19);}
+F2(jtbitwise0000){F2PREF;R va2(a,w,(C)16);}
+F2(jtbitwise0001){F2PREF;R va2(a,w,(C)17);}
+F2(jtbitwise0010){F2PREF;R va2(a,w,(C)18);}
+F2(jtbitwise0011){F2PREF;R va2(a,w,(C)19);}
 
-F2(jtbitwise0100){R va2(a,w,(C)20);}
-F2(jtbitwise0101){R va2(a,w,(C)21);}
-F2(jtbitwise0110){R va2(a,w,(C)22);}
-F2(jtbitwise0111){R va2(a,w,(C)23);}
+F2(jtbitwise0100){F2PREF;R va2(a,w,(C)20);}
+F2(jtbitwise0101){F2PREF;R va2(a,w,(C)21);}
+F2(jtbitwise0110){F2PREF;R va2(a,w,(C)22);}
+F2(jtbitwise0111){F2PREF;R va2(a,w,(C)23);}
 
-F2(jtbitwise1000){R va2(a,w,(C)24);}
-F2(jtbitwise1001){R va2(a,w,(C)25);}
-F2(jtbitwise1010){R va2(a,w,(C)26);}
-F2(jtbitwise1011){R va2(a,w,(C)27);}
+F2(jtbitwise1000){F2PREF;R va2(a,w,(C)24);}
+F2(jtbitwise1001){F2PREF;R va2(a,w,(C)25);}
+F2(jtbitwise1010){F2PREF;R va2(a,w,(C)26);}
+F2(jtbitwise1011){F2PREF;R va2(a,w,(C)27);}
 
-F2(jtbitwise1100){R va2(a,w,(C)28);}
-F2(jtbitwise1101){R va2(a,w,(C)29);}
-F2(jtbitwise1110){R va2(a,w,(C)30);}
-F2(jtbitwise1111){R va2(a,w,(C)31);}
+F2(jtbitwise1100){F2PREF;R va2(a,w,(C)28);}
+F2(jtbitwise1101){F2PREF;R va2(a,w,(C)29);}
+F2(jtbitwise1110){F2PREF;R va2(a,w,(C)30);}
+F2(jtbitwise1111){F2PREF;R va2(a,w,(C)31);}
 
-F2(jteq     ){R va2(a,w,CEQ     );}
-F2(jtlt     ){R va2(a,w,CLT     );}
-F2(jtminimum){R va2(a,w,CMIN    );}
-F2(jtle     ){R va2(a,w,CLE     );}
-F2(jtgt     ){R va2(a,w,CGT     );}
-F2(jtmaximum){R va2(a,w,CMAX    );}
-F2(jtge     ){R va2(a,w,CGE     );}
-F2(jtplus   ){R va2(a,w,CPLUS   );}
-F2(jtgcd    ){R va2(a,w,CPLUSDOT);}
-F2(jtnor    ){R va2(a,w,CPLUSCO );}
-F2(jttymes  ){R va2(a,w,CSTAR   );}
-F2(jtlcm    ){R va2(a,w,CSTARDOT);}
-F2(jtnand   ){R va2(a,w,CSTARCO );}
-F2(jtminus  ){R va2(a,w,CMINUS  );}
-F2(jtdivide ){R va2(a,w,CDIV    );}
-F2(jtexpn2  ){R va2(a,w,CEXP    );}
-F2(jtne     ){R va2(a,w,CNE     );}
-F2(jtoutof  ){R va2(a,w,CBANG   );}
-F2(jtcircle ){R va2(a,w,CCIRCLE );}
-F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
+F2(jteq     ){F2PREF;R va2(a,w,CEQ     );}
+F2(jtlt     ){F2PREF;CHECKSSING(a,w,jtsslt) R va2(a,w,CLT     );}
+F2(jtminimum){F2PREF;R va2(a,w,CMIN    );}
+F2(jtle     ){F2PREF;R va2(a,w,CLE     );}
+F2(jtgt     ){F2PREF;R va2(a,w,CGT     );}
+F2(jtmaximum){F2PREF;R va2(a,w,CMAX    );}
+F2(jtge     ){F2PREF;R va2(a,w,CGE     );}
+F2(jtplus   ){F2PREF;CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
+F2(jtgcd    ){F2PREF;R va2(a,w,CPLUSDOT);}
+F2(jtnor    ){F2PREF;R va2(a,w,CPLUSCO );}
+F2(jttymes  ){F2PREF;R va2(a,w,CSTAR   );}
+F2(jtlcm    ){F2PREF;R va2(a,w,CSTARDOT);}
+F2(jtnand   ){F2PREF;R va2(a,w,CSTARCO );}
+F2(jtminus  ){F2PREF;R va2(a,w,CMINUS  );}
+F2(jtdivide ){F2PREF;R va2(a,w,CDIV    );}
+F2(jtexpn2  ){F2PREF;R va2(a,w,CEXP    );}
+F2(jtne     ){F2PREF;R va2(a,w,CNE     );}
+F2(jtoutof  ){F2PREF;R va2(a,w,CBANG   );}
+F2(jtcircle ){F2PREF;R va2(a,w,CCIRCLE );}
+F2(jtresidue){F2PREF;RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 
-F1(jtnot   ){R w&&AT(w)&B01+SB01?va2(zero,w,CEQ):va2(one,w,CMINUS);}
-F1(jtnegate){R va2(zero,  w,     CMINUS);}
-F1(jtdecrem){R va2(w,     one,   CMINUS);}
-F1(jtincrem){R va2(one,   w,     CPLUS );}
-F1(jtduble ){R va2(num[2],w,     CSTAR );}
-F1(jtsquare){R va2(w,     w,     CSTAR );}
-F1(jtrecip ){R va2(one,   w,     CDIV  );}
-F1(jthalve ){R va2(w,     num[2],CDIV  );}
+// These are unary ops that have a canned operand
+F1(jtnot   ){F1PREF;R w&&AT(w)&B01+SB01?va2(zero,w,CEQ):va2(one,w,CMINUS);}
+F1(jtnegate){F1PREF;R va2(zero,  w,     CMINUS);}
+F1(jtdecrem){F1PREF;R va2(w,     one,   CMINUS);}
+F1(jtincrem){F1PREF;R va2(one,   w,     CPLUS );}
+F1(jtduble ){F1PREF;R va2(num[2],w,     CSTAR );}
+F1(jtsquare){F1PREF;R va2(w,     w,     CSTAR );}
+F1(jtrecip ){F1PREF;R va2(one,   w,     CDIV  );}
+F1(jthalve ){F1PREF;R va2(w,     num[2],CDIV  );}
 
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
 static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
@@ -665,7 +783,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
 
 
 
-static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
+static DF2(jtsumattymes){F2PREF;A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
  RZ(a&&w&&self);
  an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01; 
@@ -768,7 +886,7 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B*av,*wv;I dw,n,p,q,r,*s,zn,*zv;U
  R z;
 }    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
 
-DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m,
+DF2(jtfslashatg){F2PREF;A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m,
      n,nn,r,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;V*sv;VF ado,adof;
  RZ(a&&w&&self);
  an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01; sv=VAV(self); 

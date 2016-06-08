@@ -6,10 +6,10 @@
 #include "j.h"
 
 
-static DF1(swap1){DECLF; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):CALL2(f2,w,w,fs);}
-static DF2(swap2){DECLF; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):CALL2(f2,w,a,fs);}
+static DF1(swap1){F1PREF;DECLF; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):CALL2(f2,w,w,fs);}
+static DF2(swap2){F2PREF;DECLF; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):CALL2(f2,w,a,fs);}
 
-F1(jtswap){A y;C*s;I n;
+F1(jtswap){F1PREF;A y;C*s;I n;
  RZ(w); 
  if(VERB&AT(w))R ADERIV(CTILDE,swap1,swap2,RMAX,rr(w),lr(w));
  else{
@@ -27,11 +27,11 @@ static B booltab[64]={
  1,0,0,0, 1,0,0,1, 1,0,1,0, 1,0,1,1,  1,1,0,0, 1,1,0,1, 1,1,1,0, 1,1,1,1,
 };
 
-static DF2(jtbdot2){R from(plus(duble(cvt(B01,a)),cvt(B01,w)),VAV(self)->h);}
+static DF2(jtbdot2){F2PREF;R from(plus(duble(cvt(B01,a)),cvt(B01,w)),VAV(self)->h);}
 
-static DF1(jtbdot1){R bdot2(zero,w,self);}
+static DF1(jtbdot1){F1PREF;R bdot2(zero,w,self);}
 
-static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
+static DF1(jtbasis1){F1PREF;DECLF;A z;D*x;I j;V*v;
  PREF1(jtbasis1);
  RZ(w=vi(w));
  switch(*AV(w)){
@@ -46,7 +46,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
   default: ASSERT(0,EVDOMAIN);
 }}
 
-F1(jtbdot){A b,h=0;I j,n,*v;
+F1(jtbdot){F1PREF;A b,h=0;I j,n,*v;
  RZ(w);
  if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0,0,0);
  RZ(w=vi(w));
@@ -137,21 +137,21 @@ static I jtint0(J jt,A w){A x;
  R x&&INT&AT(x)?*AV(x):IMIN; 
 }
 
-DF1(jtmemo1){DECLF;A z;I x,y;
+DF1(jtmemo1){F1PREF;DECLF;A z;I x,y;
  RZ(w);
  x=IMIN; y=int0(w);
  if(y==IMIN)R CALL1(f1,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL1(f1,w,fs));
 }
 
-DF2(jtmemo2){DECLF;A z;I x,y; 
+DF2(jtmemo2){F2PREF;DECLF;A z;I x,y; 
  RZ(a&&w);
  x=int0(a); y=int0(w);
  if(x==IMIN||y==IMIN)R CALL2(f2,a,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));
 }
 
-F1(jtmemo){A h,*hv,q;I m;V*v;
+F1(jtmemo){F1PREF;A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); m=ptab[1];

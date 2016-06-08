@@ -6,10 +6,10 @@
 #include "j.h"
 
 
-F1(jtbehead ){R drop(one,    w);}
-F1(jtcurtail){R drop(num[-1],w);}
+F1(jtbehead ){F1PREF;R drop(one,    w);}
+F1(jtcurtail){F1PREF;R drop(num[-1],w);}
 
-F1(jtshift1){R drop(num[-1],over(one,w));}
+F1(jtshift1){F1PREF;R drop(num[-1],over(one,w));}
 
 static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
@@ -20,7 +20,7 @@ static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  R z;
 }
 
-static F2(jttks){PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
+static F2(jttks){F2PREF;PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GA(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
@@ -49,7 +49,7 @@ static F2(jttks){PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  EPILOG(z);
 }    /* take on sparse array w */
 
-static F2(jttk){PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
+static F2(jttk){F2PREF;PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(t&SPARSE)R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});
@@ -70,7 +70,7 @@ static F2(jttk){PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  EPILOG(RELOCATE(w,z));
 }
 
-F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
+F2(jttake){F2PREF;A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  RZ(a&&w);
  if(SPARSE&AT(a))RZ(a=denseit(a));
  if(!(SPARSE&AT(w)))RZ(w=setfv(w,w)); 
@@ -95,7 +95,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  R tk(s,w);
 }
 
-F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
+F2(jtdrop){F2PREF;A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  RZ((a=vib(a))&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; 
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
@@ -108,7 +108,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 }
 
 
-static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
+static F1(jtrsh0){F1PREF;A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); ICPY(wf+AV(x),ws+wf+1,wcr-1);
@@ -116,14 +116,14 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  R reshape(x,y);
 }
 
-F1(jthead){I wcr,wf,wr;
+F1(jthead){F1PREF;I wcr,wf,wr;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  R !wcr||*(wf+AS(w))? from(num[ 0],w) : 
      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }
 
-F1(jttail){I wcr,wf,wr;
+F1(jttail){F1PREF;I wcr,wf,wr;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  R !wcr||*(wf+AS(w))?from(num[-1],w) :

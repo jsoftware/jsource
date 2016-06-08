@@ -60,7 +60,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
                        zv[i]=*(i+(T*)aa[j]);); R z;}
 
 // Handle the case statement abc =: pqr} x,...,y,:z, with in-place operation if pqr is Boolean and abc appears on the right
-F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
+F1(jtcasev){F1PREF;A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  RZ(w);
  RZ(w1=ca(w)); u=AAV(w1);   // make a copy of the input, point to its value
  // the input is a boxed list.  The last 3 values are (name pqr);(index in which abc appeared in the x,y,... or -1 if it didn't);(original sentence queue)
@@ -188,23 +188,23 @@ static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG;A e,z;B b,sa,sw;I at,ir,it,t,
  EPILOG(z);
 }
 
-static DF2(amccn2){R amendn2(a,w,VAV(self)->f,0);}
-static DF2(amipn2){R amendn2(a,w,VAV(self)->f,(B)(!(AT(w)&RAT+XNUM)&&(1==AC(w)||AFNJA&AFLAG(w))));}
+static DF2(amccn2){F2PREF;R amendn2(a,w,VAV(self)->f,0);}
+static DF2(amipn2){F2PREF;R amendn2(a,w,VAV(self)->f,(B)(!(AT(w)&RAT+XNUM)&&(1==AC(w)||AFNJA&AFLAG(w))));}
 
-static DF2(amccv2){DECLF; 
+static DF2(amccv2){F2PREF;DECLF; 
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);
  R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),0);
 }
 
-static DF2(amipv2){DECLF; 
+static DF2(amipv2){F2PREF;DECLF; 
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);
  R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),(B)(!(AT(w)&RAT+XNUM)&&(1==AC(w)||AFNJA&AFLAG(w))));
 }
 
-static DF1(mergn1){       R merge1(w,VAV(self)->f);}
-static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
+static DF1(mergn1){F1PREF;       R merge1(w,VAV(self)->f);}
+static DF1(mergv1){F1PREF;DECLF; R merge1(w,CALL1(f1,w,fs));}
 
 static B ger(A w){A*wv,x;I wd;
  if(!(BOX&AT(w)))R 0;
@@ -267,13 +267,13 @@ static A jtamend(J jt,A w,B ip){
  else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,RMAX,RMAX,RMAX);
 }
 
-F1(jtrbrace){R amend(w,0);}
-DF1(jtamip){ R amend(w,!jtpiplocalerr(jt, self)); }
+F1(jtrbrace){F1PREF;R amend(w,0);}
+DF1(jtamip){F1PREF; R amend(w,!jtpiplocalerr(jt, self)); }
 
 
-static DF2(jtamen2){ASSERT(0,EVNONCE);}
+static DF2(jtamen2){F2PREF;ASSERT(0,EVNONCE);}
 
-F1(jtemend){
+F1(jtemend){F1PREF;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  R ADERIV(CEMEND,0L,jtamen2,RMAX,RMAX,RMAX);
 }

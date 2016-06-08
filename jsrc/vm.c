@@ -82,7 +82,7 @@ AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
 }
 
 
-F2(jtlogar2){A z;I t;
+F2(jtlogar2){F2PREF;A z;I t;
  RZ(a&&w); 
  t=maxtype(AT(a),AT(w));
  if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}
@@ -92,7 +92,7 @@ F2(jtlogar2){A z;I t;
  R 0;
 }
     
-F2(jtroot){A z;I t;
+F2(jtroot){F2PREF;A z;I t;
  RZ(a&&w);
  t=maxtype(AT(a),AT(w));
  if(!(t&XNUM))R expn2(cvt(t,w),recip(cvt(t,a)));
@@ -104,15 +104,15 @@ F2(jtroot){A z;I t;
   default:     R z;
 }}
 
-F1(jtjdot1){R tymes(a0j1,w);}
-F2(jtjdot2){R plus(a,tymes(a0j1,w));}
-F1(jtrdot1){R expn1(jdot1(w));}
-F2(jtrdot2){R tymes(a,rdot1(w));}
+F1(jtjdot1){F1PREF;R tymes(a0j1,w);}
+F2(jtjdot2){F2PREF;R plus(a,tymes(a0j1,w));}
+F1(jtrdot1){F1PREF;R expn1(jdot1(w));}
+F2(jtrdot2){F2PREF;R tymes(a,rdot1(w));}
 
 
-F1(jtpolar){RZ(w); R cvt(SPARSE&AT(w)?SFL:FL,df2(v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
+F1(jtpolar){F1PREF;RZ(w); R cvt(SPARSE&AT(w)?SFL:FL,df2(v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
-F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
+F1(jtrect){F1PREF;A e,z;B b;I r,t;P*wp,*zp;Z c;
  RZ(w); 
  t=AT(w); r=AR(w); jt->rank=0;
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);

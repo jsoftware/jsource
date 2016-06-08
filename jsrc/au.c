@@ -23,28 +23,28 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
  R 1+d;
 }    /* function depth:  1 + max depth of components */
 
-F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
+F1(jtfdepadv){F1PREF;RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 
 
-DF1(jtdf1){RZ(self); R CALL1(VAV(self)->f1,  w,self);}
-DF2(jtdf2){RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
+DF1(jtdf1){F1PREF;RZ(self); R CALL1(VAV(self)->f1,  w,self);}
+DF2(jtdf2){F2PREF;RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
 
-DF1(jtdfs1){A s=jt->sf,z; RZ(self); z=CALL1(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; R z;}
-DF2(jtdfs2){A s=jt->sf,z; RZ(self); z=CALL2(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; R z;}    
+DF1(jtdfs1){F1PREF;A s=jt->sf,z; RZ(self); z=CALL1(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; R z;}
+DF2(jtdfs2){F2PREF;A s=jt->sf,z; RZ(self); z=CALL2(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; R z;}    
      /* for monads and dyads that can possibly involve $: */
 
 A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(VAV(self)->f1,  w,self0);}
 A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,self0);}
      // used to treat self as an argument.  Used with routines that don't really use self
 
-F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); R z;}
-F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); R z;}
+F1(jtself1){F1PREF;A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); R z;}
+F2(jtself2){F2PREF;A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); R z;}
 
 A jtac1(J jt,AF f){R fdef(0,VERB, f,0L, 0L,0L,0L, 0L, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, 0L, RMAX,RMAX,RMAX);}
 
-F1(jtdomainerr1){ASSERT(0,EVDOMAIN);}
-F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
+F1(jtdomainerr1){F1PREF;ASSERT(0,EVDOMAIN);}
+F2(jtdomainerr2){F2PREF;ASSERT(0,EVDOMAIN);}
 
 // create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
 // if there has been a previous error this function returns 0

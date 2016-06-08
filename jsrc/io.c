@@ -127,7 +127,7 @@ void breakclose(J jt)
 }
 #endif
 
-F1(jtjoff){I x;
+F1(jtjoff){F1PREF;I x;
  RZ(w);
  x=i0(w);
  breakclose(jt);
@@ -159,7 +159,7 @@ I jdo(J jt, C* lp){I e,old;A x;
 
 #define SZINT             ((I)sizeof(int))
 
-DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
+DF1(jtwd){F1PREF;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
  F1RANK(1,jtwd,self);
  RZ(w);
  ASSERT(2>AR(w),EVRANK);
@@ -284,12 +284,12 @@ J JInit(void){
 int JFree(J jt){return 0;}
 #endif
 
-F1(jtbreakfnq){
+F1(jtbreakfnq){F1PREF;
  ASSERTMTV(w);
  R cstr(jt->breakfn);
 }
 
-F1(jtbreakfns){A z;I *fh,*mh; void* ad;
+F1(jtbreakfns){F1PREF;A z;I *fh,*mh; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);

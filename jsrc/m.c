@@ -32,7 +32,7 @@ B jtmeminit(J jt){I k,m=MLEN;
 }
 
 
-F1(jtspcount){A z;I c=0,j,m=1+PLIML,*v;MS*x;
+F1(jtspcount){F1PREF;A z;I c=0,j,m=1+PLIML,*v;MS*x;
  ASSERTMTV(w);
  GA(z,INT,2*m,2,0); v=AV(z);
  DO(m, j=0; x=(MS*)(jt->mfree[i]); while(x){x=(MS*)(x->a); ++j;} if(j){++c; *v++=msize[i]; *v++=j;});
@@ -72,7 +72,7 @@ B jtspfree(J jt){A t;I c,d,i,j,m,n,*u,*v;MS*x;
  R 1;
 }    /* free unused blocks */
 
-static F1(jtspfor1){
+static F1(jtspfor1){F1PREF;
  RZ(w);
  if(BOX&AT(w)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), spfor1(WVR(i)););}
  else traverse(w,jtspfor1); 
@@ -88,7 +88,7 @@ static F1(jtspfor1){
  R mtm;
 }
 
-F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
+F1(jtspfor){F1PREF;A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -104,7 +104,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
  R z;
 }    /* 7!:5 space for named object; w is <'name' */
 
-F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
+F1(jtspforloc){F1PREF;A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -130,10 +130,10 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
 }    /* 7!:6 space for a locale */
 
 
-F1(jtmmaxq){ASSERTMTV(w); R sc(jt->mmax);}
+F1(jtmmaxq){F1PREF;ASSERTMTV(w); R sc(jt->mmax);}
      /* 9!:20 space limit query */
 
-F1(jtmmaxs){I j,m=MLEN,n;
+F1(jtmmaxs){F1PREF;I j,m=MLEN,n;
  RE(n=i0(vib(w)));
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=msize[i]){j=i; break;});
@@ -224,7 +224,7 @@ static void jttf(J jt){A t=jt->tstacka;
  fr(t);
 }
 
-F1(jttpush){
+F1(jttpush){F1PREF;
  RZ(w);
  traverse(w,jttpush);
  if(jt->ttop>=NTSTACK)RZ(tg());
@@ -247,13 +247,13 @@ void jtgc3(J jt,A x,A y,A z,I old){
 }
 
 
-F1(jtfa ){RZ(w); traverse(w,jtfa ); fr(w);   R mark;}
-F1(jtra ){RZ(w); traverse(w,jtra ); ++AC(w); R w;   }
+F1(jtfa ){F1PREF;RZ(w); traverse(w,jtfa ); fr(w);   R mark;}
+F1(jtra ){F1PREF;RZ(w); traverse(w,jtra ); ++AC(w); R w;   }
 
-static F1(jtra1){RZ(w); traverse(w,jtra1); AC(w)+=jt->arg; R w;}
+static F1(jtra1){F1PREF;RZ(w); traverse(w,jtra1); AC(w)+=jt->arg; R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
-F1(jtrat){R ra(tpush(w));}
+F1(jtrat){F1PREF;R ra(tpush(w));}
 
 A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
  if(t&BIT){const I c=8*SZI;              /* bit type: pad last axis to fullword */
@@ -286,7 +286,7 @@ A jtgah(J jt,I r,A w){A z;
 }    /* allocate header */ 
 
 // clone w, returning the address of the cloned area
-F1(jtca){A z;I t;P*wp,*zp;
+F1(jtca){F1PREF;A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
  GA(z,t,AN(w),AR(w),AS(w)); if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
@@ -300,7 +300,7 @@ F1(jtca){A z;I t;P*wp,*zp;
  R z;
 }
 
-F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
+F1(jtcar){F1PREF;A*u,*wv,z;I n,wd;P*p;V*v;
  RZ(z=ca(w));
  n=AN(w);
  switch(AT(w)){

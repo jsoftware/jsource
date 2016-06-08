@@ -53,7 +53,7 @@ static const C*qq=">)}]";
 #define uS  (u[8])
 
 
-static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
+static F1(jtfmtbfc){F1PREF;A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
  RZ(w); 
  if(C2T&AT(w))RZ(w=uco2(num[5],w))
  ASSERT(1>=AR(w),EVDOMAIN);
@@ -123,7 +123,7 @@ static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
 /* corresponding to      cl bdmn pqrs                                        */
 /* b d m n p q r s are the strings to use; s is '' if all defaults           */
 
-static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1="?bdmnpqrs",d,*s,*wv;
+static F1(jtfmtparse){F1PREF;A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1="?bdmnpqrs",d,*s,*wv;
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  RZ(w);
  w=AAV0(w); n=AN(w);
@@ -526,9 +526,9 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
   /* mode is 0, 1, or 2 for 8!:0, 8!:1, or 8!:2                     */
   /* *omode is either 0 or mode                                     */
 
-F2(jtfmt02){I mode; R fmtxi(a,w,0,&mode);} /* 8!:0 dyad */
+F2(jtfmt02){F2PREF;I mode; R fmtxi(a,w,0,&mode);} /* 8!:0 dyad */
 
-F2(jtfmt12){A z;I mode,r,*s;
+F2(jtfmt12){F2PREF;A z;I mode,r,*s;
  RZ(a&&w);
  ASSERT(2>=AR(w), EVRANK);
  RZ(z=fmtxi(a,w,1,&mode));
@@ -538,7 +538,7 @@ F2(jtfmt12){A z;I mode,r,*s;
  R ravel(z);
 } /* 8!:1 dyad */
 
-F2(jtfmt22){A z;I mode,r,*s;
+F2(jtfmt22){F2PREF;A z;I mode,r,*s;
  RZ(a&&w);
  ASSERT(2>=AR(w), EVRANK);
  RZ(z=fmtxi(a,w,2,&mode));
@@ -549,6 +549,6 @@ F2(jtfmt22){A z;I mode,r,*s;
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */
 
-F1(jtfmt01){RZ(w); R fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:0 monad */
-F1(jtfmt11){RZ(w); R fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:1 monad */
-F1(jtfmt21){RZ(w); R fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:2 monad */
+F1(jtfmt01){F1PREF;RZ(w); R fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:0 monad */
+F1(jtfmt11){F1PREF;RZ(w); R fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:1 monad */
+F1(jtfmt21){F1PREF;RZ(w); R fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:2 monad */

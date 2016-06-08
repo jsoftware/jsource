@@ -45,10 +45,10 @@ B jtxlinit(J jt){A x;I*s;
  R 1;
 }
 
-F1(jtjlocks){A y; ASSERTMTV(w); y=take(sc(jt->flkn),jt->flkd); R grade2(y,y);}
+F1(jtjlocks){F1PREF;A y; ASSERTMTV(w); y=take(sc(jt->flkn),jt->flkd); R grade2(y,y);}
      /* return the locks, a 3-column table of (number,index,length) */
 
-F1(jtjlock){B b;I*v;
+F1(jtjlock){F1PREF;B b;I*v;
  F1RANK(1,jtjlock,0);
  RZ(w=vi(w)); 
  ASSERT(LKC==AN(w),EVLENGTH);
@@ -76,7 +76,7 @@ B jtunlk(J jt,I x){I j=0,*v=AV(jt->flkd);
  R 1;
 }    /* unlock all existing locks for file# x */
 
-F1(jtjunlock){
+F1(jtjunlock){F1PREF;
  F1RANK(1,jtjunlock,0); 
  ASSERT(INT&AT(w),EVDOMAIN); 
  R unlj(i0(indexof(jt->flkd,w))); 

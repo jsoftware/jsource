@@ -40,12 +40,12 @@ I jtfnum(J jt,A w){A y;I h,j;
  R j<jt->fopn?*(j+AV(jt->fopf)):0;
 }    /* file# corresp. to standard argument w */
 
-F1(jtfname){I j; 
+F1(jtfname){F1PREF;I j; 
  RE(j=i0(indexof(jt->fopf,w))); 
  R j<jt->fopn?ca(*(j+AAV(jt->fopa))):(A)0;
 }    /* string name corresp. to file# w */
 
-F1(jtjfiles){A y;
+F1(jtjfiles){F1PREF;A y;
  ASSERTMTV(w);
  RZ(y=vec(INT,jt->fopn,AV(jt->fopf)));
  R grade2(stitch(box0(y),vec(BOX,jt->fopn,AV(jt->fopa))),y);
@@ -87,7 +87,7 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
  R f?f:(F)jerrno();
 }
 
-F1(jtjopen){A z;I h;
+F1(jtjopen){F1PREF;A z;I h;
  RZ(w);
  if(!AN(w))R w;
  if(AR(w))R rank1ex(w,0L,0L,jtjopen);
@@ -111,7 +111,7 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c;
 }   /* add 2 entries to jt->fopn table (for hostio); null arg commits entries */
 
 
-F1(jtjclose){A*av;I*iv,j;
+F1(jtjclose){F1PREF;A*av;I*iv,j;
  RZ(w);
  if(!AN(w))R w;
  if(AR(w))R rank1ex(w,0L,0L,jtjclose);

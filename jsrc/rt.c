@@ -8,7 +8,7 @@
 static F1(jttrr);
 
 
-static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
+static F1(jttrc){F1PREF;A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
  RZ(w);
  s=AS(w); v=AAV(w);
  xn=s[0]; RZ(x=apv(xn,0L,0L)); xv=AV(x);
@@ -42,7 +42,7 @@ static I jtpad(J jt,A a,A w,C*zv){C dash,*u,*v,*wv;I c,d,r,*s;
  R r*d;
 }
 
-static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
+static F1(jtgraft){F1PREF;A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  RZ(t=trc(w)); u=AAV(t);
  x=u[0]; xn=AN(x); xv=AV(x); m=0; DO(xn,m+=xv[i];);
  y=u[1]; yn=AN(y); yv=AV(y);
@@ -75,7 +75,7 @@ static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
  R z;
 }
 
-static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
+static F2(jttroot){F2PREF;A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  RZ(a&&w);
  m=AN(a); u=CAV(a); b=!m||1==m&&'0'<=*u&&*u<='9';
  GA(x,LIT,b?1:4+m,1,0); v=CAV(x);
@@ -86,7 +86,7 @@ static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  R link(center(x,j,k,m),w);
 }
 
-static F1(jttleaf){A t,z;C*v;I n,*s;
+static F1(jttleaf){F1PREF;A t,z;C*v;I n,*s;
  RZ(w);
  n=AN(w);
  GA(t,LIT,2+n,2,0); s=AS(t); s[0]=1; s[1]=2+n;
@@ -95,7 +95,7 @@ static F1(jttleaf){A t,z;C*v;I n,*s;
  R z;
 }
 
-static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
+static F1(jttconnect){F1PREF;A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  RZ(w);
  n=AN(w); wv=AAV(w); y=*wv; m=*AS(y);
  e=0; DO(n,e+=*(1+AS(wv[i])););
@@ -118,9 +118,9 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
  R z;
 }
 
-static F1(jttreach){R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
+static F1(jttreach){F1PREF;R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
 
-static F1(jttrr){PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
+static F1(jttrr){F1PREF;PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME)R tleaf(lrep(w));
  v=VAV(w); id=v->id; fl=v->flag; fs=v->f; gs=v->g; hs=v->h; 
@@ -138,4 +138,4 @@ static F1(jttrr){PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  EPILOG(z);
 }
 
-F1(jttrep){PROLOG; EPILOG(tconnect(troot(mtv,trr(w))));}
+F1(jttrep){F1PREF;PROLOG; EPILOG(tconnect(troot(mtv,trr(w))));}

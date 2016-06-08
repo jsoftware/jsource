@@ -7,8 +7,8 @@
 #include "x.h"
 
 
-F1(jtaflag1){RZ(w); R sc(AFLAG(w));}
+F1(jtaflag1){F1PREF;RZ(w); R sc(AFLAG(w));}
 
-F2(jtaflag2){I k; RZ(a&&w); RE(k=i0(a)); AFLAG(w)=k; R w;}
+F2(jtaflag2){F2PREF;I k; RZ(a&&w); RE(k=i0(a)); AFLAG(w)=k; R w;}
 
-F1(jthash){RZ(w=vs(w)); R sc(hic(AN(w),UAV(w)));}
+F1(jthash){F1PREF;RZ(w=vs(w)); R sc(hic(AN(w),UAV(w)));}

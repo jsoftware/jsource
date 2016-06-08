@@ -388,7 +388,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 static F1(jtmatth1){R mat(thorn1(w));}
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
-static F1(jtthbox){A z;static C ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
+static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
@@ -396,7 +396,7 @@ static F1(jtthbox){A z;static C ctrl[]=" \001\002\003\004\005\006\007   \013\014
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
   // Two versions of replacement, depending on datatype of the array
- if(AT(z)==LIT){C *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // byte
+ if(AT(z)==LIT){UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // byte
  else{US *s=USAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // wide char
 
  R z;

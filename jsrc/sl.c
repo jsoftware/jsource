@@ -73,7 +73,7 @@ static A jtstfindnum(J jt,B b,I k){A y;I j;
 
 A jtstfind(J jt,B b,I n,C*u){I old;L*v;
  if(!n){n=4; u="base";}
- if('9'>=*u)R stfindnum(b,strtol(u,NULL,10));
+ if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
  else{
   old=jt->tbase+jt->ttop; v=probe(nfs(n,u),jt->stloc); tpop(old);
   R v?v->val:b?stcreate(0,jt->locsize[0],n,u):0;

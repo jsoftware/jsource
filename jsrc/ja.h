@@ -1014,6 +1014,7 @@
 #define thdx1(x)                    jtthdx1(jt,(x))
 #define thn(x)                      jtthn(jt,(x))
 #define thorn1(x)                   jtthorn1(jt,(x))  
+#define thorn1main(x)               jtthorn1main(jt,(x))  
 #define thorn1u(x)                  jtthorn1u(jt,(x))  
 #define thq1(x)                     jtthq1(jt,(x))
 #define ths(x)                      jtths(jt,(x))

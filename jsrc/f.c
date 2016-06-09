@@ -25,6 +25,7 @@
  {I k=1,p=(j),*sr=s+r-2; DO(p?r-1:0, k*=*(sr-i); if(p%k)break; exp); }
 
 static F1(jtthxqe);
+static F1(jtthorn1main);
 
 static FMTF(jtfmtI,I){I x=*v;
  sprintf(s,FMTI,x);
@@ -385,7 +386,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
 }
 
 // Convert 1 box to character array, then to character table
-static F1(jtmatth1){R mat(thorn1(w));}
+static F1(jtmatth1){R mat(thorn1main(w));}
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
 static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
@@ -417,12 +418,9 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  R z;
 }
 
-// entry point to allow C2T result from thorn1
-F1(jtthorn1u){A z; B to=jt->thornuni; jt->thornuni=1; z=thorn1(w); jt->thornuni=to; R z;}
-
 // ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
 // C2T when there are unicodes present
-F1(jtthorn1){PROLOG;A z;
+static F1(jtthorn1main){PROLOG;A z;
  RZ(w);
  if(!AN(w))GA(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
@@ -463,14 +461,21 @@ F1(jtthorn1){PROLOG;A z;
              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
    switch((jt->disp)[1]){
-    case 1: z=thorn1(arep(w)); break;
-    case 2: z=thorn1(drep(w)); break;
-    case 4: z=thorn1(trep(w)); break;
-    case 5: z=thorn1(lrep(w)); break;
-    case 6: z=thorn1(prep(w)); break;
+    case 1: z=thorn1main(arep(w)); break;
+    case 2: z=thorn1main(drep(w)); break;
+    case 4: z=thorn1main(trep(w)); break;
+    case 5: z=thorn1main(lrep(w)); break;
+    case 6: z=thorn1main(prep(w)); break;
  }}
  EPILOG(z);
 }
+
+// entry point to allow C2T result from thorn1
+F1(jtthorn1u){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); R z; }
+
+// entry point for returning character array only.  Allow C2T result, then convert
+F1(jtthorn1){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&C2T)z = rank1ex(z, 0L, 1L, jttoutf8); R z; }
+
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
 #define EOL(zv)  {zv[0]=eov[0]; zv[1]=eov[1]; zv+=m;}

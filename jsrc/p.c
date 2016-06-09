@@ -45,7 +45,7 @@ B jtparseinit(J jt){A x;
 
 // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
 // a deferred decrement for the block.  We expect that this call will be followed by a fa() call,
-// so we increment this use count id we find a match, to nullify the subsequent fa().
+// so we increment this use count if we find a match, to nullify the subsequent fa().
 void jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
@@ -53,25 +53,9 @@ void jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
  DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){ra(w); *v = (A)~(I)w; break;}else if(~0==s) break; ++v;);
 }    /* stack handling for w which is about to be redefined */
 
-// Action routines for the parse, when an executable fragment has been detected.  Each routine must:
-// collect the arguments for the action and run it
-// Return failure if the action failed
-// Save the result in the last stack entry for the fragment
-// Set the word-number entry in the last stack entry to the word number that the result will go by
-// Close up any gap between the unexecuted stack elements and the result
-// Return the new stack pointer, which is the relocated beginning-of-stack
-ACTION(jtmonad1 ){A* stack=jt->parserstkend1; RZ (stack[4] = dfs1(stack[4],stack[2])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack+2;}
-ACTION(jtmonad2 ){A* stack=jt->parserstkend1; RZ (stack[6] = dfs1(stack[6],stack[4])); stack[7] = stack[5]; stack[4] = stack[2]; stack[2] = stack[0]; stack[5] = stack[3]; stack[3] = stack[1]; R stack+2;}
-ACTION(jtdyad   ){A* stack=jt->parserstkend1; RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[5]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jtadv    ){A* stack=jt->parserstkend1; RZ(stack[4] = dfs1(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
-ACTION(jtconj   ){A* stack=jt->parserstkend1; RZ(stack[6] = dfs2(stack[2], stack[6], stack[4])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jttrident){A* stack=jt->parserstkend1; RZ(stack[6] = folk(stack[2], stack[4], stack[6])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; R stack + 4; }
-ACTION(jtbident ){A* stack=jt->parserstkend1; RZ(stack[4] = hook(stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; R stack + 2; }
-ACTION(jtpunc   ){A* stack=jt->parserstkend1; stack[5] = stack[1]; stack[4] = stack[2]; R stack+4;}  // Can't fail; use value from expr, token # from (
-
 static F2(jtisf){F2PREF;R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
 
-ACTION(jtis){A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1; 
+static ACTION(jtis){F1PREF;A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1; 
  n=stack[0]; v=stack[4];   // extract arguments
  if((I)stack[1]==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  if(LIT&AT(n)&&1>=AR(n)){
@@ -119,18 +103,16 @@ ACTION(jtis){A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1;
 #define PPAREN 6+0   // error offset immaterial, since never fails
 #define PNOMATCH 0
 
-ACTF casefuncs[] = {0, 0, jtmonad1, jttrident, jtmonad2, jtdyad, jtpunc, 0, 0, 0, jtbident, jtis, jtadv, jtconj};
-
 PT cases[] = {
- EDGE,      VERB,      NOUN, ANY,       jtmonad1,  jtvmonad, 1,2,1,
- EDGE+AVN,  VERB,      VERB, NOUN,      jtmonad2,  jtvmonad, 2,3,2,
- EDGE+AVN,  NOUN,      VERB, NOUN,      jtdyad,    jtvdyad,  1,3,2,
- EDGE+AVN,  VERB+NOUN, ADV,  ANY,       jtadv,     jtvadv,   1,2,1,
- EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, jtconj,    jtvconj,  1,3,1,
- EDGE+AVN,  VERB+NOUN, VERB, VERB,      jttrident, jtvfolk,  1,3,1,
- EDGE,      CAVN,      CAVN, ANY,       jtbident,  jtvhook,  1,2,1,
- NAME+NOUN, ASGN,      CAVN, ANY,       jtis,      jtvis,    0,2,1,
- LPAR,      CAVN,      RPAR, ANY,       jtpunc,    jtvpunc,  0,2,0,
+ EDGE,      VERB,      NOUN, ANY,       0,  jtvmonad, 1,2,1,
+ EDGE+AVN,  VERB,      VERB, NOUN,      0,  jtvmonad, 2,3,2,
+ EDGE+AVN,  NOUN,      VERB, NOUN,      0,    jtvdyad,  1,3,2,
+ EDGE+AVN,  VERB+NOUN, ADV,  ANY,       0,     jtvadv,   1,2,1,
+ EDGE+AVN,  VERB+NOUN, CONJ, VERB+NOUN, 0,    jtvconj,  1,3,1,
+ EDGE+AVN,  VERB+NOUN, VERB, VERB,      0, jtvfolk,  1,3,1,
+ EDGE,      CAVN,      CAVN, ANY,       0,  jtvhook,  1,2,1,
+ NAME+NOUN, ASGN,      CAVN, ANY,       0,      jtvis,    0,2,1,
+ LPAR,      CAVN,      RPAR, ANY,       0,    jtvpunc,  0,2,0,
 };
 
 // Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
@@ -144,6 +126,11 @@ F1(jtparse){F1PREF;A z;
 
 #define FP {stack = 0; goto exitparse;}   // indicate parse failure
 #define EP goto exitparse;   // exit parser, preserving current status
+#define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
+
+// Set in-place flags for non-assignment operands when the use-count is 1.  Bit 0 is for y, bit 1 for x 
+#define IPMONAD(w) ((J)((I)jt+(AC(stack[w])==1)))
+#define IPDYAD(a,w) ((J)((I)jt+(AC(stack[w])==1)+2*(AC(stack[a])==1)))
 
 // Parse a J sentence.  Input is the queue of tokens
 F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
@@ -245,7 +232,33 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
    // The action routine will pull the stack pointer from jt.  So, it's the same number of memory operations, though perhaps a little
    // slower because jt is not on the stack.
    jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
-   if(!(stack = casefuncs[i](jt)))EP  // stop parsing in case of error
+   switch(i) {
+   // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
+   // collect the arguments for the action and run it
+   // Return failure if the action failed
+   // Save the result in the last stack entry for the fragment
+   // Set the word-number entry in the last stack entry to the word number that the result will go by
+   // Close up any gap between the unexecuted stack elements and the result
+   // Return the new stack pointer, which is the relocated beginning-of-stack
+   // Set the in-place flags for verb arguments
+   case PMONAD1:
+   EPZ(stack[4] = jtdfs1(IPMONAD(2), stack[4], stack[2])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   case PMONAD2:
+   EPZ(stack[6] = jtdfs1(IPMONAD(4), stack[6], stack[4])); stack[7] = stack[5]; stack[4] = stack[2]; stack[2] = stack[0]; stack[5] = stack[3]; stack[3] = stack[1]; stack += 2; break;
+   case PDYAD:
+   EPZ(stack[6] = jtdfs2(IPDYAD(2,6), stack[2], stack[6], stack[4])); stack[7] = stack[5]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   case PADV:
+   EPZ(stack[4] = jtdfs1(jt, stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   case PCONJ:
+   EPZ(stack[6] = jtdfs2(jt, stack[2], stack[6], stack[4])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   case PTRIDENT:
+   EPZ(stack[6] = jtfolk(jt, stack[2], stack[4], stack[6])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   case PBIDENT:
+   EPZ(stack[4] = jthook(jt, stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   case PPAREN:
+   stack[5] = stack[1]; stack[4] = stack[2]; stack += 4; break; // Can't fail; use value from expr, token # from (
+   case PASGN: if(!(stack=jtis(jt)))EP break;
+   }
 
   }else{
 
@@ -289,8 +302,9 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn)y=sv;    //check NMDOT first, for speed during xdef.  Use value for special name
-        else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
+        if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
+         y=sv;    //check NMDOT first, for speed during xdef.  Use value for special name
+        } else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
       } else {
         // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
         if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
@@ -309,6 +323,11 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
     // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
     // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
     } else if(at&RPAR+CONJ){es = (at>>RPARX)+(1/(RPARX>CONJX));}  // 1 for CONJ, 2 for RPAR; the RPARX>CONJX bit is to give a compile-time error if RPARX is not > CONJX
+
+    // If the type may be in-placeable, make sure we don't try to in-place it, since it may be a saved name or a noun value
+    // saved in a list of script words.
+    // WE CAN MOVE THIS TEST to the name path if we have each script word stored with AC>1
+    if(AT(y)&B01+INT+FL && AN(y)==1 && AC(y)==1)++AC(y), tpush(y);  // kludge Need AN to avoid messing up }-in-place & other in-places, till we get better solution 
 
     // y has the resolved value, which is never a NAME unless there is an assignment immediately following
     stack[0] = y;   // finish setting the stack entry, with the new word

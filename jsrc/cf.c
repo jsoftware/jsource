@@ -48,7 +48,7 @@ static DF2(jtfolkcomp0){F2PREF;DECLFGH;PROLOG;A z;AF f;D oldct=jt->ct;
 static DF1(jtcharmapa){F1PREF;V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
 static DF1(jtcharmapb){F1PREF;V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
-A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){F2PREF;A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id; 
  hv=VAV(h); hi=hv->id; 

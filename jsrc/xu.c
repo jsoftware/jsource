@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Xenos: u: conversions                                                   */
 
+#include <wchar.h>
+
 #include "j.h"
 #include "x.h"
 
@@ -147,7 +149,7 @@ R z; // u16 from u8
 }
 
 void jttoutf8x(J jt,C* f, I n, US* fw){I q;
-q=wtomsize(fw,wcslen(fw));
-wtom(fw,wcslen(fw),f);
+q=wtomsize(fw,wcslen((wchar_t*)fw));
+wtom(fw,wcslen((wchar_t*)fw),f);
 f[q]=0;
 }

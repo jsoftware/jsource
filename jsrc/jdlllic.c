@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 
 #if !SY_WINCE
 #include <time.h>

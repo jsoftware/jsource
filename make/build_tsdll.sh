@@ -3,32 +3,34 @@
 cd ~
 . jvars.sh
 
+common=" -fPIC -O1 -Werror"
+
 case $jplatform\_$1 in
 
 linux_j32)
 TARGET=libtsdll.so
-COMPILE=" -fPIC -O1 -m32 -DC_64=0 "
+COMPILE="$common -m32 -DC_64=0 "
 LINK=" -shared -Wl,-soname,libtsdll.so  -m32 -o libtsdll.so "
 ;;
 linux_j64)
 TARGET=libtsdll.so
-COMPILE=" -fPIC -O1 "
+COMPILE="$common "
 LINK=" -shared -Wl,-soname,libtsdll.so  -o libtsdll.so "
 ;;
 raspberry_j32)
 TARGET=libtsdll.so
-COMPILE=" -fPIC -O1 -DC_64=0 "
+COMPILE="$common -DC_64=0 "
 LINK=" -shared -Wl,-soname,libtsdll.so -o libtsdll.so "
 ;;
 darwin_j32)
 TARGET=libtsdll.dylib
-COMPILE=" -fPIC -O3 -m32 -DC_64=0 "
+COMPILE="$common -m32 -DC_64=0 "
 LINK=" -m32 -dynamiclib -o libtsdll.dylib "
 ;;
 darwin_j64)
 
 TARGET=libtsdll.dylib
-COMPILE=" -fPIC -O3 "
+COMPILE="$common "
 LINK=" -dynamiclib -o libtsdll.dylib "
 ;;
 *)

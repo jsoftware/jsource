@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <io.h> 
 #else
+#include <unistd.h>
 #define _isatty isatty
 #define _fileno fileno
 #endif
@@ -33,6 +34,7 @@ int   add_history(const char *);
 int   read_history(const char *);
 int   write_history(const char *);
 char* readline(const char *);
+void  using_history(void);
 #endif
 
 int hist=1;

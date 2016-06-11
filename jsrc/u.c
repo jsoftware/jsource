@@ -99,7 +99,7 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
 // For each Type, the length of a data-item of that type.  The order
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
-extern I typesizes[] = {
+I typesizes[] = {
 sizeof(B), sizeof(C), sizeof(I), sizeof(D), sizeof(Z), sizeof(A), sizeof(X), sizeof(Q),  // B01 LIT INT FL CMPX BOX XNUM RAT
 -1,        -1,        sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P),   // BIT - SB01 SLIT SINT SFL SCMPX SBOX
 sizeof(SB), sizeof(C2), sizeof(V), sizeof(V), sizeof(V), sizeof(C), sizeof(I), sizeof(I), // SBT C2T VERB ADV CONJ ASGN MARK SYMB

@@ -3,7 +3,9 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
+common="-fPIC -O1 -Werror -Wno-error=incompatible-pointer-types -Wno-error=unused-value -Wno-error=pointer-sign -Wno-error=parentheses -fno-strict-aliasing -DSY_GETTOD"
+# clang
+common1="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
 
 case $jplatform\_$1 in
 
@@ -26,12 +28,12 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-COMPILE="$common -m32 -DC_64=0 -mmacosx-version-min=10.5"
+COMPILE="$common1 -m32 -DC_64=0 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 darwin_j64) # darwin x86
 TARGET=libj.dylib
-COMPILE="$common -mmacosx-version-min=10.5"
+COMPILE="$common1 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 *)

@@ -12,9 +12,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #define _stdcall
 #endif
+#include <stdint.h>
 
 #include "j.h"
 #include "d.h"
@@ -103,7 +106,7 @@ void breakclose(J jt)
  if(jt->adbreak==&breakdata) return;
  munmap(jt->adbreak,1);
  jt->adbreak=&breakdata;
- close(jt->breakfh);
+ close((intptr_t)jt->breakfh);
  jt->breakfh=0;
  unlink(jt->breakfn);
  *jt->breakfn=0;
@@ -299,7 +302,7 @@ F1(jtbreakfns){A z;I *fh,*mh; void* ad;
  fh=(I*)(I)open(CAV(w),O_RDWR);
  ASSERT(-1!=(I)fh,EVDOMAIN);
  ad=mmap(0,1,PROT_READ|PROT_WRITE,MAP_SHARED,(I)fh,0);
- if(0==ad){close(fh); ASSERT(0,EVDOMAIN);}
+ if(0==ad){close((intptr_t)fh); ASSERT(0,EVDOMAIN);}
 #else
  RZ(z=toutf16x(w));
  fh=CreateFileW(USAV(z),GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,0,OPEN_EXISTING,0,0);

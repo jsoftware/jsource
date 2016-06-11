@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <winbase.h>
 #else
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 

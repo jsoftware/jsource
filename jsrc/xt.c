@@ -6,6 +6,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#else
+#include <sys/time.h>
+#include <unistd.h>
 #endif
 
 #include "j.h"

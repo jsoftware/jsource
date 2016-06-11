@@ -3,26 +3,28 @@
 cd ~
 . jvars.sh
 
+common=" -fPIC -O1 -Werror"
+
 case $jplatform\_$1 in
 
 linux_j32)
-COMPILE=" -fPIC -O1 -m32 -DREADLINE"
+COMPILE="$common -m32 -DREADLINE"
 LINK=" $jgit/unix/libedit.a -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -o jconsole "
 ;;
 linux_j64)
-COMPILE=" -fPIC -O1 -DREADLINE"
+COMPILE="$common -DREADLINE"
 LINK=" $jgit/unix/libedit64.a -ldl -lncursesw -o jconsole "
 ;;
 raspberry_j32)
-COMPILE=" -fPIC -O1 -DREADLINE -DRASPI"
+COMPILE="$common -DREADLINE -DRASPI"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 darwin_j32)
-COMPILE=" -fPIC -O1 -m32 -DREADLINE -mmacosx-version-min=10.5"
+COMPILE="$common -m32 -DREADLINE -mmacosx-version-min=10.5"
 LINK=" -ledit -ldl -lncurses -m32 -mmacosx-version-min=10.5 -o jconsole "
 ;;
 darwin_j64)
-COMPILE=" -fPIC -O1 -DREADLINE -mmacosx-version-min=10.5"
+COMPILE="$common -DREADLINE -mmacosx-version-min=10.5"
 LINK=" -ledit -ldl -lncurses -mmacosx-version-min=10.5 -o jconsole "
 ;;
 *)

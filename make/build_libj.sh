@@ -3,7 +3,7 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -Werror -Wno-error=incompatible-pointer-types -Wno-error=unused-value -Wno-error=pointer-sign -Wno-error=parentheses -fno-strict-aliasing -DSY_GETTOD"
+common="-fPIC -O1 -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -fno-strict-aliasing -DSY_GETTOD"
 # clang
 common1="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
 

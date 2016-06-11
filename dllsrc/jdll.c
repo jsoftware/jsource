@@ -36,7 +36,7 @@ I jdo(J, C*);
 
 static int tounin(C* src, UI m, WCHAR* sink, UI n)
 {
-  return MultiByteToWideChar(CP_UTF8,0,src,m,sink,n);
+  return MultiByteToWideChar(CP_UTF8,0,src,(int)m,sink,(int)n);
 }
 
 void touni(C* src, WCHAR* sink)
@@ -48,7 +48,7 @@ void touni(C* src, WCHAR* sink)
 
 static void toutf8n(WCHAR* src, LPSTR sink, UI n)
 {
-  WideCharToMultiByte(CP_UTF8,0,src,1+(int)wcslen(src),sink,n,0,0);
+  WideCharToMultiByte(CP_UTF8,0,src,1+(int)wcslen(src),sink,(int)n,0,0);
 }
 
 void toasc(WCHAR* src, C* sink)
@@ -83,11 +83,11 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
     WCHAR *wstr;
 		BSTR bstr;
     if (LIT==t) {
-      wstr = (WCHAR*) malloc(sizeof(WCHAR)*k);
+      wstr = malloc(sizeof(WCHAR)*k);
 		  kw=tounin((C*)pi, k, wstr, k);
 		  bstr = SysAllocStringLen(wstr, (UINT)kw);
     } else
-		  bstr = SysAllocStringLen((C*)pi, (UINT)k);
+		  bstr = SysAllocStringLen((WCHAR*)pi, (UINT)k);
 		v->vt=VT_BSTR;
 		v->bstrVal=bstr;
     if (LIT==t) free(wstr);
@@ -102,7 +102,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		break;
 
 	case C2T:
-		if(!r) {v->vt=VT_UI2; v->bVal = *(WCHAR*)pi; return 0;}
+		if(!r) {v->vt=VT_UI2; v->iVal = *(WCHAR*)pi; return 0;}
 		vt=VT_UI2;
 		cb=k*sizeof(WCHAR);
 		break;
@@ -261,7 +261,9 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 	I shape[MAXRANK];
 	I k=1,n,r,i;
 	I* pintsnk;
+#if SY_64
 	int* pint32src;
+#endif
 	short* pshortsrc;
 	unsigned short* pboolsrc;
 	char* pboolsnk;

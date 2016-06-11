@@ -127,7 +127,9 @@ int _cdecl altinci(int i){return ++i;}
 I _stdcall xbasic_add(){return (I)xbasic;}
 
 // '1 procindex ...'
+#ifndef _WIN32
 typedef I (_stdcall *PROC)();
+#endif
 I _stdcall objxxx(void* obj,I a,I b){return a+b;}
 D _stdcall objddd(void* obj,D a,D b){return a+b;}
 //PROC vtable[]={&(PROC)objxxx,&(PROC)objddd};

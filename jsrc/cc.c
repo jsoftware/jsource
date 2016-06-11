@@ -6,12 +6,12 @@
 #include "j.h"
 
 
-static DF1(jtcut01){F1PREF;DECLF;A h,x;
+static DF1(jtcut01){DECLF;A h,x;
  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
  if(VGERL&sv->flag){h=sv->h; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
-static F2(jtcut02v){F2PREF;A z;I*av,e,j,k,m,t,wk;
+static F2(jtcut02v){A z;I*av,e,j,k,m,t,wk;
  m=AN(w); t=AT(w); wk=bp(t);
  av=AV(a); j=av[0]; e=av[1]; k=ABS(e);
  ASSERT(!e||-m<=j&&j<m,EVINDEX);
@@ -21,7 +21,7 @@ static F2(jtcut02v){F2PREF;A z;I*av,e,j,k,m,t,wk;
  R 0>e?reverse(z):z;
 }    /* a ];.0 vector */
 
-static F2(jtcut02m){F2PREF;A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
+static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
  s=AS(w); m0=s[0]; m1=s[1]; t=AT(w); wk=bp(t);
  av=AV(a);    
  if(4==AN(a)){j0=av[0]; e0=av[2]; k0=ABS(e0); j1=av[1]; e1=av[3]; k1=ABS(e1);}
@@ -38,7 +38,7 @@ static F2(jtcut02m){F2PREF;A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
  R 0>e1?irs1(z,0L,1L,jtreverse):z;
 }    /* a ];.0 matrix */
 
-static DF2(jtcut02){F2PREF;DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k,m,n,*u,*ws;
+static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k,m,n,*u,*ws;
  RZ(a&&w);
  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h);}
  id=h?0:ID(fs); d=h?0:id==CBOX?1:2; 
@@ -77,7 +77,7 @@ static DF2(jtcut02){F2PREF;DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i
  R 1==d?z:ope(z);
 }    /* a f;.0 w */
 
-DF2(jtrazecut0){F2PREF;A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
+DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
  RZ(a&&w);
  n=AN(w); wt=AT(w); wv=CAV(w); 
  ar=AR(a); as=AS(a); m=2==ar?1:*as;
@@ -101,7 +101,7 @@ DF2(jtrazecut0){F2PREF;A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
 }    /* a ;@:(<;.0) vector */
 
 
-static DF2(jtcut2bx){F2PREF;A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
+static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  RZ(a&&w&&self);
  sv=VAV(self); q=*AV(sv->g);
  an=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a); ws=AS(w);
@@ -184,7 +184,7 @@ static DF2(jtcut2bx){F2PREF;A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v
  if(pfx)for(i=m;i>=1;--i){q=yu[i-1]-yu[i  ]; d=q-neg; v1=wv+k*(b+p); stmt; p+=q;}  \
  else   for(i=1;i<=m;++i){q=yu[i  ]-yu[i-1]; d=q-neg; v1=wv+k*(b+p); stmt; p+=q;}
 
-static F1(jtcps){F1PREF;A z;P*wp,*zp;
+static F1(jtcps){A z;P*wp,*zp;
  GA(z,AT(w),1,AR(w),AS(w)); 
  zp=PAV(z);
  wp=PAV(w); 
@@ -212,7 +212,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2);
 
-static DF2(jtcut2sx){F2PREF;PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
+static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
  n=IC(w); t=AT(w); m=*AV(sv->g); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
  RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
@@ -345,7 +345,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* v1   ptr to w for current cut         */
 /* wd   1 iff w is relative              */
 
-static DF2(jtcut2){F2PREF;PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
+static DF2(jtcut2){PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
      I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wd,wt,*zi,*zs;V*vf;VF ado;
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
@@ -432,7 +432,7 @@ static DF2(jtcut2){F2PREF;PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,
  EPILOG(z);
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
 
-static DF1(jtcut1){F1PREF;R cut2(mark,w,self);}
+static DF1(jtcut1){R cut2(mark,w,self);}
 
 
 #define PSCASE(id,zt,wt)    ((id)+256*(zt)+4096*(wt))
@@ -466,7 +466,7 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
  R z;
 }    /* [: ; <@(ie/\);.k  on vector w */
 
-DF2(jtrazecut2){F2PREF;A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d,k,m=0,n,p,q,r,*s,wt;
+DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d,k,m=0,n,p,q,r,*s,wt;
     V*fv,*sv,*vv;VF ado=0;
  RZ(a&&w);
  sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;
@@ -522,7 +522,7 @@ DF2(jtrazecut2){F2PREF;A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I
  else R raze(cut2(B01&AT(a)?a:eq(scc(sep),a),w,gs));
 }    /* ;@((<@f);.n) or ([: ; <@f;.n) , monad and dyad */
 
-DF1(jtrazecut1){F1PREF;R razecut2(mark,w,self);}
+DF1(jtrazecut1){R razecut2(mark,w,self);}
 
 
 static A jttesos(J jt,A a,A w,I n){A p;I*av,c,k,m,*pv,s,*ws;
@@ -534,7 +534,7 @@ static A jttesos(J jt,A a,A w,I n){A p;I*av,c,k,m,*pv,s,*ws;
  R p;
 }    /* tesselation result outer shape */
 
-static F2(jttesa){F2PREF;A x;I*av,c,d,k,p=IMAX,r,*s,t,*u,*v;
+static F2(jttesa){A x;I*av,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RZ(a&&w);
  t=AT(a);
  RZ(a=vib(a)); 
@@ -597,7 +597,7 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv;C*u,*v,*v0,*wv,*y
  RE(0); R ope(z);
 }    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size */
 
-static DF2(jttess2){F2PREF;A gs,p,y,z;I*av,n,t;
+static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  PREF2(jttess2);
  RZ(a=tesa(a,w)); 
  av=AV(a); gs=VAV(self)->g; n=*AV(gs);
@@ -615,7 +615,7 @@ static DF2(jttess2){F2PREF;A gs,p,y,z;I*av,n,t;
  R cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self);
 }
 
-static DF1(jttess1){F1PREF;A s;I m,r,*v;
+static DF1(jttess1){A s;I m,r,*v;
  RZ(w);
  r=AR(w); RZ(s=shape(w)); v=AV(s);
  m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);
@@ -623,7 +623,7 @@ static DF1(jttess1){F1PREF;A s;I m,r,*v;
 }
 
 
-F2(jtcut){F2PREF;A h=0;I flag=0,k;
+F2(jtcut){A h=0;I flag=0,k;
  RZ(a&&w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w));

@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F2(jtstitchsp2){F2PREF;I ar,wr;
+F2(jtstitchsp2){I ar,wr;
  RZ(a&&w);
  ar=AR(a); wr=AR(w);
  R irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);

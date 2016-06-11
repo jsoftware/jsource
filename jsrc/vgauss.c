@@ -6,7 +6,7 @@
 #include "j.h"
 
                     
-F1(jtgausselm){F1PREF;A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
+F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);
  ASSERT(2==AR(w),EVRANK);
@@ -29,7 +29,7 @@ F1(jtgausselm){F1PREF;A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  R w;
 }    /* Gaussian elimination in place */
 
-static F1(jtdetr){F1PREF;A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
+static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  s=AS(w); r=s[0]; c=s[1];
  v=QAV(w); 
@@ -52,7 +52,7 @@ static F1(jtdetr){F1PREF;A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  GA(z,RAT,1,0,0); *QAV(z)=d; R z;
 }    /* determinant on rational matrix; works in place */
 
-static F1(jtdetd){F1PREF;D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
+static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
  RZ(w);
  s=AS(w); r=s[0]; c=s[1]; v=DAV(w);
  NAN0;
@@ -74,7 +74,7 @@ static F1(jtdetd){F1PREF;D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
 
 #define ZABT(v)         ((v).re*(v).re+(v).im*(v).im)
 
-static F1(jtdetz){F1PREF;A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
+static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
  RZ(w);
  z.re=1.0; z.im=0.0;
  s=AS(w); r=s[0]; c=s[1]; v=ZAV(w);
@@ -95,7 +95,7 @@ static F1(jtdetz){F1PREF;A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
  GA(t,CMPX,1,0,0); *ZAV(t)=z; R t;
 }    /* determinant on complex  matrix; works in place */
 
-F1(jtgaussdet){F1PREF;A z;I*s;
+F1(jtgaussdet){A z;I*s;
  RZ(w);
  ASSERT(2==AR(w),EVRANK);
  s=AS(w);

@@ -27,7 +27,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;
  R z;
 }    /* convert 2-byte chars to 1-byte chars; 0==h iff high order byte must be 0 */
 
-static F1(jttoc2){F1PREF;A z;C*wv,*zv;I n;
+static F1(jttoc2){A z;C*wv,*zv;I n;
  RZ(w);
  if(C2T&AT(w))R ca(w);
  n=AN(w); wv=CAV(w);
@@ -41,7 +41,7 @@ static F1(jttoc2){F1PREF;A z;C*wv,*zv;I n;
  R z;
 }    /* convert 1-byte chars to 2-byte chars */
 
-static F1(jttoc2e){F1PREF;A z;I m,n,r;
+static F1(jttoc2e){A z;I m,n,r;
  RZ(w);
  n=AN(w); r=AR(w);
  ASSERT(r,EVRANK);
@@ -53,7 +53,7 @@ static F1(jttoc2e){F1PREF;A z;I m,n,r;
  R z;
 }    /* convert pairs of 1-byte chars to 2-byte chars */
 
-static F1(jtifc2){F1PREF;A z;I n,t,*zv;
+static F1(jtifc2){A z;I n,t,*zv;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&JCHAR,EVDOMAIN);
@@ -63,7 +63,7 @@ static F1(jtifc2){F1PREF;A z;I n,t,*zv;
  R z;
 }    /* integers from 1- or 2-byte chars */
 
-static F1(jtc2fi){F1PREF;A z;I j,n,*v;US*zv;
+static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  GA(z,C2T,n,AR(w),AS(w)); zv=(US*)AV(z);
@@ -71,7 +71,7 @@ static F1(jtc2fi){F1PREF;A z;I j,n,*v;US*zv;
  R z;
 }    /* 2-byte chars from integers */
 
-F1(jtuco1){F1PREF;I t;
+F1(jtuco1){I t;
  RZ(w);
  t=AT(w);
  ASSERT(!AN(w)||t&JCHAR+NUMERIC,EVDOMAIN);
@@ -79,7 +79,7 @@ F1(jtuco1){F1PREF;I t;
 }    /* copy 2-byte chars; convert 1-byte to 2-byte */
 
 
-F2(jtuco2){F2PREF;I j;
+F2(jtuco2){I j;
  RZ(a&&w);
  RE(j=i0(a));
  switch(j){

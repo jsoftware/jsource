@@ -229,7 +229,7 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
  R z;
 }    /* integer vector from boolean mask */
 
-F1(jtii){F1PREF;RZ(w); R IX(IC(w));}
+F1(jtii){RZ(w); R IX(IC(w));}
 
 I jtmaxtype(J jt,I s,I t){I u;
  u=s|t;
@@ -274,7 +274,7 @@ A jtodom(J jt,I r,I n,I*s){A q,z;I j,k,m,*u,*zv;
  R z;
 }
 
-F1(jtrankle){F1PREF;R!w||AR(w)?w:ravel(w);}
+F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
 A jtsc(J jt,I k)     {A z; GA(z,INT, 1,0,0); *IAV(z)=k;     R z;}
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     R z;}
@@ -285,7 +285,7 @@ A jtscx(J jt,X x)    {A z; GA(z,XNUM,1,0,0); *XAV(z)=ca(x); R z;}
 
 A jtstr(J jt,I n,C*s){A z; GA(z,LIT,n,1,0); MC(AV(z),s,n); R z;}
 
-F1(jtstr0){F1PREF;A z;C*x;I n; RZ(w); n=AN(w); GA(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; R z;}
+F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GA(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; R z;}
 
 A jtv2(J jt,I a,I b){A z;I*x; GA(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; R z;}
 
@@ -293,9 +293,9 @@ A jtvci(J jt,I k){A z; GA(z,INT,1,1,0); *IAV(z)=k; R z;}
 
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); R z;}
 
-F1(jtvi){F1PREF;RZ(w); R INT&AT(w)?w:cvt(INT,w);}
+F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
-F1(jtvib){F1PREF;A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
+F1(jtvib){A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
  RZ(w);
  old=jt->rank; jt->rank=0;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
@@ -319,7 +319,7 @@ F1(jtvib){F1PREF;A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
  jt->rank=old; R z;
 }
 
-F1(jtvip){F1PREF;I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); R w;}
+F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); R w;}
 
-F1(jtvs){F1PREF;RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
+F1(jtvs){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
      /* verify string */

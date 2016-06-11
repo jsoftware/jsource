@@ -145,7 +145,7 @@ static A jtgrd1spdd(J jt,A w,I wf,I wcr){A x;I n,*ws;P*wp;
 /*  frame axes: all sparse or all dense                 */
 /*  cell  axes: 0 or more sparse axes, then dense axes  */
 
-F1(jtgrd1sp){F1PREF;PROLOG;A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
+F1(jtgrd1sp){PROLOG;A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  wp=PAV(w);
@@ -222,7 +222,7 @@ static A jtgrd2spsd(J jt,A w,I wf,I wcr){A x,z;P*zp;
  R z;
 }    /* sparse frame, dense cell */
 
-F2(jtgrd2sp){F2PREF;PROLOG;A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,wr,*ws;P*wp;
+F2(jtgrd2sp){PROLOG;A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,wr,*ws;P*wp;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[1]:ar; af=ar-acr;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;

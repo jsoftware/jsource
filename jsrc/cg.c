@@ -17,9 +17,9 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
  R z;
 }
 
-F1(jtfxeach){F1PREF;R every(w,0L,jtfx);}
+F1(jtfxeach){R every(w,0L,jtfx);}
 
-static DF1(jtcon1){F1PREF;A h,*hv,*x,z;V*sv;
+static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=VAV(self); h=sv->h; hv=AAV(h);
  GA(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
@@ -27,7 +27,7 @@ static DF1(jtcon1){F1PREF;A h,*hv,*x,z;V*sv;
  R ope(z);
 }
 
-static DF2(jtcon2){F2PREF;A h,*hv,*x,z;V*sv;
+static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=VAV(self); h=sv->h; hv=AAV(h);
  GA(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
@@ -35,7 +35,7 @@ static DF2(jtcon2){F2PREF;A h,*hv,*x,z;V*sv;
  R ope(z);
 }
 
-static DF1(jtinsert){F1PREF;A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
+static DF1(jtinsert){A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
  RZ(w);
  n=IC(w); j=n-1; hs=VAV(self)->h; m=AN(hs); hv=AAV(hs);
  if(!n)R df1(w,iden(*hv));
@@ -46,7 +46,7 @@ static DF1(jtinsert){F1PREF;A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
  R z;
 }
 
-F2(jtevger){F2PREF;A hs;I k;
+F2(jtevger){A hs;I k;
  RZ(a&&w);
  RE(k=i0(w)); 
  if(k==GTRAIN)R exg(a);
@@ -61,7 +61,7 @@ F2(jtevger){F2PREF;A hs;I k;
    ASSERT(0,EVDOMAIN);
 }}
 
-F2(jttie){F2PREF;RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
+F2(jttie){RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
 
 static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
@@ -101,7 +101,7 @@ static A jtgjoin(J jt,C c,A a,A w){A f;
  R df2(box(spellout(c)),df2(a,w,f),f);
 }
 
-static DF1(jtcase1a){F1PREF;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
+static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  RZ(w);
  r=AR(w);
  if(1<r)RZ(w=gah(1L,w));
@@ -127,14 +127,14 @@ static DF1(jtcase1a){F1PREF;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  R z;
 }
 
-static DF1(jtcase1b){F1PREF;A h,u;V*sv;
+static DF1(jtcase1b){A h,u;V*sv;
  sv=VAV(self); h=sv->h;
  RZ(u=from(df1(w,sv->g),h));
  ASSERT(!AR(u),EVRANK);
  R df1(w,*AAV(u));
 }
 
-static DF1(jtcase1){F1PREF;A h,*hv;B b;I r,wr;V*sv;
+static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  RZ(w);
  sv=VAV(self);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); jt->rank=0;
@@ -142,7 +142,7 @@ static DF1(jtcase1){F1PREF;A h,*hv;B b;I r,wr;V*sv;
  R b?case1a(w,self):rank1ex(w,self,r,jtcase1b);
 }
 
-static DF2(jtcase2){F2PREF;A u;V*sv;
+static DF2(jtcase2){A u;V*sv;
  PREF2(jtcase2);
  sv=VAV(self);
  RZ(u=from(df2(a,w,sv->g),sv->h));
@@ -150,7 +150,7 @@ static DF2(jtcase2){F2PREF;A u;V*sv;
  R df2(a,w,*AAV(u));
 }
 
-static F2(jtgerfrom){F2PREF;A*av,*v,z;I ad,n;
+static F2(jtgerfrom){A*av,*v,z;I ad,n;
  RZ(a&&w);  /* 1==AR(w)&&BOX&AT(w) */
  ASSERT(1>=AR(a),EVRANK);
  if(NUMERIC&AT(a))R from(a,w);
@@ -162,7 +162,7 @@ static F2(jtgerfrom){F2PREF;A*av,*v,z;I ad,n;
   R z;
 }}
 
-F2(jtagenda){F2PREF;
+F2(jtagenda){
  RZ(a&&w)
  if(NOUN&AT(w))R exg(gerfrom(w,a));
  R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,fxeachv(1L,a), VGERL, mr(w),lr(w),rr(w));
@@ -174,7 +174,7 @@ F2(jtagenda){F2PREF;
 //                gs=sv->g (the A block for the g operand); g1=f1 in sv->g (0 if sv->g==0); g2=f2 in sv->g (0 if sv->g==0)
 
 
-static DF1(jtgcl1){F1PREF;DECLFG;A ff,*hv=AAV(sv->h);I d;
+static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
@@ -187,17 +187,17 @@ static DF1(jtgcl1){F1PREF;DECLFG;A ff,*hv=AAV(sv->h);I d;
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){F1PREF;DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->h);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
-static DF2(jtgcl2){F2PREF;DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
-static DF2(jtgcr2){F2PREF;DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
@@ -217,12 +217,12 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  R fdef(id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 
-static DF1(jtgav1){F1PREF;DECLF;A ff,*hv=AAV(sv->h);I d;
+static DF1(jtgav1){DECLF;A ff,*hv=AAV(sv->h);I d;
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
-static DF2(jtgav2){F2PREF;DECLF;A ff,*hv=AAV(sv->h);I d;
+static DF2(jtgav2){DECLF;A ff,*hv=AAV(sv->h);I d;
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
@@ -239,8 +239,8 @@ A jtgadv(J jt,A w,C id){A hs;I n;
 }
 
 
-static DF1(jtgf1){F1PREF;A h=VAV(self)->h; R df1(  w,*AAV(h));}
-static DF2(jtgf2){F2PREF;A h=VAV(self)->h; R df2(a,w,*AAV(h));}
+static DF1(jtgf1){A h=VAV(self)->h; R df1(  w,*AAV(h));}
+static DF2(jtgf2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);

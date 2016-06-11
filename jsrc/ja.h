@@ -686,7 +686,7 @@
 #define pathit(x)                   jtpathit(jt,(x))
 #define paxis(x,y)                  jtpaxis(jt,(x),(y))
 #define pcvt(x,y)                   jtpcvt(jt,(x),(y))
-#define pdef(x0,x1,x2,x3,x4,x5,x6)  jtpdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))
+#define pdef(x0,x1,x2,x3,x4,x5,x6,x7)  jtpdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
 #define pdt(x,y)                    jtpdt(jt,(x),(y))
 #define pdtby(x,y)                  jtpdtby(jt,(x),(y))
 #define pdtsp(x,y)                  jtpdtsp(jt,(x),(y))

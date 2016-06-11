@@ -52,8 +52,8 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
 }    /* stop on line i? */
 
 
-F1(jtdbstopq){F1PREF;ASSERTMTV(w); R jt->dbstops?jt->dbstops:mtv;}
+F1(jtdbstopq){ASSERTMTV(w); R jt->dbstops?jt->dbstops:mtv;}
      /* 13!:2  query stops */
 
-F1(jtdbstops){F1PREF;RZ(w=vs(w)); fa(jt->dbstops); jt->dbstops=AN(w)?ra(w):0; R mtm;}
+F1(jtdbstops){RZ(w=vs(w)); fa(jt->dbstops); jt->dbstops=AN(w)?ra(w):0; R mtm;}
      /* 13!:3  set stops */

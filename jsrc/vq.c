@@ -7,7 +7,7 @@
 #include "ve.h"
 
 
-QF1(jtqstd){F1PREF;I d,n;Q z;X g;
+QF1(jtqstd){I d,n;Q z;X g;
  QRZ(w.n&&w.d&&!jt->jerr);
  n=XDIG(w.n); d=XDIG(w.d); z.d=xone;
  if(0>d){QRE(w.n=negate(w.n)); QRE(w.d=negate(w.d)); n=-n; d=-d;}
@@ -22,31 +22,31 @@ QF1(jtqstd){F1PREF;I d,n;Q z;X g;
  R z;
 }
 
-QF2(jtqplus){F2PREF;PROLOG;Q z;
+QF2(jtqplus){PROLOG;Q z;
  z.n=xplus(xtymes(a.n,w.d),xtymes(w.n,a.d));
  z.d=xtymes(a.d,w.d);
  QEPILOG(z);
 }
 
-QF2(jtqminus){F2PREF;PROLOG;Q z;
+QF2(jtqminus){PROLOG;Q z;
  z.n=xminus(xtymes(a.n,w.d),xtymes(w.n,a.d));
  z.d=xtymes(a.d,w.d);
  QEPILOG(z);
 }
 
-QF2(jtqtymes){F2PREF;PROLOG;Q z;
+QF2(jtqtymes){PROLOG;Q z;
  z.n=xtymes(a.n,w.n);
  z.d=xtymes(a.d,w.d);
  QEPILOG(z);
 }
 
-QF2(jtqdiv){F2PREF;PROLOG;Q z;
+QF2(jtqdiv){PROLOG;Q z;
  z.n=xtymes(a.n,w.d); 
  z.d=xtymes(a.d,w.n);
  QEPILOG(z);
 }
 
-static QF2(jtqrem){F2PREF;PROLOG;I c,d;Q m,q,z;
+static QF2(jtqrem){PROLOG;I c,d;Q m,q,z;
  c=XDIG(a.n);
  d=XDIG(w.n);
  if(!c)R w;
@@ -59,15 +59,15 @@ static QF2(jtqrem){F2PREF;PROLOG;I c,d;Q m,q,z;
  QEPILOG(z);
 }
 
-static QF2(jtqgcd){F2PREF;PROLOG;Q z;
+static QF2(jtqgcd){PROLOG;Q z;
  QRE(z.n=xgcd(a.n,w.n));
  QRE(z.d=xlcm(a.d,w.d));
  QEPILOG(z);
 }
 
-static QF2(jtqlcm){F2PREF;R qtymes(a,qdiv(w,qgcd(a,w)));}
+static QF2(jtqlcm){R qtymes(a,qdiv(w,qgcd(a,w)));}
 
-static QF2(jtqpow){F2PREF;PROLOG;B c;I p,q,s;Q t,z;X d;
+static QF2(jtqpow){PROLOG;B c;I p,q,s;Q t,z;X d;
  QRE(1);
  t=a; d=w.n; z.n=z.d=xone;
  p=XDIG(a.n); q=XDIG(w.n); c=QX1(w.d);

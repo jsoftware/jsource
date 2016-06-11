@@ -13,17 +13,17 @@
  fdef(id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),0L,(I)m,(I)l,(I)r)
 
 
-static DF1(secf1){F1PREF;A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1((AF)*   AV(h) ,  w,self);}
-static DF2(secf2){F2PREF;A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL2((AF)*(1+AV(h)),a,w,self);}
+static DF1(secf1){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1((AF)*   AV(h) ,  w,self);}
+static DF2(secf2){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL2((AF)*(1+AV(h)),a,w,self);}
 
-static DF1(jtfindrange){F1PREF;I base,n,top;
+static DF1(jtfindrange){I base,n,top;
  RZ(w);
  n=AN(w);
  irange(n,AV(w),&base,&top);
  R v2(base,top);
 }
 
-F2(jtforeign){F2PREF;I p,q;
+F2(jtforeign){I p,q;
  RZ(a&&w);
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(CIBEAM,VERB, jtwd,0L, a,w,0L, 0L, 1L,RMAX,RMAX);

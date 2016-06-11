@@ -99,7 +99,7 @@ B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
 
-F1(jtsympool){F1PREF;A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
+F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
@@ -236,13 +236,13 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
  R z;
 }    /* 15!:6 (0=flag) or 15!:14 (1=flag) */
 
-F1(jtdllsymget){F1PREF;R dllsymaddr(w,0);}
-F1(jtdllsymdat){F1PREF;R dllsymaddr(w,1);}
+F1(jtdllsymget){R dllsymaddr(w,0);}
+F1(jtdllsymdat){R dllsymaddr(w,1);}
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found
-F1(jtsymbrd){F1PREF;L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
+F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
 
-F1(jtsymbrdlock){F1PREF;A y;
+F1(jtsymbrdlock){A y;
  RZ(y=symbrd(w));
  R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
 }
@@ -266,19 +266,26 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
 // Non-error result is unused (mark)
 A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  RZ(a&&w&&g);
- n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
- if(n==m)ASSERT(!(jt->local&&g==jt->global&&probe(a,jt->local)),EVDOMAIN)  // if non-locative, give error if there is a private
+ // If we have a zombiesym, we have looked this name up already, so just use the symbol-table entry found then
+ // zombiesym is only set for assignment to local name, so we needn't check for that
+ if(jt->zombiesym) {
+  e = jt->zombiesym;   // point to the value being assigned
+  jt->zombiesym = 0;   // clear until next use.
+ } else {
+  n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
+  if(n==m)ASSERT(!(jt->local&&g==jt->global&&probe(a,jt->local)),EVDOMAIN)  // if non-locative, give error if there is a private
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
- else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s):stfind(1,n-m-2,s));}
+  else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s):stfind(1,n-m-2,s));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
- // Now g has the symbol table to look in
- RZ(e=probeis(a,g));   // set e to symbol-table slot to use
- if(jt->db)RZ(redef(w,e));  // if debug, check for changes to stack
- wt=AT(w);   // type of the value
- if(wt&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
+  // Now g has the symbol table to look in
+  RZ(e=probeis(a,g));   // set e to symbol-table slot to use
+  if(jt->db)RZ(redef(w,e));  // if debug, check for changes to stack
+  wt=AT(w);   // type of the value
+  if(wt&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
+ }
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
  ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
  if(!(x&&AFNJA&AFLAG(x))){
@@ -288,13 +295,10 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   RZ(w=ra(AFNJA&AFLAG(w)?w:rca(w)));
   // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
   // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
-  // that value until its last use.  So we defer the decrementing: we call nvrredef to INCREMENT the use count if the name is
-  // extant, and then unconditionally decrement the use count.  Later, when it's safe, we will go back to decrement the
-  // use count in the values we incremented here.  Yes, this could be done a smidgen faster, but that would require another
-  // version of nvrredef, and redefinitions are rare enough to make that not worthwhile.
-  if(x){nvrredef(x); fa(x);}   // if redefinition, modify the use counts
-  e->val=w;  // Now that the old value has been taken care of, install the new value
- }else if(x!=w){  /* replacing mapped data */
+  // that value until its last use.  We call nvrredef to see whether the name is out there; if it is, we schedule a deferred
+  // free (and don't free here), if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
+  if(x){if(!nvrredef(x))fa(x);}if(x!=w){e->val=w;}   // if redefinition, modify the use counts; install the new value
+ }else if(x!=w){  /* replacing name with different mapped data */
   if(wt&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
   ASSERT(wt&B01+INT+FL+CMPX+LIT,EVDOMAIN);

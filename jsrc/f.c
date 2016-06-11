@@ -83,7 +83,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
  *y=0; R y-s;
 }
 
-static F1(jtthbit){F1PREF;A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
+static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
  n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GA(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
@@ -98,7 +98,7 @@ static F1(jtthbit){F1PREF;A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
  R z;
 }
 
-static F1(jtthb){F1PREF;A z;B*x;C*y;I c,m,n,p,r,*s;
+static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GA(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
@@ -107,7 +107,7 @@ static F1(jtthb){F1PREF;A z;B*x;C*y;I c,m,n,p,r,*s;
  R z;
 }
 
-static F1(jtthn){F1PREF;A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
+static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);
  GA(t,LIT,wd*(1+n),1,0); tv=CAV(t);
@@ -124,7 +124,7 @@ static F1(jtthn){F1PREF;A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  R z;
 }
 
-static F1(jtthsb){F1PREF;A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
+static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=jt->sbun;
  if(1>=r){
   c=n; 
@@ -141,7 +141,7 @@ static F1(jtthsb){F1PREF;A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  R z;
 }
 
-static F1(jtthx1){F1PREF;A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
+static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
  n=AN(w); v=AV(w)+n-1; b=0>*v; 
  p=*v; if(p==XPINF)R cstr("_"); else if(p==XNINF)R cstr("__");
  sprintf(s1,FMTI,*v); p1=strlen(s1);
@@ -174,7 +174,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
  R z;
 }
 
-static F1(jtthxqe){F1PREF;A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
+static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  n=AN(w); r=AR(w); s=AS(w); wv=AV(w);
  c=r?s[r-1]:1; m=n/c;
  GA(t,BOX,n,1,0); tv=AAV(t);
@@ -318,7 +318,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv){A e,*wv;C*u,*v;
 // 2-cell of w is opened and the contents joined to its neighbors, with boxing characters
 // installed around it.
 // All the 2-cells of the result have boxing characters in the same locations.
-static F1(jtenframe){F1PREF;A x,y,z;C*zv;I ht,m,n,p,q,wd,wr,xn,*xv,yn,*yv,zn;
+static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,wd,wr,xn,*xv,yn,*yv,zn;
  // Find the positions of the cell boundaries within each 2-cell of the
  // result. x and y are lists, where x[i] and y[j] give the height/width of cell
  // (i,j) of the result 2-cell. This height/width includes the boxing char
@@ -345,7 +345,7 @@ static F1(jtenframe){F1PREF;A x,y,z;C*zv;I ht,m,n,p,q,wd,wr,xn,*xv,yn,*yv,zn;
 // Convert any character array to a table for display
 // w is an r-dimensional array of characters; result is a table with
 // 1 blank line between 2-cells, 2 blank lines between 3-cells, etc
-F1(jtmat){F1PREF;A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,zn;
+F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,zn;
  RZ(w);  // return if no w
  // r=rank of w, s->shape, v->characters
  r=AR(w); s=AS(w); v=CAV(w);
@@ -372,10 +372,10 @@ F1(jtmat){F1PREF;A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,zn;
 }
 
 // Convert 1 box to character array, then to character table
-static F1(jtmatth1){F1PREF;R mat(thorn1(w));}
+static F1(jtmatth1){R mat(thorn1(w));}
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
-static F1(jtthbox){F1PREF;A z;UC*s;static C ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
+static F1(jtthbox){A z;UC*s;static C ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
@@ -388,7 +388,7 @@ static F1(jtthbox){F1PREF;A z;UC*s;static C ctrl[]=" \001\002\003\004\005\006\00
 }
 
 // format sparse array
-static F1(jtths){F1PREF;A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
+static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  RZ(scheck(w));
  p=PAV(w); e=SPA(p,e); i=SPA(p,i); x=SPA(p,x); 
  RZ(i=thorn1(i)); s=AS(i); m=s[0]; n=s[1];
@@ -403,7 +403,7 @@ static F1(jtths){F1PREF;A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 }
 
 // ": y, returning character array
-F1(jtthorn1){F1PREF;PROLOG;A z;
+F1(jtthorn1){PROLOG;A z;
  RZ(w);
  if(!AN(w))GA(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
@@ -611,7 +611,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
 }    /* output string from array w */
 
 // 5!:30, which does who knows what
-F2(jtoutstr){F2PREF;I*v;
+F2(jtoutstr){I*v;
  RZ(a&&w);
  RZ(a=vib(a));
  ASSERT(1==AR(a), EVRANK);
@@ -626,7 +626,7 @@ F2(jtoutstr){F2PREF;I*v;
 }
 
 // w is a noun.  Convert it to a UTF-8 string and write it to the console
-static F1(jtjpr1){F1PREF;PROLOG;A z;
+static F1(jtjpr1){PROLOG;A z;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
@@ -637,7 +637,7 @@ static F1(jtjpr1){F1PREF;PROLOG;A z;
 // w is anything; convert it to character and write it to the display
 // if jt->tostdout is clear (for loading scripts quietly), check for errors but produce no output
 // Result is 0 if error, otherwise a harmless constant
-F1(jtjpr){F1PREF;A y;I i,n,t,*v;
+F1(jtjpr){A y;I i,n,t,*v;
  RZ(w);
  t=AT(w);
   // if w is a noun, format it and output it

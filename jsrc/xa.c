@@ -7,22 +7,22 @@
 #include "x.h"
 
 
-F1(jtassertq){F1PREF;ASSERTMTV(w); R scb(jt->assert);}
+F1(jtassertq){ASSERTMTV(w); R scb(jt->assert);}
 
-F1(jtasserts){F1PREF;B b; RE(b=b0(w)); jt->assert=b; R mtm;}
+F1(jtasserts){B b; RE(b=b0(w)); jt->assert=b; R mtm;}
 
-F1(jtboxq){F1PREF;ASSERTMTV(w); R ca(jt->bxa);}
+F1(jtboxq){ASSERTMTV(w); R ca(jt->bxa);}
 
-F1(jtboxs){F1PREF;A x;
+F1(jtboxs){A x;
  RZ(w=vs(w));
  ASSERT(11==*AS(w),EVLENGTH);
  x=jt->bxa; RZ(jt->bxa=ra(w)); jt->bx=CAV(jt->bxa); fa(x);
  R mtv;
 }
 
-F1(jtctq){F1PREF;ASSERTMTV(w); R scf(jt->ct);}
+F1(jtctq){ASSERTMTV(w); R scf(jt->ct);}
 
-F1(jtcts){F1PREF;D d;
+F1(jtcts){D d;
  ASSERT(!AR(w),EVRANK);
  RZ(w=cvt(FL,w)); d=*DAV(w);
  ASSERT(0<=d,EVDOMAIN); 
@@ -31,9 +31,9 @@ F1(jtcts){F1PREF;D d;
  R mtv;
 }
 
-F1(jtdispq){F1PREF;A z; ASSERTMTV(w); GA(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
+F1(jtdispq){A z; ASSERTMTV(w); GA(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
 
-F1(jtdisps){F1PREF;I n;
+F1(jtdisps){I n;
  RZ(w=vi(w));
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);
@@ -43,9 +43,9 @@ F1(jtdisps){F1PREF;I n;
  R mtv;
 }
 
-F1(jtdotnamesq){F1PREF;ASSERTMTV(w); R jt->dotnames?one:zero;}
+F1(jtdotnamesq){ASSERTMTV(w); R jt->dotnames?one:zero;}
 
-F1(jtdotnamess){F1PREF;B b,c;
+F1(jtdotnamess){B b,c;
  RZ(w);
  ASSERT(!AR(w),EVRANK);
  if(!(B01&AT(w)))RZ(w=cvt(B01,w));
@@ -62,9 +62,9 @@ F1(jtdotnamess){F1PREF;B b,c;
  R mtv;
 }
 
-F1(jtevmq){F1PREF;ASSERTMTV(w); R behead(jt->evm);}
+F1(jtevmq){ASSERTMTV(w); R behead(jt->evm);}
 
-F1(jtevms){F1PREF;A t,*tv,*wv;
+F1(jtevms){A t,*tv,*wv;
  RZ(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
@@ -78,25 +78,25 @@ F1(jtevms){F1PREF;A t,*tv,*wv;
  R mtv;
 }
 
-F1(jtfxx){F1PREF;
+F1(jtfxx){
  RZ(w);
  ASSERT(AT(w)&LIT+BOX,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  R fx(ope(w)); 
 }
 
-F1(jtiepdoq){F1PREF;ASSERTMTV(w); R scb(jt->iepdo);}
+F1(jtiepdoq){ASSERTMTV(w); R scb(jt->iepdo);}
 
-F1(jtiepdos){F1PREF;B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
+F1(jtiepdos){B b; RE(b=b0(w)); jt->iepdo=b; R mtm;}
 
-F1(jtiepq){F1PREF;
+F1(jtiepq){
  ASSERTMTV(w); 
  ASSERT(1==AR(w),EVRANK);
  ASSERT(!AN(w),EVDOMAIN); 
  R jt->iep?jt->iep:mtv;
 }
 
-F1(jtieps){F1PREF;
+F1(jtieps){
  RZ(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
@@ -107,7 +107,7 @@ F1(jtieps){F1PREF;
 
 I prokey=1; /* enabled for 5.01 beta */
 
-F1(jtoutparmq){F1PREF;A z;D*u,x;I*v;
+F1(jtoutparmq){A z;D*u,x;I*v;
  ASSERTMTV(w);
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){
   GA(z,FL, 4,1,0); u=DAV(z);
@@ -125,7 +125,7 @@ F1(jtoutparmq){F1PREF;A z;D*u,x;I*v;
  R z;
 }
 
-F1(jtoutparms){F1PREF;I*v;
+F1(jtoutparms){I*v;
  RZ(w=vib(w));
  ASSERT(1==AR(w),EVRANK);
  ASSERT(4==AN(w),EVLENGTH);
@@ -141,9 +141,9 @@ F1(jtoutparms){F1PREF;I*v;
  R mtv;
 }
 
-F1(jtposq){F1PREF;ASSERTMTV(w); R v2(jt->pos[0],jt->pos[1]);}
+F1(jtposq){ASSERTMTV(w); R v2(jt->pos[0],jt->pos[1]);}
 
-F1(jtposs){F1PREF;I n,p,q,*v;
+F1(jtposs){I n,p,q,*v;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  ASSERT(1>=AR(w),EVRANK);
@@ -154,32 +154,32 @@ F1(jtposs){F1PREF;I n,p,q,*v;
  R mtv;
 }
 
-F1(jtppq){F1PREF;C*end;I k;
+F1(jtppq){C*end;I k;
  ASSERTMTV(w);
  k = strtoI(3+jt->pp, &end, 10);
  R sc(k);
 }
 
-F1(jtpps){F1PREF;I k;
+F1(jtpps){I k;
  RE(sc(k=i0(w))); ASSERT(0<k,EVDOMAIN); ASSERT(k<=NPP,EVLIMIT);
  sprintf(3+jt->pp,FMTI"g", k);
  R mtv;
 }
 
-F1(jtretcommq){F1PREF;ASSERTMTV(w); R scb(jt->retcomm);}
+F1(jtretcommq){ASSERTMTV(w); R scb(jt->retcomm);}
 
-F1(jtretcomms){F1PREF;B b; RE(b=b0(w)); jt->retcomm=b; R mtm;}
+F1(jtretcomms){B b; RE(b=b0(w)); jt->retcomm=b; R mtm;}
 
-F1(jtseclevq){F1PREF;ASSERTMTV(w); R sc(jt->seclev);}
+F1(jtseclevq){ASSERTMTV(w); R sc(jt->seclev);}
 
-F1(jtseclevs){F1PREF;I k; 
+F1(jtseclevs){I k; 
  RE(k=i0(w)); 
  ASSERT(0==k||1==k,EVDOMAIN); 
  if(!jt->seclev&&1==k)jt->seclev=k;
  R mtm;
 }
 
-F1(jtsysparmq){F1PREF;I k;
+F1(jtsysparmq){I k;
  RE(k=i0(w));
  switch(k){
   default: ASSERT(0,EVINDEX);
@@ -189,7 +189,7 @@ F1(jtsysparmq){F1PREF;I k;
   case 3:  R sc(jt->fcalli);
 }}
 
-F1(jtsysparms){F1PREF;A*wv;I k,m,wd;
+F1(jtsysparms){A*wv;I k,m,wd;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
@@ -206,7 +206,7 @@ F1(jtsysparms){F1PREF;A*wv;I k,m,wd;
  R mtm;
 }
 
-F1(jtsysq){F1PREF;I j;
+F1(jtsysq){I j;
  ASSERTMTV(w);
  switch(SYS){
   case SYS_PC:        j=0;                break;

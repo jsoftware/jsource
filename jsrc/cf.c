@@ -14,30 +14,30 @@
 #define CAP1            {z=CALL1(g1,CALL1(h1,  w,hs),gs);}
 #define CAP2            {z=CALL1(g1,CALL2(h2,a,w,hs),gs);}
 
-static DF1(jtcork1){F1PREF;DECLFGH;PROLOG;A z;  CAP1; EPILOG(z);}
-static DF2(jtcork2){F2PREF;DECLFGH;PROLOG;A z;  CAP2; EPILOG(z);}
-static DF1(jtfolk1){F1PREF;DECLFGH;PROLOG;A z; FOLK1; EPILOG(z);}
-static DF2(jtfolk2){F2PREF;DECLFGH;PROLOG;A z; FOLK2; EPILOG(z);}
+static DF1(jtcork1){DECLFGH;PROLOG;A z;  CAP1; EPILOG(z);}
+static DF2(jtcork2){DECLFGH;PROLOG;A z;  CAP2; EPILOG(z);}
+static DF1(jtfolk1){DECLFGH;PROLOG;A z; FOLK1; EPILOG(z);}
+static DF2(jtfolk2){DECLFGH;PROLOG;A z; FOLK2; EPILOG(z);}
 
 static B jtcap(J jt,A x){V*v;
  while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(x=symbrd(v->f)));
  R CCAP==v->id;
 }
 
-static DF1(jtcorx1){F1PREF;DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
-static DF2(jtcorx2){F2PREF;DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
+static DF1(jtcorx1){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
+static DF2(jtcorx2){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
      /* f g h where f may be [: */
 
-static DF1(jtnvv1){F1PREF;DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL1(h1,  w,hs),gs));}
-static DF2(jtnvv2){F2PREF;DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL2(h2,a,w,hs),gs));}
+static DF1(jtnvv1){DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL1(h1,  w,hs),gs));}
+static DF2(jtnvv2){DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL2(h2,a,w,hs),gs));}
 
-static DF2(jtfolkcomp){F2PREF;DECLFGH;PROLOG;A z;AF f;
+static DF2(jtfolkcomp){DECLFGH;PROLOG;A z;AF f;
  RZ(a&&w);
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
  EPILOG(z);
 }
 
-static DF2(jtfolkcomp0){F2PREF;DECLFGH;PROLOG;A z;AF f;D oldct=jt->ct;
+static DF2(jtfolkcomp0){DECLFGH;PROLOG;A z;AF f;D oldct=jt->ct;
  RZ(a&&w);
  jt->ct=0;
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
@@ -45,10 +45,10 @@ static DF2(jtfolkcomp0){F2PREF;DECLFGH;PROLOG;A z;AF f;D oldct=jt->ct;
  EPILOG(z);
 }
 
-static DF1(jtcharmapa){F1PREF;V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
-static DF1(jtcharmapb){F1PREF;V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
+static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
+static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
-A jtfolk(J jt,A f,A g,A h){F2PREF;A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id; 
  hv=VAV(h); hi=hv->id; 
@@ -105,15 +105,15 @@ A jtfolk(J jt,A f,A g,A h){F2PREF;A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,
 }
 
 
-static DF1(taa){F1PREF;TDECL;A t=df1(w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(t,gs);}
-static DF1(tvc){F1PREF;TDECL; R df2(fs,w,gs);}  /* also nc */
-static DF1(tcv){F1PREF;TDECL; R df2(w,gs,fs);}  /* also cn */
+static DF1(taa){TDECL;A t=df1(w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(t,gs);}
+static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
+static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
 
 static CS1(jthook1, CALL2(f2,w,CALL1(g1,w,gs),fs))
 static CS2(jthook2, CALL2(f2,a,CALL1(g1,w,gs),fs))
 
-static DF1(jthkiota){F1PREF;DECLFG;A a,e;I n;P*p;
+static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  RZ(w);
  n=IC(w);
  if(SB01&AT(w)&&1==AR(w)){
@@ -123,13 +123,13 @@ static DF1(jthkiota){F1PREF;DECLFG;A a,e;I n;P*p;
  R B01&AT(w)&&1>=AR(w) ? ifb(n,BAV(w)) : repeat(w,IX(n));
 }    /* special code for (# i.@#) */
 
-static DF1(jthkodom){F1PREF;DECLFG;B b=0;I n,*v;
+static DF1(jthkodom){DECLFG;B b=0;I n,*v;
  RZ(w);
  if(INT&AT(w)&&1==AR(w)){n=AN(w); v=AV(w); DO(n, if(b=0>v[i])break;); if(!b)R odom(2L,n,v);}
  R CALL2(f2,w,CALL1(g1,w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
-static DF2(jthkeps){F2PREF;
+static DF2(jthkeps){
  RZ(a&&w);
  if(AT(a)==AT(w)&&AT(a)&IS1BYTE&&1==AN(a)){A z;
   GA(z,B01,1,AR(a),AS(a)); 
@@ -139,11 +139,11 @@ static DF2(jthkeps){F2PREF;
  R eps(a,gah(1L,w));
 }    /* special code for (e.,) */
 
-static DF2(jthkfrom){F2PREF;R from(a,gah(1L,w));}     /* special code for ({ ,) */
-static DF2(jthktake){F2PREF;R take(a,gah(1L,w));}     /* special code for ({.,) */
-static DF2(jthkdrop){F2PREF;R drop(a,gah(1L,w));}     /* special code for (}.,) */
+static DF2(jthkfrom){R from(a,gah(1L,w));}     /* special code for ({ ,) */
+static DF2(jthktake){R take(a,gah(1L,w));}     /* special code for ({.,) */
+static DF2(jthkdrop){R drop(a,gah(1L,w));}     /* special code for (}.,) */
 
-static DF1(jthkindexofmaxmin){F1PREF;D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
+static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
  RZ(w&&self);
  n=AN(w); t=AT(w);
  if(!(1==AR(w)&&t&INT+FL))R hook1(w,self);
@@ -162,7 +162,7 @@ static DF1(jthkindexofmaxmin){F1PREF;D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 
-F2(jthook){F2PREF;AF f1=0,f2=0;C c,d,e,id;I flag=0;V*u,*v;
+F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=0;V*u,*v;
  RZ(a&&w);
  switch(BD(AT(a),AT(w))){
   default:            ASSERT(0,EVSYNTAX);

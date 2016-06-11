@@ -7,7 +7,7 @@
 #include "p.h"
 
 
-#define PARSERSTKALLO (490*2)  // number of stack entries to allocate, when we allocate
+#define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
 
 /* NVR - named value reference                                          */
 /* a value referenced in the parser which is the value of a name        */
@@ -44,46 +44,50 @@ B jtparseinit(J jt){A x;
 }
 
 // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
-// a deferred decrement for the block.  We expect that this call will be followed by a fa() call,
-// so we increment this use count if we find a match, to nullify the subsequent fa().
-void jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
+// a deferred decrement for the block.  Return 1 if a deferred decrement was created, 0 if not (including
+// the case where there was already a deferred-decrement)
+B jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
  // then, to make sure we don't increment the same use count twice by continued scanning
- DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){ra(w); *v = (A)~(I)w; break;}else if(~0==s) break; ++v;);
+ DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){*v = (A)~(I)w; R 1;}else if(~0==s) break; ++v;);
+ R 0;  // if we get through without requesting a decrement, return 0
 }    /* stack handling for w which is about to be redefined */
 
-static F2(jtisf){F2PREF;R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
+static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
 
-static ACTION(jtis){F1PREF;A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1; 
- n=stack[0]; v=stack[4];   // extract arguments
- if((I)stack[1]==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(LIT&AT(n)&&1>=AR(n)){
-  // lhs is ASCII characters, atom or list.  Convert it to words
-  //ASSERT(1>=AR(n),EVRANK); must be true
-  s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
-  RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
-  if(1==AN(n)){
-   // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
-   if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
+static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
+ n=stack[0].a; v=stack[2].a;   // extract arguments
+ if(stack[0].t.tno==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ if(jt->zombiesym){symbis(n,v,(A)1);}   // Assign to the known name. 1 is any nonzero
+ else {
+  if(LIT&AT(n)&&1>=AR(n)){
+   // lhs is ASCII characters, atom or list.  Convert it to words
+   //ASSERT(1>=AR(n),EVRANK); must be true
+   s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
+   RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
+   if(1==AN(n)){
+    // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
+    if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
+   }
   }
+  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
+  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+  // depending on which type of assignment (but if there is no local symbol table, always use the global)
+  f=stack[1].a; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
+  // if simple assignment to a name (normal case), do it
+  if(NAME&AT(n)) symbis(n,v,jt->symb);
+  // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
+  else if(!AR(n))symbis(onm(n),v,jt->symb);
+  // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+  // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+  // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+  // if not AR assignment, just open each box of rhs and assign
+  else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,jtisf);}
  }
- ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
- // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
- // depending on which type of assignment (but if there is no local symbol table, always use the global)
- f=stack[2]; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
- // if simple assignment to a name (normal case), do it
- if(NAME&AT(n)) symbis(n,v,jt->symb);
- // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
- else if(!AR(n))symbis(onm(n),v,jt->symb);
- // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
- // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
- // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
- // if not AR assignment, just open each box of rhs and assign
- else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,jtisf);}
- jt->symb=0;   // Restore to no symbol table selected
- stack[5]=stack[3];  // clean up stack after execution
- RNE(stack+4);  // the result is the same value that was assigned
+ // obsolete jt->symb=0;   // Restore to no symbol table selected
+ stack[2].t.ipt=stack[1].t.tno;  // clean up stack after execution; clear ip to indicate can't in-place the assignment result
+ RNE(stack+2);  // the result is the same value that was assigned
 }
 
 
@@ -91,16 +95,16 @@ static ACTION(jtis){F1PREF;A f,n,v;B ger=0;C c,*s;A* stack=jt->parserstkend1;
 #define CAVN  (CONJ+ADV+VERB+NOUN)
 #define EDGE  (MARK+ASGN+LPAR)
 
-// for speed, we encode the stack offset of the token-on-error offset into bits 1-2 of the index of the action routine
-#define PMONAD1 2+0
-#define PMONAD2 4+0
-#define PDYAD 4+1
-#define PADV 4+8
-#define PCONJ 4+9
-#define PTRIDENT 2+1
-#define PBIDENT 2+8
-#define PASGN 2+9
-#define PPAREN 6+0   // error offset immaterial, since never fails
+// for speed, we encode the stack offset of the token-on-error offset into bits 0-1 of the index of the action routine
+#define PMONAD1 1+0
+#define PMONAD2 2+0
+#define PDYAD 2+4
+#define PADV 2+8
+#define PCONJ 2+12
+#define PTRIDENT 1+4
+#define PBIDENT 1+8
+#define PASGN 1+12
+#define PPAREN 3+0   // error offset immaterial, since never fails
 #define PNOMATCH 0
 
 PT cases[] = {
@@ -116,7 +120,7 @@ PT cases[] = {
 };
 
 // Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
-F1(jtparse){F1PREF;A z;
+F1(jtparse){A z;
  RZ(w);
  RZ(deba(DCPARSE,0L,w,0L));
  z=parsea(w);
@@ -124,19 +128,63 @@ F1(jtparse){F1PREF;A z;
  R z;
 }
 
+
 #define FP {stack = 0; goto exitparse;}   // indicate parse failure
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
 
-// Set in-place flags for non-assignment operands when the use-count is 1.  Bit 0 is for y, bit 1 for x 
-#define IPMONAD(w) ((J)((I)jt+(AC(stack[w])==1)))
-#define IPDYAD(a,w) ((J)((I)jt+(AC(stack[w])==1)+2*(AC(stack[a])==1)))
+// Prep for in-place operations.
+// If the top-of-stack is ASGN, we will peek into the queue to get the symbol-table entry for the
+// name about to be assigned.  jt->zombiesym will point to the symbol-table entry for the assignee
+// provided:
+//  usecount==1
+//  DIRECT type
+//  stack will be empty after the current execution
+//  The verb supports in-place ops
+//  local assignment
+//  not assigning to a locative
+// It is 0 otherwise.  When zombiesym is set, the data block for
+// the assignee may be used as a free block.  zombiesym must be cleared:
+//  when the assignment is performed
+//  if an error is encountered (preventing the assignment)
+// Set zombiesym if current assignment can be in-place.  w is the end of the assignment
+#define IPSETZOMB(w) if(AT(stack[0].a)==ASGN&&stack[(w)+1].a==mark&&AT(queue[m])==NAME&&CAV(stack[0].a)[0]==CASGN&&jt->local \
+   &&AN(queue[m])==NAV(queue[m])->m&&(s=probe(queue[m],jt->local))&&s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombiesym=s
+
+// In-place operands
+// An operand is in-placeable if:
+//  usecount==1
+//  DIRECT type
+//  was NOT moved in from the queue (i. e. is the result of an execution)
+//   tokens from the queue may be reused later in another execution of the sentence.
+//   The MSB of the word-number on the stack is set to indicate it came from execution
+//  the verb supports in-place ops
+// An in-placeable operand is indicated by setting the LSB of the argument address
+// NOTE that in name =: x i} name, the zombiesym will be set but the name operand will NOT be marked inplace.  The action routine
+// should check the operand addresses when zombiesym is set.
+#define INPLACEJ(x) ((stack[x].t.ip&&AT(stack[x].a)&DIRECT&&AC(stack[x].a)==1))
+#define INPLACEJW(w) ((J)((UI)jt+INPLACEJ(w)))
+#define INPLACEJAW(a,w) ((J)((UI)jt+2*INPLACEJ(a)+INPLACEJ(w)))
+#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w); y=jtdfs1(INPLACEJW(w),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w); y=jtdfs2(INPLACEJAW(aa,w),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+// Storing the result
+// We store the result into the stack and move the token-number for it.  We set the
+// in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
+// the result address matches an operand address, we keep the flag from the stack entry that
+// matched.  The idea is that if (] y) returns the address of y, we should use the same flags that y had
+// we pass in the stack index of the verb, and infer the operands from that
+// z=result stack index, a/w=stack index of argument(s), t=source for token number
+#define STO1(z,w,tok) {stack[z].t.tno=stack[tok].t.tno; stack[z].t.ip=(y==stack[w].a)?stack[w].t.ip : 1; EPZ(stack[z].a=y)}
+#define STO2(z,aa,w,tok) {stack[z].t.tno=stack[tok].t.tno; stack[z].t.ip=(y==stack[aa].a)?stack[aa].t.ip : (y==stack[w].a)?stack[w].t.ip : 1; EPZ(stack[z].a=y)}
+
+// Closing up the stack
+#define SM(to,from) stack[to]=stack[from]
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
+F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;L* s;  // symbol-table entry
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
- A *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
+ PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
@@ -154,6 +202,7 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
  // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original
  // word m-1, with the number in the stack being one higher than the original word number
  queue=AAV(w)-1;
+ ASSERT(!(AT(queue[1])&ASGN),EVSYNTAX);   // make sure there is something before each ASGN
 
  // As names are dereferenced, they are added to the nvr queue.  To save time in the loop, we now
  // make sure there is enough room in the nvr queue to handle all the names we will encounter in
@@ -175,15 +224,15 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
  // to use if there is an error on the word
  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
  // The stack grows down
- if(oend1-obgn >= 2*(m+4))stack=oend1-3*2;   // if we can use the previous allocation, start at the end, with 3 marks
+ if((U)oend1-(U)obgn >= (m+4)*sizeof(PSTK))stack=oend1-3;   // if we can use the previous allocation, start at the end, with 3 marks
  else{
-   I allo = MAX(2*(m+4),PARSERSTKALLO); // number of ints to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-   GA(y,INT,allo,1,0);
-   jt->parserstkbgn=(A*)AV(y);   // save start of data area
-   stack=jt->parserstkbgn+allo-3*2;  // point to the ending marks
+   I allo = MAX((m+4)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
+   GA(y,B01,allo,1,0);
+   jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
+   stack=(PSTK*)((U)jt->parserstkbgn+allo)-3;  // point to the ending marks
  }
  // We have the initial stack pointer.  Grow the stack down from there
- stack[0] = stack[2] = stack[4] = mark;  // install initial ending marks.  word numbers are unused
+ stack[0].a = stack[1].a = stack[2].a = mark;  // install initial ending marks.  word numbers are unused
 
  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
  es = 2;
@@ -193,7 +242,7 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
  while(1){  // till no more matches possible...
   // Search for a match per the parse table.  Ordered for speed, taking into account that ) and CONJ
   // have been shifted out of the first position
-#define ST(i) AT(stack[2*i])
+#define ST(i) AT(stack[i].a)
   if(ST(2) & CAVN) { // cases 0-7
    if(ST(0) == NAME)i = PASGN;   // NAME is set only if followed by ASGN
    else {  // cases 0-6
@@ -218,19 +267,17 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
                    // sentence will have a syntax error, while RPAR might just be passing through
 
   // end of match analysis.  i indicates what we matched
-  if(i&6){  // if not PNOMATCH... (we test this way to start calculating the token-in-error offset)
+  if(i&3){  // if not PNOMATCH... (we test this way to start calculating the token-in-error offset)
    // This is where we execute the action routine.  We give it the stack frame; it is responsible
    // for finding its arguments on the stack, storing the result (if no error) over the last
    // stack entry, then closing up any gap between the front-of-stack and the executed fragment,
    // and finally returning the new front-of-stack pointer
-   *dci = (I)stack[(i&6)|1];  // set the token-in-error, using the offset encoded into i
+   *dci = stack[(i&3)].t.tno;  // set the token-in-error, using the offset encoded into i
    // Save the current stack pointer for use as end+1 pointer by the next parse.  This is a design issue.  Should we
    // take the time to store the stack pointer on every execution, or just move it back the maximum possible amount
    // before the loop?  The maximum possible amount may be much larger than actual stack usage, making for
-   // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.  We
-   // compromise by storing the end pointer, but NOT passing the stack pointer as an argument to the action routine.
-   // The action routine will pull the stack pointer from jt.  So, it's the same number of memory operations, though perhaps a little
-   // slower because jt is not on the stack.
+   // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.
+   // We store it every time here, which is probably not the right answer.
    jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
    switch(i) {
    // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
@@ -242,21 +289,21 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
    // Return the new stack pointer, which is the relocated beginning-of-stack
    // Set the in-place flags for verb arguments
    case PMONAD1:
-   EPZ(stack[4] = jtdfs1(IPMONAD(2), stack[4], stack[2])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   DFSIP1(1,2) STO1(2,2,1) SM(1,0); stack += 1; break;
    case PMONAD2:
-   EPZ(stack[6] = jtdfs1(IPMONAD(4), stack[6], stack[4])); stack[7] = stack[5]; stack[4] = stack[2]; stack[2] = stack[0]; stack[5] = stack[3]; stack[3] = stack[1]; stack += 2; break;
+   DFSIP1(2,3) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; break;  //STO(z,w,toksource)
    case PDYAD:
-   EPZ(stack[6] = jtdfs2(IPDYAD(2,6), stack[2], stack[6], stack[4])); stack[7] = stack[5]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,1); SM(1,0); stack += 1; break;  //STO(z,a,w,toksource)
    case PADV:
-   EPZ(stack[4] = jtdfs1(jt, stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t.ipt = stack[1].t.ipt;SM(1,0); stack += 1; break;
    case PCONJ:
-   EPZ(stack[6] = jtdfs2(jt, stack[2], stack[6], stack[4])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   EPZ(stack[3].a = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t.ipt = stack[1].t.ipt;SM(2,0); stack += 2; break;
    case PTRIDENT:
-   EPZ(stack[6] = jtfolk(jt, stack[2], stack[4], stack[6])); stack[7] = stack[3]; stack[5] = stack[1]; stack[4] = stack[0]; stack += 4; break;
+   EPZ(stack[3].a = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t.ipt = stack[1].t.ipt;SM(2,0); stack += 2; break;
    case PBIDENT:
-   EPZ(stack[4] = jthook(jt, stack[2], stack[4])); stack[5] = stack[3]; stack[3] = stack[1]; stack[2] = stack[0]; stack += 2; break;
+   EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t.ipt = stack[1].t.ipt;SM(1,0); stack += 1; break;
    case PPAREN:
-   stack[5] = stack[1]; stack[4] = stack[2]; stack += 4; break; // Can't fail; use value from expr, token # from (
+   stack[2].a=stack[1].a; stack[2].t.ip=stack[1].t.ip; stack[2].t.tno=stack[0].t.tno; stack += 2; break; // Can't fail; use value and inplaceable from expr, token # from (
    case PASGN: if(!(stack=jtis(jt)))EP break;
    }
 
@@ -272,11 +319,11 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
    do{
     I at;  // type of the new word (before name resolution)
 
-    stack -= 2;  // back up to new stack frame, where we will store the new word
-    stack[1] = (A)m;  // install the original token number for the word
+    stack--;  // back up to new stack frame, where we will store the new word
+    stack[0].t.ipt = m;  // install the original token number for the word, and clear in-placeable flag
 
     if(m<=0) {  // Toward the end we have to worry about underrunning the queue, and pulling the virtual mark
-      if(m==0) {stack[0] = mark; --m; break;}  // move in the mark and use it, and pop the stack
+      if(m==0) {stack[0].a = mark; --m; break;}  // move in the mark and use it, and pop the stack
       EP       // if there's nothing more to pull, parse is over
     }
 
@@ -284,8 +331,7 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
     // value.
     at=AT(y = queue[m--]);   // fetch the next word from queue; pop the queue; extract the type
     if(at==NAME) {
-     if(AT(stack[2])!=ASGN) {  // Replace a name with its value, unless to left of ASGN
-      L* s;  // symbol-table entry for name
+     if(AT(stack[1].a)!=ASGN) {  // Replace a name with its value, unless to left of ASGN
 
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -324,13 +370,8 @@ F1(jtparsea){F1PREF;A *stack,*queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*d
     // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
     } else if(at&RPAR+CONJ){es = (at>>RPARX)+(1/(RPARX>CONJX));}  // 1 for CONJ, 2 for RPAR; the RPARX>CONJX bit is to give a compile-time error if RPARX is not > CONJX
 
-    // If the type may be in-placeable, make sure we don't try to in-place it, since it may be a saved name or a noun value
-    // saved in a list of script words.
-    // WE CAN MOVE THIS TEST to the name path if we have each script word stored with AC>1
-    if(AT(y)&B01+INT+FL && AN(y)==1 && AC(y)==1)++AC(y), tpush(y);  // kludge Need AN to avoid messing up }-in-place & other in-places, till we get better solution 
-
     // y has the resolved value, which is never a NAME unless there is an assignment immediately following
-    stack[0] = y;   // finish setting the stack entry, with the new word
+    stack[0].a = y;   // finish setting the stack entry, with the new word
    }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
    // words have been pulled from queue
 
@@ -351,21 +392,12 @@ exitparse:
 
  // NOW it is OK to return
 
- RZ(stack);  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled
+ if(!stack){jt->zombiesym=0; R 0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
 
  // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
- // stack[2] is the initial mark, stack[4] is the result, and stack[6] had better be the first ending mark
- z=stack[4];   // stack[1..2] are the mark; this is the sentence result, if there is no error
- ASSERT(AT(z)&MARK+CAVN&&AT(stack[6])==MARK,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
+ // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
+ z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
+ ASSERT(AT(z)&MARK+CAVN&&stack[3].a==mark,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
  R z;
 }
 
-/* locals in parsea                                             */
-/* i:     index in cases[] of matching 4-pattern                */
-/* m:     current # of non-mark words in the queue              */
-/* otop:  old value of jt->nvrtop                               */
-/* queue: queue, taken from the input                           */
-/* stack: parser stack, (word,count) pairs                      */
-/* w:     argument containing the queue                         */
-/* y:     array temp                                            */
-/* z:     result                                                */

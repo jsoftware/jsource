@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-static DF1(jtonf1){F1PREF;PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
+static DF1(jtonf1){PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  PREF1(jtonf1);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
@@ -15,7 +15,7 @@ static DF1(jtonf1){F1PREF;PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  EPILOG(z);
 }
 
-static DF2(jtuponf2){F2PREF;PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
+static DF2(jtuponf2){PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  RZ(a&&w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
@@ -46,7 +46,7 @@ static I dmodpow(D x,I n,D m){D z=1; while(n){if(1&n)z=fmod(z*x,m); x=fmod(x*x,m
 
 static I imodpow(I x,I n,I m){I z=1; while(n){if(1&n)z=(z*x)%m;     x=(x*x)%m;     n>>=1;} R   z;}
 
-static DF2(jtmodpow2){F2PREF;A h;B b,c;I at,m,n,wt,x,z;
+static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  PREF2(jtmodpow2);
  h=VAV(self)->h; 
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
@@ -70,13 +70,13 @@ static DF2(jtmodpow2){F2PREF;A h;B b,c;I at,m,n,wt,x,z;
  R sc(b?z-m:z);
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
-static DF1(jtmodpow1){F1PREF;A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpow2);}
+static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpow2);}
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 static CS1(on1,  CALL1(f1,CALL1(g1,w,gs),fs))
 static CS2(jtupon2,CALL1(f1,CALL2(g2,a,w,gs),fs))
 
-static DF2(on2){F2PREF;PROLOG;DECLFG;A ga,gw,z; 
+static DF2(on2){PROLOG;DECLFG;A ga,gw,z; 
  PREF2(on2); 
  gw=CALL1(g1,w,gs);
  ga=CALL1(g1,a,gs);
@@ -84,20 +84,20 @@ static DF2(on2){F2PREF;PROLOG;DECLFG;A ga,gw,z;
  EPILOG(z);
 }
 
-static DF2(atcomp){F2PREF;AF f;
+static DF2(atcomp){AF f;
  RZ(a&&w); 
  f=atcompf(a,w,self); 
  R f?f(jt,a,w,self):upon2(a,w,self);
 }
 
-static DF2(atcomp0){F2PREF;A z;AF f;D oldct=jt->ct;
+static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
  RZ(a&&w);
  f=atcompf(a,w,self);
  jt->ct=0; z=f?f(jt,a,w,self):upon2(a,w,self); jt->ct=oldct; 
  R z;
 }
 
-F2(jtatop){F2PREF;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag=0,m=-1;V*av,*wv;
+F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag=0,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=VAV(a); c=av->id;
  wv=VAV(w); d=wv->id;
@@ -132,7 +132,7 @@ F2(jtatop){F2PREF;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag=0,m=-1
  R fdef(CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
-F2(jtatco){F2PREF;A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag=0,j,m=-1;V*av,*wv;
+F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=VAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
  wv=VAV(w); d=wv->id;
@@ -171,7 +171,7 @@ F2(jtatco){F2PREF;A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag=0,j,m=-1;V*av,
  R fdef(CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
-F2(jtampco){F2PREF;AF f1=on1;C c,d;I flag=0;V*wv;
+F2(jtampco){AF f1=on1;C c,d;I flag=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=VAV(w); d=wv->id;
  if     (c==CSLASH&&d==CCOMMA)         f1=jtredravel;
@@ -180,25 +180,25 @@ F2(jtampco){F2PREF;AF f1=on1;C c,d;I flag=0;V*wv;
  R fdef(CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
-static DF1(withl){F1PREF;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):CALL2(g2,fs,w,gs);}
-static DF1(withr){F1PREF;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):CALL2(f2,w,gs,fs);}
+static DF1(withl){DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):CALL2(g2,fs,w,gs);}
+static DF1(withr){DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):CALL2(f2,w,gs,fs);}
 
-static DF1(ixfixedleft  ){F1PREF;V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
-static DF1(ixfixedright ){F1PREF;V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
+static DF1(ixfixedleft  ){V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
+static DF1(ixfixedright ){V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
 
-static DF1(ixfixedleft0 ){F1PREF;A z;D old=jt->ct;V*v=VAV(self); 
+static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=VAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->f,w,v->h); jt->ct=old; 
  R z;
 }
 
-static DF1(ixfixedright0){F1PREF;A z;D old=jt->ct;V*v=VAV(self); 
+static DF1(ixfixedright0){A z;D old=jt->ct;V*v=VAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->g,w,v->h); jt->ct=old; 
  R z;
 }
 
-static DF2(with2){F2PREF;R df1(w,powop(self,a,0));}
+static DF2(with2){R df1(w,powop(self,a,0));}
 
-F2(jtamp){F2PREF;A h=0;AF f1=on1,f2=on2;B b;C c,d=0;D old=jt->ct;I flag=0,mode=-1,p,r;V*u,*v;
+F2(jtamp){A h=0;AF f1=on1,f2=on2;B b;C c,d=0;D old=jt->ct;I flag=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
   default: ASSERTSYS(0,"amp");

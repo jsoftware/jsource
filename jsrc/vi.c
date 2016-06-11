@@ -606,26 +606,26 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  R fn(jt,mode+IPHOFFSET,m,n,c,k,AR(a),AR(w),(I)1,(I)1,(I)0,(I)0,a,w,&h,z);
 }
 
-F2(jtindexof){F2PREF;R indexofsub(IIDOT,a,w);}
+F2(jtindexof){R indexofsub(IIDOT,a,w);}
      /* a i."r w */
 
-F2(jtjico2){F2PREF;R indexofsub(IICO,a,w);}
+F2(jtjico2){R indexofsub(IICO,a,w);}
      /* a i:"r w */
 
-F1(jtnubsieve){F1PREF;
+F1(jtnubsieve){
  RZ(w);
  if(SPARSE&AT(w))R nubsievesp(w); 
  if(jt->rank)jt->rank[0]=jt->rank[1]; 
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
 
-F1(jtnub){F1PREF; 
+F1(jtnub){ 
  RZ(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA+AFREL)R repeat(nubsieve(w),w); 
  R indexofsub(INUB,w,w);
 }    /* ~.w */
 
-F2(jtless){F2PREF;A x=w;I ar,at,k,r,*s,wr,*ws,wt;
+F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
@@ -635,7 +635,7 @@ F2(jtless){F2PREF;A x=w;I ar,at,k,r,*s,wr,*ws,wt;
      repeat(not(eps(a,x)),a);
 }    /* a-.w */
 
-F2(jteps){F2PREF;I l,r,rv[2];
+F2(jteps){I l,r,rv[2];
  RZ(a&&w);
  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
  rv[1]=l=jt->rank?jt->rank[0]:AR(a); jt->rank=0;
@@ -644,19 +644,19 @@ F2(jteps){F2PREF;I l,r,rv[2];
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
 
-F1(jtnubind){F1PREF;
+F1(jtnubind){
  RZ(w);
  R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
-F1(jtnubind0){F1PREF;A z;D oldct=jt->ct;
+F1(jtnubind0){A z;D oldct=jt->ct;
  RZ(w);
  jt->ct=0.0; z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); jt->ct=oldct;
  R z;
 }    /* I.@(~:!.0) w */
 
 
-F1(jtsclass){F1PREF;A e,x,xy,y,z;I c,j,m,n,*v;P*p;
+F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
  if(!AR(w))R reshape(v2(1L,1L),one);
  n=IC(w);

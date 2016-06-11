@@ -359,7 +359,7 @@ B valueisint; // set if the value we are processing is really an int
 }
 
 // x ". y
-F2(jtexec2){F2PREF;A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
+F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
  RZ(a&&w);
  ASSERT(!AR(a),EVRANK);  // x must be an atom
  at=AT(a);

@@ -32,11 +32,3 @@ extern TACT(jtvis);
 extern TACT(jtvmonad);
 extern TACT(jtvpunc);
 
-extern ACTION(jtadv);
-extern ACTION(jtbident);
-extern ACTION(jtconj);
-extern ACTION(jtdyad);
-extern ACTION(jtis);
-extern ACTION(jtmonad);
-extern ACTION(jtpunc);
-

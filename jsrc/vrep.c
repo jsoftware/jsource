@@ -260,7 +260,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 
-F2(jtrepeat){F2PREF;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt;
+F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 

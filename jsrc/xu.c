@@ -98,7 +98,7 @@ static I wtomsize(US* src, I srcn){ US w;I r=0;
  R r;
 }
 
-F1(jttoutf16){F1PREF;A z;I n,t,q,b=0; C* wv; US* c2v; 
+F1(jttoutf16){A z;I n,t,q,b=0; C* wv; US* c2v; 
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
  if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 
  if(LIT&t)
@@ -126,7 +126,7 @@ F1(jttoutf16){F1PREF;A z;I n,t,q,b=0; C* wv; US* c2v;
   ASSERT(0, EVDOMAIN);
 }    // 7 u: x - utf16 from LIT or C2T
 
-F1(jttoutf8){F1PREF;A z;I n,t,q;
+F1(jttoutf8){A z;I n,t,q;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit 
 if(t&LIT) R ca(w); // char unchanged
@@ -137,7 +137,7 @@ wtom((US*)CAV(w),n,CAV(z));
 R z;
 }    // 8 u: x - utf8 from LIT or C2T
 
-F1(jttoutf16x){F1PREF;I q;A z;
+F1(jttoutf16x){I q;A z;
 ASSERT(LIT&AT(w),EVDOMAIN);
 q=mtowsize(CAV(w),AN(w));
 ASSERT(q>=0,EVDOMAIN);

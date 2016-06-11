@@ -59,7 +59,7 @@ A   zpath=0;              /* default locale search path           */
 /* identifies the J Front Ends, J Engine, and J Library */
 /* and is used in Unix to find profile.ijs              */
 /* j804/j64/windows/release/a/GPL3/unknown/datetime */
-F1(jtversqx){F1PREF;
+F1(jtversqx){
 	char m[1000];char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
 	ASSERTMTV(w);
 	strcpy(m,"j"jversion"/");
@@ -89,7 +89,7 @@ F1(jtversqx){F1PREF;
 
 char jeversion[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
-F1(jtversq){F1PREF;
+F1(jtversq){
 	char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
 	ASSERTMTV(w);
 	strcpy(m,jeversion+8);

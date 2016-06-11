@@ -7,7 +7,7 @@
 #include "x.h"
 
 
-F1(jtstype){F1PREF;RZ(w); R sc(AT(w));}
+F1(jtstype){RZ(w); R sc(AT(w));}
      /* 3!:0 w */
 
 /* binary and hex representation formats differ per J version              */
@@ -137,17 +137,17 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  R z;
 }
 
-F1(jtbinrep1){F1PREF;RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
-F1(jthexrep1){F1PREF;RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
+F1(jtbinrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
+F1(jthexrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R hrep(BU,SY_64,w);}  /* 3!:3 w */
 
-F2(jtbinrep2){F2PREF;I k;
+F2(jtbinrep2){I k;
  RZ(a&&w);
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(k<=0||k<=3,EVDOMAIN);
  R brep((B)(k%2),(B)(2<=k),w);
 }    /* a 3!:1 w */
 
-F2(jthexrep2){F2PREF;I k;
+F2(jthexrep2){I k;
  RZ(a&&w); 
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(k<=0||k<=3,EVDOMAIN);
@@ -161,7 +161,7 @@ static S jtunh(J jt,C c){
  ASSERT(0,EVDOMAIN);
 }
 
-static F1(jtunhex){F1PREF;A z;C*u;I c,n;UC p,q,*v;
+static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  RZ(w);
  c=*(1+AS(w));
  ASSERT(c==8||c==16,EVLENGTH);  
@@ -211,7 +211,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RE(z); R z;
 }    /* b iff reverse the bytes; d iff argument is 64-bits */
 
-F1(jtunbin){F1PREF;A q;B b,d;C*v;I c,i,k,m,n,r,t;
+F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
  RZ(w);
  ASSERT(LIT&AT(w),EVDOMAIN);
  if(2==AR(w))RZ(w=unhex(w));
@@ -246,7 +246,7 @@ F1(jtunbin){F1PREF;A q;B b,d;C*v;I c,i,k,m,n,r,t;
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 
-F2(jtic2){F2PREF;A z;I j,m,n,p,*v,*x,zt;I4*y;S*s;U short*u;
+F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;S*s;U short*u;
  RZ(a&&w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
@@ -267,7 +267,7 @@ F2(jtic2){F2PREF;A z;I j,m,n,p,*v,*x,zt;I4*y;S*s;U short*u;
   case  0: u=(U short*)x; DO(m, *v++=    *u++;); R z;
 }}
 
-F2(jtfc2){F2PREF;A z;D*x,*v;I j,m,n,p,zt;float*s;
+F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  RZ(a&&w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
@@ -300,7 +300,7 @@ static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top,yd;
  R 0;
 }
 
-F1(jtisnan){F1PREF;A*wv,z;B*u;D*v;I n,t,wd;
+F1(jtisnan){A*wv,z;B*u;D*v;I n,t,wd;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
@@ -313,7 +313,7 @@ F1(jtisnan){F1PREF;A*wv,z;B*u;D*v;I n,t,wd;
 }
 
 
-F1(jtbit1){F1PREF;A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
+F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
  RZ(w);
  if(!(B01&AT(w)))RZ(w=cvt(B01,w));
  n=AN(w); r=AR(w); wv=BAV(w); s=AS(w);
@@ -336,6 +336,6 @@ F1(jtbit1){F1PREF;A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
  R z;
 }    /* convert byte booleans to bit booleans */
 
-F2(jtbit2){F2PREF;
+F2(jtbit2){
  ASSERT(0,EVNONCE);
 }    /* convert byte booleans to bit booleans */

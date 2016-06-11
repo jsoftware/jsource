@@ -16,7 +16,7 @@ static AIFX(gtC,  B, UC,UC, >  )
 
 #define PLUSX +
 
-DF2(jtcharfn2){F2PREF;A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
+DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  RZ(a&&w);
  v=VAV(self); c=ID(v->f);
  if(CUNDER==v->id)switch(c){

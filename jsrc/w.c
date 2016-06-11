@@ -39,7 +39,7 @@ static ST state[10][9]={
 // w points to a string
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
 // (# words) is negated is the last word is NB.
-F1(jtwordil){F1PREF;A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
+F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  RZ(w);
  nv=0; s=SS;   // set not creating numeric constant; init state (after space)
  n=AN(w); v=UAV(w); GA(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
@@ -79,7 +79,7 @@ F1(jtwordil){F1PREF;A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
 /* xe: end index of current numeric vector                      */
 /* z:  result; maximum of n words                               */
 
-F1(jtwords){F1PREF;A t,*x,z;C*s;I k,n,*y;
+F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,0);
  RZ(w=vs(w));
  RZ(t=wordil(w));
@@ -119,7 +119,7 @@ R 1;
 // Convert text sentence to a sequence of words to be the queue for parsing
 // a holds the result of wordil, which is an integer list of word index & length: (# words),(i0,l0),(i1,l1)...
 // w holds the string text of the sentence
-F2(jtenqueue){F2PREF;A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
+F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
@@ -222,7 +222,7 @@ F2(jtenqueue){F2PREF;A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c
 /* z:  result array of boxed list of words                      */
 
 
-F1(jttokens){F1PREF;R enqueue(wordil(w),w);}
+F1(jttokens){R enqueue(wordil(w),w);}
 
 
 #define CHKJ(j)             ASSERT(0<=(j),EVINDEX);
@@ -298,7 +298,7 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  R z;
 }
 
-F1(jtfsmvfya){F1PREF;PROLOG;A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
+F1(jtfsmvfya){PROLOG;A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(a=w);
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
@@ -358,8 +358,8 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG;A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k
  EPILOG(fsmdo(f,s,m,ijrd,w,w0));
 }
 
-F2(jtfsm){F2PREF;R fsm0(a,w,1);}
+F2(jtfsm){R fsm0(a,w,1);}
      /* x;:y */
 
-DF1(jtfsmfx){F1PREF;RZ(w&&self); R fsm0(VAV(self)->f,w,0);}
+DF1(jtfsmfx){RZ(w&&self); R fsm0(VAV(self)->f,w,0);}
      /* x&;: y */

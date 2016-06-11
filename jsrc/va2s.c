@@ -16,7 +16,7 @@ static A jtvaspc(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I 
  R vasp(a,w,id,ado,cv,t,zt,af,r,wf,r,f,r);
 }    /* prefix agreement on cells */
 
-F1(jtvaspz){F1PREF;A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
+F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
  if(!(SB01&AT(w)))R w;
  wp=PAV(w); 
  e=SPA(wp,e); c=!*BAV(e);

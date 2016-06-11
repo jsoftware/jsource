@@ -667,7 +667,7 @@ extern A        jtmerge2(J,A,A,A,B);
 extern I        jtmult(J,I,I);
 extern A        jtnamerefacv(J, A, L*);
 extern A        jtnfs(J,I,C*);
-extern void     jtnvrredef(J,A);
+extern B        jtnvrredef(J,A);
 extern A        jtodom(J,I,I,I*);
 extern B        jtparseinit(J);
 extern A        jtparsex(J,A,B,CW*,DC);

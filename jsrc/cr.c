@@ -106,31 +106,31 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr;
 }
 
 
-static DF1(cons1a){F1PREF;R VAV(self)->f;}
+static DF1(cons1a){R VAV(self)->f;}
 
-static DF2(cons2a){F2PREF;R VAV(self)->f;}
+static DF2(cons2a){R VAV(self)->f;}
 
-static DF1(cons1){F1PREF;V*sv=VAV(self);
+static DF1(cons1){V*sv=VAV(self);
  RZ(w);
  R rank1ex(w,self,efr(AR(w),*AV(sv->h)),cons1a);
 }
 
-static DF2(cons2){F2PREF;V*sv=VAV(self);I*v=AV(sv->h);
+static DF2(cons2){V*sv=VAV(self);I*v=AV(sv->h);
  RZ(a&&w);
  R rank2ex(a,w,self,efr(AR(a),v[1]),efr(AR(w),v[2]),cons2a);
 }
 
-static DF1(rank1i){F1PREF;DECLF;A h=sv->h;I*v=AV(h); R irs1(w,fs,*v,f1);}
+static DF1(rank1i){DECLF;A h=sv->h;I*v=AV(h); R irs1(w,fs,*v,f1);}
 
-static DF2(rank2i){F2PREF;DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
+static DF2(rank2i){DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
-static DF1(rank1){F1PREF;DECLF;A h=sv->h;I m,*v=AV(h),wr;
+static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  RZ(w);
  wr=AR(w); m=efr(wr,v[0]);
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 
-static DF2(rank2){F2PREF;DECLF;A h=sv->h;I ar,l,r,*v=AV(h),wr;
+static DF2(rank2){DECLF;A h=sv->h;I ar,l,r,*v=AV(h),wr;
  RZ(a&&w);
  ar=AR(a); l=efr(ar,v[1]);
  wr=AR(w); r=efr(wr,v[2]);
@@ -168,7 +168,7 @@ static void qqset(A a,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
  *flag=m;
 }
 
-F2(jtqq){F2PREF;A h,t;AF f1,f2;D*d;I flag,*hv,n,r[3],*v;
+F2(jtqq){A h,t;AF f1,f2;D*d;I flag,*hv,n,r[3],*v;
  RZ(a&&w);
  GA(h,INT,3,1,0); hv=AV(h);
  if(VERB&AT(w)){

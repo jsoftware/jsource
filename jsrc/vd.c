@@ -6,9 +6,9 @@
 #include "j.h"
 
 
-static F1(jtnorm){F1PREF;R sqroot(pdt(w,conjug(w)));}
+static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
-F1(jtrinv){F1PREF;PROLOG;A ai,bx,di,z;I m,n,r,*s;
+F1(jtrinv){PROLOG;A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
  r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)/2;
  ASSERT(!r||n==s[0],EVLENGTH);
@@ -20,7 +20,7 @@ F1(jtrinv){F1PREF;PROLOG;A ai,bx,di,z;I m,n,r,*s;
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
 
-static F1(jtqrr){F1PREF;PROLOG;A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+static F1(jtqrr){PROLOG;A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)/2;} 
  if(1>=n){
@@ -40,7 +40,7 @@ static F1(jtqrr){F1PREF;PROLOG;A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  z=link(q,r); EPILOG(z);
 }
 
-F1(jtqr){F1PREF;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
+F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,0);
  ASSERT(DENSE&AT(w),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVDOMAIN);
@@ -53,7 +53,7 @@ F1(jtqr){F1PREF;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  R z;
 }
 
-static F2(jticor){F2PREF;D d,*v;I n;
+static F2(jticor){D d,*v;I n;
  RZ(a&&w);
  d=1; n=1+*AS(a);
  v=DAV(a); DO(n-1, d*=*v; v+=n;); d=jfloor(0.5+ABS(d));
@@ -62,7 +62,7 @@ static F2(jticor){F2PREF;D d,*v;I n;
  R w;
 }
 
-F1(jtminv){F1PREF;PROLOG;A q,r,*v,y,z;I m,n,*s,t,wr;
+F1(jtminv){PROLOG;A q,r,*v,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,0);
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
  if(!wr)R recip(w);
@@ -97,7 +97,7 @@ static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  R 1;
 }
 
-static F2(jtmdivsp){F2PREF;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
+static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  ASSERT(2==AR(w),EVRANK);
  v=AS(w); n=v[0]; 
  ASSERT(n>=v[1]&&n==AN(a),EVLENGTH); 
@@ -114,7 +114,7 @@ static F2(jtmdivsp){F2PREF;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 }    /* currently only handles tridiagonal sparse w */
 
 
-F2(jtmdiv){F2PREF;PROLOG;A q,r,*v,y,z;B b=0;I t;
+F2(jtmdiv){PROLOG;A q,r,*v,y,z;B b=0;I t;
  F2RANK(RMAX,2,jtmdiv,0);
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);

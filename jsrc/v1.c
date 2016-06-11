@@ -105,7 +105,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B*x,B b0,B b1){B b,c0;C*av,*w
    case 3:   INNERT2(a,w,EQA); R mn?x[mn-1]:b1;
 }}}
 
-static F2(jtmatchs){F2PREF;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
+static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; r=ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; jt->rank=0;
@@ -131,7 +131,7 @@ static F2(jtmatchs){F2PREF;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j
 }    /* a -:"r w on sparse arrays */
 
 
-F2(jtmatch){F2PREF;A z;I af,f,m,n,*s,wf;
+F2(jtmatch){A z;I af,f,m,n,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
  af=jt->rank?AR(a)-jt->rank[0]:0;
@@ -142,7 +142,7 @@ F2(jtmatch){F2PREF;A z;I af,f,m,n,*s,wf;
  R z;
 }    /* a -:"r w */
 
-F2(jtnotmatch){F2PREF;A z;I af,f,m,n,*s,wf;
+F2(jtnotmatch){A z;I af,f,m,n,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R not(matchs(a,w));
  af=jt->rank?AR(a)-jt->rank[0]:0;

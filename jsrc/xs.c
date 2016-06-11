@@ -18,7 +18,7 @@ B jtxsinit(J jt){A x;
  R 1;
 }
 
-F1(jtsnl){F1PREF;ASSERTMTV(w); R vec(BOX,jt->slistn,AAV(jt->slist));}
+F1(jtsnl){ASSERTMTV(w); R vec(BOX,jt->slistn,AAV(jt->slist));}
      /* 4!:3  list of script names */
 
 #if (SYS & SYS_MACINTOSH)
@@ -91,16 +91,16 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  R z;
 }
 
-F1(jtscm00 ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm00, 0); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
-F1(jtscm01 ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm01, 0); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
-F1(jtscm10 ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm10, 0); R r?line(w,-1L,1,0):linf(mark,w,1,0);}
-F1(jtscm11 ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm11, 0); R r?line(w,-1L,1,1):linf(mark,w,1,1);}
-F1(jtsct1  ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtsct1,  0); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
-F1(jtscz1  ){F1PREF;I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscz1,  0); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
+F1(jtscm00 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm00, 0); R r?line(w,-1L,0,0):linf(mark,w,0,0);}
+F1(jtscm01 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm01, 0); R r?line(w,-1L,0,1):linf(mark,w,0,1);}
+F1(jtscm10 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm10, 0); R r?line(w,-1L,1,0):linf(mark,w,1,0);}
+F1(jtscm11 ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscm11, 0); R r?line(w,-1L,1,1):linf(mark,w,1,1);}
+F1(jtsct1  ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtsct1,  0); R r?line(w,-1L,2,1):linf(mark,w,2,1);}
+F1(jtscz1  ){I r; RZ(w);    r=1&&AT(w)&LIT+C2T; F1RANK(     r,jtscz1,  0); R r?line(w,-1L,3,0):linf(mark,w,3,0);}
 
-F2(jtscm002){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm002,0); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
-F2(jtscm012){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm012,0); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
-F2(jtscm102){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm102,0); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
-F2(jtscm112){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm112,0); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
-F2(jtsct2  ){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtsct2,  0); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
-F2(jtscz2  ){F2PREF;I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscz2,  0); R r?line(w,-1L,3,0):linf(a,   w,3,0);}
+F2(jtscm002){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm002,0); R r?line(w,-1L,0,0):linf(a,   w,0,0);}
+F2(jtscm012){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm012,0); R r?line(w,-1L,0,1):linf(a,   w,0,1);}
+F2(jtscm102){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm102,0); R r?line(w,-1L,1,0):linf(a,   w,1,0);}
+F2(jtscm112){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscm112,0); R r?line(w,-1L,1,1):linf(a,   w,1,1);}
+F2(jtsct2  ){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtsct2,  0); R r?line(w,-1L,2,1):linf(a,   w,2,1);}
+F2(jtscz2  ){I r; RZ(a&&w); r=1&&AT(w)&LIT+C2T; F2RANK(RMAX,r,jtscz2,  0); R r?line(w,-1L,3,0):linf(a,   w,3,0);}

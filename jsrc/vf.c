@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F2(jtsetfv){F2PREF;A q=jt->fill;I t;
+F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
  t=AN(a)?AT(a):AN(w)?AT(w):0;
  if(q&&AN(q)){
@@ -19,7 +19,7 @@ F2(jtsetfv){F2PREF;A q=jt->fill;I t;
  R t==AT(w)?w:cvt(t,w);
 }
 
-F1(jtfiller){F1PREF;A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
+F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n fills of type t to *v
 void fillv(I t,I n,C*v){I k=bp(t);
@@ -35,7 +35,7 @@ void fillv(I t,I n,C*v){I k=bp(t);
 }
 
 
-static F2(jtrotsp){F2PREF;PROLOG;A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;
+static F2(jtrotsp){PROLOG;A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;
  RZ(a&&w);
  ASSERT(!jt->fill,EVNONCE);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
@@ -86,7 +86,7 @@ static void jtrot(J jt,I m,I c,I n,I k,I p,I*av,C*u,C*v){I dk,e,j,r,x,y;
    u   source data area 
    v   target data area      */
 
-F2(jtrotate){F2PREF;A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
+F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a&&w);
  if(SPARSE&AT(w))R rotsp(a,w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
@@ -110,7 +110,7 @@ F2(jtrotate){F2PREF;A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
 }    /* a|.!.f"r w */
 
 
-static F1(jtrevsp){F1PREF;A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
+static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(w);
  ASSERT(!jt->fill,EVNONCE);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
@@ -128,7 +128,7 @@ static F1(jtrevsp){F1PREF;A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  R z;
 }    /* |."r w on sparse arrays */
 
-F1(jtreverse){F1PREF;A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
+F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  RZ(w);
  if(SPARSE&AT(w))R revsp(w);
  if(jt->fill)R rotate(num[-1],w);
@@ -200,7 +200,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
-F2(jtreshape){F2PREF;A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wr,*ws,zn;
+F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); jt->rank=0;
@@ -220,7 +220,7 @@ F2(jtreshape){F2PREF;A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wr,*
  R RELOCATE(w,z);
 }    /* a ($,)"r w */
 
-F2(jtreitem){F2PREF;A y;I acr,an,ar,m,r,*v,wcr,wr;
+F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; m=MIN(1,acr);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; jt->rank=0;
@@ -268,7 +268,7 @@ F2(jtreitem){F2PREF;A y;I acr,an,ar,m,r,*v,wcr,wr;
   }
 #endif
 
-F2(jtexpand){F2PREF;A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
+F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
  RZ(a&&w);
  if(!(B01&AT(a)))RZ(a=cvt(B01,a));
  ASSERT(1==AR(a),EVRANK);

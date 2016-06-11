@@ -139,7 +139,7 @@ APFX(lcmZZ, Z,Z,Z, zlcm )
 #define INTDIVF(c,d)  (0>c==0>d?c/d:c%d?c/d-1:c/d)
 #define INTDIVC(c,d)  (0>c!=0>d?c/d:c%d?c/d+1:c/d)
 
-F2(jtintdiv){F2PREF;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
+F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
  RZ(a&&w);
  an=AN(a); ar=AR(a); as=AS(a); av=AV(a);
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
@@ -167,9 +167,9 @@ F2(jtintdiv){F2PREF;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){F2PREF;RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),one)),bsdot(slash(ds(CSTAR))));}
+static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),one)),bsdot(slash(ds(CSTAR))));}
 
-F1(jtbase1){F1PREF;A z;B*v;I c,d,m,n,p,r,*s,t,*x;
+F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  RZ(w);
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=r?*(s+r-1):1;
  ASSERT(t&DENSE,EVNONCE);
@@ -181,7 +181,7 @@ F1(jtbase1){F1PREF;A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  R z;
 }
 
-F2(jtbase2){F2PREF;I ar,*as,at,c,t,wr,*ws,wt;
+F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a); as=AS(a);
  wt=AT(w); wr=AR(w); ws=AS(w); c=wr?*(ws+wr-1):1; t=maxtype(at,wt);
@@ -192,7 +192,7 @@ F2(jtbase2){F2PREF;I ar,*as,at,c,t,wr,*ws,wt;
 }
 
 // #: y
-F1(jtabase1){F1PREF;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
+F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  RZ(w);
  // n = #atoms, r=rank, t=type
  n=AN(w); r=AR(w); t=AT(w);
@@ -227,7 +227,7 @@ F1(jtabase1){F1PREF;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  R z;
 }
 
-F2(jtabase2){F2PREF;A z;I an,ar,at,wn,wr,wt,zn;
+F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
  RZ(a&&w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
@@ -252,7 +252,7 @@ F2(jtabase2){F2PREF;A z;I an,ar,at,wn,wr,wt,zn;
   EPILOG(ope(z));
 }}
 
-F1(jtintmod2){F1PREF;A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
+F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
  RZ(w);
  n=AN(w); q=n/k; r=n%k; v=BAV(w)+!liln*(k-1);
  GA(z,B01,n,AR(w),AS(w)); u=AV(z);

@@ -27,20 +27,20 @@ A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
 A jteva(J jt,    A w,C*s){R df1(  w,colon(one,   cstr(s)));}
 A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
 
-F1(jtexec1){F1PREF;A z;
+F1(jtexec1){A z;
  F1RANK(1,jtexec1,0);
  FDEPINC(1); z=parse(tokens(vs(w))); jt->asgn=0; FDEPDEC(1);
  R z&&AT(z)&VERB+ADV+CONJ+MARK?mtv:z;
 }
 
-F1(jtimmex){F1PREF;A z;
+F1(jtimmex){A z;
  FDEPINC(1); z=parse(tokens(w)); FDEPDEC(1); 
  if(EWTHROW==jt->jerr){RESETERR; z=mtm;}
  if(z&&!jt->asgn)jpr(z);
  R z;
 }
 
-F1(jtimmea){F1PREF;A t,z;
+F1(jtimmea){A t,z;
  z=immex(w); 
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(one,z),
      all1(AT(z)&SPARSE?df1(t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
@@ -50,7 +50,7 @@ F1(jtimmea){F1PREF;A t,z;
 static A jtcex(J jt,A w,AF f){A z; RE(w); z=f(jt,w); RESETERR; R z;}
      /* conditional execute */
 
-F1(jtexg){F1PREF;A*v,*wv,x,y,z;I n,wd;
+F1(jtexg){A*v,*wv,x,y,z;I n,wd;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  ASSERT(n,EVLENGTH);
@@ -64,7 +64,7 @@ F1(jtexg){F1PREF;A*v,*wv,x,y,z;I n,wd;
 
 A jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
 
-F2(jtapplystr){F2PREF;PROLOG;A fs,z;I d;
+F2(jtapplystr){PROLOG;A fs,z;I d;
  F2RANK(1,RMAX,jtapplystr,0);
  RZ(fs=parse(tokens(vs(a))));
  ASSERT(VERB&AT(fs),EVSYNTAX);

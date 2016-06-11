@@ -365,6 +365,8 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;C id;} V;
 #define VTRY1           (I)4194304      /* monad contains try.             */
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
 #define VDDOP           (I)16777216     /* derived from a derived operator */
+#define VINPLACEOK1     (I)33554432L    // monad can handle in-place args
+#define VINPLACEOK2     (I)67108864LL    // dyad can handle in-place args
 
 
 typedef struct {DX re;DX im;} ZX;
@@ -373,3 +375,28 @@ typedef struct {DX re;DX im;} ZX;
 /* re - real part                                                          */
 /* im - imaginary part                                                     */
 
+
+// parser stack
+#if SY_64
+typedef struct {
+ A a;  // pointer to block
+ union {
+  struct {
+   I4 tno; //
+   I4 ip;  // 1 if inplaceable
+  };  // token number
+  I ipt;  // inplace+flags
+  } t;
+} PSTK;
+#else
+typedef struct {
+ A a;  // pointer to block
+ union {
+  struct {
+   S tno; //
+   S ip;  // 1 if inplaceable
+  };  // token number
+  I4 ipt;  // inplace+flags
+  } t;
+} PSTK;
+#endif

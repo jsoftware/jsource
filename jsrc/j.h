@@ -232,10 +232,10 @@
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)
 #define F2(f)           A f(J jt,A a,A w)
-#define FPREF           jt=(J)((I)jt&-4)
+#define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&-4)  // use IP version when a routine knows how to in-place
+#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&-4)
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on it.  m=monad rank, f=function to call for monad cell

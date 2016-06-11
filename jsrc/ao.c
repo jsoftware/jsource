@@ -6,7 +6,7 @@
 #include "j.h"
 
 // This is the derived verb for f/. y
-static DF1(jtoblique){F1PREF;A x,y;I m,n,r,*u,*v;
+static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
  RZ(w);
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list
@@ -37,7 +37,7 @@ static DF1(jtoblique){F1PREF;A x,y;I m,n,r,*u,*v;
  }
 
 // Derived verb for f//. y
-static DF1(jtobqfslash){F1PREF;A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
+static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
@@ -101,7 +101,7 @@ static DF1(jtobqfslash){F1PREF;A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,
    expr0; DO(p-1, expr;); *zv++=x;           \
  }}
 
-DF2(jtpolymult){F2PREF;A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
+DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  RZ(a&&w&&self);
  m=AN(a); n=AN(w); m1=m-1; zn=m+n-1; k=MIN(m,n);
  at=AT(a); wt=AT(w); t=maxtype(at,wt);
@@ -154,7 +154,7 @@ DF2(jtpolymult){F2PREF;A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;
 
 static DF2(jtkey);
 
-static DF2(jtkeysp){F2PREF;PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
+static DF2(jtkeysp){PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(a&&w);
  n=IC(a); 
  RZ(q=indexof(a,a)); p=PAV(q); 
@@ -171,7 +171,7 @@ static DF2(jtkeysp){F2PREF;PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(j?cdot2(box(IX(1+j)),z):z);
 }
 
-static DF2(jtkeyi){F2PREF;PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
+static DF2(jtkeyi){PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
  RZ(a&&w);
  jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  n=IC(a); av=AV(a);
@@ -183,7 +183,7 @@ static DF2(jtkeyi){F2PREF;PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
  EPILOG(z);
 }    /* a f/. w where a is i.~x for dense x & w */
 
-static DF2(jtkeybox){F2PREF;PROLOG;B b;I*wv;
+static DF2(jtkeybox){PROLOG;B b;I*wv;
  RZ(a&&w);
  ASSERT(IC(a)==IC(w),EVLENGTH);
  if(SPARSE&AT(a))R keysp(a,w,self);
@@ -192,7 +192,7 @@ static DF2(jtkeybox){F2PREF;PROLOG;B b;I*wv;
  EPILOG(keyi(indexof(a,a),w,self));
 }    /* a </. w */
 
-static DF2(jtkey){F2PREF;PROLOG;
+static DF2(jtkey){PROLOG;
  RZ(a&&w);
  ASSERT(IC(a)==IC(w),EVLENGTH);
  if(SPARSE&AT(a))R keysp(a,w,self);
@@ -237,7 +237,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
    else    DO(n, v=zv+c**xv++; DO(c, y=*wv++; *v=F; ++v;););     \
  }}
 
-static DF2(jtkeyslash){F2PREF;PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;D ctold=jt->ct;
+static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;D ctold=jt->ct;
  RZ(a&&w);
  at=AT(a); av0=AV(a); n=IC(a); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
@@ -297,7 +297,7 @@ static DF2(jtkeyslash){F2PREF;PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n
   else    DO(n, j=*xv++; ++pv[j]; vv=zv+j*c; DO(c, *vv+++=*v++;););  \
  }
 
-static DF2(jtkeymean){F2PREF;PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,s,*u,wr,wt,*wv,*xv;
+static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,s,*u,wr,wt,*wv,*xv;
  RZ(a&&w);
  at=AT(a); av=AV(a); n=IC(a); 
  wt=AT(w); wv=AV(w); wr=AR(w);
@@ -350,7 +350,7 @@ static DF2(jtkeymean){F2PREF;PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n
 #define GRPIX(T,asgn,j,k)   {T*v=(T*)wv; DO(n, j=asgn; if(m>=j)*cu[k]++=i; \
                                  else{GA(x,INT,cv[k],1,0); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
 
-F1(jtgroup){F1PREF;PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
+F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
  RZ(w);
  if(SPARSE&AT(w))RZ(w=denseit(w));
  n=IC(w); t=AT(w); p=q=0; b=0; k=n?aii(w)*bp(t):0;
@@ -384,7 +384,7 @@ F1(jtgroup){F1PREF;PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*w
 
 static DF2(jtkeytally);
 
-static F1(jtkeytallysp){F1PREF;PROLOG;A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
+static F1(jtkeytallysp){PROLOG;A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  RZ(w);
  RZ(q=indexof(w,w));
  p=PAV(q); 
@@ -403,7 +403,7 @@ static F1(jtkeytallysp){F1PREF;PROLOG;A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
                          u=(T*)av; DO(n, ++*(qv+*u++););  \
                          u=(T*)av; DO(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
 
-static DF2(jtkeytally){F2PREF;PROLOG;A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
+static DF2(jtkeytally){PROLOG;A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
  RZ(a&&w);
  n=IC(a); at=AT(a); av=AV(a);
  ASSERT(n==IC(w),EVLENGTH);
@@ -440,7 +440,7 @@ static DF2(jtkeytally){F2PREF;PROLOG;A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
   AN(z)=zz-(Tz*)zv;                       \
  }
 
-static DF2(jtkeyheadtally){F2PREF;PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v,wt,*zv;
+static DF2(jtkeyheadtally){PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v,wt,*zv;
  RZ(a&&w);
  n=IC(a); wt=AT(w);
  ASSERT(n==IC(w),EVLENGTH);
@@ -490,7 +490,7 @@ static DF2(jtkeyheadtally){F2PREF;PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*q
 }    /* x ({.,#)/.y or x (#,{.)/.y */
 
 
-F1(jtsldot){F1PREF;A h=0;AF f1=jtoblique,f2=jtkey;C c,d,e;I flag=0;V*v;
+F1(jtsldot){A h=0;AF f1=jtoblique,f2=jtkey;C c,d,e;I flag=0;V*v;
  RZ(w);
  if(NOUN&AT(w)){flag=VGERL; RZ(h=fxeachv(1L,w));}
  else{

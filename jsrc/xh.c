@@ -21,12 +21,12 @@ extern int os_swi1(I,I);
 
 #if (SYS & SYS_MACINTOSH)
 
-F1(jthost  ){F1PREF;ASSERT(0,EVDOMAIN);}
-F1(jthostne){F1PREF;ASSERT(0,EVDOMAIN);}
+F1(jthost  ){ASSERT(0,EVDOMAIN);}
+F1(jthostne){ASSERT(0,EVDOMAIN);}
 
 #else
 
-F1(jthost){F1PREF;A z;
+F1(jthost){A z;
  F1RANK(1,jthost,0);
  RZ(w=vs(w));
 #if (SYS & SYS_PCWIN)
@@ -56,7 +56,7 @@ F1(jthost){F1PREF;A z;
  R z;
 }
 
-F1(jthostne){F1PREF;C*s;
+F1(jthostne){C*s;
  F1RANK(1,jthostne,0);
  RZ(w=vs(w));
  s=CAV(w);
@@ -82,14 +82,14 @@ F1(jthostne){F1PREF;C*s;
 
 #if !(SYS & SYS_UNIX)
 
-F1(jthostio){F1PREF;ASSERT(0,EVDOMAIN);}
-F1(jtjwait ){F1PREF;ASSERT(0,EVDOMAIN);}
+F1(jthostio){ASSERT(0,EVDOMAIN);}
+F1(jtjwait ){ASSERT(0,EVDOMAIN);}
 
 #else
 
 #define CL(f) {close(f[0]);close(f[1]);}
 
-F1(jthostio){F1PREF;C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
+F1(jthostio){C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
  F1RANK(1,jthostio,0);
  RZ(w=vs(w));
@@ -112,6 +112,6 @@ F1(jthostio){F1PREF;C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
  R z;
 }
 
-F1(jtjwait){F1PREF;I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
+F1(jtjwait){I k;int s; RE(k=i0(w)); if(-1==waitpid(k,&s,0))jerrno(); R sc(s);}
 
 #endif

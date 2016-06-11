@@ -6,12 +6,12 @@
 #include "j.h"
 
 
-F2(jtforeignextra){F2PREF;
+F2(jtforeignextra){
  RZ(a&&w);
  R CDERIV(CIBEAM, 0,0, RMAX,RMAX,RMAX);
 }
 
-F2(jtfixrecursive){F2PREF;A f,g,y;
+F2(jtfixrecursive){A f,g,y;
  RZ(a&&w);
  RZ(y=lrep(w)); 
  if(a==one   ||a==num[3])RZ(f=colon(num[3],                over(y,cstr(" y")) ));

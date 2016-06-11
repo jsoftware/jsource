@@ -273,7 +273,7 @@ static I jtconword(J jt,I n,C*s){
  R 0;
 }
 
-static F1(jtgetsen){F1PREF;A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
+static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  RZ(y=wordil(w));
  v=AV(y);                          /* pairs, (index, len)        */
  n=2**v++;                         /* count of pair element      */

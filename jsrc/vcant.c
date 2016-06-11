@@ -30,7 +30,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
   while(j&&sv[j]==tv[j]){d+=mv[j-1]-mv[j]*sv[j]; tv[j]=0; ++tv[--j];});  \
  }
 
-static F2(jtcanta){F2PREF;A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
+static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
  RZ(a&&w);
  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  ASSERT(r==AN(a),EVLENGTH);
@@ -68,13 +68,13 @@ static F2(jtcanta){F2PREF;A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,w
  R RELOCATE(w,z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
-F1(jtcant1){F1PREF;I r; 
+F1(jtcant1){I r; 
  RZ(w); 
  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
  R canta(apv(r,r-1,-1L),w);
 }    /* |:"r w */
 
-F2(jtcant2){F2PREF;A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
+F2(jtcant2){A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
  q=jt->rank?jt->rank[0]:AR(a); 
  r=jt->rank?jt->rank[1]:AR(w); jt->rank=0;

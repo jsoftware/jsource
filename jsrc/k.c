@@ -16,7 +16,7 @@
    DO(r1, *zv++=0;);                                                      \
   }} 
 
-static KF1(jtcvt2bit){F1PREF;I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
+static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
  wv=AV(w); wr=AR(w); ws=AS(w); 
  c=wr?ws[wr-1]:1; m=c?AN(w)/c:0; q=c/BB; r=c%BB; r1=c%BW?(BW-c%BW)/BB:0;
  switch(AT(w)){
@@ -28,32 +28,32 @@ static KF1(jtcvt2bit){F1PREF;I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
  R 1;
 }
 
-static KF1(jtC1fromC2){F1PREF;UC*x;US c,*v;
+static KF1(jtC1fromC2){UC*x;US c,*v;
  v=(US*)AV(w); x=(C*)yv;
  DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
  R 1;
 }
 
-static KF1(jtC2fromC1){F1PREF;UC*v;US*x;
+static KF1(jtC2fromC1){UC*v;US*x;
  v=UAV(w); x=(US*)yv;
  DO(AN(w), *x++=*v++;);
  R 1;
 }
 
-static KF1(jtBfromI){F1PREF;B*x;I n,p,*v;
+static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
  DO(n, p=*v++; if(0==p||1==p)*x++=(B)p; else R 0;);
  R 1;
 }
 
-static KF1(jtBfromD){F1PREF;B*x;D p,*v;I n;
+static KF1(jtBfromD){B*x;D p,*v;I n;
  n=AN(w); v=DAV(w); x=(B*)yv;
  DO(n, p=*v++; if(p<-2||2<p)R 0; 
   if(!p)*x++=0; else if(FEQ(1.0,p))*x++=1; else R 0;);
  R 1;
 }
 
-static KF1(jtIfromD){F1PREF;D p,q,r,*v;I i,k=0,n,*x;
+static KF1(jtIfromD){D p,q,r,*v;I i,k=0,n,*x;
  n=AN(w); v=DAV(w); x=(I*)yv;
  q=IMIN*(1+jt->fuzz); r=IMAX*(1+jt->fuzz);
  DO(n, p=v[i]; if(p<q||r<p)R 0;);
@@ -70,20 +70,20 @@ static KF1(jtIfromD){F1PREF;D p,q,r,*v;I i,k=0,n,*x;
  R 1;
 }
 
-static KF1(jtDfromZ){F1PREF;D d,*x;I n;Z*v;
+static KF1(jtDfromZ){D d,*x;I n;Z*v;
  n=AN(w); v=ZAV(w); x=(D*)yv;
  if(jt->fuzz)DO(n, d=ABS(v->im); if(d!=inf&&d<=jt->fuzz*ABS(v->re)){*x++=v->re; v++;} else R 0;)
  else        DO(n, d=    v->im ; if(!d                            ){*x++=v->re; v++;} else R 0;);
  R 1;
 }
 
-static KF1(jtXfromB){F1PREF;B*v;I n,u[1];X*x;
+static KF1(jtXfromB){B*v;I n,u[1];X*x;
  n=AN(w); v=BAV(w); x=(X*)yv;
  DO(n, *u=v[i]; x[i]=vec(INT,1L,u););           
  R !jt->jerr;
 }
 
-static KF1(jtXfromI){F1PREF;B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
+static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
  n=AN(w); v=AV(w); x=(X*)yv;
  for(i=0;i<n;++i){
   c=v[i]; b=c==IMIN; d=b?-(1+c):ABS(c); j=0;
@@ -113,15 +113,15 @@ static X jtxd1(J jt,D p){PROLOG;A t;D d,e=tfloor(p),q,r;I m,*u;
  EPILOG(xstd(vec(INT,m,u)));
 }
 
-static KF1(jtXfromD){F1PREF;D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->jerr;}
+static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->jerr;}
 
-static KF1(jtBfromX){F1PREF;A q;B*x;I e;X*v;
+static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
  DO(AN(w), q=v[i]; e=*AV(q); RZ(1==AN(q)&&(0==e||1==e)); x[i]=(B)e;);
  R 1;
 }
 
-static KF1(jtIfromX){F1PREF;I a,i,m,n,*u,*x;X c,p,q,*v;
+static KF1(jtIfromX){I a,i,m,n,*u,*x;X c,p,q,*v;
  v=XAV(w); x=(I*)yv; n=AN(w);
  RZ(p=xc(IMAX)); RZ(q=xminus(negate(p),xc(1L)));
  for(i=0;i<n;++i){
@@ -131,7 +131,7 @@ static KF1(jtIfromX){F1PREF;I a,i,m,n,*u,*x;X c,p,q,*v;
  R 1;
 }
 
-static KF1(jtDfromX){F1PREF;D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
+static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
  dp=1.7976931348623157e308; dm=-dp;
  wn=AN(w); wv=XAV(w);
  for(i=0;i<wn;++i){
@@ -147,9 +147,9 @@ static KF1(jtDfromX){F1PREF;D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
  R 1;
 }
 
-static KF1(jtQfromX){F1PREF;X*v=XAV(w),*x=(X*)yv; DO(AN(w), *x++=*v++; *x++=iv1;); R 1;}
+static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DO(AN(w), *x++=*v++; *x++=iv1;); R 1;}
 
-static KF1(jtQfromD){F1PREF;B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
+static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  RZ(w);
  n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*liln+(S*)&t;
  for(i=0;i<n;++i){
@@ -173,7 +173,7 @@ static KF1(jtQfromD){F1PREF;B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
  R !jt->jerr;
 }
 
-static KF1(jtDfromQ){F1PREF;D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c,p,q,x2=0;
+static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c,p,q,x2=0;
  wn=AN(w); wv=QAV(w); x=(D*)yv; nn=308/XBASEN;
  for(i=0;i<wn;++i){
   p=wv[i].n; pn=AN(p); k=1==pn?*AV(p):0;
@@ -195,7 +195,7 @@ static KF1(jtDfromQ){F1PREF;D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q
  R 1;
 }
 
-static KF1(jtXfromQ){F1PREF;Q*v;X*x;
+static KF1(jtXfromQ){Q*v;X*x;
  v=QAV(w); x=(X*)yv;
  DO(AN(w), RZ(equ(iv1,v->d)); *x++=v->n; ++v;);           
  R !jt->jerr;
@@ -331,7 +331,7 @@ A jtbcvt(J jt,C mode,A w){A y,z=w;D ofuzz;I*oq;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
-F1(jticvt){F1PREF;A z;D*v,x;I i,k=0,n,*u;
+F1(jticvt){A z;D*v,x;I i,k=0,n,*u;
  RZ(w);
  n=AN(w); v=DAV(w);
  GA(z,INT,n,AR(w),AS(w)); u=AV(z);
@@ -352,7 +352,7 @@ A jtpcvt(J jt,I t,A w){A y;B b;I*oq=jt->rank;
 }    /* convert w to type t, if possible, otherwise just return w */
 
 
-F1(jtcvt0){F1PREF;I n,t,*u,*v,z0,z1;
+F1(jtcvt0){I n,t,*u,*v,z0,z1;
  RZ(w);
  t=AT(w); n=AN(w); 
  if(n&&t&FL+CMPX){
@@ -369,9 +369,9 @@ F1(jtcvt0){F1PREF;I n,t,*u,*v,z0,z1;
 
 A jtxcvt(J jt,I m,A w){A z;I old=jt->xmode; jt->xmode=m; z=cvt(XNUM,w); jt->xmode=old; R z;}
 
-F1(jtxco1){F1PREF;RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
+F1(jtxco1){RZ(w); ASSERT(AT(w)&DENSE,EVNONCE); R cvt(AT(w)&B01+INT+XNUM?XNUM:RAT,w);}
 
-F2(jtxco2){F2PREF;A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
+F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
  RZ(a&&w);
  n=AN(w); r=AR(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);

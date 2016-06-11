@@ -6,11 +6,11 @@
 #include "j.h"
 
 
-F1(jttally ){F1PREF;A z; RZ(w); z=sc(IC(w));            R AT(w)&XNUM+RAT?xco1(z):z;}
-F1(jtshapex){F1PREF;A z; RZ(w); z=vec(INT,AR(w),AS(w)); R AT(w)&XNUM+RAT?xco1(z):z;}
-F1(jtshape ){F1PREF;RZ(w); R vec(INT,AR(w),AS(w));}
+F1(jttally ){A z; RZ(w); z=sc(IC(w));            R AT(w)&XNUM+RAT?xco1(z):z;}
+F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); R AT(w)&XNUM+RAT?xco1(z):z;}
+F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 
-F1(jtravel){F1PREF;A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
+F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
@@ -37,7 +37,7 @@ F1(jtravel){F1PREF;A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*
  R z;
 }
 
-F1(jttable){F1PREF;A z;I f,r,*s,wr,*ws,wt;
+F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  RZ(w);
  wt=AT(w); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
@@ -72,12 +72,12 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,*as,k,n,of,*os,r,*s,t,
  R z;
 } 
 
-F2(jtleft2 ){F2PREF;R lr2(1,a,w);}
-F2(jtright2){F2PREF;R lr2(0,a,w);}
+F2(jtleft2 ){R lr2(1,a,w);}
+F2(jtright2){R lr2(0,a,w);}
 
-F1(jtright1){F1PREF;R rat(w);}
+F1(jtright1){R rat(w);}
 
-F1(jtiota){F1PREF;A z;I m,n,*v;
+F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,0);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));
  RZ(w=vi(w)); n=AN(w); v=AV(w);
@@ -87,7 +87,7 @@ F1(jtiota){F1PREF;A z;I m,n,*v;
  R z;
 }
 
-F1(jtjico1){F1PREF;A y,z;B b;D d,*v;I c,m,n; 
+F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,0);
  RZ(y=cvt(FL,rect(w))); v=DAV(y); d=*v;
  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num[2])));
@@ -99,16 +99,16 @@ F1(jtjico1){F1PREF;A y,z;B b;D d,*v;I c,m,n;
  R z;
 }
 
-DF1(jtnum1){F1PREF;RZ(   w&&self); R VAV(self)->h;}
-DF2(jtnum2){F2PREF;RZ(a&&w&&self); R VAV(self)->h;}
+DF1(jtnum1){RZ(   w&&self); R VAV(self)->h;}
+DF2(jtnum2){RZ(a&&w&&self); R VAV(self)->h;}
 
-F2(jtfromr  ){F2PREF;R irs2(a,w,0L,RMAX,1L,jtfrom  );}
-F2(jtrepeatr){F2PREF;R irs2(a,w,0L,RMAX,1L,jtrepeat);}
+F2(jtfromr  ){R irs2(a,w,0L,RMAX,1L,jtfrom  );}
+F2(jtrepeatr){R irs2(a,w,0L,RMAX,1L,jtrepeat);}
 
 A jttaker(J jt,I n,A w){R irs2(sc(n),w,0L,RMAX,1L,jttake);}
 A jtdropr(J jt,I n,A w){R irs2(sc(n),w,0L,RMAX,1L,jtdrop);}
 
-F1(jticap){F1PREF;A a,e;I n;P*p;
+F1(jticap){A a,e;I n;P*p;
  F1RANK(1,jticap,0);
  n=IC(w);
  if(SB01&AT(w)){

@@ -6,7 +6,6 @@
 
 #define LOCPATH(g)      ((*AV(g)+jt->sympv)->val )
 #define LOCNAME(g)      ((*AV(g)+jt->sympv)->name)
-#define NMHASH(p,s)     (*(s)+(p)+99991L*(UC)(s)[(p)-1])
 
 
 /* macro to define a function that walks through a symbol table */

@@ -95,11 +95,11 @@ BITWISE(jtbitwiseshifta,I, BWSHIFTA)
 DF1(jtbitwise1){R CALL2(VAV(self)->f2,zero,w,self);}
 
 
-static VF bwC[16]={bw0000CC,bw0001CC,bw0010CC,bw0011CC, bw0100CC,bw0101CC,bw0110CC,bw0111CC,
-                   bw1000CC,bw1001CC,bw1010CC,bw1011CC, bw1100CC,bw1101CC,bw1110CC,bw1111CC};
+static VF bwC[16]={(VF)bw0000CC,(VF)bw0001CC,(VF)bw0010CC,(VF)bw0011CC, (VF)bw0100CC,(VF)bw0101CC,(VF)bw0110CC,(VF)bw0111CC,
+                   (VF)bw1000CC,(VF)bw1001CC,(VF)bw1010CC,(VF)bw1011CC, (VF)bw1100CC,(VF)bw1101CC,(VF)bw1110CC,(VF)bw1111CC};
 
-static VF bwI[16]={bw0000II,bw0001II,bw0010II,bw0011II, bw0100II,bw0101II,bw0110II,bw0111II,
-                   bw1000II,bw1001II,bw1010II,bw1011II, bw1100II,bw1101II,bw1110II,bw1111II};
+static VF bwI[16]={(VF)bw0000II,(VF)bw0001II,(VF)bw0010II,(VF)bw0011II, (VF)bw0100II,(VF)bw0101II,(VF)bw0110II,(VF)bw0111II,
+                   (VF)bw1000II,(VF)bw1001II,(VF)bw1010II,(VF)bw1011II, (VF)bw1100II,(VF)bw1101II,(VF)bw1110II,(VF)bw1111II};
 
 /* a m b.&.(a.&i.) w */
 /* a m b.&.(a.i.]) w */
@@ -128,12 +128,12 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;V
 
 B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];VF f;
  i=t[0]; j=t[255];
- if     (i==0    ){c=j; f=bw0001II;}
- else if(j==i    ){c=i; f=bw0011II;}
- else if(j==255  ){c=i; f=bw0111II;}
- else if(j==255-i){c=i; f=bw0110II;}
- else if(j==0    ){c=i; f=bw0010II;}
- else if(i==255  ){c=j; f=bw1011II;}
+ if     (i==0    ){c=j; f=(VF)bw0001II;}
+ else if(j==i    ){c=i; f=(VF)bw0011II;}
+ else if(j==255  ){c=i; f=(VF)bw0111II;}
+ else if(j==255-i){c=i; f=(VF)bw0110II;}
+ else if(j==0    ){c=i; f=(VF)bw0010II;}
+ else if(i==255  ){c=j; f=(VF)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
  f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;

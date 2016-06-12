@@ -3,8 +3,8 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -fno-strict-aliasing -DSY_GETTOD"
-# clang
+common="-fPIC -O1 -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -fno-strict-aliasing -DSY_GETTOD"
+# darwin
 common1="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
 
 case $jplatform\_$1 in

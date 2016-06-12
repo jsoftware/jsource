@@ -63,4 +63,5 @@ static F1(jtravtranspose){I i,n,s;Z t,*v;UC*iv,*jv;UI j;
 }    /* ravel transpose in place: ,|:(#:&.<:#w)$w  or  (|."1&.#:i.#w){w */
 
 static A jtfloop(J jt,A w,I k,B inv){
+R 0;
 }

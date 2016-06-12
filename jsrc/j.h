@@ -385,7 +385,9 @@ extern I CTTZZ(I);
 #define JPF(s,v) {char b[1000]; sprintf(b, s, v); jsto(gjt,MTYOFM,b);}
 extern J gjt; // global for JPF (procs without jt)
 
-#if SY_WINCE_MIPS || defined(__arm__)
+// #if SY_WINCE_MIPS || defined(__arm__)
+// changed to add option -fsigned-char for android and raspberry
+#if SY_WINCE_MIPS
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */
 #define strchr(a,b)     (C*)strchr(a, (UC)b)
 #endif

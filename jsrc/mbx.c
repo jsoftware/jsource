@@ -239,7 +239,7 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  R z;
 }    /* 15!:12 all the blocks in an SMM variable as 3-column matrix */
 
-/*
+
 // F2(jtafr2){A x,*wv;A1*wu;
 //  RZ(a&&w);
 //  wv=AAV(w); wu=A1AV(w);

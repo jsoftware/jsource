@@ -20,16 +20,16 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  RZ(a&&w);
  v=VAV(self); c=ID(v->f);
  if(CUNDER==v->id)switch(c){
-  case CMAX:  zt=LIT; ado=maxC; break;
-  case CMIN:  zt=LIT; ado=minC; break;
+  case CMAX:  zt=LIT; ado=(VF)maxC; break;
+  case CMIN:  zt=LIT; ado=(VF)minC; break;
   case CAT:   z=VAV(v->f)->f; v=VAV(z); if(CAMP==v->id&&256==i0(v->f)&&CSTILE==ID(v->g));
  }else switch(c){
   case CEQ:   R eq(a,w);
   case CNE:   R ne(a,w);
-  case CLT:   zt=B01; ado=ltC;  break;
-  case CLE:   zt=B01; ado=leC;  break;
-  case CGE:   zt=B01; ado=geC;  break;
-  case CGT:   zt=B01; ado=gtC;  break;
+  case CLT:   zt=B01; ado=(VF)ltC;  break;
+  case CLE:   zt=B01; ado=(VF)leC;  break;
+  case CGE:   zt=B01; ado=(VF)geC;  break;
+  case CGT:   zt=B01; ado=(VF)gtC;  break;
  }
  if(!ado)R df2(a,w,self);
  an=AN(a); ar=AR(a); as=AS(a);

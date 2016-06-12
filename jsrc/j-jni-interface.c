@@ -66,7 +66,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
   (JNIEnv * env, jobject obj, jlong inst, jstring js) {
 	LOGD("callJNative");
-	J jengine = (J)inst;
+	J jengine = (J)(I)inst;
 
 	const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
 	int jc = JDo(jengine,(C*)nativeString);
@@ -76,14 +76,14 @@ JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_destroyJNative
   (JNIEnv *env, jobject obj, jlong inst) {
 	LOGD("destroyJNative");
-	JFree((J)inst);
+	JFree((J)(I)inst);
 	outputId = 0;
 }
 
 JNIEXPORT jobject JNICALL Java_com_jsoftware_j_JInterface_getVariableNative
   (JNIEnv *env, jobject obj, jlong inst, jstring jname) {
 	LOGD("getVariableNative");
-	J jengine = (J)inst;
+	J jengine = (J)(I)inst;
 	const char *name = (*env)->GetStringUTFChars(env, jname, 0);
 	long type, rank;
 	long *shape;
@@ -91,7 +91,7 @@ JNIEXPORT jobject JNICALL Java_com_jsoftware_j_JInterface_getVariableNative
 
 	JGetM(jengine,name,(I*)&type,(I*)&rank,(I*)&shape,(I*)&data);
 //LOGFD("name=%s,type=%l,rank=%l,shapehead=%l,data=%p",name,type,rank,*shape,data);
-  free(name);
+  (*env)->ReleaseStringUTFChars(env, jname, name);
 		return NULL;
  }
 
@@ -103,17 +103,17 @@ void _stdcall outputHandler(J jt,int type, const char* s) {
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_getLocaleNative
   (JNIEnv *env, jobject obj, jlong inst) {
 	LOGD("getLocaleNative");
-  return (*env)->NewStringUTF(env,inst?(C*)JGetLocale((J)inst):"base");
+  return (*env)->NewStringUTF(env,inst?(C*)JGetLocale((J)(I)inst):"base");
  }
 
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_setEnvNative
   (JNIEnv *env, jobject obj, jstring jkey, jstring jval) {
 	LOGD("setEnvNative");
-  char*key =  (*env)->GetStringUTFChars(env, jkey, 0);
-  char*val =  (*env)->GetStringUTFChars(env, jval, 0);
+  const char* key =  (*env)->GetStringUTFChars(env, jkey, 0);
+  const char* val =  (*env)->GetStringUTFChars(env, jval, 0);
   setenv(key,val,0);
-  free(key);
-  free(val);
+  (*env)->ReleaseStringUTFChars(env, jkey, key);
+  (*env)->ReleaseStringUTFChars(env, jval, val);
 }
 
 #ifdef ANDROID
@@ -172,7 +172,7 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_initializeJNative
 	 void* callbacks[] = {outputHandler,0,0,0,(void*)SMJAVA};
 #endif
 	 JSM(j,callbacks);
-	return (jlong) j;
+	return (jlong)(I)j;
 }
 
 /*
@@ -183,7 +183,7 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_dorsNative
   (JNIEnv * env, jobject obj, jlong jt0,  jstring cmd) {
   int err=1;
   char inputline[BUFLEN+1];
-  J jt = (J)jt0;
+  J jt = (J)(I)jt0;
   const char *nativecmd = (*env)->GetStringUTFChars(env, cmd, 0);
   if (sizeof(inputline)<8+strlen(nativecmd)) {
     (*env)->ReleaseStringUTFChars(env, cmd, nativecmd);

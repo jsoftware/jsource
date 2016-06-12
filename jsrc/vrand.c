@@ -786,7 +786,7 @@ static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  }
  jt->rl=(I)rl;
  R z;
-}    /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 126. */
+} */    /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 126. */
 
 /*
 static A jtbigdeal(J jt,I m,I n){A t,x,y;
@@ -794,7 +794,7 @@ static A jtbigdeal(J jt,I m,I n){A t,x,y;
  RZ(y=sc(n));
  do{RZ(t=nub(roll(reshape(x,y))));}while(m>AN(t));
  R vec(INT,m,AV(t));
-}    /* E.E. McDonnell circa 1966, small m and large n */
+} */    /* E.E. McDonnell circa 1966, small m and large n */
 
 /*
 static A jtdeal(J jt,I m,I n){A y;D rl=jt->rl;static D dm=16807,p=2147483647L;I j,k,*yv;
@@ -803,4 +803,4 @@ static A jtdeal(J jt,I m,I n){A y;D rl=jt->rl;static D dm=16807,p=2147483647L;I 
  DO(m, rl=fmod(rl*dm,p); j=i+(I)jfloor(rl*(n-i)/(1+p)); k=yv[i]; yv[i]=yv[j]; yv[j]=k;);
  jt->rl=(I)rl;
  R vec(INT,m,yv);
-}    /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 178. */
+} */   /* P.C. Berry, Sharp APL Reference Manual, 1979, p. 178. */

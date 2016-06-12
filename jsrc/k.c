@@ -230,7 +230,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
   x[i].e=e-1; x[i].p=p; x[i].x=y;
  }
  R !jt->jerr;
-}    /* most significant digit last, decimal point before last digit */
+} */    /* most significant digit last, decimal point before last digit */
 
 // Convert the data in w to the type t.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is

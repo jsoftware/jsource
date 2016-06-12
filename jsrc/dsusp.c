@@ -143,7 +143,7 @@ static A jtparseas(J jt,B as,A w){A z;
 
 /* parsex: parse an explicit defn line              */
 /* w  - line to be parsed                           */
-/* lk - 1 iff locked function; _1 
+/* lk - 1 iff locked function; _1                   */
 /* ci - current row of control matrix               */
 /* c  - stack entry for dbunquote for this function */
 

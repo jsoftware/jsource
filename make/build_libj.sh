@@ -3,8 +3,10 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -fno-strict-aliasing -DSY_GETTOD"
+common="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 # darwin
+# darwin errors additional to common: -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced
+ 
 common1="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
 
 case $jplatform\_$1 in

@@ -415,7 +415,7 @@ static A jtva2(J,A,A,C);
 #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
-// return the rank needed.  If it is, return -1
+// return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
 static I ssingflen(J jt, A a, A w){
 // 
  I ra=AR(a); I rw=AR(w); I ca,cw,fa,fw,r;
@@ -438,18 +438,17 @@ static A ssingallo(J jt,I r,I t){A z;
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
-/* Try the zombiesym as a last resort.  The only reason to make it last is that the test for using it is slow */ \
+/* Try the zombiesym first, because if we use it the assignment is faster */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
 if(jt->rank&&(f=ssingflen(jt,a,w))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
 else if (ar >= wr){  \
-    if (AINPLACE){ z = a; AT(z) = FL; } \
+    if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
+    else if (AINPLACE){ z = a; AT(z) = FL; } \
     else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-    else if(jt->zombiesym && AN(z=jt->zombiesym->val)==1 && AR(z)==ar){AT(z)=FL;} /* last because slower */ \
     else GA(z, FL, 1, ar, AS(a)); \
-} \
-else{ \
-    if (WINPLACE){ z = w; AT(z) = FL; } \
-    else if(jt->zombiesym && AN(z=jt->zombiesym->val)==1 && AR(z)==wr){AT(z)=FL;} \
+} else { \
+    if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
+    else if (WINPLACE){ z = w; AT(z) = FL; } \
     else GA(z, FL, 1, wr, AS(w)); \
 } \
 } /* We have the output block */

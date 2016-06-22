@@ -2,13 +2,16 @@ NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
 
-spn=: 3 : '>.&.(2&^.) k*2+7+1+4+1+>.(#y)%k=.IF64{4 8'   NB. space needed for a name
+spn=: 3 : '>.&.(2&^.) (k*2+7+1+2+2)+k*>.(1+#y)%k=.IF64{4 8'   NB. space needed for a name
 NB. 2   MS struct
 NB. 7   header words
 NB. 1   shape
-NB. 4   NM struct
+NB. 1   NM struct - hash
+NB. 2   NM struct - I4 bucket info
+NB. 2   NM struct - C length/flags
 NB. 1   trailing 0 pad
 NB. #y  letters in the name
+NB. all struct members seem to be aligned to long long boundaries
 
 spl=: 4 : 0   NB. space needed for locale y with hash table size x
  z=. spn >y                      NB. locale name
@@ -28,6 +31,16 @@ jajabinks_abc_ =: !100x
 NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
 (7!:6 <'abc') -: h spl <'abc'
 18!:55 <'abc'
+18!:55 <'abcdefghijklmno'
+(<'abcdefghijklmno') -: (h=:3) (18!:3) <'abcdefghijklmno'
+foot_abcdefghijklmno_=: i.3 4
+charboil_abcdefghijklmno_=: 123$'x'
+jajabinks_abcdefghijklmno_ =: !100x
+(p=: ;:'z base j') 18!:2 <'abcdefghijklmno'
+NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/ 24+sp_abc_ nl_abc_ ''
+(7!:6 <'abcdefghijklmno') -: h spl <'abcdefghijklmno'
+18!:55 <'abcdefghijklmno'
+
 
 'locale error'    -: 7!:6 etx <'nonexistent'
 'locale error'    -: 7!:6 etx <'123789456'

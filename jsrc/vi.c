@@ -5,8 +5,15 @@
 
 #include "j.h"
 
-
+// Table of hash-table sizes
+// These are primes (to reduce collisions), and big enough to just fit into a power-of-2
+// block after leaving 2 words for memory header and 7 words for A-block header.  keep rank=0
+// to avoid allocating a word for it.
+// The first row of small values was added to allow for small symbol tables to hold local
+// variables.  Hardwired references to ptab in the code have 3 added so that they correspond to
+// the correct values.  User locale sizes also refer to the original values, and have 3 added before use.
 I ptab[]={
+        3,         7,        23,
        53,       113,       241,       499,     1013, 
      2029,      4079,      8179,     16369,    32749, 
     65521,    131059,    262133,    524269,  1048559, 
@@ -466,7 +473,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
  R t;
 }    /* return type if opened atoms of cells of w has uniform type, else 0. c is # of cells */
 
-I hsize(I m){I q=m+m,*v=ptab; DO(nptab-1, if(q<=*v)break; ++v;); R*v;}
+I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;

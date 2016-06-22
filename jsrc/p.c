@@ -59,7 +59,7 @@ static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);}
 static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
  n=stack[0].a; v=stack[2].a;   // extract arguments
  if(stack[0].t.tno==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(jt->zombiesym){symbis(n,v,(A)1);}   // Assign to the known name. 1 is any nonzero
+ if(jt->assignsym){symbis(n,v,(A)1);}   // Assign to the known name. 1 is any nonzero
  else {
   if(LIT&AT(n)&&1>=AR(n)){
    // lhs is ASCII characters, atom or list.  Convert it to words
@@ -122,7 +122,7 @@ PT cases[] = {
 // Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
 F1(jtparse){A z;
  RZ(w);
- RZ(deba(DCPARSE,0L,w,0L));
+ RZ(deba(DCPARSE,0L,w,0L,0L));
  z=parsea(w);
  debz();
  R z;
@@ -132,6 +132,64 @@ F1(jtparse){A z;
 #define FP {stack = 0; goto exitparse;}   // indicate parse failure
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
+
+// In-place operations
+//
+// The key point is that an in-place operation is connected to a FUNCTION CALL, not an DATA BLOCK.
+// For example, in (+/ % #) <: y the result of <: y has a usecount of 1 and is
+// not used anywhere else, so it is passed into the fork as an inplaceable argument.
+// This same block is not inplaceable when it is passed into # (because it will be needed later by +/)
+// but it can be inplaceable when passed into +/.
+// Thus, it is up to the caller to decide whether it can tolerate having an argument overwritten;
+// if so, it marks the argument as inplaceable for that call only.
+//
+// Generally an argument is eligible for inplacing if its usecount is 1, but there are exceptions.
+// We can't inplace any argument that came from the queue, because the sentence may
+// be reexecuted later.  [This is actually two different cases.  Names in the queue are replaced,
+// by either their value or a reference, so there is no issue of overwriting the queue; but the value
+// of a noun must be protected since it is attached to the name.  It would be permissible to modify
+// a reference but there is no advantage in doing so.  Unnamed noun values in the queue must be protected
+// because they are stored in the saved sentence, which might be in an explicit definition that will
+// be run again later.  It would be OK to modify values coming from ". or immex, but that is not
+// in a critical-performance path.]
+// Individual verbs may also decide not to allow inplacing, as in the example above.
+// And, if a non-inplaceable argument is returned from a verb (such as ]), we need to make sure
+// that that result is also marked non-inplaceable.
+//
+// The upshot is that results of verbs are (usually) inplaceable.  When one of these has usecount 1,
+// we indicate its inplaceability by setting an LSB of jt: bit 0 to indicate inplaceable w, bit 1 for inplaceable a.
+// It is our responsibility not to set these flags unless we know that the receiving verb
+// can handle inplace arguments (if it can, it needs to execute F?PREFIP as its first act, to preserve
+// the flags in jt and cleanse jt before it is used).  For primitive verbs, the verb flags
+// VINPLACEOK? indicate whether the monad and dyad can handle inplace calls.
+//
+// We use stack[].ipt.ip to indicate that the stacked noun block is an argument that supports inplace calls.
+//
+// There is one more piece to the inplace system: reassigned names.  When there is an
+// assignment to a name, the block being reassigned can be reused for the output if:
+//   the usecount is 1
+//   the current execution is the only thing on the stack
+//   the assignment is to a local name 
+// We detect these cases only for local assignments, to avoid worries about aliasing
+// with other uses of the names in sentences in execution at higher stack levels; and only when
+// the verb about to be executed is the only thing on the stack (but there may have been previous
+// executions in the sentence before the final execution whose result is about to be assigned).
+// The name jt->assignsym is set to point to the symbol-table entry whenever a local assignment is detected
+// (note that some such assignments, coming from ". or (name)=. might go undetected), as a time-saving maneuver
+// because such an assignment can complete quickly.
+// When a symbol is being reassigned and the data area can be reused, the name jt->zombieval is set
+// to point to the data block for the name.
+//
+// Note that if jt->zombieval is set, any argument that is equal to jt->zombieval will be
+// ipso facto inplaceable, and moreover the flag in jt corresponding to such
+// an argument WILL NOT be set because it came from evaluating a name.  So, a verb supporting inplace
+// operation must check for (jtinplace&1||jt->zombiesym==w) for example
+// if it wants to inplace the w argument.
+
+// Note kludge: the stack bits to indicate inplaceability could be replaced by performing
+// ra();tpush();  when a word is moved to the stack; but until we
+// get nonrecursive usecounts we don't do that.
+
 
 // Prep for in-place operations.
 // If the top-of-stack is ASGN, we will peek into the queue to get the symbol-table entry for the
@@ -147,9 +205,9 @@ F1(jtparse){A z;
 // the assignee may be used as a free block.  zombiesym must be cleared:
 //  when the assignment is performed
 //  if an error is encountered (preventing the assignment)
-// Set zombiesym if current assignment can be in-place.  w is the end of the assignment
+// Set zombiesym if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
 #define IPSETZOMB(w) if(AT(stack[0].a)==ASGN&&stack[(w)+1].a==mark&&AT(queue[m])==NAME&&CAV(stack[0].a)[0]==CASGN&&jt->local \
-   &&AN(queue[m])==NAV(queue[m])->m&&(s=probe(queue[m],jt->local))&&s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombiesym=s
+   &&AN(queue[m])==NAV(queue[m])->m&&(s=probe(queue[m],jt->local))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:
@@ -203,6 +261,8 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
  // word m-1, with the number in the stack being one higher than the original word number
  queue=AAV(w)-1;
  ASSERT(!(AT(queue[1])&ASGN),EVSYNTAX);   // make sure there is something before each ASGN
+
+ // We don't refer to w past this point.  It may be overwritten be recursive calls
 
  // As names are dereferenced, they are added to the nvr queue.  To save time in the loop, we now
  // make sure there is enough room in the nvr queue to handle all the names we will encounter in
@@ -293,7 +353,7 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
    case PMONAD2:
    DFSIP1(2,3) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; break;  //STO(z,w,toksource)
    case PDYAD:
-   DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,1); SM(1,0); stack += 1; break;  //STO(z,a,w,toksource)
+   DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; break;  //STO(z,a,w,toksource)
    case PADV:
    EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t.ipt = stack[1].t.ipt;SM(1,0); stack += 1; break;
    case PCONJ:
@@ -392,7 +452,7 @@ exitparse:
 
  // NOW it is OK to return
 
- if(!stack){jt->zombiesym=0; R 0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
+ if(!stack){jt->assignsym=0; jt->zombieval=0; R 0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
 
  // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
  // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark

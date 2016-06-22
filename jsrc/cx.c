@@ -21,6 +21,8 @@
 #define BGA(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
+// h is the array of saved info for the definition; hv->pointers to boxes;
+// hi=0 for monad, 3 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
 #define LINE(sv)       {A x; \
                         h=sv->h; hv=AAV(sv->h); hi=a&&w?HN:0; \
                         line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
@@ -76,16 +78,18 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
+// Fill in 'queue' to point to the words of the sentence: n words starting at index i
+#define makequeue(n,i) (AN(queue)=(n),AK(queue)=(I)((C*)(line+i)-(C*)queue),queue)
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Recreate the execution of the failing sentence, and show an error for it */ \
-    i = ti; parsex(vec(BOX, cw[ti].n, line + cw[ti].i), -1, &cw[ti], d); \
+    i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), -1, &cw[ti], d,stkblk); \
     /* go to error loc; if we are in a try., send this error to the catch. */ \
     i = cw[ti].go; if (i<SMAX){ RESETERR; if (tdi){ --tdi; jt->db = od; } }  \
     break; }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
+static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,queue,stkblk,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
   CW *ci,*cw;DC d=0;I bi,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
  RE(0);
  // z is the final result (initialized here in case there are no lines)
@@ -106,9 +110,14 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // Read the info for the parsed definition, including control table and number of lines
  LINE(sv); ASSERT(n,EVDOMAIN);
  // Create symbol table for this execution
- RZ(jt->local=stcreate(2,1L,0L,0L));
+ RZ(jt->local=stcreate(2,1L+PTO,0L,0L));
  // If the verb contains try., allocate a try-stack area for it
  if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
+ // Allocate an area to use for the SI entries for sentences executed here
+ GA(stkblk, LIT, sizeof(DST), 1, 0);
+ // Allocate a header to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
+ // address/length into parsex.  The address and length of the sentence will be filled in as needed
+ GA(queue,INT,0,1,0);
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  jt->xdefn=1;   // Indicate explicit definition running
  // Assign the special names x y m n u v
@@ -124,7 +133,8 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
   jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
  }
- // remember tbase.  We will tpop after every sentence to free blocks
+ // remember tbase.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
+ // allocation that has to remain throughout this routine
  old=jt->tbase+jt->ttop; 
  // loop over each sentence
  while(0<=i&&i<n){
@@ -156,7 +166,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CBBLOCK:
     // B-block (present on every sentence in the B-block)
     // run the sentence
-    tpop(old); z=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
+    tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise error
@@ -175,7 +185,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // otherwise fall through to process the line.
    case CTBLOCK:
     // execute and parse line as if for B block, except save the result in t
-    gc(z,old); t=parsex(vec(BOX,ci->n,line+ci->i),lk,ci,d);
+    gc(z,old); t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
@@ -287,7 +297,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
  // If it isn't, abortively reexecute the sentence that created the noun-noun result, and flag it as error
  // The -1 means 'flag as non-noun, don't actually execute'
- if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(vec(BOX, cw[bi].n, line + cw[bi].i), -1, &cw[bi], d);
+ if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
  z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack
@@ -331,7 +341,7 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
  mnuv=xy=0;
  // Loop through monad and dyad
  A *wv=AAV(w); I wd=(I)w*ARELATIVE(w);
- for(k=0;k<6;k+=3){    // for monad and dyad cases...
+ for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
   A w=WVR(k);  // w is now the box containing the words of the expdef
   {A *wv=AAV(w);
    I wd=(I)w*ARELATIVE(w);
@@ -406,6 +416,45 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
  R 1;
 }    /* boxed sentences into monad/dyad */
 
+
+// create local-symbol table for a definition
+//
+// The goal is to save time allocating/deallocating the symbol table for a verb; and to
+// save time in name lookups.  We scan the tokens, looking for assignments, and extract
+// all names that are the target of local assignment (including fixed multiple assignments).
+// We then allocate a symbol table sufficient to hold these values, and a symbol for each
+// one.  These symbols are marked LPERMANENT.  When an LPERMANENT symbol is deleted, its value is
+// cleared but the symbol remains.
+// Then, all simplenames in the definition, whether assigned or not, are converted to bucket/index
+// form, using the known size of the symbol table.  If the name was an assigned name, its index
+// is given; otherwise the index tells how many names to skip before starting the name search.
+//
+// This symbol table is created with no values.  When the explicit definition is started, it
+// is used; values are filled in as they are defined & removed at the end of execution (but the symbol-table
+// entries for them are not removed).  If
+// a definition is recursive, it will create a new symbol table, starting it off with the
+// permanent entries from this one (with no values).  We create this table with rank 0, and we set
+// the rank to 1 while it is in use, to signify that it must be cloned rather than used inplace.
+static A jtcrelocalsyms(J jt, A zl, A zc,I type, I dyad, I flags){
+ // Allocate a pro-forma symbol table to hash the names into
+
+ // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
+ // create a symbol-table entry for each such name
+ // Start with the argument names
+ // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
+ // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
+
+ // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions.
+
+ // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
+
+ // Go back through the words of the definition, and add bucket/index information for each simplename
+ // Note that variable names must be replaced by clones so they are not overwritten
+
+ R 0;
+}
+
+
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  RZ(a&&w);
  if(VERB&AT(a)&&VERB&AT(w)){V*v;
@@ -421,7 +470,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d));
   if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}
   GA(h,BOX,2*HN,1,0); hv=AAV(h);
-  RE(b=preparse(m,hv,   hv+1   )); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
+  RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }
  if(!n)R ca(w);
@@ -431,6 +480,14 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
   else if(2==n&&AN(m)&&!AN(d)){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}
  }
  flag|=VFIX;  // ensures that f. will not look inside n : n
+ // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
+ // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
+ // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
+ if(4>=n) {
+  hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag);  // tokens,cws,type,monad,flag
+  hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag);  // tokens,cws,type,dyad,flag
+ }
+
  switch(n){
   case 1:  R fdef(CCOLON, ADV,  b?xop1:xadv,0L,    num[n],0L,h, flag, RMAX,RMAX,RMAX);
   case 2:  R fdef(CCOLON, CONJ, 0L,b?xop2:jtxdefn, num[n],0L,h, flag, RMAX,RMAX,RMAX);

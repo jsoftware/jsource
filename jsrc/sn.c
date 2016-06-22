@@ -40,7 +40,8 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  DO(n, if(' '!=*s)break; ++s; --n;); 
  t=s+n-1;
  DO(n, if(' '!=*t)break; --t; --n;);
- // If the name is the special x y.. or x. y. ..., return the preallocated block for that name
+ // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name
+ // We mustn't return the block itself, since we may modify the local-symbol pointers in it
  c=*s;if((1==n||2==n&&'.'==s[1])&&strchr("mnuvxy",c)){
   if(1==n)R c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam;
   else    R c=='y'?ydot:c=='x'?xdot:c=='v'?vdot:c=='u'?udot:c=='n'?ndot:mdot;
@@ -55,7 +56,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  else DO(n, if('_'==s[i]&&'_'==s[1+i]){   f=NMILOC; p=n-2-i;     m=n-(2+p); break;});  // p=#locales, m=#simplename
  ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
  zv->flag=f;  // Install locative flag
- zv->sn=0; zv->e=0;
+ // obsolete zv->sn=0; zv->e=0;
  zv->m=(UC)m; zv->hash=NMHASH(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
  R z;
 }    /* name from string */

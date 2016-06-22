@@ -257,6 +257,7 @@ typedef struct {A name,val;I flag,sn,next,prev;} L;
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LHEAD           (I)2            /* head pointer (no predecessor)   */
 #define LINFO           (I)4            /* locale info                     */
+#define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 
 
 typedef struct{A og,g;I ptr,flag;B sw0;} LS;
@@ -270,13 +271,18 @@ typedef struct{A og,g;I ptr,flag;B sw0;} LS;
 /* sw0:  old value of stswitched                                           */
 
 
-typedef struct{UI hash;I sn;L*e;UC m;C flag,s[1];} NM;
+typedef struct{UI hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
 
 /* hash: hash for  non-locale part of name                                 */
+// bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local
+//   0 if chain index not known
+// bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
+//   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
+//   is guaranteed to be at that position  
 /* m:    length of non-locale part of name                                 */
-/* sn:   symbol table number on last reference                             */
-/* e:    symbol pool entry   on last reference                             */
-/* s:    points to string part of full name (1 to ?? characters)           */
+// sn:   symbol table number on last reference  no longer used
+// e:    symbol pool entry   on last reference  no longer used
+/* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
 #define NMLOC           1       /* direct   locale abc_lm_                 */
 #define NMILOC          2       /* indirect locale abc__de__fgh ...        */

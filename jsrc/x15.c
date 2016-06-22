@@ -415,8 +415,8 @@ static void convertup(I*pi,I n,C t){I j=n;
 /* cdnl    - # used entries in cdhashl                                  */
 
 static A jtcdgahash(J jt,I n){A z;I hn,*v;
- v=ptab; while(n>*v)++v; hn=*v;
- GA(z,INT,hn,1,0); memset(AV(z),CFF,hn*SZI);
+ v=ptab+PTO; while(n>*v)++v; hn=*v;
+ GA(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R ra(z);
 }
 

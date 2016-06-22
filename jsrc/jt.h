@@ -246,7 +246,8 @@ typedef struct {
  B    xdefn;            /* 1 iff within explicit definition                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
  I    xmode;            /* extended integer operating mode                 */
- L    *zombiesym;       // symbol-table entry for the symbol about to be assigned
+ A    zombieval;        // value of assignsym, if it can be reused
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned
 } JST;
 
 typedef JST* J; 

@@ -111,7 +111,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
  q=hv[1]; jv= AV(q);
  q=hv[2]; cv=AAV(q); m=AN(q);
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
-  v=ptab; while(m>=*v)++v; m=*v;
+  v=ptab+PTO; while(m>=*v)++v; m=*v;
   RZ(jj=reshape(v2(m,2L),sc(IMIN))); jv= AV(jj);
   GA(cc,BOX,m,1,0);                  cv=AAV(cc);
   for(i=0,u=ju;i<n;++i,u+=2)if(IMIN!=*u){
@@ -154,7 +154,7 @@ DF2(jtmemo2){DECLF;A z;I x,y;
 F1(jtmemo){A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- v=VAV(w); m=ptab[1];
+ v=VAV(w); m=ptab[1+PTO];
  GA(h,BOX,3,1,0); hv=AAV(h);
  RZ(q=sc(0L));                     hv[0]=q;
  RZ(q=reshape(v2(m,2L),sc(IMIN))); hv[1]=q;

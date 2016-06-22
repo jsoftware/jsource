@@ -25,6 +25,7 @@
  {I k=1,p=(j),*sr=s+r-2; DO(p?r-1:0, k*=*(sr-i); if(p%k)break; exp); }
 
 static F1(jtthxqe);
+static F1(jtthorn1main);
 
 static FMTF(jtfmtI,I){I x=*v;
  sprintf(s,FMTI,x);
@@ -203,7 +204,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
 // Output is two lists, one each for x and y, where x[i] is (1+height of largest contents)
 // found in row i, and y[j] is (1 + width of largest contents) in column j
 // Result is 1 normally, 0 if size out of bounds
-static B jtrc(J jt,A w,A*px,A*py){A*v,x,y;I j=0,k=0,r,*s,xn,*xv,yn,*yv;
+static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,*yv;
  RZ(w);  // return failure if no input
  // r = rank of w, s->shape of w, v->values
  r=AR(w); s=AS(w); v=AAV(w);
@@ -211,12 +212,13 @@ static B jtrc(J jt,A w,A*px,A*py){A*v,x,y;I j=0,k=0,r,*s,xn,*xv,yn,*yv;
  xn=1<r?s[r-2]:1; RZ(*px=x=apv(xn,0L,0L)); xv=AV(x);
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
  yn=  r?s[r-1]:1; RZ(*py=y=apv(yn,0L,0L)); yv=AV(y);
- // for each atom of w, include height/width in the appropriate row/column cells
- DO(AN(w), s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
+ // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
+ DO(AN(w), maxt=MAX(maxt,AT(*v)); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position
  // We have not yet accounted for the boxing character at the end.
  DO(xn, ASSERT(xv[i]<IMAX,EVLIMIT); ++xv[i];); 
  DO(yn, ASSERT(yv[i]<IMAX,EVLIMIT); ++yv[i];);
+ *t=maxt;  // Return maximum type of inputs
  R 1;  // good return
 }
 
@@ -225,11 +227,12 @@ static B jtrc(J jt,A w,A*px,A*py){A*v,x,y;I j=0,k=0,r,*s,xn,*xv,yn,*yv;
 // 9 is vertical bar, 10 is horizontal bar
 
 // Install one row of boxing characters
+// cw is 1 if the data is LIT, 2 if C2T
 // k is index of boxing character to install at leftmost divider
 // n is #boxed values per row
 // x[i] is width of column i, including the boxing character
 // v->position of first character in some row
-static void jtfram(J jt,I k,I n,I*x,C*v){C a,b=9==k,d,l,r;
+static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
  // l = character to install at leftmost divider
  // a = character to install between dividers ('-' normally, but if l=='|', which means we are
  //   formatting the non-divider rows, use space)
@@ -238,15 +241,23 @@ static void jtfram(J jt,I k,I n,I*x,C*v){C a,b=9==k,d,l,r;
  l=jt->bx[k]; a=b?' ':jt->bx[10]; d=b?l:jt->bx[1+k]; r=b?l:jt->bx[2+k];
  // Install first character; then, for each field, {(width-1) copies of a; then d overwriting last a}
  // then install r over the last d
- *v++=l; DO(n, memset(v,a,x[i]-1); v+=x[i]-1; *v++=d;); *--v=r;
+ if(cw==1){
+  // version for LIT output array
+  *v++=l; DO(n, memset(v,a,x[i]-1); v+=x[i]-1; *v++=d;); *--v=r;
+ }else{US *u=(US*)v;I j;
+  // version for C2T output array
+  *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;
+ }
 }
 
 // Install boxing character in all result 2-cells
 // m=#result 2-cells
-// ht,wd = height & width of result 2-cell
+// ht=height of result 2-cell, in characters
+// wd=width of result 2-cell, in bytes
 // x,y hold height and width or rows & columns respectively (including 1 boxing char)
 // zv->first character in first 2-cell
-static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv){C*u,*v;I p,xn,*xv,yn,*yv;
+// cw=size of result chars:1=LIT, 2=C2T
+static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn,*yv;
  p=ht*wd;  // p=stride between 2-cells
  xn=AN(x); xv=AV(x);   // xn=#rows per 2-cell, xv->heights
  yn=AN(y); yv=AV(y);   // yn=#cols per 2-cell, yv->widths
@@ -254,15 +265,15 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv){C*u,*v;I p,xn,*xv,yn,*yv;
  // First, install the characters for cells containing data.  We start in the first
  // row of the result, even though this can never keep these characters.
  // Then we propagate this row through all rows except the last.
- fram(9L,yn,yv,zv); u=zv; DO(ht-2, MC(u+=wd,zv,wd););
+ fram(9L,yn,yv,zv,cw); u=zv; DO(ht-2, MC(u+=wd,zv,wd););
  // Fill in the first interior divider row, whose row index is the height of the first row
  // Then copy this row over all the other interior-divider rows, xn-1 times, which
  //  finishes by writing over the bottom row of the result
- fram(3L,yn,yv,u=v=zv+wd**xv); DO(xn-1, MC(u+=wd*xv[1+i],v,wd););
+ fram(3L,yn,yv,u=v=zv+wd**xv,cw); DO(xn-1, MC(u+=wd*xv[1+i],v,wd););
  // Install the first row, overwriting the data row first put there
- fram(0L,yn,yv,zv);
+ fram(0L,yn,yv,zv,cw);
  // Install the last row, overwriting the interior-divider row first copied there
- fram(6L,yn,yv,zv+p-wd);
+ fram(6L,yn,yv,zv+p-wd,cw);
  // First 2-cell is complete.  Copy it over all the others
  u=zv; DO(m-1, MC(u+=p,zv,p););
 }    /* Initialize with box-drawing characters */
@@ -270,13 +281,14 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv){C*u,*v;I p,xn,*xv,yn,*yv;
 // Copy character data into the boxed result array
 // p is #atoms in 2-cell of result
 // q is #atoms in 2-cell of input
-// wd is #atoms in one row of result
+// wd is width of result 2-cell in bytes
 // w is the input: an array of boxes of any shape, where each box holds a table of characters
 // x,y  hold height and width or rows & columns respectively (including 1 boxing char).  Each has
 //   an extra entry at the end, which we will fill in here
 // zv->output area, the first character in the result array (rank>=2)
+// cw=size of character, in bytes 1=LIT 2=C2T
 // We go through the boxes one by one, moving the data according to the width/height and centering info
-static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv){A e,*wv;C*u,*v;
+static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;C*v;
   I c,d,f,i,j,k,n,r,*s,xn,xp,*xv,yn,yp,*yv;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
@@ -289,23 +301,24 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv){A e,*wv;C*u,*v;
  // j = row number
  // k = column number
  // d = index to top-left corner of output area for the box
- i = 0; d=wd+1;  // first row/col; d->row 1 col 1  
+ i = 0; d=wd+cw;  // first row/col; d->row 1 col 1  
  while(i<n){
   for(j=0;j<xn;++j){
    for(k=0;k<yn;++k){
     // get info for contents of next box: (r,c) = height,width
-    e=wv[i]; s=AS(e); r=s[0]; c=s[1];
+    e=wv[i]; s=AS(e); r=s[0]; c=s[1]; v=CAV(e); 
     // get offset to store the value at.  First, the vertical calculation.
     // If centering=0, use starting position.  If 2, add (fieldheight-1)-(data height)
     // if 1, add half of that height
     f = xp?(d + wd*((xv[j]-1-r)>>(2-xp))) : d;
-    if(yp)f = f + ((yv[k]-1-c)>>(2-yp));
-    // Move in the data
-    u=zv+f-wd; v=CAV(e)-c; DO(r, MC(u+=wd,v+=c,c););
+    if(yp)f = f + cw*((yv[k]-1-c)>>(2-yp));
+    // Move in the data.  If sizes are dissimilar, the target must be larger; do 1- to 2-byte conversion then
+    if(cw==bp(AT(e))){C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
+    else{US *u=(US *)(zv+f),*uu; DO(r, uu=u; DO(c, *uu++=*v++;) u=(US *)((C*)u+wd);)}
     ++i;   // step to next input cell
-    d += yv[k];  // step to next output column 
+    d += cw*yv[k];  // step to next output column 
    }
-   d += wd*(xv[j]-1)+1;  // d points to start of 2nd line of row; add 1 to get to data char, and then add
+   d += wd*(xv[j]-1)+cw;  // d points to start of 2nd line of row; add 1 to get to data char, and then add
                      // height-1 rows to get to next row  
   }
   d += wd;   // d points to first row of next 2-cell: skip over first row, which contains boxing
@@ -318,11 +331,11 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv){A e,*wv;C*u,*v;
 // 2-cell of w is opened and the contents joined to its neighbors, with boxing characters
 // installed around it.
 // All the 2-cells of the result have boxing characters in the same locations.
-static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,wd,wr,xn,*xv,yn,*yv,zn;
+static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  // Find the positions of the cell boundaries within each 2-cell of the
  // result. x and y are lists, where x[i] and y[j] give the height/width of cell
  // (i,j) of the result 2-cell. This height/width includes the boxing char
- RE(rc(w,&x,&y));
+ RE(rc(w,&x,&y,&t));
  n=AN(w); wr=MAX(2,AR(w));   // n=#atoms of w, wr=rank of result (2 >. rank of w)
  // Calculate height of result as 1 + sum of row heights.  The 1 is for the final boxing character.
  xn=AN(x); xv=AV(x); ht=1; DO(xn, ht+=xv[i]; ASSERT(0<ht,EVLIMIT););
@@ -330,25 +343,26 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,wd,wr,xn,*xv,yn,*yv,zn;
  yn=AN(y); yv=AV(y); wd=1; DO(yn, wd+=yv[i]; ASSERT(0<wd,EVLIMIT););
  // p=#atoms in result 2-cell, q=#atoms in 2-cell of w, m=#result 2-cells, zn=#atoms in result
  RE(p=mult(ht,wd)); q=MAX(1,xn*yn); m=n/q; RE(zn=mult(m,p));  // in case 2-cells of w are empty, avoid zerodivide.  zn will be 0 then
- // Allocate result area; initialize shape to shape of w with the last 2 dimensions replaced by (ht,wd) of result 2-cell
- GA(z,LIT,zn,wr,AS(w)); *(AS(z)+wr-2)=ht; *(AS(z)+wr-1)=wd; 
+ // Allocate result area, using max type of the children; initialize shape to shape of w with the last 2 dimensions replaced by (ht,wd) of result 2-cell
+ GA(z,t,zn,wr,AS(w)); *(AS(z)+wr-2)=ht; *(AS(z)+wr-1)=wd; 
  if(!n)R z;  // If w has 0 cells, return the empty array
  // Here w has cells.
  zv=CAV(z);  // zv->result area
+ wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
  // Install the boxing characters in each 2-cell of the result
- fminit(m,ht,wd,x,y,zv);
+ fminit(m,ht,wdb,x,y,zv,t);
  // Insert the data for each atom into the result
- fmfill(p,q,wd,w,x,y,zv);
+ fmfill(p,q,wdb,w,x,y,zv,t);
  R z;
 }
 
 // Convert any character array to a table for display
 // w is an r-dimensional array of characters; result is a table with
 // 1 blank line between 2-cells, 2 blank lines between 3-cells, etc
-F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,zn;
+F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  RZ(w);  // return if no w
- // r=rank of w, s->shape, v->characters
- r=AR(w); s=AS(w); v=CAV(w);
+ // r=rank of w, s->shape, v->characters, t=type
+ r=AR(w); s=AS(w); v=CAV(w); t=AT(w);
  // set (q,c) to the shape of a 2-cell of the input
  q=1<r?s[r-2]:1; c=r?s[r-1]:1;
  // set b=1 if there are 0 2-cells
@@ -362,28 +376,30 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,zn;
  // set p=total # lines: number of lines in each 2-cell, plus the added blanks (unless there are no lines to display)
  RE(p=mult(m,q)+k*!!q); RE(zn=mult(p,c));  // zn=total # atoms
  // Allocate the result table, set shape to (p,c); x->data area
- GA(z,LIT,zn,2,0); *AS(z)=p; *(1+AS(z))=c; x=CAV(z);
+ GA(z,t,zn,2,0); *AS(z)=p; *(1+AS(z))=c; x=CAV(z);
  // If the result has gaps, fill the entire result area with fills
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
- if(2<r)fillv(LIT,zn,x);
- // for each 2-cell, leave a gap if required, then copy in the 2-cell.  qc=size of 2-cell
- if(zn){RE(qc=mult(q,c)); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
+ if(2<r)fillv(t,zn,x);
+ // for each 2-cell, leave a gap if required, then copy in the 2-cell.  Change c to size in bytes; qc=size of 2-cell
+ if(zn){c*=bp(t); RE(qc=mult(q,c)); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
  R z;
 }
 
 // Convert 1 box to character array, then to character table
-static F1(jtmatth1){R mat(thorn1(w));}
+static F1(jtmatth1){R mat(thorn1main(w));}
 
 // Format boxed array.  Result is table of characters, with space-changing characters (like BS, CR) converted to spaces
-static F1(jtthbox){A z;UC*s;static C ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
+static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\014 ";
  // Format the contents of each box; form into a table.  every returns an array of boxes,
  // with the same shape as w, where the contents have been replaced by a table of characters
  // Then call enframe to assemble all the tables into the result table
  RZ(z=enframe(every(w,0L,jtmatth1)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
- s=UAV(z);
- DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);
+  // Two versions of replacement, depending on datatype of the array
+ if(AT(z)==LIT){UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // byte
+ else{US *s=USAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // wide char
+
  R z;
 }
 
@@ -402,8 +418,9 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  R z;
 }
 
-// ": y, returning character array
-F1(jtthorn1){PROLOG;A z;
+// ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
+// C2T when there are unicodes present
+static F1(jtthorn1main){PROLOG;A z;
  RZ(w);
  if(!AN(w))GA(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
@@ -418,8 +435,22 @@ F1(jtthorn1){PROLOG;A z;
 #endif
   case BITX:  z=thbit(w);                  break;
   case B01X:  z=thb(w);                    break;
-  case LITX:  z=ca(w);                     break;
-  case C2TX:  z=rank1ex(w,0L,1L,jttoutf8); break;
+  case LITX:
+   // If we are producing byte output, we simply copy the input.
+    // If we are allowed to produce C2T output, do so if the string is a list.  An array of
+    // multiple U8 strings is problematic - how do you space them? - and the user should have
+    // used C2T if he wanted good-looking result.  What we do (at rank 1) is: check for non-ASCII; if there
+    // is any, convert to C2T BUT KEEP THE SAME LENGTH AS THE ORIGINAL (Eric wanted that).  If
+    // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
+   if(!jt->thornuni)z=ca(w);
+   else z = rank1ex(w, 0L, 1L, jttoutf16r);  // check list for U8 codes, return LIT or C2T
+   break;
+  case C2TX:
+   // If C2T output is allowed, just copy the input (it's not worth the time to go through
+   // the data to see if conversion to ASCII is feasible - we might just have to expand back to
+   // C2T later).  Otherwise, convert to ragged array of bytes
+   z=jt->thornuni?ca(w) : rank1ex(w,0L,1L,jttoutf8);
+   break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
   case NAMEX: z=sfn(0,w);                  break;
@@ -430,73 +461,86 @@ F1(jtthorn1){PROLOG;A z;
              z=ths(w);                    break;
   case VERBX: case ADVX:  case CONJX:
    switch((jt->disp)[1]){
-    case 1: z=thorn1(arep(w)); break;
-    case 2: z=thorn1(drep(w)); break;
-    case 4: z=thorn1(trep(w)); break;
-    case 5: z=thorn1(lrep(w)); break;
-    case 6: z=thorn1(prep(w)); break;
+    case 1: z=thorn1main(arep(w)); break;
+    case 2: z=thorn1main(drep(w)); break;
+    case 4: z=thorn1main(trep(w)); break;
+    case 5: z=thorn1main(lrep(w)); break;
+    case 6: z=thorn1main(prep(w)); break;
  }}
  EPILOG(z);
 }
 
+// entry point to allow C2T result from thorn1
+F1(jtthorn1u){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); R z; }
+
+// entry point for returning character array only.  Allow C2T result, then convert
+F1(jtthorn1){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&C2T)z = rank1ex(z, 0L, 1L, jttoutf8); R z; }
+
+
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
 #define EOL(zv)  {zv[0]=eov[0]; zv[1]=eov[1]; zv+=m;}
 #define EOLC(zv) {++lc; EOL(zv)}
-#define BDC(x)   if(16<=x&&x<=26){*(zv-1)='\342'; *zv++='\224'; *zv++=bdc[x];}
+#define BDC(zv,x)  {if(x<=26&&16<=x){*zv++='\342'; *zv++='\224'; *zv++=bdc[x];}else *zv++=x;}
+#define UUC(zv,x)  {if(x<=127)*zv++=(C)x;else if(x<=2047){*zv++=(C)(0xc0+(x>>6));*zv++=(C)(0x80+(x&0x3f));}else{*zv++=(C)(0xe0+(x>>12));*zv++=(C)(0x80+((x>>6)&0x3f));*zv++=(C)(0x80+(x&0x3f));}}
+
+
+// Apply a counting function to the input characters
+// Result is a function added up over the characters
+// I (*f)() - the counting function
+// t = width of character: 1 for byte, 2 for C2T
+// v->character array
+// h = total # lines to output
+// nq = # lines in the character array
+// c = #characters in an input line
+// lb,la # lines to accept at beginning & end
+static I countonlines(I (*f)(), I t, C* v, I h, I nq, I c, I lb, I la){
+ // if we can output all the lines, go count every character
+ if(h>=nq)R (*f)(t,v,c*nq);
+ // if we are going to suppress some lines, count the prefix and suffix separately
+ R (*f)(t,v,c*lb) + (*f)(t,(v+c*t*(nq-la)),c*la);
+}
 
 // count the number of bytes that must be added because of UTF-8 expansion.
-// This version for byte input, where the only such bytes come from boxing characters
 // We get a very conservative guess at the number of characters that have to be added
 // - we don't stop counting after the line-length limit is reached
 // - we add 3 bytes per boxing char when we only have to add 2 (3-byte UTF, but 1 is already accounted for)
 // - we don't account for internal EOLs, which reduce the number of lines to process
 // I don't know why we have this code anyway, rather than just allocating 3 bytes per each character 
-// v->byte array
-// h = total # lines to output
-// nq = # lines in the character array
-// c = #characters in an input line
-// lb,la # lines to accept at beginning & end
-// Result is # bytes that will be ADDED by UTF-8 encoding
-static I scanbdc(C*v,I h,I nq,I c,I lb,I la){C*u,x;I m;
- u=v; x=0; m=0;
- // If we can output all the lines, just count all the characters
- if(h>=nq)
-  DO(c*nq, x=*u++; if(x<=26&&16<=x)m+=3;)
- else{
-  // if we are going to cut out middle lines, count in the prefix and suffix separately
-  DO(c*lb, x=*u++; if(x<=26&&16<=x)m+=3;);  // count the prefix
-  u=v+c*(nq-la);  // advance to la lines from the end
-  DO(c*la, x=*u++; if(x<=26&&16<=x)m+=3;);  // count the suffix
+// t=width of character: 1 for byte, 2 for C2T
+// v->character array
+// n = number of characters to check
+static I scanbdc(I t, C*v,I n){C x;I m=0;
+ if(t==1) {
+  // If the input is bytes, the only added characters can come from boxing codes.  Count them
+  DO(n, x=*v; if(x<=26&&16<=x)m+=3; ++v;)
+ } else {
+  static US bdc[] = { 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0x250c,0x252c,0x2510,0x251c, 0x253c,0x2524,0x2514,0x2534,0x2518,0x2502,0x2500 };
+  // If the input is C2T, We count the length of each character.  Also, we convert the boxing codes
+  // to their Unicode values here, so we don't have to check again later
+  US *u = (US*)v, ux;  // get pointer to wide chars.  Don't analyze as bytes, to be endian-neutral
+  DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
  }
- R m;  // return total # bytes to be added
-}    /* scan for box drawing chars requiring additional space */
-
+ R m;
+}
 // Count number of interior EOL sequences
-// This routine is called only when 2-byte CRLF EOLs are in use.  This is the byte version.
-// v->byte array
-// h = total # lines to output
-// nq = # lines in the character array
-// c = #characters in an input line
-// lb,la # lines to accept at beginning & end
+// This routine is called only when 2-byte CRLF EOLs are in use.
 // Result is # bytes that will be ADDED by converting interior EOLs to CRLF
 // NOTE ERROR: if a CRLF sequence straddles a line boundary, it will be counted here
-// as a CRLF while it should be counted as 2 separate EOLs.  No one has found that yet.
-static I scaneol(C*v,I h,I nq,I c,I lb,I la){C e,*u,x;I m;
- u=v; x=0; m=0;
+// as a CRLF while it should be counted as 2 separate EOLs.
+// t=width of character: 1 for byte, 2 for C2T
+// v->character array
+// n = number of characters to check
+static I scaneol(I t, C*v,I n){I m=0;
  // We look at each character; if CR, we add 1.  If LF, we add 1, unless the
  // previous char was CR: then we subtract 1.  So for CRLF we end up adding nothing, while
  // other occurrences of CR or LF add 1 each.
- // If we can output all the lines, just count all the characters
- if(h>=nq)
-  DO(c*nq, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)
- else{
-  // if we are going to cut out middle lines, count in the prefix and suffix separately
-  DO(c*lb, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;);
-  u=v+c*(nq-la);
-  DO(c*la, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;);
+ if(t==1) {C e,x=0;
+  DO(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)
+ } else {US e,x=0,*u=(US*)v;   // Don't analyze as bytes, to be endian-neutral
+  DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)
  }
  R m;
-}    /* scan for EOL requiring additional space */
+}
 
 // Cut display down to the max size specified by the user
 // We know that at least two lines must be deleted
@@ -535,10 +579,10 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
 // lb is jt->outmaxbefore: number of leading lines to display
 // la is jt->outmaxafter: number of trailing lines to display
 static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;D lba;
-     I c,c1,h,i,j,k,lc,m,n,nbx,nq,p,q,r,*s,zn;
+     I c,c1,h,i,j,k,lc,m,n,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
- // Convert w to a character array
- RZ(y=thorn1(w));
+ // Convert w to a character array; set t=1 if it's LIT, t=2 if Unicode
+ RZ(y=thorn1u(w)); t=(AT(y)==LIT)?1:2;
  // set ch iff input w is a character type.
  ch=1&&AT(w)&LIT+C2T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char
@@ -559,9 +603,9 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  //   if other type, max truncated line length + '\n' + '...' if line is truncated
  RE(zn=(3+m)+(q?p*m:0)+mult(h,ch?c+m+(3+m)*(1+c/maxlen):c1+m+3*(c1<c)));
  // If the input was character type, count the number of embedded multiline EOLs, and add a byte for each
- if(ch&&1<m             )zn+=    scaneol(v,h,nq,c,lb,la);
+ if(ch&&1<m)zn+=countonlines(scaneol,t,v,h,nq,c,lb,la);
  // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing
- if(ch||AT(w)&BOX+SPARSE)zn+=nbx=scanbdc(v,h,nq,c,lb,la);
+ if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
  GA(z,LIT,zn,1,0); zu=zv=CAV(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
@@ -577,24 +621,44 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
   // the number of lines already output, or the number of internal EOLs in the suffix lines.  And, if a line
   // contains internal EOLs, they are all emitted, even if they exceed the prefix budget.  If any of this happens,
   // we fix it up at the end
-  if(h<=lc&&nq>la){h=IMAX; p=nq-la; v+=c*(p-i); i=p-1; DDD(zv);}
+  if(h<=lc&&nq>la){h=IMAX; p=nq-la; v+=c*t*(p-i); i=p-1; DDD(zv);}
   // Otherwise, we emit the line.  If the input was a character type, we have to check for internal newlines
   // Each of these paths must end with the input pointer v advanced to the next input line.  The output is built in *zv
   else if(ch) {
-   // Loop for each character of the line.  Convert CR, LF, or CRLF to EOL
-   for(j=k=x=0;j<c;++j){  // k counts # chars output since last EOL
-    e=x; x=*v++;  // prev char, next char
-    if     (x==CCR){          EOLC(zv); k=0;}  // if CR, turn into EOL
-    else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;}  // if LF not after CR, turn into EOL
-    else if(x)     {if(k<c1){*zv++=x; BDC(x);} else if(k==c1)DDD(zv); ++k;}  // Otherwise copy the character; if it's a boxing character,
-              // translate it to UTF8; if it fills the line, install ...
-              // apparently there used to be code here to output multiple lines if a string exceeded c1 in length
+   // Loop for each character of the line.  Convert CR, LF, or CRLF to EOL; discard NUL bytes
+   if(t==1) {
+    // Here for LIT characters.  Move em, handling EOL and box-drawing
+    for(j=k=x=0;j<c;++j){  // k counts # chars output since last EOL
+     e=x; x=*v++;  // prev char, next char
+     if     (x==CCR){          EOLC(zv); k=0;}  // if CR, turn into EOL
+     else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;}  // if LF not after CR, turn into EOL
+     else if(x)     {if(k<c1){BDC(zv,x);} else if(k==c1)DDD(zv); ++k;}  // Otherwise copy the character if not NUL; if it's a boxing character,
+               // translate it to UTF8; if it fills the line, install ...
+               // apparently there used to be code here to output multiple lines if a string exceeded c1 in length
+    }
+   } else {US *u=(US*)v,x=0,e;
+    // Here for C2T input.  Move em, handling EOL and unicode conversion.  Box-drawing characters have already been converted
+    for(j=k=0;j<c;++j){
+     e=x; x=*u++;
+     if     (x==CCR){          EOLC(zv); k=0;}
+     else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
+     else if(x)     {if(k<c1){UUC(zv,x);} else if(k==c1)DDD(zv); ++k;}
+    }
+    v=(C *)u;
    }
   // If input was not character type, we copy the first c1 characters and skip over the surplus, appending ... if there is a surplus.
   // But if there are UTF-8 characters in the mix, check each character and translate it if UTF-8
   // No internal newlines are possible unless the original w was character type (in boxes, they were changed to space)
-  }else if(nbx){DO(c1, *zv++=x=*v++; BDC(x);); if(c1<c){v+=c-c1; DDD(zv);}}
-  else         {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}}
+  // We do not suppress NULs here (there shouldn't be any)
+  }else if(t==2) {US *u=(US*)v,x;
+   DO(c1, x=*u++; UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+  }else{
+   // LIT characters.  Copy them.  If there were boxing characters about, copy one by one and translate if boxing chars
+   if(nbx){DO(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
+   // Otherwise just move fast
+   else {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}
+   }
+  }
   // One line has been copied to the output area.  Append the final EOL
   EOLC(zv);
  }
@@ -610,7 +674,10 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  R z;
 }    /* output string from array w */
 
-// 5!:30, which does who knows what
+// 5!:30, to debug formatted display
+// a is the output control, (outeol, outmaxlen, outmaxbefore, outmaxafter)
+// w is any noun
+// Result is the UTF-8 byte string that would be displayed
 F2(jtoutstr){I*v;
  RZ(a&&w);
  RZ(a=vib(a));

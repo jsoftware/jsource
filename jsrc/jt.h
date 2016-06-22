@@ -230,6 +230,7 @@ typedef struct {
  I    tbase;            /* index of current frame                          */
  C*   th2buf;           /* space for formatting one number                 */
  I    th2bufn;          /* current max length of buf                       */
+ B    thornuni;         // 1 iff ": allowed to produce C2T result
  UI   timelimit;        /* execution time limit milliseconds               */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tostdout;         /* 1 if output to stdout                           */

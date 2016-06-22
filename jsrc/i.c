@@ -163,6 +163,7 @@ static C jtjinit3(J jt){S t;
  fpsetmask(0);
 #endif
  jt->tssbase=tod();
+ jt->thornuni=0;  // init to non-unicode (normal) state
  meminit();
  sesminit();
  evinit();

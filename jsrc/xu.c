@@ -100,6 +100,20 @@ static I wtomsize(US* src, I srcn){ US w;I r=0;
  R r;
 }
 
+// Similar to out16, but called only for byte inputs at rank 1.
+// We don't abort on invalid U8, just keep the original input
+F1(jttoutf16r){A z;I n,t,q,b=0; C* wv; US* c2v;
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
+ if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 
+ q=mtowsize(CAV(w),n);
+ if(q<0 || q==n)R ca(w);  // If invalid or no U8, keep as byte
+ GA(z,C2T,n,1,0);  // allocate result - always n long!
+ c2v=(US*)CAV(z);
+ mtow(CAV(w),n,c2v);
+ for(;q<n;++q)c2v[q]=32;
+ R z; // u16 from u8
+}
+
 F1(jttoutf16){A z;I n,t,q,b=0; C* wv; US* c2v; 
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
  if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 

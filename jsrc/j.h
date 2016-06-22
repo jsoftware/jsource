@@ -155,18 +155,8 @@
 #define RMAX            IMAX            /* max rank                        */
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
-
-#if SY_WINCE
-#define NFDEP           200L            /* wince           fn call depth   */
-#endif
-#if SYS & SYS_MACOSX
-#define NFDEP           18000L          /* darwin          fn call depth   */
-#endif
-#ifndef NFCALL
-#define NFDEP           20000L          /* all other       fn call depth   */
-#endif
-
-#define NFCALL          (MAX(40,NFDEP/10))              // call depth for named calls.  They can be expensive
+#define NFDEP           20000L             // fn call depth
+#define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
 #define NTSTACK         2000L           /* size of stack for temps         */
 
 #define IIDOT           0               /* modes for indexofsub()          */

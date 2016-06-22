@@ -4,10 +4,7 @@ cd ~
 . jvars.sh
 
 common="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
-# darwin
-# darwin errors additional to common: -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced
- 
-common1="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD"
+darwin="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in
 
@@ -30,12 +27,12 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-COMPILE="$common1 -m32 -DC_64=0 -mmacosx-version-min=10.5"
+COMPILE="$darwin -m32 -DC_64=0 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 darwin_j64) # darwin x86
 TARGET=libj.dylib
-COMPILE="$common1 -mmacosx-version-min=10.5"
+COMPILE="$darwin -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 *)

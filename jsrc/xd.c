@@ -249,6 +249,10 @@ F2(jtjfatt2){A y,fn;F f;U x;
 #if (SYS & SYS_UNIX)
 
 /* FIXME:   rename J link() function so we can include unistd.h */
+// undefs to avoid darwin warnings - should be a better fix
+#undef R_OK
+#undef W_OK
+#undef X_OK
 #define R_OK    4               /* Test for read permission.    */
 #define W_OK    2               /* Test for write permission.   */
 #define X_OK    1               /* Test for execute permission. */

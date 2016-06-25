@@ -19,8 +19,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  GA(z,NAME,m,1,0); zv=NAV(z);
  memcpy(zv->s,s,m); *(m+zv->s)=0;
  zv->m   =(UC)m; 
- // obsolete zv->sn  =0; 
- // obsolete zv->e   =0;
+ zv->bucket=zv->bucketx=0;
  zv->flag=NMDOT;
  zv->hash=NMHASH(m,s); 
  ACX(z);
@@ -174,6 +173,7 @@ static C jtjinit3(J jt){S t;
  xsinit();
  sbtypeinit();
  rnginit();
+ bucketinit();
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
  xlinit();
 #endif

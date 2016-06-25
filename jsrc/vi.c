@@ -23,6 +23,18 @@ I ptab[]={
 
 I nptab=sizeof(ptab)/SZI;
 
+// The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
+// created with size i.  The argument names supported are ynam and xnam.
+I yxbuckets[sizeof(ptab)/SZI][2];
+
+// Emulate bucket calculation for local names
+void bucketinit(){I j,k;
+ for(j=0;j<nptab;++j){
+  k=NAV(ynam)->hash%ptab[j]; yxbuckets[j][0]=k?k:k+1;
+  k=NAV(xnam)->hash%ptab[j]; yxbuckets[j][1]=k?k:k+1;
+ }
+}
+
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */
 /* VAX                     1 0 3 2 5 4 7 6           */

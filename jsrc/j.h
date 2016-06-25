@@ -338,6 +338,7 @@
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0
+// CTTZI(w) counts trailing zeros in an argument of type I (32 or 64 bits depending on architecture)
 // CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
 // but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
 // since we don't require CTLZ yet, we defer that problem to another day
@@ -356,11 +357,21 @@
 #if SY_WIN32 
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
+#if SY_64
+#define CTTZI(w) _tzcnt_u64((UI)(w))
+#else
+#define CTTZI(w) _tzcnt_u32((UINT)(w))
+#endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
 #if SY_LINUX || SY_MAC
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
+#if SY_64
+#define CTTZI(w) __builtin_ctzll((UI)(w))
+#else
+#define CTTZI(w) __builtin_ctzl((UINT)(w))
+#endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
@@ -368,17 +379,19 @@
 
 // Insert CTLZ here if CTTZ is not available
 
-// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macro
-// CTLZ, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
+// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macros
+// CTLZ/CTLZI, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
 // CTTZ will be defined:
 #if defined(CTLZ) && !defined(CTTZ)
 #define CTTZ(w) (31-CTLZ((w)&-(w)))
+#define CTTZI(w) (63-CTLZI((w)&-(w)))
 #define CTTZZ(w) (0xffffffff&(w) ? CTTZ(w) : 32)
 #endif
 
 // If CTTZ is not defined, the following code will use the default from u.c:
 #if !defined(CTTZ)
 extern I CTTZ(I);
+extern I CTTZI(I);
 extern I CTTZZ(I);
 #endif
 

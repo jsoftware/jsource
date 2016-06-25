@@ -207,7 +207,7 @@ F1(jtparse){A z;
 //  if an error is encountered (preventing the assignment)
 // Set zombiesym if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
 #define IPSETZOMB(w) if(AT(stack[0].a)==ASGN&&stack[(w)+1].a==mark&&AT(queue[m])==NAME&&CAV(stack[0].a)[0]==CASGN&&jt->local \
-   &&AN(queue[m])==NAV(queue[m])->m&&(s=probe(queue[m],jt->local))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombieval=s->val;}
+   &&AN(queue[m])==NAV(queue[m])->m&&(s=probelocal(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:

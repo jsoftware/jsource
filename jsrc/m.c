@@ -16,12 +16,13 @@
 #define PLIM        1024L          /* pool allocation for blocks <= PLIM   */
 #define PLIML       10L            /* base 2 log of PLIM                   */
 
-I mhb=sizeof(MS);                  /* # bytes in memory header             */
-I mhw=sizeof(MS)/SZI;              /* # words in memory header             */
+// Don't call traverse unless one of these bits is set
+#define TRAVERSIBLE (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
+#define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow
 
-static A jttraverse(J,A,AF);
+static void jttraverse(J,A,AF);
 
-
+// msize[k]=2^k, for sizes up to the size of an I
 B jtmeminit(J jt){I k,m=MLEN;
  k=1; DO(m, msize[i]=k; k+=k;);  /* OK to do this line in each thread */
  jt->tbase=-NTSTACK;
@@ -75,7 +76,7 @@ B jtspfree(J jt){A t;I c,d,i,j,m,n,*u,*v;MS*x;
 static F1(jtspfor1){
  RZ(w);
  if(BOX&AT(w)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), spfor1(WVR(i)););}
- else traverse(w,jtspfor1); 
+ else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(1e9>AC(w)||AFSMM&AFLAG(w))
   if(AFNJA&AFLAG(w)){I j,m,n,p;
    m=SZI*WP(AT(w),AN(w),AR(w)); 
@@ -144,25 +145,35 @@ F1(jtmmaxs){I j,m=MLEN,n;
 
 void jtfr(J jt,A w){I j,n;MS*x;
  if(!w||--AC(w))R;
- x=(MS*)w-1; 
- j=x->j; n=msize[j];
- jt->bytes-=n;
+ // SYMB must free as a monolith, with the symbols returned when the hashtables are
+ if(AT(w)==SYMB) {I j,k,kt,wn=AN(w),*wv=AV(w);
+  fr(LOCPATH(w));
+  fr(LOCNAME(w));
+  for(j=1;j<wn;++j){
+   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fr((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
+   if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
+  }
+ }
+ x=(MS*)w-1;   // point to free header
+ j=x->j;
+ n=1LL<<j;
  if(PLIML<j)FREE(x);  /* malloc-ed       */
  else{                /* pool allocation */
   x->a=jt->mfree[j]; 
   jt->mfree[j]=(I*)x; 
   jt->mfreeb[j]+=n;
-}}
+ }
+ jt->bytes-=n;
+}
 
 void jtfh(J jt,A w){fr(w);}
 
 static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
- n=p=m+mhb; 
- ASSERT(n<=jt->mmax,EVLIMIT);
- j=6; n>>=j; 
- while(n){n>>=1; ++j;} 
- if(p==msize[j-1])--j;
- n=msize[j];
+ p=m+mhb; 
+ ASSERT((UI)p<=(UI)jt->mmax,EVLIMIT);
+ for(n=64;n<p;n=n+n);
+ j=CTTZI(n);
+ JBREAK0;  // Here to allow instruction scheduling
  if(jt->mfree[j]){         /* allocate from free list         */
   z=(A)(mhw+jt->mfree[j]); 
   jt->mfree[j]=((MS*)(jt->mfree[j]))->a;
@@ -179,37 +190,28 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
   z=(A)(mhw+v); 
   jt->mfree[j]=((MS*)v)->a;
   jt->mfreeb[j]+=PSIZE-n;
- } 
- JBREAK0;
- jt->bytes+=n; jt->bytesmax=MAX(jt->bytes,jt->bytesmax);
- x=(MS*)z-1; x->a=0; x->j=(C)j;
+ }
+ if(jt->bytesmax<(jt->bytes+=n))jt->bytesmax=jt->bytes;
+ x=(MS*)z-1; x->a=0; x->j=(C)j;  // Why clear a?
  R z;
 }
 
-
-static A jttraverse(J jt,A w,AF f){
- RZ(w);
- switch(AT(w)){
-  case XD:
+static void jttraverse(J jt,A w,AF f){
+// obsolete RZ(w);
+ switch(CTTZ(AT(w))){
+  case XDX:
    {DX*v=(DX*)AV(w); DO(AN(w), CALL1(f,v->x,0L); ++v;);} break;
-  case RAT:  
+  case RATX:  
    {A*v=AAV(w); DO(2*AN(w), CALL1(f,*v++,0L););} break;
-  case XNUM: case BOX:
+  case XNUMX: case BOXX:
    if(!(AFLAG(w)&AFNJA+AFSMM)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), CALL1(f,WVR(i),0L););} break;
-  case VERB: case ADV:  case CONJ: 
+  case VERBX: case ADVX:  case CONJX: 
    {V*v=VAV(w); CALL1(f,v->f,0L); CALL1(f,v->g,0L); CALL1(f,v->h,0L);} break;
-  case SYMB:
-   {I k,*v=1+AV(w);L*u;
-    CALL1(f,LOCPATH(w),0L);
-    CALL1(f,LOCNAME(w),0L);
-    DO(AN(w)-1, if(k=*v++){u=k+jt->sympv; CALL1(f,u->name,0L); CALL1(f,u->val,0L);});
-   } break;
-  case SB01: case SINT: case SFL: case SCMPX: case SLIT: case SBOX:
+  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(w); CALL1(f,SPA(v,a),0L); CALL1(f,SPA(v,e),0L); CALL1(f,SPA(v,i),0L); CALL1(f,SPA(v,x),0L);} break;
  }
- R mark;
+// obsolete R mark;
 }
-
 
 static A jttg(J jt){A t=jt->tstacka,z;
  RZ(z=ma(SZI*WP(BOX,NTSTACK,1L)));
@@ -226,7 +228,7 @@ static void jttf(J jt){A t=jt->tstacka;
 
 F1(jttpush){
  RZ(w);
- traverse(w,jttpush);
+ if(AT(w)&TRAVERSIBLE)traverse(w,jttpush);
  if(jt->ttop>=NTSTACK)RZ(tg());
  jt->tstack[jt->ttop]=w;
  ++jt->ttop;
@@ -247,10 +249,10 @@ void jtgc3(J jt,A x,A y,A z,I old){
 }
 
 
-F1(jtfa ){RZ(w); traverse(w,jtfa ); fr(w);   R mark;}
-F1(jtra ){RZ(w); traverse(w,jtra ); ++AC(w); R w;   }
+F1(jtfa ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtfa); fr(w);   R mark;}
+F1(jtra ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra); ++AC(w); R w;   }
 
-static F1(jtra1){RZ(w); traverse(w,jtra1); AC(w)+=jt->arg; R w;}
+static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); AC(w)+=jt->arg; R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
 F1(jtrat){R ra(tpush(w));}
@@ -259,15 +261,26 @@ A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
  if(t&BIT){const I c=8*SZI;              /* bit type: pad last axis to fullword */
   ASSERTSYS(1>=r||s,"ga bit array shape");
   if(1>=r)w=(n+c-1)/c; else RE(w=mult(prod(r-1,s),(s[r-1]+c-1)/c));
+#if SY_64
+  m=BP(INT,0L,r);
+  ASSERT((UI)n<TOOMANYATOMS,EVLIMIT);
+#else
+  // This test is not perfect but it's close
   w+=WP(INT,0L,r); m=SZI*w; 
   ASSERT(     n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
+#endif
  }else{
+#if SY_64
+  m=BP(t,n,r);
+  ASSERT((UI)n<TOOMANYATOMS,EVLIMIT);
+#else
   w=WP(t,n,r);     m=SZI*w; 
   ASSERT(m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
+#endif
  }
  RZ(z=ma(m));
  if(!(t&DIRECT))memset(z,C0,m);
- if(t&LAST0){I*v=(I*)z+w-2; *v++=0; *v=0;}
+ if(t&LAST0){I*v=(I*)((C*)z+m); v[-1]=0; v[-2]=0;}  // if LAST0, clear the last two Is.
  AC(z)=1; AN(z)=n; AR(z)=r; AFLAG(z)=0; AK(z)=AKX(z); AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS)); 
  AT(z)=0; tpush(z); AT(z)=t;
  if(1==r&&!(t&SPARSE))*AS(z)=n; else if(r&&s)ICPY(AS(z),s,r);  /* 1==n always if t&SPARSE */

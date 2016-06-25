@@ -26,9 +26,8 @@ typedef struct {I*a;S j;C mflag,unused;} MS;
 
 #define MFHEAD  1      /* head of 64k block (returned by malloc() */
 
-
-extern I mhb;
-extern I mhw;
+#define mhb sizeof(MS)                  /* # bytes in memory header             */
+#define mhw (sizeof(MS) / SZI)              /* # words in memory header             */
 
 // bp(type) returns the number of bytes
 #if AUDITBP

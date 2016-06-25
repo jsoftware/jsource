@@ -16,8 +16,8 @@
 /*    debz()                                             */
 // q, if given, is the block to use for the debug stack; otherwise allocated
 
-DC jtdeba(J jt,C t,A x,A y,A fs,A q){DC d;
- if(!q){GA(q,LIT,sizeof(DST),1,0);} d=(DC)AV(q);
+DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
+ if(!d){A q; GA(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
@@ -147,13 +147,14 @@ static A jtparseas(J jt,B as,A w){A z;
 /* lk - 1 iff locked function; _1 to signal noun error at beginning of sentence */
 /* ci - current row of control matrix               */
 /* c  - stack entry for dbunquote for this function */
+// d - DC area to use in deba
 
-A jtparsex(J jt,A w,B lk,CW*ci,DC c,A stk){A z;B as,s;DC d,t=jt->sitop;
+A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
  RZ(w);
  JATTN;
  as=ci->type==CASSERT;
  if(lk>0)R parseas(as,w);
- RZ(d=deba(DCPARSE,0L,w,0L,stk));
+ RZ(d=deba(DCPARSE,0L,w,0L,d));
  if(lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
  if(0==c)z=parseas(as,w);   /* anonymous or not debug */
  else{                      /* named and debug        */

@@ -38,7 +38,8 @@ typedef double             D;
 typedef FILE*              F;
 
 typedef long double        LD;
-typedef struct {I k,flag,m,t,c,n,r,s[1];}* A;
+typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;
+typedef AD *A;
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
@@ -69,12 +70,14 @@ typedef I SI;
 
 #if SY_64
 #define AKX(x)          (SZI*(AH+AR(x)))
-#define WP(t,n,r)       (AH+ r        +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define WP(t,n,r)       (AH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
+#define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
-#define AKX(x)          (SZI*(AH+AR(x)+!(1&AR(x))))
-#define WP(t,n,r)       (AH+(r+!(1&r))+(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define AKX(x)          (SZI*(AH+(AR(x)|1)))
+#define WP(t,n,r)       (AH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+/* r|1 to make sure array values are double-word aligned */
 #endif
-/* make sure array values are double-word aligned */
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (C*)(x)+AK(x) )  /* boolean                 */

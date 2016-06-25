@@ -61,29 +61,44 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
 }    /* 0: initialize (no old array); 1: extend old array */
 
 // ht->hashtable slot; allocate new symbol, install as head of hash chain, with previous chain appended
-L* jtsymnew(J jt,I*hv){I j;L*u,*v;
+// if tail==0, append at head (immediately after *hv); if tail!=0, append to tail.  If queue is empty, tail is always 0
+// result is new symbol
+L* jtsymnew(J jt,I*hv, I tailx){I j;L*u,*v;
  while(!(j=jt->sympv->next))RZ(symext(1));  /* extend pool if req'd        */
  jt->sympv->next=(j+jt->sympv)->next;       /* new top of stack            */
- u=j+jt->sympv;
- if(u->next=*hv){v=*hv+jt->sympv; v->prev=j; v->flag^=LHEAD;}
- u->prev=(I)hv; u->flag=LHEAD;  // backchain pointer in head points to the hashtable slot
- *hv=j;
+ u=j+jt->sympv;  // the new symbol.  u points to it, j is its index
+ if(tailx) {L *t=tailx+jt->sympv;
+  // appending to tail.  Queue is known to be nonempty
+  u->next=0;u->prev=tailx;t->next=j;  // it's always the end: point to next & prev, and chain from prev
+ }else{
+  // appending to head.
+  if(u->next=*hv){v=*hv+jt->sympv; v->prev=j; v->flag^=LHEAD;}  // chain old queue to u; if not empty, backchain old head to new one, clear old head flag, 
+  u->prev=(I)hv; u->flag=LHEAD;  // backchain pointer in head points to the hashtable slot; new element is the head
+  *hv=j;   // set new head
+ }
  R u;
 }    /* allocate a new pool entry and insert into hash table entry hv */
 
+// u points to an L; free it, and do fa() on the name and value.
+// If the entry is LPERMANENT, don't free it; just fa() the value and clear val pointer to 0
 B jtsymfree(J jt,L*u){I q;
- q=u->next;
- if(q)(q+jt->sympv)->prev=u->prev; 
- if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
- else (u->prev+jt->sympv)->next=q;
- fa(u->name); u->name=0;                    /* zero out data fields        */
- fa(u->val ); u->val =0; u->sn=u->flag=u->prev=0;
- u->next=jt->sympv->next;                   /* point to old top of stack   */
- jt->sympv->next=u-jt->sympv;               /* new          top of stack   */
+ if(!(u->flag&LPERMANENT)){
+  // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
+  q=u->next;
+  if(q)(q+jt->sympv)->prev=u->prev; 
+  if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
+  else (u->prev+jt->sympv)->next=q;
+  u->next=jt->sympv->next;                   /* point to old top of stack   */
+  jt->sympv->next=u-jt->sympv;               /* new          top of stack   */
+  fa(u->name); u->name=0;                    /* zero out data fields        */
+  u->sn=u->flag=u->prev=0;      // zero other fields when returning to free pool
+ }
+ // For all symbols, free the value, clear the pointer to it
+ fa(u->val);u->val=0; 
  R 1;
 }    /* free pool entry pointed to by u */
 
-static SYMWALK(jtsymfreeha, B,B01,100,1, 1, RZ(symfree(d)))   /* free pool table entries      */
+SYMWALK(jtsymfreeha, B,B01,100,1, 1, RZ(symfree(d)))   /* free pool table entries      */
 
 B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
  wv=AV(w);
@@ -109,14 +124,15 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  GA(x,INT,n*6,2,0); *AS(x)=n; *(1+AS(x))=6; xv= AV(x); zv[0]=x;
  GA(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
-  *xv++=i;
-  *xv++=(q=pv->val)?AT(pv->val):0;
-  *xv++=pv->flag;
-  *xv++=pv->sn;
+  *xv++=i;   // sym number
+  *xv++=(q=pv->val)?AT(pv->val):0;  // type
+  *xv++=pv->flag;  // flag
+  *xv++=pv->sn;    
   *xv++=pv->next;
   *xv++=pv->prev;
   RZ(*yv++=(q=pv->name)?sfn(1,q):mtv);
  }
+ // Allocate box 3: locale name
  GA(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=AV(jt->stloc); 
@@ -141,33 +157,102 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
 // a is A for name, g is symbol table
 // result is L* address of the symbol-table entry for the name, or 0 if not found
 L*jtprobe(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
- RZ(a&&g);
- u=NAV(a); m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
+ RZ(a&&g);u=NAV(a);
+ // If there is bucket information, 
+// obsolete ASSERTSYS(jt->local||(u->bucket==0&&u->bucketx==0),"bucket");
+ m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
  if(!*hv)R 0;                            /* (0) empty slot    */
  v=*hv+jt->sympv;
  while(1){
   u=NAV(v->name);
-  if(m==u->m&&!memcmp(s,u->s,m))R v;     /* (1) exact match   */
+  if(m==u->m&&!memcmp(s,u->s,m))R v->val?v:0;     // (1) exact match - if there is a value, use this slot, else say not found
   if(!v->next)R 0;                       /* (2) link list end */
   v=v->next+jt->sympv;
 }}
 
+// a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
+// If the value is empty, return 0 for not found
+L *jtprobelocal(J jt,A a){NM*u;I b,bx;
+ // If there is bucket information, there must be a local symbol table, so search it
+ RZ(a);u=NAV(a);  // u->NM block
+ if(b = u->bucket){
+  I lx = AV(jt->local)[b];  // index of first block if any
+  if(0 > (bx = ~u->bucketx)){
+   // positive bucketx (now negative); that means skip that many items and then do name search
+   I m=u->m; C* s=u->s;  // length/addr of name from name block
+   while(0>++bx){lx = jt->sympv[lx].next;}
+   // Now lx is the index of the first name that might match.  Do the compares
+   while(lx) {L* l = lx+jt->sympv;  // symbol entry
+    if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m))
+     {R l->val?l : 0;}
+    lx = l->next;
+   }
+   R 0;  // no match.
+  } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
+   // negative bucketx (now positive); skip that many items, and then you're at the right place
+   while(bx--){l = l->next+jt->sympv;}
+   R l->val?l:0;
+  }
+ } else {
+  // No bucket information, do full search
+  R jt->local?probe(a,jt->local) : 0;
+ }
+}
+
+// a is A for name; result is L* address of the symbol-table entry in the local symbol table
+// If not found, one is created
+L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
+ // If there is bucket information, there must be a local symbol table, so search it
+ RZ(a);u=NAV(a);  // u->NM block
+ if(b = u->bucket){
+  I lx = AV(jt->local)[b];  // index of first block if any
+  if(0 > (bx = ~u->bucketx)){
+   // positive bucketx (now negative); that means skip that many items and then do name search
+   I m=u->m; C* s=u->s;  // length/addr of name from name block
+   I tx = lx;  // tx will hold the address of the last item in the chain, in case we have to add a new symbol
+   L* l;
+
+   while(0>++bx){tx = lx; lx = jt->sympv[lx].next;}
+   // Now lx is the index of the first name that might match.  Do the compares
+   while(lx) {
+    l = lx+jt->sympv;  // symbol entry
+    if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m)){R l;}  // return if name match
+    tx = lx; lx = l->next;
+   }
+   // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
+   RZ(l=symnew(&AV(jt->local)[b],tx)); 
+   l->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
+   R l;
+  } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
+   // negative bucketx (now positive); skip that many items, and then you're at the right place
+   while(bx--){l = l->next+jt->sympv;}
+   R l;  // return 
+  }
+ } else {
+  // No bucket information, do full search
+  R probeis(a,jt->local);
+ }
+}
+
+
+
 // a is A for name
 // g is symbol table to use
 // result is L* symbol-table entry to use
-// if not found, on is created
-static L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
+// if not found, one is created
+L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m,tx;L*v;NM*u;
  u=NAV(a); m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
- if(*hv){                                 /* !*hv means (0) empty slot    */
-  v=*hv+jt->sympv;
+ if(tx=*hv){                                 /* !*hv means (0) empty slot    */
+  v=tx+jt->sympv;
   while(1){                               
    u=NAV(v->name);
-   if(m==u->m&&!memcmp(s,u->s,m))R v;    /* (1) exact match   */
+   if(m==u->m&&!memcmp(s,u->s,m))R v;    // (1) exact match - may or may not have value
    if(!v->next)break;                                /* (2) link list end */
-   v=v->next+jt->sympv;
- }}
-// not found, create new symbol
- RZ(v=symnew(hv)); 
+   v=(tx=v->next)+jt->sympv;
+  }
+ }
+ // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
+ RZ(v=symnew(hv,tx)); 
  v->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
  R v;
 }    /* probe for assignment */
@@ -182,7 +267,7 @@ static L*jtsyrd1(J jt,A a,A g,B b){A*v,x,y;L*e;NM*av;
  RZ(y = LOCPATH(g));   // Not found in locale.  We must use the path
  v=AAV(y); 
  DO(AN(y), x=v[i]; if(e=probe(a,stfind(1,AN(x),CAV(x))))break;);  // return when name found.  Create path locale if it does not exist
- R e;  // not found
+ R e;  // fall through: not found
 }    /* find name a where the current locale is g */ 
 
 // u is address of indirect locative: in a__b__c, it points to the b
@@ -211,13 +296,21 @@ static A jtlocindirect(J jt,I n,C*u){A a,g=jt->global,x,y;B lcl=1;C*s,*v,*xv;I k
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
 // side effect: if symb is nonzero, *symb is set to the symbol table that was the base of the path
-L*jtsyrd(J jt,A a,A*symb){A g=jt->global;I m,n;NM*v;
+L*jtsyrd(J jt,A a,A*symb){A g;I m,n;NM*v;
  RZ(a);
  n=AN(a); v=NAV(a); m=v->m;
- if(n>m)RZ(g=NMILOC&v->flag?locindirect(n-m-2,2+m+v->s):stfind(1,n-m-2,1+m+v->s))
-   // if locative, find the indirect locale to start on, or the named locale, creating the locale if not found
- if(symb)*symb=g;  // save the starting locale if the user wants to
- R syrd1(a,g,(B)(n==m));  // look up the name in that locale; if not a locative, look in the local symbol table first
+ if(n>m) {
+  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
+  RZ(g=NMILOC&v->flag?locindirect(n-m-2,2+m+v->s):stfind(1,n-m-2,1+m+v->s))
+  if(symb)*symb=g;   // save the starting locale if the user wants to
+ } else {L *e;
+  g=jt->global;  // Start with the current locale
+  if(symb)*symb=g;  // save the starting locale if the user wants to
+  // If there is a local symbol table, search it first
+  if(e = probelocal(a)){R e;}
+// obsolete  if(jt->local&&(e = probe(a, jt->local))){R e;}
+ }
+ R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
 }
 
 
@@ -281,12 +374,12 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   jt->assignsym=0; jt->zombieval = 0;   // clear until next use.
  } else {
   n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(n==m)ASSERT(!(jt->local&&g==jt->global&&probe(a,jt->local)),EVDOMAIN)  // if non-locative, give error if there is a private
+  if(n==m)ASSERT(!(jt->local&&g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s):stfind(1,n-m-2,s));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
-  RZ(e=probeis(a,g));   // set e to symbol-table slot to use
+  RZ(e=g==jt->local?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   wt=AT(w);   // type of the value
   if(wt&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.

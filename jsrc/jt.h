@@ -67,6 +67,7 @@ typedef struct {
  A    curlocn;          /* current locale name corresp. to curname         */
  A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */
+ AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
  I    db;               /* debug flag; see 13!:0                           */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */

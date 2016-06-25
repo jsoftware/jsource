@@ -40,8 +40,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  DO(n, if(' '!=*s)break; ++s; --n;); 
  t=s+n-1;
  DO(n, if(' '!=*t)break; --t; --n;);
- // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name
- // We mustn't return the block itself, since we may modify the local-symbol pointers in it
+ // If the name is the special x y.. or x. y. ..., return the preallocated block for that name
  c=*s;if((1==n||2==n&&'.'==s[1])&&strchr("mnuvxy",c)){
   if(1==n)R c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam;
   else    R c=='y'?ydot:c=='x'?xdot:c=='v'?vdot:c=='u'?udot:c=='n'?ndot:mdot;

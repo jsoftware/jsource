@@ -6,35 +6,43 @@
 #include "j.h"
 
 // Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
-// n is length of name, u->name
+// n is length of name (or locale# to allocate, for numbered locales), u->name
+// Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
+// on the result and on the name and path
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
  GA(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
- RZ(v=symnew(AV(g))); v->flag|=LINFO; v->sn=jt->symindex++;
+ RZ(v=symnew(AV(g),0)); v->flag|=LINFO; v->sn=jt->symindex++;
  switch(k){
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   LOCNAME(g)=x; LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
+   LOCNAME(g)=ra(x); LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
    // Assign this name in the locales symbol table to point to the allocated SYMB block
+   // This does ra() on g
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   LOCNAME(g)=x; LOCPATH(g)=ra(zpath);
+   LOCNAME(g)=ra(x); LOCPATH(g)=ra(zpath);
    ++jt->stused;
    m=AN(jt->stnum);
+   // Extend in-use locales list if needed
    if(m<jt->stused){
     x=ext(1,jt->stnum); y=ext(1,jt->stptr); RZ(x&&y); jt->stnum=x; jt->stptr=y;
     nv=m+AV(jt->stnum); pv=m+AAV(jt->stptr); DO(AN(x)-m, *nv++=-1; *pv++=0;); 
    }
+   // Put this locale into the in-use list at an empty location.  ra(g) at that time
    pv=AAV(jt->stptr);
    DO(AN(jt->stnum), if(!pv[i]){pv[i]=ra(g); *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;
    break;
   case 2:  /* local symbol table */
+   // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
+   // that was used to create the table
+   AR(g)=p;
    ;
  }
  R g;

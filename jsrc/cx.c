@@ -17,6 +17,8 @@
 #include "p.h"
 #include "w.h"
 
+#define LSYMINUSE 256  // This bit is set in the original symbol table when it is in use
+
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
 #define BGA(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
@@ -78,8 +80,11 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
+// We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
+// address/length into parsex.  The address and length of the sentence are filled in as needed
+
 // Fill in 'queue' to point to the words of the sentence: n words starting at index i
-#define makequeue(n,i) (AN(queue)=(n),AK(queue)=(I)((C*)(line+i)-(C*)queue),queue)
+#define makequeue(n,i) (AN(&jt->cxqueuehdr)=(n),AK(&jt->cxqueuehdr)=(I)((C*)(line+i)-(C*)&jt->cxqueuehdr),&jt->cxqueuehdr)
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Recreate the execution of the failing sentence, and show an error for it */ \
@@ -89,8 +94,9 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
     break; }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,queue,stkblk,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
-  CW *ci,*cw;DC d=0;I bi,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
+static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
+  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
+ PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // z is the final result (initialized here in case there are no lines)
  // t is the result of the current t block, or 0 if not in t block
@@ -109,20 +115,35 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,queue,stkblk,t,t
  if(st&ADV+CONJ){u=a; v=w;}
  // Read the info for the parsed definition, including control table and number of lines
  LINE(sv); ASSERT(n,EVDOMAIN);
- // Create symbol table for this execution
- RZ(jt->local=stcreate(2,1L+PTO,0L,0L));
+ // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
+ // otherwise clone a copy of it
+ symtabsize = AR(hv[3+hi])&~LSYMINUSE;  // ptab[] index of this symbol table
+ if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
+ else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
  // If the verb contains try., allocate a try-stack area for it
  if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  // Allocate an area to use for the SI entries for sentences executed here
- GA(stkblk, LIT, sizeof(DST), 1, 0);
- // Allocate a header to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
- // address/length into parsex.  The address and length of the sentence will be filled in as needed
- GA(queue,INT,0,1,0);
+ // If there is space on the parser stack, use that to avoid the alloc/free overhead.  If there's not
+ // enough space there, just use a free block
+ if((C *)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C *)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
+ else{A stkblka; GA(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
+
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  jt->xdefn=1;   // Indicate explicit definition running
  // Assign the special names x y m n u v
- IS(xnam,a); if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
- IS(ynam,w); if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
+ // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
+ // not an assignment-in-place
+ // So, we short-circuit the process by assigning directly to the name.  We take advantage of the fact that we know the
+ // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
+ // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
+ // directly.
+ L *ybuckptr = AV(jt->local)[yxbuckets[symtabsize][0]]+jt->sympv;  // pointer to sym block for y
+ if(w){ybuckptr->val=w; ra(w);}  // If y given, install it & incr usecount as in assignment
+ if(a){((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv)->val=a; ra(a);}
+   // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
+ // Do the other assignments, which occur less frequently, with IS
+ if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
+ if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
  if(jt->dotnames){
   IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
   IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
@@ -140,9 +161,11 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,queue,stkblk,t,t
  while(0<=i&&i<n){
   // if performance monitor is on, collect data for it
   if(0<jt->pmctr&&C1==jt->pmrec&&named)pmrecord(cn,cl,i,a?VAL2:VAL1);
-  // ?? debugging, something to do with redefinition of executing verb?
+  // If the executing verb was reloaded during debug, switch over to it
   if(jt->redefined&&jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
    self=jt->sitop->dcf; sv=VAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
+   // Clear all the bucket info in the definition, since it doesn't match the symbol table now
+   DO(AN(hv[0+hi]), if(AT(line[i])&NAME){NAV(line[i])->bucket=NAV(line[i])->bucketx=0;});
    jt->redefined=0;
    if(i>=n)break;
   }
@@ -300,12 +323,17 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,queue,stkblk,t,t
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
  z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
- fa(cd);   // deallocate the explicit-entity stack
- // Deallocate the local symbol table; pop the locale stack and xdefn; set no assignment (to call for result display)
- symfreeh(jt->local,0L); jt->local=loc; jt->asgn=0; jt->xdefn=ox;
+ fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
+ // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
+ // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
+ // Cloned symbol tables are freed by the normal mechanism
+ if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+ // Pop the locale stack and xdefn; set no assignment (to call for result display)
+ jt->local=loc; jt->asgn=0; jt->xdefn=ox;
  tpop(_ttop);   // finish freeing memory
  // Give this result a short lease on life
  tpush(z);
+ jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
  R z;
 }
 
@@ -333,7 +361,7 @@ static DF2(xop2){A ff,x;
 
 
 // h is the compiled form of an explicit function: an array of 2*HN boxes.
-// Boxes 0&3 contain the enqueued words  for the sentences, jammed together
+// Boxes 0&HN contain the enqueued words  for the sentences, jammed together
 // We return 1 if this function refers to its x/y arguments (which also requires
 // a reference to mnuv operands)
 static B jtxop(J jt,A w){B mnuv,xy;I i,k;
@@ -435,25 +463,113 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
 // a definition is recursive, it will create a new symbol table, starting it off with the
 // permanent entries from this one (with no values).  We create this table with rank 0, and we set
 // the rank to 1 while it is in use, to signify that it must be cloned rather than used inplace.
-static A jtcrelocalsyms(J jt, A zl, A zc,I type, I dyad, I flags){
+static A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln,tt;
  // Allocate a pro-forma symbol table to hash the names into
-
+ RZ(pfst=stcreate(2,1L+PTO,0L,0L));
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
- // Start with the argument names
+ // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
+ RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
+ if(type<3){RZ(probeis(unam,pfst));RZ(probeis(mnam,pfst)); if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
+ if (jt->dotnames){
+  RZ(probeis(ydot,pfst));if(dyad){RZ(probeis(xdot,pfst));}
+  if(type<3){RZ(probeis(udot,pfst));RZ(probeis(mdot,pfst)); if(type==2){RZ(probeis(vdot,pfst));RZ(probeis(ndot,pfst));}}
+ }  
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
+ ln=AN(l); lv=AAV(l);  // Get # words, address of first box
+ for(j=1;j<ln;++j) {
+  if(AT(t=lv[j])&ASGN&&CAV(t)[0]==CASGN) {  // local assignment
+   if((tt=AT(t=lv[j-1]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
+    // simplename followed by =.  Probe for the name
+    RZ(probeis(t,pfst));
+   } else if(tt&LIT) {
+    // LIT followed by =.  Probe each word
+    // First, convert string to words
+    s=CAV(t);   // s->1st character; remember if it is `
+    if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){  // convert to words (discarding leading ` if present)
+     I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
+     for(k=0;k<wdsn;++k) {
+      // Convert name to word; if local name, add to symbol table
+      if((wnm=onm(wdsv[k]))) {
+       if(!(NAV(wnm)->flag&(NMLOC|NMILOC)))RZ(probeis(wnm,pfst));
+      } else RESETERR
+     }
+    } else RESETERR  // if invalid words, ignore - we don't catch it here
+   }  // 'local assignment'
+  }  // for each word in sentence
+ }
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions.
+ // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
+ I pfstn=AN(pfst); I*pfstv=AV(pfst); I asgct=0;
+ for(j=1;j<pfstn;++j){  // for each hashchain
+  for(k=pfstv[j];k;k=(jt->sympv)[k].next)++asgct;  // chase the chain and count
+ }
+ asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct;++j);  // Find symtab size that has 50% empty space
+ RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
+ // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
+ // So we add them by hand - just y and possibly x.
+ RZ(probeis(ynam,actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,actst));}
+ for(j=1;j<pfstn;++j){  // for each hashchain
+  for(k=pfstv[j];k;k=(jt->sympv)[k].next){L *newsym;
+   RZ(newsym=probeis((jt->sympv)[k].name,actst));  // create new symbol (or possibly overwrite old argument name)
+   newsym->flag |= LPERMANENT;   // Mark as permanent
+  }
+ }
+ I actstn=AN(actst); I*actstv=AV(actst);  // # items in new symbol table, and pointer to hashchain table
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
-
- R 0;
+ // Don't do this if this definition might return a non-noun (i. e. is an adverb/conjunction not operating on xy)
+ // In that case, the returned result might contain local names; but these names contain bucket information
+ // and are valid only in conjuction with the symbol table for this definition.  To prevent the escape of
+ // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned
+ // result).  The definition will still benefit from the preallocation of the symbol table.
+ if(type>=3 || flags&VXOPR){  // If this is guarfanteed to return a noun...
+  for(j=0;j<ln;++j) {
+   if((tt=AT(t=lv[j]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
+    I4 compcount=0;  // number of comparisons before match
+    // lv[j] is a simplename.  We will install the bucket/index fields - but if it's an argument name,
+    // we have to clone it so we won't modify the shared copy
+    if(NAV(t)->flag&NMDOT)RZ(t=lv[j]=ca(t))
+    NM *tn = NAV(t);  // point to the NM part of the name block
+    // Get the bucket number by reproducing the calculation in the symbol-table routine
+    // This calculation is poor - by lumping together buckets 0 & 1 we get collisions - but it's the way
+    // it's always been done.  Better to allocate one more bucket and add one to the remainder
+    k=tn->hash%actstn; if(k==0)++k; tn->bucket=(I4)k;  // k is bucket number
+    // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
+    // of the number of items compared before the match.  If we get no match, the bucket index is the number
+    // of items compared (= the number of items in the chain)
+    for(k=actstv[k];k;++compcount,k=(jt->sympv)[k].next){  // k switches to hashchain index
+     if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
+    }
+    tn->bucketx=compcount;
+   }
+  }  // 'noun result guaranteed'
+ }
+ R actst;
 }
 
+// a is a local symbol table, possibly in use
+// result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
+static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
+ RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=AV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
+ // Go through each hashchain of the model
+ for(j=1;j<an;++j) {I *zhbase=&zv[j]; I ahx=av[j]; I ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
+  while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
+   RZ(l=symnew(zhbase,ztx)); 
+   l->name=ra((jt->sympv)[ahx].name);  // point symbol table to the name block, and increment its use count accordingly
+    // no need to set the PERMANENT flag, since we will never clone a clone
+   ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
+      // at head, the added block is the new head; otherwise it's pointed to by previous tail
+   ahx = (jt->sympv)[ahx].next;  // advance to next symbol
+  }
+ }
+ R z;
+}
 
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  RZ(a&&w);
@@ -476,16 +592,16 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  if(!n)R ca(w);
  if(2>=n){
   RE(b=xop(h)); 
-  if(b)flag|=VXOPR; 
-  else if(2==n&&AN(m)&&!AN(d)){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}
+  if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
+  else if(2==n&&AN(m)&&!AN(d)){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
  }
  flag|=VFIX;  // ensures that f. will not look inside n : n
  // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
-  hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag);  // tokens,cws,type,monad,flag
-  hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag);  // tokens,cws,type,dyad,flag
+  RZ(hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag));  // tokens,cws,type,monad,flag
+  RZ(hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag));  // tokens,cws,type,dyad,flag
  }
 
  switch(n){

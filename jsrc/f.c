@@ -396,9 +396,11 @@ static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\01
  RZ(z=enframe(every(w,0L,jtmatth1)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
-  // Two versions of replacement, depending on datatype of the array
+ // Two versions of replacement, depending on datatype of the array
  if(AT(z)==LIT){UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // byte
- else{US *s=USAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // wide char
+ // For wide-chars don't replace NUL following >=0x1100, since NUL is used to stand for a zero-width character paired with
+ // a double-wide character for spacing purposes
+ else{US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);}  // wide char
 
  R z;
 }
@@ -439,17 +441,22 @@ static F1(jtthorn1main){PROLOG;A z;
    // If we are producing byte output, we simply copy the input.
     // If we are allowed to produce C2T output, do so if the string is a list.  An array of
     // multiple U8 strings is problematic - how do you space them? - and the user should have
-    // used C2T if he wanted good-looking result.  What we do (at rank 1) is: check for non-ASCII; if there
-    // is any, convert to C2T BUT KEEP THE SAME LENGTH AS THE ORIGINAL (Eric wanted that).  If
+    // used C2T if he wanted a perfect result.  What we do (at rank 1) is: check for non-ASCII; if there
+    // is any, convert to C2T.  This will make the boxes as small as possible, and will be perfect IF
+    // all the characters are UTF-8 of the same length (happens in CJK environments).  If
     // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
-   if(!jt->thornuni)z=ca(w);
-   else z = rank1ex(w, 0L, 1L, jttoutf16r);  // check list for U8 codes, return LIT or C2T
+    // The conversion to C2T includes appending NUL to double-wide chars
+   z=jt->thornuni?rank1ex(w,0L,1L,jttoutf16r) : ca(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
-   // If C2T output is allowed, just copy the input (it's not worth the time to go through
+   // If C2T output is allowed, keep it as C2T (it's not worth the time to go through
    // the data to see if conversion to ASCII is feasible - we might just have to expand back to
-   // C2T later).  Otherwise, convert to ragged array of bytes
-   z=jt->thornuni?ca(w) : rank1ex(w,0L,1L,jttoutf8);
+   // C2T later).  But go through and replace CJK 2-position chars with the original char followed by NUL.
+   // This gives each glyph the same number of character codes as display positions, which will make the
+   // Resulting array line up without padding.  The NUL characters are suppressed for display, and removed
+   // on any conversion back to U8.
+   // If C2T output not allowed, convert to ragged array of bytes
+   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8);
    break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
@@ -627,7 +634,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
   else if(ch) {
    // Loop for each character of the line.  Convert CR, LF, or CRLF to EOL; discard NUL bytes
    if(t==1) {
-    // Here for LIT characters.  Move em, handling EOL and box-drawing
+    // Here for LIT characters.  Move em, handling EOL and box-drawing; discard NUL
     for(j=k=x=0;j<c;++j){  // k counts # chars output since last EOL
      e=x; x=*v++;  // prev char, next char
      if     (x==CCR){          EOLC(zv); k=0;}  // if CR, turn into EOL
@@ -638,6 +645,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     }
    } else {US *u=(US*)v,x=0,e;
     // Here for C2T input.  Move em, handling EOL and unicode conversion.  Box-drawing characters have already been converted
+    // Discard NUL characters (including ones added after CJK chars)
     for(j=k=0;j<c;++j){
      e=x; x=*u++;
      if     (x==CCR){          EOLC(zv); k=0;}
@@ -649,11 +657,12 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
   // If input was not character type, we copy the first c1 characters and skip over the surplus, appending ... if there is a surplus.
   // But if there are UTF-8 characters in the mix, check each character and translate it if UTF-8
   // No internal newlines are possible unless the original w was character type (in boxes, they were changed to space)
-  // We do not suppress NULs here (there shouldn't be any)
   }else if(t==2) {US *u=(US*)v,x;
-   DO(c1, x=*u++; UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+   // C2T result.  There may be zero-width NULs about - suppress them
+   DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
   }else{
    // LIT characters.  Copy them.  If there were boxing characters about, copy one by one and translate if boxing chars
+   // No need to suppress NULs - if the result is LIT, all boxes must have converted to LIT, and would have had NUL converted to space
    if(nbx){DO(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
    // Otherwise just move fast
    else {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}

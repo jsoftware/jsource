@@ -72,7 +72,7 @@ static I extrawidth(US w){
 // Characters with width A (ambiguous) are given the same status as the neighboring characters
 // In the array, a number in range 0-ffff starts an interval; 1xxxx ends an interval.  Singletons use 0-ffff
 static I4  widechars[] = {
-0x1100, 0x115F, // Hangul - note the first value is wired into jttwidthf16 below
+0x1100, 0x1115F, // Hangul - note the first value is wired into jttwidthf16 below
 0x231A, 0x1231B, // Hourglass
 0x2329, 0x1232A, // Angle Brackets
 0x23E9, 0x123EC, // Double triangles

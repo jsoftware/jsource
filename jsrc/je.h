@@ -569,6 +569,14 @@ extern DF2(jtrazecut2);
 extern DF2(jtrollk);
 extern DF2(jtrollkx);
 
+extern A jtssplus(J,A,A);
+extern A jtssminus(J,A,A);
+extern A jtsslt(J,A,A);
+extern A jtssle(J,A,A);
+extern A jtsseqne(J,A,A,I);
+extern A jtssmax(J,A,A);
+extern A jtssmin(J,A,A);
+
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
 extern B        jtadd2(J,F,F,C*);

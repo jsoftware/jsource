@@ -98,7 +98,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
   CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
- // z is the final result (initialized here in case there are no lines)
+ // z is the final result (initialized here in case there are no executed lines)
  // t is the result of the current t block, or 0 if not in t block
  // u,v are the operand(s), if this is an explicit modifier
  // sv->text of this explicit entity, st is its type
@@ -114,6 +114,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // If this is adv/conj, it must be 1/2 : executed with no x or y
  if(st&ADV+CONJ){u=a; v=w;}
  // Read the info for the parsed definition, including control table and number of lines
+ // If there are no words at all (empty definition), that's domain error
  LINE(sv); ASSERT(n,EVDOMAIN);
  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
  // otherwise clone a copy of it
@@ -600,8 +601,9 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  // definition is executed, so that we wouldn't take up the space for library verbs; but since we don't explicitly free
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
-  RZ(hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag));  // tokens,cws,type,monad,flag
-  RZ(hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag));  // tokens,cws,type,dyad,flag
+  // Don't bother to create a symbol table for an empty definition, since it is a domain error
+  if(AN(hv[1]))RZ(hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag));  // tokens,cws,type,monad,flag
+  if(AN(hv[HN+1]))RZ(hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag));  // tokens,cws,type,dyad,flag
  }
 
  switch(n){

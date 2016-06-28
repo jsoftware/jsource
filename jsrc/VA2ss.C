@@ -8,28 +8,27 @@
 #include "vcomp.h"
 
 // Support for Speedy Singletons
-#define SSINGF2(f) A f(J jtf, A a, A w){J jt=(J)((I)jtf&-4);   // header for function definition
-#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){J jt=(J)((I)jtf&-4);   // header for function definition
+#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)((I)jtf&-4); // header for function definition
+#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)((I)jtf&-4);   // header for function definition
 
-
-// tell if operands are inplaceable
-#define AINPLACE ((I)jtf&2)
-#define WINPLACE ((I)jtf&1)
+// An argument can be inplaced if it is enabled in the block AND in the call
+#define AINPLACE ((I)jtf&2 && ACIPISOK(a))
+#define WINPLACE ((I)jtf&1 && ACIPISOK(w))
 
 #define SSINGENC(a,w) ((a)+((w)>>2))
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
-#define SSINGBF SSINGENC(B01,FL)
+#define SSINGBD SSINGENC(B01,FL)
 #define SSINGIB SSINGENC(INT,B01)
 #define SSINGII SSINGENC(INT,INT)
-#define SSINGIF SSINGENC(INT,FL)
-#define SSINGFB SSINGENC(FL,B01)
-#define SSINGFI SSINGENC(FL,INT)
-#define SSINGFF SSINGENC(FL,FL)
+#define SSINGID SSINGENC(INT,FL)
+#define SSINGDB SSINGENC(FL,B01)
+#define SSINGDI SSINGENC(FL,INT)
+#define SSINGDD SSINGENC(FL,FL)
 
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
-#define SSRDF(w) (*(D *)CAV(w))
+#define SSRDD(w) (*(D *)CAV(w))
 #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
@@ -49,7 +48,7 @@ static I ssingflen(J jt, A a, A w){
 }
 // allocate a singleton block of type t for rank r.
 static A ssingallo(J jt,I r,I t){A z;
- GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;
+ GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt
 }
 
 #define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
@@ -58,51 +57,56 @@ static A ssingallo(J jt,I r,I t){A z;
 /* change the type of this block when we get the result type */ \
 /* Try the zombiesym first, because if we use it the assignment is faster */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
-if(jt->rank&&(f=ssingflen(jt,a,w))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
-else if (ar >= wr){  \
-    if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
-    else if (AINPLACE){ z = a; AT(z) = FL; } \
-    else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-    else GA(z, FL, 1, ar, AS(a)); \
-} else { \
-    if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
-    else if (WINPLACE){ z = w; AT(z) = FL; } \
-    else GA(z, FL, 1, wr, AS(w)); \
-} \
+ if(jt->rank&&(f=ssingflen(jt,a,w))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
+ else if (ar >= wr){  \
+  if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
+  else if (AINPLACE){ z = a; AT(z) = FL; } \
+  else if (AINPLACE && ar == wr){ z = w; AT(z) = FL; } \
+  else {GA(z, FL, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+ } else { \
+  if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
+  else if (WINPLACE){ z = w; AT(z) = FL; } \
+  else {GA(z, FL, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+ } \
 } /* We have the output block */
 
 // We don't bother checking zombiesym for comparisons, since usually they're scalar constant results
 #define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
-/* Establish the output area.  If this produces an atom, it will be one or zero, so do nothing here. */ \
-/* Otherwise, if this operation is in-placeable, reuse an in-placeable operand if */ \
+/* Establish the output area.  If this produces an atom, it will be one or zero; */ \
+/* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \
+/* If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
 {I ar = AR(a); I wr = AR(w); \
-if (ar + wr == 0)z = 0; \
-else if(jt->rank&&(f=ssingflen(jt,a,w))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
-else if (ar >= wr){ \
-    if (AINPLACE){ z = a; AT(z) = B01; } \
-    else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
-    else GA(z, B01, 1, ar, AS(a)); \
-} \
-else{ \
-    if (WINPLACE){ z = w; AT(z) = B01; } \
-    else GA(z, B01, 1, wr, AS(w)); \
-} \
+ if((ar+wr)&&jt->rank&&(f=ssingflen(jt,a,w))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
+ else if (ar >= wr){ \
+  if (AINPLACE){ z = a; AT(z) = B01; } \
+  else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
+  else if (ar + wr == 0)z = 0; \
+  else {GA(z, B01, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+ } else { \
+  if (WINPLACE){ z = w; AT(z) = B01; } \
+  else if (ar + wr == 0)z = 0; \
+  else {GA(z, B01, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+ } \
 } /* We have the output block, or 0 if we are returning an atom */
+
+
+
 
 // speedy singleton routines: each argument has one atom.  The shapes may be
 // any length, but we know they contain all 1s, so we don't care about jt->rank except to clear it
 SSINGF2(jtssplus) SSNUMPREFIX
+ if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
   case SSINGBB: SSSTORE(SSRDB(a)+SSRDB(w),z,INT,I) R z;
-  case SSINGBF: SSSTORE(SSRDB(a)+SSRDF(w),z,FL,D) R z;
-  case SSINGFB: SSSTORE(SSRDF(a)+SSRDB(w),z,FL,D) R z;
-  case SSINGIF: SSSTORE(SSRDI(a)+SSRDF(w),z,FL,D) R z;
-  case SSINGFI: SSSTORE(SSRDF(a)+SSRDI(w),z,FL,D) R z;
+  case SSINGBD: SSSTORE(SSRDB(a)+SSRDD(w),z,FL,D) R z;
+  case SSINGDB: SSSTORE(SSRDD(a)+SSRDB(w),z,FL,D) R z;
+  case SSINGID: SSSTORE(SSRDI(a)+SSRDD(w),z,FL,D) R z;
+  case SSINGDI: SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
    {B av = SSRDB(a); I wv = SSRDI(w); I zv = av+wv;
    if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
@@ -115,24 +119,27 @@ SSINGF2(jtssplus) SSNUMPREFIX
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av + wv;
    if (((zv^av)&(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
-  case SSINGFF:
-   {D av = SSRDF(a); D wv = SSRDF(w);
-   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN);
-   SSSTORE(av+wv,z,FL,D)  R z;}
+  case SSINGDD:
+   {D av = SSRDD(a); D wv = SSRDD(w);
+   NAN0;
+// obsolete   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN);
+   SSSTORE(av+wv,z,FL,D)
+   NAN1; R z;}
  }
 }
 
 SSINGF2(jtssminus) SSNUMPREFIX
+ if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
   case SSINGBB: SSSTORE(SSRDB(a)-SSRDB(w),z,INT,I) R z;
-  case SSINGBF: SSSTORE(SSRDB(a)-SSRDF(w),z,FL,D) R z;
-  case SSINGFB: SSSTORE(SSRDF(a)-SSRDB(w),z,FL,D) R z;
-  case SSINGIF: SSSTORE(SSRDI(a)-SSRDF(w),z,FL,D) R z;
-  case SSINGFI: SSSTORE(SSRDF(a)-SSRDI(w),z,FL,D) R z;
+  case SSINGBD: SSSTORE(SSRDB(a)-SSRDD(w),z,FL,D) R z;
+  case SSINGDB: SSSTORE(SSRDD(a)-SSRDB(w),z,FL,D) R z;
+  case SSINGID: SSSTORE(SSRDI(a)-SSRDD(w),z,FL,D) R z;
+  case SSINGDI: SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
    {B av = SSRDB(a); I wv = SSRDI(w); I zv = av-wv;
    if(wv<0&&zv<=wv)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
@@ -145,49 +152,96 @@ SSINGF2(jtssminus) SSNUMPREFIX
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av - wv;
    if (((zv^av)&~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
-  case SSINGFF:
-   {D av = SSRDF(a); D wv = SSRDF(w);
-   ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN);
-   SSSTORE(av-wv,z,FL,D)  R z;}
+  case SSINGDD:
+   {D av = SSRDD(a); D wv = SSRDD(w);
+// obsolete   ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN);
+   NAN0; SSSTORE(av-wv,z,FL,D) NAN1;  R z;}
  }
 }
 
 SSINGF2(jtssmin) SSNUMPREFIX
+ if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
   case SSINGBB: SSSTORE(MIN(SSRDB(a),SSRDB(w)),z,B01,B) R z;
-  case SSINGBF: SSSTORE(MIN(SSRDB(a),SSRDF(w)),z,FL,D) R z;
-  case SSINGFB: SSSTORE(MIN(SSRDF(a),SSRDB(w)),z,FL,D) R z;
-  case SSINGIF: SSSTORE(MIN(SSRDI(a),SSRDF(w)),z,FL,D) R z;
-  case SSINGFI: SSSTORE(MIN(SSRDF(a),SSRDI(w)),z,FL,D) R z;
+  case SSINGBD: SSSTORE(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDB: SSSTORE(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
+  case SSINGID: SSSTORE(MIN(SSRDI(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDI: SSSTORE(MIN(SSRDD(a),SSRDI(w)),z,FL,D) R z;
   case SSINGBI: SSSTORE(MIN(SSRDB(a),SSRDI(w)),z,INT,I) R z;
   case SSINGIB: SSSTORE(MIN(SSRDI(a),SSRDB(w)),z,INT,I) R z;
   case SSINGII: SSSTORE(MIN(SSRDI(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGFF: SSSTORE(MIN(SSRDF(a),SSRDF(w)),z,FL,D) R z;
+  case SSINGDD: SSSTORE(MIN(SSRDD(a),SSRDD(w)),z,FL,D) R z;
  }
 }
 
 SSINGF2(jtssmax) SSNUMPREFIX
+ if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
   case SSINGBB: SSSTORE(MAX(SSRDB(a),SSRDB(w)),z,B01,B) R z;
-  case SSINGBF: SSSTORE(MAX(SSRDB(a),SSRDF(w)),z,FL,D) R z;
-  case SSINGFB: SSSTORE(MAX(SSRDF(a),SSRDB(w)),z,FL,D) R z;
-  case SSINGIF: SSSTORE(MAX(SSRDI(a),SSRDF(w)),z,FL,D) R z;
-  case SSINGFI: SSSTORE(MAX(SSRDF(a),SSRDI(w)),z,FL,D) R z;
+  case SSINGBD: SSSTORE(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDB: SSSTORE(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
+  case SSINGID: SSSTORE(MAX(SSRDI(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDI: SSSTORE(MAX(SSRDD(a),SSRDI(w)),z,FL,D) R z;
   case SSINGBI: SSSTORE(MAX(SSRDB(a),SSRDI(w)),z,INT,I) R z;
   case SSINGIB: SSSTORE(MAX(SSRDI(a),SSRDB(w)),z,INT,I) R z;
   case SSINGII: SSSTORE(MAX(SSRDI(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGFF: SSSTORE(MAX(SSRDF(a),SSRDF(w)),z,FL,D) R z;
+  case SSINGDD: SSSTORE(MAX(SSRDD(a),SSRDD(w)),z,FL,D) R z;
  }
 }
 
+SSINGF2(jtssmult) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+    // +/@, on sparse relied on this test: it didn't abort on NaN found during scan
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;
+  case SSINGBD: SSSTORE(SSRDB(a)?SSRDD(w):0.0,z,FL,D) R z;
+  case SSINGDB: SSSTORE(SSRDB(w)?SSRDD(a):0.0,z,FL,D) R z;
+  case SSINGID: {I av=SSRDI(a); SSSTORE(av?av*SSRDD(w):0.0,z,FL,D) R z;}
+  case SSINGDI: {I wv=SSRDI(w); SSSTORE(wv?wv*SSRDD(a):0.0,z,FL,D) R z;}
+  case SSINGBI: SSSTORE(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
+  case SSINGIB: SSSTORE(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
+  case SSINGII: {I av=SSRDI(a), wv=SSRDI(w), zv;
+   if(!(av&&wv)) SSSTORE(0L,z,INT,I)
+   else if (zv=jtmult(0,av,wv)) SSSTORE(zv,z,INT,I)  // 0 result on errors
+   else SSSTORE((D)av*(D)wv,z,FL,D)
+   R z;}
+  case SSINGDD: {D av=SSRDD(a), wv=SSRDD(w);
+   SSSTORE(av&&wv?av*wv:0.0,z,FL,D) R z;}
+ }
+}
+
+
+
+SSINGF2(jtssdiv) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ if(jt->jerr&&jt->jerr!=EWRAT)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: {B av=SSRDB(a); B wv=SSRDB(w); SSSTORE(wv?av:av?inf:0.0,z,FL,D) R z;}
+  case SSINGBD: {B av=SSRDB(a); D wv=SSRDD(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGDB: {D av=SSRDD(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGID: {I av=SSRDI(a); D wv=SSRDD(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGDI: {D av=SSRDD(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGBI: {B av=SSRDB(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGIB: {I av=SSRDI(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGII: {I av=SSRDI(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGDD: {D av=SSRDD(a); D wv=SSRDD(w); NAN0; SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) NAN1; R z;}
+ }
+}
 
 
 SSINGF2(jtsslt) SSCOMPPREFIX
@@ -197,14 +251,14 @@ SSINGF2(jtsslt) SSCOMPPREFIX
  switch(sw) {
   default: R 0;
   case SSINGBB: zv=SSRDB(a)<SSRDB(w); break;
-  case SSINGBF: zv=TLT(SSRDB(a),SSRDF(w)); break;
-  case SSINGFB: zv=TLT(SSRDF(a),SSRDB(w)); break;
-  case SSINGIF: zv=TLT((D)SSRDI(a),SSRDF(w)); break;
-  case SSINGFI: zv=TLT(SSRDF(a),(D)SSRDI(w)); break;
+  case SSINGBD: zv=TLT(SSRDB(a),SSRDD(w)); break;
+  case SSINGDB: zv=TLT(SSRDD(a),SSRDB(w)); break;
+  case SSINGID: zv=TLT((D)SSRDI(a),SSRDD(w)); break;
+  case SSINGDI: zv=TLT(SSRDD(a),(D)SSRDI(w)); break;
   case SSINGBI: zv=SSRDB(a)<SSRDI(w); break;
   case SSINGIB: zv=SSRDI(a)<SSRDB(w); break;
   case SSINGII: zv=SSRDI(a)<SSRDI(w); break;
-  case SSINGFF: zv=TLT(SSRDF(a),SSRDF(w)); break;
+  case SSINGDD: zv=TLT(SSRDD(a),SSRDD(w)); break;
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
@@ -219,14 +273,14 @@ SSINGF2(jtssle) SSCOMPPREFIX
  switch(sw) {
   default: R 0;
   case SSINGBB: zv=SSRDB(a)<=SSRDB(w); break;
-  case SSINGBF: zv=TLE(SSRDB(a),SSRDF(w)); break;
-  case SSINGFB: zv=TLE(SSRDF(a),SSRDB(w)); break;
-  case SSINGIF: zv=TLE((D)SSRDI(a),SSRDF(w)); break;
-  case SSINGFI: zv=TLE(SSRDF(a),(D)SSRDI(w)); break;
+  case SSINGBD: zv=TLE(SSRDB(a),SSRDD(w)); break;
+  case SSINGDB: zv=TLE(SSRDD(a),SSRDB(w)); break;
+  case SSINGID: zv=TLE((D)SSRDI(a),SSRDD(w)); break;
+  case SSINGDI: zv=TLE(SSRDD(a),(D)SSRDI(w)); break;
   case SSINGBI: zv=SSRDB(a)<=SSRDI(w); break;
   case SSINGIB: zv=SSRDI(a)<=SSRDB(w); break;
   case SSINGII: zv=SSRDI(a)<=SSRDI(w); break;
-  case SSINGFF: zv=TLE(SSRDF(a),SSRDF(w)); break;
+  case SSINGDD: zv=TLE(SSRDD(a),SSRDD(w)); break;
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
@@ -241,14 +295,14 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
  switch(sw) {
   default: R 0;
   case SSINGBB: zv=SSRDB(a)==SSRDB(w); break;
-  case SSINGBF: zv=TEQ(SSRDB(a),SSRDF(w)); break;
-  case SSINGFB: zv=TEQ(SSRDF(a),SSRDB(w)); break;
-  case SSINGIF: zv=TEQ((D)SSRDI(a),SSRDF(w)); break;
-  case SSINGFI: zv=TEQ(SSRDF(a),(D)SSRDI(w)); break;
+  case SSINGBD: zv=TEQ(SSRDB(a),SSRDD(w)); break;
+  case SSINGDB: zv=TEQ(SSRDD(a),SSRDB(w)); break;
+  case SSINGID: zv=TEQ((D)SSRDI(a),SSRDD(w)); break;
+  case SSINGDI: zv=TEQ(SSRDD(a),(D)SSRDI(w)); break;
   case SSINGBI: zv=SSRDB(a)==SSRDI(w); break;
   case SSINGIB: zv=SSRDI(a)==SSRDB(w); break;
   case SSINGII: zv=SSRDI(a)==SSRDI(w); break;
-  case SSINGFF: zv=TEQ(SSRDF(a),SSRDF(w)); break;
+  case SSINGDD: zv=TEQ(SSRDD(a),SSRDD(w)); break;
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result

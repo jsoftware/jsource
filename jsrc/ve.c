@@ -15,6 +15,10 @@
 #define TYMESDI(u,v)  (   v?u*v:0)
 #define TYMESDD(u,v)  (u&&v?u*v:0)
 
+// All these lines define functions for various operand combinations
+// The comments indicate special cases that are defined by verbs that don't follow the
+// AOVF/AIFX/ANAN etc. template
+
 AOVF( plusII, I,I,I,  PLUSVV, PLUS1V, PLUSV1)
 AOVF(minusII, I,I,I, MINUSVV,MINUS1V,MINUSV1)   
 AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)

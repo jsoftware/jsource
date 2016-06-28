@@ -11,6 +11,7 @@
 
 #include "j.h"
 
+#define MEMAUDIT 0
 
 #define PSIZE       65536L         /* size of each pool                    */
 #define PLIM        1024L          /* pool allocation for blocks <= PLIM   */
@@ -22,7 +23,7 @@
 
 static void jttraverse(J,A,AF);
 
-// msize[k]=2^k, for sizes up to the size of an I
+// msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
  k=1; DO(m, msize[i]=k; k+=k;);  /* OK to do this line in each thread */
  jt->tbase=-NTSTACK;
@@ -142,19 +143,45 @@ F1(jtmmaxs){I j,m=MLEN,n;
  R mtm;
 }    /* 9!:21 space limit set */
 
+// Verify that block w does not appear on tstack more than lim times
+static void audittstack(J jt, A w, I lim){
+ // loop through each block of stack
+ I base; A* tstack; I ttop,stackct=0;
+ for(base=jt->tbase,tstack=jt->tstack,ttop=jt->ttop;base>=0;base-=NTSTACK){I j;
+  // loop through each entry, skipping the first which is a chain
+  for(j=1;j<ttop;++j)if(tstack[j]==w){
+   ++stackct;   // increment number of times we have seen w
+   if(stackct>lim)*(I*)0=0;  // if too many, abort
+  }
+  // back up to previous block
+  base -= NTSTACK;  // this leaves a gap but it matches other code
+  ttop = NTSTACK;
+  if(base>=0)tstack=AAV(tstack[0]); // back up to data for previous field
+ }
+}
 
 void jtfr(J jt,A w){I j,n;MS*x;
- if(!w||--AC(w))R;
+ if(!w)R;
+ x=(MS*)w-1;   // point to free header
+#if MEMAUDIT
+ if(!(AFLAG(w)&(AFNJA|AFSMM)||x->a==(I*)0xdeadbeef))*(I*)0=0;  // testing - verify block is memmapped/SMM or allocated
+#endif
+ if(ACDECR(w)>0)R;  // fall through if decr to 0, or from 100001 to 100000
+#if MEMAUDIT
+ if(ACUC(w))*(I*)0=0;  // usecount should not go below 0
+ audittstack(jt,w,0);  // must not free anything on the stack
+#endif
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(AT(w)==SYMB) {I j,k,kt,wn=AN(w),*wv=AV(w);
   fr(LOCPATH(w));
   fr(LOCNAME(w));
   for(j=1;j<wn;++j){
+   // free the chain; kt->last block freed
    for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fr((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
+   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
    if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
   }
  }
- x=(MS*)w-1;   // point to free header
  j=x->j;
  n=1LL<<j;
  if(PLIML<j)FREE(x);  /* malloc-ed       */
@@ -162,6 +189,9 @@ void jtfr(J jt,A w){I j,n;MS*x;
   x->a=jt->mfree[j]; 
   jt->mfree[j]=(I*)x; 
   jt->mfreeb[j]+=n;
+#if MEMAUDIT
+  x->j=0xdeaf;
+#endif
  }
  jt->bytes-=n;
 }
@@ -175,24 +205,33 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
  j=CTTZI(n);
  JBREAK0;  // Here to allow instruction scheduling
  if(jt->mfree[j]){         /* allocate from free list         */
-  z=(A)(mhw+jt->mfree[j]); 
+  z=(A)(mhw+jt->mfree[j]);
+#if MEMAUDIT
+  if(((MS*)z-1)->j!=(S)0xdeaf)*(I*)0=0;  // verify block has free-pool marker
+#endif
   jt->mfree[j]=((MS*)(jt->mfree[j]))->a;
   jt->mfreeb[j]-=n;
- }else if(n>PLIM){         /* large block: straight malloc    */
+ }else if(j>PLIML){         /* large block: straight malloc    */
   v=MALLOC(n);
   ASSERT(v,EVWSFULL); 
   z=(A)(v+mhw);
  }else{                    /* small block: do pool allocation */
   v=MALLOC(PSIZE);
   ASSERT(v,EVWSFULL);
-  u=(C*)v; DO(PSIZE/n, x=(MS*)u; u+=n; x->a=(I*)u; x->j=(C)j; x->mflag=0;); x->a=0;
+  u=(C*)v; DO(PSIZE>>j, x=(MS*)u; u+=n; x->a=(I*)u; x->mflag=0;); x->a=0;  // chain blocks to each other; set chain of last block to 0
+#if MEMAUDIT
+   u=(C*)v; DO(PSIZE>>j, ((MS*)u)->j=0xdeaf; u+=n;);
+#endif
   ((MS*)v)->mflag=MFHEAD;
   z=(A)(mhw+v); 
   jt->mfree[j]=((MS*)v)->a;
   jt->mfreeb[j]+=PSIZE-n;
  }
  if(jt->bytesmax<(jt->bytes+=n))jt->bytesmax=jt->bytes;
- x=(MS*)z-1; x->a=0; x->j=(C)j;  // Why clear a?
+ x=(MS*)z-1; x->j=(C)j;  // Why clear a?
+#if MEMAUDIT
+ x->a=(I*)0xdeadbeef;  // flag block as allocated
+#endif
  R z;
 }
 
@@ -215,7 +254,7 @@ static void jttraverse(J jt,A w,AF f){
 
 static A jttg(J jt){A t=jt->tstacka,z;
  RZ(z=ma(SZI*WP(BOX,NTSTACK,1L)));
- AT(z)=BOX; AC(z)=AR(z)=1; AN(z)=*AS(z)=NTSTACK; AM(z)=NTSTACK*SZA; AK(z)=AKX(z);
+ AT(z)=BOX; AC(z)=ACUC1; AR(z)=1; AN(z)=*AS(z)=NTSTACK; AM(z)=NTSTACK*SZA; AK(z)=AKX(z);
  jt->tstacka=z; jt->tstack=AAV(jt->tstacka); jt->tbase+=NTSTACK; jt->ttop=1;
  *jt->tstack=t;
  R z;
@@ -232,6 +271,9 @@ F1(jttpush){
  if(jt->ttop>=NTSTACK)RZ(tg());
  jt->tstack[jt->ttop]=w;
  ++jt->ttop;
+#if MEMAUDIT
+ audittstack(jt,w,ACUC(w));  // verify total # w on stack does not exceed usecount
+#endif
  R w;
 }
 
@@ -250,12 +292,12 @@ void jtgc3(J jt,A x,A y,A z,I old){
 
 
 F1(jtfa ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtfa); fr(w);   R mark;}
-F1(jtra ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra); ++AC(w); R w;   }
+F1(jtra ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra); ACINCR(w); R w;   }
 
-static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); AC(w)+=jt->arg; R w;}
+static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
-F1(jtrat){R ra(tpush(w));}
+F1(jtrat){R tpush(ra(w));}
 
 A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
  if(t&BIT){const I c=8*SZI;              /* bit type: pad last axis to fullword */
@@ -279,9 +321,12 @@ A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
 #endif
  }
  RZ(z=ma(m));
+#if MEMAUDIT
+ audittstack(jt,z,0);  // verify buffer not on stack
+#endif
  if(!(t&DIRECT))memset(z,C0,m);
  if(t&LAST0){I*v=(I*)((C*)z+m); v[-1]=0; v[-2]=0;}  // if LAST0, clear the last two Is.
- AC(z)=1; AN(z)=n; AR(z)=r; AFLAG(z)=0; AK(z)=AKX(z); AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS)); 
+ AC(z)=ACUC1; AN(z)=n; AR(z)=r; AFLAG(z)=0; AK(z)=AKX(z); AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS)); 
  AT(z)=0; tpush(z); AT(z)=t;
  if(1==r&&!(t&SPARSE))*AS(z)=n; else if(r&&s)ICPY(AS(z),s,r);  /* 1==n always if t&SPARSE */
  R z;
@@ -290,7 +335,7 @@ A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
 A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
  RZ(z=ma(SZI*(AH+r)));
- AT(z)=0; ++AC(z); tpush(z);
+ AT(z)=0; AC(z)=ACUC1; tpush(z);  // original had ++AC(z)!?
  if(w){
   AFLAG(z)=0; AM(z)=AM(w); AT(z)=AT(w); AN(z)=AN(w); AR(z)=r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);

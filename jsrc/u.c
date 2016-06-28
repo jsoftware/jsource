@@ -65,7 +65,7 @@ I jtprod(J jt,I n,I*v){I z;
 
 #else
 
-I jtmult(J jt,I x,I y){D z=x*(D)y; ASSERT(z<=IMAX,EVLIMIT); R(I)z;}
+I jtmult(J jt,I x,I y){D z=x*(D)y; ASSERT(((z<=IMAX)&&(z>=IMIN))||(z=0,!jt),EVLIMIT); R(I)z;}  // If jt==0, return quiet 0
 
 I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z;}
 

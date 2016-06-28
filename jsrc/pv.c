@@ -237,7 +237,7 @@ F1(jtvtrans){PROLOG;A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*ttab0;
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;
   if(i&&!z)z=colon(num[4-jt->tmonad],w);
-  symfreeh(jt->local,0L);
+  // obsolete symfreeh(jt->local,0L);
  }
  jt->local=local; jt->tmonad=tmonad; jt->ttab=ttab0; jt->tsubst=tsubst;
  EPILOG(z);

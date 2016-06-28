@@ -21,7 +21,7 @@ DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
-  case DCPARSE:  d->dcy=y; break;
+  case DCPARSE:  d->dcy=(A)AAV(y); d->dcj=AN(y); break;
   case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 

@@ -576,6 +576,9 @@ extern A jtssle(J,A,A);
 extern A jtsseqne(J,A,A,I);
 extern A jtssmax(J,A,A);
 extern A jtssmin(J,A,A);
+extern A jtssmult(J,A,A);
+extern A jtssdiv(J,A,A);
+
 
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);

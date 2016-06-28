@@ -857,7 +857,7 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  R mtm;
 }    /* 15!:2  memory write */
 
-F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ++AC(z); R sc((I)z);}
+F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */
 
 F1(jtfh15){I k; RE(k=i0(w)); fh((A)k); R zero;}

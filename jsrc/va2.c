@@ -392,6 +392,9 @@ static A jtva2(J,A,A,C);
 #define CHECKSSING(a,w,f) RZ(a&&w); if(!((AT(a)|AT(w))&~(B01+INT+FL)) && AN(a)==1 && AN(w)==1)R f(jt,a,w); F2PREFIP;
 #define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(!((AT(a)|AT(w))&~(B01+INT+FL)) && AN(a)==1 && AN(w)==1)R f(jt,a,w,op); F2PREFIP;
 
+// Shift the w-is-inplaceable flag to a
+#define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
+
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
@@ -425,11 +428,11 @@ F2(jtge     ){CHECKSSING(w,a,jtssle) R va2(a,w,CGE     );}
 F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
 F2(jtgcd    ){R va2(a,w,CPLUSDOT);}
 F2(jtnor    ){R va2(a,w,CPLUSCO );}
-F2(jttymes  ){R va2(a,w,CSTAR   );}
+F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,CSTAR   );}
 F2(jtlcm    ){R va2(a,w,CSTARDOT);}
 F2(jtnand   ){R va2(a,w,CSTARCO );}
 F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
-F2(jtdivide ){R va2(a,w,CDIV    );}
+F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
 F2(jtexpn2  ){R va2(a,w,CEXP    );}
 F2(jtne     ){CHECKSSINGOP(w,a,jtsseqne,1) R va2(a,w,CNE     );}
 F2(jtoutof  ){R va2(a,w,CBANG   );}
@@ -437,14 +440,14 @@ F2(jtcircle ){R va2(a,w,CCIRCLE );}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 
 // These are unary ops that have a canned operand
-F1(jtnot   ){R w&&AT(w)&B01+SB01?va2(zero,w,CEQ):va2(one,w,CMINUS);}
-F1(jtnegate){R va2(zero,  w,     CMINUS);}
-F1(jtdecrem){R va2(w,     one,   CMINUS);}
-F1(jtincrem){R va2(one,   w,     CPLUS );}
-F1(jtduble ){R va2(num[2],w,     CSTAR );}
-F1(jtsquare){R va2(w,     w,     CSTAR );}
-F1(jtrecip ){R va2(one,   w,     CDIV  );}
-F1(jthalve ){R va2(w,     num[2],CDIV  );}
+F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(one,w);}
+F1(jtnegate){R minus(zero,  w);}
+F1(jtdecrem){IPSHIFTWA; R minus(w,     one);}
+F1(jtincrem){R plus(one,   w);}
+F1(jtduble ){R tymes(num[2],w);}
+F1(jtsquare){R tymes(w,     w);}
+F1(jtrecip ){R divide(one,   w);}
+F1(jthalve ){IPSHIFTWA; R divide(w,     num[2]);}
 
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
 static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}

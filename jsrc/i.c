@@ -134,7 +134,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 DO(32, if (bp(1LL << i) != bpref(1LL << i))*(I *)5 = i;)
 #endif
 jt->assert = 1;
- RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
+ RZ(jt->bxa=ra(cstr("+++++++++|-"))); jt->bx=CAV(jt->bxa);
  y=1.0; DO(44, y*=0.5;); jt->ctdefault=jt->ct=jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;

@@ -58,7 +58,7 @@ static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);}
 
 static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
  n=stack[0].a; v=stack[2].a;   // extract arguments
- if(stack[0].t.tno==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  if(jt->assignsym){symbis(n,v,(A)1);}   // Assign to the known name. 1 is any nonzero
  else {
   if(LIT&AT(n)&&1>=AR(n)){
@@ -86,7 +86,6 @@ static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1;
   else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,jtisf);}
  }
  // obsolete jt->symb=0;   // Restore to no symbol table selected
- stack[2].t.ipt=stack[1].t.tno;  // clean up stack after execution; clear ip to indicate can't in-place the assignment result
  RNE(stack+2);  // the result is the same value that was assigned
 }
 
@@ -135,6 +134,10 @@ F1(jtparse){A z;
 
 // In-place operations
 //
+// An in-place operation requires an inplaceable argument, which is marked as LSB of AC=0,
+// Blocks are born non-inplaceable; they need to be marked inplaceable by the creator.
+// Blocks that are assigned are marked not-inplaceable.
+// But an in-placeable argument is not enough;
 // The key point is that an in-place operation is connected to a FUNCTION CALL, not an DATA BLOCK.
 // For example, in (+/ % #) <: y the result of <: y has a usecount of 1 and is
 // not used anywhere else, so it is passed into the fork as an inplaceable argument.
@@ -143,27 +146,15 @@ F1(jtparse){A z;
 // Thus, it is up to the caller to decide whether it can tolerate having an argument overwritten;
 // if so, it marks the argument as inplaceable for that call only.
 //
-// Generally an argument is eligible for inplacing if its usecount is 1, but there are exceptions.
-// We can't inplace any argument that came from the queue, because the sentence may
-// be reexecuted later.  [This is actually two different cases.  Names in the queue are replaced,
-// by either their value or a reference, so there is no issue of overwriting the queue; but the value
-// of a noun must be protected since it is attached to the name.  It would be permissible to modify
-// a reference but there is no advantage in doing so.  Unnamed noun values in the queue must be protected
-// because they are stored in the saved sentence, which might be in an explicit definition that will
-// be run again later.  It would be OK to modify values coming from ". or immex, but that is not
-// in a critical-performance path.]
-// Individual verbs may also decide not to allow inplacing, as in the example above.
-// And, if a non-inplaceable argument is returned from a verb (such as ]), we need to make sure
-// that that result is also marked non-inplaceable.
+// By setting the inplaceable flag in a result, a verb warrants that the block does not contain and is not contained in
+// any other block.  Whether to traverse to do this is an open issue, deferred for the time being because only
+// direct blocks are marked inplaceable now.
 //
-// The upshot is that results of verbs are (usually) inplaceable.  When one of these has usecount 1,
-// we indicate its inplaceability by setting an LSB of jt: bit 0 to indicate inplaceable w, bit 1 for inplaceable a.
-// It is our responsibility not to set these flags unless we know that the receiving verb
-// can handle inplace arguments (if it can, it needs to execute F?PREFIP as its first act, to preserve
-// the flags in jt and cleanse jt before it is used).  For primitive verbs, the verb flags
-// VINPLACEOK? indicate whether the monad and dyad can handle inplace calls.
+// The 2 LSBs of jt are set to indicate inplaceability of arguments.  The caller sets them when e
+// has no further use for the argument AND e knows that the callee can handle in-place arguments.
+// An argument is inplaceable only if it is marked as such in the block AND in jt.
 //
-// We use stack[].ipt.ip to indicate that the stacked noun block is an argument that supports inplace calls.
+// Bit 0 of jt is for w, bit 1 for a.
 //
 // There is one more piece to the inplace system: reassigned names.  When there is an
 // assignment to a name, the block being reassigned can be reused for the output if:
@@ -207,24 +198,20 @@ F1(jtparse){A z;
 //  if an error is encountered (preventing the assignment)
 // Set zombiesym if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
 #define IPSETZOMB(w) if(AT(stack[0].a)==ASGN&&stack[(w)+1].a==mark&&AT(queue[m])==NAME&&CAV(stack[0].a)[0]==CASGN&&jt->local \
-   &&AN(queue[m])==NAV(queue[m])->m&&(s=probelocal(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)==1)jt->zombieval=s->val;}
+   &&AN(queue[m])==NAV(queue[m])->m&&(s=probelocal(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:
-//  usecount==1
-//  DIRECT type
-//  was NOT moved in from the queue (i. e. is the result of an execution)
-//   tokens from the queue may be reused later in another execution of the sentence.
-//   The MSB of the word-number on the stack is set to indicate it came from execution
+//  usecount==1 with inplaceable bit
+//  DIRECT type (implied for now - we don't inplace otherwise)
 //  the verb supports in-place ops
-// An in-placeable operand is indicated by setting the LSB of the argument address
+// We set the jt bits to indicate inplaceability.  Since the parser never reuses an argument, all bits will
+// be set if the callee can handle inplaceing.  The inplaceable bit in the arguments must also be cleared if the
+// callee cannot handle inplaceing, to prevent releasing an in-placeable block where it is not understood.
 // NOTE that in name =: x i} name, the zombiesym will be set but the name operand will NOT be marked inplace.  The action routine
 // should check the operand addresses when zombiesym is set.
-#define INPLACEJ(x) ((stack[x].t.ip&&AT(stack[x].a)&DIRECT&&AC(stack[x].a)==1))
-#define INPLACEJW(w) ((J)((UI)jt+INPLACEJ(w)))
-#define INPLACEJAW(a,w) ((J)((UI)jt+2*INPLACEJ(a)+INPLACEJ(w)))
-#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w); y=jtdfs1(INPLACEJW(w),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w); y=jtdfs2(INPLACEJAW(aa,w),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{ACIPNO(stack[w].a); y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{ACIPNO(stack[w].a);ACIPNO(stack[aa].a); y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
 // in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
@@ -232,8 +219,8 @@ F1(jtparse){A z;
 // matched.  The idea is that if (] y) returns the address of y, we should use the same flags that y had
 // we pass in the stack index of the verb, and infer the operands from that
 // z=result stack index, a/w=stack index of argument(s), t=source for token number
-#define STO1(z,w,tok) {stack[z].t.tno=stack[tok].t.tno; stack[z].t.ip=(y==stack[w].a)?stack[w].t.ip : 1; EPZ(stack[z].a=y)}
-#define STO2(z,aa,w,tok) {stack[z].t.tno=stack[tok].t.tno; stack[z].t.ip=(y==stack[aa].a)?stack[aa].t.ip : (y==stack[w].a)?stack[w].t.ip : 1; EPZ(stack[z].a=y)}
+#define STO1(z,w,tok) {stack[z].t=stack[tok].t; EPZ(stack[z].a=y)}
+#define STO2(z,aa,w,tok) {stack[z].t=stack[tok].t; EPZ(stack[z].a=y)}
 
 // Closing up the stack
 #define SM(to,from) stack[to]=stack[from]
@@ -332,7 +319,7 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
    // for finding its arguments on the stack, storing the result (if no error) over the last
    // stack entry, then closing up any gap between the front-of-stack and the executed fragment,
    // and finally returning the new front-of-stack pointer
-   *dci = stack[(i&3)].t.tno;  // set the token-in-error, using the offset encoded into i
+   *dci = stack[(i&3)].t;  // set the token-in-error, using the offset encoded into i
    // Save the current stack pointer for use as end+1 pointer by the next parse.  This is a design issue.  Should we
    // take the time to store the stack pointer on every execution, or just move it back the maximum possible amount
    // before the loop?  The maximum possible amount may be much larger than actual stack usage, making for
@@ -355,15 +342,15 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
    case PDYAD:
    DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; break;  //STO(z,a,w,toksource)
    case PADV:
-   EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t.ipt = stack[1].t.ipt;SM(1,0); stack += 1; break;
+   EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; break;
    case PCONJ:
-   EPZ(stack[3].a = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t.ipt = stack[1].t.ipt;SM(2,0); stack += 2; break;
+   EPZ(stack[3].a = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; break;
    case PTRIDENT:
-   EPZ(stack[3].a = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t.ipt = stack[1].t.ipt;SM(2,0); stack += 2; break;
+   EPZ(stack[3].a = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; break;
    case PBIDENT:
-   EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t.ipt = stack[1].t.ipt;SM(1,0); stack += 1; break;
+   EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; break;
    case PPAREN:
-   stack[2].a=stack[1].a; stack[2].t.ip=stack[1].t.ip; stack[2].t.tno=stack[0].t.tno; stack += 2; break; // Can't fail; use value and inplaceable from expr, token # from (
+   stack[2].a=stack[1].a; stack[2].t=stack[0].t; stack += 2; break; // Can't fail; use value from expr, token # from (
    case PASGN: if(!(stack=jtis(jt)))EP break;
    }
 
@@ -380,7 +367,7 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
     I at;  // type of the new word (before name resolution)
 
     stack--;  // back up to new stack frame, where we will store the new word
-    stack[0].t.ipt = m;  // install the original token number for the word, and clear in-placeable flag
+    stack[0].t = m;  // install the original token number for the word, and clear in-placeable flag
 
     if(m<=0) {  // Toward the end we have to worry about underrunning the queue, and pulling the virtual mark
       if(m==0) {stack[0].a = mark; --m; break;}  // move in the mark and use it, and pop the stack

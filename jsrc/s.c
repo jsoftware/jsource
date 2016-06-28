@@ -405,6 +405,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
    // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
    if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
   }
+  ACIPNO(w);  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
  }else if(x!=w){  /* replacing name with different mapped data */
   if(wt&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);

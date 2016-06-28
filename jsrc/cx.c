@@ -129,6 +129,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if((C *)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C *)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
  else{A stkblka; GA(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
 
+
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  jt->xdefn=1;   // Indicate explicit definition running
  // Assign the special names x y m n u v

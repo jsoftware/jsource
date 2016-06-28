@@ -78,11 +78,11 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  jt->nflag=b;
 }
 
-static void jtseeparse(J jt,DC d){A*v,y;I m;
- y=d->dcy; v=AAV(y); /* list of tokens */
+static void jtseeparse(J jt,DC d){A*v;I m;
+ v=(A*)d->dcy;  /* list of tokens */
  m=d->dci-1;         /* index of active token when error found */
  jt->nflag=0; 
- DO(AN(y), if(i==m)eputs("    "); disp(v[i]););
+ DO(d->dcj, if(i==m)eputs("    "); disp(v[i]););
 }    /* display error line */
 
 F1(jtunparse){A*v,z;

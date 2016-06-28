@@ -174,6 +174,19 @@ typedef I SI;
 #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)
 #define DTYPE(t)        ((t)&SB01? B01:(t)&SINT? INT:(t)&SFL? FL:(t)&SCMPX? CMPX:(t)&SLIT?LIT:(t)&SBOX? BOX:0L)
 
+// Flags in the count field of type A
+#define ACINPLACE       (I)(((UI)-1>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACUSECOUNT      (I)1  // lower bits used for usecount
+#define ACIPNO(a)       (AC(a)&=~ACINPLACE)
+#define ACIPYES(a)      (AC(a)|=ACINPLACE)
+#define ACIPISOK(a)     (AC(a)<0)  // OK to modify if INPLACE set - set only when usecount=1
+#define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
+#define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
+#define ACINCRBY(a,w)   (AC(a)=(AC(a)+(w))&~ACINPLACE)  // add w to usecount; always clear INPLACE at that time
+#define ACINCR(a)       ACINCRBY(a,1)
+#define ACDECR(a)       (AC(a)-=ACUSECOUNT)  // No ACINPLACE needed, since values >1 are never inplace
+
+
 /* Values for AFLAG(x) field of type A                                     */
 
 #define AFRO            (I)1            /* read only; can't change data    */
@@ -213,11 +226,11 @@ typedef struct DS{      /* 1 2 3                                                
  A dca;                 /*     x  fn/op name                                            */
  A dcf;                 /*     x  fn/op                                                 */
  A dcx;                 /*     x  left argument                                         */
- A dcy;                 /* x x x  tokens; text        ; right argument                  */
+ A dcy;                 /* x x x  &tokens; text       ; right argument                  */
  A dcloc;               /*     x  local symb table (0 if not explicit)                  */
  A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
  I dci;                 /* x x x  index ; next index  ; ptr to line #                   */
- I dcj;                 /*   x x        ; prev index  ; error #                         */
+ I dcj;                 /* x x x  #tokens;prev index  ; error #                         */
  I dcn;                 /*   x x        ; line #      ; ptr to symb entry               */
  I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
  I dcstop;              /*     x  the last stop in this function                        */
@@ -386,26 +399,7 @@ typedef struct {DX re;DX im;} ZX;
 
 
 // parser stack
-#if SY_64
 typedef struct {
  A a;  // pointer to block
- union {
-  struct {
-   I4 tno; //
-   I4 ip;  // 1 if inplaceable
-  };  // token number
-  I ipt;  // inplace+flags
-  } t;
+ I t;  // token number for this block
 } PSTK;
-#else
-typedef struct {
- A a;  // pointer to block
- union {
-  struct {
-   S tno; //
-   S ip;  // 1 if inplaceable
-  };  // token number
-  I4 ipt;  // inplace+flags
-  } t;
-} PSTK;
-#endif

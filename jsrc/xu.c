@@ -73,40 +73,40 @@ static I extrawidth(US w){
 // In the array, a number in range 0-ffff starts an interval; 1xxxx ends an interval.  Singletons use 0-ffff
 static I4  widechars[] = {
 0x1100, 0x1115F, // Hangul - note the first value is wired into jttwidthf16 below
-0x231A, 0x1231B, // Hourglass
+// 0x231A, 0x1231B, // Hourglass
 0x2329, 0x1232A, // Angle Brackets
-0x23E9, 0x123EC, // Double triangles
-0x23F0, // Hourglass
-0x23F3, // Hourglass
-0x25FD, 0x125FE, // Small square
-0x2614, 0x12615, // Umbrellas
-0x2648, 0x12653, // Astrological
-0x267F, // Wheelchair
-0x2693, // Anchor
-0x26A1, // High Voltage
-0x26AA, 0x126AB, // Medium white circle
-0x26BD, 0x126BE, // Soccer ball, baseball
-0x26C4, 0x126C5, // Snowman
-0x26CE, // Ophiuchus
-0x26D4, // No entry
-0x26EA, // church
-0x26F2, 0x126F3, // fountain
-0x26F5, // sailboat
-0x26FA, // tent
-0x26FD, // fuel pump
-0x2705, // check mark
-0x270A, 0x1270B, // Victory fist
-0x2728, // sparkles
-0x274C, // cross mark
-0x274E, // negative cross mark
-0x2753, 0x12755, // Question marks
-0x2757, // Exclamation mark
-0x2795, 0x12797, // Plus sign
-0x27B0, // Curly Loop
-0x27BF, // Double Curly loop
-0x2B1B, 0x12B1C, // Black Squre
-0x2B50, // square
-0x2B55, // Circle
+// 0x23E9, 0x123EC, // Double triangles
+// 0x23F0, // Hourglass
+// 0x23F3, // Hourglass
+// 0x25FD, 0x125FE, // Small square
+// 0x2614, 0x12615, // Umbrellas
+// 0x2648, 0x12653, // Astrological
+// 0x267F, // Wheelchair
+// 0x2693, // Anchor
+// 0x26A1, // High Voltage
+// 0x26AA, 0x126AB, // Medium white circle
+// 0x26BD, 0x126BE, // Soccer ball, baseball
+// 0x26C4, 0x126C5, // Snowman
+// 0x26CE, // Ophiuchus
+// 0x26D4, // No entry
+// 0x26EA, // church
+// 0x26F2, 0x126F3, // fountain
+// 0x26F5, // sailboat
+// 0x26FA, // tent
+// 0x26FD, // fuel pump
+// 0x2705, // check mark
+// 0x270A, 0x1270B, // Victory fist
+// 0x2728, // sparkles
+// 0x274C, // cross mark
+// 0x274E, // negative cross mark
+// 0x2753, 0x12755, // Question marks
+// 0x2757, // Exclamation mark
+// 0x2795, 0x12797, // Plus sign
+// 0x27B0, // Curly Loop
+// 0x27BF, // Double Curly loop
+// 0x2B1B, 0x12B1C, // Black Squre
+// 0x2B50, // square
+// 0x2B55, // Circle
 0x2E80, 0x12E99, // CJK
 0x2E9B, 0x12EF3, // CJK
 0x2F00, 0x12FD5, // CJK

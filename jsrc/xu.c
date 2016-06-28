@@ -73,40 +73,40 @@ static I extrawidth(US w){
 // In the array, a number in range 0-ffff starts an interval; 1xxxx ends an interval.  Singletons use 0-ffff
 static I4  widechars[] = {
 0x1100, 0x1115F, // Hangul - note the first value is wired into jttwidthf16 below
-// 0x231A, 0x1231B, // Hourglass
+0x231A, 0x1231B, // Hourglass
 0x2329, 0x1232A, // Angle Brackets
-// 0x23E9, 0x123EC, // Double triangles
-// 0x23F0, // Hourglass
-// 0x23F3, // Hourglass
-// 0x25FD, 0x125FE, // Small square
-// 0x2614, 0x12615, // Umbrellas
-// 0x2648, 0x12653, // Astrological
-// 0x267F, // Wheelchair
-// 0x2693, // Anchor
-// 0x26A1, // High Voltage
-// 0x26AA, 0x126AB, // Medium white circle
-// 0x26BD, 0x126BE, // Soccer ball, baseball
-// 0x26C4, 0x126C5, // Snowman
-// 0x26CE, // Ophiuchus
-// 0x26D4, // No entry
-// 0x26EA, // church
-// 0x26F2, 0x126F3, // fountain
-// 0x26F5, // sailboat
-// 0x26FA, // tent
-// 0x26FD, // fuel pump
-// 0x2705, // check mark
-// 0x270A, 0x1270B, // Victory fist
-// 0x2728, // sparkles
-// 0x274C, // cross mark
-// 0x274E, // negative cross mark
-// 0x2753, 0x12755, // Question marks
-// 0x2757, // Exclamation mark
-// 0x2795, 0x12797, // Plus sign
-// 0x27B0, // Curly Loop
-// 0x27BF, // Double Curly loop
-// 0x2B1B, 0x12B1C, // Black Squre
-// 0x2B50, // square
-// 0x2B55, // Circle
+0x23E9, 0x123EC, // Double triangles
+0x23F0, // Hourglass
+0x23F3, // Hourglass
+0x25FD, 0x125FE, // Small square
+0x2614, 0x12615, // Umbrellas
+0x2648, 0x12653, // Astrological
+0x267F, // Wheelchair
+0x2693, // Anchor
+0x26A1, // High Voltage
+0x26AA, 0x126AB, // Medium white circle
+0x26BD, 0x126BE, // Soccer ball, baseball
+0x26C4, 0x126C5, // Snowman
+0x26CE, // Ophiuchus
+0x26D4, // No entry
+0x26EA, // church
+0x26F2, 0x126F3, // fountain
+0x26F5, // sailboat
+0x26FA, // tent
+0x26FD, // fuel pump
+0x2705, // check mark
+0x270A, 0x1270B, // Victory fist
+0x2728, // sparkles
+0x274C, // cross mark
+0x274E, // negative cross mark
+0x2753, 0x12755, // Question marks
+0x2757, // Exclamation mark
+0x2795, 0x12797, // Plus sign
+0x27B0, // Curly Loop
+0x27BF, // Double Curly loop
+0x2B1B, 0x12B1C, // Black Squre
+0x2B50, // square
+0x2B55, // Circle
 0x2E80, 0x12E99, // CJK
 0x2E9B, 0x12EF3, // CJK
 0x2F00, 0x12FD5, // CJK
@@ -221,7 +221,7 @@ F1(jttoutf16r){A z;I n,t,q,b=0; C* wv; US* c2v;
 // NUL char if a wide char is already followed by a NUL byte.  We assume that
 // there will not be NUL bytes in user input (since they were going to be eaten before display anyway)
 F1(jttwidthf16){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); wv=(US*)CAV(w);
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); wv=USAV(w);
  if(!n) R w;
  // See how many NUL codes we will need to add
  for(i=0;i<n;++i){
@@ -231,11 +231,11 @@ F1(jttwidthf16){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
  // If no padding is needed, no copy is required
  if(!naddednulls)R w;
  // Allocate result and copy the string, adding null padding where needed
- GA(z,C2T,n+naddednulls,1,0); zv=(US*)CAV(z);
+ GA(z,C2T,n+naddednulls,1,0); zv=USAV(z);
  nignulls = 0;
  for(i=0;i<n;++i){
   if(nignulls && (--nignulls,wv[i]==0));  // If an added null is already present, skip the copy
-  else{*zv++ = wv[i]; if(wv[i]>=0x1100){*zv++=0; nignulls = extrawidth(wv[i]);}}  // copy the char; if doublewide, copy the null for it
+  else{*zv++ = wv[i]; if(wv[i]>=0x1100&&(nignulls = extrawidth(wv[i]))){*zv++=0;}}  // copy the char; if doublewide, copy the null for it
  }
  R z;
 }

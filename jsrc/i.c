@@ -121,6 +121,8 @@ static B jtevinit(J jt){A q,*v;
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
 static B jtconsinit(J jt){D y;
+// This is an initialization routine, so emory allocations performed here are NOT
+// automatically freed by tpop()
 #if AUDITCOMPILER
 // verify that CTLZ works correctly, and that all calls to BP return what they used to
 if (CTTZ(0x1000LL) != 12)*(I *)0 = 100;   // Create program check if error
@@ -134,7 +136,7 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 DO(32, if (bp(1LL << i) != bpref(1LL << i))*(I *)5 = i;)
 #endif
 jt->assert = 1;
- RZ(jt->bxa=ra(cstr("+++++++++|-"))); jt->bx=CAV(jt->bxa);
+ RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
  y=1.0; DO(44, y*=0.5;); jt->ctdefault=jt->ct=jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
@@ -178,6 +180,10 @@ static C jtjinit3(J jt){S t;
  xlinit();
 #endif
  jtecvtinit(jt);
+ // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
+ // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
+ // look like those symbols have a free outstanding.
+ jt->ttop=jt->tbase;
  R !jt->jerr;
 }
 

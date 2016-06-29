@@ -389,8 +389,9 @@ C jtvaid(J jt,A w){A x;C c;I k;V*v;
 static A jtva2(J,A,A,C);
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(a,w,f) RZ(a&&w); if(!((AT(a)|AT(w))&~(B01+INT+FL)) && AN(a)==1 && AN(w)==1)R f(jt,a,w); F2PREFIP;
-#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(!((AT(a)|AT(w))&~(B01+INT+FL)) && AN(a)==1 && AN(w)==1)R f(jt,a,w,op); F2PREFIP;
+#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
+#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op); F2PREFIP;
+#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
 
 // Shift the w-is-inplaceable flag to a
 #define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
@@ -426,11 +427,11 @@ F2(jtgt     ){CHECKSSING(w,a,jtsslt) R va2(a,w,CGT     );}
 F2(jtmaximum){CHECKSSING(a,w,jtssmax) R va2(a,w,CMAX    );}
 F2(jtge     ){CHECKSSING(w,a,jtssle) R va2(a,w,CGE     );}
 F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
-F2(jtgcd    ){R va2(a,w,CPLUSDOT);}
+F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,CPLUSDOT);}
 F2(jtnor    ){R va2(a,w,CPLUSCO );}
 F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,CSTAR   );}
-F2(jtlcm    ){R va2(a,w,CSTARDOT);}
-F2(jtnand   ){R va2(a,w,CSTARCO );}
+F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,CSTARDOT);}
+F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,CSTARCO );}
 F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
 F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
 F2(jtexpn2  ){R va2(a,w,CEXP    );}

@@ -88,9 +88,9 @@ AHDR2(remII,I,I,I){I u,v;
 }
 
 
-static I igcd1(I a,I b){R a?igcd1(b%a,a):b;}
+static I igcd1(I a,I b){R a?igcd1(b%a,a):b;}  // Emulate Euclid
 
-static I jtigcd(J jt,I a,I b){
+I jtigcd(J jt,I a,I b){
  if(a>IMIN&&b>IMIN){a=ABS(a); b=ABS(b);}
  else{
   if(a==b||!a||!b){jt->jerr=EWOV; R 0;}
@@ -109,16 +109,16 @@ D jtdgcd(J jt,D a,D b){D a1,b1,t;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
 #if SY_64
 #if SY_WIN32 && !C_NA
-static I jtilcm(J jt,I a,I b){C er=0;I b1,d,z;
+I jtilcm(J jt,I a,I b){C er=0;I b1,d,z;
  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; TYMESVV(1L,&z,&a,&b1); if(er)jt->jerr=EWOV; R    z;}else R 0;
 }
 #else
-static I jtilcm(J jt,I a,I b){LD z;I b1,d;
+I jtilcm(J jt,I a,I b){LD z;I b1,d;
  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(LD)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
 }
 #endif
 #else
-static I jtilcm(J jt,I a,I b){D z;I b1,d;
+I jtilcm(J jt,I a,I b){D z;I b1,d;
  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(D)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
 }
 #endif
@@ -126,7 +126,7 @@ static I jtilcm(J jt,I a,I b){D z;I b1,d;
 #define GCDIO(u,v)      (dgcd((D)u,(D)v))
 #define LCMIO(u,v)      (dlcm((D)u,(D)v))
 
-static D jtdlcm(J jt,D a,D b){ASSERT(!(INF(a)||INF(b)),EVNAN); R a&&b?a*(b/dgcd(a,b)):0;}
+D jtdlcm(J jt,D a,D b){ASSERT(!(INF(a)||INF(b)),EVNAN); R a&&b?a*(b/dgcd(a,b)):0;}
 
 APFX(gcdIO, D,I,I, GCDIO)
 APFX(gcdII, I,I,I, igcd )

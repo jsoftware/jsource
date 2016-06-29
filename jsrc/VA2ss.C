@@ -166,7 +166,7 @@ SSINGF2(jtssmin) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(MIN(SSRDB(a),SSRDB(w)),z,B01,B) R z;
+  case SSINGBB: SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORE(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORE(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
   case SSINGID: SSSTORE(MIN(SSRDI(a),SSRDD(w)),z,FL,D) R z;
@@ -185,7 +185,7 @@ SSINGF2(jtssmax) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(MAX(SSRDB(a),SSRDB(w)),z,B01,B) R z;
+  case SSINGBB: SSSTORE(SSRDB(a)|SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORE(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORE(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
   case SSINGID: SSSTORE(MAX(SSRDI(a),SSRDD(w)),z,FL,D) R z;
@@ -243,6 +243,81 @@ SSINGF2(jtssdiv) SSNUMPREFIX
  }
 }
 
+
+SSINGF2(jtssgcd) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: {SSSTORE(SSRDB(a)|SSRDB(w),z,B01,B) R z;}
+  case SSINGBD: {adv=SSRDB(a); wdv=SSRDD(w); goto flresult;}
+  case SSINGDB: {adv=SSRDD(a); wdv=SSRDB(w); goto flresult;}
+  case SSINGID: {adv=(D)SSRDI(a); wdv=SSRDD(w); goto flresult;}
+  case SSINGDI: {adv=SSRDD(a); wdv=(D)SSRDI(w); goto flresult;}
+  case SSINGBI: aiv=SSRDB(a); wiv=SSRDI(w); break;
+  case SSINGIB: aiv=SSRDI(a); wiv=SSRDB(w); break;
+  case SSINGII: aiv=SSRDI(a); wiv=SSRDI(w); break;
+  case SSINGDD: {adv=SSRDD(a); wdv=SSRDD(w); goto flresult;}
+ }
+ I ziv=igcd(aiv,wiv); if(ziv||!jt->jerr){SSSTORE(ziv,z,INT,I) R z;}  // if no error, store an int
+ if(jt->jerr!=EWOV)R 0;  // If not overflow, what can it be?
+ RESETERR; adv=(D)aiv; wdv=(D)wiv;  // Rack em up again; Convert int args to float, and fall through to float case
+ flresult:
+ if((zdv=dgcd(adv,wdv))||!jt->jerr){SSSTORE(zdv,z,FL,D) R z;}  // float result is the last fallback
+ R 0;  // if there was an error, fail, jerr is set
+}
+
+
+
+SSINGF2(jtsslcm) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: {SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;}
+  case SSINGBD: {adv=SSRDB(a); wdv=SSRDD(w); goto flresult;}
+  case SSINGDB: {adv=SSRDD(a); wdv=SSRDB(w); goto flresult;}
+  case SSINGID: {adv=(D)SSRDI(a); wdv=SSRDD(w); goto flresult;}
+  case SSINGDI: {adv=SSRDD(a); wdv=(D)SSRDI(w); goto flresult;}
+  case SSINGBI: aiv=SSRDB(a); wiv=SSRDI(w); break;
+  case SSINGIB: aiv=SSRDI(a); wiv=SSRDB(w); break;
+  case SSINGII: aiv=SSRDI(a); wiv=SSRDI(w); break;
+  case SSINGDD: {adv=SSRDD(a); wdv=SSRDD(w); goto flresult;}
+ }
+ I ziv=ilcm(aiv,wiv); if(ziv||!jt->jerr){SSSTORE(ziv,z,INT,I) R z;}  // if no error, store an int
+ if(jt->jerr!=EWOV)R 0;  // If not overflow, what can it be?
+ RESETERR; adv=(D)aiv; wdv=(D)wiv;  // Rack em up again; Convert int args to float, and fall through to float case
+ flresult:
+ if((zdv=dlcm(adv,wdv))||!jt->jerr){SSSTORE(zdv,z,FL,D) R z;}  // float result is the last fallback
+ R 0;  // if there was an error, fail, jerr is set
+}
+
+SSINGF2(jtssnand) SSNUMPREFIX  I aiv,wiv; D adv,wdv;
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(sw) {
+  default: R 0;
+  case SSINGBB: aiv = SSRDB(a); wiv = SSRDB(w); break;
+  case SSINGBD: wdv=SSRDD(w); aiv = SSRDB(a); ASSERT(wdv==0.0 || teq(wdv,1.0),EVDOMAIN); wiv=(I)wdv; break;
+  case SSINGDB: adv=SSRDD(a); wiv = SSRDB(w); ASSERT(adv==0.0 || teq(adv,1.0),EVDOMAIN); aiv=(I)adv; break;
+  case SSINGID: wdv=SSRDD(w); aiv = SSRDI(a); ASSERT(!(aiv&-2) && (wdv==0.0 || teq(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; break;
+  case SSINGDI: adv=SSRDD(a); wiv = SSRDI(w); ASSERT(!(wiv&-2) && (adv==0.0 || teq(adv,1.0)),EVDOMAIN); aiv=(I)adv; break;
+  case SSINGBI: aiv = SSRDB(a); wiv = SSRDI(w); ASSERT(!(wiv&-2),EVDOMAIN); break;
+  case SSINGIB: aiv=SSRDI(a); wiv=SSRDB(w); ASSERT(!(aiv&-2),EVDOMAIN); break;
+  case SSINGII: aiv=SSRDI(a); wiv=SSRDI(w); ASSERT(!((aiv|wiv)&-2),EVDOMAIN); break;
+  case SSINGDD: adv=SSRDD(a); wdv=SSRDD(w); ASSERT((adv==0.0 || teq(adv,1.0)) && (wdv==0.0 || teq(wdv,1.0)),EVDOMAIN); wiv=(I)wdv; aiv=(I)adv; break;
+ }
+ SSSTORE((B)(1^(aiv&wiv)),z,B01,B) R z;
+}
+
+
+
+// Comparisons:
 
 SSINGF2(jtsslt) SSCOMPPREFIX
 

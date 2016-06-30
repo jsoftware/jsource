@@ -297,6 +297,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
 /* result is 1 iff try is seen                                   */
 /* zl - list of lines of tokens                                  */
 /* zc - corresp list of control info                             */
+// zs - local symbol table, to use and copy
 /* control info has 3 I values for each line                     */
 /* control info values - type, goto linenum, source linenum      */
 

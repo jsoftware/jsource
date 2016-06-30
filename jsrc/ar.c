@@ -242,7 +242,7 @@ DF1(jtredravel){A f,x,z;C id;I cv,n;P*wp;VF ado;
  if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  id=vaid(VAV(f)->f);
- while(1){
+ while(1){  // Loop to handle restart on overflow
   vains(id,AT(x),&ado,&cv);
   ASSERT(ado,EVNONCE);
   GA(z,rtype(cv),1,0,0);

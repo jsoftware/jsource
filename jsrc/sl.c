@@ -5,31 +5,44 @@
 
 #include "j.h"
 
-
+// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
+// n is length of name (or locale# to allocate, for numbered locales), u->name
+// Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
+// on the result and on the name and path
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
- GA(g,SYMB,ptab[p],1,0); 
- RZ(v=symnew(AV(g))); v->flag|=LINFO; v->sn=jt->symindex++;
+ GA(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
+ // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
+ // (it is queried by 18!:31)
+ RZ(v=symnew(AV(g),0)); v->flag|=LINFO; v->sn=jt->symindex++;
  switch(k){
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
-   LOCNAME(g)=x; LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
+   // Install name and path.  Path is 'z' except in z locale itself, which has empty path
+   LOCNAME(g)=ra(x); LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
+   // Assign this name in the locales symbol table to point to the allocated SYMB block
+   // This does ra() on g
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   LOCNAME(g)=x; LOCPATH(g)=ra(zpath);
+   LOCNAME(g)=ra(x); LOCPATH(g)=ra(zpath);
    ++jt->stused;
    m=AN(jt->stnum);
+   // Extend in-use locales list if needed
    if(m<jt->stused){
     x=ext(1,jt->stnum); y=ext(1,jt->stptr); RZ(x&&y); jt->stnum=x; jt->stptr=y;
     nv=m+AV(jt->stnum); pv=m+AAV(jt->stptr); DO(AN(x)-m, *nv++=-1; *pv++=0;); 
    }
+   // Put this locale into the in-use list at an empty location.  ra(g) at that time
    pv=AAV(jt->stptr);
    DO(AN(jt->stnum), if(!pv[i]){pv[i]=ra(g); *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;
    break;
   case 2:  /* local symbol table */
+   // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
+   // that was used to create the table
+   AR(g)=p;
    ;
  }
  R g;
@@ -39,11 +52,11 @@ B jtsymbinit(J jt){A q;I n=40;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
- GA(q,SYMB,ptab[3],1,0); jt->stloc=q;
+ GA(q,SYMB,ptab[3+PTO],1,0); jt->stloc=q;
  RZ(q=apv(n,-1L,0L));    jt->stnum=q;
  GA(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
- RZ(jt->global=stcreate(0,5L,4L,"base"));
- RZ(           stcreate(0,7L,1L,"z"   ));
+ RZ(jt->global=stcreate(0,5L+PTO,4L,"base"));
+ RZ(           stcreate(0,7L+PTO,1L,"z"   ));
  R 1;
 }
 
@@ -57,7 +70,7 @@ F1(jtlocsizes){I p,q,*v;
  ASSERT(2==AN(w),EVLENGTH);
  RZ(w=vi(w)); v=AV(w); p=v[0]; q=v[1];
  ASSERT(0<=p&&0<=q,EVDOMAIN);
- ASSERT(p<nptab&&q<nptab,EVLIMIT);
+ ASSERT(p<nptab-PTO&&q<nptab-PTO,EVLIMIT);
  jt->locsize[0]=p;
  jt->locsize[1]=q;
  R mtm;
@@ -67,7 +80,7 @@ F1(jtlocsizes){I p,q,*v;
 static A jtstfindnum(J jt,B b,I k){A y;I j;
  RZ(y=indexof(jt->stnum,sc(k))); j=*AV(y); 
  if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
- else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1],k,0L);}
+ else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
  else R 0;
 }    /* stfind for numbered locales */
 
@@ -76,7 +89,7 @@ A jtstfind(J jt,B b,I n,C*u){I old;L*v;
  if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
  else{
   old=jt->tbase+jt->ttop; v=probe(nfs(n,u),jt->stloc); tpop(old);
-  R v?v->val:b?stcreate(0,jt->locsize[0],n,u):0;
+  R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
 }}   /* find the symbol table for locale u, create if b and non-existent */
 
 static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n,wd;
@@ -158,7 +171,7 @@ F2(jtlocpath2){A g,x;
 
 static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
  RZ(a&&w);
- if(MARK&AT(a))p=jt->locsize[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
+ if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
  if(v=probe(nfs(n,s),jt->stloc)){
   g=v->val; 
@@ -171,7 +184,7 @@ static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
 
 static F1(jtloccrenum){C s[20];I k=jt->stmax,p;
  RZ(w);
- if(MARK&AT(w))p=jt->locsize[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
+ if(MARK&AT(w))p=PTO+jt->locsize[1]; else{RE(p=PTO+i0(w)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  RZ(stcreate(1,p,k,0L));
  sprintf(s,FMTI,k); 
  R box(cstr(s));

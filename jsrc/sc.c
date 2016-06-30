@@ -23,7 +23,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jt->global; 
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
- if(jt->db&&!lk)z=dbunquote(a,w,fs);
+ if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
  else{ra(fs); z=a?dfs2(a,w,fs):dfs1(w,fs); fa(fs);}  /* beware redefs down the stack */
  if(!jt->stswitched)jt->global=jt->fcallg[i].og;
  jt->stswitched=jt->fcallg[i].sw0;

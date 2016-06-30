@@ -51,7 +51,7 @@ F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 F1(jtpeekdata){ ASSERTMTV(w); R sc(jt->peekdata); }
 
 // 6!:6, used to run tests that need to run in a sentence
-F1 (jttestcode) {
+F1 (jttestcode){
 #if defined(OBSOLETE)
 // jtmult tests
  I multops[]  = {
@@ -298,20 +298,25 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  R sc(n);
 }
 
+// Add an entry to the Performance Monitor area
+// name and loc are A blocks for the name and current locale
+// lc is the line number being executed, or _1 for start function, _2 for end function
+// val is the PM counter
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
- u=jt->pmu;
- v=jt->pmv+u->i;
- if(b=u->wrapped){x=v->name; y=v->loc;}
- ++u->i;
- if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}
- v->name=name; if(name)++AC(name);
- v->loc =loc;  if(loc )++AC(loc ); if(b){fa(x); fa(y);}
- v->val =val;
+ u=jt->pmu;  // u-> pm control area
+ v=jt->pmv+u->i;  // v -> next PM slot to fill
+ if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, remember those values
+ ++u->i;  // Advance index to next slot
+ if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}  // If we stepped off the end,
+  // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
+ v->name=name; if(name)ACINCR(name);  // move name/loc; incr use counts
+ v->loc =loc;  if(loc )ACINCR(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts
+ v->val =val;  // Save the NSI data
  v->lc  =lc;
  v->s=jt->bytesmax-u->s;
  u->s=jt->bytesmax=jt->bytes;
 #if SY_WIN32
- QueryPerformanceCounter((LI*)v->t);
+ QueryPerformanceCounter((LI*)v->t);  // Save PM info
 #else
  {D d=tod(); MC(v->t,&d,sizeof(D));}
 #endif

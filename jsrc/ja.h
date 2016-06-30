@@ -1052,6 +1052,7 @@
 #define tryinit(x,y,z)              jttryinit(jt,(x),(y),(z))
 #define ts(x)                       jtts(jt,(x))
 #define tsit2(x,y)                  jttsit2(jt,(x),(y))
+#define twidthf16(x)                jttwidthf16(jt,(x))
 #define tymes(x,y)                  jttymes(jt,(x),(y))
 #define uco1(x)                     jtuco1(jt,(x))
 #define uco2(x,y)                   jtuco2(jt,(x),(y))

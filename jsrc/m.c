@@ -11,7 +11,7 @@
 
 #include "j.h"
 
-#define MEMAUDIT 0
+#define MEMAUDIT 0   // Audit level: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack
 
 #define PSIZE       65536L         /* size of each pool                    */
 #define PLIM        1024L          /* pool allocation for blocks <= PLIM   */
@@ -163,13 +163,15 @@ static void audittstack(J jt, A w, I lim){
 void jtfr(J jt,A w){I j,n;MS*x;
  if(!w)R;
  x=(MS*)w-1;   // point to free header
-#if MEMAUDIT
+#if MEMAUDIT>=1
  if(!(AFLAG(w)&(AFNJA|AFSMM)||x->a==(I*)0xdeadbeef))*(I*)0=0;  // testing - verify block is memmapped/SMM or allocated
 #endif
  if(ACDECR(w)>0)R;  // fall through if decr to 0, or from 100001 to 100000
-#if MEMAUDIT
+#if MEMAUDIT>=1
  if(ACUC(w))*(I*)0=0;  // usecount should not go below 0
+#if MEMAUDIT>=2
  audittstack(jt,w,0);  // must not free anything on the stack
+#endif
 #endif
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(AT(w)==SYMB) {I j,k,kt,wn=AN(w),*wv=AV(w);
@@ -183,13 +185,16 @@ void jtfr(J jt,A w){I j,n;MS*x;
   }
  }
  j=x->j;
+#if MEMAUDIT>=1
+ if(j<6||j>63)*(I*)0=0;  // pool number must be valid
+#endif
  n=1LL<<j;
  if(PLIML<j)FREE(x);  /* malloc-ed       */
  else{                /* pool allocation */
   x->a=jt->mfree[j]; 
   jt->mfree[j]=(I*)x; 
   jt->mfreeb[j]+=n;
-#if MEMAUDIT
+#if MEMAUDIT>=1
   x->j=0xdeaf;
 #endif
  }
@@ -206,7 +211,7 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
  JBREAK0;  // Here to allow instruction scheduling
  if(jt->mfree[j]){         /* allocate from free list         */
   z=(A)(mhw+jt->mfree[j]);
-#if MEMAUDIT
+#if MEMAUDIT>=1
   if(((MS*)z-1)->j!=(S)0xdeaf)*(I*)0=0;  // verify block has free-pool marker
 #endif
   jt->mfree[j]=((MS*)(jt->mfree[j]))->a;
@@ -219,7 +224,7 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
   v=MALLOC(PSIZE);
   ASSERT(v,EVWSFULL);
   u=(C*)v; DO(PSIZE>>j, x=(MS*)u; u+=n; x->a=(I*)u; x->mflag=0;); x->a=0;  // chain blocks to each other; set chain of last block to 0
-#if MEMAUDIT
+#if MEMAUDIT>=1
    u=(C*)v; DO(PSIZE>>j, ((MS*)u)->j=0xdeaf; u+=n;);
 #endif
   ((MS*)v)->mflag=MFHEAD;
@@ -229,7 +234,7 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
  }
  if(jt->bytesmax<(jt->bytes+=n))jt->bytesmax=jt->bytes;
  x=(MS*)z-1; x->j=(C)j;  // Why clear a?
-#if MEMAUDIT
+#if MEMAUDIT>=1
  x->a=(I*)0xdeadbeef;  // flag block as allocated
 #endif
  R z;
@@ -271,7 +276,7 @@ F1(jttpush){
  if(jt->ttop>=NTSTACK)RZ(tg());
  jt->tstack[jt->ttop]=w;
  ++jt->ttop;
-#if MEMAUDIT
+#if MEMAUDIT>=2
  audittstack(jt,w,ACUC(w));  // verify total # w on stack does not exceed usecount
 #endif
  R w;
@@ -321,7 +326,7 @@ A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
 #endif
  }
  RZ(z=ma(m));
-#if MEMAUDIT
+#if MEMAUDIT>=2
  audittstack(jt,z,0);  // verify buffer not on stack
 #endif
  if(!(t&DIRECT))memset(z,C0,m);

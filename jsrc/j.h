@@ -163,7 +163,11 @@
 #define NFDEP           18000L          /* darwin          fn call depth   */
 #endif
 #ifndef NFCALL
+#if SY_64
 #define NFDEP           20000L          /* all other       fn call depth   */
+#else
+#define NFDEP           6000L
+#endif
 #endif
 
 #define NFCALL          (MAX(40,NFDEP/10))              // call depth for named calls.  They can be expensive

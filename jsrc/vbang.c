@@ -122,7 +122,7 @@ static Z jtzbin(J jt,Z x,Z y){Z a,b,c;
 
 #define MOD2(x) ((x)-2*jfloor(0.5*(x)))
 
-static D jtbindd(J jt,D x,D y){B id,ix,iy;D d;
+D jtbindd(J jt,D x,D y){B id,ix,iy;D d;
  if(_isnan(x))R x; else if(_isnan(y))R y;
  d=y-x; 
  id=d==jfloor(d);

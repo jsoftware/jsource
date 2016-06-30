@@ -292,7 +292,6 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  R vec(BOX,zv-z0,z0);
 }    /* partition by controls */
 
-
 /* preparse - return tokenized lines and control information     */
 /* argument is a list of boxed explicit defn lines               */
 /* result is 1 iff try is seen                                   */

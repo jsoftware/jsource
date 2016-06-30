@@ -144,7 +144,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
     adotymes(jt,1,p,1,yv,u,v); adosum(jt,1,p,p,zv,yv);
     ++zv;
    }
-   if(EWOV==jt->jerr){RESETERR; fa(z); PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}
+   if(EWOV==jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed
  }}
  if(t&FL+CMPX)NAN1; RE(0);
  if(!b)R obqfslash(df2(a,w,g),f);

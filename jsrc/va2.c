@@ -423,12 +423,12 @@ F2(jteq     ){CHECKSSINGOP(w,a,jtsseqne,0) R va2(a,w,CEQ     );}
 F2(jtlt     ){CHECKSSING(a,w,jtsslt) R va2(a,w,CLT     );}
 F2(jtminimum){CHECKSSING(a,w,jtssmin) R va2(a,w,CMIN    );}
 F2(jtle     ){CHECKSSING(a,w,jtssle) R va2(a,w,CLE     );}
-F2(jtgt     ){CHECKSSING(w,a,jtsslt) R va2(a,w,CGT     );}
+F2(jtgt     ){CHECKSSING(a,w,jtssgt) R va2(a,w,CGT     );}
 F2(jtmaximum){CHECKSSING(a,w,jtssmax) R va2(a,w,CMAX    );}
-F2(jtge     ){CHECKSSING(w,a,jtssle) R va2(a,w,CGE     );}
+F2(jtge     ){CHECKSSING(a,w,jtssge) R va2(a,w,CGE     );}
 F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
 F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,CPLUSDOT);}
-F2(jtnor    ){R va2(a,w,CPLUSCO );}
+F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,CPLUSCO );}
 F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,CSTAR   );}
 F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,CSTARDOT);}
 F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,CSTARCO );}
@@ -436,7 +436,7 @@ F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
 F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
 F2(jtexpn2  ){R va2(a,w,CEXP    );}
 F2(jtne     ){CHECKSSINGOP(w,a,jtsseqne,1) R va2(a,w,CNE     );}
-F2(jtoutof  ){R va2(a,w,CBANG   );}
+F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,CBANG   );}
 F2(jtcircle ){R va2(a,w,CCIRCLE );}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 

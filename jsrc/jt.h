@@ -67,6 +67,7 @@ typedef struct {
  A    curlocn;          /* current locale name corresp. to curname         */
  A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */
+ AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
  I    db;               /* debug flag; see 13!:0                           */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
@@ -157,8 +158,8 @@ typedef struct {
  I    outmaxlen;        /* output: maximum line length before truncation   */
  C    outseq[3];		/* EOL: "LF" "CR" "CRLF"                           */
  I    parsercalls;      /* # times parser was called                       */
- A*   parserstkbgn;     // &start of parser stack
- A*   parserstkend1;    // &end+1 of parser stack
+ PSTK* parserstkbgn;     // &start of parser stack
+ PSTK* parserstkend1;    // &end+1 of parser stack
  I    peekdata;         /* our window into the interpreter                 */
  A    pma;              /* perf. monitor: data area                        */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
@@ -247,6 +248,8 @@ typedef struct {
  B    xdefn;            /* 1 iff within explicit definition                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
  I    xmode;            /* extended integer operating mode                 */
+ A    zombieval;        // value of assignsym, if it can be reused
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned
 } JST;
 
 typedef JST* J; 

@@ -19,8 +19,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  GA(z,NAME,m,1,0); zv=NAV(z);
  memcpy(zv->s,s,m); *(m+zv->s)=0;
  zv->m   =(UC)m; 
- zv->sn  =0; 
- zv->e   =0;
+ zv->bucket=zv->bucketx=0;
  zv->flag=NMDOT;
  zv->hash=NMHASH(m,s); 
  ACX(z);
@@ -33,6 +32,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  meminit();  /* required for ma to work */
  jt->parsercalls=0;
  jt->parserstkbgn=jt->parserstkend1=0;
+ jt->assignsym=0; jt->zombieval=0;
  s=bitdisp; 
  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
@@ -121,6 +121,8 @@ static B jtevinit(J jt){A q,*v;
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
 static B jtconsinit(J jt){D y;
+// This is an initialization routine, so emory allocations performed here are NOT
+// automatically freed by tpop()
 #if AUDITCOMPILER
 // verify that CTLZ works correctly, and that all calls to BP return what they used to
 if (CTTZ(0x1000LL) != 12)*(I *)0 = 100;   // Create program check if error
@@ -174,10 +176,15 @@ static C jtjinit3(J jt){S t;
  xsinit();
  sbtypeinit();
  rnginit();
+ bucketinit();
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
  xlinit();
 #endif
  jtecvtinit(jt);
+ // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
+ // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
+ // look like those symbols have a free outstanding.
+ jt->ttop=jt->tbase;
  R !jt->jerr;
 }
 

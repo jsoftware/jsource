@@ -57,8 +57,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,*as,k,n,of,*os,r,*s,t,
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w);
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
- // simply keep the surviving argument intact, and  increment its use-count (why?? this does not constitute a new
- // use).  This is the normal case.
+ // simply keep the surviving argument intact, and rat() to increment its use-count and call
+ // for a deferred free (why?? this does not constitute a new use).  This is the normal case.
  if(left){if(af>=wf)R rat(a); r=acr; s=af+as; t=AT(a); v=CAV(a); n=AN(a); of=wf; os=ws;}
  else    {if(wf>=af)R rat(w); r=wcr; s=wf+ws; t=AT(w); v=CAV(w); n=AN(w); of=af; os=as;}
  // If the cells of the surviving arg must be replicated, do so

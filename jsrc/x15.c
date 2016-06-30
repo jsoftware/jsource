@@ -415,8 +415,8 @@ static void convertup(I*pi,I n,C t){I j=n;
 /* cdnl    - # used entries in cdhashl                                  */
 
 static A jtcdgahash(J jt,I n){A z;I hn,*v;
- v=ptab; while(n>*v)++v; hn=*v;
- GA(z,INT,hn,1,0); memset(AV(z),CFF,hn*SZI);
+ v=ptab+PTO; while(n>*v)++v; hn=*v;
+ GA(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R ra(z);
 }
 
@@ -857,7 +857,7 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  R mtm;
 }    /* 15!:2  memory write */
 
-F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ++AC(z); R sc((I)z);}
+F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */
 
 F1(jtfh15){I k; RE(k=i0(w)); fh((A)k); R zero;}

@@ -28,7 +28,7 @@
   for(i=1;i<n;++i,k=*++e)while(j=k){                         \
    d=j+jt->sympv;                                            \
    k=d->next;                                                \
-   if((d->name)&&(SELECT)){                                  \
+   if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
     {PROCESS;}                                               \
     ++m;                                                     \

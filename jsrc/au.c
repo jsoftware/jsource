@@ -29,8 +29,8 @@ F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 DF1(jtdf1){RZ(self); R CALL1(VAV(self)->f1,  w,self);}
 DF2(jtdf2){RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
 
-DF1(jtdfs1){A s=jt->sf,z; RZ(self); z=CALL1(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; R z;}
-DF2(jtdfs2){A s=jt->sf,z; RZ(self); z=CALL2(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; R z;}    
+DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; R z;}
+DF2(jtdfs2){F2PREFIP;A s=jt->sf,z; RZ(self); z=CALL2IP(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; R z;}    
      /* for monads and dyads that can possibly involve $: */
 
 A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(VAV(self)->f1,  w,self0);}

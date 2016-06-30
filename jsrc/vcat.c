@@ -224,8 +224,9 @@ I jtpiplocalerr(J jt, A self){
 
 // append-in-place.  We can only append if the buffer is not in use more than once, and if the
 // datatype is direct.  Also, we can't append if the name was a local name that is not defined,
-// since that would append-in-place to the global value
-DF2(jtapip){RZ(a&&w);R AC(a)>(AFNJA&AFLAG(a)?2:1)||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
+// since that would append-in-place to the global value.  For mapped files we don't count the name
+// as a reference
+DF2(jtapip){RZ(a&&w);R AC(a)>(ACUSECOUNT*(AFNJA&AFLAG(a)?2:1))||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
 
 F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  RZ(a&&w);

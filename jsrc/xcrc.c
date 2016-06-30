@@ -38,7 +38,11 @@ F1(jtcrccompile){A h,*hv;II z;
  RZ(w);
  GA(h,BOX,2,1,0); hv=AAV(h);
  RE(z=crcvalidate(w));
+#if SY_64
+ RZ(hv[0]=vec(INT,128L,crctab));
+#else
  RZ(hv[0]=vec(INT,256L,crctab));
+#endif
  RZ(hv[1]=sc((I)z));
  R h;
 }

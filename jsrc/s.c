@@ -391,21 +391,24 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
  if(!(x&&AFNJA&AFLAG(x))){
   // name to be assigned is undefined, or is defined as a normal J name
+  // If the value is a normal J name, we have to check to see if it is shared (we clone it in that case) or is boxed containing
+  // relative addressing (we clone the boxing).  This sucks - we have to traverse the boxing just to find out that nothing is
+  // relative
+  if(!(AFNJA&AFLAG(w)))RZ(w=rca(w));
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made [for the nonce we don't support
   // inplace ops on boxed arrays; when we do, it will be the responsibility of the action routine to keep the result valid].
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
-   // For boxed arguments, rca may create a clone of the boxing tree.  kludge It's a pity to do this if the value doesn't need to be copied
-   RZ(w=ra(AFNJA&AFLAG(w)?w:rca(w)));
+   ra(w);
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.  We call nvrredef to see whether the name is out there; if it is, nvrredef has scheduled a deferred
    // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
    if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
-  }
-  ACIPNO(w);  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
+  } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
+   // ra() also removes inplaceability
  }else if(x!=w){  /* replacing name with different mapped data */
   if(wt&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);

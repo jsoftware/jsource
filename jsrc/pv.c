@@ -96,8 +96,9 @@ TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one};V*u=0,*v=
   case 3:
    xl=xt==LF; xr=xt==RT;
    yl=yt==LF; yr=yt==RT;
-   if     (xl&&yr)                  z.t=fs;
-   else if(xr&&(yl||yr&&jt->tmonad))z.t=sf;
+   if     (xl&&yr)            z.t=fs;
+   else if(xr&&yl)            z.t=sf;
+   else if(xr&&yr&&jt->tmonad)z.t=swap(fs);
    else z.t=CFORK==u->id&&primitive(yt)?folk(yt,sf,xt):folk(xt,fs,yt);
  }else{B b,c;I i,j,xj,yj;
   i=dcase(xi,u); if(u&&CFORK==u->id){xi=tvi(u->f); xj=tvi(u->h);}else{xi=-1; xj=tvi(xt);}

@@ -780,6 +780,7 @@ extern I        lr(A);
 extern I        mr(A);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
+extern UI       nmhash (I,UC*);
 extern D        qpf(void);
 extern I        rr(A);
 extern A        relocate(I,A);

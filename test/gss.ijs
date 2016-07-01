@@ -1,5 +1,31 @@
 NB. Speedy Singletons ------------------------------------------------------------------
 
+NB. Tests of local-name lookup
+
+NB. Local name passed to another modifier
+'`v1 v2 v3' =: -`*:`-:   NB. these are the values found by dou
+dou =: 1 : 'u  :: ] y'
+ _5 25 3 -: 3 : 0 ''
+r =. ''
+v1 =. v4 =. v5 =. v6 =. v7 =. v8 =. +
+r =. r , v1 dou 5
+v2 =. %:
+r =. r , v2 dou 5
+v3 =. +:
+r =. r , v3 dou 6
+r
+)
+
+
+NB. Local name assigned to global name
+tolower =: 3 : 'x =. y'
+3 : 0 ''
+filecase =: tolower
+1
+)
+filecase ''
+
+
 NB. Verify that singleton gets same result as 1 item of an array
 compss =: 1 : 0 (&>)
 :
@@ -76,6 +102,6 @@ iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 1000000'
 iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 1000000'
 iptime1 < 1.15 * iptime2  NB. Both are inplace; verify + not too slow
 
-4!:55 ;:'compss v'
+4!:55 ;:'compss compssn compssp iptime niptime v'
 
 

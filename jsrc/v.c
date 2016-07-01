@@ -49,18 +49,18 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
 
 // ] [ and ]"n ["n, dyadic
 // length error has already been detected, in irs
-static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,*as,k,n,of,*os,r,*s,t,
-  wcr,wf,wr,*ws,zn;
+static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
+  wcr,wf,wr,zn;
  RZ(a&&w);
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a);
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w);
+ ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact, and rat() to increment its use-count and call
  // for a deferred free (why?? this does not constitute a new use).  This is the normal case.
- if(left){if(af>=wf)R rat(a); r=acr; s=af+as; t=AT(a); v=CAV(a); n=AN(a); of=wf; os=ws;}
- else    {if(wf>=af)R rat(w); r=wcr; s=wf+ws; t=AT(w); v=CAV(w); n=AN(w); of=af; os=as;}
+ if(left){if(af>=wf)R a; os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
+ else    {if(wf>=af)R w; os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
  // If the cells of the surviving arg must be replicated, do so
  // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
  // of=frame os->shape   of non-surviving arg

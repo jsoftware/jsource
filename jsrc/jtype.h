@@ -197,7 +197,7 @@ typedef I SI;
 #define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
 #define ARELATIVE(w)    (AT(w)&BOX&&AFLAG(w)&AFNJA+AFSMM+AFREL)
-#define AADR(w,z)       ((w)?(A)((I)(w)+(I)(z)):(z))
+#define AADR(w,z)       (A)((I)(w)+(I)(z))   // was ((w)?(A)((I)(w)+(I)(z)):(z))
 #define AVR(i)          AADR(ad,av[i])
 #define IVR(i)          AADR(id,iv[i])
 #define WVR(i)          AADR(wd,wv[i])

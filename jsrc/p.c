@@ -226,10 +226,9 @@ F1(jtparse){A z;
 #define SM(to,from) stack[to]=stack[from]
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;L* s;  // symbol-table entry
+F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
- PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
@@ -240,13 +239,12 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
  // jt->sitop->dci must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
- m=AN(w); jt->asgn = 0; ++jt->parsercalls;
- if(2>m){
-   if(1==m)
-jt->parsercalls += 0x100000000LL;
-   if(1>m)
-{jt->parsercalls += 0x1000000000000LL; R mark;}  // exit fast if empty input
- }
+ m=AN(w); jt->asgn = 0;
+ if(1>m)R mark;  // exit fast if empty input
+
+ ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
+ PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
+ I otop=jt->nvrtop ,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;
 
  // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
  // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original

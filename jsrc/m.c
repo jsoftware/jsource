@@ -11,7 +11,7 @@
 
 #include "j.h"
 
-#define MEMAUDIT 0   // Audit level: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack
+#define MEMAUDIT 0   // Audit level: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack 3 +scrub freed areas
 
 #define PSIZE       65536L         /* size of each pool                    */
 #define PLIM        1024L          /* pool allocation for blocks <= PLIM   */
@@ -160,6 +160,17 @@ static void audittstack(J jt, A w, I lim){
  }
 }
 
+static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
+ fr(LOCPATH(w));
+ fr(LOCNAME(w));
+ for(j=1;j<wn;++j){
+  // free the chain; kt->last block freed
+  for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fr((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
+  // if the chain is not empty, make it the base of the free pool & chain previous pool from it
+  if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
+ }
+}
+
 void jtfr(J jt,A w){I j,n;MS*x;
  if(!w)R;
  x=(MS*)w-1;   // point to free header
@@ -174,19 +185,13 @@ void jtfr(J jt,A w){I j,n;MS*x;
 #endif
 #endif
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(AT(w)==SYMB) {I j,k,kt,wn=AN(w),*wv=AV(w);
-  fr(LOCPATH(w));
-  fr(LOCNAME(w));
-  for(j=1;j<wn;++j){
-   // free the chain; kt->last block freed
-   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fr((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
-   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
-   if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
-  }
- }
+ if(AT(w)==SYMB)freesymb(jt,w);
  j=x->j;
 #if MEMAUDIT>=1
  if(j<6||j>63)*(I*)0=0;  // pool number must be valid
+#if MEMAUDIT>=3
+ DO(1<(j-LGSZI), ((I*)x)[i] = 0xdeadbeef;);
+#endif
 #endif
  n=1LL<<j;
  if(PLIML<j)FREE(x);  /* malloc-ed       */
@@ -240,19 +245,23 @@ static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
  R z;
 }
 
-static void jttraverse(J jt,A w,AF f){
+static void jttraverse(J jt,A wd,AF f){
 // obsolete RZ(w);
- switch(CTTZ(AT(w))){
+ switch(CTTZ(AT(wd))){
   case XDX:
-   {DX*v=(DX*)AV(w); DO(AN(w), CALL1(f,v->x,0L); ++v;);} break;
+   {DX*v=(DX*)AV(wd); DO(AN(wd), CALL1(f,v->x,0L); ++v;);} break;
   case RATX:  
-   {A*v=AAV(w); DO(2*AN(w), CALL1(f,*v++,0L););} break;
+   {A*v=AAV(wd); DO(2*AN(wd), CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
-   if(!(AFLAG(w)&AFNJA+AFSMM)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), CALL1(f,WVR(i),0L););} break;
+   if(!(AFLAG(wd)&AFNJA+AFSMM)){A*wv=AAV(wd);
+    if(AFLAG(wd)&AFREL){DO(AN(wd), CALL1(f,WVR(i),0L););}
+    else{DO(AN(wd), CALL1(f,wv[i],0L););}
+   }
+   break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); CALL1(f,v->f,0L); CALL1(f,v->g,0L); CALL1(f,v->h,0L);} break;
+   {V*v=VAV(wd); CALL1(f,v->f,0L); CALL1(f,v->g,0L); CALL1(f,v->h,0L);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-   {P*v=PAV(w); CALL1(f,SPA(v,a),0L); CALL1(f,SPA(v,e),0L); CALL1(f,SPA(v,i),0L); CALL1(f,SPA(v,x),0L);} break;
+   {P*v=PAV(wd); CALL1(f,SPA(v,a),0L); CALL1(f,SPA(v,e),0L); CALL1(f,SPA(v,i),0L); CALL1(f,SPA(v,x),0L);} break;
  }
 // obsolete R mark;
 }
@@ -296,8 +305,8 @@ void jtgc3(J jt,A x,A y,A z,I old){
 }
 
 
-F1(jtfa ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtfa); fr(w);   R mark;}
-F1(jtra ){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra); ACINCR(w); R w;   }
+F1(jtfa ){RZ(w); traverse(w,jtfa); fr(w);   R mark;}
+F1(jtra ){I *acaddr=&AC(w); RZ(w); I ac=*acaddr; traverse(w,jtra); *acaddr=(ac+ACUSECOUNT)&~ACINPLACE; R w;   }
 
 static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}

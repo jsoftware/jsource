@@ -46,7 +46,11 @@ static DF1(jtunquote1){R unquote(0L,w,self);}
 A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  y=w?w->val:ds(CCAP);  // If there is a slot, get the value; if not, treat as [: (verb that creates error)
  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
- v=VAV(y); 
+ // We are abut to create a reference to a name.  Since this reference might escape into another context, either (1) by becoming part of a
+ // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: we have to expunge any reference to local
+ // buckets.
+ NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info
+ v=VAV(y);
  R fdef(CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, 0L, v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank and part of speech
 }
 

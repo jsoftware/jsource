@@ -241,7 +241,12 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
  m=AN(w); jt->asgn = 0; ++jt->parsercalls;
- if(1>m)R mark;  // exit fast if empty input
+ if(2>m){
+   if(1==m)
+jt->parsercalls += 0x100000000LL;
+   if(1>m)
+{jt->parsercalls += 0x1000000000000LL; R mark;}  // exit fast if empty input
+ }
 
  // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
  // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original

@@ -179,7 +179,9 @@ void jtfr(J jt,A w){I j,n;MS*x;
   fr(LOCNAME(w));
   for(j=1;j<wn;++j){
    // free the chain; kt->last block freed
-   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fr((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
+   // Use fr for the name, since it has no descendants, but use fa for the value, which may have contents.
+   // Tidy up fields for the next user (bad practice, but that's how it was done)
+   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fa((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
    // if the chain is not empty, make it the base of the free pool & chain previous pool from it
    if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
   }

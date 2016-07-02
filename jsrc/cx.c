@@ -481,9 +481,10 @@ static A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {
-  if(AT(t=lv[j])&ASGN&&CAV(t)[0]==CASGN) {  // local assignment
+  if(AT(lv[j])==(ASGN+ASGNLOCAL)) {  // local assignment  (simplename can't have been set yet)
    if((tt=AT(t=lv[j-1]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
     // simplename followed by =.  Probe for the name
+    lv[j]=asgnlocsimp;   //  indicate simple followed by =.
     RZ(probeis(t,pfst));
    } else if(tt&LIT) {
     // LIT followed by =.  Probe each word

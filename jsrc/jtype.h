@@ -141,6 +141,9 @@ typedef I SI;
 #define CONJX 20
 #define ASGN            (I)2097152L     /* I  assignment                   */
 #define ASGNX 21
+// ASGN type can have the following informational bits set along with ASGN
+#define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
+#define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
 #define MARK            (I)4194304L     /* I  end-of-stack marker          */
 #define MARKX 22
 #define SYMB            (I)8388608L     /* I  locale (symbol table)        */

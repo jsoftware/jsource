@@ -262,6 +262,8 @@
 #define NAN0            (_clearfp())
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
+#define NUMMIN          (-9)    // smallest number represented in num[]
+#define NUMMAX          9    // largest number represented in num[]
 #define PROLOG          I _ttop=jt->tbase+jt->ttop
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return

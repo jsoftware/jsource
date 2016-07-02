@@ -156,7 +156,7 @@ F1(jtmemo){A h,*hv,q;I m;V*v;
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); m=ptab[1+PTO];
  GA(h,BOX,3,1,0); hv=AAV(h);
- RZ(q=sc(0L));                     hv[0]=q;
+ GA(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN))); hv[1]=q;
  GA(q,BOX,m,1,0);                  hv[2]=q;
  R fdef(CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,v->lr,v->rr);

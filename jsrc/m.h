@@ -30,8 +30,4 @@ typedef struct {I*a;S j;C mflag,unused;} MS;
 #define mhw (sizeof(MS) / SZI)              /* # words in memory header             */
 
 // bp(type) returns the number of bytes
-#if AUDITBP
-#define bp(i) ((i)==0 || (i)&((i)-1) ? (*(I *)0) : typesizes[CTTZ(i)])
-#else
 #define bp(i) typesizes[CTTZ(i)]
-#endif

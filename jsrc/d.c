@@ -71,6 +71,8 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
   case LIT:  eputq(w);                break;
   case LPAR: eputc('(');              break;
   case RPAR: eputc(')');              break;
+  case ASGN+ASGNLOCAL:
+  case ASGN+ASGNLOCAL+ASGNSIMPLE:
   case ASGN: dspell(*CAV(w),w);       break;
   case MARK:                          break;
   default:   dspell(VAV(w)->id,w);

@@ -164,7 +164,7 @@
 #define cps(x)                      jtcps(jt,(x))
 #define crc2(x,y)                   jtcrc2(jt,(x),(y))
 #define crccompile(x)               jtcrccompile(jt,(x))
-#define crcvalidate(x)              jtcrcvalidate(jt,(x))
+#define crcvalidate(x,t)            jtcrcvalidate(jt,(x),(t))
 #define csize(x,y)                  jtcsize(jt,(x),(y))
 #define cstr(x)                     jtcstr(jt,(x))
 #define curtail(x)                  jtcurtail(jt,(x))

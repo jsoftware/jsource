@@ -15,6 +15,7 @@ NB. crc:     y is string or numeric vector; result is CRC-32
 bitand  =: 17 b.
 bitxor  =: 22 b.
 bitshift=: 33 b.
+bitshifts=: 34 b.
 
 shift=: |.!.''
 
@@ -25,7 +26,7 @@ crctbli =: (_1&bitshift)`(crcpolyi&bitxor@(_1&bitshift))@.(2&|)^:8"0
 crctblb =: bitshift`(crcpolyb&bitxor@shift)@.{:^:8"0
 prep    =: |. @ (mask32&,) @ (a.&i.^:(2:=3!:0))
 crcbyte =: {&(crctbli i.256)@(255&bitand)@bitxor bitxor _8&bitshift@]
-crc     =: _1&bitxor @ (crcbyte/) @ prep
+crc     =: (_32 bitshifts 32 bitshift ])^:IF64 @ (_1&bitxor) @ (crcbyte/) @ prep
 
 f=: 128!:3
 

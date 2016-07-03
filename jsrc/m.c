@@ -313,6 +313,39 @@ A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
 F1(jtrat){R tpush(ra(w));}
 
+#if 0
+#define GAF(name,type,atoms,rank,shape)
+#define GAFV(name,type,atoms,rank,shape)  variable atoms
+#if SY_64
+  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);
+#else
+???
+#endif
+AT(z)=t;
+ if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shape)ICPY(AS(z),shape,rank);  // 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test?
+AN(z)=atoms; AR(z)=rank; 
+ if(!(type # DIRECT))memset(z,C0,bytes);
+ if(type # LAST0){((I*)((C*)z+bytes))[-1]=0; ((I*)((C*)z+bytes))[-2]=0;}  // if LAST0, clear the last two Is.  CHANGE TO JUST 1 I
+
+
+need version for general GA - should it take type?  Yes - do all the stores inside, call afv
+A jtgafv(J jt, I bytes){I n;
+ for(n=64;n<bytes;n=n<<1);
+ R jtgaf(jt,CTTZI(n));
+}
+A jtgaf(J jt,I blockx){A z;I m,w;
+Insert ma here
+#if MEMAUDIT>=2
+ audittstack(jt,z,0);  // verify buffer not on stack
+#endif
+ AC(z)=ACUC1; AFLAG(z)=0; AK(z)=AKX(z);
+AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS));   // get rid of this?  Or change to offset from original value
+ inline 1-shot tpush(z); 
+ R z;
+}
+
+#endif
+
 A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
  if(t&BIT){const I c=8*SZI;              /* bit type: pad last axis to fullword */
   ASSERTSYS(1>=r||s,"ga bit array shape");

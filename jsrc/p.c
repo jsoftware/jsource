@@ -243,7 +243,6 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
-
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
  // others), it must be set at the time the assignment is executed.  We catch it in the action routine,

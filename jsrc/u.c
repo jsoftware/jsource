@@ -100,10 +100,10 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
 I typesizes[] = {
-sizeof(B), sizeof(C), sizeof(I), sizeof(D), sizeof(Z), sizeof(A), sizeof(X), sizeof(Q),  // B01 LIT INT FL CMPX BOX XNUM RAT
--1,        -1,        sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P),   // BIT - SB01 SLIT SINT SFL SCMPX SBOX
-sizeof(SB), sizeof(C2), sizeof(V), sizeof(V), sizeof(V), sizeof(C), sizeof(I), sizeof(I), // SBT C2T VERB ADV CONJ ASGN MARK SYMB
-sizeof(CW), sizeof(C), sizeof(I), sizeof(I), sizeof(DX), sizeof(ZX), -1,       -1         // CONW NAME LPAR RPAR XD XZ - -
+B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
+-1,        -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
+SBTSIZE, C2TSIZE, VERBSIZE, ADVSIZE, CONJSIZE, ASGNSIZE, MARKSIZE, SYMBSIZE,
+CONWSIZE, NAMESIZE, LPARSIZE, RPARSIZE, XDSIZE, XZSIZE, -1, -1
 };
 
 // default CTTZ to use if there is no compiler intrinsic

@@ -314,18 +314,30 @@ A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 F1(jtrat){R tpush(ra(w));}
 
 #if 0
-#define GAF(name,type,atoms,rank,shape)
-#define GAFV(name,type,atoms,rank,shape)  variable atoms
+#define BP(atoms,rank,size,islast,isname)       ((r*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (atoms)*(size)) & (-SZI))  // # bytes to allocate
+#define ALLOBLOCK(n) ((n)<=64?6:(n)<=128?7:(n)<=256?8:(n)<=512?9:(n)<=1024?10:(n)<=2048?11:(n)<=4096?12:(n)<=8192?13:*(I*)0)
+#define GAF(name,type,atoms,rank,shape) \
+{ \
 #if SY_64
-  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);
+  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); \
 #else
-???
+???  \
 #endif
-AT(z)=t;
- if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shape)ICPY(AS(z),shape,rank);  // 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test?
-AN(z)=atoms; AR(z)=rank; 
- if(!(type # DIRECT))memset(z,C0,bytes);
- if(type # LAST0){((I*)((C*)z+bytes))[-1]=0; ((I*)((C*)z+bytes))[-2]=0;}  // if LAST0, clear the last two Is.  CHANGE TO JUST 1 I
+RZ(name = jtgaf(jt, ALLOBLOCK(BP(atoms,rank,type ## SIZE,type&LAST0,type==NAME))); \
+AT(name)=type; \
+if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shape)ICPY(AS(z),shape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */ \
+AN(z)=atoms; AR(z)=rank; \
+if(!(type&DIRECT))memset(z,C0,bytes); \
+if(type # LAST0){((I*)((C*)z+bytes))[-1]=0; }  /* if LAST0, clear the last two Is.  CHANGE TO JUST 1 I  */ \
+}
+A jtgaf(J jt, I block){R 0;}
+void testga(){A z;
+GAF(z,INT,1, 1, 0);
+}
+
+
+
+#define GAFV(name,type,atoms,rank,shape)  variable atoms
 
 
 need version for general GA - should it take type?  Yes - do all the stores inside, call afv

@@ -38,6 +38,19 @@ _873187034 -: (<crcpolyb)   f x
 _873187034 -: (crcpolyi;_1) f x
 _873187034 -: (crcpolyb;_1) f x
 
+g =: crcpolyi&(128!:3)
+_873187034 -: g x
+g =: crcpolyb&(128!:3)
+_873187034 -: g x
+g =: (<crcpolyi)&(128!:3)
+_873187034 -: g x
+g =: (<crcpolyb)&(128!:3)
+_873187034 -: g x
+g =: (crcpolyi;_1)&(128!:3)
+_873187034 -: g x
+g =: (crcpolyb;_1)&(128!:3)
+_873187034 -: g x
+
 (f -: crc) x
 (f -: crc) x=: 'assiduously avoid any and all asinine alliterations'
 

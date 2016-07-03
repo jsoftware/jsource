@@ -33,7 +33,7 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
  R sc((I)(I4)(z^-1L));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
 }
 
-F1(jtcrccompile){A h,*hv;UINT z; UINT* crctab;
+F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
  RZ(w);
  GA(h,BOX,2,1,0); hv=AAV(h);
  RE(z=crcvalidate(w,crctab));

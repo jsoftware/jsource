@@ -74,6 +74,7 @@ OBJS=  \
  ../../jsrc/va1.o \
  ../../jsrc/va2.o \
  ../../jsrc/va2s.o \
+ ../../jsrc/va2ss.o \
  ../../jsrc/vamultsp.o \
  ../../jsrc/vb.o \
  ../../jsrc/vbang.o \

@@ -45,7 +45,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  if(equ(w,one))R mtm;
  RZ(w=vs(w));
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
- RZ(d=deba(DCSCRIPT,0L,w,(A)si));
+ RZ(d=deba(DCSCRIPT,0L,w,(A)si,0L));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
  old=jt->tbase+jt->ttop;
  switch(ce){

@@ -11,26 +11,26 @@
 #if VALENCE==1
 #define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
-#define RAC     (1==AC(yw))
+#define RAC     (ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-#define RARG    {if(1<AC(yw))NEWYW; MOVEYW;}
-#define RARGX   {if(1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(ACUC1<AC(yw))NEWYW; MOVEYW;}
+#define RARGX   {if(ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #else
 #define RCALL   CALL2(f2,ya,yw,fs)
 #define RDIRECT (at&DIRECT&&wt&DIRECT)
-#define RAC     (1==AC(ya)&&1==AC(yw))
+#define RAC     (ACUC1>=AC(ya)&&ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
 // with the shorter frame (when jj==n we have run out of repeats).  Whenever we have to copy, we first
 // check to see if the cell-workarea has been incorporated into a boxed noun; if so, we have to
 // reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
 // when a cell is to be repeated.
-#define RARG    {++jj; if(!b||jj==n){if(1<AC(ya))NEWYA; MOVEYA;}  \
-                       if( b||jj==n){if(1<AC(yw))NEWYW; MOVEYW;} if(jj==n)jj=0;}
+#define RARG    {++jj; if(!b||jj==n){if(ACUC1<AC(ya))NEWYA; MOVEYA;}  \
+                       if( b||jj==n){if(ACUC1<AC(yw))NEWYW; MOVEYW;} if(jj==n)jj=0;}
 // If the use-count in y? has been incremented, it means that y? was incorporated into an indirect
 // noun and must not be modified.  In that case, we reallocate it
-#define RARGX   {if(1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
-                 if(1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARGX   {if(ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
+                 if(ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #endif
 
 #define EMSK(x) (1<<((x)-1))

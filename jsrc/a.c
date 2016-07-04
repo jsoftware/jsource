@@ -106,20 +106,20 @@ static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
 
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
  RZ(z);
- c=AC(self); h=VAV(self)->h; hv=AAV(h);
+ c=ACUC(self); h=VAV(self)->h; hv=AAV(h);
  q=hv[0]; mv= AV(q);
  q=hv[1]; jv= AV(q);
  q=hv[2]; cv=AAV(q); m=AN(q);
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
-  v=ptab; while(m>=*v)++v; m=*v;
+  v=ptab+PTO; while(m>=*v)++v; m=*v;
   RZ(jj=reshape(v2(m,2L),sc(IMIN))); jv= AV(jj);
   GA(cc,BOX,m,1,0);                  cv=AAV(cc);
   for(i=0,u=ju;i<n;++i,u+=2)if(IMIN!=*u){
    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
    cv[(v-jv)/2]=cu[i]; cu[i]=0; v[0]=u[0]; v[1]=u[1];
   }
-  q=hv[1]; AC(q)=1; fa(q); AC(jj)+=c; hv[1]=jj;
-  q=hv[2]; AC(q)=1; fa(q); AC(cc)+=c; hv[2]=cc;
+  q=hv[1];                                AC(q)=ACUC1; fa(q); AC(jj)+=c; hv[1]=jj;
+  q=hv[2]; AC(q)=ACUC1; fa(q); AC(cc)+=c; hv[2]=cc;
  }
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
@@ -154,7 +154,7 @@ DF2(jtmemo2){DECLF;A z;I x,y;
 F1(jtmemo){A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- v=VAV(w); m=ptab[1];
+ v=VAV(w); m=ptab[1+PTO];
  GA(h,BOX,3,1,0); hv=AAV(h);
  RZ(q=sc(0L));                     hv[0]=q;
  RZ(q=reshape(v2(m,2L),sc(IMIN))); hv[1]=q;

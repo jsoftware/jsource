@@ -55,7 +55,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  else DO(n, if('_'==s[i]&&'_'==s[1+i]){   f=NMILOC; p=n-2-i;     m=n-(2+p); break;});  // p=#locales, m=#simplename
  ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
  zv->flag=f;  // Install locative flag
- zv->sn=0; zv->e=0;
+ // obsolete zv->sn=0; zv->e=0;
  zv->m=(UC)m; zv->hash=NMHASH(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
  R z;
 }    /* name from string */
@@ -201,7 +201,8 @@ F1(jtex){A*wv,y,z;B*zv;I i,n,wd;L*v;
  for(i=0;i<n;++i){
   RE(y=stdnm(WVR(i)));
   zv[i]=1&&y;
-  if(y&&(v=syrd(y,0L))){if(jt->db)RZ(redef(mark,v)); nvrredef(v->val); RZ(symfree(v));}
+  // If the value is at large in the stacks, increment the use count and call for a later decrement
+  if(y&&(v=syrd(y,0L))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ra(v->val); RZ(symfree(v));}
  }
  R z;
 }    /* 4!:55 expunge */

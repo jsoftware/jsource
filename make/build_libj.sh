@@ -104,6 +104,7 @@ OBJS="\
  va1.o \
  va2.o \
  va2s.o \
+ va2ss.o \
  vamultsp.o \
  vb.o \
  vbang.o \

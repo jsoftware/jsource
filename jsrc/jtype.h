@@ -38,7 +38,8 @@ typedef double             D;
 typedef FILE*              F;
 
 typedef long double        LD;
-typedef struct {I k,flag,m,t,c,n,r,s[1];}* A;
+typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;
+typedef AD *A;
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
@@ -69,12 +70,14 @@ typedef I SI;
 
 #if SY_64
 #define AKX(x)          (SZI*(AH+AR(x)))
-#define WP(t,n,r)       (AH+ r        +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define WP(t,n,r)       (AH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
+#define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
-#define AKX(x)          (SZI*(AH+AR(x)+!(1&AR(x))))
-#define WP(t,n,r)       (AH+(r+!(1&r))+(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define AKX(x)          (SZI*(AH+(AR(x)|1)))
+#define WP(t,n,r)       (AH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+/* r|1 to make sure array values are double-word aligned */
 #endif
-/* make sure array values are double-word aligned */
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (C*)(x)+AK(x) )  /* boolean                 */
@@ -171,6 +174,19 @@ typedef I SI;
 #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)
 #define DTYPE(t)        ((t)&SB01? B01:(t)&SINT? INT:(t)&SFL? FL:(t)&SCMPX? CMPX:(t)&SLIT?LIT:(t)&SBOX? BOX:0L)
 
+// Flags in the count field of type A
+#define ACINPLACE       (I)(((UI)-1>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACUSECOUNT      (I)1  // lower bits used for usecount
+#define ACIPNO(a)       (AC(a)&=~ACINPLACE)
+#define ACIPYES(a)      (AC(a)|=ACINPLACE)
+#define ACIPISOK(a)     (AC(a)<0)  // OK to modify if INPLACE set - set only when usecount=1
+#define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
+#define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
+#define ACINCRBY(a,w)   (AC(a)=(AC(a)+(w))&~ACINPLACE)  // add w to usecount; always clear INPLACE at that time
+#define ACINCR(a)       ACINCRBY(a,1)
+#define ACDECR(a)       (AC(a)-=ACUSECOUNT)  // No ACINPLACE needed, since values >1 are never inplace
+
+
 /* Values for AFLAG(x) field of type A                                     */
 
 #define AFRO            (I)1            /* read only; can't change data    */
@@ -210,11 +226,11 @@ typedef struct DS{      /* 1 2 3                                                
  A dca;                 /*     x  fn/op name                                            */
  A dcf;                 /*     x  fn/op                                                 */
  A dcx;                 /*     x  left argument                                         */
- A dcy;                 /* x x x  tokens; text        ; right argument                  */
+ A dcy;                 /* x x x  &tokens; text       ; right argument                  */
  A dcloc;               /*     x  local symb table (0 if not explicit)                  */
  A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
  I dci;                 /* x x x  index ; next index  ; ptr to line #                   */
- I dcj;                 /*   x x        ; prev index  ; error #                         */
+ I dcj;                 /* x x x  #tokens;prev index  ; error #                         */
  I dcn;                 /*   x x        ; line #      ; ptr to symb entry               */
  I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
  I dcstop;              /*     x  the last stop in this function                        */
@@ -257,6 +273,7 @@ typedef struct {A name,val;I flag,sn,next,prev;} L;
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LHEAD           (I)2            /* head pointer (no predecessor)   */
 #define LINFO           (I)4            /* locale info                     */
+#define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 
 
 typedef struct{A og,g;I ptr,flag;B sw0;} LS;
@@ -270,13 +287,18 @@ typedef struct{A og,g;I ptr,flag;B sw0;} LS;
 /* sw0:  old value of stswitched                                           */
 
 
-typedef struct{UI hash;I sn;L*e;UC m;C flag,s[1];} NM;
+typedef struct{UI hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
 
 /* hash: hash for  non-locale part of name                                 */
+// bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local
+//   0 if chain index not known
+// bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
+//   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
+//   is guaranteed to be at that position  
 /* m:    length of non-locale part of name                                 */
-/* sn:   symbol table number on last reference                             */
-/* e:    symbol pool entry   on last reference                             */
-/* s:    points to string part of full name (1 to ?? characters)           */
+// sn:   symbol table number on last reference  no longer used
+// e:    symbol pool entry   on last reference  no longer used
+/* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
 #define NMLOC           1       /* direct   locale abc_lm_                 */
 #define NMILOC          2       /* indirect locale abc__de__fgh ...        */
@@ -365,6 +387,8 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;C id;} V;
 #define VTRY1           (I)4194304      /* monad contains try.             */
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
 #define VDDOP           (I)16777216     /* derived from a derived operator */
+#define VINPLACEOK1     (I)33554432L    // monad can handle in-place args
+#define VINPLACEOK2     (I)67108864LL    // dyad can handle in-place args
 
 
 typedef struct {DX re;DX im;} ZX;
@@ -373,3 +397,9 @@ typedef struct {DX re;DX im;} ZX;
 /* re - real part                                                          */
 /* im - imaginary part                                                     */
 
+
+// parser stack
+typedef struct {
+ A a;  // pointer to block
+ I t;  // token number for this block
+} PSTK;

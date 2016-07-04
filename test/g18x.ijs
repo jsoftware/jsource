@@ -43,7 +43,7 @@ pcheck=: 3 : 0
  assert. (#p) = (#a),#s
 
  i=: i.#p
- b=: 0 0 -:"1 ]2 5{"1 p
+ b=: 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list
  assert. {.b
  assert. 0=1 2 3 5{"1 b#p
  assert. (4{"1 b#p) e. (# i.@#) b
@@ -52,12 +52,15 @@ pcheck=: 3 : 0
  x=: ~. /:~ ,{~^:(i.m) b*4{"1 p                NB. transitive closure
  assert. x -: I. b
 
+NB. p has: index,type,flag,sn,next,prev
+ oktypes =: <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 19 20 23   NB. Type 0 OK if permanent
  f =: 2{"1 p
  h =: 2<:4|f                                   NB. head of linked list
  li=: 4<:8|f                                   NB. locale info
+ perm=: 8<:16|f                                NB. permanent
  assert. i -: 0{"1 p                           NB. index
- assert. b +. li +. 0<1{"1 p                   NB. internal type
- assert. li <: (s e.<'**local**')+.32=1{"1 p   NB. search path of locales 
+ assert. b +. li +. ((1{"1 p)e.oktypes) +. (perm *. 0 = 1{"1 p)          NB. internal type
+ assert. li <: (s e.<'**local**')+.0 32 e.~ 1{"1 p   NB. search path of locales - 0 if local symbol table
  assert. 0<:f                                  NB. flag
  assert. b +. li +. (3{"1 p) e. _1,i.#4!:3 ''  NB. script index
  assert.      i e.~ next=. 4{"1 p              NB. next
@@ -66,7 +69,7 @@ pcheck=: 3 : 0
  assert. b +. h +.             i = (prev*-.h){next,0
 
  assert. b +. li +. -. a e. a:
- assert. b +. li +. s e. '**local**';18!:1 i.2
+ assert. b +. li +. s e. '';'**local**';18!:1 i.2  NB. must allow no locale-name for local symbol tables
  assert. (18!:1 i.2) e. s
  1
 )
@@ -99,6 +102,6 @@ pcheck 18!:31 ''
 18!:55 <'asdf'
 
 
-4!:55 ;:'a adv b f h i k li m p pcheck s sum t x y yy'
+4!:55 ;:'a adv b f h i k li m p pcheck perm s sum t x y yy'
 
 

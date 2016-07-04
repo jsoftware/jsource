@@ -252,7 +252,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
      SPB(wwp,x,selx(x,qn,p));
      RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 1:
@@ -264,7 +264,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
      RZ(*za++=h?df1(ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 2:
@@ -272,7 +272,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
      RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 3:
@@ -280,7 +280,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
      RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
   }
@@ -590,7 +590,7 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv;C*u,*v,*v0,*wv,*y
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   for(j=0;j<nc;++j){
    yc=MIN(tc,sc); tc-=mc; s=yc*k; 
-   if(1<AC(y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}
+   if(ACUC1<AC(y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}
    u=yv; DO(yr, MC(u,v,e?sj:s); u+=sj; v+=r;); v=v0+=mj; 
    *zv++=CALL1(f1,e||yr==sr&&yc==sc?y:take(v2(yr,yc),y),fs);
  }}

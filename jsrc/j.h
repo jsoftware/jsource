@@ -157,6 +157,22 @@
                                         /* including trailing 0 byte       */
 #define NFDEP           20000L             // fn call depth
 #define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
+
+#if SY_WINCE
+#define NFDEP           200L            /* wince           fn call depth   */
+#endif
+#if SYS & SYS_MACOSX
+#define NFDEP           18000L          /* darwin          fn call depth   */
+#endif
+#ifndef NFCALL
+#if SY_64
+#define NFDEP           20000L          /* all other       fn call depth   */
+#else
+#define NFDEP           6000L
+#endif
+#endif
+
+#define NFCALL          (MAX(40,NFDEP/10))              // call depth for named calls.  They can be expensive
 #define NTSTACK         2000L           /* size of stack for temps         */
 
 #define IIDOT           0               /* modes for indexofsub()          */
@@ -208,6 +224,8 @@
 #define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
+#define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
+#define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
 #define DF1(f)          A f(J jt,    A w,A self)
 #define DF2(f)          A f(J jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}
@@ -219,11 +237,17 @@
 #define FCONS(x)        fdef(CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),0L,RMAX,RMAX,RMAX)
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)
-#define F2(f)           A f(J jt,A a,A w) 
+#define F2(f)           A f(J jt,A a,A w)
+#define FPREF           
+#define F1PREF          FPREF
+#define F2PREF          FPREF
+#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&-4)
+#define F1PREFIP        FPREFIP
+#define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on it.  m=monad rank, f=function to call for monad cell
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#define HN              3L
+#define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
@@ -239,6 +263,7 @@
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define PROLOG          I _ttop=jt->tbase+jt->ttop
+#define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}
@@ -319,6 +344,7 @@
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0
+// CTTZI(w) counts trailing zeros in an argument of type I (32 or 64 bits depending on architecture)
 // CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
 // but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
 // since we don't require CTLZ yet, we defer that problem to another day
@@ -337,11 +363,21 @@
 #if SY_WIN32 
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
+#if SY_64
+#define CTTZI(w) _tzcnt_u64((UI)(w))
+#else
+#define CTTZI(w) _tzcnt_u32((UINT)(w))
+#endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
 #if SY_LINUX || SY_MAC
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
+#if SY_64
+#define CTTZI(w) __builtin_ctzll((UI)(w))
+#else
+#define CTTZI(w) __builtin_ctzl((UINT)(w))
+#endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
@@ -349,17 +385,19 @@
 
 // Insert CTLZ here if CTTZ is not available
 
-// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macro
-// CTLZ, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
+// If your machine supports count-leading-zeros but not count-trailing-zeros, you can define the macros
+// CTLZ/CTLZI, which returns the number of high-order zeros in the low 32 bits of its argument, and the following
 // CTTZ will be defined:
 #if defined(CTLZ) && !defined(CTTZ)
 #define CTTZ(w) (31-CTLZ((w)&-(w)))
+#define CTTZI(w) (63-CTLZI((w)&-(w)))
 #define CTTZZ(w) (0xffffffff&(w) ? CTTZ(w) : 32)
 #endif
 
 // If CTTZ is not defined, the following code will use the default from u.c:
 #if !defined(CTTZ)
 extern I CTTZ(I);
+extern I CTTZI(I);
 extern I CTTZZ(I);
 #endif
 

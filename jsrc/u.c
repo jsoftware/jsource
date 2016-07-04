@@ -65,7 +65,7 @@ I jtprod(J jt,I n,I*v){I z;
 
 #else
 
-I jtmult(J jt,I x,I y){D z=x*(D)y; ASSERT(z<=IMAX,EVLIMIT); R(I)z;}
+I jtmult(J jt,I x,I y){D z=x*(D)y; ASSERT(((z<=IMAX)&&(z>=IMIN))||(z=0,!jt),EVLIMIT); R(I)z;}  // If jt==0, return quiet 0
 
 I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z;}
 
@@ -149,6 +149,20 @@ I CTTZ(I w){
 }
 // same, except returns 32 if no bit set
 I CTTZZ(I w){ R w & 0xffffffff ? CTTZ(w) : 32; }
+// Same, but works on full length of an I argument (32 or 64 bits)
+#if SY_64
+I CTTZI(I w){
+    I t = 1;
+    if (0 == (w & 0xffffffffLL)){ w >>= 32; t += 32; }
+    if (0 == (w & 0xffff)){ w >>= 16; t += 16; }
+    if (0 == (w & 0xff)){ w >>= 8; t += 8; }
+    if (0 == (w & 0xf)){ w >>= 4; t += 4; }
+    if (0 == (w & 0x3)){ w >>= 2; t += 2; }
+    R t - (w & 1);
+}
+#else
+#define CTTZI CTTZ   // On 32-bit machines, I is same as long
+#endif
 #endif
 
 

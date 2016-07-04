@@ -86,7 +86,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
- if(p=q&&0<=c&&1>=AC(u[c])) {  // passes quick check
+ if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
    p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(AAV(v[m+2])[0], jt->local);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
@@ -189,7 +189,7 @@ static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG;A e,z;B b,sa,sw;I at,ir,it,t,
 }
 
 static DF2(amccn2){R amendn2(a,w,VAV(self)->f,0);}
-static DF2(amipn2){R amendn2(a,w,VAV(self)->f,(B)(!(AT(w)&RAT+XNUM)&&(1==AC(w)||AFNJA&AFLAG(w))));}
+static DF2(amipn2){R amendn2(a,w,VAV(self)->f,(B)(!(AT(w)&RAT+XNUM)&&(ACUC1>=AC(w)||AFNJA&AFLAG(w))));}
 
 static DF2(amccv2){DECLF; 
  RZ(a&&w); 
@@ -200,7 +200,7 @@ static DF2(amccv2){DECLF;
 static DF2(amipv2){DECLF; 
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);
- R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),(B)(!(AT(w)&RAT+XNUM)&&(1==AC(w)||AFNJA&AFLAG(w))));
+ R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),(B)(!(AT(w)&RAT+XNUM)&&(ACUC1>=AC(w)||AFNJA&AFLAG(w))));
 }
 
 static DF1(mergn1){       R merge1(w,VAV(self)->f);}

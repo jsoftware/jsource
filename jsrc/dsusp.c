@@ -14,13 +14,14 @@
 /*    d=deba(...);                                       */
 /*    ASSERT(blah,EVDOMAIN);                             */
 /*    debz()                                             */
+// q, if given, is the block to use for the debug stack; otherwise allocated
 
-DC jtdeba(J jt,C t,A x,A y,A fs){A q;DC d;
- GA(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);
+DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
+ if(!d){A q; GA(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
-  case DCPARSE:  d->dcy=y; break;
+  case DCPARSE:  d->dcy=(A)AAV(y); d->dcj=AN(y); break;
   case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 
@@ -143,16 +144,17 @@ static A jtparseas(J jt,B as,A w){A z;
 
 /* parsex: parse an explicit defn line              */
 /* w  - line to be parsed                           */
-/* lk - 1 iff locked function; _1                   */
+/* lk - 1 iff locked function; _1 to signal noun error at beginning of sentence */
 /* ci - current row of control matrix               */
 /* c  - stack entry for dbunquote for this function */
+// d - DC area to use in deba
 
-A jtparsex(J jt,A w,B lk,CW*ci,DC c){A z;B as,s;DC d,t=jt->sitop;
+A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
  RZ(w);
  JATTN;
  as=ci->type==CASSERT;
  if(lk>0)R parseas(as,w);
- RZ(d=deba(DCPARSE,0L,w,0L));
+ RZ(d=deba(DCPARSE,0L,w,0L,d));
  if(lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
  if(0==c)z=parseas(as,w);   /* anonymous or not debug */
  else{                      /* named and debug        */
@@ -166,7 +168,7 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c){A z;B as,s;DC d,t=jt->sitop;
 
 DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
  sv=VAV(self); t=sv->f; 
- RZ(d=deba(DCCALL,a,w,self));
+ RZ(d=deba(DCCALL,a,w,self,0L));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
   ra(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */

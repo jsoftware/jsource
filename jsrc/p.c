@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "p.h"
+#include <stdint.h>
 
 
 #define PARSERSTKALLO (490*sizeof(PSTK))  // number of stack entries to allocate, when we allocate, in bytes
@@ -271,12 +272,12 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
  // to use if there is an error on the word
  // If there is a stack inherited from the previous parse, and it is big enough to hold our queue, just use that.
  // The stack grows down
- if((U)oend1-(U)obgn >= (m+4)*sizeof(PSTK))stack=oend1-3;   // if we can use the previous allocation, start at the end, with 3 marks
+ if((uintptr_t)oend1-(uintptr_t)obgn >= (m+4)*sizeof(PSTK))stack=oend1-3;   // if we can use the previous allocation, start at the end, with 3 marks
  else{
    I allo = MAX((m+4)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
    GA(y,B01,allo,1,0);
    jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
-   stack=(PSTK*)((U)jt->parserstkbgn+allo)-3;  // point to the ending marks
+   stack=(PSTK*)((uintptr_t)jt->parserstkbgn+allo)-3;  // point to the ending marks
  }
  // We have the initial stack pointer.  Grow the stack down from there
  stack[0].a = stack[1].a = stack[2].a = mark;  // install initial ending marks.  word numbers are unused

@@ -101,149 +101,93 @@ typedef I SI;
 
 #define B01             (I)1L           /* B  boolean                      */
 #define B01X 0
-#define B01DIRECT       1               // Values, not pointers, are stored here
-#define B01LAST0        1               // Trailing 0 byte
 #define B01SIZE         sizeof(B)       // length of 1 atom
 #define LIT             (I)2L           /* C  literal (character)          */
 #define LITX 1
-#define LITDIRECT 1
-#define LITLAST0 1
 #define LITSIZE sizeof(C)
 #define INT             (I)4L           /* I  integer                      */
 #define INTX 2
-#define INTDIRECT 1
-#define INTLAST0 0
 #define INTSIZE sizeof(I)
 #define FL              (I)8L           /* D  double (IEEE floating point) */
 #define FLX 3
-#define FLDIRECT 1
-#define FLLAST0 0
 #define FLSIZE sizeof(D)
 #define CMPX            (I)16L          /* Z  complex                      */
 #define CMPXX 4
-#define CMPXDIRECT 1
-#define CMPXLAST0 0
 #define CMPXSIZE sizeof(Z)
 #define BOX             (I)32L          /* A  boxed                        */
 #define BOXX 5
-#define BOXDIRECT 0
-#define BOXLAST0 0
 #define BOXSIZE sizeof(A)
 #define XNUM            (I)64L          /* X  extended precision integer   */
 #define XNUMX 6
-#define XNUMDIRECT 0
-#define XNUMLAST0 0
 #define XNUMSIZE sizeof(X)
 #define RAT             (I)128L         /* Q  rational number              */
 #define RATX 7
-#define RATDIRECT 0
-#define RATLAST0 0
 #define RATSIZE sizeof(Q)
 #define BIT             (I)256L         /* BT bit boolean                  */
 #define BITX 8
    // Bit 9 not used
 #define SB01            (I)1024L        /* P  sparse boolean               */
 #define SB01X 10
-#define SB01DIRECT 0
-#define SB01LAST0 0
 #define SB01SIZE sizeof(P)
 #define SLIT            (I)2048L        /* P  sparse literal (character)   */
 #define SLITX 11
-#define SLITDIRECT 0
-#define SLITLAST0 0
 #define SLITSIZE sizeof(P)
 #define SINT            (I)4096L        /* P  sparse integer               */
 #define SINTX 12
-#define SINTDIRECT 0
-#define SINTLAST0 0
 #define SINTSIZE sizeof(P)
 #define SFL             (I)8192L        /* P  sparse floating point        */
 #define SFLX 13
-#define SFLDIRECT 0
-#define SFLLAST0 0
 #define SFLSIZE sizeof(P)
 #define SCMPX           (I)16384L       /* P  sparse complex               */
 #define SCMPXX 14
-#define SCMPXDIRECT 0
-#define SCMPXLAST0 0
 #define SCMPXSIZE sizeof(P)
 #define SBOX            (I)32768L       /* P  sparse boxed                 */
 #define SBOXX 15
-#define SBOXDIRECT 0
-#define SBOXLAST0 0
 #define SBOXSIZE sizeof(P)
 #define SBT             (I)65536L       /* SB symbol                       */
 #define SBTX 16
-#define SBTDIRECT 1
-#define SBTLAST0 0
 #define SBTSIZE sizeof(SB)
 #define C2T             (I)131072L      /* C2 unicode (2-byte characters)  */
 #define C2TX 17
-#define C2TDIRECT 1
-#define C2TLAST0 1
 #define C2TSIZE sizeof(C2)
 #define VERB            (I)262144L      /* V  verb                         */
 #define VERBX 18
-#define VERBDIRECT 0
-#define VERBLAST0 0
 #define VERBSIZE sizeof(V)
 #define ADV             (I)524288L      /* V  adverb                       */
 #define ADVX 19
-#define ADVDIRECT 0
-#define ADVLAST0 0
 #define ADVSIZE sizeof(V)
 #define CONJ            (I)1048576L     /* V  conjunction                  */
 #define CONJX 20
-#define CONJDIRECT 0
-#define CONJLAST0 0
 #define CONJSIZE sizeof(V)
 #define ASGN            (I)2097152L     /* I  assignment                   */
 #define ASGNX 21
-#define ASGNDIRECT 0
-#define ASGNLAST0 0
 #define ASGNSIZE sizeof(C)
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
 #define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
 #define MARK            (I)4194304L     /* I  end-of-stack marker          */
 #define MARKX 22
-#define MARKDIRECT 1
-#define MARKLAST0 0
 #define MARKSIZE sizeof(I)
 #define SYMB            (I)8388608L     /* I  locale (symbol table)        */
 #define SYMBX 23
-#define SYMBDIRECT 0
-#define SYMBLAST0 0
 #define SYMBSIZE sizeof(I)
 #define CONW            (I)16777216L    /* CW control word                 */
 #define CONWX 24
-#define CONWDIRECT 0
-#define CONWLAST0 0
 #define CONWSIZE sizeof(CW)
 #define NAME            (I)33554432L    /* NM name                         */
 #define NAMEX 25
-#define NAMEDIRECT 1
-#define NAMELAST0 1
 #define NAMESIZE sizeof(C)
 #define LPAR            (I)67108864L    /* I  left  parenthesis            */
 #define LPARX 26
-#define LPARDIRECT 1
-#define LPARLAST0 0
 #define LPARSIZE sizeof(I)
 #define RPAR            (I)134217728L   /* I  right parenthesis            */
 #define RPARX 27
-#define RPARDIRECT 1
-#define RPARLAST0 0
 #define RPARSIZE sizeof(I)
 #define XD              (I)268435456L   /* DX extended floating point      */
 #define XDX 28
-#define XDDIRECT 0
-#define XDLAST0 0
 #define XDSIZE sizeof(DX)
 #define XZ              (I)536870912L   /* ZX extended complex             */
 #define XZX 29
-#define XZDIRECT 0
-#define XZLAST0 0
 #define XZSIZE sizeof(ZX)
 
 #define ANY             -1L

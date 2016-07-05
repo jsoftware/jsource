@@ -7,6 +7,16 @@
 #include "ve.h"
 #include "vcomp.h"
 
+// mac clang compiler bug (?) caused normal I overflow and EVNAN tests to fail
+#if SY_MAC
+I macx(I a){return a;}
+#elif
+#define macx
+#endif
+
+#define SSRDB(w) (macx(*(B *)CAV(w)))
+#define SSRDI(w) (macx(*(I *)CAV(w)))
+
 // Support for Speedy Singletons
 #define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)((I)jtf&-4); // header for function definition
 #define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)((I)jtf&-4);   // header for function definition
@@ -26,8 +36,6 @@
 #define SSINGDI SSINGENC(FL,INT)
 #define SSINGDD SSINGENC(FL,FL)
 
-#define SSRDB(w) (*(B *)CAV(w))
-#define SSRDI(w) (*(I *)CAV(w))
 #define SSRDD(w) (*(D *)CAV(w))
 #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
 
@@ -88,9 +96,6 @@ static A ssingallo(J jt,I r,I t){A z;
  } \
 } /* We have the output block, or 0 if we are returning an atom */
 
-
-
-
 // speedy singleton routines: each argument has one atom.  The shapes may be
 // any length, but we know they contain all 1s, so we don't care about jt->rank except to clear it
 SSINGF2(jtssplus) SSNUMPREFIX
@@ -106,11 +111,13 @@ SSINGF2(jtssplus) SSNUMPREFIX
   case SSINGID: SSSTORE(SSRDI(a)+SSRDD(w),z,FL,D) R z;
   case SSINGDI: SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
-   {B av = SSRDB(a); I wv = SSRDI(w); I zv = av+wv;
+   {B av = SSRDB(a); I wv = SSRDI(w); I zv = macx(av+wv);
    if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGIB:
-   {I av = SSRDI(a); B wv = SSRDB(w); I zv = av + wv;
+   {I av = SSRDI(a); B wv = SSRDB(w); I zv = macx(av + wv);
+
+
    if (zv<av)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGII:
@@ -120,7 +127,9 @@ SSINGF2(jtssplus) SSNUMPREFIX
   case SSINGDD:
    {D av = SSRDD(a); D wv = SSRDD(w);
    NAN0;
-// obsolete   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN);
+#if SY_MAC   
+   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN); // obsolete - but required on mac
+#endif
    SSSTORE(av+wv,z,FL,D)
    NAN1; R z;}
  }
@@ -139,11 +148,11 @@ SSINGF2(jtssminus) SSNUMPREFIX
   case SSINGID: SSSTORE(SSRDI(a)-SSRDD(w),z,FL,D) R z;
   case SSINGDI: SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
-   {B av = SSRDB(a); I wv = SSRDI(w); I zv = av-wv;
+   {B av = SSRDB(a); I wv = SSRDI(w); I zv = macx(av-wv);
    if(wv<0&&zv<=av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGIB:
-   {I av = SSRDI(a); B wv = SSRDB(w); I zv = av - wv;
+   {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv = macx(av - wv);   
    if (zv>av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGII:
@@ -152,7 +161,9 @@ SSINGF2(jtssminus) SSNUMPREFIX
    R z;}
   case SSINGDD:
    {D av = SSRDD(a); D wv = SSRDD(w);
-// obsolete   ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN);
+#if SY_MAC
+   ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN); // obsolete - but required on mac
+#endif
    NAN0; SSSTORE(av-wv,z,FL,D) NAN1;  R z;}
  }
 }

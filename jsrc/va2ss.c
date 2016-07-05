@@ -10,7 +10,7 @@
 // mac clang compiler bug (?) caused normal I overflow and EVNAN tests to fail
 #if SY_MAC
 I macx(I a){return a;}
-#elif
+#else
 #define macx
 #endif
 

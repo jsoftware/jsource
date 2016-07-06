@@ -143,6 +143,7 @@ F1(jtmmaxs){I j,m=MLEN,n;
  R mtm;
 }    /* 9!:21 space limit set */
 
+#if MEMAUDIT>=1
 // Verify that block w does not appear on tstack more than lim times
 static void audittstack(J jt, A w, I lim){
  // loop through each block of stack
@@ -159,6 +160,7 @@ static void audittstack(J jt, A w, I lim){
   if(base>=0)tstack=AAV(tstack[0]); // back up to data for previous field
  }
 }
+#endif
 
 void jtfr(J jt,A w){I j,n;MS*x;
  if(!w)R;

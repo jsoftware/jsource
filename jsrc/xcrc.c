@@ -7,8 +7,6 @@
 #include "x.h"
 
 
-typedef unsigned int UINT;
-
 // Calculate byte-at-a-time CRC table in *crctab, and return the starting value as the result
 static UINT jtcrcvalidate(J jt,A w, UINT* crctab){A*wv;B*v;I m,wd;UINT p,x,z=-1;
  RZ(w);

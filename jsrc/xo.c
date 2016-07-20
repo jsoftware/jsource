@@ -93,20 +93,21 @@ F1(jtjopen){A z;I h;
  if(AR(w))R rank1ex(w,0L,0L,jtjopen);
  RE(h=fnum(w));
  if(h){RZ(z=sc(h)); ASSERT(fname(z),EVFNUM); R z;}
- else{
+ else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
   RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE));
-  RZ(*(jt->fopn+AAV(jt->fopa))=ra(fullname(AAV0(w))));
+  RZ(*(jt->fopn+AAV(jt->fopa))=ww=fullname(AAV0(w)));
+  ra(ww);
   ++jt->fopn;
   R sc(h);
 }}   /* open the file named w if necessary; return file# */
 
-B jtadd2(J jt,F f1,F f2,C*cmd){A c;
+B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
  if(f1==NULL) {jt->fopn+=2;R 1;};
  GA(c,LIT,1+strlen(cmd),1,0);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
  if(jt->fopn+1>=AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
- *cmd='<';RZ(*(jt->fopn+AAV(jt->fopa)  )=ra(cstr(cmd))); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
- *cmd='>';RZ(*(jt->fopn+AAV(jt->fopa)+1)=ra(cstr(cmd))); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);
+ *cmd='<';x=cstr(cmd); ra(x); RZ(*(jt->fopn+AAV(jt->fopa)  )=x); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
+ *cmd='>';x=cstr(cmd); ra(x); RZ(*(jt->fopn+AAV(jt->fopa)+1)=x); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);
  fa(c); R 1;
 }   /* add 2 entries to jt->fopn table (for hostio); null arg commits entries */
 

@@ -9,7 +9,7 @@
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
 // on the result and on the name and path
-A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
+A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  GA(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
@@ -18,7 +18,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   LOCNAME(g)=ra(x); LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
+   ra(x); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ra(xx); LOCPATH(g) = xx;
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ra() on g
    symbis(x,g,jt->stloc);
@@ -26,7 +26,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   LOCNAME(g)=ra(x); LOCPATH(g)=ra(zpath);
+   ra(x); LOCNAME(g)=x; ra(zpath); LOCPATH(g)=zpath;
    ++jt->stused;
    m=AN(jt->stnum);
    // Extend in-use locales list if needed
@@ -36,7 +36,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
    }
    // Put this locale into the in-use list at an empty location.  ra(g) at that time
    pv=AAV(jt->stptr);
-   DO(AN(jt->stnum), if(!pv[i]){pv[i]=ra(g); *(i+AV(jt->stnum))=n; break;});
+   DO(AN(jt->stnum), if(!pv[i]){ra(g); pv[i]=g; *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;
    break;
   case 2:  /* local symbol table */
@@ -164,7 +164,7 @@ F2(jtlocpath2){A g,x;
  F2RANK(1,0,jtlocpath2,0);
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
- fa(LOCPATH(g)); LOCPATH(g)=ra(x);
+ fa(LOCPATH(g)); ra(x); LOCPATH(g)=x;
  R mtm;
 }    /* 18!:2  set locale path */
 

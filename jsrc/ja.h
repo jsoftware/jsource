@@ -758,7 +758,7 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
-#define ra(x)                       jtra(jt,(x))
+#define ra(x)                       {RZ(x); I* cc=&AC(x); I tt=AT(x); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,(x),tt); *cc=(c+1)&~ACINPLACE;}
 #define ra1(x)                      jtra1(jt,(x))
 #define raa(x,y)                    jtraa(jt,(x),(y))
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))

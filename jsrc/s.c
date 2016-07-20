@@ -54,7 +54,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  DO(m-n-1, u++->next=j++;);                 /* build free list extension   */
  if(b)u->next=jt->sympv->next;              /* push extension onto stack   */
  ((L*)v)->next=n;                           /* new stack top               */
- jt->symp =ra(x);                           /* preserve new array          */
+ ra(x); jt->symp=x;                           /* preserve new array          */
  jt->sympv=(L*)AV(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
  R 1;
@@ -221,7 +221,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
    RZ(l=symnew(&AV(jt->local)[b],tx)); 
-   l->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
+   ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
    R l;
   } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -253,7 +253,7 @@ L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m,tx;L*v;NM*u;
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
  RZ(v=symnew(hv,tx)); 
- v->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
+ ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
  R v;
 }    /* probe for assignment */
 

@@ -166,7 +166,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wd,wn,wr;
 
 
 A jtcpa(J jt,B b,A w){A*wv,z,*zv;I wd;
- if(0==b&&AFNJA&AFLAG(w))R ra(w);
+ if(0==b&&AFNJA&AFLAG(w)){ra(w); R w;}
  if(!(BOX&AT(w)))R ca(w);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  GA(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);

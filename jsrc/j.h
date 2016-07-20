@@ -148,6 +148,17 @@
 #define UNDERFLOW       ((D)4.450147717014403e-308)
 #endif
 
+//
+#if SY_WIN32 
+#define RESTRICT __restrict
+#endif
+#if SY_LINUX || SY_MAC
+#define RESTRICT
+#endif
+#ifndef RESTRICT
+#define RESTRICT
+#endif
+
 
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */

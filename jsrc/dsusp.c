@@ -211,7 +211,7 @@ F1(jtdbrun ){ASSERTMTV(w); jt->dbsusact=SUSRUN;  R mtm;}
 F1(jtdbnext){ASSERTMTV(w); jt->dbsusact=SUSNEXT; R mtm;}
      /* 13!:5  run next */
 
-F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; jt->dbresult=ra(w); R mtm;}
+F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; ra(w); jt->dbresult=w; R mtm;}
      /* 13!:6  exit with result */
 
 F1(jtdbjump){RE(jt->dbjump=i0(w)); jt->dbsusact=SUSJUMP; R mtm;}
@@ -221,7 +221,7 @@ static F2(jtdbrr){DC d;
  RE(0);
  d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  /* must be explicit verb */
- jt->dbalpha=ra(a); jt->dbomega=ra(w); 
+ ra(a); jt->dbalpha=a; ra(w); jt->dbomega=w; 
  jt->dbsusact=SUSRUN;
  R mtm;
 }
@@ -232,5 +232,5 @@ F2(jtdbrr2 ){R dbrr(a, w);}
 F1(jtdbtrapq){ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); jt->dbtrap=AN(w)?ra(w):0L; R mtm;}
+F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){ra(w); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
      /* 13!:15 set trap */

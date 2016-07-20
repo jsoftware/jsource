@@ -282,7 +282,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  ASSERT(!wn||wn>=s+s0,EVLENGTH);
  x=jt->pma;
  jt->pmctr=0;
- jt->pma=wn?ra(w):0;
+ if(wn){ra(w); jt->pma=w;}else jt->pma=0;
  RZ(pmfree(x));
  if(wn){
   v=CAV(w);

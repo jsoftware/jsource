@@ -50,13 +50,13 @@ typedef struct{I d,t,e;} TD;
 
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t,EVCTRL);
- cv->t=ra(t);                            /* iteration array     */
+ ra(t); cv->t=t;                            /* iteration array     */
  cv->n=IC(t);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  cv->k=k=AN(cv->line)-5;                 /* length of item name */
  if(0<k&&cv->n){                         /* for_xyz.            */
-  s=4+CAV(cv->line); RZ(cv->x=x=ra(str(6+k,s))); 
+  s=4+CAV(cv->line); RZ(cv->x=x=str(6+k,s)); ra(x); 
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
  }
@@ -278,7 +278,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     if(!cv->t){
      BASSERT(t,EVCTRL);
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     BZ(cv->t=ra(boxopen(t))); t=0;
+     t=boxopen(t); ra(t); BZ(cv->t=t); t=0;
     }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
@@ -324,7 +324,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
- z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
+ if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
@@ -566,7 +566,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
  for(j=1;j<an;++j) {I *zhbase=&zv[j]; I ahx=av[j]; I ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   l->name=ra((jt->sympv)[ahx].name);  // point symbol table to the name block, and increment its use count accordingly
+   l->name=(jt->sympv)[ahx].name; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
     // no need to set the PERMANENT flag, since we will never clone a clone
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail

@@ -63,7 +63,8 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  a0=SPA(zq,a); v=AV(a0);
  GA(a,INT,f+c-1,1,0); u=AV(a); DO(f, u[i]=i;); DO(c-1, u[f+i]=v[1+i]+f-1;); 
  SPB(zp,a,a);
- SPB(zp,x,m==t?ra(SPA(zq,x)):cvt(m,SPA(zq,x)));
+ if(m==t)ra(SPA(zq,x));
+ SPB(zp,x,m==t?SPA(zq,x):cvt(m,SPA(zq,x)));
  R z;
 }    /* result processing */
 

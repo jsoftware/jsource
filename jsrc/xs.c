@@ -79,7 +79,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
  if(jt->slistn==i){
   if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
-  RZ(*(jt->slistn+AAV(jt->slist))=ra(y)); 
+  ra(y); RZ(*(jt->slistn+AAV(jt->slist))=y); 
   ++jt->slistn;
  }
  jt->slisti=i;    jt->glock=1==jt->glock?1:lk?2:0;

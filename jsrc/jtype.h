@@ -201,6 +201,8 @@ typedef I SI;
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+NAME)
+// Don't call traverse unless one of these bits is set
+#define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
 #define HOMO(s,t)       ((s)==(t) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
 #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)

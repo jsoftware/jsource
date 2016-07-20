@@ -57,8 +57,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
- // simply keep the surviving argument intact, and rat() to increment its use-count and call
- // for a deferred free (why?? this does not constitute a new use).  This is the normal case.
+ // simply keep the surviving argument intact.  We can do this because we have no PROLOG
  if(left){if(af>=wf)R a; os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
  else    {if(wf>=af)R w; os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
  // If the cells of the surviving arg must be replicated, do so
@@ -75,7 +74,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
 F2(jtleft2 ){R lr2(1,a,w);}
 F2(jtright2){R lr2(0,a,w);}
 
-F1(jtright1){R rat(w);}
+F1(jtright1){R w;}  // no PROLOG, so no copy required; but callers that check the usecount also need to recognize return of the
+                   // input buffer as a way of being in-use
 
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,0);

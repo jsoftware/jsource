@@ -315,35 +315,32 @@ A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 F1(jtrat){R tpush(ra(w));}
 
 #if 0
+// include in all files for inlining, except that we can't return from a conexpr
+static I alloblock(J jt,I bytes){ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT); I n=64, j=6; while(n<bytes)n<<=1, ++j; R j;}
 
 // VSZ when size is constant or variable
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((rank*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+SZI+mhb-1)) + (atoms)*(size)) & (-SZI))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
 // here when size is constant
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(rank+AH+mhw+(size/SZI)*atoms)))  // # bytes to allocate
-#define ALLOBLOCK(n) ((n)<=128?((n)<=64?6:7) : (n)<=512?((n)<=256?8:9) : (n)<=1024?:10:*(C*)0)
+#define ALLOBLOCK(n) ((n)<=128?((n)<=64?6:7) : (n)<=512?((n)<=256?8:9) : (n)<=1024?10:*(C*)0)
+#define ALLOBLOCKV(bytes) alloblock(jt, bytes)
 #define ALLONULL(n) (n)
-#define GAF(name,type,atoms,rank,shaape) \
-{ I bytes = ALLOBYTES(atoms,rank,type ## SIZE,type&LAST0,type==NAME); \
-  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);  /* 32-bit? */  \
-RZ(name = jtgaf(jt, ALLOBLOCK(bytes))); \
-AT(name)=type; \
-if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shaape)ICPY(AS(name),shaape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */ \
-AN(name)=atoms; AR(name)=rank; AK(name)=SZI*AH+SZI*rank; \
-if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-mhb); \
-if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */ \
-}
-#define GAFV(name,type,atoms,rank,shaape) \
-{ I bytes = ALLOBYTES(atoms,rank,type ## SIZE,type&LAST0,type==NAME); \
-  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);  /* 32-bit? */  \
-RZ(name = jtgafv(jt, ALLONULL(bytes))); \
-AT(name)=type; \
-if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shaape)ICPY(AS(name),shaape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */ \
-AN(name)=atoms; AR(name)=rank; AK(name)=SZI*AH+SZI*rank; \
-if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-mhb); \
-if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */ \
-}
 
-#define GAA(name,type,atoms,rank,shaape) RZ(name = jtgaa(jt,type,atoms,rank,shaape)) // use for variable type
+#define GAFx(name,type,atoms,rank,shaape,size,func,allo) \
+{ I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
+  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);  /* 32-bit? */  \
+RZ(name = func(jt, allo(bytes))); \
+AT(name)=type; \
+if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shaape)ICPY(AS(name),shaape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */ \
+AN(name)=atoms; AR(name)=rank; AK(name)=SZI*AH+SZI*rank; \
+if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-mhb); \
+if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */ \
+}
+#define GAZ(name,type,atoms,rank,shaape)  GAFx(name,type,atoms,rank,shaape,type ## SIZE,jtgaf,ALLOBLOCK)
+#define GAZZ(name,type,atoms,rank,shaape)  GAFx(name,type,atoms,rank,shaape,type ## SIZE,jtgafv,ALLONULL)
+
+
+#define GAV(name,type,atoms,rank,shaape) RZ(name = jtgaa(jt,type,atoms,rank,shaape)) // use for variable type
 
 extern A jtgaf(J jt, I block){if(jt->parsercalls)++jt->parsercalls; R block?jtgaf(jt,block-1):0;}
 extern A jtgafv(J jt, I block){if(jt->parsercalls)++jt->parsercalls; R block?jtgaf(jt,block-1):0;}
@@ -356,17 +353,18 @@ I msr = n>>6;
 I mrem = n%64;
 I mand = n&-128;
 #endif
-GAF(z,INT,1, 1, 0);
+GAZ(z,INT,1, 1, 0);
 //GAF(z,LIT,6, 1, 0);
 //GAFV(z,INT,n,1,0);
-//GAFV(z,LIT,n,1,0);
+GAZZ(z,LIT,n,1,0);
 //GAFV(z,INT,n,2,&num);
 R z /*+ mmul+msl+mdiv+msr+mrem+mand*/;
 }
 
 
+
 need version for general GA - should it take type?  Yes - do all the stores inside, call afv
-A jtgaa(J jt,I type,I atoms,I rank,I shaape){A z;
+A jtgav(J jt,I type,I atoms,I rank,I shaape){A z;
 I bytes = ALLOBYTESVSZ(atoms,rank,type ## SIZE,type&LAST0,type==NAME);
   ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); /* 32-bit? */ 
 RZ(z = jtgafv(jt, bytes));
@@ -377,18 +375,17 @@ if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-m
 if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */
 }
 
-A jtgafv(J jt, I bytes){I n;
+A jtgafv(J jt, I bytes){I j=(AH*SZI+mhb)<=64?6:7, n=(AH*SZI+mhb)<=64?64:128; 
  ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT);
- for(n=64;n<bytes;n<<=1);
- R jtgaf(jt,CTZZI(n));
+ while(n<bytes)n<<=1, ++j;
+ R jtgaf(jt,j);
 }
-A jtgaf(J jt,I lgsiz){A z;MS *v;
- I blockx = MIN(lgsiz,PLIM+1);  // for fetch purposes, point all oversize blocks to the same bins
- I mfree=jt->mfree[blockx], mfreeb=jt->mfreeb[blockx], ttop=jt->ttop, tbase=jt->tbase, tdiff; // start reads early
- JBREAK0;  // Here to allow instruction scheduling
- if(blockx>PLIML){I n = 1<<lgsiz;         /* large block: straight malloc    */
+A jtgaf(J jt,I blockx){A z;MS *v;
+ I mfree=jt->mfree[blockx], mfreeb=jt->mfreeb[blockx], ttop=jt->ttop, tbase=jt->tbase; // start reads early
+ JBREAK0;  // Put it here to assist instruction scheduling
+ if(blockx>PLIML){I n = 1<<blockx;         /* large block: straight malloc    */
   ASSERT(v=MALLOC(n),EVWSFULL);
-  v->j = lgsiz;    // Save the size of the allocation so we know how to free it and how big it was
+  v->j = blockx;    // Save the size of the allocation so we know how to free it and how big it was
   mfreeb+=n;    // mfreeb[PLIML+1] is the byte count allocated for large blocks
  } else {
   mfreeb-=MFREEBINCR;            // we are going to remove 1 free block
@@ -403,7 +400,7 @@ A jtgaf(J jt,I lgsiz){A z;MS *v;
    u=(C*)v; DO(nblocks, x=(MS*)u; u+=(1<<blockx); x->a=(I*)u; x->j=blockx; x->ofst=i<<blockx;); x->a=0;  // chain blocks to each other; set chain of last block to 0
    jt->mfree[j]=(MS*)((C*)v+(1<<blockx);  // the second block becomes the head of the free list
    mfreeb+=nblocks<<MFREEBBUFSHIFT;   // We are adding a bunch of free blocks
-   jt->mfreeb[PLIM+1]+=PSIZE;   // add to the total bytes allocated
+   jt->mfreeb[PSIZEL]+=PSIZE;   // add to the total bytes allocated
   }
  }
 
@@ -431,42 +428,59 @@ AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS));   // get rid of this?  Or change 
 // free a block whose usecount makes it freeable
 void jtmf(J jt,A w){MS*x; 
  x=(MS*)w-1;   // point to free header
+ I blockx=x->j;   // lg(buffer size)
 #if MEMAUDIT>=1
  if(!(AFLAG(w)&(AFNJA|AFSMM)||x->a==(I*)0xdeadbeef))*(I*)0=0;  // testing - verify block is memmapped/SMM or allocated
 #endif
 #if MEMAUDIT>=2
  audittstack(jt,w,0);  // must not free anything on the stack
 #endif
- // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(AT(w)==SYMB)freesymb(jt,w);
- I lgsiz=x->j;
- I blockx = MIN(lgsiz,PLIM+1);
  I mfreeb=jt->mfreeb[blockx];   // start reads early
- A mfree=jt->mfree[blockx];   // This is not used for malloc memory, but let's read it anyway
+ A mfree=jt->mfree[blockx];
+ // SYMB must free as a monolith, with the symbols returned when the hashtables are
+ if(AT(w)==SYMB){
+  freesymb(jt,w);
+  mfreeb=jt->mfreeb[blockx];   // restore values that were read early.  This path is very rare
+  mfree=jt->mfree[blockx];
+ }
 #if MEMAUDIT>=1
- if(blockx<6||blockx>63)*(I*)0=0;  // pool number must be valid
+ if(blockx<6||blockx>=sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]))*(I*)0=0;  // pool number must be valid
 #endif
 #if MEMAUDIT>=3
- DO((1<<(lgsiz-LGSZI))-2, ((I*)x)[i+2] = 0xdeadbeef;);   // wipe the block clean before we free it
+ DO((1<<(blockx-LGSZI))-2, ((I*)x)[i+2] = 0xdeadbeef;);   // wipe the block clean before we free it
 #endif
- if(PLIML+1<=lgsiz){   // allocated by malloc
-  I n=1LL<<lgsiz;   // number of bytes in 
-  I bytes11 = jt->mfreeb[PLIM+1];  // update the total number of bytes we have allocated
+ if(PLIML+1<=blockx){   // allocated by malloc
+  I n=1LL<<blockx;   // number of bytes in the allocation
   FREE(x);
-  jt->mfreeb[PLIM+1] = bytes11-n;
+  mfreeb-=n;
  else{                // buffer allocated from subpool.
   x->a=mfree;
   jt->mfree[j]=(I*)x;
-  jt->mfreeb[j] += MFREEBINCR;  // Indicate we have one more free buffer
+  if((0 <= (mfreeb+=MFREEBINCR))&&(mfreeb<=MFREEBINCR))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
+   // if this kicks the list into garbage-collection mode, indicate that
  }
+ jt->mfreeb[blockx]=mfreeb;
 }
 
 // Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists
 I jtspbytesinuse(J jt){I i,totalfree = 0;
-for(i=6;i<=PLIML;++i){totalfree=jt->(mfreet[i]+(jt->mfreeb[i]>>MFREEBBUFSHIFT))<<i;
-R (jt->mfreeb[PLIML+1] & ~MFREEBCOUNTING) - totalfree;
-} 
+for(i=6;i<=PLIML;++i){totalfree-=jt->(mfreet[i]+(jt->mfreeb[i]>>MFREEBBUFSHIFT))<<i;  // for pool sizes, count bytes in free buffers (negative addition to use)
+for(;i<=48;++i){totalfree+=jt->mfreeb[i];}  // for allocations, count the number of bytes allocated.  48 is enough bins for MY lifetime.
+R totalfree;
+}
 
+// Start tracking jt->bytes and jt->bytesmax.  We indicate this by setting the LSB of EVERY entry of mfreeb
+// Also count current space, and set that into jt->bytes and the result of this function
+I jtspstarttracking(J jt){
+ DO(sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]), jt->mfreeb[i] |= MFREEBCOUNTING);
+ R spbytesinuse();
+}
+
+// Turn off tracking.
+void jtspendtracking(J jt){
+ DO(sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]), jt->mfreeb[i] &= ~MFREEBCOUNTING);
+ R;
+}
 
 #define tpush1(a) { I ttop = jt->ttop; jt->tstack[ttop]=a; if(ttop==jt->tbase+NTSTACK-1)RZ(tpushnextbuf());else jt->ttop = ttop+1;}
 
@@ -510,32 +524,36 @@ I jttpop(J jt,I old){I ttop=jt->ttop;
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 #define MFREEBBUFSHIFT 1   // the buffer-count portion of mfreeb is shifted this many bits over
 #define MFREEBINCR (1<<MFREEBBUFSHIFT)
-// garbage collector: coalesce blocks in chain i
-// pass through the chain, incrementing the j field in the base allo for each
-incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
-for(p=(MS *)jt->mfree[i];p;p=p->a){(MS *)((C*)p-p->ofst)->j += incr;}
-// pass through the chain again, looking for blocks that have negative j in the corresponding base.  They should
-// all the removed from the chain; the base block is added to the chain of blocks to be freed.
-// In all surviving blocks the count must be removed from the j field (to set up for next time)
-MS *freehead = 0; MS *survivetail = (MS *)&jt->mfree[i];
-for(p=(MS *)jt->mfree[i];p;p=p->a){
- if((MS *)((C*)p-p->ofst)->j<0){if(p->ofst==0){p->a=freehead; freehead=p;}}
- else{survivetail->a=p;survivetail=p;p->j&=MEMJMASK;}
-}
-survivetail->a=0;  // terminate the chain of surviving buffers
-// free the buffers that need to be freed; count them
-I nfreebufs=0;
-while(freehead){MS *nfreehead = freehead->a; FREE(freehead); ++ nfreebufs; freehead = nfreehead;}  // save chain before freeing the block
-// set up for next spfree: set mfreeb to a negative value such that when SPFREEB bytes have been freed,
-// mfreeb will hit 0, causing a rescan.  Set mfreet so that
-// # bytes used in subpool = (subpool size 1<<j) * (mfreet + mfreeb)
-// Account for the buffers that were freed during the coaleascing
-I newbval = SBFREEBLG>>i;   // this many buffers need to be freed before we rescan
-jt->mfreet[i] += (jt->mfreeb[i] >> MFREEBBUFSHIFT) + newbval - (nfreebufs<<(PSIZEL-i));  // add diff between current mfreeb[] and what it will be set to; deduct freed buffers
-jt->mfreeb[i] = ((-newbval) << MFREEBBUFSHIFT) + (jt->mfreeb[i] & ~MFREEBCOUNTING);
-jt->mfreeb[PLIML+1] -= nfreebufs<<PSIZEL;   // take freed buffers out of allocated byte count
-
-
+ for(i = 6;i<=PLIML;++1) {
+must initialize mfreeb[] to proper negative values
+  // Check each chain to see if it is ready to coalesce
+  if(mfreeb[i]>=0) {
+   // garbage collector: coalesce blocks in chain i
+   // pass through the chain, incrementing the j field in the base allo for each
+   incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
+   for(p=(MS *)jt->mfree[i];p;p=p->a){(MS *)((C*)p-p->ofst)->j += incr;}
+   // pass through the chain again, looking for blocks that have negative j in the corresponding base.  They should
+   // all the removed from the chain; the base block is added to the chain of blocks to be freed.
+   // In all surviving blocks the count must be removed from the j field (to set up for next time)
+   MS *freehead = 0; MS *survivetail = (MS *)&jt->mfree[i];
+   for(p=(MS *)jt->mfree[i];p;p=p->a){
+    if((MS *)((C*)p-p->ofst)->j<0){if(p->ofst==0){p->a=freehead; freehead=p;}}
+    else{survivetail->a=p;survivetail=p;p->j&=MEMJMASK;}
+   }
+   survivetail->a=0;  // terminate the chain of surviving buffers
+   // free the buffers that need to be freed; count them
+   I nfreebufs=0;
+   while(freehead){MS *nfreehead = freehead->a; FREE(freehead); ++ nfreebufs; freehead = nfreehead;}  // save chain before freeing the block
+   // set up for next spfree: set mfreeb to a negative value such that when SPFREEB bytes have been freed,
+   // mfreeb will hit 0, causing a rescan.  Set mfreet so that
+   // # bytes used in subpool = (subpool size 1<<j) * (mfreet + mfreeb)
+   // Account for the buffers that were freed during the coaleascing
+   I newbval = SBFREEBLG>>i;   // this many buffers need to be freed before we rescan
+   jt->mfreet[i] += (jt->mfreeb[i] >> MFREEBBUFSHIFT) + newbval - (nfreebufs<<(PSIZEL-i));  // add diff between current mfreeb[] and what it will be set to; deduct freed buffers
+   jt->mfreeb[i] = ((-newbval) << MFREEBBUFSHIFT) + (jt->mfreeb[i] & ~MFREEBCOUNTING);
+   jt->mfreeb[PSIZEL] -= nfreebufs<<PSIZEL;   // take freed buffers out of allocated byte count
+  }
+ }
 jt->spfreeneeded = 0;  // indicate no check needed yet
 
 

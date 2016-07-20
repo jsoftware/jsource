@@ -238,7 +238,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
   if(pfx)for(i=m;i>=1;--i)*zi++=(yu[i-1]-yu[i  ])-neg;
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
- }else{A a,ww,x,y,z,*za;I c,i,j,q,qn,r;P*wp,*wwp;
+ }else{A a,ww,x,y,z,*za,zz;I c,i,j,q,qn,r;P*wp,*wwp;
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
   RZ(ww=cps(w)); wwp=PAV(ww);
   GA(z,BOX,m,1,0); za=AAV(z);
@@ -251,8 +251,11 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      *AS(ww)=(yu[i]-yu[i-1])-neg; 
      SPB(wwp,i,sely(y,qn,p,1+yu[i-1]));
      SPB(wwp,x,selx(x,qn,p));
-     RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
+     // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
+     // is returned to us
+     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 1:
@@ -263,24 +266,24 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
      *AS(ww)=(yu[i-1]-yu[i])-neg; 
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
-     RZ(*za++=h?df1(ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     RZ(*za++=zz=h?df1(ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
+     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 2:
     for(i=1;i<=m;++i){
      q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 3:
     for(i=m;i>=1;--i){
      q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
-     RZ(*za++=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
+     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
   }
@@ -578,7 +581,7 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
  R z;
 }    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size, uniform f */
 
-static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv;C*u,*v,*v0,*wv,*yv;
+static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*wv,*yv;
      I*av,i,j,k,mc,mi,mj,mr,nc,nr,*pv,r,s,sc,sj,sr,t,tc,tr,*ws,yc,yr;
  ws=AS(w); t=AT(w); k=bp(t); r=k*ws[1];
  av=AV(a); pv=AV(p); wv=CAV(w);
@@ -590,9 +593,9 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv;C*u,*v,*v0,*wv,*y
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   for(j=0;j<nc;++j){
    yc=MIN(tc,sc); tc-=mc; s=yc*k; 
-   if(ACUC1<AC(y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}
+   if(zz==y||ACUC1<AC(y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}  // reallo y is in use, or if returned from ][
    u=yv; DO(yr, MC(u,v,e?sj:s); u+=sj; v+=r;); v=v0+=mj; 
-   *zv++=CALL1(f1,e||yr==sr&&yc==sc?y:take(v2(yr,yc),y),fs);
+   *zv++=zz=CALL1(f1,e||yr==sr&&yc==sc?y:take(v2(yr,yc),y),fs);
  }}
  RE(0); R ope(z);
 }    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size */

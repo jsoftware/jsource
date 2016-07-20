@@ -311,7 +311,7 @@
 #define exprndID(x,y)               jtexprndID(jt,(x),(y))  
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
-#define fa(x)                       jtfa(jt,(x))     
+#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtfr(jt,x);}else *cc=Zc;}}  // use in void functions
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
@@ -354,7 +354,7 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define fr(x)                       jtfr(jt,(x))
+#define fr(x)                       {if(x){I Zs = AC(x)-1; if(Zs<=0)jtfr(jt,x);else AC(x)=Zs;}}  // scaf mf
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))

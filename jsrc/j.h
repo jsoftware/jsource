@@ -206,8 +206,10 @@
 #define BB              8      /* # bits in a byte */
 #if SY_64
 #define BW              64     /* # bits in a word */
+#define LGSZI 3    // lg(#bytes in an I)
 #else
 #define BW              32
+#define LGSZI 2
 #endif
 
 #define ABS(a)          (0<=(a)?(a):-(a))

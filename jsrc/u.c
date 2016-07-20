@@ -138,10 +138,8 @@ I CTTZI(I w){
 
 
 #if BW==64
-#define LGSZI 3
 #define ALTBYTES 0x00ff00ff00ff00ffLL
 #else
-#define LGSZI 2
 #define ALTBYTES 0x00ff00ffLL
 #endif
 

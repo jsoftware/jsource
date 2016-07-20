@@ -293,7 +293,7 @@ F1(jttpush){
 }
 
 I jttpop(J jt,I old){
- while(old<jt->tbase+jt->ttop)if(1<jt->ttop)fr(jt->tstack[--jt->ttop]); else tf(); 
+ while(old<jt->tbase+jt->ttop)if(1<jt->ttop){jtfr(jt,jt->tstack[--jt->ttop]);} else tf(); 
  R old;
 }
 
@@ -327,8 +327,9 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    if(np2)AC(np2)=(c2+ACUC1)&~ACINPLACE;  // increment usecount
   }
   // runout for loop
+  I c1=np1?AC(np1):0;
   if(t1&TRAVERSIBLE)jtra(jt,np1,t1);  // recur if recursible
-  if(np1)ACINCR(np1);  // increment usecount
+  if(np1)AC(np1)=(c1+ACUC1)&~ACINPLACE;  // increment usecount
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
   // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
@@ -344,11 +345,51 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  }
  R 1;
 }
+
+
+I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+ if(t==BOX){
+  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  // runin for loop
+  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
+  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
+  // The loop, pipelined
+  while(--n) {   // loop n-1 times
+   AD* RESTRICT np2=np1;  // pipeline stage 2
+   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
+   I c2=np2?AC(np2):0;   // fetch count in stage 2.  Will be in cache
+   I t2 = t1;    // save fetch from previous loop
+   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
+   if(t2&TRAVERSIBLE)jtfa(jt,np2,t2);  // recur if recursible
+   if(np2)if(--c2<=0){fr(np2)} else AC(np2)=c2;  // increment usecount  scaf change to mf
+  }
+  // runout for loop
+  I c1=np1?AC(np1):0;
+  if(t1&TRAVERSIBLE)jtfa(jt,np1,t1);  // recur if recursible
+  if(np1)if(--c1<=0){fr(np1)}else AC(np1)=c1;  // increment usecount  scaf change to mf
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
+  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
+  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
+  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
+  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);
+ } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
+  if(SPA(v,a))fa(SPA(v,a)); if(SPA(v,e))fa(SPA(v,e)); if(SPA(v,i))fa(SPA(v,i)); if(SPA(v,x))fa(SPA(v,x)); 
+ }
+ R 1;
+}
 #else
 I jtra(J jt, A w,I f){I *acaddr=&AC(w); RZ(w); I ac=*acaddr; traverse(w,jtra); *acaddr=(ac+ACUSECOUNT)&~ACINPLACE; R w;   }
+I jtfa(J jt, A w, I f){RZ(w); traverse(w,jtfa); fr(w);   R mark;}
 #endif
 
-F1(jtfa ){RZ(w); traverse(w,jtfa); fr(w);   R mark;}
 
 static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}

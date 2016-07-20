@@ -42,9 +42,9 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  infm=-inf;
  memset(testb,C0,256);
  testb[CIF]=testb[CELSEIF]=testb[CSELECT]=testb[CWHILE]=testb[CWHILST]=testb[CFOR]=testb[CCASE]=testb[CFCASE]=1;
- num=9+numv;
- DO(9, GA(x,INT,1,0,0); ACX(x); * AV(x)=i-9;              num[i-9]   =x;);
- DO(8, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;              num[i+2]   =x;);
+ num=numv-NUMMIN;   // address of num[0]
+ DO(-NUMMIN, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+NUMMIN;   num[i+NUMMIN]   =x;);
+ DO(NUMMAX-1, GA(x,INT,1,0,0); ACX(x); * AV(x)=i+2;       num[i+2]   =x;);
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=0;                num[0]=zero=x;
  GA(x,B01, 1,0,0     ); ACX(x); *BAV(x)=1;                num[1]=one =x;
  memset(chr,C0,256*SZI);
@@ -57,6 +57,8 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  GA(x,LIT, 0,1,0     ); ACX(x);                           aqq        =x;
  GA(x,INT, 1,1,0     ); ACX(x); * AV(x)=0;                iv0=xzero  =x;
  GA(x,INT, 1,1,0     ); ACX(x); * AV(x)=1;                iv1=xone   =x;
+ GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=0;                zeroi      =x;
+ GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=1;                onei       =x;
  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=inf;              ainf       =x;
  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=PI;               pie        =x;
  GA(x,MARK,1,0,0     ); ACX(x); * AV(x)=0;                mark       =x; 
@@ -64,6 +66,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
  RZ(y=str(1L,"z"));     ACX(y);
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;
+ GA(x,ASGN+ASGNLOCAL+ASGNSIMPLE, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
  RZ(mnam=makename("m")); RZ(mdot=makename("m."));
  RZ(nnam=makename("n")); RZ(ndot=makename("n."));
  RZ(unam=makename("u")); RZ(udot=makename("u."));
@@ -131,9 +134,6 @@ if (CTTZZ(0x100000002LL) != 1)*(I *)2 = 102;   // Create program check if error
 if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
 // verify that (I)x >> does sign-extension.  jtmult relies on that
 if(((-1) >> 1) != -1)*(I *)4 = 104;
-#endif
-#if AUDITBP
-DO(32, if (bp(1LL << i) != bpref(1LL << i))*(I *)5 = i;)
 #endif
 jt->assert = 1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);

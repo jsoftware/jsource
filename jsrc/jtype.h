@@ -101,62 +101,94 @@ typedef I SI;
 
 #define B01             (I)1L           /* B  boolean                      */
 #define B01X 0
+#define B01SIZE         sizeof(B)       // length of 1 atom
 #define LIT             (I)2L           /* C  literal (character)          */
 #define LITX 1
+#define LITSIZE sizeof(C)
 #define INT             (I)4L           /* I  integer                      */
 #define INTX 2
+#define INTSIZE sizeof(I)
 #define FL              (I)8L           /* D  double (IEEE floating point) */
 #define FLX 3
+#define FLSIZE sizeof(D)
 #define CMPX            (I)16L          /* Z  complex                      */
 #define CMPXX 4
+#define CMPXSIZE sizeof(Z)
 #define BOX             (I)32L          /* A  boxed                        */
 #define BOXX 5
+#define BOXSIZE sizeof(A)
 #define XNUM            (I)64L          /* X  extended precision integer   */
 #define XNUMX 6
+#define XNUMSIZE sizeof(X)
 #define RAT             (I)128L         /* Q  rational number              */
 #define RATX 7
+#define RATSIZE sizeof(Q)
 #define BIT             (I)256L         /* BT bit boolean                  */
 #define BITX 8
+   // Bit 9 not used
 #define SB01            (I)1024L        /* P  sparse boolean               */
 #define SB01X 10
+#define SB01SIZE sizeof(P)
 #define SLIT            (I)2048L        /* P  sparse literal (character)   */
 #define SLITX 11
+#define SLITSIZE sizeof(P)
 #define SINT            (I)4096L        /* P  sparse integer               */
 #define SINTX 12
+#define SINTSIZE sizeof(P)
 #define SFL             (I)8192L        /* P  sparse floating point        */
 #define SFLX 13
+#define SFLSIZE sizeof(P)
 #define SCMPX           (I)16384L       /* P  sparse complex               */
 #define SCMPXX 14
+#define SCMPXSIZE sizeof(P)
 #define SBOX            (I)32768L       /* P  sparse boxed                 */
 #define SBOXX 15
+#define SBOXSIZE sizeof(P)
 #define SBT             (I)65536L       /* SB symbol                       */
 #define SBTX 16
+#define SBTSIZE sizeof(SB)
 #define C2T             (I)131072L      /* C2 unicode (2-byte characters)  */
 #define C2TX 17
+#define C2TSIZE sizeof(C2)
 #define VERB            (I)262144L      /* V  verb                         */
 #define VERBX 18
+#define VERBSIZE sizeof(V)
 #define ADV             (I)524288L      /* V  adverb                       */
 #define ADVX 19
+#define ADVSIZE sizeof(V)
 #define CONJ            (I)1048576L     /* V  conjunction                  */
 #define CONJX 20
+#define CONJSIZE sizeof(V)
 #define ASGN            (I)2097152L     /* I  assignment                   */
 #define ASGNX 21
+#define ASGNSIZE sizeof(C)
+// ASGN type can have the following informational bits set along with ASGN
+#define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
+#define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
 #define MARK            (I)4194304L     /* I  end-of-stack marker          */
 #define MARKX 22
+#define MARKSIZE sizeof(I)
 #define SYMB            (I)8388608L     /* I  locale (symbol table)        */
 #define SYMBX 23
+#define SYMBSIZE sizeof(I)
 #define CONW            (I)16777216L    /* CW control word                 */
 #define CONWX 24
+#define CONWSIZE sizeof(CW)
 #define NAME            (I)33554432L    /* NM name                         */
 #define NAMEX 25
+#define NAMESIZE sizeof(C)
 #define LPAR            (I)67108864L    /* I  left  parenthesis            */
 #define LPARX 26
+#define LPARSIZE sizeof(I)
 #define RPAR            (I)134217728L   /* I  right parenthesis            */
 #define RPARX 27
+#define RPARSIZE sizeof(I)
 #define XD              (I)268435456L   /* DX extended floating point      */
 #define XDX 28
+#define XDSIZE sizeof(DX)
 #define XZ              (I)536870912L   /* ZX extended complex             */
 #define XZX 29
+#define XZSIZE sizeof(ZX)
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
@@ -197,7 +229,7 @@ typedef I SI;
 #define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
 #define ARELATIVE(w)    (AT(w)&BOX&&AFLAG(w)&AFNJA+AFSMM+AFREL)
-#define AADR(w,z)       ((w)?(A)((I)(w)+(I)(z)):(z))
+#define AADR(w,z)       (A)((I)(w)+(I)(z))   // was ((w)?(A)((I)(w)+(I)(z)):(z))
 #define AVR(i)          AADR(ad,av[i])
 #define IVR(i)          AADR(id,iv[i])
 #define WVR(i)          AADR(wd,wv[i])

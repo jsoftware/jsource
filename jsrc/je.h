@@ -787,9 +787,6 @@ extern B        jtxsinit(J);
 extern B        all0(A);
 extern B        all1(A);
 extern I        atype(I);
-#if AUDITBP
-extern I        bpref(I);
-#endif
 extern I        bsum(I,B*);
 extern void     bucketinit();
 extern C        cf(A);
@@ -825,6 +822,7 @@ extern A        ace;
 extern A        ainf;
 extern A        alp;
 extern A        aqq;
+extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGNSIMPLE
 extern UC       bit[];
 extern UC       bitc[];
 extern C        bitdisp[];
@@ -850,6 +848,7 @@ extern I        nptab;
 extern A*       num;
 extern A        numv[];
 extern A        one;
+extern A        onei;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
@@ -870,6 +869,7 @@ extern A        ydot;
 extern A        ynam;
 extern I        yxbuckets[][2];
 extern A        zero;
+extern A        zeroi;
 extern Z        zeroZ;
 extern A        zpath;
 

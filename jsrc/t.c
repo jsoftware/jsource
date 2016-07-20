@@ -39,7 +39,7 @@ B jtpinit(J jt){A t;C*s;
  /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);
  /*  (  */  pst[(UC)CLPAR]=t=sc4(LPAR,0L);        ACX(t);
  /*  )  */  pst[(UC)CRPAR]=t=sc4(RPAR,0L);        ACX(t);
- /*  =. */  GA(t,ASGN,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
+ /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
  /*  =: */  GA(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
                                                         
  /*  =  */  pdef(CEQ,     VERB, jtsclass,  jteq,     RMAX,0,   0   ,VINPLACEOK2);

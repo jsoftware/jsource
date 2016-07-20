@@ -287,32 +287,34 @@ testbvs=: 2 : 0  NB. boolean vector scalar
 )
 
 NB. test that special code is invoked by looking at space used
- 
+NB. Space may not match exactly because sc() sometimes consumes 0 bytes
+SPTOLER =: IF64 { 64 128
+
 testsp=: 2 : 0
  if. 'I.'-: 5!:5 <'u' do. 1 return. end.
  expression=:  4#,:'sp ''x u@:v y'' [ x=. ,~x [ y=. ,~y'
- assert. 1=#~. ".expression [ x=. xb [ y=. yb
- assert. 1=#~. ".expression [ x=. xb [ y=. yi
- assert. 1=#~. ".expression [ x=. xb [ y=. yd
- assert. 1=#~. ".expression [ x=. xi [ y=. yb
- assert. 1=#~. ".expression [ x=. xi [ y=. yi
- assert. 1=#~. ".expression [ x=. xi [ y=. yd
- assert. 1=#~. ".expression [ x=. xd [ y=. yb
- assert. 1=#~. ".expression [ x=. xd [ y=. yi
- assert. 1=#~. ".expression [ x=. xd [ y=. yd
- assert. 1=#~. ".expression [ x=. xs [ y=. ys
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xs [ y=. ys
  f=: u ftab v
  expression=:  4#,:'sp ''x f y'' [ x=. ,~x [ y=. ,~y'
- assert. 1=#~. ".expression [ x=. xb [ y=. yb
- assert. 1=#~. ".expression [ x=. xb [ y=. yi
- assert. 1=#~. ".expression [ x=. xb [ y=. yd
- assert. 1=#~. ".expression [ x=. xi [ y=. yb
- assert. 1=#~. ".expression [ x=. xi [ y=. yi
- assert. 1=#~. ".expression [ x=. xi [ y=. yd
- assert. 1=#~. ".expression [ x=. xd [ y=. yb
- assert. 1=#~. ".expression [ x=. xd [ y=. yi
- assert. 1=#~. ".expression [ x=. xd [ y=. yd
- assert. 1=#~. ".expression [ x=. xs [ y=. ys
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xb [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xi [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yb
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yi
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xd [ y=. yd
+ assert. (SPTOLER >: >./ - <./) ".expression [ x=. xs [ y=. ys
  1
 )
 
@@ -402,8 +404,8 @@ testc=: 2 : 0  NB. character
  assert. (u xa v yy) -: xa f      yy
  assert. (u xa v ya) -: xa f      ya
  if. -.'I.'-: 5!:5 <'u' do.
-  assert. 1=#~. t=: ".4#,:'sp ''xx u@:v yy'' [ xx=: ,~xx [ yy=: ,~yy' 
-  assert. 1=#~. t=: ".4#,:'sp ''xx f yy''    [ xx=: ,~xx [ yy=: ,~yy'
+  assert. (SPTOLER >: >./ - <./) t=: ".4#,:'sp ''xx u@:v yy'' [ xx=: ,~xx [ yy=: ,~yy' 
+  assert. (SPTOLER >: >./ - <./) t=: ".4#,:'sp ''xx f yy''    [ xx=: ,~xx [ yy=: ,~yy'
  end.
  1
 )
@@ -445,13 +447,13 @@ testE=: 2 : 0
  assert. (u xj v yj) -: xj f      yj
  if. -.'I.'-: 5!:5 <'u' do.
   expression=: 4#,:'sp ''xx u@:v yy'' [ xx=: ,~xx [ yy=: ,~yy'
-  assert. 1=#~. ". expression [ xx=: xb [ yy=: yb
-  assert. 1=#~. ". expression [ xx=: xc [ yy=: yc
-  assert. 1=#~. ". expression [ xx=: xi [ yy=: yi
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xb [ yy=: yb
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xc [ yy=: yc
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xi [ yy=: yi
   expression=: 4#,:'sp ''xx f yy''      [ xx=: ,~xx [ yy=: ,~yy'
-  assert. 1=#~. ". expression [ xx=: xb [ yy=: yb
-  assert. 1=#~. ". expression [ xx=: xc [ yy=: yc
-  assert. 1=#~. ". expression [ xx=: xi [ yy=: yi
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xb [ yy=: yb
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xc [ yy=: yc
+  assert. (SPTOLER >: >./ - <./) ". expression [ xx=: xi [ yy=: yi
  end.
  1
 )
@@ -462,7 +464,7 @@ i.&1 testE E.
 I.   testE E.
 
 
-4!:55 ;:'ad ai as data expression f ftab sp'
+4!:55 ;:'ad ai as data expression f ftab sp SPTOLER'
 4!:55 ;:'t test testbsv testbvs testbvv testc testE testsp'
 4!:55 ;:'testss testsv testvs testvv'
 4!:55 ;:'xa xb xb1 xb2 xb3 xb4 xb5 xb6 xb7 xc xd xi xj xs xx'

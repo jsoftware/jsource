@@ -216,7 +216,6 @@
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}
 #define DQ(n,stm)       {I i=(n)-1;    for(;i>=0;--i){stm}}
 #define ds(c)           pst[(UC)(c)]
-#define EPILOG(z)       R gc(z,_ttop)
 #define FDEPDEC(d)      {jt->fdepi-=d;}
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=d+jt->fdepi,EVSTACK); jt->fdepi+=d;}
 #define FCONS(x)        fdef(CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),0L,RMAX,RMAX,RMAX)
@@ -229,9 +228,10 @@
 #define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&-4)
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
-#define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on it.  m=monad rank, f=function to call for monad cell
+#define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define GAV(v,t,n,r,s)  RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))   // Use this version when t is not a constant - calls a subroutine to analyze
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
@@ -247,7 +247,26 @@
 #define NAN0            (_clearfp())
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
+#define NUMMIN          (-9)    // smallest number represented in num[]
+#define NUMMAX          9    // largest number represented in num[]
+// PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GA (i. e. all blocks).
+// GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
+// can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in
+// long-running definitions, to free memory [for this application it is normal to do some allocating of working memory, then save the tstack pointer in a local name
+// other than _ttop, then periodically do tpop(other local name); such a sequence will free up all memory that was allocated after the working memory; the working
+// memory itself will be freed by the eventual tpop(_ttop)].
+// EPILOG performs the tpop(_ttop), but it has another important function: that of preserving the result of a function.  Of all the blocks that were allocated by a function,
+// one (possibly including its descendants) is the result of the function.  It must not be freed, so that it can carry the result back to the caller of this function.
+// So, it is preserved by incrementing its usecount before the tpop(_ttop); then after the tpop, it is pushed back onto the tstack, indicating that it will be freed
+// by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
+// (unless its usecount is > 1 because it was assigned elsewhere)
 #define PROLOG          I _ttop=jt->tbase+jt->ttop
+#define EPILOG(z)       R gc(z,_ttop)   // z is the result block
+// Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
+// For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed
+// by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
+// the block that was allocated in the current primitive
+#define EPILOG1(z)       {ACINCR(z); tpop(old); tpush1(z); R z;}   // z is the result block
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}

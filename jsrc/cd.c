@@ -544,7 +544,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  v=VAV(self); RZ(fs=fix(v->f)); gs=v->g; n=AN(gs); gv=AV(gs); 
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
  RZ(e=scf((D)1e-7));
- RZ(t=sc(0L)); tv=AV(t); 
+ GA(t,INT,1,0,0); tv=AV(t); 
  RZ(s=ca(self)); v=VAV(s); v->g=t; v->lr=v->mr;
  GA(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
  DO(n, *tv=d=gv[i]; zv[i]=(ff=dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s););

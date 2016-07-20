@@ -133,6 +133,18 @@ F1(jtparse){A z;
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
 
+#if 0
+// Used to verify result of sc() not modified
+static void auditnum(){
+ DO(-NUMMIN, if(*AV(num[i+NUMMIN])!=(i+NUMMIN))*(C*)0=0;);
+ DO(NUMMAX-1, if(*AV(num[i+2])!=(i+2))*(C*)0=0;);
+ if(*BAV(num[0])!=0)*(C*)0=0;
+ if(*BAV(num[1])!=1)*(C*)0=0;
+ if(*AV(zeroi)!=0)*(C*)0=0;
+ if(*AV(onei)!=1)*(C*)0=0;
+}
+#endif
+
 // In-place operations
 //
 // An in-place operation requires an inplaceable argument, which is marked as LSB of AC=0,
@@ -197,9 +209,10 @@ F1(jtparse){A z;
 // the assignee may be used as a free block.  zombiesym must be cleared:
 //  when the assignment is performed
 //  if an error is encountered (preventing the assignment)
-// Set zombiesym if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
-#define IPSETZOMB(w) if(AT(stack[0].a)==ASGN&&stack[(w)+1].a==mark&&AT(queue[m])==NAME&&CAV(stack[0].a)[0]==CASGN&&jt->local \
-   &&AN(queue[m])==NAV(queue[m])->m&&(s=probelocal(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
+// Set zombieval if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
+// There must be a local symbol table if we have the ASGN indicating local/simple
+#define IPSETZOMB(w) if(AT(stack[0].a)==(ASGN+ASGNLOCAL+ASGNSIMPLE)&&stack[(w)+1].a==mark \
+   &&(s=probelocal(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:
@@ -227,12 +240,10 @@ F1(jtparse){A z;
 #define SM(to,from) stack[to]=stack[from]
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci=&jt->sitop->dci; B jtxdefn=jt->xdefn;L* s;  // symbol-table entry
+F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
  // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
  // So we move those values into local names.
- PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
-
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
  // others), it must be set at the time the assignment is executed.  We catch it in the action routine,
@@ -241,14 +252,39 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
  // jt->sitop->dci must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
- m=AN(w); jt->asgn = 0; ++jt->parsercalls;
- if(1>m)R mark;  // exit fast if empty input
+ A *queue=AAV(w)-1;
+ m=AN(w); jt->asgn = 0; B jtxdefn=jt->xdefn; I *dci=&jt->sitop->dci;
+ if(m<2) {
+  if(m<1)R mark;  // exit fast if empty input.  Happens only during load, but we can't deal with it
+  // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
+  // overhead, because it happens enough to notice
+  *dci=0;  // error token if error found
+  I at=AT(y = queue[1]);  // fetch the word
+  if(at==NAME) {
+   if(s=syrd(y,0L)) {     // Resolve the name.
+     A sv;  // pointer to value block for the name
+     RZ(sv = s->val);  // symbol table entry, but no value.
+     if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
+      y=sv;    //check NMDOT first, for speed during xdef.  Use value for special name
+     } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
+   } else {
+     // undefined name.
+     if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error
+     RZ(y = namerefacv(y, s));    // this will create a ref to undefined name as verb [:
+   }
+  }
+  ASSERT(AT(y)&CAVN,EVSYNTAX);
+  R y;
+ }
+
+ ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
+ PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
+ I otop=jt->nvrtop;
 
  // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
  // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original
  // word m-1, with the number in the stack being one higher than the original word number
- queue=AAV(w)-1;
- ASSERT(!(AT(queue[1])&ASGN),EVSYNTAX);   // make sure there is something before each ASGN
+ // obsolete ASSERT(!(AT(queue[1])&ASGN),EVSYNTAX);   // make sure there is something before each ASGN
 
  // We don't refer to w past this point.  It may be overwritten be recursive calls
 
@@ -303,11 +339,11 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
            : PNOMATCH;
     } else { /* cases 0, 1, 2, 5, 6, , but only if ST(1) is CAVN.  ST(1) is NOUN, VERB, or other nommatching such as (  */
      if (ST(2)&NOUN){
-         i = ST(0)&EDGE ? (ST(1) == VERB ? PMONAD1 : ST(1)&NOUN ? PBIDENT : PNOMATCH) : (ST(1) == ASGN && ST(0)&NOUN) ? PASGN : PNOMATCH;
+         i = ST(0)&EDGE ? (ST(1) == VERB ? PMONAD1 : ST(1)&NOUN ? PBIDENT : PNOMATCH) : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;
      } else {
       i = ST(3)&NOUN
-          ? (ST(1)&NOUN ? PDYAD : ST(1) == VERB ? PMONAD2 : (ST(1) == ASGN && ST(0)&NOUN) ? PASGN : PNOMATCH)
-          : ST(1)&CAVN ? (ST(3) == VERB ? PTRIDENT : ST(0)&EDGE ? PBIDENT : PNOMATCH) : (ST(1) == ASGN && ST(0)&NOUN) ? PASGN : PNOMATCH;
+          ? (ST(1)&NOUN ? PDYAD : ST(1) == VERB ? PMONAD2 : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH)
+          : ST(1)&CAVN ? (ST(3) == VERB ? PTRIDENT : ST(0)&EDGE ? PBIDENT : PNOMATCH) : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;
      }
     }
    }
@@ -325,7 +361,7 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
    // take the time to store the stack pointer on every execution, or just move it back the maximum possible amount
    // before the loop?  The maximum possible amount may be much larger than actual stack usage, making for
    // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.
-   // We store it every time here, which is probably not the right answer.
+   // Because the parser stack is used by jtxdefn for temp storage, we do the store to keep the stack compact.
    jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
    switch(i) {
    // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
@@ -379,7 +415,7 @@ F1(jtparsea){PSTK *stack;A *queue,y,z,*v;I es,i,m,otop=jt->nvrtop,maxnvrlen,*dci
     // value.
     at=AT(y = queue[m--]);   // fetch the next word from queue; pop the queue; extract the type
     if(at==NAME) {
-     if(AT(stack[1].a)!=ASGN) {  // Replace a name with its value, unless to left of ASGN
+     if(!(AT(stack[1].a)&ASGN)) {  // Replace a name with its value, unless to left of ASGN
 
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;

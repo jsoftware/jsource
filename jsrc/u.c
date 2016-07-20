@@ -100,40 +100,11 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
 // here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
 // Example: LITX is 1, so location 1 contains sizeof(C)
 I typesizes[] = {
-sizeof(B), sizeof(C), sizeof(I), sizeof(D), sizeof(Z), sizeof(A), sizeof(X), sizeof(Q),  // B01 LIT INT FL CMPX BOX XNUM RAT
--1,        -1,        sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P), sizeof(P),   // BIT - SB01 SLIT SINT SFL SCMPX SBOX
-sizeof(SB), sizeof(C2), sizeof(V), sizeof(V), sizeof(V), sizeof(C), sizeof(I), sizeof(I), // SBT C2T VERB ADV CONJ ASGN MARK SYMB
-sizeof(CW), sizeof(C), sizeof(I), sizeof(I), sizeof(DX), sizeof(ZX), -1,       -1         // CONW NAME LPAR RPAR XD XZ - -
+B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
+-1,        -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
+SBTSIZE, C2TSIZE, VERBSIZE, ADVSIZE, CONJSIZE, ASGNSIZE, MARKSIZE, SYMBSIZE,
+CONWSIZE, NAMESIZE, LPARSIZE, RPARSIZE, XDSIZE, XZSIZE, -1, -1
 };
-#if AUDITBP
-I bpref(I t){  // the old way, for reference until CTLZ is shaken down
- switch(t){
-  case B01:  R sizeof(B);
-  case LIT:  case ASGN: case NAME: 
-             R sizeof(C);
-  case C2T:  R sizeof(C2);
-  case INT:  case LPAR: case RPAR: case MARK: case SYMB:
-             R sizeof(I);
-  case FL:   R sizeof(D);
-  case CMPX: R sizeof(Z);
-  case BOX:  R sizeof(A);
-  case XNUM: R sizeof(X);
-  case RAT:  R sizeof(Q);
-  case SB01: case SINT: case SFL:  case SCMPX: case SLIT: case SBOX: 
-             R sizeof(P);
-  case VERB: case ADV:  case CONJ: 
-             R sizeof(V);
-  case CONW: R sizeof(CW);
-  case SBT:  R sizeof(SB);
-#ifdef UNDER_CE
-  default:   R t&XD?sizeof(DX):t&XZ?sizeof(ZX):-1;
-#else
-  case XD:   R sizeof(DX);
-  case XZ:   R sizeof(ZX);
-  default:   R -1;
-#endif
-}}
-#endif
 
 // default CTTZ to use if there is no compiler intrinsic
 #if !defined(CTTZ)
@@ -290,9 +261,9 @@ A jtodom(J jt,I r,I n,I*s){A q,z;I j,k,m,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; GA(z,INT, 1,0,0); *IAV(z)=k;     R z;}
+A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GA(z,INT, 1,0,0); *IAV(z)=k;     R z;}
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     R z;}
-A jtscb(J jt,B b)    {A z; GA(z,B01, 1,0,0); *BAV(z)=b;     R z;}
+A jtscb(J jt,B b)    {A z; GA(z,B01, 1,0,0); *BAV(z)=b;     R z;}  // really should be num[b]
 A jtscc(J jt,C c)    {A z; GA(z,LIT, 1,0,0); *CAV(z)=c;     R z;}
 A jtscf(J jt,D x)    {A z; GA(z,FL,  1,0,0); *DAV(z)=x;     R z;}
 A jtscx(J jt,X x)    {A z; GA(z,XNUM,1,0,0); *XAV(z)=ca(x); R z;}

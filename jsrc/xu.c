@@ -9,58 +9,192 @@
 #include "x.h"
 
 // utf-8 to c2v - assumes valid utf-8 data and snk of right size
-static void mtow(UC* src, I srcn, US* snk){ US c,c1,c2;
- while(srcn--)
- {
-  c=*src++;
-  if(c<=0x7f)
-   *snk++=c;
-  else if((c&0xE0)==0xC0)
+static void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
+  while (srcn--)
   {
-   c1=*src++;--srcn;
-   *snk++=((c&0x1F)<<6)|(c1&0x3f);
+    c=*src++;
+    if(c<0x80)
+    {
+      *snk++=c;
+    }
+    else if(c<=0xc1||c>=0xf5)
+    {
+      /* ignore */
+      *snk++=c;
+    }
+    else if(!srcn)
+    {
+      /* ignore */
+      *snk++=c;
+    }
+    else if(c<0xe0)
+    {
+// 2 utf8
+      c1=*src;
+      if((c1&0xc0)==0x80)
+      {
+        t=((c&0x1f)<<6)|(c1&0x3f);
+        *snk++=(US)t;
+        src++;srcn--;
+      }
+      else
+      {
+        /* ignore */
+        *snk++=c;
+      }
+    }
+    else if(srcn<2)
+    {
+      /* ignore */
+      *snk++=c;
+    }
+    else if(c<0xf0)
+    {
+// 3 utf8
+      c1=*src;
+      c2=*(src+1);
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80)
+      {
+        t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
+        *snk++=(US)t;
+        src+=2;srcn-=2;
+      }
+      else
+      {
+        /* ignore */
+        *snk++=c;
+      }
+    }
+    else if(srcn<3)
+    {
+      /* ignore */
+      *snk++=c;
+    }
+    else if(c<0xf8)
+    {
+// 4 utf8
+      c1=*src;
+      c2=*(src+1);
+      c3=*(src+2);
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80)
+      {
+        t=((c&0x03)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
+        if(t>=0x10000)
+        {
+          t-=0x10000;
+          *snk++=0xd800|((t>>10)&0x3ff);
+          t=0xdc00|(t&0x3ff);
+        }
+        *snk++=(US)t;
+        src+=3;srcn-=3;
+      }
+      else
+      {
+        /* ignore */
+        *snk++=c;
+      }
+    }
+    else
+    {
+      /* ignore */
+      *snk++=c;
+    }
   }
-  else if((c&0xF0)==0xE0)
-  {
-    c1=*src++;--srcn;
-    c2=*src++;--srcn;
-    *snk++=((c&0x0F)<<12)|((c1&0x3F)<<6)|(c2&0x3f);
-  }
- }
 }
 
 // get size of conversion from utf-8 to c2v
 // return -1 if utf-8 invalid
-static I mtowsize(UC* src, I srcn){ US c,c1,c2,cf; I r=0;
- while(srcn--)
- {
-  c=*src++;
-  if(c<=0x7f)
-   ++r;
-  else if((c&0xE0)==0xC0)
+static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
+  while (srcn--)
   {
-   if(!srcn) R -1;
-   c1=*src++;--srcn;
-   if((c1&0xc0)!=0x80) R -1;
-   cf=((c&0x1F)<<6)|(c1&0x3f);
-   if(cf<0x80) R -1; // overlong
-   ++r;
+    c=*src++;
+    if(c<0x80)
+    {
+      r++;
+    }
+    else if(c<=0xc1||c>=0xf5)
+    {
+      /* ignore */
+      R -1;
+    }
+    else if(!srcn)
+    {
+      /* ignore */
+      R -1;
+    }
+    else if(c<0xe0)
+    {
+// 2 utf8
+      c1=*src;
+      if((c1&0xc0)==0x80)
+      {
+        t=((c&0x1f)<<6)|(c1&0x3f);
+        src++;srcn--;
+        r++;
+      }
+      else
+      {
+        /* ignore */
+        R -1;
+      }
+    }
+    else if(srcn<2)
+    {
+      /* ignore */
+      R -1;
+    }
+    else if(c<0xf0)
+    {
+// 3 utf8
+      c1=*src;
+      c2=*(src+1);
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80)
+      {
+        t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
+        src+=2;srcn-=2;
+        r++;
+      }
+      else
+      {
+        /* ignore */
+        R -1;
+      }
+    }
+    else if(srcn<3)
+    {
+      /* ignore */
+      R -1;
+    }
+    else if(c<0xf8)
+    {
+// 4 utf8
+      c1=*src;
+      c2=*(src+1);
+      c3=*(src+2);
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80)
+      {
+        t=((c&0x03)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
+        if(t>=0x10000)
+        {
+          t-=0x10000;
+          t=0xdc00|(t&0x3ff);
+          r++;
+        }
+        src+=3;srcn-=3;
+        r++;
+      }
+      else
+      {
+        /* ignore */
+        R -1;
+      }
+    }
+    else
+    {
+      /* ignore */
+      R -1;
+    }
   }
-  else if((c&0xF0)==0xE0)
-  {
-   if(!srcn) R -1;
-   c1=*src++;--srcn;
-   if((c1&0xc0)!=0x80) R -1;
-   if(!srcn) R -1;
-   c2=*src++;--srcn;
-   if((c2&0xc0)!=0x80) R -1;
-   cf=((c&0x0F)<<12)|((c1&0x3F)<<6)|(c2&0x3f);
-   if(cf<0x800) R -1; // overlong
-   ++r;
-  }
-  else
-   R -1;
- }
  R r;
 }
 
@@ -160,40 +294,93 @@ static void wtomnull(US* src, I srcn, UC* snk, I eatnull){ US w;I nignulls = 0;
 
 // c2v to utf-8 - assume valid data and snk size is ok
 // This version seems to be referred to externally, but I can't see where from
-void wtom(US* src, I srcn, UC* snk){ US w;
+void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
  while(srcn--)
  {
   w=*src++;
   if(w<=0x7f)
-   *snk++=(C)w;
+   *snk++=(UC)w;
   else if(w<=0x7ff)
   {
    *snk++=0xc0|(w>>6);
    *snk++=0x80|(0x3f&w);
   }
-  else
+  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
   {
    *snk++=0xe0|w>>12;
    *snk++=0x80|(0x3f&(w>>6));
    *snk++=0x80|(0x3f&w);
   }
+  else
+  {
+   if(!srcn)
+   {
+    // isolated surrogate
+    *snk++=0xe0|w>>12;
+    *snk++=0x80|(0x3f&(w>>6));
+    *snk++=0x80|(0x3f&w);
+   }
+   else
+   {
+    w1=*src;
+    if(w1>=0xd800&&w1<=0xdfff)
+    {
+     t=(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
+     if(w==0xd800&&w1>=0xd800&&w1<=0xdbff)
+     {
+      *snk++=0xe0|(0x0f&(t>>12));
+      *snk++=0x80|(0x3f&(t>>6));
+      *snk++=0x80|(0x3f&t);
+     }
+     else
+     {
+      *snk++=0xf0|((t>>18)&0x07);
+      *snk++=0x80|((t>>12)&0x3f);
+      *snk++=0x80|((t>>6)&0x3f);
+      *snk++=0x80|(t&0x3f);
+     }
+     src++;srcn--;  // skip the next code unit of surrogate pair
+    }
+    else
+    {
+     // invalid surrogate
+     *snk++=0xe0|(0x0f&(w>>12));
+     *snk++=0x80|(0x3f&(w>>6));
+     *snk++=0x80|(0x3f&w);
+    }
+   }
+  }
  }
 }
 
 // get size of conversion from c2v to utf-8
-// If eatnull is true, discard NUL bytes following a wide-display char
-static I wtomsize(US* src, I srcn, I eatnull){ US w;I r=0;I nignulls = 0;
+// return -1 if utf-16 invalid
+static I wtomsize(US* src, I srcn, I eatnull){ US w,w1;I r=0;I nignulls = 0;
  while(srcn--)
  {
   w=*src++;
   if(nignulls && (--nignulls,w==0));  // If we should ignore a null, do so, decrement count of ignored nulls
-  else if(w<=0x7f)
+  if(w<=0x7f)
    ++r;
   else if(w<=0x7ff)
    r+=2;
-  else
+  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
    r+=3;
-   if(eatnull)nignulls = extrawidth(w);  // count the extra null; may rescind if already there
+  else {
+   if(!srcn)R -1; // isolated surrogate
+   w1=*src;
+   if(w1>=0xd800&&w1<=0xdfff)
+   {
+    if(w==0xd800&&w1>=0xd800&&w1<=0xdbff)
+     r+=3;
+    else
+     r+=4;
+    src++;srcn--;  // skip the next code unit of surrogate pair
+   }
+   else
+    R -1;
+  }
+  if(eatnull)nignulls = extrawidth(w);  // count the extra null; may rescind if already there
  }
  R r;
 }
@@ -275,9 +462,13 @@ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit 
 if(t&LIT) R ca(w); // char unchanged
 ASSERT(t&C2T, EVDOMAIN);
-q=wtomsize((US*)CAV(w),n,1);
+// !!! Henry unicodeCJK
+// q=wtomsize((US*)CAV(w),n,1);
+q=wtomsize((US*)CAV(w),n,0);
 GA(z,LIT,q,1,0);
-wtomnull((US*)CAV(w),n,CAV(z),1);
+// !!! Henry unicodeCJK
+// wtomnull((US*)CAV(w),n,CAV(z),1);
+wtom((US*)CAV(w),n,CAV(z));
 R z;
 }    // 8 u: x - utf8 from LIT or C2T
 

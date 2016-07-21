@@ -74,6 +74,14 @@ lr=: 1 : '5!:5 <''u'''
 'length error' -:  6 u: etx 'abc'
 'length error' -:  6 u: etx 'abcde'
 
+NB. utf-8 bmp
+16b1234 16b5678 -: 3&u: u: 16b1234 16b5678
+225 136 180 229 153 184 -: 3&u: 8&u: u: 16b1234 16b5678
+
+NB. utf-16 surrogate pair
+55304 57157 -: 3&u: u: 16bd808 16bdf45
+240 146 141 133 -: 3&u: 8&u: u: 16bd808 16bdf45
+(7 u: a.{~240 146 141 133) -: u: 16bd808 16bdf45
 
 NB. errors in various primitives ----------------------------------------
 

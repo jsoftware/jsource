@@ -177,7 +177,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*
     case 2: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(*za++=CALL1(f1,y,fs));          ); break; \
     case 3: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(*za++=df1(y,hv[j])); j=(1+j)%hn;); break; \
    }                                                                         \
-   EPILOG(ope(z));                                                           \
+   z=ope(z);                                                                 \
+   EPILOG(z);                                                                \
  }
 
 #define EACHCUTSP(stmt)  \
@@ -287,7 +288,8 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
     }
     break;
   }
-  EPILOG(ope(z));
+  z=ope(z);
+  EPILOG(z);
 }}   /* sparse f;.n (dense or sparse) */
 
 
@@ -313,7 +315,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   if(pfx&&i==m)q=p;                                 \
   else{u=memchr(v+pfx,sep,p-pfx); u+=!pfx; q=u-v;}  \
   d=q-neg; v1=wv+k*(b+n-p);                         \
-  old=jt->tbase+jt->ttop;                           \
+  old=jt->tnextpushx;                           \
   GA(y,wt,d*c,r,s); *AS(y)=d;                       \
   stmt;                                             \
   if(allbx&&!AR(y)&&BOX&AT(y))*za++=y=*AAV(y);      \
@@ -321,7 +323,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   else{I ii=i-1;                                    \
    allbx=0;                                         \
    za=AAV(z); DO(ii, RZ(*za++=box(*za));); *za++=y; \
-   old=jt->tbase+jt->ttop;                          \
+   old=jt->tnextpushx;                          \
   }                                                 \
   gc(y,old);                                        \
   p-=q; v=u;                                        \
@@ -510,7 +512,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
    q=u-v; d=q-neg;
    *AS(x)=d; AN(x)=wc*d; AK(x)=(wv+k*(b+n-p))-(C*)x;
-   old=jt->tbase+jt->ttop;
+   old=jt->tnextpushx;
    RZ(y=df1(x,fs)); ym=IC(y);
    if(!z){yt=AT(y); yr=AR(y); ys=AS(y); c=aii(y); yk=c*bp(yt); GA(z,yt,n*c,MAX(1,yr),ys); *AS(z)=n; zv=CAV(z);}
    if(!(yt==AT(y)&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
@@ -566,7 +568,7 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
  RZ(zt&B01+LIT+INT+FL+CMPX);
  zn=AN(z0); zr=AR(z0); zs=AS(z0); zk=zn*bp(zt); m=zr*SZI;
  GA(z,zt,zn*nr*nc,2+zr,0); s1=AS(z); ICPY(s1,pv,2); ICPY(2+s1,zs,zr); zv=CAV(z);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  if(e) for(i=0;i<nr;++i){  /* f;._3 */
   v=v0=wv+i*mi;
   DO(nc, 

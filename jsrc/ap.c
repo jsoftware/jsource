@@ -331,7 +331,8 @@ static DF2(jtinfix2){PROLOG;A f,x,y;B af,d;I c,m,n,n1,r,*s,t;
  else RZ(x=curtail(w));
  if(d&!(t&IS1BYTE)){RZ(y=gah(r,w)); ICPY(AS(y),s,r); *AS(y)=n1; AN(y)=c*n1; AK(y)=AK(w)+(I)w+c*bp(t)-(I)y;}
  else RZ(y= behead(w));
- EPILOG(df2(x,y,af?f:qq(f,num[-1])));
+ A z=df2(x,y,af?f:qq(f,num[-1]));
+ EPILOG(z);
 }    /* 2 f/\w */
 
 static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;

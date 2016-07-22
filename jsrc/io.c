@@ -141,7 +141,7 @@ F1(jtjoff){I x;
 
 I jdo(J jt, C* lp){I e,old;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
  while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); jt->jerr=0; tpop(old);}
@@ -218,7 +218,7 @@ A _stdcall JGetA(J jt, I n, C* name){A x;
 I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){I old;
  jt->jerr=0;
  if(!vnm(n,name)) R EVILNAME;
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  symbis(nfs(n,name),jtunbin(jt,str(dlen,d)),jt->global);
  tpop(old);
  R jt->jerr;

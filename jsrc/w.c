@@ -38,7 +38,7 @@ static ST state[10][9]={
 
 // w points to a string
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
-// (# words) is negated is the last word is NB.
+// (# words) is negated if the last word is NB.
 F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  RZ(w);
  nv=0; s=SS;   // set not creating numeric constant; init state (after space)
@@ -355,7 +355,8 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG;A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););}
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}
  }
- EPILOG(fsmdo(f,s,m,ijrd,w,w0));
+ A z=fsmdo(f,s,m,ijrd,w,w0);
+ EPILOG(z);
 }
 
 F2(jtfsm){R fsm0(a,w,1);}

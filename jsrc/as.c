@@ -184,7 +184,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  RZ(q=tail(w));
  RZ(y=gah(r,q)); ICPY(AS(y),AS(q),r); AK(y)=(I)zv-(I)y; zv-=k; 
  RZ(x=gah(r,q)); ICPY(AS(x),AS(q),r); AK(x)=(I)zv-(I)x;
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  switch(r?0:k){
   case sizeof(C): SSGULOOP(C); break;
   case sizeof(I): SSGULOOP(I); break;

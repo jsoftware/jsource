@@ -92,7 +92,8 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG;A q,wx,wy,wy1,ww,z,ze,zi,*zv;B*wb;
   }
   RZ(z=ope(z));
  }else{RZ(zi=ca(wy)); RZ(z=rank1ex(wx,fs,mr,f1)); RZ(ze=CALL1(f1,SPA(wp,e),fs));}
- EPILOG(sprz(z,zi,ze,wf,ws));
+ z=sprz(z,zi,ze,wf,ws);
+ EPILOG(z);
 }    /* f"r w on sparse arrays */
 
 static I jtspradv(J jt,I n,B*b,I f,I r,I j,P*p,A*z){A s,x;I k;P*q;
@@ -121,7 +122,8 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG;A we,ww,y,z,zi,
   if(wj==wn)break;
   wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;
  }
- EPILOG(sprz(ope(z),zi,CALL2(f2,a,we,fs),f,ws));
+ z=sprz(ope(z),zi,CALL2(f2,a,we,fs),f,ws);
+ EPILOG(z);
 }
 
 static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG;A aa,ae,y,z,zi,*zv;B*ab;
@@ -138,7 +140,8 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG;A aa,ae,y,z,zi,
   if(aj==an)break;
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
- EPILOG(sprz(ope(z),zi,CALL2(f2,ae,w,fs),f,as));
+ z=sprz(ope(z),zi,CALL2(f2,ae,w,fs),f,as);
+ EPILOG(z);
 }
 
 A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
@@ -195,7 +198,8 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B
   else if(!b&&0<=s&&(!v||ICMP(v,av,f)))if(wj==wn)wv=0; else{wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;}
  }
  AN(z)=*AS(z)=*AS(zi)=j; AN(zi)=j*g;
- EPILOG(sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws));
+ z=sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws);
+ EPILOG(z);
 }    /* a f"r w on sparse arrays */
 
 A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,

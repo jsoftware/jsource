@@ -168,7 +168,8 @@ static DF2(jtkeysp){PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  GA(q,SB01,1,1,0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
  p=PAV(q); SPB(p,a,iv0); SPB(p,e,one); SPB(p,i,by); SPB(p,x,reshape(tally(by),zero));
  RZ(z=over(df1(repeat(q,w),VAV(self)->f),x));
- EPILOG(j?cdot2(box(IX(1+j)),z):z);
+ z=j?cdot2(box(IX(1+j)),z):z;
+ EPILOG(z);
 }
 
 static DF2(jtkeyi){PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
@@ -189,14 +190,16 @@ static DF2(jtkeybox){PROLOG;B b;I*wv;
  if(SPARSE&AT(a))R keysp(a,w,self);
  if(b=INT&AT(w)&&1==AR(w)){wv=AV(w); DO(AN(w), if(i!=*wv++){b=0; break;});}
  if(b)R group(a);
- EPILOG(keyi(indexof(a,a),w,self));
+ A z=keyi(indexof(a,a),w,self);
+ EPILOG(z);
 }    /* a </. w */
 
 static DF2(jtkey){PROLOG;
  RZ(a&&w);
  ASSERT(IC(a)==IC(w),EVLENGTH);
  if(SPARSE&AT(a))R keysp(a,w,self);
- EPILOG(keyi(indexof(a,a),w,self));
+ A z=keyi(indexof(a,a),w,self);
+ EPILOG(z);
 }    /* a f/. w */
 
 static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;

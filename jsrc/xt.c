@@ -212,7 +212,7 @@ F2(jttsit2){A z;D t;I n,old;
  RE(n=i0(a));
  FDEPINC(1);  // No ASSERTs/returns till the DEPDEC below
  t=qpc(); 
- old=jt->tbase+jt->ttop; DO(n, z=exec1(w); if(!z)break; tpop(old);); 
+ old=jt->tnextpushx; DO(n, z=exec1(w); if(!z)break; tpop(old);); 
  t=qpc()-t;
  FDEPDEC(1);  // Assert OK now
  RZ(z);

@@ -28,8 +28,8 @@ static DF1(jtcorx1){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs
 static DF2(jtcorx2){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
      /* f g h where f may be [: */
 
-static DF1(jtnvv1){DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL1(h1,  w,hs),gs));}
-static DF2(jtnvv2){DECLFGH;PROLOG; EPILOG(CALL2(g2,fs,CALL2(h2,a,w,hs),gs));}
+static DF1(jtnvv1){DECLFGH;PROLOG; A z=CALL2(g2,fs,CALL1(h1,  w,hs),gs); EPILOG(z);}
+static DF2(jtnvv2){DECLFGH;PROLOG; A z=CALL2(g2,fs,CALL2(h2,a,w,hs),gs); EPILOG(z);}
 
 static DF2(jtfolkcomp){DECLFGH;PROLOG;A z;AF f;
  RZ(a&&w);

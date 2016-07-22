@@ -67,7 +67,7 @@
   RARGX; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of stoms in all result cells (if they stay homogeneous)
   GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
   if(mn){zv=CAV(z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
-  old=jt->tbase+jt->ttop;
+  old=jt->tnextpushx;
   for(j=1;j<mn;++j){   // for each result-cell...
    RARG;    // establish argument cells
    RZ(y=RCALL);  // call the function

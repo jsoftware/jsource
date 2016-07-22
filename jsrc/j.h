@@ -169,7 +169,7 @@
 #define NFDEP           20000L             // fn call depth
 #define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
 
-#define NTSTACK         2000L           /* size of stack for temps         */
+#define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
 
 #define IIDOT           0               /* modes for indexofsub()          */
 #define IICO            1
@@ -273,13 +273,13 @@
 // So, it is preserved by incrementing its usecount before the tpop(_ttop); then after the tpop, it is pushed back onto the tstack, indicating that it will be freed
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
-#define PROLOG          I _ttop=jt->tbase+jt->ttop
+#define PROLOG          I _ttop=jt->tnextpushx
 #define EPILOG(z)       R gc(z,_ttop)   // z is the result block
 // Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
 // For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
-#define EPILOG1(z)       {ACINCR(z); tpop(old); tpush1(z); R z;}   // z is the result block
+#define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
@@ -446,3 +446,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
  feclearexcept(FE_ALL_EXCEPT); return r;
 }
 #endif
+
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0   // Audit level for memory accesses: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack 3 +scrub freed areas
+

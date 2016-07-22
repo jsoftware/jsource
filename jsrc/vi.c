@@ -512,14 +512,16 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark
     case IJ0EPS:                             R sc(zn-1);
     case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
  }}}
- if(at&SPARSE||wt&SPARSE){
+ if(at&SPARSE||wt&SPARSE){A z;
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af||wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
   switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
-   case 1: EPILOG(indexofxx(mode,a,w));
-   case 2: EPILOG(indexofxx(mode,a,w));
-   case 3: EPILOG(indexofss(mode,a,w));
- }}
+   case 1: z=indexofxx(mode,a,w); break;
+   case 2: z=indexofxx(mode,a,w); break;
+   case 3: z=indexofss(mode,a,w); break;
+  }
+  EPILOG(z);
+ }
  m=acr?as[af]:1; n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
  RE(t=mk?at:maxtype(at,wt)); k1=bp(t); k=n*k1; th=HOMO(at,wt); jt->min=ss=0;
  ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  

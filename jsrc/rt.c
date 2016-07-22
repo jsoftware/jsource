@@ -138,4 +138,4 @@ static F1(jttrr){PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  EPILOG(z);
 }
 
-F1(jttrep){PROLOG; EPILOG(tconnect(troot(mtv,trr(w))));}
+F1(jttrep){PROLOG; A z=tconnect(troot(mtv,trr(w))); EPILOG(z);}

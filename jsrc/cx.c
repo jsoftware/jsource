@@ -158,7 +158,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  }
  // remember tbase.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
- old=jt->tbase+jt->ttop; 
+ old=jt->tnextpushx; 
  // loop over each sentence
  while(0<=i&&i<n){
   // if performance monitor is on, collect data for it
@@ -330,12 +330,12 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+ tpop(_ttop);   // finish freeing memory
  // Pop the locale stack and xdefn; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0; jt->xdefn=ox;
- tpop(_ttop);   // finish freeing memory
  // Give this result a short lease on life
- tpush(z);
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
+ if(z)tpush(z);
  R z;
 }
 

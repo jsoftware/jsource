@@ -214,7 +214,7 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,old,*pv,*v,wn,wt,*yv;X r,*wv,x,xma
   ASSERT(d!=XPINF&&d!=XNINF,EVDOMAIN);
   if(0>=d)b[j]=0;
   else if(1==xcompare(x,xmaxint)){
-   old=jt->tbase+jt->ttop;
+   old=jt->tnextpushx;
    DO(100, *yv=*v++; RZ(r=xrem(y,x)); if(!*AV(r)){b[j]=0; break;});
    if(b[j])RE(b[j]=xprimeq(100L,x));
    tpop(old);
@@ -417,7 +417,8 @@ F1(jtfactor){PROLOG;A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
   if(1<n)*v++=n;
   d=v-zv; m=MAX(m,d); zv+=c; while(v<zv)*v++=0; 
  }
- EPILOG(c==m?z:taker(m,z));
+ z=c==m?z:taker(m,z);
+ EPILOG(z);
 }    /* q:"r w */
 
 
@@ -436,7 +437,7 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
  ASSERT(n<=1229&&n<=AN(p4792),EVLIMIT);
  pv=AV(p4792); m=(I)(3.322*XBASEN*AN(x)); 
  GA(s,INT,m,1,0); v=sv=AV(s);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(i=0;i<n;++i){
   RZ(d=xc(pv[i])); 
   RZ(xdivrem(x,d,&q,&r));   /* d must have only one "digit" */
@@ -460,7 +461,7 @@ static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,old,*pv;X d,m,t,x,
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,xone)); 
  while(0==*AV(m)%2){++k; RZ(m=xdiv(m,t,XMFLR));}
  GA(d,INT,1,1,0); dv=AV(d);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(i=0;i<n;++i){
   *dv=pv[i]; RZ(x=xpow(d,m)); b=1==AN(x)&&1==*AV(x);
   DO(k*!b, if(!xcompare(x,y1)){b=1; break;} RZ(x=xrem(y,xsq(x))););
@@ -474,19 +475,19 @@ static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,old,*pv;X c,g,z=xone;
  n=MIN(1229,AN(p4792)); pv=AV(p4792); m=log((D)pv[n-1]);
  RZ(c=xc(2L));
  RZ(jt->xmod=scx(w));
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(i=0;i<n;++i){
   p=(D)pv[i]; e=(I)pow(p,jfloor(m/log(p)));
   RZ(c=xpow(c,sc(e)));
   RZ(g=xgcd(w,xminus(c,xone)));
   if(!equ(g,xone)&&!equ(g,w)){z=g; break;}
-  gc(c,old);
+  gc((A)c,old);
  }
  jt->xmod=om; 
  R z;
 }
 
-static XF1(jtpollard_rho){I i,n,old=jt->tbase+jt->ttop;X g,y1,y2;
+static XF1(jtpollard_rho){I i,n,old=jt->tnextpushx;X g,y1,y2;
  n=10000;
  RZ(y1=y2=xc(2L));
  for(i=0;i<n;++i){
@@ -525,7 +526,7 @@ static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
  R z;
 }
 
-static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tbase+jt->ttop;X m,s,x2,y2,yy,z2;
+static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tnextpushx;X m,s,x2,y2,yy,z2;
  if(0==xcompare(q[1],xzero)||0==xcompare(q[2],xzero)){z[0]=xzero; z[1]=xone; z[2]=xzero;}
  else{
   RZ(m=xplus(xtymes(xc(3L),xsq(q[0])),xtymes(a,xsq(xsq(q[2])))));
@@ -540,7 +541,7 @@ static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tbase+jt->ttop;X m,s,x2,y2,yy
  R 1;
 }    /* elliptic curve double point (mod proj coord) */
 
-static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tbase+jt->ttop;
+static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tnextpushx;
  if     (0==xcompare(p[2],xzero)){z[0]=q[0]; z[1]=q[1]; z[2]=q[2];}
  else if(0==xcompare(q[2],xzero)){z[0]=p[0]; z[1]=p[1]; z[2]=p[2];}
  else{X m,r,s1,s2,t,t1,t2,u1,u2,w,w2,x3,y3,z12,z22,z3;
@@ -570,7 +571,7 @@ static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tbase+jt->ttop;
 #define BIT0 0x80000000
 #endif
 
-static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tbase+jt->ttop;
+static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tnextpushx;
  if(0==m){z[0]=xzero; z[1]=xone; z[2]=xzero;}
  else{I k;UI c,d;X pm[3],q[3];
   q[0]=p[0]; q[1]=p[1]; q[2]=p[2]; 
@@ -585,7 +586,7 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tbase+jt->ttop;
  R 1;
 }    /* scalar mult ladder (mod proj coord) */
 
-static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tbase+jt->ttop,*pv;X x[3];
+static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tnextpushx,*pv;X x[3];
  lg=log((D)b1); RE(m=i0(plt(sc(b1))));
  if(m<=AN(p4792))pv=AV(p4792); else{RZ(tt=prime1(IX(m))); pv=AV(tt);}
  x[0]=q[0]; x[1]=q[1]; x[2]=q[2];
@@ -603,7 +604,7 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
  RZ(ecd(n,a,b,q,sd)); s1=t=sd; sd+=3;
  DO(d-1, eca(n,a,b,s1,t,sd); t=sd; sd+=3;); sd=sd0; sdd=t;
  RZ(ecm(n,a,b,p0,q,x));
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(i=0;i<m;++i){
   di=pd[i];
   DO(di/d, RZ(eca(n,a,b,x,sdd,x)););
@@ -616,7 +617,7 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
 
 static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,old,m;X a,b,g,q[3];
  RZ(tt=db1b2(20L,w)); m=IC(tt); b1b2=AV(tt);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(i=0;i<m;++i){
   b1=b1b2[0]; b2=b1b2[1]; b1b2+=2;
   ranec(w,&g,&a,&b,q,q+1); q[2]=xone;
@@ -653,7 +654,8 @@ static F1(jtxfactor){PROLOG;A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
   RZ(g=fac_ecm(x));     if(g!=xone){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
   ASSERT(0,EVNONCE);
  }
- EPILOG(grade2(z,z));
+ z=grade2(z,z);
+ EPILOG(z);
 }
 
 /* ---------------------------------------------------- */

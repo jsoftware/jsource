@@ -88,7 +88,7 @@ A jtstfind(J jt,B b,I n,C*u){I old;L*v;
  if(!n){n=4; u="base";}
  if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
  else{
-  old=jt->tbase+jt->ttop; v=probe(nfs(n,u),jt->stloc); tpop(old);
+  old=jt->tnextpushx; v=probe(nfs(n,u),jt->stloc); tpop(old);
   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
 }}   /* find the symbol table for locale u, create if b and non-existent */
 

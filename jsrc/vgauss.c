@@ -12,7 +12,7 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  ASSERT(2==AR(w),EVRANK);
  s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); v=QAV(w); m=c*bp(AT(w));
  GA(t,LIT,m,1,0); tv=CAV(t);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(j=0;j<r1;++j){
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   ASSERT(0<=e,EVDOMAIN);
@@ -34,7 +34,7 @@ static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  s=AS(w); r=s[0]; c=s[1];
  v=QAV(w); 
  m=c*sizeof(Q); GA(t,LIT,m,1,0); tv=CAV(t);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  for(j=0;j<r;++j){
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   if(0>e)R cvt(RAT,zero);

@@ -110,7 +110,8 @@ static X jtxd1(J jt,D p){PROLOG;A t;D d,e=tfloor(p),q,r;I m,*u;
   if(m==AN(t)){RZ(t=ext(0,t)); u=AV(t);}
  }
  if(!m){u[0]=0; ++m;}else if(0>p)DO(m, u[i]=-u[i];);
- EPILOG(xstd(vec(INT,m,u)));
+ A z=xstd(vec(INT,m,u));
+ EPILOG(z);
 }
 
 static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->jerr;}

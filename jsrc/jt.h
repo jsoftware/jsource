@@ -228,7 +228,6 @@ typedef struct {
  I    symindex;         /* symbol table index (monotonically increasing)   */
  A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
- I    tbase;            /* index of current frame                          */
  C*   th2buf;           /* space for formatting one number                 */
  I    th2bufn;          /* current max length of buf                       */
  B    thornuni;         // 1 iff ": allowed to produce C2T result
@@ -237,13 +236,13 @@ typedef struct {
  B    tostdout;         /* 1 if output to stdout                           */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
- A*   tstack;           /* data portion of current frame                   */
- A    tstacka;          /* current frame                                   */
+ I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
+ A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
  TA*  ttab;             /* tacit translator                                */
  I    ttabi;            /* tacit translator                                */
  I    ttabi0;           /* tacit translator                                */
  B    tsubst;           /* tacit translator                                */
- I    ttop;             /* stack top (index into tstack[])                 */
  B    xco;              /* 1 iff doing x: conversion                       */
  B    xdefn;            /* 1 iff within explicit definition                */
  A    xmod;             /* extended integer: the m in m&|@f                */  

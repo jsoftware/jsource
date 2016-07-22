@@ -253,7 +253,8 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
   GA(y,at, 1, 0,0); yv=CAV(y);
   GA(z,BOX,an,1,0); zv=an+AAV(z);
   DO(an, MC(yv,u-=k,k); RZ(w=divide(minus(w,*--zv=residue(y,w)),y)););
-  EPILOG(ope(z));
+  z=ope(z);
+  EPILOG(z);
 }}
 
 F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;

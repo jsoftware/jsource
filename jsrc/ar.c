@@ -197,7 +197,7 @@ static DF1(jtredg){PROLOG;DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  n=IC(w); p=ARELATIVE(w);
  RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
- old=jt->tbase+jt->ttop; 
+ old=jt->tnextpushx; 
  for(i=1;i<n;++i){
   v-=k; 
   GA(y,yt,yn,yr,ys); u=CAV(y); 

@@ -67,7 +67,8 @@ static F2(jttk){PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
    b=1; z=y;
  }}
  if(!b)z=ca(w); 
- EPILOG(RELOCATE(w,z));
+ z=RELOCATE(w,z);
+ EPILOG(z);
 }
 
 F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;

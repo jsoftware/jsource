@@ -90,7 +90,8 @@ XF2(jtxplus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  GA(z,INT,m,1,0); zv=AV(z);
  DO(n, *zv++=*av+++*wv++;);
  if(m>n)ICPY(zv,an>wn?av:wv,m-n);
- EPILOG(xstd(z));
+ z=xstd(z);
+ EPILOG(z);
 }
 
 XF2(jtxminus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
@@ -105,7 +106,8 @@ XF2(jtxminus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  GA(z,INT,m,1,0); zv=AV(z);
  DO(n, *zv++=*av++-*wv++;);
  if(m>n){if(an>wn)ICPY(zv,av,m-n); else DO(m-n, *zv++=-*wv++;);}
- EPILOG(xstd(z));
+ z=xstd(z);
+ EPILOG(z);
 }
 
 XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
@@ -183,7 +185,8 @@ X jtxdiv(J jt,X a,X w,I mode){PROLOG;B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn,*wv,y
    k=k<=3?0:k>3162?4:3<k&&k<=32?1:32<k&&k<=316?2:3;
    s=XBASEN*(an-yn)+(c0>=e?k:-k); 
    if(s){q=shift10(s,q); y=shift10(s,y);}
-   EPILOG(xplus(q,xdiv(xminus(a,y),w,mode)));
+   A z=xplus(q,xdiv(xminus(a,y),w,mode));
+   EPILOG(z);
 }}   /* <.a%w (mode=XMFLR) or >.a%w (mode=XMCEIL) or a%w (mode=XMEXACT) */
 
 XF2(jtxrem){I c,d,e;X q,r,y;
@@ -208,7 +211,7 @@ XF2(jtxgcd){I c,d,old;X p,q,t;
  ASSERT(!(c==XPINF||c==XNINF||d==XPINF||d==XNINF),EVNAN);
  if(!c)R w;
  if(!d)R a;
- p=a; q=w; old=jt->tbase+jt->ttop;
+ p=a; q=w; old=jt->tnextpushx;
  while(XDIG(p)){
   t=p;
   RZ(p=xrem(p,q));
@@ -371,7 +374,8 @@ static XF2(jtxbinp){PROLOG;D m;I i,n;X c,d,p,q,r,s;
   RZ(q=less(ravel(factor(apv(n,1L,   1L))),zero));
   c=over(p,q);
   d=repeat(v2(AN(p),AN(q)),v2(1L,-1L));
-  EPILOG(xev1(repeat(ev2(c,d,"+//."),nub(c)),"*/"));
+  A z=xev1(repeat(ev2(c,d,"+//."),nub(c)),"*/");
+  EPILOG(z);
  }else{
   p=q=xone; r=w;  
   for(i=0;i<n;++i){

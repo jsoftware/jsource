@@ -16,7 +16,8 @@ static DF1(jtpowseqlim){PROLOG;A x,y,z,*zv;I i,n;
   if(equ(x,y)){AN(z)=*AS(z)=i; break;}
   ++i;
  }
- EPILOG(ope(z));
+ z=ope(z);
+ EPILOG(z);
 }    /* f^:(<_) w */
 
 static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
@@ -73,7 +74,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
   default: 
    fs=sv->f; f1=VAV(fs)->f1;
    z=w; 
-   old=jt->tbase+jt->ttop; 
+   old=jt->tnextpushx; 
    DO(n, RZ(z=CALL1(f1,z,fs)); gc(z,old);); 
    R z;
 }}   /* single positive finite exponent */
@@ -88,7 +89,7 @@ static DF1(jtply1){PROLOG;DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0
   n=nv[m-1]; k=p;
   while(k<m&&!nv[k]){xv[k]=z; ++k;}
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
-  old=jt->tbase+jt->ttop;
+  old=jt->tnextpushx;
   for(i=1;i<=n;++i){
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(m-k, xv[k]=z; ++k;); break;}
@@ -100,7 +101,7 @@ static DF1(jtply1){PROLOG;DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0
   RZ(z=ca(w));
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
-  old=jt->tbase+jt->ttop;
+  old=jt->tnextpushx;
   for(i=-1;i>=n;--i){
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(1+k, xv[k]=z; --k;); break;}

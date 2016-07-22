@@ -200,7 +200,8 @@ A jtconnum(J jt,I n,C*s){PROLOG;A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m
  }
  if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);
  if(t&FL+CMPX)RZ(z=cvt0(z));
- EPILOG(bcvt(0,z));
+ z=bcvt(0,z);
+ EPILOG(z);
 }
 
 

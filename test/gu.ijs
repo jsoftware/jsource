@@ -74,11 +74,73 @@ lr=: 1 : '5!:5 <''u'''
 'length error' -:  6 u: etx 'abc'
 'length error' -:  6 u: etx 'abcde'
 
-NB. utf-8 bmp
+NB. 7&u:  8&u:
+
+NB.  bmp pane
+(,0) -: 3 u: 8 u: u: 0
+(,16b7f) -: 3 u: 8 u: u: 16b7f
+194 128 -: 3 u: 8 u: u: 16b80
+223 191 -: 3 u: 8 u: u: 16b7ff
+224 160 128 -: 3 u: 8 u: u: 16b800
+239 191 191 -: 3 u: 8 u: u: 16bffff
 16b1234 16b5678 -: 3&u: u: 16b1234 16b5678
 225 136 180 229 153 184 -: 3&u: 8&u: u: 16b1234 16b5678
 
-NB. utf-16 surrogate pair
+NB. null
+0 128 0 129 0 0 65535 0 -: 3&u: u: 0 128 0 129 0 0 65535 0
+0 194 128 0 194 129 0 0 239 191 191 0 -: 3 u: 8 u: u: 0 128 0 129 0 0 65535 0
+(7 u: a.{~0 194 128 0 194 129 0 0 239 191 191 0) -: u: 0 128 0 129 0 0 65535 0
+
+NB. invalid/overlong utf-8
+'domain error' -: 7 u: etx a.{~128
+'domain error' -: 7 u: etx a.{~193
+'domain error' -: 7 u: etx a.{~245
+'domain error' -: 7 u: etx a.{~224
+'domain error' -: 7 u: etx a.{~248
+'domain error' -: 7 u: etx a.{~128 191
+'domain error' -: 7 u: etx a.{~192 191
+'domain error' -: 7 u: etx a.{~224 191
+'domain error' -: 7 u: etx a.{~224 159 191
+'domain error' -: 7 u: etx a.{~248 191
+'domain error' -: 7 u: etx a.{~128 128 191
+'domain error' -: 7 u: etx a.{~192 128 191
+'domain error' -: 7 u: etx a.{~224 128 191
+'domain error' -: 7 u: etx a.{~248 128 191
+'domain error' -: 7 u: etx a.{~240 143 191 191
+
+NB. invalid utf-16 surrogate
+237 159 191 -: 3 u: 8 u: u: 16bd7ff
+238 128 128 -: 3 u: 8 u: u: 16be000
+'domain error' -: 8 u: etx u: 16bd800
+'domain error' -: 8 u: etx u: 16bdfff
+
+'domain error' -: 8 u: etx u: 16bd800 16bd7ff
+'domain error' -: 8 u: etx u: 16bd800 16be000
+'domain error' -: 8 u: etx u: 16bdbff 16bd7ff
+'domain error' -: 8 u: etx u: 16bdbff 16be000
+
+'domain error' -: 8 u: etx u: 16bd800 16bd800
+'domain error' -: 8 u: etx u: 16bd800 16bdbff
+'domain error' -: 8 u: etx u: 16bdbff 16bd800
+'domain error' -: 8 u: etx u: 16bdbff 16bdbff
+
+'domain error' -: 8 u: etx u: 16bdc00 16bd800
+'domain error' -: 8 u: etx u: 16bdc00 16bdbff
+'domain error' -: 8 u: etx u: 16bdfff 16bd800
+'domain error' -: 8 u: etx u: 16bdfff 16bdbff
+
+'domain error' -: 8 u: etx u: 16bd800 16bdfff 16bd800
+'domain error' -: 8 u: etx u: 16bd800 16bdfff 16bdfff
+
+NB. non-bmp pane
+NB. U+10000 (utf-8 f0 90 80 80)
+240 144 128 128 -: 3 u: 8 u: u: 16bd800 16bdc00
+NB. U+10ffff (utf-8 f4 8f bf bf)
+244 143 191 191 -: 3 u: 8 u: u: 16bdbff 16bdfff
+NB. U+110000 (utf-8 f4 90 80 80) invalid
+'domain error' -: 7 u: etx a.{~244 144 128 128
+
+NB. U+12345
 55304 57157 -: 3&u: u: 16bd808 16bdf45
 240 146 141 133 -: 3&u: 8&u: u: 16bd808 16bdf45
 (7 u: a.{~240 146 141 133) -: u: 16bd808 16bdf45

@@ -53,7 +53,7 @@ static void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
 // 3 utf8
       c1=*src;
       c2=*(src+1);
-      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80)
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
         t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
         *snk++=(US)t;
@@ -70,23 +70,31 @@ static void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
       /* ignore */
       *snk++=c;
     }
-    else if(c<0xf8)
+    else if(c<0xf5)
     {
 // 4 utf8
       c1=*src;
       c2=*(src+1);
       c3=*(src+2);
-      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80)
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
-        t=((c&0x03)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
-        if(t>=0x10000)
+        t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
+        if(t>=0x110000)
         {
-          t-=0x10000;
-          *snk++=0xd800|((t>>10)&0x3ff);
-          t=0xdc00|(t&0x3ff);
+          /* ignore */
+          *snk++=c;
         }
-        *snk++=(US)t;
-        src+=3;srcn-=3;
+        else
+        {
+          if(t>=0x10000)
+          {
+            t-=0x10000;
+            *snk++=0xd800|((t>>10)&0x3ff);
+            t=0xdc00|(t&0x3ff);
+          }
+          *snk++=(US)t;
+          src+=3;srcn-=3;
+        }
       }
       else
       {
@@ -128,7 +136,6 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
       c1=*src;
       if((c1&0xc0)==0x80)
       {
-        t=((c&0x1f)<<6)|(c1&0x3f);
         src++;srcn--;
         r++;
       }
@@ -148,9 +155,8 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
 // 3 utf8
       c1=*src;
       c2=*(src+1);
-      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80)
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c>=0xe1||c1>=0xa0))
       {
-        t=((c&0x0f)<<12)|((c1&0x3f)<<6)|(c2&0x3f);
         src+=2;srcn-=2;
         r++;
       }
@@ -165,19 +171,22 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
       /* ignore */
       R -1;
     }
-    else if(c<0xf8)
+    else if(c<0xf5)
     {
 // 4 utf8
       c1=*src;
       c2=*(src+1);
       c3=*(src+2);
-      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80)
+      if((c1&0xc0)==0x80&&(c2&0xc0)==0x80&&(c3&0xc0)==0x80&&(c>=0xf1||c1>=0x90))
       {
-        t=((c&0x03)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
-        if(t>=0x10000)
+        t=((c&0x07)<<18)|((c1&0x3f)<<12)|((c2&0x3f)<<6)|(c3&0x3f);
+        if(t>=0x110000)
         {
-          t-=0x10000;
-          t=0xdc00|(t&0x3ff);
+         /* ignore */
+         R -1;
+        }
+        else if(t>=0x10000)
+        {
           r++;
         }
         src+=3;srcn-=3;
@@ -323,30 +332,20 @@ void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
    else
    {
     w1=*src;
-    if(w1>=0xd800&&w1<=0xdfff)
+    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
     {
-     t=(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
-     if(w==0xd800&&w1>=0xd800&&w1<=0xdbff)
-     {
-      *snk++=0xe0|(0x0f&(t>>12));
-      *snk++=0x80|(0x3f&(t>>6));
-      *snk++=0x80|(0x3f&t);
-     }
-     else
-     {
-      *snk++=0xf0|((t>>18)&0x07);
-      *snk++=0x80|((t>>12)&0x3f);
-      *snk++=0x80|((t>>6)&0x3f);
-      *snk++=0x80|(t&0x3f);
-     }
-     src++;srcn--;  // skip the next code unit of surrogate pair
+     *snk++=0xe0|(0x0f&(t>>12));
+     *snk++=0x80|(0x3f&(t>>6));
+     *snk++=0x80|(0x3f&t);
     }
     else
     {
-     // invalid surrogate
-     *snk++=0xe0|(0x0f&(w>>12));
-     *snk++=0x80|(0x3f&(w>>6));
-     *snk++=0x80|(0x3f&w);
+     t=(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
+     *snk++=0xf0|((t>>18)&0x07);
+     *snk++=0x80|((t>>12)&0x3f);
+     *snk++=0x80|((t>>6)&0x3f);
+     *snk++=0x80|(t&0x3f);
+     src++;srcn--;  // next code unit of surrogate pair
     }
    }
   }
@@ -366,19 +365,13 @@ static I wtomsize(US* src, I srcn, I eatnull){ US w,w1;I r=0;I nignulls = 0;
    r+=2;
   else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
    r+=3;
-  else {
+  else
+  {
    if(!srcn)R -1; // isolated surrogate
    w1=*src;
-   if(w1>=0xd800&&w1<=0xdfff)
-   {
-    if(w==0xd800&&w1>=0xd800&&w1<=0xdbff)
-     r+=3;
-    else
-     r+=4;
-    src++;srcn--;  // skip the next code unit of surrogate pair
-   }
-   else
-    R -1;
+   if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) R -1; // incorrect high/low surrogate
+   r+=4;
+   src++;srcn--;  // skip the next code unit of surrogate pair
   }
   if(eatnull)nignulls = extrawidth(w);  // count the extra null; may rescind if already there
  }
@@ -465,6 +458,7 @@ ASSERT(t&C2T, EVDOMAIN);
 // !!! Henry unicodeCJK
 // q=wtomsize((US*)CAV(w),n,1);
 q=wtomsize((US*)CAV(w),n,0);
+ASSERT(q>=0,EVDOMAIN);
 GA(z,LIT,q,1,0);
 // !!! Henry unicodeCJK
 // wtomnull((US*)CAV(w),n,CAV(z),1);

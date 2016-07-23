@@ -456,7 +456,7 @@ static F1(jtthorn1main){PROLOG;A z;
    // Resulting array line up without padding.  The NUL characters are suppressed for display, and removed
    // on any conversion back to U8.
    // If C2T output not allowed, convert to ragged array of bytes
-   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8);
+   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8a);
    break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
@@ -481,7 +481,7 @@ static F1(jtthorn1main){PROLOG;A z;
 F1(jtthorn1u){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); R z; }
 
 // entry point for returning character array only.  Allow C2T result, then convert
-F1(jtthorn1){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&C2T)z = rank1ex(z, 0L, 1L, jttoutf8); R z; }
+F1(jtthorn1){ A z; B to = jt->thornuni; jt->thornuni = 1; z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&C2T)z = rank1ex(z, 0L, 1L, jttoutf8a); R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}

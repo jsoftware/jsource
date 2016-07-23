@@ -111,8 +111,8 @@ static void mtow(UC* src, I srcn, US* snk){ US c,c1,c2,c3; UINT t;
 }
 
 // get size of conversion from utf-8 to c2v
-// return -1 if utf-8 invalid
-static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
+// return negative if utf-8 invalid
+static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3;UINT t;I r=0;int invalid=0;
   while (srcn--)
   {
     c=*src++;
@@ -123,12 +123,12 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
     else if(c<=0xc1||c>=0xf5)
     {
       /* ignore */
-      R -1;
+      r++;invalid=1;
     }
     else if(!srcn)
     {
       /* ignore */
-      R -1;
+      r++;invalid=1;
     }
     else if(c<0xe0)
     {
@@ -142,13 +142,13 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
       else
       {
         /* ignore */
-        R -1;
+        r++;invalid=1;
       }
     }
     else if(srcn<2)
     {
       /* ignore */
-      R -1;
+      r++;invalid=1;
     }
     else if(c<0xf0)
     {
@@ -163,13 +163,13 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
       else
       {
         /* ignore */
-        R -1;
+        r++;invalid=1;
       }
     }
     else if(srcn<3)
     {
       /* ignore */
-      R -1;
+      r++;invalid=1;
     }
     else if(c<0xf5)
     {
@@ -183,7 +183,7 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
         if(t>=0x110000)
         {
          /* ignore */
-         R -1;
+         r++;invalid=1;
         }
         else if(t>=0x10000)
         {
@@ -195,16 +195,16 @@ static I mtowsize(UC* src, I srcn){ US c,c1,c2,c3; UINT t; I r=0;
       else
       {
         /* ignore */
-        R -1;
+        r++;invalid=1;
       }
     }
     else
     {
       /* ignore */
-      R -1;
+      r++;invalid=1;
     }
   }
- R r;
+ R (invalid)?(-r):r;
 }
 
 // w is a wide char; result is number of excess display positions needed
@@ -353,12 +353,11 @@ void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
 }
 
 // get size of conversion from c2v to utf-8
-// return -1 if utf-16 invalid
-static I wtomsize(US* src, I srcn, I eatnull){ US w,w1;I r=0;I nignulls = 0;
+// return negative if utf-16 invalid
+static I wtomsize(US* src, I srcn){ US w,w1;I r=0;int invalid=0;
  while(srcn--)
  {
   w=*src++;
-  if(nignulls && (--nignulls,w==0));  // If we should ignore a null, do so, decrement count of ignored nulls
   if(w<=0x7f)
    ++r;
   else if(w<=0x7ff)
@@ -367,15 +366,28 @@ static I wtomsize(US* src, I srcn, I eatnull){ US w,w1;I r=0;I nignulls = 0;
    r+=3;
   else
   {
-   if(!srcn)R -1; // isolated surrogate
-   w1=*src;
-   if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) R -1; // incorrect high/low surrogate
-   r+=4;
-   src++;srcn--;  // skip the next code unit of surrogate pair
+   if(!srcn)
+   {
+    // isolated surrogate
+    r+=3;invalid=1;
+   }
+   else
+   {
+    w1=*src;
+    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000)
+    {
+     // incorrect high/low surrogate
+     r+=3;invalid=1;
+    }
+    else
+    {
+     r+=4;
+     src++;srcn--;  // skip the next code unit of surrogate pair
+    }
+   }
   }
-  if(eatnull)nignulls = extrawidth(w);  // count the extra null; may rescind if already there
  }
- R r;
+ R (invalid)?(-r):r;
 }
 
 // Similar to out16, but called only for byte inputs at rank 1.
@@ -385,7 +397,9 @@ F1(jttoutf16r){A z;I n,t,q,b=0; C* wv; US* c2v;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
  if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 
  q=mtowsize(CAV(w),n);
- if(q<0 || q==n)R ca(w);  // If invalid or no U8, keep as byte
+// if(q<0 || q==n)R ca(w);  // If invalid or no U8, keep as byte
+ if(q==n)R ca(w);
+ q=(q<0)?(-q):q;
  GA(z,C2T,q,1,0);  // allocate result - long enough to hold the C@Ts
  c2v=(US*)CAV(z);
  mtow(CAV(w),n,c2v);
@@ -448,20 +462,29 @@ F1(jttoutf16){A z;I n,t,q,b=0; C* wv; US* c2v;
   ASSERT(0, EVDOMAIN);
 }    // 7 u: x - utf16 from LIT or C2T
 
+// Similar to jttoutf8, but allow invalid unicode
 // w is C2T or LIT.  Result is U8 string
-// If a wide-display C2T is followed by NULs, remove the NULs
-F1(jttoutf8){A z;I n,t,q;
+F1(jttoutf8a){A z;I n,t,q;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
-if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit 
+if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT) R ca(w); // char unchanged
 ASSERT(t&C2T, EVDOMAIN);
-// !!! Henry unicodeCJK
-// q=wtomsize((US*)CAV(w),n,1);
-q=wtomsize((US*)CAV(w),n,0);
+q=wtomsize((US*)CAV(w),n);
+q=(q<0)?(-q):q;
+GA(z,LIT,q,1,0);
+wtom((US*)CAV(w),n,CAV(z));
+R z;
+}    // called by monad ":
+
+// w is C2T or LIT.  Result is U8 string
+F1(jttoutf8){A z;I n,t,q;
+RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
+if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
+if(t&LIT) R ca(w); // char unchanged
+ASSERT(t&C2T, EVDOMAIN);
+q=wtomsize((US*)CAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GA(z,LIT,q,1,0);
-// !!! Henry unicodeCJK
-// wtomnull((US*)CAV(w),n,CAV(z),1);
 wtom((US*)CAV(w),n,CAV(z));
 R z;
 }    // 8 u: x - utf8 from LIT or C2T
@@ -477,7 +500,8 @@ R z; // u16 from u8
 
 // External function - just convert wide-char fw[] to U8 in f[], and null-terminate 
 void jttoutf8x(J jt,C* f, I n, US* fw){I q;
-q=wtomsize(fw,wcslen((wchar_t*)fw),0);
+q=wtomsize(fw,wcslen((wchar_t*)fw));
+q=(q<0)?(-q):q;
 wtom(fw,wcslen((wchar_t*)fw),f);
 f[q]=0;
 }

@@ -74,6 +74,19 @@ NB. Unicodes not emulated by th
 'abcd' -: ": u: 'abcd'
 (224 160 128 224 160 129{a.) -: ": 4 u: 2048 2049
 
+NB. ": on invalid unicode
+(":x) -: ":("1) x=: 3 4$ 97 224 176 157 98{a.
+(":x) -: ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
+
+NB. not yet worked !!!
+NB. x -: ":x should hold for all byte literal
+NB. x -: ":x=: 3 4$ 97 224 176 157 98{a.
+NB. ": on utf-16 for cjk should have no extra null
+({.a.) -.@e. 8 u: }. u: i.16bd800
+NB. ({.a.) -.@e. ": }. u: i.16bd800
+NB. (8 u: x) -: ":x=: }. u: i.16bd800
+NB. (8 u: x) -: ":x=: u: 16be000 + i.16b2000
+
 bc =: 9!:6 ''
 9!:7  '+++++++++|-'
 a =: <;.(_1) 32 195 171 195 171 195 171 32 97 98 99 100 101 102{a.

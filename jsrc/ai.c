@@ -72,9 +72,9 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws,wd;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),zero));
- GA(x,INT,wr,1,0); u=AV(x); memset(u,C0,wr*SZI);
- GA(x,INT,wr,1,0); v=(I**)AV(x);
- DO(wr, m=ws[i]; GA(x,INT,m,1,0); memset(v[i]=AV(x),CFF,m*SZI););
+ GATV(x,INT,wr,1,0); u=AV(x); memset(u,C0,wr*SZI);
+ GATV(x,INT,wr,1,0); v=(I**)AV(x);
+ DO(wr, m=ws[i]; GATV(x,INT,m,1,0); memset(v[i]=AV(x),CFF,m*SZI););
  for(i=0;i<wn;++i){
   x=WVR(i); r=AR(x); s=AS(x);
   if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}
@@ -84,8 +84,8 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws,wd;
   j=wr; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }
  if(!z){A f,h,*zv;I*hv;
-  GA(z,BOX,wn,2,ws); zv=AAV(z);
-  GA(h,INT,wr,1,0); hv=AV(h);
+  GATV(z,BOX,wn,2,ws); zv=AAV(z);
+  GATV(h,INT,wr,1,0); hv=AV(h);
   GA(f,t,1,1,0); RZ(f=filler(f)); memset(u,C0,wr*SZI);
   for(i=0;i<wn;++i){
    zv[i]=x=WVR(i);
@@ -175,7 +175,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CBANG:
    ASSERT(!AR(x),EVRANK);
    ASSERT(all1(lt(zero,x)),EVDOMAIN);
-   GA(y,BOX,9,1,0); q=AAV(y);
+   GAT(y,BOX,9,1,0); q=AAV(y);
    q[0]=cstr("3 :'(-("); q[1]=q[3]=lrep(w);
    q[2]=cstr("-y\"_)%1e_3&* "); q[4]=cstr("\"0 D:1 ])^:_[");
    h=lrep(x);

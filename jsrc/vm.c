@@ -116,7 +116,7 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
  RZ(w); 
  t=AT(w); r=AR(w); jt->rank=0;
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);
- if(t&CMPX){GA(z,FL,2*AN(w),1+r,AS(w)); *(AS(z)+r)=2; MC(AV(z),AV(w),AN(z)*sizeof(D)); R z;}
+ if(t&CMPX){GATV(z,FL,2*AN(w),1+r,AS(w)); *(AS(z)+r)=2; MC(AV(z),AV(w),AN(z)*sizeof(D)); R z;}
  else if(t&SPARSE){
   b=1&&t&SCMPX;
   GA(z,b?SFL:t,1,1+r,AS(w)); *(AS(z)+r)=2;

@@ -170,9 +170,9 @@ static void qqset(A a,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
 
 F2(jtqq){A h,t;AF f1,f2;D*d;I flag,*hv,n,r[3],*v;
  RZ(a&&w);
- GA(h,INT,3,1,0); hv=AV(h);
+ GAT(h,INT,3,1,0); hv=AV(h);
  if(VERB&AT(w)){
-  GA(t,FL,3,1,0); d=DAV(t);
+  GAT(t,FL,3,1,0); d=DAV(t);
   n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;

@@ -23,7 +23,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  si=as[0]; m=1+ws[0]-si;
  sj=as[1]; n=1+ws[1]-sj;
  t=AT(w); k=bp(t); c=ws[1]; r=k*c; s=k*sj;
- GA(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
+ GATV(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
  if(t&B01+LIT+INT||0==jt->ct&&t&FL+CMPX)
   for(i=0;i<m;++i){
    DO(n, u=av; b=0; DO(si,                         if(b=!!memcmp(u,v,s))break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
@@ -43,7 +43,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  an=AN(a); av=CAV(a); 
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
  t=AT(w); k=bp(t); s=k*an;
- GA(z,B01,wn,1,0); zv=BAV(z); 
+ GATV(z,B01,wn,1,0); zv=BAV(z); 
  if(an&&wn>an)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
  if(t&INT||0==jt->ct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
  else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
@@ -112,8 +112,8 @@ F2(jtebar){PROLOG;A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -3: R df2(shape(a),w,cut(amp(a,ds(CMATCH)),num[3]));
   case -4: R ebarvec(a,w);
  }
- GA(z,B01,n,AR(w),0); zv=BAV(z); memset(zv,C0,n);
- GA(y,INT,d,1,    0); yv= AV(y); DO(d, yv[i]=1+m;); 
+ GATV(z,B01,n,AR(w),0); zv=BAV(z); memset(zv,C0,n);
+ GATV(y,INT,d,1,    0); yv= AV(y); DO(d, yv[i]=1+m;); 
  switch(AT(w)){
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
@@ -133,7 +133,7 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -1: R sc(n);
   case -4: R indexof(ebarvec(a,w),one);
  }
- GA(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
+ GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(AT(w)){
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
@@ -152,7 +152,7 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case -1: R zero;
   case -4: R aslash(CPLUS,ebarvec(a,w));
  }
- GA(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
+ GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(AT(w)){
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
@@ -171,7 +171,7 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case -1: R zero;
   case -4: R aslash(CPLUSDOT,ebarvec(a,w));
  }
- GA(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
+ GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(AT(w)){
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R one) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R one); break;
@@ -193,8 +193,8 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case -1: R mtv;
   case -4: R icap(ebarvec(a,w));
  }
- GA(z,INT,MAX(22,n/128),1,0); zv=AV(z); zu=zv+AN(z);
- GA(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
+ GATV(z,INT,MAX(22,n/128),1,0); zv=AV(z); zu=zv+AN(z);
+ GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(AT(w)){
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;

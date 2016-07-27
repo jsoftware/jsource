@@ -79,7 +79,7 @@
   // Here we were not able to build the result in the output area; type/rank/shape changed.
   // We will create a boxed result, boxing each cell, and then open it.  If this works, great.
   jj=j%n;   // jj = #cells we processed before the wreck
-  GA(yz,BOX,mn,p,s); x=AAV(yz);   // allocate place for boxed result
+  GATV(yz,BOX,mn,p,s); x=AAV(yz);   // allocate place for boxed result
   // For each previous result, put it into a box and store the address in the result area
   if(j){
    zv=CAV(z)-k;

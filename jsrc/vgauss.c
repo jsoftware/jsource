@@ -11,7 +11,7 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  ASSERT(RAT&AT(w),EVNONCE);
  ASSERT(2==AR(w),EVRANK);
  s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); v=QAV(w); m=c*bp(AT(w));
- GA(t,LIT,m,1,0); tv=CAV(t);
+ GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r1;++j){
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
@@ -33,7 +33,7 @@ static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  s=AS(w); r=s[0]; c=s[1];
  v=QAV(w); 
- m=c*sizeof(Q); GA(t,LIT,m,1,0); tv=CAV(t);
+ m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r;++j){
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
@@ -49,7 +49,7 @@ static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  }
  d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DO(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);
- GA(z,RAT,1,0,0); *QAV(z)=d; R z;
+ GAT(z,RAT,1,0,0); *QAV(z)=d; R z;
 }    /* determinant on rational matrix; works in place */
 
 static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
@@ -92,7 +92,7 @@ static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
    if(ZNZ(u[j])){p=zdiv(u[j],q); for(k=j+1;k<r;++k)u[k]=zminus(u[k],ztymes(p,x[k]));}
  }}
  NAN1; RE(0);
- GA(t,CMPX,1,0,0); *ZAV(t)=z; R t;
+ GAT(t,CMPX,1,0,0); *ZAV(t)=z; R t;
 }    /* determinant on complex  matrix; works in place */
 
 F1(jtgaussdet){A z;I*s;

@@ -43,11 +43,11 @@ static I symcol=(sizeof(L)+SZI-1)/SZI;
 B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  if(b){y=jt->symp; j=((MS*)y-1)->j; n=*AS(y); yn=AN(y);}
  else {            j=12;            n=1;      yn=0;    }
- m=msize[1+j];                              /* new size in bytes           */
+ m=(I)1<<(1+j);                              /* new size in bytes           */
  m-=sizeof(MS)+SZI*(AH+2);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */
  s[0]=m; s[1]=symcol; xn=m*symcol;          /* new pool array shape        */
- GA(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
+ GATV(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
  if(b)ICPY(v,AV(y),yn);                     /* copy old data to new array  */
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;
@@ -119,10 +119,10 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- GA(z,BOX,3,1,0); zv=AAV(z);
+ GAT(z,BOX,3,1,0); zv=AAV(z);
  n=*AS(jt->symp); pv=jt->sympv;
- GA(x,INT,n*6,2,0); *AS(x)=n; *(1+AS(x))=6; xv= AV(x); zv[0]=x;
- GA(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
+ GATV(x,INT,n*6,2,0); *AS(x)=n; *(1+AS(x))=6; xv= AV(x); zv[0]=x;
+ GATV(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?AT(pv->val):0;  // type
@@ -133,7 +133,7 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
   RZ(*yv++=(q=pv->name)?sfn(1,q):mtv);
  }
  // Allocate box 3: locale name
- GA(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
+ GATV(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=AV(jt->stloc); 
  for(i=0;i<n;++i)if(j=v[i]){    /* per named locales    */
@@ -318,7 +318,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z); 
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){
   x=WVR(i); v=syrd(nfs(AN(x),CAV(x)),0L); 
   ASSERT(v,EVVALUE);

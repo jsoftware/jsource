@@ -23,7 +23,7 @@ F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws;
  ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; 
  RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws)); 
  k=m*bp(AT(w)); wv=CAV(w);
- GA(z,BOX,n,f,ws); zv=AAV(z);
+ GATV(z,BOX,n,f,ws); zv=AAV(z);
  if(f){
   GA(y,AT(w),m,r,f+ws); yv=CAV(y);
   if(ARELATIVE(w)){A*v=(A*)wv;A1*u=(A1*)yv; DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
@@ -55,7 +55,7 @@ static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
 
 static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m=0,n,*v,wcr;P*p;
  n=AN(w); wcr=AN(cs); wv=AAV(w);
- GA(x,B01,wcr,1,0); b=BAV(x); memset(b,C0,wcr);
+ GATV(x,B01,wcr,1,0); b=BAV(x); memset(b,C0,wcr);
  for(i=0;i<n;++i)
   if(q=wv[i],SPARSE&AT(q)){
    p=PAV(q); x=SPA(p,x); m+=*AS(x);
@@ -96,12 +96,12 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  GA(z,zt,1L,wr+wcr,0); zs=AS(z); ICPY(zs,AS(w),wr); ICPY(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,e=cvt(dt,e));
- GA(t,INT,yc, 1L,0L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
- GA(sh,INT,1+c,1L,0L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
+ GATV(t,INT,yc, 1L,0L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
+ GATV(sh,INT,1+c,1L,0L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
- GA(d,INT,wr,1,0); dv=AV(d); memset(dv,C0,wr*SZI);
+ GATV(d,INT,wr,1,0); dv=AV(d); memset(dv,C0,wr*SZI);
  RE(i=mult(m,xc)); GA(x,dt, i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
- RE(i=mult(m,yc)); GA(y,INT,i,2L, 0L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); memset(yv,C0,SZI*i);
+ RE(i=mult(m,yc)); GATV(y,INT,i,2L, 0L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); memset(yv,C0,SZI*i);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];
   if(m<p+m1){
@@ -122,7 +122,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){PROLOG;A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w); b=ARELATIVE(w);
- if(!(n&&BOX&AT(w)))R ca(w); /* {GA(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
+ if(!(n&&BOX&AT(w)))R ca(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
  if(!AR(w))R b?(A)AABS(*v,w):*v;
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i]; 
@@ -133,7 +133,7 @@ F1(jtope){PROLOG;A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
    if(t!=k){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
  }}
  if(!t)DO(n, y=b?(A)AABS(v[i],w):v[i]; k=AT(y); RE(t=maxtype(t,k)););
- GA(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
+ GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  DO(n, y=b?(A)AABS(v[i],w):v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
  else{
@@ -158,7 +158,7 @@ F1(jtope){PROLOG;A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I c=0,d,i,j,k,m,q,*s,*v1,yr,*ys;UI p;
  d=SZI*(r-1); b=ARELATIVE(w);   // d=#bytes in (stored shape of result-cell)  b=1 if w uses relative addressing
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
- GA(h,INT,r,1,0); s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
+ GATV(h,INT,r,1,0); s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
   // y->A block for contents of w[i]; yr=rank of y; ys->shape of y
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
@@ -203,7 +203,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
 
  // Now we know the type of the result.  Create the result.
  k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
- GA(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
+ GATV(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
  GA(z,t,m,r,s); if(zb)AFLAG(z)=AFREL;   // create result area, shape s
  zu=CAV(z); zv=AAV(z);  // output pointers
  // loop through each contents and copy to the result area

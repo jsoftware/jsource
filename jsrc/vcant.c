@@ -14,7 +14,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  zr=AR(z); zp=PAV(z);
  ASSERT(wr==zr,EVNONCE);
  RZ(b=bfi(wr,a1,1));
- GA(q,B01,wr,1,0); c=BAV(q); u=AV(a); DO(wr, c[i]=b[u[i]];);
+ GATV(q,B01,wr,1,0); c=BAV(q); u=AV(a); DO(wr, c[i]=b[u[i]];);
  SPB(zp,a,ifb(wr,c));
  SPB(zp,e,ca(SPA(wp,e)));
  RZ(y=fromr(grade1(indexof(a,a1)),SPA(wp,i)));
@@ -35,14 +35,14 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  ASSERT(r==AN(a),EVLENGTH);
  if(wf=wr-r){
-  GA(a,INT,wr,1,0); tv=AV(a); 
+  GATV(a,INT,wr,1,0); tv=AV(a); 
   DO(wf, tv[i]=i;); DO(r, tv[wf+i]=wf+av[i];);
   av=tv;
  }
  zr=0; DO(wr, zr=MAX(zr,av[i]);); zr+=0<wr;
- GA(m,INT,zr,1,0); mv=AV(m);
- GA(s,INT,zr,1,0); sv=AV(s);
- GA(t,INT,wr,1,0); tv=AV(t);
+ GATV(m,INT,zr,1,0); mv=AV(m);
+ GATV(s,INT,zr,1,0); sv=AV(s);
+ GATV(t,INT,wr,1,0); tv=AV(t);
  d=1; j=wr; DO(wr, --j; tv[j]=d; d*=ws[j];);
  for(j=0,zn=1;j<zr;++j){
   c=IMAX; d=k=0;
@@ -81,7 +81,7 @@ F2(jtcant2){A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
  if(1<q||q<AR(a))R rank2ex(a,w,0L,MIN(1,q),r,jtcant2);
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
-  GA(p,INT,AN(y),1,0); pv=AV(p);
+  GATV(p,INT,AN(y),1,0); pv=AV(p);
   m=AN(a); n=AN(t); av=AAV(a); ad=(I)a*ARELATIVE(a);
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));

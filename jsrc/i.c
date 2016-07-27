@@ -25,6 +25,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  ACX(z);
  R z;
 }
+// Use GA for all these initializations, to save space since they're done only once
 
 B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;

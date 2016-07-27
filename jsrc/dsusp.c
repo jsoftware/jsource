@@ -17,7 +17,7 @@
 // q, if given, is the block to use for the debug stack; otherwise allocated
 
 DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
- if(!d){A q; GA(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
+ if(!d){A q; GATV(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
@@ -39,7 +39,7 @@ void jtdebz(J jt){jt->sitop=jt->sitop->dclnk;}
 F1(jtsiinfo){A z,*zv;DC d;I c=5,n,*s;
  ASSERTMTV(w);
  n=0; d=jt->sitop; while(d){++n; d=d->dclnk;}
- GA(z,BOX,c*n,2,0); s=AS(z); s[0]=n; s[1]=c; zv=AAV(z);
+ GATV(z,BOX,c*n,2,0); s=AS(z); s[0]=n; s[1]=c; zv=AAV(z);
  d=jt->sitop;
  while(d){
   RZ(zv[0]=sc(d->dctype));
@@ -79,7 +79,7 @@ static DC suspset(DC d){DC e;
 
 static B jterrcap(J jt){A y,*yv;
  jt->dbsusact=SUSCLEAR;
- GA(y,BOX,4,1,0); yv=AAV(y);
+ GAT(y,BOX,4,1,0); yv=AAV(y);
  RZ(yv[0]=sc(jt->jerr1));
  RZ(yv[1]=str(jt->etxn1,jt->etx));
  RZ(yv[2]=dbcall(mtv));

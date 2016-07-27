@@ -12,7 +12,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
  ASSERT(r>=AR(w),EVRANK);
  ASSERT(n,EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
- GA(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
+ GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
  DO(n, RZ(zv[i]=x=fx(WVR(i))); ASSERT(VERB&AT(x),EVDOMAIN););
  R z;
 }
@@ -22,7 +22,7 @@ F1(jtfxeach){R every(w,0L,jtfx);}
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=VAV(self); h=sv->h; hv=AAV(h);
- GA(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
+ GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DO(AN(h), RZ(*x++=CALL1(VAV(*hv)->f1,  w,*hv)); ++hv;);
  R ope(z);
 }
@@ -30,7 +30,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=VAV(self); h=sv->h; hv=AAV(h);
- GA(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
+ GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DO(AN(h), RZ(*x++=CALL2(VAV(*hv)->f2,a,w,*hv)); ++hv;);
  R ope(z);
 }
@@ -39,7 +39,7 @@ static DF1(jtinsert){A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
  RZ(w);
  n=IC(w); j=n-1; hs=VAV(self)->h; m=AN(hs); hv=AAV(hs);
  if(!n)R df1(w,iden(*hv));
- GA(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
+ GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
  DO(n-1, k=--j%m; RZ(z=CALL2(hf[k],from(sc(j),w),z,hv[k])); gc(z,old);)
@@ -157,7 +157,7 @@ static F2(jtgerfrom){A*av,*v,z;I ad,n;
  else{
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
-  GA(z,BOX,n,1,0); v=AAV(z);
+  GATV(z,BOX,n,1,0); v=AAV(z);
   DO(n, RZ(*v++=gerfrom(AVR(i),w)););
   R z;
 }}

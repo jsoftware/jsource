@@ -17,7 +17,7 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,id,n,r,*s;
  s=AS(z); n=AN(ind); iv=AAV(ind); id=(I)ind*ARELATIVE(ind);
  ASSERT(n<=AR(z),EVINDEX);
  d=n; DO(n, --d; x=IVR(d); if(!equ(x,ace))break;); n=n?1+d:d;
- GA(j,BOX,n,1,0); jv=AAV(j);
+ GATV(j,BOX,n,1,0); jv=AAV(j);
  for(i=0;i<n;++i){
   x=IVR(i); d=s[i];
   if(BOX&AT(x)){
@@ -34,8 +34,8 @@ static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,id,j,m,n
  zr=AR(z); zs=AS(z); zp=PAV(z);
  if(!ar)R a;
  n=AN(ind); iv=AAV(ind); id=(I)ind*ARELATIVE(ind);
- GA(r,INT,zr,1,0); rv= AV(r);
- GA(s,BOX,zr,1,0); sv=AAV(s);
+ GATV(r,INT,zr,1,0); rv= AV(r);
+ GATV(s,BOX,zr,1,0); sv=AAV(s);
  m=0; j=n;
  DO(n, x=IVR(i); b=x==ace; m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
  DO(zr-n, rv[j]=1; RZ(sv[j]=sc(zs[j])); ++j;);
@@ -51,8 +51,8 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,id,j,m,n,*u,*v,*yv;
  zp=PAV(z);
  y=SPA(zp,i); v=AS(y); m=v[0]; c=v[1]; yv=AV(y); 
  a=SPA(zp,a); n=AN(a); av=AV(a); 
- GA(p,B01,m,1,0); b=BAV(p); memset(b,C1,m);
- GA(q,INT,m,1,0); v=AV(q); iv=AAV(ind); id=(I)ind*ARELATIVE(ind); 
+ GATV(p,B01,m,1,0); b=BAV(p); memset(b,C1,m);
+ GATV(q,INT,m,1,0); v=AV(q); iv=AAV(ind); id=(I)ind*ARELATIVE(ind); 
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;
   x=IVR(j);
@@ -67,8 +67,8 @@ static B jtipart(J jt,A z,A ind,A*i1,A*i2){A*iv,p,*pv,q,*qv,x;B*b;I c,d,id,n;P*z
  n=AN(ind); iv=AAV(ind); id=(I)ind*ARELATIVE(ind); zp=PAV(z);
  RZ(b=bfi(AR(z),SPA(zp,a),1));
  c=0; DO(n, if(b[i])++c;); d=n-c;
- GA(p,BOX,c,1,0); pv=AAV(p); *i1=p;
- GA(q,BOX,d,1,0); qv=AAV(q); *i2=q;
+ GATV(p,BOX,c,1,0); pv=AAV(p); *i1=p;
+ GATV(q,BOX,d,1,0); qv=AAV(q); *i2=q;
  DO(n, x=IVR(i); if(b[i])*pv++=x; else *qv++=x;);
  R 1;
 }    /* partition index into sparse and dense parts */
@@ -105,7 +105,7 @@ static A jtscubb(J jt,A z,A i1){A a,q,x,y;I c,d,h,j,*s,*v,*xv;P*zp;
  c=*(1+AS(q)); d=*(1+AS(y)); h=d-c;
  if(c==d)R less(q,y);
  RZ(q=less(q,taker(c,y)));
- GA(x,INT,h,1,0); xv=AV(x); j=c; DO(h, xv[i]=s[v[j++]];);
+ GATV(x,INT,h,1,0); xv=AV(x); j=c; DO(h, xv[i]=s[v[j++]];);
  RZ(x=odom(2L,h,xv));
  c=*AS(q); d=*AS(x);
  R stitch(repeat(sc(d),q),reitem(sc(c*d),x));
@@ -114,11 +114,11 @@ static A jtscubb(J jt,A z,A i1){A a,q,x,y;I c,d,h,j,*s,*v,*xv;P*zp;
 static A jtscubc(J jt,A z,A i1,A p){A a,q,s,y,y1;B*qv;I c,d,h,j=-1,m,n,*sv,*u,*v;P*zp;
  zp=PAV(z); a=SPA(zp,a); n=AN(i1); h=AN(a)-n;
  if(!h)R mtm;
- GA(s,INT,h,1,0); sv=AV(s); 
+ GATV(s,INT,h,1,0); sv=AV(s); 
  d=1; u=AS(z); v=AV(a); DO(h, d*=sv[i]=u[v[n+i]];);
  RZ(y=repeat(p,SPA(zp,i))); m=*AS(y);
  RZ(y1=take(v2(m,n),y)); v=AV(y1);
- GA(q,B01,m,1,0); qv=BAV(q);
+ GATV(q,B01,m,1,0); qv=BAV(q);
  if(m){memset(qv,C0,m); DO(m-1, if(ICMP(v,v+n,n)){if(d>i-j)qv[i]=1; j=i;} v+=n;); if(d>(m-1)-j)qv[m-1]=1;}
  RZ(y1=repeat(q,y1)); c=*AS(y1);
  if(!c)R mtm;
@@ -138,13 +138,13 @@ static A jtiindx(J jt,A z,A i1){A q,j,j1,y;I c,d,e,h,i,*jv,m,n,*qv,*v,*yv;P*zp;
  RZ(j=indexof(y,scuba(z,i1,0)));  /* j: group indices           */
  n= AN(j); jv=AV(j);
  m=*AS(y); yv=AV(y);
- GA(q,INT,n,1,0); qv=AV(q);          /* q: # members in each group */
+ GATV(q,INT,n,1,0); qv=AV(q);          /* q: # members in each group */
  for(i=h=0;i<n;++i){
   e=1; d=jv[i]; v=yv+c*d;
   DO(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);
   qv[i]=e; h+=e;
  }
- GA(j1,INT,h,1,0); v=AV(j1);
+ GATV(j1,INT,h,1,0); v=AV(j1);
  DO(n, e=qv[i]; d=jv[i]; DO(e, *v++=d++;););
  R j1;
 }    /* index of index list in the index matrix of z */

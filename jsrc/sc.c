@@ -33,7 +33,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(0<jt->pmctr)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
  jt->curlocn=oln;
  jt->curname=oldn;
- spfree();
+ if(jt->spfreeneeded)spfree();
  R z;
 }
 

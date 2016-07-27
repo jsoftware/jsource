@@ -24,7 +24,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
    RZ(x=p?irs2(x,a,0L,AR(x)-(1+k),0L,jtover):irs2(a,x,0L,0L,AR(x)-(1+k),jtover)); 
    break;
   case 1:  /* dense and a not equal to e */
-   GA(q,INT,c,1,0); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
+   GATV(q,INT,c,1,0); v=AV(q); DO(c, v[i]=ws[av[i]];); RZ(q=odom(2L,c,v));
    if(AN(q)>=AN(y)){
     RZ(z=shape(x)); *AV(z)=*AS(q); 
     RZ(x=from(grade1(over(y,less(q,y))),over(x,reshape(z,e))));
@@ -37,7 +37,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
    if(!p){v=j+AV(y); DO(m, ++*v; v+=c;);} 
    break;
   case 3:  /* sparse and a not equal to e */
-   GA(q,INT,c,1,0); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=*AS(q);
+   GATV(q,INT,c,1,0); v=AV(q); DO(c, v[i]=ws[av[i]];); v[j]=1; RZ(q=odom(2L,c,v)); n=*AS(q);
    if(p){RZ(y=over(y,q)); v=AV(y)+j+m*c; d=ws[f]; DO(n, *v=d; v+=c;);}
    else {RZ(y=over(q,y)); v=AV(y)+j+n*c;          DO(m, ++*v; v+=c;);}
    RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
@@ -65,8 +65,8 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  ap=PAV(a); RZ(ab=bfi(r,SPA(ap,a),1)); ae=SPA(ap,e); at=AT(ae);
  wp=PAV(w); RZ(wb=bfi(r,SPA(wp,a),1)); we=SPA(wp,e); wt=AT(we);
  ASSERT(equ(ae,we),EVNONCE);
- GA(q,B01,r,1,0); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); RZ(za=ifb(r,zb)); c=AN(za);
- GA(q,INT,r,1,0); zs= AV(q); DO(r, zs[i]=MAX(as[i],ws[i]););
+ GATV(q,B01,r,1,0); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); RZ(za=ifb(r,zb)); c=AN(za);
+ GATV(q,INT,r,1,0); zs= AV(q); DO(r, zs[i]=MAX(as[i],ws[i]););
  DO(r, if(zb[i]>ab[i]){RZ(a=reaxis(za,a)); break;});
  DO(r, if(zb[i]>wb[i]){RZ(w=reaxis(za,w)); break;});
  *zs=*as; DO(r, if(zs[i]>as[i]){RZ(a=take(q,a)); break;});
@@ -83,7 +83,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
   i=j=p=0; k=bp(t); 
   m=*AS(ay); u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
   n=*AS(wy); v=AV(wy); wv=CAV(wx); wm=aii(wx); wk=k*wm; mn=m+n; xk=k*(am+wm);
-  GA(y,INT,mn*c,      2,     AS(ay)); yv= AV(y); *AS(y)=mn;                 
+  GATV(y,INT,mn*c,      2,     AS(ay)); yv= AV(y); *AS(y)=mn;                 
   GA(x,t,  mn*(am+wm),AR(ax),AS(ax)); xv=CAV(x); *AS(x)=mn; *(1+AS(x))=*zs; mvc(k*AN(x),xv,k,AV(ze));
   while(i<m||j<n){I cmp;
    if     (i==m)cmp= 1; 
@@ -198,7 +198,7 @@ F2(jtstitch){B sp2;I ar,wr;
 F1(jtlamin1){A x;I*s,*v,wcr,wf,wr; 
  RZ(w);
  wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); jt->rank=0;} wf=wr-wcr;
- GA(x,INT,1+wr,1,0); v=AV(x);
+ GATV(x,INT,1+wr,1,0); v=AV(x);
  s=AS(w); ICPY(v,s,wf); *(v+wf)=1; ICPY(v+1+wf,s+wf,wcr);
  R reshape(x,w);
 }    /* ,:"r w */

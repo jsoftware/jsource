@@ -20,7 +20,7 @@
 #define LSYMINUSE 256  // This bit is set in the original symbol table when it is in use
 
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
-#define BGA(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define BGATV(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
 // h is the array of saved info for the definition; hv->pointers to boxes;
@@ -122,12 +122,12 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
  else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
  // If the verb contains try., allocate a try-stack area for it
- if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
+ if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  // Allocate an area to use for the SI entries for sentences executed here
  // If there is space on the parser stack, use that to avoid the alloc/free overhead.  If there's not
  // enough space there, just use a free block
  if((C *)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C *)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
- else{A stkblka; GA(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
+ else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
 
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
@@ -221,7 +221,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // if it fills up, extend it by 1 as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGA(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
+     else  {r=9; BGATV(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
     // remember the line number of the for./select.
@@ -438,7 +438,7 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
 static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
+ GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
  DO(AN(w), RZ(yv[i]=vs(WVR(i))););
  RZ(t=indexof(y,link(chr[':'],str(1L,":")))); v=AV(t); j=MIN(*v,*(1+v));
  *m=take(sc(j  ),y); 
@@ -590,7 +590,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  else{
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d));
   if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}
-  GA(h,BOX,2*HN,1,0); hv=AAV(h);
+  GAT(h,BOX,2*HN,1,0); hv=AAV(h);
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }

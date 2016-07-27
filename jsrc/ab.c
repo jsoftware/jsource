@@ -70,7 +70,7 @@ static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)(n%2-1); x+=k; DO(m, DO(d,
   an=AN(a); ar=AR(a); as=AS(a); av=(I*)AV(a);                          \
   wn=AN(w); wr=AR(w); ws=AS(w); wv=(T*)AV(w); b=ar>wr;                 \
   DO(MIN(ar,wr), ASSERT(as[i]==ws[i],EVLENGTH););                      \
-  GA(z,INT,b?an:wn,MAX(ar,wr),b?as:ws); zv=(T*)AV(z);                  \
+  GATV(z,INT,b?an:wn,MAX(ar,wr),b?as:ws); zv=(T*)AV(z);                  \
   if(!AN(z))R z;                                                       \
   if     (ar==wr)DO(an, x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
   else if(ar< wr)DO(an, x=*av++; DO(wn/an, y=*wv++; *zv++=op(x,y););)  \
@@ -114,7 +114,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;V
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=zn/m;
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
  j=i0(VAV(fs)->f)-16;
- GA(z,d==SZI?LIT:C2T,zn,MAX(ar,wr),b?ws:as); 
+ GATV(z,LIT,zn,MAX(ar,wr),b?ws:as);   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+d-1)/d;}
  else if(!ar||!wr||0==n%d){f=bwI[j]; n=(n+d-1)/d; p=b?&x:&y; RZ(*p=irs2(sc(d),*p,0L,0L,0L,jtrepeat));}
  else                      f=bwC[j];
@@ -166,7 +166,7 @@ DF1(jtbitwiseinsertchar){A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
   case 15: R scc((UC)255);
   case  1: case 6: case 7: case 9: f=bwinsI[j]; c=n=n/d;
  }else if(0==m%d){f=bwinsI[j]; c/=d;}
- GA(z,LIT,m,wr-1,1+AS(w)); zv=CAV(z);
+ GATV(z,LIT,m,wr-1,1+AS(w)); zv=CAV(z);
  f(jt,1L,c,n,zv,wv);
  if(1==wr){
   r=wn-n*d; u=wv+n*d; x=*zv; v=1+zv; 

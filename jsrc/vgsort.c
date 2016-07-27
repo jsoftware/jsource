@@ -70,7 +70,7 @@ static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
 static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=(US*)AV(z);
  wv=(US*)AV(w); p=65536; up=1==jt->compgt;
- GA(y,INT,p,1,0); yv=AV(y);
+ GATV(y,INT,p,1,0); yv=AV(y);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
   DO(n, ++yv[*wv++];);
@@ -92,7 +92,7 @@ static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
  irange(AN(w),wv,&q,&p); p1=(D)p;
  if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  if(0<q&&p1+q<4*n){p+=q; q=0;}
- GA(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
+ GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
  memset(yv,C0,ps);
  for(i=0;i<m;++i){
@@ -110,8 +110,8 @@ static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
 static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
  p=65536; up=1==jt->compgt; wv=AV(w);
- GA(y,INT,p,1,0); yv=AV(y);
- GA(x,INT,n,1,0); xv=AV(x);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,INT,n,1,0); xv=AV(x);
  e=SY_64?3:1;
 #if C_LE
   d= 1; 
@@ -135,8 +135,8 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I d,e,i,k,p,q,*yv;int up;
  if(n<8000)R irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GA(z,AT(w),AN(w),AR(w),AS(w));
  p=65536; q=p/2; up=1==jt->compgt; wv=DAV(w); zu=DAV(z);
- GA(y,INT,p,1,0); yv=AV(y);
- GA(x,FL, n,1,0); xu=DAV(x);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,FL, n,1,0); xu=DAV(x);
 #if C_LE
  d= 1; e=0;
 #else

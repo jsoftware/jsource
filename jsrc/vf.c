@@ -44,7 +44,7 @@ static F2(jtrotsp){PROLOG;A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
  s=AS(w);
- GA(q,INT,wr,1L,0); qv=AV(q); memset(qv,C0,wr*SZI); 
+ GATV(q,INT,wr,1L,0); qv=AV(q); memset(qv,C0,wr*SZI); 
  RZ(a=vi(a)); v=AV(a); 
  DO(p, k=v[i]; d=s[wf+i]; qv[wf+i]=!d?0:0<k?k%d:k==IMIN?d-(-d-k)%d:d-(-k)%d;);
  wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); m=IC(y);
@@ -160,7 +160,7 @@ static A jtreshapesp0(J jt,A a,A w,I wf,I wcr){A e,p,x,y,z;B*b,*pv;I c,d,r,*v,wr
  if(!wf){if(r&&c){v=AV(y); DO(c, if(v[i])R e;);} R AN(x)?reshape(mtv,x):e;}
  GA(z,AT(w),1,wf,ws);
  zp=PAV(z); SPB(zp,e,e); SPB(zp,a,ifb(wf,b));
- GA(p,B01,r,1,0); pv=BAV(p);
+ GATV(p,B01,r,1,0); pv=BAV(p);
  v=AV(y); 
  DO(r, *pv=1; DO(c-d, if(v[d+i]){*pv=0; break;}); ++pv; v+=c;);
  SPB(zp,i,repeat(p,taker(d,y)));
@@ -181,19 +181,19 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  ASSERT(!jt->fill,EVDOMAIN);
  GA(z,AT(w),1,wf+an,ws); ICPY(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
- GA(t,INT,c+d*b[wf],1,0); v=AV(t); 
+ GATV(t,INT,c+d*b[wf],1,0); v=AV(t); 
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
   if(wf!=*AV(a1))R rank2ex(a,w,0L,1L,wcr,jtreshape);
   RE(m=prod(1+d,av)); n=IC(y); q=n*(m/ws[wf]); r=m%ws[wf];
   v=AV(y); DO(n, if(r<=*v)break; ++q; v+=c;);
-  GA(t,INT,q,1,0); u=AV(t); v=v0=AV(y);
+  GATV(t,INT,q,1,0); u=AV(t); v=v0=AV(y);
   m=j=0; DO(q, u[i]=m+*v; v+=c; ++j; if(j==n){j=0; v=v0; m+=ws[wf];});
   SPB(zp,i,stitch(abase2(vec(INT,1+d,av),t),reitem(sc(q),dropr(1L,y))));
   SPB(zp,x,reitem(sc(q),x));
  }else{                   /* dense  */
-  GA(t,INT,an,1,0); v=AV(t); ICPY(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
+  GATV(t,INT,an,1,0); v=AV(t); ICPY(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
   SPB(zp,i,ca(y));
   SPB(zp,x,irs2(vec(INT,m,v),x,0L,1L,wcr-(an-m),jtreshape));
  }
@@ -228,7 +228,7 @@ F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
  if(1>=wcr)y=a;
  else{ 
   RZ(a=vi(a)); an=AN(a); m=1;
-  GA(y,INT,an+r,1,0); v=AV(y);
+  GATV(y,INT,an+r,1,0); v=AV(y);
   ICPY(v,AV(a),an); ICPY(v+an,AS(w)+wr-r,r);
  }
  R ar==acr&&wr==wcr?reshape(y,w):irs2(y,w,0L,m,wcr,jtreshape);

@@ -16,7 +16,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;
  if(LIT&AT(w))R ca(w);  // if already ASCII, clone it and return the clone
  n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
  ASSERT(!n||C2T&AT(w),EVDOMAIN);  // must be empty or unicode
- GA(z,LIT,n,AR(w),AS(w)); zv=CAV(z);  // allocate ASCII area with same data shape
+ GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z);  // allocate ASCII area with same data shape
 #if C_LE
  if(h)DO(n, *zv++=*wv++; wv++;) else DO(n, *zv++=*wv++; ASSERT(!*wv++,EVDOMAIN);)
  // copy the low byte of the data (if there is any).  if b==0, verify high byte is 0
@@ -32,7 +32,7 @@ static F1(jttoc2){A z;C*wv,*zv;I n;
  if(C2T&AT(w))R ca(w);
  n=AN(w); wv=CAV(w);
  ASSERT(!n||LIT&AT(w),EVDOMAIN);
- GA(z,C2T,n,AR(w),AS(w)); zv=CAV(z);
+ GATV(z,C2T,n,AR(w),AS(w)); zv=CAV(z);
 #if C_LE
  DO(n, *zv++=*wv++; *zv++=0;);
 #else
@@ -48,7 +48,7 @@ static F1(jttoc2e){A z;I m,n,r;
  ASSERT(!n||LIT&AT(w),EVDOMAIN);
  m=*(AS(w)+r-1);
  ASSERT(0==m%2,EVLENGTH);
- GA(z,C2T,n/2,r,AS(w)); *(AS(z)+r-1)=m/2;
+ GATV(z,C2T,n/2,r,AS(w)); *(AS(z)+r-1)=m/2;
  memcpy(AV(z),AV(w),n);
  R z;
 }    /* convert pairs of 1-byte chars to 2-byte chars */
@@ -57,7 +57,7 @@ static F1(jtifc2){A z;I n,t,*zv;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(!n||t&JCHAR,EVDOMAIN);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z);
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  if(t&LIT){UC*v=(UC*)AV(w); DO(n, *zv++=*v++;);}
  else     {US*v=(US*)AV(w); DO(n, *zv++=*v++;);}
  R z;
@@ -66,7 +66,7 @@ static F1(jtifc2){A z;I n,t,*zv;
 static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
- GA(z,C2T,n,AR(w),AS(w)); zv=(US*)AV(z);
+ GATV(z,C2T,n,AR(w),AS(w)); zv=(US*)AV(z);
  DO(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
  R z;
 }    /* 2-byte chars from integers */

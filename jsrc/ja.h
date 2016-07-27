@@ -311,7 +311,7 @@
 #define exprndID(x,y)               jtexprndID(jt,(x),(y))  
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
-#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtfr(jt,x);}else *cc=Zc;}}  // use in void functions
+#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtmf(jt,x);}else *cc=Zc;}} 
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
@@ -354,7 +354,7 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define fr(x)                       {if(x){I Zs = AC(x)-1; if(Zs<=0)jtfr(jt,x);else AC(x)=Zs;}}  // scaf mf
+#define fr(x)                       {if(x){I Zs = AC(x)-1; if(Zs<=0)mf(x);else AC(x)=Zs;}}
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
@@ -377,6 +377,8 @@
 #define fxeach(x)                   jtfxeach(jt,(x))
 #define fxeachv(x,y)                jtfxeachv(jt,(x),(y))
 #define ga(x0,x1,x2,x3)             jtga(jt,(x0),(x1),(x2),(x3))
+#define gaf(x0)                     jtgaf(jt,(x0))
+#define gafv(x0)                    jtgafv(jt,(x0))
 #define gadv(x,y)                   jtgadv(jt,(x),(y))
 #define gah(x,y)                    jtgah(jt,(x),(y))
 #define gaussdet(x)                 jtgaussdet(jt,(x))
@@ -593,6 +595,7 @@
 #define memoput(x0,x1,x2,x3)        jtmemoput(jt,(x0),(x1),(x2),(x3))
 #define merge1(x,y)                 jtmerge1(jt,(x),(y))
 #define merge2(x0,x1,x2,x3)         jtmerge2(jt,(x0),(x1),(x2),(x3))
+#define mf(x)                       jtmf(jt,(x))
 #define minimum(x,y)                jtminimum(jt,(x),(y))
 #define minors(x)                   jtminors(jt,(x))
 #define minus(x,y)                  jtminus(jt,(x),(y))  
@@ -917,6 +920,9 @@
 #define sparseit(x,y,z)             jtsparseit(jt,(x),(y),(z))
 #define sparsen1(x)                 jtsparsen1(jt,(x))
 #define sparsep1(x)                 jtsparsep1(jt,(x))
+#define spbytesinuse()              jtspbytesinuse(jt)
+#define spstarttracking()           jtspstarttracking(jt)
+#define spendtracking()             jtspendtracking(jt)
 #define spc()                       jtspc(jt)
 #define spdscell(x0,x1,x2,x3,x4)    jtspdscell(jt,(x0),(x1),(x2),(x3),(x4))
 #define spella(x)                   jtspella(jt,(x))

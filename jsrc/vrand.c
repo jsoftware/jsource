@@ -48,7 +48,7 @@ static void lcg(I n,I*v,I seed){D c=16807.0,p=2147483647.0,x=(D)seed;
 
 F1(jtlcg_test){A x;I n=1597,*v;
  ASSERTMTV(w);
- GA(x,INT,n,1,0); v=AV(x);
+ GATV(x,INT,n,1,0); v=AV(x);
  lcg(n,v,1L);
  ASSERTSYS(v[   0]==     16807L, "lcg_test 0");
  ASSERTSYS(v[   1]== 282475249L, "lcg_test 1");
@@ -438,7 +438,7 @@ static void jtsm_init(J jt,UI s){
 F1(jtrngraw){A z;I n,*v;
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
- GA(z,INT,n,1,0); v=AV(z);
+ GATV(z,INT,n,1,0); v=AV(z);
  DO(n, *v++=NEXT;);
  R z;
 }
@@ -497,7 +497,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
  ASSERTMTV(w);
  switch(jt->rng){
   case SMI: 
-   GA(z,BOX,9,1,0); zv=AAV(z);
+   GAT(z,BOX,9,1,0); zv=AAV(z);
    RZ(*zv++=zero);
    RZ(*zv++=sc(jt->rngI0[GBI])); RZ(*zv++=vec(INT,GBN,jt->rngV0[GBI]));
    RZ(*zv++=sc(jt->rngI0[MTI])); RZ(*zv++=vec(INT,MTN,jt->rngV0[MTI]));
@@ -505,7 +505,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
    RZ(*zv++=sc(jt->rngI0[MRI])); RZ(*zv++=vec(INT,MRN,jt->rngV0[MRI]));
 #else
-   u=(D*)jt->rngV0[MRI]; GA(x,INT,MRN,1,0); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
+   u=(D*)jt->rngV0[MRI]; GAT(x,INT,MRN,1,0); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
    RZ(*zv++=sc(jt->rngI0[MRI])); *zv++=x;
 #endif
    R z;
@@ -515,10 +515,10 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
   case MRI: n=MRN; v=jt->rngv; break;
 #else
-  case MRI: n=MRN; u=(D*)jt->rngv; GA(x,INT,n,1,0); v=AV(x); DO(n, v[i]=(UI)u[i];);
+  case MRI: n=MRN; u=(D*)jt->rngv; GATV(x,INT,n,1,0); v=AV(x); DO(n, v[i]=(UI)u[i];);
 #endif
  }
- GA(z,BOX,3,1,0); zv=AAV(z);
+ GAT(z,BOX,3,1,0); zv=AAV(z);
  RZ(*zv++=sc(jt->rng)); RZ(*zv++=sc(jt->rngi)); RZ(*zv++=vec(INT,n,v));
  R z;
 }
@@ -630,7 +630,7 @@ static X jtxrand(J jt,X x){PROLOG;A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
  n=AN(x); xv=AV(x);
  c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});
  m=n-(1==c);
- GA(q,INT,m,1,0); qv=AV(q);
+ GATV(q,INT,m,1,0); qv=AV(q);
  DO(m, qv[i]=XBASE;); if(1<c)qv[m-1]=c;
  while(b){
   RZ(z=roll(q)); zv=AV(z);
@@ -644,7 +644,7 @@ static X jtxrand(J jt,X x){PROLOG;A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
 static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
  if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));
  n=AN(w); v=XAV(w);
- GA(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
+ GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=xrand(x)) else{*u++=iv0; c=1;});
  if(c){D*d;I mk,sh;
   INITD;
@@ -657,7 +657,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
 
 static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;
  n=AN(w); v=BAV(w); INITD;
- GA(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  if(sh)DO(n, *u++=*v++?0.0:NEXTD1;)
  else  DO(n, *u++=*v++?0.0:NEXTD0;)
  R z;
@@ -671,7 +671,7 @@ static A jtroll2(J jt,A w,B*b){A z;I j,n,p,q,r,*v;UI mk,t,*zv;
 #else
   mk=0x01010101;
 #endif
- GA(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);
+ GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);
  if(28==p)for(j=0;j<q;++j){
   t=NEXT;
   if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
@@ -701,7 +701,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng
  if(n){v=AV(w); m1=*v++; j=1; DO(n-1, if(m1!=*v++){j=0; break;});}
  if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
  else{
-  GA(z,INT,n,AR(w),AS(w));
+  GATV(z,INT,n,AR(w),AS(w));
   v=AV(w); u=AV(z);
   for(j=0;j<n;++j){
    m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
@@ -712,7 +712,7 @@ static A jtrollnot0(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng
 
 static A jtrollany(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];
  *b=0; n=AN(w); v=AV(w); INITD;
- GA(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
  for(j=0;j<n;++j){
   m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
   if(0==m)*u++=sh?NEXTD1:NEXTD0; 
@@ -725,7 +725,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  RZ(w);
  wt=AT(w);
  ASSERT(wt&DENSE,EVDOMAIN);
- if(!AN(w)){GA(z,B01,0,AR(w),AS(w)); R z;}
+ if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
  if(wt&B01)R rollbool(w);
  if(wt&XNUM+RAT)R rollxnum(w);
  RZ(w=vi(w)); m=*AV(w);
@@ -744,9 +744,9 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
  ASSERT(0<=m&&m<=n,EVDOMAIN);
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
-  p=hsize(m); GA(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
-  GA(y,INT,2+2*m,1,0); yv=AV(y); d=2;
-  GA(z,INT,m,1,0); zv=AV(z);
+  p=hsize(m); GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
+  GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
+  GATV(z,INT,m,1,0); zv=AV(z);
   for(i=0;i<m;++i){
    s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;
    q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
@@ -764,7 +764,7 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
 
 #define FXSDECL     A z;I i,j=jt->rng;UI*v=jt->rngV[GBI];
 #define FXSDO       {i=j==GBI?jt->rngi:jt->rngI[GBI];                                \
-                     if(!jt->rngfxsv){GA(z,INT,GBN,1,0); ra(z); jt->rngfxsv=AV(z);}  \
+                     if(!jt->rngfxsv){GAT(z,INT,GBN,1,0); ra(z); jt->rngfxsv=AV(z);}  \
                      jt->rngV[GBI]=jt->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngV[GBI]=v; jt->rngI[GBI]=jt->rngi=i; rngselects(sc(j));}
 
@@ -781,7 +781,7 @@ static F1(jtroll){A z;D rl=jt->rl;static D dm=16807,p=2147483647L;I c,n,*v,*x;
  if(ICMP(v,x,n))
   DO(n, c=*v++; ASSERT(0<c,EVDOMAIN); rl=fmod(rl*dm,p); *x++=(I)jfloor(rl*c/p);)
  else{B*x;D q=p/2;
-  GA(z,B01,n,AR(w),AS(w)); x=BAV(z);
+  GATV(z,B01,n,AR(w),AS(w)); x=BAV(z);
   DO(n, rl=fmod(rl*dm,p); *x++=rl>q;);
  }
  jt->rl=(I)rl;

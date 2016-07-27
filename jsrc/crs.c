@@ -9,14 +9,14 @@
 static A jtsprarg(J jt,I f,A x){A q;B*b,c;I r;P*xp;
  r=AR(x); xp=PAV(x);
  if(SPARSE&AT(x)){c=1; RZ(b=bfi(r,SPA(xp,a),1)); DO(f, if(!b[i]){c=0; break;});}
- else{c=0; GA(q,B01,r,1,0); b=BAV(q); memset(b,C0,r);}
+ else{c=0; GATV(q,B01,r,1,0); b=BAV(q); memset(b,C0,r);}
  memset(b,C1,f);
  R c||!r?x:reaxis(ifb(r,b),x);
 }    /* ensure frame axes are sparse */
 
 static A jtsprinit(J jt,I f,I r,I*s,I t,P*p){A a,a1,z;I n,*u,*v;P*zp;
  GA(z,t,1,r,f+s); zp=PAV(z); 
- a=SPA(p,a); n=AN(a)-f; u=f+AV(a); GA(a1,INT,n,1,0); v=AV(a1); DO(n, v[i]=u[i]-f;);
+ a=SPA(p,a); n=AN(a)-f; u=f+AV(a); GATV(a1,INT,n,1,0); v=AV(a1); DO(n, v[i]=u[i]-f;);
  SPB(zp,a,a1);
  SPB(zp,e,ca(SPA(p,e)));
  SPB(zp,i,iota(v2(0L,n)));
@@ -26,7 +26,7 @@ static A jtsprinit(J jt,I f,I r,I*s,I t,P*p){A a,a1,z;I n,*u,*v;P*zp;
 
 static B*jtspredge(J jt,A y,I f,I*zm){A q;B*b;I c,m,n,*v;
  v=AS(y); n=v[0]; c=v[1]; m=n?1:0;
- GA(q,B01,n,1,0); b=BAV(q);
+ GATV(q,B01,n,1,0); b=BAV(q);
  if(n){
   if(f){v=AV(y); DO(n-1, if(b[i]=1&&ICMP(v,v+c,f))++m; v+=c;);}else memset(b,C0,n);
   b[n-1]=1;
@@ -44,7 +44,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
   t=AT(q); zt=STYPE(t);
   GA(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
   zp=PAV(z); SPB(zp,e,q); SPB(zp,a,mtv); 
-  GA(q,INT,0L,2L,&zeroZ); SPB(zp,i,q); 
+  GATV(q,INT,0L,2L,&zeroZ); SPB(zp,i,q); 
   GA(q,t,0L,1+AR(z),0L); *AS(q)=0; ICPY(1+AS(q),AS(z),AR(z)); SPB(zp,x,q);
   R z;
  }
@@ -57,11 +57,11 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  if(d){SPB(zp,a,IX(f)); SPB(zp,i,y); SPB(zp,x,m==t?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);
  ASSERT(equ(e,SPA(zq,e)),EVNONCE);
- h=*AS(y); GA(q,INT,h,1,0); u=AV(q); memset(u,C0,h*SZI); 
+ h=*AS(y); GATV(q,INT,h,1,0); u=AV(q); memset(u,C0,h*SZI); 
  if(n){h=-1; DO(n-1, if(*v!=*(v+c)){u[*v]=i-h; h=i;} v+=c;); u[*v]=n-1-h;}
  SPB(zp,i,stitch(repeat(q,y),dropr(1L,y0)));
  a0=SPA(zq,a); v=AV(a0);
- GA(a,INT,f+c-1,1,0); u=AV(a); DO(f, u[i]=i;); DO(c-1, u[f+i]=v[1+i]+f-1;); 
+ GATV(a,INT,f+c-1,1,0); u=AV(a); DO(f, u[i]=i;); DO(c-1, u[f+i]=v[1+i]+f-1;); 
  SPB(zp,a,a);
  if(m==t)ra(SPA(zq,x));
  SPB(zp,x,m==t?SPA(zq,x):cvt(m,SPA(zq,x)));
@@ -81,8 +81,8 @@ A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG;A q,wx,wy,wy1,ww,z,ze,zi,*zv;B*wb;
   RZ(wb=spredge(wy,wf,&m));
   RZ(ww=sprinit(wf,wcr,ws,wt,wp)); wq=PAV(ww);
   RZ(ze=CALL1(f1,ww,fs));
-  GA(z,BOX,m,1,0); zv=AAV(z);
-  GA(zi,INT,m*wf,2,0); iv=AV(zi); v=AS(zi); v[0]=m; v[1]=wf;
+  GATV(z,BOX,m,1,0); zv=AAV(z);
+  GATV(zi,INT,m*wf,2,0); iv=AV(zi); v=AS(zi); v[0]=m; v[1]=wf;
   for(i=j=0;i<m;++i){
    k=1+(B*)memchr(wb+j,C1,n-j)-(wb+j);
    ICPY(iv,wv+j*c,wf); iv+=wf;
@@ -114,8 +114,8 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG;A we,ww,y,z,zi,
  RZ(w=sprarg(wf,w)); wt=AT(w); wp=PAV(w);
  y=SPA(wp,i); v=AS(y); wn=v[0]; wc=v[1]; wv=AV(y); RZ(wb=spredge(y,wf,&wm));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
- GA(z,BOX,wm,1,0); zv=AAV(z);
- GA(zi,INT,f*wm,2,0); iv=AV(zi); v=AS(zi); v[0]=wm; v[1]=f;
+ GATV(z,BOX,wm,1,0); zv=AAV(z);
+ GATV(zi,INT,f*wm,2,0); iv=AV(zi); v=AS(zi); v[0]=wm; v[1]=f;
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=0;
  while(1){
   ICPY(iv,wv,f); iv+=f; RZ(zv[j++]=CALL2(f2,a,ww,fs));
@@ -132,8 +132,8 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG;A aa,ae,y,z,zi,
  RZ(a=sprarg(af,a)); at=AT(a); ap=PAV(a);
  y=SPA(ap,i); v=AS(y); an=v[0]; ac=v[1]; av=AV(y); RZ(ab=spredge(y,af,&am));
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
- GA(z,BOX,am,1,0); zv=AAV(z);
- GA(zi,INT,f*am,2,0); iv=AV(zi); v=AS(zi); v[0]=am; v[1]=f;
+ GATV(z,BOX,am,1,0); zv=AAV(z);
+ GATV(zi,INT,f*am,2,0); iv=AV(zi); v=AS(zi); v[0]=am; v[1]=f;
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa)); j=0;
  while(1){
   ICPY(iv,av,f); iv+=f; RZ(zv[j++]=CALL2(f2,aa,w,fs));
@@ -164,8 +164,8 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
  b=af<wf; j=am*(af<wf?m:1)+wm*(af>wf?m:1);
- GA(z, BOX,j,  1,0); zv=AAV(z);
- GA(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
+ GATV(z, BOX,j,  1,0); zv=AAV(z);
+ GATV(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa));
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=s=k=0; u=ii; y=0; v=0;
  if(af==wf)while(av||wv){
@@ -222,8 +222,8 @@ A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG;A aa,ae,we,ww,
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
  b=af<wf; j=am*(af<wf?m:1)+wm*(af>wf?m:1);
- GA(z, BOX,j,  1,0); zv=AAV(z);
- GA(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
+ GATV(z, BOX,j,  1,0); zv=AAV(z);
+ GATV(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa));
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=s=k=0; u=ii; y=0; v=0;
  if(af==wf)while(av||wv){

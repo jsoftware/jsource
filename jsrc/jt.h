@@ -27,13 +27,48 @@ windows the global data that needs scrutiny is in the 0003: section.
 
 
 typedef struct {
+// The first cache line is the hottest real estate in J, because it is brought in by every
+// memory-allocation function.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
- I    arg;              /* integer argument                                */
+ B    breakignore;      /* 1 to ignore break (input_jfe_ output_jfe_       */
+ B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
- B    assert;           /* 1 iff evaluate assert. statements               */
+ B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
+ B    xdefn;            /* 1 iff within explicit definition                */
+ C    dbss;             /* single step mode                                */
+ B    stch;             /* enable setting of changed bit                   */
+ C    jerr;             /* error number (0 means no error)                 */
+ struct {
+  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+  MS *pool;             // pointer to first free block
+ }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+ I    mfreegenallo;        // Amount allocated through malloc, biased
+ I*   rank;             /* for integrated rank support                     */
+ A    fill;             /* fill                                            */
+ C*   fillv;            /* fill value                                      */
+// --- end of cache linepair 0
+// parser values
+ A    zombieval;        // value of assignsym, if it can be reused
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned
+ I    parsercalls;      /* # times parser was called                       */
+ PSTK* parserstkbgn;     // &start of parser stack
+ PSTK* parserstkend1;    // &end+1 of parser stack
+ DC   sitop;            /* top of SI stack                                 */
+ A    local;            /* local symbol table                              */
+ A    global;           /* global symbol table                             */
+ A    symb;             /* symbol table for assignment                     */
+ I    symindex;         /* symbol table index (monotonically increasing)   */
+ A    symp;             /* symbol pool array                               */
+ L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
+ A    stloc;            /* locales symbol table                            */
+ I    stmax;            /* numbered locales maximum number                 */
+ A    stnum;            /* numbered locale numbers                         */
+ A    stptr;            /* numbered locale symbol table ptrs               */
+ I    stused;           /* entries in stnum/stptr in use                   */
+
+ I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
  C    breakfn[NPATH];   /* break file name                                 */
- B    breakignore;      /* 1 to ignore break (input_jfe_ output_jfe_       */
  I*   breakmh;          /* win break map handle                            */
  C*   bx;               /* box drawing characters                          */
  A    bxa;              /* array of box drawing characters                 */
@@ -73,7 +108,6 @@ typedef struct {
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */
  A    dbresult;         /* result to pop to the next level                 */
- C    dbss;             /* single step mode                                */
  DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
  A    dbssexec;         /* single step: execute string                     */
  A    dbstops;          /* stops set by the user                           */
@@ -81,8 +115,8 @@ typedef struct {
  A    dbtrap;           /* trap, execute on suspension                     */
  I    dbuser;           /* user-entered value for db                       */
  DC   dcs;              /* ptr to debug stack entry for current script     */
- C    diratts[7];       /* set by ismatch, read by dir1                    */
  C*   dirbase;          /* for directory search                            */
+ C    diratts[7];       /* set by ismatch, read by dir1                    */
  C    dirmode[11];      /* set by ismatch, read by dir1                    */
  C    dirnamebuf[NPATH];/* for directory search                            */
  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
@@ -95,7 +129,6 @@ typedef struct {
 #endif 
  I    disp[7];          /* # different verb displays                       */
  I    dlllasterror;     /* DLL stuff                                       */
- B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
  void*dtoa;             /* use internally by dtoa.c                        */
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  I    etxn;             /* strlen(etx)                                     */
@@ -106,8 +139,6 @@ typedef struct {
  LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
  I    fdepi;            /* fn calls: current depth                         */
  I    fdepn;            /* fn calls: maximum permissible depth             */
- A    fill;             /* fill                                            */
- C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
@@ -119,32 +150,24 @@ typedef struct {
  A    fxpath;           /* f. path of names                                */
  A*   fxpv;             /* f. AAV(fxpath)                                  */
  I    getlasterror;     /* DLL stuff                                       */
- A    global;           /* global symbol table                             */
  I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
  void*heap;             /* heap handle                                     */
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
  A    iep;              /* immediate execution phrase                      */
- B    iepdo;            /* 1 iff do iep                                    */
- C    jerr;             /* error number (0 means no error)                 */
  I    jerr1;            /* last non-zero jerr                              */
  AF   lcp;              /* linear representation paren function            */
  I    lleft;            /* positive finite left    level                   */
  I    lmon;             /* positive finite monadic level                   */
- A    local;            /* local symbol table                              */
  I    locsize[2];       /* size indices for named and numbered locales     */
  I    lright;           /* positive finite right   level                   */
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
- I*   mfree[MLEN];      /* head ptr of each free list                      */
- I    mfreeb[MLEN];     /* # bytes tied up in the corresp. mfree list      */
- I    mfreet[MLEN];     /* thresholds for garbage collect                  */
  I    min;              /* the r result from irange                        */
  I    mmax;             /* space allocation limit                          */
  I    mtyo;				/* jsto output type - jfwrite arg to jpr           */
  C*   mtyostr;          /* jsto string                                     */
  I    nfe;              /* 1 for J native front end                        */
- B    nflag;            /* 1 if space required before name                 */
  B    nla[256];         /* namelist names mask                             */
  I    nlt;              /* namelist type  mask                             */
  A    nvra;             /* data blocks that are in execution somewhere     */
@@ -157,24 +180,18 @@ typedef struct {
  I    outmaxbefore;     /* output: maximum # lines before truncation       */
  I    outmaxlen;        /* output: maximum line length before truncation   */
  C    outseq[3];		/* EOL: "LF" "CR" "CRLF"                           */
- I    parsercalls;      /* # times parser was called                       */
- PSTK* parserstkbgn;     // &start of parser stack
- PSTK* parserstkend1;    // &end+1 of parser stack
  I    peekdata;         /* our window into the interpreter                 */
  A    pma;              /* perf. monitor: data area                        */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
- B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            /* print precision                                 */
  AF   pre;              /* preface function for assignment                 */
- I*   rank;             /* for integrated rank support                     */
  I    redefined;        /* symbol table entry of redefined explicit defn   */
  int  reginitflag;      /* 1 iff regular expression stuff initialized      */
  I    rela;             /* if a is relative, a itself; else 0              */
  I    relw;             /* if w is relative, w itself; else 0              */
- B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  I    rng;              /* RNG: generator selector                         */
  UF   rngF[5];          /* RNG: function to get the next random number     */
  UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
@@ -205,9 +222,7 @@ typedef struct {
  I*   scv;              /* S: AV(sca)                                      */
  int  sdinited;         /* sockets                                         */
  I    seclev;           /* security level                                  */
- B    sesm;             /* whether there is a session manager              */
  A    sf;               /* for $:                                          */
- DC   sitop;            /* top of SI stack                                 */
  A    slist;            /* files used in right arg to 0!:                  */
  I    slisti;           /* index into slist of current script              */ 
  I    slistn;           /* slist # of real entries                         */
@@ -217,23 +232,21 @@ typedef struct {
  void*smoutput;         /* sm.. sm/wd callbacks set by JSM()               */
  void*smpoll;
  D    spfor;            /* semi-global for use by spfor()                  */
- B    stch;             /* enable setting of changed bit                   */
- A    stloc;            /* locales symbol table                            */
- I    stmax;            /* numbered locales maximum number                 */
- A    stnum;            /* numbered locale numbers                         */
- A    stptr;            /* numbered locale symbol table ptrs               */
- B    stswitched;       /* called fn switched locale                       */
- I    stused;           /* entries in stnum/stptr in use                   */
- A    symb;             /* symbol table for assignment                     */
- I    symindex;         /* symbol table index (monotonically increasing)   */
- A    symp;             /* symbol pool array                               */
- L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  C*   th2buf;           /* space for formatting one number                 */
  I    th2bufn;          /* current max length of buf                       */
- B    thornuni;         // 1 iff ": allowed to produce C2T result
  UI   timelimit;        /* execution time limit milliseconds               */
+ B    assert;           /* 1 iff evaluate assert. statements               */
+ B    iepdo;            /* 1 iff do iep                                    */
+ B    nflag;            /* 1 if space required before name                 */
+ B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
+ B    retcomm;          /* 1 iff retain comments and redundant spaces      */
+ B    thornuni;         // 1 iff ": allowed to produce C2T result
+ B    sesm;             /* whether there is a session manager              */
+ B    stswitched;       /* called fn switched locale                       */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tostdout;         /* 1 if output to stdout                           */
+ B    tsubst;           /* tacit translator                                */
+ B    xco;              /* 1 iff doing x: conversion                       */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
@@ -242,13 +255,8 @@ typedef struct {
  TA*  ttab;             /* tacit translator                                */
  I    ttabi;            /* tacit translator                                */
  I    ttabi0;           /* tacit translator                                */
- B    tsubst;           /* tacit translator                                */
- B    xco;              /* 1 iff doing x: conversion                       */
- B    xdefn;            /* 1 iff within explicit definition                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
  I    xmode;            /* extended integer operating mode                 */
- A    zombieval;        // value of assignsym, if it can be reused
- L    *assignsym;       // symbol-table entry for the symbol about to be assigned
 } JST;
 
 typedef JST* J; 

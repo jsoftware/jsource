@@ -20,8 +20,8 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  u0=AV(y); u=u0+n; 
  v0=u0+wf; v=v0+n;
  if(!m){*zt=*zc=mtv; R 1;}
- GA(t,INT,2+2*m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GA(c,INT,  2*m,2,0); cv=AV(c); cv[0]=0;       cn=0; *(1+AS(c))=2;
+ GATV(t,INT,2+2*m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
+ GATV(c,INT,  2*m,2,0); cv=AV(c); cv[0]=0;       cn=0; *(1+AS(c))=2;
  for(j=1;j<m;++j){
   b=1;
   for(k=0;k<wf;++k)
@@ -46,7 +46,7 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
 static A jtgrd1spz(J jt,A w,I wf,I wcr){A z;I*ws,zn;
  ws=AS(w);
  RE(zn=prod(wf+!!wcr,ws)); 
- GA(z,INT,zn,1+wf,ws); if(!wcr)*(AS(z)+wf)=1;
+ GATV(z,INT,zn,1+wf,ws); if(!wcr)*(AS(z)+wf)=1;
  R z;
 }    /* allocate result for grd1sp__ */
 
@@ -75,7 +75,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){A c,d,t,x,y,z;I cn,*cv,*dv,i,n,n1,*tv,*
  jt->compw=w; jt->compswf=wf; jt->comp=wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
- GA(x,INT,2+n,1,0);   xv=AV(x);  /* work area for msmerge() */
+ GATV(x,INT,2+n,1,0);   xv=AV(x);  /* work area for msmerge() */
  RZ(d=apv(wf,0L,0L)); dv=AV(d);  /* odometer for frame      */
  for(i=0;i<cn;i+=2){
   jt->compstv=u=tv+cv[i]; n1=cv[1+i]-1;
@@ -109,8 +109,8 @@ static B jtspdscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;I*cv,m,n,p,*s,tn,*tv,
  y=SPA(wp,i); s=AS(y); m=s[0]; n=s[1];
  v0=AV(y); v=v0+n; 
  if(!m){*zt=*zc=mtv; R 1;}
- GA(t,INT,2+m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GA(c,INT,2,  2,0); cv=AV(c); cv[0]=0;       *(1+AS(c))=2;
+ GATV(t,INT,2+m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
+ GAT(c,INT,2,  2,0); cv=AV(c); cv[0]=0;       *(1+AS(c))=2;
  DO(m-1, if(*v0!=*v){tv[tn++]=1+i; v0=v;} v+=n;);
  tv[tn++]=m; tv[tn++]=m; cv[1]=tn;
  if(p==tn){++cv[0]; cv[1]-=2;}
@@ -129,7 +129,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){A c,t,x,y,z;I*cv,m,n,n1,p,*tv,*ws,wt,*x
  RZ(spdscell(w,wf,wcr,&c,&t));
  if(!AN(c)){DO(m, DO(n, zv[i]=i;); zv+=n;); R z;}
  cv=AV(c); n1=cv[1]-1; jt->compstv=tv=cv[0]+AV(t);
- GA(x,INT,MAX(n,1+n1),1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV(x,INT,MAX(n,1+n1),1,0); xv=AV(x);  /* work area for msmerge() */
  if(cv[0])DO(m, jt->compsi=i; DO(n1, zv[i]=i;); msort(n1,zv,xv);                                 zv+=n;)
  else     DO(m, jt->compsi=i; DO(n1, xv[i]=i;); msort(n1,xv,zv); sp1merge0(n,n1,yc,zv,xv,yv,tv); zv+=n;);
  R z;
@@ -202,8 +202,8 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){A c,t,x,y,z,zy;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DO(cn, m=MAX(m,cv[j]); j+=2;);
- GA(x,INT,m,1,0); xu=AV(x);  /* work area for msmerge() */
- GA(x,INT,m,1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV(x,INT,m,1,0); xu=AV(x);  /* work area for msmerge() */
+ GATV(x,INT,m,1,0); xv=AV(x);  /* work area for msmerge() */
  zy=SPA(zp,i); zyv=AV(zy);
  for(i=0;i<cn;i+=2){
   jt->compstv=u=tv+cv[i]; n1=cv[1+i]-1; m=0;

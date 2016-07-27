@@ -35,20 +35,21 @@
 #endif
 
 
-F1(jtsp){ASSERTMTV(w); R sc(jt->bytes);}
+F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}
 
 F1(jtspit){A z;I k; 
  F1RANK(1,jtspit,0); 
- jt->bytesmax=k=jt->bytes;
+ jt->bytesmax=k=spstarttracking();  // start keeping track of bytesmax
  FDEPINC(1); z=exec1(w); FDEPDEC(1);
+ spendtracking();  // end tracking, even if there was an error
  RZ(z);
  R sc(jt->bytesmax-k);
-}
+}   // 7!:2, calculate max space used
 
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-F1(jtpeekdata){ ASSERTMTV(w); R sc(jt->peekdata); }
+F1(jtpeekdata){ jt->peekdata = 1; R sc(0); }
 
 // 6!:6, used to run tests that need to run in a sentence
 F1 (jttestcode){
@@ -131,7 +132,7 @@ R sc(0);
 F1(jtts){A z;D*x;struct tm*t;struct timeval tv;
  ASSERTMTV(w);
  gettimeofday(&tv,NULL); t=localtime((time_t*)&tv.tv_sec);
- GA(z,FL,6,1,0); x=DAV(z);
+ GAT(z,FL,6,1,0); x=DAV(z);
  x[0]=t->tm_year+1900;
  x[1]=t->tm_mon+1;
  x[2]=t->tm_mday;
@@ -149,7 +150,7 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  n=AN(w); xv=DAV(x);
  if(!n)R x;
  if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
- GA(z,LIT,n,AR(w),AS(w)); zv=CAV(z); memcpy(zv,CAV(w),n);
+ GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); memcpy(zv,CAV(w),n);
  q=0; v=zv; DO(n, if('Y'==*v++)++q;); u=2==q?s+2:s;
  sprintf(s,FMTI04,(I)xv[0]);             v=zv; DO(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
  sprintf(s,FMTI02,(I)xv[1]);        u=s; v=zv; DO(n, if(*v=='M'){*v=*u++; if(!*u)break;} ++v;);
@@ -250,7 +251,7 @@ F1(jtpmctr){D x;I q;
  ASSERT(jt->pma,EVDOMAIN);
  x=q+(D)jt->pmctr;
  ASSERT(IMIN<=x&&x<=IMAX,EVDOMAIN);
- jt->pmctr=q=(I)x; 
+ jt->pmctr=q=(I)x;
  R sc(q);
 }    /* add w to pmctr */
 
@@ -283,6 +284,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  x=jt->pma;
  jt->pmctr=0;
  if(wn){ra(w); jt->pma=w;}else jt->pma=0;
+ if(jt->pma)spstarttracking();else spendtracking();  // track whenever PM is running
  RZ(pmfree(x));
  if(wn){
   v=CAV(w);
@@ -291,7 +293,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
   jt->pmrec=u->rec=a0;
   u->n=n=(wn-s0)/s; 
   u->i=0;
-  u->s=jt->bytesmax=jt->bytes;
+  u->s=jt->bytesmax=spbytesinuse();
   u->trunc=a1; 
   u->wrapped=0;
  }
@@ -328,15 +330,15 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
  if(!(INT&AT(w)))RZ(w=cvt(INT,w));
  wn=AN(w); wv=AV(w);
  u=(PM0*)AV(jt->pma); p=u->wrapped?u->n-u->i:0; q=u->i; n=p+q;
- GA(x,B01,n,1,0); b=BAV(x); memset(b,wn?C0:C1,n);
+ GATV(x,B01,n,1,0); b=BAV(x); memset(b,wn?C0:C1,n);
  if(wn){
   DO(wn, k=wv[i]; if(0>k)k+=n; ASSERT(0<=k&&k<n,EVINDEX); b[k]=1;);
   m=0; 
   DO(n, if(b[i])++m;);
  }else m=n;
  v0=jt->pmv; vq=q+v0;
- GA(z,BOX,1+PMCOL,1,0); zv=AAV(z);
- GA(t,BOX,2*m,1,0); av=AAV(t); au=m+av;
+ GAT(z,BOX,1+PMCOL,1,0); zv=AAV(z);
+ GATV(t,BOX,2*m,1,0); av=AAV(t); au=m+av;
  v=vq; DO(p, if(b[  i]){RZ(*av++=v->name?sfn(0,v->name):mtv); RZ(*au++=v->loc?sfn(0,v->loc):mtv);} ++v;); 
  v=v0; DO(q, if(b[p+i]){RZ(*av++=v->name?sfn(0,v->name):mtv); RZ(*au++=v->loc?sfn(0,v->loc):mtv);} ++v;); 
  RZ(x=indexof(t,t));
@@ -345,10 +347,10 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
  RZ(x=indexof(repeat(c,x),x)); iv=AV(x);
  RZ(zv[0]=vec(INT,m,  iv));
  RZ(zv[1]=vec(INT,m,m+iv));
- GA(t,INT,m,1,0); zv[2]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=(I)v->val;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=(I)v->val; ++v;);
- GA(t,INT,m,1,0); zv[3]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->lc; ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->lc; ++v;);
- GA(t,INT,m,1,0); zv[4]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->s;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->s;  ++v;); 
- GA(t,FL, m,1,0); zv[5]=t; dv=DAV(t);
+ GATV(t,INT,m,1,0); zv[2]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=(I)v->val;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=(I)v->val; ++v;);
+ GATV(t,INT,m,1,0); zv[3]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->lc; ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->lc; ++v;);
+ GATV(t,INT,m,1,0); zv[4]=t; iv=AV(t); v=vq; DO(p, if(b[i])*iv++=v->s;  ++v;); v=v0; DO(q, if(b[p+i])*iv++=v->s;  ++v;); 
+ GATV(t,FL, m,1,0); zv[5]=t; dv=DAV(t);
 #if SY_WIN32
  v=vq; DO(p, if(b[i]  )*dv++=(((LI*)v->t)->LowPart+qpm*((LI*)v->t)->HighPart)/pf; ++v;);
  v=v0; DO(q, if(b[p+i])*dv++=(((LI*)v->t)->LowPart+qpm*((LI*)v->t)->HighPart)/pf; ++v;);
@@ -361,7 +363,7 @@ F1(jtpmunpack){A*au,*av,c,t,x,z,*zv;B*b;D*dv;I*iv,k,m,n,p,q,wn,*wv;PM*v,*v0,*vq;
 
 F1(jtpmstats){A x,z;I*zv;PM0*u;
  ASSERTMTV(w);
- GA(z,INT,6,1,0); zv=AV(z);
+ GAT(z,INT,6,1,0); zv=AV(z);
  if(x=jt->pma){
   u=(PM0*)AV(x);
   zv[0]=u->rec;

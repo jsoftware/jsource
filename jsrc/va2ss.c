@@ -54,7 +54,7 @@ static I ssingflen(J jt, I ra, I rw){I ca,cw,fa,fw,r;
 }
 // allocate a singleton block of type t for rank r.
 static A ssingallo(J jt,I r,I t){A z;
- GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt
+ GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
 }
 
 #define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
@@ -68,11 +68,11 @@ static A ssingallo(J jt,I r,I t){A z;
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
   else if (AINPLACE){ z = a; AT(z) = FL; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-  else {GA(z, FL, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, FL, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
  } else { \
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
   else if (WINPLACE){ z = w; AT(z) = FL; } \
-  else {GA(z, FL, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, FL, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
  } \
 } /* We have the output block */
 
@@ -88,11 +88,11 @@ static A ssingallo(J jt,I r,I t){A z;
   if (AINPLACE){ z = a; AT(z) = B01; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GA(z, B01, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, B01, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
  } else { \
   if (WINPLACE){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GA(z, B01, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, B01, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
  } \
 } /* We have the output block, or 0 if we are returning an atom */
 

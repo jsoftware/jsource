@@ -82,7 +82,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
 static DF1(jtply1){PROLOG;DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;
  hs=sv->h; m=AN(hs); 
  RZ(x=ravel(hs)); RZ(y=from(j=grade1(x),x)); nv=AV(y);
- GA(x,BOX,m,1,0); xv=AAV(x);
+ GATV(x,BOX,m,1,0); xv=AAV(x);
  while(p<m&&0>nv[p])p++;
  if(p<m){
   RZ(z=ca(w));

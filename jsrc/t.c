@@ -34,13 +34,13 @@ static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
 
 B jtpinit(J jt){A t;C*s;
  MC(wtype,ctype,256L); wtype['N']=CN; wtype['B']=CB;
- GA(alp,LIT,NALP,1,0); s=CAV(alp); DO(NALP,*s++=(C)i;); 
+ GAT(alp,LIT,NALP,1,0); s=CAV(alp); DO(NALP,*s++=(C)i;); 
  /*  a. */  pst[(UC)CALP ]=t=alp;                 ACX(t);
  /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);
  /*  (  */  pst[(UC)CLPAR]=t=sc4(LPAR,0L);        ACX(t);
  /*  )  */  pst[(UC)CRPAR]=t=sc4(RPAR,0L);        ACX(t);
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
- /*  =: */  GA(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
+ /*  =: */  GAT(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
                                                         
  /*  =  */  pdef(CEQ,     VERB, jtsclass,  jteq,     RMAX,0,   0   ,VINPLACEOK2);
  /*  =. */       /* see above */

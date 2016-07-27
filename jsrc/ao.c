@@ -94,7 +94,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
 
 #define PMLOOP(Tw,Tz,zt,expr0,expr)  \
  {Tw*aa=(Tw*)av,*u,*v,*ww=(Tw*)wv;Tz x,*zv;  \
-  b=1; GA(z,zt,zn,1,0); zv=(Tz*)AV(z);       \
+  b=1; GATVS(z,zt,zn,1,0,zt##SIZE); zv=(Tz*)AV(z);       \
   for(i=0;i<zn;++i){                         \
    j=MIN(i,m1); u=aa+j; v=ww+i-j;            \
    p=MIN(1+i,zn-i); p=MIN(p,k);              \
@@ -135,9 +135,9 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VF adotymes,adosum;
    b=1;
    RZ(var(CSTAR,a,w,at,wt,&adotymes,&i)); vains(CPLUS,wt,&adosum,&i);
-   GA(a1,INT,m,1,0); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
-   GA(y,INT,MIN(m,n),1,0); yv=AV(y);
-   GA(z,INT,zn,1,0); zv=AV(z);
+   GATV(a1,INT,m,1,0); aa=AV(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
+   GATV(y,INT,MIN(m,n),1,0); yv=AV(y);
+   GATV(z,INT,zn,1,0); zv=AV(z);
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
@@ -165,7 +165,7 @@ static DF2(jtkeysp){PROLOG;A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(b=ne(e,x));
  RZ(by=repeat(b,y));
  RZ(x=key(repeat(b,x),from(ravel(by),w),self));
- GA(q,SB01,1,1,0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
+ GAT(q,SB01,1,1,0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
  p=PAV(q); SPB(p,a,iv0); SPB(p,e,one); SPB(p,i,by); SPB(p,x,reshape(tally(by),zero));
  RZ(z=over(df1(repeat(q,w),VAV(self)->f),x));
  z=j?cdot2(box(IX(1+j)),z):z;
@@ -177,7 +177,7 @@ static DF2(jtkeyi){PROLOG;A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
  jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  n=IC(a); av=AV(a);
  RZ(j=grade1(a)); jv=AV(j);
- GA(p,B01,n,1,0); pv=BAV(p);
+ GATV(p,B01,n,1,0); pv=BAV(p);
  DO(n, c=d; d=av[*jv++]; *pv++=c<d;);
  z=df2(p,from(j,w),cut(VAV(self)->f,one));
  jt->ct=ctold;
@@ -253,7 +253,7 @@ static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*q
  at=keyrs(a,&r,&s); c=aii(w); m=s;
  zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s&&s<=MAX(2*n,65536);
  if(bb){
-  GA(b,B01,s,  1,0); bv=BAV(b); memset(bv,C1,s); bv-=r;
+  GATV(b,B01,s,  1,0); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
  }else{RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}
  GA(z,zt,m*c,wr,AS(w)); *AS(z)=m; zv0=AV(z);
@@ -309,9 +309,9 @@ static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,
  at=keyrs(a,&r,&s); c=aii(w);
  if(wt&FL)NAN0;
  if(s&&s<=MAX(2*n,65536)){
-  GA(p,INT,s,  1, 0    ); pv= AV(p); memset(pv,C0,s*  SZI); pv-=r;
-  GA(q,FL, s*c,1, 0    ); qv=DAV(q); memset(qv,C0,s*c*SZD); qv-=r*c;
-  GA(z,FL, s*c,wr,AS(w)); zv=DAV(z);
+  GATV(p,INT,s,  1, 0    ); pv= AV(p); memset(pv,C0,s*  SZI); pv-=r;
+  GATV(q,FL, s*c,1, 0    ); qv=DAV(q); memset(qv,C0,s*c*SZD); qv-=r*c;
+  GATV(z,FL, s*c,wr,AS(w)); zv=DAV(z);
   switch(KMCASE(at,wt)){
    case KMCASE(B01,B01): KMACC(B, B); break;
    case KMCASE(B01,INT): KMACC(B, I); break;
@@ -335,8 +335,8 @@ static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,
   *AS(z)=m; AN(z)=m*c;
  }else{
   RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);
-  GA(p,INT,m,  1, 0    );           pv= AV(p); memset(pv,C0,m*  SZI);
-  GA(z,FL, m*c,wr,AS(w)); *AS(z)=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
+  GATV(p,INT,m,  1, 0    );           pv= AV(p); memset(pv,C0,m*  SZI);
+  GATV(z,FL, m*c,wr,AS(w)); *AS(z)=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
   switch(wt){
    case B01: KMFUN(B); break;
    case INT: KMFUN(I); break;
@@ -351,18 +351,18 @@ static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,
 
 #define GRPCD(T)            {T*v=(T*)wv; DO(n, j=*v++; if(0<=dv[j])++cv[j]; else{dv[j]=i; cv[j]=1; ++zn;});}
 #define GRPIX(T,asgn,j,k)   {T*v=(T*)wv; DO(n, j=asgn; if(m>=j)*cu[k]++=i; \
-                                 else{GA(x,INT,cv[k],1,0); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
+                                 else{GATV(x,INT,cv[k],1,0); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
 
 F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
  RZ(w);
  if(SPARSE&AT(w))RZ(w=denseit(w));
  n=IC(w); t=AT(w); p=q=0; b=0; k=n?aii(w)*bp(t):0;
- if(!AN(w)){GA(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
+ if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
  if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
  if(b=q&&(2>=k||q<=2*n)){
-  GA(c,INT,q,1,0); cv=AV(c)-p;  /* counts  */
-  GA(d,INT,q,1,0); dv=AV(d)-p;  /* indices */
+  GATV(c,INT,q,1,0); cv=AV(c)-p;  /* counts  */
+  GATV(d,INT,q,1,0); dv=AV(d)-p;  /* indices */
   wv=AV(w); v=dv+p; DO(q, *v++=-1;);
   switch(k){
    case 1:   GRPCD(UC); break;
@@ -370,10 +370,10 @@ F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
    case SZI: GRPCD(I);
  }}else{
   RZ(w=indexof(w,w)); wv=AV(w);
-  GA(c,INT,n,1,0); cv=AV(c);
+  GATV(c,INT,n,1,0); cv=AV(c);
   m=-1; v=wv; DO(n, j=*v++; if(m>=j)++cv[j]; else{m=j; cv[j]=1; ++zn;});
  }
- GA(z,BOX,zn,1,0); zv=AAV(z);
+ GATV(z,BOX,zn,1,0); zv=AAV(z);
  m=-1; cu=(I**)cv;
  switch(b*k){
   case 1:   GRPIX(UC,dv[k=*v++],j,k); break;
@@ -397,7 +397,7 @@ static F1(jtkeytallysp){PROLOG;A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
  j=0; DO(c, if(k<=u[i])break; if(u[i]==v[i])++j;);
  RZ(b=ne(e,x));
  RZ(x=repeat(b,x)); RZ(x=keytally(x,x,mark)); u=AV(x); d=AN(x);
- GA(z,INT,1+d,1,0); v=AV(z);
+ GATV(z,INT,1+d,1,0); v=AV(z);
  DO(j, *v++=*u++;); *v++=IC(w)-bsum(c,BAV(b)); DO(d-j, *v++=*u++;);
  EPILOG(z);
 }    /* x #/.y , sparse x */
@@ -415,8 +415,8 @@ static DF2(jtkeytally){PROLOG;A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
  at=keyrs(a,&r,&s);
  if(n&&at&B01&&1>=AR(a)){B*b=(B*)av; k=bsum(n,b); R !k||n==k?vci(k?k:n):v2(*b?k:n-k,*b?n-k:k);}
  if(s&&s<=MAX(2*n,65536)){A z;I*zv;
-  GA(z,INT,s,1,0); zv=AV(z);
-  GA(q,INT,s,1,0); qv=AV(q)-r;
+  GATV(z,INT,s,1,0); zv=AV(z);
+  GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;);
   switch(at){
    case LIT: KEYTALLY(UC); break;
@@ -456,13 +456,13 @@ static DF2(jtkeyheadtally){PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v
   if(*p){i=0; d=(B*)memchr(p,C0,n); j=d?d-p:0;}
   else  {j=0; c=(B*)memchr(p,C1,n); i=c?c-p:0;}
   k=bsum(n,p); m=c&&d?2:1;
-  GA(x,INT,m,1,0); v=AV(x); *v++=MIN(i,j);      if(c&&d)*v=MAX(i,j); 
-  GA(y,INT,m,1,0); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
+  GATV(x,INT,m,1,0); v=AV(x); *v++=MIN(i,j);      if(c&&d)*v=MAX(i,j); 
+  GATV(y,INT,m,1,0); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
   R stitch(b?from(x,w):y,b?y:from(x,w));
  }
  if(at&LIT+C2T+INT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
-  GA(q,INT,s,1,0); qv=AV(q)-r;
+  GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;); k=0;
   switch(9*b+(at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;

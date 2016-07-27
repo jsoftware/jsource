@@ -36,7 +36,7 @@ F1(jthost){A z;
 {
  A t;I b;C*fn,*s;F f;I n;
  n=AN(w);
- GA(t,LIT,n+5+L_tmpnam,1,0); s=CAV(t);
+ GATV(t,LIT,n+5+L_tmpnam,1,0); s=CAV(t);
  fn=5+n+s; MC(s,AV(w),n);
 #ifdef ANDROID
  MC(n+s,"   > ",5L);
@@ -94,7 +94,7 @@ F1(jthostio){C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
  F1RANK(1,jthostio,0);
  RZ(w=vs(w));
- s=CAV(w); GA(z,INT,3,1,0); pz=(F*)AV(z);
+ s=CAV(w); GAT(z,INT,3,1,0); pz=(F*)AV(z);
  if((r=pipe(fii))==-1||pipe(foi)==-1){if(r!=-1)CL(fi); ASSERT(0,EVFACE);}
  if(!((pz[1]=fdopen(fi[0],"r"))&&(pz[2]=fdopen(fo[1],"w")))){
   if(pz[1])fclose(pz[1]); CL(fi);CL(fo);}

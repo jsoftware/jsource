@@ -262,7 +262,7 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
   RZ(x=ext(1,jt->sbu)); jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  }
  if(AN(jt->sbs)<n+jt->sbsn){            /* extend sbs strings           */
-  GA(x,LIT,2*(n+jt->sbsn),1,0); MC(CAV(x),jt->sbsv,jt->sbsn);
+  GATV(x,LIT,2*(n+jt->sbsn),1,0); MC(CAV(x),jt->sbsv,jt->sbsn);
   fa(jt->sbs); ra(x); jt->sbs=x; jt->sbsv=CAV(x);
  }
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
@@ -320,13 +320,13 @@ static A jtsbunstr(J jt,I q,A w){A z;B c2;I i,j,m,wn;SB*zv;
  if(c2){C2 c,*wv=(C2*)AV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
-  GA(z,SBT,m,1,0); zv=SBAV(z);
+  GATV(z,SBT,m,1,0); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv))); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv))); j=i+1;}}
  }else{C c,*wv=CAV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
-  GA(z,SBT,m,1,0); zv=SBAV(z);
+  GATV(z,SBT,m,1,0); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,i-j,j+wv)); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,i-j,j+wv)); j=i+1;}}
  }
@@ -339,7 +339,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;B c2;I i,m,wc,wr,*ws;SB*zv;
  ASSERT(1<AR(w),EVRANK);
  c2=1&&AT(w)&C2T; wr=AR(w); ws=AS(w); wc=ws[wr-1];
  RE(m=wc?AN(w)/wc:prod(wr-1,ws));
- GA(z,SBT,m,wr-1,ws); zv=SBAV(z);
+ GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
  if(!wc)memset(zv,C0,m*sizeof(SB));
  else if(c2){C2 c=(C2)cx,*s,*wv=(C2*)AV(w);
   for(i=0;i<m;++i){
@@ -359,7 +359,7 @@ static F1(jtsbunbox){A*wv,x,z;B c2;I i,m,n,wd;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
  m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
+ GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
   x=WVR(i); n=AN(x); c2=1&&AT(x)&C2T;
   ASSERT(!n||AT(x)&LIT+C2T,EVDOMAIN);
@@ -407,7 +407,7 @@ F1(jtsborder){A z;I n,*zv;SB*v;
  RZ(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z);
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  DO(n, *zv++=SBUV(*v++)->order;);
  R z;
 }    /* order numbers for symbol array w */
@@ -416,7 +416,7 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
  RZ(w);
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
- GA(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
+ GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
  DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=SBC2&u->flag?vec(C2T,u->n/2,s):str(u->n,s)););
  R z;
 }    /* boxed strings for symbol array w */
@@ -463,7 +463,7 @@ static A jtsblit(J jt,C c,A w){A z;B c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 
 static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  n=jt->sbun; v=jt->sbuv; p=AN(jt->sbh);
- GA(z,INT,n,1,0); zv=AV(z);
+ GATV(z,INT,n,1,0); zv=AV(z);
  DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){j=(j+1)%p; ++k;} *zv++=k;);
  R z;
 }    /* # queries in hash table for each unique symbol */
@@ -509,13 +509,13 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG;A x,*
  ASSERTD(equ(vec(INT,1L,&hn),factor(sc(hn))),"#h prime");
  b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD(0<=j&&j<c,"h index"););
  ASSERTD(b,"h full");
- GA(x,B01,c,1,0); lfv=BAV(x); memset(lfv,C0,c);
- GA(x,B01,c,1,0); rtv=BAV(x); memset(rtv,C0,c);
- GA(x,B01,c,1,0); dnv=BAV(x); memset(dnv,C0,c);
- GA(x,B01,c,1,0); upv=BAV(x); memset(upv,C0,c);
- GA(x,LIT,c,1,0); ptv=CAV(x); memset(ptv,C0,c); ptv[0]=1;
- GA(x,BOX,c,1,0); xv=AAV(x); RZ(xv[0]=str(uv->n,sv+uv->i));
- GA(y,INT,c,1,0); yv= AV(y); yv[0]=uv->order;
+ GATV(x,B01,c,1,0); lfv=BAV(x); memset(lfv,C0,c);
+ GATV(x,B01,c,1,0); rtv=BAV(x); memset(rtv,C0,c);
+ GATV(x,B01,c,1,0); dnv=BAV(x); memset(dnv,C0,c);
+ GATV(x,B01,c,1,0); upv=BAV(x); memset(upv,C0,c);
+ GATV(x,LIT,c,1,0); ptv=CAV(x); memset(ptv,C0,c); ptv[0]=1;
+ GATV(x,BOX,c,1,0); xv=AAV(x); RZ(xv[0]=str(uv->n,sv+uv->i));
+ GATV(y,INT,c,1,0); yv= AV(y); yv[0]=uv->order;
  for(i=1,v=1+uv;i<c;++i,++v){B c2;I ord,vi,vn;UC*vc;UI k;
   c2=1&&v->flag&SBC2;
   vi=v->i;
@@ -564,7 +564,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
 }
 
 static F1(jtsbgetdata){A z,*zv;
- GA(z,BOX,8,1,0); zv=AAV(z);
+ GAT(z,BOX,8,1,0); zv=AAV(z);
  RZ(zv[0]=sc(jt->sbun));
  RZ(zv[1]=sc(jt->sbsn));
  RZ(zv[2]=ca(jt->sbu));
@@ -623,7 +623,7 @@ F2(jtsb2){A z;I j,k,n;
   case 21:   FILLFACTOR/=2; ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(FILLFACTOR);
 #ifdef TMP
   case 22:
-    GA(z,INT,10,1,0); zv=AV(z);
+    GAT(z,INT,10,1,0); zv=AV(z);
     zv[0] = tmp_lr      = 0;
     zv[1] = tmp_rr      = 0;
     zv[2] = tmp_lt      = 0;
@@ -636,7 +636,7 @@ F2(jtsb2){A z;I j,k,n;
     zv[9] = tmp_rhit;
     R z;
   case 23:
-    GA(z,INT,10,1,0);
+    GAT(z,INT,10,1,0);
     zv[0] = tmp_lr;
     zv[1] = tmp_rr;
     zv[2] = tmp_lt;
@@ -657,9 +657,9 @@ F2(jtsb2){A z;I j,k,n;
 // automatically freed by tpop()
 B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
  s[0]=2000; s[1]=c;
- GA(x,LIT,20000,1,0);       jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;
+ GA(x,LIT,20000,1,0);       jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
  RZ(x=apv(ptab[5+PTO],-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
- GA(x,INT,*s*c,2,s);        jt->sbu=x; jt->sbuv=(SBU*)AV(x);
+ GATV(x,INT,*s*c,2,s);        jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */

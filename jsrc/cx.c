@@ -17,7 +17,7 @@
 #include "p.h"
 #include "w.h"
 
-#define LSYMINUSE 256  // This bit is set in the original symbol table when it is in use
+#define LSYMINUSE 256  // This bit is set in the rank of the original symbol table when it is in use
 
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
 #define BGATV(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))

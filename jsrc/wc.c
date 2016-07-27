@@ -206,8 +206,21 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       if(r==CWHILE||r==CWHILST||r==CFOR)--wb;  // if this ends a loop, decrement the nested-loop count
       CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
  }}}
+ if(top)R stack[top-1];
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
- R top?stack[top-1]:-1;
+ // Fill in the canend field, which is 1 if the previous B-block result can become the overall result.  It is used only
+ // in T blocks
+ // Clear canend to 0, meaning 'don't know'
+
+ // Set 'can' in all lines that end: return., goto.
+
+ // Loop till no 'can' propagates:
+  // Propagate 'can' backwards, but stop when a B-block sentence is encountered
+
+  // For each line, look at possible next lines.  If any is 'can', set the line to 'can';
+  // If all possible next lines are 'can't', set 'can't
+
+ R -1;
 }    /* modifies con; return -1 if OK or index of bad con entry */
 
 A jtspellcon(J jt,I c){

@@ -445,7 +445,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI); 
- if(mode==INUB||mode==INUBI){GA(y,B01,m,1,0); yb=BAV(y);}
+ if(mode==INUB||mode==INUBI){GATV(y,B01,m,1,0); yb=BAV(y);}
  md=w==mark?-1:mode<IPHOFFSET?mode:mode-IPHOFFSET;
  av=AAV(a); ad=(I)a*ARELATIVE(a); acn=ak/sizeof(A);
  wv=AAV(w); wd=(I)w*ARELATIVE(w); wcn=wk/sizeof(A);
@@ -502,8 +502,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
-    case IICO:    GA(z,INT,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
-    case IEPS:    GA(z,B01,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              R ca(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R zero;
@@ -512,14 +512,16 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark
     case IJ0EPS:                             R sc(zn-1);
     case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
  }}}
- if(at&SPARSE||wt&SPARSE){
+ if(at&SPARSE||wt&SPARSE){A z;
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af||wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
   switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
-   case 1: EPILOG(indexofxx(mode,a,w));
-   case 2: EPILOG(indexofxx(mode,a,w));
-   case 3: EPILOG(indexofss(mode,a,w));
- }}
+   case 1: z=indexofxx(mode,a,w); break;
+   case 2: z=indexofxx(mode,a,w); break;
+   case 3: z=indexofss(mode,a,w); break;
+  }
+  EPILOG(z);
+ }
  m=acr?as[af]:1; n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
  RE(t=mk?at:maxtype(at,wt)); k1=bp(t); k=n*k1; th=HOMO(at,wt); jt->min=ss=0;
  ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  
@@ -530,17 +532,17 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark
  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
  if(!mk)switch(mode){I q;
   case IIDOT: 
-  case IICO:    GA(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GA(z,B01,zn,f+f1+!acr,s); if(af)ICPY(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
+  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
+  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)ICPY(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
   case INUB:    q=MIN(m,p); GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GA(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
-  case INUBI:   q=MIN(m,p); GA(z,INT,q,1,0); break;
-  case IIFBEPS: GA(z,INT,c,1,0); break;
+  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
+  case INUBI:   q=MIN(m,p); GATV(z,INT,q,1,0); break;
+  case IIFBEPS: GATV(z,INT,c,1,0); break;
   case IANYEPS: case IALLEPS:
-                GA(z,B01,1,0,0); break;
+                GAT(z,B01,1,0,0); break;
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS: case ISUMEPS:
-                GA(z,INT,1,0,0); break;
+                GAT(z,INT,1,0,0); break;
  }
  if(!(mk||m&&n&&zn&&th))switch(mode){
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
@@ -574,15 +576,15 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark
   if(fn!=jtiobs)GA(h,ht,p,1,0);
  }
  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
-  GA(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
+  GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
   q=k; u=CAV(a); v=u+k;
   DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);
-  if(q){jt->hin=k-q; GA(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
+  if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
  }
  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
  if(mk){A x,*zv;I*xv,ztype;
-  GA(z,BOX,3,1,0); zv=AAV(z);
-  GA(x,INT,6,1,0); xv=AV(x);
+  GAT(z,BOX,3,1,0); zv=AAV(z);
+  GAT(x,INT,6,1,0); xv=AV(x);
   switch(mode){
    default:                    ztype=0; break;  /* integer vector      */
    case ILESS:                 ztype=1; break;  /* type/shape from arg */
@@ -614,11 +616,11 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  if(mode==ILESS&&(t!=wt||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
  if(!(m&&n&&c&&HOMO(t,wt)&&t>=wt))R indexofsub(mode,a,w);
  switch(ztype){
-  case 0: GA(z,INT,c,    f1, ws); break;
+  case 0: GATV(z,INT,c,    f1, ws); break;
   case 1: GA(z,wt, AN(w),1+r,ws); break;
-  case 2: GA(z,B01,c,    f1, ws); break;
-  case 3: GA(z,B01,1,    0,  0 ); break;
-  case 4: GA(z,INT,1,    0,  0 ); break;
+  case 2: GATV(z,B01,c,    f1, ws); break;
+  case 3: GAT(z,B01,1,    0,  0 ); break;
+  case 4: GAT(z,INT,1,    0,  0 ); break;
  }
  jt->hin=AN(hi); jt->hiv=AV(hi);
  if(t!=wt)RZ(w=cvt(t,w)) else if(t&FL+CMPX)RZ(w=cvt0(w));
@@ -686,7 +688,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=*AS(xy);
  m=j=-1; DO(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
- GA(z,SB01,1,2,0);  v=AS(z); v[0]=1+m; v[1]=n;
+ GAT(z,SB01,1,2,0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
  SPB(p,e,zero);
@@ -747,8 +749,8 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  if(t!=at)RZ(a=cvt(t,a));
  if(t!=wt)RZ(w=cvt(t,w));
  p=hsize(m);
- GA(h,INT,p,1,0);
- GA(z,INT,AN(w),wr,ws);
+ GATV(h,INT,p,1,0);
+ GATV(z,INT,AN(w),wr,ws);
  switch(t){
   default:   ASSERT(0,EVNONCE);     
   case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;

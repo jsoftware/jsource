@@ -149,7 +149,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
  ASSERT(!ICMP(as,ws,r),EVLENGTH);
  if(an&&wn){m=prod(r,s); n=prod(b?ar-r:wr-r,r+s);}else m=n=0; 
- GA(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
+ GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
  if(!wr&&p&&!(p&p1)){
   k=0; j=1; while(p>j){++k; j<<=1;}
@@ -179,7 +179,7 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  ASSERT(t&DENSE,EVNONCE);
  if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
  if(c)m=n/c; else RE(m=prod(r-1,s));
- GA(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
+ GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
  if(c)DO(m, p=0; d=1; DO(c, if(*--v)p+=d; d+=d;); *--x=p;)
  else memset(x-m,C0,m*SZI);
  R z;
@@ -225,7 +225,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
 // obsolete c=MAX(1,c);  // always at least 1
  DO(n, p=*v++; x|=(UI)(p>0?p:-p););  // overflow happens on IMIN, no prob
  for(c=0;x;x>>=1){++c;}  // count # bits in result
- GA(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;  // Allocate result area, install shape
+ GATV(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;  // Allocate result area, install shape
  v=n+AV(w); zv=AN(z)+BAV(z);  // v->last input location (prebiased), zv->last result location (prebiased)
  DO(n, x=*--v; DO(c, *--zv=(B)(x&1); x>>=1;));  // copy in the bits, starting with the LSB
  R z;
@@ -239,7 +239,7 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
  if(!ar)R residue(a,w);
  if(1==ar&&at&B01+INT&&wt&B01+INT){I*av,d,r,*u,*wv,x,*zv;
   RZ(coerce2(&a,&w,INT));
-  RE(zn=mult(an,wn)); GA(z,INT,zn,1+wr,AS(w)); *(wr+AS(z))=an;
+  RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); *(wr+AS(z))=an;
   av=an+AV(a); wv=wn+AV(w); zv=zn+AV(z);
   if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,j,k;
    k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;
@@ -251,15 +251,16 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
   F2RANK(1,0,jtabase2,0);
   k=bp(at); u=an*k+CAV(a);
   GA(y,at, 1, 0,0); yv=CAV(y);
-  GA(z,BOX,an,1,0); zv=an+AAV(z);
+  GATV(z,BOX,an,1,0); zv=an+AAV(z);
   DO(an, MC(yv,u-=k,k); RZ(w=divide(minus(w,*--zv=residue(y,w)),y)););
-  EPILOG(ope(z));
+  z=ope(z);
+  EPILOG(z);
 }}
 
 F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
  RZ(w);
  n=AN(w); q=n/k; r=n%k; v=BAV(w)+!liln*(k-1);
- GA(z,B01,n,AR(w),AS(w)); u=AV(z);
+ GATV(z,B01,n,AR(w),AS(w)); u=AV(z);
  b=(B*)&mask; DO(k, b[i]=1;);
  b=(B*)&m; DO(q, DO(k, b[i]=*v; v+=k;); *u++=mask&m;)
  b=(B*)u; wi=AV(w)+q*k; DO(r, *b++=1&*wi++?1:0;);

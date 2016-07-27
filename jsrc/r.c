@@ -23,7 +23,7 @@ static F1(jtdrr){PROLOG;A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs),0L,jtdrr):drr(gs));
  if(ex)RZ(dg=unparsem(zero,w));
  m+=!b&&!xop||hs&&xop;
- GA(z,BOX,m,1,0); x=AAV(z);
+ GATV(z,BOX,m,1,0); x=AAV(z);
  RZ(x[0]=df);
  RZ(x[1]=b||c||xop?dg:fl&VDDOP?(hv=AV(hs),link(sc(hv[0]),link(spellout(id),sc(hv[1])))):spellout(id));
  if(2<m)RZ(x[2]=c||xop?drr(hs):dg);
@@ -44,9 +44,9 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(!m)R spella(w);
   if(evoke(w))R sfn(0,fs);
  }
- GA(z,BOX,2,1,0); x=AAV(z);
+ GAT(z,BOX,2,1,0); x=AAV(z);
  if(NOUN&AT(w)){RZ(x[0]=ravel(scc(CNOUN))); x[1]=w; R z;}
- GA(y,BOX,m,1,0); u=AAV(y);
+ GATV(y,BOX,m,1,0); u=AAV(y);
  if(0<m)RZ(u[0]=aro(fs));
  if(1<m)RZ(u[1]=aro(ex?unparsem(zero,w):xop?hs:gs));
  if(2<m)RZ(u[2]=aro(hs));
@@ -109,14 +109,14 @@ F1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
 static A jtunparse1(J jt,CW*c,A x,I j,A y){A q,z;C*s;I t;
  switch(t=c->type){
   case CBBLOCK: case CTBLOCK: RZ(z=unparse(x));  break;
-  case CASSERT:               RZ(q=unparse(x)); GA(z,LIT,8+AN(q),1,0); s=CAV(z); 
+  case CASSERT:               RZ(q=unparse(x)); GATV(z,LIT,8+AN(q),1,0); s=CAV(z); 
                               MC(s,"assert. ",8L); MC(8+s,CAV(q),AN(q)); break;
   case CLABEL:  case CGOTO:   RZ(z=ca(*AAV(x))); break;
   case CFOR:                  RZ(z=c->n?*AAV(x):spellcon(t)); break;
   default:                    RZ(z=spellcon(t));
  }
  if(j==c->source){
-  GA(q,LIT,1+AN(y)+AN(z),1,0); s=CAV(q); 
+  GATV(q,LIT,1+AN(y)+AN(z),1,0); s=CAV(q); 
   MC(s,CAV(y),AN(y)); s+=AN(y); *s++=' '; MC(s,CAV(z),AN(z)); 
   z=q;
  }
@@ -147,13 +147,13 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   if(m)mn=1+((CW*)AV(mc)+m-1)->source;
   if(n)dn=1+((CW*)AV(dc)+n-1)->source;
-  GA(z,BOX,p+mn+dn,1,0); zu=zv=AAV(z);
+  GATV(z,BOX,p+mn+dn,1,0); zu=zv=AAV(z);
   RZ(zv=unparse1a(m,hv,   zv)); if(p)RZ(*zv++=chr[':']);
   RZ(zv=unparse1a(n,hv+HN,zv));
   ASSERTSYS(AN(z)==zv-zu,"unparsem zn");
  }else{
   mn=AN(ms); dn=AN(ds);
-  GA(z,BOX,p+mn+dn,1,0); zv=AAV(z);
+  GATV(z,BOX,p+mn+dn,1,0); zv=AAV(z);
   ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chr[':']);
   ICPY(zv,AAV(ds),dn);
  }
@@ -170,7 +170,7 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
  hv=AAV(h);
  x=hv[  j]; v=    AAV(x); 
  x=hv[1+j]; u=(CW*)AV(x); n=AN(x);
- GA(z,BOX,3*n,2,0); s=AS(z); s[0]=n; s[1]=3;
+ GATV(z,BOX,3*n,2,0); s=AS(z); s[0]=n; s[1]=3;
  zv=AAV(z);
  for(i=0;i<n;++i,++u){
   RZ(*zv++=sc(i));

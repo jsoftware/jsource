@@ -65,7 +65,7 @@ static I jtc2j(J jt,B e,I m,C*zv){C c,*s,*t;I k,p;
 }    /* c format to j format */
 
 static B jtfmtex(J jt,I m,I d,I n,I*xv,B b,I c,I q,I ex){B bm=b||m;C*u,*v=jt->th2buf;I k;
- if(jt->th2bufn<20+d){A s; jt->th2bufn=20+d; GA(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
+ if(jt->th2bufn<20+d){A s; jt->th2bufn=20+d; GATV(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
  if(b)*v++='_'; else if(m)*v++=' '; *v++=' '; sprintf(v,FMTI,c); v+=q;
  k=(XBASEN+d+1-q)/XBASEN; k=MIN(n-1,k);
  DO(k, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;);
@@ -88,7 +88,7 @@ static B jtfmtx(J jt,B e,I m,I d,C*s,I t,X*wv){B b;C*v=jt->th2buf;I c,n,p,q,*xv;
  if(e)R fmtex(m,d,n,xv,b,c,q,p-1);
  else if(m&&m<b+p+d+!!d){memset(v,'*',m); v[m]=0;}
  else{
-  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GA(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
+  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
   if(' '==*s)*v++=' '; if(b)*v++='_'; 
   sprintf(v,FMTI,c); v+=q;
   DO(n-1, c=*--xv; sprintf(v,FMTI04,b?-c:c); v+=XBASEN;); 
@@ -114,7 +114,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  if(e)R fmtex(m,d,n,xv,b,c,q,ex);
  else if(m&&m<b+d+!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
  else{
-  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GA(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
+  if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
   if(' '==*s)*v++=' '; if(b)*v++='_';
   if(0>ex){k=-ex-1; DO(1+MIN(d,k), *v++='0';);}
   sprintf(v,FMTI,c); v+=q;
@@ -167,7 +167,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;C*u
  // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
   // Allocate space for all results; set shape to (n,q); zv->result area
- GA(z,LIT,p,2,0); *AS(z)=n; *(1+AS(z))=q; zv=CAV(z);
+ GATV(z,LIT,p,2,0); *AS(z)=n; *(1+AS(z))=q; zv=CAV(z);
  // If field length is fixed, format the column to that width & return it
  if(m){th2c(e,m,d,s,n,t,wk,wv,m,zv); R z;}
  // Otherwise, field has variable width.  Format the values one by one.
@@ -190,7 +190,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;C*u
  // kludge - this does not conform to Ye Dic, but deployed code may rely on it
  m+=(!first) - b;
  // Allocate final result area, an nxm table of characters.  Install shape
- GA(y,LIT,n*m,2,0); *AS(y)=n; *(1+AS(y))=m;
+ GATV(y,LIT,n*m,2,0); *AS(y)=n; *(1+AS(y))=m;
  // Clear result area to spaces.  Set yv-> first result string, u->first intermediate formatted string
  yv=CAV(y); memset(yv,' ',AN(y));  u=zv;
  // Copy the strings from the formatting area (u->) to the result area (yv->)
@@ -222,10 +222,10 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
  if(r)RZ(a=cvt(INT,a));  // this detects invalid type for a
  an=AN(a); au=ZAV(a); av=AV(a);  // an=#atoms of a, au->a data (if complex), av->a data (if real)
  // Allocate output arrays, set return value, set ?v->first value of output area
- GA(ea,B01,an,   1,0); *ep=ea; ev=BAV(ea);  // exponential flag, Boolean list
- GA(ma,INT,an,   1,0); *mp=ma; mv= AV(ma);  // field width, integer list
- GA(da,INT,an,   1,0); *dp=da; dv= AV(da);  // #decimal places, integer list
- GA(s, LIT,an*sk,2,0); *sp=s;  sv=CAV(s); *AS(s)=an; *(1+AS(s))=sk;  // spritf string, set as nx(sk) table
+ GATV(ea,B01,an,   1,0); *ep=ea; ev=BAV(ea);  // exponential flag, Boolean list
+ GATV(ma,INT,an,   1,0); *mp=ma; mv= AV(ma);  // field width, integer list
+ GATV(da,INT,an,   1,0); *dp=da; dv= AV(da);  // #decimal places, integer list
+ GATV(s, LIT,an*sk,2,0); *sp=s;  sv=CAV(s); *AS(s)=an; *(1+AS(s))=sk;  // spritf string, set as nx(sk) table
  // Look at each atom of a
  for(i=0;i<an;++i){
   // Split a into field-width m and #decimal places d, and x as a flag, negative to indicate exponential form
@@ -245,7 +245,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
   if(jt->th2bufn<m)jt->th2bufn=m; if(jt->th2bufn<500+d)jt->th2bufn=500+d;
  }
  // Now that we know the conversion buffer size, allocate it
- GA(s,LIT,jt->th2bufn,1,0); jt->th2buf=CAV(s);
+ GATV(s,LIT,jt->th2bufn,1,0); jt->th2buf=CAV(s);
  // Output total line width if it is valid, 0 if not
  *zkp=b?zk:0; R 1;
 }    /* parse format control (left argument of ":) */
@@ -269,13 +269,13 @@ F2(jtthorn2){PROLOG;A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m
  if(zk||!AN(w)){
   // We know the width, or there is nothing to format.  Create the lines one by one
   if(1==an)zk*=c;   // If only one atom in a, replicate it to match a line of w
-  GA(z,LIT,n*zk,r?r:1,ws); *(AS(z)+AR(z)-1)=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
+  GATV(z,LIT,n*zk,r?r:1,ws); *(AS(z)+AR(z)-1)=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
   // Format the fields one by one, appending the new string to the accumulated old.  We process each field specifier for the entire
   // w before moving to the next field.
   DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} th2c(e,m,d,sv+=sk,n,t,wk,wv+=k,zk,zv); zv+=m;);  // Set e,m,d (if atomic a, keep the same values each time
  }else{
   // The width is unknown.  Build up the result one field at a time.  Each field becomes a box in this intermediate result
-  GA(y,BOX,c,1,0); yv=AAV(y);  // Allocate boxed array, one box per field
+  GATV(y,BOX,c,1,0); yv=AAV(y);  // Allocate boxed array, one box per field
   // Format each field into its own box
   DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} RZ(yv[i]=th2a(e,m,d,sv+=sk,n,t,wk,wv+=k,(B)!i)););
   // Join the fields of each line to produce an nxc table of characters, one row per 1-cell of w

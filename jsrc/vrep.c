@@ -36,7 +36,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
   ASSERT(k<=IMAX-1,EVLIMIT);
   if(c==k)RZ(w=irs2(sc(1+k),w,0L,0L,wcr,jttake));
   DO(2*m, ASSERT(0<=xv[i],EVDOMAIN); p+=xv[i]; ASSERT(0<=p,EVLIMIT););
-  GA(q,INT,p,1,0); qv=AV(q);
+  GATV(q,INT,p,1,0); qv=AV(q);
   DO(m, c=*xv++; d=*xv++; j=yv[i]; DO(c, *qv++=j;); DO(d, *qv++=k;);); 
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
@@ -131,7 +131,7 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  x=SPA(ap,x); n=AN(x); b=BAV(x);
  if(!AN(SPA(ap,a)))R irs2(ifb(n,b),w,0L,1L,wcr,jtfrom);
  if(!*BAV(e)){
-  GA(q,INT,n,1,0); v=v0=AV(q); 
+  GATV(q,INT,n,1,0); v=v0=AV(q); 
   DO(n, if(*b++)*v++=u[i];); 
   AN(q)=*AS(q)=v-v0; 
   R irs2(q,w,0L,1L,wcr,jtfrom);
@@ -145,9 +145,9 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
  RZ(y1=fromr(c,wy));
  RZ(q=not(eps(y1,ravel(repeat(not(x),y)))));
  m=*AS(a)-m;
- GA(ai,INT,m,1,0); v=AV(ai); DO(n, if(!*b++)*v++=u[i];);
+ GATV(ai,INT,m,1,0); v=AV(ai); DO(n, if(!*b++)*v++=u[i];);
  RZ(g=grade1(over(ai,repeat(q,y1)))); gv=AV(g);
- GA(d,INT,AN(y1),1,0); dv=AV(d); j=0; DO(AN(g), if(m>gv[i])++j; else dv[gv[i]-m]=j;);
+ GATV(d,INT,AN(y1),1,0); dv=AV(d); j=0; DO(AN(g), if(m>gv[i])++j; else dv[gv[i]-m]=j;);
  RZ(zy=repeat(q,wy)); v=AV(zy)+*AV(c); m=*(1+AS(zy)); DO(*AS(zy), *v-=dv[i]; v+=m;);
  zp=PAV(z);
  SPB(zp,a,ca(wa));
@@ -162,7 +162,7 @@ static REPF(jtrepidx){A y;I j,m,p=0,*v,*x;
  RZ(a=vi(a)); x=AV(a);
  m=*AS(a);
  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
- GA(y,INT,p,1,0); v=AV(y); 
+ GATV(y,INT,p,1,0); v=AV(y); 
  DO(m, j=i; DO(x[j], *v++=j;););
  R irs2(y,w,0L,1L,wcr,jtfrom);
 }    /* (dense  integer) #"r (dense or sparse) */
@@ -176,7 +176,7 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
  if(!*AV(e)){
   m=AN(x);  
   DO(m, ASSERT(0<=xv[i],EVDOMAIN); p+=xv[i]; ASSERT(0<=p,EVLIMIT););
-  GA(q,INT,p,1,0); qv=AV(q); 
+  GATV(q,INT,p,1,0); qv=AV(q); 
   DO(m, c=xv[i]; j=yv[i]; DO(c, *qv++=j;);); 
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
@@ -233,7 +233,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
    j=0; DO(wf, j+=b[i];); v=j+AV(y);
    if(AN(ax)==1+j){u+=j; DO(p, m=cd**u; u+=q; DO(c, *v=m+i; v+=q;););}
    else{A xx;I h,i,j1=1+j,*uu;
-    GA(xx,INT,j1,1,0); uu=AV(xx);
+    GATV(xx,INT,j1,1,0); uu=AV(xx);
     k=0; DO(j1, uu[i]=u[i];);
     for(i=0;i<p;++i,u+=q)
      if(ICMP(uu,u,j1)||i==p-1){

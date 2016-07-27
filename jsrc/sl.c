@@ -9,8 +9,8 @@
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
 // on the result and on the name and path
-A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
- GA(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
+A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
+ GATV(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  RZ(v=symnew(AV(g),0)); v->flag|=LINFO; v->sn=jt->symindex++;
@@ -18,7 +18,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   LOCNAME(g)=ra(x); LOCPATH(g)=ra(1==n&&'z'==*u?vec(BOX,0L,0L):zpath);
+   ra(x); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ra(xx); LOCPATH(g) = xx;
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ra() on g
    symbis(x,g,jt->stloc);
@@ -26,7 +26,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   LOCNAME(g)=ra(x); LOCPATH(g)=ra(zpath);
+   ra(x); LOCNAME(g)=x; ra(zpath); LOCPATH(g)=zpath;
    ++jt->stused;
    m=AN(jt->stnum);
    // Extend in-use locales list if needed
@@ -36,7 +36,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,y;C s[20];I m,*nv;L*v;
    }
    // Put this locale into the in-use list at an empty location.  ra(g) at that time
    pv=AAV(jt->stptr);
-   DO(AN(jt->stnum), if(!pv[i]){pv[i]=ra(g); *(i+AV(jt->stnum))=n; break;});
+   DO(AN(jt->stnum), if(!pv[i]){ra(g); pv[i]=g; *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;
    break;
   case 2:  /* local symbol table */
@@ -52,9 +52,9 @@ B jtsymbinit(J jt){A q;I n=40;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
- GA(q,SYMB,ptab[3+PTO],1,0); jt->stloc=q;
+ GATV(q,SYMB,ptab[3+PTO],1,0); jt->stloc=q;
  RZ(q=apv(n,-1L,0L));    jt->stnum=q;
- GA(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
+ GATV(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
  RZ(jt->global=stcreate(0,5L+PTO,4L,"base"));
  RZ(           stcreate(0,7L+PTO,1L,"z"   ));
  R 1;
@@ -88,7 +88,7 @@ A jtstfind(J jt,B b,I n,C*u){I old;L*v;
  if(!n){n=4; u="base";}
  if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
  else{
-  old=jt->tbase+jt->ttop; v=probe(nfs(n,u),jt->stloc); tpop(old);
+  old=jt->tnextpushx; v=probe(nfs(n,u),jt->stloc); tpop(old);
   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
 }}   /* find the symbol table for locale u, create if b and non-existent */
 
@@ -116,7 +116,7 @@ static I jtprobenum(J jt,C*u){I j;
 F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,wd,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z);
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  for(i=0;i<n;++i){
   y=WVR(i); m=AN(y); u=CAV(y); c=*u; 
   if(!vlocnm(m,u))zv[i]=-2;
@@ -130,7 +130,7 @@ static F1(jtlocnlx){A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);
  if(1&m)z=nlsym(jt->stloc);
  if(2&m){
-  GA(y,BOX,jt->stused,1,0); yv=AAV(y); pv=AAV(jt->stptr); nv=AV(jt->stnum);
+  GATV(y,BOX,jt->stused,1,0); yv=AAV(y); pv=AAV(jt->stptr); nv=AV(jt->stnum);
   DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
       if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
   y=take(sc(n),y);
@@ -164,7 +164,7 @@ F2(jtlocpath2){A g,x;
  F2RANK(1,0,jtlocpath2,0);
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
- fa(LOCPATH(g)); LOCPATH(g)=ra(x);
+ fa(LOCPATH(g)); ra(x); LOCPATH(g)=x;
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -231,10 +231,10 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  ASSERT(g,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
  m=*AS(q);
- GA(x,INT,m*3,2,AS(q)); xv= AV(x);
- GA(y,BOX,m,  1,0    ); yv=AAV(y);
+ GATV(x,INT,m*3,2,AS(q)); xv= AV(x);
+ GATV(y,BOX,m,  1,0    ); yv=AAV(y);
  DO(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);
- GA(z,BOX,2,1,0); zv=AAV(z); zv[0]=x; zv[1]=y;
+ GAT(z,BOX,2,1,0); zv=AAV(z); zv[0]=x; zv[1]=y;
  R z;
 }    /* 18!:30 locale map */
 
@@ -245,7 +245,7 @@ F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv,wd;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
- GA(z,B01,n,AR(w),AS(w)); zv=BAV(z);
+ GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   zv[i]=1; y=WVR(i); g=0; m=AN(y); u=CAV(y); b='9'>=*u;
   if(b){j=probenum(u);               if(0<=j)g=pv[j]; }

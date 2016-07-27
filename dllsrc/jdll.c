@@ -235,7 +235,7 @@ int jget(J jt, C* name, VARIANT* v, int dobstr)
 	if(strlen(name) >= sizeof(gn)) return EVILNAME;
 	if(valid(name, gn)) return EVILNAME; 
 	RZ(a=symbrd(nfs(strlen(gn),gn)));
-	old = jt->tbase+jt->ttop;
+	old = jt->tnextpushx;
 	er = a2v (jt, a, v, dobstr);
 	tpop (old);
 	return er;
@@ -531,7 +531,7 @@ void oleoutput(J jt, I n, char* s)
 int jsetx(J jt, C* name, VARIANT* v, int dobstrs)
 {
 	int er;
-	I old=jt->tbase+jt->ttop;
+	I old=jt->tnextpushx;
 	char gn[256];
 
 	// validate name

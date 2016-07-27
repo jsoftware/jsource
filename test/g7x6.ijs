@@ -2,16 +2,15 @@ NB. 7!:6 ----------------------------------------------------------------
 
 (7!:6 <'') -: 7!:6 <'base'
 
-spn=: 3 : '>.&.(2&^.) (k*2+7+1+2+2)+k*>.(1+#y)%k=.IF64{4 8'   NB. space needed for a name
+spn=: 3 : '>.&.(2&^.) (8+k*2+7+1+2+1)+k*>.(#y)%k=.IF64{4 8'   NB. space needed for a name
+NB. 8   bytes in I4 bucket info
 NB. 2   MS struct
 NB. 7   header words
 NB. 1   shape
 NB. 1   NM struct - hash
-NB. 2   NM struct - I4 bucket info
 NB. 2   NM struct - C length/flags
-NB. 1   trailing 0 pad
+NB. 8   trailing 0 pad - full word because B01 ops need it
 NB. #y  letters in the name
-NB. all struct members seem to be aligned to long long boundaries
 
 spl=: 4 : 0   NB. space needed for locale y with hash table size x
  z=. spn >y                      NB. locale name

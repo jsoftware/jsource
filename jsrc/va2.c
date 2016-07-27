@@ -684,7 +684,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
  switch(t){
   case B01:
    {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
-    GA(z,INT,zn,r-1,1+s); zu=AV(z);
+    GATV(z,INT,zn,r-1,1+s); zu=AV(z);
     if(1==n){
               zv=zu; DO(m,                     *zv++ =*av++**wv++;);
      DO(nn-1, zv=zu; DO(m,                     *zv+++=*av++**wv++;););
@@ -699,7 +699,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
 #if !SY_64
   case INT:
    {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
-    GA(z,FL,zn,r-1,1+s); zu=DAV(z);
+    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
     if(1==n){
               zv=zu; DO(m,                        *zv++ =*av++*(D)*wv++;);
      DO(nn-1, zv=zu; DO(m,                        *zv+++=*av++*(D)*wv++;););
@@ -716,7 +716,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
 #endif
   case FL:   
    {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
-    GA(z,FL,zn,r-1,1+s); zu=DAV(z);
+    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
     NAN0;
     if(1==n){
               zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?u*v:0;  );
@@ -756,8 +756,8 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B*av,*wv;I dw,n,p,q,r,*s,zn,*zv;U
  s=AS(w); n=*s;
  zn=AN(w)/n; dw=(zn+SZI-1)/SZI; p=dw*SZI;
  q=n/255; r=n%255;
- GA(z,INT,zn,AR(w)-1,1+s); zv=AV(z); memset(zv,C0,zn*SZI);
- GA(t,INT,dw,1,0); tu=(UC*)AV(t); tv=(UI*)tu;
+ GATV(z,INT,zn,AR(w)-1,1+s); zv=AV(z); memset(zv,C0,zn*SZI);
+ GATV(t,INT,dw,1,0); tu=(UC*)AV(t); tv=(UI*)tu;
  av=BAV(a); u=(UI*)av; 
  wv=BAV(w); v=(UI*)wv;
  switch(id){
@@ -811,7 +811,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
  GA(z,zt,zn,r-1,1+s);
  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
   av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
-  tn=(zn+SZI-1)/SZI; GA(t,INT,tn,1,0); tc=(UC*)AV(t); ti=(UI*)tc;
+  tn=(zn+SZI-1)/SZI; GATV(t,INT,tn,1,0); tc=(UC*)AV(t); ti=(UI*)tc;
   for(j=nn;0<j;j-=255){
    memset(ti,C0,tn*SZI); 
    DO(MIN(j,255), ado(jt,b,m,n,yv,av,wv); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););

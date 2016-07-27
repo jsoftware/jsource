@@ -69,7 +69,7 @@ static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
  d=*(s+n-1); b='-'==*s; c='x'==d||'r'==d; s+=b;
  if('-'==d){RZ(2>=n); RZ(*v=vci(1==n?XPINF:XNINF)); R 1;}
  n-=b+c; RZ(m=(n+XBASEN-1)/XBASEN); k=n-XBASEN*(m-1);
- GA(y,INT,m,1,0); yv=m+AV(y);
+ GATV(y,INT,m,1,0); yv=m+AV(y);
  DO(m, j=0; DO(k, RZ(t=memchr(dig,*s++,10L)); j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
  RZ(*v=yv[m-1]?y:xstd(y));
  R 1;
@@ -77,7 +77,7 @@ static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
 
 static X jtx10(J jt,I e){A z;I c,m,r,*zv;
  m=1+e/XBASEN; r=e%XBASEN;
- GA(z,INT,m,1,0); zv=AV(z);
+ GATV(z,INT,m,1,0); zv=AV(z);
  DO(m-1, *zv++=0;);
  c=1; DO(r, c*=10;); *zv=c;
  R z;
@@ -122,7 +122,7 @@ static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
  RZ(d=indexof(str(m,dig),str(n,s)));
  RZ(all0(eps(sc(m),d)));
  k=sizeof(Z);
- GA(c,CMPX,1,0,0); MC(AV(c),&b,k); RZ(y=base2(c,d)); MC(v,AV(y),k);
+ GAT(c,CMPX,1,0,0); MC(AV(c),&b,k); RZ(y=base2(c,d)); MC(v,AV(y),k);
  R 1;
 }
 
@@ -187,7 +187,7 @@ A jtconnum(J jt,I n,C*s){PROLOG;A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m
  if(1==n)                {if(k=s[0]-'0',0<=k&&k<=9)R num[ k]; else R ainf;}
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',0<=k&&k<=9)R num[-k];}
  RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;
- GA(y,INT,1+n,1,0); yv=AV(y);
+ GATV(y,INT,1+n,1,0); yv=AV(y);
  DO(n, c=*v; *v++=c=c==CSIGN?'-':c==CTAB||c==' '?C0:c; b=C0==c; if(p!=b)yv[d++]=i; p=b;);
  if(d%2)yv[d++]=n; m=d/2;
  numcase(n,s,&b,&j,&x,&q,&ii);
@@ -200,7 +200,8 @@ A jtconnum(J jt,I n,C*s){PROLOG;A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m
  }
  if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);
  if(t&FL+CMPX)RZ(z=cvt0(z));
- EPILOG(bcvt(0,z));
+ z=bcvt(0,z);
+ EPILOG(z);
 }
 
 
@@ -287,7 +288,7 @@ B valueisint; // set if the value we are processing is really an int
  // Rank of result is rank of w, unless the rows have only 1 character; make rows atoms then, removing them from rank
  r=AR(w)-(1==c); r=MAX(0,r); 
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
- GA(z,FL,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=DAV(z);
+ GATV(z,FL,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=DAV(z);
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int,
  // but only on 64-bit systems where int and float have the same size

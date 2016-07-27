@@ -23,7 +23,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
  at=AT(a); if(SPARSE&at){at=DTYPE(at); ap=PAV(a);}
  wt=DTYPE(AT(w)); wp=PAV(w); 
  if(h=HOMO(at,wt))t=maxtype(at,wt);
- GA(z,SINT,1L,AR(w),AS(w)); zp=PAV(z);
+ GATV(z,SINT,1L,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,SPA(wp,a));
  SPB(zp,i,SPA(wp,i));
  e=SPA(wp,e); if(h&&t!=wt)RZ(e=cvt(t,e));
@@ -70,7 +70,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  if(s){p=PAV(a); m=ar; n=wr;}
  else {p=PAV(w); m=wr; n=ar;}
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;
- GA(x,B01,n,1,0); c=BAV(x);
+ GATV(x,B01,n,1,0); c=BAV(x);
  if(s)DO(d, c[i]=1;);
  j=0; DO(MIN(ar,wr), ++j; c[n-j]=b[m-j];);
  R indexofss(mode,s?a:reaxis(ifb(n,c),a),s?reaxis(ifb(n,c),w):w);
@@ -124,11 +124,11 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
  RZ(b=not(irs2(wx,reshape(vec(INT,n,1+AS(wx)),SPA(wp,e)),0L,n,n,jtmatch)));
  if(!all1(b)){RZ(wx=repeat(b,wx)); RZ(wy=repeat(b,wy));}
  v=AV(wy); m=*AS(wy); n=*(1+AS(wy)); nd=n-d;
- GA(b,B01,m,1,0); bv=BAV(b);
+ GATV(b,B01,m,1,0); bv=BAV(b);
  if     (0==d){memset(bv,C0,m); if(m)*bv=1;}
  else if(1==d){j=-1; DO(m, bv[i]=j!=*v; j=*v; v+=n;);}
  else{
-  GA(x,INT,d,1,0); xv=AV(x); *xv=-1;
+  GATV(x,INT,d,1,0); xv=AV(x); *xv=-1;
   DO(m, bv[i]=0; DO(d, if(xv[i]!=v[i]){bv[i]=1; j=i; DO(d-j, xv[j]=v[j]; ++j;); break;}); v+=n;)
  }
  if(m){RZ(f=cut(ds(CCOMMA),one)); RZ(y=df2(b,dropr(d,wy),f)); RZ(x=df2(b,wx,f));}
@@ -167,7 +167,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  if(aw)DO(AN(x), u[i]=m>u[i]?v[u[i]]:n;)
  else  DO(AN(x), u[i]=v[u[i]];);
  if(!r)R AN(x)?sc(*u):ioe(mode,a);
- GA(z,SINT,1,r,AS(w)); zp=PAV(z);
+ GATV(z,SINT,1,r,AS(w)); zp=PAV(z);
  SPB(zp,a,IX(r));
  SPB(zp,e,ioe(mode,a));
  SPB(zp,i,aw?wi:ai);
@@ -185,10 +185,10 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
  x=SPA(p,x); v=AV(x);
  e=SPA(p,e); j=*AV(e); m=j<n;
  DO(c, m+=u[i]==v[i];);
- GA(y,INT,m,2,0); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV(y);
+ GATV(y,INT,m,2,0); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV(y);
  if(c)DO(c, if(u[i]==v[i]){if(j<u[i]){*vv++=j; j=n;} *vv++=u[i];})
  if(m&&vv<yv+m)*vv=j;
- GA(z,SB01,1,1,&n); p=PAV(z);
+ GATV(z,SB01,1,1,&n); p=PAV(z);
  SPB(p,a,iv0);
  SPB(p,e,zero);
  SPB(p,i,y);

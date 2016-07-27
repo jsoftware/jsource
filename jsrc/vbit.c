@@ -95,7 +95,7 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  wr=AR(w);
  if(1>=wr)R sc(bitsum(AN(w),UAV(w)));
  ws=AS(w); m=*ws; if(m)n=AN(w)/m; else RE(n=prod(wr-1,1+ws)); 
- GA(z,INT,n,wr-1,1+ws); zv=AV(z); memset(zv,C0,SZI*n);
+ GATV(z,INT,n,wr-1,1+ws); zv=AV(z); memset(zv,C0,SZI*n);
  if(!n)R z;
  if(!m){memset(zv,C0,n*SZI); R z;}
 #if SY_64
@@ -109,7 +109,7 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  }
 #endif
  n1=(n+BW-1)/BW; n1*=SZI; q=(n+BB-1)/BB;
- GA(t,INT,q,1,0); v=v0=(UI*)AV(t); wv=UAV(w);
+ GATV(t,INT,q,1,0); v=v0=(UI*)AV(t); wv=UAV(w);
  for(i=(m+mm-1)/mm-1;i>=0;--i){
   v=v0; DO(q, *v++=0;);
   p=i?mm:m%mm;
@@ -280,7 +280,7 @@ static F2(jtbitfrom){A z;I an,ar,*as,c,i,j,m,n,q,r,rc,r1,wr,*ws;UC k,*v,*zv;
    DO(r1, *zv++=0;);
  }}else{A x;I*u,*v,zn,zr,*zv;
   zr=ar+wr-1;
-  GA(x,INT,zr,1,0); u=AV(x); 
+  GATV(x,INT,zr,1,0); u=AV(x); 
   ICPY(u,as,ar); ICPY(u+ar,1+ws,wr-1); RE(zn=prod(zr,u));
   GA(z,BIT,zn,zr,u); zv=AV(z);
   n=*ws; c=(ws[wr-1]+BW-1)/BW; RE(m=mult(prod(wr-2,1+ws),c));

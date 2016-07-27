@@ -36,7 +36,7 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
 static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv,*wv,x,y;
  av=AV(a); wv=AV(w);
  p=av[0]; q=av[n-1]; ascend=p<=q; if(!ascend){x=p; p=q; q=x;}
- GA(t,INT,1+q-p,1,0); v=AV(t); tv=v-p; vv=v+AN(t);
+ GATV(t,INT,1+q-p,1,0); v=AV(t); tv=v-p; vv=v+AN(t);
  if(ascend){u=av;     x=*u++; *v++=j=0; DO(n-1, ++j; y=*u++; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
  else      {u=av+n-1; x=*u--;      j=n; DO(n-1, --j; y=*u--; ASSERT(p<=y&&y<=q&&vv>=v+y-x,EVDOMAIN); DO(y-x, *v++=j;); x=y;);}
  if(ascend)DO(m, x=*wv++; *zv++=x<=p?0:q<x?n:tv[x];)
@@ -95,7 +95,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
  ASSERT(b||at&DENSE&&wt&DENSE,EVNONCE);
  t=maxtype(at,wt);
  RE(m=prod(wr-r,ws)); RE(c=prod(r,ws+wr-r));
- GA(z,INT,m,wr-r,ws); zv=AV(z);
+ GATV(z,INT,m,wr-r,ws); zv=AV(z);
  if(!m||!n||!c){DO(m, *zv++=0;); R z;}
  if(1==c){
   if(at&B01&&wt&B01+INT+FL){RZ(iixBX(n,m,a,w,zv)); R z;}

@@ -38,11 +38,11 @@ static ST state[10][9]={
 
 // w points to a string
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
-// (# words) is negated is the last word is NB.
+// (# words) is negated if the last word is NB.
 F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  RZ(w);
  nv=0; s=SS;   // set not creating numeric constant; init state (after space)
- n=AN(w); v=UAV(w); GA(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
+ n=AN(w); v=UAV(w); GATV(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
   // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
  for(i=0;i<n;++i){   // run the state machine
   p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
@@ -84,7 +84,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  RZ(w=vs(w));
  RZ(t=wordil(w));
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
- GA(z,BOX,n,1,0); x=AAV(z);
+ GATV(z,BOX,n,1,0); x=AAV(z);
  DO(n, k=*y++; RZ(*x++=str(*y++,s+k)););
  R z;
 }
@@ -93,7 +93,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
- GA(z,LIT,m,1!=m,0); x=CAV(z);
+ GATV(z,LIT,m,1!=m,0); x=CAV(z);
  p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)*x++=c; p=b&&!p;);
  R z;
 }
@@ -123,7 +123,7 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
- GA(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
+ GATV(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
@@ -189,8 +189,8 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
       // The sentence is abc =: CCASEV (new argument)
       // The new argument is (the list of names), then
       // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
-      GA(z1,BOX,4,1,0); x=AAV(z1);   // Allocate the sentence, point to its data
-      GA(y,BOX,m+3,1,0); yv=AAV(y);   // Allocate the argument
+      GAT(z1,BOX,4,1,0); x=AAV(z1);   // Allocate the sentence, point to its data
+      GATV(y,BOX,m+3,1,0); yv=AAV(y);   // Allocate the argument
       c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
       j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmp(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
       yv[m]=v[2]; RZ(yv[m+1]=sc(c)); yv[m+2]=z;    // add the 3 ending elements
@@ -327,7 +327,7 @@ F1(jtfsmvfya){PROLOG;A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   ASSERT(c==AN(alp),EVLENGTH);
   RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
- GA(z,BOX,4,1,0); zv=AAV(z);
+ GAT(z,BOX,4,1,0); zv=AAV(z);
  RZ(zv[0]=sc(f)); zv[1]=s; zv[2]=m; RZ(zv[3]=vec(INT,4L,ijrd));
  R z;
 }    /* check left argument of x;:y */
@@ -350,12 +350,13 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG;A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k
   ASSERT(BOX&AT(m),EVDOMAIN);
   RZ(y=raze(m)); r=AR(y); k=AN(y);
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
-  GA(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m); md=(I)m*ARELATIVE(m); 
+  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m); md=(I)m*ARELATIVE(m); 
   DO(c, j=i; t=AADR(md,mv[i]); if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););}
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}
  }
- EPILOG(fsmdo(f,s,m,ijrd,w,w0));
+ A z=fsmdo(f,s,m,ijrd,w,w0);
+ EPILOG(z);
 }
 
 F2(jtfsm){R fsm0(a,w,1);}

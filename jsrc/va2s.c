@@ -10,7 +10,7 @@
 static A jtvaspc(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I f,I r){A q;I*as,*v,*ws;
  as=AS(a);
  ws=AS(w);
- GA(q,INT,f+r,1,0); v=AV(q);
+ GATV(q,INT,f+r,1,0); v=AV(q);
  if(r>acr){ICPY(v,wf+ws,r); RZ(a=irs2(vec(INT,r-acr,acr+v),a,0L,1L,0L,jtreshape));}
  if(r>wcr){ICPY(v,af+as,r); RZ(w=irs2(vec(INT,r-wcr,wcr+v),w,0L,1L,0L,jtreshape));}
  R vasp(a,w,id,ado,cv,t,zt,af,r,wf,r,f,r);
@@ -59,11 +59,11 @@ static B jtvaspprep(J jt,A a,A w,I t,I af,I acr,I wf,I wcr,I f,I r,A*ae,A*ay,A*a
      A aa,e,x,wa;B*b,sa,sw;I c,d,m,n,*u,*v;P*ap,*wp;
  sa=1&&AT(a)&SPARSE; 
  sw=1&&AT(w)&SPARSE;
- GA(x,B01,f+r,1,0); b=BAV(x); memset(b,C1,f); memset(b+f,C0,r);
+ GATV(x,B01,f+r,1,0); b=BAV(x); memset(b,C1,f); memset(b+f,C0,r);
  if(sa){ap=PAV(a); aa=SPA(ap,a); u=AV(aa); d=f-af; DO(AN(aa), c=u[i]; if(af<=c)b[c+d]=1;);}
  if(sw){wp=PAV(w); wa=SPA(wp,a); v=AV(wa); d=f-wf; DO(AN(wa), c=v[i]; if(wf<=c)b[c+d]=1;);}
- GA(x,INT,f+r,1,0); u=AV(x); m=0; DO(af, if(b[i])u[m++]=i;); DO(acr, if(b[f+i])u[m++]=af+i;); 
- GA(x,INT,f+r,1,0); v=AV(x); n=0; DO(wf, if(b[i])v[n++]=i;); DO(wcr, if(b[f+i])v[n++]=wf+i;); 
+ GATV(x,INT,f+r,1,0); u=AV(x); m=0; DO(af, if(b[i])u[m++]=i;); DO(acr, if(b[f+i])u[m++]=af+i;); 
+ GATV(x,INT,f+r,1,0); v=AV(x); n=0; DO(wf, if(b[i])v[n++]=i;); DO(wcr, if(b[f+i])v[n++]=wf+i;); 
  if(!sa||m!=AN(aa)||memcmp(u,AV(aa),m*SZI))RZ(a=reaxis(vec(INT,m,u),a));
  if(!sw||n!=AN(wa)||memcmp(v,AV(wa),n*SZI))RZ(w=reaxis(vec(INT,n,v),w));
  ap=PAV(a); *ae=e=SPA(ap,e); *ay=SPA(ap,i); *ax=x=SPA(ap,x); if(t&&t!=AT(x)){RZ(*ae=cvt(t,e)); RZ(*ax=cvt(t,x));}
@@ -77,7 +77,7 @@ static B jtvaspeqprep(J jt,A a,A w,I t,I f,I r,A*ae,A*ay,A*ax,A*we,A*wy,A*wx,A*z
      A aa,e,q,x,wa;B*b,sa,sw;I n,*v;P*p;
  sa=1&&AT(a)&SPARSE; 
  sw=1&&AT(w)&SPARSE; n=f+r;
- GA(x,B01,n,1,0); b=BAV(x); memset(b,C0,n);
+ GATV(x,B01,n,1,0); b=BAV(x); memset(b,C0,n);
  if(sa){p=PAV(a); aa=SPA(p,a); v=AV(aa); DO(AN(aa), b[v[i]]=1;);}
  if(sw){p=PAV(w); wa=SPA(p,a); v=AV(wa); DO(AN(wa), b[v[i]]=1;);}
  RZ(*za=q=ifb(n,b));
@@ -114,7 +114,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  wev=CAV(we); wxv=CAV(wx); wk=xc*bp(AT(wx));
  d=zcount(ay,wy,ab,wb);
  GA(zx,zt, d*xc,AR(ax),AS(ax)); *AS(zx)=d; zxv=CAV(zx); zk=xc*bp(zt);
- GA(zy,INT,d*yc,2,     AS(ay)); *AS(zy)=d; zyv= AV(zy);
+ GATV(zy,INT,d*yc,2,     AS(ay)); *AS(zy)=d; zyv= AV(zy);
  i=j=d=0; u=AV(ay); v=AV(wy);
  while(m>i&&n>j){
   c=0; DO(yc, if(c=u[i]-v[i])break;);

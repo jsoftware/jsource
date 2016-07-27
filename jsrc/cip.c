@@ -109,7 +109,7 @@ F2(jtpdt){PROLOG;A z;I ar,at,i,m,n,p,p1,t,wr,wt;
   case B01:
    if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
     q=p/255; r=p%255; nw=(n+SZI-1)/SZI;
-    GA(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
+    GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
     u=BAV(a); v=wv=BAV(w); zv=AV(z);
     for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); DO(q, BBLOCK(255);); BBLOCK(r);}
    }else{B*u,*v,*wv;I*x,*zv;
@@ -135,7 +135,7 @@ F2(jtpdt){PROLOG;A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      if(er)break;
     }
     if(er){A z1;D c,*x,*zv;I*u,*v,*wv;
-     GA(z1,FL,AN(z),AR(z),AS(z)); z=z1;
+     GATV(z1,FL,AN(z),AR(z),AS(z)); z=z1;
      u=AV(a); v=wv=AV(w); zv=DAV(z);
      for(i=0;i<m;++i,v=wv,zv+=n){
              x=zv; c=(D)*u++; DO(n, *x++ =c**v++;);

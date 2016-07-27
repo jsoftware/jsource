@@ -9,7 +9,7 @@ g =: 3 : 0
  z=. w*2                              NB. 2 words for memory management
  z=. z + w*7                          NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
- z=. z + ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072  NB. atoms & trailing 0 byte
+ z=. z + ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072  NB. atoms & trailing 0 word (uses whole word of padding)
  >.&.(2&^.) z
 )
 

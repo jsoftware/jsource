@@ -93,8 +93,8 @@ static C*jtbrephdr(J jt,B b,B d,A w,A y){A q;I f,r;
 static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  wp=PAV(w);
  n=1+sizeof(P)/SZI; kk=WS(d);
- GA(z,BOX,n,1,0); zv=AAV(z);
- GA(y,LIT,bsize(d,1,INT,n,AR(w),AS(w)),1,0);
+ GATV(z,BOX,n,1,0); zv=AAV(z);
+ GATV(y,LIT,bsize(d,1,INT,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
  RZ(mvw(v,(C*)&c,1L,BU,b,d,SY_64));  /* reserved for flag */
  zv[0]=y; m=AN(y);
@@ -109,7 +109,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
  RZ(w);
  e=n=AN(w); t=AT(w); u=CAV(w); k=bp(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
- GA(y,LIT,bsize(d,1,t,n,AR(w),AS(w)),1,0);
+ GATV(y,LIT,bsize(d,1,t,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
  if(t&DIRECT)switch(t){
   case SBT:
@@ -119,10 +119,10 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
   default:   if(n){int*u=(int*)v+(n*k-1)/sizeof(int); *u++=0; *u=0;}
              MC(v,u,n*k); R y;
  }
- if(t&RAT){e+=n; GA(q,XNUM,e,1,0); MC(AV(q),u,n*k);}
+ if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n*k);}
  else     RZ(q=1<AR(w)?ravel(w):w);
  m=AN(y); wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(z,BOX,1+e,1,0); zv=AAV(z); 
+ GATV(z,BOX,1+e,1,0); zv=AAV(z); 
  *zv++=y;
  DO(e, RZ(*zv++=q=brep(b,d,WVR(i))); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
  R raze(z);
@@ -131,7 +131,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));
  n=AN(y); s[0]=n/WS(d); s[1]=2*WS(d); 
- GA(z,LIT,2*n,2,s);  
+ GATV(z,LIT,2*n,2,s);  
  u=CAV(y); v=CAV(z); 
  DO(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  R z;
@@ -166,7 +166,7 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  c=*(1+AS(w));
  ASSERT(c==8||c==16,EVLENGTH);  
  n=AN(w)/2; u=CAV(w);
- GA(z,LIT,n,1,0); v=UAV(z);
+ GATV(z,LIT,n,1,0); v=UAV(z);
  DO(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
  RE(z); R z;
 }
@@ -187,7 +187,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(t&DENSE)j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
- if(t&BOX+XNUM+RAT+SPARSE){GA(y,INT,e,1,0); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
+ if(t&BOX+XNUM+RAT+SPARSE){GATV(y,INT,e,1,0); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){A*zv=AAV(z);I i,k=0,*iv;
   RZ(y=indexof(y,y)); iv=AV(y);
   for(i=0;i<e;++i){
@@ -287,14 +287,14 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 
 static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top,yd;
  RZ(w);
- GA(x,INT,BOX&AT(w)?2*AN(w):1,1,0); xv=AAV(x);
+ GATV(x,INT,BOX&AT(w)?2*AN(w):1,1,0); xv=AAV(x);
  *xv=w; top=1;
  while(top){
   --top; y=xv[top]; n=AN(y); t=AT(y);
   if(t&FL+CMPX){v=DAV(y); DO(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
   else if(t&BOX){
    m=top+n; yv=AAV(y); yd=(I)y*ARELATIVE(y);
-   if(m>AN(y)){GA(x1,INT,2*m,1,0); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
+   if(m>AN(y)){GATV(x1,INT,2*m,1,0); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
    u=xv+top; DO(n, q=YVR(i); if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
  }}
  R 0;
@@ -304,7 +304,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t,wd;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
- GA(z,B01,n,AR(w),AS(w)); u=BAV(z);
+ GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if     (t&FL  ){v=DAV(w); DO(n, *u++=_isnan(*v++););}
  else if(t&CMPX){v=DAV(w); DO(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
  else if(t&BOX ){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(n, *u++=isnanq(WVR(i));); RE(0);}

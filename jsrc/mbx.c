@@ -73,7 +73,7 @@ static B smmsplit(A a,I j){I i,k,**mfree,p;MS*x,*y;
  i=j;
  while(p>i&&!mfree[i])++i;
  RZ(p>i);
- k=msize[i-1];
+ k=(I)1<<(i-1);
  while(j<i){
   x=(MS*)AABS(a,mfree[i]);
   mfree[i]=x->a;
@@ -111,7 +111,7 @@ static A jtsmma(J jt,A a,I m){A z;I j,n,**mfree,p;MS*x;
  n=p=m+mhb; 
  ASSERT(n<=jt->mmax,EVLIMIT);
  j=6; n>>=j; while(n){n>>=1; ++j;}
- if(p==msize[j-1])--j;
+ if(p==(I)1<<(j-1))--j;
  mfree=SMMFREE(a);
  ASSERT(mfree[j]||smmsplit(a,j)||smmjoin(a,j),EVALLOC);
  x=(MS*)AABS(a,mfree[j]);
@@ -166,10 +166,10 @@ F2(jtsmmis){A*wv,x;A1*av;I wd,wn,wr;
 
 
 A jtcpa(J jt,B b,A w){A*wv,z,*zv;I wd;
- if(0==b&&AFNJA&AFLAG(w))R ra(w);
+ if(0==b&&AFNJA&AFLAG(w)){ra(w); R w;}
  if(!(BOX&AT(w)))R ca(w);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);
+ GATV(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);
  DO(AN(w), RZ(zv[i]=cpa(b,WVR(i))););
  R z;
 }    /* copy w down to leaves, recursing on boxed AFNJA iff 1=b */
@@ -196,8 +196,8 @@ static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
  mfree=SMMFREE(w);
  p=MLEN; q=0; 
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); ++q;                           v=x->a;});
- GA(z,INT,2*q,2,0); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
- DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); *zv++=(I)x; *zv++=msize[x->j]; v=x->a;});
+ GATV(z,INT,2*q,2,0); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
+ DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); *zv++=(I)x; *zv++=(I)1<<(x->j); v=x->a;});
  R z;
 }    /* blocks free as a 2-column matrix of (address,size) */
 
@@ -210,7 +210,7 @@ static I smmblkun(B b,A w){A1*wv;I z=0;MS*x;
 
 static I* smmblku1(B b,I*zv,A w){A1*wv;MS*x;
  x=(MS*)w-1;
- if(b&&x->a){*zv++=(I)x; *zv++=msize[x->j];}
+ if(b&&x->a){*zv++=(I)x; *zv++=(I)1<<(x->j);}
  if(BOX&AT(w)){wv=A1AV(w); DO(AN(w), zv=smmblku1(1,zv,(A)AABS(wv[i],w)););}
  R zv;
 }
@@ -218,7 +218,7 @@ static I* smmblku1(B b,I*zv,A w){A1*wv;MS*x;
 static A jtsmmblku(J jt,A w){A z;I n;
  RZ(w);
  n=smmblkun(0,w);
- GA(z,INT,2*n,2,0); *AS(z)=n; *(1+AS(z))=2;
+ GATV(z,INT,2*n,2,0); *AS(z)=n; *(1+AS(z))=2;
  smmblku1(0,AV(z),w);
  R z;
 }    /* blocks in use */
@@ -230,7 +230,7 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  RZ(x=smmblku(w));
  RZ(y=smmblkf(w));
  n=1+*AS(x)+*AS(y);
- GA(z,INT,3*n,2,0); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
+ GATV(z,INT,3*n,2,0); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
  *zv++=IMIN; *zv++=IMIN; *zv++=IMIN;
  v=AV(x); DO(*AS(x), *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
  v=AV(y); DO(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );

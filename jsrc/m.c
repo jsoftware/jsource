@@ -11,67 +11,94 @@
 
 #include "j.h"
 
-#define MEMAUDIT 0   // Audit level: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack 3 +scrub freed areas
+#define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Doesn't seem to help much.
 
-#define PSIZE       65536L         /* size of each pool                    */
-#define PSIZEL      16L            // lg(PSIZE)
-#define PLIM        1024L          /* pool allocation for blocks <= PLIM   */
-#define PLIML       10L            /* base 2 log of PLIM                   */
-
-// Don't call traverse unless one of these bits is set
-#define TRAVERSIBLE (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
-#define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow
+#define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
+#define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)
+#define SBFREEB (1L<<SBFREEBLG)   // number of bytes that need to be freed before we rescan
+#define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 
 static void jttraverse(J,A,AF);
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
- k=1; DO(m, msize[i]=k; k+=k;);  /* OK to do this line in each thread */
- jt->tbase=-NTSTACK;
- jt->ttop = NTSTACK;
- jt->mmax =msize[m-1];
- DO(m, jt->mfree[i]=0; jt->mfreeb[i]=0; jt->mfreet[i]=1048576;);
+ // obsolete k=1; DO(m, msize[i]=k; k+=k;);  /* OK to do this line in each thread */
+ if(jt->tstack==0){  // meminit gets called twice.  Alloc the block only once
+  jt->tstack=(A*)MALLOC(NTSTACK);
+  jt->tnextpushx = SZI;  // start storing at position 1 (the chain field in entry 0 is unused)
+ }
+ jt->mmax =(I)1<<(m-1);
+ for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
+ jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
  R 1;
 }
 
 
-F1(jtspcount){A z;I c=0,j,m=1+PLIML,*v;MS*x;
+F1(jtspcount){A z;I c=0,i,j,*v;MS*x;
  ASSERTMTV(w);
- GA(z,INT,2*m,2,0); v=AV(z);
- DO(m, j=0; x=(MS*)(jt->mfree[i]); while(x){x=(MS*)(x->a); ++j;} if(j){++c; *v++=msize[i]; *v++=j;});
+ GATV(z,INT,2*(-PMINL+PLIML+1),2,0); v=AV(z);
+ for(i=PMINL;i<=PLIML;++i){j=0; x=(MS*)(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
  v=AS(z); v[0]=c; v[1]=2; AN(z)=2*c;
  R z;
 }    /* 7!:3 count of unused blocks */
 
-static int __cdecl spfreecomp(const void *x,const void *y){R *(I*)x<*(I*)y?-1:1;}
+// Garbage collector.  Called when free has decided a call is needed
+B jtspfree(J jt){I i;MS*p;
+ for(i = PMINL;i<=PLIML;++i) {
+  // Check each chain to see if it is ready to coalesce
+  if(jt->mfree[-PMINL+i].ballo<=0) {
+   // garbage collector: coalesce blocks in chain i
+   // pass through the chain, incrementing the j field in the base allo for each
+   US incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
+   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){((MS *)((C*)p-(p->blkx<<i)))->j += incr;}
+   // pass through the chain again, looking for blocks that have negative j in the corresponding base.
+   // Remove all the NON-base blocks that will be freed (i. e. base count=0x8000).
+   // The count must be removed from all SURVIVING base blocks (remember, the base block itself may
+   // be allocated and thus not in this traversal, but we must still reset its count to 0 - but the count
+   // can never hit 0x8000 unless all blocks including the base are in the free chain); but we must leave the
+   // count set to 0x8000 in TO-BE-FREED base blocks, so that subsequent blocks in the same allo see that
+   // they are to be deleted
+   MS *freehead = 0;   // root of the queue of full allos to be freed
+   MS *survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
+   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){   // for each free block
+    UI blkx = p->blkx;   // extract offset to base block
+    MS *baseblock = (MS *)((C*)p-(blkx<<i));  // get address of corresponding base block
+    baseblock->j &= (0x8000|MEMJMASK);  // set the count in the base to 0, unless it's 8000
+    if(blkx==0||!(baseblock->j&0x8000)){  // if block is a base block, or a surviving non-base...
+     survivetail->a=(I*)p;survivetail=p;  // ...add it as tail of survival chain
+    }
+   }
+   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+   // We have kept the surviving buffers in order because the head of the free list is the most-recently-freed buffer
+   // and therefore most likely to be in cache
 
-B jtspfree(J jt){A t;I c,d,i,j,m,n,*u,*v;MS*x;
- m=0; u=5+jt->mfreet; v=5+jt->mfreeb;
- /* DO(1+PLIML, if(jt->mfreet[i]<=jt->mfreeb[i]){j=jt->mfreeb[i]/msize[i]; m=MAX(m,j);}); */
- if(*++u<=*++v){j=*v/  64; m=MAX(m,j);}
- if(*++u<=*++v){j=*v/ 128; m=MAX(m,j);}
- if(*++u<=*++v){j=*v/ 256; m=MAX(m,j);}
- if(*++u<=*++v){j=*v/ 512; m=MAX(m,j);}
- if(*++u<=*++v){j=*v/1024; m=MAX(m,j);}
- if(!m)R 1;
- GA(t,INT,1+m,1,0); v=AV(t);
- /* must not allocate memory after this point */
- for(i=6;i<=PLIML;++i){
-  if(jt->mfreet[i]>jt->mfreeb[i])continue;
-  n=0; x=(MS*)(jt->mfree[i]); 
-  while(x){v[n++]=(I)x; x=(MS*)(x->a);}
-  qsort(v,n,SZI,spfreecomp); 
-  j=0; u=0; c=msize[i]; d=PSIZE/c;
-  while(n>j){
-   x=(MS*)v[j];
-   if(MFHEAD&x->mflag&&n>=j+d&&PSIZE==c+v[j+d-1]-v[j]){
-    j+=d; 
-    FREE(x); 
-    jt->mfreeb[i]-=PSIZE;
-   }else{x->a=u; u=(I*)v[j]; ++j;}
+   // traverse the (shortened) list one last time.  Blocks whose count is nonzero must be base blocks with count==0x8000, and they should
+   // be taken off the list and freed.  Survivors remain, in order
+   survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
+I survivect = 0;
+   for(p=jt->mfree[-PMINL+i].pool;p;){MS *np = (MS*)p->a;  // next-in-chain
+    if(p->j&0x8000){ // Free base blocks;
+#if ALIGNTOCACHE
+     FREE(((I**)p)[-1]);  // If aligned, the word before the block points to the original block address
+#else
+     FREE(p);
+#endif
+    }else{survivetail->a=(I*)p;survivetail=p;;++survivect;} p=np;   //  the rest survive.
+   } 
+   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+
+   // set up for next spfree: set mfreeb to a value such that when SPFREEB bytes have been freed,
+   // mfreeb will hit 0, causing a rescan.
+   // Account for the buffers that were freed during the coalescing by reducing the number of PSIZEL bytes allocated
+   // coalescing doesn't change the allocation, but it does change the accounting.  The change to mfreeb[] must be
+   // compensated for by a change to mfreegenallo
+   // This elides the step of subtracting coalesced buffers from the number of allocated buffers of size i, followed by
+   // adding the bytes for those blocks to mfreebgenallo
+   jt->mfreegenallo -= SBFREEB - (jt->mfree[-PMINL+i].ballo & ~MFREEBCOUNTING);  // subtract diff between current mfreeb[] and what it will be set to
+   jt->mfree[-PMINL+i].ballo = SBFREEB + (jt->mfree[-PMINL+i].ballo & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
   }
-  jt->mfree[i]=u; jt->mfreet[i]=1048576+jt->mfreeb[i];
  }
+ jt->spfreeneeded = 0;  // indicate no check needed yet
  R 1;
 }    /* free unused blocks */
 
@@ -83,11 +110,11 @@ static F1(jtspfor1){
   if(AFNJA&AFLAG(w)){I j,m,n,p;
    m=SZI*WP(AT(w),AN(w),AR(w)); 
    n=p=m+mhb; 
-   j=6; n>>=j; 
+   j=PMINL; n>>=j; 
    while(n){n>>=1; ++j;} 
-   if(p==msize[j-1])--j;
-   jt->spfor+=msize[j];
-  }else jt->spfor+=msize[((MS*)w-1)->j];
+   if(p==(I)1<<(j-1))--j;
+   jt->spfor+=(I)1<<j;
+  }else jt->spfor+=(I)1<<(((MS*)w-1)->j);
  R mtm;
 }
 
@@ -95,7 +122,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
+ GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
   x=WVR(i); m=AN(x); s=CAV(x);
   ASSERT(LIT&AT(x),EVDOMAIN);
@@ -111,7 +138,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
+ GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
   x=WVR(i); m=AN(x); s=CAV(x);
   if(!m){m=4; s="base";}
@@ -120,7 +147,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
   ASSERT(vlocnm(m,s),EVILNAME);
   y=stfind(0,m,s);
   ASSERT(y,EVLOCALE);
-  *v=(D)msize[((MS*)y-1)->j];
+  *v=(D)((I)1<<(((MS*)y-1)->j));
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));
   m=AN(y); yv=AV(y); 
   for(j=1;j<m;++j){
@@ -139,29 +166,64 @@ F1(jtmmaxq){ASSERTMTV(w); R sc(jt->mmax);}
 F1(jtmmaxs){I j,m=MLEN,n;
  RE(n=i0(vib(w)));
  ASSERT(1E5<=n,EVLIMIT);
- j=m-1; DO(m, if(n<=msize[i]){j=i; break;});
- jt->mmax=msize[j];
+ j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
+ jt->mmax=(I)1<<j;
  R mtm;
 }    /* 9!:21 space limit set */
 
-#if MEMAUDIT>=1
+
+// Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists.
+// mfreeb[] is a negative count of blocks in the free list, and biased so the value goes negative
+// when garbage-collection is required.  All non-pool allocations are accounted for in
+// mfreegenallo
+// At init, each mfreeb indicates SBFREEB bytes. mfreegenallo is negative to match that total,
+// indicating nothing has really been allocated; that's (PLIML-PMINL+1)*SBFREEB to begin with.  When a block
+// is alocated, mfreeb[] increases; when a big block is allocated, mfreegenallo increases by the
+// amount of the alllocation, and mfree[-PMINL+] decreases by the amount in all the blocks that are now
+// on the free list.
+// At coalescing,
+// mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
+I jtspbytesinuse(J jt){I i,totalallo = jt->mfreegenallo&~MFREEBCOUNTING;  // start with bias value
+for(i=PMINL;i<=PLIML;++i){totalallo+=jt->mfree[-PMINL+i].ballo&~MFREEBCOUNTING;}  // add all the allocations
+R totalallo;
+}
+
+// Start tracking jt->bytes and jt->bytesmax.  We indicate this by setting the LSB of EVERY entry of mfreeb
+// Also count current space, and set that into jt->bytes and the result of this function
+I jtspstarttracking(J jt){I i;
+ for(i=PMINL;i<=PLIML;++i){jt->mfree[-PMINL+i].ballo |= MFREEBCOUNTING;}
+ jt->mfreegenallo |= MFREEBCOUNTING;  // same for non-pool alloc
+ R jt->bytes = spbytesinuse();
+}
+
+// Turn off tracking.
+void jtspendtracking(J jt){I i;
+ for(i=PMINL;i<=PLIML;++i){jt->mfree[-PMINL+i].ballo &= ~MFREEBCOUNTING;}
+ R;
+}
+
+
 // Verify that block w does not appear on tstack more than lim times
-static void audittstack(J jt, A w, I lim){
+void audittstack(J jt, A w, I lim){
+#if MEMAUDIT>=1
  // loop through each block of stack
- I base; A* tstack; I ttop,stackct=0;
- for(base=jt->tbase,tstack=jt->tstack,ttop=jt->ttop;base>=0;base-=NTSTACK){I j;
+ A* tstack; I ttop,stackct=0;
+ for(tstack=jt->tstack,ttop=jt->tnextpushx;ttop>0;){I j;
   // loop through each entry, skipping the first which is a chain
-  for(j=1;j<ttop;++j)if(tstack[j]==w){
-   ++stackct;   // increment number of times we have seen w
-   if(stackct>lim)*(I*)0=0;  // if too many, abort
+  for(j=((ttop-SZI)&(NTSTACK-1));j>0;j-=SZI){
+   A stkent = *(A*)((I)tstack+j);
+   if(stkent==w){
+    ++stackct;   // increment number of times we have seen w
+    if(stackct>lim)*(I*)0=0;  // if too many, abort
+   }
+   if(AC(stkent))stkent=0;  // touch the entry to catch skipped blocks
   }
   // back up to previous block
-  base -= NTSTACK;  // this leaves a gap but it matches other code
-  ttop = NTSTACK;
-  if(base>=0)tstack=AAV(tstack[0]); // back up to data for previous field
+  ttop = (ttop-SZI)&-NTSTACK;  // decrement to start of block, will roll over boundary above
+  tstack=(A*)*tstack; // back up to data for previous field
  }
-}
 #endif
+}
 
 static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
  fr(LOCPATH(w));
@@ -172,78 +234,6 @@ static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
   if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
  }
-}
-
-void jtfr(J jt,A w){I j,n;MS*x;
- if(!w)R;
- x=(MS*)w-1;   // point to free header
-#if MEMAUDIT>=1
- if(!(AFLAG(w)&(AFNJA|AFSMM)||x->a==(I*)0xdeadbeef))*(I*)0=0;  // testing - verify block is memmapped/SMM or allocated
-#endif
- if(ACDECR(w)>0)R;  // fall through if decr to 0, or from 100001 to 100000
-#if MEMAUDIT>=1
- if(ACUC(w))*(I*)0=0;  // usecount should not go below 0
-#if MEMAUDIT>=2
- audittstack(jt,w,0);  // must not free anything on the stack
-#endif
-#endif
- // SYMB must free as a monolith, with the symbols returned when the hashtables are
- if(AT(w)==SYMB)freesymb(jt,w);
- j=x->j;
-#if MEMAUDIT>=1
- if(j<6||j>63)*(I*)0=0;  // pool number must be valid
-#if MEMAUDIT>=3
- DO(1<(j-LGSZI), ((I*)x)[i] = 0xdeadbeef;);
-#endif
-#endif
- n=1LL<<j;
- if(PLIML<j)FREE(x);  /* malloc-ed       */
- else{                /* pool allocation */
-  x->a=jt->mfree[j]; 
-  jt->mfree[j]=(I*)x; 
-  jt->mfreeb[j]+=n;
-#if MEMAUDIT>=1
-  x->j=0xdeaf;
-#endif
- }
- jt->bytes-=n;
-}
-
-static A jtma(J jt,I m){A z;C*u;I j,n,p,*v;MS*x;
- p=m+mhb; 
- ASSERT((UI)p<=(UI)jt->mmax,EVLIMIT);
- for(n=64;n<p;n=n+n);
- j=CTTZI(n);
- JBREAK0;  // Here to allow instruction scheduling
- if(jt->mfree[j]){         /* allocate from free list         */
-  z=(A)(mhw+jt->mfree[j]);
-#if MEMAUDIT>=1
-  if(((MS*)z-1)->j!=(S)0xdeaf)*(I*)0=0;  // verify block has free-pool marker
-#endif
-  jt->mfree[j]=((MS*)(jt->mfree[j]))->a;
-  jt->mfreeb[j]-=n;
- }else if(j>PLIML){         /* large block: straight malloc    */
-  v=MALLOC(n);
-  ASSERT(v,EVWSFULL); 
-  z=(A)(v+mhw);
- }else{                    /* small block: do pool allocation */
-  v=MALLOC(PSIZE);
-  ASSERT(v,EVWSFULL);
-  u=(C*)v; DO(PSIZE>>j, x=(MS*)u; u+=n; x->a=(I*)u; x->mflag=0;); x->a=0;  // chain blocks to each other; set chain of last block to 0
-#if MEMAUDIT>=1
-   u=(C*)v; DO(PSIZE>>j, ((MS*)u)->j=0xdeaf; u+=n;);
-#endif
-  ((MS*)v)->mflag=MFHEAD;
-  z=(A)(mhw+v); 
-  jt->mfree[j]=((MS*)v)->a;
-  jt->mfreeb[j]+=PSIZE-n;
- }
- if(jt->bytesmax<(jt->bytes+=n))jt->bytesmax=jt->bytes;
- x=(MS*)z-1; x->j=(C)j;  // Why clear a?
-#if MEMAUDIT>=1
- x->a=(I*)0xdeadbeef;  // flag block as allocated
-#endif
- R z;
 }
 
 static void jttraverse(J jt,A wd,AF f){
@@ -269,335 +259,372 @@ static void jttraverse(J jt,A wd,AF f){
 
 void jtfh(J jt,A w){fr(w);}
 
-static A jttg(J jt){A t=jt->tstacka,z;
- RZ(z=ma(SZI*WP(BOX,NTSTACK,1L)));
- AT(z)=BOX; AC(z)=ACUC1; AR(z)=1; AN(z)=*AS(z)=NTSTACK; AM(z)=NTSTACK*SZA; AK(z)=AKX(z);
- jt->tstacka=z; jt->tstack=AAV(jt->tstacka); jt->tbase+=NTSTACK; jt->ttop=1;
- *jt->tstack=t;
- R z;
+// macros copied here for reordering & common elimination
+A jtgc (J jt,A w,I old){
+RZ(w); I* cc=&AC(w); I tt=AT(w); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,w,tt); *cc=(c+1)&~ACINPLACE;
+I pushx=tpop(old);
+*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT>=1)audittstack(jt,w,ACUC(w));
+R w;
 }
 
-static void jttf(J jt){A t=jt->tstacka;
- jt->tstacka=*jt->tstack; jt->tstack=AAV(jt->tstacka); jt->tbase-=NTSTACK; jt->ttop=NTSTACK;
- fr(t);
-}
 
-F1(jttpush){
- RZ(w);
- if(AT(w)&TRAVERSIBLE)traverse(w,jttpush);
- if(jt->ttop>=NTSTACK)RZ(tg());
- jt->tstack[jt->ttop]=w;
- ++jt->ttop;
-#if MEMAUDIT>=2
- audittstack(jt,w,ACUC(w));  // verify total # w on stack does not exceed usecount
-#endif
- R w;
-}
-
-I jttpop(J jt,I old){
- while(old<jt->tbase+jt->ttop)if(1<jt->ttop)fr(jt->tstack[--jt->ttop]); else tf(); 
- R old;
-}
-
-A jtgc (J jt,A w,I old){ra(w); tpop(old); R tpush(w);}
-
-void jtgc3(J jt,A x,A y,A z,I old){
+I jtgc3(J jt,A x,A y,A z,I old){
  if(x)ra(x);    if(y)ra(y);    if(z)ra(z);
  tpop(old);
  if(x)tpush(x); if(y)tpush(y); if(z)tpush(z);
+ R 1;  // good return
+}
+
+I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+ if(t==BOX){
+  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  // runin for loop
+  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
+  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
+  // The loop, pipelined
+  while(--n) {   // loop n-1 times
+   AD* RESTRICT np2=np1;  // pipeline stage 2
+   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
+   I c2=np2?AC(np2):0;   // fetch count in stage 2.  Will be in cache
+   I t2 = t1;    // save fetch from previous loop
+   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
+   if(t2&TRAVERSIBLE)jtra(jt,np2,t2);  // recur if recursible
+   if(np2)AC(np2)=(c2+ACUC1)&~ACINPLACE;  // increment usecount
+  }
+  // runout for loop
+  I c1=np1?AC(np1):0;
+  if(t1&TRAVERSIBLE)jtra(jt,np1,t1);  // recur if recursible
+  if(np1)AC(np1)=(c1+ACUC1)&~ACINPLACE;  // increment usecount
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
+  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
+  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
+  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
+  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  if(v->f)ra(v->f); if(v->g)ra(v->g); if(v->h)ra(v->h);
+ } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DO(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
+  if(SPA(v,a))ra(SPA(v,a)); if(SPA(v,e))ra(SPA(v,e)); if(SPA(v,i))ra(SPA(v,i)); if(SPA(v,x))ra(SPA(v,x)); 
+ }
+ R 1;
 }
 
 
-F1(jtfa ){RZ(w); traverse(w,jtfa); fr(w);   R mark;}
-F1(jtra ){I *acaddr=&AC(w); RZ(w); I ac=*acaddr; traverse(w,jtra); *acaddr=(ac+ACUSECOUNT)&~ACINPLACE; R w;   }
+I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+ if(t==BOX){
+  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  // runin for loop
+  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
+  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
+  // The loop, pipelined
+  while(--n) {   // loop n-1 times
+   AD* RESTRICT np2=np1;  // pipeline stage 2
+   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
+   I c2=np2?AC(np2):0;   // fetch count in stage 2.  Will be in cache
+   I t2 = t1;    // save fetch from previous loop
+   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
+   if(t2&TRAVERSIBLE)jtfa(jt,np2,t2);  // recur if recursible
+   if(np2)if(--c2<=0){mf(np2);} else AC(np2)=c2;  // increment usecount
+  }
+  // runout for loop
+  I c1=np1?AC(np1):0;
+  if(t1&TRAVERSIBLE)jtfa(jt,np1,t1);  // recur if recursible
+  if(np1)if(--c1<=0){mf(np1);}else AC(np1)=c1;  // increment usecount
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
+  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
+  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
+  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
+  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);
+ } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
+  if(SPA(v,a))fa(SPA(v,a)); if(SPA(v,e))fa(SPA(v,e)); if(SPA(v,i))fa(SPA(v,i)); if(SPA(v,x))fa(SPA(v,x)); 
+ }
+ R 1;
+}
+
+// subroutine to save space, just like tpush macro
+static I subrtpush(J jt, A wd, I pushx){
+I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT>=1)audittstack(jt,wd,ACUC(wd));R pushx;
+}
+
+// Result is new value of jt->tnextpushx, or 0 if error
+I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
+ if(t==BOX){
+  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  A* tstack=jt->tstack;  // base of current output block
+  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
+  // runin for loop
+  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
+  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
+  // The loop, pipelined
+  while(--n) {   // loop n-1 times
+   AD* RESTRICT np2=np1;  // pipeline stage 2
+   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
+   if(np2){   // musn't push an unfilled box
+    *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np2;  // put the box on the stack
+    pushx += SZI;  // advance to next output slot
+    if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
+#if MEMAUDIT>=1
+    jt->tnextpushx=pushx;
+    audittstack(jt,np2,ACUC(np2));
+#endif
+   }
+   I t2 = t1;    // save fetch from previous loop
+   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
+   if(t2&TRAVERSIBLE){RZ(pushx=jttpush(jt,np2,t2,pushx)); tstack=jt->tstack;} // recur if recursible; refresh output pointers
+  }
+  // runout for loop
+  if(np1){   // musn't push an unfilled box
+   *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np1;  // put the box on the stack
+   pushx += SZI;  // advance to next output slot
+   if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
+#if MEMAUDIT>=1
+   jt->tnextpushx=pushx;
+   audittstack(jt,np1,ACUC(np1));
+#endif
+  }
+  if(t1&TRAVERSIBLE){RZ(pushx=jttpush(jt,np1,t1,pushx)); tstack=jt->tstack;}  // recur if recursible
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
+  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
+  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
+  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
+  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  if(v->f)pushx=subrtpush(jt,v->f,pushx); if(v->g)pushx=subrtpush(jt,v->g,pushx); if(v->h)pushx=subrtpush(jt,v->h,pushx);
+ } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DO(t&RAT?2*n:n, if(*v)pushx=subrtpush(jt,*v,pushx); ++v;);
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
+  if(SPA(v,a))pushx=subrtpush(jt,SPA(v,a),pushx); if(SPA(v,e))pushx=subrtpush(jt,SPA(v,e),pushx); if(SPA(v,i))pushx=subrtpush(jt,SPA(v,i),pushx); if(SPA(v,x))pushx=subrtpush(jt,SPA(v,x),pushx); 
+ }
+ R pushx;
+}
+
+// Result is address of new stack block
+A* jttg(J jt){     // Filling last slot; must allocate next page.  Caller is responsible for advancing pushx
+ if(jt->tstacknext) {   // if we already have a page to move to
+//  jt->tstacknext[0] = jt->tstack;   // next was chained to prev before it was saved as next
+  jt->tstack = jt->tstacknext;   // set new buffer as current
+  jt->tstacknext = 0;    // indicate no new one available now
+ } else {A *v;   // no page to move to - better read one
+  // We don't account for the NTSTACK blocks as part of memory space used, because it's so unpredictable and large as to be confusing
+  ASSERT(v=MALLOC(NTSTACK),EVWSFULL);
+  *v = (A)jt->tstack;   // backchain old buffers to new
+  jt->tstack = v;    // set new buffer as the one to use
+ }
+ R jt->tstack;  // Return base address of block
+}
+
+
+// pop stack,  ending when we have freed the entry with tnextpushx==old.  tnextpushx is left pointing to an empty slot
+// return value is pushx
+I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
+ if(old>=pushx)R pushx;  // return fast if nothing to do
+ while(1) {  // loop till end.  Return is at bottom of loop
+  endingtpushx = MAX(old,SZI+((pushx-SZI)&-NTSTACK));  // Get # of frees we can perform in this tstack block
+  I nfrees=(A*)pushx-(A*)endingtpushx;
+  // Do the block of conditional frees.  Loop is pipelined once
+  if(nfrees){
+   A* RESTRICT fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
+
+   A np1=*fp--;  // read address of block, step to next
+   I c1=AC(np1);
+   while(--nfrees) {
+    A np2=np1;
+    np1=*fp--;
+    I c2=c1;
+    c1=AC(np1);
+#if MEMAUDIT >= 1
+    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
+#endif
+    if(--c2<=0)jtmf(jt,np2);else AC(np2)=c2;
+    // Pipelining problem: because we read two cs before we write, we will err in the unusual case of reading the same
+    // address back to back - we read the undecremented value twice.  If we detect that, replace the second read witbh the decremented value
+    if(np1==np2)c1=c2;
+   }
+   // loop runout
+#if MEMAUDIT >= 1
+    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
+#endif
+   if(--c1<=0)jtmf(jt,np1);else AC(np1)=c1;
+  }
+  // See if there are more blocks to do
+  if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
+   if(jt->tstacknext)FREE(jt->tstacknext);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
+   jt->tstacknext=jt->tstack;  // save the next-to-use
+   jt->tstack=(A*)jt->tstack[0];   // back up to the previous block, leaving tstacknext pointing to tstack
+   // move the start pointer forward; past old, if this is the last pass
+   pushx=endingtpushx-SZI;  // back up to slot 0, so when the next starting address is calculated, it goes all the way back to beginning of block
+#if MEMAUDIT >= 1
+   jt->tnextpushx -= SZI;  // skip the chain field on the stack for auditing
+#endif
+   // The return point:
+  } else R jt->tnextpushx=endingtpushx;  // On last time through, update starting pointer for next push, and return that value
+ }
+}
+
+
 
 static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
-F1(jtrat){R tpush(ra(w));}
-
-#if 0
-// include in all files for inlining, except that we can't return from a conexpr
-static I alloblock(J jt,I bytes){ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT); I n=64, j=6; while(n<bytes)n<<=1, ++j; R j;}
-
-// VSZ when size is constant or variable
-#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((rank*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+SZI+mhb-1)) + (atoms)*(size)) & (-SZI))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
-// here when size is constant
-#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(rank+AH+mhw+(size/SZI)*atoms)))  // # bytes to allocate
-#define ALLOBLOCK(n) ((n)<=128?((n)<=64?6:7) : (n)<=512?((n)<=256?8:9) : (n)<=1024?10:*(C*)0)
-#define ALLOBLOCKV(bytes) alloblock(jt, bytes)
-#define ALLONULL(n) (n)
-
-#define GAFx(name,type,atoms,rank,shaape,size,func,allo) \
-{ I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
-  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT);  /* 32-bit? */  \
-RZ(name = func(jt, allo(bytes))); \
-AT(name)=type; \
-if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shaape)ICPY(AS(name),shaape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */ \
-AN(name)=atoms; AR(name)=rank; AK(name)=SZI*AH+SZI*rank; \
-if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-mhb); \
-if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */ \
-}
-#define GAZ(name,type,atoms,rank,shaape)  GAFx(name,type,atoms,rank,shaape,type ## SIZE,jtgaf,ALLOBLOCK)
-#define GAZZ(name,type,atoms,rank,shaape)  GAFx(name,type,atoms,rank,shaape,type ## SIZE,jtgafv,ALLONULL)
+F1(jtrat){ra(w); tpush(w); R w;}
 
 
-#define GAV(name,type,atoms,rank,shaape) RZ(name = jtgaa(jt,type,atoms,rank,shaape)) // use for variable type
+// static auditmodulus = 0;
+RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
+// audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
+// audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
+// use 6!:5 to start audit I i,j;MS *x; if(jt->peekdata){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
+// unconditional {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}
 
-extern A jtgaf(J jt, I block){if(jt->parsercalls)++jt->parsercalls; R block?jtgaf(jt,block-1):0;}
-extern A jtgafv(J jt, I block){if(jt->parsercalls)++jt->parsercalls; R block?jtgaf(jt,block-1):0;}
-A testga(I n){A z;J jt;
-#if 0
-I mmul = n*32;
-I msl = n<<6;
-I mdiv = n/32;
-I msr = n>>6;
-I mrem = n%64;
-I mand = n&-128;
+ I pushx=jt->tnextpushx;  // start reads for tpush
+ A* tstack=jt->tstack;
+ if(blockx>PLIML){             /* large block: straight malloc    */
+  mfreeb=jt->mfreegenallo;    // bytes in large allocations
+  JBREAK0;  // See if we are interrupted
+#if ALIGNTOCACHE
+  // Allocate the block, and start it on a cache-line boundary
+  I *v;
+  ASSERT(v=MALLOC(n+CACHELINESIZE),EVWSFULL);
+  av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+  av->a = (I*)v;    // save address of original allocation
+#else
+  // Allocate without alignment
+  ASSERT(av=MALLOC(n),EVWSFULL);
 #endif
-GAZ(z,INT,1, 1, 0);
-//GAF(z,LIT,6, 1, 0);
-//GAFV(z,INT,n,1,0);
-GAZZ(z,LIT,n,1,0);
-//GAFV(z,INT,n,2,&num);
-R z /*+ mmul+msl+mdiv+msr+mrem+mand*/;
-}
-
-
-
-need version for general GA - should it take type?  Yes - do all the stores inside, call afv
-A jtgav(J jt,I type,I atoms,I rank,I shaape){A z;
-I bytes = ALLOBYTESVSZ(atoms,rank,type ## SIZE,type&LAST0,type==NAME);
-  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); /* 32-bit? */ 
-RZ(z = jtgafv(jt, bytes));
-AT(z)=type; \
-if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(rank&&shaape)ICPY(AS(name),shaape,rank);  /* 1==atoms always if t&SPARSE  could check rank&&shape first - would that avoid SPARSE test? */
-AN(name)=atoms; AR(name)=rank; AK(name)=SZI*AH+SZI*rank;
-if(!(type&DIRECT))memset((C*)name+(SZI*AH+SZI*rank),C0,bytes-(SZI*AH+SZI*rank)-mhb);
-if(type&LAST0){((I*)((C*)name+bytes))[-(I)mhw-1]=0; }  /* if LAST0, clear the last I  */
-}
-
-A jtgafv(J jt, I bytes){I j=(AH*SZI+mhb)<=64?6:7, n=(AH*SZI+mhb)<=64?64:128; 
- ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT);
- while(n<bytes)n<<=1, ++j;
- R jtgaf(jt,j);
-}
-A jtgaf(J jt,I blockx){A z;MS *v;
- I mfree=jt->mfree[blockx], mfreeb=jt->mfreeb[blockx], ttop=jt->ttop, tbase=jt->tbase; // start reads early
- JBREAK0;  // Put it here to assist instruction scheduling
- if(blockx>PLIML){I n = 1<<blockx;         /* large block: straight malloc    */
-  ASSERT(v=MALLOC(n),EVWSFULL);
-  v->j = blockx;    // Save the size of the allocation so we know how to free it and how big it was
-  mfreeb+=n;    // mfreeb[PLIML+1] is the byte count allocated for large blocks
+  av->j = (US)blockx;    // Save the size of the allocation so we know how to free it and how big it was
+  jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
  } else {
-  mfreeb-=MFREEBINCR;            // we are going to remove 1 free block
-  if(mfree){         // allocate from a chain of free blocks
-   v = jt->mfree[blockx]);
-   jt->mfree[blockx] = v->a;  // remove & use the head of the free chain
+  av=jt->mfree[-PMINL+blockx].pool;   // tentatively use head of free list as result
+  mfreeb=jt->mfree[-PMINL+blockx].ballo; // bytes in pool allocations
+  JBREAK0;  // See if we are interrupted
+  if(av){         // allocate from a chain of free blocks
+   jt->mfree[-PMINL+blockx].pool = (MS *)av->a;  // remove & use the head of the free chain
 #if MEMAUDIT>=1
    if(v->j!=blockx)*(I*)0=0;  // verify block has correct size
 #endif
   }else{MS *x;C* u;I nblocks=PSIZE>>blockx;                    // small block, but chain is empty.  Alloc PSIZE and split it into blocks
-   ASSERT(v=MALLOC(PSIZE),EVWSFULL);
-   u=(C*)v; DO(nblocks, x=(MS*)u; u+=(1<<blockx); x->a=(I*)u; x->j=blockx; x->ofst=i<<blockx;); x->a=0;  // chain blocks to each other; set chain of last block to 0
-   jt->mfree[j]=(MS*)((C*)v+(1<<blockx);  // the second block becomes the head of the free list
-   mfreeb+=nblocks<<MFREEBBUFSHIFT;   // We are adding a bunch of free blocks
-   jt->mfreeb[PSIZEL]+=PSIZE;   // add to the total bytes allocated
-  }
- }
-
-#if MEMAUDIT>=1
- v->a=(I*)0xdeadbeef;  // flag block as allocated
+#if ALIGNTOCACHE
+   // align the buffer list on a cache-line boundary
+   I *v;
+   ASSERT(v=MALLOC(PSIZE+CACHELINESIZE),EVWSFULL);
+   av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+   ((I**)av)[-1] = (I*)v;   // save address of entire allocation in the word before the aligned section
+#else
+   // allocate without alignment
+   ASSERT(av=MALLOC(PSIZE),EVWSFULL);
 #endif
-  z=(A)&v[1];  // advance past the memory header
- jt->mfreeb[blockx]=mfreeb;
+   u=(C*)av; DO(nblocks, x=(MS*)u; u+=n; x->a=(I*)u; x->j=(US)blockx; x->blkx=(US)i;); x->a=0;  // chain blocks to each other; set chain of last block to 0
+   jt->mfree[-PMINL+blockx].pool=(MS*)((C*)av+n);  // the second block becomes the head of the free list
+   mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
+   jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
+  }
+  jt->mfree[-PMINL+blockx].ballo=mfreeb+=n;
+#if MEMAUDIT>=1
+  av->a=(I*)0xdeadbeef;  // flag block as allocated
+#endif
+ }
+ z=(A)&av[1];  // advance past the memory header
  // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it
- if(mfreeb&1){I bytes = spbytesinuse(); if(bytes>jt->bytesmax)jt->bytesmax=bytes;}
-
-
+ if(mfreeb&MFREEBCOUNTING){jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;}
 #if MEMAUDIT>=2
  audittstack(jt,z,0);  // verify buffer not on stack
 #endif
- AC(z)=ACUC1; AFLAG(z)=0; 
-AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS));   // get rid of this?  Or change to offset from original value.  Must mod, since AK not set yet
-
- jt->tstack[ttop]=z; if(ttop==tbase+NTSTACK-1)RZ(tpushnextbuf());else jt->ttop = ttop+1;  // Perform tpush1 (we already read ttop and tbase)
-
+ AFLAG(z)=0; AC(z)=ACUC1; 
+ *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;}
+ jt->tnextpushx=pushx;
  R z;
 }
 
+RESTRICTF A jtgafv(J jt, I bytes){I j=PMINL, n=PMIN; 
+ ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT);
+ while(n<bytes)n<<=1, ++j;
+ R jtgaf(jt,j);
+}
 
-// free a block whose usecount makes it freeable
-void jtmf(J jt,A w){MS*x; 
- x=(MS*)w-1;   // point to free header
- I blockx=x->j;   // lg(buffer size)
-#if MEMAUDIT>=1
- if(!(AFLAG(w)&(AFNJA|AFSMM)||x->a==(I*)0xdeadbeef))*(I*)0=0;  // testing - verify block is memmapped/SMM or allocated
+RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
+ // Get the number of bytes needed, including the header, the atoms, and a full I appended for types that require a
+ // trailing NUL (because boolean-op code needs it)
+ I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,type==NAME);
+#if SY_64
+ ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); // check for too many atoms, to preempt overflow
+#else
+ ASSERT(bytes>atoms&&atoms>=0,EVLIMIT);   /* beware integer overflow */
 #endif
+ RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+ I akx=AKXR(rank);   // Get offset to data
+ if(!(type&DIRECT))memset((C*)z+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
+// obsolete  if(!(type&DIRECT))memset((C*)z+(AH*SZI),C0,((bytes+SZI-1-mhb)&(-SZI))-AH*SZI);  // For indirect types, zero the 
+ else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
+// obsolete else if(type&LAST0){((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-2]=((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-1]=0; }  /* if LAST0, clear the last TWO Is  */
+    // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
+    // To find that byte, back out the SZI added nulls 
+ AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
+ // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
+ AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
+ if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+ AM(z)=((I)1<<((MS*)z-1)->j)-(akx+mhb);   // get rid of this
+ R z;
+}
+
+// free a block.  The usecount must make it freeable
+void jtmf(J jt,A w){I mfreeb;
+ I blockx=((MS*)w)[-1].j;   // lg(buffer size)
+ I n=1LL<<blockx;   // number of bytes in the allocation
 #if MEMAUDIT>=2
  audittstack(jt,w,0);  // must not free anything on the stack
 #endif
- I mfreeb=jt->mfreeb[blockx];   // start reads early
- A mfree=jt->mfree[blockx];
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(AT(w)==SYMB){
   freesymb(jt,w);
-  mfreeb=jt->mfreeb[blockx];   // restore values that were read early.  This path is very rare
-  mfree=jt->mfree[blockx];
  }
 #if MEMAUDIT>=1
- if(blockx<6||blockx>=sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]))*(I*)0=0;  // pool number must be valid
+ if(blockx<PMINL||blockx>PLIML)*(I*)0=0;  // pool number must be valid
 #endif
 #if MEMAUDIT>=3
- DO((1<<(blockx-LGSZI))-2, ((I*)x)[i+2] = 0xdeadbeef;);   // wipe the block clean before we free it
+ DO((1<<(blockx-LGSZI))-2, ((I*)w)[i] = 0xdeadbeef;);   // wipe the block clean before we free it
 #endif
  if(PLIML+1<=blockx){   // allocated by malloc
-  I n=1LL<<blockx;   // number of bytes in the allocation
-  FREE(x);
-  mfreeb-=n;
- else{                // buffer allocated from subpool.
-  x->a=mfree;
-  jt->mfree[j]=(I*)x;
-  if((0 <= (mfreeb+=MFREEBINCR))&&(mfreeb<=MFREEBINCR))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
+  mfreeb = jt->mfreegenallo;
+#if ALIGNTOCACHE
+  FREE(((MS*)w)[-1].a);  // point to initial allocation and free it
+#else
+  FREE((MS*)w-1);  // point to initial allocation and free it
+#endif
+  jt->mfreegenallo = mfreeb-n;
+ }else{                // buffer allocated from subpool.
+  mfreeb = jt->mfree[-PMINL+blockx].ballo;   // number of bytes allocated at this size (biased zero point)
+  ((MS*)w)[-1].a=(I*)jt->mfree[-PMINL+blockx].pool;  // append free list to the new addition...
+  jt->mfree[-PMINL+blockx].pool=((MS*)w-1);   //  ...and make new addition the new head
+  if(0 > (mfreeb-=n))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
+  jt->mfree[-PMINL+blockx].ballo=mfreeb;
  }
- jt->mfreeb[blockx]=mfreeb;
+ if(mfreeb&MFREEBCOUNTING){jt->bytes -= n;}  // keep track of total allocation only if asked to
 }
 
-// Get total # bytes in use.  That's total allocated so far, minus the bytes in the free lists
-I jtspbytesinuse(J jt){I i,totalfree = 0;
-for(i=6;i<=PLIML;++i){totalfree-=jt->(mfreet[i]+(jt->mfreeb[i]>>MFREEBBUFSHIFT))<<i;  // for pool sizes, count bytes in free buffers (negative addition to use)
-for(;i<=48;++i){totalfree+=jt->mfreeb[i];}  // for allocations, count the number of bytes allocated.  48 is enough bins for MY lifetime.
-R totalfree;
-}
 
-// Start tracking jt->bytes and jt->bytesmax.  We indicate this by setting the LSB of EVERY entry of mfreeb
-// Also count current space, and set that into jt->bytes and the result of this function
-I jtspstarttracking(J jt){
- DO(sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]), jt->mfreeb[i] |= MFREEBCOUNTING);
- R spbytesinuse();
-}
-
-// Turn off tracking.
-void jtspendtracking(J jt){
- DO(sizeof(jt->mfreeb)/sizeof(jt->mfreeb[0]), jt->mfreeb[i] &= ~MFREEBCOUNTING);
- R;
-}
-
-#define tpush1(a) { I ttop = jt->ttop; jt->tstack[ttop]=a; if(ttop==jt->tbase+NTSTACK-1)RZ(tpushnextbuf());else jt->ttop = ttop+1;}
-
-I tpushnextbuf(){     // Filling last slot; must allocate next page
- if(jt->nextstack) {   // if we already have a page to move to
-  jt->base += NTSTACK; jt->ttop = jt->base+1;  // advance next-slot and base pointers
-//  jt->nextstack[0] = jt->tstack;   // next was chained to prev before it was saved as next
-  jt->tstack = jt=->nextstack;   // set new buffer as current
-  jt->nextstack = 0;    // indicate no new one available now
- } else {I *v;   // no page to move to - better read one
-   // We don't account for the NTSTACK blocks as part of memory space used, because it's so unpredictable and large as to be confusing
-   ASSERT(v=MALLOC(NTSTACK*SZI),EVWSFULL);
-   jt->base += NTSTACK; jt->ttop = jt->base+1;  // advance buffer pointers for the next store
-   *v = jt->tstack;   // backchain old buffers to new
-   jt->tstack = v;    // set new buffer as the one to use
- }
-R 1;
-}
-
-#define fr(a) {I s = AC(a)-1; if(s<=0)mf(a);else AC(a)=s;}
-
-// pop stack,  ending when we have freed the entry with ttop==old.  ttop is left pointing to an empty slot
-I jttpop(J jt,I old){I ttop=jt->ttop;
- while(old<jt->tbase+ttop) {
-  I endingttop = MAX(old,jt->tbase+1);  // Get # of frees we can perform in this tstack block
-  while(ttop-- > endingttop)fr(jt->tstack[ttop]);  // Do em
-  if(ttop>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
-    if(jt->nextstack)FREE(jt->nextstack);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
-    jt->nextstack=jt->tstack;  // save the next-to-use
-    jt->tstack=jt->tstack[0];   // back up to the previous block
-    ttop=NTSTACK;    // position our pointers at the end of it
-    jt->base -= NTSTACK;
-  }
- }
- jt->ttop=ttop;
-}
-
-#define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
-#define SBFREEB 1048576L   // number of bytes that need to be freed before we rescan
-#define SBFREEBLG 20   // jg2(SBFREEB)
-#define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
-#define MFREEBBUFSHIFT 1   // the buffer-count portion of mfreeb is shifted this many bits over
-#define MFREEBINCR (1<<MFREEBBUFSHIFT)
- for(i = 6;i<=PLIML;++1) {
-must initialize mfreeb[] to proper negative values
-  // Check each chain to see if it is ready to coalesce
-  if(mfreeb[i]>=0) {
-   // garbage collector: coalesce blocks in chain i
-   // pass through the chain, incrementing the j field in the base allo for each
-   incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
-   for(p=(MS *)jt->mfree[i];p;p=p->a){(MS *)((C*)p-p->ofst)->j += incr;}
-   // pass through the chain again, looking for blocks that have negative j in the corresponding base.  They should
-   // all the removed from the chain; the base block is added to the chain of blocks to be freed.
-   // In all surviving blocks the count must be removed from the j field (to set up for next time)
-   MS *freehead = 0; MS *survivetail = (MS *)&jt->mfree[i];
-   for(p=(MS *)jt->mfree[i];p;p=p->a){
-    if((MS *)((C*)p-p->ofst)->j<0){if(p->ofst==0){p->a=freehead; freehead=p;}}
-    else{survivetail->a=p;survivetail=p;p->j&=MEMJMASK;}
-   }
-   survivetail->a=0;  // terminate the chain of surviving buffers
-   // free the buffers that need to be freed; count them
-   I nfreebufs=0;
-   while(freehead){MS *nfreehead = freehead->a; FREE(freehead); ++ nfreebufs; freehead = nfreehead;}  // save chain before freeing the block
-   // set up for next spfree: set mfreeb to a negative value such that when SPFREEB bytes have been freed,
-   // mfreeb will hit 0, causing a rescan.  Set mfreet so that
-   // # bytes used in subpool = (subpool size 1<<j) * (mfreet + mfreeb)
-   // Account for the buffers that were freed during the coaleascing
-   I newbval = SBFREEBLG>>i;   // this many buffers need to be freed before we rescan
-   jt->mfreet[i] += (jt->mfreeb[i] >> MFREEBBUFSHIFT) + newbval - (nfreebufs<<(PSIZEL-i));  // add diff between current mfreeb[] and what it will be set to; deduct freed buffers
-   jt->mfreeb[i] = ((-newbval) << MFREEBBUFSHIFT) + (jt->mfreeb[i] & ~MFREEBCOUNTING);
-   jt->mfreeb[PSIZEL] -= nfreebufs<<PSIZEL;   // take freed buffers out of allocated byte count
-  }
- }
-jt->spfreeneeded = 0;  // indicate no check needed yet
-
-
-#endif
-
-A jtga(J jt,I t,I n,I r,I*s){A z;I m,w;
- if(t&BIT){const I c=8*SZI;              /* bit type: pad last axis to fullword */
-  ASSERTSYS(1>=r||s,"ga bit array shape");
-  if(1>=r)w=(n+c-1)/c; else RE(w=mult(prod(r-1,s),(s[r-1]+c-1)/c));
-#if SY_64
-  m=BP(INT,0L,r);
-  ASSERT((UI)n<TOOMANYATOMS,EVLIMIT);
-#else
-  // This test is not perfect but it's close
-  w+=WP(INT,0L,r); m=SZI*w; 
-  ASSERT(     n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
-#endif
- }else{
-#if SY_64
-  m=BP(t,n,r);
-  ASSERT((UI)n<TOOMANYATOMS,EVLIMIT);
-#else
-  w=WP(t,n,r);     m=SZI*w; 
-  ASSERT(m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
-#endif
- }
- RZ(z=ma(m));
-#if MEMAUDIT>=2
- audittstack(jt,z,0);  // verify buffer not on stack
-#endif
- if(!(t&DIRECT))memset(z,C0,m);
- if(t&LAST0){I*v=(I*)((C*)z+m); v[-1]=0; v[-2]=0;}  // if LAST0, clear the last two Is.
- AC(z)=ACUC1; AN(z)=n; AR(z)=r; AFLAG(z)=0; AK(z)=AKX(z); AM(z)=msize[((MS*)z-1)->j]-(AK(z)+sizeof(MS)); 
- AT(z)=0; tpush(z); AT(z)=t;
- if(1==r&&!(t&SPARSE))*AS(z)=n; else if(r&&s)ICPY(AS(z),s,r);  /* 1==n always if t&SPARSE */
- R z;
-}
-
-A jtgah(J jt,I r,A w){A z;
+RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
- RZ(z=ma(SZI*(AH+r)));
- AT(z)=0; AC(z)=ACUC1; tpush(z);  // original had ++AC(z)!?
+// obsolete  RZ(z=ma(SZI*(AH+r)));
+ RZ(z=gafv(SZI*(AH+r)+mhb));
+ AT(z)=0;
+// obsolete   AC(z)=ACUC1;tpush(z);  // original had ++AC(z)!?
  if(w){
   AFLAG(z)=0; AM(z)=AM(w); AT(z)=AT(w); AN(z)=AN(w); AR(z)=r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);
@@ -665,11 +692,12 @@ A jtexta(J jt,I t,I r,I c,I m){A z;I k,m1;
 }    /* "optimal" allocation for type t rank r, c atoms per item, >=m items */
 
 
+#if 0
 /* debugging tools  */
 
 B jtcheckmf(J jt){C c;I i,j;MS*x,*y;
  for(j=0;j<=PLIML;++j){
-  i=0; y=0; x=(MS*)(jt->mfree[j]); /* head ptr for j-th pool */
+  i=0; y=0; x=(MS*)(jt->mfree[-PMINL+j]); /* head ptr for j-th pool */
   while(x){
    ++i; c=x->mflag;
    if(!(j==x->j)){
@@ -697,3 +725,4 @@ B jtchecksi(J jt){DC d;I dt;
  }
  R 1;
 }    /* traverse stack per jt->sitop */
+#endif

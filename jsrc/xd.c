@@ -78,7 +78,7 @@ char *toascbuf(wchar_t *src)
                          _A_SUBDIR+_A_ARCH)
 
 static A jtattv(J jt,U x){A z;C*s;
- GA(z,LIT,6,1,0); s=CAV(z);
+ GAT(z,LIT,6,1,0); s=CAV(z);
  s[0]=x&_A_RDONLY?'r':'-';
  s[1]=x&_A_HIDDEN?'h':'-';
  s[2]=x&_A_SYSTEM?'s':'-';
@@ -123,7 +123,7 @@ F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  RZ(fn=toutf16x(y));
  p=USAV(fn); q=p+AN(fn)-3;
- GA(z,LIT,3,1,0); s=CAV(z);
+ GAT(z,LIT,3,1,0); s=CAV(z);
  x=_waccess(p,R_OK); if(0>x)R jerrno();
  s[0]=x?'-':'r';
  s[1]=_waccess(p,W_OK)?'-':'w';
@@ -151,7 +151,7 @@ F1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
  p=CAV(y); q=p+AN(y)-3;
- GA(z,LIT,3,1,0); s=CAV(z);
+ GAT(z,LIT,3,1,0); s=CAV(z);
  if((attr=GetFileAttributes(tounibuf(p)))==0xFFFFFFFF)R jerrno();
  s[0]='r';
  s[1]=attr&FILE_ATTRIBUTE_READONLY?'-':'w';
@@ -192,7 +192,7 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
  rwx[0]='r';
  rwx[1]=f->dwFileAttributes & FILE_ATTRIBUTE_READONLY ?'-':'w';
  rwx[2]=strcmp(t,"exe")&&strcmp(t,"bat")&&strcmp(t,"com")?'-':'x';
- GA(z,BOX,5,1,0); zv=AAV(z);
+ GAT(z,BOX,5,1,0); zv=AAV(z);
  RZ(zv[0]=str(n,s)); 
  RZ(zv[1]=vec(INT,6L,ts));
 #if SY_64
@@ -210,7 +210,7 @@ F1(jtjdir){PROLOG;A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffe
  RZ(w=vs(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w));
  fh=FindFirstFileW((US*)CAV(fn),&f);
- GA(z,BOX,n,1,0); zv=AAV(z);
+ GATV(z,BOX,n,1,0); zv=AAV(z);
  if (fh!=INVALID_HANDLE_VALUE) {
   do {
    jttoutf8x(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
@@ -311,7 +311,7 @@ static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;s
  ts[0]=1900+tm->tm_year; ts[1]=1+tm->tm_mon; ts[2]=tm->tm_mday;
  ts[3]=tm->tm_hour; ts[4]=tm->tm_min; ts[5]=tm->tm_sec;
  s=f->d_name; n=strlen(s);
- GA(z,BOX,6,1,0); zv=AAV(z);
+ GAT(z,BOX,6,1,0); zv=AAV(z);
  RZ(zv[0]=vec(LIT,n,s)); 
  RZ(zv[1]=vec(INT,6L,ts));
  sz=jt->dirstatbuf.st_size;
@@ -334,7 +334,7 @@ F1(jtjdir){PROLOG;A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
   * so we use less efficient but portable code.
   */
  sprintf(jt->dirnamebuf,"%s/",dir); jt->dirbase=jt->dirnamebuf+strlen(jt->dirnamebuf); f=readdir(DP);
- GA(z,BOX,n,1,0); zv=AAV(z);
+ GATV(z,BOX,n,1,0); zv=AAV(z);
  while(f){
   if(ismatch(jt,pat,f->d_name)){
    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}

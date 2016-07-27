@@ -13,10 +13,10 @@
 #define dnegate(x)     (-x)
 #define QNEGATE(x)     (qminus(zeroQ,x))
 
-#define CFR(f,T,xx,fplus,ftymes,fnegate)  \
+#define CFR(f,T,TYPE,fplus,ftymes,fnegate)  \
  F2(f){PROLOG;A z;I j,n;T d,*t,*u,*v;            \
   n=AN(w); u=(T*)AV(w);                          \
-  GA(z,xx,1+n,1,0); v=(T*)AV(z); *v=*(T*)AV(a);  \
+  GATVS(z,TYPE,1+n,1,0,TYPE##SIZE); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
    d=fnegate(u[j]); t=j+v; *(1+t)=*t;            \
    DO(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \
@@ -41,7 +41,7 @@ static F1(jtrsort){A t,z;D d=jt->ct;
 static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  RZ(w=rsort(w)); 
  n=AN(w); u=ZAV(w); 
- GA(z,CMPX,1+n,1,0); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
+ GATV(z,CMPX,1+n,1,0); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
  for(j=0;j<n;++j){
   d=znegate(u[j]); t=j+v; *(1+t)=*t; 
   DO(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
@@ -145,7 +145,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
  RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
  RZ(y=take(sc(1+m),x)); yv=ZAV(y);  /* deflated complex  poly */
  RZ(q=take(sc(1+m),w)); qv=QAV(q);  /* deflated rational poly */
- GA(z,RAT,m,1,0); zv=QAV(z);        /* exact rational roots   */
+ GATV(z,RAT,m,1,0); zv=QAV(z);        /* exact rational roots   */
  i=j=0;
  while(i<m){
   r=laguerre(m,xv,laguerre(m-i,yv,zeroZ));
@@ -170,8 +170,8 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
 
 static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
  real=CMPX!=AT(w); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
- GA(y,CMPX,1+m,1,0); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
- GA(z,CMPX,  m,1,0); zv=ZAV(z);
+ GATV(y,CMPX,1+m,1,0); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
+ GATV(z,CMPX,  m,1,0); zv=ZAV(z);
  if(2==m){Z a2,b,c,d,z2={2,0};
   a2=ztymes(z2,xv[2]); b=znegate(xv[1]); c=xv[0]; 
   d=zsqrt(zminus(ztymes(b,b),ztymes(z2,ztymes(a2,c))));
@@ -230,7 +230,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r,wd;
  RZ(w);
  if(BOX&AT(w)){
   n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); RZ(s=sc(m));
-  GA(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
+  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
   for(i=0;i<n;++i){
    x=WVR(i); r=AR(x); 
    ASSERT(1>=r,EVRANK); 

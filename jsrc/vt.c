@@ -35,7 +35,7 @@ static F2(jttks){PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  if(c){A j;C*xv,*yv;I d,i,*iv,*jv,k,n,t;
   d=0; t=AT(x); k=bp(t)*aii(x);
   q=SPA(wp,i); n=IC(q);
-  GA(j,INT,AN(q),AR(q),AS(q)); jv= AV(j); iv= AV(q);
+  GATV(j,INT,AN(q),AR(q),AS(q)); jv= AV(j); iv= AV(q);
   GA(y,t,  AN(x),AR(x),AS(x)); yv=CAV(y); xv=CAV(x);
   for(i=0;i<n;++i){
    c=0; DO(m, t=u[i]; if(c=0>t?iv[i]<t+s[i]:iv[i]>=t)break;);
@@ -67,7 +67,8 @@ static F2(jttk){PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
    b=1; z=y;
  }}
  if(!b)z=ca(w); 
- EPILOG(RELOCATE(w,z));
+ z=RELOCATE(w,z);
+ EPILOG(z);
 }
 
 F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
@@ -103,7 +104,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  n=AN(a); u=AV(a);
  ASSERT(!wcr||n<=wcr,EVLENGTH);
  if(wcr){RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; v[i]=d<-m?0:d<0?d+m:d<m?d-m:0;);}
- else{GA(s,INT,wr+n,1,0); v=AV(s); ICPY(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}
+ else{GATV(s,INT,wr+n,1,0); v=AV(s); ICPY(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}
  R tk(s,w);
 }
 

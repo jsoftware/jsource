@@ -50,13 +50,13 @@ static I fsize(F f){
 }
 #endif
 
-static A jtrdns(J jt,F f){A za,z;I n;size_t r,tr=0;
- GA(za,LIT,n=1024,1,0); clearerr(f);
+static A jtrdns(J jt,F f){A za,z;I n=1024;size_t r,tr=0;
+ GAT(za,LIT,1024,1,0); clearerr(f);
  while(!feof(f) && (r=fread(CAV(za)+tr,sizeof(C),n-tr,f))){
   tr+=r; if(tr==(U)n){RZ(za=ext(0,za));n*=2;}
  }
  if(tr==(U)n)z=za;
- else {GA(z,LIT,tr,1,0); MC(CAV(z),CAV(za),tr);}
+ else {GATV(z,LIT,tr,1,0); MC(CAV(z),CAV(za),tr);}
  R z;
 }    /* read entire file stream (non-seekable) */
 
@@ -71,7 +71,7 @@ A jtrd(J jt,F f,I j,I n){A z;C*x;I p=0;size_t q=1;
 #endif
 
  clearerr(f);
- GA(z,LIT,n,1,0); x=CAV(z);
+ GATV(z,LIT,n,1,0); x=CAV(z);
  while(q&&n>p){
   p+=q=fread(p+x,sizeof(C),(size_t)(n-p),f);
   if(ferror(f))R jerrno();
@@ -288,7 +288,7 @@ F1(jtjgetenv){
   RZ(z=toutf16x(w));
   us=_wgetenv((US*)CAV(z));
   if(!us)R zero;
-  GA(z,C2T,wcslen(us),1,0);
+  GATV(z,C2T,wcslen(us),1,0);
   memcpy(USAV(z),us,2*wcslen(us));
   R toutf8(z);
  }

@@ -197,7 +197,7 @@ static DF1(jtredg){PROLOG;DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  n=IC(w); p=ARELATIVE(w);
  RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
- old=jt->tbase+jt->ttop; 
+ old=jt->tnextpushx; 
  for(i=1;i<n;++i){
   v-=k; 
   GA(y,yt,yn,yr,ys); u=CAV(y); 
@@ -281,7 +281,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
  v=AS(y); yr=v[0]; yc=v[1]; yr1=yr-1;
  RZ(d=grade1(eq(a,sc(f)))); dv=AV(d); 
  DO(AN(a), if(i!=dv[i]){RZ(q=grade1p(d,y)); qv=AV(q); break;});
- GA(p,B01,yr,1,0); pv=BAV(p); memset(pv,C0,yr);
+ GATV(p,B01,yr,1,0); pv=BAV(p); memset(pv,C0,yr);
  u=yv=AV(y); m=mm=0; j=-1; if(qv)v=yv+yc*qv[0];
  for(k=0;k<yr1;++k){
   if(qv){u=v; v=yv+yc*qv[1+k];}else v=u+yc;
@@ -298,7 +298,7 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
   case CEQ:                  j=!*BAV(e);     break;
   case CNE:                  j= *BAV(e);     break;
  }
- if(j)GA(sn,INT,m,1,0);
+ if(j)GATV(sn,INT,m,1,0);
  *zm=m; *zdv=dv; *zpv=pv; *zqv=qv; *zxxv=xxv; *zsn=sn;
  R 1;
 }
@@ -331,7 +331,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  RZ(redspsprep(id,f,zt,a,e,x,y,&m,&dv,&pv,&qv,&xxv,&sn));
  xv=CAV(x); xk=xc*bp(xt);
  GA(zx,zt,m*xc,AR(x),AS(x)); *AS(zx)=m; zv=CAV(zx); zk=xc*bp(zt);
- GA(zy,INT,m*(yc-1),2,0); v=AS(zy); v[0]=m; v[1]=yc-1; yu=AV(zy);
+ GATV(zy,INT,m*(yc-1),2,0); v=AS(zy); v[0]=m; v[1]=yc-1; yu=AV(zy);
  v=qv; if(sn)sv=AV(sn);
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;
   p1=1+(B*)memchr(pv,C1,yr); n=p1-pv; if(sn)sv[i]=wm-n; pv=p1;
@@ -380,12 +380,12 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
 }    /* f/"r for sparse w */
 
 #define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
-                         GA(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
+                         GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
                          if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;)  \
                          else   DO(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
                         }
 #define BR2PFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
-                         GA(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
+                         GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
                          if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)  \
                          else   DO(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
                         }
@@ -433,7 +433,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
   case BR2CASE(FL, CGE     ): BR2PFX(D,TGE); break;
   case BR2CASE(FL, CNE     ): BR2PFX(D,TNE); break;
  }
- if(b){S*u=(S*)wv; GA(z,B01,wn/2,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
+ if(b){S*u=(S*)wv; GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
  if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DO(r-1, *u++=*v++;);}
  *zz=z;
  R 1;
@@ -470,7 +470,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  j=0; DO(n, if(e==v[i]){j=i; break;}); 
  k=1; DO(f, if(!b[i])++k;);
  zp=PAV(z); SPB(zp,e,ca(SPA(wp,e)));
- GA(q,INT,n-(c&&d),1,0); v=AV(q); DO(wr, if(b[i])*v++=i-(i>f);); SPB(zp,a,q);
+ GATV(q,INT,n-(c&&d),1,0); v=AV(q); DO(wr, if(b[i])*v++=i-(i>f);); SPB(zp,a,q);
  if(c&&d){          /* sparse sparse */
   SPB(zp,x,ca(x));
   SPB(zp,i,q=repeatr(ne(a,sc(f)),y));
@@ -481,7 +481,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
   MC(AV(q),AV(x),AN(x)*bp(AT(x)));
   SPB(zp,x,q); SPB(zp,i,ca(y));
  }else{             /* other */
-  GA(q,INT,xr,1,0); v=AV(q); 
+  GATV(q,INT,xr,1,0); v=AV(q); 
   if(1!=k){*v++=0; *v++=k; e=0; DO(xr-1, ++e; if(e!=k)*v++=e;); RZ(x=cant2(q,x));}
   v=AV(q); u=AS(x); *v=u[0]*u[1]; ICPY(1+v,2+u,xr-1); RZ(x=reshape(vec(INT,xr-1,v),x));
   e=ws[f+c]; RZ(y=repeat(sc(e),y)); v=j+AV(y);
@@ -524,7 +524,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(2==r)R irs1(w,0L,2L,jtcant1);
  RZ(c=IX(wr)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));
  if(SPARSE&AT(w)){A x;
-  GA(x,INT,f+r-1,1,0); v=AV(x); ICPY(v,AS(y),f+1);
+  GATV(x,INT,f+r-1,1,0); v=AV(x); ICPY(v,AS(y),f+1);
   RE(v[f+1]=mult(s[f],s[f+2])); ICPY(v+f+2,s+3+f,r-3);
   R reshape(x,y);
  }else{
@@ -550,8 +550,8 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
  if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),one));
  zn=AN(w)/n; zm=prod(f,ws); m=zm?AN(w)/(zm*n):prod(r-1,ws+f+1); mn=m*n;
- GA(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
- GA(x,BOX,n,1,0); xv=AAV(x);
+ GATV(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
+ GATV(x,BOX,n,1,0); xv=AAV(x);
  zv=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); RZ(*zv++=raze(x));); wv+=mn;);
  R z;
@@ -605,7 +605,7 @@ DF1(jtmean){A z;I c,f,m,n,r,wn,wr,*ws,wt;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  wt=AT(w); wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
- GA(z,FL,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
+ GATV(z,FL,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
  m=prod(f,ws); c=m?wn/m:prod(r,f+ws);
  if(wt&INT)meanI(m,c,n,DAV(z), AV(w)); 
  else      meanD(m,c,n,DAV(z),DAV(w));

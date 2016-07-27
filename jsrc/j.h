@@ -148,6 +148,24 @@
 #define UNDERFLOW       ((D)4.450147717014403e-308)
 #endif
 
+//
+#if SY_WIN32 
+// RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
+#define RESTRICT __restrict
+// RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
+#define RESTRICTF __declspec(restrict)
+#endif
+#if SY_LINUX || SY_MAC
+#define RESTRICT __restrict
+// No RESTRICTF on GCC
+#endif
+#ifndef RESTRICT
+#define RESTRICT
+#endif
+#ifndef RESTRICTF
+#define RESTRICTF
+#endif
+
 
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
@@ -158,7 +176,7 @@
 #define NFDEP           20000L             // fn call depth
 #define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
 
-#define NTSTACK         2000L           /* size of stack for temps         */
+#define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
 
 #define IIDOT           0               /* modes for indexofsub()          */
 #define IICO            1
@@ -195,9 +213,13 @@
 #define BB              8      /* # bits in a byte */
 #if SY_64
 #define BW              64     /* # bits in a word */
+#define LGSZI 3    // lg(#bytes in an I)
 #else
 #define BW              32
+#define LGSZI 2
 #endif
+
+#define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ACX(a)          {AC(a)=IMAX/2;}
@@ -230,8 +252,54 @@
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+
+// Memory-allocation macros
+// Size-of-block calculations.  VSZ when size is constant or variable
+// Because the Boolean dyads write beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
+#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+/*SZI*/+mhb)) + (atoms)*(size)) /*& (-SZI)*/)  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
+// here when size is constant.  The number of bytes must not exceed 2^(PMINL+5)
+#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+AH+mhw+((size)/SZI)*(atoms))))  // # bytes to allocate
+#define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
+// GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#define GAV(v,t,n,r,s)  RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))   // Use this version when t is not a constant - calls a subroutine to analyze
+#if 0
+#else
+// When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
+#define GAT(name,type,atoms,rank,shaape) \
+{ I bytes = ALLOBYTES(atoms,rank,type##SIZE,type&LAST0,type==NAME); \
+ AD* ZZz = jtgaf(jt, ALLOBLOCK(bytes)); \
+ I akx=AKXR(rank);   \
+ RZ(ZZz);   \
+ AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms;   \
+ if(!(type&DIRECT))memset((C*)ZZz+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  \
+ else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
+ AR(ZZz)=rank;     \
+ if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}    \
+ AM(ZZz)=((I)1<<ALLOBLOCK(bytes))-(akx+mhb);    \
+ name=ZZz;   \
+}
+// Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
+#define GATVS(name,type,atoms,rank,shaape,size) \
+{ I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
+ ASSERT(SY_64?(UI)(atoms)<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT);  \
+ AD* ZZz = jtgafv(jt, bytes);   \
+ I akx=AKXR(rank);   \
+ RZ(ZZz);   \
+ if(!(type&DIRECT))memset((C*)ZZz+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  \
+ else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
+ AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
+ if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
+ AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-(akx+mhb);     \
+ name=ZZz;   \
+}
+#define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE)
+#if 0
+#define GAT(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define GATV(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define GATVS(v,t,n,r,s,sz)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#endif
+#endif
+
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
@@ -249,7 +317,7 @@
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
-// PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GA (i. e. all blocks).
+// PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in
 // long-running definitions, to free memory [for this application it is normal to do some allocating of working memory, then save the tstack pointer in a local name
@@ -260,13 +328,13 @@
 // So, it is preserved by incrementing its usecount before the tpop(_ttop); then after the tpop, it is pushed back onto the tstack, indicating that it will be freed
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
-#define PROLOG          I _ttop=jt->tbase+jt->ttop
+#define PROLOG          I _ttop=jt->tnextpushx
 #define EPILOG(z)       R gc(z,_ttop)   // z is the result block
 // Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
 // For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
-#define EPILOG1(z)       {ACINCR(z); tpop(old); tpush1(z); R z;}   // z is the result block
+#define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
@@ -329,9 +397,11 @@
 #define BS11    0x0101
 #endif
 
+
 #include "ja.h" 
 #include "jc.h" 
 #include "jtype.h" 
+#include "m.h"
 #include "jt.h" 
 #include "jlib.h"
 #include "je.h" 
@@ -341,7 +411,6 @@
 #include "vx.h" 
 #include "vz.h"
 #include "vdx.h"  
-#include "m.h"
 #include "a.h"
 #include "s.h"
 
@@ -433,3 +502,8 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
  feclearexcept(FE_ALL_EXCEPT); return r;
 }
 #endif
+
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0   // Audit level for memory accesses: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack 3 +scrub freed areas
+
+#define CACHELINESIZE 128  // free pool is aligned on this boundary

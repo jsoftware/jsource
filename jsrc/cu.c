@@ -24,7 +24,7 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;I wd;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
  if(!(BOX&AT(w)))RZ(w=box0(w));
- GA(z,BOX,AN(w),AR(w),AS(w));
+ GATV(z,BOX,AN(w),AR(w),AS(w));
  zv=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  DO(AN(w), EVERYI(CALL1(f1,WVR(i),fs)););
  R z;
@@ -36,7 +36,7 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd
  wn=AN(w); wr=AR(w); ws=AS(w); wb=BOX==AT(w); wd=(I)w*ARELATIVE(w);
  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
- GA(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
+ GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
  if(ar&&!ab)RZ(a=box0(a)); av=AAV(a);
  if(wr&&!wb)RZ(w=box0(w)); wv=AAV(w);
  if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,AVR(i),      WVR(i),      fs))) 
@@ -70,7 +70,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  }
  if(!b)R from(df1(indexof(alp,w),fs),alp);
  n=AN(w);
- GA(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
+ GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
  if(!bitwisecharamp(f,n,wv,zv))DO(n, *zv++=f[*wv++];); 
  R z;
 }    /* f&.(a.&i.) w */

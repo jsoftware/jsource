@@ -47,7 +47,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  }
  ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
- GA(z,NAME,n,1,0); zv=NAV(z);
+ GATV(z,NAME,n,1,0); zv=NAV(z);
  memcpy(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag for locative/indirect locative
@@ -92,7 +92,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,wd,*zv;L*v;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);  // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(WVR(i)));  // point to (the possibly relative) name, audit for validity
   if(y){if(v=syrd(y,0L)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
@@ -142,7 +142,7 @@ F1(jtscind){A*wv,x,y,z;I n,wd,*zv;L*v;
  n=AN(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z);
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  DO(n, x=WVR(i); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y,0L); RESETERR; zv[i]=v?v->sn:-1;);
  R z;
 }    /* 4!:4  script index */
@@ -161,7 +161,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;I*e,i,k,m,p,wn;L*d;
     if(b){
      if(m==AN(ch)){RZ(ch=ext(0,ch)); v=m+AAV(ch);}
      x=d->name; k=NAV(x)->m;
-     GA(y,LIT,k+2+p,1,0); yv=CAV(y); 
+     GATV(y,LIT,k+2+p,1,0); yv=CAV(y); 
      MC(yv,NAV(x)->s,k); MC(1+k+yv,s,p); yv[k]=yv[1+k+p]='_';
      *v++=y; ++m;
    }}
@@ -174,7 +174,7 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;I*e,i,k,m,p,wn;L*d;
 
 F1(jtnch){A ch,*pv;B b;I*e,i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
- GA(ch,BOX,20,1,0); m=0;
+ GAT(ch,BOX,20,1,0); m=0;
  if(jt->stch){
   n=AN(jt->stloc); e=1+AV(jt->stloc); pv=AAV(jt->stptr);
   for(i=1;i<n;++i,++e)if(*e){
@@ -197,7 +197,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n,wd;L*v;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,B01,n,AR(w),AS(w)); zv=BAV(z);
+ GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   RE(y=stdnm(WVR(i)));
   zv[i]=1&&y;

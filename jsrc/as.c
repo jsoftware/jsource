@@ -164,7 +164,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  jt->rank=0;
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
- GA(z,BOX,n,1,0); zv=AAV(z);
+ GATV(z,BOX,n,1,0); zv=AAV(z);
  DO(n, RZ(zv[i]=df1(drop(sc(i),w),hv[i%m])););
  R ope(z);
 }    /* g\."r w for gerund g */
@@ -184,7 +184,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  RZ(q=tail(w));
  RZ(y=gah(r,q)); ICPY(AS(y),AS(q),r); AK(y)=(I)zv-(I)y; zv-=k; 
  RZ(x=gah(r,q)); ICPY(AS(x),AS(q),r); AK(x)=(I)zv-(I)x;
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  switch(r?0:k){
   case sizeof(C): SSGULOOP(C); break;
   case sizeof(I): SSGULOOP(I); break;
@@ -209,7 +209,7 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;B p;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(
  fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
  n=IC(w); p=ARELATIVE(w);
  if(DIRECT&AT(w)){RE(z=ssgu(w,self)); if(z)R z;}
- GA(z,BOX,n,1,0); zv=n+AAV(z); 
+ GATV(z,BOX,n,1,0); zv=n+AAV(z); 
  RZ(*--zv=q=tail(w)); yt=AT(q); yn=AN(q); yr=AR(q); ys=1+AS(w);
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
  for(i=1;i<n;++i){
@@ -276,7 +276,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  n=IC(x);
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
- GA(z,BOX,n,1,0); zv=AAV(z);
+ GATV(z,BOX,n,1,0); zv=AAV(z);
  DO(n, RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])););
  R ope(z);
 }

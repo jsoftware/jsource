@@ -58,9 +58,9 @@ static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k
   GA(z,y?AT(y):B01,n,m,as); R z;
  }
  ws=AS(w); 
- GA(z,BOX,n,m,as); zv=AAV(z);
- GA(q,BOX,c,1,0); qv=AAV(q);
- GA(qq,BOX,1,0,0); *AAV(qq)=q;
+ GATV(z,BOX,n,m,as); zv=AAV(z);
+ GATV(q,BOX,c,1,0); qv=AAV(q);
+ GAT(qq,BOX,1,0,0); *AAV(qq)=q;
  for(ii=0;ii<n;++ii){
   for(i=0;i<c;++i){
    m=ws[i]; j=u[i]; e=u[i+c]; k=ABS(e); 
@@ -106,8 +106,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*
  sv=VAV(self); q=*AV(sv->g);
  an=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a); ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
- GA(x,BOX,an,1,0); xv=AAV(x);
- GA(y,BOX,an,1,0); yv=AAV(y);
+ GATV(x,BOX,an,1,0); xv=AAV(x);
+ GATV(y,BOX,an,1,0); yv=AAV(y);
  for(i=0;i<an;++i){
   b=AVR(i); bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
@@ -117,8 +117,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*
    if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),0<q?one:zero));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
-   GA(t,INT,p,1,0); u=AV(t); xv[i]=t;
-   GA(t,INT,p,1,0); v=AV(t); yv[i]=t; j=-1;
+   GATV(t,INT,p,1,0); u=AV(t); xv[i]=t;
+   GATV(t,INT,p,1,0); v=AV(t); yv[i]=t; j=-1;
    if(p)switch(q){
     case  1: DO(bn, if(bv[i]){*u++=i  ; if(0<=j)*v++=i-j  ; j=i;}); *v=bn-j;   break;
     case -1: DO(bn, if(bv[i]){*u++=i+1; if(0<=j)*v++=i-j-1; j=i;}); *v=bn-j-1; break;
@@ -137,9 +137,9 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*
 #define CUTSWITCH(EACHC)  \
  switch(wd?0:id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
   case CPOUND:                                                               \
-   GA(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;); R z;                          \
+   GATV(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;); R z;                          \
   case CDOLLAR:                                                              \
-   GA(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;);                               \
+   GATV(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;);                               \
    R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);                        \
   case CHEAD:                                                                \
    GA(z,t,m*c,r,s); zc=CAV(z); *AS(z)=m;                                     \
@@ -170,14 +170,15 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*
    /* note: fall through */                                                  \
   default:                                                                   \
    if(!m){y=reitem(zero,w); R iota(over(zero,shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
-   GA(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
+   GATV(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
    switch((wd?2:0)+(h?1:0)){                                                 \
     case 0: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(*za++=CALL1(f1,y,fs));          ); break; \
     case 1: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(*za++=df1(y,hv[j])); j=(1+j)%hn;); break; \
     case 2: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(*za++=CALL1(f1,y,fs));          ); break; \
     case 3: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(*za++=df1(y,hv[j])); j=(1+j)%hn;); break; \
    }                                                                         \
-   EPILOG(ope(z));                                                           \
+   z=ope(z);                                                                 \
+   EPILOG(z);                                                                \
  }
 
 #define EACHCUTSP(stmt)  \
@@ -203,7 +204,7 @@ static A jtselx(J jt,A x,I r,I i){A z;I c,k;
 
 static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  c=*(1+AS(y));
- GA(z,INT,r*c,2,0); s=AS(z); s[0]=r; s[1]=c;
+ GATV(z,INT,r*c,2,0); s=AS(z); s[0]=r; s[1]=c;
  v=AV(z);
  ICPY(v,AV(y)+i*c,r*c);
  DO(r, *v-=j; v+=c;);
@@ -222,7 +223,7 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
- GA(yy,INT,1+yn,1,0); yu=AV(yy); *yu++=p=pfx?n:-1;
+ GATV(yy,INT,1+yn,1,0); yu=AV(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
   case 0:          DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
   case 1: v+=yn-1; DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
@@ -234,14 +235,14 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
   r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); wd=(I)w*ARELATIVE(w);
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
-  GA(z,INT,m,1,0); zi=AV(z); 
+  GATV(z,INT,m,1,0); zi=AV(z); 
   if(pfx)for(i=m;i>=1;--i)*zi++=(yu[i-1]-yu[i  ])-neg;
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
  }else{A a,ww,x,y,z,*za,zz;I c,i,j,q,qn,r;P*wp,*wwp;
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
   RZ(ww=cps(w)); wwp=PAV(ww);
-  GA(z,BOX,m,1,0); za=AAV(z);
+  GATV(z,BOX,m,1,0); za=AAV(z);
   switch(AN(a)&&*AV(a)?2+pfx:pfx){
    case 0:
     p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
@@ -287,7 +288,8 @@ static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn
     }
     break;
   }
-  EPILOG(ope(z));
+  z=ope(z);
+  EPILOG(z);
 }}   /* sparse f;.n (dense or sparse) */
 
 
@@ -313,7 +315,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   if(pfx&&i==m)q=p;                                 \
   else{u=memchr(v+pfx,sep,p-pfx); u+=!pfx; q=u-v;}  \
   d=q-neg; v1=wv+k*(b+n-p);                         \
-  old=jt->tbase+jt->ttop;                           \
+  old=jt->tnextpushx;                           \
   GA(y,wt,d*c,r,s); *AS(y)=d;                       \
   stmt;                                             \
   if(allbx&&!AR(y)&&BOX&AT(y))*za++=y=*AAV(y);      \
@@ -321,7 +323,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   else{I ii=i-1;                                    \
    allbx=0;                                         \
    za=AAV(z); DO(ii, RZ(*za++=box(*za));); *za++=y; \
-   old=jt->tbase+jt->ttop;                          \
+   old=jt->tnextpushx;                          \
   }                                                 \
   gc(y,old);                                        \
   p-=q; v=u;                                        \
@@ -378,10 +380,10 @@ static DF2(jtcut2){PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,
  }
  switch(wd?0:id){
   case CPOUND:
-   GA(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;); 
+   GATV(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;); 
    break;
   case CDOLLAR:
-   GA(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;);
+   GATV(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;);
    R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);
   case CHEAD:
    GA(z,wt,m*c,r,s); zc=CAV(z); *AS(z)=m;
@@ -423,7 +425,7 @@ static DF2(jtcut2){PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,
  }}
  if(!z){B allbx=1;
   if(!m){y=reitem(zero,w); y=h?df1(y,*hv):CALL1(f1,y,fs); RESETERR; R iota(over(zero,shape(y?y:mtv)));}
-  GA(z,BOX,m,1,0); za=AAV(z);
+  GATV(z,BOX,m,1,0); za=AAV(z);
   switch((wd?2:0)+(h?1:0)){
    case 0: EACHCUTG(MC(AV(y),v1,d*k);  RZ(y=CALL1(f1,y,fs));     ); break;
    case 1: EACHCUTG(MC(AV(y),v1,d*k);  RZ(y=df1(y,hv[(i-1)%hn]));); break;
@@ -510,7 +512,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
    q=u-v; d=q-neg;
    *AS(x)=d; AN(x)=wc*d; AK(x)=(wv+k*(b+n-p))-(C*)x;
-   old=jt->tbase+jt->ttop;
+   old=jt->tnextpushx;
    RZ(y=df1(x,fs)); ym=IC(y);
    if(!z){yt=AT(y); yr=AR(y); ys=AS(y); c=aii(y); yk=c*bp(yt); GA(z,yt,n*c,MAX(1,yr),ys); *AS(z)=n; zv=CAV(z);}
    if(!(yt==AT(y)&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
@@ -531,7 +533,7 @@ DF1(jtrazecut1){R razecut2(mark,w,self);}
 static A jttesos(J jt,A a,A w,I n){A p;I*av,c,k,m,*pv,s,*ws;
  RZ(a&&w);
  c=*(1+AS(a)); av=AV(a); ws=AS(w);
- GA(p,INT,c,1,0); pv=AV(p);
+ GATV(p,INT,c,1,0); pv=AV(p);
  if(3==n)DO(c, m=av[i]; s=ws[i]; pv[i]=m?(s+m-1)/m:1&&s;)
  else    DO(c, m=av[i]; k=av[c+i]; s=ws[i]-ABS(k); pv[i]=0>s?0:m?(k||s%m)+s/m:1;);
  R p;
@@ -545,7 +547,7 @@ static F2(jttesa){A x;I*av,c,d,k,p=IMAX,r,*s,t,*u,*v;
  ASSERT(d>=c&&(2>r||2==*s),EVLENGTH);
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););
  if(2==r&&c==d&&t&INT)R a;
- GA(x,INT,2*d,2,0); s=AS(x); s[0]=2; s[1]=d;
+ GATV(x,INT,2*d,2,0); s=AS(x); s[0]=2; s[1]=d;
  u=AV(x); v=u+d; s=AS(w);
  if(2==r)DO(c,   *u++=av[i]; k=av[i+c]; *v++=k==p?s[i]:k==-p?-s[i]:k;);
  if(2> r)DO(c,   *u++=1;     k=av[i];   *v++=k==p?s[i]:k==-p?-s[i]:k;);
@@ -566,7 +568,7 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
  RZ(zt&B01+LIT+INT+FL+CMPX);
  zn=AN(z0); zr=AR(z0); zs=AS(z0); zk=zn*bp(zt); m=zr*SZI;
  GA(z,zt,zn*nr*nc,2+zr,0); s1=AS(z); ICPY(s1,pv,2); ICPY(2+s1,zs,zr); zv=CAV(z);
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  if(e) for(i=0;i<nr;++i){  /* f;._3 */
   v=v0=wv+i*mi;
   DO(nc, 
@@ -588,7 +590,7 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*
  nr=pv[0]; sr=av[2]; mr=av[0]; mi=r*mr; tr=ws[0];
  nc=pv[1]; sc=av[3]; mc=av[1]; mj=k*mc; sj=k*sc;
  GA(y,t,sr*sc,2,2+av); yv=CAV(y);
- GA(z,BOX,nr*nc,2,pv); zv=AAV(z);
+ GATV(z,BOX,nr*nc,2,pv); zv=AAV(z);
  for(i=0;i<nr;++i){
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   for(j=0;j<nc;++j){

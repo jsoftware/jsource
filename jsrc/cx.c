@@ -20,7 +20,7 @@
 #define LSYMINUSE 256  // This bit is set in the original symbol table when it is in use
 
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
-#define BGA(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define BGATV(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
 // h is the array of saved info for the definition; hv->pointers to boxes;
@@ -50,13 +50,13 @@ typedef struct{I d,t,e;} TD;
 
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t,EVCTRL);
- cv->t=ra(t);                            /* iteration array     */
+ ra(t); cv->t=t;                            /* iteration array     */
  cv->n=IC(t);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  cv->k=k=AN(cv->line)-5;                 /* length of item name */
  if(0<k&&cv->n){                         /* for_xyz.            */
-  s=4+CAV(cv->line); RZ(cv->x=x=ra(str(6+k,s))); 
+  s=4+CAV(cv->line); RZ(cv->x=x=str(6+k,s)); ra(x); 
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
  }
@@ -122,12 +122,12 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
  else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
  // If the verb contains try., allocate a try-stack area for it
- if(sv->flag&VTRY1+VTRY2){GA(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
+ if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  // Allocate an area to use for the SI entries for sentences executed here
  // If there is space on the parser stack, use that to avoid the alloc/free overhead.  If there's not
  // enough space there, just use a free block
  if((C *)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C *)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
- else{A stkblka; GA(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
+ else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
 
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
@@ -158,7 +158,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  }
  // remember tbase.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
- old=jt->tbase+jt->ttop; 
+ old=jt->tnextpushx; 
  // loop over each sentence
  while(0<=i&&i<n){
   // if performance monitor is on, collect data for it
@@ -221,7 +221,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // if it fills up, extend it by 1 as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGA(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
+     else  {r=9; BGATV(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
     // remember the line number of the for./select.
@@ -278,7 +278,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     if(!cv->t){
      BASSERT(t,EVCTRL);
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     BZ(cv->t=ra(boxopen(t))); t=0;
+     t=boxopen(t); ra(t); BZ(cv->t=t); t=0;
     }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
@@ -324,18 +324,18 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
- z=jt->jerr?0:z?ra(z):mtm;  // If no error, increment use count in result to protect it from tpop
+ if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+ tpop(_ttop);   // finish freeing memory
  // Pop the locale stack and xdefn; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0; jt->xdefn=ox;
- tpop(_ttop);   // finish freeing memory
  // Give this result a short lease on life
- tpush(z);
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
+ if(z)tpush(z);
  R z;
 }
 
@@ -438,7 +438,7 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
 static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
- GA(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
+ GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
  DO(AN(w), RZ(yv[i]=vs(WVR(i))););
  RZ(t=indexof(y,link(chr[':'],str(1L,":")))); v=AV(t); j=MIN(*v,*(1+v));
  *m=take(sc(j  ),y); 
@@ -566,7 +566,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
  for(j=1;j<an;++j) {I *zhbase=&zv[j]; I ahx=av[j]; I ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   l->name=ra((jt->sympv)[ahx].name);  // point symbol table to the name block, and increment its use count accordingly
+   l->name=(jt->sympv)[ahx].name; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
     // no need to set the PERMANENT flag, since we will never clone a clone
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
@@ -590,7 +590,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  else{
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d));
   if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}
-  GA(h,BOX,2*HN,1,0); hv=AAV(h);
+  GAT(h,BOX,2*HN,1,0); hv=AAV(h);
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }

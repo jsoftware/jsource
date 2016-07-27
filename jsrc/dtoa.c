@@ -3399,7 +3399,7 @@ d2a_Malloc
 
 B jtecvtinit(J jt) {A x; struct dtoa_info *di;
  if(jt->dtoa) R 1;
- GA(x, LIT, sizeof(struct dtoa_info), 1, 0);
+ GATV(x, LIT, sizeof(struct dtoa_info), 1, 0);
  di=(struct dtoa_info*)AV(x); 
  di->_p5s=0;
  di->_pmem_next=di->_private_mem;

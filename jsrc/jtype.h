@@ -69,15 +69,16 @@ typedef I SI;
 #define AS(x)           ((x)->s)        /* Pointer to shape                */
 
 #if SY_64
-#define AKX(x)          (SZI*(AH+AR(x)))
+#define AKXR(x)         (SZI*(AH+(x)))
 #define WP(t,n,r)       (AH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
 #define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
-#define AKX(x)          (SZI*(AH+(AR(x)|1)))
+#define AKXR(x)         (SZI*(AH+((x)|1)))
 #define WP(t,n,r)       (AH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
 #define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 /* r|1 to make sure array values are double-word aligned */
 #endif
+#define AKX(x)          AKXR(AR(x))
 
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (C*)(x)+AK(x) )  /* boolean                 */
@@ -125,6 +126,7 @@ typedef I SI;
 #define RATSIZE sizeof(Q)
 #define BIT             (I)256L         /* BT bit boolean                  */
 #define BITX 8
+// No size for BIT, since it is fractional
    // Bit 9 not used
 #define SB01            (I)1024L        /* P  sparse boolean               */
 #define SB01X 10
@@ -201,6 +203,8 @@ typedef I SI;
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+NAME)
+// Don't call traverse unless one of these bits is set
+#define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
 #define HOMO(s,t)       ((s)==(t) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
 #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)

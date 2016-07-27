@@ -36,7 +36,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  RZ(w=vi(w));
  switch(*AV(w)){
   case 0:
-   GA(z,FL,3,1,0); x=DAV(z); v=VAV(fs);
+   GAT(z,FL,3,1,0); x=DAV(z); v=VAV(fs);
    j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->lr; x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->rr; x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
@@ -54,7 +54,7 @@ F1(jtbdot){A b,h=0;I j,n,*v;
  if(1==n){j=*v; ASSERT(-16<=j&&j<=34,EVINDEX);}
  else DO(n, j=*v++; ASSERT(-16<=j&&j<16,EVINDEX););
  if(1!=n||j<16){
-  GA(b,B01,64,2,0); *AS(b)=16; *(1+AS(b))=4; MC(AV(b),booltab,64L);
+  GAT(b,B01,64,2,0); *AS(b)=16; *(1+AS(b))=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));
   R fdef(CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, 0L, RMAX,0L,0L);
  }else switch(j){
@@ -113,7 +113,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
   v=ptab+PTO; while(m>=*v)++v; m=*v;
   RZ(jj=reshape(v2(m,2L),sc(IMIN))); jv= AV(jj);
-  GA(cc,BOX,m,1,0);                  cv=AAV(cc);
+  GATV(cc,BOX,m,1,0);                  cv=AAV(cc);
   for(i=0,u=ju;i<n;++i,u+=2)if(IMIN!=*u){
    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
    cv[(v-jv)/2]=cu[i]; cu[i]=0; v[0]=u[0]; v[1]=u[1];
@@ -155,9 +155,9 @@ F1(jtmemo){A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); m=ptab[1+PTO];
- GA(h,BOX,3,1,0); hv=AAV(h);
- GA(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
+ GAT(h,BOX,3,1,0); hv=AAV(h);
+ GAT(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN))); hv[1]=q;
- GA(q,BOX,m,1,0);                  hv[2]=q;
+ GATV(q,BOX,m,1,0);                  hv[2]=q;
  R fdef(CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,v->lr,v->rr);
 }

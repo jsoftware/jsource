@@ -65,7 +65,7 @@ static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
   else if(s=strchr(pp,c)){t=1; p=c; q=qq[s-pp];}
  }
  ASSERT(!t,EVDOMAIN);
- GA(z,BOX,m,1<m,0); u=AAV(z);
+ GATV(z,BOX,m,1<m,0); u=AAV(z);
  for(i=0;i<n;++i){
   c=wv[i]; 
   if(t){if(c==q)t=0;}
@@ -127,7 +127,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  RZ(w);
  w=AAV0(w); n=AN(w);
- GA(z,BOX,1+NMODVALS,1,0); zv=AAV(z); 
+ GAT(z,BOX,1+NMODVALS,1,0); zv=AAV(z); 
  DO(NMODVALS, zv[1+i]=mtv;);
  if(n&&C2T&AT(w))RZ(w=uco2(num[5],w));
  ASSERT(1>=AR(w),EVRANK);
@@ -251,11 +251,11 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  RZ(a&&w); 
  nf=1==AR(a)?1:*AS(a); n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;
  ASSERT(wt&B01+INT+FL, EVDOMAIN);
- if(1<nf){GA(base,INT,nf*4,2,0); s=AS(base); *s++=nf; *s=4;}else GA(base,INT,3+nc,1,0);
- GA(strs,BOX,nf*NMODVALS,2,0); s=AS(strs); *s++=nf; *s=NMODVALS;
- GA(len, INT,n,wr,ws); 
- GA(fb,  B01,n,wr,ws); memset(BAV(fb),C0,n);
- GA(z,BOX,4,1,0); u=AAV(z); *u++=base; *u++=strs; *u++=len; *u++=fb; 
+ if(1<nf){GATV(base,INT,nf*4,2,0); s=AS(base); *s++=nf; *s=4;}else GATV(base,INT,3+nc,1,0);
+ GATV(strs,BOX,nf*NMODVALS,2,0); s=AS(strs); *s++=nf; *s=NMODVALS;
+ GATV(len, INT,n,wr,ws); 
+ GATV(fb,  B01,n,wr,ws); memset(BAV(fb),C0,n);
+ GAT(z,BOX,4,1,0); u=AAV(z); *u++=base; *u++=strs; *u++=len; *u++=fb; 
  ib=AV(base); as=AAV(strs); u=AAV(a);
  if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); MC(as,u+1,SZA*NMODVALS);}
  else DO(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
@@ -387,22 +387,22 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
  nf=1==AR(base)?1:AS(base)[0];
  switch(mode){
   case 0:
-   GA(x, BOX, n, wr, ws); a1v=AAV(x); il=AV(len); ib=AV(base);
+   GATV(x, BOX, n, wr, ws); a1v=AAV(x); il=AV(len); ib=AV(base);
    DO(n, 
     if(i%nf) ib+=4; else ib=AV(base);
-    if(0<ib[0]) GA(*a1v, LIT, ib[0], 1, 0)
-    else GA(*a1v, LIT, *il, 1, 0) 
+    if(0<ib[0]) GATV(*a1v, LIT, ib[0], 1, 0)
+    else GATV(*a1v, LIT, *il, 1, 0) 
     memset(CAV(*a1v), ' ', AN(*a1v)); 
     a1v++; il++; 
    );
    break;
   case 1:
-   GA(x, BOX, nc, 1, 0); a1v=AAV(x); ib=AV(base); zs[0]=prod(wr-1,ws);
-   GA(v, LIT, nc*SZA, 1, 0); cvv=(C**)AV(v); 
+   GATV(x, BOX, nc, 1, 0); a1v=AAV(x); ib=AV(base); zs[0]=prod(wr-1,ws);
+   GATV(v, LIT, nc*SZA, 1, 0); cvv=(C**)AV(v); 
    DO(nc,
     if(0<ib[0]) zs[1]=ib[0]; 
     else zs[1]=ib[3+(1<nf?0:i%nc)]; 
-    GA(*a1v, LIT, zs[0]*zs[1], 2, zs); 
+    GATV(*a1v, LIT, zs[0]*zs[1], 2, zs); 
     memset(CAV(*a1v), ' ', AN(*a1v)); 
     *cvv++=CAV(*a1v);
     a1v++; if(1<nf) ib+=4; 
@@ -414,7 +414,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    DO(nc, if(0<ib[0]) coll+=ib[0]; else coll+=ib[3+(1<nf?0:i%nc)];
           if(1<nf) ib+=4; );
    zs[0]=prod(wr-1,ws); zs[1]=coll;
-   GA(x, LIT, zs[0]*zs[1], 2, zs);
+   GATV(x, LIT, zs[0]*zs[1], 2, zs);
    memset(CAV(x), ' ', AN(x));
    break;
   default: ASSERTSYS(0, "jtfmtallcol: mode");

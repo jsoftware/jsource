@@ -104,13 +104,14 @@ static X jtxd1(J jt,D p){PROLOG;A t;D d,e=tfloor(p),q,r;I m,*u;
  }
  if(p== inf)R vci(XPINF);
  if(p==-inf)R vci(XNINF);
- GA(t,INT,30,1,0); u=AV(t); m=0; d=ABS(p); 
+ GAT(t,INT,30,1,0); u=AV(t); m=0; d=ABS(p); 
  while(0<d){
   q=jfloor(d/XBASE); r=d-q*XBASE; u[m++]=(I)r; d=q;
   if(m==AN(t)){RZ(t=ext(0,t)); u=AV(t);}
  }
  if(!m){u[0]=0; ++m;}else if(0>p)DO(m, u[i]=-u[i];);
- EPILOG(xstd(vec(INT,m,u)));
+ A z=xstd(vec(INT,m,u));
+ EPILOG(z);
 }
 
 static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->jerr;}
@@ -220,7 +221,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
  for(i=0;i<n;++i){
   c=wv[i]; d=dd=c==IMIN?-(1+c):ABS(c); 
   if(d){e=0; while(d){++e; r=d%10; d=d/10;}}else e=1;
-  GA(y,INT,m,1,0); yv=AV(y);
+  GATV(y,INT,m,1,0); yv=AV(y);
   r=p%XBASEN; q=!!r+((e-r)+XBASEN-1)/XBASEN; 
   if(d=(e-r)%XBASEN){b=1; DO(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;
   DO(m-q, *yv++=0;);
@@ -271,19 +272,19 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
    case CVCASE(BIT, B01): R cvt2bit(w, yv);
    case CVCASE(BIT, INT): R cvt2bit(w, yv);
    case CVCASE(BIT, FL): R cvt2bit(w, yv);
-   case CVCASE(BIT, CMPX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
+   case CVCASE(BIT, CMPX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
    default:                ASSERT(0, EVDOMAIN);
   }
  }
  switch (CVCASE(CTTZ(t),CTTZ(wt))){
   case CVCASE(INTX, B01X): {I*x = yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
   case CVCASE(XNUMX, B01X): R XfromB(w, yv);
-  case CVCASE(RATX, B01X): GA(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
+  case CVCASE(RATX, B01X): GATV(d, XNUM, n, r, s); R XfromB(w, AV(d)) && QfromX(d, yv);
   case CVCASE(FLX, B01X): {D*x = (D*)yv; B*v = (B*)wv; DO(n, *x++ = *v++;); } R 1;
   case CVCASE(CMPXX, B01X): {Z*x = (Z*)yv; B*v = (B*)wv; DO(n, x++->re = *v++;); } R 1;
   case CVCASE(B01X, INTX): R BfromI(w, yv);
   case CVCASE(XNUMX, INTX): R XfromI(w, yv);
-  case CVCASE(RATX, INTX): GA(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
+  case CVCASE(RATX, INTX): GATV(d, XNUM, n, r, s); R XfromI(w, AV(d)) && QfromX(d, yv);
   case CVCASE(FLX, INTX): {D*x = (D*)yv; I*v = wv; DO(n, *x++ = (D)*v++;); } R 1;
   case CVCASE(CMPXX, INTX): {Z*x = (Z*)yv; I*v = wv; DO(n, x++->re = (D)*v++;); } R 1;
   case CVCASE(B01X, FLX): R BfromD(w, yv);
@@ -291,21 +292,21 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
   case CVCASE(XNUMX, FLX): R XfromD(w, yv);
   case CVCASE(RATX, FLX): R QfromD(w, yv);
   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
-  case CVCASE(B01X, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R BfromD(d, yv);
-  case CVCASE(INTX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R IfromD(d, yv);
-  case CVCASE(XNUMX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R XfromD(d, yv);
-  case CVCASE(RATX, CMPXX): GA(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R QfromD(d, yv);
+  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R BfromD(d, yv);
+  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R IfromD(d, yv);
+  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R XfromD(d, yv);
+  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R QfromD(d, yv);
   case CVCASE(FLX, CMPXX): R DfromZ(w, yv);
   case CVCASE(B01X, XNUMX): R BfromX(w, yv);
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
   case CVCASE(RATX, XNUMX): R QfromX(w, yv);
   case CVCASE(FLX, XNUMX): R DfromX(w, yv);
-  case CVCASE(CMPXX, XNUMX): GA(d, FL, n, r, s); RZ(DfromX(w, AV(d))); R ccvt(t, d, y);
-  case CVCASE(B01X, RATX): GA(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R BfromX(d, yv);
-  case CVCASE(INTX, RATX): GA(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R IfromX(d, yv);
+  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); RZ(DfromX(w, AV(d))); R ccvt(t, d, y);
+  case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R BfromX(d, yv);
+  case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R IfromX(d, yv);
   case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
   case CVCASE(FLX, RATX): R DfromQ(w, yv);
-  case CVCASE(CMPXX, RATX): GA(d, FL, n, r, s); RZ(DfromQ(w, AV(d))); R ccvt(t, d, y);
+  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); RZ(DfromQ(w, AV(d))); R ccvt(t, d, y);
   default:                ASSERT(0, EVDOMAIN);
  }
 }
@@ -334,7 +335,7 @@ A jtbcvt(J jt,C mode,A w){A y,z=w;D ofuzz;I*oq;
 F1(jticvt){A z;D*v,x;I i,k=0,n,*u;
  RZ(w);
  n=AN(w); v=DAV(w);
- GA(z,INT,n,AR(w),AS(w)); u=AV(z);
+ GATV(z,INT,n,AR(w),AS(w)); u=AV(z);
  for(i=0;i<n;++i){
   x=*v++; if(x<IMIN||IMAX<x)R w;
 #if SY_64
@@ -382,13 +383,13 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  1: R xco1(w);
   case  2: 
    if(!(t&RAT))RZ(w=cvt(RAT,w));
-   GA(z,XNUM,2*n,1+r,AS(w)); *(r+AS(z))=2;
+   GATV(z,XNUM,2*n,1+r,AS(w)); *(r+AS(z))=2;
    MC(AV(z),AV(w),2*n*SZI);
    R z;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
    b=1&&t&XD;
-   GA(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; ICPY(s,AS(w),r);
+   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; ICPY(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DO(n,         *zv++=v->p;);}
    else    {ZX*v=(ZX*)wv,y; DO(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}

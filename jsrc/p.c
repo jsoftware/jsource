@@ -40,7 +40,7 @@
 // dealing with in-place modification.
 
 B jtparseinit(J jt){A x;
- GA(x,INT,20,1,0); ra(x); jt->nvra=x; jt->nvrav=AAV(x);  // Initial stack.  Size is doubled as needed
+ GAT(x,INT,20,1,0); ra(x); jt->nvra=x; jt->nvrav=AAV(x);  // Initial stack.  Size is doubled as needed
  R 1;
 }
 
@@ -311,7 +311,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
  if((uintptr_t)oend1-(uintptr_t)obgn >= (m+4)*sizeof(PSTK))stack=oend1-3;   // if we can use the previous allocation, start at the end, with 3 marks
  else{
    I allo = MAX((m+4)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-   GA(y,B01,allo,1,0);
+   GATV(y,B01,allo,1,0);
    jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
    stack=(PSTK*)((uintptr_t)jt->parserstkbgn+allo)-3;  // point to the ending marks
  }

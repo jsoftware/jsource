@@ -25,6 +25,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  ACX(z);
  R z;
 }
+// Use GA for all these initializations, to save space since they're done only once
 
 B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;
@@ -184,7 +185,7 @@ static C jtjinit3(J jt){S t;
  // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
  // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
  // look like those symbols have a free outstanding.
- jt->ttop=jt->tbase;
+ jt->tnextpushx=SZI;  // first store is to entry 1 of the first block
  R !jt->jerr;
 }
 

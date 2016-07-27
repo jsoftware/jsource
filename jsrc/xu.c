@@ -395,12 +395,12 @@ static I wtomsize(US* src, I srcn){ US w,w1;I r=0;int invalid=0;
 // We convert a byte string to wide-char
 F1(jttoutf16r){A z;I n,t,q,b=0; C* wv; US* c2v;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
- if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 
+ if(!n) {GATV(z,LIT,n,1,0); R z;}; // empty lit list 
  q=mtowsize(CAV(w),n);
 // if(q<0 || q==n)R ca(w);  // If invalid or no U8, keep as byte
  if(q==n)R ca(w);
  q=(q<0)?(-q):q;
- GA(z,C2T,q,1,0);  // allocate result - long enough to hold the C@Ts
+ GATV(z,C2T,q,1,0);  // allocate result - long enough to hold the C@Ts
  c2v=(US*)CAV(z);
  mtow(CAV(w),n,c2v);
 // obsolete for(;q<n;++q)c2v[q]=32;  no need to pad with spaces now
@@ -425,7 +425,7 @@ F1(jttwidthf16){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
  // If no padding is needed, no copy is required
  if(!naddednulls)R w;
  // Allocate result and copy the string, adding null padding where needed
- GA(z,C2T,n+naddednulls,1,0); zv=USAV(z);
+ GATV(z,C2T,n+naddednulls,1,0); zv=USAV(z);
  nignulls = 0;
  for(i=0;i<n;++i){
   if(nignulls && (--nignulls,wv[i]==0));  // If an added null is already present, skip the copy
@@ -436,14 +436,14 @@ F1(jttwidthf16){US *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
 
 F1(jttoutf16){A z;I n,t,q,b=0; C* wv; US* c2v; 
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
- if(!n) {GA(z,LIT,n,1,0); R z;}; // empty lit list 
+ if(!n) {GATV(z,LIT,n,1,0); R z;}; // empty lit list 
  if(LIT&t)
  {
   DO(n, if(0>*wv++){b=1;break;});
-  if(!b){ if(1==AR(w)) {R ca(w);}; GA(z,LIT,1,1,0); *CAV(z)=*CAV(w); R z;} // ascii list unchanged ascii scalar as list
+  if(!b){ if(1==AR(w)) {R ca(w);}; GAT(z,LIT,1,1,0); *CAV(z)=*CAV(w); R z;} // ascii list unchanged ascii scalar as list
   q=mtowsize(CAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
-  GA(z,C2T,q,1,0);
+  GATV(z,C2T,q,1,0);
   mtow(CAV(w),n,(US*)CAV(z));
   R z; // u16 from u8
  }
@@ -452,7 +452,7 @@ F1(jttoutf16){A z;I n,t,q,b=0; C* wv; US* c2v;
   c2v=(US*)AV(w);
   DO(n, if(127<*c2v++){b=1;break;});
   if(b) R ca(w); // u16 unchanged
-  GA(z,LIT,n,AR(w),AS(w));
+  GATV(z,LIT,n,AR(w),AS(w));
   wv=CAV(z);
   c2v=(US*)AV(w);
   DO(n, *wv++=(char)*c2v++;);
@@ -479,12 +479,12 @@ R z;
 // w is C2T or LIT.  Result is U8 string
 F1(jttoutf8){A z;I n,t,q;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
-if(!n) {GA(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
+if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT) R ca(w); // char unchanged
 ASSERT(t&C2T, EVDOMAIN);
 q=wtomsize((US*)CAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
-GA(z,LIT,q,1,0);
+ GATV(z,LIT,q,1,0);
 wtom((US*)CAV(w),n,CAV(z));
 R z;
 }    // 8 u: x - utf8 from LIT or C2T
@@ -493,7 +493,7 @@ F1(jttoutf16x){I q;A z;
 ASSERT(LIT&AT(w),EVDOMAIN);
 q=mtowsize(CAV(w),AN(w));
 ASSERT(q>=0,EVDOMAIN);
-GA(z,C2T,q,1,0);
+ GATV(z,C2T,q,1,0);
 mtow(CAV(w),AN(w),(US*)CAV(z));
 R z; // u16 from u8
 }

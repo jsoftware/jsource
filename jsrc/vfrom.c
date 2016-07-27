@@ -13,11 +13,11 @@ F1(jtcatalog){PROLOG;A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s
  DO(n, x=WVR(i); if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
  RE(t=maxtype(B01,t)); k=bp(t);
  GA(b,t,n,1,0);      bv=CAV(b);
- GA(x,INT,n,1,0);    qv=AV(x);
- GA(x,BOX,n,1,0);    pv=(C**)AV(x);
+ GATV(x,INT,n,1,0);    qv=AV(x);
+ GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
  RZ(x=apv(n,0L,0L)); cv=AV(x);
  DO(n, x=WVR(i); if(t!=AT(x))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
- GA(z,BOX,m,r,0);    zv=AAV(z); s=AS(z); 
+ GATV(z,BOX,m,r,0);    zv=AAV(z); s=AS(z); 
  DO(n, x=WVR(i); u=AS(x); DO(AR(x),*s++=*u++;););
  for(i=0;i<m;i++){
   bu=bv-k;
@@ -146,7 +146,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf
 #if !SY_64 && SY_WIN32
    else{A x;C*v,*xv,*xv00,*xv01,*xv02,*xv03,*xv04,*xv05,*xv06,*xv07,*xv08,*xv09,*xv10,*xv11,
          *xv12,*xv13,*xv14,*xv15;I i,j,k4=k*4;
-    GA(x,LIT,16*k4,1,0); xv=CAV(x);
+    GATV(x,LIT,16*k4,1,0); xv=CAV(x);
     xv00=xv;       xv01=xv+   k4; xv02=xv+ 2*k4; xv03=xv+ 3*k4;
     xv04=xv+ 4*k4; xv05=xv+ 5*k4; xv06=xv+ 6*k4; xv07=xv+ 7*k4;
     xv08=xv+ 8*k4; xv09=xv+ 9*k4; xv10=xv+10*k4; xv11=xv+11*k4;
@@ -192,12 +192,12 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
   v=ws+wf+h; DO(wcr-h, *u++=*v++;);
   R z;
  } 
- GA(p,INT,h,1,0); v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
+ GATV(p,INT,h,1,0); v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
  r=wr+1-h;
  if(r==wr)
   z=irs2(pdt(a,p),w,0L,RMAX,wcr+1-h,jtifrom);
  else if(ARELATIVE(w)){
-  GA(q,INT,r,1,0); 
+  GATV(q,INT,r,1,0); 
   v=AV(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
   z=irs2(pdt(a,p),q,0L,RMAX,wcr+1-h,jtifrom);
  }else{
@@ -214,7 +214,7 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I ad,an,ar,c,j,k,t,*u,*v,*ws;
  ws=wf+AS(w); ar=AR(a); av=AAV(a); ad=(I)a*ARELATIVE(a); q=AVR(0); c=AN(q);
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
- GA(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
+ GATV(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
  for(j=0;j<an;++j){
   q=AVR(j); t=AT(q);
   if(t&BOX)R 0;

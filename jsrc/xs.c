@@ -13,7 +13,7 @@
 
 
 B jtxsinit(J jt){A x;
- GA(x,BOX,10,1,0); memset(AV(x),C0,AN(x)*SZI); ra(x); jt->slist=x;
+ GAT(x,BOX,10,1,0); memset(AV(x),C0,AN(x)*SZI); ra(x); jt->slist=x;
  jt->slisti=-1;
  R 1;
 }
@@ -47,7 +47,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si,0L));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
- old=jt->tbase+jt->ttop;
+ old=jt->tnextpushx;
  switch(ce){
   case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=jgets("   ")); tpop(old);} break;
   case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=jgets("   ")); tpop(old);} break;
@@ -79,7 +79,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
  if(jt->slistn==i){
   if(jt->slistn==AN(jt->slist))RZ(jt->slist=ext(1,jt->slist)); 
-  RZ(*(jt->slistn+AAV(jt->slist))=ra(y)); 
+  ra(y); RZ(*(jt->slistn+AAV(jt->slist))=y); 
   ++jt->slistn;
  }
  jt->slisti=i;    jt->glock=1==jt->glock?1:lk?2:0;

@@ -31,8 +31,8 @@ A jtpind(J jt,I n,A w){A z;I j,m,*v;
 
 A jtpfill(J jt,I n,A w){PROLOG;A b,z;B*bv,*v;I*wv,*zv;
  RZ(w=pind(n,w));  wv=AV(w);
- GA(z,INT,n,1,0); zv=AV(z);
- GA(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
+ GATV(z,INT,n,1,0); zv=AV(z);
+ GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
  DO(AN(w), v=bv+wv[i]; ASSERT(*v,EVINDEX); *v=0;);
  DO(n, if(bv[i])*zv++=i;); ICPY(zv,wv,AN(w));
  EPILOG(z);
@@ -42,14 +42,14 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  RZ(w);
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
-  GA(b,B01,1+n,1,0); bv=BAV(b); memset(bv,C0,n);
+  GATV(b,B01,1+n,1,0); bv=BAV(b); memset(bv,C0,n);
   DO(n, j=v[i]; if(j<0||n<=j||bv[j]){c=0; break;} bv[j]=1;);
  }
- if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GA(b,B01,1+n,1,0);}
+ if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV(b,B01,1+n,1,0);}
  bv=BAV(b); memset(bv,C0,1+n); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
- GA(q,INT,n, 1,0); qv= AV(q);
- GA(z,BOX,zn,1,0); zv=AAV(z);
+ GATV(q,INT,n, 1,0); qv= AV(q);
+ GATV(z,BOX,zn,1,0); zv=AAV(z);
  while(1){
   while(bv[j])--j; if(0>j)break;
   u=qv; c=j;
@@ -64,7 +64,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
 static A jtdfc(J jt,I n,A w){PROLOG;A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x,wd;
  RE(n); RZ(w);
  ASSERT(0<=n,EVINDEX);
- GA(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
+ GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
  RZ(z=IX(n)); x=AV(z);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  for(j=AN(w)-1;0<=j;j--){
@@ -87,8 +87,8 @@ F2(jtcdot2){A p;
 F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  RZ(x=cvt(INT,w));
  r=AR(x); s=AS(x); n=r?*(s+r-1):1; RE(m=prod(r-1,s)); v=AV(x);
- GA(y,B01,n,1,0); u=BAV(y);
- GA(z,INT,m,r?r-1:0,s); zv=AV(z);
+ GATV(y,B01,n,1,0); u=BAV(y);
+ GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
   j=p=0; memset(u,C1,n);
   DO(n, k=v[i]; if(0>k)v[i]=k+=n; if(0<=k&&k<n&&u[k])u[k]=0; else{j=1+n; break;});
@@ -102,7 +102,7 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
 static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  RZ(w);
  n=*(AS(w)+AR(w)-1); m=n?AN(w)/n:0; v=AV(w);
- GA(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
+ GATV(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
  for(i=0;i<m;++i){
   DO(n, x[i]=i;);
   DO(n-1, j=i; c=x[j+v[j]]; DO(1+v[j], d=x[j+i]; x[j+i]=c; c=d;););

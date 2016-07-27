@@ -23,10 +23,10 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
   if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
   RZ(a=ifb(1+f,b)); 
-  GA(c,INT,r,1L,0L); v=r+AV(c); j=wr; m=1; DO(r, *--v=m; m*=ws[--j];);
+  GATV(c,INT,r,1L,0L); v=r+AV(c); j=wr; m=1; DO(r, *--v=m; m*=ws[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));
-  GA(y,INT,m*(1+n-r),2,0); v=AS(y); v[0]=m; v[1]=1+n-r;
+  GATV(y,INT,m*(1+n-r),2,0); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DO(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
  }else{RZ(a=ca(SPA(wp,a))); RZ(x=irs1(SPA(wp,x),0L,r,jtravel)); RZ(y=ca(SPA(wp,i)));}
@@ -124,7 +124,7 @@ A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  wn=AN(w); n=MIN(AN(x),AN(y)); u=n+UAV(x); v=n+UAV(y);
  k=256; memset(bb,C0,256); if(n<AN(y))memset(zz,*(n+UAV(y)),256);
  DO(n, c=*--u; zz[c]=*--v; if(!bb[c]){--k; bb[c]=1;});
- GA(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
+ GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
  if(k&&n==AN(y))DO(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)
  else if(!bitwisecharamp(zz,wn,u,v))DO(wn, *v++=zz[*u++];);
  R z;

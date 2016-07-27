@@ -83,7 +83,7 @@ static GF(jtgrx){A x;I ck,d,t,*xv;
   case RATX:  jt->comp=compq;                    break;
   default:   jt->comp=compc;
  }
- GA(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
  DO(m, DO(n, zv[i]=i;); msort(n,zv,xv); jt->compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
@@ -125,8 +125,8 @@ void grcol(I d,I c,I*yv,I n,I*xv,I*zv,const I m,US*u,int up,int split,int sort){
 static GF(jtgrd){A x,y;B b;D*v,*wv;I d,e,*g,*h,i,k,p,q,*xv,*yv;int up;US*u;
  if(!(c==n&&n>65536/3.5))R grx(m,c,n,w,zv);
  p=65536; q=p/2; up=1==jt->compgt; wv=DAV(w);
- GA(y,INT,p,1,0); yv=AV(y);
- GA(x,INT,n,1,0); xv=AV(x);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,INT,n,1,0); xv=AV(x);
 #if C_LE
  d= 1; e=0;
 #else
@@ -153,8 +153,8 @@ static GF(jtgrd){A x,y;B b;D*v,*wv;I d,e,*g,*h,i,k,p,q,*xv,*yv;int up;US*u;
 
 static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
  p=65536; up=1==jt->compgt; wv=AV(w);
- GA(y,INT,p,1,0); yv=AV(y);
- GA(x,INT,n,1,0); xv=AV(x);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,INT,n,1,0); xv=AV(x);
  e=SY_64?3:1;
 #if C_LE
   d= 1; 
@@ -198,8 +198,8 @@ static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
  irange(AN(w),wv,&q,&p); 
  if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
  if(0<q&&q<k-p){p+=q; q=0;}
- GA(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
- if(1<d){GA(x,INT,n,1,0); xv=AV(x);}
+ GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
+ if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
   s=0; j=p; memset(yv,C0,ps);
   v=wv+d-1;
@@ -252,7 +252,7 @@ static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
 static GF(jtgrb){A x;B b,up;I d,i,p,ps,q,*xv,yv[16];UC*vv,*wv;
  if(c>4*n*log((D)n))R grx(m,c,n,w,zv); 
  d=c/n; q=d/4; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
- if(1<q){GA(x,INT,n,1,0); xv=AV(x);}
+ if(1<q){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
   vv=wv+d; b=1&&q%2;
   if(q){   vv-=4; DOCOL4(p, *(int*)v, *(int*)v,         i,   v+=d);}
@@ -267,7 +267,7 @@ static GF(jtgrc){A x;B b,q,up;I d,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  if(d>log((D)n))R grx(m,c,n,w,zv); 
  p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
  q=C2T&AT(w) && C_LE;
- if(1<d){GA(x,INT,n,1,0); xv=AV(x);}
+ if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
   b=(B)(d%2); if(q){e=-3; vv=wv+d-2;}else{e=-1; vv=wv+d-1;}
                  DOCOL1(p,*v,*v,       i,   v+=d); if(q)e=1==e?-3:1; 
@@ -283,8 +283,8 @@ static GF(jtgrs){R gri(m,c,n,sborder(w),zv);}
 F2(jtgrade1p){PROLOG;A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
  jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w);
- GA(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
- GA(x,INT,n,1,0); xv=AV(x);
+ GATV(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
+ GATV(x,INT,n,1,0); xv=AV(x);
  msort(n,zv,xv);
  EPILOG(z);
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
@@ -300,7 +300,7 @@ F1(jtgr1){PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  f=wr-r; s=AS(w); m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1;
- RE(zn=mult(m,n)); GA(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
+ RE(zn=mult(m,n)); GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
  if(!c||1>=n)R reshape(shape(z),IX(n));
  if     (t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z)))
  else if(t&SBT            )RZ(grs(m,c,n,w,AV(z)))

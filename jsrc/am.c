@@ -81,7 +81,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  else{   // slow case
   if(!(INT&AT(b)))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
-  GA(x,INT,m,1,0); aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
+  GATV(x,INT,m,1,0); aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
  }
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
@@ -116,7 +116,7 @@ A jtmerge2(J jt,A a,A w,A ind,B ip){A z;I an,ar,*as,at,in,ir,*iv,k,t,wn,wt;
  else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
  if(ip&&t&BOX&&AFNJA&AFLAG(w)){A*av,t,x,y;A1*zv;I ad,*tv;
   ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);
-  GA(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);
+  GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);
   DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);
   if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}
   DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););
@@ -139,7 +139,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
    R x;
   }
   k=AAV0(ind); n=AN(k);
-  GA(x,INT,wr,1,0); u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);
+  GATV(x,INT,wr,1,0); u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);
   R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),0L,0L,RMAX,jtplus);
  }
  if(!b){n=1; RZ(j=pind(*ws,ind));}

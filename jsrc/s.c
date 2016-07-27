@@ -43,18 +43,18 @@ static I symcol=(sizeof(L)+SZI-1)/SZI;
 B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  if(b){y=jt->symp; j=((MS*)y-1)->j; n=*AS(y); yn=AN(y);}
  else {            j=12;            n=1;      yn=0;    }
- m=msize[1+j];                              /* new size in bytes           */
+ m=(I)1<<(1+j);                              /* new size in bytes           */
  m-=sizeof(MS)+SZI*(AH+2);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */
  s[0]=m; s[1]=symcol; xn=m*symcol;          /* new pool array shape        */
- GA(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
+ GATV(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
  if(b)ICPY(v,AV(y),yn);                     /* copy old data to new array  */
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;
  DO(m-n-1, u++->next=j++;);                 /* build free list extension   */
  if(b)u->next=jt->sympv->next;              /* push extension onto stack   */
  ((L*)v)->next=n;                           /* new stack top               */
- jt->symp =ra(x);                           /* preserve new array          */
+ ra(x); jt->symp=x;                           /* preserve new array          */
  jt->sympv=(L*)AV(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
  R 1;
@@ -119,10 +119,10 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- GA(z,BOX,3,1,0); zv=AAV(z);
+ GAT(z,BOX,3,1,0); zv=AAV(z);
  n=*AS(jt->symp); pv=jt->sympv;
- GA(x,INT,n*6,2,0); *AS(x)=n; *(1+AS(x))=6; xv= AV(x); zv[0]=x;
- GA(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
+ GATV(x,INT,n*6,2,0); *AS(x)=n; *(1+AS(x))=6; xv= AV(x); zv[0]=x;
+ GATV(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?AT(pv->val):0;  // type
@@ -133,7 +133,7 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
   RZ(*yv++=(q=pv->name)?sfn(1,q):mtv);
  }
  // Allocate box 3: locale name
- GA(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
+ GATV(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=AV(jt->stloc); 
  for(i=0;i<n;++i)if(j=v[i]){    /* per named locales    */
@@ -221,7 +221,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
    RZ(l=symnew(&AV(jt->local)[b],tx)); 
-   l->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
+   ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
    R l;
   } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -253,7 +253,7 @@ L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m,tx;L*v;NM*u;
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
  RZ(v=symnew(hv,tx)); 
- v->name=ra(a);  // point symbol table to the name block, and increment its use count accordingly
+ ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
  R v;
 }    /* probe for assignment */
 
@@ -318,7 +318,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
  RZ(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- GA(z,INT,n,AR(w),AS(w)); zv=AV(z); 
+ GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){
   x=WVR(i); v=syrd(nfs(AN(x),CAV(x)),0L); 
   ASSERT(v,EVVALUE);

@@ -16,7 +16,7 @@ F1(jtboxq){ASSERTMTV(w); R ca(jt->bxa);}
 F1(jtboxs){A x;
  RZ(w=vs(w));
  ASSERT(11==*AS(w),EVLENGTH);
- x=jt->bxa; RZ(jt->bxa=ra(w)); jt->bx=CAV(jt->bxa); fa(x);
+ x=jt->bxa; ra(w); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
  R mtv;
 }
 
@@ -31,7 +31,7 @@ F1(jtcts){D d;
  R mtv;
 }
 
-F1(jtdispq){A z; ASSERTMTV(w); GA(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
+F1(jtdispq){A z; ASSERTMTV(w); GATV(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
 
 F1(jtdisps){I n;
  RZ(w=vi(w));
@@ -69,7 +69,7 @@ F1(jtevms){A t,*tv,*wv;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
- GA(t,BOX,1+NEVM,1,0); tv=AAV(t); 
+ GAT(t,BOX,1+NEVM,1,0); tv=AAV(t); 
  *tv++=mtv;
  if(ARELATIVE(w))RZ(w=car(w));
  wv=AAV(w);
@@ -101,7 +101,7 @@ F1(jtieps){
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  fa(jt->iep);
- RZ(jt->iep=ra(w)); 
+ ra(w); RZ(jt->iep=w); 
  R mtm;
 }
 
@@ -110,13 +110,13 @@ I prokey=1; /* enabled for 5.01 beta */
 F1(jtoutparmq){A z;D*u,x;I*v;
  ASSERTMTV(w);
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){
-  GA(z,FL, 4,1,0); u=DAV(z);
+  GAT(z,FL, 4,1,0); u=DAV(z);
   u[0]=(D)jt->outeol;
   x=(D)jt->outmaxlen;    u[1]=x==IMAX?inf:x;
   x=(D)jt->outmaxbefore; u[2]=x==IMAX?inf:x;
   x=(D)jt->outmaxafter;  u[3]=x==IMAX?inf:x;
  }else{
-  GA(z,INT,4,1,0); v= AV(z);
+  GAT(z,INT,4,1,0); v= AV(z);
   v[0]=jt->outeol;
   v[1]=jt->outmaxlen;
   v[2]=jt->outmaxbefore;

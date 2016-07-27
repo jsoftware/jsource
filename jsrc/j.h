@@ -262,21 +262,19 @@
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#if 0
-#else
 // When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
+// For best results declare name as: AD* RESTRICT name;
 #define GAT(name,type,atoms,rank,shaape) \
 { I bytes = ALLOBYTES(atoms,rank,type##SIZE,type&LAST0,type==NAME); \
- AD* ZZz = jtgaf(jt, ALLOBLOCK(bytes)); \
+ name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
- RZ(ZZz);   \
- AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms;   \
- if(!(type&DIRECT))memset((C*)ZZz+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  \
- else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
- AR(ZZz)=rank;     \
- if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}    \
- AM(ZZz)=((I)1<<ALLOBLOCK(bytes))-(akx+mhb);    \
- name=ZZz;   \
+ RZ(name);   \
+ AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
+ if(!(type&DIRECT))memset((C*)name+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  \
+ else if(type&LAST0){((I*)((C*)name+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
+ AR(name)=rank;     \
+ if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}    \
+ AM(name)=((I)1<<ALLOBLOCK(bytes))-(akx+mhb);    \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size) \
@@ -293,12 +291,6 @@
  name=ZZz;   \
 }
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE)
-#if 0
-#define GAT(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#define GATV(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#define GATVS(v,t,n,r,s,sz)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
-#endif
-#endif
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)

@@ -301,9 +301,8 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
   // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
-  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
-  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  // thus it is impossible to delete something that is referred to by a named ACV.  We use the recursive increment
+  // only for assignments; for temporary locking of a definition, we increment the execct nonrecursively
   if(v->f)ra(v->f); if(v->g)ra(v->g); if(v->h)ra(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
@@ -339,12 +338,11 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   if(t1&TRAVERSIBLE)jtfa(jt,np1,t1);  // recur if recursible
   if(np1)if(--c1<=0){mf(np1);}else AC(np1)=c1;  // increment usecount
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
-  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
-  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
-  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
-  if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);
+  // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
+  // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
+  // count in a static variable before calling this routine, we had to increment the usecount at the same time
+  // we increment execct.
+  if(v->execct){--v->execct;}else{if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);}
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);

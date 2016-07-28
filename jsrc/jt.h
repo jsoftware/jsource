@@ -62,6 +62,8 @@ typedef struct {
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  A    stloc;            /* locales symbol table                            */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
+ I    db;               /* debug flag; see 13!:0                           */
+ I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
 // --- end cache linepair 1
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */
@@ -71,7 +73,6 @@ typedef struct {
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
- I    db;               /* debug flag; see 13!:0                           */
  A    symp;             /* symbol pool array                               */
  I    rela;             /* if a is relative, a itself; else 0              */
  I    relw;             /* if w is relative, w itself; else 0              */
@@ -159,7 +160,6 @@ typedef struct {
  A    fxpath;           /* f. path of names                                */
  A*   fxpv;             /* f. AAV(fxpath)                                  */
  I    getlasterror;     /* DLL stuff                                       */
- I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
  A    iep;              /* immediate execution phrase                      */

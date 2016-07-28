@@ -242,7 +242,7 @@ typedef I SI;
 #define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
 
 
-typedef struct {I i;US n,go,source;C type;C canend} CW;
+typedef struct {I i;US n,go,source;C type;C canend;} CW;
 
 /* control word (always has corresponding token string)                             */
 /* type   - as specified in w.h                                            */

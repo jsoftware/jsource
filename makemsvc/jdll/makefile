@@ -156,7 +156,7 @@ endif
 
 $(TARGET) : $(OBJS) jdll.res
 ifdef x64
-	$(LD) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res advapi32.lib ole32.lib oleaut32.lib uuid.lib
+	$(LD) /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res advapi32.lib ole32.lib oleaut32.lib uuid.lib
 else
 	$(LD) /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) jdll.res advapi32.lib ole32.lib oleaut32.lib uuid.lib
 endif

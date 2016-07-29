@@ -327,6 +327,8 @@
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
 #define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
+// Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
+#define EPILOGNULL(z)   R z
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
@@ -496,6 +498,6 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0   // Audit level for memory accesses: 0=fastest, 1=buffer checks but not tstack 2=buffer+tstack 3 +scrub freed areas
-
+#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+ // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define CACHELINESIZE 128  // free pool is aligned on this boundary

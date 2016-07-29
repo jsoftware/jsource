@@ -205,7 +205,7 @@ void jtspendtracking(J jt){I i;
 
 // Verify that block w does not appear on tstack more than lim times
 void audittstack(J jt, A w, I lim){
-#if MEMAUDIT>=1
+#if MEMAUDIT&2
  // loop through each block of stack
  A* tstack; I ttop,stackct=0;
  for(tstack=jt->tstack,ttop=jt->tnextpushx;ttop>0;){I j;
@@ -263,7 +263,7 @@ void jtfh(J jt,A w){fr(w);}
 A jtgc (J jt,A w,I old){
 RZ(w); I* cc=&AC(w); I tt=AT(w); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,w,tt); *cc=(c+1)&~ACINPLACE;
 I pushx=tpop(old);
-*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT>=1)audittstack(jt,w,ACUC(w));
+*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
 R w;
 }
 
@@ -354,7 +354,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 // subroutine to save space, just like tpush macro
 static I subrtpush(J jt, A wd, I pushx){
-I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT>=1)audittstack(jt,wd,ACUC(wd));R pushx;
+I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2)audittstack(jt,wd,ACUC(wd));R pushx;
 }
 
 // Result is new value of jt->tnextpushx, or 0 if error
@@ -376,7 +376,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
     *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np2;  // put the box on the stack
     pushx += SZI;  // advance to next output slot
     if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
-#if MEMAUDIT>=1
+#if MEMAUDIT&2
     jt->tnextpushx=pushx;
     audittstack(jt,np2,ACUC(np2));
 #endif
@@ -390,7 +390,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
    *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np1;  // put the box on the stack
    pushx += SZI;  // advance to next output slot
    if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
-#if MEMAUDIT>=1
+#if MEMAUDIT&2
    jt->tnextpushx=pushx;
    audittstack(jt,np1,ACUC(np1));
 #endif
@@ -446,7 +446,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
     np1=*fp--;
     I c2=c1;
     c1=AC(np1);
-#if MEMAUDIT >= 1
+#if MEMAUDIT&2
     jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
     if(--c2<=0)jtmf(jt,np2);else AC(np2)=c2;
@@ -455,7 +455,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
     if(np1==np2)c1=c2;
    }
    // loop runout
-#if MEMAUDIT >= 1
+#if MEMAUDIT&2
     jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
    if(--c1<=0)jtmf(jt,np1);else AC(np1)=c1;
@@ -467,7 +467,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
    jt->tstack=(A*)jt->tstack[0];   // back up to the previous block, leaving tstacknext pointing to tstack
    // move the start pointer forward; past old, if this is the last pass
    pushx=endingtpushx-SZI;  // back up to slot 0, so when the next starting address is calculated, it goes all the way back to beginning of block
-#if MEMAUDIT >= 1
+#if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // skip the chain field on the stack for auditing
 #endif
    // The return point:
@@ -504,6 +504,9 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
 #else
   // Allocate without alignment
   ASSERT(av=MALLOC(n),EVWSFULL);
+#if MEMAUDIT&1
+  av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
+#endif
 #endif
   av->j = (US)blockx;    // Save the size of the allocation so we know how to free it and how big it was
   jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
@@ -513,8 +516,8 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
   JBREAK0;  // See if we are interrupted
   if(av){         // allocate from a chain of free blocks
    jt->mfree[-PMINL+blockx].pool = (MS *)av->a;  // remove & use the head of the free chain
-#if MEMAUDIT>=1
-   if(v->j!=blockx)*(I*)0=0;  // verify block has correct size
+#if MEMAUDIT&1
+   if(av->j!=blockx)*(I*)0=0;  // verify block has correct size
 #endif
   }else{MS *x;C* u;I nblocks=PSIZE>>blockx;                    // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if ALIGNTOCACHE
@@ -532,16 +535,19 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
    mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
    jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
   }
-  jt->mfree[-PMINL+blockx].ballo=mfreeb+=n;
-#if MEMAUDIT>=1
-  av->a=(I*)0xdeadbeef;  // flag block as allocated
+#if MEMAUDIT&1
+  av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
 #endif
+  jt->mfree[-PMINL+blockx].ballo=mfreeb+=n;
  }
  z=(A)&av[1];  // advance past the memory header
  // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it
  if(mfreeb&MFREEBCOUNTING){jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;}
-#if MEMAUDIT>=2
+#if MEMAUDIT&2
  audittstack(jt,z,0);  // verify buffer not on stack
+#endif
+#if MEMAUDIT&8
+ DO((1<<(blockx-LGSZI))-2, ((I*)z)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean after we get it
 #endif
  AFLAG(z)=0; AC(z)=ACUC1; 
  *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;}
@@ -584,28 +590,34 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 void jtmf(J jt,A w){I mfreeb;
  I blockx=((MS*)w)[-1].j;   // lg(buffer size)
  I n=1LL<<blockx;   // number of bytes in the allocation
-#if MEMAUDIT>=2
+#if MEMAUDIT&2
  audittstack(jt,w,0);  // must not free anything on the stack
 #endif
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  if(AT(w)==SYMB){
   freesymb(jt,w);
  }
-#if MEMAUDIT>=1
- if(blockx<PMINL||blockx>PLIML)*(I*)0=0;  // pool number must be valid
+#if MEMAUDIT&1
+ if(blockx<PMINL||blockx>=BW)*(I*)0=0;  // pool number must be valid
 #endif
-#if MEMAUDIT>=3
- DO((1<<(blockx-LGSZI))-2, ((I*)w)[i] = 0xdeadbeef;);   // wipe the block clean before we free it
+#if MEMAUDIT&4
+ DO((1<<(blockx-LGSZI))-2, ((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it
 #endif
  if(PLIML+1<=blockx){   // allocated by malloc
   mfreeb = jt->mfreegenallo;
 #if ALIGNTOCACHE
   FREE(((MS*)w)[-1].a);  // point to initial allocation and free it
 #else
+#if MEMAUDIT&1
+  if(((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // a field is set in pool allocs if not cache-aligned
+#endif
   FREE((MS*)w-1);  // point to initial allocation and free it
 #endif
   jt->mfreegenallo = mfreeb-n;
  }else{                // buffer allocated from subpool.
+#if MEMAUDIT&1
+  if(((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // a field is set in pool allocs
+#endif
   mfreeb = jt->mfree[-PMINL+blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   ((MS*)w)[-1].a=(I*)jt->mfree[-PMINL+blockx].pool;  // append free list to the new addition...
   jt->mfree[-PMINL+blockx].pool=((MS*)w-1);   //  ...and make new addition the new head

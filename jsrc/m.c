@@ -281,23 +281,14 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  // runin for loop
-  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
-  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
-  // The loop, pipelined
-  while(--n) {   // loop n-1 times
-   AD* RESTRICT np2=np1;  // pipeline stage 2
-   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
-   I c2=np2?AC(np2):0;   // fetch count in stage 2.  Will be in cache
-   I t2 = t1;    // save fetch from previous loop
-   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
-   if(t2&TRAVERSIBLE)jtra(jt,np2,t2);  // recur if recursible
-   if(np2)AC(np2)=(c2+ACUC1)&~ACINPLACE;  // increment usecount
+  while(n--){
+   AD* np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+   if(np){    // it can be 0, if there was an error
+    I tp=AT(np);  // fetch type
+    AC(np)=(AC(np)+ACUC1)&~ACINPLACE;   // incr usecount
+    if(tp&TRAVERSIBLE)jtra(jt,np,tp);   // recur if recursible
+   }
   }
-  // runout for loop
-  I c1=np1?AC(np1):0;
-  if(t1&TRAVERSIBLE)jtra(jt,np1,t1);  // recur if recursible
-  if(np1)AC(np1)=(c1+ACUC1)&~ACINPLACE;  // increment usecount
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
   // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
@@ -320,23 +311,15 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  // runin for loop
-  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
-  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
-  // The loop, pipelined
-  while(--n) {   // loop n-1 times
-   AD* RESTRICT np2=np1;  // pipeline stage 2
-   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
-   I c2=np2?AC(np2):0;   // fetch count in stage 2.  Will be in cache
-   I t2 = t1;    // save fetch from previous loop
-   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
-   if(t2&TRAVERSIBLE)jtfa(jt,np2,t2);  // recur if recursible
-   if(np2)if(--c2<=0){mf(np2);} else AC(np2)=c2;  // increment usecount
+  while(n--){
+   AD* np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   if(np){    // it could be 0 if there was error
+    I tp=AT(np);  // fetch type
+    I c = AC(np);  // fetch usecount
+    if(tp&TRAVERSIBLE)jtfa(jt,np,tp);  // recur before we free this block
+    if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount; free if it goes to 0; otherwise store decremented count
+   }
   }
-  // runout for loop
-  I c1=np1?AC(np1):0;
-  if(t1&TRAVERSIBLE)jtfa(jt,np1,t1);  // recur if recursible
-  if(np1)if(--c1<=0){mf(np1);}else AC(np1)=c1;  // increment usecount
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
   // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
@@ -365,37 +348,21 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   A* tstack=jt->tstack;  // base of current output block
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
-  // runin for loop
-  AD* RESTRICT np1= (A)((I)*wv+(I)wrel); ++wv; // np -> box
-  I t1=np1?AT(np1):0;  // type for box.  the pointer may be 0, if there was an error creating the boxed result
-  // The loop, pipelined
-  while(--n) {   // loop n-1 times
-   AD* RESTRICT np2=np1;  // pipeline stage 2
-   np1 = (A)((I)*wv+(I)wrel); ++wv; // np -> box
-   if(np2){   // musn't push an unfilled box
-    *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np2;  // put the box on the stack
+  while(n--){
+   A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   if(np){     // it can be 0 if there was error
+    I tp=AT(np);  // fetch type
+    *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np;  // put the box on the stack
     pushx += SZI;  // advance to next output slot
     if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
 #if MEMAUDIT&2
     jt->tnextpushx=pushx;
     audittstack(jt,np2,ACUC(np2));
 #endif
+    if(tp&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // recur, and restore stack pointers after recursion
    }
-   I t2 = t1;    // save fetch from previous loop
-   t1=np1?AT(np1):0;  // fetch type.  Will complete in next loop
-   if(t2&TRAVERSIBLE){RZ(pushx=jttpush(jt,np2,t2,pushx)); tstack=jt->tstack;} // recur if recursible; refresh output pointers
   }
-  // runout for loop
-  if(np1){   // musn't push an unfilled box
-   *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np1;  // put the box on the stack
-   pushx += SZI;  // advance to next output slot
-   if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
-#if MEMAUDIT&2
-   jt->tnextpushx=pushx;
-   audittstack(jt,np1,ACUC(np1));
-#endif
-  }
-  if(t1&TRAVERSIBLE){RZ(pushx=jttpush(jt,np1,t1,pushx)); tstack=jt->tstack;}  // recur if recursible
+
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
   // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
@@ -435,30 +402,14 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
  while(1) {  // loop till end.  Return is at bottom of loop
   endingtpushx = MAX(old,SZI+((pushx-SZI)&-NTSTACK));  // Get # of frees we can perform in this tstack block
   I nfrees=(A*)pushx-(A*)endingtpushx;
-  // Do the block of conditional frees.  Loop is pipelined once
-  if(nfrees){
-   A* RESTRICT fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
-
-   A np1=*fp--;  // read address of block, step to next
-   I c1=AC(np1);
-   while(--nfrees) {
-    A np2=np1;
-    np1=*fp--;
-    I c2=c1;
-    c1=AC(np1);
+  A* RESTRICT fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
+  while(nfrees--){
+   A np=*fp--;   // point to block to be freed
+   I c=AC(np);  // fetch usecount
 #if MEMAUDIT&2
-    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
+   jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
-    if(--c2<=0)jtmf(jt,np2);else AC(np2)=c2;
-    // Pipelining problem: because we read two cs before we write, we will err in the unusual case of reading the same
-    // address back to back - we read the undecremented value twice.  If we detect that, replace the second read witbh the decremented value
-    if(np1==np2)c1=c2;
-   }
-   // loop runout
-#if MEMAUDIT&2
-    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
-#endif
-   if(--c1<=0)jtmf(jt,np1);else AC(np1)=c1;
+   if(--c<=0)mf(np);else AC(np)=c;  // decdrement usecount and either store it back or free the block
   }
   // See if there are more blocks to do
   if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
@@ -482,6 +433,9 @@ A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
 F1(jtrat){ra(w); tpush(w); R w;}
 
+#if MEMAUDIT&8
+static I lfsr = 1;  // holds varying memory pattern
+#endif
 
 // static auditmodulus = 0;
 RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
@@ -547,7 +501,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
  audittstack(jt,z,0);  // verify buffer not on stack
 #endif
 #if MEMAUDIT&8
- DO((1<<(blockx-LGSZI))-2, ((I*)z)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean after we get it
+ DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
 #endif
  AFLAG(z)=0; AC(z)=ACUC1; 
  *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;}

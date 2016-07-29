@@ -334,9 +334,9 @@ void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
     w1=*src;
     if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
     {
-     *snk++=0xe0|(0x0f&(t>>12));
-     *snk++=0x80|(0x3f&(t>>6));
-     *snk++=0x80|(0x3f&t);
+     *snk++=0xe0|(0x0f&(w>>12));
+     *snk++=0x80|(0x3f&(w>>6));
+     *snk++=0x80|(0x3f&w);
     }
     else
     {

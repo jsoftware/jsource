@@ -116,8 +116,15 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
   case INT:  RZ(mvw(v,u,n,  b,BU,d,SY_64)); R y;
   case FL:   RZ(mvw(v,u,n,  b,BU,1,1    )); R y;
   case CMPX: RZ(mvw(v,u,n+n,b,BU,1,1    )); R y;
-  default:   if(n){int*u=(int*)v+(n*k-1)/sizeof(int); *u++=0; *u=0;}
-             MC(v,u,n*k); R y;
+  default:
+   // 1- and 2-byte types, all of which have LAST0.  We need to clear the last
+   // bytes, because the datalength is rounded up in bsize, and thus there are
+   // up to 3 words at the end of y that will not be copied to.  We clear them to
+   // 0 to provide repeatable results.
+   // Make sure there is a zero byte if the string is empty
+   {I suffsize = MIN(4*SZI,(CAV(y)+AN(y))-(C*)v);  // len of area to clear to 0 
+   memset((CAV(y)+AN(y))-suffsize,C0,suffsize);   // clear suffix
+   MC(v,u,n*k); R y;}      // copy the valid part of the data
  }
  if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n*k);}
  else     RZ(q=1<AR(w)?ravel(w):w);

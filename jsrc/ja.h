@@ -1052,7 +1052,7 @@
 #define tparse(x)                   jttparse(jt,(x))
 #define tpoly(x)                    jttpoly(jt,(x))
 #define tpop(x)                     jttpop(jt,(x))  
-#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT>=1)audittstack(jt,(x),ACUC(x));}
+#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))

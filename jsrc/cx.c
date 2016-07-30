@@ -319,23 +319,29 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
+if(jt->peekdata)printf("exiting jtxdefn loop, z=0x%p\n",z);  // crashdebug
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
  // If it isn't, abortively reexecute the sentence that created the noun-noun result, and flag it as error
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
  if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
+if(jt->peekdata)printf("after ra(z), cd=0x%p\n",cd);  // crashdebug
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
+if(jt->peekdata)printf("after fa(cd)\n");  // crashdebug
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+if(jt->peekdata)printf("after symfree, AR(jt->local)=%lld, _ttop=0x%llx, jt->tnextpushx=0x%llx\n",AR(jt->local),_ttop,jt->tnextpushx);  // crashdebug
  tpop(_ttop);   // finish freeing memory
+if(jt->peekdata)printf("after tpop, jt->tnextpushx=0x%llx\n",jt->tnextpushx);  // crashdebug
  // Pop the locale stack and xdefn; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0; jt->xdefn=ox;
  // Give this result a short lease on life
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
  if(z)tpush(z);
+if(jt->peekdata)printf("after tpush, jt->tnextpushx=0x%llx\n",jt->tnextpushx);  // crashdebug
  R z;
 }
 

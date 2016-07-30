@@ -49,80 +49,10 @@ F1(jtspit){A z;I k;
 F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 
 // 6!:5, window into the running J code
-F1(jtpeekdata){ jt->peekdata = 1; R sc(0); }
+F1(jtpeekdata){ jt->peekdata = i0(w); R zero; }
 
 // 6!:6, used to run tests that need to run in a sentence
 F1 (jttestcode){
-#if defined(OBSOLETE)
-// jtmult tests
- I multops[]  = {
- 0,1,-1,20,-20,300,-300,65535,-65535,65536,-65536,65537,-65537,
- 0x7ffffff0,-0x7ffffff0,0x7ffffffe,-0x7ffffffe,0x7fffffff,-0x7fffffff,
- 0x80000000,-0x80000000,0x80000001,-0x80000001,0x80000002,-0x80000002,
- 0xc0000000,-0xc0000000,0xfffffff0,-0xfffffff0,0xfffffffe,-0xfffffffe,
- 0xffffffff,-0xffffffff,0x100000000,-0x100000000,0x100000001,-0x100000001,
- 0x100000002,-0x100000002,0x200000567,-0x200000567,0x412345678,-0x412345678,
- 0x4ffffdcba,-0x4ffffdcba,
- 0x7ffffffe00000000,-0x7ffffffe00000000,
- 0x7ffffffe00000001,-0x7ffffffe00000001,0x7ffffffe7ffffffe,-0x7ffffffe7ffffffe,
- 0x7ffffffe7fffffff,-0x7ffffffe7fffffff,0x7ffffffe80000000,-0x7ffffffe80000000,
- 0x7ffffffe80000001,-0x7ffffffe80000001,0x7ffffffe80000002,-0x7ffffffe80000002,
- 0x7ffffffefffffffe,-0x7ffffffefffffffe,0x7ffffffeffffffff,-0x7ffffffeffffffff,
- 0x7fffffff00000000,-0x7fffffff00000000,
- 0x7fffffff00000001,-0x7fffffff00000001,0x7fffffff7ffffffe,-0x7fffffff7ffffffe,
- 0x7fffffff7fffffff,-0x7fffffff7fffffff,0x7fffffff80000000,-0x7fffffff80000000,
- 0x7fffffff80000001,-0x7fffffff80000001,0x7fffffff80000002,-0x7fffffff80000002,
- 0x7ffffffffffffffe,-0x7ffffffffffffffe,0x7fffffffffffffff,-0x7fffffffffffffff,
- 0x8000000000000000,-0x8000000000000000,
- 0x8000000000000001,-0x8000000000000001,0x800000007ffffffe,-0x800000007ffffffe,
- 0x800000007fffffff,-0x800000007fffffff,0x8000000080000000,-0x8000000080000000,
- 0x8000000080000001,-0x8000000080000001,0x8000000080000002,-0x8000000080000002,
- 0x80000000fffffffe,-0x80000000fffffffe,0x80000000ffffffff,-0x80000000ffffffff,
- 0x8000000100000000,-0x8000000100000000,
- 0x8000000100000001,-0x8000000100000001,0x800000017ffffffe,-0x800000017ffffffe,
- 0x800000017fffffff,-0x800000017fffffff,0x8000000180000000,-0x8000000180000000,
- 0x8000000180000001,-0x8000000180000001,0x8000000180000002,-0x8000000180000002,
- 0x80000001fffffffe,-0x80000001fffffffe,0x80000001ffffffff,-0x80000001ffffffff,
- 0x8000000200000000,-0x8000000200000000,
- 0x8000000200000001,-0x8000000200000001,0x800000027ffffffe,-0x800000027ffffffe,
- 0x800000027fffffff,-0x800000027fffffff,0x8000000280000000,-0x8000000280000000,
- 0x8000000280000001,-0x8000000280000001,0x8000000280000002,-0x8000000280000002,
- 0x80000002fffffffe,-0x80000002fffffffe,0x80000002ffffffff,-0x80000002ffffffff,
- 0xfffffffe00000000,-0xfffffffe00000000,
- 0xfffffffe00000001,-0xfffffffe00000001,0xfffffffe7ffffffe,-0xfffffffe7ffffffe,
- 0xfffffffe7fffffff,-0xfffffffe7fffffff,0xfffffffe80000000,-0xfffffffe80000000,
- 0xfffffffe80000001,-0xfffffffe80000001,0xfffffffe80000002,-0xfffffffe80000002,
- 0xfffffffefffffffe,-0xfffffffefffffffe,0xfffffffeffffffff,-0xfffffffeffffffff,
- 0xffffffff00000000,-0xffffffff00000000,
- 0xffffffff00000001,-0xffffffff00000001,0xffffffff7ffffffe,-0xffffffff7ffffffe,
- 0xffffffff7fffffff,-0xffffffff7fffffff,0xffffffff80000000,-0xffffffff80000000,
- 0xffffffff80000001,-0xffffffff80000001,0xffffffff80000002,-0xffffffff80000002,
- 0xfffffffffffffffe,-0xfffffffffffffffe,0xffffffffffffffff,-0xffffffffffffffff
-};
- I i, j;
- mult(0x8000000000000000LL,-1LL);
- for(i = 0;i < sizeof(multops)/sizeof(multops[0]);++i){
-  for(j = 0;j < sizeof(multops)/sizeof(multops[0]);++j){
-   I res = mult(multops[i],multops[j]);
-   I chkval = multops[i]*multops[j];
-   I limitj;
-   if(multops[i]==0x8000000000000000LL && multops[j]==-1LL)chkval = 0;
-   if(multops[j] == 0x8000000000000000LL && multops[i] == -1LL)chkval = 0;
-   if ((multops[i] != 0) && (multops[j] != 0) && (multops[i] != 1) && (multops[j] != 1) && (multops[i] != -1) && (multops[j] != -1)){
-    if((multops[i]>0)==(multops[j]>0)) {
-     limitj = (0x7fffffffffffffffLL / multops[i]);
-     if(multops[j]<0 && multops[j] < limitj)chkval = 0;
-     if(multops[j]>0 && multops[j] > limitj)chkval = 0;
-    } else {
-     limitj = (0x8000000000000000LL / multops[i]);
-     if (multops[j]<0 && multops[j] < limitj)chkval = 0;
-     if (multops[j]>0 && multops[j] > limitj)chkval = 0;
-    }
-   }
-   if(res != chkval)*(I *)0 = i;
-  }
- }
-#endif
 R sc(0);
 }
 

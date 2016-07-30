@@ -526,7 +526,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    newsym->flag |= LPERMANENT;   // Mark as permanent
   }
  }
- I actstn=AN(actst); I*actstv=AV(actst);  // # items in new symbol table, and pointer to hashchain table
+ I actstn=AN(actst)-SYMLINFOSIZE; I*actstv=AV(actst);  // # hashchains in new symbol table, and pointer to hashchain table
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
@@ -546,11 +546,11 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // Get the bucket number by reproducing the calculation in the symbol-table routine
     // This calculation is poor - by lumping together buckets 0 & 1 we get collisions - but it's the way
     // it's always been done.  Better to allocate one more bucket and add one to the remainder
-    k=tn->hash%actstn; if(k==0)++k; tn->bucket=(I4)k;  // k is bucket number
+    tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
     // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
     // of the number of items compared before the match.  If we get no match, the bucket index is the number
     // of items compared (= the number of items in the chain)
-    for(k=actstv[k];k;++compcount,k=(jt->sympv)[k].next){  // k switches to hashchain index
+    for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
      if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
     }
     tn->bucketx=compcount;

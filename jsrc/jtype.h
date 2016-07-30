@@ -297,6 +297,8 @@ typedef struct {I e,p;X x;} DX;
 /*        decimal point after last digit                                   */
 
 
+#define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT contain symbol chains, but instead are LINFO entries
+
 typedef struct {A name,val;I flag,sn,next,prev;} L;
 
 /* symbol pool entry                           LINFO entry                 */

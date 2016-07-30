@@ -49,43 +49,45 @@ B jtspfree(J jt){I i;MS*p;
   if(jt->mfree[-PMINL+i].ballo<=0) {
    // garbage collector: coalesce blocks in chain i
    // pass through the chain, incrementing the j field in the base allo for each
+   // also, create a chain, using a spare word in the data area, with one entry for each base block that
+   // appears in the scan.  To ensure base blocks are represented only once, we add to this chain only the first
+   // time the count is incremented.
+   // also, keep track of whether any block is incremented to the point where it can be freed
    US incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
-   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){((MS *)((C*)p-(p->blkx<<i)))->j += incr;}
-   // pass through the chain again, looking for blocks that have negative j in the corresponding base.
-   // Remove all the NON-base blocks that will be freed (i. e. base count=0x8000).
-   // The count must be removed from all SURVIVING base blocks (remember, the base block itself may
-   // be allocated and thus not in this traversal, but we must still reset its count to 0 - but the count
-   // can never hit 0x8000 unless all blocks including the base are in the free chain); but we must leave the
-   // count set to 0x8000 in TO-BE-FREED base blocks, so that subsequent blocks in the same allo see that
-   // they are to be deleted
-   MS *freehead = 0;   // root of the queue of full allos to be freed
-   MS *survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
-   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){   // for each free block
-    UI blkx = p->blkx;   // extract offset to base block
-    MS *baseblock = (MS *)((C*)p-(blkx<<i));  // get address of corresponding base block
-    baseblock->j &= (0x8000|MEMJMASK);  // set the count in the base to 0, unless it's 8000
-    if(blkx==0||!(baseblock->j&0x8000)){  // if block is a base block, or a surviving non-base...
-     survivetail->a=(I*)p;survivetail=p;  // ...add it as tail of survival chain
-    }
+   I freereqd = 0; MS *baseblockproxyroot = 0;  // init no full blocks, no touched blocks 
+   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){
+    I incrj = ((MS *)((C*)p-(p->blkx<<i)))->j += incr;  // increment count in base
+    if(incrj&0x8000){freereqd = 1;   // if the base block will be freed, note that fact
+    }else if((incrj&~MEMJMASK)==incr){ ((MS**)p)[2] = baseblockproxyroot; baseblockproxyroot = p;}  // on first encounter of base block, chain the proxy for it
    }
-   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+   // if any blocks can be freed, pass through the chain to remove them.
+   if(freereqd) {
+    MS *survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
+      // NOTE PUN: ->a must be at offset 0 of the MS struct
+    for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){   // for each free block
+     MS *baseblock = (MS *)((C*)p-(p->blkx<<i));  // get address of corresponding base block
+     if(!(baseblock->j&0x8000)){  // if block is not to be deleted...
+      survivetail->a=(I*)p;survivetail=p;  // ...add it as tail of survival chain
+     }
+    }
+    survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+   }
    // We have kept the surviving buffers in order because the head of the free list is the most-recently-freed buffer
-   // and therefore most likely to be in cache
+   // and therefore most likely to be in cache.  This would work better if we could avoid trashing the caches while we chase the chain
 
-   // traverse the (shortened) list one last time.  Blocks whose count is nonzero must be base blocks with count==0x8000, and they should
-   // be taken off the list and freed.  Survivors remain, in order
-   survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
-I survivect = 0;
-   for(p=jt->mfree[-PMINL+i].pool;p;){MS *np = (MS*)p->a;  // next-in-chain
-    if(p->j&0x8000){ // Free base blocks;
+   // Traverse the list of base-block proxies.  There is one per base block.  If the base count is 8000, free it;
+   // otherwise clear the count
+   for(p=baseblockproxyroot;p;){MS *np = (((MS**)p)[2]);  // next-in-chain
+    MS *baseblock = (MS *)((C*)p-(p->blkx<<i));  // get address of corresponding base block
+    if(baseblock->j&0x8000){ // Free fully-unused base blocks;
 #if ALIGNTOCACHE
-     FREE(((I**)p)[-1]);  // If aligned, the word before the block points to the original block address
+     FREE(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
 #else
-     FREE(p);
+     FREE(baseblock);
 #endif
-    }else{survivetail->a=(I*)p;survivetail=p;;++survivect;} p=np;   //  the rest survive.
+    }else{baseblock->j &= MEMJMASK;}   // restore the count to 0 in the rest
+    p=np;   //  step to next base block
    } 
-   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
 
    // set up for next spfree: set mfreeb to a value such that when SPFREEB bytes have been freed,
    // mfreeb will hit 0, causing a rescan.

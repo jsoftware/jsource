@@ -7,8 +7,11 @@
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
-// block after leaving 2 words for memory header and 7 words for A-block header.  keep rank=0
-// to avoid allocating a word for it.
+// block after leaving 2 words for memory header, AH words for A-block header, 1 for rank (if used),
+// and 1 for the unused first word, which (for symbol tables) holds general table info.
+// symbol tables allocate ptab[]+SYMLINFOSIZE entries, leaving ptab[] entries for symbols.  i.-family
+// operations use tables of size ptab[]
+ // If AH changes, these numbers need to be revisited
 // The first row of small values was added to allow for small symbol tables to hold local
 // variables.  Hardwired references to ptab in the code have 3 added so that they correspond to
 // the correct values.  User locale sizes also refer to the original values, and have 3 added before use.
@@ -27,11 +30,11 @@ I nptab=sizeof(ptab)/SZI;
 // created with size i.  The argument names supported are ynam and xnam.
 I yxbuckets[sizeof(ptab)/SZI][2];
 
-// Emulate bucket calculation for local names
-void bucketinit(){I j,k;
+// Emulate bucket calculation for local names.
+void bucketinit(){I j;
  for(j=0;j<nptab;++j){
-  k=NAV(ynam)->hash%ptab[j]; yxbuckets[j][0]=k?k:k+1;
-  k=NAV(xnam)->hash%ptab[j]; yxbuckets[j][1]=k?k:k+1;
+  yxbuckets[j][0]=SYMHASH(NAV(ynam)->hash,ptab[j]);
+  yxbuckets[j][1]=SYMHASH(NAV(xnam)->hash,ptab[j]);
  }
 }
 

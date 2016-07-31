@@ -518,6 +518,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  }
  asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct;++j);  // Find symtab size that has 50% empty space
  RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
+if(jt->peekdata)printf("Symbol table size index is %lld, asgct=%lld\n",j,asgct);  // crashdebug
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.

@@ -28,10 +28,13 @@
 if(jt->peekdata)printf("Definition has %lld chains\n",n);  /* crashdebug */ \
   for(i=1;i<n;++i,k=*++e){   \
 if(jt->peekdata)printf("Processing hashchain %lld\n",i);  /* crashdebug */ \
+if(jt->peekdata)printf("Initial symbol index is &lld\n",k);  /* crashdebug */ \
    while(j=k){                         \
+if(jt->peekdata)printf("Processing symbol index %lld\n",j);  /* crashdebug */ \
    d=j+jt->sympv;                                            \
+if(jt->peekdata)printf("L entry address is %p\n",d);  /* crashdebug */ \
    k=d->next;                                                \
-if(jt->peekdata)printf("d=%p, d->name=%p, d->val=%p\n",d,d->name,d->val);  /* crashdebug */ \
+if(jt->peekdata)printf("d->name=%p, d->val=%p\n",d,d->name,d->val);  /* crashdebug */ \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
     {PROCESS;}                                               \

@@ -267,7 +267,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     i=ci->go;     // continue at new location
     break;
    case CRETURN:
-    // return.  Increment the use-count of the result, pop the stack back to empty, set i (which will exit)
+    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
     if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}
     i=ci->go;
     break;
@@ -328,12 +328,12 @@ if(jt->peekdata)printf("exiting jtxdefn loop, z=0x%p\n",z);  // crashdebug
  if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
 if(jt->peekdata)printf("after ra(z), cd=0x%p\n",cd);  // crashdebug
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
-if(jt->peekdata)printf("after fa(cd)\n");  // crashdebug
+if(jt->peekdata)printf("after fa(cd), AR(jt->local)=%lld\n",AR(jt->local));  // crashdebug
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
-if(jt->peekdata)printf("after symfree, AR(jt->local)=%lld, _ttop=0x%llx, jt->tnextpushx=0x%llx\n",AR(jt->local),_ttop,jt->tnextpushx);  // crashdebug
+if(jt->peekdata)printf("after symfree, _ttop=0x%llx, jt->tnextpushx=0x%llx\n",_ttop,jt->tnextpushx);  // crashdebug
  tpop(_ttop);   // finish freeing memory
 if(jt->peekdata)printf("after tpop, jt->tnextpushx=0x%llx\n",jt->tnextpushx);  // crashdebug
  // Pop the locale stack and xdefn; set no assignment (to call for result display)

@@ -82,19 +82,27 @@ L* jtsymnew(J jt,I*hv, I tailx){I j;L*u,*v;
 // u points to an L; free it, and do fa() on the name and value.
 // If the entry is LPERMANENT, don't free it; just fa() the value and clear val pointer to 0
 B jtsymfree(J jt,L*u){I q;
+if(jt->peekdata)printf("symfree entry for sym 0x%p\n",u);  // crashdebug
+if(jt->peekdata)printf("name of symbol is %s\n",NAV(u->name)->s);  // crashdebug
  if(!(u->flag&LPERMANENT)){
+if(jt->peekdata)printf("not PERMANENT symbol, next=0x%x\n",u->next);  // crashdebug
   // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
   q=u->next;
   if(q)(q+jt->sympv)->prev=u->prev; 
+if(jt->peekdata)printf("removed from backchain, flag=%d\n",u->flag);  // crashdebug
   if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
   else (u->prev+jt->sympv)->next=q;
   u->next=jt->sympv->next;                   /* point to old top of stack   */
   jt->sympv->next=u-jt->sympv;               /* new          top of stack   */
+if(jt->peekdata)printf("chain complete, &name=0x%p\n",u->name);  // crashdebug
   fa(u->name); u->name=0;                    /* zero out data fields        */
+if(jt->peekdata)printf("after fa() for name\n");  // crashdebug
   u->sn=u->flag=u->prev=0;      // zero other fields when returning to free pool
  }
  // For all symbols, free the value, clear the pointer to it
+if(jt->peekdata)printf("end of ~PERMANENT, &val=0x%p\n",u->val);  // crashdebug
  fa(u->val);u->val=0; 
+if(jt->peekdata)printf("after fa() for val\n");  // crashdebug
  R 1;
 }    /* free pool entry pointed to by u */
 

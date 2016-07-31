@@ -532,8 +532,8 @@ if(jt->peekdata)printf("Symbol table size index is %lld, asgct=%lld\n",j,asgct);
  }
  I actstn=AN(actst); I*actstv=AV(actst);  // # items in new symbol table, and pointer to hashchain table
 if(jt->peekdata)printf("defining symbol table with %lld chains; original had %lld\n",actstn-1,pfstn-1);  // crashdebug
-if(jt->peekdata)printf("actst[%d]=%llx\n",actstn-2,actst[actstn-2]);  // crashdebug
-if(jt->peekdata)printf("actst[%d]=%llx\n",actstn-1,actst[actstn-1]);  // crashdebug
+if(jt->peekdata)printf("actst[%d]=%llx\n",actstn-2,(AV(actst))[actstn-2]);  // crashdebug
+if(jt->peekdata)printf("actst[%d]=%llx\n",actstn-1,(AV(actst))[actstn-1]);  // crashdebug
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten

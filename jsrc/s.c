@@ -88,7 +88,7 @@ if(jt->peekdata)printf("name of symbol is %s\n",NAV(u->name)->s);  // crashdebug
 if(jt->peekdata)printf("not PERMANENT symbol, next=0x%llx\n",u->next);  // crashdebug
   // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
   q=u->next;
-  if(q)(q+jt->sympv)->prev=u->prev; 
+  if(q)(q+jt->sympv)->prev=u->prev;
 if(jt->peekdata)printf("removed from backchain, flag=%lld\n",u->flag);  // crashdebug
   if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
   else (u->prev+jt->sympv)->next=q;

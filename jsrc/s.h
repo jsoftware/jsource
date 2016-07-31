@@ -21,12 +21,13 @@
 #define SYMWALK(f,T,TYPE,COUNT,COL,SELECT,PROCESS)  \
  F1(f){A z;I*e,i,j,k,m=0,n;L*d;T*zv;                         \
   RZ(w);                                                     \
-  n=AN(w); e=1+AV(w); k=*e;                                  \
+  n=AN(w); e=1+AV(w);                                  \
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
 if(jt->peekdata)printf("Definition has %lld chains\n",n);  /* crashdebug */ \
-  for(i=1;i<n;++i,k=*++e){   \
+  for(i=1;i<n;++i){   /* crashdebug */  \
+   k=*e++;  /* initial symbol index */  \
 if(jt->peekdata)printf("Processing hashchain %lld\n",i);  /* crashdebug */ \
 if(jt->peekdata)printf("Initial symbol index is %lld\n",k);  /* crashdebug */ \
    while(j=k){                         \

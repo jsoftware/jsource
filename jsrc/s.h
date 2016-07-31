@@ -34,13 +34,18 @@ if(jt->peekdata)printf("Processing symbol index %llx\n",j);  /* crashdebug */ \
    d=j+jt->sympv;                                            \
 if(jt->peekdata)printf("L entry address is %p\n",d);  /* crashdebug */ \
    k=d->next;                                                \
-if(jt->peekdata)printf("d->name=%p, d->val=%p\n",d,d->name,d->val);  /* crashdebug */ \
+if(jt->peekdata)printf("d->name=%p, d->val=%p\n, SELECT=%d",d->name,d->val,(SELECT));  /* crashdebug */ \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
+if(jt->peekdata)printf("Calling PROCESS\n");  /* crashdebug */ \
     {PROCESS;}                                               \
     ++m;                                                     \
   }}}                                                         \
-  AN(z)=m*(COL); *AS(z)=m;                                   \
+if(jt->peekdata)printf("End of loop, m=%lld\n",m);  /* crashdebug */ \
+  AN(z)=m*(COL);   \
+if(jt->peekdata)printf("stored to AN\n");  /* crashdebug */ \
+  *AS(z)=m;                                   \
+if(jt->peekdata)printf("stored to AS\n");  /* crashdebug */ \
   R z;                                                       \
  }
 

@@ -28,13 +28,13 @@ F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws;
   GA(y,AT(w),m,r,f+ws); yv=CAV(y);
   if(ARELATIVE(w)){A*v=(A*)wv;A1*u=(A1*)yv; DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
   else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
- }else RZ(*zv=rat(w));
+ }else {rat1(w); *zv=w;}
  R z;
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); R AN(w)&&BOX&AT(w)?rat(w):box(w);}
+F1(jtboxopen){RZ(w); if(AN(w)&&BOX&AT(w)){rat1(w); R w;}else{R box(w);}}
 
-F2(jtlink){RZ(a&&w); R over(box(a),AN(w)&&AT(w)&BOX?rat(w):box(w));}
+F2(jtlink){RZ(a&&w); if(AN(w)&&AT(w)&BOX){rat1(w);}else{w = box(w);} R over(box(a),w);}
 
 static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  RZ(w);

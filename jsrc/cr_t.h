@@ -89,7 +89,7 @@
   DO(mn-j-1, RARG; RZ(y=RCALL); *x++=y;);   // for all the rest, execute the cells and move pointer to output area
   z=ope(yz);  // We have created x <@f y; this creates > x <@f y which is the final result
  }
- EPILOG(z);
+ EPILOG(z);  // If the result is boxed, we know we had no wastage at this level except for yz, which is small compared to z
 }
 #undef VALENCE
 #undef RAC

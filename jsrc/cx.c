@@ -17,7 +17,7 @@
 #include "p.h"
 #include "w.h"
 
-#define LSYMINUSE 256  // This bit is set in the original symbol table when it is in use
+#define LSYMINUSE 256  // This bit is set in the rank of the original symbol table when it is in use
 
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
 #define BGATV(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
@@ -210,7 +210,10 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // otherwise fall through to process the line.
    case CTBLOCK:
     // execute and parse line as if for B block, except save the result in t
-    gc(z,old); t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
+    // If there is a possibility that the previous B result may become the result of this definition,
+    // protect it during the frees during the T block.  Otherwise, just free memory
+    if(ci->canend&2)tpop(old);else gc(z,old);   // 2 means previous B can't be the result
+    t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
@@ -245,7 +248,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // if there are no more iterations, fall through... (this deallocates the loop variables)
    case CENDSEL:
     // end. for select., and do. for for. after the last iteration, must pop the stack - just once
-    rat(z); unstackcv(cv); --cv; ++r; 
+    if(!(ci->canend&2))rat(z); unstackcv(cv); --cv; ++r; 
     i=ci->go;    // continue at new location
     break;
    case CBREAK:
@@ -254,7 +257,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // until they have popped the SELECT type.  It would be possible for the initial analysis to
     // decide whether any popping is required, but we didn't do that.
     if(cd&&(cv->w==CSELECT||cv->w==CSELECTN)){
-     rat(z);   // protect possible result from pop
+     if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
      do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
     }
     i=ci->go;   // After popping any select. off the stack, continue at new address
@@ -262,7 +265,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CBREAKF:
     // break. in a for. must first pop any active select., and then pop the for.
     // We just pop till we have popped a non-select.
-    rat(z);   // protect possible result from pop
+    if(!(ci->canend&2))rat(z);   // protect possible result from pop
     do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
     i=ci->go;     // continue at new location
     break;
@@ -315,7 +318,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     t=0;  // Indicate no T block, now that we have processed it
     if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...
-   default:   // including BREAK and END
+   default:   //    CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
     JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
@@ -327,7 +330,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
- // We detect original symbol table by rank 1 - other symbol tables are assigned rank 0.
+ // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
  tpop(_ttop);   // finish freeing memory
@@ -523,7 +526,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    newsym->flag |= LPERMANENT;   // Mark as permanent
   }
  }
- I actstn=AN(actst); I*actstv=AV(actst);  // # items in new symbol table, and pointer to hashchain table
+ I actstn=AN(actst)-SYMLINFOSIZE; I*actstv=AV(actst);  // # hashchains in new symbol table, and pointer to hashchain table
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
@@ -543,11 +546,11 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // Get the bucket number by reproducing the calculation in the symbol-table routine
     // This calculation is poor - by lumping together buckets 0 & 1 we get collisions - but it's the way
     // it's always been done.  Better to allocate one more bucket and add one to the remainder
-    k=tn->hash%actstn; if(k==0)++k; tn->bucket=(I4)k;  // k is bucket number
+    tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
     // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
     // of the number of items compared before the match.  If we get no match, the bucket index is the number
     // of items compared (= the number of items in the chain)
-    for(k=actstv[k];k;++compcount,k=(jt->sympv)[k].next){  // k switches to hashchain index
+    for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
      if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
     }
     tn->bucketx=compcount;

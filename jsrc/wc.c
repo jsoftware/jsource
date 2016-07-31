@@ -207,7 +207,49 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       CWASSERT(0>conend(i,j,k,b,c,d,p,q,r));   // update the controls matching this end.
  }}}
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
- R top?stack[top-1]:-1;
+ if(top)R stack[top-1];
+ // Fill in the canend field, which is 1 if the previous B-block result can become the overall result.  It is used only
+ // in T blocks
+ // Clear canend to 0, meaning 'don't know'
+ DO(n, con[i].canend=0;);
+ // Go through in reverse order, filling in a line if we have the status of its successors
+ // Repeat until there are no more changes
+ I madechange;  // set if we made a change
+ do{
+  madechange=0;  // init to no change
+  for(i=n-1;i>=0;--i){
+   if(!con[i].canend){  // if the value is filled in already, we won't change it
+    switch(con[i].type) {
+     case CBBLOCK: case CTHROW:
+      con[i].canend = 2; break;  // These are by definition not an end
+     case CRETURN:
+      con[i].canend = 1; break;  // These by definition ARE an end
+     case CASSERT: case CTBLOCK: case CFOR: case CSELECTN: case CSELECT:
+      // These blocks inherit only from NSI
+      if(i>=n-1)con[i].canend = 1;  // If fall off the end, that's end
+      else con[i].canend = con[i+1].canend;  // Only successor is NSI, use that
+      break;
+     case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
+      // These blocks inherit either from NSI or from go
+      if(i==n-1)con[i].canend = 1;  // If fall off the end, that's end
+      else if(con[i].go>=n)con[i].canend = 1;   // if go is off the end, use that
+      else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
+      else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
+      break;
+     case CENDSEL: case CBREAK: case CCONT: case CBREAKF: case CCASE: case CFCASE:
+     case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
+       // These blocks inherit only from GO
+      if(con[i].go>=n)con[i].canend = 1;  // If jump off the end, that's end
+      else con[i].canend = con[con[i].go].canend;  // Only successor is go, use that
+      break;
+     case CLABEL: break;   // Nothing to do for a label
+    }
+    if(con[i].canend)madechange=1;
+   }
+  }
+ }while(madechange);
+
+ R -1;
 }    /* modifies con; return -1 if OK or index of bad con entry */
 
 A jtspellcon(J jt,I c){

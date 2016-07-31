@@ -49,43 +49,45 @@ B jtspfree(J jt){I i;MS*p;
   if(jt->mfree[-PMINL+i].ballo<=0) {
    // garbage collector: coalesce blocks in chain i
    // pass through the chain, incrementing the j field in the base allo for each
+   // also, create a chain, using a spare word in the data area, with one entry for each base block that
+   // appears in the scan.  To ensure base blocks are represented only once, we add to this chain only the first
+   // time the count is incremented.
+   // also, keep track of whether any block is incremented to the point where it can be freed
    US incr = 0x8000>>(PSIZEL-i);  // number of subbuffers=2^(PSIZEL-i); we want this number to come out 0x8000 (i. e. negative in a S)
-   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){((MS *)((C*)p-(p->blkx<<i)))->j += incr;}
-   // pass through the chain again, looking for blocks that have negative j in the corresponding base.
-   // Remove all the NON-base blocks that will be freed (i. e. base count=0x8000).
-   // The count must be removed from all SURVIVING base blocks (remember, the base block itself may
-   // be allocated and thus not in this traversal, but we must still reset its count to 0 - but the count
-   // can never hit 0x8000 unless all blocks including the base are in the free chain); but we must leave the
-   // count set to 0x8000 in TO-BE-FREED base blocks, so that subsequent blocks in the same allo see that
-   // they are to be deleted
-   MS *freehead = 0;   // root of the queue of full allos to be freed
-   MS *survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
-   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){   // for each free block
-    UI blkx = p->blkx;   // extract offset to base block
-    MS *baseblock = (MS *)((C*)p-(blkx<<i));  // get address of corresponding base block
-    baseblock->j &= (0x8000|MEMJMASK);  // set the count in the base to 0, unless it's 8000
-    if(blkx==0||!(baseblock->j&0x8000)){  // if block is a base block, or a surviving non-base...
-     survivetail->a=(I*)p;survivetail=p;  // ...add it as tail of survival chain
-    }
+   I freereqd = 0; MS *baseblockproxyroot = 0;  // init no full blocks, no touched blocks 
+   for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){
+    I incrj = ((MS *)((C*)p-(p->blkx<<i)))->j += incr;  // increment count in base
+    if(incrj&0x8000){freereqd = 1;   // if the base block will be freed, note that fact
+    }else if((incrj&~MEMJMASK)==incr){ ((MS**)p)[2] = baseblockproxyroot; baseblockproxyroot = p;}  // on first encounter of base block, chain the proxy for it
    }
-   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+   // if any blocks can be freed, pass through the chain to remove them.
+   if(freereqd) {
+    MS *survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
+      // NOTE PUN: ->a must be at offset 0 of the MS struct
+    for(p=jt->mfree[-PMINL+i].pool;p;p=(MS*)p->a){   // for each free block
+     MS *baseblock = (MS *)((C*)p-(p->blkx<<i));  // get address of corresponding base block
+     if(!(baseblock->j&0x8000)){  // if block is not to be deleted...
+      survivetail->a=(I*)p;survivetail=p;  // ...add it as tail of survival chain
+     }
+    }
+    survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+   }
    // We have kept the surviving buffers in order because the head of the free list is the most-recently-freed buffer
-   // and therefore most likely to be in cache
+   // and therefore most likely to be in cache.  This would work better if we could avoid trashing the caches while we chase the chain
 
-   // traverse the (shortened) list one last time.  Blocks whose count is nonzero must be base blocks with count==0x8000, and they should
-   // be taken off the list and freed.  Survivors remain, in order
-   survivetail = (MS *)&jt->mfree[-PMINL+i].pool;  // pointer to last block in chain of blocks that are NOT dropped off
-I survivect = 0;
-   for(p=jt->mfree[-PMINL+i].pool;p;){MS *np = (MS*)p->a;  // next-in-chain
-    if(p->j&0x8000){ // Free base blocks;
+   // Traverse the list of base-block proxies.  There is one per base block.  If the base count is 8000, free it;
+   // otherwise clear the count
+   for(p=baseblockproxyroot;p;){MS *np = (((MS**)p)[2]);  // next-in-chain
+    MS *baseblock = (MS *)((C*)p-(p->blkx<<i));  // get address of corresponding base block
+    if(baseblock->j&0x8000){ // Free fully-unused base blocks;
 #if ALIGNTOCACHE
-     FREE(((I**)p)[-1]);  // If aligned, the word before the block points to the original block address
+     FREE(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
 #else
-     FREE(p);
+     FREE(baseblock);
 #endif
-    }else{survivetail->a=(I*)p;survivetail=p;;++survivect;} p=np;   //  the rest survive.
+    }else{baseblock->j &= MEMJMASK;}   // restore the count to 0 in the rest
+    p=np;   //  step to next base block
    } 
-   survivetail->a=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
 
    // set up for next spfree: set mfreeb to a value such that when SPFREEB bytes have been freed,
    // mfreeb will hit 0, causing a rescan.
@@ -282,19 +284,18 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
   while(n--){
-   AD* np=(A)((I)*wv+(I)wrel); ++wv;
-   if(np){
+   AD* np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+   if(np){    // it can be 0, if there was an error
     I tp=AT(np);  // fetch type
-    AC(np)=(AC(np)+ACUC1)&~ACINPLACE;
-    if(tp&TRAVERSIBLE)jtra(jt,np,tp);
+    AC(np)=(AC(np)+ACUC1)&~ACINPLACE;   // incr usecount
+    if(tp&TRAVERSIBLE)jtra(jt,np,tp);   // recur if recursible
    }
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
   // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
-  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
-  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  // thus it is impossible to delete something that is referred to by a named ACV.  We use the recursive increment
+  // only for assignments; for temporary locking of a definition, we increment the execct nonrecursively
   if(v->f)ra(v->f); if(v->g)ra(v->g); if(v->h)ra(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
@@ -313,20 +314,20 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
   while(n--){
-   AD* np=(A)((I)*wv+(I)wrel); ++wv;
-   if(np){
+   AD* np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   if(np){    // it could be 0 if there was error
     I tp=AT(np);  // fetch type
-    if(tp&TRAVERSIBLE)jtfa(jt,np,tp);
-    if(0 >= (AC(np)-=ACUC1))mf(np);
+    I c = AC(np);  // fetch usecount
+    if(tp&TRAVERSIBLE)jtfa(jt,np,tp);  // recur before we free this block
+    if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount; free if it goes to 0; otherwise store decremented count
    }
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
-  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
-  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
-  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
-  if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);
+  // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
+  // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
+  // count in a static variable before calling this routine, we had to increment the usecount at the same time
+  // we increment execct.
+  if(v->execct){--v->execct;}else{if(v->f)fa(v->f); if(v->g)fa(v->g); if(v->h)fa(v->h);}
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
@@ -350,8 +351,8 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
-   A np=(A)((I)*wv+(I)wrel); ++wv;
-   if(np){
+   A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   if(np){     // it can be 0 if there was error
     I tp=AT(np);  // fetch type
     *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np;  // put the box on the stack
     pushx += SZI;  // advance to next output slot
@@ -360,7 +361,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
     jt->tnextpushx=pushx;
     audittstack(jt,np2,ACUC(np2));
 #endif
-    if(tp&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}
+    if(tp&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // recur, and restore stack pointers after recursion
    }
   }
 
@@ -403,14 +404,14 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
  while(1) {  // loop till end.  Return is at bottom of loop
   endingtpushx = MAX(old,SZI+((pushx-SZI)&-NTSTACK));  // Get # of frees we can perform in this tstack block
   I nfrees=(A*)pushx-(A*)endingtpushx;
-  A* fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
+  A* RESTRICT fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
   while(nfrees--){
-   A np=*fp--;
-   I c=AC(np);
+   A np=*fp--;   // point to block to be freed
+   I c=AC(np);  // fetch usecount
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
-   if(--c<=0)jtmf(jt,np);else AC(np)=c;
+   if(--c<=0)mf(np);else AC(np)=c;  // decdrement usecount and either store it back or free the block
   }
   // See if there are more blocks to do
   if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
@@ -434,6 +435,9 @@ A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
 F1(jtrat){ra(w); tpush(w); R w;}
 
+#if MEMAUDIT&8
+static I lfsr = 1;  // holds varying memory pattern
+#endif
 
 // static auditmodulus = 0;
 RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
@@ -499,7 +503,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
  audittstack(jt,z,0);  // verify buffer not on stack
 #endif
 #if MEMAUDIT&8
- DO((1<<(blockx-LGSZI))-2, ((I*)z)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean after we get it
+ DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
 #endif
  AFLAG(z)=0; AC(z)=ACUC1; 
  *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;}

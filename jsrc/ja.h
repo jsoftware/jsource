@@ -769,6 +769,7 @@
 #define rank2ex(x0,x1,x2,x3,x4,x5)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rat(x)                      jtrat(jt,(x))
+#define rat1(x)                     {ACINCR(x); tpush1(x);}
 #define ravel(x)                    jtravel(jt,(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    
@@ -1053,6 +1054,7 @@
 #define tpoly(x)                    jttpoly(jt,(x))
 #define tpop(x)                     jttpop(jt,(x))  
 #define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
+#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))

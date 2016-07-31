@@ -26,6 +26,7 @@
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
   for(i=1;i<n;++i,k=*++e)while(j=k){                         \
+if(jt->peekdata)printf("Processing hashchain %lld\n",i);  /* crashdebug */ \
    d=j+jt->sympv;                                            \
    k=d->next;                                                \
    if((d->name)&&(d->val)&&(SELECT)){                        \

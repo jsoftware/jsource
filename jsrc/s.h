@@ -25,15 +25,18 @@
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
-  for(i=1;i<n;++i,k=*++e)while(j=k){                         \
+if(jt->peekdata)printf("Definition has %lld chains\n",n);  /* crashdebug */ \
+  for(i=1;i<n;++i,k=*++e){   \
 if(jt->peekdata)printf("Processing hashchain %lld\n",i);  /* crashdebug */ \
+   while(j=k){                         \
    d=j+jt->sympv;                                            \
    k=d->next;                                                \
+if(jt->peekdata)printf("d=%p, d->name=%p, d->val=%p\n",d,d->name,d->val);  /* crashdebug */ \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
     {PROCESS;}                                               \
     ++m;                                                     \
-  }}                                                         \
+  }}}                                                         \
   AN(z)=m*(COL); *AS(z)=m;                                   \
   R z;                                                       \
  }

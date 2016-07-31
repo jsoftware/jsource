@@ -530,6 +530,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   }
  }
  I actstn=AN(actst); I*actstv=AV(actst);  // # items in new symbol table, and pointer to hashchain table
+if(jt->peekdata)printf("defining symbol table with %lld chains; original had %lld\n",actstn-1,pfstn-1);  // crashdebug
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten

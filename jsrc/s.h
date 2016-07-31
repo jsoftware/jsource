@@ -25,28 +25,18 @@
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
-if(jt->peekdata)printf("Definition has %lld chains\n",n);  /* crashdebug */ \
-  for(i=1;i<n;++i){   /* crashdebug */  \
+  for(i=1;i<n;++i){                  \
    k=*e++;  /* initial symbol index */  \
-if(jt->peekdata)printf("Processing hashchain %lld\n",i);  /* crashdebug */ \
-if(jt->peekdata)printf("Initial symbol index is %lld\n",k);  /* crashdebug */ \
    while(j=k){                         \
-if(jt->peekdata)printf("Processing symbol index %llx\n",j);  /* crashdebug */ \
    d=j+jt->sympv;                                            \
-if(jt->peekdata)printf("L entry address is %p\n",d);  /* crashdebug */ \
    k=d->next;                                                \
-if(jt->peekdata)printf("d->name=%p, d->val=%p\n, SELECT=%d",d->name,d->val,(SELECT));  /* crashdebug */ \
    if((d->name)&&(d->val)&&(SELECT)){                        \
     if(m==*AS(z)){RZ(z=ext(0,z)); zv=(m*(COL))+(T*)AV(z);}   \
-if(jt->peekdata)printf("Calling PROCESS\n");  /* crashdebug */ \
     {PROCESS;}                                               \
     ++m;                                                     \
   }}}                                                         \
-if(jt->peekdata)printf("End of loop, m=%lld\n",m);  /* crashdebug */ \
   AN(z)=m*(COL);   \
-if(jt->peekdata)printf("stored to AN\n");  /* crashdebug */ \
   *AS(z)=m;                                   \
-if(jt->peekdata)printf("stored to AS\n");  /* crashdebug */ \
   R z;                                                       \
  }
 

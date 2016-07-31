@@ -363,7 +363,6 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.
    // Because the parser stack is used by jtxdefn for temp storage, we do the store to keep the stack compact.
    jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
-if(!(ptab[0]==3&&ptab[1]==7&&ptab[2]==23))printf("ptab[] has been overwritten!\n");  // crashdebug
    switch(i) {
    // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
    // collect the arguments for the action and run it

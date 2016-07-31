@@ -33,9 +33,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(0<jt->pmctr)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
  jt->curlocn=oln;
  jt->curname=oldn;
- if(jt->peekdata)printf("before spfree, jt->spfreeneeded=%hhd\n",jt->spfreeneeded);  // crashdebug
  if(jt->spfreeneeded)spfree();
- if(jt->peekdata)printf("after spfree\n");  // crashdebug
  R z;
 }
 

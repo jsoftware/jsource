@@ -363,11 +363,12 @@ F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 
-F2(jtordstati){A t;I j,n,wt;
+F2(jtordstati){A t;I n,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade1(w));
  RZ(t=ordstat(a,w));
+ I j=0;  // =0 needed to stifle warning
  if(wt&FL){D p=*DAV(t),*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
  else     {I p=* AV(t),*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);

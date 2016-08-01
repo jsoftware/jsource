@@ -43,11 +43,12 @@ typedef struct {
   MS *pool;             // pointer to first free block
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
  I    mfreegenallo;        // Amount allocated through malloc, biased
- I*   rank;             /* for integrated rank support                     */
+ void*heap;             /* heap handle                                     */
  A    fill;             /* fill                                            */
  C*   fillv;            /* fill value                                      */
 // --- end of cache linepair 0
 // parser values
+ I*   rank;             /* for integrated rank support                     */
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
  I    parsercalls;      /* # times parser was called                       */
@@ -58,13 +59,23 @@ typedef struct {
  A    global;           /* global symbol table                             */
  A    symb;             /* symbol table for assignment                     */
  I    symindex;         /* symbol table index (monotonically increasing)   */
- A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  A    stloc;            /* locales symbol table                            */
+ I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
+ I    db;               /* debug flag; see 13!:0                           */
+ I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+// --- end cache linepair 1
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
+ B    stswitched;       /* called fn switched locale                       */
+ I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
+ A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
+ A    symp;             /* symbol pool array                               */
+ I    rela;             /* if a is relative, a itself; else 0              */
+ I    relw;             /* if w is relative, w itself; else 0              */
 
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
@@ -103,7 +114,6 @@ typedef struct {
  A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */
  AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
- I    db;               /* debug flag; see 13!:0                           */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */
@@ -150,8 +160,6 @@ typedef struct {
  A    fxpath;           /* f. path of names                                */
  A*   fxpv;             /* f. AAV(fxpath)                                  */
  I    getlasterror;     /* DLL stuff                                       */
- I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
- void*heap;             /* heap handle                                     */
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
  A    iep;              /* immediate execution phrase                      */
@@ -182,7 +190,6 @@ typedef struct {
  C    outseq[3];		/* EOL: "LF" "CR" "CRLF"                           */
  I    peekdata;         /* our window into the interpreter                 */
  A    pma;              /* perf. monitor: data area                        */
- I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
  PM*  pmv;              /* perf. monitor: (PM*)(sizeof(PM0)+CAV(pma))      */
  I    pos[2];           /* boxed output x-y positioning                    */
@@ -190,8 +197,6 @@ typedef struct {
  AF   pre;              /* preface function for assignment                 */
  I    redefined;        /* symbol table entry of redefined explicit defn   */
  int  reginitflag;      /* 1 iff regular expression stuff initialized      */
- I    rela;             /* if a is relative, a itself; else 0              */
- I    relw;             /* if w is relative, w itself; else 0              */
  I    rng;              /* RNG: generator selector                         */
  UF   rngF[5];          /* RNG: function to get the next random number     */
  UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
@@ -242,16 +247,12 @@ typedef struct {
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  B    thornuni;         // 1 iff ": allowed to produce C2T result
  B    sesm;             /* whether there is a session manager              */
- B    stswitched;       /* called fn switched locale                       */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tostdout;         /* 1 if output to stdout                           */
  B    tsubst;           /* tacit translator                                */
  B    xco;              /* 1 iff doing x: conversion                       */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
- I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
- A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
  TA*  ttab;             /* tacit translator                                */
  I    ttabi;            /* tacit translator                                */
  I    ttabi0;           /* tacit translator                                */

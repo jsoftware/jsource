@@ -33,10 +33,11 @@
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
 
-#define AS1(f,exp)      DF1(f){PROLOG;DECLF ;A z; PREF1(f); z=(exp); EPILOG(z);}
-#define AS2(f,exp)      DF2(f){PROLOG;DECLF ;A z; PREF2(f); z=(exp); EPILOG(z);}
-#define CS1(f,exp)      DF1(f){PROLOG;DECLFG;A z; PREF1(f); z=(exp); EPILOG(z);}
-#define CS2(f,exp)      DF2(f){PROLOG;DECLFG;A z; PREF2(f); z=(exp); EPILOG(z);}
+// Since F?RANK ends with EPILOG (needlessly for boxed results), there's no need to EPILOG here
+#define AS1(f,exp)      DF1(f){PROLOG;DECLF ;A z; PREF1(f); z=(exp); EPILOGNULL(z);}
+#define AS2(f,exp)      DF2(f){PROLOG;DECLF ;A z; PREF2(f); z=(exp); EPILOGNULL(z);}
+#define CS1(f,exp)      DF1(f){PROLOG;DECLFG;A z; PREF1(f); z=(exp); EPILOGNULL(z);}
+#define CS2(f,exp)      DF2(f){PROLOG;DECLFG;A z; PREF2(f); z=(exp); EPILOGNULL(z);}
 
 #define ADERIV(id,f1,f2,m,l,r)  fdef(id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,0L,(I)(m),(I)(l),(I)(r))
 #define CDERIV(id,f1,f2,m,l,r)  fdef(id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,0L,(I)(m),(I)(l),(I)(r))

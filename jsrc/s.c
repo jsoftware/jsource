@@ -99,6 +99,10 @@ B jtsymfree(J jt,L*u){I q;
 }    /* free pool entry pointed to by u */
 
 SYMWALK(jtsymfreeha, B,B01,100,1, 1, RZ(symfree(d)))   /* free pool table entries      */
+// This visits every symbol and frees it.  BUT it doesn't visit symbols that do not have nonnull
+// name and value fields.  But this is OK: You can't have a value without a name; and the only
+// way to have a name without a value is if the name is PERMANENT and either uninitialized or deleted.
+// In either case, we need to leave the name undisturbed.
 
 B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
  wv=AV(w);
@@ -156,11 +160,11 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
 
 // a is A for name, g is symbol table
 // result is L* address of the symbol-table entry for the name, or 0 if not found
-L*jtprobe(J jt,A a,A g){C*s;I*hv,k,m;L*v;NM*u;
+L*jtprobe(J jt,A a,A g){C*s;I*hv,m;L*v;NM*u;
  RZ(a&&g);u=NAV(a);
  // If there is bucket information, 
 // obsolete ASSERTSYS(jt->local||(u->bucket==0&&u->bucketx==0),"bucket");
- m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
+ m=u->m; s=u->s; hv=AV(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
  if(!*hv)R 0;                            /* (0) empty slot    */
  v=*hv+jt->sympv;
  while(1){
@@ -240,8 +244,8 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
 // g is symbol table to use
 // result is L* symbol-table entry to use
 // if not found, one is created
-L*jtprobeis(J jt,A a,A g){C*s;I*hv,k,m,tx;L*v;NM*u;
- u=NAV(a); m=u->m; s=u->s; k=u->hash%AN(g); hv=AV(g)+(k?k:1);
+L*jtprobeis(J jt,A a,A g){C*s;I*hv,m,tx;L*v;NM*u;
+ u=NAV(a); m=u->m; s=u->s; hv=AV(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
  if(tx=*hv){                                 /* !*hv means (0) empty slot    */
   v=tx+jt->sympv;
   while(1){                               

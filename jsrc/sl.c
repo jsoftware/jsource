@@ -10,7 +10,7 @@
 // Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
 // on the result and on the name and path
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
- GATV(g,SYMB,ptab[p],0,0);   // rank=0 to allow one more word for hash table
+ GATV(g,SYMB,ptab[p]+SYMLINFOSIZE,0,0);   // have prime number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  RZ(v=symnew(AV(g),0)); v->flag|=LINFO; v->sn=jt->symindex++;
@@ -52,7 +52,7 @@ B jtsymbinit(J jt){A q;I n=40;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
- GATV(q,SYMB,ptab[3+PTO],1,0); jt->stloc=q;
+ GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains
  RZ(q=apv(n,-1L,0L));    jt->stnum=q;
  GATV(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
  RZ(jt->global=stcreate(0,5L+PTO,4L,"base"));

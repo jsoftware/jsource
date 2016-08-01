@@ -127,7 +127,36 @@ fm =. 3 : 'if. (4j5-4j5)+23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fm 23
 'not 23' -: fm 17
 
+NB. Verify don't twiddle usecount on lines that cannot be result lines
+slow =: 3 : 0
+bigbox =. <"0 i. 100000
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+)
+fast =: 3 : 0
+bigbox =. <"0 i. 100000
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+5
+)
+(6!:2 'slow 0') > 2 * (6!:2 'fast 0')
 
-4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t '
+NB. 4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow fast '
 
 

@@ -770,7 +770,7 @@ extern void     jttoutf8x(J,C*,I,US*);
 extern I        jttpop(J,I);
 extern I        jttpush(J,AD* RESTRICT,I,I);
 extern B        jttrd(J jt,A w);
-extern A*       jttg(J);
+extern A*       jttg(J,I);
 extern B        jtunlk(J,I);
 extern A        jtv2(J,I,I);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);

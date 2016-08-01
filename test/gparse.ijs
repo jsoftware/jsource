@@ -61,8 +61,18 @@ NB. Verify AR assignment works for 1 & more names
 3 -: 4!:0<'bc'
 (,'+') -: 5!:5 <'bc'
 
+NB. Test single-word lines
+swd =: 3 : 0
++
+y
+&
+/
+undefname
+5
+)
+5 -: swd''
 
 
-4!:55 ;:'a t '
+4!:55 ;:'a swd t '
 
 

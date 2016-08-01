@@ -16,15 +16,18 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;
  ASSERT(fs,EVVALUE); 
  ASSERT(AT(self)==AT(fs),EVDOMAIN);
+ V *fv=VAV(fs);  // point to V struct in fs
  RE(d=fdep(fs));
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
  if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
- lk=jt->glock||VLOCK&VAV(fs)->flag;
+ lk=jt->glock||VLOCK&fv->flag;
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jt->global; 
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
- else{ra(fs); z=a?dfs2(a,w,fs):dfs1(w,fs); fa(fs);}  /* beware redefs down the stack */
+ // Execute.  Bump execct to protect against deleting the name while it is running.
+ // Because of implementation of fa(), which may be called elsewhere as well, we must also bump usecount
+ else{ACINCR(fs); ++fv->execct; z=a?dfs2(a,w,fs):dfs1(w,fs); fa(fs);}  /* beware redefs down the stack */
  if(!jt->stswitched)jt->global=jt->fcallg[i].og;
  jt->stswitched=jt->fcallg[i].sw0;
  if(jt->fcallg[i].flag)locdestroy(i);

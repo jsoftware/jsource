@@ -163,7 +163,7 @@ typedef I SI;
 #define CONJSIZE sizeof(V)
 #define ASGN            (I)2097152L     /* I  assignment                   */
 #define ASGNX 21
-#define ASGNSIZE sizeof(C)
+#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
 #define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
@@ -242,7 +242,7 @@ typedef I SI;
 #define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
 
 
-typedef struct {I i;US n,go,source;C type;} CW;
+typedef struct {I i;US n,go,source;C type;C canend;} CW;
 
 /* control word (always has corresponding token string)                             */
 /* type   - as specified in w.h                                            */
@@ -250,6 +250,7 @@ typedef struct {I i;US n,go,source;C type;} CW;
 /* source - source line number                                             */
 /* i      - beginning index of token string                                */
 /* n      - length          of token string                                */
+// canend - Indicates that the most-recent B-block result can (1) or can't (2) become the result of the running definition.  0 means we don't know yet.
 
 
 #define DCPARSE  1      /* sentence for parser                                          */
@@ -295,6 +296,8 @@ typedef struct {I e,p;X x;} DX;
 /*        least significant digit first                                    */
 /*        decimal point after last digit                                   */
 
+
+#define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT contain symbol chains, but instead are LINFO entries
 
 typedef struct {A name,val;I flag,sn,next,prev;} L;
 
@@ -400,7 +403,7 @@ typedef struct{
 #define SBC2  1         /* 1 iff 2-byte character                          */
 
 
-typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;C id;} V;
+typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // more than 64000 execs will be a stack error anyway
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
   

@@ -292,7 +292,7 @@ F1(jtbreakfnq){
  R cstr(jt->breakfn);
 }
 
-F1(jtbreakfns){A z;I *fh,*mh; void* ad;
+F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);

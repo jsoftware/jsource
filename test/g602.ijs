@@ -78,6 +78,11 @@ NB. ": on invalid unicode
 (":x) -: ":("1) x=: 3 4$ 97 224 176 157 98{a.
 (":x) -: ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
 
+NB. ": on byte argument should always pass through unchanged
+a. -: ": a.
+(-: ":) a. {~ 8 10 ?@$ 256
+(-: ":) 1 2 3 4 5 129 { a.
+
 NB. not yet worked !!!
 NB. x -: ":x should hold for all byte literal
 NB. x -: ":x=: 3 4$ 97 224 176 157 98{a.

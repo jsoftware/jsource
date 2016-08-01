@@ -133,9 +133,31 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=: j./(2,?100 100)?@$1e6
 
 1 [ unmap_jmf_ 'q'
+
+NB. Test usecount on mapped arrays
+NB. create clean mapped noun a
+f=. jpath'~temp/t.jmf'
+1 [ createjmf_jmf_ f;1000
+1 [ 1 unmap_jmf_'a' NB. 1 forces unmap - even with dangling refs
+1 [ map_jmf_ 'a';f
+a=: i.5
+
+NB. create foo and goo to create the problem
+foo=: 4 : 0
+if. x do. goo'' return. end.
+)
+
+goo=: 3 : 0
+0 foo <a NB. ".&.><'a'
+)
+
+NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
+1 [ 1 foo '' NB. a NB. ".&.> <'a' [ !a
+(<,2) -: (<1 9) { showmap_jmf_''
+1 [ unmap_jmf_ 'a'
+
 18!:55 <'jmf'
 
-
-4!:55 ;:'bp f g q sp x'
+4!:55 ;:'bp f g q sp x a foo goo'
 
 

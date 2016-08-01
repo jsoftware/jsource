@@ -7,7 +7,7 @@
 
 
 static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*xv;I an,*av,c,d,
-     h,i,*iv,j,*jv,k,m,n,*pv,*qu,*qv,r,s,*u,*v,xk,*yu,*yv;P*wp,*zp;
+     h=0,i,*iv,j,*jv,k,m,n,*pv,*qu,*qv,r,s,*u,*v,xk,*yu,*yv;P*wp,*zp;  // init h to stifle warning
  zp=PAV(z); wp=PAV(w); r=AR(ind); n=AN(ind); 
  a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});
  y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));

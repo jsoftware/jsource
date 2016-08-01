@@ -224,7 +224,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       con[i].canend = 2; break;  // These are by definition not an end
      case CRETURN:
       con[i].canend = 1; break;  // These by definition ARE an end
-     case CASSERT: case CTBLOCK: case CFOR: case CSELECTN: case CSELECT:
+     case CASSERT: case CTBLOCK: case CFOR: case CSELECTN: case CSELECT: case CLABEL:
       // These blocks inherit only from NSI
       if(i>=n-1)con[i].canend = 1;  // If fall off the end, that's end
       else con[i].canend = con[i+1].canend;  // Only successor is NSI, use that
@@ -242,7 +242,6 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       if(con[i].go>=n)con[i].canend = 1;  // If jump off the end, that's end
       else con[i].canend = con[con[i].go].canend;  // Only successor is go, use that
       break;
-     case CLABEL: break;   // Nothing to do for a label
     }
     if(con[i].canend)madechange=1;
    }

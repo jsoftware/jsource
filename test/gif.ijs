@@ -155,8 +155,40 @@ if. 0 do. end.
 if. 0 do. end.
 5
 )
-(6!:2 'slow 0') > 2 * (6!:2 'fast 0')
+slow2 =: 3 : 0
+bigbox =. <"0 i. 100000
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. return. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+5
+)
+fast2 =: 3 : 0
+bigbox =. <"0 i. 100000
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+if. 0 do. end.
+label_xxx.
+5
+)
 
-NB. 4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow fast '
+(6!:2 'slow 0') > 2 * (6!:2 'fast 0')
+(6!:2 'slow2 0') > 2 * (6!:2 'fast 0')
+(6!:2 'slow 0') > 2 * (6!:2 'fast2 0')
+
+NB. 4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
 
 

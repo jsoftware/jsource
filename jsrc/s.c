@@ -99,6 +99,10 @@ B jtsymfree(J jt,L*u){I q;
 }    /* free pool entry pointed to by u */
 
 SYMWALK(jtsymfreeha, B,B01,100,1, 1, RZ(symfree(d)))   /* free pool table entries      */
+// This visits every symbol and frees it.  BUT it doesn't visit symbols that do not have nonnull
+// name and value fields.  But this is OK: You can't have a value without a name; and the only
+// way to have a name without a value is if the name is PERMANENT and either uninitialized or deleted.
+// In either case, we need to leave the name undisturbed.
 
 B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
  wv=AV(w);

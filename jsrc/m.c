@@ -265,7 +265,7 @@ void jtfh(J jt,A w){fr(w);}
 A jtgc (J jt,A w,I old){
 RZ(w); I* cc=&AC(w); I tt=AT(w); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,w,tt); *cc=(c+1)&~ACINPLACE;
 I pushx=tpop(old);
-*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
+*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
 R w;
 }
 
@@ -339,7 +339,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 // subroutine to save space, just like tpush macro
 static I subrtpush(J jt, A wd, I pushx){
-I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2)audittstack(jt,wd,ACUC(wd));R pushx;
+I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2)audittstack(jt,wd,ACUC(wd));R pushx;
 }
 
 // Result is new value of jt->tnextpushx, or 0 if error
@@ -356,7 +356,10 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
     I tp=AT(np);  // fetch type
     *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np;  // put the box on the stack
     pushx += SZI;  // advance to next output slot
-    if(!(pushx&(NTSTACK-1))){RZ(tstack=tg()); pushx+=SZI;} // if the buffer ran out, allocate another, save its address
+    if(!(pushx&(NTSTACK-1))){
+     // pushx has crossed the block boundary.  Allocate a new block.
+     RZ(tstack=tg(pushx)); pushx+=SZI;   // If error, abort with values set; if not, step pushx over the chain field
+    } // if the buffer ran out, allocate another, save its address
 #if MEMAUDIT&2
     jt->tnextpushx=pushx;
     audittstack(jt,np2,ACUC(np2));
@@ -371,25 +374,33 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
   // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
   // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
-  if(v->f)pushx=subrtpush(jt,v->f,pushx); if(v->g)pushx=subrtpush(jt,v->g,pushx); if(v->h)pushx=subrtpush(jt,v->h,pushx);
+  if(v->f)RZ(pushx=subrtpush(jt,v->f,pushx)); if(v->g)RZ(pushx=subrtpush(jt,v->g,pushx)); if(v->h)RZ(pushx=subrtpush(jt,v->h,pushx));
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
-  DO(t&RAT?2*n:n, if(*v)pushx=subrtpush(jt,*v,pushx); ++v;);
+  DO(t&RAT?2*n:n, if(*v)RZ(pushx=subrtpush(jt,*v,pushx)); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
-  if(SPA(v,a))pushx=subrtpush(jt,SPA(v,a),pushx); if(SPA(v,e))pushx=subrtpush(jt,SPA(v,e),pushx); if(SPA(v,i))pushx=subrtpush(jt,SPA(v,i),pushx); if(SPA(v,x))pushx=subrtpush(jt,SPA(v,x),pushx); 
+  if(SPA(v,a))RZ(pushx=subrtpush(jt,SPA(v,a),pushx)); if(SPA(v,e))RZ(pushx=subrtpush(jt,SPA(v,e),pushx)); if(SPA(v,i))RZ(pushx=subrtpush(jt,SPA(v,i),pushx)); if(SPA(v,x))RZ(pushx=subrtpush(jt,SPA(v,x),pushx)); 
  }
  R pushx;
 }
 
 // Result is address of new stack block
-A* jttg(J jt){     // Filling last slot; must allocate next page.  Caller is responsible for advancing pushx
+A* jttg(J jt, I pushx){     // Filling last slot; must allocate next page.  Caller is responsible for advancing pushx
  if(jt->tstacknext) {   // if we already have a page to move to
 //  jt->tstacknext[0] = jt->tstack;   // next was chained to prev before it was saved as next
   jt->tstack = jt->tstacknext;   // set new buffer as current
   jt->tstacknext = 0;    // indicate no new one available now
  } else {A *v;   // no page to move to - better read one
   // We don't account for the NTSTACK blocks as part of memory space used, because it's so unpredictable and large as to be confusing
-  ASSERT(v=MALLOC(NTSTACK),EVWSFULL);
+  if(!(v=MALLOC(NTSTACK))){  // Allocate block
+   // Unable to allocate a new block.  This is catastrophic, because we have done ra for blocks that we
+   // will now not be able to tpop.  Memory is going to be lost.  The best we can do is prevent a crash.
+   // We will leave tstack as is, pointing to the last block, and set nextpushx to the last entry in it.
+   // This loses the last entry in the last block, and all the tpushes we couldn't perform.
+   // The return will go all the way back to the first caller and beyond, so we set the values in jt as best we can
+   jt->tnextpushx = pushx-SZI;
+   ASSERT(v,EVWSFULL);   // this always fails
+  }
   *v = (A)jt->tstack;   // backchain old buffers to new
   jt->tstack = v;    // set new buffer as the one to use
  }
@@ -506,7 +517,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
  DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
 #endif
  AFLAG(z)=0; AC(z)=ACUC1; 
- *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg()); pushx+=SZI;}
+ *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;}
  jt->tnextpushx=pushx;
  R z;
 }
@@ -528,7 +539,9 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 #endif
  RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  I akx=AKXR(rank);   // Get offset to data
- if(!(type&DIRECT))memset((C*)z+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
+ if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-mhb-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
+   // All non-DIRECT types have items that are multiples of I, so no need to round the length
+// obsolete  if(!(type&DIRECT))memset((C*)z+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
 // obsolete  if(!(type&DIRECT))memset((C*)z+(AH*SZI),C0,((bytes+SZI-1-mhb)&(-SZI))-AH*SZI);  // For indirect types, zero the 
  else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
 // obsolete else if(type&LAST0){((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-2]=((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-1]=0; }  /* if LAST0, clear the last TWO Is  */
@@ -538,7 +551,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
- AM(z)=((I)1<<((MS*)z-1)->j)-(akx+mhb);   // get rid of this
+ AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
  R z;
 }
 

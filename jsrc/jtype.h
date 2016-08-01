@@ -163,7 +163,7 @@ typedef I SI;
 #define CONJSIZE sizeof(V)
 #define ASGN            (I)2097152L     /* I  assignment                   */
 #define ASGNX 21
-#define ASGNSIZE sizeof(C)
+#define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
 #define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW

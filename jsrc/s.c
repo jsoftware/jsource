@@ -85,7 +85,7 @@ B jtsymfree(J jt,L*u){I q;
  if(!(u->flag&LPERMANENT)){
   // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
   q=u->next;
-  if(q)(q+jt->sympv)->prev=u->prev; 
+  if(q)(q+jt->sympv)->prev=u->prev;
   if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
   else (u->prev+jt->sympv)->next=q;
   u->next=jt->sympv->next;                   /* point to old top of stack   */

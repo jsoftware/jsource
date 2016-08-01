@@ -267,7 +267,7 @@ static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     i=ci->go;     // continue at new location
     break;
    case CRETURN:
-    // return.  Increment the use-count of the result, pop the stack back to empty, set i (which will exit)
+    // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
     if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}
     i=ci->go;
     break;

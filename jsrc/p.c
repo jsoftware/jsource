@@ -269,7 +269,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
      } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
    } else {
      // undefined name.
-     if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error
+     ASSERT(!(NMDOT&NAV(y)->flag&&jtxdefn),EVVALUE)  // Error if the unresolved name is x y etc
      RZ(y = namerefacv(y, s));    // this will create a ref to undefined name as verb [:
    }
   }

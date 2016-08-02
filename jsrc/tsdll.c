@@ -10,10 +10,12 @@ int WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 	return TRUE;
 }
 typedef wchar_t wc;
+typedef unsigned int uc;
 #else
 #define _stdcall
 #define _cdecl
 typedef unsigned short wc;
+typedef unsigned int uc;
 #endif
 
 #include <stdio.h>
@@ -35,6 +37,7 @@ typedef float F;
 // tests in place s (and i for J64) in place conversion
 char    _stdcall cbasic(char*  a,  char  b, char*  c) sum
 wc      _stdcall wbasic(wc*    a,  wc    b, wc*    c) sum
+uc      _stdcall ubasic(uc*    a,  uc    b, uc*    c) sum
 short   _stdcall sbasic(short* a,  short b, short* c) sum
 int     _stdcall ibasic(int*   a,  int   b, int*   c) sum
 I       _stdcall xbasic(I*     a,  I     b, I*     c) sum

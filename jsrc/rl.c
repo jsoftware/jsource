@@ -196,6 +196,7 @@ static F1(jtlnoun0){A s,x;B r1;
   default:   R over(cstr("i."),s);
   case LIT:  x=cstr(   "''"); R r1?x:over(over(s,scc('$')),x);
   case C2T:  x=cstr("u: ''"); R r1?x:over(over(s,scc('$')),x);
+  case C4T:  x=cstr("10&u: ''"); R r1?x:over(over(s,scc('$')),x);
   case BOX:  R over(s,cstr("$a:"    ));
   case B01:  R over(s,cstr("$0"     ));
   case FL:   R over(s,cstr("$0.5"   ));
@@ -213,6 +214,7 @@ static F1(jtlnoun){I t;
  switch(t){
   case LIT: R lchar(w);
   case C2T: R over(cstr("u: "),lnum(uco2(num[3],w)));
+  case C4T: R over(cstr("10&u: "),lnum(uco2(num[3],w)));
   case BOX: R lbox(w);
   case SBT: R over(cstr("s: "),lbox(sb2(num[5],w)));
   default:  R lnum(w);

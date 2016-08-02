@@ -85,13 +85,16 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case C2T: d=65536; break;
+  case C4T: c4range(m,(C4*)AV(a),&ca,&da); if(da)c4range(n,(C4*)AV(w),&cw,&dw); 
+            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
+            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case LIT: d=256;   break;
   case B01: d=2;     break;
  }
  *zc=c;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT&&0<d&&d<=memlimit ? d : -4;
+ R t&B01+LIT+C2T||t&INT+C4T&&0<d&&d<=memlimit ? d : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \
@@ -118,6 +121,7 @@ F2(jtebar){PROLOG;A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
   case C2T:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
+  case C4T:      EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
   default:       EBLOOP(UC,u[i],  v[k+m],   zv[k]=i==m);
  }
  EPILOG(z);
@@ -138,6 +142,8 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
   case C2T:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
+  case C4T: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
+            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
   default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R sc(k));
  }
  R sc(n);
@@ -157,6 +163,8 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
   case C2T:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
+  case C4T: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
+            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
   default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)++z);
  }
  R sc(z);
@@ -176,6 +184,8 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R one) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R one); break;
   case C2T:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R one); break;
+  case C4T: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R one) 
+            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R one); break;
   default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R one);
  }
  R zero;
@@ -199,6 +209,8 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case INT: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;
   case C2T:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
+  case C4T: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
+            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;
   default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
  }
  AN(z)=*AS(z)=zv-AV(z);

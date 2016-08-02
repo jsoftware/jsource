@@ -300,3 +300,14 @@ extern ADECL2(tymesIO,D,I,I);
 extern ADECL2(tymesQQ,Q,Q,Q);
 extern ADECL2(tymesXX,X,X,X);
 extern ADECL2(tymesZZ,Z,Z,Z);
+
+extern ADECL2(   eqUU,B,C4,C4);
+extern ADECL2(   eqUS,B,C4,US);
+extern ADECL2(   eqSU,B,US,C4);
+extern ADECL2(   eqUC,B,C4,UC);
+extern ADECL2(   eqCU,B,UC,C4);
+extern ADECL2(   neUU,B,C4,C4);
+extern ADECL2(   neUS,B,C4,US);
+extern ADECL2(   neSU,B,US,C4);
+extern ADECL2(   neUC,B,C4,UC);
+extern ADECL2(   neCU,B,UC,C4);

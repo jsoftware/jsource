@@ -13,7 +13,7 @@ F1(jtswap){A y;C*s;I n;
  RZ(w); 
  if(VERB&AT(w))R ADERIV(CTILDE,swap1,swap2,RMAX,rr(w),lr(w));
  else{
-  if(C2T&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
+  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
   ASSERT(1>=AR(w),EVRANK);
   n=AN(w); s=CAV(w); 
   ASSERT(vnm(n,s),EVILNAME); 

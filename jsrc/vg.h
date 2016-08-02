@@ -19,6 +19,7 @@ extern int  compp(J,I,I);
 extern int  compq(J,I,I);
 extern int  compr(J,I,I);
 extern int  compu(J,I,I);
+extern int  comp4(J,I,I);
 extern int  compx(J,I,I);
 
 extern int  compspdsB(J,I,I);

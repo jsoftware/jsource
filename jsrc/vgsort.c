@@ -84,7 +84,6 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  R z;
 }    /* w grade"1 w on 2-byte character or unicode items */
 
-
 static SF(jtsorti1);
 
 static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
@@ -125,6 +124,50 @@ static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
   grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),1*d+q+(US*)xv,up,0,1);
   grcol(p,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*d+q+(US*)zv,up,0,1);
 #endif
+  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),e*d+q+(US*)xv,up,1,1);
+  wv+=c; zv+=n;
+ }
+ R z;
+}    /* w grade"r w on large-range integers */
+
+static SF(jtsortu1);
+
+static SF(jtsortu){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
+// turn off optimization
+// R irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ wv=AV(w);
+ c4range(AN(w),(C4*)wv,&q,&p); p1=(D)p;
+ if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(0<q&&p1+q<4*n){p+=q; q=0;}
+ GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
+ memset(yv,C0,ps);
+ for(i=0;i<m;++i){
+  if(q)DO(n, ++yv[*wv++-q];) 
+  else DO(n, ++yv[*wv++  ];);
+  switch(2*up+(1&&q)){
+   case 0: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
+   case 1: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
+   case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
+   case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
+ }}
+ R z;
+}    /* w grade"1 w on small-range unicode */
+
+static SF(jtsortu1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
+ p=65536; up=1==jt->compgt; wv=AV(w);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,INT,n,1,0); xv=AV(x);
+ e=1;
+#if C_LE
+  d= 1; 
+#else
+  d=-1;
+#endif
+ q=e*(-1==d);
+ for(i=0;i<m;++i){
+  grcol(p,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    q+(US*)wv,up,0,1);
   grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),e*d+q+(US*)xv,up,1,1);
   wv+=c; zv+=n;
  }
@@ -174,6 +217,7 @@ F2(jtgr2){PROLOG;A z=0;I acr,d,f,m,n,*s,t,wcr;
   else if(1==d)                      RZ(z=sortc (m,n,n,w))  // sorting single bytes (character or Boolean)
   else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,n,w))  // Booleans with cell-items 2 bytes long
   else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,n,w))  // long character strings with cell-items 2 bytes long
+  else if(4==d  &&t&C4T&&30000<n)    RZ(z=sortu (m,n,n,w))  // unicode string lists
   else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,n,w))  // Booleans with cell-items 4 bytes long
   else if(1==wcr&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
   else if(1==wcr&&t&FL )             RZ(z=sortd (m,n,n,w)); // floating-point lists

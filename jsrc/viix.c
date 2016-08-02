@@ -81,7 +81,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-// Now we split out C2T separately; all the other codes fit in 0-7 so we can produce a 6-bit
+// Now we split out C2T and C4T separately; all the other codes fit in 0-7 so we can produce a 6-bit
 // encoding.  Supporting other types would require revisiting this, whether new style or old.
 #define TT(s,t) (((s)<<3)+(t))
 
@@ -112,6 +112,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
   case FLX:   COMPVLOOP(D, c);           break;
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
+  case C4TX:  COMPVLOOP(C4,c);           break;
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
@@ -120,8 +121,16 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
    DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
  }
  ge=cc; gt=-ge;
- // Handle C2T separately to tighten encoding of other combinations
- if(C2T&(at|wt)){
+ // Handle C2T and C4T separately to tighten encoding of other combinations
+ if(C4T&(at|wt)){
+  switch(TT(at,wt)){   // Don't use CTTZ; TT is still adequate to separate the cases
+   case TT(LIT, C4T ): BSLOOP(UC,C4); break;
+   case TT(C2T, C4T ): BSLOOP(US,C4); break;
+   case TT(C4T, LIT ): BSLOOP(C4,UC); break;
+   case TT(C4T, C2T ): BSLOOP(C4,US); break;
+   case TT(C4T, C4T ): BSLOOP(C4,C4); break;
+  }
+ } else if(C2T&(at|wt)){
   switch(TT(at,wt)){   // Don't use CTTZ; TT is still adequate to separate the cases
    case TT(LIT, C2T ): BSLOOP(UC,US); break;
    case TT(C2T, C2T ): BSLOOP(US,US); break;

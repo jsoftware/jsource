@@ -206,6 +206,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  at=AT(a); ac=aii(a);
  if(2>=ac)switch(at){
   case C2T: if(1==ac)s=65536;                      break;
+  case C4T: if(1==ac)c4range(AN(a),(C4*)AV(a),&r,&s);   break;
   case B01: if(1==ac)s=2;   else{s=258;   at=C2T;} break;
   case LIT: if(1==ac)s=256; else{s=65536; at=C2T;} break;
   case INT: if(1==ac)irange(AN(a),AV(a),&r,&s);    break;
@@ -233,6 +234,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
     case B01: KACC1(F,B ); break;                                \
     case LIT: KACC1(F,UC); break;                                \
     case C2T: KACC1(F,US); break;                                \
+    case C4T: KACC1(F,C4); break;                                \
     case INT: KACC1(F,I );                                       \
   }}else{                                                        \
    v=zv; DO(m*c, *v++=v0;);                                      \
@@ -283,7 +285,7 @@ static DF2(jtkeyslash){PROLOG;A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*q
 }    /* x f//.y */
 
 
-#define KMCASE(ta,tw)  (ta+65536*tw)
+#define KMCASE(ta,tw)  (ta+262144*tw) // (ta+65536*tw)
 #define KMACC(Ta,Tw) \
  {Ta*u=(Ta*)av;Tw*v=(Tw*)wv;                                        \
   if(1==c)DO(n, ++pv[*u];                   qv[*u]+=*v++;   ++u;)   \
@@ -322,6 +324,9 @@ static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,
    case KMCASE(C2T,B01): KMACC(US,B); break;
    case KMCASE(C2T,INT): KMACC(US,I); break;
    case KMCASE(C2T,FL ): KMACC(US,D); break;
+   case KMCASE(C4T,B01): KMACC(C4,B); break;
+   case KMCASE(C4T,INT): KMACC(C4,I); break;
+   case KMCASE(C4T,FL ): KMACC(C4,D); break;
    case KMCASE(INT,B01): KMACC(I ,B); break;
    case KMCASE(INT,INT): KMACC(I ,I); break;
    case KMCASE(INT,FL ): KMACC(I ,D);
@@ -330,6 +335,7 @@ static DF2(jtkeymean){PROLOG;A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,*pv,r,
    case B01: KMSET(B ); break;
    case LIT: KMSET(UC); break;
    case C2T: KMSET(US); break;
+   case C4T: KMSET(C4); break;
    case INT: KMSET(I );
   }
   *AS(z)=m; AN(z)=m*c;
@@ -359,6 +365,7 @@ F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
  n=IC(w); t=AT(w); p=q=0; b=0; k=n?aii(w)*bp(t):0;
  if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
+ if(k==sizeof(C4)&&t&t&C4T)c4range(n,(C4*)AV(w),&p,&q);
  if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
  if(b=q&&(2>=k||q<=2*n)){
   GATV(c,INT,q,1,0); cv=AV(c)-p;  /* counts  */
@@ -367,6 +374,9 @@ F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
   switch(k){
    case 1:   GRPCD(UC); break;
    case 2:   GRPCD(US); break;
+#if SY_64
+   case 4:   GRPCD(C4); break;
+#endif
    case SZI: GRPCD(I);
  }}else{
   RZ(w=indexof(w,w)); wv=AV(w);
@@ -378,6 +388,9 @@ F1(jtgroup){PROLOG;A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
  switch(b*k){
   case 1:   GRPIX(UC,dv[k=*v++],j,k); break;
   case 2:   GRPIX(US,dv[k=*v++],j,k); break;
+#if SY_64
+  case 4:   GRPIX(C4,dv[k=*v++],j,k); break;
+#endif
   case SZI: GRPIX(I ,dv[k=*v++],j,k); break;
   default:  GRPIX(I ,     *v++ ,j,j);
  }
@@ -421,6 +434,7 @@ static DF2(jtkeytally){PROLOG;A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
   switch(at){
    case LIT: KEYTALLY(UC); break;
    case C2T: KEYTALLY(US); break;
+   case C4T: KEYTALLY(C4); break;
    case INT: KEYTALLY(I );
   }
   AN(z)=*AS(z)=j;
@@ -460,11 +474,11 @@ static DF2(jtkeyheadtally){PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v
   GATV(y,INT,m,1,0); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
   R stitch(b?from(x,w):y,b?y:from(x,w));
  }
- if(at&LIT+C2T+INT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
+ if(at&LIT+C2T+C4T+INT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;); k=0;
-  switch(9*b+(at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
+  switch(12*b+(at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
    case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;
    case  2: KEYHEADTALLY(D,UC,D,(D)*v,wv[i]); break;
@@ -474,15 +488,21 @@ static DF2(jtkeyheadtally){PROLOG;A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v
    case  6: KEYHEADTALLY(I,I ,B,*v,   wv[i]); break;
    case  7: KEYHEADTALLY(I,I ,I,*v,   wv[i]); break;
    case  8: KEYHEADTALLY(D,I ,D,(D)*v,wv[i]); break;
-   case  9: KEYHEADTALLY(I,UC,B,wv[i],*v   ); break;
-   case 10: KEYHEADTALLY(I,UC,I,wv[i],*v   ); break;
-   case 11: KEYHEADTALLY(D,UC,D,wv[i],(D)*v); break;
-   case 12: KEYHEADTALLY(I,US,B,wv[i],*v   ); break;
-   case 13: KEYHEADTALLY(I,US,I,wv[i],*v   ); break;
-   case 14: KEYHEADTALLY(D,US,D,wv[i],(D)*v); break;
-   case 15: KEYHEADTALLY(I,I ,B,wv[i],*v   ); break;
-   case 16: KEYHEADTALLY(I,I ,I,wv[i],*v   ); break;
-   case 17: KEYHEADTALLY(D,I ,D,wv[i],(D)*v); break;
+   case  9: KEYHEADTALLY(I,C4,B,*v,   wv[i]); break;
+   case 10: KEYHEADTALLY(I,C4,I,*v,   wv[i]); break;
+   case 11: KEYHEADTALLY(D,C4,D,(D)*v,wv[i]); break;
+   case 12: KEYHEADTALLY(I,UC,B,wv[i],*v   ); break;
+   case 13: KEYHEADTALLY(I,UC,I,wv[i],*v   ); break;
+   case 14: KEYHEADTALLY(D,UC,D,wv[i],(D)*v); break;
+   case 15: KEYHEADTALLY(I,US,B,wv[i],*v   ); break;
+   case 16: KEYHEADTALLY(I,US,I,wv[i],*v   ); break;
+   case 17: KEYHEADTALLY(D,US,D,wv[i],(D)*v); break;
+   case 18: KEYHEADTALLY(I,I ,B,wv[i],*v   ); break;
+   case 19: KEYHEADTALLY(I,I ,I,wv[i],*v   ); break;
+   case 20: KEYHEADTALLY(D,I ,D,wv[i],(D)*v); break;
+   case 21: KEYHEADTALLY(I,C4,B,wv[i],*v   ); break;
+   case 22: KEYHEADTALLY(I,C4,I,wv[i],*v   ); break;
+   case 23: KEYHEADTALLY(D,C4,D,wv[i],(D)*v); break;
   }
   *AS(z)=AN(z)/2; *(1+AS(z))=2;
  }else{

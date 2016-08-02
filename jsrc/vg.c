@@ -76,6 +76,7 @@ static GF(jtgrx){A x;I ck,d,t,*xv;
  switch(CTTZ(t)){
   case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
   case C2TX:  jt->comp=compu;                    break;
+  case C4TX:  jt->comp=comp4;                    break;
   case INTX:  jt->comp=c==n?compi1:compi;        break;
   case FLX:   jt->comp=c==n?compd1:compd;        break;
   case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
@@ -174,6 +175,29 @@ static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
  R 1;
 }    /* grade"r w on integer w where c==n */
 
+static GF(jtgru1){A x,y;C4*wv;I d,e,i,p,*xv,*yv;int up;US*u;
+ p=65536; up=1==jt->compgt; wv=(C4*)AV(w);
+ GATV(y,INT,p,1,0); yv=AV(y);
+ GATV(x,INT,n,1,0); xv=AV(x);
+ e=SY_64?3:1;
+#if C_LE
+  d= 1; 
+#else
+  d=-1;
+#endif
+ for(i=0;i<m;++i){
+  u=e*(-1==d)+(US*)wv;
+  grcol(p,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,    up,0,0);
+#if SY_64
+  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+1*d,up,0,0);
+  grcol(p,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+2*d,up,0,0);
+#endif
+  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+e*d,up,1,0);
+  wv+=c; zv+=n;
+ }
+ R 1;
+}    /* grade"r w on c4t w where c==n */
+
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
 void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
@@ -184,6 +208,17 @@ void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
  *base=q; d=p-q; *top=0>d||d==IMAX?0:1+d;
+}    /* min and max in 1.5*n comparisons */
+
+// copy of irange for sizeof(C4)==sizeof(int)
+void c4range(I n,C4*v,I*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
+ if(n>m+m)p=q=*v++; else if(n){q=C4MAX; p=C4MIN;}else p=q=0;
+ for(i=0;i<m;++i){
+  x=*v++; y=*v++; 
+  if(x<y){if(x<q)q=x; if(p<y)p=y;}
+  else   {if(y<q)q=y; if(p<x)p=x;}
+ }
+ *base=q; d=(I)p-(I)q; *top=0>d||d==C4MAX?0:1+d;
 }    /* min and max in 1.5*n comparisons */
 
 F1(jtmaxmin){I base,top;
@@ -229,6 +264,42 @@ static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
 }    /* grade"r w on small-range integers w */
 
 
+static GF(jtgru){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s;C4*v;C4 *wv;I *xv,*yv;
+ wv=(C4*)AV(w); d=c/n; k=4*n;
+ c4range(AN(w),wv,&q,&p); 
+ if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
+ if(0<q&&q<k-p){p+=q; q=0;}
+ GATV(y,INT,p,1,0); yv=AV(y); ps=p*sizeof(C4); up=1==jt->compgt;
+ if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
+ for(i=0;i<m;++i){
+  s=0; j=p; memset(yv,C0,ps);
+  v=wv+d-1;
+  if(q) DO(n, ++yv[*v-q]; v+=d;) 
+  else  DO(n, ++yv[*v  ]; v+=d;);
+  if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
+  else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
+  v=wv+d-1;
+  if(q) DO(n, zv[yv[*v-q]++]=i; v+=d;) 
+  else  DO(n, zv[yv[*v  ]++]=i; v+=d;);
+  v=wv+d-1;
+  for(e=d-2,b=0;0<=e;--e){
+   --v;
+   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}
+   s=0; j=p; memset(yv,C0,ps);
+   if(q) DO(n, ++yv[*(v+d*g[i])-q];) 
+   else  DO(n, ++yv[*(v+d*g[i])  ];);
+   if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
+   else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
+   if(q) DO(n, h[yv[*(v+d*g[i])-q]++]=g[i];) 
+   else  DO(n, h[yv[*(v+d*g[i])  ]++]=g[i];);
+  }
+  if(b)DO(n, zv[i]=xv[i];);
+  wv+=c; zv+=n;
+ }
+ R 1;
+}    /* grade"r w on small-range c4t w */
+
+
 #define DOCOL1(p,iicalc0,iicalc1,ind,vinc)  \
  {I*g,*h,   j=p-1,k,s=0;UC*v;                          \
   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}        \
@@ -270,8 +341,8 @@ static GF(jtgrc){A x;B b,q,up;I d,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
   b=(B)(d%2); if(q){e=-3; vv=wv+d-2;}else{e=-1; vv=wv+d-1;}
-                 DOCOL1(p,*v,*v,       i,   v+=d); if(q)e=1==e?-3:1; 
-  DO(d-1, vv+=e; DOCOL1(p,*v,v[d*g[i]],g[i],v   ); if(q)e=1==e?-3:1;);
+                 DOCOL1(p,*v,*v,       i,   v+=d); if(q)e=1==e?(q==1?-3:-5):1; 
+  DO(d-1, vv+=e; DOCOL1(p,*v,v[d*g[i]],g[i],v   ); if(q)e=1==e?(q==1?-3:-5):1;);
   wv+=d*n; zv+=n;
  }
  R 1;
@@ -306,7 +377,8 @@ F1(jtgr1){PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
  else if(t&SBT            )RZ(grs(m,c,n,w,AV(z)))
  else if(t&FL             )RZ(grd(m,c,n,w,AV(z)))
  else if(t&INT            )RZ(gri(m,c,n,w,AV(z)))
- else if(t&IS1BYTE+C2T    )RZ(grc(m,c,n,w,AV(z)))
+ else if(t&IS1BYTE+C2T)    RZ(grc(m,c,n,w,AV(z)))
+ else if(t&C4T)            RZ(gru(m,c,n,w,AV(z)))
  else                      RZ(grx(m,c,n,w,AV(z)));
  EPILOG(z);
 }    /*   grade"r w main control for dense w */

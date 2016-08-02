@@ -64,6 +64,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
  else switch(k){
   case sizeof(C): IFROMLOOP(C); break; 
   case sizeof(S): IFROMLOOP(S); break;  
+#if SY_64
+  case sizeof(C4):IFROMLOOP(C4); break;
+#endif
   case sizeof(I): IFROMLOOP(I); break;
   default:
    if     (0==k%sizeof(I))IFROMLOOP2(I,k/sizeof(I))
@@ -140,6 +143,9 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf
   case   2*sizeof(C): BNNERM(C,I); break; 
   case 1+2*sizeof(C): INNER1B(C);  break;
   case 1+2*sizeof(S): INNER1B(S);  break;
+#if SY_64
+  case 1+2*sizeof(C4): INNER1B(C4);  break;
+#endif
   case 1+2*sizeof(I): INNER1B(I);  break;
   default:
    if(1==an){wv+=k**av; DO(m, MC(zv,wv,k); zv+=k; wv+=wk;);}
@@ -259,6 +265,9 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I c,d,e,j,k,m,pn,pr,*pv,
   case sizeof(C): INNER2(C);
   case sizeof(S): INNER2(S);
   case sizeof(I): INNER2(I);
+#if SY_64
+  case sizeof(C4): INNER2(C4);
+#endif
 #if !SY_64 && SY_WIN32
   case sizeof(D): INNER2(D);
 #endif

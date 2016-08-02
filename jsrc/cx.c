@@ -588,7 +588,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
  }
  RE(n=i0(a));
  if(equ(w,zero)){RZ(w=colon0(mark)); if(!n)R w;}
- if(C2T&AT(w))RZ(w=cvt(LIT,w));
+ if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d));

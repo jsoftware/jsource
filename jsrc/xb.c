@@ -117,7 +117,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
   case FL:   RZ(mvw(v,u,n,  b,BU,1,1    )); R y;
   case CMPX: RZ(mvw(v,u,n+n,b,BU,1,1    )); R y;
   default:
-   // 1- and 2-byte types, all of which have LAST0.  We need to clear the last
+   // 1- and 2-byte C4T types, all of which have LAST0.  We need to clear the last
    // bytes, because the datalength is rounded up in bsize, and thus there are
    // up to 3 words at the end of y that will not be copied to.  We clear them to
    // 0 to provide repeatable results.
@@ -184,7 +184,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
  kk=WS(d); v=BV(d,w,r);
- ASSERT(t==B01||t==INT||t==FL||t==CMPX||t==BOX||t==XNUM||t==RAT||t==LIT||t==C2T||
+ ASSERT(t==B01||t==INT||t==FL||t==CMPX||t==BOX||t==XNUM||t==RAT||t==LIT||t==C2T||t==C4T||
         t==SB01||t==SLIT||t==SINT||t==SFL||t==SCMPX||t==SBOX||t==SBT,EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(0<=r&&r<=RMAX,EVRANK);

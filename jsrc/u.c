@@ -101,7 +101,7 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
 // Example: LITX is 1, so location 1 contains sizeof(C)
 I typesizes[] = {
 B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
--1,        -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
+-1,      C4TSIZE, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
 SBTSIZE, C2TSIZE, VERBSIZE, ADVSIZE, CONJSIZE, ASGNSIZE, MARKSIZE, SYMBSIZE,
 CONWSIZE, NAMESIZE, LPARSIZE, RPARSIZE, XDSIZE, XZSIZE, -1, -1
 };
@@ -214,12 +214,15 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 F1(jtii){RZ(w); R IX(IC(w));}
 
-I jtmaxtype(J jt,I s,I t){I u;
+I jtmaxtype(J jt,I s,I t){I u,s1,t1;
  u=s|t;
- if(!(u&SPARSE))R u&CMPX?CMPX:u&FL?FL:s<t?t:s;
+// workaround needed since C4T < C2T
+ s1=(s==C4T)?C2T+1:s;
+ t1=(t==C4T)?C2T+1:t;
+ if(!(u&SPARSE))R u&CMPX?CMPX:u&FL?FL:((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
  if(s){s=s&SPARSE?s:STYPE(s); ASSERT(s,EVDOMAIN);}
  if(t){t=t&SPARSE?t:STYPE(t); ASSERT(t,EVDOMAIN);}
- R s<t?t:s;
+ R ((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
 }
 
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);

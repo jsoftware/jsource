@@ -21,6 +21,7 @@
 
 CF(compc){COMPLOOP (UC,jt->compn);          R a>b?1:-1;}
 CF(compu){COMPLOOP (US,jt->compn);          R a>b?1:-1;}
+CF(comp4){COMPLOOP (C4,jt->compn);          R a>b?1:-1;}
 CF(compi){COMPLOOP (I, jt->compn);          R a>b?1:-1;}
 CF(compd){COMPLOOP (D, jt->compn);          R a>b?1:-1;}
 CF(compa){COMPLOOPF(A, jt->compn,compare ); R a>b?1:-1;}
@@ -61,6 +62,7 @@ int jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   switch(CTTZ(t)){
    default:   COMPLOOQ (UC,m  );         break;
    case C2TX:  COMPLOOQ (US,m  );         break;
+   case C4TX:  COMPLOOQ (C4,m  );         break;
    case INTX:  COMPLOOQ (I, m  );         break;
    case FLX:   COMPLOOQ (D, m  );         break;
    case CMPXX: COMPLOOQ (D, m+m);         break;

@@ -348,7 +348,8 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  if(!n)R z;  // If w has 0 cells, return the empty array
  // Here w has cells.
  zv=CAV(z);  // zv->result area
- wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
+// wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
+ wdb=wd*(t=MIN(2,bp(t)));  // Replace t with the length of a character of t; get length of line in bytes
  // Install the boxing characters in each 2-cell of the result
  fminit(m,ht,wdb,x,y,zv,t);
  // Insert the data for each atom into the result
@@ -458,6 +459,10 @@ static F1(jtthorn1main){PROLOG;A z;
    // If C2T output not allowed, convert to ragged array of bytes
    z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8a);
    break;
+  case C4TX:
+   z= rank1ex(w,0L,1L,jttoutf8a);
+//   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8a);
+   break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
   case NAMEX: z=sfn(0,w);                  break;
@@ -481,7 +486,7 @@ static F1(jtthorn1main){PROLOG;A z;
 F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&LIT); z = thorn1main(w); R z; }
 
 // entry point for returning character array only.  Allow C2T result, then convert.  But always pass byte arguments unchanged
-F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&LIT); z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&C2T)z = rank1ex(z, 0L, 1L, jttoutf8a); R z; }
+F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&LIT); z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, jttoutf8a); R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
@@ -591,7 +596,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // Convert w to a character array; set t=1 if it's LIT, t=2 if Unicode
  RZ(y=thorn1u(w)); t=(AT(y)==LIT)?1:2;
  // set ch iff input w is a character type.
- ch=1&&AT(w)&LIT+C2T+SBT;
+ ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char
  r=AR(y); s=AS(y); v=CAV(y);
  // q=#lines in a 2-cell, c=#chars in a row, n=#2-cells, nq=total # lines (without spacing)

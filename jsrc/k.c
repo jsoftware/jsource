@@ -40,6 +40,30 @@ static KF1(jtC2fromC1){UC*v;US*x;
  R 1;
 }
 
+static KF1(jtC1fromC4){UC*x;C4 c,*v;
+ v=(C4*)AV(w); x=(C*)yv;
+ DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
+ R 1;
+}
+
+static KF1(jtC2fromC4){US*x;C4 c,*v;
+ v=(C4*)AV(w); x=(US*)yv;
+ DO(AN(w), c=*v++; RZ(65536>c); *x++=(US)c;);
+ R 1;
+}
+
+static KF1(jtC4fromC1){UC*v;C4*x;
+ v=UAV(w); x=(C4*)yv;
+ DO(AN(w), *x++=*v++;);
+ R 1;
+}
+
+static KF1(jtC4fromC2){US*v;C4*x;
+ v=(US*)AV(w); x=(C4*)yv;
+ DO(AN(w), *x++=*v++;);
+ R 1;
+}
+
 static KF1(jtBfromI){B*x;I n,p,*v;
  n=AN(w); v=AV(w); x=(B*)yv;
  DO(n, p=*v++; if(0==p||1==p)*x++=(B)p; else R 0;);
@@ -261,14 +285,18 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  if(t&CMPX)fillv(t,n,(C*)yv); 
  if(!n)R 1;
  // Perform the conversion based on data types
- // For branch-table efficiency, we split the C2T and BIT conversions into one block, and
+ // For branch-table efficiency, we split the C2T and C4T and BIT conversions into one block, and
  // the rest in another
- if ((t|wt)&(C2T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
+ if ((t|wt)&(C2T+C4T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
    // we must account for all NOUN types.  Low 8 bits have most of them, and we know type can't be sparse.  This picks up the others
   ASSERT(!((t|wt)&(SBT+XD+XZ)),EVDOMAIN);  // No conversions for these types
   switch (CVCASE(t,wt)){  // This version doesn't use CTTZ, but it works anyway
    case CVCASE(LIT, C2T): R C1fromC2(w, yv);
+   case CVCASE(LIT, C4T): R C1fromC4(w, yv);
    case CVCASE(C2T, LIT): R C2fromC1(w, yv);
+   case CVCASE(C2T, C4T): R C2fromC4(w, yv);
+   case CVCASE(C4T, LIT): R C4fromC1(w, yv);
+   case CVCASE(C4T, C2T): R C4fromC2(w, yv);
    case CVCASE(BIT, B01): R cvt2bit(w, yv);
    case CVCASE(BIT, INT): R cvt2bit(w, yv);
    case CVCASE(BIT, FL): R cvt2bit(w, yv);

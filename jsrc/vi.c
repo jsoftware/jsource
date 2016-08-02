@@ -71,6 +71,7 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 /* hic:  hash a string of length k                                 */
 /* hicx: hash the bytes of string v indicated by hin/hiv           */
 /* hic2: hash the low order bytes of a string of length k (k even) */
+/* hic4: hash the low order bytes of a string of length k (k multiple of 4) */
 /* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
 
        UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
@@ -83,6 +84,12 @@ static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u
        UI hic2(     I k,UC*v){UI z=0;             DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
 #else
        UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
+#endif
+
+#if C_LE
+       UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
+#else
+       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
 #endif
 
 #if SY_64
@@ -100,6 +107,7 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  switch(CTTZ(t)){
   case LITX:  R hic(n,yv);
   case C2TX:  R hic2(2*n,yv);
+  case C4TX:  R hic4(4*n,yv);
   case SBTX:  R hic(n*SZI,yv);
   case B01X:  d=*(B*)yv; break;
   case INTX:  d=(D)*(I*)yv; break;
@@ -395,6 +403,7 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
  switch(CTTZ(AT(a))){
   default:                SCDO(C, *wv,x!=av[j]      ); break;
   case C2TX:               SCDO(S, *wv,x!=av[j]      ); break;
+  case C4TX:               SCDO(C4,*wv,x!=av[j]      ); break;
   case CMPXX:              SCDO(Z, *wv,!zeq(x, av[j])); break;
   case XNUMX:              SCDO(A, *wv,!equ(x, av[j])); break;
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;

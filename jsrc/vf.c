@@ -30,6 +30,7 @@ void fillv(I t,I n,C*v){I k=bp(t);
   memset(v,C0,k*n); break;
  case LITX: memset(v,' ',n); break;
  case C2TX: {US x=32; mvc(n*k,v,k,&x); break;}
+ case C4TX: {C4 x=32; mvc(n*k,v,k,&x); break;}
  default: mvc(n*k,v,k,&mtv);
  }
 }

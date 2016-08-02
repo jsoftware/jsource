@@ -545,10 +545,14 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
   switch(id){
     // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
    case CEQ: *ado=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
-                  at&LIT?(wt&LIT?(VF)eqCC:(VF)eqCS):wt&LIT?(VF)eqSC:(VF)eqSS; break;
+                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
+                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
+                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
     // similarly for ~:
    case CNE: *ado=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
-                  at&LIT?(wt&LIT?(VF)neCC:(VF)neCS):wt&LIT?(VF)neSC:(VF)neSS; break;
+                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
+                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
+                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
    default:
     // If not = ~:, it had better be a symbol operation.
     ASSERT(at&SBT&&wt&SBT,EVDOMAIN);

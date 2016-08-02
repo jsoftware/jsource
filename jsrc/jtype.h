@@ -29,6 +29,7 @@ typedef char               C;
 typedef char*              Ptr;
 typedef short              S;
 typedef short              C2;
+typedef unsigned int       C4;
 typedef unsigned char      UC;
 typedef unsigned short     US;
 typedef unsigned short     U2;
@@ -127,7 +128,9 @@ typedef I SI;
 #define BIT             (I)256L         /* BT bit boolean                  */
 #define BITX 8
 // No size for BIT, since it is fractional
-   // Bit 9 not used
+#define C4T             (I)512L         /* C4 unicode (4-byte characters)  */
+#define C4TX 9
+#define C4TSIZE sizeof(C4)
 #define SB01            (I)1024L        /* P  sparse boolean               */
 #define SB01X 10
 #define SB01SIZE sizeof(P)
@@ -195,14 +198,14 @@ typedef I SI;
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
 #define NUMERIC         (B01+BIT+INT+FL+CMPX+XNUM+RAT+XD+XZ+SB01+SINT+SFL+SCMPX)
-#define DIRECT          (LIT+C2T+B01+BIT+INT+FL+CMPX+SBT)
-#define JCHAR           (LIT+C2T+SLIT)
+#define DIRECT          (LIT+C2T+C4T+B01+BIT+INT+FL+CMPX+SBT)
+#define JCHAR           (LIT+C2T+C4T+SLIT)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBOX+SBT)
 #define DENSE           (NOUN&~SPARSE)
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
-#define LAST0           (B01+LIT+C2T+NAME)
+#define LAST0           (B01+LIT+C2T+C4T+NAME)
 // Don't call traverse unless one of these bits is set
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
@@ -401,6 +404,7 @@ typedef struct{
 } SBU;
 
 #define SBC2  1         /* 1 iff 2-byte character                          */
+#define SBC4  2         /* 2 iff 4-byte character                          */
 
 
 typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // more than 64000 execs will be a stack error anyway

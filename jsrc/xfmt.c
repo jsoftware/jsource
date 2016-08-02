@@ -55,7 +55,7 @@ static const C*qq=">)}]";
 
 static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
  RZ(w); 
- if(C2T&AT(w))RZ(w=uco2(num[5],w))
+ if((C2T+C4T)&AT(w))RZ(w=uco2(num[5],w))
  ASSERT(1>=AR(w),EVDOMAIN);
  n=AN(w); wv=CAV(w); t=0; m=1; j=0;
  for(i=0;i<n;++i){
@@ -129,7 +129,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
  w=AAV0(w); n=AN(w);
  GAT(z,BOX,1+NMODVALS,1,0); zv=AAV(z); 
  DO(NMODVALS, zv[1+i]=mtv;);
- if(n&&C2T&AT(w))RZ(w=uco2(num[5],w));
+ if(n&&(C2T+C4T)&AT(w))RZ(w=uco2(num[5],w));
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!n||LIT&AT(w),EVDOMAIN); 
  wv=CAV(w); n1=1+n; t=c=0; fb=0; mi=-1; memset(ml,C1,sizeof(ml));

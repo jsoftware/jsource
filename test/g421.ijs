@@ -189,6 +189,7 @@ test=: 2 : 0
  assert. ((n,0)$0     ) (u/. -: v/.) i.n
  assert. ((n,0)$''    ) (u/. -: v/.) i.n
  assert. ((n,0)$u: 0  ) (u/. -: v/.) i.n
+ assert. ((n,0)$10&u: 0) (u/. -: v/.) i.n
  assert. ((n,0)$2     ) (u/. -: v/.) i.n
  assert. ((n,0)$2.5   ) (u/. -: v/.) i.n
  assert. ((n,0)$2j5   ) (u/. -: v/.) i.n

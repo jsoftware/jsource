@@ -109,10 +109,12 @@ sh =. $@(+./ .*.) -: }:@$@[ , }.@$@]
 'domain error' -: (3 4 ?@$ 2) +./ .*. etx 4 5$'c'
 'domain error' -: (3 4 ?@$ 2) +./ .*. etx 4 5$<'c'
 'domain error' -: (3 4 ?@$ 2) +./ .*. etx u: 4 5 ?@$ 100
+'domain error' -: (3 4 ?@$ 2) +./ .*. etx 10&u: 4 5 ?@$ 100
 
 'domain error' -: (4 3$'c'  ) +./ .*. etx 3 4 ?@$ 2
 'domain error' -: (4 3$<'c' ) +./ .*. etx 3 4 ?@$ 2
 'domain error' -: (4 3$u: 12) +./ .*. etx 3 4 ?@$ 2
+'domain error' -: (4 3$10&u: 12) +./ .*. etx 3 4 ?@$ 2
 
 'length error' -: (3 4 ?@$ 2) +./ .*. etx 5$1
 'length error' -: (3 4 ?@$ 2) +./ .*. etx 3 4 ?@$ 2

@@ -96,6 +96,7 @@ c=: _4 _1 0 1 2 3 4 5
 
 'domain error' -: 1    p: etx '123'
 'domain error' -: 1    p: etx u: '123'
+'domain error' -: 1    p: etx 10&u: '123'
 'domain error' -: 1    p: etx 1;2;3
 
 'domain error' -: 1    p: etx 13x _
@@ -109,6 +110,7 @@ c=: _4 _1 0 1 2 3 4 5
 'domain error' -: 4    p: etx '234'
 'domain error' -: 4    p: etx 2;34
 'domain error' -: 4    p: etx u: 2 3 4
+'domain error' -: 4    p: etx 10&u: 2 3 4
 
 'domain error' -: _4   p: etx 4 3 2 
 'domain error' -: _4   p: etx 4 3 2x
@@ -119,6 +121,7 @@ c=: _4 _1 0 1 2 3 4 5
 'domain error' -: _4   p: etx '456' 
 'domain error' -: _4   p: etx 1 2 3j4 
 'domain error' -: _4   p: etx u: 2 3 4 
+'domain error' -: _4   p: etx 10&u: 2 3 4 
 
 'domain error' -: 5    p: etx 2 3 4 _5
 'domain error' -: 5    p: etx 2 3 4 _5x

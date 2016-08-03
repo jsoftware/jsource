@@ -48,12 +48,14 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 'domain error'    -: 7!:6 etx <1 2.3 4
 'domain error'    -: 7!:6 etx <1 2j3 4
 'domain error'    -: 7!:6 etx <u: 'abc'
+'domain error'    -: 7!:6 etx <10&u: 'abc'
 'domain error'    -: 7!:6 etx <s: ' bc'
 'domain error'    -: 7!:6 etx <<'abc'
 'domain error'    -: 7!:6 etx i.4
 'domain error'    -: 7!:6 etx 1 2.3 4
 'domain error'    -: 7!:6 etx 1 2j3 4
 'domain error'    -: 7!:6 etx u: 'abc'
+'domain error'    -: 7!:6 etx 10&u: 'abc'
 'domain error'    -: 7!:6 etx s: ' bc'
 
 'rank error'      -: 7!:5 etx <,:'abc'

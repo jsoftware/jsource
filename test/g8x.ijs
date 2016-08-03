@@ -210,6 +210,9 @@ NB. 8!:n : various data types -------------------------------------------
 (( u:'5') fmt y) -:   '5'  fmt y=: 3 4 ?@$ 0
 ((<u:'5') fmt y) -: (<'5') fmt y=: 3 4 ?@$ 0
 
+(( 10&u:'5') fmt y) -:   '5'  fmt y=: 3 4 ?@$ 0
+((<10&u:'5') fmt y) -: (<'5') fmt y=: 3 4 ?@$ 0
+
 ('domain error';'assertion failure') e.~< '' fmt etx 1 2 3 4j5
 
 ('rank error';  'assertion failure') e.~< '' fmt etx 1 2;3
@@ -768,6 +771,11 @@ NB. left justify.  same deal for fmt2.
 ('' fmt <, '5'     ) -: '' fmt <, u:'5'
 ('' fmt <0$'5'     ) -: '' fmt <0$u:'5'
 ('' fmt <  '5'     ) -: '' fmt <  u:'5'
+
+('' fmt <  'abcdef') -: '' fmt <  10&u:'abcdef'
+('' fmt <, '5'     ) -: '' fmt <, 10&u:'5'
+('' fmt <0$'5'     ) -: '' fmt <0$10&u:'5'
+('' fmt <  '5'     ) -: '' fmt <  10&u:'5'
 
 
 4!:55 ;:'afzrnd f fmt fmt1 fmt2 s t x y'

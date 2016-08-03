@@ -1,6 +1,6 @@
 NB. 7!:5 ----------------------------------------------------------------
 
-bp=: (IF64{1 1 4 8 16 4 4 2,:1 1 8 8 16 8 8 2) {~ 1 2 4 8 16 32 65536 131072 i. 3!:0
+bp=: (IF64{1 1 4 8 16 4 4 2 4,:1 1 8 8 16 8 8 2 4) {~ 1 2 4 8 16 32 65536 131072 512 i. 3!:0
 sp=: 7!:5
 f =: 3 : '7!:5 <''y'''
 
@@ -9,7 +9,7 @@ g =: 3 : 0
  z=. w*2                              NB. 2 words for memory management
  z=. z + w*7                          NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
- z=. z + ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072  NB. atoms & trailing 0 word (uses whole word of padding)
+ z=. z + ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072 512  NB. atoms & trailing 0 word (uses whole word of padding)
  >.&.(2&^.) z
 )
 
@@ -18,21 +18,26 @@ g =: 3 : 0
 (f -: g) 2j3
 (f -: g) 2j3
 (f -: g) u: 'a'
+(f -: g) 10&u: 'a'
 (f -: g) {.s: ' ab'
 
 (f -: g)@($&    0 1 )"0 ]200+i.4 10
 (f -: g)@($&    'x' )"0 ]200+i.4 10
 (f -: g)@($&(u: 'x'))"0 ]100+i.4 10
+(f -: g)@($&(10&u: 'x'))"0 ]100+i.4 10
 (f -: g)@($&    0 1 )"0 ]160+i.4 10
 (f -: g)@($&    'x' )"0 ]160+i.4 10
 (f -: g)@($&(u: 'x'))"0 ] 80+i.4 10
+(f -: g)@($&(10&u: 'x'))"0 ] 80+i.4 10
 
 (f -: g)@($&    0 1 )"1 ]1,"0 ] 200+i.4 10
 (f -: g)@($&    'x' )"1 ]1,"0 ] 200+i.4 10
 (f -: g)@($&(u: 'x'))"1 ]1,"0 ] 100+i.4 10
+(f -: g)@($&(10&u: 'x'))"1 ]1,"0 ] 100+i.4 10
 (f -: g)@($&    0 1 )"1 ]1,"0 ] 160+i.4 10
 (f -: g)@($&    'x' )"1 ]1,"0 ] 160+i.4 10
 (f -: g)@($&(u: 'x'))"1 ]1,"0 ]  80+i.4 10
+(f -: g)@($&(10&u: 'x'))"1 ]1,"0 ]  80+i.4 10
 
 (f -: g) x=: (?1e4)$1 0
 (f -: g) x=: (?1e4)$2 3
@@ -40,6 +45,7 @@ g =: 3 : 0
 (f -: g) x=: (?1e4)$2j3
 (f -: g) x=: (?1e4)$2j3
 (f -: g) x=: (?1e4)$u: 'ab'
+(f -: g) x=: (?1e4)$10&u: 'ab'
 (f -: g) x=: (?1e4)$s: ' ab c'
 
 (f -: g) x=: (1+?100 100)$1 0
@@ -48,6 +54,7 @@ g =: 3 : 0
 (f -: g) x=: (1+?100 100)$2j3
 (f -: g) x=: (1+?100 100)$2j3
 (f -: g) x=: (1+?100 100)$u: 'ab'
+(f -: g) x=: (1+?100 100)$10&u: 'ab'
 (f -: g) x=: (1+?100 100)$s: ' ab c'
 
 (f -: g) x=: (1+?100 10 50)$1 0
@@ -56,6 +63,7 @@ g =: 3 : 0
 (f -: g) x=: (1+?100 10 50)$2j3
 (f -: g) x=: (1+?100 10 50)$2j3
 (f -: g) x=: (1+?100 10 50)$u: 'ab'
+(f -: g) x=: (1+?100 10 50)$10&u: 'ab'
 (f -: g) x=: (1+?100 10 50)$s: ' ab c'
 
 (sp ;:'f g sp') -: (sp <'f'),(sp <'g'),sp <'sp'
@@ -102,12 +110,14 @@ x=: 2 : 0
 'domain error'    -: 7!:5 etx <1 2.3 4
 'domain error'    -: 7!:5 etx <1 2j3 4
 'domain error'    -: 7!:5 etx <u: 'abc'
+'domain error'    -: 7!:5 etx <10&u: 'abc'
 'domain error'    -: 7!:5 etx <s: ' bc'
 'domain error'    -: 7!:5 etx <<'abc'
 'domain error'    -: 7!:5 etx i.4
 'domain error'    -: 7!:5 etx 1 2.3 4
 'domain error'    -: 7!:5 etx 1 2j3 4
 'domain error'    -: 7!:5 etx u: 'abc'
+'domain error'    -: 7!:5 etx 10&u: 'abc'
 'domain error'    -: 7!:5 etx s: ' bc'
 
 'rank error'      -: 7!:5 etx <,:'abc'
@@ -121,7 +131,7 @@ NB. 7!:5 on mapped arrays -----------------------------------------------
 load'jmf'
 18!:4 <'base'
 1 [ unmap_jmf_ 'q'
-f=: <jpath '~temp\q.jmf'
+f=: <jpath '~temp/q.jmf'
 1 [ createjmf_jmf_ f,<3e5      NB. 3e5 bytes for data
 map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 '' -: q

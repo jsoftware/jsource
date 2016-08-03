@@ -72,11 +72,13 @@ sqz=: #"1~ -.@(1 1&E.)@(*./)@(' '&=)
 
 NB. Unicodes not emulated by th
 'abcd' -: ": u: 'abcd'
+'abcd' -: ": 10&u: 'abcd'
 (224 160 128 224 160 129{a.) -: ": 4 u: 2048 2049
 
 NB. ": on invalid unicode
 (":x) -: ":("1) x=: 3 4$ 97 224 176 157 98{a.
 (":x) -: ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
+(":x) -: ":("1) x=: 3 4$ 10&u: 16b61 16bd800 16bdc00
 
 NB. ": on byte argument should always pass through unchanged
 a. -: ": a.

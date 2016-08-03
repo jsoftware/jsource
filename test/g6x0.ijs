@@ -24,6 +24,8 @@ t -:&((-.x e. 'YMDhms')&#) x
 (}.;'-'&,@}.@":&.>10000 100 100+3{.ts '') -: ts 'YYYY-MM-DD'
 (ts -: ts@u:) 'YYYY-MM-DD'
 (ts -: ts@u:) 'MM/DD/YY hh:mm'
+(ts -: ts@(10&u:)) 'YYYY-MM-DD'
+(ts -: ts@(10&u:)) 'MM/DD/YY hh:mm'
 (":{.ts '') -: ts    'YYYY'
 (_2{.":{.ts '') -: ts 'YY'
 

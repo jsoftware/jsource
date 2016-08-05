@@ -90,7 +90,9 @@ F1(jtjwait ){ASSERT(0,EVDOMAIN);}
 
 #define CL(f) {close(f[0]);close(f[1]);}
 
-F1(jthostio){C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
+F1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
+ if(pipe(fi)==-1) ASSERT(0,EVFACE);
+ if(pipe(fo)==-1){CL(fi); ASSERT(0,EVFACE);}
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
  F1RANK(1,jthostio,0);
  RZ(w=vs(w));
@@ -109,7 +111,7 @@ F1(jthostio){C*s;A z;F*pz;I fi[2],fo[2],r;int fii[2],foi[2];
          execl("/bin/sh","/bin/sh","-c",s,NULL); exit(-1);
 #endif
  }close(fo[0]);close(fi[1]);
- add2(NULL,NULL,NULL); pz[0]=(F)r;
+ add2(NULL,NULL,NULL); pz[0]=(F)(intptr_t)r;
  R z;
 }
 

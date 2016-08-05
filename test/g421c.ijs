@@ -21,7 +21,7 @@ test _450+i.900
 test  1e6+i.900
 test _1e6+i.900
 test u: i.65536
-test 10&u: i.1048576
+test 10&u: i.16b110000
 test -:      i.900
 test -: _450+i.900
 test <"0 ?40$100
@@ -49,7 +49,7 @@ test1 _450+i.900
 test1  1e6+i.900
 test1 _1e6+i.900
 test1 u: i.65536
-test1 10&u: i.1048576
+test1 10&u: i.16b110000
 test1 -:      i.900
 test1 -: _450+i.900
 test1 <"0 ?40$100

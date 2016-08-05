@@ -973,7 +973,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; A c4; I *v;
   GATV(c4,C4T,n,AR(w),AS(w)); c4v=(C4*)AV(c4);
   DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
   q=utowsize((C4*)CAV(c4),AN(c4));
-  ASSERT(q>=0,EVDOMAIN);
+  q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV(z,C2T,q,1,0);
   utow((C4*)CAV(c4),AN(c4),(US*)CAV(z));
   R z; // u32 from u8
@@ -1060,7 +1060,7 @@ n=AN(w); v=(I*)AV(w);
 GATV(c4,C4T,n,AR(w),AS(w)); c4v=(C4*)AV(c4);
 DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
 q=utomsize((C4*)CAV(c4),AN(c4));
-ASSERT(q>=0,EVDOMAIN);
+q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
 GATV(z,LIT,q,1,0);
 utom((C4*)CAV(c4),AN(c4),CAV(z));
 }

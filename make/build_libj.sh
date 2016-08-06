@@ -3,7 +3,9 @@
 cd ~
 . jvars.sh
 
-common="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
+# gcc-6 -O1 needs -fno-if-conversion2 for x15.c double trick
+# but clang does not have this flag
+common="-fPIC -O1 -fno-if-conversion2 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 darwin="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in

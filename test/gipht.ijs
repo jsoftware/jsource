@@ -46,8 +46,8 @@ NB. possible garbage collect can louse up timing
 (x=: u:   1e4 4 ?@$ 65536) f0 y=: u:   1e4 4 ?@$ 65536
 (x=:10&u:   1e4   ?@$ 256  ) f0 y=: 10&u:   1e4   ?@$ 256
 (x=:10&u:   1e4 4 ?@$ 256  ) f0 y=: 10&u:   1e4 4 ?@$ 256
-(x=:10&u:   1e4   ?@$ 16b110000) f0 y=: 10&u:   1e4   ?@$ 16b110000
-(x=:10&u:   1e4 4 ?@$ 16b110000) f0 y=: 10&u:   1e4 4 ?@$ 16b110000
+(x=:10&u:   1e4   ?@$ C4MAX) f0 y=: 10&u:   1e4   ?@$ C4MAX
+(x=:10&u:   1e4 4 ?@$ C4MAX) f0 y=: 10&u:   1e4 4 ?@$ C4MAX
 
 mean=: +/ % #
 

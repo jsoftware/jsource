@@ -39,6 +39,8 @@ timer    =: 6!:2
 type     =: 3!:0
 imax     =: IF64{:: 2147483647; 9223372036854775807
 imin     =: (-imax)-1
+U4MAX    =: 16b110000
+C4MAX    =: IF64{:: 2147483647;4294967296
 
 scheck=: 3 : 0  NB. check sparse array
  s=. $ y

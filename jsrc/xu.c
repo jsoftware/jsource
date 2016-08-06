@@ -1117,7 +1117,8 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; I* v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV(z,C4T,n,AR(w),AS(w)); c4v=(C4*)AV(z);
-  DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+//  DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+  DO(n, j=*v++; *c4v++=(C4)(UI)j;);
   R z; // u32 from int
  }
  else if(LIT&t)
@@ -1184,7 +1185,8 @@ F1(jttou32){A z;I n,t,b=0,j; C* wv; US* c2v; C4* c4v; I* v; UC* c1v;
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV(z,C4T,n,AR(w),AS(w)); c4v=(C4*)AV(z);
-  DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+//  DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
+  DO(n, j=*v++; *c4v++=(C4)(UI)j;);
  }
  else if(LIT&t)
  {

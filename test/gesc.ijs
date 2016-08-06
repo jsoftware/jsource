@@ -48,8 +48,8 @@ A0=: 1 : 0
  x E ~ a=. j./ 2 600 2 ?@$ 0
  x E ~ a=. u: 600   ?@$ 65536
  x E ~ a=. u: 600 2 ?@$ 65536
- x E ~ a=. 10&u: 600   ?@$ 16b110000
- x E ~ a=. 10&u: 600 2 ?@$ 16b110000
+ x E ~ a=. 10&u: 600   ?@$ C4MAX
+ x E ~ a=. 10&u: 600 2 ?@$ C4MAX
  x E ~ a=. (1;2 3;4 5;;:'foo upon thee'),":&.> 600 ?@$ 1000
  x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:'foo upon thee'),":&.> 20 ?@$ 1000
  x E ~ a=. s: ' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000

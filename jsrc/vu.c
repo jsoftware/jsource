@@ -90,7 +90,11 @@ static F1(jtifc2){A z;I n,t,*zv;
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  if(t&LIT){UC*v=(UC*)AV(w); DO(n, *zv++=*v++;);}
  else if(t&C2T){US*v=(US*)AV(w); DO(n, *zv++=*v++;);}
+#if SY_64
  else          {C4*v=(C4*)AV(w); DO(n, *zv++=*v++;);}
+#else
+ else          {I*v=(I*)AV(w); DO(n, *zv++=*v++;);}
+#endif
  R z;
 }    /* integers from 1- or 2-byte or 4-byte chars */
 

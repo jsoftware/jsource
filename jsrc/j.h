@@ -74,7 +74,7 @@
 
 #define IMIN            (~IMAX)   /* ANSI C LONG_MIN is  -LONG_MAX */
 
-#define C4MAX           2147483647L
+#define C4MAX           0xffffffffUL
 #define C4MIN           0L
 
 #if (SYS & SYS_AMIGA)

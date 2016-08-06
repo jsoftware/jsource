@@ -778,6 +778,6 @@ NB. left justify.  same deal for fmt2.
 ('' fmt <  '5'     ) -: '' fmt <  10&u:'5'
 
 
-4!:55 ;:'afzrnd f fmt fmt1 fmt2 s t x y'
+4!:55 ;:'afzrnd f fmt fmt1 fmt2 round s t x y'
 
 

@@ -38,7 +38,7 @@ test _450+i.900
 test  1e6+i.900
 test _1e6+i.900
 test u: 100 ?@$ 65536
-test 10&u: 100 ?@$ 16b110000
+test 10&u: 100 ?@$ C4MAX
 test o.i.900
 test o._450+i.900
 test <"0 ?40$100

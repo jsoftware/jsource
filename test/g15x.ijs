@@ -131,6 +131,6 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 4!:55 ;:'Fsetptr Fsize Fwrite '
 4!:55 ;:'cderx fclose fcopyto fcreate fcreatedir fdelete fdeletedir fmoveto '
 4!:55 ;:'fopen fread fsetptr fsize fwrite '
-4!:55 ;:'h i pc s t test'
+4!:55 ;:'h i pc s t test winset'
 
 

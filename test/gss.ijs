@@ -96,12 +96,12 @@ ops =: ((1 $~ [) $ ])&.>/"1 b =: (;"0/~ i. 6) ([ ,"0 ($~ $)~) v
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 1000000'
 niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 1000000'
-niptime > 1.1 * iptime   NB. ~25% improvement normally
+THRESHOLD+. niptime > 1.1 * iptime   NB. ~25% improvement normally
 
 iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 1000000'
 iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 1000000'
-iptime1 < 1.45 * iptime2  NB. Both are inplace; verify + not too slow
+THRESHOLD+. iptime1 < 1.45 * iptime2  NB. Both are inplace; verify + not too slow
 
-4!:55 ;:'compss compssn compssp iptime niptime v'
+4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 niptime ops v v1 v2 v3'
 
 

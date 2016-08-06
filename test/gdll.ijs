@@ -104,6 +104,6 @@ xbasic_add=: ":>{.'xbasic_add x' dcd ''
 (2 0 -: cder '') *. 'domain error' -: ('0 _',(>IF64{'2333444555';19$'93'),' x x') cd etx (,2);2;3 4
 
 
-4!:55 ;:'a add address b dcd f lib obj_add pc s0 s1 td td1a td3 td4 tf tf3'
+4!:55 ;:'a a1 add address b b1 dcd f lib obj_add pc s0 s1 td td1a td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
 

@@ -343,6 +343,6 @@ f =: -
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
-4!:55 ;:'minors monad nl p q Tv x'
+4!:55 ;:'minors monad nl p q svxy Tv x'
 
 

@@ -62,7 +62,7 @@ static F1(jtswapc){C c;
  R strchr(ctab,c)?w:c==CLT?ds(CGT):c==CGT?ds(CLT):c==CLE?ds(CGE):c==CGE?ds(CLE):swap(w);
 }    /* w~ or equivalent */
 
-TACT(jtvmonad){A fs;TA y,z={one};V*v;
+TACT(jtvmonad){A fs;TA y,z={one,0};V*v;
  y=stack[e]; fs=stack[b].a;
  if(!y.t)z.a=df1(y.a,fs);
  else{
@@ -84,7 +84,7 @@ static I jtdcase(J jt,I xi,V*v){
 /* 4   [: f  t  */
 /* 5   s  f  t  */
 
-TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one};V*u=0,*v=0;
+TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one,0};V*u=0,*v=0;
  fs=stack[e-1].a; x=stack[b]; y=stack[e]; sf=swapc(fs);
  if(xt=tine(x.t)){xi=tvi(x.t); u=VAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->f); if(0>xi)xi=tvi(u->h);}}
  if(yt=tine(y.t)){yi=tvi(y.t); v=VAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->f); if(0>yi)yi=tvi(v->h);}}
@@ -141,17 +141,17 @@ TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one};V*u=0,*v=
  R z;
 }
 
-TACT(jtvadv ){TA z={0}; if(CHK1)z.a=df1(stack[b].a,stack[e].a); R z;}
+TACT(jtvadv ){TA z={0,0}; if(CHK1)z.a=df1(stack[b].a,stack[e].a); R z;}
 
-TACT(jtvconj){TA z={0}; if(CHK2)z.a=df2(stack[b].a,stack[e].a,stack[e-1].a); R z;}
+TACT(jtvconj){TA z={0,0}; if(CHK2)z.a=df2(stack[b].a,stack[e].a,stack[e-1].a); R z;}
 
-TACT(jtvfolk){TA z={0}; if(CHK3)z.a=folk(stack[b].a,stack[1+b].a,stack[e].a); R z;}
+TACT(jtvfolk){TA z={0,0}; if(CHK3)z.a=folk(stack[b].a,stack[1+b].a,stack[e].a); R z;}
 
-TACT(jtvhook){TA z={0}; if(CHK2)z.a=hook(stack[b].a,stack[e].a); R z;}
+TACT(jtvhook){TA z={0,0}; if(CHK2)z.a=hook(stack[b].a,stack[e].a); R z;}
 
 TACT(jtvpunc){R stack[e-1];}
 
-TACT(jtvis){A ea,et,n,t;I j;TA*u,z={0};
+TACT(jtvis){A ea,et,n,t;I j;TA*u,z={0,0};
  n=stack[b].a;
  if(!(NAME&AT(n)&&CASGN==*CAV(stack[1+b].a)))R z;
  t=sfn(0,n); j=jt->ttabi; u=jt->ttab;

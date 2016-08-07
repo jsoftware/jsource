@@ -581,7 +581,7 @@ void wtom(US* src, I srcn, UC* snk){ US w,w1; UINT t;
    *snk++=0xc0|(w>>6);
    *snk++=0x80|(0x3f&w);
   }
-  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
+  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000))
   {
    *snk++=0xe0|w>>12;
    *snk++=0x80|(0x3f&(w>>6));
@@ -629,7 +629,7 @@ static I wtomsize(US* src, I srcn){ US w,w1;I r=0;int invalid=0;
    ++r;
   else if(w<=0x7ff)
    r+=2;
-  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000&&w<=0xffff))
+  else if((w>=0x800&&w<=0xd7ff)||(w>=0xe000))
    r+=3;
   else
   {
@@ -663,7 +663,7 @@ void wtou(US* src, I srcn, C4* snk){ US w,w1;
  while(srcn--)
  {
   w=*src++;
-  if(w<=0xd7ff||(w>=0xe000&&w<=0xffff))
+  if(w<=0xd7ff||(w>=0xe000))
   {
    *snk++=(C4)w;
   }
@@ -697,7 +697,7 @@ static I wtousize(US* src, I srcn){ US w,w1;I r=0;int invalid=0;
  while(srcn--)
  {
   w=*src++;
-  if(w<=0xd7ff||(w>=0xe000&&w<=0xffff))
+  if(w<=0xd7ff||(w>=0xe000))
    ++r;
   else
   {

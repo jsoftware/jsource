@@ -10,6 +10,8 @@ endif
 
 OBJS=  ../../jsrc/tsdll.o
 
+DEF= ../../makevs/tsdll/tsdll.def
+
 ifndef LD
 LD=link
 endif
@@ -24,7 +26,7 @@ TARGET= tsdll32.dll
 endif
 
 $(TARGET) : $(OBJS)
-	$(LD) $(FLAGS) /out:$@ $(OBJS)
+	$(LD) /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS)
 
 jddll.res : $(RCS)
 	$(RC) /L 0x409 /D NDEBUG /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

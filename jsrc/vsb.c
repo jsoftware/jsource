@@ -14,7 +14,7 @@
 #define FILLFACTOR      (jt->sbfillfactor)
 #define GAP             (jt->sbgap)  
 
-static const  SBU       sentinel = {0,0,0,BLACK,0,0,0,IMIN,0,0};
+static const  SBU       sentinel = {0,0,0,BLACK,0,0,0,IMIN,0,0,0};
 
 /* #define TMP */
 #ifdef TMP

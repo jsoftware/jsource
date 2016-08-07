@@ -3,7 +3,7 @@
 cd ~
 . jvars.sh
 
-common=" -fPIC -O1 "
+common=" -fPIC -O1 -Wextra "
 
 case $jplatform\_$1 in
 

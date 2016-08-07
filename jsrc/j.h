@@ -281,7 +281,7 @@
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size) \
 { I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
- ASSERT(SY_64?(UI)(atoms)<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT);  \
+ ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
  AD* ZZz = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  RZ(ZZz);   \

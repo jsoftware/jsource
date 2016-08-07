@@ -54,7 +54,7 @@ A   ynam=0;               /* y as a name                          */
 A   zero=0;               /* 0                                    */
 A   zeroi=0;              // integer 0
 Q   zeroQ={0,0};          /* 0r1                                  */
-DX  zeroDX={0,0};         /* 0                                    */
+DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
 

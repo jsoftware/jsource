@@ -7,6 +7,10 @@
 #include "ve.h"
 #include "vcomp.h"
 
+// see va2ss.c
+#if defined(__clang__)
+I macx(I a){return a;}
+#endif
 
 static VA va[]={
 /*       */ {

@@ -8,8 +8,11 @@
 #include "vcomp.h"
 
 // mac clang compiler bug (?) caused normal I overflow and EVNAN tests to fail
-#if SY_MAC
-I macx(I a){return a;}
+// work for clang-3.5 but not clang-3.8
+#if defined(__clang__)
+// move macx to va2.c to prevent optimized away
+// I macx(I a){return a;}
+extern I macx(I a);
 #else
 #define macx
 #endif
@@ -127,7 +130,7 @@ SSINGF2(jtssplus) SSNUMPREFIX
   case SSINGDD:
    {D av = SSRDD(a); D wv = SSRDD(w);
    NAN0;
-#if SY_MAC   
+#if defined(__clang__)
    ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN); // obsolete - but required on mac
 #endif
    SSSTORE(av+wv,z,FL,D)
@@ -161,7 +164,7 @@ SSINGF2(jtssminus) SSNUMPREFIX
    R z;}
   case SSINGDD:
    {D av = SSRDD(a); D wv = SSRDD(w);
-#if SY_MAC
+#if defined(__clang__)
    ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN); // obsolete - but required on mac
 #endif
    NAN0; SSSTORE(av-wv,z,FL,D) NAN1;  R z;}

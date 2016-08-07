@@ -355,8 +355,8 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
  if(strchr("cwusilx*n",zl)){I r;
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
   switch(zl){
-   case 'c': *(C*)v=(C)r;  break;
-   case 'w': *(S*)v=(S)r;  break;
+   case 'c': *(UC*)v=(UC)r;  break;
+   case 'w': *(US*)v=(US)r;  break;
    case 'u': *(C4*)v=(C4)r;break;
    case 's': *v=(I)(S)r;   break;
    case 'i': *v=(I)(int)r; break;
@@ -615,21 +615,21 @@ strcpy(proc,"x15lseek32");
 
 #define CDT(x,y) ((x)+512*(y))
 
-static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;S s;C4 s4;
+static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
  switch(CDT(zt,wt)){
   default:           R 0;
   case CDT(FL, B01): *(D*)v=*(B*)u; break;
   case CDT(FL, INT): *(D*)v=(D)*(I*)u; break;
   case CDT(FL, FL ): *(D*)v=*(D*)u; break;
-  case CDT(C2T,LIT): *(S*)v=*(C*)u; break;
-  case CDT(C2T,C2T): *(S*)v=*(S*)u; break;
-  case CDT(LIT,LIT): *(C*)v=*(C*)u; break;
-  case CDT(LIT,C2T): s=*(S*)u; if(256<=(US)s)R 0; *(C*)v=(C)s; break;
-  case CDT(C4T,LIT): *(C4*)v=*(C*)u; break;
-  case CDT(C4T,C2T): *(C4*)v=*(S*)u; break;
+  case CDT(C2T,LIT): *(US*)v=*(UC*)u; break;
+  case CDT(C2T,C2T): *(US*)v=*(US*)u; break;
+  case CDT(LIT,LIT): *(UC*)v=*(UC*)u; break;
+  case CDT(LIT,C2T): s=*(US*)u; if(256<=(US)s)R 0; *(UC*)v=(UC)s; break;
+  case CDT(C4T,LIT): *(C4*)v=*(UC*)u; break;
+  case CDT(C4T,C2T): *(C4*)v=*(US*)u; break;
   case CDT(C4T,C4T): *(C4*)v=*(C4*)u; break;
-  case CDT(LIT,C4T): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(C*)v=(C)s4; break;
-  case CDT(C2T,C4T): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(S*)v=(S)s4; break;
+  case CDT(LIT,C4T): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(UC*)v=(UC)s4; break;
+  case CDT(C2T,C4T): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
   case CDT(INT,B01): *    v=*(B*)u; break;
   case CDT(INT,INT): *    v=*(I*)u; break;
   case CDT(INT,FL ):
@@ -679,8 +679,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     cipt[cipcount]=c; 
     ++cipcount;
   }}else switch(c){
-   case 'c': *dv++=*(C*)xv;  break;
-   case 'w': *dv++=*(S*)xv;  break;
+   case 'c': *dv++=*(UC*)xv;  break;
+   case 'w': *dv++=*(US*)xv;  break;
    case 'u': *dv++=*(C4*)xv; break;
    case 's': *dv++=(S)*xv;   break;
    case 'i': *dv++=(int)*xv; break;

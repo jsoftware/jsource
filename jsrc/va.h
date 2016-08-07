@@ -132,8 +132,8 @@ typedef struct {VA2 p1[6];} UA;
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1)
 
-#define AHDR1(f,Tz,Tx)          void f(J jt,            I n,Tz*z,Tx*x)
-#define AHDR2(f,Tz,Tx,Ty)       void f(J jt,B b,I m,    I n,Tz*z,Tx*x,Ty*y)
+#define AHDR1(f,Tz,Tx)          void f(J jt,            I n,Tz* RESTRICT z,Tx* RESTRICT x)
+#define AHDR2(f,Tz,Tx,Ty)       void f(J jt,B b,I m,    I n,Tz* RESTRICT z,Tx* RESTRICT x,Ty* RESTRICT y)
 #define AHDRP(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)
 #define AHDRR(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)
 #define AHDRS(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)

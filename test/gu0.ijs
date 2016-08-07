@@ -1,6 +1,6 @@
 NB. Unicode 4-byte characters -------------------------------------------
 
-UTYPE=: 512      NB. type code for Unicode
+UTYPE=: 262144      NB. type code for Unicode
 
 domerr=: 1 : 0
  if. 1 e. y do. 

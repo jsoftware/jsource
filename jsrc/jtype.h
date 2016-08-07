@@ -101,99 +101,101 @@ typedef I SI;
 /* Types for AT(x) field of type A                                         */
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
 
-#define B01             (I)1L           /* B  boolean                      */
 #define B01X 0
+#define B01             ((I)1L<<B01X)           /* B  boolean                      */
 #define B01SIZE         sizeof(B)       // length of 1 atom
-#define LIT             (I)2L           /* C  literal (character)          */
 #define LITX 1
+#define LIT             ((I)1L<<LITX)           /* C  literal (character)          */
 #define LITSIZE sizeof(C)
-#define INT             (I)4L           /* I  integer                      */
 #define INTX 2
+#define INT             ((I)1L<<INTX)           /* I  integer                      */
 #define INTSIZE sizeof(I)
-#define FL              (I)8L           /* D  double (IEEE floating point) */
 #define FLX 3
+#define FL              ((I)1L<<FLX)           /* D  double (IEEE floating point) */
 #define FLSIZE sizeof(D)
-#define CMPX            (I)16L          /* Z  complex                      */
 #define CMPXX 4
+#define CMPX            ((I)1L<<CMPXX)          /* Z  complex                      */
 #define CMPXSIZE sizeof(Z)
-#define BOX             (I)32L          /* A  boxed                        */
 #define BOXX 5
+#define BOX             ((I)1L<<BOXX)          /* A  boxed                        */
 #define BOXSIZE sizeof(A)
-#define XNUM            (I)64L          /* X  extended precision integer   */
 #define XNUMX 6
+#define XNUM            ((I)1L<<XNUMX)          /* X  extended precision integer   */
 #define XNUMSIZE sizeof(X)
-#define RAT             (I)128L         /* Q  rational number              */
 #define RATX 7
+#define RAT             ((I)1L<<RATX)         /* Q  rational number              */
 #define RATSIZE sizeof(Q)
-#define BIT             (I)256L         /* BT bit boolean                  */
 #define BITX 8
+#define BIT             ((I)1L<<BITX)         /* BT bit boolean                  */
 // No size for BIT, since it is fractional
-#define C4T             (I)512L         /* C4 unicode (4-byte characters)  */
-#define C4TX 9
-#define C4TSIZE sizeof(C4)
-#define SB01            (I)1024L        /* P  sparse boolean               */
+// Bit 9 unused
 #define SB01X 10
+#define SB01            ((I)1L<<SB01X)        /* P  sparse boolean               */
 #define SB01SIZE sizeof(P)
-#define SLIT            (I)2048L        /* P  sparse literal (character)   */
 #define SLITX 11
+#define SLIT            ((I)1L<<SLITX)        /* P  sparse literal (character)   */
 #define SLITSIZE sizeof(P)
-#define SINT            (I)4096L        /* P  sparse integer               */
 #define SINTX 12
+#define SINT            ((I)1L<<SINTX)        /* P  sparse integer               */
 #define SINTSIZE sizeof(P)
-#define SFL             (I)8192L        /* P  sparse floating point        */
 #define SFLX 13
+#define SFL             ((I)1L<<SFLX)        /* P  sparse floating point        */
 #define SFLSIZE sizeof(P)
-#define SCMPX           (I)16384L       /* P  sparse complex               */
 #define SCMPXX 14
+#define SCMPX           ((I)1L<<SCMPXX)       /* P  sparse complex               */
 #define SCMPXSIZE sizeof(P)
-#define SBOX            (I)32768L       /* P  sparse boxed                 */
 #define SBOXX 15
+#define SBOX            ((I)1L<<SBOXX)       /* P  sparse boxed                 */
 #define SBOXSIZE sizeof(P)
-#define SBT             (I)65536L       /* SB symbol                       */
 #define SBTX 16
+#define SBT             ((I)1L<<SBTX)       /* SB symbol                       */
 #define SBTSIZE sizeof(SB)
-#define C2T             (I)131072L      /* C2 unicode (2-byte characters)  */
 #define C2TX 17
+#define C2T             ((I)1L<<C2TX)      /* C2 unicode (2-byte characters)  */
 #define C2TSIZE sizeof(C2)
-#define VERB            (I)262144L      /* V  verb                         */
-#define VERBX 18
+#define C4TX 18
+#define C4T             ((I)1L<<C4TX)         /* C4 unicode (4-byte characters)  */
+#define C4TSIZE sizeof(C4)
+#define VERBX 19
+#define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)
-#define ADV             (I)524288L      /* V  adverb                       */
-#define ADVX 19
+#define ADVX 20
+#define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
-#define CONJ            (I)1048576L     /* V  conjunction                  */
-#define CONJX 20
+#define CONJX 21
+#define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)
-#define ASGN            (I)2097152L     /* I  assignment                   */
-#define ASGNX 21
+// ASGN see below
+#define MARKX 23
+#define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
+#define MARKSIZE sizeof(I)
+#define SYMBX 24
+#define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
+#define SYMBSIZE sizeof(I)
+#define CONWX 25
+#define CONW            ((I)1L<<CONWX)    /* CW control word                 */
+#define CONWSIZE sizeof(CW)
+#define NAMEX 26
+#define NAME            ((I)1L<<NAMEX)    /* NM name                         */
+#define NAMESIZE sizeof(C)
+#define LPARX 27
+#define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
+#define LPARSIZE sizeof(I)
+#define RPARX 28
+#define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
+#define RPARSIZE sizeof(I)
+#define XDX 29
+#define XD              ((I)1L<<XDX)   /* DX extended floating point      */
+#define XDSIZE sizeof(DX)
+#define XZX 30
+#define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
+#define XZSIZE sizeof(ZX)
+#define ASGNX 22
+#define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
-#define ASGNLOCAL       (I)8388608L     // set for =.    aliases with SYMB
-#define ASGNSIMPLE      (I)16777216L     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
-#define MARK            (I)4194304L     /* I  end-of-stack marker          */
-#define MARKX 22
-#define MARKSIZE sizeof(I)
-#define SYMB            (I)8388608L     /* I  locale (symbol table)        */
-#define SYMBX 23
-#define SYMBSIZE sizeof(I)
-#define CONW            (I)16777216L    /* CW control word                 */
-#define CONWX 24
-#define CONWSIZE sizeof(CW)
-#define NAME            (I)33554432L    /* NM name                         */
-#define NAMEX 25
-#define NAMESIZE sizeof(C)
-#define LPAR            (I)67108864L    /* I  left  parenthesis            */
-#define LPARX 26
-#define LPARSIZE sizeof(I)
-#define RPAR            (I)134217728L   /* I  right parenthesis            */
-#define RPARX 27
-#define RPARSIZE sizeof(I)
-#define XD              (I)268435456L   /* DX extended floating point      */
-#define XDX 28
-#define XDSIZE sizeof(DX)
-#define XZ              (I)536870912L   /* ZX extended complex             */
-#define XZX 29
-#define XZSIZE sizeof(ZX)
+#define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =.    aliases with SYMB
+#define ASGNSIMPLE      ((I)1L<<CONWX)     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)

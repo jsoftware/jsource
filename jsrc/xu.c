@@ -878,7 +878,7 @@ F1(jttoutf32r){A z;I n,t,q,b=0; C* wv; C4* c4v;
 // Pad a wide-char array to make shape match display shape.
 // w is a C2T block.  Result is a C2T block with characters wider than
 // 1 display position padded with following NUL chars to make the
-// width in the array match the display width.  Currently, this is done for CJK
+// width in the array match the display width.  Currently, this is done only for boxed CJK
 // codepoints.  To make this function idempotent, we don't add a
 // NUL char if a wide char is already followed by a NUL byte.  We assume that
 // there will not be NUL bytes in user input (since they were going to be eaten before display anyway)
@@ -1035,7 +1035,7 @@ if(t&C2T)
 q=wtomsize((US*)CAV(w),n);
 q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);
-wtom((US*)CAV(w),n,CAV(z));
+wtomnull((US*)CAV(w),n,CAV(z),jt->thornuni);  // If we inserted nulls after CJK, remove them.  This is only when original data was boxed
 }
 else
 {

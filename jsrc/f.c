@@ -483,10 +483,11 @@ static F1(jtthorn1main){PROLOG;A z;
 }
 
 // entry point to allow C2T result from thorn1.  But always pass byte arguments unchanged
-F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&LIT); z = thorn1main(w); R z; }
+// This will enable null insertion/removal for CJK, but that's OK since the result goes to display
+F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); R z; }
 
-// entry point for returning character array only.  Allow C2T result, then convert.  But always pass byte arguments unchanged
-F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&LIT); z = thorn1main(w); jt->thornuni = to; RZ(z);  if (AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, jttoutf8a); R z; }
+// entry point for returning character array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
+F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, jttoutf8a); jt->thornuni = to; R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}

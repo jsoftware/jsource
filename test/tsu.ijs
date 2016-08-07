@@ -88,6 +88,7 @@ NB. ebi extensions
 RSET=: 4 : '(x)=: y'
 RBAD=: 3 : '>_4}.each(#testpath)}.each(-.RB)#RF'
 RUN=: RBAD@('RB'&RSET)@(0!:3)@('RF'&RSET)
+RUND=: RBAD@('RB'&RSET)@(0!:2)@('RF'&RSET)  NB. Run w/display
 
 RUN1=: 13 : '0!:2<testpath,y,''.ijs'''
 

@@ -103,7 +103,7 @@ F1(jtranking){A y,z;C*wv;I i,k,m,n,p=0,q=0,t,wcr,wf,wk,wr,*ws,wt,*yu,*yv,*zv;
  for(i=0;i<m;++i){
   memset(yv,C0,p*SZI);
   switch(k){
-   case sizeof(int): RANKINGLOOP(int); break;
+   case sizeof(int): if(wt&C4T){RANKINGLOOP(C4);} else {RANKINGLOOP(int);} break;
    case sizeof(C):   RANKINGLOOP(UC); break;
 #if C_LE
    case sizeof(S):

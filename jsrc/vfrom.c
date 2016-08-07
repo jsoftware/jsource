@@ -65,11 +65,14 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
   case sizeof(C): IFROMLOOP(C); break; 
   case sizeof(S): IFROMLOOP(S); break;  
 #if SY_64
-  case sizeof(C4):IFROMLOOP(C4); break;
+  case sizeof(int):IFROMLOOP(int); break;
 #endif
   case sizeof(I): IFROMLOOP(I); break;
   default:
    if     (0==k%sizeof(I))IFROMLOOP2(I,k/sizeof(I))
+#if SY_64
+   else if(0==k%sizeof(int))IFROMLOOP2(int,k/sizeof(int))
+#endif
    else if(0==k%sizeof(S))IFROMLOOP2(S,k/sizeof(S))
    else{S*x,*u;
     q=1+k/sizeof(S);
@@ -144,7 +147,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf
   case 1+2*sizeof(C): INNER1B(C);  break;
   case 1+2*sizeof(S): INNER1B(S);  break;
 #if SY_64
-  case 1+2*sizeof(C4): INNER1B(C4);  break;
+  case 1+2*sizeof(int): INNER1B(int);  break;
 #endif
   case 1+2*sizeof(I): INNER1B(I);  break;
   default:
@@ -264,10 +267,10 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I c,d,e,j,k,m,pn,pr,*pv,
    DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}
   case sizeof(C): INNER2(C);
   case sizeof(S): INNER2(S);
-  case sizeof(I): INNER2(I);
 #if SY_64
-  case sizeof(C4): INNER2(C4);
+  case sizeof(int): INNER2(int);
 #endif
+  case sizeof(I): INNER2(I);
 #if !SY_64 && SY_WIN32
   case sizeof(D): INNER2(D);
 #endif

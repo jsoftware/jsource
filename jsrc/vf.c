@@ -144,6 +144,9 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
   default:        {C*s=wv-k,*t; DO(m, t=s+=nk; DO(n, memcpy(zv,t,k); zv+=k; t-=k;););} break;
   case sizeof(C): {C*s=    wv,*t,*u=    zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
   case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+#if SY_64
+  case sizeof(int):{int*s=(int*)wv,*t,*u=(int*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
+#endif
   case sizeof(I): {I*s=(I*)wv,*t,*u=(I*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
 #if !SY_64 && SY_WIN32
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
@@ -282,6 +285,9 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
  switch(wk){
   case sizeof(C): EXPAND(C); break;
   case sizeof(S): EXPAND(S); break;
+#if SY_64
+  case sizeof(int): EXPAND(int); break;
+#endif
   case sizeof(I): EXPAND(I); break;
   default:  
    mvc(k*zn,zv,k,jt->fillv); 

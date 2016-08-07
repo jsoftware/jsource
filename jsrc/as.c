@@ -188,6 +188,9 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  switch(r?0:k){
   case sizeof(C): SSGULOOP(C); break;
   case sizeof(I): SSGULOOP(I); break;
+#if SY_64
+  case sizeof(int): SSGULOOP(int); break;
+#endif
   case sizeof(S): SSGULOOP(S); break;
 #if ! SY_64
   case sizeof(D): SSGULOOP(D); break;

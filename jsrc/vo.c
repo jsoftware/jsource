@@ -294,6 +294,9 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
   yv=CAV(y);
   switch(0==(I)xv%dk&&0==ck%dk?dk:0){
    case sizeof(I): {I*u,*v=(I*)yv; DO(p, u=(I*)xv; *u=*v++;    xv+=ck;);} break;
+#if SY_64
+   case sizeof(int):{int*u,*v=(int*)yv; DO(p, u=(int*)xv; *u=*v++; xv+=ck;);} break;
+#endif
    case sizeof(S): {S*u,*v=(S*)yv; DO(p, u=(S*)xv; *u=*v++;    xv+=ck;);} break;
    case sizeof(C):                 DO(p, *xv=*yv++;            xv+=ck;);  break;
    default:                        DO(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); 

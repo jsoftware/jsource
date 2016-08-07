@@ -451,6 +451,9 @@ static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;
    case sizeof(C):   REPDO(C,u++,  *v++=*u++);                       break;
    case sizeof(S):   REPDO(S,u++,  *v++=*u++);                       break;
    case sizeof(C)*3: REPDO(C,u+=3, (*v++=*u++,*v++=*u++,*v++=*u++)); break;
+#if SY_64
+   case sizeof(int): REPDO(int,u++,*v++=*u++);                       break;
+#endif
    case sizeof(I):   REPDO(I,u++,  *v++=*u++);                       break;
    case sizeof(I)*2: REPDO(I,u+=2, (*v++=*u++,*v++=*u++));           break;
    case sizeof(I)*3: REPDO(I,u+=3, (*v++=*u++,*v++=*u++,*v++=*u++)); break;

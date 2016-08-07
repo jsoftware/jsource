@@ -82,6 +82,9 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  if(zn)switch(k=AN(w)/(c*m)*bp(AT(w)),FL&AT(w)||k!=sizeof(D)?k:0){
   case sizeof(C): REPB(C); break;
   case sizeof(S): REPB(S); break;
+#if SY_64
+  case sizeof(int): REPB(int); break;
+#endif
   case sizeof(I): REPB(I); break;
   case sizeof(D): REPB(D); break;
   default: {C*u;I k1=k,k2=k*2,k3=k*3,k4=k*4,km=k*m;                                                     

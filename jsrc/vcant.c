@@ -60,6 +60,9 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
   default:        CANTA(C, MC(u,v+d*k,k); u+=k;); break;       
   case sizeof(C): CANTA(C, *u++=v[d];); break;
   case sizeof(S): CANTA(S, *u++=v[d];); break;
+#if SY_64
+  case sizeof(int): CANTA(int, *u++=v[d];); break;
+#endif
   case sizeof(I): CANTA(I, *u++=v[d];); break;
 #if !SY_64 && SY_WIN32
   case sizeof(D): CANTA(D, *u++=v[d];); break;

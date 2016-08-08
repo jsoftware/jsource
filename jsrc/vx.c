@@ -78,7 +78,7 @@ int jtxcompare(J jt,X a,X w){I*av,j,m,n,x,y,*wv;int s,t;
 
 XF1(jtxsgn){I x=XDIG(w); R xc(SGN(x));}
 
-XF2(jtxplus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
+XF2(jtxplus){PROLOG(0094);A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  RZ(a&&w);
  an=AN(a); av=AV(a); c=av[an-1];
  wn=AN(w); wv=AV(w); d=wv[wn-1];
@@ -94,7 +94,7 @@ XF2(jtxplus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  EPILOG(z);
 }
 
-XF2(jtxminus){PROLOG;A z;I an,*av,c,d,m,n,wn,*wv,*zv;
+XF2(jtxminus){PROLOG(0095);A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  RZ(a&&w);
  an=AN(a); av=AV(a); c=av[an-1];
  wn=AN(w); wv=AV(w); d=wv[wn-1];
@@ -152,7 +152,7 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){B b,c;I*av,d,j,n,*qv,r,y;X q;
  *qz=q; *rz=vec(INT,1L,&r); R 1;
 }    /* (<.a%w),(w|a) where w has a single "digit" and is nonzero */
  
-X jtxdiv(J jt,X a,X w,I mode){PROLOG;B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn,*wv,yn;X q,r,y;
+X jtxdiv(J jt,X a,X w,I mode){PROLOG(0096);B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn,*wv,yn;X q,r,y;
  RZ(a&&w&&!jt->jerr);
  an=AN(a); av=AV(a); c=c0=av[an-1];
  wn=AN(w); wv=AV(w); d=   wv[wn-1]; di=d==XPINF||d==XNINF;
@@ -233,7 +233,7 @@ static X jtxexp(J jt,X w,I mode){I k,m;X s,y;
  R xdiv(s,xev1(apv(1+m,1L,1L),"*/"),mode);
 }
 
-XF2(jtxpow){PROLOG;I c,d,e,r;X m,t,z;
+XF2(jtxpow){PROLOG(0097);I c,d,e,r;X m,t,z;
  RZ(a&&w);
  c=XDIG(a); d=XDIG(w); e=*AV(w);
  if(c==XPINF||c==XNINF){
@@ -366,7 +366,7 @@ XF1(jtxfact){I n;
  R xev1(apv(n,1L,1L),"*/");
 }
 
-static XF2(jtxbinp){PROLOG;D m;I i,n;X c,d,p,q,r,s;
+static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
  RZ(d=xminus(w,a)); s=1==xcompare(a,d)?d:a; RE(n=xint(s));
  m=xdouble(w);
  if(m<=IMAX){

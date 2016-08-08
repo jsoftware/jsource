@@ -7,7 +7,7 @@
 #include "w.h"
 
 
-static F1(jtdrr){PROLOG;A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
+static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN)R w;
  if(AT(w)&NAME)R sfn(0,w);

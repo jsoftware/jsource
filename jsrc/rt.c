@@ -120,7 +120,7 @@ static F1(jttconnect){A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,zn;
 
 static F1(jttreach){R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
 
-static F1(jttrr){PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
+static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME)R tleaf(lrep(w));
  v=VAV(w); id=v->id; fl=v->flag; fs=v->f; gs=v->g; hs=v->h; 
@@ -138,4 +138,4 @@ static F1(jttrr){PROLOG;A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  EPILOG(z);
 }
 
-F1(jttrep){PROLOG; A z=tconnect(troot(mtv,trr(w))); EPILOG(z);}
+F1(jttrep){PROLOG(0059); A z=tconnect(troot(mtv,trr(w))); EPILOG(z);}

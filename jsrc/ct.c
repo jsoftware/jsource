@@ -179,9 +179,9 @@ static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=VAV(w);
  R AN(d)?tpoly(df2(c,d,h)):eva(atco(amp(c,h),gt),"[ { x@:(i.@>:@(>./)@,)");
 }
 
-static AS1(jttdot1, df1(w,tdot(fix(fs))))
-static AS1(jttco1,  df1(w,tco (fix(fs))))
-static CS1(jttcap1, df1(w,tcap(fix(fs),gs)))
+static AS1(jttdot1, df1(w,tdot(fix(fs))),0104)
+static AS1(jttco1,  df1(w,tco (fix(fs))),0105)
+static CS1(jttcap1, df1(w,tcap(fix(fs),gs)),0106)
 
 static DF1(jttcoh1){R hgcoeff(w,VAV(self)->f);}
 

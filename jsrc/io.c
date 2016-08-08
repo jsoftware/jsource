@@ -388,7 +388,7 @@ int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
 	int er;
 
-	PROLOG;
+	PROLOG(0051);
 	er = setterm(jt, name, jtype, jrank, jshape, jdata);
 	tpop(_ttop);
 	return er;

@@ -14,7 +14,7 @@
 #define QNEGATE(x)     (qminus(zeroQ,x))
 
 #define CFR(f,T,TYPE,fplus,ftymes,fnegate)  \
- F2(f){PROLOG;A z;I j,n;T d,*t,*u,*v;            \
+ F2(f){PROLOG(0060);A z;I j,n;T d,*t,*u,*v;            \
   n=AN(w); u=(T*)AV(w);                          \
   GATVS(z,TYPE,1+n,1,0,TYPE##SIZE); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \

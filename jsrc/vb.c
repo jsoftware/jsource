@@ -104,7 +104,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
     if   (k==p){for(i=0;i<m&&u[i]==v[k+i];++i); ZFUNC;             } \
    }
 
-F2(jtebar){PROLOG;A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
+F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  RZ(a&&w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);

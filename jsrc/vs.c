@@ -123,7 +123,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  R z;
 }
 
-A jtsparseit(J jt,A w,A a,A e){PROLOG;A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*s,t,*u,*v,wn;P*p;
+A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*s,t,*u,*v,wn;P*p;
  RZ(w&&a&&e);
  r=AR(w); t=AT(w); wn=AN(w); n=AN(a);
  ASSERT(!(t&LIT+BOX),EVNONCE);

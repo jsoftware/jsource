@@ -68,7 +68,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  R z;
 }    /* result processing */
 
-A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG;A q,wx,wy,wy1,ww,z,ze,zi,*zv;B*wb;
+A jtsprank1(J jt,A w,A fs,I mr,AF f1){PROLOG(0043);A q,wx,wy,wy1,ww,z,ze,zi,*zv;B*wb;
      I c,i,*iv,j,k,m,n,*v,wcr,wf,wr,*ws,wt,*wv;P*wp,*wq;
  RZ(w);
  wr=AR(w); ws=AS(w); wcr=efr(wr,mr); wf=wr-wcr;
@@ -108,7 +108,7 @@ static I jtspradv(J jt,I n,B*b,I f,I r,I j,P*p,A*z){A s,x;I k;P*q;
  R k;
 }    /* advance to the next cell */
 
-static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG;A we,ww,y,z,zi,*zv;B*wb;
+static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y,z,zi,*zv;B*wb;
      I f,*iv,j,*v,wc,wj,wk,wm,wn,*ws,wt,*wv;P*wp;
  f=wf; ws=AS(w);
  RZ(w=sprarg(wf,w)); wt=AT(w); wp=PAV(w);
@@ -126,7 +126,7 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG;A we,ww,y,z,zi,
  EPILOG(z);
 }
 
-static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG;A aa,ae,y,z,zi,*zv;B*ab;
+static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y,z,zi,*zv;B*ab;
      I f,*iv,j,*v,ac,aj,ak,am,an,*as,at,*av;P*ap;
  f=af; as=AS(a);
  RZ(a=sprarg(af,a)); at=AT(a); ap=PAV(a);
@@ -144,7 +144,7 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG;A aa,ae,y,z,zi,
  EPILOG(z);
 }
 
-A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
+A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
      ar,*as,at,*av,d,f,g,*ii,*iv,j,k,m,s,*u,*v,wc,wcr,wf,wj,wk,wm,wn,wr,*ws,wt,*wv;P*ap,*wp;
  RZ(a&&w);
  ar=AR(a); as=AS(a); acr=efr(ar,lr); af=ar-acr; 
@@ -202,7 +202,7 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B
  EPILOG(z);
 }    /* a f"r w on sparse arrays */
 
-A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG;A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
+A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,we,ww,y,zi,z,*zv;B*ab,b,*wb;I ac,acr,af,aj,ak,am,an,
      ar,*as,at,*av,d,f,g,*ii,*iv,j,k,m,s,*u,*v,wc,wcr,wf,wj,wk,wm,wn,wr,*ws,wt,*wv;P*ap,*wp;
  RZ(a&&w);
  ar=AR(a); as=AS(a); acr=efr(ar,lr); af=ar-acr; 

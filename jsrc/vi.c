@@ -501,7 +501,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
 I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG;A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
     I ac,acr,af,ak,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wr,*ws,wt,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;

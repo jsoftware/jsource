@@ -20,7 +20,7 @@ static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  R z;
 }
 
-static F2(jttks){PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
+static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GA(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
@@ -49,7 +49,7 @@ static F2(jttks){PROLOG;A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  EPILOG(z);
 }    /* take on sparse array w */
 
-static F2(jttk){PROLOG;A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
+static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(t&SPARSE)R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});

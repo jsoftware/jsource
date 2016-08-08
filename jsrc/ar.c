@@ -189,7 +189,7 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
  R reitem(vec(INT,f,s),lamin1(df1(x,iden(fs))));
 }    /* f/"r w identity case */
 
-static DF1(jtredg){PROLOG;DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
+static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;

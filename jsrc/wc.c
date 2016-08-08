@@ -344,7 +344,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
 
 #define ASSERTCW(b,j)  {if(!(b)){I jj=(j); jsignal3(EVCTRL,wv[jj],jj); R 0;}}
 
-B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG;A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,try=0;
+B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,try=0;
      C*s;CW*d,*cv;I as=0,i,j,k,m,n,p,q,yn;
  RZ(w);
  p=AN(w); wv=AAV(w);

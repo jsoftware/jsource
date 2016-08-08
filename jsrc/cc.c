@@ -213,7 +213,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2);
 
-static DF2(jtcut2sx){PROLOG;DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
+static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
  n=IC(w); t=AT(w); m=*AV(sv->g); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
  RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
@@ -350,7 +350,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* v1   ptr to w for current cut         */
 /* wd   1 iff w is relative              */
 
-static DF2(jtcut2){PROLOG;DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
+static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
      I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wd,wt,*zi,*zs;V*vf;VF ado;
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);

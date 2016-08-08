@@ -7,7 +7,7 @@
 
 
 /*
-static A jtmerge1(J jt,A w,A ind){PROLOG;A z;C*v,*x;I c,k,r,*s,t,*u;
+static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
  RZ(w&&ind);
  RZ(ind=pind(IC(w),ind));
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); c=aii(w);
@@ -169,7 +169,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
 /* 2 amendn2 EPILOG/gc                      */
 /* 1 jdo     tpop                           */
 
-static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG;A e,z;B b,sa,sw;I at,ir,it,t,t1,wt;P*p;
+static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG(0007);A e,z;B b,sa,sw;I at,ir,it,t,t1,wt;P*p;
  RZ(a&&w&&ind);
  at=AT(a); sa=1&&at&SPARSE; if(sa)at=DTYPE(at);
  wt=AT(w); sw=1&&wt&SPARSE; if(sw)wt=DTYPE(wt);

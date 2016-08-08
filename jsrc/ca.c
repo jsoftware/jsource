@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-static DF1(jtonf1){PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
+static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  PREF1(jtonf1);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
@@ -15,7 +15,7 @@ static DF1(jtonf1){PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  EPILOG(z);
 }
 
-static DF2(jtuponf2){PROLOG;DECLFG;A z;I flag=sv->flag,m=jt->xmode;
+static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  RZ(a&&w);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
@@ -73,10 +73,10 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
 static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpow2);}
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
-static CS1(on1,  CALL1(f1,CALL1(g1,w,gs),fs))
-static CS2(jtupon2,CALL1(f1,CALL2(g2,a,w,gs),fs))
+static CS1(on1,  CALL1(f1,CALL1(g1,w,gs),fs),0113)
+static CS2(jtupon2,CALL1(f1,CALL2(g2,a,w,gs),fs),0114)
 
-static DF2(on2){PROLOG;DECLFG;A ga,gw,z; 
+static DF2(on2){PROLOG(0023);DECLFG;A ga,gw,z; 
  PREF2(on2); 
  gw=CALL1(g1,w,gs);
  ga=CALL1(g1,a,gs);

@@ -500,7 +500,7 @@ static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  R z;
 }    /* # queries in hash table for each unique symbol */
 
-static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG;A x,*xv,y;
+static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003);A x,*xv,y;
      B b,*dnv,*lfv,*rtv,*upv;C*ptv,*sv;I c,f,g,hn,*hv,i,j,r,sn,un,*yv;SBU*uv,*v;
  RZ(una&&sna&&u&&s&&h);
  ASSERTD(!AR(una),"c atom");            /* cardinality   */

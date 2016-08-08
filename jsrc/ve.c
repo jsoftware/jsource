@@ -247,7 +247,7 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
    else    DO(wn, x=*--wv; if(0<=x){*--zv=x%d; *--zv=x/d;}else{*--zv=d+x%d; *--zv=-1+x/d;})
   }else DO(wn, x=*--wv; u=av; DO(an, d=*--u; *--zv=r=remii(d,x); x=d?(x-r)/d:0;););
   R z;
- }else{PROLOG;A y,*zv;C*u,*yv;I k;
+ }else{PROLOG(0070);A y,*zv;C*u,*yv;I k;
   F2RANK(1,0,jtabase2,0);
   k=bp(at); u=an*k+CAV(a);
   GA(y,at, 1, 0,0); yv=CAV(y);

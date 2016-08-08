@@ -43,7 +43,7 @@ static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn
  R !b?scf(s):z?take(sc(1+j),z):hgd(b,j,w,p,q);
 }    /* real vector p,q; real scalar w; all terms (1=b) or last term (0=b) */
 
-static DF2(jthgeom2){PROLOG;A h,*hv,t,z;B b;I an,*av,j,n;V*sv=VAV(self);
+static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=VAV(self);
  RZ(a&&w);
  if(AR(w))R rank2ex(a,w,self,0L,0L,jthgeom2);
  RZ(a=AT(a)&FL+CMPX?vib(a):vi(a));
@@ -93,7 +93,7 @@ F1(jthgdiff){A*hv,p,q,x,y;V*v=VAV(w);
  R equ(p,one)?q:folk(qq(p,zero),ds(CSTAR),q);
 }    /* a H. w D. 1 */
 
-DF1(jthgcoeff){PROLOG;A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=VAV(self);
+DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=VAV(self);
  RZ(w=vi(w)); v=AV(w); 
  n=0; DO(AN(w), j=v[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R eq(w,w);

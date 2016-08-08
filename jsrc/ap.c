@@ -295,7 +295,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 }
 
 // Entry point for infix.  a is x, w is y, fs points to u
-static DF2(jtinfix){PROLOG;DECLF;A x,z;I m; 
+static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m; 
  PREF2(jtinfix); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  // If length is infinite, convert to large integer
@@ -320,7 +320,7 @@ static DF2(jtinfix){PROLOG;DECLF;A x,z;I m;
  EPILOG(z);
 }
 
-static DF2(jtinfix2){PROLOG;A f,x,y;B af,d;I c,m,n,n1,r,*s,t; 
+static DF2(jtinfix2){PROLOG(0019);A f,x,y;B af,d;I c,m,n,n1,r,*s,t; 
  PREF2(jtinfix); 
  RE(m=i0(vib(a))); t=AT(w); n=IC(w); 
  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);

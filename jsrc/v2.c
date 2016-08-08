@@ -132,7 +132,7 @@ static F1(jtprime1d){A d,z;D*wv,x,*zv;I*dv,k,n;
  ASSERT(0,EVLIMIT);
 }
 
-F1(jtprime){PROLOG;A z;B b=1;I n,p,q,t;
+F1(jtprime){PROLOG(0061);A z;B b=1;I n,p,q,t;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  n=AN(w); t=AT(w);
@@ -149,7 +149,7 @@ F1(jtprime){PROLOG;A z;B b=1;I n,p,q,t;
 static I jtsuq(J jt,I n,I*wv){I c=24; DO(n, c=MAX(c,wv[i]););  R c==0x7fffffff?c:1+c;}
      /* 1+24>.>./w */
 
-F1(jtplt){PROLOG;A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
+F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  RZ(w);
  xt=1&&AT(w)&XNUM+RAT;
  if(!(INT&AT(w)))RZ(w=vi(ceil1(w))); wv=AV(w); JBREAK0;
@@ -394,7 +394,7 @@ F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
 
 static F1(jtxfactor);
 
-F1(jtfactor){PROLOG;A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
+F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  if(AT(w)&XNUM+RAT)R xfactor(w);
@@ -635,7 +635,7 @@ static XF1(jtfac_ecm){A tt;I b1,b2,*b1b2,i,old,m;X a,b,g,q[3];
  R xone;
 }
 
-static F1(jtxfactor){PROLOG;A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
+static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
  F1RANK(0,jtxfactor,0);
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  x=*XAV(w); m=XDIG(x);

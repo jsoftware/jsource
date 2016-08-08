@@ -64,7 +64,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n,wd;
 
 A jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
 
-F2(jtapplystr){PROLOG;A fs,z;I d;
+F2(jtapplystr){PROLOG(0054);A fs,z;I d;
  F2RANK(1,RMAX,jtapplystr,0);
  RZ(fs=parse(tokens(vs(a))));
  ASSERT(VERB&AT(fs),EVSYNTAX);

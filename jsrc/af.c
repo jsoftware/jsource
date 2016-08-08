@@ -87,7 +87,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
 }}   /* 0=a if fix names; 1=a if fix names only if does not contain $: */
 
 
-F1(jtfix){PROLOG;A z;I*rv=jt->rank;
+F1(jtfix){PROLOG(0005);A z;I*rv=jt->rank;
  RZ(w);
  jt->rank=0;
  RZ(jt->fxpath=reshape(sc(jt->fxi=(I)255),ace)); jt->fxpv=AAV(jt->fxpath);

@@ -94,7 +94,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
     break; }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG;A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
+static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
   CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);

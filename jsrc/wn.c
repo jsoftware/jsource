@@ -183,7 +183,7 @@ static void jtnumcase(J jt,I n,C*s,B*b,B*j,B*x,B*q,B*ii){B e;C c;
   DO(n, c=s[i]; e=!s[1+i]; if(c=='.'||c=='e'||c=='x'&&!e){*x=*q=*ii=0; R;});
 }}
 
-A jtconnum(J jt,I n,C*s){PROLOG;A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m,t,*yv;
+A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',0<=k&&k<=9)R num[ k]; else R ainf;}
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',0<=k&&k<=9)R num[-k];}
  RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;

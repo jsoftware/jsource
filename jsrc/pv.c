@@ -220,7 +220,7 @@ F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
  R t?vfinal(t):cfn(x);
 }
 
-F1(jtvtrans){PROLOG;A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*ttab0;
+F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*ttab0;
  local=jt->local; tmonad=jt->tmonad; ttab0=jt->ttab; tsubst=jt->tsubst;
  RZ(ttab[0].a=cstr("x")); ttab[0].t=ds(CLEFT);
  RZ(ttab[1].a=cstr("y")); ttab[1].t=RT; c=2;

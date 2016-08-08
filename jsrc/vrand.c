@@ -626,7 +626,7 @@ DF2(jtrollk){A g;V*sv;
  R rollksub(a,vi(w));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
-static X jtxrand(J jt,X x){PROLOG;A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
+static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
  n=AN(x); xv=AV(x);
  c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});
  m=n-(1==c);

@@ -163,7 +163,7 @@ static void jtth2c(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,I zk,C*zv){
 //  wk stride (in bytes) between values
 //  wv->first value
 // first set when we are processing the first field (to suppress the leading space between fields)
-static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG;A y,z;C*u,*yv,*zv;I b,i,m0=m,k,p,q;
+static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y,z;C*u,*yv,*zv;I b,i,m0=m,k,p,q;
  // Set q=nominal length of field: the length given, if m!=0; otheriwse based on type.  p=length of allocated buffer
  q=m?m:t&B01?3:t&INT?12:17; p=n*q;
   // Allocate space for all results; set shape to (n,q); zv->result area
@@ -251,7 +251,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
 }    /* parse format control (left argument of ":) */
 
 // x ": y
-F2(jtthorn2){PROLOG;A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
+F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*dv,k,m,*mv,n,r,sk,t,wk,*ws,zk;
  F2RANK(1,RMAX,jtthorn2,0);  // apply rank 1 _
  // From here on the a arg is rank 0 or 1
  an=AN(a); t=AT(w);  // an=#atoms of a, t=type of w

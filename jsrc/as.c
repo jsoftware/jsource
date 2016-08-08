@@ -284,7 +284,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  R ope(z);
 }
 
-static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))))
+static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);

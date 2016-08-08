@@ -322,7 +322,7 @@
 // So, it is preserved by incrementing its usecount before the tpop(_ttop); then after the tpop, it is pushed back onto the tstack, indicating that it will be freed
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
-#define PROLOG          I _ttop=jt->tnextpushx
+#define PROLOG(x)       I _ttop=jt->tnextpushx
 #define EPILOG(z)       R gc(z,_ttop)   // z is the result block
 // Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
 // For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed

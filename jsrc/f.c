@@ -423,7 +423,7 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
 
 // ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
 // C2T when there are unicodes present
-static F1(jtthorn1main){PROLOG;A z;
+static F1(jtthorn1main){PROLOG(0001);A z;
  RZ(w);
  if(!AN(w))GATV(z,LIT,0,AR(w),AS(w))
  else switch(CTTZ(AT(w))){
@@ -708,7 +708,7 @@ F2(jtoutstr){I*v;
 }
 
 // w is a noun.  Convert it to a UTF-8 string and write it to the console
-static F1(jtjpr1){PROLOG;A z;
+static F1(jtjpr1){PROLOG(0002);A z;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden

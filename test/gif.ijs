@@ -205,10 +205,10 @@ label_xxx.
 5
 )
 
-(6!:2 'slow 0') > 2 * (6!:2 'fast 0')
-(6!:2 'slow2 0') > 2 * (6!:2 'fast 0')
-(6!:2 'slow 0') > 2 * (6!:2 'fast2 0')
+THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast 0')
+THRESHOLD+. (6!:2 'slow2 0') > 1.5 * (6!:2 'fast 0')
+THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast2 0')
 
-NB. 4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
+4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
 
 

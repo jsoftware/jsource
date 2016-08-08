@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-static DF1(jtpowseqlim){PROLOG;A x,y,z,*zv;I i,n;
+static DF1(jtpowseqlim){PROLOG(0039);A x,y,z,*zv;I i,n;
  RZ(w);
  RZ(z=exta(BOX,1L,1L,20L)); zv=AAV(z); *zv++=x=w;
  i=1; n=AN(z);
@@ -79,7 +79,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    R z;
 }}   /* single positive finite exponent */
 
-static DF1(jtply1){PROLOG;DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;
+static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;
  hs=sv->h; m=AN(hs); 
  RZ(x=ravel(hs)); RZ(y=from(j=grade1(x),x)); nv=AV(y);
  GATV(x,BOX,m,1,0); xv=AAV(x);
@@ -141,7 +141,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
 static DF1(jtinv1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); R z;}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); R z;}
 
-static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)))
+static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)
 
 static DF1(jtpowg1){A h=VAV(self)->h; R df1(  w,*AAV(h));}
 static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
@@ -157,11 +157,11 @@ static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
 //   with the y arg as the w operand (and self/powop included to provide access to the original u)
 // We allow v to create a gerund, but we do not allow a gerund to create a gerund.
 // here for u^:v y
-static CS1(jtpowv1,  df1(  w,powop(fs,        CALL1(g1,  w,gs),(A)1)))
+static CS1(jtpowv1,  df1(  w,powop(fs,        CALL1(g1,  w,gs),(A)1)),0108)
 // here for x u^:y y 
-static CS2(jtpowv2,  df2(a,w,powop(fs,        CALL2(g2,a,w,gs),(A)1)))
+static CS2(jtpowv2,  df2(a,w,powop(fs,        CALL2(g2,a,w,gs),(A)1)),0109)
 // here for x u@:]^:v y and x u@]v y
-static CS2(jtpowv2a, df1(  w,powop(VAV(fs)->f,CALL2(g2,a,w,gs),(A)1)))
+static CS2(jtpowv2a, df1(  w,powop(VAV(fs)->f,CALL2(g2,a,w,gs),(A)1)),0110)
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
 // contains verb v or gerund v, it executes v on the xy arguments and then calls jtpowop

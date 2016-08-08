@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F1(jtcatalog){PROLOG;A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u,wd;
+F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u,wd;
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
@@ -283,7 +283,7 @@ static A jtafi(J jt,I n,A w){A x;
  R AN(x)?less(IX(n),pind(n,x)):ace; 
 }
 
-static F2(jtafrom){PROLOG;A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
+static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;

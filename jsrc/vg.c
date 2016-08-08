@@ -351,7 +351,7 @@ static GF(jtgrc){A x;B b,q,up;I d,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
 static GF(jtgrs){R gri(m,c,n,sborder(w),zv);}    
      /* grade"r w on symbols w */
 
-F2(jtgrade1p){PROLOG;A x,z;I n,*s,*xv,*zv;
+F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
  jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w);
  GATV(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
@@ -367,7 +367,7 @@ F2(jtgrade1p){PROLOG;A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-F1(jtgr1){PROLOG;A z;I c,f,m,n,r,*s,t,wr,zn;
+F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  f=wr-r; s=AS(w); m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1;

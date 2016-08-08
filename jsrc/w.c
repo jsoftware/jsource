@@ -298,7 +298,7 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  R z;
 }
 
-F1(jtfsmvfya){PROLOG;A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
+F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(a=w);
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
@@ -332,7 +332,7 @@ F1(jtfsmvfya){PROLOG;A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  R z;
 }    /* check left argument of x;:y */
 
-static A jtfsm0(J jt,A a,A w,C chka){PROLOG;A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k,md,n,p,q,*v;
+static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k,md,n,p,q,*v;
  RZ(a&&w);
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); ad=(I)a*ARELATIVE(a);

@@ -119,7 +119,7 @@ static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
  R !jt->jerr;
 }
 
-static X jtxd1(J jt,D p){PROLOG;A t;D d,e=tfloor(p),q,r;I m,*u;
+static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  switch(jt->xmode){
   case XMFLR:   p=e;                            break;
   case XMCEIL:  p=ceil(p);                      break;

@@ -21,7 +21,7 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 #define MOVEYA  {MC(uu,u+=ak,ak); if(ab)RZ(ya=relocate((I)a-(I)ya,ya));}
 #define MOVEYW  {MC(vv,v+=wk,wk); if(wb)RZ(yw=relocate((I)w-(I)yw,yw));}
 
-A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG;A y,y0,yw,z;B wb;C*v,*vv;
+A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG(0041);A y,y0,yw,z;B wb;C*v,*vv;
     I k,mn,n=1,p,*s,wcn,wcr,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(w);
  wt=AT(w);
@@ -40,7 +40,7 @@ A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG;A y,y0,yw,z;B wb;C*v,*vv;
 // A verb u["n] using this function checks to see whether it has multiple cells; if so,
 // it calls here, giving a callback; we split the arguents into cells and call the callback,
 // which is often the same original function that called here.
-A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG;A y,y0,ya,yw,z;B ab,b,wb;
+A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0042);A y,y0,ya,yw,z;B ab,b,wb;
    C*u,*uu,*v,*vv;I acn,acr,af,ak,ar,*as,at,k,mn,n=1,p,q,*s,wcn,wcr,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(a&&w);
  at=AT(a); wt=AT(w);

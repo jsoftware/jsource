@@ -14,30 +14,30 @@
 #define CAP1            {z=CALL1(g1,CALL1(h1,  w,hs),gs);}
 #define CAP2            {z=CALL1(g1,CALL2(h2,a,w,hs),gs);}
 
-static DF1(jtcork1){DECLFGH;PROLOG;A z;  CAP1; EPILOG(z);}
-static DF2(jtcork2){DECLFGH;PROLOG;A z;  CAP2; EPILOG(z);}
-static DF1(jtfolk1){DECLFGH;PROLOG;A z; FOLK1; EPILOG(z);}
-static DF2(jtfolk2){DECLFGH;PROLOG;A z; FOLK2; EPILOG(z);}
+static DF1(jtcork1){DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
+static DF2(jtcork2){DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
+static DF1(jtfolk1){DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
+static DF2(jtfolk2){DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
 static B jtcap(J jt,A x){V*v;
  while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(x=symbrd(v->f)));
  R CCAP==v->id;
 }
 
-static DF1(jtcorx1){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
-static DF2(jtcorx2){DECLFGH;PROLOG;A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
+static DF1(jtcorx1){DECLFGH;PROLOG(0030);A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
+static DF2(jtcorx2){DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
      /* f g h where f may be [: */
 
-static DF1(jtnvv1){DECLFGH;PROLOG; A z=CALL2(g2,fs,CALL1(h1,  w,hs),gs); EPILOG(z);}
-static DF2(jtnvv2){DECLFGH;PROLOG; A z=CALL2(g2,fs,CALL2(h2,a,w,hs),gs); EPILOG(z);}
+static DF1(jtnvv1){DECLFGH;PROLOG(0032); A z=CALL2(g2,fs,CALL1(h1,  w,hs),gs); EPILOG(z);}
+static DF2(jtnvv2){DECLFGH;PROLOG(0033); A z=CALL2(g2,fs,CALL2(h2,a,w,hs),gs); EPILOG(z);}
 
-static DF2(jtfolkcomp){DECLFGH;PROLOG;A z;AF f;
+static DF2(jtfolkcomp){DECLFGH;PROLOG(0034);A z;AF f;
  RZ(a&&w);
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
  EPILOG(z);
 }
 
-static DF2(jtfolkcomp0){DECLFGH;PROLOG;A z;AF f;D oldct=jt->ct;
+static DF2(jtfolkcomp0){DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
  RZ(a&&w);
  jt->ct=0;
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
@@ -110,8 +110,8 @@ static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
 
-static CS1(jthook1, CALL2(f2,w,CALL1(g1,w,gs),fs))
-static CS2(jthook2, CALL2(f2,a,CALL1(g1,w,gs),fs))
+static CS1(jthook1, CALL2(f2,w,CALL1(g1,w,gs),fs),0111)
+static CS2(jthook2, CALL2(f2,a,CALL1(g1,w,gs),fs),0112)
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  RZ(w);

@@ -305,7 +305,7 @@ static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  R linsert(t,w);
 }
 
-F1(jtlrep){PROLOG;A z;
+F1(jtlrep){PROLOG(0056);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
  RE(z=lrr(w));
  if(jt->ltext)z=over(z,jt->ltext);
@@ -313,7 +313,7 @@ F1(jtlrep){PROLOG;A z;
  EPILOG(z);
 }
 
-F1(jtprep){PROLOG;A z;
+F1(jtprep){PROLOG(0057);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
  RE(z=lrr(w));
  if(jt->ltext)z=over(z,jt->ltext);

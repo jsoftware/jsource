@@ -194,7 +194,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 			 ap<AAV(a)+k;
 			 ++ap, ++v)
 		{
-			PROLOG;
+			PROLOG(0118);
 			er=a2v (jt, *ap, v, dobstrs);
 			tpop(_ttop);
 			if (er!=0)

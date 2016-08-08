@@ -36,7 +36,7 @@ void fillv(I t,I n,C*v){I k=bp(t);
 }
 
 
-static F2(jtrotsp){PROLOG;A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;
+static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;
  RZ(a&&w);
  ASSERT(!jt->fill,EVNONCE);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;

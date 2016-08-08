@@ -92,7 +92,7 @@ l1:
 }
 #endif
 
-F2(jtpdt){PROLOG;A z;I ar,at,i,m,n,p,p1,t,wr,wt;
+F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  RZ(a&&w);
  ar=AR(a); at=AN(a)?AT(a):B01;
  wr=AR(w); wt=AN(w)?AT(w):B01;

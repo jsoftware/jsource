@@ -8,7 +8,7 @@
 
 static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
-F1(jtrinv){PROLOG;A ai,bx,di,z;I m,n,r,*s;
+F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
  r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)/2;
  ASSERT(!r||n==s[0],EVLENGTH);
@@ -20,7 +20,7 @@ F1(jtrinv){PROLOG;A ai,bx,di,z;I m,n,r,*s;
  EPILOG(z);
 }    /* R.K.W. Hui, Uses of { and }, APL87, p. 56 */
 
-static F1(jtqrr){PROLOG;A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
+static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)/2;} 
  if(1>=n){
@@ -62,7 +62,7 @@ static F2(jticor){D d,*v;I n;
  R w;
 }
 
-F1(jtminv){PROLOG;A q,r,*v,y,z;I m,n,*s,t,wr;
+F1(jtminv){PROLOG(0068);A q,r,*v,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,0);
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
  if(!wr)R recip(w);
@@ -114,7 +114,7 @@ static F2(jtmdivsp){A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 }    /* currently only handles tridiagonal sparse w */
 
 
-F2(jtmdiv){PROLOG;A q,r,*v,y,z;B b=0;I t;
+F2(jtmdiv){PROLOG(0069);A q,r,*v,y,z;B b=0;I t;
  F2RANK(RMAX,2,jtmdiv,0);
  if(AT(a)&SPARSE)RZ(a=denseit(a));
  t=AT(w);

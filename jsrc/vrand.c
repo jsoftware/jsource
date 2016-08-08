@@ -549,7 +549,7 @@ F1(jtrngstates){A*wv;I k,wd;UI**vv=jt->rngV;
             RE(k=i0(WVR(5))); RZ(rngstates1(DXI,DXN,vv,0,k,WVR(6),1)); jt->rngI0[DXI]=k;
             RE(k=i0(WVR(7))); RZ(rngstates1(MRI,MRN,vv,0,k,WVR(8),0)); jt->rngI0[MRI]=k;
             break;
-  case GBI: RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,0,k,WVR(2),1)); break;  // It appears that in some cases rngi can be 0 here
+  case GBI: RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,0,k,WVR(2),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
   case MTI: RE(k=i0(WVR(1))); RZ(rngstates1(MTI,MTN,vv,0,k,WVR(2),0)); break;
   case DXI: RE(k=i0(WVR(1))); RZ(rngstates1(DXI,DXN,vv,0,k,WVR(2),1)); break;
   case MRI: RE(k=i0(WVR(1))); RZ(rngstates1(MRI,MRN,vv,0,k,WVR(2),0));

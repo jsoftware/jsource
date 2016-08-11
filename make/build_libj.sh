@@ -6,10 +6,10 @@ cd ~
 # gcc-6 -O1 needs -fno-if-conversion2 for x15.c double trick
 # but clang does not have this flag
 # gcc
-common="-fPIC -O1 -fno-if-conversion2 -fno-strict-aliasing -DSY_GETTOD -Wextra -Wno-maybe-uninitialized -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
+common="-fPIC -O1 -fno-if-conversion2 -fwrapv -fno-strict-aliasing -DSY_GETTOD -Wextra -Wno-maybe-uninitialized -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 # clang
-# common="-Werror -fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
-darwin="-fPIC -O1 -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
+# common="-Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -DSY_GETTOD -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
+darwin="-fPIC -O1 -fwrapv -fno-strict-aliasing -DSY_GETTOD -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in
 

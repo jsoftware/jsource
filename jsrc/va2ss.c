@@ -8,14 +8,7 @@
 #include "vcomp.h"
 
 // mac clang compiler bug (?) caused normal I overflow and EVNAN tests to fail
-// work for clang-3.5 but not clang-3.8
-#if defined(__clang__)
-// move macx to va2.c to prevent optimized away
-// I macx(I a){return a;}
-extern I macx(I a);
-#else
 #define macx
-#endif
 
 #define SSRDB(w) (macx(*(B *)CAV(w)))
 #define SSRDI(w) (macx(*(I *)CAV(w)))
@@ -128,13 +121,8 @@ SSINGF2(jtssplus) SSNUMPREFIX
    if (((zv^av)&(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGDD:
-   {D av = SSRDD(a); D wv = SSRDD(w);
-   NAN0;
-#if defined(__clang__)
-   ASSERT(!((av==inf&&wv==infm)||(av==infm&&wv==inf)),EVNAN); // obsolete - but required on mac
-#endif
-   SSSTORE(av+wv,z,FL,D)
-   NAN1; R z;}
+   {
+   NAN0; SSSTORE(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
  }
 }
 
@@ -163,11 +151,8 @@ SSINGF2(jtssminus) SSNUMPREFIX
    if (((zv^av)&~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGDD:
-   {D av = SSRDD(a); D wv = SSRDD(w);
-#if defined(__clang__)
-   ASSERT(!((av==inf&&wv==inf)||(av==infm&&wv==infm)),EVNAN); // obsolete - but required on mac
-#endif
-   NAN0; SSSTORE(av-wv,z,FL,D) NAN1;  R z;}
+   {
+   NAN0; SSSTORE(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}
  }
 }
 
@@ -251,7 +236,7 @@ SSINGF2(jtssdiv) SSNUMPREFIX
   case SSINGBI: {B av=SSRDB(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGIB: {I av=SSRDI(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGII: {I av=SSRDI(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
-  case SSINGDD: {D av=SSRDD(a); D wv=SSRDD(w); NAN0; SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) NAN1; R z;}
+  case SSINGDD: {NAN0; SSSTORE((SSRDD(a)||SSRDD(w))?SSRDD(a)/(D)SSRDD(w):0.0,z,FL,D) NAN1; R z;}
  }
 }
 

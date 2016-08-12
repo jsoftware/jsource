@@ -306,7 +306,11 @@
 #define MC              memcpy
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
-#define NAN0            (_clearfp())
+#if SYS & SYS_UNIX
+#define NAN0            feclearexcept(FE_ALL_EXCEPT)
+#else
+#define NAN0            _clearfp()
+#endif
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NUMMIN          (-9)    // smallest number represented in num[]

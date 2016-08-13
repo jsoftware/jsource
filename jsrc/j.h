@@ -168,6 +168,11 @@
 #define RESTRICTF
 #endif
 
+#ifdef __clang__
+#define VOLATILE  volatile
+#else
+#define VOLATILE
+#endif
 
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */

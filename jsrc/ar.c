@@ -579,8 +579,8 @@ A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),one));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
 
-static AHDRR(jtmeanD,D,D){I d=c/n,i;volatile D*y;volatile D v,*zz;
- volatile D *Vz=z;
+static AHDRR(jtmeanD,D,D){I d=c/n,i;VOLATILE D*y;VOLATILE D v,*zz;
+ VOLATILE D *Vz=z;
  NAN0;
  if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *Vz++=v/n;)
  else for(i=0;i<m;++i){

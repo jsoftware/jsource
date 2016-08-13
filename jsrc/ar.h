@@ -15,8 +15,8 @@
  }}
 
 #define REDUCENAN(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;volatile Tx*y;volatile Tz v;                \
-  volatile Tz*Vz=z,*zz;                                           \
+ AHDRR(f,Tz,Tx){I d,i;VOLATILE Tx*y;VOLATILE Tz v;                \
+  VOLATILE Tz*Vz=z,*zz;                                           \
   NAN0;                                                           \
   d=c/n; x+=m*c; zz=Vz+=m*d;                                      \
   if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--Vz=v;) \

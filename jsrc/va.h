@@ -171,10 +171,10 @@ typedef struct {VA2 p1[6];} UA;
  }
 
 #define ANAN(f,Tz,Tx,Ty,pfx)   \
- AHDR2(f,Tz,Tx,Ty){volatile Tx u;volatile Ty v;                    \
-  volatile Tz*Vz=z;                                                \
-  volatile Tx*Vx=x;                                                \
-  volatile Ty*Vy=y;                                                \
+ AHDR2(f,Tz,Tx,Ty){VOLATILE Tx u;VOLATILE Ty v;                    \
+  VOLATILE Tz*Vz=z;                                                \
+  VOLATILE Tx*Vx=x;                                                \
+  VOLATILE Ty*Vy=y;                                                \
   NAN0;                                                            \
   if(1==n)  DO(m,                *Vz++=pfx(*Vx,*Vy); Vx++; Vy++; ) \
   else if(b)DO(m, u=*Vx++; DO(n, *Vz++=pfx( u,*Vy);      Vy++;))   \

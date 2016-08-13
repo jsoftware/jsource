@@ -154,9 +154,10 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #endif
    break;
   case FL:
-   {D c,s,t,*u,*v,*wv,*x,*zv;
-    u=DAV(a); v=wv=DAV(w); zv=DAV(z);
+   {D t,*u,*v,*wv,*x,*zv;
+    volatile D c,s;
     NAN0;
+    u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
     else for(i=0;i<m;++i,v=wv,zv+=n){
             x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}

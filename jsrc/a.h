@@ -33,7 +33,6 @@
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
 
-// Since F?RANK ends with EPILOG (needlessly for boxed results), there's no need to EPILOG here
 #define AS1(f,exp,x)      DF1(f){PROLOG(x);DECLF ;A z; PREF1(f); z=(exp); EPILOG(z);}
 #define AS2(f,exp,x)      DF2(f){PROLOG(x);DECLF ;A z; PREF2(f); z=(exp); EPILOG(z);}
 #define CS1(f,exp,x)      DF1(f){PROLOG(x);DECLFG;A z; PREF1(f); z=(exp); EPILOG(z);}

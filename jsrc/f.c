@@ -203,6 +203,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
 // w is an array of boxes of any shape, where the contents of each box are character tables.
 // Output is two lists, one each for x and y, where x[i] is (1+height of largest contents)
 // found in row i, and y[j] is (1 + width of largest contents) in column j
+// Also return the largest type encountered
 // Result is 1 normally, 0 if size out of bounds
 static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,*yv;
  RZ(w);  // return failure if no input
@@ -241,12 +242,14 @@ static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
  l=jt->bx[k]; a=b?' ':jt->bx[10]; d=b?l:jt->bx[1+k]; r=b?l:jt->bx[2+k];
  // Install first character; then, for each field, {(width-1) copies of a; then d overwriting last a}
  // then install r over the last d
- if(cw==1){
-  // version for LIT output array
-  *v++=l; DO(n, memset(v,a,x[i]-1); v+=x[i]-1; *v++=d;); *--v=r;
- }else{US *u=(US*)v;I j;
-  // version for C2T output array
-  *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;
+ // Different version for each character size
+ switch (cw){
+ case 1:   // version for LIT output array
+  {*v++=l; DO(n, memset(v,a,x[i]-1); v+=x[i]-1;*v++=d;);*--v=r;}break;
+ case 2: // version for C2T output array
+  {US *u=(US*)v;I j; *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;} break;
+ case 4: // version for C4T output array
+  {C4 *u=(C4*)v;I j; *u++=l; DO(n, for(j=x[i]-1;j>0;--j)*u++=a; *u++=d;); *--u=r;} break;
  }
 }
 
@@ -256,7 +259,7 @@ static void jtfram(J jt,I k,I n,I*x,C*v,I cw){C a,b=9==k,d,l,r;
 // wd=width of result 2-cell, in bytes
 // x,y hold height and width or rows & columns respectively (including 1 boxing char)
 // zv->first character in first 2-cell
-// cw=size of result chars:1=LIT, 2=C2T
+// cw=size of result chars:1=LIT, 2=C2T, 4=C4T
 static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn,*yv;
  p=ht*wd;  // p=stride between 2-cells
  xn=AN(x); xv=AV(x);   // xn=#rows per 2-cell, xv->heights
@@ -286,9 +289,9 @@ static void jtfminit(J jt,I m,I ht,I wd,A x,A y,C*zv, I cw){C*u,*v;I p,xn,*xv,yn
 // x,y  hold height and width or rows & columns respectively (including 1 boxing char).  Each has
 //   an extra entry at the end, which we will fill in here
 // zv->output area, the first character in the result array (rank>=2)
-// cw=size of character, in bytes 1=LIT 2=C2T
+// cw=size of output character, in bytes 1=LIT 2=C2T 4=C4T
 // We go through the boxes one by one, moving the data according to the width/height and centering info
-static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;C*v;
+static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
   I c,d,f,i,j,k,n,r,*s,xn,xp,*xv,yn,yp,*yv;
  // n=#boxes in w, wv->&first box
  n=AN(w); wv=AAV(w);
@@ -306,15 +309,23 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;C*v;
   for(j=0;j<xn;++j){
    for(k=0;k<yn;++k){
     // get info for contents of next box: (r,c) = height,width
-    e=wv[i]; s=AS(e); r=s[0]; c=s[1]; v=CAV(e); 
+    e=wv[i]; s=AS(e); r=s[0]; c=s[1];
     // get offset to store the value at.  First, the vertical calculation.
     // If centering=0, use starting position.  If 2, add (fieldheight-1)-(data height)
     // if 1, add half of that height
     f = xp?(d + wd*((xv[j]-1-r)>>(2-xp))) : d;
     if(yp)f = f + cw*((yv[k]-1-c)>>(2-yp));
-    // Move in the data.  If sizes are dissimilar, the target must be larger; do 1- to 2-byte conversion then
-    if(cw==bp(AT(e))){C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
-    else{US *u=(US *)(zv+f),*uu; DO(r, uu=u; DO(c, *uu++=*v++;) u=(US *)((C*)u+wd);)}
+    // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
+    if(cw==bp(AT(e))){C* v=CAV(e); C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
+    else{  // conversion required
+     if(bp(AT(e))==1){C *v=CAV(e);   // source is bytes
+      if(cw==2){   // dest is C2T
+       US *u=(US *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(US *)((C*)u+wd);)
+      }else{   // dest is C4T
+       C4 *u=(C4 *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4 *)((C*)u+wd);)
+      }
+     }else{US *v=USAV(e);C4 *u=(C4 *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4 *)((C*)u+wd);)}  // must be source is C2T, dest C4T
+    }
     ++i;   // step to next input cell
     d += cw*yv[k];  // step to next output column 
    }
@@ -348,8 +359,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  if(!n)R z;  // If w has 0 cells, return the empty array
  // Here w has cells.
  zv=CAV(z);  // zv->result area
-// wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
- wdb=wd*(t=MIN(2,bp(t)));  // Replace t with the length of a character of t; get length of line in bytes
+ wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
  // Install the boxing characters in each 2-cell of the result
  fminit(m,ht,wdb,x,y,zv,t);
  // Insert the data for each atom into the result
@@ -397,12 +407,14 @@ static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\01
  RZ(z=enframe(every(w,0L,jtmatth1)));
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
- // Two versions of replacement, depending on datatype of the array
- if(AT(z)==LIT){UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);}  // byte
+ // Three versions of replacement, depending on datatype of the array
+ switch(AT(z)){
+  case LIT: {UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);} break; // byte
  // For wide-chars don't replace NUL following >=0x1100, since NUL is used to stand for a zero-width character paired with
- // a double-wide character for spacing purposes
- else{US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);}  // wide char
-
+ // a double-wide character for spacing purposes.  This NUL will be removed at final output, or for display
+  case C2T: {US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // wide char
+  default: {C4 *s=C4AV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // must be literal4
+ }
  R z;
 }
 
@@ -420,6 +432,56 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  s=AS(z); d=*(1+s); v=1+CAV(z); c=jt->bx[9]; DO(*s, *(v+n)=c; v+=d;);
  R z;
 }
+
+/* spec for the routines needed from xu.c:
+Routine A:
+Input: a block of type LIT, rank <=1
+Result: a block of type LIT, C2T, or C4T
+Process:
+ if(block is all ASCII or contains invalid UTF-8)return a copy of the input block;
+ if(block contains no codepoints above FFFF){
+  UTF-decode to C2T;
+  call Routine B and return its result;
+ }
+ UTF-decode to C4T;
+ call Routine C and return its result;
+
+Routine B:
+Input: a block of type C2T, rank <=1
+Result: a block of type C2T, or C4T
+Process:
+ if(block contains surrogates){
+  Convert block to C4T, one character at a time, ignoring surrogates;
+  Call Routine C and return its result;
+ }
+ if(jt->thornuni)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
+ return the C2T block;
+
+Routine C:
+Input: a block of type C4T, rank <=1
+Result: a block of type C4T
+Process:
+ if(block contains surrogate pairs){
+  Join surrogate pairs into one C4T character per pair;
+ }
+ if(jt->thornuni)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
+ return the C4T block;
+
+
+Routine D:
+Input: a block of type C2T or C4T, rank <=1
+Result: a block of type LIT
+Process:
+  if(C4T and block contains a character above 10FFFF)domain error;
+  if(jt->thornuni)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
+  else convert all bytes to UTF-8 byte string;
+*/
+
+#define RoutineA jttoutf16r
+#define RoutineB jttwidthf16
+#define RoutineC jttwidthf32
+#define RoutineD jttoutf8a
+
 
 // ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
 // C2T when there are unicodes present
@@ -446,8 +508,9 @@ static F1(jtthorn1main){PROLOG(0001);A z;
     // is any, convert to C2T.  This will make the boxes as small as possible, and will be perfect IF
     // all the characters are UTF-8 of the same length (happens in CJK environments).  If
     // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
-    // The conversion to C2T includes appending NUL to double-wide chars
-   z=jt->thornuni?rank1ex(w,0L,1L,jttoutf16r) : ca(w);  // check list for U8 codes, return LIT or C2T
+    // The conversion to C2T includes appending NUL to double-wide chars, and conversion up to
+    // C4T if there are surrogate pairs or codes above U+FFFF
+   z=jt->thornuni?rank1ex(w,0L,1L,RoutineA) : ca(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, keep it as C2T (it's not worth the time to go through
@@ -456,12 +519,14 @@ static F1(jtthorn1main){PROLOG(0001);A z;
    // This gives each glyph the same number of character codes as display positions, which will make the
    // Resulting array line up without padding.  The NUL characters are suppressed for display, and removed
    // on any conversion back to U8.
+   // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8a);
+   z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,RoutineD);
    break;
   case C4TX:
-   z= rank1ex(w,0L,1L,jttoutf8a);
-//   z=jt->thornuni?rank1ex(w,0L,1L,jttwidthf16) : rank1ex(w,0L,1L,jttoutf8a);
+   // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
+   // If C2T output not allowed, just convert to UTF-8 bytes
+   z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,RoutineD);
    break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;
@@ -486,21 +551,23 @@ static F1(jtthorn1main){PROLOG(0001);A z;
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
 F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); R z; }
 
-// entry point for returning character array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
-F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, jttoutf8a); jt->thornuni = to; R z; }
+// entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
+F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, RoutineD); jt->thornuni = to; R z; }
 
 
 #define DDD(v)   {*v++='.'; *v++='.'; *v++='.';}
 #define EOL(zv)  {zv[0]=eov[0]; zv[1]=eov[1]; zv+=m;}
 #define EOLC(zv) {++lc; EOL(zv)}
 #define BDC(zv,x)  {if(x<=26&&16<=x){*zv++='\342'; *zv++='\224'; *zv++=bdc[x];}else *zv++=x;}
-#define UUC(zv,x)  {if(x<=127)*zv++=(C)x;else if(x<=2047){*zv++=(C)(0xc0+(x>>6));*zv++=(C)(0x80+(x&0x3f));}else{*zv++=(C)(0xe0+(x>>12));*zv++=(C)(0x80+((x>>6)&0x3f));*zv++=(C)(0x80+(x&0x3f));}}
+#define UUC(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else{*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
+#define UUC4(zv,x)  {if((x)<=127)*zv++=(C)(x);else if((x)<=2047){*zv++=(C)(0xc0+((x)>>6));*zv++=(C)(0x80+((x)&0x3f));}else if((x)<=65535){*zv++=(C)(0xe0+((x)>>12));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));} \
+else{*zv++=(C)(0xf0+((x)>>18));*zv++=(C)(0x80+(((x)>>12)&0x3f));*zv++=(C)(0x80+(((x)>>6)&0x3f));*zv++=(C)(0x80+((x)&0x3f));}}
 
 
 // Apply a counting function to the input characters
 // Result is a function added up over the characters
 // I (*f)() - the counting function
-// t = width of character: 1 for byte, 2 for C2T
+// t = width of character: 1 for byte, 2 for C2T, 4 for C4T
 // v->character array
 // h = total # lines to output
 // nq = # lines in the character array
@@ -518,8 +585,7 @@ static I countonlines(I (*f)(), I t, C* v, I h, I nq, I c, I lb, I la){
 // - we don't stop counting after the line-length limit is reached
 // - we add 3 bytes per boxing char when we only have to add 2 (3-byte UTF, but 1 is already accounted for)
 // - we don't account for internal EOLs, which reduce the number of lines to process
-// I don't know why we have this code anyway, rather than just allocating 3 bytes per each character 
-// t=width of character: 1 for byte, 2 for C2T
+// t=width of character: 1 for byte, 2 for C2T, 4 for C4T
 // v->character array
 // n = number of characters to check
 static I scanbdc(I t, C*v,I n){C x;I m=0;
@@ -528,10 +594,13 @@ static I scanbdc(I t, C*v,I n){C x;I m=0;
   DO(n, x=*v; if(x<=26&&16<=x)m+=3; ++v;)
  } else {
   static US bdc[] = { 0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0x250c,0x252c,0x2510,0x251c, 0x253c,0x2524,0x2514,0x2534,0x2518,0x2502,0x2500 };
-  // If the input is C2T, We count the length of each character.  Also, we convert the boxing codes
+  // If the input is C2T/C4T, We count the length of each character.  Also, we convert the boxing codes
   // to their Unicode values here, so we don't have to check again later
-  US *u = (US*)v, ux;  // get pointer to wide chars.  Don't analyze as bytes, to be endian-neutral
-  DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
+  if(t==2){US *u = (US*)v, ux;  // get pointer to wide chars.  Don't analyze as bytes, to be endian-neutral
+   DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=bdc[ux];}else if(ux>127){++m; if(ux>2047)++m;} ++u;)
+  }else{C4 *u = (C4*)v, ux;  // get pointer to C4T chars.  Don't analyze as bytes, to be endian-neutral
+   DO(n, ux=*u; if(ux<=26&&16<=ux){m+=2;*u=(C4)bdc[ux];}else if(ux>127){++m; if(ux>2047){++m; if(ux>65535)++m;}} ++u;)
+  }
  }
  R m;
 }
@@ -547,10 +616,10 @@ static I scaneol(I t, C*v,I n){I m=0;
  // We look at each character; if CR, we add 1.  If LF, we add 1, unless the
  // previous char was CR: then we subtract 1.  So for CRLF we end up adding nothing, while
  // other occurrences of CR or LF add 1 each.
- if(t==1) {C e,x=0;
-  DO(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)
- } else {US e,x=0,*u=(US*)v;   // Don't analyze as bytes, to be endian-neutral
-  DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)
+ switch(t){
+  case 1: {C e,x=0; DO(n, e=x; x=*v++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;)} break;
+  case 2: {US e,x=0,*u=(US*)v; DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;
+  default: {C4 e,x=0,*u=(C4*)v; DO(n, e=x; x=*u++; if(x==CCR)++m; else if(x==CLF)e==CCR?--m:++m;) } break;  // must be C4T
  }
  R m;
 }
@@ -594,8 +663,8 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
 static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;D lba;
      I c,c1,h,i,j,k,lc,m,n,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
- // Convert w to a character array; set t=1 if it's LIT, t=2 if Unicode
- RZ(y=thorn1u(w)); t=(AT(y)==LIT)?1:2;
+ // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
+ RZ(y=thorn1u(w)); t=bp(AT(y));
  // set ch iff input w is a character type.
  ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char
@@ -639,7 +708,8 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
   // Each of these paths must end with the input pointer v advanced to the next input line.  The output is built in *zv
   else if(ch) {
    // Loop for each character of the line.  Convert CR, LF, or CRLF to EOL; discard NUL bytes
-   if(t==1) {
+   switch(t){
+   case 1:
     // Here for LIT characters.  Move em, handling EOL and box-drawing; discard NUL
     for(j=k=x=0;j<c;++j){  // k counts # chars output since last EOL
      e=x; x=*v++;  // prev char, next char
@@ -649,7 +719,8 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
                // translate it to UTF8; if it fills the line, install ...
                // apparently there used to be code here to output multiple lines if a string exceeded c1 in length
     }
-   } else {US *u=(US*)v,x=0,e;
+    break;
+   case 2:{US *u=(US*)v,x=0,e;
     // Here for C2T input.  Move em, handling EOL and unicode conversion.  Box-drawing characters have already been converted
     // Discard NUL characters (including ones added after CJK chars)
     for(j=k=0;j<c;++j){
@@ -659,19 +730,43 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      else if(x)     {if(k<c1){UUC(zv,x);} else if(k==c1)DDD(zv); ++k;}
     }
     v=(C *)u;
+    }
+    break;
+   case 4:{C4 *u=(C4*)v,x=0,e;
+    // Here for C4T input.  Like C2T
+    for(j=k=0;j<c;++j){
+     e=x; x=*u++;
+     if     (x==CCR){          EOLC(zv); k=0;}
+     else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
+     else if(x)     {if(k<c1){UUC4(zv,x);} else if(k==c1)DDD(zv); ++k;}
+    }
+    v=(C *)u;
+    }
+    break;
    }
-  // If input was not character type, we copy the first c1 characters and skip over the surplus, appending ... if there is a surplus.
+  // If input was not character type, it will bnot contain squirrely sequences (boxing will have translated them to spaces),
+  // so we copy the first c1 characters and skip over the surplus, appending ... if there is a surplus.
   // But if there are UTF-8 characters in the mix, check each character and translate it if UTF-8
   // No internal newlines are possible unless the original w was character type (in boxes, they were changed to space)
-  }else if(t==2) {US *u=(US*)v,x;
-   // C2T result.  There may be zero-width NULs about - suppress them
-   DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
   }else{
-   // LIT characters.  Copy them.  If there were boxing characters about, copy one by one and translate if boxing chars
-   // No need to suppress NULs - if the result is LIT, all boxes must have converted to LIT, and would have had NUL converted to space
-   if(nbx){DO(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
-   // Otherwise just move fast
-   else {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}
+   switch(t){
+   case 2: {US *u=(US*)v,x;
+    // C2T result.  There may be zero-width NULs about - suppress them
+    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+    }
+    break;
+   case 1:
+    // LIT characters.  Copy them.  If there were boxing characters about, copy one by one and translate if boxing chars
+    // No need to suppress NULs - if the result is LIT, all boxes must have converted to LIT, and would have had NUL converted to space
+    if(nbx){DO(c1, x=*v++; BDC(zv,x);); if(c1<c){v+=c-c1; DDD(zv);}}
+    // Otherwise just move fast
+    else {MC(zv,v,c1); zv+=c1; v+=c1;    if(c1<c){v+=c-c1; DDD(zv);}}
+    break;
+   default: {C4 *u=(C4*)v,x;
+    // C4T result.  There may be zero-width NULs about - suppress them
+    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+    }
+    break;
    }
   }
   // One line has been copied to the output area.  Append the final EOL

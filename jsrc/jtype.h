@@ -86,6 +86,7 @@ typedef I SI;
 #define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
+#define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AK(x)))  /* name                    */
 #define IAV(x)          AV(x)                   /* integer                 */
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */

@@ -35,14 +35,14 @@ ZF1(jtztrend){D a,b,t;Z z;
  R z;
 }
 
-ZF2(jtztymes){volatile D a,b,c,d;Z z;
+ZF2(jtztymes){D a,b,c,d;Z z;
  a=u.re; b=u.im; c=v.re; d=v.im;
  z.re=TYMES(a,c)-TYMES(b,d);
  z.im=TYMES(a,d)+TYMES(b,c);
  R z;
 }
 
-ZF2(jtzdiv){ZF2DECL;volatile D t;
+ZF2(jtzdiv){ZF2DECL;D t;
  if(ZNZ(v)){
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+(b&&d?b*d:0.0))/t; zi=(b-(a&&d?a*d:0))/t;

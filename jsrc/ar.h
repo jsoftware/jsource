@@ -15,15 +15,14 @@
  }}
 
 #define REDUCENAN(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;volatile Tx*y;volatile Tz v;                \
-  volatile Tz*Vz=z,*zz;                                           \
+ AHDRR(f,Tz,Tx){I d,i;Tx*y;Tz v,*zz;                              \
   NAN0;                                                           \
-  d=c/n; x+=m*c; zz=Vz+=m*d;                                      \
-  if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--Vz=v;) \
-  else if(1==n)DO(d, *--Vz=    *--x;)                             \
+  d=c/n; x+=m*c; zz=z+=m*d;                                       \
+  if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
+  else if(1==n)DO(d, *--z=    *--x;)                              \
   else for(i=0;i<m;++i,zz-=d){                                    \
-   y=x; x-=d; Vz=zz; DO(d, --Vz; --x; --y; *Vz=pfx(*x,*y););      \
-   DO(n-2,    Vz=zz; DO(d, --Vz; --x;      *Vz=pfx(*x,*Vz);));    \
+   y=x; x-=d; z=zz; DO(d, --z; --x; --y; *z=pfx(*x,*y););         \
+   DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   }                                                               \
   NAN1V;                                                          \
  }

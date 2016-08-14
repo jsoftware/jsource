@@ -18,7 +18,7 @@
  }}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I d,i;volatile Tz v,*y;                               \
+ AHDRS(f,Tz,Tx){I d,i;Tz v,*y;                                        \
   NAN0;                                                               \
   d=c/n; x+=m*c; z+=m*c;                                              \
   if(1==d)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \

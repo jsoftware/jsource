@@ -579,14 +579,14 @@ A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),one));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
 
-static AHDRR(jtmeanD,D,D){I d=c/n,i;volatile D*y;volatile D v,*zz;
- volatile D *Vz=z;
+static AHDRR(jtmeanD,D,D){I d,i;D*y;D v,*zz;
+ d=c/n;
  NAN0;
- if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *Vz++=v/n;)
+ if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *z++=v/n;)
  else for(i=0;i<m;++i){
-  y=x; x+=d; zz=Vz; DO(d, *Vz++ =*x+++   *y++;);
-  DO(n-3,    Vz=zz; DO(d, *Vz+++=*x++;        ));
-             Vz=zz; DO(d, *Vz   =(*Vz+*x++)/n; ++Vz;);
+  y=x; x+=d; zz=z; DO(d, *z++ =*x+++   *y++;);
+  DO(n-3,    z=zz; DO(d, *z+++=*x++;        ));
+             z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
  }
  NAN1V;
 }    /* based on REDUCEPFX; 2<n */

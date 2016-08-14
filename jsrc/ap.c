@@ -25,7 +25,7 @@
  }}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I d=c/n,i;VOLATILE Tz v,*y;                           \
+ AHDRP(f,Tz,Tx){I d=c/n,i;Tz v,*y;                                    \
   NAN0;                                                               \
   if(1==d)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else for(i=0;i<m;++i){                                              \
@@ -52,7 +52,7 @@
  }}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I d=c/n,i;VOLATILE Tz v,*y;                                        \
+ AHDRP(f,Tz,Tx){B b;I d=c/n,i;Tz v,*y;                                                 \
   NAN0;                                                                                \
   if(1==d)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else for(i=0;i<m;++i){                                                               \

@@ -16,8 +16,8 @@
 /* EMAX2:  largest  number where _>cosh EMAX2; EMAX+^.2 */
 /* TMAX:   smallest number where 1=tanh TMAX            */
                    
-#define ZF1DECL         Z z;VOLATILE D zr=0.0,zi=0.0,a=v.re,b=v.im
-#define ZF2DECL         Z z;VOLATILE D zr=0.0,zi=0.0,a=u.re,b=u.im,c=v.re,d=v.im
+#define ZF1DECL         Z z;D zr=0.0,zi=0.0,a=v.re,b=v.im
+#define ZF2DECL         Z z;D zr=0.0,zi=0.0,a=u.re,b=u.im,c=v.re,d=v.im
 #define ZEPILOG         z.re=zr; z.im=zi; R z
 #define ZF1(f)          Z f(J jt,Z v)
 #define ZF2(f)          Z f(J jt,Z u,Z v)

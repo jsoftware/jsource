@@ -570,6 +570,7 @@
     <ClCompile Include="..\..\jsrc\dtoa.c" />
     <ClCompile Include="..\..\jsrc\F.C" />
     <ClCompile Include="..\..\jsrc\F2.C" />
+    <ClCompile Include="..\..\jsrc\fbu.c" />
     <ClCompile Include="..\..\jsrc\I.C" />
     <ClCompile Include="..\..\jsrc\IO.C" />
     <ClCompile Include="..\..\jsrc\J.C" />
@@ -598,6 +599,7 @@
     <ClCompile Include="..\..\jsrc\VA1.C" />
     <ClCompile Include="..\..\jsrc\VA2.C" />
     <ClCompile Include="..\..\jsrc\VA2S.C" />
+    <ClCompile Include="..\..\jsrc\VA2SS.C" />
     <ClCompile Include="..\..\jsrc\vamultsp.c" />
     <ClCompile Include="..\..\jsrc\VB.C" />
     <ClCompile Include="..\..\jsrc\VBANG.C" />

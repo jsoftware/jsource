@@ -83,6 +83,7 @@ OBJS="\
  dtoa.o \
  f.o \
  f2.o \
+ fbu.o \
  i.o \
  io.o \
  j.o \

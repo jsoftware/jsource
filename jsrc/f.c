@@ -5,6 +5,12 @@
 
 #include "j.h"
 
+// in fbu.c
+extern A RoutineA(J,A);
+extern A RoutineB(J,A);
+extern A RoutineC(J,A);
+extern A RoutineD(J,A);
+
 #if SY_64
 #define WI          21L
 #else
@@ -433,56 +439,6 @@ static F1(jtths){A e,i,x,z;C c,*u,*v;I d,m,n,*s;P*p;
  R z;
 }
 
-/* spec for the routines needed from xu.c:
-Routine A:
-Input: a block of type LIT, rank <=1
-Result: a block of type LIT, C2T, or C4T
-Process:
- if(block is all ASCII or contains invalid UTF-8)return a copy of the input block;
- if(block contains no codepoints above FFFF){
-  UTF-decode to C2T;
-  call Routine B and return its result;
- }
- UTF-decode to C4T;
- call Routine C and return its result;
-
-Routine B:
-Input: a block of type C2T, rank <=1
-Result: a block of type C2T, or C4T
-Process:
- if(block contains surrogates){
-  Convert block to C4T, one character at a time, ignoring surrogates;
-  Call Routine C and return its result;
- }
- if(jt->thornuni)install a NUL C2T character after each CJK fullwidth char that is not followed by NUL;
- return the C2T block;
-
-Routine C:
-Input: a block of type C4T, rank <=1
-Result: a block of type C4T
-Process:
- if(block contains surrogate pairs){
-  Join surrogate pairs into one C4T character per pair;
- }
- if(jt->thornuni)install a NUL C4T character after each CJK fullwidth char that is not followed by NUL;
- return the C4T block;
-
-
-Routine D:
-Input: a block of type C2T or C4T, rank <=1
-Result: a block of type LIT
-Process:
-  if(C4T and block contains a character above 10FFFF)domain error;
-  if(jt->thornuni)convert to UTF-8 byte string, ignoring the first NUL following a CJK fullwidth character;
-  else convert all bytes to UTF-8 byte string;
-*/
-
-#define RoutineA jttoutf16r
-#define RoutineB jttwidthf16
-#define RoutineC jttwidthf32
-#define RoutineD jttoutf8a
-
-
 // ": y, returning character array.  If jt->thornuni is set, LIT and C2T types return
 // C2T when there are unicodes present
 static F1(jtthorn1main){PROLOG(0001);A z;
@@ -521,12 +477,12 @@ static F1(jtthorn1main){PROLOG(0001);A z;
    // on any conversion back to U8.
    // If there are surrogates, the value returned here might be C4T
    // If C2T output not allowed, convert to ragged array of bytes
-   z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,RoutineD);
+   z=jt->thornuni?rank1ex(w,0L,1L,RoutineB) : rank1ex(w,0L,1L,jttoutf8a);
    break;
   case C4TX:
    // If C2T output is allowed, keep this as C4T, but add the padding NUL characters following CJK fullwidth.
    // If C2T output not allowed, just convert to UTF-8 bytes
-   z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,RoutineD);
+   z= jt->thornuni?rank1ex(w,0L,1L,RoutineC) : rank1ex(w,0L,1L,jttoutf8a);
    break;
   case BOXX:  z=thbox(w);                  break;
   case SBTX:  z=thsb(w);                   break;

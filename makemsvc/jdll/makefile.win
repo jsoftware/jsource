@@ -46,6 +46,7 @@ OBJS=  \
  ../../jsrc/dtoa.o \
  ../../jsrc/f.o \
  ../../jsrc/f2.o \
+ ../../jsrc/fbu.o \
  ../../jsrc/i.o \
  ../../jsrc/io.o \
  ../../jsrc/j.o \

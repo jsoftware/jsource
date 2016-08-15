@@ -85,14 +85,32 @@ a. -: ": a.
 (-: ":) a. {~ 8 10 ?@$ 256
 (-: ":) 1 2 3 4 5 129 { a.
 
-NB. not yet worked !!!
-NB. x -: ":x should hold for all byte literal
+NB. x -: ":x should hold for all rank-1 byte literal
 x -: ":x=: 3 4$ 97 224 176 157 98{a.
 NB. ": on utf-16 for cjk should have no extra null
 ({.a.) -.@e. 8 u: }. u: i.16bd800
 ({.a.) -.@e. ": }. u: i.16bd800
-(8 u: x) -: ":x=: }. u: i.16bd800
-(8 u: x) -: ":x=: u: 16be000 + i.16b2000
+(8 u: x) -: ":x=: u: i.16bd800
+(8 u: x) -: ":x=: u: 0 0 0,~ 16be000 + i.16b2000
+(8 u: x) -: ":x=: 10 u: 0 0 0,~ 16b10000 + i.16b2000
+NB. literal
+x -: ":x=: 128{.a.              NB. ascii
+x -: ":x=: 128}.a.              NB. illegal utf8
+x -: ":x=: 8 u: u: 128}.a.      NB. 2-byte utf8
+x -: ":x=: 8 u: 16b800 + i.8    NB. 3-byte utf8
+x -: ":x=: 8 u: 16b10000 + i.8  NB. non-bmp
+x -: ":x=: 8 u: 16bd800 + i.8   NB. lone surrogate
+NB. wchar
+(8 u: x) -: ":x=: u: i.128                 NB. ascii
+(8 u: x) -: ":x=: u: 128+i.128             NB. wchar
+(8 u: y) -: ":x=: 7 u: y=: 16bd800 + i.8   NB. lone surrogate
+(8 u: y) -: ":x=: 7 u: y=: 16b10000 + i.8  NB. non-bmp
+NB. literal4
+(8 u: x) -: ":x=: 10 u: i.128               NB. ascii
+(8 u: x) -: ":x=: 10 u: 128+i.128           NB. wchar
+(8 u: y) -: ":x=: 10 u: y=: 16bd800 + i.8   NB. lone surrogate
+(8 u: y) -: ":x=: 10 u: y=: 16b10000 + i.8  NB. non-bmp
+'domain error' -: ": etx 10 u: 16b110000 + i.8
 
 bc =: 9!:6 ''
 9!:7  '+++++++++|-'
@@ -106,6 +124,9 @@ NB. display width of CJK
 10 = # ' ' -.~ {. ": <8&u: u:30000+i.4
 NB. display width of mixed character sets
 18 = # ' ' -.~ {. ": <8&u: u:(40+i.4),(200+i.4),30000+i.4
+NB. display width of non-bmp pane
+6 = # ' ' -.~ {. ": <10&u:16b10000+i.4
+10 = # ' ' -.~ {. ": <10&u:16b20000+i.4
 9!:7 bc
 
 
@@ -191,6 +212,18 @@ f <<'';i.2 0 3 4 2
 f +&.>i.2 3 4
 f (<i.3 4) (<0 0 0)} +.&.>i.2 3 4
 
+NB. literal, wchar, literal4
+f < 'abc'
+f < u: 'abc'
+f < 10 u: 'abc'
+f < 128}.a.
+f < u: 128+i.128
+f < 10 u: 128+i.128
+f 'abc';(u: 'abc');(10 u: 'abc')
+f (128{.a.);(u: 128+i.128)
+f (128}.a.);(10 u: 128+i.128)
+f (u: 128+i.128);(10 u: 128+i.128)
+f (128}.a.);(u: 128+i.128);(10 u: 128+i.128)
 
 NB. x":y ----------------------------------------------------------------
 

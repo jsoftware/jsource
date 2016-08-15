@@ -103,7 +103,7 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
   ado=p.f; cv=p.cv;
  }
- if(ado==idf)R rat(w);
+ if(ado==idf)R rat(w);  // no need to rat, really, but harmless since always DIRECT type
  if(b)R va1s(w,id,cv,ado);
  t=atype(cv); zt=rtype(cv);
  if(t&&t!=wt)RZ(w=cvt(t,w));
@@ -113,7 +113,13 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
  else    R cv&VRI+VRD?cvz(cv,z):z;
 }
 
-F1(jtfloor1){R va1(w,CFLOOR);}
+
+// If argument has a single direct-numeric atom, go process through speedy-singleton code
+#define CHECKSSING(w,f) RZ(w); if(0 && AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w); F1PREFIP;
+
+
+
+F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOOR);}
 F1(jtceil1 ){R va1(w,CCEIL );}
 F1(jtconjug){R va1(w,CPLUS );}
 F1(jtsignum){R va1(w,CSTAR );}

@@ -570,6 +570,8 @@ extern DF2(jtrazecut2);
 extern DF2(jtrollk);
 extern DF2(jtrollkx);
 
+extern A jtssfloor(J,A);
+
 extern A jtssplus(J,A,A);
 extern A jtssminus(J,A,A);
 extern A jtsslt(J,A,A);

@@ -108,6 +108,7 @@ OBJS="\
  v1.o \
  v2.o \
  va1.o \
+ va1ss.o \
  va2.o \
  va2s.o \
  va2ss.o \

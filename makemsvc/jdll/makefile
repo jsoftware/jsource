@@ -73,6 +73,7 @@ OBJS=  \
  ../../jsrc/v1.o \
  ../../jsrc/v2.o \
  ../../jsrc/va1.o \
+ ../../jsrc/va1ss.o \
  ../../jsrc/va2.o \
  ../../jsrc/va2s.o \
  ../../jsrc/va2ss.o \

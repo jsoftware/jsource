@@ -248,6 +248,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // if there are no more iterations, fall through... (this deallocates the loop variables)
    case CENDSEL:
     // end. for select., and do. for for. after the last iteration, must pop the stack - just once
+    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
     if(!(ci->canend&2))rat(z); unstackcv(cv); --cv; ++r; 
     i=ci->go;    // continue at new location
     break;
@@ -265,6 +266,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CBREAKF:
     // break. in a for. must first pop any active select., and then pop the for.
     // We just pop till we have popped a non-select.
+    // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
     if(!(ci->canend&2))rat(z);   // protect possible result from pop
     do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
     i=ci->go;     // continue at new location

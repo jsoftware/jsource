@@ -75,31 +75,18 @@ NB. Unicodes not emulated by th
 'abcd' -: ": 10&u: 'abcd'
 (224 160 128 224 160 129{a.) -: ": 4 u: 2048 2049
 
-NB. ": on invalid unicode
+NB. ": on unboxed literal
+(a.{~i.16 16) -: ": 16 16$a.
 (":x) -: ":("1) x=: 3 4$ 97 224 176 157 98{a.
 (":x) -: ":("1) x=: 3 4$ u: 16b61 16bd800 16bdc00
 (":x) -: ":("1) x=: 3 4$ 10&u: 16b61 16bd800 16bdc00
 
-NB. ": on byte argument should always pass through unchanged
-a. -: ": a.
-(-: ":) a. {~ 8 10 ?@$ 256
-(-: ":) 1 2 3 4 5 129 { a.
-
-NB. x -: ":x should hold for all rank-1 byte literal
-x -: ":x=: 3 4$ 97 224 176 157 98{a.
-NB. ": on utf-16 for cjk should have no extra null
+NB. ": on unboxed literal should have no extra null
 ({.a.) -.@e. 8 u: }. u: i.16bd800
 ({.a.) -.@e. ": }. u: i.16bd800
 (8 u: x) -: ":x=: u: i.16bd800
 (8 u: x) -: ":x=: u: 0 0 0,~ 16be000 + i.16b2000
 (8 u: x) -: ":x=: 10 u: 0 0 0,~ 16b10000 + i.16b2000
-NB. literal
-x -: ":x=: 128{.a.              NB. ascii
-x -: ":x=: 128}.a.              NB. illegal utf8
-x -: ":x=: 8 u: u: 128}.a.      NB. 2-byte utf8
-x -: ":x=: 8 u: 16b800 + i.8    NB. 3-byte utf8
-x -: ":x=: 8 u: 16b10000 + i.8  NB. non-bmp
-x -: ":x=: 8 u: 16bd800 + i.8   NB. lone surrogate
 NB. wchar
 (8 u: x) -: ":x=: u: i.128                 NB. ascii
 (8 u: x) -: ":x=: u: 128+i.128             NB. wchar
@@ -110,7 +97,7 @@ NB. literal4
 (8 u: x) -: ":x=: 10 u: 128+i.128           NB. wchar
 (8 u: y) -: ":x=: 10 u: y=: 16bd800 + i.8   NB. lone surrogate
 (8 u: y) -: ":x=: 10 u: y=: 16b10000 + i.8  NB. non-bmp
-'domain error' -: ": etx 10 u: 16b110000 + i.8
+(a.{~256|y) -: ": 10 u: y=: 16b110000 + i.1000 NB. demoting unboxed illegal utf32
 
 bc =: 9!:6 ''
 9!:7  '+++++++++|-'
@@ -212,18 +199,21 @@ f <<'';i.2 0 3 4 2
 f +&.>i.2 3 4
 f (<i.3 4) (<0 0 0)} +.&.>i.2 3 4
 
-NB. literal, wchar, literal4
+NB. ascii
 f < 'abc'
 f < u: 'abc'
 f < 10 u: 'abc'
-f < 128}.a.
-f < u: 128+i.128
-f < 10 u: 128+i.128
 f 'abc';(u: 'abc');(10 u: 'abc')
-f (128{.a.);(u: 128+i.128)
-f (128}.a.);(10 u: 128+i.128)
-f (u: 128+i.128);(10 u: 128+i.128)
-f (128}.a.);(u: 128+i.128);(10 u: 128+i.128)
+f (32}.128{.a.);(u:32}.i.128);(10 u:32}.i.128)
+
+NB. NUL removed
+0 -.@e. , ": < a.
+0 -.@e. , ": < u: 0 0, 0 0,~ 128+i.128
+0 -.@e. , ": < 10 u: 0 0, 0 0,~ 128+i.128
+0 -.@e. , ": (128{.a.);(u: 0 0, 0 0,~ 128+i.128)
+0 -.@e. , ": (128}.a.);(10 u: 0 0, 0 0,~ 128+i.128)
+0 -.@e. , ": (u: 0 0, 0 0,~ 128+i.128);(10 u: 0 0, 0 0,~ 128+i.128)
+0 -.@e. , ": (128}.a.);(u: 0 0, 0 0,~ 128+i.128);(10 u: 0 0, 0 0,~ 128+i.128)
 
 NB. x":y ----------------------------------------------------------------
 

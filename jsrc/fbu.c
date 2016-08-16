@@ -465,34 +465,34 @@ Process:
   else convert all bytes to UTF-8 byte string;
 */
 
-A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; C* wv;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
+A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&LIT,EVDOMAIN);
- if(!n) {GATV(z,LIT,n,1,0); R z;}; // empty lit list 
- DO(n, if(0>*wv++){b=1;break;});
+ if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list 
+ DO(n, if(127<*wv++){b=1;break;});
  if(!b)R ca(w);
- q=mtowsize(CAV(w),n);
+ q=mtowsize(UAV(w),n);
  if(q<0)R ca(w);
- if(q==(q1=mtousize(CAV(w),n))){
-  GATV(z,C2T,q,AR(w),0);
-  mtow(CAV(w),n,USAV(z));
+ if(q==(q1=mtousize(UAV(w),n))){
+  GATV(z,C2T,q,1,0);
+  mtow(UAV(w),n,USAV(z));
   R RoutineB(jt,z);
  }else{
-  GATV(z,C4T,q1,AR(w),0);
-  mtou(CAV(w),n,C4AV(z));
+  GATV(z,C4T,q1,1,0);
+  mtou(UAV(w),n,C4AV(z));
   R RoutineC(jt,z);
  }
 }
 
-A RoutineB(J jt,A w){A z;I n,t,q,b=0; C* wv; US* c2v; C4* c4v;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
+A RoutineB(J jt,A w){A z;I n,t,q,b=0; UC* wv; US* c2v; C4* c4v;
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  ASSERT(t&C2T,EVDOMAIN);
- if(!n) {GATV(z,C2T,n,1,0); R z;}; // empty C2T list 
+ if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty C2T list 
  q=wtousize(USAV(w),n);
  if(q<0||q!=n){
-  GATV(z,C4T,n,AR(w),0);
-  c4v=(C4*)AV(z);
-  c2v=(US*)CAV(w);
+  GATV(z,C4T,n,AR(w),AS(w));
+  c4v=C4AV(z);
+  c2v=USAV(w);
   DO(n, *c4v++=(C4)*c2v++;);
   R RoutineC(jt,z);
  }
@@ -503,7 +503,7 @@ A RoutineB(J jt,A w){A z;I n,t,q,b=0; C* wv; US* c2v; C4* c4v;
 A RoutineC(J jt,A w){A z;I n,t,q,b=0; C4* wv;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=C4AV(w);
  ASSERT(t&C4T,EVDOMAIN);
- if(!n) {GATV(z,C4T,n,1,0); R z;}; // empty C4T list 
+ if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty C4T list 
  DO(n, if(*wv>=0xd800&&*wv<=0xdf00){b=1;break;};wv++;);
  if(b){
  q=utousize(C4AV(w),n);
@@ -525,31 +525,31 @@ if(t&C4T)
  DO(n, if(0x10ffff<*c4v++){b=1;break;});
  ASSERT(!b, EVDOMAIN);
  if(jt->thornuni){
- q=utomnullsize((C4*)CAV(w),n);
+ q=utomnullsize(C4AV(w),n);
  GATV(z,LIT,q,1,0);
- utomnull((C4*)CAV(w),n,CAV(z));
+ utomnull(C4AV(w),n,UAV(z));
  }
  else
  {
- q=utomsize((C4*)CAV(w),n);
+ q=utomsize(C4AV(w),n);
  q=(q<0)?(-q):q;
  GATV(z,LIT,q,1,0);
- utom((C4*)CAV(w),n,CAV(z));
+ utom(C4AV(w),n,UAV(z));
  }
 }
 else
 {
  if(jt->thornuni){
- q=wtomnullsize((US*)CAV(w),n);
+ q=wtomnullsize(USAV(w),n);
  GATV(z,LIT,q,1,0);
- wtomnull((US*)CAV(w),n,CAV(z));
+ wtomnull(USAV(w),n,UAV(z));
  }
  else
  {
- q=wtomsize((US*)CAV(w),n);
+ q=wtomsize(USAV(w),n);
  q=(q<0)?(-q):q;
  GATV(z,LIT,q,1,0);
- wtom((US*)CAV(w),n,CAV(z));
+ wtom(USAV(w),n,UAV(z));
  }
 }
 R z;

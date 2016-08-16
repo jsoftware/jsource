@@ -586,7 +586,8 @@ void utom(C4* src, I srcn, UC* snk){ C4 w;
   }
   else if(w>0x10ffff)          // invalid range
   {
-     // ignored, utf8 atmost 4 bytes
+   // demoted to 1-byte. utf8 atmost 4 bytes
+   *snk++=(UC)w;
   }
   else
   {
@@ -613,7 +614,7 @@ I utomsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
   else if(w>=0xd800&&w<=0xdfff) // utf-16 surrogate invalid in utf-32
   {r+=3;invalid=1;}
   else if(w>0x10ffff)          // invalid range
-  {invalid=1;}                 // ignored, utf8 atmost 4 bytes
+  {++r;invalid=1;}             // demoted to 1-byte. utf8 atmost 4 bytes
   else
    r+=4;
  }
@@ -628,7 +629,8 @@ void utow(C4* src, I srcn, US* snk){ C4 w;
   w=*src++;
   if(w>0x10ffff) // invalid range
   {
-   // ignored
+   // demoted to 2-byte.
+   *snk++=(US)w;
   }
   else
   {
@@ -650,7 +652,10 @@ I utowsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
  {
   w=*src++;
   if(w>0x10ffff) // invalid range
-   invalid=1; // ignored
+  {
+    r+=1;
+    invalid=1; // demoted to 2-byte.
+  }
   else
   {
    if(w>=0x10000)
@@ -664,60 +669,60 @@ I utowsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
  R (invalid)?(-r):r;
 }
 
-F1(jttoutf16){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; A c4; I *v;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
- if(!n) {GATV(z,LIT,n,1,0); R z;}; // empty lit list 
+F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
+ if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
  if(t&(B01+INT))
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
-  GATV(c4,C4T,n,AR(w),0); c4v=(C4*)AV(c4);
+  GATV(c4,C4T,n,1,0); c4v=C4AV(c4);
   DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
-  q=utowsize((C4*)CAV(c4),AN(c4));
+  q=utowsize(C4AV(c4),AN(c4));
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV(z,C2T,q,1,0);
-  utow((C4*)CAV(c4),AN(c4),(US*)CAV(z));
-  R z; // u32 from u8
+  utow(C4AV(c4),AN(c4),USAV(z));
+  R z; // u16 from int
  }
  else if(LIT&t)
  {
-  DO(n, if(0>*wv++){b=1;break;});
-  if(!b){ if(1==AR(w)) {R ca(w);}; GAT(z,LIT,1,1,0); *CAV(z)=*CAV(w); R z;} // ascii list unchanged ascii scalar as list
-  q=mtowsize(CAV(w),n);
+  DO(n, if(127<*wv++){b=1;break;});
+  if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
+  q=mtowsize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C2T,q,1,0);
-  mtow(CAV(w),n,(US*)CAV(z));
+  mtow(UAV(w),n,USAV(z));
   R z; // u16 from u8
  }
  else if(C2T&t)
  {
-  c2v=(US*)AV(w);
+  c2v=USAV(w);
   DO(n, if(127<*c2v++){b=1;break;});
   if(b) R ca(w); // u16 unchanged
-  GATV(z,LIT,n,AR(w),0);
-  wv=CAV(z);
-  c2v=(US*)AV(w);
-  DO(n, *wv++=(char)*c2v++;);
-  R z;
+  GATV(z,LIT,n,1,0);
+  wv=UAV(z);
+  c2v=USAV(w);
+  DO(n, *wv++=(UC)*c2v++;);
+  R z;   // fallback to ascii
  }
  else if(C4T&t)
  {
-  c4v=(C4*)AV(w);
+  c4v=C4AV(w);
   DO(n, if(127<*c4v++){b=1;break;});
   if(b){
-  q=utowsize((C4*)CAV(w),n);
+  q=utowsize(C4AV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C2T,q,1,0);
-  utow((C4*)CAV(w),n,(US*)CAV(z));
+  utow(C4AV(w),n,USAV(z));
   R z;
   }
   else
   {
-  GATV(z,LIT,n,AR(w),0);
-  wv=CAV(z);
-  c4v=(C4*)CAV(w);
+  GATV(z,LIT,n,1,0);
+  wv=UAV(z);
+  c4v=C4AV(w);
   DO(n, *wv++=(char)*c4v++;);
-  R z;
+  R z;   // fallback to ascii
   }
  }
  else
@@ -733,18 +738,17 @@ if(t&LIT) R ca(w); // char unchanged
 ASSERT(t&(C2T+C4T), EVDOMAIN);
 if(t&C2T)
 {
-q=wtomsize((US*)CAV(w),n);
+q=wtomsize(USAV(w),n);
 q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);
-// wtomnull((US*)CAV(w),n,CAV(z),jt->thornuni);  // If we inserted nulls after CJK, remove them.  This is only when original data was boxed
-wtom((US*)CAV(w),n,CAV(z));
+wtom(USAV(w),n,UAV(z));
 }
 else
 {
-q=utomsize((C4*)CAV(w),n);
+q=utomsize(C4AV(w),n);
 q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);
-utom((C4*)CAV(w),n,CAV(z));
+utom(C4AV(w),n,UAV(z));
 }
 R z;
 }    // called by monad ":
@@ -759,51 +763,54 @@ if(t&(B01+INT))
 {
 RZ(w=vi(w));
 n=AN(w); v=(I*)AV(w);
-GATV(c4,C4T,n,AR(w),0); c4v=(C4*)AV(c4);
+GATV(c4,C4T,n,1,0); c4v=C4AV(c4);
 DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
-q=utomsize((C4*)CAV(c4),AN(c4));
+q=utomsize(C4AV(c4),AN(c4));
 q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
 GATV(z,LIT,q,1,0);
-utom((C4*)CAV(c4),AN(c4),CAV(z));
+utom(C4AV(c4),AN(c4),UAV(z));
 }
 else if(t&C4T)
 {
-q=utomsize((C4*)CAV(w),n);
+q=utomsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV(z,LIT,q,1,0);
-utom((C4*)CAV(w),n,CAV(z));
+utom(C4AV(w),n,UAV(z));
 }
 else
 {
-q=wtomsize((US*)CAV(w),n);
+q=wtomsize(USAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV(z,LIT,q,1,0);
-wtom((US*)CAV(w),n,CAV(z));
+wtom(USAV(w),n,UAV(z));
 }
 R z;
 }    // 8 u: x - utf8 from LIT or C2T C4T
 
 // Similar to jttoutf16, but unlike 7&u: this one always returns unicode
-F1(jttoutf16x){I q;A z;
-ASSERT((LIT+C4T)&AT(w),EVDOMAIN);
-if(AT(w)&C4T)
+F1(jttoutf16x){A z;I n,t,q;
+RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
+if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty list
+if(t&C2T)R ca(w);
+ASSERT(t&LIT+C4T,EVDOMAIN);
+if(t&C4T)
 {
-q=utowsize((C4*)CAV(w),AN(w));
+q=utowsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV(z,C2T,q,1,0);
-utow((C4*)CAV(w),AN(w),(US*)CAV(z));
+utow(C4AV(w),n,USAV(z));
 }
 else
 {
-q=mtowsize(CAV(w),AN(w));
+q=mtowsize(UAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV(z,C2T,q,1,0);
-mtow(CAV(w),AN(w),(US*)CAV(z));
+mtow(UAV(w),n,USAV(z));
 }
 R z; // u16 from u8
 }
 
-// External function - just convert wide-char fw[] to U8 in f[], and null-terminate 
+// External function - just convert wide-char fw[] to U8 in f[], and null-terminate
 void jttoutf8x(J jt,C* f, I n, US* fw){I q;
 q=wtomsize(fw,wcslen((wchar_t*)fw));
 q=(q<0)?(-q):q;
@@ -811,50 +818,50 @@ wtom(fw,wcslen((wchar_t*)fw),f);
 f[q]=0;
 }
 
-F1(jttoutf32){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; I* v;
- RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=CAV(w);
- if(!n) {GATV(z,LIT,n,1,0); R z;}; // empty lit list 
+F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
+ RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
+ if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
  if((B01+INT)&t)
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
-  GATV(z,C4T,n,AR(w),0); c4v=(C4*)AV(z);
+  GATV(z,C4T,n,AR(w),AS(w)); c4v=C4AV(z);
   DO(n, j=*v++; *c4v++=(C4)(UI)j;);
   R z; // u32 from int
  }
  else if(LIT&t)
  {
-  DO(n, if(0>*wv++){b=1;break;});
-  if(!b){ if(1==AR(w)) {R ca(w);}; GAT(z,LIT,1,1,0); *CAV(z)=*CAV(w); R z;} // ascii list unchanged ascii scalar as list
-  q=mtousize(CAV(w),n);
+  DO(n, if(127<*wv++){b=1;break;});
+  if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
+  q=mtousize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C4T,q,1,0);
-  mtou(CAV(w),n,(C4*)CAV(z));
+  mtou(UAV(w),n,C4AV(z));
   R z; // u32 from u8
  }
  else if(C2T&t)
  {
-  c2v=(US*)AV(w);
+  c2v=USAV(w);
   DO(n, if(127<*c2v++){b=1;break;});
   if(b){
-  q=wtousize((US*)CAV(w),n);
+  q=wtousize(USAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C4T,q,1,0);
-  wtou((US*)CAV(w),n,(C4*)CAV(z));
+  wtou(USAV(w),n,C4AV(z));
   R z;
   }
   else
   {
-  GATV(z,LIT,n,AR(w),0);
-  wv=CAV(z);
-  c2v=(US*)AV(w);
+  GATV(z,LIT,n,1,0);
+  wv=UAV(z);
+  c2v=USAV(w);
   DO(n, *wv++=(char)*c2v++;);
   R z;
   }
  }
  else if(C4T&t)
  {
-  c4v=(C4*)AV(w);
+  c4v=C4AV(w);
   DO(n, if(127<*c4v++){b=1;break;});
   if(b){
    R ca(w); // u32 unchanged
@@ -862,9 +869,9 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; I* v;
   else
   {
   GATV(z,LIT,n,AR(w),0);
-  wv=CAV(z);
-  c4v=(C4*)CAV(w);
-  DO(n, *wv++=(char)*c4v++;);
+  wv=UAV(z);
+  c4v=C4AV(w);
+  DO(n, *wv++=(UC)*c4v++;);
   R z;
   }
  }
@@ -877,29 +884,29 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; C* wv; US* c2v; C4* c4v; I* v;
 // illegal utf-16 is allowed
 // literal is NOT interpreted as utf-8.
 // rank is infinit
-F1(jttou32){A z;I n,t,b=0,j; C* wv; US* c2v; C4* c4v; I* v; UC* c1v;
- RZ(w); n=AN(w); t=AT(w); wv=CAV(w);
+F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
+ RZ(w); n=AN(w); t=AT(w); wv=UAV(w);
  if(C4T&AT(w))R ca(w);  // if already C4T, clone it and return the clone
  ASSERT(!n||(B01+INT+LIT+C2T)&AT(w),EVDOMAIN);  // must be empty or unicode
  if((B01+INT)&t)
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
-  GATV(z,C4T,n,AR(w),AS(w)); c4v=(C4*)AV(z);
+  GATV(z,C4T,n,AR(w),AS(w)); c4v=C4AV(z);
   DO(n, j=*v++; *c4v++=(C4)(UI)j;);
  }
  else if(LIT&t)
  {
   GATV(z,C4T,n,AR(w),AS(w));
-  c4v=(C4*)CAV(z);
+  c4v=C4AV(z);
   c1v=(UC*)UAV(w);
   DO(n, *c4v++=(C4)*c1v++;);
  }
  else
  {
   GATV(z,C4T,n,AR(w),AS(w));
-  c4v=(C4*)AV(z);
-  c2v=(US*)CAV(w);
+  c4v=C4AV(z);
+  c2v=USAV(w);
   DO(n, *c4v++=(C4)*c2v++;);
  }
  R z;

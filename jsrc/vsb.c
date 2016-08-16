@@ -329,7 +329,7 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
  ASSERT(1>=AR(w),EVRANK);
  c2=1&&AT(w)&C2T; wn=AN(w);
  c2+=2*(1&&AT(w)&C4T);
- if(c2==2){C4 c,*wv=(C4*)AV(w); 
+ if(c2==2){C4 c,*wv=C4AV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
@@ -359,7 +359,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  RE(m=wc?AN(w)/wc:prod(wr-1,ws));
  GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
  if(!wc)memset(zv,C0,m*sizeof(SB));
- else if(c2==2){C4 c=(C4)cx,*s,*wv=(C4*)AV(w);
+ else if(c2==2){C4 c=(C4)cx,*s,*wv=C4AV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,4*((c!=*s)+s-wv),(C*)wv));
@@ -461,7 +461,7 @@ static A jtsbstr(J jt,I q,A w){A z;S c2=0;C c;I m,n;SB*v,*v0;SBU*u;
  v=v0; 
  GA(z,c2==2?C4T:c2==1?C2T:LIT,m,1,0);
  if(c2==2){C4*zv;
-  zv=(C4*)AV(z); 
+  zv=C4AV(z); 
   if(1==q)*zv++=c;
   DO(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
   if(n){  u=SBUV(*v++); C2FSB(zv,u,q,0,c);}
@@ -486,7 +486,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
  DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=2; k/=4;} else if(u->flag&SBC2){c2=(c2==2)?c2:1;  k/=2;} if(m<k)m=k;); 
  v=v0;
  GA(z,c2==2?C4T:c2==1?C2T:LIT,n*m,1+AR(w),AS(w)); *(AR(w)+AS(z))=m;
- if(c2==2){C4*zv=(C4*)AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
+ if(c2==2){C4*zv=C4AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
  else if(c2==1){C2*zv=(C2*)AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
  else  {C*zv=CAV(z); memset(zv,c,n*m); DO(n, u=SBUV(*v++); MC(zv,SBSV(u->i),u->n); zv+=m;);}
  R z;

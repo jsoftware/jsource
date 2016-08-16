@@ -216,7 +216,7 @@ F1(jtjmkdir){A y,z;
  R mkdir(CAV(y),0775)?jerrno():one;
 #else
  RZ(z=toutf16x(y));
- R _wmkdir((US*)CAV(z))?jerrno():one;
+ R _wmkdir(USAV(z))?jerrno():one;
 #endif
 }
 
@@ -264,7 +264,7 @@ F1(jtpathchdir){A z;
  ASSERT(!chdir(CAV(w)),EVFACE);
 #else
  RZ(z=toutf16x(w));
- _wchdir((US*)CAV(z));
+ _wchdir(USAV(z));
 #endif
  R mtv;
 #endif
@@ -286,7 +286,7 @@ F1(jtjgetenv){
  {
   A z; US* us;
   RZ(z=toutf16x(w));
-  us=_wgetenv((US*)CAV(z));
+  us=_wgetenv(USAV(z));
   if(!us)R zero;
   GATV(z,C2T,wcslen(us),1,0);
   memcpy(USAV(z),us,2*wcslen(us));

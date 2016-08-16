@@ -27,8 +27,8 @@ static SF(jtsortb){A z;B up,*u,*v;I i,s;
 }    /* w grade"1 w on boolean */
 
 static SF(jtsortb2){A z;B up;I i,ii,j,p,yv[4];US*v,*wv,x,zz[4];
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=(US*)AV(z);
- wv=(US*)AV(w); p=4; up=1==jt->compgt;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
+ wv=USAV(w); p=4; up=1==jt->compgt;
  DO(p, yv[i]=0;); 
  zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
  for(i=0;i<m;++i){
@@ -68,8 +68,8 @@ static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
 }    /* w grade"1 w on boolean or character */
 
 static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
- GA(z,AT(w),AN(w),AR(w),AS(w)); v=(US*)AV(z);
- wv=(US*)AV(w); p=65536; up=1==jt->compgt;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
+ wv=USAV(w); p=65536; up=1==jt->compgt;
  GATV(y,INT,p,1,0); yv=AV(y);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){

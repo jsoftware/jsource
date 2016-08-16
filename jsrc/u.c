@@ -156,7 +156,7 @@ I bsum(I n,B*b){I q=n>>LGSZI,z=0;UC*u;UI t,*v;
   z = z + (t & 0xffff);   // clear garbage, add sig
  }
 // finish up any remnant, 7 bytes or less
- u=(UC *)v;DO(n&((1<<LGSZI)-1), z+=*u++;);
+ u=(UC*)v;DO(n&((1<<LGSZI)-1), z+=*u++;);
  R z;
 }    /* sum of boolean vector b */
 

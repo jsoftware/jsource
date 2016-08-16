@@ -176,7 +176,7 @@ static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
 }    /* grade"r w on integer w where c==n */
 
 static GF(jtgru1){A x,y;C4*wv;I d,e,i,p,*xv,*yv;int up;US*u;
- p=65536; up=1==jt->compgt; wv=(C4*)AV(w);
+ p=65536; up=1==jt->compgt; wv=C4AV(w);
  GATV(y,INT,p,1,0); yv=AV(y);
  GATV(x,INT,n,1,0); xv=AV(x);
  e=SY_64?3:1;
@@ -265,7 +265,7 @@ static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
 
 
 static GF(jtgru){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s;C4*v;C4 *wv;I *xv,*yv;
- wv=(C4*)AV(w); d=c/n; k=4*n;
+ wv=C4AV(w); d=c/n; k=4*n;
  c4range(AN(w),wv,&q,&p); 
  if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
  if(0<q&&q<k-p){p+=q; q=0;}

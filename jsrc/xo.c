@@ -68,7 +68,7 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
 {
  US usmode[10]; US*s; I i;
  RZ(z=jttoutf16x(jt,t));
- s=(US*)CAV(z);
+ s=USAV(z);
  for(i=0;i<(I)strlen(mode);++i){usmode[i]=(US)mode[i];}
  usmode[i]=0;
 #if !SY_WINCE 
@@ -134,7 +134,7 @@ F jtstdf(J jt,A w){A y;F f;I n,r,t;
   y=AAV0(w); t=AT(y); n=AN(y); r=AR(y);
   if(t&LIT){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); R 0;}
 /*!
-  if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); ASSERT(vc1(n,(US*)AV(y)),EVDOMAIN); R 0;}
+  if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); ASSERT(vc1(n,USAV(y)),EVDOMAIN); R 0;}
      vc1 can now be killed off
 */
   if(t&B01+INT)R stdf(y);

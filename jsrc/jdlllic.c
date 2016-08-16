@@ -150,7 +150,7 @@ F1(jtlock1){A z; C* p; C* src;
  RZ(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(prokey&&AT(w)&LIT,EVDOMAIN);
- src=(UC*)CAV(w);
+ src=UAV(w);
  len=(int)AN(w);
  xlen=len;
 #if SY_WINCE
@@ -197,7 +197,7 @@ F1(jtunlock1){R unlock2(mtv,w);}
 
 F2(jtunlock2){int i,j,len,tlen;UC c1,c2,k1[SK],*lp,*sp,*d;
  RZ(a&&w);  
- d=(UC*)CAV(w);
+ d=UAV(w);
  tlen=(int)AN(w);
  if(!tlen || 255!=d[0] || 0 != d[1] || tlen<8+SK) return w;	/* not jl */
  memcpy(k1, d+8, SK);

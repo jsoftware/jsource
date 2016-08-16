@@ -126,7 +126,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Allocate an area to use for the SI entries for sentences executed here
  // If there is space on the parser stack, use that to avoid the alloc/free overhead.  If there's not
  // enough space there, just use a free block
- if((C *)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C *)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
+ if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
  else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
 
 

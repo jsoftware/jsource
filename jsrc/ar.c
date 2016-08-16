@@ -141,7 +141,7 @@ AHDRR(plusinsB,I,B){I d,dw,i,p,q,r,r1,s;UC*tu;UI*v;
   d=c/n; dw=(d+SZI-1)/SZI; p=dw*SZI; memset(z,C0,m*d*SZI);
   q=n/255; r=n%255;
   t=ga(INT,dw,1,0); if(!t)R;
-  tu=(UC*)AV(t); tv=(UI*)tu; v=(UI*)x;
+  tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
   for(i=0;i<m;++i,z+=d){
    DO(q, memset(tv,C0,p); DO(255, DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];));
          memset(tv,C0,p); DO(r,   DO(dw,tv[i]+=v[i];); x+=d; v=(UI*)x;); DO(d,z[i]+=tu[i];) ;

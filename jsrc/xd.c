@@ -209,7 +209,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
  RZ(w);
  RZ(w=vs(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w));
- fh=FindFirstFileW((US*)CAV(fn),&f);
+ fh=FindFirstFileW(USAV(fn),&f);
  GATV(z,BOX,n,1,0); zv=AAV(z);
  if (fh!=INVALID_HANDLE_VALUE) {
   do {

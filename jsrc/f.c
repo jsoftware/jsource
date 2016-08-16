@@ -324,13 +324,13 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
     // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
     if(cw==bp(AT(e))){C* v=CAV(e); C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
     else{  // conversion required
-     if(bp(AT(e))==1){UC *v=(UC *)CAV(e);   // source is bytes
+     if(bp(AT(e))==1){UC *v=UAV(e);   // source is bytes
       if(cw==2){   // dest is C2T
-       US *u=(US *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(US *)((C*)u+wd);)
+       US *u=(US*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(US*)((UC*)u+wd);)
       }else{   // dest is C4T
-       C4 *u=(C4 *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4 *)((C*)u+wd);)
+       C4 *u=(C4*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)
       }
-     }else{US *v=USAV(e);C4 *u=(C4 *)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4 *)((C*)u+wd);)}  // must be source is C2T, dest C4T
+     }else{US *v=USAV(e);C4 *u=(C4*)(zv+f),*uu; DO(r, uu=u; DO(c,*uu++=*v++;) u=(C4*)((UC*)u+wd);)}  // must be source is C2T, dest C4T
     }
     ++i;   // step to next input cell
     d += cw*yv[k];  // step to next output column 
@@ -685,7 +685,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
      else if(x)     {if(k<c1){UUC(zv,x);} else if(k==c1)DDD(zv); ++k;}
     }
-    v=(C *)u;
+    v=(C*)u;
     }
     break;
    case 4:{C4 *u=(C4*)v,x=0,e;
@@ -696,7 +696,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      else if(x==CLF){if(e!=CCR)EOLC(zv); k=0;} 
      else if(x)     {if(k<c1){UUC4(zv,x);} else if(k==c1)DDD(zv); ++k;}
     }
-    v=(C *)u;
+    v=(C*)u;
     }
     break;
    }
@@ -708,7 +708,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
    switch(t){
    case 2: {US *u=(US*)v,x;
     // C2T result.  There may be zero-width NULs about - suppress them
-    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
     }
     break;
    case 1:
@@ -720,7 +720,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     break;
    default: {C4 *u=(C4*)v,x;
     // C4T result.  There may be zero-width NULs about - suppress them
-    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C *)u;  // Convert to UTF-8, and save input pointer at the end
+    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
     }
     break;
    }

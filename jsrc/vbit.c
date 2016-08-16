@@ -272,7 +272,7 @@ static F2(jtbitfrom){A z;I an,ar,*as,c,i,j,m,n,q,r,rc,r1,wr,*ws;UC k,*v,*zv;
  an=AN(a); ar=AR(a); as=AS(a); wr=AR(w); ws=AS(w);
  if(1>=wr){I*u;
   c=ar?as[ar-1]:1; m=c?an/c:0; q=c/BB; r=c%BB; rc=c%BW; r1=rc?(BW-rc)/BB:0;
-  GA(z,BIT,an,ar,as); zv=(UC*)AV(z);
+  GA(z,BIT,an,ar,as); zv=UAV(z);
   u=AV(a); v=UAV(w); n=AN(w);
   for(i=0;i<m;++i){
    DO(q, k=0; DO(BB, j=*u++; if(0>j)j+=n; ASSERT(0<=j&&j<n,EVINDEX); if(v[j/BB]&(UC)128>>j%BB)k|=bit[i];); *zv++=k;);
@@ -317,8 +317,8 @@ static F2(jtbiterror){ASSERT(0,EVNONCE);}
   ASSERT(AR(a)==AR(w),EVRANK);                                 \
   ASSERT(!memcmp(as,AS(w),ar),EVLENGTH);                       \
   c=ar?as[ar-1]:1; m=c?an/c:0; q=c/BB; r=c%BB; rc=c%BW; r1=rc?(BW-rc)/BB:0;  \
-  GA(z,BIT,an,ar,as); zv=(UC*)AV(z);                           \
-  u=AV(a); v=AV(w); zv=(UC*)AV(z);                             \
+  GA(z,BIT,an,ar,as); zv=UAV(z);                               \
+  u=AV(a); v=AV(w); zv=UAV(z);                                 \
   for(i=0;i<m;++i){                                            \
    DO(q, k=0; DO(BB, if(OP(*u++,*v++))k|=bit[i];); *zv++=k;);  \
    if(r){k=0; DO(r,  if(OP(*u++,*v++))k|=bit[i];); *zv++=k;}   \

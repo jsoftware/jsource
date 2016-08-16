@@ -129,8 +129,8 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
   default:   R hic(n*bp(AT(y)),UAV(y));
 }}
 
-static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,(UC*)AV(y));}
-static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,(UC*)AV(y));}
+static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,UAV(y));}
+static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,UAV(y));}
 
 
 static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}

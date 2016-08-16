@@ -29,7 +29,7 @@ static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
 }
 
 static KF1(jtC1fromC2){UC*x;US c,*v;
- v=(US*)AV(w); x=(C*)yv;
+ v=USAV(w); x=(C*)yv;
  DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
  R 1;
 }
@@ -41,13 +41,13 @@ static KF1(jtC2fromC1){UC*v;US*x;
 }
 
 static KF1(jtC1fromC4){UC*x;C4 c,*v;
- v=(C4*)AV(w); x=(C*)yv;
+ v=C4AV(w); x=(C*)yv;
  DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
  R 1;
 }
 
 static KF1(jtC2fromC4){US*x;C4 c,*v;
- v=(C4*)AV(w); x=(US*)yv;
+ v=C4AV(w); x=(US*)yv;
  DO(AN(w), c=*v++; RZ(65536>c); *x++=(US)c;);
  R 1;
 }
@@ -59,7 +59,7 @@ static KF1(jtC4fromC1){UC*v;C4*x;
 }
 
 static KF1(jtC4fromC2){US*v;C4*x;
- v=(US*)AV(w); x=(C4*)yv;
+ v=USAV(w); x=(C4*)yv;
  DO(AN(w), *x++=*v++;);
  R 1;
 }

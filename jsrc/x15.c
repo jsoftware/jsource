@@ -355,8 +355,8 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
  if(strchr("cwusilx*n",zl)){I r;
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
   switch(zl){
-   case 'c': *(UC*)v=(UC)r;  break;
-   case 'w': *(US*)v=(US)r;  break;
+   case 'c': *(C*)v=(C)r;  break;
+   case 'w': *(US*)v=(US)r;break;
    case 'u': *(C4*)v=(C4)r;break;
    case 's': *v=(I)(S)r;   break;
    case 'i': *v=(I)(int)r; break;
@@ -679,8 +679,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     cipt[cipcount]=c; 
     ++cipcount;
   }}else switch(c){
-   case 'c': *dv++=*(UC*)xv;  break;
-   case 'w': *dv++=*(US*)xv;  break;
+   case 'c': *dv++=*(C*)xv;  break;
+   case 'w': *dv++=*(US*)xv; break;
    case 'u': *dv++=*(C4*)xv; break;
    case 's': *dv++=(S)*xv;   break;
    case 'i': *dv++=(int)*xv; break;

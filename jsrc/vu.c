@@ -15,7 +15,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  RZ(w);
  if(LIT&AT(w))R ca(w);  // if already ASCII, clone it and return the clone
  n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
- w4=(C4*)AV(w);
+ w4=C4AV(w);
  ASSERT(!n||(C2T+C4T)&AT(w),EVDOMAIN);  // must be empty or unicode
  GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z);  // allocate ASCII area with same data shape
 #if C_LE
@@ -45,9 +45,9 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
 static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
  RZ(w);
  if(C2T&AT(w))R ca(w);
- n=AN(w); wv=CAV(w); w4=(C4*)AV(w);
+ n=AN(w); wv=CAV(w); w4=C4AV(w);
  ASSERT(!n||(LIT+C4T)&AT(w),EVDOMAIN);
- GATV(z,C2T,n,AR(w),AS(w)); zv=CAV(z); z2=(US*)AV(z);
+ GATV(z,C2T,n,AR(w),AS(w)); zv=CAV(z); z2=USAV(z);
 #if C_LE
  if(LIT&AT(w))
  {
@@ -88,10 +88,10 @@ static F1(jtifc2){A z;I n,t,*zv;
  n=AN(w); t=AT(w);
  ASSERT(!n||t&JCHAR,EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(t&LIT){UC*v=(UC*)AV(w); DO(n, *zv++=*v++;);}
- else if(t&C2T){US*v=(US*)AV(w); DO(n, *zv++=*v++;);}
+ if(t&LIT){UC*v=UAV(w); DO(n, *zv++=*v++;);}
+ else if(t&C2T){US*v=USAV(w); DO(n, *zv++=*v++;);}
 #if SY_64
- else          {C4*v=(C4*)AV(w); DO(n, *zv++=*v++;);}
+ else          {C4*v=C4AV(w); DO(n, *zv++=*v++;);}
 #else
  else          {I*v=(I*)AV(w); DO(n, *zv++=*v++;);}
 #endif
@@ -101,7 +101,7 @@ static F1(jtifc2){A z;I n,t,*zv;
 static F1(jtc2fi){A z;I j,n,*v;US*zv;
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
- GATV(z,C2T,n,AR(w),AS(w)); zv=(US*)AV(z);
+ GATV(z,C2T,n,AR(w),AS(w)); zv=USAV(z);
  DO(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
  R z;
 }    /* 2-byte chars from integers */

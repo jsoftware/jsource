@@ -64,7 +64,7 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
  ASSERT(n,EVLENGTH);
  s=CAV(w); c=*(s+n-1);
  DO(n, d=s[i]; ASSERT(32<=d&&d<127,EVSPELL););
- if(CA==ctype[*s]&&c!=CESC1&&c!=CESC2)R swap(w);
+ if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);
  ASSERT(id=spellin(n,s),EVSPELL);
  if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?sc(m):2==n?ainf:sc(-m));}
  ASSERT(y&&RHS&AT(y),EVDOMAIN);

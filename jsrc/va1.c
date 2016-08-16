@@ -115,17 +115,17 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
 
 
 // If argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(w,f) RZ(w); if(0 && AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w); F1PREFIP;
-
+#define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w); F1PREFIP;
+#define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;} F1PREFIP;  // fall through if returns 0
 
 
 F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOOR);}
-F1(jtceil1 ){R va1(w,CCEIL );}
+F1(jtceil1 ){CHECKSSING(w,jtssceil) R va1(w,CCEIL );}
 F1(jtconjug){R va1(w,CPLUS );}
-F1(jtsignum){R va1(w,CSTAR );}
-F1(jtsqroot){R va1(w,CSQRT );}
-F1(jtexpn1 ){R va1(w,CEXP  );}
-F1(jtlogar1){R va1(w,CLOG  );}
-F1(jtmag   ){R va1(w,CSTILE);}
-F1(jtfact  ){R va1(w,CBANG );}
-F1(jtpix   ){RZ(w); R XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL)?va1(w,CCIRCLE):tymes(pie,w);}
+F1(jtsignum){CHECKSSING(w,jtsssignum) R va1(w,CSTAR );}
+F1(jtsqroot){CHECKSSINGNZ(w,jtsssqrt) R va1(w,CSQRT );}
+F1(jtexpn1 ){CHECKSSING(w,jtssexp) R va1(w,CEXP  );}
+F1(jtlogar1){CHECKSSINGNZ(w,jtsslog) R va1(w,CLOG  );}
+F1(jtmag   ){CHECKSSING(w,jtssmag) R va1(w,CSTILE);}
+F1(jtfact  ){CHECKSSING(w,jtssfact) R va1(w,CBANG );}
+F1(jtpix   ){CHECKSSING(w,jtsspix) R XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL)?va1(w,CCIRCLE):tymes(pie,w);}

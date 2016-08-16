@@ -33,7 +33,7 @@ static D dgps(D v){D*d=terms+coeff,s=0.0; DO(terms, s=*--d+v*s;); R 1/s;}
 
 static Z jtzgps(J jt,Z z){R zdiv(z1,zhorner(terms,coeff,z));}
 
-static D jtdgamma(J jt,D x){B b;D t;
+D jtdgamma(J jt,D x){B b;D t;
  t=1.0; b=x==jfloor(x);
  if(b&&0>=x){ASSERT(x>x-1,EVLIMIT); R x==2*jfloor(x/2)?inf:infm;}
  if(0<=x) while(1<x){t*=--x; if(t==inf)R inf;}

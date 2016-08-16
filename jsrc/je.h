@@ -571,6 +571,14 @@ extern DF2(jtrollk);
 extern DF2(jtrollkx);
 
 extern A jtssfloor(J,A);
+extern A jtssceil(J,A);
+extern A jtsssignum(J,A);
+extern A jtsssqrt(J,A);
+extern A jtssexp(J,A);
+extern A jtsslog(J,A);
+extern A jtssmag(J,A);
+extern A jtssfact(J,A);
+extern A jtsspix(J,A);
 
 extern A jtssplus(J,A,A);
 extern A jtssminus(J,A,A);
@@ -633,6 +641,7 @@ extern void     jtdebdisp(J,DC);
 extern void     jtdebz(J);
 extern A        jtdfss1(J,A,A,A);
 extern A        jtdfss2(J,A,A,A,A);
+extern D        jtdgamma(J,D);
 extern D        jtdgcd(J,D,D);
 extern D        jtdlcm(J,D,D);
 extern A        jtdropr(J,I,A);

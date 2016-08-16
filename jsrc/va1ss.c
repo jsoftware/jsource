@@ -47,3 +47,123 @@ SSINGF1(jtssfloor) SSNUMPREFIX
    R z;
  }
 }
+
+SSINGF1(jtssceil) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w),z,B01,B) R z;
+  case INT: SSSTORE(SSRDI(w),z,INT,I) R z;
+  case FL:
+   f = tceil(SSRDD(w));
+   if(f == (D)(I)f) SSSTORE((I)f,z,INT,I) else SSSTORE(f,z,FL,D)
+   R z;
+ }
+}
+
+SSINGF1(jtsssignum) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w),z,B01,B) R z;
+  case INT: SSSTORE(SSRDI(w)>0?1:SSRDI(w)<0?-1:0,z,INT,I) R z;
+  case FL:
+   f = SSRDD(w);
+   SSSTORE(f>=jt->ct?1:f<=-jt->ct?-1:0,z,INT,I)
+   R z;
+ }
+}
+
+SSINGF1(jtsssqrt) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f; I i;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w),z,INT,I) R z;  // normal code returns B01, but INT seems better
+  case INT:
+    if((i = SSRDI(w))>=0){SSSTORE(sqrt((D)i),z,FL,D) R z;}   // return value if real
+    jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
+  case FL:
+    if((f = SSRDD(w))>=0){SSSTORE(sqrt(f),z,FL,D) R z;}   // return value if real
+    jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
+ }
+}
+
+SSINGF1(jtssexp) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f; I i;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w)?2.71828182845904523536:1.0,z,FL,D) R z;
+  case INT:
+    i = SSRDI(w);
+    SSSTORE(i<EMIN?0.0:EMAX<i?inf:exp((D)i),z,FL,D) R z;
+  case FL:
+    f = SSRDD(w);
+    SSSTORE(f<EMIN?0.0:EMAX<f?inf:exp(f),z,FL,D) R z;
+ }
+}
+
+SSINGF1(jtsslog) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f; I i;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w)?0.0:infm,z,FL,D) R z;
+  case INT:
+    if((i = SSRDI(w))>=0){SSSTORE(log((D)i),z,FL,D) R z;}   // return value if real
+    jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
+  case FL:
+    if((f = SSRDD(w))>=0){SSSTORE(log(f),z,FL,D) R z;}   // return value if real
+    jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
+ }
+}
+
+SSINGF1(jtssmag) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f; I i;
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
+  case INT:
+    if((i = SSRDI(w))>IMIN){SSSTORE(i>=0?i:-i,z,INT,I)}else SSSTORE((D)-IMIN,z,FL,D) R z;
+  case FL:
+    f = SSRDD(w); SSSTORE(ABS(f),z,FL,D) R z;
+ }
+}
+
+SSINGF1(jtssfact) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {D f;
+  default: R 0;
+  case B01: SSSTORE(1,z,INT,I) R z;   // return INT rather than normal B01
+  case INT:
+    SSSTORE(dgamma(1.0+(D)SSRDI(w)),z,FL,D) R z;
+  case FL:
+    f = SSRDD(w); SSSTORE(_isnan(f)?f:dgamma(1.0+f),z,FL,D) R z;
+ }
+}
+
+SSINGF1(jtsspix) SSNUMPREFIX
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(AT(w)) {
+  default: R 0;
+  case B01: SSSTORE(SSRDB(w)?PI:1.0,z,FL,D) R z;
+  case INT:
+    SSSTORE(PI*(D)SSRDI(w),z,FL,D) R z;
+  case FL:
+    SSSTORE(PI*SSRDD(w),z,FL,D) R z;
+ }
+}

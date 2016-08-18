@@ -591,18 +591,26 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[j
  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
  if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}
- else if(2==m){
-  p=jt->rngw; p-=p%4; q=n/p; r=n%p; 
+ else if(2==m){I nslice; I j;
+  p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+  // See how many p-size blocks we can have, and how many single leftovers
+  q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
   mk=(UI)0x0101010101010101;
 #else
   mk=0x01010101;
 #endif
-  if(28==p)DO(q, t=NEXT; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1;
-                         *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t;)
-  else     DO(q, t=NEXT; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1;
-                         *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t; t>>=1; *u++=mk&t;);
-  if(r){B*c=(B*)u; DO(r, *c++=1&&1&NEXT;);}
+  // Loop to output all the p-size blocks
+  for(j=0;j<q;++j){
+   t=NEXT;
+   DO(nslice, *u++=mk&t; t>>=1;);
+  }
+  // Get a random # for finishing slices, & out them
+  t=NEXT;  // Get random # for slices
+  DO(r>>LGSZI, *u++=mk&t; t>>=1;);
+  // Output the rest, one bit at a time
+  t=NEXT;  // Get random # for bits
+  B*c=(B*)u; DO(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
   r=n; s=GMOF(m,x); if(s==x)s=0;
   k=0; j=1; while(m>j){++k; j<<=1;}
@@ -663,36 +671,37 @@ static F1(jtrollbool){A z;B*v;D*u;I n,sh;UINT mk;
  R z;
 }    /* ?n$x where x is boolean */
 
-static A jtroll2(J jt,A w,B*b){A z;I j,n,p,q,r,*v;UI mk,t,*zv;
- *b=0; n=AN(w); v=AV(w);
- p=jt->rngw; p-=p%4; q=n/p; r=n%p; 
+// If w is all 2, deal Booleans, with each each bit of a random number providing a single Boolean
+// Result is Boolean array, or mark if w is not all 2
+// *b=0 if w contained non-2, 1 otherwise (i. e. result is valid if *b=1)
+static A jtroll2(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
+ *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
+ // If w contains non-2, return with error
+ DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
+ // See how many RNG values to use.  jt->rngw gives the number of bits in a generated random #
+ // We will shift these out 4 or 8 bits at a time; the number of slices we can get out of
+ // a random number is 8 - the number of non-random bits at the top of a word.  p will be the number
+ // of bits we can get per random number
+ p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+ // See how many p-size blocks we can have, and how many single leftovers
+ q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
 #if SY_64
   mk=(UI)0x0101010101010101;
 #else
   mk=0x01010101;
 #endif
- GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);
- if(28==p)for(j=0;j<q;++j){
+ GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);  // Allocate result area
+ // Loop to output all the p-size blocks
+ for(j=0;j<q;++j){
   t=NEXT;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t;
- }else for(j=0;j<q;++j){
-  t=NEXT;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t; t>>=1;
-  if(!(2==*v++&&2==*v++&&2==*v++&&2==*v++))R mark; *zv++=mk&t;
+  DO(nslice, *zv++=mk&t; t>>=1;);
  }
- if(r){B*c=(B*)zv; DO(r, if(2!=*v++)R mark; *c++=1&&1&NEXT;);}
+ // Get a random # for finishing slices, & out them
+ t=NEXT;  // Get random # for slices
+ DO(r>>LGSZI, *zv++=mk&t; t>>=1;);
+ // Output the rest, one bit at a time
+ t=NEXT;  // Get random # for bits
+ B*c=(B*)zv; DO(r&(SZI-1), *c++=1&t; t>>=1;);
  *b=1; R z;
 }    /* ?n$x where x is 2, maybe */
 

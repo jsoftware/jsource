@@ -19,7 +19,7 @@
 #define SSRDD(w) (*(D *)CAV(w))
 #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
 
-#define SSNUMPREFIX A z;  \
+#define SSNUMPREFIX A z; I wt=AT(w);  \
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand */ \
 /* If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
@@ -37,7 +37,7 @@ SSINGF1(jtssfloor) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f;
+ switch(wt) {D f;
   default: R 0;
   case B01: SSSTORE(SSRDB(w),z,B01,B) R z;
   case INT: SSSTORE(SSRDI(w),z,INT,I) R z;
@@ -52,7 +52,7 @@ SSINGF1(jtssceil) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f;
+ switch(wt) {D f;
   default: R 0;
   case B01: SSSTORE(SSRDB(w),z,B01,B) R z;
   case INT: SSSTORE(SSRDI(w),z,INT,I) R z;
@@ -67,7 +67,7 @@ SSINGF1(jtsssignum) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f;
+ switch(wt) {D f;
   default: R 0;
   case B01: SSSTORE(SSRDB(w),z,B01,B) R z;
   case INT: SSSTORE(SSRDI(w)>0?1:SSRDI(w)<0?-1:0,z,INT,I) R z;
@@ -82,7 +82,7 @@ SSINGF1(jtsssqrt) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f; I i;
+ switch(wt) {D f; I i;
   default: R 0;
   case B01: SSSTORE(SSRDB(w),z,INT,I) R z;  // normal code returns B01, but INT seems better
   case INT:
@@ -98,7 +98,7 @@ SSINGF1(jtssexp) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f; I i;
+ switch(wt) {D f; I i;
   default: R 0;
   case B01: SSSTORE(SSRDB(w)?2.71828182845904523536:1.0,z,FL,D) R z;
   case INT:
@@ -114,7 +114,7 @@ SSINGF1(jtsslog) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f; I i;
+ switch(wt) {D f; I i;
   default: R 0;
   case B01: SSSTORE(SSRDB(w)?0.0:infm,z,FL,D) R z;
   case INT:
@@ -130,11 +130,11 @@ SSINGF1(jtssmag) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f; I i;
+ switch(wt) {D f; I i;
   default: R 0;
   case B01: SSSTORE(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
   case INT:
-    if((i = SSRDI(w))>IMIN){SSSTORE(i>=0?i:-i,z,INT,I)}else SSSTORE((D)-IMIN,z,FL,D) R z;
+    if((i = SSRDI(w))>IMIN){SSSTORE(i>=0?i:-i,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
   case FL:
     f = SSRDD(w); SSSTORE(ABS(f),z,FL,D) R z;
  }
@@ -144,13 +144,13 @@ SSINGF1(jtssfact) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {D f;
+ switch(wt) {D f;
   default: R 0;
   case B01: SSSTORE(1,z,INT,I) R z;   // return INT rather than normal B01
   case INT:
-    SSSTORE(dgamma(1.0+(D)SSRDI(w)),z,FL,D) R z;
+    SSSTORE(dgamma(1.0+(D)SSRDI(w)),z,FL,D) RE(0) R z;
   case FL:
-    f = SSRDD(w); SSSTORE(_isnan(f)?f:dgamma(1.0+f),z,FL,D) R z;
+    f = SSRDD(w); SSSTORE(_isnan(f)?f:dgamma(1.0+f),z,FL,D) RE(0) R z;
  }
 }
 
@@ -158,9 +158,9 @@ SSINGF1(jtsspix) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- switch(AT(w)) {
+ switch(wt) {
   default: R 0;
-  case B01: SSSTORE(SSRDB(w)?PI:1.0,z,FL,D) R z;
+  case B01: SSSTORE(SSRDB(w)?PI:0.0,z,FL,D) R z;
   case INT:
     SSSTORE(PI*(D)SSRDI(w),z,FL,D) R z;
   case FL:

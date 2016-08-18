@@ -28,6 +28,7 @@ filecase ''
 
 NB. Verify that singleton gets same result as 1 item of an array
 compss =: 1 : 0 (&>)
+(u etx y) -: (({.@:(u&(2 $ ,:))) etx y)
 :
 (x u etx y) -: (x ({.@:(u&(2 $ ,:))) etx y)
 )
@@ -49,6 +50,26 @@ v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"
 - compss/~ v
 % compss/~ v
 ~: compss/~ v
+^ compss/~ v
+16 b. compss/~ v
+17 b. compss/~ v
+18 b. compss/~ v
+19 b. compss/~ v
+20 b. compss/~ v
+21 b. compss/~ v
+22 b. compss/~ v
+23 b. compss/~ v
+24 b. compss/~ v
+25 b. compss/~ v
+26 b. compss/~ v
+27 b. compss/~ v
+28 b. compss/~ v
+29 b. compss/~ v
+30 b. compss/~ v
+31 b. compss/~ v
+32 b. compss/~ v
+33 b. compss/~ v
+34 b. compss/~ v
 
 NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
@@ -93,6 +114,17 @@ ops =: ((1 $~ [) $ ])&.>/"1 b =: (;"0/~ i. 6) ([ ,"0 ($~ $)~) v
 ~: compssn 4&>/"1 ops
 % compssn 5&>/"1 ops
 
+NB. Monads
+<. compss v
+>. compss v
+* compss v
+| compss v
+%: compss v
+^ compss v
+^. compss v
+! compss v
+o. compss v
+
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 1000000'
 niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 1000000'
@@ -102,6 +134,11 @@ iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 1000000'
 iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 1000000'
 THRESHOLD+. iptime1 < 1.6 * iptime2  NB. Both are inplace; verify + not too slow
 
-4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 niptime ops v v1 v2 v3'
+iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' 1000000'
+iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' 1000000'  NB. Not ssing
+iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 1000000'  NB. inplace
+THRESHOLD+. iptime1 < 0.8 * iptime2  NB. Both are inplace; verify * not too slow
+THRESHOLD+. iptime1 < 1.3 * iptime3  NB. Both are inplace; verify * not too slow
 
+4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 niptime ops v v1 v2 v3'
 

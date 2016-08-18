@@ -88,9 +88,9 @@ static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)(n%2-1); x+=k; DO(m, DO(d,
 #define BWSHIFT(x,y)    (0>x ? (x<=-WLEN?0:y>>-x)           : (x>=WLEN?0:y<<x)            )
 #define BWSHIFTA(x,y)   (0>x ? (x<=-WLEN?(y<0?-1:0):y>>-x)  : (x>=WLEN?0:y<<x)            )
 
-BITWISE(jtbitwiserotate,UI,BWROT   )
-BITWISE(jtbitwiseshift, UI,BWSHIFT )
-BITWISE(jtbitwiseshifta,I, BWSHIFTA)
+BITWISE(jtgenbitwiserotate,UI,BWROT   )
+BITWISE(jtgenbitwiseshift, UI,BWSHIFT )
+BITWISE(jtgenbitwiseshifta,I, BWSHIFTA)
 
 DF1(jtbitwise1){R CALL2(VAV(self)->f2,zero,w,self);}
 

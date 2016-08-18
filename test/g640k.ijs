@@ -111,6 +111,9 @@ test4=: 4 : 0
 1e8 100 0 2 test4"1 0 ]2^i.10
 13 97 7     test4 1000
 
+NB. Deal some binaries, verify plausible
+1000 > | ((* >:) 192) - 4 * +/ (>: i. 192) ([: +/ ?@$)"0 (2)
+
 test5=: 4 : 0
  h=: ,1{"2 g
  for_i. i.#h do. 
@@ -188,7 +191,7 @@ test9=: 4 : 0  NB. mean test
  t=: 2e4 ?@$ yy
  d=: (%:var t) %~ | (mean t) - |-:<:yy
  p=: n01cdf d
- assert. p<0.99995
+ assert. p<0.99995   NB. This is a very lax test!!
      9!:43 j
  1
 )

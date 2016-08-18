@@ -391,6 +391,7 @@ static A jtva2(J,A,A,C);
 #define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
 #define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op); F2PREFIP;
 #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
+#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;} F2PREFIP;
 
 // Shift the w-is-inplaceable flag to a
 #define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
@@ -398,27 +399,31 @@ static A jtva2(J,A,A,C);
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
-F2(jtbitwise0000){R va2(a,w,(C)16);}
-F2(jtbitwise0001){R va2(a,w,(C)17);}
-F2(jtbitwise0010){R va2(a,w,(C)18);}
-F2(jtbitwise0011){R va2(a,w,(C)19);}
+F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R va2(a,w,(C)16);}
+F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R va2(a,w,(C)17);}
+F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R va2(a,w,(C)18);}
+F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R va2(a,w,(C)19);}
 
-F2(jtbitwise0100){R va2(a,w,(C)20);}
-F2(jtbitwise0101){R va2(a,w,(C)21);}
-F2(jtbitwise0110){R va2(a,w,(C)22);}
-F2(jtbitwise0111){R va2(a,w,(C)23);}
+F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R va2(a,w,(C)20);}
+F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R va2(a,w,(C)21);}
+F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R va2(a,w,(C)22);}
+F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R va2(a,w,(C)23);}
 
-F2(jtbitwise1000){R va2(a,w,(C)24);}
-F2(jtbitwise1001){R va2(a,w,(C)25);}
-F2(jtbitwise1010){R va2(a,w,(C)26);}
-F2(jtbitwise1011){R va2(a,w,(C)27);}
+F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R va2(a,w,(C)24);}
+F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R va2(a,w,(C)25);}
+F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R va2(a,w,(C)26);}
+F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R va2(a,w,(C)27);}
 
-F2(jtbitwise1100){R va2(a,w,(C)28);}
-F2(jtbitwise1101){R va2(a,w,(C)29);}
-F2(jtbitwise1110){R va2(a,w,(C)30);}
-F2(jtbitwise1111){R va2(a,w,(C)31);}
+F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R va2(a,w,(C)28);}
+F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R va2(a,w,(C)29);}
+F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R va2(a,w,(C)30);}
+F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R va2(a,w,(C)31);}
 
-F2(jteq     ){CHECKSSINGOP(w,a,jtsseqne,0) R va2(a,w,CEQ     );}
+F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
+F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
+F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
+
+F2(jteq     ){CHECKSSINGOP(a,w,jtsseqne,0) R va2(a,w,CEQ     );}
 F2(jtlt     ){CHECKSSING(a,w,jtsslt) R va2(a,w,CLT     );}
 F2(jtminimum){CHECKSSING(a,w,jtssmin) R va2(a,w,CMIN    );}
 F2(jtle     ){CHECKSSING(a,w,jtssle) R va2(a,w,CLE     );}
@@ -433,8 +438,8 @@ F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,CSTARDOT);}
 F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,CSTARCO );}
 F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
 F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
-F2(jtexpn2  ){R va2(a,w,CEXP    );}
-F2(jtne     ){CHECKSSINGOP(w,a,jtsseqne,1) R va2(a,w,CNE     );}
+F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,CEXP    );}
+F2(jtne     ){CHECKSSINGOP(a,w,jtsseqne,1) R va2(a,w,CNE     );}
 F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,CBANG   );}
 F2(jtcircle ){R va2(a,w,CCIRCLE );}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}

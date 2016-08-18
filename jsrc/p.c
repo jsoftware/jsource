@@ -331,19 +331,19 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    if(ST(0) == NAME)i = PASGN;   // NAME is set only if followed by ASGN
    else {  // cases 0-6
     if (!(ST(0)&(EDGE + AVN)))i = PNOMATCH;
-    else if ((ST(1) | ST(2))&(ADV + CONJ)){ /* cases 3, 4, 6, but only if ST(1) is CAVN  */
+    else if ((ST(1) | ST(2))&(ADV + CONJ)){ // cases 3, 4, 6, and 7 when NOUN=:AC
      i = ST(1)&(ADV + CONJ)
-         ? (ST(0)&EDGE ? PBIDENT : PNOMATCH)
-         : ST(1)&CAVN   // here ST2 must be adv/conj
-           ? (ST(2)==ADV ? PADV : ST(3)&(VERB + NOUN) ? PCONJ : ST(0)&EDGE ? PBIDENT : PNOMATCH)
-           : PNOMATCH;
-    } else { /* cases 0, 1, 2, 5, 6, , but only if ST(1) is CAVN.  ST(1) is NOUN, VERB, or other nommatching such as (  */
-     if (ST(2)&NOUN){
+         ? (ST(0)&EDGE ? PBIDENT : PNOMATCH)  // case 6 AC
+         : ST(1)&CAVN   // here ST2 must be adv/conj; cases 3, 4, 7 NOUN=:AC
+           ? (ST(2)==ADV ? PADV : ST(3)&(VERB + NOUN) ? PCONJ : ST(0)&EDGE ? PBIDENT : PNOMATCH)  // 3, 4, 6 not AC
+           : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;  // 7 NOUN=:AC, or parsing error 
+    } else { // cases 0, 1, 2, 5, 6 VN, 7 NOUN=:VN  ST(1) is NOUN, VERB, or other nommatching such as ( but not AC
+     if (ST(2)&NOUN){   // 0, 6 N, 7 NOUN=:N.  6 N will be invalid
          i = ST(0)&EDGE ? (ST(1) == VERB ? PMONAD1 : ST(1)&NOUN ? PBIDENT : PNOMATCH) : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;
-     } else {
+     } else {   // 1, 2, 5, 6 V, 7 NOUN=:V
       i = ST(3)&NOUN
-          ? (ST(1)&NOUN ? PDYAD : ST(1) == VERB ? PMONAD2 : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH)
-          : ST(1)&CAVN ? (ST(3) == VERB ? PTRIDENT : ST(0)&EDGE ? PBIDENT : PNOMATCH) : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;
+          ? (ST(1)&NOUN ? PDYAD : ST(1) == VERB ? PMONAD2 : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH)  // 1, 2, 7 NOUN=:V
+          : ST(1)&CAVN ? (ST(3) == VERB ? PTRIDENT : ST(0)&EDGE ? PBIDENT : PNOMATCH) : ((ST(1) & ASGN) && ST(0)&NOUN) ? PASGN : PNOMATCH;  // 5, 6 V, 7 NOUN=:V
      }
     }
    }

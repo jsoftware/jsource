@@ -72,7 +72,12 @@ undefname
 )
 5 -: swd''
 
+NB. Verify noun assignments to all parts of speech are honored
+3 = +('aa'=:/) i. 3
+5 = +/('aa'=:@:)*: i. 3
+_6 = ('aa'=: -) 6
+1 2 3 -: 'aa' =: 1 2 3
 
-4!:55 ;:'a multi swd t '
+4!:55 ;:'a aa multi swd t '
 
 

@@ -720,7 +720,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     break;
    default: {C4 *u=(C4*)v,x;
     // C4T result.  There may be zero-width NULs about - suppress them
-    DO(c1, if(x=*u++)UUC(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
+    DO(c1, if(x=*u++)UUC4(zv,x);); if(c1<c){u+=c-c1; DDD(zv);} v=(C*)u;  // Convert to UTF-8, and save input pointer at the end
     }
     break;
    }

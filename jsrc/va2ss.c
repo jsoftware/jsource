@@ -352,7 +352,74 @@ SSINGF2(jtssoutof) SSNUMPREFIX  D adv,wdv,zdv;
  SSSTORE(zdv,z,FL,D) R z;  // Return the value if valid
 }
 
+// Return int version of d, with error if loss of significance
+static I intforD(J jt, D d){I z;
+ z=(I)jfloor(d);
+ if(!FEQ((D)z,d)){++z;
+  // see if >: <.a is tolerantly equal to (I)a
+  ASSERT(FEQ((D)z,d),EVDOMAIN);
+ }
+ R z;
+}
 
+SSINGF2OP(jtssbitwise) SSNUMPREFIX  I aiv,wiv,ziv;
+ // Each operand must be convertible to integer
+ if(AT(a)==INT){aiv=SSRDI(a);
+ }else if(AT(a)==FL){aiv=intforD(jt,SSRDD(a));
+  // see if <.a is tolerantly equal to (I)a
+ }else{aiv=SSRDB(a);
+ }
+
+ if(AT(w)==INT){wiv=SSRDI(w);
+ }else if(AT(w)==FL){wiv=intforD(jt,SSRDD(w));
+ }else{wiv=SSRDB(w);
+ }
+
+  RE(0);  // return if noninteger argument
+
+ // We have the operands, now perform the operation
+ switch(op){
+  case 0: ziv=0; break;
+  case 1: ziv=aiv&wiv; break;
+  case 2: ziv=aiv&~wiv; break;
+  case 3: ziv=aiv; break;
+  case 4: ziv=(~aiv)&wiv; break;
+  case 5: ziv=wiv; break;
+  case 6: ziv=aiv^wiv; break;
+  case 7: ziv=aiv|wiv; break;
+  case 8: ziv=~(aiv|wiv); break;
+  case 9: ziv=~(aiv^wiv); break;
+  case 10: ziv=~wiv; break;
+  case 11: ziv=aiv|~wiv; break;
+  case 12: ziv=~aiv; break;
+  case 13: ziv=(~aiv)|wiv; break;
+  case 14: ziv=~(aiv&wiv); break;
+  case 15: ziv=~0; break;
+  case 16: ziv=0>aiv ? ((UI)wiv>>((-aiv)&(BW-1)))|((UI)wiv<<(aiv&(BW-1))) : ((UI)wiv<<(aiv&(BW-1)))|((UI)wiv>>((-aiv)&(BW-1))); break;  // rotate
+  case 17: ziv=0>aiv ? (aiv<=-BW?0:(UI)wiv>>-aiv) : (aiv>=BW?0:(UI)wiv<<aiv); break;  // shift logical
+  case 18: ziv=0>aiv ? (aiv<=-BW?(wiv<0?-1:0):wiv>>-aiv) : (aiv>=BW?0:wiv<<aiv); break;  // shift arithmetic
+ }
+ SSSTORE(ziv,z,INT,I) R z;
+}
+
+SSINGF2(jtsspow) SSNUMPREFIX
+ if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+
+ // Switch on the types; do the operation, store the result, set the type of result
+ // types are 1, 4, or 8
+ switch(sw) { D t;
+  default: R 0;
+  case SSINGBB: SSSTORE((I)SSRDB(a)|(I)!SSRDB(w),z,INT,I) R z;  // normal code produces B01
+  case SSINGBD: SSSTORE(SSRDB(a)?1.0:(t=SSRDD(w))<0?inf:t==0?1:0,z,FL,D) R z;
+  case SSINGDB: SSSTORE(SSRDB(w)?SSRDD(a):1.0,z,FL,D) R z;
+  case SSINGID: RE(t=pospow((D)SSRDI(a),SSRDD(w))) SSSTORE(t,z,FL,D) R z;
+  case SSINGDI: RE(t=intpow(SSRDD(a),SSRDI(w))) SSSTORE(t,z,FL,D) R z;
+  case SSINGBI: SSSTORE(SSRDB(a)?1.0:(t=(D)SSRDI(w))<0?inf:t==0?1:0,z,FL,D) R z;
+  case SSINGIB: SSSTORE(SSRDB(w)?(D)SSRDI(a):1.0,z,FL,D) R z;
+  case SSINGII: RE(t=intpow((D)SSRDI(a),SSRDI(w))) SSSTORE(t,z,FL,D) R z;
+  case SSINGDD: RE(t=pospow(SSRDD(a),SSRDD(w))) SSSTORE(t,z,FL,D) R z;
+ }
+}
 
 // Comparisons:
 
@@ -466,5 +533,4 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
  if(z==0)R zv^(B)op?one:zero;
  BAV(z)[0] = zv^(B)op; R z;
 }
-
 

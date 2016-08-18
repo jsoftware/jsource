@@ -6,13 +6,13 @@
 #include "j.h"
 #include "ve.h"
 
-static D jtintpow(J jt,D x,I n){D r=1;
+D jtintpow(J jt,D x,I n){D r=1;
  if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}
  while(n){if(1&n)r*=x; x*=x; n>>=1;}
  R r;
 }    /* x^n where x is real and n is integral */
 
-static D jtpospow(J jt,D x,D y){
+D jtpospow(J jt,D x,D y){
  if(0==y)R 1.0;
  if(0==x)R 0<y?0.0:inf;
  if(0<x){

@@ -126,7 +126,7 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  GATV(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++){  // for each word
-  wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
+  wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
   if(128>c&&(y=ds(e))){*x++=y;if(e==CTILDE&&x[-2]==ds(CRBRACE))bracetilde=1;}  // If first char is ASCII, see if the form including inflections is a primitive;
     // if so, that is the word to put into the queue.  No need to copy it

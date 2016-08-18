@@ -54,7 +54,7 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
   s[0]=' '; s[4]=0;
   spellit(id,1+s);
   c=s[1]; 
-  eputs(s+!(c==CESC1||c==CESC2||jt->nflag&&CA==ctype[c]));
+  eputs(s+!(c==CESC1||c==CESC2||jt->nflag&&CA==ctype[(UC)c]));
 }}
 
 static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;

@@ -21,7 +21,7 @@ static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
  RZ(w);
  n=AN(w); v=CAV(w); c=*v; d=*(v+n-1);
  if(1==n||(2==n||3>=n&&' '==c)&&(d==CESC1||d==CESC2)||vnm(n,v))R 0;
- if(C9==ctype[c])DO(n-1, d=c; c=ctype[*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
+ if(C9==ctype[(UC)c])DO(n-1, d=c; c=ctype[(UC)*++v]; if(b=!NUMV(c)||d==CS&&c!=C9)break;)
  else if(c==q)   DO(n-1, c=*v++; if(c==q)p=!p; if(b=p?0:c!=q)break;)
  else if(c=='(') DO(n-1, c=*v++; j+=c=='('?1:c==')'?-1:0; if(b=!j)break;)
  R b;
@@ -37,9 +37,9 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
  RZ(w);
  n=AN(w); wv=CAV(w); 
  if(!b){
-  c=ctype[*wv]; v=wv; p=0;
-  if     (c==CQ)DO(n-1, c=ctype[*++v]; if(c==CQ)p=!p; else if(p){b=1; break;})
-  else if(c==C9)DO(n-1, c=ctype[*++v]; if(!(c==C9   ||c==CS   )){b=1; break;})
+  c=ctype[(UC)*wv]; v=wv; p=0;
+  if     (c==CQ)DO(n-1, c=ctype[(UC)*++v]; if(c==CQ)p=!p; else if(p){b=1; break;})
+  else if(c==C9)DO(n-1, c=ctype[(UC)*++v]; if(!(c==C9   ||c==CS   )){b=1; break;})
   else          DO(n-1, c=      *++v ; if(!(c==CESC1||c==CESC2)){b=1; break;});
   if(b&&vnm(n,wv))b=0;
  }
@@ -232,11 +232,11 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=VAV(w);
 
 static B laa(A a,A w){C c,d;
  RZ(a&&w);
- c=ctype[cl(a)]; d=ctype[cf(w)];
+ c=ctype[(UC)cl(a)]; d=ctype[(UC)cf(w)];
  R (c==C9||c==CA)&&(d==C9||d==CA);
 }
 
-static B lnn(A a,A w){C c; RZ(a&&w); c=cl(a); R ('x'==c||C9==ctype[c])&&C9==ctype[cf(w)];}
+static B lnn(A a,A w){C c; RZ(a&&w); c=cl(a); R ('x'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
 
 static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I ad,n;V*v;
  RZ(a&&w);

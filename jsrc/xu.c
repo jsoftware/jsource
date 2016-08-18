@@ -912,3 +912,24 @@ F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
  R z;
 }    // 10 u: x - literal4 similar to monad u: for whcar
 
+// to modified utf-8 assume input is rank-1 LIT
+// embeding null not converted
+F1(jttomutf8){A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
+RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
+if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
+ASSERT(t&LIT,EVDOMAIN);
+q=mtowsize(wv,n);
+if(q<0)R ca(w);
+GATV(z,C2T,q,1,0);
+c2v=USAV(z);
+mtow(wv,n,c2v);
+GATV(z1,C4T,q,1,0);
+c4v=C4AV(z1);
+DO(q, *c4v++=(C4)*c2v++;);
+q=utomsize(C4AV(z1),AN(z1));
+q=(q<0)?(-q):q;
+GATV(z,LIT,q,1,0);
+utom(C4AV(z1),AN(z1),UAV(z));
+R z;
+}
+

@@ -505,7 +505,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
 
 // entry point to allow C2T result from thorn1.  But always pass byte arguments unchanged
 // This will enable null insertion/removal for CJK, but that's OK since the result goes to display
-F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); R z; }
+F1(jtthorn1u){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT)); z = thorn1main(w); jt->thornuni = to; R z; }
 
 // entry point for returning LIT array only.  Allow C2T result, then convert.  But always pass literal arguments unchanged
 F1(jtthorn1){ A z; RZ(w); B to = jt->thornuni; jt->thornuni = !(AT(w)&(LIT+C2T+C4T)); z = thorn1main(w); if (z&&AT(z)&(C2T+C4T))z = rank1ex(z, 0L, 1L, RoutineD); jt->thornuni = to; R z; }
@@ -763,7 +763,14 @@ static F1(jtjpr1){PROLOG(0002);A z;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
+#ifdef ANDROID
+ if(AN(z)){
+  z=tomutf8(z);
+  jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
+ }
+#else
  if(AN(z))jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
+#endif
  EPILOG(mtm);
 }
 

@@ -323,6 +323,7 @@ extern F1(jttsit1);
 extern F1(jttss);
 extern F1(jttoutf8);
 extern F1(jttoutf8a);
+extern F1(jttomutf8);
 extern F1(jttoutf16);
 extern F1(jttoutf32);
 extern F1(jttou32);

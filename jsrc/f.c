@@ -763,14 +763,12 @@ static F1(jtjpr1){PROLOG(0002);A z;
  // convert the character array to a null-terminated UTF-8 string
  RZ(z=jprx(jt->outeol,jt->outmaxlen,jt->outmaxbefore,jt->outmaxafter,w));
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
-#ifdef ANDROID
  if(AN(z)){
+#ifdef ANDROID
   z=tomutf8(z);
+#endif
   jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
  }
-#else
- if(AN(z))jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
-#endif
  EPILOG(mtm);
 }
 

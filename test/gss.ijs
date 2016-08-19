@@ -126,19 +126,19 @@ NB. Monads
 o. compss v
 
 NB. Verify that operations are performed in-place where possible
-iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 1000000'
-niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 1000000'
+iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'
+niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 100000'
 THRESHOLD+. niptime > 1.1 * iptime   NB. ~25% improvement normally
 
-iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 1000000'
-iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 1000000'
+iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 100000'
+iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 100000'
 THRESHOLD+. iptime1 < 1.6 * iptime2  NB. Both are inplace; verify + not too slow
 
-iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' 1000000'
-iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' 1000000'  NB. Not ssing
-iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 1000000'  NB. inplace
-THRESHOLD+. iptime1 < 0.8 * iptime2  NB. Both are inplace; verify * not too slow
-THRESHOLD+. iptime1 < 1.3 * iptime3  NB. Both are inplace; verify * not too slow
+iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' 100000'
+iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' 100000'  NB. Not ssing
+iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 100000'  NB. inplace
+THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Both are inplace; verify * not too slow
+THRESHOLD+. iptime1 < 1.4 * iptime3  NB. Both are inplace; verify * not too slow
 
 4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 niptime ops v v1 v2 v3'
 

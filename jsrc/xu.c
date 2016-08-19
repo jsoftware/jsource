@@ -913,19 +913,23 @@ F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
 }    // 10 u: x - literal4 similar to monad u: for whcar
 
 // to modified utf-8 assume input is rank-1 LIT
-// embeding null not converted
+// to convert backwards, first to utf-16 then to utf-8
 F1(jttomutf8){A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
 ASSERT(t&LIT,EVDOMAIN);
+// convert to utf-16
 q=mtowsize(wv,n);
 if(q<0)R ca(w);
 GATV(z,C2T,q,1,0);
 c2v=USAV(z);
 mtow(wv,n,c2v);
+// promote wchar to literal4
+// change 0 to its over long version
 GATV(z1,C4T,q,1,0);
 c4v=C4AV(z1);
-DO(q, *c4v++=(C4)*c2v++;);
+DO(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
+// convert to utf-8
 q=utomsize(C4AV(z1),AN(z1));
 q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);

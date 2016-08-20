@@ -16,11 +16,23 @@ a (r. -: rdot) b
 
 'domain error' -: r. etx 'abc'
 'domain error' -: r. etx <'abc'
+'domain error' -: r. etx u:'abc'
+'domain error' -: r. etx <u:'abc'
+'domain error' -: r. etx 10&u:'abc'
+'domain error' -: r. etx <10&u:'abc'
 
 'domain error' -: 'abc' r. etx 3
 'domain error' -: 'abc' r.~etx 3
 'domain error' -: 4     r. etx <'abc'
 'domain error' -: 4     r.~etx <'abc'
+'domain error' -: (u:'abc') r. etx 3
+'domain error' -: (u:'abc') r.~etx 3
+'domain error' -: 4     r. etx <u:'abc'
+'domain error' -: 4     r.~etx <u:'abc'
+'domain error' -: (10&u:'abc') r. etx 3
+'domain error' -: (10&u:'abc') r.~etx 3
+'domain error' -: 4     r. etx <10&u:'abc'
+'domain error' -: 4     r.~etx <10&u:'abc'
 
 'length error' -: 3 4   r. etx 5 6 7
 'length error' -: 3 4   r.~etx 5 6 7

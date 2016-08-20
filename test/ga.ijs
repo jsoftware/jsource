@@ -1,5 +1,7 @@
 NB. a. ------------------------------------------------------------------
 
+randuni''
+
 2           -: type a.
 1           -: #$a.
 256         -: #a.
@@ -29,14 +31,16 @@ base  =: >:@i.@-@#
 rfd   =: +/@({.>}.)\.
 dfr   =: /:^:2@,/
 
-adot1 =: (base #. rfd)@((ord pfill ])`C.@.boxed) " 1
-adot2 =: dfr@(base@] #: [) { ]
+Adot1 =: (base #. rfd)@((ord pfill ])`C.@.boxed) " 1
+Adot2 =: dfr@(base@] #: [) { ]
 
-(A. -: adot1) 7?12
-(A. -: adot1) x=:(1=1,?6$3) <;.1 (7?12)
+(A. -: Adot1) 7?12
+(A. -: Adot1) x=:(1=1,?6$3) <;.1 (7?12)
 
-(?!5) (A. -: adot2) 'xyzab'
-(?!5) (A. -: adot2) r.i.5 2
+(?!5) (A. -: Adot2) 'xyzab'
+(?!5) (A. -: Adot2) u:'xyzab'
+(?!5) (A. -: Adot2) 10&u:'xyzab'
+(?!5) (A. -: Adot2) r.i.5 2
 
 5 -: A.0 3 2 1
 5 -: A.3 2 1
@@ -45,6 +49,8 @@ adot2 =: dfr@(base@] #: [) { ]
 
 (_1 A. y) -: |. y=:1=?300 2$2
 (_1 A. y) -: |. y=:(?400$#a.){a.
+(_1 A. y) -: |. y=:(?400$#adot1){adot1
+(_1 A. y) -: |. y=:(?400$#adot2){adot2
 (_1 A. y) -: |. y=:?300$2000
 (_1 A. y) -: |. y=:o.?400 2$100
 (_1 A. y) -: |. y=:^0j1*?400 2$100
@@ -53,6 +59,8 @@ adot2 =: dfr@(base@] #: [) { ]
 
 (0 A. y) -: y=:1=?2
 (0 A. y) -: y=:(?#a.){a.
+(0 A. y) -: y=:(?#adot1){adot1
+(0 A. y) -: y=:(?#adot2){adot2
 (0 A. y) -: y=:?20000
 (0 A. y) -: y=:o.?20000
 (0 A. y) -: y=:^0j1*?2000
@@ -60,6 +68,8 @@ adot2 =: dfr@(base@] #: [) { ]
 
 (_1 A. y) -: y=:1=?2
 (_1 A. y) -: y=:(?#a.){a.
+(_1 A. y) -: y=:(?#adot1){adot1
+(_1 A. y) -: y=:(?#adot2){adot2
 (_1 A. y) -: y=:?20000
 (_1 A. y) -: y=:o.?20000
 (_1 A. y) -: y=:^0j1*?2000
@@ -67,13 +77,19 @@ adot2 =: dfr@(base@] #: [) { ]
 
 (0 A. y) -: y=:i.0 4 5
 (0 A. y) -: y=:0 5$a.
+(0 A. y) -: y=:0 5$adot1
+(0 A. y) -: y=:0 5$adot2
 (0 A. y) -: y=:0$<1234
 
 ([ -: 3&A.^:_1@(3&A.)) x=:?100$10000
 ([ -: 3&A.^:_1@(3&A.)) x=:?20 4$100
 ([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:'Hey nonny nonny'
+([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:u:'Hey nonny nonny'
+([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:10&u:'Hey nonny nonny'
 
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.'Antebellum'
+([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.u:'Antebellum'
+([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.10&u:'Antebellum'
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:100?100
 
 0 -: A. i.0
@@ -124,7 +140,7 @@ p4 =: 3 : 0
 (p0 -: p4)"0 i.6
 
 
-4!:55 ;:'adot1 adot2 base boxed dfr grow j ord p p0 '
+4!:55 ;:'Adot1 Adot2 adot1 adot2 base boxed dfr grow j ord p p0 '
 4!:55 ;:'p1 p2 p3 p4 pfill pind rfd x y z '
 
 

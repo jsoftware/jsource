@@ -56,7 +56,7 @@ perm =. 1!:7
 'length error'      -: perm etx <''
 
 'file name error'   -: perm etx <'1234skidoo'
-'file name error'   -: perm etx <'does\not\exist'
+'file name error'   -: perm etx <'does/not/exist'
 
 'file number error' -: perm etx 0
 'file number error' -: perm etx 1

@@ -7,7 +7,11 @@ if. IFWIN do.
 else.
  n=: 'libtsdll.',;(UNAME-:'Darwin'){'so';'dylib'
 end. 
-LIBTSDLL=: jpath'~bin/',n,' '
+if. UNAME-:'Android' do.
+ LIBTSDLL=: jpath'~bin/../../lib/',n,' '
+else.
+ LIBTSDLL=: jpath'~bin/',n,' '
+end.
 1
 )
 
@@ -41,6 +45,8 @@ imax     =: IF64{:: 2147483647; 9223372036854775807
 imin     =: (-imax)-1
 U4MAX    =: 16b110000
 C4MAX    =: IF64{:: 2147483647;4294967296
+RAND32   =: (] [`(<:@-@[)@.]"0 ?@:($&2)@:$)^:(-.IF64) NB. negate and decrement randomly
+UNSGN32  =: <.@:((2^32)&|)^:(-.IF64)                  NB. unsigned 32-bit to double
 
 scheck=: 3 : 0  NB. check sparse array
  s=. $ y
@@ -81,6 +87,16 @@ comb=: 4 : 0
  c=. 1 {.~ - d=. 1+y-x
  z=. i.1 0
  for_j. (d-1+y)+/&i.d do. z=. (c#j) ,. z{~;(-c){.&.><i.{.c=. +/\.c end.
+)
+
+randuni=: 3 : 0
+ adot1=: u: /:~ 256?65536
+ if. IF64 do.
+  adot2=: 10&u: /:~ 256?C4MAX
+ else.
+  adot2=: /:~ 10&u: RAND32 256?C4MAX
+ end.
+''
 )
 
 NB. ebi extensions

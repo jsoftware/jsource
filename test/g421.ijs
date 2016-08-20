@@ -1,5 +1,7 @@
 NB. f/. f\  f\. models --------------------------------------------------
 
+randuni''
+
 en     =: #@]
 em     =: (en >.@% -@[)`(en 0&>.@>:@- [) @. (0&<:@[)
 kay    =: en`em @. (0&<@[)
@@ -43,6 +45,22 @@ a=:a.{~32+?10 5 3$95
 (]/. -: ] ob) a
 (</. -: < ob) 'a'
 (</. -: < ob) ''
+
+NB. literal2
+a=:adot1{~32+?10 5 3$95
+(</. -: < ob) a
+(</. -: < ob) ,a
+(]/. -: ] ob) a
+(</. -: < ob) u:'a'
+(</. -: < ob) u:''
+
+NB. literal4
+a=:adot2{~32+?10 5 3$95
+(</. -: < ob) a
+(</. -: < ob) ,a
+(]/. -: ] ob) a
+(</. -: < ob) 10&u:'a'
+(</. -: < ob) 10&u:''
 
 NB. integer
 a=:?3 4 5 6$100
@@ -136,6 +154,16 @@ a=:a.{~32+?11$95
 k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
+NB. literal2
+a=:adot1{~32+?11$95
+k (</. -: < key) a      [ k=:?11$4
+k (]/. -: ] key) a      [ k=:?11$4
+
+NB. literal2
+a=:adot2{~32+?11$95
+k (</. -: < key) a      [ k=:?11$4
+k (]/. -: ] key) a      [ k=:?11$4
+
 NB. integer
 a=:?11 5$110
 k (</.  -: < key) a     [ k=:?11$4
@@ -162,17 +190,28 @@ k (]/. -: ] key) a      [ k=:?11$4
 ''        -: '' </. ''
 ''        -: '' </. i.0 4 5
 ''        -: (i.0 4 5) </. ''
+''        -: (u:'') </. u:''
+''        -: (u:'') </. i.0 4 5
+''        -: (i.0 4 5) </. u:''
+''        -: (10&u:'') </. 10&u:''
+''        -: (10&u:'') </. i.0 4 5
+''        -: (i.0 4 5) </. 10&u:''
 (,<,5)    -: 4 </. 5
 (,<i.1 9) -: 4 </. i.1 9
 (,<,4)    -: (i.1 9) </. 4
 (,<,4)    -: (i.1 0) </. 4
 (,<x )    -: (i.(#x),0) </. x=:'abcdefghij'
+(,<x )    -: (i.(#x),0) </. x=:u:'abcdefghij'
+(,<x )    -: (i.(#x),0) </. x=:10&u:'abcdefghij'
+
 
 'length error' -: 'abc'  </. etx i.4
+'length error' -: (u:'abc')  </. etx i.4
 'length error' -: 'abcd' </. etx i.3
 'length error' -: ''     </. etx i.4
 'length error' -: 4      </. etx i.4
 'length error' -: 'abcd' </. etx 4
+'length error' -: (10&u:'abcd') </. etx 4
 
 (,<,1) -: 1 1 1 1 (<@~.)/.!.0 (1) + 1e_15 * i. 4
 (4#<,1) -: (<@~.)/.!.0~ (1) + 1e_15 * i. 4
@@ -197,6 +236,8 @@ test=: 2 : 0
  assert. ((n,0)$2r5   ) (u/. -: v/.) i.n
  assert. ((n,0)$a:    ) (u/. -: v/.) i.n
  assert. ((n,0)$s:<'x') (u/. -: v/.) i.n
+ assert. ((n,0)$s:<u:'x') (u/. -: v/.) i.n
+ assert. ((n,0)$s:<10&u:'x') (u/. -: v/.) i.n
  1
 )
 
@@ -208,7 +249,7 @@ test=: 2 : 0
 (# ,{.) test (3 : '(# ,{.)y')
 
 
-4!:55 ;:'a base bs bsd conv conv1 em en eq iind infix k '
+4!:55 ;:'a adot1 adot2 base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru '
 4!:55 ;:'s sd seg suffix t test x xx'
 

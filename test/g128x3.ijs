@@ -62,6 +62,8 @@ b=: 32 ?@$ 2
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
+'domain error' -: f etx u:x
+'domain error' -: f etx 10&u:x
 
 'rank error'   -: f etx 3 4$'abc'
 

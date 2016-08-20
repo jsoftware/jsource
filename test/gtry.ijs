@@ -30,6 +30,8 @@ fd =: 3 : 0
 
 (3+y) -: (x=:?100) fd (y=:?100)
 (7+x) -: (x=:?100) fd 'triskaidekaphobia'
+(7+x) -: (x=:?100) fd u:'triskaidekaphobia'
+(7+x) -: (x=:?100) fd 10&u:'triskaidekaphobia'
 'x and y are both bad' -: 'foo' fd 'bar'
 
 write =: 1!:2

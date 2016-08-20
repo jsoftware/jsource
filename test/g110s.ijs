@@ -65,6 +65,10 @@ times=: 4 : 'x*y'
 
 'domain error' -: */\. etx 'deipnosophist'
 'domain error' -: */\. etx ;:'sui generis'
+'domain error' -: */\. etx u:'deipnosophist'
+'domain error' -: */\. etx ;:u:'sui generis'
+'domain error' -: */\. etx 10&u:'deipnosophist'
+'domain error' -: */\. etx ;:10&u:'sui generis'
 
 4!:55 ;:'f times x'
 

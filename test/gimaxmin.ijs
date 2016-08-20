@@ -30,6 +30,8 @@ test 0$0.5
 test 100 3 ?@$ 4
  
 'domain error' -: (i.<./) etx 'abc'
+'domain error' -: (i.<./) etx u:'abc'
+'domain error' -: (i.<./) etx 10&u:'abc'
 'domain error' -: (i.<./) etx 1j2 3 4 
 'domain error' -: (i.<./) etx 1;2;3 4 
 

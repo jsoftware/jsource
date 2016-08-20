@@ -122,6 +122,8 @@ NB. rational
 'domain error' -: (<2 3$'abc') p. etx 3    
 'domain error' -: (<2 3$<3   ) p. etx 3    
 'domain error' -: (<i.3 2)     p. etx 'ab' 
+'domain error' -: (<i.3 2)     p. etx u:'ab' 
+'domain error' -: (<i.3 2)     p. etx 10&u:'ab' 
 'domain error' -: ('a';_3 7)   p. etx 4 5  
 'domain error' -: (3;'abc')    p. etx 4 5  
 'domain error' -: (3;<<1 2 3)  p. etx 4 5  

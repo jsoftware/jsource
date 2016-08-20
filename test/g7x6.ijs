@@ -63,6 +63,7 @@ NB. (7!:6 <'abc') -: ((spn 'abc')+(4*2^6+h)+sp <'p') + (+/spn&> nl_abc_ '') + +/
 'ill-formed name' -: 7!:5 etx <'bad name'
 'ill-formed name' -: 7!:5 etx <''
 
+0 s: 11
 
 4!:55 ;:'h p sp_z_ spl spn'
 

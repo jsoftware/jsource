@@ -15,6 +15,8 @@ a -: c
 
 'domain error' -: rls etx 3.5 
 'domain error' -: rls etx 'a' 
+'domain error' -: rls etx u:'a' 
+'domain error' -: rls etx 10&u:'a' 
 'domain error' -: rls etx <9  
 'domain error' -: rls etx 3j4 
 
@@ -288,6 +290,8 @@ t -: 9!:38 ''
 'domain error' -: 9!:39 etx 2 3r4
 'domain error' -: 9!:39 etx 2 3;4
 'domain error' -: 9!:39 etx '23'
+'domain error' -: 9!:39 etx u:'23'
+'domain error' -: 9!:39 etx 10&u:'23'
 'domain error' -: 9!:39 etx _1 3
 
 'rank error'   -: 9!:39 etx 2

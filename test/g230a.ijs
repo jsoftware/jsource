@@ -56,6 +56,10 @@ y=. _1e5+?100$2e5
 
 'domain error' -: 1   | etx 'chthonic'
 'domain error' -: 0 0 | etx ;:'sui generis'
+'domain error' -: 1   | etx u:'chthonic'
+'domain error' -: 0 0 | etx ;:u:'sui generis'
+'domain error' -: 1   | etx 10&u:'chthonic'
+'domain error' -: 0 0 | etx ;:10&u:'sui generis'
 
 4!:55 ;:'x y z'
 

@@ -1,17 +1,31 @@
 NB. 3!:0 ----------------------------------------------------------------
 
+randuni''
+
 NB. Boolean
 1 = type 0
 1 = type 1
 1 = type 1 0 1 0 0
 1 = type 3 = 4 5
 1 = type (<'ergo')e.;:'Cogito, ergo sum.'
+1 = type (<'ergo')e.;:u:'Cogito, ergo sum.'
+1 = type (<'ergo')e.;:10&u:'Cogito, ergo sum.'
 
 NB. literal
 2 = type a.
 2 = type 'abc'
 2 = type ''
 2 = type ":1 2 3
+
+NB. literal2
+131072 = type adot1
+131072 = type u:'abc'
+131072 = type u:''
+
+NB. literal4
+262144 = type adot2
+262144 = type 10&u:'abc'
+262144 = type 10&u:''
 
 NB. integer
 4 = type 4 5 6
@@ -34,6 +48,8 @@ NB. complex
 NB. boxed
 32 = type (<'abc'),<'bar'
 32 = type ;:'Cogito, ergo sum.'
+32 = type ;:u:'Cogito, ergo sum.'
+32 = type ;:10&u:'Cogito, ergo sum.'
 32 = type 0$<''
 
 NB. extended integer
@@ -57,6 +73,10 @@ f=: 1 : 0  NB. miscellaneous arrays
  assert. test x=: ?20$2
  assert. test x=: a.
  assert. test x=: a.{~?2 34$#a.
+ assert. test x=: adot1
+ assert. test x=: adot1{~?2 34$#adot1
+ assert. test x=: adot2
+ assert. test x=: adot2{~?2 34$#adot2
  assert. test x=: _4e5+?100$8e5
  assert. test x=: o._4e5+?100$8e5
  assert. test x=: j./_500+?2 50$1000
@@ -143,6 +163,8 @@ f=: 1 : 0  NB. boxed arrays
  assert. test x=: <"0 j./?2 3 4$5
  assert. test x=: (1=?100$10) <;.1 ?100$2
  assert. test x=: (1=?100$10) <;.1 (?100$#a.){a.
+ assert. test x=: (1=?100$10) <;.1 (?100$#adot1){adot1
+ assert. test x=: (1=?100$10) <;.1 (?100$#adot2){adot2
  assert. test x=: (1=?100$10) <;.1 ?100$1000
  assert. test x=: (1=?100$20) <;.1 o.?100$10000
  assert. test x=: (1=?100$20) <;.1 j./?2 100$5
@@ -206,6 +228,10 @@ test (i.30)$3j4
 (-: ]&.( 0&(3!:1))) x=: j./?2 29 7$2e6
 (-: ]&.( 0&(3!:1))) x=: ;:'bou stro phe don ic'
 (-: ]&.( 0&(3!:1))) x=: 3 41$;:'4 score and 7 years ago, +/ . *'
+(-: ]&.( 0&(3!:1))) x=: ;:u:'bou stro phe don ic'
+(-: ]&.( 0&(3!:1))) x=: 3 41$;:u:'4 score and 7 years ago, +/ . *'
+(-: ]&.( 0&(3!:1))) x=: ;:10&u:'bou stro phe don ic'
+(-: ]&.( 0&(3!:1))) x=: 3 41$;:10&u:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.( 1&(3!:1))) x=: ?2000$2
 (-: ]&.( 1&(3!:1))) x=: ?29 7$2
@@ -219,6 +245,10 @@ test (i.30)$3j4
 (-: ]&.( 1&(3!:1))) x=: j./?2 29 7$2e6
 (-: ]&.( 1&(3!:1))) x=: ;:'bou stro phe don ic'
 (-: ]&.( 1&(3!:1))) x=: 3 41$;:'4 score and 7 years ago, +/ . *'
+(-: ]&.( 1&(3!:1))) x=: ;:u:'bou stro phe don ic'
+(-: ]&.( 1&(3!:1))) x=: 3 41$;:u:'4 score and 7 years ago, +/ . *'
+(-: ]&.( 1&(3!:1))) x=: ;:10&u:'bou stro phe don ic'
+(-: ]&.( 1&(3!:1))) x=: 3 41$;:10&u:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.(10&(3!:1))) x=: ?2000$2
 (-: ]&.(10&(3!:1))) x=: ?29 7$2
@@ -232,6 +262,10 @@ test (i.30)$3j4
 (-: ]&.(10&(3!:1))) x=: j./?2 29 7$2e6
 (-: ]&.(10&(3!:1))) x=: ;:'bou stro phe don ic'
 (-: ]&.(10&(3!:1))) x=: 3 41$;:'4 score and 7 years ago, +/ . *'
+(-: ]&.(10&(3!:1))) x=: ;:u:'bou stro phe don ic'
+(-: ]&.(10&(3!:1))) x=: 3 41$;:u:'4 score and 7 years ago, +/ . *'
+(-: ]&.(10&(3!:1))) x=: ;:10&u:'bou stro phe don ic'
+(-: ]&.(10&(3!:1))) x=: 3 41$;:10&u:'4 score and 7 years ago, +/ . *'
 
 (-: ]&.(11&(3!:1))) x=: ?2000$2
 (-: ]&.(11&(3!:1))) x=: ?29 7$2
@@ -245,6 +279,10 @@ test (i.30)$3j4
 (-: ]&.(11&(3!:1))) x=: j./?2 29 7$2e6
 (-: ]&.(11&(3!:1))) x=: ;:'bou stro phe don ic'
 (-: ]&.(11&(3!:1))) x=: 3 41$;:'4 score and 7 years ago, +/ . *'
+(-: ]&.(11&(3!:1))) x=: ;:u:'bou stro phe don ic'
+(-: ]&.(11&(3!:1))) x=: 3 41$;:u:'4 score and 7 years ago, +/ . *'
+(-: ]&.(11&(3!:1))) x=: ;:10&u:'bou stro phe don ic'
+(-: ]&.(11&(3!:1))) x=: 3 41$;:10&u:'4 score and 7 years ago, +/ . *'
 
 NB. empty array type
 x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
@@ -277,6 +315,8 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'rank error'   -: ex '0 1&(3!:3) ^: _1 ] 9'
 
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep ;:'Cogito, ergo sum.'
+'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep ;:u:'Cogito, ergo sum.'
+'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep ;:10&u:'Cogito, ergo sum.'
 'index error'  -: unbin etx (_1{a.) (>IF64{(24+i.4);48+i.8)}x
 'index error'  -: unbin etx ( 7{a.) (>IF64{(28+i.4);56+i.8)}x
 'index error'  -: unbin etx (_1{a.) (>IF64{(32+i.4);64+i.8)}x
@@ -284,11 +324,21 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'index error'  -: unbin etx 'f' 6}x
 'index error'  -: unbin etx '7' 7}x
 'index error'  -: unbin etx 'f' 8}x
+'index error'  -: unbin etx '7' 5}x=: hexrep ;:u:'Cogito, ergo sum.'
+'index error'  -: unbin etx 'f' 6}x
+'index error'  -: unbin etx '7' 7}x
+'index error'  -: unbin etx 'f' 8}x
+'index error'  -: unbin etx '7' 5}x=: hexrep ;:10&u:'Cogito, ergo sum.'
+'index error'  -: unbin etx 'f' 6}x
+'index error'  -: unbin etx '7' 7}x
+'index error'  -: unbin etx 'f' 8}x
 
 'length error' -: unbin etx ''
 'length error' -: unbin etx _5}.binrep ?20$2
 'length error' -: unbin etx _5}.binrep 4 5$'sesquipedalian'
-'length error' -: unbin etx _5}.binrep 3 4 5
+'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$u:'sesquipedalian'
+'length error' -: unbin etx (IF64{_5 _9)}.binrep 4 5$10&u:'sesquipedalian'
+'length error' -: unbin etx (IF64{_5 _9)}.binrep 3 4 5
 
 NB. 3!:2 decoding pre-601 data ------------------------------------------
 
@@ -327,6 +377,10 @@ test y=: o. i.2 3
 test y=: ^j.i.2 3
 test y=: ;:'Cogito, ergo sum.'
 test y=: 0$<'abcde'
+test y=: ;:u:'Cogito, ergo sum.'
+test y=: 0$<u:'abcde'
+test y=: ;:10&u:'Cogito, ergo sum.'
+test y=: 0$<10&u:'abcde'
 test y=: <''
 test y=: {:: <''
 test y=: 5!:1 <'binrep_pre601'
@@ -390,14 +444,18 @@ rx=: 3 : 0
 (-:!.0 rx@xr) _ __
 (-:!.0 rx@xr) j./o.?2 3 4$1e6
 (-:!.0 rx@xr) ;:'Cogito, ergo sum.'
+(-:!.0 rx@xr) ;:u:'Cogito, ergo sum.'
+(-:!.0 rx@xr) ;:10&u:'Cogito, ergo sum.'
 (-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. ;:'Cogito, ergo sum.'
+(-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. ;:u:'Cogito, ergo sum.'
+(-:!.0 rx@xr) 0.07 ; (j./i.2 3 4) ; ,. ;:10&u:'Cogito, ergo sum.'
 (-:!.0 rx@xr) !100x
 (-:!.0 rx@xr) +/ .*~^:(10) 2 2$0 1 1 1x
 (-:!.0 rx@xr) (+%)/\44$1x
 (-:!.0 rx@xr) 5!:1 <'xrh'
 
 
-4!:55 ;:'bhdr_pre601 binrep binrep_pre601 br f g H hbr hexrep hrx Indirect'
+4!:55 ;:'adot1 adot2 bhdr_pre601 binrep binrep_pre601 br f g H hbr hexrep hrx Indirect'
 4!:55 ;:'rb rbi rx test unbin WS x xr xrh y'
 
 

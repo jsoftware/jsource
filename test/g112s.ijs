@@ -16,6 +16,10 @@ f"0 x=.>:i.2 10
 'domain error' -: *:/\. etx 3j4 5
 'domain error' -: *:/\. etx 'deipnosophist'
 'domain error' -: *:/\. etx ;:'professors in New England'
+'domain error' -: *:/\. etx u:'deipnosophist'
+'domain error' -: *:/\. etx ;:u:'professors in New England'
+'domain error' -: *:/\. etx 10&u:'deipnosophist'
+'domain error' -: *:/\. etx ;:10&u:'professors in New England'
 
 4!:55 ;:'f nand x'
 

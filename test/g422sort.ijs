@@ -1,5 +1,7 @@
 NB. y/:y and y\:y -------------------------------------------------------
 
+randuni''
+
 test=: 3 : 0
  t=. (/:y){y
  assert. t -: y/:y
@@ -56,15 +58,35 @@ test     u: 7001 ?@$ 65536
 test     u: 7002 ?@$ 65536
 test     u: 7003 ?@$ 65536
 
-test  10&u: 1000 ?@$ C4MAX
-test  10&u: 1001 ?@$ C4MAX
-test  10&u: 1002 ?@$ C4MAX
-test  10&u: 1003 ?@$ C4MAX
+test     adot1{~  ?1000 $# adot1
+test     adot1{~  ?1001 $# adot1
+test     adot1{~  ?1002 $# adot1
+test     adot1{~  ?1003 $# adot1
 
-test  10&u: 7000 ?@$ C4MAX
-test  10&u: 7001 ?@$ C4MAX
-test  10&u: 7002 ?@$ C4MAX
-test  10&u: 7003 ?@$ C4MAX
+test     adot1{~  ?7000 $# adot1
+test     adot1{~  ?7001 $# adot1
+test     adot1{~  ?7002 $# adot1
+test     adot1{~  ?7003 $# adot1
+
+test  10&u: RAND32 1000 ?@$ C4MAX
+test  10&u: RAND32 1001 ?@$ C4MAX
+test  10&u: RAND32 1002 ?@$ C4MAX
+test  10&u: RAND32 1003 ?@$ C4MAX
+
+test  10&u: RAND32 7000 ?@$ C4MAX
+test  10&u: RAND32 7001 ?@$ C4MAX
+test  10&u: RAND32 7002 ?@$ C4MAX
+test  10&u: RAND32 7003 ?@$ C4MAX
+
+test     adot2{~  ?1000 $# adot2
+test     adot2{~  ?1001 $# adot2
+test     adot2{~  ?1002 $# adot2
+test     adot2{~  ?1003 $# adot2
+
+test     adot2{~  ?7000 $# adot2
+test     adot2{~  ?7001 $# adot2
+test     adot2{~  ?7002 $# adot2
+test     adot2{~  ?7003 $# adot2
 
 test        1000 ?@$ 1e4
 test        1001 ?@$ 1e4
@@ -142,15 +164,15 @@ test1    u: 3 1001 ?@$ 65536
 test1    u: 3 1002 ?@$ 65536
 test1    u: 3 1003 ?@$ 65536
 
-test1 10&u: 3 1000 ?@$ C4MAX
-test1 10&u: 3 1001 ?@$ C4MAX
-test1 10&u: 3 1002 ?@$ C4MAX
-test1 10&u: 3 1003 ?@$ C4MAX
+test1 10&u: RAND32 3 1000 ?@$ C4MAX
+test1 10&u: RAND32 3 1001 ?@$ C4MAX
+test1 10&u: RAND32 3 1002 ?@$ C4MAX
+test1 10&u: RAND32 3 1003 ?@$ C4MAX
 
-test1 10&u: 3 1000 ?@$ C4MAX
-test1 10&u: 3 1001 ?@$ C4MAX
-test1 10&u: 3 1002 ?@$ C4MAX
-test1 10&u: 3 1003 ?@$ C4MAX
+test1 10&u: RAND32 3 1000 ?@$ C4MAX
+test1 10&u: RAND32 3 1001 ?@$ C4MAX
+test1 10&u: RAND32 3 1002 ?@$ C4MAX
+test1 10&u: RAND32 3 1003 ?@$ C4MAX
 
 test1       3 1000 ?@$ 1e4
 test1       3 1001 ?@$ 1e4
@@ -213,6 +235,6 @@ test1 0.01*(--:n) + 3 1002 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1003 ?@$ n=: IF64{1e9 1e18
 
 
-4!:55 ;:'b n test test1'
+4!:55 ;:'adot1 adot2 b n test test1'
 
 

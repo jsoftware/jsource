@@ -1,5 +1,7 @@
 NB. }.y -----------------------------------------------------------------
 
+randuni''
+
 behead =: 1&}.
 
 NB. Boolean
@@ -14,6 +16,20 @@ NB. literal
 (behead -: }.) a.{~?4$256
 (behead -: }.) a.{~?3 4$256
 (behead -: }.) a.{~?2 3 4$256
+(behead -: }.) 1=?0 3$256
+
+NB. literal
+(behead -: }.) u:'a'
+(behead -: }.) adot1{~?4$256
+(behead -: }.) adot1{~?3 4$256
+(behead -: }.) adot1{~?2 3 4$256
+(behead -: }.) 1=?0 3$256
+
+NB. literal4
+(behead -: }.) 10&u:'a'
+(behead -: }.) adot2{~?4$256
+(behead -: }.) adot2{~?3 4$256
+(behead -: }.) adot2{~?2 3 4$256
 (behead -: }.) 1=?0 3$256
 
 NB. integer
@@ -73,10 +89,25 @@ test =: }. -: [ }. 0&<:@i.@#@[ $  ]
 1 2 0 test 'a'
 0 0 0 test 'a'
 
+1 2 3 test u:'a'
+1 0 3 test u:'a'
+1 2 0 test u:'a'
+0 0 0 test u:'a'
+
+1 2 3 test 10&u:'a'
+1 0 3 test 10&u:'a'
+1 2 0 test 10&u:'a'
+0 0 0 test 10&u:'a'
+
 1 2 3 test <4;5;6
 1 0 3 test <'sui generis'
+1 0 3 test <u:'sui generis'
+1 0 3 test <10&u:'sui generis'
+1 2 0 test 4
 1 2 0 test 4
 0 0 0 test <;:'Cogito, ergo sum.'
+0 0 0 test <;:u:'Cogito, ergo sum.'
+0 0 0 test <;:10&u:'Cogito, ergo sum.'
 
 'length error' -: 1 2 3 }. etx i.2 3
 'length error' -: 2 3   }. etx 'abcd'
@@ -105,6 +136,8 @@ n (}."2 -: f"2) x [ n=:?}.$x
 n (}."2 -: f"2) x [ n=:?}.$x
 
 ([\.x) -: (i.#x)}."0 1 x=:'abcdefghij'
+([\.x) -: (i.#x)}."0 1 x=:u:'abcdefghij'
+([\.x) -: (i.#x)}."0 1 x=:10&u:'abcdefghij'
                  
 3 4 5 (}."1 0 -: f"1 0) i.6 7
 3 4 5 (}."1 0 -: f"1 0) i.0 7
@@ -119,6 +152,6 @@ n (}."2 -: f"2) x [ n=:?}.$x
 (7,5e2$1) -: $ (5e2$0) }."1 0 i.7x
 
 
-4!:55 ;:'behead di drop f m n ni pi t test x '
+4!:55 ;:'adot1 adot2 behead di drop f m n ni pi t test x '
 
 

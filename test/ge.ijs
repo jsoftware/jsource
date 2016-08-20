@@ -6,11 +6,31 @@ y =. 'abc';'dc';'a'
 x =. 1 0 0 1 0 1 (<;.1) 3#"1,.'abcdca'
 (e.x) -: e.y
 
+y =. u:&.>'abc';'dc';'a'
+(e.y) -: 1 1 1 0 1 1,0 0 1 1 1 0,:1 0 0 0 0 1
+
+x =. 1 0 0 1 0 1 (<;.1) 3#"1,.u:'abcdca'
+(e.x) -: e.y
+
+y =. 10&u:&.>'abc';'dc';'a'
+(e.y) -: 1 1 1 0 1 1,0 0 1 1 1 0,:1 0 0 0 0 1
+
+x =. 1 0 0 1 0 1 (<;.1) 3#"1,.10&u:'abcdca'
+(e.x) -: e.y
+
 (e.'') -: i.0 0
+(e.u:'') -: i.0 0
+(e.10&u:'') -: i.0 0
 
 'domain error' -: e. etx 1 2;'abc'  
 'domain error' -: e. etx 1 2;<<'abc' 
 'domain error' -: e. etx 'ab';<<'a' 
+'domain error' -: e. etx 1 2;u:'abc'  
+'domain error' -: e. etx 1 2;<<u:'abc' 
+'domain error' -: e. etx 'ab';<<u:'a' 
+'domain error' -: e. etx 1 2;10&u:'abc'  
+'domain error' -: e. etx 1 2;<<10&u:'abc' 
+'domain error' -: e. etx 'ab';<<10&u:'a' 
 
 
 NB. x e.y ---------------------------------------------------------------
@@ -18,13 +38,25 @@ NB. x e.y ---------------------------------------------------------------
 1 0 0 -: 'foo' e.'f'
 0 0 0 -: 'foo' e.'x'
 0 0 0 -: 'foo' e.4
+1 0 0 -: (u:'foo') e.u:'f'
+0 0 0 -: (u:'foo') e.u:'x'
+0 0 0 -: (u:'foo') e.4
+1 0 0 -: (10&u:'foo') e.10&u:'f'
+0 0 0 -: (10&u:'foo') e.10&u:'x'
+0 0 0 -: (10&u:'foo') e.4
 1 0 0 -: 1 0 0 e.1
 1 0 0 -: 2 1 4 e.2
 1 0 0 -: (o.3 1 2)e.o.3
 
 0 0     -: (i.2 3) e. 4 3$'a'
+0 0     -: (i.2 3) e. 4 3$u:'a'
+0 0     -: (i.2 3) e. 4 3$10&u:'a'
 0 0 0   -: (i.3 2 4) e. 1 2 4$<'a'
+0 0 0   -: (i.3 2 4) e. 1 2 4$<u:'a'
+0 0 0   -: (i.3 2 4) e. 1 2 4$<10&u:'a'
 (3 2$0) -: (3 2 4$'a') e. i.2 4
+(3 2$0) -: (3 2 4$u:'a') e. i.2 4
+(3 2$0) -: (3 2 4$10&u:'a') e. i.2 4
 
 nan=: e.!.0&_.
 
@@ -46,19 +78,27 @@ test=: 3 : 0
 
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:10&u:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: ?5$C4MAX
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:10&u:' miasma chthonic chronic kakistocracy dado'
 
 0 0 -: (i.2 3) e. i.2 4
 0 0 -: (i.2 3) e. 4 5$'a'
+0 0 -: (i.2 3) e. 4 5$u:'a'
+0 0 -: (i.2 3) e. 4 5$10&u:'a'
 
 0   -: 3 e. i.4 3
 

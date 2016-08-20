@@ -63,10 +63,10 @@ fread  =: 3 : 0   NB. fread handle
 test=: 3 : 0   NB. windows only
 if. pc do.
 assert. 1 -: fcreatedir <'testtemp'
-assert. 0 -: fdelete <'testtemp\non_existent_file'
+assert. 0 -: fdelete <'testtemp/non_existent_file'
 assert. 2 -: >{.cderx ''
 
-assert. _1 ~: h=: fcreate <'testtemp\test.jnk'
+assert. _1 ~: h=: fcreate <'testtemp/test.jnk'
 
 s=: 'boustrophedonic paracletic kerygmatic'
 assert. 1 -: s fwrite h
@@ -83,24 +83,24 @@ assert. (i+#t) -: fsize h
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. 1 -: fcreatedir <'testtemp\tempdir'
+assert. 1 -: fcreatedir <'testtemp/tempdir'
 
-assert. (<'testtemp\test.jnk') fcopyto <'testtemp\test1.jnk'
-assert. _1 ~: h=: fopen <'testtemp\test1.jnk'
+assert. (<'testtemp/test.jnk') fcopyto <'testtemp/test1.jnk'
+assert. _1 ~: h=: fopen <'testtemp/test1.jnk'
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. (<'testtemp\test1.jnk') fmoveto <'testtemp\tempdir\test2.jnk'
-assert. _1 ~: h=: fopen <'testtemp\tempdir\test2.jnk'
+assert. (<'testtemp/test1.jnk') fmoveto <'testtemp/tempdir/test2.jnk'
+assert. _1 ~: h=: fopen <'testtemp/tempdir/test2.jnk'
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. 1 -: fdelete <'testtemp\test.jnk'
+assert. 1 -: fdelete <'testtemp/test.jnk'
 
-assert. 0 -: fdeletedir <'testtemp\tempdir'
+assert. 0 -: fdeletedir <'testtemp/tempdir'
 assert. (>{.cderx '') e. 5 145
-assert. 1 -: fdelete <'testtemp\tempdir\test2.jnk'
-assert. 1 -: fdeletedir <'testtemp\tempdir'
+assert. 1 -: fdelete <'testtemp/tempdir/test2.jnk'
+assert. 1 -: fdeletedir <'testtemp/tempdir'
 assert. 1 -: fdeletedir <'testtemp'
 end.
 1

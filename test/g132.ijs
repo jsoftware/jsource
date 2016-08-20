@@ -24,6 +24,10 @@ NB. x%:y ----------------------------------------------------------------
 
 'domain error' -: 3 4 %: etx 'ab'
 'domain error' -: 3 4 %:~etx 'ab'
+'domain error' -: 3 4 %: etx u:'ab'
+'domain error' -: 3 4 %:~etx u:'ab'
+'domain error' -: 3 4 %: etx 10&u:'ab'
+'domain error' -: 3 4 %:~etx 10&u:'ab'
 'domain error' -: 3 4 %: etx 3;4 5
 'domain error' -: 3 4 %:~etx 3;4 5
 

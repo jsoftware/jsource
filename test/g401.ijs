@@ -133,8 +133,12 @@ NB. complex
 (_3r2+2x^n+1) = 2 #. (n$1),1r2 [ n=: 66
 
 'domain error' -: 'abc'   #. etx 1 2 3
+'domain error' -: (u:'abc')   #. etx 1 2 3
+'domain error' -: (10&u:'abc')   #. etx 1 2 3
 'domain error' -: (1;2;3) #. etx 1 2 3
 'domain error' -: 1 2 3   #. etx 'a'
+'domain error' -: 1 2 3   #. etx u:'a'
+'domain error' -: 1 2 3   #. etx 10&u:'a'
 'domain error' -: 1 2 3   #. etx <5
 
 

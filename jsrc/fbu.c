@@ -11,10 +11,12 @@ extern I mtowsize(UC* src, I srcn);
 extern I wtomsize(US* src, I srcn);
 extern I wtousize(US* src, I srcn);
 extern I utomsize(C4* src, I srcn);
+extern I utousize(C4* src, I srcn);
 extern void mtow(UC* src, I srcn, US* snk);
 extern void mtou(UC* src, I srcn, C4* snk);
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utom(C4* src, I srcn, UC* snk);
+extern void utou(C4* src, I srcn, C4* snk);
 
 // forward declaration
 A RoutineA(J,A);
@@ -27,8 +29,6 @@ static void wtomnull(US* src, I srcn, UC* snk);
 static void utomnull(C4* src, I srcn, UC* snk);
 static A wtownull(J,A);
 static A utounull(J,A);
-static I utousize(C4* src, I srcn);
-static void utou(C4* src, I srcn, C4* snk);
 
 // w is a wide char; result is number of excess display positions needed
 // for now, this is just 1 for wide CJK characters
@@ -355,71 +355,6 @@ static A utounull(J jt,A w){C4 *wv,*zv;I n,i,nignulls=0,naddednulls=0;A z;
  R z;
 }
 
-static I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
- while(srcn--)
- {
-  w=*src++;
-  if(w<=0xd7ff||(w>=0xe000))
-  {
-   r++;
-  }
-  else
-  {
-   if(!srcn)
-   {
-    // isolated surrogate
-   r++;
-   }
-   else
-   {
-    w1=*src;
-    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
-    {
-      r++;
-    }
-    else
-    {
-     r++;  // NOT  r+=2
-     src++;srcn--;  // next code unit of surrogate pair
-    }
-   }
-  }
- }
- R r;
-}
-
-// convert surrogate pair in C4T
-static void utou(C4* src, I srcn, C4* snk){ C4 w,w1;
- while(srcn--)
- {
-  w=*src++;
-  if(w<=0xd7ff||(w>=0xe000))
-  {
-   *snk++=(C4)w;
-  }
-  else
-  {
-   if(!srcn)
-   {
-    // isolated surrogate
-   *snk++=(C4)w;
-   }
-   else
-   {
-    w1=*src;
-    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
-    {
-     *snk++=(C4)w;
-    }
-    else
-    {
-     *snk++=(C4)(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
-     src++;srcn--;  // next code unit of surrogate pair
-    }
-   }
-  }
- }
-}
 
 /*
 Routine A:

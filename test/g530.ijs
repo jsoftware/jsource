@@ -1,10 +1,16 @@
 NB. m}y and u}y ---------------------------------------------------------
 
+randuni''
+
 g =. e.&' '@{.} @ (,:&'_')
 h =. e.&' ' {"0 1 ,"0&'_'
 
 (g -: h) 'Cogito, ergo sum.'
+(g -: h) u:'Cogito, ergo sum.'
+(g -: h) 10&u:'Cogito, ergo sum.'
 (g -: h) 2 3 4$'Now is the time, all good mean, to ergo sum.'
+(g -: h) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
+(g -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
@@ -48,6 +54,18 @@ f=: 3 : 0
    xx=: j./_500+?(2,$b)$1000
    yy=: j./_500+?(2,$b)$1000
    zz=: j./_500+?(2,$b)$1000
+  case. 'C' do.
+   xx=: a.{~?($b)$#a.
+   yy=: a.{~?($b)$#a.
+   zz=: a.{~?($b)$#a.
+  case. 'W' do.
+   xx=: adot1{~?($b)$#adot1
+   yy=: adot1{~?($b)$#adot1
+   zz=: adot1{~?($b)$#adot1
+  case. 'U' do.
+   xx=: adot2{~?($b)$#adot2
+   yy=: adot2{~?($b)$#adot2
+   zz=: adot2{~?($b)$#adot2
   end.
  i.0 0
 )
@@ -182,9 +200,9 @@ g3c=: 3 : 0  NB. character data, integer selection
 g0 "0 'BIDZ'
 g1 "0 'BIDZ'
 g2 "0 'BIDZ'
-g2c"0 'C'
+g2c"0 'CWU'
 g3 "0 'BIDZ'
-g3c"0 'C'
+g3c"0 'CWU'
 g4 "0 'BIDZ'
 g5 "0 'BIDZ'
 g8 "0 'BIDZ'
@@ -244,18 +262,38 @@ h  =. e.&' ' {"0 1 ,"0&'_'
 (f -: h) 'Cogito, ergo sum.'
 (f -: h) 2 3 4$'Now is the time, all good mean, to ergo sum.'
 
+(u:'Cogito,*ergo*sum.') -: (u:'*') (' '&= # i.@#)@]} u:'Cogito, ergo sum.'
+(f -: h) u:'Cogito, ergo sum.'
+(f -: h) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
+
+(10&u:'Cogito,*ergo*sum.') -: (10&u:'*') (' '&= # i.@#)@]} 10&u:'Cogito, ergo sum.'
+(f -: h) 10&u:'Cogito, ergo sum.'
+(f -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
+
 C =. 2 : 'x & ((#i.@#)@,@y@] })'
 
 (f -: '_' C (' '&=)) 'Cogito, ergo sum.'
 (f -: '_' C (' '&=)) 2 3 4$'Now is the time, all good mean, to ergo sum.'
 a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$'Now is the time, all good mean, '
 
+(f -: '_' C (' '&=)) u:'Cogito, ergo sum.'
+(f -: '_' C (' '&=)) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
+a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$u:'Now is the time, all good mean, '
+
+(f -: '_' C (' '&=)) 10&u:'Cogito, ergo sum.'
+(f -: '_' C (' '&=)) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
+a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$10&u:'Now is the time, all good mean, '
+
 *./ (=@i. -: 1&((<0 1)&|:ia})@($&0)@(,~))"0 ?5$10
 
 'abcX' -: 'X' _1}'abcd'
+'abcX' -: 'X' _1}u:'abcd'
+'abcX' -: 'X' _1}10&u:'abcd'
 
 1   -: type 'a' ''}0$0
 2   -: type 'a' ''}''
+131072-: type 'a' ''}u:''
+262144-: type 'a' ''}10&u:''
 4   -: type 'a' ''}i.0
 8   -: type 'a' ''}0$3.5
 16  -: type 'a' ''}0$3j5
@@ -386,6 +424,7 @@ y -: (<10;20;30){ab
 *./, 1 (<10;20;30)} ab = abc
 
 NB. Verify no local-to-global aliasing
+1 [ 4!:55 <'a'
 f10 =: 3 : 'a =. (0) 1} a'
 f11 =: 3 : 'a =: (0) 1} a'
 f12 =: 3 : ('a =. 2 3';'a =: (0) 1} a')
@@ -399,7 +438,7 @@ a =: i. 4
 2 0 -: f13''
 
 
-4!:55 ;:'a aa ab abc b b32 C c c1 d d1 dd f foo '
+4!:55 ;:'a aa ab abc adot1 adot2 b b32 C c c1 d d1 dd f foo '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g2c g3 g3c g4 g5 g8 g9 g10 g11 goo '
 4!:55 ;:'h i ia j k p q save sp t t0 t1 t2 test x xx y yy z z1 zz '

@@ -1,14 +1,14 @@
-NB. s: ------------------------------------------------------------------
+NB. s: unicode ------------------------------------------------------------------
 
 0 s: 11
 data=: 0 s: 10
 
-a=:   ;:'A AAPL AMAT AMD AMZN ATT BA CRA CSCO DELL F GE GM HWP IBM INTC'
-a=: a,;:'JDSU LLY LU MOT MSFT NOK NT PFE PG QCOM RMBS T XRX YHOO'
-b=: ;:'NY SF LDN TOK HK FF TOR'
-c=: ;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'
-d=: <;._1 ' 00 01 02 03 04 05 06 07 08 09'
-e=: ;:'open high low close'
+a=:   ;:10&u:'A AAPL AMAT AMD AMZN ATT BA CRA CSCO DELL F GE GM HWP IBM INTC'
+a=: a,;:10&u:'JDSU LLY LU MOT MSFT NOK NT PFE PG QCOM RMBS T XRX YHOO'
+b=: ;:10&u:'NY SF LDN TOK HK FF TOR'
+c=: ;:10&u:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'
+d=: <;._1[10&u:' 00 01 02 03 04 05 06 07 08 09'
+e=: ;:10&u:'open high low close'
 
 t=: }.@;&.>{' ',&.>&.>a;b;c;d;<e
 

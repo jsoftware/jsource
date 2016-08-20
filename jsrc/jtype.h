@@ -153,7 +153,7 @@ typedef I SI;
 #define SBTSIZE sizeof(SB)
 #define C2TX 17
 #define C2T             ((I)1L<<C2TX)      /* C2 unicode (2-byte characters)  */
-#define C2TSIZE sizeof(C2)
+#define C2TSIZE sizeof(US)
 #define C4TX 18
 #define C4T             ((I)1L<<C4TX)         /* C4 unicode (4-byte characters)  */
 #define C4TSIZE sizeof(C4)

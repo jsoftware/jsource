@@ -1,5 +1,7 @@
 NB. x f;.n y for sparse x, n e. _2 _1 1 2 -------------------------------
 
+randuni''
+
 box=: 3 : '<y'
 
 C=: 1 : 0
@@ -37,6 +39,20 @@ $    f x
 <@}. f x
 box  f x
 
+<    f x=: adot1{~ ?101 1 7$#adot1
+$    f x
+[    f x
+,    f x
+<@}. f x
+box  f x
+
+<    f x=: adot2{~ ?101 1 7$#adot2
+$    f x
+[    f x
+,    f x
+<@}. f x
+box  f x
+
 test=: 4 : 0
  b=: $. (#y){.(i._2+#y) e. +/\2+?(#y)$10
  assert. (b #   ;. x y) -: b (3 : '#    y');.x y
@@ -62,6 +78,26 @@ _1 test t
 2  test t
 _2 test t
 
+1  test t=: adot1{~ ?300$#adot1
+_1 test t
+2  test t
+_2 test t
+
+1  test t=: adot1{~?101 2 3$#adot1
+_1 test t
+2  test t
+_2 test t
+
+1  test t=: adot2{~ ?300$#adot2
+_1 test t
+2  test t
+_2 test t
+
+1  test t=: adot2{~?101 2 3$#adot2
+_1 test t
+2  test t
+_2 test t
+
 1  test t=: ?317$1e6
 _1 test t
 2  test t
@@ -77,6 +113,6 @@ _2 test t
 'index error'  -: ($. 1 1 1 0 0) {.;._1 etx i.5
 
 
-4!:55 ;:'b box C f t test x'
+4!:55 ;:'adot1 adot2 b box C f t test x'
 
 

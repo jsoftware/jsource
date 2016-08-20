@@ -463,6 +463,8 @@ testE=: 2 : 0
 i.&1 testE E.
 I.   testE E.
 
+0 s: 11
+
 
 4!:55 ;:'ad ai as data expression f ftab sp SPTOLER'
 4!:55 ;:'t test testbsv testbvs testbvv testc testE testsp'

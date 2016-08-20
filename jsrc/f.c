@@ -765,7 +765,7 @@ static F1(jtjpr1){PROLOG(0002);A z;
  // write string to stdout, calling it a 'formatted array' unless otherwise overridden
  if(AN(z)){
 #ifdef ANDROID
-  z=tomutf8(z);
+  z=tocesu8(z);
 #endif
   jsto(jt,jt->mtyo==0?MTYOFM:jt->mtyo,CAV(z));
  }

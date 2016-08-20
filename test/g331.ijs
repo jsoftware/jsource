@@ -1,6 +1,10 @@
 NB. ;.n -----------------------------------------------------------------
 
+randuni''
+
 'domain error' -: ex ' [;.''2'''
+'domain error' -: ex ' [;.u:''2'''
+'domain error' -: ex ' [;.(10&u:)''2'''
 'domain error' -: ex ' [;.4'
 'domain error' -: ex ' <;.4x'
 'domain error' -: ex '+/;.3.4'
@@ -32,17 +36,73 @@ a=: 'abcdefghijklmnopqrstuvwxyz'
 'stuv' -: (,._5  4) [;.0 a
 'vuts' -: (,._5 _4) [;.0 a
 
+a=: u:'abcdefghijklmnopqrstuvwxyz'
+(|.a) -: [;.0 a
+'fghi' -: (,. 5  4) [;.0 a
+'ihgf' -: (,. 5 _4) [;.0 a
+'stuv' -: (,._5  4) [;.0 a
+'vuts' -: (,._5 _4) [;.0 a
+
+a=: 10&u:'abcdefghijklmnopqrstuvwxyz'
+(|.a) -: [;.0 a
+'fghi' -: (,. 5  4) [;.0 a
+'ihgf' -: (,. 5 _4) [;.0 a
+'stuv' -: (,._5  4) [;.0 a
+'vuts' -: (,._5 _4) [;.0 a
+
 f=: 4 : 0
  (x [;.0 y) -: > x <;.0 y
 )
 
+a=: 'abcdefghijklmnopqrstuvwxyz'
+(,."1 ] 5 4*"1 ] _1^#:i.4) f"2 1 a
+a=: u:'abcdefghijklmnopqrstuvwxyz'
+(,."1 ] 5 4*"1 ] _1^#:i.4) f"2 1 a
+a=: 10&u:'abcdefghijklmnopqrstuvwxyz'
 (,."1 ] 5 4*"1 ] _1^#:i.4) f"2 1 a
 (,."1 ] 5 4*"1 ] _1^#:i.4) f"2 1 x=: ?100$1e6
 
 (2 2$"1 ] 2 3 4 5*"1 ] _1^#:i.16) f"2 x=: a.{~?10 11$#a.
+(2 2$"1 ] 2 3 4 5*"1 ] _1^#:i.16) f"2 x=: adot1{~?10 11$#adot1
+(2 2$"1 ] 2 3 4 5*"1 ] _1^#:i.16) f"2 x=: adot2{~?10 11$#adot2
 (2 2$"1 ] 2 3 4 5*"1 ] _1^#:i.16) f"2 x=: ?11 10$1e6
 (,."1 ] 5 4*"1 ] _1^#:i.4)        f"2 x=: ?11 13$1e6
 
+a=: 'abcdefghijklmnopqrstuvwxyz'
+'' -: (,. 25 0)[;.0 a
+'' -: (,. 26 0)[;.0 a
+'' -: (,._26 0)[;.0 a
+'' -: (,._27 0)[;.0 a
+a  -: (i.2 0  )[;.0 a
+(,'z' ) -: (,. 25 4) [;.0 a
+'yz'    -: (,. 24 4) [;.0 a
+'xyz'   -: (,. 23 4) [;.0 a
+'wxyz'  -: (,. 22 4) [;.0 a
+'vwxy'  -: (,. 21 4) [;.0 a
+'abc'   -: (,. _24 7) [;.0 a
+'ab'    -: (,. _25 7) [;.0 a
+(,'a')  -: (,. _26 7) [;.0 a
+
+(i.2 0 4) -: (1,:2 0 4) [;.0 [ 4 5 6$'a'
+
+a=: u:'abcdefghijklmnopqrstuvwxyz'
+'' -: (,. 25 0)[;.0 a
+'' -: (,. 26 0)[;.0 a
+'' -: (,._26 0)[;.0 a
+'' -: (,._27 0)[;.0 a
+a  -: (i.2 0  )[;.0 a
+(,'z' ) -: (,. 25 4) [;.0 a
+'yz'    -: (,. 24 4) [;.0 a
+'xyz'   -: (,. 23 4) [;.0 a
+'wxyz'  -: (,. 22 4) [;.0 a
+'vwxy'  -: (,. 21 4) [;.0 a
+'abc'   -: (,. _24 7) [;.0 a
+'ab'    -: (,. _25 7) [;.0 a
+(,'a')  -: (,. _26 7) [;.0 a
+
+(i.2 0 4) -: (1,:2 0 4) [;.0 [ 4 5 6$'a'
+
+a=: 10&u:'abcdefghijklmnopqrstuvwxyz'
 '' -: (,. 25 0)[;.0 a
 '' -: (,. 26 0)[;.0 a
 '' -: (,._26 0)[;.0 a
@@ -67,6 +127,8 @@ a  -: (i.2 0  )[;.0 a
 'length error' -: (i.3 2)    <;.0 etx i.2 3
 
 'domain error' -: 'abc'   [;.0 etx i.3 4
+'domain error' -: (u:'abc')   [;.0 etx i.3 4
+'domain error' -: (10&u:'abc')   [;.0 etx i.3 4
 'domain error' -: (3;4 5) [;.0 etx i.3 4
 'domain error' -: 3j4 5j6 [;.0 etx i.3 4
 
@@ -76,8 +138,201 @@ a  -: (i.2 0  )[;.0 a
 
 NB. f;.n y ------------------------------------------------------------
 
+NB. literal
 t=:'a bc def ghij'
 x=:'abcd efg hi j'
+
+(' a';' bc';' def';' ghij')  -: <;. 1 ' ',t
+((,'a');'bc';'def';'ghij')   -: <;._1 ' ',t
+('a ';'bc ';'def ';'ghij ')  -: <;. 2 t,' '
+((,'a');'bc';'def';'ghij')   -: <;._2 t,' '
+(' abcd';' efg';' hi';' j')  -: <;. 1 ' ',x
+('abcd';'efg';'hi';,'j')     -: <;._1 ' ',x
+('abcd ';'efg ';'hi ';,'j ') -: <;. 2 x,' '
+('abcd';'efg';'hi';,'j')     -: <;._2 x,' '
+
+(<;.1 ' ',t) -: <;.1x  ' ',t
+(<;.1 ' ',t) -: <;.1r1 ' ',t
+
+(4 5$' a    bc   def  ghij') -: ,;. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: ,;._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: ,;. 2 t,' '
+(4 4$'a   bc  def ghij')     -: ,;._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: ,;. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: ,;._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: ,;. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: ,;._2 x,' '
+
+(,.2 3 4 5) -: $;. 1 ' ',t
+(,.1 2 3 4) -: $;._1 ' ',t
+(,.2 3 4 5) -: $;. 2 t,' '
+(,.1 2 3 4) -: $;._2 t,' '
+(,.5 4 3 2) -: $;. 1 ' ',x
+(,.4 3 2 1) -: $;._1 ' ',x
+(,.5 4 3 2) -: $;. 2 x,' '
+(,.4 3 2 1) -: $;._2 x,' '
+
+2 3 4 5 -: #;. 1 ' ',t
+1 2 3 4 -: #;._1 ' ',t
+2 3 4 5 -: #;. 2 t,' '
+1 2 3 4 -: #;._2 t,' '
+5 4 3 2 -: #;. 1 ' ',x
+4 3 2 1 -: #;._1 ' ',x
+5 4 3 2 -: #;. 2 x,' '
+4 3 2 1 -: #;._2 x,' '
+
+(4 5$' a    bc   def  ghij') -: [;. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: [;._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: [;. 2 t,' '
+(4 4$'a   bc  def ghij')     -: [;._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: [;. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: [;._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: [;. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: [;._2 x,' '
+
+(4 5$' a    bc   def  ghij') -: ];. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: ];._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: ];. 2 t,' '
+(4 4$'a   bc  def ghij')     -: ];._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: ];. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: ];._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: ];. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: ];._2 x,' '
+
+'    ' -: {.;. 1 ' ',t
+'abdg' -: {.;._1 ' ',t
+'abdg' -: {.;. 2 t,' '
+'abdg' -: {.;._2 t,' '
+'    ' -: {.;. 1 ' ',x
+'aehj' -: {.;._1 ' ',x
+'aehj' -: {.;. 2 x,' '
+'aehj' -: {.;._2 x,' '
+
+'acfj' -: {:;. 1 ' ',t
+'acfj' -: {:;._1 ' ',t
+'    ' -: {:;. 2 t,' '
+'acfj' -: {:;._2 t,' '
+'dgij' -: {:;. 1 ' ',x
+'dgij' -: {:;._1 ' ',x
+'    ' -: {:;. 2 x,' '
+'dgij' -: {:;._2 x,' '
+
+1: #;. 1 x=:1
+1: #;._1 x
+1: #;. 2 x
+1: #;._2 x
+1: #;. 1 x=:'a'
+1: #;._1 x
+1: #;. 2 x
+1: #;._2 x
+1: <;. 1 x=:1
+1: <;._1 x
+1: <;. 2 x
+1: <;._2 x
+1: <;. 1 x=:'a'
+1: <;._1 x
+1: <;. 2 x
+1: <;._2 x
+
+NB. literal2
+t=:u:'a bc def ghij'
+x=:u:'abcd efg hi j'
+
+(' a';' bc';' def';' ghij')  -: <;. 1 ' ',t
+((,'a');'bc';'def';'ghij')   -: <;._1 ' ',t
+('a ';'bc ';'def ';'ghij ')  -: <;. 2 t,' '
+((,'a');'bc';'def';'ghij')   -: <;._2 t,' '
+(' abcd';' efg';' hi';' j')  -: <;. 1 ' ',x
+('abcd';'efg';'hi';,'j')     -: <;._1 ' ',x
+('abcd ';'efg ';'hi ';,'j ') -: <;. 2 x,' '
+('abcd';'efg';'hi';,'j')     -: <;._2 x,' '
+
+(<;.1 ' ',t) -: <;.1x  ' ',t
+(<;.1 ' ',t) -: <;.1r1 ' ',t
+
+(4 5$' a    bc   def  ghij') -: ,;. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: ,;._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: ,;. 2 t,' '
+(4 4$'a   bc  def ghij')     -: ,;._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: ,;. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: ,;._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: ,;. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: ,;._2 x,' '
+
+(,.2 3 4 5) -: $;. 1 ' ',t
+(,.1 2 3 4) -: $;._1 ' ',t
+(,.2 3 4 5) -: $;. 2 t,' '
+(,.1 2 3 4) -: $;._2 t,' '
+(,.5 4 3 2) -: $;. 1 ' ',x
+(,.4 3 2 1) -: $;._1 ' ',x
+(,.5 4 3 2) -: $;. 2 x,' '
+(,.4 3 2 1) -: $;._2 x,' '
+
+2 3 4 5 -: #;. 1 ' ',t
+1 2 3 4 -: #;._1 ' ',t
+2 3 4 5 -: #;. 2 t,' '
+1 2 3 4 -: #;._2 t,' '
+5 4 3 2 -: #;. 1 ' ',x
+4 3 2 1 -: #;._1 ' ',x
+5 4 3 2 -: #;. 2 x,' '
+4 3 2 1 -: #;._2 x,' '
+
+(4 5$' a    bc   def  ghij') -: [;. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: [;._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: [;. 2 t,' '
+(4 4$'a   bc  def ghij')     -: [;._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: [;. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: [;._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: [;. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: [;._2 x,' '
+
+(4 5$' a    bc   def  ghij') -: ];. 1 ' ',t
+(4 4$'a   bc  def ghij')     -: ];._1 ' ',t
+(4 5$'a    bc   def  ghij ') -: ];. 2 t,' '
+(4 4$'a   bc  def ghij')     -: ];._2 t,' '
+(4 5$' abcd efg  hi   j   ') -: ];. 1 ' ',x
+(4 4$'abcdefg hi  j   ')     -: ];._1 ' ',x
+(4 5$'abcd efg  hi   j    ') -: ];. 2 x,' '
+(4 4$'abcdefg hi  j   ')     -: ];._2 x,' '
+
+'    ' -: {.;. 1 ' ',t
+'abdg' -: {.;._1 ' ',t
+'abdg' -: {.;. 2 t,' '
+'abdg' -: {.;._2 t,' '
+'    ' -: {.;. 1 ' ',x
+'aehj' -: {.;._1 ' ',x
+'aehj' -: {.;. 2 x,' '
+'aehj' -: {.;._2 x,' '
+
+'acfj' -: {:;. 1 ' ',t
+'acfj' -: {:;._1 ' ',t
+'    ' -: {:;. 2 t,' '
+'acfj' -: {:;._2 t,' '
+'dgij' -: {:;. 1 ' ',x
+'dgij' -: {:;._1 ' ',x
+'    ' -: {:;. 2 x,' '
+'dgij' -: {:;._2 x,' '
+
+1: #;. 1 x=:1
+1: #;._1 x
+1: #;. 2 x
+1: #;._2 x
+1: #;. 1 x=:'a'
+1: #;._1 x
+1: #;. 2 x
+1: #;._2 x
+1: <;. 1 x=:1
+1: <;._1 x
+1: <;. 2 x
+1: <;._2 x
+1: <;. 1 x=:'a'
+1: <;._1 x
+1: <;. 2 x
+1: <;._2 x
+
+NB. literal4
+t=:10&u:'a bc def ghij'
+x=:10&u:'abcd efg hi j'
 
 (' a';' bc';' def';' ghij')  -: <;. 1 ' ',t
 ((,'a');'bc';'def';'ghij')   -: <;._1 ' ',t
@@ -174,6 +429,7 @@ x=:'abcd efg hi j'
 
 NB. x f;.n y ------------------------------------------------------------
 
+NB. literal
 ('ab';'cd';'efg')  -: 1 0 1 0 1 0 0 <;. 1 'abcdefg'
 (,&.>'b';'d';'fg') -: 1 0 1 0 1 0 0 <;._1 'abcdefg'
 
@@ -185,6 +441,32 @@ NB. x f;.n y ------------------------------------------------------------
 
 ('ab';'cd';'efg')  -: 0 1 0 1 0 0 1 0 0 <;. 2 'abcdefgxy'
 (,&.>'a';'c';'ef') -: 0 1 0 1 0 0 1 0 0 <;._2 'abcdefgxy'
+
+NB. literal2
+('ab';'cd';'efg')  -: 1 0 1 0 1 0 0 <;. 1 u:'abcdefg'
+(,&.>'b';'d';'fg') -: 1 0 1 0 1 0 0 <;._1 u:'abcdefg'
+
+('ab';'cd';'efg')  -: 0 0 1 0 1 0 1 0 0 <;. 1 u:'xyabcdefg'
+(,&.>'b';'d';'fg') -: 0 0 1 0 1 0 1 0 0 <;._1 u:'xyabcdefg'
+
+('ab';'cd';'efg')  -: 0 1 0 1 0 0 1 <;. 2 u:'abcdefg'
+(,&.>'a';'c';'ef') -: 0 1 0 1 0 0 1 <;._2 u:'abcdefg'
+
+('ab';'cd';'efg')  -: 0 1 0 1 0 0 1 0 0 <;. 2 u:'abcdefgxy'
+(,&.>'a';'c';'ef') -: 0 1 0 1 0 0 1 0 0 <;._2 u:'abcdefgxy'
+
+NB. literal4
+('ab';'cd';'efg')  -: 1 0 1 0 1 0 0 <;. 1 [10&u:'abcdefg'
+(,&.>'b';'d';'fg') -: 1 0 1 0 1 0 0 <;._1 [10&u:'abcdefg'
+
+('ab';'cd';'efg')  -: 0 0 1 0 1 0 1 0 0 <;. 1 [10&u:'xyabcdefg'
+(,&.>'b';'d';'fg') -: 0 0 1 0 1 0 1 0 0 <;._1 [10&u:'xyabcdefg'
+
+('ab';'cd';'efg')  -: 0 1 0 1 0 0 1 <;. 2 [10&u:'abcdefg'
+(,&.>'a';'c';'ef') -: 0 1 0 1 0 0 1 <;._2 [10&u:'abcdefg'
+
+('ab';'cd';'efg')  -: 0 1 0 1 0 0 1 0 0 <;. 2 [10&u:'abcdefgxy'
+(,&.>'a';'c';'ef') -: 0 1 0 1 0 0 1 0 0 <;._2 [10&u:'abcdefgxy'
 
 5 9 21 -: 1 0 1 0 1 0 0 +/;. 1 [ 2 3 4 5 6 7 8
 3 5 15 -: 1 0 1 0 1 0 0 +/;._1 [ 2 3 4 5 6 7 8
@@ -215,12 +497,24 @@ x=:' Now! is the time, all good men!'
 ((x e.' ')<;._1 x) -: <;._1 x
 ('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._1 x
 
+x=:u:' Now! is the time, all good men!'
+((x e.' ')<;. 1 x) -: <;. 1 x
+((x e.' ')<;._1 x) -: <;._1 x
+('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._1 x
+
+x=:10&u:' Now! is the time, all good men!'
+((x e.' ')<;. 1 x) -: <;. 1 x
+((x e.' ')<;._1 x) -: <;._1 x
+('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._1 x
+
 b=:1 0 0 1 1 0
 x=:b <;.1 i.6 2
 3=$x
 (#;.1 b) -: #&>x
 
 (,:'cdef') -: 0 0 1 0 0 0 [;.1 'abcdef'
+(,:'cdef') -: 0 0 1 0 0 0 [;.1 u:'abcdef'
+(,:'cdef') -: 0 0 1 0 0 0 [;.1 [10&u:'abcdef'
 
 (,<,3)      -: <;.1 (3)
 (,<,3)      -: 1 <;.1 (3)
@@ -235,25 +529,57 @@ x=:b <;.1 i.6 2
 '' -: <;.1 ''
 '' -: <;._1 ''
 '' -: 0 0 0 <;.1 'abc'
+'' -: '' <;.1 u:''
+'' -: <;.1 u:''
+'' -: <;._1 u:''
+'' -: 0 0 0 <;.1 u:'abc'
+'' -: '' <;.1 [10&u:''
+'' -: <;.1 [10&u:''
+'' -: <;._1 [10&u:''
+'' -: 0 0 0 <;.1 [10&u:'abc'
 
 (<@, "0 x) -: 1  <;. 1 x=: 'abcdefg'
 (<@}."0 x) -: 1  <;._1 x=: 'abcdefg'
+(<@, "0 x) -: 1  <;. 1 x=: u:'abcdefg'
+(<@}."0 x) -: 1  <;._1 x=: u:'abcdefg'
+(<@, "0 x) -: 1  <;. 1 x=: 10&u:'abcdefg'
+(<@}."0 x) -: 1  <;._1 x=: 10&u:'abcdefg'
 x          -: 1 +/;. 1 x=: 2 3 4 5 6 7 8
 (x-x)      -: 1 +/;._1 x=: 2 3 4 5 6 7 8
 
 'length error' -: 1 0 0   <;. 1 etx 'abcde'
 'length error' -: 1 0 0   <;. 1 etx 'ab'
 'length error' -: (,1)    <;. 1 etx 'abcd'
+'length error' -: 1 0 0   <;. 1 etx u:'abcde'
+'length error' -: 1 0 0   <;. 1 etx u:'ab'
+'length error' -: (,1)    <;. 1 etx u:'abcd'
+'length error' -: 1 0 0   <;. 1 etx 10&u:'abcde'
+'length error' -: 1 0 0   <;. 1 etx 10&u:'ab'
+'length error' -: (,1)    <;. 1 etx 10&u:'abcd'
 'length error' -: 1 0 0 1 <;. 1 etx (4)
 
 'domain error' -: 'abc'   <;. 1 etx i.3
 'domain error' -: 2 0 0   <;. 1 etx 'abc'
+'domain error' -: (u:'abc')   <;. 1 etx i.3
+'domain error' -: 2 0 0   <;. 1 etx u:'abc'
+'domain error' -: (10&u:'abc')   <;. 1 etx i.3
+'domain error' -: 2 0 0   <;. 1 etx 10&u:'abc'
 'domain error' -: 3j4 1 1 <;._1 etx i.3
 
 
 NB. f;.2 and f;._2 ------------------------------------------------------
 
 t=:'Now! is the time, all good men! '
+((t e.' ')<;. 2 t) -: <;. 2 t
+((t e.' ')<;._2 t) -: <;._2 t
+('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._2 t
+
+t=:u:'Now! is the time, all good men! '
+((t e.' ')<;. 2 t) -: <;. 2 t
+((t e.' ')<;._2 t) -: <;._2 t
+('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._2 t
+
+t=:10&u:'Now! is the time, all good men! '
 ((t e.' ')<;. 2 t) -: <;. 2 t
 ((t e.' ')<;._2 t) -: <;._2 t
 ('Now!';'is';'the';'time,';'all';'good';'men!') -: <;._2 t
@@ -267,8 +593,18 @@ x=:b <;.2 i.6 3 4
 '' -: <;.2 ''
 '' -: <;._2 ''
 '' -: 0 0 0 <;.2 'abc'
+'' -: '' <;.2 u:''
+'' -: <;.2 u:''
+'' -: <;._2 u:''
+'' -: 0 0 0 <;.2 u:'abc'
+'' -: '' <;.2 [10&u:''
+'' -: <;.2 [10&u:''
+'' -: <;._2 [10&u:''
+'' -: 0 0 0 <;.2 [10&u:'abc'
 
 (,:'abc') -: 0 0 1 0 0 0[;.2 'abcdef'
+(,:u:'abc') -: 0 0 1 0 0 0[;.2 u:'abcdef'
+(,:10&u:'abc') -: 0 0 1 0 0 0[;.2 [10&u:'abcdef'
 
 (,<,3)      -: <;.2 (3)
 (,<,3)      -: 1 <;.2 (3)
@@ -283,19 +619,39 @@ x=:b <;.2 i.6 3 4
 '' -: <;.2 ''
 '' -: <;._2 ''
 '' -: 0 0 0 <;.2 'abc'
+'' -: '' <;.2 u:''
+'' -: <;.2 u:''
+'' -: <;._2 u:''
+'' -: 0 0 0 <;.2 u:'abc'
+'' -: '' <;.2 [10&u:''
+'' -: <;.2 [10&u:''
+'' -: <;._2 [10&u:''
+'' -: 0 0 0 <;.2 [10&u:'abc'
 
 (<@, "0 x) -: 1  <;. 2 x=: 'abcdefg'
 (<@}."0 x) -: 1  <;._2 x=: 'abcdefg'
+(<@, "0 x) -: 1  <;. 2 x=: u:'abcdefg'
+(<@}."0 x) -: 1  <;._2 x=: u:'abcdefg'
+(<@, "0 x) -: 1  <;. 2 x=: 10&u:'abcdefg'
+(<@}."0 x) -: 1  <;._2 x=: 10&u:'abcdefg'
 x          -: 1 +/;. 2 x=: 2 3 4 5 6 7 8
 (x-x)      -: 1 +/;._2 x=: 2 3 4 5 6 7 8
 
 'length error' -: 1 0 0   <;. 2 etx 'abcde'
 'length error' -: 1 0 0   <;. 2 etx 'ab'
 'length error' -: (,1)    <;. 2 etx 'abcd'
+'length error' -: 1 0 0   <;. 2 etx u:'abcde'
+'length error' -: 1 0 0   <;. 2 etx u:'ab'
+'length error' -: (,1)    <;. 2 etx u:'abcd'
+'length error' -: 1 0 0   <;. 2 etx 10&u:'abcde'
+'length error' -: 1 0 0   <;. 2 etx 10&u:'ab'
+'length error' -: (,1)    <;. 2 etx 10&u:'abcd'
 'length error' -: 1 0 0 1 <;. 2 etx (4)
 
 'domain error' -: 'abc'   <;. 2 etx i.3
 'domain error' -: 2 0 0   <;. 2 etx 'abc'
+'domain error' -: 2 0 0   <;. 2 etx u:'abc'
+'domain error' -: 2 0 0   <;. 2 etx 10&u:'abc'
 'domain error' -: 3j4 1 1 <;._2 etx i.3
 
 
@@ -331,9 +687,29 @@ _1 test t
 2  test t=: 'a' (_1,(<&3000 # ]) +/\2+?40$1500)}3000$'xyz'
 _2 test t
 
+1  test t=: (u:'a') ( 0,(<&3000 # ]) +/\2+?40$1500)}3000$u:'xyz'
+_1 test t
+2  test t=: (u:'a') (_1,(<&3000 # ]) +/\2+?40$1500)}3000$u:'xyz'
+_2 test t
+
+1  test t=: (10&u:'a') ( 0,(<&3000 # ]) +/\2+?40$1500)}3000$10&u:'xyz'
+_1 test t
+2  test t=: (10&u:'a') (_1,(<&3000 # ]) +/\2+?40$1500)}3000$10&u:'xyz'
+_2 test t
+
 1  test t=: (2 3$'abcdef') ( 0,(<&998 # ])+/\2+?40$50)}a.{~?1000 2 3$#a.
 _1 test t
 2  test t=: (2 3$'abcdef') (_1,(<&998 # ])+/\2+?40$50)}a.{~?1000 2 3$#a.
+_2 test t
+
+1  test t=: (2 3$u:'abcdef') ( 0,(<&998 # ])+/\2+?40$50)}adot1{~?1000 2 3$#adot1
+_1 test t
+2  test t=: (2 3$u:'abcdef') (_1,(<&998 # ])+/\2+?40$50)}adot1{~?1000 2 3$#adot1
+_2 test t
+
+1  test t=: (2 3$10&u:'abcdef') ( 0,(<&998 # ])+/\2+?40$50)}adot2{~?1000 2 3$#adot2
+_1 test t
+2  test t=: (2 3$10&u:'abcdef') (_1,(<&998 # ])+/\2+?40$50)}adot2{~?1000 2 3$#adot2
 _2 test t
 
 1  test t=: 11 ( 0,(<&3000 # ]) +/\2+?40$1500)}?3000$10
@@ -348,20 +724,30 @@ _2 test t
 
 (<@}.;._1 t) -: (3 : '<}.y') ;._1 t=: ' foo upon  thee'
 (<@}:;._1 t) -: (3 : '<}:y') ;._1 t=: 'foo upon  thee '
+(<@}.;._1 t) -: (3 : '<}.y') ;._1 t=: u:' foo upon  thee'
+(<@}:;._1 t) -: (3 : '<}:y') ;._1 t=: u:'foo upon  thee '
+(<@}.;._1 t) -: (3 : '<}.y') ;._1 t=: 10&u:' foo upon  thee'
+(<@}:;._1 t) -: (3 : '<}:y') ;._1 t=: 10&u:'foo upon  thee '
 
 'a d'    -: {.;._1 ',abc,,d'
+'a d'    -: {.;._1 u:',abc,,d'
+'a d'    -: {.;._1 [10&u:',abc,,d'
  2 1 0 3 -: {.;._2 ] 2 3 4 1 2 4 4 3 4 
 
 
 NB. f;.3 and f;._3 ------------------------------------------------------
 
 'domain error' -: 'ab'       $;. 3 etx i.3 4
+'domain error' -: (u:'ab')       $;. 3 etx i.3 4
+'domain error' -: (10&u:'ab')       $;. 3 etx i.3 4
 'domain error' -: (1,:3.4 5) $;. 3 etx i.3 4
 'domain error' -: (1 2;3 4)  $;. 3 etx i.3 4
 'domain error' -: (_1,:2)    <;. 3 etx i.12
 'length error' -: (1,:2 3)   <;. 3 etx i.12
 
 'domain error' -: 'ab'       $;._3 etx i.3 4
+'domain error' -: (u:'ab')       $;._3 etx i.3 4
+'domain error' -: (10&u:'ab')       $;._3 etx i.3 4
 'domain error' -: (1,:3.4 5) $;._3 etx i.3 4
 'domain error' -: (1 2;3 4)  $;._3 etx i.3 4
 'domain error' -: (_1,:2)    <;._3 etx i.12
@@ -415,6 +801,10 @@ f5 =: 4 : '(x,.0,:(({:$x)-#$y){.$y) <;._3 y'
 
 'a' -: [;. 3 'a'
 'a' -: [;._3 'a'
+'a' -: [;. 3 u:'a'
+'a' -: [;._3 u:'a'
+'a' -: [;. 3 [10&u:'a'
+'a' -: [;._3 [10&u:'a'
 x -: [;. 3 x=:?1000001
 x -: [;._3 x=:?1000001
 
@@ -429,7 +819,7 @@ f2=: 4 : '{.&.> {. (1,.x) <;._3 ,:y'
 (x=: ?3 4 2 2$9) (f2 -: <;._3)"2 i. 11 13
 
 
-4!:55 ;:'a b c f f1 f2 f3 f4 f5'
+4!:55 ;:'a adot1 adot2 b c f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m p q size t test testw w x y'
 
 

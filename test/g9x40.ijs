@@ -9,6 +9,8 @@ t=: 9!:40 ''
 
 'length error' -: 9!:40 etx 1 2
 'length error' -: 9!:40 etx 'abc'
+'length error' -: 9!:40 etx u:'abc'
+'length error' -: 9!:40 etx 10&u:'abc'
 
 'rank error'   -: 9!:41 etx ,0
 'rank error'   -: 9!:41 etx ,1

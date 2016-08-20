@@ -1,5 +1,8 @@
 NB. f/. f\  f\. models --------------------------------------------------
 en     =: #@]
+
+randuni''
+
 em     =: (en >.@% 1&>.@|@[)`(en 0&>.@>:@- [) @. (0&<:@[)
 kay    =: en`em @. (0&<@[)
 omask  =: (em,en) $ ($&0@|@[ , $&1@kay)
@@ -35,6 +38,18 @@ a=:1=?10 5$2
 
 NB. literal
 a=:a.{~32+?10 5$95
+(<\. -: < bsd) a
+(<\. -: < bsd) ,a
+(]\. -: ] bsd) a
+
+NB. literal2
+a=:adot1{~32+?10 5$95
+(<\. -: < bsd) a
+(<\. -: < bsd) ,a
+(]\. -: ] bsd) a
+
+NB. literal4
+a=:adot2{~32+?10 5$95
 (<\. -: < bsd) a
 (<\. -: < bsd) ,a
 (]\. -: ] bsd) a
@@ -262,7 +277,7 @@ xover =: 3 : '~:/y'
 (-: +/\."2) i. 0 (2)}?5$10
 
 
-4!:55 ;:'a base bs bsd em en f iind infix '
+4!:55 ;:'a adot1 adot2 base bs bsd em en f iind infix '
 4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
 4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover '
 

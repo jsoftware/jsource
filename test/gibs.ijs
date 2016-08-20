@@ -50,8 +50,29 @@ y test y
 x test y [ x=: i.&.> 1000 ?@# 750 [ y=: i.&.> 1019 ?@# 880
 y test y
 
+NB. literal
 a=: ;:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
 a=: a,;:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
+a=: a,(<"0 ] 20 ?@$ 100)
+x test y [ x=: a{~ 811 2?@$ #a [ y=: a{~ 947 2 ?@$#a
+y test y
+
+x test y [ x=: 811 0$a: [ y=: 947 0$a:
+y test y
+
+NB. literal2
+a=: ;:u:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
+a=: a,;:u:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
+a=: a,(<"0 ] 20 ?@$ 100)
+x test y [ x=: a{~ 811 2?@$ #a [ y=: a{~ 947 2 ?@$#a
+y test y
+
+x test y [ x=: 811 0$a: [ y=: 947 0$a:
+y test y
+
+NB. literal4
+a=: ;:10&u:'chthonic kakistocracy kleptocracy eleemosynary amanuensis paronomasiac'
+a=: a,;:10&u:'onomatopoeia metonymic metronymic paraclete parousia pauline exegesis'
 a=: a,(<"0 ] 20 ?@$ 100)
 x test y [ x=: a{~ 811 2?@$ #a [ y=: a{~ 947 2 ?@$#a
 y test y
@@ -63,6 +84,26 @@ NB. mapped boxed arrays
 
 0!:0 <testpath,'gmbx.ijs'
 q=: x=: (811 2 ?@$ #u){u=: 17 3;(<"0] 30 ?@$ 100), (<5!:2 <'mean'), ;:'Cogito, ergo sum.'
+r=: y=: (547 2 ?@$ #u){u
+
+(mbxcheck_jmf_ q), q test y
+(mbxcheck_jmf_ r), x test r
+(mbxcheck_jmf_ q), q test r
+(mbxcheck_jmf_ q), q test q
+
+4!:55 ;:'q x r y u'
+0!:0 <testpath,'gmbx.ijs'
+q=: x=: (811 2 ?@$ #u){u=: 17 3;(<"0] 30 ?@$ 100), (<5!:2 <u:'mean'), ;:u:'Cogito, ergo sum.'
+r=: y=: (547 2 ?@$ #u){u
+
+(mbxcheck_jmf_ q), q test y
+(mbxcheck_jmf_ r), x test r
+(mbxcheck_jmf_ q), q test r
+(mbxcheck_jmf_ q), q test q
+
+4!:55 ;:'q x r y u'
+0!:0 <testpath,'gmbx.ijs'
+q=: x=: (811 2 ?@$ #u){u=: 17 3;(<"0] 30 ?@$ 100), (<5!:2 <10&u:'mean'), ;:10&u:'Cogito, ergo sum.'
 r=: y=: (547 2 ?@$ #u){u
 
 (mbxcheck_jmf_ q), q test y

@@ -11,6 +11,8 @@ seed -: 9!:0 ''
 
 'domain error' -: ?. etx 0 _1                          
 'domain error' -: ?. etx 'abc'                         
+'domain error' -: ?. etx u:'abc'                         
+'domain error' -: ?. etx 10&u:'abc'                         
 'domain error' -: ?. etx 2 3 _4                        
 'domain error' -: ?. etx 2 3.4 5                       
 'domain error' -: ?. etx 2 3j4 5                       

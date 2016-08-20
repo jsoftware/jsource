@@ -21,6 +21,8 @@ fa =. 3 : 'if. y do. 1 else. 0 end.'
 1 = fa '0'
 1 = fa (16$0){a.
 1 = fa 'abcd'
+1 = fa u:'abcd'
+1 = fa 10&u:'abcd'
 1 = fa 0 1 2{a.
 1 = fa <0
 

@@ -25,6 +25,8 @@ f j./_1e5+?2 3 4$2e5
 5 5 5 5 -: |3j4 3j_4 _3j4 _3j_4
 
 'domain error' -: | etx 'abc'
+'domain error' -: | etx u:'abc'
+'domain error' -: | etx 10&u:'abc'
 'domain error' -: | etx 3;4
 
 
@@ -60,10 +62,14 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 
 'domain error' -: 'abc' | etx 1 2 3
 'domain error' -: 'abc' | etx 'feg'
+'domain error' -: 'abc' | etx u:'feg'
+'domain error' -: 'abc' | etx 10&u:'feg'
 'domain error' -: 'abc' | etx 0;1;2
 
 'domain error' -: (2;3) | etx 2 3
 'domain error' -: (2;3) | etx 'eg'
+'domain error' -: (2;3) | etx u:'eg'
+'domain error' -: (2;3) | etx 10&u:'eg'
 'domain error' -: (2;3) | etx 4;5
 
 4!:55 ;:'complex f mag t test x y'

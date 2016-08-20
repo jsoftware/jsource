@@ -76,7 +76,7 @@ static GF(jtgrx){A x;I ck,d,t,*xv;
  switch(CTTZ(t)){
   case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
   case C2TX:  jt->comp=compu;                    break;
-  case C4TX:  jt->comp=comp4;                    break;
+  case C4TX:  jt->comp=c==n?compt1:compt;        break;
   case INTX:  jt->comp=c==n?compi1:compi;        break;
   case FLX:   jt->comp=c==n?compd1:compd;        break;
   case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
@@ -119,6 +119,27 @@ void grcol(I d,I c,I*yv,I n,I*xv,I*zv,const I m,US*u,int up,int split,int sort){
  if(sort){
   if(2==m)                       DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
   else    {zz=(D*)zv; xx=(D*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
+ }else if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
+ else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
+}
+
+void grcolu(I d,I c,UI*yv,I n,UI*xv,UI*zv,const I m,US*u,int up,int split,int sort){
+     C4*xx,*zz;UI k,s,*t;US*v;
+ s=0; memset(c+yv,C0,d*SZI); 
+ v=u; 
+ DO(n, ++yv[*v]; v+=m;);
+ switch(up+2*split){
+  case 0: t=yv+c+d;     DO(d,   --t; if(k=*t){*t=s; s+=k;}); break;
+  case 1: t=yv+c-1;     DO(d,   ++t; if(k=*t){*t=s; s+=k;}); break;
+  case 2: t=yv+c+d/2;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); 
+          t=yv+c+d  ;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); break;
+  case 3: t=yv+c+d/2-1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;}); 
+          t=yv+c    -1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;});
+ }
+ v=u;
+ if(sort){
+  if(sizeof(I)==sizeof(C4))      DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
+  else  {zz=(C4*)zv; xx=(C4*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
  }else if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
  else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
 }
@@ -175,24 +196,27 @@ static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
  R 1;
 }    /* grade"r w on integer w where c==n */
 
-static GF(jtgru1){A x,y;C4*wv;I d,e,i,p,*xv,*yv;int up;US*u;
+static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
  p=65536; up=1==jt->compgt; wv=C4AV(w);
  GATV(y,INT,p,1,0); yv=AV(y);
  GATV(x,INT,n,1,0); xv=AV(x);
- e=SY_64?3:1;
 #if C_LE
-  d= 1; 
+ d= 1; e=0;
 #else
-  d=-1;
+ d=-1; e=1;
 #endif
  for(i=0;i<m;++i){
-  u=e*(-1==d)+(US*)wv;
-  grcol(p,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,    up,0,0);
-#if SY_64
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+1*d,up,0,0);
-  grcol(p,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+2*d,up,0,0);
-#endif
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+e*d,up,1,0);
+  u=e+(US*)wv; 
+  v=wv; k=0; b=0;
+  g=b?xv:zv; h=b?zv:xv;
+  grcolu(p, 0L, yv,n,0L,h,sizeof(C4)/sizeof(US),u+0*d,k==n?!up:up,0,0);
+  grcolu(p, 0L, yv,n, h,g,sizeof(C4)/sizeof(US),u+1*d,k==n?!up:up,0,0);
+  if(b){C4 d;I j,m,*u,*v,*vv;
+   if(up){ICPY(k+zv,  xv,n-k); u=zv;     v=n+xv;}
+   else  {ICPY(  zv,k+xv,n-k); u=zv+n-k; v=k+xv;}
+   j=0; d=wv[*(v-1)];
+   DO(1+k, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
+  }
   wv+=c; zv+=n;
  }
  R 1;
@@ -211,14 +235,14 @@ void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
 }    /* min and max in 1.5*n comparisons */
 
 // copy of irange for sizeof(C4)==sizeof(int)
-void c4range(I n,C4*v,I*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
+void c4range(I n,C4*v,C4*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=C4MAX; p=C4MIN;}else p=q=0;
  for(i=0;i<m;++i){
   x=*v++; y=*v++; 
   if(x<y){if(x<q)q=x; if(p<y)p=y;}
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
- *base=q; d=(I)p-(I)q; *top=0>d||d==C4MAX?0:1+d;
+ *base=q; d=(I)p-(I)q; *top=0>d||d>=IMAX?0:1+d;
 }    /* min and max in 1.5*n comparisons */
 
 F1(jtmaxmin){I base,top;
@@ -264,32 +288,32 @@ static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
 }    /* grade"r w on small-range integers w */
 
 
-static GF(jtgru){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s;C4*v;C4 *wv;I *xv,*yv;
+static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
  wv=C4AV(w); d=c/n; k=4*n;
  c4range(AN(w),wv,&q,&p); 
  if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
- if(0<q&&q<k-p){p+=q; q=0;}
- GATV(y,INT,p,1,0); yv=AV(y); ps=p*sizeof(C4); up=1==jt->compgt;
- if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
- for(i=0;i<m;++i){
+ if(0<q&&(I)q<k-p){p+=q; q=0;}
+ GATV(y,INT,p,1,0); yv=(UI*)AV(y); ps=p*SZI; up=1==jt->compgt;
+ if(1<d){GATV(x,INT,n,1,0); xv=(UI*)AV(x);}
+ for(i=0;i<m;++i){C4 k;
   s=0; j=p; memset(yv,C0,ps);
   v=wv+d-1;
   if(q) DO(n, ++yv[*v-q]; v+=d;) 
   else  DO(n, ++yv[*v  ]; v+=d;);
-  if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
-  else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
+  if(up)DO(p,      if(k=(C4)yv[i]){yv[i]=s; s+=k;}) 
+  else  DO(p, --j; if(k=(C4)yv[j]){yv[j]=s; s+=k;});
   v=wv+d-1;
   if(q) DO(n, zv[yv[*v-q]++]=i; v+=d;) 
   else  DO(n, zv[yv[*v  ]++]=i; v+=d;);
   v=wv+d-1;
   for(e=d-2,b=0;0<=e;--e){
    --v;
-   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}
+   if(b){g=xv; h=(UI*)zv; b=0;}else{g=(UI*)zv; h=xv; b=1;}
    s=0; j=p; memset(yv,C0,ps);
    if(q) DO(n, ++yv[*(v+d*g[i])-q];) 
    else  DO(n, ++yv[*(v+d*g[i])  ];);
-   if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
-   else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
+   if(up)DO(p,      if(k=(C4)yv[i]){yv[i]=s; s+=k;}) 
+   else  DO(p, --j; if(k=(C4)yv[j]){yv[j]=s; s+=k;});
    if(q) DO(n, h[yv[*(v+d*g[i])-q]++]=g[i];) 
    else  DO(n, h[yv[*(v+d*g[i])  ]++]=g[i];);
   }

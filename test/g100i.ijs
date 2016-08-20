@@ -106,6 +106,14 @@ NB. +/ X ----------------------------------------------------------------
 'domain error' -: +/"1 etx 3 4$'abc'
 'domain error' -: +/   etx ;:'modus operandi'
 'domain error' -: +/"1 etx 3 4$;:'I think not'
+'domain error' -: +/   etx 3 4$u:'abc'
+'domain error' -: +/"1 etx 3 4$u:'abc'
+'domain error' -: +/   etx ;:u:'modus operandi'
+'domain error' -: +/"1 etx 3 4$;:u:'I think not'
+'domain error' -: +/   etx 3 4$10&u:'abc'
+'domain error' -: +/"1 etx 3 4$10&u:'abc'
+'domain error' -: +/   etx ;:10&u:'modus operandi'
+'domain error' -: +/"1 etx 3 4$;:10&u:'I think not'
 
 
 4!:55 ;:'f plus x'

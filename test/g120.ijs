@@ -2,6 +2,10 @@ NB. -y ------------------------------------------------------------------
 
 'domain error' -: - etx 'abc'
 'domain error' -: - etx ;:'sui generis'
+'domain error' -: - etx u:'abc'
+'domain error' -: - etx ;:u:'sui generis'
+'domain error' -: - etx 10&u:'abc'
+'domain error' -: - etx ;:10&u:'sui generis'
 'domain error' -: - etx <i.2 3
 
 
@@ -26,6 +30,14 @@ _1 -: 3 - 4
 'domain error' -: 'abc' -~etx 4
 'domain error' -: 4     - etx <'abc'
 'domain error' -: 4     -~etx <'abc'
+'domain error' -: (u:'abc') - etx 4
+'domain error' -: (u:'abc') -~etx 4
+'domain error' -: 4     - etx <u:'abc'
+'domain error' -: 4     -~etx <u:'abc'
+'domain error' -: (10&u:'abc') - etx 4
+'domain error' -: (10&u:'abc') -~etx 4
+'domain error' -: 4     - etx <10&u:'abc'
+'domain error' -: 4     -~etx <10&u:'abc'
 
 'length error' -: 3 4   - etx 5 6 7
 'length error' -: 3 4   -~etx 5 6 7

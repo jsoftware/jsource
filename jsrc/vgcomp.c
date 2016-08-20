@@ -21,7 +21,7 @@
 
 CF(compc){COMPLOOP (UC,jt->compn);          R a>b?1:-1;}
 CF(compu){COMPLOOP (US,jt->compn);          R a>b?1:-1;}
-CF(comp4){COMPLOOP (C4,jt->compn);          R a>b?1:-1;}
+CF(compt){COMPLOOP (C4,jt->compn);          R a>b?1:-1;}
 CF(compi){COMPLOOP (I, jt->compn);          R a>b?1:-1;}
 CF(compd){COMPLOOP (D, jt->compn);          R a>b?1:-1;}
 CF(compa){COMPLOOPF(A, jt->compn,compare ); R a>b?1:-1;}
@@ -29,8 +29,9 @@ CF(compr){COMPLOOPR(A1,jt->compn,compare ); R a>b?1:-1;}
 CF(compx){COMPLOOPG(X, jt->compn,xcompare); R a>b?1:-1;}
 CF(compq){COMPLOOPG(Q, jt->compn,QCOMP   ); R a>b?1:-1;}
 
-CF(compi1){I p=*(a+(I*)jt->compv),q=*(b+(I*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
-CF(compd1){D p=*(a+(D*)jt->compv),q=*(b+(D*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
+CF(compt1){C4 p=*(a+(C4*)jt->compv),q=*(b+(C4*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
+CF(compi1){I  p=*(a+ (I*)jt->compv),q=*(b+ (I*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
+CF(compd1){D  p=*(a+ (D*)jt->compv),q=*(b+ (D*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
 
 CF(compp){COMPDCLP(I);I*cv=jt->compsyv,xi,yi;
  DO(jt->compn, xi=x[cv[i]]; yi=y[cv[i]]; if(xi>yi)R 1; else if(xi<yi)R -1;);

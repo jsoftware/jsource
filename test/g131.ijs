@@ -107,9 +107,13 @@ _13.9    f =i.9
 (j./?2 9 9$100) (%. -: mdiv) r./0.231*_40+?2 9 9$100
 
 'domain error' -:        %. etx 4 4$'abc'
+'domain error' -:        %. etx 4 4$u:'abc'
+'domain error' -:        %. etx 4 4$10&u:'abc'
 'domain error' -:        %. etx 4 4$<123
 
 'domain error' -: 'abcd' %. etx ?4 4$100
+'domain error' -: (u:'abcd') %. etx ?4 4$100
+'domain error' -: (10&u:'abcd') %. etx ?4 4$100
 
 'length error' -:        %. etx ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100

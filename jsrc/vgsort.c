@@ -132,47 +132,50 @@ static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
 
 static SF(jtsortu1);
 
-static SF(jtsortu){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
-// turn off optimization
-// R irs2(gr1(w),w,0L,1L,1L,jtfrom);
- wv=AV(w);
- c4range(AN(w),(C4*)wv,&q,&p); p1=(D)p;
- if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+static SF(jtsortu){A y,z;B up;D p1;I i,p,ps,s,*yv;C4 j,*wv,*zv,q;
+ wv=C4AV(w);
+ c4range(AN(w),wv,&q,&p); p1=(D)p;
+ if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  if(0<q&&p1+q<4*n){p+=q; q=0;}
  GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
+ GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  memset(yv,C0,ps);
  for(i=0;i<m;++i){
   if(q)DO(n, ++yv[*wv++-q];) 
   else DO(n, ++yv[*wv++  ];);
   switch(2*up+(1&&q)){
-   case 0: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
-   case 1: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
+   case 0: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
+   case 1: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
    case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
    case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
  }}
  R z;
-}    /* w grade"1 w on small-range unicode */
+}    /* w grade"1 w on small-range literal4 */
 
-static SF(jtsortu1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
- p=65536; up=1==jt->compgt; wv=AV(w);
+static SF(jtsortu1){A x,y,z;B b;C4*g,*h,*xu,*wv,*zu;I d,e,i,k,p;UI *yv;int up;
+ GA(z,AT(w),AN(w),AR(w),AS(w));
+ p=65536; up=1==jt->compgt; wv=C4AV(w); zu=C4AV(z);
  GATV(y,INT,p,1,0); yv=AV(y);
- GATV(x,INT,n,1,0); xv=AV(x);
- e=1;
+ GATV(x,C4T,n,1,0); xu=C4AV(x);
 #if C_LE
-  d= 1; 
+ d= 1; e=0;
 #else
-  d=-1;
+ d=-1; e=1;
 #endif
- q=e*(-1==d);
  for(i=0;i<m;++i){
-  grcol(p,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    q+(US*)wv,up,0,1);
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),e*d+q+(US*)xv,up,1,1);
-  wv+=c; zv+=n;
+  k=0; b=0;
+  g=b?xu:zu; h=b?zu:xu;
+  grcolu(p, 0L, yv,n,(UI*)wv,(UI*)h,sizeof(C4)/sizeof(US),e+0*d+(US*)wv,k==n?!up:up,0,1);
+  grcolu(p, 0L, yv,n,(UI*)h, (UI*)g,sizeof(C4)/sizeof(US),e+1*d+(US*)h ,k==n?!up:up,0,1);
+  if(b){
+   g=zu;
+   if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
+   else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
+  }
+  wv+=c; zu+=n;
  }
  R z;
-}    /* w grade"r w on large-range integers */
+}    /* w grade"r w on large-range literal4 */
 
 static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I d,e,i,k,p,q,*yv;int up;
  if(n<8000)R irs2(gr1(w),w,0L,1L,1L,jtfrom);
@@ -217,7 +220,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr;
   else if(1==d)                      RZ(z=sortc (m,n,n,w))  // sorting single bytes (character or Boolean)
   else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,n,w))  // Booleans with cell-items 2 bytes long
   else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,n,w))  // long character strings with cell-items 2 bytes long
-  else if(4==d  &&t&C4T&&30000<n)    RZ(z=sortu (m,n,n,w))  // unicode string lists
+  else if(1==wcr&&t&C4T)             RZ(z=sortu (m,n,n,w))  // literal4 string lists
   else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,n,w))  // Booleans with cell-items 4 bytes long
   else if(1==wcr&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
   else if(1==wcr&&t&FL )             RZ(z=sortd (m,n,n,w)); // floating-point lists

@@ -1,5 +1,7 @@
 NB. ^: ------------------------------------------------------------------
 
+randuni''
+
 f1 =: 3&+
 f2 =: +
 g  =: +:@[ + 3&*@]
@@ -239,20 +241,36 @@ Expand=: (* +/\)@[ { -@>:@#@] {. ]
 (b&Expand -: b&#^:_1) x=:    ?n$1000
 (b&Expand -: b&#^:_1) x=:a.{~?n$#a.
 (b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:10&u:'tris kai deka phobia finden tush'
 (b&Expand -: b&#^:_1) x=:    ?(n,5)$1000
 (b&Expand -: b&#^:_1) x=:a.{~?(n,5)$#a.
 (b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:10&u:'tris kai deka phobia finden tush'
 (b&Expand -: b&#^:_1) x=:    ?(n,2 5)$1000
 (b&Expand -: b&#^:_1) x=:a.{~?(n,2 5)$#a.
+(b&Expand -: b&#^:_1) x=:adot1{~?(n,2 5)$#adot1
+(b&Expand -: b&#^:_1) x=:adot2{~?(n,2 5)$#adot2
 (b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:10&u:'tris kai deka phobia finden tush'
 
 (2&+&.(b&#) y) -: b*2+y=:?((#b),5)$1000
 
 'a a  a' -: 1 0 1 0 0 1&#^:_1 'a'
+'a a  a' -: 1 0 1 0 0 1&#^:_1 u:'a'
+'a a  a' -: 1 0 1 0 0 1&#^:_1[10&u:'a'
 
 'length error' -: 1 0 1 0 0 1&#^:_1 etx 'ab'
 'length error' -: 1 0 1 0 0 1&#^:_1 etx 'abcd'
 'length error' -: 1 0 1 0 0 1&#^:_1 etx ,'a'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx u:'ab'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx u:'abcd'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx ,u:'a'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx 10&u:'ab'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx 10&u:'abcd'
+'length error' -: 1 0 1 0 0 1&#^:_1 etx ,10&u:'a'
 
 'length error' -: 1 0 1 0 0 1&#^:_1 etx i.2 4
 'length error' -: 1 0 1 0 0 1&#^:_1 etx i.4 6
@@ -264,7 +282,7 @@ x -: ]&.(_2 _3&|:) x
 18!:55 ;:'loc'
 
 
-4!:55 ;:'a b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '
+4!:55 ;:'a adot1 adot2 b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '
 4!:55 ;:'g h hi i id inv lr m minus n p plus '
 4!:55 ;:'t test testx times x y '
 

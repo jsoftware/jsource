@@ -7,6 +7,8 @@ mtv =: $0
 
 (ar <'a') -: nar a =: 1=?10$2
 (ar <'a') -: nar a =: 'Cogito, ergo sum.'
+(ar <'a') -: nar a =: u:'Cogito, ergo sum.'
+(ar <'a') -: nar a =: 10&u:'Cogito, ergo sum.'
 (ar <'a') -: nar a =: ?3 4$10
 (ar <'a') -: nar a =: 3.14159265358979
 (ar <'a') -: nar a =: ^0j1*?3 4$10
@@ -14,6 +16,8 @@ mtv =: $0
 
 (ar <'a') -: nar a =: 0 3 4 $ 1=?10$2
 (ar <'a') -: nar a =: 4 0   $ 'Cogito, ergo sum.'
+(ar <'a') -: nar a =: 4 0   $ u:'Cogito, ergo sum.'
+(ar <'a') -: nar a =: 4 0   $ 10&u:'Cogito, ergo sum.'
 (ar <'a') -: nar a =: 0     $ ?3 4$10
 (ar <'a') -: nar a =: 4 0 5 $ 3.14159265358979
 (ar <'a') -: nar a =: 0 0   $ ^0j1*?3 4$10

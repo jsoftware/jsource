@@ -28,6 +28,10 @@ res=. 4 : 'x|y'
 
 'domain error' -: |/\ etx 'deipnosophist'
 'domain error' -: |/\ etx ;:'guard the glory that was Greece'
+'domain error' -: |/\ etx u:'deipnosophist'
+'domain error' -: |/\ etx ;:u:'guard the glory that was Greece'
+'domain error' -: |/\ etx 10&u:'deipnosophist'
+'domain error' -: |/\ etx ;:10&u:'guard the glory that was Greece'
 
 4!:55 ;:'res x'
 

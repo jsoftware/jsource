@@ -1,6 +1,8 @@
 NB. & -------------------------------------------------------------------
 
 ((|.x),|.y) -: (x=.'Cogito, ergo sum.') ,&|. y=.'I think not'
+((|.x),|.y) -: (x=.u:'Cogito, ergo sum.') ,&|. y=.u:'I think not'
+((|.x),|.y) -: (x=.10&u:'Cogito, ergo sum.') ,&|. y=.10&u:'I think not'
 
 dr =. 5!:2
 

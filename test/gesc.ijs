@@ -48,18 +48,28 @@ A0=: 1 : 0
  x E ~ a=. j./ 2 600 2 ?@$ 0
  x E ~ a=. u: 600   ?@$ 65536
  x E ~ a=. u: 600 2 ?@$ 65536
- x E ~ a=. 10&u: 600   ?@$ C4MAX
- x E ~ a=. 10&u: 600 2 ?@$ C4MAX
+ x E ~ a=. 10&u: RAND32 600   ?@$ C4MAX
+ x E ~ a=. 10&u: RAND32 600 2 ?@$ C4MAX
  x E ~ a=. (1;2 3;4 5;;:'foo upon thee'),":&.> 600 ?@$ 1000
+ x E ~ a=. (1;2 3;4 5;;:u:'foo upon thee'),":&.> 600 ?@$ 1000
+ x E ~ a=. (1;2 3;4 5;;:10&u:'foo upon thee'),":&.> 600 ?@$ 1000
  x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:'foo upon thee'),":&.> 20 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:u:'foo upon thee'),":&.> 20 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:10&u:'foo upon thee'),":&.> 20 ?@$ 1000
  x E ~ a=. s: ' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
+ x E ~ a=. s: u:' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
+ x E ~ a=. s: 10&u:' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
  x E ~ a=. a{~600 2 ?@$ #a=. s: ' cogito ergo sum ',": 600 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=. s: u:' cogito ergo sum ',": 600 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=. s: 10&u:' cogito ergo sum ',": 600 ?@$ 1000
  x E ~ a=. x: 600   ?@$ IF64{2e9 9e18
  x E ~ a=. x: 600 2 ?@$ 1000
  x E ~ a=. %/x: 0 1+2 600   ?@$ IF64{2e9 9e18
  x E ~ a=. %/x: 0 1+2 600 2 ?@$ 1000
  x E ~ a=. 4 0$0
  x E ~ a=. 4 0$'a'
+ x E ~ a=. 4 0$u:'a'
+ x E ~ a=. 4 0$10&u:'a'
  x E ~ a=. 4 0$100
  x E ~ a=. 4 0$0.5
  x E ~ a=. 4 0$3j4
@@ -67,6 +77,8 @@ A0=: 1 : 0
  x E ~ a=. 4 0$u: 123
  x E ~ a=. 4 0$10&u: 123
  x E ~ a=. 4 0$s: ' cogito'
+ x E ~ a=. 4 0$s: u: ' cogito'
+ x E ~ a=. 4 0$s: 10&u: ' cogito'
  x E ~ a=. 4 0$3x
  x E ~ a=. 4 0$3r4
 )
@@ -111,6 +123,7 @@ A1~ 3 4 0 5$-~3j4
 (a.{~600 4 ?@$  256) A1   600 4 ?@$ 2
 (a.{~600 4 ?@$  256) A1 ~ 600 4 ?@$ 2
 
+0 s: 11
 
 4!:55 ;:'A0 A1 E f g h xx yy'
 

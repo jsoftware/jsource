@@ -669,6 +669,73 @@ I utowsize(C4* src, I srcn){ C4 w;I r=0;int invalid=0;
  R (invalid)?(-r):r;
 }
 
+// convert surrogate pair in C4T
+void utou(C4* src, I srcn, C4* snk){ C4 w,w1;
+ while(srcn--)
+ {
+  w=*src++;
+  if(w<=0xd7ff||(w>=0xe000))
+  {
+   *snk++=(C4)w;
+  }
+  else
+  {
+   if(!srcn)
+   {
+    // isolated surrogate
+   *snk++=(C4)w;
+   }
+   else
+   {
+    w1=*src;
+    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
+    {
+     *snk++=(C4)w;
+    }
+    else
+    {
+     *snk++=(C4)(((w&0x3ff)<<10)|(w1&0x3ff))+0x10000;
+     src++;srcn--;  // next code unit of surrogate pair
+    }
+   }
+  }
+ }
+}
+
+// convert surrogate pair in C4T
+I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
+ while(srcn--)
+ {
+  w=*src++;
+  if(w<=0xd7ff||(w>=0xe000))
+  {
+   r++;
+  }
+  else
+  {
+   if(!srcn)
+   {
+    // isolated surrogate
+   r++;
+   }
+   else
+   {
+    w1=*src;
+    if(w>=0xdc00||w1<=0xdbff||w1>=0xe000) // incorrect high/low surrogate
+    {
+      r++;
+    }
+    else
+    {
+     r++;  // NOT  r+=2
+     src++;srcn--;  // next code unit of surrogate pair
+    }
+   }
+  }
+ }
+ R r;
+}
+
 F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
@@ -864,7 +931,10 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   c4v=C4AV(w);
   DO(n, if(127<*c4v++){b=1;break;});
   if(b){
-   R ca(w); // u32 unchanged
+   q=utousize(C4AV(w),n);
+   GATV(z,C4T,q,1,0);
+   utou(C4AV(w),n,C4AV(z));
+   R z;
   }
   else
   {
@@ -912,9 +982,8 @@ F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
  R z;
 }    // 10 u: x - literal4 similar to monad u: for whcar
 
-// to modified utf-8 assume input is rank-1 LIT
-// to convert backwards, first to utf-16 then to utf-8
-F1(jttomutf8){A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
+// cnull 0: cesu-8  1: modified utf-8
+static A tocesu8a(J jt, A w, I cnul) {A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
 ASSERT(t&LIT,EVDOMAIN);
@@ -928,7 +997,11 @@ mtow(wv,n,c2v);
 // change 0 to its over long version
 GATV(z1,C4T,q,1,0);
 c4v=C4AV(z1);
-DO(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
+if(cnul){
+ DO(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
+}else{
+ DO(q, *c4v++=(C4)*c2v++;);
+}
 // convert to utf-8
 q=utomsize(C4AV(z1),AN(z1));
 q=(q<0)?(-q):q;
@@ -936,4 +1009,12 @@ GATV(z,LIT,q,1,0);
 utom(C4AV(z1),AN(z1),UAV(z));
 R z;
 }
+
+// to modified utf-8 assume input is rank-1 LIT
+// nul converted 0xc080
+F1(jttomutf8){R tocesu8a(jt,w,1);}
+
+// to cesu-8 assume input is rank-1 LIT
+// to convert backwards, first to utf-16 then to utf-8
+F1(jttocesu8){R tocesu8a(jt,w,0);}
 

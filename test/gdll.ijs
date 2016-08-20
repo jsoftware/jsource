@@ -9,11 +9,11 @@ dcd=: 4 : '(lib,x) cd y'
 NB. test integer types
 a=: 4 u: +/401 402 403
 b=: 4 u: 402 403
-a1=: 10 u: +/401 402 403
-b1=: 10 u: 402 403
+a1=: 10&u: +/401 402 403
+b1=: 10&u: 402 403
 ('&';(,'&');'a';'bc')=   'cbasic c *c c *c' dcd (,'a');'a';'bc'
 (a;(,a);(4 u: 401);b)=   'wbasic w *w w *w' dcd (,4 u: 400);(4 u: 401);4 u: 402 403
-(a1;(,a1);(10 u: 401);b)='ubasic u *u u *u' dcd (,10 u: 400);(10 u: 401);10 u: 402 403
+(a1;(,a1);(10&u: 401);b)='ubasic u *u u *u' dcd (,10&u: 400);(10&u: 401);10&u: 402 403
 (9;(,9);2;3 4)=          'sbasic s *s s *s' dcd (,2);2;3 4
 (9;(,9);2;1 ic 3 4)=     'sbasic s *s s *s' dcd (,2);2;1 ic 3 4  NB. shorts in chars
 (9;(,9);2;3 4)=          'ibasic i *i i *i' dcd (,2);2;3 4

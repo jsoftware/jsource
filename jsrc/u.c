@@ -214,18 +214,17 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 F1(jtii){RZ(w); R IX(IC(w));}
 
-I jtmaxtype(J jt,I s,I t){I u;
+I jtmaxtype(J jt,I s,I t){I u,s1,t1;
  s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
  t=UNSAFE(t);
 u=s|t;
-// obsolete // workaround needed since C4T < C2T
-// obsolete  s1=(s==C4T)?C2T+1:s;
-// obsolete  t1=(t==C4T)?C2T+1:t;
+// workaround needed since LIT < INT SBT but C2T C4T > INT SBT
+ s1=(s&C4T)?LIT+2:(s&C2T)?LIT+1:s;
+ t1=(t&C4T)?LIT+2:(t&C2T)?LIT+1:t;
  if(!(u&SPARSE))R u&CMPX+FL?(u&CMPX?CMPX:FL):s<t?t:s;
  if(s){s=s&SPARSE?s:STYPE(s); ASSERT(s,EVDOMAIN);}
  if(t){t=t&SPARSE?t:STYPE(t); ASSERT(t,EVDOMAIN);}
-// obsolete  R ((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
- R s<t?t:s;
+ R ((LIT+2)==(s1<t1?t1:s1))?C4T:((LIT+1)==(s1<t1?t1:s1))?C2T:(s<t?t:s);
 }
 
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);

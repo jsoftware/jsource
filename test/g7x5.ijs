@@ -168,6 +168,8 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 
 18!:55 <'jmf'
 
+0 s: 11
+
 4!:55 ;:'bp f g q sp x a foo goo'
 
 

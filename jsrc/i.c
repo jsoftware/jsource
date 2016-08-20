@@ -21,7 +21,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  zv->m   =(UC)m; 
  zv->bucket=zv->bucketx=0;
  zv->flag=NMDOT;
- zv->hash=NMHASH(m,s); 
+ zv->hash=nmhash(m,s);
  ACX(z);
  R z;
 }

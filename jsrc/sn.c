@@ -56,7 +56,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
  zv->flag=f;  // Install locative flag
  // obsolete zv->sn=0; zv->e=0;
- zv->m=(UC)m; zv->hash=NMHASH(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
+ zv->m=(UC)m; zv->hash=nmhash(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
  R z;
 }    /* name from string */
 

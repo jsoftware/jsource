@@ -177,7 +177,7 @@ static void jtnumcase(J jt,I n,C*s,B*b,B*j,B*x,B*q,B*ii){B e;C c;
   // if string contains r, it's rational (since not ar)
   if(memchr(s,'r',n)){*q=1;    *ii=0;}
   // if no x or r found, exit as float/integer
-  if(!*x&&!*q&!*ii)R;
+  if(!*x&&!*q&&!*ii)R;
   // If any . or e found, or 'x' not at the end, treat as float/int, with all other modes cleared
   // Thus, 4. 1r3 produces float, while 4 1r3 produces rational
   DO(n, c=s[i]; e=!s[1+i]; if(c=='.'||c=='e'||c=='x'&&!e){*x=*q=*ii=0; R;});

@@ -156,7 +156,7 @@ F1(jtposs){I n,p,q,*v;
 
 F1(jtppq){C*end;I k;
  ASSERTMTV(w);
- k = strtoI(3+jt->pp, &end, 10);
+ k = strtoI(3+jt->pp, (char**)&end, 10);
  R sc(k);
 }
 

@@ -153,9 +153,9 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
  RZ(w);
  JATTN;
  as=ci->type==CASSERT;
- if(lk>0)R parseas(as,w);
+ if((signed char)lk>0)R parseas(as,w);
  RZ(d=deba(DCPARSE,0L,w,0L,d));
- if(lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
+ if((signed char)lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
  if(0==c)z=parseas(as,w);   /* anonymous or not debug */
  else{                      /* named and debug        */
   if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}

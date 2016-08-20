@@ -34,8 +34,8 @@ static NUMH(jtnumd){C c,*t;D*v,x,y;
    if('-'==c){*v=infm; R 1;}
    else if('.'==c){*v=jnan; R 1;}
   }
- x=strtod(s,&t);
- if(t<s+n-1&&'r'==*t){y=strtod(1+t,&t); x=y?x/y:0<x?inf:0>x?infm:0;}
+ x=strtod(s,(char**)&t);
+ if(t<s+n-1&&'r'==*t){y=strtod(1+t,(char**)&t); x=y?x/y:0<x?inf:0>x?infm:0;}
  R t>=s+n?(*v=x,1):0;
 }
 
@@ -86,7 +86,7 @@ static X jtx10(J jt,I e){A z;I c,m,r,*zv;
 static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
  v=(Q*)vv;
  nf=0; i.d=iv1; f.d=iv1;
- if(te=memchr(s,'e',n)){ne=n-(te-s)-1; e=strtoI(1+te,&t,10);  RZ(!*t&&10>ne);}
+ if(te=memchr(s,'e',n)){ne=n-(te-s)-1; e=strtoI(1+te,(char**)&t,10);  RZ(!*t&&10>ne);}
  if(td=memchr(s,'.',n)){nf=te?(te-td)-1:n-(td-s)-1; if(nf)RZ(numx(nf,td+1,&f.n));}
  ni=td?td-s:te?te-s:n; RZ(numx(ni,s,&i.n));
  x=i;
@@ -313,7 +313,7 @@ B valueisint; // set if the value we are processing is really an int
       // The conversion to int failed, but that's not enough for us to write off ints.  Maybe the
       // value was invalid, and we will use the default, which is known to be int.
   }
-  if(!valueisint)zv[k]=strtod(u,&v);
+  if(!valueisint)zv[k]=strtod(u,(char**)&v);
   // We have read a number, either as an int or a float.  Analyze the stopper character
   switch(*v){
    case ',':

@@ -48,7 +48,7 @@ A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
  ASSERT(!*jt->adbreak,EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==*(s+n-1))joff(zero);
-  c=jt->bx[9]; if(c<0)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
+  c=jt->bx[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
  }
  R str(n-k,s+k);
 }

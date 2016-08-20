@@ -998,5 +998,5 @@ F1(jtcallbackx){
 F1(jtnfeoutstr){I k;
  RE(k=i0(w));
  ASSERT(0==k,EVDOMAIN);
- R cstr(jt->mtyostr?jt->mtyostr:"");
+ R cstr(jt->mtyostr?jt->mtyostr:(C*)"");
 } /* 15!:18 return last jsto output */

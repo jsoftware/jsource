@@ -71,7 +71,7 @@ C spellin(I n,C*s){C c,d,p=*s,*t;I j;
 
 void spellit(C c,C*s){C*q;I k;
  s[1]=s[2]=0;
- if(0<=c&&(UC)c<=127) s[0]=c;
+ if((UC)c<=127) s[0]=c;
  else if(q=(C*)strchr(spell[1],c)){k=q-spell[1]; s[0]=spell[0][k]; s[1]=CESC1;}
  else if(q=(C*)strchr(spell[2],c)){k=q-spell[2]; s[0]=spell[0][k]; s[1]=CESC2;}
  else if(q=(C*)strchr(sp3[0],  c)){k=q-sp3[0];   s[0]=sp3[1][k];   s[1]=sp3[2][k]; s[2]=sp3[3][k];}

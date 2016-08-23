@@ -96,6 +96,16 @@ RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.0!:3 RESUB1 y')"0
 RECHO=: 13 : '+/ RESUB2 y'
 
+RUN2=: 4 : 0
+x123=. x>.1
+y123=. y
+4!:55 'x';'y'
+for. i.x123 do.
+  0!:2<testpath,y123,'.ijs'
+end.
+''
+)
+
 echo 9!:14''
 
 echo 0 : 0
@@ -118,6 +128,7 @@ g401 occasionally fails (random data?) but then runs clean
    RUN ddall   NB. report scripts that fail
    
    RUN1 'g000' NB. run script with display
+ n RUN2 'g000' NB. run script with display for n times
    
    RBAD ''     NB. report scripts that failed
    RB          NB. 0!:3 result (0 for failure)

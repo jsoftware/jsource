@@ -291,6 +291,14 @@ static C*modebuf(mode_t m){C c;static C b[11];I t=m;
 }
 
 static int ismatch(J jt,C*pat,C*name){ 
+#if !SY_64 && defined(ANDROID)
+// Android issue
+// Long Long (64 bit) fields are not 8 bytes aligned
+ UC* raw_stat=(UC*)&jt->dirstatbuf;
+ raw_stat[sizeof(struct stat)-1]=98;
+ raw_stat[sizeof(struct stat)-2]=76;
+ raw_stat[sizeof(struct stat)-3]=54;
+#endif
  strcpy(jt->dirbase,name); if(stat(jt->dirnamebuf,&jt->dirstatbuf))R 0;
  if('.'!=*pat && ((!strcmp(name,"."))||(!strcmp(name,".."))))R 0;
  if(fnmatch(pat,name,0)) R 0;
@@ -315,6 +323,16 @@ static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;s
  RZ(zv[0]=vec(LIT,n,s)); 
  RZ(zv[1]=vec(INT,6L,ts));
  sz=jt->dirstatbuf.st_size;
+#if !SY_64 && defined(ANDROID)
+ UC* raw_stat=(UC*)&jt->dirstatbuf;
+ if(raw_stat[sizeof(struct stat)-1]==98 &&
+    raw_stat[sizeof(struct stat)-2]==76 &&
+    raw_stat[sizeof(struct stat)-3]==54){
+    // Wrong stat size. Long Long (64bit) fields are not 8 bytes aligned.
+     uint* raw_stat32 = (uint*)&jt->dirstatbuf;
+     sz=(I)(size_t)raw_stat32[11]; // st_size from the packed (without alignment) structure
+ }
+#endif
  sz=sz<0?-1:sz;
  RZ(zv[2]=sc(sz));
  RZ(zv[3]=vec(LIT,3L, jt->dirrwx ));

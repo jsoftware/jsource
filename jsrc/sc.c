@@ -15,7 +15,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  oldn=jt->curname; jt->curname=aa;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;
  ASSERT(fs,EVVALUE); 
- ASSERT(AT(self)==AT(fs),EVDOMAIN);
+ ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);
  V *fv=VAV(fs);  // point to V struct in fs
  RE(d=fdep(fs));
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit

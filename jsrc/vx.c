@@ -466,10 +466,10 @@ AMON( pixX, X,X, *z=   xpi(*x);)
 
 F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
  RZ(w);
- if(!AR(w))switch(AT(w)){
-  case INT:  b=0<=*AV(w); break;
-  case XNUM: x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]; break;
-  case RAT:  x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]&&equ(iv1,QAV(w)->d);
+ if(!AR(w))switch(CTTZ(AT(w))){
+  case INTX:  b=0<=*AV(w); break;
+  case XNUMX: x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]; break;
+  case RATX:  x=*XAV(w); n=AN(x); v=AV(x); b=0<=v[n-1]&&equ(iv1,QAV(w)->d);
  }
  if(!b)R rank1ex(thorn1(w),0L,0L,jtexec1);
  m=INT&AT(w)?(SY_64?19:10):XBASEN*AN(x);

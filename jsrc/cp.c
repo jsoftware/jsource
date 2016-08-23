@@ -120,10 +120,10 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  RZ(j=grade1(ravel(hs))); jv=AV(j); e=nv[*jv];
  if(!e&&!nv[jv[m-1]])R reshape(over(shape(hs),shape(w)),w);
  RZ(y=y1=CALL1(f1,w,fs)); t=AT(y); r=AR(y);
- if(0>e||t==BOX)R ply1(w,self);
+ if(0>e||t&BOX)R ply1(w,self);
  if(!e){
   if(HOMO(t,AT(w)))RZ(w=pcvt(t,w));
-  if(!(t==AT(w)&&AN(y)==AN(w)&&(r==AR(w)||1>=r&&1>=AR(w))))R ply1(w,self);
+  if(!(TYPESEQ(t,AT(w))&&AN(y)==AN(w)&&(r==AR(w)||1>=r&&1>=AR(w))))R ply1(w,self);
  }
  k=AR(hs); RE(zn=mult(m,AN(y)));
  GA(z,AT(y),zn,k+AR(y),0); zv=CAV(z);
@@ -132,7 +132,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  k=0; DIST(0,w); DIST(1,y);
  for(i=2;i<=n;++i){
   RZ(y=CALL1(f1,y,fs));
-  if(t!=AT(y)||r!=AR(y)||ICMP(AS(y),s,r))R ply1(w,self);
+  if(TYPESNE(t,AT(y))||r!=AR(y)||ICMP(AS(y),s,r))R ply1(w,self);
   DIST(i,y);
  }
  R z;

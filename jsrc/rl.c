@@ -106,7 +106,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 
 static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n,wd;
  RZ(w);
- if(equ(ace,w)&&B01==AT(AAV0(w)))R cstr("a:");
+ if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  DO(n, x=WVR(i); if(BOX&AT(x)){b=1; break;}); b=b||1==n;
  GATV(y,BOX,n+n-!b,1,0); v=vv=AAV(y);
@@ -192,18 +192,18 @@ static F1(jtlsparse){A a,e,q,t,x,y,z;B ba,be,bn;I j,r,*v;P*p;
 static F1(jtlnoun0){A s,x;B r1;
  RZ(w);
  r1=1==AR(w); RZ(s=thorn1(shape(w)));
- switch(AT(w)){
+ switch(CTTZ(AT(w))){
   default:   R over(cstr("i."),s);
-  case LIT:  x=cstr(   "''"); R r1?x:over(over(s,scc('$')),x);
-  case C2T:  x=cstr("u: ''"); R r1?x:over(over(s,scc('$')),x);
-  case C4T:  x=cstr("10&u: ''"); R r1?x:over(over(s,scc('$')),x);
-  case BOX:  R over(s,cstr("$a:"    ));
-  case B01:  R over(s,cstr("$0"     ));
-  case FL:   R over(s,cstr("$0.5"   ));
-  case CMPX: R over(s,cstr("$0j5"   ));
-  case XNUM: R over(s,cstr("$0x"    ));
-  case RAT:  R over(s,cstr("$1r2"   ));
-  case SBT:  R over(s,cstr("$s: ' '"));
+  case LITX:  x=cstr(   "''"); R r1?x:over(over(s,scc('$')),x);
+  case C2TX:  x=cstr("u: ''"); R r1?x:over(over(s,scc('$')),x);
+  case C4TX:  x=cstr("10&u: ''"); R r1?x:over(over(s,scc('$')),x);
+  case BOXX:  R over(s,cstr("$a:"    ));
+  case B01X:  R over(s,cstr("$0"     ));
+  case FLX:   R over(s,cstr("$0.5"   ));
+  case CMPXX: R over(s,cstr("$0j5"   ));
+  case XNUMX: R over(s,cstr("$0x"    ));
+  case RATX:  R over(s,cstr("$1r2"   ));
+  case SBTX:  R over(s,cstr("$s: ' '"));
 }}   /* empty dense array */
 
 static F1(jtlnoun){I t;

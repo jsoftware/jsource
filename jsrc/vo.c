@@ -130,7 +130,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=
   r=MAX(r,AR(y)); 
   if(AN(y)){
    k=AT(y); t=t?t:k; m=t|k;
-   if(t!=k){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
+   if(TYPESNE(t,k)){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
  }}
  if(!t)DO(n, y=b?(A)AABS(v[i],w):v[i]; k=AT(y); RE(t=maxtype(t,k)););
  GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
@@ -145,8 +145,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=
    y=b?(A)AABS(v[i],w):v[i];
    if(ARELATIVE(y))RZ(y=relocate((I)y-c*(I)z,ca(y)));
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
-   else if(t==AT(y)&&m==AN(y))MC(x,AV(y),q); 
-   else if(AN(y))             RZ(povtake(cs,t==AT(y)?y:cvt(t,y),x)); 
+   else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 
+   else if(AN(y))             RZ(povtake(cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
    x+=q;
  }}
  EPILOG(z);
@@ -198,7 +198,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
   // If no fill has been specified, the scan isn't needed, because all blocks will be extended with their
   // normal fill, which will be enough to hold the highest precision.  But if there are no nonempty blocks,
   // we have to scan to get a precision from among the empties
-  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(t,AT(y));)}
+  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}
  }
 
  // Now we know the type of the result.  Create the result.
@@ -209,7 +209,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i];  // y->address of A block for v[i]
-  if(t!=AT(y))RZ(y=cvt(t,y));   // convert to result type if needed
+  if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y));   // convert to result type if needed
   yr=AR(y); ys=AS(y);    // yr=rank of y, ys->shape of y
   if(!yr){
    // atomic contents; perform atomic replication
@@ -260,7 +260,7 @@ F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
  // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
  // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
  // but this is how it was done originally
- if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(t,AT(y));)}}
+ if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
  GA(z,t,m,r,0); if(zb&&!(t&DIRECT))AFLAG(z)=AFREL;  // allocate the result area; mark relative if any contents relative
  zu=CAV(z); zv=AAV(z); k=bp(t); // inpout pointers, depending on type; length of an item
  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed
@@ -274,7 +274,7 @@ F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
    // y relative and z not is impossible
    if(t&BOX){yv=AAV(y); q=ARELATIVE(y)*(I)y-zb*(I)z; DO(AN(y), *zv++=(A)((I)yv[i]+q););}  // yv->contents, copy each pointer
    // For other (always nonrelative) contents, convert data if necessary, then copy it
-   else     {if(t!=AT(y))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
+   else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
  }}
  R z;
 }
@@ -284,7 +284,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
- DO(n, y=WVR(i); r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&t==AT(y),EVNONCE); c+=1==r?1:*(1+AS(y)););
+ DO(n, y=WVR(i); r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
  GA(z,t,p*c,2,0); s=AS(z); *s=p; *(1+s)=c; 
  zv=CAV(z); ck=c*k;
  for(i=0;i<n;++i){
@@ -314,7 +314,7 @@ F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
   wv=AAV(w); y=*wv; r=AR(y); s=1+AS(y); n=B01&AT(a)?2:wn;
   for(i=m=t=0;b&&i<n;++i){
    y=wv[i]; b=r==AR(y)&&!(1<r&&ICMP(s,1+AS(y),r-1));
-   if(AN(y)){m+=AN(y); if(t)b=b&&t==AT(y); else t=AT(y);}
+   if(AN(y)){m+=AN(y); if(t)b=b&&TYPESEQ(t,AT(y)); else t=AT(y);}
  }}
  if(!(b&&t&DIRECT))R raze(from(a,w));
  c=aii(y); k=bp(t); 

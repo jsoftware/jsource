@@ -77,7 +77,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
     }
     jt->fxpv[jt->fxi++]=mtv;
     RE(z);
-    ASSERT(AT(w)==AT(z)||AT(w)&NOUN&&AT(z)&NOUN,EVDOMAIN);
+    ASSERT(TYPESEQ(AT(w),AT(z))||AT(w)&NOUN&&AT(z)&NOUN,EVDOMAIN);
     R z;
    }else R df1(fixa(num[2],f),wf);
   default:

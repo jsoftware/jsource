@@ -49,7 +49,7 @@ int _stdcall JwdS(J jt, int x, A w, A* p1, int** p2)
 	/* binrep of user arg has 4 byte ints */
 	int* pi=(int*)CAV(w);
 	/* test for wd'q' - depends on 3!:1 format */
-	if(x==0 && LIT==pi[1] && 1==pi[2] && 0==pi[3] && 'q'==*(16+(C*)pi))
+	if(x==0 && LIT&pi[1] && 1==pi[2] && 0==pi[3] && 'q'==*(16+(C*)pi))
 	{
 		int* pi=geteventdata();
 		if(0==pi) return EVDOMAIN;

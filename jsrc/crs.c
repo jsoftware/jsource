@@ -50,11 +50,11 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  }
  e=q;
  zt=t=AT(z0); d=t&SPARSE?0:1; if(d)zt=STYPE(t); else t=DTYPE(zt);
- et=AT(e); m=MAX(et,t); zt=STYPE(m);
+ et=AT(e); m=maxtype(et,t); zt=STYPE(m);
  r=AR(z0);
  GA(z,zt,1,f+r-1,s); ICPY(AS(z)+f,AS(z0)+1,r-1);
- zp=PAV(z); SPB(zp,e,m==et?e:cvt(m,e));
- if(d){SPB(zp,a,IX(f)); SPB(zp,i,y); SPB(zp,x,m==t?z0:cvt(m,z0)); R z;}
+ zp=PAV(z); SPB(zp,e,TYPESEQ(m,et)?e:cvt(m,e));
+ if(d){SPB(zp,a,IX(f)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);
  ASSERT(equ(e,SPA(zq,e)),EVNONCE);
  h=*AS(y); GATV(q,INT,h,1,0); u=AV(q); memset(u,C0,h*SZI); 
@@ -63,8 +63,8 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  a0=SPA(zq,a); v=AV(a0);
  GATV(a,INT,f+c-1,1,0); u=AV(a); DO(f, u[i]=i;); DO(c-1, u[f+i]=v[1+i]+f-1;); 
  SPB(zp,a,a);
- if(m==t)ra(SPA(zq,x));
- SPB(zp,x,m==t?SPA(zq,x):cvt(m,SPA(zq,x)));
+ if(TYPESEQ(m,t))ra(SPA(zq,x));
+ SPB(zp,x,TYPESEQ(m,t)?SPA(zq,x):cvt(m,SPA(zq,x)));
  R z;
 }    /* result processing */
 

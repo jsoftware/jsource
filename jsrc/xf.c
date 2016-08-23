@@ -142,11 +142,11 @@ F1(jtjfsize){B b;F f;I m;
 
 static F jtixf(J jt,A w){F f;
  ASSERT(2<=AN(w),EVLENGTH);
- switch(AT(w)){
+ switch(CTTZNOFLAG(AT(w))){
   default:  ASSERT(0,EVDOMAIN);
-  case B01: ASSERT(0,EVFNUM);
-  case BOX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 
-  case INT: f=(F)*AV(w); ASSERT(2<(UI)f,EVFNUM);
+  case B01X: ASSERT(0,EVFNUM);
+  case BOXX: ASSERT(2==AN(w),EVLENGTH); f=stdf(head(w)); break; 
+  case INTX: f=(F)*AV(w); ASSERT(2<(UI)f,EVFNUM);
  }
  R f?vfn(f):f;
 }    /* process index file arg for file number; 0 if a file name */

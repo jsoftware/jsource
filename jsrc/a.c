@@ -129,7 +129,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
 
 static I jtint0(J jt,A w){A x;
  if(AR(w))R IMIN;
- if(NUMERIC&AT(w))switch(AT(w)){
+ if(NUMERIC&AT(w))switch(UNSAFE(AT(w))){
   case B01: R (I)*BAV(w);
   case INT: R *AV(w);
  }

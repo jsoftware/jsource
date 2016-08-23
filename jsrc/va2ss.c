@@ -364,14 +364,14 @@ static I intforD(J jt, D d){I z;
 
 SSINGF2OP(jtssbitwise) SSNUMPREFIX  I aiv,wiv,ziv;
  // Each operand must be convertible to integer
- if(AT(a)==INT){aiv=SSRDI(a);
- }else if(AT(a)==FL){aiv=intforD(jt,SSRDD(a));
+ if(AT(a)&INT){aiv=SSRDI(a);
+ }else if(AT(a)&FL){aiv=intforD(jt,SSRDD(a));
   // see if <.a is tolerantly equal to (I)a
  }else{aiv=SSRDB(a);
  }
 
- if(AT(w)==INT){wiv=SSRDI(w);
- }else if(AT(w)==FL){wiv=intforD(jt,SSRDD(w));
+ if(AT(w)&INT){wiv=SSRDI(w);
+ }else if(AT(w)&FL){wiv=intforD(jt,SSRDD(w));
  }else{wiv=SSRDB(w);
  }
 

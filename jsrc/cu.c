@@ -32,8 +32,8 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;I wd;
 
 A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd,wn,wr,*ws;
  RZ(a&&w); 
- an=AN(a); ar=AR(a); as=AS(a); ab=BOX==AT(a); ad=(I)a*ARELATIVE(a);
- wn=AN(w); wr=AR(w); ws=AS(w); wb=BOX==AT(w); wd=(I)w*ARELATIVE(w);
+ an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a)); ad=(I)a*ARELATIVE(a);
+ wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w)); wd=(I)w*ARELATIVE(w);
  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
  GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);

@@ -61,7 +61,7 @@ static A jtva1(J,A,C);
 
 static A jtva1s(J jt,A w,C id,I cv,VF ado){A e,x,z,ze,zx;B c;C ee;I n,t,zt;P*wp,*zp;
  t=atype(cv); zt=rtype(cv);
- wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&t!=AT(e);
+ wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); c=t&&TYPESNE(t,AT(e));
  if(c)RZ(e=cvt(t,e));          GA(ze,zt,1,0,    0    ); ado(jt,1L,AV(ze),AV(e));
  if(c)RZ(e=cvt(t,x)); n=AN(x); GA(zx,zt,n,AR(x),AS(x)); ado(jt,n, AV(zx),AV(x));
  if(jt->jerr){
@@ -106,7 +106,7 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
  if(ado==idf)R rat(w);  // no need to rat, really, but harmless since always DIRECT type
  if(b)R va1s(w,id,cv,ado);
  t=atype(cv); zt=rtype(cv);
- if(t&&t!=wt)RZ(w=cvt(t,w));
+ if(t&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  GA(z,zt,n,AR(w),AS(w));
  ado(jt,n,AV(z),AV(w));
  if(jt->jerr)R NEVM<jt->jerr?va1(w,id):0; 

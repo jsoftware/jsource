@@ -172,7 +172,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 #define SSGULOOP(T)  \
  {T*v=(T*)zv;                      \
   for(i=0;i<n1;++i){               \
-   RZ(q=CALL2(f2,x,y,fs)); RZ(t==AT(q)&&!AR(q)); \
+   RZ(q=CALL2(f2,x,y,fs)); RZ(TYPESEQ(t,AT(q))&&!AR(q)); \
    *v--=*(T*)AV(q);                \
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
@@ -198,7 +198,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
   case sizeof(Z): SSGULOOP(Z); break;
   default:
    for(i=0;i<n1;++i){       
-    RZ(q=CALL2(f2,x,y,fs)); RZ(t==AT(q)&&r==AR(q)&&!ICMP(AS(y),AS(q),r)); 
+    RZ(q=CALL2(f2,x,y,fs)); RZ(TYPESEQ(t,AT(q))&&r==AR(q)&&!ICMP(AS(y),AS(q),r)); 
     MC(zv,CAV(q),k); zv-=k; 
     AK(x)-=k; AK(y)-=k; 
     tpop(old);
@@ -238,7 +238,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
  rv[1]=m; jt->rank=rv; RZ(x=CALL1(sf,x,self)); jt->rank=0;
- t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(t!=AT(x))RZ(x=cvt(t,x));
+ t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
  GA(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
  zp=PAV(z); 
  SPB(zp,e,e); 
@@ -258,7 +258,7 @@ static DF1(jtsscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(2>n||!wn){if(id){jt->rank=0; R r?ca(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
  vasfx(id,wt,&ado,&cv);
  if(!ado)R ssg(w,self);
- if((t=atype(cv))&&t!=wt)RZ(w=cvt(t,w));
+ if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
  ado(jt,m,c,n,AV(z),AV(w));

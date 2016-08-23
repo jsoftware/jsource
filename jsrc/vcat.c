@@ -15,8 +15,8 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  ASSERT(HOMO(at,wt),EVDOMAIN);
  t=maxtype(at,wt);
  ASSERT(t&(B01|INT|FL|CMPX),EVDOMAIN);  // verify supported sparse type
- if(t!=at)RZ(a=cvt(t,a));
- if(t!=wt){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));}
+ if(TYPESNE(t,at))RZ(a=cvt(t,a));
+ if(TYPESNE(t,wt)){RZ(x=cvt(t,x)); RZ(e=cvt(t,e));}
  j=k=0; DO(f, if(b[i])++j; else ++k;);
  switch(2*b[f]+!equ(a,e)){
   case 0:  /* dense and a equal e */
@@ -72,10 +72,10 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  *zs=*as; DO(r, if(zs[i]>as[i]){RZ(a=take(q,a)); break;});
  *zs=*ws; DO(r, if(zs[i]>ws[i]){RZ(w=take(q,w)); break;});
  *zs=*as+*ws; t=maxtype(at,wt);
- ap=PAV(a); ay=SPA(ap,i); ax=SPA(ap,x); if(t!=at)RZ(ax=cvt(t,ax));
- wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(t!=at)RZ(wx=cvt(t,wx));
+ ap=PAV(a); ay=SPA(ap,i); ax=SPA(ap,x); if(TYPESNE(t,at))RZ(ax=cvt(t,ax));
+ wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(TYPESNE(t,at))RZ(wx=cvt(t,wx));
  GA(z,STYPE(t),1,r,zs); zp=PAV(z);
- SPB(zp,a,za); SPB(zp,e,ze=ca(t==at?ae:we));
+ SPB(zp,a,za); SPB(zp,e,ze=ca(TYPESEQ(t,at)?ae:we));
  if(*zb){
   SPB(zp,x,  over(ax,wx));
   SPB(zp,i,y=over(ay,wy)); v=AV(y)+AN(ay); m=*as; DO(*AS(wy), *v+=m; v+=c;);
@@ -232,13 +232,13 @@ F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  RZ(a&&w);
  at=AT(a); ar=AR(a); as=AS(a);
  wt=AT(w); wr=AR(w); ws=AS(w); p=-1;
- if(AN(a)&&ar&&ar>=wr&&at>=wt&&5e8>AC(a)){
+ if(AN(a)&&ar&&ar>=wr&&!TYPESGT(wt,at)&&5e8>AC(a)){
   p=0; u=as+ar-wr; v=ws; if(ar==wr){++u; ++v;}
   DO(wr-(ar==wr), k=*u++-*v++; if(0<k)p=1; else if(0>k){p=-1; break;});
   k=bp(at); ak=k*AN(a); wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;
  }
  if(0<=p&&AM(a)>=ak+wk+(1&&at&LAST0)){
-  if(at>wt)RZ(w=cvt(at,w));
+  if(TYPESGT(at,wt))RZ(w=cvt(at,w));
   if(p){RZ(h=vec(INT,wr,as+ar-wr)); if(ar==wr)*AV(h)=*ws; RZ(w=take(h,w));}
   av=ak+CAV(a); wv=CAV(w); 
   if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk,av,k,jt->fillv);}

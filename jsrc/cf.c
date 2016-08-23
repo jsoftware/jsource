@@ -131,7 +131,7 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
 
 static DF2(jthkeps){
  RZ(a&&w);
- if(AT(a)==AT(w)&&AT(a)&IS1BYTE&&1==AN(a)){A z;
+ if(TYPESEQ(AT(a),AT(w))&&AT(a)&IS1BYTE&&1==AN(a)){A z;
   GATV(z,B01,1,AR(a),AS(a)); 
   *BAV(z)=1&&memchr(CAV(w),*CAV(a),AN(w)); 
   R z;

@@ -331,7 +331,7 @@ static F2(jtbiterror){ASSERT(0,EVNONCE);}
  F2(f){I at;                                    \
   RZ(a&&w);                                     \
   at=AT(a);                                     \
-  ASSERT(at==AT(w)&&at&BIT+INT,EVNONCE);        \
+  ASSERT(TYPESEQ(at,AT(w))&&at&BIT+INT,EVNONCE);        \
   R at&BIT?fBB(a,w):fII(a,w);                   \
  }
 

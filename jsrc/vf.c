@@ -11,12 +11,12 @@ F2(jtsetfv){A q=jt->fill;I t;
  t=AN(a)?AT(a):AN(w)?AT(w):0;
  if(q&&AN(q)){
   RE(t=maxtype(t,AT(q))); 
-  if(t!=AT(q))RZ(q=cvt(t,q));
+  if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));
   if(ARELATIVE(q))RZ(q=cpa(1,q));
   jt->fillv=CAV(q);
  }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}
  if(ARELATIVE(w)){*(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,w); jt->fillv=jt->fillv0;}
- R t==AT(w)?w:cvt(t,w);
+ R TYPESEQ(t,AT(w))?w:cvt(t,w);
 }
 
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}

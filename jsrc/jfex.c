@@ -70,7 +70,7 @@ int _stdcall Jwd(J jt, int x, A pa, A* pz)
 	if(!AN(pa)) return EVDOMAIN;
 	if(0==x)
 	{
-		if(LIT!=AT(pa)) return EVDOMAIN;
+		if(!(LIT&AT(pa))) return EVDOMAIN;
 		c=*CAV(pa);
 		if('0'==c) return 0;
 		if('1'==c)
@@ -105,7 +105,7 @@ int _stdcall Jwd(J jt, int x, A pa, A* pz)
 	}
 	if(x==2000)
 	{
-		if(INT!=AT(pa)) return EVDOMAIN;
+		if(!(INT&AT(pa))) return EVDOMAIN;
 		i=*IAV(pa);
 		if(0==i) return 0;
 		if(1==i)

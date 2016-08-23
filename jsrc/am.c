@@ -71,7 +71,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  if(p){
   b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
   p=t&B01+LIT+INT+FL+CMPX&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
-  if(p)DO(m, y=u[i]; if(!(t==AT(y)&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
+  if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
  if(!p)R parse(v[m+2]);   // NOTE this will end up assigning the value twice: once in the parse, and again when we return.  Should we whack off the first two words?
@@ -111,8 +111,8 @@ A jtmerge2(J jt,A a,A w,A ind,B ip){A z;I an,ar,*as,at,in,ir,*iv,k,t,wn,wt;
  ASSERT(!ICMP(as,AS(ind)+ir-ar,ar),EVLENGTH);
  if(!wn)R ca(w);
  RE(t=an&&wn?maxtype(at,wt):wt);
- if(an&&t!=at)RZ(a=cvt(t,a));
- if(ip&&t==wt&&(!(t&BOX)||AFNJA&AFLAG(w))){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
+ if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));
+ if(ip&&TYPESEQ(t,wt)&&(!(t&BOX)||AFNJA&AFLAG(w))){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
  else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
  if(ip&&t&BOX&&AFNJA&AFLAG(w)){A*av,t,x,y;A1*zv;I ad,*tv;
   ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);
@@ -178,8 +178,8 @@ static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG(0007);A e,z;B b,sa,sw;I at,ir
  ASSERT(it&DENSE,EVNONCE);
  if(sw){
   ASSERT(!(wt&BOX),EVNONCE); ASSERT(HOMO(at,wt),EVDOMAIN);
-  RE(t=maxtype(at,wt)); t1=STYPE(t); RZ(a=t==at?a:cvt(sa?t1:t,a));
-  if(ip=ip&&t==wt&&t1!=BOX){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
+  RE(t=maxtype(at,wt)); t1=STYPE(t); RZ(a=TYPESEQ(t,at)?a:cvt(sa?t1:t,a));
+  if(ip=ip&&TYPESEQ(t,wt)&&!(t1&BOX)){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
   p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
   p=PAV(a); if(sa&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); sa=0;}
   if(it&NUMERIC||!ir)z=(b?jtam1e:sa?jtam1sp:jtam1a)(jt,a,z,it&NUMERIC?box(ind):ope(ind),ip);
@@ -218,14 +218,14 @@ static B ger(A w){A*wv,x;I wd;
 static B gerar(J jt, A w){A x; C c;
  I n = AN(w); 
  // literal contents are OK if a valid name or a primitive
- if(AT(w)==LIT) {
+ if(AT(w)&LIT) {
   C *stg = CAV(w);
   if(!vnm(n,stg)){
    // not name, see if valid primitive
    UC p = spellin(n,stg);
    R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
   }
- } else if(AT(w)==BOX) {A *wv;I wd,bmin=0,bmax=0;
+ } else if(AT(w)&BOX) {A *wv;I wd,bmin=0,bmax=0;
   // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
   // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
@@ -233,7 +233,7 @@ static B gerar(J jt, A w){A x; C c;
   RZ(n==2);  // verify 2 boxes
   wv = AAV(w); wd = (I)w*ARELATIVE(w); x=WVR(0); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
-  if(LIT==AT(x) && 1>=AR(x) && 1==AN(x)){
+  if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
    c = CAV(x)[0];   // fetch that character
    if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
    else if(c=='2'||c=='4')bmin=bmax=2;
@@ -243,7 +243,7 @@ static B gerar(J jt, A w){A x; C c;
   if(bmin==0){RZ(gerar(jt,x)); bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x = WVR(1);   // point to second box
-  RZ(BOX==AT(x) && 1==AR(x));   // verify it contains a list of boxes
+  RZ(BOX&AT(x) && 1==AR(x));   // verify it contains a list of boxes
   RZ(bmin<=AN(x)&&bmax>=AN(x));  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;

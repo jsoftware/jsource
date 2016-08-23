@@ -168,9 +168,9 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
  ASSERT(2>AR(w),EVRANK);
  sv=VAV(self);
  t=i0(sv->g);
- if(t>=2000 && t<3000 && AN(w) && LIT!=AT(w) && C2T!=AT(w) && C4T!=AT(w) && INT!=AT(w))
+ if(t>=2000 && t<3000 && AN(w) && !(LIT+C2T+C4T+INT&AT(w)))
  {
-	 switch(AT(w))
+	 switch(UNSAFE(AT(w)))
 	 {
 	 case B01:
 		RZ(w=vi(w));break;

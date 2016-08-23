@@ -59,22 +59,20 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
 
 static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  if(b&&jt->nflag)eputc(' ');
- switch(AT(w)){
-  case B01:
-  case INT:
-  case FL:
-  case CMPX: 
-  case XNUM: 
-  case RAT:  eputv(w);                break;
-  case BOX:  eputs(" a:"+!jt->nflag); break;
-  case NAME: ep(AN(w),NAV(w)->s);     break;
-  case LIT:  eputq(w);                break;
-  case LPAR: eputc('(');              break;
-  case RPAR: eputc(')');              break;
-  case ASGN+ASGNLOCAL:
-  case ASGN+ASGNLOCAL+ASGNSIMPLE:
-  case ASGN: dspell(*CAV(w),w);       break;
-  case MARK:                          break;
+ switch(CTTZ(AT(w))){
+  case B01X:
+  case INTX:
+  case FLX:
+  case CMPXX: 
+  case XNUMX: 
+  case RATX:  eputv(w);                break;
+  case BOXX:  eputs(" a:"+!jt->nflag); break;
+  case NAMEX: ep(AN(w),NAV(w)->s);     break;
+  case LITX:  eputq(w);                break;
+  case LPARX: eputc('(');              break;
+  case RPARX: eputc(')');              break;
+  case ASGNX: dspell(*CAV(w),w);       break;
+  case MARKX:                          break;
   default:   dspell(VAV(w)->id,w);
  }
  jt->nflag=b;

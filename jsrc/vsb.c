@@ -405,12 +405,12 @@ F1(jtsb1){
  A abc;
  clo=clock();
  RZ(w);
- switch(AT(w)){
+ switch(CTTZ(AT(w))){
   default:  ASSERT(0,EVDOMAIN);
-  case C2T:
-  case C4T:
-  case LIT: abc=(1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w)); break;
-  case BOX: abc=(sbunbox(w));
+  case C2TX:
+  case C4TX:
+  case LITX: abc=(1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w)); break;
+  case BOXX: abc=(sbunbox(w));
  }  
  clo-=clock();
  R abc;
@@ -418,12 +418,12 @@ F1(jtsb1){
 #else
 F1(jtsb1){
  RZ(w);
- switch(AT(w)){
+ switch(CTTZ(AT(w))){
   default:  ASSERT(0,EVDOMAIN);
-  case C2T:
-  case C4T:
-  case LIT: R 1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w);
-  case BOX: R sbunbox(w);
+  case C2TX:
+  case C4TX:
+  case LITX: R 1>=AR(w)?sbunstr(-1L,w):sbunlit(' ',w);
+  case BOXX: R sbunbox(w);
 }}   /* monad s: main control */
 #endif
 

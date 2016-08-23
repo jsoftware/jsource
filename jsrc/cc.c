@@ -297,8 +297,8 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  *zz=0; 
  fs=sv->f;
  RE(y=df1(zero,iden(VAV(fs)->f)));
- if(zt<AT(y)){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->g)),amp(fs,ds(COPE))); R 0;}
- if(zt>AT(y))RE(y=cvt(zt,y)); 
+ if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->g)),amp(fs,ds(COPE))); R 0;}
+ if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
 }    /* pointer to identity element */
 
@@ -418,7 +418,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
     GA(z,zt,m*c,r,s); *AS(z)=m; 
     if(!AN(z))R z;
     zc=CAV(z); zk=c*bp(zt);
-    if((t=atype(cv))&&t!=wt){RZ(w=cvt(t,w)); wv=CAV(w);}
+    if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
     EACHCUT(if(d)ado(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&y); 
         if(!z0){if(y)R y; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
     if(jt->jerr)R jt->jerr==EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,z):z;
@@ -440,7 +440,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
 static DF1(jtcut1){R cut2(mark,w,self);}
 
 
-#define PSCASE(id,zt,wt)    ((id)+256*(zt)+4096*(wt))
+#define PSCASE(id,zt,wt)    ((id)+256*(zt)+1024*(wt))
 #define PSLOOP(Tz,Tw,F,v0)      \
     {C*u;Tw*wv;Tz s=v0,x,*zv;                   \
      GA(z,zt,n,1,0);                            \
@@ -454,19 +454,19 @@ static DF1(jtcut1){R cut2(mark,w,self);}
 
 static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
  n=AN(w); m=id==CBSDOT?n:0; zt=rtype(cv); av=BAV(a);
- switch(PSCASE(ie,zt,AT(w))){
-  case PSCASE(CPLUS,   INT,B01):       PSLOOP(I,B,s+=x,      0   );       break;
-  case PSCASE(CPLUS,   FL, FL ): NAN0; PSLOOP(D,D,s+=x,      0.0 ); NAN1; break;
-  case PSCASE(CMAX,    INT,INT):       PSLOOP(I,I,s=MAX(s,x),IMIN);       break;
-  case PSCASE(CMAX,    FL, FL ):       PSLOOP(D,D,s=MAX(s,x),-inf);       break;
-  case PSCASE(CMIN,    INT,INT):       PSLOOP(I,I,s=MIN(s,x),IMAX);       break;
-  case PSCASE(CMIN,    FL, FL ):       PSLOOP(D,D,s=MIN(s,x),inf );       break;
-  case PSCASE(CMAX,    B01,B01):
-  case PSCASE(CPLUSDOT,B01,B01):       PSLOOP(B,B,s|=x,      0   );       break;
-  case PSCASE(CMIN,    B01,B01):
-  case PSCASE(CSTARDOT,B01,B01):       PSLOOP(B,B,s&=x,      1   );       break;
-  case PSCASE(CNE,     B01,B01):       PSLOOP(B,B,s^=x,      0   );       break;
-  case PSCASE(CEQ,     B01,B01):       PSLOOP(B,B,s=s==x,    1   );       break;
+ switch(PSCASE(ie,CTTZ(zt),CTTZ(AT(w)))){
+  case PSCASE(CPLUS,   INTX,B01X):       PSLOOP(I,B,s+=x,      0   );       break;
+  case PSCASE(CPLUS,   FLX, FLX ): NAN0; PSLOOP(D,D,s+=x,      0.0 ); NAN1; break;
+  case PSCASE(CMAX,    INTX,INTX):       PSLOOP(I,I,s=MAX(s,x),IMIN);       break;
+  case PSCASE(CMAX,    FLX, FLX ):       PSLOOP(D,D,s=MAX(s,x),-inf);       break;
+  case PSCASE(CMIN,    INTX,INTX):       PSLOOP(I,I,s=MIN(s,x),IMAX);       break;
+  case PSCASE(CMIN,    FLX, FLX ):       PSLOOP(D,D,s=MIN(s,x),inf );       break;
+  case PSCASE(CMAX,    B01X,B01X):
+  case PSCASE(CPLUSDOT,B01X,B01X):       PSLOOP(B,B,s|=x,      0   );       break;
+  case PSCASE(CMIN,    B01X,B01X):
+  case PSCASE(CSTARDOT,B01X,B01X):       PSLOOP(B,B,s&=x,      1   );       break;
+  case PSCASE(CNE,     B01X,B01X):       PSLOOP(B,B,s^=x,      0   );       break;
+  case PSCASE(CEQ,     B01X,B01X):       PSLOOP(B,B,s=s==x,    1   );       break;
  }
  R z;
 }    /* [: ; <@(ie/\);.k  on vector w */
@@ -493,7 +493,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt);
  if(pfx){u=v+n; while(u>v&&sep!=*v)++v; p=u-v;}
  if(ado){I t,zk,zt;                     /* atomic function f/\ or f/\. */
-  if((t=atype(cv))&&t!=wt){RZ(w=cvt(t,w)); wv=CAV(w);}
+  if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
   zt=rtype(cv); zk=c*bp(zt);
   if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,cv,pfx,id,ie)); if(z)R z;}
   GA(z,zt,AN(w),r,s); zv=CAV(z);
@@ -515,7 +515,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    old=jt->tnextpushx;
    RZ(y=df1(x,fs)); ym=IC(y);
    if(!z){yt=AT(y); yr=AR(y); ys=AS(y); c=aii(y); yk=c*bp(yt); GA(z,yt,n*c,MAX(1,yr),ys); *AS(z)=n; zv=CAV(z);}
-   if(!(yt==AT(y)&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
+   if(!(TYPESEQ(yt,AT(y))&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
    while(IC(z)<=m+ym){RZ(z=ext(0,z)); zv=CAV(z); b1=0;}
    memcpy(zv+m*yk,CAV(y),ym*yk); 
    if(b1)gc(yt&DIRECT?0:y,old);
@@ -573,12 +573,12 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
   v=v0=wv+i*mi;
   DO(nc, 
       u=yv; DO(sr, MC(u,v,sj); u+=sj; v+=r;); v=v0+=mj; RZ(x=CALL1(f1,y,fs));
-      RZ(zt==AT(x)&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
+      RZ(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
  }else for(i=0;i<nr;++i){  /* f;. 3 */
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   DO(nc, yc=MIN(tc,sc); tc-=mc; s=yc*k; 
       u=yv; DO(yr, MC(u,v,s ); u+=sj; v+=r;); v=v0+=mj; RZ(x=CALL1(f1,yr<sr||yc<sc?take(v2(yr,yc),y):y,fs));
-      RZ(zt==AT(x)&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
+      RZ(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
  }
  R z;
 }    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size, uniform f */
@@ -613,7 +613,7 @@ static DF2(jttess2){A gs,p,y,z;I*av,n,t;
   if(z&&!AN(z)){
    y=df1(w,VAV(self)->f); RESETERR;
    t=y?AT(y):B01;
-   if(t!=AT(z))GA(z,t,0L,AR(z),AS(z));
+   if(TYPESNE(t,AT(z)))GA(z,t,0L,AR(z),AS(z));
   }
   R z;
  }

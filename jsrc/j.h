@@ -451,6 +451,11 @@
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
+// For older processors, TZCNT is executed as BSF, which differs from TZCNT in that it does not
+// set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
+// table, and it expects TSCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
+#define CTTZNOFLAG(w) (CTTZ(w)&31)
+
 // Insert other compilers/architectures here
 
 // Insert CTLZ here if CTTZ is not available

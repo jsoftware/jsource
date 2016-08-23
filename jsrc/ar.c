@@ -264,7 +264,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
   case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==n%2)e=one; break;
   case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==n%2)e=zero;
  }
- if(AT(e)!=AT(zx)){t=maxtype(AT(e),AT(zx)); if(t!=AT(zx))RZ(zx=cvt(t,zx));}
+ if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
  GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)ICPY(f+AS(z),f+1+ws,wr-1);
  zp=PAV(z);
@@ -315,7 +315,7 @@ static B jtredspse(J jt,C id,I wm,I xt,A e,A zx,A sn,A*ze,A*zzx){A b;B nz;I t,zt
   case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(zero,residue(num[2],sn)))); if(!(wm%2))e=one;  break;
   case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(one, residue(num[2],sn)))); if(!(wm%2))e=zero; break;
  }
- if(AT(e)!=AT(zx)){t=maxtype(AT(e),AT(zx)); if(t!=AT(zx))RZ(zx=cvt(t,zx));}
+ if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  *ze=e; *zzx=zx;
  R 1;
 }
@@ -404,34 +404,34 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
 static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
  m=prod(f,ws); c=m?wn/m:prod(r,f+ws); d=c/2;
- switch(BR2CASE(AT(w),id)){
-  case BR2CASE(B01,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
-  case BR2CASE(B01,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
-  case BR2CASE(B01,CLT     ): if(b=1==r)BTABIFX(<    ); break;
-  case BR2CASE(B01,CLE     ): if(b=1==r)BTABIFX(<=   ); break;
-  case BR2CASE(B01,CGT     ): if(b=1==r)BTABIFX(>    ); break;
-  case BR2CASE(B01,CGE     ): if(b=1==r)BTABIFX(>=   ); break;
-  case BR2CASE(B01,CMAX    ):
-  case BR2CASE(B01,CPLUSDOT): if(b=1==r)BTABIFX(||   ); break;
-  case BR2CASE(B01,CPLUSCO ): if(b=1==r)BTABPFX(BNOR ); break;
-  case BR2CASE(B01,CMIN    ):
-  case BR2CASE(B01,CSTAR   ):
-  case BR2CASE(B01,CSTARDOT): if(b=1==r)BTABIFX(&&   ); break;
-  case BR2CASE(B01,CSTARCO ): if(b=1==r)BTABPFX(BNAND); break;
-  case BR2CASE(LIT,CEQ     ): BR2IFX(C,== ); break;
-  case BR2CASE(LIT,CNE     ): BR2IFX(C,!= ); break;
-  case BR2CASE(INT,CEQ     ): BR2IFX(I,== ); break;
-  case BR2CASE(INT,CLT     ): BR2IFX(I,<  ); break;
-  case BR2CASE(INT,CLE     ): BR2IFX(I,<= ); break;
-  case BR2CASE(INT,CGT     ): BR2IFX(I,>  ); break;
-  case BR2CASE(INT,CGE     ): BR2IFX(I,>= ); break;
-  case BR2CASE(INT,CNE     ): BR2IFX(I,!= ); break;
-  case BR2CASE(FL, CEQ     ): BR2PFX(D,TEQ); break;
-  case BR2CASE(FL, CLT     ): BR2PFX(D,TLT); break;
-  case BR2CASE(FL, CLE     ): BR2PFX(D,TLE); break;
-  case BR2CASE(FL, CGT     ): BR2PFX(D,TGT); break;
-  case BR2CASE(FL, CGE     ): BR2PFX(D,TGE); break;
-  case BR2CASE(FL, CNE     ): BR2PFX(D,TNE); break;
+ switch(BR2CASE(CTTZ(AT(w)),id)){
+  case BR2CASE(B01X,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
+  case BR2CASE(B01X,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
+  case BR2CASE(B01X,CLT     ): if(b=1==r)BTABIFX(<    ); break;
+  case BR2CASE(B01X,CLE     ): if(b=1==r)BTABIFX(<=   ); break;
+  case BR2CASE(B01X,CGT     ): if(b=1==r)BTABIFX(>    ); break;
+  case BR2CASE(B01X,CGE     ): if(b=1==r)BTABIFX(>=   ); break;
+  case BR2CASE(B01X,CMAX    ):
+  case BR2CASE(B01X,CPLUSDOT): if(b=1==r)BTABIFX(||   ); break;
+  case BR2CASE(B01X,CPLUSCO ): if(b=1==r)BTABPFX(BNOR ); break;
+  case BR2CASE(B01X,CMIN    ):
+  case BR2CASE(B01X,CSTAR   ):
+  case BR2CASE(B01X,CSTARDOT): if(b=1==r)BTABIFX(&&   ); break;
+  case BR2CASE(B01X,CSTARCO ): if(b=1==r)BTABPFX(BNAND); break;
+  case BR2CASE(LITX,CEQ     ): BR2IFX(C,== ); break;
+  case BR2CASE(LITX,CNE     ): BR2IFX(C,!= ); break;
+  case BR2CASE(INTX,CEQ     ): BR2IFX(I,== ); break;
+  case BR2CASE(INTX,CLT     ): BR2IFX(I,<  ); break;
+  case BR2CASE(INTX,CLE     ): BR2IFX(I,<= ); break;
+  case BR2CASE(INTX,CGT     ): BR2IFX(I,>  ); break;
+  case BR2CASE(INTX,CGE     ): BR2IFX(I,>= ); break;
+  case BR2CASE(INTX,CNE     ): BR2IFX(I,!= ); break;
+  case BR2CASE(FLX, CEQ     ): BR2PFX(D,TEQ); break;
+  case BR2CASE(FLX, CLT     ): BR2PFX(D,TLT); break;
+  case BR2CASE(FLX, CLE     ): BR2PFX(D,TLE); break;
+  case BR2CASE(FLX, CGT     ): BR2PFX(D,TGT); break;
+  case BR2CASE(FLX, CGE     ): BR2PFX(D,TGE); break;
+  case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
  }
  if(b){S*u=(S*)wv; GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
  if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DO(r-1, *u++=*v++;);}
@@ -455,7 +455,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(!ado)R redg(w,self);
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
- if((t=atype(cv))&&t!=wt)RZ(w=cvt(t,w));
+ if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  m=prod(f,ws); c=m?wn/m:prod(r,f+ws);
  ado(jt,m,c,n,AV(z),AV(w));
  if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
@@ -539,7 +539,7 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t,wd;
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
  wv=AAV(w); wd=(I)w*ARELATIVE(w); y=WVR(0); p=IC(y); t=AT(y);
- DO(n, y=WVR(i); r=AR(y); if(!(r&&r<=2&&p==IC(y)&&t==AT(y)))R reduce(w,self););
+ DO(n, y=WVR(i); r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
  R box(razeh(w));
 }    /* ,.&.>/ w */
 

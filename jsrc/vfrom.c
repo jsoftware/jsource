@@ -16,7 +16,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  GATV(x,INT,n,1,0);    qv=AV(x);
  GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
  RZ(x=apv(n,0L,0L)); cv=AV(x);
- DO(n, x=WVR(i); if(t!=AT(x))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
+ DO(n, x=WVR(i); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
  GATV(z,BOX,m,r,0);    zv=AAV(z); s=AS(z); 
  DO(n, x=WVR(i); u=AS(x); DO(AR(x),*s++=*u++;););
  for(i=0;i<m;i++){

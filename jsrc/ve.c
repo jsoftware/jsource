@@ -210,7 +210,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // Calculate z = ((1+d)$2) #: w
   RZ(z=abase2(reshape(increm(d),num[2]),w));
   // If not float, result is exact or complex; either way, keep it
-  if(t!=FL)R z;
+  if(!(t&FL))R z;
   // If float, see if we had one digit too many (could happen, if the log was too close to an integer)
   // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
   // But we can't delete a digit if any of the values were negative - all are significant then

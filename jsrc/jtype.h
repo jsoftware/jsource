@@ -157,46 +157,64 @@ typedef I SI;
 #define C4TX 18
 #define C4T             ((I)1L<<C4TX)         /* C4 unicode (4-byte characters)  */
 #define C4TSIZE sizeof(C4)
-#define VERBX 19
+#define XDX 19
+#define XD              ((I)1L<<XDX)   /* DX extended floating point      */
+#define XDSIZE sizeof(DX)
+#define XZX 20
+#define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
+#define XZSIZE sizeof(ZX)
+#define VERBX 21
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
 #define VERBSIZE sizeof(V)
-#define ADVX 20
+#define ADVX 22
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
-#define CONJX 21
+#define CONJX 23
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)
 // ASGN see below
-#define MARKX 23
+#define MARKX 25
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
-#define SYMBX 24
+#define SYMBX 26
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(I)
-#define CONWX 25
+#define CONWX 27
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
-#define NAMEX 26
+#define NAMEX 28
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)
-#define LPARX 27
+#define LPARX 29
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 #define LPARSIZE sizeof(I)
-#define RPARX 28
+#define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
-#define XDX 29
-#define XD              ((I)1L<<XDX)   /* DX extended floating point      */
-#define XDSIZE sizeof(DX)
-#define XZX 30
-#define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
-#define XZSIZE sizeof(ZX)
-#define ASGNX 22
+#define ASGNX 24
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =.    aliases with SYMB
-#define ASGNSIMPLE      ((I)1L<<CONWX)     // set when assignment is to simple name; set only when ASGNLOCAL is also set    aliases with CONW
+#define ASGNSIMPLE      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
+// NOUN types can have the following informational bits set
+#define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
+#define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
+
+// Planned coding to save bits in type
+// Uses bits 24-27 eg
+// MARK is represented by type of all 0
+// Other types are in bits 24-27:
+// CONJ   0001
+// ADV    0101
+// VERB   1101
+// ASGN   xy10    x=ASGNLOCAL y=ASGNSIMPLE
+// CONW   0100    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
+// SYMB   1100
+// NAME   1000
+// RPAR   0011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
+// LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
+// 1000 and 0100 are used as flag bits for NOUNSAFE
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
@@ -212,9 +230,23 @@ typedef I SI;
 // Don't call traverse unless one of these bits is set
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
-#define HOMO(s,t)       ((s)==(t) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
-#define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)
-#define DTYPE(t)        ((t)&SB01? B01:(t)&SINT? INT:(t)&SFL? FL:(t)&SCMPX? CMPX:(t)&SLIT?LIT:(t)&SBOX? BOX:0L)
+// NOUNSAFE flag
+#define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
+#define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
+#define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
+#define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
+#define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
+#define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack
+#define TYPESEQ(x,y)    (0==UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
+#define TYPESNE(x,y)    (0!=UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
+#define TYPESLT(x,y)    (UNSAFE(x)<UNSAFE(y))  // type x < type y
+#define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
+
+#define HOMO(s,t)       (TYPESEQ((s),(t)) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
+// obsolete #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)
+// obsolete #define DTYPE(t)        ((t)&SB01? B01:(t)&SINT? INT:(t)&SFL? FL:(t)&SCMPX? CMPX:(t)&SLIT?LIT:(t)&SBOX? BOX:0L)
+#define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
+#define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 
 // Flags in the count field of type A
 #define ACINPLACE       (I)(((UI)-1>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
@@ -238,7 +270,7 @@ typedef I SI;
 
 #define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
-#define ARELATIVE(w)    (AT(w)&BOX&&AFLAG(w)&AFNJA+AFSMM+AFREL)
+#define ARELATIVE(w)    (AFLAG(w)&AFNJA+AFSMM+AFREL&&AT(w)&BOX)
 #define AADR(w,z)       (A)((I)(w)+(I)(z))   // was ((w)?(A)((I)(w)+(I)(z)):(z))
 #define AVR(i)          AADR(ad,av[i])
 #define IVR(i)          AADR(id,iv[i])

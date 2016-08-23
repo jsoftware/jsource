@@ -21,8 +21,8 @@ B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;
  ASSERTSYS(all1(eps(a,IX(r))),"scheck a index");
  ASSERTSYS(equ(a,nub(a)),"scheck a unique");
  ASSERTSYS(!AR(e),"scheck e rank");
- ASSERTSYS(AT(e)==DTYPE(t),"scheck e type");
- ASSERTSYS(AT(e)==AT(x),"scheck e/x type");
+ ASSERTSYS(TYPESEQ(AT(e),DTYPE(t)),"scheck e type");
+ ASSERTSYS(TYPESEQ(AT(e),AT(x)),"scheck e/x type");
  ASSERTSYS(2==AR(y),"scheck i rank");
  ASSERTSYS(INT&AT(y),"scheck i type");
  ASSERTSYS(IC(y)==IC(x),"scheck i/x tally");
@@ -92,8 +92,8 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
   ASSERT(*AS(x)==*AS(y),EVLENGTH);
   ASSERT(HOMO(et,AT(x)),EVDOMAIN);
   t=maxtype(et,AT(x));
-  if(t!=et   )RZ(e=cvt(t,e));
-  if(t!=AT(x))RZ(x=cvt(t,x));
+  if(TYPESNE(t,et)   )RZ(e=cvt(t,e));
+  if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
   n=*AS(y)-1; u=AV(y); v=an+u;
   for(i=0;i<n;++i){
    j=0;
@@ -281,10 +281,10 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
  RE(t=maxtype(at,wt)); zt=STYPE(t);
  ASSERT(zt,EVDOMAIN);
  GA(z,zt,1,AR(w),AS(w)); zp=PAV(z);
- SPB(zp,e,t==at?ca(a):cvt(t,a));
+ SPB(zp,e,TYPESEQ(t,at)?ca(a):cvt(t,a));
  SPB(zp,a,ca(SPA(wp,a)));
  SPB(zp,i,ca(SPA(wp,i)));
- SPB(zp,x,t==wt?ca(x):cvt(t,x));
+ SPB(zp,x,TYPESEQ(t,wt)?ca(x):cvt(t,x));
  R z;
 }    /* respecify the sparse element */
 

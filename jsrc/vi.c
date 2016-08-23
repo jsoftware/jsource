@@ -122,10 +122,10 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
 static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
- switch(AT(y)){
-  case RAT:  m+=n;  /* fall thru */
-  case XNUM: u=XAV(y); DO(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
-  case INT:                                    z =hicnz(n    *SZI,UAV(y));   R z;
+ switch(CTTZ(AT(y))){
+  case RATX:  m+=n;  /* fall thru */
+  case XNUMX: u=XAV(y); DO(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
+  case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
   default:   R hic(n*bp(AT(y)),UAV(y));
 }}
 
@@ -494,7 +494,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md
 static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
  if(!AN(w))R 1;
  m=AN(w)/c; wv=AAV(w); wd=(I)w*ARELATIVE(w);
- DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t)RZ(t==AT(x)) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
+ DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type, else 0. c is # of cells */
 
@@ -539,8 +539,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  RE(t=mk?at:maxtype(at,wt)); k1=bp(t); k=n*k1; th=HOMO(at,wt); jt->min=ss=0;
  ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  
  wc=prod(wf,ws); wk=wc?k1*AN(w)/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
- if(th&&t!=at)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
- if(th&&t!=wt)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
+ if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
+ if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
  if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}
  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
  if(!mk)switch(mode){I q;
@@ -579,7 +579,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  }else{B b=0==jt->ct;I ht=INT,t1;
   if(!b&&t&BOX+FL+CMPX)ctmask(jt);
   if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
-                              (t1=utype(a,ac))&&(mk||a==w||t1==utype(w,wc))?jtioau:jtioa1;
+                              (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?jtioau:jtioa1;
   else if(t&XNUM)         fn=jtiox;
   else if(t&RAT )         fn=jtioq;
   else if(1==k)           {fn=jtio1; if(!(mode==IIDOT||mode==IICO))ht=B01;}
@@ -626,8 +626,8 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  ASSERT(r<=ar&&0<=f1,EVRANK); 
  ASSERT(!ICMP(as+ar-r,ws+f1,r),EVLENGTH);
  RE(c=prod(f1,ws));
- if(mode==ILESS&&(t!=wt||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
- if(!(m&&n&&c&&HOMO(t,wt)&&t>=wt))R indexofsub(mode,a,w);
+ if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
+ if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode,a,w);
  switch(ztype){
   case 0: GATV(z,INT,c,    f1, ws); break;
   case 1: GA(z,wt, AN(w),1+r,ws); break;
@@ -636,7 +636,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
   case 4: GAT(z,INT,1,    0,  0 ); break;
  }
  jt->hin=AN(hi); jt->hiv=AV(hi);
- if(t!=wt)RZ(w=cvt(t,w)) else if(t&FL+CMPX)RZ(w=cvt0(w));
+ if(TYPESNE(t,wt))RZ(w=cvt(t,w)) else if(t&FL+CMPX)RZ(w=cvt0(w));
  R fn(jt,mode+IPHOFFSET,m,n,c,k,AR(a),AR(w),(I)1,(I)1,(I)0,(I)0,a,w,&h,z);
 }
 
@@ -665,7 +665,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)R ca(a);
  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}
- R !(at&SPARSE)&&HOMO(at,wt)&&at==maxtype(at,wt)&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
+ R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
 }    /* a-.w */
 
@@ -759,8 +759,8 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  wt=AT(w); wr=AR(w); ws=AS(w); 
  d=1; DO(1+wr-ar, d*=ws[i];);
  RE(t=maxtype(at,wt));
- if(t!=at)RZ(a=cvt(t,a));
- if(t!=wt)RZ(w=cvt(t,w));
+ if(TYPESNE(t,at))RZ(a=cvt(t,a));
+ if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  p=hsize(m);
  GATV(h,INT,p,1,0);
  GATV(z,INT,AN(w),wr,ws);

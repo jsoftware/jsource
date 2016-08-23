@@ -658,14 +658,14 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    x=WVR(i); xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
    lit=star&&xt&LIT&&(c=='s'&&0==xn%2||c=='f'&&0==xn%4);
-   if(t&&t!=xt&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
+   if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
    xv=AV(x); if(zbx)*zv++=x;
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
    CDASSERT(xv,per); 
    if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv++=y;}
   }
-  if(star&&!xr&&xt==BOX){           /* scalar boxed integer/boolean scalar is a pointer */
+  if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer */
    y=AAV0(x);
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);
    if(AT(y)&B01){CDASSERT(0==*BAV(y),per); *dv++=0;}else *dv++=*AV(y);
@@ -832,7 +832,7 @@ F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R zero;}
 
 F1(jtmemr){C*u;I k,m,n,t,*v;
  RZ(w);
- ASSERT(INT==AT(w),EVDOMAIN);
+ ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
@@ -848,7 +848,7 @@ F1(jtmemr){C*u;I k,m,n,t,*v;
 
 F2(jtmemw){C*u;I k,m,n,t,*v;
  RZ(a&&w);
- ASSERT(INT==AT(w),EVDOMAIN);
+ ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
@@ -856,8 +856,8 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  ASSERT(t&LIT+INT+FL+CMPX,EVDOMAIN);
  k=bp(t);
  ASSERT(m==AN(a)||t&LIT&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
- if(B01==AT(a)&&t==INT) RZ(a=cvt(INT,a));
- ASSERT(t==AT(a),EVDOMAIN);
+ if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
+ ASSERT(TYPESEQ(t,AT(a)),EVDOMAIN);
 #if SY_WIN32
  ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
@@ -886,8 +886,8 @@ static I cbold(I n,I *pi){char d[256],*p;A r;I i;
  *p=0;
  r=exec1(cstr(d));
  if(!r||AR(r)) R 0;
- if(INT==AT(r)) R *AV(r);
- if(B01==AT(r)) R *(BYTE*)AV(r);
+ if(INT&AT(r)) R *AV(r);
+ if(B01&AT(r)) R *(BYTE*)AV(r);
  R 0;
 }
 
@@ -895,8 +895,8 @@ static I cbnew(){A r;
  J jt=cbjt;
  r=exec1(cstr("cdcallback''"));
  if(!r||AR(r)) R 0;
- if(INT==AT(r)) R *AV(r);
- if(B01==AT(r)) R *(BYTE*)AV(r);
+ if(INT&AT(r)) R *AV(r);
+ if(B01&AT(r)) R *(BYTE*)AV(r);
  R 0;
 }
 

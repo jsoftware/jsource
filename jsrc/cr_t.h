@@ -71,7 +71,7 @@
   for(j=1;j<mn;++j){   // for each result-cell...
    RARG;    // establish argument cells
    RZ(y=RCALL);  // call the function
-   if(yt!=AT(y)||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
+   if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
    MC(zv+=k,AV(y),k);   // move the result-cell to the output
    if(cc&&RAC)tpop(old); else cc=0;  // as long as argument cells are not incorporated into boxed nouns, pop the stack after each cell (??)
  }}

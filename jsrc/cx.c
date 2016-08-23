@@ -308,15 +308,18 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
      
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
 
-     switch(AN(t)?AT(t):0){   // empty t is also true
+     if(AN(t)){
+      switch(CTTZ(AT(t))){
       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
-      case RAT:
-      case XNUM: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // rat/xnum true if first word non0, or multiple words
-      case CMPX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
-      case FL:   b=0!=*DAV(t);                 break;
-      case INT:  b=0!=*AV(t);                  break;
-      case B01:  b=*BAV(t);
-    }}
+      case RATX:
+      case XNUMX: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // rat/xnum true if first word non0, or multiple words
+      case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
+      case FLX:   b=0!=*DAV(t);                 break;
+      case INTX:  b=0!=*AV(t);                  break;
+      case B01X:  b=*BAV(t);
+      }
+     }    // If no atoms, that's true too
+    }
     t=0;  // Indicate no T block, now that we have processed it
     if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...

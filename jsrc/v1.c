@@ -59,7 +59,7 @@ B jtequ(J jt,A a,A w){A x;B b;
 }
 
 static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
- if(!(AT(a)==AT(w)&&u->id==v->id))R 0;
+ if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
  p=u->f; q=v->f; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1)))R 0;
  p=u->g; q=v->g; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1)))R 0;
  p=u->h; q=v->h;    R !p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1);
@@ -83,22 +83,22 @@ static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
  }
 
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B*x,B b0,B b1){B b,c0;C*av,*wv;I at,c,j=0,mn,p,q,t,wt;
- p=AR(a)-af; at=AT(a); mn=m&&n?m*n:0;
- q=AR(w)-wf; wt=AT(w); RE(t=maxtype(at,wt)); c0=!jt->ct&&t&FL+CMPX;
+ p=AR(a)-af; at=UNSAFE(AT(a)); mn=m&&n?m*n:0;
+ q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt)); c0=!jt->ct&&t&FL+CMPX;
  c=(af>wf?AN(a):AN(w))/(mn?mn:1); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);
  if(b||!c||a==w){memset(x,b?b0:b1,mn); R b?b0:b1;}
  if(t&FUNC)R eqf(a,w)?b1:b0;
- if(t!=at)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(c0)RZ(a=cvt0(a)); 
- if(t!=wt)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(c0)RZ(w=cvt0(w)); 
+ if(TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(c0)RZ(a=cvt0(a)); 
+ if(TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(c0)RZ(w=cvt0(w)); 
  p=af?c:0; av=CAV(a);
  q=wf?c:0; wv=CAV(w);
- switch(c0?0:t){
+ switch(c0?0:CTTZ(t)){
   default:   R eqv(af,wf,m,n,c*bp(t),av,wv,x,b0,b1);
-  case FL:   INNERT(D,teq);    R mn?x[mn-1]:b1;
-  case CMPX: INNERT(Z,zeq);    R mn?x[mn-1]:b1;
-  case XNUM: INNERT(X,equ);    R mn?x[mn-1]:b1;
-  case RAT:  INNERT(Q,EQQ);    R mn?x[mn-1]:b1;
-  case BOX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){
+  case FLX:   INNERT(D,teq);    R mn?x[mn-1]:b1;
+  case CMPXX: INNERT(Z,zeq);    R mn?x[mn-1]:b1;
+  case XNUMX: INNERT(X,equ);    R mn?x[mn-1]:b1;
+  case RATX:  INNERT(Q,EQQ);    R mn?x[mn-1]:b1;
+  case BOXX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){
    default:  INNERT(A,EQA);    R mn?x[mn-1]:b1;
    case 1:   INNERT2(0,w,EQA); R mn?x[mn-1]:b1;
    case 2:   INNERT2(a,0,EQA); R mn?x[mn-1]:b1;

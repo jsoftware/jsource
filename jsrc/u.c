@@ -102,8 +102,8 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
 I typesizes[] = {
 B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
 -1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
-SBTSIZE, C2TSIZE, C4TSIZE, VERBSIZE, ADVSIZE, CONJSIZE, ASGNSIZE, MARKSIZE,
-SYMBSIZE,CONWSIZE, NAMESIZE, LPARSIZE, RPARSIZE, XDSIZE, XZSIZE, -1,
+SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, VERBSIZE, ADVSIZE, CONJSIZE,
+ASGNSIZE, MARKSIZE, SYMBSIZE, CONWSIZE, NAMESIZE, LPARSIZE, RPARSIZE,-1,
 };
 
 // default CTTZ to use if there is no compiler intrinsic
@@ -169,8 +169,8 @@ I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
  at=AT(*a); at1=AN(*a)?at:0;
  wt=AT(*w); wt1=AN(*w)?wt:0; RE(t=maxtype(at1,wt1)); RE(t=maxtype(t,mt));
  if(!t)RE(t=maxtype(at,wt));
- if(t!=at)RZ(*a=cvt(t,*a));
- if(t!=wt)RZ(*w=cvt(t,*w));
+ if(TYPESNE(t,at))RZ(*a=cvt(t,*a));
+ if(TYPESNE(t,wt))RZ(*w=cvt(t,*w));
  R t;
 }
 
@@ -214,15 +214,18 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 F1(jtii){RZ(w); R IX(IC(w));}
 
-I jtmaxtype(J jt,I s,I t){I u,s1,t1;
- u=s|t;
-// workaround needed since C4T < C2T
- s1=(s==C4T)?C2T+1:s;
- t1=(t==C4T)?C2T+1:t;
- if(!(u&SPARSE))R u&CMPX?CMPX:u&FL?FL:((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
+I jtmaxtype(J jt,I s,I t){I u;
+ s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
+ t=UNSAFE(t);
+u=s|t;
+// obsolete // workaround needed since C4T < C2T
+// obsolete  s1=(s==C4T)?C2T+1:s;
+// obsolete  t1=(t==C4T)?C2T+1:t;
+ if(!(u&SPARSE))R u&CMPX+FL?(u&CMPX?CMPX:FL):s<t?t:s;
  if(s){s=s&SPARSE?s:STYPE(s); ASSERT(s,EVDOMAIN);}
  if(t){t=t&SPARSE?t:STYPE(t); ASSERT(t,EVDOMAIN);}
- R ((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
+// obsolete  R ((C2T+1)==(s1<t1?t1:s1))?C4T:(s<t?t:s);
+ R s<t?t:s;
 }
 
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
@@ -285,11 +288,11 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
  RZ(w);
  old=jt->rank; jt->rank=0;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
- switch(AT(w)){
-  case INT:  z=w; break;
-  case B01:  z=cvt(INT,w); break;
-  case XNUM:
-  case RAT:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
+ switch(CTTZNOFLAG(AT(w))){
+  case INTX:  z=w; break;
+  case B01X:  z=cvt(INT,w); break;
+  case XNUMX:
+  case RATX:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
   default:
    if(!(AT(w)&FL))RZ(w=cvt(FL,w));
    n=AN(w); wv=DAV(w);

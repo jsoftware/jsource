@@ -259,7 +259,7 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(2>n||!wn){if(id){jt->rank=0; R r?ca(w):reshape(over(shape(w),one),w);}else R prefix(w,self);}
  vapfx(id,wt,&ado,&cv);
  if(!ado)R prefix(w,self);
- if((t=atype(cv))&&t!=wt)RZ(w=cvt(t,w));
+ if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
  ado(jt,m,c,n,AV(z),AV(w));
@@ -538,7 +538,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  d=0<=m0?1+p-m:(p+m-1)/m; c=aii(w); cm=c*m; b=0>m0&&0<p%m;
  zt=rtype(cv); jt->rank=0; 
  GA(z,zt,c*d,MAX(1,AR(w)),AS(w)); *AS(z)=d;
- if((t=atype(cv))&&t!=wt){RZ(w=cvt(t,w)); wt=AT(w);}
+ if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=bp(zt)*c; 
  wv=CAV(w); wk=bp(wt)*(0<=m0?c:c*m);
  DO(d-b, ado(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);

@@ -353,7 +353,7 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
  if(v==(L*)d->dcn){  // if the saved jt->cursymb (from the unquote lookup) matches the name being assigned...
   // insist that the redefinition have the same type, and the same explicit character
   jt->curname=d->dca; f=d->dcf;
-  ASSERT(AT(f)==AT(w)&&(CCOLON==VAV(f)->id)==(CCOLON==VAV(w)->id),EVSTACK);
+  ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==VAV(f)->id)==(CCOLON==VAV(w)->id),EVSTACK);
   d->dcf=w;
   // If we are redefiniing the executing explicit definition during debug, remember that.  We will use it to reload the definition.
   // Reassignment outside of debug waits until the name is off the stack, using nvrredef

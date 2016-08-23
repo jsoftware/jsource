@@ -6,10 +6,10 @@
 #include "j.h"
 
 // in fbu.c
-extern A RoutineA(J,A);
-extern A RoutineB(J,A);
-extern A RoutineC(J,A);
-extern A RoutineD(J,A);
+extern A RoutineA(J,A);  // convert LIT to C2T/C4T is it contains UTF-8
+extern A RoutineB(J,A);  // Convert C2T to C4T if it contains surrogates; install NUL after CJK if result is C2T
+extern A RoutineC(J,A);  // instal NUL after CJK characters of C4T
+extern A RoutineD(J,A);  // Convert C2T/C4T to UTF-8
 
 #if SY_64
 #define WI          21L
@@ -186,17 +186,17 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  c=r?s[r-1]:1; m=n/c;
  GATV(t,BOX,n,1,0); tv=AAV(t);
  RZ(d=apv(c,1L,0L)); dv=AV(d); v=tv;
- switch(AT(w)){
-  case XNUM: {X*u =(X*) wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
-  case RAT:  {Q*u =(Q*) wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
+ switch(CTTZ(AT(w))){
+  case XNUMX: {X*u =(X*) wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
+  case RATX:  {Q*u =(Q*) wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
 #ifdef UNDER_CE
   default: 
-   if (AT(w)==XD){DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));}
+   if (AT(w)&XD){DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));}
    else          {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);}
    break;
 #else
-  case XD:   {DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
-  case XZ:   {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);} break;
+  case XDX:   {DX*u=(DX*)wv; DO(m, DO(c, RZ(*v++=y=thdx1(*u++)); dv[i]=MAX(dv[i],AN(y));));} break;
+  case XZX:   {ZX*u=(ZX*)wv; ASSERT(0,EVNONCE);} break;
 #endif
  }
  --dv[c-1];
@@ -220,7 +220,7 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
  yn=  r?s[r-1]:1; RZ(*py=y=apv(yn,0L,0L)); yv=AV(y);
  // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
- DO(AN(w), maxt=MAX(maxt,AT(*v)); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
+ DO(AN(w), maxt=MAX(maxt,UNSAFE(AT(*v))); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position
  // We have not yet accounted for the boxing character at the end.
  DO(xn, ASSERT(xv[i]<IMAX,EVLIMIT); ++xv[i];); 
@@ -414,11 +414,11 @@ static F1(jtthbox){A z;static UC ctrl[]=" \001\002\003\004\005\006\007   \013\01
  // Go through each byte of the result, replacing ASCII codes 0, 8, 9, 10, and 13
  // (NUL, BS, TAB, LF, CR) with space
  // Three versions of replacement, depending on datatype of the array
- switch(AT(z)){
-  case LIT: {UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);} break; // byte
+ switch(CTTZ(AT(z))){
+  case LITX: {UC *s=UAV(z); DO(AN(z), if(14>s[i])s[i]=ctrl[s[i]];);} break; // byte
  // For wide-chars don't replace NUL following >=0x1100, since NUL is used to stand for a zero-width character paired with
  // a double-wide character for spacing purposes.  This NUL will be removed at final output, or for display
-  case C2T: {US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // wide char
+  case C2TX: {US *s=USAV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // wide char
   default: {C4 *s=C4AV(z); DO(AN(z), if(14>s[i]&&(s[i]||!i||s[i-1]<0x1100))s[i]=ctrl[s[i]];);} break;  // must be literal4
  }
  R z;

@@ -26,12 +26,12 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
  GATV(z,SINT,1L,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,SPA(wp,a));
  SPB(zp,i,SPA(wp,i));
- e=SPA(wp,e); if(h&&t!=wt)RZ(e=cvt(t,e));
- x=SPA(wp,x); if(h&&t!=wt)RZ(x=cvt(t,x));
+ e=SPA(wp,e); if(h&&TYPESNE(t,wt))RZ(e=cvt(t,e));
+ x=SPA(wp,x); if(h&&TYPESNE(t,wt))RZ(x=cvt(t,x));
  if(ap){A ae,ax,ay,p,q;B b=0,*pv;I j,k,m,n,*v,*yv;
   ay=SPA(ap,i); yv=AV(ay); 
-  ae=SPA(ap,e); if(h&&t!=at)RZ(ae=cvt(t,ae));
-  ax=SPA(ap,x); if(h&&t!=at)RZ(ax=cvt(t,ax)); if(!AN(ay))RZ(ax=ravel(ax));
+  ae=SPA(ap,e); if(h&&TYPESNE(t,at))RZ(ae=cvt(t,ae));
+  ax=SPA(ap,x); if(h&&TYPESNE(t,at))RZ(ax=cvt(t,ax)); if(!AN(ay))RZ(ax=ravel(ax));
   m=AN(ax); n=*AS(a);
   j=ioev(mode,a);
   if(equ(ae,e))SPB(zp,e,sc(j))
@@ -43,7 +43,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
   }
   SPB(zp,x,q);
  }else{
-  if(h&&t!=at)RZ(a=cvt(t,a));
+  if(h&&TYPESNE(t,at))RZ(a=cvt(t,a));
   SPB(zp,e,indexofsub(mode,a,e));
   SPB(zp,x,indexofsub(mode,a,x));
  }
@@ -55,7 +55,7 @@ A jtiovsd(J jt,I mode,A a,A w){A ae,ax,ay,p,z;B h,*pv;I at,j,m,n,t,wt,*v,*yv;P*a
  if(!AN(ay))R indexofsub(mode,ravel(ax),w);
  m=AN(ax); n=*AS(a); yv=AV(ay); ae=SPA(ap,e);
  at=DTYPE(AT(a)); wt=AT(w); if(h=HOMO(at,wt))t=maxtype(at,wt);
- if(h&&t!=wt)RZ(w=cvt(t,w));
+ if(h&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  j=ioev(mode,a); 
  RZ(z=indexofsub(mode,ax,w)); v=AV(z);
  RZ(p=eq(ae,w)); pv=BAV(p); 

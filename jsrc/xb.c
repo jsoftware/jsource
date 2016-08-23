@@ -7,7 +7,7 @@
 #include "x.h"
 
 
-F1(jtstype){RZ(w); R sc(AT(w));}
+F1(jtstype){RZ(w); R sc(UNSAFE(AT(w)));}
      /* 3!:0 w */
 
 /* binary and hex representation formats differ per J version              */
@@ -107,7 +107,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
 
 A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
  RZ(w);
- e=n=AN(w); t=AT(w); u=CAV(w); k=bp(t); kk=WS(d);
+ e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); k=bp(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
  GATV(y,LIT,bsize(d,1,t,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
@@ -184,8 +184,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
  kk=WS(d); v=BV(d,w,r);
- ASSERT(t==B01||t==INT||t==FL||t==CMPX||t==BOX||t==XNUM||t==RAT||t==LIT||t==C2T||t==C4T||
-        t==SB01||t==SLIT||t==SINT||t==SFL||t==SCMPX||t==SBOX||t==SBT,EVDOMAIN);
+ ASSERT((t==(t&-t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(0<=r&&r<=RMAX,EVRANK);
  p=bsize(d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 

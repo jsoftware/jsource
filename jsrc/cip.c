@@ -98,7 +98,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  wr=AR(w); wt=AN(w)?AT(w):B01;
  if((at|wt)&SPARSE)R pdtsp(a,w);
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));
- if(ar&&wr&&AN(a)&&AN(w)&&at!=wt&&B01&at+wt)R pdtby(a,w);
+ if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&at+wt)R pdtby(a,w);   // prefer at^wt
  t=coerce2(&a,&w,B01);
  ASSERT(t&NUMERIC,EVDOMAIN);
  RZ(z=ipprep(a,w,t&B01?INT:t&INT&&!SY_64?FL:t,&m,&n,&p));

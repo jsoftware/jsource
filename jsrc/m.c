@@ -278,7 +278,7 @@ I jtgc3(J jt,A x,A y,A z,I old){
 }
 
 I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
- if(t==BOX){
+ if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
@@ -308,7 +308,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 
 I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
- if(t==BOX){
+ if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
@@ -344,7 +344,7 @@ I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pu
 
 // Result is new value of jt->tnextpushx, or 0 if error
 I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
- if(t==BOX){
+ if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
@@ -629,18 +629,18 @@ F1(jtca){A z;I t;P*wp,*zp;
 F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
  RZ(z=ca(w));
  n=AN(w);
- switch(AT(w)){
-  case RAT:  n+=n;
-  case XNUM:
-  case BOX:  u=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(n, RZ(*u++=car(WVR(i)));); break;
-  case SB01: case SLIT: case SINT: case SFL: case SCMPX: case SBOX:
+ switch(CTTZ(AT(w))){
+  case RATX:  n+=n;
+  case XNUMX:
+  case BOXX:  u=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(n, RZ(*u++=car(WVR(i)));); break;
+  case SB01X: case SLITX: case SINTX: case SFLX: case SCMPXX: case SBOXX:
    p=PAV(z); 
    SPB(p,a,car(SPA(p,a)));
    SPB(p,e,car(SPA(p,e)));
    SPB(p,i,car(SPA(p,i)));
    SPB(p,x,car(SPA(p,x)));
    break;
-  case VERB: case ADV: case CONJ: 
+  case VERBX: case ADVX: case CONJX: 
    v=VAV(z); 
    if(v->f)RZ(v->f=car(v->f)); 
    if(v->g)RZ(v->g=car(v->g)); 

@@ -19,10 +19,10 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
  av=BAV(a); descend=av[0]>av[n-1];
  b=memchr(av,C0,n); p=b?b-av:-1;
  b=memchr(av,C1,n); q=b?b-av:-1;
- switch(AT(w)){
-  case INT: BXLOOP(I); break;
-  case FL:  BXLOOP(D); break;
-  case B01:
+ switch(CTTZNOFLAG(AT(w))){
+  case INTX: BXLOOP(I); break;
+  case FLX:  BXLOOP(D); break;
+  case B01X:
    b=BAV(w);
    switch((4*descend)+(0<=p?2:0)+(0<=q)){
     case 1: memset(zv,C0,m*SZI);   break;  /*   q */
@@ -167,14 +167,14 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
     }
     break;
    default:
-    ASSERT(at!=wt,EVNONCE);
-    if(t!=at)RZ(a=cvt(t,a));
-    if(t!=wt)RZ(w=cvt(t,w));
-    switch(t){
-     case CMPX: c+=c;  /* fall thru */ 
-     case FL:   BSLOOP(D,D);           break;
-     case XNUM: BSLOOF(X,X, xcompare); break;
-     case RAT:  BSLOOF(Q,Q, qcompare); break;
+    ASSERT(TYPESNE(at,wt),EVNONCE);
+    if(TYPESNE(t,at))RZ(a=cvt(t,a));
+    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
+    switch(CTTZ(t)){
+     case CMPXX: c+=c;  /* fall thru */ 
+     case FLX:   BSLOOP(D,D);           break;
+     case XNUMX: BSLOOF(X,X, xcompare); break;
+     case RATX:  BSLOOF(Q,Q, qcompare); break;
      default:   ASSERT(0,EVNONCE);
  }}}
  R z;

@@ -459,8 +459,8 @@ static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
 
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
- if(cv&VRD&&t!=FL )R pcvt(FL,w);
- if(cv&VRI&&t!=INT)R icvt(w);
+ if(cv&VRD&&!(t&FL) )R pcvt(FL,w);
+ if(cv&VRI&&!(t&INT))R icvt(w);
  R w;
 }    /* convert result */
 
@@ -515,7 +515,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD;     break;
   }
   RESETERR;
- }else if(!((t=at|wt)&~NUMERIC)){
+ }else if(!((t=UNSAFE(at|wt))&~NUMERIC)){
   // Normal case where we are not retrying: here for numeric arguments
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
@@ -526,7 +526,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
   if(t<CMPX) {
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
-   p = &va[vaptr[(UC)id]].p2[(at>>1)+((at+wt)>>2)];
+   p = &va[vaptr[(UC)id]].p2[UNSAFE((at>>1)+((at+wt)>>2))];
    *cv = p->cv;
   } else {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
@@ -620,8 +620,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  if(t&&!sp&&an&&wn){B xn = !!(t&XNUM);
   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
   // type of conversion to XNUM in use.
-  if(t!=at)RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
-  if(t!=wt)RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
+  if(TYPESNE(t,at))RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
+  if(TYPESNE(t,wt))RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
  // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
  // rank, type, etc. using the original input block.  That's OK.
@@ -801,18 +801,18 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
  if(c==CPLUS){
   if(at&B01&&wt&B01&&1==n&&(0==zn%SZI||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
-   if(ar&&wr&&at==wt&&at&B01+FL+(INT*!SY_64))R sumattymes(a,w,self);
+   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R sumattymes(a,w,self);
    if(!ar||!wr){
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
   }}
   sb=1&&yt&B01;
  }
- if(!(sb||yt==zt))R df1(df2(a,w,gs),fs);
+ if(!(sb||TYPESEQ(yt,zt)))R df1(df2(a,w,gs),fs);
  if(t){
   bb=1&&t&XNUM;
-  if(t!=at)RZ(a=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
-  if(t!=wt)RZ(w=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
+  if(TYPESNE(t,at))RZ(a=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
+  if(TYPESNE(t,wt))RZ(w=bb?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
  ak=(an/nn)*bp(AT(a)); wk=(wn/nn)*bp(AT(w));  
  GA(y,yt,zn,1,0); 

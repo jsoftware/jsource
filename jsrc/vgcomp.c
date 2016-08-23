@@ -56,8 +56,8 @@ int jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   RZ(q=gt(a,w)); v=BAV(q);
   DO(m, if(u[i])R jt->complt; else if(v[i])R jt->compgt;);
  }else{
-  if(t!=at)RZ(a=cvt(t,a));
-  if(t!=wt)RZ(w=cvt(t,w));
+  if(TYPESNE(t,at))RZ(a=cvt(t,a));
+  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
   av=CAV(a); wv=CAV(w);
   switch(CTTZ(t)){
    default:   COMPLOOQ (UC,m  );         break;

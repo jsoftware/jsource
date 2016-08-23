@@ -19,11 +19,11 @@
 static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
  wv=AV(w); wr=AR(w); ws=AS(w); 
  c=wr?ws[wr-1]:1; m=c?AN(w)/c:0; q=c/BB; r=c%BB; r1=c%BW?(BW-c%BW)/BB:0;
- switch(AT(w)){
+ switch(CTTZNOFLAG(AT(w))){
   default:  R 0;
-  case B01: TOBIT(B, 1         ); break;
-  case INT: TOBIT(I, 1==x      ); break;
-  case FL:  TOBIT(D, FEQ(1.0,x)); break;
+  case B01X: TOBIT(B, 1         ); break;
+  case INTX: TOBIT(I, 1==x      ); break;
+  case FLX:  TOBIT(D, FEQ(1.0,x)); break;
  }
  R 1;
 }
@@ -279,7 +279,7 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  // Now known to be non-sparse
  n=AN(w); wt=AT(w); wv=AV(w);
  // If type is already correct, return a clone
- if(t==wt){RZ(*y=ca(w)); R 1;}
+ if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
  GA(*y,t,n,r,s); yv=AV(*y); 
  if(t&CMPX)fillv(t,n,(C*)yv); 

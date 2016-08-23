@@ -58,8 +58,8 @@ static F1(jtcfr){A c,r,*wv;I t,wd;
  ASSERT(!AR(c)&&1>=AR(r),EVRANK);
  ASSERT(NUMERIC&AT(c)&&(!AN(r)||NUMERIC&AT(r)),EVDOMAIN);
  t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; RE(t=maxtype(t,AT(c)));
- if(t!=AT(c))RZ(c=cvt(t,c));
- if(t!=AT(r))RZ(r=cvt(t,r));
+ if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
+ if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
  R t&RAT?cfrq(c,r):t&XNUM?cfrx(c,r):t&CMPX?cfrz(c,r):cfrd(c,r);
 }    /* coefficients from roots */
 
@@ -169,7 +169,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
 }    /* roots from coefficients, degree m is 2 or more */
 
 static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
- real=CMPX!=AT(w); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
+ real=!(CMPX&AT(w)); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
  GATV(y,CMPX,1+m,1,0); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
  GATV(z,CMPX,  m,1,0); zv=ZAV(z);
  if(2==m){Z a2,b,c,d,z2={2,0};
@@ -275,8 +275,8 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  d=0.0; e=zeroZ;
  RE(t=maxtype(at,wt)); if(b)RE(t=maxtype(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtype(t,FL));
  if(b){RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);}
- if(t!=at)RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
- if(t!=wt)RZ(w=cvt(t,w)); wd=DAV(w); wz=ZAV(w);
+ if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
+ if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wd=DAV(w); wz=ZAV(w);
  j=0;
  if(t&FL+CMPX){
         DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 

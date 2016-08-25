@@ -1,5 +1,8 @@
 NB. f/y for atomic verbs ------------------------------------------------
 
+randuni''
+
+
 insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
 
 (= /t) -: = insert t=: 20 ?@$ 2
@@ -91,6 +94,10 @@ insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
 (- /t) -: - insert t
 (% /t) -: % insert t
 
+NB. symbol
+(<./t) -: <.insert t=: sdot{~20 ?@$#sdot
+(>./t) -: >.insert t
+
 (<./t) -: <.insert t=:?10 17$1e6
 (>./t) -: >.insert t=:?10 17$1e6
 (+ /t) -: + insert t=:?10 17$1e6
@@ -128,12 +135,22 @@ insert =: 1 : '{. ` ({. x $:@}.) @. (1&<@#)'     NB. one or more items
 
 (,/t) -: ,insert t=:7
 (,/t) -: ,insert t=:'abc'
+(,/t) -: ,insert t=:u:'abc'
+(,/t) -: ,insert t=:10&u:'abc'
+(,/t) -: ,insert t=:s:@<"0 'abc'
 (,/t) -: ,insert t=: ,'a'
+(,/t) -: ,insert t=: ,u:'a'
+(,/t) -: ,insert t=: ,10&u:'a'
+(,/t) -: ,insert t=: ,s:@<"0 'a'
 (,/t) -: ,insert t=:?7 0$1000
 (,/t) -: ,insert t=:?7 1$1000
 (,/t) -: ,insert t=:?7 9$1000
 (,/t) -: ,insert t=:?1 7$1000
 (,/t) -: ,insert t=:7 2$;:'Cogito, ergo sum.'
+(,/t) -: ,insert t=:7 2$;:u:'Cogito, ergo sum.'
+(,/t) -: ,insert t=:7 2$;:10&u:'Cogito, ergo sum.'
+(,/t) -: ,insert t=:7 2$s:@<"0&.> ;:'Cogito, ergo sum.'
+(,/t) -: ,insert t=:7 2$<"0@s: ;:'Cogito, ergo sum.'
 (,/t) -: ,insert t=:o.?2 7 3$1000
 (,/t) -: ,insert t=:?2 0 7 3$1000
 (,/t) -: ,insert t=:r.?7 2 3 1 1$10000
@@ -146,6 +163,14 @@ NB. ;/ ------------------------------------------------------------------
 
 (;/a) -: <"_1 a=:?10 20$1000
 a=:4 5$(;:'sui generis'),<"0 ?20$1000
+(;/a) -: (0{a);(1{a);(2{a);3{a
+a=:4 5$(;:u:'sui generis'),<"0 ?20$1000
+(;/a) -: (0{a);(1{a);(2{a);3{a
+a=:4 5$(;:10&u:'sui generis'),<"0 ?20$1000
+(;/a) -: (0{a);(1{a);(2{a);3{a
+a=:4 5$(s:@<"0&.> ;:'sui generis'),<"0 ?20$1000
+(;/a) -: (0{a);(1{a);(2{a);3{a
+a=:4 5$(<"0@s: ;:'sui generis'),<"0 ?20$1000
 (;/a) -: (0{a);(1{a);(2{a);3{a
 
 
@@ -685,7 +710,7 @@ test 23
 test 29
 
 
-4!:55 ;:'A a c f g i insert iota k MC n p pl q '
+4!:55 ;:'A adot1 adot2 sdot a c f g i insert iota k MC n p pl q '
 4!:55 ;:'rand s t test x y z'
 
 

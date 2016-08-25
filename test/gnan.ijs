@@ -1,8 +1,8 @@
 NB. NaN -----------------------------------------------------------------
 
-t=. }.&.> 3.4 _ __; 3j4 _ __; 34x _ __ ; 3r4 _ __
-pinf=: {.&.> t
-ninf=: {:&.> t
+t1=. }.&.> 3.4 _ __; 3j4 _ __; 34x _ __ ; 3r4 _ __
+pinf=: {.&.> t1
+ninf=: {:&.> t1
 inf =: pinf,ninf
 zero=: 0 ; -&.>~ 2 ; 3.4 ; 3j4 ; 3x ; 3r4
 znan=: {. _. 3j4
@@ -284,6 +284,6 @@ _1 1 = 7 o. __ _
 'NaN error' -: x: etx 3 4 _.
 
 
-4!:55 ;:'d det f i inf ninf pinf t x y zero znan'
+4!:55 ;:'d det f i inf ninf pinf t t1 x y zero znan'
 
 

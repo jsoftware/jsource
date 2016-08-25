@@ -90,9 +90,9 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
    else if(j==n)cmp=-1;
    else         {cmp=0; DO(c, if(u[i]!=v[i]){cmp=u[i]<v[i]?-1:1; break;});}
    switch(cmp){
-    case -1: ICPY(yv,u,c); u+=c; ++i; memcpy(xv,   av,ak); av+=ak; break;
-    case  0: ICPY(yv,u,c); u+=c; ++i; memcpy(xv,   av,ak); av+=ak; ++p;  /* fall thru */
-    case  1: ICPY(yv,v,c); v+=c; ++j; memcpy(xv+ak,wv,wk); wv+=wk;
+    case -1: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; break;
+    case  0: ICPY(yv,u,c); u+=c; ++i; MC(xv,   av,ak); av+=ak; ++p;  /* fall thru */
+    case  1: ICPY(yv,v,c); v+=c; ++j; MC(xv+ak,wv,wk); wv+=wk;
    }
    yv+=c; xv+=xk;
   }

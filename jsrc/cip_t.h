@@ -15,7 +15,7 @@
 for(i=0;i<m;++i, zv+=n, av0+=p){
  av = av0;  // av-> current row of a
  // Initialize result row using the first atom of a; if that will saturate (eg 1 in +./ . +.), do no more processing, skip to next row
- b=*av; av+=ana; memcpy(zv,b?v1:v0,n); if(b==esat)continue;
+ b=*av; av+=ana; MC(zv,b?v1:v0,n); if(b==esat)continue;
  // bring in the rest of the inner products for this 1-cell of a
  for(j=1;j<p;++j){
   // perform one inner product of b (an atom of x) with the corresponding cell f

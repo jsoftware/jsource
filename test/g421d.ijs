@@ -37,6 +37,7 @@ test 1 0
 test a.
 test adot1
 test adot2
+test sdot
 test      i.900
 test _450+i.900
 test  1e6+i.900
@@ -54,8 +55,11 @@ test <"0 ?40$100
 'domain error' -: 1 2 3 ({.,#)/. etx ;:u:'foo upon thee' 
 'domain error' -: 1 2 3 ({.,#)/. etx 10&u:'abc' 
 'domain error' -: 1 2 3 ({.,#)/. etx ;:10&u:'foo upon thee' 
+'domain error' -: 1 2 3 ({.,#)/. etx s:@<"0 'abc' 
+'domain error' -: 1 2 3 ({.,#)/. etx s:@<"0&.> ;:'foo upon thee' 
+'domain error' -: 1 2 3 ({.,#)/. etx <"0@s: ;:'foo upon thee' 
 
 
-4!:55 ;:'adot1 adot2 f g test testa xx yy'
+4!:55 ;:'adot1 adot2 sdot f g test testa xx yy'
 
 

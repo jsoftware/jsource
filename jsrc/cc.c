@@ -44,7 +44,7 @@ static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k
  id=h?0:ID(fs); d=h?0:id==CBOX?1:2; 
  if(1>=AR(a))RZ(a=lamin2(zero,a));
  RZ(a=vib(a));
- if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&B01+LIT+INT+FL+CMPX)
+ if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
   if     (2==AN(a)&&1==AR(w))R cut02v(a,w);
   else if(4>=AN(a)&&2==AR(w))R cut02m(a,w);
  as=AS(a); m=AR(a)-2; RE(n=prod(m,as)); c=as[1+m]; u=AV(a);
@@ -517,7 +517,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    if(!z){yt=AT(y); yr=AR(y); ys=AS(y); c=aii(y); yk=c*bp(yt); GA(z,yt,n*c,MAX(1,yr),ys); *AS(z)=n; zv=CAV(z);}
    if(!(TYPESEQ(yt,AT(y))&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
    while(IC(z)<=m+ym){RZ(z=ext(0,z)); zv=CAV(z); b1=0;}
-   memcpy(zv+m*yk,CAV(y),ym*yk); 
+   MC(zv+m*yk,CAV(y),ym*yk); 
    if(b1)gc(yt&DIRECT?0:y,old);
    b1=1; m+=ym; p-=q; v=u;
   }
@@ -565,7 +565,7 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
  GA(y,t,sr*sc,2,2+av); yv=CAV(y);
  u=yv; v=wv; DO(sr, MC(u,v,sj); u+=sj; v+=r;); 
  RZ(z0=CALL1(f1,y,fs)); zt=AT(z0); 
- RZ(zt&B01+LIT+INT+FL+CMPX);
+ RZ(zt&DIRECT);
  zn=AN(z0); zr=AR(z0); zs=AS(z0); zk=zn*bp(zt); m=zr*SZI;
  GA(z,zt,zn*nr*nc,2+zr,0); s1=AS(z); ICPY(s1,pv,2); ICPY(2+s1,zs,zr); zv=CAV(z);
  old=jt->tnextpushx;

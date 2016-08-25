@@ -85,21 +85,26 @@ static void showdepth(J jt, I node, int **ptr, I* size, I depth)
 }
 #endif
 
-static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;U2*p,*q;C4*f,*g;
+static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;US*p,*q;C4*f,*g;
 #ifdef TMP
  tmp_lt++;
 #endif
  u=a+jt->sbuv; m=u->n; s=(UC*)(jt->sbsv+u->i);
  v=b+jt->sbuv; n=v->n; t=(UC*)(jt->sbsv+v->i);
+// string comparison ignores storage type
+//         u   s   m                        v   t   n
  switch((SBC4&u->flag?6:SBC2&u->flag?3:0)+(SBC4&v->flag?2:SBC2&v->flag?1:0)){
+// u LIT
   case 0: {                                DO(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
-  case 1: {          q=(U2*)t;       n/=2; DO(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
+  case 1: {          q=(US*)t;       n/=2; DO(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
   case 2: {          g=(C4*)t;       n/=4; DO(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
-  case 3: {p=(U2*)s;           m/=2;       DO(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
-  case 4: {p=(U2*)s; q=(U2*)t; m/=2; n/=2; DO(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
-  case 5: {p=(U2*)s; g=(C4*)t; m/=2; n/=4; DO(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
+// u C2T
+  case 3: {p=(US*)s;           m/=2;       DO(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
+  case 4: {p=(US*)s; q=(US*)t; m/=2; n/=2; DO(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
+  case 5: {p=(US*)s; g=(C4*)t; m/=2; n/=4; DO(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
+// u C4T
   case 6: {f=(C4*)s;           m/=4;       DO(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
-  case 7: {f=(C4*)s; q=(U2*)t; m/=4; n/=2; DO(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
+  case 7: {f=(C4*)s; q=(US*)t; m/=4; n/=2; DO(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
   case 8: {f=(C4*)s; g=(C4*)t; m/=4; n/=4; DO(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
  }
  R m<n;
@@ -281,15 +286,15 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  R hi;
 }
 
-static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,I hi){I c,m,p;SBU*u;
+static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
- p=(c2==1)&&m%2;                        /* pad for alignment            */
- p+=(c2==2)*m%4;
+// p=(-m)&((c2<<1)-1);                  /* pad for alignment (leaner)   */
+ p=c2&SBC4?(m%4?4-m%4:0):c2&SBC2?m%2:0; /* pad for alignment            */
  RE(hi=sbextend(n+p,s,h,hi));           /* extend global tables as req'd*/
  MC(SBSV(m+p),s,n);                     /* copy string into sbs         */
  u=SBUV(c); u->i=m+p; u->n=n; u->h=h;   /* index/length/hash            */
- u->flag=c2==2?SBC4:c2==1?SBC2:0;
+ u->flag=c2;                            /* SBC2 SBC4 flag               */
  ASSERTSYS(STATUS_OK==insert(jt,c),"sbinsert");
  (jt->sbhv)[hi]=c;                      /* make sbh point to new symbol */
  ++jt->sbun;                            /* # unique symbols             */
@@ -297,8 +302,8 @@ static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,I hi){I c,m,p;SBU*u;
  R(SB)c;
 }    /* insert new symbol */
 
-static SB jtsbprobe(J jt,S c2,I n,C*s){B b;C*t;I hi,hn,ui;SBU*u;UI h;
- h=c2==2?hic4(n,(UC*)s):c2==1?hic2(n,(UC*)s):hic(n,(UC*)s);
+static SB jtsbprobe(J jt,S c2,I n,C*s){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
+ h=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(n,us);
  hn=AN(jt->sbh);                        /* size of hast table           */
  hi=h%hn;                               /* index into hash table        */
  while(1){
@@ -306,14 +311,20 @@ static SB jtsbprobe(J jt,S c2,I n,C*s){B b;C*t;I hi,hn,ui;SBU*u;UI h;
   if(0>ui)R sbinsert(c2,n,s,h,hi);      /* new symbol                   */
   u=SBUV(ui);
   if(h==u->h){                          /* old symbol, maybe            */
-   t=SBSV(u->i);
-   switch((c2==2?6:c2==1?3:0)+(u->flag&SBC4?2:u->flag&SBC2?1:0)){
-    case 1: if(n==u->n/2){US*q=(US*)t; b=1; DO(n,   if(s[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;}
-    case 2: if(n==u->n/4){C4*q=(C4*)t; b=1; DO(n,   if(s[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;}
-    case 3: if(n==u->n*2){US*q=(US*)s; b=1; DO(n/2, if(t[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} 
-    case 6: if(n==u->n*4){C4*q=(C4*)s; b=1; DO(n/4, if(t[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} 
-    case 5: if(n==u->n/2){US*q=(US*)s;C4*t1=(C4*)t; b=1; DO(n/2, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} 
-    case 7: if(n==u->n*2){C4*q=(C4*)s;US*t1=(US*)t; b=1; DO(n/4, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} 
+   t=(UC*)SBSV(u->i);
+// string comparison ignores storage type
+//         c2  us  n                u->flag  t  u->n
+   switch((c2&SBC4?6:c2&SBC2?3:0)+(u->flag&SBC4?2:u->flag&SBC2?1:0)){
+// c2==0
+    case 1: if(n==u->n/2){US*q=(US*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+    case 2: if(n==u->n/4){C4*q=(C4*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+// c2==SBC2
+    case 3: if(n==u->n*2){US*q=(US*)us;               b=1; DO(n/2, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
+    case 5: if(n==u->n/2){US*q=(US*)us; C4*t1=(C4*)t; b=1; DO(n/2, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+// c2==SBC4
+    case 6: if(n==u->n*4){C4*q=(C4*)us;               b=1; DO(n/4, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
+    case 7: if(n==u->n*2){C4*q=(C4*)us; US*t1=(US*)t; b=1; DO(n/4, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+// c2==u->flag
     case 4:
     case 8:
     case 0: if(n==u->n&&!memcmp(t,s,n))R(SB)ui; break;
@@ -328,14 +339,14 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
  ASSERT(AT(w)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  wn=AN(w);
- c2=(AT(w)>>C2TX)&((C2T|C4T)>>C2TX);  // c2=0 for LIT, 1 for C2T, 2 for C4T
- if(c2==2){C4 c,*wv=C4AV(w); 
+ c2=AT(w)&C4T?SBC4:AT(w)&C2T?SBC2:0; wn=AN(w);  // c2=0 for LIT, SBC2 for C2T, SBC4 for C4T
+ if(c2&SBC4){C4 c,*wv=C4AV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
   if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv))); j=i+1;}}
   else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv))); j=i+1;}}
- }else if(c2==1){US c,*wv=USAV(w); 
+ }else if(c2&SBC2){US c,*wv=USAV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
@@ -355,17 +366,17 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||AT(w)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1<AR(w),EVRANK);
- c2=(AT(w)>>C2TX)&((C2T|C4T)>>C2TX);  // c2=0 for LIT, 1 for C2T, 2 for C4T
+ c2=AT(w)&C4T?SBC4:AT(w)&C2T?SBC2:0;  // c2=0 for LIT, SBC2 for C2T, SBC4 for C4T
  wr=AR(w); ws=AS(w); wc=ws[wr-1];
  RE(m=wc?AN(w)/wc:prod(wr-1,ws));
  GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
  if(!wc)memset(zv,C0,m*sizeof(SB));
- else if(c2==2){C4 c=(C4)cx,*s,*wv=C4AV(w);
+ else if(c2&SBC4){C4 c=(C4)cx,*s,*wv=C4AV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,4*((c!=*s)+s-wv),(C*)wv));
    wv+=wc;
- }}else if(c2==1){US c=(US)cx,*s,*wv=USAV(w);
+ }}else if(c2&SBC2){US c=(US)cx,*s,*wv=USAV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
    RE(*zv++=sbprobe(c2,2*((c!=*s)+s-wv),(C*)wv));
@@ -379,16 +390,16 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  R z;
 }    /* each row of literal array w less the trailing "blanks" is a symbol */
 
-static F1(jtsbunbox){A*wv,x,z;B c2;I i,m,n,wd;SB*zv;
+static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n,wd;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
  m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
-  x=WVR(i); n=AN(x); c2=1&&AT(x)&C2T; c2+=2*(1&&AT(x)&C4T); 
+  x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
-  RE(*zv++=sbprobe(c2,c2==2?n+n+n+n:c2==1?n+n:n,CAV(x)));
+  RE(*zv++=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x)));
  }
  R z;
 }    /* each element of boxed array w is a string */
@@ -458,15 +469,16 @@ static A jtsbstr(J jt,I q,A w){A z;S c2=0;C c;I m,n;SB*v,*v0;SBU*u;
  RZ(w);
  m=n=AN(w); v=v0=SBAV(w); c=1==q?'`':C0;
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
- DO(n, u=SBUV(*v++); if(u->flag&SBC4){c2=2; m+=u->n/4;}else if(u->flag&SBC2){c2=(c2==2)?2:1; m+=u->n/2;}else m+=u->n;); 
+// promote to the highest character type for output
+ DO(n, u=SBUV(*v++); if(u->flag&SBC4){c2=SBC4; m+=u->n/4;}else if(u->flag&SBC2){c2=MAX(c2,SBC2); m+=u->n/2;}else m+=u->n;); 
  v=v0; 
- GA(z,c2==2?C4T:c2==1?C2T:LIT,m,1,0);
- if(c2==2){C4*zv;
+ GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,m,1,0);
+ if(c2&SBC4){C4*zv;
   zv=C4AV(z); 
   if(1==q)*zv++=c;
   DO(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
   if(n){  u=SBUV(*v++); C2FSB(zv,u,q,0,c);}
- }else if(c2==1){US*zv;
+ }else if(c2&SBC2){US*zv;
   zv=USAV(z); 
   if(1==q)*zv++=c;
   DO(n-1, u=SBUV(*v++); C2FSB(zv,u,2,0,c););
@@ -484,11 +496,12 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
  RZ(w);
  n=AN(w); v=v0=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
- DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=2; k/=4;} else if(u->flag&SBC2){c2=(c2==2)?2:1;  k/=2;} if(m<k)m=k;); 
+// promote to the highest character type for output
+ DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=SBC4; k/=4;} else if(u->flag&SBC2){c2=MAX(c2,SBC2);  k/=2;} if(m<k)m=k;); 
  v=v0;
- GA(z,c2==2?C4T:c2==1?C2T:LIT,n*m,1+AR(w),AS(w)); *(AR(w)+AS(z))=m;
- if(c2==2){C4*zv=C4AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
- else if(c2==1){US*zv=USAV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
+ GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,n*m,1+AR(w),AS(w)); *(AR(w)+AS(z))=m;
+ if(c2&SBC4){C4*zv=C4AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
+ else if(c2&SBC2){US*zv=USAV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
  else  {C*zv=CAV(z); memset(zv,c,n*m); DO(n, u=SBUV(*v++); MC(zv,SBSV(u->i),u->n); zv+=m;);}
  R z;
 }    /* literal array for symbol array w padded with c */
@@ -550,21 +563,22 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  GATV(x,BOX,c,1,0); xv=AAV(x); RZ(xv[0]=str(uv->n,sv+uv->i));
  GATV(y,INT,c,1,0); yv= AV(y); yv[0]=uv->order;
  for(i=1,v=1+uv;i<c;++i,++v){S c2;I ord,vi,vn;UC*vc;UI k;
-  c2=1&&v->flag&SBC2;
-  c2+=2*(1&&v->flag&SBC4);
+  c2=v->flag&SBC2+SBC4;
   vi=v->i;
   vn=v->n;
   vc=(UC*)(sv+vi);
+  ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
+  ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
   ASSERTD(0<=vi&&vi<=sn,"u index");
-  ASSERTD((!c2)||(c2==1&&!(vi%2))||(c2==2&&!(vi%4)),"u index alignment");
-  ASSERTD(0<=vn&&((!c2)||(c2==1&&!(vi%2))||(c2==2&&!(vi%4))),"u length");
+  ASSERTD(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4)),"u index alignment");
+  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
-  k=(c2==2?hic4:c2==1?hic2:hic)(vn,vc);
+  k=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(vn,vc);
   ASSERTD(k==v->h,"u hash");
   j=k%hn; while(i!=hv[j]&&0<=hv[j])j=(1+j)%hn;
   ASSERTD(i==hv[j],"u/h mismatch");
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
-  RZ(xv[i]=c2==2?vec(C4T,vn/4,vc):c2==1?vec(C2T,vn/2,vc):str(vn,vc));
+  RZ(xv[i]=c2&SBC4?vec(C4T,vn/4,vc):c2&SBC2?vec(C2T,vn/2,vc):str(vn,vc));
   yv[i]=ord=v->order;
   j=v->parent; ASSERTD(    0<=j&&j<c&&2>=++ptv[j],"u parent");                        
   j=v->left;   ASSERTD(!j||0<=j&&j<c&&1>=++lfv[j]&&     ord>(j+uv)->order ,"u left"       );

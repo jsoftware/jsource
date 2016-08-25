@@ -252,18 +252,24 @@ F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
 }    /* 3!:2 w, inverse for binrep/hexrep */
 
 
-F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;S*s;U short*u;
+F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  RZ(a&&w);
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
  RE(j=i0(a));
- ASSERT(ABS(j)<=2+SY_64,EVDOMAIN);
- p=3==j||-3==j?8:2==j||-2==j?4:2;
+#if SY_64
+ ASSERT(ABS(j)<=4,EVDOMAIN);
+#else
+ ASSERT(ABS(j)<=2,EVDOMAIN);
+#endif
+ p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
  if(0<j){m=n*p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
  else   {m=n/p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n%p),EVLENGTH);} 
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
+  case -4: y1=(UI4*)x;    DO(m, *v++=    *y1++;); R z;
+  case  4: y1=(UI4*)v;    DO(n, *y1++=(UI4)*x++;); R z;
   case -3: ICPY(v,x,m); R z;
   case  3: MC(v,x,m);   R z;
   case -2: y=(I4*)x;      DO(m, *v++=    *y++;); R z;

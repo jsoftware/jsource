@@ -28,9 +28,9 @@ void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
   e=strlen(t);            /* end-of-line */
   n=sizeof(buf)-(c+e+1);  /* main text   */
   d=m>n?n-3:m;
-  memcpy(v,p,c); v+=c;
-  memcpy(v,s,d); v+=d; if(m>n){memcpy(v,"...",3L); v+=3;}
-  memcpy(v,t,e); v+=e; 
+  MC(v,p,c); v+=c;
+  MC(v,s,d); v+=d; if(m>n){MC(v,"...",3L); v+=3;}
+  MC(v,t,e); v+=e; 
   *v=0;
   jsto(jt,type,buf);
 }}
@@ -379,7 +379,7 @@ static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 	for(i=0; i<*jrank; ++i)	k *= ((I*)(*jshape))[i];
 	a = ga(*jtype, k, *jrank, (I*)*jshape);
 	if(!a) return EVWSFULL;
-	memcpy(AV(a), (void*)*jdata, n*k);
+	MC(AV(a), (void*)*jdata, n*k);
 	jset(gn, a);
 	return jt->jerr;
 }

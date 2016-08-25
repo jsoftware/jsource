@@ -1,5 +1,7 @@
 NB. 7!:5 ----------------------------------------------------------------
 
+randuni''
+
 bp=: (IF64{1 1 4 8 16 4 4 2 4,:1 1 8 8 16 8 8 2 4) {~ 1 2 4 8 16 32 65536 131072 262144 i. 3!:0
 sp=: 7!:5
 f =: 3 : '7!:5 <''y'''
@@ -17,9 +19,10 @@ g =: 3 : 0
 (f -: g) 2.3
 (f -: g) 2j3
 (f -: g) 2j3
-(f -: g) u: 'a'
-(f -: g) 10&u: 'a'
-(f -: g) {.s: ' ab'
+(f -: g) 'a'
+(f -: g) u:'a'
+(f -: g) 10&u:'a'
+(f -: g) {.s: ' a'
 
 (f -: g)@($&    0 1 )"0 ]200+i.4 10
 (f -: g)@($&    'x' )"0 ]200+i.4 10
@@ -44,27 +47,30 @@ g =: 3 : 0
 (f -: g) x=: (?1e4)$2.3
 (f -: g) x=: (?1e4)$2j3
 (f -: g) x=: (?1e4)$2j3
-(f -: g) x=: (?1e4)$u: 'ab'
-(f -: g) x=: (?1e4)$10&u: 'ab'
-(f -: g) x=: (?1e4)$s: ' ab c'
+(f -: g) x=: (?1e4)$'ab'
+(f -: g) x=: (?1e4)$u:'ab'
+(f -: g) x=: (?1e4)$10&u:'ab'
+(f -: g) x=: (?1e4)$s: ' a b'
 
 (f -: g) x=: (1+?100 100)$1 0
 (f -: g) x=: (1+?100 100)$2 3
 (f -: g) x=: (1+?100 100)$2.3
 (f -: g) x=: (1+?100 100)$2j3
 (f -: g) x=: (1+?100 100)$2j3
-(f -: g) x=: (1+?100 100)$u: 'ab'
-(f -: g) x=: (1+?100 100)$10&u: 'ab'
-(f -: g) x=: (1+?100 100)$s: ' ab c'
+(f -: g) x=: (1+?100 100)$'ab'
+(f -: g) x=: (1+?100 100)$'ab'
+(f -: g) x=: (1+?100 100)$10&u:'ab'
+(f -: g) x=: (1+?100 100)$s: ' a b'
 
 (f -: g) x=: (1+?100 10 50)$1 0
 (f -: g) x=: (1+?100 10 50)$2 3
 (f -: g) x=: (1+?100 10 50)$2.3
 (f -: g) x=: (1+?100 10 50)$2j3
 (f -: g) x=: (1+?100 10 50)$2j3
-(f -: g) x=: (1+?100 10 50)$u: 'ab'
-(f -: g) x=: (1+?100 10 50)$10&u: 'ab'
-(f -: g) x=: (1+?100 10 50)$s: ' ab c'
+(f -: g) x=: (1+?100 10 50)$'ab'
+(f -: g) x=: (1+?100 10 50)$u:'ab'
+(f -: g) x=: (1+?100 10 50)$10&u:'ab'
+(f -: g) x=: (1+?100 10 50)$s: ' a b'
 
 (sp ;:'f g sp') -: (sp <'f'),(sp <'g'),sp <'sp'
 
@@ -109,16 +115,15 @@ x=: 2 : 0
 'domain error'    -: 7!:5 etx <i.4
 'domain error'    -: 7!:5 etx <1 2.3 4
 'domain error'    -: 7!:5 etx <1 2j3 4
-'domain error'    -: 7!:5 etx <u: 'abc'
-'domain error'    -: 7!:5 etx <10&u: 'abc'
-'domain error'    -: 7!:5 etx <s: ' bc'
+'domain error'    -: 7!:5 etx <10&u:'abc'
+'domain error'    -: 7!:5 etx <s: ' a b c'
 'domain error'    -: 7!:5 etx <<'abc'
 'domain error'    -: 7!:5 etx i.4
 'domain error'    -: 7!:5 etx 1 2.3 4
 'domain error'    -: 7!:5 etx 1 2j3 4
-'domain error'    -: 7!:5 etx u: 'abc'
-'domain error'    -: 7!:5 etx 10&u: 'abc'
-'domain error'    -: 7!:5 etx s: ' bc'
+'domain error'    -: 7!:5 etx u:'abc'
+'domain error'    -: 7!:5 etx 10&u:'abc'
+'domain error'    -: 7!:5 etx s: ' a b c'
 
 'rank error'      -: 7!:5 etx <,:'abc'
 
@@ -138,9 +143,14 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=:     (?1e4)?@$2
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=: a.{~(?1e4)?@$#a.
+(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: adot1{~(?1e4)?@$#adot1
+(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: adot2{~(?1e4)?@$#adot2
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=: (?100 100)?@$1e6
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=: o.(?30 30 30)?@$1e6
 (7!:5 <'q') -: 7!:5 <'x' [ q=:x=: j./(2,?100 100)?@$1e6
+(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 a.{~(?1e4)?@$#a.
+(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 adot1{~(?1e4)?@$#adot1
+(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 adot2{~(?1e4)?@$#adot2
 
 1 [ unmap_jmf_ 'q'
 
@@ -168,8 +178,6 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 
 18!:55 <'jmf'
 
-0 s: 11
-
-4!:55 ;:'bp f g q sp x a foo goo'
+4!:55 ;:'adot1 adot2 sdot bp f g q sp x a foo goo'
 
 

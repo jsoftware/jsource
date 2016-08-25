@@ -1,5 +1,8 @@
 NB. prehashed i. family of functions ------------------------------------
 
+randuni''
+
+
 g=: 4 : 0
  xx=: y{~(1e4,x) ?@$ #y 
  yy=: y{~(1e3,x) ?@$ #y
@@ -39,6 +42,18 @@ h=: 4 : 0
 ''  g a.
 2 3 g a.
 37  g a.
+
+''  g adot1
+2 3 g adot1
+37  g adot1
+
+''  g adot2
+2 3 g adot2
+37  g adot2
+
+''  g sdot
+2 3 g sdot
+37  g sdot
 
 ''  g u: 1000 ?@# 256
 2 3 g u: 1000 ?@# 256
@@ -81,9 +96,11 @@ h=: 4 : 0
 ''  g ;:10&u:'Cogito, ergo sum. 4 20 and 10 years ago'
 1 2 g ;:10&u:'Cogito, ergo sum. 4 20 and 10 years ago'
 
-''  g s: ' Cogito ergo sum 4 20 and 10 years ago kakistocracy'
-''  g s: u:' Cogito ergo sum 4 20 and 10 years ago kakistocracy'
-''  g s: 10&u:' Cogito ergo sum 4 20 and 10 years ago kakistocracy'
+''  g s:@<"0&.> ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+''  g <"0@s: ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+1 2 g s:@<"0&.> ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+1 2 g <"0@s: ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+
 2 3 g s: ":&.> 20 ?@$1000
 
 
@@ -125,9 +142,7 @@ f=: x&i.
 'length error' -: (i.3 4)&i. etx i.5
 'length error' -: (i.3 4)&i. etx i.2 5
 
-0 s: 11
-
-4!:55 ;:'f fedot fico fidot g h m ss x xx yy'
+4!:55 ;:'adot1 adot2 sdot f fedot fico fidot g h m ss x xx yy'
 
 
  

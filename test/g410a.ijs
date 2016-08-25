@@ -60,6 +60,9 @@ y=. _1e2+?100$2e2
 'domain error' -: 0 0 ! etx ;:u:'sui generis'
 'domain error' -: 1   ! etx 10&u:'chthonic'
 'domain error' -: 0 0 ! etx ;:10&u:'sui generis'
+'domain error' -: 1   ! etx s:@<"0 'chthonic'
+'domain error' -: 0 0 ! etx s:@<"0&.> ;:'sui generis'
+'domain error' -: 0 0 ! etx <"0@s: ;:'sui generis'
 
 4!:55 ;:'x y z'
 

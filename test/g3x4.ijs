@@ -91,13 +91,16 @@ g3 imin,0,imax
 'rank error'   -: _2 ic etx 1 4$'a'
 'rank error'   -: _2 ic etx 1 4$u:'a'
 'rank error'   -: _2 ic etx 1 4$10&u:'a'
+'rank error'   -: _2 ic etx 1 4$s:@<"0 'a'
 'rank error'   -:  1 ic etx i.3 4
 'rank error'   -: _1 ic etx 3 4$'abcd'
 'rank error'   -: _1 ic etx 3 4$u:'abcd'
 'rank error'   -: _1 ic etx 3 4$10&u:'abcd'
+'rank error'   -: _1 ic etx 3 4$s:@<"0 'abcd'
 'rank error'   -:  0 ic etx 3 4$'a'
 'rank error'   -:  0 ic etx 3 4$u:'a'
 'rank error'   -:  0 ic etx 3 4$10&u:'a'
+'rank error'   -:  0 ic etx 3 4$s:@<"0 'a'
 
 'length error' -: _2 ic etx 'ab'
 'length error' -: _2 ic etx 'abcdef'
@@ -111,6 +114,10 @@ g3 imin,0,imax
 'domain error' -: _2 ic etx 10&u:'abcdef'
 'domain error' -: _1 ic etx 10&u:'abc'
 'domain error' -:  0 ic etx 10&u:'abc'
+'domain error' -: _2 ic etx s:@<"0 'ab'
+'domain error' -: _2 ic etx s:@<"0 'abcdef'
+'domain error' -: _1 ic etx s:@<"0 'abc'
+'domain error' -:  0 ic etx s:@<"0 'abc'
 
 
 4!:55 ;:'g1 g2 g3 ic x'

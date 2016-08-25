@@ -8,6 +8,9 @@ a = 5
 6 -: ex '(''a'' 2 : ''u'' 3) =. 6'
 a = 6
 
+NB. erase local a
+4!:55 ;:'a '
+
 'syntax error' -: ex ') 5'
 'syntax error' -: ex ') +'
 'syntax error' -: ex ') &'

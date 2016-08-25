@@ -32,6 +32,13 @@ NB. literal4
 (behead -: }.) adot2{~?2 3 4$256
 (behead -: }.) 1=?0 3$256
 
+NB. symbol
+(behead -: }.) s:@<"0 'a'
+(behead -: }.) sdot{~?4$256
+(behead -: }.) sdot{~?3 4$256
+(behead -: }.) sdot{~?2 3 4$256
+(behead -: }.) 1=?0 3$256
+
 NB. integer
 (behead -: }.) 12345
 (behead -: }.) ?4$123456
@@ -103,14 +110,21 @@ test =: }. -: [ }. 0&<:@i.@#@[ $  ]
 1 0 3 test <'sui generis'
 1 0 3 test <u:'sui generis'
 1 0 3 test <10&u:'sui generis'
+1 0 3 test s:@<"0&.> <'sui generis'
+1 0 3 test <"0@s: <'sui generis'
 1 2 0 test 4
 1 2 0 test 4
 0 0 0 test <;:'Cogito, ergo sum.'
 0 0 0 test <;:u:'Cogito, ergo sum.'
 0 0 0 test <;:10&u:'Cogito, ergo sum.'
+0 0 0 test <s:@<"0&.> ;:'Cogito, ergo sum.'
+0 0 0 test <<"0@s: ;:'Cogito, ergo sum.'
 
 'length error' -: 1 2 3 }. etx i.2 3
 'length error' -: 2 3   }. etx 'abcd'
+'length error' -: 2 3   }. etx u:'abcd'
+'length error' -: 2 3   }. etx 10&u:'abcd'
+'length error' -: 2 3   }. etx s:@<"0 'abcd'
 
 
 NB. x}."r y -------------------------------------------------------------
@@ -138,6 +152,7 @@ n (}."2 -: f"2) x [ n=:?}.$x
 ([\.x) -: (i.#x)}."0 1 x=:'abcdefghij'
 ([\.x) -: (i.#x)}."0 1 x=:u:'abcdefghij'
 ([\.x) -: (i.#x)}."0 1 x=:10&u:'abcdefghij'
+([\.x) -: (i.#x)}."0 1 x=:s:@<"0 'abcdefghij'
                  
 3 4 5 (}."1 0 -: f"1 0) i.6 7
 3 4 5 (}."1 0 -: f"1 0) i.0 7
@@ -152,6 +167,6 @@ n (}."2 -: f"2) x [ n=:?}.$x
 (7,5e2$1) -: $ (5e2$0) }."1 0 i.7x
 
 
-4!:55 ;:'adot1 adot2 behead di drop f m n ni pi t test x '
+4!:55 ;:'adot1 adot2 sdot behead di drop f m n ni pi t test x '
 
 

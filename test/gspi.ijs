@@ -298,8 +298,6 @@ f&> c
 f=: 3 : 'assert. (i:~ $.^:_1 s) -: i:~ s=: (b=: 0=?((#d),2)$5) * (2;y)$.d'
 f&> c
 
-0 s: 11
-
 4!:55 ;:'b c d df f f0 f1 f2 f3 f4 p pe ps q qe qs r s x'
 
 

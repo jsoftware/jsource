@@ -70,16 +70,6 @@ NB. literal4 is unsigned
 3 2 1 0 6 5 4 -: /: 10&u: 3 2 1 0 _1 _2 _3
 4 5 6 0 1 2 3 -: \: 10&u: 3 2 1 0 _1 _2 _3
 
-NB. x=: a.{~?3 5 7 2$#a.
-NB. y=: 6 u: x
-NB. ($y) -: (}:$x),-:{:$x
-NB. 
-NB. lr=: 1 : '5!:5 <''u'''
-NB. 2&u: lr -: 1&u: b. _1
-NB. 1&u: lr -: 2&u: b. _1
-NB. 4&u: lr -: 3&u: b. _1
-NB. 3&u: lr -: 4&u: b. _1
-
 'domain error' -: 9 u: etx 0 1.2
 'domain error' -: 9 u: etx 0 1j2
 'domain error' -: 9 u: etx 0 1r2
@@ -89,23 +79,6 @@ NB. 3&u: lr -: 4&u: b. _1
 'domain error' -: 10&u: etx 0 1j2
 'domain error' -: 10&u: etx 0 1r2
 'domain error' -: 10&u: etx 0 1;2
-
-NB. 'domain error' -:  0 u: etx 0 1 2
-NB. 'domain error' -: _1 u: etx 0 1 2
-NB. 'domain error' -: _2 u: etx 0 1 2
-NB. 'domain error' -: _3 u: etx 0 1 2
-NB. 'domain error' -: _4 u: etx 0 1 2
-NB. 
-NB. 'domain error' -:  0 u: etx 'abc'
-NB. 'domain error' -: _1 u: etx 'abc'
-NB. 'domain error' -: _2 u: etx 'abc'
-NB. 'domain error' -: _3 u: etx 'abc'
-NB. 'domain error' -: _4 u: etx 'abc'
-NB. 
-NB. 'index error'  -:  4 u: etx 1 2 3 65536
-NB. 
-NB. 'length error' -:  6 u: etx 'abc'
-NB. 'length error' -:  6 u: etx 'abcde'
 
 NB. 7&u:  8&u:
 

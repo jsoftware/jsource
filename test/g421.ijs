@@ -62,6 +62,14 @@ a=:adot2{~32+?10 5 3$95
 (</. -: < ob) 10&u:'a'
 (</. -: < ob) 10&u:''
 
+NB. symbol
+a=:sdot{~32+?10 5 3$95
+(</. -: < ob) a
+(</. -: < ob) ,a
+(]/. -: ] ob) a
+(</. -: < ob) s:@<"0 'a'
+(</. -: < ob) s:''
+
 NB. integer
 a=:?3 4 5 6$100
 (</.  -: < ob) a
@@ -164,6 +172,11 @@ a=:adot2{~32+?11$95
 k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
+NB. symbol
+a=:sdot{~32+?11$95
+k (</. -: < key) a      [ k=:?11$4
+k (]/. -: ] key) a      [ k=:?11$4
+
 NB. integer
 a=:?11 5$110
 k (</.  -: < key) a     [ k=:?11$4
@@ -196,6 +209,9 @@ k (]/. -: ] key) a      [ k=:?11$4
 ''        -: (10&u:'') </. 10&u:''
 ''        -: (10&u:'') </. i.0 4 5
 ''        -: (i.0 4 5) </. 10&u:''
+''        -: (s:'') </. s:''
+''        -: (s:'') </. i.0 4 5
+''        -: (i.0 4 5) </. s:''
 (,<,5)    -: 4 </. 5
 (,<i.1 9) -: 4 </. i.1 9
 (,<,4)    -: (i.1 9) </. 4
@@ -203,15 +219,23 @@ k (]/. -: ] key) a      [ k=:?11$4
 (,<x )    -: (i.(#x),0) </. x=:'abcdefghij'
 (,<x )    -: (i.(#x),0) </. x=:u:'abcdefghij'
 (,<x )    -: (i.(#x),0) </. x=:10&u:'abcdefghij'
+(,<x )    -: (i.(#x),0) </. x=:s:@<"0 'abcdefghij'
 
 
 'length error' -: 'abc'  </. etx i.4
 'length error' -: (u:'abc')  </. etx i.4
+'length error' -: (10&u:'abc')  </. etx i.4
+'length error' -: (s:@<"0 'abc')  </. etx i.4
 'length error' -: 'abcd' </. etx i.3
+'length error' -: (u:'abcd') </. etx i.3
+'length error' -: (10&u:'abcd') </. etx i.3
+'length error' -: (s:@<"0 'abcd') </. etx i.3
 'length error' -: ''     </. etx i.4
 'length error' -: 4      </. etx i.4
 'length error' -: 'abcd' </. etx 4
+'length error' -: (u:'abcd') </. etx 4
 'length error' -: (10&u:'abcd') </. etx 4
+'length error' -: (s:@<"0 'abcd') </. etx 4
 
 (,<,1) -: 1 1 1 1 (<@~.)/.!.0 (1) + 1e_15 * i. 4
 (4#<,1) -: (<@~.)/.!.0~ (1) + 1e_15 * i. 4
@@ -249,7 +273,7 @@ test=: 2 : 0
 (# ,{.) test (3 : '(# ,{.)y')
 
 
-4!:55 ;:'a adot1 adot2 base bs bsd conv conv1 em en eq iind infix k '
+4!:55 ;:'a adot1 adot2 sdot base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru '
 4!:55 ;:'s sd seg suffix t test x xx'
 

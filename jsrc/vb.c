@@ -24,7 +24,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  sj=as[1]; n=1+ws[1]-sj;
  t=AT(w); k=bp(t); c=ws[1]; r=k*c; s=k*sj;
  GATV(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
- if(t&B01+LIT+INT||0==jt->ct&&t&FL+CMPX)
+ if(t&B01+LIT+C2T+C4T+INT||0==jt->ct&&t&FL+CMPX)
   for(i=0;i<m;++i){
    DO(n, u=av; b=0; DO(si,                         if(b=!!memcmp(u,v,s))break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
    zv+=c; v=v0=wv+=r;

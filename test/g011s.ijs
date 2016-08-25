@@ -1,5 +1,7 @@
 NB. <./\. B -------------------------------------------------------------
 
+randuni''
+
 (0 0 0 1,:0 1 0 1) -: <./\. 0 0 1 1 ,: 0 1 0 1
 
 min=: 4 : 'x<.y'
@@ -56,6 +58,20 @@ min=: 4 : 'x<.y'
 (<./\."1 -: min/\."1) x
 (<./\."2 -: min/\."2) x
 
+NB. <./\. SB -------------------------------------------------------------
+
+min=: 4 : 'x<.y'
+
+(<./\. -: min/\.) x=.sdot
+(<./\. -: min/\.) |.x
+
+(<./\.   -: min/\.  ) x=.sdot{~ ?    23$#sdot
+(<./\.   -: min/\.  ) x=.sdot{~ ?4   23$#sdot
+(<./\."1 -: min/\."1) x
+(<./\.   -: min/\.  ) x=.sdot{~ ?7 5 23$#sdot
+(<./\."1 -: min/\."1) x
+(<./\."2 -: min/\."2) x
+
 'domain error' -: <./\. etx 'deipnosophist'
 'domain error' -: <./\. etx ;:'professors in New England'
 'domain error' -: <./\. etx u:'deipnosophist'
@@ -63,6 +79,6 @@ min=: 4 : 'x<.y'
 'domain error' -: <./\. etx 10&u:'deipnosophist'
 'domain error' -: <./\. etx ;:10&u:'professors in New England'
 
-4!:55 ;:'f min x'
+4!:55 ;:'adot1 adot2 sdot f min x'
 
 

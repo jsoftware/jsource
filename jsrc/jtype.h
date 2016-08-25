@@ -35,6 +35,7 @@ typedef unsigned short     US;
 typedef unsigned short     U2;
 typedef unsigned int       UINT;
 typedef int                I4;
+typedef unsigned int       UI4;
 typedef double             D;
 typedef FILE*              F;
 

@@ -17,7 +17,7 @@ void startup(void);
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
  GATV(z,NAME,m,1,0); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
- memcpy(zv->s,s,m); *(m+zv->s)=0;
+ MC(zv->s,s,m); *(m+zv->s)=0;
  zv->m   =(UC)m; 
  zv->bucket=zv->bucketx=0;
  zv->flag=NMDOT;

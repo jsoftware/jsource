@@ -54,6 +54,12 @@ a=:adot2{~32+?10 5$95
 (<\. -: < bsd) ,a
 (]\. -: ] bsd) a
 
+NB. symbol
+a=:sdot{~32+?10 5$95
+(<\. -: < bsd) a
+(<\. -: < bsd) ,a
+(]\. -: ] bsd) a
+
 NB. integer
 a=:?10 5$100
 (<\. -: < bsd) a
@@ -277,7 +283,7 @@ xover =: 3 : '~:/y'
 (-: +/\."2) i. 0 (2)}?5$10
 
 
-4!:55 ;:'a adot1 adot2 base bs bsd em en f iind infix '
+4!:55 ;:'a adot1 adot2 sdot base bs bsd em en f iind infix '
 4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
 4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover '
 

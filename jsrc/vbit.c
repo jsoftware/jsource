@@ -238,13 +238,13 @@ static F1(jtbitravel){A z;I c,m,rw,wn,wr,*ws;UC*wv,*zv;
   k=0; t=0; ti=BB-t;
   for(j=0;j<m;++j){
    if(t)DO(q, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;)
-   else if(q){memcpy(zv,wv,q); zv+=q; wv+=q;}
+   else if(q){MC(zv,wv,q); zv+=q; wv+=q;}
    if(r){y=*wv++; k|=y>>t; if(BB<=t+r){*zv++=k; k=y<<ti;} t=(t+r)%BB; ti=BB-t;}
    wv+=r1;
   }
   if(r&&t)*zv++=k;
   if(wn%BW)memset(zv,C0,(BW-wn%BW)/BB);
- }else memcpy(zv,wv,wn/BB);
+ }else MC(zv,wv,wn/BB);
  R z;
 }    /* , bit array */
 
@@ -255,13 +255,13 @@ static F2(jtbitcat){A z;I an,ar,*as,t,ti,wn,wr,*ws;UC*zv;
  wn=AN(w); wr=AR(w); ws=AS(w);
  ASSERT(1>=ar&&1>=wr,EVNONCE);
  GA(z,BIT,an+wn,1,0); zv=UAV(z);
- memcpy(zv,AV(a),SZI*((an+BW-1)/BW));
+ MC(zv,AV(a),SZI*((an+BW-1)/BW));
  zv+=an/BB;
  if(t=an%BB){UC k,*wv,y;
   ti=BB-t; wv=UAV(w); k=*zv;
   DO((wn+BB-1)/BB, y=*wv++; k|=y>>t; *zv++=k; k=y<<ti;);
   *zv++=k;
- }else memcpy(zv,AV(w),SZI*((wn+BW-1)/BW));
+ }else MC(zv,AV(w),SZI*((wn+BW-1)/BW));
  R z;
 }    /* bit array , bit array */
 
@@ -458,7 +458,7 @@ static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;
    case sizeof(I)*2: REPDO(I,u+=2, (*v++=*u++,*v++=*u++));           break;
    case sizeof(I)*3: REPDO(I,u+=3, (*v++=*u++,*v++=*u++,*v++=*u++)); break;
    case sizeof(I)*4: REPDO(I,u+=4, (*v++=*u++,*v++=*u++,*v++=*u++,*v++=*u++)); break;
-   default:          REPDO(C,u+=wk,(memcpy(v,u,wk),u+=wk,v+=wk));
+   default:          REPDO(C,u+=wk,(MC(v,u,wk),u+=wk,v+=wk));
  }}
  R z;
 }    /* bit vector # array */

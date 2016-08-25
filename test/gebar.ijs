@@ -17,6 +17,11 @@ randuni''
 1 0 0 0 0 -: E.~ 10&u:'abcde'
 0 0 0 0 0 -: (10&u:'xy') E. 10&u:'asfdd'
 
+1 0 1 0 0 -: (s:@<"0 'co') E. s:@<"0 'cocoa'
+1 1 1 1 0 -: (s:@<"0 'aa') E. 5$s:@<"0 'a'
+1 0 0 0 0 -: E.~ s:@<"0 'abcde'
+0 0 0 0 0 -: (s:@<"0 'xy') E. s:@<"0 'asfdd'
+
 (($j)$0)  -: (a.{~j,j) E. a.{~j=.?(?100)$256
 (($j)$0)  -: (a.{~j,j) E. a.{~j=.?(?100)$256
 (($j)$0)  -: (a.{~j,j) E. a.{~j=.?(?100)$256
@@ -214,6 +219,6 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
-4!:55 ;:'adot1 adot2 adot3 adot4 g ebar i j m n s t x y G jtree joinroutes olim '
+4!:55 ;:'adot1 adot2 sdot adot3 adot4 g ebar i j m n s t x y G jtree joinroutes olim '
 
 

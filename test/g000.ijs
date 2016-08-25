@@ -70,6 +70,14 @@ NB. literal4
 (($t)$0) -: (r._5e6+?($t)$1e8) = t=:adot2{~?2 3 4$#adot2
 (($t)$0) -: (($t)$;:'8-+.abc') = t=:adot2{~?2 3 4$#adot2
 
+NB. symbol
+(($t)$1) -: t = t=:sdot{~?2 3 4$#sdot
+(($t)$0) -: (?($t)$2)          = t=:sdot{~?2 3 4$#sdot
+(($t)$0) -: (_5e8+?($t)$1e9)   = t=:sdot{~?2 3 4$#sdot
+(($t)$0) -: (o._5e8+?($t)$1e9) = t=:sdot{~?2 3 4$#sdot
+(($t)$0) -: (r._5e6+?($t)$1e8) = t=:sdot{~?2 3 4$#sdot
+(($t)$0) -: (($t)$;:'8-+.abc') = t=:sdot{~?2 3 4$#sdot
+
 NB. integer
 (($t)$1) -: t = t=:_1e9+?2 3 4$2e9
 (a=b)-:0=a-b     [ a=:_5+?200$10         [ b=:_5+?200$10
@@ -104,6 +112,6 @@ NB. boxed
 'length error' -: (i.3 4) =~etx i.5 4    
 
 
-4!:55 ;:'a adot1 adot2 b n t test x'
+4!:55 ;:'a adot1 adot2 sdot b n t test x'
 
 

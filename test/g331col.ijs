@@ -35,6 +35,7 @@ c=: (i.n)e.?20$n
 y=: a{~?(m,n)$#a=: ' abcd efgh ijkl mnop qrst uvwy xz '
 y1=: a{~?(m,n)$#a=: u:' abcd efgh ijkl mnop qrst uvwy xz '
 y2=: a{~?(m,n)$#a=: 10&u:' abcd efgh ijkl mnop qrst uvwy xz '
+y3=: a{~?(m,n)$#a=: s:@<"0 ' abcd efgh ijkl mnop qrst uvwy xz '
 
 test b    ;c    ;y
 test b    ;(0*c);y
@@ -51,6 +52,11 @@ test b    ;(0*c);y2
 test (0*b);c    ;y2
 test (0*b);(0*c);y2
 
+test b    ;c    ;y3
+test b    ;(0*c);y3
+test (0*b);c    ;y3
+test (0*b);(0*c);y3
 
-4!:55 ;:'a b c cutcol m n test y y1 y2 yy'
+
+4!:55 ;:'a b c cutcol m n test y y1 y2 y3 yy'
 

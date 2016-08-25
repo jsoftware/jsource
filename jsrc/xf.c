@@ -289,7 +289,7 @@ F1(jtjgetenv){
   us=_wgetenv(USAV(z));
   if(!us)R zero;
   GATV(z,C2T,wcslen(us),1,0);
-  memcpy(USAV(z),us,2*wcslen(us));
+  MC(USAV(z),us,2*wcslen(us));
   R toutf8(z);
  }
 #endif

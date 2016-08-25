@@ -50,6 +50,9 @@ f =: ([,-.@(0&e.))@$ $ ,
 (f t) -: #:t=:(?32$2)$2j4
 
 'domain error' -: #: etx 'abc'
+'domain error' -: #: etx u:'abc'
+'domain error' -: #: etx 10&u:'abc'
+'domain error' -: #: etx s:@<"0 'abc'
 'domain error' -: #: etx 123;45 6
 
 
@@ -94,10 +97,12 @@ g=: 3 : 'y#:i.*/y'
 'domain error' -: 2 3 4#: etx 'abc'
 'domain error' -: 2 3 4#: etx u:'abc'
 'domain error' -: 2 3 4#: etx 10&u:'abc'
+'domain error' -: 2 3 4#: etx s:@<"0 'abc'
 'domain error' -: 4 3 2#: etx 123;45 6
 'domain error' -: 'abc'#: etx 7
 'domain error' -: (u:'abc')#: etx 7
 'domain error' -: (10&u:'abc')#: etx 7
+'domain error' -: (s:@<"0 'abc')#: etx 7
 'domain error' -: (123;4 5 6)#: etx _12
 
 4!:55 ;:'abase1 abase2 bits f g max t x '

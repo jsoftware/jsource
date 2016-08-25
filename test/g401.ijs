@@ -41,6 +41,13 @@ x -: #."0 x=: 100 * 10 ?@$ 0
 
 'domain error' -: #. etx 'abc'
 'domain error' -: #. etx ;:'Cogito, ergo sum.'
+'domain error' -: #. etx u:'abc'
+'domain error' -: #. etx ;:u:'Cogito, ergo sum.'
+'domain error' -: #. etx 10&u:'abc'
+'domain error' -: #. etx ;:10&u:'Cogito, ergo sum.'
+'domain error' -: #. etx s:@<"0 'abc'
+'domain error' -: #. etx s:@<"0&.> ;:'Cogito, ergo sum.'
+'domain error' -: #. etx <"0@s: ;:'Cogito, ergo sum.'
 
 
 NB. x#.y ----------------------------------------------------------------
@@ -135,10 +142,12 @@ NB. complex
 'domain error' -: 'abc'   #. etx 1 2 3
 'domain error' -: (u:'abc')   #. etx 1 2 3
 'domain error' -: (10&u:'abc')   #. etx 1 2 3
+'domain error' -: (s:@<"0 'abc')   #. etx 1 2 3
 'domain error' -: (1;2;3) #. etx 1 2 3
 'domain error' -: 1 2 3   #. etx 'a'
 'domain error' -: 1 2 3   #. etx u:'a'
 'domain error' -: 1 2 3   #. etx 10&u:'a'
+'domain error' -: 1 2 3   #. etx s:@<"0 'a'
 'domain error' -: 1 2 3   #. etx <5
 
 

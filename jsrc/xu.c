@@ -739,7 +739,8 @@ I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
 F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
- if(t&(B01+INT))
+ ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
+ if(NUMERIC&t)
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
@@ -772,7 +773,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   DO(n, *wv++=(UC)*c2v++;);
   R z;   // fallback to ascii
  }
- else if(C4T&t)
+ else
  {
   c4v=C4AV(w);
   DO(n, if(127<*c4v++){b=1;break;});
@@ -792,8 +793,6 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   R z;   // fallback to ascii
   }
  }
- else
-  ASSERT(0, EVDOMAIN);
 }    // 7 u: x - utf16 from LIT or C2T C4T
 
 // Similar to jttoutf8, but allow invalid unicode
@@ -825,8 +824,8 @@ F1(jttoutf8){A z;I n,t,q,j; A c4; C4* c4v; I *v;
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT) R ca(w); // char unchanged
-ASSERT(t&(B01+INT+C2T+C4T), EVDOMAIN);
-if(t&(B01+INT))
+ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
+if(NUMERIC&t)
 {
 RZ(w=vi(w));
 n=AN(w); v=(I*)AV(w);
@@ -888,7 +887,8 @@ f[q]=0;
 F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
- if((B01+INT)&t)
+ ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
+ if(NUMERIC&t)
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
@@ -926,7 +926,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   R z;
   }
  }
- else if(C4T&t)
+ else
  {
   c4v=C4AV(w);
   DO(n, if(127<*c4v++){b=1;break;});
@@ -945,8 +945,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   R z;
   }
  }
- else
-  ASSERT(0, EVDOMAIN);
 }    // 9 u: x - utf32 from INT UTF-8 or UTF-16
 
 
@@ -957,8 +955,9 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
 F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
  RZ(w); n=AN(w); t=AT(w); wv=UAV(w);
  if(C4T&AT(w))R ca(w);  // if already C4T, clone it and return the clone
- ASSERT(!n||(B01+INT+LIT+C2T)&AT(w),EVDOMAIN);  // must be empty or unicode
- if((B01+INT)&t)
+ ASSERT(!n||(NUMERIC+JCHAR)&AT(w),EVDOMAIN);  // must be empty or unicode
+ if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty list
+ if(NUMERIC&t)
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);

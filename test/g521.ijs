@@ -37,6 +37,12 @@ NB. literal4
 (head -: {.) adot2{~?3 4$256
 (head -: {.) adot2{~?2 3 4$256
 
+NB. symbol
+(head -: {.) s:@<"0 'a'
+(head -: {.) sdot{~?4$256
+(head -: {.) sdot{~?3 4$256
+(head -: {.) sdot{~?2 3 4$256
+
 NB. integer
 (head -: {.) 12345
 (head -: {.) ?4$123456
@@ -117,6 +123,15 @@ g1 (?3 4 5$#adot2){adot2
 g2 (?3 4  $#adot2){adot2
 g2 (?3 4 5$#adot1){adot2
 
+f1 (?3 4  $#x ){x=:s:@<"0 'boustrophedonic'
+f1 (?3 4 5$#sdot){sdot
+f2 (?3 4  $#sdot){sdot
+f2 (?3 4 5$#sdot){sdot
+g1 (?3 4  $#x ){x=:s:@<"0 'boustrophedonic'
+g1 (?3 4 5$#sdot){sdot
+g2 (?3 4  $#sdot){sdot
+g2 (?3 4 5$#sdot){sdot
+
 f1 _1e5+?3 4  $2e5
 f1 _1e5+?3 4 5$2e5
 f2 _1e5+?3 4  $2e5
@@ -147,20 +162,29 @@ g2 r._1e5+?4 5 6$2e5
 f1 (?31 4  $#x){x=:;:'super cali fragi listic'
 f1 (?31 4  $#x){x=:;:u:'super cali fragi listic'
 f1 (?31 4  $#x){x=:;:10&u:'super cali fragi listic'
+f1 (?31 4  $#x){x=:s:@<"0&.> ;:'super cali fragi listic'
+f1 (?31 4  $#x){x=:<"0@s: ;:'super cali fragi listic'
 f1 (?31 4 5$#x){x=:+&.>i.100
 f2 (?31 4  $#x){x=:(;:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4  $#x){x=:(;:u:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4  $#x){x=:(;:10&u:'Cogito, ergo sum.'),+&.>i.12
+f2 (?31 4  $#x){x=:(s:@<"0&.> ;:'Cogito, ergo sum.'),+&.>i.12
+f2 (?31 4  $#x){x=:(<"0@s: ;:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4 5$#x){x=:(<<'opposable thumbs'),+&.>i.12
 f2 (?31 4 5$#x){x=:(<<u:'opposable thumbs'),+&.>i.12
 f2 (?31 4 5$#x){x=:(<<10&u:'opposable thumbs'),+&.>i.12
+f2 (?31 4 5$#x){x=:(<s:@<"0&.> <'opposable thumbs'),+&.>i.12
+f2 (?31 4 5$#x){x=:(<<"0@s: <'opposable thumbs'),+&.>i.12
 g1 (?31 4  $#x){x=:<"0 a.
 g1 (?31 4  $#x){x=:<"0 adot1
 g1 (?31 4  $#x){x=:<"0 adot2
+g1 (?31 4  $#x){x=:<"0 sdot
 g1 (?31 4 5$#x){x=:(i.12){.&.>123
 g2 (?31 4  $#x){x=:(<'junkfoo'),(i.12){.&.>3j4
 g2 (?31 4  $#x){x=:(<u:'junkfoo'),(i.12){.&.>3j4
 g2 (?31 4  $#x){x=:(<10&u:'junkfoo'),(i.12){.&.>3j4
+g2 (?31 4  $#x){x=:(<s:@<"0&.> <'junkfoo'),(i.12){.&.>3j4
+g2 (?31 4  $#x){x=:(<<"0@s: <'junkfoo'),(i.12){.&.>3j4
 g2 (?31 4 5$#x){x=:5!:1&.<'g2'
 g2 (?31 4 5$#x){x=:5!:1&.<u:'g2'
 g2 (?31 4 5$#x){x=:5!:1&.<10&u:'g2'
@@ -170,6 +194,7 @@ f ?4 5$2
 f 2 3 4$'supercalifragilisticespialidocious'
 f 2 3 4$u:'supercalifragilisticespialidocious'
 f 2 3 4$10&u:'supercalifragilisticespialidocious'
+f 2 3 4$s:@<"0 'supercalifragilisticespialidocious'
 f ?2 3 4$1000
 f o.?100$1000
 f j./_500+?2 12$1000
@@ -186,9 +211,11 @@ NB. x{.y ----------------------------------------------------------------
 (x,20$<$0) -: 23{.x=:;:'Cogito, ergo'
 (x,20$<$0) -: 23{.x=:;:u:'Cogito, ergo'
 (x,20$<$0) -: 23{.x=:;:10&u:'Cogito, ergo'
+(x,20$<$0) -: 23{.x=:s:@<"0&.> ;:'Cogito, ergo'
+(x,20$<$0) -: 23{.x=:<"0@s: ;:'Cogito, ergo'
 
 mt    =: 0&e.@$
-fill  =: > @ ({&(' ';(u:' ');(10&u:' ');a:;0)) @ (2 131072 262144 32&i.) @ (3!:0)
+fill  =: > @ ({&(' ';(u:' ');(10&u:' ');({.s:'');a:;0)) @ (2 131072 262144 65536 32&i.) @ (3!:0)
 pad   =: fill@] $~ (|@[ - #@]) 0} $@]
 ti    =: i.@-@[ + [ + #@]
 case  =: 0&<:@[ #.@, |@[ > #@]
@@ -216,6 +243,12 @@ _3 _4 f <u:'foo'
 _3 4  f 10&u:'a'
 3 _4  f <10&u:'foo'
 _3 _4 f <10&u:'foo'
+3 4   f s:@<"0 'a'
+_3 4  f s:@<"0 'a'
+3 _4  f s:@<"0&.> <'foo'
+3 _4  f <"0@s: <'foo'
+_3 _4 f s:@<"0&.> <'foo'
+_3 _4 f <"0@s: <'foo'
 
 2   3  4 f 3j4
 2   3 _4 f 3.4
@@ -223,6 +256,7 @@ _3 _4 f <10&u:'foo'
 2  _3 _4 f '3'
 2  _3 _4 f u:'3'
 2  _3 _4 f 10&u:'3'
+2  _3 _4 f s:@<"0 '3'
 _2  3  4 f 0
 _2  3 _4 f _24
 _2 _3  4 f _1.23e_34j_5.67e_28
@@ -236,6 +270,8 @@ _3 f 'abasdfasdfasf'
 _3 f u:'abasdfasdfasf'
 3  f 10&u:'abafasfkjsadf'
 _3 f 10&u:'abasdfasdfasf'
+3  f s:@<"0 'abafasfkjsadf'
+_3 f s:@<"0 'abasdfasdfasf'
 3  f +&.>i.12
 _3 f +&.>i.12
 
@@ -259,18 +295,26 @@ _3 _6 f ?5 6 4$100
 3 f 0$<'abc'
 3 f 0$<u:'abc'
 3 f 0$<10&u:'abc'
+3 f 0$s:@<"0&.> <'abc'
+3 f 0$<"0@s: <'abc'
 3 f 0 0$<''
 3 f 0 0$<u:''
 3 f 0 0$<10&u:''
+3 f 0 0$<s:''
 3 4 f i.0 0
 3 4 f 4 0 3$' '
 3 4 f 4 0 3$u:' '
 3 4 f 4 0 3$10&u:' '
+3 4 f 4 0 3$s:@<"0 ' '
 _3 4 f 0 0 5$<''
 _3 4 f 0 0 5$<u:''
 _3 4 f 0 0 5$<10&u:''
+_3 4 f 0 0 5$<s:''
 
 'domain error' -: 'abc'     {. etx i.2 3 4
+'domain error' -: (u:'abc')     {. etx i.2 3 4
+'domain error' -: (10&u:'abc')     {. etx i.2 3 4
+'domain error' -: (s:@<"0 'abc')     {. etx i.2 3 4
 'domain error' -: 3.4 5     {. etx i.2 3 4
 'domain error' -: 3j4       {. etx i.2 3 4
 'domain error' -: (3;4)     {. etx i.2 3 4
@@ -300,6 +344,7 @@ x =: o.?3 5 7$1e9
 ([\x) -: (>:i.#x){."0 1 x=:'abcdefghij'
 ([\x) -: (>:i.#x){."0 1 x=:u:'abcdefghij'
 ([\x) -: (>:i.#x){."0 1 x=:10&u:'abcdefghij'
+([\x) -: (>:i.#x){."0 1 x=:s:@<"0 'abcdefghij'
 
 f =: 4 : 'x{.y'
 3 4 5 ({."1 0 -: f"1 0) i.6 7
@@ -359,24 +404,28 @@ jot =: <''
 ((s,_3{.t)$' ') -:   s {.(t=:2|8?8)$' ' [ s=:1+?5$2
 ((s,_3{.t)$u:' ') -:   s {.(t=:2|8?8)$u:' ' [ s=:1+?5$2
 ((s,_3{.t)$10&u:' ') -:   s {.(t=:2|8?8)$10&u:' ' [ s=:1+?5$2
+((s,_3{.t)${.s:'') -:   s {.(t=:2|8?8)$(s:@<"0 ' ') [ s=:1+?5$2
 ((s,_3{.t)$0  ) -:   s {.(t=:2|8?8)$0   [ s=:1+?5$2
 ((s,_3{.t)$a: ) -:   s {.(t=:2|8?8)$a:  [ s=:1+?5$2
 
 ((s,_3{.t)$' ') -: (-s){.(t=:2|8?8)$' ' [ s=:1+?5$2
 ((s,_3{.t)$u:' ') -: (-s){.(t=:2|8?8)$u:' ' [ s=:1+?5$2
 ((s,_3{.t)$10&u:' ') -: (-s){.(t=:2|8?8)$10&u:' ' [ s=:1+?5$2
+((s,_3{.t)${.s:'') -: (-s){.(t=:2|8?8)$s:@<"0 ' ' [ s=:1+?5$2
 ((s,_3{.t)$0  ) -: (-s){.(t=:2|8?8)$0   [ s=:1+?5$2
 ((s,_3{.t)$a: ) -: (-s){.(t=:2|8?8)$a:  [ s=:1+?5$2
 
 s -: $  s {.' ' [ s=:?8$2
 s -: $  s {.(u:' ') [ s=:?8$2
 s -: $  s {.(10&u:' ') [ s=:?8$2
+s -: $  s {.({.s:'') [ s=:?8$2
 s -: $  s {.0   [ s=:?8$2
 s -: $  s {.a:  [ s=:?8$2
 
 s -: $(-s){.' ' [ s=:?8$2
 s -: $(-s){.(u:' ') [ s=:?8$2
 s -: $(-s){.(10&u:' ') [ s=:?8$2
+s -: $(-s){.({.s:'') [ s=:?8$2
 s -: $(-s){.0   [ s=:?8$2
 s -: $(-s){.a:  [ s=:?8$2
 
@@ -403,6 +452,14 @@ a=:1 3$10&u:'a'
 (' ',a) -: ec,a
 (' ',a) -: en,a
 (' ',a) -: eb,a
+
+a=:1 3$s:@<"0 'a'
+(a,{.s:'') -: a,ec
+(a,{.s:'') -: a,en
+(a,{.s:'') -: a,eb
+(({.s:''),a) -: ec,a
+(({.s:''),a) -: en,a
+(({.s:''),a) -: eb,a
 
 a=:i.1 3
 (a,0) -: a,ec
@@ -436,9 +493,18 @@ a=:,:1;2;10&u:'abc'
 (jot,a) -: en,a
 (jot,a) -: eb,a
 
+a=:,:1;2;s:@<"0 'abc'
+(a,jot) -: a,ec
+(a,jot) -: a,en
+(a,jot) -: a,eb
+(jot,a) -: ec,a
+(jot,a) -: en,a
+(jot,a) -: eb,a
+
 (0 0 1 0{' ',:a) -: >ec;en;a;eb [ a=:'abc'
 (0 0 1 0{(u:' '),:a) -: >ec;en;a;eb [ a=:u:'abc'
 (0 0 1 0{(10&u:' '),:a) -: >ec;en;a;eb [ a=:10&u:'abc'
+(0 0 1 0{({.s:''),:a) -: >ec;en;a;eb [ a=:s:@<"0 'abc'
 (0 0 1 0{0  ,:a) -: >ec;en;a;eb [ a=:3 4 5
 (0 0 1 0{jot,:a) -: >ec;en;a;eb [ a=:4;5;i.3 4
 
@@ -471,7 +537,7 @@ NB. x{.y with infinite left arguments -----------------------------------
 'limit error'  -: (>IF64{(_,_1+2^31);_,_1+2^63){. etx i.3 4
 
 
-4!:55 ;:'a adot1 adot2 case eb ec en f f0 f1 f2 fill '
+4!:55 ;:'a adot1 adot2 sdot case eb ec en f f0 f1 f2 fill '
 4!:55 ;:'g1 g2 head itake jot larg mt n pad raise '
 4!:55 ;:'s t take taker targ ti x '
 

@@ -31,6 +31,8 @@ NB. x^.y ----------------------------------------------------------------
 'domain error' -: 3   ^.~etx u:'abc'
 'domain error' -: 3   ^. etx 10&u:'abc'
 'domain error' -: 3   ^.~etx 10&u:'abc'
+'domain error' -: 3   ^. etx s:@<"0 'abc'
+'domain error' -: 3   ^.~etx s:@<"0 'abc'
 'domain error' -: 2   ^. etx 2;4 5
 'domain error' -: 2   ^.~etx 2;4 5
 

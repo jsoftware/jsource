@@ -1,5 +1,7 @@
 NB. B >. B ---------------------------------------------------------------
 
+randuni''
+
 x=. ?100$2
 y=. ?100$2
 (x>.y) -: (#.x,.y){0 1 1 1
@@ -152,6 +154,30 @@ y=. o._1e5+?100$2e5
 (o.1) -: (o.1) >. ^1
 1p1 -: 1x1 >. 1p1
 
-4!:55 ;:'x y z'
+NB. SB >. SB ---------------------------------------------------------------
+
+(s:' a b c d') -: (s:' a b c d') >. (s:' A b c D')
+(s:' a ba ca d') -: (s:' a b c d') >. (s:' Aa ba ca Da')
+(s:' a bb ccc dddd') -: (s:' a bb ccc dddd') >. (s:' Aa baa cacc Daddd')
+(s:' a bbb cccc dddd') -: (s:' a bb ccc dddd') >. (s:' Aa bbb cccc Daddd')
+
+(s:' a b c d') -:  (s:' A b c D') >. (s:' a b c d')
+(s:' a ba ca d') -:  (s:' Aa ba ca Da') >. (s:' a b c d')
+(s:' a bb ccc dddd') -:  (s:' Aa baa cacc Daddd') >. (s:' a bb ccc dddd')
+(s:' a bbb cccc dddd') -:  (s:' Aa bbb cccc Daddd') >. (s:' a bb ccc dddd')
+
+(}.sdot) -: (}:sdot) >. (}.sdot)
+(}.sdot) -: (}.sdot) >. (}:sdot)
+
+((128{.|.sdot),(_128{.sdot)) -: (|.sdot) >. (sdot)
+((128{.|.sdot),(_128{.sdot)) -: (sdot) >. (|.sdot)
+
+(2 4 32$ }.sdot) -: (2 4 32$ }:sdot) >. (2 4 32$ }.sdot)
+(2 4 32$ }.sdot) -: (2 4 32$ }.sdot) >. (2 4 32$ }:sdot)
+
+(({.2 4 32$ |.sdot),:({:2 4 32$ sdot)) -: (2 4 32$ |.sdot) >. (2 4 32$ sdot)
+(({.2 4 32$ |.sdot),:({:2 4 32$ sdot)) -: (2 4 32$ sdot) >. (2 4 32$ |.sdot)
+
+4!:55 ;:'adot1 adot2 sdot x y z'
 
 

@@ -5,6 +5,12 @@
 
 #include "j.h"
 
+// in xu.c
+extern I wtomsize(US* src, I srcn);
+extern I utomsize(C4* src, I srcn);
+extern void wtom(US* src, I srcn, UC* snk);
+extern void utom(C4* src, I srcn, UC* snk);
+
 // in fbu.c
 extern A RoutineA(J,A);  // convert LIT to C2T/C4T is it contains UTF-8
 extern A RoutineB(J,A);  // Convert C2T to C4T if it contains surrogates; install NUL after CJK if result is C2T
@@ -97,9 +103,9 @@ static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
  x=UAV(w); y=CAV(z);
  q=c/BB; r=c%BB; r1=c%BW?(BW-c%BW)/BB:0;
  for(i=0;i<m;++i){
-  DO(q-!r, memcpy(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
-  if(r)   {memcpy(y,bitdisp+2*BB**x,2*r -1); ++x; y+=2*r -1;}
-  else    {memcpy(y,bitdisp+2*BB**x,2*BB-1); ++x; y+=2*BB-1;}
+  DO(q-!r, MC(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
+  if(r)   {MC(y,bitdisp+2*BB**x,2*r -1); ++x; y+=2*r -1;}
+  else    {MC(y,bitdisp+2*BB**x,2*BB-1); ++x; y+=2*BB-1;}
   x+=r1;
  }
  R z;
@@ -131,19 +137,40 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  R z;
 }
 
+// cvt SB string to utf8
+// return length only
+static I sbtou8size(J jt,SBU*u){I q=u->n;
+ if(u->flag&SBC4)
+  q=utomsize((C4*)SBSV(u->i),u->n/4);
+ else if(u->flag&SBC2)
+  q=wtomsize((US*)SBSV(u->i),u->n/2);
+ R (q<0)?-q:q;
+}
+
+// cvt SB string to utf8
+static void sbtou8(J jt,SBU*u,C*s){
+ if(u->flag&SBC4)
+  utom((C4*)SBSV(u->i),u->n/4,s);
+ else if(u->flag&SBC2)
+  wtom((US*)SBSV(u->i),u->n/2,s);
+ else
+  MC(s,SBSV(u->i),u->n);
+}
+
 static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=jt->sbun;
  if(1>=r){
   c=n; 
-  p=2*n-1; DO(c, p+=SBUV(*x++)->n;);
+  RZ(d=apv(c,0L,0L)); dv=AV(d);
+  p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++)););
   GATV(z,LIT,  p,1,   0); zv=CAV(z); memset(zv,' ',AN(z));
-        DO(c, u=SBUV(*y++); *zv='`'; MC(1+zv,SBSV(u->i),u->n); zv+=2+u->n;);
+        DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
   c=s[r-1]; m=n/c; RZ(d=apv(c,0L,0L)); dv=AV(d);
-  DO(m,    DO(c, p =SBUV(*x++)->n; dv[i]=MAX(dv[i],p);););
+  DO(m,    DO(c, p =sbtou8size(jt,SBUV(*x++)); dv[i]=MAX(dv[i],p);););
   p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
-  DO(m, DO(c, u=SBUV(*y++); *zv='`'; MC(1+zv,SBSV(u->i),u->n); zv+=dv[i];););
+  DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
  }
  R z;
 }

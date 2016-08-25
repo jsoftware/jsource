@@ -12,6 +12,11 @@ h =. e.&' ' {"0 1 ,"0&'_'
 (g -: h) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
 (g -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 
+g =. e.&(s:@<"0 ' ')@{.} @ (,:&(s:@<"0 '_'))
+h =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
+(g -: h) s:@<"0 'Cogito, ergo sum.'
+(g -: h) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
+
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
 ((<0 1)&|: -: i.@}.@$}) i.,~?20
 
@@ -66,6 +71,10 @@ f=: 3 : 0
    xx=: adot2{~?($b)$#adot2
    yy=: adot2{~?($b)$#adot2
    zz=: adot2{~?($b)$#adot2
+  case. 'B' do.
+   xx=: sdot{~?($b)$#sdot
+   yy=: sdot{~?($b)$#sdot
+   zz=: sdot{~?($b)$#sdot
   end.
  i.0 0
 )
@@ -197,12 +206,36 @@ g3c=: 3 : 0  NB. character data, integer selection
  1
 )
 
+g2b=: 3 : 0  NB. symbol data, boolean selection
+ f y
+ q=: b{"0 1 xx,"0 yy
+ p=: yy
+ yy=: b}xx,:yy
+ assert. q -: yy
+ assert. q -: b{"0 1 xx,"0 p
+ assert. -. p -: yy
+ 1
+)
+
+g3b=: 3 : 0  NB. symbol data, integer selection
+ f y
+ q=: c{"0 1 xx,"0 1 yy ,"0 zz
+ p=: yy
+ yy=: c}xx,yy,:zz
+ assert. q -: yy
+ assert. q -: c{"0 1 xx,"0 1 p,"0 zz
+ assert. -. p -: yy
+ 1
+)
+
 g0 "0 'BIDZ'
 g1 "0 'BIDZ'
 g2 "0 'BIDZ'
 g2c"0 'CWU'
+g2b"0 'S'
 g3 "0 'BIDZ'
 g3c"0 'CWU'
+g3b"0 'S'
 g4 "0 'BIDZ'
 g5 "0 'BIDZ'
 g8 "0 'BIDZ'
@@ -259,16 +292,27 @@ f  =. '_'&((' '&= # i.@#)@,@]})
 h  =. e.&' ' {"0 1 ,"0&'_'
 
 'Cogito,*ergo*sum.' -: '*' (' '&= # i.@#)@]} 'Cogito, ergo sum.'
+
 (f -: h) 'Cogito, ergo sum.'
 (f -: h) 2 3 4$'Now is the time, all good mean, to ergo sum.'
 
 (u:'Cogito,*ergo*sum.') -: (u:'*') (' '&= # i.@#)@]} u:'Cogito, ergo sum.'
+
 (f -: h) u:'Cogito, ergo sum.'
 (f -: h) 2 3 4$u:'Now is the time, all good mean, to ergo sum.'
 
 (10&u:'Cogito,*ergo*sum.') -: (10&u:'*') (' '&= # i.@#)@]} 10&u:'Cogito, ergo sum.'
+
 (f -: h) 10&u:'Cogito, ergo sum.'
 (f -: h) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
+
+(s:@<"0 'Cogito,*ergo*sum.') -: (s:@<"0 '*') ((s:@<"0 ' ')&= # i.@#)@]} s:@<"0 'Cogito, ergo sum.'
+
+f1  =. (s:@<"0 '_')&(((s:@<"0 ' ')&= # i.@#)@,@]})
+h1  =. e.&(s:@<"0 ' ') {"0 1 ,"0&(s:@<"0 '_')
+
+(f1 -: h1) s:@<"0 'Cogito, ergo sum.'
+(f1 -: h1) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
 
 C =. 2 : 'x & ((#i.@#)@,@y@] })'
 
@@ -284,6 +328,10 @@ a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$u:'Now is the time, all good mean, '
 (f -: '_' C (' '&=)) 2 3 4$10&u:'Now is the time, all good mean, to ergo sum.'
 a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$10&u:'Now is the time, all good mean, '
 
+(f1 -: (s:@<"0 '_') C ((s:@<"0 ' ')&=)) s:@<"0 'Cogito, ergo sum.'
+(f1 -: (s:@<"0 '_') C ((s:@<"0 ' ')&=)) 2 3 4$s:@<"0 'Now is the time, all good mean, to ergo sum.'
+a -: (s:@<"0 ' ') C ((s:@<"0 '_')&=) (s:@<"0 '_') C((s:@<"0 ' ')&=) a =. 2 3 4$s:@<"0 'Now is the time, all good mean, '
+
 *./ (=@i. -: 1&((<0 1)&|:ia})@($&0)@(,~))"0 ?5$10
 
 'abcX' -: 'X' _1}'abcd'
@@ -294,6 +342,7 @@ a -: ' ' C('_'&=) '_' C(' '&=) a =. 2 3 4$10&u:'Now is the time, all good mean, 
 2   -: type 'a' ''}''
 131072-: type 'a' ''}u:''
 262144-: type 'a' ''}10&u:''
+65536 -: type (s:@<"0 'a') ''}s:''
 4   -: type 'a' ''}i.0
 8   -: type 'a' ''}0$3.5
 16  -: type 'a' ''}0$3j5
@@ -438,8 +487,8 @@ a =: i. 4
 2 0 -: f13''
 
 
-4!:55 ;:'a aa ab abc adot1 adot2 b b32 C c c1 d d1 dd f foo '
+4!:55 ;:'a aa ab abc adot1 adot2 sdot b b32 C c c1 d d1 dd f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g2c g3 g3c g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h i ia j k p q save sp t t0 t1 t2 test x xx y yy z z1 zz '
+4!:55 ;:'h h1 i ia j k p q save sp t t0 t1 t2 test x xx y yy z z1 zz '
 

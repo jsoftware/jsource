@@ -18,6 +18,9 @@ test 0 3j4
 'domain error' -: + etx <u:'abc'
 'domain error' -: + etx  10&u:'abc'
 'domain error' -: + etx <10&u:'abc'
+'domain error' -: + etx  s:@<"0 'abc'
+'domain error' -: + etx s:@<"0&.> <'abc'
+'domain error' -: + etx <"0@s: <'abc'
 'domain error' -: + etx <3 4 5
 
 
@@ -31,6 +34,8 @@ NB. x+y -----------------------------------------------------------------
 4 = type (u:'a') + (0$0)
 1 = type (10&u:'a') +. (0$0)
 4 = type (10&u:'a') + (0$0)
+1 = type (s:@<"0 'a') +. (0$0)
+4 = type (s:@<"0 'a') + (0$0)
 8 = type '' + 5.5
 16 = type '' + 3j1
 1 = type '' +. 'c'
@@ -39,9 +44,12 @@ NB. x+y -----------------------------------------------------------------
 4 = type '' + u:'c'
 1 = type '' +. 10&u:'c'
 4 = type '' + 10&u:'c'
+1 = type '' +. s:@<"0 'c'
+4 = type '' + s:@<"0 'c'
 'length error' -: '' + etx 1000 1000 $ 'abc'
 'length error' -: '' + etx 1000 1000 $ u:'abc'
 'length error' -: '' + etx 1000 1000 $ 10&u:'abc'
+'length error' -: '' + etx 1000 1000 $ s:@<"0 'abc'
  
  
 4 = type 1234+5678
@@ -122,6 +130,17 @@ NB. Errors
 'domain error' -: 4     +~etx <10&u:'abc'
 'domain error' -: 'j'   + etx <10&u:'abc'
 'domain error' -: 'j'   +~etx <10&u:'abc'
+'length error' -: (s:@<"0 'abc') + etx 4 5  NB. Agreement before domain
+'domain error' -: (s:@<"0 'abc') + etx 4
+'domain error' -: (s:@<"0 'abc') +~etx 4
+'domain error' -: 4     + etx s:@<"0&.> <'abc'
+'domain error' -: 4     + etx <"0@s: <'abc'
+'domain error' -: 4     +~etx s:@<"0&.> <'abc'
+'domain error' -: 4     +~etx <"0@s: <'abc'
+'domain error' -: 'j'   + etx s:@<"0&.> <'abc'
+'domain error' -: 'j'   + etx <"0@s: <'abc'
+'domain error' -: 'j'   +~etx s:@<"0&.> <'abc'
+'domain error' -: 'j'   +~etx <"0@s: <'abc'
 
 'length error' -: 3 4   + etx 5 6 7
 'length error' -: 3 4   +~etx 5 6 7

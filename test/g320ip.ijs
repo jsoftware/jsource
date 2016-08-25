@@ -28,6 +28,7 @@ f2=: 3 : 0
 (] -: f2) 'only Hugh can prevent florist friars'
 (] -: f2) u:'only Hugh can prevent florist friars'
 (] -: f2) 10&u:'only Hugh can prevent florist friars'
+(] -: f2) s:@<"0 'only Hugh can prevent florist friars'
 (] -: f2) ?1000$1e6
 
 global=: i.7
@@ -51,6 +52,11 @@ f4=: 3 : 0
  b =: 3 17$(10$10&u:'b'),10&u:'1234567'
  a =: a,b
  assert. a -: a1,b
+ a =: 4 27$s:@<"0 'a'
+ a1=: 4 27$s:@<"0 'a'
+ b =: 3 17$(10$s:@<"0 'b'),s:@<"0 '1234567'
+ a =: a,b
+ assert. a -: a1,b
  1
 )
 
@@ -64,6 +70,7 @@ f5=: 3 : 0
 )
 
 ('onex';'twox') -: f5 ''
+
 global=: ;: u:'zero one two three four'
 
 f5=: 3 : 0
@@ -71,7 +78,8 @@ f5=: 3 : 0
  txt=. txt ,each u:'x'
 )
 
-('onex';'twox') -: f5 ''
+((u:'onex');u:'twox') -: f5 ''
+
 global=: ;: 10&u:'zero one two three four'
 
 f5=: 3 : 0
@@ -79,7 +87,8 @@ f5=: 3 : 0
  txt=. txt ,each 10&u:'x'
 )
 
-('onex';'twox') -: f5 ''
+((10&u:'onex');10&u:'twox') -: f5 ''
+
 global -: ;: 'zero one two three four'
 
 f6=: 3 : 0

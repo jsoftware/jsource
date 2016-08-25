@@ -103,6 +103,20 @@ NB. literal4
 (|. -: rev) x=.adot2{~?50 11$#adot2
 (|. -: rev) x=.adot2{~?50 12$#adot2
 
+NB. symbol
+(|. -: rev) x=.sdot{~?50  1$#sdot
+(|. -: rev) x=.sdot{~?50  2$#sdot
+(|. -: rev) x=.sdot{~?50  3$#sdot
+(|. -: rev) x=.sdot{~?50  4$#sdot
+(|. -: rev) x=.sdot{~?50  5$#sdot
+(|. -: rev) x=.sdot{~?50  6$#sdot
+(|. -: rev) x=.sdot{~?50  7$#sdot
+(|. -: rev) x=.sdot{~?50  8$#sdot
+(|. -: rev) x=.sdot{~?50  9$#sdot
+(|. -: rev) x=.sdot{~?50 10$#sdot
+(|. -: rev) x=.sdot{~?50 11$#sdot
+(|. -: rev) x=.sdot{~?50 12$#sdot
+
 
 NB. |."r y --------------------------------------------------------------
 
@@ -157,6 +171,20 @@ NB. literal4
 (|."2 -: rev"2) x=.adot2{~?4 12 11$#adot2
 (|."2 -: rev"2) x=.adot2{~?4 12 12$#adot2
 
+NB. symbol
+(|."2 -: rev"2) x=.sdot{~?4 12  1$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  2$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  3$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  4$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  5$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  6$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  7$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  8$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12  9$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12 10$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12 11$#sdot
+(|."2 -: rev"2) x=.sdot{~?4 12 12$#sdot
+
 
 NB. x|.y ----------------------------------------------------------------
 
@@ -189,6 +217,13 @@ NB. literal4
 (_50+?100) (|. -: rot) (?0 10 2$#a){a
 (_50+?100) (|. -: rot) 10&u:'a'
 (_50+?100) (|. -: rot) 10&u:''
+
+NB. symbol
+(_50+?100) (|. -: rot) (?45 1 2 2$#a){a=.s:@<"0 'foo upon thee 1=?10 20$2'
+(_50+?100) (|. -: rot) (?400 1 1$#a){a
+(_50+?100) (|. -: rot) (?0 10 2$#a){a
+(_50+?100) (|. -: rot) s:@<"0 'a'
+(_50+?100) (|. -: rot) s:''
 
 NB. integer
 (_50+?100) (|. -: rot) ?25 2 2 2$212341
@@ -223,17 +258,20 @@ NB. boxed
 (1 1 1  $'a') -: 1 2 3  |.'a'
 (1 1 1  $'a') -: 1 2 3  |.u:'a'
 (1 1 1  $'a') -: 1 2 3  |.10&u:'a'
+(1 1 1  $s:@<"0 'a') -: 1 2 3  |.s:@<"0 'a'
 (1 1 1 1$4  ) -: (?4$10)|.4
 
 x -: '' |. x=. ? 2 3 4$2
 x -: '' |. x=. 3 4 5 6 $ 'deipnosophist'
 x -: '' |. x=. 3 4 5 6 $ u:'deipnosophist'
 x -: '' |. x=. 3 4 5 6 $ 10&u:'deipnosophist'
+x -: '' |. x=. 3 4 5 6 $ s:@<"0 'deipnosophist'
 x -: '' |. x=. ? 12$1000
 
 'domain error' -: 'abc'|. etx i.4 3 2
 'domain error' -: (u:'abc')|. etx i.4 3 2
 'domain error' -: (10&u:'abc')|. etx i.4 3 2
+'domain error' -: (s:@<"0 'abc')|. etx i.4 3 2
 'domain error' -: 3.45 |. etx i.2 3 4
 'domain error' -: 3j4  |. etx i.3 4
 'domain error' -: (3;4)|. etx i.4 2
@@ -273,6 +311,7 @@ _2 _3 (|. -: f1) j./?2 3 4$1000
 'length error' -: 2 3 4 |. etx 2 3$'a'
 'length error' -: 2 3 4 |. etx 2 3$u:'a'
 'length error' -: 2 3 4 |. etx 2 3$10&u:'a'
+'length error' -: 2 3 4 |. etx 2 3$s:@<"0 'a'
 
 
 NB. x|.!.f y ------------------------------------------------------------
@@ -280,6 +319,7 @@ NB. x|.!.f y ------------------------------------------------------------
 ' abcdef' -: |.!.'' 'abcdefg'
 ' abcdef' -: |.!.'' u:'abcdefg'
 ' abcdef' -: |.!.'' 10&u:'abcdefg'
+(({.s:''),s:@<"0 'abcdef') -: |.!.'' s:@<"0 'abcdefg'
 0 4 5 6   -: |.!.'' 4 5 6 7
 (i.0 4 5) -: |.!.'' i.0 4 5
 
@@ -293,6 +333,9 @@ NB. x|.!.f y ------------------------------------------------------------
 'ito, ergoXXX' -: 3  |.!.'X' 10&u:'Cogito, ergo'
 'XXXXXXXXXXXX' -: 99 |.!.'X' 10&u:'Cogito, ergo'
 'XXXXXXXXXXXX' -: _29|.!.'X' 10&u:'Cogito, ergo'
+(s:@<"0 'ito, ergoXXX') -: 3  |.!.(s:@<"0 'X') s:@<"0 'Cogito, ergo'
+(s:@<"0 'XXXXXXXXXXXX') -: 99 |.!.(s:@<"0 'X') s:@<"0 'Cogito, ergo'
+(s:@<"0 'XXXXXXXXXXXX') -: _29|.!.(s:@<"0 'X') s:@<"0 'Cogito, ergo'
 (i.0)          -: 9  |.!.99  i.0
 
 (1 1 1$9) -: 1 2 3|.!.9 [4
@@ -300,6 +343,7 @@ NB. x|.!.f y ------------------------------------------------------------
 'domain error' -: 2   |.!.4    etx 'abcdef'
 'domain error' -: 2   |.!.4    etx u:'abcdef'
 'domain error' -: 2   |.!.4    etx 10&u:'abcdef'
+'domain error' -: 2   |.!.4    etx s:@<"0 'abcdef'
 'domain error' -: 2 1 |.!.4    etx +&.>i.4 3
 'domain error' -: _2  |.!.'a'  etx i.7 3
 'domain error' -: 3   |.!.'a'  etx ;:'Cogito, ergo carborundum'
@@ -307,9 +351,13 @@ NB. x|.!.f y ------------------------------------------------------------
 'domain error' -: 3   |.!.(u:'a')  etx ;:'Cogito, ergo carborundum'
 'domain error' -: _2  |.!.(10&u:'a')  etx i.7 3
 'domain error' -: 3   |.!.(10&u:'a')  etx ;:'Cogito, ergo carborundum'
+'domain error' -: _2  |.!.(s:@<"0 'a')  etx i.7 3
+'domain error' -: 3   |.!.(s:@<"0 'a')  etx s:@<"0&.> ;:'Cogito, ergo carborundum'
+'domain error' -: 3   |.!.(s:@<"0 'a')  etx <"0@s: ;:'Cogito, ergo carborundum'
 'domain error' -: 9   |.!.(<4) etx 'supercalifragilisticexpialidocious'
 'domain error' -: 9   |.!.(<4) etx u:'supercalifragilisticexpialidocious'
 'domain error' -: 9   |.!.(<4) etx 10&u:'supercalifragilisticexpialidocious'
+'domain error' -: 9   |.!.(<4) etx s:@<"0 'supercalifragilisticexpialidocious'
 'domain error' -: 0   |.!.(<4) etx o.i.17
 
 
@@ -321,6 +369,7 @@ rot =: 3 : (':'; 'x|.y')
 1 2 3 (|."0 1 -: rot"0 1) a.{~?3 7$#a.
 1 2 3 (|."0 1 -: rot"0 1) adot1{~?3 7$#adot1
 1 2 3 (|."0 1 -: rot"0 1) adot2{~?3 7$#adot2
+1 2 3 (|."0 1 -: rot"0 1) sdot{~?3 7$#sdot
 1 2 3 (|."0 1 -: rot"0 1) ?3 7$1000
 1 2 3 (|."0 1 -: rot"0 1) o.?3 7$1000
 1 2 3 (|."0 1 -: rot"0 1) j./?2 3 7$1000
@@ -329,6 +378,7 @@ _3 (|."0 1 -: rot"0 1) ?3 7$2
 _3 (|."0 1 -: rot"0 1) a.{~?3 7$#a.
 _3 (|."0 1 -: rot"0 1) adot1{~?3 7$#adot1
 _3 (|."0 1 -: rot"0 1) adot2{~?3 7$#adot2
+_3 (|."0 1 -: rot"0 1) sdot{~?3 7$#sdot
 _3 (|."0 1 -: rot"0 1) ?3 7$1000
 _3 (|."0 1 -: rot"0 1) o.?3 7$1000
 _3 (|."0 1 -: rot"0 1) j./?2 3 7$1000
@@ -337,6 +387,7 @@ _2 3 (|."1 2 -: rot"1 2) ?2 3 7$2
 _2 3 (|."1 2 -: rot"1 2) a.{~?2 3 7$#a.
 _2 3 (|."1 2 -: rot"1 2) adot1{~?2 3 7$#adot1
 _2 3 (|."1 2 -: rot"1 2) adot2{~?2 3 7$#adot2
+_2 3 (|."1 2 -: rot"1 2) sdot{~?2 3 7$#sdot
 _2 3 (|."1 2 -: rot"1 2) ?2 3 7$1000
 _2 3 (|."1 2 -: rot"1 2) o.?2 3 7$1000
 _2 3 (|."1 2 -: rot"1 2) j./?2 2 3 7$1000
@@ -358,6 +409,7 @@ rot =: 3 : (':'; 'x|.!.f y')
 1 2 3 (|.!.f"0 1 -: rot"0 1) a.{~?3 7$#a.    [ f=:'*'
 1 2 3 (|.!.f"0 1 -: rot"0 1) adot1{~?3 7$#adot1    [ f=:'*'
 1 2 3 (|.!.f"0 1 -: rot"0 1) adot2{~?3 7$#adot2    [ f=:'*'
+1 2 3 (|.!.f"0 1 -: rot"0 1) sdot{~?3 7$#sdot     [ f=:s:@<"0 '*'
 1 2 3 (|.!.f"0 1 -: rot"0 1) ?3 7$1000       [ f=:1
 1 2 3 (|.!.f"0 1 -: rot"0 1) o.?3 7$1000     [ f=:3.56
 1 2 3 (|.!.f"0 1 -: rot"0 1) j./?2 3 7$1000  [ f=:3j4
@@ -366,6 +418,7 @@ _3 (|.!.f"0 1 -: rot"0 1) ?3 7$2             [ f=:2
 _3 (|.!.f"0 1 -: rot"0 1) a.{~?3 7$#a.       [ f=:'@'
 _3 (|.!.f"0 1 -: rot"0 1) adot1{~?3 7$#adot1       [ f=:'@'
 _3 (|.!.f"0 1 -: rot"0 1) adot2{~?3 7$#adot2       [ f=:'@'
+_3 (|.!.f"0 1 -: rot"0 1) sdot{~?3 7$#sdot       [ f=:s:@<"0 '@'
 _3 (|.!.f"0 1 -: rot"0 1) ?3 7$1000          [ f=:3.4
 _3 (|.!.f"0 1 -: rot"0 1) o.?3 7$1000        [ f=:0
 _3 (|.!.f"0 1 -: rot"0 1) j./?2 3 7$1000     [ f=:2.5
@@ -374,6 +427,7 @@ _2 3 (|.!.f"1 2 -: rot"1 2) ?2 3 7$2         [ f=:3j4
 _2 3 (|.!.f"1 2 -: rot"1 2) a.{~?2 3 7$#a.   [ f=:' '
 _2 3 (|.!.f"1 2 -: rot"1 2) adot1{~?2 3 7$#adot1   [ f=:' '
 _2 3 (|.!.f"1 2 -: rot"1 2) adot2{~?2 3 7$#adot2   [ f=:' '
+_2 3 (|.!.f"1 2 -: rot"1 2) sdot{~?2 3 7$#sdot   [ f=:s:@<"0 ' '
 _2 3 (|.!.f"1 2 -: rot"1 2) ?2 3 7$1000      [ f=:999
 _2 3 (|.!.f"1 2 -: rot"1 2) o.?2 3 7$1000    [ f=:3j4
 _2 3 (|.!.f"1 2 -: rot"1 2) j./?2 2 3 7$1000 [ f=:0

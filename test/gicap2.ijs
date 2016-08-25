@@ -52,6 +52,8 @@ test2=: 4 : 0
 3   test1 (u:'paraskavedekatriaphobia');":&.> 200 ?@$ 250
 ''  test1 (10&u:'paraskavedekatriaphobia');":&.> 200 ?@$ 250
 3   test1 (10&u:'paraskavedekatriaphobia');":&.> 200 ?@$ 250
+''  test1 (s:@<"0 'paraskavedekatriaphobia');":&.> 200 ?@$ 250
+3   test1 (s:@<"0 'paraskavedekatriaphobia');":&.> 200 ?@$ 250
 
 0 1 test2       200 ?@$ 250
 0 1 test2~      200 ?@$ 250
@@ -157,14 +159,16 @@ test5"0 i.5 20
 ((i.0) I. 1 2 3) -: (0$a.) I. 1 2 3
 ((i.0) I. 1 2 3) -: (0$adot1) I. 1 2 3
 ((i.0) I. 1 2 3) -: (0$adot2) I. 1 2 3
+((i.0) I. 1 2 3) -: (0$sdot) I. 1 2 3
 ((i.0) I. 1 2 3) -: (0$a:) I. 1 2 3
 (2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$a.
 (2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$adot1
 (2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$adot2
+(2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$sdot
 (2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$a:
 
 
-4!:55 ;:'adot1 adot2 bs ge gt I i j k le lt p q t'
+4!:55 ;:'adot1 adot2 sdot bs ge gt I i j k le lt p q t'
 4!:55 ;:'test1 test2 test3 test4 test5'
 4!:55 ;:'x xx y yy'
 

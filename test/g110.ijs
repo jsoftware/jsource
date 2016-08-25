@@ -63,6 +63,12 @@ NB. x*y -----------------------------------------------------------------
 'domain error' -: (10&u:'abc') *~etx 4
 'domain error' -: 4     * etx <10&u:'abc'
 'domain error' -: 4     *~etx <10&u:'abc'
+'domain error' -: (s:@<"0 'abc') * etx 4
+'domain error' -: (s:@<"0 'abc') *~etx 4
+'domain error' -: 4     * etx s:@<"0&.> <'abc'
+'domain error' -: 4     * etx <"0@s: <'abc'
+'domain error' -: 4     *~etx s:@<"0&.> <'abc'
+'domain error' -: 4     *~etx <"0@s: <'abc'
 
 'length error' -: 3 4   * etx 5 6 7
 'length error' -: 3 4   *~etx 5 6 7

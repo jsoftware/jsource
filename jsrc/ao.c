@@ -206,7 +206,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  at=AT(a); ac=aii(a);
  if(2>=ac)switch(CTTZ(at)){
   case C2TX: if(1==ac)s=65536;                      break;
-  case C4TX: if(1==ac)c4range(AN(a),C4AV(a),&r,&s); break;
+  case C4TX: if(1==ac)c4range(AN(a),C4AV(a),(C4 *)&r,&s); break;
   case B01X: if(1==ac)s=2;   else{s=258;   at=C2T;} break;
   case LITX: if(1==ac)s=256; else{s=65536; at=C2T;} break;
   case INTX: if(1==ac)irange(AN(a),AV(a),&r,&s);    break;

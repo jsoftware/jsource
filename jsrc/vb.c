@@ -84,8 +84,8 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
   case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case C2T: d=65536; break;
-  case C4T: c4range(m,C4AV(a),(C4*)&ca,&da); if(da)c4range(n,C4AV(w),(C4*)&cw,&dw); 
+  case C2TX: d=65536; break;
+  case C4TX: c4range(m,C4AV(a),(C4*)&ca,&da); if(da)c4range(n,C4AV(w),(C4*)&cw,&dw); 
             if(da&&dw){c=MIN((C4)ca,(C4)cw); d=MAX(((C4)ca)+da,((C4)cw)+dw)-(C4)c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case LITX: d=256;   break;

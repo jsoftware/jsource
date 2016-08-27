@@ -3419,7 +3419,7 @@ B jtecvt(J jt, D dw, I ndp, int *decpt, int *sign, C *dest)
 
  ASSERTSYS(ndp<=INT_MAX, "jtecvt: too long");
  di->ndp=(int)ndp; di->result=dest;
- y=d2a_dtoa(di, dw, 2, (int)ndp, decpt, sign, &z);
+ y=d2a_dtoa(di, dw, 2, (int)ndp, decpt, sign, (char**)&z);
  RZ(y&&z);
  memset(z, '0', ndp-(z-y));
  R 1;

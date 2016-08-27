@@ -1,5 +1,7 @@
 NB. }:y -----------------------------------------------------------------
 
+randuni''
+
 curtail =. _1&}.
 
 NB. Boolean
@@ -14,6 +16,20 @@ NB. literal
 (curtail -: }:) a.{~?4$256
 (curtail -: }:) a.{~?3 4$256
 (curtail -: }:) a.{~?2 3 4$256
+(curtail -: }:) 1=?0 3$256
+
+NB. literal2
+(curtail -: }:) u:'a'
+(curtail -: }:) adot1{~?4$256
+(curtail -: }:) adot1{~?3 4$256
+(curtail -: }:) adot1{~?2 3 4$256
+(curtail -: }:) 1=?0 3$256
+
+NB. literal4
+(curtail -: }:) 10&u:'a'
+(curtail -: }:) adot2{~?4$256
+(curtail -: }:) adot2{~?3 4$256
+(curtail -: }:) adot2{~?2 3 4$256
 (curtail -: }:) 1=?0 3$256
 
 NB. integer
@@ -45,6 +61,6 @@ t=.(+&.>i.5),;:'(raze a) -: }: a=. ^0j1*?3 4$1256'
 (curtail -: }:) t{~?2 3 4$#t
 (curtail -: }:) 0 3$<123456
 
-4!:55 ;:'curtail t '
+4!:55 ;:'adot1 adot2 curtail t '
 
 

@@ -365,7 +365,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv
  n=IC(w); t=AT(w); p=q=0; b=0; k=n?aii(w)*bp(t):0;
  if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
- if(k==sizeof(C4)&&t&t&C4T)c4range(n,C4AV(w),&p,&q);
+ if(k==sizeof(C4)&&t&t&C4T){c4range(n,C4AV(w),(C4*)&p,&q);}
  if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
  if(b=q&&(2>=k||q<=2*n)){
   GATV(c,INT,q,1,0); cv=AV(c)-p;  /* counts  */

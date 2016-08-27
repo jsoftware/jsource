@@ -43,9 +43,13 @@ NB. scalar arguments
 f y=: <4
 f y=: <4.5
 f y=: <2 3$'abcd'
+f y=: <2 3$u:'abcd'
+f y=: <2 3$10&u:'abcd'
 f y=: 4
 f y=: 4.5
 f y=: 'a'
+f y=: u:'a'
+f y=: 10&u:'a'
 
 
 4!:55 ;:'a c f r y'

@@ -16,6 +16,8 @@ NB. p.. y ---------------------------------------------------------------
 
 
 'domain error' -: p.. etx 'abc'
+'domain error' -: p.. etx u:'abc'
+'domain error' -: p.. etx 10&u:'abc'
 
 
 NB. x p.. y -------------------------------------------------------------
@@ -29,6 +31,8 @@ x -: ({.x) p.. p.. x=: ?10$100
 
 
 'domain error' -: 3    p.. etx 'abc'
+'domain error' -: 3    p.. etx u:'abc'
+'domain error' -: 3    p.. etx 10&u:'abc'
 'domain error' -: 'x'  p.. etx 3 4 
 'domain error' -: (<4) p.. etx 3 4 
 

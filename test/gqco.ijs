@@ -118,6 +118,8 @@ d3=: */ @: >: @: (_&q:)
 'domain error' -: (<3)q: etx 123
 
 'domain error' -: 1   q: etx 'a'
+'domain error' -: 1   q: etx u:'a'
+'domain error' -: 1   q: etx 10&u:'a'
 'domain error' -: 1   q: etx 0
 'domain error' -: 1   q: etx _35
 'domain error' -: 1   q: etx 3.5

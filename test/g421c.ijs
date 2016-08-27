@@ -1,5 +1,7 @@
 NB. x </. i.#x ----------------------------------------------------------
 
+randuni''
+
 test=: 3 : 0
  assert. (x</.i.#x) -: <:&.>x </.>:i.#x=: y{~?1000  $#y
  assert. (x</.i.#x) -: <:&.>x </.>:i.#x=: y{~ 1000  $0
@@ -16,6 +18,8 @@ test=: 3 : 0
 
 test 0 1
 test a.
+test adot1
+test adot2
 test      i.900
 test _450+i.900
 test  1e6+i.900
@@ -44,6 +48,8 @@ test1=: 3 : 0
 
 test1 0 1
 test1 a.
+test1 adot1
+test1 adot2
 test1      i.900
 test1 _450+i.900
 test1  1e6+i.900
@@ -55,5 +61,5 @@ test1 -: _450+i.900
 test1 <"0 ?40$100
 
 
-4!:55 ;:'test test1 x'
+4!:55 ;:'adot1 adot2 test test1 x'
 

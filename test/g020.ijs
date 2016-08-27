@@ -57,6 +57,10 @@ x -: > x=: 0 0 $<34
 
 'domain error' -: > etx (<'abc'),<12 
 'domain error' -: > etx (<'abc'),<<12
+'domain error' -: > etx (<u:'abc'),<12 
+'domain error' -: > etx (<u:'abc'),<<12
+'domain error' -: > etx (<10&u:'abc'),<12 
+'domain error' -: > etx (<10&u:'abc'),<<12
 'domain error' -: > etx (<12),<<12  
 
 
@@ -70,6 +74,12 @@ NB. x>y -----------------------------------------------------------------
 'domain error' -: 'abc' > etx 3 4 5
 'domain error' -: 'abc' >~etx 3 4 5      
 'domain error' -: 'ab'  > etx 'cd'           
+'domain error' -: (u:'abc') > etx 3 4 5
+'domain error' -: (u:'abc') >~etx 3 4 5      
+'domain error' -: (u:'ab')  > etx 'cd'           
+'domain error' -: (10&u:'abc') > etx 3 4 5
+'domain error' -: (10&u:'abc') >~etx 3 4 5      
+'domain error' -: (10&u:'ab')  > etx 'cd'           
 'domain error' -: 3     > etx <3 4        
 'domain error' -: 3     >~etx <3 4   
 'domain error' -: 3.4   > etx 1 2 3j4   
@@ -77,6 +87,10 @@ NB. x>y -----------------------------------------------------------------
 'domain error' -: 3j4   > etx 1 2 3j4    
 'domain error' -: 'abc' > etx 1 2 3j4   
 'domain error' -: 'abc' >~etx 1 2 3j4
+'domain error' -: (u:'abc') > etx 1 2 3j4   
+'domain error' -: (u:'abc') >~etx 1 2 3j4
+'domain error' -: (10&u:'abc') > etx 1 2 3j4   
+'domain error' -: (10&u:'abc') >~etx 1 2 3j4
 
 4!:55 ;:'b crank crk cshape ctype f fill mrk msh mt '
 4!:55 ;:'mtype ope rank t x '

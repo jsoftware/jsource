@@ -36,7 +36,11 @@ or=: 4 : 'x+.y'
 (+./\."2 -: or/\."2) x
 
 'domain error' -: +./\. etx 'deipnosophist'
-'domain error' -: +./\. etx ;:'professors in New Englor'
+'domain error' -: +./\. etx ;:'professors in New England'
+'domain error' -: +./\. etx u:'deipnosophist'
+'domain error' -: +./\. etx ;:u:'professors in New England'
+'domain error' -: +./\. etx 10&u:'deipnosophist'
+'domain error' -: +./\. etx ;:10&u:'professors in New England'
 
 4!:55 ;:'f or x'
 

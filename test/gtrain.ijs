@@ -1,5 +1,7 @@
 NB. (# i.@#) ------------------------------------------------------------
 
+randuni''
+
 NB. (# i.@#) y on boolean y is recognized as a special phrase by the interpreter
 
 f=: # i.@#
@@ -38,6 +40,10 @@ g=: 3 : 0
 
 (?200$5)      (f -:g) 200$'triskaidekaphobia'
 (j./?2 200$5) (f -:g) 200$'triskaidekaphobia'
+(?200$5)      (f -:g) 200$u:'triskaidekaphobia'
+(j./?2 200$5) (f -:g) 200$u:'triskaidekaphobia'
+(?200$5)      (f -:g) 200$10&u:'triskaidekaphobia'
+(j./?2 200$5) (f -:g) 200$10&u:'triskaidekaphobia'
 
 i=: 1e3 ? 1e9
 b=: 1 i}1 $. 1e9 ; 0 ; 0
@@ -94,12 +100,20 @@ g=: 4 : 'x e. , y'
 (a.{~?2 3$#a.) (f -: g) a.{~?10 10 10$#a.
 (?2 3$9)       (f -: g) a.{~?10 10 10$#a.
 
+'x'            (f -: g) adot1{~?10 10 10$#adot1
+(adot1{~?2 3$#adot1) (f -: g) adot1{~?10 10 10$#adot1
+(?2 3$9)       (f -: g) adot1{~?10 10 10$#adot1
+
+'x'            (f -: g) adot2{~?10 10 10$#adot2
+(adot2{~?2 3$#adot2) (f -: g) adot2{~?10 10 10$#adot2
+(?2 3$9)       (f -: g) adot2{~?10 10 10$#adot2
+
 
 NB. adverb adverb trains ------------------------------------------------
 
 'syntax error' -: ex ' + ((1 : ''/'') \)'
 
 
-4!:55 ;:'b f g i x'
+4!:55 ;:'adot1 adot2 b f g i x'
 
 

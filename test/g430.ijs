@@ -1,5 +1,7 @@
 NB. f/. f\  f\. models --------------------------------------------------
 
+randuni''
+
 en     =: #@]
 em     =: (en >.@% -@[)`(en 0&>.@>:@- [) @. (0&<:@[)
 kay    =: en`em @. (0&<@[)
@@ -36,6 +38,18 @@ a=:1=?10 5$2
 
 NB. literal
 a=:a.{~32+?10 5$95
+(<\a)   -: < bs a
+(<\,a)  -: < bs ,a
+(]\a)  -: ] bs a
+
+NB. literal2
+a=:adot1{~32+?10 5$95
+(<\a)   -: < bs a
+(<\,a)  -: < bs ,a
+(]\a)  -: ] bs a
+
+NB. literal4
+a=:adot2{~32+?10 5$95
 (<\a)   -: < bs a
 (<\,a)  -: < bs ,a
 (]\a)  -: ] bs a
@@ -382,6 +396,28 @@ a=:'d'
 k (<\ -: < bs) a     [ k=:0
 k (<\ -: < bs) a     [ k=:4
 
+NB. literal2
+a=:adot1{~32+?11 5$95
+k (<\ -: < bs) a     [ k=:_4+?11
+k (<\ -: < bs) ,a    [ k=:_4+?11
+k (]\ -: ] bs) a     [ k=:_4+?11
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:1+#a
+a=:'d'
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:4
+
+NB. literal4
+a=:adot2{~32+?11 5$95
+k (<\ -: < bs) a     [ k=:_4+?11
+k (<\ -: < bs) ,a    [ k=:_4+?11
+k (]\ -: ] bs) a     [ k=:_4+?11
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:1+#a
+a=:'d'
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:4
+
 NB. integer
 a=:?11 5$110
 k (<\  -: < bs) a    [ k=:_4+?11
@@ -489,6 +525,8 @@ f=: i.@:>:@:$
 (1 0 5$0) -: (,_) ,\ 3 4 4 5
 
 'domain error' -: 'a'      <\ etx i.12
+'domain error' -: (u:'a')      <\ etx i.12
+'domain error' -: (10&u:'a')      <\ etx i.12
 'domain error' -: 3.5      <\ etx i.12
 'domain error' -: (o._1e12)<\ etx i.12
 'domain error' -: 3j4      <\ etx i.12
@@ -497,7 +535,7 @@ f=: i.@:>:@:$
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
 
-4!:55 ;:'A a b base bs bsd em en f iind '
+4!:55 ;:'A a adot1 adot2 b base bs bsd em en f iind '
 4!:55 ;:'infix inv k kay key n ob oind omask osub '
 4!:55 ;:'outfix prefix sd seg suffix t test w x y'
 

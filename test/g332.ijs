@@ -6,12 +6,28 @@ NB. ;:y -----------------------------------------------------------------
 '' -: ;:''
 '' -: ;:'      '
 
+('Cogito';(,',');'ergo';'sum.')     -: ;:u:'Cogito, ergo sum.'
+('Opposable';'Thumbs')              -: ;:u:'Opposable Thumbs'
+('1 2';'+.';'/:';'..';'*.';'4 5 6') -: ;:u:'1 2+./: ..*.4 5 6'
+'' -: ;:u:''
+'' -: ;:u:'      '
+
+('Cogito';(,',');'ergo';'sum.')     -: ;:10&u:'Cogito, ergo sum.'
+('Opposable';'Thumbs')              -: ;:10&u:'Opposable Thumbs'
+('1 2';'+.';'/:';'..';'*.';'4 5 6') -: ;:10&u:'1 2+./: ..*.4 5 6'
+'' -: ;:10&u:''
+'' -: ;:10&u:'      '
+
 rhet=: 'anaphora anthimeria antithesis cacozelia comprobatio '
 rhet=: rhet, 'epiphonema erotema erotesis hypophora metaphor '
 rhet=: rhet, 'metonymy occultatio oxymoron polyptoton simile '
 rhet=: rhet, 'syllepsis synecdoche tasis'
-rhet=: ;:rhet
-1 = #$rhet
+rhet1=: ;:rhet
+1 = #$rhet1
+rhet1=: ;:u:rhet
+1 = #$rhet1
+rhet1=: ;:10&u:rhet
+1 = #$rhet1
 
 (,<,t) -: ;: t=.'+'
 (,<,t) -: ;: t=.'+.'
@@ -310,6 +326,6 @@ NB. 'ill-formed number' -: ex '123 45e   '
 'ill-formed number' -: ex '2 3pb     '
 'ill-formed number' -: ex '2 3xb     '
 
-4!:55 ;:'dig eq q r rhet t'
+4!:55 ;:'dig eq q r rhet rhet1 t'
 
 

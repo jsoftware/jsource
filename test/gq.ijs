@@ -622,6 +622,10 @@ c=. _4 11 _13r2 1r1
 
 'domain error' -: p. etx 'a';r
 'domain error' -: p. etx 1r2;'abc'
+'domain error' -: p. etx (u:'a');r
+'domain error' -: p. etx 1r2;u:'abc'
+'domain error' -: p. etx (10&u:'a');r
+'domain error' -: p. etx 1r2;10&u:'abc'
 
 1 2 3 4 (p.!.1r2  -: p.!.0.5) 5
 1 2 3 4 (p.!._2r1 -: p.!._2 ) 5

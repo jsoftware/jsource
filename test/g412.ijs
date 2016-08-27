@@ -3,8 +3,12 @@ NB. !: treatement of placeholder argument -------------------------------
 F=: 2 : 0
  assert. 'rank error'   -: m!:n etx 0
  assert. 'rank error'   -: m!:n etx 'a'
+ assert. 'rank error'   -: m!:n etx u:'a'
+ assert. 'rank error'   -: m!:n etx 10&u:'a'
  assert. 'length error' -: m!:n etx 0 1
  assert. 'length error' -: m!:n etx 'ab'
+ assert. 'length error' -: m!:n etx u:'ab'
+ assert. 'length error' -: m!:n etx 10&u:'ab'
  1
 )
 

@@ -334,6 +334,7 @@ NB. s: errors -----------------------------------------------------------
 'rank error'   -:     s: etx 'abc';2 3$'foobar'
 'rank error'   -: 1 2 s: etx s: ' a bc'
 
+0 s: 11
 
 4!:55 ;:'i m t x x0 x1 x2 y y0 y1 y2 z0 z1'
 

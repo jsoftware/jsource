@@ -33,6 +33,12 @@ NB. floating point
 'domain error' -: 'abc'  < etx 3 4 5
 'domain error' -: 'abc'  <~etx 3 4 5 
 'domain error' -: 'ab'   < etx 'cd'  
+'domain error' -: (u:'abc')  < etx 3 4 5
+'domain error' -: (u:'abc')  <~etx 3 4 5 
+'domain error' -: (u:'ab')   < etx 'cd'  
+'domain error' -: (10&u:'abc')  < etx 3 4 5
+'domain error' -: (10&u:'abc')  <~etx 3 4 5 
+'domain error' -: (10&u:'ab')   < etx 'cd'  
 'domain error' -: 3      < etx <3 4   
 'domain error' -: 3      <~etx <3 4  
 'domain error' -: 3.4    < etx 1 2 3j4 
@@ -40,6 +46,10 @@ NB. floating point
 'domain error' -: 3j4    < etx 1 2 3j4 
 'domain error' -: 'abc'  < etx 1 2 3j4
 'domain error' -: 'abc'  <~etx 1 2 3j4 
+'domain error' -: (u:'abc')  < etx 1 2 3j4
+'domain error' -: (u:'abc')  <~etx 1 2 3j4 
+'domain error' -: (10&u:'abc')  < etx 1 2 3j4
+'domain error' -: (10&u:'abc')  <~etx 1 2 3j4 
 
 'length error' -: 3 4    < etx 5 6 7  
 'length error' -: 3 4    <~etx 5 6 7        

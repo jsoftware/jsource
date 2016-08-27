@@ -1,7 +1,11 @@
 NB. ~:y -----------------------------------------------------------------
 
+randuni''
+
 (,1) -: ~:0
 (,1) -: ~:'a'
+(,1) -: ~:u:'a'
+(,1) -: ~:10&u:'a'
 (,1) -: ~:243
 (,1) -: ~:2.71828
 (,1) -: ~:3j4.54e2
@@ -9,33 +13,49 @@ NB. ~:y -----------------------------------------------------------------
 
 (,1) -: ~:,1
 (,1) -: ~:1 3 4$a.
+(,1) -: ~:1 3 4$adot1
+(,1) -: ~:1 3 4$adot2
 (,1) -: ~:i.1 2 3 4
 (,1) -: ~:o.i.1 2 3
 (,1) -: ~:r.i.1 0 3
 (,1) -: ~:1 3 2$;:'Cogito, ergo sum.'
+(,1) -: ~:1 3 2$;:u:'Cogito, ergo sum.'
+(,1) -: ~:1 3 2$;:10&u:'Cogito, ergo sum.'
 
 ''   -: ~:0$0
 ''   -: ~:0 3 4$a.
+''   -: ~:0 3 4$adot1
+''   -: ~:0 3 4$adot2
 ''   -: ~:i.0 2 3 4
 ''   -: ~:o.i.0 2 3
 ''   -: ~:^0j1*i.0 2 0 3
 ''   -: ~:0 3 2$;:'Cogito, ergo sum.'
+''   -: ~:0 3 2$;:u:'Cogito, ergo sum.'
+''   -: ~:0 3 2$;:10&u:'Cogito, ergo sum.'
 
 (5{.1) -: ~:5#1
 (5{.1) -: ~:5#1 3 4$a.
+(5{.1) -: ~:5#1 3 4$adot1
+(5{.1) -: ~:5#1 3 4$adot2
 (5{.1) -: ~:5#i.1 2 3 4
 (5{.1) -: ~:5#o.i.1 2 3
 (5{.1) -: ~:5#^0j1*i.1 0 3
 (5{.1) -: ~:5#1 3 2$;:'Cogito, ergo sum.'
+(5{.1) -: ~:5#1 3 2$;:u:'Cogito, ergo sum.'
+(5{.1) -: ~:5#1 3 2$;:10&u:'Cogito, ergo sum.'
 
 test =: 3 : '(1=type b), (($b)-:,#y), b-:(i.#y)=i.~y [ b=.~:y' 
 
 test ?2
 test a.{~?#a.
+test adot1{~?#adot1
+test adot2{~?#adot2
 test ?2023
 test o.?2023
 test j./?2$3324
 test ('foo';'upon';'thee'){~?3
+test (u:&.>'foo';'upon';'thee'){~?3
+test (10&u:&.>'foo';'upon';'thee'){~?3
 
 test ?20 2$2
 test a.{~50+?40 2$3
@@ -43,6 +63,8 @@ test ?20 2$3
 test o.?20 2$3
 test j./?2 82 2$3
 test ('foo';'upon';'thee'){~?20 2$3
+test (u:&.>'foo';'upon';'thee'){~?20 2$3
+test (10&u:&.>'foo';'upon';'thee'){~?20 2$3
 
 test=: 3 : 0
  yy=: y
@@ -57,17 +79,23 @@ test=: 3 : 0
 
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: _10+?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:10&u:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
-test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: ?5$C4MAX
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:10&u:' miasma chthonic chronic kakistocracy dado'
 
 test=: 3 : 0
  yy=: y
@@ -82,17 +110,23 @@ test=: 3 : 0
 
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: _10+?5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:10&u:' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
-test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: ?5$C4MAX
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
 test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:u:' miasma chthonic chronic kakistocracy dado'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:10&u:' miasma chthonic chronic kakistocracy dado'
 
 
 NB. ~:"r y --------------------------------------------------------------
@@ -106,6 +140,18 @@ g =: 3 : '~:y'
 (g"4  -: ~:"4 ) y
 (g"_1 -: ~:"_1) y
 (g"0  -: ~:"0 ) y=:'ab'{~?2 3 4 5$2
+(g"1  -: ~:"1 ) y
+(g"2  -: ~:"2 ) y
+(g"3  -: ~:"3 ) y
+(g"4  -: ~:"4 ) y
+(g"_1 -: ~:"_1) y
+(g"0  -: ~:"0 ) y=:(u:'ab'){~?2 3 4 5$2
+(g"1  -: ~:"1 ) y
+(g"2  -: ~:"2 ) y
+(g"3  -: ~:"3 ) y
+(g"4  -: ~:"4 ) y
+(g"_1 -: ~:"_1) y
+(g"0  -: ~:"0 ) y=:(10&u:'ab'){~?2 3 4 5$2
 (g"1  -: ~:"1 ) y
 (g"2  -: ~:"2 ) y
 (g"3  -: ~:"3 ) y
@@ -135,6 +181,18 @@ g =: 3 : '~:y'
 (g"3  -: ~:"3 ) y
 (g"4  -: ~:"4 ) y
 (g"_1 -: ~:"_1) y
+(g"0  -: ~:"0 ) y=:(?5 4 3 2$#x){x=:;:u:'kakistocracy piscatory sequipedalian'
+(g"1  -: ~:"1 ) y
+(g"2  -: ~:"2 ) y
+(g"3  -: ~:"3 ) y
+(g"4  -: ~:"4 ) y
+(g"_1 -: ~:"_1) y
+(g"0  -: ~:"0 ) y=:(?5 4 3 2$#x){x=:;:10&u:'kakistocracy piscatory sequipedalian'
+(g"1  -: ~:"1 ) y
+(g"2  -: ~:"2 ) y
+(g"3  -: ~:"3 ) y
+(g"4  -: ~:"4 ) y
+(g"_1 -: ~:"_1) y
 (g"0  -: ~:"0 ) y=:?0 0 0 0$0
 (g"1  -: ~:"1 ) y
 (g"2  -: ~:"2 ) y
@@ -157,6 +215,22 @@ NB. literal
 (($t)$1) -: (o._5e8+?($t)$1e9) ~: t=:a.{~?2 3 4$#a.
 (($t)$1) -: (r._5e7+?($t)$1e8) ~: t=:a.{~?2 3 4$#a.
 (($t)$1) -: (($t)$;:'8-+.abc') ~: t=:a.{~?2 3 4$#a.
+
+NB. literal2
+(($t)$0) -: t ~: t=:adot1{~?2 3 4$#adot1
+(($t)$1) -: (?($t)$2)          ~: t=:adot1{~?2 3 4$#adot1
+(($t)$1) -: (_5e8+?($t)$1e9)   ~: t=:adot1{~?2 3 4$#adot1
+(($t)$1) -: (o._5e8+?($t)$1e9) ~: t=:adot1{~?2 3 4$#adot1
+(($t)$1) -: (r._5e7+?($t)$1e8) ~: t=:adot1{~?2 3 4$#adot1
+(($t)$1) -: (($t)$;:u:'8-+.abc') ~: t=:adot1{~?2 3 4$#adot1
+
+NB. literal4
+(($t)$0) -: t ~: t=:adot2{~?2 3 4$#adot2
+(($t)$1) -: (?($t)$2)          ~: t=:adot2{~?2 3 4$#adot2
+(($t)$1) -: (_5e8+?($t)$1e9)   ~: t=:adot2{~?2 3 4$#adot2
+(($t)$1) -: (o._5e8+?($t)$1e9) ~: t=:adot2{~?2 3 4$#adot2
+(($t)$1) -: (r._5e7+?($t)$1e8) ~: t=:adot2{~?2 3 4$#adot2
+(($t)$1) -: (($t)$;:10&u:'8-+.abc') ~: t=:adot2{~?2 3 4$#adot2
 
 NB. integer
 (($t)$0) -: t ~: t=:_1e9+?2 3 4$2e9
@@ -182,14 +256,18 @@ NB. boxed
 (($t)$0) -: t ~: t=:<"1?2 3 4 5$10
 (($t)$1) -: (?($t)$2)          ~: t=:<"1?2 3 4$10
 (($t)$1) -: (($t)$'8-+.abc')   ~: t=:<"1?2 3 4$10
+(($t)$1) -: (($t)$u:'8-+.abc')   ~: t=:<"1?2 3 4$10
+(($t)$1) -: (($t)$10&u:'8-+.abc')   ~: t=:<"1?2 3 4$10
 (($t)$1) -: (_5e8+?($t)$1e9)   ~: t=:<"1?2 3 4$10
 (($t)$1) -: (o._5e8+?($t)$1e9) ~: t=:<"1?2 3 4$10
 (($t)$1) -: (r._5e7+?($t)$1e8) ~: t=:<"1?2 3 4$10
 
 'length error' -: 1 2 ~: etx 'abc'
+'length error' -: 1 2 ~: etx u:'abc'
+'length error' -: 1 2 ~: etx 10&u:'abc'
 'length error' -: 1 2 ~: etx i. 3 4 5
 
 
-4!:55 ;:'a b g t test x y yy'
+4!:55 ;:'a adot1 adot2 b g t test x y yy'
 
 

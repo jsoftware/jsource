@@ -1059,6 +1059,7 @@
 #define toutf8(x)                   jttoutf8(jt,(x))
 #define toutf8a(x)                  jttoutf8a(jt,(x))
 #define tomutf8(x)                  jttomutf8(jt,(x))
+#define tocesu8(x)                  jttocesu8(jt,(x))
 #define toutf16(x)                  jttoutf16(jt,(x))
 #define toutf32(x)                  jttoutf32(jt,(x))
 #define tou32(x)                    jttou32(jt,(x))

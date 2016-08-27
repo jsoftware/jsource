@@ -17,6 +17,10 @@ a -: [&.+. a=.0.1*_50j_50+j.&?~100$100
 
 'domain error' -: +. etx 'abc'
 'domain error' -: +. etx <'abc'
+'domain error' -: +. etx u:'abc'
+'domain error' -: +. etx <u:'abc'
+'domain error' -: +. etx 10&u:'abc'
+'domain error' -: +. etx <10&u:'abc'
 
 
 NB. x+.y  ---------------------------------------------------------------
@@ -38,6 +42,18 @@ y=: j./ _5000 + 2 10000 ?@$ 10000
 'domain error' -: 4     +.~etx <'abc'
 'domain error' -: 'j'   +. etx <'abc'
 'domain error' -: 'j'   +.~etx <'abc'
+'domain error' -: (u:'abc') +. etx 4
+'domain error' -: (u:'abc') +.~etx 4
+'domain error' -: 4     +. etx <u:'abc'
+'domain error' -: 4     +.~etx <u:'abc'
+'domain error' -: 'j'   +. etx <u:'abc'
+'domain error' -: 'j'   +.~etx <u:'abc'
+'domain error' -: (10&u:'abc') +. etx 4
+'domain error' -: (10&u:'abc') +.~etx 4
+'domain error' -: 4     +. etx <10&u:'abc'
+'domain error' -: 4     +.~etx <10&u:'abc'
+'domain error' -: 'j'   +. etx <10&u:'abc'
+'domain error' -: 'j'   +.~etx <10&u:'abc'
 
 'length error' -: 0 1   +. etx 0 1 0
 'length error' -: 0 1   +.~etx 5 6 7

@@ -37,6 +37,10 @@ and=: 4 : 'x*.y'
 
 'domain error' -: *./\. etx 'deipnosophist'
 'domain error' -: *./\. etx ;:'professors in New England'
+'domain error' -: *./\. etx u:'deipnosophist'
+'domain error' -: *./\. etx ;:u:'professors in New England'
+'domain error' -: *./\. etx 10&u:'deipnosophist'
+'domain error' -: *./\. etx ;:10&u:'professors in New England'
 
 4!:55 ;:'f and x'
 

@@ -16,7 +16,7 @@ test=: 1 : 0
  assert. (xx=:      ? n   $1e9  ) (u//. -: v/.) yy
  assert. (xx=:      ?(n,2)$100  ) (u//. -: v/.) yy
  assert. (xx=:    u:? n   $65536) (u//. -: v/.) yy
- assert. (xx=: 10&u:? n $C4MAX) (u//. -: v/.) yy
+ assert. (xx=: 10&u: RAND32 ? n $C4MAX) (u//. -: v/.) yy
  1
 )
 

@@ -25,9 +25,17 @@ pow=. 4 : 'x^y'
 
 (,'j')    -: ^/\'j'
 (,<'ace') -: ^/\<'ace'
+(,'j')    -: ^/\u:'j'
+(,<'ace') -: ^/\<u:'ace'
+(,'j')    -: ^/\10&u:'j'
+(,<'ace') -: ^/\<10&u:'ace'
 
 'domain error' -: ^/\ etx 'triskaidekaphobia'
 'domain error' -: ^/\ etx ;:'ex cathedra'
+'domain error' -: ^/\ etx u:'triskaidekaphobia'
+'domain error' -: ^/\ etx ;:u:'ex cathedra'
+'domain error' -: ^/\ etx 10&u:'triskaidekaphobia'
+'domain error' -: ^/\ etx ;:10&u:'ex cathedra'
 
 4!:55 ;:'pow x'
 

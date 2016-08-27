@@ -16,11 +16,23 @@ a -: [ &. j. a
 
 'domain error' -: j. etx 'abc'
 'domain error' -: j. etx <'abc'
+'domain error' -: j. etx u:'abc'
+'domain error' -: j. etx <u:'abc'
+'domain error' -: j. etx 10&u:'abc'
+'domain error' -: j. etx <10&u:'abc'
 
 'domain error' -: 'abc' j. etx 3
 'domain error' -: 'abc' j.~etx 3
 'domain error' -: 4     j. etx <'abc'
 'domain error' -: 4     j.~etx <'abc'
+'domain error' -: (u:'abc') j. etx 3
+'domain error' -: (u:'abc') j.~etx 3
+'domain error' -: 4     j. etx <u:'abc'
+'domain error' -: 4     j.~etx <u:'abc'
+'domain error' -: (10&u:'abc') j. etx 3
+'domain error' -: (10&u:'abc') j.~etx 3
+'domain error' -: 4     j. etx <10&u:'abc'
+'domain error' -: 4     j.~etx <10&u:'abc'
 
 'length error' -: 3 4   j. etx 5 6 7
 'length error' -: 3 4   j.~etx 5 6 7

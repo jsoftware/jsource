@@ -58,6 +58,10 @@ max=: 4 : 'x>.y'
 
 'domain error' -: >./\. etx 'triskaidekaphobia'
 'domain error' -: >./\. etx ;:'professors in New England'
+'domain error' -: >./\. etx u:'triskaidekaphobia'
+'domain error' -: >./\. etx ;:u:'professors in New England'
+'domain error' -: >./\. etx 10&u:'triskaidekaphobia'
+'domain error' -: >./\. etx ;:10&u:'professors in New England'
 
 4!:55 ;:'f max x'
 

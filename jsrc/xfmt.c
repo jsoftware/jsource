@@ -434,7 +434,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(1==nf)*j];
   nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR);
   cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR);
-  subs=AN(uS)?CAV(uS):"e,.-*";
+  subs=AN(uS)?CAV(uS):(C*)"e,.-*";
   switch(mode) {
    case 0: v=*a1v; cv=CAV(v); break;
    case 1: k=0<l?l:coll; cv=cvv[j]; cvv[j]+=k; break;

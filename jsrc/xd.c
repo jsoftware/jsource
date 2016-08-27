@@ -345,7 +345,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
  RZ(w);
  RZ(w=str0(vs(!AR(w)&&BOX&AT(w)?ope(w):w)));
  s=CAV(w);
- if(x=strrchr(s,'/')){dir=s==x?"/":s; pat=x+1; *x=0;}else{dir="."; pat=s;}
+ if(x=strrchr(s,'/')){dir=s==x?(C*)"/":s; pat=x+1; *x=0;}else{dir="."; pat=s;}
  if(NULL==(DP=opendir(dir)))R reshape(v2(0L,6L),ace);
  /*
   * SYSV and BSD have different return types for sprintf(),

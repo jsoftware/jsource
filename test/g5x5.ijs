@@ -1,5 +1,7 @@
 NB. 5!:5 ----------------------------------------------------------------
 
+randuni''
+
 ar=: 5!:1
 
 test1=: 1 : 0
@@ -18,6 +20,7 @@ NB. 5!:5 nouns ----------------------------------------------------------
 
 test=: [ -: ".@(3 : '5!:5<''y''')
 
+NB. literal
 test ''
 test 0 1$''
 test 1 0$''
@@ -71,6 +74,114 @@ test (a.{~(i.26)+a.i.'a') ((i.26)+a.i.'A')}a.
 test |.a.
 test a.{~?#a.
 
+NB. literal2
+test u:''
+test 0 1$u:''
+test 1 0$u:''
+test 0 3 4$u:'abc'
+test 4 3 2 4 9 0 3 4$u:'Cogito, ergo sum.'
+test u:'j'
+test ,u:'j'
+test 5$u:'j'
+test 13$u:'j'
+test u:''''
+test ,u:''''
+test 5$u:''''
+test 6$u:''''
+test 23$u:''''
+test 24$u:''''
+test u:'sui generis'
+test u:'Don''t tread on me!'
+test 1 1$u:'j'
+test 1 3$u:'row'
+test 6 1$u:'column'
+test 2 3$u:'j'
+test 1 13$u:'j'
+test 13 1$u:'j'
+test 6 12$u:'j'
+test 2 3$u:''''
+test 1 13$u:''''
+test 13 1$u:''''
+test 6 13$u:''''
+test 3 7$u:'Opposable thumbs'
+test 6 13$u:'Don''t tread on me!'
+test 2 3 4$u:'j'
+test 2 3 4$u:''''
+test 2 3 4$u:'Don''t tread on me!'
+test (?2 3 4 5$#adot1){adot1
+test (u:'abc'), adot1
+test (u:'abc'),~adot1
+test (0    {adot1), adot1
+test (0    {adot1),~adot1
+test (0   1{adot1), adot1
+test (0   1{adot1),~adot1
+test (0   4{adot1), adot1
+test (0   4{adot1),~adot1
+test (_1   {adot1), adot1
+test (_1   {adot1),~adot1
+test (_2 _1{adot1), adot1
+test (_2 _1{adot1),~adot1
+test (_4 _1{adot1), adot1
+test (_4 _1{adot1),~adot1
+test (u:'_') (adot1 i.{.adot1)}adot1
+test (adot1{~(i.26)+adot1 i.{.adot1) ((-i.26)+adot1 i.{:adot1)}adot1
+test |.adot1
+test adot1{~?#adot1
+
+NB. literal4
+test 10&u:''
+test 0 1$10&u:''
+test 1 0$10&u:''
+test 0 3 4$10&u:'abc'
+test 4 3 2 4 9 0 3 4$10&u:'Cogito, ergo sum.'
+test 10&u:'j'
+test ,10&u:'j'
+test 5$10&u:'j'
+test 13$10&u:'j'
+test 10&u:''''
+test ,10&u:''''
+test 5$10&u:''''
+test 6$10&u:''''
+test 23$10&u:''''
+test 24$10&u:''''
+test 10&u:'sui generis'
+test 10&u:'Don''t tread on me!'
+test 1 1$10&u:'j'
+test 1 3$10&u:'row'
+test 6 1$10&u:'column'
+test 2 3$10&u:'j'
+test 1 13$10&u:'j'
+test 13 1$10&u:'j'
+test 6 12$10&u:'j'
+test 2 3$10&u:''''
+test 1 13$10&u:''''
+test 13 1$10&u:''''
+test 6 13$10&u:''''
+test 3 7$10&u:'Opposable thumbs'
+test 6 13$10&u:'Don''t tread on me!'
+test 2 3 4$10&u:'j'
+test 2 3 4$10&u:''''
+test 2 3 4$10&u:'Don''t tread on me!'
+test (?2 3 4 5$#adot2){adot2
+test (10&u:'abc'), adot2
+test (10&u:'abc'),~adot2
+test (0    {adot2), adot2
+test (0    {adot2),~adot2
+test (0   1{adot2), adot2
+test (0   1{adot2),~adot2
+test (0   4{adot2), adot2
+test (0   4{adot2),~adot2
+test (_1   {adot2), adot2
+test (_1   {adot2),~adot2
+test (_2 _1{adot2), adot2
+test (_2 _1{adot2),~adot2
+test (_4 _1{adot2), adot2
+test (_4 _1{adot2),~adot2
+test (10&u:'_') (adot2 i.{.adot2)}adot2
+test (adot2{~(i.26)+adot2 i.{.adot2) ((-i.26)+adot2 i.{:adot2)}adot2
+test |.adot2
+test adot2{~?#adot2
+
 test 0
 test i.0
 test i.1 0
@@ -101,6 +212,7 @@ test 10$_
 test 4 5$__
 test 4 5$_ 0 __
 
+NB. box literal
 test 0$<''
 test 0 1$<'abc'
 test 1 0$<'abc'
@@ -127,6 +239,54 @@ test 5!:5<'test'
 
 'a:' -: 5!:5 <'t' [ t=:a:
 
+NB. box literal2
+test 0$<u:''
+test 0 1$<u:'abc'
+test 1 0$<u:'abc'
+test 0 3 4 5 0$<u:'abc'
+test <u:''
+test <u:'j'
+test <,u:'j'
+test ,<u:'foobar'
+test ;:u:'Cogito, ergo sum.'
+test (u:'') ;;:u:'sui generis'
+test (u:'f');;:u:'sui generis'
+test ,&.>(u:'f');;:u:'sui generis'
+test u:&.>'Opposable';'thumbs'
+test u:&.>'Opposable';'thumbs '
+test 2 3$(u:'foobar');?2 3$183164
+test (u:'abcd');5$233{adot1
+test <0;u:'abcd'
+test <(,0);u:'abcd'
+test 5!:1<u:'test'
+test 5!:2<u:'test'
+test 5!:4<u:'test'
+test 5!:5<u:'test'
+
+NB. box literal4
+test 0$<10&u:''
+test 0 1$<10&u:'abc'
+test 1 0$<10&u:'abc'
+test 0 3 4 5 0$<10&u:'abc'
+test <10&u:''
+test <10&u:'j'
+test <,10&u:'j'
+test ,<10&u:'foobar'
+test ;:10&u:'Cogito, ergo sum.'
+test (10&u:'') ;;:10&u:'sui generis'
+test (10&u:'f');;:10&u:'sui generis'
+test ,&.>(10&u:'f');;:10&u:'sui generis'
+test 10&u:&.>'Opposable';'thumbs'
+test 10&u:&.>'Opposable';'thumbs '
+test 2 3$(10&u:'foobar');?2 3$183164
+test (10&u:'abcd');5$233{adot1
+test <0;10&u:'abcd'
+test <(,0);10&u:'abcd'
+test 5!:1<10&u:'test'
+test 5!:2<10&u:'test'
+test 5!:4<10&u:'test'
+test 5!:5<10&u:'test'
+
 
 NB. 5!:5 empty arrays ---------------------------------------------------
 
@@ -134,6 +294,8 @@ test=: 3 : '((3!:0 x) -: 3!:0 y) *. x -: y [ x=. ".5!:5 <''y'''
 
 test 0$0
 test 0$'abc'
+test 0$u:'abc'
+test 0$10&u:'abc'
 test 0$3 4
 test 0$3.4
 test 0$3j4
@@ -173,9 +335,16 @@ f                                test1
 ,&(3 4$'asdf')                   test1
 3&$ @ (,&(3 4$'asdf'))           test1
 3&$ @  ,&(3 4$'asdf')            test1
+,&(3 4$u:'asdf')                 test1
+3&$ @ (,&(3 4$u:'asdf'))         test1
+3&$ @  ,&(3 4$u:'asdf')          test1
+,&(3 4$10&u:'asdf')              test1
+3&$ @ (,&(3 4$10&u:'asdf'))      test1
+3&$ @  ,&(3 4$10&u:'asdf')       test1
 3 : 'foo y'                      test1
 3 : (':'; 'x bar y')             test1
 3 : ('foo y'; ':'; 'x bar y')    test1
+3 : (97 9 98{a.)                 test1
 3 : (97 9 98{a.)                 test1
 +/ : (- * %)                     test1
 1 H. 1                           test1
@@ -507,7 +676,7 @@ f =: g@.
 f =: @.('abc'&i.)
 (lr<'f') -: '@.(''abc''&i.)'
 
-4!:55 ;:'a act alp ar base bot boxc boxed bp bs '
+4!:55 ;:'a act adot1 adot2 alp ar base bot boxc boxed bp bs '
 4!:55 ;:'bsd c center connect cp cross dash dig dotco em '
 4!:55 ;:'en extent f f3 fx g gap graft h hfork '
 4!:55 ;:'id iind infix ins insert kay kern kernb kernt key '

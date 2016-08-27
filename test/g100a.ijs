@@ -14,6 +14,8 @@ y=. ?100$2
 0 1 1 2 -: 0 0 1 1 + 0 1 0 1
 
 'domain error' -: 1 0 1 + etx 'abc'
+'domain error' -: 1 0 1 + etx u:'abc'
+'domain error' -: 1 0 1 + etx 10&u:'abc'
 'domain error' -: 1 0 1 + etx <123
 
 

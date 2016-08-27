@@ -1,5 +1,7 @@
 NB. |: ------------------------------------------------------------------
 
+randuni''
+
 NB. mask  =: =/ i.@>:@(>./)
 NB. vec   =: >@{@:(i.&.>)@((<./ .+) 127&*@-.)
 NB. ind   =: vec +/ .* (#. |:)
@@ -53,6 +55,26 @@ NB. literal
 (|: -: cant1) a=:a.{~?13  7$256
 (|: -: cant1) a=:a.{~? 7 13$256
 
+NB. literal2
+(p=:(?#$a)?#$a) vfy a =: adot1{~?(4?6)$256
+(|: -: cant1) a
+(|: -: cant1) a=:adot1{~? 8 32$256
+(|: -: cant1) a=:adot1{~?32  8$256
+(|: -: cant1) a=:adot1{~? 8  8$256
+(|: -: cant1) a=:adot1{~?13 13$256
+(|: -: cant1) a=:adot1{~?13  7$256
+(|: -: cant1) a=:adot1{~? 7 13$256
+
+NB. literal4
+(p=:(?#$a)?#$a) vfy a =: adot2{~?(4?6)$256
+(|: -: cant1) a
+(|: -: cant1) a=:adot2{~? 8 32$256
+(|: -: cant1) a=:adot2{~?32  8$256
+(|: -: cant1) a=:adot2{~? 8  8$256
+(|: -: cant1) a=:adot2{~?13 13$256
+(|: -: cant1) a=:adot2{~?13  7$256
+(|: -: cant1) a=:adot2{~? 7 13$256
+
 NB. integer
 (p=:(?#$a)?#$a) vfy a =: ?(4?6)$111256
 (|: -: cant1) a
@@ -88,6 +110,18 @@ x =: (+&.>?20$100), ;:'((?#$a)?#$a) vfy a =: ^0j1*?(4?6)$111'
 (p=:(?#$a)?#$a) vfy a =: x{~?(4?6)$#x
 (|: -: cant1) a
 (|: -: cant1) a=:x{~? 8 32$#x=:;:'deip no so phist epi cur ean ex cell ence'
+(|: -: cant1) a=:x{~?32  8$#x
+(|: -: cant1) a=:x{~? 8  8$#x
+(|: -: cant1) a=:x{~?13 13$#x
+(|: -: cant1) a=:x{~?13  7$#x
+(|: -: cant1) a=:x{~? 7 13$#x
+(|: -: cant1) a=:x{~? 8 32$#x=:;:u:'deip no so phist epi cur ean ex cell ence'
+(|: -: cant1) a=:x{~?32  8$#x
+(|: -: cant1) a=:x{~? 8  8$#x
+(|: -: cant1) a=:x{~?13 13$#x
+(|: -: cant1) a=:x{~?13  7$#x
+(|: -: cant1) a=:x{~? 7 13$#x
+(|: -: cant1) a=:x{~? 8 32$#x=:;:10&u:'deip no so phist epi cur ean ex cell ence'
 (|: -: cant1) a=:x{~?32  8$#x
 (|: -: cant1) a=:x{~? 8  8$#x
 (|: -: cant1) a=:x{~?13 13$#x
@@ -171,6 +205,30 @@ NB. literal
 (|:"2 -: cant"2) a=:a.{~?3 13  7$256
 (|:"2 -: cant"2) a=:a.{~?2  7 13$256
 
+NB. literal2
+(  |: -: cant) (?45 45$#a){a=:u:'foo upon thee 1=?10 20$2'
+(0&|: -: cant) (?10 200$#a){a
+(|:"2 -: cant"2) (?400 1$#a){a
+(|:"2 -: cant"2) (?0 1000$#a){a
+(|:"2 -: cant"2) a=:adot1{~?   8 32$256
+(|:"2 -: cant"2) a=:adot1{~?4 32  8$256
+(|:"2 -: cant"2) a=:adot1{~?5  8  8$256
+(|:"2 -: cant"2) a=:adot1{~?1 13 13$256
+(|:"2 -: cant"2) a=:adot1{~?3 13  7$256
+(|:"2 -: cant"2) a=:adot1{~?2  7 13$256
+
+NB. literal4
+(  |: -: cant) (?45 45$#a){a=:10&u:'foo upon thee 1=?10 20$2'
+(0&|: -: cant) (?10 200$#a){a
+(|:"2 -: cant"2) (?400 1$#a){a
+(|:"2 -: cant"2) (?0 1000$#a){a
+(|:"2 -: cant"2) a=:adot2{~?   8 32$256
+(|:"2 -: cant"2) a=:adot2{~?4 32  8$256
+(|:"2 -: cant"2) a=:adot2{~?5  8  8$256
+(|:"2 -: cant"2) a=:adot2{~?1 13 13$256
+(|:"2 -: cant"2) a=:adot2{~?3 13  7$256
+(|:"2 -: cant"2) a=:adot2{~?2  7 13$256
+
 NB. integer
 (    |: -: cant) ?50 50$212341
 (1 0&|: -: cant) ?60 45$212341
@@ -218,10 +276,32 @@ NB. boxed
 (|:"2 -: cant"2) a=:x{~?1 13 13$#x
 (|:"2 -: cant"2) a=:x{~?3 13  7$#x
 (|:"2 -: cant"2) a=:x{~?2  7 13$#x
+(  |: -: cant) (?30 25$#x){x=:;:u:'Cogito, ergo sum. +/2 12 341 CBC News'
+(0&|: -: cant) (?30 30$#x){x
+(|:"2 -: cant"2) (?255 1$#x){x
+(|:"2 -: cant"2) (?0 0$#x){x
+(|:"2 -: cant"2) a=:x{~?   8 32$#x
+(|:"2 -: cant"2) a=:x{~?4 32  8$#x
+(|:"2 -: cant"2) a=:x{~?5  8  8$#x
+(|:"2 -: cant"2) a=:x{~?1 13 13$#x
+(|:"2 -: cant"2) a=:x{~?3 13  7$#x
+(|:"2 -: cant"2) a=:x{~?2  7 13$#x
+(  |: -: cant) (?30 25$#x){x=:;:10&u:'Cogito, ergo sum. +/2 12 341 CBC News'
+(0&|: -: cant) (?30 30$#x){x
+(|:"2 -: cant"2) (?255 1$#x){x
+(|:"2 -: cant"2) (?0 0$#x){x
+(|:"2 -: cant"2) a=:x{~?   8 32$#x
+(|:"2 -: cant"2) a=:x{~?4 32  8$#x
+(|:"2 -: cant"2) a=:x{~?5  8  8$#x
+(|:"2 -: cant"2) a=:x{~?1 13 13$#x
+(|:"2 -: cant"2) a=:x{~?3 13  7$#x
+(|:"2 -: cant"2) a=:x{~?2  7 13$#x
 
 (1 0 2    |:x) -: |:&.(<"_2) x=:?3 4 5$1000
 (1 0 2 3  |:x) -: |:&.(<"_2) x=:?2 3 4 2$1000
 (1 0 2 3 4|:x) -: |:&.(<"_2) x=:a.{~?2 3 4 2 3$#a.
+(1 0 2 3 4|:x) -: |:&.(<"_2) x=:adot1{~?2 3 4 2 3$#adot1
+(1 0 2 3 4|:x) -: |:&.(<"_2) x=:adot2{~?2 3 4 2 3$#adot2
 
 (i.0 13 7) -: |:"2 i.0 7 13
 (i.a,0)    -: |:   i.0,a=:<._1+2^31
@@ -229,6 +309,10 @@ NB. boxed
 
 'domain error' -: 'abc'   |: etx i.3 4
 'domain error' -: (<'abc')|: etx i.3 4
+'domain error' -: (u:'abc')   |: etx i.3 4
+'domain error' -: (<u:'abc')|: etx i.3 4
+'domain error' -: (10&u:'abc')   |: etx i.3 4
+'domain error' -: (<10&u:'abc')|: etx i.3 4
 'domain error' -: 0.5     |: etx i.3 4
 'domain error' -: (<0.5)  |: etx i.3 4
 'domain error' -: 3j4     |: etx i.3 4
@@ -236,6 +320,8 @@ NB. boxed
 'domain error' -: (<<0)   |: etx i.3 4
 'domain error' -: (0;<<1) |: etx i.3 4
 'domain error' -: (0;'a') |: etx i.3 4
+'domain error' -: (0;u:'a') |: etx i.3 4
+'domain error' -: (0;10&u:'a') |: etx i.3 4
 
 'index error'  -: 0 0     |: etx i.3 4
 'index error'  -: (<0 0)  |: etx i.3 4
@@ -251,10 +337,14 @@ NB. |:"r ----------------------------------------------------------------
 
 (|:"2 -: cant1"2) ?2 3 4$2 
 (|:"2 -: cant1"2) a.{~?2 3 4$#a.
+(|:"2 -: cant1"2) adot1{~?2 3 4$#adot1
+(|:"2 -: cant1"2) adot2{~?2 3 4$#adot2
 (|:"2 -: cant1"2) ?2 3 4$1000 
 (|:"2 -: cant1"2) o.?2 3 4$1000 
 (|:"2 -: cant1"2) r.?2 3 4$1000 
 (|:"2 -: cant1"2) x{~?2 3 4$#x=:(+/i.2 3);;:'Cogito, ergo sum.'
+(|:"2 -: cant1"2) x{~?2 3 4$#x=:(+/i.2 3);;:u:'Cogito, ergo sum.'
+(|:"2 -: cant1"2) x{~?2 3 4$#x=:(+/i.2 3);;:10&u:'Cogito, ergo sum.'
 
 1 0   (|:"2 -: cant2"2) ?3 4 5$1000
 1 0   (|:"3 -: cant2"3) ?2 3 4 5$1000
@@ -263,6 +353,12 @@ NB. |:"r ----------------------------------------------------------------
 (1 0,:0 1) (|:"1 2 -: cant2"1 2) a.{~?2 3 4$#a.
 (1 0,:0 1) (|:"1 2 -: cant2"1 2) a.{~?2 3 4 5$#a.
 (1 0,:0 2) (|:"1 3 -: cant2"1 3) a.{~?2 3 4 5$#a.
+(1 0,:0 1) (|:"1 2 -: cant2"1 2) adot1{~?2 3 4$#adot1
+(1 0,:0 1) (|:"1 2 -: cant2"1 2) adot1{~?2 3 4 5$#adot1
+(1 0,:0 2) (|:"1 3 -: cant2"1 3) adot1{~?2 3 4 5$#adot1
+(1 0,:0 1) (|:"1 2 -: cant2"1 2) adot2{~?2 3 4$#adot2
+(1 0,:0 1) (|:"1 2 -: cant2"1 2) adot2{~?2 3 4 5$#adot2
+(1 0,:0 2) (|:"1 3 -: cant2"1 3) adot2{~?2 3 4 5$#adot2
 
 NB. magic cubes due to Professor James G. Mauldon
 
@@ -335,7 +431,7 @@ sym1=: (-: 0&|:) *. (-: _2&|:)
 (sym0 -: sym1) x
 
 
-4!:55 ;:'a cant cant1 cant2 canta ci diag en id0 id1 '
+4!:55 ;:'a adot1 adot2 cant cant1 cant2 canta ci diag en id0 id1 '
 4!:55 ;:'ind magic magicprop mask mi p perm pfill '
 4!:55 ;:'rank rho sym0 sym1 t vfy X x y'
 

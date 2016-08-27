@@ -839,6 +839,7 @@ NB. x: ------------------------------------------------------------------
 'domain error' -: 3 x: etx y
 'domain error' -: x x: etx y
 
+0 s: 11
 
 4!:55 ;:'a f i j k p q s t u v x y'
 

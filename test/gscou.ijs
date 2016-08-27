@@ -1,4 +1,4 @@
-NB. s: with unicode -----------------------------------------------------
+NB. s: unicode -----------------------------------------------------
 
 c=: ' a b cd chthonic boustrophedonic octothorpe'
 t=: s: c

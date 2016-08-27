@@ -1,11 +1,17 @@
 NB. {:y -----------------------------------------------------------------
 
+randuni''
+
 tail =. _1&{
 
 4         -: {: 4
 4         -: {: i.5
 '.'       -: {: 'Cogito, ergo sum.'
+(u:'.')   -: {: u:'Cogito, ergo sum.'
+(10&u:'.')-: {: 10&u:'Cogito, ergo sum.'
 (<'sum.') -: {: ;:'Cogito, ergo sum.'
+(<u:'sum.') -: {: ;:u:'Cogito, ergo sum.'
+(<10&u:'sum.') -: {: ;:10&u:'Cogito, ergo sum.'
 8 9 10 11 -: {: i.3 4
 
 NB. Boolean
@@ -19,6 +25,18 @@ NB. literal
 (tail -: {:) a.{~?4$256
 (tail -: {:) a.{~?3 4$256
 (tail -: {:) a.{~?2 3 4$256
+
+NB. literal2
+(tail -: {:) u:'a'
+(tail -: {:) adot1{~?4$256
+(tail -: {:) adot1{~?3 4$256
+(tail -: {:) adot1{~?2 3 4$256
+
+NB. literal4
+(tail -: {:) 10&u:'a'
+(tail -: {:) adot2{~?4$256
+(tail -: {:) adot2{~?3 4$256
+(tail -: {:) adot2{~?2 3 4$256
 
 NB. integer
 (tail -: {:) 12345
@@ -55,6 +73,6 @@ t=.(+&.>i.5),;:'(tail -: {:) ^0j1*?3 4$1256'
 (2 3$3j4) -: {:!.3j4 i. 0 2 3
 
 
-4!:55 ;:'t tail'
+4!:55 ;:'adot1 adot2 t tail'
 
 

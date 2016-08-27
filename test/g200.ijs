@@ -29,6 +29,10 @@ _  = ^  709.783
 
 'domain error' -: ^ etx 'abc'
 'domain error' -: ^ etx <'abc'
+'domain error' -: ^ etx u:'abc'
+'domain error' -: ^ etx <u:'abc'
+'domain error' -: ^ etx 10&u:'abc'
+'domain error' -: ^ etx <10&u:'abc'
 
 0 = ^_744.441j2e9
 0 = ^_744.441j_2e9

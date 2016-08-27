@@ -19,6 +19,10 @@ NB. 32 bit specific shape overflow tests --------------------------------
 
  assert. (32768$'a') ="0 _ test 65536$'a'
  assert. (65536$'a') ="0 _ test 65536$'a'
+ assert. (32768$u:'a') ="0 _ test 65536$u:'a'
+ assert. (65536$u:'a') ="0 _ test 65536$u:'a'
+ assert. (32768$10&u:'a') ="0 _ test 65536$10&u:'a'
+ assert. (65536$10&u:'a') ="0 _ test 65536$10&u:'a'
 
  assert. > test (i.65536);65536$<1
  assert. > test (i.65536);65535$<1
@@ -49,10 +53,14 @@ NB. 32 bit specific shape overflow tests --------------------------------
  assert. (i.65536) f "0 _ test i.65536
 
  assert. 32768 65536 $ test 'a'
+ assert. 32768 65536 $ test u:'a'
+ assert. 32768 65536 $ test 10&u:'a'
  assert.  8192 65536 $ test 4
  assert.  4096 65536 $ test 4.8
  assert.  2048 65536 $ test 4j8
  assert. 65536 32768 $ test 'a'
+ assert. 65536 32768 $ test u:'a'
+ assert. 65536 32768 $ test 10&u:'a'
  assert. 16384 32768 $ test 4
  assert.  8192 32768 $ test 4.8
  assert.  4096 32768 $ test 4j8
@@ -67,11 +75,25 @@ NB. 32 bit specific shape overflow tests --------------------------------
 
  assert.  (65536$'a') ,"0 1 test 65536$'b'
  assert.  (65536$'a') ,"0 1 test 32768$'b'
+ assert.  (65536$u:'a') ,"0 1 test 65536$u:'b'
+ assert.  (65536$u:'a') ,"0 1 test 32768$u:'b'
+ assert.  (65536$10&u:'a') ,"0 1 test 65536$10&u:'b'
+ assert.  (65536$10&u:'a') ,"0 1 test 32768$10&u:'b'
 
  assert. [;.1 test (32767$'x'),65536{.'x'
  assert. [;.1 test (32768$'x'),65536{.'x'
  assert. [;.1 test (65535$'x'),65536{.'x'
  assert. [;.1 test (65536$'x'),65536{.'x'
+
+ assert. [;.1 test (32767$u:'x'),65536{.u:'x'
+ assert. [;.1 test (32768$u:'x'),65536{.u:'x'
+ assert. [;.1 test (65535$u:'x'),65536{.u:'x'
+ assert. [;.1 test (65536$u:'x'),65536{.u:'x'
+
+ assert. [;.1 test (32767$10&u:'x'),65536{.10&u:'x'
+ assert. [;.1 test (32768$10&u:'x'),65536{.10&u:'x'
+ assert. [;.1 test (65535$10&u:'x'),65536{.10&u:'x'
+ assert. [;.1 test (65536$10&u:'x'),65536{.10&u:'x'
 
  assert.  65536 # test 65536$'a'
  assert.  65536 # test 65535$'a'
@@ -82,10 +104,38 @@ NB. 32 bit specific shape overflow tests --------------------------------
  assert.  65536 123# test 2 32768$'a'
  assert.  65536 123# test 2 32767$'a'
 
+ assert.  65536 # test 65536$u:'a'
+ assert.  65536 # test 65535$u:'a'
+ assert.  65536 # test 32768$u:'a'
+ assert.  65536 # test 32767$u:'a'
+ assert.  65536 123# test 2 65536$u:'a'
+ assert.  65536 123# test 2 65535$u:'a'
+ assert.  65536 123# test 2 32768$u:'a'
+ assert.  65536 123# test 2 32767$u:'a'
+
+ assert.  65536 # test 65536$10&u:'a'
+ assert.  65536 # test 65535$10&u:'a'
+ assert.  65536 # test 32768$10&u:'a'
+ assert.  65536 # test 32767$10&u:'a'
+ assert.  65536 123# test 2 65536$10&u:'a'
+ assert.  65536 123# test 2 65535$10&u:'a'
+ assert.  65536 123# test 2 32768$10&u:'a'
+ assert.  65536 123# test 2 32767$10&u:'a'
+
  assert.  (i.65536) ["1 test 65536 1$'a'
  assert.  (i.65536) ["1 test 32768 1$'a'
  assert.  (i.65536) ["1 test 16384 1$'a'
  assert.  (i.65536) ["1 test  8192 1$'a'
+
+ assert.  (i.65536) ["1 test 65536 1$u:'a'
+ assert.  (i.65536) ["1 test 32768 1$u:'a'
+ assert.  (i.65536) ["1 test 16384 1$u:'a'
+ assert.  (i.65536) ["1 test  8192 1$u:'a'
+
+ assert.  (i.65536) ["1 test 65536 1$10&u:'a'
+ assert.  (i.65536) ["1 test 32768 1$10&u:'a'
+ assert.  (i.65536) ["1 test 16384 1$10&u:'a'
+ assert.  (i.65536) ["1 test  8192 1$10&u:'a'
 
  assert.  (<(65536 ?@$ 2); 65536 ?@$ 3){ test 2 3$'abcdef'
  assert.  (<(32768 ?@$ 2); 65536 ?@$ 3){ test 2 3$'abcdef'
@@ -99,6 +149,30 @@ NB. 32 bit specific shape overflow tests --------------------------------
  assert.  (65536 ?@$ 2){ test 2 65536$'abc'
  assert.  (32768 ?@$ 2){ test 2 65536$'abc'
 
+ assert.  (<(65536 ?@$ 2); 65536 ?@$ 3){ test 2 3$u:'abcdef'
+ assert.  (<(32768 ?@$ 2); 65536 ?@$ 3){ test 2 3$u:'abcdef'
+ assert.  (<(16384 ?@$ 2); 65536 ?@$ 3){ test 2 3$u:'abcdef'
+ assert.  (65650 ?@$ 2){ test 2 32767$u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 32768$u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 32769$u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65535$u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65536$u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65537$u:'abc'
+ assert.  (65536 ?@$ 2){ test 2 65536$u:'abc'
+ assert.  (32768 ?@$ 2){ test 2 65536$u:'abc'
+
+ assert.  (<(65536 ?@$ 2); 65536 ?@$ 3){ test 2 3$10&u:'abcdef'
+ assert.  (<(32768 ?@$ 2); 65536 ?@$ 3){ test 2 3$10&u:'abcdef'
+ assert.  (<(16384 ?@$ 2); 65536 ?@$ 3){ test 2 3$10&u:'abcdef'
+ assert.  (65650 ?@$ 2){ test 2 32767$10&u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 32768$10&u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 32769$10&u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65535$10&u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65536$10&u:'abc'
+ assert.  (65650 ?@$ 2){ test 2 65537$10&u:'abc'
+ assert.  (65536 ?@$ 2){ test 2 65536$10&u:'abc'
+ assert.  (32768 ?@$ 2){ test 2 65536$10&u:'abc'
+
  assert.  65536 65536 {. test 65536 4$'a'
  assert.  65535 65536 {. test 65535 4$'a'
  assert.  32768 65536 {. test 32768 4$'a'
@@ -106,12 +180,40 @@ NB. 32 bit specific shape overflow tests --------------------------------
  assert.  65536 {."1 test 65535 2$'a' 
  assert.  65536 {."1 test 32768 2$'a' 
 
+ assert.  65536 65536 {. test 65536 4$u:'a'
+ assert.  65535 65536 {. test 65535 4$u:'a'
+ assert.  32768 65536 {. test 32768 4$u:'a'
+ assert.  65536 {."1 test 65536 2$u:'a' 
+ assert.  65536 {."1 test 65535 2$u:'a' 
+ assert.  65536 {."1 test 32768 2$u:'a' 
+
+ assert.  65536 65536 {. test 65536 4$10&u:'a'
+ assert.  65535 65536 {. test 65535 4$10&u:'a'
+ assert.  32768 65536 {. test 32768 4$10&u:'a'
+ assert.  65536 {."1 test 65536 2$10&u:'a' 
+ assert.  65536 {."1 test 65535 2$10&u:'a' 
+ assert.  65536 {."1 test 32768 2$10&u:'a' 
+
  assert. (16384 2$'a') i."1 _ test 16384 2$'a'
  assert. (16384 2$'a') i."1 _ test 32768 2$'a'
  assert. (32768 2$'a') i."1 _ test 32768 2$'a'
  assert. (32768 2$'a') i."1 _ test 65536 2$'a'
  assert. (65536 2$'a') i."1 _ test 65536 2$'a'
  assert. (32767 2$'a') i."1 _ test 65536 2$'a'
+
+ assert. (16384 2$u:'a') i."1 _ test 16384 2$u:'a'
+ assert. (16384 2$u:'a') i."1 _ test 32768 2$u:'a'
+ assert. (32768 2$u:'a') i."1 _ test 32768 2$u:'a'
+ assert. (32768 2$u:'a') i."1 _ test 65536 2$u:'a'
+ assert. (65536 2$u:'a') i."1 _ test 65536 2$u:'a'
+ assert. (32767 2$u:'a') i."1 _ test 65536 2$u:'a'
+
+ assert. (16384 2$10&u:'a') i."1 _ test 16384 2$10&u:'a'
+ assert. (16384 2$10&u:'a') i."1 _ test 32768 2$10&u:'a'
+ assert. (32768 2$10&u:'a') i."1 _ test 32768 2$10&u:'a'
+ assert. (32768 2$10&u:'a') i."1 _ test 65536 2$10&u:'a'
+ assert. (65536 2$10&u:'a') i."1 _ test 65536 2$10&u:'a'
+ assert. (32767 2$10&u:'a') i."1 _ test 65536 2$10&u:'a'
 
  assert. 'limit error' -: ;  etx ;~i.(2^30),0
  assert. 'limit error' -: ,~ etx   i.(2^30),0
@@ -137,8 +239,20 @@ NB. general shape overflow tests ----------------------------------------
 ('a' $~ m,m ,0) ,"1 test 'b'
 ('a' $~ m,m2,0) ,"1 test 'b'
 
+((u:'a') $~ m,m ,0) ,"1 test u:'b'
+((u:'a') $~ m,m2,0) ,"1 test u:'b'
+
+((10&u:'a') $~ m,m ,0) ,"1 test 10&u:'b'
+((10&u:'a') $~ m,m2,0) ,"1 test 10&u:'b'
+
 #"2 test ((16 $~ IF64{ 8 16),0 2)$'a'
 #"2 test (( 2 $~ IF64{31 63),0 2)$'a'
+
+#"2 test ((16 $~ IF64{ 8 16),0 2)$u:'a'
+#"2 test (( 2 $~ IF64{31 63),0 2)$u:'a'
+
+#"2 test ((16 $~ IF64{ 8 16),0 2)$10&u:'a'
+#"2 test (( 2 $~ IF64{31 63),0 2)$10&u:'a'
 
 /:"2 test i.m,32768 0
 /:"2 test i.m,32767 0
@@ -158,6 +272,12 @@ NB. general shape overflow tests ----------------------------------------
 
 (i.m,0) ]"1 test 65536$'a'
 (i.m,0) ]"1 test 32768$'a'
+
+(i.m,0) ]"1 test 65536$u:'a'
+(i.m,0) ]"1 test 32768$u:'a'
+
+(i.m,0) ]"1 test 65536$10&u:'a'
+(i.m,0) ]"1 test 32768$10&u:'a'
 
 (    -2^IF64{31 63) {. test i.    4 0
 (    -2^IF64{31 63) {. test i.  3 4 0

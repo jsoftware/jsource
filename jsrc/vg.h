@@ -19,7 +19,8 @@ extern int  compp(J,I,I);
 extern int  compq(J,I,I);
 extern int  compr(J,I,I);
 extern int  compu(J,I,I);
-extern int  comp4(J,I,I);
+extern int  compt(J,I,I);
+extern int  compt1(J,I,I);
 extern int  compx(J,I,I);
 
 extern int  compspdsB(J,I,I);
@@ -33,6 +34,7 @@ extern int  compspssI(J,I,I);
 extern int  compspssZ(J,I,I);
 
 extern void grcol(I,I,I*,I,I*,I*,const I,US*,int,int,int);
+extern void grcolu(I,I,UI*,I,UI*,UI*,const I,US*,int,int,int);
 
 extern void jtmsort(J,I,I*,I*);
 

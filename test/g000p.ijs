@@ -85,6 +85,10 @@ eq=: 4 : 'x=y'
 
 'domain error' -: =/\ etx 'deipnosophist'
 'domain error' -: =/\ etx ;:'peace in our time'
+'domain error' -: =/\ etx u:'deipnosophist'
+'domain error' -: =/\ etx ;:u:'peace in our time'
+'domain error' -: =/\ etx 10&u:'deipnosophist'
+'domain error' -: =/\ etx ;:10&u:'peace in our time'
 
 4!:55 ;:'eq eqscan f x'
 

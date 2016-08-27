@@ -138,7 +138,7 @@ iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' 100000'
 iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' 100000'  NB. Not ssing
 iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 100000'  NB. inplace
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Both are inplace; verify * not too slow
-THRESHOLD+. iptime1 < 1.4 * iptime3  NB. Both are inplace; verify * not too slow
+THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
-4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 niptime ops v v1 v2 v3'
+4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 iptime3 niptime ops v v1 v2 v3'
 

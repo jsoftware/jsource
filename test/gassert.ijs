@@ -46,10 +46,18 @@ word=: 3 : 0
 
 word 'kerygmatic'
 word 'lucubrations'
+word u:'kerygmatic'
+word u:'lucubrations'
+word 10&u:'kerygmatic'
+word 10&u:'lucubrations'
 
 'assertion failure' -: word etx 1 2 3
 'assertion failure' -: word etx ,: 'kerygmatic'
+'assertion failure' -: word etx ,: u:'kerygmatic'
+'assertion failure' -: word etx ,: 10&u:'kerygmatic'
 'assertion failure' -: word etx 'zzz'
+'assertion failure' -: word etx u:'zzz'
+'assertion failure' -: word etx 10&u:'zzz'
 
 'control error' -: ex '3 : s' [ s=: 'assert.',lf,'if. y do. 1 end.'
 'control error' -: ex '3 : s' [ s=: 'assert.',lf,'assert. 0=y',lf,'2'

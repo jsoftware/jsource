@@ -44,6 +44,8 @@ c f&> <($d)$-~0j1
 'domain error' -: $. etx 2 3r7
 
 'nonce error'  -: $. etx 3 4$'a'
+'domain error' -: $. etx 3 4$u:'a'
+'domain error' -: $. etx 3 4$10&u:'a'
 'nonce error'  -: $. etx <"0 i.2 3
 
 
@@ -69,6 +71,8 @@ _7&$.  ieq ( 7&$.)
 _8&$.  ieq ( 8&$.)
 
 'domain error' -: 'a'  $. etx 3 4 5
+'domain error' -: (u:'a')  $. etx 3 4 5
+'domain error' -: (10&u:'a')  $. etx 3 4 5
 'domain error' -: 3.5  $. etx 3 4 5
 'domain error' -: 3j5  $. etx 3 4 5
 'domain error' -: 3r5  $. etx 3 4 5
@@ -92,6 +96,10 @@ scheck@(1&$.)"(1) 3 5 7 11;"1 ,/(perm 4){"(2 1) 4 comb 4
 
 'domain error' -: 1$. etx 'abc'
 'domain error' -: 1$. etx 'abc';0 1;0
+'domain error' -: 1$. etx u:'abc'
+'domain error' -: 1$. etx (u:'abc');0 1;0
+'domain error' -: 1$. etx 10&u:'abc'
+'domain error' -: 1$. etx (10&u:'abc');0 1;0
 'domain error' -: 1$. etx (<2 3 4);0 1;0
 'domain error' -: 1$. etx (>IF64{3e9 4;3e19 4);0 1;0
 'domain error' -: 1$. etx 2 3 4;0 1;2x
@@ -112,6 +120,8 @@ scheck@(1&$.)"(1) 3 5 7 11;"1 ,/(perm 4){"(2 1) 4 comb 4
 'index error'  -: 1$. etx 2 3 4;0 0;0
 
 'nonce error'  -: 1$. etx 2 3 4;0 1;' '
+'domain error' -: 1$. etx 2 3 4;0 1;u:' '
+'domain error' -: 1$. etx 2 3 4;0 1;10&u:' '
 'nonce error'  -: 1$. etx 2 3 4;0 1;<a:
 
 
@@ -290,6 +300,8 @@ f j./o.?2 45$20
 
 'domain error' -: 5 $.etx 0 1 
 'domain error' -: 5 $.etx 'abc'
+'domain error' -: 5 $.etx u:'abc'
+'domain error' -: 5 $.etx 10&u:'abc'
 'domain error' -: 5 $.etx 0 1 2
 'domain error' -: 5 $.etx 0 1.2 
 'domain error' -: 5 $.etx 0 1j2 

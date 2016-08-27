@@ -1,5 +1,7 @@
 NB. ,.y -----------------------------------------------------------------
 
+randuni''
+
 (1 1$x) -: ,.x=.0
 (1 1$x) -: ,.x=.'a'
 (1 1$x) -: ,.x=.123450
@@ -8,6 +10,8 @@ NB. ,.y -----------------------------------------------------------------
 (1 1$x) -: ,.x=.<i.10
 
 0 1  -: $,.''
+0 1  -: $,.u:''
+0 1  -: $,.10&u:''
 1 0  -: $,.1 4 5 0$9
 2 0  -: $,.2 4 0 5$9
 0 12 -: $,.i.0 3 4
@@ -33,6 +37,16 @@ table =: (# , */@}.@$) $ ,
 (,."_1 -: table"_1) (?2 3 4 5$#x){x=.'imitative harmony'
 (,."_2 -: table"_2) (?2 3 4 5$#x){x=.'personification'
 (,."_3 -: table"_3) (?2 3 4 5$#x){x=.'sui generis'
+
+(,."0  -: table"0)  (?2 3 4 5$#x){x=.u:'metaphoric meteoric'
+(,."_1 -: table"_1) (?2 3 4 5$#x){x=.u:'imitative harmony'
+(,."_2 -: table"_2) (?2 3 4 5$#x){x=.u:'personification'
+(,."_3 -: table"_3) (?2 3 4 5$#x){x=.u:'sui generis'
+
+(,."0  -: table"0)  (?2 3 4 5$#x){x=.10&u:'metaphoric meteoric'
+(,."_1 -: table"_1) (?2 3 4 5$#x){x=.10&u:'imitative harmony'
+(,."_2 -: table"_2) (?2 3 4 5$#x){x=.10&u:'personification'
+(,."_3 -: table"_3) (?2 3 4 5$#x){x=.10&u:'sui generis'
 
 (,."0 -: table"0) i.i. 5
 (,."0 -: table"0) i.i._5
@@ -99,6 +113,42 @@ NB. literal
 (a.{~?6 1 3$#a.) f a.{~?6 9$#a.
 (a.{~?6 1 3$#a.) f a.{~?6 4 9$#a.
 
+NB. literal2
+(adot1{~?#adot1) f adot1{~?#adot1
+(adot1{~?#adot1) f adot1{~?12$#adot1
+(adot1{~?#adot1) f adot1{~?3 10$#adot1
+(adot1{~?#adot1) f adot1{~?7 2 10$#adot1
+(adot1{~?11$#adot1) f adot1{~?#adot1
+(adot1{~?11$#adot1) f adot1{~?11$#adot1
+(adot1{~?11$#adot1) f adot1{~?11 1$#adot1
+(adot1{~?11$#adot1) f adot1{~?11 3 2$#adot1
+(adot1{~?7 3$#adot1) f adot1{~?#adot1
+(adot1{~?7 3$#adot1) f adot1{~?7$#adot1
+(adot1{~?7 3$#adot1) f adot1{~?7 9$#adot1
+(adot1{~?7 3$#adot1) f adot1{~?7 8 9$#adot1
+(adot1{~?6 1 3$#adot1) f adot1{~?#adot1
+(adot1{~?6 1 3$#adot1) f adot1{~?6$#adot1
+(adot1{~?6 1 3$#adot1) f adot1{~?6 9$#adot1
+(adot1{~?6 1 3$#adot1) f adot1{~?6 4 9$#adot1
+
+NB. literal4
+(adot2{~?#adot2) f adot2{~?#adot2
+(adot2{~?#adot2) f adot2{~?12$#adot2
+(adot2{~?#adot2) f adot2{~?3 10$#adot2
+(adot2{~?#adot2) f adot2{~?7 2 10$#adot2
+(adot2{~?11$#adot2) f adot2{~?#adot2
+(adot2{~?11$#adot2) f adot2{~?11$#adot2
+(adot2{~?11$#adot2) f adot2{~?11 1$#adot2
+(adot2{~?11$#adot2) f adot2{~?11 3 2$#adot2
+(adot2{~?7 3$#adot2) f adot2{~?#adot2
+(adot2{~?7 3$#adot2) f adot2{~?7$#adot2
+(adot2{~?7 3$#adot2) f adot2{~?7 9$#adot2
+(adot2{~?7 3$#adot2) f adot2{~?7 8 9$#adot2
+(adot2{~?6 1 3$#adot2) f adot2{~?#adot2
+(adot2{~?6 1 3$#adot2) f adot2{~?6$#adot2
+(adot2{~?6 1 3$#adot2) f adot2{~?6 9$#adot2
+(adot2{~?6 1 3$#adot2) f adot2{~?6 4 9$#adot2
+
 NB. integer
 (?2222) f ?2
 (?2222) f ?12$1234
@@ -159,14 +209,20 @@ NB. boxed
 (<?2e9) f t{~?3 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (<?2e9) f t{~?7 2 10$#t=.<"0 i.123
 (t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?12     $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?12$#t) f t{~?12 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?12$#t) f t{~?12 2 10$#t=.<"0 i.123
 (<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?7     $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (<"0?7 2$999) f t{~?7 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (<"0?7 2$999) f t{~?7 2 10$#t=.<"0 i.123
 (t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?13    $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?13 2 2$#t) f t{~?13 3  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?13 2 2$#t) f t{~?13 2 3$#t=.<"0 ?123$11231
@@ -201,6 +257,6 @@ a.                   f"_ 0 ] 100+i.12
 (<"0 ] 1000 ?@$ 1e5) f"_ 0 ] 100+i.12
 
 
-4!:55 ;:'d e f overr t table x'
+4!:55 ;:'adot1 adot2 d e f overr t table x'
 
 

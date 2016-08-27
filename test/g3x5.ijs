@@ -44,11 +44,15 @@ eq =. 2 : ('ar=.5!:1'; '(ar <''x.'') -: (ar <''y.'')')
 'domain error' -: (<1)fc etx 3 4.5
 
 'domain error' -:  2 fc etx 'abcd0123'
+'domain error' -:  2 fc etx u:'abcd0123'
+'domain error' -:  2 fc etx 10&u:'abcd0123'
 'domain error' -:  2 fc etx (i.12){a.
 'domain error' -:  2 fc etx 1 2 3j4
 'domain error' -:  2 fc etx 1;2 3 4
 
 'domain error' -:  1 fc etx 'abcd0123'
+'domain error' -:  1 fc etx u:'abcd0123'
+'domain error' -:  1 fc etx 10&u:'abcd0123'
 'domain error' -:  1 fc etx (i.12){a.
 'domain error' -:  1 fc etx 1 2 3j4
 'domain error' -:  1 fc etx 1;2 3 4
@@ -65,13 +69,25 @@ eq =. 2 : ('ar=.5!:1'; '(ar <''x.'') -: (ar <''y.'')')
 
 'rank error'   -:  2 fc etx i.1 4
 'rank error'   -: _2 fc etx 1 4$'a'
+'rank error'   -: _2 fc etx 1 4$u:'a'
+'rank error'   -: _2 fc etx 1 4$10&u:'a'
 'rank error'   -:  1 fc etx i.3 4
 'rank error'   -: _1 fc etx 3 4$'abcd'
+'rank error'   -: _1 fc etx 3 4$u:'abcd'
+'rank error'   -: _1 fc etx 3 4$10&u:'abcd'
 
 'length error' -: _2 fc etx 'ab'
 'length error' -: _2 fc etx 'abcdef'
 'length error' -: _1 fc etx 'a'
 'length error' -: _1 fc etx 'abc'
+'domain error' -: _2 fc etx u:'ab'
+'domain error' -: _2 fc etx u:'abcdef'
+'domain error' -: _1 fc etx u:'a'
+'domain error' -: _1 fc etx u:'abc'
+'domain error' -: _2 fc etx 10&u:'ab'
+'domain error' -: _2 fc etx 10&u:'abcdef'
+'domain error' -: _1 fc etx 10&u:'a'
+'domain error' -: _1 fc etx 10&u:'abc'
 
 4!:55 ;:'eq f fc g x'
 

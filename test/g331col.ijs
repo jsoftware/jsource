@@ -33,12 +33,24 @@ n=: 300
 b=: (i.m)e.?20$m
 c=: (i.n)e.?20$n
 y=: a{~?(m,n)$#a=: ' abcd efgh ijkl mnop qrst uvwy xz '
+y1=: a{~?(m,n)$#a=: u:' abcd efgh ijkl mnop qrst uvwy xz '
+y2=: a{~?(m,n)$#a=: 10&u:' abcd efgh ijkl mnop qrst uvwy xz '
 
 test b    ;c    ;y
 test b    ;(0*c);y
 test (0*b);c    ;y
 test (0*b);(0*c);y
 
+test b    ;c    ;y1
+test b    ;(0*c);y1
+test (0*b);c    ;y1
+test (0*b);(0*c);y1
 
-4!:55 ;:'a b c cutcol m n test y yy'
+test b    ;c    ;y2
+test b    ;(0*c);y2
+test (0*b);c    ;y2
+test (0*b);(0*c);y2
+
+
+4!:55 ;:'a b c cutcol m n test y y1 y2 yy'
 

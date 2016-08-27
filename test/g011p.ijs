@@ -67,9 +67,17 @@ min=. 4 : 'x<.y'
 
 (,'j')    -: <./\'j'
 (,<'ace') -: <./\<'ace'
+(,'j')    -: <./\u:'j'
+(,<'ace') -: <./\<u:'ace'
+(,'j')    -: <./\10&u:'j'
+(,<'ace') -: <./\<10&u:'ace'
 
 'domain error' -: <./\ etx 'deipnosophist'
 'domain error' -: <./\ etx ;:'peace in our time'
+'domain error' -: <./\ etx u:'deipnosophist'
+'domain error' -: <./\ etx ;:u:'peace in our time'
+'domain error' -: <./\ etx 10&u:'deipnosophist'
+'domain error' -: <./\ etx ;:10&u:'peace in our time'
 
 4!:55 ;:'f min x'
 

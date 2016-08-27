@@ -22,11 +22,11 @@ unix=. x e. 5 7
 pc  =. x e. 0 1 2 6
 
 test dir '*.*'
-test dir (pc#'\*.*'),(unix#'/etc/p*')
-test dir (pc#'c:\autoexec.bat'),(unix#'/etc/passwd')
+test dir (pc#'/*.*'),(unix#'/etc/p*')
+test dir (pc#'c:/autoexec.bat'),(unix#'/etc/passwd')
 
 p =. >{:4!:3 ''
-p =. < p ([ }.~ [: - |.@[ i. ]) (pc#'\'),(mac#':'),unix#'/'
+p =. < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
 d =. dir p,&.><'*.ijs'
 s =. >2{"1 d
 s -: #@read p,&.>{."1 d

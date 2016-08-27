@@ -47,6 +47,8 @@ r=: y=: 5!:2 <'g'
 1 [ unmap_jmf_ 'q'
 1 [ unmap_jmf_ 'r'
 
+0 s: 11
+
 4!:55 ;:'f f1 g j mean q r t x y'
 
 

@@ -81,6 +81,8 @@ h&>c [ i=: <''
 h&>c [ i=: <$0
 
 'domain error' -: 'abc'    { etx $. i.2 3
+'domain error' -: (u:'abc')    { etx $. i.2 3
+'domain error' -: (10&u:'abc')    { etx $. i.2 3
 
 'rank error'   -: (<2 3$<0){ etx $. i.2 3
 
@@ -90,6 +92,10 @@ h&>c [ i=: <$0
 'index error'  -: _3       { etx $. i.2 3
 'index error'  -: (<'ab')  { etx $. i.2 3
 'index error' -: (<2;'a')  { etx $. i.2 3
+'index error'  -: (<u:'ab')  { etx $. i.2 3
+'index error' -: (<2;u:'a')  { etx $. i.2 3
+'index error'  -: (<10&u:'ab')  { etx $. i.2 3
+'index error' -: (<2;10&u:'a')  { etx $. i.2 3
 
 
 4!:55 ;:'c d f g h i r s x'

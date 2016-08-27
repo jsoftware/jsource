@@ -271,13 +271,13 @@
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  RZ(name);   \
- AK(name)=akx; AT(name)=type&NOUN?SAFE(type):type; AN(name)=atoms;   \
+ AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-mhb-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
  AR(name)=rank;     \
  if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}    \
  AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx;    \
-}  // SAFE is scaf
+}
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size) \
 { I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
@@ -287,7 +287,7 @@
  RZ(ZZz);   \
  if(!(type&DIRECT))memset((C*)ZZz+akx,C0,bytes-mhb-akx);  \
  else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
- AK(ZZz)=akx; AT(ZZz)=type&NOUN?SAFE(type):type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
+ AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
  if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
  AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
  name=ZZz;   \

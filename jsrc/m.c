@@ -541,7 +541,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
     // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
     // To find that byte, back out the SZI added nulls 
- AK(z)=akx; AT(z)=type&NOUN?SAFE(type):type; AN(z)=atoms;   // Fill in AK, AT, AN   SAFE is scaf
+ AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short

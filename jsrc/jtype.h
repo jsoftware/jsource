@@ -231,9 +231,9 @@ typedef I SI;
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
 // NOUNSAFE flag
-#define SAFE(x)         (x) // ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack  scaf
-#define SAFED(x)        (x) // ((x)|NOUNSAFE)    // type, descendants safe from tstack
-#define SAFE0(x)        (x) // ((x)|NOUNSAFE0)    // type, current block safe from tstack
+#define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
+#define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
+#define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
 #define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
 #define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
 #define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack

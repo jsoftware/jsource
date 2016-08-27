@@ -86,7 +86,6 @@ static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1;
   // if not AR assignment, just open each box of rhs and assign
   else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,jtisf);}
  }
- // obsolete jt->symb=0;   // Restore to no symbol table selected
  RNE(stack+2);  // the result is the same value that was assigned
 }
 
@@ -284,7 +283,6 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
  // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
  // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original
  // word m-1, with the number in the stack being one higher than the original word number
- // obsolete ASSERT(!(AT(queue[1])&ASGN),EVSYNTAX);   // make sure there is something before each ASGN
 
  // We don't refer to w past this point.  It may be overwritten be recursive calls
 

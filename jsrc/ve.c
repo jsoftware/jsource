@@ -220,9 +220,6 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  }
  // Integer.  Calculate x=max magnitude encountered (minimum of 1, to leave 1 output value)
  x=1; v=AV(w);
-// obsolete  DO(n, p=*v++; if(p==IMIN){c=SY_64?64:32; break;} x=x<p?p:x<-p?-p:x;);  // overflow happens on IMIN
-// obsolete if(!c)while(x){x>>=1; ++c;}  // count # bits in result
-// obsolete c=MAX(1,c);  // always at least 1
  DO(n, p=*v++; x|=(UI)(p>0?p:-p););  // overflow happens on IMIN, no prob
  for(c=0;x;x>>=1){++c;}  // count # bits in result
  GATV(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;  // Allocate result area, install shape

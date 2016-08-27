@@ -201,7 +201,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
 // a f/ . g w
 // c is pseudochar for f, d is pseudochar for g
-static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,e,*u,*v,*v0,*v1,*zv;C c0,c1;
+static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*zv;C c0,c1;
     I ana,i,j,m,n,p,q,r,*uu,*vv,wc;
  RZ(a&&w);
  RZ(z=ipprep(a,w,B01,&m,&n,&p));
@@ -227,6 +227,19 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,e,*u,*v,*v0,*v1,
  if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),zero):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),one):c1==IPBXW?w:not(w));
  // av->a arg, zv->result, v0->input for 0, v1->input for 1
  av0=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
+
+ // See if the operations are such that a 0 or 1 from a can skip the innerproduct, or perhaps
+ // terminate the entire operation
+ I esat=2, eskip=2;  // if byte of a equals esat, the entire result-cell is set to its limit value; if it equals eskip, the innerproduct is skipped
+ if(c==CPLUSDOT&&(c0==IPBX1||c1==IPBX1)||c==CSTARDOT&&(c0==IPBX0||c1==IPBX0)){
+ // +./ . (+. <: >: *:)   *./ . (*. < > +:)   a byte of a can saturate the entire result-cell: see which value does that
+  esat=c==CPLUSDOT?c1==IPBX1:c1==IPBX0;  // esat==1 if +./ . (+. >:)   or *./ . (< +:) where x=1 overrides y (producing 1);  if esat=0, x=0 overrides y (producing 1)
+ }else if(c==CPLUSDOT&&(c0==IPBX0||c1==IPBX0)||c==CSTARDOT&&(c0==IPBX1||c1==IPBX1)||
+     c==CNE&&(c0==IPBX0||c1==IPBX0)){
+  // (+. ~:)/ . (*. < > +:)   *./ . (+. <: >: *:)  a byte of a can guarantee the current innerproduct has no effect
+  eskip=c==CSTARDOT?c1==IPBX1:c1==IPBX0;  // eskip==1 if  (+. ~:)/ . (+:)   *./ . (+. >:)  where x=1 has no effect; if esat=0, x=0 has no effect
+ }
+
  switch(c){
   case CPLUSDOT:
 #define F |=

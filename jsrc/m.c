@@ -22,7 +22,6 @@ static void jttraverse(J,A,AF);
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
- // obsolete k=1; DO(m, msize[i]=k; k+=k;);  /* OK to do this line in each thread */
  if(jt->tstack==0){  // meminit gets called twice.  Alloc the block only once
   jt->tstack=(A*)MALLOC(NTSTACK);
   jt->tnextpushx = SZI;  // start storing at position 1 (the chain field in entry 0 is unused)
@@ -239,7 +238,6 @@ static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
 }
 
 static void jttraverse(J jt,A wd,AF f){
-// obsolete RZ(w);
  switch(CTTZ(AT(wd))){
   case XDX:
    {DX*v=(DX*)AV(wd); DO(AN(wd), CALL1(f,v->x,0L); ++v;);} break;
@@ -256,7 +254,6 @@ static void jttraverse(J jt,A wd,AF f){
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(wd); CALL1(f,SPA(v,a),0L); CALL1(f,SPA(v,e),0L); CALL1(f,SPA(v,i),0L); CALL1(f,SPA(v,x),0L);} break;
  }
-// obsolete R mark;
 }
 
 void jtfh(J jt,A w){fr(w);}
@@ -541,13 +538,10 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  I akx=AKXR(rank);   // Get offset to data
  if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-mhb-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
    // All non-DIRECT types have items that are multiples of I, so no need to round the length
-// obsolete  if(!(type&DIRECT))memset((C*)z+akx,C0,((bytes+SZI-1-mhb)&(-SZI))-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
-// obsolete  if(!(type&DIRECT))memset((C*)z+(AH*SZI),C0,((bytes+SZI-1-mhb)&(-SZI))-AH*SZI);  // For indirect types, zero the 
  else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
-// obsolete else if(type&LAST0){((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-2]=((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-1]=0; }  /* if LAST0, clear the last TWO Is  */
     // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
     // To find that byte, back out the SZI added nulls 
- AK(z)=akx; AT(z)=type&NOUN?UNSAFE(type):type; AN(z)=atoms;   // Fill in AK, AT, AN   SAFE is scaf
+ AK(z)=akx; AT(z)=type&NOUN?SAFE(type):type; AN(z)=atoms;   // Fill in AK, AT, AN   SAFE is scaf
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
@@ -600,10 +594,8 @@ void jtmf(J jt,A w){I mfreeb;
 
 RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
-// obsolete  RZ(z=ma(SZI*(AH+r)));
  RZ(z=gafv(SZI*(AH+r)+mhb));
  AT(z)=0;
-// obsolete   AC(z)=ACUC1;tpush(z);  // original had ++AC(z)!?
  if(w){
   AFLAG(z)=0; AM(z)=AM(w); AT(z)=AT(w); AN(z)=AN(w); AR(z)=r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);

@@ -669,7 +669,6 @@ extern I        jtfdep(J,A);
 extern void     jtfh(J,A);
 extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
-// obsolete extern void     jtfr(J,A);
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
 extern A        jtfxeachv(J,I,A);
@@ -868,7 +867,6 @@ extern I        liln;
 extern A        mark;
 extern C        minus0[];
 extern A        mnam;
-// obsolete extern I        msize[];
 extern A        mdot;
 extern A        mtm;
 extern A        mtv;

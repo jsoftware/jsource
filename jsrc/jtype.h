@@ -231,9 +231,9 @@ typedef I SI;
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 
 // NOUNSAFE flag
-#define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
-#define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
-#define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
+#define SAFE(x)         (x) // ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack  scaf
+#define SAFED(x)        (x) // ((x)|NOUNSAFE)    // type, descendants safe from tstack
+#define SAFE0(x)        (x) // ((x)|NOUNSAFE0)    // type, current block safe from tstack
 #define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
 #define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
 #define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack
@@ -243,8 +243,6 @@ typedef I SI;
 #define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
 
 #define HOMO(s,t)       (TYPESEQ((s),(t)) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
-// obsolete #define STYPE(t)        ((t)& B01?SB01:(t)& INT?SINT:(t)& FL?SFL:(t)& CMPX?SCMPX:(t)&LIT?SLIT:(t)& BOX?SBOX:0L)
-// obsolete #define DTYPE(t)        ((t)&SB01? B01:(t)&SINT? INT:(t)&SFL? FL:(t)&SCMPX? CMPX:(t)&SLIT?LIT:(t)&SBOX? BOX:0L)
 #define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 

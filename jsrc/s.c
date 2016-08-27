@@ -165,7 +165,6 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
 L*jtprobe(J jt,A a,A g){C*s;I*hv,m;L*v;NM*u;
  RZ(a&&g);u=NAV(a);
  // If there is bucket information, 
-// obsolete ASSERTSYS(jt->local||(u->bucket==0&&u->bucketx==0),"bucket");
  m=u->m; s=u->s; hv=AV(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
  if(!*hv)R 0;                            /* (0) empty slot    */
  v=*hv+jt->sympv;
@@ -314,7 +313,6 @@ L*jtsyrd(J jt,A a,A*symb){A g;I m,n;NM*v;
   if(symb)*symb=g;  // save the starting locale if the user wants to
   // If there is a local symbol table, search it first
   if(e = probelocal(a)){R e;}
-// obsolete  if(jt->local&&(e = probe(a, jt->local))){R e;}
  }
  R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
 }

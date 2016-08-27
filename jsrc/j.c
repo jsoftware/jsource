@@ -27,7 +27,6 @@ A   mark=0;               /* parser marker                        */
 C   minus0[8]={0};        /* the abominable minus 0               */
 A   mdot=0;               /* m.                                   */
 A   mnam=0;               /* m as a name                          */
-// obsolete I   msize[MLEN]={0};      /* m.c size of blocks in mfree[i]       */
 A   mtm=0;                /* i. 0 0                               */
 A   mtv=0;                /* i.0                                  */
 A   ndot=0;               /* n.                                   */

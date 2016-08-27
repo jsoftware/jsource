@@ -242,6 +242,9 @@ typedef I SI;
 #define TYPESLT(x,y)    (UNSAFE(x)<UNSAFE(y))  // type x < type y
 #define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
 
+// Utility: keep the lowest 1 only
+#define LOWESTBIT(x)    ((x)&-(x))
+
 #define HOMO(s,t)       (TYPESEQ((s),(t)) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
 #define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))

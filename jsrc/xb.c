@@ -80,10 +80,10 @@ static B jtmvw(J jt,C*v,C*u,I n,B bv,B bu,B dv,B du){C c;
  R 1;
 }    /* move n words from u to v */
 
-static C*jtbrephdr(J jt,B b,B d,A w,A y){A q;I f,r;
+static C*jtbrephdr(J jt,B b,B d,A w,A y){A q;I f,r;I extt = UNSAFE(AT(w));
  q=(A)AV(y); r=AR(w); f=0;
  RZ(mvw(BF(d,q),(C*)&f,    1L,b,BU,d,SY_64)); *CAV(y)=d?(b?0xe3:0xe2):(b?0xe1:0xe0);
- RZ(mvw(BT(d,q),(C*)&AT(w),1L,b,BU,d,SY_64));
+ RZ(mvw(BT(d,q),(C*)&extt,1L,b,BU,d,SY_64));
  RZ(mvw(BN(d,q),(C*)&AN(w),1L,b,BU,d,SY_64));
  RZ(mvw(BR(d,q),(C*)&AR(w),1L,b,BU,d,SY_64));
  RZ(mvw(BS(d,q),(C*) AS(w),r, b,BU,d,SY_64));
@@ -184,7 +184,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RZ(mvw((C*)&n,BN(d,w),1L,BU,b,SY_64,d));
  RZ(mvw((C*)&r,BR(d,w),1L,BU,b,SY_64,d)); 
  kk=WS(d); v=BV(d,w,r);
- ASSERT((t==(t&-t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
+ ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(0<=r&&r<=RMAX,EVRANK);
  p=bsize(d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 

@@ -526,7 +526,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
   if(t<CMPX) {
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
-   p = &va[vaptr[(UC)id]].p2[UNSAFE((at>>1)+((at+wt)>>2))];
+   p = &va[vaptr[(UC)id]].p2[((at>>1)+((at+wt)>>2))&(CMPX-1)];
    *cv = p->cv;
   } else {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)

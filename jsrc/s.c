@@ -131,7 +131,7 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  GATV(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
-  *xv++=(q=pv->val)?AT(pv->val):0;  // type
+  *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
   *xv++=pv->flag;  // flag
   *xv++=pv->sn;    
   *xv++=pv->next;

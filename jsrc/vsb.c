@@ -327,8 +327,8 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
  if(!AN(w))R vec(SBT,0L,0L);
  ASSERT(AT(w)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
- c2=1&&AT(w)&C2T; wn=AN(w);
- c2+=2*(1&&AT(w)&C4T);
+ wn=AN(w);
+ c2=(AT(w)>>C2TX)&((C2T|C4T)>>C2TX);  // c2=0 for LIT, 1 for C2T, 2 for C4T
  if(c2==2){C4 c,*wv=C4AV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
@@ -355,7 +355,8 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||AT(w)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1<AR(w),EVRANK);
- c2=1&&AT(w)&C2T; c2+=2*(1&&AT(w)&C4T); wr=AR(w); ws=AS(w); wc=ws[wr-1];
+ c2=(AT(w)>>C2TX)&((C2T|C4T)>>C2TX);  // c2=0 for LIT, 1 for C2T, 2 for C4T
+ wr=AR(w); ws=AS(w); wc=ws[wr-1];
  RE(m=wc?AN(w)/wc:prod(wr-1,ws));
  GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
  if(!wc)memset(zv,C0,m*sizeof(SB));

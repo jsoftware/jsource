@@ -81,9 +81,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // large values unsuitable for a branch table, and also took advantage of the fact that
 // codes produced by multiple combinations, such as LIT,B01 and B01,FL which both produce
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
-// Now we split out C2T and C4T separately; all the other codes fit in 0-7 so we can produce a 6-bit
-// encoding.  Supporting other types would require revisiting this, whether new style or old.
-#define TT(s,t) (((s)<<3)+(t))
+#define TT(s,t) (((s)<<5)+(t))
 
 F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wd,wr,*ws,wt,*zv;int cc;
  RZ(a&&w);
@@ -121,61 +119,53 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
    DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
  }
  ge=cc; gt=-ge;
- // Handle C2T and C4T separately to tighten encoding of other combinations
- if(C4T&(at|wt)){
-  switch(TT(at,wt)){   // Don't use CTTZ; TT is still adequate to separate the cases
-   case TT(LIT, C4T ): BSLOOP(UC,C4); break;
-   case TT(C2T, C4T ): BSLOOP(US,C4); break;
-   case TT(C4T, LIT ): BSLOOP(C4,UC); break;
-   case TT(C4T, C2T ): BSLOOP(C4,US); break;
-   case TT(C4T, C4T ): BSLOOP(C4,C4); break;
-  }
- } else if(C2T&(at|wt)){
-  switch(TT(at,wt)){   // Don't use CTTZ; TT is still adequate to separate the cases
-   case TT(LIT, C2T ): BSLOOP(UC,US); break;
-   case TT(C2T, C2T ): BSLOOP(US,US); break;
-   case TT(C2T, LIT ): BSLOOP(US,UC); break;
-  }
- } else {
-  switch(TT(CTTZ(at),CTTZ(wt))){
-   case TT(B01X, B01X ): BSLOOP(C, C ); break;
-   case TT(B01X, INTX ): BSLOOP(C, I ); break;
-   case TT(B01X, FLX  ): BSLOOP(C, D ); break;
+ switch(TT(CTTZ(at),CTTZ(wt))){
+  case TT(LITX, C4TX ): BSLOOP(UC,C4); break;
+  case TT(C2TX, C4TX ): BSLOOP(US,C4); break;
+  case TT(C4TX, LITX ): BSLOOP(C4,UC); break;
+  case TT(C4TX, C2TX ): BSLOOP(C4,US); break;
+  case TT(C4TX, C4TX ): BSLOOP(C4,C4); break;
+  case TT(LITX, C2TX ): BSLOOP(UC,US); break;
+  case TT(C2TX, C2TX ): BSLOOP(US,US); break;
+  case TT(C2TX, LITX ): BSLOOP(US,UC); break;
+  case TT(B01X, B01X ): BSLOOP(C, C ); break;
+  case TT(B01X, INTX ): BSLOOP(C, I ); break;
+  case TT(B01X, FLX  ): BSLOOP(C, D ); break;
 #if C_LE
-   case TT(LITX, LITX ): BSLOOP(UC,UC); break;
+  case TT(LITX, LITX ): BSLOOP(UC,UC); break;
 #else
-   case TT(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
+  case TT(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
 #endif
-   case TT(INTX, B01X ): BSLOOP(I, C ); break;
-   case TT(INTX, INTX ): BSLOOP(I, I ); break;
-   case TT(INTX, FLX  ): BSLOOP(I, D ); break;
-   case TT(FLX,  B01X ): BSLOOP(D, C ); break;
-   case TT(FLX,  INTX ): BSLOOP(D, I ); break;
-   case TT(CMPXX,CMPXX): c+=c;  /* fall thru */
-   case TT(FLX,  FLX  ): BSLOOP(D, D ); break;
-   case TT(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
-   case TT(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
-   case TT(BOXX, BOXX ):
-    for(j=0,cm=c*m;j<cm;j+=c){
-     p=0; q=n-1;
-     while(p<=q){
-      MID(k,p,q); ck=c*k; b=1; 
-      DO(c, if(cc=compare(AVR(i+ck),WVR(i+j))){b=gt==cc; break;});
-      if(b)q=k-1; else p=k+1;
-     } 
-     *zv++=1+q;
-    }
-    break;
-   default:
-    ASSERT(TYPESNE(at,wt),EVNONCE);
-    if(TYPESNE(t,at))RZ(a=cvt(t,a));
-    if(TYPESNE(t,wt))RZ(w=cvt(t,w));
-    switch(CTTZ(t)){
-     case CMPXX: c+=c;  /* fall thru */ 
-     case FLX:   BSLOOP(D,D);           break;
-     case XNUMX: BSLOOF(X,X, xcompare); break;
-     case RATX:  BSLOOF(Q,Q, qcompare); break;
-     default:   ASSERT(0,EVNONCE);
- }}}
+  case TT(INTX, B01X ): BSLOOP(I, C ); break;
+  case TT(INTX, INTX ): BSLOOP(I, I ); break;
+  case TT(INTX, FLX  ): BSLOOP(I, D ); break;
+  case TT(FLX,  B01X ): BSLOOP(D, C ); break;
+  case TT(FLX,  INTX ): BSLOOP(D, I ); break;
+  case TT(CMPXX,CMPXX): c+=c;  /* fall thru */
+  case TT(FLX,  FLX  ): BSLOOP(D, D ); break;
+  case TT(XNUMX,XNUMX): BSLOOF(X, X, xcompare); break;
+  case TT(RATX, RATX ): BSLOOF(Q, Q, qcompare); break;
+  case TT(BOXX, BOXX ):
+   for(j=0,cm=c*m;j<cm;j+=c){
+    p=0; q=n-1;
+    while(p<=q){
+     MID(k,p,q); ck=c*k; b=1; 
+     DO(c, if(cc=compare(AVR(i+ck),WVR(i+j))){b=gt==cc; break;});
+     if(b)q=k-1; else p=k+1;
+    } 
+    *zv++=1+q;
+   }
+   break;
+  default:
+   ASSERT(TYPESNE(at,wt),EVNONCE);
+   if(TYPESNE(t,at))RZ(a=cvt(t,a));
+   if(TYPESNE(t,wt))RZ(w=cvt(t,w));
+   switch(CTTZ(t)){
+    case CMPXX: c+=c;  /* fall thru */ 
+    case FLX:   BSLOOP(D,D);           break;
+    case XNUMX: BSLOOF(X,X, xcompare); break;
+    case RATX:  BSLOOF(Q,Q, qcompare); break;
+    default:   ASSERT(0,EVNONCE);
+ }}
  R z;
 }    /* a I."r w */

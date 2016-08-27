@@ -613,26 +613,26 @@ strcpy(proc,"x15lseek32");
  R cc;
 }
 
-#define CDT(x,y) ((x)+512*(y))
+#define CDT(x,y) ((x)+32*(y))  // x runs from LIT to C4T, 2-18
 
 static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
- switch(CDT(zt,wt)){
+ switch(CDT(CTTZ(zt),CTTZ(wt))){
   default:           R 0;
-  case CDT(FL, B01): *(D*)v=*(B*)u; break;
-  case CDT(FL, INT): *(D*)v=(D)*(I*)u; break;
-  case CDT(FL, FL ): *(D*)v=*(D*)u; break;
-  case CDT(C2T,LIT): *(US*)v=*(UC*)u; break;
-  case CDT(C2T,C2T): *(US*)v=*(US*)u; break;
-  case CDT(LIT,LIT): *(UC*)v=*(UC*)u; break;
-  case CDT(LIT,C2T): s=*(US*)u; if(256<=(US)s)R 0; *(UC*)v=(UC)s; break;
-  case CDT(C4T,LIT): *(C4*)v=*(UC*)u; break;
-  case CDT(C4T,C2T): *(C4*)v=*(US*)u; break;
-  case CDT(C4T,C4T): *(C4*)v=*(C4*)u; break;
-  case CDT(LIT,C4T): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(UC*)v=(UC)s4; break;
-  case CDT(C2T,C4T): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
-  case CDT(INT,B01): *    v=*(B*)u; break;
-  case CDT(INT,INT): *    v=*(I*)u; break;
-  case CDT(INT,FL ):
+  case CDT(FLX, B01X): *(D*)v=*(B*)u; break;
+  case CDT(FLX, INTX): *(D*)v=(D)*(I*)u; break;
+  case CDT(FLX, FLX ): *(D*)v=*(D*)u; break;
+  case CDT(C2TX,LITX): *(US*)v=*(UC*)u; break;
+  case CDT(C2TX,C2TX): *(US*)v=*(US*)u; break;
+  case CDT(LITX,LITX): *(UC*)v=*(UC*)u; break;
+  case CDT(LITX,C2TX): s=*(US*)u; if(256<=(US)s)R 0; *(UC*)v=(UC)s; break;
+  case CDT(C4TX,LITX): *(C4*)v=*(UC*)u; break;
+  case CDT(C4TX,C2TX): *(C4*)v=*(US*)u; break;
+  case CDT(C4TX,C4TX): *(C4*)v=*(C4*)u; break;
+  case CDT(LITX,C4TX): s4=*(C4*)u; if(256<=(C4)s4)R 0; *(UC*)v=(UC)s4; break;
+  case CDT(C2TX,C4TX): s4=*(C4*)u; if(65536<=(C4)s4)R 0; *(US*)v=(US)s4; break;
+  case CDT(INTX,B01X): *    v=*(B*)u; break;
+  case CDT(INTX,INTX): *    v=*(I*)u; break;
+  case CDT(INTX,FLX ):
    p=*(D*)u; q=jfloor(p);
    if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0; 
 #if SY_64

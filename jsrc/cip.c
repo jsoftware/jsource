@@ -6,13 +6,20 @@
 #include "j.h"
 #include "vasm.h"
 
+// Analysis for inner product
+// a,w are arguments
+// zt is type of result
+// *pm is # 1-cells of a
+// *pn is # atoms in an item of w
+// *pp is number of inner-product muladds
+//   (in each, an atom of a multiplies an item of w)
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
  ar=AR(a); as=AS(a); ar1=ar?ar-1:0; RE(*pm=m=prod(ar1,  as));
  wr=AR(w); ws=AS(w); wr1=wr?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));
- *pp=p=ar?*(as+ar1):wr?*ws:1;
+ *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
- GA(z,zt,mn,ar1+wr1,0);
- ICPY(AS(z),      as,ar1);
+ GA(z,zt,mn,ar1+wr1,0);   // allocate result area
+ ICPY(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
  ICPY(AS(z)+ar1,1+ws,wr1);
  R z;
 }    /* argument validation & result for an inner product */
@@ -39,11 +46,11 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
  at=AT(a); wt=AT(w); t=at&B01?wt:at;
  RZ(z=ipprep(a,w,t,&m,&n,&p)); zk=n*bp(t); u=BAV(a); v=wv=BAV(w);
  NAN0;
- switch(t){
+ switch(CTTZ(t)){
   default:   ASSERT(0,EVDOMAIN);
-  case CMPX:  if(at&B01)PDTBY(Z,Z,ZINC) else PDTXB(Z,Z,ZINC,c=*u++   ); break;
-  case FL:    if(at&B01)PDTBY(D,D,DINC) else PDTXB(D,D,DINC,c=*u++   ); break;
-  case INT:   if(at&B01)PDTBY(I,I,IINC) else PDTXB(I,I,IINC,c=*u++   ); 
+  case CMPXX:  if(at&B01)PDTBY(Z,Z,ZINC) else PDTXB(Z,Z,ZINC,c=*u++   ); break;
+  case FLX:    if(at&B01)PDTBY(D,D,DINC) else PDTXB(D,D,DINC,c=*u++   ); break;
+  case INTX:   if(at&B01)PDTBY(I,I,IINC) else PDTXB(I,I,IINC,c=*u++   ); 
              if(er==EWOV){
               RZ(z=ipprep(a,w,FL,&m,&n,&p)); zk=n*sizeof(D); u=BAV(a); v=wv=BAV(w);
               if(at&B01)PDTBY(D,I,IINC) else PDTXB(D,I,IINC,c=(D)*u++);
@@ -105,8 +112,8 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if(!p){memset(AV(z),C0,AN(z)*bp(AT(z))); R z;}
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
- switch(t){
-  case B01:
+ switch(CTTZNOFLAG(t)){
+  case B01X:
    if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
     q=p/255; r=p%255; nw=(n+SZI-1)/SZI;
     GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
@@ -119,7 +126,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DO(p1, x=zv; if(*u++)DO(n, *x+++=*v++;) else v+=n;);
    }}
    break;
-  case INT:
+  case INTX:
 #if SY_64
    {C er=0;I c,*u,*v,*wv,*x,*zv;
     u=AV(a); v=wv=AV(w); zv=AV(z);
@@ -153,7 +160,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    }
 #endif
    break;
-  case FL:
+  case FLX:
    {D c,s,t,*u,*v,*wv,*x,*zv;
     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     NAN0;
@@ -165,7 +172,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
     NAN1;
    }
    break;
-  case CMPX:
+  case CMPXX:
    {Z c,*u,*v,*wv,*x,*zv;
     u=ZAV(a); v=wv=ZAV(w); zv=ZAV(z);
     if(1==n)DO(m, v=wv; c=zeroZ; DO(p, c.re+=ZRE(*u,*v); c.im+=ZIM(*u,*v); ++u; ++v;); *zv++=c;)
@@ -192,11 +199,15 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #define IPBXW  2
 #define IPBXNW 3
 
-static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,b,e,*u,*v,*v0,*v1,*zv;C c0,c1;
-    I ac,i,j,m,n,p,q,r,*uu,*vv,wc;
+// a f/ . g w
+// c is pseudochar for f, d is pseudochar for g
+static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,e,*u,*v,*v0,*v1,*zv;C c0,c1;
+    I ana,i,j,m,n,p,q,r,*uu,*vv,wc;
  RZ(a&&w);
  RZ(z=ipprep(a,w,B01,&m,&n,&p));
- ac=AR(a)?1:0; wc=AR(w)?n:0; q=n/SZI; r=n%SZI;
+ // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
+ ana=!!AR(a); wc=AR(w)?n:0; q=n/SZI; r=n%SZI;  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords in an item of w, r=remainder
+ // Set c0 & c1 to classify the g operation
  switch(B01&AT(w)?d:0){
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;
   case CNE:                             c0=IPBXW;  c1=IPBXNW; break;
@@ -210,20 +221,23 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,b,e,*u,*v,*v0,*v1,*zv;C
   case CSTARCO:                         c0=IPBX1;  c1=IPBXNW; break;
   default: c0=c1=-1; g=ds(d); RZ(x0=df2(zero,w,g)); RZ(x1=df2(zero,w,g));
  }
+ // Set up x0 to be the argument to use for y if the atom of x is 0: 0, 1, y, -.y
+ // Set up x1 to be the arg if xatom is 1
  if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),zero):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),one):c0==IPBXW?w:not(w));
  if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),zero):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),one):c1==IPBXW?w:not(w));
- av=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
+ // av->a arg, zv->result, v0->input for 0, v1->input for 1
+ av0=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
  switch(c){
   case CPLUSDOT:
-#define F(x,y) *x++|=*y++
+#define F |=
 #include "cip_t.h"
    break;
   case CSTARDOT:
-#define F(x,y) *x++&=*y++
+#define F &=
 #include "cip_t.h"
    break;
   case CNE:
-#define F(x,y) *x++^=*y++
+#define F ^=
 #include "cip_t.h"
    break;
  }

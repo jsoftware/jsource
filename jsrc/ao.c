@@ -26,7 +26,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
 }
 
 
-#define OBQCASE(t,id)    ((t)+(256*(id)))
+#define OBQCASE(t,id)    ((t)+(8*(id)))
 
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw*u,*v,*ww=(Tw*)wv;Tz x,*zz;                  \
@@ -46,35 +46,35 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; c=prod(r-2,2+s);
  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)*bp(wt)); R z;}
  if(wt&FL+CMPX)NAN0;
- if(1==c)switch(OBQCASE(wt,id)){
-  case OBQCASE(B01, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
-  case OBQCASE(B01, CEQ     ): OBQLOOP(B,B,wt,x=*u, x=x==*u      ); break;
-  case OBQCASE(B01, CMAX    ):
-  case OBQCASE(B01, CPLUSDOT): OBQLOOP(B,B,wt,x=*u, x|=*u        ); break;
-  case OBQCASE(B01, CMIN    ):
-  case OBQCASE(B01, CSTAR   ):
-  case OBQCASE(B01, CSTARDOT): OBQLOOP(B,B,wt,x=*u, x&=*u        ); break;
-  case OBQCASE(B01, CLT     ): OBQLOOP(B,B,wt,x=*u, x=*u< x      ); break;
-  case OBQCASE(B01, CLE     ): OBQLOOP(B,B,wt,x=*u, x=*u<=x      ); break;
-  case OBQCASE(B01, CGT     ): OBQLOOP(B,B,wt,x=*u, x=*u> x      ); break;
-  case OBQCASE(B01, CGE     ): OBQLOOP(B,B,wt,x=*u, x=*u>=x      ); break;
-  case OBQCASE(B01, CPLUS   ): OBQLOOP(B,I,INT,x=*u, x+=*u        ); break;
-  case OBQCASE(FL,  CMAX    ): OBQLOOP(D,D,wt,x=*u, x=MAX(x,*u)  ); break;
-  case OBQCASE(FL,  CMIN    ): OBQLOOP(D,D,wt,x=*u, x=MIN(x,*u)  ); break;
-  case OBQCASE(FL,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
-  case OBQCASE(CMPX,CPLUS   ): OBQLOOP(Z,Z,wt,x=*u, x=zplus(x,*u)); break;
-  case OBQCASE(XNUM,CMAX    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)? x:*u); break;
-  case OBQCASE(XNUM,CMIN    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)?*u: x); break;
-  case OBQCASE(XNUM,CPLUS   ): OBQLOOP(X,X,wt,x=*u, x=xplus(x,*u)); break;
-  case OBQCASE(RAT, CMAX    ): OBQLOOP(Q,Q,wt,x=*u, x=1==QCOMP(x,*u)? x:*u); break;
-  case OBQCASE(RAT, CMIN    ): OBQLOOP(Q,Q,wt,x=*u, x=1==QCOMP(x,*u)?*u: x); break;
-  case OBQCASE(RAT, CPLUS   ): OBQLOOP(Q,Q,wt,x=*u, x=qplus(x,*u)); break;
-  case OBQCASE(INT, CBW0001 ): OBQLOOP(I,I,wt,x=*u, x&=*u        ); break;
-  case OBQCASE(INT, CBW0110 ): OBQLOOP(I,I,wt,x=*u, x^=*u        ); break;
-  case OBQCASE(INT, CBW0111 ): OBQLOOP(I,I,wt,x=*u, x|=*u        ); break;
-  case OBQCASE(INT, CMAX    ): OBQLOOP(I,I,wt,x=*u, x=MAX(x,*u)  ); break;
-  case OBQCASE(INT, CMIN    ): OBQLOOP(I,I,wt,x=*u, x=MIN(x,*u)  ); break;
-  case OBQCASE(INT, CPLUS   ): 
+ if(1==c)switch(OBQCASE(CTTZ(wt),id)){
+  case OBQCASE(B01X, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
+  case OBQCASE(B01X, CEQ     ): OBQLOOP(B,B,wt,x=*u, x=x==*u      ); break;
+  case OBQCASE(B01X, CMAX    ):
+  case OBQCASE(B01X, CPLUSDOT): OBQLOOP(B,B,wt,x=*u, x|=*u        ); break;
+  case OBQCASE(B01X, CMIN    ):
+  case OBQCASE(B01X, CSTAR   ):
+  case OBQCASE(B01X, CSTARDOT): OBQLOOP(B,B,wt,x=*u, x&=*u        ); break;
+  case OBQCASE(B01X, CLT     ): OBQLOOP(B,B,wt,x=*u, x=*u< x      ); break;
+  case OBQCASE(B01X, CLE     ): OBQLOOP(B,B,wt,x=*u, x=*u<=x      ); break;
+  case OBQCASE(B01X, CGT     ): OBQLOOP(B,B,wt,x=*u, x=*u> x      ); break;
+  case OBQCASE(B01X, CGE     ): OBQLOOP(B,B,wt,x=*u, x=*u>=x      ); break;
+  case OBQCASE(B01X, CPLUS   ): OBQLOOP(B,I,INT,x=*u, x+=*u        ); break;
+  case OBQCASE(FLX,  CMAX    ): OBQLOOP(D,D,wt,x=*u, x=MAX(x,*u)  ); break;
+  case OBQCASE(FLX,  CMIN    ): OBQLOOP(D,D,wt,x=*u, x=MIN(x,*u)  ); break;
+  case OBQCASE(FLX,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
+  case OBQCASE(CMPXX,CPLUS   ): OBQLOOP(Z,Z,wt,x=*u, x=zplus(x,*u)); break;
+  case OBQCASE(XNUMX,CMAX    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)? x:*u); break;
+  case OBQCASE(XNUMX,CMIN    ): OBQLOOP(X,X,wt,x=*u, x=1==xcompare(x,*u)?*u: x); break;
+  case OBQCASE(XNUMX,CPLUS   ): OBQLOOP(X,X,wt,x=*u, x=xplus(x,*u)); break;
+  case OBQCASE(RATX, CMAX    ): OBQLOOP(Q,Q,wt,x=*u, x=1==QCOMP(x,*u)? x:*u); break;
+  case OBQCASE(RATX, CMIN    ): OBQLOOP(Q,Q,wt,x=*u, x=1==QCOMP(x,*u)?*u: x); break;
+  case OBQCASE(RATX, CPLUS   ): OBQLOOP(Q,Q,wt,x=*u, x=qplus(x,*u)); break;
+  case OBQCASE(INTX, CBW0001 ): OBQLOOP(I,I,wt,x=*u, x&=*u        ); break;
+  case OBQCASE(INTX, CBW0110 ): OBQLOOP(I,I,wt,x=*u, x^=*u        ); break;
+  case OBQCASE(INTX, CBW0111 ): OBQLOOP(I,I,wt,x=*u, x|=*u        ); break;
+  case OBQCASE(INTX, CMAX    ): OBQLOOP(I,I,wt,x=*u, x=MAX(x,*u)  ); break;
+  case OBQCASE(INTX, CMIN    ): OBQLOOP(I,I,wt,x=*u, x=MIN(x,*u)  ); break;
+  case OBQCASE(INTX, CPLUS   ): 
    er=0; OBQLOOP(I,I,wt,x=*u, {p=0>x; x+=*u; BOV(p==0>*u&&p!=0>x);}); 
    if(er==EWOV)OBQLOOP(I,D,FL,x=(D)*u, x+=*u);
  }
@@ -112,23 +112,23 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  g=v->g; y=VAV(g)->f;              d=vaid(y);
  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);
  if(t&FL+CMPX)NAN0;
- switch(PMCASE(t,c,d)){
-  case PMCASE(B01, CNE,    CMAX    ): 
-  case PMCASE(B01, CNE,    CPLUSDOT): PMLOOP(B,B,B01,  x=*u--|*v++, x^=*u--|*v++); break;
-  case PMCASE(B01, CNE,    CSTAR   ): 
-  case PMCASE(B01, CNE,    CMIN    ): 
-  case PMCASE(B01, CNE,    CSTARDOT): PMLOOP(B,B,B01,  x=*u--&*v++, x^=*u--&*v++); break;
-  case PMCASE(B01, CPLUS,  CMAX    ): 
-  case PMCASE(B01, CPLUS,  CPLUSDOT): PMLOOP(B,I,INT,  x=*u--|*v++, x+=*u--|*v++); break;
-  case PMCASE(B01, CPLUS,  CSTAR   ): 
-  case PMCASE(B01, CPLUS,  CMIN    ): 
-  case PMCASE(B01, CPLUS,  CSTARDOT): PMLOOP(B,I,INT,  x=*u--&*v++, x+=*u--&*v++); break;
-  case PMCASE(FL,  CPLUS,  CSTAR   ): PMLOOP(D,D,FL,   x=*u--**v++, x+=*u--**v++); break;
-  case PMCASE(CMPX,CPLUS,  CSTAR   ): PMLOOP(Z,Z,CMPX, x=ztymes(*u--,*v++), x=zplus(x,ztymes(*u--,*v++))); break;
-  case PMCASE(XNUM,CPLUS,  CSTAR   ): PMLOOP(X,X,XNUM, x=xtymes(*u--,*v++), x=xplus(x,xtymes(*u--,*v++))); break;
-  case PMCASE(RAT, CPLUS,  CSTAR   ): PMLOOP(Q,Q,RAT,  x=qtymes(*u--,*v++), x=qplus(x,qtymes(*u--,*v++))); break;
-  case PMCASE(INT, CBW0110,CBW0001 ): PMLOOP(I,I,INT,  x=*u--&*v++, x^=*u--&*v++); break;
-  case PMCASE(INT, CPLUS,  CSTAR   ): 
+ switch(PMCASE(CTTZ(t),c,d)){
+  case PMCASE(B01X, CNE,    CMAX    ): 
+  case PMCASE(B01X, CNE,    CPLUSDOT): PMLOOP(B,B,B01,  x=*u--|*v++, x^=*u--|*v++); break;
+  case PMCASE(B01X, CNE,    CSTAR   ): 
+  case PMCASE(B01X, CNE,    CMIN    ): 
+  case PMCASE(B01X, CNE,    CSTARDOT): PMLOOP(B,B,B01,  x=*u--&*v++, x^=*u--&*v++); break;
+  case PMCASE(B01X, CPLUS,  CMAX    ): 
+  case PMCASE(B01X, CPLUS,  CPLUSDOT): PMLOOP(B,I,INT,  x=*u--|*v++, x+=*u--|*v++); break;
+  case PMCASE(B01X, CPLUS,  CSTAR   ): 
+  case PMCASE(B01X, CPLUS,  CMIN    ): 
+  case PMCASE(B01X, CPLUS,  CSTARDOT): PMLOOP(B,I,INT,  x=*u--&*v++, x+=*u--&*v++); break;
+  case PMCASE(FLX,  CPLUS,  CSTAR   ): PMLOOP(D,D,FL,   x=*u--**v++, x+=*u--**v++); break;
+  case PMCASE(CMPXX,CPLUS,  CSTAR   ): PMLOOP(Z,Z,CMPX, x=ztymes(*u--,*v++), x=zplus(x,ztymes(*u--,*v++))); break;
+  case PMCASE(XNUMX,CPLUS,  CSTAR   ): PMLOOP(X,X,XNUM, x=xtymes(*u--,*v++), x=xplus(x,xtymes(*u--,*v++))); break;
+  case PMCASE(RATX, CPLUS,  CSTAR   ): PMLOOP(Q,Q,RAT,  x=qtymes(*u--,*v++), x=qplus(x,qtymes(*u--,*v++))); break;
+  case PMCASE(INTX, CBW0110,CBW0001 ): PMLOOP(I,I,INT,  x=*u--&*v++, x^=*u--&*v++); break;
+  case PMCASE(INTX, CPLUS,  CSTAR   ): 
 /*
    er=0; PMLOOP(I,I,INT, TYMESF(x), ACCUMF);
 */
@@ -204,19 +204,19 @@ static DF2(jtkey){PROLOG(0011);
 
 static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  at=AT(a); ac=aii(a);
- if(2>=ac)switch(at){
-  case C2T: if(1==ac)s=65536;                      break;
-  case C4T: if(1==ac)c4range(AN(a),C4AV(a),&r,&s); break;
-  case B01: if(1==ac)s=2;   else{s=258;   at=C2T;} break;
-  case LIT: if(1==ac)s=256; else{s=65536; at=C2T;} break;
-  case INT: if(1==ac)irange(AN(a),AV(a),&r,&s);    break;
-  case SBT: if(1==ac){at=INT; s=jt->sbun; if(65536<s)irange(AN(a),AV(a),&r,&s);}
+ if(2>=ac)switch(CTTZ(at)){
+  case C2TX: if(1==ac)s=65536;                      break;
+  case C4TX: if(1==ac)c4range(AN(a),C4AV(a),&r,&s); break;
+  case B01X: if(1==ac)s=2;   else{s=258;   at=C2T;} break;
+  case LITX: if(1==ac)s=256; else{s=65536; at=C2T;} break;
+  case INTX: if(1==ac)irange(AN(a),AV(a),&r,&s);    break;
+  case SBTX: if(1==ac){at=INT; s=jt->sbun; if(65536<s)irange(AN(a),AV(a),&r,&s);}
  }
  *zr=r; *zs=s;
  R at;
 }
 
-#define KCASE(d,t)          (t+17*d)
+#define KCASE(d,t)          (t+4*d)
 #define KACC1(F,Ta)  \
  {Ta*u;                                                          \
   if(1==c){                                                      \
@@ -230,12 +230,12 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  {Tw*wv=(Tw*)wv0,y;Tz*qv=(Tz*)qv0,*v,*zv=(Tz*)zv0;               \
   if(bb){                                                        \
    m=0; v=qv; DO(AN(q), *v++=v0;); qv-=r*c;                      \
-   switch(at){                                                   \
-    case B01: KACC1(F,B ); break;                                \
-    case LIT: KACC1(F,UC); break;                                \
-    case C2T: KACC1(F,US); break;                                \
-    case C4T: KACC1(F,C4); break;                                \
-    case INT: KACC1(F,I );                                       \
+   switch(CTTZNOFLAG(at)){                                                   \
+    case B01X: KACC1(F,B ); break;                                \
+    case LITX: KACC1(F,UC); break;                                \
+    case C2TX: KACC1(F,US); break;                                \
+    case C4TX: KACC1(F,C4); break;                                \
+    case INTX: KACC1(F,I );                                       \
   }}else{                                                        \
    v=zv; DO(m*c, *v++=v0;);                                      \
    if(1==c)DO(n, v=zv+  *xv++;       y=*wv++; *v=F;       )      \
@@ -261,22 +261,22 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  GA(z,zt,m*c,wr,AS(w)); *AS(z)=m; zv0=AV(z);
  if(wt&FL)NAN0;
  jt->ct=jt->ctdefault;
- switch(KCASE(d,wt)){
-  case KCASE(CEQ,     B01): KACC(*v==y,    B, B, 1   ); break;
-  case KCASE(CPLUSDOT,B01): KACC(*v||y,    B, B, 0   ); break;
-  case KCASE(CSTARDOT,B01): KACC(*v&&y,    B, B, 1   ); break;
-  case KCASE(CNE,     B01): KACC(*v!=y,    B, B, 0   ); break;
-  case KCASE(CMIN,    INT): KACC(MIN(*v,y),I, I, IMAX); break;  
-  case KCASE(CMIN,    FL ): KACC(MIN(*v,y),D, D, inf ); break;
-  case KCASE(CMAX,    INT): KACC(MAX(*v,y),I, I, IMIN); break;
-  case KCASE(CMAX,    FL ): KACC(MAX(*v,y),D, D, infm); break;
-  case KCASE(CPLUS,   B01): KACC(*v+y,     I, B, 0   ); break;
-  case KCASE(CPLUS,   INT): KACC(*v+y,     D, I, 0.0 ); pp=1; break;
-  case KCASE(CPLUS,   FL ): KACC(*v+y,     D, D, 0.0 ); break;
-  case KCASE(17,      INT): KACC(*v&y,     UI,UI,-1  ); break;
-  case KCASE(22,      INT): KACC(*v^y,     UI,UI,0   ); break;
-  case KCASE(23,      INT): KACC(*v|y,     UI,UI,0   ); break;
-  case KCASE(25,      INT): KACC(~(*v^y),  UI,UI,-1  );
+ switch(KCASE(d,CTTZ(wt))){
+  case KCASE(CEQ,     B01X): KACC(*v==y,    B, B, 1   ); break;
+  case KCASE(CPLUSDOT,B01X): KACC(*v||y,    B, B, 0   ); break;
+  case KCASE(CSTARDOT,B01X): KACC(*v&&y,    B, B, 1   ); break;
+  case KCASE(CNE,     B01X): KACC(*v!=y,    B, B, 0   ); break;
+  case KCASE(CMIN,    INTX): KACC(MIN(*v,y),I, I, IMAX); break;  
+  case KCASE(CMIN,    FLX): KACC(MIN(*v,y),D, D, inf ); break;
+  case KCASE(CMAX,    INTX): KACC(MAX(*v,y),I, I, IMIN); break;
+  case KCASE(CMAX,    FLX ): KACC(MAX(*v,y),D, D, infm); break;
+  case KCASE(CPLUS,   B01X): KACC(*v+y,     I, B, 0   ); break;
+  case KCASE(CPLUS,   INTX): KACC(*v+y,     D, I, 0.0 ); pp=1; break;
+  case KCASE(CPLUS,   FLX ): KACC(*v+y,     D, D, 0.0 ); break;
+  case KCASE(17,      INTX): KACC(*v&y,     UI,UI,-1  ); break;
+  case KCASE(22,      INTX): KACC(*v^y,     UI,UI,0   ); break;
+  case KCASE(23,      INTX): KACC(*v|y,     UI,UI,0   ); break;
+  case KCASE(25,      INTX): KACC(~(*v^y),  UI,UI,-1  );
  }
  jt->ct=ctold;
  if(wt&FL)NAN1;
@@ -285,7 +285,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
 }    /* x f//.y */
 
 
-#define KMCASE(ta,tw)  (ta+262144*tw) // (ta+65536*tw)
+#define KMCASE(ta,tw)  (4*ta+tw) // (ta+65536*tw)
 #define KMACC(Ta,Tw) \
  {Ta*u=(Ta*)av;Tw*v=(Tw*)wv;                                        \
   if(1==c)DO(n, ++pv[*u];                   qv[*u]+=*v++;   ++u;)   \
@@ -314,39 +314,39 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
   GATV(p,INT,s,  1, 0    ); pv= AV(p); memset(pv,C0,s*  SZI); pv-=r;
   GATV(q,FL, s*c,1, 0    ); qv=DAV(q); memset(qv,C0,s*c*SZD); qv-=r*c;
   GATV(z,FL, s*c,wr,AS(w)); zv=DAV(z);
-  switch(KMCASE(at,wt)){
-   case KMCASE(B01,B01): KMACC(B, B); break;
-   case KMCASE(B01,INT): KMACC(B, I); break;
-   case KMCASE(B01,FL ): KMACC(B, D); break;
-   case KMCASE(LIT,B01): KMACC(UC,B); break;
-   case KMCASE(LIT,INT): KMACC(UC,I); break;
-   case KMCASE(LIT,FL ): KMACC(UC,D); break;
-   case KMCASE(C2T,B01): KMACC(US,B); break;
-   case KMCASE(C2T,INT): KMACC(US,I); break;
-   case KMCASE(C2T,FL ): KMACC(US,D); break;
-   case KMCASE(C4T,B01): KMACC(C4,B); break;
-   case KMCASE(C4T,INT): KMACC(C4,I); break;
-   case KMCASE(C4T,FL ): KMACC(C4,D); break;
-   case KMCASE(INT,B01): KMACC(I ,B); break;
-   case KMCASE(INT,INT): KMACC(I ,I); break;
-   case KMCASE(INT,FL ): KMACC(I ,D);
+  switch(KMCASE(CTTZ(at),CTTZ(wt))){
+   case KMCASE(B01X,B01X): KMACC(B, B); break;
+   case KMCASE(B01X,INTX): KMACC(B, I); break;
+   case KMCASE(B01X,FLX ): KMACC(B, D); break;
+   case KMCASE(LITX,B01X): KMACC(UC,B); break;
+   case KMCASE(LITX,INTX): KMACC(UC,I); break;
+   case KMCASE(LITX,FLX ): KMACC(UC,D); break;
+   case KMCASE(C2TX,B01X): KMACC(US,B); break;
+   case KMCASE(C2TX,INTX): KMACC(US,I); break;
+   case KMCASE(C2TX,FLX ): KMACC(US,D); break;
+   case KMCASE(C4TX,B01X): KMACC(C4,B); break;
+   case KMCASE(C4TX,INTX): KMACC(C4,I); break;
+   case KMCASE(C4TX,FLX ): KMACC(C4,D); break;
+   case KMCASE(INTX,B01X): KMACC(I ,B); break;
+   case KMCASE(INTX,INTX): KMACC(I ,I); break;
+   case KMCASE(INTX,FLX ): KMACC(I ,D);
   }
-  switch(at){
-   case B01: KMSET(B ); break;
-   case LIT: KMSET(UC); break;
-   case C2T: KMSET(US); break;
-   case C4T: KMSET(C4); break;
-   case INT: KMSET(I );
+  switch(CTTZNOFLAG(at)){
+   case B01X: KMSET(B ); break;
+   case LITX: KMSET(UC); break;
+   case C2TX: KMSET(US); break;
+   case C4TX: KMSET(C4); break;
+   case INTX: KMSET(I );
   }
   *AS(z)=m; AN(z)=m*c;
  }else{
   RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);
   GATV(p,INT,m,  1, 0    );           pv= AV(p); memset(pv,C0,m*  SZI);
   GATV(z,FL, m*c,wr,AS(w)); *AS(z)=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
-  switch(wt){
-   case B01: KMFUN(B); break;
-   case INT: KMFUN(I); break;
-   case FL:  KMFUN(D);
+  switch(CTTZNOFLAG(wt)){
+   case B01X: KMFUN(B); break;
+   case INTX: KMFUN(I); break;
+   case FLX:  KMFUN(D);
   }
   if(1==c)DO(m, *zv++/=*pv++;) else DO(m, d=(D)*pv++; DO(c, *zv++/=d;););
  }
@@ -431,11 +431,11 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
   GATV(z,INT,s,1,0); zv=AV(z);
   GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;);
-  switch(at){
-   case LIT: KEYTALLY(UC); break;
-   case C2T: KEYTALLY(US); break;
-   case C4T: KEYTALLY(C4); break;
-   case INT: KEYTALLY(I );
+  switch(CTTZ(at)){
+   case LITX: KEYTALLY(UC); break;
+   case C2TX: KEYTALLY(US); break;
+   case C4TX: KEYTALLY(C4); break;
+   case INTX: KEYTALLY(I );
   }
   AN(z)=*AS(z)=j;
   EPILOG(z);

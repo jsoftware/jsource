@@ -230,11 +230,11 @@ static F1(jtprimetest){A x;D oct;I t;
  RZ(w);
  t=AT(w);
  if(!AN(w)||t&B01)R reshape(shape(w),zero);
- switch(t){
+ switch(CTTZ(t)){
   default:             ASSERT(0,EVDOMAIN);
-  case INT:            R iprimetest(w);
-  case RAT: case XNUM: R xprimetest(w);
-  case FL:  case CMPX:
+  case INTX:            R iprimetest(w);
+  case RATX: case XNUMX: R xprimetest(w);
+  case FLX:  case CMPXX:
    oct=jt->ct; jt->ct=jt->fuzz; x=eq(t&FL?w:conjug(w),floor1(w)); jt->ct=oct;
    R xprimetest(cvt(XNUM,tymes(w,x))); 
 }}   /* primality test */

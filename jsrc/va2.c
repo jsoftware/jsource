@@ -689,8 +689,8 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
  wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01; 
  t=maxtype(at,wt); b=ar<=wr; r=b?wr:ar; s=b?ws:as; nn=*s;
  zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;
- switch(t){
-  case B01:
+ switch(CTTZNOFLAG(t)){
+  case B01X:
    {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
     GATV(z,INT,zn,r-1,1+s); zu=AV(z);
     if(1==n){
@@ -705,7 +705,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
    }}
    break;
 #if !SY_64
-  case INT:
+  case INTX:
    {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
     GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
     if(1==n){
@@ -722,7 +722,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
    }
    break;
 #endif
-  case FL:   
+  case FLX:   
    {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
     GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
     NAN0;

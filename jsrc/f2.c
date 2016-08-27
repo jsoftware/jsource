@@ -130,11 +130,11 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
 // t is the type of the data
 // wv->the data
 static void jtfmt1(J jt,B e,I m,I d,C*s,I t,C*wv){D y;
- switch(t){
-  case B01:  sprintf(jt->th2buf,s,(D)*wv);     break;
-  case INT:  sprintf(jt->th2buf,s,(D)*(I*)wv); break;
-  case XNUM: fmtx(e,m,d,s,t,(X*)wv);          break;
-  case RAT:  fmtq(e,m,d,s,t,(Q*)wv);          break;
+ switch(CTTZNOFLAG(t)){
+  case B01X:  sprintf(jt->th2buf,s,(D)*wv);     break;
+  case INTX:  sprintf(jt->th2buf,s,(D)*(I*)wv); break;
+  case XNUMX: fmtx(e,m,d,s,t,(X*)wv);          break;
+  case RATX:  fmtq(e,m,d,s,t,(Q*)wv);          break;
   default:
    y=*(D*)wv; y=y?y:0.0;  /* -0 to 0 */
    if     (!memcmp(wv,&inf, SZD))strcpy(jt->th2buf,e?"  _" :' '==*s?" _" :"_" );

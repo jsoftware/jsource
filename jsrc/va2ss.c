@@ -21,7 +21,7 @@
 #define AINPLACE ((I)jtf&2 && ACIPISOK(a))
 #define WINPLACE ((I)jtf&1 && ACIPISOK(w))
 
-#define SSINGENC(a,w) ((a)+((w)>>2))
+#define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
 #define SSINGBD SSINGENC(B01,FL)

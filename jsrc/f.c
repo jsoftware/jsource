@@ -56,21 +56,21 @@ static FMTF(jtfmtD,D){B q;C buf[1+WD],c,*t;D x=*v;I k=0;
 static FMTF(jtfmtZ,Z){fmtD(s,&v->re); if(v->im){I k=strlen(s); *(k+s)='j'; fmtD(1+k+s,&v->im);}}
 
 static void thcase(I t,I*wd,VF*fmt){
- switch(t){
-  case CMPX: *wd=WZ; *fmt=jtfmtZ; break;
-  case FL:   *wd=WD; *fmt=jtfmtD; break;
+ switch(CTTZ(t)){
+  case CMPXX: *wd=WZ; *fmt=jtfmtZ; break;
+  case FLX:   *wd=WD; *fmt=jtfmtD; break;
   default:   *wd=WI; *fmt=jtfmtI;
 }}
 
 I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF fmt;
  RZ(w&&n);
  wn=AN(w); wt=AT(w); x=CAV(w); thcase(wt,&wd,&fmt);
- switch(wt){
-  case XNUM: case RAT:
+ switch(CTTZNOFLAG(wt)){
+  case XNUMX: case RATX:
    RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
-  case B01:
+  case B01X:
    if(ov=n<2*wn)p=n4/2; else p=wn; DO(p, *y++=*x++?'1':'0'; *y++=' ';); break;
-  case INT:
+  case INTX:
 	{C*t;I i,*v,x;
 	v=AV(w);
     for(i=0;i<wn;++i){

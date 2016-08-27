@@ -211,12 +211,12 @@ static F1(jtlnoun){I t;
  t=AT(w);
  if(t&SPARSE)R lsparse(w);
  if(!AN(w))R lnoun0(w);
- switch(t){
-  case LIT: R lchar(w);
-  case C2T: R over(cstr("u: "),lnum(uco2(num[3],w)));
-  case C4T: R over(cstr("10&u: "),lnum(uco2(num[3],w)));
-  case BOX: R lbox(w);
-  case SBT: R over(cstr("s: "),lbox(sb2(num[5],w)));
+ switch(CTTZ(t)){
+  case LITX: R lchar(w);
+  case C2TX: R over(cstr("u: "),lnum(uco2(num[3],w)));
+  case C4TX: R over(cstr("10&u: "),lnum(uco2(num[3],w)));
+  case BOXX: R lbox(w);
+  case SBTX: R over(cstr("s: "),lbox(sb2(num[5],w)));
   default:  R lnum(w);
 }}
 

@@ -20,7 +20,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 }
 */
 
-#define MCASE(t,k)  ((t)+16*(k))
+#define MCASE(t,k)  ((t)+4*(k))
 #define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(0<=j&&j<m,EVINDEX);}
 
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
@@ -36,16 +36,16 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  ASSERT(!c||1!=m||!memchr(b,C1,c),EVINDEX);
  zi=AV(z); zc=(C*)zi; zd=(D*)zc;
  wi=AV(w); wc=(C*)wi; wd=(D*)wc;
- switch(MCASE(it,k)){
-  case MCASE(B01,sizeof(C)): DO(c,         *zc++=wc[*b++?i+c:i];); break;
-  case MCASE(B01,sizeof(I)): DO(c,         *zi++=wi[*b++?i+c:i];); break;
+ switch(MCASE(CTTZ(it),k)){
+  case MCASE(B01X,sizeof(C)): DO(c,         *zc++=wc[*b++?i+c:i];); break;
+  case MCASE(B01X,sizeof(I)): DO(c,         *zi++=wi[*b++?i+c:i];); break;
 #if !SY_64
-  case MCASE(B01,sizeof(D)): DO(c,         *zd++=wd[*b++?i+c:i];); break;
+  case MCASE(B01X,sizeof(D)): DO(c,         *zd++=wd[*b++?i+c:i];); break;
 #endif
-  case MCASE(INT,sizeof(C)): DO(c, MINDEX; *zc++=wc[i+c*j];); break;
-  case MCASE(INT,sizeof(I)): DO(c, MINDEX; *zi++=wi[i+c*j];); break;
+  case MCASE(INTX,sizeof(C)): DO(c, MINDEX; *zc++=wc[i+c*j];); break;
+  case MCASE(INTX,sizeof(I)): DO(c, MINDEX; *zi++=wi[i+c*j];); break;
 #if !SY_64
-  case MCASE(INT,sizeof(D)): DO(c, MINDEX; *zd++=wd[i+c*j];); break;
+  case MCASE(INTX,sizeof(D)): DO(c, MINDEX; *zd++=wd[i+c*j];); break;
 #endif  
   default: if(it&B01)DO(c,         MC(zc,wc+k*(*b++?i+c:i),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;

@@ -350,22 +350,22 @@ static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 	I k=1,i,n;
 	char gn[256];
 
-	switch(*jtype)
+	switch(CTTZNOFLAG(*jtype))
 	{
-	case LIT:
-	case B01:
+	case LITX:
+	case B01X:
 		n = sizeof(char);
 		break;
 
-	case INT:
+	case INTX:
 		n = sizeof(I);
 		break;
 		
-	case FL:
+	case FLX:
 		n = sizeof(double);
 		break;
 		
-	case CMPX:
+	case CMPXX:
 		n = 2 * sizeof(double);
 		break;
 		

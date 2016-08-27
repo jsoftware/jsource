@@ -764,10 +764,10 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  p=hsize(m);
  GATV(h,INT,p,1,0);
  GATV(z,INT,AN(w),wr,ws);
- switch(t){
+ switch(CTTZ(t)){
   default:   ASSERT(0,EVNONCE);     
-  case FL:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;
-  case CMPX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask(jt); break;
+  case FLX:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;
+  case CMPXX: fn=mode==IICO?jtjocolz:jtiocolz; ctmask(jt); break;
  }
  fn(jt,m,c,d,a,w,z,h);
  R z;

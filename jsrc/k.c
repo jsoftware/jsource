@@ -290,17 +290,17 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  if ((t|wt)&(C2T+C4T+BIT+SBT+XD+XZ)) {   // there are no SBT+XD+XZ conversions, but we have to show domain error
    // we must account for all NOUN types.  Low 8 bits have most of them, and we know type can't be sparse.  This picks up the others
   ASSERT(!((t|wt)&(SBT+XD+XZ)),EVDOMAIN);  // No conversions for these types
-  switch (CVCASE(t,wt)){  // This version doesn't use CTTZ, but it works anyway
-   case CVCASE(LIT, C2T): R C1fromC2(w, yv);
-   case CVCASE(LIT, C4T): R C1fromC4(w, yv);
-   case CVCASE(C2T, LIT): R C2fromC1(w, yv);
-   case CVCASE(C2T, C4T): R C2fromC4(w, yv);
-   case CVCASE(C4T, LIT): R C4fromC1(w, yv);
-   case CVCASE(C4T, C2T): R C4fromC2(w, yv);
-   case CVCASE(BIT, B01): R cvt2bit(w, yv);
-   case CVCASE(BIT, INT): R cvt2bit(w, yv);
-   case CVCASE(BIT, FL): R cvt2bit(w, yv);
-   case CVCASE(BIT, CMPX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
+  switch (CVCASE(CTTZ(t),CTTZ(wt))){
+   case CVCASE(LITX, C2TX): R C1fromC2(w, yv);
+   case CVCASE(LITX, C4TX): R C1fromC4(w, yv);
+   case CVCASE(C2TX, LITX): R C2fromC1(w, yv);
+   case CVCASE(C2TX, C4TX): R C2fromC4(w, yv);
+   case CVCASE(C4TX, LITX): R C4fromC1(w, yv);
+   case CVCASE(C4TX, C2TX): R C4fromC2(w, yv);
+   case CVCASE(BITX, B01X): R cvt2bit(w, yv);
+   case CVCASE(BITX, INTX): R cvt2bit(w, yv);
+   case CVCASE(BITX, FLX): R cvt2bit(w, yv);
+   case CVCASE(BITX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
    default:                ASSERT(0, EVDOMAIN);
   }
  }

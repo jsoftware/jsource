@@ -111,11 +111,11 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
  if(t&SPARSE)R breps(b,d,w);
  GATV(y,LIT,bsize(d,1,t,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
- if(t&DIRECT)switch(t){
-  case SBT:
-  case INT:  RZ(mvw(v,u,n,  b,BU,d,SY_64)); R y;
-  case FL:   RZ(mvw(v,u,n,  b,BU,1,1    )); R y;
-  case CMPX: RZ(mvw(v,u,n+n,b,BU,1,1    )); R y;
+ if(t&DIRECT)switch(CTTZ(t)){
+  case SBTX:
+  case INTX:  RZ(mvw(v,u,n,  b,BU,d,SY_64)); R y;
+  case FLX:   RZ(mvw(v,u,n,  b,BU,1,1    )); R y;
+  case CMPXX: RZ(mvw(v,u,n+n,b,BU,1,1    )); R y;
   default:
    // 1- and 2-byte C4T types, all of which have LAST0.  We need to clear the last
    // bytes, because the datalength is rounded up in bsize, and thus there are
@@ -206,12 +206,12 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
   j=vv[2]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
   j=vv[3]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,i,unbinr(b,d,pre601,vv[4]-j,(A)(u+j)));
   j=vv[4]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,x,unbinr(b,d,pre601,m    -j,(A)(u+j)));
- }else if(n)switch(t){
-  case B01:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
-  case SBT:
-  case INT:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
-  case FL:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
-  case CMPX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
+ }else if(n)switch(CTTZNOFLAG(t)){
+  case B01X:  {B c,*zv=BAV(z); DO(n, c=v[i]; ASSERT(c==C0||c==C1,EVDOMAIN); zv[i]=c;);} break; 
+  case SBTX:
+  case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
+  case FLX:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
+  case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
   default:   e=n*bp(t); ASSERTSYS(e<=AM(z),"unbinr"); MC(CAV(z),v,e);
  }
  RE(z); R z;

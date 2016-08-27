@@ -260,13 +260,13 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  if(1==nf){MC(ib,AV(*u),SZI*3); memset(ib+3,C0,SZI*nc); MC(as,u+1,SZA*NMODVALS);}
  else DO(nf, MC(ib,AV(*u),SZI*3); ib[3]=0; ib+=4; MC(as,u+1,SZA*NMODVALS); as+=NMODVALS; u+=1+NMODVALS;);
  bits=BAV(fb);
- switch(wt) {
-  case B01:
+ switch(CTTZNOFLAG(wt)) {
+  case B01X:
    bw=BAV(w); ib=AV(base);
    DO(n, *bits|=BITSz*!*bw; bits++; bw++;);  /* BITSe, BITS_, BITS__, and BITS_d are 0 */
    DO(nf, if(ib[1]==-1)ib[1]=0; ib+=4;);     /* boolean always has 0 decimal places: */
    break;
-  case INT:
+  case INTX:
    iw=AV(w); ib=AV(base); iv=AV(len); /* use len to store dp */
    for(i=0;i<n;++i){
     if(i%nf) ib += 4; else ib=AV(base);
@@ -285,7 +285,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
     iv++; 
    }
    break;
-  case FL:
+  case FLX:
    dw=DAV(w); ib=AV(base); iv=AV(len); /* use len to store dp */
    for(i=0;i<n;++i){
     if(i%nf) ib+=4; else ib=AV(base); 
@@ -466,12 +466,12 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     else if(dtmp< 0       ) { *cv=SUBm;                              }
     else if(dtmp>=0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
    } else {
-    switch(t) {
-     case B01:
+    switch(CTTZNOFLAG(t)) {
+     case B01X:
       if(mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
       RZ(sprintfI(cv+nP, *il-nP-nQ, d, *bv, subs));
       break;
-     case INT:
+     case INTX:
       y=*iv < 0; g=0; 
       if(*iv < 0 && mMN) { y=nM; g=nN; }
       else if(*iv>=0 && mPQ) { y=nP; g=nQ; }
@@ -482,7 +482,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
       else if(*iv < 0       ) { *cv=SUBm;                              }
       else if(*iv>= 0 && mPQ) { MC(cv, cP, nP); MC(cv+*il-nQ, cQ, nQ); }
       break;
-     case FL:
+     case FLX:
       y=*dv < 0; g=0;
       if(*dv < 0 && mMN) { y=nM; g=nN; }
       else if(*dv>=0 && mPQ) { y=nP; g=nQ; }

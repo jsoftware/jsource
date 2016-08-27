@@ -73,7 +73,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  memlimit = MIN(4*n,(I)((jt->mmax-100)/sizeof(I)));  // maximum size we will allow our d to reach.  Used only for I type.
   // 4*the size of the search area seems big enough; but not more than what a single memory allocation supports.  The size
   // is measured in Is.  The 100 is to account for memory-manager overhead
- switch(t){
+ switch(CTTZNOFLAG(t)){
   // calculate the number of distinct values in the range of the two operands.
   // for strings, we just assume the worst (all codes)
   // for ints, actually look at the data to get the range (min and #values+1).  If there is
@@ -81,15 +81,15 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
   // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
   // the SUB0 and SUB1 expressions into EBLOOP simpler
   // We allocate an array for each result in range, so we have to get c and d right
-  case INT: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
+  case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case C2T: d=65536; break;
-  case C4T: c4range(m,C4AV(a),&ca,&da); if(da)c4range(n,C4AV(w),&cw,&dw); 
+  case C2TX: d=65536; break;
+  case C4TX: c4range(m,C4AV(a),&ca,&da); if(da)c4range(n,C4AV(w),&cw,&dw); 
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case LIT: d=256;   break;
-  case B01: d=2;     break;
+  case LITX: d=256;   break;
+  case B01X: d=2;     break;
  }
  *zc=c;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.

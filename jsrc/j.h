@@ -258,7 +258,7 @@
 // Memory-allocation macros
 // Size-of-block calculations.  VSZ when size is constant or variable
 // Because the Boolean dyads write beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
-#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+/*SZI*/+mhb)) + (atoms)*(size)) /*& (-SZI)*/)  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
+#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+mhb)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
 // here when size is constant.  The number of bytes must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+AH+mhw+((size)/SZI)*(atoms))))  // # bytes to allocate
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
@@ -271,13 +271,13 @@
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  RZ(name);   \
- AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
+ AK(name)=akx; AT(name)=type&NOUN?UNSAFE(type):type; AN(name)=atoms;   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-mhb-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
  AR(name)=rank;     \
  if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}    \
  AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx;    \
-}
+}  // SAFE is scaf
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size) \
 { I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
@@ -287,11 +287,11 @@
  RZ(ZZz);   \
  if(!(type&DIRECT))memset((C*)ZZz+akx,C0,bytes-mhb-akx);  \
  else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
- AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
+ AK(ZZz)=akx; AT(ZZz)=type&NOUN?UNSAFE(type):type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
  if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
  AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
  name=ZZz;   \
-}
+}  // SAFE is scaf
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE)
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)

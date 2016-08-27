@@ -455,7 +455,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 // use 6!:5 to start audit I i,j;MS *x; if(jt->peekdata){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
-// unconditional {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}
+// unconditional {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}
 
  I pushx=jt->tnextpushx;  // start reads for tpush
  A* tstack=jt->tstack;
@@ -547,7 +547,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 // obsolete else if(type&LAST0){((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-2]=((I*)((C*)z+((bytes+SZI-1-mhb)&(-SZI))))[-1]=0; }  /* if LAST0, clear the last TWO Is  */
     // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
     // To find that byte, back out the SZI added nulls 
- AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
+ AK(z)=akx; AT(z)=type&NOUN?UNSAFE(type):type; AN(z)=atoms;   // Fill in AK, AT, AN   SAFE is scaf
  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
  AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short

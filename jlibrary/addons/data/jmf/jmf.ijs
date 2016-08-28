@@ -18,6 +18,8 @@ doc=: 0 : 0
         types are defined in dll.ijs as:
             JB01      boolean
             JCHAR     character
+            JCHAR2    unicode
+            JCHAR4    unicode4
             JINT      integer
             JFL       floating point
             JCMPX     complex
@@ -63,20 +65,6 @@ if. IFUNIX do.
   c_lseek=: 'lseek x i x i' api
   c_mmap=: 'mmap * * x i i i x' api
   c_munmap=: 'munmap i * x' api
-  if. (-.IFIOS) *. UNAME -: 'Darwin' do.
-    c_mmap=: }:@:('mmap * * i i i i i i' api)@:(}: , (<0)"_ , {:)
-    if. ({.a.)={. 1&(3!:4) 1 do.
-      c_lseek=: (0 1 3 4&{)@:('lseek i i i i i' api)@:(0&{ , (<0)"_ , 1&{ , 2&{)
-    end.
-  elseif. IFIOS *. (UNAME -: 'Darwin') > IF64 do.
-    if. ({.a.)={. 1&(3!:4) 1 do.
-      c_mmap=: }:@:('mmap * * i i i i i i' api)@:(}: , (<0)"_ , {:)
-      c_lseek=: (0 1 3 4&{)@:('lseek i i i i i' api)@:(0&{ , (<0)"_ , 1&{ , 2&{)
-    else.
-      c_mmap=: }:@:('mmap * * i i i i i i' api)@:(}: , (<0)"_ ,~ {:)
-      c_lseek=: (0 1 3 4&{)@:('lseek i i i i i' api)@:(0&{ , (<0)"_ ,~ 1&{ , 2&{)
-    end.
-  end.
 else.
   CREATE_ALWAYS=: 2
   CREATE_NEW=: 1
@@ -129,6 +117,8 @@ allochdr=: 3 : 'r[2 memw (r=.15!:8 y),HADC,1,JINT'
 freehdr=: 15!:9
 msize=: 3 : 'memr y,HADM,1,JINT'
 refcount=: 3 : 'memr y,HADC,1,JINT'
+
+nountype =: 17 b.&16b1fffff
 MAXINTU=: 2 ^ IF64{32 64x
 MAXINTS=: <: 2 ^ IF64{31 63x
 ufs=: + MAXINTU * 0 > ]
@@ -165,6 +155,7 @@ z=. z, *./ 0 = 8|a
 )
 settypeshape=: 3 : 0
 'name type shape'=: y
+type =: nountype type
 rank=. #shape
 sad=. symget <fullname name
 'bad name' assert sad
@@ -182,7 +173,7 @@ validate=: 3 : 0
 'ts had'=. y
 if. ts>:HS do.
   d=. memr had,0 4,JINT
-  *./((HS,ts-HS)=0 2{d),1 2 4 8 16 32 e.~ 3{d
+  *./((HS,ts-HS)=0 2{d),1 2 4 8 16 32 131072 262144 65536 e.~ nountype 3{d
 else. 0 end.
 )
 ERROR_NOT_ENOUGH_MEMORY=: 8
@@ -230,6 +221,7 @@ sad=. symget <fullname y
 'bad name' assert sad
 had=. 1{s=. memr sad,0 4,JINT
 'flag msize type rank'=. 1 2 3 6{memr had,0 28,JINT
+type =. nountype type 
 'not mapped and writeable' assert 2=flag
 'scalar' assert 0~:rank
 'not supported for boxed data' assert 32~:type
@@ -319,6 +311,7 @@ map=: 3 : 0
 :
 if. 0=L.x do. t=. <&> x else. t=. x end.
 'type tshape hsize'=. 3 {. t, a:
+type =. nountype type
 
 'trailing shape may not be zero' assert -. 0 e. tshape
 
@@ -446,17 +439,17 @@ mh=. OpenFileMappingR (FILE_MAP_READ+FILE_MAP_WRITE); bNo_Inherit_Handle; uucp l
 
 addr=. MapViewOfFileR mh; (FILE_MAP_READ+FILE_MAP_WRITE); 0; 0; 0
 if. addr=0 do. 'MapViewOfFile failed' assert 0[CloseHandleR mh end.
-".(_1=4!:0<'mapTable')#'mapTable=:i.0,3' 	
-mapTable=: mapTable, y; mh; addr			
+".(_1=4!:0<'mapTable')#'mapTable=:i.0,3'
+mapTable=: mapTable, y; mh; addr
 addr
 )
 memshareclose=: 3 : 0
-r=. y findkey mapTable						
-'Unknown share name' assert 0~:$r			
-'mh addr'=. {:(<r; 1 2){mapTable				
+r=. y findkey mapTable
+'Unknown share name' assert 0~:$r
+'mh addr'=. {:(<r; 1 2){mapTable
 ('Unable to close share: ', y) assert $mh > 0
-UnmapViewOfFileR <<addr						
-if. CloseHandleR mh	do. 					
-  mapTable=: (<((i.#mapTable)-.r); i.{:$mapTable){mapTable 	
+UnmapViewOfFileR <<addr
+if. CloseHandleR mh do.
+  mapTable=: (<((i.#mapTable)-.r); i.{:$mapTable){mapTable
 end.
 )

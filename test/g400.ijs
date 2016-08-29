@@ -392,6 +392,14 @@ f=: 4 : 'x#y'
 1j2 3j4 0j5 (#"1 3 -: f"1 3) x
 
 1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){s:@<"0&.> ;:'chirality paronomasiac onomatopoeia'
+1j2 3j4 0j5 (#"0 1 -: f"0 1) x
+1j2 3j4 0j5 (#"0 2 -: f"0 2) x
+1j2 3j4 0j5 (#"0 3 -: f"0 3) x
+1j2 3j4 0j5 (#"1 0 -: f"1 0) x
+1j2 3j4 0j5 (#"1 1 -: f"1 1) x
+1j2 3j4 0j5 (#"1 2 -: f"1 2) x
+1j2 3j4 0j5 (#"1 3 -: f"1 3) x
+
 1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){<"0@s: ;:'chirality paronomasiac onomatopoeia'
 1j2 3j4 0j5 (#"0 1 -: f"0 1) x
 1j2 3j4 0j5 (#"0 2 -: f"0 2) x

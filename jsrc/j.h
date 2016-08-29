@@ -262,12 +262,13 @@
 // here when size is constant.  The number of bytes must not exceed 2^(PMINL+5)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+AH+mhw+((size)/SZI)*(atoms))))  // # bytes to allocate
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
-// GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros
+// GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
+// NEVER use GA() for NAME types - it doesn't honor it.
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;
 #define GAT(name,type,atoms,rank,shaape) \
-{ I bytes = ALLOBYTES(atoms,rank,type##SIZE,type&LAST0,type==NAME); \
+{ I bytes = ALLOBYTES(atoms,rank,type##SIZE,(type)&LAST0,(type)&NAME); \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  RZ(name);   \
@@ -280,7 +281,7 @@
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size) \
-{ I bytes = ALLOBYTES(atoms,rank,size,type&LAST0,type==NAME); \
+{ I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
  AD* ZZz = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
@@ -291,7 +292,7 @@
  if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
  AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
  name=ZZz;   \
-}  // SAFE is scaf
+}
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE)
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)

@@ -176,15 +176,15 @@ typedef I SI;
 #define MARKX 25
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
-#define SYMBX 26
-#define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
-#define SYMBSIZE sizeof(I)
-#define CONWX 27
-#define CONW            ((I)1L<<CONWX)    /* CW control word                 */
-#define CONWSIZE sizeof(CW)
-#define NAMEX 28
+#define NAMEX 26
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)
+#define SYMBX 27
+#define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
+#define SYMBSIZE sizeof(I)
+#define CONWX 28
+#define CONW            ((I)1L<<CONWX)    /* CW control word                 */
+#define CONWSIZE sizeof(CW)
 #define LPARX 29
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 #define LPARSIZE sizeof(I)
@@ -196,10 +196,13 @@ typedef I SI;
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =.    aliases with SYMB
-#define ASGNSIMPLE      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
+#define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOUN types can have the following informational bits set
 #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
 #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
+// NAME type can have the following information flags set
+#define NAMEIPOK        ((I)1L<<SYMBX)     // set it the value can be marked inplaceable when it is moved onto the stack (is name is reassigned - watch for errors!)   Aliases with SYMB
+
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg
@@ -208,7 +211,7 @@ typedef I SI;
 // CONJ   0001
 // ADV    0101
 // VERB   1101
-// ASGN   xy10    x=ASGNLOCAL y=ASGNSIMPLE
+// ASGN   xy10    x=ASGNLOCAL y=ASGNTONAME
 // CONW   0100    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 // SYMB   1100
 // NAME   1000

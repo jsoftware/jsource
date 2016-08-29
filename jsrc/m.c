@@ -528,7 +528,7 @@ RESTRICTF A jtgafv(J jt, I bytes){I j=PMINL, n=PMIN;
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // Get the number of bytes needed, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,type==NAME);
+ I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
  ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); // check for too many atoms, to preempt overflow
 #else
@@ -607,7 +607,9 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
- GA(z,t,AN(w),AR(w),AS(w)); if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
+ if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));}  // GA does not allow NAME type, for speed
+ else{GA(z,t,AN(w),AR(w),AS(w));}
+ if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
  if(t&SPARSE){
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));

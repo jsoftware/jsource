@@ -164,7 +164,6 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
 // result is L* address of the symbol-table entry for the name, or 0 if not found
 L*jtprobe(J jt,A a,A g){C*s;I*hv,m;L*v;NM*u;
  RZ(a&&g);u=NAV(a);
- // If there is bucket information, 
  m=u->m; s=u->s; hv=AV(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
  if(!*hv)R 0;                            /* (0) empty slot    */
  v=*hv+jt->sympv;
@@ -355,7 +354,7 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
   jt->curname=d->dca; f=d->dcf;
   ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==VAV(f)->id)==(CCOLON==VAV(w)->id),EVSTACK);
   d->dcf=w;
-  // If we are redefiniing the executing explicit definition during debug, remember that.  We will use it to reload the definition.
+  // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
   // Reassignment outside of debug waits until the name is off the stack, using nvrredef
   if(CCOLON==VAV(w)->id)jt->redefined=(I)v;
   // Erase any stack entries after the redefined call
@@ -367,13 +366,26 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
  R 1;
 }    /* check for changes to stack */
 
-// assign symbol: assign name a in symbol table g to the value w
+// find symbol entry for name a in symbol table g; this is known to be global assignment
+// the name a may require lookup through the path; once we find the locale, we search only in it
+// Result is &symbol-table entry, if one exists
+L* jtprobeisquiet(J jt,A a){A g;
+ I n=AN(a); NM* v=NAV(a); I m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
+ if(n==m){g=jt->global;}   // if not locative, define in default locale
+ else{C* s=1+m+v->s; if(!(g=NMILOC&v->flag?locindirect(n-m-2,1+s):stfind(1,n-m-2,s))){RESETERR; R 0;}}  // if locative, find the locale for the assignment; error is not fatal
+ R probeis(a, g);  // return pointer to slot, creating one if not found
+}
+
+
+// assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
 // Non-error result is unused (mark)
 A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  RZ(a&&w&&g);
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
- // assignsym is only set for assignment to local name, so we needn't check for that
+ // in this case g is the type field of the name being assigned; and jt->local must exist, since it comes from
+ // an explicit definition
  if(jt->assignsym) {
+  ASSERT(((I)g&ASGNLOCAL||!probelocal(a)),EVDOMAIN)  //  if global assignment, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
   jt->assignsym=0; jt->zombieval = 0;   // clear until next use.
  } else {

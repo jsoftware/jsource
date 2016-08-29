@@ -746,6 +746,7 @@
 #define probe(x,y)                  jtprobe(jt,(x),(y))
 #define probeis(x,y)                jtprobeis(jt,(x),(y))
 #define probeislocal(x)             jtprobeislocal(jt,(x))
+#define probeisquiet(x)             jtprobeisquiet(jt,(x))
 #define probelocal(x)               jtprobelocal(jt,(x))
 #define probenum(x)                 jtprobenum(jt,(x))  
 #define prod(x,y)                   jtprod(jt,(x),(y))

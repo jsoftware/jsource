@@ -732,6 +732,7 @@ extern B        jtprimitive(J,A);
 extern L*       jtprobe(J,A,A);
 extern L*       jtprobeis(J, A, A);
 extern L*       jtprobeislocal(J,A);
+extern L*       jtprobeisquiet(J, A);
 extern L*       jtprobelocal(J,A);
 extern I        jtprod(J, I, I*);
 extern int      jtqcompare(J,Q,Q);
@@ -851,7 +852,8 @@ extern A        ace;
 extern A        ainf;
 extern A        alp;
 extern A        aqq;
-extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGNSIMPLE
+extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
+extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
 extern UC       bit[];
 extern UC       bitc[];
 extern C        bitdisp[];

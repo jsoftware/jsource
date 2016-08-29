@@ -387,7 +387,7 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
    // Loop over each word, starting at beginning where the references are more likely
    for(i=0;i<in;++i) {
     A w=WVR(i);  // w is box containing a queue value.  If it's a name, we inspect it
-    if(AT(w)==NAME){
+    if(AT(w)&NAME){
      // Get length/string pointer
      I n=AN(w); C *s=NAV(w)->s;
      // if dotnames allowed, and last character is '.', back up 1
@@ -488,13 +488,19 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  }  
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
+ // Also look for global assignments to name (either locative =. or name =:) and flag them
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
- for(j=1;j<ln;++j) {
-  if(AT(lv[j])==(ASGN+ASGNLOCAL)) {  // local assignment  (simplename can't have been set yet)
-   if((tt=AT(t=lv[j-1]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
-    // simplename followed by =.  Probe for the name
-    lv[j]=asgnlocsimp;   //  indicate simple followed by =.
-    RZ(probeis(t,pfst));
+ for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
+  if(AT(lv[j])==(ASGN+ASGNLOCAL)) {  // local assignment  (ASGNTONAME can't have been set yet in the input)
+   if((tt=AT(t=lv[j-1]))&NAME){    // tt = type of previous word
+    if((NAV(t)->flag&(NMLOC|NMILOC))){
+     // locative =.   flag as global assignment
+     lv[j]=asgngloname;   //  indicate name =:  (ASGN|ASGNTONAME)
+    }else{
+     // simplename followed by =.  Probe for the name.  This creates the symbol-table entry for it
+     lv[j]=asgnlocsimp;   //  indicate =. preceded by simplename (ASGN|ASGNLOCAL|ASGNTONAME)
+     RZ(probeis(t,pfst));
+    }
    } else if(tt&LIT) {
     // LIT followed by =.  Probe each word
     // First, convert string to words
@@ -508,7 +514,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
       } else RESETERR
      }
     } else RESETERR  // if invalid words, ignore - we don't catch it here
-   }  // 'local assignment'
+   } else if(AT(lv[j])==ASGN&&tt&NAME) {    // global assignment to name
+    lv[j]=asgngloname;   //  indicate name =:  (ASGN|ASGNTONAME)
+   }  // 'assignment'
   }  // for each word in sentence
  }
 

@@ -16,7 +16,7 @@ void startup(void);
 
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
- GA(z,NAME,m,1,0); zv=NAV(z);
+ GATV(z,NAME,m,1,0); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
  memcpy(zv->s,s,m); *(m+zv->s)=0;
  zv->m   =(UC)m; 
  zv->bucket=zv->bucketx=0;
@@ -67,7 +67,8 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
  RZ(y=str(1L,"z"));     ACX(y);
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;
- GA(x,ASGN+ASGNLOCAL+ASGNSIMPLE, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
+ GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
+ GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgngloname=x;
  RZ(mnam=makename("m")); RZ(mdot=makename("m."));
  RZ(nnam=makename("n")); RZ(ndot=makename("n."));
  RZ(unam=makename("u")); RZ(udot=makename("u."));

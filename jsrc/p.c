@@ -242,7 +242,7 @@ static void auditnum(){
 // be set if the callee can handle inplaceing.  The inplaceable bit in the arguments must also be cleared if the
 // callee cannot handle inplaceing, to prevent releasing an in-placeable block where it is not understood.
 // NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT be marked inplace.  The action routine
-// should check the operand addresses when zombieval is set.
+// should check the operand addresses when zombieval/assignsym is set.
 //
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb

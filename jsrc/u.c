@@ -164,6 +164,12 @@ C cf(A w){RZ(w); R*CAV(w);}
 
 C cl(A w){RZ(w); R*(CAV(w)+AN(w)-1);}
 
+// Choose type to use for joined arguments; convert the arguments to that type if needed
+// *a and *w are blocks to read/modify
+// mt is the type to use if none is given
+// We choose the highest-priority type from the nonempty arguments and mt;
+// If none of those are given we choose the larger type from the (empty) arguments
+// Then convert as needed
 I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
  RZ(*a&&*w);
  at=AT(*a); at1=AN(*a)?at:0;
@@ -214,8 +220,27 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 F1(jtii){RZ(w); R IX(IC(w));}
 
-I jtmaxtype(J jt,I s,I t){I u,s1,t1;
- s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
+// Priority is
+// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
+// For sparse types, we encode here the corresponding dense type
+static C typepriority[] = {   // convert type bit to priority
+0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
+0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
+8, 2, 3};  // SBT C2T C4T
+static C prioritytype[] = {  // Convert priority to type bit
+B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+// Return the higher-priority of the types s and t.
+// If either is sparse, convert the result to sparse.
+// Error if one argument is sparse and the other is non-sparsable
+// s or t may be set to 0 to suppress the argument (if argument is empty, usually)
+I jtmaxtype(J jt,I s,I t){
+ if(s&&t) {   // If both values given...
+  I resultbit = prioritytype[MAX(typepriority[CTTZ(s)],typepriority[CTTZ(t)])];  // Get the higher-priority type
+  if((s|t)&SPARSE){ ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If sparse, return sparse version
+  R (I)1 << resultbit;
+ } else {R s|t;}  // If one value omitted, return the other
+#if 0
+I u,s1,t1; s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
  t=UNSAFE(t);
 u=s|t;
 // workaround needed since LIT < INT SBT but C2T C4T > INT SBT
@@ -225,9 +250,12 @@ u=s|t;
  if(s){s=s&SPARSE?s:STYPE(s); ASSERT(s,EVDOMAIN);}
  if(t){t=t&SPARSE?t:STYPE(t); ASSERT(t,EVDOMAIN);}
  R ((LIT+2)==(s1<t1?t1:s1))?C4T:((LIT+1)==(s1<t1?t1:s1))?C2T:(s<t?t:s);
+#endif
 }
 
+// Copy m bytes from w to z, repeating every n bytes if n<m
 void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
+ // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
  MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
 }
 

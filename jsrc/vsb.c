@@ -289,7 +289,7 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
-// p=(-m)&((c2<<1)-1);                  /* pad for alignment (leaner)   */
+// p = (-m)&(c2+(c2>>1));               /* pad for alignment (leaner)   */
  p=c2&SBC4?(m%4?4-m%4:0):c2&SBC2?m%2:0; /* pad for alignment            */
  RE(hi=sbextend(n+p,s,h,hi));           /* extend global tables as req'd*/
  MC(SBSV(m+p),s,n);                     /* copy string into sbs         */

@@ -245,7 +245,8 @@ typedef struct {
  B    nflag;            /* 1 if space required before name                 */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
- B    thornuni;         // 1 iff ": allowed to produce C2T result
+ B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
+ B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tostdout;         /* 1 if output to stdout                           */

@@ -172,7 +172,7 @@ F1(jtlock1){A z; C* p; C* src;
  for(i=0;i<SK;++i) k2[i] = lobyte(rand());
  *p++=(UC)255; *p++=0; *p++=c1; *p++=c2;
  for(i=0;i<4;++i) *p++= k1[i] ^ *(i+(UC*)&xlen);
- memcpy(p,k1,SK);
+ MC(p,k1,SK);
  p+=SK;
  k=LOCKEXTRA+maxc1;
  for(i=0;i<k;++i) *p++= lobyte(rand());
@@ -184,7 +184,7 @@ F1(jtlock1){A z; C* p; C* src;
   if(++j==SK) j=0;
   *p++=c;
  }
- memcpy(p,k2,SK);
+ MC(p,k2,SK);
  p+=SK;
  for(i=0;i<maxc2;++i) *p++= lobyte(rand());
  for(i=0;i<2*SERIALNUMSIZE;++i) *p++= lobyte(rand());
@@ -200,7 +200,7 @@ F2(jtunlock2){int i,j,len,tlen;UC c1,c2,k1[SK],*lp,*sp,*d;
  d=UAV(w);
  tlen=(int)AN(w);
  if(!tlen || 255!=d[0] || 0 != d[1] || tlen<8+SK) return w;	/* not jl */
- memcpy(k1, d+8, SK);
+ MC(k1, d+8, SK);
  for(i=0;i<sizeof(int);++i)	*(i+(UC*)&len) = k1[i] ^ d[4+i];
 #if !(SYS & SYS_LILENDIAN)
  len=swapint(len);

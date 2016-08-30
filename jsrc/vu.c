@@ -78,7 +78,7 @@ static F1(jttoc2e){A z;I m,n,r;
  m=*(AS(w)+r-1);
  ASSERT(0==m%2,EVLENGTH);
  GATV(z,C2T,n/2,r,AS(w)); *(AS(z)+r-1)=m/2;
- memcpy(AV(z),AV(w),n);
+ MC(AV(z),AV(w),n);
  R z;
 }    /* convert pairs of 1-byte chars to 2-byte chars */
 

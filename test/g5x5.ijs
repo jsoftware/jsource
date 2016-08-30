@@ -296,6 +296,7 @@ test 0$0
 test 0$'abc'
 test 0$u:'abc'
 test 0$10&u:'abc'
+test 0$s: ' a b c'
 test 0$3 4
 test 0$3.4
 test 0$3j4
@@ -303,21 +304,18 @@ NB. test 0$3r4
 test 0$34x
 test 0$3r4
 test 0$3;4
-test 0$s: ' a b cd'
-test 0$u: ' a b cd'
-test 0$10&u: ' a b cd'
 
 test s$0             [ s=: 0 (?#s)}s=: ?10$5
 test s$'abc'         [ s=: 0 (?#s)}s=: ?10$5
+test s$u:'abc'       [ s=: 0 (?#s)}s=: ?10$5
+test s$10&u:'abc'    [ s=: 0 (?#s)}s=: ?10$5
+test s$s: ' a b c'   [ s=: 0 (?#s)}s=: ?10$5
 test s$3 4           [ s=: 0 (?#s)}s=: ?10$5
 test s$3.4           [ s=: 0 (?#s)}s=: ?10$5
 test s$3j4           [ s=: 0 (?#s)}s=: ?10$5
 NB. test s$3r4       [ s=: 0 (?#s)}s=: ?10$5
 test s$34x           [ s=: 0 (?#s)}s=: ?10$5
 test s$3;4           [ s=: 0 (?#s)}s=: ?10$5
-test s$s: ' a b cd'  [ s=: 0 (?#s)}s=: ?10$5
-test s$u: ' a b cd'  [ s=: 0 (?#s)}s=: ?10$5
-test s$10&u: ' a b cd'  [ s=: 0 (?#s)}s=: ?10$5
 
 
 NB. 5!:5 ----------------------------------------------------------------
@@ -676,7 +674,7 @@ f =: g@.
 f =: @.('abc'&i.)
 (lr<'f') -: '@.(''abc''&i.)'
 
-4!:55 ;:'a act adot1 adot2 alp ar base bot boxc boxed bp bs '
+4!:55 ;:'a act adot1 adot2 sdot alp ar base bot boxc boxed bp bs '
 4!:55 ;:'bsd c center connect cp cross dash dig dotco em '
 4!:55 ;:'en extent f f3 fx g gap graft h hfork '
 4!:55 ;:'id iind infix ins insert kay kern kernb kernt key '

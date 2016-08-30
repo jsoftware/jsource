@@ -11,6 +11,7 @@ data=: 4 : 0
   case.  2 do. {&a.&.> ?&.> ((?m$11),&.>x{'';'';5;2 3) $&.> #a.
   case.  131072 do. {&adot1&.> ?&.> ((?m$11),&.>x{(u:'');(u:'');5;2 3) $&.> #adot1
   case.  262144 do. {&adot2&.> ?&.> ((?m$11),&.>x{(10&u:'');(10&u:'');5;2 3) $&.> #adot2
+  case.  65536  do. {&sdot&.> ?&.> ((?m$11),&.>x{(s:'');(s:'');5;2 3) $&.> #sdot
   case.  4 do.         ?&.> ((?m$11),&.>x{'';'';5;2 3) $&.> 500
   case.  8 do.   o.&.> ?&.> ((?m$11),&.>x{'';'';5;2 3) $&.> 500
   case. 16 do.   r.&.> ?&.> ((?m$11),&.>x{'';'';5;2 3) $&.> 500
@@ -36,6 +37,7 @@ test 1
 test 2
 test 131072
 test 262144
+test 65536
 test 4
 test 8
 test 16
@@ -55,6 +57,15 @@ test 16
 'domain error' -: (30$1.5)  ;@:{ etx 2$<10&u:'xy'
 'domain error' -: (30$3j1)  ;@:{ etx 2$<10&u:'xy'
 'domain error' -: (30$1 2)  ;@:{ etx 2 3;(10&u:'abc');4 5 6 7
+'domain error' -: (30$s:@<"0 'a')  ;@:{ etx 2$s:@<"0&.> <'xy'
+'domain error' -: (30$s:@<"0 'a')  ;@:{ etx 2$<"0@s: <'xy'
+'domain error' -: (30$s:@<"0&.> <'a') ;@:{ etx 2$s:@<"0&.> <'xy'
+'domain error' -: (30$<"0@s: <'a') ;@:{ etx 2$<"0@s: <'xy'
+'domain error' -: (30$1.5)  ;@:{ etx 2$s:@<"0&.> <'xy'
+'domain error' -: (30$1.5)  ;@:{ etx 2$<"0@s: <'xy'
+'domain error' -: (30$3j1)  ;@:{ etx 2$s:@<"0&.> <'xy'
+'domain error' -: (30$3j1)  ;@:{ etx 2$<"0@s: <'xy'
+'domain error' -: (30$1 2)  ;@:{ etx 2 3;(s:@<"0 'abc');4 5 6 7
 
 'index error'  -: (30$3)    ;@:{ etx 2$<'xy'
 'index error'  -: (71$3 _6) ;@:{ etx 5$<'xy'
@@ -62,8 +73,12 @@ test 16
 'index error'  -: (71$3 _6) ;@:{ etx 5$<u:'xy'
 'index error'  -: (30$3)    ;@:{ etx 2$<10&u:'xy'
 'index error'  -: (71$3 _6) ;@:{ etx 5$<10&u:'xy'
+'index error'  -: (30$3)    ;@:{ etx 2$s:@<"0&.> <'xy'
+'index error'  -: (30$3)    ;@:{ etx 2$<"0@s: <'xy'
+'index error'  -: (71$3 _6) ;@:{ etx 5$s:@<"0&.> <'xy'
+'index error'  -: (71$3 _6) ;@:{ etx 5$<"0@s: <'xy'
 
 
-4!:55 ;:'adot1 adot2 b data f i m test yy'
+4!:55 ;:'adot1 adot2 sdot b data f i m test yy'
 
 

@@ -80,7 +80,7 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  n=AN(w); xv=DAV(x);
  if(!n)R x;
  if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
- GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); memcpy(zv,CAV(w),n);
+ GATV(z,LIT,n,AR(w),AS(w)); zv=CAV(z); MC(zv,CAV(w),n);
  q=0; v=zv; DO(n, if('Y'==*v++)++q;); u=2==q?s+2:s;
  sprintf(s,FMTI04,(I)xv[0]);             v=zv; DO(n, if(*v=='Y'){*v=*u++; if(!*u)break;} ++v;);
  sprintf(s,FMTI02,(I)xv[1]);        u=s; v=zv; DO(n, if(*v=='M'){*v=*u++; if(!*u)break;} ++v;);

@@ -70,7 +70,7 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  DO(m+1, x=symbrd(v[i]); if(!x){p=0; RESETERR; break;} u[i]=x; p=p&&NOUN&AT(x););  // verify names defined, and are nouns
  if(p){
   b=u[m]; n=AN(b); r=AR(b); s=AS(b); t=AT(*u);  // length, rank, shape, of pqr; type of first value in list
-  p=t&B01+LIT+INT+FL+CMPX&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
+  p=t&DIRECT&&AT(b)&NUMERIC;    // fail if first value in list is indirect or pqr is not numeric
   if(p)DO(m, y=u[i]; if(!(TYPESEQ(t,AT(y))&&r==AR(y)&&!ICMP(s,AS(y),r))){p=0; break;});  // fail if list is not homogeneous in type, rank, and shape
  }
  // If the audit failed, the sentence might work, but we won't be doing it here.  Go run the original sentence
@@ -92,11 +92,21 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
     // then look up the symbol entry for word[0]
  }
  if(p)z=u[c]; else GA(z,t,n,r,s);   // z = output area, which may be in-place
- switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
+// switch((!q?12:!p?0:c==0?4:8)+(t&B01+LIT?0:t&INT?1:t&FL?2:3)){   // choose a comparison based on data
+//  case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
+//  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
+//  case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
+//  case 12: CASENZ(C);  case 13: CASENZ(I);  case 14: CASENZ(D);  case 15: CASENZ(Z);
+// 0 B01+LIT 1 INT 2 FL 3 CMPX 4 C2T 5 C4T 6 SBT 7 unused
+ switch((!q?24:!p?0:c==0?8:16)+(t&B01+LIT?0:t&INT?1:t&FL?2:t&CMPX?3:t&C2T?4:t&C4T?5:6)){   // choose a comparison based on data
   case  0: CASE2Z(C);  case  1: CASE2Z(I);  case  2: CASE2Z(D);  case  3: CASE2Z(Z);
-  case  4: CASE2X(C);  case  5: CASE2X(I);  case  6: CASE2X(D);  case  7: CASE2X(Z);
-  case  8: CASE2Y(C);  case  9: CASE2Y(I);  case 10: CASE2Y(D);  case 11: CASE2Y(Z);
-  case 12: CASENZ(C);  case 13: CASENZ(I);  case 14: CASENZ(D);  case 15: CASENZ(Z);
+  case  4: CASE2Z(US); case  5: CASE2Z(C4); case  6: CASE2Z(I);
+  case  8: CASE2X(C);  case  9: CASE2X(I);  case 10: CASE2X(D);  case 11: CASE2X(Z);
+  case 12: CASE2X(US); case 13: CASE2X(C4); case 14: CASE2X(I);
+  case 16: CASE2Y(C);  case 17: CASE2Y(I);  case 18: CASE2Y(D);  case 19: CASE2Y(Z);
+  case 20: CASE2Y(US); case 21: CASE2Y(C4); case 22: CASE2Y(I);
+  case 24: CASENZ(C);  case 25: CASENZ(I);  case 26: CASENZ(D);  case 27: CASENZ(Z);
+  case 28: CASENZ(US); case 29: CASENZ(C4); case 30: CASENZ(I);
   default: ASSERTSYS(0,"casev");
 }}   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 

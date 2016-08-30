@@ -57,6 +57,13 @@ cir=. 4 : 'x o. y'
 
 'domain error' -: o./\. etx 'eleemosynary'
 'domain error' -: o./\. etx ;:'quod erat demonstratum'
+'domain error' -: o./\. etx u:'eleemosynary'
+'domain error' -: o./\. etx ;:u:'quod erat demonstratum'
+'domain error' -: o./\. etx 10&u:'eleemosynary'
+'domain error' -: o./\. etx ;:10&u:'quod erat demonstratum'
+'domain error' -: o./\. etx s:@<"0 'eleemosynary'
+'domain error' -: o./\. etx s:@<"0&.> ;:'quod erat demonstratum'
+'domain error' -: o./\. etx <"0@s: ;:'quod erat demonstratum'
 
 4!:55 ;:'cir x'
 

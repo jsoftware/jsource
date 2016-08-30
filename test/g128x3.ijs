@@ -54,6 +54,11 @@ _873187034 -: g x
 (f -: crc) x
 (f -: crc) x=: 'assiduously avoid any and all asinine alliterations'
 
+NB. literal2/literal4
+x=: 'assiduously avoid any and all asinine iterations'
+(f 6&u: x) = f , _2 Endian \ x
+(f 10&u: (IF64{_2 _4) ic x) = f , _4 Endian \ x
+
 b=: 32 ?@$ 2
 
 'domain error' -: f etx 2 3 4
@@ -62,10 +67,12 @@ b=: 32 ?@$ 2
 'domain error' -: f etx 2 3j4
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
-'domain error' -: f etx u:x
-'domain error' -: f etx 10&u:x
+'domain error' -: f etx s:@<"0 'abc'
 
 'rank error'   -: f etx 3 4$'abc'
+'rank error'   -: f etx 3 4$u:'abc'
+'rank error'   -: f etx 3 4$10&u:'abc'
+'rank error'   -: f etx 3 4$s:@<"0 'abc'
 
 'domain error' -: 123           f etx 3 4 5
 'domain error' -: 123           f etx 3 4 5x
@@ -74,9 +81,14 @@ b=: 32 ?@$ 2
 'domain error' -: 123           f etx 3r4 5
 
 'domain error' -: '34'          f etx 'xyz'
+'domain error' -: (u:'34')      f etx 'xyz'
+'domain error' -: (10&u:'34')   f etx 'xyz'
+'domain error' -: (s:@<"0 '34') f etx 'xyz'
 'domain error' -: 3.4           f etx 'xyz'
 'domain error' -: 3j4           f etx 'xyz'
 'domain error' -: (<'abc')      f etx 'xyz'
+'domain error' -: (<u:'abc')    f etx 'xyz'
+'domain error' -: (<10&u:'abc') f etx 'xyz'
 'domain error' -: (34;'a')      f etx 'xyz'
 'domain error' -: (b;'a')       f etx 'xyz'
 

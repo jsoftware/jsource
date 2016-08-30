@@ -143,7 +143,7 @@ static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
 F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t,wd;
  RZ(w);
  n=AN(w); t=AT(w); 
- ASSERT(t&B01+LIT+INT+FL+CMPX+BOX,EVDOMAIN);
+ ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+BOX+SBT,EVDOMAIN);
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
  zv=A1AV(z); wv=AAV(w);
  if(t&BOX){wd=(I)w*ARELATIVE(w); DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}

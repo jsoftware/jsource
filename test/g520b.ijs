@@ -74,6 +74,8 @@ f2=: 3 : 0
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: ;:'Cogito, ergo sum. kakistocracy'
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: ;:u:'Cogito, ergo sum. kakistocracy'
  assert. (b{x) -: i{x=: x{~ ?  2$#x=: ;:10&u:'Cogito, ergo sum. kakistocracy'
+ assert. (b{x) -: i{x=: x{~ ?  2$#x=: s:@<"0&.> ;:'Cogito, ergo sum. kakistocracy'
+ assert. (b{x) -: i{x=: x{~ ?  2$#x=: <"0@s: ;:'Cogito, ergo sum. kakistocracy'
  1
 )
 
@@ -89,6 +91,8 @@ f2"0 ] 1000+i.10
 (b{"1 x) -: i{"1 x=: x{~?5 2$#x=: ;:'Cogito, ergo sum. kakistocracy'
 (b{"1 x) -: i{"1 x=: x{~?5 2$#x=: ;:u:'Cogito, ergo sum. kakistocracy'
 (b{"1 x) -: i{"1 x=: x{~?5 2$#x=: ;:10&u:'Cogito, ergo sum. kakistocracy'
+(b{"1 x) -: i{"1 x=: x{~?5 2$#x=: ;:'Cogito, ergo sum. kakistocracy'
+(b{"1 x) -: i{"1 x=: x{~?5 2$#x=: ;:'Cogito, ergo sum. kakistocracy'
 
 
 'index error' -: (10$1 0) { etx i.1 5

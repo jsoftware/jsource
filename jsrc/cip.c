@@ -185,7 +185,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
 #define IPBX(F)  \
  for(i=0;i<m;++i){                                       \
-  memcpy(zv,*av?v1:v0,n); if(ac)++av;                    \
+  MC(zv,*av?v1:v0,n); if(ac)++av;                    \
   for(j=1;j<p;++j){                                      \
    uu=(I*)zv; vv=(I*)(*av?v1+j*wc:v0+j*wc); if(ac)++av;  \
    DO(q, *uu++F=*vv++;);                                 \

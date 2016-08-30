@@ -17,6 +17,7 @@ p -: iota q
 'domain error' -: i. etx 'abc'
 'domain error' -: i. etx u:'abc'
 'domain error' -: i. etx 10&u:'abc'
+'domain error' -: i. etx s:@<"0 'abc'
 'domain error' -: i. etx 3.4 5
 'domain error' -: i. etx 3j4 5
 'domain error' -: i. etx 3 4;5
@@ -99,6 +100,27 @@ a-:(i.~a){a
 (1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:adot2{~?7 5000 2$#adot2
 (1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:adot2{~?7 5000 4$#adot2
 
+NB. symbol
+a=:sdot{~32+?10 5$95
+a-:(i.~a){a
+(i.~a)-:i.~<"_1 a
+0=a i.0{a
+(#a)=a i.4 5 6 7 8
+(b*#a) -: (a=:(>:?40)$s:@<"0 'axy') i. (b=:?30$2){s:@<"0 'ab'
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 1$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 2$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 3$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 4$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 5$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 6$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 7$#sdot
+(1|.a) -: (a i.1|.a){a=:sdot{~?117 8$#sdot
+
+(1|.a) -: (a i. 1|.a){a=:sdot{~?7000 2$#sdot
+(1|.a) -: (a i. 1|.a){a=:sdot{~?7000 4$#sdot
+(1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:sdot{~?7 5000 2$#sdot
+(1|."2 a) -: (a i."(2) 1|."2 a){"_1 a=:sdot{~?7 5000 4$#sdot
+
 NB. integer
 a=:?10 5$100
 a-:(i.~a){a
@@ -168,6 +190,7 @@ a-:(i.!.0~a){a
 (b*#a) -: (a=:(>:?40)$(<4;'aj95'),<'lieben') i. (b=:?50$2){(<4;'aj95'),<1234
 (b*#a) -: (a=:(>:?40)$(<4;u:'aj95'),<u:'lieben') i. (b=:?50$2){(<4;u:'aj95'),<1234
 (b*#a) -: (a=:(>:?40)$(<4;10&u:'aj95'),<10&u:'lieben') i. (b=:?50$2){(<4;10&u:'aj95'),<1234
+(b*#a) -: (a=:(>:?40)$(<4;s:@<"0 'aj95'),<s:@<"0 'lieben') i. (b=:?50$2){(<4;s:@<"0 'aj95'),<1234
 ((i.   ~x){x) -: x=:;:'i.~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 ((i.!.0~x){x) -: x=:;:'i.~(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4'
 (20$0) -: i.   ~(?20$3){'';($0);(0$<'')
@@ -256,6 +279,16 @@ f =: i. -: ciof
 
 ((?3000$256){adot2) f (?4 80$256){adot2
 ((?3000$256){adot2) f (? 300$256){adot2
+
+NB. x i.y for symbol x and y -------------------------------------------
+
+map  =: 3 : '(i.-#y) (sdot i.|.y)}256$#y'
+ciof =: sdot&i.@] { map@[
+
+f =: i. -: ciof
+
+((?3000$256){sdot) f (?4 80$256){sdot
+((?3000$256){sdot) f (? 300$256){sdot
 
 NB. x i.y on boxed numerics ---------------------------------------------
 
@@ -361,6 +394,23 @@ x (g"2  -: i."2 ) y=:adot2{~?(14,   c)$#adot2
 x (g"2  -: i."2 ) x
 x (g"2  -: i."2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i."_1) y=:adot2{~?(117,  c)$#adot2
+
+NB. symbol
+x=:sdot{~?(117 7,c)$#sdot [ c=:3
+x (g"2  -: i."2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i."2 ) x
+x (g"2  -: i."2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i."_1) y=:sdot{~?(117,  c)$#sdot
+x=:sdot{~?(117 7,c)$#sdot [ c=:4
+x (g"2  -: i."2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i."2 ) x
+x (g"2  -: i."2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i."_1) y=:sdot{~?(117,  c)$#sdot
+x=:sdot{~?(117 7,c)$#sdot [ c=:11
+x (g"2  -: i."2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i."2 ) x
+x (g"2  -: i."2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i."_1) y=:sdot{~?(117,  c)$#sdot
 
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i."1 ) y=:p+?q
@@ -496,6 +546,23 @@ x (g"2  -: i.!.0"2 ) x
 x (g"2  -: i.!.0"2 ) y=:adot2{~?(117 3,c)$#adot2
 x (g"_1 -: i.!.0"_1) y=:adot2{~?(117,  c)$#adot2
 
+NB. symbol
+x=:sdot{~?(117 7,c)$#sdot [ c=:3
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i.!.0"2 ) x
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i.!.0"_1) y=:sdot{~?(117,  c)$#sdot
+x=:sdot{~?(117 7,c)$#sdot [ c=:4
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i.!.0"2 ) x
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i.!.0"_1) y=:sdot{~?(117,  c)$#sdot
+x=:sdot{~?(117 7,c)$#sdot [ c=:11
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(14,   c)$#sdot 
+x (g"2  -: i.!.0"2 ) x
+x (g"2  -: i.!.0"2 ) y=:sdot{~?(117 3,c)$#sdot
+x (g"_1 -: i.!.0"_1) y=:sdot{~?(117,  c)$#sdot
+
 x=:p+?117 7$q [ p=:0 [ q=:14
 x (g"1  -: i.!.0"1 ) y=:p+?q
 x (g"1  -: i.!.0"1 ) x
@@ -594,6 +661,6 @@ x (i. -: f) y [ x=: 1+0.5*t*i.50 [ y=: 1+0.5*t*?~60
 x (i. -: f)~y
 
 
-4!:55 ;:'a adot1 adot2 b c ciof ct f f1 f2 g iota j map n p q t test x xx y yy'
+4!:55 ;:'a adot1 adot2 sdot b c ciof ct f f1 f2 g iota j map n p q t test x xx y yy'
 
 

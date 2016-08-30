@@ -1,3 +1,5 @@
+randuni''
+
 NB. >./\. B -------------------------------------------------------------
 
 (0 1 1 1,:0 1 0 1) -: >./\. 0 0 1 1 ,: 0 1 0 1
@@ -56,6 +58,20 @@ max=: 4 : 'x>.y'
 (>./\."1 -: max/\."1) x
 (>./\."2 -: max/\."2) x
 
+NB. >./\. SB -------------------------------------------------------------
+
+max=: 4 : 'x>.y'
+
+(>./\. -: max/\.) x=.sdot
+(>./\. -: max/\.) |.x
+
+(>./\.   -: max/\.  ) x=.sdot{~ ?    23$#sdot
+(>./\.   -: max/\.  ) x=.sdot{~ ?4   23$#sdot
+(>./\."1 -: max/\."1) x
+(>./\.   -: max/\.  ) x=.sdot{~ ?7 5 23$#sdot
+(>./\."1 -: max/\."1) x
+(>./\."2 -: max/\."2) x
+
 'domain error' -: >./\. etx 'triskaidekaphobia'
 'domain error' -: >./\. etx ;:'professors in New England'
 'domain error' -: >./\. etx u:'triskaidekaphobia'
@@ -63,6 +79,6 @@ max=: 4 : 'x>.y'
 'domain error' -: >./\. etx 10&u:'triskaidekaphobia'
 'domain error' -: >./\. etx ;:10&u:'professors in New England'
 
-4!:55 ;:'f max x'
+4!:55 ;:'adot1 adot2 sdot f max x'
 
 

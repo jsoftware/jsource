@@ -83,6 +83,9 @@ x -: %/\x=. [&.j. 0 0 0 0
 (,<'ace') -: %/\<u:'ace'
 (,'j')    -: %/\10&u:'j'
 (,<'ace') -: %/\<10&u:'ace'
+(,s:@<"0 'j')    -: %/\s:@<"0 'j'
+(,s:@<"0&.> <'ace') -: %/\s:@<"0&.> <'ace'
+(,<"0@s: <'ace') -: %/\<"0@s: <'ace'
 
 'domain error' -: %/\ etx 'deipnosophist'
 'domain error' -: %/\ etx ;:'peace in our time'
@@ -90,6 +93,9 @@ x -: %/\x=. [&.j. 0 0 0 0
 'domain error' -: %/\ etx ;:u:'peace in our time'
 'domain error' -: %/\ etx 10&u:'deipnosophist'
 'domain error' -: %/\ etx ;:10&u:'peace in our time'
+'domain error' -: %/\ etx s:@<"0 'deipnosophist'
+'domain error' -: %/\ etx s:@<"0&.> ;:'peace in our time'
+'domain error' -: %/\ etx <"0@s: ;:'peace in our time'
 
 4!:55 ;:'div x'
 

@@ -198,9 +198,9 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
   // If no fill has been specified, the scan isn't needed, because all blocks will be extended with their
   // normal fill, which will be enough to hold the highest precision.  But if there are no nonempty blocks,
   // we have to scan to get a precision from among the empties
-  // ensure literal fill consistent
+  // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
 //  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}
-  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
+  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
  }
 
  // Now we know the type of the result.  Create the result.
@@ -262,9 +262,9 @@ F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
  // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
  // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
  // but this is how it was done originally
- // ensure literal fill consistent
+  // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
 // if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
- if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
+ if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
  GA(z,t,m,r,0); if(zb&&!(t&DIRECT))AFLAG(z)=AFREL;  // allocate the result area; mark relative if any contents relative
  zu=CAV(z); zv=AAV(z); k=bp(t); // inpout pointers, depending on type; length of an item
  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed

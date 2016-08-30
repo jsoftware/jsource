@@ -20,6 +20,9 @@ a (r. -: rdot) b
 'domain error' -: r. etx <u:'abc'
 'domain error' -: r. etx 10&u:'abc'
 'domain error' -: r. etx <10&u:'abc'
+'domain error' -: r. etx s:@<"0 'abc'
+'domain error' -: r. etx s:@<"0&.> <'abc'
+'domain error' -: r. etx <"0@s: <'abc'
 
 'domain error' -: 'abc' r. etx 3
 'domain error' -: 'abc' r.~etx 3

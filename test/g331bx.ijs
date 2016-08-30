@@ -70,6 +70,7 @@ x ] g y
 'domain error' -: (1 0 1;'abcd')    <;.1 etx i.3 4
 'domain error' -: (1 0 1;u:'abcd')    <;.1 etx i.3 4
 'domain error' -: (1 0 1;10&u:'abcd')    <;.1 etx i.3 4
+'domain error' -: (1 0 1;s:@<"0 'abcd')    <;.1 etx i.3 4
 'domain error' -: (1 0 1;2 3 4 1)   <;.1 etx i.3 4
 'domain error' -: (1 0 1;<4$<1)     <;.1 etx i.3 4
 'domain error' -: (1 0 1;2 3 4 1.2) <;.1 etx i.3 4

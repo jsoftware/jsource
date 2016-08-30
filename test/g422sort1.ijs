@@ -89,6 +89,16 @@ test     adot2{~  ?700100 $# adot2
 test     adot2{~  ?700200 $# adot2
 test     adot2{~  ?700300 $# adot2
 
+test     sdot{~  ?100000 $# sdot
+test     sdot{~  ?100100 $# sdot
+test     sdot{~  ?100200 $# sdot
+test     sdot{~  ?100300 $# sdot
+
+test     sdot{~  ?700000 $# sdot
+test     sdot{~  ?700100 $# sdot
+test     sdot{~  ?700200 $# sdot
+test     sdot{~  ?700300 $# sdot
+
 test        100000 ?@$ 1e4
 test        100100 ?@$ 1e4
 test        100200 ?@$ 1e4
@@ -241,6 +251,6 @@ test1 0.01*(--:n) + 3 100200 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 100300 ?@$ n=: IF64{1e9 1e18
 
 
-4!:55 ;:'adot1 adot2 b n test test1'
+4!:55 ;:'adot1 adot2 sdot b n test test1'
 
 

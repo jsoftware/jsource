@@ -17,6 +17,9 @@ test i.3 0
 1e_15 > | 0j1.41421356237309504880 - %: _2
 
 'domain error' -: %: etx 'abc'
+'domain error' -: %: etx u:'abc'
+'domain error' -: %: etx 10&u:'abc'
+'domain error' -: %: etx s:@<"0 'abc'
 'domain error' -: %: etx 3;4 5
 
 
@@ -28,6 +31,8 @@ NB. x%:y ----------------------------------------------------------------
 'domain error' -: 3 4 %:~etx u:'ab'
 'domain error' -: 3 4 %: etx 10&u:'ab'
 'domain error' -: 3 4 %:~etx 10&u:'ab'
+'domain error' -: 3 4 %: etx s:@<"0 'ab'
+'domain error' -: 3 4 %:~etx s:@<"0 'ab'
 'domain error' -: 3 4 %: etx 3;4 5
 'domain error' -: 3 4 %:~etx 3;4 5
 

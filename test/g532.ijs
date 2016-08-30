@@ -32,6 +32,13 @@ NB. literal4
 (curtail -: }:) adot2{~?2 3 4$256
 (curtail -: }:) 1=?0 3$256
 
+NB. symbol
+(curtail -: }:) s:@<"0 'a'
+(curtail -: }:) sdot{~?4$256
+(curtail -: }:) sdot{~?3 4$256
+(curtail -: }:) sdot{~?2 3 4$256
+(curtail -: }:) 1=?0 3$256
+
 NB. integer
 (curtail -: }:) 12345
 (curtail -: }:) ?4$123456
@@ -61,6 +68,6 @@ t=.(+&.>i.5),;:'(raze a) -: }: a=. ^0j1*?3 4$1256'
 (curtail -: }:) t{~?2 3 4$#t
 (curtail -: }:) 0 3$<123456
 
-4!:55 ;:'adot1 adot2 curtail t '
+4!:55 ;:'adot1 adot2 sdot curtail t '
 
 

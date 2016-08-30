@@ -45,7 +45,7 @@ perm=: 3 : 0
 1 chk 1 xr <'perm'
 0 chk 2 xr <'perm'
 
-f1 =. 3 : 0
+f1 =: 3 : 0
  if. y do. goto_true. else. goto_false. end.
  label_true.  'true'  return.
  label_false. 'false' return.

@@ -48,7 +48,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
  GATV(z,NAME,n,1,0); zv=NAV(z);
- memcpy(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
+ MC(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
  f=0; m=n; p=0;
  // Split name into simplename and locale, verify length of each; set flag for locative/indirect locative
  if('_'==*t){--t; while(s<t&&'_'!=*t)--t; f=NMLOC;  p=n-2-(t-s); m=n-(2+p);}  // t->_ before localename, p=#locale name, m=#simplename

@@ -54,6 +54,12 @@ a=:adot2{~32+?10 5$95
 (<\,a)  -: < bs ,a
 (]\a)  -: ] bs a
 
+NB. symbol
+a=:sdot{~32+?10 5$95
+(<\a)   -: < bs a
+(<\,a)  -: < bs ,a
+(]\a)  -: ] bs a
+
 NB. integer
 a=:?10 5$100
 (<\ -: < bs) a
@@ -418,6 +424,17 @@ a=:'d'
 k (<\ -: < bs) a     [ k=:0
 k (<\ -: < bs) a     [ k=:4
 
+NB. symbol
+a=:sdot{~32+?11 5$95
+k (<\ -: < bs) a     [ k=:_4+?11
+k (<\ -: < bs) ,a    [ k=:_4+?11
+k (]\ -: ] bs) a     [ k=:_4+?11
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:1+#a
+a=:'d'
+k (<\ -: < bs) a     [ k=:0
+k (<\ -: < bs) a     [ k=:4
+
 NB. integer
 a=:?11 5$110
 k (<\  -: < bs) a    [ k=:_4+?11
@@ -527,6 +544,7 @@ f=: i.@:>:@:$
 'domain error' -: 'a'      <\ etx i.12
 'domain error' -: (u:'a')      <\ etx i.12
 'domain error' -: (10&u:'a')      <\ etx i.12
+'domain error' -: (s:@<"0 'a')      <\ etx i.12
 'domain error' -: 3.5      <\ etx i.12
 'domain error' -: (o._1e12)<\ etx i.12
 'domain error' -: 3j4      <\ etx i.12
@@ -535,7 +553,7 @@ f=: i.@:>:@:$
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
 
-4!:55 ;:'A a adot1 adot2 b base bs bsd em en f iind '
+4!:55 ;:'A a adot1 adot2 sdot b base bs bsd em en f iind '
 4!:55 ;:'infix inv k kay key n ob oind omask osub '
 4!:55 ;:'outfix prefix sd seg suffix t test w x y'
 

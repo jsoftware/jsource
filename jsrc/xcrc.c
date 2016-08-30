@@ -25,8 +25,9 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
  RZ(a&&w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
  n=AN(w); v=UAV(w);
- ASSERT(!n||LIT&AT(w),EVDOMAIN);
+ ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
  RE(z=crcvalidate(a,crctab));
+ n=AT(w)&C4T?(4*n):AT(w)&C2T?n+n:n;
  DO(n, z=z>>8^crctab[255&(z^*v++)];);  // do the computation using unsigned z
  R sc((I)(I4)(z^-1L));  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value
 }
@@ -44,7 +45,8 @@ DF1(jtcrcfixedleft){A h,*hv;I n;UINT*t,z;UC*v;
  RZ(w);
  h=VAV(self)->h; hv=AAV(h); t=(UINT*)AV(hv[0]); z=(UINT)*AV(hv[1]);
  n=AN(w); v=UAV(w);
- ASSERT(!n||LIT&AT(w),EVDOMAIN); 
+ ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
+ n=AT(w)&C4T?(4*n):AT(w)&C2T?n+n:n;
  DO(n, z=z>>8^t[255&(z^*v++)];);
  R sc((I)(I4)(z^-1L));
 }

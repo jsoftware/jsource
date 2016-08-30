@@ -23,6 +23,9 @@ NB. x>:y ----------------------------------------------------------------
 
 1 0 1 1 -: 0 0 1 1 >: 0 1 0 1
 
+NB. symbol
+1 1 0 1 1 0 -: (s:@<"0 'cbaCBA') >: s:@<"0 'abcABC'
+
 'domain error' -: 'abc' >: etx 3 4 5 
 'domain error' -: 'abc' >:~etx 3 4 5  
 'domain error' -: (u:'abc') >: etx 3 4 5 

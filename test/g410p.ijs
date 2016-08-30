@@ -32,6 +32,9 @@ bang=. 4 : 'x!y'
 'domain error' -: !/\ etx ;:u:'super cali fragi listic espi ali do cious'
 'domain error' -: !/\ etx 10&u:'sesquipedalian'
 'domain error' -: !/\ etx ;:10&u:'super cali fragi listic espi ali do cious'
+'domain error' -: !/\ etx s:@<"0 'sesquipedalian'
+'domain error' -: !/\ etx s:@<"0&.> ;:'super cali fragi listic espi ali do cious'
+'domain error' -: !/\ etx <"0@s: ;:'super cali fragi listic espi ali do cious'
 
 4!:55 ;:'bang x'
 

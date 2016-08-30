@@ -4,6 +4,9 @@ randuni''
 
 (1 1$x) -: ,.x=.0
 (1 1$x) -: ,.x=.'a'
+(1 1$x) -: ,.x=.u:'a'
+(1 1$x) -: ,.x=.10&u:'a'
+(1 1$x) -: ,.x=.s:@<"0 'a'
 (1 1$x) -: ,.x=.123450
 (1 1$x) -: ,.x=.3.145
 (1 1$x) -: ,.x=.1.23e18j5.67e_89
@@ -12,11 +15,15 @@ randuni''
 0 1  -: $,.''
 0 1  -: $,.u:''
 0 1  -: $,.10&u:''
+0 1  -: $,.s:''
 1 0  -: $,.1 4 5 0$9
 2 0  -: $,.2 4 0 5$9
 0 12 -: $,.i.0 3 4
 0 0  -: $,.i.0 2 3 0
 0 0  -: $,.0 0$<''
+0 0  -: $,.0 0$<u:''
+0 0  -: $,.0 0$<10&u:''
+0 0  -: $,.0 0$<s:''
 
 table =: (# , */@}.@$) $ ,
 
@@ -47,6 +54,11 @@ table =: (# , */@}.@$) $ ,
 (,."_1 -: table"_1) (?2 3 4 5$#x){x=.10&u:'imitative harmony'
 (,."_2 -: table"_2) (?2 3 4 5$#x){x=.10&u:'personification'
 (,."_3 -: table"_3) (?2 3 4 5$#x){x=.10&u:'sui generis'
+
+(,."0  -: table"0)  (?2 3 4 5$#x){x=.s:@<"0 'metaphoric meteoric'
+(,."_1 -: table"_1) (?2 3 4 5$#x){x=.s:@<"0 'imitative harmony'
+(,."_2 -: table"_2) (?2 3 4 5$#x){x=.s:@<"0 'personification'
+(,."_3 -: table"_3) (?2 3 4 5$#x){x=.s:@<"0 'sui generis'
 
 (,."0 -: table"0) i.i. 5
 (,."0 -: table"0) i.i._5
@@ -149,6 +161,24 @@ NB. literal4
 (adot2{~?6 1 3$#adot2) f adot2{~?6 9$#adot2
 (adot2{~?6 1 3$#adot2) f adot2{~?6 4 9$#adot2
 
+NB. symbol
+(sdot{~?#sdot) f sdot{~?#sdot
+(sdot{~?#sdot) f sdot{~?12$#sdot
+(sdot{~?#sdot) f sdot{~?3 10$#sdot
+(sdot{~?#sdot) f sdot{~?7 2 10$#sdot
+(sdot{~?11$#sdot) f sdot{~?#sdot
+(sdot{~?11$#sdot) f sdot{~?11$#sdot
+(sdot{~?11$#sdot) f sdot{~?11 1$#sdot
+(sdot{~?11$#sdot) f sdot{~?11 3 2$#sdot
+(sdot{~?7 3$#sdot) f sdot{~?#sdot
+(sdot{~?7 3$#sdot) f sdot{~?7$#sdot
+(sdot{~?7 3$#sdot) f sdot{~?7 9$#sdot
+(sdot{~?7 3$#sdot) f sdot{~?7 8 9$#sdot
+(sdot{~?6 1 3$#sdot) f sdot{~?#sdot
+(sdot{~?6 1 3$#sdot) f sdot{~?6$#sdot
+(sdot{~?6 1 3$#sdot) f sdot{~?6 9$#sdot
+(sdot{~?6 1 3$#sdot) f sdot{~?6 4 9$#sdot
+
 NB. integer
 (?2222) f ?2
 (?2222) f ?12$1234
@@ -211,30 +241,51 @@ NB. boxed
 (t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.(s:@<"0&.> <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.(s:@<"0&.> <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.(<"0@s: <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.(<"0@s: <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?12     $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?12$#t) f t{~?12 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?12$#t) f t{~?12 2 10$#t=.<"0 i.123
 (<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.(s:@<"0&.> <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.(s:@<"0&.> <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.(<"0@s: <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.(<"0@s: <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?7     $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (<"0?7 2$999) f t{~?7 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (<"0?7 2$999) f t{~?7 2 10$#t=.<"0 i.123
 (t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.(s:@<"0&.> <'asdf');3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.(s:@<"0&.> <'asdf');3 4;<"0@s: ;:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.(<"0@s: <'asdf');3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.(<"0@s: <'asdf');3 4;<"0@s: ;:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?13    $#t=.2;3;;:'?12$2;:(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?13 2 2$#t) f t{~?13 3  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?13 2 2$#t) f t{~?13 2 3$#t=.<"0 ?123$11231
 
 'domain error' -: 1 2 3   ,. etx 'abc'
+'domain error' -: 1 2 3   ,. etx u:'abc'
+'domain error' -: 1 2 3   ,. etx 10&u:'abc'
+'domain error' -: 1 2 3   ,. etx s:@<"0 'abc'
 'domain error' -: 1 2 3   ,. etx 2;3;4
 'domain error' -: (2;3;4) ,. etx 'abc'
+'domain error' -: (2;3;4) ,. etx u:'abc'
+'domain error' -: (2;3;4) ,. etx 10&u:'abc'
+'domain error' -: (2;3;4) ,. etx s:@<"0 'abc'
 'domain error' -: (2;3;4) ,. etx 2 3 4
 'domain error' -: 'abc'   ,. etx 1 2 3
 'domain error' -: 'abc'   ,. etx 2;3;4
 
 'length error' -: 'abc'   ,. etx 'sui generis'
+'length error' -: 'abc'   ,. etx u:'sui generis'
+'length error' -: 'abc'   ,. etx 10&u:'sui generis'
+'length error' -: (s:@<"0 'abc')   ,. etx s:@<"0 'sui generis'
 'length error' -: (,1)    ,. etx 3 4
 
 
@@ -249,6 +300,9 @@ f=: 4 : 0
 0 1                  f"_ 0 ] 100+i.12
 a.                   f"_ 0 ] 100+i.12
 (a.{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
+(adot1{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
+(adot2{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
+(sdot{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
 (u: i.1e3)           f"_ 0 ] 100+i.12
 (10&u: i.1e3)        f"_ 0 ] 100+i.12
 (1000 ?@$ 1e4)       f"_ 0 ] 100+i.12
@@ -257,6 +311,6 @@ a.                   f"_ 0 ] 100+i.12
 (<"0 ] 1000 ?@$ 1e5) f"_ 0 ] 100+i.12
 
 
-4!:55 ;:'adot1 adot2 d e f overr t table x'
+4!:55 ;:'adot1 adot2 sdot d e f overr t table x'
 
 

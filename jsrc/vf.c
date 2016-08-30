@@ -141,7 +141,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  k=bp(wt); v=1+f+ws; DO(r-1, k*=*v++;); nk=n*k;
  GA(z,wt,AN(w),wr,ws); zv=CAV(z);
  switch(k){
-  default:        {C*s=wv-k,*t; DO(m, t=s+=nk; DO(n, memcpy(zv,t,k); zv+=k; t-=k;););} break;
+  default:        {C*s=wv-k,*t; DO(m, t=s+=nk; DO(n, MC(zv,t,k); zv+=k; t-=k;););} break;
   case sizeof(C): {C*s=    wv,*t,*u=    zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
   case sizeof(S): {S*s=(S*)wv,*t,*u=(S*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
 #if SY_64

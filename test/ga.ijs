@@ -51,6 +51,7 @@ Adot2 =: dfr@(base@] #: [) { ]
 (_1 A. y) -: |. y=:(?400$#a.){a.
 (_1 A. y) -: |. y=:(?400$#adot1){adot1
 (_1 A. y) -: |. y=:(?400$#adot2){adot2
+(_1 A. y) -: |. y=:(?400$#sdot){sdot
 (_1 A. y) -: |. y=:?300$2000
 (_1 A. y) -: |. y=:o.?400 2$100
 (_1 A. y) -: |. y=:^0j1*?400 2$100
@@ -61,6 +62,7 @@ Adot2 =: dfr@(base@] #: [) { ]
 (0 A. y) -: y=:(?#a.){a.
 (0 A. y) -: y=:(?#adot1){adot1
 (0 A. y) -: y=:(?#adot2){adot2
+(0 A. y) -: y=:(?#sdot){sdot
 (0 A. y) -: y=:?20000
 (0 A. y) -: y=:o.?20000
 (0 A. y) -: y=:^0j1*?2000
@@ -70,6 +72,7 @@ Adot2 =: dfr@(base@] #: [) { ]
 (_1 A. y) -: y=:(?#a.){a.
 (_1 A. y) -: y=:(?#adot1){adot1
 (_1 A. y) -: y=:(?#adot2){adot2
+(_1 A. y) -: y=:(?#sdot){sdot
 (_1 A. y) -: y=:?20000
 (_1 A. y) -: y=:o.?20000
 (_1 A. y) -: y=:^0j1*?2000
@@ -86,10 +89,13 @@ Adot2 =: dfr@(base@] #: [) { ]
 ([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:'Hey nonny nonny'
 ([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:u:'Hey nonny nonny'
 ([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){;:10&u:'Hey nonny nonny'
+([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){s:@<"0&.> ;:'Hey nonny nonny'
+([ -: 3&A.^:_1@(3&A.)) x=:(?200$3){<"0@s: ;:'Hey nonny nonny'
 
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.'Antebellum'
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.u:'Antebellum'
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.10&u:'Antebellum'
+([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:~.s:@<"0 'Antebellum'
 ([ -: A.&y^:_1@(A.&y)) x=:?100$#y=:100?100
 
 0 -: A. i.0
@@ -140,7 +146,7 @@ p4 =: 3 : 0
 (p0 -: p4)"0 i.6
 
 
-4!:55 ;:'Adot1 Adot2 adot1 adot2 base boxed dfr grow j ord p p0 '
+4!:55 ;:'Adot1 Adot2 adot1 adot2 sdot base boxed dfr grow j ord p p0 '
 4!:55 ;:'p1 p2 p3 p4 pfill pind rfd x y z '
 
 

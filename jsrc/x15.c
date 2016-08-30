@@ -837,7 +837,7 @@ F1(jtmemr){C*u;I k,m,n,t,*v;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
- ASSERT(t&LIT+INT+FL+CMPX,EVDOMAIN);
+ ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  if(-1==m){ASSERT(t&LIT,EVDOMAIN); m=strlen(u);}
  k=bp(t);
 #if SY_WIN32
@@ -853,7 +853,7 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
- ASSERT(t&LIT+INT+FL+CMPX,EVDOMAIN);
+ ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  k=bp(t);
  ASSERT(m==AN(a)||t&LIT&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
@@ -861,7 +861,7 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
 #if SY_WIN32
  ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
- memcpy(u,AV(a),m*k);
+ MC(u,AV(a),m*k);
  R mtm;
 }    /* 15!:2  memory write */
 

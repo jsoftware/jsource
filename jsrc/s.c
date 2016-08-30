@@ -428,7 +428,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  }else if(x!=w){  /* replacing name with different mapped data */
   if(wt&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
-  ASSERT(wt&B01+INT+FL+CMPX+LIT,EVDOMAIN);
+  ASSERT(wt&DIRECT,EVDOMAIN);
   ASSERT(AM(x)>=m,EVALLOC);
   AT(x)=wt; AN(x)=wn; AR(x)=wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
  }

@@ -53,6 +53,13 @@ $    f x
 <@}. f x
 box  f x
 
+<    f x=: sdot{~ ?101 1 7$#sdot
+$    f x
+[    f x
+,    f x
+<@}. f x
+box  f x
+
 test=: 4 : 0
  b=: $. (#y){.(i._2+#y) e. +/\2+?(#y)$10
  assert. (b #   ;. x y) -: b (3 : '#    y');.x y
@@ -98,6 +105,16 @@ _1 test t
 2  test t
 _2 test t
 
+1  test t=: sdot{~ ?300$#sdot
+_1 test t
+2  test t
+_2 test t
+
+1  test t=: sdot{~?101 2 3$#sdot
+_1 test t
+2  test t
+_2 test t
+
 1  test t=: ?317$1e6
 _1 test t
 2  test t
@@ -113,6 +130,6 @@ _2 test t
 'index error'  -: ($. 1 1 1 0 0) {.;._1 etx i.5
 
 
-4!:55 ;:'adot1 adot2 b box C f t test x'
+4!:55 ;:'adot1 adot2 sdot b box C f t test x'
 
 

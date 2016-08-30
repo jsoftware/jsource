@@ -1,5 +1,7 @@
 NB. test script utilities -----------------------------------------------
 
+cocurrent 'base'
+
 3 : 0 ''
 testpath=: '/',~(t i:'/'){.t=. jpath;(4!:4<'ddall'){4!:3''
 if. IFWIN do.
@@ -96,7 +98,17 @@ randuni=: 3 : 0
  else.
   adot2=: /:~ 10&u: RAND32 256?C4MAX
  end.
-''
+NB. 256 unique random symbols
+ a=.((9#1),~1+?247#9) [ b=. /:~ 256?256
+ s0=. a (] s:@:<@({&a.)@:+ i.@[)"0 b
+ a=.(1+?256#9) [ b=. /:~ 256?65536-9
+ s1=. a (] s:@:<@u:@:+ i.@[)"0 b
+ a=.(1+?256#9) [ b=. RAND32 /:~ 256?C4MAX-9
+ s2=. /:~^:(-.IF64) a (] s:@:<@(10&u:)@:+ i.@[)"0 b
+ s=. ~.(?~256*3){s0,s1,s2
+ sdot=: /:~ (256?#s){s
+ assert. 256=#~.sdot
+ ''
 )
 
 NB. ebi extensions
@@ -111,6 +123,20 @@ RUN1=: 13 : '0!:2<testpath,y,''.ijs'''
 RESUB1=: 3 : 'y[echo >y'
 RESUB2=: (13 : '-.0!:3 RESUB1 y')"0
 RECHO=: 13 : '+/ RESUB2 y'
+
+RECHO1=: 4 : 0
+x123=. x>.1
+y123=. y
+4!:55 'x';'y'
+for_y234. y123 do.
+ echo RLAST=: >y234
+ for. i.x123 do.
+  assert. 0!:2 y234
+  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
+ end.
+end.
+''
+)
 
 RUN2=: 4 : 0
 x123=. x>.1
@@ -150,5 +176,7 @@ g401 occasionally fails (random data?) but then runs clean
    RB          NB. 0!:3 result (0 for failure)
    RF          NB. scripts that were run
    
-   RECHO ddall NB. echo script names as run and final count of failures
+   RECHO ddall  NB. echo script names as run and final count of failures
+   RECHO1 ddall NB. script with display for n times and stop on failure
+                NB. RLAST is the last script
 )

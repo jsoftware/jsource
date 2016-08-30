@@ -164,6 +164,10 @@ void jtjsigd(J jt,C*s){C buf[100],*d="domain error: ";I m,n,p;
 
 void jtjsignal(J jt,I e){A x;
  if(EVATTN==e||EVBREAK==e||e==EVINPRUPT) *jt->adbreak=0;
+// template for debug break point
+// if(EVDOMAIN==e){
+// fprintf(stderr,"domain error\n");
+// }
  x=0<e&&e<=NEVM?*(e+AAV(jt->evm)):mtv; jsigstr(e,AN(x),CAV(x));
 }
 

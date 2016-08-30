@@ -229,16 +229,19 @@ static C typepriority[] = {   // convert type bit to priority
 8, 2, 3};  // SBT C2T C4T
 static C prioritytype[] = {  // Convert priority to type bit
 B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+
 // Return the higher-priority of the types s and t.
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
 // s or t may be set to 0 to suppress the argument (if argument is empty, usually)
 I jtmaxtype(J jt,I s,I t){
- if(s&&t) {   // If both values given...
-  I resultbit = prioritytype[MAX(typepriority[CTTZ(s)],typepriority[CTTZ(t)])];  // Get the higher-priority type
-  if((s|t)&SPARSE){ ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If sparse, return sparse version
-  R (I)1 << resultbit;
- } else {R s|t;}  // If one value omitted, return the other
+ t=UNSAFE(t); s=UNSAFE(s);  // We must ignore the flag bits during this test
+ // If the types are the same, or one is 0, return quickly.  This handles the common case of equal types
+ if((s|t)==t||(s|t)==s)R s|t;
+ // If values differ and are both nonzero...
+ I resultbit = prioritytype[MAX(typepriority[CTTZ(s)],typepriority[CTTZ(t)])];  // Get the higher-priority type
+ if((s|t)&SPARSE){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If sparse, return sparse version
+ R (I)1 << resultbit;
 #if 0
 I u,s1,t1; s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
  t=UNSAFE(t);

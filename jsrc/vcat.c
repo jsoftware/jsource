@@ -265,12 +265,12 @@ F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
   av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
   // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
   // copy fill to the output area.  This (1) copies too much: it should start after where the w data will go;
-  // it copies too often (if there is only 1 cell in a
+  // (2) it copies too often (if there is only 1 cell in a)
   if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk,av,k,jt->fillv);}
-  // Copy in the actual data: filling if w is atomic
+  // Copy in the actual data, replicating if w is atomic
   if(wr)MC(av,wv,k*AN(w)); else mvc(wk,av,k,wv);
   // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
   *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
- }else RZ(a=over(a,w));
+ }else RZ(a=over(a,w));  // if there was trouble, failover to non-in-place code
  R a;
 }    /* append in place if possible */

@@ -332,6 +332,8 @@
 #define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z
+// Routines that do not return A
+#define EPILOG0         tpop(_ttop)
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}

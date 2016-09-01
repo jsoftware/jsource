@@ -737,10 +737,11 @@ I utousize(C4* src, I srcn){ C4 w,w1; I r=0;
 }
 
 F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
+ PROLOG(0000);
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
  ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
- if(NUMERIC&t)
+ if(NUMERIC&t) // u16 from int
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
@@ -750,9 +751,8 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
   GATV(z,C2T,q,1,0);
   utow(C4AV(c4),AN(c4),USAV(z));
-  R z; // u16 from int
  }
- else if(LIT&t)
+ else if(LIT&t) // u16 from u8
  {
   DO(n, if(127<*wv++){b=1;break;});
   if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
@@ -760,7 +760,6 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C2T,q,1,0);
   mtow(UAV(w),n,USAV(z));
-  R z; // u16 from u8
  }
  else if(C2T&t)
  {
@@ -770,8 +769,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   GATV(z,LIT,n,1,0);
   wv=UAV(z);
   c2v=USAV(w);
-  DO(n, *wv++=(UC)*c2v++;);
-  R z;   // fallback to ascii
+  DO(n, *wv++=(UC)*c2v++;);   // fallback to ascii
  }
  else
  {
@@ -782,22 +780,22 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C2T,q,1,0);
   utow(C4AV(w),n,USAV(z));
-  R z;
   }
   else
   {
   GATV(z,LIT,n,1,0);
   wv=UAV(z);
   c4v=C4AV(w);
-  DO(n, *wv++=(char)*c4v++;);
-  R z;   // fallback to ascii
+  DO(n, *wv++=(char)*c4v++;);   // fallback to ascii
   }
  }
+ EPILOG(z);
 }    // 7 u: x - utf16 from LIT or C2T C4T
 
 // Similar to jttoutf8, but allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string
 F1(jttoutf8a){A z;I n,t,q;
+PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT) R ca(w); // char unchanged
@@ -816,11 +814,12 @@ q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);
 utom(C4AV(w),n,UAV(z));
 }
-R z;
+EPILOG(z);
 }    // called by monad ":
 
 // w is C2T C4T or LIT INT.  Result is U8 string
 F1(jttoutf8){A z;I n,t,q,j; A c4; C4* c4v; I *v;
+PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
 if(t&LIT) R ca(w); // char unchanged
@@ -850,11 +849,12 @@ ASSERT(q>=0,EVDOMAIN);
 GATV(z,LIT,q,1,0);
 wtom(USAV(w),n,UAV(z));
 }
-R z;
+EPILOG(z);
 }    // 8 u: x - utf8 from LIT or C2T C4T
 
 // Similar to jttoutf16, but unlike 7&u: this one always returns unicode
 F1(jttoutf16x){A z;I n,t,q;
+PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty list
 if(t&C2T)R ca(w);
@@ -866,14 +866,14 @@ ASSERT(q>=0,EVDOMAIN);
 GATV(z,C2T,q,1,0);
 utow(C4AV(w),n,USAV(z));
 }
-else
+else // u16 from u8
 {
 q=mtowsize(UAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
 GATV(z,C2T,q,1,0);
 mtow(UAV(w),n,USAV(z));
 }
-R z; // u16 from u8
+EPILOG(z);
 }
 
 // External function - just convert wide-char fw[] to U8 in f[], and null-terminate
@@ -885,18 +885,18 @@ f[q]=0;
 }
 
 F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
+ PROLOG(0000);
  RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w); wv=UAV(w);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
  ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
- if(NUMERIC&t)
+ if(NUMERIC&t) // u32 from int
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
   GATV(z,C4T,n,AR(w),AS(w)); c4v=C4AV(z);
   DO(n, j=*v++; *c4v++=(C4)(UI)j;);
-  R z; // u32 from int
  }
- else if(LIT&t)
+ else if(LIT&t) // u32 from u8
  {
   DO(n, if(127<*wv++){b=1;break;});
   if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
@@ -904,7 +904,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C4T,q,1,0);
   mtou(UAV(w),n,C4AV(z));
-  R z; // u32 from u8
  }
  else if(C2T&t)
  {
@@ -915,7 +914,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C4T,q,1,0);
   wtou(USAV(w),n,C4AV(z));
-  R z;
   }
   else
   {
@@ -923,7 +921,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   wv=UAV(z);
   c2v=USAV(w);
   DO(n, *wv++=(char)*c2v++;);
-  R z;
   }
  }
  else
@@ -934,7 +931,6 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
    q=utousize(C4AV(w),n);
    GATV(z,C4T,q,1,0);
    utou(C4AV(w),n,C4AV(z));
-   R z;
   }
   else
   {
@@ -942,9 +938,9 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   wv=UAV(z);
   c4v=C4AV(w);
   DO(n, *wv++=(UC)*c4v++;);
-  R z;
   }
  }
+ EPILOG(z);
 }    // 9 u: x - utf32 from INT UTF-8 or UTF-16
 
 
@@ -953,6 +949,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
 // literal is NOT interpreted as utf-8.
 // rank is infinit
 F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
+ PROLOG(0000);
  RZ(w); n=AN(w); t=AT(w); wv=UAV(w);
  if(C4T&AT(w))R ca(w);  // if already C4T, clone it and return the clone
  ASSERT(!n||(NUMERIC+JCHAR)&AT(w),EVDOMAIN);  // must be empty or unicode
@@ -978,11 +975,12 @@ F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
   c2v=USAV(w);
   DO(n, *c4v++=(C4)*c2v++;);
  }
- R z;
+ EPILOG(z);
 }    // 10 u: x - literal4 similar to monad u: for whcar
 
 // cnull 0: cesu-8  1: modified utf-8
 static A tocesu8a(J jt, A w, I cnul) {A z,z1; UC* wv=UAV(w); I n,t,q; C4* c4v; US* c2v;
+PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
 ASSERT(t&LIT,EVDOMAIN);
@@ -1006,7 +1004,7 @@ q=utomsize(C4AV(z1),AN(z1));
 q=(q<0)?(-q):q;
 GATV(z,LIT,q,1,0);
 utom(C4AV(z1),AN(z1),UAV(z));
-R z;
+EPILOG(z);
 }
 
 // to modified utf-8 assume input is rank-1 LIT

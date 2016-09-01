@@ -496,6 +496,7 @@ R z;
 // unit of nsrc in    C          US           C4
 // nul are ignored
 I stringdisplaywidth(J jt, I c2, void*src, I nsrc){I n=nsrc,q;A c4;C4*u;
+ PROLOG(0000);
  switch(c2){
  default:
   q=mtousize(src,nsrc);
@@ -516,5 +517,6 @@ I stringdisplaywidth(J jt, I c2, void*src, I nsrc){I n=nsrc,q;A c4;C4*u;
   q=nsrc; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
   break;
  }
+ EPILOG0;
  R n;
 }

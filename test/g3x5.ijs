@@ -40,7 +40,7 @@ eq =. 2 : ('ar=.5!:1'; '(ar <''x.'') -: (ar <''y.'')')
 'domain error' -: _3  fc etx 8$0{a.
 'domain error' -: _3  fc etx 8$0{adot1
 'domain error' -: _3  fc etx 8$0{adot2
-'domain error' -: _3  fc etx 8$0{sdot
+'domain error' -: _3  fc etx 8$0{sdot0
 'domain error' -: '1' fc etx 3 4.5
 'domain error' -: 1.2 fc etx 3 4.5
 'domain error' -: 1j2 fc etx 3 4.5
@@ -53,7 +53,7 @@ eq =. 2 : ('ar=.5!:1'; '(ar <''x.'') -: (ar <''y.'')')
 'domain error' -:  2 fc etx (i.12){a.
 'domain error' -:  2 fc etx (i.12){adot1
 'domain error' -:  2 fc etx (i.12){adot2
-'domain error' -:  2 fc etx (i.12){sdot
+'domain error' -:  2 fc etx (i.12){sdot0
 'domain error' -:  2 fc etx 1 2 3j4
 'domain error' -:  2 fc etx 1 2 3j4
 'domain error' -:  2 fc etx 1;2 3 4
@@ -65,7 +65,7 @@ eq =. 2 : ('ar=.5!:1'; '(ar <''x.'') -: (ar <''y.'')')
 'domain error' -:  1 fc etx (i.12){a.
 'domain error' -:  1 fc etx (i.12){adot1
 'domain error' -:  1 fc etx (i.12){adot2
-'domain error' -:  1 fc etx (i.12){sdot
+'domain error' -:  1 fc etx (i.12){sdot0
 'domain error' -:  1 fc etx 1 2 3j4
 'domain error' -:  1 fc etx 1;2 3 4
 

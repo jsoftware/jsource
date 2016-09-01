@@ -12,7 +12,7 @@ locks  =: 1!:30
 lock   =: 1!:31
 unlock =: 1!:32
 
-f =: <'foo.x'
+f =: <jpath '~temp/foo.x'
 (128$'a') write f
 h =: open f
 

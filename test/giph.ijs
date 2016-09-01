@@ -51,9 +51,9 @@ h=: 4 : 0
 2 3 g adot2
 37  g adot2
 
-''  g sdot
-2 3 g sdot
-37  g sdot
+''  g sdot0
+2 3 g sdot0
+37  g sdot0
 
 ''  g u: 1000 ?@# 256
 2 3 g u: 1000 ?@# 256
@@ -90,11 +90,11 @@ h=: 4 : 0
 ''  g ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 1 2 g ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 
-''  g ;:u:'Cogito, ergo sum. 4 20 and 10 years ago'
-1 2 g ;:u:'Cogito, ergo sum. 4 20 and 10 years ago'
+''  g (u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+1 2 g (u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 
-''  g ;:10&u:'Cogito, ergo sum. 4 20 and 10 years ago'
-1 2 g ;:10&u:'Cogito, ergo sum. 4 20 and 10 years ago'
+''  g (10&u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
+1 2 g (10&u:&.>) ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 
 ''  g s:@<"0&.> ;:'Cogito, ergo sum. 4 20 and 10 years ago'
 ''  g <"0@s: ;:'Cogito, ergo sum. 4 20 and 10 years ago'
@@ -142,7 +142,7 @@ f=: x&i.
 'length error' -: (i.3 4)&i. etx i.5
 'length error' -: (i.3 4)&i. etx i.2 5
 
-4!:55 ;:'adot1 adot2 sdot f fedot fico fidot g h m ss x xx yy'
+4!:55 ;:'adot1 adot2 sdot0 f fedot fico fidot g h m ss x xx yy'
 
 
  

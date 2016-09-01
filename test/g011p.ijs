@@ -71,13 +71,13 @@ NB. <./\ SB ---------------------------------------------------------------
 
 min=. 4 : 'x<.y'
 
-(<./\ -: min/\) x=.sdot
+(<./\ -: min/\) x=.sdot0
 (<./\ -: min/\) |.x
 
-(<./\   -: min/\  ) x=.sdot{~ ?    13$#sdot
-(<./\   -: min/\  ) x=.sdot{~ ?4   13$#sdot
+(<./\   -: min/\  ) x=.sdot0{~ ?    13$#sdot0
+(<./\   -: min/\  ) x=.sdot0{~ ?4   13$#sdot0
 (<./\"1 -: min/\"1) x
-(<./\   -: min/\  ) x=.sdot{~ ?3 5 13$#sdot
+(<./\   -: min/\  ) x=.sdot0{~ ?3 5 13$#sdot0
 (<./\"1 -: min/\"1) x
 (<./\"2 -: min/\"2) x
 
@@ -95,10 +95,10 @@ min=. 4 : 'x<.y'
 'domain error' -: <./\ etx 'deipnosophist'
 'domain error' -: <./\ etx ;:'peace in our time'
 'domain error' -: <./\ etx u:'deipnosophist'
-'domain error' -: <./\ etx ;:u:'peace in our time'
+'domain error' -: <./\ etx u:&.> ;:'peace in our time'
 'domain error' -: <./\ etx 10&u:'deipnosophist'
-'domain error' -: <./\ etx ;:10&u:'peace in our time'
+'domain error' -: <./\ etx 10&u:&.> ;:'peace in our time'
 
-4!:55 ;:'adot1 adot2 sdot f min x'
+4!:55 ;:'adot1 adot2 sdot0 f min x'
 
 

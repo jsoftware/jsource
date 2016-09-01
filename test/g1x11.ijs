@@ -8,7 +8,7 @@ erase =. 1!:55
 
 intv  =. [ {~ ([: ({. + i.@{:) ]) 
 
-f =. <'foo1x11.x'
+f =. <jpath '~temp/foo1x11.x'
 t =. a.{~?1000$#a.
 t write f
 (t intv i) -: iread f,<i=.?100 900
@@ -29,7 +29,7 @@ h =. open f
 erase h
 
 
-f =. <'foo1x11.x'
+f =. <jpath '~temp/foo1x11.x'
 '0123456789' write f
 h =. open f
 

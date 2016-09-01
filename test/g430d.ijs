@@ -21,14 +21,14 @@ test=: 1 : 0
 5  ([\ -:  >@:(<\)) test o.i.5
 5  ([\ -:  >@:(<\)) test j./?2 3 4$100
 5  ([\ -:  >@:(<\)) test ;:'Cogito, ergo sum.'
-5  ([\ -:  >@:(<\)) test ;:u:'Cogito, ergo sum.'
-5  ([\ -:  >@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+5  ([\ -:  >@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+5  ([\ -:  >@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 5  ([\ -:  >@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 5  ([\ -:  >@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 5  ([\ -:  >@:(<\)) test a.
 5  ([\ -:  >@:(<\)) test adot1
 5  ([\ -:  >@:(<\)) test adot2
-5  ([\ -:  >@:(<\)) test sdot
+5  ([\ -:  >@:(<\)) test sdot0
 
 5  (]\ -:  >@:(<\)) test 0 1
 5  (]\ -:  >@:(<\)) test 'chiaroscuro'
@@ -39,14 +39,14 @@ test=: 1 : 0
 5  (]\ -:  >@:(<\)) test o.i.5
 5  (]\ -:  >@:(<\)) test j./?2 3 4$100
 5  (]\ -:  >@:(<\)) test ;:'Cogito, ergo sum.'
-5  (]\ -:  >@:(<\)) test ;:u:'Cogito, ergo sum.'
-5  (]\ -:  >@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+5  (]\ -:  >@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+5  (]\ -:  >@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 5  (]\ -:  >@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 5  (]\ -:  >@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 5  (]\ -:  >@:(<\)) test a.
 5  (]\ -:  >@:(<\)) test adot1
 5  (]\ -:  >@:(<\)) test adot2
-5  (]\ -:  >@:(<\)) test sdot
+5  (]\ -:  >@:(<\)) test sdot0
 
 5  (,\ -:,&>@:(<\)) test 0 1
 5  (,\ -:,&>@:(<\)) test 'chiaroscuro'
@@ -57,14 +57,14 @@ test=: 1 : 0
 5  (,\ -:,&>@:(<\)) test o.i.5
 5  (,\ -:,&>@:(<\)) test j./?2 3 4$100
 5  (,\ -:,&>@:(<\)) test ;:'Cogito, ergo sum.'
-5  (,\ -:,&>@:(<\)) test ;:u:'Cogito, ergo sum.'
-5  (,\ -:,&>@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+5  (,\ -:,&>@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+5  (,\ -:,&>@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test a.
 5  (,\ -:,&>@:(<\)) test adot1
 5  (,\ -:,&>@:(<\)) test adot2
-5  (,\ -:,&>@:(<\)) test sdot
+5  (,\ -:,&>@:(<\)) test sdot0
 
 _5 ([\ -:  >@:(<\)) test 0 1
 _5 ([\ -:  >@:(<\)) test 'chiaroscuro'
@@ -75,14 +75,14 @@ _5 ([\ -:  >@:(<\)) test 2 3 4
 _5 ([\ -:  >@:(<\)) test o.i.5
 _5 ([\ -:  >@:(<\)) test j./?2 3 4$100
 _5 ([\ -:  >@:(<\)) test ;:'Cogito, ergo sum.'
-_5 ([\ -:  >@:(<\)) test ;:u:'Cogito, ergo sum.'
-_5 ([\ -:  >@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+_5 ([\ -:  >@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+_5 ([\ -:  >@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 _5 ([\ -:  >@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 _5 ([\ -:  >@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 _5 ([\ -:  >@:(<\)) test a.
 _5 ([\ -:  >@:(<\)) test adot1
 _5 ([\ -:  >@:(<\)) test adot2 
-_5 ([\ -:  >@:(<\)) test sdot 
+_5 ([\ -:  >@:(<\)) test sdot0 
 
 _5 (]\ -:  >@:(<\)) test 0 1
 _5 (]\ -:  >@:(<\)) test 'chiaroscuro'
@@ -93,14 +93,14 @@ _5 (]\ -:  >@:(<\)) test 2 3 4
 _5 (]\ -:  >@:(<\)) test o.i.5
 _5 (]\ -:  >@:(<\)) test j./?2 3 4$100
 _5 (]\ -:  >@:(<\)) test ;:'Cogito, ergo sum.'
-_5 (]\ -:  >@:(<\)) test ;:u:'Cogito, ergo sum.'
-_5 (]\ -:  >@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+_5 (]\ -:  >@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+_5 (]\ -:  >@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 _5 (]\ -:  >@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 _5 (]\ -:  >@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 _5 (]\ -:  >@:(<\)) test a.
 _5 (]\ -:  >@:(<\)) test adot1
 _5 (]\ -:  >@:(<\)) test adot2 
-_5 (]\ -:  >@:(<\)) test sdot 
+_5 (]\ -:  >@:(<\)) test sdot0 
 
 5  (,\ -:,&>@:(<\)) test 0 1
 5  (,\ -:,&>@:(<\)) test 'chiaroscuro'
@@ -111,14 +111,14 @@ _5 (]\ -:  >@:(<\)) test sdot
 5  (,\ -:,&>@:(<\)) test o.i.5
 5  (,\ -:,&>@:(<\)) test j./?2 3 4$100
 5  (,\ -:,&>@:(<\)) test ;:'Cogito, ergo sum.'
-5  (,\ -:,&>@:(<\)) test ;:u:'Cogito, ergo sum.'
-5  (,\ -:,&>@:(<\)) test ;:10&u:'Cogito, ergo sum.'
+5  (,\ -:,&>@:(<\)) test (u:&.>) ;:'Cogito, ergo sum.'
+5  (,\ -:,&>@:(<\)) test (10&u:&.>) ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test s:@<"0&.> ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test <"0@s: ;:'Cogito, ergo sum.'
 5  (,\ -:,&>@:(<\)) test a.
 5  (,\ -:,&>@:(<\)) test adot1
 5  (,\ -:,&>@:(<\)) test adot2
-5  (,\ -:,&>@:(<\)) test sdot
+5  (,\ -:,&>@:(<\)) test sdot0
 
 (i.(1+k), 2e9 0) -: 2e9 [\ ((k+2e9),0)$0 [ k=:  147483647
 (i.(1+k), 2e9 0) -: 2e9 ]\ ((k+2e9),0)$0
@@ -167,6 +167,6 @@ _5 ([\ -: 3 : '[y'\) <"0 i. 0 4 5
 _5 (,\ -: 3 : ',y'\) o.i.0 4 5
 
 
-4!:55 ;:'adot1 adot2 sdot k m test'
+4!:55 ;:'adot1 adot2 sdot0 k m test'
 
 

@@ -67,9 +67,9 @@ t (-. -: less) (?4 3 2$#t){t=:(?100    $256){a.
 ''     -: '&' -. 2 3$'=1&2];'
 
 NB. literal2
-t (-. -: less) (?30   $#t){t=:(?100 2 3$256){adot1
-t (-. -: less) (?2 15 $#t){t=:(?100 2  $256){adot1
-t (-. -: less) (?4 3 2$#t){t=:(?100    $256){adot1
+t (-. -: less) (?30   $#t){t=:(?100 2 3$(#adot1)){adot1
+t (-. -: less) (?2 15 $#t){t=:(?100 2  $(#adot1)){adot1
+t (-. -: less) (?4 3 2$#t){t=:(?100    $(#adot1)){adot1
 (3 2$'abc') (-. -: less) 3 2$'xyz'
 (3 2 5 1$'abdef') (-. -: less) 5 1$'abdef'
 (3 2 5 1$'abdef') (-. -: less) 2 5 1$'abdef'
@@ -77,9 +77,9 @@ t (-. -: less) (?4 3 2$#t){t=:(?100    $256){adot1
 ''     -: '&' -. 2 3$u:'=1&2];'
 
 NB. literal4
-t (-. -: less) (?30   $#t){t=:(?100 2 3$256){adot2
-t (-. -: less) (?2 15 $#t){t=:(?100 2  $256){adot2
-t (-. -: less) (?4 3 2$#t){t=:(?100    $256){adot2
+t (-. -: less) (?30   $#t){t=:(?100 2 3$(#adot2)){adot2
+t (-. -: less) (?2 15 $#t){t=:(?100 2  $(#adot2)){adot2
+t (-. -: less) (?4 3 2$#t){t=:(?100    $(#adot2)){adot2
 (3 2$'abc') (-. -: less) 3 2$'xyz'
 (3 2 5 1$'abdef') (-. -: less) 5 1$'abdef'
 (3 2 5 1$'abdef') (-. -: less) 2 5 1$'abdef'
@@ -87,9 +87,9 @@ t (-. -: less) (?4 3 2$#t){t=:(?100    $256){adot2
 ''     -: '&' -. 2 3$10&u:'=1&2];'
 
 NB. symbol
-t (-. -: less) (?30   $#t){t=:(?100 2 3$256){sdot
-t (-. -: less) (?2 15 $#t){t=:(?100 2  $256){sdot
-t (-. -: less) (?4 3 2$#t){t=:(?100    $256){sdot
+t (-. -: less) (?30   $#t){t=:(?100 2 3$(#sdot0)){sdot0
+t (-. -: less) (?2 15 $#t){t=:(?100 2  $(#sdot0)){sdot0
+t (-. -: less) (?4 3 2$#t){t=:(?100    $(#sdot0)){sdot0
 (3 2$s:@<"0 'abc') (-. -: less) 3 2$s:@<"0 'xyz'
 (3 2 5 1$s:@<"0 'abdef') (-. -: less) 5 1$s:@<"0 'abdef'
 (3 2 5 1$s:@<"0 'abdef') (-. -: less) 2 5 1$s:@<"0 'abdef'
@@ -158,10 +158,10 @@ x -: x -. 0#x=: adot2{~1000  ?@$#adot2
 x -: x -. 0#x=: adot2{~1000 2?@$#adot2
 x -: x -. 0#x=: adot2{~1000 4?@$#adot2
 x -: x -. 0#x=: adot2{~1000 9?@$#adot2
-x -: x -. 0#x=: sdot{~1000  ?@$#sdot
-x -: x -. 0#x=: sdot{~1000 2?@$#sdot
-x -: x -. 0#x=: sdot{~1000 4?@$#sdot
-x -: x -. 0#x=: sdot{~1000 9?@$#sdot
+x -: x -. 0#x=: sdot0{~1000  ?@$#sdot0
+x -: x -. 0#x=: sdot0{~1000 2?@$#sdot0
+x -: x -. 0#x=: sdot0{~1000 4?@$#sdot0
+x -: x -. 0#x=: sdot0{~1000 9?@$#sdot0
 x -: x -. 0#x=: u:  1000  ?@$65536
 x -: x -. 0#x=: u:  1000 3?@$65536
 x -: x -. 0#x=: 10&u: RAND32 1000  ?@$C4MAX
@@ -193,10 +193,10 @@ x -: x -. (5  $123) [ x=: adot2{~1000  ?@$#adot2
 x -: x -. (5 2$123) [ x=: adot2{~1000 2?@$#adot2
 x -: x -. (5 4$123) [ x=: adot2{~1000 4?@$#adot2
 x -: x -. (5 9$123) [ x=: adot2{~1000 9?@$#adot2
-x -: x -. (5  $123) [ x=: sdot{~1000  ?@$#sdot
-x -: x -. (5 2$123) [ x=: sdot{~1000 2?@$#sdot
-x -: x -. (5 4$123) [ x=: sdot{~1000 4?@$#sdot
-x -: x -. (5 9$123) [ x=: sdot{~1000 9?@$#sdot
+x -: x -. (5  $123) [ x=: sdot0{~1000  ?@$#sdot0
+x -: x -. (5 2$123) [ x=: sdot0{~1000 2?@$#sdot0
+x -: x -. (5 4$123) [ x=: sdot0{~1000 4?@$#sdot0
+x -: x -. (5 9$123) [ x=: sdot0{~1000 9?@$#sdot0
 x -: x -. (5 9$123) [ x=: u:  1000  ?@$65536
 x -: x -. (5 3$123) [ x=: u:  1000 3?@$65536
 x -: x -. (5 9$123) [ x=: 10&u: RAND32 1000  ?@$C4MAX
@@ -229,6 +229,6 @@ s f&>/ t
 'length error' -: -.&(i.2 5 3) etx i.5 4
 
 
-4!:55 ;:'dr f less not rank res s t x xx yy'
+4!:55 ;:'adot1 adot2 sdot0 dr f less not rank res s t x xx yy'
 
 

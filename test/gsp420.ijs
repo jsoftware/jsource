@@ -247,6 +247,6 @@ c=: ; (i.1+r) <"1@comb&.>r=:#$d
 'limit error' -: ,/ etx $. 0$~>IF64{1e5 1e6 0;1e10 2e9 0
 
 
-4!:55 ;:'b c d e f g r s x'
+4!:55 ;:'b c d e f g r s t x'
 
 

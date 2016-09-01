@@ -163,9 +163,9 @@ lib=: LIBTSDLL
 dcd=: 4 : '(lib,x) cd y'
 
 q=: x=: 1.1;2.2
-NB. following tests not run to avoid failure with C_DF=0 (raspberry/android/etc)
-NB. ('ddd d d d' dcd x) -: 'ddd d d d' dcd q
-NB. mbxcheck_jmf_ q
+NB. comment out the following tests to avoid failure with C_DF=0
+('ddd d d d' dcd x) -: 'ddd d d d' dcd q
+mbxcheck_jmf_ q
 
 add=: mema 2*IF64{4 8
 3 4 memw add,0,2,JINT

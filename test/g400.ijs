@@ -157,8 +157,8 @@ f1=: 3 : 0
  assert. (b=: ?n$2) (# -: copy) xx=: adot1{~?(n,7)$#adot1
  assert. (b=: ?n$2) (# -: copy) xx=: adot2{~?n$#adot2
  assert. (b=: ?n$2) (# -: copy) xx=: adot2{~?(n,7)$#adot2
- assert. (b=: ?n$2) (# -: copy) xx=: sdot{~?n$#sdot
- assert. (b=: ?n$2) (# -: copy) xx=: sdot{~?(n,7)$#sdot
+ assert. (b=: ?n$2) (# -: copy) xx=: sdot0{~?n$#sdot0
+ assert. (b=: ?n$2) (# -: copy) xx=: sdot0{~?(n,7)$#sdot0
  assert. (b=: ?n$2) (# -: copy) xx=: ?n$1e9
  assert. (b=: ?n$2) (# -: copy) xx=: o.?n$1e9
  assert. (b=: ?n$2) (# -: copy) xx=: j./?(2,n)$1e9
@@ -179,8 +179,8 @@ f2=: 3 : 0
  assert. (b=: ?n$2) (#"2 -: copy"2) xx=: adot1{~?(3,n,7)$#adot1
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: adot2{~?(3,n)$#adot2
  assert. (b=: ?n$2) (#"2 -: copy"2) xx=: adot2{~?(3,n,7)$#adot2
- assert. (b=: ?n$2) (#"1 -: copy"1) xx=: sdot{~?(3,n)$#sdot
- assert. (b=: ?n$2) (#"2 -: copy"2) xx=: sdot{~?(3,n,7)$#sdot
+ assert. (b=: ?n$2) (#"1 -: copy"1) xx=: sdot0{~?(3,n)$#sdot0
+ assert. (b=: ?n$2) (#"2 -: copy"2) xx=: sdot0{~?(3,n,7)$#sdot0
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: ?(3,n)$1e9
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: o.?(3,n)$1e9
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: j./?(2 3,n)$1e9
@@ -260,7 +260,7 @@ NB. x#!.f y -------------------------------------------------------------
 (s:@<"0 'aa____a')        -: 2j4 1 #!.(s:@<"0 '_') s:@<"0 'a'
 (2 4 2 4#'a_b_') -: 2j4   #!.'_' 'ab'
 (2 4 2 4#u:'a_b_') -: 2j4   #!.(u:'_') u:'ab'
-(2 4 2 4#10&u:'a_b_') -: 2j4   #!.(10&u:'_')10& u:'ab'
+(2 4 2 4#10&u:'a_b_') -: 2j4   #!.(10&u:'_') 10&u:'ab'
 (2 4 2 4#s:@<"0 'a_b_') -: 2j4   #!.(s:@<"0 '_') s:@<"0 'ab'
 'aa____'         -: 2j4   #!.'_' 'a'
 'aa____'         -: 2j4   #!.(u:'_') u:'a'
@@ -282,8 +282,8 @@ NB. x#!.f y -------------------------------------------------------------
 'domain error' -: 3j4    #!.4    etx 10&u:'sui generis'
 'domain error' -: 3j4    #!.4    etx s:@<"0 'sui generis'
 'domain error' -: 5 3j5 4#!.4    etx ;:'Cogito, ergo'
-'domain error' -: 5 3j5 4#!.4    etx ;:u:'Cogito, ergo'
-'domain error' -: 5 3j5 4#!.4    etx ;:10&u:'Cogito, ergo'
+'domain error' -: 5 3j5 4#!.4    etx u:&.> ;:'Cogito, ergo'
+'domain error' -: 5 3j5 4#!.4    etx 10&u:&.> ;:'Cogito, ergo'
 'domain error' -: 5 3j5 4#!.4    etx s:@<"0&.> ;:'Cogito, ergo'
 'domain error' -: 5 3j5 4#!.4    etx <"0@s: ;:'Cogito, ergo'
 'domain error' -: 1j7    #!.(<4) etx 'eleemosynary'
@@ -353,11 +353,11 @@ f=: 4 : 'x#y'
 (?5 2$10) (#    -: f"1 _) x=:2 5$;:'When eras die their legacies are left to strange police'
 (?5 2$10) (#"_1 -: f"_1 ) y=:5 2$;:'Professors in New England guard the glory that was Greece'
 
-(?5 2$10) (#    -: f"1 _) x=:2 5$;:u:'When eras die their legacies are left to strange police'
-(?5 2$10) (#"_1 -: f"_1 ) y=:5 2$;:u:'Professors in New England guard the glory that was Greece'
+(?5 2$10) (#    -: f"1 _) x=:2 5$(u:&.>) ;:'When eras die their legacies are left to strange police'
+(?5 2$10) (#"_1 -: f"_1 ) y=:5 2$(u:&.>) ;:'Professors in New England guard the glory that was Greece'
 
-(?5 2$10) (#    -: f"1 _) x=:2 5$;:10&u:'When eras die their legacies are left to strange police'
-(?5 2$10) (#"_1 -: f"_1 ) y=:5 2$;:10&u:'Professors in New England guard the glory that was Greece'
+(?5 2$10) (#    -: f"1 _) x=:2 5$(10&u:&.>) ;:'When eras die their legacies are left to strange police'
+(?5 2$10) (#"_1 -: f"_1 ) y=:5 2$(10&u:&.>) ;:'Professors in New England guard the glory that was Greece'
 
 (?5 2$10) (#    -: f"1 _) x=:2 5$s:@<"0&.> ;:'When eras die their legacies are left to strange police'
 (?5 2$10) (#    -: f"1 _) x=:2 5$<"0@s: ;:'When eras die their legacies are left to strange police'
@@ -373,7 +373,7 @@ f=: 4 : 'x#y'
 1j2 3j4 0j5 (#"1 2 -: f"1 2) x
 1j2 3j4 0j5 (#"1 3 -: f"1 3) x
 
-1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){;:u:'chirality paronomasiac onomatopoeia'
+1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){(u:&.>) ;:'chirality paronomasiac onomatopoeia'
 1j2 3j4 0j5 (#"0 1 -: f"0 1) x
 1j2 3j4 0j5 (#"0 2 -: f"0 2) x
 1j2 3j4 0j5 (#"0 3 -: f"0 3) x
@@ -382,7 +382,7 @@ f=: 4 : 'x#y'
 1j2 3j4 0j5 (#"1 2 -: f"1 2) x
 1j2 3j4 0j5 (#"1 3 -: f"1 3) x
 
-1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){;:10&u:'chirality paronomasiac onomatopoeia'
+1j2 3j4 0j5 (#"0 0 -: f"0 0) x=:(?3 3 3$3){(10&u:&.>) ;:'chirality paronomasiac onomatopoeia'
 1j2 3j4 0j5 (#"0 1 -: f"0 1) x
 1j2 3j4 0j5 (#"0 2 -: f"0 2) x
 1j2 3j4 0j5 (#"0 3 -: f"0 3) x
@@ -419,6 +419,6 @@ f=: 4 : 'x#y'
 (i.1e9 2e4 0) -: 1e4#"2 i.1e9 2 0
 
 
-4!:55 ;:'a adot1 adot2 sdot b c copy f f1 f2 f3 f4 g m n tally x xx y '
+4!:55 ;:'a adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n tally x xx y '
 
 

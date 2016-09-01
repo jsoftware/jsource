@@ -71,17 +71,21 @@ f=: 3 : 0
    xx=: adot2{~?($b)$#adot2
    yy=: adot2{~?($b)$#adot2
    zz=: adot2{~?($b)$#adot2
-  case. 'B' do.
-   xx=: sdot{~?($b)$#sdot
-   yy=: sdot{~?($b)$#sdot
-   zz=: sdot{~?($b)$#sdot
+  case. 'S' do.
+   xx=: sdot0{~?($b)$#sdot0
+   yy=: sdot0{~?($b)$#sdot0
+   zz=: sdot0{~?($b)$#sdot0
   end.
  i.0 0
 )
 
 g0=: 3 : 0  NB. basic identities, boolean selection
  f y
+ if. y e. 'CWUS' do.
+ q=: ($yy) $ (b0{,xx) (b0=. I.,b)},yy
+ else.
  q=: (xx*b)+yy*-.b
+ end.
  dd=: (b)}yy,:xx
  aa=: b}yy,:xx
  yy=: b}yy,:xx
@@ -105,29 +109,49 @@ g1=: 3 : 0  NB. basic identities, integer selection
 
 g2=: 3 : 0  NB. force new copy, boolean selection
  f y
+ if. y e. 'CWUS' do.
+ q=: ($yy) $ (b0{,xx) (b0=. I.,b)},yy
+ else.
  q=: (xx*b)+yy*-.b
+ end.
  p=: yy
  yy=: b}yy,:xx
  assert. q -: yy
+ if. y e. 'CWUS' do.
+ assert. q -: ($yy) $ (b0{,xx) (b0=. I.,b)},yy
+ else.
  assert. q -: (xx*b)+p*-.b
+ end.
  assert. -. p -: yy
  1
 )
 
 g3=: 3 : 0  NB. force new copy, integer selection
  f y
+ if. y e. 'CWUS' do.
+ q=: c{"0 1 xx,"0 1 yy ,"0 zz
+ else.
  q=: (xx*0=c)+(yy*1=c)+zz*2=c
+ end.
  p=: yy
  yy=: c}xx,yy,:zz
  assert. q -: yy
+ if. y e. 'CWUS' do.
+ assert. q -: c{"0 1 xx,"0 1 p,"0 zz
+ else.
  assert. q -: (xx*0=c)+(p*1=c)+zz*2=c
+ end.
  assert. -. p -: yy
  1
 )
 
 g4=: 3 : 0  NB. in place, boolean selection
  f y
+ if. y e. 'CWUS' do.
+ q=: ($yy) $ (b0{,xx) (b0=. I.,b)},yy
+ else.
  q=: (xx*b)+yy*-.b
+ end.
  t=: 7!:2 'yy=: b}yy,:xx'
  assert. q -: yy
  assert. t<IF64{2000 4000
@@ -149,7 +173,11 @@ g5=: 3 : 0  NB. integer selection
 g8=: 3 : 0  NB. force idiom misidentification, boolean selection
  f y
  xx=: {.,xx
+ if. y e. 'CWUS' do.
+ q=: ($yy) $ ((#b0)#xx) (b0=. I.,b)},yy
+ else.
  q=: (xx*b)+yy*-.b
+ end.
  aa=: b}yy,:xx
  yy=: b}yy,:xx
  assert. q -: yy
@@ -184,61 +212,13 @@ g11=: 3 : 0  NB. force idiom misidentification, integer selection
  1
 )
 
-g2c=: 3 : 0  NB. character data, boolean selection
- f y
- q=: b{"0 1 xx,"0 yy
- p=: yy
- yy=: b}xx,:yy
- assert. q -: yy
- assert. q -: b{"0 1 xx,"0 p
- assert. -. p -: yy
- 1
-)
-
-g3c=: 3 : 0  NB. character data, integer selection
- f y
- q=: c{"0 1 xx,"0 1 yy ,"0 zz
- p=: yy
- yy=: c}xx,yy,:zz
- assert. q -: yy
- assert. q -: c{"0 1 xx,"0 1 p,"0 zz
- assert. -. p -: yy
- 1
-)
-
-g2b=: 3 : 0  NB. symbol data, boolean selection
- f y
- q=: b{"0 1 xx,"0 yy
- p=: yy
- yy=: b}xx,:yy
- assert. q -: yy
- assert. q -: b{"0 1 xx,"0 p
- assert. -. p -: yy
- 1
-)
-
-g3b=: 3 : 0  NB. symbol data, integer selection
- f y
- q=: c{"0 1 xx,"0 1 yy ,"0 zz
- p=: yy
- yy=: c}xx,yy,:zz
- assert. q -: yy
- assert. q -: c{"0 1 xx,"0 1 p,"0 zz
- assert. -. p -: yy
- 1
-)
-
-g0 "0 'BIDZ'
+g0 "0 'BIDZCWUS'
 g1 "0 'BIDZ'
-g2 "0 'BIDZ'
-g2c"0 'CWU'
-g2b"0 'S'
-g3 "0 'BIDZ'
-g3c"0 'CWU'
-g3b"0 'S'
-g4 "0 'BIDZ'
+g2 "0 'BIDZCWUS'
+g3 "0 'BIDZCWUS'
+g4 "0 'BIDZCWUS'
 g5 "0 'BIDZ'
-g8 "0 'BIDZ'
+g8 "0 'BIDZCWUS'
 g9 "0 'BIDZ'
 g10"0 'BIDZ'
 g11"0 'BIDZ'
@@ -487,8 +467,8 @@ a =: i. 4
 2 0 -: f13''
 
 
-4!:55 ;:'a aa ab abc adot1 adot2 sdot b b32 C c c1 d d1 dd f foo f1 '
+4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
-4!:55 ;:'g g0 g1 g2 g2c g3 g3c g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 i ia j k p q save sp t t0 t1 t2 test x xx y yy z z1 zz '
+4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
+4!:55 ;:'h h1 i ia j k p q save sp t t t0 t1 t2 test x xx y yy z z1 zz '
 

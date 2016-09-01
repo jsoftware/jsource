@@ -55,7 +55,7 @@ a=:adot2{~32+?10 5$95
 (]\a)  -: ] bs a
 
 NB. symbol
-a=:sdot{~32+?10 5$95
+a=:sdot0{~32+?10 5$95
 (<\a)   -: < bs a
 (<\,a)  -: < bs ,a
 (]\a)  -: ] bs a
@@ -425,7 +425,7 @@ k (<\ -: < bs) a     [ k=:0
 k (<\ -: < bs) a     [ k=:4
 
 NB. symbol
-a=:sdot{~32+?11 5$95
+a=:sdot0{~32+?11 5$95
 k (<\ -: < bs) a     [ k=:_4+?11
 k (<\ -: < bs) ,a    [ k=:_4+?11
 k (]\ -: ] bs) a     [ k=:_4+?11
@@ -553,7 +553,7 @@ f=: i.@:>:@:$
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
 
-4!:55 ;:'A a adot1 adot2 sdot b base bs bsd em en f iind '
+4!:55 ;:'A a adot1 adot2 sdot0 b base bs bsd em en f iind '
 4!:55 ;:'infix inv k kay key n ob oind omask osub '
 4!:55 ;:'outfix prefix sd seg suffix t test w x y'
 

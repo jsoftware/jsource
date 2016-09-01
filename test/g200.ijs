@@ -329,6 +329,6 @@ _ -:  1r2 ^ {. __ 1r1
 'domain error' -: _1r2   ^ etx {.__ 1r1
 
 
-4!:55 ;:'a exp f h pow rou s x y'
+4!:55 ;:'a exp f h n pow rou s x y'
 
 

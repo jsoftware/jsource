@@ -23,7 +23,7 @@ test 1 0
 test a.
 test adot1
 test adot2
-test sdot
+test sdot0
 test      i.900
 test _450+i.900
 test  1e6+i.900
@@ -38,5 +38,5 @@ test <"0 ?40$100
 'length error' -: 1 2 3 #/. etx i.4 
 
 
-4!:55 ;:'adot1 adot2 sdot tally test x'
+4!:55 ;:'adot1 adot2 sdot0 tally test xx'
 

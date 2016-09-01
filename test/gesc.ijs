@@ -51,17 +51,17 @@ A0=: 1 : 0
  x E ~ a=. 10&u: RAND32 600   ?@$ C4MAX
  x E ~ a=. 10&u: RAND32 600 2 ?@$ C4MAX
  x E ~ a=. (1;2 3;4 5;;:'foo upon thee'),":&.> 600 ?@$ 1000
- x E ~ a=. (1;2 3;4 5;;:u:'foo upon thee'),":&.> 600 ?@$ 1000
- x E ~ a=. (1;2 3;4 5;;:10&u:'foo upon thee'),":&.> 600 ?@$ 1000
+ x E ~ a=. (1;2 3;4 5;(u:&.>) ;:'foo upon thee'),":&.> 600 ?@$ 1000
+ x E ~ a=. (1;2 3;4 5;(10&u:&.>) ;:'foo upon thee'),":&.> 600 ?@$ 1000
  x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:'foo upon thee'),":&.> 20 ?@$ 1000
- x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:u:'foo upon thee'),":&.> 20 ?@$ 1000
- x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;;:10&u:'foo upon thee'),":&.> 20 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;(u:&.>) ;:'foo upon thee'),":&.> 20 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=.(1;2 3;4 5;(10&u:&.>) ;:'foo upon thee'),":&.> 20 ?@$ 1000
  x E ~ a=. s: ' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
- x E ~ a=. s: u:' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
- x E ~ a=. s: 10&u:' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
+ x E ~ a=. s: u: 128+a.i. ' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
+ x E ~ a=. s: 10&u: 65536+a.i. ' cogito ergo sum kakistocracy foo upon thee ',": 600 ?@$ 1000
  x E ~ a=. a{~600 2 ?@$ #a=. s: ' cogito ergo sum ',": 600 ?@$ 1000
- x E ~ a=. a{~600 2 ?@$ #a=. s: u:' cogito ergo sum ',": 600 ?@$ 1000
- x E ~ a=. a{~600 2 ?@$ #a=. s: 10&u:' cogito ergo sum ',": 600 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=. s: u: 128+a.i. ' cogito ergo sum ',": 600 ?@$ 1000
+ x E ~ a=. a{~600 2 ?@$ #a=. s: 10&u: 65536+a.i. ' cogito ergo sum ',": 600 ?@$ 1000
  x E ~ a=. x: 600   ?@$ IF64{2e9 9e18
  x E ~ a=. x: 600 2 ?@$ 1000
  x E ~ a=. %/x: 0 1+2 600   ?@$ IF64{2e9 9e18
@@ -77,8 +77,8 @@ A0=: 1 : 0
  x E ~ a=. 4 0$u: 123
  x E ~ a=. 4 0$10&u: 123
  x E ~ a=. 4 0$s: ' cogito'
- x E ~ a=. 4 0$s: u: ' cogito'
- x E ~ a=. 4 0$s: 10&u: ' cogito'
+ x E ~ a=. 4 0$s: u: 128+a.i. ' cogito'
+ x E ~ a=. 4 0$s: 10&u: 65536+a.i. ' cogito'
  x E ~ a=. 4 0$3x
  x E ~ a=. 4 0$3r4
 )

@@ -88,15 +88,15 @@ test     adot2{~  ?7001 $# adot2
 test     adot2{~  ?7002 $# adot2
 test     adot2{~  ?7003 $# adot2
 
-test     sdot{~  ?1000 $# sdot
-test     sdot{~  ?1001 $# sdot
-test     sdot{~  ?1002 $# sdot
-test     sdot{~  ?1003 $# sdot
+test     sdot0{~  ?1000 $# sdot0
+test     sdot0{~  ?1001 $# sdot0
+test     sdot0{~  ?1002 $# sdot0
+test     sdot0{~  ?1003 $# sdot0
 
-test     sdot{~  ?7000 $# sdot
-test     sdot{~  ?7001 $# sdot
-test     sdot{~  ?7002 $# sdot
-test     sdot{~  ?7003 $# sdot
+test     sdot0{~  ?7000 $# sdot0
+test     sdot0{~  ?7001 $# sdot0
+test     sdot0{~  ?7002 $# sdot0
+test     sdot0{~  ?7003 $# sdot0
 
 test        1000 ?@$ 1e4
 test        1001 ?@$ 1e4
@@ -245,6 +245,6 @@ test1 0.01*(--:n) + 3 1002 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1003 ?@$ n=: IF64{1e9 1e18
 
 
-4!:55 ;:'adot1 adot2 sdot b n test test1'
+4!:55 ;:'adot1 adot2 sdot0 b n test test1'
 
 

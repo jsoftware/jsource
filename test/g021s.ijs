@@ -62,23 +62,23 @@ NB. >./\. SB -------------------------------------------------------------
 
 max=: 4 : 'x>.y'
 
-(>./\. -: max/\.) x=.sdot
+(>./\. -: max/\.) x=.sdot0
 (>./\. -: max/\.) |.x
 
-(>./\.   -: max/\.  ) x=.sdot{~ ?    23$#sdot
-(>./\.   -: max/\.  ) x=.sdot{~ ?4   23$#sdot
+(>./\.   -: max/\.  ) x=.sdot0{~ ?    23$#sdot0
+(>./\.   -: max/\.  ) x=.sdot0{~ ?4   23$#sdot0
 (>./\."1 -: max/\."1) x
-(>./\.   -: max/\.  ) x=.sdot{~ ?7 5 23$#sdot
+(>./\.   -: max/\.  ) x=.sdot0{~ ?7 5 23$#sdot0
 (>./\."1 -: max/\."1) x
 (>./\."2 -: max/\."2) x
 
 'domain error' -: >./\. etx 'triskaidekaphobia'
 'domain error' -: >./\. etx ;:'professors in New England'
 'domain error' -: >./\. etx u:'triskaidekaphobia'
-'domain error' -: >./\. etx ;:u:'professors in New England'
+'domain error' -: >./\. etx u:&.> ;:'professors in New England'
 'domain error' -: >./\. etx 10&u:'triskaidekaphobia'
-'domain error' -: >./\. etx ;:10&u:'professors in New England'
+'domain error' -: >./\. etx 10&u:&.> ;:'professors in New England'
 
-4!:55 ;:'adot1 adot2 sdot f max x'
+4!:55 ;:'adot1 adot2 sdot0 f max x'
 
 

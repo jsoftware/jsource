@@ -103,7 +103,7 @@ f5=: 3 : 0
 
 ('onex';'twox') -: f5 ''
 
-global=: ;: u:'zero one two three four'
+global=: (u:&.>) ;:'zero one two three four'
 
 f5=: 3 : 0
  txt=. 1 2 { global
@@ -112,7 +112,7 @@ f5=: 3 : 0
 
 ((u:'onex');u:'twox') -: f5 ''
 
-global=: ;: 10&u:'zero one two three four'
+global=: (10&u:&.>) ;:'zero one two three four'
 
 f5=: 3 : 0
  txt=. 1 2 { global
@@ -129,16 +129,16 @@ f6=: 3 : 0
  t=. t ,each 'x'
  assert. t -: ;:'onex twox'
  assert. g -: ;: 'zero one two three four'
- g=. ;: u:'zero one two three four'
+ g=. (u:&.>) ;:'zero one two three four'
  t=. 1 2 { g
  t=. t ,each u:'x'
- assert. t -: ;:u:'onex twox'
- assert. g -: ;: u:'zero one two three four'
- g=. ;: 10&u:'zero one two three four'
+ assert. t -: (u:&.>) ;:'onex twox'
+ assert. g -: (u:&.>) ;:'zero one two three four'
+ g=. (10&u:&.>) ;:'zero one two three four'
  t=. 1 2 { g
  t=. t ,each 10&u:'x'
- assert. t -: ;:10&u:'onex twox'
- assert. g -: ;: 10&u:'zero one two three four'
+ assert. t -: (10&u:&.>) ;:'onex twox'
+ assert. g -: (10&u:&.>) ;:'zero one two three four'
  1
 )
 
@@ -150,16 +150,16 @@ f7=: 3 : 0
  t=. t ,&.> 'x'
  assert. t -: ;:'onex twox'
  assert. g -: ;: 'zero one two three four'
- g=. ;: u:'zero one two three four'
+ g=. (u:&.>) ;:'zero one two three four'
  t=. 1 2 { g
  t=. t ,&.> u:'x'
- assert. t -: ;:u:'onex twox'
- assert. g -: ;: u:'zero one two three four'
- g=. ;: 10&u:'zero one two three four'
+ assert. t -: (u:&.>) ;:'onex twox'
+ assert. g -: (u:&.>) ;:'zero one two three four'
+ g=. (10&u:&.>) ;:'zero one two three four'
  t=. 1 2 { g
  t=. t ,&.> 10&u:'x'
- assert. t -: ;:10&u:'onex twox'
- assert. g -: ;: 10&u:'zero one two three four'
+ assert. t -: (10&u:&.>) ;:'onex twox'
+ assert. g -: (10&u:&.>) ;:'zero one two three four'
  1
 )
 

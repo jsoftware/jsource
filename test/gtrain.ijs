@@ -114,6 +114,6 @@ NB. adverb adverb trains ------------------------------------------------
 'syntax error' -: ex ' + ((1 : ''/'') \)'
 
 
-4!:55 ;:'adot1 adot2 sdot b f g i x'
+4!:55 ;:'adot1 adot2 sdot0 b f g i x'
 
 

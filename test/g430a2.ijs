@@ -142,8 +142,8 @@ y=: 1e4 ?@$ 2
 
 NB. commented out because times were too close (within 10%) and prone to fail
 NB. y=: 1e6 ?@$ 2  
-NB. >/ t=: 6!:2 '(}:+.}.)y',:'2+./\y'
-NB. >/ t=: 6!:2 '(}:~:}.)y',:'2~:/\y'
+NB. THRESHOLD+. >/ t=: 6!:2 '(}:+.}.)y',:'2+./\y'
+NB. THRESHOLD+. >/ t=: 6!:2 '(}:~:}.)y',:'2~:/\y'
 
 
 4!:55 ;:'f t y'

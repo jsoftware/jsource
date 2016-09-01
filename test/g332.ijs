@@ -24,9 +24,9 @@ rhet=: rhet, 'metonymy occultatio oxymoron polyptoton simile '
 rhet=: rhet, 'syllepsis synecdoche tasis'
 rhet1=: ;:rhet
 1 = #$rhet1
-rhet1=: ;:u:rhet
+rhet1=: ;:u: rhet
 1 = #$rhet1
-rhet1=: ;:10&u:rhet
+rhet1=: ;:10&u: rhet
 1 = #$rhet1
 
 (,<,t) -: ;: t=.'+'
@@ -225,6 +225,10 @@ NB. ;: various errors ---------------------------------------------------
 'domain error' -: ;: etx 3.4
 'domain error' -: ;: etx 3j4
 'domain error' -: ;: etx <'asdf'
+
+'domain error' -: ;: etx ('asdf'),(u:256),('asdf')
+'domain error' -: ;: etx ('asdf'),(10&u:65536),('asdf')
+'domain error' -: ;: etx s:<'asdf'
 
 'spelling error' -: ex '10:'
 'spelling error' -: ex '_10:'

@@ -1,6 +1,7 @@
 NB. assert --------------------------------------------------------------
 
-1: 9!:41 ]1
+ws=: 9!:40 ''
+9!:41 ]1  NB. retain comments and whitespace
 
 lf=: 10{a.
 
@@ -72,6 +73,7 @@ s=: 0 : 0
 
 'control error' -: ex '3 : s' 
 
+9!:41 ws
 
-4!:55 ;:'f lf s word'
+4!:55 ;:'f lf s word ws'
 

@@ -3,12 +3,12 @@ NB. s: unicode -----------------------------------------------------------------
 0 s: 11
 data=: 0 s: 10
 
-a=:   ;:u:'A AAPL AMAT AMD AMZN ATT BA CRA CSCO DELL F GE GM HWP IBM INTC'
-a=: a,;:u:'JDSU LLY LU MOT MSFT NOK NT PFE PG QCOM RMBS T XRX YHOO'
-b=: ;:u:'NY SF LDN TOK HK FF TOR'
-c=: ;:u:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'
-d=: <;._1 u:' 00 01 02 03 04 05 06 07 08 09'
-e=: ;:u:'open high low close'
+a=:   ;:'A AAPL AMAT AMD AMZN ATT BA CRA CSCO DELL F GE GM HWP IBM INTC'
+a=: ([: u: 128+a.&i.)&.> a,;:'JDSU LLY LU MOT MSFT NOK NT PFE PG QCOM RMBS T XRX YHOO'
+b=: ([: u: 128+a.&i.)&.> ;:'NY SF LDN TOK HK FF TOR'
+c=: ([: u: 128+a.&i.)&.> ;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'
+d=: ([: u: 128+a.&i.)&.> <;._1 ' 00 01 02 03 04 05 06 07 08 09'
+e=: ([: u: 128+a.&i.)&.> ;:'open high low close'
 
 t=: }.@;&.>{' ',&.>&.>a;b;c;d;<e
 
@@ -27,26 +27,24 @@ b0=: 7!:0 ''
 
 s=: s: t
 t -: 5 s: s
-0 s: 11
 
 d=: 0 s: 10
-(3!:1 d) 1!:2 <'foo.x'
+(3!:1 d) 1!:2 <jpath '~temp/foo.x'
 
 p=: s: q
 q -: 5 s: p
-0 s: 11
 
-d -: 3!:2 (1!:1) <'foo.x'
+d -: 3!:2 (1!:1) <jpath '~temp/foo.x'
 10 s: d
 0 s: 11
 d -: 0 s: 10
 t -: 5 s: s
 
-1!:55 <'foo.x'
+1!:55 <jpath '~temp/foo.x'
 
 10 s: data
 0 s: 11
-
+ 
 d=:p=:s=: 911
 s1=: 7!:3 ''
 b1=: 7!:0 ''

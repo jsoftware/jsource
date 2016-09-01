@@ -30,19 +30,19 @@ t -: 5 s: s
 0 s: 11
 
 d=: 0 s: 10
-(3!:1 d) 1!:2 <'foo.x'
+(3!:1 d) 1!:2 <jpath '~temp/foo.x'
 
 p=: s: q
 q -: 5 s: p
 0 s: 11
 
-d -: 3!:2 (1!:1) <'foo.x'
+d -: 3!:2 (1!:1) <jpath '~temp/foo.x'
 10 s: d
 0 s: 11
 d -: 0 s: 10
 t -: 5 s: s
 
-1!:55 <'foo.x'
+1!:55 <jpath '~temp/foo.x'
 
 10 s: data
 0 s: 11

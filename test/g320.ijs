@@ -196,8 +196,8 @@ t=.adot2{~97+i.4 3 2
 (3 6$(6$10&u:' '),~,x) -: (0$<''),~x
 
 NB. symbol
-x=.sdot{~97+i.2 6
-t=.sdot{~97+i.4 3 2
+x=.sdot0{~97+i.2 6
+t=.sdot0{~97+i.4 3 2
 5 3 6 -: $x,t
 5 3 6 -: $t,x
 (((}.$t)$s:@<"0 'a'), t) -: (s:@<"0 'a'), t
@@ -337,14 +337,14 @@ NB. literal2
 (x, 3 4$'ab', 12$' ') -: 'ab'  ,     ~x=.2 3 4$u:'Vandermonde matrices'
 (x, 3 4$'ab', 12$'q') -: 'ab'  ,!.'q'~x
 
-(x,~  4$(3;4), 4$a: ) -: (3;4) ,      x=.2 4$;:u:'how now Charlie Brown?'
+(x,~  4$(3;4), 4$a: ) -: (3;4) ,      x=.2 4$(u:&.>) ;:'how now Charlie Brown?'
 (x,~  4$(3;4), 4$<9 ) -: (3;4) ,!.(<9)x
-(x,~3 4$(3;4),12$a: ) -: (3;4) ,      x=.2 3 4$;:u:'sigh no more a-shore x'
+(x,~3 4$(3;4),12$a: ) -: (3;4) ,      x=.2 3 4$(u:&.>) ;:'sigh no more a-shore x'
 (x,~3 4$(3;4),12$<9 ) -: (3;4) ,!.(<9)x
 
-(x,   4$(3;4), 4$a: ) -: (3;4) ,      ~x=.2 4$;:u:'how now Charlie Brown?'
+(x,   4$(3;4), 4$a: ) -: (3;4) ,      ~x=.2 4$(u:&.>) ;:'how now Charlie Brown?'
 (x,   4$(3;4), 4$<9 ) -: (3;4) ,!.(<9)~x
-(x, 3 4$(3;4),12$a: ) -: (3;4) ,      ~x=.2 3 4$;:u:'sigh no more a-shore x'
+(x, 3 4$(3;4),12$a: ) -: (3;4) ,      ~x=.2 3 4$(u:&.>) ;:'sigh no more a-shore x'
 (x, 3 4$(3;4),12$<9 ) -: (3;4) ,!.(<9)~x
 
 NB. literal4
@@ -358,14 +358,14 @@ NB. literal4
 (x, 3 4$'ab', 12$' ') -: 'ab'  ,     ~x=.2 3 4$10&u:'Vandermonde matrices'
 (x, 3 4$'ab', 12$'q') -: 'ab'  ,!.'q'~x
 
-(x,~  4$(3;4), 4$a: ) -: (3;4) ,      x=.2 4$;:10&u:'how now Charlie Brown?'
+(x,~  4$(3;4), 4$a: ) -: (3;4) ,      x=.2 4$(10&u:&.>) ;:'how now Charlie Brown?'
 (x,~  4$(3;4), 4$<9 ) -: (3;4) ,!.(<9)x
-(x,~3 4$(3;4),12$a: ) -: (3;4) ,      x=.2 3 4$;:10&u:'sigh no more a-shore x'
+(x,~3 4$(3;4),12$a: ) -: (3;4) ,      x=.2 3 4$(10&u:&.>) ;:'sigh no more a-shore x'
 (x,~3 4$(3;4),12$<9 ) -: (3;4) ,!.(<9)x
 
-(x,   4$(3;4), 4$a: ) -: (3;4) ,      ~x=.2 4$;:10&u:'how now Charlie Brown?'
+(x,   4$(3;4), 4$a: ) -: (3;4) ,      ~x=.2 4$(10&u:&.>) ;:'how now Charlie Brown?'
 (x,   4$(3;4), 4$<9 ) -: (3;4) ,!.(<9)~x
-(x, 3 4$(3;4),12$a: ) -: (3;4) ,      ~x=.2 3 4$;:10&u:'sigh no more a-shore x'
+(x, 3 4$(3;4),12$a: ) -: (3;4) ,      ~x=.2 3 4$(10&u:&.>) ;:'sigh no more a-shore x'
 (x, 3 4$(3;4),12$<9 ) -: (3;4) ,!.(<9)~x
 
 NB. symbol
@@ -462,45 +462,45 @@ f=: 3 : 'xx (,"y -: cat"y) yy'
 
 f&>r [ xx=:    ?  2 3 4$2   [ yy=:    ?  2 3 4$2
 f&>r [ xx=:a.{~?  2 3 4$256 [ yy=:a.{~?  2 3 4$256
-f&>r [ xx=:adot1{~?  2 3 4$256 [ yy=:adot1{~?  2 3 4$256
-f&>r [ xx=:adot2{~?  2 3 4$256 [ yy=:adot2{~?  2 3 4$256
-f&>r [ xx=:sdot{~?  2 3 4$256 [ yy=:sdot{~?  2 3 4$256
+f&>r [ xx=:adot1{~?  2 3 4$(#adot1) [ yy=:adot1{~?  2 3 4$(#adot1)
+f&>r [ xx=:adot2{~?  2 3 4$(#adot2) [ yy=:adot2{~?  2 3 4$(#adot2)
+f&>r [ xx=:sdot0{~?  2 3 4$(#sdot0) [ yy=:sdot0{~?  2 3 4$(#sdot0)
 f&>r [ xx=:    ?  2 3 4$100 [ yy=:    ?  2 3 4$100
 f&>r [ xx=:o.  ?  2 3 4$100 [ yy=:o.  ?  2 3 4$100
 f&>r [ xx=:j./ ?2 2 3 4$100 [ yy=:j./ ?2 2 3 4$100
 
 f&>r [ xx=:    ?  2 3  $2   [ yy=:    ?  2 3 4$2
 f&>r [ xx=:a.{~?  2 3  $256 [ yy=:a.{~?  2 3 4$256
-f&>r [ xx=:adot1{~?  2 3  $256 [ yy=:adot1{~?  2 3 4$256
-f&>r [ xx=:adot2{~?  2 3  $256 [ yy=:adot2{~?  2 3 4$256
-f&>r [ xx=:sdot{~?  2 3  $256 [ yy=:sdot{~?  2 3 4$256
+f&>r [ xx=:adot1{~?  2 3  $(#adot1) [ yy=:adot1{~?  2 3 4$(#adot1)
+f&>r [ xx=:adot2{~?  2 3  $(#adot2) [ yy=:adot2{~?  2 3 4$(#adot2)
+f&>r [ xx=:sdot0{~?  2 3  $(#sdot0) [ yy=:sdot0{~?  2 3 4$(#sdot0)
 f&>r [ xx=:    ?  2 3  $100 [ yy=:    ?  2 3 4$100
 f&>r [ xx=:o.  ?  2 3  $100 [ yy=:o.  ?  2 3 4$100
 f&>r [ xx=:j./ ?2 2 3  $100 [ yy=:j./ ?2 2 3 4$100
 
 f&>r [ xx=:    ?  2 3 4$2   [ yy=:    ?  2 3  $2
 f&>r [ xx=:a.{~?  2 3 4$256 [ yy=:a.{~?  2 3  $256
-f&>r [ xx=:adot1{~?  2 3 4$256 [ yy=:adot1{~?  2 3  $256
-f&>r [ xx=:adot2{~?  2 3 4$256 [ yy=:adot2{~?  2 3  $256
-f&>r [ xx=:sdot{~?  2 3 4$256 [ yy=:sdot{~?  2 3  $256
+f&>r [ xx=:adot1{~?  2 3 4$(#adot1) [ yy=:adot1{~?  2 3  $(#adot1)
+f&>r [ xx=:adot2{~?  2 3 4$(#adot2) [ yy=:adot2{~?  2 3  $(#adot2)
+f&>r [ xx=:sdot0{~?  2 3 4$(#sdot0) [ yy=:sdot0{~?  2 3  $(#sdot0)
 f&>r [ xx=:    ?  2 3 4$100 [ yy=:    ?  2 3  $100
 f&>r [ xx=:o.  ?  2 3 4$100 [ yy=:o.  ?  2 3  $100
 f&>r [ xx=:j./ ?2 2 3 4$100 [ yy=:j./ ?2 2 3  $100
 
 f&>r [ xx=:?2               [ yy=:    ?  2 3 4$2
 f&>r [ xx=:'A'              [ yy=:a.{~?  2 3 4$256
-f&>r [ xx=:(u:'A')              [ yy=:adot1{~?  2 3 4$256
-f&>r [ xx=:(10&u:'A')              [ yy=:adot2{~?  2 3 4$256
-f&>r [ xx=:(s:@<"0 'A')              [ yy=:sdot{~?  2 3 4$256
+f&>r [ xx=:(u:'A')              [ yy=:adot1{~?  2 3 4$(#adot1)
+f&>r [ xx=:(10&u:'A')              [ yy=:adot2{~?  2 3 4$(#adot2)
+f&>r [ xx=:(s:@<"0 'A')              [ yy=:sdot0{~?  2 3 4$(#sdot0)
 f&>r [ xx=:?100             [ yy=:    ?  2 3 4$100
 f&>r [ xx=:o.?100           [ yy=:o.  ?  2 3 4$100
 f&>r [ xx=:j./?2$100        [ yy=:j./ ?2 2 3 4$100
 
 f&>r [ xx=:    ?  2 3 4$2   [ yy=:?2
 f&>r [ xx=:a.{~?  2 3 4$256 [ yy=:'B'
-f&>r [ xx=:adot1{~?  2 3 4$256 [ yy=:u:'B'
-f&>r [ xx=:adot2{~?  2 3 4$256 [ yy=:10&u:'B'
-f&>r [ xx=:sdot{~?  2 3 4$256 [ yy=:s:@<"0 'B'
+f&>r [ xx=:adot1{~?  2 3 4$(#adot1) [ yy=:u:'B'
+f&>r [ xx=:adot2{~?  2 3 4$(#adot2) [ yy=:10&u:'B'
+f&>r [ xx=:sdot0{~?  2 3 4$(#sdot0) [ yy=:s:@<"0 'B'
 f&>r [ xx=:    ?  2 3 4$100 [ yy=:?100
 f&>r [ xx=:o.  ?  2 3 4$100 [ yy=:o.?100
 f&>r [ xx=:j./ ?2 2 3 4$100 [ yy=:j./?2$100
@@ -518,6 +518,6 @@ test=. 4 : '((n,x)$''x'') (,"1 -: cat"1) (n,y)$''y'''
 
 test"0/~i.20
 
-4!:55 ;:'adot1 adot2 sdot cat f n r t test x xx y yy'
+4!:55 ;:'adot1 adot2 sdot0 cat f n r t test x xx y yy'
 
 

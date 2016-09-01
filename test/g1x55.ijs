@@ -6,7 +6,7 @@ open  =. 1!:21
 lock  =. 1!:31
 erase =. 1!:55
 
-f =. <'foo1x55.x'
+f =. <jpath '~temp/foo1x55.x'
 g =. <'goo1x55.x'
 q =. files ''
 

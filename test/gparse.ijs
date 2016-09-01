@@ -22,9 +22,11 @@ a =: 1
 4097 = ". 'a' ,~ ; 4096 # <'a + '
 
 NB. Make sure deferred frees are performed, by creating an 800MB array and repeatedly assigning to it
-a =: 1e8$2
+NB. a =: 1e8$2
+a =: 1e7$2
 multi =: 3 : 'a =: a =: a [ a + a'
-a -: multi^:100 a
+NB. a -: multi^:100 a
+a -: multi^:10 a
 
 NB. Test display of error spacing
 '|domain error: efx|   1    +''a''' -: efx '1 + ''a'''
@@ -81,6 +83,6 @@ NB. Verify noun assignments to all parts of speech are honored
 _6 = ('aa'=: -) 6
 1 2 3 -: 'aa' =: 1 2 3
 
-4!:55 ;:'a aa multi swd t '
+4!:55 ;:'a aa bc multi swd t '
 
 

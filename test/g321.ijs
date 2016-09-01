@@ -162,22 +162,22 @@ NB. literal4
 (adot2{~?6 1 3$#adot2) f adot2{~?6 4 9$#adot2
 
 NB. symbol
-(sdot{~?#sdot) f sdot{~?#sdot
-(sdot{~?#sdot) f sdot{~?12$#sdot
-(sdot{~?#sdot) f sdot{~?3 10$#sdot
-(sdot{~?#sdot) f sdot{~?7 2 10$#sdot
-(sdot{~?11$#sdot) f sdot{~?#sdot
-(sdot{~?11$#sdot) f sdot{~?11$#sdot
-(sdot{~?11$#sdot) f sdot{~?11 1$#sdot
-(sdot{~?11$#sdot) f sdot{~?11 3 2$#sdot
-(sdot{~?7 3$#sdot) f sdot{~?#sdot
-(sdot{~?7 3$#sdot) f sdot{~?7$#sdot
-(sdot{~?7 3$#sdot) f sdot{~?7 9$#sdot
-(sdot{~?7 3$#sdot) f sdot{~?7 8 9$#sdot
-(sdot{~?6 1 3$#sdot) f sdot{~?#sdot
-(sdot{~?6 1 3$#sdot) f sdot{~?6$#sdot
-(sdot{~?6 1 3$#sdot) f sdot{~?6 9$#sdot
-(sdot{~?6 1 3$#sdot) f sdot{~?6 4 9$#sdot
+(sdot0{~?#sdot0) f sdot0{~?#sdot0
+(sdot0{~?#sdot0) f sdot0{~?12$#sdot0
+(sdot0{~?#sdot0) f sdot0{~?3 10$#sdot0
+(sdot0{~?#sdot0) f sdot0{~?7 2 10$#sdot0
+(sdot0{~?11$#sdot0) f sdot0{~?#sdot0
+(sdot0{~?11$#sdot0) f sdot0{~?11$#sdot0
+(sdot0{~?11$#sdot0) f sdot0{~?11 1$#sdot0
+(sdot0{~?11$#sdot0) f sdot0{~?11 3 2$#sdot0
+(sdot0{~?7 3$#sdot0) f sdot0{~?#sdot0
+(sdot0{~?7 3$#sdot0) f sdot0{~?7$#sdot0
+(sdot0{~?7 3$#sdot0) f sdot0{~?7 9$#sdot0
+(sdot0{~?7 3$#sdot0) f sdot0{~?7 8 9$#sdot0
+(sdot0{~?6 1 3$#sdot0) f sdot0{~?#sdot0
+(sdot0{~?6 1 3$#sdot0) f sdot0{~?6$#sdot0
+(sdot0{~?6 1 3$#sdot0) f sdot0{~?6 9$#sdot0
+(sdot0{~?6 1 3$#sdot0) f sdot0{~?6 4 9$#sdot0
 
 NB. integer
 (?2222) f ?2
@@ -239,8 +239,8 @@ NB. boxed
 (<?2e9) f t{~?3 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (<?2e9) f t{~?7 2 10$#t=.<"0 i.123
 (t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:'Cogito, ergo sum.'
-(t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
-(t{~?12$#t) f t{~?        #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.'asdf';3 4;(u:&.>) ;:'Cogito, ergo sum.'
+(t{~?12$#t) f t{~?        #t=.'asdf';3 4;(10&u:&.>) ;:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?        #t=.(s:@<"0&.> <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?        #t=.(s:@<"0&.> <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
 (t{~?12$#t) f t{~?        #t=.(<"0@s: <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
@@ -249,8 +249,8 @@ NB. boxed
 (t{~?12$#t) f t{~?12 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (t{~?12$#t) f t{~?12 2 10$#t=.<"0 i.123
 (<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
-(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
-(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;(u:&.>) ;:'Cogito, ergo sum.'
+(<"0?7 2$999) f t{~?       #t=.'asdf';3 4;(10&u:&.>) ;:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?       #t=.(s:@<"0&.> <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?       #t=.(s:@<"0&.> <'asdf'),3 4;<"0@s: ;:'Cogito, ergo sum.'
 (<"0?7 2$999) f t{~?       #t=.(<"0@s: <'asdf'),3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
@@ -259,8 +259,8 @@ NB. boxed
 (<"0?7 2$999) f t{~?7 10  $#t=.2;;:'(<?2e9) f t{~?3 10$#t=.2;'
 (<"0?7 2$999) f t{~?7 2 10$#t=.<"0 i.123
 (t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:'Cogito, ergo sum.'
-(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:u:'Cogito, ergo sum.'
-(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;;:10&u:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;(u:&.>) ;:'Cogito, ergo sum.'
+(t{~?13 2 2$#t) f t{~?       #t=.'asdf';3 4;(10&u:&.>) ;:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?       #t=.(s:@<"0&.> <'asdf');3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?       #t=.(s:@<"0&.> <'asdf');3 4;<"0@s: ;:'Cogito, ergo sum.'
 (t{~?13 2 2$#t) f t{~?       #t=.(<"0@s: <'asdf');3 4;s:@<"0&.> ;:'Cogito, ergo sum.'
@@ -300,9 +300,9 @@ f=: 4 : 0
 0 1                  f"_ 0 ] 100+i.12
 a.                   f"_ 0 ] 100+i.12
 (a.{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
-(adot1{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
-(adot2{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
-(sdot{~1000 2 ?@$ 256) f"_ 0 ] 100+i.12
+(adot1{~1000 2 ?@$(#adot1)) f"_ 0 ] 100+i.12
+(adot2{~1000 2 ?@$(#adot2)) f"_ 0 ] 100+i.12
+(sdot0{~1000 2 ?@$(#sdot0)) f"_ 0 ] 100+i.12
 (u: i.1e3)           f"_ 0 ] 100+i.12
 (10&u: i.1e3)        f"_ 0 ] 100+i.12
 (1000 ?@$ 1e4)       f"_ 0 ] 100+i.12
@@ -311,6 +311,6 @@ a.                   f"_ 0 ] 100+i.12
 (<"0 ] 1000 ?@$ 1e5) f"_ 0 ] 100+i.12
 
 
-4!:55 ;:'adot1 adot2 sdot d e f overr t table x'
+4!:55 ;:'adot1 adot2 sdot0 d e f overr t table x'
 
 

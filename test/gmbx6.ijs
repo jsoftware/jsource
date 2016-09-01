@@ -11,12 +11,12 @@ q=: x=: ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), (".'x')       -: ".'q'
 (mbxcheck_jmf_ q), (".'|.x')     -: ".'|.q'
 
-q=: x=: ;:u:'COGITO, ERGO SUM.'
+q=: x=: (u:&.>) ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (".'x')       -: ".'q'
 (mbxcheck_jmf_ q), (".'|.x')     -: ".'|.q'
 
-q=: x=: ;:10&u:'Cogito, Ergo Sum.'
+q=: x=: (10&u:&.>) ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (".'x')       -: ".'q'
 (mbxcheck_jmf_ q), (".'|.x')     -: ".'|.q'
@@ -31,13 +31,13 @@ q=: x=: <"0 (<5!:2 <'g'),;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
 (mbxcheck_jmf_ q), (0 1":2 3$x)  -: 0 1":2 3$q
 
-q=: x=: <"0 (<5!:2 <'g'),;:u:'COGITO, ERGO SUM.'
+q=: x=: <"0 (<5!:2 <'g'),(u:&.>) ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (":x)         -: ":q
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
 (mbxcheck_jmf_ q), (0 1":2 3$x)  -: 0 1":2 3$q
 
-q=: x=: <"0 (<5!:2 <'g'),;:10&u:'Cogito, Ergo Sum.'
+q=: x=: <"0 (<5!:2 <'g'),(10&u:&.>) ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (":x)         -: ":q
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
@@ -50,13 +50,13 @@ q=: x=: <"0 (<5!:2 <'g'),<@(s:"0) ;:'Cogito, ergo sum.'
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
 (mbxcheck_jmf_ q), (0 1":2 3$x)  -: 0 1":2 3$q
 
-q=: x=: <"0 (<5!:2 <'g'),<@(s:"0) ;:u:'COGITO, ERGO SUM.'
+q=: x=: <"0 (<5!:2 <'g'),<@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (":x)         -: ":q
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
 (mbxcheck_jmf_ q), (0 1":2 3$x)  -: 0 1":2 3$q
 
-q=: x=: <"0 (<5!:2 <'g'),<@(s:"0) ;:10&u:'Cogito, Ergo Sum.'
+q=: x=: <"0 (<5!:2 <'g'),<@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum.'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (":x)         -: ":q
 (mbxcheck_jmf_ q), (0 1":x)      -: 0 1":q
@@ -93,11 +93,11 @@ q=: x=: ('a'&;)`('b'&;)`('c'&;)
 
 q=: x=: ('a'&;)`('b'&;)`('c'&;)
 (mbxcheck_jmf_ q), x             -: q
-(mbxcheck_jmf_ q),(x;._1 j)      -: q;._1 j=: s: u:' BOU STRO PHE DON IC'
+(mbxcheck_jmf_ q),(x;._1 j)      -: q;._1 j=: s: u: 128+a.i. ' BOU STRO PHE DON IC'
 
 q=: x=: ('a'&;)`('b'&;)`('c'&;)
 (mbxcheck_jmf_ q), x             -: q
-(mbxcheck_jmf_ q),(x;._1 j)      -: q;._1 j=: s: 10&u:' Bou Stro Phe Don Ic'
+(mbxcheck_jmf_ q),(x;._1 j)      -: q;._1 j=: s: 10&u: 65536+a.i. ' Bou Stro Phe Don Ic'
 
 q=: x=: ('a'&;)`('b'&;)`('c'&;)
 r=: y=: ('a'&;)`('b'&;)
@@ -144,7 +144,7 @@ q=: x=: ;:'Cogito, ergo sum. boustrophedonic chthonic'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
+q=: x=: (u:&.>) ;:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -166,7 +166,7 @@ q=: x=: ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: ;:10&u:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
+q=: x=: (10&u:&.>) ;:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -211,7 +211,7 @@ q=: x=: <@(s:"0) ;:'Cogito, ergo sum. boustrophedonic chthonic'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: <@(s:"0) ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
+q=: x=: <@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -233,7 +233,7 @@ q=: x=: <@(s:"0) ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: <@(s:"0) ;:10&u:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
+q=: x=: <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -278,7 +278,7 @@ q=: x=: (<5!:2 <'g'), <"0 ;:'Cogito, ergo sum. boustrophedonic chthonic'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: (<5!:2 <'g'), <"0 ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
+q=: x=: (<5!:2 <'g'), <"0 (u:&.>) ;:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -300,7 +300,7 @@ q=: x=: (<5!:2 <'g'), <"0 ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: (<5!:2 <'g'), <"0 ;:10&u:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
+q=: x=: (<5!:2 <'g'), <"0 (10&u:&.>) ;:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -345,7 +345,7 @@ q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) ;:'Cogito, ergo sum. boustrophedonic chthonic
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
+q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHONIC'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q
@@ -367,7 +367,7 @@ q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) ;:u:'COGITO, ERGO SUM. BOUSTROPHEDONIC CHTHON
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.x
 (mbxcheck_jmf_ q), (x,&.>|.x)    -: q ,&.>|.q
  
-q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) ;:10&u:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
+q=: x=: (<5!:2 <'g'), <"0 <@(s:"0) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum. Boustrophedonic Chthonic'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), ($&.> x)      -: $&.> q
 (mbxcheck_jmf_ q), (|.&.> x)     -: |.&.> q

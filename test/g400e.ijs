@@ -52,7 +52,7 @@ b (exp -: expand) x=:     ?2     [ b=: ?(1+?1000)$2
 b (exp -: expand) x=: a.{~?#a.   [ b=: ?(1+?1000)$2
 b (exp -: expand) x=: adot1{~?#adot1   [ b=: ?(1+?1000)$2
 b (exp -: expand) x=: adot2{~?#adot2   [ b=: ?(1+?1000)$2
-b (exp -: expand) x=: sdot{~?#sdot   [ b=: ?(1+?1000)$2
+b (exp -: expand) x=: sdot0{~?#sdot0   [ b=: ?(1+?1000)$2
 b (exp -: expand) x=:     ?1e6   [ b=: ?(1+?1000)$2
 b (exp -: expand) x=: o.  ?1e6   [ b=: ?(1+?1000)$2
 b (exp -: expand) x=: j./ ?2$1e6 [ b=: ?(1+?1000)$2
@@ -61,7 +61,7 @@ b (exp -: expand) x=:     ?2     [ b=:  (1+?1000)$1
 b (exp -: expand) x=: a.{~?#a.   [ b=:  (1+?1000)$1
 b (exp -: expand) x=: adot1{~?#adot1   [ b=:  (1+?1000)$1
 b (exp -: expand) x=: adot2{~?#adot2   [ b=:  (1+?1000)$1
-b (exp -: expand) x=: sdot{~?#sdot   [ b=:  (1+?1000)$1
+b (exp -: expand) x=: sdot0{~?#sdot0   [ b=:  (1+?1000)$1
 b (exp -: expand) x=:     ?1e6   [ b=:  (1+?1000)$1
 b (exp -: expand) x=: o.  ?1e6   [ b=:  (1+?1000)$1
 b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$1
@@ -70,7 +70,7 @@ b (exp -: expand) x=:     ?2     [ b=:  (1+?1000)$0
 b (exp -: expand) x=: a.{~?#a.   [ b=:  (1+?1000)$0
 b (exp -: expand) x=: adot1{~?#adot1   [ b=:  (1+?1000)$0
 b (exp -: expand) x=: adot2{~?#adot2   [ b=:  (1+?1000)$0
-b (exp -: expand) x=: sdot{~?#sdot   [ b=:  (1+?1000)$0
+b (exp -: expand) x=: sdot0{~?#sdot0   [ b=:  (1+?1000)$0
 b (exp -: expand) x=:     ?1e6   [ b=:  (1+?1000)$0
 b (exp -: expand) x=: o.  ?1e6   [ b=:  (1+?1000)$0
 b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
@@ -104,6 +104,6 @@ b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
 'length error' -: 1 0 1 #^:_1 etx i.5 3
 
 
-4!:55 ;:'adot1 adot2 sdot b exp expand f g x'
+4!:55 ;:'adot1 adot2 sdot0 b exp expand f g x'
 
 

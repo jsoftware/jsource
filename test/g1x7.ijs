@@ -17,7 +17,7 @@ mkdir d
 test perm d
 erase d
 
-f =. <'foogoo5.x'
+f =. <jpath (UNAME-:'Android'){::'~temp/foogoo5.x';'~bin/foogoo5.x'
 'foo upon thee' write f
 test perm f
 
@@ -39,7 +39,7 @@ erase f
 
 NB. 1!:7 ----------------------------------------------------------------
 
-perm =. 1!:7
+perm =: 1!:7
 
 'domain error'      -: perm etx 'a'
 'domain error'      -: perm etx 'abc'
@@ -63,17 +63,17 @@ perm =. 1!:7
 'file number error' -: perm etx 2
 'file number error' -: perm etx 12345 12346
 
-'domain error'      -: 0 1 0 perm etx <'foo.x'
-'domain error'      -: 3 1   perm etx <'foo.x'
-'domain error'      -: 3.5   perm etx <'foo.x'
-'domain error'      -: 3j4   perm etx <'foo.x'
-'domain error'      -: (<'r')perm etx <'foo.x'
-'domain error'      -: (nn$'abc') perm etx <'foo.x'
-'domain error'      -: (nn$'a--') perm etx <'foo.x'
-'domain error'      -: (nn$'-a-') perm etx <'foo.x'
-'domain error'      -: (nn$'--a') perm etx <'foo.x'
+'domain error'      -: 0 1 0 perm etx <jpath '~temp/foo.x'
+'domain error'      -: 3 1   perm etx <jpath '~temp/foo.x'
+'domain error'      -: 3.5   perm etx <jpath '~temp/foo.x'
+'domain error'      -: 3j4   perm etx <jpath '~temp/foo.x'
+'domain error'      -: (<'r')perm etx <jpath '~temp/foo.x'
+'domain error'      -: (nn$'abc') perm etx <jpath '~temp/foo.x'
+'domain error'      -: (nn$'a--') perm etx <jpath '~temp/foo.x'
+'domain error'      -: (nn$'-a-') perm etx <jpath '~temp/foo.x'
+'domain error'      -: (nn$'--a') perm etx <jpath '~temp/foo.x'
 
-'length error'      -: 'wx'  perm etx <'foo.x'
+'length error'      -: 'wx'  perm etx <jpath '~temp/foo.x'
 
 4!:55 ;:'close d erase f h mkdir nn open perm test unix write '
 

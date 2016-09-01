@@ -24,8 +24,8 @@ cc =. %:
 'domain error' -: [: etx o.?2 4$100000
 'domain error' -: [: etx r.o.?2 4$100000
 'domain error' -: [: etx ;:'Cogito, ergo sum.'
-'domain error' -: [: etx ;:u:'Cogito, ergo sum.'
-'domain error' -: [: etx ;:10&u:'Cogito, ergo sum.'
+'domain error' -: [: etx u:&.> ;:'Cogito, ergo sum.'
+'domain error' -: [: etx 10&u:&.> ;:'Cogito, ergo sum.'
 'domain error' -: [: etx s:@<"0&.> ;:'Cogito, ergo sum.'
 'domain error' -: [: etx <"0@s: ;:'Cogito, ergo sum.'
 
@@ -40,12 +40,12 @@ cc =. %:
 'domain error' -: (?17$2)        [: etx o.?2 4$100000
 'domain error' -: 'eleemosynary' [: etx r.o.?2 4$100000
 'domain error' -: ''             [: etx ;:'Cogito, ergo sum.'
-'domain error' -: ''             [: etx ;:u:'Cogito, ergo sum.'
-'domain error' -: ''             [: etx ;:10&u:'Cogito, ergo sum.'
+'domain error' -: ''             [: etx u:&.> ;:'Cogito, ergo sum.'
+'domain error' -: ''             [: etx 10&u:&.> ;:'Cogito, ergo sum.'
 'domain error' -: ''             [: etx s:@<"0&.> ;:'Cogito, ergo sum.'
 'domain error' -: ''             [: etx <"0@s: ;:'Cogito, ergo sum.'
 
 
-4!:55 ;:'c1 c2 cc f ss t x y'
+4!:55 ;:'c1 c2 cc cc f ss t x y'
 
 

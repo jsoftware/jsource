@@ -126,7 +126,7 @@ NB. (s +/ t) -: x +/ y
 NB.  /. CSLDOT,  ADV,  sldot,   0L,     
 NB.  /: CGRADE,  VERB, grade1,  grade2, 
 NB.  \  CBSLASH, ADV,  bslash,  0L,     
-NB.  \. CBSDOT,  ADV,  bsdot,   0L,     
+NB.  \. CBSDOT,  ADV,  bsdot0,   0L,     
 NB.  \: CDGRADE, VERB, dgrade1, dgrade2,
 
 ([s) -: [x

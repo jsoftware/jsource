@@ -55,7 +55,7 @@ k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
 
 NB. symbol
-a=:sdot{~32+?11 5$95
+a=:sdot0{~32+?11 5$95
 k (<\.   -: < bsd) a    [ k=:_4+?11
 k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
@@ -127,6 +127,6 @@ testb"0 ] 22 25
 testb"0 ] 16 17 19 21 23 31
 
 
-4!:55 ;:'a adot1 adot2 sdot base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
-4!:55 ;:'prefix sd seg suffix t testb'
+4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
+4!:55 ;:'prefix sd seg suffix t testa testb'
 

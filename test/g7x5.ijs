@@ -156,7 +156,7 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 
 NB. Test usecount on mapped arrays
 NB. create clean mapped noun a
-f=. jpath'~temp/t.jmf'
+f=: jpath'~temp/t.jmf'
 1 [ createjmf_jmf_ f;1000
 1 [ 1 unmap_jmf_'a' NB. 1 forces unmap - even with dangling refs
 1 [ map_jmf_ 'a';f
@@ -178,6 +178,6 @@ NB. run foo calling goo calling foo (note perhaps nasty goo calling foo!)
 
 18!:55 <'jmf'
 
-4!:55 ;:'adot1 adot2 sdot bp f g q sp x a foo goo'
+4!:55 ;:'adot1 adot2 sdot0 bp f g q sp x a foo goo'
 
 

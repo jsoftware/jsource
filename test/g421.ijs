@@ -63,7 +63,7 @@ a=:adot2{~32+?10 5 3$95
 (</. -: < ob) 10&u:''
 
 NB. symbol
-a=:sdot{~32+?10 5 3$95
+a=:sdot0{~32+?10 5 3$95
 (</. -: < ob) a
 (</. -: < ob) ,a
 (]/. -: ] ob) a
@@ -173,7 +173,7 @@ k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
 NB. symbol
-a=:sdot{~32+?11$95
+a=:sdot0{~32+?11$95
 k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
@@ -260,8 +260,8 @@ test=: 2 : 0
  assert. ((n,0)$2r5   ) (u/. -: v/.) i.n
  assert. ((n,0)$a:    ) (u/. -: v/.) i.n
  assert. ((n,0)$s:<'x') (u/. -: v/.) i.n
- assert. ((n,0)$s:<u:'x') (u/. -: v/.) i.n
- assert. ((n,0)$s:<10&u:'x') (u/. -: v/.) i.n
+ assert. ((n,0)$s:<u: 128+a.i. 'x') (u/. -: v/.) i.n
+ assert. ((n,0)$s:<10&u: 65536+a.i. 'x') (u/. -: v/.) i.n
  1
 )
 
@@ -273,7 +273,7 @@ test=: 2 : 0
 (# ,{.) test (3 : '(# ,{.)y')
 
 
-4!:55 ;:'a adot1 adot2 sdot base bs bsd conv conv1 em en eq iind infix k '
+4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru '
 4!:55 ;:'s sd seg suffix t test x xx'
 

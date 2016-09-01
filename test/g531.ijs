@@ -20,23 +20,23 @@ NB. literal
 
 NB. literal
 (behead -: }.) u:'a'
-(behead -: }.) adot1{~?4$256
-(behead -: }.) adot1{~?3 4$256
-(behead -: }.) adot1{~?2 3 4$256
+(behead -: }.) adot1{~?4$(#adot1)
+(behead -: }.) adot1{~?3 4$(#adot1)
+(behead -: }.) adot1{~?2 3 4$(#adot1)
 (behead -: }.) 1=?0 3$256
 
 NB. literal4
 (behead -: }.) 10&u:'a'
-(behead -: }.) adot2{~?4$256
-(behead -: }.) adot2{~?3 4$256
-(behead -: }.) adot2{~?2 3 4$256
+(behead -: }.) adot2{~?4$(#adot2)
+(behead -: }.) adot2{~?3 4$(#adot2)
+(behead -: }.) adot2{~?2 3 4$(#adot2)
 (behead -: }.) 1=?0 3$256
 
 NB. symbol
 (behead -: }.) s:@<"0 'a'
-(behead -: }.) sdot{~?4$256
-(behead -: }.) sdot{~?3 4$256
-(behead -: }.) sdot{~?2 3 4$256
+(behead -: }.) sdot0{~?4$(#sdot0)
+(behead -: }.) sdot0{~?3 4$(#sdot0)
+(behead -: }.) sdot0{~?2 3 4$(#sdot0)
 (behead -: }.) 1=?0 3$256
 
 NB. integer
@@ -115,8 +115,8 @@ test =: }. -: [ }. 0&<:@i.@#@[ $  ]
 1 2 0 test 4
 1 2 0 test 4
 0 0 0 test <;:'Cogito, ergo sum.'
-0 0 0 test <;:u:'Cogito, ergo sum.'
-0 0 0 test <;:10&u:'Cogito, ergo sum.'
+0 0 0 test <(u:&.>) ;:'Cogito, ergo sum.'
+0 0 0 test <(10&u:&.>) ;:'Cogito, ergo sum.'
 0 0 0 test <s:@<"0&.> ;:'Cogito, ergo sum.'
 0 0 0 test <<"0@s: ;:'Cogito, ergo sum.'
 
@@ -167,6 +167,6 @@ n (}."2 -: f"2) x [ n=:?}.$x
 (7,5e2$1) -: $ (5e2$0) }."1 0 i.7x
 
 
-4!:55 ;:'adot1 adot2 sdot behead di drop f m n ni pi t test x '
+4!:55 ;:'adot1 adot2 sdot0 behead di drop f m n ni pi t test x '
 
 

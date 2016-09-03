@@ -137,7 +137,7 @@
 #define cdlookupl(x)                jtcdlookupl(jt,(x))   
 #define cdot1(x)                    jtcdot1(jt,(x))   
 #define cdot2(x,y)                  jtcdot2(jt,(x),(y))  
-#define cdparse(x)                  jtcdparse(jt,(x))
+#define cdparse(x,y)                jtcdparse(jt,(x),(y))
 #define ceil1(x)                    jtceil1(jt,(x))
 #define center(x0,x1,x2,x3)         jtcenter(jt,(x0),(x1),(x2),(x3))
 #define cex(x,y)                    jtcex(jt,(x),(y))

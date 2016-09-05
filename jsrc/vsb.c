@@ -286,13 +286,22 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  R hi;
 }
 
-static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
+static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
+// optimize storage if ascii or short
+// c2 new flag; c0 original flag
+ if(c2!=c0)n/=(c0&SBC4&&c2&SBC2)?2:(c0&SBC4&&!c2&SBC2)?4:2;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
 // p = (-m)&(c2+(c2>>1));               /* pad for alignment (leaner)   */
  p=c2&SBC4?(m%4?4-m%4:0):c2&SBC2?m%2:0; /* pad for alignment            */
  RE(hi=sbextend(n+p,s,h,hi));           /* extend global tables as req'd*/
- MC(SBSV(m+p),s,n);                     /* copy string into sbs         */
+ if(c2==c0)
+  MC(SBSV(m+p),s,n);                    /* copy string into sbs         */
+ else{
+  if     (c0&SBC4&& c2&SBC2){C4*ss=(C4*)s; US*s0=(US*)SBSV(m+p); DO(n/2, *s0++=(US)*ss++;);}
+  else if(c0&SBC4&&!c2&SBC2){C4*ss=(C4*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
+  else                      {US*ss=(US*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
+ }
  u=SBUV(c); u->i=m+p; u->n=n; u->h=h;   /* index/length/hash            */
  u->flag=c2;                            /* SBC2 SBC4 flag               */
  ASSERTSYS(STATUS_OK==insert(jt,c),"sbinsert");
@@ -303,28 +312,35 @@ static SB jtsbinsert(J jt,S c2,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
 }    /* insert new symbol */
 
 static SB jtsbprobe(J jt,S c2,I n,C*s){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
- h=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(n,us);
+// optimize storage if ascii or short
+ S c0=c2;  // save original flag
+ if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DO(n/4,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
+ else if(SBC2&c2){US*ss=(US*)s;c2=c2&~SBC2; DO(n/2,if(127<*ss++){c2|=SBC2;break;});}
+
+// hash using c0 on original data
+ h=(c0&SBC4?hic4:c0&SBC2?hic2:hic)(n,us);
+
  hn=AN(jt->sbh);                        /* size of hast table           */
  hi=h%hn;                               /* index into hash table        */
  while(1){
   ui=(jt->sbhv)[hi];                    /* index into unique symbols    */
-  if(0>ui)R sbinsert(c2,n,s,h,hi);      /* new symbol                   */
+  if(0>ui)R sbinsert(c2,c0,n,s,h,hi);   /* new symbol                   */
   u=SBUV(ui);
   if(h==u->h){                          /* old symbol, maybe            */
    t=(UC*)SBSV(u->i);
 // string comparison ignores storage type
-//         c2  us  n                u->flag  t  u->n
-   switch((c2&SBC4?6:c2&SBC2?3:0)+(u->flag&SBC4?2:u->flag&SBC2?1:0)){
-// c2==0
+//         c0  us  n                u->flag  t  u->n
+   switch((c0&SBC4?6:c0&SBC2?3:0)+(u->flag&SBC4?2:u->flag&SBC2?1:0)){
+// c0==0
     case 1: if(n==u->n/2){US*q=(US*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
     case 2: if(n==u->n/4){C4*q=(C4*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
-// c2==SBC2
+// c0==SBC2
     case 3: if(n==u->n*2){US*q=(US*)us;               b=1; DO(n/2, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
     case 5: if(n==u->n/2){US*q=(US*)us; C4*t1=(C4*)t; b=1; DO(n/2, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
-// c2==SBC4
+// c0==SBC4
     case 6: if(n==u->n*4){C4*q=(C4*)us;               b=1; DO(n/4, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
     case 7: if(n==u->n*2){C4*q=(C4*)us; US*t1=(US*)t; b=1; DO(n/4, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
-// c2==u->flag
+// c0==u->flag
     case 4:
     case 8:
     case 0: if(n==u->n&&!memcmp(t,s,n))R(SB)ui; break;
@@ -459,7 +475,7 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
 }    /* boxed strings for symbol array w */
 
 #define C2FSB(zv,u,q,m,c)  \
- {C*s=SBSV(u->i);I k=u->n;US*us=(US*)s;                            \
+ {UC*s=SBSV(u->i);I k=u->n;US*us=(US*)s;                            \
   if(SBC4&u->flag){MC(zv,s,k); zv+=k/=4;}                          \
   else if(SBC2&u->flag){k/=2; DO(k, *zv++=*us++;);}else DO(k, *zv++=*s++;);  \
   if(2==q)*zv++=c; else if(3==q)DO(m-k, *zv++=c;);                 \

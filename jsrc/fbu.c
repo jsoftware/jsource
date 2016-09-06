@@ -15,6 +15,7 @@ extern I utousize(C4* src, I srcn);
 extern void mtow(UC* src, I srcn, US* snk);
 extern void mtou(UC* src, I srcn, C4* snk);
 extern void wtom(US* src, I srcn, UC* snk);
+extern void wtou(US* src, I srcn, C4* snk);
 extern void utom(C4* src, I srcn, UC* snk);
 extern void utou(C4* src, I srcn, C4* snk);
 
@@ -490,3 +491,30 @@ else
 R z;
 }
 
+// display width of a string
+//              c2  0:literal  1:literal2   2:literal4
+// unit of nsrc in    C          US           C4
+// nul are ignored
+I stringdisplaywidth(J jt, I c2, void*src, I nsrc){I n=nsrc,q;A c4;C4*u;
+ switch(c2){
+ default:
+  q=mtousize(src,nsrc);
+  q=(q<0)?-q:q;
+  GATV(c4,C4T,q,1,0); u=C4AV(c4);
+  mtou(src,nsrc,u);
+  n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
+  break;
+ case 1:
+  q=wtousize(src,nsrc);
+  q=(q<0)?-q:q;
+  GATV(c4,C4T,q,1,0); u=C4AV(c4);
+  wtou(src,nsrc,u);
+  n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
+  break;
+ case 2:
+  u=(C4*)src;
+  q=nsrc; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
+  break;
+ }
+ R n;
+}

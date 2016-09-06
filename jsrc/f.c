@@ -16,6 +16,7 @@ extern A RoutineA(J,A);  // convert LIT to C2T/C4T is it contains UTF-8
 extern A RoutineB(J,A);  // Convert C2T to C4T if it contains surrogates; install NUL after CJK if result is C2T
 extern A RoutineC(J,A);  // instal NUL after CJK characters of C4T
 extern A RoutineD(J,A);  // Convert C2T/C4T to UTF-8
+extern I stringdisplaywidth(J jt, I c2, void*src, I nsrc); // display width of a string
 
 #if SY_64
 #define WI          21L
@@ -138,13 +139,21 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
 }
 
 // cvt SB string to utf8
-// return length only
-static I sbtou8size(J jt,SBU*u){I q=u->n;
- if(u->flag&SBC4)
+// return byte length and display width
+static I sbtou8size(J jt,SBU*u,I*dw){I q=u->n;
+ if(dw)*dw=q;
+ if(u->flag&SBC4){
   q=utomsize((C4*)SBSV(u->i),u->n/4);
- else if(u->flag&SBC2)
+  q=(q<0)?-q:q;
+  if(dw&&q>0)*dw=stringdisplaywidth(jt, 2,(void*)SBSV(u->i),u->n/4);
+ }else if(u->flag&SBC2){
   q=wtomsize((US*)SBSV(u->i),u->n/2);
- R (q<0)?-q:q;
+  q=(q<0)?-q:q;
+  if(dw&&q>0)*dw=stringdisplaywidth(jt, 1,(void*)SBSV(u->i),u->n/2);
+ }else{
+  if(dw&&q>0)*dw=stringdisplaywidth(jt, 0,(void*)SBSV(u->i),u->n);
+ }
+ R q;
 }
 
 // cvt SB string to utf8
@@ -162,15 +171,64 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  if(1>=r){
   c=n; 
   RZ(d=apv(c,0L,0L)); dv=AV(d);
-  p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++)););
+  p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++),0););
   GATV(z,LIT,  p,1,   0); zv=CAV(z); memset(zv,' ',AN(z));
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
-  c=s[r-1]; m=n/c; RZ(d=apv(c,0L,0L)); dv=AV(d);
-  DO(m,    DO(c, p =sbtou8size(jt,SBUV(*x++)); dv[i]=MAX(dv[i],p);););
-  p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-  GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
-  DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
+  if(jt->jprx){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;
+   c=s[r-1]; m=n/c; 
+   RZ(d =apv(c,0L,0L)); dv =AV(d);      // col max byte
+   RZ(dw=apv(c,0L,0L)); dwv=AV(dw);     // col max display width
+   RZ(dd=apv(c,0L,0L)); ddv=AV(dd);     // col max element byte - display width
+   RZ(e =apv(n,0L,0L)); ev =AV(e);      // element byte
+   RZ(ew=apv(n,0L,0L)); ewv=AV(ew);     // element display width
+   j=0;
+   DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),ewv+j); ev[j]=p; dv[i]=MAX(dv[i],p); dwv[i]=MAX(dwv[i],ewv[j]);j++;););
+   j=0;
+   DO(m, DO(c, ddv[i]=MAX(ddv[i],ev[j]-ewv[j]);j++;););
+         DO(c, dv[i]+=ddv[i];);         // add col padding space
+   p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
+#if 0
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   j=0;
+   DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
+         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
+//                 `   utf8    col max - disp width  space
+               zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
+// sum of col padding space is over estimated
+// can be reduced by the minimum of p-((zv-zv1)-1) of all rows
+// change trailing padding space to NUL, all NUL will be removed in jtprx
+               if(i==c-1)memset(zv,0,p-((zv-zv1)-1));
+               j++;););
+#else
+// first pass to reduce padding space
+   I q=IMAX,p0;
+   j=0;
+   DO(m, p0=0;
+         DO(c, 
+//                 `   utf8    col max - disp width  space
+               p0+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
+               if(i==c-1)q=MIN(q,p-(p0-1));
+               j++;););
+// second pass real work
+   p-=q==IMAX?0:q;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   j=0;
+   DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
+         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
+//                 `   utf8    col max - disp width  space
+               zv+=1 + ev[j] + (dwv[i]-ewv[j])       + 1;
+// change trailing padding space to NUL, all NUL will be removed in jtprx
+               if(i==c-1)memset(zv,0,p-((zv-zv1)-1));
+               j++;););
+#endif
+  }else{
+   c=s[r-1]; m=n/c; RZ(d=apv(c,0L,0L)); dv=AV(d);
+   DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););
+   p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
+  }
  }
  R z;
 }
@@ -647,7 +705,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      I c,c1,h,i,j,k,lc,m,n,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
- RZ(y=thorn1u(w)); t=bp(AT(y));
+ jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bp(AT(y));
  // set ch iff input w is a character type.
  ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char

@@ -168,6 +168,7 @@ static C jtjinit3(J jt){S t;
 #endif
  jt->tssbase=tod();
  jt->thornuni=0;  // init to non-unicode (normal) state
+ jt->jprx=0;      // init to non jprx jconsole output (normal) state
  meminit();
  sesminit();
  evinit();

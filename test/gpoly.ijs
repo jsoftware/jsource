@@ -16,6 +16,8 @@ test =: 3 : 0
  1
 )
 
+test _48 1 0 0 0 1  NB. Caused trouble
+
 test _10+?11$25
 test _10+?10$25
 test _10+? 9$25

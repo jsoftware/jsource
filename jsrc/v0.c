@@ -97,7 +97,9 @@ static void jtdeflate(J jt,B k,I m,Z*v,Z x){
   DO(m-1, r=v->re; v->re=d=p; v->im=0.0; --v; p=q+d*a; q=r+d*b;);
 }}   /* deflate by single root (1=k) or by conjugates (0=k) */
 
-static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,g,g2,h,p,q,s,sq,y,zm,zm1;
+#define CSZ1 11
+static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,zm,zm1;
+ static D cyclefracs[8] = {0.5,0.25,0.75,0.13,0.87,0.63,0.37,0.95};
  zm=zrj0((D)m); zm1=zrj0((D)m-1);
  for(i=0;;++i){
   ZASSERT(i<400,EVLIMIT);
@@ -115,9 +117,13 @@ static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,g,g2,h,p,q,s,sq,y,zm,
   sq=zsqrt(ztymes(zm1,zminus(ztymes(zm,h),g2)));
   p=zplus(g,sq); q=zminus(g,sq); s=zmag(p)>zmag(q)?p:q; 
   y=x;
-  x=ZNZ(s)?zminus(x,zdiv(zm,s)):zpow(znegate(zdiv(a[0],a[m])),zrj0(1.0/(D)m));
-  if(zmag(zminus(x,y))<=EPS*zmag(x))R x;
-}}   /* Press et al., "Numerical Recipes in C" */
+  dx=ZNZ(s)?zdiv(zm,s):zpow(znegate(zdiv(a[0],a[m])),zrj0(1.0/(D)m));  // Normal step if s!=0; random step if s=0
+  x=zminus(x,dx);  // advance to new position
+  if(zmag(zminus(x,y))<=EPS*zmag(x))R x;  // if we didn't move much, call it converged.  We hope it's a root.
+  // This algorithm is subject to hitting limit cycles (_48 1 0 0 0 1 is an example)
+  // To prevent that, every so often we make a partial move
+  if(((i-1)%CSZ1)==0)x=zplus(x,ztymes(dx,zrj0(cyclefracs[(i>>3)&8])));
+}}   // Press et al., "Numerical Recipes in C" with additions from 2d edition
 
 static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
  q1r2.n=xone; q1r2.d=xplus(xone,xone);
@@ -128,41 +134,56 @@ static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
 }    /* nearest multiple of m to x */
 
 static Q jtmaxdenom(J jt,I n,Q*v){Q z;X*u,x,y;
- u=1+(X*)v; x=*u;
- DO(n-1, u+=2; y=*u; if(-1==xcompare(x,y))x=y;);
- z.n=x; z.d=xone; R z;
+ u=1+(X*)v; x=*u;  // u-> &1st denominator, x=&1st denominator
+ DO(n-1, u+=2; y=*u; if(-1==xcompare(x,y))x=y;);  // x=&largest denominator
+ z.n=x; z.d=xone; R z;  // set denominator as a rational number
 }    /* maximum denominator in rational vector v */
 
-/* find all exact rational roots of a rational polynomial w; return: */
+/* find all exact rational roots of a rational polynomial w or degree m; return: */
 /*  *zz: list of what rational roots are found                       */
 /*  *ww: list of complex coefficients of deflated polynomial         */
 
 static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*zv;Z r,*xv,*yv;
  wt=AT(w);
  ASSERTSYS(wt&B01+INT+FL+XNUM+RAT,"rfcq");
+ // Convert w to rational; wv->1st rational coeff
  if(!(wt&RAT))RZ(w=cvt(RAT,w)); wv=QAV(w);
- rdx=maxdenom(1+m,wv);
- RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
- RZ(y=take(sc(1+m),x)); yv=ZAV(y);  /* deflated complex  poly */
- RZ(q=take(sc(1+m),w)); qv=QAV(q);  /* deflated rational poly */
- GATV(z,RAT,m,1,0); zv=QAV(z);        /* exact rational roots   */
+ rdx=maxdenom(1+m,wv);  // rdx = max denominator in the polynomial, in rational form
+ RZ(x=cvt(CMPX,w)); xv=ZAV(x); // set x = complex form of w, xv->first complex coeff
+ RZ(y=take(sc(1+m),x)); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff
+ RZ(q=take(sc(1+m),w)); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
+ GATV(z,RAT,m,1,0); zv=QAV(z);        // allocate space for exact rational roots, zv->first result location
  i=j=0;
+ // loop to find each root by Laguerre's method
  while(i<m){
+  // find one (complex) root.  Exit if error
   r=laguerre(m,xv,laguerre(m-i,yv,zeroZ));
   if(jt->jerr){RESETERR; break;}
+  // Get a rational form, with denominator equal to the largest denominator in the polynomial,
+  // that is close to the real part of the root
   RE(rq=multiple(r.re,rdx));
-  b=0;
+  b=0;  // set 'no rational root found'
+  // If the value found IS a root, deivide it from the polynomial repeatedly, and move a copy
+  // to the result for each repetition
   while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
-  if(!b){Q q1;  /* more speculative methods */
+  // Laguerre came up empty.  Try something else
+  if(!b){Q q1;
+   // Try adjusting the numerator of the Laguerre result by +-1, and see if they work
    q1=rq; q1.n=xone;
    rq=qplus (rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
    rq=qminus(rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   }
+  // If we found a root, refresh the copies of the complex versions, and account for the roots we have found
   if(b){AN(q)=*AS(q)=1+m-j; rdx=maxdenom(1+m-j,qv); RZ(y=cvt(CMPX,q)); yv=ZAV(y); i=j;}
   else{D c,d;
+   // No root found!  Turn over the table and shoot out the lights.  If r is near an axis, push it to the axis.
    c=ABS(r.re); d=ABS(r.im); if(d<EPS*c)r.im=0; if(c<EPS*d)r.re=0;
+   // Use Newton's method to find a root (we hope)
    r=newt(m,xv,r,10L); b=!r.im||i==m-1;
+   // Divide out the root - or the pair of them, if they are complex.
    deflate(b,m-i,yv,r); i+=2-b;
+   // We don't use te roots we find here - we just have to make some progress
+   // before the next iteration
  }}
  AN(z)=*AS(z)=j; *zz=z; RZ(*ww=cvt(FL,q));
  R 1;
@@ -187,6 +208,7 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
    else deflate(1,m-i,yv,r);
   }
   if(bb){A x1;D*u;
+   // If we failed on an iteration, perturb the highest coefficient a little bit and see if we can solve that instead.
    if(real){RZ(x1=cvt(FL,vec(CMPX,1+m,xv))); u=  DAV(x1)+m-1;      if(*u)*u*=1+1e-12; else *u=1e-12;}
    else    {RZ(x1=       vec(CMPX,1+m,xv) ); u=&(ZAV(x1)+m-1)->re; if(*u)*u*=1+1e-12; else *u=1e-12;}
    RZ(z=rfcz(m,x1)); zv=ZAV(z);
@@ -196,33 +218,41 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
  R z;
 }    /* roots from coefficients, degree m is 2 or more */
 
+// roots from coefficients.  w is (possibly empty) list of coefficients
 static F1(jtrfc){A r,w1;I m=0,n,t;
- n=AN(w); t=AT(w);
+ n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
-  ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);
-  RZ(r=jico2(ne(w,zero),one)); m=*AV(r)%n;
-  ASSERT(m||equ(zero,head(w)),EVDOMAIN);
+  ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);  // coeffs must be dense numeric
+  RZ(r=jico2(ne(w,zero),one)); m=*AV(r)%n;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
+  ASSERT(m||equ(zero,head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
+ // switch based on degree of polynomial
  switch(m){
-  case 0:  R link(zero,mtv);
-  case 1:  r=ravel(negate(aslash(CDIV,take(num[2],w)))); break;
-  default: if(t&CMPX)r=rfcz(m,w);
-           else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));}
+  case 0:  R link(zero,mtv);  // degree 0 - return 0;''
+  case 1:  r=ravel(negate(aslash(CDIV,take(num[2],w)))); break;  // linear - return solution, whatever its type
+  default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
+           else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
+            // if there are residual (complex) solutions, go find them
  }
+ // Return result, which is leading nonzero coeff;roots
  R link(from(sc(m),w),rsort(r));
 }
 
+// entry point for p. y
 F1(jtpoly1){A c,e,x;
- F1RANK(1L,jtpoly1,0L); 
+ F1RANK(1L,jtpoly1,0L);
+ // If y is not boxed, it's a list of coefficients.  Get the roots
  if(!(AN(w)&&BOX&AT(w)))R rfc(w);
  x=AAV0(w);
+ // If there is more than one box, or the first box has rank <= 1, it's scale;roots form - go handle it
  if(1<AN(w)||1>=AR(x))R cfr(w);
+ // Must be exponent form: a single box containing a table with 2-atom rows
  ASSERT(2==AR(x),EVRANK);
  ASSERT(2==*(1+AS(x)),EVLENGTH);
- RZ(c=irs1(x,0L,1L,jthead));
- RZ(e=irs1(x,0L,1L,jttail));  
- ASSERT(equ(e,floor1(e))&&all1(le(zero,e)),EVDOMAIN);
- R evc(c,e,"x y}(1+>./y)$0");
+ RZ(c=irs1(x,0L,1L,jthead));  // c = {."1>y = list of coefficients
+ RZ(e=irs1(x,0L,1L,jttail));  // e = {:"1>y = list of exponents
+ ASSERT(equ(e,floor1(e))&&all1(le(zero,e)),EVDOMAIN);  // insist on nonnegative integral exponents
+ R evc(c,e,"x y}(1+>./y)$0");  // evaluate c 2 : 'x y}(1+>./y)$0' e
 }
 
 

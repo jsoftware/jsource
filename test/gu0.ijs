@@ -568,7 +568,7 @@ y=: 10&u: x
 (x i. '9') -: y i. 10&u: '9'
 
 NB. simple repeatable test
-(t i. t,t) -: t i. t, t0=. (10&u:)&.>t=: <"_1 'gfcceggefegcaeceebda'
+(t i. t,t) -: t i. t, (10&u:)&.>t=: <"_1 'gfcceggefegcaeceebda'
 
 (t i.&:> t,t) -: t        i. t, (10&u:)&.>t=: <"_1 a.{~   ?100  $#a.
 (t i.&:> t,t) -: t        i. t,~(10&u:)&.>t

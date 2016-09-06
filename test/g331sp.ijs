@@ -53,7 +53,7 @@ $    f x
 <@}. f x
 box  f x
 
-<    f x=: sdot{~ ?101 1 7$#sdot
+<    f x=: sdot0{~ ?101 1 7$#sdot0
 $    f x
 [    f x
 ,    f x
@@ -105,12 +105,12 @@ _1 test t
 2  test t
 _2 test t
 
-1  test t=: sdot{~ ?300$#sdot
+1  test t=: sdot0{~ ?300$#sdot0
 _1 test t
 2  test t
 _2 test t
 
-1  test t=: sdot{~?101 2 3$#sdot
+1  test t=: sdot0{~?101 2 3$#sdot0
 _1 test t
 2  test t
 _2 test t
@@ -130,6 +130,6 @@ _2 test t
 'index error'  -: ($. 1 1 1 0 0) {.;._1 etx i.5
 
 
-4!:55 ;:'adot1 adot2 sdot b box C f t test x'
+4!:55 ;:'adot1 adot2 sdot0 b box C f t test x'
 
 

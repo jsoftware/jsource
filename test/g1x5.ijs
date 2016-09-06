@@ -13,6 +13,9 @@ mac =. x e. 3
 unix=. x e. 5 7
 pc  =. x e. 0 1 2 6
 
+ocwd=: 1!:43 ''
+1!:44 jpath '~temp'
+
 p=: (1!:43 ''),mac{'/:'
 
 mkdir d=.<'brandnew'
@@ -45,7 +48,9 @@ bada =. e.&('interface error';'file access error')
 bada <mkdir etx <'conflict'
 erase <'conflict'
 
-4!:55 ;:'att bada badf d dir erase f mac mkdir p pc '
+1!:44 ocwd
+
+4!:55 ;:'att bada badf d dir erase f mac mkdir ocwd p pc '
 4!:55 ;:'read unix win write x '
 
 

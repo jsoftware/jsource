@@ -167,6 +167,7 @@ static void sbtou8(J jt,SBU*u,C*s){
 }
 
 static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
+ PROLOG(0000);
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=jt->sbun;
  if(1>=r){
   c=n; 
@@ -230,7 +231,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
    DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
   }
  }
- R z;
+ EPILOG(z);
 }
 
 static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;

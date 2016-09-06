@@ -39,8 +39,8 @@ f =: 3 : ',:y'
 (,:"1 -: f"1) x=:a.{~?2 3 4$#a.
 (,:"2 -: f"2) x=:o.?2 3 4$1e5
 (,:"3 -: f"3) x=:(?2 3 4$#y){y=:;:'Cogito, ergo sum. ipso facto 1 2'
-(,:"3 -: f"3) x=:(?2 3 4$#y){y=:;:u:'Cogito, ergo sum. ipso facto 1 2'
-(,:"3 -: f"3) x=:(?2 3 4$#y){y=:;:10&u:'Cogito, ergo sum. ipso facto 1 2'
+(,:"3 -: f"3) x=:(?2 3 4$#y){y=:(u:&.>) ;:'Cogito, ergo sum. ipso facto 1 2'
+(,:"3 -: f"3) x=:(?2 3 4$#y){y=:(10&u:&.>) ;:'Cogito, ergo sum. ipso facto 1 2'
 (,:"3 -: f"3) x=:(?2 3 4$#y){y=:s:@<"0&.> ;:'Cogito, ergo sum. ipso facto 1 2'
 (,:"3 -: f"3) x=:(?2 3 4$#y){y=:<"0@s: ;:'Cogito, ergo sum. ipso facto 1 2'
 
@@ -99,7 +99,7 @@ t=:adot2{~96+i.4 3 2
 ((|.t),~(1,$t)$,t) -: (|.t),:~t
 
 NB. symbol
-t=:sdot{~96+i.4 3 2
+t=:sdot0{~96+i.4 3 2
 ((s:@<"0 '&'), (1,$t)$,t) -: (s:@<"0 '&'),: t
 ((s:@<"0 '&'),~(1,$t)$,t) -: (s:@<"0 '&'),:~t
 ((s:@<"0 '-+'), (1,$t)$,t) -: (s:@<"0 '-+'),: t
@@ -158,12 +158,12 @@ x (,:"1 -: lam"1) y [ x=: adot1{~?3$#adot1  [ y=: adot1{~?5 4 3$#adot1
 y (,:"1 -: lam"1) x
 x (,:"1 -: lam"1) y [ x=: adot2{~?3$#adot2  [ y=: adot2{~?5 4 3$#adot2
 y (,:"1 -: lam"1) x
-x (,:"1 -: lam"1) y [ x=: sdot{~?3$#sdot  [ y=: sdot{~?5 4 3$#sdot
+x (,:"1 -: lam"1) y [ x=: sdot0{~?3$#sdot0  [ y=: sdot0{~?5 4 3$#sdot0
 y (,:"1 -: lam"1) x
 x (,:"1 -: lam"1) y [ x=: j./?2 3$100 [ y=: j./?2 5 4 3$1e6
 y (,:"1 -: lam"1) x
 
 
-4!:55 ;:'a adot1 adot2 sdot f lam t x y'
+4!:55 ;:'a adot1 adot2 sdot0 f lam t x y'
 
 

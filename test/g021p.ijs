@@ -71,13 +71,13 @@ NB. >./\ SB ---------------------------------------------------------------
 
 max=. 4 : 'x>.y'
 
-(>./\ -: max/\) x=.sdot
+(>./\ -: max/\) x=.sdot0
 (>./\ -: max/\) |.x
 
-(>./\   -: max/\  ) x=.sdot{~ ?    13$#sdot
-(>./\   -: max/\  ) x=.sdot{~ ?4   13$#sdot
+(>./\   -: max/\  ) x=.sdot0{~ ?    13$#sdot0
+(>./\   -: max/\  ) x=.sdot0{~ ?4   13$#sdot0
 (>./\"1 -: max/\"1) x
-(>./\   -: max/\  ) x=.sdot{~ ?3 5 13$#sdot
+(>./\   -: max/\  ) x=.sdot0{~ ?3 5 13$#sdot0
 (>./\"1 -: max/\"1) x
 (>./\"2 -: max/\"2) x
 
@@ -94,10 +94,10 @@ max=. 4 : 'x>.y'
 'domain error' -: >./\ etx 'deipnosophist'
 'domain error' -: >./\ etx ;:'peace in our time'
 'domain error' -: >./\ etx u:'deipnosophist'
-'domain error' -: >./\ etx ;:u:'peace in our time'
+'domain error' -: >./\ etx u:&.> ;:'peace in our time'
 'domain error' -: >./\ etx 10&u:'deipnosophist'
-'domain error' -: >./\ etx ;:10&u:'peace in our time'
+'domain error' -: >./\ etx 10&u:&.> ;:'peace in our time'
 
-4!:55 ;:'adot1 adot2 sdot max x'
+4!:55 ;:'adot1 adot2 sdot0 max x'
 
 

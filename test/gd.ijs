@@ -92,6 +92,6 @@ _0.5 1&p. eq (2&! d. 1)
 ((10"_ * %:) D. 1) eq ((10 * %:) D. 1)
 
 
-4!:55 ;:'D E b dc eq f g h test x '
+4!:55 ;:'D E b dc eq f g h t test x '
 
 

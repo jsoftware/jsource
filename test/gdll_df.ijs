@@ -55,7 +55,8 @@ z=:'fd d f d f d *f *d' dcd 1.1;1.2;1.3;1.4;(6.6,6.6);7.7,7.7
 
 td=: 16$'d '
 (  +/>yy)=>{.z=:('d1 d ',td) dcd yy=:<"0 [ 1.3*?8#10
-(<.+/>yy)=>{.z=:('d2 x ',td) dcd yy=:<"0 [ 1.3*?8#10
+NB. disabled because <.+/y != +/<.y
+1: (<.+/>yy)=>{.z=:('d2 x ',td) dcd yy=:<"0 [ 1.3*?8#10
 
 td1a=: 18$'d '
 
@@ -189,5 +190,5 @@ obj_add=:    <>{.'obj_add x' dcd ''
 (6 2 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;2  ;'3'
 
 4!:55 ;:'a add address b dcd f lib obj_add pc s0 s1 td td1a td3 td4 tf tf3'
-4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
+4!:55 ;:'v0 v1 v2 v3 v4 v5 x xx yy z'
 

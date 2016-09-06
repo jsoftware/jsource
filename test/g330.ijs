@@ -54,7 +54,7 @@ NB. symbol
 (; -: raze) <"0@s: 'abc';'dc';'a'
 (; -: raze) (s:@<"0 'a') ;3 4$s:@<"0 'abc'
 (; -: raze) (s:@<"0 'ad');3 4$s:@<"0 'abc'
-(; -: raze) <"0 t=:(?2 3 4 2$#sdot){sdot
+(; -: raze) <"0 t=:(?2 3 4 2$#sdot0){sdot0
 (; -: raze) <"1 t
 (; -: raze) <"2 t
 (; -: raze) <"3 t
@@ -311,6 +311,6 @@ link  =: <@[ , <`]@.(boxed *. -.@mt)@]
 'domain error' -: ex '>2 3 4; 2;3;(s:@<"0 ''1234'')'
 'domain error' -: ex '>2 3 4;~2;3;(s:@<"0 ''1234'')'
 
-4!:55 ;:'a adot1 adot2 sdot boxed link maxr mt raze t templ x y'
+4!:55 ;:'a adot1 adot2 sdot0 boxed link maxr mt raze t templ x y'
 
 

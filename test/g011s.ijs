@@ -62,23 +62,23 @@ NB. <./\. SB -------------------------------------------------------------
 
 min=: 4 : 'x<.y'
 
-(<./\. -: min/\.) x=.sdot
+(<./\. -: min/\.) x=.sdot0
 (<./\. -: min/\.) |.x
 
-(<./\.   -: min/\.  ) x=.sdot{~ ?    23$#sdot
-(<./\.   -: min/\.  ) x=.sdot{~ ?4   23$#sdot
+(<./\.   -: min/\.  ) x=.sdot0{~ ?    23$#sdot0
+(<./\.   -: min/\.  ) x=.sdot0{~ ?4   23$#sdot0
 (<./\."1 -: min/\."1) x
-(<./\.   -: min/\.  ) x=.sdot{~ ?7 5 23$#sdot
+(<./\.   -: min/\.  ) x=.sdot0{~ ?7 5 23$#sdot0
 (<./\."1 -: min/\."1) x
 (<./\."2 -: min/\."2) x
 
 'domain error' -: <./\. etx 'deipnosophist'
 'domain error' -: <./\. etx ;:'professors in New England'
 'domain error' -: <./\. etx u:'deipnosophist'
-'domain error' -: <./\. etx ;:u:'professors in New England'
+'domain error' -: <./\. etx u:&.> ;:'professors in New England'
 'domain error' -: <./\. etx 10&u:'deipnosophist'
-'domain error' -: <./\. etx ;:10&u:'professors in New England'
+'domain error' -: <./\. etx 10&u:&.> ;:'professors in New England'
 
-4!:55 ;:'adot1 adot2 sdot f min x'
+4!:55 ;:'adot1 adot2 sdot0 f min x'
 
 

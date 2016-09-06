@@ -44,7 +44,7 @@ NB. possible garbage collect can louse up timing
 (x=: a.{~ 1e4 4 ?@$ #a.  ) f0 y=: a.{~ 1e4 4 ?@$ #a.
 (x=: adot1{~ 1e4 4 ?@$ #adot1  ) f0 y=: adot1{~ 1e4 4 ?@$ #adot1
 (x=: adot2{~ 1e4 4 ?@$ #adot2  ) f0 y=: adot2{~ 1e4 4 ?@$ #adot2
-(x=: sdot{~ 1e4 4 ?@$ #sdot  ) f0 y=: sdot{~ 1e4 4 ?@$ #sdot
+(x=: sdot0{~ 1e4 4 ?@$ #sdot0  ) f0 y=: sdot0{~ 1e4 4 ?@$ #sdot0
 (x=: u:   1e4   ?@$ 256  ) f0 y=: u:   1e4   ?@$ 256
 (x=: u:   1e4 4 ?@$ 256  ) f0 y=: u:   1e4 4 ?@$ 256
 (x=: u:   1e4   ?@$ 65536) f0 y=: u:   1e4   ?@$ 65536
@@ -73,6 +73,6 @@ f1=: 3 : 0
 f1"0 ]1e1 1e3 1e5 1e7 1e9
 
 
-4!:55 ;:'adot1 adot2 sdot f f0 f1 g m mean t x xx y yy'
+4!:55 ;:'adot1 adot2 sdot0 f f0 f1 g m mean t x xx y yy'
 
  

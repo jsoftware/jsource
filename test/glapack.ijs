@@ -5,7 +5,7 @@ s48=: 9!:48 ''
 
 tol=: 2^_34
 
-require '~addons\math\lapack\lapack.ijs'
+require '~addons/math/lapack/lapack.ijs'
 mp=: +/ .*
 
 test=: 3 : 0
@@ -26,7 +26,7 @@ test=: 3 : 0
 
 NB. LAPACK dgeev --------------------------------------------------------
 
-require '~addons\math\lapack\dgeev.ijs'
+require '~addons/math/lapack/dgeev.ijs'
 
 tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 1
 tol test 131072 %~ _5e6+?(n,n)$1e7 [ n=: 2
@@ -65,7 +65,7 @@ s0 -: s1
 
 NB. LAPACK zgeev --------------------------------------------------------
 
-require '~addons\math\lapack\zgeev.ijs'
+require '~addons/math/lapack/zgeev.ijs'
 
 tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 1
 tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 2

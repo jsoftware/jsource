@@ -5,7 +5,7 @@ write  =. 1!:2
 append =. 1!:3
 erase  =. 1!:55
 
-f =. <'foogQ0m1.x'
+f =. <jpath '~temp/foogQ0m1.x'
 x =. (?1000$#a.){a.
 x append f
 

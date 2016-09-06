@@ -384,6 +384,7 @@ extern F2(jtbitwiseshifta);
 extern F2(jtcant2);
 extern F2(jtcd);
 extern F2(jtcdot2);
+extern F1(jtcdproc);
 extern F2(jtcircle);
 extern F2(jtcolon);
 extern F2(jtcrc2);

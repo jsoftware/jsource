@@ -24,7 +24,8 @@ h =. open f
 (size h) -: # read h
 close h
 
-f =. <'foogoo5.x'
+
+f =. <jpath '~temp/foogoo5.x'
 t =. (?1000$#a.){a.
 t write f
 h =. open f

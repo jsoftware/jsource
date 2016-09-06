@@ -13,7 +13,7 @@ mac =. x e. 3
 unix=. x e. 5 7
 pc  =. x e. 0 1 2 6
 
-f =. <'foo.x'
+f =. <jpath '~temp/foo.x'
 g =. <'g'
 
 (128$'a') write f

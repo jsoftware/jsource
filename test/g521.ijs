@@ -27,21 +27,21 @@ NB. literal
 
 NB. literal2
 (head -: {.) u:'a'
-(head -: {.) adot1{~?4$256
-(head -: {.) adot1{~?3 4$256
-(head -: {.) adot1{~?2 3 4$256
+(head -: {.) adot1{~?4$(#adot1)
+(head -: {.) adot1{~?3 4$(#adot1)
+(head -: {.) adot1{~?2 3 4$(#adot1)
 
 NB. literal4
 (head -: {.) 10&u:'a'
-(head -: {.) adot2{~?4$256
-(head -: {.) adot2{~?3 4$256
-(head -: {.) adot2{~?2 3 4$256
+(head -: {.) adot2{~?4$(#adot2)
+(head -: {.) adot2{~?3 4$(#adot2)
+(head -: {.) adot2{~?2 3 4$(#adot2)
 
 NB. symbol
 (head -: {.) s:@<"0 'a'
-(head -: {.) sdot{~?4$256
-(head -: {.) sdot{~?3 4$256
-(head -: {.) sdot{~?2 3 4$256
+(head -: {.) sdot0{~?4$(#sdot0)
+(head -: {.) sdot0{~?3 4$(#sdot0)
+(head -: {.) sdot0{~?2 3 4$(#sdot0)
 
 NB. integer
 (head -: {.) 12345
@@ -124,13 +124,13 @@ g2 (?3 4  $#adot2){adot2
 g2 (?3 4 5$#adot1){adot2
 
 f1 (?3 4  $#x ){x=:s:@<"0 'boustrophedonic'
-f1 (?3 4 5$#sdot){sdot
-f2 (?3 4  $#sdot){sdot
-f2 (?3 4 5$#sdot){sdot
+f1 (?3 4 5$#sdot0){sdot0
+f2 (?3 4  $#sdot0){sdot0
+f2 (?3 4 5$#sdot0){sdot0
 g1 (?3 4  $#x ){x=:s:@<"0 'boustrophedonic'
-g1 (?3 4 5$#sdot){sdot
-g2 (?3 4  $#sdot){sdot
-g2 (?3 4 5$#sdot){sdot
+g1 (?3 4 5$#sdot0){sdot0
+g2 (?3 4  $#sdot0){sdot0
+g2 (?3 4 5$#sdot0){sdot0
 
 f1 _1e5+?3 4  $2e5
 f1 _1e5+?3 4 5$2e5
@@ -160,14 +160,14 @@ g2 r._1e5+?4 5  $2e5
 g2 r._1e5+?4 5 6$2e5
 
 f1 (?31 4  $#x){x=:;:'super cali fragi listic'
-f1 (?31 4  $#x){x=:;:u:'super cali fragi listic'
-f1 (?31 4  $#x){x=:;:10&u:'super cali fragi listic'
+f1 (?31 4  $#x){x=:(u:&.>) ;:'super cali fragi listic'
+f1 (?31 4  $#x){x=:(10&u:&.>) ;:'super cali fragi listic'
 f1 (?31 4  $#x){x=:s:@<"0&.> ;:'super cali fragi listic'
 f1 (?31 4  $#x){x=:<"0@s: ;:'super cali fragi listic'
 f1 (?31 4 5$#x){x=:+&.>i.100
 f2 (?31 4  $#x){x=:(;:'Cogito, ergo sum.'),+&.>i.12
-f2 (?31 4  $#x){x=:(;:u:'Cogito, ergo sum.'),+&.>i.12
-f2 (?31 4  $#x){x=:(;:10&u:'Cogito, ergo sum.'),+&.>i.12
+f2 (?31 4  $#x){x=:((u:&.>) ;:'Cogito, ergo sum.'),+&.>i.12
+f2 (?31 4  $#x){x=:((10&u:&.>) ;:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4  $#x){x=:(s:@<"0&.> ;:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4  $#x){x=:(<"0@s: ;:'Cogito, ergo sum.'),+&.>i.12
 f2 (?31 4 5$#x){x=:(<<'opposable thumbs'),+&.>i.12
@@ -178,7 +178,7 @@ f2 (?31 4 5$#x){x=:(<<"0@s: <'opposable thumbs'),+&.>i.12
 g1 (?31 4  $#x){x=:<"0 a.
 g1 (?31 4  $#x){x=:<"0 adot1
 g1 (?31 4  $#x){x=:<"0 adot2
-g1 (?31 4  $#x){x=:<"0 sdot
+g1 (?31 4  $#x){x=:<"0 sdot0
 g1 (?31 4 5$#x){x=:(i.12){.&.>123
 g2 (?31 4  $#x){x=:(<'junkfoo'),(i.12){.&.>3j4
 g2 (?31 4  $#x){x=:(<u:'junkfoo'),(i.12){.&.>3j4
@@ -209,8 +209,8 @@ NB. x{.y ----------------------------------------------------------------
 (x,20$0  ) -: 23{.x=:o.?3$10000
 (x,20$0  ) -: 23{.x=:j./?2 3$10000
 (x,20$<$0) -: 23{.x=:;:'Cogito, ergo'
-(x,20$<$0) -: 23{.x=:;:u:'Cogito, ergo'
-(x,20$<$0) -: 23{.x=:;:10&u:'Cogito, ergo'
+(x,20$<$0) -: 23{.x=:(u:&.>) ;:'Cogito, ergo'
+(x,20$<$0) -: 23{.x=:(10&u:&.>) ;:'Cogito, ergo'
 (x,20$<$0) -: 23{.x=:s:@<"0&.> ;:'Cogito, ergo'
 (x,20$<$0) -: 23{.x=:<"0@s: ;:'Cogito, ergo'
 
@@ -537,7 +537,7 @@ NB. x{.y with infinite left arguments -----------------------------------
 'limit error'  -: (>IF64{(_,_1+2^31);_,_1+2^63){. etx i.3 4
 
 
-4!:55 ;:'a adot1 adot2 sdot case eb ec en f f0 f1 f2 fill '
+4!:55 ;:'a adot1 adot2 sdot0 case eb ec en f f0 f1 f2 fill '
 4!:55 ;:'g1 g2 head itake jot larg mt n pad raise '
 4!:55 ;:'s t take taker targ ti x '
 

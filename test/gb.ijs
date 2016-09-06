@@ -247,6 +247,6 @@ x -: ]&.(28 b.&12345) x
 'domain error' -: ex '12345&(28 b.) b. _1'
 
 
-4!:55 ;:'B d f g g0 g1 g2 N p test u x xx y yy'
+4!:55 ;:'B d f g g0 g1 g2 l N p test u x xx y yy'
 
 

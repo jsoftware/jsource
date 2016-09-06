@@ -98,7 +98,7 @@ b=: 32 ?@$ 2
 
 4!:55 ;:'b bitand bitshift bitshifts bitxor crc crcbyte crcpoly crcpolyb crcpolyi crctbl'
 4!:55 ;:'crctblb crctbli'
-4!:55 ;:'f mask32 p prep shift x '
+4!:55 ;:'f g mask32 p prep shift x '
 
 
 

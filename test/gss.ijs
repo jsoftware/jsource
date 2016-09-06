@@ -34,42 +34,44 @@ compss =: 1 : 0 (&>)
 )
 
 NB. values to use
-v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
+NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
+v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 20 ?@$ 0)
 
-= compss/~ v
-< compss/~ v
-<. compss/~ v
-<: compss/~ v
->: compss/~ v
-+ compss/~ v
-+. compss/~ v
-+: compss/~ v
-* compss/~ v
-*. compss/~ v
-*: compss/~ v
-- compss/~ v
-% compss/~ v
-~: compss/~ v
-^ compss/~ v
-16 b. compss/~ v
-17 b. compss/~ v
-18 b. compss/~ v
-19 b. compss/~ v
-20 b. compss/~ v
-21 b. compss/~ v
-22 b. compss/~ v
-23 b. compss/~ v
-24 b. compss/~ v
-25 b. compss/~ v
-26 b. compss/~ v
-27 b. compss/~ v
-28 b. compss/~ v
-29 b. compss/~ v
-30 b. compss/~ v
-31 b. compss/~ v
-32 b. compss/~ v
-33 b. compss/~ v
-34 b. compss/~ v
+NB.  *./,  faster display scrolling
+*./,   = compss/~ v
+*./,   < compss/~ v
+*./,   <. compss/~ v
+*./,   <: compss/~ v
+*./,   >: compss/~ v
+*./,   + compss/~ v
+*./,   +. compss/~ v
+*./,   +: compss/~ v
+*./,   * compss/~ v
+*./,   *. compss/~ v
+*./,   *: compss/~ v
+*./,   - compss/~ v
+*./,   % compss/~ v
+*./,   ~: compss/~ v
+*./,   ^ compss/~ v
+*./,   16 b. compss/~ v
+*./,   17 b. compss/~ v
+*./,   18 b. compss/~ v
+*./,   19 b. compss/~ v
+*./,   20 b. compss/~ v
+*./,   21 b. compss/~ v
+*./,   22 b. compss/~ v
+*./,   23 b. compss/~ v
+*./,   24 b. compss/~ v
+*./,   25 b. compss/~ v
+*./,   26 b. compss/~ v
+*./,   27 b. compss/~ v
+*./,   28 b. compss/~ v
+*./,   29 b. compss/~ v
+*./,   30 b. compss/~ v
+*./,   31 b. compss/~ v
+*./,   32 b. compss/~ v
+*./,   33 b. compss/~ v
+*./,   34 b. compss/~ v
 
 NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
@@ -89,41 +91,41 @@ compssn =: 2 : 0
 )
 
 ops =: ((1 $~ [) $ ])&.>/"1 b =: (;"0/~ i. 6) ([ ,"0 ($~ $)~) v
-+ compss/"1 ops
-= compssn _5&>/"1 ops
-< compssn _4&>/"1 ops
-> compssn _3&>/"1 ops
-<: compssn _2&>/"1 ops
->: compssn _1&>/"1 ops
-+. compssn 0 _2&>/"1 ops
-+. compssn 0 _1&>/"1 ops
-+. compssn 0 0&>/"1 ops
-+. compssn 0 1&>/"1 ops
-+. compssn 0 2&>/"1 ops
-+: compssn 1 _2&>/"1 ops
-+: compssn 1 _1&>/"1 ops
-+: compssn 1 0&>/"1 ops
-+: compssn 1 1&>/"1 ops
-+: compssn 1 2&>/"1 ops
-*. compssn 2 _2&>/"1 ops
-*. compssn 2 _1&>/"1 ops
-*. compssn 2 0&>/"1 ops
-*. compssn 2 1&>/"1 ops
-*. compssn 2 2&>/"1 ops
-*: compssn 3&>/"1 ops
-~: compssn 4&>/"1 ops
-% compssn 5&>/"1 ops
+*./,   + compss/"1 ops
+*./,   = compssn _5&>/"1 ops
+*./,   < compssn _4&>/"1 ops
+*./,   > compssn _3&>/"1 ops
+*./,   <: compssn _2&>/"1 ops
+*./,   >: compssn _1&>/"1 ops
+*./,   +. compssn 0 _2&>/"1 ops
+*./,   +. compssn 0 _1&>/"1 ops
+*./,   +. compssn 0 0&>/"1 ops
+*./,   +. compssn 0 1&>/"1 ops
+*./,   +. compssn 0 2&>/"1 ops
+*./,   +: compssn 1 _2&>/"1 ops
+*./,   +: compssn 1 _1&>/"1 ops
+*./,   +: compssn 1 0&>/"1 ops
+*./,   +: compssn 1 1&>/"1 ops
+*./,   +: compssn 1 2&>/"1 ops
+*./,   *. compssn 2 _2&>/"1 ops
+*./,   *. compssn 2 _1&>/"1 ops
+*./,   *. compssn 2 0&>/"1 ops
+*./,   *. compssn 2 1&>/"1 ops
+*./,   *. compssn 2 2&>/"1 ops
+*./,   *: compssn 3&>/"1 ops
+*./,   ~: compssn 4&>/"1 ops
+*./,   % compssn 5&>/"1 ops
 
 NB. Monads
-<. compss v
->. compss v
-* compss v
-| compss v
-%: compss v
-^ compss v
-^. compss v
-! compss v
-o. compss v
+*./,   <. compss v
+*./,   >. compss v
+*./,   * compss v
+*./,   | compss v
+*./,   %: compss v
+*./,   ^ compss v
+*./,   ^. compss v
+*./,   ! compss v
+*./,   o. compss v
 
 NB. Verify that operations are performed in-place where possible
 iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'
@@ -140,5 +142,5 @@ iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 100000'  NB. inplace
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Both are inplace; verify * not too slow
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
-4!:55 ;:'compss compssn compssp dou iptime iptime1 iptime2 iptime3 niptime ops v v1 v2 v3'
+4!:55 ;:'b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3'
 

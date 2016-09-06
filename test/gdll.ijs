@@ -93,6 +93,8 @@ f=: 3 : 0
 
 NB. 0 procaddress
 xbasic_add=: ":>{.'xbasic_add x' dcd ''
+NB. new 15!:19
+xbasic_add -: ": 15!:19 lib,'xbasic'
 (9;(,9);2;3 4) = ('0 ',xbasic_add,' x *x x *x') cd (,2);2;3 4
 
 (2 0 -: cder '') *. 'domain error' -: '0  1e4 x x' cd etx (,2);2;3 4

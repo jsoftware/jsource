@@ -24,7 +24,9 @@
 #include "..\jsrc\j.h"
 #include "..\jsrc\jlib.h"
 
-void wtom(US* src, I srcn, UC* snk);
+extern void wtom(US* src, I srcn, UC* snk);
+extern void utow(C4* src, I srcn, US* snk);
+extern I utowsize(C4* src, I srcn);
 int valid(C* psrc, C* psnk);
 C* esub(J jt, long ec);
 
@@ -34,7 +36,7 @@ I jdo(J, C*);
 
 #define MAXRANK	60
 
-static int tounin(C* src, UI m, WCHAR* sink, UI n)
+static I tounin(C* src, UI m, WCHAR* sink, UI n)
 {
   return MultiByteToWideChar(CP_UTF8,0,src,(int)m,sink,(int)n);
 }
@@ -69,28 +71,34 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 {
 	SAFEARRAY FAR* psa; 
 	SAFEARRAYBOUND rgsabound[MAXRANK];
-	int er,kw;
-	I i,r,k,t,cb,*pi;
+	int er;
+	I i,r,k,kw,t,cb,*pi;
 	VARTYPE vt;
 
 	k=AN(a);
 	pi=AV(a);
 	r=AR(a);
-	t=AT(a);
+	t=NOUN&AT(a);
 	if(r>MAXRANK) return EVRANK;
-	if(dobstrs && r<2 && (LIT==t || C2T==t)) 	// char scalar or vector returned as BSTR
+	if(dobstrs && r<2 && (t&LIT+C2T+C4T)) 	// char scalar or vector returned as BSTR
 	{
     WCHAR *wstr;
 		BSTR bstr;
-    if (LIT==t) {
+    if (LIT&t) {
       wstr = malloc(sizeof(WCHAR)*k);
 		  kw=tounin((C*)pi, k, wstr, k);
+		  bstr = SysAllocStringLen(wstr, (UINT)kw);
+    } else if (C4T&t) {
+      kw=utowsize((C4*)pi, k);
+      kw=(kw<0)?(-kw):kw;
+      wstr = malloc(sizeof(WCHAR)*kw);
+      utow((C4*)pi, k, wstr);
 		  bstr = SysAllocStringLen(wstr, (UINT)kw);
     } else
 		  bstr = SysAllocStringLen((WCHAR*)pi, (UINT)k);
 		v->vt=VT_BSTR;
 		v->bstrVal=bstr;
-    if (LIT==t) free(wstr);
+    if (t&LIT+C4T) free(wstr);
 		R 0;
 	}
 	switch(t)
@@ -107,6 +115,12 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		cb=k*sizeof(WCHAR);
 		break;
 
+	case C4T:
+		if(!r) {v->vt=VT_UI4; v->iVal = *(UI4*)pi; return 0;}
+		vt=VT_UI4;
+		cb=k*sizeof(C4);
+		break;
+
 	case B01:
 		if(!r) {
 			v->vt=VT_BOOL;
@@ -117,9 +131,15 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		break;
 
 	case INT:
-		if(!r) {v->vt=VT_I4; v->lVal = (long)(*pi); return 0;}
+#if SY_64
+		if(!r) {v->vt=VT_I8; v->llVal = (I)(*pi); return 0;}
+		vt=VT_I8;
+		cb=k*sizeof(long long);
+#else
+		if(!r) {v->vt=VT_I4; v->lVal = (I)(*pi); return 0;}
 		vt=VT_I4;
 		cb=k*sizeof(int);
+#endif
 		break;
 
 	case FL:
@@ -174,7 +194,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		return EVWSFULL;
 	}
 
-	switch (AT(a))
+	switch (NOUN&AT(a))
 	{
 	case B01:
 	{
@@ -207,7 +227,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		SafeArrayUnaccessData (psa);
 		break;
 	}
-#if SY_64
+#if 0 && SY_64
   case INT:
   {
     long *p1=psa->pvData;
@@ -263,6 +283,8 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 	I* pintsnk;
 #if SY_64
 	int* pint32src;
+#else
+	long long* pint64src;
 #endif
 	short* pshortsrc;
 	unsigned short* pboolsrc;
@@ -362,6 +384,16 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 		memcpy(AV(a), psa->pvData, k * sizeof(char));
 		break;
 
+	case VT_UI2 | VT_ARRAY:
+		RE(a=ga(C2T, k, r, (I*)&shape));
+		memcpy(AV(a), psa->pvData, k * sizeof(short));
+		break;
+
+	case VT_UI4 | VT_ARRAY:
+		RE(a=ga(C4T, k, r, (I*)&shape));
+		memcpy(AV(a), psa->pvData, k * sizeof(int));
+		break;
+
 	case VT_I2 | VT_ARRAY:
 		RE(a=ga(INT, k, r, (I*)&shape));
 		pshortsrc = (short*)psa->pvData;
@@ -382,12 +414,17 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 #endif
 		break;
 
-#if SY_64
 	case VT_I8 | VT_ARRAY:
 		RE(a=ga(INT, k, r, (I*)&shape));
+#if SY_64
 		memcpy(AV(a), psa->pvData, k * sizeof(I));
-		break;
+#else
+		pint64src = (long long*)psa->pvData;
+		pintsnk = AV(a);
+		while(k--)
+			*pintsnk++ = (I)*pint64src++;
 #endif
+		break;
 
 	case VT_R4 | VT_ARRAY:
 		RE(a=ga(FL, k, r, (I*)&shape));
@@ -407,6 +444,16 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 		*CAV(a) = OPTREF(v,bVal);
 		break;
 
+	case VT_UI2:
+		RE(a=ga(C2T, 1, 0, 0));
+		*USAV(a) = (US)OPTREF(v,iVal);
+		break;
+
+	case VT_UI4:
+		RE(a=ga(C4T, 1, 0, 0));
+		*C4AV(a) = (C4)OPTREF(v,lVal);
+		break;
+
 	case VT_BOOL:
 		RE(a=ga(B01, 1, 0, 0));
 		// array case above explains this messy phrase:
@@ -423,12 +470,10 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 		*IAV(a) = OPTREF(v,lVal);
 		break;
 
-#if SY_64
 	case VT_I8:
 		RE(a=ga(INT, 1, 0, 0));
-		*IAV(a) = OPTREF(v,lVal);
+		*IAV(a) = (I)OPTREF(v,llVal);
 		break;
-#endif
 
 	case VT_R4:
 		RE(a=ga(FL, 1, 0, 0));

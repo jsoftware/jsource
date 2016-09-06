@@ -56,6 +56,7 @@ typedef unsigned char       BYTE;
 #define CALLBACK
 #define FIXWINUTF8
 #endif
+#include <wchar.h>
 
 #include "j.h"
 
@@ -547,7 +548,7 @@ static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:c=='j'?CMPX:(c=='f'||c=
 /*  *         pointer                                           */
 /*  n   INT   no result (integer 0)                             */
 
-static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,li,pi;
+static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,li,pi;
  ASSERT(LIT&AT(a),EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(NLEFTARG>=AN(a),EVLIMIT);
@@ -568,8 +569,12 @@ static CCT*jtcdparse(J jt,A a){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I
  cc->fpreset  =0; while(*s==' ')++s; if('%'==*s){cc->fpreset  =1; ++s;}
  /* result type declaration */
  while(*s==' ')++s;
- CDASSERT(*s,DEDEC);
- cc->zl=c=*s++; cc->zt=cdjtype(c);
+ if(empty&&!*s){
+  cc->zl=c='x'; cc->zt=cdjtype(c);
+ }else{
+  CDASSERT(*s,DEDEC);
+  cc->zl=c=*s++; cc->zt=cdjtype(c);
+ }
  CDASSERT(strchr("cwusilxfd*n",c),DEDEC);
  CDASSERT(SY_64||'l'!=c,DEDEC);
  if(c=='*' && *s && strchr("cwusilxfdj",*s)) ++s;
@@ -753,7 +758,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wd,wr,*ws,wt;
  if(1<AR(a))R rank2ex(a,w,0L,1L,1L,jtcd);
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  ASSERT(wt&DENSE,EVDOMAIN);
- RZ(cc=cdparse(a)); 
+ RZ(cc=cdparse(a,0)); 
  n=cc->n; 
  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); *(AS(z)+AR(z)-1)=1+n;}
@@ -830,7 +835,7 @@ F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
 F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R zero;}
      /* 15!:4  memory free */
 
-F1(jtmemr){C*u;I k,m,n,t,*v;
+F1(jtmemr){C*u;I k,m,n,t,*v;US*us;C4*c4;
  RZ(w);
  ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
@@ -838,10 +843,22 @@ F1(jtmemr){C*u;I k,m,n,t,*v;
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
  ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
- if(-1==m){ASSERT(t&LIT,EVDOMAIN); m=strlen(u);}
+ if(-1==m){
+  ASSERT(t&LIT+C2T+C4T,EVDOMAIN);
+  if(t&LIT) m=strlen(u);
+  else if(t&C2T) {
+   if(sizeof(US)==sizeof(wchar_t)) m=wcslen((wchar_t*)u);
+   else {m=0; us=(US*)u; while(*us++)m++;}
+  }
+  else {
+   if(sizeof(C4)==sizeof(wchar_t)) m=wcslen((wchar_t*)u);
+   else {m=0; c4=(C4*)u; while(*c4++)m++;}
+  }
+ }
  k=bp(t);
 #if SY_WIN32
- ASSERT(!IsBadReadPtr(u,m*k),EVDOMAIN);
+// This function is obsolete and should not be used
+// ASSERT(!IsBadReadPtr(u,m*k),EVDOMAIN);
 #endif
  R vec(t,m,u);
 }    /* 15!:1  memory read */
@@ -855,11 +872,12 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
  ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  k=bp(t);
- ASSERT(m==AN(a)||t&LIT&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
+ ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
  ASSERT(TYPESEQ(t,AT(a)),EVDOMAIN);
 #if SY_WIN32
- ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
+// This function is obsolete and should not be used
+// ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
  MC(u,AV(a),m*k);
  R mtm;
@@ -1000,3 +1018,14 @@ F1(jtnfeoutstr){I k;
  ASSERT(0==k,EVDOMAIN);
  R cstr(jt->mtyostr?jt->mtyostr:(C*)"");
 } /* 15!:18 return last jsto output */
+
+F1(jtcdproc){CCT*cc;
+ RZ(w);
+ ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(AN(w),EVLENGTH);
+ if(!jt->cdarg)RE(cdinit());
+ RE(cc=cdparse(w,1));
+ R sc((I)cc->fp);
+}    /* 15!:19 return proc address */
+

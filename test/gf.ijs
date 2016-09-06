@@ -1,5 +1,8 @@
 NB. f. ------------------------------------------------------------------
 
+ws=: 9!:40 ''
+9!:41 ]1  NB. retain comments and whitespace
+
 ar =: 5!:1
 
 mat =: ?3 4$1e5
@@ -13,11 +16,11 @@ g     =: +/
 (ar<'f') -: ar<'g'
 (+/y)    -: 'v' f. y=: _1e7+?12$2e7
 
-each =: &.>
-f    =: 'each' f.
+eachh=: &.>
+f    =: 'eachh' f.
 g    =: &.>
 (ar<'f') -: ar<'g'
-(|.&.>y) -: |. 'each' f. y=: ;:'Cogito, ergo sum.'
+(|.&.>y) -: |. 'eachh' f. y=: ;:'Cogito, ergo sum.'
 
 f=: undefined_no
 'value error' -: ex 'f f.'
@@ -118,7 +121,7 @@ f=: (C +:)"0 f.
 (f -: (!+:)) y=: 10 ?@$ 6
 
 
-4!:55 ;:'a ambi ar b C cap dec dyad each f fact fact1 eq g inc lr '
-4!:55 ;:'mat monad plus s sgn slash t v y'
+4!:55 ;:'a ambi ar b C cap dec dyad eachh f fact fact1 eq g inc lr '
+4!:55 ;:'mat monad plus s sgn slash t v ws y'
 
 

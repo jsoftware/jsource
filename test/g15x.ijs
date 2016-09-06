@@ -62,11 +62,11 @@ fread  =: 3 : 0   NB. fread handle
 
 test=: 3 : 0   NB. windows only
 if. pc do.
-assert. 1 -: fcreatedir <'testtemp'
-assert. 0 -: fdelete <'testtemp/non_existent_file'
+assert. 1 -: fcreatedir <jpath '~temp/testtemp'
+assert. 0 -: fdelete <jpath '~temp/testtemp/non_existent_file'
 assert. 2 -: >{.cderx ''
 
-assert. _1 ~: h=: fcreate <'testtemp/test.jnk'
+assert. _1 ~: h=: fcreate <jpath '~temp/testtemp/test.jnk'
 
 s=: 'boustrophedonic paracletic kerygmatic'
 assert. 1 -: s fwrite h
@@ -83,25 +83,25 @@ assert. (i+#t) -: fsize h
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. 1 -: fcreatedir <'testtemp/tempdir'
+assert. 1 -: fcreatedir <jpath '~temp/testtemp/tempdir'
 
-assert. (<'testtemp/test.jnk') fcopyto <'testtemp/test1.jnk'
-assert. _1 ~: h=: fopen <'testtemp/test1.jnk'
+assert. (<jpath '~temp/testtemp/test.jnk') fcopyto <jpath '~temp/testtemp/test1.jnk'
+assert. _1 ~: h=: fopen <jpath '~temp/testtemp/test1.jnk'
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. (<'testtemp/test1.jnk') fmoveto <'testtemp/tempdir/test2.jnk'
-assert. _1 ~: h=: fopen <'testtemp/tempdir/test2.jnk'
+assert. (<jpath '~temp/testtemp/test1.jnk') fmoveto <jpath '~temp/testtemp/tempdir/test2.jnk'
+assert. _1 ~: h=: fopen <jpath '~temp/testtemp/tempdir/test2.jnk'
 assert. ((i{.s),t) -: fread h
 assert. 1 -: fclose h
 
-assert. 1 -: fdelete <'testtemp/test.jnk'
+assert. 1 -: fdelete <jpath '~temp/testtemp/test.jnk'
 
-assert. 0 -: fdeletedir <'testtemp/tempdir'
+assert. 0 -: fdeletedir <jpath '~temp/testtemp/tempdir'
 assert. (>{.cderx '') e. 5 145
-assert. 1 -: fdelete <'testtemp/tempdir/test2.jnk'
-assert. 1 -: fdeletedir <'testtemp/tempdir'
-assert. 1 -: fdeletedir <'testtemp'
+assert. 1 -: fdelete <jpath '~temp/testtemp/tempdir/test2.jnk'
+assert. 1 -: fdeletedir <jpath '~temp/testtemp/tempdir'
+assert. 1 -: fdeletedir <jpath '~temp/testtemp'
 end.
 1
 )
@@ -118,9 +118,9 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 'domain error' -: 15!:6  etx <'test'
 'domain error' -: 15!:6  etx ;:'t test'
 'value error' -: 15!:6  etx <u:'test'
-'domain error' -: 15!:6  etx ;:u:'t test'
+'value error' -: 15!:6  etx u:&.> ;:'t test'
 'value error' -: 15!:6  etx <10&u:'test'
-'domain error' -: 15!:6  etx ;:10&u:'t test'
+'value error' -: 15!:6  etx 10&u:&.> ;:'t test'
 'value error' -: 15!:6  etx s:@<"0&.> <'test'
 'value error' -: 15!:6  etx <"0@s: <'test'
 'value error' -: 15!:6  etx s:@<"0&.> ;:'t test'
@@ -128,9 +128,9 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 'domain error' -: 15!:14 etx <'test'
 'domain error' -: 15!:14 etx ;:'t test'
 'value error' -: 15!:14 etx <u:'test'
-'domain error' -: 15!:14 etx ;:u:'t test'
+'value error' -: 15!:14 etx u:&.> ;:'t test'
 'value error' -: 15!:14 etx <10&u:'test'
-'domain error' -: 15!:14 etx ;:10&u:'t test'
+'value error' -: 15!:14 etx 10&u:&.> ;:'t test'
 'value error' -: 15!:14 etx s:@<"0&.> <'test'
 'value error' -: 15!:14 etx <"0@s: <'test'
 'value error' -: 15!:14 etx s:@<"0&.> ;:'t test'

@@ -4,9 +4,9 @@ NB. mapped boxed arrays -------------------------------------------------
 
 q=: x=: (] , <@(s:"0)) ;:'Cogito, ergo sum. ignorance apathy'
 (mbxcheck_jmf_ q), x           -: q
-q=: x=: (] , <@(s:"0)) ;:u:'COGITO, ERGO SUM. IGNORANCE APATHY'
+q=: x=: (] , <@(s:"0)) ([: u: 128+a.&i.)&.> ;:'COGITO, ERGO SUM. IGNORANCE APATHY'
 (mbxcheck_jmf_ q), x           -: q
-q=: x=: (] , <@(s:"0)) ;:10&u:'Cogito, Ergo Sum. Ignorance Apathy'
+q=: x=: (] , <@(s:"0)) (10 u: 65536+a.&i.)&.> ;:'Cogito, Ergo Sum. Ignorance Apathy'
 (mbxcheck_jmf_ q), x           -: q
 
 NB. s: ------------------------------------------------------------------
@@ -19,7 +19,7 @@ q=: x=: ;:'Cogito, ergo sum. ignorance apathy'
 (mbxcheck_jmf_ q), (x;s: x)    -: q ; s: x
 (mbxcheck_jmf_ q), (x;s: x)    -: q ; s: q
 
-q=: x=: ;:u:'COGITO, ERGO SUM. IGNORANCE APATHY'
+q=: x=: (u:&.>) ;:'COGITO, ERGO SUM. IGNORANCE APATHY'
 (mbxcheck_jmf_ q), x           -: q
 (mbxcheck_jmf_ q), (  s: x)    -:     s: q
 (mbxcheck_jmf_ q), (< s: x)    -: <   s: q
@@ -27,7 +27,7 @@ q=: x=: ;:u:'COGITO, ERGO SUM. IGNORANCE APATHY'
 (mbxcheck_jmf_ q), (x;s: x)    -: q ; s: x
 (mbxcheck_jmf_ q), (x;s: x)    -: q ; s: q
 
-q=: x=: ;:10&u:'Cogito, Ergo Sum. Ignorance Apathy'
+q=: x=: (10&u:&.>) ;:'Cogito, Ergo Sum. Ignorance Apathy'
 (mbxcheck_jmf_ q), x           -: q
 (mbxcheck_jmf_ q), (  s: x)    -:     s: q
 (mbxcheck_jmf_ q), (< s: x)    -: <   s: q

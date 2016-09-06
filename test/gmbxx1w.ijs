@@ -50,15 +50,15 @@ q=: x=: <"0 <"0 ?2 3 4$1e6
 
 NB. 4!: -----------------------------------------------------------------
 
-q=: x=: ;:u:'g mean junkfoo'
+q=: x=: (u:&.>) ;:'g mean junkfoo'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (4!:0 x)      -: 4!:0 q
 
-q=: x=: ;:u:'g mean junkfoo'
+q=: x=: (u:&.>) ;:'g mean junkfoo'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (4!:4 x)      -: 4!:4 q
 
-q=: x=: t=: ;:u:'junkfoo t'
+q=: x=: t=: (u:&.>) ;:'junkfoo t'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), 1 1 -: 4!:55 q
 
@@ -73,7 +73,7 @@ q=: x=: <'mean'
 (mbxcheck_jmf_ q), (5!:5 x)      -: 5!:5 q
 (mbxcheck_jmf_ q), (5!:6 x)      -: 5!:6 q
 
-q=: x=: (5!:2 <'g'); ;:u:'avuncular kakistocracy hermeneutics'
+q=: x=: (5!:2 <'g'); (u:&.>) ;:'avuncular kakistocracy hermeneutics'
 (mbxcheck_jmf_ q), (5!:1 <'x') -: 5!:1 <'q'
 (mbxcheck_jmf_ q), (5!:2 <'x') -: 5!:2 <'q'
 (mbxcheck_jmf_ q), (5!:4 <'x') -: 5!:4 <'q'
@@ -87,7 +87,7 @@ q=: x=: 5!:1 <'mean'
 (mbxcheck_jmf_ q), x             -: q
 (7!:5 <'q') >: 7!:5 <'x'
 
-q=: x=: (;:u:'Cogito, ergo sum.'), {:: 5!:1 <'mean'
+q=: x=: ((u:&.>) ;:'Cogito, ergo sum.'), {:: 5!:1 <'mean'
 (mbxcheck_jmf_ q), x             -: q
 (7!:5 <'q') >: 7!:5 <'x'
 
@@ -95,13 +95,13 @@ q=: x=: 5!:1 <'g'
 (mbxcheck_jmf_ q), x             -: q
 (7!:5 <'q') >: 7!:5 <'x'
 
-q=: x=: (;:u:'Cogito, ergo sum.'), {:: 5!:1 <'g'
+q=: x=: ((u:&.>) ;:'Cogito, ergo sum.'), {:: 5!:1 <'g'
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), (7!:5 <'q') >: 7!:5 <'x'
 
-q=: x=: ;:u:'base z'
+q=: x=: (u:&.>) ;:'base z'
 (mbxcheck_jmf_ q), x             -: q
-(mbxcheck_jmf_ q), (7!:6 q) -: 7!:6 x
+(mbxcheck_jmf_ q), (7!:6 (5&u:&.>) q) -: 7!:6 (5&u:&.>) x
 
 
 NB. 8!: -----------------------------------------------------------------
@@ -163,9 +163,9 @@ lib=: LIBTSDLL
 dcd=: 4 : '(lib,x) cd y'
 
 q=: x=: 1.1;2.2
-NB. following tests not run to avoid failure with C_DF=0 (raspberry/android/etc)
-NB. ('ddd d d d' dcd x) -: 'ddd d d d' dcd q
-NB. mbxcheck_jmf_ q
+NB. comment out the following tests to avoid failure with C_DF=0
+('ddd d d d' dcd x) -: 'ddd d d d' dcd q
+mbxcheck_jmf_ q
 
 add=: mema 2*IF64{4 8
 3 4 memw add,0,2,JINT
@@ -186,24 +186,24 @@ mbxcheck_jmf_ q
 NB. 18!: ----------------------------------------------------------------
 
 q=: x=: <'xyz'
-r=: y=: ;:u:'bou stro phedonic'
+r=: y=: (u:&.>) ;:'bou stro phedonic'
 abc_xyz_ =: ?10$100
 
 (mbxcheck_jmf_ q), x             -: q
 (mbxcheck_jmf_ q), y             -: r
 (mbxcheck_jmf_ q), (abc__x)      -: abc__q
-(mbxcheck_jmf_ q), (18!:2 x)     -: 18!:2 q
-(mbxcheck_jmf_ q), (y 18!:2 x)   -: r 18!:2 q
-(mbxcheck_jmf_ q), (18!:2 x)     -: 18!:2 q
-(mbxcheck_jmf_ q), (18!:55 x)    -: 18!:55 q
+(mbxcheck_jmf_ q), (18!:2 x)     -: 18!:2 (5&u:&.>) q
+(mbxcheck_jmf_ q), (((5&u:&.>) y) 18!:2 x)   -: ((5&u:&.>) r) 18!:2 (5&u:&.>) q
+(mbxcheck_jmf_ q), (18!:2 x)     -: 18!:2 (5&u:&.>) q
+(mbxcheck_jmf_ q), (18!:55 x)    -: 18!:55 (5&u:&.>) q
 
-18!:55 y
+18!:55 (5&u:&.>) y
 
 
 NB. 128!: ---------------------------------------------------------------
 
 q=: x=: _306674912;1234567
-y=: 'assiduously avoid any and all asinine alliterations'
+y=: u: 256+a.i. 'assiduously avoid any and all asinine alliterations'
 (x 128!:3 y) -: q 128!:3 y
 mbxcheck_jmf_ q
 

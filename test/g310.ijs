@@ -112,6 +112,7 @@ p -: x
 
 NB. : treatment of comments and white space -----------------------------
 
+ws=: 9!:40 ''
 9!:41 ]1  NB. retain comments and whitespace
 
 f1 =: 3 : 0
@@ -340,9 +341,10 @@ f =: -
 2 -: 7 (<'base') c [: 5
 
 9!:49 svxy
+9!:41 ws
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'
 4!:55 ;:'f4a f5 f5a f6 f6a f6b f6c f7'
-4!:55 ;:'minors monad nl p q svxy Tv x'
+4!:55 ;:'minors monad nl p q svxy Tv ws x'
 
 

@@ -155,14 +155,14 @@ h"0 i.25
 
 NB. literal2
 (u:'a') test u:'b'
-a test a=:adot1{~?100$256
-((}:a),{:adot1) test a=:adot1{~?100$255
-(adot1{~?2 3$256) test adot1{~?2 3 4 5$256
-(($a)$1)        test a=:adot1{~?2 3 4$255
-(($a)$45)       test a=:adot1{~?2 3 4$255
-(($a)$4.5)      test a=:adot1{~?2 3 4$255
-(($a)$4j5)      test a=:adot1{~?2 3 4$255
-(($a)$<45)      test a=:adot1{~?2 3 4$255
+a test a=:adot1{~?100$(#adot1)
+((}:a),{:adot1) test a=:adot1{~?100$(<:#adot1)
+(adot1{~?2 3$(#adot1)) test adot1{~?2 3 4 5$(#adot1)
+(($a)$1)        test a=:adot1{~?2 3 4$(<:#adot1)
+(($a)$45)       test a=:adot1{~?2 3 4$(<:#adot1)
+(($a)$4.5)      test a=:adot1{~?2 3 4$(<:#adot1)
+(($a)$4j5)      test a=:adot1{~?2 3 4$(<:#adot1)
+(($a)$<45)      test a=:adot1{~?2 3 4$(<:#adot1)
 f =: $&(u:'abc')            test $&(u:'abc')
 g =: ,&(u:'d')@}:@($&'abc') test ,&(u:'e')@}:@($&(u:'abc'))
 h =: {&(u:'ab')@:?@($&2)    test {&(u:'ab')@:?@($&2)
@@ -172,14 +172,14 @@ h"0 i.25
 
 NB. literal4
 (10&u:'a') test 10&u:'b'
-a test a=:adot2{~?100$256
-((}:a),{:adot2) test a=:adot2{~?100$255
-(adot2{~?2 3$256) test adot2{~?2 3 4 5$256
-(($a)$1)        test a=:adot2{~?2 3 4$255
-(($a)$45)       test a=:adot2{~?2 3 4$255
-(($a)$4.5)      test a=:adot2{~?2 3 4$255
-(($a)$4j5)      test a=:adot2{~?2 3 4$255
-(($a)$<45)      test a=:adot2{~?2 3 4$255
+a test a=:adot2{~?100$(#adot2)
+((}:a),{:adot2) test a=:adot2{~?100$(<:#adot2)
+(adot2{~?2 3$(#adot2)) test adot2{~?2 3 4 5$(#adot2)
+(($a)$1)        test a=:adot2{~?2 3 4$(<:#adot2)
+(($a)$45)       test a=:adot2{~?2 3 4$(<:#adot2)
+(($a)$4.5)      test a=:adot2{~?2 3 4$(<:#adot2)
+(($a)$4j5)      test a=:adot2{~?2 3 4$(<:#adot2)
+(($a)$<45)      test a=:adot2{~?2 3 4$(<:#adot2)
 f =: $&(10&u:'abc')            test $&(10&u:'abc')
 g =: ,&(10&u:'d')@}:@($&'abc') test ,&(10&u:'e')@}:@($&(10&u:'abc'))
 h =: {&(10&u:'ab')@:?@($&2)    test {&(10&u:'ab')@:?@($&2)
@@ -189,14 +189,14 @@ h"0 i.25
 
 NB. symbol
 (s:@<"0 'a') test s:@<"0 'b'
-a test a=:adot1{~?100$256
-((}:a),{:sdot) test a=:sdot{~?100$255
-(sdot{~?2 3$256) test sdot{~?2 3 4 5$256
-(($a)$1)        test a=:sdot{~?2 3 4$255
-(($a)$45)       test a=:sdot{~?2 3 4$255
-(($a)$4.5)      test a=:sdot{~?2 3 4$255
-(($a)$4j5)      test a=:sdot{~?2 3 4$255
-(($a)$<45)      test a=:sdot{~?2 3 4$255
+a test a=:sdot0{~?100$(#sdot0)
+((}:a),{:sdot0) test a=:sdot0{~?100$(<:#sdot0)
+(sdot0{~?2 3$(#sdot0)) test sdot0{~?2 3 4 5$(#sdot0)
+(($a)$1)        test a=:sdot0{~?2 3 4$(<:#sdot0)
+(($a)$45)       test a=:sdot0{~?2 3 4$(<:#sdot0)
+(($a)$4.5)      test a=:sdot0{~?2 3 4$(<:#sdot0)
+(($a)$4j5)      test a=:sdot0{~?2 3 4$(<:#sdot0)
+(($a)$<45)      test a=:sdot0{~?2 3 4$(<:#sdot0)
 f =: $&(s:@<"0 'abc')            test $&(s:@<"0 'abc')
 g =: ,&(s:@<"0 'd')@}:@($&(s:@<"0 'abc')) test ,&(s:@<"0 'e')@}:@($&(s:@<"0 'abc'))
 h =: {&(s:@<"0 'ab')@:?@($&2)    test {&(s:@<"0 'ab')@:?@($&2)
@@ -306,8 +306,8 @@ test2"0 i.3 10
 (-:"0/~ -: match"0/~) x=:o.?20$10
 (-:"0/~ -: match"0/~) x=:r.?20$10
 (-:"0/~ -: match"0/~) x=:a{~?20$#a=:;:'deipno sop hist anti dis est a blish'
-(-:"0/~ -: match"0/~) x=:a{~?20$#a=:;:u:'deipno sop hist anti dis est a blish'
-(-:"0/~ -: match"0/~) x=:a{~?20$#a=:;:10&u:'deipno sop hist anti dis est a blish'
+(-:"0/~ -: match"0/~) x=:a{~?20$#a=:(u:&.>) ;:'deipno sop hist anti dis est a blish'
+(-:"0/~ -: match"0/~) x=:a{~?20$#a=:(10&u:&.>) ;:'deipno sop hist anti dis est a blish'
 (-:"0/~ -: match"0/~) x=:a{~?20$#a=:s:@<"0&.> ;:'deipno sop hist anti dis est a blish'
 (-:"0/~ -: match"0/~) x=:a{~?20$#a=:<"0@s: ;:'deipno sop hist anti dis est a blish'
 
@@ -320,8 +320,8 @@ test2"0 i.3 10
 (-:"1/~ -: match"1/~) x=:a{~?20$#a=:o.?10 4$1000
 (-:"1/~ -: match"1/~) x=:a{~?20$#a=:r.?10 4$1000
 (-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$;:'deipno sop hist anti dis est a blish'
-(-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$;:u:'deipno sop hist anti dis est a blish'
-(-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$;:10&u:'deipno sop hist anti dis est a blish'
+(-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$(u:&.>) ;:'deipno sop hist anti dis est a blish'
+(-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$(10&u:&.>) ;:'deipno sop hist anti dis est a blish'
 (-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$s:@<"0&.> ;:'deipno sop hist anti dis est a blish'
 (-:"1/~ -: match"1/~) x=:a{~?20$#a=:5 3$<"0@s: ;:'deipno sop hist anti dis est a blish'
 
@@ -334,8 +334,8 @@ test2"0 i.3 10
 (x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: o.?3$100
 (x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: r.?3$100
 (x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: ;:'ja oder nein'
-(x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: ;:u:'ja oder nein'
-(x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: ;:10&u:'ja oder nein'
+(x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: (u:&.>) ;:'ja oder nein'
+(x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: (10&u:&.>) ;:'ja oder nein'
 (x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: s:@<"0&.> ;:'ja oder nein'
 (x=:a{~?20$3) (-:"0 -: match"0) y=:a{~?20$3 [ a=: <"0@s: ;:'ja oder nein'
 
@@ -348,8 +348,8 @@ test2"0 i.3 10
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: o.?3 5$3
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: r.?3 5$3
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<'do'),.3 5$;:'pi no so hi do to an am no'
-(x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<u:'do'),.3 5$;:u:'pi no so hi do to an am no'
-(x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<10&u:'do'),.3 5$;:10&u:'pi no so hi do to an am no'
+(x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<u:'do'),.3 5$(u:&.>) ;:'pi no so hi do to an am no'
+(x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<10&u:'do'),.3 5$(10&u:&.>) ;:'pi no so hi do to an am no'
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (s:@<"0&.> <'do'),.3 5$s:@<"0&.> ;:'pi no so hi do to an am no'
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (s:@<"0&.> <'do'),.3 5$<"0@s: ;:'pi no so hi do to an am no'
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<"0@s: <'do'),.3 5$s:@<"0&.> ;:'pi no so hi do to an am no'
@@ -388,6 +388,6 @@ test4=: 4 : 0
 (0 1;2;i.7) test4"1 0 i.3 10
 
 
-4!:55 ;:'a adot1 adot2 sdot c d e f g h match n test test1 test2 test3 test4 x xx y yy'
+4!:55 ;:'a adot1 adot2 sdot0 c d e f g h match n test test1 test2 test3 test4 x xx y yy'
 
 

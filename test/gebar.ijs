@@ -28,17 +28,17 @@ randuni''
 (($j)$0)  -: (a.{~j,j) E. a.{~j=.?(?100)$256
 (($j)$0)  -: (a.{~j,j) E. a.{~j=.?(?100)$256
 
-(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$256
-(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$256
-(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$256
-(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$256
-(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$256
+(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$(#adot1)
+(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$(#adot1)
+(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$(#adot1)
+(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$(#adot1)
+(($j)$0)  -: (adot1{~j,j) E. adot1{~j=.?(?100)$(#adot1)
 
-(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$256
-(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$256
-(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$256
-(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$256
-(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$256
+(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$(#adot2)
+(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$(#adot2)
+(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$(#adot2)
+(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$(#adot2)
+(($j)$0)  -: (adot2{~j,j) E. adot2{~j=.?(?100)$(#adot2)
 
 ((m*n)$n{.1) *./ . <: s E. (m*n)$s=.a.{~?n$256 [ m=.?20 [ n=.?20
 ((m*n)$n{.1) *./ . <: s E. (m*n)$s=.a.{~?n$256 [ m=.?20 [ n=.?20
@@ -46,17 +46,17 @@ randuni''
 ((m*n)$n{.1) *./ . <: s E. (m*n)$s=.a.{~?n$256 [ m=.?20 [ n=.?20
 ((m*n)$n{.1) *./ . <: s E. (m*n)$s=.a.{~?n$256 [ m=.?20 [ n=.?20
 
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$256 [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$(#adot1) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$(#adot1) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$(#adot1) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$(#adot1) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot1{~?n$(#adot1) [ m=.?20 [ n=.?20
 
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$256 [ m=.?20 [ n=.?20
-((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$256 [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$(#adot2) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$(#adot2) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$(#adot2) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$(#adot2) [ m=.?20 [ n=.?20
+((m*n)$n{.1) *./ . <: s E. (m*n)$s=.adot2{~?n$(#adot2) [ m=.?20 [ n=.?20
 
 NB. literal
 ebar =: 4 : 0
@@ -94,7 +94,7 @@ NB. a.    (ebar -: E.) 'a'
 'aaa' (ebar -: E.) 50$'aaa'
 
 NB. literal2
-adot3=: /:~ 256{.~.(u:'ABCabc'),adot1,u: 256?65536
+adot3=: /:~ (#adot1){.~.(u:'ABCabc'),adot1,u: (#adot1)?65536
 ebar =: 4 : 0
  assert. (0 e.$x) +. 2 131072 e.~ type x
  assert. (0 e.$y) +. 2 131072 e.~ type y
@@ -130,7 +130,7 @@ NB. adot3    (ebar -: E.) u:'a'
 'aaa'    (ebar -: E.) 50$u:'aaa'
 
 NB. literal4
-adot4=: /:~ 256{.~.(u:'ABCabc'),adot2,10&u: RAND32 256?C4MAX
+adot4=: /:~ (#adot2){.~.(u:'ABCabc'),adot2,10&u: RAND32 (#adot2)?C4MAX
 ebar =: 4 : 0
  assert. (0 e.$x) +. 2 131072 262144 e.~ type x
  assert. (0 e.$y) +. 2 131072 262144 e.~ type y
@@ -219,6 +219,6 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
-4!:55 ;:'adot1 adot2 sdot adot3 adot4 g ebar i j m n s t x y G jtree joinroutes olim '
+4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 g ebar i j m n s t x y G jtree joinroutes olim '
 
 

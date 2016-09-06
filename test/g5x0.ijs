@@ -19,13 +19,13 @@ ar =: 5!:1
 
 tv   =: 1 : '=/(ar<''x'') fx `(x f.)'
 eq   =: ar&<@[ -: ar&<@]
-each =: 1 : 'x f.&.>'
+eachh=: 1 : 'x f.&.>'
 pow  =: 2 : ('i=.>:y'; 't=.]'; 'while. i=.<:i do. t=.x&t f. end.')
 
 +             tv
 +/ . *        tv
 +/ pow 4      tv
-|. each       tv
+|. eachh      tv
 
 +/ : *        tv
 +/ : [:       tv
@@ -50,7 +50,7 @@ f =: eq
 g =: (ar <'f') fx
 'f' eq 'g'
 
-f =: each
+f =: eachh
 g =: (ar <'f') fx
 'f' eq 'g'
 
@@ -163,6 +163,6 @@ f=:+,*
 'length error' -: ex '(<''a.'';<<''+''     ) fx'
 
 
-4!:55 ;:'a ar cn cv each eq f fx g noun pow tv verb '
+4!:55 ;:'a ar cn cv eachh eq f fx g noun pow tv verb '
 
 

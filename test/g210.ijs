@@ -126,9 +126,9 @@ NB. literal4
 
 NB. symbol
 (4 5 res s:@<"0 'x')       -: 4 5$s:@<"0 'x'
-(4 5 res b)         -: 4 5$b=.sdot{~?20$$sdot
-(4 5 res 3 4$b)     -: 4 5$3 4$b=.sdot{~?20$$sdot
-(4 5 0 res b)       -: 4 5 0$b=.sdot{~?20$$sdot
+(4 5 res b)         -: 4 5$b=.sdot0{~?20$$sdot0
+(4 5 res 3 4$b)     -: 4 5$3 4$b=.sdot0{~?20$$sdot0
+(4 5 0 res b)       -: 4 5 0$b=.sdot0{~?20$$sdot0
 (4 5 0 res 0 6$b)   -: 4 5 0$0 6$b
 (4 5 0 res 6 0 7$b) -: 4 5 0$6 0 7$b
 
@@ -290,7 +290,7 @@ NB. literal4
 
 NB. x$"r y --------------------------------------------------------------
 
-f =. 4 : 'x$y' " 1 _
+f =: 4 : 'x$y' " 1 _
 
 2 3 4 (f"1 -: $"1) ?2 3 4$2
 2 3 4 (f"1 -: $"1) a.{~?2 3 4$256
@@ -298,8 +298,8 @@ f =. 4 : 'x$y' " 1 _
 2 3 4 (f"1 -: $"1) o.?2 3 4$1000
 2 3 4 (f"1 -: $"1) r./?2 2 3 4$1000
 2 3 4 (f"1 -: $"1) 2 3 4$;:'Cogito, ergo sum. sui generis'
-2 3 4 (f"1 -: $"1) 2 3 4$;:u:'Cogito, ergo sum. sui generis'
-2 3 4 (f"1 -: $"1) 2 3 4$;:10&u:'Cogito, ergo sum. sui generis'
+2 3 4 (f"1 -: $"1) 2 3 4$(u:&.>) ;:'Cogito, ergo sum. sui generis'
+2 3 4 (f"1 -: $"1) 2 3 4$(10&u:&.>) ;:'Cogito, ergo sum. sui generis'
 2 3 4 (f"1 -: $"1) 2 3 4$s:@<"0&.> ;:'Cogito, ergo sum. sui generis'
 2 3 4 (f"1 -: $"1) 2 3 4$<"0@s: ;:'Cogito, ergo sum. sui generis'
  
@@ -309,8 +309,8 @@ f =. 4 : 'x$y' " 1 _
 2 3 4 (f"2 -: $"2) o.?2 3 4$1000
 2 3 4 (f"2 -: $"2) r./?2 2 3 4$1000
 2 3 4 (f"2 -: $"2) 2 3 4$;:'When eras die their thoughts are left to strange police'
-2 3 4 (f"2 -: $"2) 2 3 4$;:u:'When eras die their thoughts are left to strange police'
-2 3 4 (f"2 -: $"2) 2 3 4$;:10&u:'When eras die their thoughts are left to strange police'
+2 3 4 (f"2 -: $"2) 2 3 4$(u:&.>) ;:'When eras die their thoughts are left to strange police'
+2 3 4 (f"2 -: $"2) 2 3 4$(10&u:&.>) ;:'When eras die their thoughts are left to strange police'
 2 3 4 (f"2 -: $"2) 2 3 4$s:@<"0&.> ;:'When eras die their thoughts are left to strange police'
 2 3 4 (f"2 -: $"2) 2 3 4$<"0@s: ;:'When eras die their thoughts are left to strange police'
 
@@ -320,8 +320,8 @@ f =. 4 : 'x$y' " 1 _
 2     (f"2 -: $"2) o.?7 3 4$1000
 2     (f"2 -: $"2) r./?2 7 3 4$1000
 2     (f"2 -: $"2) 7 3 4$;:'salt of the earth boustrophedonic bull of Bashan'
-2     (f"2 -: $"2) 7 3 4$;:u:'salt of the earth boustrophedonic bull of Bashan'
-2     (f"2 -: $"2) 7 3 4$;:10&u:'salt of the earth boustrophedonic bull of Bashan'
+2     (f"2 -: $"2) 7 3 4$(u:&.>) ;:'salt of the earth boustrophedonic bull of Bashan'
+2     (f"2 -: $"2) 7 3 4$(10&u:&.>) ;:'salt of the earth boustrophedonic bull of Bashan'
 2     (f"2 -: $"2) 7 3 4$s:@<"0&.> ;:'salt of the earth boustrophedonic bull of Bashan'
 2     (f"2 -: $"2) 7 3 4$<"0@s: ;:'salt of the earth boustrophedonic bull of Bashan'
 
@@ -335,9 +335,9 @@ NB. x$!.f y -------------------------------------------------------------
 (2 3 4$'chthonic',16$' ') -: 2 3 4$!.'' 'chthonic'
 (2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.;:'Cogito, ergo sum.'
 (2 3 4$'chthonic',16$' ') -: 2 3 4$!.'' u:'chthonic'
-(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.;:u:'Cogito, ergo sum.'
+(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.(u:&.>) ;:'Cogito, ergo sum.'
 (2 3 4$'chthonic',16$' ') -: 2 3 4$!.'' 10&u:'chthonic'
-(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.;:10&u:'Cogito, ergo sum.'
+(2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.(10&u:&.>) ;:'Cogito, ergo sum.'
 (2 3 4$(s:@<"0 'chthonic'),16${.s:'') -: 2 3 4$!.'' s:@<"0 'chthonic'
 (2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.s:@<"0&.> ;:'Cogito, ergo sum.'
 (2 3 4$t,         20$<$0) -: 2 3 4$!.'' t=.<"0@s: ;:'Cogito, ergo sum.'
@@ -373,12 +373,12 @@ NB. x$!.f y -------------------------------------------------------------
 'domain error' -: 9 3 $!.(u:'a')  etx 4
 'domain error' -: 9 3 $!.(u:'a')  etx 'b';'c';'d'
 'domain error' -: 9 3 $!.4    etx u:'sui generis'
-'domain error' -: 9 3 $!.4    etx ;:u:'Cogito, ergo sum.'
+'domain error' -: 9 3 $!.4    etx u:&.> ;:'Cogito, ergo sum.'
 'domain error' -: 9 3 $!.(<4) etx u:'eleemosynary'
 'domain error' -: 9 3 $!.(10&u:'a')  etx 4
 'domain error' -: 9 3 $!.(10&u:'a')  etx 'b';'c';'d'
 'domain error' -: 9 3 $!.4    etx 10&u:'sui generis'
-'domain error' -: 9 3 $!.4    etx ;:10&u:'Cogito, ergo sum.'
+'domain error' -: 9 3 $!.4    etx 10&u:&.> ;:'Cogito, ergo sum.'
 'domain error' -: 9 3 $!.(<4) etx 10&u:'eleemosynary'
 'domain error' -: 9 3 $!.(s:@<"0 'a')  etx 4
 'domain error' -: 9 3 $!.(s:@<"0 'a')  etx <"0@s: 'b';'c';'d'
@@ -388,6 +388,6 @@ NB. x$!.f y -------------------------------------------------------------
 'domain error' -: 9 3 $!.(<4) etx s:@<"0 'eleemosynary'
 'domain error' -: 9 3 $!.(<4) etx i.2 3
 
-4!:55 ;:'adot1 adot2 sdot b f res s t'
+4!:55 ;:'adot1 adot2 sdot0 b f res s t'
 
 

@@ -37,6 +37,6 @@ c=: ; (i.1+r) <"1@comb&.>r=:#$p
 f&>/~c
 
 
-4!:55 ;:'c d f p q r x'
+4!:55 ;:'c d e f p q r x'
 
 

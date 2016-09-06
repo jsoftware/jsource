@@ -217,6 +217,7 @@ F2(jtforeign){I p,q;
   case XC(15,16): R SDERIV(CIBEAM, jtnfes,       0,            RMAX,0,   0   );
   case XC(15,17): R SDERIV(CIBEAM, jtcallbackx,  0,            RMAX,0,   0   );
   case XC(15,18): R SDERIV(CIBEAM, jtnfeoutstr,  0,            RMAX,0,   0   );
+  case XC(15,19): R SDERIV(CIBEAM, jtcdproc,     0,            RMAX,0,   0   );
 
   case XC(18,0):  R CDERIV(CIBEAM, jtlocnc,      0,            0,   0,   0   );
   case XC(18,1):  R CDERIV(CIBEAM, jtlocnl1,     jtlocnl2,     RMAX,RMAX,RMAX);

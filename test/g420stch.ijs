@@ -118,15 +118,15 @@ test ?@($&2)          &.> (1+?123),&.>1+?k$20 [ k=:10
 test {&a.@?@($&(#a.)) &.> (1+?123),&.>1+?k$20
 test {&adot1@?@($&(#adot1)) &.> (1+?123),&.>1+?k$20
 test {&adot2@?@($&(#adot2)) &.> (1+?123),&.>1+?k$20
-test {&sdot@?@($&(#sdot)) &.> (1+?123),&.>1+?k$20
+test {&sdot0@?@($&(#sdot0)) &.> (1+?123),&.>1+?k$20
 test ?@($&1000)       &.> (1+?123),&.>1+?k$20
 test o.@?@($&1000)    &.> (1+?123),&.>1+?k$20
 test r.@?@($&1000)    &.> (1+?123),&.>1+?k$20
-test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=.;:'bou stro phe don ic 1'
-test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=.;:u:'bou stro phe don ic 1'
-test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=.;:10&u:'bou stro phe don ic 1'
-test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=.s:@<"0&.> ;:'bou stro phe don ic 1'
-test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=.<"0@s: ;:'bou stro phe don ic 1'
+test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=:;:'bou stro phe don ic 1'
+test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=:(u:&.>) ;:'bou stro phe don ic 1'
+test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=:(10&u:&.>) ;:'bou stro phe don ic 1'
+test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=:s:@<"0&.> ;:'bou stro phe don ic 1'
+test {&x@?@($&(#x))   &.> (1+?123),&.>1+?k$20 [ x=:<"0@s: ;:'bou stro phe don ic 1'
 
 
 test ((1+?123),&.>2 3 4) $&.> 2;3;4.5
@@ -138,6 +138,6 @@ test ((1+?123),&.>2 3 4) $&.> 2;3;0
 'length error' -: ,.&.>/ etx 1 2;3 4 5
 
 
-4!:55 ;:'adot1 adot2 sdot c f g k s sp t test x yy z'
+4!:55 ;:'adot1 adot2 sdot0 c f g k s sp t test x yy z'
 
 

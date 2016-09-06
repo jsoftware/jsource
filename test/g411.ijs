@@ -59,8 +59,8 @@ p (p.!.k -: f) x=:?3 5$10
 (4 5$!.''   x) -: 4 5$x,(20-#x)$({.s:'') [ x=:s:@<"0 'kakistocracy'
 (4 5$!.(s:@<"0 'q')  x) -: 4 5$x,(20-#x)$s:@<"0 'q'
 (4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:;:'anti dis establish ment arian ism'
-(4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:;:u:'anti dis establish ment arian ism'
-(4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:;:10&u:'anti dis establish ment arian ism'
+(4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:(u:&.>) ;:'anti dis establish ment arian ism'
+(4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:(10&u:&.>) ;:'anti dis establish ment arian ism'
 (4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:s:@<"0&.> ;:'anti dis establish ment arian ism'
 (4 5$!.(<3) x) -: 4 5$x,(20-#x)$<3  [ x=:<"0@s: ;:'anti dis establish ment arian ism'
 
@@ -101,17 +101,17 @@ f =: 4 : '(+.x) #&, y,.k'
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:adot2{~?10$#adot2 [ k=:10&u:'x' 
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:adot2{~?10$#adot2 [ k=:10&u:' ' 
 
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:sdot{~?10$#sdot [ k=:s:@<"0 'x' 
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:sdot{~?10$#sdot [ k=:s:@<"0 ' ' 
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:sdot0{~?10$#sdot0 [ k=:s:@<"0 'x' 
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:sdot0{~?10$#sdot0 [ k=:s:@<"0 ' ' 
 
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:'on a clear day' [ k=:<'see forever'
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:'on a clear day' [ k=:<$0
 
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:u:'on a clear day' [ k=:<u:'see forever'
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:u:'on a clear day' [ k=:<$0
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$(u:&.>) ;:'on a clear day' [ k=:<u:'see forever'
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$(u:&.>) ;:'on a clear day' [ k=:<$0
 
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:10&u:'on a clear day' [ k=:<10&u:'see forever'
-(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$;:10&u:'on a clear day' [ k=:<$0
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$(10&u:&.>) ;:'on a clear day' [ k=:<10&u:'see forever'
+(x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$(10&u:&.>) ;:'on a clear day' [ k=:<$0
 
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$s:@<"0&.> ;:'on a clear day' [ k=:s:@<"0&.> <'see forever'
 (x f y) -: x #!.k y [ x=:j./?2 10$20 [ y=:10$<"0@s: ;:'on a clear day' [ k=:s:@<"0&.> <'see forever'
@@ -165,16 +165,16 @@ NB. {.!.n ---------------------------------------------------------------
 (20{.!.(s:@<"0 'x')  x) -: 20$x          [ x=:27$s:@<"0 'rapport'
 (20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:;:'Cogito, ergo sum.'
 (20{.!.a:   x) -: x,(20-#x)$<$0 
-(20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:;:u:'Cogito, ergo sum.'
+(20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:(u:&.>) ;:'Cogito, ergo sum.'
 (20{.!.a:   x) -: x,(20-#x)$<$0 
-(20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:;:10&u:'Cogito, ergo sum.'
+(20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:(10&u:&.>) ;:'Cogito, ergo sum.'
 (20{.!.a:   x) -: x,(20-#x)$<$0 
 (20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:s:@<"0&.> ;:'Cogito, ergo sum.'
 (20{.!.(<12)x) -: x,(20-#x)$<12 [ x=:<"0@s: ;:'Cogito, ergo sum.'
 (20{.!.a:   x) -: x,(20-#x)$<$0 
 (20{.!.(<12)x) -: 20$x          [ x=:27$;:'Cogito, ergo sum.'
-(20{.!.(<12)x) -: 20$x          [ x=:27$;:u:'Cogito, ergo sum.'
-(20{.!.(<12)x) -: 20$x          [ x=:27$;:10&u:'Cogito, ergo sum.'
+(20{.!.(<12)x) -: 20$x          [ x=:27$(u:&.>) ;:'Cogito, ergo sum.'
+(20{.!.(<12)x) -: 20$x          [ x=:27$(10&u:&.>) ;:'Cogito, ergo sum.'
 (20{.!.(<12)x) -: 20$x          [ x=:27$s:@<"0&.> ;:'Cogito, ergo sum.'
 (20{.!.(<12)x) -: 20$x          [ x=:27$<"0@s: ;:'Cogito, ergo sum.'
 
@@ -220,17 +220,17 @@ NB. |.!.n ---------------------------------------------------------------
 (0|.!.(s:@<"0 'x')  x) -: x=:27$s:@<"0 'chthonic'
 (2|.!.(<12)x) -: 2}.x,2$<12 [ x=:;:'Cogito, ergo sum.'
 (2|.!.''   x) -: 2}.x,2$<$0 
-(2|.!.(<12)x) -: 2}.x,2$<12 [ x=:;:u:'Cogito, ergo sum.'
+(2|.!.(<12)x) -: 2}.x,2$<12 [ x=:(u:&.>) ;:'Cogito, ergo sum.'
 (2|.!.''   x) -: 2}.x,2$<$0 
-(2|.!.(<12)x) -: 2}.x,2$<12 [ x=:;:10&u:'Cogito, ergo sum.'
+(2|.!.(<12)x) -: 2}.x,2$<12 [ x=:(10&u:&.>) ;:'Cogito, ergo sum.'
 (2|.!.''   x) -: 2}.x,2$<$0 
 (2|.!.(<12)x) -: 2}.x,2$<12 [ x=:s:@<"0&.> ;:'Cogito, ergo sum.'
 (2|.!.''   x) -: 2}.x,2$<$0 
 (2|.!.(<12)x) -: 2}.x,2$<12 [ x=:<"0@s: ;:'Cogito, ergo sum.'
 (2|.!.''   x) -: 2}.x,2$<$0 
 (0|.!.(<12)x) -: x=:27$;:'Cogito, ergo sum.'
-(0|.!.(<12)x) -: x=:27$;:u:'Cogito, ergo sum.'
-(0|.!.(<12)x) -: x=:27$;:10&u:'Cogito, ergo sum.'
+(0|.!.(<12)x) -: x=:27$(u:&.>) ;:'Cogito, ergo sum.'
+(0|.!.(<12)x) -: x=:27$(10&u:&.>) ;:'Cogito, ergo sum.'
 (0|.!.(<12)x) -: x=:27$s:@<"0&.> ;:'Cogito, ergo sum.'
 (0|.!.(<12)x) -: x=:27$<"0@s: ;:'Cogito, ergo sum.'
 
@@ -348,6 +348,6 @@ NB. x v!.f y where x is extended and v requires fill --------------------
 ((17r2-1r2) |.!.17 y) -: 8 |.!.17 y
 
 
-4!:55 ;:'adot1 adot2 sdot f i k n p v x y'
+4!:55 ;:'adot1 adot2 sdot0 f i k n p v x y'
 
 

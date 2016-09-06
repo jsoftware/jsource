@@ -166,18 +166,18 @@ NB. SB <. SB ---------------------------------------------------------------
 (s:' Aa baa cacc Daddd') -:  (s:' Aa baa cacc Daddd') <. (s:' a bb ccc dddd')
 (s:' Aa bb ccc Daddd') -:  (s:' Aa bbb cccc Daddd') <. (s:' a bb ccc dddd')
 
-(}:sdot) -: (}:sdot) <. (}.sdot)
-(}:sdot) -: (}.sdot) <. (}:sdot)
+(}:sdot0) -: (}:sdot0) <. (}.sdot0)
+(}:sdot0) -: (}.sdot0) <. (}:sdot0)
 
-((128{.sdot),(_128{.|.sdot)) -: (|.sdot) <. (sdot)
-((128{.sdot),(_128{.|.sdot)) -: (sdot) <. (|.sdot)
+(((-:@#sdot0){.sdot0),((-@-:@#sdot0){.|.sdot0)) -: (|.sdot0) <. (sdot0)
+(((-:@#sdot0){.sdot0),((-@-:@#sdot0){.|.sdot0)) -: (sdot0) <. (|.sdot0)
 
-(2 4 32$ }:sdot) -: (2 4 32$ }:sdot) <. (2 4 32$ }.sdot)
-(2 4 32$ }:sdot) -: (2 4 32$ }.sdot) <. (2 4 32$ }:sdot)
+((2 4, 8%~#sdot0)$ }:sdot0) -: ((2 4, 8%~#sdot0)$ }:sdot0) <. ((2 4, 8%~#sdot0)$ }.sdot0)
+((2 4, 8%~#sdot0)$ }:sdot0) -: ((2 4, 8%~#sdot0)$ }.sdot0) <. ((2 4, 8%~#sdot0)$ }:sdot0)
 
-(({.2 4 32$ sdot),:({:2 4 32$ |.sdot)) -: (2 4 32$ |.sdot) <. (2 4 32$ sdot)
-(({.2 4 32$ sdot),:({:2 4 32$ |.sdot)) -: (2 4 32$ sdot) <. (2 4 32$ |.sdot)
+(({.(2 4, 8%~#sdot0)$ sdot0),:({:(2 4, 8%~#sdot0)$ |.sdot0)) -: ((2 4, 8%~#sdot0)$ |.sdot0) <. ((2 4, 8%~#sdot0)$ sdot0)
+(({.(2 4, 8%~#sdot0)$ sdot0),:({:(2 4, 8%~#sdot0)$ |.sdot0)) -: ((2 4, 8%~#sdot0)$ sdot0) <. ((2 4, 8%~#sdot0)$ |.sdot0)
 
-4!:55 ;:'adot1 adot2 sdot x y z'
+4!:55 ;:'adot1 adot2 sdot0 x y z'
 
 

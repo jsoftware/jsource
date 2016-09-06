@@ -1,5 +1,9 @@
 NB. x o.y for x e.i.13 --------------------------------------------------
 
+NB. test failed on small ct
+ct   =: 9!:18''
+9!:19[2^_42
+
 z =: (_10+?20$20) j. _4+?20$20
 x =: 0.1 * _50+?20$100
 
@@ -343,9 +347,10 @@ _1 -: 7 o. _710j1e9
 0.5p1 _0.5p1 -: _3 o. _ __
 (0*x)={:"1 +.   _3 o. x=:1e_10*_5000+?4 5$1e4
 
+9!:19 ct
 
 4!:55 ;:'a acos acosh asin asinh atan atanh b cir0 cir4 '
-4!:55 ;:'cir4m cir8 cir8m circle cirm cirp cos cosh imag '
+4!:55 ;:'cir4m cir8 cir8m circle cirm cirp cos cosh ct imag '
 4!:55 ;:'jasin jatan jcosh jsinh p pi q real sin sinh '
 4!:55 ;:'tan tanh x y z zacos zacosh zarc zasin zasinh zatan '
 4!:55 ;:'zatanh zcos zcosh zm4 zp4 zp8 zsin zsinh ztan ztanh '

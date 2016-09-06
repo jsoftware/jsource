@@ -7,7 +7,7 @@ iwrite =. 1!:12
 open   =. 1!:21
 erase  =. 1!:55
 
-f =. <'foo1x12.x'
+f =. <jpath '~temp/foo1x12.x'
 x =. (?1000$#a.){a.
 x write f
 h =. open f
@@ -24,7 +24,7 @@ y -: iread h,100,#y
 
 erase h
   
-f =. <'foo1x12.x'
+f =. <jpath '~temp/foo1x12.x'
 '0123456789' write f
 h =. open f
 

@@ -2,11 +2,11 @@ NB. s: unicode -----------------------------------------------------------------
 
 NB. create test data set 
 
-x=: s: (u:'wxyz'),&.>/":&.>?20$123
-y=: s: (u:'abcd'),&.>/":&.>?20$110
+x=: s: (u: 128+a.i. 'wxyz'),&.>/":&.>?20$123
+y=: s: (u: 128+a.i. 'abcd'),&.>/":&.>?20$110
 a=: {. s: u:' 4'
 
-t=: ;:u:'anaphoric chthonic metonymic oxymoronic sardonic'
+t=: (u:&.>) ;:'anaphoric chthonic metonymic oxymoronic sardonic'
 u=: ~. s: , t ,&.>/":&.>":&.>?10$50
 v=: /:/: u
 

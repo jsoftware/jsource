@@ -321,7 +321,7 @@ n01cdf=: -: @: >: @: erf @: ((%:0.5)&*)   NB. CDF of N(0,1)
 4!:55 ;:'Bessel H H1 H2 T X a coeff cos cosb '
 4!:55 ;:'cosh coshb erf eterm extrema f f0 f1 f13 f14 f17 '
 4!:55 ;:'f2 f2a f3 f4 f5 f7 f8 g g13 g14 '
-4!:55 ;:'g17 g7 g8 h h13 h7 h8 k L1 L2 n n01cdf p '
+4!:55 ;:'g17 g7 g8 h h13 h7 h8 k L1 L2 n n n01cdf p '
 4!:55 ;:'prf q r rf roots sin sinb sinh sinhb test x z '
 
 

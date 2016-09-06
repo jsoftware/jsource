@@ -241,20 +241,20 @@ Expand=: (* +/\)@[ { -@>:@#@] {. ]
 (b&Expand -: b&#^:_1) x=:    ?n$1000
 (b&Expand -: b&#^:_1) x=:a.{~?n$#a.
 (b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:u:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?n$#y=:;:10&u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?n$#y=:(u:&.>) ;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?n$#y=:(10&u:&.>) ;:'tris kai deka phobia finden tush'
 (b&Expand -: b&#^:_1) x=:    ?(n,5)$1000
 (b&Expand -: b&#^:_1) x=:a.{~?(n,5)$#a.
 (b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:u:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:;:10&u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:(u:&.>) ;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,5)$#y=:(10&u:&.>) ;:'tris kai deka phobia finden tush'
 (b&Expand -: b&#^:_1) x=:    ?(n,2 5)$1000
 (b&Expand -: b&#^:_1) x=:a.{~?(n,2 5)$#a.
 (b&Expand -: b&#^:_1) x=:adot1{~?(n,2 5)$#adot1
 (b&Expand -: b&#^:_1) x=:adot2{~?(n,2 5)$#adot2
 (b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:u:'tris kai deka phobia finden tush'
-(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:;:10&u:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:(u:&.>) ;:'tris kai deka phobia finden tush'
+(b&Expand -: b&#^:_1) x=:y {~?(n,2 5)$#y=:(10&u:&.>) ;:'tris kai deka phobia finden tush'
 
 (2&+&.(b&#) y) -: b*2+y=:?((#b),5)$1000
 
@@ -285,7 +285,7 @@ x -: ]&.(_2 _3&|:) x
 18!:55 ;:'loc'
 
 
-4!:55 ;:'a adot1 adot2 sdot b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '
+4!:55 ;:'a adot1 adot2 sdot0 b c D Da Nt Expand ar cap eps eq f f1 f2 f_g '
 4!:55 ;:'g h hi i id inv lr m minus n p plus '
 4!:55 ;:'t test testx times x y '
 

@@ -513,7 +513,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
 #if MEMAUDIT&8
  DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
 #endif
- AFLAG(z)=0; AC(z)=ACUC1; 
+ AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
  *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;}
  jt->tnextpushx=pushx;
  R z;

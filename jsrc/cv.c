@@ -6,25 +6,15 @@
 #include "j.h"
 
 
-static DF1(jtfitct1){DECLFG;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL1(f1,  w,fs); jt->ct=old; R z;}
-static DF2(jtfitct2){DECLFG;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL2(f2,a,w,fs); jt->ct=old; R z;}
+static DF1(jtfitct1){DECLFG;F1PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL1IP(f1,  w,fs); jt->ct=old; R z;}
+static DF2(jtfitct2){DECLFG;F2PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL2IP(f2,a,w,fs); jt->ct=old; R z;}
 
 static F2(jtfitct){D d;V*sv;
  RZ(a&&w);
  ASSERT(!AR(w),EVRANK);
  sv=VAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- R CDERIV(CFIT,jtfitct1,jtfitct2,sv->mr,sv->lr,sv->rr);
-}
-
-static DF1(jtfitfill1){DECLFG;A z; jt->fill=gs; z=CALL1(f1,  w,fs); jt->fill=0; R z;}
-static DF2(jtfitfill2){DECLFG;A z; jt->fill=gs; z=CALL2(f2,a,w,fs); jt->fill=0; R z;}
-
-static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
- MC(d,s,8L); 
- sprintf(s,FMTI"g",*AV(gs)); 
- z=CALL1(f1,w,fs); MC(s,d,8L);
- R z;
+ R fdef(CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
 }
 
 static DF2(jtfitexp2){
@@ -37,6 +27,16 @@ static DF2(jtfitpoly2){
  F2RANK(1,0,jtfitpoly2,self);
  R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),VAV(self)->g,slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
+
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; R z;}
+static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; R z;}
+
+static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
+ MC(d,s,8L); 
+ sprintf(s,FMTI"g",*AV(gs)); 
+ z=CALL1(f1,w,fs); MC(s,d,8L);
+ R z;
+}
 
 static DF1(jtfitf1){V*sv=VAV(self); R df1(  w,fit(fix(sv->f),sv->g));}
 static DF2(jtfitf2){V*sv=VAV(self); R df2(a,w,fit(fix(sv->f),sv->g));}
@@ -56,7 +56,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitpoly2,m,l,r);
-  case CPOWOP:
+  case CPOWOP:  // support for #^:_1!.n
    if(VERB&AT(sv->g)||!equ(num[-1],sv->g))R fitct(a,w);
    f=sv->f; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,m,l,r);}
@@ -67,7 +67,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CROT: case CDOLLAR: 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   R CDERIV(CFIT,jtfitfill1,jtfitfill2,m,l,r);
+   R fdef(CFIT,VERB,(AF)(jtfitfill1),(AF)(jtfitfill2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(m),(I)(l),(I)(r));  // preserve INPLACE flags
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);

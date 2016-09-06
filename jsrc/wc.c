@@ -367,7 +367,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    d->source=(US)i;                     /* source line number    */
    d->go= !k||k==CCONT||k==CBREAK||k==CTHROW ? (US)SMAX : k==CRETURN ? (US)SMAX-1 : (US)(1+n);
    b|=k==CGOTO;                         /* goto seen?            */
-   if(!k)RZ(x=enqueue(w1,w0)) else x=k==CLABEL||k==CGOTO||k==CFOR&&4<AN(w0)?w0:0L;
+   if(!k)RZ(x=enqueue(w1,w0,2)) else x=k==CLABEL||k==CGOTO||k==CFOR&&4<AN(w0)?w0:0L;  // parse for explicit defn
    q=k?1&&x:AN(x);
    ASSERT(q<SMAX,EVLIMIT);
    if(x){                               /* tokens of the line    */

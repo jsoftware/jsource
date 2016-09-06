@@ -68,7 +68,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  RZ(y=str(1L,"z"));     ACX(y);
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;
  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
- GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgngloname=x;
+ GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
  RZ(mnam=makename("m")); RZ(mdot=makename("m."));
  RZ(nnam=makename("n")); RZ(ndot=makename("n."));
  RZ(unam=makename("u")); RZ(udot=makename("u."));

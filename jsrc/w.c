@@ -119,27 +119,41 @@ R 1;
 // Convert text sentence to a sequence of words to be the queue for parsing
 // a holds the result of wordil, which is an integer list of word index & length: (# words),(i0,l0),(i1,l1)...
 // w holds the string text of the sentence
-F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
+// env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
+A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
  GATV(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
- for(i=0;i<n;i++){  // for each word
+ for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
-  if(128>c&&(y=ds(e))){*x++=y;if(e==CTILDE&&x[-2]==ds(CRBRACE))bracetilde=1;}  // If first char is ASCII, see if the form including inflections is a primitive;
+  if(128>c&&(y=ds(e))){if(e==CTILDE&&x[-1]==ds(CRBRACE))bracetilde=1;  // If first char is ASCII, see if the form including inflections is a primitive;
     // if so, that is the word to put into the queue.  No need to copy it
     // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
     // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
     // without risk of program check
-  else if(e==CFCONS)RZ(*x++=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
-  else switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
+    // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
+    // In environment 0 (tacit translator), leave as simple assignment
+    if(env!=0 && AT(y)&ASGN) {
+     if(env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC)))){y=ds(CGASGN);}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
+     if(i&& AT(x[-1])&NAME){y= y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
+   }
+   *x=y;   // install the value
+  } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
+  } else switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
    default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
-   case C9: RZ(*x++=connum(wl,wi));   break;   // starts with numeric, create numeric constant
-   case CQ: RZ(*x++=constr(wl,wi));   break;   // start with ', make string constant
-   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x++=nfs(wl,wi));   // starts with alphabetic, make it a name, error if invalid name
- }}
+   case C9: RZ(*x=connum(wl,wi));   break;   // starts with numeric, create numeric constant
+   case CQ: RZ(*x=constr(wl,wi));   break;   // start with ', make string constant
+   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));   // starts with alphabetic, make it a name, error if invalid name
+  }
+  // Mark the word as not-inplaceable.  Since all allocations start life marked in-placeable, we get into trouble if words in
+  // a explicit definition are left that way, because the sentences may get reexecuted and any constant marked inplaceable could
+  // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts
+  // are incremented).  But just do it for all words in sentences
+  ACIPNO(*x);  // mark the stored word not inplaceable
+ }
 
  // We have created the queue.  Here we check for special in-place forms.  If we find one, we
  // replace the verb/adverb with a version that performs in-place operation.
@@ -151,13 +165,16 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
  // The game here is to make tests that fail as quickly as possible, so that this overhead
  // falls lightly on most sentences
  if(5 <= n) {   // no special form can be less than 5 words
+#if 0  // scaf
   if(TVERB(3,CCOMMA) && TAIA(0,2) && !(AT(v[4])&ADV+CONJ) && 
       !(AT(v[4])&NAME&&(y=symbrd(v[4]),jt->etxn=jt->jerr=0,y)&&AT(y)&ADV+CONJ)) {
    // abc = abc , blah  but blah must not start with a modifier, or be a name whose value is a modifier
    // NOTE that strictly speaking we don't know the type of the name (could change during blah), so this is a kludge
    RZ(v[3]=y=ca(ds(CAPIP)));   // create new word for append-in-place.  OK to overwrite v[3] because it is from ds()
    if(!jtpipname(jt, v[0], v[1], &VAV(y)->h))R 0;  // install name to check, in the otherwise-unused h field
-  } else if (6 <= n) {
+  } else
+#endif
+  if (6 <= n) {
    if((TRBRACE(n-2) || TRBRACE(n-3) && RPAR&AT(v[n-2])) && TAIA(0,n-1) ){I c,j,p,q;
     // abc=:pqr xyz}abc  or  abc=:pqr (xyz})abc    or  abc=:pqr (xyz)}abc    or   abc=:(expr) xyz}abc     or   abc=:(expr) (xyz)} abc
     j=2; p=q=0;   // start looking after ASGN
@@ -221,8 +238,8 @@ F2(jtenqueue){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracetilde=0;UC c;
 /* y:  array temp                                               */
 /* z:  result array of boxed list of words                      */
 
-
-F1(jttokens){R enqueue(wordil(w),w);}
+// env is the environment: 0=tacit translator, 1=keyboard/immex with no local symbol, 2=explicit definition running
+A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 
 
 #define CHKJ(j)             ASSERT(0<=(j),EVINDEX);

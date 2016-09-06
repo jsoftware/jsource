@@ -241,8 +241,9 @@ I jtmaxtype(J jt,I s,I t){
  // If values differ and are both nonzero...
  I resultbit = prioritytype[MAX(typepriority[CTTZ(s)],typepriority[CTTZ(t)])];  // Get the higher-priority type
  if((s|t)&SPARSE){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If sparse, return sparse version
- R (I)1 << resultbit;
+ R (I)1 << resultbit;   // otherwise, return normal version
 #if 0
+// obsolete code
 I u,s1,t1; s=UNSAFE(s);   // We must compare the types only, not the safe/unsafe bit
  t=UNSAFE(t);
 u=s|t;

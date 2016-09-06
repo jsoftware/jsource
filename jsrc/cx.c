@@ -488,20 +488,14 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  }  
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
- // Also look for global assignments to name (either locative =. or name =:) and flag them
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
-  if(AT(lv[j])==(ASGN+ASGNLOCAL)) {  // local assignment  (ASGNTONAME can't have been set yet in the input)
-   if((tt=AT(t=lv[j-1]))&NAME){    // tt = type of previous word
-    if((NAV(t)->flag&(NMLOC|NMILOC))){
-     // locative =.   flag as global assignment
-     lv[j]=asgngloname;   //  indicate name =:  (ASGN|ASGNTONAME)
-    }else{
-     // simplename followed by =.  Probe for the name.  This creates the symbol-table entry for it
-     lv[j]=asgnlocsimp;   //  indicate =. preceded by simplename (ASGN|ASGNLOCAL|ASGNTONAME)
-     RZ(probeis(t,pfst));
-    }
-   } else if(tt&LIT) {
+  if((AT(lv[j])&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
+   t=lv[j-1];  // t is the previous word
+   if(AT(lv[j])&ASGNTONAME){    // preceded by name?
+    // Lookup the name, which will create the symbol-table entry for it
+    RZ(probeis(t,pfst));
+   } else if(AT(t)&LIT) {
     // LIT followed by =.  Probe each word
     // First, convert string to words
     s=CAV(t);   // s->1st character; remember if it is `
@@ -514,11 +508,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
       } else RESETERR
      }
     } else RESETERR  // if invalid words, ignore - we don't catch it here
-   } else if(AT(lv[j])==ASGN&&tt&NAME) {    // global assignment to name
-    lv[j]=asgngloname;   //  indicate name =:  (ASGN|ASGNTONAME)
-   }  // 'assignment'
-  }  // for each word in sentence
- }
+   }  // not NAME, not LIT
+  } // end 'local assignment'
+ }  // for each word in sentence
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
@@ -548,7 +540,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // and are valid only in conjuction with the symbol table for this definition.  To prevent the escape of
  // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned
  // result).  The definition will still benefit from the preallocation of the symbol table.
- if(type>=3 || flags&VXOPR){  // If this is guarfanteed to return a noun...
+ if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
   for(j=0;j<ln;++j) {
    if((tt=AT(t=lv[j]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
     I4 compcount=0;  // number of comparisons before match

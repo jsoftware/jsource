@@ -20,7 +20,7 @@
 #include "p.h"
 
 
-A jteval(J jt,C*s){R parse(tokens(cstr(s)));}
+A jteval(J jt,C*s){R parse(tokens(cstr(s),1+!!jt->local));}
 
 A jtev1(J jt,    A w,C*s){R df1(  w,eval(s));}
 A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
@@ -29,12 +29,12 @@ A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
 
 F1(jtexec1){A z;
  F1RANK(1,jtexec1,0);
- FDEPINC(1); z=parse(tokens(vs(w))); jt->asgn=0; FDEPDEC(1);
+ FDEPINC(1); z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0; FDEPDEC(1);
  R z&&AT(z)&VERB+ADV+CONJ+MARK?mtv:z;
 }
 
 F1(jtimmex){A z;
- FDEPINC(1); z=parse(tokens(w)); FDEPDEC(1); 
+ FDEPINC(1); z=parse(tokens(w,1+!!jt->local)); FDEPDEC(1); 
  if(EWTHROW==jt->jerr){RESETERR; z=mtm;}
  if(z&&!jt->asgn)jpr(z);
  R z;
@@ -66,7 +66,7 @@ A jtjset(J jt,C*name,A x){R symbis(nfs((I)strlen(name),name),x,jt->global);}
 
 F2(jtapplystr){PROLOG(0054);A fs,z;I d;
  F2RANK(1,RMAX,jtapplystr,0);
- RZ(fs=parse(tokens(vs(a))));
+ RZ(fs=parse(tokens(vs(a),1+!!jt->local)));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  RE(d=fdep(fs));
  FDEPINC(d); z=CALL1(VAV(fs)->f1,w,fs); FDEPDEC(d);

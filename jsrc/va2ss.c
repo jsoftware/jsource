@@ -50,6 +50,8 @@ static A ssingallo(J jt,I r,I t){A z;
  GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
 }
 
+// MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only
+
 #define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
@@ -61,13 +63,15 @@ static A ssingallo(J jt,I r,I t){A z;
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
   else if (AINPLACE){ z = a; AT(z) = FL; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-  else {GATV(z, FL, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, FL, 1, ar, AS(a));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
  } else { \
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
   else if (WINPLACE){ z = w; AT(z) = FL; } \
-  else {GATV(z, FL, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, FL, 1, wr, AS(w));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
  } \
 } /* We have the output block */
+
+// MUST NOT USE AT after SSCOMPPREFIX!  We overwrite the type.  Use sw only
 
 // We don't bother checking zombiesym for comparisons, since usually they're scalar constant results
 #define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
@@ -81,11 +85,11 @@ static A ssingallo(J jt,I r,I t){A z;
   if (AINPLACE){ z = a; AT(z) = B01; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, ar, AS(a)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, B01, 1, ar, AS(a));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
  } else { \
   if (WINPLACE){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, wr, AS(w)); if((I)jtf&3)ACIPYES(z);} \
+  else {GATV(z, B01, 1, wr, AS(w));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
  } \
 } /* We have the output block, or 0 if we are returning an atom */
 
@@ -361,15 +365,22 @@ static I intforD(J jt, D d){I z;
 
 SSINGF2OP(jtssbitwise) SSNUMPREFIX  I aiv,wiv,ziv;
  // Each operand must be convertible to integer
- if(AT(a)&INT){aiv=SSRDI(a);
- }else if(AT(a)&FL){aiv=intforD(jt,SSRDD(a));
-  // see if <.a is tolerantly equal to (I)a
- }else{aiv=SSRDB(a);
+ switch(sw){  // type has been overwritten, must take it from here
+ case SSINGIB: case SSINGII: case SSINGID:  // a is INT
+  aiv=SSRDI(a); break;
+ case SSINGDB: case SSINGDI: case SSINGDD:  // a is FL
+  aiv=intforD(jt,SSRDD(a)); break;   // see if <.a is tolerantly equal to (I)a
+ default:  // a is B01
+  aiv=SSRDB(a);
  }
 
- if(AT(w)&INT){wiv=SSRDI(w);
- }else if(AT(w)&FL){wiv=intforD(jt,SSRDD(w));
- }else{wiv=SSRDB(w);
+ switch(sw){  // type has been overwritten, must take it from here
+ case SSINGBI: case SSINGII: case SSINGDI:  // w is INT
+  wiv=SSRDI(w); break;
+ case SSINGBD: case SSINGID: case SSINGDD:  // w is FL
+  wiv=intforD(jt,SSRDD(w)); break;   // see if <.w is tolerantly equal to (I)a
+ default:  // w is B01
+  wiv=SSRDB(w);
  }
 
   RE(0);  // return if noninteger argument

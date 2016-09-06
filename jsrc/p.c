@@ -150,13 +150,11 @@ static void auditnum(){
 // Blocks are born non-inplaceable; they need to be marked inplaceable by the creator.
 // Blocks that are assigned are marked not-inplaceable.
 // But an in-placeable argument is not enough;
-// The key point is that an in-place operation is connected to a FUNCTION CALL, not an DATA BLOCK.
+// The key point is that an in-place operation is connected to a FUNCTION CALL as well as a DATA BLOCK.
 // For example, in (+/ % #) <: y the result of <: y has a usecount of 1 and is
 // not used anywhere else, so it is passed into the fork as an inplaceable argument.
 // This same block is not inplaceable when it is passed into # (because it will be needed later by +/)
 // but it can be inplaceable when passed into +/.
-// Thus, it is up to the caller to decide whether it can tolerate having an argument overwritten;
-// if so, it marks the argument as inplaceable for that call only.
 //
 // By setting the inplaceable flag in a result, a verb warrants that the block does not contain and is not contained in
 // any other block.  Whether to traverse to do this is an open issue, deferred for the time being because only
@@ -165,6 +163,9 @@ static void auditnum(){
 // The 2 LSBs of jt are set to indicate inplaceability of arguments.  The caller sets them when e
 // has no further use for the argument AND e knows that the callee can handle in-place arguments.
 // An argument is inplaceable only if it is marked as such in the block AND in jt.
+// A caller should set the bit in jt only if it knows that the argument is inplaceable, which
+// will be true if (1) the block was created by the caller; (2) the block was an argument to the caller with jt
+// marked to indicate its inplaceability
 //
 // Bit 0 of jt is for w, bit 1 for a.
 //
@@ -239,15 +240,17 @@ static void auditnum(){
 //  DIRECT type (implied for now - we don't inplace otherwise)
 //  the verb supports in-place ops
 // We set the jt bits to indicate inplaceability.  Since the parser never reuses an argument, all bits will
-// be set if the callee can handle inplaceing.  The inplaceable bit in the arguments must also be cleared if the
-// callee cannot handle inplaceing, to prevent releasing an in-placeable block where it is not understood.
+// be set if the callee can handle inplaceing.
 // NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT be marked inplace.  The action routine
-// should check the operand addresses when zombieval/assignsym is set.
-//
+// should check the operand addresses when zombieval/assignsym is set.  Inplaceable arguments are ignored by functions that do
+// not handle inplace operations.
+// The inplaceable bit in the arguments must also be cleared if the
+// callee cannot handle inplaceing, to prevent releasing an in-placeable block where it is not understood.   scaf comment
+
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb
-#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{ACIPNO(stack[w].a); y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{ACIPNO(stack[w].a);ACIPNO(stack[aa].a); y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{/* scaf ACIPNO(stack[w].a); */y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{/* scaf ACIPNO(stack[w].a);ACIPNO(stack[aa].a); */y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
 // in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
@@ -414,7 +417,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
 
   }else{
 
-   // no executable fragment, pull from the stack.  If we pull ')', there is no way we can execute
+   // no executable fragment, pull from the queue.  If we pull ')', there is no way we can execute
    // anything till 2 more words have been pulled, so we pull them here to avoid parse overhead.
    // Likewise, if we pull a CONJ, we can safely pull 1 more here.  And first time through, we should
    // pull 2 words following the first one.

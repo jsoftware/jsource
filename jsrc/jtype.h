@@ -469,9 +469,9 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // m
 #define VXOPCALL        (I)2097152      /* : defn derived fn call          */
 #define VTRY1           (I)4194304      /* monad contains try.             */
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
-#define VDDOP           (I)16777216     /* derived from a derived operator */
-#define VINPLACEOK1     (I)33554432L    // monad can handle in-place args
-#define VINPLACEOK2     (I)67108864LL    // dyad can handle in-place args
+#define VDDOP           (I)16777216     /* 24 derived from a derived operator */
+#define VINPLACEOK1     (I)33554432L    // 25 monad can handle in-place args
+#define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
 
 
 typedef struct {DX re;DX im;} ZX;

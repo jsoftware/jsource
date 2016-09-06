@@ -137,6 +137,7 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l,r,*v=AV(h),wr;
  R l<ar||r<wr?rank2ex(a,w,fs,l,r,f2):CALL2(f2,a,w,fs);
 }
 
+// Select action routines and flags for u"n based on the verb u and the ranks n
 static void qqset(A a,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
  static C at1[]={CFLOOR,CLE,CCEIL,CGE,CPLUS,CPLUSDOT,CPLUSCO, 
    CSTAR,CSTARDOT,CSTARCO,CMINUS,CNOT,CHALVE,CDIV,CSQRT,CEXP,CLOG, 
@@ -148,36 +149,52 @@ static void qqset(A a,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
    CDOLLAR,CPOUND,CIOTA,CICO,CEPS,CLBRACE,CMATCH,
    CEQ,CLT,CMIN,CLE,CGT,CMAX,CGE,CPLUS,CPLUSDOT,CPLUSCO,CSTAR,CSTARDOT,CSTARCO,
    CMINUS,CDIV,CEXP,CNE,CSTILE,CBANG,CCIRCLE,0};
+ // For noun u, set flags to empty and use the constant routines
  if(NOUN&AT(a)){*f1=cons1; *f2=cons2; *flag=0; R;}
+ // Calculate m, the flags to use for u.  We set VIRSx if the verb is a primitive with known
+ // IRS, or if u has a IRS flags set (except when that flag came from execution of ")
  v=VAV(a); c=v->id;
  if(strchr(ir1,c))m+=VIRS1;
  if(strchr(ir2,c))m+=VIRS2;
  if(!(m&VIRS1)&&v->flag&VIRS1&&c!=CQQ)m+=VIRS1;
  if(!(m&VIRS2)&&v->flag&VIRS2&&c!=CQQ)m+=VIRS2;
+ // If u does not have intrinsic IRS, see if it is a combination that has IRS
  if(!m){
-  p=0; if(f=v->f){d=ID(f);p=VERB&AT(f)&&strchr(ir2,d);};
-  q=0; if(g=v->g){e=ID(g);q=VERB&AT(g)&&strchr(ir2,e);};
+  p=0; if(f=v->f){d=ID(f);p=VERB&AT(f)&&strchr(ir2,d);};  // p=1 if f has IRS2
+  q=0; if(g=v->g){e=ID(g);q=VERB&AT(g)&&strchr(ir2,e);};  // q=1 if g has IRS2
   switch(c){
-   case CFIT:   if(p&&d!=CEXP)m+=VIRS2; if(d==CNE)m+=VIRS1; break;
-   case CTILDE: if(p)m+=VIRS1+VIRS2; break;
-   case CAMP:   if(p&&NOUN&AT(g)||q&&NOUN&AT(f))m+=VIRS1; break;
-   case CFORK:  if(v->f1==(AF)jtmean)m+=VIRS1;
+   case CFIT:   if(p&&d!=CEXP)m+=VIRS2; if(d==CNE)m+=VIRS1; break;  // u!.n, preserve IRS2 except for ^!.n; preserve IRS1 for ~:!.n (match)
+   case CTILDE: if(p)m+=VIRS1+VIRS2; break;   // u~, set IRS if dyad u has IRS2
+   case CAMP:   if(p&&NOUN&AT(g)||q&&NOUN&AT(f))m+=VIRS1; break;   // u&n or m&v, preserve IRS2 of the verb 
+   case CFORK:  if(v->f1==(AF)jtmean)m+=VIRS1;   // mean is also supported by IRS1  (kludge - should set flag when mean detected)
  }}
+ // We have m.  Now decide the return routines.  If the rank is nugatory, skip it & preserve the original routine pointer.
+ // Otherwise, use the driver routine that executes rank?ex for the verb
+ // I think this can be improved, by detecting the nugatory case by looking at the verb ranks.  This code may go back to
+ // the time when arithmetic verbs had infinite rank.
+ // Preserve the INPLACE flags from u - but only when irs etc can handle them!
+ // not yet m |= v->flag&(VINPLACEOK1|VINPLACEOK2);
  *f1=strchr(at1,c) ? v->f1 : m&VIRS1 ? rank1i : rank1;
  *f2=                        m&VIRS2 ? rank2i : rank2; 
  *flag=m;
 }
 
+// a"w; result is a verb
 F2(jtqq){A h,t;AF f1,f2;D*d;I flag,*hv,n,r[3],*v;
  RZ(a&&w);
- GAT(h,INT,3,1,0); hv=AV(h);
+ // The h value in the function will hold the ranks.  Allocate it
+ GAT(h,INT,3,1,0); hv=AV(h);  // hv->rank[0]
  if(VERB&AT(w)){
+  // verb v.  Extract the ranks into a floating-point list
   GAT(t,FL,3,1,0); d=DAV(t);
   n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;
+  // The floating-list is what we will call the v operand
+  // h is the integer version
   w=t;
  }else{
+  // Noun v. Extract and turn into 3 values, stored in h
   n=AN(w);
   ASSERT(1>=AR(w),EVRANK);
   ASSERT(0<n&&n<4,EVLENGTH);
@@ -186,6 +203,8 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I flag,*hv,n,r[3],*v;
   hv[1]=v[3==n]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  r[2]=DR(hv[2]);
  }
+ // Get the action routines and flags to use for the derived verb
  qqset(a,&f1,&f2,&flag);
+ // Create the derived verb
  R fdef(CQQ,VERB, f1,f2, a,w,h, flag, r[0],r[1],r[2]);
 }

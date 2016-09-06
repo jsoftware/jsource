@@ -396,8 +396,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
   RZ(e=g==jt->local?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  wt=AT(w);   // type of the value
-  if(wt&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
+  if(AT(w)&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
@@ -424,9 +423,10 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
    // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
    if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
+    // kludge this should not be required, since the incumbent value should never be inplaceable
    // ra() also removes inplaceability
  }else if(x!=w){  /* replacing name with different mapped data */
-  if(wt&BOX)R smmis(x,w);
+  if((wt=AT(w))&BOX)R smmis(x,w);
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
   ASSERT(wt&DIRECT,EVDOMAIN);
   ASSERT(AM(x)>=m,EVALLOC);

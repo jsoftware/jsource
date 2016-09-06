@@ -81,8 +81,8 @@ B jtpinit(J jt){A t;C*s;
  /*  :  */  pdef(CCOLON,  CONJ, 0L,        jtcolon,  0,   0,   0   ,0);
  /*  :. */  pdef(COBVERSE,CONJ, 0L,        jtobverse,0,   0,   0   ,0);
  /*  :: */  pdef(CADVERSE,CONJ, 0L,        jtadverse,0,   0,   0   ,0);
- /*  ,  */  pdef(CCOMMA,  VERB, jtravel,   jtover,   RMAX,RMAX,RMAX,0);
- /*  ,* */  pdef(CAPIP,   VERB, 0L,        jtapip,   0,   RMAX,RMAX,0);  // f1 gets filled in with pointer to a name when this is used
+ /*  ,  */  pdef(CCOMMA,  VERB, jtravel,   jtapip,   RMAX,RMAX,RMAX,VINPLACEOK2);
+ // obsolete /*  ,* */  pdef(CAPIP,   VERB, 0L,        jtapip,   0,   RMAX,RMAX,VINPLACEOK2);  // f1 gets filled in with pointer to a name when this is used
  /*  ,. */  pdef(CCOMDOT, VERB, jttable,   jtstitch, RMAX,RMAX,RMAX,0);
  /*  ,: */  pdef(CLAMIN,  VERB, jtlamin1,  jtlamin2, RMAX,RMAX,RMAX,0);
  /*  ;  */  pdef(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,0);

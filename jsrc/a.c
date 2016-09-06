@@ -6,13 +6,14 @@
 #include "j.h"
 
 
-static DF1(swap1){DECLF; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):CALL2(f2,w,w,fs);}
-static DF2(swap2){DECLF; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):CALL2(f2,w,a,fs);}
+static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&1)),(f2)((J)((I)jt|(((I)jtinplace<<1)+(I)jtinplace)),w,w,fs));}
+static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&3)),(f2)((J)((I)jt|(((((I)jtinplace<<2)+(I)jtinplace)>>1)&3)),w,a,fs));}
 
 F1(jtswap){A y;C*s;I n;
  RZ(w); 
- if(VERB&AT(w))R ADERIV(CTILDE,swap1,swap2,RMAX,rr(w),lr(w));
- else{
+ if(VERB&AT(w)){I flag = VAV(w)->flag&VINPLACEOK2; flag = flag+(flag>>1);  // set both inplace bits from dyad
+  R fdef(CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
+ }else{
   if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
   ASSERT(1>=AR(w),EVRANK);
   n=AN(w); s=CAV(w); 

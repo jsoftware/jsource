@@ -9,6 +9,16 @@ f=: 3 : 0
 
 (i. -: f)"0 ?2 10$2e3
 
+f=: 3 : 0
+ z=. i.0
+ for_i. i.y do.
+  z=. i ,~ z
+ end.
+)
+
+(i. -: f)"0 ?2 10$2e3
+
+
 f1=: 3 : 0
  z=. i.0 0
  for_i. i.y do.
@@ -18,10 +28,32 @@ f1=: 3 : 0
 
 (i."0@i. -: f1)"0 ?2 10$100
 
+f1=: 3 : 0
+ z=. i.0 0
+ for_i. i.y do.
+  z=. (i. i) ,~ z
+ end.
+)
+
+(i."0@i. -: f1)"0 ?2 10$100
+
 f2=: 3 : 0
  z=. ''
  for_x. y do.
   z=. z,x
+ end.
+)
+
+(] -: f2) 'only Hugh can prevent florist friars'
+(] -: f2) u:'only Hugh can prevent florist friars'
+(] -: f2) 10&u:'only Hugh can prevent florist friars'
+(] -: f2) s:@<"0 'only Hugh can prevent florist friars'
+(] -: f2) ?1000$1e6
+
+f2=: 3 : 0
+ z=. ''
+ for_x. y do.
+  z=. x ,~ z
  end.
 )
 
@@ -234,6 +266,13 @@ a =: i. 4
 0 1 2 3 8 -: a
 'domain error' -: f12 etx ''
 2 3 2 3 -: f13''
+
+NB. Verify constants not corrupted in unassigned verbs
+f =: 3 : 0"0 '123'
+'abc' , (2#y) , 'd'
+)
+('abc11d' , 'abc22d' ,: 'abc33d') -: f
+
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global local test testa'
 

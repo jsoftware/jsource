@@ -222,11 +222,7 @@ I jtpiplocalerr(J jt, A self){
   R 0;  // OK otherwise
 }
 
-// Look for append-in-place.  We can only append-in-place to a.  We can do that if the argument is
-// marked in-placeable in the usecount and in the jt flag; OR if assignsym is nonnull, has a value, and
-// the value is equal to the address of a.  Otherwise, revert to normal append.
-
-
+#if 0  // obsolete
 // append-in-place.  We can only append if the buffer is not in use more than once, and if the
 // datatype is direct.  Also, we can't append if the name was a local name that is not defined,
 // since that would append-in-place to the global value.  For mapped files we don't count the name
@@ -241,7 +237,7 @@ F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  if(AN(a)&&ar&&ar>=wr&&!TYPESGT(wt,at)&&5e8>AC(a)){
   // a is a nonempty array, and the items of the result will have the rank of items of a,
   // and a does not need to be promoted in precision, and a is not a canned constant (this last test
-  // is not needed since we wouldn't be here if it were), check the item sizes.  Set p=-1 if the
+  // is not needed since we wouldn't be here if it were).  Check the item sizes.  Set p=-1 if the
   // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p=1 if items of w require fill
   // If there are extra axes in a, they will become unit axes of w.  Check the axes that are in both a and w,
   // to see if any require extension in a
@@ -274,3 +270,64 @@ F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  }else RZ(a=over(a,w));  // if there was trouble, failover to non-in-place code
  R a;
 }    /* append in place if possible */
+
+#else
+// Append, including tests for append-in-place
+A jtapip(J jtf, A a, A w, A self){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
+ RZ(a&&w); J jt = (J)((I)jtf&-4);  // create unflagged true jt address
+ // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
+ // being assigned is the same as a, and the usecount of a allows inplacing; or if the operation is inplaceable in jt and
+ // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
+ // one of the uses is for the mapping header.
+ // In all cases we allow only DIRECT types (I don't know why) 
+ if(((I)jtf&2&&ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2))) && AT(a)&DIRECT) {
+  // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
+  // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes
+  // in the shape that are part of the shape of an item), or if a is atomic (because
+  // we would have to replicate a, and anyway how much are you saving?), or if w has higher rank than a (because the rank of the
+  // result would increase, and there's no room in the shape)
+  // We insist that the rank of the verb be at least as large as the rank of each argument.  There are some cases where it
+  // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
+  if(AN(a)&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&(!jt->rank||(jt->rank[0]>=ar&&jt->rank[1]>=wr))){
+   //  Check the item sizes.  Set p<0 if the
+   // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
+   // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
+   // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
+   // shape of an item of result that matters
+   I naxes = MIN(wr,ar-1); u=ar+(as=AS(a))-naxes; v=wr+(ws=AS(w))-naxes;  // point to the axes to compare
+   // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
+   // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
+   // items of w (after its conversion to the precision of a)
+   k=bp(at); ak=k*AN(a); wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
+   // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
+   p=0; DO(naxes, p |= *u++-*v++;);
+   // Now p<0 if ANY axis of a needs extension - can't inplace then
+   if(p>=0) {
+    // See if there is room in a to fit w (including trailing zero byte)
+    if(AM(a)>=ak+wk+(1&&at&LAST0)){
+     // We have passed all the tests.  Inplacing is OK.
+     // If w must change precision, do.  This is where we catch domain errors.
+     if(TYPESGT(at,wt))RZ(w=cvt(at,w));
+     // If the items of w must be padded to the result item-size, do so.
+     // If the items of w are items of the result, we simply extend each to the shape of
+     // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
+     // item of the result, and it is extended to the size of a corresponding cell of a.  The extra
+     // rank is implicit in the shape of a.
+     if(p){RZ(h=vec(INT,wr,as+ar-wr)); if(ar==wr)*AV(h)=*ws; RZ(w=take(h,w));}
+     av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
+     // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
+     // copy fill to the output area.  Start the copy after the area that will be filled in by w
+     I wlen = k*AN(w); // the length in bytes of the data in w
+     if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+     // Copy in the actual data, replicating if w is atomic
+     if(wr)MC(av,wv,wlen); else mvc(wk,av,k,wv);
+     // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
+     *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
+     R a;
+    }
+   }
+  }
+ }
+ R(over(a,w));  // if there was trouble, failover to non-in-place code
+}    /* append in place if possible */
+#endif

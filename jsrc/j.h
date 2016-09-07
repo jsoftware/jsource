@@ -517,3 +517,10 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define CACHELINESIZE 128  // free pool is aligned on this boundary
+
+#if C_HASH
+#define HASH0           224273737UL
+#else
+#define HASH0           0UL
+#endif
+

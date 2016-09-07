@@ -14,7 +14,7 @@
 #define FILLFACTOR      (jt->sbfillfactor)
 #define GAP             (jt->sbgap)  
 
-static const  SBU       sentinel = {0,0,0,BLACK,0,0,0,IMIN,0,0,0};
+static const  SBU       sentinel = {0,0,HASH0,BLACK,0,0,0,IMIN,0,0,0};
 
 /* #define TMP */
 #ifdef TMP
@@ -312,6 +312,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
 }    /* insert new symbol */
 
 static SB jtsbprobe(J jt,S c2,I n,C*s){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
+ if(!n)R(SB)0;   // sentinel
 // optimize storage if ascii or short
  S c0=c2;  // save original flag
  if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DO(n/4,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
@@ -606,6 +607,42 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  EPILOG(one);
 }
 
+// minimal check for sbsetdata2
+static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
+     C*sv;I c,i,sn,un;SBU*uv,*v;
+ RZ(una&&sna&&u&&s);
+ ASSERTD(!AR(una),"c atom");            /* cardinality   */
+ ASSERTD(INT&AT(una),"c integer");
+ c=*AV(una);
+ ASSERTD(0<=c,"c non-negative");
+ ASSERTD(!AR(sna),"sn atom");           /* string length */
+ ASSERTD(INT&AT(sna),"sn integer");
+ sn=*AV(sna);
+ ASSERTD(0<=sn,"sn non-negative");      /* root          */
+ sv=CAV(s);
+ un=*AS(u); uv=(SBU*)AV(u);
+ ASSERTD(2==AR(u),"u matrix");
+ ASSERTD(INT&AT(u),"u integer");
+ ASSERTD(*(1+AS(u))==sizeof(SBU)/SZI,"u #columns");
+ ASSERTD(c<=un,"c bounded by #u");
+ ASSERTD(1==AR(s),"s vector");
+ ASSERTD(LIT&AT(s),"s literal");
+ ASSERTD(sn<=AN(s),"sn bounded by #s");
+ for(i=1,v=1+uv;i<c;++i,++v){S c2;I vi,vn;UC*vc;
+  c2=v->flag&SBC2+SBC4;
+  vi=v->i;
+  vn=v->n;
+  vc=(UC*)(sv+vi);
+  ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
+  ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
+  ASSERTD(0<=vi&&vi<=sn,"u index");
+  ASSERTD(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4)),"u index alignment");
+  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4))),"u length");
+  ASSERTD(sn>=vi+vn,"u index/length");
+ }
+ EPILOG(one);
+}
+
 static F1(jtsbcheck){R sbcheck1(sc(jt->sbun),sc(jt->sbsn),jt->sbu,jt->sbs,jt->sbh,sc(ROOT),sc(FILLFACTOR),sc(GAP));}
 
 static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
@@ -624,6 +661,29 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
  FILLFACTOR=*AV(WVR(6));
  GAP       =*AV(WVR(7));
  fa(u); fa(s); fa(h);
+ R one;
+}
+
+static F1(jtsbsetdata2){A *wv;I c,i,sn,wd;SBU*uv,*v;C*sv;
+ RZ(w);
+ ASSERTD(BOX&AT(w),"arg type");
+ ASSERTD(1==AR(w), "arg rank");
+ ASSERTD(4<=AN(w), "arg length");
+ wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
+ c=*AV(WVR(0));                         // cardinality
+ sn=*AV(WVR(1));                        // string length
+ uv=(SBU*)AV(WVR(2));                   // table of symbols
+ sv=CAV(WVR(3));                        // global string table
+ fa(jt->sbu); fa(jt->sbs); fa(jt->sbh); // free old symbol
+ sbtypeinit();                          // initialization routine
+ ra(jt->sbu); ra(jt->sbs); ra(jt->sbh); // prevent automatically freed by tpop()
+ for(i=1,v=1+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
+  vi=v->i;                              // index into sbs
+  vn=v->n;                              // length in bytes
+  vc=(UC*)(sv+vi);                      // symbol string
+  ASSERTD(i==sbprobe((S)v->flag,vn,vc),"u unique"); // insert symbol
+ }
  R one;
 }
 
@@ -679,6 +739,7 @@ F2(jtsb2){A z;I j,k,n;
   case -6:   R sbunind(w);
   case  7:   R sborder(w);
   case 10:   R sbsetdata(w);
+  case 11:   R sbsetdata2(w);
   case 16:   GAP = 4;                                       R sc(GAP);
   case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
   case 18:   GAP--;                                         R sc(GAP);
@@ -721,14 +782,14 @@ F2(jtsb2){A z;I j,k,n;
 // automatically freed by tpop()
 B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
  s[0]=2000; s[1]=c;
- GA(x,LIT,20000,1,0);       jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
+ GA(x,LIT,20000,1,0);           jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
  RZ(x=apv(ptab[5+PTO],-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
- GATV(x,INT,*s*c,2,s);        jt->sbu=x; jt->sbuv=(SBU*)AV(x);
+ GATV(x,INT,*s*c,2,s);          jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */
  jt->sbuv[0]=sentinel;
  jt->sbun=1;
- *jt->sbhv=0;
+ jt->sbhv[HASH0%AN(jt->sbh)]=0;
  R 1;
 }    /* initialize global data for SBT datatype */

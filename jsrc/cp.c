@@ -184,9 +184,11 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
     if(ARELATIVE(w))RZ(w=car(w));
     if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
      f1=jtpowseq; f2=jtply2; v=VAV(a);
-     if((!AN(x)||FL&AT(x)&&inf==*DAV(x))&&
-         CAMP==v->id&&(CFROM==ID(v->f)&&(y=v->g,INT&AT(y)&&1==AR(y))))f1=jtindexseqlim1;
-     if(CTILDE==v->id&&CFROM==ID(v->f))f2=jtindexseqlim2;
+     // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
+     if((!AN(x)||FL&AT(x)&&inf==*DAV(x))){
+      if(CAMP==v->id&&(CFROM==ID(v->f)&&(y=v->g,INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}
+      else if(CTILDE==v->id&&CFROM==ID(v->f)){f2=jtindexseqlim2;}
+     }
      R CDERIV(CPOWOP,f1,f2,RMAX,RMAX,RMAX);
     }
 //    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design

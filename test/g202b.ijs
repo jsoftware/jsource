@@ -95,6 +95,8 @@ test=: 3 : 0
 
 test"0 ] 10^i.4
 
+0 2 4 9 10 12 _1 -: (2 0 4 0 9 0 0 0 0 10 12 0 _1 {~^:a: 0)
+0 2 4 -: (2 0 4 0 9 0 0 0 0 10 12 0 _1 {~^:(<3) 0)
 
 4!:55 ;:'boxed_rec f indexlim r randomfile rec rec1 spleak'
 4!:55 ;:'test x x2288 y2288'

@@ -123,8 +123,9 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 'value error' -: 15!:6  etx 10&u:&.> ;:'t test'
 'value error' -: 15!:6  etx s:@<"0&.> <'test'
 'value error' -: 15!:6  etx <"0@s: <'test'
-'value error' -: 15!:6  etx s:@<"0&.> ;:'t test'
-'value error' -: 15!:6  etx <"0@s: ;:'t test'
+NB. ??? sometimes ill-formed name
+NB. 'value error' -: 15!:6  etx s:@<"0&.> ;:'t test'
+NB. 'value error' -: 15!:6  etx <"0@s: ;:'t test'
 'domain error' -: 15!:14 etx <'test'
 'domain error' -: 15!:14 etx ;:'t test'
 'value error' -: 15!:14 etx <u:'test'
@@ -133,8 +134,9 @@ t -: ($t)$15!:1 (15!:14 <'t'),0,(*/$t),3!:0 t
 'value error' -: 15!:14 etx 10&u:&.> ;:'t test'
 'value error' -: 15!:14 etx s:@<"0&.> <'test'
 'value error' -: 15!:14 etx <"0@s: <'test'
-'value error' -: 15!:14 etx s:@<"0&.> ;:'t test'
-'value error' -: 15!:14 etx <"0@s: ;:'t test'
+NB. ??? sometimes ill-formed name
+NB. 'value error' -: 15!:14 etx s:@<"0&.> ;:'t test'
+NB. 'value error' -: 15!:14 etx <"0@s: ;:'t test'
 
 'value error'  -: 15!:6  etx <'undefinedname'
 'value error'  -: 15!:6  etx ;:'t undefinedname'

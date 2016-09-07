@@ -53,69 +53,69 @@ NB. complex
 (|. -: rev) 0$3j4
 
 NB. boxed
-(|. -: rev) (?30 2 1 1 1$#x){x=.;:'Cogito, ergo sum. $212 341 CBC News'
-(|. -: rev) (?30 2 1 1 1$#x){x=.(u:&.>) ;:'Cogito, ergo sum. $212 341 CBC News'
-(|. -: rev) (?30 2 1 1 1$#x){x=.(10&u:&.>) ;:'Cogito, ergo sum. $212 341 CBC News'
+(|. -: rev) (?30 2 1 1 1$#x){x=:;:'Cogito, ergo sum. $212 341 CBC News'
+(|. -: rev) (?30 2 1 1 1$#x){x=:(u:&.>) ;:'Cogito, ergo sum. $212 341 CBC News'
+(|. -: rev) (?30 2 1 1 1$#x){x=:(10&u:&.>) ;:'Cogito, ergo sum. $212 341 CBC News'
 (|. -: rev) (?255 1$#x){x
 (|. -: rev) (?0 0$#x){x
 (|. -: rev) <i.2 3
 (|. -: rev) ,<i.2 3
 
 NB. literal
-(|. -: rev) x=.a.{~?50  1$#a.
-(|. -: rev) x=.a.{~?50  2$#a.
-(|. -: rev) x=.a.{~?50  3$#a.
-(|. -: rev) x=.a.{~?50  4$#a.
-(|. -: rev) x=.a.{~?50  5$#a.
-(|. -: rev) x=.a.{~?50  6$#a.
-(|. -: rev) x=.a.{~?50  7$#a.
-(|. -: rev) x=.a.{~?50  8$#a.
-(|. -: rev) x=.a.{~?50  9$#a.
-(|. -: rev) x=.a.{~?50 10$#a.
-(|. -: rev) x=.a.{~?50 11$#a.
-(|. -: rev) x=.a.{~?50 12$#a.
+(|. -: rev) x=:a.{~?50  1$#a.
+(|. -: rev) x=:a.{~?50  2$#a.
+(|. -: rev) x=:a.{~?50  3$#a.
+(|. -: rev) x=:a.{~?50  4$#a.
+(|. -: rev) x=:a.{~?50  5$#a.
+(|. -: rev) x=:a.{~?50  6$#a.
+(|. -: rev) x=:a.{~?50  7$#a.
+(|. -: rev) x=:a.{~?50  8$#a.
+(|. -: rev) x=:a.{~?50  9$#a.
+(|. -: rev) x=:a.{~?50 10$#a.
+(|. -: rev) x=:a.{~?50 11$#a.
+(|. -: rev) x=:a.{~?50 12$#a.
 
 NB. literal2
-(|. -: rev) x=.adot1{~?50  1$#adot1
-(|. -: rev) x=.adot1{~?50  2$#adot1
-(|. -: rev) x=.adot1{~?50  3$#adot1
-(|. -: rev) x=.adot1{~?50  4$#adot1
-(|. -: rev) x=.adot1{~?50  5$#adot1
-(|. -: rev) x=.adot1{~?50  6$#adot1
-(|. -: rev) x=.adot1{~?50  7$#adot1
-(|. -: rev) x=.adot1{~?50  8$#adot1
-(|. -: rev) x=.adot1{~?50  9$#adot1
-(|. -: rev) x=.adot1{~?50 10$#adot1
-(|. -: rev) x=.adot1{~?50 11$#adot1
-(|. -: rev) x=.adot1{~?50 12$#adot1
+(|. -: rev) x=:adot1{~?50  1$#adot1
+(|. -: rev) x=:adot1{~?50  2$#adot1
+(|. -: rev) x=:adot1{~?50  3$#adot1
+(|. -: rev) x=:adot1{~?50  4$#adot1
+(|. -: rev) x=:adot1{~?50  5$#adot1
+(|. -: rev) x=:adot1{~?50  6$#adot1
+(|. -: rev) x=:adot1{~?50  7$#adot1
+(|. -: rev) x=:adot1{~?50  8$#adot1
+(|. -: rev) x=:adot1{~?50  9$#adot1
+(|. -: rev) x=:adot1{~?50 10$#adot1
+(|. -: rev) x=:adot1{~?50 11$#adot1
+(|. -: rev) x=:adot1{~?50 12$#adot1
 
 NB. literal4
-(|. -: rev) x=.adot2{~?50  1$#adot2
-(|. -: rev) x=.adot2{~?50  2$#adot2
-(|. -: rev) x=.adot2{~?50  3$#adot2
-(|. -: rev) x=.adot2{~?50  4$#adot2
-(|. -: rev) x=.adot2{~?50  5$#adot2
-(|. -: rev) x=.adot2{~?50  6$#adot2
-(|. -: rev) x=.adot2{~?50  7$#adot2
-(|. -: rev) x=.adot2{~?50  8$#adot2
-(|. -: rev) x=.adot2{~?50  9$#adot2
-(|. -: rev) x=.adot2{~?50 10$#adot2
-(|. -: rev) x=.adot2{~?50 11$#adot2
-(|. -: rev) x=.adot2{~?50 12$#adot2
+(|. -: rev) x=:adot2{~?50  1$#adot2
+(|. -: rev) x=:adot2{~?50  2$#adot2
+(|. -: rev) x=:adot2{~?50  3$#adot2
+(|. -: rev) x=:adot2{~?50  4$#adot2
+(|. -: rev) x=:adot2{~?50  5$#adot2
+(|. -: rev) x=:adot2{~?50  6$#adot2
+(|. -: rev) x=:adot2{~?50  7$#adot2
+(|. -: rev) x=:adot2{~?50  8$#adot2
+(|. -: rev) x=:adot2{~?50  9$#adot2
+(|. -: rev) x=:adot2{~?50 10$#adot2
+(|. -: rev) x=:adot2{~?50 11$#adot2
+(|. -: rev) x=:adot2{~?50 12$#adot2
 
 NB. symbol
-(|. -: rev) x=.sdot0{~?50  1$#sdot0
-(|. -: rev) x=.sdot0{~?50  2$#sdot0
-(|. -: rev) x=.sdot0{~?50  3$#sdot0
-(|. -: rev) x=.sdot0{~?50  4$#sdot0
-(|. -: rev) x=.sdot0{~?50  5$#sdot0
-(|. -: rev) x=.sdot0{~?50  6$#sdot0
-(|. -: rev) x=.sdot0{~?50  7$#sdot0
-(|. -: rev) x=.sdot0{~?50  8$#sdot0
-(|. -: rev) x=.sdot0{~?50  9$#sdot0
-(|. -: rev) x=.sdot0{~?50 10$#sdot0
-(|. -: rev) x=.sdot0{~?50 11$#sdot0
-(|. -: rev) x=.sdot0{~?50 12$#sdot0
+(|. -: rev) x=:sdot0{~?50  1$#sdot0
+(|. -: rev) x=:sdot0{~?50  2$#sdot0
+(|. -: rev) x=:sdot0{~?50  3$#sdot0
+(|. -: rev) x=:sdot0{~?50  4$#sdot0
+(|. -: rev) x=:sdot0{~?50  5$#sdot0
+(|. -: rev) x=:sdot0{~?50  6$#sdot0
+(|. -: rev) x=:sdot0{~?50  7$#sdot0
+(|. -: rev) x=:sdot0{~?50  8$#sdot0
+(|. -: rev) x=:sdot0{~?50  9$#sdot0
+(|. -: rev) x=:sdot0{~?50 10$#sdot0
+(|. -: rev) x=:sdot0{~?50 11$#sdot0
+(|. -: rev) x=:sdot0{~?50 12$#sdot0
 
 
 NB. |."r y --------------------------------------------------------------
@@ -130,60 +130,60 @@ f =: 3 : '|.y'
 (|."3 -: f"3) ?2 3 4$2e5
 
 NB. literal
-(|."2 -: rev"2) x=.a.{~?4 12  1$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  2$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  3$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  4$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  5$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  6$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  7$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  8$#a.
-(|."2 -: rev"2) x=.a.{~?4 12  9$#a.
-(|."2 -: rev"2) x=.a.{~?4 12 10$#a.
-(|."2 -: rev"2) x=.a.{~?4 12 11$#a.
-(|."2 -: rev"2) x=.a.{~?4 12 12$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  1$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  2$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  3$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  4$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  5$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  6$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  7$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  8$#a.
+(|."2 -: rev"2) x=:a.{~?4 12  9$#a.
+(|."2 -: rev"2) x=:a.{~?4 12 10$#a.
+(|."2 -: rev"2) x=:a.{~?4 12 11$#a.
+(|."2 -: rev"2) x=:a.{~?4 12 12$#a.
 
 NB. literal2
-(|."2 -: rev"2) x=.adot1{~?4 12  1$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  2$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  3$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  4$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  5$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  6$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  7$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  8$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12  9$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12 10$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12 11$#adot1
-(|."2 -: rev"2) x=.adot1{~?4 12 12$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  1$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  2$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  3$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  4$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  5$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  6$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  7$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  8$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12  9$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12 10$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12 11$#adot1
+(|."2 -: rev"2) x=:adot1{~?4 12 12$#adot1
 
 NB. literal4
-(|."2 -: rev"2) x=.adot2{~?4 12  1$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  2$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  3$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  4$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  5$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  6$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  7$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  8$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12  9$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12 10$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12 11$#adot2
-(|."2 -: rev"2) x=.adot2{~?4 12 12$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  1$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  2$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  3$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  4$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  5$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  6$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  7$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  8$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12  9$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12 10$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12 11$#adot2
+(|."2 -: rev"2) x=:adot2{~?4 12 12$#adot2
 
 NB. symbol
-(|."2 -: rev"2) x=.sdot0{~?4 12  1$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  2$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  3$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  4$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  5$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  6$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  7$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  8$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12  9$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12 10$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12 11$#sdot0
-(|."2 -: rev"2) x=.sdot0{~?4 12 12$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  1$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  2$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  3$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  4$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  5$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  6$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  7$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  8$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12  9$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12 10$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12 11$#sdot0
+(|."2 -: rev"2) x=:sdot0{~?4 12 12$#sdot0
 
 
 NB. x|.y ----------------------------------------------------------------
@@ -247,9 +247,9 @@ NB. complex
 (_50+?100) (|. -: rot) 0$3j4
 
 NB. boxed
-(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=.;:'Cogit, ergo $212 341 CBC News'
-(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=.(u:&.>) ;:'Cogit, ergo $212 341 CBC News'
-(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=.(10&u:&.>) ;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=:;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=:(u:&.>) ;:'Cogit, ergo $212 341 CBC News'
+(_50+?100) (|. -: rot) (?30 2 1 1 1$#x){x=:(10&u:&.>) ;:'Cogit, ergo $212 341 CBC News'
 (_50+?100) (|. -: rot) (?255 1$#x){x
 (_50+?100) (|. -: rot) (?0 0$#x){x
 (_50+?100) (|. -: rot) <i.2 3
@@ -261,12 +261,12 @@ NB. boxed
 (1 1 1  $s:@<"0 'a') -: 1 2 3  |.s:@<"0 'a'
 (1 1 1 1$4  ) -: (?4$10)|.4
 
-x -: '' |. x=. ? 2 3 4$2
-x -: '' |. x=. 3 4 5 6 $ 'deipnosophist'
-x -: '' |. x=. 3 4 5 6 $ u:'deipnosophist'
-x -: '' |. x=. 3 4 5 6 $ 10&u:'deipnosophist'
-x -: '' |. x=. 3 4 5 6 $ s:@<"0 'deipnosophist'
-x -: '' |. x=. ? 12$1000
+x -: '' |. x=: ? 2 3 4$2
+x -: '' |. x=: 3 4 5 6 $ 'deipnosophist'
+x -: '' |. x=: 3 4 5 6 $ u:'deipnosophist'
+x -: '' |. x=: 3 4 5 6 $ 10&u:'deipnosophist'
+x -: '' |. x=: 3 4 5 6 $ s:@<"0 'deipnosophist'
+x -: '' |. x=: ? 12$1000
 
 'domain error' -: 'abc'|. etx i.4 3 2
 'domain error' -: (u:'abc')|. etx i.4 3 2
@@ -296,13 +296,13 @@ f1 =: 3 : 0
 _2  3 (|. -: f1) o.?4 5$100
 _2 _3 (|. -: f1) j./?2 3 4$1000
 
-(?1$10) (|. -: f1) x=.?7 6 5 4 3$10000
+(?1$10) (|. -: f1) x=:?7 6 5 4 3$10000
 (?2$10) (|. -: f1) x
 (?3$10) (|. -: f1) x
 (?4$10) (|. -: f1) x
 (?5$10) (|. -: f1) x
 
-(?1$10) (|."1 _1 -: f1"1 _1) x=.?7 6 5 4 3$10000
+(?1$10) (|."1 _1 -: f1"1 _1) x=:?7 6 5 4 3$10000
 (?2$10) (|."1 _1 -: f1"1 _1) x
 (?3$10) (|."1 _1 -: f1"1 _1) x
 (?4$10) (|."1 _1 -: f1"1 _1) x

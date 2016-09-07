@@ -1,23 +1,23 @@
 NB. 1!:1 ----------------------------------------------------------------
 
-dir   =. 1!:0
-read  =. 1!:1
-write =. 1!:2
-size  =. 1!:4
-open  =. 1!:21
-close =. 1!:22
-erase =. 1!:55
+dir   =: 1!:0
+read  =: 1!:1
+write =: 1!:2
+size  =: 1!:4
+open  =: 1!:21
+close =: 1!:22
+erase =: 1!:55
 
-x=. 9!:12 ''
-win =. x e. 2 6
-mac =. x e. 3
-unix=. x e. 5 7
-pc  =. x e. 0 1 2 6
+x=: 9!:12 ''
+win =: x e. 2 6
+mac =: x e. 3
+unix=: x e. 5 7
+pc  =: x e. 0 1 2 6
 
-p =. >{:4!:3 ''
-p =. < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
-f =. p,&.><'g100.ijs'
-h =. open f
+p =: >{:4!:3 ''
+p =: < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
+f =: p,&.><'g100.ijs'
+h =: open f
 
 (read f) -: read h
 (read f) -: read <h
@@ -25,24 +25,24 @@ h =. open f
 close h
 
 
-f =. <jpath '~temp/foogoo5.x'
-t =. (?1000$#a.){a.
+f =: <jpath '~temp/foogoo5.x'
+t =: (?1000$#a.){a.
 t write f
-h =. open f
+h =: open f
 
 t -: read f
 t -: read h
 
 erase f
 
-d =. dir p,&.><'*.ijs'
+d =: dir p,&.><'*.ijs'
 (>2{"1 d) -: #@read p,&.>{."1 d
 
-x=.'1'#~1 j. 1 2 4 8 4 2 1 0
-t=.read 1   NB. read from keyboard
+x=:'1'#~1 j. 1 2 4 8 4 2 1 0
+t=:read 1   NB. read from keyboard
 1 1  1    1        1    1  1 1
 t -: x
-t=.read <1  NB. read from keyboard
+t=:read <1  NB. read from keyboard
 1 1  1    1        1    1  1 1
 t -: x
 

@@ -250,6 +250,8 @@ NB. 10 s: y -------------------------------------------------------------
 0 s: 11
 
 x=: 0 s: 10
+10 s: x
+x -: 0 s: 10
 
 'domain error' -: 10 s: etx ($x)$0 1
 'domain error' -: 10 s: etx ($x)$1 2 3 4
@@ -288,6 +290,95 @@ x=: 0 s: 10
 'domain error' -: 10 s: etx x 3}~< ($>2{x)$2r3
 'domain error' -: 10 s: etx x 3}~< }:"1 >2{x
 'domain error' -: 10 s: etx x 3}~< (>2{x),.0
+
+
+NB. 11 s: y -------------------------------------------------------------
+
+0 s: 11
+
+x=: 0 s: 10
+
+11 s: x
+0 s: 11
+
+NB. some tests below may failed when restoring from previous versions
+NB. because of storage optimization
+NB. anyway cardinality and order # should hold
+
+NB. cardinality and string length
+(0 1 { x) -: 0 1 { 0 s: 10
+NB. 0   index in the string table
+NB. 1   length in bytes
+NB. 2   hash value
+NB. 7   order #
+NB. 10  bit flags
+(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+NB. the string, ignore padding bytes
+x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+y1=: (0 s: 1) {. 0 s: 3
+y2=: (>1{x) {. >3{x
+(x1 { y1) -: (x2 { y2)
+
+NB. only 0 s:&.>i.4 are needed
+11 s: 4{.x
+0 s: 11
+(0 1 { x) -: 0 1 { 0 s: 10
+(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+y1=: (0 s: 1) {. 0 s: 3
+y2=: (>1{x) {. >3{x
+(x1 { y1) -: (x2 { y2)
+
+NB. minimal data required by 11 s:
+11 s: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
+0 s: 11
+(0 1 { x) -: 0 1 { 0 s: 10
+(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+y1=: (0 s: 1) {. 0 s: 3
+y2=: (>1{x) {. >3{x
+(x1 { y1) -: (x2 { y2)
+
+'domain error' -: 11 s: etx ($x)$0 1
+'domain error' -: 11 s: etx ($x)$1 2 3 4
+'domain error' -: 11 s: etx ($x)$1 2 3.4
+'domain error' -: 11 s: etx ($x)$1 2 3j4
+'domain error' -: 11 s: etx ($x)$1 2 3r4
+'domain error' -: 11 s: etx ($x)$1 2 3 4x
+'domain error' -: 11 s: etx ($x)$' 2 3 4'
+
+'domain error' -: 11 s: etx }.x
+'domain error' -: 11 s: etx 2}.x
+'domain error' -: 11 s: etx ,:x
+'domain error' -: 11 s: etx {.x
+
+'domain error' -: 11 s: etx x 0}~< 'a'         
+'domain error' -: 11 s: etx x 0}~< 100002.4 
+'domain error' -: 11 s: etx x 0}~< 100002j4
+'domain error' -: 11 s: etx x 0}~< 100002r4
+'domain error' -: 11 s: etx x 0}~< ({.x),&.>0
+'domain error' -: 11 s: etx x 0}~< 1+#>2{x
+'domain error' -: 11 s: etx x 0}~< 1+#>4{x
+'domain error' -: 11 s: etx x 0}~< _1e6
+
+'domain error' -: 11 s: etx x 1}~< 'a'         
+'domain error' -: 11 s: etx x 1}~< 100002.4    
+'domain error' -: 11 s: etx x 1}~< 100002j4    
+'domain error' -: 11 s: etx x 1}~< 100002r4    
+'domain error' -: 11 s: etx x 1}~< (1{x),&.>0
+'domain error' -: 11 s: etx x 1}~< 1+#>3{x   
+
+'domain error' -: 11 s: etx x 3}~< 1234
+'domain error' -: 11 s: etx x 3}~< ,:>2{x
+'domain error' -: 11 s: etx x 3}~< ($>2{x)$'2'
+'domain error' -: 11 s: etx x 3}~< ($>2{x)$2.3
+'domain error' -: 11 s: etx x 3}~< ($>2{x)$2j3
+'domain error' -: 11 s: etx x 3}~< ($>2{x)$2r3
+'domain error' -: 11 s: etx x 3}~< }:"1 >2{x
+'domain error' -: 11 s: etx x 3}~< (>2{x),.0
 
 
 NB. s: errors -----------------------------------------------------------

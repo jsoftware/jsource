@@ -35,29 +35,29 @@ NB. 18!:31 y ------------------------------------------------------------
 pcheck=: 3 : 0
  yy=: y
  assert. ((,3)-:$y) *. 32=type y
- 'p a s'=: y
+ 'p a s'=. y
  assert. 2=#$p
  assert. (2=#$p) *. 4 =type p                  NB. symbol pool
  assert. (1=#$a) *. 32=type a                  NB. object name
  assert. (1=#$s) *. 32=type s                  NB. locale name (or '**local**')
  assert. (#p) = (#a),#s
 
- i=: i.#p
- b=: 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list
+ i=. i.#p
+ b=. 0 0 -:"1 ]2 5{"1 p      NB. flag=0 & no prev pointer: empty symbol, on free list
  assert. {.b
  assert. 0=1 2 3 5{"1 b#p
  assert. (4{"1 b#p) e. (# i.@#) b
  assert. 0 e. 4{"1 b#p
- m=: >:>.2^.#b
- x=: ~. /:~ ,{~^:(i.m) b*4{"1 p                NB. transitive closure
+ m=. >:>.2^.#b
+ x=. ~. /:~ ,{~^:(i.m) b*4{"1 p                NB. transitive closure
  assert. x -: I. b
 
 NB. p has: index,type,flag,sn,next,prev
- oktypes =: <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 21 22 23 27   NB. Type 0 OK if permanent
- f =: 2{"1 p
- h =: 2<:4|f                                   NB. head of linked list
- li=: 4<:8|f                                   NB. locale info
- perm=: 8<:16|f                                NB. permanent
+ oktypes =. <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 21 22 23 27   NB. Type 0 OK if permanent
+ f =. 2{"1 p
+ h =. 2<:4|f                                   NB. head of linked list
+ li=. 4<:8|f                                   NB. locale info
+ perm=. 8<:16|f                                NB. permanent
  assert. i -: 0{"1 p                           NB. index
  assert. b +. li +. ((1{"1 p)e.oktypes) +. (perm *. 0 = 1{"1 p)          NB. internal type
  assert. li <: (s e.<'**local**')+.0 32 e.~ 1{"1 p   NB. search path of locales - 0 if local symbol table

@@ -1,25 +1,25 @@
 NB. 1!:2 ----------------------------------------------------------------
 
-read  =. 1!:1
-write =. 1!:2
-erase =. 1!:55
+read  =: 1!:1
+write =: 1!:2
+erase =: 1!:55
 
-f =. <jpath '~temp/foogQ0m1.x'
-x =. (?1000$#a.){a.
+f =: <jpath '~temp/foogQ0m1.x'
+x =: (?1000$#a.){a.
 x write f
 
 x-:read f
-x-:read f [ (x=.a.{~?(>:?1000)$#a.) write f
-x-:read f [ x=.,'j' [ 'j' write f
-x-:read f [ (x=.'') write f
+x-:read f [ (x=:a.{~?(>:?1000)$#a.) write f
+x-:read f [ x=:,'j' [ 'j' write f
+x-:read f [ (x=:'') write f
 
 erase f
 
 NB. 0 0$((0j7,1 j.0,~2^i.5)#'1') write 2  
 NB. 1 1  1    1        1                1   The 1s should line up
   
-read  =. 1!:1
-write =. 1!:2
+read  =: 1!:1
+write =: 1!:2
 
 'domain error'      -: 'abcd'  write etx 'a'
 'domain error'      -: 'abcd'  write etx 'abc'
@@ -53,13 +53,13 @@ write =. 1!:2
 'domain error'      -: 3j4 0 write etx <'noQsuch'
 'file name error'   -: read etx <'noQsuch'
 
-x=. 9!:12 ''
-win =. x e. 2 6
-mac =. x e. 3
-unix=. x e. 5 7
-pc  =. x e. 0 1 2 6
+x=: 9!:12 ''
+win =: x e. 2 6
+mac =: x e. 3
+unix=: x e. 5 7
+pc  =: x e. 0 1 2 6
 
-f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
+f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 
 'file name error'   -: 'asdf'  write etx f
 

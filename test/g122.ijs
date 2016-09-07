@@ -356,7 +356,7 @@ test2"0 i.3 10
 (x=:a{~?20$3) (-:"1 -: match"1) y=:a{~?20$3 [ a=: (<"0@s: <'do'),.3 5$<"0@s: ;:'pi no so hi do to an am no'
 
 test3=: 4 : 0
- a=: x{~?(3,y)$#x
+ a=. x{~?(3,y)$#x
  xx=:a{~?#a
  yy=:a{~?3 5$#a
  assert. xx (-:"1 -: match"1) yy
@@ -372,7 +372,7 @@ test3=: 4 : 0
 (0 1;2;i.7) test3"1 0 i.3 10
 
 test4=: 4 : 0
- a=: x{~?(3,y)$#x
+ a=. x{~?(3,y)$#x
  xx=:a{~?3 5 2 7$#a
  yy=:a{~?3 5$#a
  assert. xx (-:"1 -: match"1) yy

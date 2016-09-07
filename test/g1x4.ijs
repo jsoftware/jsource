@@ -1,25 +1,25 @@
 NB. 1!:4 ----------------------------------------------------------------
 
-dir   =. 1!:0
-size  =. 1!:4
-open  =. 1!:21
-close =. 1!:22
+dir   =: 1!:0
+size  =: 1!:4
+open  =: 1!:21
+close =: 1!:22
 
-x=. 9!:12 ''
-win =. x e. 2 6
-mac =. x e. 3
-unix=. x e. 5 7
-pc  =. x e. 0 1 2 6
+x=: 9!:12 ''
+win =: x e. 2 6
+mac =: x e. 3
+unix=: x e. 5 7
+pc  =: x e. 0 1 2 6
 
-p =. >{:4!:3 ''
-p =. < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
-d =. dir p,&.><'*.ijs'
+p =: >{:4!:3 ''
+p =: < p ([ }.~ [: - |.@[ i. ]) (pc#'/'),(mac#':'),unix#'/'
+d =: dir p,&.><'*.ijs'
 (>2{"1 d) -: size p,&.>{."1 d
 
-j =. (5<.#d)?#d
-f =. p,&.>j{0{"1 d
-s =. >j{2{"1 d
-h =. open f
+j =: (5<.#d)?#d
+f =: p,&.>j{0{"1 d
+s =: >j{2{"1 d
+h =: open f
 s = size f
 s = size h
 s = size ;/h
@@ -48,7 +48,7 @@ close h
 'file number error' -: size etx <2 
 'file number error' -: size etx <12311
 
-f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
+f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 'file name error'   -: size etx f
 'file name error'   -: size etx <'noQsuch'
 

@@ -1,18 +1,18 @@
 NB. 1!:3 ----------------------------------------------------------------
 
-read   =. 1!:1
-write  =. 1!:2
-append =. 1!:3
-erase  =. 1!:55
+read   =: 1!:1
+write  =: 1!:2
+append =: 1!:3
+erase  =: 1!:55
 
-f =. <jpath '~temp/foogQ0m1.x'
-x =. (?1000$#a.){a.
+f =: <jpath '~temp/foogQ0m1.x'
+x =: (?1000$#a.){a.
 x append f
 
 x-:read f
-x-:read f [ y append f [ x=.x,y=.a.{~?(>:?1000)$#a.
-x-:read f [ y append f [ x=.x,y=.'j'
-x-:read f [ y append f [ x=.x,y=.''
+x-:read f [ y append f [ x=:x,y=:a.{~?(>:?1000)$#a.
+x-:read f [ y append f [ x=:x,y=:'j'
+x-:read f [ y append f [ x=:x,y=:''
 
 erase f
 
@@ -48,8 +48,8 @@ erase f
 'domain error'      -: 3j4 0 append etx <'noQsuch'
 'file name error'   -: read etx <'noQsuch'
 
-mac =. 3 = 9!:12 ''
-f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
+mac =: 3 = 9!:12 ''
+f   =: mac{'no/such/dir/or/file';':no:such:dir:or:file'
 'file name error'   -: 'asdf' append etx f
 
 4!:55 ;:'append erase f mac read write x y '

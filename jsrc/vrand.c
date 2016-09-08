@@ -544,7 +544,7 @@ F1(jtrngstates){A*wv;I k,wd;UI**vv=jt->rngV;
  ASSERT(AN(w)==(jt->rng?3:9),EVLENGTH);
  switch(jt->rng){
   case SMI: vv=jt->rngV0;
-            RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,1,k,WVR(2),1)); jt->rngI0[GBI]=k;
+            RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,0,k,WVR(2),1)); jt->rngI0[GBI]=k;  // We accept 0-55 even though we never produce 55 ourselves
             RE(k=i0(WVR(3))); RZ(rngstates1(MTI,MTN,vv,0,k,WVR(4),0)); jt->rngI0[MTI]=k;
             RE(k=i0(WVR(5))); RZ(rngstates1(DXI,DXN,vv,0,k,WVR(6),1)); jt->rngI0[DXI]=k;
             RE(k=i0(WVR(7))); RZ(rngstates1(MRI,MRN,vv,0,k,WVR(8),0)); jt->rngI0[MRI]=k;

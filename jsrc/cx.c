@@ -474,6 +474,11 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
 // permanent entries from this one (with no values).  We create this table with rank 0, and we set
 // the rank to 1 while it is in use, to signify that it must be cloned rather than used inplace.
 // static A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln,tt;
+// l is the A block for all the words/queues used in the definition
+// c is the table of control-word info used in the definition
+// type is the m operand to m : n, indicating part of speech to be produce
+// dyad is 1 if this is the dyadic definition
+// flags is the flag field for the verb we are creating; indicates whether uvmn are to be defined
 A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln,tt;
  // Allocate a pro-forma symbol table to hash the names into
  RZ(pfst=stcreate(2,1L+PTO,0L,0L));
@@ -512,13 +517,28 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   } // end 'local assignment'
  }  // for each word in sentence
 
+ // Go through the control-word table, looking for for_xyz.  Add xyz and xyz_index to the local table too.
+ I cn=AN(c); CW *cwv=(CW*)AV(c);  // Get # control words, address of first
+ for(j=0;j<cn;++j) {   // look at each control word
+  if(cwv[j].type==CFOR){  // for.
+   I cwlen = AN(lv[cwv[j].i]);
+   if(cwlen>4){  // for_xyz.
+    // for_xyz. found.  Lookup xyz and xyz_length
+    A xyzname = str(cwlen+1,CAV(lv[cwv[j].i])+4);
+    RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
+    MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name
+    RZ(probeis(nfs(cwlen+1,CAV(xyzname)),pfst));  // create xyz_index
+   }
+  }
+ }
+
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
  I pfstn=AN(pfst); I*pfstv=AV(pfst); I asgct=0;
  for(j=1;j<pfstn;++j){  // for each hashchain
   for(k=pfstv[j];k;k=(jt->sympv)[k].next)++asgct;  // chase the chain and count
  }
- asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct;++j);  // Find symtab size that has 50% empty space
+ asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct;++j);  // Find symtab size that has 33% empty space
  RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
@@ -549,8 +569,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     if(NAV(t)->flag&NMDOT)RZ(t=lv[j]=ca(t))
     NM *tn = NAV(t);  // point to the NM part of the name block
     // Get the bucket number by reproducing the calculation in the symbol-table routine
-    // This calculation is poor - by lumping together buckets 0 & 1 we get collisions - but it's the way
-    // it's always been done.  Better to allocate one more bucket and add one to the remainder
     tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
     // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
     // of the number of items compared before the match.  If we get no match, the bucket index is the number

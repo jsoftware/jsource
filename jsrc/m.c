@@ -645,6 +645,8 @@ F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
 
 B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREE(z); R 1; }
 
+// Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
+// if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  RZ(w);                               /* assume AR(w)&&AN(w)    */
  m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
@@ -652,7 +654,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  MC(AV(z),AV(w),m*k);                 /* copy old contents      */
  if(b){ra(z); fa(w);}                 /* 1=b iff w is permanent */
  *AS(z)=m1=AM(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
- if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));
+ if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }
 

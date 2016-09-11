@@ -89,7 +89,7 @@ JNIEXPORT jobject JNICALL Java_com_jsoftware_j_JInterface_getVariableNative
 	long *shape;
 	char *data;
 
-	JGetM(jengine,name,(I*)&type,(I*)&rank,(I*)&shape,(I*)&data);
+	JGetM(jengine,(C*)name,(I*)&type,(I*)&rank,(I*)&shape,(I*)&data);
 //LOGFD("name=%s,type=%l,rank=%l,shapehead=%l,data=%p",name,type,rank,*shape,data);
   (*env)->ReleaseStringUTFChars(env, jname, name);
 		return NULL;

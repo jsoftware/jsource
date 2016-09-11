@@ -9,8 +9,13 @@
 #include <windows.h>
 #include <winbase.h>
 #else
+#ifdef __GNUC__
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#endif
 #include <sys/types.h>
 #include <unistd.h>
+#include <fts.h>
 #endif
 
 #include "j.h"
@@ -23,11 +28,13 @@
 #if (SYS & SYS_UNIX)
 #include <stdlib.h>
 typedef long long INT64;
+static int rmdir2(const char *dir);
 #endif
 
 #if SY_WIN32 && !SY_WINCE
 #include <direct.h>
 #include <io.h>
+static int rmdir2(J jt, const wchar_t *dir);
 #endif
 
 
@@ -227,11 +234,16 @@ F1(jtjferase){A y,fn;US*s;I h;
  ASSERT(y,EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
- R !unlink(CAV(y))||!rmdir(CAV(y))?one:jerrno();
+ if(access(CAV(y), F_OK )){R !unlink(CAV(y))?one:jerrno();} /* rmdir2 cannot raise error on non-exist file */
+ else {R !unlink(CAV(y))||!rmdir(CAV(y))||!rmdir2(CAV(y))?one:jerrno();}
 #else
  RZ(fn=toutf16x(y));
  s=USAV(fn);
+#if SY_WIN32 && !SY_WINCE
+ R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?one:jerrno();
+#else
  R !_wunlink(s)||!_wrmdir(s)?one:jerrno();
+#endif
 #endif
 }    /* erase file or directory */
 
@@ -306,14 +318,102 @@ F1(jtjgetpid){
 }
 
 #if (SYS & SYS_UNIX)
+#ifdef __GNUC__
+F1(jtpathdll){Dl_info info;
+ ASSERTMTV(w);
+ if(dladdr(jtpathdll, &info)){
+  R cstr((C*)info.dli_fname);
+ } else R cstr((C*)"");
+}
+#else
 F1(jtpathdll){
- ASSERTMTV(w); R cstr("");
-} 
+ ASSERTMTV(w); R cstr((C*)"");
+}
+#endif
 #else
 F1(jtpathdll){char p[MAX_PATH]; extern C dllpath[];
  ASSERTMTV(w);
  strcpy(p,dllpath);
  if('\\'==p[strlen(p)-1]) p[strlen(p)-1]=0;
  R cstr(p);
+}
+#endif
+
+#if (SYS & SYS_UNIX)
+int rmdir2(const char *dir)
+{
+ int ret=0;
+ FTS *ftsp=NULL;
+ FTSENT *curr;
+
+ char *files[]={ (char *) dir, NULL };
+
+ // FTS_NOCHDIR  - Avoid changing cwd, which could cause unexpected behavior
+ //                in multithreaded programs
+ // FTS_PHYSICAL - Don't follow symlinks. Prevents deletion of files outside
+ //                of the specified directory
+ // FTS_XDEV     - Don't cross filesystem boundaries
+ ftsp=fts_open(files, FTS_NOCHDIR | FTS_PHYSICAL | FTS_XDEV, NULL);
+ if (!ftsp) {
+//  fprintf(stderr, "%s: fts_open failed: %s\n", dir, strerror(errno));
+  ret=-1;
+  goto finish;
+ }
+
+ while ((curr=fts_read(ftsp))) {
+  switch (curr->fts_info) {
+   case FTS_NS:
+   case FTS_DNR:
+   case FTS_ERR:
+//   fprintf(stderr, "%s: fts_read error: %s\n", curr->fts_accpath, strerror(curr->fts_errno));
+   break;
+
+   case FTS_DC:
+   case FTS_DOT:
+   case FTS_NSOK:
+   // Not reached unless FTS_LOGICAL, FTS_SEEDOT, or FTS_NOSTAT were
+   // passed to fts_open()
+   break;
+
+   case FTS_D:
+   // Do nothing. Need depth-first search, so directories are deleted
+   // in FTS_DP
+   break;
+
+   case FTS_DP:
+   case FTS_F:
+   case FTS_SL:
+   case FTS_SLNONE:
+   case FTS_DEFAULT:
+    if (remove(curr->fts_accpath) < 0) {
+//    fprintf(stderr, "%s: Failed to remove: %s\n", curr->fts_path, strerror(errno));
+    ret=-1;
+   }
+   break;
+  }
+ }
+
+finish:
+ if (ftsp) {
+  fts_close(ftsp);
+ }
+
+ return ret;
+}
+#endif
+#if SY_WIN32 && !SY_WINCE
+int rmdir2(J jt, const wchar_t *dir){A z;US*zv;
+ SHFILEOPSTRUCTW sh;
+ GATV(z,C2T,wcslen(dir)+2,1,0); zv=USAV(z);
+ memcpy(zv,dir,wcslen(dir)*sizeof(wchar_t));
+ zv[1+wcslen(dir)]=zv[wcslen(dir)]=0;  // doubly null terminated string
+ sh.hwnd   = NULL;
+ sh.wFunc  = FO_DELETE;
+ sh.pFrom  = zv;
+ sh.pTo    = NULL;
+ sh.fFlags = FOF_NOCONFIRMATION | FOF_SILENT;
+ sh.hNameMappings = 0;
+ sh.lpszProgressTitle = NULL;
+ R SHFileOperationW (&sh);
 }
 #endif

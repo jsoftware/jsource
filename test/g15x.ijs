@@ -143,12 +143,21 @@ NB. 'value error' -: 15!:14 etx <"0@s: ;:'t test'
 'value error'  -: 15!:14 etx <'undefinedname'
 'value error'  -: 15!:14 etx ;:'t undefinedname'
 
+0 ~: jt=: 15!:19 ''
+0 = 15!:20 'nosuchlibrary'
+0 ~: h=: 15!:20 >IFUNIX{ 'wsock32' ; unxlib 'c'
+0 ~: h 15!:21 'gethostname'
+
+0 ~: sbp=: 0 (15!:21) 'JSBProbe'
+0 ~: s=: ('0 ',(":sbp),' > x x x x *c') 15!:0 jt;0;(#;]) t=: AlphaNum_j_{~ ?10$#AlphaNum_j_
+(5 s: _6 s: s) -: <t
+
 4!:55 ;:'CREATE_NEW FILE_BEGIN FILE_CURRENT FILE_END GENERIC_READ '
 4!:55 ;:'GENERIC_WRITE OPEN_EXISTING '
 4!:55 ;:'Fclose Fcopyto Fcreate Fcreatedir Fdelete Fdeletedir Fmoveto Fread '
 4!:55 ;:'Fsetptr Fsize Fwrite '
 4!:55 ;:'cderx fclose fcopyto fcreate fcreatedir fdelete fdeletedir fmoveto '
 4!:55 ;:'fopen fread fsetptr fsize fwrite '
-4!:55 ;:'h i pc s t test winset'
+4!:55 ;:'h i jt pc s sbp t test winset'
 
 

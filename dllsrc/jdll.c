@@ -763,11 +763,12 @@ J _stdcall JInit()
 // clean up at the end of a J instance
 int _stdcall JFree(J jt)
 {
-
+	I old;
 	if(!jt) return 0;
 #if !SY_WINCE
 	dllquit(jt);  // clean up call dll
 #endif
+	if(jt->xep&&AN(jt->xep)){old=jt->tnextpushx; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
 	HeapDestroy(jt->heap);
 	return 0;
 }

@@ -118,7 +118,7 @@ F1(jtjclose){A*av;I*iv,j;
  if(AR(w))R rank1ex(w,0L,0L,jtjclose);
  RE(j=i0(indexof(jt->fopf,sc(fnum(w))))); ASSERT(j<jt->fopn,EVFNUM);
  av=AAV(jt->fopa); iv=IAV(jt->fopf); 
-#if (SYS & SYS_DOS+SYS_MACINTOSH)
+#if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
  RZ(unlk(iv[j]));
 #endif
  if(fclose((F)iv[j]))R jerrno();

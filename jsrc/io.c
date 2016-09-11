@@ -22,6 +22,8 @@
 #include "j.h"
 #include "d.h"
 
+extern void dllquit(J);
+
 void jtwri(J jt,I type,C*p,I m,C*s){C buf[1024],*t=jt->outseq,*v=buf;I c,d,e,n;
  if(jt->tostdout){
   c=strlen(p);            /* prompt      */
@@ -124,7 +126,9 @@ void breakclose(J jt)
 #if SY_WINCE
  DeleteFile(tounibuf(jt->breakfn));
 #else
- DeleteFileA(jt->breakfn);
+ WCHAR wpath[NPATH];
+ MultiByteToWideChar(CP_UTF8,0,jt->breakfn,1+(int)strlen(jt->breakfn),wpath,NPATH);
+ DeleteFileW(wpath);
 #endif
  *jt->breakfn=0;
 }
@@ -133,8 +137,8 @@ void breakclose(J jt)
 F1(jtjoff){I x;
  RZ(w);
  x=i0(w);
- breakclose(jt);
- if(jt->sesm)jsto(jt, MTYOEXIT,(C*)x);
+ jt->jerr=0; jt->etxn=0; /* clear old errors */
+ if(jt->sesm)jsto(jt, MTYOEXIT,(C*)x); else JFree(jt);
  exit((int)x);
  R 0;
 }
@@ -284,7 +288,16 @@ J JInit(void){
   R jt;
 }
 
-int JFree(J jt){return 0;}
+// clean up at the end of a J instance
+int JFree(J jt){I old;
+  if(!jt) R 0;
+  breakclose(jt);
+  jt->jerr=0; jt->etxn=0; /* clear old errors */
+  if(jt->xep&&AN(jt->xep)){old=jt->tnextpushx; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
+  dllquit(jt);  // clean up call dll
+  free(jt);
+  R 0;
+}
 #endif
 
 F1(jtbreakfnq){
@@ -357,7 +370,16 @@ static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 		n = sizeof(char);
 		break;
 
+	case C2TX:
+		n = sizeof(unsigned short);
+		break;
+
+	case C4TX:
+		n = sizeof(unsigned int);
+		break;
+
 	case INTX:
+	case SBTX:
 		n = sizeof(I);
 		break;
 		

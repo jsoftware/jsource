@@ -267,7 +267,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
   case KCASE(CSTARDOT,B01X): KACC(*v&&y,    B, B, 1   ); break;
   case KCASE(CNE,     B01X): KACC(*v!=y,    B, B, 0   ); break;
   case KCASE(CMIN,    INTX): KACC(MIN(*v,y),I, I, IMAX); break;  
-  case KCASE(CMIN,    FLX): KACC(MIN(*v,y),D, D, inf ); break;
+  case KCASE(CMIN,    FLX ): KACC(MIN(*v,y),D, D, inf ); break;
   case KCASE(CMAX,    INTX): KACC(MAX(*v,y),I, I, IMIN); break;
   case KCASE(CMAX,    FLX ): KACC(MAX(*v,y),D, D, infm); break;
   case KCASE(CPLUS,   B01X): KACC(*v+y,     I, B, 0   ); break;

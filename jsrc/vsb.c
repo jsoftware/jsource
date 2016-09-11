@@ -664,20 +664,25 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
  R one;
 }
 
+static void resetdata(J jt){
+ fa(jt->sbu); fa(jt->sbs); fa(jt->sbh); // free old symbol
+ sbtypeinit();                          // initialization routine
+ ra(jt->sbu); ra(jt->sbs); ra(jt->sbh); // prevent automatically freed by tpop()
+}    /* re-initialize global symbol table */
+
 static F1(jtsbsetdata2){A *wv;I c,i,sn,wd;SBU*uv,*v;C*sv;
  RZ(w);
- ASSERTD(BOX&AT(w),"arg type");
+ ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
- ASSERTD(4<=AN(w), "arg length");
+ ASSERTD(!AN(w)||4<=AN(w), "arg length");
+ if(!AN(w)){resetdata(jt); R one; }
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
  c=*AV(WVR(0));                         // cardinality
  sn=*AV(WVR(1));                        // string length
  uv=(SBU*)AV(WVR(2));                   // table of symbols
  sv=CAV(WVR(3));                        // global string table
- fa(jt->sbu); fa(jt->sbs); fa(jt->sbh); // free old symbol
- sbtypeinit();                          // initialization routine
- ra(jt->sbu); ra(jt->sbs); ra(jt->sbh); // prevent automatically freed by tpop()
+ resetdata(jt);
  for(i=1,v=1+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
   vi=v->i;                              // index into sbs
   vn=v->n;                              // length in bytes
@@ -793,3 +798,15 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
  jt->sbhv[HASH0%AN(jt->sbh)]=0;
  R 1;
 }    /* initialize global data for SBT datatype */
+
+/* same as jtsbprobe but called from external libraries */
+/* n is number of characters, not bytes */
+SB _stdcall JSBProbe(J jt, I flag, I n, void* s){SB u;
+ S c2=flag&SBC2+SBC4;
+ if(!jt||0>n||!s) R 0;            /* validations */
+ if(c2&SBC2&&c2&SBC4) R 0;
+ u=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,(C*)s);
+ jt->jerr=0; jt->etxn=0; /* clear old errors */
+ R u;
+}    /* return symbol index of a string */
+

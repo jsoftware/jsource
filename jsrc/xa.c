@@ -218,3 +218,20 @@ F1(jtsysq){I j;
  }
  R sc(j);
 }
+
+F1(jtxepq){
+ ASSERTMTV(w); 
+ ASSERT(1==AR(w),EVRANK);
+ ASSERT(!AN(w),EVDOMAIN); 
+ R jt->xep?jt->xep:mtv;
+}
+
+F1(jtxeps){
+ RZ(w);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
+ fa(jt->xep);
+ ra(w); RZ(jt->xep=w); 
+ R mtm;
+}
+

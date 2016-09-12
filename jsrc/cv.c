@@ -14,7 +14,7 @@ static F2(jtfitct){D d;V*sv;
  ASSERT(!AR(w),EVRANK);
  sv=VAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- R fdef(CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ R fdef(CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
 }
 
 static DF2(jtfitexp2){
@@ -41,6 +41,9 @@ static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
 static DF1(jtfitf1){V*sv=VAV(self); R df1(  w,fit(fix(sv->f),sv->g));}
 static DF2(jtfitf2){V*sv=VAV(self); R df2(a,w,fit(fix(sv->f),sv->g));}
 
+// Fit conjunction u!.n
+// Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
+// Preserve VISATOMIC1 from u (applies only to numeric atomic ops)
 F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  ASSERTVN(a,w);
  sv=VAV(a); m=sv->mr; l=sv->lr; r=sv->rr;
@@ -52,14 +55,14 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    R fitct(a,w);
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   R CDERIV(CFIT,0L,jtfitexp2, m,l,r);
+   R CDERIV(CFIT,0L,jtfitexp2,0L, m,l,r);
   case CPOLY:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
-   R CDERIV(CFIT,0L,jtfitpoly2,m,l,r);
+   R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
   case CPOWOP:  // support for #^:_1!.n
    if(VERB&AT(sv->g)||!equ(num[-1],sv->g))R fitct(a,w);
    f=sv->f; c=ID(f);
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,m,l,r);}
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,0L,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);
    f=VAV(f)->g; ASSERT(CPOUND==ID(f),EVDOMAIN);
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:
@@ -67,18 +70,19 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CROT: case CDOLLAR: 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   R fdef(CFIT,VERB,(AF)(jtfitfill1),(AF)(jtfitfill2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(m),(I)(l),(I)(r));  // preserve INPLACE flags
+ // obsolete  R fdef(CFIT,VERB,(AF)(jtfitfill1),(AF)(jtfitfill2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(m),(I)(l),(I)(r)); 
+   R CDERIV(CFIT,jtfitfill1,jtfitfill2,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2),m,l,r); // preserve INPLACE flags
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);
    ASSERT(k<=NPP,EVLIMIT); 
-   R CDERIV(CFIT,jtfitpp1,sv->f2,m,l,r);
+   R CDERIV(CFIT,jtfitpp1,sv->f2,0L,m,l,r);  // CTHORN lacks VIRS
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
-   R CDERIV(CFIT,jtpparity,0L,m,RMAX,RMAX);
+   R CDERIV(CFIT,jtpparity,0L,0L,m,RMAX,RMAX);  // CCYCLE lacks VIRS
   case CTILDE:
    ASSERT(NOUN&AT(sv->f),EVDOMAIN);
-   R CDERIV(CFIT,jtfitf1,jtfitf2,m,l,r);
+   R CDERIV(CFIT,jtfitf1,jtfitf2,0L,m,l,r);  // m~ has no VIRS
   default:
    ASSERT(0,EVDOMAIN);
 }}

@@ -48,6 +48,7 @@ static DF2(jtfolkcomp0){DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
 static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
 static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
+// Create the derived verb for a fork.  Insert in-placeable flags and asgsafe based on fgh
 A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id; 
@@ -64,7 +65,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  switch(fi){
   case CCAP:                      f1=jtcork1; f2=jtcork2;  break; /* [: g h */
   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;} break; /* f  g h */
-  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f))f1=jtmean; break;  /* +/%# */
+  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1;} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
   case CFORK:  /* (x i. ]) { y"_ */
    if(hi==CQQ&&(y=hv->f,LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->g)&&

@@ -571,7 +571,7 @@ F1(jtslash){A h;AF f1=jtreduce;C c;V*v;
   case CUNDER:  if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;}
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));
- R fdef(CSLASH,VERB, f1,jtoprod, w,0L,h, 0L, RMAX,RMAX,RMAX);
+ R fdef(CSLASH,VERB, f1,jtoprod, w,0L,h, VAV(pst[(UC)CSLASH])->flag, RMAX,RMAX,RMAX);
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}

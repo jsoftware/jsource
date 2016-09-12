@@ -9,7 +9,7 @@
 static CS1(obv1, CALL1(f1,  w,fs),0103)
 static CS2(obv2, CALL2(f2,a,w,fs),0104)
 
-F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,mr(a),lr(a),rr(a));}
+F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,0L,mr(a),lr(a),rr(a));}
 
 
 static DF1(ad1){DECLFG;A z;I od=jt->db; 
@@ -28,11 +28,11 @@ static DF2(ad2){DECLFG;A z;I od=jt->db;
  R z?z:CALL2(g2,a,w,gs);
 }
 
-F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,RMAX,RMAX,RMAX);}
+F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,0L,RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)
 static CS1(odd1,  halve(df1(w,folk(fs,ds(CMINUS),atop(fs,gs)))),0116)
 
-F2(jteven){ASSERTVV(a,w); R CDERIV(CEVEN,even1,0L, RMAX,0L,0L);}
-F2(jtodd ){ASSERTVV(a,w); R CDERIV(CODD, odd1, 0L, RMAX,0L,0L);}
+F2(jteven){ASSERTVV(a,w); R CDERIV(CEVEN,even1,0L, 0L,RMAX,0L,0L);}
+F2(jtodd ){ASSERTVV(a,w); R CDERIV(CODD, odd1, 0L, 0L,RMAX,0L,0L);}

@@ -464,9 +464,9 @@ static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;
 }    /* bit vector # array */
 
 
-#define BITDEF(f1,f2)  fdef(CIBEAM,VERB, f1,f2, w,0L,0L, 0L, RMAX,RMAX,RMAX)
-#define BITDEF1(f1)    fdef(CIBEAM,VERB, f1,0L, w,0L,0L, 0L, RMAX,RMAX,RMAX)
-#define BITDEF2(f2)    fdef(CIBEAM,VERB, 0L,f2, w,0L,0L, 0L, RMAX,RMAX,RMAX)
+#define BITDEF(f1,f2)  fdef(CIBEAM,VERB, f1,f2, w,0L,0L, VASGSAFE, RMAX,RMAX,RMAX)
+#define BITDEF1(f1)    fdef(CIBEAM,VERB, f1,0L, w,0L,0L, VASGSAFE, RMAX,RMAX,RMAX)
+#define BITDEF2(f2)    fdef(CIBEAM,VERB, 0L,f2, w,0L,0L, VASGSAFE, RMAX,RMAX,RMAX)
 
 F1(jtbitadv){A x;V*v;
  RZ(w); v=VAV(w);

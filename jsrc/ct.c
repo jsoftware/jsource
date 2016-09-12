@@ -128,7 +128,7 @@ static F1(jttayfolk){A c,d,f,ft,g,h,ht,pp;B b;V*v=VAV(w);
   case CPLUS:
   case CMINUS: R b ? tpoly(df1(lamin2(c,d),slash(g))) : folk(ft,g,ht);
   case CSTAR:  R b ? tpoly(df2(c,d,pp)) : eva(folk(ft,pp,ht),"{ x@(i.@>:@(>./)@,)");
-  case CDIV:   R ADERIV(CTDOT,jttaydiv,0L,RMAX,RMAX,RMAX);
+  case CDIV:   R ADERIV(CTDOT,jttaydiv,0L,VISATOMIC1,RMAX,RMAX,RMAX);
   case CTILDE: g=VAV(g)->f; ASSERT(VERB&AT(f),EVDOMAIN); R tayfolk(folk(h,g,f));
   case CEXP:   ASSERT(1==AN(d),EVDOMAIN); R tdot(atop(amp(g,head(d)),f));
   default:     ASSERT(0,EVDOMAIN);
@@ -150,8 +150,8 @@ static F1(jttaysum){I n;V*v=VAV(w);
 static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=VAV(w);
  f=v->f; g=v->g;
  switch(ID(f)){
-  case CDIV:  R ADERIV(CTDOT,jttayrecip,0L,RMAX,RMAX,RMAX);
-  case CSQRT: R ADERIV(CTDOT,jttaysqrt, 0L,RMAX,RMAX,RMAX);
+  case CDIV:  R ADERIV(CTDOT,jttayrecip,0L,VISATOMIC1,RMAX,RMAX,RMAX);
+  case CSQRT: R ADERIV(CTDOT,jttaysqrt, 0L,VISATOMIC1,RMAX,RMAX,RMAX);
   case CAMP:
    c=VAV(f)->f; d=VAV(f)->g;
    if(CEXP==ID(c)&&INT&AT(d)&&!AR(d)){
@@ -188,7 +188,7 @@ static DF1(jttcoh1){R hgcoeff(w,VAV(self)->f);}
 F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
  RZ(w);
  if(NOUN&AT(w))R vger2(CTDOT,0L,w);
- if(!nameless(w))R ADERIV(CTDOT,jttdot1,0L,RMAX,RMAX,RMAX);
+ if(!nameless(w))R ADERIV(CTDOT,jttdot1,0L,VISATOMIC1,RMAX,RMAX,RMAX);
  v=VAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f);
  g=v->g; ng=g&&NOUN&AT(g);
@@ -238,14 +238,14 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
 F1(jttco){A f,g;B nf,ng;C id;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- if(!nameless(w))R ADERIV(CTCO,jttco1,0L,RMAX,RMAX,RMAX);
+ if(!nameless(w))R ADERIV(CTCO,jttco1,0L,0L,RMAX,RMAX,RMAX);
  v=VAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f);
  g=v->g; ng=g&&NOUN&AT(g);
  if(id==CAMP&&nf!=ng)R tcoamp(w,nf,nf?f:g,nf?g:f);
  switch(id){
   case CEXP:   R eval("$&1&$");
-  case CHGEOM: R ADERIV(CTCO,jttcoh1,0L,RMAX,RMAX,RMAX);
+  case CHGEOM: R ADERIV(CTCO,jttcoh1,0L,0L,RMAX,RMAX,RMAX);
   case CQQ:    if(!nf)R tco(f);
  }
  R facit(tdot(w));
@@ -256,7 +256,7 @@ F2(jttcap){A c,p,s,t;I n;
  ASSERT(!AR(w),EVRANK);
  RZ(t=vib(w)); n=*AV(t);
  ASSERT(0<=n,EVDOMAIN);
- if(!nameless(a))R CDERIV(CTCAP,jttcap1,0L,RMAX,RMAX,RMAX);
+ if(!nameless(a))R CDERIV(CTCAP,jttcap1,0L,0L,RMAX,RMAX,RMAX);
  RZ(p=tdot(a));
  if(n<IMAX)R amp(df1(iota(t),p),ds(CPOLY));
  RZ(c=coeff(p));

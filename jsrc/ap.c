@@ -550,7 +550,7 @@ static DF1(jtiota1){R apv(IC(w),1L,1L);}
 
 F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
  RZ(w);
- if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|VAV(pst[(UC)CBSLASH])->flag, RMAX,0L,RMAX);
  v=VAV(w); f=VAV(w)->f;
  switch(v->id){
   case CPOUND:
@@ -562,7 +562,7 @@ F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
   case CSLASH: 
    f2=jtmovfslash; if(vaid(f))f1=jtpscan;
  }
- R ADERIV(CBSLASH,f1,f2,RMAX,0L,RMAX);
+ R ADERIV(CBSLASH,f1,f2,VAV(pst[(UC)CBSLASH])->flag,RMAX,0L,RMAX);
 }
 
 A jtascan(J jt,C c,A w){RZ(w); R df1(w,bslash(slash(ds(c))));}

@@ -593,7 +593,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
    l->name=(jt->sympv)[ahx].name; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
-    // no need to set the PERMANENT flag, since we will never clone a clone
+   l->flag|=LPERMANENT;  // mark entry as PERMANENT, in case we try to delete the name (as in for_xyz. or 4!:55)
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail
    ahx = (jt->sympv)[ahx].next;  // advance to next symbol

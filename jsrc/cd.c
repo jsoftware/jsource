@@ -412,7 +412,7 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w)); r=AR(w); n=AN(w); wv=AV(w);
  if(NOUN&AT(a)){ASSERT(0,EVNONCE);}
- if(!nameless(a)||1<r)R CDERIV(CDDOT, jtddot1,0L, 0L,0L,0L);
+ if(!nameless(a)||1<r)R CDERIV(CDDOT, jtddot1,0L, 0L, 0L,0L,0L);
  irange(n,wv,&p,&q);
  if(!r){
   if(!p){V*v=VAV(a); R v->mr||v->lr||v->rr?qq(a,zero):a;}
@@ -557,12 +557,12 @@ F2(jtdcap){A z;I r,*v;
  RZ(w=vi(w)); v=AV(w); DO(AN(w), ASSERT(0<=v[i],EVNONCE););
  if(NOUN&AT(a))R vger2(CDCAP,a,w);
  r=mr(a);
- R !AR(w)&&nameless(a)&&(z=dtab(a,*v))?z:CDERIV(CDCAP,jtderiv1,0L,r,0L,r);
+ R !AR(w)&&nameless(a)&&(z=dtab(a,*v))?z:CDERIV(CDCAP,jtderiv1,0L,VFLAGNONE,r,0L,r);
 }
 
 F2(jtdcapco){I r,*v;
  ASSERTVN(a,w);
  RZ(w=vi(w)); v=AV(w); DO(AN(w), ASSERT(0<=v[i],EVNONCE););
  r=mr(a);
- R CDERIV(CDCAPCO,0L,jtsslope,0L,r,r);
+ R CDERIV(CDCAPCO,0L,jtsslope,VFLAGNONE,0L,r,r);
 }

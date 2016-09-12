@@ -178,7 +178,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
   case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
   case VV:
    v=VAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->g)==CRIGHT;
-   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,RMAX,RMAX,RMAX);
+   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,0L,RMAX,RMAX,RMAX);
   case VN:
    if(BOX&AT(w)){A x,y;AF f1,f2;
     if(ARELATIVE(w))RZ(w=car(w));
@@ -189,14 +189,14 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
       if(CAMP==v->id&&(CFROM==ID(v->f)&&(y=v->g,INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}
       else if(CTILDE==v->id&&CFROM==ID(v->f)){f2=jtindexseqlim2;}
      }
-     R CDERIV(CPOWOP,f1,f2,RMAX,RMAX,RMAX);
+     R CDERIV(CPOWOP,f1,f2,0L,RMAX,RMAX,RMAX);
     }
 //    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
     R gconj(a,w,CPOWOP);
    }
    RZ(hs=vib(w));
    b=0; m=AN(hs); n=m?*AV(hs):0; r=0<AR(hs);
-   if(!r&&-1==n)R CDERIV(CPOWOP,jtinv1,jtinv2,RMAX,RMAX,RMAX);
+   if(!r&&-1==n)R CDERIV(CPOWOP,jtinv1,jtinv2,0L,RMAX,RMAX,RMAX);
    if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));
    R fdef(CPOWOP,VERB, b||!m?jtply1:!r&&0<=n?jtfpown:jtply1s,jtply2, a,w,hs,  
       0L,RMAX,RMAX,RMAX);

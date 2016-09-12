@@ -11,7 +11,7 @@ static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0
 
 F1(jtswap){A y;C*s;I n;
  RZ(w); 
- if(VERB&AT(w)){I flag = VAV(w)->flag&VINPLACEOK2; flag = flag+(flag>>1);  // set both inplace bits from dyad
+ if(VERB&AT(w)){I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = flag+(flag>>1);  // set both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
   if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
@@ -49,7 +49,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
 
 F1(jtbdot){A b,h=0;I j,n,*v;
  RZ(w);
- if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0,0,0);
+ if(VERB&AT(w))R ADERIV(CBDOT, jtbasis1,0L, 0L,0,0,0);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(-16<=j&&j<=34,EVINDEX);}
@@ -60,25 +60,25 @@ F1(jtbdot){A b,h=0;I j,n,*v;
   R fdef(CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, 0L, RMAX,0L,0L);
  }else switch(j){
   default: ASSERT(0,EVNONCE);
-  case 16: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0000, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 17: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0001, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 18: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0010, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 19: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0011, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 20: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0100, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 21: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0101, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 22: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0110, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 23: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0111, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 24: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1000, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 25: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1001, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 26: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1010, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 27: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1011, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 28: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1100, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 29: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1101, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 30: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1110, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 31: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1111, w,0L,0L, VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 32: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VINPLACEOK2, 0L,0L,0L);
-  case 33: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VINPLACEOK2, 0L,0L,0L);
-  case 34: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VINPLACEOK2, 0L,0L,0L);
+  case 16: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 17: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0001, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 18: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0010, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 19: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0011, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 20: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0100, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 21: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0101, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 22: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0110, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 23: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0111, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 24: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 25: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1001, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 26: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1010, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 27: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1011, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 28: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1100, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 29: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1101, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 30: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1110, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 31: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise1111, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
+  case 32: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+  case 33: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+  case 34: R fdef(CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
 }}
 
 

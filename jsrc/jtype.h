@@ -447,17 +447,20 @@ typedef struct{
 #define SBC4  2         /* 2 iff 4-byte character                          */
 
 
+
 typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // more than 64000 execs will be a stack error anyway
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
+#define VFLAGNONE 0L
+#define VRTNNONE ((A)0)
   
                                         /* type V flag values              */
                                         /* < 256 see vcompsc.c             */
 #define VGERL           (I)256          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
-#define VIRS1           (I)2048         /* monad has integral rank support */
-#define VIRS2           (I)4096         /* dyad  has integral rank support */
+#define VIRS1           (I)2048         /* 11 monad has integral rank support */
+#define VIRS2           (I)4096         /* 12 dyad  has integral rank support */
 #define VFLR            (I)8192         /* function is <.@g                */
 #define VCEIL           (I)16384        /* function is >.@g                */
 #define VMOD            (I)32768        /* function is m&|@g               */
@@ -472,6 +475,8 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // m
 #define VDDOP           (I)16777216     /* 24 derived from a derived operator */
 #define VINPLACEOK1     (I)33554432L    // 25 monad can handle in-place args
 #define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
+#define VASGSAFE        ((I)1L<<27)     // does not alter locale/path
+#define VISATOMIC1      ((I)1L<<28)     // processes each atom individually (should have had rank 0, but didn't)
 
 
 typedef struct {DX re;DX im;} ZX;

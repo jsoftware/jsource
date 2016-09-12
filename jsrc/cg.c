@@ -165,7 +165,7 @@ static F2(jtgerfrom){A*av,*v,z;I ad,n;
 F2(jtagenda){
  RZ(a&&w)
  if(NOUN&AT(w))R exg(gerfrom(w,a));
- R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,fxeachv(1L,a), VGERL, mr(w),lr(w),rr(w));
+ R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,fxeachv(1L,a), VGERL|VAV(pst[(UC)CATDOT])->flag, mr(w),lr(w),rr(w));
 }
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.

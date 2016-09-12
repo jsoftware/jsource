@@ -8,7 +8,7 @@
 
 F2(jtforeignextra){
  RZ(a&&w);
- R CDERIV(CIBEAM, 0,0, RMAX,RMAX,RMAX);
+ R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);
 }
 
 F2(jtfixrecursive){A f,g,y;

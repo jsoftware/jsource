@@ -272,9 +272,9 @@ B jtgerexact(J jt, A w){
 
 static A jtamend(J jt,A w,B ip){
  RZ(w);
- if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,RMAX,RMAX,RMAX);
+ if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,0L,RMAX,RMAX,RMAX);
  else if(ger(w))R gadv(w,CRBRACE);
- else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,RMAX,RMAX,RMAX);
+ else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,0L,RMAX,RMAX,RMAX);
 }
 
 F1(jtrbrace){R amend(w,0);}
@@ -285,5 +285,5 @@ static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
 F1(jtemend){
  ASSERT(NOUN&AT(w),EVDOMAIN);
- R ADERIV(CEMEND,0L,jtamen2,RMAX,RMAX,RMAX);
+ R ADERIV(CEMEND,0L,jtamen2,0L,RMAX,RMAX,RMAX);
 }

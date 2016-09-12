@@ -89,10 +89,10 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
     f1=b&& b1?jtbitwiseinsertchar:jtunderai1; 
     f2=b&&!b1?jtbitwisechar:u->id==CMAX||u->id==CMIN?jtcharfn2:jtunder2;
  }}
- R CDERIV(CUNDER,f1,f2,r,r,r);
+ R CDERIV(CUNDER,f1,f2,0L,r,r,r);
 }
 
 F2(jtundco){
  ASSERTVV(a,w); 
- R CDERIV(CUNDCO,jtundco1,jtundco2,RMAX,RMAX,RMAX);
+ R CDERIV(CUNDCO,jtundco1,jtundco2,0L,RMAX,RMAX,RMAX);
 }

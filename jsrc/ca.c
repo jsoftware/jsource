@@ -216,11 +216,12 @@ F2(jtamp){A h=0;AF f1=on1,f2=on2;B b;C c,d=0;D old=jt->ct;I flag=0,mode=-1,p,r;V
     case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; break;
     case CIBEAM: if(v->f&&v->g&&128==i0(v->f)&&3==i0(v->g)){RZ(h=crccompile(a)); f1=jtcrcfixedleft;}
    }
+   flag = (v->flag&VIRS2)>>1;  // preserve the IRS character of u.  Can't preserve inplaceability until CAMP understands it too
    R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VN: 
-   f1=withr;
+   f1=withr; v=VAV(a);
    if(AN(w)&&AR(w)){
-    v=VAV(a); c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
+    c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
     if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */
     else      mode=c==CEPS?IEPS:c==CLESS?ILESS:-1;
    }
@@ -228,6 +229,7 @@ F2(jtamp){A h=0;AF f1=on1,f2=on2;B b;C c,d=0;D old=jt->ct;I flag=0,mode=-1,p,r;V
     if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0;}
     else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ;}
    }
+   flag = (v->flag&VIRS2)>>1;  // preserve the IRS character of u.  Can't preserve inplaceability until CAMP understands it too
    R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VV:
    v=VAV(w); c=v->id; r=v->mr;

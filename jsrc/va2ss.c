@@ -63,11 +63,11 @@ static A ssingallo(J jt,I r,I t){A z;
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
   else if (AINPLACE){ z = a; AT(z) = FL; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-  else {GATV(z, FL, 1, ar, AS(a));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
+  else {GATV(z, FL, 1, ar, AS(a));} \
  } else { \
   if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
   else if (WINPLACE){ z = w; AT(z) = FL; } \
-  else {GATV(z, FL, 1, wr, AS(w));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
+  else {GATV(z, FL, 1, wr, AS(w));} \
  } \
 } /* We have the output block */
 
@@ -85,11 +85,11 @@ static A ssingallo(J jt,I r,I t){A z;
   if (AINPLACE){ z = a; AT(z) = B01; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, ar, AS(a));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
+  else {GATV(z, B01, 1, ar, AS(a));} \
  } else { \
   if (WINPLACE){ z = w; AT(z) = B01; } \
   else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, wr, AS(w));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
+  else {GATV(z, B01, 1, wr, AS(w));} \
  } \
 } /* We have the output block, or 0 if we are returning an atom */
 

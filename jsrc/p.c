@@ -244,13 +244,11 @@ static void auditnum(){
 // NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT be marked inplace.  The action routine
 // should check the operand addresses when zombieval/assignsym is set.  Inplaceable arguments are ignored by functions that do
 // not handle inplace operations.
-// The inplaceable bit in the arguments must also be cleared if the
-// callee cannot handle inplaceing, to prevent releasing an in-placeable block where it is not understood.   scaf comment
 
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb
-#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{/* scaf ACIPNO(stack[w].a); */y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{/* scaf ACIPNO(stack[w].a);ACIPNO(stack[aa].a); */y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
 // in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
@@ -278,7 +276,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
  A *queue=AAV(w)-1;
- m=AN(w); jt->asgn = 0; B jtxdefn=jt->xdefn; I *dci=&jt->sitop->dci;
+ m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci;
  if(m<2) {
   if(m<1)R mark;  // exit fast if empty input.  Happens only during load, but we can't deal with it
   // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
@@ -289,12 +287,14 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    if(s=syrd(y,0L)) {     // Resolve the name.
      A sv;  // pointer to value block for the name
      RZ(sv = s->val);  // symbol table entry, but no value.
-     if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
-      y=sv;    //check NMDOT first, for speed during xdef.  Use value for special name
+// obsolete      if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
+     if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value
+      y=sv;
      } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
    } else {
      // undefined name.
-     ASSERT(!(NMDOT&NAV(y)->flag&&jtxdefn),EVVALUE)  // Error if the unresolved name is x y etc
+// obsolete      ASSERT(!(NMDOT&NAV(y)->flag&&jtxdefn),EVVALUE)  // Error if the unresolved name is x y etc
+     ASSERT(!(at&NAMEBYVALUE),EVVALUE)  // Error if the unresolved name is x y etc
      RZ(y = namerefacv(y, s));    // this will create a ref to undefined name as verb [:
    }
   }
@@ -444,7 +444,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
-      // original:     if (!(y = jt->xdefn&&NMDOT&NAV(y)->flag ? symbrd(y) : nameref(y))) { stack = 0; goto exitparse; }
+      // obsolete     if (!(y = jt->xdefn&&NMDOT&NAV(y)->flag ? symbrd(y) : nameref(y))) { stack = 0; goto exitparse; }
       // To save some overhead, we inline this and do the analysis in a different order here
       *dci = m+1;  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
       if(s=syrd(y,0L)) {   // look up the name in the symbol tables.  0L=Don't bother storing which symbol table was used
@@ -456,12 +456,14 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-        if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
-         y=sv;    //check NMDOT first, for speed during xdef.  Use value for special name
+// obsolete         if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
+        if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
+         y=sv;
         } else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
       } else {
         // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-        if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
+// obsolete         if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
+        if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
         if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
           // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
       }

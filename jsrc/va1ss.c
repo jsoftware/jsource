@@ -27,7 +27,7 @@
 {I wr = AR(w);    /* get rank */ \
  if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)>=wr){AR(jt->zombieval)=wr; AT(z=jt->zombieval)=FL;}  \
  else if (WINPLACE){ AT(z=w) = FL; } \
- else {GATV(z, FL, 1, wr, AS(w));/* scaf if((I)jtf&3)ACIPYES(z);*/} \
+ else {GATV(z, FL, 1, wr, AS(w));} \
 } /* We have the output block */
 
 

@@ -30,7 +30,7 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  GATV(z,BOX,WTA*(5+n),2,0); s=AS(z); *s++=5+n; *s=WTA;
  x=(TA*)AV(z);
  x->a=mark; x->t=0; ++x;
- DO(n, x->a=t=*y++; x->t=0; ++x; if(t==xnam||jt->dotnames&&t==xdot)jt->tmonad=0;);
+ DO(n, x->a=t=*y++; x->t=0; ++x; if(AT(t)&NAME&&NAV(t)->flag&NMDOT&&NAV(t)->s[0]=='x')jt->tmonad=0;);
  x->a=mark; x->t=0; ++x;
  x->a=mark; x->t=0; ++x;
  x->a=mark; x->t=0; ++x;

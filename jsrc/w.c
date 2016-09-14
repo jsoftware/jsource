@@ -130,24 +130,27 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl,bracet
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
   if(1<wl){d=*(wi+wl-1); if(b=p!=C9&&d==CESC1||d==CESC2)e=spellin(wl,wi);}  // if word has >1 character, starts with nonnumeric, and ends with inflection, convert to pseudocharacter
   if(128>c&&(y=ds(e))){if(e==CTILDE&&x[-1]==ds(CRBRACE))bracetilde=1;  // If first char is ASCII, see if the form including inflections is a primitive;
-    // if so, that is the word to put into the queue.  No need to copy it
-    // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
-    // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
-    // without risk of program check
-    // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
-    // In environment 0 (tacit translator), leave as simple assignment
-    if(env!=0 && AT(y)&ASGN) {
-     if(env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC)))){y=ds(CGASGN);}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
-     if(i&& AT(x[-1])&NAME){y= y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
+   // if so, that is the word to put into the queue.  No need to copy it
+   // Since the address of the shared primitive block is used, we can use that to compare against to identify the primitive later
+   // We keep track of We keep track of whether }~ was found.  If } starts the sentence, this will compare garbage, but
+   // without risk of program check
+   // If the word is an assignment, use the appropriate assignment block, depending on the previous word and the environment
+   // In environment 0 (tacit translator), leave as simple assignment
+   if(env!=0 && AT(y)&ASGN) {
+    if(env==1 || (i && AT(x[-1])&NAME && (NAV(x[-1])->flag&(NMLOC|NMILOC)))){y=ds(CGASGN);}   // sentence is NOT for explicit definition, or preceding word is a locative.  Convert to a global assignment.  This will make the display show =:
+    if(i&& AT(x[-1])&NAME){y= y==ds(CGASGN)?asgngloname:asgnlocsimp;}  // if ASGN preceded by NAME, flag it thus, by switching to the block with the ASGNTONAME flag set
    }
+   if(AT(y)&NAME&&(NAV(y)->flag&NMDOT)){RZ(y=ca(y)); if(env==2)AT(y)|=NAMEBYVALUE;}  // The inflected names are the old-fashioned x. y. etc.  They must be cloned lest we modify the shared copy
    *x=y;   // install the value
   } else if(e==CFCONS){RZ(*x=FCONS(connum(wl-1,wi)))  // if the inflected form says [_]0-9:, create word for that
   } else switch(b?0:p){    // otherwise, it's not a primitive, but data, either numeric, string, or name.  Check first character, but fail if inflected form, which must be invalid
    default: jsignal3(EVSPELL,w,wi-s); R 0;   // bad first character or inflection
    case C9: RZ(*x=connum(wl,wi));   break;   // starts with numeric, create numeric constant
    case CQ: RZ(*x=constr(wl,wi));   break;   // start with ', make string constant
-   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi));   // starts with alphabetic, make it a name, error if invalid name
+   case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMDOT)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
+    // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
   }
+
   // Mark the word as not-inplaceable.  Since all allocations start life marked in-placeable, we get into trouble if words in
   // a explicit definition are left that way, because the sentences may get reexecuted and any constant marked inplaceable could
   // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts

@@ -607,7 +607,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
- if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));}  // GA does not allow NAME type, for speed
+ if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
  else{GA(z,t,AN(w),AR(w),AS(w));}
  if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
  if(t&SPARSE){

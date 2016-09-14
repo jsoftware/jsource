@@ -485,6 +485,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
+ // We have to clone the names to make sure we don't get a global name in the 
  RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
  if(type<3){RZ(probeis(unam,pfst));RZ(probeis(mnam,pfst)); if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
  if (jt->dotnames){
@@ -564,9 +565,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(j=0;j<ln;++j) {
    if((tt=AT(t=lv[j]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
     I4 compcount=0;  // number of comparisons before match
-    // lv[j] is a simplename.  We will install the bucket/index fields - but if it's an argument name,
-    // we have to clone it so we won't modify the shared copy
-    if(NAV(t)->flag&NMDOT)RZ(t=lv[j]=ca(t))
+    // lv[j] is a simplename.  We will install the bucket/index fields
+// obsolete     if(NAV(t)->flag&NMDOT)RZ(t=lv[j]=ca(t))
     NM *tn = NAV(t);  // point to the NM part of the name block
     // Get the bucket number by reproducing the calculation in the symbol-table routine
     tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash

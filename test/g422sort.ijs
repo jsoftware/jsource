@@ -3,11 +3,11 @@ NB. y/:y and y\:y -------------------------------------------------------
 randuni''
 
 test=: 3 : 0
- t=: (/:y){y
+ t=. (/:y){y
  assert. t -: y/:y
  assert. t -: /:~ y
  if. (1=#$y)*.0=1{.0$y do. assert. (}.t)>:}:t end. 
- t=: (\:y){y
+ t=. (\:y){y
  assert. t -: y\:y
  assert. t -: \:~ y
  if. (1=#$y)*.0=1{.0$y do. assert. (}.t)<:}:t end. 
@@ -15,11 +15,11 @@ test=: 3 : 0
 )
 
 test1=: 3 : 0
- t=: (/:"1 y){"1 y
+ t=. (/:"1 y){"1 y
  assert. t -: y/:"1 y
  assert. t -: /:~"1 y
  assert. t -: /:"1~ y
- t=: (\:"1 y){"1 y
+ t=. (\:"1 y){"1 y
  assert. t -: y\:"1 y
  assert. t -: \:~"1 y
  assert. t -: \:"1~ y
@@ -245,6 +245,6 @@ test1 0.01*(--:n) + 3 1002 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1003 ?@$ n=: IF64{1e9 1e18
 
 
-4!:55 ;:'adot1 adot2 sdot0 b n t test test1'
+4!:55 ;:'adot1 adot2 sdot0 b n test test1'
 
 

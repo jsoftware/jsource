@@ -389,7 +389,9 @@ static A jtva2(J,A,A,C);
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
 #define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
+#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT)))R f(jt,a,w); F2PREFIP;
 #define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op); F2PREFIP;
+#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT+LIT+C2T+C4T)))R f(jt,a,w,op); F2PREFIP;
 #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
 #define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;} F2PREFIP;
 
@@ -420,13 +422,13 @@ F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
 F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
 F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
 
-F2(jteq     ){CHECKSSINGOP(a,w,jtsseqne,0) R va2(a,w,CEQ     );}
-F2(jtlt     ){CHECKSSING(a,w,jtsslt) R va2(a,w,CLT     );}
-F2(jtminimum){CHECKSSING(a,w,jtssmin) R va2(a,w,CMIN    );}
-F2(jtle     ){CHECKSSING(a,w,jtssle) R va2(a,w,CLE     );}
-F2(jtgt     ){CHECKSSING(a,w,jtssgt) R va2(a,w,CGT     );}
-F2(jtmaximum){CHECKSSING(a,w,jtssmax) R va2(a,w,CMAX    );}
-F2(jtge     ){CHECKSSING(a,w,jtssge) R va2(a,w,CGE     );}
+F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,CEQ     );}
+F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,CLT     );}
+F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,CMIN    );}
+F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,CLE     );}
+F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,CGT     );}
+F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,CMAX    );}
+F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,CGE     );}
 F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
 F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,CPLUSDOT);}
 F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,CPLUSCO );}
@@ -436,7 +438,7 @@ F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,CSTARCO );}
 F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
 F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
 F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,CEXP    );}
-F2(jtne     ){CHECKSSINGOP(a,w,jtsseqne,1) R va2(a,w,CNE     );}
+F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,CNE     );}
 F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,CBANG   );}
 F2(jtcircle ){R va2(a,w,CCIRCLE );}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}

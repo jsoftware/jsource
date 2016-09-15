@@ -127,6 +127,7 @@ extern F1(jthostne);
 extern F1(jticap);
 extern F1(jticvt);
 extern F1(jtiden);
+extern F1(jtidensb);
 extern F1(jtiepdoq);
 extern F1(jtiepdos);
 extern F1(jtiepq);

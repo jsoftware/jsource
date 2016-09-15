@@ -165,6 +165,42 @@ NB. adot4    (ebar -: E.) 10&u:'a'
 'a'      (ebar -: E.) 10&u:'b'
 'aaa'    (ebar -: E.) 50$10&u:'aaa'
 
+NB. symbol5
+adot5=: /:~ (#sdot0){.~.(s:' ABC abc a b c A B C'),sdot0,s:'zz',"1 ":i.100
+ebar =: 4 : 0
+ assert. (0 e.$x) +. 65536 e.~ type x
+ assert. (0 e.$y) +. 65536 e.~ type y
+ assert. (1>:#$x)*.1>:#$y
+ m=.#x
+ n=.#y
+ p=.(*m)+n-m
+ v=.(adot5 i.y),99
+ td1=.(m-i.m) (adot5 i.,x)}(#adot5)$1+m
+ z=.($y)$k=.0
+ while. k<p do.
+  i=.0 
+  while. i<m do.
+   if. (i{x)=(k+i){y do. i=.>:i else. break. end. 
+  end.
+  z=.(i=m) k}z
+  k=.k+((k+m){v){td1
+ end.
+ z
+)
+
+adot5         (ebar -: E.) adot5
+adot5         (ebar -: E.) s:' a b c'
+(s:<'abc')    (ebar -: E.) adot5
+(s:<'ABC')    (ebar -: E.) adot5
+(s:'')        (ebar -: E.) adot5
+adot5         (ebar -: E.) s:''
+(s:'')        (ebar -: E.) s:''
+(s:<'abc')    (ebar -: E.) adot5
+NB. adot5         (ebar -: E.) s:<'abc'
+(s:<'abc')    (ebar -: E.) s:<'abc'
+(s:<'abc')    (ebar -: E.) s:<'b'
+(s:<'abc')    (ebar -: E.) 50$s:<'abc'
+
 
 x=: a.{~ ?31$#a.
 y=: x ((?40$y-&#x)+/i.#x)}y=: a.{~ ?9111$#a.
@@ -177,6 +213,10 @@ y=: x ((?40$y-&#x)+/i.#x)}y=: adot1{~ ?9111$#adot1
 x=: adot2{~ ?31$#adot2
 y=: x ((?40$y-&#x)+/i.#x)}y=: adot2{~ ?9111$#adot2
 (x E. y) -: x E.&(adot2&i.) y
+
+x=: sdot0{~ ?31$#sdot0
+y=: x ((?40$y-&#x)+/i.#x)}y=: sdot0{~ ?9111$#sdot0
+(x E. y) -: x E.&(sdot0&i.) y
 
 x=: ?31$1000
 i=: ?40$y-&#x
@@ -219,6 +259,6 @@ olim =: 9!:20''
 (0 $~ 8e6 % IF64 { 4 8) -: (0 3e6 * 2 - IF64)  E. i. 8e6 % IF64 { 4 8 [ 'If this fails, you need ''9!:21 olim'' to restore memory allocation size'
 9!:21 olim
 
-4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 g ebar i j m n s t x y G jtree joinroutes olim '
+4!:55 ;:'adot1 adot2 sdot0 adot3 adot4 adot5 g ebar i j m n s t x y G jtree joinroutes olim '
 
 

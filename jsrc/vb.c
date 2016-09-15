@@ -24,7 +24,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  sj=as[1]; n=1+ws[1]-sj;
  t=AT(w); k=bp(t); c=ws[1]; r=k*c; s=k*sj;
  GATV(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
- if(t&B01+LIT+C2T+C4T+INT||0==jt->ct&&t&FL+CMPX)
+ if(t&B01+LIT+C2T+C4T+INT+SBT||0==jt->ct&&t&FL+CMPX)
   for(i=0;i<m;++i){
    DO(n, u=av; b=0; DO(si,                         if(b=!!memcmp(u,v,s))break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
    zv+=c; v=v0=wv+=r;
@@ -43,9 +43,9 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  an=AN(a); av=CAV(a); 
  wn=AN(w); wv=CAV(w); n=1+wn-an; 
  t=AT(w); k=bp(t); s=k*an;
- GATV(z,B01,wn,1,0); zv=BAV(z); 
+ GATV(z,B01,wn,AR(w)?1:0,0); zv=BAV(z); 
  if(an&&wn>an)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
- if(t&INT||0==jt->ct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
+ if(t&B01+LIT+C2T+C4T+INT+SBT||0==jt->ct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
  else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
  R z;
 }    /* E. on vector arguments */
@@ -84,6 +84,9 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
   case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
+  case SBTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
+            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
+            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case C2TX: d=65536; break;
   case C4TX: c4range(m,C4AV(a),&ccaw,&da); ca=ccaw; if(da){c4range(n,C4AV(w),&ccaw,&dw); cw=ccaw; }
             if(da&&dw){c=MIN((C4)ca,(C4)cw); d=MAX(((C4)ca)+da,((C4)cw)+dw)-(C4)c;} // This may make d overflow (if c<0), but we catch that at exit
@@ -94,7 +97,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  *zc=c;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT+C4T&&0<d&&d<=memlimit ? d : -4;
+ R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<d&&d<=memlimit ? d : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \
@@ -120,6 +123,8 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(I, u[i],  v[k+m],   zv[k]=i==m); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, zv[k]=i==m) 
+            else EBLOOP(SB,u[i],  v[k+m],   zv[k]=i==m); break;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   zv[k]=i==m); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, zv[k]=i==m) 
             else EBLOOP(C4,u[i],  v[k+m],   zv[k]=i==m); break;
@@ -142,6 +147,8 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R sc(k)); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
+            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R sc(k)); break;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R sc(k)); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R sc(k)) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R sc(k)); break;
@@ -163,6 +170,8 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)++z); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)++z) 
+            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)++z); break;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)++z); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)++z) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)++z); break;
@@ -184,6 +193,8 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R one) 
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)R one); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R one) 
+            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R one); break;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R one); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R one) 
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R one); break;
@@ -209,6 +220,8 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(I, u[i],  v[k+m],   if(i==m)IFB1); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)IFB1)
+            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)IFB1); break;
   case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)IFB1); break;
   case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)IFB1)
             else EBLOOP(C4,u[i],  v[k+m],   if(i==m)IFB1); break;

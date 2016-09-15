@@ -149,7 +149,7 @@ NB. 'value error' -: 15!:14 etx <"0@s: ;:'t test'
 0 ~: h 15!:21 'gethostname'
 
 0 ~: sbp=: 0 (15!:21) 'JSBProbe'
-0 ~: s=: ('0 ',(":sbp),' > x x x x *c') 15!:0 jt;0;(#;]) t=: AlphaNum_j_{~ ?10$#AlphaNum_j_
+0 ~: s=: ('0 ',(":sbp),' > x x x x *c x') 15!:0 jt;0;(<0),~(#;]) t=: AlphaNum_j_{~ ?10$#AlphaNum_j_
 (5 s: _6 s: s) -: <t
 
 4!:55 ;:'CREATE_NEW FILE_BEGIN FILE_CURRENT FILE_END GENERIC_READ '

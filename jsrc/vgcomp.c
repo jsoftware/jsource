@@ -15,7 +15,7 @@
 #define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
 #define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]>y[i])R jt->compgt; else if(x[i]<y[i])R jt->complt;);}
 #define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]>y[i])R jt->compgt; else if(x[i]<y[i])R jt->complt;);}
-#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBUV(x[i])->order>SBUV(y[i])->order)R jt->compgt; else if(SBUV(x[i])->order<SBUV(y[i])->order)R jt->complt;);}
+#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBGT(x[i],y[i]))R jt->compgt; else if(SBLT(x[i],y[i]))R jt->complt;);}
 #define COMPLOOPF(T,m,f) {COMPDCLP(T);int j; DO(m, if(j=f(x[i],y[i]))R j;);}
 #define COMPLOOPR(T,m,f) {COMPDCLP(T);int j; DO(m, if(j=f((A)AABS(x[i],jt->compw),(A)AABS(y[i],jt->compw)))R j;);}
 #define COMPLOOPG(T,m,f) {COMPDCLP(T);int j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}

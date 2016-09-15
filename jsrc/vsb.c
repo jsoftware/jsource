@@ -311,7 +311,7 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  R(SB)c;
 }    /* insert new symbol */
 
-static SB jtsbprobe(J jt,S c2,I n,C*s){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
+static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*)s;
  if(!n)R(SB)0;   // sentinel
 // optimize storage if ascii or short
  S c0=c2;  // save original flag
@@ -325,7 +325,7 @@ static SB jtsbprobe(J jt,S c2,I n,C*s){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*us=(UC*
  hi=h%hn;                               /* index into hash table        */
  while(1){
   ui=(jt->sbhv)[hi];                    /* index into unique symbols    */
-  if(0>ui)R sbinsert(c2,c0,n,s,h,hi);   /* new symbol                   */
+  if(0>ui){if(test)R -1; else R sbinsert(c2,c0,n,s,h,hi);} /* new symbol                   */
   u=SBUV(ui);
   if(h==u->h){                          /* old symbol, maybe            */
    t=(UC*)SBSV(u->i);
@@ -361,20 +361,20 @@ static A jtsbunstr(J jt,I q,A w){A z;S c2;I i,j,m,wn;SB*zv;
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
-  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv))); j=i+1;}}
-  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv))); j=i+1;}}
+  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv),0)); j=i+1;}}
+  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,4*(i-j),(C*)(j+wv),0)); j=i+1;}}
  }else if(c2&SBC2){US c,*wv=USAV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
-  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv))); j=i+1;}}
-  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv))); j=i+1;}}
+  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv),0)); j=i+1;}}
+  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,2*(i-j),(C*)(j+wv),0)); j=i+1;}}
  }else{C c,*wv=CAV(w); 
   c=wv[q==-1?0:wn-1];
   m=0; DO(wn, if(c==wv[i])++m;);
   GATV(z,SBT,m,1,0); zv=SBAV(z);
-  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,i-j,j+wv)); j=i+1;}}
-  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,i-j,j+wv)); j=i+1;}}
+  if(q==-1){for(i=j=1;i<=wn;++i)if(c==wv[i]||i==wn){RE(*zv++=sbprobe(c2,i-j,j+wv,0)); j=i+1;}}
+  else     {for(i=j=0;i< wn;++i)if(c==wv[i]       ){RE(*zv++=sbprobe(c2,i-j,j+wv,0)); j=i+1;}}
  }
  R z;
 }    /* monad s: on leading (_1=q) or trailing (_2=q) character separated strings */
@@ -391,17 +391,17 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  else if(c2&SBC4){C4 c=(C4)cx,*s,*wv=C4AV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
-   RE(*zv++=sbprobe(c2,4*((c!=*s)+s-wv),(C*)wv));
+   RE(*zv++=sbprobe(c2,4*((c!=*s)+s-wv),(C*)wv,0));
    wv+=wc;
  }}else if(c2&SBC2){US c=(US)cx,*s,*wv=USAV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
-   RE(*zv++=sbprobe(c2,2*((c!=*s)+s-wv),(C*)wv));
+   RE(*zv++=sbprobe(c2,2*((c!=*s)+s-wv),(C*)wv,0));
    wv+=wc;
  }}else{C c=cx,*s,*wv=CAV(w);
   for(i=0;i<m;++i){
    s=wc+wv; DO(wc, if(c!=*--s)break;);   /* exclude trailing "blanks"    */
-   RE(*zv++=sbprobe(c2,(c!=*s)+s-wv,wv));
+   RE(*zv++=sbprobe(c2,(c!=*s)+s-wv,wv,0));
    wv+=wc;
  }}
  R z;
@@ -416,7 +416,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n,wd;SB*zv;
   x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
-  RE(*zv++=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x)));
+  RE(*zv++=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),0));
  }
  R z;
 }    /* each element of boxed array w is a string */
@@ -541,11 +541,11 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");
  sn=*AV(sna); 
- ASSERTD(0<=sn,"sn non-negative");      /* root          */
+ ASSERTD(0<=sn,"sn non-negative");
  ASSERTD(!AR(roota),"root atom"); 
  ASSERTD(INT&AT(roota),"root integer");
  r=*AV(roota);
- ASSERTD(0<=r,"root non-negative");
+ ASSERTD(0<=r,"root non-negative");     /* root          */
  ASSERTD(r<c,"root bounded by c");
  ASSERTD(!AR(ff),"ff atom");            /* fill factor   */
  ASSERTD(INT&AT(ff),"ff integer");
@@ -609,26 +609,29 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
 
 // minimal check for sbsetdata2
 static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
-     C*sv;I c,i,sn,un;SBU*uv,*v;
+     C*sv;I c,i,sn,un,offset=0;SBU*uv,*v;
  RZ(una&&sna&&u&&s);
- ASSERTD(!AR(una),"c atom");            /* cardinality   */
+ if(1==AN(una)){ASSERTD(!AR(una),"c atom");}            /* cardinality    */
+ else {ASSERTD(2==AN(una)&&1==AR(una),"c/offset vector");}
  ASSERTD(INT&AT(una),"c integer");
  c=*AV(una);
  ASSERTD(0<=c,"c non-negative");
+ if(2==AN(una)){ASSERTD(0<=(offset=*(1+AV(una))),"offset non-negative");}
+ if(!offset){ASSERTD(!offset||offset==jt->sbun,"offset contiguous");}
  ASSERTD(!AR(sna),"sn atom");           /* string length */
  ASSERTD(INT&AT(sna),"sn integer");
  sn=*AV(sna);
- ASSERTD(0<=sn,"sn non-negative");      /* root          */
+ ASSERTD(0<=sn,"sn non-negative");
  sv=CAV(s);
  un=*AS(u); uv=(SBU*)AV(u);
  ASSERTD(2==AR(u),"u matrix");
  ASSERTD(INT&AT(u),"u integer");
  ASSERTD(*(1+AS(u))==sizeof(SBU)/SZI,"u #columns");
- ASSERTD(c<=un,"c bounded by #u");
+ ASSERTD(c<=un+offset,"c bounded by #u");
  ASSERTD(1==AR(s),"s vector");
  ASSERTD(LIT&AT(s),"s literal");
  ASSERTD(sn<=AN(s),"sn bounded by #s");
- for(i=1,v=1+uv;i<c;++i,++v){S c2;I vi,vn;UC*vc;
+ for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){S c2;I vi,vn;UC*vc;  // i==0 is sentinel
   c2=v->flag&SBC2+SBC4;
   vi=v->i;
   vn=v->n;
@@ -670,7 +673,7 @@ static void resetdata(J jt){
  ra(jt->sbu); ra(jt->sbs); ra(jt->sbh); // prevent automatically freed by tpop()
 }    /* re-initialize global symbol table */
 
-static F1(jtsbsetdata2){A *wv;I c,i,sn,wd;SBU*uv,*v;C*sv;
+static F1(jtsbsetdata2){A *wv;I c,i,sn,wd,offset=0;SBU*uv,*v;C*sv;
  RZ(w);
  ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
@@ -679,18 +682,33 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,wd;SBU*uv,*v;C*sv;
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
  c=*AV(WVR(0));                         // cardinality
+ if(1<AN(WVR(0)))offset=*(1+AV(WVR(0)));// offset
  sn=*AV(WVR(1));                        // string length
  uv=(SBU*)AV(WVR(2));                   // table of symbols
  sv=CAV(WVR(3));                        // global string table
- resetdata(jt);
- for(i=1,v=1+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
+ if(!offset)resetdata(jt);
+ for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
   vi=v->i;                              // index into sbs
   vn=v->n;                              // length in bytes
   vc=(UC*)(sv+vi);                      // symbol string
-  ASSERTD(i==sbprobe((S)v->flag,vn,vc),"u unique"); // insert symbol
+  RE(sbprobe((S)v->flag,vn,vc,0));      // insert symbol
  }
  R one;
 }
+
+static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n,wd;B*zv;
+ RZ(w);
+ ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
+ m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ GATV(z,B01,m,AR(w),AS(w)); zv=BAV(z);
+ for(i=0;i<m;++i){
+  x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
+  ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
+  ASSERT(1>=AR(x),EVRANK);
+  RE(*zv++=0<=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),1));
+ }
+ R z;
+}    /* test symbol, each element of boxed array w is a string */
 
 static F1(jtsbgetdata){A z,*zv;
  GAT(z,BOX,8,1,0); zv=AAV(z);
@@ -745,6 +763,7 @@ F2(jtsb2){A z;I j,k,n;
   case  7:   R sborder(w);
   case 10:   R sbsetdata(w);
   case 11:   R sbsetdata2(w);
+  case 12:   R sbtestbox(w);
   case 16:   GAP = 4;                                       R sc(GAP);
   case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
   case 18:   GAP--;                                         R sc(GAP);
@@ -801,11 +820,11 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
 
 /* same as jtsbprobe but called from external libraries */
 /* n is number of characters, not bytes */
-SB _stdcall JSBProbe(J jt, I flag, I n, void* s){SB u;
+SB _stdcall JSBProbe(J jt, I flag, I n, void* s, I test){SB u;
  S c2=flag&SBC2+SBC4;
  if(!jt||0>n||!s) R 0;            /* validations */
  if(c2&SBC2&&c2&SBC4) R 0;
- u=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,(C*)s);
+ u=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,(C*)s,test);
  jt->jerr=0; jt->etxn=0; /* clear old errors */
  R u;
 }    /* return symbol index of a string */

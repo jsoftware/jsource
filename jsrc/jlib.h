@@ -12,7 +12,6 @@ I _stdcall JSetA(J jt,I n,C* name,I x,C* d);/* name=:3!:2 data */
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 int _stdcall JErrorTextM(J jt, I ec, I* p);
-I _stdcall JSBProbe(J jt,I flag,I n,void*s);/* symbol probe */
 
 typedef void* (_stdcall *JInitType)     ();
 typedef int   (_stdcall *JDoType)       (void*, C*);

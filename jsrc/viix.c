@@ -44,6 +44,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
  R 1;
 }    /* a I. w where a is a list of small range integers */
 
+#define SBCOMP(x,y)       \
+ ((SBLT((x),(y)))?-1:(SBGT((x),(y)))?1:0)
 #define COMPVLOOP(T,c)       \
  {T*u=(T*)uu,*v=(T*)vv; DO(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
 #define COMPVLOOF(T,c,COMP)  \
@@ -111,6 +113,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
   case C4TX:  COMPVLOOP(C4,c);           break;
+  case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  

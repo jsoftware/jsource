@@ -437,14 +437,37 @@ static DF2(jtmovavg){I m;
     SETZ;                                                      \
  }}}
 
+#define MOVMINMAXS(T,type,ie,CMP)    \
+ {T d,e,*s,*t,*u,*v,x=ie,*yv,*zv;                              \
+  zv=(T*)AV(z); u=v=(T*)AV(w);                                 \
+  if(1==c){                                                    \
+   DO(m, d=*v++; if(CMP(d,x))x=d;); *zv++=x;                    \
+   for(i=0;i<p;++i){                                           \
+    d=*v++; e=*u++;                                            \
+    if(CMP(d,x))x=d; else if(e==x){x=d; t=u; DO(m-1, e=*t++; if(CMP(e,x))x=e;);}  \
+    *zv++=x;                                                   \
+  }}else{                                                      \
+   GATVS(y,type,c,1,0,type##SIZE); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
+   DO(m, s=yv; DO(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  \
+   for(i=0;i<p;++i){                                           \
+    for(j=0,s=yv;j<c;++j,++s){                                 \
+     d=*v++; e=*u++; x=*s;                                     \
+     if(CMP(d,x))x=d; else if(e==x){x=d; t=c+u-1; DO(m-1, e=*t; t+=c; if(CMP(e,x))x=e;);}  \
+     *s=x;                                                     \
+    }                                                          \
+    SETZ;                                                      \
+ }}}
+
 static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  p=IC(w)-m; wt=AT(w); c=aii(w);
  GA(z,AT(w),c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
- switch(max+(wt&INT?0:2)){
-  case 0: MOVMINMAX(I,INT,IMAX,<=); break;
-  case 1: MOVMINMAX(I,INT,IMIN,>=); break;
-  case 2: MOVMINMAX(D,FL, inf ,<=); break;
-  case 3: MOVMINMAX(D,FL, infm,>=);
+ switch(max+(wt&SBT?0:wt&INT?2:4)){
+  case 0: MOVMINMAXS(SB,SBT,jt->sbuv[0].down,SBLE); break;
+  case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
+  case 2: MOVMINMAX(I,INT,IMAX,<=); break;
+  case 3: MOVMINMAX(I,INT,IMIN,>=); break;
+  case 4: MOVMINMAX(D,FL, inf ,<=); break;
+  case 5: MOVMINMAX(D,FL, infm,>=); break;
  }
  R z;
 }    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer or float; 0<m */
@@ -524,14 +547,14 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
  switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
   case CPLUS:    if(wt&B01+INT+FL)R movsumavg(m,w,self,0); break;
-  case CMIN:     if(wt&    INT+FL)R movminmax(m,w,self,0); break;
-  case CMAX:     if(wt&    INT+FL)R movminmax(m,w,self,1); break;
+  case CMIN:     if(wt&SBT+INT+FL)R movminmax(m,w,self,0); break;
+  case CMAX:     if(wt&SBT+INT+FL)R movminmax(m,w,self,1); break;
   case CSTARDOT: if(wt&B01       )R  movandor(m,w,self,0); break;
   case CPLUSDOT: if(wt&B01       )R  movandor(m,w,self,1); break;
   case CNE:      if(wt&B01       )R   movneeq(m,w,self,0); break;
   case CEQ:      if(wt&B01       )R   movneeq(m,w,self,1); break;
   case CBW1001:  if(wt&    INT   )R movbwneeq(m,w,self,1); break;
-  case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0);
+  case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  vains(id,wt,&ado,&cv);
  if(!ado||!m||m>p)R infix(a,w,self);

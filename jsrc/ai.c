@@ -386,3 +386,15 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  ASSERT(x,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
 }
+
+F1(jtidensb){A f,g,x=0,w0=w;V*v;
+ RZ(w=fix(w)); ASSERT(VERB&AT(w),EVDOMAIN);
+ v=VAV(w); f=v->f; g=v->g;
+ switch(v->id){
+  default:      R iden(w0);
+  case CMAX:    GATV(x,SBT,1,0,0);*SBAV(x)=0; break;
+  case CMIN:    GATV(x,SBT,1,0,0);*SBAV(x)=jt->sbuv[0].down; break;
+ }
+ ASSERT(x,EVDOMAIN);
+ R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));
+}

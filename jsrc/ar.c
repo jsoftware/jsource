@@ -186,7 +186,7 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w);
  jt->rank=0;
  GA(x,AT(w),0L,r,f+s);
- R reitem(vec(INT,f,s),lamin1(df1(x,iden(fs))));
+ R reitem(vec(INT,f,s),lamin1(df1(x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
 static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
@@ -420,6 +420,16 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
   case BR2CASE(B01X,CSTARCO ): if(b=1==r)BTABPFX(BNAND); break;
   case BR2CASE(LITX,CEQ     ): BR2IFX(C,== ); break;
   case BR2CASE(LITX,CNE     ): BR2IFX(C,!= ); break;
+  case BR2CASE(C2TX,CEQ     ): BR2IFX(US,== ); break;
+  case BR2CASE(C2TX,CNE     ): BR2IFX(US,!= ); break;
+  case BR2CASE(C4TX,CEQ     ): BR2IFX(C4,== ); break;
+  case BR2CASE(C4TX,CNE     ): BR2IFX(C4,!= ); break;
+  case BR2CASE(SBTX,CEQ     ): BR2IFX(SB,== ); break;
+  case BR2CASE(SBTX,CLT     ): BR2PFX(SB,SBLT); break;
+  case BR2CASE(SBTX,CLE     ): BR2PFX(SB,SBLE); break;
+  case BR2CASE(SBTX,CGT     ): BR2PFX(SB,SBGT); break;
+  case BR2CASE(SBTX,CGE     ): BR2PFX(SB,SBGE); break;
+  case BR2CASE(SBTX,CNE     ): BR2IFX(SB,!= ); break;
   case BR2CASE(INTX,CEQ     ): BR2IFX(I,== ); break;
   case BR2CASE(INTX,CLT     ): BR2IFX(I,<  ); break;
   case BR2CASE(INTX,CLE     ): BR2IFX(I,<= ); break;

@@ -1048,6 +1048,7 @@ F1(jtcdproc1){CCT*cc;
 #pragma warning(disable: 4276)
 #endif
 
+I _stdcall JSBProbe(J jt,I flag,I n,void*s,I test);
 #if SY_WIN32
 #define VARIANT void
 int _stdcall JBreak(J jt);

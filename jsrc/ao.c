@@ -26,7 +26,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
 }
 
 
-#define OBQCASE(t,id)    ((t)+(8*(id)))
+#define OBQCASE(t,id)    ((t)+(9*(id)))
 
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw*u,*v,*ww=(Tw*)wv;Tz x,*zz;                  \
@@ -58,7 +58,9 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
   case OBQCASE(B01X, CLE     ): OBQLOOP(B,B,wt,x=*u, x=*u<=x      ); break;
   case OBQCASE(B01X, CGT     ): OBQLOOP(B,B,wt,x=*u, x=*u> x      ); break;
   case OBQCASE(B01X, CGE     ): OBQLOOP(B,B,wt,x=*u, x=*u>=x      ); break;
-  case OBQCASE(B01X, CPLUS   ): OBQLOOP(B,I,INT,x=*u, x+=*u        ); break;
+  case OBQCASE(B01X, CPLUS   ): OBQLOOP(B,I,INT,x=*u, x+=*u       ); break;
+  case OBQCASE(SBTX, CMAX    ): OBQLOOP(SB,SB,wt,x=*u, x=SBGT(x,*u)?x:*u ); break;
+  case OBQCASE(SBTX, CMIN    ): OBQLOOP(SB,SB,wt,x=*u, x=SBLT(x,*u)?x:*u ); break;
   case OBQCASE(FLX,  CMAX    ): OBQLOOP(D,D,wt,x=*u, x=MAX(x,*u)  ); break;
   case OBQCASE(FLX,  CMIN    ): OBQLOOP(D,D,wt,x=*u, x=MIN(x,*u)  ); break;
   case OBQCASE(FLX,  CPLUS   ): OBQLOOP(D,D,wt,x=*u, x+=*u        ); break;
@@ -216,7 +218,7 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  R at;
 }
 
-#define KCASE(d,t)          (t+4*d)
+#define KCASE(d,t)          (t+5*d)
 #define KACC1(F,Ta)  \
  {Ta*u;                                                          \
   if(1==c){                                                      \
@@ -235,7 +237,8 @@ static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
     case LITX: KACC1(F,UC); break;                                \
     case C2TX: KACC1(F,US); break;                                \
     case C4TX: KACC1(F,C4); break;                                \
-    case INTX: KACC1(F,I );                                       \
+    case SBTX: KACC1(F,SB); break;                                \
+    case INTX: KACC1(F,I ); break;                                \
   }}else{                                                        \
    v=zv; DO(m*c, *v++=v0;);                                      \
    if(1==c)DO(n, v=zv+  *xv++;       y=*wv++; *v=F;       )      \
@@ -250,6 +253,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  x=VAV(self)->f; d=vaid(VAV(x)->f); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
+     wt&SBT&&(d==CMIN||d==CMAX)||
      wt&INT&&(17<=d&&d<=25)||
      wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
  at=keyrs(a,&r,&s); c=aii(w); m=s;
@@ -266,6 +270,8 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
   case KCASE(CPLUSDOT,B01X): KACC(*v||y,    B, B, 0   ); break;
   case KCASE(CSTARDOT,B01X): KACC(*v&&y,    B, B, 1   ); break;
   case KCASE(CNE,     B01X): KACC(*v!=y,    B, B, 0   ); break;
+  case KCASE(CMIN,    SBTX): KACC(SBLT(*v,y)?*v:y,SB,SB,jt->sbuv[0].down); break;
+  case KCASE(CMAX,    SBTX): KACC(SBGT(*v,y)?*v:y,SB,SB,0); break;
   case KCASE(CMIN,    INTX): KACC(MIN(*v,y),I, I, IMAX); break;  
   case KCASE(CMIN,    FLX ): KACC(MIN(*v,y),D, D, inf ); break;
   case KCASE(CMAX,    INTX): KACC(MAX(*v,y),I, I, IMIN); break;
@@ -327,6 +333,9 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
    case KMCASE(C4TX,B01X): KMACC(C4,B); break;
    case KMCASE(C4TX,INTX): KMACC(C4,I); break;
    case KMCASE(C4TX,FLX ): KMACC(C4,D); break;
+   case KMCASE(SBTX,B01X): KMACC(SB,B); break;
+   case KMCASE(SBTX,INTX): KMACC(SB,I); break;
+   case KMCASE(SBTX,FLX ): KMACC(SB,D); break;
    case KMCASE(INTX,B01X): KMACC(I ,B); break;
    case KMCASE(INTX,INTX): KMACC(I ,I); break;
    case KMCASE(INTX,FLX ): KMACC(I ,D);
@@ -336,7 +345,8 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
    case LITX: KMSET(UC); break;
    case C2TX: KMSET(US); break;
    case C4TX: KMSET(C4); break;
-   case INTX: KMSET(I );
+   case SBTX: KMSET(SB); break;
+   case INTX: KMSET(I ); break;
   }
   *AS(z)=m; AN(z)=m*c;
  }else{
@@ -346,7 +356,7 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
   switch(CTTZNOFLAG(wt)){
    case B01X: KMFUN(B); break;
    case INTX: KMFUN(I); break;
-   case FLX:  KMFUN(D);
+   case FLX:  KMFUN(D); break;
   }
   if(1==c)DO(m, *zv++/=*pv++;) else DO(m, d=(D)*pv++; DO(c, *zv++/=d;););
  }
@@ -435,7 +445,8 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
    case LITX: KEYTALLY(UC); break;
    case C2TX: KEYTALLY(US); break;
    case C4TX: KEYTALLY(C4); break;
-   case INTX: KEYTALLY(I );
+   case SBTX: KEYTALLY(SB); break;
+   case INTX: KEYTALLY(I ); break;
   }
   AN(z)=*AS(z)=j;
   EPILOG(z);
@@ -474,11 +485,11 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv
   GATV(y,INT,m,1,0); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
   R stitch(b?from(x,w):y,b?y:from(x,w));
  }
- if(at&LIT+C2T+C4T+INT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
+ if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;); k=0;
-  switch(12*b+(at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
+  switch(15*b+(at&SBT?12:at&C4T?9:at&INT?6:at&C2T?3:0)+(wt&FL?2:wt&INT?1:0)){
    case  0: KEYHEADTALLY(I,UC,B,*v,   wv[i]); break;
    case  1: KEYHEADTALLY(I,UC,I,*v,   wv[i]); break;
    case  2: KEYHEADTALLY(D,UC,D,(D)*v,wv[i]); break;
@@ -491,18 +502,24 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv
    case  9: KEYHEADTALLY(I,C4,B,*v,   wv[i]); break;
    case 10: KEYHEADTALLY(I,C4,I,*v,   wv[i]); break;
    case 11: KEYHEADTALLY(D,C4,D,(D)*v,wv[i]); break;
-   case 12: KEYHEADTALLY(I,UC,B,wv[i],*v   ); break;
-   case 13: KEYHEADTALLY(I,UC,I,wv[i],*v   ); break;
-   case 14: KEYHEADTALLY(D,UC,D,wv[i],(D)*v); break;
-   case 15: KEYHEADTALLY(I,US,B,wv[i],*v   ); break;
-   case 16: KEYHEADTALLY(I,US,I,wv[i],*v   ); break;
-   case 17: KEYHEADTALLY(D,US,D,wv[i],(D)*v); break;
-   case 18: KEYHEADTALLY(I,I ,B,wv[i],*v   ); break;
-   case 19: KEYHEADTALLY(I,I ,I,wv[i],*v   ); break;
-   case 20: KEYHEADTALLY(D,I ,D,wv[i],(D)*v); break;
-   case 21: KEYHEADTALLY(I,C4,B,wv[i],*v   ); break;
-   case 22: KEYHEADTALLY(I,C4,I,wv[i],*v   ); break;
-   case 23: KEYHEADTALLY(D,C4,D,wv[i],(D)*v); break;
+   case 12: KEYHEADTALLY(I,SB,B,*v,   wv[i]); break;
+   case 13: KEYHEADTALLY(I,SB,I,*v,   wv[i]); break;
+   case 14: KEYHEADTALLY(D,SB,D,(D)*v,wv[i]); break;
+   case 15: KEYHEADTALLY(I,UC,B,wv[i],*v   ); break;
+   case 16: KEYHEADTALLY(I,UC,I,wv[i],*v   ); break;
+   case 17: KEYHEADTALLY(D,UC,D,wv[i],(D)*v); break;
+   case 18: KEYHEADTALLY(I,US,B,wv[i],*v   ); break;
+   case 19: KEYHEADTALLY(I,US,I,wv[i],*v   ); break;
+   case 20: KEYHEADTALLY(D,US,D,wv[i],(D)*v); break;
+   case 21: KEYHEADTALLY(I,I ,B,wv[i],*v   ); break;
+   case 22: KEYHEADTALLY(I,I ,I,wv[i],*v   ); break;
+   case 23: KEYHEADTALLY(D,I ,D,wv[i],(D)*v); break;
+   case 24: KEYHEADTALLY(I,C4,B,wv[i],*v   ); break;
+   case 25: KEYHEADTALLY(I,C4,I,wv[i],*v   ); break;
+   case 26: KEYHEADTALLY(D,C4,D,wv[i],(D)*v); break;
+   case 27: KEYHEADTALLY(I,SB,B,wv[i],*v   ); break;
+   case 28: KEYHEADTALLY(I,SB,I,wv[i],*v   ); break;
+   case 29: KEYHEADTALLY(D,SB,D,wv[i],(D)*v); break;
   }
   *AS(z)=AN(z)/2; *(1+AS(z))=2;
  }else{

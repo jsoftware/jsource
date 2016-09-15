@@ -507,6 +507,46 @@ static AF atcompC[]={   /* table for LIT vs. LIT */
  ifbeqC, ifbneC, 0L,0L,0L,0L,0L,0L,
 };
 
+INDF( i0eqUS,US,US,ANE)  INDF( i0neUS,US,US,AEQ)
+INDF( i1eqUS,US,US,AEQ)  INDF( i1neUS,US,US,ANE)
+JNDF( j0eqUS,US,US,ANE)  JNDF( j0neUS,US,US,AEQ)
+JNDF( j1eqUS,US,US,AEQ)  JNDF( j1neUS,US,US,ANE)
+SUMF(sumeqUS,US,US,AEQ)  SUMF(sumneUS,US,US,ANE)
+ALLF(alleqUS,US,US,AEQ)  ALLF(allneUS,US,US,ANE)
+ANYF(anyeqUS,US,US,AEQ)  ANYF(anyneUS,US,US,ANE)
+IFBF(ifbeqUS,US,US,AEQ)  IFBF(ifbneUS,US,US,ANE)
+
+static AF atcompUS[]={   /* table for C2T vs. C2T */
+  i0eqUS,  i0neUS, 0L,0L,0L,0L,0L,0L,
+  i1eqUS,  i1neUS, 0L,0L,0L,0L,0L,0L,
+  j0eqUS,  j0neUS, 0L,0L,0L,0L,0L,0L,
+  j1eqUS,  j1neUS, 0L,0L,0L,0L,0L,0L,
+ sumeqUS, sumneUS, 0L,0L,0L,0L,0L,0L,
+ anyeqUS, anyneUS, 0L,0L,0L,0L,0L,0L,
+ alleqUS, allneUS, 0L,0L,0L,0L,0L,0L,
+ ifbeqUS, ifbneUS, 0L,0L,0L,0L,0L,0L,
+};
+
+INDF( i0eqC4,C4,C4,ANE)  INDF( i0neC4,C4,C4,AEQ)
+INDF( i1eqC4,C4,C4,AEQ)  INDF( i1neC4,C4,C4,ANE)
+JNDF( j0eqC4,C4,C4,ANE)  JNDF( j0neC4,C4,C4,AEQ)
+JNDF( j1eqC4,C4,C4,AEQ)  JNDF( j1neC4,C4,C4,ANE)
+SUMF(sumeqC4,C4,C4,AEQ)  SUMF(sumneC4,C4,C4,ANE)
+ALLF(alleqC4,C4,C4,AEQ)  ALLF(allneC4,C4,C4,ANE)
+ANYF(anyeqC4,C4,C4,AEQ)  ANYF(anyneC4,C4,C4,ANE)
+IFBF(ifbeqC4,C4,C4,AEQ)  IFBF(ifbneC4,C4,C4,ANE)
+
+static AF atcompC4[]={   /* table for C4T vs. C4T */
+  i0eqC4,  i0neC4, 0L,0L,0L,0L,0L,0L,
+  i1eqC4,  i1neC4, 0L,0L,0L,0L,0L,0L,
+  j0eqC4,  j0neC4, 0L,0L,0L,0L,0L,0L,
+  j1eqC4,  j1neC4, 0L,0L,0L,0L,0L,0L,
+ sumeqC4, sumneC4, 0L,0L,0L,0L,0L,0L,
+ anyeqC4, anyneC4, 0L,0L,0L,0L,0L,0L,
+ alleqC4, allneC4, 0L,0L,0L,0L,0L,0L,
+ ifbeqC4, ifbneC4, 0L,0L,0L,0L,0L,0L,
+};
+
 INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
 INDF( i1eqS,SB,SB,AEQ) INDF( i1neS,SB,SB,ANE) 
 JNDF( j0eqS,SB,SB,ANE) JNDF( j0neS,SB,SB,AEQ) 
@@ -581,6 +621,8 @@ AF jtatcompf(J jt,A a,A w,A self){AF f;I ar,at,m,wr,wt;
  if(!f){
   if(at&B01+INT+FL&&wt&B01+INT+FL)f=atcompxy[9*m+3*(at&B01?0:at&INT?1:2)+(wt&B01?0:wt&INT?1:2)];
   else if(at&LIT&&wt&LIT)         f=atcompC[m];
+  else if(at&C2T&&wt&C2T)         f=atcompUS[m];
+  else if(at&C4T&&wt&C4T)         f=atcompC4[m];
   else if(at&SBT&&wt&SBT)         f=atcompSB[m];
  }
  R f;

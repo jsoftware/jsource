@@ -230,8 +230,9 @@ static void auditnum(){
 // Set zombieval if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
 // There must be a local symbol table if we have the ASGN indicating local/simple
 // Set assignsym for any final execution that assigns to a name.  We use this only if the verb is known to be locale-safe, so it's OK
-// to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name
-#define IPSETZOMB(w) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&stack[(w)+1].a==mark \
+// to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name.
+//  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h) 
+#define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE) \
    &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
 
 // In-place operands
@@ -247,8 +248,8 @@ static void auditnum(){
 
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb
-#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
 // in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
@@ -264,7 +265,7 @@ static void auditnum(){
 
 // Parse a J sentence.  Input is the queue of tokens
 F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
- // we know what the compiler does not: that jt->sitop and jtxdefn=jt->xdefn are constant even over function calls.
+ // we know what the compiler does not: that jt->sitop and mark are constant even over function calls.
  // So we move those values into local names.
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
@@ -276,9 +277,9 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
  A *queue=AAV(w)-1;
- m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci;
+ m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci; A locmark = mark;
  if(m<2) {
-  if(m<1)R mark;  // exit fast if empty input.  Happens only during load, but we can't deal with it
+  if(m<1)R locmark;  // exit fast if empty input.  Happens only during load, but we can't deal with it
   // Only 1 word in the queue.  No need to parse - just evaluate & return.  We do it here to avoid parsing
   // overhead, because it happens enough to notice
   *dci=0;  // error token if error found
@@ -340,7 +341,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    stack=(PSTK*)((uintptr_t)jt->parserstkbgn+allo)-3;  // point to the ending marks
  }
  // We have the initial stack pointer.  Grow the stack down from there
- stack[0].a = stack[1].a = stack[2].a = mark;  // install initial ending marks.  word numbers are unused
+ stack[0].a = stack[1].a = stack[2].a = locmark;  // install initial ending marks.  word numbers are unused
 
  // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
  es = 2;
@@ -431,7 +432,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
     stack[0].t = m;  // install the original token number for the word, and clear in-placeable flag
 
     if(m<=0) {  // Toward the end we have to worry about underrunning the queue, and pulling the virtual mark
-      if(m==0) {stack[0].a = mark; --m; break;}  // move in the mark and use it, and pop the stack
+      if(m==0) {stack[0].a = locmark; --m; break;}  // move in the mark and use it, and pop the stack
       EP       // if there's nothing more to pull, parse is over
     }
 
@@ -507,7 +508,7 @@ exitparse:
  // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
  // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
  z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
- ASSERT(AT(z)&MARK+CAVN&&stack[3].a==mark,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
+ ASSERT(AT(z)&MARK+CAVN&&stack[3].a==locmark,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
  R z;
 }
 

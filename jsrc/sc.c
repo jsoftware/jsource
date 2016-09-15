@@ -54,7 +54,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // buckets.
  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info
  v=VAV(y);
- R fdef(CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, 0L, v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank and part of speech
+ R fdef(CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, v->flag&VASGSAFE, v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and ASGSAFE
 }
 
 

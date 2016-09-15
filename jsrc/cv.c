@@ -62,7 +62,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CPOWOP:  // support for #^:_1!.n
    if(VERB&AT(sv->g)||!equ(num[-1],sv->g))R fitct(a,w);
    f=sv->f; c=ID(f);
-   if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,0L,m,l,r);}  // CPOWOP has no VIRS
+   if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);
    f=VAV(f)->g; ASSERT(CPOUND==ID(f),EVDOMAIN);
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:

@@ -236,7 +236,7 @@ F2(jtgrd2sp){PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,wr,*ws;
  DO(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){
-  default: z=irs2(irs1(w,0L,wcr,jt->compgt==1?jtgrade1:jtdgrade1),a,0L,RMAX,acr,jtfrom); break;
+  default: z=irs2(irs1(w,0L,wcr,jt->compgt==1?jtgrade1:jtdgrade1),a,VFLAGNONE, RMAX,acr,jtfrom); break;
   case 2: /* sparse dense  */ z=grd2spsd(w,wf,wcr); break;
   case 3: /* sparse sparse */ z=grd2spss(w,wf,wcr); break;
  } 

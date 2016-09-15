@@ -94,5 +94,5 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
 
 F2(jtundco){
  ASSERTVV(a,w); 
- R CDERIV(CUNDCO,jtundco1,jtundco2,0L,RMAX,RMAX,RMAX);
+ R CDERIV(CUNDCO,jtundco1,jtundco2,VFLAGNONE, RMAX,RMAX,RMAX);
 }

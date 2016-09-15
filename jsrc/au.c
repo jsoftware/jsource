@@ -40,8 +40,8 @@ A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,s
 F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); R z;}
 F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); R z;}
 
-A jtac1(J jt,AF f){R fdef(0,VERB, f,0L, 0L,0L,0L, 0L, RMAX,RMAX,RMAX);}
-A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, 0L, RMAX,RMAX,RMAX);}
+A jtac1(J jt,AF f){R fdef(0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
 F1(jtdomainerr1){ASSERT(0,EVDOMAIN);}
 F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}

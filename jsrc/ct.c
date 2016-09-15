@@ -238,14 +238,14 @@ F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
 F1(jttco){A f,g;B nf,ng;C id;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- if(!nameless(w))R ADERIV(CTCO,jttco1,0L,0L,RMAX,RMAX,RMAX);
+ if(!nameless(w))R ADERIV(CTCO,jttco1,0L,VFLAGNONE, RMAX,RMAX,RMAX);
  v=VAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f);
  g=v->g; ng=g&&NOUN&AT(g);
  if(id==CAMP&&nf!=ng)R tcoamp(w,nf,nf?f:g,nf?g:f);
  switch(id){
   case CEXP:   R eval("$&1&$");
-  case CHGEOM: R ADERIV(CTCO,jttcoh1,0L,0L,RMAX,RMAX,RMAX);
+  case CHGEOM: R ADERIV(CTCO,jttcoh1,0L,VFLAGNONE, RMAX,RMAX,RMAX);
   case CQQ:    if(!nf)R tco(f);
  }
  R facit(tdot(w));
@@ -256,7 +256,7 @@ F2(jttcap){A c,p,s,t;I n;
  ASSERT(!AR(w),EVRANK);
  RZ(t=vib(w)); n=*AV(t);
  ASSERT(0<=n,EVDOMAIN);
- if(!nameless(a))R CDERIV(CTCAP,jttcap1,0L,0L,RMAX,RMAX,RMAX);
+ if(!nameless(a))R CDERIV(CTCAP,jttcap1,0L,VFLAGNONE, RMAX,RMAX,RMAX);
  RZ(p=tdot(a));
  if(n<IMAX)R amp(df1(iota(t),p),ds(CPOLY));
  RZ(c=coeff(p));

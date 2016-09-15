@@ -127,7 +127,7 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I id,j,m,n,old,wr,wcr;
    if(!AN(x))continue;
    RZ(x=less(IX(m),pind(m,x)));
   }
-  RZ(z=irs2(x,z,0L,RMAX,wcr-j,jtfromis)); gc(z,old);
+  RZ(z=irs2(x,z,VFLAGNONE, RMAX,wcr-j,jtfromis)); gc(z,old);
  }
  R z;
 }    /* (<ind){"r w, sparse w */
@@ -156,7 +156,7 @@ F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
  SPB(zp,a,wf?plus(sc(wf),SPA(ap,a)):SPA(ap,a));
  SPB(zp,i,SPA(ap,i));
  if(wf){
-  RZ(x=irs2(SPA(ap,x),w,0L,RMAX,wcr,jtifrom));
+  RZ(x=irs2(SPA(ap,x),w,VFLAGNONE, RMAX,wcr,jtifrom));
   RZ(x=cant2(less(IX(AR(x)),sc(wf)),x));
   SPB(zp,x,x);
  }else SPB(zp,x,ifrom(SPA(ap,x),w));
@@ -181,7 +181,7 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  GATV(x,INT,ar+n-!!wcr,1,0); v=AV(x);
  DO(wf, if(b[i])*v++=i;); DO(ar, *v++=wf+i;); DO(wcr-1, if(b[i+wf+1])*v++=wf+ar+i;);
  SPB(zp,a,x);
- RZ(x=irs2(SPA(ap,x),w,0L,RMAX,wcr,jtfrom)); xp=PAV(x); 
+ RZ(x=irs2(SPA(ap,x),w,VFLAGNONE, RMAX,wcr,jtfrom)); xp=PAV(x); 
  y=SPA(xp,i); u=AV(y); c=*(1+AS(y)); m=*AS(y); k=0; DO(wf, if(b[i])++k;);
  y=SPA(ap,i); v=AV(y); d=*(1+AS(y)); n=c+d-1; p=c-(1+k);
  GATV(y,INT,m*n,2,0); *AS(y)=m; *(1+AS(y))=n; yv=AV(y);

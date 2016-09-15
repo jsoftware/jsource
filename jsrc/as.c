@@ -290,7 +290,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
  fs=VAV(self)->f; f=VAV(fs)->f; v=VAV(f); c=v->id; t=AT(w);
  if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);
- z=irs2(df1(w,fs),df2(a,w,bslash(fs)),0L,RMAX,-1L,c==CPLUS?(AF)jtminus:v->f2);
+ z=irs2(df1(w,fs),df2(a,w,bslash(fs)),VFLAGNONE, RMAX,-1L,c==CPLUS?(AF)jtminus:v->f2);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "inverse" */
 

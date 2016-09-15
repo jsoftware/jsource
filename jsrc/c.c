@@ -28,11 +28,11 @@ static DF2(ad2){DECLFG;A z;I od=jt->db;
  R z?z:CALL2(g2,a,w,gs);
 }
 
-F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,0L,RMAX,RMAX,RMAX);}
+F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,VFLAGNONE, RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)
 static CS1(odd1,  halve(df1(w,folk(fs,ds(CMINUS),atop(fs,gs)))),0116)
 
-F2(jteven){ASSERTVV(a,w); R CDERIV(CEVEN,even1,0L, 0L,RMAX,0L,0L);}
-F2(jtodd ){ASSERTVV(a,w); R CDERIV(CODD, odd1, 0L, 0L,RMAX,0L,0L);}
+F2(jteven){ASSERTVV(a,w); R CDERIV(CEVEN,even1,0L, VFLAGNONE, RMAX,0L,0L);}
+F2(jtodd ){ASSERTVV(a,w); R CDERIV(CODD, odd1, 0L, VFLAGNONE, RMAX,0L,0L);}

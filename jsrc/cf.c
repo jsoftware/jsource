@@ -49,10 +49,11 @@ static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
 static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
 // Create the derived verb for a fork.  Insert in-placeable flags and asgsafe based on fgh
-A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag=0,j,m=-1;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
- gv=VAV(g); gi=gv->id; 
- hv=VAV(h); hi=hv->id; 
+ gv=VAV(g); gi=gv->id;
+ hv=VAV(h); hi=hv->id;
+ flag=(gv->flag&hv->flag)&VASGSAFE;  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
  if(NOUN&AT(f)){  /* y {~ x i. ] */
   f1=jtnvv1;
   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->f)&&hi==CFORK){
@@ -61,7 +62,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   }
   R fdef(CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
- fv=VAV(f); fi=fv->id;
+ fv=VAV(f); fi=fv->id; flag &= fv->flag;
  switch(fi){
   case CCAP:                      f1=jtcork1; f2=jtcork2;  break; /* [: g h */
   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;} break; /* f  g h */
@@ -93,14 +94,14 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  if(0<=m){
   v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->g);
   switch(b?ID(v->f):v->id){
-   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag=0+8*m; break;
-   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag=1+8*m; break;
-   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag=2+8*m; break;
-   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag=3+8*m; break;
-   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag=4+8*m; break;
-   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag=5+8*m; break;
-   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag=6+8*m; break;
-   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag=7+8*m; break;
+   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; break;
+   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; break;
+   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; break;
+   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=3+8*m; break;
+   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=4+8*m; break;
+   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; break;
+   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; break;
+   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; break;
  }}
  R fdef(CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }

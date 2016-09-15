@@ -11,7 +11,7 @@ static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0
 
 F1(jtswap){A y;C*s;I n;
  RZ(w); 
- if(VERB&AT(w)){I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = flag+(flag>>1);  // set both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
+ if(VERB&AT(w)){I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (VAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
   if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
@@ -57,7 +57,7 @@ F1(jtbdot){A b,h=0;I j,n,*v;
  if(1!=n||j<16){
   GAT(b,B01,64,2,0); *AS(b)=16; *(1+AS(b))=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));
-  R fdef(CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, 0L, RMAX,0L,0L);
+  R fdef(CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, VFLAGNONE, RMAX,0L,0L);
  }else switch(j){
   default: ASSERT(0,EVNONCE);
   case 16: R fdef(CBDOT,VERB, jtbitwise1,jtbitwise0000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);

@@ -204,14 +204,14 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  GATV(p,INT,h,1,0); v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
  r=wr+1-h;
  if(r==wr)
-  z=irs2(pdt(a,p),w,0L,RMAX,wcr+1-h,jtifrom);
+  z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  else if(ARELATIVE(w)){
   GATV(q,INT,r,1,0); 
   v=AV(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
-  z=irs2(pdt(a,p),q,0L,RMAX,wcr+1-h,jtifrom);
+  z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }else{
   RZ(q=gah(r,w)); v=AS(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
-  z=irs2(pdt(a,p),q,0L,RMAX,wcr+1-h,jtifrom);
+  z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
  R z;
 }    /* (<"1 a){"r w, dense w, integer array a */

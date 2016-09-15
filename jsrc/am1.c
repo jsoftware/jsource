@@ -79,7 +79,7 @@ static A jtdcube(J jt,A z,A i2){A*iv,x,y;I i,id,m,n,*s;P*zp;
  m=1; y=IVR(n-1); if(y==ace)RZ(y=IX(s[n-1]));
  for(i=n-2;0<=i;--i){
   m*=s[1+i]; x=IVR(i);
-  RZ(y=irs2(tymes(sc(m),x==ace?IX(s[i]):x),y,0L,0L,RMAX,jtplus));
+  RZ(y=irs2(tymes(sc(m),x==ace?IX(s[i]):x),y,0L,VFLAGNONE, RMAX,jtplus));
  }
  R y;
 }    /* index cube relative to dense axes */

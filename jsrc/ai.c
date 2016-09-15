@@ -156,11 +156,11 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CFIT:
    ASSERT(nf&&(CPOUND==ID(VAV(g)->f)),EVDOMAIN);
    ASSERT(1==AR(x),EVRANK);
-   R fdef(CPOWOP,VERB, jtexpandg,0L, w,num[-1],0L, 0L, RMAX,0L,0L);
+   R fdef(CPOWOP,VERB, jtexpandg,0L, w,num[-1],0L, VFLAGNONE, RMAX,0L,0L);
   case CPOUND:
    ASSERT(nf,EVDOMAIN);
    ASSERT(1==AR(x),EVRANK);
-   R fdef(CPOWOP,VERB, jtexpandf,0L, w,num[-1],0L, 0L, RMAX,0L,0L);
+   R fdef(CPOWOP,VERB, jtexpandf,0L, w,num[-1],0L, VFLAGNONE, RMAX,0L,0L);
    break;
   case CPOWOP:
    if(VGERL&u->flag){ff=*(1+AAV(u->h)); R amp(nf?x:ff,nf?ff:x);} 
@@ -267,7 +267,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
   case CWORDS:   R eval("}:@;@(,&' '&.>\"1) :. ;:");
   case CBANG:    R eval("3 :'(-(!-y\"_)%1e_3&* !\"0 D:1 ])^:_ <.&170^:(-:+)^.y' :. !");
   case CXCO:     R amp(num[-1],w);
-  case CSPARSE:  R fdef(CPOWOP,VERB,jtdenseit,0L, w,num[-1],0L, 0L, RMAX,RMAX,RMAX);
+  case CSPARSE:  R fdef(CPOWOP,VERB,jtdenseit,0L, w,num[-1],0L, VFLAGNONE, RMAX,RMAX,RMAX);
   case CPCO:     R fdef(CPOWOP,VERB,jtplt,    0L, w,num[-1],0L, 0L, 0L,  0L,  0L  );
   case CQCO:     R eval("*/");
   case CUCO:     R amp(num[3],w);
@@ -311,7 +311,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
    }}
    break;
   case CCUT:
-   if(CBOX==ID(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(CPOWOP,VERB, jtbminv,0L, w,num[-1], 0L,0L, RMAX,RMAX,RMAX);
+   if(CBOX==ID(f)&&ng&&(p=i0(g),1==p||2==p))R fdef(CPOWOP,VERB, jtbminv,0L, w,num[-1], 0L,VFLAGNONE, RMAX,RMAX,RMAX);
    break;
   case CIBEAM:
    p=i0(f); q=i0(g);

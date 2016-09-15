@@ -150,7 +150,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
   }
   k=AAV0(ind); n=AN(k);
   GATV(x,INT,wr,1,0); u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);
-  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),0L,0L,RMAX,jtplus);
+  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),0L,VFLAGNONE, RMAX,jtplus);
  }
  if(!b){n=1; RZ(j=pind(*ws,ind));}
  else{
@@ -169,9 +169,9 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
     x=AAV0(x); k=IX(d);
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
-   RZ(j=irs2(tymes(j,sc(d)),k,0L,0L,RMAX,jtplus));
+   RZ(j=irs2(tymes(j,sc(d)),k,0L,VFLAGNONE, RMAX,jtplus));
  }}
- R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),0L,0L,RMAX,jtplus);
+ R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),0L,VFLAGNONE, RMAX,jtplus);
 }    /* convert ind in a ind}w into integer positions */
 
 /* Reference count for w for amend in place */
@@ -272,9 +272,9 @@ B jtgerexact(J jt, A w){
 
 static A jtamend(J jt,A w,B ip){
  RZ(w);
- if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,0L,RMAX,RMAX,RMAX);
+ if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,VFLAGNONE, RMAX,RMAX,RMAX);
  else if(ger(w))R gadv(w,CRBRACE);
- else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,0L,RMAX,RMAX,RMAX);
+ else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,VFLAGNONE, RMAX,RMAX,RMAX);
 }
 
 F1(jtrbrace){R amend(w,0);}
@@ -285,5 +285,5 @@ static DF2(jtamen2){ASSERT(0,EVNONCE);}
 
 F1(jtemend){
  ASSERT(NOUN&AT(w),EVDOMAIN);
- R ADERIV(CEMEND,0L,jtamen2,0L,RMAX,RMAX,RMAX);
+ R ADERIV(CEMEND,0L,jtamen2,VFLAGNONE, RMAX,RMAX,RMAX);
 }

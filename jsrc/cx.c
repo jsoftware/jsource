@@ -602,12 +602,12 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
  R z;
 }
 
-F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=0,n,p;
+F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RZ(a&&w);
- if(VERB&AT(a)&&VERB&AT(w)){V*v;
-  v=VAV(a); if(CCOLON==v->id&&VERB&AT(v->f)&&VERB&AT(v->g))a=v->f;
-  v=VAV(w); if(CCOLON==v->id&&VERB&AT(v->f)&&VERB&AT(v->g))w=v->g;
-  R fdef(CCOLON,VERB,xv1,xv2,a,w,0L,0L,mr(a),lr(w),rr(w));
+ if(VERB&AT(a)&&VERB&AT(w)){V*va,*vw;
+  va=VAV(a); if(CCOLON==va->id&&VERB&AT(va->f)&&VERB&AT(va->g))a=va->f;
+  vw=VAV(w); if(CCOLON==vw->id&&VERB&AT(vw->f)&&VERB&AT(vw->g))w=vw->g;
+  R fdef(CCOLON,VERB,xv1,xv2,a,w,0L,((VAV(a)->flag&VAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));
  if(equ(w,zero)){RZ(w=colon0(mark)); if(!n)R w;}

@@ -136,7 +136,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  RE(m=prod(n,s)); b=equ(a,IX(r));
  RZ(x=gah(1+r-n,b?w:cant2(ax,w))); v=AS(x); *v=m; if(r>n)ICPY(1+v,n+s,r-n);
  b=b&&SB01&AT(z)&&equ(e,zero); c=w;
- if(!b)RZ(c=not(irs2(reshape(vec(INT,r-n,n+s),SPA(p,e)),x,0L,RMAX,-1L,jtmatch)));
+ if(!b)RZ(c=not(irs2(reshape(vec(INT,r-n,n+s),SPA(p,e)),x,VFLAGNONE, RMAX,-1L,jtmatch)));
  cn=AN(c); cv=BAV(c); cm=bsum(cn,cv);
  /* RZ(y=abase2(vec(INT,n,s),repeat(c,IX(cn)))); */
  GATV(y,INT,cm*n,2,0); u=AS(y); *u++=cm; *u=n;

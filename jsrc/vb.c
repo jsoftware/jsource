@@ -59,7 +59,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
 /* -3: rank > 2                             */
 /* -4: not discrete type or range too large */
 
-static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,m,n,t,wr,wt,memlimit;
+static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,m,n,t,wr,wt,memlimit;C4 ccaw;
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(ar==wr||!ar&&1==wr,EVRANK);
@@ -85,7 +85,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case C2TX: d=65536; break;
-  case C4TX: c4range(m,C4AV(a),(C4*)&ca,&da); if(da)c4range(n,C4AV(w),(C4*)&cw,&dw); 
+  case C4TX: c4range(m,C4AV(a),&ccaw,&da); ca=ccaw; if(da){c4range(n,C4AV(w),&ccaw,&dw); cw=ccaw; }
             if(da&&dw){c=MIN((C4)ca,(C4)cw); d=MAX(((C4)ca)+da,((C4)cw)+dw)-(C4)c;} // This may make d overflow (if c<0), but we catch that at exit
             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
   case LITX: d=256;   break;

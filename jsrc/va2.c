@@ -393,9 +393,6 @@ static A jtva2(J,A,A,C);
 #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w); F2PREFIP;
 #define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;} F2PREFIP;
 
-// Shift the w-is-inplaceable flag to a
-#define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
-
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
@@ -444,7 +441,12 @@ F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,CBANG   );}
 F2(jtcircle ){R va2(a,w,CCIRCLE );}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 
-// These are unary ops that have a canned operand
+
+// These are the unary ops that are implemented using a canned argument
+
+// Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
+#define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
+
 F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(one,w);}
 F1(jtnegate){R minus(zero,  w);}
 F1(jtdecrem){IPSHIFTWA; R minus(w,     one);}

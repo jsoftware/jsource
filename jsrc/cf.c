@@ -9,35 +9,60 @@
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
 #define TDECL           V*sv=VAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
 
-#define FOLK1           {A fx,hx; hx=CALL1(h1,  w,hs); fx=CALL1(f1,  w,fs); z=CALL2(g2,fx,hx,gs);}
-#define FOLK2           {A fx,hx; hx=CALL2(h2,a,w,hs); fx=CALL2(f2,a,w,fs); z=CALL2(g2,fx,hx,gs);}
-#define CAP1            {z=CALL1(g1,CALL1(h1,  w,hs),gs);}
-#define CAP2            {z=CALL1(g1,CALL2(h2,a,w,hs),gs);}
+// handle fork, with support for in-place operations
+#define FOLK1           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&1)); hx=CALL1(h1,  w,hs); /* the call to h is not inplaceable */ \
+/* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
+fx=(f1)((VAV(fs)->flag&VINPLACEOK1&&hx!=w)?jtinplace:jt,  w,fs); /* CALL1 with variable jt */ \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
+z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw?2:0)+(hx!=protw))) ):jt,fx,hx,gs);}
 
-static DF1(jtcork1){DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
-static DF2(jtcork2){DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
-static DF1(jtfolk1){DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
-static DF2(jtfolk2){DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
+#define FOLK2           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); hx=CALL2(h2,a,w,hs); /* the call to h is not inplaceable */  \
+/* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
+/* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
+fx=(f2)((VAV(fs)->flag&VINPLACEOK2)?((J)((I)jtinplace&((hx==w?~1:~0)&(hx==a?~2:~0)))):jt ,a,w,fs); \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed x/y */ \
+z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw&&fx!=prota?2:0)+(hx!=protw&&hx!=prota))) ):jt,fx,hx,gs);}
 
+// similar for cap, but now we can inplace the call to h
+#define CAP1            {A hx;  A protw = (A)((I)w+((I)jtinplace&1)); hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs); \
+/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
+z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw?( (J)((I)jt|1) ):jt,hx,gs);}
+#define CAP2            {A hx; A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);  \
+z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw&&hx!=prota?( (J)((I)jt|1) ):jt,hx,gs);}
+
+static DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
+static DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
+static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
+static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
+
+// see if f is defined as [:, perhaps through a chain of references
 static B jtcap(J jt,A x){V*v;
  while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(x=symbrd(v->f)));
  R CCAP==v->id;
 }
 
-static DF1(jtcorx1){DECLFGH;PROLOG(0030);A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
-static DF2(jtcorx2){DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
+// (name g h).  If name is ultimately defined as [:, we redefine the derived verb and then run it, with no inplacing for it.  Deprecated.
+// The normal path supports inplacing
+static DF1(jtcorx1){F1PREFIP;DECLFGH;PROLOG(0030);A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
+static DF2(jtcorx2){F2PREFIP;DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
      /* f g h where f may be [: */
 
-static DF1(jtnvv1){DECLFGH;PROLOG(0032); A z=CALL2(g2,fs,CALL1(h1,  w,hs),gs); EPILOG(z);}
-static DF2(jtnvv2){DECLFGH;PROLOG(0033); A z=CALL2(g2,fs,CALL2(h2,a,w,hs),gs); EPILOG(z);}
+// nvv forks.  n must not be inplaced, since the fork may be reused.  hx can be inplaced unless protected by caller.
+static DF1(jtnvv1){F1PREFIP;DECLFGH;PROLOG(0032);
+ A protw = (A)((I)w+((I)jtinplace&1)); A hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs);
+ A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw?( (J)((I)jt|1) ):jt,fs,hx,gs); EPILOG(z);}
+static DF2(jtnvv2){F1PREFIP;DECLFGH;PROLOG(0033);
+ A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); A hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);
+ A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw&&hx!=prota?( (J)((I)jt|1) ):jt,fs,hx,gs); EPILOG(z);}
 
-static DF2(jtfolkcomp){DECLFGH;PROLOG(0034);A z;AF f;
+static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  RZ(a&&w);
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
  EPILOG(z);
 }
 
-static DF2(jtfolkcomp0){DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
+static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
  RZ(a&&w);
  jt->ct=0;
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
@@ -48,60 +73,61 @@ static DF2(jtfolkcomp0){DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
 static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
 static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
-// Create the derived verb for a fork.  Insert in-placeable flags and asgsafe based on fgh
+// Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
 A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id;
  hv=VAV(h); hi=hv->id;
- flag=(gv->flag&hv->flag)&VASGSAFE;  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+ // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2
+ flag=(VINPLACEOK1|VINPLACEOK2)+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
  if(NOUN&AT(f)){  /* y {~ x i. ] */
   f1=jtnvv1;
   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->f)&&hi==CFORK){
    x=hv->f;
-   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->g)&&CRIGHT==ID(hv->h))f1=jtcharmapa;  
+   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->g)&&CRIGHT==ID(hv->h)){f1=jtcharmapa;  flag &=~(VINPLACEOK1);}
   }
   R fdef(CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
- fv=VAV(f); fi=fv->id; flag &= fv->flag;
+ fv=VAV(f); fi=fv->id; flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
  switch(fi){
   case CCAP:                      f1=jtcork1; f2=jtcork2;  break; /* [: g h */
-  case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;} break; /* f  g h */
-  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1;} break;  /* +/%# */
+  case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
+  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
   case CFORK:  /* (x i. ]) { y"_ */
    if(hi==CQQ&&(y=hv->f,LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->g)&&
        (x=fv->f,LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->g)&&
-       (fi==CAMP||CRIGHT==ID(fv->h)))f1=jtcharmapb; break;
+       (fi==CAMP||CRIGHT==ID(fv->h))){f1=jtcharmapb; flag &=~(VINPLACEOK1);} break;
   case CAT:    /* <"1@[ { ] */
    if(gi==CLBRACE&&hi==CRIGHT){                                   
     p=fv->f; q=fv->g; 
-    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->f,CLT==ID(x)&&equ(one,v->g)))f2=jtsfrom;
+    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->f,CLT==ID(x)&&equ(one,v->g))){f2=jtsfrom; flag &=~(VINPLACEOK2);}
  }}
  switch(fi==CCAP?gi:hi){
-  case CQUERY:  if(hi==CDOLLAR||hi==CPOUND)f2=jtrollk;  break;
-  case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND)f2=jtrollkx; break;
-  case CICAP:   m=7; if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv))f1=jtnubind0;} break;
+  case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VINPLACEOK2);}  break;
+  case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VINPLACEOK2);} break;
+  case CICAP:   m=7; if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VINPLACEOK1);}} break;
   case CSLASH:  c=ID(gv->f); m=c==CPLUS?4:c==CPLUSDOT?5:c==CSTARDOT?6:-1; 
-                if(fi==CCAP&&vaid(gv->f)&&vaid(h))f2=jtfslashatg;
+                if(fi==CCAP&&vaid(gv->f)&&vaid(h)){f2=jtfslashatg; flag &=~(VINPLACEOK2);}
                 break;
   case CFCONS:  if(hi==CFCONS){x=hv->h; j=*BAV(x); m=B01&AT(x)?(gi==CIOTA?j:gi==CICO?2+j:-1):-1;} break;
-  case CRAZE:   if(hi==CLBRACE)f2=jtrazefrom;
+  case CRAZE:   if(hi==CLBRACE){f2=jtrazefrom; flag &=~(VINPLACEOK2);}
                 else if(hi==CCUT){
                  j=i0(hv->g);
-                 if(CBOX==ID(hv->f)&&!j)f2=jtrazecut0;
-                 else if(boxatop(h)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2;}
+                 if(CBOX==ID(hv->f)&&!j){f2=jtrazecut0; flag &=~(VINPLACEOK2);}
+                 else if(boxatop(h)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag &=~(VINPLACEOK1|VINPLACEOK2);}
  }}
  if(0<=m){
   v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->g);
   switch(b?ID(v->f):v->id){
-   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; break;
-   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; break;
-   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; break;
-   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=3+8*m; break;
-   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=4+8*m; break;
-   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; break;
-   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; break;
-   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; break;
+   case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CLE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=3+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CGE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=4+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
+   case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
  }}
  R fdef(CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }

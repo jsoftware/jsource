@@ -273,6 +273,16 @@ f =: 3 : 0"0 '123'
 )
 ('abc11d' , 'abc22d' ,: 'abc33d') -: f
 
+NB. Verify inplacing works in forks, including nvv forks
+1120000 > 7!:2 '(i. , ]) 100000'
+'lrlr' -: (1 {. 'l') (, , ,) (1 {. 'r')
+(10000 # 'lrlr') -: (10000 # 'l') (, , ,) (10000 # 'r')
+24000 > 7!:2 '(10000 # ''l'') (, , ]) (1000 # ''r'')'
+(10000 2000 # 'lr') -: (10000 # 'l') (, , ]) (1000 # 'r')
+24000 > 7!:2 '(10000#''l'') ([: ] ,) (1000#''r'')'
+0 7 14 21 28 -: (({.7)"_ * ])"0 i. 5  NB. ensure constant function not overwritten
+0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
+
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global local test testa'
 

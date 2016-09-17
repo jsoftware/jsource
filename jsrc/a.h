@@ -17,16 +17,16 @@
 #define VN              1               /* VERB NOUN                       */
 #define VV              0               /* VERB VERB                       */
 
-#define DECLF           V*sv=VAV(self);A fs=sv->f;  \
+#define DECLF            V* RESTRICT sv=VAV(self); AD * RESTRICT fs=sv->f;  \
                         AF f1=fs?VAV(fs)->f1:0,f2=fs?VAV(fs)->f2:0
 
-#define DECLG           V*sv=VAV(self);A gs=sv->g;  \
+#define DECLG           V* RESTRICT sv=VAV(self);AD * RESTRICT gs=sv->g;  \
                         AF g1=gs?VAV(gs)->f1:0,g2=gs?VAV(gs)->f2:0
 
-#define DECLFG          DECLF;         A gs=sv->g;  \
+#define DECLFG          DECLF;         AD * RESTRICT gs=sv->g;  \
                         AF g1=gs?VAV(gs)->f1:0,g2=gs?VAV(gs)->f2:0
 
-#define DECLFGH         DECLFG;        A hs=sv->h;  \
+#define DECLFGH         DECLFG;        AD * RESTRICT hs=sv->h;  \
                         AF h1=hs?VAV(hs)->f1:0,h2=hs?VAV(hs)->f2:0
 
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell

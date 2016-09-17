@@ -473,7 +473,7 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v,wd;
 // a definition is recursive, it will create a new symbol table, starting it off with the
 // permanent entries from this one (with no values).  We create this table with rank 0, and we set
 // the rank to 1 while it is in use, to signify that it must be cloned rather than used inplace.
-// static A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln,tt;
+
 // l is the A block for all the words/queues used in the definition
 // c is the table of control-word info used in the definition
 // type is the m operand to m : n, indicating part of speech to be produce
@@ -485,7 +485,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
- // We have to clone the names to make sure we don't get a global name in the 
  RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
  if(type<3){RZ(probeis(unam,pfst));RZ(probeis(mnam,pfst)); if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
  if (jt->dotnames){

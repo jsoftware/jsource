@@ -191,7 +191,7 @@ static void qqset(A a,I r0,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
 */
 
 // a"w; result is a verb
-F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],*v;
+F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
  RZ(a&&w);
  // The h value in the function will hold the ranks.  Allocate it
  GAT(h,INT,3,1,0); hv=AV(h);  // hv->rank[0]
@@ -216,16 +216,17 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],*v;
  }
 
  // Get the action routines and flags to use for the derived verb
- if(NOUN&AT(a)){f1=cons1; f2=cons2;  // use the constant routines for nouns
+ if(NOUN&AT(a)){f1=cons1; f2=cons2; ACIPNO(a); vf=VFLAGNONE; // use the constant routines for nouns; mark the constant non-inplaceable since it may be reused
  }else{
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.
   V* av=VAV(a);   // point to verb info
   f1=av->flag&VISATOMIC1 ? av->f1 : av->flag&VIRS1 ? rank1i : rank1;
-  f2= av->flag&VIRS2 ? rank2i : rank2; 
+  f2=av->flag&VIRS2 ? rank2i : rank2; 
+  vf=av->flag&VASGSAFE;  // inherit ASGSAFE from u
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; not does it (yet) support inplace ops
- R fdef(CQQ,VERB, f1,f2, a,w,h, 0L, r[0],r[1],r[2]);
+ R fdef(CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
 }

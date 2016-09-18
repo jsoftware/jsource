@@ -37,7 +37,11 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;long c;fpos_t v; fpos_t q;
 #if SY_WIN32
  e=_locking(_fileno(f),lk?_LK_NBLCK:_LK_UNLCK,(long)n);
 #else
+#ifdef ANDROID
+ e=flock(fileno(f),lk?LOCK_EX+LOCK_NB:LOCK_UN);
+#else
  e=lockf(fileno(f),lk?F_TLOCK:F_ULOCK,(I)n);
+#endif
 #endif
  fsetpos(f,(fpos_t*)&q);
  R !e?1:errno==EACCES?0:(B)(intptr_t)jerrno();

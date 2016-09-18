@@ -218,7 +218,7 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
  R z;
 }    /* integer vector from boolean mask */
 
-F1(jtii){RZ(w); R IX(IC(w));}
+static F1(jtii){RZ(w); R IX(IC(w));}
 
 // Priority is
 // B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX

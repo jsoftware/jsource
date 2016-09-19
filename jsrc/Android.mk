@@ -6,10 +6,10 @@ LOCAL_MODULE_FILENAME    := libj
 
 ifeq ($(TARGET_ARCH),arm)
   ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-    LOCAL_CFLAGS := -fPIC -O1 -Werror -fno-strict-aliasing -fsigned-char -DC_64=0 -DSY_GETTOD -DC_CD_ARMEL -mfloat-abi=softfp -mfpu=vfpv3-d16 -march=armv7-a
+    LOCAL_CFLAGS := -fPIC -O1 -Werror -fno-strict-aliasing -DC_64=0 -DSY_GETTOD -DC_CD_ARMEL -mfloat-abi=softfp -mfpu=vfpv3-d16 -march=armv7-a
     LOCAL_ARM_MODE := arm
   else
-    LOCAL_CFLAGS := -fPIC -O1 -Werror -fno-strict-aliasing -fsigned-char -DC_64=0 -DSY_GETTOD -DC_CD_ARMEL -mfloat-abi=softfp -mfpu=vfp -march=armv6
+    LOCAL_CFLAGS := -fPIC -O1 -Werror -fno-strict-aliasing -DC_64=0 -DSY_GETTOD -DC_CD_ARMEL -mfloat-abi=softfp -mfpu=vfp -march=armv6
     LOCAL_ARM_MODE := arm
   endif
 endif

@@ -11,6 +11,7 @@
 #define _fileno fileno
 #endif
 #include <signal.h>
+#include <stdint.h>
 #include "j.h"
 #include "jeload.h"
 
@@ -101,10 +102,11 @@ void _stdcall Joutput(J jt,int type, C* s)
 {
  if(MTYOEXIT==type)
  {
+  jefree();
 #ifdef READLINE
-  rlexit((int)(I)s);
+  rlexit((int)(intptr_t)s);
 #endif
-  exit((int)(I)s);
+  exit((int)(intptr_t)s);
  }
  fputs(s,stdout);
  fflush(stdout);

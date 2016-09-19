@@ -660,7 +660,7 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
 
 /* ---------------------------------------------------- */
 
-F1(test_ecm){A*wv,z;I wd;X*ab,n,*zv;
+static F1(test_ecm){A*wv,z;I wd;X*ab,n,*zv;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  ASSERT(4==AN(w),EVLENGTH);
@@ -677,7 +677,7 @@ F1(test_ecm){A*wv,z;I wd;X*ab,n,*zv;
  R z;
 }
 
-F1(test_ecm_s1){A*wv,z;I wd;X*ab,n,*zv;
+static F1(test_ecm_s1){A*wv,z;I wd;X*ab,n,*zv;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  ASSERT(4==AN(w),EVLENGTH);
@@ -694,7 +694,7 @@ F1(test_ecm_s1){A*wv,z;I wd;X*ab,n,*zv;
  R z;
 }
 
-F1(test_ecm_s2){A*wv,z;I*b1b2,wd;X*ab,n,*zv;
+static F1(test_ecm_s2){A*wv,z;I*b1b2,wd;X*ab,n,*zv;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  ASSERT(4==AN(w),EVLENGTH);
@@ -712,7 +712,7 @@ F1(test_ecm_s2){A*wv,z;I*b1b2,wd;X*ab,n,*zv;
  R z;
 }
 
-F1(test_fac_ecm){
+static F1(test_fac_ecm){
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  ASSERT(!AR(w),EVRANK);

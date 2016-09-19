@@ -1,9 +1,9 @@
 NB. 1!:30 ---------------------------------------------------------------
 
-pc=: (9!:12 '') e. 0 1 2 6 7   NB. works on DOS or Windows only
+sys=: 9!:12 ''
 
 3 : 0 ''
-if. pc do.
+if. sys e. 0 1 2 5 6 7 do.
 
 write  =: 1!:2
 open   =: 1!:21
@@ -19,7 +19,9 @@ h =: open f
 k =: locks ''
 assert. lock h,0 8
 assert. lock h,8 16
-assert. 0 -: lock h,0 16
+if. sys~:5 do.
+assert. 0 -: lock h,0 16           NB. windows and *nix different behavior
+end.
 assert. ((h,0 8),:h,8 16)e.locks ''
 
 assert. unlock h,0 8
@@ -63,6 +65,6 @@ end.
 )
 
 
-4!:55 ;:'close f h k lock locks open pc unlock write '
+4!:55 ;:'close f h k lock locks open sys unlock write '
 
 

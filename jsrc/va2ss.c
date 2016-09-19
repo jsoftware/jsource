@@ -9,6 +9,10 @@
 
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
+#define SSRDS(w) (*(SB*)CAV(w))
+#define SSRDC(w) (*(UC*)CAV(w))
+#define SSRDW(w) (*(US*)CAV(w))
+#define SSRDU(w) (*(C4*)CAV(w))
 
 // Support for Speedy Singletons
 #define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)((I)jtf&-4); // header for function definition
@@ -18,7 +22,8 @@
 #define AINPLACE ((I)jtf&2 && ACIPISOK(a))
 #define WINPLACE ((I)jtf&1 && ACIPISOK(w))
 
-#define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
+// #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
+#define SSINGENC(a,w) ((UNSAFE(a))+((UNSAFE(w))<<2))   // Mask off SAFE bits
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
 #define SSINGBD SSINGENC(B01,FL)
@@ -28,6 +33,16 @@
 #define SSINGDB SSINGENC(FL,B01)
 #define SSINGDI SSINGENC(FL,INT)
 #define SSINGDD SSINGENC(FL,FL)
+#define SSINGCC SSINGENC(LIT,LIT)
+#define SSINGCW SSINGENC(LIT,C2T)
+#define SSINGCU SSINGENC(LIT,C4T)
+#define SSINGWC SSINGENC(C2T,LIT)
+#define SSINGWW SSINGENC(C2T,C2T)
+#define SSINGWU SSINGENC(C2T,C4T)
+#define SSINGUC SSINGENC(C4T,LIT)
+#define SSINGUW SSINGENC(C4T,C2T)
+#define SSINGUU SSINGENC(C4T,C4T)
+#define SSINGSS SSINGENC(SBT,SBT)
 
 #define SSRDD(w) (*(D *)CAV(w))
 #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
@@ -164,6 +179,7 @@ SSINGF2(jtssmin) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: SSSTORE(SBMIN(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
   case SSINGBB: SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORE(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORE(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
@@ -183,6 +199,7 @@ SSINGF2(jtssmax) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: SSSTORE(SBMAX(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
   case SSINGBB: SSSTORE(SSRDB(a)|SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORE(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORE(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
@@ -437,6 +454,7 @@ SSINGF2(jtsslt) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: zv=SBLT(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)<SSRDB(w); break;
   case SSINGBD: zv=TLT(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TLT(SSRDD(a),SSRDB(w)); break;
@@ -459,6 +477,7 @@ SSINGF2(jtssgt) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: zv=SBGT(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)>SSRDB(w); break;
   case SSINGBD: zv=TGT(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TGT(SSRDD(a),SSRDB(w)); break;
@@ -481,6 +500,7 @@ SSINGF2(jtssle) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: zv=SBLE(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)<=SSRDB(w); break;
   case SSINGBD: zv=TLE(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TLE(SSRDD(a),SSRDB(w)); break;
@@ -503,6 +523,7 @@ SSINGF2(jtssge) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: zv=SBGE(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)>=SSRDB(w); break;
   case SSINGBD: zv=TGE(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TGE(SSRDD(a),SSRDB(w)); break;
@@ -526,6 +547,16 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
+  case SSINGSS: zv=SSRDS(a)==SSRDS(w); break;
+  case SSINGCC: zv=SSRDC(a)==SSRDC(w); break;
+  case SSINGCW: zv=SSRDC(a)==SSRDW(w); break;
+  case SSINGCU: zv=SSRDC(a)==SSRDU(w); break;
+  case SSINGWC: zv=SSRDW(a)==SSRDC(w); break;
+  case SSINGWW: zv=SSRDW(a)==SSRDW(w); break;
+  case SSINGWU: zv=SSRDW(a)==SSRDU(w); break;
+  case SSINGUC: zv=SSRDU(a)==SSRDC(w); break;
+  case SSINGUW: zv=SSRDU(a)==SSRDW(w); break;
+  case SSINGUU: zv=SSRDU(a)==SSRDU(w); break;
   case SSINGBB: zv=SSRDB(a)==SSRDB(w); break;
   case SSINGBD: zv=TEQ(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TEQ(SSRDD(a),SSRDB(w)); break;

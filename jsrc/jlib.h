@@ -5,9 +5,13 @@ J _stdcall JInit();                         /* init instance */
 void _stdcall JSM(J jt, void*callbacks[]);  /* set callbacks */ 
 int _stdcall JDo(J jt,C*);                  /* run sentence */
 C* _stdcall JGetLocale(J jt);               /* get locale */			
+A _stdcall Jga(J jt, I t, I n, I r, I*s);
 int _stdcall JFree(J jt);                   /* free instance */
 A _stdcall JGetA(J jt,I n,C* name);         /* get 3!:1 from name */
 I _stdcall JSetA(J jt,I n,C* name,I x,C* d);/* name=:3!:2 data */
+int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+int _stdcall JErrorTextM(J jt, I ec, I* p);
 
 typedef void* (_stdcall *JInitType)     ();
 typedef int   (_stdcall *JDoType)       (void*, C*);

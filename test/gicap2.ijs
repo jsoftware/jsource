@@ -65,10 +65,12 @@ t   test2 x: t=: 200 ?@$ 250
 t   test2~x: t
 t   test2 1r2 * t=: 200 ?@$ 250
 t   test2~1r2 * t
-a.  test2 u: 1000 ?@$ 65536
-a.  test2~u: 1000 ?@$ 65536
-a.  test2 10&u: RAND32 1000 ?@$ C4MAX
-a.  test2~10&u: RAND32 1000 ?@$ C4MAX
+t   test2 (500?1000){ t=: u: 1000 ?@$ 65536
+t   test2~(500?1000){ t=: u: 1000 ?@$ 65536
+t   test2 (500?1000){ t=: 10&u: RAND32 1000 ?@$ C4MAX
+t   test2~(500?1000){ t=: 10&u: RAND32 1000 ?@$ C4MAX
+t   test2 ((-:#sdot0)?#sdot0){ t=: sdot0
+t   test2~((-:#sdot0)?#sdot0){ t=: sdot0
 
 (20*0<x) -: (20$0) I. x=:    7 13 ?@$ 2
 (20*0<x) -: (20$0) I. x=: _5+7 13 ?@$ 10
@@ -168,7 +170,7 @@ test5"0 i.5 20
 (2 3 5 7 I. i.0) -: 2 3 5 7 I. 0$a:
 
 
-4!:55 ;:'adot1 adot2 sdot0 bs ge gt I i j k le lt p q t'
+4!:55 ;:'adot1 adot2 sdot0 bs ge gt I i j k le lt p q s t'
 4!:55 ;:'test1 test2 test3 test4 test5'
 4!:55 ;:'x xx y yy'
 

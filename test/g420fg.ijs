@@ -18,7 +18,6 @@ testsub=: 2 : 0
 
 test=: 2 : 0
  if. 'b' e. y do. u testsub v 0 1                          end.
- if. 'c' e. y do. u testsub v a.                           end.
  if. 'i' e. y do. u testsub v        _1000+  1000 ?@$ 2000 end.
  if. 'd' e. y do. u testsub v 4096%~*_1000+  1000 ?@$ 2000 end.
  if. 'z' e. y do. u testsub v j./    _1000+2 1000 ?@$ 2000 end.

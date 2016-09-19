@@ -25,5 +25,6 @@ EXPORTS
                 JGetB               @23
                 JSetB               @24
                 JDoR                @25
-				JGetA				@26
-				JSetA				@27
+                JGetA               @26
+                JSetA               @27
+                JSBProbe            @28

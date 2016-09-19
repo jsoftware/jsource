@@ -240,6 +240,7 @@ typedef struct {
  C*   th2buf;           /* space for formatting one number                 */
  I    th2bufn;          /* current max length of buf                       */
  UI   timelimit;        /* execution time limit milliseconds               */
+ A    xep;              /* exit execution phrase                           */
  B    assert;           /* 1 iff evaluate assert. statements               */
  B    iepdo;            /* 1 iff do iep                                    */
  B    nflag;            /* 1 if space required before name                 */

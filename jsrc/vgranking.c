@@ -90,7 +90,7 @@ F1(jtranking){A y,z;C*wv;I i,k,m,n,p=0,q=0,t,wcr,wf,wk,wr,*ws,wt,*yu,*yv,*zv;
   case 2:   p=65536; break;
   case sizeof(int): 
    if(wt&INT){irange(AN(w)/(k/wk),(I*)wv,&q,&p); if(!(65536>p||0.69*(p+2*n)<n*log((D)n)))p=0;}
-   else if(wt&C4T){c4range(AN(w)/(k/wk),(C4*)wv,(C4*)&q,&p); if(!(65536>p||0.69*(p+2*n)<n*log((D)n)))p=0;}
+   else if(wt&C4T){C4 cq=(C4)q; c4range(AN(w)/(k/wk),(C4*)wv,&cq,&p); q=cq; if(!(65536>p||0.69*(p+2*n)<n*log((D)n)))p=0;}
  }
  if(!p){
   RZ(y=irs1(w,0L,wcr,jtgrade1)); yv=AV(y); 

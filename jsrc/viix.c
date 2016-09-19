@@ -44,6 +44,8 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
  R 1;
 }    /* a I. w where a is a list of small range integers */
 
+#define SBCOMP(x,y)       \
+ ((SBLT((x),(y)))?-1:(SBGT((x),(y)))?1:0)
 #define COMPVLOOP(T,c)       \
  {T*u=(T*)uu,*v=(T*)vv; DO(c, if(*u!=*v){cc=*u<*v?-1:1; break;} ++u; ++v;);}
 #define COMPVLOOF(T,c,COMP)  \
@@ -111,6 +113,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
   case CMPXX: COMPVLOOP(D, c+c);         break;
   case C2TX:  COMPVLOOP(US,c);           break;
   case C4TX:  COMPVLOOP(C4,c);           break;
+  case SBTX:  COMPVLOOF(SB,c, SBCOMP  ); break;
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
@@ -120,22 +123,23 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
  }
  ge=cc; gt=-ge;
  switch(TT(CTTZ(at),CTTZ(wt))){
-  case TT(LITX, C4TX ): BSLOOP(UC,C4); break;
-  case TT(C2TX, C4TX ): BSLOOP(US,C4); break;
-  case TT(C4TX, LITX ): BSLOOP(C4,UC); break;
-  case TT(C4TX, C2TX ): BSLOOP(C4,US); break;
-  case TT(C4TX, C4TX ): BSLOOP(C4,C4); break;
-  case TT(LITX, C2TX ): BSLOOP(UC,US); break;
-  case TT(C2TX, C2TX ): BSLOOP(US,US); break;
-  case TT(C2TX, LITX ): BSLOOP(US,UC); break;
   case TT(B01X, B01X ): BSLOOP(C, C ); break;
   case TT(B01X, INTX ): BSLOOP(C, I ); break;
   case TT(B01X, FLX  ): BSLOOP(C, D ); break;
+  case TT(LITX, C2TX ): BSLOOP(UC,US); break;
+  case TT(LITX, C4TX ): BSLOOP(UC,C4); break;
 #if C_LE
   case TT(LITX, LITX ): BSLOOP(UC,UC); break;
 #else
   case TT(LITX, LITX ): if(1&c){BSLOOP(UC,UC); break;}else c>>=1; /* fall thru */
 #endif
+  case TT(C2TX, C2TX ): BSLOOP(US,US); break;
+  case TT(C2TX, C4TX ): BSLOOP(US,C4); break;
+  case TT(C2TX, LITX ): BSLOOP(US,UC); break;
+  case TT(C4TX, C2TX ): BSLOOP(C4,US); break;
+  case TT(C4TX, C4TX ): BSLOOP(C4,C4); break;
+  case TT(C4TX, LITX ): BSLOOP(C4,UC); break;
+  case TT(SBTX, SBTX ): BSLOOF(SB,SB, SBCOMP  ); break;
   case TT(INTX, B01X ): BSLOOP(I, C ); break;
   case TT(INTX, INTX ): BSLOOP(I, I ); break;
   case TT(INTX, FLX  ): BSLOOP(I, D ); break;

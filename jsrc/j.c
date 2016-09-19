@@ -62,7 +62,7 @@ A   zpath=0;              /* default locale search path           */
 /* identifies the J Front Ends, J Engine, and J Library */
 /* and is used in Unix to find profile.ijs              */
 /* j804/j64/windows/release/a/GPL3/unknown/datetime */
-F1(jtversqx){
+static F1(jtversqx){
 	char m[1000];char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
 	ASSERTMTV(w);
 	strcpy(m,"j"jversion"/");

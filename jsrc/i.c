@@ -180,7 +180,7 @@ static C jtjinit3(J jt){S t;
  sbtypeinit();
  rnginit();
  bucketinit();
-#if (SYS & SYS_DOS+SYS_MACINTOSH)
+#if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
  xlinit();
 #endif
  jtecvtinit(jt);

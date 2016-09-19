@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
+#include <stdint.h>
 
 #include "j.h"
 #include "x.h"

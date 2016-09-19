@@ -42,6 +42,16 @@ UTYPE -: type x
 x -: y
 (3!:1 x) -: 3!:1 y
 
+a. -: 1 u: u:i.256
+a. -: 5 u: u:i.256
+(,~a.) -: 1 u: u:i.512
+'domain error' -: 5 u: etx u:i.512
+
+a. -: 1 u: 10&u:i.256
+a. -: 5 u: 10&u:i.256
+(,~a.) -: 1 u: 10&u:i.512
+'domain error' -: 5 u: etx 10&u:i.512
+
 2 -: type 9 u: 128{.a.
 'domain error' -: 9 u: etx 128}.a.
 UTYPE -: type 10&u: 128{.a.

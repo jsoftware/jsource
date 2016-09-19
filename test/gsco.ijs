@@ -243,6 +243,11 @@ y=: s: x
 t =: 7 s: y
 4 -: type t
 ($y) = $t
+(/:,x) -: /:,t
+(\:,x) -: \:,t
+(/:,y) -: /:,t
+(\:,y) -: \:,t
+(7 s: _6 s: i. 0 s: 0) -: 7{"1 (0 s: 0) {. 0 s: 2
 
 
 NB. 10 s: y -------------------------------------------------------------
@@ -323,6 +328,9 @@ y2=: (>1{x) {. >3{x
 NB. only 0 s:&.>i.4 are needed
 11 s: 4{.x
 0 s: 11
+
+
+NB. x -: 0 s: 10        doesn't work
 (0 1 { x) -: 0 1 { 0 s: 10
 (0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
 x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
@@ -334,8 +342,41 @@ y2=: (>1{x) {. >3{x
 NB. minimal data required by 11 s:
 11 s: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
 0 s: 11
+
+NB. x -: 0 s: 10        doesn't work
 (0 1 { x) -: 0 1 { 0 s: 10
 (0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+y1=: (0 s: 1) {. 0 s: 3
+y2=: (>1{x) {. >3{x
+(x1 { y1) -: (x2 { y2)
+
+NB. reset symbol table
+x=: 0 s: 10
+11 s: ''
+1 = 0 s: 0
+10 s: x
+(>{.x) = 0 s: 0
+
+NB. appending symbol table
+x0=: 0 s: 10     NB. check point
+offset=: 0 s: 0
+
+y=: s: (":6!:1''),"1 ":"0 [ i.100  NB. add more symbols
+x=: 0 s: 10
+offset < 0 s: 0
+'c sn uv s'=: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
+10 s: x0         NB. restore to check point
+
+NB. new symbols since check point
+offset = 0 s: 0
+sbase=: offset{0{"1 uv    NB. index to string table
+11 s: (c,offset);(sn-sbase);((sbase-~offset}.{."1 uv) (<a:;0)}offset}.uv);(sbase}.s)
+
+NB. x -: 0 s: 10        doesn't work
+(0 1 4 5 6 7{ x) -: 0 1 4 5 6 7{ 0 s: 10
+((>0{x) {. >2{x) -: (0 s: 0) {. 0 s: 2
 x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
 x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
 y1=: (0 s: 1) {. 0 s: 3
@@ -379,6 +420,14 @@ y2=: (>1{x) {. >3{x
 'domain error' -: 11 s: etx x 3}~< ($>2{x)$2r3
 'domain error' -: 11 s: etx x 3}~< }:"1 >2{x
 'domain error' -: 11 s: etx x 3}~< (>2{x),.0
+
+
+NB. 12 s: y -------------------------------------------------------------
+
+x=: (;:'el eem o syn ary') ,&.>/ ":&.>?2 3 4$1e4
+y=: s: x
+*./, 1 = 12 s: x 
+0 =  12 s: ;:'waskjfji309sdf4u5vfasdfv8o4u dlfgjosjfsadfiotug9045tl dsfjgos9234dfigpejlkfdshg32h45kjre'
 
 
 NB. s: errors -----------------------------------------------------------
@@ -427,6 +476,6 @@ NB. s: errors -----------------------------------------------------------
 
 0 s: 11
 
-4!:55 ;:'i m t x x0 x1 x2 y y0 y1 y2 z0 z1'
+4!:55 ;:'c i m offset s sbase sn t uv x x0 x1 x2 y y0 y1 y2 z0 z1'
 
 

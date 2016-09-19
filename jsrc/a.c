@@ -138,14 +138,14 @@ static I jtint0(J jt,A w){A x;
  R x&&INT&AT(x)?*AV(x):IMIN; 
 }
 
-DF1(jtmemo1){DECLF;A z;I x,y;
+static DF1(jtmemo1){DECLF;A z;I x,y;
  RZ(w);
  x=IMIN; y=int0(w);
  if(y==IMIN)R CALL1(f1,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL1(f1,w,fs));
 }
 
-DF2(jtmemo2){DECLF;A z;I x,y; 
+static DF2(jtmemo2){DECLF;A z;I x,y; 
  RZ(a&&w);
  x=int0(a); y=int0(w);
  if(x==IMIN||y==IMIN)R CALL2(f2,a,w,fs);

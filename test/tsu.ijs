@@ -187,6 +187,8 @@ while. x123~:0 do.
  r123=. RB=: r123*.RB
  echo RBAD''
  x123=. <:x123
+NB.  11 s: ''    NB. reset symbol
+ echo (+/ % #) 0 s: 12
 end.
 echo 'Finish'
 )
@@ -203,6 +205,8 @@ for_y234. y123 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
   assert. _1 = 4!:0 ;:'x y'
+NB.  11 s: ''    NB. reset symbol
+  echo (+/ % #) 0 s: 12
  end.
 end.
 ''
@@ -220,6 +224,8 @@ while. x123~:0 do.
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
   assert. _1 = 4!:0 ;:'x y'
+NB.   11 s: ''    NB. reset symbol
+  echo (+/ % #) 0 s: 12
  end.
 x123=. <:x123
 end.
@@ -237,6 +243,8 @@ while. x123~:0 do.
  assert. 0=#(nl'')-.oldnl,'oldnl';'x123';'RLAST'
  assert. _1 = 4!:0 ;:'x y'
  x123=. <:x123
+NB.  11 s: ''    NB. reset symbol
+ echo (+/ % #) 0 s: 12
 end.
 ''
 )

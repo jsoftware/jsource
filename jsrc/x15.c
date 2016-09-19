@@ -56,6 +56,7 @@ typedef unsigned char       BYTE;
 #define CALLBACK
 #define FIXWINUTF8
 #endif
+#include <stdint.h>
 #include <wchar.h>
 
 #include "j.h"
@@ -1019,7 +1020,21 @@ F1(jtnfeoutstr){I k;
  R cstr(jt->mtyostr?jt->mtyostr:(C*)"");
 } /* 15!:18 return last jsto output */
 
-F1(jtcdproc){CCT*cc;
+F1(jtcdjt){
+ ASSERTMTV(w);
+ R sc((I)(intptr_t)jt);
+} /* 15!:19 return jt */
+
+F1(jtcdlibl){
+ RZ(w);
+ ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(AN(w),EVLENGTH);
+ if(!jt->cdarg)R zero;
+ R sc((I)cdlookupl(CAV(w)));
+}    /* 15!:20 return library handle */
+
+F1(jtcdproc1){CCT*cc;
  RZ(w);
  ASSERT(LIT&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
@@ -1027,5 +1042,107 @@ F1(jtcdproc){CCT*cc;
  if(!jt->cdarg)RE(cdinit());
  RE(cc=cdparse(w,1));
  R sc((I)cc->fp);
-}    /* 15!:19 return proc address */
+}    /* 15!:21 return proc address */
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4276)
+#endif
+
+I _stdcall JSBProbe(J jt,I flag,I n,void*s,I test);
+#if SY_WIN32
+#define VARIANT void
+int _stdcall JBreak(J jt);
+int _stdcall JIsBusy(J jt);
+int _stdcall JGet(J jt, C* name, VARIANT* v);
+int _stdcall JGetB(J jt, C* name, VARIANT* v);
+int _stdcall JSet(J jt, C* name, VARIANT* v);
+int _stdcall JSetB(J jt, C* name, VARIANT* v);
+int _stdcall JErrorText(J jt, long ec, VARIANT* v);
+int _stdcall JClear(J jt);
+int _stdcall JTranspose(J jt, long b);
+int _stdcall JErrorTextB(J jt, long ec, VARIANT* v);
+int _stdcall JDoR(J jt, C* p, VARIANT* v);
+#endif
+
+// procedures in jlib.h
+static void* jfntaddr[]={
+JDo,
+JErrorTextM,
+JFree,
+JGetA,
+JGetLocale,
+JGetM,
+JInit,
+JSBProbe,
+JSM,
+JSetA,
+JSetM,
+Jga,
+#if SY_WIN32
+JBreak,
+JClear,
+JDoR,
+JErrorText,
+JErrorTextB,
+JGet,
+JGetB,
+JIsBusy,
+JSet,
+JSetB,
+JTranspose,
+#endif
+};
+
+static C* jfntnm[]={
+"JDo",
+"JErrorTextM",
+"JFree",
+"JGetA",
+"JGetLocale",
+"JGetM",
+"JInit",
+"JSBProbe",
+"JSM",
+"JSetA",
+"JSetM",
+"Jga",
+#if SY_WIN32
+"JBreak",
+"JClear",
+"JDoR",
+"JErrorText",
+"JErrorTextB",
+"JGet",
+"JGetB",
+"JIsBusy",
+"JSet",
+"JSetB",
+"JTranspose",
+#endif
+};
+
+F2(jtcdproc2){C*proc;FARPROC f;HMODULE h;
+ RZ(a&&w);
+ ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(AN(w),EVLENGTH);
+ proc=CAV(w);
+ RE(h=(HMODULE)i0(a));
+ if(!h){I k=-1;
+  DO(sizeof(jfntnm)/sizeof(C*), if(!strcmp(jfntnm[i],proc)){k=i; break;});
+  f=(k==-1)?(FARPROC)0:(FARPROC)jfntaddr[k];
+ }else{
+#if SY_WIN32 && !SY_WINCE
+  f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):proc);
+#endif
+#if SY_WINCE
+  f=GetProcAddress(h,tounibuf(proc));
+#endif
+#if (SYS & SYS_UNIX)
+  f=(FARPROC)dlsym(h,proc);
+#endif
+ }
+ CDASSERT(f,DEBADFN);
+ R sc((I)f);
+}    /* 15!:21 return proc address */
 

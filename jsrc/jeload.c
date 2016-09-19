@@ -33,6 +33,7 @@
 #endif
 #include "j.h"
 #include "jversion.h"
+#include <stdint.h>
 
 static void* hjdll;
 static J jt;
@@ -197,6 +198,7 @@ int jefirst(int type,char* arg)
 {
 	int r; char* p,*q;
 	char* input=malloc(2000+strlen(arg));
+	char buf[50];
 	*input=0;
 	if(0==type)
 	{
@@ -233,6 +235,9 @@ int jefirst(int type,char* arg)
 #elif defined(RASPI)
 	strcat(input,"[IFRASPI_z_=:1");
 #endif
+	sprintf(buf,"(" FMTI ")",(I)(intptr_t)hjdll);
+	strcat(input,"[HLIBJ_z_=:");
+	strcat(input,buf);
 	strcat(input,"[BINPATH_z_=:'");
 	p=path;
 	q=input+strlen(input);

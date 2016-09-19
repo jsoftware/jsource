@@ -1,5 +1,7 @@
 NB. Speedy Singletons ------------------------------------------------------------------
 
+randuni''
+
 NB. Tests of local-name lookup
 
 NB. Local name passed to another modifier
@@ -36,12 +38,17 @@ compss =: 1 : 0 (&>)
 NB. values to use
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
 v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 20 ?@$ 0)
+vv0 =: ((<"0) sdot0{~ 100 ?@$ #sdot0)
+vv1 =: ((<"0) adot1{~ 100 ?@$ #adot1)
+vv2 =: ((<"0) adot2{~ 100 ?@$ #adot2)
 
 NB.  *./,  faster display scrolling
 *./,   = compss/~ v
 *./,   < compss/~ v
 *./,   <. compss/~ v
 *./,   <: compss/~ v
+*./,   > compss/~ v
+*./,   >. compss/~ v
 *./,   >: compss/~ v
 *./,   + compss/~ v
 *./,   +. compss/~ v
@@ -72,6 +79,21 @@ NB.  *./,  faster display scrolling
 *./,   32 b. compss/~ v
 *./,   33 b. compss/~ v
 *./,   34 b. compss/~ v
+
+*./,   = compss/~ vv0
+*./,   < compss/~ vv0
+*./,   <. compss/~ vv0
+*./,   <: compss/~ vv0
+*./,   > compss/~ vv0
+*./,   >. compss/~ vv0
+*./,   >: compss/~ vv0
+*./,   ~: compss/~ vv0
+
+*./,   = compss/~ vv1
+*./,   ~: compss/~ vv1
+
+*./,   = compss/~ vv2
+*./,   ~: compss/~ vv2
 
 NB. ! is slower, especially for big values
 compssp =: 1 : 0 (&>)
@@ -142,6 +164,7 @@ iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 100000'  NB. inplace
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Faster than non-ssing
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
+
 NB. Same for inside fork
 iptime1 =: 6!:2 '3 : ''for. i. y do. (** ** ** ** ** ***)*1 end.'' 100000'
 iptime2 =: 6!:2 '3 : ''for. i. y do. (++ ++ ++ ++ ++ +++) +1 end.'' 100000'  NB. Not ssing
@@ -150,5 +173,5 @@ THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Faster than non-ssing
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
 
-4!:55 ;:'b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3'
+4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2'
 

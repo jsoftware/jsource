@@ -248,13 +248,14 @@ static C invf[2][29] = {
  CBASE,  CABASE, CEXEC,   CTHORN,  0 
 };
 
-// Return inverse.  recur is a recursion indicator, always forced to 0 for the initial call, and
+// Return inverse of monad w.  recur is a recursion indicator, always forced to 0 for the initial call, and
 // set to 1 here for recursive calls
 A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN); 
- id=ID(w); v=VAV(w);
- if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);
+ id=ID(w); v=VAV(w);  // id=pseudochar for w, v->verb info
+ if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses
+ // in case id indicates a modifier, set (f|g) to the operand, n? if it is a noun or name, v? if it is a verb
  f=v->f; nf=f&&AT(f)&NOUN+NAME; vf=f&&!nf;
  g=v->g; ng=g&&AT(g)&NOUN+NAME; vg=g&&!ng;
  switch(id){
@@ -279,15 +280,15 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
   case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;
   case CSLASH:   if(CSTAR==ID(f))R ds(CQCO);        break;
   case CQQ:      if(vf)R qq(invrecur(f),g);              break;
-  case COBVERSE: if(vf&&vg)R obverse(g,f);          break;
+  case COBVERSE: if(vf&&vg)R obverse(g,f);          break;  // if defined obverse, return it
   case CSCO:     R amp(num[5],w);
   case CPOWOP:   
    if(vf&&ng){RE(p=i0(g)); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
    if(VGERL&v->flag)R*(1+AAV(v->h));
    break;
   case CTILDE:
-   if(nf)R invrecur(symbrd(f));
-   switch(ID(f)){
+   if(nf)R invrecur(symbrd(f));  // name~ - resolve name & try again
+   switch(ID(f)){   // inverses for reflexive monads
     case CPLUS:  R ds(CHALVE);
     case CSTAR:  R ds(CSQRT);
     case CJDOT:  R eval("0.5j_0.5&*");
@@ -299,7 +300,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
    break;
   case CBSLASH:
   case CBSDOT:
-   if(CSLASH==ID(f)&&(ff=VAV(f)->f,ff&&VERB&AT(ff))){
+   if(CSLASH==ID(f)&&(ff=VAV(f)->f,ff&&VERB&AT(ff))){  //  ff/\  or ff/\.
     b=id==CBSDOT;
     switch(ID(ff)){
      case CPLUS: R obverse(eval(b?"- 1&(|.!.0)":" - |.!.0"),w);
@@ -326,7 +327,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
  // Failure - no inverse found.  If there are names in w, try fixing w and try on that.
  // But only fix once, at the top recursion level, (1) to avoid an infinite loop if
  // there is a circular reference that leaves names in the fixed form of w; (2) to avoid
- // repeated fixing of lower branches, which will only be tried again when higher levells are fixed
+ // repeated fixing of lower branches, which will only be tried again when higher levels are fixed
  if(!recur&&!nameless(w))R invrecur(fix(w));
  ASSERT(0,EVDOMAIN);
 }

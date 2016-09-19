@@ -258,10 +258,34 @@ static void jttraverse(J jt,A wd,AF f){
 
 void jtfh(J jt,A w){fr(w);}
 
+// Free temporary buffers, while preventing the result from being freed
+//
+// Here w is a result that needs to be protected against being deleted.  We increment its usecount,
+// pop all the blocks we have allocated, then put w back on that stack to be deleted later.  After
+// this, w has the same status as a block allocated in the program that called the one that called gc.
+//
+// Additional subtlety is needed to get the most out of inplacing.  If w is inplaceable, it
+// should remain inplaceable after we finish, because by definition we are through with it.  So
+// we need to revert the usecount to inplaceable in that case.  But there's more: if the block
+// was inplaced by the program calling gc, it will have been allocated back up the stack.  In that case,
+// the tpop will not free it and it will be left with a usecount of 2, preventing further inplacing.
+//
+// To solve both problems, we check to see if w is inplaceable.  If it is, we restore it to inplaceable
+// after the tpop.  But if its usecount after tpop was 2, we do not do the tpush.
+
 // macros copied here for reordering & common elimination
 A jtgc (J jt,A w,I old){
+// ra(w)
 RZ(w); I* cc=&AC(w); I tt=AT(w); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,w,tt); *cc=(c+1)&~ACINPLACE;
+// tpop(old)
 I pushx=tpop(old);
+// if block was originally inplaceable, restore it to inplaceable; if usecount was not decremented by tpop, return to avoid the tpush
+if(c<0){
+ I c2=*cc;  // get usecount after tpop
+ *cc=c;  // restore inplaceability, if the block is inplaceable
+ if(c2>ACUC1)R w;  // if the block was not popped, don't push it again
+}
+// tpush(w)
 *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
 R w;
 }

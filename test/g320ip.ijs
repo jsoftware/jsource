@@ -282,7 +282,74 @@ NB. Verify inplacing works in forks, including nvv forks
 24000 > 7!:2 '(10000#''l'') ([: ] ,) (1000#''r'')'
 0 7 14 21 28 -: (({.7)"_ * ])"0 i. 5  NB. ensure constant function not overwritten
 0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
+a =: 10000#'a'
+3000 > 7!:2 'a =: (''b'' ,~ [) a'
+a -: (10000#'a'),'b'
+a =: 'abc'
+'abcbabcb' -: a (, , ,) 'b'
+a =: a (, , ,) 'b'
+'abcbabcb' -: a
+'abcbabcb' -: ('a','bc') (, , ,) {.'b'
+a =: 'abc'
+a =: 'abc' (, , (, , ,)) 'b'
+a -: 'abcbabcbabcb'
+a =: 'abc'
+a =: 'abc' (, , (, , [)) 'b'
+a -: 'abcbabcbabc' 
 
+            
+
+
+NB. hook
+('c' ,~ 999 $ 'abc') -: (, {:) 999 $ 'abc'
+3000 > 7!:2 '(, {:) 888 $ ''abc'''
+('c' ,~ 1000 # 'a') -: (1000 # 'a') (, ]) 'c'
+4000 > 7!:2 '(1000 # ''a'') (, ]) ''c'''
+
+NB. u@v
+'b' -: (10000#'a') {:@, 'b'
+20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
+a =: 10000#'c'
+3000 > 7!:2 'a =: {.@(''b'' ,~ ]) a'
+
+NB. u&v
+a =: i. 1000
+0 1 2 3 4 -: ($0) {.&(5 ,~ ]) a
+a =: i. 1000
+3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+
+NB. u@:v
+'b' -: (10000#'a') {:@:, 'b'
+20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
+a =: 10000#'c'
+3000 > 7!:2 'a =: {.@:(''b'' ,~ ]) a'
+
+NB. u&n
+20000 > 7!:2 ',&''a'' 10000#''b'''
+a =: 10000#'a'
+('c' ,~ 10000#'a') -: a =: ,&'c' a
+2000 > 7!:2 'a =: ,&''c'' a'
+
+NB. m&v
+(5,.i.4) -: (6-1)&,"0 i. 4  NB. Verify constant not overwritten
+
+NB. u&.v
+20000 > 7!:2 ',&''b''&.] 10000#''a'''
+a =: 10000#'a'
+('c' ,~ 10000#'a') -: a =: ,&'c'&.] a
+3000 > 7!:2 'a =: ,&''c''&.] a'
+3000 > 7!:2 '{. a =: ,&''c''&.] a'  NB. Verify assignment need not be first word
+22000 > 7!:2 'a =: ]&.(,&''b'') a'
+
+NB. u&.:v
+20000 > 7!:2 ',&''b''&.:] 10000#''a'''
+a =: 10000#'a'
+('c' ,~ 10000#'a') -: a =: ,&'c'&.:] a
+3000 > 7!:2 'a =: ,&''c''&.:] a'
+3000 > 7!:2 '{. a =: ,&''c''&.:] a'  NB. Verify assignment need not be first word
+22000 > 7!:2 'a =: ]&.:(,&''b'') a'
+
+22000 > 7!:2 ',&''b''&.(,&''c'' :. (,&''d'')) 10000#''a'''  NB. all verbs inplaceable
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global local test testa'
 

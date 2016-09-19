@@ -189,20 +189,28 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
  R reitem(vec(INT,f,s),lamin1(df1(x,iden(fs))));
 }    /* f/"r w identity case */
 
+// general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
 static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
+ // loop over rank
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  if(r<wr)R rank1ex(w,self,r,jtredg);
- n=IC(w); p=ARELATIVE(w);
+ // From here on we are doing a single reduction
+ n=IC(w); p=ARELATIVE(w);  // n=#items of cell, p=REL flag
+ J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+3);  // if f supports inplacing, so do we
+ // z will hold the result from the iterations.  Init to value of last cell
+ // yt=type, yn=#atoms, yr=rank, ys->shape of input cell
  RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
+ // k=length of input cell in bytes, v->last cell data
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
- old=jt->tnextpushx; 
- for(i=1;i<n;++i){
-  v-=k; 
-  GA(y,yt,yn,yr,ys); u=CAV(y); 
+ old=jt->tnextpushx; // save stack mark for subsequent frees
+ for(i=1;i<n;++i){   // loop through items
+  v-=k;    // v-> next item to apply
+  GA(y,yt,yn,yr,ys); u=CAV(y);   // allocate block for item, u->data area
+  // copy the item into the allocated block
   if(p){A1*wv=(A1*)v,*yv=(A1*)u;I d=(I)w-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
-  RZ(z=CALL2(f2,y,z,fs));
+  RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
   gc(z,old);
  }
  EPILOG(z);

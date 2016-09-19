@@ -276,11 +276,12 @@ F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
 A jtapip(J jtf, A a, A w, A self){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
  RZ(a&&w); J jt = (J)((I)jtf&-4);  // create unflagged true jt address
  // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
- // being assigned is the same as a, and the usecount of a allows inplacing; or if the operation is inplaceable in jt and
+ // being assigned is the same as a, and the usecount of a allows inplacing; or
  // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
  // one of the uses is for the mapping header.
+ // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
  // In all cases we allow only DIRECT types (I don't know why) 
- if(((I)jtf&2&&ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2))) && AT(a)&DIRECT) {
+ if((((I)jtf&2) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&DIRECT) {
   // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
   // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes
   // in the shape that are part of the shape of an item), or if a is atomic (because

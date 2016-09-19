@@ -137,9 +137,18 @@ static DF1(taa){TDECL;A t=df1(w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1
 static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
+// If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
+static CS1IP(jthook1, \
+{A protw = (A)((I)w+((I)jtinplace&1)); A gx=CALL1(g1,w,gs);  /* Cannot inplace the call to g */ \
+/* inplace gx unless it is protected; inplace w if the caller allowed it*/ \
+z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(2*((I)jtinplace&1)+(gx!=protw))) ):jt,w,gx,fs);} \
+,0111)
+static CS2IP(jthook2, \
+{A protw = (A)((I)w+((I)jtinplace&1)); A gx=CALL1(g1,w,gs);  /* Cannot inplace the call to g */ \
+/* inplace gx unless it is protected; inplace w if the caller allowed it*/ \
+z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&2)+(gx!=protw))) ):jt,a,gx,fs);} \
+,0112)
 
-static CS1(jthook1, CALL2(f2,w,CALL1(g1,w,gs),fs),0111)
-static CS2(jthook2, CALL2(f2,a,CALL1(g1,w,gs),fs),0112)
 
 static DF1(jthkiota){DECLFG;A a,e;I n;P*p;
  RZ(w);
@@ -190,28 +199,33 @@ static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 
-F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=0;V*u,*v;
+F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
  RZ(a&&w);
  switch(BD(AT(a),AT(w))){
   default:            ASSERT(0,EVSYNTAX);
   case BD(VERB,VERB):
+   // This is the (V V) case, producing a verb
    u=VAV(a); c=u->id; f1=jthook1; f2=jthook2;
    v=VAV(w); d=v->id; e=ID(v->f);
+   // Set flag to use: ASGSAFE if both operands are safe, and INPLACEOK to match f1,f2
+   flag=((u->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);  // start with in-place enabled, as befits f1/f2
    if(d==CCOMMA)switch(c){
-    case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;
-    case CFROM:   f2=jthkfrom;  break;
-    case CTAKE:   f2=jthktake;  break;
-    case CDROP:   f2=jthkdrop;  break;
-    case CEPS:    f2=jthkeps;
+    case CDOLLAR: f2=jtreshape; flag+=VIRS2; flag &=~VINPLACEOK2; break;
+    case CFROM:   f2=jthkfrom; flag &=~VINPLACEOK2;  break;
+    case CTAKE:   f2=jthktake; flag &=~VINPLACEOK2;  break;
+    case CDROP:   f2=jthkdrop; flag &=~VINPLACEOK2;  break;
+    case CEPS:    f2=jthkeps; flag &=~VINPLACEOK2; break;
    }else        switch(c){
-    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)&&CBOX==ID(u->f))f1=jtgroup; break;
-    case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g))f1=jthkiota; break;
-    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->g)&&CSTAR==ID(VAV(v->g)->f))f1=jthkodom; break;
+    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)&&CBOX==ID(u->f)){f1=jtgroup; flag &=~VINPLACEOK1;} break;
+    case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)){f1=jthkiota; flag &=~VINPLACEOK1;} break;
+    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->g)&&CSTAR==ID(VAV(v->g)->f)){f1=jthkodom; flag &=~VINPLACEOK1;} break;
     case CIOTA:   
-    case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN))f1=jthkindexofmaxmin; break;
-    case CFROM:   if(d==CGRADE)f2=jtordstati; else if(d==CTILDE&&e==CGRADE)f2=jtordstat;
+    case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN)){f1=jthkindexofmaxmin; flag &=~VINPLACEOK1;} break;
+    case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VINPLACEOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VINPLACEOK2;}
    }
+   // Return the derived verb
    R fdef(CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+  // All other cases produce an adverb
   case BD(ADV, ADV ): f1=taa; break;
   case BD(NOUN,CONJ):
   case BD(VERB,CONJ):

@@ -52,11 +52,16 @@ static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,-1L, RMAX,VAV(self)->f2);}
 DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,RMAX,-1L, VAV(self)->f2);}
 
-static DF1(jtunder1){DECLFG; R df1(  w,atop(inv(gs),amp(fs,gs)));}
-static DF2(jtunder2){DECLFG; R df2(a,w,atop(inv(gs),amp(fs,gs)));}
+// u&.v    kludge should calculate fullf as part of under/undco & pass in via h
+static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtunder1){DECLFG; R df1(w,atop(inv(gs),amp(fs,gs)));}
+// obsolete static DF2(jtunder2){DECLFG; R df2(a,w,atop(inv(gs),amp(fs,gs)));}
 
-static DF1(jtundco1){DECLFG; R df1(  w,atop(inv(gs),ampco(fs,gs)));}
-static DF2(jtundco2){DECLFG; R df2(a,w,atop(inv(gs),ampco(fs,gs)));}
+static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtundco1){DECLFG; R df1(  w,atop(inv(gs),ampco(fs,gs)));}
+// obsolete static DF2(jtundco2){DECLFG; R df2(a,w,atop(inv(gs),ampco(fs,gs)));}
 
 
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
@@ -67,7 +72,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
   if(b){x=vi(x); y=vi(y); b=x&&y;} 
   if(b){u=AV(x); v=AV(y); DO(256, j=*u++; if(j==*v++&&-256<=j&&j<256)f[i]=(UC)(0<=j?j:j+256); else{b=0; break;});}
   if(jt->jerr)RESETERR;
- }
+ }         
  if(!b)R from(df1(indexof(alp,w),fs),alp);
  n=AN(w);
  GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
@@ -77,9 +82,11 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 
 F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
  ASSERTVV(a,w);
- c=0; f1=jtunder1; f2=jtunder2; r=mr(w); v=VAV(w); 
+ c=0; f1=jtunder1; f2=jtunder2; r=mr(w); v=VAV(w);
+ // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
+ I flag = (VAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
  switch(v->id){
-  case COPE:  f1=jteach1; f2=jteach2; break;
+  case COPE:  f1=jteach1; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
   case CFORK: c=ID(v->h); /* fall thru */
   case CAMP:  
    u=VAV(a);
@@ -88,11 +95,13 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
    if(CIOTA==ID(v->g)&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->f)){
     f1=b&& b1?jtbitwiseinsertchar:jtunderai1; 
     f2=b&&!b1?jtbitwisechar:u->id==CMAX||u->id==CMIN?jtcharfn2:jtunder2;
+    flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
  }}
- R CDERIV(CUNDER,f1,f2,0L,r,r,r);
+ R CDERIV(CUNDER,f1,f2,flag,r,r,r);
 }
 
 F2(jtundco){
  ASSERTVV(a,w); 
- R CDERIV(CUNDCO,jtundco1,jtundco2,VFLAGNONE, RMAX,RMAX,RMAX);
+ // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
+ R CDERIV(CUNDCO,jtundco1,jtundco2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
 }

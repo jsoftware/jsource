@@ -203,10 +203,10 @@ static void auditnum(){
 // assign it to the result.  This will be set only for local assignments to a simplename.
 
 // Note that if jt->zombieval is set, any argument that is equal to jt->zombieval will be
-// ipso facto inplaceable, and moreover the flag in jt corresponding to such
+// ipso facto inplaceable, and moreover the usecount in such
 // an argument WILL NOT be set because it came from evaluating a name.  So, a verb supporting inplace
-// operation must check for (jtinplace&1||jt->zombiesym==w) for example
-// if it wants to inplace the w argument.  If the verb supports loose inplace operations, 
+// operation must check for (jtinplace&1 && ACIPISOK(w)||jt->zombiesym==w) for example
+// if it wants to inplace the w argument.
 
 // Note kludge: the stack bits to indicate inplaceability could be replaced by performing
 // ra();tpush();  when a word is moved to the stack; but until we
@@ -242,13 +242,13 @@ static void auditnum(){
 //  the verb supports in-place ops
 // We set the jt bits to indicate inplaceability.  Since the parser never reuses an argument, all bits will
 // be set if the callee can handle inplaceing.
-// NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT be marked inplace.  The action routine
+// NOTE that in name =: x i} name, the zombieval will be set but the name operand will NOT have an inplaceable usecount.  The action routine
 // should check the operand addresses when zombieval/assignsym is set.  Inplaceable arguments are ignored by functions that do
 // not handle inplace operations.
 
 // w here is the index of the last word of the execution. 
-// aa  is the index of the left argument.  v is the verb
-#define DFSIP1(v,w) if(VAV(stack[v].a)->flag&VINPLACEOK1){IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+// aa  is the index of the left argument.  v is the verb.  zomb is 1 if it is OK to set assignsym/zombieval
+#define DFSIP1(v,w,zomb) if(VAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
 #define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
@@ -397,10 +397,11 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    // Close up any gap between the unexecuted stack elements and the result
    // Return the new stack pointer, which is the relocated beginning-of-stack
    // Set the in-place flags for verb arguments
+   // STO stores the result; SM closes up the stack
    case PMONAD1:
-   DFSIP1(1,2) STO1(2,2,1) SM(1,0); stack += 1; break;
+   DFSIP1(1,2,1) STO1(2,2,1) SM(1,0); stack += 1; break;
    case PMONAD2:
-   DFSIP1(2,3) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; break;  //STO(z,w,toksource)
+   DFSIP1(2,3,0) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; break;  // stack is not executing last verb here, so zomb=0
    case PDYAD:
    DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; break;  //STO(z,a,w,toksource)
    case PADV:

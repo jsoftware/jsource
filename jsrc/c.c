@@ -6,10 +6,14 @@
 #include "j.h"
 
 
-static CS1(obv1, CALL1(f1,  w,fs),0103)
-static CS2(obv2, CALL2(f2,a,w,fs),0104)
+// obv1 and obv2 merely pass the call to f.  Sinc3e we took the inplace flags for the compound from the original a, we can pass them on too
+static CS1IP(obv1, z=(f1)(jtinplace,w,fs),0103)
+static CS2IP(obv2, z=(f2)(jtinplace,a,w,fs),0104)
+// obsolete static CS1IP(obv2, CALL1(f2,w,fs),0103)
+// obsolete static CS2IP(obv2, CALL2(f2,a,w,fs),0104)
 
-F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,0L,mr(a),lr(a),rr(a));}
+// Set ASGSAFE from a&w; set INPLACE from a
+F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
 
 
 static DF1(ad1){DECLFG;A z;I od=jt->db; 
@@ -28,7 +32,8 @@ static DF2(ad2){DECLFG;A z;I od=jt->db;
  R z?z:CALL2(g2,a,w,gs);
 }
 
-F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,VFLAGNONE, RMAX,RMAX,RMAX);}
+// Set ASGSAFE from operands
+F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,(VAV(a)->flag&VAV(w)->flag&VASGSAFE),RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)

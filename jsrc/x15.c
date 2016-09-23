@@ -28,14 +28,10 @@ The XP64 double_trick puts the 1st four parameters in mmx regs.
 XP64 runs no code, it just does a call with 4 doubles to get the mmx
 regs loded before the switchcall.
 
-Linux64/Mac64 pass the 1st 8 float/double args in mmx regs and they are
-NOT in the switchcall parameters. Float/double parms after the 1st 8 are
-pushed on the stack differently than I parameters and are not supported
-by switchcall. More than 8 float/double parameters returns an error.
-
-Linux64/Mac64/... DELIMIT error if more than 8 D arg. Don't know how to do this call.
-Treating D as I after the 8th doesn't work.
-Treating all D as I if there are more than 8 doesn't work.
+Linux64/Mac64 pass the 1st 8 float/double args in mmx regs and they
+are NOT in the switchcall parameters.  If more than 8 f/D args exist,
+putting D after the 8th on stack starting from the 7th I.  Note
+that the first 6 I args will be in regs that are unavailable to D..
 
 double_trick call must be immediately before SWITCHCALL
 otherwise the regs may be used and the parameter lost.
@@ -130,7 +126,7 @@ typedef float (_cdecl    *ALTCALLF)();
 #define DEPARM          6
 #define DELIMIT         7       /* too many float/double args  */
 
-#define NCDARGS         32      /* hardwired max number of arguments    */
+#define NCDARGS         64      /* hardwired max number of arguments    */
 #define NLIBS           100     /* max number of libraries              */
 
 #define NLEFTARG        (2*NPATH+4+3*(1+NCDARGS))
@@ -162,11 +158,15 @@ typedef struct {
 extern void double_trick(D,D,D,D);
 #endif
 
-#if SYS & (SYS & SYS_LINUX)
+#if (SYS & SYS_MACOSX) | (SYS & SYS_LINUX)
 #ifdef C_CD_ARMHF
 extern void double_trick(float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float);
 #else
+#ifdef __PPC64__
+extern void double_trick(D,D,D,D,D,D,D,D,D,D,D,D,D);
+#else
 extern void double_trick(D,D,D,D,D,D,D,D);
+#endif
 #endif
 #endif
 #if SY_MACPPC
@@ -208,7 +208,11 @@ static void double_trick(double*v, I n){I i=0;
  #if SY_WIN32
   #define dtrick {D*pd=(D*)d; double_trick(pd[0],pd[1],pd[2],pd[3]);}
  #elif SY_UNIX64
-  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
+  #ifdef __PPC64__
+   #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12]);
+  #else
+   #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
+  #endif
  #elif SY_MAC
   #define dtrick;
  #endif
@@ -316,6 +320,214 @@ static void double_trick(double*v, I n){I i=0;
                   d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
                   d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
                   d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31]);break;  \
+  case 33: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32]);break;                                            \
+  case 34: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33]);break;                                      \
+  case 35: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34]);break;                                \
+  case 36: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35]);break;                          \
+  case 37: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36]);break;                    \
+  case 38: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37]);break;              \
+  case 39: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38]);break;        \
+  case 40: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39]);break;  \
+  case 41: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40]);break;                                            \
+  case 42: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41]);break;                                      \
+  case 43: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42]);break;                                \
+  case 44: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43]);break;                          \
+  case 45: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44]);break;                    \
+  case 46: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45]);break;              \
+  case 47: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46]);break;        \
+  case 48: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47]);break;  \
+  case 49: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48]);break;                                            \
+  case 50: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49]);break;                                      \
+  case 51: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50]);break;                                \
+  case 52: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51]);break;                          \
+  case 53: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52]);break;                    \
+  case 54: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53]);break;              \
+  case 55: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54]);break;        \
+  case 56: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55]);break;  \
+  case 57: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56]);break;                                            \
+  case 58: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57]);break;                                      \
+  case 59: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58]);break;                                \
+  case 60: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58],d[59]);break;                          \
+  case 61: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58],d[59],d[60]);break;                    \
+  case 62: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58],d[59],d[60],d[61]);break;              \
+  case 63: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58],d[59],d[60],d[61],d[62]);break;        \
+  case 64: r = fp(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7],          \
+                  d[8], d[9], d[10],d[11],d[12],d[13],d[14],d[15],         \
+                  d[16],d[17],d[18],d[19],d[20],d[21],d[22],d[23],         \
+                  d[24],d[25],d[26],d[27],d[28],d[29],d[30],d[31],         \
+                  d[32],d[33],d[34],d[35],d[36],d[37],d[38],d[39],         \
+                  d[40],d[41],d[42],d[43],d[44],d[45],d[46],d[47],         \
+                  d[48],d[49],d[50],d[51],d[52],d[53],d[54],d[55],         \
+                  d[56],d[57],d[58],d[59],d[60],d[61],d[62],d[63]);break;  \
 }
 
 static I     stdcalli(STDCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
@@ -659,6 +871,9 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  CDASSERT(!n||wt&BOX||!(u=memchr(cc->star,C1,n)),DEPARM+256*(((B*)u)-cc->star));
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;
  for(i=0;i<n;++i){
+#if SY_UNIX64 && defined(__x86_64__)
+  if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
+#endif
   per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);
   if(wt&BOX){
    x=WVR(i); xt=AT(x); xn=AN(x); xr=AR(x);
@@ -696,7 +911,15 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
           dd[dcnt++]=(float)*(D*)xv;
 #endif
 #if SY_64 && (SY_LINUX  || SY_MAC)
-     {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;}
+  #ifdef __PPC64__
+     /* +1 put the float in low bits in dv, but dd has to be D */
+     *dv=0; *(((float*)dv++)+1)=(float)(dd[dcnt++]=*(D*)xv);
+     /**dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv;*/
+  #else /* assuming __x86_64__ */
+     {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
+      if(dcnt>8){ /* push the 9th F and more on to stack (must be the 7th I onward) */
+        if(dv-data>=6)*(float*)(dv++)=f;else *(float*)(data+dcnt-3)=f;}}
+  #endif
 #else
 #ifdef C_CD_ARMHF
              f=(float)*(D*)xv; dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
@@ -712,7 +935,14 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
              dd[dcnt++]=*(D*)xv;
 #endif
 #if SY_UNIX64
+#ifdef __PPC64__
+             /* always need to increment dv, the contents get used from the 14th D */
+             *(D*)dv++=dd[dcnt++]=*(D*)xv;
+#else /* assuming __x86_64__ */
              dd[dcnt++]=*(D*)xv;
+             if(dcnt>8){ /* push the 9th D and more on to stack (must be the 7th I onward) */
+               if(dv-data>=6)*dv++=*xv;else *(data+dcnt-3)=*xv;}
+#endif
 #endif
 #if !SY_UNIX64
 #ifdef C_CD_ARMHF
@@ -732,8 +962,10 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #ifdef C_CD_ARMHF
  CDASSERT(16>=fcnt,DELIMIT);
  CDASSERT(16>=dcnt,DELIMIT);
-#elif SY_UNIX64
- CDASSERT(8>=dcnt,DELIMIT);
+#elif SY_UNIX64 && defined(__x86_64__)
+ if(dcnt>8&&dv-data<6)dv=data+dcnt-2; /* update dv to point to the end */
+#elif !SY_64
+ CDASSERT(dv-data<=NCDARGS,DECOUNT); /* D needs 2 I args in 32bit system, check it again. */
 #endif
 
  DO(cipcount, convertdown(cipv[i],cipn[i],cipt[i]););  /* convert I to s and int and d to f as required */

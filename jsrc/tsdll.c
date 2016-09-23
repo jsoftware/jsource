@@ -90,9 +90,15 @@ D _stdcall dx7(D a,I b,D c,I d,D e)  {return a+b+c+d+e;}
 D _stdcall d1(D a,D b,D c,D d,D e,D f,D g,D h){
 	return a+b+c+d+e+f+g+h;}
 
-/* 9 double scalars is error 7 0 in linux64 */
 D _stdcall d1a(D a,D b,D c,D d,D e,D f,D g,D h,D i){
 	return a+b+c+d+e+f+g+h+i;}
+
+D _stdcall d1b(D a,D b,D c,D d,D e,D f,D g,D h,D i,D j,D k,D l,D m){
+       return a+b+c+d+e+f+g+h+i+j+k+l+m;}
+D _stdcall d1c(D a,D b,D c,D d,D e,D f,D g,D h,D i,D j,D k,D l,D m,D n){
+       return a+b+c+d+e+f+g+h+i+j+k+l+m+n;}
+D _stdcall d1z(D a,D b,D c,D d,D e,D f,D g,D h,D i,D j,D k,D l,D m,D n,D o,D p,D q,D r,D s,D t,D u,D v,D w,D x,D y,D z){
+       return a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z;}
 
 I _stdcall d2(D a,D b,D c,D d,D e,D f,D g,D h){
 	return (I)(a+b+c+d+e+f+g+h);}
@@ -121,6 +127,11 @@ D _stdcall fd(float f0, D d0, float f1, D d1, float* fp, D* fd){
 	fp[0]=f0; fp[1]=f1; fd[0]=d0; fd[1]=d1;
 	return f0+f1+d0+d1;
 }
+
+D _stdcall fdi(F a,D b,I c,F d,D e,I f,F g,D h,I i,F j,D k,I l,F m,D n,I o,F p,D q,I r,F s,D t,I u,F v,D w,I x,F y,D z){
+       return a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z;}
+D _stdcall ffi(F a,F b,I c,F d,F e,I f,F g,F h,I i,F j,F k,I l,F m,F n,I o,F p,F q,I r,F s,F t,I u,F v,F w,I x,F y,F z){
+       return a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z;}
 
 // __cdecl - default C calling convention
 // __cdecl is the alternate (+ cd flag) calling convention

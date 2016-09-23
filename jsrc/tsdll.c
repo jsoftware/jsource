@@ -112,6 +112,37 @@ D _stdcall d4(D a,int b,D c,int d,D e,int f,D g,int h,D i,int j,D k,int l,D m,in
 D _stdcall d5(D a,I b, D c, I d, D e, I f, D g, D* pd, F* pf, I* px, int* pi){
 	return a+b+c+d+e+f+g+pd[0]+pd[1]+pf[0]+pf[1]+px[0]+px[1]+pi[0]+pi[1];}
 
+// corner cases
+D _stdcall di1d9a(I ia,D a,D b,D c,D d,D e,D f,D g,D h,D i){
+	return ia + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di1d9b(D a,D b,D c,D d,D e,D f,D g,D h,D i,I ia){
+	return ia + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di6d9a(I ia,I ib,I ic,I id,I ie,I iF,D a,D b,D c,D d,D e,D f,D g,D h,D i){
+	return ia+ib+ic+id+ie+iF + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di6d9b(I ia,I ib,I ic,I id,I ie,D a,D b,D c,D d,D e,D f,D g,D h,D i,I iF){
+	return ia+ib+ic+id+ie+iF + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di7d9a(I ia,I ib,I ic,I id,I ie,I iF,I ig,D a,D b,D c,D d,D e,D f,D g,D h,D i){
+	return ia+ib+ic+id+ie+iF+ig + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di7d9b(I ia,I ib,I ic,I id,I ie,I iF,D a,D b,D c,D d,D e,D f,D g,D h,D i,I ig){
+	return ia+ib+ic+id+ie+iF+ig + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di8d9a(I ia,I ib,I ic,I id,I ie,I iF,I ig,I ih,D a,D b,D c,D d,D e,D f,D g,D h,D i){
+	return ia+ib+ic+id+ie+iF+ig+ih + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di8d9b(I ia,I ib,I ic,I id,I ie,I iF,I ig,D a,D b,D c,D d,D e,D f,D g,D h,D i,I ih){
+	return ia+ib+ic+id+ie+iF+ig+ih + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di9d9a(I ia,I ib,I ic,I id,I ie,I iF,I ig,I ih,I ii,D a,D b,D c,D d,D e,D f,D g,D h,D i){
+	return ia+ib+ic+id+ie+iF+ig+ih+ii + a+b+c+d+e+f+g+h+i;}
+
+D _stdcall di9d9b(I ia,I ib,I ic,I id,I ie,I iF,I ig,I ih,D a,D b,D c,D d,D e,D f,D g,D h,D i,I ii){
+	return ia+ib+ic+id+ie+iF+ig+ih+ii + a+b+c+d+e+f+g+h+i;}
+
 F _stdcall f1(F a,F b,F c,F d,F e,F f,F g,F h){
 	return a+b+c+d+e+f+g+h;}
 

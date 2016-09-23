@@ -80,6 +80,21 @@ catch.
 end.
 )
 
+NB. corner cases
+3 : 0^:(-.IFRASPI) 1
+assert. (+/>yy)=>{.z=:'di1d9a d i d d d d d d d d d' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di1d9b d d d d d d d d d d i' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di6d9a d i i i i i i d d d d d d d d d' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di6d9b d i i i i i d d d d d d d d d i' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di7d9a d i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di7d9b d i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di8d9a d i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di8d9b d i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di9d9a d i i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'di9d9b d i i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.18
+1
+)
+
 td3=: 32$'d x '
 (+/>yy)=>{.z=:('d3 d ',td3) dcd yy=:16$12.3;4
 td4=: 32$'d i '

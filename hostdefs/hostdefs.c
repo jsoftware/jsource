@@ -1,4 +1,6 @@
 #ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <regex.h>
@@ -6,6 +8,7 @@
 #include <sys/types.h>
 #else
 #include <stdio.h>
+#include <stdlib.h>
 #include <winsock.h>
 #include "../regex/rxposix.h"
 #endif
@@ -93,7 +96,9 @@ main(){
 	printf ("rm_eo_sz=: %d\n",sizeof(((regmatch_t*)0)->rm_eo));
 	puts("");
 #ifdef linux
+#ifndef ANDROID
 #define fds_bits __fds_bits
+#endif
 #endif
 	puts("");
 #ifndef _WIN32

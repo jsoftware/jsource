@@ -9,7 +9,7 @@ case $jplatform\_$1 in
 
 linux_j32)
 TARGET=libtsdll.so
-COMPILE="$common -m32 -DC_64=0 "
+COMPILE="$common -m32 "
 LINK=" -shared -Wl,-soname,libtsdll.so  -m32 -o libtsdll.so "
 ;;
 linux_j64)
@@ -19,12 +19,12 @@ LINK=" -shared -Wl,-soname,libtsdll.so  -o libtsdll.so "
 ;;
 raspberry_j32)
 TARGET=libtsdll.so
-COMPILE="$common -DC_64=0 "
+COMPILE="$common "
 LINK=" -shared -Wl,-soname,libtsdll.so -o libtsdll.so "
 ;;
 darwin_j32)
 TARGET=libtsdll.dylib
-COMPILE="$common -m32 -DC_64=0 "
+COMPILE="$common -m32 "
 LINK=" -m32 -dynamiclib -o libtsdll.dylib "
 ;;
 darwin_j64)

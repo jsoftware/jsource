@@ -6,11 +6,18 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#include <io.h>
+#include <stdlib.h>
 #else
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
 #include <stdint.h>
+
+#ifdef _MSC_VER
+#define mktemp _mktemp
+#define unlink _unlink
+#endif
 
 #include "j.h"
 #include "x.h"
@@ -31,7 +38,7 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 F1(jthost){A z;
  F1RANK(1,jthost,0);
  RZ(w=vs(w));
-#if (SYS & SYS_PCWIN)
+#if SY_WINCE
  ASSERT(0,EVDOMAIN);
 #else
 {
@@ -39,17 +46,20 @@ F1(jthost){A z;
  n=AN(w);
  GATV(t,LIT,n+5+L_tmpnam,1,0); s=CAV(t);
  fn=5+n+s; MC(s,AV(w),n);
-#ifdef ANDROID
  MC(n+s,"   > ",5L);
- const char*ftmp=getenv("TMPDIR");
- ASSERT(ftmp!=NULL,EVFACE);
- strcpy(fn,ftmp);
- strcat(fn,"/tmp.XXXXXX");
- {C* t=mktemp(fn); }
+#ifdef _MSC_VER
+ strcpy(fn,"tmp.XXXXXX");
+ {A fz; mktemp(fn);
+  RZ(fz=toutf16x(t));
+  b=!_wsystem(USAV(fz));
+ }
 #else
- MC(n+s,"   > ",5L); {C* t=tmpnam(fn);}
-#endif
+ const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
+ strcpy(fn,ftmp?ftmp:(char*)"/tmp");
+ strcat(fn,"/tmp.XXXXXX");
+ {int fd=mkstemp(fn); close(fd);}
  b=!system(s);
+#endif
  if(b){f=fopen(fn,FREAD); z=rd(f,0L,-1L); fclose(f);}
  unlink(fn);
  ASSERT(b&&f,EVFACE);
@@ -62,12 +72,18 @@ F1(jthostne){C*s;
  F1RANK(1,jthostne,0);
  RZ(w=vs(w));
  s=CAV(w);
-#if SYS & SYS_PCWIN
+#if SY_WINCE
  ASSERT(0,EVNONCE);
 #else
  {
   I b;
+#ifdef _MSC_VER
+  A fz;
+  RZ(fz=toutf16x(w));
+  b=_wsystem(USAV(fz));
+#else
   b=system(s);
+#endif
 #if !SY_64 && (SYS&SYS_LINUX)
   //Java-jnative-j.so system always returns -1
   if(jt->sm==SMJAVA&&-1==b) b=-1==system("")?0:-1;

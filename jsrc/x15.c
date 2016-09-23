@@ -57,7 +57,7 @@ typedef unsigned char       BYTE;
 
 #include "j.h"
 
-#define SY_UNIX64 (SY_64 && !defined(ANDROID) && (SY_LINUX || SY_MAC || SY_FREEBSD))
+#define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD))
 
 #if SY_WINCE
 #define HINSTANCE_ERROR 0
@@ -111,7 +111,7 @@ typedef float              DoF;
 typedef double             DoF;
 #endif
 
-#if SY_64 || defined(__arm__)  /* J64 requires special float result */
+#if SY_64 || defined(__arm__)   /* J64 requires special float result */
 typedef float (__stdcall *STDCALLF)();
 typedef float (_cdecl    *ALTCALLF)();
 #endif 
@@ -213,15 +213,16 @@ static void double_trick(double*v, I n){I i=0;
   #else
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
   #endif
- #elif SY_MAC
-  #define dtrick;
+ #elif defined(C_CD_ARMHF)
+  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12],dd[13],dd[14],dd[15]);
+ #else
+  #define dtrick ;
  #endif
 #else
  #if SY_WIN32
   #define dtrick ;
  #elif SY_LINUX
  #ifdef C_CD_ARMHF
-  #undef dtrick
   #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12],dd[13],dd[14],dd[15]);
  #else
   #define dtrick ;
@@ -230,7 +231,7 @@ static void double_trick(double*v, I n){I i=0;
   #define dtrick ;
  #elif SY_MACPPC
   #define dtrick double_trick(dd,dcnt);
- #elif SY_MAC
+ #else
   #define dtrick ;
  #endif
 #endif
@@ -873,6 +874,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  for(i=0;i<n;++i){
 #if SY_UNIX64 && defined(__x86_64__)
   if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
+#elif SY_UNIX64 && defined(__aarch64__)
+  if(dcnt>8&&dv-data==8)dv=data+dcnt;    /* v0 to v7 fully filled before x0 to x7 */
 #endif
   per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);
   if(wt&BOX){
@@ -911,10 +914,14 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
           dd[dcnt++]=(float)*(D*)xv;
 #endif
 #if SY_64 && (SY_LINUX  || SY_MAC)
-  #ifdef __PPC64__
+  #if defined(__PPC64__)
      /* +1 put the float in low bits in dv, but dd has to be D */
      *dv=0; *(((float*)dv++)+1)=(float)(dd[dcnt++]=*(D*)xv);
      /**dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv;*/
+  #elif defined(__aarch64__)
+     {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
+      if(dcnt>8){
+        if(dv-data>=8)*(float*)(dv++)=f;else *(float*)(data+dcnt-1)=f;}}
   #else /* assuming __x86_64__ */
      {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
       if(dcnt>8){ /* push the 9th F and more on to stack (must be the 7th I onward) */
@@ -935,9 +942,13 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
              dd[dcnt++]=*(D*)xv;
 #endif
 #if SY_UNIX64
-#ifdef __PPC64__
+#if defined(__PPC64__)
              /* always need to increment dv, the contents get used from the 14th D */
              *(D*)dv++=dd[dcnt++]=*(D*)xv;
+#elif defined(__aarch64__)
+             dd[dcnt++]=*(D*)xv;
+             if(dcnt>8){
+               if(dv-data>=8)*dv++=*xv;else *(data+dcnt-1)=*xv;}
 #else /* assuming __x86_64__ */
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){ /* push the 9th D and more on to stack (must be the 7th I onward) */
@@ -964,6 +975,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  CDASSERT(16>=dcnt,DELIMIT);
 #elif SY_UNIX64 && defined(__x86_64__)
  if(dcnt>8&&dv-data<6)dv=data+dcnt-2; /* update dv to point to the end */
+#elif SY_UNIX64 && defined(__aarch64__)
+ if(dcnt>8&&dv-data<=8)dv=data+dcnt;  /* update dv to point to the end */
 #elif !SY_64
  CDASSERT(dv-data<=NCDARGS,DECOUNT); /* D needs 2 I args in 32bit system, check it again. */
 #endif

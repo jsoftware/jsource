@@ -210,11 +210,9 @@ static void double_trick(double*v, I n){I i=0;
  #elif SY_UNIX64
   #ifdef __PPC64__
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12]);
-  #else
+  #elif defined(__x86_64__)||defined(__aarch64__)
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
   #endif
- #elif defined(C_CD_ARMHF)
-  #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12],dd[13],dd[14],dd[15]);
  #else
   #define dtrick ;
  #endif
@@ -876,6 +874,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
 #elif SY_UNIX64 && defined(__aarch64__)
   if(dcnt>8&&dv-data==8)dv=data+dcnt;    /* v0 to v7 fully filled before x0 to x7 */
+#elif defined(C_CD_ARMHF)
+  if((fcnt>16||dcnt>16)&&dv-data==4)dv=data+MAX(fcnt,dcnt)-12;  /* v0 to v15 fully filled before x0 to x3 */
 #endif
   per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);
   if(wt&BOX){
@@ -916,22 +916,36 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #if SY_64 && (SY_LINUX  || SY_MAC)
   #if defined(__PPC64__)
      /* +1 put the float in low bits in dv, but dd has to be D */
+#if C_LE
+     *dv=0; *(((float*)dv++))=(float)(dd[dcnt++]=*(D*)xv);
+#else
      *dv=0; *(((float*)dv++)+1)=(float)(dd[dcnt++]=*(D*)xv);
-     /**dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv;*/
+#endif
+     /* *dv=0; *(((float*)dv++)+1)=dd[dcnt++]=(float)*(D*)xv; */
   #elif defined(__aarch64__)
      {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
       if(dcnt>8){
         if(dv-data>=8)*(float*)(dv++)=f;else *(float*)(data+dcnt-1)=f;}}
-  #else /* assuming __x86_64__ */
+  #elif defined(__x86_64__)
      {f=(float)*(D*)xv; dd[dcnt]=0; *(float*)(dd+dcnt++)=f;
       if(dcnt>8){ /* push the 9th F and more on to stack (must be the 7th I onward) */
         if(dv-data>=6)*(float*)(dv++)=f;else *(float*)(data+dcnt-3)=f;}}
   #endif
 #else
 #ifdef C_CD_ARMHF
-             f=(float)*(D*)xv; dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
-             if ((0==fcnt%2) && (fcnt<dcnt)) fcnt=dcnt;
-             if ((1==fcnt%2) && (fcnt>dcnt)) dcnt=fcnt+1;
+            {f=(float)*(D*)xv; 
+             if(fcnt<16&&dcnt<=16){
+               dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
+               if ((0==fcnt%2) && (fcnt<dcnt)) fcnt=dcnt;
+               if ((1==fcnt%2) && (fcnt>dcnt)) dcnt=fcnt+1;
+             }else{
+               if(dv-data>=4){
+                 *(float*)(dv++)=f;
+                 fcnt=(dv-data)+12;
+               }else{
+                 fcnt=MAX(fcnt,dcnt);
+                 *(((float*)data)+fcnt++ -12)=f;
+             }}}
 #else
              f=(float)*(D*)xv; *dv++=*(int*)&f;
 #endif
@@ -949,7 +963,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){
                if(dv-data>=8)*dv++=*xv;else *(data+dcnt-1)=*xv;}
-#else /* assuming __x86_64__ */
+#elif defined(__x86_64__)
              dd[dcnt++]=*(D*)xv;
              if(dcnt>8){ /* push the 9th D and more on to stack (must be the 7th I onward) */
                if(dv-data>=6)*dv++=*xv;else *(data+dcnt-3)=*xv;}
@@ -957,8 +971,19 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 #if !SY_UNIX64
 #ifdef C_CD_ARMHF
-             if (dcnt==fcnt) fcnt+=2;
-             *(D*)(dd+dcnt++)= *(D*)xv; dcnt++;
+            {if(dcnt<16){
+               if (dcnt==fcnt) fcnt+=2;
+               *(D*)(dd+dcnt++)= *(D*)xv; dcnt++;
+             }else{
+               if(dv-data>=4){
+                 if((dv-data)%2)dv++;
+                 *(D*)(dv++)=*(D*)xv; dv++;
+                 dcnt=(dv-data)+12;
+               }else{
+                 dcnt=MAX(fcnt,dcnt);
+                 if(dcnt%2)dcnt++;
+                 *(D*)(data+dcnt++ -12)=*(D*)xv; dcnt++;
+             }}}
 #else
 #ifdef C_CD_ARMEL
              if((data-dv)%2) *dv++=0;   /* 8-byte alignment for double */
@@ -971,10 +996,11 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
  }}
 #ifdef C_CD_ARMHF
- CDASSERT(16>=fcnt,DELIMIT);
- CDASSERT(16>=dcnt,DELIMIT);
+// CDASSERT(16>=fcnt,DELIMIT);
+// CDASSERT(16>=dcnt,DELIMIT);
+ if((fcnt>16||dcnt>16)&&dv-data<=4)dv=data+MAX(fcnt,dcnt)-12;  /* update dv to point to the end */
 #elif SY_UNIX64 && defined(__x86_64__)
- if(dcnt>8&&dv-data<6)dv=data+dcnt-2; /* update dv to point to the end */
+ if(dcnt>8&&dv-data<=6)dv=data+dcnt-2; /* update dv to point to the end */
 #elif SY_UNIX64 && defined(__aarch64__)
  if(dcnt>8&&dv-data<=8)dv=data+dcnt;  /* update dv to point to the end */
 #elif !SY_64

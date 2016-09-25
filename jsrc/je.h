@@ -10,6 +10,8 @@ extern F1(jtaflag1);
 extern F1(jtarep);
 extern F1(jtaro);
 extern F1(jtarx);
+extern F1(jtasgzombq);
+extern F1(jtasgzombs);
 extern F1(jtassertq);
 extern F1(jtasserts);
 extern F1(jtbase1);

@@ -253,6 +253,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
   // hs is a BOX array, but its elements are VERBs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2);
+ if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

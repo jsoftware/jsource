@@ -91,6 +91,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
    x=hv->f;
    if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->g)&&CRIGHT==ID(hv->h)){f1=jtcharmapa;  flag &=~(VINPLACEOK1);}
   }
+  if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
   R fdef(CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
  fv=VAV(f); fi=fv->id; flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
@@ -134,6 +135,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
    case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
    case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
  }}
+ if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R fdef(CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
@@ -229,6 +231,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VINPLACEOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VINPLACEOK2;}
    }
    // Return the derived verb
+   if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
    R fdef(CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
   // All other cases produce an adverb
   case BD(ADV, ADV ): f1=taa; break;

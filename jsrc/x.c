@@ -173,6 +173,8 @@ F2(jtforeign){I p,q;
   case XC(9,49):  R CDERIV(CIBEAM, jtdotnamess,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,50):  R CDERIV(CIBEAM, jtxepq,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,51):  R CDERIV(CIBEAM, jtxeps,       0,            VASGSAFE,RMAX,0,   0   );
+  case XC(9,52):  R CDERIV(CIBEAM, jtasgzombq,   0,            VASGSAFE,RMAX,0,   0   );
+  case XC(9,53):  R CDERIV(CIBEAM, jtasgzombs,   0,            VFLAGNONE,RMAX,0,   0   );
 
 /* case XC(11,*):      handled at beginning */
 /* case XC(12,*):      reserved for D.H. Steinbrook tree stuff         */

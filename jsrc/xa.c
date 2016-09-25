@@ -221,8 +221,6 @@ F1(jtsysq){I j;
 
 F1(jtxepq){
  ASSERTMTV(w); 
- ASSERT(1==AR(w),EVRANK);
- ASSERT(!AN(w),EVDOMAIN); 
  R jt->xep?jt->xep:mtv;
 }
 
@@ -235,3 +233,11 @@ F1(jtxeps){
  R mtm;
 }
 
+F1(jtasgzombq){ASSERTMTV(w); R sc(jt->asgzomblevel);}
+
+F1(jtasgzombs){I k; 
+ RE(k=i0(w)); 
+ ASSERT(0<=k&&k<=2,EVDOMAIN);
+ jt->asgzomblevel=(C)k;
+ R mtm;
+}

@@ -274,6 +274,7 @@ f =: 3 : 0"0 '123'
 ('abc11d' , 'abc22d' ,: 'abc33d') -: f
 
 NB. Verify inplacing works in forks, including nvv forks
+9!:53 (0)
 1120000 > 7!:2 '(i. , ]) 100000'
 'lrlr' -: (1 {. 'l') (, , ,) (1 {. 'r')
 (10000 # 'lrlr') -: (10000 # 'l') (, , ,) (10000 # 'r')
@@ -285,6 +286,20 @@ NB. Verify inplacing works in forks, including nvv forks
 b =: 7
 0 7 14 21 28 -: (b * ])"0 i. 5  NB. ensure name in nvv not overwritten
 b -: 7
+9!:53 (0)
+a =: 10000#'a'
+3000 < 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+3000 < 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+nb =: ('b' ,~ [)
+3000 < 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace  but not with 9!:53 (0)
+a -: (10000#'a'),'bbb'
+b =: 'c'
+3000 < 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
+b -: 'c'
+a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
+a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+9!:53 (1)  NB. Now they should inplace
 a =: 10000#'a'
 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
@@ -305,7 +320,21 @@ ipexp =: 3 : 0
 0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
 b =. 7
 0 7 14 21 28 -: (b * ])"0 i. 5  NB. ensure name in nvv not overwritten
-b -. 7
+b -: 7
+9!:53 (0)
+a =. 10000#'a'
+3000 < 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+3000 < 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+nb =. ('b' ,~ [)
+3000 < 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace  but not with 9!:53 (0)
+a -: (10000#'a'),'bbb'
+b =. 'c'
+3000 < 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
+b -: 'c'
+a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
+a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+9!:53 (1)
 a =. 10000#'a'
 3000 > 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
 3000 > 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too
@@ -321,6 +350,7 @@ a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
 )
 ipexp''
 ipexp''
+9!:53 (0)
 
 a =: 'abc'
 'abcbabcb' -: a (, , ,) 'b'
@@ -346,23 +376,41 @@ NB. hook
 NB. u@v
 'b' -: (10000#'a') {:@, 'b'
 20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
+9!:53 (0)
+a =: 10000#'c'
+3000 < 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+9!:53 (1)
 a =: 10000#'c'
 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 
 NB. u&v
 a =: i. 1000
 0 1 2 3 4 -: ($0) {.&(5 ,~ ]) a
+9!:53 (0)
+a =: i. 1000
+3000 < 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+9!:53 (1)
 a =: i. 1000
 3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
 
 NB. u@:v
 'b' -: (10000#'a') {:@:, 'b'
 20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
+9!:53 (0)
+a =: 10000#'c'
+3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+9!:53 (1)
 a =: 10000#'c'
 3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 
 NB. u&n
 20000 > 7!:2 ',&''a'' 10000#''b'''
+a =: 10000#'a'
+9!:53 (0)
+a =: 10000#'a'
+('c' ,~ 10000#'a') -: a =: ,&'c' a
+2000 < 7!:2 'a =: ,&({.''c'') a'
+9!:53 (1)
 a =: 10000#'a'
 ('c' ,~ 10000#'a') -: a =: ,&'c' a
 2000 > 7!:2 'a =: ,&({.''c'') a'
@@ -372,22 +420,42 @@ NB. m&v
 
 NB. u&.v
 20000 > 7!:2 ',&''b''&.] 10000#''a'''
+9!:53 (0)
+a =: 10000#5
+(6 ,~ 10000#5) -: a =: ,&6&.] a
+3000 < 7!:2 'a =: ,&6&.] a'
+3000 < 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
+a =: 10000#'a'
+22000 < 7!:2 'a =: ]&.(,&({.''b'')) a'
+22000 < 7!:2 'a =: ]&.(,&(''b'')) a'
+9!:53 (1)
 a =: 10000#5
 (6 ,~ 10000#5) -: a =: ,&6&.] a
 3000 > 7!:2 'a =: ,&6&.] a'
 3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
 22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
+22000 > 7!:2 'a =: ]&.(,&(''b'')) a'
 
 NB. u&.:v
 20000 > 7!:2 ',&''b''&.:] 10000#''a'''
+9!:53 (0)
+a =: 10000#5
+(6 ,~ 10000#5) -: a =: ,&6&.:] a
+3000 < 7!:2 'a =: ,&6&.:] a'
+3000 < 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+a =: 10000#'a'
+22000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
+22000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
+9!:53 (1)
 a =: 10000#5
 (6 ,~ 10000#5) -: a =: ,&6&.:] a
 3000 > 7!:2 'a =: ,&6&.:] a'
 3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
-22000 > 7!:2 ',&''b''&.:(,&''c'' :. (,&''d'')) 10000#''a'''  NB. all verbs inplaceable
 a =: 10000#'a'
 22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
+22000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
+9!:53 (0)
 
 
 

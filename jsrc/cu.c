@@ -92,11 +92,12 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
     f2=b&&!b1?jtbitwisechar:u->id==CMAX||u->id==CMIN?jtcharfn2:jtunder2;
     flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
  }}
+ if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R CDERIV(CUNDER,f1,f2,flag,r,r,r);
 }
 
 F2(jtundco){
  ASSERTVV(a,w); 
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
- R CDERIV(CUNDCO,jtundco1,jtundco2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
+ R CDERIV(CUNDCO,jtundco1,jtundco2,((jt->asgzomblevel?VAV(a)->flag&VAV(w)->flag&VASGSAFE:0) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
 }

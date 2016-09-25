@@ -404,7 +404,12 @@ foo =. 3 : 0
  z=.z,sp 'xyz=. _456 (5)}xyz'   NB. in place
  z=.z,sp 'xyz=. _789 (6})xyz'   NB. in place
  z=.z,sp 'qqq=. _123 (7)}xyz'   NB. create copy
- assert. xyz -: 0 1 2 3 _123 _456 _789,7}.i.10000
+ z=.z,sp 'xyz=. 8 9 >:@[`[`]} xyz'  NB. in place
+ z=.z,sp 'xyz=. xyz >:@]`]`[} 11 12'  NB. in place
+ n =. 14 15
+ z=.z,sp 'xyz=. n >:@(17 ,~ [)`(16 ,~ [)`]} xyz'  NB. in place but only the amend
+ assert. n -: 14 15
+ assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, 18}.i.10000
  assert. pqr -: i. 10000
  z
 )
@@ -421,8 +426,27 @@ goo =. 3 : 0
  z
 )
 
-(68500 2900 2900 68500*2-b32) > t=.foo 1
-(68500 2900 2900 68500*2-b32) > t=.goo 1
+hoo =. 3 : 0
+ pqr=.xyz =: i.10000
+ z=:''
+ z=:z,sp 'xyz=: _123 (4)}xyz'   NB. create copy
+ z=:z,sp 'xyz=: _456 (5)}xyz'   NB. in place
+ z=:z,sp 'xyz=: _789 (6})xyz'   NB. in place
+ z=:z,sp 'qqq=: _123 (7)}xyz'   NB. create copy
+ z=:z,sp 'xyz=: 8 9 >:@[`[`]} xyz'  NB. in place
+ z=:z,sp 'xyz=: xyz >:@]`]`[} 11 12'  NB. in place
+ n =: 14 15
+ z=:z,sp 'xyz=: n >:@(17 ,~ [)`(16 ,~ [)`]} xyz'  NB. in place but only the amend
+ assert. n -: 14 15
+ assert. xyz -: 0 1 2 3 _123 _456 _789 7 9 10 10 12 13 13 15 16 18 17, 18}.i.10000
+ assert. pqr -: i. 10000
+ z
+)
+
+
+(68500 2900 2900 68500 2900 2900 5200*2-b32) > t=:foo 1
+(68500 2900 2900 68500*2-b32) > t=:goo 1
+(68500 2900 2900 68500 2900 2900 5200*2-b32) > t=:hoo 1
 
 abc =. save =. i.10000
 (68500*2-b32) > t1=.sp 'abc=. _123 (0)  }abc'  NB. create copy
@@ -470,5 +494,5 @@ a =: i. 4
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 i ia j k p q save sp t t t0 t1 t2 test x xx y yy z z1 zz '
+4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save sp t t t0 t1 t2 test x xx xyz y yy z z1 zz '
 

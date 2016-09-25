@@ -5,9 +5,9 @@
 
 #include "j.h"
 
-
-static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&1)),(f2)((J)((I)jt|(((I)jtinplace<<1)+(I)jtinplace)),w,w,fs));}
-static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&3)),(f2)((J)((I)jt|(((((I)jtinplace<<2)+(I)jtinplace)>>1)&3)),w,a,fs));}
+// create inplace bits as copy of W, or swap A & W
+static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&JTINPLACEW)),(f2)((J)((I)jt|(((I)jtinplace<<1)+(I)jtinplace)),w,w,fs));}
+static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)((I)jt|(((((I)jtinplace<<2)+(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
 
 F1(jtswap){A y;C*s;I n;
  RZ(w); 

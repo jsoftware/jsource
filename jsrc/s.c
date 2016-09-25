@@ -387,7 +387,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  if(jt->assignsym) {
   ASSERT(((I)g&ASGNLOCAL||!probelocal(a)),EVDOMAIN)  //  if global assignment, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
-  jt->assignsym=0; jt->zombieval = 0;   // clear until next use.
+  CLEARZOMBIE   // clear until next use.
  } else {
   n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
   if(n==m)ASSERT(!(jt->local&&g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local

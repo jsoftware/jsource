@@ -103,6 +103,8 @@ typedef I SI;
 /* Types for AT(x) field of type A                                         */
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
 
+// NOTE!! the length of NOUN types must be power-of-2 multiples because of jtamend2
+
 #define B01X 0
 #define B01             ((I)1L<<B01X)           /* B  boolean                      */
 #define B01SIZE         sizeof(B)       // length of 1 atom
@@ -397,8 +399,8 @@ typedef struct {I a,e,i,x;} P;
 /* i: index matrix, columns correspond to a                                */
 /* x: value cells corresponding to rows of i                               */
 
-#define SPA(p,a)        ((A)((p)->a+(C*)(p)))
-#define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ(p->a+(C*)(p));}
+#define SPA(p,a)        ((A)((p)->a+(C*)(p)))  // a is one of aeix; result is A pointer for that component
+#define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
 
 
 /* performance monitoring stuff */

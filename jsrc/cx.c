@@ -128,7 +128,10 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // enough space there, just use a free block
  if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
  else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
-
+ // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
+ // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
+ // in preventing it - still not a full fix, since invalid inplacing may have been done already
+ CLEARZOMBIE
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  jt->xdefn=1;   // Indicate explicit definition running
@@ -565,7 +568,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    if((tt=AT(t=lv[j]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
     I4 compcount=0;  // number of comparisons before match
     // lv[j] is a simplename.  We will install the bucket/index fields
-// obsolete     if(NAV(t)->flag&NMDOT)RZ(t=lv[j]=ca(t))
     NM *tn = NAV(t);  // point to the NM part of the name block
     // Get the bucket number by reproducing the calculation in the symbol-table routine
     tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash

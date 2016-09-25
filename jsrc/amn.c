@@ -51,6 +51,7 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
 }    /* index i1 (in index matrix) and address i2 (in data array) from index array */
 
 static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,h,m,n;P*zp;
+ // put sparse axi into names a,x,y; remember x&y as x0,y0
  zp=PAV(z); a=SPA(zp,a); x=x0=SPA(zp,x); y=y0=SPA(zp,i);
  n=1; h=*(AS(ind)+AR(ind)-1);
  RZ(ai=IX(h));
@@ -68,8 +69,12 @@ static A jtzpadn(J jt,A z,A ind,B ip){A a,ai,i1,p,p1,q,t,x,x0,y,y0,y1;B*b;I c,d,
  }
  if(m=*AS(p)){  /* new cells being added */
   RZ(y=over(y,p)); RZ(q=grade1(y)); RZ(y=from(q,y));
-  RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e))))); 
-  if(ip){ra(y); ra(x); fa(y0); fa(x0);}
+  RZ(t=shape(x)); *AV(t)=m; RZ(x=from(q,over(x,reshape(t,SPA(zp,e)))));
+  // if z is assigned to a name, the use counts need to be adjusted: the old ones need to be decremented
+  // to remove the assignment, and the new ones need to be incremented to prevent them from being freed
+  // until the name is freed.  We detect the case from jt->zombieval being set to the address of z
+  // (if the block could not be inplaced, z will have been changed)
+  if(jt->assignsym&&jt->assignsym->val==z){ra(y); ra(x); fa(y0); fa(x0);}
   SPB(zp,i,y); SPB(zp,x,x);
  }
  R z;

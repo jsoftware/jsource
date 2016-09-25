@@ -15,12 +15,12 @@
 #define SSRDU(w) (*(C4*)CAV(w))
 
 // Support for Speedy Singletons
-#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)((I)jtf&-4); // header for function definition
-#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)((I)jtf&-4);   // header for function definition
+#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA)); // header for function definition
+#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
 
 // An argument can be inplaced if it is enabled in the block AND in the call
-#define AINPLACE ((I)jtf&2 && ACIPISOK(a))
-#define WINPLACE ((I)jtf&1 && ACIPISOK(w))
+#define AINPLACE ((I)jtf&JTINPLACEA && ACIPISOK(a))
+#define WINPLACE ((I)jtf&JTINPLACEW && ACIPISOK(w))
 
 // #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
 #define SSINGENC(a,w) ((UNSAFE(a))+((UNSAFE(w))<<2))   // Mask off SAFE bits

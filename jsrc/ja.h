@@ -226,6 +226,8 @@
 #define dfrep(x)                    jtdfrep(jt,(x))
 #define dfs1(x,y)                   jtdfs1(jt,(x),(y)) 
 #define dfs2(x,y,z)                 jtdfs2(jt,(x),(y),(z)) 
+#define dfs1ip(x,y)                 jtdfs1(jtinplace,(x),(y)) 
+#define dfs2ip(x,y,z)               jtdfs2(jtinplace,(x),(y),(z)) 
 #define dfss1(x,y,i)                jtdfss1(jt,(x),(y),(i))  
 #define dfss2(x,y,z,i)              jtdfss2(jt,(x),(y),(z),(i))  
 #define dgamma(x)                   jtdgamma(jt,(x))
@@ -780,7 +782,8 @@
 #define rank2ex(x0,x1,x2,x3,x4,x5)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rat(x)                      jtrat(jt,(x))
-#define rat1(x)                     {ACINCR(x); tpush1(x);}
+#define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
+#define rat1s(x)                    jtrat1s(jt,(x))  // subroutine version
 #define ravel(x)                    jtravel(jt,(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    
@@ -1074,6 +1077,7 @@
 #define tpop(x)                     jttpop(jt,(x))
 // if tg() fails, tpush leaves nextpushx unchanged
 #define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
+// tpush1 is like tpush, but it does not recur to lower levels
 #define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     

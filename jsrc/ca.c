@@ -75,27 +75,24 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpo
 
 // If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
 static CS1IP(on1, \
-{A protw = (A)((I)w+((I)jtinplace&1)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs);  /* inplace g */ \
+{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs);  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+1) ):jt,gx,fs);} \
+z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
 ,0113)
 static CS2IP(jtupon2, \
-{A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); A gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs);  /* inplace g */ \
+{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs);  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+1) ):jt,gx,fs);} \
+z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
 ,0114)
-
-// obsolete static CS1(on1,  CALL1(f1,CALL1(g1,w,gs),fs),0113)
-// obsolete static CS2(jtupon2,CALL1(f1,CALL2(g2,a,w,gs),fs),0114)
 
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
  PREF2(on2);
  // here for execution on a single cell
- A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2));
+ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
  // take inplaceability of each monad from the corresponding dyad argument
- gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~2):jt,w,gs);
- ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&2)>>1)):jt,a,gs);
- z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((gw!=protw?2:0)+(ga!=prota))) ):jt,ga,gw,fs); 
+ gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);
+ ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs);
+ z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs); 
  EPILOG(z);
 }
 
@@ -205,7 +202,7 @@ F2(jtampco){AF f1=on1;C c,d;I flag;V*wv;
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
-static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+1)&-2),w,gs,fs);}
+static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 
 static DF1(ixfixedleft  ){V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
 static DF1(ixfixedright ){V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
@@ -229,8 +226,13 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
   case NN: ASSERT(0,EVDOMAIN);
   case NV:
    f1=withl; v=VAV(w); c=v->id;
-   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
+   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
    flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+   // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
+   // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
+   // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+   // assigned to a name, which will protects values inside it.
+   rat1s(a);
    if(AN(a)&&AR(a)){
     if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f); 
     mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
@@ -246,7 +248,13 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
   case VN: 
    f1=withr; v=VAV(a);
    // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
+   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
    flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+   // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
+   // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
+   // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+   // assigned to a name, which will protects values inside it.
+   rat1s(w);
    if(AN(w)&&AR(w)){
     c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
     if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */

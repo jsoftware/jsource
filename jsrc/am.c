@@ -110,30 +110,51 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   default: ASSERTSYS(0,"casev");
 }}   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
-
-A jtmerge2(J jt,A a,A w,A ind,B ip){A z;I an,ar,*as,at,in,ir,*iv,k,t,wn,wt;
+// Handle a ind} w after indices have been converted to integer
+static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn,wt;
  RZ(a&&w&&ind);
+ // ?n=#atoms, ?t=type, ?r=rank, ?s->shape where ?=awi for xym
  an=AN(a); at=AT(a); ar=AR(a); as=AS(a); 
  wn=AN(w); wt=AT(w);
  in=AN(ind); ir=AR(ind); iv=AV(ind);
- ASSERT(!an||!wn||HOMO(at,wt),EVDOMAIN);
- ASSERT(ar<=ir,EVRANK);
+ ASSERT(!an||!wn||HOMO(at,wt),EVDOMAIN);  // error if xy not empty and not compatible
+ ASSERT(ar<=ir,EVRANK);   // require shape of x to be a suffix of the shape of m
  ASSERT(!ICMP(as,AS(ind)+ir-ar,ar),EVLENGTH);
- if(!wn)R ca(w);
- RE(t=an&&wn?maxtype(at,wt):wt);
- if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));
- if(ip&&TYPESEQ(t,wt)&&(!(t&BOX)||AFNJA&AFLAG(w))){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
+ if(!wn)R ca(w);  // if y empty, clone it & return.  It's small.  Ignore inplacing
+ RE(t=an?maxtype(at,wt):wt);  // get the type of the result: max of types, but if x empty, leave y as is
+ if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so
+ // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
+ // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a
+ // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
+ I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w))))
+      &&TYPESEQ(t,wt)&&(wt&DIRECT||((t&BOX)&&AFNJA&AFLAG(w)))&&w!=a&&w!=ind;
+ if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
+ // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
  if(ip&&t&BOX&&AFNJA&AFLAG(w)){A*av,t,x,y;A1*zv;I ad,*tv;
-  ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);
-  GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);
-  DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);
-  if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}
-  DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););
+  // in-placeable boxed memory-mapped array
+  ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
+  GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);   // allocate an array of pointers, one per item of x; clear to 0
+  DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);   // copy the items of x (repeated as needed) into the smm area of result
+  if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
+  DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););  // replace pointer to old block with (relative) pointer to new, then free the (absolute) old in smm area
  }else{
+  // normal assignment - just copy the items.  Relocate relative blocks
   if(ARELATIVE(a))RZ(a=rca(a));
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);          DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
-  else            {C*av=CAV(a),*zv=CAV(z); k=bp(t); DO(in, MC(zv+k*iv[i],av+k*(i%an),k); );}
+  else{
+   // Here for non-relative blocks.
+   C* RESTRICT av0=CAV(a); I k=bp(t); C * RESTRICT avn=av0+(an*k);
+   switch(k){
+   case sizeof(C):
+    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
+   case sizeof(I):
+    {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
+   // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
+   default:
+    {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
+   }
+  }
  }
  R z;
 }
@@ -179,39 +200,52 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
 /* 2 amendn2 EPILOG/gc                      */
 /* 1 jdo     tpop                           */
 
-static A jtamendn2(J jt,A a,A w,A ind,B ip){PROLOG(0007);A e,z;B b,sa,sw;I at,ir,it,t,t1,wt;P*p;
+// Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
+static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z;I sa,sw; B b;I at,ir,it,t,t1,wt;P*p;
+ A ind=VAV(self)->f;
  RZ(a&&w&&ind);
- at=AT(a); sa=1&&at&SPARSE; if(sa)at=DTYPE(at);
- wt=AT(w); sw=1&&wt&SPARSE; if(sw)wt=DTYPE(wt);
+ // ?t = underlying type of ?, s?=nonzero if sparse
+ at=AT(a); sa=at&SPARSE; if(sa)at=DTYPE(at);
+ wt=AT(w); sw=wt&SPARSE; if(sw)wt=DTYPE(wt);
  it=AT(ind); ir=AR(ind);
  ASSERT(it&NUMERIC+BOX||!AN(ind),EVDOMAIN);
- ASSERT(it&DENSE,EVNONCE);
+ ASSERT(it&DENSE,EVNONCE);  // m must be dense, and numeric or boxed
  if(sw){
+  // Sparse w.  a an t must be compatible; sparse w must not be boxed
   ASSERT(!(wt&BOX),EVNONCE); ASSERT(HOMO(at,wt),EVDOMAIN);
+  // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be
   RE(t=maxtype(at,wt)); t1=STYPE(t); RZ(a=TYPESEQ(t,at)?a:cvt(sa?t1:t,a));
-  if(ip=ip&&TYPESEQ(t,wt)&&!(t1&BOX)){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
+  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
+  // DIRECT or this is a boxed memory-mapped array
+  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))
+      &&TYPESEQ(t,wt)&&(t&DIRECT);
+  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
+  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
+  // call the routine to handle the sparse amend
   p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
   p=PAV(a); if(sa&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); sa=0;}
   if(it&NUMERIC||!ir)z=(b?jtam1e:sa?jtam1sp:jtam1a)(jt,a,z,it&NUMERIC?box(ind):ope(ind),ip);
   else{RE(aindex(ind,z,0L,&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:sa?jtamnsp:jtamna)(jt,a,z,ind,ip);}
- }else z=merge2(sa?denseit(a):a,w,jstd(w,ind),ip);
+ }else{
+  // Dense w.  Convert indexes to integer indexes, transfer to merge2 to do the work
+  z=jtmerge2(jtinplace,sa?denseit(a):a,w,jstd(w,ind));
+ }
  EPILOG(z);
 }
 
+#if 0
 static DF2(amccn2){R amendn2(a,w,VAV(self)->f,0);}
 static DF2(amipn2){R amendn2(a,w,VAV(self)->f,(B)(!(AT(w)&RAT+XNUM)&&(ACUC1>=AC(w)||AFNJA&AFLAG(w))));}
+#endif
 
-static DF2(amccv2){DECLF; 
+// Execution of x u} y.  Call u to get the indices, then
+// call merge2 to do the merge.  Pass inplaceability into merge2.
+static DF2(amccv2){F2PREFIP;DECLF; 
  RZ(a&&w); 
- ASSERT(DENSE&AT(w),EVNONCE);
- R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),0);
+ ASSERT(DENSE&AT(w),EVNONCE);  // u} not supported for sparse
+ R jtmerge2(jtinplace,a,w,pind(AN(w),CALL2(f2,a,w,fs)));
 }
 
-static DF2(amipv2){DECLF; 
- RZ(a&&w); 
- ASSERT(DENSE&AT(w),EVNONCE);
- R merge2(a,w,pind(AN(w),CALL2(f2,a,w,fs)),(B)(!(AT(w)&RAT+XNUM)&&(ACUC1>=AC(w)||AFNJA&AFLAG(w))));
-}
 
 static DF1(mergn1){       R merge1(w,VAV(self)->f);}
 static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
@@ -270,16 +304,13 @@ B jtgerexact(J jt, A w){
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
 
-static A jtamend(J jt,A w,B ip){
+// u} handling.  This is not inplaceable but the derived verb is
+F1(jtamend){
  RZ(w);
- if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,ip?amipv2:amccv2,VFLAGNONE, RMAX,RMAX,RMAX);
- else if(ger(w))R gadv(w,CRBRACE);
- else           R ADERIV(CRBRACE,mergn1,ip?amipn2:amccn2,VFLAGNONE, RMAX,RMAX,RMAX);
+ if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VINPLACEOK2, RMAX,RMAX,RMAX);  // verb} 
+ else if(ger(w))R gadv(w,CRBRACE);   // v0`v1`v2}
+ else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VINPLACEOK2, RMAX,RMAX,RMAX);  // m}
 }
-
-F1(jtrbrace){R amend(w,0);}
-DF1(jtamip){ R amend(w,!jtpiplocalerr(jt, self)); }
-
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}
 

@@ -214,74 +214,17 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  R z;
 }    /* a,:"r w */
 
-// Return 0 if it's ok to in-place this name, 1 if not.  It's not if the name in h
-// exists (meaning it is target is local assignment) but is not defined
-I jtpiplocalerr(J jt, A self){
-  A nm = VAV(self)->h;
-  if(nm&&jt->local)R !probe(nm,jt->local);  // if name defined, and there are local names, see if it's defined
-  R 0;  // OK otherwise
-}
-
-#if 0  // obsolete
-// append-in-place.  We can only append if the buffer is not in use more than once, and if the
-// datatype is direct.  Also, we can't append if the name was a local name that is not defined,
-// since that would append-in-place to the global value.  For mapped files we don't count the name
-// as a reference
-DF2(jtapip){RZ(a&&w);R AC(a)>(ACUSECOUNT*(AFNJA&AFLAG(a)?2:1))||!(DIRECT&AT(a))||jtpiplocalerr(jt,self)?over(a,w):apipx(a,w);}
-
-F2(jtapipx){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
- RZ(a&&w);
- // Get type/rank/shape of a & w
- at=AT(a); ar=AR(a); as=AS(a);
- wt=AT(w); wr=AR(w); ws=AS(w); p=-1;
- if(AN(a)&&ar&&ar>=wr&&!TYPESGT(wt,at)&&5e8>AC(a)){
-  // a is a nonempty array, and the items of the result will have the rank of items of a,
-  // and a does not need to be promoted in precision, and a is not a canned constant (this last test
-  // is not needed since we wouldn't be here if it were).  Check the item sizes.  Set p=-1 if the
-  // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p=1 if items of w require fill
-  // If there are extra axes in a, they will become unit axes of w.  Check the axes that are in both a and w,
-  // to see if any require extension in a
-  p=0; u=as+ar-wr; v=ws; if(ar==wr){++u; ++v;}
-  DO(wr-(ar==wr), k=*u++-*v++; if(0<k)p=1; else if(0>k){p=-1; break;});
-  // Calculate k, the size of an item of a; ak, the number of bytes in a; wm, the number of result-items in w
-  // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
-  // items of w (after its conversion to the precision of a)
-  k=bp(at); ak=k*AN(a); wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;
- }
- // If there is room in a to fit w, copy it in
- if(0<=p&&AM(a)>=ak+wk+(1&&at&LAST0)){
-  // If w must change precision, do
-  if(TYPESGT(at,wt))RZ(w=cvt(at,w));
-  // If the items of w must be padded to the result item-size, do so.
-  // If the items of w are items of the result, we simply extend each to the shape of
-  // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
-  // item of the result, and it is extended to the size of a corresponding cell of a.  The extra
-  // rank is implicit in the shape of a.
-  if(p){RZ(h=vec(INT,wr,as+ar-wr)); if(ar==wr)*AV(h)=*ws; RZ(w=take(h,w));}
-  av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
-  // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
-  // copy fill to the output area.  This (1) copies too much: it should start after where the w data will go;
-  // (2) it copies too often (if there is only 1 cell in a)
-  if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk,av,k,jt->fillv);}
-  // Copy in the actual data, replicating if w is atomic
-  if(wr)MC(av,wv,k*AN(w)); else mvc(wk,av,k,wv);
-  // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
-  *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
- }else RZ(a=over(a,w));  // if there was trouble, failover to non-in-place code
- R a;
-}    /* append in place if possible */
-
-#else
 // Append, including tests for append-in-place
-A jtapip(J jtf, A a, A w, A self){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
- RZ(a&&w); J jt = (J)((I)jtf&-4);  // create unflagged true jt address
+A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
+ RZ(a&&w);
  // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
  // being assigned is the same as a, and the usecount of a allows inplacing; or
  // the argument a is marked inplaceable.  Usecount of <1 is inplaceable, and for memory-mapped nouns, 2 is also OK since
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
- // In all cases we allow only DIRECT types (I don't know why) 
- if((((I)jtf&2) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&DIRECT) {
+ // This is 'loose' inplacing, which doesn't scruple about globals appearing on the stack elsewhere
+ // In all cases we allow only DIRECT types (I don't know why)
+ if((((I)jtinplace&JTINPLACEA) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&DIRECT) {
   // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
   // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes
   // in the shape that are part of the shape of an item), or if a is atomic (because
@@ -331,4 +274,3 @@ A jtapip(J jtf, A a, A w, A self){A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn
  }
  R(over(a,w));  // if there was trouble, failover to non-in-place code
 }    /* append in place if possible */
-#endif

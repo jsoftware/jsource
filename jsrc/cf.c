@@ -10,26 +10,26 @@
 #define TDECL           V*sv=VAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
 
 // handle fork, with support for in-place operations
-#define FOLK1           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&1)); hx=CALL1(h1,  w,hs); /* the call to h is not inplaceable */ \
+#define FOLK1           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); hx=CALL1(h1,  w,hs); /* the call to h is not inplaceable */ \
 /* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
 fx=(f1)((VAV(fs)->flag&VINPLACEOK1&&hx!=w)?jtinplace:jt,  w,fs); /* CALL1 with variable jt */ \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
-z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw?2:0)+(hx!=protw))) ):jt,fx,hx,gs);}
+z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw?JTINPLACEA:0)+(hx!=protw?JTINPLACEW:0))) ):jt,fx,hx,gs);}
 
-#define FOLK2           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); hx=CALL2(h2,a,w,hs); /* the call to h is not inplaceable */  \
+#define FOLK2           {A fx,hx; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); hx=CALL2(h2,a,w,hs); /* the call to h is not inplaceable */  \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
-fx=(f2)((VAV(fs)->flag&VINPLACEOK2)?((J)((I)jtinplace&((hx==w?~1:~0)&(hx==a?~2:~0)))):jt ,a,w,fs); \
+fx=(f2)((VAV(fs)->flag&VINPLACEOK2)?((J)((I)jtinplace&((hx==w?~JTINPLACEW:~0)&(hx==a?~JTINPLACEA:~0)))):jt ,a,w,fs); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed x/y */ \
-z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw&&fx!=prota?2:0)+(hx!=protw&&hx!=prota))) ):jt,fx,hx,gs);}
+z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw&&fx!=prota?JTINPLACEA:0)+(hx!=protw&&hx!=prota?JTINPLACEW:0))) ):jt,fx,hx,gs);}
 
 // similar for cap, but now we can inplace the call to h
-#define CAP1            {A hx;  A protw = (A)((I)w+((I)jtinplace&1)); hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs); \
+#define CAP1            {A hx;  A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
-z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw?( (J)((I)jt|1) ):jt,hx,gs);}
-#define CAP2            {A hx; A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);  \
-z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw&&hx!=prota?( (J)((I)jt|1) ):jt,hx,gs);}
+z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw?( (J)((I)jt|JTINPLACEW) ):jt,hx,gs);}
+#define CAP2            {A hx; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);  \
+z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw&&hx!=prota?( (J)((I)jt|JTINPLACEW) ):jt,hx,gs);}
 
 static DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
 static DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
@@ -50,11 +50,11 @@ static DF2(jtcorx2){F2PREFIP;DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,f
 
 // nvv forks.  n must not be inplaced, since the fork may be reused.  hx can be inplaced unless protected by caller.
 static DF1(jtnvv1){F1PREFIP;DECLFGH;PROLOG(0032);
- A protw = (A)((I)w+((I)jtinplace&1)); A hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs);
- A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw?( (J)((I)jt|1) ):jt,fs,hx,gs); EPILOG(z);}
+ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A hx=(h1)((VAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs);
+ A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw?( (J)((I)jt|JTINPLACEW) ):jt,fs,hx,gs); EPILOG(z);}
 static DF2(jtnvv2){F1PREFIP;DECLFGH;PROLOG(0033);
- A protw = (A)((I)w+((I)jtinplace&1)); A prota = (A)((I)a+((I)jtinplace&2)); A hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);
- A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw&&hx!=prota?( (J)((I)jt|1) ):jt,fs,hx,gs); EPILOG(z);}
+ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs);
+ A z=(g2)(VAV(gs)->flag&VINPLACEOK2&&hx!=protw&&hx!=prota?( (J)((I)jt|JTINPLACEW) ):jt,fs,hx,gs); EPILOG(z);}
 
 static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  RZ(a&&w);
@@ -81,6 +81,11 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2
  flag=(VINPLACEOK1|VINPLACEOK2)+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
  if(NOUN&AT(f)){  /* y {~ x i. ] */
+  // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
+  // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
+  // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+  // assigned to a name, which will protects values inside it.
+  rat1s(f);  // This justifies keeping the result ASGSAFE
   f1=jtnvv1;
   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->f)&&hi==CFORK){
    x=hv->f;
@@ -139,14 +144,14 @@ static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
 // If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
 static CS1IP(jthook1, \
-{A protw = (A)((I)w+((I)jtinplace&1)); A gx=CALL1(g1,w,gs);  /* Cannot inplace the call to g */ \
-/* inplace gx unless it is protected; inplace w if the caller allowed it*/ \
-z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(2*((I)jtinplace&1)+(gx!=protw))) ):jt,w,gx,fs);} \
+{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=CALL1(g1,w,gs);  /* Cannot inplace the call to g */ \
+/* inplace gx unless it is protected; inplace w (as left arg) if the caller allowed it*/ \
+z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs);} \
 ,0111)
 static CS2IP(jthook2, \
-{A protw = (A)((I)w+((I)jtinplace&1)); A gx=CALL1(g1,w,gs);  /* Cannot inplace the call to g */ \
-/* inplace gx unless it is protected; inplace w if the caller allowed it*/ \
-z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&2)+(gx!=protw))) ):jt,a,gx,fs);} \
+{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);  /* Can inplace the call to g for the dyad; it has w only */ \
+/* inplace gx unless it is protected; inplace a if the caller allowed it*/ \
+z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs);} \
 ,0112)
 
 

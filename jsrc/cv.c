@@ -70,7 +70,6 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CROT: case CDOLLAR: 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
- // obsolete  R fdef(CFIT,VERB,(AF)(jtfitfill1),(AF)(jtfitfill2),a,w ,0L,sv->flag&(VINPLACEOK1|VINPLACEOK2),(I)(m),(I)(l),(I)(r)); 
    R CDERIV(CFIT,jtfitfill1,jtfitfill2,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2),m,l,r); // preserve INPLACE flags
   case CTHORN:
    RE(w=sc(k=i0(w)));

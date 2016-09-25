@@ -70,12 +70,18 @@ typedef struct {
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
  B    stswitched;       /* called fn switched locale                       */
+ B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
+ B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
  A    symp;             /* symbol pool array                               */
  I    rela;             /* if a is relative, a itself; else 0              */
  I    relw;             /* if w is relative, w itself; else 0              */
+ A*   nvrav;            /* AAV(jt->nvra)                                   */
+ I    nvrtop;           /* top of nvr stack; # valid entries               */
+
+// --- end cache linepair 2
 
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
@@ -179,8 +185,6 @@ typedef struct {
  B    nla[256];         /* namelist names mask                             */
  I    nlt;              /* namelist type  mask                             */
  A    nvra;             /* data blocks that are in execution somewhere     */
- A*   nvrav;            /* AAV(jt->nvra)                                   */
- I    nvrtop;           /* top of nvr stack; # valid entries               */
  I    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
  I    outeol;           /* output: EOL sequence code                       */
@@ -246,8 +250,6 @@ typedef struct {
  B    nflag;            /* 1 if space required before name                 */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
- B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
- B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tostdout;         /* 1 if output to stdout                           */

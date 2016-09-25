@@ -233,7 +233,7 @@ static void auditnum(){
 // to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name.
 //  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h) 
 #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE) \
-   &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(s->val)&DIRECT&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
+   &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:
@@ -248,8 +248,8 @@ static void auditnum(){
 
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb.  zomb is 1 if it is OK to set assignsym/zombieval
-#define DFSIP1(v,w,zomb) if(VAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|1),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|3),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w,zomb) if(VAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  We set the
 // in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
@@ -288,13 +288,11 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
    if(s=syrd(y,0L)) {     // Resolve the name.
      A sv;  // pointer to value block for the name
      RZ(sv = s->val);  // symbol table entry, but no value.
-// obsolete      if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
      if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value
       y=sv;
      } else RZ(y = namerefacv(y, s));   // Replace other acv with reference
    } else {
      // undefined name.
-// obsolete      ASSERT(!(NMDOT&NAV(y)->flag&&jtxdefn),EVVALUE)  // Error if the unresolved name is x y etc
      ASSERT(!(at&NAMEBYVALUE),EVVALUE)  // Error if the unresolved name is x y etc
      RZ(y = namerefacv(y, s));    // this will create a ref to undefined name as verb [:
    }
@@ -446,7 +444,6 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
       // Name, not being assigned
       // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
       // otherwise resolve nouns to values, and others to 'name~' references
-      // obsolete     if (!(y = jt->xdefn&&NMDOT&NAV(y)->flag ? symbrd(y) : nameref(y))) { stack = 0; goto exitparse; }
       // To save some overhead, we inline this and do the analysis in a different order here
       *dci = m+1;  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
       if(s=syrd(y,0L)) {   // look up the name in the symbol tables.  0L=Don't bother storing which symbol table was used
@@ -458,13 +455,11 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
         // The name is defined.  If it's a noun, use its value (the common & fast case)
         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-// obsolete         if(AT(sv)&NOUN || NMDOT&NAV(y)->flag&&jtxdefn){
         if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
          y=sv;
         } else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
       } else {
         // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
-// obsolete         if(NMDOT&NAV(y)->flag&&jtxdefn){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
         if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
         if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
           // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
@@ -504,7 +499,7 @@ exitparse:
 
  // NOW it is OK to return
 
- if(!stack){jt->assignsym=0; jt->zombieval=0; R 0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
+ if(!stack){CLEARZOMBIE R 0;}  // If there was an error during execution or name-stacking, exit with failure.  Error has already been signaled.  Remove zombiesym
 
  // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
  // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark

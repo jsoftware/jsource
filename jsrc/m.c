@@ -283,7 +283,12 @@ I pushx=tpop(old);
 if(c<0){
  I c2=*cc;  // get usecount after tpop
  *cc=c;  // restore inplaceability, if the block is inplaceable
- if(c2>ACUC1)R w;  // if the block was not popped, don't push it again
+ if(c2>ACUC1){
+#if MEMAUDIT&2
+  audittstack(jt,w,ACUC(w));
+#endif
+  R w;  // if the block was not popped, don't push it again
+ }
 }
 // tpush(w)
 *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
@@ -360,7 +365,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 // subroutine to save space, just like tpush macro
 static I subrtpush(J jt, A wd, I pushx){
-I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2)audittstack(jt,wd,ACUC(wd));R pushx;
+I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2){jt->tnextpushx = pushx; (jt,wd,ACUC(wd));}R pushx;
 }
 
 // Result is new value of jt->tnextpushx, or 0 if error
@@ -383,7 +388,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
     } // if the buffer ran out, allocate another, save its address
 #if MEMAUDIT&2
     jt->tnextpushx=pushx;
-    audittstack(jt,np2,ACUC(np2));
+    audittstack(jt,np,ACUC(np));
 #endif
     if(tp&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // recur, and restore stack pointers after recursion
    }
@@ -465,7 +470,16 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
 A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
 
-F1(jtrat){ra(w); tpush(w); R w;}
+// Protect a value temporarily
+// w is a block that we want to make ineligible for inplacing.  We increment its usecount (which protects it) and tpush it (which
+// undoes the incrementing after we are gone).  The protection lasts until the tpop for the stack level in effect at the call to here.
+// Protection is needed only for names, for example in samenoun =: (samenoun verb verb) samenoun  where we must make sure
+// the noun is not operated on inplace lest it destroy the value stored in the fork, which might be saved in an explicit definition.
+// If the noun is assigned as part of a named derived verb, protection is not needed (but harmless) because if the same value is
+// assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
+// only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
+F1(jtrat){ra(w); tpush(w); R w;}  // recursive
+F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern

@@ -235,6 +235,7 @@
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
 #define CALL2IP(f,a,w,fs) ((f)(jtinplace,(a),(w),(A)(fs)))
+#define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
 #define DF1(f)          A f(J jt,    A w,A self)
 #define DF2(f)          A f(J jt,A a,A w,A self)
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}
@@ -249,7 +250,7 @@
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&-4)
+#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&~(JTINPLACEW+JTINPLACEA))
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
@@ -303,6 +304,8 @@
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreak&&!jt->breakignore){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreak&&!jt->breakignore){jsignal(EVBREAK); R 0;}}
+#define JTINPLACEW      1   // turn this on in jt to indicate that w can be inplaced
+#define JTINPLACEA      2   // turn this on in jt to indicate that a can be inplaced
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MIN(a,b)        ((a)<(b)?(a):(b))

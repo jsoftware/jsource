@@ -7,6 +7,7 @@
 
 
 static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
+ F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  RE(0);
  JATTN;
  v=VAV(self);
@@ -27,7 +28,10 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
  // Execute.  Bump execct to protect against deleting the name while it is running.
  // Because of implementation of fa(), which may be called elsewhere as well, we must also bump usecount
- else{ACINCR(fs); ++fv->execct; z=a?dfs2(a,w,fs):dfs1(w,fs); fa(fs);}  /* beware redefs down the stack */
+ else{ACINCR(fs); ++fv->execct;
+  if(a){if(!(fv->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
+  fa(fs);
+ }  /* beware redefs down the stack */
  if(!jt->stswitched)jt->global=jt->fcallg[i].og;
  jt->stswitched=jt->fcallg[i].sw0;
  if(jt->fcallg[i].flag)locdestroy(i);
@@ -40,7 +44,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  R z;
 }
 
-static DF1(jtunquote1){R unquote(0L,w,self);}
+static DF1(jtunquote1){R unquote(0L,w,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
 // return ref to adv/conj/verb whose name is a and whose symbol-table entry is w
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block
@@ -54,7 +58,12 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // buckets.
  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info
  v=VAV(y);
- R fdef(CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, v->flag&VASGSAFE, v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and ASGSAFE
+ // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
+ // is used.  Thus, we can't guarantee inplaceability by copying INPLACE bits from f to the result, and we just set INPLACE for everything
+ // and let unquote use the up-to-date value.
+ // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
+ // problem by making [: unsafe.
+ R fdef(CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
 }
 
 

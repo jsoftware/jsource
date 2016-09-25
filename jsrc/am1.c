@@ -155,7 +155,11 @@ static A jtzpad1(J jt,A z,A t,B ip){A q,s,x,x0,y,y0;I m;P*zp;
   zp=PAV(z);  
   y0=SPA(zp,i); RZ(y=over(y0,t)); RZ(q=grade1(y)); RZ(y=from(q,y));
   x0=SPA(zp,x); RZ(s=shape(x0)); *AV(s)=m; RZ(x=from(q,over(x0,reshape(s,SPA(zp,e)))));
-  if(ip){ra(y); ra(x); fa(y0); fa(x0);}
+  // if z is assigned to a name, the use counts need to be adjusted: the old ones need to be decremented
+  // to remove the assignment, and the new ones need to be incremented to prevent them from being freed
+  // until the name is freed.  We detect the case from jt->zombieval being set to the address of z
+  // (if the block could not be inplaced, z will have been changed)
+  if(jt->assignsym&&jt->assignsym->val==z){ra(y); ra(x); fa(y0); fa(x0);}
   SPB(zp,i,y); SPB(zp,x,x);
  }
  R z;

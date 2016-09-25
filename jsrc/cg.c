@@ -202,9 +202,9 @@ static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d;
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
-// called for gerund} or ^:gerund forms.  id is the pseudocharacter for the conjunction (} or ^:)
+// called for gerund} or ^:gerund forms.  id is the pseudocharacter for the modifier (} or ^:)
 // Creates a verb that will run jtgc[rl][12] to execute the gerunds on the xy arguments, and
-// then  
+// then execute the operation
 // a is the original u, w is the original v
 A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  RZ(a&&w);
@@ -222,20 +222,38 @@ static DF1(jtgav1){DECLF;A ff,*hv=AAV(sv->h);I d;
  R df1(df1(w,hv[2]),ff);
 }
 
-static DF2(jtgav2){DECLF;A ff,*hv=AAV(sv->h);I d;
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
- R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
+// verb executed for x v0`v1`v2 y
+static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->h);I d;   // hv->gerunds
+A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+ // first, get the indexes to use.  Since this is going to call m} again, we protect against
+ // stack overflow - but why do we stop with the execution of the }, which is not inside the
+ // potential loop?
+ RE(d=fdep(hv[1])); FDEPINC(d);
+ ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing
+ ff=df1(ffm,ds(sv->id)); FDEPDEC(d);   // now ff represents (x v1 y)}
+ RZ(ffm);  // OK to fail after FDEPDEC
+ // execute the gerunds that will give the arguments to ff
+ RZ(ffy = df2(a,w,hv[2]));   // x v2 y - cannot inplace
+ // x v0 y - can inplace any unprotected argument
+ RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ // execute ff, i. e.  (x v1 y)} .  Allow inplacing y unless it is protected by the caller
+ R (VAV(ff)->f2)(VAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
+// handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
+// The id is the pseudocharacter for the function, which is passed in as the pchar for the derived verb
 A jtgadv(J jt,A w,C id){A hs;I n;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);
- ASSERT(n&&n<=3,EVLENGTH);
+ ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
- RZ(hs=fxeach(3==n?w:behead(reshape(num[4],w))));
- R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs, VGERL, RMAX,RMAX,RMAX);
+ RZ(hs=fxeach(3==n?w:behead(reshape(num[4],w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
+  // hs is a BOX array, but its elements are VERBs
+ // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
+ I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2);
+ R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
 

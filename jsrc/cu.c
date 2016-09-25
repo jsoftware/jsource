@@ -55,14 +55,9 @@ DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,RMAX,-1L, VAV(self)->f2);}
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
 static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtunder1){DECLFG; R df1(w,atop(inv(gs),amp(fs,gs)));}
-// obsolete static DF2(jtunder2){DECLFG; R df2(a,w,atop(inv(gs),amp(fs,gs)));}
 
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtundco1){DECLFG; R df1(  w,atop(inv(gs),ampco(fs,gs)));}
-// obsolete static DF2(jtundco2){DECLFG; R df2(a,w,atop(inv(gs),ampco(fs,gs)));}
-
 
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);

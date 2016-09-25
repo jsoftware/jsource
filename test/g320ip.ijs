@@ -282,9 +282,46 @@ NB. Verify inplacing works in forks, including nvv forks
 24000 > 7!:2 '(10000#''l'') ([: ] ,) (1000#''r'')'
 0 7 14 21 28 -: (({.7)"_ * ])"0 i. 5  NB. ensure constant function not overwritten
 0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
+b =: 7
+0 7 14 21 28 -: (b * ])"0 i. 5  NB. ensure name in nvv not overwritten
+b -: 7
 a =: 10000#'a'
-3000 > 7!:2 'a =: (''b'' ,~ [) a'
-a -: (10000#'a'),'b'
+3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
+3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
+nb =: ('b' ,~ [)
+3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace
+a -: (10000#'a'),'bbb'
+b =: 'c'
+3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment
+b -: 'c'
+a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
+a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+NB. Boxed values should cause no trouble, but we don't have anything that inplaces boxed arrays yet
+
+NB. Repeat the tests in an explicit definition - twice, to ensure no corruption of stored sentences
+ipexp =: 3 : 0
+0 7 14 21 28 -: (({.7)"_ * ])"0 i. 5  NB. ensure constant function not overwritten
+0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
+b =. 7
+0 7 14 21 28 -: (b * ])"0 i. 5  NB. ensure name in nvv not overwritten
+b -. 7
+a =. 10000#'a'
+3000 > 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
+3000 > 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too
+nb =. ('b' ,~ [)
+3000 > 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace
+a -: (10000#'a'),'bbb'
+b =. 'c'
+3000 > 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment
+b -: 'c'
+a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
+a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+)
+ipexp''
+ipexp''
+
 a =: 'abc'
 'abcbabcb' -: a (, , ,) 'b'
 a =: a (, , ,) 'b'
@@ -310,7 +347,7 @@ NB. u@v
 'b' -: (10000#'a') {:@, 'b'
 20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
 a =: 10000#'c'
-3000 > 7!:2 'a =: {.@(''b'' ,~ ]) a'
+3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 
 NB. u&v
 a =: i. 1000
@@ -322,35 +359,38 @@ NB. u@:v
 'b' -: (10000#'a') {:@:, 'b'
 20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
 a =: 10000#'c'
-3000 > 7!:2 'a =: {.@:(''b'' ,~ ]) a'
+3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 
 NB. u&n
 20000 > 7!:2 ',&''a'' 10000#''b'''
 a =: 10000#'a'
 ('c' ,~ 10000#'a') -: a =: ,&'c' a
-2000 > 7!:2 'a =: ,&''c'' a'
+2000 > 7!:2 'a =: ,&({.''c'') a'
 
 NB. m&v
 (5,.i.4) -: (6-1)&,"0 i. 4  NB. Verify constant not overwritten
 
 NB. u&.v
 20000 > 7!:2 ',&''b''&.] 10000#''a'''
+a =: 10000#5
+(6 ,~ 10000#5) -: a =: ,&6&.] a
+3000 > 7!:2 'a =: ,&6&.] a'
+3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-('c' ,~ 10000#'a') -: a =: ,&'c'&.] a
-3000 > 7!:2 'a =: ,&''c''&.] a'
-3000 > 7!:2 '{. a =: ,&''c''&.] a'  NB. Verify assignment need not be first word
-22000 > 7!:2 'a =: ]&.(,&''b'') a'
+22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
 
 NB. u&.:v
 20000 > 7!:2 ',&''b''&.:] 10000#''a'''
+a =: 10000#5
+(6 ,~ 10000#5) -: a =: ,&6&.:] a
+3000 > 7!:2 'a =: ,&6&.:] a'
+3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+22000 > 7!:2 ',&''b''&.:(,&''c'' :. (,&''d'')) 10000#''a'''  NB. all verbs inplaceable
 a =: 10000#'a'
-('c' ,~ 10000#'a') -: a =: ,&'c'&.:] a
-3000 > 7!:2 'a =: ,&''c''&.:] a'
-3000 > 7!:2 '{. a =: ,&''c''&.:] a'  NB. Verify assignment need not be first word
-22000 > 7!:2 'a =: ]&.:(,&''b'') a'
+22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
 
-22000 > 7!:2 ',&''b''&.(,&''c'' :. (,&''d'')) 10000#''a'''  NB. all verbs inplaceable
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global local test testa'
+
+4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global ipexp local nb test testa'
 
 

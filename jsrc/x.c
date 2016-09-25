@@ -107,7 +107,7 @@ F2(jtforeign){I p,q;
 
   case XC(6,0):   R CDERIV(CIBEAM, jtts0,        0,            VASGSAFE,RMAX,0,   0   );
   case XC(6,1):   R CDERIV(CIBEAM, jttss,        0,            VASGSAFE,RMAX,0,   0   );
-  case XC(6,2):   R CDERIV(CIBEAM, jttsit1,      jttsit2,      VASGSAFE,1,   0,   1   );
+  case XC(6,2):   R CDERIV(CIBEAM, jttsit1,      jttsit2,      VFLAGNONE,1,   0,   1   );
   case XC(6,3):   R CDERIV(CIBEAM, jtdl,         0,            VASGSAFE,0,   0,   0   );
   case XC(6,4):   R CDERIV(CIBEAM, jtparsercalls,0,            VASGSAFE,RMAX,0,   0   );
   case XC(6,5):   R CDERIV(CIBEAM, jtpeekdata,   0,            VASGSAFE,RMAX,0,   0   );  // turn on to provide a J window into the running system
@@ -120,7 +120,7 @@ F2(jtforeign){I p,q;
   case XC(6,13):  R CDERIV(CIBEAM, jtpmstats,    0,            VASGSAFE,RMAX,0,   0   );
 
   case XC(7,0):   R CDERIV(CIBEAM, jtsp,         0,            VASGSAFE,RMAX,0,   0   );
-  case XC(7,2):   R CDERIV(CIBEAM, jtspit,       0,            VASGSAFE,1,   0,   0   );
+  case XC(7,2):   R CDERIV(CIBEAM, jtspit,       0,            VFLAGNONE,1,   0,   0   );
   case XC(7,3):   R CDERIV(CIBEAM, jtspcount,    0,            VASGSAFE,RMAX,0,   0   );
   case XC(7,5):   R CDERIV(CIBEAM, jtspfor,      0,            VASGSAFE,0,   0,   0   );
   case XC(7,6):   R CDERIV(CIBEAM, jtspforloc,   0,            VASGSAFE,0,   0,   0   );

@@ -447,7 +447,7 @@ F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 // These are the unary ops that are implemented using a canned argument
 
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
-#define IPSHIFTWA (jt = (J)(((I)jt+1)&-2))
+#define IPSHIFTWA (jt = (J)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
 F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(one,w);}
 F1(jtnegate){R minus(zero,  w);}

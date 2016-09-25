@@ -11,7 +11,8 @@ else.
  n=. 'libtsdll.',;(UNAME-:'Darwin'){'so';'dylib'
 end. 
 if. UNAME-:'Android' do.
- LIBTSDLL=: jpath'~bin/../../lib/',n,' '
+ arch=. LF-.~ 2!:0'getprop ro.product.cpu.abi'
+ LIBTSDLL=: jpath'~bin/../libexec/',arch,'/',n,' '
 else.
  LIBTSDLL=: jpath'~bin/',n,' '
 end.

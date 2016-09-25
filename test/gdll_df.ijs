@@ -58,14 +58,41 @@ td=: 16$'d '
 NB. disabled because <.+/y != +/<.y
 1: (<.+/>yy)=>{.z=:('d2 x ',td) dcd yy=:<"0 [ 1.3*?8#10
 
-td1a=: 18$'d '
-
-3 : 0''
+9 13 14 26(4 : 0"0)'abcz'
 try.
- (+/>yy)=>{.z=:('d1a d ',td1a) dcd yy=:<"0 [ 1.3*?9#10
+ (+/>yy)=>{.z=:('d1',y,' d ','d '$~2*x) dcd yy=:<"0 [ 1.3*?x#10
 catch.
  7 0-:cder'' NB. failure with too many float/double args allowed
 end.
+)
+3 : 0"0'df'
+try.
+ (+/>yy)=>{.z=:('f',y,'i d ',52$'f ',y,' i ')dcd yy=:(2+3*i.8)>.&.>@{`[`]}<"0[0.125+i.26
+catch.
+ 7 0-:cder''
+end.
+)
+3 : 0"0'df'
+try.
+ (+/>yy)(3e_7>[:|-%>.)>{.z=:('f',y,'i d ',52$'f ',y,' i ')dcd yy=:(2+3*i.8)>.&.>@{`[`]}<"0[1.7*?26#100
+catch.
+ 7 0-:cder''
+end.
+)
+
+NB. corner cases
+3 : 0^:(-.IFRASPI) 1
+assert. (+/>yy)=>{.z=:'di1d9a d i d d d d d d d d d' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di1d9b d d d d d d d d d d i' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di6d9a d i i i i i i d d d d d d d d d' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di6d9b d i i i i i d d d d d d d d d i' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di7d9a d i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di7d9b d i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di8d9a d i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di8d9b d i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di9d9a d i i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'di9d9b d i i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.18
+1
 )
 
 td3=: 32$'d x '
@@ -189,6 +216,6 @@ obj_add=:    <>{.'obj_add x' dcd ''
 (6 1 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;'2';3
 (6 2 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;2  ;'3'
 
-4!:55 ;:'a add address b dcd f lib obj_add pc s0 s1 td td1a td3 td4 tf tf3'
+4!:55 ;:'a add address b dcd f lib obj_add pc s0 s1 td td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xx yy z'
 

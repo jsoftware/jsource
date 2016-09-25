@@ -2,6 +2,7 @@
 #include "com_jsoftware_j_android_JInterface.h"
 #include "j-jni-interface.h"
 #include <strings.h>
+#include <stdint.h>
 
 // #define JNIGNULL (*env)->NewGlobalRef(env, NULL)
 #define JNIGNULL (void*)0
@@ -66,7 +67,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
   (JNIEnv * env, jobject obj, jlong inst, jstring js) {
 	LOGD("callJNative");
-	J jengine = (J)(I)inst;
+	J jengine = (J)(intptr_t)inst;
 
 	const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
 	int jc = JDo(jengine,(C*)nativeString);
@@ -76,14 +77,14 @@ JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_destroyJNative
   (JNIEnv *env, jobject obj, jlong inst) {
 	LOGD("destroyJNative");
-	JFree((J)(I)inst);
+	JFree((J)(intptr_t)inst);
 	outputId = 0;
 }
 
 JNIEXPORT jobject JNICALL Java_com_jsoftware_j_JInterface_getVariableNative
   (JNIEnv *env, jobject obj, jlong inst, jstring jname) {
 	LOGD("getVariableNative");
-	J jengine = (J)(I)inst;
+	J jengine = (J)(intptr_t)inst;
 	const char *name = (*env)->GetStringUTFChars(env, jname, 0);
 	long type, rank;
 	long *shape;
@@ -103,7 +104,7 @@ void _stdcall outputHandler(J jt,int type, const char* s) {
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_getLocaleNative
   (JNIEnv *env, jobject obj, jlong inst) {
 	LOGD("getLocaleNative");
-  return (*env)->NewStringUTF(env,inst?(C*)JGetLocale((J)(I)inst):"base");
+  return (*env)->NewStringUTF(env,inst?(C*)JGetLocale((J)(intptr_t)inst):"base");
  }
 
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_setEnvNative
@@ -172,7 +173,7 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_initializeJNative
 	 void* callbacks[] = {outputHandler,0,0,0,(void*)SMJAVA};
 #endif
 	 JSM(j,callbacks);
-	return (jlong)(I)j;
+	return (jlong)(intptr_t)j;
 }
 
 /*
@@ -183,7 +184,7 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_dorsNative
   (JNIEnv * env, jobject obj, jlong jt0,  jstring cmd) {
   int err=1;
   char inputline[BUFLEN+1];
-  J jt = (J)(I)jt0;
+  J jt = (J)(intptr_t)jt0;
   const char *nativecmd = (*env)->GetStringUTFChars(env, cmd, 0);
   if (sizeof(inputline)<8+strlen(nativecmd)) {
     (*env)->ReleaseStringUTFChars(env, cmd, nativecmd);

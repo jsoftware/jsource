@@ -9,8 +9,17 @@
 
 // C_? new style config - default value if not defined by builder
 
-#ifndef C_64 // 64/32 bits
+// #ifndef C_64 // 64/32 bits
+// #define C_64 1
+// #endif
+// auto config C_64
+#ifdef C_64
+#undef C_64
+#endif
+#if defined(_WIN64)||defined(__LP64__)
 #define C_64 1
+#else
+#define C_64 0
 #endif
 
 #ifndef C_LE // littleendian/bigendian
@@ -35,11 +44,35 @@ define one of the following in the build as required
  f result and f/d args gets 5 x error (rather than wrong result or crash when abi support not available)
 
 -DC_CD_ARMHF
- arm hardware float - result/args passed in float hardware - used by raspian
+ arm hardware float - result/args passed in float hardware - used by raspbian
 
 -DC_CD_ARMEL
  arm software float - result/args passed without using float hardware
 */
+
+// auto config
+
+#ifdef RASPI
+#ifndef C_CD_ARMHF
+#define C_CD_ARMHF
+#endif
+#endif
+
+#if defined(ANDROID) && defined(__arm__)
+#ifndef C_CD_ARMEL
+#define C_CD_ARMEL
+#endif
+#endif
+
+#ifdef _MSC_VER
+#ifdef SY_GETTOD
+#undef SY_GETTOD
+#endif
+#else
+#ifndef SY_GETTOD
+#define SY_GETTOD
+#endif
+#endif
 
 /* Inclusion of a system herein does not necessarily mean that the source  */
 /* compiles or works under that system.                                    */

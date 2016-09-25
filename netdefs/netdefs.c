@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <winsock.h>
 #else
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #ifdef sun
 #include <inet/tcp.h>

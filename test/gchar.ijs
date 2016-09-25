@@ -9,13 +9,13 @@ jtype.h has: typedef char C;
 
 perhaps it should be: typedef signed char C;
 
-but the above change causes problems on raspian
+but the above change causes problems on raspbian
 so I am not willing to take that leap right now
 
 a compiler option should be used to change the
 compiler default from unsigned char to be signed char
 
-raspian build is done with compiler option fsigned-char
+raspbian build is done with compiler option fsigned-char
 )
 
 9082 32 215 32 9077 = 3 u: 7 u: 226 141 186 32 195 151 32 226 141 181{a.

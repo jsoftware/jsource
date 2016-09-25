@@ -503,8 +503,11 @@ extern J gjt; // global for JPF (procs without jt)
 /* strchr fails for CE MIPS - neg chars - spellit fails in ws.c for f=.+.  */
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
-#if defined(__arm__) && !defined(__MACH__)
+#if (defined(__arm__)||defined(__aarch64__)) && !defined(__MACH__)
 // option -fsigned-char in android and raspberry
+#ifdef strchr
+#undef strchr
+#endif
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
 

@@ -10,3 +10,4 @@ include jni/hostdefs/Hostdefs.mk
 include jni/hostdefs/Hostdefs-nopie.mk
 include jni/netdefs/Netdefs.mk
 include jni/netdefs/Netdefs-nopie.mk
+# include jni/clapack/Android.mk

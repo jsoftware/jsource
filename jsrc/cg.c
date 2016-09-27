@@ -127,29 +127,35 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  R z;
 }
 
+// m@.v general (non-atomic)case, like dyad case below
 static DF1(jtcase1b){A h,u;V*sv;
- sv=VAV(self); h=sv->h;
- RZ(u=from(df1(w,sv->g),h));
+ F1PREFIP;sv=VAV(self); h=sv->h;
+ RZ(u=from(df1(w,sv->g),h));  // not inplace
  ASSERT(!AR(u),EVRANK);
- R df1(w,*AAV(u));
+ R jtdf1(VAV(*AAV(u))->flag&VINPLACEOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
 }
 
+// m@.v y.  First check for atomic verbs (special case case1a); if not, process through case1b.  Pass inplacing to case1b only if there is 1 cell
 static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  RZ(w);
- sv=VAV(self);
+ F1PREFIP; sv=VAV(self);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); jt->rank=0;
  if(b=!r&&wr&&AN(w)){h=sv->h; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
- R b?case1a(w,self):rank1ex(w,self,r,jtcase1b);
+ if(b){R case1a(w,self);}   // atomic: go there
+ if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability
+ R rank1ex(w,self,r,jtcase1b);  // Otherwise loop over the cells (perforce not inplace)
 }
 
+// x m@.v y.  Run v (not inplace); select the "BOX" containing the verb to run; run it, inplacing as called for in the input
 static DF2(jtcase2){A u;V*sv;
- PREF2(jtcase2);
+ F2PREFIP;PREF2(jtcase2);
  sv=VAV(self);
  RZ(u=from(df2(a,w,sv->g),sv->h));
  ASSERT(!AR(u),EVRANK);
- R df2(a,w,*AAV(u));
+ R df2ip(a,w,*AAV(u));
 }
 
+// @.n
 static F2(jtgerfrom){A*av,*v,z;I ad,n;
  RZ(a&&w);  /* 1==AR(w)&&BOX&AT(w) */
  ASSERT(1>=AR(a),EVRANK);
@@ -162,10 +168,16 @@ static F2(jtgerfrom){A*av,*v,z;I ad,n;
   R z;
 }}
 
-F2(jtagenda){
+F2(jtagenda){I flag;
  RZ(a&&w)
  if(NOUN&AT(w))R exg(gerfrom(w,a));
- R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,fxeachv(1L,a), VGERL|VAV(pst[(UC)CATDOT])->flag, mr(w),lr(w),rr(w));
+ // verb v.  Create a "BOX" type holding the verb form of each gerund
+ A avb = fxeachv(1L,a); RZ(avb);
+  // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
+ if(0==jt->asgzomblevel){flag=0;}else{
+  flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!
+ }
+ R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|VAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.

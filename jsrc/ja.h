@@ -221,6 +221,8 @@
 #define detz(x)                     jtdetz(jt,(x))
 #define df1(x,y)                    jtdf1(jt,(x),(y))  
 #define df2(x,y,z)                  jtdf2(jt,(x),(y),(z))  
+#define df1ip(x,y)                  jtdf1(jtinplace,(x),(y))  
+#define df2ip(x,y,z)                jtdf2(jtinplace,(x),(y),(z))  
 #define dfc(x,y)                    jtdfc(jt,(x),(y))
 #define dfr(x)                      jtdfr(jt,(x))
 #define dfrep(x)                    jtdfrep(jt,(x))

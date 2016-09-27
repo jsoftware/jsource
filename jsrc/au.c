@@ -25,7 +25,7 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
 
 F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 
-
+// jtdf1 and jtdf2 can be called with or without inplace flags since they don't use jt but merely pass it through
 DF1(jtdf1){RZ(self); R CALL1(VAV(self)->f1,  w,self);}
 DF2(jtdf2){RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
 

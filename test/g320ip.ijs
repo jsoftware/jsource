@@ -273,6 +273,11 @@ f =: 3 : 0"0 '123'
 )
 ('abc11d' , 'abc22d' ,: 'abc33d') -: f
 
+NB. Create unsafe name
+1: 4!:55 ;:'unsafename undefname'
+unsafename =: undefname
+undefname =: ]
+
 NB. Verify inplacing works in forks, including nvv forks
 9!:53 (0)
 1120000 > 7!:2 '(i. , ]) 100000'
@@ -297,8 +302,11 @@ b =: 'c'
 3000 < 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
+b -: 'c'
+a -: (10000#'a'),'bbbcc'
 3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
-a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 9!:53 (1)  NB. Now they should inplace
 a =: 10000#'a'
 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
@@ -310,8 +318,11 @@ b =: 'c'
 3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment
 b -: 'c'
 a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
+b -: 'c'
+a -: (10000#'a'),'bbbcc'
 3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
-a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 NB. Boxed values should cause no trouble, but we don't have anything that inplaces boxed arrays yet
 
 NB. Repeat the tests in an explicit definition - twice, to ensure no corruption of stored sentences
@@ -332,8 +343,11 @@ b =. 'c'
 3000 < 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
+b -: 'c'
+a -: (10000#'a'),'bbbcc'
 3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
-a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 9!:53 (1)
 a =. 10000#'a'
 3000 > 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
@@ -345,8 +359,11 @@ b =. 'c'
 3000 > 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment
 b -: 'c'
 a -: (10000#'a'),'bbbc'
+3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
+b -: 'c'
+a -: (10000#'a'),'bbbcc'
 3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
-a -: ((10000#'a'),'bbbc'),((10000#'a'),'bbbc')
+a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 )
 ipexp''
 ipexp''
@@ -372,6 +389,13 @@ NB. hook
 3000 > 7!:2 '(, {:) 888 $ ''abc'''
 ('c' ,~ 1000 # 'a') -: (1000 # 'a') (, ]) 'c'
 4000 > 7!:2 '(1000 # ''a'') (, ]) ''c'''
+a =: 10000#'a'
+4000 < 7!:2 'a =: (, {.) a'
+9!:53 (1)
+4000 > 7!:2 'a =: (, {.) a'
+4000 < 7!:2 'a =: (, {.@unsafename) a'
+9!:53 (0)
+
 
 NB. u@v
 'b' -: (10000#'a') {:@, 'b'
@@ -379,9 +403,31 @@ NB. u@v
 9!:53 (0)
 a =: 10000#'c'
 3000 < 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+a =: 10000#'c'
+3000 < 7!:2 'a =: a ]@, ''b'''
 9!:53 (1)
 a =: 10000#'c'
 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+a =: 10000#'c'
+3000 > 7!:2 'a =: a ]@, ''b'''
+3000 < 7!:2 'a =: a unsafename@, ''b'''
+9!:53 (0)
+
+NB. u@:v
+'b' -: (10000#'a') {:@:, 'b'
+20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
+9!:53 (0)
+a =: 10000#'c'
+3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+a =: 10000#'c'
+3000 < 7!:2 'a =: a ]@:, ''b'''
+9!:53 (1)
+a =: 10000#'c'
+3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+a =: 10000#'c'
+3000 > 7!:2 'a =: a ]@:, ''b'''
+3000 < 7!:2 'a =: a unsafename@:, ''b'''
+9!:53 (0)
 
 NB. u&v
 a =: i. 1000
@@ -392,16 +438,23 @@ a =: i. 1000
 9!:53 (1)
 a =: i. 1000
 3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
-
-NB. u@:v
-'b' -: (10000#'a') {:@:, 'b'
-20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
+a =: i. 1000
+3000 < 7!:2 'a =: ($0) {.&(5 ,~ unsafename) a'
 9!:53 (0)
-a =: 10000#'c'
-3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+
+NB. u&:v
+a =: i. 1000
+0 1 2 3 4 -: ($0) {.&:(5 ,~ ]) a
+9!:53 (0)
+a =: i. 1000
+3000 < 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
 9!:53 (1)
-a =: 10000#'c'
-3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+a =: i. 1000
+3000 > 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
+a =: i. 1000
+3000 < 7!:2 'a =: ($0) {.&:(5 ,~ unsafename) a'
+9!:53 (0)
+
 
 NB. u&n
 20000 > 7!:2 ',&''a'' 10000#''b'''
@@ -414,6 +467,7 @@ a =: 10000#'a'
 a =: 10000#'a'
 ('c' ,~ 10000#'a') -: a =: ,&'c' a
 2000 > 7!:2 'a =: ,&({.''c'') a'
+9!:53 (0)
 
 NB. m&v
 (5,.i.4) -: (6-1)&,"0 i. 4  NB. Verify constant not overwritten
@@ -436,6 +490,8 @@ a =: 10000#5
 a =: 10000#'a'
 22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
 22000 > 7!:2 'a =: ]&.(,&(''b'')) a'
+22000 < 7!:2 'a =: unsafename&.(,&(''b'')) a'
+9!:53 (0)
 
 NB. u&.:v
 20000 > 7!:2 ',&''b''&.:] 10000#''a'''
@@ -455,10 +511,62 @@ a =: 10000#5
 a =: 10000#'a'
 22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
 22000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
+22000 < 7!:2 'a =: unsafename&.:(,&(''b'')) a'
+9!:53 (0)
+
+NB. u^:v
+a =: 10000#'a'
+3000 > 7!:2 ']^:0 a'
+3000 > 7!:2 ']^:1 a'
+b =: 10000#a:
+3000 > 7!:2 ']^:0 b'
+3000 > 7!:2 ']^:1 b'
+23000 > 7!:2 '(10000#''a'') ,^:0: ''b'''
+23000 > 7!:2 '(10000#''a'') ,^:1: ''b'''
+9!:53 (0)
+i =: i. 5000
+3000 > 7!:2 'i =: 0 ,~^:0 i'
+3000 > 7!:2 'i =: 0 ,~^:1 i'   NB. u^:1 is equivalent to u
+3000 > 7!:2 'i =: 0 ,~^:[ i'
+3000 < 7!:2 'i =: 1 ,~^:[ i'
+9!:53 (1)
+3000 > 7!:2 'i =: 0 ,~^:0 i'
+3000 > 7!:2 'i =: 0 ,~^:1 i'
+3000 > 7!:2 'i =: 0 ,~^:[ i'
+3000 > 7!:2 'i =: 1 ,~^:[ i'
+3000 > 7!:2 'i =: i ,^:] 1'
+3000 < 7!:2 'i =: i ,^:unsafename 1'
+9!:53 (0)
+
+
+NB. u@.v
+i =: i. 5000
+(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`>:@.] 0'
+(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 1'
+i =: i. 5000
+(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 2'
+(500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 1'
+i =: i. 5000
+(500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 2'
+9!:53 (0)
+3000 < 7!:2 'i =: i ,`]`[`>:@.] 0'
+4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
+i =: i. 5000
+4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
+3000 < 7!:2 'i =: i ,`]`[`>:@.] 3'
+9!:53 (1)
+4000 > 7!:2 'i =: i ,`]`[`>:@.] 0'
+4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
+i =: i. 5000
+4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
+3000 < 7!:2 'i =: i ,`unsafename`[`>:@.] 0'
+3000 < 7!:2 'i =: i ,`]`[`unsafename@.] 0'
+3000 < 7!:2 'i =: i ,`]`[`>:@.unsafename 0'
 9!:53 (0)
 
 
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global ipexp local nb test testa'
+
+4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefname'
 
 

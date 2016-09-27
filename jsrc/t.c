@@ -28,7 +28,7 @@ static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->fdep=1;                 /* function depth   */
  v->id=id;                  /* spelling         */
  v->flag=flag;              // flags
- pst[(UC)id]=z;             /* other fields are zeroed in ga() */
+ ds(id)=z;             /* other fields are zeroed in ga() */
  R 1;
 }
 

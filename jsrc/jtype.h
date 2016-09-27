@@ -198,7 +198,7 @@ typedef I SI;
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN
-#define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =.    aliases with SYMB
+#define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOUN types can have the following informational bits set
 #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB

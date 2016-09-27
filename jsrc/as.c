@@ -317,7 +317,7 @@ static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}
 
 F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
  RZ(w);
- if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(pst[(UC)CBSLASH])->flag, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=VAV(w);
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
@@ -331,5 +331,5 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
      f2=jtofxassoc;
  }}
- R ADERIV(CBSDOT,f1,f2,VAV(pst[(UC)CBSDOT])->flag,RMAX,0,RMAX);
+ R ADERIV(CBSDOT,f1,f2,VAV(ds(CBSDOT))->flag,RMAX,0,RMAX);
 }

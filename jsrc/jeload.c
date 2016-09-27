@@ -198,7 +198,9 @@ int jefirst(int type,char* arg)
 {
 	int r; char* p,*q;
 	char* input=malloc(2000+strlen(arg));
+#if 0
 	char buf[50];
+#endif
 	*input=0;
 	if(0==type)
 	{
@@ -235,9 +237,11 @@ int jefirst(int type,char* arg)
 #elif defined(RASPI)
 	strcat(input,"[IFRASPI_z_=:1");
 #endif
+#if 0
 	sprintf(buf,"(" FMTI ")",(I)(intptr_t)hjdll);
 	strcat(input,"[HLIBJ_z_=:");
 	strcat(input,buf);
+#endif
 	strcat(input,"[BINPATH_z_=:'");
 	p=path;
 	q=input+strlen(input);

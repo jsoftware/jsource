@@ -60,7 +60,8 @@ F2(jtforeign){I p,q;
   case XC(1,21):  R SDERIV(CIBEAM, jtjopen,      0,            VASGSAFE,0,   0,   0   );
   case XC(1,22):  R SDERIV(CIBEAM, jtjclose,     0,            VASGSAFE,0,   0,   0   );
 
-#if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
+// #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
+#if (SYS & SYS_DOS+SYS_MACINTOSH)
   case XC(1,30):  R SDERIV(CIBEAM, jtjlocks,     0,            VASGSAFE,RMAX,0,   0   );
   case XC(1,31):  R SDERIV(CIBEAM, jtjlock,      0,            VASGSAFE,1,   0,   0   );
   case XC(1,32):  R SDERIV(CIBEAM, jtjunlock,    0,            VASGSAFE,1,   0,   0   );
@@ -171,8 +172,10 @@ F2(jtforeign){I p,q;
   case XC(9,47):  R CDERIV(CIBEAM, jtbreakfns,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,48):  R CDERIV(CIBEAM, jtdotnamesq,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,49):  R CDERIV(CIBEAM, jtdotnamess,  0,            VASGSAFE,RMAX,0,   0   );
+#if 0
   case XC(9,50):  R CDERIV(CIBEAM, jtxepq,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,51):  R CDERIV(CIBEAM, jtxeps,       0,            VASGSAFE,RMAX,0,   0   );
+#endif
   case XC(9,52):  R CDERIV(CIBEAM, jtasgzombq,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,53):  R CDERIV(CIBEAM, jtasgzombs,   0,            VFLAGNONE,RMAX,0,   0   );
 
@@ -221,9 +224,11 @@ F2(jtforeign){I p,q;
   case XC(15,16): R SDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,17): R SDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,18): R SDERIV(CIBEAM, jtnfeoutstr,  0,            VASGSAFE,RMAX,0,   0   );
+#if 0
   case XC(15,19): R SDERIV(CIBEAM, jtcdjt,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,20): R SDERIV(CIBEAM, jtcdlibl,     0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,21): R SDERIV(CIBEAM, jtcdproc1,    jtcdproc2,    VASGSAFE,RMAX,RMAX,RMAX);
+#endif
 
   case XC(18,0):  R CDERIV(CIBEAM, jtlocnc,      0,            VFLAGNONE,0,   0,   0   );
   case XC(18,1):  R CDERIV(CIBEAM, jtlocnl1,     jtlocnl2,     VFLAGNONE,RMAX,RMAX,RMAX);

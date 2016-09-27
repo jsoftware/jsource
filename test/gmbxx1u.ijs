@@ -202,9 +202,9 @@ abc_xyz_ =: ?10$100
 
 NB. 128!: ---------------------------------------------------------------
 
-q=: x=: _306674912;1234567
-y=: 10&u: 65536+a.i. 'assiduously avoid any and all asinine alliterations'
-(x 128!:3 y) -: q 128!:3 y
+NB. q=: x=: _306674912;1234567
+NB. y=: 10&u: 65536+a.i. 'assiduously avoid any and all asinine alliterations'
+NB. (x 128!:3 y) -: q 128!:3 y
 mbxcheck_jmf_ q
 
 

@@ -38,7 +38,8 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 F1(jthost){A z;
  F1RANK(1,jthost,0);
  RZ(w=vs(w));
-#if SY_WINCE
+// #if SY_WINCE
+#if SY_WINCE || SY_WIN32
  ASSERT(0,EVDOMAIN);
 #else
 {
@@ -72,7 +73,8 @@ F1(jthostne){C*s;
  F1RANK(1,jthostne,0);
  RZ(w=vs(w));
  s=CAV(w);
-#if SY_WINCE
+// #if SY_WINCE
+#if SY_WINCE || SY_WIN32
  ASSERT(0,EVNONCE);
 #else
  {

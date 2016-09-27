@@ -95,9 +95,9 @@ NB. 0 procaddress
 xbasic_add=: ":>{.'xbasic_add x' dcd ''
 
 NB. alternate ways to get proc address
-0 ~: f =: 15!:20 }:lib
-(f 15!:21 'xbasic') = 15!:21 lib,'xbasic'
-xbasic_add -: ": 15!:21 lib,'xbasic'
+NB. 0 ~: f =: 15!:20 }:lib
+NB. (f 15!:21 'xbasic') = 15!:21 lib,'xbasic'
+NB. xbasic_add -: ": 15!:21 lib,'xbasic'
 
 (9;(,9);2;3 4) = ('0 ',xbasic_add,' x *x x *x') cd (,2);2;3 4
 

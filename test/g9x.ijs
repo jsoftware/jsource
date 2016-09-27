@@ -315,23 +315,23 @@ old=: 9!:48 ''
 
 NB. 9!:50 and 9!:51 -----------------------------------------------------
 
-old=: 9!:50 ''
-
-'length error' -: 9!:50 etx i.4
-
-'rank error'   -: 9!:50 etx 4
-'rank error'   -: 9!:50 etx '4'
-'rank error'   -: 9!:50 etx i.0 0
-
-'domain error' -: 9!:51 etx i.12
-'domain error' -: 9!:51 etx 3 4.5
-'domain error' -: 9!:51 etx 3 4j5
-'domain error' -: 9!:51 etx 3 4r5
-'domain error' -: 9!:51 etx ;:'es chat o lo gy'
-
-'rank error'   -: 9!:51 etx 3 4$'abc'
-
-9!:51 old
+NB. old=: 9!:50 ''
+NB. 
+NB. 'length error' -: 9!:50 etx i.4
+NB. 
+NB. 'rank error'   -: 9!:50 etx 4
+NB. 'rank error'   -: 9!:50 etx '4'
+NB. 'rank error'   -: 9!:50 etx i.0 0
+NB. 
+NB. 'domain error' -: 9!:51 etx i.12
+NB. 'domain error' -: 9!:51 etx 3 4.5
+NB. 'domain error' -: 9!:51 etx 3 4j5
+NB. 'domain error' -: 9!:51 etx 3 4r5
+NB. 'domain error' -: 9!:51 etx ;:'es chat o lo gy'
+NB. 
+NB. 'rank error'   -: 9!:51 etx 3 4$'abc'
+NB. 
+NB. 9!:51 old
 
 
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '

@@ -152,7 +152,7 @@ static DF2(jtcase2){A u;V*sv;
  sv=VAV(self);
  RZ(u=from(df2(a,w,sv->g),sv->h));
  ASSERT(!AR(u),EVRANK);
- R df2ip(a,w,*AAV(u));
+ R jtdf2(VAV(*AAV(u))->flag&VINPLACEOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // @.n
@@ -172,7 +172,7 @@ F2(jtagenda){I flag;
  RZ(a&&w)
  if(NOUN&AT(w))R exg(gerfrom(w,a));
  // verb v.  Create a "BOX" type holding the verb form of each gerund
- A avb = fxeachv(1L,a); RZ(avb);
+ A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
  if(0==jt->asgzomblevel){flag=0;}else{
   flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!

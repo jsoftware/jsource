@@ -9,28 +9,32 @@
 
 #if TEMPLATE==0
 #if VALENCE==1
-#define RCALL   CALL1(f1,yw,fs)
+#define RDECLS  A prevyw
+#define RCALL   CALL1(f1,prevyw=yw,fs)
 #define RDIRECT (wt&DIRECT)
-#define RAC     (ACUC1>=AC(yw))
+// obsolete #define RAC     (yw!=prevyw&&ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-#define RARG    {if(ACUC1<AC(yw))NEWYW; MOVEYW;}
-#define RARGX   {if(ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(yw==prevyw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
+#define RARG1   {if(yw==prevyw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #else
-#define RCALL   CALL2(f2,ya,yw,fs)
+#define RDECLS  A prevya,prevyw
+#define RCALL   CALL2(f2,prevya=ya,prevyw=yw,fs)
 #define RDIRECT (at&DIRECT&&wt&DIRECT)
-#define RAC     (ACUC1>=AC(ya)&&ACUC1>=AC(yw))
+// obsolete #define RAC     (yw!=prevyw&&ya!=prevya&&ACUC1>=AC(ya)&&ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
 // with the shorter frame (when jj==n we have run out of repeats).  Whenever we have to copy, we first
-// check to see if the cell-workarea has been incorporated into a boxed noun; if so, we have to
+// check to see if the cell-workarea has been incorporated into a result noun; if so, we have to
 // reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
-// when a cell is to be repeated.
-#define RARG    {++jj; if(!b||jj==n){if(ACUC1<AC(ya))NEWYA; MOVEYA;}  \
-                       if( b||jj==n){if(ACUC1<AC(yw))NEWYW; MOVEYW;} if(jj==n)jj=0;}
+// when a cell is to be repeated.  NEWY? allocates a new argument cell, and MOVEY? copies to it.
+#define RARG    {if(++jj==n)jj=0; \
+                 if(!b||jj==0){if(ya==prevya||ACUC1<AC(ya)){cc = 0;NEWYA;} MOVEYA;}  \
+                 if( b||jj==0){if(yw==prevyw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;} }
 // If the use-count in y? has been incremented, it means that y? was incorporated into an indirect
-// noun and must not be modified.  In that case, we reallocate it
-#define RARGX   {if(ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
-                 if(ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+// noun and must not be modified.  In that case, we reallocate it.  This is used to reallocate the
+// first cell only.
+#define RARG1   {if(ya==prevya||ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
+                 if(yw==prevyw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #endif
 
 #define EMSK(x) (1<<((x)-1))
@@ -44,7 +48,7 @@
 // mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
 //  from shorter-frame argument
 
-{B cc=1;C*zv;I j=0,jj=0,old;
+{B cc=1;C*zv;I j=0,jj=0,old;RDECLS;
  if(mn){y0=y=RCALL; RZ(y);}  // if there are cells, execute on the first one
  else{I d;
   // if there are no cells, execute on a cell of fills.  Do this quietly, because
@@ -64,21 +68,26 @@
  // or if there are no results at all; and we can continue until we hit an incompatible result-type.
  // With luck this will process the entire input.
  if(!mn||yt&DIRECT&&RFLAG){I zn;
-  RARGX; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of stoms in all result cells (if they stay homogeneous)
+  RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of stoms in all result cells (if they stay homogeneous)
   GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
   if(mn){zv=CAV(z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
+  // Establish the point we will free to after each call.  This must be after the allocated result area, and
+  // after the starting result cell.  After we call the verb we will free up what it allocated, until we have to
+  // reallocate the result cell; then we would be wiping out a cell that we ourselves allocated, so we stop
+  // freeing then
   old=jt->tnextpushx;
-  for(j=1;j<mn;++j){   // for each result-cell...
+  for(j=1;j<mn;++j){   // for each additional result-cell...
    RARG;    // establish argument cells
    RZ(y=RCALL);  // call the function
    if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
    MC(zv+=k,AV(y),k);   // move the result-cell to the output
-   if(cc&&RAC)tpop(old); else cc=0;  // as long as argument cells are not incorporated into boxed nouns, pop the stack after each cell (??)
+   if(cc)tpop(old);  // Now that we have copied to the output area: if we have not reallocated a cell on the stack, free what the verb did
+// obsolete    if(cc&&RAC)tpop(old); else cc=0;  // as long as we have not created a temp cell (& will not create one next time), pop the stack after each cell (??)
  }}
  if(j<mn){A q,*x,yz;
   // Here we were not able to build the result in the output area; type/rank/shape changed.
   // We will create a boxed result, boxing each cell, and then open it.  If this works, great.
-  jj=j%n;   // jj = #cells we processed before the wreck
+  jj=j%n;   // j = #cells we processed before the wreck; jj=position in the smaller cell (not used for monad; compiler should optimize it away)
   GATV(yz,BOX,mn,p,s); x=AAV(yz);   // allocate place for boxed result
   // For each previous result, put it into a box and store the address in the result area
   if(j){
@@ -92,12 +101,13 @@
  EPILOG(z);  // If the result is boxed, we know we had no wastage at this level except for yz, which is small compared to z
 }
 #undef VALENCE
-#undef RAC
+// obsolete #undef RAC
 #undef RARG
-#undef RARGX
+#undef RARG1
 #undef RCALL
 #undef RDIRECT
 #undef RFLAG
+#undef RDECLS
 #endif  /* TEMPLATE 0 */
 
 

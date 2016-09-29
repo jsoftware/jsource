@@ -274,9 +274,9 @@ f =: 3 : 0"0 '123'
 ('abc11d' , 'abc22d' ,: 'abc33d') -: f
 
 NB. Create unsafe name
-1: 4!:55 ;:'unsafename undefname'
-unsafename =: undefname
-undefname =: ]
+1: 4!:55 ;:'unsafename undefinedname'
+unsafename =: undefinedname
+undefinedname =: ]
 
 NB. Verify inplacing works in forks, including nvv forks
 9!:53 (0)
@@ -564,9 +564,17 @@ i =: i. 5000
 3000 < 7!:2 'i =: i ,`]`[`>:@.unsafename 0'
 9!:53 (0)
 
+NB. The following failed when we didn't properly set the inplace flags for the selected verb
+NB. The sentence aborted without performing the assignment
+4!:55 ;:'a'
+a =: $$ a: (3 : ('y';':';'x'))`0:@.(0:) a:
+(,0) -: a
+4!:55 ;:'a'
+a =: $$ (3 : ('y';':';'x'))`0:@.(0:) a:
+(,0) -: a
 
 
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefname'
+4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 
 

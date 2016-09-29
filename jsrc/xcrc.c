@@ -25,7 +25,8 @@ F2(jtcrc2){I n;UINT z;UC*v; UINT crctab[256];
  RZ(a&&w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
  n=AN(w); v=UAV(w);
- ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
+// ASSERT(!n||AT(w)&LIT+C2T+C4T,EVDOMAIN);
+ ASSERT(!n||AT(w)&LIT,EVDOMAIN);
  RE(z=crcvalidate(a,crctab));
  n=AT(w)&C4T?(4*n):AT(w)&C2T?n+n:n;
  DO(n, z=z>>8^crctab[255&(z^*v++)];);  // do the computation using unsigned z

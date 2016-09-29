@@ -33,12 +33,14 @@ jsrc/jversion.h
 android/libs/
 android/obj/
 android/jni/jsrc
+android/jni/clapack
 android/jni/pcre
 android/jni/tsdll
 android/jni/hostdefs
 android/jni/netdefs
 linenoise.c
 linenoise.h
+clapack/
 pcre/
 
 release

@@ -143,6 +143,155 @@ D _stdcall di9d9a(I ia,I ib,I ic,I id,I ie,I iF,I ig,I ih,I ii,D a,D b,D c,D d,D
 D _stdcall di9d9b(I ia,I ib,I ic,I id,I ie,I iF,I ig,I ih,D a,D b,D c,D d,D e,D f,D g,D h,D i,I ii){
 	return ia+ib+ic+id+ie+iF+ig+ih+ii + a+b+c+d+e+f+g+h+i;}
 
+// raspberry pi ARMHF
+#define I3 I i1,I i2,I i3
+#define I4 I i1,I i2,I i3,I i4
+#define I5 I i1,I i2,I i3,I i4,I i5
+#define I6 I i1,I i2,I i3,I i4,I i5,I i6
+#define I7 I i1,I i2,I i3,I i4,I i5,I i6,I i7
+#define I8 I i1,I i2,I i3,I i4,I i5,I i6,I i7,I i8
+#define I9 I i1,I i2,I i3,I i4,I i5,I i6,I i7,I i8,I i9
+#define D7 D d1,D d2,D d3,D d4,D d5,D d6,D d7
+#define D8 D d1,D d2,D d3,D d4,D d5,D d6,D d7,D d8
+
+D _stdcall dr160(I3,F fa,D7,F fb,F fc,D da,F fd,I ia){
+	return ia+fa+fb+fc+fd+da + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr161(I3,F fa,D7,F fb,D da,F fc,D db,I ia){
+	return ia+fa+fb+fc+da+db + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr162(I3,F fa,D7,I ia,F fb,F fc,D da,I ib){
+	return ia+ib+fa+fb+fc+da + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr163(I3,F fa,D7,I ia,F fb,D da,F fc,I ib){
+	return ia+ib+fa+fb+fc+da + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr164(I3,F fa,D7,I ia,D da,F fb,D db,I ib){
+	return ia+ib+fa+fb+da+db + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr165(I4,F fa,D7,F fb,F fc,D da,I ia){
+	return ia+fa+fb+fc+da + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr166(I4,F fa,D7,F fb,D da,F fc,I ia){
+	return ia+fa+fb+fc+da + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr167(I4,F fa,D7,D da,F fb,D db,I ia){
+	return ia+fa+fb+da+db + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr168(I4,F fa,D7,I ia,F fb,D da,I ib){
+	return ia+ib+fa+fb+da + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr169(I4,F fa,D7,I ia,D da,F fb,I ib){
+	return ia+ib+fa+fb+da + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr10a(I ia,F fa,D7,F fb){
+	return ia+fa+fb + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr10b(F fa,D7,F fb,I ia){
+	return ia+fa+fb + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr10c(F fa,D7,F fb,D da){
+	return da+fa+fb + d1+d2+d3+d4+d5+d6+d7;}
+
+D _stdcall dr11a(I ia,F fa,D8,F fb){
+	return ia+fa+fb + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr11b(F fa,D8,F fb,I ia){
+	return ia+fa+fb + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr11c(F fa,D8,F fb,D da){
+	return da+fa+fb + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr12a(I ia,F fa,D8,F fb,D da){
+	return ia+fa+fb+da + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr12b(F fa,D8,F fb,I ia,D da){
+	return ia+fa+fb+da + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr12c(F fa,D8,F fb,F fc,D da){
+	return da+fa+fc+fb + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr13a(I4,F fa,D8){
+	return fa + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr13b(I3,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr13c(I3,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr14a(I5,F fa,D8){
+	return fa + i1+i2+i3+i4+i5 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr14b(I4,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr14c(I4,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr15a(I6,F fa,D8){
+	return fa + i1+i2+i3+i4+i5+i6 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr15b(I5,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3+i4+i5 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr15c(I5,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4+i5 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr16a(I7,F fa,D8){
+	return fa + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr16b(I6,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3+i4+i5+i6 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr16c(I6,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17a(I7,F fa,D8, F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17b(I6,F fa,D8,F fb,I ia){
+	return ia+fa+fb + i1+i2+i3+i4+i5+i6 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17c(I6,F fa,D8,F fb,D da){
+	return fa+fb+da + i1+i2+i3+i4+i5+i6 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17d(I8,F fa,D8){
+	return fa + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17e(I7,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr17f(I7,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18a(I8,F fa,D8, F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18b(I7,F fa,D8,F fb,I ia){
+	return ia+fa+fb + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18c(I7,F fa,D8,F fb,D da){
+	return fa+fb+da + i1+i2+i3+i4+i5+i6+i7 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18d(I9,F fa,D8){
+	return fa + i1+i2+i3+i4+i5+i6+i7+i8+i9 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18e(I8,F fa,D8,I ia){
+	return ia+fa + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr18f(I8,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr19a(I9,F fa,D8,F fb){
+	return fa+fb + i1+i2+i3+i4+i5+i6+i7+i8+i9 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr19b(I8,F fa,D8,F fb,I ia){
+	return ia+fa+fb + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
+D _stdcall dr19c(I8,F fa,D8,F fb,D da){
+	return fa+fb+da + i1+i2+i3+i4+i5+i6+i7+i8 + d1+d2+d3+d4+d5+d6+d7+d8;}
+
 F _stdcall f1(F a,F b,F c,F d,F e,F f,F g,F h){
 	return a+b+c+d+e+f+g+h;}
 

@@ -297,137 +297,137 @@ x -: 0 s: 10
 'domain error' -: 10 s: etx x 3}~< (>2{x),.0
 
 
-NB. 11 s: y -------------------------------------------------------------
-
-0 s: 11
-
-x=: 0 s: 10
-
-11 s: x
-0 s: 11
-
-NB. some tests below may failed when restoring from previous versions
-NB. because of storage optimization
-NB. anyway cardinality and order # should hold
-
-NB. cardinality and string length
-(0 1 { x) -: 0 1 { 0 s: 10
-NB. 0   index in the string table
-NB. 1   length in bytes
-NB. 2   hash value
-NB. 7   order #
-NB. 10  bit flags
-(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
-NB. the string, ignore padding bytes
-x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
-x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
-y1=: (0 s: 1) {. 0 s: 3
-y2=: (>1{x) {. >3{x
-(x1 { y1) -: (x2 { y2)
-
-NB. only 0 s:&.>i.4 are needed
-11 s: 4{.x
-0 s: 11
-
-
-NB. x -: 0 s: 10        doesn't work
-(0 1 { x) -: 0 1 { 0 s: 10
-(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
-x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
-x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
-y1=: (0 s: 1) {. 0 s: 3
-y2=: (>1{x) {. >3{x
-(x1 { y1) -: (x2 { y2)
-
-NB. minimal data required by 11 s:
-11 s: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
-0 s: 11
-
-NB. x -: 0 s: 10        doesn't work
-(0 1 { x) -: 0 1 { 0 s: 10
-(0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
-x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
-x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
-y1=: (0 s: 1) {. 0 s: 3
-y2=: (>1{x) {. >3{x
-(x1 { y1) -: (x2 { y2)
-
-NB. reset symbol table
-x=: 0 s: 10
-11 s: ''
-1 = 0 s: 0
-10 s: x
-(>{.x) = 0 s: 0
-
-NB. appending symbol table
-x0=: 0 s: 10     NB. check point
-offset=: 0 s: 0
-
-y=: s: (":6!:1''),"1 ":"0 [ i.100  NB. add more symbols
-x=: 0 s: 10
-offset < 0 s: 0
-'c sn uv s'=: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
-10 s: x0         NB. restore to check point
-
-NB. new symbols since check point
-offset = 0 s: 0
-sbase=: offset{0{"1 uv    NB. index to string table
-11 s: (c,offset);(sn-sbase);((sbase-~offset}.{."1 uv) (<a:;0)}offset}.uv);(sbase}.s)
-
-NB. x -: 0 s: 10        doesn't work
-(0 1 4 5 6 7{ x) -: 0 1 4 5 6 7{ 0 s: 10
-((>0{x) {. >2{x) -: (0 s: 0) {. 0 s: 2
-x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
-x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
-y1=: (0 s: 1) {. 0 s: 3
-y2=: (>1{x) {. >3{x
-(x1 { y1) -: (x2 { y2)
-
-'domain error' -: 11 s: etx ($x)$0 1
-'domain error' -: 11 s: etx ($x)$1 2 3 4
-'domain error' -: 11 s: etx ($x)$1 2 3.4
-'domain error' -: 11 s: etx ($x)$1 2 3j4
-'domain error' -: 11 s: etx ($x)$1 2 3r4
-'domain error' -: 11 s: etx ($x)$1 2 3 4x
-'domain error' -: 11 s: etx ($x)$' 2 3 4'
-
-'domain error' -: 11 s: etx }.x
-'domain error' -: 11 s: etx 2}.x
-'domain error' -: 11 s: etx ,:x
-'domain error' -: 11 s: etx {.x
-
-'domain error' -: 11 s: etx x 0}~< 'a'         
-'domain error' -: 11 s: etx x 0}~< 100002.4 
-'domain error' -: 11 s: etx x 0}~< 100002j4
-'domain error' -: 11 s: etx x 0}~< 100002r4
-'domain error' -: 11 s: etx x 0}~< ({.x),&.>0
-'domain error' -: 11 s: etx x 0}~< 1+#>2{x
-'domain error' -: 11 s: etx x 0}~< 1+#>4{x
-'domain error' -: 11 s: etx x 0}~< _1e6
-
-'domain error' -: 11 s: etx x 1}~< 'a'         
-'domain error' -: 11 s: etx x 1}~< 100002.4    
-'domain error' -: 11 s: etx x 1}~< 100002j4    
-'domain error' -: 11 s: etx x 1}~< 100002r4    
-'domain error' -: 11 s: etx x 1}~< (1{x),&.>0
-'domain error' -: 11 s: etx x 1}~< 1+#>3{x   
-
-'domain error' -: 11 s: etx x 3}~< 1234
-'domain error' -: 11 s: etx x 3}~< ,:>2{x
-'domain error' -: 11 s: etx x 3}~< ($>2{x)$'2'
-'domain error' -: 11 s: etx x 3}~< ($>2{x)$2.3
-'domain error' -: 11 s: etx x 3}~< ($>2{x)$2j3
-'domain error' -: 11 s: etx x 3}~< ($>2{x)$2r3
-'domain error' -: 11 s: etx x 3}~< }:"1 >2{x
-'domain error' -: 11 s: etx x 3}~< (>2{x),.0
-
-
-NB. 12 s: y -------------------------------------------------------------
-
-x=: (;:'el eem o syn ary') ,&.>/ ":&.>?2 3 4$1e4
-y=: s: x
-*./, 1 = 12 s: x 
-0 =  12 s: ;:'waskjfji309sdf4u5vfasdfv8o4u dlfgjosjfsadfiotug9045tl dsfjgos9234dfigpejlkfdshg32h45kjre'
+NB. NB. 11 s: y -------------------------------------------------------------
+NB. 
+NB. 0 s: 11
+NB. 
+NB. x=: 0 s: 10
+NB. 
+NB. 11 s: x
+NB. 0 s: 11
+NB. 
+NB. NB. some tests below may failed when restoring from previous versions
+NB. NB. because of storage optimization
+NB. NB. anyway cardinality and order # should hold
+NB. 
+NB. NB. cardinality and string length
+NB. (0 1 { x) -: 0 1 { 0 s: 10
+NB. NB. 0   index in the string table
+NB. NB. 1   length in bytes
+NB. NB. 2   hash value
+NB. NB. 7   order #
+NB. NB. 10  bit flags
+NB. (0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+NB. NB. the string, ignore padding bytes
+NB. x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+NB. x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+NB. y1=: (0 s: 1) {. 0 s: 3
+NB. y2=: (>1{x) {. >3{x
+NB. (x1 { y1) -: (x2 { y2)
+NB. 
+NB. NB. only 0 s:&.>i.4 are needed
+NB. 11 s: 4{.x
+NB. 0 s: 11
+NB. 
+NB. 
+NB. NB. x -: 0 s: 10        doesn't work
+NB. (0 1 { x) -: 0 1 { 0 s: 10
+NB. (0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+NB. x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+NB. x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+NB. y1=: (0 s: 1) {. 0 s: 3
+NB. y2=: (>1{x) {. >3{x
+NB. (x1 { y1) -: (x2 { y2)
+NB. 
+NB. NB. minimal data required by 11 s:
+NB. 11 s: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
+NB. 0 s: 11
+NB. 
+NB. NB. x -: 0 s: 10        doesn't work
+NB. (0 1 { x) -: 0 1 { 0 s: 10
+NB. (0 1 7 10 {"1 (>0{x) {. >2{x) -: (0 1 7 10 {"1 (0 s: 0) {. 0 s: 2)
+NB. x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+NB. x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+NB. y1=: (0 s: 1) {. 0 s: 3
+NB. y2=: (>1{x) {. >3{x
+NB. (x1 { y1) -: (x2 { y2)
+NB. 
+NB. NB. reset symbol table
+NB. x=: 0 s: 10
+NB. 11 s: ''
+NB. 1 = 0 s: 0
+NB. 10 s: x
+NB. (>{.x) = 0 s: 0
+NB. 
+NB. NB. appending symbol table
+NB. x0=: 0 s: 10     NB. check point
+NB. offset=: 0 s: 0
+NB. 
+NB. y=: s: (":6!:1''),"1 ":"0 [ i.100  NB. add more symbols
+NB. x=: 0 s: 10
+NB. offset < 0 s: 0
+NB. 'c sn uv s'=: (0 s:&.>i.2),((0 s:0){.0(<a:;(2+i.8))}0 s:2);((0 s:1){.0 s: 3)
+NB. 10 s: x0         NB. restore to check point
+NB. 
+NB. NB. new symbols since check point
+NB. offset = 0 s: 0
+NB. sbase=: offset{0{"1 uv    NB. index to string table
+NB. 11 s: (c,offset);(sn-sbase);((sbase-~offset}.{."1 uv) (<a:;0)}offset}.uv);(sbase}.s)
+NB. 
+NB. NB. x -: 0 s: 10        doesn't work
+NB. (0 1 4 5 6 7{ x) -: 0 1 4 5 6 7{ 0 s: 10
+NB. ((>0{x) {. >2{x) -: (0 s: 0) {. 0 s: 2
+NB. x1=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (0 s: 0) {. 0 s: 2
+NB. x2=: ; <@({.+i.@{:)"1 [ 0 1 {"1 (>0{x) {. >2{x
+NB. y1=: (0 s: 1) {. 0 s: 3
+NB. y2=: (>1{x) {. >3{x
+NB. (x1 { y1) -: (x2 { y2)
+NB. 
+NB. 'domain error' -: 11 s: etx ($x)$0 1
+NB. 'domain error' -: 11 s: etx ($x)$1 2 3 4
+NB. 'domain error' -: 11 s: etx ($x)$1 2 3.4
+NB. 'domain error' -: 11 s: etx ($x)$1 2 3j4
+NB. 'domain error' -: 11 s: etx ($x)$1 2 3r4
+NB. 'domain error' -: 11 s: etx ($x)$1 2 3 4x
+NB. 'domain error' -: 11 s: etx ($x)$' 2 3 4'
+NB. 
+NB. 'domain error' -: 11 s: etx }.x
+NB. 'domain error' -: 11 s: etx 2}.x
+NB. 'domain error' -: 11 s: etx ,:x
+NB. 'domain error' -: 11 s: etx {.x
+NB. 
+NB. 'domain error' -: 11 s: etx x 0}~< 'a'         
+NB. 'domain error' -: 11 s: etx x 0}~< 100002.4 
+NB. 'domain error' -: 11 s: etx x 0}~< 100002j4
+NB. 'domain error' -: 11 s: etx x 0}~< 100002r4
+NB. 'domain error' -: 11 s: etx x 0}~< ({.x),&.>0
+NB. 'domain error' -: 11 s: etx x 0}~< 1+#>2{x
+NB. 'domain error' -: 11 s: etx x 0}~< 1+#>4{x
+NB. 'domain error' -: 11 s: etx x 0}~< _1e6
+NB. 
+NB. 'domain error' -: 11 s: etx x 1}~< 'a'         
+NB. 'domain error' -: 11 s: etx x 1}~< 100002.4    
+NB. 'domain error' -: 11 s: etx x 1}~< 100002j4    
+NB. 'domain error' -: 11 s: etx x 1}~< 100002r4    
+NB. 'domain error' -: 11 s: etx x 1}~< (1{x),&.>0
+NB. 'domain error' -: 11 s: etx x 1}~< 1+#>3{x   
+NB. 
+NB. 'domain error' -: 11 s: etx x 3}~< 1234
+NB. 'domain error' -: 11 s: etx x 3}~< ,:>2{x
+NB. 'domain error' -: 11 s: etx x 3}~< ($>2{x)$'2'
+NB. 'domain error' -: 11 s: etx x 3}~< ($>2{x)$2.3
+NB. 'domain error' -: 11 s: etx x 3}~< ($>2{x)$2j3
+NB. 'domain error' -: 11 s: etx x 3}~< ($>2{x)$2r3
+NB. 'domain error' -: 11 s: etx x 3}~< }:"1 >2{x
+NB. 'domain error' -: 11 s: etx x 3}~< (>2{x),.0
+NB. 
+NB. 
+NB. NB. 12 s: y -------------------------------------------------------------
+NB. 
+NB. x=: (;:'el eem o syn ary') ,&.>/ ":&.>?2 3 4$1e4
+NB. y=: s: x
+NB. *./, 1 = 12 s: x 
+NB. 0 =  12 s: ;:'waskjfji309sdf4u5vfasdfv8o4u dlfgjosjfsadfiotug9045tl dsfjgos9234dfigpejlkfdshg32h45kjre'
 
 
 NB. s: errors -----------------------------------------------------------

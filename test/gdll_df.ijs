@@ -80,18 +80,71 @@ catch.
 end.
 )
 
-NB. corner cases
-3 : 0^:(-.IFRASPI) 1
-assert. (+/>yy)=>{.z=:'di1d9a d i d d d d d d d d d' dcd yy=: <"0[i.10
-assert. (+/>yy)=>{.z=:'di1d9b d d d d d d d d d d i' dcd yy=: <"0[i.10
-assert. (+/>yy)=>{.z=:'di6d9a d i i i i i i d d d d d d d d d' dcd yy=: <"0[i.15
-assert. (+/>yy)=>{.z=:'di6d9b d i i i i i d d d d d d d d d i' dcd yy=: <"0[i.15
-assert. (+/>yy)=>{.z=:'di7d9a d i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.16
-assert. (+/>yy)=>{.z=:'di7d9b d i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.16
-assert. (+/>yy)=>{.z=:'di8d9a d i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.17
-assert. (+/>yy)=>{.z=:'di8d9b d i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.17
-assert. (+/>yy)=>{.z=:'di9d9a d i i i i i i i i i d d d d d d d d d' dcd yy=: <"0[i.18
-assert. (+/>yy)=>{.z=:'di9d9b d i i i i i i i i d d d d d d d d d i' dcd yy=: <"0[i.18
+3 : 0''
+assert. (+/>yy)=>{.z=:'di1d9a d x d d d d d d d d d' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di1d9b d d d d d d d d d d x' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'di6d9a d x x x x x x d d d d d d d d d' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di6d9b d x x x x x d d d d d d d d d x' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'di7d9a d x x x x x x x d d d d d d d d d' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di7d9b d x x x x x x d d d d d d d d d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'di8d9a d x x x x x x x x d d d d d d d d d' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di8d9b d x x x x x x x d d d d d d d d d x' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'di9d9a d x x x x x x x x x d d d d d d d d d' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'di9d9b d x x x x x x x x d d d d d d d d d x' dcd yy=: <"0[i.18
+1
+)
+
+3 : 0''
+assert. (+/>yy)=>{.z=:'dr160 d x x x f d d d d d d d f f d f x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr161 d x x x f d d d d d d d f d f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr162 d x x x f d d d d d d d x f f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr163 d x x x f d d d d d d d x f d f x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr164 d x x x f d d d d d d d x d f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr165 d x x x x f d d d d d d d f f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr166 d x x x x f d d d d d d d f d f x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr167 d x x x x f d d d d d d d d f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr168 d x x x x f d d d d d d d x f d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr169 d x x x x f d d d d d d d x d f x' dcd yy=: <"0[i.16
+1
+)
+
+3 : 0''
+assert. (+/>yy)=>{.z=:'dr10a d x f d d d d d d d f' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'dr10b d f d d d d d d d f x' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'dr10c d f d d d d d d d f d' dcd yy=: <"0[i.10
+assert. (+/>yy)=>{.z=:'dr11a d x f d d d d d d d d f' dcd yy=: <"0[i.11
+assert. (+/>yy)=>{.z=:'dr11b d f d d d d d d d d f x' dcd yy=: <"0[i.11
+assert. (+/>yy)=>{.z=:'dr11c d f d d d d d d d d f d' dcd yy=: <"0[i.11
+assert. (+/>yy)=>{.z=:'dr12a d x f d d d d d d d d f d' dcd yy=: <"0[i.12
+assert. (+/>yy)=>{.z=:'dr12b d f d d d d d d d d f x d' dcd yy=: <"0[i.12
+assert. (+/>yy)=>{.z=:'dr12c d f d d d d d d d d f f d' dcd yy=: <"0[i.12
+assert. (+/>yy)=>{.z=:'dr13a d x x x x f d d d d d d d d' dcd yy=: <"0[i.13
+assert. (+/>yy)=>{.z=:'dr13b d x x x f d d d d d d d d x' dcd yy=: <"0[i.13
+assert. (+/>yy)=>{.z=:'dr13c d x x x f d d d d d d d d f' dcd yy=: <"0[i.13
+assert. (+/>yy)=>{.z=:'dr14a d x x x x x f d d d d d d d d' dcd yy=: <"0[i.14
+assert. (+/>yy)=>{.z=:'dr14b d x x x x f d d d d d d d d x' dcd yy=: <"0[i.14
+assert. (+/>yy)=>{.z=:'dr14c d x x x x f d d d d d d d d f' dcd yy=: <"0[i.14
+assert. (+/>yy)=>{.z=:'dr15a d x x x x x x f d d d d d d d d' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'dr15b d x x x x x f d d d d d d d d x' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'dr15c d x x x x x f d d d d d d d d f' dcd yy=: <"0[i.15
+assert. (+/>yy)=>{.z=:'dr16a d x x x x x x x f d d d d d d d d' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr16b d x x x x x x f d d d d d d d d x' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr16c d x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.16
+assert. (+/>yy)=>{.z=:'dr17a d x x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr17b d x x x x x x f d d d d d d d d f x' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr17c d x x x x x x f d d d d d d d d f d' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr17d d x x x x x x x x f d d d d d d d d' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr17e d x x x x x x x f d d d d d d d d x' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr17f d x x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.17
+assert. (+/>yy)=>{.z=:'dr18a d x x x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr18b d x x x x x x x f d d d d d d d d f x' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr18c d x x x x x x x f d d d d d d d d f d' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr18d d x x x x x x x x x f d d d d d d d d' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr18e d x x x x x x x x f d d d d d d d d x' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr18f d x x x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.18
+assert. (+/>yy)=>{.z=:'dr19a d x x x x x x x x x f d d d d d d d d f' dcd yy=: <"0[i.19
+assert. (+/>yy)=>{.z=:'dr19b d x x x x x x x x f d d d d d d d d f x' dcd yy=: <"0[i.19
+assert. (+/>yy)=>{.z=:'dr19c d x x x x x x x x f d d d d d d d d f d' dcd yy=: <"0[i.19
 1
 )
 

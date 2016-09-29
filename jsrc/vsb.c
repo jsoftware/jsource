@@ -762,8 +762,10 @@ F2(jtsb2){A z;I j,k,n;
   case -6:   R sbunind(w);
   case  7:   R sborder(w);
   case 10:   R sbsetdata(w);
+#if 0
   case 11:   R sbsetdata2(w);
   case 12:   R sbtestbox(w);
+#endif
   case 16:   GAP = 4;                                       R sc(GAP);
   case 17:   GAP++;         ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(GAP);
   case 18:   GAP--;                                         R sc(GAP);
@@ -817,15 +819,4 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
  jt->sbhv[HASH0%AN(jt->sbh)]=0;
  R 1;
 }    /* initialize global data for SBT datatype */
-
-/* same as jtsbprobe but called from external libraries */
-/* n is number of characters, not bytes */
-SB _stdcall JSBProbe(J jt, I flag, I n, void* s, I test){SB u;
- S c2=flag&SBC2+SBC4;
- if(!jt||0>n||!s) R 0;            /* validations */
- if(c2&SBC2&&c2&SBC4) R 0;
- u=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,(C*)s,test);
- jt->jerr=0; jt->etxn=0; /* clear old errors */
- R u;
-}    /* return symbol index of a string */
 

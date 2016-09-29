@@ -234,12 +234,17 @@ F1(jtjferase){A y,fn;US*s;I h;
  ASSERT(y,EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
+#if 0
  if(access(CAV(y), F_OK )){R !unlink(CAV(y))?one:jerrno();} /* rmdir2 cannot raise error on non-exist file */
  else {R !unlink(CAV(y))||!rmdir(CAV(y))||!rmdir2(CAV(y))?one:jerrno();}
 #else
+ R !unlink(CAV(y))||!rmdir(CAV(y))?one:jerrno();
+#endif
+#else
  RZ(fn=toutf16x(y));
  s=USAV(fn);
-#if SY_WIN32 && !SY_WINCE
+// #if SY_WIN32 && !SY_WINCE
+#if 0
  R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?one:jerrno();
 #else
  R !_wunlink(s)||!_wrmdir(s)?one:jerrno();
@@ -318,7 +323,8 @@ F1(jtjgetpid){
 }
 
 #if (SYS & SYS_UNIX)
-#ifdef __GNUC__
+// #ifdef __GNUC__
+#if 0
 F1(jtpathdll){Dl_info info;
  ASSERTMTV(w);
  if(dladdr(jtpathdll, &info)){

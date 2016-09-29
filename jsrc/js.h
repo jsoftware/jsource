@@ -31,7 +31,7 @@
 #endif
 
 #ifndef C_HASH // alternate hash function
-#define C_HASH 1
+#define C_HASH 0
 #endif
 
 /*

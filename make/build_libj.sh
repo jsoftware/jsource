@@ -26,7 +26,7 @@ LINK=" $jgit/asm/linuxasm64.o -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-COMPILE="$common -fsigned-char -DRASPI"
+COMPILE="$common -DRASPI"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

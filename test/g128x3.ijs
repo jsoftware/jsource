@@ -55,9 +55,9 @@ _873187034 -: g x
 (f -: crc) x=: 'assiduously avoid any and all asinine alliterations'
 
 NB. literal2/literal4
-x=: 'assiduously avoid any and all asinine iterations'
-(f 6&u: x) = f x
-(f 10&u: (IF64{_2 _4) ic x) = f , _4 Endian \ x
+NB. x=: 'assiduously avoid any and all asinine iterations'
+NB. (f 6&u: x) = f x
+NB. (f 10&u: (IF64{_2 _4) ic x) = f , _4 Endian \ x
 
 b=: 32 ?@$ 2
 

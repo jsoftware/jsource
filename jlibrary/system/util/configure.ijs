@@ -10,7 +10,10 @@ DirTreeX
 Format
 MemoryLimit
 EPSReader
+ImageViewer
+ImageViewer_nox
 PDFReader
+PDFReader_nox
 ReadCatalog
 RecentMax
 XDiff
@@ -68,7 +71,11 @@ Snapshots_j_=: 0
 9!:3 DisplayForm
 9!:7 BoxForm { Boxes
 9!:17 BoxPos
-9!:21 (2&^ ^: (<&_)) MemoryLimit
+if. MemoryLimit<1000 do.
+  9!:21[2^MemoryLimit
+elseif. MemoryLimit<_ do.
+  9!:21 MemoryLimit
+end.
 9!:37 Output
 0!:100 ;(}:,'_j_=:',]) each <;.2 jdefs
 EMPTY

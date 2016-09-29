@@ -86,7 +86,7 @@ end.
 )
 
 CSS=: 0 : 0
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 form{margin-top:0;margin-bottom:0;}
 *.fm   {color:<PC_FM_COLOR>;}
 *.er   {color:<PC_ER_COLOR>;}

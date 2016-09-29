@@ -1,3 +1,5 @@
+NB. deprecated way to start JHS server - see jhs.cfg
+
 NB. JHS initialization
 NB.  loads
 NB.   ~addons/ide/jhs/config/jhs_default.ijs

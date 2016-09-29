@@ -362,7 +362,7 @@ end.
 CSS=: 0 : 0
 #report{color:red}
 #pathd{color:blue;}
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 )
 
 JS=: 0 : 0

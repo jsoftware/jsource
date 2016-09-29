@@ -43,7 +43,7 @@ end.
 )
 
 CSS=: 0 : 0
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 form{margin-top:0;margin-bottom:0;}
 *.jhb  {margin-left:0;margin-right:0;}
 )

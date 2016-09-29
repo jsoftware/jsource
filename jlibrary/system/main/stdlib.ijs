@@ -14,15 +14,9 @@ IFWINE=: (0 ~: 'ntdll wine_get_version >+ x'&(15!:0)) ::0:`0:@.IFUNIX ''
 if. notdef 'IFIOS' do.
   IFIOS=: 0
 end.
-if. notdef 'IFQT' do.
-  IFQT=: 0
-  libjqt=: 'libjqt'
+if. notdef 'IFJA' do.
+  IFJA=: 0
 end.
-if. notdef 'IFJCDROID' do.
-  IFJCDROID=: 0
-end.
-
-assert. IFQT *: IFJCDROID
 if. notdef 'FHS' do.
   FHS=: 0
 end.
@@ -39,7 +33,8 @@ if. notdef 'UNAME' do.
 end.
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
-    IFRASPI=: 1 e. 'BCM2708' E. 2!:0 'cat /proc/cpuinfo'
+    cpu=. 2!:0 'cat /proc/cpuinfo'
+    IFRASPI=: (1 e. 'BCM2708' E. cpu) +. 1 e. 'BCM2709' E. cpu
   else.
     IFRASPI=: 0
   end.
@@ -53,15 +48,20 @@ else.
     IFWOW64=: 'AMD64'-:2!:5'PROCESSOR_ARCHITEW6432'
   end.
 end.
-if. UNAME-:'Android' do.
-  if. IFQT do.
-    AndroidLibPath=: ({.~i:&'/') libjqt
-  else.
-    AndroidLibPath=: '/lib',~ ({.~i:&'/')^:2 BINPATH
+if. notdef 'IFQT' do.
+  IFQT=: 0
+  libjqt=: IFUNIX{::'jqt.dll';'libjqt',(UNAME-:'Darwin'){::'.so';'.dylib'
+  if. 0 ~: 1!:4 :: 0: < ((BINPATH,'/')&,) libjqt do.
+    libjqt=: ((BINPATH,'/')&,) libjqt
   end.
 end.
+if. UNAME-:'Android' do.
+  AndroidLibPath=: '/lib',~ ({.~i:&'/')^:2 BINPATH
+end.
+
+assert. IFQT *: IFJA
 )
-jcwdpath=: (1!:43@(0&$),])@jpathsep@((*@# # '/'"_),])
+jcwdpath=: jpathsep@(1!:43@(0&$),])@((*@# # '/'"_),])
 jsystemdefs=: 3 : 0
 xuname=. UNAME
 if. 0=4!:0 <f=. y,'_',(tolower xuname),(IF64#'_64'),'_j_' do.
@@ -131,7 +131,6 @@ c=. IFIOS + (;: 'Linux Android Darwin') i. <UNAME_z_
 )
 18!:4 <'z'
 anddf=: 4 : '''libj.so android_download_file > i *c *c'' 15!:0 x;y'
-andurl=: 'http://www.jsoftware.com/moin_static180/common/jwlogo.png'
 andunzip=: 3 : 0
 '' andunzip y
 :
@@ -141,10 +140,28 @@ android_exec_am=: 3 : 0
 'intent uri mimetype flags'=. 4{.y
 user=. (UserNumber_ja_"_)^:(0=4!:0<'UserNumber_ja_') (_1)
 2!:0 ::0: utf8 'am start ',((user>:0)#'--user ', ":user),' -a ', intent, ' -d ', (dquote uri), ((*#mimetype)#' -t ', mimetype), ((0~:flags)#' -f ', ":flags)
-EMPTY
+i.0 0
 )
 
-android_exec_host=: 2!:1`android_exec_am`StartActivityImplicit_ja_@.(IFQT+0=4!:0<'AndroidPackage')
+android_exec_host=: 2!:1@(3&{.)`android_exec_am@.(0=4!:0<'AndroidPackage')
+android_getdisplaymetrics=: 3 : 0
+dm=. 0 2 320 1280 2 720 243.247 244.273
+if. 18<:APILEVEL_ja_ do.
+  if. 0=4!:0<'android_getdisplaymetrics_memo_ja_' do.
+    dm=. android_getdisplaymetrics_memo_ja_
+  else.
+    try.
+      densityDpi=. 0&". ' '-.~ (}.~ i:&' ') LF-.~ 2!:0 'wm density'
+      ('widthPixels heightPixels')=: 0&". ;._1 'x', ' '-.~ (}.~ i:&' ') LF-.~ 2!:0 'wm size'
+      density=. (0.5*heightPixels>480) + (0.5*heightPixels>320) + densityDpi% 160
+      dm=. 1 2 3 4 5 (density, densityDpi, heightPixels, density, widthPixels)}dm
+    catch. end.
+    android_getdisplaymetrics_memo_ja_=: dm
+  end.
+end.
+'DM_density_ja_ DM_densityDpi_ja_ DM_scaledDensity_ja_'=: 1 2 4{dm
+dm
+)
 18!:4 <'z'
 'TAB LF FF CR DEL EAV'=: 9 10 12 13 127 255{a.
 LF2=: LF,LF
@@ -152,8 +169,20 @@ CRLF=: CR,LF
 EMPTY=: i.0 0
 Debug=: 0
 'noun adverb conjunction verb monad dyad'=: 0 1 2 3 3 4
-alpha27=: (27 b.) & 16bffffff
-alpha17=: (17 b.) & 16bffffff
+setalpha=: 16bff&$: : (4 : 0)
+((_32&(34 b.))^:IF64 _8 (32 b.) x)&(23 b.) 16bffffff (17 b.) y
+)
+getalpha=: 16bff (17 b.) _24&(34 b.)
+abspath=: 3 : 0
+if. (1 e. '://'&E.) y=. ,jpathsep y do. y return. end.
+if. IFWIN do.
+  assert. 0<rc=. 'kernel32 GetFullPathNameW > i *w i *w *w'&cd (uucp y);((#;])f=. 1024$u:' '),<<0
+  y=. jpathsep utf8 rc{.f
+elseif. ('/' ~: {.) y do.
+  y=. iospath^:IFIOS (1!:43'') , '/' , utf8 y
+end.
+y
+)
 apply=: 128!:2
 assert=: 0 0 $ 13!:8^:((0 e. ])`(12"_))
 bind=: 2 : 'x@(y"_)'
@@ -196,13 +225,16 @@ evtloop=: EMPTY"_
 exit=: 2!:55
 expand=: #^:_1
 file2url=: 3 : 0
-y=. (' ';'%20';'\';'/') stringreplace y -. '"'
+if. (1 e. '://'&E.) ,y do. y return. end.
+y=. (' ';'%20') stringreplace abspath y -. '"'
 if. IFWIN do.
-  if. ':'~:{:2{.y do. ((' ';'%20';'\';'/') stringreplace 1!:43''),'/',y end.
-  'file:///', y
+  if. '//'-:2{.y do.
+    'file:',y
+  else.
+    'file:///',y
+  end.
 else.
-  if. '/'~:{.y do. ((' ';'%20') stringreplace 1!:43''),'/',y end.
-  'file://', y
+  'file://',y
 end.
 )
 fixdotdot=: 3 : 0
@@ -239,6 +271,7 @@ end.
 ''
 )
 isutf8=: 1:@(7&u:) :: 0:
+isutf16=: 1:@(8&u:) :: 0:
 items=: "_1
 fetch=: {::
 leaf=: L:0
@@ -291,7 +324,7 @@ stdin=: 1!:1@3: :. stdout
 sign=: *
 sminfo=: 3 : 0
 if. IFQT do. wdinfo_jqtide_ y
-elseif. ('Android'-:UNAME) *. 3=4!:0<'mbinfo_ja_' do. mbinfo_ja_ y
+elseif. IFJA do. wdinfo_ja_ y
 elseif. do. smoutput >_1{.boxopen y end.
 )
 smoutput=: 0 0 $ 1!:2&2
@@ -453,19 +486,19 @@ symdat=: 15!:14
 cdcb=: 15!:13
 JB01=: 1
 JCHAR=: 2
-JCHAR2=: 131072
-JCHAR4=: 262144
-JSB=: 65536
 JSTR=: _1,JCHAR
-JSTR2=: _1,JCHAR2
-JSTR4=: _1,JCHAR4
 JINT=: 4
 JPTR=: JINT
 JFL=: 8
 JCMPX=: 16
 JBOXED=: 32
-JTYPES=: JB01,JCHAR,JINT,JPTR,JFL,JCMPX,JBOXED,JCHAR2,JCHAR4,JSB
-JSIZES=: >IF64{1 1 4 4 8 16 4 2 4 4;1 1 8 8 8 16 8 2 4 8
+JSB=: 65536
+JCHAR2=: 131072
+JSTR2=: _1,JCHAR2
+JCHAR4=: 262144
+JSTR4=: _1,JCHAR4
+JTYPES=: JB01,JCHAR,JINT,JPTR,JFL,JCMPX,JBOXED,JSB,JCHAR2,JCHAR4
+JSIZES=: >IF64{1 1 4 4 8 16 4 4 2 4;1 1 8 8 8 16 8 8 2 4
 ic=: 3!:4
 fc=: 3!:5
 endian=: |.^:('a'={.2 ic a.i.'a')
@@ -709,7 +742,22 @@ min=. 0>.ln-before [ max=. (<:#def)<.ln+after
 ctx=. ((,.ln=range){' >'),"1 '[',"1 (":,.range) ,"1 ('] ') ,"1 >def{~range=. min + i. >:max-min
 > (<'@@ ', name, '[', (dyad#':'), (":ln) ,'] *', (nc{' acv'),' @@ ', src), def0, <"1 ctx
 )
-dbg=: 13!:0
+dbg=: 3 : 0
+if. -.IFQT do.
+  13!:0 y return.
+end.
+if. y do.
+  if. _1 = 4!:0 <'jdb_open_jdebug_' do.
+    0!:0 <jpath '~addons/ide/qt/debugs.ijs'
+  end.
+  jdb_open_jdebug_''
+  13!:0 [ 1
+else.
+  jdb_close_jdebug_ :: ] ''
+  13!:15 ''
+  13!:0 [ 0
+end.
+)
 dblocals=: _1&$: : (4 : 0)
 stk=. }. 13!:13''
 if. 0=#y do. y=. a: else. y=. (y e. i.#stk) # y end.
@@ -1153,13 +1201,15 @@ end.
 x freads y
 )
 freadblock=: 3 : 0
+1e6 freadblock y
+:
 'f p'=. y
 f=. > fboxname f
 s=. 1!:4 <f
 if. s = _1 do. return. end.
 if. (s = 0) +. p >: s do. '';p return. end.
-if. 1e6 < s-p do.
-  dat=. 1!:11 f;p,1e6
+if. x < s-p do.
+  dat=. 1!:11 f;p,x
   len=. 1 + dat i: LF
   if. len > #dat do.
     'file not in LF-delimited lines' 13!:8[3
@@ -1252,8 +1302,8 @@ else.
 end.
 )
 ftype=: 3 : 0
-d=. (}: ^: ('/'={:)) ucp y
-d=. 1!:0 fboxname d
+(1:@(1!:4) :: 0:)^:IFWIN < f=. }: ^: ('/' = {:) > fboxname y
+d=. 1!:0 f
 if. #d do.
   >: 'd' = 4 { > 4 { ,d
 else.
@@ -1283,15 +1333,12 @@ fwrites=: 4 : 0
 )
 cocurrent 'z'
 install=: 3 : 0
-if. IFQT+.IFIOS+.'Android'-:UNAME do.
-  smoutput 'must run from jconsole' return.
-end.
 require 'pacman'
 do_install_jpacman_ y
 )
 getqtbin=: 3 : 0
 if. (<UNAME) -.@e. 'Linux';'Darwin';'Win' do. return. end.
-if. IFQT+.IFIOS+.'Android'-:UNAME do.
+if. IFQT do.
   smoutput 'must run from jconsole' return.
 end.
 require 'pacman'
@@ -1335,10 +1382,10 @@ dat=. y
 'fd sd'=. 2{. boxopen x
 assert. 1 = #fd
 if. #sd do.
-  if. 1=#~.sd do. sd=. ,{.sd
-  else.
-    s=. {.('|'=fd){ '|`'
-    dat=. dat rplc ({.sd);s;({:sd);s
+  sd=. ~.sd
+  if. 1 < #sd do.
+    s=. {. '|`' -. fd
+    dat=. dat charsub~ ,sd,.s
     sd=. s
   end.
   dat=. dat,fd
@@ -1490,6 +1537,18 @@ c=. b +. y=' '
 b=. b > (1,}:b) +. }.c,0
 ' ' (I. b) } y
 )
+18!:4 <'z'
+3 : 0''
+if. IFIOS do.
+  r=. 'Engine: ',9!:14''
+  r=. r,LF,'Library: ',LF -.~ 1!:1<'/j/system/config/version.txt'
+  r=. r,LF,'J/iOS Version: ',VERSION
+  r=. r,LF,'Platform: ',UNAME,' ',IF64 pick '32';'64'
+  r=. r,LF,'InstallPath: ', (2!:5'HOME'), '/Documents/j'
+  JVERSION=: toJ r
+end.
+EMPTY
+)
 
 cocurrent <'j'
 Alpha=: a. {~ , (a.i.'Aa') +/ i.26
@@ -1507,6 +1566,7 @@ addfname=: , ('/' ~: {:) # i:&'/' }. ]
 boxdraw=: 3 : '9!:7 y { Boxes'
 hostcmd=: [: 2!:0 '(' , ,&' || true)'
 fpath=: [: }: +./\.@:=&'/' # ]
+isURL=: 1 e. '://'&E.
 maxrecent=: 3 : '(RecentMax <. #r) {. r=. ~.y'
 pack=: [: (,. ".&.>) ;: ::]
 pdef=: 3 : '0 0$({."1 y)=: {:"1 y'
@@ -1583,7 +1643,7 @@ t=. {.>'kernel32.dll GetConsoleWindow x'cd''
 i.0 0
 )
 mkdir=: 3 : 0
-a=. termsep y
+a=. termsep jpath y
 if. #1!:0 }:a do. 1 return. end.
 for_n. I. a='/' do.
   1!:5 :: 0: < n{.a
@@ -1638,7 +1698,7 @@ d=. 1!:0 y
 if. 1 ~: #d do. r return. end.
 if. 'd' ~: 4 { 4 pick {. d do. r return. end.
 if. IFWIN do.
-  shell_jtask_ 'rmdir ',y,' /S /Q'
+  shell_jtask_ 'rmdir "',y,'" /S /Q'
 else.
   hostcmd_j_ 'rm -rf --preserve-root ',y
 end.
@@ -1715,9 +1775,9 @@ res
 htmlhelp=: 3 : 0
 f=. jpath '~addons/docs/help/',y
 if. fexist ({.~ i:&'#') f do.
-  browse 'file://',f
+  browse file2url f
 else.
-  f=. 'http://www.jsoftware.com/docs/help',}.(i.&'/'{.]) 9!:14''
+  f=. 'http://www.jsoftware.com/docs/help', '805'
   browse f,'/',y
 end.
 )
@@ -1728,15 +1788,14 @@ dquote=: 3 : 0
 if. '"' = {.y do. y else. '"',y,'"' end.
 )
 browse=: 3 : 0
-cmd=. dlb@dtb y
-isURL=. 1 e. '://'&E.
+if. -. isURL cmd=. dltb y do.
+  if. -.fexist cmd do. EMPTY return. end.
+end.
 if. IFJHS do.
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -. isURL cmd do.
-    if. -.fexist cmd do. EMPTY return. end.
-    cmd=. 'file://',cmd
-  end.
-  redirecturl_jijxm_=: (' ';'%20') stringreplace cmd
+  redirecturl_jijxm_=: file2url cmd
+  EMPTY return.
+elseif. IFIOS do.
+  jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
 browser=. Browser_j_
@@ -1745,32 +1804,19 @@ case. 'Win' do.
   ShellExecute=. 'shell32 ShellExecuteW > i x *w *w *w *w i'&cd
   SW_SHOWNORMAL=. 1
   NULL=. <0
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -. isURL cmd do.
-    if. -.fexist cmd do. EMPTY return. end.
-    cmd=. 'file://',cmd
-  end.
   if. 0 = #browser do.
-    r=. ShellExecute 0;(uucp 'open');(uucp cmd);NULL;NULL;SW_SHOWNORMAL
+    r=. ShellExecute 0;(uucp 'open');(uucp winpathsep cmd);NULL;NULL;SW_SHOWNORMAL
   else.
-    r=. ShellExecute 0;(uucp 'open');(uucp browser);(uucp dquote cmd);NULL;SW_SHOWNORMAL
+    r=. ShellExecute 0;(uucp 'open');(uucp winpathsep browser);(uucp dquote winpathsep cmd);NULL;SW_SHOWNORMAL
   end.
   if. r<33 do. sminfo 'browse error:',browser,' ',cmd,LF2,1{::cderx'' end.
 case. 'Android' do.
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -. isURL cmd do.
-    cmd=. 'file://',cmd
-  end.
-  android_exec_host 'android.intent.action.VIEW';(utf8 cmd);'text/html';16b0004000
+  android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) cmd);'text/html';16b0004000
 case. do.
   if. 0 = #browser do.
     browser=. dfltbrowser''
   end.
   browser=. dquote (browser;Browser_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -. isURL cmd do.
-    cmd=. 'file://',cmd
-  end.
   cmd=. browser,' ',dquote cmd
   try.
     2!:1 cmd, (0=nox)#' >/dev/null 2>&1 &'
@@ -1787,6 +1833,7 @@ EMPTY
 )
 dfltbrowser=: verb define
 select. UNAME
+case. 'Android' do. ''
 case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
@@ -1809,43 +1856,36 @@ case. do.
 end.
 )
 viewpdf=: 3 : 0
-cmd=. dlb@dtb y
-isURL=. 1 e. '://'&E.
-if. IFJHS do.
-  cmd=. '/' (I. cmd='\') } cmd
+if. -. isURL cmd=. dltb y do.
   if. -.fexist cmd do. EMPTY return. end.
-  redirecturl_jijxm_=: (' ';'%20') stringreplace cmd
+end.
+if. IFJHS do.
+  redirecturl_jijxm_=: file2url cmd
   EMPTY return.
 elseif. IFIOS do.
-  jh '<a href="file://',(iospath y),'" >',cmd,'</a>'
+  jh '<a href="',(file2url cmd),'"</a>'
   EMPTY return.
 end.
-PDFReader=. PDFReader_j_
+nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+PDFReader=. nox{::PDFReader_j_;PDFReader_nox_j_
 select. UNAME
 case. 'Win' do.
   ShellExecute=. 'shell32 ShellExecuteW > i x *w *w *w *w i'&cd
   SW_SHOWNORMAL=. 1
   NULL=. <0
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -.fexist cmd do. EMPTY return. end.
   if. 0 = #PDFReader do.
-    r=. ShellExecute 0;(uucp 'open');(uucp cmd);NULL;NULL;SW_SHOWNORMAL
+    r=. ShellExecute 0;(uucp 'open');(uucp winpathsep cmd);NULL;NULL;SW_SHOWNORMAL
   else.
-    r=. ShellExecute 0;(uucp 'open');(uucp PDFReader);(uucp dquote cmd);NULL;SW_SHOWNORMAL
+    r=. ShellExecute 0;(uucp 'open');(uucp winpathsep PDFReader);(uucp dquote winpathsep cmd);NULL;SW_SHOWNORMAL
   end.
   if. r<33 do. sminfo 'view pdf error:',PDFReader,' ',cmd,LF2,1{::cderx'' end.
 case. 'Android' do.
-  cmd=. '/' (I. cmd='\') } cmd
-  if. -. isURL cmd do.
-    cmd=. 'file://',cmd
-  end.
-  android_exec_host 'android.intent.action.VIEW';(utf8 cmd);'application/pdf';0
+  android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) cmd);'application/pdf';0
 case. do.
   if. 0 = #PDFReader do.
     PDFReader=. dfltpdfreader''
   end.
   PDFReader=. dquote PDFReader
-  cmd=. '/' (I. cmd='\') } cmd
   cmd=. PDFReader,' ',dquote cmd
   try.
     2!:1 cmd
@@ -1962,28 +2002,26 @@ if. L. y do. res else. >res end.
 Loaded=: ''
 Public=: i. 0 2
 UserFolders=: i. 0 2
-Ignore=: 3 : 0''
-r=. ' colib convert coutil dates debug dir dll files libpath strings text'
+getignore=: 3 : 0
+r=. ' colib compare convert coutil dates dir dll files libpath strings text'
 if. IFIOS do.
-  r=. r, ' qtide ide/qt viewmat'
+  r=. r, ' qtide ide/qt'
 else.
   r=. r, ' ide/ios'
 end.
 if. -.IFQT do.
   r=. r, ' qtide ide/qt'
 end.
-if. (((UNAME-:'Android')>IFQT+.IFJCDROID)+.IFIOS+.IFJHS) do.
+if. (((UNAME-:'Android')>IFJA)+.IFIOS+.IFJHS) do.
   r=. r,' gl2 graphics/gl2'
 end.
-if. -.IFJCDROID +. IFQT*.'Android'-:UNAME do.
-  r=. r,' android gui/android'
+if. -.IFJA do.
+  r=. r,' ja ide/ja'
 end.
-if. -.IFJCDROID do.
-  r=. r,' droidwd gui/droidwd'
-end.
-<;._1 r
+Ignore=: <;._1 r
 )
 
+getignore''
 buildpublic=: 3 : 0
 dat=. deb toJ y
 dat=. a: -.~ <;._2 dat, LF
@@ -1993,7 +2031,8 @@ long=. ndx }. each dat
 long=. extsrc@jpathsep@deb each long
 msk=. (<'system','/') = 7 {. each long
 long=. (msk{'';'~') ,each long
-Public=: sort ~. Public,~ short,.long
+msk=. (i. ~.) {."1 Public=: Public,~ short,.long
+Public=: sort msk{Public
 empty''
 )
 cutnames=: 3 : 0
@@ -2063,18 +2102,22 @@ fullname each y
 getpath=: ([: +./\. =&'/') # ]
 xedit=: 0&$: : (4 : 0)
 'file row'=. 2{.(boxopen y),<0
-file=. ,file
-isURL=. 1 e. '://'&E.
+file=. dltb file
+if. -.fexist file do. EMPTY return. end.
 if. IFJHS do.
   xmr ::0: file
   EMPTY return.
 end.
 if. UNAME-:'Android' do.
-  file=. '/' (I. file='\') } file
-  if. -. isURL file do.
-    file=. 'file://',file
+  if. IFJA do.
+    android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) file);'text/plain';0
+  elseif. 1=ftype '/system/bin/vi' do.
+    2!:1 '/system/bin/vi', ' ', (dquote >@fboxname file)
+  elseif. 1=ftype '/system/xbin/vi' do.
+    2!:1 '/system/xbin/vi', ' ', (dquote >@fboxname file)
+  elseif. #Editor_j_ do.
+    2!:1 Editor_j_, ' ', (dquote >@fboxname file)
   end.
-  android_exec_host 'android.intent.action.VIEW';(utf8 file);'text/plain';0
   EMPTY return.
 end.
 editor=. (Editor_j_;Editor_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
@@ -2100,6 +2143,68 @@ catch.
   smoutput msg
 end.
 EMPTY
+)
+
+viewimage=: 3 : 0
+if. -. isURL cmd=. dltb y do.
+  if. -.fexist cmd do. EMPTY return. end.
+end.
+if. IFJHS do.
+  redirecturl_jijxm_=: file2url cmd
+  EMPTY return.
+elseif. IFIOS do.
+  jh '<a href="',(file2url cmd),'"</a>'
+  EMPTY return.
+end.
+nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+ImageViewer=. nox{::ImageViewer_j_;ImageViewer_nox_j_
+select. UNAME
+case. 'Win' do.
+  ShellExecute=. 'shell32 ShellExecuteW > i x *w *w *w *w i'&cd
+  SW_SHOWNORMAL=. 1
+  NULL=. <0
+  r=. ShellExecute 0;(uucp 'open');(uucp winpathsep cmd);NULL;NULL;SW_SHOWNORMAL
+  if. r<33 do. sminfo 'view image error: ',cmd,LF2,1{::cderx'' end.
+case. 'Android' do.
+  android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) cmd);'image/*';0
+case. do.
+  if. 0 = #ImageViewer do.
+    ImageViewer=. dfltimageviewer''
+  end.
+  if. 0 = #ImageViewer do.
+    browser=. Browser_j_
+    if. 0 = #browser do.
+      browser=. dfltbrowser''
+    end.
+    browser=. dquote (browser;Browser_nox_j_){::~ nox=. (UNAME-:'Linux') *. (0;'') e.~ <2!:5 'DISPLAY'
+  else.
+    browser=. dquote ImageViewer
+  end.
+  cmd=. browser,' ',dquote cmd
+  try.
+    2!:1 cmd, (0=nox)#' >/dev/null 2>&1 &'
+  catch.
+    msg=. 'Could not run the image viewer with the command:',LF2
+    msg=. msg, cmd,LF2
+    if. IFQT do.
+      msg=. msg, 'You can change the imageviewer definition in Edit|Configure|Base',LF2
+    end.
+    sminfo 'Run image viewer';msg
+  end.
+end.
+EMPTY
+)
+dfltimageviewer=: verb define
+select. UNAME
+case. 'Android' do. ''
+case. 'Win' do. ''
+case. 'Darwin' do. 'open'
+case. do.
+  try.
+    2!:0'which eog'
+    'eog' return. catch. end.
+  '' return.
+end.
 )
 cocurrent 'z'
 jpath=: jpath_j_

@@ -60,7 +60,7 @@ jhrajax FIFINFO,>FIFNAMEONLY{JHSFOUNDFILES;FIFFOUND
 )
 
 CSS=: 0 : 0
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 )
 
 JS=: 0 : 0
@@ -1362,7 +1362,7 @@ if. #FIFWHAT do.
 end.
 )
 fifh_open_button=: 3 : 0
-require '~system\extras\util\browser.ijs'
+require '~system/extras/util/browser.ijs'
 launch_jbrowser_ FIFHTMFILE
 )
 fifhshow=: 3 : 0

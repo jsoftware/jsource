@@ -23,6 +23,7 @@ doc=: 0 : 0
             JINT      integer
             JFL       floating point
             JCMPX     complex
+            JSB       symbol
 
          trailing_shape= }. shape    (default '')
 

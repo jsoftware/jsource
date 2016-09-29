@@ -6,9 +6,9 @@ DESCRIPTION=: 0 : 0
 J Memory Mapped File
 )
 
-VERSION=: '1.0.9'
+VERSION=: '1.0.17'
 
-RELEASE=: 'j701 j801'
+RELEASE=: 'j802 j803 j804 j805'
 
 PLATFORMS=: ''
 

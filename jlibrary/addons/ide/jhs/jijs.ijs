@@ -143,7 +143,7 @@ NB. codemirror requires no div padding (line number vs caret) so set padding-lef
 CSS=: 0 : 0
 #rep{color:red}
 #filenamed{color:blue;}
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 #jresizeb{overflow:visible;border:solid;border-width:1px;clear:left;}
 div{padding-left:0;}
 )

@@ -6,7 +6,7 @@ coinsert'jhs'
 if. IF64 do.
  JHS=: jpath'~user/jhs/'
 else.
- JHS=: jpath'~home/j801-user/jhs/'
+ JHS=: jpath'~home/j805-user/jhs/'
 end.
 )
 
@@ -442,7 +442,7 @@ NB. insist on virgin install - that is, jhs folder is empty
 NB. y is port to serve and password
 createjum=: 3 : 0
 if. -.IF64 do.
- 'not running as normal j801-user' assert 'j801-user'-:_9{.jpath'~user'
+ 'not running as normal j805-user' assert 'j805-user'-:_9{.jpath'~user'
 end.
 'port pass'=. y
 1!:5 :: [ <jpath'~user/jhs'

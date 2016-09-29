@@ -11,3 +11,8 @@ data/jmf - change history
 
 == 1.0.8 ==
  * j801
+
+== 1.0.13 ==
+ * MAC OS X (darwin) mmap lseek
+
+

@@ -13,18 +13,11 @@ TIMEOUT=: 60
 WWWREV=: REV=: _1
 
 IgnoreIOS=: 0 : 0
-api/gl3
 api/jni
-api/x11
 data/dbman
 data/ddmysql
 data/odbc
-demos/gldemo
-demos/glsimple
-demos/grid
 demos/isigraph
-demos/opengl
-demos/plot
 demos/wd
 demos/wdplot
 games/minesweeper
@@ -35,18 +28,15 @@ general/pcall
 general/sfl
 graphics/d3
 graphics/fvj3
-graphics/gl1ut
+graphics/fvj4
 graphics/gl2
 graphics/gnuplot
 graphics/graph
 graphics/graphviz
-graphics/grid
 graphics/jturtle
-graphics/opengl
 graphics/print
 graphics/tgsj
 graphics/treemap
-graphics/viewmat
 gui/monthview
 gui/util
 ide/qt
@@ -54,6 +44,7 @@ math/tabula
 media/animate
 media/gdiplus
 media/image3
+media/imagekit
 media/ming
 media/paint
 media/wav
@@ -87,8 +78,7 @@ setfiles=: 3 : 0
 ADDCFG=: jpath '~addons/config/'
 makedir ADDCFG
 ADDCFGIJS=: ADDCFG,'config.ijs'
-JRELEASE=: ({.~i.&'/') 9!:14''
-JRELEASE=: 'j801'
+JRELEASE=: 'j805'
 LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
@@ -114,14 +104,12 @@ Files outside the system subdirectory, such as profile.ijs, are not changed.
 )
 cutjal=: ([: (* 4 > +/\) ' ' = ]) <;._1 ]
 cutjsp=: ([: (* 5 > +/\) ' ' = ]) <;._1 ]
-dquote=: '"'&, @ (,&'"')
 fname=: #~ ([: *./\. ~:&'/')
 hostcmd=: [: 2!:0 '(' , ] , ' || true)'"_
 ischar=: 2 = 3!:0
 rnd=: [ * [: <. 0.5 + %~
 sep2under=: '/' & (I.@('_' = ])})
 termLF=: , (0 < #) # LF -. {:
-todel=: ; @: (DEL&, @ (,&(DEL,' ')) each)
 tolist=: }. @ ; @: (LF&,@,@":each)
 isjpkgout=: ((4 = {:) *. 2 = #)@$ *. 1 = L.
 getintro=: ('...' ,~ -&3@[ {. ])^:(<#)
@@ -200,8 +188,6 @@ fls=. ndx {.each fls
 zps=. <;._2 &> fls ,each '_'
 pfm=. 3 {"1 zps
 uname=. tolower UNAME
-if. UNAME-:'Darwin' do. uname=. 'linux' end.
-if. UNAME-:'Android' do. uname=. 'linux' end.
 msk=. (uname -: ({.~ i.&'.')) &> pfm
 if. 1 ~: +/msk do. msk=. 1,~ }:0*.msk end.
 msk # zps,.fls,.siz
@@ -274,9 +260,9 @@ case. 'Win' do.
 case. 'Linux' do.
   zps=. lnx # zps
 case. 'Android' do.
-  zps=. (lnx +. and) # zps
+  zps=. and # zps
 case. 'Darwin' do.
-  zps=. (lnx +. mac) # zps
+  zps=. mac # zps
   zps=. zps /: 3 {"1 zps
   zps=. (~: 3 {."1 zps) # zps
 end.
@@ -359,8 +345,8 @@ unzip=: 3 : 0
 'file dir'=. dquote each y
 e=. 'Unexpected unzip error'
 if. IFUNIX do.
-  notarcmd=. 0
-  if. IFIOS +. UNAME-:'Android' do.
+  notarcmd=. IFIOS
+  if. UNAME-:'Android' do.
     notarcmd=. _1-: 2!:0 ::_1: 'which tar'
     if. (UNAME-:'Android') > '/mnt/sdcard'-:2!:5'EXTERNAL_STORAGE' do. notarcmd=. 1 end.
   end.
@@ -371,7 +357,7 @@ if. IFUNIX do.
   else.
     e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#(('Darwin'-:UNAME){::'--no-same-owner --no-same-permissions';'-o -p')),' -xzf ',file,' -C ',dir
   end.
-  if. (0~:FHS) *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
+  if. ('/usr/'-:5{.dir) *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
     shellcmd ::0: 'find ',dir,' -type d -exec chmod a+rx {} \+'
     shellcmd ::0: 'find ',dir,' -type f -exec chmod a+r {} \+'
   end.
@@ -527,9 +513,10 @@ if. 0 = #y do. y return. end.
 dep=. getdepend_console 1{"1 y
 PKGDATA #~ (1{"1 PKGDATA) e. dep
 )
-getdepend_console=: 3 : 0
+getdepend_console=: 0&$: : (4 : 0)
 if. 0 = #y do. y return. end.
 old=. ''
+if. 0=#PKGDATA do. init_console'' end.
 ids=. 1{"1 PKGDATA
 dep=. 6{"1 PKGDATA
 res=. ~. <;._1 ; ',' ,each (ids e. y) # dep
@@ -537,7 +524,7 @@ whilst. -. res-:old do.
   old=. res
   res=. ~. res, <;._1 ; ',' ,each (ids e. res) # dep
 end.
-~. y, res -. a:, {."1 ADDINS
+/:~ ~. y, res -. a:, (0=x)# {."1 ADDINS
 )
 httpget=: 3 : 0
 'f t'=. 2 {. (boxxopen y),a:
@@ -555,7 +542,8 @@ if. IFIOS +. UNAME-:'Android' do.
   whilst. 0 do.
     'rc sk'=. sdsocket_jsocket_''
     if. 0~:rc do. break. end.
-    rc=. sdconnect_jsocket_ sk;PF_INET_jsocket_;'23.21.67.48';80
+    ip=. >2{sdgethostbyname_jsocket_ 'www.jsoftware.com'
+    rc=. sdconnect_jsocket_ sk;PF_INET_jsocket_;ip;80
     if. 0~:rc do. break. end.
     'rc sent'=. ('GET ',f,' HTTP/1.0',LF2) sdsend_jsocket_ sk;0
     if. 0~:rc do. break. end.
@@ -806,7 +794,6 @@ remove_labs=: 3 : 0
   ADDLABS=: ; txt ,each LF
 )
 LOG=: 1
-LOGMAX=: 100
 log=: 3 : 0
 if. LOG do. smoutput y end.
 )
@@ -1019,19 +1006,18 @@ jpkg=: 4 : 0
 do_install=: 3 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.
 'update' jpkg ''
-select. y
-case. 'qtide' do.
-  'install' jpkg 'base library ide/qt'
-  getqtbin 0
-  smoutput 'exit and restart J using ',IFWIN pick 'bin/jqt';(fexist jpath '~install/jqt.cmd'){::'bin/jqt.exe';'jqt.cmd'
-case. 'all' do.
-  'install' jpkg 'all'
-  getqtbin 0
+if. -. (<y) e. 'all';'qtide' do.
+  'install' jpkg y return.
 end.
+if. IFQT do.
+  smoutput 'Must run from jconsole' return.
+end.
+'install' jpkg (y-:'all') pick 'base library ide/qt';'all'
+getqtbin 0
+msg=. (+/ 2 1 * IFWIN,'Darwin'-:UNAME) pick 'jqt.sh';'the jqt icon';'jqt.cmd'
+smoutput 'Exit and restart J using ',msg
 )
 do_getqtbin=: 3 : 0
-IFPPC=. 0
-if. 'Darwin'-:UNAME do. IFPPC=. 1. e. 'powerpc' E. 2!:0 'uname -p' end.
 smoutput 'Installing JQt binaries...'
 if. 'Linux'-:UNAME do.
   if. IFRASPI do.
@@ -1041,22 +1027,23 @@ if. 'Linux'-:UNAME do.
   end.
   z1=. 'libjqt.so'
 elseif. IFWIN do.
-  z=. 'jqt-win-',(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'jqt-win',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
   z1=. 'jqt.dll'
 elseif. do.
-  z=. 'jqt-mac-',(IFPPC pick (IF64 pick 'x86';'x64');'ppc'),'.zip'
+  z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
   z1=. 'libjqt.dylib'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/jqt/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j805/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
 d=. jpath '~bin'
+fhs=. ('Linux'-:UNAME) *. '/usr/lib/'-:9{.libjqt
 if. IFWIN do.
   unzip_jpacman_ p;d
 else.
   if. 'Linux'-:UNAME do.
-    if. (0~:FHS) do.
+    if. fhs do.
       if. IFRASPI do.
         d1=. '/usr/lib/arm-linux-gnueabihf/.'
       elseif. IF64 do.
@@ -1073,46 +1060,30 @@ else.
   end.
 end.
 ferase p
-if. #1!:0 ((0~:FHS)*.'Linux'-:UNAME){::(jpath '~bin/',z1);'/usr/bin/jqt' do.
-  m=. 'Finished install of jqt binaries.'
+if. #1!:0 fhs{::(jpath '~bin/',z1);'/usr/bin/jqt' do.
+  m=. 'Finished install of JQt binaries.'
 else.
-  m=. 'Unable to install jqt binaries.',LF
-  m=. m,'check that you have write permission for: ',LF,((0~:FHS)*.'Linux'-:UNAME){::(jpath '~bin');'/usr/bin'
+  m=. 'Unable to install JQt binaries.',LF
+  m=. m,'check that you have write permission for: ',LF,fhs{::(jpath '~bin');'/usr/bin'
 end.
 smoutput m
 if. 'Linux'-:UNAME do. return. end.
-if. ('Darwin'-:UNAME) *. 1=#1!:0 jpath '/Library/Frameworks/QtCore.framework' do. return. end.
 
-tgt=. jpath '~install/',(IFWIN{'Qq'),'t'
-if. (0={.y,0) *. 1=#1!:0 tgt do. return. end.
-
+tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt5Core.dll'
+y=. (*#y){::0;y
 smoutput 'Installing Qt library...'
 if. IFWIN do.
-  z=. 'qt48-win-',(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt56-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 else.
-  z=. 'qt48-mac-',(IFPPC pick (IF64 pick 'x86';'x64');'ppc'),'.zip'
+  z=. 'qt56-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/qtlib/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j805/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
-d=. jpath '~install'
+d=. jpath IFWIN{::'~install';'~bin'
 if. IFWIN do.
   unzip_jpacman_ p;d
-  if. -.fexist jpath '~install/jqt.cmd' do.
-    smoutput 'move Qt library to bin'
-    plugins=. {.("1) 1!:0 jpath '~install/qt/plugins/*'
-    for_ps. plugins do.
-      spawn_jtask_ 'cmd /k rmdir /s /q "',('/\' charsub jpath '~bin/',>ps),'" > nul'
-      (jpath '~bin/',>ps) frename (jpath '~install/qt/plugins/',>ps)
-    end.
-    spawn_jtask_ 'cmd /k rmdir /s /q "',('/\' charsub jpath '~install/qt/plugins'),'" > nul'
-    for_fn. {."(1) 1!:0 jpath '~install/qt/*' do.
-      1!:55 ::0: <jpath '~bin/',>fn
-      (jpath '~bin/',>fn) frename (jpath '~install/qt/',>fn)
-    end.
-    'Do not delete this folder' 1!:2 <jpath '~install/qt/dummy.txt'
-  end.
 else.
   hostcmd_jpacman_ 'unzip -o ',(dquote p),' -d ',dquote d
 end.
@@ -1121,7 +1092,7 @@ if. #1!:0 tgt do.
   m=. 'Finished install of Qt binaries.'
 else.
   m=. 'Unable to install Qt binaries.',LF
-  m=. m,'check that you have write permission for: ',LF,tgt
+  m=. m,'check that you have write permission for: ',LF,IFWIN{::tgt;jpath'~bin'
 end.
 smoutput m
 

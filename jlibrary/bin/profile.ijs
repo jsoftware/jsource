@@ -3,23 +3,22 @@ NB. JFE sets BINPATH_z_ and ARGV_z_
 NB. add your sentences in startup.ijs
 
 systype=. 9!:12''
-jpathsep_z_=: '/'&(('\' I.@:= ])}) NB. convert to / separator
+jpathsep_z_=: '/'&(('\' I.@:= ])})
 BINPATH_z_=: jpathsep BINPATH_z_
 
 NB. create SystemFolders
 bin=. BINPATH
 install=. (bin i: '/'){.bin
-fhs=. (FHS"_)^:(0=4!:0<'FHS') (0)
-install=. (0&~:fhs){::install;'/usr/share/j/8.0.1'
+fhs=. (FHS"_)^:(0=4!:0<'FHS')(5=systype)*.0=#1!:0<BINPATH,'/../system/util/boot.ijs'
+install=. (0&~:fhs){::install;'/usr/share/j/8.0.4'
 install=. (INSTALLROOT"_)^:(0=4!:0<'INSTALLROOT') install
 addons=. install,'/addons'
 system=. install,'/system'
 tools=. install,'/tools'
 home=. >(systype-5){(2!:5'HOME');2!:5'USERPROFILE'
 home=. >(0-:home){home;,'/'
-isroot=. ('root'-:2!:5'USER') +. (<home) e. '/var/root';'/root';'';,'/'
-t=. 9!:14''
-userx=. '/j',('64-'#~16={:$3!:3[2),'-user',~}.(t i.'/'){.t
+isroot=. (0=#1!:0'/data') *. ('root'-:2!:5'USER') +. (<home) e. '/var/root';'/root';'';,'/'
+userx=. '/j',('64-'#~16={:$3!:3[2),'805-user'
 user=. home,userx
 user=. >isroot{user;install,'/user'
 home=. >isroot{home;install
@@ -27,11 +26,11 @@ break=. user,'/break'
 config=. user,'/config'
 snap=. user,'/snap'
 temp=. user,'/temp'
-temp=. >isroot{temp;'/tmp'
+temp=. >isroot{temp;(*#1!:0'/tmp'){::'/tmp';~(0-:2!:5'TMPDIR'){::(2!:5'TMPDIR');temp
 ids=. ;:'addons bin break config home install snap system tools temp user'
 
 0!:0 :: ] <(({.~ i:&'/') jpathsep >{.4!:3''),'/profilex.ijs' NB. override
-0!:0 :: ] <home,>(systype-5){'/.jprofile.ijs';'/_jprofile.ijs' NB. override per user
+0!:0 :: ] ^:(0=#1!:0 (({.~ i:&'/') jpathsep >{.4!:3''),'/startup_android.ijs') <home,>(systype-5){'/.jprofile.ijs';'/_jprofile.ijs' NB. override per user except for standalone script
 
 SystemFolders_j_=: ids,.jpathsep@".&.>ids
 

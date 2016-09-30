@@ -34,7 +34,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  jt->parsercalls=0;
  jt->parserstkbgn=jt->parserstkend1=0;
  CLEARZOMBIE
- // jt->asgzomblevel = 0;  // suppress premature change to zombie names
+ jt->asgzomblevel = 2;  // allow premature change to zombie names
  s=bitdisp; 
  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);

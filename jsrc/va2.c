@@ -648,6 +648,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
    // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
   }
   // Not sparse.  Allocate a result area of the right type, and copy in its cell-shape after the frame
+  // If an argument can be overwritten, use it rather than allocating a new one
   GA(z,zt,zn,f+r,sf); ICPY(f+AS(z),s,r); 
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   av=CAV(a); wv=CAV(w); zv=CAV(z);   // point to the data

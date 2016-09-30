@@ -32,6 +32,7 @@ typedef struct {VA2 p1[6];} UA;
 #define VXEQ            (Vxx|(XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|(XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|(XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
+#define VIPOK           (1<<27)    // This routine can put its result over an input
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) ((x)&VARGMSK)

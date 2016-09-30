@@ -77,53 +77,59 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0042);A y,y0,ya,yw,z;B ab,
 /* frame agreement is verified before invoking f        */
 /* frames either match, or one is empty                 */
 /* (i.e. prefix agreement invokes general case)         */
+// If the action verb handles inplacing, we pass that through, whether for
 
-A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old=jt->rank,rv[2],wr; 
- RZ(w);
+A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr; 
+ F1PREFIP; RZ(w);
  wr=AR(w); rv[1]=m=efr(wr,m);
- if(m>=wr)R CALL1(f1,w,fs);
+ if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
+ if(m>=wr)R CALL1IP(f1,w,fs);
  rv[0]=0;
- jt->rank=rv; z=CALL1(f1,w,fs); jt->rank=old; 
+ old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old; 
  R z;
 }
 
 // IRS setup for dyads x op y
 // a is x, w is y
 // fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none
+//  if inplacing is enabled in jt, fs must be given
 // l, r are nominal ranks of fs
 // f2 is a setup verb (jtover, jtreshape, etc)
-A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old=jt->rank,rv[2],wf,wr;
+A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
- RZ(a&&w);
+ F1PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;  // get rank, effective rank, length of frame...
  wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;     // ...for both args
- if(!(af||wf))R CALL2(f2,a,w,fs);   // if no frame, call setup verb and return result
+ if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
+ if(!(af||wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  /* if(af&&wf&&af!=wf)R rank2ex(a,w,fs,l,r,f2); */
- jt->rank=rv; z=CALL2(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+ old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
   // Not all setup verbs (*f2)() use the fs argument.  
  R z;
 }
 
 
 static DF1(cons1a){R VAV(self)->f;}
-
 static DF2(cons2a){R VAV(self)->f;}
 
+// Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){V*sv=VAV(self);
  RZ(w);
  R rank1ex(w,self,efr(AR(w),*AV(sv->h)),cons1a);
 }
-
 static DF2(cons2){V*sv=VAV(self);I*v=AV(sv->h);
  RZ(a&&w);
  R rank2ex(a,w,self,efr(AR(a),v[1]),efr(AR(w),v[2]),cons2a);
 }
 
+// Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
+// If inplacing is allowed here, pass that on to irs.  It will see whether the action verb can support inplacing.
+// NOTHING HERE MAY DEREFERENCE jt!!
 static DF1(rank1i){DECLF;A h=sv->h;I*v=AV(h); R irs1(w,fs,*v,f1);}
-
 static DF2(rank2i){DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
+// u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  RZ(w);
  wr=AR(w); m=efr(wr,v[0]);
@@ -222,17 +228,17 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
   // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
   rat1s(a);
-  vf=VASGSAFE;    // the noun can't mess up assignment
+  vf=VASGSAFE;    // the noun can't mess up assignment, and does not support IRS
  }else{
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
-  // supports IRS.
+  // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   V* av=VAV(a);   // point to verb info
-  f1=av->flag&VISATOMIC1 ? av->f1 : av->flag&VIRS1 ? rank1i : rank1;
-  f2=av->flag&VIRS2 ? rank2i : rank2; 
   vf=av->flag&VASGSAFE;  // inherit ASGSAFE from u
+  if(av->flag&VISATOMIC1){f1=av->f1;}else if(av->flag&VIRS1){f1=rank1i;vf|=VINPLACEOK1;}else{f1=rank1;}
+  if(av->flag&VIRS2){f2=rank2i;vf|=VINPLACEOK2;}else{f2=rank2;}
  }
 
- // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; not does it (yet) support inplace ops
+ // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports irs
  R fdef(CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
 }

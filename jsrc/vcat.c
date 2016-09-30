@@ -230,9 +230,9 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
   // in the shape that are part of the shape of an item), or if a is atomic (because
   // we would have to replicate a, and anyway how much are you saving?), or if w has higher rank than a (because the rank of the
   // result would increase, and there's no room in the shape)
-  // We insist that the rank of the verb be at least as large as the rank of each argument.  There are some cases where it
+  // jt->rank is not set unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
-  if(AN(a)&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&(!jt->rank||(jt->rank[0]>=ar&&jt->rank[1]>=wr))){
+  if(AN(a)&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
    // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis

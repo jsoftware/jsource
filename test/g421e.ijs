@@ -2,6 +2,10 @@ NB. f//. y --------------------------------------------------------------
 
 randuni''
 
+NB. test failed on small ct
+ct   =: 9!:18''
+9!:19[2^_40
+
 data=: 4 : 0
  select. x 
   case. 'b' do. y ?@$ 2 
@@ -53,7 +57,8 @@ test2=: 2 : 0
 
 22 b. test2 (17 b.)"0 'iI'
 
+9!:19 ct
 
-4!:55 ;:'adot1 adot2 sdot0 data test test2 xx yy'
+4!:55 ;:'adot1 adot2 sdot0 ct data test test2 xx yy'
 
 

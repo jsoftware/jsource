@@ -145,7 +145,6 @@ JZWSPU8=: 226 128 139{a. NB. empty prompt kludge - &#8203; \200B
 
 NB. J needs input - y is prompt - '' '   ' '      '
 input=: 3 : 0
-logjhs 'prompt'
 logapp 'jhs input prompt: ',":#y
 try.
 if. _1~:SKSERVER do. try. ".'urlresponse_',URL,'_ y' catch. end. end. NB. jijx
@@ -159,7 +158,6 @@ elseif. 'post'-:METHOD do. r=. getv'jdo'
 elseif. '.'e.URL       do. r=. 'jev_get_jfilesrc_ URL_jhs_'
 elseif. 1              do. r=. 'jev_get_',URL,'_'''''
 end.
-logjhs'sentence'
 logapp 'jhs sentence: ',r
 if. JZWSPU8-:3{.r do. r=. 3}.r end. NB. empty prompt kludge
 r NB. J sentence to run
@@ -207,13 +205,6 @@ try.
   if. '<br>'-:_4{.t do. t=. _4}.t end.
   LOGN=: LOGN,'<div class="',class,'">',t,'</div>'
  end.
-
- NB. INPUT now in LS
- NB. if. (3=type)*.(0~:#s-.' ')*.(-.s-:>{.INPUT)*.(-.'jev_'-:4{.s)*.0=+/'</script'E.tolower s do.
- NB.  INPUT=: INPUT,~<s -. LF NB. labs (0!:noun) has LF???
- NB.  INPUT=: (PC_RECALL_LIMIT<.#INPUT){.INPUT
- NB. end.
-
 catch.
  logappx'output'
  exit''
@@ -422,10 +413,6 @@ lts=: 3 : 0
 20{.4 3 3 3 3 3":<.6!:0''
 )
 
-logjhs=: 3 : 0
-if. #USERNAME do. ((lts''),y,LF)1!:3 logjhsfile end.
-)
-
 logapp=: 3 : 0
 if. -.PC_LOG do. return. end.
 ((lts''),(>coname''),' : ',y,LF)1!:3 logappfile
@@ -551,6 +538,12 @@ jjsx_z_=: 3 : 0
 jjs';',y
 )
 
+NB. pop-up window - jtable/jd3
+windowopen=: 4 : 0
+m=. x,' pop-up blocked\nadjust browser settings to allow localhost pop-up\nsee jhelp section pop-up'
+jjs'if(null==window.open("<X>","<Y>"))alert("<M>");'rplc '<X>';x;'<Y>';y;'<M>';m
+)
+
 jtable_z_=: 3 : 0
 require'~addons/ide/jhs/jtable.ijs'
 't n'=. y
@@ -558,43 +551,102 @@ n=. dltb n
 n=. n,>('_'={:n){'__';''
 validate_jtable_ n
 (t,'_ev_body_load_data_jtable_')=: n
-jjs'window.open("jtable","',t,'");'
+'jtable' windowopen_jhs_ t
+)
+
+NB. jd3 plots
+
+jd3doc_z_=: 0 : 0
+jd3'help'
+jd3'help options'
+
+jd3'reset'         - jd3x=: '' - clear options  
+jd3'title TITLE'   - add title option to jd3x
+
+jd3 tab;options;data
+ tab     - browser tab title
+ options - list of jd3 options
+ data    - data to plot
+
+example:
+jd3'reset'
+jd3'type line'
+jd3'title My Data'
+jd3'legend ["line one","line two","line three"]'
+jd3'line_plot';jd3x;?3 4$100
+
+jd3'type bar'
+jd3'label ["a","b","c","d"]'
+jd3'bar_plot';jd3x;?3 4$100
+
+jd3'type pie'
+jd3'pie_plot';jd3x;?4$100
+)
+
+jd3docoptions_z_=: 0 : 0
+jd3'option arg'    - add option to jd3x__
+ type        line      - line or pie or bar   
+ title       Good Data
+ titlesize   12pt      - html font size
+ minh        100       - min graph pixel height
+ maxh        300       - max graph pixel height
+ linewidth   2
+ barwidth    20
+ legend      ["a","b","c"]
+ lable       ["s","d","f"]
+ header      how now<hr>
+ header_css  "font-size":"24pt","margin-left":50
+ footer      <hr>how now
+ footer_css  "font-size":"24pt","margin-left":50
+ data        formatted data - as formatted by jd3data
 )
 
 jd3_z_=: 3 : 0
 require'~addons/ide/jhs/jd3.ijs'
-'t p'=. y
+if. 'literal'-:datatype y do.
+ i=. y i.' '
+ c=. dltb i{.y
+ a=. dltb i}.y
+ b=. '"',a,'"'
+ select. c
+ fcase.'' do.
+ case.'help' do.
+  ;(a-:'options'){jd3doc;jd3docoptions return.
+ case.'reset' do. jd3x=: '' return.
+ case.'header' do.
+  t=. '$("#ahtml").html(',b,')'
+ case.'footer' do.
+  t=. '$("#zhtml").html(',b,')'
+ case.'header_css' do.
+  t=. '$("#ahtml").css({',a,'})'
+ case.'footer_css' do.
+  t=. '$("#zhtml").css({',a,'})'
+ case. ;:'type title titlesize minh maxh' do.
+  t=. c,'=',b
+ case. ;:'legend label' do.
+  t=. c,'=',a
+ case. do. ('jd3 unknown option: ',y)assert 0  
+ end.
+ jd3x=: jd3x,t,LF
+ i.0 0
+ return.
+end.
+if. 3=#y do.
+ 't p d'=. y
+  p=. p,jd3data d
+else.  
+ 't p'=. y
+end. 
 (t,'_ev_body_load_data_jd3_')=: p
-jjs'window.open("jd3","',t,'");'
+'jd3' windowopen_jhs_ t
 )
 
 jd3data_z_=: 3 : 0
 d=. ":each <"1 y
 d=. d rplc each <' ';','
+d=. d rplc each <'_';'-'
 d=. ']',~each '[',each d
 ']',~'data=[',;d,each','
-)
-
-jd3line_z_=: 'type="line"',LF
-jd3pie_z_=:  'type="pie"',LF
-jd3bar_z_=:  'type="bar"',LF
-
-NB. jd3'foo';jd3x,jd3line,jd3data ?3 4$100
-NB. jd3'foo';jd3x,jd3pie,jd3data ?4$100
-jd3x_z_=: 0 : 0
-title="Example J D3 Plot"
-titlesize= "24pt"
-minh=50
-maxh=400
-linewidth=2
-barwidth=40
-legend= ["legend zero","legend one","legend two","legend three"]
-label=["a","b","c","d"] // pie, bar
-$("#ahtml").html("how now<br>brown cow<hr>")
-$("#zhtml").html("<hr>one flew over")
-$("#ahtml").css({"font-size":"24pt","margin-left":50})
-$("#zhtml").css({"font-size":"24pt","margin-left":50})
-$("#legend").css({"font-size":"16pt","text-align":"center"})
 )
 
 NB. somewhat unique query string - avoid cache - not quaranteed to be unique!
@@ -722,6 +774,10 @@ J HTTP Server - init OK
 
 Requires HTML 5 browser with javascript.
 
+On many systems localhost is the same as <LOCAL>. 
+
+Ctrl+c here signals an interrupt to J.
+
 A : separates ip address from port.
 <REMOTE>
 Start a web browser on this machine and enter URL:
@@ -744,33 +800,40 @@ If JHS is serving the port, close this task and use the running server.
 
 If JHS server is not working, close it, close this task, and restart.
 
-
-See file: <CFGFILE>
-for information on using another PORT.
+See file "~addons/ide/jhs/config/jhs.cfg" on using another PORT.
 )
 
-NB. PC_FONTFAMILY=:   '"courier new","courier","monospace"'
-NB. PC_FONT_COLOR=:   'black'
-NB. PC_RECALL_LIMIT=: 25       NB. limit ijx recall lines
-NB. PC_LOG_LIMIT=:    20000    NB. limit ijx log size in bytes
-
 NB. html config parameters
-config=: 3 : 0
-PC_FM_COLOR=:     'black'  NB. formatted output
-PC_ER_COLOR=:     'red'    NB. error
-PC_LOG_COLOR=:    'blue'   NB. log user input
-PC_SYS_COLOR=:    'purple' NB. system error
-PC_FILE_COLOR=:   'green'  NB. 1!:! file output
+configdefault=: 3 : 0
+PORT=: 65001       NB. private port range 49152 to 65535
+LHOK=: 1           NB. 0 if localhost requires user/pass login
+BIND=: 'localhost' NB. 'any'  - access from any machine
+USER=: ''          NB. 'john' - login
+PASS=: ''          NB. 'abra' - login
+TIPX=: ''          NB. tab title prefix - distinguish sessions
 
-PC_BOXDRAW=:      0        NB. 0 utf8, 1 +-, 2 oem
+PC_FONTFIXED=:     '"courier new","courier","monospace"'
+PC_FONTVARIABLE=:  '"sans-serif"'
+PC_BOXDRAW=:       0        NB. 0 utf8, 1 +-, 2 oem
+
+PC_FM_COLOR=:      'black'  NB. formatted output
+PC_ER_COLOR=:      'red'    NB. error
+PC_LOG_COLOR=:     'blue'   NB. log user input
+PC_SYS_COLOR=:     'purple' NB. system error
+PC_FILE_COLOR=:    'green'  NB. 1!:! file output
+)
+
+NB. undocumneted config parameters
 PC_RECVSLOW=:     0        NB. 1 simulates slow recv connection
 PC_SENDSLOW=:     0        NB. 1 simulates slow send connection
 PC_LOG=:          0        NB. 1 to log events
 PC_RECVBUFSIZE=:  10000    NB. size of recv buffer
 PC_RECVTIMEOUT=:  5000     NB. seconds for recv timeout
 PC_SENDTIMEOUT=:  5000     NB. seconds for send timeout
-)
 
+USERNAME=: '' NB. JUM left over
+
+NB. JUM - no longer used
 NB. fix userfolders for username y
 NB. adjust SystemFolders for multi-users in single account
 fixuf=: 3 : 0
@@ -826,29 +889,10 @@ NB. current locale possibly changed
 cocurrent 'jhs'
 )
 
-NB. PORT defined - assumes already configured
-NB. config_file jhscfg username
-NB. config_file 'PORT=:....' does ". instead of load
-NB. USERNAME not '' adjusts SystemFolders and does cd ~temp
-NB. load config files to set PORT LHOK BIND PASS USER
-NB. configuration loads
-NB.   ~addons/ide/jhs/config/jhs_default.ijs
-NB.  then loads first file (if any) that exists from
-NB.   config_file (error if not '' and does not exist)
-NB.   ~config/jhs.ijs
-NB.   ~addons/ide/jhs/config/jhs.ijs
-NB. config sets PORT BIND LHOK PASS USER
-NB. USER used in jlogin - JUM forces USER=:USERNAME
-jhscfg=: 4 : 0
-fixuf y
-if. _1=nc<'PORT' do.
- lcfg jpath'~addons/ide/jhs/config/jhs_default.ijs'
- if.     'PORT=:'-:6{.x                                   do. ".x
- elseif.     -.''-:t=. jpath x                            do. lcfg t
- elseif. fexist t=. jpath'~config/jhs.ijs'                do. lcfg t
- elseif. fexist t=. jpath'~addons/ide/jhs/config/jhs.ijs' do. lcfg t
- end.
-end.
+NB. simplified config
+jhscfg=: 3 : 0
+configdefault''
+if. 3=nc<'config' do. config'' end.
 'PORT invalid' assert (PORT>49151)*.PORT<2^16
 'BIND invalid' assert +./(<BIND)='any';'localhost'
 'LHOK invalid' assert +./LHOK=0 1
@@ -863,28 +907,21 @@ TIPX=: TIPX,(0~:#TIPX)#'/'
 'TIPX invalid' assert 2=3!:0 TIPX
 if. _1=nc<'TARGET' do. TARGET=: '_blank' end.
 if. _1=nc<'OKURL' do. OKURL=: '' end. NB. URL allowed without login
-if. #USERNAME do. USER=:USERNAME end.
 BIND=: >(BIND-:'any'){'127.0.0.1';''
 )
 
-NB. [config_file] init USERNAME
 NB. SO_REUSEADDR allows server to kill/exit and restart immediately
 NB. FD_CLOEXEC prevents inheritance by new tasks (JUM startask)
 init=: 3 : 0
-''init y
-:
 'already initialized' assert _1=nc<'SKLISTEN'
 IFJHS_z_=: 1
 if. 3=nc<'getignore_j_' do. getignore_j_'' end. NB. not defined in 801
 canvasnum_jhs_=: 1
-x jhscfg y
+jhscfg''
 PATH=: jpath'~addons/ide/jhs/'
 NB. IP=: getexternalip''
 LOCALHOST=: >2{sdgethostbyname_jsocket_'localhost'
 logappfile=: <jpath'~user/.applog.txt' NB. username
-logjhsfile=: <jpath'~user/.jhslog.txt' NB. username
-logjhs'start'
-config''
 SETCOOKIE=: 0
 NVDEBUG=: 0 NB. 1 shows NV on each input
 NB. leading &nbsp; for Chrome delete all
@@ -896,7 +933,7 @@ PS=: '/'
 cfgfile=. jpath'~addons/ide/jhs/config/jhs_default.ijs'
 r=. dobind BIND
 if. r=10048 do.
- smoutput console_failed hrplc 'PORT CFGFILE';(":PORT);cfgfile
+ echo console_failed hrplc 'PORT';":PORT
  'JHS init failed'assert 0
 end.
 sdcheck_jsocket_ r

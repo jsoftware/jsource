@@ -6,7 +6,7 @@ DESCRIPTION=: 0 : 0
 JHS IDE
 )
 
-VERSION=: '1.0.212'
+VERSION=: '1.0.218'
 
 FILES=: 0 : 0
 history.txt
@@ -35,6 +35,7 @@ jijxh.ijs
 jijxm.ijs
 jijxipad.ijs
 jlogin.ijs
+shortcut.ijs
 jtable.ijs
 jum.ijs
 sp.ijs
@@ -42,7 +43,7 @@ spxdemo.ijs
 utilh.ijs
 utiljs.ijs
 config/jhs_default.ijs
-config/jhs65001.ijs
+config/jhs.cfg
 demo/jdemo1.ijs
 demo/jdemo2.ijs
 demo/jdemo3.ijs
@@ -98,4 +99,4 @@ FILESWIN=: 0 : 0
 grep.exe
 )
 
-RELEASE=: 'j701 j801 j802 j803 j804'
+RELEASE=: 'j701 j801 j802 j803 j804 j805'

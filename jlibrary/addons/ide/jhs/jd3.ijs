@@ -4,7 +4,7 @@ coinsert'jhs'
 HBS=: 0 : 0
 '<link rel="stylesheet" href="~addons/ide/jhs/js/jquery/smoothness/jquery-ui.custom.css" />'
 '<script src="~addons/ide/jhs/js/jquery/jquery-2.0.3.min.js"></script>'
-'<script src="~addons/ide/jhs/js/d3/d3.v3.min.js"></script>'
+'<script src="~addons/ide/jhs/js/d3/d3.min.js"></script>'
 '<div id="d3error"></div>'
 '<div id="ahtml"></div>'
 '<div id="graph"></div>'
@@ -37,7 +37,7 @@ path{stroke: steelblue;stroke-width: 1;fill: none;}
 .x.axis .minor{stroke-opacity:.5;}
 .x.axis path{display:none;}
 .y.axis line, .y.axis path{fill:none;stroke:#000;}
-.slice text{font-size:16pt;font-family:Arial;}
+.slice text{font-size:16pt;}
 #d3error{font-size:24pt;margin-left:20px;margin-top:20px;}
 span{font-size:inherit;}
 )
@@ -47,8 +47,8 @@ JS=: 0 : 0 NB. javascript
 title= "title";
 titlesize= "24pt"
 type= "line";
-minh= 0;
-maxh= 2000;
+minh= 50;
+maxh= 200;
 linewidth= 1;
 barwidth= 40;
 legend= [];
@@ -57,7 +57,7 @@ data=[[]];  // data matrix - list of lists
 
 
 //window.onresize= plot;
-function color(n){return d3.scale.category20().range()[n];}
+function color(n){return d3.scaleOrdinal(d3.schemeCategory10).range()[n];}
 function getlabel(i){return (i<label.length)?label[i]:i;}
 
 // must use JHS framework load handler instead of jquery - $(document).ready(function() 
@@ -150,10 +150,10 @@ function plotline()
  h= (h<minh)?minh:h;
  h= (h>maxh)?maxh:h;
  
- var x= d3.scale.linear().domain([0,-1+data[0].length]).range([0,w]);
- var y= d3.scale.linear().domain([dmin,dmax]).range([h,0]);
+ var x= d3.scaleLinear().domain([0,-1+data[0].length]).range([0,w]);
+ var y= d3.scaleLinear().domain([dmin,dmax]).range([h,0]);
 
- var line = d3.svg.line()
+ var line = d3.line()
    .x(function(d,i){return x(i);})
    .y(function(d){return y(d);})
 
@@ -163,10 +163,10 @@ function plotline()
     .append("svg:g")
     .attr("transform","translate("+m+","+m+")");
 
- var xAxis = d3.svg.axis().scale(x).tickSize(-h).tickSubdivide(true);
+ var xAxis = d3.axisBottom().scale(x).tickSize(-h);
    graph.append("svg:g").attr("class", "x axis").attr("transform", "translate(0,"+h+")").call(xAxis);
 
- var yAxisLeft = d3.svg.axis().scale(y).ticks(4).orient("left"); // left y axis
+ var yAxisLeft = d3.axisLeft().scale(y).ticks(4); // .orient("left"); // left y axis
    graph.append("svg:g").attr("class", "y axis").attr("transform", "translate(-25,0)").call(yAxisLeft);
   
  for(var i=0;i<data.length;++i)
@@ -209,9 +209,10 @@ function plotpie()
   .append("svg:g")
   .attr("transform", "translate("+(r+m)+","+(r+m)+")")
  
- var arc = d3.svg.arc().outerRadius(r);
+ var arc = d3.arc().outerRadius(r);
  
- var pie = d3.layout.pie()
+ //var pie = d3.layout.pie()
+ var pie = d3.pie()
   .value(function(d){return d;});
  
  var arcs = vis.selectAll("g.slice")
@@ -268,8 +269,10 @@ h= (h<minh)?minh:h;
 h= (h>maxh)?maxh:h;
 
 var p= [m,m,m,m], // 20 50 30 20
-    x= d3.scale.ordinal().rangeRoundBands([0, w - p[1] - p[3]]),
-    y= d3.scale.linear().range([0, h - p[0] - p[2]])
+ //d3.scaleBand().rangeRound([range]);
+ //   x= d3.scaleOrdinal().rangeRoundBands([0, w - p[1] - p[3]]),
+    x= d3.scaleBand().rangeRound([0, w - p[1] - p[3]]),
+    y= d3.scaleLinear().range([0, h - p[0] - p[2]])
     z= color;
 
 var svg = d3.select("#graph")
@@ -295,13 +298,15 @@ var rect = cause.selectAll("rect")
  .attr("x", function(d) { return x(d.x); })
  .attr("y", function(d) { return -y(d.y0) - y(d.y); })
  .attr("height", function(d) { return y(d.y); })
-.attr("width", x.rangeBand());
+//.attr("width", x.rangeBand());
+.attr("width", x.bandwidth());
+//.attr('width', xScale.bandwidth())
       
       
 var dolabel = svg.selectAll("text")
  .data(x.domain())
  .enter().append("svg:text")
- .attr("x", function(d) { return x(d) + x.rangeBand() / 2; })
+ .attr("x", function(d) { return x(d) + x.bandwidth() / 2; })
  .attr("y", 6)
  .attr("text-anchor", "middle")
  .attr("dy", ".71em")

@@ -169,7 +169,7 @@ NB. p{} klduge because IE inserts <p> instead of <br> for enter
 CSS=: 0 : 0
 #rep{color:red}
 #filenamed{color:blue;}
-*{font-family:"courier new","courier","monospace";}
+*{font-family:<PC_FONTFIXED>;}
 p{margin:0;}
 )
 

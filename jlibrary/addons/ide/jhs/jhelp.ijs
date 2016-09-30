@@ -16,22 +16,34 @@ jev_get=: 3 : 0
 )
 
 jumps=: 0 : 0
-<a href="#help">Help</a>&nbsp;
-<a href="#recent">Recent</a>&nbsp;
+<a href="#highlights">highlights</a>&nbsp;
+<a href="#help">help</a>&nbsp;
+<a href="#changes">changes</a>&nbsp;
 <a href="#jhs">JHS</a>&nbsp;
-<a href="#config">Config</a>&nbsp;
+<a href="#config">config</a>&nbsp;
 <a href="#ix">iX</a>&nbsp;
 <a href="#ide">IDE</a>&nbsp;
-<a href="#plot">Plot</a>&nbsp;
+<a href="#plot">plot</a>&nbsp;
 <a href="#gui">GUI</a>&nbsp;
 <a href="#jum">JUM</a>&nbsp;
-<a href="#console">Console</a>&nbsp;
-<a href="#about">About</a>
+<a href="#console">console</a>&nbsp;
+<a href="#pop-up">pop-up</a>&nbsp;
+<a href="#about">about</a>
 )
 
 text=: 0 : 0
 <div>
-<a><h1>Simple Project</h1>
+<a name="highlights"><h1>highlights</h1>
+<b>simple plot</b>
+<p>Verb jd3 provides a simple way to plot your data.</p>
+
+<pre class="jcode">
+   jd3'help'
+</pre>
+<p>See <a href=#jd3>jd3</a> for details and
+<a href="#plot">plot</a>&nbsp; for other plot facilities.</p>
+
+<b>simple project</b>
 <p>The simple project utilities (defined in ~addons/ide/jhs/sp.ijs) are an important part of JHS.
 They can be used in any front end.</p>
 
@@ -39,7 +51,7 @@ They can be used in any front end.</p>
 
 <p>See noun spxhelp for managed execution of scripts and tutorials.</p>
 
-<a name="help"><h1>Help</h1>
+<a name="help"><h1>help</h1>
 This document links to lots of information, but is itself quite short.
 A bit of time here will pay off down the road.<br><br>
 
@@ -52,14 +64,20 @@ For complete documentation see:<br>
 <br>if you have installed local help with jal see:<br>
 <a href="~addons/docs/help/index.htm" target="_blank">~addons/docs/help/index.htm</a>
 
-<a name="recent"><h1>Recent changes</h1>
-<h2>December 2015 update</h2>
+<a name="changes"><h1>changes</h1>
+<b>September 2016 update</b>
+<ul>
+<li>simpler way to start JHS - see ~addons/ide/jhs/config/jhs.cfg</li>
+<li>config PC_FONTFIXED and PC_FONTVARIABLE</li>
+<li>jd3 plot simplified and improved</li>
+</ul>
+<b>December 2015 update</b>
 <ul>
 <li>simple project simplifications and improvements</li>
 <li>jfile lists windows drives (c: etc) and unix root (/)</li>
 </ul>
 
-<h2>July 2014 update</h2>
+<b>July 2014 update</b>
 <ul>
 <li>echo/smoutput displays immediately - http chunked transfer encoding</li>
 <li>demo 10 Ajax chunks - http chunked transfer encoiding</li>
@@ -72,7 +90,7 @@ For complete documentation see:<br>
 <li> IE 11 HTML 5 support adequate as JHS client</li>
 </ul>
 
-<h2>Oct 2013 update</h2>
+<b>Oct 2013 update</b>
 <ul>
 <li>jd3 support added (see plot section for details)
 <li>jtable - table editor with handsontable/jquery - <a target="_blank" href="http://www.handsontable.com">www.handsontable.com</a> </li>
@@ -152,16 +170,14 @@ appropriate, it is easy to include any additional toolkit
 with the JHS framework and have the best of all worlds
 in developing your browser app.
 
-<a name="config"><h1>Config</h1>
-A jconsole task becomes a server when the JHS scripts are loaded, configured, and initialized.<br><br>
+<a name="config"><h1>config</h1>
+A jconsole task becomes a server when the JHS scripts are loaded,
+configured, and initialized.<br><br>
 
-JHS is configured to serve a port (e.g., 65001), allow any or only localhost clients,
-to require a user/pass, etc.<br><br>
+JHS is configured to serve a port (e.g., 65001), allow any or
+only localhost clients, to require a user/pass, etc.<br><br>
 
-Study ~addons/ide/jhs/config/jhs65001.ijs to see how to start a configured JHS.<br><br>
-
-Study ~addons/ide/jhs/config/jhs_default.ijs to see another (older and more complicated)
-way to start a configured server. This is the method used in the installation shortcut.<br><br>
+Study ~addons/ide/jhs/config/jhs.cfg to see how to start a configured JHS.<br><br>
 
 Usually http://127.0.0.1:65001/jijx is the same as http://localhost:65001/jijx.<br><br>
 
@@ -329,19 +345,19 @@ menu debug|run - run to error or stop
 (runs to end as no error or stops)
 </pre>
 
-<a name="plot"><h1>Plot</h1>
+<a name="plot"><h1>plot</h1>
 
 Plots (graphics) can be done in several ways: viewmat, native, jd3, webgl, gcplot, and gnuplot
 (as documented in the following sections).
 
-<h2>viewmat</h2>
+<h3>viewmat</h3>
 <pre class="jcode">
    load'viewmat'
    viewmat ?20 20$2
    viewmat */~ i:9
 </pre>
 
-<h2>native plot</h2>
+<h3>native plot</h3>
 
 Native plot creates an html file that has the data and javascript for drawing on an html canvas element.<br><br>
 
@@ -388,24 +404,19 @@ Plot has default output of canvas/html. It can also create cairo/png output.
    plot 10?10                       NB. create ~temp/plot.html 
 </pre>
 
-
-<h2>jd3 - plots with D3/jquery <a target="_blank" href="http://www.d3js.org">www.d3js.org</a></h2>
+<a name="jd3"><h3>jd3 - plots with D3/jquery <a target="_blank" href="http://www.d3js.org">www.d3js.org</a></h3>
 <pre class="jcode">
-   jd3'p1';jd3x,jd3line,jd3data ?3 4$100
-   jd3'p2';jd3x,jd3pie, jd3data ?3$100
-   jd3'p3';jd3x,jd3bar, jd3data ?20$100
-   jd3'p3';jd3x,jd3bar, jd3data ?4 20$100 NB. stacked bar
-   jd3x NB. parameters
+   jd3'help'
 </pre>
-Currently only simple line and pie charts are supported.
+Currently only simple line, bar, and pie charts are supported.
 Study ~addons/ide/jhs/jd3.ijs to see how it works and how easy it will be to extend.
 
-<h2>WebGl</h2>
+<h3>WebGl</h3>
 
 See studio|demos|demo|12 for an example of WebGl 3d graphics.
 
 
-<h2>gcplot <a href="http://code.google.com/apis/chart/">Google Charts</a></h2>
+<h3>gcplot <a href="http://code.google.com/apis/chart/">Google Charts</a></h3>
 
 <pre class="jcode">
    load'~addons/ide/jhs/jgcp.ijs'
@@ -413,7 +424,7 @@ See studio|demos|demo|12 for an example of WebGl 3d graphics.
    jgcx''     NB. examples
 </pre>
 
-<h2>gnuplot <a href="http://www.gnuplot.info">www.gnuplot.info</a></h2>
+<h3>gnuplot <a href="http://www.gnuplot.info">www.gnuplot.info</a></h3>
 
 Plots can be created with gnuplot and displayed in the browser.<br><br>
 
@@ -525,7 +536,7 @@ A rough sketch of the steps are:
    browse to jum task /jum and create new account
 </pre>
 
-<a name="console"><h1>Console</h1>
+<a name="console"><h1>console</h1>
 The JHS jconsole window diplays useful information.<br><br>
 It can be used (ctrl+c) to signal break to the J task and
 it can kill the J task in the event of problems.<br><br> 
@@ -534,7 +545,33 @@ In windows you can edit the icon properties to run minimized.
 You can hide the window if you wish:
 <pre class="jcode">   jshowconsole_j_ 0 NB. hide/show 0/1</pre>
 
-<a name="about"><h1>About</h1></a>
+<a name="pop-up"><h1>pop-up</h1></a>
+<p>Pop-up windows can be a plague when browsing ill-behaved sites.
+However, they can be very useful in an app like JHS that
+tries to combine the best of the browser interface with some
+features of classic desktop applications.<p>
+
+<p>JHS facilities like jd3 (plots) and jtable (spreadsheet) need
+to create pop-ups.</p>
+
+<p>If your browser is set to block pop-ups, then you will get
+an alert message when JHS tries to create a pop-up. You can
+adjust the browser settings to allow the JHS pop-ups.</p>
+
+<p>You may not want to enable all pop-ups, and instead only
+want to allow JHS pop-ups.
+More recent versions of most browsers (Firefox/Chrome/Edge/IE)
+allow you to configure pop-up blocking to allow pop-ups based
+on the site address. In this case you want to enable pop-ups
+from localhost:65001/jijx. Safari does not allow this kind of
+configuration and you may want to simply allow all pop-ups.</p>
+
+
+
+
+
+
+<a name="about"><h1>about</h1></a>
 <pre class="jcode">
    JVERSION
 

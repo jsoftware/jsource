@@ -3,8 +3,8 @@ coclass'jhs'
 
 NB.framework styles for all pages
 CSSCORE=: 0 : 0
-*{font-family:"sans-serif";}
-*.jcode{font-family:"courier new","courier","monospace";white-space:pre;}
+*{font-family:<PC_FONTVARIABLE>;}
+*.jcode{font-family:<PC_FONTFIXED>;white-space:pre;}
 *.jhab:hover{cursor:pointer;color:black;background:#ddd;}
 *.jhab{text-decoration:none;}
 *.jhmab:hover{cursor:pointer;}
@@ -15,15 +15,15 @@ CSSCORE=: 0 : 0
 *.jhmg{text-decoration:none;}
 *.jhml{color:black;}
 *.jhml:visited{color:black;}
-*.jhsel{background-color:buttonface;font-family:"courier new","courier","monospace";}
+*.jhsel{background-color:buttonface;font-family:<PC_FONTFIXED>;}
 body{margin:0;}
 div{padding-left:2px;}
 .menu li{
  display:block;white-space:nowrap;
  padding:2px;color:#000;background:#eee;
- font-family:"courier new","courier","monospace";
+ font-family:<PC_FONTFIXED>;
 }
-.menu a{font-family:"courier new","courier","monospace";}
+.menu a{font-family:<PC_FONTFIXED>;}
 .menu a:hover{cursor:pointer;color:#000;background:#ddd;width:100%;}
 .menu span{float:left;position:relative;}
 .menu ul{
@@ -44,8 +44,8 @@ HEXTRA=: ''
 NB. core plus page styles with config replaces
 NB. apply outer style tags after removing inner ones
 css=: 3 : 0
-t=. 'PC_FM_COLOR PC_ER_COLOR PC_LOG_COLOR PC_SYS_COLOR PC_FILE_COLOR'
-t=. (CSSCORE,y) hrplc t;PC_FM_COLOR;PC_ER_COLOR;PC_LOG_COLOR;PC_SYS_COLOR;PC_FILE_COLOR
+t=. 'PC_FONTFIXED PC_FONTVARIABLE PC_FM_COLOR PC_ER_COLOR PC_LOG_COLOR PC_SYS_COLOR PC_FILE_COLOR'
+t=. (CSSCORE,y) hrplc t;PC_FONTFIXED;PC_FONTVARIABLE;PC_FM_COLOR;PC_ER_COLOR;PC_LOG_COLOR;PC_SYS_COLOR;PC_FILE_COLOR
 '<style type="text/css">',t,'</style>'
 )
 

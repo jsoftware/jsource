@@ -11,13 +11,14 @@ decomment=: 3 : 0
 dat=. <;._2 termLF toJ y
 if. 2 > #dat do. y return. end.
 
-com=. ('NB.'&-:)@(3&{.)&> dat
+com=. (('NB.'-:3{.])>'NB.!'-:4{.])&> dat
 ncm=. com < (1|.0,}.com) +. (0,}._1|.com)
 msk=. com +: ncm *. dat=a:
 dat=. msk # dat
 
-f=. *./\ @ ('NB.'&E. <: ~:/\@(e.&''''))
-g=. f dtb@#^:(0 e. [) ]
+d=. #~ ([: +./\. -.@e.&(' ',TAB))
+f=. *./\ @ (('NB.'&E.>'NB.!'&E.) <: ~:/\@(e.&''''))
+g=. f d@#^:(0 e. [) ]
 ; (g each dat) ,each LF
 )
 ffoldername=: 3 : 0
@@ -249,7 +250,6 @@ else.
   ProjectName=: ''
 end.
 projread''
-recentproj_add_j_ Project
 )
 projpathfolder=: 3 : 0
 p=. touserfolder y
@@ -273,43 +273,8 @@ end.
 load ::] p,Run
 )
 pp_today=: 2 }. [: ": [: <. 100 #. 3 {. 6!:0
-pp_stamp=: [: ":@, 'r<0>2.0' (8!:2) _3 {. 6!:0
-pp_unstamp=: ':' (2 5}"1) 1 1 0 1 1 0 1 1 (#^:_1"1) _6 {.&> ]
-pic=: 4 : 0
-'f p'=. fpathname y
-path=. remsep f
-d=. snapgetpath path
-if. d -: 0 do. return. end.
-d=. d,'/p',pp_today''
-t=. d,'/',p
-dat=. x,(pp_stamp''),EAV
-if. _1 -: fread t do.
-  if. -. pic_inidir d do. 0 return. end.
-  old=. fread y
-  if. -. _1 -: old do.
-    dat=. old,(6#'0'),EAV,dat
-  end.
-end.
-dat fappend t
-)
 pic_files=: 3 : 0
-{."1 [1!:0 (snappath remsep y),'/p','/*',~pp_today''
-)
-pic_inidir=: 3 : 0
-if. #1!:0 y do. 1 return. end.
-h=. (y i: 'p') {. y
-n=. {."1 [ 1!:0 h,'p*'
-if. #n do.
-  direrase h,'plast'
-  n=. \:~ n -. <'plast'
-  if. #n do.
-    if. 1<#n do.
-      direrase &> (<h) ,each }.n
-    end.
-    (h,'plast') frename h,0 pick n
-  end.
-end.
-ss_mkdir y
+{."1 [1!:0 (snappath y),'/p','/*',~pp_today''
 )
 pic_list=: 3 : 0
 t=. y,(0=#y)#pp_today''
@@ -334,82 +299,15 @@ m,.c,.s
 )
 pic_read=: 3 : 0
 'f p'=. fpathname y
-r=. fread (snappath remsep f),'/p',(pp_today''),'/',p
+r=. fread (snappath f),'/p',(pp_today''),'/',p
 if. r -: _1 do. '' else. <;._2 r end.
 )
 pic_readx=: 3 : 0
 'f n'=. y
 _6 }. n pick pic_read f
 )
-ss_today=: 's' , 2 }. [: ": [: <. 100 #. 3 {. 6!:0
-SnapTrees=: ''
-snapfcopy=: 3 : 0
-'source dest'=. y
-if. IFWIN do.
-  0 pick 'kernel32 CopyFileW i *w *w i' cd (uucp source);(uucp dest);0
-else.
-  if. 0 = fpathcreate fpath dest do. 0 return. end.
-  if. _1 -: dat=. fread source do. 0 return. end.
-  -. _1 -: dat fwrite dest
-end.
-)
-snapgetpath=: 3 : 0
-p=. snappath y
-if. 0 = #1!:0 p do.
-  if. -. ss_mkdir p do. 0 return. end.
-  y fwrite p,'/dir.txt'
-end.
-p
-)
 snappath=: 3 : 0
-)
-snapshot=: 3 : 0
-if. Snapshots=0 do. return. end.
-snapshot1 y;(ss_today'');ProjectPath
-)
-snapshot_tree=: 3 : 0
-if. Snapshots=0 do. return. end.
-if. (<Folder_j_) e. SnapTrees do. return. end.
-snapshot1 &> (<0;ss_today'') (,<@fpath) each y
-empty SnapTrees_jp_=: SnapTrees,<Folder_j_
-)
-snapshot1=: 3 : 0
-'force today path'=. y
-p=. snapgetpath path
-if. p = 0 do. return. end.
-p=. p,'/'
-d=. 1!:0 p,'s*'
-pfx=. p,today
-if. 0=#d do. path ss_make pfx,'001' return. end.
-d=. \:~ {."1 d #~ 'd' = 4{"1 > 4{"1 d
-last=. 0 pick d
-iftoday=. today -: 7 {. last
-if. force do.
-  if. (p,last) ss_match ProjectPath do.
-    ss_info 'Last snapshot matches current project.'
-    0 return.
-  end.
-  if. iftoday do.
-    f=. pfx,_3 {. '00',": 1 + 0 ". _3 {. last
-  else.
-    f=. pfx,'001'
-  end.
-  path ss_make f
-  ss_info 'New snapshot: ',1 pick fpathname f
-  
-else.
-  if. iftoday do. 0 return. end.
-  if. (p,last) ss_match path do. 0 return. end.
-  path ss_make pfx,'001'
-end.
-d=. (Snapshots-1) }. d
-for_s. d do.
-  f=. p,(>s),'/'
-  1!:55 f&, each {."1 [ 1!:0 f,'*'
-  1!:55 <f
-end.
-
-1
+jpath '~snap/.snp/',getsha1_jqtide_ projname2path remsep y
 )
 ss_cleanup=: 3 : 0
 if. 1~:#y do.
@@ -438,6 +336,10 @@ d=. 1!:0 p,'*'
 d=. ('d' = 4 {"1 > 4 {"1 d) # {."1 d
 d=. (<p) ,each d
 d;<(1!:1 :: (''"_))@< each d ,each <'/dir.txt'
+)
+ss_dir1=: 3 : 0
+if. 0=#y do. '' return. end.
+dir (snappath y),'/*'
 )
 ss_dirs=: 3 : 0
 'd r'=. ss_dir''
@@ -476,7 +378,7 @@ sminfo 'Snapshot';y
 )
 ss_list=: 3 : 0
 if. 0=#y do. '' return. end.
-p=. snappath projname2path y
+p=. snappath y
 d=. 1!:0 p,'/s*'
 if. #d do.
   d=. d #~ 'd' = 4 {"1 > 4 {"1 d
@@ -484,40 +386,6 @@ if. #d do.
 else.
   ''
 end.
-)
-ss_make=: 4 : 0
-fm=. x,'/'
-to=. y,'/'
-if. 0 = ss_mkdir to do. 0 return. end.
-f=. {."1 ss_files fm
-fm=. (<fm) ,each f
-to=. (<to) ,each f
-res=. snapfcopy"1 fm ,. to
-if. 0 e. res do.
-  txt=. 'Unable to copy:',LF2,tolist (res=0)#fm
-  ss_info txt
-end.
-*./ res
-)
-ss_mkdir=: 3 : 0
-if. 0 -: fpathcreate y do.
-  if. 1 = # 1!:0 y do. 1 return. end.
-  ss_info 'Unable to create snapshot directory: ',y
-  0 return.
-end.
-arw=. 'rw' 0 1 } 1!:7 <y
-if. 0 -: arw 1!:7 :: 0: <y do.
-  ss_info 'Unable to set read/write attributes for snapshot directory.'
-  0 return.
-end.
-if. -.IFUNIX do.
-  ph=. 'h' 1 } 1!:6 <y
-  if. 0 -: ph 1!:6 :: 0: <y do.
-    ss_info 'Unable to set hidden attribute for snapshot directory.'
-  end.
-end.
-
-1
 )
 ss_match=: 4 : 0
 x=. termsep x
@@ -573,7 +441,9 @@ writesource1=: 4 : 0
 'p t'=. y
 dat=. x readsource1 p
 if. _1 -: dat do. return. end.
-dat fwritenew jpath t
+t=. jpath t
+mkdir fpath t
+dat fwritenew t
 EMPTY
 )
 

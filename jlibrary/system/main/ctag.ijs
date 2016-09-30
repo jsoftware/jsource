@@ -163,7 +163,6 @@ if. #a=. tagselect y do.
 end.
 EMPTY
 )
-
 NB. do string search
 NB. =========================================================
 NB. return 0-base line number or 0$0 if nothing done

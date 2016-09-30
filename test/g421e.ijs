@@ -2,9 +2,9 @@ NB. f//. y --------------------------------------------------------------
 
 randuni''
 
-NB. test failed on small ct
+NB. test with zero tolerance
 ct   =: 9!:18''
-9!:19[2^_40
+9!:19[0
 
 data=: 4 : 0
  select. x 

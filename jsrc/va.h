@@ -32,7 +32,10 @@ typedef struct {VA2 p1[6];} UA;
 #define VXEQ            (Vxx|(XMEXMT<<VXCVTYPEX))   /* convert to XNUM for = ~:            */
 #define VXCF            (Vxx|(XMCEIL<<VXCVTYPEX))   /* convert to XNUM ceiling/floor       */
 #define VXFC            (Vxx|(XMFLR<<VXCVTYPEX))  /* convert to XNUM floor/ceiling       */
-#define VIPOK           (1<<27)    // This routine can put its result over an input
+#define VIPOKWX         27      // This routine can put its result over W
+#define VIPOKW          (1<<VIPOKWX)
+#define VIPOKAX         28      // This routine can put its result over A
+#define VIPOKA          (1<<VIPOKAX)
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) ((x)&VARGMSK)
@@ -135,9 +138,9 @@ typedef struct {VA2 p1[6];} UA;
 
 #define AHDR1(f,Tz,Tx)          void f(J jt,            I n,Tz* RESTRICT z,Tx* RESTRICT x)
 #define AHDR2(f,Tz,Tx,Ty)       void f(J jt,B b,I m,    I n,Tz* RESTRICT z,Tx* RESTRICT x,Ty* RESTRICT y)
-#define AHDRP(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)
-#define AHDRR(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)
-#define AHDRS(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz*z,Tx*x)
+#define AHDRP(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
+#define AHDRR(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
+#define AHDRS(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
 
 /*
  b    1 iff cell rank of a <= cell rank of w

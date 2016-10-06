@@ -83,12 +83,16 @@ B jtprimitive(J jt,A w){A x=w;V*v;
  R!VAV(x)->f;
 }    /* 1 iff w is a primitive */
 
+
 // w is a cut conj, f;.n
 // Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
+B jtboxatop(J jt,A w){RZ(w); R boxat(VAV(w)->f);}
 
-B jtboxatop(J jt,A w){A x;C c;V*v;
- RZ(w);
- x=VAV(w)->f; v=VAV(x); c=v->id;   // x->f, v->value, c=id of f
+// w is a verb
+// Return 1 if verb is of the form <@:g  (or <@g when g has infinite rank)
+B boxat(A x){C c;V*v;
+ RZ(x);
+ v=VAV(x); c=v->id;   // x->f, v->value, c=id of f
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
  if(CBOX==ID(v->f)) {  // if u is <...
    if(COMPOSECO(c))R 1;  // always OK if @: &:
@@ -96,3 +100,17 @@ B jtboxatop(J jt,A w){A x;C c;V*v;
  }
  R 0; 
 }    /* 1 iff "last" function in w is <@f */
+
+// w is a verb
+// Result has bit 0 set if the verb is ...@[, bit 1 set if ...@]   (or @:)
+// The set bit indicates that argument WILL NOT be examined when w is executed
+I atoplr(A w){
+ RZ(w);
+ V *v=VAV(w);     // v->verb info, c=id of w
+ if(!(v->id==CAT||v->id==CATCO))R 0;
+ switch(VAV(v->g)->id){
+  case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
+  case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A
+ }
+ R 0;   // both args in use
+}

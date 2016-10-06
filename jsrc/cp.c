@@ -165,7 +165,7 @@ static CS1IP(jtpowv1, \
 A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
 z=(VAV(u)->f1)(VAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
 ,0108)
-// here for x u^:y y 
+// here for x u^:v y 
 static CS2IP(jtpowv2, \
 A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
 z=(VAV(u)->f2)(VAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
@@ -193,7 +193,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
    // u^:v.  Create derived verb to handle it.
    v=VAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->g)==CRIGHT;
    // The action routines are inplaceable; take ASGSAFE from u and v
-   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(jt->asgzomblevel?v->flag&VAV(w)->flag&VASGSAFE:0)+(VINPLACEOK1|VINPLACEOK2), RMAX,RMAX,RMAX);
+   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&VAV(w)->flag&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2), RMAX,RMAX,RMAX);
   case VN:
    // u^:n.  Check for special types.
    if(BOX&AT(w)){A x,y;AF f1,f2;

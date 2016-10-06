@@ -1,0 +1,299 @@
+
+NB. atomic"n in-place and not -------------------------------
+randuni''
+
+NB. x is selection;shapes;prediction
+NB.  selection selects a prediction
+NB.  prediction is string, 27 predictors separated by '/'
+NB.   predictor contains the following chars:
+NB.    k,l,L  allocate B01/INT/FL block for conversion of left arg
+NB.    q,r,R  allocate B01/INT/FL block for conversion of right arg
+NB.    B,b,I,D,d   allocate B01/INT/FL for result; d means (FL only if FL is bigger than INT); b is removed by caller if inplacing allowed
+NB.  shapes is (xshape,yshape,resultshape)
+NB. y is # of bytes used in execution of the sentence
+NB. Result is 1 if in range
+checkallosize =: 4 : 0
+'sel shapes pred' =: x
+bytesused =: y
+if. 0 = #pred do. 1 return. end.  NB. If no prediction, don't fail
+assert. 27 = # predflds =: <;._2 pred
+spred =: ' ' -.~ sel {:: predflds  NB. Select fielda
+atomct =: 3 3 5 # */@> shapes   NB. Get #atoms in each arg/result
+atomsz =: IF64 { 1 4 8 1 4 8 1 1 4 8 8 ,: 1 8 8 1 8 8 1 1 8 8 0   NB. Length of atoms
+allobytes =: +/ >.&.(2&^.) (atomct*atomsz) {~ 'klLqrRBbIDd' i. spred  NB. Total # bytes allocated
+(bytesused>allobytes-3000) *. (bytesused<allobytes+3000)
+)
+
+
+NB. u is verb; y is (left shape;right shape). n is 27x3x3 table of # of (b,i,d) buffers expected to be allocated in shape (x,y,result)
+NB. Create random x and y; run u not-in-place and save result
+NB. Run on combinations of inplaceable executions; verify result
+testinplace =: 2 : 0
+vb =: u
+'xs ys' =: y
+'resvalidity allopred' =: n
+
+if. 'B' e. resvalidity do.
+NB. Test binary data, in all precisions
+
+NB. Create random data
+bx =: xs ?@$ 2
+by =: ys ?@$ 2
+NB. Make the first value 0.  This creates 0|0 which goes through a different path in the code; we need to do so predictably
+if. #,bx do. bx =: 0 0:} bx end.
+if. #,by do. by =: 0 0:} by end.
+NB. Create copies in other precisions
+ix =: bx + (2-2)
+iy =: by + (2-2)
+dx =: ix + (2.5-2.5)
+dy =: iy + (2.5-2.5)
+NB. Save all precisions in a separate area
+'svbx svby svix sviy svdx svdy' =: svxy =: 3!:1&.> bx;by;ix;iy;dx;dy
+NB. Get result with all looping performed in rank conjunction
+r =: bx u"u"u by
+xyzs =: xs;ys;$r  NB. Used to predict allocation
+NB. For each precision combination, verify identical result
+assert. (0;xyzs;allopred) checkallosize 7!:2 'tr =: bx u by'
+assert. r -: tr [ 0 [  'tr =: bx u by'
+assert. (1;xyzs;allopred) checkallosize 7!:2 'tr =: bx u iy'
+assert. r -: tr [ 0 [  'tr =: bx u iy'
+assert. (2;xyzs;allopred) checkallosize 7!:2 'tr =: bx u dy'
+assert. r -: tr [ 0 [  'tr =: bx u dy'
+assert. (3;xyzs;allopred) checkallosize 7!:2 'tr =: ix u by'
+assert. r -: tr [ 0 [ 'tr =: ix u by'
+assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
+assert. r -: tr [ 0 [ 'tr =: ix u iy'
+assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
+assert. r -: tr [ 0 [ 'tr =: ix u dy'
+assert. (6;xyzs;allopred) checkallosize 7!:2 'tr =: dx u by'
+assert. r -: tr [ 0 [ 'tr =: dx u by'
+assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
+assert. r -: tr [ 0 [ 'tr =: dx u iy'
+assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
+assert. r -: tr [ 0 [ 'tr =: dx u dy'
+NB. Verify nothing modified in place
+assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
+NB. Make x inplaceable.  Verify correct result
+tx =: 3!:2 (3!:1) bx
+assert. (9;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
+assert. r -: tx [ 0 [ 'tx =: bx u by'
+tx =: 3!:2 (3!:1) bx
+assert. (10;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. r -: tx [ 0 [ 'tx =: bx u iy'
+tx =: 3!:2 (3!:1) bx
+assert. (11;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 0 [ 'tx =: bx u dy'
+tx =: 3!:2 (3!:1) ix
+assert. (12;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
+assert. r -: tx [ 0 [ 'tx =: ix u by'
+tx =: 3!:2 (3!:1) ix
+assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. r -: tx [ 0 [ 'tx =: ix u iy'
+tx =: 3!:2 (3!:1) ix
+assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 0 [ 'tx =: ix u dy'
+tx =: 3!:2 (3!:1) dx
+assert. (15;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
+assert. r -: tx [ 0 [ 'tx =: dx u by'
+tx =: 3!:2 (3!:1) dx
+assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. r -: tx [ 0 [ 'tx =: dx u iy'
+tx =: 3!:2 (3!:1) dx
+assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 0 [ 'tx =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
+NB. Make y inplaceable.  Verify correct result
+ty =: 3!:2 (3!:1) by
+assert. (18;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
+assert. r -: ty [ 0 [ 'ty =: bx u by'
+ty =: 3!:2 (3!:1) iy
+assert. (19;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
+assert. r -: ty [ 0 [ 'ty =: bx u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (20;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
+assert. r -: ty [ 0 [ 'ty =: bx u dy'
+ty =: 3!:2 (3!:1) by
+assert. (21;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. r -: ty [ 0 [ 'ty =: ix u by'
+ty =: 3!:2 (3!:1) iy
+assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. r -: ty [ 0 [ 'ty =: ix u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. r -: ty [ 0 [ 'ty =: ix u dy'
+ty =: 3!:2 (3!:1) by
+assert. (24;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 0 [ 'ty =: dx u by'
+ty =: 3!:2 (3!:1) iy
+assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 0 [ 'ty =: dx u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 0 [ 'ty =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
+end.
+
+if. 'I' e. resvalidity do.
+NB. Test integer data, in integer and float precisions
+
+NB. Create random data.  This will not generate overflow so we don't have to worry about unreproducible space requirements
+ix =: xs ?@$ IF64 { 30000 1000000
+iy =: ys ?@$ IF64 { 30000 1000000
+NB. Make the first value 0.  This creates 0|0 which goes through a different path in the code; we need to do so predictably
+if. #,ix do. ix =: 0 0:} ix end.
+if. #,iy do. iy =: 0 0:} iy end.
+NB. Create copies in other precisions
+dx =: ix + (2.5-2.5)
+dy =: iy + (2.5-2.5)
+NB. Save all precisions in a separate area
+'svix sviy svdx svdy' =: svxy =: 3!:1&.> ix;iy;dx;dy
+NB. Get result with all looping performed in rank conjunction
+r =: ix u"u"u iy
+NB. For each precision combination, verify identical result
+assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
+assert. r -: tr [ 1 [ 'tr =: ix u iy'
+assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
+assert. r -: tr [ 1 [ 'tr =: ix u dy'
+assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
+assert. r -: tr [ 1 [ 'tr =: dx u iy'
+assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
+assert. r -: tr [ 1 [ 'tr =: dx u dy'
+NB. Verify nothing modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+NB. Make x inplaceable.  Verify correct result
+tx =: 3!:2 (3!:1) ix
+assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. r -: tx [ 1 [ 'tx =: ix u iy'
+tx =: 3!:2 (3!:1) ix
+assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 1 [ 'tx =: ix u dy'
+tx =: 3!:2 (3!:1) dx
+assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. r -: tx [ 1 [ 'tx =: dx u iy'
+tx =: 3!:2 (3!:1) dx
+assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 1 [ 'tx =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+NB. Make y inplaceable.  Verify correct result
+ty =: 3!:2 (3!:1) iy
+assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. r -: ty [ 1 [ 'ty =: ix u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. r -: ty [ 1 [ 'ty =: ix u dy'
+ty =: 3!:2 (3!:1) iy
+assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 1 [ 'ty =: dx u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 1 [ 'ty =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+end.
+
+if. 'D' e. resvalidity do.
+NB. Test float data, in float precision
+
+NB. Create random data.  This will not generate overflow so we don't have to worry about unreproducible space requirements
+dx =: xs ?@$ 0
+dy =: ys ?@$ 0
+NB. Save all precisions in a separate area
+'svdx svdy' =: svxy =: 3!:1&.> dx;dy
+NB. Get result with all looping performed in rank conjunction
+r =: dx u"u"u dy
+NB. For each precision combination, verify identical result
+assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
+assert. r -: tr [ 2 [ 'tr =: dx u dy'
+NB. Verify nothing modified in place
+assert. svxy -: 3!:1&.> dx;dy
+NB. Make x inplaceable.  Verify correct result
+tx =: 3!:2 (3!:1) dx
+assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. r -: tx [ 2 [ 'tx =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> dx;dy
+NB. Make y inplaceable.  Verify correct result
+ty =: 3!:2 (3!:1) dy
+assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. r -: ty [ 2 [ 'ty =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> dx;dy
+end.
+
+1
+)
+
+NB. u is verb, y is (result precisions to test, string incl BDI),(buffer-allocation predictions)
+NB. We try the verb on different ranks and shapes
+testinplacer =: 1 : 0
+'resultprec predr' =: y
+NB. Test for validity.  Checks for inplacing too much
+NB. Choose a random shape, then try all combinations of prefixes.
+(u testinplace (resultprec;''))"1 ,"0/~ a: , <\ >: ? 4 # 10
+NB. Repeat for other ranks of u.  Also create a random cell-shape and use a prefix of it for each argument
+(u"0 0 testinplace (resultprec;''))"1 (0 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"0 1 testinplace (resultprec;''))"1 (0 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"1 0 testinplace (resultprec;''))"1 (1 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"1 1 testinplace (resultprec;''))"1 (1 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+(u"0 2 testinplace (resultprec;''))"1 (0 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+(u"1 2 testinplace (resultprec;''))"1 (1 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+(u"2 2 testinplace (resultprec;''))"1 (2 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"2 1 testinplace (resultprec;''))"1 (2 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"2 0 testinplace (resultprec;''))"1 (2 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"0 3 testinplace (resultprec;''))"1 (0 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"1 3 testinplace (resultprec;''))"1 (1 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"2 3 testinplace (resultprec;''))"1 (2 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"3 3 testinplace (resultprec;''))"1 (3 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"3 2 testinplace (resultprec;''))"1 (3 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"3 1 testinplace (resultprec;''))"1 (3 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+(u"3 0 testinplace (resultprec;''))"1 (3 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+
+NB. Verify size of large operands.  Checks for inplacing too little
+u testinplace (resultprec;(predr -. 'b'))"1 (16000;16000)  NB. 'b' means inplace only if rank not specified
+u"1 testinplace (resultprec;predr)"1 (10 1600;10 1600)
+)
+
++. testinplacer 'BID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
+*. testinplacer 'BID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
+
+27 b. testinplacer 'BI';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
+
+! testinplacer 'BID';'B/LRI/L/LRI/LRI/L/R/R/D/    b/LRI/L/LRI/LRI/L/R/R//   b/LRI/L/LRI/LRI/L/R/R//'
+
+% testinplacer 'BID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
+ {{(VF)divBB,VD}, {(VF)divBI,VD+VIP0I}, {(VF)divBD,VD+VIPOKW},
+  {(VF)divIB,VD+VIPI0}, {(VF)divII,VD+VIPI0+VIP0I}, {(VF)divID,VD+VIPID},
+  {(VF)divDB,VD+VIPOKA}, {(VF)divDI,VD+VIPDI}, {(VF)divDD,VD+VIP}, 
+
+* testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
+
++ testinplacer 'BID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
+- testinplacer 'BID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
+
+< testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+= testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+> testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+<: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+>: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+~: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+
++: testinplacer 'B';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
+*: testinplacer 'B';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
+
+NB. INT ^ INT produces slightly different values than INT ^ FL on 902753 ^ 39  which is close to the IEEE limit.  So don't check those values
+^ testinplacer 'BD';'B/D/D/I/D/D/D/D/D/    b/D/D/I/D/D/D/D/D/   b/D/D/I/D/D/D/D/D/'
+
+NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this code
+| testinplacer 'BID';'B/l/L/r/I/ID/R/R/D/    b/l/L/r//ID/R/R//   b/l/L/r//ID/R/R//'  NB. I | D fails, then runs in-place
+
+<. testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+>. testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+
+4!:55 ;:'allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
+4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
+4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys'
+
+

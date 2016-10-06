@@ -94,7 +94,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
     break; }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named,ox=jt->xdefn;CDATA*cv;
+static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named;CDATA*cv;
   CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
@@ -134,7 +134,6 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  CLEARZOMBIE
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
- jt->xdefn=1;   // Indicate explicit definition running
  // Assign the special names x y m n u v
  // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
  // not an assignment-in-place
@@ -342,8 +341,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
  tpop(_ttop);   // finish freeing memory
- // Pop the locale stack and xdefn; set no assignment (to call for result display)
- jt->local=loc; jt->asgn=0; jt->xdefn=ox;
+ // Pop the locale stack; set no assignment (to call for result display)
+ jt->local=loc; jt->asgn=0;
  // Give this result a short lease on life
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
  if(z)tpush(z);

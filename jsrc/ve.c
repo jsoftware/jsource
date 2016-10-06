@@ -72,7 +72,7 @@ ANAN(remZZ, Z,Z,Z, zrem )
 static I jtremid(J jt,I a,D b){D r;I k;
  ASSERT(a&&-9e15<b&&b<9e15,EWOV);
  r=b-a*floor(b/a); k=(I)r;
- ASSERT(k==r,EWOV); 
+ ASSERT(k==r,EWOV);   // not really overflow - just has a fractional part
  R k;
 }
 
@@ -254,8 +254,9 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
   EPILOG(z);
 }}
 
+// Compute 2 | w for INT w, leaving Boolean result.
 F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
- RZ(w);
+ RZ(w);F1PREFIP;  // allow inplacing but don't use it, since the input is INT and the result is B01
  n=AN(w); q=n/k; r=n%k; v=BAV(w)+!liln*(k-1);
  GATV(z,B01,n,AR(w),AS(w)); u=AV(z);
  b=(B*)&mask; DO(k, b[i]=1;);

@@ -174,9 +174,7 @@ F2(jtagenda){I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- if(0==jt->asgzomblevel){flag=0;}else{
-  flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!
- }
+ flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!
  R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|VAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 
@@ -234,7 +232,7 @@ static DF1(jtgav1){DECLF;A ff,*hv=AAV(sv->h);I d;
  R df1(df1(w,hv[2]),ff);
 }
 
-// verb executed for x v0`v1`v2 y
+// verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->h);I d;   // hv->gerunds
 A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
@@ -244,12 +242,14 @@ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&
  ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing
  ff=df1(ffm,ds(sv->id)); FDEPDEC(d);   // now ff represents (x v1 y)}
  RZ(ffm);  // OK to fail after FDEPDEC
+ PUSHZOMB
  // execute the gerunds that will give the arguments to ff
- RZ(ffy = df2(a,w,hv[2]));   // x v2 y - cannot inplace
+ // x v2 y - can inplace an argument that v0 is not going to use
+ RZ(ffy = (VAV(hv[2])->f2)((VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));
  // x v0 y - can inplace any unprotected argument
  RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
- // execute ff, i. e.  (x v1 y)} .  Allow inplacing y unless it is protected by the caller
- R (VAV(ff)->f2)(VAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
+ POPZOMB; R (VAV(ff)->f2)(VAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
@@ -262,10 +262,10 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
  RZ(hs=fxeach(3==n?w:behead(reshape(num[4],w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
-  // hs is a BOX array, but its elements are VERBs
+ // hs is a BOX array, but its elements are VERBs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
- I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2);
- if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
+ // Also set the LSB flags to indicate whether v0 is u@[ or u@]
+ I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
  R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

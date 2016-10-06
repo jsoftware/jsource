@@ -458,6 +458,8 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // m
 #define VRTNNONE ((A)0)
   
                                         /* type V flag values              */
+#define VFATOPL          JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
+#define VFATOPR          JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
                                         /* < 256 see vcompsc.c             */
 #define VGERL           (I)256          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */

@@ -31,10 +31,6 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;
  jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
- jt->parsercalls=0;
- jt->parserstkbgn=jt->parserstkend1=0;
- CLEARZOMBIE
- jt->asgzomblevel = 2;  // allow premature change to zombie names
  s=bitdisp; 
  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
@@ -127,7 +123,7 @@ static B jtevinit(J jt){A q,*v;
 /* static void sigflpe(int k){jsignal(EVDOMAIN); signal(SIGFPE,sigflpe);} */
 
 static B jtconsinit(J jt){D y;
-// This is an initialization routine, so emory allocations performed here are NOT
+// This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
 #if AUDITCOMPILER
 // verify that CTLZ works correctly, and that all calls to BP return what they used to
@@ -155,6 +151,15 @@ jt->assert = 1;
  R 1;
 }
 
+// Initialization of fields in jt that are not initialized to 0
+static void jtjtinit(J jt){
+// zero jt->parsercalls=0;
+// zero jt->parserstkbgn=jt->parserstkend1=0;
+// zero CLEARZOMBIE
+ jt->asgzomblevel = 2;  // allow premature change to zombie names
+}
+
+
 static C jtjinit3(J jt){S t;
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug
@@ -174,6 +179,7 @@ static C jtjinit3(J jt){S t;
  sesminit();
  evinit();
  consinit();
+ jtjtinit(jt);
  symbinit();
  parseinit();
  xoinit();

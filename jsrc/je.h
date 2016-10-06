@@ -821,7 +821,9 @@ extern B        jtxsinit(J);
 
 extern B        all0(A);
 extern B        all1(A);
+extern I        atoplr(A);
 extern I        atype(I);
+extern B        boxat(A);
 extern I        bsum(I,B*);
 extern void     bucketinit();
 extern C        cf(A);

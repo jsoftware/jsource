@@ -51,8 +51,9 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B*x,B b0,B b1){B b,*xx=x;I c,d,mn=m
  R mn?xx[mn-1]:b1;
 }    /* what memcmp should have been */
 
+// Return 1 if a and w match, 0 if not
 B jtequ(J jt,A a,A w){A x;B b; 
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
  R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,&b,C0,C1);

@@ -34,10 +34,10 @@ typedef struct {
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
- B    xdefn;            /* 1 iff within explicit definition                */
  C    dbss;             /* single step mode                                */
  B    stch;             /* enable setting of changed bit                   */
  C    jerr;             /* error number (0 means no error)                 */
+ C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   MS *pool;             // pointer to first free block
@@ -72,7 +72,6 @@ typedef struct {
  B    stswitched;       /* called fn switched locale                       */
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
- C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack

@@ -11,7 +11,7 @@ static CS1IP(obv1, z=(f1)(jtinplace,w,fs),0103)
 static CS2IP(obv2, z=(f2)(jtinplace,a,w,fs),0104)
 
 // Set ASGSAFE from a&w; set INPLACE from a
-F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((jt->asgzomblevel?VAV(a)->flag&VAV(w)->flag&VASGSAFE:0)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
+F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
 
 
 static DF1(ad1){DECLFG;A z;I od=jt->db; 
@@ -31,7 +31,7 @@ static DF2(ad2){DECLFG;A z;I od=jt->db;
 }
 
 // Set ASGSAFE from operands
-F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,(jt->asgzomblevel?VAV(a)->flag&VAV(w)->flag&VASGSAFE:0),RMAX,RMAX,RMAX);}
+F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,(VAV(a)->flag&VAV(w)->flag&VASGSAFE),RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)

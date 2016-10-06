@@ -72,7 +72,7 @@ B jtpinit(J jt){A t;C*s;
  /*  ~  */  pdef(CTILDE,  ADV,  jtswap,    0L,       0,   0,   0   ,VFLAGNONE);
  /*  ~. */  pdef(CNUB,    VERB, jtnub,     0L,       RMAX,0,   0   ,VASGSAFE);
  /*  ~: */  pdef(CNE,     VERB, jtnubsieve,jtne,     RMAX,0,   0   ,VASGSAFE|VIRS1|VIRS2|VINPLACEOK2);
- /*  |  */  pdef(CSTILE,  VERB, jtmag,     jtresidue,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1);
+ /*  |  */  pdef(CSTILE,  VERB, jtmag,     jtresidue,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
  /*  |. */  pdef(CREV,    VERB, jtreverse, jtrotate, RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);   // alias CROT
  /*  |: */  pdef(CCANT,   VERB, jtcant1,   jtcant2,  RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);
  /*  .  */  pdef(CDOT,    CONJ, 0L,        jtdot,    0,   0,   0   ,VFLAGNONE);

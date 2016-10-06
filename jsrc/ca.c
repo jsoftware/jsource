@@ -75,24 +75,24 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpo
 
 // If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
 static CS1IP(on1, \
-{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs);  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs);  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
+POPZOMB; z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
 ,0113)
 static CS2IP(jtupon2, \
-{A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs);  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs);  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
+POPZOMB; z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
 ,0114)
 
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
- PREF2(on2);
+ PREF2(on2); PUSHZOMB;
  // here for execution on a single cell
  A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
  // take inplaceability of each monad from the corresponding dyad argument
  gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);
  ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs);
- z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs); 
+ POPZOMB; z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs); 
  EPILOG(z);
 }
 
@@ -143,7 +143,6 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
- if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R fdef(CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
@@ -185,7 +184,6 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag,j,m=-1;V*av,*wv;
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
- if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R fdef(CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
@@ -197,7 +195,6 @@ F2(jtampco){AF f1=on1;C c,d;I flag;V*wv;
  if     (c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
- if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
  R fdef(CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
@@ -247,7 +244,6 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
     case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VINPLACEOK1; break;
     case CIBEAM: if(v->f&&v->g&&128==i0(v->f)&&3==i0(v->g)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VINPLACEOK1;}
    }
-   if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
    R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VN: 
    f1=withr; v=VAV(a);
@@ -268,7 +264,6 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
     if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}
     else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VINPLACEOK1;}
    }
-   if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
    R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VV:
    // u@v
@@ -288,6 +283,5 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
     case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
     case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
    }
-   if(0==jt->asgzomblevel)flag &= ~VASGSAFE;   // turn off ASGSAFE for compounds if the user can't handle it
    R fdef(CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
 }}

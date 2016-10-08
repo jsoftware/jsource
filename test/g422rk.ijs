@@ -20,8 +20,8 @@ a.  f"1 0 i.10
 
 (/:@/:   -: rk  ) x=: 10&u: RAND32   1e4 ?@$ C4MAX
 (/:@/:"1 -: rk"1) x=: 10&u: RAND32 5 1e4 ?@$ C4MAX
-(/:@/:   -: rk  ) x=: 10&u: RAND32   1e6 ?@$ C4MAX
-(/:@/:"1 -: rk"1) x=: 10&u: RAND32 5 1e6 ?@$ C4MAX
+(/:@/:   -: rk  ) x=: 10&u: RAND32   1e5 ?@$ C4MAX
+(/:@/:"1 -: rk"1) x=: 10&u: RAND32 5 1e5 ?@$ C4MAX
 
 (/:@/:   -: rk  ) x=: sdot0{~   1e4 ?@$#sdot0
 (/:@/:"1 -: rk"1) x=: sdot0{~ 5 1e4 ?@$#sdot0

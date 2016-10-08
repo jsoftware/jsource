@@ -41,12 +41,14 @@ void consoleAppend(JNIEnv *env, jobject obj,int type, const char*chars) {
 	if(outputId == 0) {
   	   jclass the_class = (*env)->GetObjectClass(env,obj);
 		outputId = (*env)->GetMethodID(env,the_class,"output","(ILjava/lang/String;)V" );
+		(*env)->DeleteLocalRef(env,the_class);
 	}
 	if(outputId == 0) {
 		LOGD("failed to get the method id for " "output:" "(ILjava/lang/String;)V");
 	} else {
 		jstring str = (*env)->NewStringUTF(env,chars);
 		(*env)->CallVoidMethod(env,obj,outputId,(jint)type,str);
+		(*env)->DeleteLocalRef(env,str);
 	}
 }
 
@@ -131,6 +133,9 @@ const char* __nextLineFromAndroid(
 		free((char*)android_next_ptr);
 	}
 	android_next_ptr = (*env)->GetStringUTFChars(env, res, 0);
+	(*env)->DeleteLocalRef(env,res);
+	(*env)->DeleteLocalRef(env,nextLineId);
+	(*env)->DeleteLocalRef(env,the_class);
 	return android_next_ptr;
 }
 
@@ -144,6 +149,7 @@ void __quitViaAndroid(
 	jclass the_class = (*env)->GetObjectClass(env,obj);
 	jmethodID quitId = (*env)->GetMethodID(env,the_class,"quit","()V" );
 	(*env)->CallVoidMethod(env,obj,quitId);
+	(*env)->DeleteLocalRef(env,quitId);
 }
 
 void _stdcall android_quit() {

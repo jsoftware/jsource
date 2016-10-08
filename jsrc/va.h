@@ -36,6 +36,8 @@ typedef struct {VA2 p1[6];} UA;
 #define VIPOKW          (1<<VIPOKWX)
 #define VIPOKAX         28      // This routine can put its result over A
 #define VIPOKA          (1<<VIPOKAX)
+#define VCANHALTX       29    // This routine can generate an error after it has started
+#define VCANHALT        (1<<VCANHALTX)
 
 // Extract the argument-conversion type from cv coming from the table
 #define atype(x) ((x)&VARGMSK)

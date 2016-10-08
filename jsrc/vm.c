@@ -7,7 +7,7 @@
 #include "ve.h"
 
 D jtintpow(J jt,D x,I n){D r=1;
- if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}
+ if(0>n){x=1/x; if(n==IMIN){r=x; n=IMAX;} else n=-n;}  // kludge use r=x; n=-1-n;
  while(n){if(1&n)r*=x; x*=x; n>>=1;}
  R r;
 }    /* x^n where x is real and n is integral */

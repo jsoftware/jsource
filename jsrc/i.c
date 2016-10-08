@@ -156,7 +156,7 @@ static void jtjtinit(J jt){
 // zero jt->parsercalls=0;
 // zero jt->parserstkbgn=jt->parserstkend1=0;
 // zero CLEARZOMBIE
- jt->asgzomblevel = 2;  // allow premature change to zombie names
+ jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 }
 
 

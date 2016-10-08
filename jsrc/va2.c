@@ -180,7 +180,7 @@ static VA va[]={
 /* 25 %  */ {
  {{(VF)divBB,VD}, {(VF)divBI,VD+VIP0I}, {(VF)divBD,VD+VIPOKW},
   {(VF)divIB,VD+VIPI0}, {(VF)divII,VD+VIPI0+VIP0I}, {(VF)divID,VD+VIPID},
-  {(VF)divDB,VD+VIPOKA}, {(VF)divDI,VD+VIPDI}, {(VF)divDD,VD+VIP}, 
+  {(VF)divDB,VD+VIPOKA}, {(VF)divDI,VD+VIPDI}, {(VF)divDD,VD+VIP+VCANHALT}, 
   {(VF)divZZ,VZ+VZZ}, {(VF)divXX,VX+VXX}, {(VF)divQQ,VQ+VQQ}, {0,0}},
  {{(VF)divinsD,VD+VDD}, {(VF)divinsD,VD+VDD}, {(VF)divinsD,VD}, {(VF)divinsZ,VZ}},
  {{(VF)divpfxD,VD+VDD}, {(VF)divpfxD,VD+VDD}, {(VF)divpfxD,VD}, {(VF)divpfxZ,VZ}},
@@ -198,7 +198,7 @@ static VA va[]={
 /* 2b +  */ {
  {{(VF)plusBB,VI    }, {(VF)plusII,VI+VII}, {(VF)plusBD,VD+VIPOKW}, 
   {(VF)plusII,VI+VII}, {(VF)plusII,VI    }, {(VF)plusID,VD+VIPID}, 
-  {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP}, 
+  {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP+VCANHALT}, 
   {(VF)plusZZ,VZ+VZZ+VIP}, {(VF)plusXX,VX+VXX}, {(VF)plusQQ,VQ+VQQ}, {0,0}},
  {{(VF)plusinsB,VI}, {(VF)plusinsI,VI}, {(VF)plusinsD,VD}, {(VF)plusinsZ,VZ}, {0,0},         {0,0},         {0,0}},
  {{(VF)pluspfxB,VI}, {(VF)pluspfxI,VI}, {(VF)pluspfxD,VD}, {(VF)pluspfxZ,VZ}, {(VF)pluspfxX,VX}, {(VF)pluspfxQ,VQ}, {0,0}},
@@ -207,7 +207,7 @@ static VA va[]={
 /* 2d -  */ {
  {{(VF)minusBB,VI    }, {(VF)minusII,VI+VII}, {(VF)minusBD,VD+VIPOKW}, 
   {(VF)minusII,VI+VII}, {(VF)minusII,VI    }, {(VF)minusID,VD+VIPID},
-  {(VF)minusDB,VD+VIPOKA    }, {(VF)minusDI,VD+VIPDI    }, {(VF)minusDD,VD+VIP}, 
+  {(VF)minusDB,VD+VIPOKA    }, {(VF)minusDI,VD+VIPDI    }, {(VF)minusDD,VD+VIP+VCANHALT}, 
   {(VF)minusZZ,VZ+VZZ+VIP}, {(VF)minusXX,VX+VXX}, {(VF)minusQQ,VQ+VQQ}, {0,0}},
  {{(VF)minusinsB,VI}, {(VF)minusinsI,VI}, {(VF)minusinsD,VD}, {(VF)minusinsZ,VZ}, {0,0},          {0,0},          {0,0}},
  {{(VF)minuspfxB,VI}, {(VF)minuspfxI,VI}, {(VF)minuspfxD,VD}, {(VF)minuspfxZ,VZ}, {(VF)minuspfxX,VX}, {(VF)minuspfxQ,VQ}, {0,0}},
@@ -243,8 +243,8 @@ static VA va[]={
 
 /* 5e ^  */ {   // may produce complex numbers
  {{(VF)geBB, VB+VIP}, {(VF)powBI,VD}, {(VF)powBD,VD},
-  {(VF)powIB,VI}, {(VF)powII,VD}, {(VF)powID,VD},
-  {(VF)powDB,VD}, {(VF)powDI,VD}, {(VF)powDD,VD}, 
+  {(VF)powIB,VI}, {(VF)powII,VD}, {(VF)powID,VD+VCANHALT},
+  {(VF)powDB,VD}, {(VF)powDI,VD}, {(VF)powDD,VD+VCANHALT}, 
   {(VF)powZZ,VZ+VZZ}, {(VF)powXX,VX+VXX}, {(VF)powQQ,VQ+VQQ}, {0,0}},
  {{(VF)geinsB,VB}},
  {{(VF)gepfxB,VB}},
@@ -252,8 +252,8 @@ static VA va[]={
 
 /* 7c |  */ {
  {{(VF)ltBB, VB+VIP    }, {(VF)remII,VI+VII+VIP}, {(VF)remDD,VD+VDD+VIP},
-  {(VF)remII,VI+VII+VIP}, {(VF)remII,VI+VIP    }, {(VF)remID,VI    },   // remID can 'overflow' if result is nonintegral
-  {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VIP    }, 
+  {(VF)remII,VI+VII+VIP}, {(VF)remII,VI+VIP    }, {(VF)remID,VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
+  {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VDD+VIP}, {(VF)remDD,VD+VIP+VCANHALT}, 
   {(VF)remZZ,VZ+VZZ}, {(VF)remXX,VX+VXX}, {(VF)remQQ,VQ+VQQ}, {0,0}},
  {{(VF)ltinsB,VB}},
  {{(VF)ltpfxB,VB}},
@@ -298,7 +298,7 @@ static VA va[]={
 /* 88 +. */ {
  {{(VF)orBB,VB+VIP     }, {(VF)gcdII,VI+VII}, {(VF)gcdDD,VD+VDD+VIP},
   {(VF)gcdII,VI+VII}, {(VF)gcdII,VI    }, {(VF)gcdDD,VD+VDD+VIP},
-  {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VIP    }, 
+  {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VDD+VIP}, {(VF)gcdDD,VD+VIP+VCANHALT}, 
   {(VF)gcdZZ,VZ+VZZ}, {(VF)gcdXX,VX+VXX}, {(VF)gcdQQ,VQ+VQQ}, {0,0}},
  {{(VF)orinsB,VB}},
  {{(VF)orpfxB,VB}},
@@ -316,7 +316,7 @@ static VA va[]={
 /* 8a *. */ {
  {{(VF)andBB,VB+VIP    }, {(VF)lcmII,VI+VII}, {(VF)lcmDD,VD+VDD+VIP},
   {(VF)lcmII,VI+VII}, {(VF)lcmII,VI    }, {(VF)lcmDD,VD+VDD+VIP},
-  {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VIP    }, 
+  {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VDD+VIP}, {(VF)lcmDD,VD+VIP+VCANHALT}, 
   {(VF)lcmZZ,VZ+VZZ}, {(VF)lcmXX,VX+VXX}, {(VF)lcmQQ,VQ+VQQ}, {0,0}},
  {{(VF)andinsB,VB}},
  {{(VF)andpfxB,VB}},
@@ -670,8 +670,9 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
   (I)jtinplace &= cv>>VIPOKWX;  // qualify input flags based on routine result
   // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
-  if((I)jtinplace&JTINPLACEW && zn==wn && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w) && (wr==f+r)){z=w; AT(z)=zt;  // scaf must check for conditional not-inplaceable
-  }else if((I)jtinplace&JTINPLACEA && zn==an && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a) && (ar==f+r)){z=a; AT(z)=zt;
+  // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
+  if((I)jtinplace&JTINPLACEW && zn==wn && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(cv&VCANHALT && jt->asgzomblevel<2)) && (wr==f+r)){z=w; AT(z)=zt;
+  }else if((I)jtinplace&JTINPLACEA && zn==an && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(cv&VCANHALT && jt->asgzomblevel<2)) && (ar==f+r)){z=a; AT(z)=zt;
   }else{GA(z,zt,zn,f+r,sf); ICPY(f+AS(z),s,r);}
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   av=CAV(a); wv=CAV(w); zv=CAV(z);   // point to the data

@@ -2,6 +2,26 @@
 NB. atomic"n in-place and not -------------------------------
 randuni''
 
+NB. Use-count test
+by =: (<51);(20 20+2.5-2.5);''
+(22 0)  4 : 0  by
+tlc =. x
+'dos dotl wires' =. 3 {. y
+dotl =. dotl +"1 tlc
+1
+)
+by -: (<51);(20 20+2.5-2.5);''
+NB. Use-count test
+(22 0)  4 : 0  by
+tlc =. x
+'dos dotl wires' =. 3 {. y
+dotl =. tlc +"1 dotl
+1
+)
+by -: (<51);(20 20+2.5-2.5);''
+
+
+
 NB. x is selection;shapes;prediction
 NB.  selection selects a prediction
 NB.  prediction is string, 27 predictors separated by '/'
@@ -232,65 +252,100 @@ testinplacer =: 1 : 0
 'resultprec predr' =: y
 NB. Test for validity.  Checks for inplacing too much
 NB. Choose a random shape, then try all combinations of prefixes.
-(u testinplace (resultprec;''))"1 ,"0/~ a: , <\ >: ? 4 # 10
-NB. Repeat for other ranks of u.  Also create a random cell-shape and use a prefix of it for each argument
-(u"0 0 testinplace (resultprec;''))"1 (0 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"0 1 testinplace (resultprec;''))"1 (0 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"1 0 testinplace (resultprec;''))"1 (1 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"1 1 testinplace (resultprec;''))"1 (1 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-(u"0 2 testinplace (resultprec;''))"1 (0 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-(u"1 2 testinplace (resultprec;''))"1 (1 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
-(u"2 2 testinplace (resultprec;''))"1 (2 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"2 1 testinplace (resultprec;''))"1 (2 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"2 0 testinplace (resultprec;''))"1 (2 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"0 3 testinplace (resultprec;''))"1 (0 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"1 3 testinplace (resultprec;''))"1 (1 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"2 3 testinplace (resultprec;''))"1 (2 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"3 3 testinplace (resultprec;''))"1 (3 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"3 2 testinplace (resultprec;''))"1 (3 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"3 1 testinplace (resultprec;''))"1 (3 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
-(u"3 0 testinplace (resultprec;''))"1 (3 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+if. 'V' e. resultprec do.
+  (u testinplace (resultprec;''))"1 ,"0/~ a: , <\ >: ? 4 # 10
+  NB. Repeat for other ranks of u.  Also create a random cell-shape and use a prefix of it for each argument
+  (u"0 0 testinplace (resultprec;''))"1 (0 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"0 1 testinplace (resultprec;''))"1 (0 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"1 0 testinplace (resultprec;''))"1 (1 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"1 1 testinplace (resultprec;''))"1 (1 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+  (u"0 2 testinplace (resultprec;''))"1 (0 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+  (u"1 2 testinplace (resultprec;''))"1 (1 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 3 # 10
+  (u"2 2 testinplace (resultprec;''))"1 (2 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"2 1 testinplace (resultprec;''))"1 (2 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"2 0 testinplace (resultprec;''))"1 (2 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"0 3 testinplace (resultprec;''))"1 (0 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"1 3 testinplace (resultprec;''))"1 (1 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"2 3 testinplace (resultprec;''))"1 (2 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"3 3 testinplace (resultprec;''))"1 (3 3) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"3 2 testinplace (resultprec;''))"1 (3 2) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"3 1 testinplace (resultprec;''))"1 (3 1) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+  (u"3 0 testinplace (resultprec;''))"1 (3 0) (] ,&.> [ {.&.> [: < 10 ?@$~ >./@[)"1   ,"0/~ a: , <\ >: ? 2 # 10
+end.
 
 NB. Verify size of large operands.  Checks for inplacing too little
 u testinplace (resultprec;(predr -. 'b'))"1 (16000;16000)  NB. 'b' means inplace only if rank not specified
 u"1 testinplace (resultprec;predr)"1 (10 1600;10 1600)
 )
+NB. Full test with everything allowed
+9!:53 (2)
 
-+. testinplacer 'BID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
-*. testinplacer 'BID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
++. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
+*. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
 
-27 b. testinplacer 'BI';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
+27 b. testinplacer 'VBI';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
 
-! testinplacer 'BID';'B/LRI/L/LRI/LRI/L/R/R/D/    b/LRI/L/LRI/LRI/L/R/R//   b/LRI/L/LRI/LRI/L/R/R//'
+! testinplacer 'VBID';'B/LRI/L/LRI/LRI/L/R/R/D/    b/LRI/L/LRI/LRI/L/R/R//   b/LRI/L/LRI/LRI/L/R/R//'
 
-% testinplacer 'BID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
- {{(VF)divBB,VD}, {(VF)divBI,VD+VIP0I}, {(VF)divBD,VD+VIPOKW},
-  {(VF)divIB,VD+VIPI0}, {(VF)divII,VD+VIPI0+VIP0I}, {(VF)divID,VD+VIPID},
-  {(VF)divDB,VD+VIPOKA}, {(VF)divDI,VD+VIPDI}, {(VF)divDD,VD+VIP}, 
+% testinplacer 'VBID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
 
-* testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
+* testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
 
-+ testinplacer 'BID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
-- testinplacer 'BID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
++ testinplacer 'VBID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
+- testinplacer 'VBID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
 
-< testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-= testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-> testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-<: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
->: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-~: testinplacer 'BID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+< testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+= testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+> testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+<: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+>: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+~: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
 
-+: testinplacer 'B';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
-*: testinplacer 'B';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
++: testinplacer 'VB';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
+*: testinplacer 'VB';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
 
 NB. INT ^ INT produces slightly different values than INT ^ FL on 902753 ^ 39  which is close to the IEEE limit.  So don't check those values
-^ testinplacer 'BD';'B/D/D/I/D/D/D/D/D/    b/D/D/I/D/D/D/D/D/   b/D/D/I/D/D/D/D/D/'
+^ testinplacer 'VBD';'B/D/D/I/D/D/D/D/D/    b/D/D/I/D/D/D/D/D/   b/D/D/I/D/D/D/D/D/'
 
 NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this code
-| testinplacer 'BID';'B/l/L/r/I/ID/R/R/D/    b/l/L/r//ID/R/R//   b/l/L/r//ID/R/R//'  NB. I | D fails, then runs in-place
+| testinplacer 'VBID';'B/l/L/r/I/ID/R/R/D/    b/l/L/r//ID/R/R//   b/l/L/r//ID/R/R//'  NB. I | D fails, then runs in-place
 
-<. testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
->. testinplacer 'BID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+<. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+>. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+
+NB. Go back and recheck with partial execution not allowed.  No need for checking overlap again, or binary
+9!:53 (1)
++. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'
+*. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'
+
+27 b. testinplacer 'I';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
+
+! testinplacer 'ID';'B/LRI/L/LRI/LRI/L/R/R/D/    b/LRI/L/LRI/LRI/L/R/R//   b/LRI/L/LRI/LRI/L/R/R//'
+
+% testinplacer 'ID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d///D/   D/d//D/d//D/d/D/'
+
+* testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
+
++ testinplacer 'ID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d///D/   I/lI//rI/I//D/d/D/'
+- testinplacer 'ID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d///D/   I/lI//rI/I//D/d/D/'
+
+< testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+= testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+> testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+<: testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+>: testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+~: testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+
+NB. INT ^ INT produces slightly different values than INT ^ FL on 902753 ^ 39  which is close to the IEEE limit.  So don't check those values
+^ testinplacer 'D';'B/D/D/I/D/D/D/D/D/    b/D/D/I/D/D/D/D/D/   b/D/D/I/D/D/D/D/D/'
+
+NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this code
+| testinplacer 'ID';'B/l/L/r/I/ID/R/R/D/    b/l/L/r//ID/R/R/D/   b/l/L/r//ID/R/R/D/'  NB. I | D fails, then runs in-place
+
+<. testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+>. testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+
+9!:53 (1)   NB. Reset the default
 
 4!:55 ;:'allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'

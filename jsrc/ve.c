@@ -254,7 +254,7 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
   EPILOG(z);
 }}
 
-// Compute 2 | w for INT w, leaving Boolean result.
+// Compute 2 | w for INT w, leaving Boolean result.   kludge this should shift into mask & store fullwords
 F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
  RZ(w);F1PREFIP;  // allow inplacing but don't use it, since the input is INT and the result is B01
  n=AN(w); q=n/k; r=n%k; v=BAV(w)+!liln*(k-1);

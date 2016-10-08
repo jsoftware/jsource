@@ -631,8 +631,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  if(t&&!sp&&an&&wn){B xn = !!(t&XNUM);
   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.
-  if(TYPESNE(t,at)){RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));(I)jtinplace |= JTINPLACEA;}
-  if(TYPESNE(t,wt)){RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));(I)jtinplace |= JTINPLACEW;}
+  if(TYPESNE(t,at)){RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));jtinplace = (J)((I)jtinplace | JTINPLACEA);}
+  if(TYPESNE(t,wt)){RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));jtinplace = (J)((I)jtinplace | JTINPLACEW);}
  }
  // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
  // rank, type, etc. using the original input block.  That's OK.
@@ -668,7 +668,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
   // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
-  (I)jtinplace &= cv>>VIPOKWX;  // qualify input flags based on routine result
+  jtinplace = (J)((I)jtinplace & (cv>>VIPOKWX));  // qualify input flags based on routine result
   // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
   // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
   if((I)jtinplace&JTINPLACEW && zn==wn && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(cv&VCANHALT && jt->asgzomblevel<2)) && (wr==f+r)){z=w; AT(z)=zt;

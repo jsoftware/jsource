@@ -136,7 +136,6 @@ char* __nextLineFromAndroid(
 	strcpy(android_next_ptr,line);
 	(*env)->ReleaseStringUTFChars(env, res, line);
 	(*env)->DeleteLocalRef(env,res);
-	(*env)->DeleteLocalRef(env,nextLineId);
 	(*env)->DeleteLocalRef(env,the_class);
 	return android_next_ptr;
 }
@@ -152,7 +151,7 @@ void __quitViaAndroid(
 	jclass the_class = (*env)->GetObjectClass(env,obj);
 	jmethodID quitId = (*env)->GetMethodID(env,the_class,"quit","()V" );
 	(*env)->CallVoidMethod(env,obj,quitId);
-	(*env)->DeleteLocalRef(env,quitId);
+	(*env)->DeleteLocalRef(env,the_class);
 }
 
 void _stdcall android_quit() {

@@ -15,6 +15,15 @@
 /*   tfloor(v)  x=floor(0.5+v), x-tgt(x,v)                                 */
 /*   tceil(v)   x=floor(0.5+v), x+tlt(x,v)                                 */
 
+// cct is complementary comp tolerance (1-jt->ct).  Result is 1 if tolerantly equal
+// If a==b the comparisons will have opposite results, i. e. 1
+// If a!=b, finite a,b, the larger will compare greater and the other will compare le as long
+// as the tolerance holds.
+// If both a&b are same infinity, <= will succeed, > will fail, giving ==
+// If only one is infinite, it will dominate both tests, giving !=
+// If anything is _., all comparisons fail, giving !=
+#define TCMPEQ(cct,a,b) ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0))
+
 #define TEQ            teq
 #define TEQXD(u,v)     teq((D)u,   v)
 #define TEQDX(u,v)     teq(   u,(D)v)

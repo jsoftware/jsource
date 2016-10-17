@@ -261,7 +261,7 @@ r =: ix u"u"u iy
 NB. For each precision combination, verify reasonable result.  Because we convert to float,
 NB. IMAX+IMIN may lose precision if INTs are 64-bit.  We are mainly making sure we don't
 NB. turn IMIN to IMAX or vice versa
-fuzz =. IF64 { 0 16384 
+fuzz =. IF64 { 8 16384 
 assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
 assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: ix u iy'
 assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'

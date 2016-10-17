@@ -41,12 +41,14 @@ void consoleAppend(JNIEnv *env, jobject obj,int type, const char*chars) {
 	if(outputId == 0) {
   	   jclass the_class = (*env)->GetObjectClass(env,obj);
 		outputId = (*env)->GetMethodID(env,the_class,"output","(ILjava/lang/String;)V" );
+		(*env)->DeleteLocalRef(env,the_class);
 	}
 	if(outputId == 0) {
 		LOGD("failed to get the method id for " "output:" "(ILjava/lang/String;)V");
 	} else {
 		jstring str = (*env)->NewStringUTF(env,chars);
 		(*env)->CallVoidMethod(env,obj,outputId,(jint)type,str);
+		(*env)->DeleteLocalRef(env,str);
 	}
 }
 
@@ -71,6 +73,7 @@ JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
 
 	const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
 	int jc = JDo(jengine,(C*)nativeString);
+	(*env)->ReleaseStringUTFChars(env, js, nativeString);
 	return (jint) jc;
 }
 
@@ -118,19 +121,22 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_setEnvNative
 }
 
 #ifdef ANDROID
-const char* android_next_ptr = NULL;
-const char* __nextLineFromAndroid(
+static char* android_next_ptr = NULL;
+char* __nextLineFromAndroid(
 		JNIEnv *env,
 		jobject obj) {
-	LOGD("extLineFromAndroid");
+	LOGD("nextLineFromAndroid");
+	const char *line;
 	jclass the_class = (*env)->GetObjectClass(env,obj);
 	jmethodID nextLineId = (*env)->GetMethodID(env,the_class,"nextLine","()Ljava/lang/String;" );
 	/* this method blocks via sleep until a line is available */
 	jstring res = (jstring) (*env)->CallObjectMethod(env,obj,nextLineId);
-	if(android_next_ptr != NULL) {
-		free((char*)android_next_ptr);
-	}
-	android_next_ptr = (*env)->GetStringUTFChars(env, res, 0);
+	line = (*env)->GetStringUTFChars(env, res, 0);
+	android_next_ptr=realloc(android_next_ptr,1+strlen(line));
+	strcpy(android_next_ptr,line);
+	(*env)->ReleaseStringUTFChars(env, res, line);
+	(*env)->DeleteLocalRef(env,res);
+	(*env)->DeleteLocalRef(env,the_class);
 	return android_next_ptr;
 }
 
@@ -141,9 +147,11 @@ const char * _stdcall android_next_line() {
 void __quitViaAndroid(
 		JNIEnv *env,
 		jobject obj) {
+	free(android_next_ptr);
 	jclass the_class = (*env)->GetObjectClass(env,obj);
 	jmethodID quitId = (*env)->GetMethodID(env,the_class,"quit","()V" );
 	(*env)->CallVoidMethod(env,obj,quitId);
+	(*env)->DeleteLocalRef(env,the_class);
 }
 
 void _stdcall android_quit() {

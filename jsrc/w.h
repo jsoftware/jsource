@@ -32,3 +32,5 @@
 #define CCATCHD        27
 #define CCATCHT        28
 #define CSELECTN       29
+#define CBREAKS        30   // break. with select. as containing looping struct
+#define CCONTS         31   // continue. with select. as containing looping struct

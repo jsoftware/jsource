@@ -20,7 +20,25 @@ dotl =. tlc +"1 dotl
 )
 by -: (<51);(20 20+2.5-2.5);''
 
+NB. Test plusBI and plusIB with overflow and inplace
+bx =: 0 1 0 0 0 1 0 1 0 0 0 0 1
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx + iy) -: bx +"0"0 iy
+(bx + (0 + iy)) -: bx +"0"0 iy
+((0 +. bx) + iy) -: bx +"0"0 iy
+((0 +. bx) + (0 + iy)) -: bx +"0"0 iy
 
+bx =: 4 3$0 1 0 0 0 1 0 1 0 0 0 0 1 0
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx + iy) -: bx +"0"0 iy
+(bx + (0 + iy)) -: bx +"0"0 iy
+((0 +. bx) + iy) -: bx +"0"0 iy
+((0 +. bx) + (0 + iy)) -: bx +"0"0 iy
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx +"1 2 iy) -: bx +"0"1 2 iy
+(bx +"1 2 (0 + iy)) -: bx +"0"1 2 iy
+((0 +. bx) +"1 2 iy) -: bx +"0"1 2 iy
+((0 +. bx) +"1 2 (0 + iy)) -: bx +"0"1 2 iy
 
 NB. x is selection;shapes;prediction
 NB.  selection selects a prediction
@@ -214,6 +232,78 @@ NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 end.
 
+if. 'O' e. resvalidity do.
+NB. Test integer data, in integer and float precisions, with overflow
+
+NB. Create random data.
+ix =: xs (?@$ - <.@:-:@:]) IF64 { 30000 1000000
+iy =: ys (?@$ - <.@:-:@:]) IF64 { 30000 1000000
+NB. Install random overflow values, with enough coverage to exercise the paths; say 10% of each argument, both IMAX and IMIN
+IMAX =. _1 - IMIN =. <. - 2 ^ IF64 { 31 63
+if. #ixx =. ($ix) <@#: I. 0.10 > ?@$&0 */ $ ix do.
+ ix =: (IMAX - (#ixx) ?@$ 10) ixx} ix
+elseif. '' -: $ix do. ix =: IMIN
+end.
+if. #iyx =. ($iy) <@#: I. 0.10 > ?@$&0 */ $ iy do.
+ iy =: (IMIN + (#iyx) ?@$ 10) iyx} iy
+elseif. '' -: $iy do. iy =: IMAX
+end.
+NB. Make the first value 0.  This creates 0|0 which goes through a different path in the code; we need to do so predictably
+if. #,ix do. ix =: 0 0:} ix end.
+if. #,iy do. iy =: 0 0:} iy end.
+NB. Create copies in other precisions
+dx =: ix + (2.5-2.5)
+dy =: iy + (2.5-2.5)
+NB. Save all precisions in a separate area
+'svix sviy svdx svdy' =: svxy =: 3!:1&.> ix;iy;dx;dy
+NB. Get result with all looping performed in rank conjunction
+r =: ix u"u"u iy
+NB. For each precision combination, verify reasonable result.  Because we convert to float,
+NB. IMAX+IMIN may lose precision if INTs are 64-bit.  We are mainly making sure we don't
+NB. turn IMIN to IMAX or vice versa
+fuzz =. IF64 { 0 16384 
+assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
+assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: ix u iy'
+assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
+assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: ix u dy'
+assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
+assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: dx u iy'
+assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
+assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: dx u dy'
+NB. Verify nothing modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+NB. Make x inplaceable.  Verify correct result
+tx =: 3!:2 (3!:1) ix
+assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: ix u iy'
+tx =: 3!:2 (3!:1) ix
+assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: ix u dy'
+tx =: 3!:2 (3!:1) dx
+assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
+assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: dx u iy'
+tx =: 3!:2 (3!:1) dx
+assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
+assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+NB. Make y inplaceable.  Verify correct result
+ty =: 3!:2 (3!:1) iy
+assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: ix u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
+assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: ix u dy'
+ty =: 3!:2 (3!:1) iy
+assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: dx u iy'
+ty =: 3!:2 (3!:1) dy
+assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
+assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: dx u dy'
+NB. Verify originals not modified in place
+assert. svxy -: 3!:1&.> ix;iy;dx;dy
+end.
+
 if. 'D' e. resvalidity do.
 NB. Test float data, in float precision
 
@@ -291,7 +381,8 @@ NB. Full test with everything allowed
 
 * testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
 
-+ testinplacer 'VBID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
++ testinplacer 'VBID';'I/I/D/I/I/D/D/D/D/    I/I/D///d////   I///I///D/d//'  NB. non-overflow
++ testinplacer 'VO';'I/Id/D/Id/Id/D/D/D/D/    I/Id/D/d/d/d////   I/d//Id/d//D/d//'   NB. overflow
 - testinplacer 'VBID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
 
 < testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
@@ -326,7 +417,7 @@ NB. Go back and recheck with partial execution not allowed.  No need for checkin
 
 * testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
 
-+ testinplacer 'ID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d///D/   I/lI//rI/I//D/d/D/'
++ testinplacer 'ID';'I/I/D/I/I/D/D/D/D/    I/I/D///d///D/   I///I///D/d/D/'
 - testinplacer 'ID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d///D/   I/lI//rI/I//D/d/D/'
 
 < testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'

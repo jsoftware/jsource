@@ -18,7 +18,7 @@ fx=(f1)((VAV(fs)->flag&VINPLACEOK1&&hx!=w)?jtinplace:jt,  w,fs); /* CALL1 with v
 POPZOMB; z=(g2)(VAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw?JTINPLACEA:0)+(hx!=protw?JTINPLACEW:0))) ):jt,fx,hx,gs);}
 
 #define FOLK2 {A fx,hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); \
-hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?(J)((I)jtinplace&(VAV(hs)->flag|~(VFATOPL|VFATOPR))):jt,a,w,hs); /* inplace h if f is x@] */  \
+hx=(h2)(a!=w&&(VAV(hs)->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt,a,w,hs); /* inplace h if f is x@], but not if a==w */  \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
 fx=(f2)((VAV(fs)->flag&VINPLACEOK2)?((J)((I)jtinplace&((hx==w?~JTINPLACEW:~0)&(hx==a?~JTINPLACEA:~0)))):jt ,a,w,fs); \

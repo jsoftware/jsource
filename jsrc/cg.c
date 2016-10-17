@@ -242,10 +242,12 @@ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&
  ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing
  ff=df1(ffm,ds(sv->id)); FDEPDEC(d);   // now ff represents (x v1 y)}
  RZ(ffm);  // OK to fail after FDEPDEC
+ // Protect any input that was returned by v1 (must be ][)
+ if(a==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff
- // x v2 y - can inplace an argument that v0 is not going to use
- RZ(ffy = (VAV(hv[2])->f2)((VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));
+ // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
+ RZ(ffy = (VAV(hv[2])->f2)(a!=w&&(VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
  RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller

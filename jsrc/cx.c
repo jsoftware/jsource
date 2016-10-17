@@ -254,15 +254,14 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(!(ci->canend&2))rat(z); unstackcv(cv); --cv; ++r; 
     i=ci->go;    // continue at new location
     break;
-   case CBREAK:
-   case CCONT:
-    // break.-in-while./continue must pop the stack if they are in a select. structure.  Then, they must pop
-    // until they have popped the SELECT type.  It would be possible for the initial analysis to
-    // decide whether any popping is required, but we didn't do that.
-    if(cd&&(cv->w==CSELECT||cv->w==CSELECTN)){
-     if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
-     do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
-    }
+   case CBREAKS:
+   case CCONTS:
+    // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
+    // any number of SELECTN, up to the SELECT 
+// obsolete     if(cd&&(cv->w==CSELECT||cv->w==CSELECTN)){
+   if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
+   do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
+// obsolete    }
     i=ci->go;   // After popping any select. off the stack, continue at new address
     break;
    case CBREAKF:

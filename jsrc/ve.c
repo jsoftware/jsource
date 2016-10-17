@@ -15,25 +15,112 @@
 #define TYMESDI(u,v)  (   v?u*v:0)
 #define TYMESDD(u,v)  (u&&v?u*v:0)
 
+// II add, noting overflow and leaving it, possibly in place
+AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
+ if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u+v; *z=w; ++x; ++y; ++z; u^=w; v^=w; if((u&v)<0)++oflo;}}
+ else if(b)DO(m, u=*x++; I thresh = IMIN-u; if (u<=0){DO(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DO(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
+ else      DO(m, v=*y++; I thresh = IMIN-v; if (v<=0){DO(n, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DO(n, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSII;
+}
+
+// BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
+AHDR2(plusBI,I,B,I){I u;I v;I w;I oflo=0;
+ if(1==n)  DO(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
+ else if(b)DO(m, u=(I)*x++; if(u){DO(n, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,n<<LGSZI); z+=n; y+=n;})
+ else      DO(m, v=*y++; DO(n, u=(I)*x; if(v==IMAX)oflo+=u; w=u+v; *z++=w; x++;))
+ if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSBI;
+}
+
+// IB add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
+AHDR2(plusIB,I,I,B){I u;I v;I w;I oflo=0;
+ if(1==n)  DO(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=(I)*y; if(u==IMAX)oflo+=v; w=u+v; *z++=w; y++;))
+ else      DO(m, v=(I)*y++; if(v){DO(n, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSIB;
+}
+
+// BD DB add similarly?
+#if 0
+// II multiply, in double precision
+AHDR2(tymesIIa,I,I,I){I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
+ if(1==n)  DO(m, u=*x; v=*y; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=*y; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; y++;))
+ else      DO(m, v=*y++; DO(n, u=*x; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; x++;))
+exit: jt->mulofloloc += z-zi; R;
+oflo: jt->jerr = EWOVIP; goto exit;
+}
+
+// BI multiply, using clear/copy
+AHDR2(tymesBIa,I,B,I){B u;I v;
+ if(1==n)  DO(m, u=*x; *z++=u?*y:0; x++; y++; )
+ else if(b)DO(m, u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; y+=n;)
+ else      DO(m, v=*y++; DO(n, u=*x; *z++=u?v:0; x++;))
+}
+
+// IB multiply, using clear/copy
+AHDR2(tymesIBa,I,I,B){I u;B v;
+ if(1==n)  DO(m, v=*y; *z++=v?*x:0; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=*y; *z++=v?u:0; y++;))
+ else      DO(m, v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
+}
+#endif
+// BD DB mul similarly?
+
+// Overflow repair routines
+// *x is a non-in-place argument, and n and m advance through it
+//  each atom of *x is repeated n times
+// *y is the result of the operation that overflowed
+// *z is the D result area (which might be the same as *y)
+// b is unused
+AHDR2(plusIIO,D,I,I){I u;
+ DO(m, u=*x++; DO(n, *z=(D)u + (D)(*y-u); ++y; ++z;));
+}
+AHDR2(plusBIO,D,B,I){I u;
+ DO(m, u=(I)*x++; DO(n, *z=(D)u + (D)(*y-u); ++y; ++z;));
+}
+
+// For subtract repair, b is 1 if x was the subtrahend, 0 if the minuend
+AHDR2(minusIIO,D,I,I){I u;
+ DO(m, u=*x++; DO(n, *z=b?((D)(*y+u)-(D)u):(D)u - (D)(u-*y);); ++y; ++z;);
+}
+AHDR2(minusBIO,D,B,I){I u;
+ DO(m, u=(I)*x++; DO(n, *z=b?((D)(*y+u)-(D)u):(D)u - (D)(u-*y);); ++y; ++z;);
+}
+
+#if 0
+// Multiply repair is like multiply, but we have to skip over the part that has already been converted
+AHDR2(tymesIIO,D,I,I){I u;I v;I skipct=jt->mulofloloc;
+ if(1==n)  DO(m, u=*x; v=*y; if(skipct<=0){*z=(D)u*(D)v;} --skipct; x++; y++; z++;)
+ else if(b)DO(m, u=*x++; DO(n, v=*y; if(skipct<=0){*z=(D)u*(D)v;} --skipct; z++; y++;))
+ else      DO(m, v=*y++; DO(n, u=*x; if(skipct<=0){*z=(D)u*(D)v;} --skipct; z++; x++;))
+ jt->mulofloloc=skipct;
+}
+#endif
+
+
 // All these lines define functions for various operand combinations
 // The comments indicate special cases that are defined by verbs that don't follow the
 // AOVF/AIFX/ANAN etc. template
 
+#if 0  // scaf
 AOVF( plusII, I,I,I,  PLUSVV, PLUS1V, PLUSV1)
+#endif
 AOVF(minusII, I,I,I, MINUSVV,MINUS1V,MINUSV1)   
 AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
 
+// These routines are used by sparse processing, which doesn't do in-place overflow
 APFX( plusIO, D,I,I,  PLUSO)
 APFX(minusIO, D,I,I, MINUSO)
 APFX(tymesIO, D,I,I, TYMESO)
 
-AIFX( plusBB, I,B,B, +     )    /* plusII */                AIFX( plusBD, D,B,D, +   )
-   /* plusII */                 /* plusII */                AIFX( plusID, D,I,D, +   )
+AIFX( plusBB, I,B,B, +     )    /* plusBI */                AIFX( plusBD, D,B,D, +   )
+   /* plusIB */                 /* plusII */                AIFX( plusID, D,I,D, +   )
 AIFX( plusDB, D,D,B, +     )  AIFX( plusDI, D,D,I, +)       ANAN( plusDD, D,D,D, PLUS)
 ANAN( plusZZ, Z,Z,Z, zplus )
 
-AIFX(minusBB, I,B,B, -     )    /* minusII */               AIFX(minusBD, D,B,D, -    )
-  /* minusII */                 /* minusII */               AIFX(minusID, D,I,D, -    )
+
+AIFX(minusBB, I,B,B, -     )    /* minusBI */               AIFX(minusBD, D,B,D, -    )
+  /* minusIB */                 /* minusII */               AIFX(minusID, D,I,D, -    )
 AIFX(minusDB, D,D,B, -     )  AIFX(minusDI, D,D,I, -)       ANAN(minusDD, D,D,D, MINUS)
 ANAN(minusZZ, Z,Z,Z, zminus)
 

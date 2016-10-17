@@ -80,7 +80,7 @@ typedef struct {
  I    relw;             /* if w is relative, w itself; else 0              */
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  I    nvrtop;           /* top of nvr stack; # valid entries               */
-
+ I    mulofloloc;       // index of the result at which II multiply overflow occurred
 // --- end cache linepair 2
 
  I    arg;              /* integer argument                                */

@@ -196,8 +196,8 @@ static VA va[]={
  {{(VF)andsfxB,VB}, {(VF)tymessfxI,VI}, {(VF)tymessfxD,VD}, {(VF)tymessfxZ,VZ}, {(VF)tymessfxX,VX}, {(VF)tymessfxQ,VQ}, {0,0}} },
 
 /* 2b +  */ {
- {{(VF)plusBB,VI    }, {(VF)plusII,VI+VII}, {(VF)plusBD,VD+VIPOKW}, 
-  {(VF)plusII,VI+VII}, {(VF)plusII,VI    }, {(VF)plusID,VD+VIPID}, 
+ {{(VF)plusBB,VI    }, {(VF)plusBI,VI+VIPOKW}, {(VF)plusBD,VD+VIPOKW}, 
+  {(VF)plusIB,VI+VIPOKA}, {(VF)plusII,VI+VIP}, {(VF)plusID,VD+VIPID}, 
   {(VF)plusDB,VD+VIPOKA    }, {(VF)plusDI,VD+VIPDI    }, {(VF)plusDD,VD+VIP+VCANHALT}, 
   {(VF)plusZZ,VZ+VZZ+VIP}, {(VF)plusXX,VX+VXX}, {(VF)plusQQ,VQ+VQQ}, {0,0}},
  {{(VF)plusinsB,VI}, {(VF)plusinsI,VI}, {(VF)plusinsD,VD}, {(VF)plusinsZ,VZ}, {0,0},         {0,0},         {0,0}},
@@ -519,7 +519,8 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    case VARCASE(EWRAT ,CDIV    ): *ado=(VF)divQQ;   *cv=VQ+VQQ;     break;
    case VARCASE(EWRAT ,CEXP    ): *ado=(VF)powQQ;   *cv=VQ+VQQ;     break;
    case VARCASE(EWDIV0,CDIV    ): *ado=(VF)divDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWOV  ,CPLUS   ): *ado=(VF)plusIO;  *cv=VD+VII;     break;
+   case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS   ): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS   ): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS   ):
+    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // only used for sparse arrays
    case VARCASE(EWOV  ,CMINUS  ): *ado=(VF)minusIO; *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CSTAR   ): *ado=(VF)tymesIO; *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
@@ -644,7 +645,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  else{
    // Not sparse.  If rank given, calculate the numbers of loops to do
   if(c!=2) {  // if rank was given initially...
-   RE(mf=prod(q,sf)); RE(nf=prod(f-q,q+sf));//else mf=nf=0;  // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
+   RE(mf=prod(q,sf)); RE(nf=prod(f-q,q+sf));    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
    RE(zn=mult(mf,mult(nf,zcn)));  // zn=total # result atoms  (only if non-sparse)
    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
    // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
@@ -680,12 +681,39 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   if(1==nf) DO(mf,        ado(jt,b,m,n,zv,av,wv); zv+=zk; av+=ak; wv+=wk;)  // if the short cell is not repeated, loop over the frame
   else if(c)DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk;         wv+=wk;); av+=ak;)  // if right frame is longer, repeat cells of a
   else      DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
-  // The work has been done.  If there was no error, check for optional conversion-if-possible
-  if(!jt->jerr)R cv&VRI+VRD?cvz(cv,z):z;
+  // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
+  if(!jt->jerr){R cv&VRI+VRD?cvz(cv,z):z;
+  }else if(jt->jerr-EWOVIP>=0){A zz;C *zzv;I zzk; I nipw;
+   // Here for overflow that can be corrected in place
+   // If the original result block cannot hold the D result, allocate a separate result area
+   if(sizeof(D)==sizeof(I)){zz=z; AT(zz)=FL; zzk=zk;
+   }else{GATV(zz,FL,zn,f+r,sf); ICPY(f+AS(zz),s,r); zzk=zk*(sizeof(D)/sizeof(I));}
+   // restore pointers to beginning of arguments
+   zv=CAV(z); zzv=CAV(zz);  // point to new-result data
+   // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
+   switch(jt->jerr-EWOVIP){
+   case EWOVIPPLUSII:
+    // choose the non-in-place argument
+    ado=plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+   case EWOVIPPLUSBI:
+    ado=plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+   case EWOVIPPLUSIB:
+    ado=plusBIO; nipw = 1; break;  // Use w as not-in-place
+   }
+   // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
+   // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
+   // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
+   if(nipw){av=CAV(w), ak=wk;}else{av=CAV(a);}  if(nipw==c){mf *= nf; nf = 1;} if(nipw==b){m *= n; n = 1;}
+   // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.
+   DO(mf, DO(nf, ado(jt,nipw,m,n,zzv,av,zv); zzv+=zzk; zv+=zk;); av+=ak;)  // use each cell of a (nf) times
+   RESETERR
+   R zz;  // Return the result after overflow has been corrected
+  }
  }
  // If we got an internal-only error during execution of the verb, restart to see if it's
  // a recoverable error such an overflow during integer addition.  We have to restore
- // jt->rank, which might have been modified
+ // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
+ // do overflow recovery in-place
  R NEVM<jt->jerr?(jt->rank=oq,va2(a,w,id)):0;
 }    /* scalar fn primitive and f"r main control */
 

@@ -709,6 +709,12 @@ a =: $$ (3 : ('y';':';'x'))`0:@.(0:) a:
 (,0) -: a
 
 
+NB. Don't inplace h in (f g h) if a==w, even if f is f@[
+1 7 7 -: ($@] , ,)~ ,{.7
+
+NB. Similarly in g}
+1 0 -: (>:@]`(1{.[)`,)}~ i. 1
+1 0 -: (>:@]`[`,)}~ i. 1
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 

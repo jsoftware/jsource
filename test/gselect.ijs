@@ -288,7 +288,18 @@ y , 'A'
 )
 'zabdefhijknoscdefhijknosyxwutA'-: t ''
 
-
+t=: 3 : 0
+select. 0 [ y =. y , 'a'
+case. 0 [ y =. y , 'b' do.
+  while. 1 [ y =. y , 'c' do.
+    y =. y , 'd' break.
+    y =. y , 'f'
+  end.
+  y =. y , 'g'
+end.
+y =. y , 'h'
+)
+'abcdgh' -: t ''
 
 4!:55 ;:'f0 f1 f2 f3 f4 f5 g1 g2 g3 g4 x t'
 

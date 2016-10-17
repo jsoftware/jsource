@@ -58,6 +58,13 @@ static I jtcongoto(J jt,I n,CW*con,A*lv){A x,z;C*s;CW*d=con,*e;I i,j,k,m;
 /* d k r  2nd word before end.                                  */
 /* each triplet (b,i,p) is ptr, stack index, code (ptr->type)   */
 
+// Each end. for for./while./select. is processed as it is encountered, and the break./continue. lines within it are processed.
+// When we fill in a line, we change its go field from SMAX to a valid line#, which we use as an indicator that the field
+// has been processed; thus we fill in each break./continue. only in the innermost containing loop.  If the innermost structure
+// containing the break./continue. is a select., we change the type to BREAKS or CONTS to signal that we need to pop the
+// select. off the stack, but we do not change the line number so that the line number will be filled in properly for the for. or while. .
+// If the BREAKS turns out to be nested inside a for., it will be changed to BREAKF to cause the for. to be popped off the stack.
+
 // Process end. not associated with select. or try.
 static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
  e=1+i;    // set e to Next Sequential Instruction
@@ -74,13 +81,14 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
    // we will skip over break. for inner loops, which have already been processed). 
    CWASSERT(b&&d); b->go=(US)(1+k); m=i-k-1;   // get # cws between (after while.) and (before end.)
    // fill in break. to go after end., or continue. to go after while.; leave others unchanged
-   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=t==CBREAK?                 (US)e :t==CCONT?(US)(1+k):(US)SMAX;);
+   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(US)e :(t==CCONT||t==CCONTS)?(US)(1+k):(US)SMAX;);
    break;
   case CWCASE(CFOR,CDOF):
    // for. is like while., but end. and continue. go back to the do., and break. is marked as BREAKF
-   // to indicate that the for. must be popped off the execution stack
+   // to indicate that the for. must be popped off the execution stack.  breakf. is needed even if the block
+   // was previously marked as in select.
    CWASSERT(b&&d); b->go=(US)j;   m=i-k-1;
-   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=t==CBREAK?(d->type=CBREAKF,(US)e):t==CCONT?(US)j    :(US)SMAX;);
+   DO(m, ++d; t=d->type; if(SMAX==d->go)d->go=(t==CBREAK||t==CBREAKS)?(d->type=CBREAKF,(US)e):(t==CCONT||t==CCONTS)?(US)j:(US)SMAX;);
  }
  R -1;
 }
@@ -88,7 +96,7 @@ static I conend(I i,I j,I k,CW*b,CW*c,CW*d,I p,I q,I r){I e,m,t;
 // Fix up the stack after encountering the end. for a try.  e=address of end.
 static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0;US ii;
  c[0]=c[1]=c[2]=-1; d[k++]=e;
- // fill d[] with end. line# followed by catchx. numbers, in descending order of line #s.  Error if repeated catch.
+ // fill d[] with end. line# followed by catchx. numbers, in descending order of line #s.  Error if repeated catch. type
  while(top&&t!=CTRY){
   j=stack[--top];
   switch(t=(j+con)->type){
@@ -106,13 +114,14 @@ static I conendtry(I e,I top,I stack[],CW*con){CW*v;I c[3],d[4],i=-1,j,k=0,m,t=0
  // if there is a catch./catchd., scan the lines from after-try. to the first catchx., and point
  // any hitherto not-processed throw. to go to the catch. (if it exists) or catchd. (if no catch.).
  // That way, unfielded throw. counts as an error that can be picked up in catch.
- if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type)v->go=ii;);}
- else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type)v->go=ii;);}
+ // kludge if break/continue encountered:  while. do. try. break. catch. end. end.  leaves the break pointing past the outer end, and the try stack unpopped
+ if     (0<=c[0]){ii=(US)(1+c[0]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
+ else if(0<=c[1]){ii=(US)(1+c[1]); v=j+con; DO(m-j-1, ++v; if(SMAX==v->go&&CBREAK!=v->type&&CCONT!=v->type&&CBREAKS!=v->type&&CCONTS!=v->type)v->go=ii;);}
  R top;  //return stack pointer with the try. ... end. removed
 }    /* result is new value of top */
 
 // Fix up the stack after encountering the end, for a select.  i=address of end.
-static I conendsel(I i,I top,I stack[],CW*con){I c=i-1,d=0,j,ot=top,t;
+static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,t;
  // Go through the stack in reverse order till we hit the select.
  // c will hold the cw one before the one to go to if the previous test fails (init to one before end.)
  while(1){
@@ -120,11 +129,13 @@ static I conendsel(I i,I top,I stack[],CW*con){I c=i-1,d=0,j,ot=top,t;
   if(t==CSELECT||t==CSELECTN)break;                //when we hit select., we're done
   if(t==CDOSEL){d=j; (j+con)->go=(US)(1+c);}  // on do., remember line# of do. in d; point that do. to the failure position
   else{                            // must be case./fcase.
-   c=j; (j+con)->go=(US)i;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)
+   c=j; (j+con)->go=(US)endline;          // set failed-compare point to be the case. test; point case. to the end. (end-of-case goes to end.)
    if(d==1+j)(d+con)->go=(US)(1+d);    // if empty case., set do. to fall through to next inst
    if(t==CFCASE&&top<ot-2)(stack[2+top]+con)->go=(US)(1+stack[3+top]);  // if fcase. (and not last case), point case. AFTER fcase. to go to the do. for that following case.
  }}
  (c+con)->go=(US)(1+c);  // set first case. to fall through to the first test
+ // j points to the select. for this end.  Replace any hitherto unfilled break./continue. with BREAKS/CONTS
+ DO(endline-j-2, ++j; if(SMAX==con[j].go){if(CBREAK==con[j].type)con[j].type=CBREAKS;else if(CCONT==con[j].type)con[j].type=CCONTS;});
  R top;     // return stack with select. ... end. removed
 }    /* result is new value of top */
 
@@ -149,8 +160,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
    case CCATCH:
    case CCATCHD:
    case CCATCHT: stack[top++]=i;        break;  // try./catch.: push address of control word
-   case CCONT:
-   case CBREAK:  CWASSERT(wb);          break;  // continue/break: verify in a loop
+   case CCONT: case CBREAK: case CCONTS: case CBREAKS:  CWASSERT(wb);          break;  // continue/break: verify in a loop
    case CFOR:
    case CWHILE:  
    case CWHILST: ++wb;                          // for./while./whilst.: increment nested-loop count, fall through to...
@@ -236,7 +246,7 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
       else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
       break;
-     case CENDSEL: case CBREAK: case CCONT: case CBREAKF: case CCASE: case CFCASE:
+     case CENDSEL: case CBREAK: case CCONT: case CBREAKS: case CCONTS: case CBREAKF: case CCASE: case CFCASE:
      case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
        // These blocks inherit only from GO
       if(con[i].go>=n)con[i].canend = 1;  // If jump off the end, that's end
@@ -256,13 +266,12 @@ A jtspellcon(J jt,I c){
   default:      ASSERTSYS(0,"spellcon");
   case CASSERT: R cstr("assert.");
   case CBBLOCK: R cstr("bblock.");
-  case CBREAK:  
-  case CBREAKF: R cstr("break.");
+  case CBREAK: case CBREAKF:  case CBREAKS: R cstr("break.");
   case CCASE:   R cstr("case.");
   case CCATCH:  R cstr("catch.");
   case CCATCHD: R cstr("catchd.");
   case CCATCHT: R cstr("catcht.");
-  case CCONT:   R cstr("continue.");
+  case CCONT: case CCONTS: R cstr("continue.");
   case CDO:
   case CDOF:    
   case CDOSEL:  R cstr("do.");
@@ -368,7 +377,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    d->type=k?(C)k:2==as?CASSERT:CBBLOCK;  // install type; if not cw, call it BBLOCK unless it's the block after assert.
    d->source=(US)i;                     /* source line number for this sentence   */
    // If this cw ends the verb, set a special goto line number; otherwise point to NSI
-   d->go= !k||k==CCONT||k==CBREAK||k==CTHROW ? (US)SMAX : k==CRETURN ? (US)SMAX-1 : (US)(1+n);
+   d->go= !k||k==CCONT||k==CBREAK||k==CCONTS||k==CBREAKS||k==CTHROW ? (US)SMAX : k==CRETURN ? (US)SMAX-1 : (US)(1+n);
    b|=k==CGOTO;                         // remember if we see a goto_.
    // if not cw (ie executable sentence), turn words into an executable queue.  If cw, check for cw with data.  Set x to queue/cw, or 1 if cw w/o data
    if(!k)RZ(x=enqueue(w1,w0,2)) else x=k==CLABEL||k==CGOTO||k==CFOR&&4<AN(w0)?w0:0L;

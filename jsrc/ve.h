@@ -260,13 +260,18 @@ extern ADECL2(   neZZ,B,Z,Z);
 extern ADECL2(  norBB,B,B,B);
 extern ADECL2(   orBB,B,B,B);
 extern ADECL2( plusBB,I,B,B);
+extern ADECL2( plusBI,I,B,I);
+extern ADECL2( plusBIO,D,B,I);
 extern ADECL2( plusBD,D,B,D);
 extern ADECL2( plusDB,D,D,B);
 extern ADECL2( plusDD,D,D,D);
 extern ADECL2( plusDI,D,D,I);
 extern ADECL2( plusDX,DX,DX,DX);
+extern ADECL2( plusIB,I,I,B);
 extern ADECL2( plusID,D,I,D);
 extern ADECL2( plusII,I,I,I);
+extern ADECL2( plusIIa,I,I,I);  // scaf
+extern ADECL2( plusIIO,D,I,I);
 extern ADECL2( plusIO,D,I,I);
 extern ADECL2( plusQQ,Q,Q,Q);
 extern ADECL2( plusXX,X,X,X);

@@ -7,6 +7,7 @@
 #include "ve.h"
 #include "vcomp.h"
 
+#define CMPGT(a,b) ((a)>(b)?1:0)
 
 B jtteq(J jt,D u,D v){D d,s;
  if(u==v)R 1;

@@ -47,3 +47,7 @@
 #define EWRAT           53      /* rational   result           */
 #define EWDIV0          54      /* division by zero            */
 #define EWTHROW         55      /* throw. executed             */
+#define EWOVIP          60      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
+#define EWOVIPPLUSII    0
+#define EWOVIPPLUSBI    1
+#define EWOVIPPLUSIB    2

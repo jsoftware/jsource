@@ -694,11 +694,11 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
    switch(jt->jerr-EWOVIP){
    case EWOVIPPLUSII:
     // choose the non-in-place argument
-    ado=plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+    ado=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
    case EWOVIPPLUSBI:
-    ado=plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+    ado=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
    case EWOVIPPLUSIB:
-    ado=plusBIO; nipw = 1; break;  // Use w as not-in-place
+    ado=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
    }
    // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
    // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf

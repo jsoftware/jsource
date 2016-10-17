@@ -7,8 +7,8 @@
 #include "ve.h"
 
 // Perform ado with overflow recovery
-static jtspado(){
-}
+// static jtspado(){
+// }
 
 static A jtvaspc(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I f,I r){A q;I*as,*v,*ws;
  as=AS(a);

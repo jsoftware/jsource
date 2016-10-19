@@ -23,10 +23,11 @@
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand */ \
 /* If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
-/* Try the zombiesym first, because if we use it the assignment is faster */ \
+/* Try the zombiesym last, saving it as a trump card */ \
+/* Clear zombieval after use to avoid overwriting it */ \
 {I wr = AR(w);    /* get rank */ \
- if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)>=wr){AR(jt->zombieval)=wr; AT(z=jt->zombieval)=FL;}  \
- else if (WINPLACE){ AT(z=w) = FL; } \
+ if (WINPLACE){ AT(z=w) = FL; } \
+ else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)>=wr){AT(z=jt->zombieval)=FL; AR(z)=wr; jt->zombieval=0;}  \
  else {GATV(z, FL, 1, wr, AS(w));} \
 } /* We have the output block */
 

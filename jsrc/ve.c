@@ -24,22 +24,49 @@ AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
 }
 
 // BI add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
-AHDR2(plusBI,I,B,I){I u;I v;I w;I oflo=0;
+AHDR2(plusBI,I,B,I){I u;I v;I oflo=0;
  if(1==n)  DO(m, u=(I)*x; v=*y; if(v==IMAX)oflo+=u; v=u+v; *z++=v; x++; y++; )
  else if(b)DO(m, u=(I)*x++; if(u){DO(n, v=*y; if(v==IMAX)oflo=1; v=v+1; *z++=v; y++;)}else{if(z!=y)MC(z,y,n<<LGSZI); z+=n; y+=n;})
- else      DO(m, v=*y++; DO(n, u=(I)*x; if(v==IMAX)oflo+=u; w=u+v; *z++=w; x++;))
+ else      DO(m, v=*y++; DO(n, u=(I)*x; if(v==IMAX)oflo+=u; u=u+v; *z++=u; x++;))
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSBI;
 }
 
 // IB add, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
-AHDR2(plusIB,I,I,B){I u;I v;I w;I oflo=0;
+AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(1==n)  DO(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
- else if(b)DO(m, u=*x++; DO(n, v=(I)*y; if(u==IMAX)oflo+=v; w=u+v; *z++=w; y++;))
+ else if(b)DO(m, u=*x++; DO(n, v=(I)*y; if(u==IMAX)oflo+=v; v=u+v; *z++=v; y++;))
  else      DO(m, v=(I)*y++; if(v){DO(n, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSIB;
 }
 
 // BD DB add similarly?
+
+// II subtract, noting overflow and leaving it, possibly in place
+AHDR2(minusIIa,I,I,I){I u;I v;I w;I oflo=0;
+ if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; u^=w; v=~v; v^=w; if((u&v)<0)++oflo;}}
+ // if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
+ else if(b)DO(m, u=*x++; I thresh = u-IMIN; if (u<0){DO(n, v=*y; if(v>thresh)++oflo; w=u-v; *z++=w; y++;)}else{DO(n, v=*y; if(v<=thresh)++oflo; w=u-v; *z++=w; y++;)})
+ // if v>0, oflo if u-v < IMIN => u < v+IMIN = v-IMIN; if v<=0, oflo if u-v > IMAX => u>v+IMAX => u>v-1-IMIN => u >= v-IMIN
+ else      DO(m, v=*y++; I thresh = v-IMIN; if (v<=0){DO(n, u=*x; if(u>=thresh)++oflo; u=u-v; *z++=u; x++;)}else{DO(n, u=*x; if(u<thresh)++oflo; u=u-v; *z++=u; x++;)})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSII;
+}
+
+// BI subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
+AHDR2(minusBI,I,B,I){I u;I v;I w;I oflo=0;
+ if(1==n)  DO(m, u=(I)*x; v=*y; u=u-v; if(v<=IMIN+1&&u<0)++oflo; *z++=u; x++; y++; )
+ else if(b)DO(m, u=(I)*x++; DO(n, v=*y; w=u-v; if(v<=IMIN+1&&w<0)++oflo; *z++=w; y++;))
+ else      DO(m, v=*y++; DO(n, u=(I)*x; u=u-v; if(v<=IMIN+1&&u<0)++oflo; *z++=u; x++;))
+ if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSBI;
+}
+
+// IB subtract, noting overflow and leaving it, possibly in place.  If we add 0, copy the numbers (or leave unchanged, if in place)
+AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
+ if(1==n)  DO(m, u=*x; v=(I)*y; if(u==IMIN)oflo+=v; u=u-v; *z++=u; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=(I)*y; if(u==IMAX)oflo+=v; w=u-v; *z++=w; y++;))
+ else      DO(m, v=(I)*y++; if(v){DO(n, u=*x; if(u==IMAX)oflo=1; u=u-1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSIB;
+}
+
 #if 0
 // II multiply, in double precision
 AHDR2(tymesIIa,I,I,I){I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
@@ -69,9 +96,9 @@ AHDR2(tymesIBa,I,I,B){I u;B v;
 // Overflow repair routines
 // *x is a non-in-place argument, and n and m advance through it
 //  each atom of *x is repeated n times
-// *y is the result of the operation that overflowed
+// *y is the I result of the operation that overflowed
 // *z is the D result area (which might be the same as *y)
-// b is unused
+// b is unused for plus
 AHDR2(plusIIO,D,I,I){I u;
  DO(m, u=*x++; DO(n, *z=(D)u + (D)(*y-u); ++y; ++z;));
 }

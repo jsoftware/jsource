@@ -71,24 +71,26 @@ static A ssingallo(J jt,I r,I t){A z;
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
-/* Try the zombiesym first, because if we use it the assignment is faster */ \
+/* Save the zombieval for a last trump card, but the early verbs are the ones that end up needing it; leave it till last anyway */ \
+/* Once the zombieval is used, make sure it doesn't get used again as zombieval.  It would be nice to but allow it to be inplaced as a temp result */ \
+/* but if a verb failed with a name marked inplaceable, that name would be unprotected.  AC is always 1 in zombieval */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
  if(jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
  else if (ar >= wr){  \
-  if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL;}  \
-  else if (AINPLACE){ z = a; AT(z) = FL; } \
+  if (AINPLACE){ z = a; AT(z) = FL; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
+  else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL; jt->zombieval = 0;}  \
   else {GATV(z, FL, 1, ar, AS(a));} \
  } else { \
-  if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL;}  \
-  else if (WINPLACE){ z = w; AT(z) = FL; } \
+  if (WINPLACE){ z = w; AT(z) = FL; } \
+  else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL; jt->zombieval = 0;}  \
   else {GATV(z, FL, 1, wr, AS(w));} \
  } \
 } /* We have the output block */
 
 // MUST NOT USE AT after SSCOMPPREFIX!  We overwrite the type.  Use sw only
 
-// We don't bother checking zombiesym for comparisons, since usually they're scalar constant results
+// We don't bother checking zombieval for comparisons, since usually they're scalar constant results
 #define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
 /* Establish the output area.  If this produces an atom, it will be one or zero; */ \
 /* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \

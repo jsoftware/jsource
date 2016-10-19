@@ -4,6 +4,7 @@
 /* Verbs: Match Associates                                                 */
 
 #include "j.h"
+#include "vcomp.h"
 
 
 static B jtmatchsub(J,I,I,I,I,A,A,B*,B,B);
@@ -70,14 +71,14 @@ static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
 #define INNERT(T,f)                  \
- {T*u=(T*)av,*v=(T*)wv;              \
+ {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;              \
   if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
   else if(af>wf)DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; ++j;); v+=q;)  \
   else          DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
  }
 
 #define INNERT2(aa,ww,f)             \
- {A1*u=(A1*)av,*v=(A1*)wv;           \
+ {A1* RESTRICT u=(A1*)av,* RESTRICT v=(A1*)wv;           \
   if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
   else if(af>wf)DO(m, DO(n, x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); u+=p; ++j;); v+=q;)  \
   else          DO(m, DO(n, x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
@@ -95,7 +96,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B*x,B b0,B b1){B b,c0;C*av,*w
  q=wf?c:0; wv=CAV(w);
  switch(c0?0:CTTZ(t)){
   default:   R eqv(af,wf,m,n,c*bp(t),av,wv,x,b0,b1);
-  case FLX:   INNERT(D,teq);    R mn?x[mn-1]:b1;
+  case FLX:   INNERT(D,TEQ);    R mn?x[mn-1]:b1;
   case CMPXX: INNERT(Z,zeq);    R mn?x[mn-1]:b1;
   case XNUMX: INNERT(X,equ);    R mn?x[mn-1]:b1;
   case RATX:  INNERT(Q,EQQ);    R mn?x[mn-1]:b1;

@@ -51,3 +51,6 @@
 #define EWOVIPPLUSII    0
 #define EWOVIPPLUSBI    1
 #define EWOVIPPLUSIB    2
+#define EWOVIPMINUSII    3
+#define EWOVIPMINUSBI    4
+#define EWOVIPMINUSIB    5

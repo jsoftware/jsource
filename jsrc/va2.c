@@ -457,13 +457,13 @@ F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
 #define IPSHIFTWA (jt = (J)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
-F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(one,w);}
-F1(jtnegate){R minus(zero,  w);}
-F1(jtdecrem){IPSHIFTWA; R minus(w,     one);}
-F1(jtincrem){R plus(one,   w);}
+F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(onei,w);}
+F1(jtnegate){R minus(zeroi,  w);}
+F1(jtdecrem){IPSHIFTWA; R minus(w,     onei);}
+F1(jtincrem){R plus(onei,   w);}
 F1(jtduble ){R tymes(num[2],w);}
-F1(jtsquare){R tymes(w,     w);}
-F1(jtrecip ){R divide(one,   w);}
+F1(jtsquare){R tymes(w,     w);}   // leave inplaceable in w only
+F1(jtrecip ){R divide(onei,   w);}
 F1(jthalve ){IPSHIFTWA; R divide(w,     num[2]);}
 
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
@@ -520,7 +520,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    case VARCASE(EWRAT ,CEXP    ): *ado=(VF)powQQ;   *cv=VQ+VQQ;     break;
    case VARCASE(EWDIV0,CDIV    ): *ado=(VF)divDD;   *cv=VD+VDD;     break;
    case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS   ): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS   ): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS   ):
-    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // only used for sparse arrays
+    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // used only for sparse arrays
    case VARCASE(EWOV  ,CMINUS  ): *ado=(VF)minusIO; *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CSTAR   ): *ado=(VF)tymesIO; *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
@@ -699,6 +699,12 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
     ado=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
    case EWOVIPPLUSIB:
     ado=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
+   case EWOVIPMINUSII:
+    ado=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+   case EWOVIPMINUSBI:
+    ado=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+   case EWOVIPMINUSIB:
+    ado=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
    }
    // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
    // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf

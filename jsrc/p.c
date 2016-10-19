@@ -229,11 +229,15 @@ static void auditnum(){
 //  if an error is encountered (preventing the assignment)
 // Set zombieval if current assignment can be in-place.  w is the end of the execution that will produce the result to assign
 // There must be a local symbol table if we have the ASGN indicating local/simple
-// Set assignsym for any final execution that assigns to a name.  We use this only if the verb is known to be locale-safe, so it's OK
+// Set assignsym for any final execution that assigns to a name.  queue[m] is the name to be assigned.  We use this only if the verb is known to be locale-safe, so it's OK
 // to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name.
-//  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h) 
+//  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h)
+// We set zombieval only when AC == 1, not <=, for the following reason: Since the zombieval is already in a name, its usecount can never be flagged as inplaceable.  If we reuse
+// the zombieval block, we would like to set AC to inplaceable, to allow it to be further inplaced.  But if the verb fails with the name set to inplaceable, curtains, because
+// the value might be wiped out when the name is next used.  To prevent this, we don't allow inplacing results that were assigned to zombieval; but if we work out a
+// way to leave them marked inplaceable, we don't want to detect them as zombievals here.
 #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE) \
-   &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL&&AC(s->val)<=ACUC1)jt->zombieval=s->val;}
+   &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL&&AC(s->val)==ACUC1)jt->zombieval=s->val;}
 
 // In-place operands
 // An operand is in-placeable if:

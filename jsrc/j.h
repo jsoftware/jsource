@@ -343,9 +343,9 @@
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
-// Compounds push zombie to begin with and restore before the last operation, which can execute in place
-#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval;if(!jt->asgzomblevel||!jt->local)CLEARZOMBIE}
-#define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
+// Compounds push zombie to begin with and restore before the last operation, which can execute in place.  savzombval is nonzero only if it was pushed.
+#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval=0; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
+#define POPZOMB if(savassignsym){jt->assignsym=savassignsym;if(savzombval)jt->zombieval=savzombval;}
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}

@@ -42,7 +42,7 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
 // BD DB add similarly?
 
 // II subtract, noting overflow and leaving it, possibly in place
-AHDR2(minusIIa,I,I,I){I u;I v;I w;I oflo=0;
+AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
  if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; u^=w; v=~v; v^=w; if((u&v)<0)++oflo;}}
  // if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
  else if(b)DO(m, u=*x++; I thresh = u-IMIN; if (u<0){DO(n, v=*y; if(v>thresh)++oflo; w=u-v; *z++=w; y++;)}else{DO(n, v=*y; if(v<=thresh)++oflo; w=u-v; *z++=w; y++;)})
@@ -76,22 +76,35 @@ AHDR2(tymesIIa,I,I,I){I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
 exit: jt->mulofloloc += z-zi; R;
 oflo: jt->jerr = EWOVIP; goto exit;
 }
+#endif
 
 // BI multiply, using clear/copy
-AHDR2(tymesBIa,I,B,I){B u;I v;
+AHDR2(tymesBI,I,B,I){B u;I v;
  if(1==n)  DO(m, u=*x; *z++=u?*y:0; x++; y++; )
  else if(b)DO(m, u=*x++; if(u){if(z!=y)MC(z,y,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; y+=n;)
  else      DO(m, v=*y++; DO(n, u=*x; *z++=u?v:0; x++;))
 }
 
 // IB multiply, using clear/copy
-AHDR2(tymesIBa,I,I,B){I u;B v;
+AHDR2(tymesIB,I,I,B){I u;B v;
  if(1==n)  DO(m, v=*y; *z++=v?*x:0; x++; y++; )
  else if(b)DO(m, u=*x++; DO(n, v=*y; *z++=v?u:0; y++;))
  else      DO(m, v=*y++; if(v){if(z!=x)MC(z,x,n<<LGSZI);}else{memset(z,0,n<<LGSZI);} z+=n; x+=n;)
 }
-#endif
-// BD DB mul similarly?
+
+// DI multiply, using clear/copy
+AHDR2(tymesBD,D,B,D){B u;D v;
+ if(1==n)  DO(m, u=*x; *z++=u?*y:0; x++; y++; )
+ else if(b)DO(m, u=*x++; if(u){if(z!=y)MC(z,y,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; y+=n;)
+ else      DO(m, v=*y++; DO(n, u=*x; *z++=u?v:0; x++;))
+}
+
+// ID multiply, using clear/copy
+AHDR2(tymesDB,D,D,B){D u;B v;
+ if(1==n)  DO(m, v=*y; *z++=v?*x:0; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=*y; *z++=v?u:0; y++;))
+ else      DO(m, v=*y++; if(v){if(z!=x)MC(z,x,n*sizeof(D));}else{memset(z,0,n*sizeof(D));} z+=n; x+=n;)
+}
 
 // Overflow repair routines
 // *x is a non-in-place argument, and n and m advance through it
@@ -108,10 +121,10 @@ AHDR2(plusBIO,D,B,I){I u;
 
 // For subtract repair, b is 1 if x was the subtrahend, 0 if the minuend
 AHDR2(minusIIO,D,I,I){I u;
- DO(m, u=*x++; DO(n, *z=b?((D)(*y+u)-(D)u):(D)u - (D)(u-*y);); ++y; ++z;);
+ DO(m, u=*x++; DO(n, *z=b?((D)(*y+u)-(D)u):((D)u - (D)(u-*y)); ++y; ++z;));
 }
 AHDR2(minusBIO,D,B,I){I u;
- DO(m, u=(I)*x++; DO(n, *z=b?((D)(*y+u)-(D)u):(D)u - (D)(u-*y);); ++y; ++z;);
+ DO(m, u=(I)*x++; DO(n, *z=b?((D)(*y+u)-(D)u):((D)u - (D)(u-*y)); ++y; ++z;));
 }
 
 #if 0
@@ -131,8 +144,8 @@ AHDR2(tymesIIO,D,I,I){I u;I v;I skipct=jt->mulofloloc;
 
 #if 0  // scaf
 AOVF( plusII, I,I,I,  PLUSVV, PLUS1V, PLUSV1)
-#endif
 AOVF(minusII, I,I,I, MINUSVV,MINUS1V,MINUSV1)   
+#endif
 AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
 
 // These routines are used by sparse processing, which doesn't do in-place overflow
@@ -151,9 +164,9 @@ AIFX(minusBB, I,B,B, -     )    /* minusBI */               AIFX(minusBD, D,B,D,
 AIFX(minusDB, D,D,B, -     )  AIFX(minusDI, D,D,I, -)       ANAN(minusDD, D,D,D, MINUS)
 ANAN(minusZZ, Z,Z,Z, zminus)
 
-    /* andBB */               APFX(tymesBI, I,B,I, TYMESBX) APFX(tymesBD, D,B,D, TYMESBX) 
-APFX(tymesIB, I,I,B, TYMESXB)   /* tymesII */               APFX(tymesID, D,I,D, TYMESID)  
-APFX(tymesDB, D,D,B, TYMESXB) APFX(tymesDI, D,D,I, TYMESDI) APFX(tymesDD, D,D,D, TYMESDD) 
+    /* andBB */                 /* tymesBI */                   /* tymesBD */            
+    /* tymesIB */               /* tymesII */               APFX(tymesID, D,I,D, TYMESID)  
+    /* tymesDB */             APFX(tymesDI, D,D,I, TYMESDI) APFX(tymesDD, D,D,D, TYMESDD) 
 ANAN(tymesZZ, Z,Z,Z, ztymes )
 
 APFX(  divBB, D,B,B, DIVBB)   APFX(  divBI, D,B,I, DIVI)    APFX(  divBD, D,B,D, DIV)

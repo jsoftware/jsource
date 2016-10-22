@@ -343,9 +343,12 @@
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
 #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
-// Compounds push zombie to begin with and restore before the last operation, which can execute in place.  savzombval is nonzero only if it was pushed.
-#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval=0; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
-#define POPZOMB if(savassignsym){jt->assignsym=savassignsym;if(savzombval)jt->zombieval=savzombval;}
+// Compounds push zombie to begin with and restore before the last operation, which can execute in place.
+// zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
+// zombieval is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
+// not an argument, but this seems to be more trouble than it's worth, so we don't bother detecting final assignment.
+#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
+#define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}

@@ -723,6 +723,12 @@ blk =. ([: <. >.&.(2&^.)@#) >{.y
 )
 64 -: f 3 # <48#'x'
 
+NB. Verify hook does not in-place g on repeated argument
+f =: 3 : 0
+(, ('c' ,~ ]))~ 2 # 'a'
+)
+'aaaac' -: f ''
+
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 
 

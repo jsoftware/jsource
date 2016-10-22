@@ -21,7 +21,9 @@ dotl =. tlc +"1 dotl
 by -: (<51);(20 20+2.5-2.5);''
 
 NB. Test plusBI and plusIB with overflow and inplace
+
 bx =: 0 1 0 0 0 1 0 1 0 0 0 0 1
+IMAX =. _1 - IMIN =. <. - 2 ^ IF64 { 31 63
 iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
 (bx + iy) -: bx +"0"0 iy
 (bx + (0 + iy)) -: bx +"0"0 iy
@@ -39,6 +41,27 @@ iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
 (bx +"1 2 (0 + iy)) -: bx +"0"1 2 iy
 ((0 +. bx) +"1 2 iy) -: bx +"0"1 2 iy
 ((0 +. bx) +"1 2 (0 + iy)) -: bx +"0"1 2 iy
+
+NB. Test minusBI and minusIB with overflow and inplace
+bx =: 0 1 0 0 0 1 0 1 0 0 0 0 1
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx - iy) -: bx -"0"0 iy
+(bx - (iy - 0)) -: bx -"0"0 iy
+((0 +. bx) - iy) -: bx -"0"0 iy
+((0 +. bx) - (iy - 0)) -: bx -"0"0 iy
+
+bx =: 4 3$0 1 0 0 0 1 0 1 0 0 0 0 1 0
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx - iy) -: bx -"0"0 iy
+(bx - (iy - 0)) -: bx -"0"0 iy
+((0 +. bx) - iy) -: bx -"0"0 iy
+((0 +. bx) - (iy - 0)) -: bx -"0"0 iy
+iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
+(bx -"1 2 iy) -: bx -"0"1 2 iy
+(bx -"1 2 (iy - 0)) -: bx -"0"1 2 iy
+((0 +. bx) -"1 2 iy) -: bx -"0"1 2 iy
+((0 +. bx) -"1 2 (iy - 0)) -: bx -"0"1 2 iy
+
 
 NB. x is selection;shapes;prediction
 NB.  selection selects a prediction
@@ -383,7 +406,8 @@ NB. Full test with everything allowed
 
 + testinplacer 'VBID';'I/I/D/I/I/D/D/D/D/    I/I/D///d////   I///I///D/d//'  NB. non-overflow
 + testinplacer 'VO';'I/Id/D/Id/Id/D/D/D/D/    I/Id/D/d/d/d////   I/d//Id/d//D/d//'   NB. overflow
-- testinplacer 'VBID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d////   I/lI//rI/I//D/d//'
+- testinplacer 'VBID';'I/I/D/I/I/D/D/D/D/    I/I/D///d////   I///I///D/d//'
+- testinplacer 'VO';'I/Id/D/Id/Id/D/D/D/D/    I/Id/D/d/d/d////   I/d//Id/d//D/d//'   NB. overflow
 
 < testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
 = testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
@@ -418,7 +442,7 @@ NB. Go back and recheck with partial execution not allowed.  No need for checkin
 * testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
 
 + testinplacer 'ID';'I/I/D/I/I/D/D/D/D/    I/I/D///d///D/   I///I///D/d/D/'
-- testinplacer 'ID';'I/lI/D/rI/I/D/D/D/D/    I/lI/D/rI/I/d///D/   I/lI//rI/I//D/d/D/'
+- testinplacer 'ID';'I/I/D/I/I/D/D/D/D/    I/I/D///d///D/   I///I///D/d/D/'
 
 < testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
 = testinplacer 'ID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
@@ -440,6 +464,6 @@ NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this 
 
 4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
-4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys'
+4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys IMIN IMAX'
 
 

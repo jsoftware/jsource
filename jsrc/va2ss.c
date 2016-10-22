@@ -19,8 +19,8 @@
 #define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
 
 // An argument can be inplaced if it is enabled in the block AND in the call
-#define AINPLACE ((I)jtf&JTINPLACEA && ACIPISOK(a))
-#define WINPLACE ((I)jtf&JTINPLACEW && ACIPISOK(w))
+#define AINPLACE ((I)jtf&JTINPLACEA && ((AC(a)<1) || ((AC(a)==1) && (a==jt->zombieval))))
+#define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))
 
 // #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
 #define SSINGENC(a,w) ((UNSAFE(a))+((UNSAFE(w))<<2))   // Mask off SAFE bits
@@ -79,11 +79,9 @@ static A ssingallo(J jt,I r,I t){A z;
  else if (ar >= wr){  \
   if (AINPLACE){ z = a; AT(z) = FL; } \
   else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
-  else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==ar){AT(z=jt->zombieval)=FL; jt->zombieval = 0;}  \
   else {GATV(z, FL, 1, ar, AS(a));} \
  } else { \
   if (WINPLACE){ z = w; AT(z) = FL; } \
-  else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)==wr){AT(z=jt->zombieval)=FL; jt->zombieval = 0;}  \
   else {GATV(z, FL, 1, wr, AS(w));} \
  } \
 } /* We have the output block */

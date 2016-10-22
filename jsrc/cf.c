@@ -153,7 +153,7 @@ static CS1IP(jthook1, \
 POPZOMB; z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs);} \
 ,0111)
 static CS2IP(jthook2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);  /* Can inplace the call to g for the dyad; it has w only */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)(a!=w&&(VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
 /* inplace gx unless it is protected; inplace a if the caller allowed it*/ \
 POPZOMB; z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs);} \
 ,0112)

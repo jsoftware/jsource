@@ -12,7 +12,7 @@
 #define SSINGF1OP(f) A f(J jtf, A w, I op){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
 
 // An argument can be inplaced if it is enabled in the block AND in the call
-#define WINPLACE ((I)jtf&JTINPLACEW && ACIPISOK(w))
+#define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))
 
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
@@ -27,7 +27,6 @@
 /* Clear zombieval after use to avoid overwriting it */ \
 {I wr = AR(w);    /* get rank */ \
  if (WINPLACE){ AT(z=w) = FL; } \
- else if(jt->zombieval && AN(jt->zombieval)==1 && AR(jt->zombieval)>=wr){AT(z=jt->zombieval)=FL; AR(z)=wr; jt->zombieval=0;}  \
  else {GATV(z, FL, 1, wr, AS(w));} \
 } /* We have the output block */
 

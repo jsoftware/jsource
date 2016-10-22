@@ -27,6 +27,13 @@ filecase =: tolower
 )
 filecase ''
 
+NB. Verify singleton not changed when in use by fork
+v =: 3 : 0
+a =. 0 + 1
+b =. 0 + 1
+a =. a (+ , +) b
+)
+2 2 -: v''
 
 NB. Verify that singleton gets same result as 1 item of an array
 compss =: 1 : 0 (&>)

@@ -102,13 +102,13 @@ B boxat(A x){C c;V*v;
 }    /* 1 iff "last" function in w is <@f */
 
 // w is a verb
-// Result has bit 0 set if the verb is ...@[, bit 1 set if ...@]   (or @:)
+// Result has bit 0 set if the verb is [ or ...@[, bit 1 set if ] or ...@]   (or @:)
 // The set bit indicates that argument WILL NOT be examined when w is executed
 I atoplr(A w){
  RZ(w);
  V *v=VAV(w);     // v->verb info, c=id of w
- if(!(v->id==CAT||v->id==CATCO))R 0;
- switch(VAV(v->g)->id){
+ C id = v->id;if(v->id==CAT||v->id==CATCO)id = VAV(v->g)->id;
+ switch(id){
   case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
   case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A
  }

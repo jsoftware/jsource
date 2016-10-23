@@ -160,7 +160,9 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
  else{                      /* named and debug        */
   if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
   else                      {z=parseas(as,w);     }
-  if(!z&&(s||DBTRY!=jt->db)){t->dcj=d->dcj=jt->jerr; z=debug(); t->dcj=0;}
+  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
+  // executed 13!:8]0, and we should continue on outwide of debug mode
+  if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=/*d->dcj=*/jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; dcj must remain # tokens
  }
  debz();
  R z;
@@ -176,7 +178,9 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
   while(0==i){
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}
    else              {ra(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
-   if(!z&&(s||DBTRY!=jt->db)){d->dcj=jt->jerr; z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
+   // executed 13!:8]0, and we should continue on outwide of debug mode
+   if(!z&&jt->db&&(s||DBTRY!=jt->db)){d->dcj=jt->jerr; z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
    ++i;

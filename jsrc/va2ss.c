@@ -45,7 +45,7 @@
 #define SSINGSS SSINGENC(SBT,SBT)
 
 #define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
+#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t);}
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
@@ -71,17 +71,14 @@ static A ssingallo(J jt,I r,I t){A z;
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
-/* Save the zombieval for a last trump card, but the early verbs are the ones that end up needing it; leave it till last anyway */ \
-/* Once the zombieval is used, make sure it doesn't get used again as zombieval.  It would be nice to but allow it to be inplaced as a temp result */ \
-/* but if a verb failed with a name marked inplaceable, that name would be unprotected.  AC is always 1 in zombieval */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
  if(jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
  else if (ar >= wr){  \
-  if (AINPLACE){ z = a; AT(z) = FL; } \
-  else if (WINPLACE && ar == wr){ z = w; AT(z) = FL; } \
+  if (AINPLACE){ z = a; } \
+  else if (WINPLACE && ar == wr){ z = w; } \
   else {GATV(z, FL, 1, ar, AS(a));} \
  } else { \
-  if (WINPLACE){ z = w; AT(z) = FL; } \
+  if (WINPLACE){ z = w; } \
   else {GATV(z, FL, 1, wr, AS(w));} \
  } \
 } /* We have the output block */
@@ -94,6 +91,7 @@ static A ssingallo(J jt,I r,I t){A z;
 /* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \
 /* If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
+/* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
 {I ar = AR(a); I wr = AR(w); \
  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
  else if (ar >= wr){ \

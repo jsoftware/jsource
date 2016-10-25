@@ -448,7 +448,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
-   if(--c<=0)mf(np);else AC(np)=c;  // decdrement usecount and either store it back or free the block
+   if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount and either store it back or free the block
   }
   // See if there are more blocks to do
   if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block

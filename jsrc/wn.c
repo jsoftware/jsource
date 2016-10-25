@@ -375,21 +375,21 @@ F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
   RZ(w=irs2(w,chr[' '],0L,1L,0L,jtover));  // New w will be created
   v=CAV(w); r=AR(w); s=AS(w); n=s[r-1]; m=prod(r-1,s);  // v->data, m = #lists, n = length of each list
   for(i=0;i<m;++i){I j;
-   // b is set when the current character is a space; p when the previous character was a space
+   // b is set when the current character is a space/TAB; p when the previous character was a space/TAB
    // k counts the number of words on this line
    // c is the max # words found on a line
    b=1; k=0; 
    for(j=0;j<n;++j){
-    p=b; d=*v; b=' '==d;
+    p=b; d=*v; b=0;
     switch(d){
-     case ' ':   *v=C0;  break;
+     case ' ': case CTAB:  *v=C0; b=1; break;
      case CSIGN: *v='-'; 
     }
     ++v; if(p>b)++k;
    } 
    if(k>c)c=k;
  }}
- // c is length of each output list; the list has had _ replaced by - and space replaced by \0
+ // c is length of each output list; the list has had _ replaced by - and space/TAB replaced by \0
  // Classify the input y according the types it contains
  numcase(m*n,CAV(w),&b,&j,&x,&q,&ii);
 

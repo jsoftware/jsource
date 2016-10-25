@@ -179,6 +179,10 @@ iptime3 =: 6!:2 '3 : ''for. i. y do. (]] ]] ]] ]] ]] ]]]) ]1 end.'' 100000'  NB.
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Faster than non-ssing
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
+NB. If ^ needs to produce complex, it fails over to the normal code.  Verify no corruption of the in-place block
+_0.707106781186547j0.707106781186548 = ({._1)^({.0.75)
+_0.707106781186547j0.707106781186548 = ({._1)^(0.75)
+_0.707106781186547j0.707106781186548 = (_1)^({.0.75)
 
 4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2'
 

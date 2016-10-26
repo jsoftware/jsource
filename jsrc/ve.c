@@ -67,15 +67,29 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
  if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSIB;
 }
 
-#if 0
+#if MULTINC
 // II multiply, in double precision
-AHDR2(tymesIIa,I,I,I){I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
- if(1==n)  DO(m, u=*x; v=*y; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; x++; y++; )
- else if(b)DO(m, u=*x++; DO(n, v=*y; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; y++;))
- else      DO(m, v=*y++; DO(n, u=*x; w=u*v; h=__mulh(u,v); if(h+(w>>(BW-1)))goto oflo; *z++=w; x++;))
+#if SY_64
+#define DPMUL(x,y,l,h) l=_mul128(x,y,&h)
+#define DPDECLS
+#else
+#if 0
+#define DPDECLS __int64 p;
+#define DPMUL(x,y,l,h) p = __emul(x,y); l=(I)p; h=(I)(p>>32)
+#else
+#define DPDECLS 
+#define DPMUL(x,y,l,h) l=jtmult(0,x,y); if((x)&&(y)&&!l)goto oflo; h=((l)>>(BW-1))  // scaf
+#endif
+#endif
+AHDR2(tymesII,I,I,I){DPDECLS I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
+ if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; x++; y++; )
+ else if(b)DO(m, u=*x++; DO(n, v=*y; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; y++;))
+ else      DO(m, v=*y++; DO(n, u=*x; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; x++;))
 exit: jt->mulofloloc += z-zi; R;
-oflo: jt->jerr = EWOVIP; goto exit;
+oflo: jt->jerr = EWOVIP+EWOVIPMULII; goto exit;
 }
+#else
+AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
 #endif
 
 // BI multiply, using clear/copy
@@ -127,15 +141,22 @@ AHDR2(minusBIO,D,B,I){I u;
  DO(m, u=(I)*x++; DO(n, *z=b?((D)(*y+u)-(D)u):((D)u - (D)(u-*y)); ++y; ++z;));
 }
 
-#if 0
-// Multiply repair is like multiply, but we have to skip over the part that has already been converted
-AHDR2(tymesIIO,D,I,I){I u;I v;I skipct=jt->mulofloloc;
- if(1==n)  DO(m, u=*x; v=*y; if(skipct<=0){*z=(D)u*(D)v;} --skipct; x++; y++; z++;)
- else if(b)DO(m, u=*x++; DO(n, v=*y; if(skipct<=0){*z=(D)u*(D)v;} --skipct; z++; y++;))
- else      DO(m, v=*y++; DO(n, u=*x; if(skipct<=0){*z=(D)u*(D)v;} --skipct; z++; x++;))
+// In multiply repair, z points to result, x and y to inputs
+// Parts of z before mulofloloc have been filled in already
+// We have to track the inputs just as for any other action routine
+AHDR2(tymesIIO,D,I,I){I u,v;
+ // if all the multiplies are to be skipped, skip them quickly
+ I skipct=jt->mulofloloc;
+ if(skipct>=m*n){skipct-=m*n;
+ }else{
+  // There are unskipped multiplies.  Do them.
+  if(1==n)  DO(m, u=*x; v=*y; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; x++; y++; )
+  else if(b)DO(m, u=*x++; DO(n, v=*y; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; y++;))
+  else      DO(m, v=*y++; DO(n, u=*x; if(skipct){--skipct;}else{*z=(D)u * (D)v;} z++; x++;))
+ }
+ // Store the new skipct
  jt->mulofloloc=skipct;
 }
-#endif
 
 
 // All these lines define functions for various operand combinations
@@ -146,7 +167,6 @@ AHDR2(tymesIIO,D,I,I){I u;I v;I skipct=jt->mulofloloc;
 AOVF( plusII, I,I,I,  PLUSVV, PLUS1V, PLUSV1)
 AOVF(minusII, I,I,I, MINUSVV,MINUS1V,MINUSV1)   
 #endif
-AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
 
 // These routines are used by sparse processing, which doesn't do in-place overflow
 APFX( plusIO, D,I,I,  PLUSO)
@@ -226,12 +246,12 @@ I jtigcd(J jt,I a,I b){
  R a?igcd1(b%a,a):b;
 }
 
-D jtdgcd(J jt,D a,D b){D a1,b1,t;
+D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  a=ABS(a); b=ABS(b); if(a>b){t=a; a=b; b=t;}
  ASSERT(inf!=b,EVNAN);
  if(!a)R b;
  a1=a; b1=b;
- while(remdd(a1/jfloor(0.5+a1/a),b1)){t=a; a=remdd(a,b); b=t;}
+ while(remdd(a1/jfloor(0.5+a1/a),b1)){t=a; if((a=remdd(a,b))==0)break; b=t;}  // avoid infinite loop if a goes to 0
  R a;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
 #if SY_64
@@ -366,9 +386,9 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
   RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); *(wr+AS(z))=an;
   av=an+AV(a); wv=wn+AV(w); zv=zn+AV(z);
   if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,j,k;
-   k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;
+   k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;  // should use CTTZ
    if(d==j)DO(wn, x=*--wv; *--zv=x&d1; *--zv=x>>k;)
-   else    DO(wn, x=*--wv; if(0<=x){*--zv=x%d; *--zv=x/d;}else{*--zv=d+x%d; *--zv=-1+x/d;})
+   else    DO(wn, x=*--wv; if(0<=x){*--zv=x%d; *--zv=x/d;}else{*--zv=d+x%d; *--zv=-1+x/d;})  // kludge this line discrepant w/ previous
   }else DO(wn, x=*--wv; u=av; DO(an, d=*--u; *--zv=r=remii(d,x); x=d?(x-r)/d:0;););
   R z;
  }else{PROLOG(0070);A y,*zv;C*u,*yv;I k;

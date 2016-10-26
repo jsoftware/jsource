@@ -109,7 +109,7 @@ static A ssingallo(J jt,I r,I t){A z;
 // speedy singleton routines: each argument has one atom.  The shapes may be
 // any length, but we know they contain all 1s, so we don't care about jt->rank except to clear it
 SSINGF2(jtssplus) SSNUMPREFIX
- if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ if(jt->jerr&&jt->jerr<EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
@@ -141,7 +141,7 @@ SSINGF2(jtssplus) SSNUMPREFIX
 }
 
 SSINGF2(jtssminus) SSNUMPREFIX
- if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ if(jt->jerr&&jt->jerr<EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
@@ -214,7 +214,7 @@ SSINGF2(jtssmult) SSNUMPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
- if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ if(jt->jerr&&jt->jerr<EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
     // +/@, on sparse relied on this test: it didn't abort on NaN found during scan
  switch(sw) {
   default: R 0;
@@ -275,7 +275,7 @@ SSINGF2(jtssgcd) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
   case SSINGDD: {adv=SSRDD(a); wdv=SSRDD(w); goto flresult;}
  }
  I ziv=igcd(aiv,wiv); if(ziv||!jt->jerr){SSSTORE(ziv,z,INT,I) R z;}  // if no error, store an int
- if(jt->jerr!=EWOV)R 0;  // If not overflow, what can it be?
+ if(jt->jerr<EWOV)R 0;  // If not overflow, what can it be?
  RESETERR; adv=(D)aiv; wdv=(D)wiv;  // Rack em up again; Convert int args to float, and fall through to float case
  flresult:
  if((zdv=dgcd(adv,wdv))||!jt->jerr){SSSTORE(zdv,z,FL,D) R z;}  // float result is the last fallback
@@ -299,7 +299,7 @@ SSINGF2(jtsslcm) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
   case SSINGDD: {adv=SSRDD(a); wdv=SSRDD(w); goto flresult;}
  }
  I ziv=ilcm(aiv,wiv); if(!jt->jerr){SSSTORE(ziv,z,INT,I) R z;}  // if no error, store an int
- if(jt->jerr!=EWOV)R 0;  // If not overflow, what can it be?
+ if(jt->jerr<EWOV)R 0;  // If not overflow, what can it be?
  RESETERR; adv=(D)aiv; wdv=(D)wiv;  // Rack em up again; Convert int args to float, and fall through to float case
  flresult:
  zdv=dlcm(adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D) R z;}  // float result is the last fallback
@@ -398,7 +398,7 @@ SSINGF2OP(jtssbitwise) SSNUMPREFIX  I aiv,wiv,ziv;
   wiv=SSRDB(w);
  }
 
-  RE(0);  // return if noninteger argument
+  RE(0);  // return if noninteger argument.  This will leave the error set, and fail quickly
 
  // We have the operands, now perform the operation
  switch(op){
@@ -426,10 +426,12 @@ SSINGF2OP(jtssbitwise) SSNUMPREFIX  I aiv,wiv,ziv;
 }
 
 SSINGF2(jtsspow) SSNUMPREFIX
- if(jt->jerr&&jt->jerr!=EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
+ if(jt->jerr&&jt->jerr<EWOV)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
 
  // Switch on the types; do the operation, store the result, set the type of result
  // types are 1, 4, or 8
+ // If the calculation fails (if it produces complex results, for example), we will exit with
+ // jt->jerr set, and the normal code will start with the error routine
  switch(sw) { D t;
   default: R 0;
   case SSINGBB: SSSTORE((I)SSRDB(a)|(I)!SSRDB(w),z,INT,I) R z;  // normal code produces B01

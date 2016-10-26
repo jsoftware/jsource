@@ -41,16 +41,17 @@
 
 /* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
 
-#define EWOV            50      /* integer overflow            */
-#define EWIMAG          51      /* imaginary  result           */
-#define EWIRR           52      /* irrational result           */
-#define EWRAT           53      /* rational   result           */
-#define EWDIV0          54      /* division by zero            */
-#define EWTHROW         55      /* throw. executed             */
-#define EWOVIP          60      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
+#define EWIMAG          45      /* imaginary  result           */
+#define EWIRR           46      /* irrational result           */
+#define EWRAT           47      /* rational   result           */
+#define EWDIV0          48      /* division by zero            */
+#define EWTHROW         49      /* throw. executed             */
+#define EWOV            50      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
+#define EWOVIP          51      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
 #define EWOVIPPLUSII    0
 #define EWOVIPPLUSBI    1
 #define EWOVIPPLUSIB    2
 #define EWOVIPMINUSII    3
 #define EWOVIPMINUSBI    4
 #define EWOVIPMINUSIB    5
+#define EWOVIPMULII    6

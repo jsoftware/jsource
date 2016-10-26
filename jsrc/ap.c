@@ -263,7 +263,7 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
  ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 // block a contains (start,length) of infix.  w is the A for the data.
@@ -566,7 +566,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  wv=CAV(w); wk=bp(wt)*(0<=m0?c:c*m);
  DO(d-b, ado(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
  if(b)ado(jt,1L,c*(p%m),p%m,zv,wv);
- if(jt->jerr==EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
+ if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 
 static DF1(jtiota1){R apv(IC(w),1L,1L);}

@@ -168,7 +168,9 @@ void jtjsignal(J jt,I e){A x;
 // if(EVDOMAIN==e){
 // fprintf(stderr,"domain error\n");
 // }
- x=0<e&&e<=NEVM?*(e+AAV(jt->evm)):mtv; jsigstr(e,AN(x),CAV(x));
+ // Errors > NEVM are internal-only errors that should never make it to the end of execution.
+ // Ignore them here - they will not be displayed
+ x=0<e&&e<=NEVM?AAV(jt->evm)[e]:mtv; jsigstr(e,AN(x),CAV(x));
 }
 
 void jtjsignal3(J jt,I e,A w,I j){

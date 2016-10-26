@@ -421,7 +421,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
     if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
     EACHCUT(if(d)ado(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&y); 
         if(!z0){if(y)R y; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
-    if(jt->jerr)R jt->jerr==EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,z):z;
+    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,z):z;
  }}
  if(!z){B allbx=1;
   if(!m){y=reitem(zero,w); y=h?df1(y,*hv):CALL1(f1,y,fs); RESETERR; R iota(over(zero,shape(y?y:mtv)));}
@@ -502,7 +502,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    q=u-v;
    if(d=q-neg){
     ado(jt,1L,c*d,d,zv,wv+k*(b+n-p));
-    if(jt->jerr)R jt->jerr==EWOV?razecut2(a,w,self):0;
+    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;
     m+=d; zv+=d*zk; 
    }
    p-=q; v=u;  

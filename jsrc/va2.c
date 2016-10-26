@@ -188,7 +188,7 @@ static VA va[]={
 
 /* 2a *  */ {
  {{(VF)andBB,  VB+VIP}, {(VF)tymesBI,VI+VIPOKW}, {(VF)tymesBD,VD+VIPOKW},
-  {(VF)tymesIB,VI+VIPOKA}, {(VF)tymesII,VI}, {(VF)tymesID,VD+VIPID},
+  {(VF)tymesIB,VI+VIPOKA}, {(VF)tymesII,VI+VIP*MULTINC}, {(VF)tymesID,VD+VIPID},
   {(VF)tymesDB,VD+VIPOKA}, {(VF)tymesDI,VD+VIPDI}, {(VF)tymesDD,VD+VIP}, 
   {(VF)tymesZZ,VZ+VZZ}, {(VF)tymesXX,VX+VXX}, {(VF)tymesQQ,VQ+VQQ}, {0,0}},
  {{(VF)andinsB,VB}, {(VF)tymesinsI,VI}, {(VF)tymesinsD,VD}, {(VF)tymesinsZ,VZ}, {0,0},          {0,0},          {0,0}},
@@ -478,7 +478,7 @@ A jtcvz(J jt,I cv,A w){I t;
 
 #define VAF(fname,ptr,fp,fm,ft)   \
  void fname(J jt,C id,I t,VF*ado,I*cv){VA2*p;  \
-  if(jt->jerr==EWOV){                          \
+  if(jt->jerr>=EWOV){                          \
    jt->jerr=0;                                 \
    *ado=(id==CPLUS?fp:id==CMINUS?fm:ft);       \
    *cv=VD;                                     \
@@ -511,7 +511,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  // for it, and return.
  if(jt->jerr){
   switch(VARCASE(jt->jerr,id)){
-   default:      R 0;
+   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled nternal error should not occur.  Force error out
    case VARCASE(EWIMAG,CCIRCLE ): *ado=(VF)cirZZ;   *cv=VZ+VZZ+VRD; break;
    case VARCASE(EWIMAG,CEXP    ): *ado=(VF)powZZ;   *cv=VZ+VZZ+VRD; break;
    case VARCASE(EWIRR ,CBANG   ): *ado=(VF)binDD;   *cv=VD+VDD;     break;
@@ -522,8 +522,8 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS):
     *ado=(VF)plusIO;  *cv=VD+VII;     break;   // used only for sparse arrays
    case VARCASE(EWOVIP+EWOVIPMINUSII  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSBI  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSIB  ,CMINUS):
-    *ado=(VF)minusIO; *cv=VD+VII;     break;
-   case VARCASE(EWOV  ,CSTAR   ): *ado=(VF)tymesIO; *cv=VD+VII;     break;
+    *ado=(VF)minusIO; *cv=VD+VII;     break;   // used only for sparse arrays
+   case VARCASE(MULTINC?(EWOVIP+EWOVIPMULII):EWOV  ,CSTAR): *ado=(VF)tymesIO; *cv=VD+VII;     break;   // used only for sparse arrays
    case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CSTARDOT): *ado=(VF)lcmIO;   *cv=VD+VII;     break;
    case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD+VIP;     break;
@@ -542,6 +542,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    // The index into va is atype*3 + wtype, calculated sneakily
    p = &va[vaptr[(UC)id]].p2[((at>>1)+((at+wt)>>2))&(CMPX-1)];
    *cv = p->cv;
+   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
   } else {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
@@ -604,8 +605,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  oq=jt->rank;  // save original rank before we change it, in case we have to restart the operation
  if(jt->rank){
   // Here, a rank was specified.
-  r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; acn=prod(acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #cells
-  r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; wcn=prod(wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #cells
+  r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; acn=prod(acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
+  r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; wcn=prod(wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
   // Now that we have used the rank info, clear jt->rank.  All verbs start with jt->rank=0 unless they have "n applied
   // we do this before we generate failures
@@ -613,8 +614,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   // if the frames don't agree, that's always an agreement error
   ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
   c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
-  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; n=m?zcn/m:0; r=b?wcr:acr; s=b?ws+wf:as+af;   // b='right cell has larger rank'; zcn=#cells in arg with larger rank (=#result cells);
-    // m=#cells in arg with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
+  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; n=m?zcn/m:0; r=b?wcr:acr; s=b?ws+wf:as+af;   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
+    // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
  }else{
   // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
   ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
@@ -683,36 +684,46 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   else if(c)DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk;         wv+=wk;); av+=ak;)  // if right frame is longer, repeat cells of a
   else      DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-  if(!jt->jerr){R cv&VRI+VRD?cvz(cv,z):z;
+  if(!jt->jerr){R cv&VRI+VRD?cvz(cv,z):z;  // normal return is here.  The rest is error recovery
   }else if(jt->jerr-EWOVIP>=0){A zz;C *zzv;I zzk; I nipw;
    // Here for overflow that can be corrected in place
    // If the original result block cannot hold the D result, allocate a separate result area
-   if(sizeof(D)==sizeof(I)){zz=z; AT(zz)=FL; zzk=zk;
+   if(sizeof(D)==sizeof(I)){zz=z; AT(zz)=FL; zzk=zk;   // shape etc are already OK
    }else{GATV(zz,FL,zn,f+r,sf); ICPY(f+AS(zz),s,r); zzk=zk*(sizeof(D)/sizeof(I));}
    // restore pointers to beginning of arguments
    zv=CAV(z); zzv=CAV(zz);  // point to new-result data
    // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
-   switch(jt->jerr-EWOVIP){
-   case EWOVIPPLUSII:
-    // choose the non-in-place argument
-    ado=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-   case EWOVIPPLUSBI:
-    ado=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-   case EWOVIPPLUSIB:
-    ado=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
-   case EWOVIPMINUSII:
-    ado=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
-   case EWOVIPMINUSBI:
-    ado=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
-   case EWOVIPMINUSIB:
-    ado=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
+   if(jt->jerr==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=(I*)zv;
+    // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
+    DO(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
+    // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
+    av=CAV(a); wv=CAV(w); ado=(VF)tymesIIO;
+    if(1==nf) DO(mf,        ado(jt,b,m,n,zzv,av,wv); zzv+=zzk; av+=ak; wv+=wk;)  // if the short cell is not repeated, loop over the frame
+    else if(c)DO(mf, DO(nf, ado(jt,b,m,n,zzv,av,wv); zzv+=zzk;         wv+=wk;); av+=ak;)  // if right frame is longer, repeat cells of a
+    else      DO(mf, DO(nf, ado(jt,b,m,n,zzv,av,wv); zzv+=zzk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
+   } else {
+    switch(jt->jerr-EWOVIP){
+    case EWOVIPPLUSII:
+     // choose the non-in-place argument
+     ado=(VF)plusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+    case EWOVIPPLUSBI:
+     ado=(VF)plusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+    case EWOVIPPLUSIB:
+     ado=(VF)plusBIO; nipw = 1; break;  // Use w as not-in-place
+    case EWOVIPMINUSII:
+     ado=(VF)minusIIO; nipw = z!=w; break; // if w not repeated, select it for not-in-place
+    case EWOVIPMINUSBI:
+     ado=(VF)minusBIO; nipw = 0; break;   // Leave the Boolean argument as a
+    case EWOVIPMINUSIB:
+     ado=(VF)minusBIO; nipw = 1; break;  // Use w as not-in-place
+    }
+    // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
+    // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
+    // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
+    if(nipw){av=CAV(w), ak=wk;}else{av=CAV(a);}  if(nipw==c){mf *= nf; nf = 1;} if(nipw==b){m *= n; n = 1;}
+    // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
+    DO(mf, DO(nf, ado(jt,nipw,m,n,zzv,av,zv); zzv+=zzk; zv+=zk;); av+=ak;)  // use each cell of a (nf) times
    }
-   // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
-   // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
-   // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
-   if(nipw){av=CAV(w), ak=wk;}else{av=CAV(a);}  if(nipw==c){mf *= nf; nf = 1;} if(nipw==b){m *= n; n = 1;}
-   // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.
-   DO(mf, DO(nf, ado(jt,nipw,m,n,zzv,av,zv); zzv+=zzk; zv+=zk;); av+=ak;)  // use each cell of a (nf) times
    RESETERR
    R zz;  // Return the result after overflow has been corrected
   }

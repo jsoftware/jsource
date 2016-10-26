@@ -402,7 +402,10 @@ NB. Full test with everything allowed
 
 % testinplacer 'VBID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
 
-* testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
+NB. mulinc * testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'  NB. non-overflow
+NB. mulinc * testinplacer 'VO';'B/I/D/I/Id/D/D/D/D/    b/I/D//d/d////   b///I/d//D/d//'  NB. overflow
+* testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'  NB. non-overflow
+* testinplacer 'VO';'B/I/D/I/ID/D/D/D/D/    b/I/D//ID/d////   b///I/ID//D/d//'  NB. overflow
 
 + testinplacer 'VBID';'I/I/D/I/I/D/D/D/D/    I/I/D///d////   I///I///D/d//'  NB. non-overflow
 + testinplacer 'VO';'I/Id/D/Id/Id/D/D/D/D/    I/Id/D/d/d/d////   I/d//Id/d//D/d//'   NB. overflow
@@ -428,7 +431,7 @@ NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this 
 <. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
 >. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
 
-NB. Go back and recheck with partial execution not allowed.  No need for checking overlap again, or binary
+NB. Go back and recheck with partial execution not allowed.  No need for checking overlap again, or binary, or overflow
 9!:53 (1)
 +. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'
 *. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'
@@ -439,6 +442,7 @@ NB. Go back and recheck with partial execution not allowed.  No need for checkin
 
 % testinplacer 'ID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d///D/   D/d//D/d//D/d/D/'
 
+NB. mulinc * testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
 * testinplacer 'ID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'
 
 + testinplacer 'ID';'I/I/D/I/I/D/D/D/D/    I/I/D///d///D/   I///I///D/d/D/'

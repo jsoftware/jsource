@@ -255,7 +255,7 @@ DF1(jtredravel){A f,x,z;C id;I cv,n;P*wp;VF ado;
   ASSERT(ado,EVNONCE);
   GA(z,rtype(cv),1,0,0);
   if(n)ado(jt,1L,n,n,AV(z),AV(x));
-  if(jt->jerr!=EWOV)R redsp1a(id,z,SPA(wp,e),n,AR(w),AS(w));;
+  if(jt->jerr<EWOV)R redsp1a(id,z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
@@ -384,7 +384,7 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
   b=0; DO(AN(a), if(f==v[i]){b=1; break;});
   z=b?redsps(w,self,id,ado,cv,f,r,zt):redspd(w,self,id,ado,cv,f,r,zt);
  }
- R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,reducesp(w,self)):z;
+ R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reducesp(w,self)):z;
 }    /* f/"r for sparse w */
 
 #define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
@@ -476,7 +476,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  m=prod(f,ws); c=m?wn/m:prod(r,f+ws);
  ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

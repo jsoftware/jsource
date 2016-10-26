@@ -175,7 +175,7 @@
 #define RMAX            IMAX            /* max rank                        */
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
-#define NFDEP           20000L             // fn call depth
+#define NFDEP           (8000L+12000L*SY_64)             // fn call depth
 #define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
 
 #define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
@@ -538,3 +538,4 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define HASH0           0UL
 #endif
 
+#define MULTINC 0 // scaf  set to 1 to engage C multiply code

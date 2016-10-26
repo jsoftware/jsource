@@ -78,7 +78,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
   case OBQCASE(INTX, CMIN    ): OBQLOOP(I,I,wt,x=*u, x=MIN(x,*u)  ); break;
   case OBQCASE(INTX, CPLUS   ): 
    er=0; OBQLOOP(I,I,wt,x=*u, {p=0>x; x+=*u; BOV(p==0>*u&&p!=0>x);}); 
-   if(er==EWOV)OBQLOOP(I,D,FL,x=(D)*u, x+=*u);
+   if(er>=EWOV)OBQLOOP(I,D,FL,x=(D)*u, x+=*u);
  }
  if(wt&FL+CMPX)NAN1; RE(0);
  R b?z:oblique(w,self);
@@ -146,7 +146,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
     adotymes(jt,1,p,1,yv,u,v); adosum(jt,1,p,p,zv,yv);
     ++zv;
    }
-   if(EWOV==jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed
+   if(EWOV<=jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed; any error >= EWOV will be an overflow
  }}
  if(t&FL+CMPX)NAN1; RE(0);
  if(!b)R obqfslash(df2(a,w,g),f);

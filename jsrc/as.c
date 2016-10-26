@@ -262,7 +262,7 @@ static DF1(jtsscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
  ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr==EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/\."r w main control */
 
 
@@ -310,7 +310,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,cv,d,k,kc,m,r,t;V*v;VF ado;
  MC(zv,     AV(s),          kc);                     /* {.s           */
  if(1<d)ado(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s) */
  MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     /* {:p           */
- if(jt->jerr==EWOV){RESETERR; R ofxassoc(a,cvt(FL,w),self);}else R z;
+ if(jt->jerr>=EWOV){RESETERR; R ofxassoc(a,cvt(FL,w),self);}else R z;
 }    /* a f/\. w where f is an atomic associative fn */
 
 static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}

@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-// obv1 and obv2 merely pass the call to f.  Sinc3e we took the inplace flags for the compound from the original a, we can pass them on too
+// obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too
 static CS1IP(obv1, z=(f1)(jtinplace,w,fs),0103)
 static CS2IP(obv2, z=(f2)(jtinplace,a,w,fs),0104)
 

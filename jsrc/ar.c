@@ -568,7 +568,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;I n
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
  if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),one));
 // bug: ,&.>/ y does scalar replication wrong
- wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
+// wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; zm=prod(f,ws); m=zm?AN(w)/(zm*n):prod(r-1,ws+f+1); mn=m*n;
  GATV(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);

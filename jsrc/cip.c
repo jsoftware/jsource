@@ -14,8 +14,8 @@
 // *pp is number of inner-product muladds
 //   (in each, an atom of a multiplies an item of w)
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
- ar=AR(a); as=AS(a); ar1=ar?ar-1:0; RE(*pm=m=prod(ar1,  as));
- wr=AR(w); ws=AS(w); wr1=wr?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));
+ ar=AR(a); as=AS(a); ar1=ar?ar-1:0; RE(*pm=m=prod(ar1,  as));  // m=# 1-cells of a
+ wr=AR(w); ws=AS(w); wr1=wr?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));  // n=#atoms in 1-cell of w; mn = #atoms in result
  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
@@ -64,7 +64,7 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
      DO(nn, if(*u++){vi=(UI*)v; d=ti; DO(nw, *d+++=*vi++;);} v+=n;);  \
      x=zv; c=tc; DO(n, *x+++=*c++;);
 
-#if C_NA
+#if 0&&C_NA    // scaf  asm function no longer used, and no longer defined in C
 /*
 *** from asm64noovf.c
 C asminnerprodx(I m,I*z,I u,I*y)
@@ -99,19 +99,28 @@ l1:
 }
 #endif
 
+// +/ . * support
 F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  RZ(a&&w);
+ // ?r = rank, ?t = type (but set Boolean type for an empty argument)
  ar=AR(a); at=AN(a)?AT(a):B01;
  wr=AR(w); wt=AN(w)?AT(w):B01;
- if((at|wt)&SPARSE)R pdtsp(a,w);
- if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));
- if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&at+wt)R pdtby(a,w);   // prefer at^wt
- t=coerce2(&a,&w,B01);
+ if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
+ if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
+ if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&at+wt)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
+ t=coerce2(&a,&w,B01);  // convert a/w to common type, using b01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
+ // Allocate result area and calculate loop controls
+ // m is # 1-cells of a
+ // n is # atoms in an item of w
+ // p is number of inner-product muladds (length of a row of a)
+
  RZ(z=ipprep(a,w,t&B01?INT:t&INT&&!SY_64?FL:t,&m,&n,&p));
  if(!p){memset(AV(z),C0,AN(z)*bp(AT(z))); R z;}
+ // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
+ // Perform the inner product according to the type
  switch(CTTZNOFLAG(t)){
   case B01X:
    if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
@@ -128,7 +137,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    break;
   case INTX:
 #if SY_64
-   {C er=0;I c,*u,*v,*wv,*x,*zv;
+   {I er=0;I c,* RESTRICT u,* RESTRICT v,* RESTRICT wv,* RESTRICT x,* RESTRICT zv;
     u=AV(a); v=wv=AV(w); zv=AV(z);
  /*
    for(i=0;i<m;++i,v=wv,zv+=n){
@@ -136,12 +145,21 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
+#if 1   // non-assembler version
+    for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,os; C cry;
+     x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
+// scaf     DQ(p1, x=zv; c=*u++; DQ(n, DPMULX(c,*v, o=*x; r=o+l; *x++=r; o^=r; r^=l; ++v; if((r&o)<0)++er;, ++er); if(er)break;))
+     // The h+=os; could be moved into the _addcarry producing h, but the compiler then generates an extra sarb/inc pair.  Somehow referring to os later fixes that. 
+     DQ(p1, x=zv; c=*u++; DQ(n, o=*x; os = o>>(BW-1); DPMULX(c,*v, cry=_addcarry_u64(0, o, l, &l); _addcarry_u64(cry, 0, h, &h); *x++=l; h += os; if(h += ((UI)l>>(BW-1)))++er; ++v;, ++er);) if(er)break;)
+    }
+#else
     for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;
      DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
      if(er)break;
     }
-    if(er){A z1;D c,*x,*zv;I*u,*v,*wv;
+#endif
+    if(er){A z1;D c,* RESTRICT x,* RESTRICT zv;I* RESTRICT u,* RESTRICT v,* RESTRICT wv;
      GATV(z1,FL,AN(z),AR(z),AS(z)); z=z1;
      u=AV(a); v=wv=AV(w); zv=DAV(z);
      for(i=0;i<m;++i,v=wv,zv+=n){
@@ -161,6 +179,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #endif
    break;
   case FLX:
+#if 1
    {D c,s,t,*u,*v,*wv,*x,*zv;
     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     NAN0;
@@ -171,6 +190,74 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
     }
     NAN1;
    }
+
+#else  // this turned out to be slower, at least until the arguments won't fit in cache.  Fast page mode memory saves the day for the original code
+#define OPHEIGHT 2  // height of outer-product block
+#define OPWIDTH 2  // width of outer-product block
+#define WSWATCHWIDTH 16  // number of columns of w in each inner product
+#define MAXOPS 4 // maximum number of outer products
+   {I remlines, remwcols, reminblock, remw2blocks, numip;
+   NAN0;
+   // m is # 1-cells of a
+   // n is # atoms in an item of w (and result)
+   // p is number of inner-product muladds (length of a row of a, and # items of w)
+   D* RESTRICT arowhd = DAV(a);  // base of current row-pair of a
+   D* RESTRICT zrowhd = DAV(z);  // current result row-pair
+   // process a by line-pairs, producing a result line-pair
+   for(remlines = m;remlines>0;remlines-=OPHEIGHT,arowhd+=OPHEIGHT*p,zrowhd+=OPHEIGHT*n) {
+    D* RESTRICT zcolhd = zrowhd;  // pointer to 2x16 result-block in the current row-pair
+    D* RESTRICT wswatchhd = DAV(w);   // pointer to top of 16-column swatch of w, to be processed in 32x2 blocks
+    // process w in 16-column swatches.  32x16 is the size of the block we need resident in cache
+    for(remwcols = n;remwcols>0;remwcols-=WSWATCHWIDTH,zcolhd+=WSWATCHWIDTH,wswatchhd+=WSWATCHWIDTH) {
+     D* RESTRICT ablkst=arowhd;  // pointer to current 2x32 block of a
+     D* RESTRICT zblkst = zcolhd;  // pointer to result area, 2x16
+     D* RESTRICT wmblkst = wswatchhd;  // pointer to current 32x2 block of w
+     // Clear the result area to 0.  We do it now to bring the result block into cache,
+     // and not before so we don't sweep through the cache too early
+     {D* RESTRICT zp0 = zblkst;D* RESTRICT zp1;
+     DO(MIN(OPHEIGHT,remlines), zp1=zp0; DO(MIN(WSWATCHWIDTH,remwcols), *zp1++=0;); zp0 += n;);
+     }
+     // process the inner product row x col in 32-outer-product macroblocks
+     for(reminblock = p;reminblock>0;reminblock-=MAXOPS,ablkst+=MAXOPS,wmblkst+=MAXOPS*n) {
+      D* RESTRICT zv = zblkst;  // pointer to result 2x2
+      D* RESTRICT wblkst = wmblkst;   // pointer to 1st 32x2 block in w
+      // Process each 32x16 as up to 8 32x2 blocks, (less when we get to the right end of w)
+      // Meanwhile, prefetch the next 32x16 (32x128 bytes) block of w
+      for(remw2blocks=MIN(WSWATCHWIDTH,remwcols);remw2blocks>0;remw2blocks-=OPWIDTH,zv+=OPWIDTH,wblkst+=OPWIDTH) {
+       // Accumulate 2x2 outer products into a 2x2 result.
+       // We have 2 pointers to a and w.  We always fetch 2 a and 2 w; if we run off the end of either,
+       // we fetch the same value twice to avoid an out-of-bounds fetch
+_mm_prefetch(,MM_HINT_T0);
+       D* RESTRICT at = ablkst;   // top-left of 2x32
+       D* RESTRICT ab = ablkst + (remlines>1?p:0);  // lower row
+       D* RESTRICT wl = wblkst;   // top-left of 32x2
+       D* RESTRICT wr = wblkst + (remw2blocks>1?1:0);  // right column
+       D ztl=0.0, ztr=0.0, zbl=0.0, zbr=0.0;
+       // Loop through up to 32 2x2 outer products until we run out of inputs
+       for(numip=MIN(MAXOPS,reminblock);numip;--numip,++at,++ab,wl+=n,wr+=n) {D t0, t1, t2;
+        // Do one 2x2 outer product, accumulate into zxx
+        t0 = *at, t1 = *wl;   // fetch at, wl
+        ztl += t0 * t1;
+        t2 = *ab;  // fetch ab
+        zbl += t1 * t2;
+        t1 = *wr;  // fetch wr
+        ztr += t1 * t0;
+        zbr += t1 * t2;
+       }
+       // Accumulate the sum-of-outer-products into the result area
+       zv[0] += ztl;
+       if(at!=ab)zv[n] += zbl;  // Don't write outside of valid result area if there is no second row
+       if(wl!=wr){   // . or if no right column
+        zv[1] += ztr;
+        if(at!=ab)zv[n+1] += zbr;  // Don't write outside of valid result area if there is no second row
+       }
+      }
+     }
+    }
+   }
+   }
+   NAN1;
+#endif
    break;
   case CMPXX:
    {Z c,*u,*v,*wv,*x,*zv;
@@ -199,7 +286,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #define IPBXW  2
 #define IPBXNW 3
 
-// a f/ . g w
+// a f/ . g w  for boolean a and w
 // c is pseudochar for f, d is pseudochar for g
 static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*zv;C c0,c1;
     I ana,i,j,m,n,p,q,r,*uu,*vv,wc;

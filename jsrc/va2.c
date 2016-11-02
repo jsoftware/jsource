@@ -476,6 +476,11 @@ A jtcvz(J jt,I cv,A w){I t;
  R w;
 }    /* convert result */
 
+// Routine to lookup function/flags
+// ptr is the type of lookup (insert/prefix/suffix) to generate the function for
+// In the function, id is the pseudochar for the function to look up
+//  t is the argument type
+//  action routine is stored in *ado, flags in *cv.  If no action routine, *ado=0
 #define VAF(fname,ptr,fp,fm,ft)   \
  void fname(J jt,C id,I t,VF*ado,I*cv){VA2*p;  \
   if(jt->jerr>=EWOV){                          \
@@ -487,6 +492,11 @@ A jtcvz(J jt,I cv,A w){I t;
    *ado=p->f; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
+
+// Lookup the action routine & flags for insert/prefix/suffix
+// first name is name of the generated function
+// second name (e. g. pins) is the name of the structure element containing the action-routine pointers
+// other names are the names of overflow action routines for plus,minus,times respectively
 
 VAF(jtvains,pins, plusinsO,minusinsO,tymesinsO)
 VAF(jtvapfx,ppfx, pluspfxO,minuspfxO,tymespfxO)
@@ -877,7 +887,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
   if(at&B01&&wt&B01&&1==n&&(0==zn%SZI||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
    if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R sumattymes(a,w,self);
-   if(!ar||!wr){
+   if(!ar||!wr){  // if either argument is atomic, apply the distributive propoerty to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
   }}

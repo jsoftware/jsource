@@ -4,6 +4,7 @@
 /* Interpreter Utilities                                                   */
 
 #include "j.h"
+#include "vasm.h"
 
 
 #if SY_64
@@ -23,7 +24,11 @@ static I jtmultold(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x0000000
 #endif
 
 // If jt is 0, don't call jsignal when there is an error
-// Returns x*y, or 0 if there is an error (and jsignal might have been called)
+// Returns x*y, or 0 if there is an error (and in that case jsignal might have been called)
+#ifdef DPMULD
+#define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
+I jtmult(J jt, I x, I y){I z; DPMULDDECLS DPMULD(x,y,z,{if(jt)jsignal(EVLIMIT);R 0;}) R z;}
+#else
 I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xffffffff00000000LL;
   I const lmsb = 0x0000000080000000LL; I const hlsb = 0x0000000100000000;
  // if each argument fits in unsigned-32, do unsigned multiply (normal case); make sure result doesn't overflow
@@ -51,6 +56,7 @@ I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xf
  }
  R z;
 }
+#endif
 
 I jtprod(J jt,I n,I*v){I z;
  if(1>n)R 1;

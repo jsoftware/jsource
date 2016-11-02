@@ -17,7 +17,9 @@
 
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
- if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u+v; *z=w; ++x; ++y; ++z; u^=w; v^=w; if((u&v)<0)++oflo;}}
+// obsolete if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u+v; *z=w; ++x; ++y; ++z; u^=w; v^=w; if((u&v)<0)++oflo;}}
+ // overflow is (input signs equal) and (result sign differs from one of them)
+ if(1==n) DQ(m, u=*x; v=*y; w=~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if((w&v)<0)++oflo;)
  else if(b)DO(m, u=*x++; I thresh = IMIN-u; if (u<=0){DO(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DO(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
  else      DO(m, v=*y++; I thresh = IMIN-v; if (v<=0){DO(n, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DO(n, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSII;
@@ -43,8 +45,10 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
 
 // II subtract, noting overflow and leaving it, possibly in place
 AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
- if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; u^=w; v=~v; v^=w; if((u&v)<0)++oflo;}}
- // if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
+// obsolete if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; u^=w; v=~v; v^=w; if((u&v)<0)++oflo;}}
+ // overflow is (input signs differ) and (result sign differs from minuend sign)
+ if(1==n)  {DQ(m, u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; v^=u; u^=w; if((u&v)<0)++oflo;)}
+// if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
  else if(b)DO(m, u=*x++; I thresh = u-IMIN; if (u<0){DO(n, v=*y; if(v>thresh)++oflo; w=u-v; *z++=w; y++;)}else{DO(n, v=*y; if(v<=thresh)++oflo; w=u-v; *z++=w; y++;)})
  // if v>0, oflo if u-v < IMIN => u < v+IMIN = v-IMIN; if v<=0, oflo if u-v > IMAX => u>v+IMAX => u>v-1-IMIN => u >= v-IMIN
  else      DO(m, v=*y++; I thresh = v-IMIN; if (v<=0){DO(n, u=*x; if(u>=thresh)++oflo; u=u-v; *z++=u; x++;)}else{DO(n, u=*x; if(u<thresh)++oflo; u=u-v; *z++=u; x++;)})
@@ -69,24 +73,12 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 
 #if MULTINC
 // II multiply, in double precision
-#if SY_64
-#define DPMUL(x,y,l,h) l=_mul128(x,y,&h)
-#define DPDECLS
-#else
-#if 0
-#define DPDECLS __int64 p;
-#define DPMUL(x,y,l,h) p = __emul(x,y); l=(I)p; h=(I)(p>>32)
-#else
-#define DPDECLS 
-#define DPMUL(x,y,l,h) l=jtmult(0,x,y); if((x)&&(y)&&!l)goto oflo; h=((l)>>(BW-1))  // scaf
-#endif
-#endif
-AHDR2(tymesII,I,I,I){DPDECLS I u;I v;I h,w;if(jt->jerr)R; I *zi=z;
- if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; x++; y++; )
- else if(b)DO(m, u=*x++; DO(n, v=*y; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; y++;))
- else      DO(m, v=*y++; DO(n, u=*x; DPMUL(u,v,w,h); if(h+((UI)w>>(BW-1)))goto oflo; *z++=w; x++;))
+AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;if(jt->jerr)R; I *zi=z;
+ if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo); ; z++; x++; y++; )
+ else if(b)DO(m, u=*x; DO(n, v=*y; DPMUL(u,v,z, goto oflo); z++; y++;) x++;)
+ else      DO(m, v=*y; DO(n, u=*x; DPMUL(u,v,z, goto oflo); z++; x++;) y++;)
 exit: jt->mulofloloc += z-zi; R;
-oflo: jt->jerr = EWOVIP+EWOVIPMULII; goto exit;
+oflo: jt->jerr = EWOVIP+EWOVIPMULII; *x=u; *y=v; goto exit;  // back out the last store, in case it's in-place; gcc stores before overflow
 }
 #else
 AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
@@ -254,21 +246,24 @@ D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  while(remdd(a1/jfloor(0.5+a1/a),b1)){t=a; if((a=remdd(a,b))==0)break; b=t;}  // avoid infinite loop if a goes to 0
  R a;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
-#if SY_64
-#if SY_WIN32 && !C_NA
-I jtilcm(J jt,I a,I b){C er=0;I b1,d,z;
- if(a&&b){RZ(d=igcd(a,b)); b1=b/d; TYMESVV(1L,&z,&a,&b1); if(er)jt->jerr=EWOV; R    z;}else R 0;
+// obsolete #if SY_64
+// obsolete #if SY_WIN32 && !C_NA
+// obsolete I jtilcm(J jt,I a,I b){C er=0;I b1,d,z;
+// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; TYMESVV(1L,&z,&a,&b1); if(er)jt->jerr=EWOV; R    z;}else R 0;
+// obsolete }
+// obsolete #else
+// obsolete I jtilcm(J jt,I a,I b){LD z;I b1,d;
+// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(LD)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
+// obsolete }
+// obsolete #endif
+// obsolete #else
+// obsolete I jtilcm(J jt,I a,I b){D z;I b1,d;
+// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(D)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
+// obsolete }
+// obsolete #endif
+I jtilcm(J jt,I a,I b){I z;I d;
+ if(a&&b){RZ(d=igcd(a,b)); if(0==(z=jtmult(0,a,b/d)))jt->jerr=EWOV; R z;}else R 0;
 }
-#else
-I jtilcm(J jt,I a,I b){LD z;I b1,d;
- if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(LD)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
-}
-#endif
-#else
-I jtilcm(J jt,I a,I b){D z;I b1,d;
- if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(D)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
-}
-#endif
 
 #define GCDIO(u,v)      (dgcd((D)u,(D)v))
 #define LCMIO(u,v)      (dlcm((D)u,(D)v))

@@ -24,7 +24,9 @@ typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
 
 typedef void  (_stdcall * outputtype)(J,int,C*);
 typedef int   (_stdcall * dowdtype)  (J,int, A, A*);
+typedef int   (_stdcall * dowdtype2) (J,int, A, A*, C*);  // pass current locale
 typedef C* (_stdcall * inputtype) (J,C*);
+typedef C* (_stdcall * polltype) (J,int,int);
 
 void _stdcall Joutput(J jt, int type, C* s);
 int _stdcall Jwd(J jt, int x, A parg, A* pres);

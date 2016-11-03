@@ -166,6 +166,8 @@ I jdo(J jt, C* lp){I e,old;A x;
 
 #define SZINT             ((I)sizeof(int))
 
+C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(y);}
+
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
  F1RANK(1,jtwd,self);
  RZ(w);
@@ -189,15 +191,28 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 	 }
  }
  // t is 11!:t and w is wd argument
+ // smoption: 1=use smpoll to get last result
+ //           2=pass current locale
+ if(0x2&jt->smoption){
+ e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
+ }else{
  e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
+ }
  if(!e) R mtm;   // e==0 is MTM
- if(e==-1) R z;  // e---1 is zp
+ if(e==-1)       // e---1 is zp
+  if(!(0x1&jt->smoption)) R z;
+  else R ca((A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
  ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
+ if(!(0x1&jt->smoption)){
  RZ(z=df1(z,cut(ds(CBOX),num[-2]))); // e==-2 is lit pairs
  R reshape(v2(AN(z)/2,2L),z);
+ }else{
+ RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
+ z=ca(z);        // zp is not allocated by Jga
+ RZ(z=df1(z,cut(ds(CBOX),num[-2]))); // e==-2 is lit pairs
+ R reshape(v2(AN(z)/2,2L),z);
+ }
 }
-
-C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(y);}
 
 static char breaknone=0;
 
@@ -232,9 +247,11 @@ I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){I old;
 void _stdcall JSM(J jt, void* callbacks[])
 {
 	jt->smoutput = (outputtype)callbacks[0];
-	jt->smdowd = (dowdtype)callbacks[1];
+	jt->smdowd = callbacks[1];
 	jt->sminput = (inputtype)callbacks[2];
-	jt->sm = (I)callbacks[4];
+	jt->smpoll = (polltype)callbacks[3];
+	jt->sm = 0xff & (I)callbacks[4];
+	jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}

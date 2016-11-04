@@ -501,19 +501,27 @@ C asminnerprodx(I,I*,I,I*);
 #define MINUSV1(n,z,x,v)   {B p=0>v; DO(n, z[i]=x[i]-v;   BOV(p!=0>x[i]&&p==0>z[i]););}
 #endif
 
-// #define PLUSP(n,z,x)      {I s=0,u,v;   DQ(n, u=~s; v=*x; s+=v; *z++=s; u^=v; v^=s;  if((u&v)<0){er=EWOV; break;} x++;      ); }
+// obsolete #define PLUSP(n,z,x)      {I s=0,u,v;   DQ(n, u=~s; v=*x; s+=v; *z++=s; u^=v; v^=s;  if((u&v)<0){er=EWOV; break;} x++;      ); }
 // overflow if (~ssign^vsign)&&(resultsign^vsign), i. e. input signs equal and result changes sign
 #define PLUSP(n,z,x)      {I s=0,u,v;   DQ(n, u=~s; v=*x; s+=v; u^=v; v^=s; x++; *z++=s; BOV((u&v)<0));}
 // obsolete #define PLUSP(n,z,x)      {B p;I s=0;   DO(n, p=0>s; *z=s+=*x;        BOV(p==0>*x&&p!=0>s); z++; x++;);}
 // obsolete #define MINUSP(n,z,x)      {B p=0;DI t=0; DO(n, t=p?t-*x:t+*x; *z=(I)t; BOV(t<IMIN||IMAX<t ); z++; x++; p=!p;);}
 #define MINUSP(n,z,x)      {I s=0,u,v,p=0;   DQ(n, u=~s; v=*x^p; s+=v-p; p = ~p; u^=v; v^=s; *z++=s; x++; BOV((u&v)<0));}
 // obsolete #define TYMESP(n,z,x)      {DI t=1;      DO(n, t*=*x;         *z=(I)t; BOV(t<IMIN||IMAX<t ); z++; x++;);}
-#define TYMESP(n,z,x)      {DPMULDECLS l=1; DQ(n, DPMUL(*x,l,z,{er=EWOV; break;}); z++; x++;)}
+#define TYMESP(n,z,x)      {DPMULDDECLS I s=1; DQ(n, DPMULD(*x,s,s,{er=EWOV; break;}) *z++=s; x++;)}
 
-// #define PLUSR(n,z,x)      {I s=0,u,v;   DQ(n, u=~s; v=*x; s+=v; u^=v; v^=s;  if((u&v)<0){er=EWOV; break;} x++;      ); *z=s;}
-#define PLUSR(n,z,x)      {I s=0,v,vs=0,h=0;C c;   DQ(n, v=*x; vs += v>>(BW-1); c=_addcarry_u64(0,v,s,&s); _addcarry_u64(c,0,h,&h); x++;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=s;}
-#define MINUSR(n,z,x)      {I s=n>>1,v,vs=0,h=0,p=0;C c;   DQ(n, v=*x^p; vs += v>>(BW-1); c=_addcarry_u64(0,v,s,&s); _addcarry_u64(c,0,h,&h); x++; p=~p;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=s;}
-//#define MINUSR(n,z,x)      {B p=0;DI t=0; DO(n, t=p?t-*x:t+*x; BOV(t<IMIN||IMAX<t ); x++; p=!p;); *z=(I)t;}
+// obsolete #define PLUSR(n,z,x)      {I s=0,u,v;   DQ(n, u=~s; v=*x; s+=v; u^=v; v^=s;  if((u&v)<0){er=EWOV; break;} x++;      ); *z=s;}
+// obsolete #define PLUSR(n,z,x)      {I s=0,v,vs=0,h=0;C c;   DQ(n, v=*x; vs += v>>(BW-1); c=_addcarry_u64(0,v,s,&s); _addcarry_u64(c,0,h,&h); x++;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=s;}
+// intrinsic #define PLUSR(n,z,x)      {I s=0,v,vs=0,h=0;C c;   DQ(n, v=*x; vs += v>>(BW-1); c=_addcarry_u64(0,v,s,&s); _addcarry_u64(c,0,h,&h); x++;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=s;}
+// intrinsic #define MINUSR(n,z,x)      {I s=n>>1,v,vs=0,h=0,p=0;C c;   DQ(n, v=*x^p; vs += v>>(BW-1); c=_addcarry_u64(0,v,s,&s); _addcarry_u64(c,0,h,&h); x++; p=~p;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=s;}
+// accumulate the total in double integer precision; at the end decide which to use.  vs accumulates the number of negative numbers added: each one
+// should be sign-extended and added to the high part, but we wait till the end to combine them, to save pipeline stalls
+#define PLUSR(n,z,x)      {UI s=0,v,vs=0,h=0;   DQ(n, v=*x; vs += (I)v>>(BW-1); SPDPADD(v, s, h) x++;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=(I)s;}
+// accumulate in double integer precision; p alternates between 0 (add) and _1 (subtract); subtract by adding one's-complement + 1.  As with addition,
+// we accumulate high-order sign-extensions to add and add them at the end.  Also, we don't add the 1 in the complement+1 each time: we just
+// calculate the number of subtracts there will be, and add them all at once (at initialization of z)
+#define MINUSR(n,z,x)      {UI s=n>>1,v,vs=0,h=0,p=0;  DQ(n, v=*x^p; vs += (I)v>>(BW-1); SPDPADD(v, s, h) x++; p=~p;); if(h+vs+((UI)s>>(BW-1)))er=EWOV; *z=(I)s;}
+// obsolete #define MINUSR(n,z,x)      {B p=0;DI t=0; DO(n, t=p?t-*x:t+*x; BOV(t<IMIN||IMAX<t ); x++; p=!p;); *z=(I)t;}
 #define TYMESR(n,z,x)      {I l=1; DPMULDDECLS DQ(n, DPMULD(l,*x,l,{er=EWOV; break;}); x++;) *z=l;}
 
 // obsolete #define PLUSRV(d,z,x)     {B p;  DO(d, p=0>*z; *z+=*x;       BOV(p==0>*x&&p!=0>*z); x++; z++;);}
@@ -527,7 +535,7 @@ C asminnerprodx(I,I*,I,I*);
 // overflow if (~ssign^vsign)&&(resultsign^vsign), i. e. input signs differ and result has different sign from minuend
 #define MINUSS(n,z,x)     {I s=0,u,v; x+=n; z+=n; DQ(n, u=s; v=*--x; s=v-u; u^=v; v^=s; *--z=s; BOV((u&v)<0));}
 // obsolete #define MINUSS(n,z,x)      {B p;I s=0; x+=n; z+=n; DO(n, --x; p=0>s; *--z=s=*x-s;      BOV(p!=0>*x&&p==0>s););}
-#define TYMESS(n,z,x)      {DPMULDECLS l=1; x+=n; z+=n; DQ(n, --x; --z; DPMUL(*x,l,z, {er=EWOV; break;}))}
+#define TYMESS(n,z,x)      {DPMULDDECLS I s=1; x+=n; z+=n; DQ(n, --x; --z; DPMULD(*x,s,s, {er=EWOV; break;} *z=s;))}
 // obsolete #define TYMESS(n,z,x)      {DI t=1;    x+=n; z+=n; DO(n, --x;        t*=*x; *--z=(I)t; BOV(t<IMIN||IMAX<t ););}
 
 #endif

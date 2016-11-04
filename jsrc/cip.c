@@ -145,12 +145,13 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
 
  */
-#if 1   // non-assembler version
-    for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,os; C cry;
+#if C_NA   // non-assembler version
+    for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,oc,lp;
      x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
 // scaf     DQ(p1, x=zv; c=*u++; DQ(n, DPMULX(c,*v, o=*x; r=o+l; *x++=r; o^=r; r^=l; ++v; if((r&o)<0)++er;, ++er); if(er)break;))
-     // The h+=os; could be moved into the _addcarry producing h, but the compiler then generates an extra sarb/inc pair.  Somehow referring to os later fixes that. 
-     DQ(p1, x=zv; c=*u++; DQ(n, o=*x; os = o>>(BW-1); DPMULX(c,*v, cry=_addcarry_u64(0, o, l, &l); _addcarry_u64(cry, 0, h, &h); *x++=l; h += os; if(h += ((UI)l>>(BW-1)))++er; ++v;, ++er);) if(er)break;)
+     // obsolete The h+=os; could be moved into the _addcarry producing h, but the compiler then generates an extra sarb/inc pair.  Somehow referring to os later fixes that. 
+// obsolete      DQ(p1, x=zv; c=*u++; DQ(n, o=*x; DPMULX(c,*v, l cry=_addcarry_u64(0, o, l, &l); _addcarry_u64(cry, 0, h, &h); *x++=l; h += os; if(h += ((UI)l>>(BW-1)))++er; ++v;, ++er);) if(er)break;)
+    DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if((oc&o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
     }
 #else
     for(i=0;i<m;++i,v=wv,zv+=n){

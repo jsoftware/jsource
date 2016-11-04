@@ -539,34 +539,46 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 
 #define MULTINC 1 // scaf  set to 1 to engage C multiply code
+// Define extended-precision add
 // Define integer multiply, *z=x*y but jump to the label oflo if integer overflow.
 // Depending on the compiler, the overflowed result may or may not have been stored
 #if SY_64
 #if SY_WIN32 
+#define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
 #define DPMULDECLS I l,h;
 // DPMUL: *z=x*y, execute s if overflow
 #define DPMUL(x,y,z,s) *z=l=_mul128(x,y,&h); if(h+((UI)l>>(BW-1)))s
 #define DPMULDDECLS I h;
 #define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
-// DPMULX l=x*y then execute the given lines s1; execute s2 if overflow
-#define DPMULX(x,y,s1,s2) l=_mul128(x,y,&h); s1 /* if(h+((UI)l>>(BW-1)))s2 */
+// obsolete // DPMULX l=x*y then execute the given lines s1; execute s2 if overflow
+// obsolete #define DPMULX(x,y,s1,s2) l=_mul128(x,y,&h); s1 /* if(h+((UI)l>>(BW-1)))s2 */
 #else if SY_LINUX || SY_MAC
-#define DPMULDECLS I l;
+#define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
-#define DPMULX(x,y,s1,s2) if(__builtin_smulll_overflow(x,y,&l))s2; s1
+#define DPMULDDECLS
+#define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
 #endif
-// No default version of DPMULX for 64-bit systems without compiler support - you really need to find an intrinsic
+// No default version of DPMUL... for 64-bit systems without compiler support - you really need to find an intrinsic
 #else  // 32-bit
 #if SY_WIN32
+// optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
 #define DPMULDECLS unsigned __int64 p;
 #define DPMUL(x,y,z,s) p = __emul(x,y); *z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
+#define DPMULDDECLS unsigned __int64 p;
+#define DPMULD(x,y,z,s) p = __emul(x,y); z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
 #else if SY_LINUX || SY_MAC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
+#define DPMULDDECLS
+#define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
 #endif
 #ifndef DPMULDECLS   // default version for 32-bit system without compiler support
 #define DPMULDECLS D p;
-#define DPMUL(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; *z=(I)p
+#define DPMUL(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; *z=(I)p;
+#define DPMULD(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; z=(I)p;
 #endif
+#endif
+#ifndef SPDPADD   // default version for systems without addcarry
+#define SPDPADD(addend, sumlo, sumhi) sumlo += addend; sumhi += (addend > sumlo);
 #endif
 

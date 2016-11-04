@@ -17,7 +17,7 @@
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
 #define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); if((t)!=FL)AT(z)=(t);}
+#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t);}
 
 #define SSNUMPREFIX A z; I wtc=CTTZ(AT(w));  \
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand */ \
@@ -25,9 +25,9 @@
 /* change the type of this block when we get the result type */ \
 /* Try the zombiesym last, saving it as a trump card */ \
 /* Clear zombieval after use to avoid overwriting it */ \
-{I wr = AR(w);    /* get rank */ \
- if (WINPLACE){ AT(z=w) = FL; } \
- else {GATV(z, FL, 1, wr, AS(w));} \
+{  \
+ if (WINPLACE){ z=w; } \
+ else {GATV(z, FL, 1, AR(w), AS(w));} \
 } /* We have the output block */
 
 

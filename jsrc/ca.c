@@ -134,6 +134,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv
     h=x; flag+=VMOD; 
     if(d==CEXP){f2=jtmodpow2; flag&=~VINPLACEOK2;} else{f1=jtmodpow1; flag&=~VINPLACEOK1;}
  }}
+// bug: +/@e.&m y does ,@e. not e.
+// if(d==CEBAR||(b=FIT0(CEPS,wv))){
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
   f=av->f; g=av->g; e=ID(f); if(b)d=ID(wv->f);
   if(c==CICAP)m=7;
@@ -182,6 +184,8 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag,j,m=-1;V*av,*wv;
    case CGE:   f2=b?atcomp0:atcomp; flag+=4+8*m; flag&=~VINPLACEOK2; break;
    case CGT:   f2=b?atcomp0:atcomp; flag+=5+8*m; flag&=~VINPLACEOK2; break;
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
+// Bug in special code for f@:e. when rank of e. result > 1
+//   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
  R fdef(CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);

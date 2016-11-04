@@ -566,7 +566,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMUL(x,y,z,s) p = __emul(x,y); *z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
 #define DPMULDDECLS unsigned __int64 p;
 #define DPMULD(x,y,z,s) p = __emul(x,y); z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
-#else if SY_LINUX || SY_MAC
+#elseif SY_LINUX || SY_MAC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
 #define DPMULDDECLS

@@ -552,7 +552,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
 // obsolete // DPMULX l=x*y then execute the given lines s1; execute s2 if overflow
 // obsolete #define DPMULX(x,y,s1,s2) l=_mul128(x,y,&h); s1 /* if(h+((UI)l>>(BW-1)))s2 */
-#else if SY_LINUX || SY_MAC
+#elseif SY_LINUX || SY_MAC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
 #define DPMULDDECLS

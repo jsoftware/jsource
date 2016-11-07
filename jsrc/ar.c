@@ -459,8 +459,8 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
 
 static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  RZ(w);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
- wn=AN(w); ws=AS(w); n=r?ws[f]:1;
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;  // r = rank of w, f=length of frame
+ wn=AN(w); ws=AS(w); n=r?ws[f]:1;  // n=#items in a CELL of w
  if(SPARSE&AT(w))R reducesp(w,self);
  wt=AT(w); wt=wn?wt:B01;
  id=vaid(VAV(self)->f);
@@ -474,9 +474,13 @@ static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  zt=rtype(cv); jt->rank=0;
  GA(z,zt,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
  if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- m=prod(f,ws); c=m?wn/m:prod(r,f+ws);
+ m=prod(f,ws); c=m?wn/m:prod(r,f+ws);  // kludge should be just prod(r,f+ws)
+ // call the reduce routine.  m=#cells of w to operate on; c=#atoms in a cell of w (NOT a cell to which u is applied)
  ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ // if return is EWOV, it's an integer overflow and we must restart.
+ // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
+ // have to do is change the type of the result
+ if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;R z;}else R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

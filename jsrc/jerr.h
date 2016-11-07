@@ -47,7 +47,8 @@
 #define EWDIV0          48      /* division by zero            */
 #define EWTHROW         49      /* throw. executed             */
 #define EWOV            50      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
-#define EWOVIP          51      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
+#define EWOV1           51      // integer overflow that can be recovered because the flota version has already been saved
+#define EWOVIP          52      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
 #define EWOVIPPLUSII    0
 #define EWOVIPPLUSBI    1
 #define EWOVIPPLUSIB    2

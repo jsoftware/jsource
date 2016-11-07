@@ -3,19 +3,34 @@
 /*                                                                         */
 /* Adverbs: f/ defns                                                       */
 
+// n=#items in a CELL of w
+// m=#cells to operate on
+// c=#atoms in a cell
 
+#if 0
 #define REDUCEPFX(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx*y;Tz v,*zz;                              \
-  d=c/n; x+=m*c; zz=z+=m*d;                                       \
-  if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
-  else if(1==n)DO(d, *--z=    *--x;)                              \
-  else for(i=0;i<m;++i,zz-=d){                                    \
-   y=x; x-=d; z=zz; DO(d, --z; --x; --y; *z=pfx(*x,*y););         \
-   DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
- }}
+AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
+d=c/n; x+=m*c; zz=z+=m*d;                              \
+if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
+else if(1==n)DO(d, *--z=    *--x;)                              \
+else for(i=0;i<m;++i,zz-=d){                                    \
+y=x; x-=d; z=zz; DO(d, --z; --x; --y; *z=pfx(*x,*y););         \
+DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
+}}
+#else
+#define REDUCEPFX(f,Tz,Tx,pfx)  \
+ AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
+  if(c==n){x += m*c; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
+  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DO(c, *z++=    *x++;)}else{MC((C*)z,(C*)x,c*sizeof(Tz));}}          \
+  else{d=c/n; x+=m*c; zz=z+=m*d;                                       \
+   for(i=0;i<m;++i,zz-=d){                                    \
+    y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
+    DO(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
+  }}}
+#endif
 
 #define REDUCENAN(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx*y;Tz v,*zz;                              \
+ AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
   NAN0;                                                           \
   d=c/n; x+=m*c; zz=z+=m*d;                                       \
   if(1==d)DO(m, v=    *--x; DO(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
@@ -28,7 +43,7 @@
  }
 
 #define REDUCCPFX(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx*y;Tz v,*zz;                              \
+ AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
   d=c/n; x+=m*c; zz=z+=m*d;                                       \
   if(1==d)DO(m, v=(Tz)*--x; DO(n-1, --x; v=pfx(*x,v);); *--z=v;)  \
   else if(1==n)DO(d, *--z=(Tz)*--x;)                              \
@@ -38,7 +53,7 @@
  }}
 
 #define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
- AHDRR(f,I,I){C er=0;I d,i,*xx,*y,*zz;                          \
+ AHDRR(f,I,I){C er=0;I d,i,* RESTRICT xx,*y,* RESTRICT zz;                          \
   d=c/n; xx=x+=m*c; zz=z+=m*d;                                  \
   if(1==d){DO(m, z=--zz; x=xx-=c; fr1(n,z,x); RER;); R;}        \
   if(1==n){DO(d, *--z=*--x;); R;}                               \

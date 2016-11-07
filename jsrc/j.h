@@ -573,6 +573,7 @@ No default version of DPMUL... for 64-bit systems without compiler support - you
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
 #else      // default version for 32-bit system without compiler support
+should not get here on Windows/Mac?Linux   scaffolding for test
 #define DPMULDECLS D p;
 #define DPMULDDECLS D p;
 #define DPMUL(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; *z=(I)p;

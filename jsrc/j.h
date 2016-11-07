@@ -552,13 +552,14 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
 // obsolete // DPMULX l=x*y then execute the given lines s1; execute s2 if overflow
 // obsolete #define DPMULX(x,y,s1,s2) l=_mul128(x,y,&h); s1 /* if(h+((UI)l>>(BW-1)))s2 */
-#elseif SY_LINUX || SY_MAC
+#elif SY_LINUX || SY_MAC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
+#else
+No default version of DPMUL... for 64-bit systems without compiler support - you really need to find an intrinsic
 #endif
-// No default version of DPMUL... for 64-bit systems without compiler support - you really need to find an intrinsic
 #else  // 32-bit
 #if SY_WIN32
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
@@ -566,14 +567,14 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMUL(x,y,z,s) p = __emul(x,y); *z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
 #define DPMULDDECLS unsigned __int64 p;
 #define DPMULD(x,y,z,s) p = __emul(x,y); z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
-#elseif SY_LINUX || SY_MAC
+#elif SY_LINUX || SY_MAC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
-#endif
-#ifndef DPMULDECLS   // default version for 32-bit system without compiler support
+#else      // default version for 32-bit system without compiler support
 #define DPMULDECLS D p;
+#define DPMULDDECLS D p;
 #define DPMUL(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; *z=(I)p;
 #define DPMULD(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; z=(I)p;
 #endif

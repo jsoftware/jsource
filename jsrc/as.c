@@ -9,45 +9,45 @@
 
 
 #define SUFFIXPFX(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I d,i;Tz v,*y;                                        \
-  d=c/n; x+=m*c; z+=m*c;                                              \
-  if(1==d)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else for(i=0;i<m;++i){                                              \
+ AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
+  x+=m*c; z+=m*c;                                              \
+  if(c==n)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{I d=c/n; for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=    *--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
- }}
+ }}}
 
 #define SUFFIXNAN(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I d,i;Tz v,*y;                                        \
+ AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
   NAN0;                                                               \
-  d=c/n; x+=m*c; z+=m*c;                                              \
-  if(1==d)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else for(i=0;i<m;++i){                                              \
+  x+=m*c; z+=m*c;                                              \
+  if(c==n)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{I d=c/n; for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=    *--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
-  }                                                                   \
+  }}                                                                   \
   NAN1V;                                                              \
  }
 
 #define SUFFICPFX(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I d,i;Tz v,*y;                                        \
-  d=c/n; x+=m*c; z+=m*c;                                              \
-  if(1==d)DO(m, *--z=v=(Tz)*--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else for(i=0;i<m;++i){                                              \
+ AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
+  x+=m*c; z+=m*c;                                              \
+  if(c==n)DO(m, *--z=v=(Tz)*--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{I d=c/n; for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=(Tz)*--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
- }}
+ }}}
 
 #define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
- AHDRS(f,I,I){C er=0;I d,i,*xx,*y,*zz;                      \
-  d=c/n; xx=x+=m*c; zz=z+=m*c;                              \
-  if(1==d){                                                 \
+ AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
+  xx=x+=m*c; zz=z+=m*c;                              \
+  if(c==n){                                                 \
    if(1==n)DO(m, *--z=*--x;)                                \
    else    DO(m, z=zz-=c; x=xx-=c; fs1(n,z,x); RER;)        \
-  }else for(i=0;i<m;++i){                                   \
+  }else{I d=c/n; for(i=0;i<m;++i){                                   \
    DO(d, *--zz=*--xx;);                                     \
    DO(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y); RER;);     \
- }}
+ }}}
 
 #if SY_ALIGN
 #define SUFFIXBFXLOOP(T,pfx)  \

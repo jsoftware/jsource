@@ -457,25 +457,47 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
 
-static DF1(jtreduce){A z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF ado;
  RZ(w);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;  // r = rank of w, f=length of frame
- wn=AN(w); ws=AS(w); n=r?ws[f]:1;  // n=#items in a CELL of w
- if(SPARSE&AT(w))R reducesp(w,self);
- wt=AT(w); wt=wn?wt:B01;
- id=vaid(VAV(self)->f);
- switch(n){
-  case 0: R red0(w,self);
-  case 1: R tail(w);
-  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;
+ wn=AN(w); wt=wn?AT(w):B01;   // Treat empty as Boolean type
+ if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
+ wr=AR(w); ws=AS(w); n=1;
+ // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
+ if(jtr=jt->rank) {
+  // Rank specified (it must be less than the rank of w).  Set values accordingly.
+  r=jtr[1]; f=wr-r; if(r)n=ws[f];
+ }else{r=wr; f=0; if(r)n=ws[0];
  }
+ id=vaid(VAV(self)->f);
+ // Handle the special cases: neutrals, single items, reduce on 2 items
+ switch(n){
+  case 0: R red0(w,self);    // neutrals
+  case 1: R tail(w);    // reduce on single items - note that jt->rank is still set
+  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
+ }
+ 
+ // Normal processing for multiple items.  Get the routine & flags to process it
  vains(id,wt,&ado,&cv);
+ // If there is no special routine, go perform general reduce
  if(!ado)R redg(w,self);
- zt=rtype(cv); jt->rank=0;
- GA(z,zt,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
+ // Here for primitive reduce handled by special code.
+ // Calculate m: #cells of w to operate on; c: #atoms in a cell of w (NOT a cell to which u is applied);
+ // zn: #atoms in result
+ PROD(zn,r-1,f+ws+1);  //  */ }. $ cell
+ if(jtr){
+  // Rank specified.  m=*/ frame (i. e. #cells to operate on), c=*/ $ cell of w (#atoms in cell), zn=m * */ }. $ cell (# result atoms).
+  // r cannot be 0 (would be handled above).  Calculate low part of zn first
+  PROD(m,f,ws); c=zn*ws[f]; zn*=m; jt->rank=0;   // clear rank now that we've used it
+ }else{
+  // No rank, just operate on whole of w
+  m=1; c=wn;   // one cell, containing all the atoms
+ }
+ // Allocate the result area
+ zt=rtype(cv);
+ GA(z,zt,zn,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+ // Convert inputs if needed 
  if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- m=prod(f,ws); c=m?wn/m:prod(r,f+ws);  // kludge should be just prod(r,f+ws)
- // call the reduce routine.  m=#cells of w to operate on; c=#atoms in a cell of w (NOT a cell to which u is applied)
+ // call the selected reduce routine.
  ado(jt,m,c,n,AV(z),AV(w));
  // if return is EWOV, it's an integer overflow and we must restart.
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we

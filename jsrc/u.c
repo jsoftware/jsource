@@ -26,7 +26,6 @@ static I jtmultold(J jt,I x,I y){B neg;I a,b,c,p,q,qs,r,s,z;static I m=0x0000000
 // If jt is 0, don't call jsignal when there is an error
 // Returns x*y, or 0 if there is an error (and in that case jsignal might have been called)
 #ifdef DPMULD
-#define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
 I jtmult(J jt, I x, I y){I z; DPMULDDECLS DPMULD(x,y,z,{if(jt)jsignal(EVLIMIT);R 0;}) R z;}
 #else
 I jtmult(J jt, I x, I y){I z;I const lm = 0x00000000ffffffffLL; I const hm = 0xffffffff00000000LL;

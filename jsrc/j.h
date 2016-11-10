@@ -168,6 +168,12 @@
 #define RESTRICTF
 #endif
 
+// If the user switch C_NOMULTINTRINSIC is defined, suppress using it
+#ifdef C_NOMULTINTRINSIC
+#define C_USEMULTINTRINSIC 0
+#else
+#define C_USEMULTINTRINSIC 1
+#endif
 
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
@@ -320,8 +326,11 @@
 #endif
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
-// PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array
+// PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
 #define PROD(result,length,ain) {I _i; if((_i=(length)-1)<0)result=1;else{result=*(ain);if(_i>0){I *_ain=(ain); do{result*=*++_ain;}while(--_i);}}}
+// CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
+// we don't know that the array isn't empty or will be checked later
+#define CPROD(t,z,x,a)if(t)PROD(z,x,a)else RE(z=prod(x,a))
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in
@@ -540,49 +549,62 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define HASH0           0UL
 #endif
 
-#define MULTINC 1 // scaf  set to 1 to engage C multiply code
-// Define extended-precision add
-// Define integer multiply, *z=x*y but jump to the label oflo if integer overflow.
+
+// Define integer multiply, *z=x*y but do something else if integer overflow.
 // Depending on the compiler, the overflowed result may or may not have been stored
 #if SY_64
 #if SY_WIN32 
-#define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
 #define DPMULDECLS I l,h;
 // DPMUL: *z=x*y, execute s if overflow
 #define DPMUL(x,y,z,s) *z=l=_mul128(x,y,&h); if(h+((UI)l>>(BW-1)))s
 #define DPMULDDECLS I h;
 #define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
-// obsolete // DPMULX l=x*y then execute the given lines s1; execute s2 if overflow
-// obsolete #define DPMULX(x,y,s1,s2) l=_mul128(x,y,&h); s1 /* if(h+((UI)l>>(BW-1)))s2 */
-#elif SY_LINUX || SY_MAC
+#elif (SY_LINUX || SY_MAC) && C_USEMULTINTRINSIC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
-#else
-No default version of DPMUL... for 64-bit systems without compiler support - you really need to find an intrinsic
 #endif
+// If no builtin was found, use the standard-C version (64-bit)
+#ifndef DPMULDECLS
+#define DPMULDECLS I _l;D _d;
+#define DPMUL(x,y,z,s) _l=(x)*(y); _d=(D)(x)*(D)(y)-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s  // *z may be the same as x or y
+#define DPMULDDECLS I _l;D _d;
+#define DPMULD(x,y,z,s) _l=(x)*(y); _d=(D)(x)*(D)(y)-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8)s
+#endif
+
 #else  // 32-bit
 #if SY_WIN32
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
-#define DPMULDECLS unsigned __int64 p;
-#define DPMUL(x,y,z,s) p = __emul(x,y); *z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
-#define DPMULDDECLS unsigned __int64 p;
-#define DPMULD(x,y,z,s) p = __emul(x,y); z=(I)p; if((p+0x80000000U)>0xFFFFFFFFU)s
-#elif SY_LINUX || SY_MAC
+#define DPMULDECLS unsigned __int64 _p;
+#define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
+#define DPMULDDECLS unsigned __int64 _p;
+#define DPMULD(x,y,z,s) _p = __emul(x,y); z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
+#elif (SY_LINUX || SY_MAC) && C_USEMULTINTRINSIC
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
-#else      // default version for 32-bit system without compiler support
-should not get here on Windows/Mac?Linux   scaffolding for test
-#define DPMULDECLS D p;
-#define DPMULDDECLS D p;
-#define DPMUL(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; *z=(I)p;
-#define DPMULD(x,y,z,s) p = (D)x*(D)y; if(p>IMAX||p<IMIN)s; z=(I)p;
+#endif
+#ifndef DPMULDECLS
+// If no builtin was found, use the standard-C version (32-bit)
+#define DPMULDECLS D _p;
+#define DPMUL(x,y,z,s) _p = (D)x*(D)y; *z=(I)_p; if(_p>IMAX||_p<IMIN)s
+#define DPMULDDECLS D _p;
+#define DPMULD(x,y,z,s) _p = (D)x*(D)y; z=(I)_p; if(_p>IMAX||_p<IMIN)s
 #endif
 #endif
+// end of multiply builtins
+
+// define single+double-recision integer add
+#if SY_64
+#if SY_WIN32 
+#define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
+#endif
+#endif
+
 #ifndef SPDPADD   // default version for systems without addcarry
 #define SPDPADD(addend, sumlo, sumhi) sumlo += addend; sumhi += (addend > sumlo);
 #endif
+// end of addition builtins
 

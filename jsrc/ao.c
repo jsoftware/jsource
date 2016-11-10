@@ -43,7 +43,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
  y=VAV(self)->f; y=VAV(y)->f; id=vaid(y);
  m=s[0]; m1=m-1;
- n=s[1]; n1=n-1; mn=m*n; d=m+n-1; c=prod(r-2,2+s);
+ n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)*bp(wt)); R z;}
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){

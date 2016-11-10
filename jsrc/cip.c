@@ -14,7 +14,7 @@
 // *pp is number of inner-product muladds
 //   (in each, an atom of a multiplies an item of w)
 static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,p,*ws,wr,wr1;
- ar=AR(a); as=AS(a); ar1=ar?ar-1:0; RE(*pm=m=prod(ar1,  as));  // m=# 1-cells of a
+ ar=AR(a); as=AS(a); ar1=ar?ar-1:0; RE(*pm=m=prod(ar1,as));  // m=# 1-cells of a.  It could overflow, if there are no atoms
  wr=AR(w); ws=AS(w); wr1=wr?wr-1:0; RE(*pn=n=prod(wr1,1+ws)); RE(mn=mult(m,n));  // n=#atoms in 1-cell of w; mn = #atoms in result
  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
@@ -148,9 +148,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #if C_NA   // non-assembler version
     for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,oc,lp;
      x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
-// scaf     DQ(p1, x=zv; c=*u++; DQ(n, DPMULX(c,*v, o=*x; r=o+l; *x++=r; o^=r; r^=l; ++v; if((r&o)<0)++er;, ++er); if(er)break;))
-     // obsolete The h+=os; could be moved into the _addcarry producing h, but the compiler then generates an extra sarb/inc pair.  Somehow referring to os later fixes that. 
-// obsolete      DQ(p1, x=zv; c=*u++; DQ(n, o=*x; DPMULX(c,*v, l cry=_addcarry_u64(0, o, l, &l); _addcarry_u64(cry, 0, h, &h); *x++=l; h += os; if(h += ((UI)l>>(BW-1)))++er; ++v;, ++er);) if(er)break;)
     DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if((oc&o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
     }
 #else

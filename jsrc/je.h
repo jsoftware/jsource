@@ -790,7 +790,6 @@ extern D        jttceil(J,D);
 extern B        jtteq(J,D,D);
 extern D        jttfloor(J,D);
 extern I        jtthv(J,A,I,C*);
-// obsolete extern B        jttlt(J,D,D);
 extern A        jttoc1(J,B,A);
 extern void     jttoutf8x(J,C*,I,US*);
 extern I        jttpop(J,I);

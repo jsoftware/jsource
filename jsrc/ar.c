@@ -411,7 +411,7 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
 
 static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
- m=prod(f,ws); c=m?wn/m:prod(r,f+ws); d=c/2;
+ PROD(m,f,ws); PROD(c,r,f+ws); d=c/2;
  switch(BR2CASE(CTTZ(AT(w)),id)){
   case BR2CASE(B01X,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
   case BR2CASE(B01X,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
@@ -475,7 +475,11 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
   case 1: R tail(w);    // reduce on single items - note that jt->rank is still set
   case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
  }
- 
+ // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
+ // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
+ // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
+ // are no atoms written
+
  // Normal processing for multiple items.  Get the routine & flags to process it
  vains(id,wt,&ado,&cv);
  // If there is no special routine, go perform general reduce
@@ -595,7 +599,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;I n
  if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),one));
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
- zn=AN(w)/n; zm=prod(f,ws); m=zm?AN(w)/(zm*n):prod(r-1,ws+f+1); mn=m*n;
+ zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
  GATV(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
  zv=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w);
@@ -651,8 +655,9 @@ DF1(jtmean){A z;I c,f,m,n,r,wn,wr,*ws,wt;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  wt=AT(w); wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
+ // there must be atoms, so it's OK to PROD infixes of shape
  GATV(z,FL,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
- m=prod(f,ws); c=m?wn/m:prod(r,f+ws);
+ PROD(m,f,ws); PROD(c,r,f+ws);
  if(wt&INT)meanI(m,c,n,DAV(z), AV(w)); 
  else      meanD(m,c,n,DAV(z),DAV(w));
  RE(0); R z;

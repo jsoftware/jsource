@@ -12,7 +12,6 @@
 #define RDECLS  A prevyw
 #define RCALL   CALL1(f1,prevyw=yw,fs)
 #define RDIRECT (wt&DIRECT)
-// obsolete #define RAC     (yw!=prevyw&&ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 #define RARG    {if(yw==prevyw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
 #define RARG1   {if(yw==prevyw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
@@ -20,7 +19,6 @@
 #define RDECLS  A prevya,prevyw
 #define RCALL   CALL2(f2,prevya=ya,prevyw=yw,fs)
 #define RDIRECT (at&DIRECT&&wt&DIRECT)
-// obsolete #define RAC     (yw!=prevyw&&ya!=prevya&&ACUC1>=AC(ya)&&ACUC1>=AC(yw))
 #define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
 // with the shorter frame (when jj==n we have run out of repeats).  Whenever we have to copy, we first
@@ -68,7 +66,7 @@
  // or if there are no results at all; and we can continue until we hit an incompatible result-type.
  // With luck this will process the entire input.
  if(!mn||yt&DIRECT&&RFLAG){I zn;
-  RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of stoms in all result cells (if they stay homogeneous)
+  RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of atoms in all result cells (if they stay homogeneous)
   GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
   if(mn){zv=CAV(z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
   // Establish the point we will free to after each call.  This must be after the allocated result area, and
@@ -82,7 +80,6 @@
    if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
    MC(zv+=k,AV(y),k);   // move the result-cell to the output
    if(cc)tpop(old);  // Now that we have copied to the output area: if we have not reallocated a cell on the stack, free what the verb did
-// obsolete    if(cc&&RAC)tpop(old); else cc=0;  // as long as we have not created a temp cell (& will not create one next time), pop the stack after each cell (??)
  }}
  if(j<mn){A q,*x,yz;
   // Here we were not able to build the result in the output area; type/rank/shape changed.
@@ -101,7 +98,6 @@
  EPILOG(z);  // If the result is boxed, we know we had no wastage at this level except for yz, which is small compared to z
 }
 #undef VALENCE
-// obsolete #undef RAC
 #undef RARG
 #undef RARG1
 #undef RCALL

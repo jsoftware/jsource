@@ -133,24 +133,26 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
 }    /* a -:"r w on sparse arrays */
 
 
-F2(jtmatch){A z;I af,f,m,n,*s,wf;
+F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
  af=jt->rank?AR(a)-jt->rank[0]:0;
  wf=jt->rank?AR(w)-jt->rank[1]:0; jt->rank=0;
  if(af>wf){f=af; s=AS(a); RE(m=prod(wf,s)); RE(n=prod(af-wf,wf+s));}
  else     {f=wf; s=AS(w); RE(m=prod(af,s)); RE(n=prod(wf-af,af+s));}
- GATV(z,B01,m*n,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0,C1);
+ RE(mn=mult(m,n));
+ GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0,C1);
  R z;
 }    /* a -:"r w */
 
-F2(jtnotmatch){A z;I af,f,m,n,*s,wf;
+F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R not(matchs(a,w));
  af=jt->rank?AR(a)-jt->rank[0]:0;
  wf=jt->rank?AR(w)-jt->rank[1]:0; jt->rank=0;
  if(af>wf){f=af; s=AS(a); RE(m=prod(wf,s)); RE(n=prod(af-wf,wf+s));}
  else     {f=wf; s=AS(w); RE(m=prod(af,s)); RE(n=prod(wf-af,af+s));}
- GATV(z,B01,m*n,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1,C0);
+ RE(mn=mult(m,n));
+ GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1,C0);
  R z;
 }    /* a -.@-:"r w */

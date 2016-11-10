@@ -15,15 +15,19 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);  // n=#atoms, ws->shape, wt=type, d=1 if dense
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
- RE(m=prod(r,f+ws));   // m=#atoms in cell
- if((I)jtinplace&JTINPLACEW && (f<wr) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w) && d){  // inplace allowed, result rank (f+1) <= current rank, usecount is right, and it's a dense array
-  // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell)
-  AR(w)=1+f; AS(w)[f]=m; R w;
+ if(!(wt&SPARSE)){
+  CPROD(n,m,r,f+ws);   // m=#atoms in cell
+  if((I)jtinplace&JTINPLACEW && (f<wr) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w)){  // inplace allowed, result rank (f+1) <= current rank, usecount is right, and it's a dense array
+   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell)
+   AR(w)=1+f; AS(w)[f]=m; R w;
+  }
+  // Not inplaceable.  Allocate and copy
+  GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
+  MC(AV(z),AV(w),n*bp(wt)); R RELOCATE(w,z);  // if dense, move the data and relocate it as needed
  }
- // Not inplaceable.  Allocate and copy
- GA(z,wt,d?n:1,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
- if(d){MC(AV(z),AV(w),n*bp(wt)); R RELOCATE(w,z);}  // if dense, move the data and relocate it as needed
  // the rest handles sparse matrix enfile
+ RE(m=prod(r,f+ws));  // # atoms in cell
+ GA(z,wt,1,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
  RZ(b=bfi(wr,SPA(wp,a),1)); 
  if(memchr(b+f,C1,r)){

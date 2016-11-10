@@ -252,7 +252,7 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
- m=prod(f,ws); c=m?AN(w)/m:prod(r,f+ws); n=r?ws[f]:1;
+ PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
  // y is the verb u; id=pseudocharacter for it
  y=VAV(self)->f; id=vaid(VAV(y)->f);
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w

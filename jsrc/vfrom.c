@@ -49,15 +49,15 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,jtifrom);  // split a into cells if needed
- // From here on, execution on a single cell of a (on the entire w)
+ // From here on, execution on a single cell of a (on a single cell of w)
  an=AN(a); wn=AN(w); ws=AS(w);
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
- p=j=wcr?*(ws+wf):1; j=j?j:1;
- RE(m=prod(wf,ws)); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is shape of a foll by shape of cell of w; start with w-shape, which gets the frame
+ p=j=wcr?*(ws+wf):1; j=j?j:1;  // j is #items in a cell of w.  m is #cells of w
+ m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
+ GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is shape of a followed by shape of cell of w; start with w-shape, which gets the frame
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
  av=AV(a); wv=CAV(w); zv=CAV(z); if(an)SETJ(*av);
  if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k/sizeof(D));}

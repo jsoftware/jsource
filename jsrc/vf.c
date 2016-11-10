@@ -99,7 +99,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bp(AT(w));
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
- m=prod(wf,s); n=wcr?s[wf]:1;
+ PROD(m,wf,s); n=wcr?s[wf]:1;
  rot(m,wn/m,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
@@ -204,14 +204,14 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
-F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wr,*ws,zn;
+F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); jt->rank=0;
  if(1<acr||acr<ar)R rank2ex(a,w,0L,MIN(1,acr),wcr,jtreshape);
  RZ(a=vip(a)); r=AN(a); u=AV(a);
  if(SPARSE&AT(w))R reshapesp(a,w,wf,wcr);
- RE(m=prod(r,u)); RE(c=prod(wf,ws)); RE(n=c?AN(w)/c:prod(wcr,wf+ws)); 
+ wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);
  ASSERT(n||!m||jt->fill,EVLENGTH);
  b=jt->fill&&m>n; if(b)RZ(w=setfv(w,w)); 
  t=AT(w); k=bp(t); p=k*m; q=k*n;

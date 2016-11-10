@@ -123,13 +123,14 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
  RZ(a&&w);
  RZ(w=setfv(a,w)); RZ(coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
- RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);
+ RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);   // Allocate list for shape of composite item
+ // Calculate the shape of the result: the shape of the item, max of input shapes
  if(m=MIN(ar,wr)){
   as=ar+AS(a); ws=wr+AS(w); k=r;
   DO(m, --as; --ws; sv[--k]=MAX(*as,*ws);); 
   DO(r-m, sv[i]=MAX(1,sv[i]););
  }
- RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); 
+ RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bp(AT(a));
  if(ARELATIVE(a)||ARELATIVE(w)){AFLAG(z)=AFREL; q=(I)jt->fillv+(I)w-(I)z; mvc(k*zn,x,k,&q);}
@@ -165,26 +166,29 @@ static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
 }}   /* move an argument into the result area */
 
 
-F2(jtover){A z;B b;C*zv;I acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
+F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);  // if either arg is sparse, switch to sparse code
  RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
- if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);
+ if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);  // If appending vectors at infinite rank, go handle that
  acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;
  wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;
  r=acr+wcr?MAX(acr,wcr):1;
+ // if max cell-rank>2, or an argument is empty, or (joining tables with row of different lengths) or something is relative, do general case
  if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||ARELATIVE(a)||ARELATIVE(w)){
   jt->rank=0; R rank2ex(a,w,0L,acr,wcr,jtovg);
  }
  acn=1>=acr?p:p*as[af+acr-2]; ma=!acr&&2==wcr?q:acn;
- wcn=1>=wcr?q:q*ws[wf+wcr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw; 
- b=af<=wf; f=b?wf:af; s=b?ws:as; RE(c=prod(f,s)); RE(zn=mult(c,m));
+ wcn=1>=wcr?q:q*ws[wf+wcr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;
+ PROD(acct,af,as); PROD(wcct,wf,ws);  // Number of cells in a and w; known non-empty shapes
+ if(af<=wf){f=wf; s=ws; c=wcct;}else{f=af; s=as; c=acct;};
+ RE(zn=mult(c,m));
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1; 
  if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}
  k=bp(t);
- om(k,c,prod(af,as),m,ma,acn,ar,zv,     CAV(a)); 
- om(k,c,prod(wf,ws),m,mw,wcn,wr,zv+k*ma,CAV(w));
+ om(k,c,acct,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
+ om(k,c,wcct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
  R z;
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 

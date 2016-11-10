@@ -28,8 +28,8 @@ A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG(0041);A y,y0,yw,z;B wb;C*v,*vv;
  if(wt&SPARSE)R sprank1(w,fs,mr,f1);
  wr=AR(w); ws=AS(w); wcr=efr(wr,mr); wf=wr-wcr; wb=ARELATIVE(w);
  if(!wf)R CALL1(f1,w,fs);
- RE(wcn=prod(wcr,wf+ws)); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;
- p=wf; s=ws; RE(mn=prod(wf,ws));
+ PROD(wcn,wcr,wf+ws); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;  // if this PROD overflows, the reshape below will fail
+ p=wf; s=ws; mn=prod(wf,ws);
  if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,wcr,ws+wf),filler(w)));
 #define VALENCE   1
 #define TEMPLATE  0
@@ -38,7 +38,7 @@ A jtrank1ex(J jt,A w,A fs,I mr,AF f1){PROLOG(0041);A y,y0,yw,z;B wb;C*v,*vv;
 
 // General setup for verbs with IRS that do not go through jtirs[12]
 // A verb u["n] using this function checks to see whether it has multiple cells; if so,
-// it calls here, giving a callback; we split the arguents into cells and call the callback,
+// it calls here, giving a callback; we split the arguments into cells and call the callback,
 // which is often the same original function that called here.
 A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0042);A y,y0,ya,yw,z;B ab,b,wb;
    C*u,*uu,*v,*vv;I acn,acr,af,ak,ar,*as,at,k,mn,n=1,p,q,*s,wcn,wcr,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
@@ -52,8 +52,8 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0042);A y,y0,ya,yw,z;B ab,
  // multiple cells.  Loop through them.
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
  // Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
- RE(acn=prod(acr,as+af)); ak=acn*bp(at); u=CAV(a)-ak; NEWYA;
- RE(wcn=prod(wcr,ws+wf)); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;
+ PROD(acn,acr,as+af); ak=acn*bp(at); u=CAV(a)-ak; NEWYA;  // if this PROD overflows, the reshape below will catch it
+ PROD(wcn,wcr,ws+wf); wk=wcn*bp(wt); v=CAV(w)-wk; NEWYW;
  // b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
  // mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
  //  from shorter-frame argument
@@ -143,58 +143,6 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l,r,*v=AV(h),wr;
  R l<ar||r<wr?rank2ex(a,w,fs,l,r,f2):CALL2(f2,a,w,fs);
 }
 
-/* obsolete
-// Select action routines and flags for u"n based on the verb u and the ranks n.  r0 is rank being installed in the monad
-static void qqset(A a,I r0,AF*f1,AF*f2,I*flag){A f,g;C c,d,e,p,q;I m=0;V*v;
- static C at1[]={CFLOOR,CLE,CCEIL,CGE,CPLUS,CPLUSDOT,CPLUSCO, 
-   CSTAR,CSTARDOT,CSTARCO,CMINUS,CNOT,CHALVE,CDIV,CSQRT,CEXP,CLOG, 
-   CSTILE,CBANG,CLEFT,CRIGHT,CQUERY,CHGEOM,CJDOT,CCIRCLE, 
-   CPCO,CQCO,CRDOT,CTDOT,CXCO,0};  // f monad <-> f"r monad
- static C ir1[]={CCOMMA,CLAMIN,CLEFT,CRIGHT,CCANT,CROT,CTAKE,CDROP,CGRADE,CDGRADE,
-   CBOX,CNE,CTAIL,CCTAIL,CSLASH,CBSLASH,CBSDOT,CCOMDOT,CPCO,CATDOT,0};
- static C ir2[]={CCOMMA,CLAMIN,CLEFT,CRIGHT,CCANT,CROT,CTAKE,CDROP,CGRADE,CDGRADE,
-   CDOLLAR,CPOUND,CIOTA,CICO,CEPS,CLBRACE,CMATCH,
-   CEQ,CLT,CMIN,CLE,CGT,CMAX,CGE,CPLUS,CPLUSDOT,CPLUSCO,CSTAR,CSTARDOT,CSTARCO,
-   CMINUS,CDIV,CEXP,CNE,CSTILE,CBANG,CCIRCLE,0};
- // For noun u, set flags to empty and use the constant routines
- if(NOUN&AT(a)){*f1=cons1; *f2=cons2; *flag=0; R;}
- // Verb u.  Calculate m, the flags to use for u.  We set VIRSx if the verb is a primitive with known
- // IRS, or if u has a IRS flags set (except when that flag came from execution of ")
- v=VAV(a); c=v->id;
- if(strchr(ir1,c))m+=VIRS1;
- if(strchr(ir2,c))m+=VIRS2;
- if(!(m&VIRS1)&&v->flag&VIRS1&&c!=CQQ)m+=VIRS1;
- if(!(m&VIRS2)&&v->flag&VIRS2&&c!=CQQ)m+=VIRS2;
- // If u does not have intrinsic IRS, see if it is a combination that has IRS
- if(!m){
-  p=0; if(f=v->f){d=ID(f);p=VERB&AT(f)&&strchr(ir2,d);};  // p=1 if f has IRS2
-  q=0; if(g=v->g){e=ID(g);q=VERB&AT(g)&&strchr(ir2,e);};  // q=1 if g has IRS2
-  switch(c){
-   case CFIT:   if(p&&d!=CEXP)m+=VIRS2; if(d==CNE)m+=VIRS1; break;  // u!.n, preserve IRS2 except for ^!.n; preserve IRS1 for ~:!.n (nub sieve)
-   case CTILDE: if(p)m+=VIRS1+VIRS2; break;   // u~, set IRS if dyad u has IRS2
-   case CAMP:   if(p&&NOUN&AT(g)||q&&NOUN&AT(f))m+=VIRS1; break;   // u&n or m&v, preserve IRS2 of the verb 
-   case CFORK:  if(v->f1==(AF)jtmean)m+=VIRS1;   // mean is also supported by IRS1  (kludge - should set flag when mean detected)
- }}
-
- // Set m to the verb flags, which we will use to select the action routine, based on whether u supports IRS.
- // VISATOMIC1 overrides IRS1.
- I nm = v->flag&(VIRS1|VIRS2|VISATOMIC1);
- if(nm&VISATOMIC1)nm|=VIRS1;  // scaf
- if((~nm)&(m&(VIRS1|VIRS2)))
-  *((I*)0)=0;  // scaf
- 
- // We have m.  Now decide the return routines.  If the rank is nugatory, skip it & preserve the original routine pointer.
- // Otherwise, use the driver routine that executes irs? or rank?ex for the verb
- // I think this can be improved, by detecting the nugatory case by looking at the verb ranks.  This code may go back to
- // the time when arithmetic verbs had infinite rank.
- // Preserve the INPLACE flags from u - but only when irs etc can handle them!
- // not yet m |= v->flag&(VINPLACEOK1|VINPLACEOK2);
-// obsolete *f1=strchr(at1,c) ? v->f1 : m&VIRS1 ? rank1i : rank1;
- *f1=nm&VISATOMIC1 ? v->f1 : nm&VIRS1 ? rank1i : rank1;
- *f2=                        nm&VIRS2 ? rank2i : rank2; 
- *flag=0;  // u"n itself does not support IRS - it IS IRS, and requires explicit rank is rank is applied to it
-}
-*/
 
 // a"w; result is a verb
 F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;

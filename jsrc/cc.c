@@ -47,7 +47,7 @@ static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k
  if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
   if     (2==AN(a)&&1==AR(w))R cut02v(a,w);
   else if(4>=AN(a)&&2==AR(w))R cut02m(a,w);
- as=AS(a); m=AR(a)-2; RE(n=prod(m,as)); c=as[1+m]; u=AV(a);
+ as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);
  ASSERT(2==as[m]&&c<=AR(w),EVLENGTH);
  if(!n){  /* empty result; figure out result type */
   switch(d){

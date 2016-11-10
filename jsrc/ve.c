@@ -17,7 +17,6 @@
 
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
-// obsolete if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u+v; *z=w; ++x; ++y; ++z; u^=w; v^=w; if((u&v)<0)++oflo;}}
  // overflow is (input signs equal) and (result sign differs from one of them)
  if(1==n) DQ(m, u=*x; v=*y; w=~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if((w&v)<0)++oflo;)
  else if(b)DO(m, u=*x++; I thresh = IMIN-u; if (u<=0){DO(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DO(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
@@ -45,7 +44,6 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
 
 // II subtract, noting overflow and leaving it, possibly in place
 AHDR2(minusII,I,I,I){I u;I v;I w;I oflo=0;
-// obsolete if(1==n)  {I *ep = z+m; while(z!=ep){u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; u^=w; v=~v; v^=w; if((u&v)<0)++oflo;}}
  // overflow is (input signs differ) and (result sign differs from minuend sign)
  if(1==n)  {DQ(m, u=*x; v=*y; w=u-v; *z=w; ++x; ++y; ++z; v^=u; u^=w; if((u&v)<0)++oflo;)}
 // if u<0, oflo if u-v < IMIN => v > u-IMIN; if u >=0, oflo if u-v>IMAX => v < u+IMIN+1 => v <= u+IMIN => v <= u-IMIN
@@ -71,7 +69,6 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
  if(oflo)jt->jerr=EWOVIP+EWOVIPMINUSIB;
 }
 
-#if MULTINC
 // II multiply, in double precision
 AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;if(jt->jerr)R; I *zi=z;
  if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo); ; z++; x++; y++; )
@@ -80,9 +77,6 @@ AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;if(jt->jerr)R; I *zi=z;
 exit: jt->mulofloloc += z-zi; R;
 oflo: jt->jerr = EWOVIP+EWOVIPMULII; *x=u; *y=v; goto exit;  // back out the last store, in case it's in-place; gcc stores before overflow
 }
-#else
-AOVF(tymesII, I,I,I, TYMESVV,TYMES1V,TYMESV1)
-#endif
 
 // BI multiply, using clear/copy
 AHDR2(tymesBI,I,B,I){B u;I v;
@@ -155,10 +149,6 @@ AHDR2(tymesIIO,D,I,I){I u,v;
 // The comments indicate special cases that are defined by verbs that don't follow the
 // AOVF/AIFX/ANAN etc. template
 
-#if 0  // scaf
-AOVF( plusII, I,I,I,  PLUSVV, PLUS1V, PLUSV1)
-AOVF(minusII, I,I,I, MINUSVV,MINUS1V,MINUSV1)   
-#endif
 
 // These routines are used by sparse processing, which doesn't do in-place overflow
 APFX( plusIO, D,I,I,  PLUSO)
@@ -290,7 +280,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  an=AN(a); ar=AR(a); as=AS(a); av=AV(a);
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
  ASSERT(!ICMP(as,ws,r),EVLENGTH);
- if(an&&wn){m=prod(r,s); n=prod(b?ar-r:wr-r,r+s);}else m=n=0; 
+ if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
  if(!wr&&p&&!(p&p1)){
@@ -320,7 +310,7 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=r?*(s+r-1):1;
  ASSERT(t&DENSE,EVNONCE);
  if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
- if(c)m=n/c; else RE(m=prod(r-1,s));
+ CPROD(n,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
  if(c)DO(m, p=0; d=1; DO(c, if(*--v)p+=d; d+=d;); *--x=p;)
  else memset(x-m,C0,m*SZI);

@@ -94,7 +94,7 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  ASSERT(BIT&AT(w),EVDOMAIN);
  wr=AR(w);
  if(1>=wr)R sc(bitsum(AN(w),UAV(w)));
- ws=AS(w); m=*ws; if(m)n=AN(w)/m; else RE(n=prod(wr-1,1+ws)); 
+ ws=AS(w); m=*ws; if(m)n=AN(w)/m; else PROD(n,wr-1,1+ws); 
  GATV(z,INT,n,wr-1,1+ws); zv=AV(z); memset(zv,C0,SZI*n);
  if(!n)R z;
  if(!m){memset(zv,C0,n*SZI); R z;}

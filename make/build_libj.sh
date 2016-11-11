@@ -17,14 +17,14 @@ linux_j32) # linux x86
 TARGET=libj.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
-COMPILE="$common -m32 -msse2 -mfpmath=sse "
+COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl -o libj.so "
 ;;
 linux_j64) # linux x86
 TARGET=libj.so
-COMPILE="$common -DC_NA=0"
+COMPILE="$common -DC_NOMULTINTRINSIC "
 LINK=" $jgit/asm/linuxasm64.o -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

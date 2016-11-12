@@ -11,10 +11,9 @@
 /* fp   zv=.+/\ xv    1<n */
 /* fs   zv=.+/\.xv    1<n */
 
-#if !C_NA
+#if 0 //! #if !C_NA
 #if SY_WIN32 && !SY_64 && !SY_WINCE
 #define OVF
-
 #define PLUSVV(m,z,x,y)                 \
 {                                       \
 __asm        mov  ecx,m                 \

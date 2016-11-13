@@ -611,3 +611,10 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 // end of addition builtins
 
+// Create (x&y) where x and y are signed, so we can test for overflow.
+#if SY_WIN32
+#define XANDY(x,y) ((x)&(y))
+#else
+#define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
+#endif
+

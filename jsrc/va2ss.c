@@ -132,7 +132,7 @@ SSINGF2(jtssplus) SSNUMPREFIX
    R z;}
   case SSINGII:
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av + wv;
-   if (((zv^av)&(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (XANDY((zv^av),(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGDD:
    {
@@ -162,7 +162,7 @@ SSINGF2(jtssminus) SSNUMPREFIX
    R z;}
   case SSINGII:
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av - wv;
-   if (((zv^av)&~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (XANDY((zv^av),~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
    R z;}
   case SSINGDD:
    {

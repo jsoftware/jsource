@@ -115,83 +115,83 @@ r =: bx u"u"u by
 xyzs =: xs;ys;$r  NB. Used to predict allocation
 NB. For each precision combination, verify identical result
 assert. (0;xyzs;allopred) checkallosize 7!:2 'tr =: bx u by'
-assert. r -: tr [ 0 [  'tr =: bx u by'
+assert. r -: tr [ 00 [  'tr =: bx u by'
 assert. (1;xyzs;allopred) checkallosize 7!:2 'tr =: bx u iy'
-assert. r -: tr [ 0 [  'tr =: bx u iy'
+assert. r -: tr [ 01 [  'tr =: bx u iy'
 assert. (2;xyzs;allopred) checkallosize 7!:2 'tr =: bx u dy'
-assert. r -: tr [ 0 [  'tr =: bx u dy'
+assert. r -: tr [ 02 [  'tr =: bx u dy'
 assert. (3;xyzs;allopred) checkallosize 7!:2 'tr =: ix u by'
-assert. r -: tr [ 0 [ 'tr =: ix u by'
+assert. r -: tr [ 03 [ 'tr =: ix u by'
 assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
-assert. r -: tr [ 0 [ 'tr =: ix u iy'
+assert. r -: tr [ 04 [ 'tr =: ix u iy'
 assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
-assert. r -: tr [ 0 [ 'tr =: ix u dy'
+assert. r -: tr [ 05 [ 'tr =: ix u dy'
 assert. (6;xyzs;allopred) checkallosize 7!:2 'tr =: dx u by'
-assert. r -: tr [ 0 [ 'tr =: dx u by'
+assert. r -: tr [ 06 [ 'tr =: dx u by'
 assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
-assert. r -: tr [ 0 [ 'tr =: dx u iy'
+assert. r -: tr [ 07 [ 'tr =: dx u iy'
 assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
-assert. r -: tr [ 0 [ 'tr =: dx u dy'
+assert. r -: tr [ 08 [ 'tr =: dx u dy'
 NB. Verify nothing modified in place
 assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
 NB. Make x inplaceable.  Verify correct result
 tx =: 3!:2 (3!:1) bx
 assert. (9;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
-assert. r -: tx [ 0 [ 'tx =: bx u by'
+assert. r -: tx [ 10 [ 'tx =: tx u by'
 tx =: 3!:2 (3!:1) bx
 assert. (10;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. r -: tx [ 0 [ 'tx =: bx u iy'
+assert. r -: tx [ 11 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) bx
 assert. (11;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 0 [ 'tx =: bx u dy'
+assert. r -: tx [ 12 [ 'tx =: tx u dy'
 tx =: 3!:2 (3!:1) ix
 assert. (12;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
-assert. r -: tx [ 0 [ 'tx =: ix u by'
+assert. r -: tx [ 13 [ 'tx =: tx u by'
 tx =: 3!:2 (3!:1) ix
 assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. r -: tx [ 0 [ 'tx =: ix u iy'
+assert. r -: tx [ 14 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) ix
 assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 0 [ 'tx =: ix u dy'
+assert. r -: tx [ 15 [ 'tx =: tx u dy'
 tx =: 3!:2 (3!:1) dx
 assert. (15;xyzs;allopred) checkallosize 7!:2 'tx =: tx u by'
-assert. r -: tx [ 0 [ 'tx =: dx u by'
+assert. r -: tx [ 16 [ 'tx =: tx u by'
 tx =: 3!:2 (3!:1) dx
 assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. r -: tx [ 0 [ 'tx =: dx u iy'
+assert. r -: tx [ 17 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) dx
 assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 0 [ 'tx =: dx u dy'
+assert. r -: tx [ 18 [ 'tx =: tx u dy'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
 NB. Make y inplaceable.  Verify correct result
 ty =: 3!:2 (3!:1) by
 assert. (18;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
-assert. r -: ty [ 0 [ 'ty =: bx u by'
+assert. r -: ty [ 20 [ 'ty =: bx u ty'
 ty =: 3!:2 (3!:1) iy
 assert. (19;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
-assert. r -: ty [ 0 [ 'ty =: bx u iy'
+assert. r -: ty [ 21 [ 'ty =: bx u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (20;xyzs;allopred) checkallosize 7!:2 'ty =: bx u ty'
-assert. r -: ty [ 0 [ 'ty =: bx u dy'
+assert. r -: ty [ 22 [ 'ty =: bx u ty'
 ty =: 3!:2 (3!:1) by
 assert. (21;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. r -: ty [ 0 [ 'ty =: ix u by'
+assert. r -: ty [ 23 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) iy
 assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. r -: ty [ 0 [ 'ty =: ix u iy'
+assert. r -: ty [ 24 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. r -: ty [ 0 [ 'ty =: ix u dy'
+assert. r -: ty [ 25 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) by
 assert. (24;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 0 [ 'ty =: dx u by'
+assert. r -: ty [ 26 [ 'ty =: dx u ty'
 ty =: 3!:2 (3!:1) iy
 assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 0 [ 'ty =: dx u iy'
+assert. r -: ty [ 27 [ 'ty =: dx u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 0 [ 'ty =: dx u dy'
+assert. r -: ty [ 28 [ 'ty =: dx u ty'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> bx;by;ix;iy;dx;dy
 end.
@@ -214,43 +214,43 @@ NB. Get result with all looping performed in rank conjunction
 r =: ix u"u"u iy
 NB. For each precision combination, verify identical result
 assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
-assert. r -: tr [ 1 [ 'tr =: ix u iy'
+assert. r -: tr [ 30 [ 'tr =: ix u iy'
 assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
-assert. r -: tr [ 1 [ 'tr =: ix u dy'
+assert. r -: tr [ 31 [ 'tr =: ix u dy'
 assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
-assert. r -: tr [ 1 [ 'tr =: dx u iy'
+assert. r -: tr [ 32 [ 'tr =: dx u iy'
 assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
-assert. r -: tr [ 1 [ 'tr =: dx u dy'
+assert. r -: tr [ 33 [ 'tr =: dx u dy'
 NB. Verify nothing modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 NB. Make x inplaceable.  Verify correct result
 tx =: 3!:2 (3!:1) ix
 assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. r -: tx [ 1 [ 'tx =: ix u iy'
+assert. r -: tx [ 40 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) ix
 assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 1 [ 'tx =: ix u dy'
+assert. r -: tx [ 41 [ 'tx =: ix u dy'
 tx =: 3!:2 (3!:1) dx
 assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. r -: tx [ 1 [ 'tx =: dx u iy'
+assert. r -: tx [ 42 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) dx
 assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 1 [ 'tx =: dx u dy'
+assert. r -: tx [ 43 [ 'tx =: tx u dy'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 NB. Make y inplaceable.  Verify correct result
 ty =: 3!:2 (3!:1) iy
 assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. r -: ty [ 1 [ 'ty =: ix u iy'
+assert. r -: ty [ 50 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. r -: ty [ 1 [ 'ty =: ix u dy'
+assert. r -: ty [ 51 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) iy
 assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 1 [ 'ty =: dx u iy'
+assert. r -: ty [ 52 [ 'ty =: dx u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 1 [ 'ty =: dx u dy'
+assert. r -: ty [ 53 [ 'ty =: dx u ty'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 end.
@@ -286,43 +286,43 @@ NB. IMAX+IMIN may lose precision if INTs are 64-bit.  We are mainly making sure 
 NB. turn IMIN to IMAX or vice versa
 fuzz =. IF64 { 8 16384 
 assert. (4;xyzs;allopred) checkallosize 7!:2 'tr =: ix u iy'
-assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: ix u iy'
+assert. *./ , fuzz > | r - tr [ 60 [ 'tr =: ix u iy'
 assert. (5;xyzs;allopred) checkallosize 7!:2 'tr =: ix u dy'
-assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: ix u dy'
+assert. *./ , fuzz > | r - tr [ 61 [ 'tr =: ix u dy'
 assert. (7;xyzs;allopred) checkallosize 7!:2 'tr =: dx u iy'
-assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: dx u iy'
+assert. *./ , fuzz > | r - tr [ 62 [ 'tr =: dx u iy'
 assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
-assert. *./ , fuzz > | r - tr [ 1 [ 'tr =: dx u dy'
+assert. *./ , fuzz > | r - tr [ 63 [ 'tr =: dx u dy'
 NB. Verify nothing modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 NB. Make x inplaceable.  Verify correct result
 tx =: 3!:2 (3!:1) ix
 assert. (13;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: ix u iy'
+assert. *./ , fuzz > | r - tx [ 70 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) ix
 assert. (14;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: ix u dy'
+assert. *./ , fuzz > | r - tx [ 71 [ 'tx =: tx u dy'
 tx =: 3!:2 (3!:1) dx
 assert. (16;xyzs;allopred) checkallosize 7!:2 'tx =: tx u iy'
-assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: dx u iy'
+assert. *./ , fuzz > | r - tx [ 72 [ 'tx =: tx u iy'
 tx =: 3!:2 (3!:1) dx
 assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. *./ , fuzz > | r - tx [ 1 [ 'tx =: dx u dy'
+assert. *./ , fuzz > | r - tx [ 73 [ 'tx =: tx u dy'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 NB. Make y inplaceable.  Verify correct result
 ty =: 3!:2 (3!:1) iy
 assert. (22;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: ix u iy'
+assert. *./ , fuzz > | r - ty [ 80 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (23;xyzs;allopred) checkallosize 7!:2 'ty =: ix u ty'
-assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: ix u dy'
+assert. *./ , fuzz > | r - ty [ 81 [ 'ty =: ix u ty'
 ty =: 3!:2 (3!:1) iy
 assert. (25;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: dx u iy'
+assert. *./ , fuzz > | r - ty [ 82 [ 'ty =: dx u ty'
 ty =: 3!:2 (3!:1) dy
 assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. *./ , fuzz > | r - ty [ 1 [ 'ty =: dx u dy'
+assert. *./ , fuzz > | r - ty [ 83 [ 'ty =: dx u ty'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> ix;iy;dx;dy
 end.
@@ -339,19 +339,19 @@ NB. Get result with all looping performed in rank conjunction
 r =: dx u"u"u dy
 NB. For each precision combination, verify identical result
 assert. (8;xyzs;allopred) checkallosize 7!:2 'tr =: dx u dy'
-assert. r -: tr [ 2 [ 'tr =: dx u dy'
+assert. r -: tr [ 90 [ 'tr =: dx u dy'
 NB. Verify nothing modified in place
 assert. svxy -: 3!:1&.> dx;dy
 NB. Make x inplaceable.  Verify correct result
 tx =: 3!:2 (3!:1) dx
 assert. (17;xyzs;allopred) checkallosize 7!:2 'tx =: tx u dy'
-assert. r -: tx [ 2 [ 'tx =: dx u dy'
+assert. r -: tx [ 91 [ 'tx =: tx u dy'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> dx;dy
 NB. Make y inplaceable.  Verify correct result
 ty =: 3!:2 (3!:1) dy
 assert. (26;xyzs;allopred) checkallosize 7!:2 'ty =: dx u ty'
-assert. r -: ty [ 2 [ 'ty =: dx u dy'
+assert. r -: ty [ 92 [ 'ty =: dx u ty'
 NB. Verify originals not modified in place
 assert. svxy -: 3!:1&.> dx;dy
 end.

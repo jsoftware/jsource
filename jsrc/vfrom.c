@@ -31,12 +31,12 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
 #define SETJ(jexp)    {j=(jexp); if(0<=j)ASSERT(j<p,EVINDEX) else{j+=p; ASSERT(0<=j,EVINDEX);}}
 
 #define IFROMLOOP(T)        \
- {T   *v=(T*)wv,*x=(T*)zv;  \
+ {T   * RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
   if(1==an){v+=j;   DO(m,                                    *x++=*v;       v+=p; );}  \
   else              DO(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
 #define IFROMLOOP2(T,qexp)  \
- {T*u,*v=(T*)wv,*x=(T*)zv;  \
+ {T* RESTRICT u,* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
   q=(qexp); pq=p*q;         \
   if(1==an){v+=j*q; DO(m,                     u=v;     DO(q, *x++=*u++;);   v+=pq;);}  \
   else              DO(m, DO(an, SETJ(av[i]); u=v+j*q; DO(q, *x++=*u++;);); v+=pq;);   \
@@ -52,14 +52,27 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
  // From here on, execution on a single cell of a (on a single cell of w)
  an=AN(a); wn=AN(w); ws=AS(w);
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
- // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
+ // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
-// if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
- p=j=wcr?*(ws+wf):1; j=j?j:1;  // j is #items in a cell of w.  m is #cells of w
- m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is shape of a followed by shape of cell of w; start with w-shape, which gets the frame
+// if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;     defer this pending analysis
+ // If w is empty, portions of its shape may overflow during calculations, and there is no data to move (we still need to
+ // audit for index error, though).  If w is not empty, there is no need to check for such overflow.  So we split the computation here.
+ // Either way, we need   zn: #atoms in result   p: #items in a cell of w
+ p=wcr?*(ws+wf):1;
+ if(wn){
+ // For copying items, we need to compute:
+ // j: same as p, but 1 if there are no items   m: #cells in w
+ // k: stride between items of a cell of w   wk: stride between cells of w 
+  j=p?p:1;  // j is #items in a cell of w.  m is #cells of w
+  m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
+ } else {zn=0;}  // No data to move
+ // Allocate the result area and fill in the shape
+ GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of cell of w; start with w-shape, which gets the frame
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
- av=AV(a); wv=CAV(w); zv=CAV(z); if(an)SETJ(*av);
+ av=AV(a);  // point to the selectors
+ if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
+ // from here on we are moving items
+ wv=CAV(w); zv=CAV(z); if(an)SETJ(*av);
  if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k/sizeof(D));}
  else switch(k){
   case sizeof(C): IFROMLOOP(C); break; 

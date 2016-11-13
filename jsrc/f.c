@@ -703,7 +703,7 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
 // lb is jt->outmaxbefore: number of leading lines to display
 // la is jt->outmaxafter: number of trailing lines to display
 static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*zu,*zv;D lba;
-     I c,c1,h,i,j,k,lc,m,n,nbx,nq,p,q,r,*s,t,zn;
+     I c,c1,h,i,j,k,lc,m,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
  jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bp(AT(y));
@@ -711,10 +711,12 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char
  r=AR(y); s=AS(y); v=CAV(y);
- // q=#lines in a 2-cell, c=#chars in a row, n=#2-cells, nq=total # lines (without spacing)
- q=1<r?s[r-2]:1; c=r?s[r-1]:1; RE(n=prod(r-2,s)); RE(nq=mult(n,q));
  // m=length of EOL sequence; *eov=EOL sequence
  if(ieol){m=2; eov[0]=CCR; eov[1]=CLF;}else{m=1; eov[0]=CLF; eov[1]=0;}
+ // q=#lines in a 2-cell, c=#chars in a row, n=#2-cells, nq=total # lines (without spacing)
+// obsolete  q=1<r?s[r-2]:1; c=r?s[r-1]:1; RE(n=prod(r-2,s)); RE(nq=mult(n,q));
+ // if w is empty the values could overflow.  In that case, just display nothing
+ q=1<r?s[r-2]:1; c=r?s[r-1]:1; nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); CAV(z)[m]=0; R z;}
  // c1=#characters to put out per line, lba=max # lines to put out
  c1=MIN(c,maxlen); lba=(D)lb+la;
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2
@@ -786,7 +788,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
     }
     break;
    }
-  // If input was not character type, it will bnot contain squirrely sequences (boxing will have translated them to spaces),
+  // If input was not character type, it will not contain squirrely sequences (boxing will have translated them to spaces),
   // so we copy the first c1 characters and skip over the surplus, appending ... if there is a surplus.
   // But if there are UTF-8 characters in the mix, check each character and translate it if UTF-8
   // No internal newlines are possible unless the original w was character type (in boxes, they were changed to space)

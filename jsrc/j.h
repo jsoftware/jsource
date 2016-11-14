@@ -150,7 +150,12 @@
 #define UNDERFLOW       ((D)4.450147717014403e-308)
 #endif
 
-//
+// RESTRICT causes the compiler to generate better code by assuming no overlap of regions pointed to by pointers
+// We use RESTRICT for routines that operate in-place on an argument.  This is strictly speaking a violation of the rule,
+// but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
+// the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
+// after writing to *z, so we don't turn RESTRICT on for 32-bit
+#if SY_64
 #if SY_WIN32 
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
@@ -160,6 +165,7 @@
 #if SY_LINUX || SY_MAC
 #define RESTRICT __restrict
 // No RESTRICTF on GCC
+#endif
 #endif
 #ifndef RESTRICT
 #define RESTRICT

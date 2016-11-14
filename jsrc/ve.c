@@ -18,7 +18,8 @@
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;
  // overflow is (input signs equal) and (result sign differs from one of them)
- if(1==n) DQ(m, u=*x; v=*y; w=~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if(XANDY(w,v)<0)++oflo;)
+ // If u==0, v^=u is always 0 & therefore no overflow
+ if(1==n) DQ(m, u=*x; v=*y; w= ~u; u+=v; *z=u; ++x; ++y; ++z; w^=v; v^=u; if(XANDY(w,v)<0)++oflo;)
  else if(b)DO(m, u=*x++; I thresh = IMIN-u; if (u<=0){DO(n, v=*y; if(v<thresh)++oflo; v=u+v; *z++=v; y++;)}else{DO(n, v=*y; if(v>=thresh)++oflo; v=u+v; *z++=v; y++;)})
  else      DO(m, v=*y++; I thresh = IMIN-v; if (v<=0){DO(n, u=*x; if(u<thresh)++oflo; u=u+v; *z++=u; x++;)}else{DO(n, u=*x; if(u>=thresh)++oflo; u=u+v; *z++=u; x++;)})
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSII;

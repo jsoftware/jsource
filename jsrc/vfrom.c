@@ -42,7 +42,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   else              DO(m, DO(an, SETJ(av[i]); u=v+j*q; DO(q, *x++=*u++;);); v+=pq;);   \
  }
 
-F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws,zn;
+F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  // This routine is implemented as if it had infinite rank: if no rank is specified, it operates on the entire
  // a (and w).  This has implications for empty arguments.
@@ -61,18 +61,18 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
  p=wcr?*(ws+wf):1;
  if(wn){
  // For copying items, we need to compute:
- // j: same as p, but 1 if there are no items   m: #cells in w
- // k: stride between items of a cell of w   wk: stride between cells of w 
-  j=p?p:1;  // j is #items in a cell of w.  m is #cells of w
-  m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
+ // m: #cells in w   k: stride between items of a cell of w   wk: stride between cells of w
+// obsolete  j=p?p:1;  // j is #items in a cell of w.  m is #cells of w
+// obsolete   m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
+  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of cell of w; start with w-shape, which gets the frame
+ GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
  av=AV(a);  // point to the selectors
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
- wv=CAV(w); zv=CAV(z); if(an)SETJ(*av);
+ wv=CAV(w); zv=CAV(z); SETJ(*av);
  if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k/sizeof(D));}
  else switch(k){
   case sizeof(C): IFROMLOOP(C); break; 
@@ -139,7 +139,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcn,wcr,wf,wk,wn,wr,*ws
 
 #define INNER1B(T)  {T*v=(T*)wv,*x=(T*)zv; v+=*av; DO(m, *x++=*v; v+=p;);}
 
-static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf,wk,wn,wr,*ws,zn;
+// a is boolean
+static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
@@ -150,9 +151,15 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcn,wcr,wf
 // if(an==0 && wn==0 && ws[wf]==0)wcr=wr=0;
  p=wcr?*(ws+wf):1; q=an/SZI; r=an%SZI;
  ASSERT(2<=p||1==p&&all0(a)||!p&&!an,EVINDEX);
- p=p?p:1; RE(m=prod(wf,ws)); RE(zn=mult(an,wn/p)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/p; wk=p*k;
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws); 
+ // We always need zn, the number of result atoms
+ if(wn){
+  // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
+  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
+// obsolete  p=p?p:1; RE(m=prod(wf,ws)); RE(zn=mult(an,wn/p)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/p; wk=p*k;
+ }else{zn=0;}
+ GA(z,AT(w),zn,ar+wr-(0<wcr),ws);
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
+ if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
  switch(k+k+(1==an)){
   case   2*sizeof(I): BNNERN(I);   break;
@@ -261,23 +268,30 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,k,n,t,*v,*ws;
  R 1;
 }    /* verify that <"1 a is valid for (<"1 a){w */
 
-static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I c,d,e,j,k,m,pn,pr,*pv,
-  qn,qr,*qv,*s,wf,wk,wr,*ws,zn;
+static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTRICT pv,
+  qn,qr,* RESTRICT qv,* RESTRICT s,wf,wk,wr,* RESTRICT ws,zn;
  wr=AR(w); ws=AS(w); wf=wr-r; wk=bp(AT(w));
  pn=AN(p); pr=AR(p); pv=AV(p);
  qn=AN(q); qr=AR(q); qv=AV(q);
- RE(m=prod(wf,ws)); RE(c=prod(r,ws+wf)); e=ws[1+wf]; d=c?c/(e*ws[wf]):0;
- RE(zn=mult(m,mult(pn,mult(qn,d))));
+ if(AN(w)){
+// obsolete  RE(m=prod(wf,ws)); RE(c=prod(r,ws+wf)); e=ws[1+wf]; d=c?c/(e*ws[wf]):0;
+// obsolete  RE(zn=mult(m,mult(pn,mult(qn,d))));
+  // Set zn=#atoms of result  d=#atoms in a _2-cell of cell of w
+  // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
+  PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
+ }else{zn=0;}
  GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
  s=AS(z)+wf; ICPY(s,AS(p),pr); 
  s+=pr;      ICPY(s,AS(q),qr);
  s+=qr;      ICPY(s,ws+wf+2,r-2);
+ if(!zn)R z;  // If no data to move, exit with empty.  Rank is right
  wv=CAV(w); zv=CAV(z); 
- switch(k=d*wk){
-  default:        {C*v=wv,*x=zv-k;I n=c*wk;
+ switch(k=d*wk){   // k=*bytes in a _2-cell of a cell of w
+  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
    DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;); R z;}
-#define INNER2(T) {T*v=(T*)wv,*x=(T*)zv;I n=c/d; \
-   DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}
+// obsolete #define INNER2(T) {T*v=(T*)wv,*x=(T*)zv;I n=c/d;
+#define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
+   DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}  // n=#_2-cells in a cell of w
   case sizeof(C): INNER2(C);
   case sizeof(S): INNER2(S);
 #if SY_64

@@ -391,12 +391,21 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wr,zn;
+F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wn,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
- f=wr-r; s=AS(w); m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1;
- RE(zn=mult(m,n)); GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
- if(!c||1>=n)R reshape(shape(z),IX(n));
+ f=wr-r; s=AS(w);
+ // Calculate m: #cells in w   n: #items in a cell of w   c: #atoms in a cell of w
+ n=r?s[f]:1; if(wn=AN(w)){
+  // If w is not empty, it must have an acceptable number of cells
+// obsolete  m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1; RE(zn=mult(m,n));
+  PROD(m,f,s); PROD(c,r,f+s); zn=m*n;
+ }else{
+  // empty w.  The number of cells may overflow, but reshape will catch that
+  RE(zn=mult(prod(f,s),n));
+ }
+ GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
+ if(!wn||1>=n)R reshape(shape(z),IX(n));
  if     (t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z)))
  else if(t&SBT            )RZ(grs(m,c,n,w,AV(z)))
  else if(t&FL             )RZ(grd(m,c,n,w,AV(z)))

@@ -326,8 +326,8 @@ x -: i{ x=: 2x
 'index error'  -: _3        { etx a                           
 'index error'  -: (<0 _4 0) { etx a                    
 'index error'  -: (<2 0)    { etx a                       
-'index error'  -:  -: (0 1 2 1) {"2 etx i. 1e9 1e9 1e9 3 0 4
-'index error'  -:  -: (0) {"2 etx i. 1e9 1e9 1e9 3 0 4
+'index error'  -:  (0 1 2 1) {"2 etx i. 1e9 1e9 1e9 3 0 4
+'index error'  -:  (0) {"2 etx i. 1e9 1e9 1e9 3 0 4
 
 
 NB. x{y boxed indices ---------------------------------------------------

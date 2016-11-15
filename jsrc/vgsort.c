@@ -213,7 +213,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr;
  wcr=jt->rank?jt->rank[1]:AR(w); t=AT(w);
  // Handle special in-place cases, when the arguments are identical and the cells are also.  Only if cells have rank>0
  if(a==w&&acr==wcr&&wcr>0){
-  // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell (but invalid if cell has rank 0);
+  // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w (even if cell has rank 0 - then the cell has one item)
   f=AR(w)-wcr; s=AS(w); m=prod(f,s); n=(AR(w))?s[f]:1; d=bp(t)*prod(wcr-1,1+f+s);
   if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,n,w))  // sorting Booleans, when all grades start on a word boundary

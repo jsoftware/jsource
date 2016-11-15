@@ -20,10 +20,10 @@ ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-  LOCAL_CFLAGS := -fPIC -Os -Werror -fno-strict-aliasing -DREADLINE -malign-double -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -Werror -fno-strict-aliasing -DREADLINE -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -Os -Werror -fno-strict-aliasing -DREADLINE -malign-double -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -Werror -fno-strict-aliasing -DREADLINE -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
 endif
 
 LOCAL_SRC_FILES :=  jconsole.c jeload.c linenoise.c

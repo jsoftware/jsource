@@ -4,6 +4,8 @@
 #include <strings.h>
 #include <stdint.h>
 
+extern I jdo(J jt, C* lp);
+
 // #define JNIGNULL (*env)->NewGlobalRef(env, NULL)
 #define JNIGNULL (void*)0
 

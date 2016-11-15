@@ -181,6 +181,21 @@
 #define C_USEMULTINTRINSIC 1
 #endif
 
+// disable C_USEMULTINTRINSIC if un-available
+#if C_USEMULTINTRINSIC
+#if !defined(_MSC_VER)
+#if defined(__clang__)
+#if !__has_builtin(__builtin_smull_overflow)
+#undef C_USEMULTINTRINSIC
+#define C_USEMULTINTRINSIC 0
+#endif
+#elif __GNUC__ < 5
+#undef C_USEMULTINTRINSIC
+#define C_USEMULTINTRINSIC 0
+#endif
+#endif
+#endif
+
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */

@@ -161,7 +161,7 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
   if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
   else                      {z=parseas(as,w);     }
   // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
-  // executed 13!:8]0, and we should continue on outwide of debug mode
+  // executed 13!:0]0, and we should continue on outside of debug mode
   if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=/*d->dcj=*/jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; dcj must remain # tokens
  }
  debz();

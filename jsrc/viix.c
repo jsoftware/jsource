@@ -94,7 +94,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
  ASSERT(b||HOMO(at,wt),EVDOMAIN);
  ASSERT(b||at&DENSE&&wt&DENSE,EVNONCE);
  t=maxtype(at,wt);
- RE(m=prod(wr-r,ws)); RE(c=prod(r,ws+wr-r));
+ CPROD(AN(a),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
  if(!m||!n||!c){DO(m, *zv++=0;); R z;}
  if(1==c){

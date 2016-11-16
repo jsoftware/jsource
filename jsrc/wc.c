@@ -360,7 +360,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  p=AN(w); wv=AAV(w);  // p=#lines, wv->line 0 (a line is a boxed string)
  ASSERT(p<SMAX,EVLIMIT);
  RZ(c=exta(CONW,1L,1L,3*p)); cv=(CW*)AV(c); n=0;  // allocate result area, cv->start of block of CWs, n=#cws encountered
- RZ(l=exta(BOX, 1L,1L,5*p)); lv=    AAV(l); m=0;  // allocate list of boxed words, lv->&A for firast word; m=#words
+ RZ(l=exta(BOX, 1L,1L,5*p)); lv=    AAV(l); m=0;  // allocate list of boxed words, lv->&A for first word; m=#words
  for(i=0;i<p;++i){   // loop for each line
   // split the line into a sequence of sentences, splitting on each control word.  Result is a list of boxed strings, each one sentnece
   RZ(y=getsen(wv[i])); yn=AN(y); v=AAV(y);  // split string into sentences; yn=#sentences on line, v->block for first sentence

@@ -253,10 +253,7 @@ static void auditnum(){
 #define DFSIP1(v,w,zomb) if(VAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
 #define DFSIP2(aa,v,w) if(VAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
-// We store the result into the stack and move the token-number for it.  We set the
-// in-place flag to 1 to indicate that the result came from execution, EXCEPT that if
-// the result address matches an operand address, we keep the flag from the stack entry that
-// matched.  The idea is that if (] y) returns the address of y, we should use the same flags that y had
+// We store the result into the stack and move the token-number for it.  
 // we pass in the stack index of the verb, and infer the operands from that
 // z=result stack index, a/w=stack index of argument(s), t=source for token number
 #define STO1(z,w,tok) {stack[z].t=stack[tok].t; EPZ(stack[z].a=y)}

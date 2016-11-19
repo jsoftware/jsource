@@ -154,11 +154,17 @@
 #if SY_WIN32 
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
+// RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
+// the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
+// same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
+// as a temp, which means we can't take the liberties there
+#define RESTRICTI __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
 #define RESTRICTF __declspec(restrict)
 #endif
 #if SY_LINUX || SY_MAC
 #define RESTRICT __restrict
+#define RESTRICTI __restrict
 // No RESTRICTF on GCC
 #endif
 #ifndef RESTRICT
@@ -166,6 +172,9 @@
 #endif
 #ifndef RESTRICTF
 #define RESTRICTF
+#endif
+#ifndef RESTRICTI
+#define RESTRICTI
 #endif
 
 // If the user switch C_NOMULTINTRINSIC is defined, suppress using it

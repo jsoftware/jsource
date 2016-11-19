@@ -7,13 +7,15 @@
 #include "vcomp.h"
 
 
-static B jtmatchsub(J,I,I,I,I,A,A,B*,B,B);
+static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B,B);
 static F2(jtmatchs);
 
 #define MCS(q,af,wf)  ((1<q?16:q?8:0)+(af?2:0)+(wf?1:0))
+// set *x++ to b1 if *u=*v, b0 otherwise
 #define QLOOP         b=b1; DO(q, if(u[i]!=v[i]){b=b0; break;}); *x++=b;
+// comparison, with special cases for 1/more than 1, and looping over repeated cell
 #define EQV(T)        \
- {T h,*u=(T*)av,*v=(T*)wv;                                                   \
+ {T h,* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;                                                   \
   q=k/sizeof(T);                                                             \
   switch(MCS(q,af,wf)){                                                      \
    case MCS(1,0,0):              *x++=*u  ==*v?b1:b0; break;                 \
@@ -36,7 +38,10 @@ static F2(jtmatchs);
                     else          DO(m, DO(n, QLOOP; u+=q;); v+=q;); break;  \
  }}
 
-static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B*x,B b0,B b1){B b,*xx=x;I c,d,mn=m*n,q;
+// comparison function for non-float arrays, in chunks of size k, storing match results into *x and
+// returning the last one as the result (nothing special about last, could be any one)
+static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b0,B b1){B b,* RESTRICT xx=x;I c,d,mn=m*n,q;
+  // compare 
  if     (0==k%sizeof(I)  )EQV(I)
 #if SY_64
  else if(0==k%sizeof(int))EQV(int)
@@ -60,6 +65,7 @@ B jtequ(J jt,A a,A w){A x;B b;
  R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,&b,C0,C1);
 }
 
+// Test for equality of functions, 1 if they match.  The functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
  if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
  p=u->f; q=v->f; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1)))R 0;
@@ -67,16 +73,20 @@ static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
  p=u->h; q=v->h;    R !p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1);
 }
 
+// compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
+// The result is stored in the harmless location &b
 #define EQA(a,w)  matchsub(0L,0L,1L,1L,a,w,&b,C0,C1)
+// compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
+// compare arrays for equality of all values.  f is the compare function
 #define INNERT(T,f)                  \
  {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;              \
   if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
   else if(af>wf)DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; ++j;); v+=q;)  \
   else          DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
  }
-
+// use this version for boxed arrays that have relative addressing
 #define INNERT2(aa,ww,f)             \
  {A1* RESTRICT u=(A1*)av,* RESTRICT v=(A1*)wv;           \
   if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
@@ -84,7 +94,9 @@ static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
   else          DO(m, DO(n, x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
  }
 
-static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B*x,B b0,B b1){B b,c0;C*av,*wv;I at,c,j=0,mn,p,q,t,wt;
+// match two values, returning 1 if match.  If the values are functions, that's all we return.  If the values are nouns, we
+// store the match value(s) in *x
+static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b0,B b1){B b,c0;C*av,*wv;I at,c,j=0,mn,p,q,t,wt;
  p=AR(a)-af; at=UNSAFE(AT(a)); mn=m&&n?m*n:0;
  q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt)); c0=!jt->ct&&t&FL+CMPX;
  c=(af>wf?AN(a):AN(w))/(mn?mn:1); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);

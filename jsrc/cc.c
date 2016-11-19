@@ -442,7 +442,7 @@ static DF1(jtcut1){R cut2(mark,w,self);}
 
 #define PSCASE(id,zt,wt)    ((id)+256*(zt)+1024*(wt))
 #define PSLOOP(Tz,Tw,F,v0)      \
-    {C*u;Tw*wv;Tz s=v0,x,*zv;                   \
+    {C*u;Tw* RESTRICT wv;Tz s=v0,x,* RESTRICT zv;                   \
      GA(z,zt,n,1,0);                            \
      u=m+av; wv=m+(Tw*)AV(w); zv=m+(Tz*)AV(z);  \
      switch(pfx+2*(id==CBSLASH)){               \

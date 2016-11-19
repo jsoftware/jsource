@@ -473,13 +473,13 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 } 
 
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
- {A*u=av,*v;I*hi=hv,p,q;             \
+ {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hiinc; u=av+n*p; zstmti;        \
   DO(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;});  \
  }
 
 #define BSLOOPAWX(ii,icmp,iinc,uinc,zstmt)  \
- {A*u=wv+n*(ii),*v;I i,j,p,q;int t;  \
+ {A* RESTRICT u=wv+n*(ii),* RESTRICT v;I i,j,p,q;int t;  \
   for(i=ii;icmp;iinc,uinc){          \
    p=0; q=m1;                        \
    while(p<=q){                      \

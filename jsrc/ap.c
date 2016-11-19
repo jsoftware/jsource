@@ -17,7 +17,7 @@
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
 #define PREFIXPFX(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,*y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
   if(c==n)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=    *x++;);                                        \
@@ -25,7 +25,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,*y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
   NAN0;                                                               \
   if(c==n)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                              \
@@ -36,7 +36,7 @@
  }   /* for associative functions only */
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,*y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
   if(c==n)DO(m, *z++=v=(Tz)*x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=(Tz)*x++;);                                        \
@@ -44,7 +44,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXALT(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,*y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
   if(c==n)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=    *x++;); b=0;                                                    \
@@ -52,7 +52,7 @@
  }}}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,*y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
   NAN0;                                                                                \
   if(c==n)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                                               \
@@ -63,7 +63,7 @@
  }
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,*y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
   if(c==n)DO(m, *z++=v=(Tz)*x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{I d=c/n; for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=(Tz)*x++;); b=0;                                                    \
@@ -71,7 +71,7 @@
  }}}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
- AHDRP(f,I,I){C er=0;I i,*xx=x,*y,*zz=z;                      \
+ AHDRP(f,I,I){C er=0;I i,*xx=x,* RESTRICT y,*zz=z;                      \
   if(c==n){                                                         \
    if(1==n)DO(m, *z++=*x++;)                                        \
    else    DO(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;)                \
@@ -83,13 +83,13 @@
   
 #if SY_ALIGN
 #define PREFIXBFXLOOP(T,pfx)  \
- {T*xx=(T*)x,*yy,*zz=(T*)z;  \
+ {T* RESTRICT xx=(T*)x,* RESTRICT yy,* RESTRICT zz=(T*)z;  \
   q=d/sizeof(T);             \
   DO(m, yy=zz; DO(q, *zz++=*xx++;); DO(n-1, DO(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  }
 
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
- AHDRP(f,B,B){B*y;I d=c/n,j,q;                        \
+ AHDRP(f,B,B){B* RESTRICT y;I d=c/n,j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
   else if(0==d%sizeof(UI  ))PREFIXBFXLOOP(UI,   pfx)  \
   else if(0==d%sizeof(UINT))PREFIXBFXLOOP(UINT,ipfx)  \

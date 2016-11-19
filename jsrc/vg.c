@@ -442,7 +442,7 @@ F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND
  }
 
 #define OSLOOP(T,ATOMF)  \
-{T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
+{T p0,p1,q,*tv,* RESTRICT u,ui,uj,uk,* RESTRICT v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
   while(1){                                                                            \
    if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}                                              \

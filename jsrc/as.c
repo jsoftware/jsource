@@ -51,13 +51,13 @@
 
 #if SY_ALIGN
 #define SUFFIXBFXLOOP(T,pfx)  \
- {T*xx=(T*)x,*yy,*zz=(T*)z;   \
+ {T* RESTRICT xx=(T*)x,* RESTRICT yy,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);              \
   DO(m, yy=zz; DO(q, *--zz=*--xx;); DO(n-1, DO(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy);)));  \
  }
   
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
- AHDRP(f,B,B){B v,*y;I d,q;                                        \
+ AHDRP(f,B,B){B v,* RESTRICT y;I d,q;                                        \
   d=c/n; x+=m*c; z+=m*c;                                           \
   if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
   if(0==d%sizeof(UI  )){SUFFIXBFXLOOP(UI,   pfx); R;}              \

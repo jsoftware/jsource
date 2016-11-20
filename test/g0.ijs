@@ -38,7 +38,7 @@ f=: 3 : 0
  assert. 0=y
  assert. 0=!.0 y
  assert. t -:!.0 y
- assert. (3!:3 t) -: 3!:3 y  NB. y changed to true 0 in place
+ NB. not changed any more assert. (3!:3 t) -: 3!:3 y  NB. y changed to true 0 in place
  1
 )
 
@@ -48,7 +48,7 @@ g=: 3 : 0
  assert. 0=y
  assert. 0=!.0 y
  assert. (0,#y) -: y i.!.0 o. 0 2
- assert. (3!:3 t) -: 3!:3 y  NB. y changed to true 0 in place
+ assert. (3!:3 t) -: 3!:3 y  NB. y changed to true 0 in place by i.
  1
 )
 

@@ -239,6 +239,7 @@ B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
 // s or t may be set to 0 to suppress the argument (if argument is empty, usually)
+// Result is always an UNSAFE type
 I jtmaxtype(J jt,I s,I t){
  t=UNSAFE(t); s=UNSAFE(s);  // We must ignore the flag bits during this test
  // If the types are the same, or one is 0, return quickly.  This handles the common case of equal types

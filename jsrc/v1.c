@@ -7,18 +7,19 @@
 #include "vcomp.h"
 
 
-static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B,B);
+static B jtmatchsub(J,I,I,I,I,A,A,B* RESTRICT,B);
 static F2(jtmatchs);
 
-#define MCS(q,af,wf)  ((1<q?16:q?8:0)+(af?2:0)+(wf?1:0))
+#define MCS(q,af,wf)  ((1<q?8:q?4:0)+(af?2:0)+(wf?1:0))
 // set *x++ to b1 if *u=*v, b0 otherwise
-#define QLOOP         b=b1; DO(q, if(u[i]!=v[i]){b=b0; break;}); *x++=b;
-// comparison, with special cases for 1/more than 1, and looping over repeated cell
+#define QLOOP         b=b1; DO(q, if(u[i]!=v[i]){b^=1; break;}); *x++=b;
+// comparison, with special cases for 1/more than 1, and looping over repeated cells
+// we know there is a frame somewhere.  This is for plain byte compartison - no tolerance
 #define EQV(T)        \
  {T h,* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;                                                   \
   q=k/sizeof(T);                                                             \
   switch(MCS(q,af,wf)){                                                      \
-   case MCS(1,0,0):              *x++=*u  ==*v?b1:b0; break;                 \
+/* obsolete   case MCS(1,0,0):              *x++=*u  ==*v?b1:b0; break;   */              \
    case MCS(1,0,1): h=*u; if(b1)DO(mn, *x++=h   ==*v++;) else DO(mn, *x++=h   !=*v++;)  break;  \
    case MCS(1,1,0): h=*v; if(b1)DO(mn, *x++=*u++==h;   ) else DO(mn, *x++=*u++!=h;   ); break;  \
    case MCS(1,1,1): if(b1){                                                  \
@@ -30,7 +31,7 @@ static F2(jtmatchs);
                      else if(af<wf)DO(m, h=*u++; DO(n, *x++=h   !=*v++;);)   \
                      else          DO(m, h=*v++; DO(n, *x++=*u++!=h;   ););  \
                     } break;                                                 \
-   case MCS(2,0,0):        QLOOP;               break;                       \
+/* obsolete   case MCS(2,0,0):        QLOOP;               break;    */                   \
    case MCS(2,0,1): DO(mn, QLOOP;       v+=q;); break;                       \
    case MCS(2,1,0): DO(mn, QLOOP; u+=q;      ); break;                       \
    case MCS(2,1,1): if(1==n)      DO(m,       QLOOP; u+=q;   v+=q;)          \
@@ -39,9 +40,11 @@ static F2(jtmatchs);
  }}
 
 // comparison function for non-float arrays, in chunks of size k, storing match results into *x and
-// returning the last one as the result (nothing special about last, could be any one)
-static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b0,B b1){B b,* RESTRICT xx=x;I c,d,mn=m*n,q;
-  // compare 
+// returning the first one as the result (nothing special about first, could be any one)
+// This is a generalized version of the INNERT macro below
+// If we get here, we know that at least one of the arguments has a frame
+static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT xx=x;I mn=m*n,q;
+  // select a comparison loop based on the size of the data area.  It's all about the fastest way to compare bytes
  if     (0==k%sizeof(I)  )EQV(I)
 #if SY_64
  else if(0==k%sizeof(int))EQV(int)
@@ -49,75 +52,102 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b0,B b1){B b,* REST
  else if(0==k%sizeof(S)  )EQV(S)
  else if(1==k)            EQV(C)
  else{
-  c=af?k:0; d=wf?k:0;
-  if(1==n)      DO(m,       *x++=!!memcmp(av,wv,k)?b0:b1; av+=c;   wv+=d;)
-  else if(af<wf)DO(m, DO(n, *x++=!!memcmp(av,wv,k)?b0:b1; wv+=k;); av+=k;)
-  else          DO(m, DO(n, *x++=!!memcmp(av,wv,k)?b0:b1; av+=k;); wv+=k;);
+// obsolete    c=af?k:0; d=wf?k:0;
+  if(1==n)      DO(m,       *x++=(memcmp(av,wv,k)&1)^b1; av+=k;   wv+=k;)
+  else if(af<wf)DO(m, DO(n, *x++=(memcmp(av,wv,k)&1)^b1; wv+=k;); av+=k;)
+  else          DO(m, DO(n, *x++=(memcmp(av,wv,k)&1)^b1; av+=k;); wv+=k;);
  }
- R mn?xx[mn-1]:b1;
+ R xx[0];   // obsolete mn?xx[mn-1]:b1;
 }    /* what memcmp should have been */
 
 // Return 1 if a and w match, 0 if not
-B jtequ(J jt,A a,A w){A x;B b; 
+B jtequ(J jt,A a,A w){A x;
  RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
- R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,&b,C0,C1);
+ R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,0,C1);
 }
 
 // Test for equality of functions, 1 if they match.  The functions must have the same pseudocharacter and fgh
-static B jteqf(J jt,A a,A w){A p,q;B b;V*u=VAV(a),*v=VAV(w);
+static B jteqf(J jt,A a,A w){A p,q;V*u=VAV(a),*v=VAV(w);
  if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
- p=u->f; q=v->f; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1)))R 0;
- p=u->g; q=v->g; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1)))R 0;
- p=u->h; q=v->h;    R !p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,&b,C0,C1);
+ p=u->f; q=v->f; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;
+ p=u->g; q=v->g; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;
+ p=u->h; q=v->h;    R !p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1);
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
 // The result is stored in the harmless location &b
-#define EQA(a,w)  matchsub(0L,0L,1L,1L,a,w,&b,C0,C1)
+#define EQA(a,w)  matchsub(0L,0L,1L,1L,a,w,0,C1)
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
 // compare arrays for equality of all values.  f is the compare function
+// m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
+// x[] is result array.  This can be 0 if we are doing a comparison inside a box, in which case
+// we don't store the result.  In any case, b holds the result of the last comparison
 #define INNERT(T,f)                  \
- {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;              \
-  if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
-  else if(af>wf)DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); u+=p; ++j;); v+=q;)  \
-  else          DO(m, DO(n, x[j]=b1; DO(c, if(!f(u[i],v[i])){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
+ {T* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;   /* u->a data, v->w data */           \
+  if(1==n)      DO(m,       b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); if(x)x[j++]=b; u+=c; v+=c;)  \
+  else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
+  else          DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
  }
 // use this version for boxed arrays that have relative addressing
 #define INNERT2(aa,ww,f)             \
  {A1* RESTRICT u=(A1*)av,* RESTRICT v=(A1*)wv;           \
-  if(1==n)      DO(m,       x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); u+=p; v+=q; ++j;  )  \
-  else if(af>wf)DO(m, DO(n, x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); u+=p; ++j;); v+=q;)  \
-  else          DO(m, DO(n, x[j]=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){x[j]=b0; break;}); v+=q; ++j;); u+=p;)  \
+  if(1==n)      DO(m,       b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); if(x)x[j++]=b; u+=c; v+=c;)  \
+  else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
+  else          DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
  }
 
+// compare functions for float/complex intolerant comparison
+#define DEQCT0(a,w) ((a)==(w))
+#define ZEQCT0(a,w) ( ((a).re==(w).re) && ((a).im==(w).im) )
+
 // match two values, returning 1 if match.  If the values are functions, that's all we return.  If the values are nouns, we
-// store the match value(s) in *x
-static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b0,B b1){B b,c0;C*av,*wv;I at,c,j=0,mn,p,q,t,wt;
- p=AR(a)-af; at=UNSAFE(AT(a)); mn=m&&n?m*n:0;
- q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt)); c0=!jt->ct&&t&FL+CMPX;
- c=(af>wf?AN(a):AN(w))/(mn?mn:1); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);
- if(b||!c||a==w){memset(x,b?b0:b1,mn); R b?b0:b1;}
- if(t&FUNC)R eqf(a,w)?b1:b0;
- if(TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(c0)RZ(a=cvt0(a)); 
- if(TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(c0)RZ(w=cvt0(w)); 
- p=af?c:0; av=CAV(a);
- q=wf?c:0; wv=CAV(w);
- switch(c0?0:CTTZ(t)){
-  default:   R eqv(af,wf,m,n,c*bp(t),av,wv,x,b0,b1);
-  case FLX:   INNERT(D,TEQ);    R mn?x[mn-1]:b1;
-  case CMPXX: INNERT(Z,zeq);    R mn?x[mn-1]:b1;
-  case XNUMX: INNERT(X,equ);    R mn?x[mn-1]:b1;
-  case RATX:  INNERT(Q,EQQ);    R mn?x[mn-1]:b1;
-  case BOXX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){
-   default:  INNERT(A,EQA);    R mn?x[mn-1]:b1;
-   case 1:   INNERT2(0,w,EQA); R mn?x[mn-1]:b1;
-   case 2:   INNERT2(a,0,EQA); R mn?x[mn-1]:b1;
-   case 3:   INNERT2(a,w,EQA); R mn?x[mn-1]:b1;
-}}}
+// store the match value(s) in *x.  x may be 0, if af and wf are 0 and m and n are 1.  In this case we con't store anything
+// but return the match status.  We use this when comparing boxed arrays or functions
+// b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
+static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
+ // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
+ p=AR(a)-af; at=UNSAFE(AT(a));
+ q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt));
+ // p=cell-rank of a; q=cell-rank of w; ?t=type; m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
+ // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
+ // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
+ // and were handled there).
+ PROD(c,p,af+AS(a)); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);
+// obsolete  c=(af>wf?AN(a):AN(w))/(mn?mn:1);
+ // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
+ if(b||!c||a==w){if(x)memset(x,b^b1,m*n); R b^b1;}
+ // If we're comparing functions, return that result
+ if(t&FUNC)R (!eqf(a,w))^b1;  // true value, but switch if return is not 'match'
+ // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
+ if(at!=wt) {
+  if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)); // obsolete  else if(c0)RZ(a=cvt0(a)); 
+  if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)); // obsolete else if(c0)RZ(w=cvt0(w));
+ }
+ // If a has no frame, it might be the shorter frame and therefore repeated; but in that case
+ // m will be 1 (1 cell in shorter frame).  So it is safe to increment each address by c in the compare loops
+ av=CAV(a);  // obsolete  p=af?c:0;
+ wv=CAV(w);  // obsolete  q=wf?c:0;
+ // do the comparison, leaving the last result in b
+ switch(CTTZ(t)){
+  // Take the case of no frame quickly, because it happens on each recursion and also in much user code
+ default:   c *= bp(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (memcmp(av,wv,c)&1)^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
+ case FLX:   if(jt->ct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break; // obsolete    R mn?x[0]:b1;
+ case CMPXX: if(jt->ct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
+ case XNUMX: INNERT(X,equ); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
+ case RATX:  INNERT(Q,EQQ); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
+ case BOXX:
+  switch(2*ARELATIVE(a)+ARELATIVE(w)){
+  default:  INNERT(A,EQA); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
+  case 1:   INNERT2(0,w,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
+  case 2:   INNERT2(a,0,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
+  case 3:   INNERT2(a,w,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
+  } break;
+ } R b;
+}
 
 static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
  RZ(a&&w);
@@ -150,21 +180,45 @@ F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
  af=jt->rank?AR(a)-jt->rank[0]:0;
  wf=jt->rank?AR(w)-jt->rank[1]:0; jt->rank=0;
- if(af>wf){f=af; s=AS(a); RE(m=prod(wf,s)); RE(n=prod(af-wf,wf+s));}
- else     {f=wf; s=AS(w); RE(m=prod(af,s)); RE(n=prod(wf-af,af+s));}
- RE(mn=mult(m,n));
- GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0,C1);
+ // If either operand is empty return without any comparisons.  In this case we have to worry that the
+ // number of cells may overflow, even if there are no atoms
+ if(!AN(a)||!AN(w)){B b; I p;
+  // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
+  if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
+  // The result for each cell is 1 if the cell-shapes are the same
+  p=AR(a)-af; b=p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p);   // b =  shapes are the same
+  // Allocate & return result
+  GATV(z,B01,mn,f,s); memset(BAV(z),b,mn); R z;
+ }
+ // There are atoms.
+ // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
+ if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
+ else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
+ mn=m*n;  // total number of matches to do, i. e. # results
+ GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1);
  R z;
 }    /* a -:"r w */
 
 F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
- if(SPARSE&(AT(a)|AT(w)))R not(matchs(a,w));
+ if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
  af=jt->rank?AR(a)-jt->rank[0]:0;
  wf=jt->rank?AR(w)-jt->rank[1]:0; jt->rank=0;
- if(af>wf){f=af; s=AS(a); RE(m=prod(wf,s)); RE(n=prod(af-wf,wf+s));}
- else     {f=wf; s=AS(w); RE(m=prod(af,s)); RE(n=prod(wf-af,af+s));}
- RE(mn=mult(m,n));
- GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1,C0);
+ // If either operand is empty return without any comparisons.  In this case we have to worry that the
+ // number of cells may overflow, even if there are no atoms
+ if(!AN(a)||!AN(w)){B b; I p;
+  // no atoms.  The shape of the result is the length of the longer frame.  See how many cells that is
+  if(af>wf){f=af; s=AS(a); RE(mn = prod(af,AS(a)));}else{f=wf; s=AS(w); RE(mn = prod(wf,AS(w)));}
+  // The result for each cell is 1 if the cell-shapes are the same
+  p=AR(a)-af; b=!(p==(AR(w)-wf)&&!ICMP(af+AS(a),wf+AS(w),p));   // b =  shapes are the same
+  // Allocate & return result
+  GATV(z,B01,mn,f,s); memset(BAV(z),b,mn); R z;
+ }
+ // There are atoms.
+ // Create m: #cells in shorter (i. e. common) frame  n: # times cell of shorter frame is repeated
+ if(af>wf){f=af; s=AS(a); PROD(m,wf,s); PROD(n,af-wf,wf+s);}
+ else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
+ mn=m*n;  // total number of matches to do, i. e. # results
+ GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0);
  R z;
 }    /* a -.@-:"r w */

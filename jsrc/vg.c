@@ -441,16 +441,18 @@ F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND
    if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2);         \
  }
 
+// Partitioning function for order statistics
+// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
 #define OSLOOP(T,ATOMF)  \
-{T p0,p1,q,*tv,* RESTRICT u,ui,uj,uk,* RESTRICT v,*wv;                                                     \
+{T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
   while(1){                                                                            \
-   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}                                              \
+   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}        /* stop loop on small partition */       \
    p0=tv[qv[i]%n]; ++i; if(i==qn)i=0;                                                  \
-   p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}                    \
+   p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
    if(p0==p1){m0=m1=0; v=tv; DO(n, if(p0>*v)++m0;                     ++v;);}          \
-   else      {m0=m1=0; v=tv; DO(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}          \
-   c=m0+m1; m=j<m0?m0:j<c?m1:n-c;                                                      \
+   else      {m0=m1=0; v=tv; DO(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}  /* count m0: # < p0; and m1: # p0<=x<p1  */         \
+   c=m0+m1; m=j<m0?m0:j<c?m1:n-c;    /* calc size of partition holding the result */        \
    if(t)u=v=tv; else{GA(t,wt,m,1,0); u=tv=(T*)AV(t); v=wv;}                            \
    if     (j<m0){       DO(n, if(*v<p0        )*u++=*v; ++v;); n=m;}                   \
    else if(j<c ){j-=m0; DO(n, if(p0<=*v&&*v<p1)*u++=*v; ++v;); n=m;}                   \
@@ -464,6 +466,7 @@ F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));
  RE(j=i0(a)); if(0>j)j+=n;
  ASSERT(0<=j&&j<n,EVINDEX);
+ // deal 53 random large integers to provide pivots.  We reuse them if needed
  RZ(q=df2(sc(qn),sc(IMAX),atop(ds(CQUERY),ds(CDOLLAR)))); qv=AV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
@@ -472,7 +475,7 @@ F2(jtordstati){A t;I n,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade1(w));
- RZ(t=ordstat(a,w));
+ RZ(t=ordstat(a,w));   // Get the value of the ath order statistic, then look up its index
  I j=0;  // =0 needed to stifle warning
  if(wt&FL){D p=*DAV(t),*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
  else     {I p=* AV(t),*v= AV(w); DO(n, if(p==*v++){j=i; break;});}

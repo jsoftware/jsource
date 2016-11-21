@@ -53,8 +53,8 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT 
  else if(1==k)            EQV(C)
  else{
 // obsolete    c=af?k:0; d=wf?k:0;
-  if(1==n)      DO(m,       *x++=(memcmp(av,wv,k)&1)^b1; av+=k;   wv+=k;)
-  else if(af<wf)DO(m, DO(n, *x++=(memcmp(av,wv,k)&1)^b1; wv+=k;); av+=k;)
+// obsolete   if(1==n)      DO(m,       *x++=(memcmp(av,wv,k)&1)^b1; av+=k;   wv+=k;)
+  if(af<wf)DO(m, DO(n, *x++=(memcmp(av,wv,k)&1)^b1; wv+=k;); av+=k;)
   else          DO(m, DO(n, *x++=(memcmp(av,wv,k)&1)^b1; av+=k;); wv+=k;);
  }
  R xx[0];   // obsolete mn?xx[mn-1]:b1;
@@ -104,8 +104,8 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=VAV(a),*v=VAV(w);
 #define DEQCT0(a,w) ((a)==(w))
 #define ZEQCT0(a,w) ( ((a).re==(w).re) && ((a).im==(w).im) )
 
-// match two values, returning 1 if match.  If the values are functions, that's all we return.  If the values are nouns, we
-// store the match value(s) in *x.  x may be 0, if af and wf are 0 and m and n are 1.  In this case we con't store anything
+// match two values, returning b1 if match, 1^b1 if no match.  If the values are functions, that's all we return.  If the values are nouns, we
+// store the match value(s) in *x.  x may be 0, if af and wf are 0 and m and n are 1.  In this case we don't store anything.
 // but return the match status.  We use this when comparing boxed arrays or functions
 // b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;

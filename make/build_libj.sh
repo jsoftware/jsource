@@ -3,6 +3,11 @@
 cd ~
 . jvars.sh
 
+# gcc 5 vs 4 - killing off linux asm routines (overflow detection)
+# new fast code uses builtins not available in gcc 4
+# use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
+# too early to move main linux release package to gcc 5
+ 
 # gcc-6 -O1 needs -fno-if-conversion2 for x15.c double trick
 # but clang does not have this flag
 # gcc
@@ -13,19 +18,20 @@ darwin="-fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-b
 
 case $jplatform\_$1 in
 
+
 linux_j32) # linux x86
 TARGET=libj.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
-COMPILE="$common -m32 -msse2 -mfpmath=sse "
+COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl -o libj.so "
 ;;
 linux_j64) # linux x86
 TARGET=libj.so
-COMPILE="$common -DC_NA=0"
-LINK=" $jgit/asm/linuxasm64.o -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
+COMPILE="$common -DC_NOMULTINTRINSIC "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 
 raspberry_j32) # linux raspbian arm

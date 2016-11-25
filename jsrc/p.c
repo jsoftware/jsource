@@ -286,7 +286,7 @@ F1(jtparsea){PSTK *stack;A y,z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table ent
   if(at&NAME) {
    if(s=syrd(y,0L)) {     // Resolve the name.
      A sv;  // pointer to value block for the name
-     RZ(sv = s->val);  // symbol table entry, but no value.
+     RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
      if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value
       y=sv;
      } else RZ(y = namerefacv(y, s));   // Replace other acv with reference

@@ -80,6 +80,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
+
 // We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
 // address/length into parsex.  The address and length of the sentence are filled in as needed
 
@@ -142,9 +143,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
  // directly.
  L *ybuckptr = AV(jt->local)[yxbuckets[symtabsize][0]]+jt->sympv;  // pointer to sym block for y
- if(w){ybuckptr->val=w; ra(w);}  // If y given, install it & incr usecount as in assignment
- if(a){((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv)->val=a; ra(a);}
+ if(w){ybuckptr->val=w; ybuckptr->sn=jt->slisti; ra(w);}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
+ if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ybuckptr->val=a; ybuckptr->sn=jt->slisti; ra(a);}
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}

@@ -16,7 +16,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #define offset(r,f) (((char*)&((r*)0)->f)-((char*)((r*)0)))
-main(){
+int main(){
 	printf ("NB. do not edit -- created by sym2ijs\n\n");
 	printf ("cocurrent <'jdefs'\n\n");
 #ifndef _WIN32

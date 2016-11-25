@@ -150,7 +150,12 @@
 #define UNDERFLOW       ((D)4.450147717014403e-308)
 #endif
 
-//
+// RESTRICT causes the compiler to generate better code by assuming no overlap of regions pointed to by pointers
+// We use RESTRICT for routines that operate in-place on an argument.  This is strictly speaking a violation of the rule,
+// but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
+// the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
+// after writing to *z, so we don't turn RESTRICT on for 32-bit
+#if SY_64
 #if SY_WIN32 
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
@@ -167,6 +172,7 @@
 #define RESTRICTI __restrict
 // No RESTRICTF on GCC
 #endif
+#endif
 #ifndef RESTRICT
 #define RESTRICT
 #endif
@@ -182,6 +188,21 @@
 #define C_USEMULTINTRINSIC 0
 #else
 #define C_USEMULTINTRINSIC 1
+#endif
+
+// disable C_USEMULTINTRINSIC if un-available
+#if C_USEMULTINTRINSIC
+#if !defined(_MSC_VER)
+#if defined(__clang__)
+#if !__has_builtin(__builtin_smull_overflow)
+#undef C_USEMULTINTRINSIC
+#define C_USEMULTINTRINSIC 0
+#endif
+#elif __GNUC__ < 5
+#undef C_USEMULTINTRINSIC
+#define C_USEMULTINTRINSIC 0
+#endif
+#endif
 #endif
 
 #define NALP            256             /* size of alphabet                */
@@ -564,20 +585,21 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 // Define integer multiply, *z=x*y but do something else if integer overflow.
 // Depending on the compiler, the overflowed result may or may not have been stored
 #if SY_64
+
+#if C_USEMULTINTRINSIC
 #if SY_WIN32 
 #define DPMULDECLS I l,h;
 // DPMUL: *z=x*y, execute s if overflow
 #define DPMUL(x,y,z,s) *z=l=_mul128(x,y,&h); if(h+((UI)l>>(BW-1)))s
 #define DPMULDDECLS I h;
 #define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
-#elif (SY_LINUX || SY_MAC) && C_USEMULTINTRINSIC
+#else
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
 #endif
-// If no builtin was found, use the standard-C version (64-bit)
-#ifndef DPMULDECLS
+#else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
 #define DPMULDECLS I _l;D _d;
 #define DPMUL(x,y,z,s) _l=(x)*(y); _d=(D)(x)*(D)(y)-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s  // *z may be the same as x or y
 #define DPMULDDECLS I _l;D _d;
@@ -585,25 +607,27 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 
 #else  // 32-bit
-#if SY_WIN32
+
+#if C_USEMULTINTRINSIC
+#if SY_WIN32 
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
 #define DPMULDECLS unsigned __int64 _p;
 #define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
 #define DPMULDDECLS unsigned __int64 _p;
 #define DPMULD(x,y,z,s) _p = __emul(x,y); z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
-#elif (SY_LINUX || SY_MAC) && C_USEMULTINTRINSIC
+#else
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smull_overflow(x,y,z))s
 #define DPMULDDECLS
 #define DPMULD(x,y,z,s) if(__builtin_smull_overflow(x,y,&z))s
 #endif
-#ifndef DPMULDECLS
-// If no builtin was found, use the standard-C version (32-bit)
+#else // C_USEMULTINTRINSIC 0 - use standard-C version (32-bit)
 #define DPMULDECLS D _p;
 #define DPMUL(x,y,z,s) _p = (D)x*(D)y; *z=(I)_p; if(_p>IMAX||_p<IMIN)s
 #define DPMULDDECLS D _p;
 #define DPMULD(x,y,z,s) _p = (D)x*(D)y; z=(I)_p; if(_p>IMAX||_p<IMIN)s
 #endif
+
 #endif
 // end of multiply builtins
 
@@ -618,4 +642,11 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define SPDPADD(addend, sumlo, sumhi) sumlo += addend; sumhi += (addend > sumlo);
 #endif
 // end of addition builtins
+
+// Create (x&y) where x and y are signed, so we can test for overflow.
+#if SY_WIN32
+#define XANDY(x,y) ((x)&(y))
+#else
+#define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
+#endif
 

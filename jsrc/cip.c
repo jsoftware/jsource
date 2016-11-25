@@ -161,7 +161,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #if C_NA   // non-assembler version
     for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,oc,lp;
      x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
-    DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if((oc&o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
+    DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if(XANDY(oc,o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
     }
 #else
     for(i=0;i<m;++i,v=wv,zv+=n){

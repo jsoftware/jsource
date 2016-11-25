@@ -34,7 +34,7 @@
 #define C_NA 1   // scaf force noasm
 
 #ifndef C_HASH // alternate hash function
-#define C_HASH 0
+#define C_HASH 1
 #endif
 
 /*

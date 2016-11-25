@@ -221,6 +221,7 @@ _2 -: jnc    <''
 'rank error'      -: scind etx <3 4$'xab'
 'rank error'      -: scind etx <,:'xab'
 
+ 0 < x =: 3 : '4!:4 <y' 'y'
 
 NB. locales -------------------------------------------------------------
 

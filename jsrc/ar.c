@@ -201,6 +201,7 @@ static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*y
  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
  // z will hold the result from the iterations.  Init to value of last cell
  // yt=type, yn=#atoms, yr=rank, ys->shape of input cell
+ // Since there are multiple cells, z mst be in a new block and therefore inplaceable
  RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
  // k=length of input cell in bytes, v->last cell data
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
@@ -211,7 +212,7 @@ static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*y
   // copy the item into the allocated block
   if(p){A1*wv=(A1*)v,*yv=(A1*)u;I d=(I)w-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
   RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
-  gc(z,old);
+  gc(z,old);   // free the buffers we allocated, except for the result
  }
  EPILOG(z);
 }    /* f/"r w for general f and 1<(-r){$w */

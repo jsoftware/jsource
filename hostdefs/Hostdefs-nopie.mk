@@ -23,7 +23,7 @@ ifeq ($(TARGET_ARCH),x86_64)
   LOCAL_CFLAGS := -fPIC -Os -fno-strict-aliasing -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector
 endif
 ifeq ($(TARGET_ARCH),x86)
-  LOCAL_CFLAGS := -fPIC -Os -fno-strict-aliasing -malign-double -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
+  LOCAL_CFLAGS := -fPIC -Os -fno-strict-aliasing -march=i686 -mtune=intel -mssse3 -mfpmath=sse -fno-stack-protector
 endif
 
 LOCAL_SRC_FILES :=  hostdefs.c

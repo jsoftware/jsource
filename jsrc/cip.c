@@ -100,6 +100,175 @@ l1:
 #endif
 
 // +/ . * support
+ // cache-blocking code
+#define OPHEIGHT 2  // height of outer-product block
+#define OPWIDTH 4  // width of outer-product block
+#define CACHEWIDTH 64  // width of resident cache block
+#define CACHEHEIGHT 16  // height of resident cache block
+// Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
+// *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
+// a is shape mxp, w is shape pxn
+static cachedmmult(D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH + 2*CACHELINESIZE/sizeof(D)];
+ // m is # 1-cells of a
+ // n is # atoms in an item of w (and result)
+ // p is number of inner-product muladds (length of a row of a, and # items of w)
+ // point to cache-aligned areas we will use for staging the inner-product info
+ D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
+ D *cva = (D*)(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
+ // zero the result area
+ memset(zv,C0,m*n*sizeof(D));
+ // process each 64-float vertical stripe of w, producing the corresponding columns of z
+ D* w0base = wv; D* z0base = zv; I w0rem = n;
+ for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
+  // process each 16x64 section of w, adding each result to the columns of z
+  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p;
+  for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT,w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
+   // read the 16x64 section of w into the cache area (8KB, 2 ways of cache), with prefetch of rows
+   for(i=MIN(CACHEHEIGHT,w1rem),cvx=cvw;i;--i){I j;
+    D* RESTRICT w1x=w1next; w1next+=n;  // save start of current input row, point to next row...
+    _mm_prefetch((C*)w1next,_MM_HINT_T0);   // ... and prefetch next row
+    for(j=0;j<MIN(CACHEWIDTH,w0rem);++j)*cvx++=*w1x++; for(;j<CACHEWIDTH;++j)*cvx++=0.0;   // move current row during prefetch
+   }
+   // Because of loop unrolling, we fetch and multiply one extra value in each cache column.  We make sure those values are 0 to avoid NaN errors
+   for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0; 
+// obsolete       memset(cvx,C0,(CACHEHEIGHT-i)*(CACHEWIDTH*sizeof(D)));  // clear unfilled part of cache - not needed? We should stop processing rows of cache
+   // the nx16 vertical strip of a will be multiplied by the 16x64 section of w and accumulated into z
+   // process each 2x16 section of a against the 16x64 cache block
+   D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
+   for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*p,z2base+=OPHEIGHT*n){
+    static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+    // Prepare for the 2x16 block of a
+    // If the second row of a is off the end of the data, we mustn't fetch it - switch the pointer to the last valid row
+    // (the data there might be _ and multiplied by a 0 from cache, giving error: should we point to a 1 instead?  Nothing is guaranteed.
+    D *a2base1 = (a2rem>1)?a2base0+p:missingrow;
+#if ARCHAVX
+    // Make 4 sequential copies of each float in a, to support the parallel multiply for the outer product.  Interleave the values
+    // from the two rows, putting them in the correct order for the multiply.  If the bottom row of a isn't there, use 1.0 for
+    // the value to avoid trouble if multiplying by infinity
+    {__m256d *cvx=(__m256d*)cva;D *a0x=a2base0,*a1x=a2base1;
+     for(i=MIN(CACHEHEIGHT,w1rem);i;--i,++a0x,++a1x){
+      *cvx++ = _mm256_set_pd(*a0x,*a0x,*a0x,*a0x);  *cvx++ = _mm256_set_pd(*a1x,*a1x,*a1x,*a1x);
+     }
+     // Because of loop unrolling, we fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
+     *cvx++ = _mm256_set_pd(0.0,0.0,0.0,0.0);  *cvx++ = _mm256_set_pd(0.0,0.0,0.0,0.0);
+    }
+#endif
+    // process each 16x4 section of cache, accumulating into z
+    I a3rem=MIN(w0rem,CACHEWIDTH);
+    D* RESTRICT z3base=z2base; D* c3base=c2base;
+    for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH,z3base+=OPWIDTH){
+     // initialize accumulator with the z values accumulated so far.
+#if ARCHAVX
+     __m256d z00,z01,z10,z11,z20,z21; static I valmask[8]={0, 0,0,0,-1,-1,-1,-1};
+     z21 = z20 = z11 = z10 = _mm256_set_pd(0.0,0.0,0.0,0.0);
+     // We have to use masked load at the edges of the array, to make sure we don't fetch from undefined memory.  Fill anything not loaded with 0
+     if(a3rem>3){z00 = _mm256_loadu_pd(z3base);if(a2rem>1)z01 = _mm256_loadu_pd(z3base+n); else z01=z21;
+     }else{z01 = z00 = z20; z00 = _mm256_maskload_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]));
+           I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_set_epi64x(valmask[vx],valmask[vx+1],valmask[vx+2],valmask[vx+3]));
+     }
+#else
+     D z00,z01,z02,z03,z10,z11,z12,z13;
+     z00=z3base[0];
+     if(a3rem>3){z01=z3base[1],z02=z3base[2],z03=z3base[3]; if(a2rem>1)z10=z3base[n],z11=z3base[n+1],z12=z3base[n+2],z13=z3base[n+3];
+     }else{if(a3rem>1){z01=z3base[1];if(a3rem>2)z02=z3base[2];}; if(a2rem>1){z10=z3base[n];if(a3rem>1)z11=z3base[n+1];if(a3rem>2)z12=z3base[n+2];}}
+     // process outer product of each 2x1 section on each 1x4 section of cache
+#endif
+
+     // Before starting the last set of 16 outer products, issue prefetches for the next lines of a and z
+     // We hope that the hardware prefetcher will get the remainder of each 2x16 block before it is needed
+     if(a3rem<=4){_mm_prefetch((C*)(z2base+(OPHEIGHT*n)),_MM_HINT_T0);_mm_prefetch((C*)(z2base+(OPHEIGHT*n)+n),_MM_HINT_T0);
+                  _mm_prefetch((C*)(a2base0+(OPHEIGHT*p)),_MM_HINT_T0);_mm_prefetch((C*)(a2base0+(OPHEIGHT*p))+p,_MM_HINT_T0);}
+
+     I a4rem=MIN(w1rem,CACHEHEIGHT);
+     D* RESTRICT c4base=c3base;
+#if ARCHAVX
+     D* a4base0=cva;   // Can't put RESTRICT on this - the loop to init *cva gets optimized away
+#else
+     D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
+#endif
+#if ARCHAVX  // This version if AVX instruction set is available.
+      // read the 2x1 a values and the 1x4 cache values
+      // form outer product, add to accumulator
+// This loop is hand-unrolled because the compiler doesn't seem to do it.  Unroll 3 times - needed on dual ALUs
+     __m256d cval0 = _mm256_load_pd(c4base);
+     __m256d aval00 = _mm256_load_pd(a4base0);
+     __m256d aval01 = _mm256_load_pd(a4base0+OPWIDTH);
+
+     __m256d cval1 = _mm256_load_pd(c4base+CACHEWIDTH);
+     __m256d aval10 = _mm256_load_pd(a4base0+OPWIDTH*OPHEIGHT);
+      aval00 = _mm256_mul_pd(cval0,aval00);
+     __m256d aval11 = _mm256_load_pd(a4base0+OPWIDTH*OPHEIGHT+OPWIDTH);
+      aval01 = _mm256_mul_pd(cval0,aval01);
+     do{
+     __m256d cval2 = _mm256_load_pd(c4base+2*CACHEWIDTH);
+     __m256d aval20 = _mm256_load_pd(a4base0+2*OPWIDTH*OPHEIGHT);
+      aval10 = _mm256_mul_pd(cval1,aval10);
+     __m256d aval21 = _mm256_load_pd(a4base0+2*OPWIDTH*OPHEIGHT+OPWIDTH);
+      aval11 = _mm256_mul_pd(cval1,aval11);
+      z00 = _mm256_add_pd(z00 , aval00);
+      z01 = _mm256_add_pd(z01 , aval01);
+      if(--a4rem<=0)break;
+
+      cval0 = _mm256_load_pd(c4base+3*CACHEWIDTH);
+      aval00 = _mm256_load_pd(a4base0+3*OPWIDTH*OPHEIGHT);
+      aval20 = _mm256_mul_pd(cval2,aval20);
+      aval01 = _mm256_load_pd(a4base0+3*OPWIDTH*OPHEIGHT+OPWIDTH);
+      aval21 = _mm256_mul_pd(cval2,aval21);
+      z10 = _mm256_add_pd(z10 , aval10);
+      z11 = _mm256_add_pd(z11 , aval11);
+      if(--a4rem<=0)break;
+
+      cval1 = _mm256_load_pd(c4base+4*CACHEWIDTH);
+      aval10 = _mm256_load_pd(a4base0+4*OPWIDTH*OPHEIGHT);
+      aval00 = _mm256_mul_pd(cval0,aval00);
+      aval11 = _mm256_load_pd(a4base0+4*OPWIDTH*OPHEIGHT+OPWIDTH);
+      aval01 = _mm256_mul_pd(cval0,aval01);
+      z20 = _mm256_add_pd(z20 , aval20);
+      z21 = _mm256_add_pd(z21 , aval21);
+      if(--a4rem<=0)break;
+
+      a4base0 += OPWIDTH*OPHEIGHT*3;
+      c4base+=CACHEWIDTH*3;
+     }while(1);
+
+#else   // If no FMA
+     do{
+      // read the 2x1 a values and the 1x4 cache values
+      // form outer product, add to accumulator
+      D t0,t1,a0,a1,c0,c1,c2,c3;
+      a0=a4base0[0]; t0=c4base[0]; 
+      a1=a4base1[0]; c0=c4base[0];
+      t0 *= a0; c0 *= a1;
+      t1=c4base[1]; c1=c4base[1]; t1 *= a0; c1 *= a1;
+      z00 += t0; t0 = c4base[2]; c2 = c4base[2]; c3 = c4base[3];
+      z10 += c0; z01 += t1; z11 += c1;
+      t0 *= a0; c2 *= a1; a0 *= c3; c3 *= a1;
+      z02 += t0; z12 += c2; z03 += a0; z13 += c3;
+      a4base0++,a4base1++;
+      c4base+=CACHEWIDTH;
+     }while(--a4rem>0);
+#endif
+     // Store accumulator into z.  Don't store outside the array
+#if ARCHAVX
+     // Collect the sums of products
+     z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
+     if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
+     }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
+           if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z01);
+     }
+#else
+     z3base[0]=z00;
+     if(a3rem>3){z3base[1]=z01,z3base[2]=z02,z3base[3]=z03; if(a2rem>1)z3base[n]=z10,z3base[n+1]=z11,z3base[n+2]=z12,z3base[n+3]=z13;
+     }else{if(a3rem>1){z3base[1]=z01;if(a3rem>2)z3base[2]=z02;}; if(a2rem>1){z3base[n]=z10;if(a3rem>1){z3base[n+1]=z11;if(a3rem>2)z3base[n+2]=z12;}}}
+#endif
+    }
+   }
+  }
+ }
+}
+
+
+
 F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  RZ(a&&w);
  // ?r = rank, ?t = type (but set Boolean type for an empty argument)
@@ -177,85 +346,21 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #endif
    break;
   case FLX:
-#if 1
-   {D c,s,t,*u,*v,*wv,*x,*zv;
-    u=DAV(a); v=wv=DAV(w); zv=DAV(z);
-    NAN0;
-    if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
-    else for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
-     DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=*v?c**v:0.0; ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
-    }
-    NAN1;
-   }
-
-#else  // this turned out to be slower, at least until the arguments won't fit in cache.  Fast page mode memory saves the day for the original code
-#define OPHEIGHT 2  // height of outer-product block
-#define OPWIDTH 2  // width of outer-product block
-#define WSWATCHWIDTH 16  // number of columns of w in each inner product
-#define MAXOPS 4 // maximum number of outer products
-   {I remlines, remwcols, reminblock, remw2blocks, numip;
-   NAN0;
-   // m is # 1-cells of a
-   // n is # atoms in an item of w (and result)
-   // p is number of inner-product muladds (length of a row of a, and # items of w)
-   D* RESTRICT arowhd = DAV(a);  // base of current row-pair of a
-   D* RESTRICT zrowhd = DAV(z);  // current result row-pair
-   // process a by line-pairs, producing a result line-pair
-   for(remlines = m;remlines>0;remlines-=OPHEIGHT,arowhd+=OPHEIGHT*p,zrowhd+=OPHEIGHT*n) {
-    D* RESTRICT zcolhd = zrowhd;  // pointer to 2x16 result-block in the current row-pair
-    D* RESTRICT wswatchhd = DAV(w);   // pointer to top of 16-column swatch of w, to be processed in 32x2 blocks
-    // process w in 16-column swatches.  32x16 is the size of the block we need resident in cache
-    for(remwcols = n;remwcols>0;remwcols-=WSWATCHWIDTH,zcolhd+=WSWATCHWIDTH,wswatchhd+=WSWATCHWIDTH) {
-     D* RESTRICT ablkst=arowhd;  // pointer to current 2x32 block of a
-     D* RESTRICT zblkst = zcolhd;  // pointer to result area, 2x16
-     D* RESTRICT wmblkst = wswatchhd;  // pointer to current 32x2 block of w
-     // Clear the result area to 0.  We do it now to bring the result block into cache,
-     // and not before so we don't sweep through the cache too early
-     {D* RESTRICT zp0 = zblkst;D* RESTRICT zp1;
-     DO(MIN(OPHEIGHT,remlines), zp1=zp0; DO(MIN(WSWATCHWIDTH,remwcols), *zp1++=0;); zp0 += n;);
+   {NAN0;
+    // Run the cache-friendly matrix multiply
+    cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p);
+    // If there was a floating-point error, retry it the old way in case it was _ * 0
+    if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;  // scaf
+     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
+     NAN0;
+     if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
+     else for(i=0;i<m;++i,v=wv,zv+=n){
+             x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
+      DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=*v?c**v:0.0; ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
      }
-     // process the inner product row x col in 32-outer-product macroblocks
-     for(reminblock = p;reminblock>0;reminblock-=MAXOPS,ablkst+=MAXOPS,wmblkst+=MAXOPS*n) {
-      D* RESTRICT zv = zblkst;  // pointer to result 2x2
-      D* RESTRICT wblkst = wmblkst;   // pointer to 1st 32x2 block in w
-      // Process each 32x16 as up to 8 32x2 blocks, (less when we get to the right end of w)
-      // Meanwhile, prefetch the next 32x16 (32x128 bytes) block of w
-      for(remw2blocks=MIN(WSWATCHWIDTH,remwcols);remw2blocks>0;remw2blocks-=OPWIDTH,zv+=OPWIDTH,wblkst+=OPWIDTH) {
-       // Accumulate 2x2 outer products into a 2x2 result.
-       // We have 2 pointers to a and w.  We always fetch 2 a and 2 w; if we run off the end of either,
-       // we fetch the same value twice to avoid an out-of-bounds fetch
-_mm_prefetch(,MM_HINT_T0);
-       D* RESTRICT at = ablkst;   // top-left of 2x32
-       D* RESTRICT ab = ablkst + (remlines>1?p:0);  // lower row
-       D* RESTRICT wl = wblkst;   // top-left of 32x2
-       D* RESTRICT wr = wblkst + (remw2blocks>1?1:0);  // right column
-       D ztl=0.0, ztr=0.0, zbl=0.0, zbr=0.0;
-       // Loop through up to 32 2x2 outer products until we run out of inputs
-       for(numip=MIN(MAXOPS,reminblock);numip;--numip,++at,++ab,wl+=n,wr+=n) {D t0, t1, t2;
-        // Do one 2x2 outer product, accumulate into zxx
-        t0 = *at, t1 = *wl;   // fetch at, wl
-        ztl += t0 * t1;
-        t2 = *ab;  // fetch ab
-        zbl += t1 * t2;
-        t1 = *wr;  // fetch wr
-        ztr += t1 * t0;
-        zbr += t1 * t2;
-       }
-       // Accumulate the sum-of-outer-products into the result area
-       zv[0] += ztl;
-       if(at!=ab)zv[n] += zbl;  // Don't write outside of valid result area if there is no second row
-       if(wl!=wr){   // . or if no right column
-        zv[1] += ztr;
-        if(at!=ab)zv[n+1] += zbr;  // Don't write outside of valid result area if there is no second row
-       }
-      }
-     }
+     NAN1;
     }
    }
-   }
-   NAN1;
-#endif
    break;
   case CMPXX:
    {Z c,*u,*v,*wv,*x,*zv;

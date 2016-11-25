@@ -554,8 +554,6 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 
-#define ARCHAVX SY_64   // Set to 1 if the target architecture supports AVX instruction set
-
 #if C_HASH
 #define HASH0           224273737UL
 #else

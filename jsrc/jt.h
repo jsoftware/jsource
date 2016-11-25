@@ -72,6 +72,7 @@ typedef struct {
  B    stswitched;       /* called fn switched locale                       */
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
+ B    cpuarchavx;       // 1 if this CPU supports AVX instructions
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack

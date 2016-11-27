@@ -314,7 +314,7 @@ extern F1(jttail);
 extern F1(jttally);
 extern F1(jttco);
 extern F1(jttdot);
-extern F1(jttestcode);
+extern F1(jtprocarch);
 extern F1(jtthorn1);
 extern F1(jtthorn1u);
 extern F1(jttlimq);

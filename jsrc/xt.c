@@ -51,9 +51,11 @@ F1(jtparsercalls){ASSERTMTV(w); R sc(jt->parsercalls);}
 // 6!:5, window into the running J code
 F1(jtpeekdata){ jt->peekdata = i0(w); R zero; }
 
-// 6!:6, used to run tests that need to run in a sentence
-F1 (jttestcode){
-R sc(0);
+// 6!:6: set y as processor architecture and return previous value.  Bit 0=AVX instructions supported
+F1 (jtprocarch){I newval,old=jt->cpuarchavx;
+RE(newval=i0(w));
+jt->cpuarchavx=(C)newval;
+R sc(old);
 }
 
 #if SY_WIN32

@@ -100,7 +100,7 @@ l1:
 #endif
 
 // +/ . * support
-#if SY_64
+#if SY_64 && SY_WIN32
 #define ARCHAVX 1
 #define FUNCNAME cachedmmultavx
 #include "cipfloatmm_t.h"
@@ -192,7 +192,12 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
   case FLX:
    {NAN0;
     // Run the cache-friendly matrix multiply
-    (jt->cpuarchavx?cachedmmultavx:cachedmmult)(DAV(a),DAV(w),DAV(z),m,n,p);
+#if SY_64 && SY_WIN32
+    (jt->cpuarchavx?cachedmmultavx:cachedmmult)
+#else
+    cachedmmult
+#endif
+     (DAV(a),DAV(w),DAV(z),m,n,p);
     // If there was a floating-point error, retry it the old way in case it was _ * 0
     if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;  // scaf
      u=DAV(a); v=wv=DAV(w); zv=DAV(z);

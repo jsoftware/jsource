@@ -72,13 +72,13 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
      z00=z3base[0];
      if(a3rem>3){z01=z3base[1],z02=z3base[2],z03=z3base[3]; if(a2rem>1)z10=z3base[n],z11=z3base[n+1],z12=z3base[n+2],z13=z3base[n+3];
      }else{if(a3rem>1){z01=z3base[1];if(a3rem>2)z02=z3base[2];}; if(a2rem>1){z10=z3base[n];if(a3rem>1)z11=z3base[n+1];if(a3rem>2)z12=z3base[n+2];}}
-     // process outer product of each 2x1 section on each 1x4 section of cache
 #endif
+     // process outer product of each 2x1 section on each 1x4 section of cache
 
      // Before starting the last set of 16 outer products, issue prefetches for the next lines of a and z
      // We hope that the hardware prefetcher will get the remainder of each 2x16 block before it is needed
-     if(a3rem<=4){_mm_prefetch((C*)(z2base+(OPHEIGHT*n)),_MM_HINT_T0);_mm_prefetch((C*)(z2base+(OPHEIGHT*n)+n),_MM_HINT_T0);
-                  _mm_prefetch((C*)(a2base0+(OPHEIGHT*p)),_MM_HINT_T0);_mm_prefetch((C*)(a2base0+(OPHEIGHT*p))+p,_MM_HINT_T0);}
+     if(a3rem<=4){PREFETCH((C*)(z2base+(OPHEIGHT*n)),_MM_HINT_T0);PREFETCH((C*)(z2base+(OPHEIGHT*n)+n),_MM_HINT_T0);
+                  PREFETCH((C*)(a2base0+(OPHEIGHT*p)),_MM_HINT_T0);PREFETCH((C*)(a2base0+(OPHEIGHT*p))+p,_MM_HINT_T0);}
 
      I a4rem=MIN(w1rem,CACHEHEIGHT);
      D* RESTRICT c4base=c3base;
@@ -87,17 +87,17 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
       // read the 2x1 a values and the 1x4 cache values
       // form outer product, add to accumulator
 // This loop is hand-unrolled because the compiler doesn't seem to do it.  Unroll 3 times - needed on dual ALUs
-     __m256d cval0 = _mm256_load_pd(c4base);
+     __m256d cval0 = _mm256_load_pd(c4base);  // read from cache
 
      __m256d cval1 = _mm256_load_pd(c4base+CACHEWIDTH);
-     __m256d aval00 = _mm256_mul_pd(cval0,a4base0[0]);
+     __m256d aval00 = _mm256_mul_pd(cval0,a4base0[0]);  // multiply by a
      __m256d aval01 = _mm256_mul_pd(cval0,a4base0[1]);
 
      do{
       __m256d cval2 = _mm256_load_pd(c4base+2*CACHEWIDTH);
       __m256d aval10 = _mm256_mul_pd(cval1,a4base0[2]);
       __m256d aval11 = _mm256_mul_pd(cval1,a4base0[3]);
-      z00 = _mm256_add_pd(z00 , aval00);
+      z00 = _mm256_add_pd(z00 , aval00);    // accumulate into z
       z01 = _mm256_add_pd(z01 , aval01);
       if(--a4rem<=0)break;
 
@@ -115,13 +115,13 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
       z21 = _mm256_add_pd(z21 , aval21);
       if(--a4rem<=0)break;
 
-      a4base0 += OPHEIGHT*3;  // OP)WIDTH is implied by __m256d type
+      a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
       c4base+=CACHEWIDTH*3;
      }while(1);
 
-     // Store accumulator into z.  Don't store outside the array
      // Collect the sums of products
      z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
+     // Store accumulator into z.  Don't store outside the array
      if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
      }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
            if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z01);

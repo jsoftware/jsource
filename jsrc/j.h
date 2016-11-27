@@ -155,24 +155,32 @@
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
 // the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
 // after writing to *z, so we don't turn RESTRICT on for 32-bit
-#if SY_64
 #if SY_WIN32 
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
+// RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
+#define RESTRICTF __declspec(restrict)
+#define PREFETCH _mm_prefetch
+#endif
+#if SY_LINUX || SY_MAC
+#define RESTRICT __restrict
+// No RESTRICTF on GCC
+#define PREFETCH __builtin_prefetch
+#endif
+
+#if SY_64
+#if SY_WIN32 
 // RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
 // the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
 // same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
 // as a temp, which means we can't take the liberties there
 #define RESTRICTI __restrict
-// RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
-#define RESTRICTF __declspec(restrict)
 #endif
 #if SY_LINUX || SY_MAC
-#define RESTRICT __restrict
 #define RESTRICTI __restrict
-// No RESTRICTF on GCC
 #endif
-#endif
+#endif  // SY_64
+
 #ifndef RESTRICT
 #define RESTRICT
 #endif

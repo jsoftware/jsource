@@ -26,11 +26,14 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
    // read the 16x64 section of w into the cache area (8KB, 2 ways of cache), with prefetch of rows
    for(i=MIN(CACHEHEIGHT,w1rem),cvx=cvw;i;--i){I j;
     D* RESTRICT w1x=w1next; w1next+=n;  // save start of current input row, point to next row...
-    _mm_prefetch((C*)w1next,_MM_HINT_T0);   // ... and prefetch next row
+    // I don't think it's worth the trouble to move the data with AVX instructions - though it was to prefetch it
     for(j=0;j<MIN(CACHEWIDTH,w0rem);++j)*cvx++=*w1x++; for(;j<CACHEWIDTH;++j)*cvx++=0.0;   // move current row during prefetch
    }
    // Because of loop unrolling, we fetch and multiply one extra value in each cache column.  We make sure those values are 0 to avoid NaN errors
-   for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0; 
+   for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0;
+
+   // w1next is left pointing to the next cache block in the column.  We will use that to prefetch
+
    // the nx16 vertical strip of a will be multiplied by the 16x64 section of w and accumulated into z
    // process each 2x16 section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
@@ -51,6 +54,15 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
       // Because of loop unrolling, we fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
       *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);
      }
+    }
+#endif
+#ifdef PREFETCH
+    // While we are processing the sections of a, move the next cache block into L2 (not L1, so we don't overrun it)
+    // We would like to do all the prefetches for a CACHEWIDTH at once to stay in page mode
+    // but that might overrun the prefetch queue, which holds 10 prefetches.  So we just squeeze off 3 at a time
+    if(a2rem<=4*OPHEIGHT*CACHEHEIGHT){I offset= (a2rem&(3*OPHEIGHT))*(2*CACHELINESIZE/OPHEIGHT);
+     PREFETCH2((C*)w1next+offset); PREFETCH2((C*)w1next+offset+CACHELINESIZE); PREFETCH2((C*)w1next+offset+2*CACHELINESIZE);
+     if(offset==CACHELINESIZE*3*OPHEIGHT)w1next += n;  // advance to next row for next time
     }
 #endif
     // process each 16x4 section of cache, accumulating into z
@@ -75,10 +87,18 @@ static void FUNCNAME (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWI
 #endif
      // process outer product of each 2x1 section on each 1x4 section of cache
 
-     // Before starting the last set of 16 outer products, issue prefetches for the next lines of a and z
-     // We hope that the hardware prefetcher will get the remainder of each 2x16 block before it is needed
-     if(a3rem<=4){PREFETCH((C*)(z2base+(OPHEIGHT*n)),_MM_HINT_T0);PREFETCH((C*)(z2base+(OPHEIGHT*n)+n),_MM_HINT_T0);
-                  PREFETCH((C*)(a2base0+(OPHEIGHT*p)),_MM_HINT_T0);PREFETCH((C*)(a2base0+(OPHEIGHT*p))+p,_MM_HINT_T0);}
+     // Prefetch the next lines of a and z into L2 cache.  We don't prefetch all the way to L1 because that might overfill L1,
+     // if all the prefetches hit the same line (we already have 2 lines for our cache area, plus the current z values)
+     // The number of prefetches we need per line is (CACHEHEIGHT*sizeof(D)/CACHELINESIZE)+1, and we need that for
+     // OPHEIGHT*(OPWIDTH/4) lines for each of a and z.  We squeeze off half the prefetches for a row at once so we can use fast page mode
+     // to read the data (only half to avoid overfilling the prefetch buffer), and we space the reads as much as possible through the column-swatches
+#ifdef PREFETCH   // if architecture doesn't support prefetch, skip it
+     if((3*OPWIDTH)==(a3rem&(3*OPWIDTH))){  // every fourth swatch
+      I inc=((a3rem&(8*OPWIDTH))?p:n)*sizeof(D);    // counting down, a then z
+      C *base=(C*)((a3rem&(8*OPWIDTH))?a2base0:z2base) + inc + (a3rem&(4*OPWIDTH)?0:inc);
+      PREFETCH2(base); PREFETCH2(base+CACHELINESIZE); PREFETCH2(base+2*CACHELINESIZE);
+     }
+#endif
 
      I a4rem=MIN(w1rem,CACHEHEIGHT);
      D* RESTRICT c4base=c3base;

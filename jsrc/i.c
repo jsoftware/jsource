@@ -152,7 +152,7 @@ jt->assert = 1;
  R 1;
 }
 
-// Initialization of fields in jt that are not initialized to 0.  jt itself has been cleared to 0.
+// Initialization of fields in *jt that are not initialized to 0.  *jt itself has been cleared to 0.
 static void jtjtinit(J jt){
 // zero jt->parsercalls=0;
 // zero jt->parserstkbgn=jt->parserstkend1=0;
@@ -160,13 +160,12 @@ static void jtjtinit(J jt){
  jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 #if SY_64 && SY_WIN32
  // See if processor supports AVX instructions
- // Tip o'hat to InsufficientlyComplicated and the commenter
+ // Tip o' hat to InsufficientlyComplicated and the commenter
  // Checking for AVX requires 3 things:
  // 1) CPUID indicates that the OS uses XSAVE and XRSTORE
  //     instructions (allowing saving YMM registers on context
  //     switch)
- // 2) CPUID indicates 
- // support for AVX
+ // 2) CPUID indicates support for AVX
  // 3) XGETBV indicates the AVX registers will be saved and
  //     restored on context switch
  //
@@ -185,6 +184,7 @@ static void jtjtinit(J jt){
   jt->cpuarchavx = (xcrFeatureMask & 0x6) == 0x6;
  }
 #endif
+// cpuarch will be left 0 on other architectures
 
 }
 

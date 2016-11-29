@@ -160,12 +160,14 @@
 #define RESTRICT __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
 #define RESTRICTF __declspec(restrict)
-#define PREFETCH _mm_prefetch
+#define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
+#define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1
 #endif
 #if SY_LINUX || SY_MAC
 #define RESTRICT __restrict
 // No RESTRICTF on GCC
-#define PREFETCH __builtin_prefetch
+#define PREFETCH __builtin_prefetch(x)
+#define PREFETCH2(x) __builtin_prefetch((x),2)   // prefetch into L2 cache but not L1
 #endif
 
 #if SY_64
@@ -190,6 +192,7 @@
 #ifndef RESTRICTI
 #define RESTRICTI
 #endif
+// If PREFETCH is not defined, we won't generate prefetch instrs
 
 // If the user switch C_NOMULTINTRINSIC is defined, suppress using it
 #ifdef C_NOMULTINTRINSIC

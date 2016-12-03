@@ -55,6 +55,9 @@ void bucketinit(){I j;
 #define LSW 1
 #endif
 
+// create a mask of bits in which a difference is considered significant for floating-point purposes.
+// we calculate this using pi as a reference: find pi +- ct, and see which bits are different.  Everything
+// above the bits that are changed by ct is considered significant
 static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  p.d=PI;                      /* pi itself                */
  x.d=PI*(1-jt->ct);           /* lower bound              */
@@ -131,14 +134,21 @@ static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u
 #endif
 
 #if SY_64
+// Hash a single unsigned INT
 #define hicw(v)  (10495464745870458733U**(UI*)(v))
+// Hash a single double, using only the bits in ctmask
 static UI jthid(J jt,D d){R 10495464745870458733U*(jt->ctmask&*(I*)&d);}
 #else
 #define hicw(v)  (2838338383U**(U*)(v))
 static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+2838338383U*x.i[MSW];}
 #endif
 
-
+// Hash the data in the given A.  Comments say this is called only for singletons
+// If empty or boxed, hash the shape
+// If literal, hash the whole thing
+// If numeric, convert first atom to float and hash it
+// Q: called only for singletons?  is hct=1 for exact compares?  Seems to be 1.0 always.  Why multiply by hct?
+//  is ctmask=~0 for exact compares?  Better be.
 static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
  if(!n||t&BOX)R hic(AR(y)*SZI,(UC*)AS(y));
@@ -157,6 +167,7 @@ static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  R hid(d*hct);
 }
 
+// Hash y, which is not a singleton.  Integral types do not hash bytes that equal 0 or 255 (why??).
 static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
  m=n=AN(y);
  if(!n)R 0;
@@ -167,15 +178,18 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
   default:   R hic(n*bp(AT(y)),UAV(y));
 }}
 
+// Hashes for extended/rational types.  Hash only the numerator of rationals.  These are
+// Q and X types (Q is a brace of X types)
 static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,UAV(y));}
 static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,UAV(y));}
 
-
+// Comparisons for extended/rational/float/complex types.  teq should use the macro
 static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
+// test if u and v match.  If u and v are boxed (as they usually are), c and d are the relative flags
 static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
 
 /*
@@ -223,25 +237,49 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
  z    result
 */
 
+// should change IOF to return pointer to h; then could just pass in h rather than hp
 #define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
+// variables used in IOF routines:
+// h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
+// zb,zc,zi are pointer to result area, of different sizes according to the operation
+// t1 is 1.0 here; it is the amount that a singleton must be multiplied by to get the value to be hashed
+// acn,wcn=#atoms in cell of a,w
+// cn = #atoms in target item
+// j is the starting bucket number of the hashtable search
+// hj is the index of the first empty-or-matching bucket encountered
+// zv->result area (as an array of pointers), av->a data, wv->w data 
 #define IODECL(T)  A h=*hp;B*zb;C*zc;D t1=1.0;I t=sizeof(T),acn=ak/t,cn=k/t,hj,*hv=AV(h),j,l,p=AN(h),  \
                      wcn=wk/t,*zi,*zv=AV(z);T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
+// start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
+// (exp is a comparison, normally referring to v (the current element being hashed) and hv (the data field for
+// the first block that hashed to this address)
+// should init hash to _1 to allow constant compare?; should init end-of-array to sentinel to move compare out of the loop; should unroll to overlap compare with fetch
 #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
+// define ad and wd, which are bases to be added to boxed addresses
+// should use conditional statement
 #define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
+// Misc code to set the shape once we see how many results there are
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
 #define ZUSHAPE(T) *AS(z)= zu-(T*)zv;    AN(z)=n**AS(z)
 
-
+// Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  should use _1 for empty?
 #define XDOA(hash,exp,inc)         {d=ad; v=av;          DO(m,  j=(hash)%pm; FIND(exp); if(m==hj)hv[j]=i; inc;);}
 #define XDQA(hash,exp,dec)         {d=ad; v=av+cn*(m-1); DQ(m,  j=(hash)%pm; FIND(exp); if(m==hj)hv[j]=i; dec;);}
+
+// Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
+// and must check whether *hj (->prev data) matches the new data in *v
 #define XDO(hash,exp,inc,stmt)     {d=wd; v=wv;          DO(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
 #define XDQ(hash,exp,dec,stmt)     {d=wd; v=wv+cn*(c-1); DQ(cm, j=(hash)%pm; FIND(exp); stmt;             dec;);}
-
+// special lookup routines to move the data rather than store its index, used for nub/match
 #define XMV(hash,exp,inc,stmt)      \
  if(k==SZI){XDO(hash,exp,inc,if(m==hj){*zi++=*(I*)v;      stmt;}); zc=(C*)zi;}  \
  else       XDO(hash,exp,inc,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
 
+// The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
+// should change IPHOFFSET for ease in calc md
+// should change IIDOT etc to make testing easier
+//
 #define IOFX(T,f,hash,exp,inc,dec)   \
  IOF(f){RDECL;IODECL(T);B b;I cm,d,md,s;UC*u=0;                                      \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                             \
@@ -249,7 +287,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
   zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                                       \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!b){if(mode==IICO)XDQA(hash,exp,dec) else XDOA(hash,exp,inc);}}  \
-   switch(md){                                                                       \
+    switch(md){                                                                       \
     case IIDOT:   if(b){          XDO(hash,exp,inc,*zv++=m==hj?(hv[j]=i):hj);}       \
                   else XDO(hash,exp,inc,*zv++=hj);                           break;  \
     case IICO:    if(b){zi=zv+=c; XDQ(hash,exp,dec,*--zi=m==hj?(hv[j]=i):hj);}       \
@@ -454,7 +492,7 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
  R z;
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
 
-
+// return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
 static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
  av=AAV(a); ad=(I)a*ARELATIVE(a);
@@ -546,10 +584,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  as=AS(a); at=AT(a);
  ws=AS(w); wt=AT(w);
- if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}
- else{
+ if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted, 
+ else{  // w is given
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
+   // Dyad with no items or frame mismatch.  Return an appropriate not-found
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
@@ -564,6 +603,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
     case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
  }}}
  if(at&SPARSE||wt&SPARSE){A z;
+  // Handle sparse arguments
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
   if(af||wf)R sprank2(a,w,0L,acr,wcr,jtindexof);
   switch((at&SPARSE?2:0)+(wt&SPARSE?1:0)){
@@ -573,9 +613,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   }
   EPILOG(z);
  }
+ // Not sparse.
+ // Calculate size of result and allocate it.  Convert dissimilar types
  m=acr?as[af]:1; n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
  RE(t=mk?at:maxtype(at,wt)); k1=bp(t); k=n*k1; th=HOMO(at,wt); jt->min=ss=0;
- ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  
+ ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  // ac = #cells of a
  wc=prod(wf,ws); wk=wc?k1*AN(w)/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
@@ -596,6 +638,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
                 GAT(z,INT,1,0,0); break;
  }
  if(!(mk||m&&n&&zn&&th))switch(mode){
+  // If empty argument or result, or inhomogeneous arguments, return an appropriate not-found
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),one));
@@ -612,8 +655,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   case IALLEPS: R c&&n?zero:one;
   case IIFBEPS: R n?mtv :IX(c);
  }
+ // Choose the function to use for performing the operation
  if(a!=w&&!mk&&1==acr&&(1==wc||ac==wc)&&(D)m*n*zn<13*((D)m*n+zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
-  fn=jtiosc;
+  fn=jtiosc;  // simple scalar search without hashing.  should revisit the tuning parms after making any changes
  }else{B b=0==jt->ct;I ht=INT,t1;
   if(!b&&t&BOX+FL+CMPX)ctmask(jt);
   if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
@@ -624,16 +668,22 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   else if(2==k)           {fn=jtio2; if(!(mode==IIDOT||mode==IICO))ht=B01;}
   else if(k==SZI&&!(t&FL)){if(p==ss){fn=jtio4; if(!(mode==IIDOT||mode==IICO))ht=B01;}else fn=jtioi;}
   else                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;
+  // if a hashtable will be needed, allocate it.  It is NOT initialized
   if(fn!=jtiobs)GA(h,ht,p,1,0);
  }
  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
+  // exact types (including intolerant comparison of FL/CMPX)
+  // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
   GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
-  q=k; u=CAV(a); v=u+k;
-  DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);
+  q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
+  DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
+  // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
   if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
  }
+ // Call the routine to perform the operation
  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
  if(mk){A x,*zv;I*xv,ztype;
+  // If w was omitted, return the information for that special case
   GAT(z,BOX,3,1,0); zv=AAV(z);
   GAT(x,INT,6,1,0); xv=AV(x);
   switch(mode){

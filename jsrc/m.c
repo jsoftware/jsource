@@ -304,18 +304,26 @@ I jtgc3(J jt,A x,A y,A z,I old){
 }
 
 I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
- if(t&BOX){
+ if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  while(n--){
-   AD* np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  while(1){AD* np0;  // n is always > 0 to start
+   if(--n<0)break;
+   if(n){   // mustn't read past the end of the block, in case of protection check
+    np0=(A)((I)*wv+(I)wrel); ++wv;  // point to block for next box
+   }
    if(np){    // it can be 0, if there was an error
     I tp=AT(np);  // fetch type
+#ifdef PREFETCH
+    PREFETCH((C*)np0);   // prefetch the next box
+#endif
     AC(np)=(AC(np)+ACUC1)&~ACINPLACE;   // incr usecount
     if(tp&TRAVERSIBLE)jtra(jt,np,tp);   // recur if recursible
    }
+   np=np0;  // advance to next box
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
@@ -334,19 +342,27 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 
 I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
- if(t&BOX){
-  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+ if(t&BOX){AD* np;
+  // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  while(n--){
-   AD* np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+  np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+  while(1){AD* np0;
+   if(--n<0)break;
+   if(n){
+    np0=(A)((I)*wv+(I)wrel); ++wv;   // point to block for next box
+   }
    if(np){    // it could be 0 if there was error
     I tp=AT(np);  // fetch type
+#ifdef PREFETCH
+    PREFETCH((C*)np0);   // prefetch the next box
+#endif
     I c = AC(np);  // fetch usecount
     if(tp&TRAVERSIBLE)jtfa(jt,np,tp);  // recur before we free this block
     if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount; free if it goes to 0; otherwise store decremented count
    }
+   np = np0;  // advance to next box
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
@@ -371,7 +387,7 @@ I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pu
 // Result is new value of jt->tnextpushx, or 0 if error
 I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
-  // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
+  // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
   I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
@@ -381,6 +397,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
    if(np){     // it can be 0 if there was error
     I tp=AT(np);  // fetch type
     *(A*)((I)tstack+(pushx&(NTSTACK-1)))=np;  // put the box on the stack
+      // Don't bother to prefetch, since we do so little with the fetched word
     pushx += SZI;  // advance to next output slot
     if(!(pushx&(NTSTACK-1))){
      // pushx has crossed the block boundary.  Allocate a new block.
@@ -438,17 +455,24 @@ A* jttg(J jt, I pushx){     // Filling last slot; must allocate next page.  Call
 // return value is pushx
 I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
  if(old>=pushx)R pushx;  // return fast if nothing to do
- while(1) {  // loop till end.  Return is at bottom of loop
+ while(1) {A np;  // loop till end.  Return is at bottom of loop
   endingtpushx = MAX(old,SZI+((pushx-SZI)&-NTSTACK));  // Get # of frees we can perform in this tstack block
   I nfrees=(A*)pushx-(A*)endingtpushx;
   A* RESTRICT fp = (A*)((I)jt->tstack+((pushx-SZI)&(NTSTACK-1)));  // point to first slot to free, possibly rolling to end of block
-  while(nfrees--){
-   A np=*fp--;   // point to block to be freed
+  np=*fp--;   // point to block to be freed
+  while(--nfrees>=0){A np0;
+   // It is OK to prefetch the next box even on the last pass, because the next pointer IS a pointer to a valid box, or a chain pointer
+   // to the previous free block (or 0 at end), al of which is OK to read and then prefetch from
+   np0=*fp--;   // point to next block
    I c=AC(np);  // fetch usecount
+#ifdef PREFETCH
+   PREFETCH((C*)np0);   // prefetch the next box
+#endif
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
    if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount and either store it back or free the block
+   np=np0;  // Advance to next block
   }
   // See if there are more blocks to do
   if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block

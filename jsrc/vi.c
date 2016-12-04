@@ -223,13 +223,13 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
        44 IPHIFBEPS  I.@e.   a w     prehashed
  m    target axis length
  n    target item # elements
- c    # target items in a right arg cell
+ c    if >1 cell in a: # target items in a right arg cell; otherwise # atoms in result
  k    target item # bytes
  acr  left  rank
  wcr  right rank
- ac   # left  arg cells
+ ac   # left  arg cells  (cells, NOT items)
  wc   # right arg cells
- ak   # bytes left  arg cells, or 0 if only one cell
+ ak   # bytes left  arg cells, or 0 if only 1 cell
  wk   # bytes right arg cells, or 0 if only one cell
  a    left  arg
  w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
@@ -238,6 +238,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 */
 
 // should change IOF to return pointer to h; then could just pass in h rather than hp
+// wcr does not need to be passed in.  Check other args
 #define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
 // variables used in IOF routines:
 // h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
@@ -578,17 +579,17 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
-    I ac,acr,af,ak,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wr,*ws,wt,zn;
+    I ac,acr,af,ak,an,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- as=AS(a); at=AT(a);
- ws=AS(w); wt=AT(w);
- if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted, 
+ as=AS(a); at=AT(a); an=AN(a);
+ ws=AS(w); wt=AT(w); wn=AN(w);
+ if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted, use info from a
  else{  // w is given
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
-   // Dyad with no items or frame mismatch.  Return an appropriate not-found
+   // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
@@ -602,6 +603,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
     case IJ0EPS:                             R sc(zn-1);
     case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
  }}}
+ // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
+ // r is rank of an item of a cell of a (i. e. rank of a target item), f1 is len of frame of A CELL OF w with respect to target cells, in
+ // other words the frame of the results each cell of w will produce
  if(at&SPARSE||wt&SPARSE){A z;
   // Handle sparse arguments
   if(1>=acr)R af?sprank2(a,w,0L,acr,RMAX,jtindexof):wt&SPARSE?iovxs(mode,a,w):iovsd(mode,a,w);
@@ -614,15 +618,31 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   EPILOG(z);
  }
  // Not sparse.
- // Calculate size of result and allocate it.  Convert dissimilar types
- m=acr?as[af]:1; n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
- RE(t=mk?at:maxtype(at,wt)); k1=bp(t); k=n*k1; th=HOMO(at,wt); jt->min=ss=0;
- ac=prod(af,as); ak=ac?k1*AN(a)/ac:0;  // ac = #cells of a
- wc=prod(wf,ws); wk=wc?k1*AN(w)/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
+ // Calculate size of result.
+ m=acr?as[af]:1; RE(t=mk?at:maxtype(at,wt)); k1=bp(t);   // Length of target axis; the common type; k1=#bytes/atom of common type
+ if(an&&wn){  // scaf
+  // Neither arg is empty.  We can safely count the number of cells
+  PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
+  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // #cells in a & w;  c=#target items in a result-cell
+  RE(zn=mult(af?ac:wc,c));   // WRONG
+  ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
+  if(ac==1)c=zn;   // ?? if there is more than 1 cell in a, repurpose c to be zn
+ }else{
+  // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old way
+  n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
+  k=n*k1;
+  ac=prod(af,as); ak=ac?k1*an/ac:0;  // ac = #cells of a
+  wc=prod(wf,ws); wk=wc?k1*wn/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
+ }
+
+ // Convert dissimilar types
+ th=HOMO(at,wt); jt->min=ss=0;  // are args compatible? clear return values from irange
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
+// should fix irange so as not to need pointer args
  if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}
  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
+ // Allocate the result area
  if(!mk)switch(mode){I q;
   case IIDOT: 
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
@@ -638,7 +658,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
                 GAT(z,INT,1,0,0); break;
  }
  if(!(mk||m&&n&&zn&&th))switch(mode){
-  // If empty argument or result, or inhomogeneous arguments, return an appropriate not-found
+  // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),one));

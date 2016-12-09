@@ -136,7 +136,8 @@ static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u
 #if SY_64
 // Hash a single unsigned INT
 #define hicw(v)  (10495464745870458733U**(UI*)(v))
-// Hash a single double, using only the bits in ctmask
+// Hash a single double, using only the bits in ctmask.  -0 is hashed differently than +0.  Should we take the sign bit out of ct?  Only if ct=0?
+//  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
 static UI jthid(J jt,D d){R 10495464745870458733U*(jt->ctmask&*(I*)&d);}
 #else
 #define hicw(v)  (2838338383U**(U*)(v))
@@ -189,7 +190,8 @@ static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
-// test if u and v match.  If u and v are boxed (as they usually are), c and d are the relative flags
+// test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
+// We test n subboxes
 static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
 
 /*
@@ -222,7 +224,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
        43 IPHALLEPS  [:*./e. a w     prehashed
        44 IPHIFBEPS  I.@e.   a w     prehashed
  m    target axis length
- n    target item # elements
+ n    target item # atoms
  c    if >1 cell in a: # target items in a right arg cell; otherwise # atoms in result
  k    target item # bytes
  acr  left  rank
@@ -237,8 +239,10 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
  z    result
 */
 
+// should RESTRICT all pointers used for hashtables, inputs, outputs
+
 // should change IOF to return pointer to h; then could just pass in h rather than hp
-// wcr does not need to be passed in.  Check other args
+// should not pass in wcr - not used.  Check other args
 #define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
 // variables used in IOF routines:
 // h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
@@ -252,14 +256,16 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 #define IODECL(T)  A h=*hp;B*zb;C*zc;D t1=1.0;I t=sizeof(T),acn=ak/t,cn=k/t,hj,*hv=AV(h),j,l,p=AN(h),  \
                      wcn=wk/t,*zi,*zv=AV(z);T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
 // start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
-// (exp is a comparison, normally referring to v (the current element being hashed) and hv (the data field for
+// (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
 // the first block that hashed to this address)
-// should init hash to _1 to allow constant compare?; should init end-of-array to sentinel to move compare out of the loop; should unroll to overlap compare with fetch
+// should init hash to _1 to allow constant compare? not needed if we embed seq# in hash, but useful otherwise
+// should init end-of-array to sentinel to move compare against j out of the loop
+// should combine hash here, and unroll 3 times to overlap hash, fetch, compare
 #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
 // define ad and wd, which are bases to be added to boxed addresses
 // should use conditional statement
 #define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
-// Misc code to set the shape once we see how many results there are
+// Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
 #define ZUSHAPE(T) *AS(z)= zu-(T*)zv;    AN(z)=n**AS(z)
@@ -277,10 +283,20 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
  if(k==SZI){XDO(hash,exp,inc,if(m==hj){*zi++=*(I*)v;      stmt;}); zc=(C*)zi;}  \
  else       XDO(hash,exp,inc,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
 
+
+// *************** first class: intolerant comparisons, unboxed ***********************
+
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 // should change IPHOFFSET for ease in calc md
-// should change IIDOT etc to make testing easier
-//
+// should change IIDOT etc to make testing run faster
+// should change hash so as not to require clearing it - consider leaving the table allocated permanently to reduce cache thrashing and save initialization.
+// Could use subsets of it - power of 2??  Choose good size to reduce cache footprint of accessed area.  For prehashing, copy the hash to the
+//  prehashed compound.  Could save space by copying only index, not other bytes
+// alternatively, could save a multiply by storing address of data rather than index (not as good)
+// if we clear the hash, should clear by fast block-copy
+// (in all classes) should do self-index in 1 pass: hash and get result without further ado (seems to be done already)
+
+// if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 #define IOFX(T,f,hash,exp,inc,dec)   \
  IOF(f){RDECL;IODECL(T);B b;I cm,d,md,s;UC*u=0;                                      \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                             \
@@ -310,6 +326,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
   R z;                                                                               \
  }
 
+//
 static IOFX(A,jtioax1,hia(t1,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed exact 1-element item */   
 static IOFX(A,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed uniform type         */
 static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               v+=cn, v-=cn)  /* extended integer           */   
@@ -318,33 +335,55 @@ static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             v+=cn,
 static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
 static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,   --v  )
 
+// ********************* second class: tolerant comparisons, possibly boxed **********************
 
+// should have 64-bit versions that use ctmask directly (it should be in machine byte order)
+// create hash for a D type
 #define HID(y)              (888888883U*y.i[LSW]+2838338383U*y.i[MSW])
 #define MASK(dd,xx)         {dd.d=xx; dd.i[LSW]&=jt->ctmask;}
+
+// functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
+
+// hash a single D type.  If complex, hash the real part only (hashing both parts would require 4 hashes for tolerance)
 #define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
+// boxed type.  "hash" the shape only, after performing relative-to-absolute conversion
+// should omit the relative, since only shape is hashed
 #define THASHBX(expa)       {j=hia(t1,AADR(d,*v))%pm;            FIND(expa); if(m==hj)hv[j]=i;}
 
+// functions for searching the hash table
+
+// find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
 #define TFINDXY(expa,expw)  \
  {x=*(D*)v;                                                                             \
   MASK(dl,x*tl);                j=              HID(dl)%pm; FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr.d!=dl.d){j=              HID(dr)%pm; FIND(expw);    ir=hj;}      \
- } 
+ }
+// same idea, but also throw in an exact match on the value itself (rounded to a bucket value).  Used for reflexive searches, in which
+// we have not initialized the hash table.  We first add an (exact) entry for the current value, and then search for tolerant matches
+// We have to add an entry for the current value always, because a hashed value may be tolerantly equal to y but not tequal some
+// other value tequal to y.  -0 will always get hashed as +0, and possibly -0 as well
 #define TFINDYY(expa,expw)  \
  {x=*(D*)v;                                                                             \
   MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  \
   MASK(dl,x*tl);                j=dl.d==dx.d?jx:HID(dl)%pm; FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr.d!=dl.d){j=dr.d==dx.d?jx:HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
+// Here the match on the value itself is not exact.
 #define TFINDY1(expa,expw)  \
  {x=*(D*)v;                                                                             \
   MASK(dx,x   ); j=jx=HID(dx)%pm;             FIND(expa);            if(m==hj)hv[j]=i;  \
   MASK(dl,x*tl);                j=dl.d==dx.d?jx:HID(dl)%pm; FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr.d!=dl.d){j=dr.d==dx.d?jx:HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
+// here comparing boxes
 #define TFINDBX(expa,expw)   \
  {jx=j=hia(tl,AADR(d,*v))%pm;           FIND(expw); il=ir=hj;   \
      j=hia(tr,AADR(d,*v))%pm; if(j!=jx){FIND(expw);    ir=hj;}  \
  }
+
+// loop to search the hash table.  b means self-index, bx means boxed
+// Fxx is a TFIND macro, charged with setting il and ih; stmt tells what to do with il/ir
+// should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
  switch(4*bx+2*b+(k==sizeof(D))){                       \
   default: DO(c, FXY(expa,expw); stmt; v+=cn;); break;  \
@@ -352,6 +391,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   case 2:  DO(c, FYY(expa,expw); stmt; v+=cn;); break;  \
   case 3:  DO(c, FYY(expa,expw); stmt; ++v;  );         \
  }
+// Same, but search from the end of y backwards (e. i: 0 etc)
 #define TDQ(FXY,FYY,expa,expw,stmt)  \
  v+=cn*(c-1);                                           \
  switch(4*bx+2*b+(k==sizeof(D))){                       \
@@ -360,6 +400,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   case 2:  DQ(c, FYY(expa,expw); stmt; v-=cn;); break;  \
   case 3:  DQ(c, FYY(expa,expw); stmt; --v;  );         \
  }
+// Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
 #define TMV(FXY,FYY,expa,expw,prop)   \
  switch(4*bx+2*b+(k==sizeof(D))){                                  \
   default: DO(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
@@ -368,7 +409,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   case 3:  DO(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
  }
 
-
+// Do the operation.  Build a hash for a except when unboxed self-index
 #define IOFT(T,f,FA,FXY,FYY,expa,expw)   \
  IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;DI dl,dr,dx;I d,e,il,ir,jx,md,s;  \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                                         \
@@ -404,32 +445,70 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
   R z;                                                                                           \
  }
 
+// Verbs for the types of inputs
+
+// CMPLX array
 static IOFT(Z,jtioz, THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,n*2*sizeof(D)), !eqz(n,v,av+n*hj)               )
+// CMPLX list
 static IOFT(Z,jtioz1,THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,  2*sizeof(D)), !zeq( *v,av[hj] )               )
+// FL array
 static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,n*  sizeof(D)), !eqd(n,v,av+n*hj)               )
+// FL list
+// should use macro for teq
 static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !teq(x,av[hj] )                 )
+// boxed array with more than 1 box
 static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+// singleton box
 static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
+// ********************* third class: small-range arguments ****************************
+// should consider removing this, as the hash will be just about as fast.  That would save the
+// erasing of the table and the call to irange.
+// or, should leave 1- and 2-byte versions, remove the word-length versions here and don't call irange
 
+// create the value vector
+
+// v0 is the EMPTY value.  Clear to empty, then go through and set TRUE for each value found.  Used for [: u e.  where the position doesn't matter
 #define SDO(v0)         if(mode<IPHOFFSET){B v1=!(v0); memset(hv,v0,p); u=av; DO(m, hb[*u++]=v1;);}
+// Clear to empty, then go through and remember the index for each value.  Leaves last index, so used for i:
 #define SDOA            if(mode<IPHOFFSET){DO(p,hv[i]=m; ); u=av;   DO(m,hu[*u++]=i;);}
+// Clear to empty, then go through and remember the index for each value.  Reverse order, so leaves first index, so used for i.
 #define SDQA            if(mode<IPHOFFSET){DO(p,hv[i]=m; ); u=av+m; DQ(m,hu[*--u]=i;);}
 
+// Execute stmt on each cell of w.  stmt is responsible for incrementing input and output pointers
 #define SDOW(stmt)      {u=wv;   DO(cm, stmt;);}
 
+// loop through the items of w, creating the output.  hh->the value vector
+
+// first, versions for i. i: e.    zz is an lvalue that stores to *zz++, vv is the value to use for not-found
+// this version (used for 1- and 2-byte values) we just store the value from the value vector
 #define SCOZ(hh,zz,vv)  {u=wv;   DO(cm, zz=hh[*u++];                      );}
+// This version for fullword values (which have a partial table); use the table only if the value is represented there
 #define SCOZ1(hh,zz,vv) {u=wv;   DO(cm, x=*u++; zz=min<=x&&x<max?hh[x]:vv;);}
 
-#define SCOW(hh,stmt)   {u=wv;   DO(cm,         if(                hh[  *u++]){stmt;});}
-#define SCOWX(hh,stmt)  {u=wv;   DO(cm,         if(                hh[x=*u++]){stmt;});}
+// for u@e. - for each item of w, see if it is in the value table, execute stmt if so.  Save w value in x before executing stmt
 #define SCOW1(hh,stmt)  {u=wv;   DO(cm, x=*u++; if(min<=x&&x< max&&hh[x     ]){stmt;});}
+// reversed: execute stmt when the cell of w is NOT in the value table
 #define SCOW0(hh,stmt)  {u=wv;   DO(cm, x=*u++; if(x<min ||max<=x||hh[x     ]){stmt;});}
+// faster version of SCOW1 for use when the table contains all possible values
+#define SCOWX(hh,stmt)  {u=wv;   DO(cm,         if(                hh[x=*u++]){stmt;});}
+// still faster version of SCOWX, don't bother setting x
+#define SCOW(hh,stmt)   {u=wv;   DO(cm,         if(                hh[  *u++]){stmt;});}
 
+// just like SCOW1/SCOW0/SCOW, but scanning from the end of w
 #define SCQW(hh,stmt)   {u=wv+c; DQ(cm,         if(                hh[  *--u]){stmt;});}
 #define SCQW1(hh,stmt)  {u=wv+c; DQ(cm, x=*--u; if(min<=x&&x< max&&hh[x     ]){stmt;});}
 #define SCQW0(hh,stmt)  {u=wv+c; DQ(cm, x=*--u; if(x<min ||max<=x||hh[x     ]){stmt;});}
 
+// Do the operation on small-range arguments
+// COZ1 is the result loop for i. i: e.
+// COW0 is the result loop for (e. i. 0:)  ([: *./ e.)
+// COW1 is the result loop for (e. i. 1:)  ([: +./ e.) ([: +/ e.) ([: I. e.)
+// COWX is the result loop for -.
+// CQW0 is the result loop for (e. i: 0:)
+// CQW1 is the result loop for (e. i: 1:)
+// cm is the number of cells of w per cell of a 
+// clear the value table; 
 #define IOFSMALLRANGE(f,T,COZ1,COW0,COW1,COWX,CQW0,CQW1)    \
  IOF(f){A h=*hp;B b,*hb,*zb;I cm,e,*hu,*hv,l,max,md,min,p,s,*v,*zi,*zv;T*av,*u,*wv,x,*zu;       \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET; b=(mode==IIDOT||mode==IICO)&&a==w&&ac==wc;             \
@@ -460,11 +539,15 @@ static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!e
   R z;                                                                                          \
  }
 
+// The verbs to do the work, for different item lengths
 static IOFSMALLRANGE(jtio1,UC,SCOZ, SCOW, SCOW, SCOWX,SCQW, SCQW )  /* 1-byte    items */
 static IOFSMALLRANGE(jtio2,US,SCOZ, SCOW, SCOW, SCOWX,SCQW, SCQW )  /* 2-byte    items */
 static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size items */
 
+// ******************* fourth class: sequential comparison ***************************************
 
+// we is the expression for reading one comparand, exp is the expression
+// loop through storing the index at which a match was found
 #define SCDO(T,xe,exp)  \
  {T*av=(T*)u,*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
@@ -488,10 +571,14 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
   case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
-             else         SCDO(D, *wv,!teq(x,av[j]));
+             else         SCDO(D, *wv,!teq(x,av[j]));  // should use macro
  }
  R z;
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
+
+
+// ***************** fifth class: boxed arguments ************************
+// should scrap this and do a recursive hash on the entire box, and use the normal hash code.  would require managing -0 in the hash for float/complex
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
 static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
@@ -501,22 +588,53 @@ static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
 
+// 
+// b means self-index and running i. i: ~. ~: (I.@~.)
+// bk means i: (e. i: 0:) (e. i: 1:)   or prehashed version thereof, i. e. backwards
+// We grade a, producing the ordering permutation.  Then we go through it to discard duplicates
+// should not do the duplicate-removal pass, since it requires an entire pass over the a argument; instead, check
+//  for duplicates as matches are found, and mark when a check has been made.  Duplicate removal might be reasonable for prehashing
 static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u,*v;I*hi,*hu,*hv,l,m1,q;
  RZ(h=irs1(a,0L,acr,jtgrade1)); hv=AV(h)+bk*(m-1); av=AAV(a);
- if(!b)for(l=0;l<ac;++l,av+=acn,hv+=m){
+ // if not self-index, close up the duplicates
+ if(!b)for(l=0;l<ac;++l,av+=acn,hv+=m){  // for each item of the overall result
+  // hi->next index in the grade result, q is its value, u->A block for that index
+  // hu->next output position.  The first result always stays in place
   hi=hv; q=*hi; u=av+n*q;
+  // loop through, setting q/v to the index/address of data.  If *v!=*u, accept q/v as a new value and set u=v
+  // should not bother with testing equality if q<index of u (for ascending; reverse for descending)
+  // if the list was shortened, replace the last position with 1-(length of shortened list).  This will be detected
+  // and the sign changed to give (length of list)-1.  0 is OK too, indicating a 1-element list
   if(bk){hu=--hi; DO(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
   else  {hu=++hi; DO(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
  }
  R h;
 } 
 
+// hiinc will inc or dec hi
+// zstmti initializes the first result index with the index of the smallest element
+// zstmt1 is executed if v is a duplicate, and should repeat the previous result
+// zstmt0 is executed if v is not a dup, and must advance the p marker to q as well as store the new result
+// should not bother testing for equality if ascending order and q<p (since grade would preserve order if equal), or if descending and q>p
+// should look into having a grade that discards dups
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
-  p=*hiinc; u=av+n*p; zstmti;        \
-  DO(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;});  \
+  p=*hiinc; u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
+  DO(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;}); /* 
+   q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
+   if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
 
+// binary search through the list hu[]
+// m1 is the number of items-1(= index of last item)
+// p/q are left/right indexes for the binary search
+// ii is the item number we start working on
+// i is the item number of w we are working on
+// icmp is the loop exit condition, finding the last i (depends on direction - I don't see why)
+// iinc advances to the next item of w (depends on direction - I don't see why)
+// uinc advances the pointer to the next item of w (depends on direction - I don't see why)
+// zstmt creates the result when a match has been found.  At that point q=-2 if there was no match, otherwise
+//  it holds the index of the match
 #define BSLOOPAWX(ii,icmp,iinc,uinc,zstmt)  \
  {A* RESTRICT u=wv+n*(ii),* RESTRICT v;I i,j,p,q;int t;  \
   for(i=ii;icmp;iinc,uinc){          \
@@ -529,9 +647,13 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
    zstmt;                            \
  }}
 
+// macros to create ascending or descending binary search, executing zstmt afterwards
 #define BSLOOPAW(zstmt)     BSLOOPAWX(0  ,i< c,++i,u+=n,zstmt)
 #define BSLOOQAW(zstmt)     BSLOOPAWX(c-1,i>=0,--i,u-=n,zstmt)
 
+// index by sorting a into order, then doing binary search on each item of w.
+// Used only when ct=0 and (boxed rank>1 or boxes contain numeric arrays)
+// 
 static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI); 
@@ -540,18 +662,20 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md
  av=AAV(a); ad=(I)a*ARELATIVE(a); acn=ak/sizeof(A);
  wv=AAV(w); wd=(I)w*ARELATIVE(w); wcn=wk/sizeof(A);
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
+ // If a has not been sorted already, sort it
  if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,ad,n,m,b,bk));
  if(w==mark)R mark;
  hv=AV(h)+bk*(m-1); jt->complt=-1; jt->compgt=1;
- for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=m){
+ for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=m){  // loop for each result in a
+  // m1=index of last item, which may be less than m if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-m:m-1]; m1=0>s?-s:m-1; hu=hv-m1*bk;
-  if(b)switch(md){
+  if(b)switch(md){  // self-indexes
    case IIDOT:        BSLOOPAA(hi++,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
    case IICO:         BSLOOPAA(hi--,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
    case INUBSV:       BSLOOPAA(hi++,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=m;     break;
    case INUB:         BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
    case INUBI:        BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i])*zi++=i;);                  ZISHAPE; break;
-  }else switch(md){
+  }else switch(md){  // searches, by binary search
    case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
    case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
    case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
@@ -573,10 +697,12 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
  m=AN(w)/c; wv=AAV(w); wd=(I)w*ARELATIVE(w);
  DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
-}    /* return type if opened atoms of cells of w has uniform type, else 0. c is # of cells */
+}    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 
 I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
+
+// This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
 
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
     I ac,acr,af,ak,an,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;
@@ -620,6 +746,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  // Not sparse.
  // Calculate size of result.
  m=acr?as[af]:1; RE(t=mk?at:maxtype(at,wt)); k1=bp(t);   // Length of target axis; the common type; k1=#bytes/atom of common type
+// We are going to have to calculate the number of times to repeat cells of w and a, and use those values in all the macros
  if(an&&wn){  // scaf
   // Neither arg is empty.  We can safely count the number of cells
   PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
@@ -637,6 +764,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
 
  // Convert dissimilar types
  th=HOMO(at,wt); jt->min=ss=0;  // are args compatible? clear return values from irange
+ // touch a float/complex arg to convert -0 to 0.  should handle this in the hash, perhaps by masking out the sign bit (might be needed only if ct=0)
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
 // should fix irange so as not to need pointer args
@@ -703,7 +831,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  // Call the routine to perform the operation
  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
  if(mk){A x,*zv;I*xv,ztype;
-  // If w was omitted, return the information for that special case
+  // If w was omitted (indicating prehashing), return the information for that special case
+  // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
+  // The caller must ra() this result to protect it, if it is going to be saved
   GAT(z,BOX,3,1,0); zv=AAV(z);
   GAT(x,INT,6,1,0); xv=AV(x);
   switch(mode){
@@ -721,21 +851,27 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  EPILOG(z);
 }    /* a i."r w main control */
 
+// verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt,ztype;
  RZ(a&&w&&hs);
+ // hv is (info vector);(hashtable);(byte index valididty)
  hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
+ // get the info from the info vector
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
  wr=AR(w); ws=AS(w); wt=AT(w);
  if(1==ztype)r=wr?wr-1:0;
  else        r=ar?ar-1:0;
  f1=wr-r;
+ // audit conformance of input shapes.  bug: should return not-found rather than length error
  ASSERT(r<=ar&&0<=f1,EVRANK); 
  ASSERT(!ICMP(as+ar-r,ws+f1,r),EVLENGTH);
- RE(c=prod(f1,ws));
+ RE(c=prod(f1,ws));  // c=#cells of w (and result)
  if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode,a,w);
+ // allocate enough space for the result, depending on the type of the operation
+ // should define constants for these types
  switch(ztype){
   case 0: GATV(z,INT,c,    f1, ws); break;
   case 1: GA(z,wt, AN(w),1+r,ws); break;
@@ -743,17 +879,27 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
   case 3: GAT(z,B01,1,    0,  0 ); break;
   case 4: GAT(z,INT,1,    0,  0 ); break;
  }
+ // save info used by the routines
  jt->hin=AN(hi); jt->hiv=AV(hi);
+ // convert type of w if needed; and if unconverted FL/CMPX, touch to change -0 to 0
+ // this is dodgy: if the comparison tolerance doen't change, there should be no need for conversion; but
+ // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)) else if(t&FL+CMPX)RZ(w=cvt0(w));
+ // call the action routine
  R fn(jt,mode+IPHOFFSET,m,n,c,k,AR(a),AR(w),(I)1,(I)1,(I)0,(I)0,a,w,&h,z);
 }
 
+// Now, support for the primitives that use indexof
+
+// x i. y
 F2(jtindexof){R indexofsub(IIDOT,a,w);}
      /* a i."r w */
 
+// x i: y
 F2(jtjico2){R indexofsub(IICO,a,w);}
      /* a i:"r w */
 
+// ~: y
 F1(jtnubsieve){
  RZ(w);
  if(SPARSE&AT(w))R nubsievesp(w); 
@@ -761,22 +907,27 @@ F1(jtnubsieve){
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
 
+// ~. y  - does not have IRS
 F1(jtnub){ 
  RZ(w);
  if(SPARSE&AT(w)||AFLAG(w)&AFNJA+AFREL)R repeat(nubsieve(w),w); 
  R indexofsub(INUB,w,w);
 }    /* ~.w */
 
+// x -. y.  does not have IRS
 F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a); 
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
- if(ar>1+wr)R ca(a);
- if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}
+ if(ar>1+wr)R ca(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
+ // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
+ if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+ // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
 }    /* a-.w */
 
+// x e. y
 F2(jteps){I l,r,rv[2];
  RZ(a&&w);
  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
@@ -786,24 +937,29 @@ F2(jteps){I l,r,rv[2];
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
 
+// I.@~: y   does not have IRS
 F1(jtnubind){
  RZ(w);
  R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
+// i.@(~:"0) y     does not have IRS
 F1(jtnubind0){A z;D oldct=jt->ct;
  RZ(w);
  jt->ct=0.0; z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); jt->ct=oldct;
  R z;
 }    /* I.@(~:!.0) w */
 
-
+// = y    
 F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
+ // If w is scalar, return 1 1$1
  if(!AR(w))R reshape(v2(1L,1L),one);
- n=IC(w);
- RZ(x=indexof(w,w));
+ n=IC(w);   // n=#items of y
+ RZ(x=indexof(w,w));   // x = i.~ y
+ // if w is dense, return ((x = i.n) # x) =/ x
  if(DENSE&AT(w))R atab(CEQ,repeat(eq(IX(n),x),x),x);
+ // if x is sparse... ??
  p=PAV(x); e=SPA(p,e); y=SPA(p,i); RZ(xy=stitch(SPA(p,x),y));
  if(n>*AV(e))RZ(xy=over(xy,stitch(e,less(IX(n),y))));
  RZ(xy=grade2(xy,xy)); v=AV(xy);
@@ -819,11 +975,21 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 }
 
 
+// support for a i."1 &.|:w or a i:"1 &.|:w
+
+// function definition
 #define IOCOLF(f)     void f(J jt,I m,I c,I d,A a,A w,A z,A h)
 #define IOCOLDECL(T)  D tl=1-jt->ct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
 
+// function to search forward
+// T is the type of the data
+// f is function name
+// hasha is the hash to use for the values from a
+// hashl and hashr are the hashes to use for one tolerance below & above
+// exp is a test for not-equal, returning 1 when values do not match
+// For each column, clear the hash table, then hash the items of a, then look up the items of w 
 #define IOCOLFT(T,f,hasha,hashl,hashr,exp)  \
  IOCOLF(f){IOCOLDECL(T);                                                   \
   for(l=0;l<c;++l){                                                        \
@@ -839,6 +1005,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
    ++av; ++wv; ++zv;                                                       \
  }}
 
+// Similar, but search backward
 #define JOCOLFT(T,f,hasha,hashl,hashr,exp)  \
  IOCOLF(f){IOCOLDECL(T);I q;                                               \
   for(l=0;l<c;++l){                                                        \
@@ -854,24 +1021,30 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
    ++av; ++wv; ++zv;                                                       \
  }}
 
+// create the index-of routines.  These hash just the real part of a complex value
 static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[c*hj]))
 static IOCOLFT(Z,jtiocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
 
 static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[c*hj]))
 static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
 
+// support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff
 A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  RZ(a&&w);
+ // require ct!=0   why??
  ASSERT(0!=jt->ct,EVNONCE);
- at=AT(a); ar=AR(a); m=*AS(a); c=aii(a);
+ at=AT(a); ar=AR(a); m=*AS(a); c=aii(a);  // a: at=type ar=rank m=#items c=#atoms in an item
  wt=AT(w); wr=AR(w); ws=AS(w); 
  d=1; DO(1+wr-ar, d*=ws[i];);
+ // convert to common type
  RE(t=maxtype(at,wt));
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
+ // allocate hash table and result
  p=hsize(m);
  GATV(h,INT,p,1,0);
  GATV(z,INT,AN(w),wr,ws);
+ // call routine based on types.  Only float and CMPX are supported
  switch(CTTZ(t)){
   default:   ASSERT(0,EVNONCE);     
   case FLX:   fn=mode==IICO?jtjocold:jtiocold; ctmask(jt); break;

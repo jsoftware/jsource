@@ -80,8 +80,10 @@ B all0(A w){RZ(w); R !memchr(AV(w),C1,AN(w));}
 
 B all1(A w){RZ(w); R !memchr(AV(w),C0,AN(w));}
 
+// Number of atoms in an item.  should check AN and avoid multiply.  bug: must check result of prod() on empty lists
 I jtaii(J jt,A w){I m=IC(w); R m&&!(SPARSE&AT(w))?AN(w)/m:prod(AR(w)-1,1+AS(w));}
 
+// return A-block for b+m*i.n
 A jtapv(J jt,I n,I b,I m){A z;I j=b-m,p=b+m*(n-1),*x;
  GATV(z,INT,n,1,0); x=AV(z);
  switch(m){
@@ -296,15 +298,18 @@ A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     R z;}
 A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     R z;}
 A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); R z;}
 
-// return block for the string *s with length n
+// return A-block for the string *s with length n
 A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); R z;}
 
 F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; R z;}
 
+// return A-block for a 2-atom integer vector containing a,b
 A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; R z;}
 
+// return A-block for singleton integer list whose value is k
 A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; R z;}
 
+// return A-block for list of type t, length v, and values *v 
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); R z;}
 
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}

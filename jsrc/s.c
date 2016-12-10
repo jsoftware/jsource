@@ -62,8 +62,8 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  R 1;
 }    /* 0: initialize (no old array); 1: extend old array */
 
-// ht->hashtable slot; allocate new symbol, install as head of hash chain, with previous chain appended
-// if tail==0, append at head (immediately after *hv); if tail!=0, append to tail.  If queue is empty, tail is always 0
+// ht->hashtable slot; allocate new symbol, install as head/tail of hash chain, with previous chain appended
+// if tailx==0, append at head (immediately after *hv); if tailx!=0, append to tail.  If queue is empty, tail is always 0
 // result is new symbol
 L* jtsymnew(J jt,I*hv, I tailx){I j;L*u,*v;
  while(!(j=jt->sympv->next))RZ(symext(1));  /* extend pool if req'd        */

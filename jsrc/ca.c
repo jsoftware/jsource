@@ -208,9 +208,13 @@ F2(jtampco){AF f1=on1;C c,d;I flag;V*wv;
 static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
 static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 
+// Here for m&i. and m&i:, computing a prehashed table from a
+// v->h is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft  ){V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
+// Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
 static DF1(ixfixedright ){V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
 
+// Here if ct was 0 when the compound was created - we must keep it 0
 static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=VAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->f,w,v->h); jt->ct=old; 
  R z;

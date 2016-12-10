@@ -120,8 +120,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
  // otherwise clone a copy of it
  symtabsize = AR(hv[3+hi])&~LSYMINUSE;  // ptab[] index of this symbol table
- if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
+ if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}  // scaf
  else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
+
  // If the verb contains try., allocate a try-stack area for it
  if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
  // Allocate an area to use for the SI entries for sentences executed here
@@ -339,7 +340,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
  tpop(_ttop);   // finish freeing memory
- // Pop the locale stack; set no assignment (to call for result display)
+ // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0;
  // Give this result a short lease on life
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos

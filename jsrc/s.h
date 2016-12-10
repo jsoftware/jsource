@@ -4,8 +4,8 @@
 /* For Symbol Tables aka Locales                                           */
 
 
-#define LOCPATH(g)      ((*AV(g)+jt->sympv)->val )
-#define LOCNAME(g)      ((*AV(g)+jt->sympv)->name)
+#define LOCPATH(g)      ((*AV(g)+jt->sympv)->val )   // (jt->sympv)[AV(g)[0]].val
+#define LOCNAME(g)      ((*AV(g)+jt->sympv)->name)  // (jt->sympv)[AV(g)[0]].name
 
 
 /* macro to define a function that walks through a symbol table */

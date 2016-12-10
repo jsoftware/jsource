@@ -226,6 +226,12 @@ void audittstack(J jt, A w, I lim){
 #endif
 }
 
+/* scaf
+I symfreelen(J jt){I l,k;  // scaf
+ for(k = jt->sympv[0].next, l=0;k;k=(jt->sympv)[k].next)++l;
+ R l;
+} */
+
 static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
  fr(LOCPATH(w));
  fr(LOCNAME(w));

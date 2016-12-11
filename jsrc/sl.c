@@ -13,7 +13,8 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  GATV(g,SYMB,ptab[p]+SYMLINFOSIZE,0,0);   // have prime number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
- RZ(v=symnew(AV(g),0)); v->flag|=LINFO; v->sn=jt->symindex++;
+ // The allocation clears all the hash chain bases, including the one used for SYMLINFO
+ RZ(v=symnew(&AV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));

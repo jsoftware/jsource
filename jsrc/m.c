@@ -233,11 +233,18 @@ I symfreelen(J jt){I l,k;  // scaf
 } */
 
 static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
+ // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
  fr(LOCPATH(w));
  fr(LOCNAME(w));
- for(j=1;j<wn;++j){
+ if(k=wv[SYMLINFO]){  // The LINFO block might not have been allocated
+  // clear the data fields   kludge but this is how it was done (should be done in symnew)
+  (jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;
+  (jt->sympv)[k].next=jt->sympv->next;jt->sympv->next=k;  // Note: must not try to hold chainbase in a register, because this routine is recursive
+ }
+ for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fa((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
+  // if the chain is not empty, chain previous pool from it & make it the base of the free pool
   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
   if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
  }

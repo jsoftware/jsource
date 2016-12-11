@@ -3,9 +3,9 @@
 /*                                                                         */
 /* For Symbol Tables aka Locales                                           */
 
-
-#define LOCPATH(g)      ((*AV(g)+jt->sympv)->val )   // (jt->sympv)[AV(g)[0]].val
-#define LOCNAME(g)      ((*AV(g)+jt->sympv)->name)  // (jt->sympv)[AV(g)[0]].name
+// The first L block in a symbol table is used to point to the path and the locale-name rather than hash chains
+#define LOCPATH(g) ((jt->sympv)[AV(g)[SYMLINFO]].val)
+#define LOCNAME(g) ((jt->sympv)[AV(g)[SYMLINFO]].name)
 
 
 /* macro to define a function that walks through a symbol table */

@@ -213,7 +213,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
        14 IIFBEPS    I.@e.   a w    
        30 IPHIDOT    i.      a w     prehashed
        31 IPHICO     i:      a w     prehashed
-       34 IPHLESS    -.      a w     prehashed
+       34 IPHLESS    -.      a w     prehashed  no longer supported
        36 IPHEPS     e.      a w     prehashed
        37 IPHI0EPS   e.i.0:  a w     prehashed
        38 IPHI1EPS   e.i.1:  a w     prehashed
@@ -225,7 +225,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
        44 IPHIFBEPS  I.@e.   a w     prehashed
  m    target axis length
  n    target item # atoms
- c    if >1 cell in a: # target items in a right arg cell; otherwise # atoms in result
+ c    # target items in a left-arg cell, which may include multiple right-arg cells
  k    target item # bytes
  acr  left  rank
  wcr  right rank
@@ -704,18 +704,31 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
 
+// Types for the prehashed result
+#define PREHRESIV 0
+#define PREHRESVAR 1
+#define PREHRESBV 2
+#define PREHRESBAN 3
+#define PREHRESIA 4
+#define PREHRESIAN 5
+#define PREHRESIVN 6
+
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
     I ac,acr,af,ak,an,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;
  RZ(a&&w);
+ // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
+ // mk is set if w argument is omitted (we are just prehashing the a arg)
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
- if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted, use info from a
+ if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
+   if((wf-af)>0&&af){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
+   I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
@@ -725,8 +738,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R zero;
     case ISUMEPS:                            R sc(0L);
-    case II1EPS:  case IJ1EPS:               R sc(zn);
-    case IJ0EPS:                             R sc(zn-1);
+    case II1EPS:  case IJ1EPS:               R sc(witems);
+    case IJ0EPS:                             R sc(witems-1);
     case INUBSV:  case INUB:    case INUBI:  ASSERTSYS(0,"indexofsub"); // impossible 
  }}}
  // f is len of frame of a (or of w if a has no frame); s->shape of a (or of w is a has no frame)
@@ -745,15 +758,22 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  }
  // Not sparse.
  // Calculate size of result.
- m=acr?as[af]:1; RE(t=mk?at:maxtype(at,wt)); k1=bp(t);   // Length of target axis; the common type; k1=#bytes/atom of common type
-// We are going to have to calculate the number of times to repeat cells of w and a, and use those values in all the macros
+ // m=target axis length, n=target item # atoms
+ // c # target items in a left-arg cell, which may include multiple right-arg cells
+ // k=target item # bytes, hp->hash table or to 0   z=result   p=size of hashtable
+ m=acr?as[af]:1; RE(t=mk?at:maxtype(at,wt)); k1=bp(t);   // m=length of target axis; the common type; k1=#bytes/atom of common type
+ // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
+ // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
+ // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
+ // We do this only if af!=0, because we have already set up to repeat cells of a if af=0
+ if((wf-af)>0&&af){f1+=wf-af; wf=af;}
  if(an&&wn){  // scaf
   // Neither arg is empty.  We can safely count the number of cells
   PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
-  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // #cells in a & w;  c=#target items in a result-cell
-  RE(zn=mult(af?ac:wc,c));   // WRONG
+  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // #cells in a & w;  c=#target items (and therefore #result values) in a result-cell
+  RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
   ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
-  if(ac==1)c=zn;   // ?? if there is more than 1 cell in a, repurpose c to be zn
+  if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old way
   n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
@@ -767,9 +787,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  // touch a float/complex arg to convert -0 to 0.  should handle this in the hash, perhaps by masking out the sign bit (might be needed only if ct=0)
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
-// should fix irange so as not to need pointer args
- if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}
+ if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}  //  r=min value,ss=max value+1-min value or 0 if no values or range too big
+ // compute size of hashtable
  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
+
  // Allocate the result area
  if(!mk)switch(mode){I q;
   case IIDOT: 
@@ -779,14 +800,22 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
   case INUBI:   q=MIN(m,p); GATV(z,INT,q,1,0); break;
-  case IIFBEPS: GATV(z,INT,c,1,0); break;
+  // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
+  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
+                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,0,0); break;
+  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) work only if e. produces rank 0 or 1.  Nonce error otherwise
+  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,1,0); break;
   case IANYEPS: case IALLEPS:
-                GAT(z,B01,1,0,0); break;
-  case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS: case ISUMEPS:
-                GAT(z,INT,1,0,0); break;
+                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,0,0); break;
+  case ISUMEPS:
+                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,0,0); break;
  }
- if(!(mk||m&&n&&zn&&th))switch(mode){
+ if(!(mk||m&&n&&zn&&(th>0))){
+  I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
+  switch(mode){
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
+  // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
+  // in that case the search always fails
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),one));
@@ -794,15 +823,16 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),k1*AN(w)); R z;
   case IEPS:    R reshape(shape(z),m&&(!n||th)?one:zero);
   case INUBI:   R m?iv0:mtv;
-  case II0EPS:  R sc(n?0L        :c         );
-  case II1EPS:  R sc(n?c         :0L        );
-  case IJ0EPS:  R sc(n?MAX(0,c-1):c         );
-  case IJ1EPS:  R sc(n?c         :MAX(0,c-1));
-  case ISUMEPS: R sc(n?0L        :c         );
+  // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
+  case II0EPS:  R sc(n&&zn?0L        :witems         );
+  case II1EPS:  R sc(n&&zn?witems         :0L        );
+  case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
+  case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
+  case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
   case IANYEPS: R    n?zero:one;
   case IALLEPS: R c&&n?zero:one;
   case IIFBEPS: R n?mtv :IX(c);
- }
+ }}
  // Choose the function to use for performing the operation
  if(a!=w&&!mk&&1==acr&&(1==wc||ac==wc)&&(D)m*n*zn<13*((D)m*n+zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
   fn=jtiosc;  // simple scalar search without hashing.  should revisit the tuning parms after making any changes
@@ -817,11 +847,13 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   else if(k==SZI&&!(t&FL)){if(p==ss){fn=jtio4; if(!(mode==IIDOT||mode==IICO))ht=B01;}else fn=jtioi;}
   else                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;
   // if a hashtable will be needed, allocate it.  It is NOT initialized
+  // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fn!=jtiobs)GA(h,ht,p,1,0);
  }
  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
   // exact types (including intolerant comparison of FL/CMPX)
   // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
+  // should get rid of this - cheaper to hash than to check for need-to-hash
   GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
   q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
   DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
@@ -837,13 +869,14 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   GAT(z,BOX,3,1,0); zv=AAV(z);
   GAT(x,INT,6,1,0); xv=AV(x);
   switch(mode){
-   default:                    ztype=0; break;  /* integer vector      */
-   case ILESS:                 ztype=1; break;  /* type/shape from arg */
-   case IEPS:                  ztype=2; break;  /* boolean vector      */
-   case IANYEPS: case IALLEPS: ztype=3; break;  /* boolean scalar      */
-   case ISUMEPS:
+   default:                    ztype=PREHRESIV; break;  /* integer vector      */
+ // obsolete  case ILESS:                 ztype=PREHRESVAR; break;  /* type/shape from arg */
+   case IEPS:                  ztype=PREHRESBV; break;  /* boolean vector      */
+   case IANYEPS: case IALLEPS: ztype=PREHRESBAN; break;  /* boolean scalar      */
+   case ISUMEPS:               ztype=PREHRESIAN; break; 
    case II0EPS:  case II1EPS:  
-   case IJ0EPS:  case IJ1EPS:  ztype=4;         /* integer scalar      */
+   case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
+   case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
   }
   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
   zv[0]=x; zv[1]=h; zv[2]=hi;
@@ -861,23 +894,30 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
  wr=AR(w); ws=AS(w); wt=AT(w);
- if(1==ztype)r=wr?wr-1:0;
- else        r=ar?ar-1:0;
+// obsolete if(1==ztype)r=wr?wr-1:0;
+// obsolete  else        
+ r=ar?ar-1:0;
  f1=wr-r;
- // audit conformance of input shapes.  bug: should return not-found rather than length error
- ASSERT(r<=ar&&0<=f1,EVRANK); 
- ASSERT(!ICMP(as+ar-r,ws+f1,r),EVLENGTH);
  RE(c=prod(f1,ws));  // c=#cells of w (and result)
- if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
+ // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
+ // Use c as an error flag
+ if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
+ if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
+// obsolete  if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
+ // If there is any error, transfer to the non-prehashed code
  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode,a,w);
  // allocate enough space for the result, depending on the type of the operation
  // should define constants for these types
+
  switch(ztype){
-  case 0: GATV(z,INT,c,    f1, ws); break;
-  case 1: GA(z,wt, AN(w),1+r,ws); break;
-  case 2: GATV(z,B01,c,    f1, ws); break;
-  case 3: GAT(z,B01,1,    0,  0 ); break;
-  case 4: GAT(z,INT,1,    0,  0 ); break;
+  // the N endings are types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
+  case PREHRESIV: GATV(z,INT,c,    f1, ws); break;
+  case PREHRESIVN: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,    f1, ws); break;
+  case PREHRESVAR: GA(z,wt, AN(w),1+r,ws); break;
+  case PREHRESBV: GATV(z,B01,c,    f1, ws); break;
+  case PREHRESBAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,    0,  0 ); break;
+  case PREHRESIA: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,    0,  0 ); break;
+  case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,    0,  0 ); break;
  }
  // save info used by the routines
  jt->hin=AN(hi); jt->hiv=AV(hi);

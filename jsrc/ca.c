@@ -266,7 +266,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    if(AN(w)&&AR(w)){
     c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
     if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */
-    else      mode=c==CEPS?IEPS:c==CLESS?ILESS:-1;
+    else      mode=c==CEPS?IEPS:/* obsolete c==CLESS?ILESS:*/-1;
    }
    if(0<=mode){
     if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}

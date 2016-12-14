@@ -224,7 +224,9 @@ static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
 
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
-void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
+void irange(I n,I*v,I*base,I*top){I i,p,q;
+#if 0  // obsolete
+ I d,m=n/2,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=IMAX; p=IMIN;}else p=q=0;
  for(i=0;i<m;++i){
   x=*v++; y=*v++; 
@@ -232,10 +234,19 @@ void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
  *base=q; d=p-q; *top=0>d||d==IMAX?0:1+d;
-}    /* min and max in 1.5*n comparisons */
+#else
+ q=IMAX; p=IMIN;
+ for(i=0;i<n;++i){I x=*v++;
+  if(x>p)p=x; if(x<q)q=x; 
+ }
+ *base=q; *top=MAX(1+p-q,0);
+#endif
+}
 
 // copy of irange for sizeof(C4)==sizeof(int)
-void c4range(I n,C4*v,C4*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
+void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
+#if 0  // obsolete
+ I d,i,m=n/2;C4 p,q,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=C4MAX; p=C4MIN;}else p=q=0;
  for(i=0;i<m;++i){
   x=*v++; y=*v++; 
@@ -243,7 +254,14 @@ void c4range(I n,C4*v,C4*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
  *base=q; d=(I)p-(I)q; *top=0>d||d>=IMAX?0:1+d;
-}    /* min and max in 1.5*n comparisons */
+#else
+ q=C4MAX; p=C4MIN;
+ for(i=0;i<n;++i){C4 x=*v++;
+  if(x>p)p=x; if(x<q)q=x; 
+ }
+ *base=q; *top=MAX(1+(I)p-(I)q,0);
+#endif
+}
 
 F1(jtmaxmin){I base,top;
  RZ(w);

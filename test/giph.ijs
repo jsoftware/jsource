@@ -137,10 +137,12 @@ f=: x&i.
 ((i.7 2) -.   2 3) -: -.&   2 3  i. 7 2
 ((i.7 2) -. ,:2 3) -: -.&(,:2 3) i. 7 2
 
-'rank error'   -: (i.3 4)&i. etx 7
-
-'length error' -: (i.3 4)&i. etx i.5
-'length error' -: (i.3 4)&i. etx i.2 5
+NB. no more 'rank error'   -: (i.3 4)&i. etx 7
+NB. no more 'length error' -: (i.3 4)&i. etx i.5
+NB. no more 'length error' -: (i.3 4)&i. etx i.2 5
+((i.3 4)&i. 7) -: (i.3 4)&(i."i.) 7
+((i.3 4)&i. i. 5) -: (i.3 4)&(i."i.) i. 5
+((i.3 4)&i. i. 2 5) -: (i.3 4)&(i."i.) i. 2 5
 
 4!:55 ;:'adot1 adot2 sdot0 f fedot fico fidot g h m ss x xx yy'
 

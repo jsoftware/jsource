@@ -224,9 +224,9 @@ s=: 1 0 1 1 0; 3 1 4 5 0; 3 1 4 5 0 0.2; 3 1 4 5 0j2; 3 4 5 5 0x; '3145'
 t=: 0 ; 'abc'; 0 3 4; 0 3.4; 0 3j4; 0 3 4x; <0 3;4
 s f&>/ t
 
-'length error' -: -.&0 1 2     etx i.5 2
-'length error' -: -.&0 1 2     etx i.5 4
-'length error' -: -.&(i.2 5 3) etx i.5 4
+NB. obsolete 'length error' -: -.&0 1 2     etx i.5 2
+NB. obsolete 'length error' -: -.&0 1 2     etx i.5 4
+NB. obsolete 'length error' -: -.&(i.2 5 3) etx i.5 4
 
 
 4!:55 ;:'adot1 adot2 sdot0 dr f less not rank res s t x xx yy'

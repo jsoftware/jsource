@@ -234,7 +234,8 @@
 #define ILESS           4
 #define INUBI           5
 #define IEPS            6
-#define II0EPS          7
+// the I...EPS values below are wired into the function table at the end of vcompsc.c
+#define II0EPS          7  // this must come first; other base on it
 #define II1EPS          8
 #define IJ0EPS          9
 #define IJ1EPS          10
@@ -244,18 +245,18 @@
 #define IIFBEPS         14
 
 #define IPHOFFSET       30              /* offset for prehashed versions   */
-#define IPHIDOT         30
-#define IPHICO          31
-#define IPHLESS         34
-#define IPHEPS          36
-#define IPHI0EPS        37
-#define IPHI1EPS        38
-#define IPHJ0EPS        39
-#define IPHJ1EPS        40
-#define IPHSUMEPS       41
-#define IPHANYEPS       42
-#define IPHALLEPS       43
-#define IPHIFBEPS       44
+#define IPHIDOT         (IPHOFFSET+IIDOT)
+#define IPHICO          (IPHOFFSET+IICO)
+// obsolete #define IPHLESS         34
+#define IPHEPS          (IPHOFFSET+IEPS)
+#define IPHI0EPS        (IPHOFFSET+II0EPS)
+#define IPHI1EPS        (IPHOFFSET+II1EPS)
+#define IPHJ0EPS        (IPHOFFSET+IJ0EPS)
+#define IPHJ1EPS        (IPHOFFSET+IJ1EPS)
+#define IPHSUMEPS       (IPHOFFSET+ISUMEPS)
+#define IPHANYEPS       (IPHOFFSET+IANYEPS)
+#define IPHALLEPS       (IPHOFFSET+IALLEPS)
+#define IPHIFBEPS       (IPHOFFSET+IIFBEPS)
 
 #define jfloor          floor
 

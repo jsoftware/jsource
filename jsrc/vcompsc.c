@@ -577,9 +577,8 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  ifbeqS,ifbneS,ifbltS,ifbleS,ifbgeS,ifbgtS, 0L,0L,
 };
 
-// the special case for compounds like +/@e. work only if the result of e. is a list or atom, i. e. the rank of
-// a is no higher than the rank of w.  For other cases, revert to the definition
-static F2( jti0eps){RZ(a&&w); if(AR(a)<=MAX(1,AR(w))){R indexofsub( II0EPS,w,a);}else{R indexof(eps(a,w),zero);}}
+// the special case for compounds like +/@e.
+static F2( jti0eps){R indexofsub( II0EPS,w,a);}
 static F2( jti1eps){R indexofsub( II1EPS,w,a);}
 static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}
 static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}

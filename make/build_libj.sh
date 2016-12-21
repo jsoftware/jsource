@@ -36,7 +36,7 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-COMPILE="$common -DRASPI"
+COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

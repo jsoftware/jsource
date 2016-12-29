@@ -82,6 +82,8 @@ typedef struct {
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  I    nvrtop;           /* top of nvr stack; # valid entries               */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
+ A    idothash0;        // 2-byte hash table for use by i.
+ A    idothash1;        // 4-byte hash table for use by i.
 // --- end cache linepair 2
 
  I    arg;              /* integer argument                                */

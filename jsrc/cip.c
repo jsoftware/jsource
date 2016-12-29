@@ -199,7 +199,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #endif
      (DAV(a),DAV(w),DAV(z),m,n,p);
     // If there was a floating-point error, retry it the old way in case it was _ * 0
-    if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;  // scaf
+    if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
      u=DAV(a); v=wv=DAV(w); zv=DAV(z);
      NAN0;
      if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}

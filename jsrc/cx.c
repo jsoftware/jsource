@@ -120,7 +120,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
  // otherwise clone a copy of it
  symtabsize = AR(hv[3+hi])&~LSYMINUSE;  // ptab[] index of this symbol table
- if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}  // scaf
+ if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
  else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
 
  // If the verb contains try., allocate a try-stack area for it

@@ -4,6 +4,7 @@
 /* Verbs: Index-of                                                         */
 
 #include "j.h"
+#include "vcomp.h"
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
@@ -284,6 +285,132 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
  else       XDO(hash,exp,inc,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
 
 
+// Routine to allocate sections of the hash tables
+// *hh is the hash table we have selected, p is the number of hash entries we need, m is the maximum+1 value that needs to be stored in an entry
+// md gives information about the type of entry, in particular if it is bits or packed bits
+// Main result is in *hh, notably currentlo/currentindexofst.  Other fields have been adjusted to account for the allocated space
+// The nominal result is the new value for md.  This routine is responsible for setting/clearing IIMODBASE0 appropriately, but only when IIMODBITS is clear
+static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
+ // If the request is for bits, allocate them starting at the beginning of the table.
+ if(md&IIMODBITS){
+  hh->currentlo=0; hh->currentindexofst=0;  // Bits always start at 0
+  // Since bits invalidate the memory ranges, record what parts are invalid
+  hh->invalidlo=0;  // invalid area starts at 0
+  if(md&IIMODPACK)p=(p+15)>>3;  // if bits are packed, convert to byte count.  Pad first and last bytes
+  // Round p up to multiple of I, then convert to hashtable entries. Must do this for endian reasons, to avoid a hole in the invalid region
+  p = (p+(SZI-1))&-SZI;  // round up to number of bytes that need to be cleared to clear Is
+  // Clear the bits before returning.  We init packed bits to 0, but byte-bits to a value that depends on the function being performed.
+ // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
+  memset(hh->data.UC,(md&(IIMODPACK+IIOPMSK))<=INUBI,p);
+  // If the invalid area grows, update the invalid hwmk, and also the partition
+  p >>= hh->hashelelgsize;  // convert p to hash index 
+  if(p>hh->invalidhi){
+   hh->currenthi = MAX(hh->currenthi,p);  // adjust partition to be after the invalid area
+   hh->invalidhi=p;  // adjust high-water mark
+  }
+  R md;
+ }
+ // Not bits. We have a choice of allocating on the left or the right.  Allocating on the left creates cache coherence
+ // but tends to waste address points.  Calculate the cost of each and choose.
+
+ // if we are forced to start over, do so
+ md |= IINOTALLOCATED;   // indicate not allocated yet
+ if(!(md&IIMODFORCE0)){
+  // Not forced to start over, choose an allocation
+
+  // First of all: it's moot if the allocation won't fit on the right
+  I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
+  I selside=0;  // default to allocating on the left (i. e. at 0)
+  UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible index for this table
+  UI indexceil=maxindex-m;  // max starting index
+
+  // Cost of allocating on the left comes
+  // (1) now, as we use (m*currenthi) units of index space
+  // (2) in the future, as all future allocations on the right lose index space,
+  // in the amount of (new left index end-right index end-future m)*(width-currenthi).  We estimate future values to equal current ones.
+  // (3) now, if we have to clear the invalid area (1 store per word cleared)
+  // BUT: if the cleared invalid area covers the entire p, we use m rather than left-index+m for calculating the other costs
+  // The cost of a unit of index space is 1 store per (width*maxindex)/(m*p) index-space unit, with m and p rounded up if large;
+  // we will approximate as 2*(m*p)/(width*maxindex) 
+
+  // Cost of allocating on the right is
+  // (p*m) units of index space for the allocated area, plus (currenthi*((right index+m)-left index)) units of index space lost on the left,
+  // plus cache expense of p<.currenthi cache words
+  // The cost of a cache word is reckoned at 1/2 store per word
+
+  // That's not worth figuring out for every call.  So, we will just allocate on the right unless
+  // the invalid area is empty and m<4096 (about the size of L1 cache), to get the caching benefit for small arguments
+  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (m>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
+   // Allocating right.  Return a region starting at currenthi
+   md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated it
+   hh->currentlo=hh->currenthi; hh->currenthi+=p;   // set return value (starting position) and partition
+   UI startx=hh->previousindexend;
+   hh->currentindexofst=startx; hh->previousindexend=(startx+=m);  // set return value (starting index) and allocated index space
+   hh->currentindexend=MAX(startx,hh->currentindexend);  // since currentindexend speaks for the whole left side, we may have to push it up
+   // Since the partition (currenthi) is kept to the right of the invalid region, there is no need to clear invalid data
+// obsolete UI clrpt = MIN(hh->currenthi, hh->invalidhi);   // get index to clear to
+// obsolete  I clrfrom = MAX(hh->currentlo,hh->invalidlo);
+// obsolete  I nclrhsh = clrpt-clrfrom;  // get number of hash entries to clear
+// obsolete  if(nclrhsh>0){   // if there is something to clear
+// obsolete     memset(hh->data.UC+(clrfrom<<hh->hashelelgsize), C0,(nclrhsh<<hh->hashelelgsize));  // clear the region to 0
+// obsolete  }
+  }else if(hh->currentindexend < indexceil){
+   // Allocating left.  Return a region starting at position 0.
+   md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated
+   hh->currentlo=0; hh->currenthi=p;   // set return value (starting position) and partition
+   UI startx=hh->currentindexend;   // the previous end+1 index becomes the index for this time
+   hh->previousindexend=startx;  // bring up the right side to match the left side before we advance
+   hh->currentindexofst=startx; hh->currentindexend=(startx+=m);  // set return value (starting index) and allocated index space
+   // If (part of) the return area needs to be cleared, clear it.  If we clear the entire left side, reduce the left index
+   UI clrpt = MIN(p, hh->invalidhi);   // get index to clear to
+   I nclrhsh = clrpt - hh->invalidlo;  // get number of hash entries to clear
+   if(nclrhsh>0){   // if there is something to clear
+    memset(hh->data.UC+(hh->invalidlo<<hh->hashelelgsize), C0,(nclrhsh<<hh->hashelelgsize));  // clear the region to 0
+    if(p<=clrpt){startx=hh->currentindexofst;hh->currentindexend=MAX(m,hh->currentindexofst);}  // If we cleared the whole left side, we can back the left-side pointer to match the right
+    hh->invalidlo=clrpt;  // Indicate that we have cleared this region
+   }
+  }
+ }
+ if(md&IINOTALLOCATED) {
+  // Cannot allocate as is: the region must be initialized.  set BASE0 in this case, and since we initialize, initialize to the most useful value
+  md |= IIMODBASE0;  // if we clear the region, mention that so that we get the fastest code
+  // Clear the entries of the first allocation to m.  Use fullword stores (should use cache-line stores).  Our allocations are always multiples of fullwords,
+  // so it is safe to overfill with fullword stores
+  UI storeval=m; if(hh->hashelelgsize==1)storeval |= storeval<<16; if(SZI>4)storeval |= storeval<<(32%BW);  // Pad store value to 64 bits, dropping excess on smaller machines
+  I i, nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
+  for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
+  // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
+  // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
+  // we need to avoid clearing the whole buffer for any time after the first.
+  // We also don't want to clear the whole buffer if we were trying to save a little time by setting BASE0 in an argument that uses only a little
+  // of the table.
+  // We have to make sure we are not moving the partition to the left: that might expose some uninitialized values on the right side
+  if(md&IIMODFORCE0){
+   // Putting that together: if FORCE0 is set, we just clear the left side and leave the right alone, except that we may move the partition right.
+   if(p>=hh->currenthi){
+    // Moving the partition right (or not at all).  That doesn't uncover anything
+    hh->currenthi=p;   // set the new partition pointer
+    hh->currentindexend=MAX(hh->previousindexend,1+m);  // keep the left-side max index no less than the right-wide
+   }else{
+    // We didn't clear as far as the partition.  The left side still contains old data.
+    if(hh->currentindexend<1+m)hh->currentindexend=1+m;  // Don't lower the index if there is uncleared data on the left
+   }
+  }else{
+   // Not FORCE0: we are clearing because we have to.  Clear everything.  But we can save clearing the right side if it's already clear.
+   I clrtopoint=(hh->previousindexend!=1)?hh->datasize:hh->currenthi<<hh->hashelelgsize;  // high+1 entry to clear
+   I clrfrompoint=p<<hh->hashelelgsize;  // offset to clear from
+   if((clrtopoint-=clrfrompoint)>0){memset(hh->data.UC+clrfrompoint, C0, clrtopoint);}  // clear the region to 0
+   hh->currenthi=p;   // set return value (starting position) and partition
+   hh->currentindexend=1+m;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
+   hh->previousindexend=1;  // Init right side unused (but with the 0s representing initialized values)
+  }
+  hh->currentindexofst=0;  // Indic left-side starting index (return value)
+  hh->currentlo=0;    // Indic left-side starting position (return value)
+  hh->invalidlo=IMAX; hh->invalidhi=0;  // clear invalidity region
+ }
+ R md;
+}
+
 // *************** first class: intolerant comparisons, unboxed ***********************
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
@@ -462,10 +589,8 @@ static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !e
 static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
 // ********************* third class: small-range arguments ****************************
-// should consider removing this, as the hash will be just about as fast.  That would save the
-// erasing of the table and the call to irange.
-// or, should leave 1- and 2-byte versions, remove the word-length versions here and don't call irange
 
+#if 0
 // create the value vector
 
 // v0 is the EMPTY value.  Clear to empty, then go through and set TRUE for each value found.  Used for [: u e.  where the position doesn't matter
@@ -544,16 +669,300 @@ static IOFSMALLRANGE(jtio1,UC,SCOZ, SCOW, SCOW, SCOWX,SCQW, SCQW )  /* 1-byte   
 static IOFSMALLRANGE(jtio2,US,SCOZ, SCOW, SCOW, SCOWX,SCQW, SCQW )  /* 2-byte    items */
 static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size items */
 
+#else  // *********************** new version **************************
+// Macros to convert bit index to byte index and bit#.  We address to the byte to avoid rounding problems, as long as the compiler doesn't extend
+#define BYTENO(b) ((b)>>3)
+#define BITNO(b) ((b)&7)
+
+// nub support, which creates & processes the bit-vector in one pass.  FULL is immaterial.
+// T is the type for the result vector, stmt creates the result
+// unpacked version expects default of 1
+#define SNUB(decl, stmt) I zi=0, zie=m;  decl  UC* RESTRICT hu=hh->data.UC-min; while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=0;  stmt  ++zi;}
+// packed version.  Default of 0
+#define SNUBP(decl, stmt) I zi=0, zie=m;  decl  UC* RESTRICT hu=hh->data.UC-BYTENO(min); while(zi!=zie){UC v=hu[BYTENO(wv[zi])]; hu[BYTENO(wv[zi])]|=1<<BITNO(wv[zi]); v >>=BITNO(wv[zi]); v&=1; v^=1; stmt  ++zi;}
+
+// creation of the value vector
+
+// The bitmask was cleared to 0 by hashalloc
+// Boolean/bit hashtables.  Used  where the position doesn't matter, i. e. for all but i./i: 
+// Set TRUE for each value found.  hh->currentlo will always be 0.  zi starts at 0, since values don't matter
+// The value in the cell is 0 or 1, since we don't care what the original position was
+// We init the table to 0 or 1 depending on the primitive; but we always use 0 for PACKed bits, because it's never right to add
+// an instruction to building the table
+// obsolete #define SDO(T)  I zi=0, zi0=zi, zie=m; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ \
+// obsolete      if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; while(zi!=zie){hu[mav[zi]]=1; ++zi;} zi=0;}
+#define SDO(T,bitdef)  UC* RESTRICT hu=hh->data.UC-min; if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[mav[i]]=1-bitdef;)}
+#define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}
+
+// US/UI4 hashtables
+// the value in the cell indicates the original input position; the index of the cell indicates the input value
+// Go through and remember the index for each value.  Leaves last index, so used for i:.  Leave zi correct at end
+#define SDOA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+                           if(!(mode&IPHOFFSET)){T* RESTRICT mav=av-zi; while(zi!=zie){hu[mav[zi]]=(Ttype)zi; ++zi;} zi=zi0;}
+// No faster version for BASE0
+// Go through and remember the index for each value.  Reverse order, so leaves first index, so used for i.
+#define SDQA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
+                           if(!(mode&IPHOFFSET)){T* RESTRICT mav=av-zi; do{--zie; hu[mav[zie]]=(Ttype)zie;}while(zie!=zi);}
+// This version if we know the area starts at 0
+#define SDQA0(T,Ttype) I zie=m-1; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
+                           if(!(mode&IPHOFFSET)){do{hu[av[zie]]=(Ttype)zie;}while(--zie>=0);}
+
+// using the value vector: loop through the items of w, creating the output.
+// if FULL is set, there is no need for range-checking the input
+
+// first, versions for i. i:     vv is the value to use for not-found (always m)
+// This version for I values (which have a partial table); use the table only if the value is represented there.  vv is the not-found value.  Install it in default position
+// Since the table is not FULL, the range scan of must have aborted; we scan forward from the beginning of w
+#define SCOZ(T,Ttype,vv) {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+c; def[0]=(Ttype)(vv+zi0); \
+                          while(zi!=zie){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; I hvv; if((hvv=(I)*hv-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}
+ /* printf("v=%d, hv=0x%p, def=0x%p, zi0=%d, *hv=%d, hvv=%d\n",v,hv,def,zi0,*hv,hvv); */
+// this version is used when the result vector is known to be full (out-of-range not possible).  Omit the out-of-bounds check.  Since the range-scan of w ran to completion,
+// the end of w is most likely to be in-cache; so scan backwards
+#define SCOZF(T,Ttype,vv)  {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; zie=zi+c; while(zi!=zie){--zie; I hvv; if((hvv=(I)hu[mwv[zie]]-zi0)<0)hvv=vv; zv[zie]=(Ttype)hvv;}}
+// these versions are used if the table is known to start at offset 0.  Omit the not-found check, since m was already loaded; and zi is 0
+#define SCOZ0(T,Ttype,vv) {I zi = -c; I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; def[0]=(Ttype)vv; \
+                          while(zi){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; zv[zi]=*hv; ++zi;}}
+#define SCOZF0(T,Ttype,vv) {zie=c-1; I * RESTRICT zv=AV(z)+l*c; while(zie>=0){zv[zie]=hu[wv[zie]]; --zie;}}  // backwards scan
+
+// for e. -. u@e. - for each item of w, see if it is in the value table.  Set v to the value read from the table (1 if in table).
+// The table is always allocated as a bit vector and therefore is at offset 0 in the table
+// wv[i] is the data value read, if that's needed
+// should revise loops to count up from -n to 0, saving 1 inst
+// Declare the result vector, and prebias it for our loop if needed.  indexed is 1 if zv will be referred to as zv[i], 0 if by *zv
+#define DCLZVO(T,indexed) T * RESTRICT zv=T##AV(z)+(l+indexed)*c;
+#define SCOW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
+// faster version of SCOW for use when the table contains all possible values
+#define SCOWF(T,bitdef,stmt)  {I i; T *mwv=wv+c; for(i=-c;i<0;++i){UC v=hu[mwv[i]]; stmt}}
+// packed version
+#define SCOWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+// packed full version
+#define SCOWPF(T,bitdef,stmt)  {I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+
+// just like SCOW/SCOWF but scanning from the end of w
+#define DCLZVQ(T,unused) T * RESTRICT zv=T##AV(z)+l*c;
+#define SCQW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
+#define SCQWF(T,bitdef,stmt)  {I i; for(i=c-1;i>=0;--i){UC v=hu[wv[i]]; stmt}}
+#define SCQWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=(*hv>>BITNO(x))&1; stmt}}
+#define SCQWPF(T,bitdef,stmt)  {I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+
+// Create basic/FULL/PACK/FULL+PACK versions (used for all boolean maps)
+#define SMCASE0(casename, text) case casename: text break;
+#define SMCASEF(casename, text) case IIMODFULL+casename: text break;
+#define SMCASEP(casename, text) case IIMODPACK+casename: text break;
+#define SMCASE1(casename, text) case IIMODFULL+IIMODPACK+casename: text break;
+#define SMFULLPACK(T,bitdef,casename,decl,action) SMCASE0(casename, {SDO(T,bitdef) decl SCOW action}) SMCASEF(casename, {SDO(T,bitdef) decl SCOWF action}) SMCASEP(casename, {SDOP(T) decl SCOWP action}) SMCASE1(casename, {SDOP(T) decl SCOWPF action})
+#define SMFULLPACQ(T,bitdef,casename,decl,action) SMCASE0(casename, {SDO(T,bitdef) decl SCQW action}) SMCASEF(casename, {SDO(T,bitdef) decl SCQWF action}) SMCASEP(casename, {SDOP(T) decl SCQWP action}) SMCASE1(casename, {SDOP(T) decl SCQWPF action})
+// EPS builds a full-size result and thus can scan FULLs in either order; we choose backwards
+#define SMFULLPACKEPS(T,bitdef,casename,action) SMCASE0(casename, {SDO(T,bitdef) DCLZVO(B,1) SCOW action}) SMCASEF(casename, {SDO(T,bitdef) DCLZVQ(B,1) SCQWF action}) SMCASEP(casename, {SDOP(T) DCLZVO(B,1) SCOWP action}) SMCASE1(casename, {SDOP(T) DCLZVQ(B,1) SCQWPF action})
+
+// Do the operation on small-range arguments
+// COZ1 is the result loop for i. i:  we will have to have a bit version for e.
+// COW is the result loop for (e. i. 1:)  ([: +./ e.) ([: +/ e.) ([: I. e.) (e. i. 0:) ([: *./ e.) -.
+// CQW is the result loop for (e. i: 1:) (e. i: 0:)
+// cm is the number of cells of w per cell of a 
+#define IOFSMALLRANGE(f,T,Ttype)    \
+ IOF(f){IH *hh=IHAV(*hp);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
+  mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
+  av=(T*)AV(a); wv=(T*)AV(w); \
+  min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; /* scaf printf("min=%d, max=%d, mode=0x%x\n",min,max,mode);*/\
+  e=1==wc?0:c; if(w==mark){c=0; mode|=IPHCALC;} \
+  for(l=0;l<ac;++l,av+=m,wv+=e){ \
+   if(!(mode&(IPHOFFSET|IPHCALC))){mode = hashallo(hh,p,m,mode);}  /* set parms for this loop - only if not prehashing or using prehashed table, which always start at offset 0 */ \
+   switch(mode&(IIOPMSK|IIMODFULL|IIMODPACK|IIMODBASE0)){ /* We know the setting of IIMODBITS without looking */ \
+   default: ASSERTSYS(0,"switch failure in i."); \
+     /* a lot of the l*c in the cases below could be removed because the verbs lack IRS, but we're leaving them in for now */ \
+     /* reflexives, which include nubs, do not require a FULL version.  i.~ and i:~ don't need PACK versions either, since they deal in full indexes only */ \
+   case IIMODREFLEX+IIMODFULL+IIDOT: \
+   case IIMODREFLEX+IIDOT: \
+     {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+      while(zi!=zie){I vv = hu[mwv[zi]]; if(vv<zi0)vv=zi; hu[mwv[zi]]=(Ttype)vv; zv[zi]=vv-zi0;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
+   case IIMODBASE0+IIMODREFLEX+IIMODFULL+IIDOT: \
+   case IIMODBASE0+IIMODREFLEX+IIDOT: \
+     {I zi=0;  I * RESTRICT zv=AV(z)+l*m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+      while(zi!=m){I vv = hu[wv[zi]]; if(vv==m)vv=zi; hu[wv[zi]]=(Ttype)vv; zv[zi]=vv;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
+   case IIMODREFLEX+IIMODFULL+IICO: \
+   case IIMODREFLEX+IICO: \
+     {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
+      do{--zie; I vv = hu[mwv[zie]]; if(vv<zi0)vv=zie; hu[mwv[zie]]=(Ttype)vv; zv[zie]=vv-zi0;}while(zie!=zi); } break; /* same in reverse */ \
+   case IIMODBASE0+IIMODREFLEX+IIMODFULL+IICO: \
+   case IIMODBASE0+IIMODREFLEX+IICO: \
+     {I zie=m-1;  I * RESTRICT zv=AV(z)+l*m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
+      do{I vv = hu[wv[zie]]; if(vv==m)vv=zie; hu[wv[zie]]=(Ttype)vv; zv[zie]=vv; --zie; }while(zie>=0); } break; /* same in reverse */ \
+ \
+    /* NUB types use Boolean masks but do not depend on FULL, since they cannot miss.  But they must support PACK. */ \
+   case IIMODFULL+INUBSV: \
+   case INUBSV:            {SNUB (B * RESTRICT zv=BAV(z)+l*m;  ,  zv[zi]=v;) } break; \
+   case IIMODPACK+IIMODFULL+INUBSV: \
+   case IIMODPACK+INUBSV:  {SNUBP(B * RESTRICT zv=BAV(z)+l*m;  ,  zv[zi]=v;) } break; \
+   case IIMODFULL+INUB: \
+   case INUB:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case IIMODPACK+IIMODFULL+INUB: \
+   case IIMODPACK+INUB:    {SNUBP(T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
+   case IIMODFULL+INUBI: \
+   case INUBI:             {SNUB (I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) *AS(z)=AN(z)=zv-zv0; } break;  \
+   case IIMODPACK+IIMODFULL+INUBI: \
+   case IIMODPACK+INUBI:   {SNUBP(I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) *AS(z)=AN(z)=zv-zv0; } break;  \
+     /* non-reflexives can benefit from FULL checking.  IIDOT and IICO need full indexes (and thus use BASE0, but no PACK); everything else is Boolean */\
+   case IIDOT:             {SDQA(T,Ttype);  SCOZ(T,Ttype,m);} break;  \
+   case IIMODFULL+IIDOT:   {SDQA(T,Ttype);  SCOZF(T,Ttype,m);} break;  \
+   case IIMODBASE0+IIDOT:  {SDQA0(T,Ttype);  SCOZ0(T,Ttype,m);} break;  \
+   case IIMODBASE0+IIMODFULL+IIDOT: {SDQA0(T,Ttype);  SCOZF0(T,Ttype,m);} break;  \
+   case IICO:              {SDOA(T,Ttype);  SCOZ(T,Ttype,m);} break;  \
+   case IIMODFULL+IICO:    {SDOA(T,Ttype); SCOZF(T,Ttype,m);} break;  \
+   case IIMODBASE0+IICO:   {SDOA(T,Ttype);  SCOZ0(T,Ttype,m);} break;  \
+   case IIMODBASE0+IIMODFULL+IICO: {SDOA(T,Ttype); SCOZF0(T,Ttype,m);} break;  \
+    /* Boolean indexes from here on.  These must support FULL and PACK */ \
+   SMFULLPACKEPS(T,0,IEPS,  (T,0,zv[i]=v;)) /* EPS scans FULL args backwards for cache coherence */ \
+   SMFULLPACK(T,1,ILESS,  DCLZVO(T,0) T *zv0=zv; , (T,1,*zv=mwv[i]; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);)  \
+   SMFULLPACK(T,0,II0EPS, DCLZVO(I,0) I s=c; , (T,0,if(!v){s+=i; break;});*zv++=s;)  \
+   SMFULLPACK(T,0,II1EPS, DCLZVO(I,0) I s=c; , (T,0,if(v){s+=i; break;});*zv++=s; )  \
+   SMFULLPACQ(T,0,IJ0EPS, DCLZVQ(I,0) I s=c; , (T,0,if(!v){s=i; break;});*zv++=s;)  \
+   SMFULLPACQ(T,0,IJ1EPS, DCLZVQ(I,0) I s=c; , (T,0,if(v){s=i; break;}); *zv++=s;)  \
+   SMFULLPACK(T,0,IANYEPS,DCLZVO(B,0) B s=0; , (T,0,if(v){s=1; break;}); *zv++=s;)  \
+   SMFULLPACK(T,0,IALLEPS,DCLZVO(B,0) B s=1; , (T,0,if(!v){s=0; break;}); *zv++=s;)  \
+   SMFULLPACK(T,0,ISUMEPS,DCLZVO(I,0) I s=0; , (T,0,s+=v;); *zv++=s;)  \
+   SMFULLPACK(T,0,IIFBEPS,DCLZVO(I,0) I *zv0=zv; , (T,0,*zv=i+c; zv+=v;); *AS(z)=AN(z)=zv-zv0;)  \
+   }  \
+  }  \
+  R z; \
+ }
+// init to 1 for ~. ~: NUBI LESS   others to 0
+#if 0
+/* scaf printf("hu[mwv[zi]]=%d ",hu[mwv[zi]]); *//* scaf printf("mwv[zi]=%d, vv=%d\n",mwv[zi],vv); */
+/* scaf printf("zi=%d, zie=%d\n",zi,zie); */\
+/* scaf   ASSERTSYS(zi0==hh->currentindexofst,"zi0 error"); ASSERTSYS(mwv[zi]>=min,"value too low"); ASSERTSYS(mwv[zi]<=max,"value too high"); ASSERTSYS(vv<(I)hh->currentindexend,"vv too high"); */ \
+/* scaf   ASSERTSYS(hh->currentindexend-hh->currentindexofst==m,"range not same as m"); scaf*/ \
+
+#define SCOZ(T,Ttype,vv) {T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+c; def[0]=(Ttype)(vv+zi0); \
+                          while(zi!=zie){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; I hvv; if((hvv=(I)*hv-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}
+ /* printf("v=%d, hv=0x%p, def=0x%p, zi0=%d, *hv=%d, hvv=%d\n",v,hv,def,zi0,*hv,hvv); */
+// this version is used when the result vector is known to be full (out-of-range not possible).  Omit the out-of-bounds check.
+#define SCOZF(T,Ttype,vv)  {T* RESTRICT mwv=wv-zi; zie=zi+c; while(zi!=zie){I hvv; if((hvv=(I)hu[mwv[zi]]-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}  // zi always starts at 0
+// these versions are used if the table is known to start at offset 0.  Omit the not-found check, since m was already loaded; and zi is 0
+
+
+#define SCQW(T,stmt)  {UC def[1]; def[0]=0; DQ(c, T x=wv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt)}
+#define SCQWF(T,stmt)  {DQ(c, UC v=hu[wv[i]]; stmt)}
+#define SCQWP(T,stmt)  {UC def[1]; def[0]=0; DQ(c, T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=(*hv>>BITNO(x))&1; stmt)}
+#define SCQWPF(T,stmt)  {DQ(c, T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=(*hv>>BITNO(x))&1; stmt)}
+   SMCASE0(IEPS,   {SDO(T); DCLZVO(B) SCOW (T,zv[i]=v;);}) \
+   SMCASEF(IEPS,   {SDO(T); DCLZVO(B) SCOWF(T,zv[i]=v;);}) \
+   SMCASE0(ILESS,  {SDO(T); DCLZVO(T) T *zv0=zv; SCOW (T,*zv=wv[i]; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);})  \
+   SMCASEF(ILESS,  {SDO(T); DCLZVO(T) T *zv0=zv; SCOWF(T,*zv=wv[i]; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);})  \
+   SMCASE0(II0EPS, {SDO(T); DCLZVO(I) I s=c; SCOW (T,if(!v){s=i; break;});*zv++=s;})  \
+   SMCASEF(II0EPS, {SDO(T); DCLZVO(I) I s=c; SCOWF(T,if(!v){s=i; break;});*zv++=s;})  \
+   SMCASE0(II1EPS, {SDO(T); DCLZVO(I) I s=c; SCOW (T,if(v){s=i; break;});*zv++=s; })  \
+   SMCASEF(II1EPS, {SDO(T); DCLZVO(I) I s=c; SCOWF(T,if(v){s=i; break;});*zv++=s; })  \
+   SMCASE0(IJ0EPS, {SDO(T); DCLZVQ(I) I s=c; SCQW (T,if(!v){s=i; break;});*zv++=s;})  \
+   SMCASEF(IJ0EPS, {SDO(T); DCLZVQ(I) I s=c; SCQWF(T,if(!v){s=i; break;});*zv++=s;})  \
+   SMCASE0(IJ1EPS, {SDO(T); DCLZVQ(I) I s=c; SCQW (T,if(v){s=i; break;}); *zv++=s;})  \
+   SMCASEF(IJ1EPS, {SDO(T); DCLZVQ(I) I s=c; SCQWF(T,if(v){s=i; break;}); *zv++=s;})  \
+   SMCASE0(IANYEPS,{SDO(T); DCLZVO(B) B s=0; SCOW (T,if(v){s=1; break;}); *zv++=s;})  \
+   SMCASEF(IANYEPS,{SDO(T); DCLZVO(B) B s=0; SCOWF(T,if(v){s=1; break;}); *zv++=s;})  \
+   SMCASE0(IALLEPS,{SDO(T); DCLZVO(B) B s=1; SCOW (T,if(!v){s=0; break;}); *zv++=s;})  \
+   SMCASEF(IALLEPS,{SDO(T); DCLZVO(B) B s=1; SCOWF(T,if(!v){s=0; break;}); *zv++=s;})  \
+   SMCASE0(ISUMEPS,{SDO(T); DCLZVO(I) I s=0; SCOW (T,s+=v;); *zv++=s;})  \
+   SMCASEF(ISUMEPS,{SDO(T); DCLZVO(I) I s=0; SCOWF(T,s+=v;); *zv++=s;})  \
+   SMCASE0(IIFBEPS,{SDO(T); DCLZVO(I) I *zv0=zv; SCOW (T,*zv=i; zv+=v;); *AS(z)=AN(z)=zv-zv0;})  \
+   SMCASEF(IIFBEPS,{SDO(T); DCLZVO(I) I *zv0=zv; SCOWF(T,*zv=i; zv+=v;); *AS(z)=AN(z)=zv-zv0;})  
+//   /* case IEPS:               {SDO(T); DCLZVO(B) SCOW(T,zv[i]=v;);}  break; */ \
+//   /* case IIMODFULL+IEPS:     {SDO(T); DCLZVO(B) SCOWF(T,zv[i]=v;);}  break; */  \
+//   case ILESS:              {SDO(T); DCLZVO(T) T *zv0=zv; SCOW(T,*zv=wv[i]; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);} break;  \
+//   case IIMODFULL+ILESS:    {SDO(T); DCLZVO(T) T *zv0=zv; SCOWF(T,*zv=wv[i]; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);} break;  \
+//   case II0EPS:             {SDO(T); DCLZVO(I) I s=c; SCOW(T,if(!v){s=i; break;});*zv++=s;} break;  \
+//   case IIMODFULL+II0EPS:   {SDO(T); DCLZVO(I) I s=c; SCOWF(T,if(!v){s=i; break;});*zv++=s;} break;  \
+//   case II1EPS:             {SDO(T); DCLZVO(I) I s=c; SCOW(T,if(v){s=i; break;});*zv++=s; } break;  \
+//   case IIMODFULL+II1EPS:   {SDO(T); DCLZVO(I) I s=c; SCOWF(T,if(v){s=i; break;});*zv++=s; } break;  \
+//   case IJ0EPS:             {SDO(T); DCLZVQ(I) I s=c; SCQW(T,if(!v){s=i; break;});*zv++=s;} break;  \
+//   case IIMODFULL+IJ0EPS:   {SDO(T); DCLZVQ(I) I s=c; SCQWF(T,if(!v){s=i; break;});*zv++=s;} break;  \
+//   case IJ1EPS:             {SDO(T); DCLZVQ(I) I s=c; SCQW(T,if(v){s=i; break;}); *zv++=s;} break;  \
+//   case IIMODFULL+IJ1EPS:   {SDO(T); DCLZVQ(I) I s=c; SCQWF(T,if(v){s=i; break;}); *zv++=s;} break;  \
+//   case IANYEPS:            {SDO(T); DCLZVO(B) B s=0; SCOW(T,if(v){s=1; break;}); *zv++=s;} break;  \
+//   case IIMODFULL+IANYEPS:  {SDO(T); DCLZVO(B) B s=0; SCOWF(T,if(v){s=1; break;}); *zv++=s;} break;  \
+//   case IALLEPS:            {SDO(T); DCLZVO(B) B s=1; SCOW(T,if(!v){s=0; break;}); *zv++=s;} break;  \
+//   case IIMODFULL+IALLEPS:  {SDO(T); DCLZVO(B) B s=1; SCOWF(T,if(!v){s=0; break;}); *zv++=s;} break;  \
+//   case ISUMEPS:            {SDO(T); DCLZVO(I) I s=0; SCOW(T,s+=v;       ); *zv++=s;} break;  \
+//   case IIMODFULL+ISUMEPS:  {SDO(T); DCLZVO(I) I s=0; SCOWF(T,s+=v;       ); *zv++=s;} break;  \
+//   case IIFBEPS:            {SDO(T); DCLZVO(I) I *zv0=zv; SCOW(T,*zv=i; zv+=v;); *AS(z)=AN(z)=zv-zv0;}     break;  \
+//  case IIMODFULL+IIFBEPS:  {SDO(T); DCLZVO(I) I *zv0=zv; SCOWF(T,*zv=i; zv+=v;); *AS(z)=AN(z)=zv-zv0;}     break;  \
+//   case IEPS:    {SDO(T); B * RESTRICT zv=BAV(z)+l*c; SCOZ(T,UC,0);}  break;  
+//   case IIMODFULL+IEPS:    {SDO(T); B * RESTRICT zv=BAV(z)+l*c; SCOZ(T,UC,0);}  break;  
+//  {I zi=0, zie=m;  B * RESTRICT zv=BAV(z)+l*m; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+//                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; v^=1; zv[zi]=v; ++zi;} } break;  
+//    {I zi=0, zie=m;  T * RESTRICT zv=(T*)AV(z), *zv0=zv; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+//                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; v^=1; *zv=wv[zi]; zv+=v; ++zi;} *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  
+//   {I zi=0, zie=m;  I * RESTRICT zv=AV(z), *zv0=zv; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+//                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; v^=1; *zv=zi; zv+=v; ++zi;} *AS(z)=AN(z)=zv-zv0; } break;
+#define f jtio4
+#define T UC
+#define Ttype US
+ IOF(f){IH *hh=IHAV(*hp);I e,l,md;T*av,*wv;T max,min,p; 
+  md=(mode&~-IPHOFFSET); md|=(((mode&~((IIDOT^IICO)|IIMODFIELD|IPHOFFSET))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX); 
+  av=(T*)AV(a); wv=(T*)AV(w); 
+  min=(T)hh->currentlo; p=(T)hh->currentindexofst; max=min+p-1; 
+  e=1==wc?0:c; if(w==mark)c=0; 
+  for(l=0;l<ac;++l,av+=m,wv+=e){ 
+   if(!(mode&IPHOFFSET)){hashallo(hh,p,m,md);}  /* set parms for this loop */ 
+   switch(md){ 
+   case IIMODREFLEX+IIDOT: {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ 
+                           while(zi!=zie){I vv = hu[mwv[zi]]; if(vv<zi0)vv=zi; hu[mwv[zi]]=(Ttype)vv; zv[zi]=vv-zi0; ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ 
+   case IIMODREFLEX+IICO: {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; 
+                           do{--zie; I vv = hu[mwv[zie]]; if(vv<zi0)vv=zie; hu[mwv[zie]]=(Ttype)vv; zv[zie]=vv-zi0;}while(zie!=zi); } break; /* same in reverse */ 
+   case IIDOT:   {SDQA(T,Ttype);  I * RESTRICT zv=AV(z)+l*m-zi; SCOZ(T,Ttype,m);} break;  
+   case IIMODFULL+IIDOT:   {SDQA(T,Ttype);  I * RESTRICT zv=AV(z)+l*m-zi; SCOZ(T,Ttype,m);} break;  
+   case IICO:    {SDOA(T,Ttype);  I * RESTRICT zv=AV(z)+l*m-zi; SCOZ(T,Ttype,m);} break;  
+   case IIMODFULL+IICO:    {SDOA(T,Ttype);  I * RESTRICT zv=AV(z)+l*m-zi; SCOZ(T,Ttype,m);} break;  
+   case IEPS:    {SDO(T); B * RESTRICT zv=BAV(z)+l*m; SCOZ(T,UC,0);}  break;  
+   case IIMODFULL+IEPS:    {SDO(T); B * RESTRICT zv=BAV(z)+l*m; SCOZ(T,UC,0);}  break;  
+   case IIMODFULL+INUBSV: 
+   case INUBSV:  {I zi=0, zie=m;  B * RESTRICT zv=BAV(z)+l*m; T* RESTRICT mwv=wv; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; v^=1; zv[zi]=v; ++zi;} } break;  
+   case IIMODFULL+INUB: 
+   case INUB:    {I zi=0, zie=m;  T * RESTRICT zv=(T*)AV(z)+l*m, *zv0=zv; T* RESTRICT mwv=wv; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; *zv=wv[zi]; v^=1; zv+=v; ++zi;} *AS(z)= zv-zv0; AN(z)=n*(zv-zv0); } break;  
+   case IIMODFULL+INUBI: 
+   case INUBI:   {I zi=0, zie=m;  I * RESTRICT zv=AV(z)+l*m, *zv0=zv; T* RESTRICT mwv=wv; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ 
+                 while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=1; *zv=zi; v^=1; zv+=v; ++zi;} *AS(z)=AN(z)=zv-zv0; } break;  
+   case ILESS:   {SDO(T); T * RESTRICT zv=(T*)AV(z)+l*m, *zv0=zv; SCOW(T,*zv=*mwv; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);} break;  
+   case IIMODFULL+ILESS:   {SDO(T); T * RESTRICT zv=(T*)AV(z)+l*m, *zv0=zv; SCOW(T,*zv=*mwv; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);} break;  
+   case II0EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCOW(T,if(!v){s=i; break;});*zv++=s;} break;  
+   case IIMODFULL+II0EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCOW(T,if(!v){s=i; break;});*zv++=s;} break;  
+   case II1EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCOW(T,if(v){s=i; break;});*zv++=s; } break;  
+   case IIMODFULL+II1EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCOW(T,if(v){s=i; break;});*zv++=s; } break;  
+   case IJ0EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCQW(T,if(!v){s=i; break;});*zv++=s;} break;  
+   case IIMODFULL+IJ0EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCQW(T,if(!v){s=i; break;});*zv++=s;} break;  
+   case IJ1EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCQW(T,if(v){s=i; break;}); *zv++=s;} break;  
+   case IIMODFULL+IJ1EPS:  {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=c; SCQW(T,if(v){s=i; break;}); *zv++=s;} break;  
+   case IANYEPS: {SDO(T); B * RESTRICT zv=BAV(z)+l*m; B s=0; SCOW(T,if(v){s=1; break;}); *zv++=s;} break;  
+   case IIMODFULL+IANYEPS: {SDO(T); B * RESTRICT zv=BAV(z)+l*m; B s=0; SCOW(T,if(v){s=1; break;}); *zv++=s;} break;  
+   case IALLEPS: {SDO(T); B * RESTRICT zv=BAV(z)+l*m; B s=1; SCOW(T,if(!v){s=0; break;}); *zv++=s;} break;  
+   case IIMODFULL+IALLEPS: {SDO(T); B * RESTRICT zv=BAV(z)+l*m; B s=1; SCOW(T,if(!v){s=0; break;}); *zv++=s;} break;  
+   case ISUMEPS: {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=0; SCOW(T,s+=v;       ); *zv++=s;} break;  
+   case IIMODFULL+ISUMEPS: {SDO(T); I * RESTRICT zv=IAV(z)+l*m; I s=0; SCOW(T,s+=v;       ); *zv++=s;} break;  
+   case IIFBEPS: {SDO(T); I * RESTRICT zv=IAV(z)+l*m, *zv0=zv; SCOW(T,*zv=i; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);}     break;  
+   case IIMODFULL+IIFBEPS: {SDO(T); I * RESTRICT zv=IAV(z)+l*m, *zv0=zv; SCOW(T,*zv=i; v^=1; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);}     break;  
+   }  
+  }  
+  R z; 
+ }
+#else
+
+// The verbs to do the work, for different item lengths and hashtable sizes
+static IOFSMALLRANGE(jtio12,UC,US)  static IOFSMALLRANGE(jtio14,UC,UI4)  // 1-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio22,US,US)  static IOFSMALLRANGE(jtio24,US,UI4)  // 2-byte items, using small/large hashtable
+static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte items, using small/large hashtable
+#endif
+#endif
 // ******************* fourth class: sequential comparison ***************************************
 
 // we is the expression for reading one comparand, exp is the expression
 // loop through storing the index at which a match was found
 #define SCDO(T,xe,exp)  \
- {T*av=(T*)u,*v0=(T*)v,*wv=(T*)v,x; \
+ {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
-   case IIDOT: DO(ac, DO(c, x=(xe); j=0;   while(m>j &&(exp))++j; *zv++=j;       wv+=q;); av+=p; if(1==wc)wv=v0;); break;  \
-   case IICO:  DO(ac, DO(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;); break;  \
-   case IEPS:  DO(ac, DO(c, x=(xe); j=0;   while(m>j &&(exp))++j; *zb++=m>j;     wv+=q;); av+=p; if(1==wc)wv=v0;); break;  \
+   case IIDOT: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv++=j+m;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IICO:  {T*av=(T*)u; DQ(ac, DQ(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
 static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
@@ -571,7 +980,7 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
   case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
-             else         SCDO(D, *wv,!teq(x,av[j]));  // should use macro
+             else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
  R z;
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
@@ -701,6 +1110,82 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
 
 I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
+// Routine to find range of an array of I
+// The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
+// we abort and return 0 range.
+// min and max are initial values for min/max
+static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
+ // Unroll loop once to keep the compares rolling
+ if(!n)goto fail;
+ min1=min0=min; max0=max1=max;  // initial values
+ if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
+ if(n>>=1){  // n=#pairs of words left
+  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
+  do{  // We keep this short loop separate because it always finishes with a misprediction.
+   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
+   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+  }while(--i>=0);
+  // Every so often, coalecse the results & see if input maxrange has been exceeded
+  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
+  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
+  while(n--){  // Do the remaining 64-word blocks
+   i=31;
+   do{  // This loop, which is always 64 words, will never mispredict
+    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
+    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+   }while(--i>=0);
+   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
+   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
+  }
+ } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
+ ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.range=0; R ret;
+}
+// Same for US types
+static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
+ // Unroll loop once to keep the compares rolling
+ if(!n)goto fail;
+ min1=min0=min; max0=max1=max;  // initial values
+ if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
+ if(n>>=1){  // n=#pairs of words left
+  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
+  do{  // We keep this short loop separate because it always finishes with a misprediction.
+   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
+   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+  }while(--i>=0);
+  // Every so often, coalecse the results & see if input maxrange has been exceeded
+  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
+  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
+  while(n--){  // Do the remaining 64-word blocks
+   i=31;
+   do{  // This loop, which is always 64 words, will never mispredict
+    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
+    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+   }while(--i>=0);
+   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
+   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
+  }
+ } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
+ ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.range=0; R ret;
+}
+#if 0  // the simpler non-unrolled version
+// Same for US types
+static CR condrange2(US *s,I n,I max){CR ret;I i,p,q;US x;
+ q=IMAX; p=IMIN;
+ while(n){
+  n--; i=n&63; n&=~63;  // do a block of compares
+  do{x=*s++;
+   if(x>p)p=x; if(x<q)q=x; 
+  }while(i-->=0);
+  if((p-q)<0 || (p-q)>=max){ret.range=0; R ret;}
+ }
+ ret.min=q; ret.range=1+p-q;  // 1+p-q can never be < 0, from the previous test, except first time, when we return garbage
+ R ret;
+}
+#endif
 
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
 
@@ -713,13 +1198,15 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 #define PREHRESIAN 5
 #define PREHRESIVN 6
 
+#define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
+
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
-    I ac,acr,af,ak,an,ar,*as,at,c,f,f1,k,k1,m,n,p,r,*s,ss,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;
+    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;  // note: mark is an atom
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -767,15 +1254,15 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
  // We do this only if af!=0, because we have already set up to repeat cells of a if af=0
  if((wf-af)>0&&af){f1+=wf-af; wf=af;}
- if(an&&wn){  // scaf
+ if(an&&wn){
   // Neither arg is empty.  We can safely count the number of cells
   PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
-  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // #cells in a & w;  c=#target items (and therefore #result values) in a result-cell
+  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell
   RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
   ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn
  }else{
-  // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old way
+  // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
   n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
   k=n*k1;
   ac=prod(af,as); ak=ac?k1*an/ac:0;  // ac = #cells of a
@@ -783,36 +1270,36 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  }
 
  // Convert dissimilar types
- th=HOMO(at,wt); jt->min=ss=0;  // are args compatible? clear return values from irange
+ th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
  // touch a float/complex arg to convert -0 to 0.  should handle this in the hash, perhaps by masking out the sign bit (might be needed only if ct=0)
- if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )RZ(a=cvt0(a));
- if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)RZ(w=cvt0(w));
- if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}  //  r=min value,ss=max value+1-min value or 0 if no values or range too big
- // compute size of hashtable
- p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
+ I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
+ if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
+ if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
 
  // Allocate the result area
- if(!mk)switch(mode){I q;
+ if(!mk)switch(mode&IIOPMSK){I q;
   case IIDOT: 
   case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
   case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)ICPY(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
-  case INUB:    q=MIN(m,p); GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;
+  case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
-  case INUBI:   q=MIN(m,p); GATV(z,INT,q,1,0); break;
+  case INUBI:   q=m+1; GATV(z,INT,q,1,0); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
                 if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,0,0); break;
   // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) work only if e. produces rank 0 or 1.  Nonce error otherwise
-  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,1,0); break;
+  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c+1,1,0); break;  // +1 because we speculatively overwrite
   case IANYEPS: case IALLEPS:
                 ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,0,0); break;
   case ISUMEPS:
                 ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,0,0); break;
  }
+
+ // Handle empty/inhomogeneous arguments
  if(!(mk||m&&n&&zn&&(th>0))){
   I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
-  switch(mode){
+  switch(mode&IIOPMSK){
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
   // We also handle the case of i.&0@:e. when the rank of w is more than 1 greater than the rank of a cell of a;
   // in that case the search always fails
@@ -833,23 +1320,178 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   case IALLEPS: R c&&n?zero:one;
   case IIFBEPS: R n?mtv :IX(c);
  }}
+
+ // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
+ // preserved if the resulting hashtable is saved as part of a prehash.  They are not valid on input to this routine.
+
+ fn=0; // we haven't figured it out yet
+ UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
+ p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
  // Choose the function to use for performing the operation
- if(a!=w&&!mk&&1==acr&&(1==wc||ac==wc)&&(D)m*n*zn<13*((D)m*n+zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
+ // See if we should simply do sequential search.    We do this only when the cell of a is a list.
+ // The cost of such a search is (4 inst per loop) and the expected number of loops is half of
+ // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
+ // (full hashing is considerably more expensive)
+ if(a!=w&&!mk&&1==acr&&(1==wc||ac==wc)&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
   fn=jtiosc;  // simple scalar search without hashing.  should revisit the tuning parms after making any changes
- }else{B b=0==jt->ct;I ht=INT,t1;
+ }else{B b=0==jt->ct;I t1;
   if(!b&&t&BOX+FL+CMPX)ctmask(jt);
   if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
                               (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?jtioau:jtioa1;
   else if(t&XNUM)         fn=jtiox;
   else if(t&RAT )         fn=jtioq;
-  else if(1==k)           {fn=jtio1; if(!(mode==IIDOT||mode==IICO))ht=B01;}
-  else if(2==k)           {fn=jtio2; if(!(mode==IIDOT||mode==IICO))ht=B01;}
-  else if(k==SZI&&!(t&FL)){if(p==ss){fn=jtio4; if(!(mode==IIDOT||mode==IICO))ht=B01;}else fn=jtioi;}
-  else                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;
-  // if a hashtable will be needed, allocate it.  It is NOT initialized
-  // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
-  if(fn!=jtiobs)GA(h,ht,p,1,0);
+  else if(1==k)           {p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fn=jtio12;}   // 1-byte ops, just use small-range code: checking takes too much time
+  else{
+   // We might switch over to small-range mode, if the sizes are right.  See how big the hash table would be for full hashing
+   // figure out whether we should use small-range matching or hashing.  We use small-range code if:
+   // type is exact and length is 2 bytes; or
+   // type is exact numeric, length is 4 bytes or 8 bytes, and the (range of the data)*(length of rangecell) is less than 2.1*(length of data)*(length of hashcell)
+   //  where length of rangecell=4 for i. or i:, 1/8 otherwise, length of hashcell=4
+   // result is p (the length of hashtable, as # of entries), datamin (the minimum value found, if small-range)
+   // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
+   if(2==k){
+    // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
+    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);   // get the range
+    if(crres.range){
+      datamin=crres.min;
+      // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
+      // in the current allocation going all the way to 65536 kicks us into the longer hashtable (questionable decision).  Otherwise we should just promote
+      // any non-Boolean, because the actual cache footprint won't change.
+      // The cost of promoting a Boolean is 1 store (1 clock) per word cleared, for (65536-range)>>booladj bytes (if booladj!=0) [or (65536-range) hashtable entries if booladj==0]
+      // The savings is 4 ops (2 clocks) per word searched
+      if(booladj && ((UI)(65536-crres.range)>>booladj) < (c<<(LGSZI+1))){p=65536; datamin=0;}else{p=crres.range;}  // this underestimates the benefit for prehashes
+      if(p==65536)mode|=IIMODFULL;
+      fn=jtio22;  // This qualifies for small-range processing
+    }else{booladj=0;}   // Turn off booladj if small-range processing not engaged
+   }
+   if(!fn){  // if we don't have it yet, it will be a hash.  Decide which one
+    if(cvtsneeded&1)RZ(a=cvt0(a));  // Convert negative 0 to positive 0. Should do this in the hash
+    if(cvtsneeded&2)RZ(w=cvt0(w));
+    if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT
+     if(t&INT+SBT){  // same here, for I types
+      CR crres = condrange(AV(a),(AN(a)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
+      if(crres.range){
+       datamin=crres.min;
+       p=crres.range; fn=jtio42;
+      }else{booladj=0; fn=jtioi;}  // leave p as is; clear booladj since not small-range; select integer hashing
+     }else{booladj=0; fn=jtioi;}
+    }else{                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
+   }
+  }
  }
+
+
+// obsolete // should have an irange that takes the max value allowed, & returns early if range is exceeded
+// obsolete  if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}  //  r=min value,ss=max value+1-min value or 0 if no values or range too big
+// obsolete  // compute size of hashtable
+// obsolete  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
+
+ // if a hashtable will be needed, allocate it.  It is NOT initialized
+ // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
+ if(fn==jtio12||fn==jtio22||fn==jtio42){IH *hh;
+  // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
+  // if the #entries fits in a US, use the short table.  But bits always use the long table
+
+  // See if the size/range of w allows use of one of the faster loops.  The options are FULL (which saves the 4 instructions per atom of w that would
+  // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
+  // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
+  if(a!=w&&!mk&&!(mode&IIMODFULL)){CR crres;
+   I allowrange;  // where we will build the max allowed range of w
+   if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
+   // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
+   // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
+   if(k==2){
+    allowrange=MIN(MAX(L2CACHESIZE/(LGSZUS),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+    crres = condrange2(USAV(w),AN(w),datamin,datamin+p-1,allowrange);
+   }else{
+    allowrange=MIN(MAX(L2CACHESIZE/(LGSZUI4),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+    crres = condrange(AV(w),AN(w),datamin,datamin+p-1,allowrange);
+   }
+   if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
+  }  
+  if(p<(65536-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US))) && booladj==0 && m<65536){
+   // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
+   // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
+   // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
+   // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo
+   // Clearing also saves 1 clock per input word
+   mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
+   if(mk||!(h=jt->idothash0)){
+    GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
+    // Fill in the header
+    hh=IHAV(h);  // point to the header
+    hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+    hh->hashelelgsize=1;  // hash entries are 2 bytes long
+    if(mk){
+     // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
+     // the allocated position and index
+     mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
+     // It's OK to round the fill up to the length of an I
+     UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+     DO(fillct, hh->data.UI[i]=fillval;)
+// obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
+     hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
+    }else{
+     // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
+     jt->idothash0=h;
+     hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is ever used for bits
+     hh->currentindexend=hh->previousindexend=(US)-1;  // signal table must be initialized
+     // since table is to be initialized, currentlo/currenthi can be left garbage
+     ra(h);  // make the table permanent
+    }
+   }
+  }else{
+   // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
+   // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
+   // or bytes, and represent that information in mode and booladj.
+   if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
+   }else{
+    // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
+    mode |= ((c*3+m)<(p<<(1-(LGSZI-LGSZUI4))))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/2 cycle per atom to clear (without wide insts)
+   }
+   I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
+        // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
+   if(mk||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes)){
+    // if we have to reallocate, free the old one
+    if(!mk&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
+    // allocate the new one and fill it in
+    GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
+    // Fill in the header
+    hh=IHAV(h);  // point to the header
+    hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+    hh->hashelelgsize=2;  // hash entries are 4 bytes long
+    if(mk){
+     // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
+     // the allocated position and index
+     // It's OK to round the fill up to the length of an I
+     UI fillval;
+     if(booladj){  // convert bit count to words, rounded up
+      fillval=(mode&(IIMODPACK+IIOPMSK))<=INUBI; fillval|=fillval<<8; fillval|=fillval<<16;  // fill packed bits with 0, byte-bits with 0 except for ~. ~: I.@~. -.
+     }else{  // convert UI4 count to words, rounded up
+      mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
+      fillval=m; 
+     }  // fill bits with 0; fill full hashes with m
+     if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
+     UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
+     DO(fillct, hh->data.UI[i]=fillval;)
+// obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
+     hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed
+    }else{
+     // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
+     jt->idothash1=h;
+     hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is invalid because it held bitmasks
+     hh->currentindexend=hh->previousindexend=(UI4)-1;  // signal that table must be initialized
+     // since table is to be initialized, currentlo/currenthi can be left garbage
+     ra(h);  // make the table permanent
+    }
+   }
+   // switch the routine pointer to the big table
+   if(fn==jtio12)fn=jtio14; else if(fn==jtio22)fn=jtio24; else fn=jtio44;
+  }
+  // Pass the min/range into the action routine, using result values in the hashtable
+  hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
+ }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
+
  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
   // exact types (including intolerant comparison of FL/CMPX)
   // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
@@ -868,7 +1510,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   // The caller must ra() this result to protect it, if it is going to be saved
   GAT(z,BOX,3,1,0); zv=AAV(z);
   GAT(x,INT,6,1,0); xv=AV(x);
-  switch(mode){
+// should use a lookup
+  switch(mode&IIOPMSK){
    default:                    ztype=PREHRESIV; break;  /* integer vector      */
  // obsolete  case ILESS:                 ztype=PREHRESVAR; break;  /* type/shape from arg */
    case IEPS:                  ztype=PREHRESBV; break;  /* boolean vector      */
@@ -904,11 +1547,10 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
 // obsolete  if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
- // If there is any error, transfer to the non-prehashed code
- if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode,a,w);
- // allocate enough space for the result, depending on the type of the operation
- // should define constants for these types
+ // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
+ if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
 
+ // allocate enough space for the result, depending on the type of the operation
  switch(ztype){
   // the N endings are types that do not produce correct results if the result of e. has rank >1.  We give nonce error if that happens
   case PREHRESIV: GATV(z,INT,c,    f1, ws); break;

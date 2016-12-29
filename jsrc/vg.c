@@ -224,6 +224,7 @@ static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
 
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
+// returns 2 if n=0 (??)
 void irange(I n,I*v,I*base,I*top){I i,p,q;
 #if 0  // obsolete
  I d,m=n/2,x,y;

@@ -227,7 +227,9 @@
 
 #define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
 
-#define IIDOT           0               /* modes for indexofsub()          */
+// modes for indexofsub()
+#define IIOPMSK         0xf     // operation bits
+#define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2
 #define INUB            3
@@ -243,8 +245,18 @@
 #define IANYEPS         12
 #define IALLEPS         13
 #define IIFBEPS         14
-
-#define IPHOFFSET       30              /* offset for prehashed versions   */
+#define IIMODFIELD      0x70  // bits used to indicate processing options
+#define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
+                              // bitmask should be stored as packed bits rather than bytes
+#define IIMODREFLEX     0x10  // (small-range i. and i:) this is i.~/i:~
+#define IIMODFULL       0x20  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required
+#define IIMODBASE0      0x40  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes
+#define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Set only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
+#define IIMODFORCE0X    8
+#define IIMODFORCE0     (1LL<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
+#define IPHCALC         0x200   // set when we are calculating a prehashed table
+#define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
+#define IPHOFFSET       0x800              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
 #define IPHICO          (IPHOFFSET+IICO)
 // obsolete #define IPHLESS         34
@@ -268,6 +280,12 @@
 #define BW              32
 #define LGSZI 2
 #endif
+#define LGSZUI4  2  // lg(#bytes in a UI4)
+#define LGSZUS   1  // lg(bytes in a US)
+
+#define L1CACHESIZE (1LL<<15)
+#define L2CACHESIZE (1LL<<18)
+#define L3CACHESIZE (1LL<<22)
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
@@ -482,7 +500,6 @@
 #include "vdx.h"  
 #include "a.h"
 #include "s.h"
-
 
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0

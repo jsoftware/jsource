@@ -242,6 +242,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // assigned to a name, which will protects values inside it.
    rat1s(a);
    if(AN(a)&&AR(a)){
+     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+     // Also set b if the fit is !.0
     if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f); 
     mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
    }
@@ -264,6 +266,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // assigned to a name, which will protects values inside it.
    rat1s(w);
    if(AN(w)&&AR(w)){
+     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+     // Also set b if the fit is !.0
     c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
     if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */
     else      mode=c==CEPS?IEPS:/* obsolete c==CLESS?ILESS:*/-1;

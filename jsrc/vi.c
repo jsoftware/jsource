@@ -965,7 +965,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
    case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
-static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
+static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
  p=1<ac?m:0; q=1<wc||1<c;
  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
@@ -982,7 +982,6 @@ static IOF(jtiosc){B*zb;I j,p,q,*u,*v,zn,*zv;
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
- R z;
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
 
 
@@ -1125,7 +1124,7 @@ static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,m
    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
   }while(--i>=0);
-  // Every so often, coalecse the results & see if input maxrange has been exceeded
+  // Every so often, coalesce the results & see if input maxrange has been exceeded
   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   while(n--){  // Do the remaining 64-word blocks
@@ -1154,7 +1153,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0
    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
   }while(--i>=0);
-  // Every so often, coalecse the results & see if input maxrange has been exceeded
+  // Every so often, coalesce the results & see if input maxrange has been exceeded
   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   while(n--){  // Do the remaining 64-word blocks
@@ -1200,7 +1199,7 @@ static CR condrange2(US *s,I n,I max){CR ret;I i,p,q;US x;
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
 
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w==mark,th;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark,th;
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1210,7 +1209,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
- else{  // w is given
+ else{  // w is given.  See if we need to abort owing to shapes.
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
@@ -1271,7 +1270,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
 
  // Convert dissimilar types
  th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
- // touch a float/complex arg to convert -0 to 0.  should handle this in the hash, perhaps by masking out the sign bit (might be needed only if ct=0)
+ // Indicate if float args need to be canonicalized for -0.  should do this in the hash
  I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
@@ -1324,17 +1323,17 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
  // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
  // preserved if the resulting hashtable is saved as part of a prehash.  They are not valid on input to this routine.
 
- fn=0; // we haven't figured it out yet
- UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
- p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
  // Choose the function to use for performing the operation
  // See if we should simply do sequential search.    We do this only when the cell of a is a list.
  // The cost of such a search is (4 inst per loop) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
  // (full hashing is considerably more expensive)
- if(a!=w&&!mk&&1==acr&&(1==wc||ac==wc)&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
-  fn=jtiosc;  // simple scalar search without hashing.  should revisit the tuning parms after making any changes
+ if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
+  jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=0==jt->ct;I t1;
+  AF fn=0; // we haven't figured it out yet
+  UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
+  p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
   if(!b&&t&BOX+FL+CMPX)ctmask(jt);
   if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
                               (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?jtioau:jtioa1;
@@ -1344,7 +1343,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
   else{
    // We might switch over to small-range mode, if the sizes are right.  See how big the hash table would be for full hashing
    // figure out whether we should use small-range matching or hashing.  We use small-range code if:
-   // type is exact and length is 2 bytes; or
+   // type is exact and length is 1 or 2 bytes; or
    // type is exact numeric, length is 4 bytes or 8 bytes, and the (range of the data)*(length of rangecell) is less than 2.1*(length of data)*(length of hashcell)
    //  where length of rangecell=4 for i. or i:, 1/8 otherwise, length of hashcell=4
    // result is p (the length of hashtable, as # of entries), datamin (the minimum value found, if small-range)
@@ -1378,7 +1377,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
     }else{                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
    }
   }
- }
+
 
 
 // obsolete // should have an irange that takes the max value allowed, & returns early if range is exceeded
@@ -1386,144 +1385,146 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;AF fn;B mk=w
 // obsolete  // compute size of hashtable
 // obsolete  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
 
- // if a hashtable will be needed, allocate it.  It is NOT initialized
- // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
- if(fn==jtio12||fn==jtio22||fn==jtio42){IH *hh;
-  // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
-  // if the #entries fits in a US, use the short table.  But bits always use the long table
+  // if a hashtable will be needed, allocate it.  It is NOT initialized
+  // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
+  if(fn==jtio12||fn==jtio22||fn==jtio42){IH *hh;
+   // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
+   // if the #entries fits in a US, use the short table.  But bits always use the long table
 
-  // See if the size/range of w allows use of one of the faster loops.  The options are FULL (which saves the 4 instructions per atom of w that would
-  // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
-  // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
-  if(a!=w&&!mk&&!(mode&IIMODFULL)){CR crres;
-   I allowrange;  // where we will build the max allowed range of w
-   if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
-   // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
-   // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
-   if(k==2){
-    allowrange=MIN(MAX(L2CACHESIZE/(LGSZUS),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-    crres = condrange2(USAV(w),AN(w),datamin,datamin+p-1,allowrange);
-   }else{
-    allowrange=MIN(MAX(L2CACHESIZE/(LGSZUI4),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-    crres = condrange(AV(w),AN(w),datamin,datamin+p-1,allowrange);
-   }
-   if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
-  }  
-  if(p<(65536-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US))) && booladj==0 && m<65536){
-   // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
-   // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
-   // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
-   // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo
-   // Clearing also saves 1 clock per input word
-   mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
-   if(mk||!(h=jt->idothash0)){
-    GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
-    // Fill in the header
-    hh=IHAV(h);  // point to the header
-    hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
-    hh->hashelelgsize=1;  // hash entries are 2 bytes long
-    if(mk){
-     // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
-     // the allocated position and index
-     mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
-     // It's OK to round the fill up to the length of an I
-     UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
-     DO(fillct, hh->data.UI[i]=fillval;)
+   // See if the size/range of w allows use of one of the faster loops.  The options are FULL (which saves the 4 instructions per atom of w that would
+   // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
+   // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
+   if(a!=w&&!mk&&!(mode&IIMODFULL)){CR crres;
+    I allowrange;  // where we will build the max allowed range of w
+    if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
+    // always allow a little bit larger than the range of a, to make sure we expand the hashtable if a little more would be enough.
+    // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
+    if(k==2){
+     allowrange=MIN(MAX(L2CACHESIZE/(LGSZUS),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+     crres = condrange2(USAV(w),AN(w),datamin,datamin+p-1,allowrange);
+    }else{
+     allowrange=MIN(MAX(L2CACHESIZE/(LGSZUI4),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
+     crres = condrange(AV(w),AN(w),datamin,datamin+p-1,allowrange);
+    }
+    if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
+   }  
+   if(p<(65536-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US))) && booladj==0 && m<65536){
+    // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
+    // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
+    // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
+    // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo
+    // Clearing also saves 1 clock per input word
+    mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
+    if(mk||!(h=jt->idothash0)){
+     GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
+     // Fill in the header
+     hh=IHAV(h);  // point to the header
+     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->hashelelgsize=1;  // hash entries are 2 bytes long
+     if(mk){
+      // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
+      // the allocated position and index
+      mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
+      // It's OK to round the fill up to the length of an I
+      UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+      DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
-     hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
-    }else{
-     // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
-     jt->idothash0=h;
-     hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is ever used for bits
-     hh->currentindexend=hh->previousindexend=(US)-1;  // signal table must be initialized
-     // since table is to be initialized, currentlo/currenthi can be left garbage
-     ra(h);  // make the table permanent
+      hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
+     }else{
+      // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
+      jt->idothash0=h;
+      hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is ever used for bits
+      hh->currentindexend=hh->previousindexend=(US)-1;  // signal table must be initialized
+      // since table is to be initialized, currentlo/currenthi can be left garbage
+      ra(h);  // make the table permanent
+     }
     }
-   }
-  }else{
-   // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
-   // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
-   // or bytes, and represent that information in mode and booladj.
-   if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
    }else{
-    // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
-    mode |= ((c*3+m)<(p<<(1-(LGSZI-LGSZUI4))))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/2 cycle per atom to clear (without wide insts)
-   }
-   I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
-        // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
-   if(mk||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes)){
-    // if we have to reallocate, free the old one
-    if(!mk&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
-    // allocate the new one and fill it in
-    GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
-    // Fill in the header
-    hh=IHAV(h);  // point to the header
-    hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
-    hh->hashelelgsize=2;  // hash entries are 4 bytes long
-    if(mk){
-     // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
-     // the allocated position and index
-     // It's OK to round the fill up to the length of an I
-     UI fillval;
-     if(booladj){  // convert bit count to words, rounded up
-      fillval=(mode&(IIMODPACK+IIOPMSK))<=INUBI; fillval|=fillval<<8; fillval|=fillval<<16;  // fill packed bits with 0, byte-bits with 0 except for ~. ~: I.@~. -.
-     }else{  // convert UI4 count to words, rounded up
-      mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
-      fillval=m; 
-     }  // fill bits with 0; fill full hashes with m
-     if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
-     UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
-     DO(fillct, hh->data.UI[i]=fillval;)
-// obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
-     hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed
+    // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
+    // First, make a decision for Boolean tables.  If the table will be Boolean, decide whether to use packed bits
+    // or bytes, and represent that information in mode and booladj.
+    if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
     }else{
-     // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
-     jt->idothash1=h;
-     hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is invalid because it held bitmasks
-     hh->currentindexend=hh->previousindexend=(UI4)-1;  // signal that table must be initialized
-     // since table is to be initialized, currentlo/currenthi can be left garbage
-     ra(h);  // make the table permanent
+     // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
+     mode |= ((c*3+m)<(p<<(1-(LGSZI-LGSZUI4))))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/2 cycle per atom to clear (without wide insts)
     }
+    I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
+         // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
+    if(mk||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes)){
+     // if we have to reallocate, free the old one
+     if(!mk&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
+     // allocate the new one and fill it in
+     GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
+     // Fill in the header
+     hh=IHAV(h);  // point to the header
+     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->hashelelgsize=2;  // hash entries are 4 bytes long
+     if(mk){
+      // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
+      // the allocated position and index
+      // It's OK to round the fill up to the length of an I
+      UI fillval;
+      if(booladj){  // convert bit count to words, rounded up
+       fillval=(mode&(IIMODPACK+IIOPMSK))<=INUBI; fillval|=fillval<<8; fillval|=fillval<<16;  // fill packed bits with 0, byte-bits with 0 except for ~. ~: I.@~. -.
+      }else{  // convert UI4 count to words, rounded up
+       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
+       fillval=m; 
+      }  // fill bits with 0; fill full hashes with m
+      if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
+      UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
+      DO(fillct, hh->data.UI[i]=fillval;)
+// obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
+      hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed
+     }else{
+      // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
+      jt->idothash1=h;
+      hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is invalid because it held bitmasks
+      hh->currentindexend=hh->previousindexend=(UI4)-1;  // signal that table must be initialized
+      // since table is to be initialized, currentlo/currenthi can be left garbage
+      ra(h);  // make the table permanent
+     }
+    }
+    // switch the routine pointer to the big table
+    if(fn==jtio12)fn=jtio14; else if(fn==jtio22)fn=jtio24; else fn=jtio44;
    }
-   // switch the routine pointer to the big table
-   if(fn==jtio12)fn=jtio14; else if(fn==jtio22)fn=jtio24; else fn=jtio44;
-  }
-  // Pass the min/range into the action routine, using result values in the hashtable
-  hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
- }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
+   // Pass the min/range into the action routine, using result values in the hashtable
+   hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
+  }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
 
- if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
-  // exact types (including intolerant comparison of FL/CMPX)
-  // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
-  // should get rid of this - cheaper to hash than to check for need-to-hash
-  GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
-  q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
-  DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
-  // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
-  if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
- }
- // Call the routine to perform the operation
- RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
- if(mk){A x,*zv;I*xv,ztype;
-  // If w was omitted (indicating prehashing), return the information for that special case
-  // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
-  // The caller must ra() this result to protect it, if it is going to be saved
-  GAT(z,BOX,3,1,0); zv=AAV(z);
-  GAT(x,INT,6,1,0); xv=AV(x);
-// should use a lookup
-  switch(mode&IIOPMSK){
-   default:                    ztype=PREHRESIV; break;  /* integer vector      */
- // obsolete  case ILESS:                 ztype=PREHRESVAR; break;  /* type/shape from arg */
-   case IEPS:                  ztype=PREHRESBV; break;  /* boolean vector      */
-   case IANYEPS: case IALLEPS: ztype=PREHRESBAN; break;  /* boolean scalar      */
-   case ISUMEPS:               ztype=PREHRESIAN; break; 
-   case II0EPS:  case II1EPS:  
-   case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
-   case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
+  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
+   // exact types (including intolerant comparison of FL/CMPX)
+   // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
+   // should get rid of this - cheaper to hash than to check for need-to-hash
+   GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
+   q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
+   DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
+   // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
+   if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
   }
-  xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
-  zv[0]=x; zv[1]=h; zv[2]=hi;
- }
+
+  // Call the routine to perform the operation
+  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
+  if(mk){A x,*zv;I*xv,ztype;
+   // If w was omitted (indicating prehashing), return the information for that special case
+   // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
+   // The caller must ra() this result to protect it, if it is going to be saved
+   GAT(z,BOX,3,1,0); zv=AAV(z);
+   GAT(x,INT,6,1,0); xv=AV(x);
+// should use a lookup
+   switch(mode&IIOPMSK){
+    default:                    ztype=PREHRESIV; break;  /* integer vector      */
+ // obsolete  case ILESS:                 ztype=PREHRESVAR; break;  /* type/shape from arg */
+    case IEPS:                  ztype=PREHRESBV; break;  /* boolean vector      */
+    case IANYEPS: case IALLEPS: ztype=PREHRESBAN; break;  /* boolean scalar      */
+    case ISUMEPS:               ztype=PREHRESIAN; break; 
+    case II0EPS:  case II1EPS:  
+    case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
+    case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
+   }
+   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
+   zv[0]=x; zv[1]=h; zv[2]=hi;
+  }
+ }  // end of 'not sequential comparison' which means we need a hashtable
  EPILOG(z);
 }    /* a i."r w main control */
 

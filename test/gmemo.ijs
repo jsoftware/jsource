@@ -33,7 +33,16 @@ combr=: 4 : 0 M.  NB. All size x combinations of i.y
 
 (comb -: combr)/"1 (<:/"1 t)#t=. ,/>{;~i.9
 
+params =: ( <:@:i.@:(] - <:@:[))
+coeffs =: (|.@:>:@:i.@(] - <:@:[))
+f =: 4 : 0 M.
+if. y < x do. 1
+else. >: +/ ((x coeffs y) * x f"0 (x params y))
+end.
+)
+1053389 -: 50 f 168
+1148904 -: 10 f 57
 
-4!:55 ;:'combr fib fibr pn pnx rec t'
+4!:55 ;:'coeffs combr f fib fibr params pn pnx rec t'
 
 

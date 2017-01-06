@@ -126,13 +126,13 @@ f=: 4 : 0
 f"0/~ i. 10
 f"0/~ 64 + i: 10
 f"0/~ 128 + i: 10
-if. 1 (17 b.) arch =: 6!:6 (0) do.   NB. 6!:6 returns bit 0 set if AVX supported
- NB. Rerun with AVX off
- f"0/~ i. 10
- f"0/~ 64 + i: 10
- f"0/~ 128 + i: 10
-end.
-6!:6 arch   NB. Restore AVX
+NB. No longer is it settable if. 1 (17 b.) arch =: 6!:6 (0) do.   NB. 6!:6 returns bit 0 set if AVX supported
+NB.  NB. Rerun with AVX off
+NB.  f"0/~ i. 10
+NB.  f"0/~ 64 + i: 10
+NB.  f"0/~ 128 + i: 10
+NB. end.
+NB. 6!:6 arch   NB. Restore AVX
 1
 )
 

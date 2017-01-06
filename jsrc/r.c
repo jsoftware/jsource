@@ -57,28 +57,33 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
 
 F1(jtarep){R box(aro(w));}
 
-
+// Create AR for a string
 static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
  n=AN(w);
- ASSERT(1>=AR(w),EVRANK);
+ ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
  ASSERT(n,EVLENGTH);
  s=CAV(w); c=*(s+n-1);
- DO(n, d=s[i]; ASSERT(32<=d&&d<127,EVSPELL););
- if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);
- ASSERT(id=spellin(n,s),EVSPELL);
- if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?sc(m):2==n?ainf:sc(-m));}
- ASSERT(y&&RHS&AT(y),EVDOMAIN);
+ DO(n, d=s[i]; ASSERT(32<=d&&d<127,EVSPELL););  // must be all ASCII
+ if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref
+ ASSERT(id=spellin(n,s),EVSPELL);  // not name, must be control word or primitive.  Also classify string 
+ if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?sc(m):2==n?ainf:sc(-m));} // define 0:, if it's that
+ ASSERT(y&&RHS&AT(y),EVDOMAIN);   // make sure it's a noun/verb
  R y;
 }
 
+// Convert an AR to an A block.  w is a gerund that has been opened
 F1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
  RZ(w);
+ // if string, handle that special case (verb/primitive)
  if(LIT&AT(w))R fxchar(w);
- m=AN(w); wd=(I)w*ARELATIVE(w);
+ // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
+ m=AN(w); wd=(I)w*ARELATIVE(w);  // m=#atoms, wd=relative offset (if any), used by WVR/AADR macro
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==m||2==m,EVLENGTH);
- wv=AAV(w); y=WVR(0);
+ wv=AAV(w); y=WVR(0);  // set wv->box pointers, y->first box
+ // If the first box contains boxes, they are ARs - go expand them and save as fs
+ // id will contains the type of the AR: 0=another AR, '0'=noun
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){

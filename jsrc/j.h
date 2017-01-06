@@ -216,6 +216,10 @@
 #endif
 #endif
 
+#if !defined(C_AVX)
+#define C_AVX 0
+#endif
+
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */

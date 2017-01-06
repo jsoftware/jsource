@@ -9,17 +9,21 @@
 static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&JTINPLACEW)),(f2)((J)((I)jt|(((I)jtinplace<<1)+(I)jtinplace)),w,w,fs));}
 static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)((I)jt|(((((I)jtinplace<<2)+(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
 
+// w~, which is either reflexive/passive or evoke
 F1(jtswap){A y;C*s;I n;
  RZ(w); 
- if(VERB&AT(w)){I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (VAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
+ if(VERB&AT(w)){
+  // reflexive/passive.  Create verb that swaps
+  I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (VAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
+  // evoke.  Ii must be LIT and convertible to ASCII.
   if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w)) else ASSERT(LIT&AT(w),EVDOMAIN);
-  ASSERT(1>=AR(w),EVRANK);
+  ASSERT(1>=AR(w),EVRANK);  // list or atom only
   n=AN(w); s=CAV(w); 
-  ASSERT(vnm(n,s),EVILNAME); 
-  RZ(y=nfs(AN(w),CAV(w)));
-  R nameref(y);
+  ASSERT(vnm(n,s),EVILNAME);   // valid name
+  RZ(y=nfs(AN(w),CAV(w)));  // create a NAME block for the string
+  R nameref(y);  // Create a name-reference pointing to the name
 }}
 
 

@@ -158,7 +158,7 @@ static void jtjtinit(J jt){
 // zero jt->parserstkbgn=jt->parserstkend1=0;
 // zero CLEARZOMBIE
  jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
-#if SY_64 && SY_WIN32
+#if 0   // Now we detect architecture at installation time, using C_AVX
  // See if processor supports AVX instructions
  // Tip o' hat to InsufficientlyComplicated and the commenter
  // Checking for AVX requires 3 things:

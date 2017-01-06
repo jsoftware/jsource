@@ -111,11 +111,12 @@ static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
 
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
  RZ(z);
- c=ACUC(self); h=VAV(self)->h; hv=AAV(h);
+ c=ACUC(self)-VAV(self)->execct; h=VAV(self)->h; hv=AAV(h);  // c = # fa()s needed to deallocate self, not counting the ones that just protect the name
  q=hv[0]; mv= AV(q);
  q=hv[1]; jv= AV(q);
  q=hv[2]; cv=AAV(q); m=AN(q);
- if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;
+ // If the buffer must be extended, allocate a new one
+ if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;I _ttop=jt->tnextpushx;
   v=ptab+PTO; while(m>=*v)++v; m=*v;
   RZ(jj=reshape(v2(m,2L),sc(IMIN))); jv= AV(jj);
   GATV(cc,BOX,m,1,0);                  cv=AAV(cc);
@@ -123,11 +124,17 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
    cv[(v-jv)/2]=cu[i]; cu[i]=0; v[0]=u[0]; v[1]=u[1];
   }
-  q=hv[1];                                AC(q)=ACUC1; fa(q); AC(jj)+=c; hv[1]=jj;
-  q=hv[2]; AC(q)=ACUC1; fa(q); AC(cc)+=c; hv[2]=cc;
+  // Free the old buffer.  Transfer the usecount from the old to the new, by adding the number of times the memoed verb will free this buffer
+  q=hv[1]; AC(q)=1; fa(q); ACINCRBY(jj,c); hv[1]=jj;  // force fa(); transfer usecount to new buffer
+  q=hv[2]; AC(q)=1; fa(q); ACINCRBY(cc,c); hv[2]=cc;
+  tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above.
+   // We have to do this because we have no guarantee that our caller will do a tpop before calling us again, and we
+   // might end up forcing AC(q) to 1 and freeing it while it has an outstanding free on the stack.
+   // This decrements the usecount of cc so that it now equals the number of times self must be fa()d to deallocate it.
  }
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
+ // bump the usecount of the result by the number of times it will be freed by this memoed verb
  cv[(v-jv)/2]=raa(c,z); v[0]=y; v[1]=x; 
  R z;
 }
@@ -153,9 +160,14 @@ static DF2(jtmemo2){DECLF;A z;I x,y;
  RZ(a&&w);
  x=int0(a); y=int0(w);
  if(x==IMIN||y==IMIN)R CALL2(f2,a,w,fs);
- R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));
+ R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result
 }
 
+// Create the memoed verb.  We create an h argument that is a list of 3 boxes, containing:
+// 0 number of memoed results m
+// 1 mx2 INT table of input value; index of result
+// 2 boxed list containing results
+// All these start life on the tpush stack
 F1(jtmemo){A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);

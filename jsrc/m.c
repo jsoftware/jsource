@@ -18,6 +18,12 @@
 #define SBFREEB (1L<<SBFREEBLG)   // number of bytes that need to be freed before we rescan
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 
+#if (MEMAUDIT==0 || !_WIN32)
+#define FREECHK(x) FREE(x)
+#else
+#define FREECHK(x) if(!FREE(x))*(I*)0=0;  // crash on error
+#endif
+
 static void jttraverse(J,A,AF);
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
@@ -80,9 +86,9 @@ B jtspfree(J jt){I i;MS*p;
     MS *baseblock = (MS *)((C*)p-(p->blkx<<i));  // get address of corresponding base block
     if(baseblock->j&0x8000){ // Free fully-unused base blocks;
 #if ALIGNTOCACHE
-     FREE(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
+     FREECHK(((I**)baseblock)[-1]);  // If aligned, the word before the block points to the original block address
 #else
-     FREE(baseblock);
+     FREECHK(baseblock);
 #endif
     }else{baseblock->j &= MEMJMASK;}   // restore the count to 0 in the rest
     p=np;   //  step to next base block
@@ -489,7 +495,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
   }
   // See if there are more blocks to do
   if(endingtpushx>old){      // If we haven't done them all, we must have hit start-of-block.  Move back to previous block
-   if(jt->tstacknext)FREE(jt->tstacknext);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
+   if(jt->tstacknext)FREECHK(jt->tstacknext);   // We will set the block we are vacating as the next-to-use.  We can have only 1 such; if there is one already, free it
    jt->tstacknext=jt->tstack;  // save the next-to-use
    jt->tstack=(A*)jt->tstack[0];   // back up to the previous block, leaving tstacknext pointing to tstack
    // move the start pointer forward; past old, if this is the last pass
@@ -504,8 +510,10 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 
 
 
+// Add jt->arg to the usecount of w and all its descendants.
 static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
-A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}
+// Add k to the usecount of w and all its descendants
+A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}  // preserve jt->arg; return w
 
 // Protect a value temporarily
 // w is a block that we want to make ineligible for inplacing.  We increment its usecount (which protects it) and tpush it (which
@@ -645,12 +653,12 @@ void jtmf(J jt,A w){I mfreeb;
  if(PLIML+1<=blockx){   // allocated by malloc
   mfreeb = jt->mfreegenallo;
 #if ALIGNTOCACHE
-  FREE(((MS*)w)[-1].a);  // point to initial allocation and free it
+  FREECHK(((MS*)w)[-1].a);  // point to initial allocation and free it
 #else
 #if MEMAUDIT&1
   if(((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // a field is set in pool allocs if not cache-aligned
 #endif
-  FREE((MS*)w-1);  // point to initial allocation and free it
+  FREECHK((MS*)w-1);  // point to initial allocation and free it
 #endif
   jt->mfreegenallo = mfreeb-n;
  }else{                // buffer allocated from subpool.
@@ -719,7 +727,7 @@ F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
  R z;
 }
 
-B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREE(z); R 1; }
+B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
 
 // Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
 // if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer

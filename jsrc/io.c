@@ -169,49 +169,44 @@ I jdo(J jt, C* lp){I e,old;A x;
 C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(y);}
 
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
- F1RANK(1,jtwd,self);
- RZ(w);
- ASSERT(2>AR(w),EVRANK);
- sv=VAV(self);
- t=i0(sv->g);
- if(t>=2000 && t<3000 && AN(w) && !(LIT+C2T+C4T+INT&AT(w)))
- {
-	 switch(UNSAFE(AT(w)))
-	 {
-	 case B01:
-		RZ(w=vi(w));break;
-	 case FL:
-		pd=DAV(w);
-		GATV(w,INT,AN(w),AR(w),0);
-		pi=AV(w);
-		DO(AN(w),*pi++=(I)(jfloor(0.5+*pd++));); 
-		break;
-	 default:
-		 ASSERT(0,EVDOMAIN);
-	 }
- }
- // t is 11!:t and w is wd argument
- // smoption: 1=use smpoll to get last result
- //           2=pass current locale
- if(0x2&jt->smoption){
- e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
- }else{
- e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
- }
- if(!e) R mtm;   // e==0 is MTM
- if(e==-1)       // e---1 is zp
-  if(!(0x1&jt->smoption)) R z;
-  else R ca((A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
- ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
- if(!(0x1&jt->smoption)){
- RZ(z=df1(z,cut(ds(CBOX),num[-2]))); // e==-2 is lit pairs
- R reshape(v2(AN(z)/2,2L),z);
- }else{
- RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
- z=ca(z);        // zp is not allocated by Jga
- RZ(z=df1(z,cut(ds(CBOX),num[-2]))); // e==-2 is lit pairs
- R reshape(v2(AN(z)/2,2L),z);
- }
+  F1RANK(1,jtwd,self);
+  RZ(w);
+  ASSERT(2>AR(w),EVRANK);
+  sv=VAV(self);
+  t=i0(sv->g);
+  if(t>=2000 && t<3000 && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {
+    switch(UNSAFE(AT(w))) {
+    case B01:
+      RZ(w=vi(w));
+      break;
+    case FL:
+      pd=DAV(w);
+      GATV(w,INT,AN(w),AR(w),0);
+      pi=AV(w);
+      DO(AN(w),*pi++=(I)(jfloor(0.5+*pd++)););
+      break;
+    default:
+      ASSERT(0,EVDOMAIN);
+    }
+  }
+// t is 11!:t and w is wd argument
+// smoption:
+//   1=pass current locale
+//   2=result not allocated by jga
+//   4=use smpoll to get last result
+  if(0x1&jt->smoption) {
+    e=jt->smdowd ? ((dowdtype2)(jt->smdowd))(jt, (int)t, w, &z, getlocale(jt)) : EVDOMAIN;
+  } else {
+    e=jt->smdowd ? ((dowdtype)(jt->smdowd))(jt, (int)t, w, &z) : EVDOMAIN;
+  }
+  if(!e) R mtm;   // e==0 is MTM
+  ASSERT(e<=0,e); // e>=0 is EVDOMAIN etc
+  if(0x4&jt->smoption) RZ(z=(A)((polltype)(jt->smpoll))(jt, (int)t, (int)e));
+  if(0x2&jt->smoption) z=ca(z);
+  if(e==-2){      // e==-2 is lit pairs
+    RZ(z=df1(z,cut(ds(CBOX),num[-2])));
+    R reshape(v2(AN(z)/2,2L),z);
+  } else R z;
 }
 
 static char breaknone=0;

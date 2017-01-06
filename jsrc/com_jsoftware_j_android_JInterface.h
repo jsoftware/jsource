@@ -19,52 +19,38 @@ extern "C" {
 #define com_jsoftware_j_JInterface_MTYOEXIT 5L
 #undef com_jsoftware_j_JInterface_MTYOFILE
 #define com_jsoftware_j_JInterface_MTYOFILE 6L
-/*
- * Class:     com_jsoftware_j_JInterface
- * Method:    getVariableNative
- * Signature: (JLjava/lang/String;)Ljava/lang/Object;
- */
-JNIEXPORT jobject JNICALL Java_com_jsoftware_j_JInterface_getVariableNative
-  (JNIEnv *, jobject, jlong, jstring);
+
 
 /*
  * Class:     com_jsoftware_j_JInterface
- * Method:    setVariableNative
- * Signature: (JLjava/lang/String;Ljava/lang/Object;)V
- */
-JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_setVariableNative
-  (JNIEnv *, jobject, jlong, jstring, jobject);
-
-/*
- * Class:     com_jsoftware_j_JInterface
- * Method:    callJNative
+ * Method:    JDo
  * Signature: (JLjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_callJNative
+JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
   (JNIEnv *, jobject, jlong, jstring);
 
 /*
  * Class:     com_jsoftware_j_JInterface
- * Method:    destroyJNative
+ * Method:    JFree
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_destroyJNative
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
   (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     com_jsoftware_j_JInterface
- * Method:    initializeJNative
+ * Method:    JInit
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_initializeJNative
+JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
   (JNIEnv *, jobject, jboolean);
 
 /*
  * Class:     com_jsoftware_j_JInterface
- * Method:    dorsNative
+ * Method:    JDoR
  * Signature: (JLjava/lang/Object;Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_dorsNative
+JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
   (JNIEnv *, jobject, jlong, jstring);
 
 #ifdef __cplusplus

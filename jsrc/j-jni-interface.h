@@ -2,12 +2,6 @@
 #define J_JNI_INTERFACE
 
 #ifdef ANDROID
-
-void _stdcall android_quit();
-void _stdcall android_free(void* ptr);
-#endif
-
-#ifdef ANDROID
 #define LOCALOGTAG "libj"
 #include <android/log.h>
 #define LOGD(msg) __android_log_write(ANDROID_LOG_DEBUG,LOCALOGTAG,msg)

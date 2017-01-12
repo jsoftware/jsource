@@ -19,3 +19,4 @@ typedef int (_stdcall JErrorTextBType)(void*, long, VARIANT* pbstr);
 typedef int (_stdcall JGetBType)(void*, LPSTR, VARIANT*);
 typedef int (_stdcall JSetBType)(void*, LPSTR, VARIANT*);
 typedef int (_stdcall JDoRType)(void*, LPSTR, VARIANT*);
+typedef int (_stdcall JInt64Type)(void*, long);

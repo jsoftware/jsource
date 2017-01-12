@@ -162,6 +162,10 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ VARIANT __RPC_FAR *v,
             /* [retval][out] */ long __RPC_FAR *r) = 0;
         
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Int64( 
+            /* [in] */ long b,
+            /* [retval][out] */ long __RPC_FAR *r) = 0;
+        
     };
     
 #else 	/* C style interface */
@@ -312,6 +316,11 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ VARIANT __RPC_FAR *v,
             /* [retval][out] */ long __RPC_FAR *r);
         
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Int64 )( 
+            IJDLLServer __RPC_FAR * This,
+            /* [in] */ long b,
+            /* [retval][out] */ long __RPC_FAR *r);
+        
         END_INTERFACE
     } IJDLLServerVtbl;
 
@@ -401,6 +410,9 @@ EXTERN_C const IID IID_IJDLLServer;
 
 #define IJDLLServer_DoR(This,input,v,r)	\
     (This)->lpVtbl -> DoR(This,input,v,r)
+
+#define IJDLLServer_Int64(This,b,r)	\
+    (This)->lpVtbl -> Int64(This,b,r)
 
 #endif /* COBJMACROS */
 
@@ -653,6 +665,19 @@ void __RPC_STUB IJDLLServer_DoR_Stub(
     IRpcChannelBuffer *_pRpcChannelBuffer,
     PRPC_MESSAGE _pRpcMessage,
     DWORD *_pdwStubPhase);
+
+/* [helpstring] */ HRESULT STDMETHODCALLTYPE IJDLLServer_Int64_Proxy( 
+    IJDLLServer __RPC_FAR * This,
+    /* [in] */ long b,
+    /* [retval][out] */ long __RPC_FAR *r);
+
+
+void __RPC_STUB IJDLLServer_Int64_Stub(
+    IRpcStubBuffer *This,
+    IRpcChannelBuffer *_pRpcChannelBuffer,
+    PRPC_MESSAGE _pRpcMessage,
+    DWORD *_pdwStubPhase);
+
 
 
 

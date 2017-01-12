@@ -23,7 +23,7 @@
 
 	[helpstring("Set variant value in J variable.")]
 	HRESULT Set([in] BSTR jname, [in] VARIANT* v, [out, retval] long* r);
-  
+
 	[helpstring("Get J variable description and memory addresses of shape and data.")]
 	HRESULT GetM([in] BSTR jname, [out] long* jtype, [out] long* jrank, [out] long* jshape, [out] long* jdata, [out, retval] long *r);
 
@@ -53,4 +53,7 @@
 
 	[helpstring("Execute string and return formatted output in variant BSTR.).")]
 	HRESULT DoR([in] BSTR input, [out] VARIANT* v, [out, retval] long* r);
+
+	[helpstring("Enable/disable (1/0) return Int64 integer.")]
+	HRESULT Int64([in] long b, [out, retval] long* r);
 

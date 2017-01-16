@@ -50,7 +50,7 @@ typedef int              (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
 typedef struct {D re,im;}  Z;
-typedef union {D d;UINT i[2];} DI;
+typedef union {D d;UINT i[2];UI ui;} DI;
 
 #if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */
 typedef S SI;
@@ -88,6 +88,7 @@ typedef I SI;
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
+#define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AK(x)))  /* name                    */
 #define IAV(x)          AV(x)                   /* integer                 */

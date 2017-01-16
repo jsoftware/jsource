@@ -73,6 +73,7 @@
 #endif
 
 #define IMIN            (~IMAX)   /* ANSI C LONG_MIN is  -LONG_MAX */
+#define NEGATIVE0       0x8000000000000000LL   // IEEE -0
 
 #define C4MAX           0xffffffffUL
 #define C4MIN           0L
@@ -252,7 +253,7 @@
 #define IIMODFIELD      0x70  // bits used to indicate processing options
 #define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
                               // bitmask should be stored as packed bits rather than bytes
-#define IIMODREFLEX     0x10  // (small-range i. and i:) this is i.~/i:~
+#define IIMODREFLEX     0x10  // (small-range i. and i:) this is i.~/i:~ (hashing) this is i.~/i:~/~./~:/I.@:~.
 #define IIMODFULL       0x20  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required
 #define IIMODBASE0      0x40  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes
 #define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Set only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
@@ -683,3 +684,15 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
 #endif
 
+// The following definitions are used only in builds for the AVX instruction set
+#if SY_64
+#if SY_WIN32
+// Visual Studio definitions
+#define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
+#define CRC32L(x,y) _mm_crc32_u64(x,y)  // takes UI, returns UI (top 32 bits 0)
+#else
+// gcc/clang definition
+#define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
+#define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
+#endif
+#endif

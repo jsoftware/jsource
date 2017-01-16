@@ -72,6 +72,218 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 }    /* 1 iff significant wrt comparison tolerance */
 
 
+#if C_HASH
+/* hic:  hash a string of length k                                 */
+/* hicx: hash the bytes of string v indicated by hin/hiv           */
+/* hic2: hash the bytes of a string of length k (k even)           */
+/* hic4: hash the bytes of a string of length k (k multiple of 4)  */
+/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
+
+       UI hic (     I k,UC*v){UI z=HASH0;             DO(k,       z=(149*i+1000003)**v++   ^z<<1;      ); R z;}
+
+static UI hicnz(    I k,UC*v){UI z=HASH0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(149*i+1000003)*c^z<<1;); R z;}
+
+static UI hicx(J jt,I k,UC*v){UI z=HASH0;I*u=jt->hiv; DO(jt->hin, z=(149*i+1000003)*v[*u++]^z<<1;      ); R z;}
+
+#if C_LE
+       UI hic2(     I k,UC*v){UI z=HASH0;             DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
+                                                       if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=2;); R z;}
+#else
+       UI hic2(     I k,UC*v){UI z=HASH0; ++v;        DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
+                                                       if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=2;); R z;}
+#endif
+
+#if C_LE
+       UI hic4(     I k,UC*v){UI z=HASH0;             DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
+                                               if(*(v+2)||*(v+3)){z=(149*i+1000003)**(v+1) ^z<<1;
+                                                                  z=(149*i+1000003)**(v+2) ^z<<1;
+                                                                  z=(149*i+1000003)**(v+3) ^z<<1;}
+                                                  else if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=4;); R z;}
+#else
+       UI hic4(     I k,UC*v){UI z=HASH0; v+=3;       DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
+                                               if(*(v-2)||*(v-3)){z=(149*i+1000003)**(v-1) ^z<<1;
+                                                                  z=(149*i+1000003)**(v-2) ^z<<1;
+                                                                  z=(149*i+1000003)**(v-3) ^z<<1;}
+                                                  else if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=4;); R z;}
+#endif
+
+#else
+/* hic:  hash a string of length k                                 */
+/* hicx: hash the bytes of string v indicated by hin/hiv           */
+/* hic2: hash the low order bytes of a string of length k (k even) */
+/* hic4: hash the low order bytes of a string of length k (k multiple of 4) */
+/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
+
+       UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
+
+static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(i+1000003)*c^z<<1;); R z;}
+
+static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u++]^z<<1;      ); R z;}
+
+#if C_LE
+       UI hic2(     I k,UC*v){UI z=0;             DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
+#else
+       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
+#endif
+
+#if C_LE
+       UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
+#else
+       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
+#endif
+
+#endif
+
+#if SY_64
+// Hash a single unsigned INT
+#define hicw(v)  (10495464745870458733U**(UI*)(v))
+// Hash a single double, using only the bits in ctmask.  -0 is hashed differently than +0.  Should we take the sign bit out of ct?  Only if ct=0?
+//  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
+static UI jthid(J jt,D d){R 10495464745870458733U*(jt->ctmask&*(I*)&d);}
+#else
+#define hicw(v)  (2838338383U**(U*)(v))
+static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+2838338383U*x.i[MSW];}
+#endif
+
+// Hash the data in the given A.  Comments say this is called only for singletons
+// If empty or boxed, hash the shape
+// If literal, hash the whole thing
+// If numeric, convert first atom to float and hash it
+// Q: called only for singletons?  is hct=1 for exact compares?  Seems to be 1.0 always.  Why multiply by hct?
+//  is ctmask=~0 for exact compares?  Better be.
+static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
+ n=AN(y); t=AT(y); yv=UAV(y);
+ if(!n||t&BOX)R hic(AR(y)*SZI,(UC*)AS(y));
+ switch(CTTZ(t)){
+  case LITX:  R hic(n,yv);
+  case C2TX:  R hic2(2*n,yv);
+  case C4TX:  R hic4(4*n,yv);
+  case SBTX:  R hic(n*SZI,yv);
+  case B01X:  d=*(B*)yv; break;
+  case INTX:  d=(D)*(I*)yv; break;
+  case FLX: 
+  case CMPXX: d=*(D*)yv; break;
+  case XNUMX: d=xdouble(*(X*)yv); break;
+  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
+ }
+ R hid(d*hct);
+}
+
+// Hash y, which is not a singleton.  Integral types do not hash bytes that equal 0 or 255 (why??).
+static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
+ m=n=AN(y);
+ if(!n)R 0;
+ switch(CTTZ(AT(y))){
+  case RATX:  m+=n;  /* fall thru */
+  case XNUMX: u=XAV(y); DO(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
+  case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
+  default:   R hic(n*bp(AT(y)),UAV(y));
+}}
+
+// Hashes for extended/rational types.  Hash only the numerator of rationals.  These are
+// Q and X types (Q is a brace of X types)
+static UI hix(X*v){A y=*v;   R hic(AN(y)*SZI,UAV(y));}
+static UI hiq(Q*v){A y=v->n; R hic(AN(y)*SZI,UAV(y));}
+
+// Comparisons for extended/rational/float/complex types.  teq should use the macro
+static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
+
+// test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
+// We test n subboxes
+static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
+
+/*
+ mode one of the following:
+       0  IIDOT      i.      a w rank
+       1  IICO       i:      a w rank
+       2  INUBSV     ~:        w rank
+       3  INUB       ~.        w
+       4  ILESS      -.      a w
+       5  INUBI      I.@~:     w
+       6  IEPS       e.      a w rank
+       7  II0EPS     e.i.0:  a w   
+       8  II1EPS     e.i.1:  a w
+       9  IJ0EPS     e.i:0:  a w  
+       10 IJ1EPS     e.i:1:  a w
+       11 ISUMEPS    [:+ /e. a w     
+       12 IANYEPS    [:+./e. a w    
+       13 IALLEPS    [:*./e. a w    
+       14 IIFBEPS    I.@e.   a w    
+       30 IPHIDOT    i.      a w     prehashed
+       31 IPHICO     i:      a w     prehashed
+       34 IPHLESS    -.      a w     prehashed  no longer supported
+       36 IPHEPS     e.      a w     prehashed
+       37 IPHI0EPS   e.i.0:  a w     prehashed
+       38 IPHI1EPS   e.i.1:  a w     prehashed
+       39 IPHJ0EPS   e.i:0:  a w     prehashed
+       40 IPHJ1EPS   e.i:1:  a w     prehashed
+       41 IPHSUMEPS  [:+ /e. a w     prehashed
+       42 IPHANYEPS  [:+./e. a w     prehashed
+       43 IPHALLEPS  [:*./e. a w     prehashed
+       44 IPHIFBEPS  I.@e.   a w     prehashed
+ m    target axis length
+ n    target item # atoms
+ c    # target items in a left-arg cell, which may include multiple right-arg cells
+ k    target item # bytes
+ acr  left  rank
+ wcr  right rank
+ ac   # left  arg cells  (cells, NOT items)
+ wc   # right arg cells
+ ak   # bytes left  arg cells, or 0 if only 1 cell
+ wk   # bytes right arg cells, or 0 if only one cell
+ a    left  arg
+ w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
+ hp   pointer to hash table or to 0
+ z    result
+*/
+
+// should RESTRICT all pointers used for hashtables, inputs, outputs
+
+// should change IOF to return pointer to h; then could just pass in h rather than hp
+// should not pass in wcr - not used.  Check other args
+#define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
+// variables used in IOF routines:
+// h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
+// zb,zc,zi are pointer to result area, of different sizes according to the operation
+// t1 is 1.0 here; it is the amount that a singleton must be multiplied by to get the value to be hashed
+// acn,wcn=#atoms in cell of a,w
+// cn = #atoms in target item
+// j is the starting bucket number of the hashtable search
+// hj is the index of the first empty-or-matching bucket encountered
+// zv->result area (as an array of pointers), av->a data, wv->w data 
+#define IODECL(T)  A h=*hp;B*zb;C*zc;D t1=1.0;I t=sizeof(T),acn=ak/t,cn=k/t,hj,*hv=AV(h),j,l,p=AN(h),  \
+                     wcn=wk/t,*zi,*zv=AV(z);T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
+// start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
+// (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
+// the first block that hashed to this address)
+// should init hash to _1 to allow constant compare? not needed if we embed seq# in hash, but useful otherwise
+// should init end-of-array to sentinel to move compare against j out of the loop
+// should combine hash here, and unroll 3 times to overlap hash, fetch, compare
+#define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
+// define ad and wd, which are bases to be added to boxed addresses
+// should use conditional statement
+#define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
+// Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
+#define ZISHAPE    *AS(z)=AN(z)=zi-zv
+#define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
+#define ZUSHAPE(T) *AS(z)= zu-(T*)zv;    AN(z)=n**AS(z)
+
+// Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  should use _1 for empty?
+#define XDOA(hash,exp,inc)         {d=ad; v=av;          DO(m,  j=(hash)%pm; FIND(exp); if(m==hj)hv[j]=i; inc;);}
+#define XDQA(hash,exp,dec)         {d=ad; v=av+cn*(m-1); DQ(m,  j=(hash)%pm; FIND(exp); if(m==hj)hv[j]=i; dec;);}
+
+// Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
+// and must check whether *hj (->prev data) matches the new data in *v
+#define XDO(hash,exp,inc,stmt)     {d=wd; v=wv;          DO(cm, j=(hash)%pm; FIND(exp); stmt;             inc;);}
+#define XDQ(hash,exp,dec,stmt)     {d=wd; v=wv+cn*(c-1); DQ(cm, j=(hash)%pm; FIND(exp); stmt;             dec;);}
+// special lookup routines to move the data rather than store its index, used for nub/match
+#define XMV(hash,exp,inc,stmt)      \
+ if(k==SZI){XDO(hash,exp,inc,if(m==hj){*zi++=*(I*)v;      stmt;}); zc=(C*)zi;}  \
+ else       XDO(hash,exp,inc,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
+
 
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, m is the maximum+1 value that needs to be stored in an entry
@@ -199,360 +411,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
  R md;
 }
 
-#if 0
-#if C_HASH
-/* hic:  hash a string of length k                                 */
-/* hicx: hash the bytes of string v indicated by hin/hiv           */
-/* hic2: hash the bytes of a string of length k (k even)           */
-/* hic4: hash the bytes of a string of length k (k multiple of 4)  */
-/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
-
-       UI hic (     I k,UC*v){UI z=HASH0;             DO(k,       z=(149*i+1000003)**v++   ^z<<1;      ); R z;}
-
-static UI hicnz(    I k,UC*v){UI z=HASH0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(149*i+1000003)*c^z<<1;); R z;}
-
-static UI hicx(J jt,I k,UC*v){UI z=HASH0;I*u=jt->hiv; DO(jt->hin, z=(149*i+1000003)*v[*u++]^z<<1;      ); R z;}
-
-#if C_LE
-       UI hic2(     I k,UC*v){UI z=HASH0;             DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
-                                                       if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=2;); R z;}
-#else
-       UI hic2(     I k,UC*v){UI z=HASH0; ++v;        DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
-                                                       if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=2;); R z;}
-#endif
-
-#if C_LE
-       UI hic4(     I k,UC*v){UI z=HASH0;             DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
-                                               if(*(v+2)||*(v+3)){z=(149*i+1000003)**(v+1) ^z<<1;
-                                                                  z=(149*i+1000003)**(v+2) ^z<<1;
-                                                                  z=(149*i+1000003)**(v+3) ^z<<1;}
-                                                  else if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=4;); R z;}
-#else
-       UI hic4(     I k,UC*v){UI z=HASH0; v+=3;       DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
-                                               if(*(v-2)||*(v-3)){z=(149*i+1000003)**(v-1) ^z<<1;
-                                                                  z=(149*i+1000003)**(v-2) ^z<<1;
-                                                                  z=(149*i+1000003)**(v-3) ^z<<1;}
-                                                  else if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=4;); R z;}
-#endif
-
-#else
-/* hic:  hash a string of length k                                 */
-/* hicx: hash the bytes of string v indicated by hin/hiv           */
-/* hic2: hash the low order bytes of a string of length k (k even) */
-/* hic4: hash the low order bytes of a string of length k (k multiple of 4) */
-/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
-
-       UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
-
-static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(i+1000003)*c^z<<1;); R z;}
-
-static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u++]^z<<1;      ); R z;}
-
-#if C_LE
-       UI hic2(     I k,UC*v){UI z=0;             DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
-#else
-       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
-#endif
-
-#if C_LE
-       UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
-#else
-       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
-#endif
-
-#endif
-
-#if SY_64
-// Hash a single unsigned INT
-#define hicw(v)  (10495464745870458733U**(UI*)(v))
-#else
-#define hicw(v)  (2838338383U**(U*)(v))
-static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+2838338383U*x.i[MSW];}
-#endif
-#endif
-
-// All hashes must return a CRC result, because that is evenly distributed throughout the lower 32 bits
-
-#define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
-// Create CRC32 of the k bytes in *v.  Uses CRC32L to process 8 bytes at a time
-// We may fetch past the end of the input, but only up to the next SZI-byte block
-UI hic(I k, UC *v) {
- // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
- // This is executed repeatedly so we expect all the branches to predict correctly
- UI crc0=-1, crc1=crc0, crc2=crc0;  // init all CRCs
- for(;k>=24;v+=24,k-=24){  // Do blocks of 24 bytes
-  crc0=CRC32L(crc0,((UI*)v)[0]); crc1=CRC32L(crc1,((UI*)v)[1]); crc2=CRC32L(crc2,((UI*)v)[2]);
- }
- // The order of this runout is replicated in the other character routines
- if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
- if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
- if(k&=7){  // last few bytes
-  crc2=CRC32L(crc2,((UI*)v)[0]&~(-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
- }
- RETCRC3;
-}
-
-#define hicnz hic  // hicnz omits 0/255 bytes.  If this is just for performance, get rid of it
-
-// collect count LS sections of size lgsize (in bits) from v, where sections are separated by lgspacing bytes and we start with section number index 
-static UI fetchspread(UC *v, I lgspacing, I lgsize, I count, I index){UI ret = 0;
- DO(count, ret |= (UI)*(US*)(v+((index+i)<<lgspacing))<<(i<<lgsize););  // read 2 bytes to avoid overrun; expand to 64, shift
- R ret;
-}
-// Hash a C4T to be compatible with C2T and LIT
-// Scan to see if the C4T can be represented exactly as a C2T or LIT; if so,
-// hash only those bytes
-// k is the number of BYTES (for compatibility with previously-existing interfaces)
-UI hic4(I k, UC* v){I cct=k/sizeof(UI4);
- // Scan to find precision needed.  Since this will probably kick out quickly, we don't bother
- // unrolling the loop
- I max = 0;
- DQ(cct, max |= ((UI4*)v)[i]; if(((UI4*)v)[i]>65535)R hic(k,v););
- UI crc0=-1, crc1=crc0, crc2=crc0;
- if(max<=255){
-  // hash as if LIT
-  for(;cct>=24;v+=24*sizeof(UI4),cct-=24){  // Do blocks of 24 bytes
-   crc0=CRC32L(crc0,fetchspread(v,2,3,8,0)); crc1=CRC32L(crc1,fetchspread(v,2,3,8,8)); crc2=CRC32L(crc2,fetchspread(v,2,3,8,16));
-  }
-  // The order of this runout exactly matches hic(): crc0 gets first full 8 if any, crc1 gets next full 8; crc2 takes any shard
-  if(cct>=8){crc0=CRC32L(crc0,fetchspread(v,2,3,8,0)); v+=32;}  // finish the remnant
-  if(cct>=16){crc1=CRC32L(crc1,fetchspread(v,2,3,8,0)); v+=32;}
-  if(cct&=7){  // last few bytes
-   crc2=CRC32L(crc2,fetchspread(v,2,3,cct,0));  // mask out invalid bytes
-  }
- } else {
-  // hash as if C2T
-  for(;cct>=12;v+=12*sizeof(UI4),cct-=12){  // Do blocks of 24 bytes
-   crc0=CRC32L(crc0,fetchspread(v,2,4,4,0)); crc1=CRC32L(crc1,fetchspread(v,2,4,4,4)); crc2=CRC32L(crc2,fetchspread(v,2,4,4,8));
-  }
-  if(cct>=4){crc0=CRC32L(crc0,fetchspread(v,2,4,4,0)); v+=16;}  // finish the remnant
-  if(cct>=8){crc1=CRC32L(crc1,fetchspread(v,2,4,4,0)); v+=16;}
-  if(cct&=3){  // last few bytes
-   crc2=CRC32L(crc2,fetchspread(v,2,4,cct,0));  // mask out invalid bytes
-  }
- }
- RETCRC3;
-
-}
-
-// Similarly, hash a C2T for compatibility with LIT
-UI hic2(I k, UC* v){I cct=k/sizeof(US);
- // Scan to find precision needed.  Since this will probably kick out quickly, we don't bother
- // unrolling the loop
- DQ(cct, if(((US*)v)[i]>255)R hic(k,v););
- // hash as if LIT
- UI crc0=-1, crc1=crc0, crc2=crc0;
- for(;cct>=24;v+=24*sizeof(US),cct-=24){  // Do blocks of 24 bytes
-  crc0=CRC32L(crc0,fetchspread(v,1,3,8,0)); crc1=CRC32L(crc1,fetchspread(v,1,3,8,8)); crc2=CRC32L(crc2,fetchspread(v,1,3,8,16));
- }
- if(cct>=8){crc0=CRC32L(crc0,fetchspread(v,1,3,8,0)); v+=16;}  // finish the remnant
- if(cct>=16){crc1=CRC32L(crc1,fetchspread(v,1,3,8,0)); v+=16;}
- if(cct&=7){  // last few bytes
-  crc2=CRC32L(crc2,fetchspread(v,1,3,cct,0));  // mask out invalid bytes
- }
- RETCRC3;
-}
-
-// Hash a single INT-sized atom
-#define hici1(x) CRC32L(-1LL,*x)
-
-// Hash an INT list
-static UI hici(I k, UI* v){
- // Owing to latency, hash 3 inputs at a time; but not if short.  Length is never 0 or 1.
- if((k-=3)<=0){  // fast path for len<=3.  We think all these branches will predict correctly
-  UI crc; crc=CRC32L(-1LL,v[0]); crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]); R crc;
- }
- UI crc0=-1, crc1=crc0, crc2=crc0;
- do{
-  crc0=CRC32L(crc0,v[0]); crc1=CRC32L(crc1,v[1]); crc2=CRC32L(crc2,v[2]);
-  v+=3, k-=3;
- }while(k>=0);  // at end k is negative, and we have gone through the loop origk%3 times
- if(k>-2){crc1=CRC32L(crc1,v[1]); crc0=CRC32L(crc0,v[0]);}else if(k==-2){crc0=CRC32L(crc0,v[0]);}
- // obsolete  if(k>-3){crc0=CRC32L(crc0,v[0]); if(k>-2){crc1=CRC32L(crc1,v[1]);}}
- RETCRC3;
-}
-
-
-// Hash a single FL atom, with check for -0 and +0
-#define hic01(x) ((*(x)!=NEGATIVE0)?CRC32L(-1L,*x):CRC32L(-1L,0))
-
-// Hash a FL list, with check for -0 and +0
-static UI hic0(I k, UI* v){
- // Owing to latency, hash pairs of inputs.  Check each for -0
- UI crc0=-1, crc1=crc0;
- for(k-=2;k>=0;v+=2, k-=2){
-  if(v[0]!=NEGATIVE0){crc0=CRC32L(crc0,v[0]);}else{crc0=CRC32L(crc0,0);}
-  if(v[1]!=NEGATIVE0){crc1=CRC32L(crc1,v[1]);}else{crc1=CRC32L(crc1,0);}
- }
- if(k>-2){if(v[0]!=NEGATIVE0){crc0=CRC32L(crc0,v[0]);}else{crc0=CRC32L(crc0,0);}}
- R CRC32L(crc0,crc1);
-}
-
-
-// Hashes for extended/rational types.  Hash only the numerator of rationals.  These are
-// Q and X types (Q is a brace of X types)
-static UI hix(X*v){A y=*v;   R hici(AN(y),UIAV(y));}
-static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
-
-
-// Hash a single double, using only the bits in ctmask.  -0 is hashed differently than +0.  Should we take the sign bit out of ct?  Only if ct=0?
-//  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-static UI jthid(J jt,D d){R *(I*)&d!=NEGATIVE0?CRC32L(-1L,*(I*)&d&jt->ctmask):CRC32L(-1L,0);}
-
-// Hash the data in the given A, which is an element of the box we are hashing
-// If empty or boxed, hash the shape
-// If literal, hash the whole thing
-// If numeric, convert first atom to float and hash it after multiplying by hct.  hct will change to give low/high values
-// Q: called only for singletons?  is hct=1 for exact compares?  Seems to be 1.0 always.  Why multiply by hct?
-//  is ctmask=~0 for exact compares?  Better be.
-static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
- n=AN(y); t=AT(y); yv=UAV(y);
- if(!n||t&BOX)R hic(AR(y)*SZI,(UC*)AS(y));
- switch(CTTZ(t)){
-  case LITX:  R hic(n,yv);
-  case C2TX:  R hic2(2*n,yv);
-  case C4TX:  R hic4(4*n,yv);
-  case SBTX:  R hic(n*SZI,yv);
-  case B01X:  d=*(B*)yv; break;
-  case INTX:  d=(D)*(I*)yv; break;
-  case FLX: 
-  case CMPXX: d=*(D*)yv; break;
-  case XNUMX: d=xdouble(*(X*)yv); break;
-  case RATX:  u=(Q*)yv; d=xdouble(u->n)/xdouble(u->d);
- }
- R hid(d*hct);
-}
-
-// Hash y, which is not a singleton.
-static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
- m=n=AN(y);
- if(!n)R 0;
- switch(CTTZ(AT(y))){
-  case RATX:  m+=n;  /* fall thru */
-  case XNUMX: z=-1LL; u=XAV(y); DO(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
-// obsolete   case INTX:                                    R hicnz(n    *SZI,UAV(y));
-  case INTX:                                    R hici(n,AV(y));
-  default:   R hic(n*bp(AT(y)),UAV(y));
-}}
-
-// Comparisons for extended/rational/float/complex types.  teq should use the macro
-static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
-
-// test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
-// We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
-
-/*
- mode one of the following:
-       0  IIDOT      i.      a w rank
-       1  IICO       i:      a w rank
-       2  INUBSV     ~:        w rank
-       3  INUB       ~.        w
-       4  ILESS      -.      a w
-       5  INUBI      I.@~:     w
-       6  IEPS       e.      a w rank
-       7  II0EPS     e.i.0:  a w   
-       8  II1EPS     e.i.1:  a w
-       9  IJ0EPS     e.i:0:  a w  
-       10 IJ1EPS     e.i:1:  a w
-       11 ISUMEPS    [:+ /e. a w     
-       12 IANYEPS    [:+./e. a w    
-       13 IALLEPS    [:*./e. a w    
-       14 IIFBEPS    I.@e.   a w    
-       30 IPHIDOT    i.      a w     prehashed
-       31 IPHICO     i:      a w     prehashed
-       34 IPHLESS    -.      a w     prehashed  no longer supported
-       36 IPHEPS     e.      a w     prehashed
-       37 IPHI0EPS   e.i.0:  a w     prehashed
-       38 IPHI1EPS   e.i.1:  a w     prehashed
-       39 IPHJ0EPS   e.i:0:  a w     prehashed
-       40 IPHJ1EPS   e.i:1:  a w     prehashed
-       41 IPHSUMEPS  [:+ /e. a w     prehashed
-       42 IPHANYEPS  [:+./e. a w     prehashed
-       43 IPHALLEPS  [:*./e. a w     prehashed
-       44 IPHIFBEPS  I.@e.   a w     prehashed
- m    target axis length
- n    target item # atoms
- c    # target items in a left-arg cell, which may include multiple right-arg cells
- k    target item # bytes
- acr  left  rank
- wcr  right rank
- ac   # left  arg cells  (cells, NOT items)
- wc   # right arg cells
- ak   # bytes left  arg cells, or 0 if only 1 cell
- wk   # bytes right arg cells, or 0 if only one cell
- a    left  arg
- w    right arg, or mark for m&i. or m&i: or e.&n or -.&n
- hp   pointer to hash table or to 0
- z    result
-*/
-
-// should RESTRICT all pointers used for hashtables, inputs, outputs
-
-// should change IOF to return pointer to h; then could just pass in h rather than hp
-// should not pass in wcr - not used.  Check other args
-#define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
-// variables used in IOF routines:
-// h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
-// acn,wcn=#atoms in cell of a,w
-// cn = #atoms in target item
-// j is the starting bucket number of the hashtable search
-// hj is the index of the first empty-or-matching bucket encountered
-// zv->result area (as an array of pointers), av->a data, wv->w data 
-#define IODECL(T)  AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,*hv=AV(h),j,l,p=AN(h),  \
-                     wcn=wk/sizeof(T),*zv=AV(z);T*av=(T*)AV(a),*v,*wv=(T*)AV(w)
-
-
-
-// get hash slot and set up for the search
-#define HASHSLOT(hash) j=((hash)*p)>>32;
-// start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
-// (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
-// the first block that hashed to this address)
-// should init hash to _1 to allow constant compare? not needed if we embed seq# in hash, but useful otherwise
-// should init end-of-array to sentinel to move compare against j out of the loop
-// should combine hash here, and unroll 3 times to overlap hash, fetch, compare
-// obsolete #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
-#define FINDP(name,exp) while(m>(hj=hv[name])&&(exp)){++name; if(name==p)name=0;}
-#define FIND(exp)  FINDP(j,exp)
-#define FINDPA(name,exp) while(m>hj&&(exp)){++name; if(name==p)name=0; hj=hv[name];}
-// define ad and wd, which are bases to be added to boxed addresses
-// should use conditional statement
-#define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
-// Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
-#define ZISHAPE    *AS(z)=AN(z)=zi-zv
-#define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
-#define ZUSHAPE(T) *AS(z)= zu-(T*)zv;    AN(z)=n**AS(z)
-
-
-// *************** first class: intolerant comparisons, unboxed or boxed ***********************
-
-// Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  should use _1 for empty?
-#define XDOA(hash,exp,stride)         {d=ad; v=av;          DO(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=i; v+=stride;);}
-#define XDQA(hash,exp,stride)         {d=ad; v=av+cn*(m-1); DQ(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=i; v-=stride;);}
-
-#if 0 // obsolete
-#define XDOAP(hash,exp,stride) {d=ad; v=av; HASHSLOT(hash) if(m>1){ v+=stride; j1=j; HASHSLOT(hash) v-=2*stride; \
-DO(m-2, v+=3*stride; j2=j1; j1=j; HASHSLOT(hash) PREFETCH((C*)&hv[j]); v-=2*stride; FINDP(j2,exp); if(m==hj)hv[j2]=i;) \
-v+=stride; FINDP(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride;} FINDP(j,exp);  if(m==hj)hv[j]=m-1;}
-#endif
-#define XDOAP(hash,exp,stride) {d=ad; v=av; HASHSLOT(hash) hj=m; if(m>1){ v+=stride; j1=j; HASHSLOT(hash) v-=2*stride; hj=hv[j1]; \
-DO(m-2, v+=3*stride; j2=j1; j1=j; HASHSLOT(hash) PREFETCH((C*)&hv[j]); v-=2*stride; FINDPA(j2,exp); if(m==hj)hv[j2]=i; hj=hv[j1];) \
-v+=stride; FINDPA(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride; hj=hv[j];} FINDPA(j,exp);  if(m==hj)hv[j]=m-1;}
-
-// Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
-// and must check whether *hj (->prev data) matches the new data in *v
-// obsolete #define XDO(hash,exp,stride,stmt)     {d=wd; v=wv;          DO(cm, HASHSLOT(hash) FIND(exp); stmt;             v+=stride;);}
-// obsolete #define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(cm, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
-#define XDO(hash,exp,stride,stmt)     {d=wd; v=wv;          DO(c, HASHSLOT(hash) FIND(exp); stmt;             v+=stride;);}
-#define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(c, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
-// special lookup routines to move the data rather than store its index, used for nub/match
-#define XMV(hash,exp,stride,stmt)      \
- if(k==SZI){XDO(hash,exp,stride,if(m==hj){*(I*)zc=*(I*)v; zc+=SZI;     stmt;}); }  \
- else       XDO(hash,exp,stride,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
+// *************** first class: intolerant comparisons, unboxed ***********************
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 // should change IPHOFFSET for ease in calc md
@@ -565,136 +424,92 @@ v+=stride; FINDPA(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride; hj=hv[j];} FINDPA(j,e
 // (in all classes) should do self-index in 1 pass: hash and get result without further ado (seems to be done already)
 
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
-// should comment this
-#define IOFX(T,f,hash,exp,stride)   \
- IOF(f){RDECL;IODECL(T);I d,md,j1,j2;/*obsolete UC*u=0;*/                                      \
-/* obsolete  md=mode<IPHOFFSET?mode:mode-IPHOFFSET; */                                            \
-  md=mode&IIOPMSK;   /* turn off REFLEX bit */                                            \
-/* obsolete  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI); */ \
-    /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
-  if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<4)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
-/* obsolete  zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                     */                  \
-  if(w==mark)c=0;   /* if prehashing, turn off the second half */                          \
+#define IOFX(T,f,hash,exp,inc,dec)   \
+ IOF(f){RDECL;IODECL(T);B b;I cm,d,md,s;UC*u=0;                                      \
+  md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                             \
+  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI);  \
+  zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                                       \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
-   /* zv progresses through the result - for those versions that support IRS */ \
-   if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQA(hash,exp,stride) else XDOAP(hash,exp,stride);}}  \
-   switch(md){                                                                       \
-    /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
-   case IIDOT|IIMODREFLEX: {          XDO(hash,exp,stride,*zv++=m==hj?(hv[j]=i):hj);} break;      \
-    /* normal i. - use the table */ \
-   case IIDOT: { XDO(hash,exp,stride,*zv++=hj); }                          break;  \
-   case IICO|IIMODREFLEX: {I *zi=zv+=c; XDQ(hash,exp,stride,*--zi=m==hj?(hv[j]=i):hj);} break;      \
-   case IICO: {    XDO(hash,exp,stride,*zv++=hj); }                          break;  \
-   case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDO(hash,exp,stride,*zb++=m==hj?(hv[j]=i,1):0); zv=(I*)zb;} /* IRS - keep zv running */  break;  \
-   case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMV(hash,exp,stride,hv[j]=i);                ZCSHAPE; }   break;  \
-   case ILESS: { C *zc=(C*)zv; XMV(hash,exp,stride,0      );                ZCSHAPE; }   break;  \
-   case INUBI|IIMODREFLEX: {I *zi=zv;  XDO(hash,exp,stride,if(m==hj)*zi++=hv[j]=i); ZISHAPE; }   break;  \
-   case IEPS: { B *zb=(B*)zv;  XDO(hash,exp,stride,*zb++=m>hj); zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
-    /* the rest are f@:e., none of which have IRS */ \
-   case II0EPS: { I s=c; XDO(hash,exp,stride,if(m==hj){s=i; break;}); *zv=s; }   break; /* i.&0@:e. */   \
-   case II1EPS: { I s=c; XDO(hash,exp,stride,if(m> hj){s=i; break;}); *zv=s; }   break; /* i.&1@:e. */  \
-   case IJ0EPS: { I s=c; XDQ(hash,exp,stride,if(m==hj){s=i; break;}); *zv=s; }   break; /* i:&0@:e. */  \
-   case IJ1EPS: { I s=c; XDQ(hash,exp,stride,if(m> hj){s=i; break;}); *zv=s; }   break; /* i:&1@:e. */  \
-   case ISUMEPS: { I s=0; XDO(hash,exp,stride,if(m> hj)++s;         ); *zv=s; }   break; /* +/@:e. */  \
-   case IANYEPS: { B s=0; XDO(hash,exp,stride,if(m> hj){s=1; break;}); *(B*)zv=s; } break; /* +./@:e. */  \
-   case IALLEPS: { B s=1; XDO(hash,exp,stride,if(m==hj){s=0; break;}); *(B*)zv=s; } break; /* *./@:e. */  \
-   case IIFBEPS: { I s=c; I *zi=zv; XDO(hash,exp,stride,if(m> hj)*zi++=i      ); ZISHAPE; }   break; /* I.@:e. */  \
+   if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!b){if(mode==IICO)XDQA(hash,exp,dec) else XDOA(hash,exp,inc);}}  \
+    switch(md){                                                                       \
+    case IIDOT:   if(b){          XDO(hash,exp,inc,*zv++=m==hj?(hv[j]=i):hj);}       \
+                  else XDO(hash,exp,inc,*zv++=hj);                           break;  \
+    case IICO:    if(b){zi=zv+=c; XDQ(hash,exp,dec,*--zi=m==hj?(hv[j]=i):hj);}       \
+                  else XDO(hash,exp,inc,*zv++=hj);                           break;  \
+    case INUBSV:       XDO(hash,exp,inc,*zb++=m==hj?(hv[j]=i,1):0);          break;  \
+    case INUB:         XMV(hash,exp,inc,hv[j]=i);                ZCSHAPE;    break;  \
+    case ILESS:        XMV(hash,exp,inc,0      );                ZCSHAPE;    break;  \
+    case INUBI:        XDO(hash,exp,inc,if(m==hj)*zi++=hv[j]=i); ZISHAPE;    break;  \
+    case IEPS:         XDO(hash,exp,inc,*zb++=m>hj);                         break;  \
+    case II0EPS:  s=c; XDO(hash,exp,inc,if(m==hj){s=i; break;}); *zi++=s;    break;  \
+    case II1EPS:  s=c; XDO(hash,exp,inc,if(m> hj){s=i; break;}); *zi++=s;    break;  \
+    case IJ0EPS:  s=c; XDQ(hash,exp,dec,if(m==hj){s=i; break;}); *zi++=s;    break;  \
+    case IJ1EPS:  s=c; XDQ(hash,exp,dec,if(m> hj){s=i; break;}); *zi++=s;    break;  \
+    case ISUMEPS: s=0; XDO(hash,exp,inc,if(m> hj)++s;         ); *zi++=s;    break;  \
+    case IANYEPS: s=0; XDO(hash,exp,inc,if(m> hj){s=1; break;}); *zb++=1&&s; break;  \
+    case IALLEPS: s=1; XDO(hash,exp,inc,if(m==hj){s=0; break;}); *zb++=1&&s; break;  \
+    case IIFBEPS: s=c; XDO(hash,exp,inc,if(m> hj)*zi++=i      ); ZISHAPE;    break;  \
   }}                                                                                 \
   R z;                                                                               \
  }
 
-// compare floats, not distinguishing -0 from +0.  Return 0 if equal, 1 if not equal
-static int fcmp0(D* a, D* w, I n){
- DQ(n, if(a[i]!=w[i])R 1;);
- R 0;
-}
-
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi1 k=SZI, INT/SBT/char/bool not small-range
-// jtioi  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-
-static IOFX(A,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
-// obsolete static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
-static IOFX(I,jtioi,  hici(n,v),            memcmp(v,av+n*hj,k),          cn  )  // INT array, not float
-static IOFX(I,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex stom
-static IOFX(D,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
-
-
+//
+static IOFX(A,jtioax1,hia(t1,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed exact 1-element item */   
+static IOFX(A,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed uniform type         */
+static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               v+=cn, v-=cn)  /* extended integer           */   
+static IOFX(Q,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               v+=cn, v-=cn)  /* rational number            */   
+static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
+static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
+static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,   --v  )
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************
 
 // should have 64-bit versions that use ctmask directly (it should be in machine byte order)
-// create tolerant hash for a single D
-// Note: the masking may cause a nonzero to hash to negative zero.  This is OK, because any nonzero will not be
-// tequal to +0 or -0.  But be must ensure that -0 hashes to the same value as +0, since those two numbers are equal.
-#define HIDMSK(v) (*(UI*)v!=NEGATIVE0?CRC32L(-1L,*(UI*)v&jt->ctmask):CRC32L(-1L,0))
-// save the mask result in m
-#define HIDMSKSV(m,v) ((m=*(UI*)v&jt->ctmask), (*(UI*)v!=NEGATIVE0?CRC32L(-1L,m):CRC32L(-1L,0)) )
 // create hash for a D type
-// obsolete #define HID(y)              (888888883U*y.i[LSW]+2838338383U*y.i[MSW])
-#define HID(y)              CRC32L(-1L,(y))
-// obsolete #define MASK(dd,xx)         {dd.d=xx; dd.i[LSW]&=jt->ctmask;}
-#define MASK(dd,xx)         {D dv=(xx); if(*(UI*)&dv!=NEGATIVE0){dd=*(UI*)&dv&jt->ctmask;}else{dd=0;} }
+#define HID(y)              (888888883U*y.i[LSW]+2838338383U*y.i[MSW])
+#define MASK(dd,xx)         {dd.d=xx; dd.i[LSW]&=jt->ctmask;}
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
 
 // hash a single D type.  If complex, hash the real part only (hashing both parts would require 4 hashes for tolerance)
-// obsolete #define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
-#define THASHA(expa)        {x=*(D*)v; HASHSLOT(HIDMSK(v)); FIND(expa); if(m==hj)hv[j]=i;}
-// boxed type.  "hash" the data, as best we can
-#define THASHBX(expa)       {HASHSLOT(hia(1.0,AADR(d,*v)))            FIND(expa); if(m==hj)hv[j]=i;}
+#define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
+// boxed type.  "hash" the shape only, after performing relative-to-absolute conversion
+// should omit the relative, since only shape is hashed
+#define THASHBX(expa)       {j=hia(t1,AADR(d,*v))%pm;            FIND(expa); if(m==hj)hv[j]=i;}
 
 // functions for searching the hash table
 
 // find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
 #define TFINDXY(expa,expw)  \
- {x=*(D*)v;                                                                            \
-  MASK(dl,x*tl);            HASHSLOT(HID(dl)) FIND(expw); il=ir=hj;       \
-  MASK(dr,x*tr); if(dr!=dl){HASHSLOT(HID(dr)) FIND(expw);    ir=hj;}       \
+ {x=*(D*)v;                                                                             \
+  MASK(dl,x*tl);                j=              HID(dl)%pm; FIND(expw); il=ir=hj;       \
+  MASK(dr,x*tr); if(dr.d!=dl.d){j=              HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
 // same idea, but also throw in an exact match on the value itself (rounded to a bucket value).  Used for reflexive searches, in which
 // we have not initialized the hash table.  We first add an (exact) entry for the current value, and then search for tolerant matches
 // We have to add an entry for the current value always, because a hashed value may be tolerantly equal to y but not tequal some
 // other value tequal to y.  -0 will always get hashed as +0, and possibly -0 as well
-// I think this is a failing attempt to create equivalence classes
 #define TFINDYY(expa,expw)  \
  {x=*(D*)v;                                                                             \
-  /* obsolete MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  */ \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  \
-/*  MASK(dl,x*tl);                j=dl==dx?jx:HID(dl)%pm; FIND(expw); il=ir=hj; */      \
-/*  MASK(dr,x*tr); if(dr!=dl){j=dr==dx?jx:HID(dr)%pm; FIND(expw);    ir=hj;}    */   \
-  MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
-  MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
+  MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  \
+  MASK(dl,x*tl);                j=dl.d==dx.d?jx:HID(dl)%pm; FIND(expw); il=ir=hj;       \
+  MASK(dr,x*tr); if(dr.d!=dl.d){j=dr.d==dx.d?jx:HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
 // Here the match on the value itself is not exact.
 #define TFINDY1(expa,expw)  \
  {x=*(D*)v;                                                                             \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; FIND(expa); if(m==hj)hv[j]=i;  \
-  MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
-  MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
+  MASK(dx,x   ); j=jx=HID(dx)%pm;             FIND(expa);            if(m==hj)hv[j]=i;  \
+  MASK(dl,x*tl);                j=dl.d==dx.d?jx:HID(dl)%pm; FIND(expw); il=ir=hj;       \
+  MASK(dr,x*tr); if(dr.d!=dl.d){j=dr.d==dx.d?jx:HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
 // here comparing boxes
 #define TFINDBX(expa,expw)   \
- {HASHSLOT(hia(tl,AADR(d,*v))) jx=j;           FIND(expw); il=ir=hj;   \
-     HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FIND(expw);    ir=hj;}  \
+ {jx=j=hia(tl,AADR(d,*v))%pm;           FIND(expw); il=ir=hj;   \
+     j=hia(tr,AADR(d,*v))%pm; if(j!=jx){FIND(expw);    ir=hj;}  \
  }
 
 // loop to search the hash table.  b means self-index, bx means boxed
-// Fxx is a TFIND macro, charged with setting il and ir; stmt tells what to do with il/ir
+// Fxx is a TFIND macro, charged with setting il and ih; stmt tells what to do with il/ir
 // should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
  switch(4*bx+2*b+(k==sizeof(D))){                       \
@@ -723,11 +538,11 @@ static IOFX(Z,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) 
 
 // Do the operation.  Build a hash for a except when unboxed self-index
 #define IOFT(T,f,FA,FXY,FYY,expa,expw)   \
- IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;UI dl,dr,dx;I d,e,il,ir,jx,md,s; B*zb;C*zc;I*zi; \
+ IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;DI dl,dr,dx;I d,e,il,ir,jx,md,s;  \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                                         \
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI);              \
   zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(m-1); bx=1&&BOX&AT(a);                           \
-  jx=0;                                                                     \
+  jx=0; dl.d=dr.d=dx.d=x=0.0;                                                                    \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
    if(mode<IPHOFFSET){                                                                           \
     DO(p,hv[i]=m;);                                                                              \
@@ -758,17 +573,13 @@ static IOFX(Z,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) 
  }
 
 // Verbs for the types of inputs
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
 
 // CMPLX array
-static IOFT(Z,jtioz, THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
-// CMPLX atom
-static IOFT(Z,jtioz1,THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
+static IOFT(Z,jtioz, THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,n*2*sizeof(D)), !eqz(n,v,av+n*hj)               )
+// CMPLX list
+static IOFT(Z,jtioz1,THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,  2*sizeof(D)), !zeq( *v,av[hj] )               )
 // FL array
-static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !eqd(n,v,av+n*hj)               )
+static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,memcmp(v,av+n*hj,n*  sizeof(D)), !eqd(n,v,av+n*hj)               )
 // FL list
 // should use macro for teq
 static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !teq(x,av[hj] )                 )
@@ -904,6 +715,7 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
 // Since the table is not FULL, the range scan of must have aborted; we scan forward from the beginning of w
 #define SCOZ(T,Ttype,vv) {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+c; def[0]=(Ttype)(vv+zi0); \
                           while(zi!=zie){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; I hvv; if((hvv=(I)*hv-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}
+ /* printf("v=%d, hv=0x%p, def=0x%p, zi0=%d, *hv=%d, hvv=%d\n",v,hv,def,zi0,*hv,hvv); */
 // this version is used when the result vector is known to be full (out-of-range not possible).  Omit the out-of-bounds check.  Since the range-scan of w ran to completion,
 // the end of w is most likely to be in-cache; so scan backwards
 #define SCOZF(T,Ttype,vv)  {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; zie=zi+c; while(zi!=zie){--zie; I hvv; if((hvv=(I)hu[mwv[zie]]-zi0)<0)hvv=vv; zv[zie]=(Ttype)hvv;}}
@@ -952,7 +764,7 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
  IOF(f){IH *hh=IHAV(*hp);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
   av=(T*)AV(a); wv=(T*)AV(w); \
-  min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
+  min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; /* scaf printf("min=%d, max=%d, mode=0x%x\n",min,max,mode);*/\
   e=1==wc?0:c; if(w==mark){c=0; mode|=IPHCALC;} \
   for(l=0;l<ac;++l,av+=m,wv+=e){ \
    if(!(mode&(IPHOFFSET|IPHCALC))){mode = hashallo(hh,p,m,mode);}  /* set parms for this loop - only if not prehashing or using prehashed table, which always start at offset 0 */ \
@@ -1457,11 +1269,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  }
 
  // Convert dissimilar types
- th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange should do away with jt->min
+ th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
  // Indicate if float args need to be canonicalized for -0.  should do this in the hash
-// obsolete I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
- if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))// obsolete else if(t&FL+CMPX      )cvtsneeded=1;
- if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))// obsolete else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
+ I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
+ if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)) else if(t&FL+CMPX      )cvtsneeded=1;
+ if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)) else if(t&FL+CMPX&&a!=w)cvtsneeded|=2;
 
  // Allocate the result area
  if(!mk)switch(mode&IIOPMSK){I q;
@@ -1519,20 +1331,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=0==jt->ct;I t1;
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi1  k=SZI, INT/SBT/char/bool not small-range
-// jtioi  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
   AF fn=0; // we haven't figured it out yet
   UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
   p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
@@ -1566,38 +1364,17 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     }else{booladj=0;}   // Turn off booladj if small-range processing not engaged
    }
    if(!fn){  // if we don't have it yet, it will be a hash.  Decide which one
-// obsolete     if(cvtsneeded&1)RZ(a=cvt0(a));  // Convert negative 0 to positive 0. Should do this in the hash
-// obsolete     if(cvtsneeded&2)RZ(w=cvt0(w));
-    if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT, or characters.  FL has -0 problem
+    if(cvtsneeded&1)RZ(a=cvt0(a));  // Convert negative 0 to positive 0. Should do this in the hash
+    if(cvtsneeded&2)RZ(w=cvt0(w));
+    if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT
      if(t&INT+SBT){  // same here, for I types
       CR crres = condrange(AV(a),(AN(a)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
       if(crres.range){
        datamin=crres.min;
        p=crres.range; fn=jtio42;
-      }else{booladj=0; fn=jtioi1;}  // leave p as is; clear booladj since not small-range; select integer hashing
-     }else{booladj=0; fn=jtioi1;}
-    }else{
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi  k=SZI, INT/SBT/char/bool not small-range
-// jtioi1  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
-     static AF fntbl[20]={
-      jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
-      jtiod,jtioc0,jtiod1,jtioc01,0,0,0,0,   // FL
-      jtioz,jtioz0,jtioz1,jtioz01};   // CMPX
-     fn=fntbl[((t&CMPX+FL+INT))+((n==1)?2:0)+b];  // index: CMPX/FL/n==1/intolerant
-    }
-// obsolete                     fn=t&B01+JCHAR+INT+SBT?jtioc:b?jtioc0:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
+      }else{booladj=0; fn=jtioi;}  // leave p as is; clear booladj since not small-range; select integer hashing
+     }else{booladj=0; fn=jtioi;}
+    }else{                    fn=b||t&B01+JCHAR+INT+SBT?jtioc:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
    }
   }
 
@@ -1714,17 +1491,17 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
   }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
 
-// obsolete   if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
-// obsolete    // exact types (including intolerant comparison of FL/CMPX)
-// obsolete    // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
-// obsolete    // should get rid of this - cheaper to hash than to check for need-to-hash
-// obsolete    GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
-// obsolete    q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
-// obsolete    DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
-// obsolete    // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
-// obsolete    if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
-// obsolete   }
-// obsolete 
+  if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
+   // exact types (including intolerant comparison of FL/CMPX)
+   // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
+   // should get rid of this - cheaper to hash than to check for need-to-hash
+   GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
+   q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
+   DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
+   // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
+   if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
+  }
+
   // Call the routine to perform the operation
   RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
   if(mk){A x,*zv;I*xv,ztype;
@@ -1790,7 +1567,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  // convert type of w if needed; and if unconverted FL/CMPX, touch to change -0 to 0
  // this is dodgy: if the comparison tolerance doen't change, there should be no need for conversion; but
  // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable
- if(TYPESNE(t,wt))RZ(w=cvt(t,w))/* obsolete else if(t&FL+CMPX)RZ(w=cvt0(w)); */
+ if(TYPESNE(t,wt))RZ(w=cvt(t,w)) else if(t&FL+CMPX)RZ(w=cvt0(w));
  // call the action routine
  R fn(jt,mode+IPHOFFSET,m,n,c,k,AR(a),AR(w),(I)1,(I)1,(I)0,(I)0,a,w,&h,z);
 }

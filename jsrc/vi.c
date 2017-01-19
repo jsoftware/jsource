@@ -358,9 +358,9 @@ UI hic2(I k, UC* v){I cct=k/sizeof(US);
 
 // Hash an INT list
 static UI hici(I k, UI* v){
- // Owing to latency, hash 3 inputs at a time; but not if short.  Length is never 0 or 1.
+ // Owing to latency, hash 3 inputs at a time; but not if short.  Length is never 0 but can be 1.
  if((k-=3)<=0){  // fast path for len<=3.  We think all these branches will predict correctly
-  UI crc; crc=CRC32L(-1LL,v[0]); crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]); R crc;
+  UI crc; crc=CRC32L(-1LL,v[0]); if(k>=-1){crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]);} R crc;
  }
  UI crc0=-1, crc1=crc0, crc2=crc0;
  do{
@@ -503,7 +503,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // hj is the index of the first empty-or-matching bucket encountered
 // zv->result area (as an array of pointers), av->a data, wv->w data 
 #define IODECL(T)  AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,*hv=AV(h),j,l,p=AN(h),  \
-                     wcn=wk/sizeof(T),*zv=AV(z);T*av=(T*)AV(a),*v,*wv=(T*)AV(w)
+                     wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),*v,* RESTRICT wv=(T*)AV(w)
 
 
 
@@ -516,9 +516,9 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // should init end-of-array to sentinel to move compare against j out of the loop
 // should combine hash here, and unroll 3 times to overlap hash, fetch, compare
 // obsolete #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
-#define FINDP(name,exp) while(m>(hj=hv[name])&&(exp)){++name; if(name==p)name=0;}
+#define FINDP(name,exp) while(m>(hj=hv[name])&&(exp)){if(--name<0)name+=p;}
 #define FIND(exp)  FINDP(j,exp)
-#define FINDPA(name,exp) while(m>hj&&(exp)){++name; if(name==p)name=0; hj=hv[name];}
+// obsolete #define FINDPA(name,exp) while(m>hj&&(exp)){++name; if(name==p)name=0; hj=hv[name];}
 // define ad and wd, which are bases to be added to boxed addresses
 // should use conditional statement
 #define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
@@ -539,9 +539,23 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 DO(m-2, v+=3*stride; j2=j1; j1=j; HASHSLOT(hash) PREFETCH((C*)&hv[j]); v-=2*stride; FINDP(j2,exp); if(m==hj)hv[j2]=i;) \
 v+=stride; FINDP(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride;} FINDP(j,exp);  if(m==hj)hv[j]=m-1;}
 #endif
-#define XDOAP(hash,exp,stride) {d=ad; v=av; HASHSLOT(hash) hj=m; if(m>1){ v+=stride; j1=j; HASHSLOT(hash) v-=2*stride; hj=hv[j1]; \
-DO(m-2, v+=3*stride; j2=j1; j1=j; HASHSLOT(hash) PREFETCH((C*)&hv[j]); v-=2*stride; FINDPA(j2,exp); if(m==hj)hv[j2]=i; hj=hv[j1];) \
-v+=stride; FINDPA(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride; hj=hv[j];} FINDPA(j,exp);  if(m==hj)hv[j]=m-1;}
+#if 1
+#define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*p)>>32;
+#define BUILDPA(T,name,exp,value) do{if(m==hj){hv[name]=(value); break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+#define XDOAP(T,hash,exp,stride) {d=ad; v=av; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) hj=m; if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,j2,exp,i); hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride);) \
+BUILDPA(T,j1,exp,m-2); hj=hv[j]; vp=_mm_add_epi64(vp,vpstride);} BUILDPA(T,j,exp,m-1); }
+#else
+#define HASHSLOTP(T,hash) v=v0; j=((hash)*p)>>32;
+#define BUILDPA(T,name,exp,value) do{if(m==hj){hv[name]=(value); break;} v=v1; if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+#define XDOAP(T,hash,exp,stride) {d=ad; T *v0=(T*)av; T *v1=(T*)av;  \
+HASHSLOTP(T,hash) hj=m; if(m>1){ v0+=stride; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; v0+=stride; \
+DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,j2,exp,i); hj=hv[j1]; v0+=stride;v1+=stride;) \
+BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
+#endif
+
+
 
 // Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
 // and must check whether *hj (->prev data) matches the new data in *v
@@ -567,9 +581,13 @@ v+=stride; FINDPA(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride; hj=hv[j];} FINDPA(j,e
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 // should comment this
 #define IOFX(T,f,hash,exp,stride)   \
- IOF(f){RDECL;IODECL(T);I d,md,j1,j2;/*obsolete UC*u=0;*/                                      \
+ IOF(f){RDECL;AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,*hv=AV(h),j,l,p=AN(h),  \
+                     wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),*v,* RESTRICT wv=(T*)AV(w);I d,md,j1,j2;/*obsolete UC*u=0;*/                                      \
 /* obsolete  md=mode<IPHOFFSET?mode:mode-IPHOFFSET; */                                            \
-  md=mode&IIOPMSK;   /* turn off REFLEX bit */                                            \
+  __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
+ _mm256_zeroupper();  \
+  vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
+   md=mode&IIOPMSK;   /* turn off REFLEX bit */                                            \
 /* obsolete  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI); */ \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
   if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<4)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
@@ -577,7 +595,7 @@ v+=stride; FINDPA(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride; hj=hv[j];} FINDPA(j,e
   if(w==mark)c=0;   /* if prehashing, turn off the second half */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
-   if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQA(hash,exp,stride) else XDOAP(hash,exp,stride);}}  \
+   if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQA(hash,exp,stride) else XDOAP(T,hash,exp,stride);}}  \
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
    case IIDOT|IIMODREFLEX: {          XDO(hash,exp,stride,*zv++=m==hj?(hv[j]=i):hj);} break;      \
@@ -629,7 +647,7 @@ static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /
 static IOFX(I,jtioi,  hici(n,v),            memcmp(v,av+n*hj,k),          cn  )  // INT array, not float
 static IOFX(I,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
 static IOFX(D,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex stom
+static IOFX(Z,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
 static IOFX(D,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
 static IOFX(Z,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 

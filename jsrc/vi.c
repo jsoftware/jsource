@@ -516,8 +516,8 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // should init end-of-array to sentinel to move compare against j out of the loop
 // should combine hash here, and unroll 3 times to overlap hash, fetch, compare
 // obsolete #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
-#define FINDP(name,exp) while(m>(hj=hv[name])&&(exp)){if(--name<0)name+=p;}
-#define FIND(exp)  FINDP(j,exp)
+#define FIND(exp) while(m>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
+
 // obsolete #define FINDPA(name,exp) while(m>hj&&(exp)){++name; if(name==p)name=0; hj=hv[name];}
 // define ad and wd, which are bases to be added to boxed addresses
 // should use conditional statement
@@ -531,8 +531,8 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // *************** first class: intolerant comparisons, unboxed or boxed ***********************
 
 // Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  should use _1 for empty?
-#define XDOA(hash,exp,stride)         {d=ad; v=av;          DO(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=i; v+=stride;);}
-#define XDQA(hash,exp,stride)         {d=ad; v=av+cn*(m-1); DQ(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=i; v-=stride;);}
+#define XDOA(TH,hash,exp,stride)         {d=ad; v=av;          DO(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v+=stride;);}
+#define XDQA(TH,hash,exp,stride)         {d=ad; v=av+cn*(m-1); DQ(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v-=stride;);}
 
 #if 0 // obsolete
 #define XDOAP(hash,exp,stride) {d=ad; v=av; HASHSLOT(hash) if(m>1){ v+=stride; j1=j; HASHSLOT(hash) v-=2*stride; \
@@ -541,18 +541,23 @@ v+=stride; FINDP(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride;} FINDP(j,exp);  if(m==
 #endif
 #if 1
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*p)>>32;
-#define BUILDPA(T,name,exp,value) do{if(m==hj){hv[name]=(value); break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
-#define XDOAP(T,hash,exp,stride) {d=ad; v=av; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) hj=m; if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
-DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,j2,exp,i); hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride);) \
-BUILDPA(T,j1,exp,m-2); hj=hv[j]; vp=_mm_add_epi64(vp,vpstride);} BUILDPA(T,j,exp,m-1); }
-#else
+#define BUILDPA(T,TH,name,exp,value) do{if(m==hj){hv[name]=(TH)(value); break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+#define XDOAP(T,TH,hash,exp,stride) {d=ad; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];) \
+BUILDPA(T,TH,j1,exp,m-2); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,m-1); }
+
+#define XDQAP(T,TH,hash,exp,stride) {d=ad; vp=_mm_insert_epi64(vp,(I)(av+cn*(m-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+I i; for(i=m-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+BUILDPA(T,TH,j1,exp,1); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,0); }
+#else  // obsolete 
 #define HASHSLOTP(T,hash) v=v0; j=((hash)*p)>>32;
-#define BUILDPA(T,name,exp,value) do{if(m==hj){hv[name]=(value); break;} v=v1; if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
-#define XDOAP(T,hash,exp,stride) {d=ad; T *v0=(T*)av; T *v1=(T*)av;  \
+#define BUILDPA(T,TH,name,exp,value) do{if(m==hj){hv[name]=(TH)(value); break;} v=v1; if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+#define XDOAP(T,TH,hash,exp,stride) {d=ad; T *v0=(T*)av; T *v1=(T*)av;  \
 HASHSLOTP(T,hash) hj=m; if(m>1){ v0+=stride; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; v0+=stride; \
-DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,j2,exp,i); hj=hv[j1]; v0+=stride;v1+=stride;) \
-BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
+DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); hj=hv[j1]; v0+=stride;v1+=stride;) \
+BUILDPA(T,TH,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,TH,j,exp,m-1); }
 #endif
 
 
@@ -563,10 +568,26 @@ BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
 // obsolete #define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(cm, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
 #define XDO(hash,exp,stride,stmt)     {d=wd; v=wv;          DO(c, HASHSLOT(hash) FIND(exp); stmt;             v+=stride;);}
 #define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(c, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
-// special lookup routines to move the data rather than store its index, used for nub/match
+
+#define FINDP(T,TH,name,exp,fstmt,nfstmt,reflex) do{if(m==hj){if(reflex)hv[name]=(TH)i; nfstmt break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp)){fstmt break;} if(--name<0)name+=p; hj=hv[name];}while(1);
+
+#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) if(c){I i; d=wd; vp=_mm_insert_epi64(vp,(I)(wv),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(c>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=0;i<c-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=c-1; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
+
+#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) if(c){I i; d=wd; vp=_mm_insert_epi64(vp,(I)(wv+cn*(c-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(c>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=c-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=0; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
+
+// special lookup routines to move the data rather than store its index, used for nub/less
 #define XMV(hash,exp,stride,stmt)      \
  if(k==SZI){XDO(hash,exp,stride,if(m==hj){*(I*)zc=*(I*)v; zc+=SZI;     stmt;}); }  \
  else       XDO(hash,exp,stride,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
+#define XMVP(T,TH,hash,exp,stride,reflex)      \
+ if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
+ else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 // should change IPHOFFSET for ease in calc md
@@ -580,9 +601,9 @@ BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
 
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 // should comment this
-#define IOFX(T,f,hash,exp,stride)   \
- IOF(f){RDECL;AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,*hv=AV(h),j,l,p=AN(h),  \
-                     wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),*v,* RESTRICT wv=(T*)AV(w);I d,md,j1,j2;/*obsolete UC*u=0;*/                                      \
+#define IOFX(T,TH,f,hash,exp,stride)   \
+ IOF(f){RDECL;AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,j,l,p=AN(h),  \
+                     wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),*v,* RESTRICT wv=(T*)AV(w);I d,md,j1,j2; TH * RESTRICT hv=TH##AV(h); /*obsolete UC*u=0;*/   \
 /* obsolete  md=mode<IPHOFFSET?mode:mode-IPHOFFSET; */                                            \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
  _mm256_zeroupper();  \
@@ -595,28 +616,28 @@ BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
   if(w==mark)c=0;   /* if prehashing, turn off the second half */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
-   if(mode<IPHOFFSET){DO(p,hv[i]=m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQA(hash,exp,stride) else XDOAP(T,hash,exp,stride);}}  \
+   if(mode<IPHOFFSET){DO(p,hv[i]=(TH)m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);}}  \
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
-   case IIDOT|IIMODREFLEX: {          XDO(hash,exp,stride,*zv++=m==hj?(hv[j]=i):hj);} break;      \
-    /* normal i. - use the table */ \
-   case IIDOT: { XDO(hash,exp,stride,*zv++=hj); }                          break;  \
-   case IICO|IIMODREFLEX: {I *zi=zv+=c; XDQ(hash,exp,stride,*--zi=m==hj?(hv[j]=i):hj);} break;      \
-   case IICO: {    XDO(hash,exp,stride,*zv++=hj); }                          break;  \
-   case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDO(hash,exp,stride,*zb++=m==hj?(hv[j]=i,1):0); zv=(I*)zb;} /* IRS - keep zv running */  break;  \
-   case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMV(hash,exp,stride,hv[j]=i);                ZCSHAPE; }   break;  \
-   case ILESS: { C *zc=(C*)zv; XMV(hash,exp,stride,0      );                ZCSHAPE; }   break;  \
-   case INUBI|IIMODREFLEX: {I *zi=zv;  XDO(hash,exp,stride,if(m==hj)*zi++=hv[j]=i); ZISHAPE; }   break;  \
-   case IEPS: { B *zb=(B*)zv;  XDO(hash,exp,stride,*zb++=m>hj); zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
+   case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
+    /* normal i./i: - use the table */ \
+   case IICO|IIMODREFLEX: {I *zi=zv+=c; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
+   case IICO: \
+   case IIDOT: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=hj;},0); }                          break;  \
+   case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{*zb++=0;},{*zb++=1;},1) zv=(I*)zb;} /* IRS - keep zv running */  break;  \
+   case INUB|IIMODREFLEX: { C *zc=(C*)zv;       XMVP(T,TH,hash,exp,stride,1);                ZCSHAPE; }   break;  \
+   case ILESS: { C *zc=(C*)zv; XMVP(T,TH,hash,exp,stride,0);                ZCSHAPE; }   break;  \
+   case INUBI|IIMODREFLEX: {I *zi=zv;  XDOP(T,TH,hash,exp,stride,{},{*zi++=i;},1) ZISHAPE; }   break;  \
+   case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{*zb++=1;},{*zb++=0;},0) zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
     /* the rest are f@:e., none of which have IRS */ \
-   case II0EPS: { I s=c; XDO(hash,exp,stride,if(m==hj){s=i; break;}); *zv=s; }   break; /* i.&0@:e. */   \
-   case II1EPS: { I s=c; XDO(hash,exp,stride,if(m> hj){s=i; break;}); *zv=s; }   break; /* i.&1@:e. */  \
-   case IJ0EPS: { I s=c; XDQ(hash,exp,stride,if(m==hj){s=i; break;}); *zv=s; }   break; /* i:&0@:e. */  \
-   case IJ1EPS: { I s=c; XDQ(hash,exp,stride,if(m> hj){s=i; break;}); *zv=s; }   break; /* i:&1@:e. */  \
-   case ISUMEPS: { I s=0; XDO(hash,exp,stride,if(m> hj)++s;         ); *zv=s; }   break; /* +/@:e. */  \
-   case IANYEPS: { B s=0; XDO(hash,exp,stride,if(m> hj){s=1; break;}); *(B*)zv=s; } break; /* +./@:e. */  \
-   case IALLEPS: { B s=1; XDO(hash,exp,stride,if(m==hj){s=0; break;}); *(B*)zv=s; } break; /* *./@:e. */  \
-   case IIFBEPS: { I s=c; I *zi=zv; XDO(hash,exp,stride,if(m> hj)*zi++=i      ); ZISHAPE; }   break; /* I.@:e. */  \
+   case II0EPS: { I s; XDOP(T,TH,hash,exp,stride,{},{s=i; goto exit0;},0); s=c; exit0: *zv=s; }   break; /* i.&0@:e. */   \
+   case II1EPS: { I s; XDOP(T,TH,hash,exp,stride,{s=i; goto exit1;},{},0); s=c; exit1: *zv=s; }  break; /* i.&1@:e. */  \
+   case IJ0EPS: { I s; XDQP(T,TH,hash,exp,stride,{},{s=i; goto exit2;},0); s=c; exit2: *zv=s; }   break; /* i:&0@:e. */  \
+   case IJ1EPS: { I s; XDQP(T,TH,hash,exp,stride,{s=i; goto exit3;},{},0); s=c; exit3: *zv=s; }   break; /* i:&1@:e. */  \
+   case ISUMEPS: { I s=0; XDOP(T,TH,hash,exp,stride,{++s;},{},0); *zv=s; }   break; /* +/@:e. */  \
+   case IANYEPS: { B s; XDOP(T,TH,hash,exp,stride,{s=1; goto exit5;},{},0); s=0; exit5: *(B*)zv=s; } break; /* +./@:e. */  \
+   case IALLEPS: { B s; XDOP(T,TH,hash,exp,stride,{},{s=0; goto exit6;},0); s=1; exit6: *(B*)zv=s; } break; /* *./@:e. */  \
+   case IIFBEPS: { I *zi=zv; XDOP(T,TH,hash,exp,stride,{*zi++=i;},{},0); ZISHAPE; }   break; /* I.@:e. */  \
   }}                                                                                 \
   R z;                                                                               \
  }
@@ -625,6 +646,15 @@ BUILDPA(T,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,j,exp,m-1); }
 static int fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
+}
+
+// Return nonzero if *a!=*w
+static I icmpeq(I *a, I *w, I n) {
+ if(n)do{
+  if(*a!=*w)R n;
+  if(--n)++a,++w; else R n;
+ }while(1);
+ R n;
 }
 
 // jtioa* BOX
@@ -638,19 +668,31 @@ static int fcmp0(D* a, D* w, I n){
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(A,UI4,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(X,UI4,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,UI4,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,UI4,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 // obsolete static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
-static IOFX(I,jtioi,  hici(n,v),            memcmp(v,av+n*hj,k),          cn  )  // INT array, not float
-static IOFX(I,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(I,UI4,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
+static IOFX(I,UI4,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,UI4,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,UI4,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,UI4,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,UI4,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
+static IOFX(A,US,jtioax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(X,US,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,US,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,US,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+// obsolete static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
+static IOFX(I,US,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
+static IOFX(I,US,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,US,jtioc012, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,US,jtioz012, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,US,jtioc02, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,US,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************

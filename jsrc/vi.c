@@ -165,8 +165,17 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   // Clear the entries of the first allocation to m.  Use fullword stores (should use cache-line stores).  Our allocations are always multiples of fullwords,
   // so it is safe to overfill with fullword stores
   UI storeval=m; if(hh->hashelelgsize==1)storeval |= storeval<<16; if(SZI>4)storeval |= storeval<<(32%BW);  // Pad store value to 64 bits, dropping excess on smaller machines
-  I i, nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-  for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
+  I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
+#if 1  // without AVX
+  I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
+#else
+  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
+  {__m128i* storeptr=(__m128i*)hh->data.UI;  // point to area to be cleared
+   __m128i store128; store128=_mm_set1_epi32 ((UI4)storeval);
+   DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
+   if(nstores&1)*(I*)storeptr=storeval;  // If there is an odd word, store it
+  }
+#endif
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
   // we need to avoid clearing the whole buffer for any time after the first.
@@ -357,7 +366,7 @@ UI hic2(I k, UC* v){I cct=k/sizeof(US);
 #define hici1(x) CRC32L(-1LL,*x)
 
 // Hash an INT list
-static UI hici(I k, UI* v){
+static __forceinline UI hici(I k, UI* v){
  // Owing to latency, hash 3 inputs at a time; but not if short.  Length is never 0 but can be 1.
  if((k-=3)<=0){  // fast path for len<=3.  We think all these branches will predict correctly
   UI crc; crc=CRC32L(-1LL,v[0]); if(k>=-1){crc=CRC32L(crc,v[1]); if(k==0)crc=CRC32L(crc,v[2]);} R crc;
@@ -542,13 +551,14 @@ v+=stride; FINDP(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride;} FINDP(j,exp);  if(m==
 #if 1
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*p)>>32;
 #define BUILDPA(T,TH,name,exp,value) do{if(m==hj){hv[name]=(TH)(value); break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
-#define XDOAP(T,TH,hash,exp,stride) {d=ad; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+
+#define XDOAP(T,TH,hash,exp,stride) {I j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(m>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
 DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];) \
 BUILDPA(T,TH,j1,exp,m-2); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,m-1); }
 
-#define XDQAP(T,TH,hash,exp,stride) {d=ad; vp=_mm_insert_epi64(vp,(I)(av+cn*(m-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(m>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+#define XDQAP(T,TH,hash,exp,stride) {I j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av+cn*(m-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(m>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
 I i; for(i=m-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
 BUILDPA(T,TH,j1,exp,1); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,0); }
 #else  // obsolete 
@@ -571,13 +581,13 @@ BUILDPA(T,TH,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,TH,j,exp,m-1); }
 
 #define FINDP(T,TH,name,exp,fstmt,nfstmt,reflex) do{if(m==hj){if(reflex)hv[name]=(TH)i; nfstmt break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp)){fstmt break;} if(--name<0)name+=p; hj=hv[name];}while(1);
 
-#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) if(c){I i; d=wd; vp=_mm_insert_epi64(vp,(I)(wv),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(c>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i; I j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(c>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
 for(i=0;i<c-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
 FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=c-1; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
 
-#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) if(c){I i; d=wd; vp=_mm_insert_epi64(vp,(I)(wv+cn*(c-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(c>1){ vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i; I j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv+cn*(c-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(c>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
 for(i=c-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
 FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=0; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
 
@@ -602,21 +612,23 @@ FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 // should comment this
 #define IOFX(T,TH,f,hash,exp,stride)   \
- IOF(f){RDECL;AD * RESTRICT h=*hp;I acn=ak/sizeof(T),cn=k/sizeof(T),hj,j,l,p=AN(h),  \
-                     wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),*v,* RESTRICT wv=(T*)AV(w);I d,md,j1,j2; TH * RESTRICT hv=TH##AV(h); /*obsolete UC*u=0;*/   \
+ IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
+        wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; TH * RESTRICT hv; \
+        IH *hh=IHAV(*hp); p=hh->datarange;  hv=hh->data.TH;  \
+ \
 /* obsolete  md=mode<IPHOFFSET?mode:mode-IPHOFFSET; */                                            \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
  _mm256_zeroupper();  \
   vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
-   md=mode&IIOPMSK;   /* turn off REFLEX bit */                                            \
+  md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
 /* obsolete  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI); */ \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
   if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<4)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
 /* obsolete  zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                     */                  \
-  if(w==mark)c=0;   /* if prehashing, turn off the second half */                          \
+  if(w==mark){c=0;}   /* if prehashing, turn off the second half, turn off hashallo */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
-   if(mode<IPHOFFSET){DO(p,hv[i]=(TH)m;); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);}}  \
+   if(!(mode&IPHOFFSET)){hashallo(hh,p,m,mode); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);} if(c==0)break;}  \
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
    case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
@@ -643,13 +655,13 @@ FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]
  }
 
 // compare floats, not distinguishing -0 from +0.  Return 0 if equal, 1 if not equal
-static int fcmp0(D* a, D* w, I n){
+static __forceinline I fcmp0(D* a, D* w, I n){
  DQ(n, if(a[i]!=w[i])R 1;);
  R 0;
 }
 
 // Return nonzero if *a!=*w
-static I icmpeq(I *a, I *w, I n) {
+static __forceinline I icmpeq(I *a, I *w, I n) {
  if(n)do{
   if(*a!=*w)R n;
   if(--n)++a,++w; else R n;
@@ -668,31 +680,31 @@ static I icmpeq(I *a, I *w, I n) {
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,UI4,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,UI4,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,UI4,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,UI4,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(A,US,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(X,US,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,US,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 // obsolete static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
-static IOFX(I,UI4,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
-static IOFX(I,UI4,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,UI4,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,UI4,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,UI4,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,UI4,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(I,US,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
+static IOFX(I,US,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,US,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,US,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,US,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,US,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
-static IOFX(A,US,jtioax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
-static IOFX(X,US,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
-static IOFX(Q,US,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
-static IOFX(C,US,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
+static IOFX(A,UI4,jtioax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(X,UI4,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
+static IOFX(Q,UI4,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
+static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 // obsolete static IOFX(C,jtiocx, hicx(jt,k,(UC*)v), memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
-static IOFX(I,US,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
-static IOFX(I,US,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,US,jtioc012, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,US,jtioz012, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,US,jtioc02, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,US,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(I,UI4,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
+static IOFX(I,UI4,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
+static IOFX(D,UI4,jtioc012, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,UI4,jtioz012, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,UI4,jtioc02, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************
@@ -1013,9 +1025,9 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
-  e=1==wc?0:c; if(w==mark){c=0; mode|=IPHCALC;} \
+  e=1==wc?0:c; if(w==mark){c=0;} \
   for(l=0;l<ac;++l,av+=m,wv+=e){ \
-   if(!(mode&(IPHOFFSET|IPHCALC))){mode = hashallo(hh,p,m,mode);}  /* set parms for this loop - only if not prehashing or using prehashed table, which always start at offset 0 */ \
+   if(!(mode&(IPHOFFSET))){mode = hashallo(hh,p,m,mode);}  /* clear table & set parms for this loop - only if not using prehashed table, which always start at offset 0 */ \
    switch(mode&(IIOPMSK|IIMODFULL|IIMODPACK|IIMODBASE0)){ /* We know the setting of IIMODBITS without looking */ \
    default: ASSERTSYS(0,"switch failure in i."); \
      /* a lot of the l*c in the cases below could be removed because the verbs lack IRS, but we're leaving them in for now */ \
@@ -1435,6 +1447,56 @@ static CR condrange2(US *s,I n,I max){CR ret;I i,p,q;US x;
 #endif
 
 // This is the routine that analyzes the input, allocates result area and hashtable, and vectors to the correct action routine
+// jtioa* BOX
+// jtiox  XNUM
+// jtioq  RAT
+// jtioi  k=SZI, INT/SBT/char/bool not small-range
+// jtioi1  INT array
+// jtioc  k=any, bool (must be list of em)/char/INT/SBT
+// jtioc01 intolerant FL atom
+// jtioc0 intolerant FL array
+// jtioz01 intolerant CMPX atom
+// jtioz0 intolerant CMPX array
+// jtiod  tolerant FL
+// jtiod1 tolerant FL atom
+// jtioz  tolerant CMPX
+// jtoiz1 tolerant CMPX atom
+// Table to look up routine from index
+// 0-11, 16-19 are hashes for various types, calculated by bit-twisting
+#define FNTBLSMALL1 12  // small-range, 1-byte items
+#define FNTBLSMALL2 13  // small-range, 1-byte items
+#define FNTBLSMALL4 14  // small-range, 1-byte items
+#define FNTBLONEINT 15  // hash of single INT-sized exact value
+#define FNTBLBOXARRAY 20  // array of boxes, tolerant or not (we just hash on shape)
+#define FNTBLBOXINTOLERANT 21  // single box but intolerant
+#define FNTBLBOXUNIFORM 22  // single box, but a and w have uniform contents
+#define FNTBLBOXUNKNOWN 23  // single box, but we can't do much with it.  Try hashing the first atom of contents
+#define FNTBLXNUM 24   // hashed xnum
+#define FNTBLRAT 25   // hashed rat
+#define FNTBLBOXSSORT 26  // boxes, handled by sorting and binary search
+#define FNTBLSIZE 27  // number of functions
+static AF fntbl[]={
+ jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
+ jtiod,jtioc0,jtiod1,jtioc01,jtio12,jtio22,jtio42,jtioi1,   // FL (then small-range, then ONEINT)
+ jtioz,jtioz0,jtioz1,jtioz01,   // CMPX
+ jtioa,jtioax1,jtioau,jtioa1,  // atomic types
+ jtiox,jtioq,
+ jtiobs,
+ jtioc2,jtioc2,jtioc2,jtioc2,jtioi2,jtioi2,jtioi2,jtioi2,  // bool, INT
+ jtiod,jtioc02,jtiod1,jtioc012,jtio14,jtio24,jtio44,jtioi12,   // FL (then small-range, then ONEINT)
+ jtioz,jtioz02,jtioz1,jtioz012,   // CMPX
+ jtioa,jtioax12,jtioau2,jtioa1,  // atomic types
+ jtiox2,jtioq2,
+ jtiobs
+};
+static S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // bool, INT
+ -1,IIMODFULL,-1,IIMODFULL,0,0,0,IIMODFULL,   // FL (then small-range, then ONEINT)
+ -1,IIMODFULL,-1,IIMODFULL,   // CMPX
+ -1,IIMODFULL,IIMODFULL,-1,  // atomic types
+ IIMODFULL,IIMODFULL,
+ -2
+};
 
 // Types for the prehashed result
 #define PREHRESIV 0
@@ -1578,7 +1640,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  // (full hashing is considerably more expensive)
  if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
- }else{B b=0==jt->ct;I t1;
+ }else{B b=0==jt->ct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
@@ -1593,15 +1655,23 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
 // jtiod1 tolerant FL atom
 // jtioz  tolerant CMPX
 // jtoiz1 tolerant CMPX atom
-  AF fn=0; // we haven't figured it out yet
+
+#define SMALLHASHMAX (65535-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US)))
+// testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically
+  I fnx=-1; // we haven't figured it out yet
   UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
-  p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
-  if(!b&&t&BOX+FL+CMPX)ctmask(jt);
-  if     (t&BOX)          fn=b&&(1<n||usebs(a,ac,m))?jtiobs:1<n?jtioa:b?jtioax1:
-                              (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?jtioau:jtioa1;
-  else if(t&XNUM)         fn=jtiox;
-  else if(t&RAT )         fn=jtioq;
-  else if(1==k)           {p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fn=jtio12;}   // 1-byte ops, just use small-range code: checking takes too much time
+  p=m; if(t&B01&&k<(BW-1)){p=MIN(p,(UI)1LL<<k);}  // Get max # different possible values to hash; the number of items, but less then that for short booleans
+  // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
+  // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
+  p=MIN(IMAX-5,(p<SMALLHASHMAX/10)?(p*10) : (p<SMALLHASHMAX/3?SMALLHASHMAX:3*p));
+// testing  p = (UI)MIN(IMAX-5,(HASHFACTOR*p));  // length we will use for hashtable, if small-range not used
+  if(!b&&t&BOX+FL+CMPX)ctmask(jt);   // calculate ctmask if comparison is tolerant and there might be floats
+
+  if(t&BOX+XNUM+RAT){
+   if(t&BOX){I t1; fnx=b&&(1<n||usebs(a,ac,m))?FNTBLBOXSSORT:1<n?FNTBLBOXARRAY:b?FNTBLBOXINTOLERANT:
+             (t1=utype(a,ac))&&(mk||a==w||TYPESEQ(t1,utype(w,wc)))?FNTBLBOXUNIFORM:FNTBLBOXUNKNOWN;
+   }else fnx=CTTZ(t)+(FNTBLXNUM-XNUMX);
+  }else if(1==k)           {p=t&B01?2:256;datamin=0; mode|=IIMODFULL; fnx=FNTBLSMALL1;}   // 1-byte ops, just use small-range code: checking takes too much time
   else{
    // We might switch over to small-range mode, if the sizes are right.  See how big the hash table would be for full hashing
    // figure out whether we should use small-range matching or hashing.  We use small-range code if:
@@ -1622,10 +1692,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // The savings is 4 ops (2 clocks) per word searched
       if(booladj && ((UI)(65536-crres.range)>>booladj) < (c<<(LGSZI+1))){p=65536; datamin=0;}else{p=crres.range;}  // this underestimates the benefit for prehashes
       if(p==65536)mode|=IIMODFULL;
-      fn=jtio22;  // This qualifies for small-range processing
-    }else{booladj=0;}   // Turn off booladj if small-range processing not engaged
+      fnx=FNTBLSMALL2;  // This qualifies for small-range processing
+    }
    }
-   if(!fn){  // if we don't have it yet, it will be a hash.  Decide which one
+   if(fnx<0){  // if we don't have it yet, it will be a hash.  Decide which one
 // obsolete     if(cvtsneeded&1)RZ(a=cvt0(a));  // Convert negative 0 to positive 0. Should do this in the hash
 // obsolete     if(cvtsneeded&2)RZ(w=cvt0(w));
     if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT, or characters.  FL has -0 problem
@@ -1633,50 +1703,33 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       CR crres = condrange(AV(a),(AN(a)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
       if(crres.range){
        datamin=crres.min;
-       p=crres.range; fn=jtio42;
-      }else{booladj=0; fn=jtioi1;}  // leave p as is; clear booladj since not small-range; select integer hashing
-     }else{booladj=0; fn=jtioi1;}
+       p=crres.range; fnx=FNTBLSMALL4;
+      }else{fnx=FNTBLONEINT;}  // leave p as is; select integer hashing
+     }else{fnx=FNTBLONEINT;}
     }else{
-// jtioa* BOX
-// jtiox  XNUM
-// jtioq  RAT
-// jtioi  k=SZI, INT/SBT/char/bool not small-range
-// jtioi1  INT array
-// jtioc  k=any, bool (must be list of em)/char/INT/SBT
-// jtioc01 intolerant FL atom
-// jtioc0 intolerant FL array
-// jtioz01 intolerant CMPX atom
-// jtioz0 intolerant CMPX array
-// jtiod  tolerant FL
-// jtiod1 tolerant FL atom
-// jtioz  tolerant CMPX
-// jtoiz1 tolerant CMPX atom
-     static AF fntbl[20]={
-      jtioc,jtioc,jtioc,jtioc,jtioi,jtioi,jtioi,jtioi,  // bool, INT
-      jtiod,jtioc0,jtiod1,jtioc01,0,0,0,0,   // FL
-      jtioz,jtioz0,jtioz1,jtioz01};   // CMPX
-     fn=fntbl[((t&CMPX+FL+INT))+((n==1)?2:0)+b];  // index: CMPX/FL/n==1/intolerant
+     fnx=((t&CMPX+FL+INT))+((n==1)?2:0)+b;  // index: CMPX/FL/n==1/intolerant
     }
 // obsolete                     fn=t&B01+JCHAR+INT+SBT?jtioc:b?jtioc0:1==n?(t&FL?jtiod1:jtioz1):t&FL?jtiod:jtioz;}  // select other hashing
    }
   }
-
-
 
 // obsolete // should have an irange that takes the max value allowed, & returns early if range is exceeded
 // obsolete  if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}  //  r=min value,ss=max value+1-min value or 0 if no values or range too big
 // obsolete  // compute size of hashtable
 // obsolete  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
 
+  I fmods = fnflags[fnx];  // fetch flags for this type.  This will be simplified when we finish tolerant hash. -1 means old hash, -2 means no hash
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
-  if(fn==jtio12||fn==jtio22||fn==jtio42){IH *hh;
+  if(fmods>=0){IH * RESTRICT hh;
+   if(fmods){mode |= fmods; booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
 
    // See if the size/range of w allows use of one of the faster loops.  The options are FULL (which saves the 4 instructions per atom of w that would
    // be spent range-checking w) and BASE0 (which clears the hashtable, at a cost of 1 cycle per 2/4 entries, or 4x that if we use fast instructions)
    // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
+   // Don't bother to check if the decision has already been made (this will be set for full hashes, which ignore this bit and require FORCE0)
    if(a!=w&&!mk&&!(mode&IIMODFULL)){CR crres;
     I allowrange;  // where we will build the max allowed range of w
     if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
@@ -1691,26 +1744,33 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-   if(p<(65536-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US))) && booladj==0 && m<65536){
+   if(p<=SMALLHASHMAX && booladj==0 && m<65536){
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
     // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
-    // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo
+    // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo (or on allocation here, for prehashing)
     // Clearing also saves 1 clock per input word
+#if 0  // now that we have wide instructions, it always makes sense to clear the allocated area
     mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
+#else
+    mode |= IIMODFORCE0;
+#endif
     if(mk||!(h=jt->idothash0)){
      GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
+     hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
+     if(!mk){jt->idothash0=h; ra(h);}  // If not prehashing a table, save this and protect against removal
+#if 0
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
       // the allocated position and index
       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
-      // It's OK to round the fill up to the length of an I
-      UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
-      DO(fillct, hh->data.UI[i]=fillval;)
+// obsolete      // It's OK to round the fill up to the length of an I
+// obsolete      UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+// obsolete       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
      }else{
@@ -1721,6 +1781,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // since table is to be initialized, currentlo/currenthi can be left garbage
       ra(h);  // make the table permanent
      }
+#endif
     }
    }else{
     // using the long table.  Use the current one if it is long enough; otherwise allocate a new one
@@ -1728,8 +1789,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     // or bytes, and represent that information in mode and booladj.
     if(booladj){if(p>MAXBYTEBOOL){mode|=IIMODPACK|IIMODBITS;}else{mode|=IIMODBITS;booladj=5-3;}  // set MODBITS as a flag to hashallo
     }else{
+#if 0  // now that we have wide instructions, it always makes sense to clear the allocated area
      // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
      mode |= ((c*3+m)<(p<<(1-(LGSZI-LGSZUI4))))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/2 cycle per atom to clear (without wide insts)
+#else
+     mode |= IIMODFORCE0;
+#endif     
     }
     I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
          // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
@@ -1742,20 +1807,25 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      hh=IHAV(h);  // point to the header
      hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=2;  // hash entries are 4 bytes long
+     hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
+     // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,
+     // it would be a shame to tie up vast amounts of memory waiting for a large search.  To compromise, we keep the buffer unless it is much bigger than the L3 cache
+     if(!mk&&hh->datasize<5*L3CACHESIZE){jt->idothash1=h; ra(h);}  // If not prehashing a table, save this and protect against removal
+#if 0
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
       // the allocated position and index
       // It's OK to round the fill up to the length of an I
-      UI fillval;
-      if(booladj){  // convert bit count to words, rounded up
-       fillval=(mode&(IIMODPACK+IIOPMSK))<=INUBI; fillval|=fillval<<8; fillval|=fillval<<16;  // fill packed bits with 0, byte-bits with 0 except for ~. ~: I.@~. -.
-      }else{  // convert UI4 count to words, rounded up
-       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
-       fillval=m; 
-      }  // fill bits with 0; fill full hashes with m
-      if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
-      UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
-      DO(fillct, hh->data.UI[i]=fillval;)
+// obsolete      UI fillval;
+// obsolete       if(booladj){  // convert bit count to words, rounded up
+// obsolete       fillval=(mode&(IIMODPACK+IIOPMSK))<=INUBI; fillval|=fillval<<8; fillval|=fillval<<16;  // fill packed bits with 0, byte-bits with 0 except for ~. ~: I.@~. -.
+// obsolete      }else{  // convert UI4 count to words, rounded up
+// obsolete        mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
+// obsolete       fillval=m; 
+// obsolete       }  // fill bits with 0; fill full hashes with m
+// obsolete       if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
+// obsolete       UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
+// obsolete       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed
      }else{
@@ -1766,13 +1836,14 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // since table is to be initialized, currentlo/currenthi can be left garbage
       ra(h);  // make the table permanent
      }
+#endif
     }
     // switch the routine pointer to the big table
-    if(fn==jtio12)fn=jtio14; else if(fn==jtio22)fn=jtio24; else fn=jtio44;
+    fnx+=FNTBLSIZE;
    }
    // Pass the min/range into the action routine, using result values in the hashtable
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
-  }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
+  }else{if(fmods==-1)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
 
 // obsolete   if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
 // obsolete    // exact types (including intolerant comparison of FL/CMPX)
@@ -1786,7 +1857,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
 // obsolete   }
 // obsolete 
   // Call the routine to perform the operation
-  RZ(fn(jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
+  RZ(fntbl[fnx](jt,mode,m,n,c,k,acr,wcr,ac,wc,ak,wk,a,w,&h,z));
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
@@ -1804,7 +1875,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
     case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
    }
-   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
+   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fntbl[fnx]; xv[5]=ztype; 
    zv[0]=x; zv[1]=h; zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we need a hashtable
@@ -1846,10 +1917,11 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
   case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,    0,  0 ); break;
  }
  // save info used by the routines
- jt->hin=AN(hi); jt->hiv=AV(hi);
+ jt->hin=AN(hi); jt->hiv=AV(hi);  // should go away?
  // convert type of w if needed; and if unconverted FL/CMPX, touch to change -0 to 0
  // this is dodgy: if the comparison tolerance doen't change, there should be no need for conversion; but
- // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable
+ // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable & revert to
+ // original a if ct has changed
  if(TYPESNE(t,wt))RZ(w=cvt(t,w))/* obsolete else if(t&FL+CMPX)RZ(w=cvt0(w)); */
  // call the action routine
  R fn(jt,mode+IPHOFFSET,m,n,c,k,AR(a),AR(w),(I)1,(I)1,(I)0,(I)0,a,w,&h,z);

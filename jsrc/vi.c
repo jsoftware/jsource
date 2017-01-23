@@ -74,11 +74,11 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 
 
 // Routine to allocate sections of the hash tables
-// *hh is the hash table we have selected, p is the number of hash entries we need, m is the maximum+1 value that needs to be stored in an entry
+// *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
 // md gives information about the type of entry, in particular if it is bits or packed bits
 // Main result is in *hh, notably currentlo/currentindexofst.  Other fields have been adjusted to account for the allocated space
 // The nominal result is the new value for md.  This routine is responsible for setting/clearing IIMODBASE0 appropriately, but only when IIMODBITS is clear
-static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
+static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
  // If the request is for bits, allocate them starting at the beginning of the table.
  if(md&IIMODBITS){
   hh->currentlo=0; hh->currentindexofst=0;  // Bits always start at 0
@@ -110,30 +110,30 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
   I selside=0;  // default to allocating on the left (i. e. at 0)
   UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible index for this table
-  UI indexceil=maxindex-m;  // max starting index
+  UI indexceil=maxindex-asct;  // max starting index
 
   // Cost of allocating on the left comes
-  // (1) now, as we use (m*currenthi) units of index space
+  // (1) now, as we use (asct*currenthi) units of index space
   // (2) in the future, as all future allocations on the right lose index space,
-  // in the amount of (new left index end-right index end-future m)*(width-currenthi).  We estimate future values to equal current ones.
+  // in the amount of (new left index end-right index end-future asct)*(width-currenthi).  We estimate future values to equal current ones.
   // (3) now, if we have to clear the invalid area (1 store per word cleared)
-  // BUT: if the cleared invalid area covers the entire p, we use m rather than left-index+m for calculating the other costs
-  // The cost of a unit of index space is 1 store per (width*maxindex)/(m*p) index-space unit, with m and p rounded up if large;
-  // we will approximate as 2*(m*p)/(width*maxindex) 
+  // BUT: if the cleared invalid area covers the entire p, we use asct rather than left-index+asct for calculating the other costs
+  // The cost of a unit of index space is 1 store per (width*maxindex)/(asct*p) index-space unit, with asct and p rounded up if large;
+  // we will approximate as 2*(asct*p)/(width*maxindex) 
 
   // Cost of allocating on the right is
-  // (p*m) units of index space for the allocated area, plus (currenthi*((right index+m)-left index)) units of index space lost on the left,
+  // (p*asct) units of index space for the allocated area, plus (currenthi*((right index+asct)-left index)) units of index space lost on the left,
   // plus cache expense of p<.currenthi cache words
   // The cost of a cache word is reckoned at 1/2 store per word
 
   // That's not worth figuring out for every call.  So, we will just allocate on the right unless
-  // the invalid area is empty and m<4096 (about the size of L1 cache), to get the caching benefit for small arguments
-  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (m>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
+  // the invalid area is empty and asct<4096 (about the size of L1 cache), to get the caching benefit for small arguments
+  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (asct>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
    // Allocating right.  Return a region starting at currenthi
    md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated it
    hh->currentlo=hh->currenthi; hh->currenthi+=p;   // set return value (starting position) and partition
    UI startx=hh->previousindexend;
-   hh->currentindexofst=startx; hh->previousindexend=(startx+=m);  // set return value (starting index) and allocated index space
+   hh->currentindexofst=startx; hh->previousindexend=(startx+=asct);  // set return value (starting index) and allocated index space
    hh->currentindexend=MAX(startx,hh->currentindexend);  // since currentindexend speaks for the whole left side, we may have to push it up
    // Since the partition (currenthi) is kept to the right of the invalid region, there is no need to clear invalid data
 // obsolete UI clrpt = MIN(hh->currenthi, hh->invalidhi);   // get index to clear to
@@ -148,13 +148,13 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
    hh->currentlo=0; hh->currenthi=p;   // set return value (starting position) and partition
    UI startx=hh->currentindexend;   // the previous end+1 index becomes the index for this time
    hh->previousindexend=startx;  // bring up the right side to match the left side before we advance
-   hh->currentindexofst=startx; hh->currentindexend=(startx+=m);  // set return value (starting index) and allocated index space
+   hh->currentindexofst=startx; hh->currentindexend=(startx+=asct);  // set return value (starting index) and allocated index space
    // If (part of) the return area needs to be cleared, clear it.  If we clear the entire left side, reduce the left index
    UI clrpt = MIN(p, hh->invalidhi);   // get index to clear to
    I nclrhsh = clrpt - hh->invalidlo;  // get number of hash entries to clear
    if(nclrhsh>0){   // if there is something to clear
     memset(hh->data.UC+(hh->invalidlo<<hh->hashelelgsize), C0,(nclrhsh<<hh->hashelelgsize));  // clear the region to 0
-    if(p<=clrpt){startx=hh->currentindexofst;hh->currentindexend=MAX(m,hh->currentindexofst);}  // If we cleared the whole left side, we can back the left-side pointer to match the right
+    if(p<=clrpt){startx=hh->currentindexofst;hh->currentindexend=MAX(asct,hh->currentindexofst);}  // If we cleared the whole left side, we can back the left-side pointer to match the right
     hh->invalidlo=clrpt;  // Indicate that we have cleared this region
    }
   }
@@ -162,9 +162,9 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
  if(md&IINOTALLOCATED) {
   // Cannot allocate as is: the region must be initialized.  set BASE0 in this case, and since we initialize, initialize to the most useful value
   md |= IIMODBASE0;  // if we clear the region, mention that so that we get the fastest code
-  // Clear the entries of the first allocation to m.  Use fullword stores (should use cache-line stores).  Our allocations are always multiples of fullwords,
+  // Clear the entries of the first allocation to asct.  Use fullword stores (should use cache-line stores).  Our allocations are always multiples of fullwords,
   // so it is safe to overfill with fullword stores
-  UI storeval=m; if(hh->hashelelgsize==1)storeval |= storeval<<16; if(SZI>4)storeval |= storeval<<(32%BW);  // Pad store value to 64 bits, dropping excess on smaller machines
+  UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16; if(SZI>4)storeval |= storeval<<(32%BW);  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
 #if 1  // without AVX
   I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
@@ -187,10 +187,10 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
    if(p>=hh->currenthi){
     // Moving the partition right (or not at all).  That doesn't uncover anything
     hh->currenthi=p;   // set the new partition pointer
-    hh->currentindexend=MAX(hh->previousindexend,1+m);  // keep the left-side max index no less than the right-wide
+    hh->currentindexend=MAX(hh->previousindexend,1+asct);  // keep the left-side max index no less than the right-wide
    }else{
     // We didn't clear as far as the partition.  The left side still contains old data.
-    if(hh->currentindexend<1+m)hh->currentindexend=1+m;  // Don't lower the index if there is uncleared data on the left
+    if(hh->currentindexend<1+asct)hh->currentindexend=1+asct;  // Don't lower the index if there is uncleared data on the left
    }
   }else{
    // Not FORCE0: we are clearing because we have to.  Clear everything.  But we can save clearing the right side if it's already clear.
@@ -198,7 +198,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
    I clrfrompoint=p<<hh->hashelelgsize;  // offset to clear from
    if((clrtopoint-=clrfrompoint)>0){memset(hh->data.UC+clrfrompoint, C0, clrtopoint);}  // clear the region to 0
    hh->currenthi=p;   // set return value (starting position) and partition
-   hh->currentindexend=1+m;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
+   hh->currentindexend=1+asct;  // set return value (starting index) and allocated index space.  Leave 0 for 'not found'
    hh->previousindexend=1;  // Init right side unused (but with the 0s representing initialized values)
   }
   hh->currentindexofst=0;  // Indic left-side starting index (return value)
@@ -207,78 +207,6 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
  }
  R md;
 }
-
-#if 0
-#if C_HASH
-/* hic:  hash a string of length k                                 */
-/* hicx: hash the bytes of string v indicated by hin/hiv           */
-/* hic2: hash the bytes of a string of length k (k even)           */
-/* hic4: hash the bytes of a string of length k (k multiple of 4)  */
-/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
-
-       UI hic (     I k,UC*v){UI z=HASH0;             DO(k,       z=(149*i+1000003)**v++   ^z<<1;      ); R z;}
-
-static UI hicnz(    I k,UC*v){UI z=HASH0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(149*i+1000003)*c^z<<1;); R z;}
-
-static UI hicx(J jt,I k,UC*v){UI z=HASH0;I*u=jt->hiv; DO(jt->hin, z=(149*i+1000003)*v[*u++]^z<<1;      ); R z;}
-
-#if C_LE
-       UI hic2(     I k,UC*v){UI z=HASH0;             DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
-                                                       if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=2;); R z;}
-#else
-       UI hic2(     I k,UC*v){UI z=HASH0; ++v;        DO(k/2,     z=(149*i+1000003)**v     ^z<<1;
-                                                       if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=2;); R z;}
-#endif
-
-#if C_LE
-       UI hic4(     I k,UC*v){UI z=HASH0;             DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
-                                               if(*(v+2)||*(v+3)){z=(149*i+1000003)**(v+1) ^z<<1;
-                                                                  z=(149*i+1000003)**(v+2) ^z<<1;
-                                                                  z=(149*i+1000003)**(v+3) ^z<<1;}
-                                                  else if(*(v+1)){z=(149*i+1000003)**(v+1) ^z<<1;} v+=4;); R z;}
-#else
-       UI hic4(     I k,UC*v){UI z=HASH0; v+=3;       DO(k/4,     z=(149*i+1000003)**v     ^z<<1;
-                                               if(*(v-2)||*(v-3)){z=(149*i+1000003)**(v-1) ^z<<1;
-                                                                  z=(149*i+1000003)**(v-2) ^z<<1;
-                                                                  z=(149*i+1000003)**(v-3) ^z<<1;}
-                                                  else if(*(v-1)){z=(149*i+1000003)**(v-1) ^z<<1;} v+=4;); R z;}
-#endif
-
-#else
-/* hic:  hash a string of length k                                 */
-/* hicx: hash the bytes of string v indicated by hin/hiv           */
-/* hic2: hash the low order bytes of a string of length k (k even) */
-/* hic4: hash the low order bytes of a string of length k (k multiple of 4) */
-/* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
-
-       UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
-
-static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(i+1000003)*c^z<<1;); R z;}
-
-static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u++]^z<<1;      ); R z;}
-
-#if C_LE
-       UI hic2(     I k,UC*v){UI z=0;             DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
-#else
-       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k/2,     z=(i+1000003)**v     ^z<<1; v+=2;); R z;}
-#endif
-
-#if C_LE
-       UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
-#else
-       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
-#endif
-
-#endif
-
-#if SY_64
-// Hash a single unsigned INT
-#define hicw(v)  (10495464745870458733U**(UI*)(v))
-#else
-#define hicw(v)  (2838338383U**(U*)(v))
-static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+2838338383U*x.i[MSW];}
-#endif
-#endif
 
 // All hashes must return a CRC result, because that is evenly distributed throughout the lower 32 bits
 
@@ -381,7 +309,6 @@ static __forceinline UI hici(I k, UI* v){
  RETCRC3;
 }
 
-
 // Hash a single FL atom, with check for -0 and +0
 #define hic01(x) ((*(x)!=NEGATIVE0)?CRC32L(-1L,*x):CRC32L(-1L,0))
 
@@ -447,7 +374,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
 // Comparisons for extended/rational/float/complex types.  teq should use the macro
 static B jteqx(J jt,I n,X*u,X*v){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
-static B jteqd(J jt,I n,D*u,D*v){DO(n, if(!teq(*u,*v))R 0; ++u; ++v;); R 1;}
+static B jeqd(I n,D*u,D*v,D cct){DO(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
@@ -483,9 +410,9 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
        42 IPHANYEPS  [:+./e. a w     prehashed
        43 IPHALLEPS  [:*./e. a w     prehashed
        44 IPHIFBEPS  I.@e.   a w     prehashed
- m    target axis length
+ asct    target axis length (number of things to be searched from in a single pass)
  n    target item # atoms
- c    # target items in a left-arg cell, which may include multiple right-arg cells
+ wsct    # target items in a left-arg cell, which may include multiple right-arg cells (number of searches)
  k    target item # bytes
  acr  left  rank
  wcr  right rank
@@ -503,7 +430,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 
 // should change IOF to return pointer to h; then could just pass in h rather than hp
 // should not pass in wcr - not used.  Check other args
-#define IOF(f)     A f(J jt,I mode,I m,I n,I c,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
+#define IOF(f)     A f(J jt,I mode,I asct,I n,I wsct,I k,I acr,I wcr,I ac,I wc,I ak,I wk,A a,A w,A*hp,A z)
 // variables used in IOF routines:
 // h=A for hashtable, hv->hashtable data, p=#entries in table, pm=unsigned p, used for converting hash to bucket#
 // acn,wcn=#atoms in cell of a,w
@@ -525,7 +452,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // should init end-of-array to sentinel to move compare against j out of the loop
 // should combine hash here, and unroll 3 times to overlap hash, fetch, compare
 // obsolete #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
-#define FIND(exp) while(m>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
+#define FIND(exp) while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
 
 // obsolete #define FINDPA(name,exp) while(m>hj&&(exp)){++name; if(name==p)name=0; hj=hv[name];}
 // define ad and wd, which are bases to be added to boxed addresses
@@ -540,61 +467,93 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 // *************** first class: intolerant comparisons, unboxed or boxed ***********************
 
 // Routines to build the hash table from a.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  should use _1 for empty?
-#define XDOA(TH,hash,exp,stride)         {d=ad; v=av;          DO(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v+=stride;);}
-#define XDQA(TH,hash,exp,stride)         {d=ad; v=av+cn*(m-1); DQ(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v-=stride;);}
+// obsolete #define XDOA(TH,hash,exp,stride)         {d=ad; v=av;          DO(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v+=stride;);}
+// obsolete #define XDQA(TH,hash,exp,stride)         {d=ad; v=av+cn*(m-1); DQ(m,  HASHSLOT(hash) FIND(exp); if(m==hj)hv[j]=(TH)i; v-=stride;);}
 
-#if 0 // obsolete
-#define XDOAP(hash,exp,stride) {d=ad; v=av; HASHSLOT(hash) if(m>1){ v+=stride; j1=j; HASHSLOT(hash) v-=2*stride; \
-DO(m-2, v+=3*stride; j2=j1; j1=j; HASHSLOT(hash) PREFETCH((C*)&hv[j]); v-=2*stride; FINDP(j2,exp); if(m==hj)hv[j2]=i;) \
-v+=stride; FINDP(j1,exp); if(m==hj)hv[j1]=m-2; v+=stride;} FINDP(j,exp);  if(m==hj)hv[j]=m-1;}
-#endif
-#if 1
+// Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
+// here, so get it out.  [NOTE: bad code generation seems to add 2 extra instructions in incrementing vp.  should get rid of that]
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*p)>>32;
-#define BUILDPA(T,TH,name,exp,value) do{if(m==hj){hv[name]=(TH)(value); break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+// Conditionally insert a new value into the hash table.  The initial value of hj (the table scan pointer) has been fetched.  name is the name holding the slot to be added
+// (it will be j, j1, or j2 depending on where we are in the processing pipeline),
+// exp is a comparison expression meaning 'mismatch' that returns 0 if the data indexed by the slot is equal to *v (the expression will use *v as the new value, and hj as the index into the
+// original input av to point to the value represented in the hashtable).  hj advances through the hash until an empty slot or a match is found.
+// The v value is stored in an xmm register and brought out into v for use by (exp); it is a delayed version of the v that was used for HASHSLOT.
+// The table search goes in descending order, and wraps around to p-1 (the last entry in the table).
+// What happens after the search depends on the last 3 parameters:
+// If (store) is 1, the value of i (which is the loop index giving the position within a of the item being processed) is stored into the empty hash slot, only if the hash search does not find a match.
+// Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
+#define FINDP(T,TH,name,exp,fstmt,nfstmt,store) do{if(asct==hj){if(store)hv[name]=(TH)i; nfstmt break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp)){fstmt break;} if(--name<0)name+=p; hj=hv[name];}while(1);
+// obsolete #define BUILDPA(T,TH,name,exp) do{if(m==hj){hv[name]=(TH)i; break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
+// obsolete #define BUILDPA(T,TH,name,exp) FINDP(T,TH,name,exp,{},{},1)
 
-#define XDOAP(T,TH,hash,exp,stride) {I j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(m>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
-DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];) \
-BUILDPA(T,TH,j1,exp,m-2); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,m-1); }
+#if 1
+// Traverse the hash table for one argument.  (src) indicates which argument, a or w.  For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track
+// of which input item is being operated on.  This loop is triple-unrolled, so that after we HASHSLOT for entry q, we FINDP for entry q-2.  As soon as we HASHSLOT for entry
+// q, we prefetch it into L1 cache; then as soon as we have finished the last store for entry q-1, we do the fetch for entry q (which will be fetching while the hash for entry
+// q+2 is being calculated).
+// The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
+// (vpofst,loopctl,finali) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
+#define XSEARCH(T,TH,src,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
+ {I i, j, hj; T *v; d=src##d; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+ HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+ for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+ FINDP(T,TH,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,j,exp,fstmt,nfstmt,store); }
 
-#define XDQAP(T,TH,hash,exp,stride) {I j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av+cn*(m-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(m>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
-I i; for(i=m-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
-BUILDPA(T,TH,j1,exp,1); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; BUILDPA(T,TH,j,exp,0); }
-#else  // obsolete 
-#define HASHSLOTP(T,hash) v=v0; j=((hash)*p)>>32;
-#define BUILDPA(T,TH,name,exp,value) do{if(m==hj){hv[name]=(TH)(value); break;} v=v1; if(!(exp))break; if(--name<0)name+=p; hj=hv[name];}while(1);
-#define XDOAP(T,TH,hash,exp,stride) {d=ad; T *v0=(T*)av; T *v1=(T*)av;  \
-HASHSLOTP(T,hash) hj=m; if(m>1){ v0+=stride; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; v0+=stride; \
-DO(m-2,j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp,i); hj=hv[j1]; v0+=stride;v1+=stride;) \
-BUILDPA(T,TH,j1,exp,m-2); hj=hv[j]; v1+=stride;} BUILDPA(T,TH,j,exp,m-1); }
-#endif
+#if 0  // obsolete
+#define XDOSEARCH(T,TH,src,hash,exp,stride,fstmt,nfstmt,reflex) {I i, j, hj; T *v; d=src##d; vp=_mm_insert_epi64(vp,(I)(src##v),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=0;i<src##sct-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=src##sct-1; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
 
+#define XDOAP(T,TH,hash,exp,stride) XDOSEARCH(T,TH,a,hash,exp,stride,{},{},1)
+#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XDOSEARCH(T,TH,w,hash,exp,stride,fstmt,nfstmt,reflex)
 
-
-// Routines to look up an item of w.  hash calculates the hash function, usually referring to v (the input) and possibly other names.  exp is the comparison routine.  stmt is executed after the hash lookup
-// and must check whether *hj (->prev data) matches the new data in *v
-// obsolete #define XDO(hash,exp,stride,stmt)     {d=wd; v=wv;          DO(cm, HASHSLOT(hash) FIND(exp); stmt;             v+=stride;);}
-// obsolete #define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(cm, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
-#define XDO(hash,exp,stride,stmt)     {d=wd; v=wv;          DO(c, HASHSLOT(hash) FIND(exp); stmt;             v+=stride;);}
-#define XDQ(hash,exp,stride,stmt)     {d=wd; v=wv+cn*(c-1); DQ(c, HASHSLOT(hash) FIND(exp); stmt;             v-=stride;);}
-
-#define FINDP(T,TH,name,exp,fstmt,nfstmt,reflex) do{if(m==hj){if(reflex)hv[name]=(TH)i; nfstmt break;} v=(T*)_mm_extract_epi64(vp,1); if(!(exp)){fstmt break;} if(--name<0)name+=p; hj=hv[name];}while(1);
-
-#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i; I j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(c>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
-for(i=0;i<c-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
-FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=c-1; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
-
-#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i; I j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv+cn*(c-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
-HASHSLOTP(T,hash) if(c>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
-for(i=c-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+// Copy of the above, but going backwards through the input values.
+#define XDQSEARCH(T,TH,src,hash,exp,stride,fstmt,nfstmt,reflex) {I i, j, hj; T *v; d=src##d; vp=_mm_insert_epi64(vp,(I)(src##v+cn*(src##sct-1)),0); vpstride = _mm_insert_epi64(vp,(-(stride))*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=src##sct-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
 FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=0; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
 
+#define XDQAP(T,TH,hash,exp,stride) XDQSEARCH(T,TH,a,hash,exp,stride,{},{},1)
+#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XDQSEARCH(T,TH,w,hash,exp,stride,fstmt,nfstmt,reflex)
+#else
+// Traverse a in forward direction, adding values to the hash table
+#define XDOAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
+// Traverse w in forward direction, executing fstmt/nfstmt depending on found/notfound; and adding to the hash if (reflex) is 1, indicating a reflexive operation
+#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,hash,exp,stride,fstmt,nfstmt,reflex,0, (i=0;i<wsct-2;++i) ,wsct-1)
+// same for traversing a/w in reverse
+#define XDQAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,hash,exp,(-(stride)),{},{},1,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
+#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
+#endif
+#else  // obsolete 
+// Build the hash table, all asct entries of it.  For each one we do HASHSLOT folowed by BUILDPA, and adjust the (v) values (both stored in xmm variable vp) to keep track
+// of which input item is being operated on.  This loop is triple-unrolled, so that after we HASHSLOT for entry q, we BUILDPA for entry q-2.  As soon as we HASHSLOT for entry
+// q, we prefetch it into L1 cache; then as soon as we have finished the last store for entry q-1, we do the fetch for entry q (which will be fetching while the hash for entry
+// q+2 is being calculated).
+#define XDOAP(T,TH,hash,exp,stride) {I i, j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(asct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=0;i<asct-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+BUILDPA(T,TH,j1,exp); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=asct-1; BUILDPA(T,TH,j,exp); }
+#define XDOP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i, j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv),0); vpstride = _mm_insert_epi64(vp,stride*sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(wsct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=0;i<wsct-2;++i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=wsct-1; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
+
+// Copy of the above, but going backwards through the input values.
+#define XDQAP(T,TH,hash,exp,stride) {I i, j, hj; T *v; d=ad; vp=_mm_insert_epi64(vp,(I)(av+cn*(asct-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(asct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=asct-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); BUILDPA(T,TH,j2,exp); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+BUILDPA(T,TH,j1,exp); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=0; BUILDPA(T,TH,j,exp); }
+#define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) {I i, j, hj; T *v; d=wd; vp=_mm_insert_epi64(vp,(I)(wv+cn*(wsct-1)),0); vpstride = _mm_insert_epi64(vp,(-stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+HASHSLOTP(T,hash) if(wsct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
+for(i=wsct-1;i>1;--i){j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,j2,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
+FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=0; FINDP(T,TH,j,exp,fstmt,nfstmt,reflex); }
+#endif
+
 // special lookup routines to move the data rather than store its index, used for nub/less
-#define XMV(hash,exp,stride,stmt)      \
- if(k==SZI){XDO(hash,exp,stride,if(m==hj){*(I*)zc=*(I*)v; zc+=SZI;     stmt;}); }  \
- else       XDO(hash,exp,stride,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
+// obsolete #define XMV(hash,exp,stride,stmt)      \
+// obsolete if(k==SZI){XDO(hash,exp,stride,if(m==hj){*(I*)zc=*(I*)v; zc+=SZI;     stmt;}); }  \
+// obsolete else       XDO(hash,exp,stride,if(m==hj){MC(zc,v,k); zc+=k; stmt;});
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
@@ -625,15 +584,15 @@ FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
   if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<4)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
 /* obsolete  zb=(B*)zv; zc=(C*)zv; zi=zv; cm=w==mark?0:c;                     */                  \
-  if(w==mark){c=0;}   /* if prehashing, turn off the second half, turn off hashallo */                          \
+  if(w==mark){wsct=0;}   /* if prehashing, turn off the second half */                          \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                 \
    /* zv progresses through the result - for those versions that support IRS */ \
-   if(!(mode&IPHOFFSET)){hashallo(hh,p,m,mode); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);} if(c==0)break;}  \
+   if(!(mode&IPHOFFSET)){hashallo(hh,p,asct,mode); if(!(md&IIMODREFLEX)){if(md==IICO)XDQAP(T,TH,hash,exp,stride) else XDOAP(T,TH,hash,exp,stride);} if(wsct==0)break;}  \
    switch(md){                                                                       \
     /* i.~ - one-pass operation.  Fill in the table and result as we go */ \
    case IIDOT|IIMODREFLEX: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=i;},1);} break;      \
     /* normal i./i: - use the table */ \
-   case IICO|IIMODREFLEX: {I *zi=zv+=c; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
+   case IICO|IIMODREFLEX: {I *zi=zv+=wsct; XDQP(T,TH,hash,exp,stride,{*--zi=hj;},{*--zi=i;},1) } break;      \
    case IICO: \
    case IIDOT: { XDOP(T,TH,hash,exp,stride,{*zv++=hj;},{*zv++=hj;},0); }                          break;  \
    case INUBSV|IIMODREFLEX: { B *zb=(B*)zv; XDOP(T,TH,hash,exp,stride,{*zb++=0;},{*zb++=1;},1) zv=(I*)zb;} /* IRS - keep zv running */  break;  \
@@ -642,10 +601,10 @@ FINDP(T,TH,j1,exp,fstmt,nfstmt,reflex); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]
    case INUBI|IIMODREFLEX: {I *zi=zv;  XDOP(T,TH,hash,exp,stride,{},{*zi++=i;},1) ZISHAPE; }   break;  \
    case IEPS: { B *zb=(B*)zv;  XDOP(T,TH,hash,exp,stride,{*zb++=1;},{*zb++=0;},0) zv=(I*)zb;} /* this has IRS, so zv must be kept right */                       break;  \
     /* the rest are f@:e., none of which have IRS */ \
-   case II0EPS: { I s; XDOP(T,TH,hash,exp,stride,{},{s=i; goto exit0;},0); s=c; exit0: *zv=s; }   break; /* i.&0@:e. */   \
-   case II1EPS: { I s; XDOP(T,TH,hash,exp,stride,{s=i; goto exit1;},{},0); s=c; exit1: *zv=s; }  break; /* i.&1@:e. */  \
-   case IJ0EPS: { I s; XDQP(T,TH,hash,exp,stride,{},{s=i; goto exit2;},0); s=c; exit2: *zv=s; }   break; /* i:&0@:e. */  \
-   case IJ1EPS: { I s; XDQP(T,TH,hash,exp,stride,{s=i; goto exit3;},{},0); s=c; exit3: *zv=s; }   break; /* i:&1@:e. */  \
+   case II0EPS: { I s; XDOP(T,TH,hash,exp,stride,{},{s=i; goto exit0;},0); s=wsct; exit0: *zv=s; }   break; /* i.&0@:e. */   \
+   case II1EPS: { I s; XDOP(T,TH,hash,exp,stride,{s=i; goto exit1;},{},0); s=wsct; exit1: *zv=s; }  break; /* i.&1@:e. */  \
+   case IJ0EPS: { I s; XDQP(T,TH,hash,exp,stride,{},{s=i; goto exit2;},0); s=wsct; exit2: *zv=s; }   break; /* i:&0@:e. */  \
+   case IJ1EPS: { I s; XDQP(T,TH,hash,exp,stride,{s=i; goto exit3;},{},0); s=wsct; exit3: *zv=s; }   break; /* i:&1@:e. */  \
    case ISUMEPS: { I s=0; XDOP(T,TH,hash,exp,stride,{++s;},{},0); *zv=s; }   break; /* +/@:e. */  \
    case IANYEPS: { B s; XDOP(T,TH,hash,exp,stride,{s=1; goto exit5;},{},0); s=0; exit5: *(B*)zv=s; } break; /* +./@:e. */  \
    case IALLEPS: { B s; XDOP(T,TH,hash,exp,stride,{},{s=0; goto exit6;},0); s=1; exit6: *(B*)zv=s; } break; /* *./@:e. */  \
@@ -726,9 +685,9 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 
 // hash a single D type.  If complex, hash the real part only (hashing both parts would require 4 hashes for tolerance)
 // obsolete #define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
-#define THASHA(expa)        {x=*(D*)v; HASHSLOT(HIDMSK(v)); FIND(expa); if(m==hj)hv[j]=i;}
+#define THASHA(expa)        {x=*(D*)v; HASHSLOT(HIDMSK(v)); FIND(expa); if(asct==hj)hv[j]=i;}
 // boxed type.  "hash" the data, as best we can
-#define THASHBX(expa)       {HASHSLOT(hia(1.0,AADR(d,*v)))            FIND(expa); if(m==hj)hv[j]=i;}
+#define THASHBX(expa)       {HASHSLOT(hia(1.0,AADR(d,*v)))            FIND(expa); if(asct==hj)hv[j]=i;}
 
 // functions for searching the hash table
 
@@ -746,7 +705,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 #define TFINDYY(expa,expw)  \
  {x=*(D*)v;                                                                             \
   /* obsolete MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  */ \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  \
+  HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(asct==hj)hv[j]=i;  \
 /*  MASK(dl,x*tl);                j=dl==dx?jx:HID(dl)%pm; FIND(expw); il=ir=hj; */      \
 /*  MASK(dr,x*tr); if(dr!=dl){j=dr==dx?jx:HID(dr)%pm; FIND(expw);    ir=hj;}    */   \
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
@@ -755,7 +714,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // Here the match on the value itself is not exact.
 #define TFINDY1(expa,expw)  \
  {x=*(D*)v;                                                                             \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; FIND(expa); if(m==hj)hv[j]=i;  \
+  HASHSLOT(HIDMSKSV(dx,v)) jx=j; FIND(expa); if(asct==hj)hv[j]=i;  \
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
  }
@@ -770,27 +729,27 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
  switch(4*bx+2*b+(k==sizeof(D))){                       \
-  default: DO(c, FXY(expa,expw); stmt; v+=cn;); break;  \
-  case 1:  DO(c, FXY(expa,expw); stmt; ++v;  ); break;  \
-  case 2:  DO(c, FYY(expa,expw); stmt; v+=cn;); break;  \
-  case 3:  DO(c, FYY(expa,expw); stmt; ++v;  );         \
+  default: DO(wsct, FXY(expa,expw); stmt; v+=cn;); break;  \
+  case 1:  DO(wsct, FXY(expa,expw); stmt; ++v;  ); break;  \
+  case 2:  DO(wsct, FYY(expa,expw); stmt; v+=cn;); break;  \
+  case 3:  DO(wsct, FYY(expa,expw); stmt; ++v;  );         \
  }
 // Same, but search from the end of y backwards (e. i: 0 etc)
 #define TDQ(FXY,FYY,expa,expw,stmt)  \
- v+=cn*(c-1);                                           \
+ v+=cn*(wsct-1);                                           \
  switch(4*bx+2*b+(k==sizeof(D))){                       \
-  default: DQ(c, FXY(expa,expw); stmt; v-=cn;); break;  \
-  case 1:  DQ(c, FXY(expa,expw); stmt; --v;  ); break;  \
-  case 2:  DQ(c, FYY(expa,expw); stmt; v-=cn;); break;  \
-  case 3:  DQ(c, FYY(expa,expw); stmt; --v;  );         \
+  default: DQ(wsct, FXY(expa,expw); stmt; v-=cn;); break;  \
+  case 1:  DQ(wsct, FXY(expa,expw); stmt; --v;  ); break;  \
+  case 2:  DQ(wsct, FYY(expa,expw); stmt; v-=cn;); break;  \
+  case 3:  DQ(wsct, FYY(expa,expw); stmt; --v;  );         \
  }
 // Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
 #define TMV(FXY,FYY,expa,expw,prop)   \
  switch(4*bx+2*b+(k==sizeof(D))){                                  \
-  default: DO(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 1:  DO(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
-  case 2:  DO(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 3:  DO(c, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
+  default: DO(wsct, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 1:  DO(wsct, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
+  case 2:  DO(wsct, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 3:  DO(wsct, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
  }
 
 // Do the operation.  Build a hash for a except when unboxed self-index
@@ -798,33 +757,33 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
  IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;UI dl,dr,dx;I d,e,il,ir,jx,md,s; B*zb;C*zc;I*zi; \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                                         \
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI);              \
-  zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(m-1); bx=1&&BOX&AT(a);                           \
+  zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(asct-1); bx=1&&BOX&AT(a);                           \
   jx=0;                                                                     \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
    if(mode<IPHOFFSET){                                                                           \
-    DO(p,hv[i]=m;);                                                                              \
+    DO(p,hv[i]=asct;);                                                                              \
     if(bx||!b){                                                                                  \
      d=ad; v=av; jt->ct=0.0;                                                                     \
-     if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DO(m, FA(expa); v+=cn;);                 \
+     if(IICO==mode){v+=e; DQ(asct, FA(expa); v-=cn;);}else DO(asct, FA(expa); v+=cn;);                 \
      jt->ct=ct; if(w==mark)break;                                                                \
    }}                                                                                            \
-   d=wd; v=wv;                                                                                   \
+   d=wd; v=wv; D cct=1.0-jt->ct;                                                                   \
    switch(md){                                                                                   \
     case IIDOT:        TDO(FXY,FYY,expa,expw,*zv++=MIN(il,ir));                          break;  \
-    case IICO:  zv+=c; TDQ(FXY,FYY,expa,expw,*--zv=m==il?ir:m==ir?il:MAX(il,ir)); zv+=c; break;  \
+    case IICO:  zv+=wsct; TDQ(FXY,FYY,expa,expw,*--zv=asct==il?ir:asct==ir?il:MAX(il,ir)); zv+=wsct; break;  \
     case INUBSV:       TDO(FXY,FYY,expa,expw,*zb++=i==MIN(il,ir));                       break;  \
     case INUB:         TMV(FXY,FYY,expa,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
-    case ILESS:        TMV(FXY,FYY,expa,expw,m==il&&m==ir);                  ZCSHAPE;    break;  \
+    case ILESS:        TMV(FXY,FYY,expa,expw,asct==il&&asct==ir);                  ZCSHAPE;    break;  \
     case INUBI:        TDO(FXY,FYY,expa,expw,if(i==MIN(il,ir))*zi++=i;);     ZISHAPE;    break;  \
-    case IEPS:         TDO(FXY,FYY,expa,expw,*zb++=m>il||m>ir             );             break;  \
-    case II0EPS:  s=c; TDO(FXY,FYY,expa,expw,if(m==il&&m==ir){s=i; break;}); *zi++=s;    break;  \
-    case II1EPS:  s=c; TDO(FXY,FYY,expa,expw,if(m> il||m> ir){s=i; break;}); *zi++=s;    break;  \
-    case IJ0EPS:  s=c; TDQ(FXY,FYY,expa,expw,if(m==il&&m==ir){s=i; break;}); *zi++=s;    break;  \
-    case IJ1EPS:  s=c; TDQ(FXY,FYY,expa,expw,if(m> il||m> ir){s=i; break;}); *zi++=s;    break;  \
-    case ISUMEPS: s=0; TDO(FXY,FYY,expa,expw,if(m> il||m> ir)++s          ); *zi++=s;    break;  \
-    case IANYEPS: s=0; TDO(FXY,FYY,expa,expw,if(m> il||m> ir){s=1; break;}); *zb++=1&&s; break;  \
-    case IALLEPS: s=1; TDO(FXY,FYY,expa,expw,if(m==il&&m==ir){s=0; break;}); *zb++=1&&s; break;  \
-    case IIFBEPS:      TDO(FXY,FYY,expa,expw,if(m> il||m> ir)*zi++=i      ); ZISHAPE;    break;  \
+    case IEPS:         TDO(FXY,FYY,expa,expw,*zb++=asct>il||asct>ir             );             break;  \
+    case II0EPS:  s=wsct; TDO(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;    break;  \
+    case II1EPS:  s=wsct; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;    break;  \
+    case IJ0EPS:  s=wsct; TDQ(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;    break;  \
+    case IJ1EPS:  s=wsct; TDQ(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;    break;  \
+    case ISUMEPS: s=0; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir)++s          ); *zi++=s;    break;  \
+    case IANYEPS: s=0; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=1; break;}); *zb++=1&&s; break;  \
+    case IALLEPS: s=1; TDO(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=0; break;}); *zb++=1&&s; break;  \
+    case IIFBEPS:      TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir)*zi++=i      ); ZISHAPE;    break;  \
   }}                                                                                             \
   R z;                                                                                           \
  }
@@ -840,10 +799,10 @@ static IOFT(Z,jtioz, THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eq
 // CMPLX atom
 static IOFT(Z,jtioz1,THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
 // FL array
-static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !eqd(n,v,av+n*hj)               )
+static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,cct)               )
 // FL list
 // should use macro for teq
-static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !teq(x,av[hj] )                 )
+static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !TCMPEQ(cct,x,av[hj] )                 )
 // boxed array with more than 1 box
 static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
 // singleton box
@@ -851,7 +810,7 @@ static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!e
 
 // ********************* third class: small-range arguments ****************************
 
-#if 0
+#if 0  // obsolete
 // create the value vector
 
 // v0 is the EMPTY value.  Clear to empty, then go through and set TRUE for each value found.  Used for [: u e.  where the position doesn't matter
@@ -938,9 +897,9 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
 // nub support, which creates & processes the bit-vector in one pass.  FULL is immaterial.
 // T is the type for the result vector, stmt creates the result
 // unpacked version expects default of 1
-#define SNUB(decl, stmt) I zi=0, zie=m;  decl  UC* RESTRICT hu=hh->data.UC-min; while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=0;  stmt  ++zi;}
+#define SNUB(decl, stmt) I zi=0, zie=asct;  decl  UC* RESTRICT hu=hh->data.UC-min; while(zi!=zie){UC v=hu[wv[zi]]; hu[wv[zi]]=0;  stmt  ++zi;}
 // packed version.  Default of 0
-#define SNUBP(decl, stmt) I zi=0, zie=m;  decl  UC* RESTRICT hu=hh->data.UC-BYTENO(min); while(zi!=zie){UC v=hu[BYTENO(wv[zi])]; hu[BYTENO(wv[zi])]|=1<<BITNO(wv[zi]); v >>=BITNO(wv[zi]); v&=1; v^=1; stmt  ++zi;}
+#define SNUBP(decl, stmt) I zi=0, zie=asct;  decl  UC* RESTRICT hu=hh->data.UC-BYTENO(min); while(zi!=zie){UC v=hu[BYTENO(wv[zi])]; hu[BYTENO(wv[zi])]|=1<<BITNO(wv[zi]); v >>=BITNO(wv[zi]); v&=1; v^=1; stmt  ++zi;}
 
 // creation of the value vector
 
@@ -952,58 +911,58 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
 // an instruction to building the table
 // obsolete #define SDO(T)  I zi=0, zi0=zi, zie=m; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ \
 // obsolete      if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; while(zi!=zie){hu[mav[zi]]=1; ++zi;} zi=0;}
-#define SDO(T,bitdef)  UC* RESTRICT hu=hh->data.UC-min; if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[mav[i]]=1-bitdef;)}
-#define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}
+#define SDO(T,bitdef)  UC* RESTRICT hu=hh->data.UC-min; if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(asct, hu[mav[i]]=1-bitdef;)}
+#define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(asct, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}
 
 // US/UI4 hashtables
 // the value in the cell indicates the original input position; the index of the cell indicates the input value
 // Go through and remember the index for each value.  Leaves last index, so used for i:.  Leave zi correct at end
-#define SDOA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+#define SDOA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
                            if(!(mode&IPHOFFSET)){T* RESTRICT mav=av-zi; while(zi!=zie){hu[mav[zi]]=(Ttype)zi; ++zi;} zi=zi0;}
 // No faster version for BASE0
 // Go through and remember the index for each value.  Reverse order, so leaves first index, so used for i.
-#define SDQA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
+#define SDQA(T,Ttype) I zi=hh->currentindexofst, zi0=zi, zie=zi+asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
                            if(!(mode&IPHOFFSET)){T* RESTRICT mav=av-zi; do{--zie; hu[mav[zie]]=(Ttype)zie;}while(zie!=zi);}
 // This version if we know the area starts at 0
-#define SDQA0(T,Ttype) I zie=m-1; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
+#define SDQA0(T,Ttype) I zie=asct-1; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo;  \
                            if(!(mode&IPHOFFSET)){do{hu[av[zie]]=(Ttype)zie;}while(--zie>=0);}
 
 // using the value vector: loop through the items of w, creating the output.
 // if FULL is set, there is no need for range-checking the input
 
-// first, versions for i. i:     vv is the value to use for not-found (always m)
+// first, versions for i. i:     vv is the value to use for not-found (always asct)
 // This version for I values (which have a partial table); use the table only if the value is represented there.  vv is the not-found value.  Install it in default position
 // Since the table is not FULL, the range scan of must have aborted; we scan forward from the beginning of w
-#define SCOZ(T,Ttype,vv) {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+c; def[0]=(Ttype)(vv+zi0); \
+#define SCOZ(T,Ttype,vv) {I * RESTRICT zv=AV(z)+l*wsct-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+wsct; def[0]=(Ttype)(vv+zi0); \
                           while(zi!=zie){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; I hvv; if((hvv=(I)*hv-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}
 // this version is used when the result vector is known to be full (out-of-range not possible).  Omit the out-of-bounds check.  Since the range-scan of w ran to completion,
 // the end of w is most likely to be in-cache; so scan backwards
-#define SCOZF(T,Ttype,vv)  {I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; zie=zi+c; while(zi!=zie){--zie; I hvv; if((hvv=(I)hu[mwv[zie]]-zi0)<0)hvv=vv; zv[zie]=(Ttype)hvv;}}
-// these versions are used if the table is known to start at offset 0.  Omit the not-found check, since m was already loaded; and zi is 0
-#define SCOZ0(T,Ttype,vv) {I zi = -c; I * RESTRICT zv=AV(z)+l*c-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; def[0]=(Ttype)vv; \
+#define SCOZF(T,Ttype,vv)  {I * RESTRICT zv=AV(z)+l*wsct-zi; T* RESTRICT mwv=wv-zi; zie=zi+wsct; while(zi!=zie){--zie; I hvv; if((hvv=(I)hu[mwv[zie]]-zi0)<0)hvv=vv; zv[zie]=(Ttype)hvv;}}
+// these versions are used if the table is known to start at offset 0.  Omit the not-found check, since asct was already loaded; and zi is 0
+#define SCOZ0(T,Ttype,vv) {I zi = -wsct; I * RESTRICT zv=AV(z)+l*wsct-zi; T* RESTRICT mwv=wv-zi; Ttype def[1]; def[0]=(Ttype)vv; \
                           while(zi){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; zv[zi]=*hv; ++zi;}}
-#define SCOZF0(T,Ttype,vv) {zie=c-1; I * RESTRICT zv=AV(z)+l*c; while(zie>=0){zv[zie]=hu[wv[zie]]; --zie;}}  // backwards scan
+#define SCOZF0(T,Ttype,vv) {zie=wsct-1; I * RESTRICT zv=AV(z)+l*wsct; while(zie>=0){zv[zie]=hu[wv[zie]]; --zie;}}  // backwards scan
 
 // for e. -. u@e. - for each item of w, see if it is in the value table.  Set v to the value read from the table (1 if in table).
 // The table is always allocated as a bit vector and therefore is at offset 0 in the table
 // wv[i] is the data value read, if that's needed
 // should revise loops to count up from -n to 0, saving 1 inst
 // Declare the result vector, and prebias it for our loop if needed.  indexed is 1 if zv will be referred to as zv[i], 0 if by *zv
-#define DCLZVO(T,indexed) T * RESTRICT zv=T##AV(z)+(l+indexed)*c;
-#define SCOW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
+#define DCLZVO(T,indexed) T * RESTRICT zv=T##AV(z)+(l+indexed)*wsct;
+#define SCOW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
 // faster version of SCOW for use when the table contains all possible values
-#define SCOWF(T,bitdef,stmt)  {I i; T *mwv=wv+c; for(i=-c;i<0;++i){UC v=hu[mwv[i]]; stmt}}
+#define SCOWF(T,bitdef,stmt)  {I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){UC v=hu[mwv[i]]; stmt}}
 // packed version
-#define SCOWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define SCOWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
 // packed full version
-#define SCOWPF(T,bitdef,stmt)  {I i; T *mwv=wv+c; for(i=-c;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define SCOWPF(T,bitdef,stmt)  {I i; T *mwv=wv+wsct; for(i=-wsct;i<0;++i){T x=mwv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
 
 // just like SCOW/SCOWF but scanning from the end of w
-#define DCLZVQ(T,unused) T * RESTRICT zv=T##AV(z)+l*c;
-#define SCQW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
-#define SCQWF(T,bitdef,stmt)  {I i; for(i=c-1;i>=0;--i){UC v=hu[wv[i]]; stmt}}
-#define SCQWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=(*hv>>BITNO(x))&1; stmt}}
-#define SCQWPF(T,bitdef,stmt)  {I i; for(i=c-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
+#define DCLZVQ(T,unused) T * RESTRICT zv=T##AV(z)+l*wsct;
+#define SCQW(T,bitdef,stmt)  {UC def[1]; def[0]=bitdef; I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+x; if(x<min)hv=def; if(x>max)hv=def; UC v=*hv; stmt}}
+#define SCQWF(T,bitdef,stmt)  {I i; for(i=wsct-1;i>=0;--i){UC v=hu[wv[i]]; stmt}}
+#define SCQWP(T,bitdef,stmt)  {UC def[1]; def[0]=0; I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); if(x<min)hv=def; if(x>max)hv=def; UC v=(*hv>>BITNO(x))&1; stmt}}
+#define SCQWPF(T,bitdef,stmt)  {I i; for(i=wsct-1;i>=0;--i){T x=wv[i]; UC *hv=hu+BYTENO(x); UC v=((*hv>>BITNO(x))&1)^bitdef; stmt}}
 
 // Create basic/FULL/PACK/FULL+PACK versions (used for all boolean maps)
 #define SMCASE0(casename, text) case casename: text break;
@@ -1025,35 +984,35 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
-  e=1==wc?0:c; if(w==mark){c=0;} \
-  for(l=0;l<ac;++l,av+=m,wv+=e){ \
-   if(!(mode&(IPHOFFSET))){mode = hashallo(hh,p,m,mode);}  /* clear table & set parms for this loop - only if not using prehashed table, which always start at offset 0 */ \
+  e=1==wc?0:wsct; if(w==mark){wsct=0;} \
+  for(l=0;l<ac;++l,av+=asct,wv+=e){ \
+   if(!(mode&(IPHOFFSET))){mode = hashallo(hh,p,asct,mode);}  /* clear table & set parms for this loop - only if not using prehashed table, which always start at offset 0 */ \
    switch(mode&(IIOPMSK|IIMODFULL|IIMODPACK|IIMODBASE0)){ /* We know the setting of IIMODBITS without looking */ \
    default: ASSERTSYS(0,"switch failure in i."); \
-     /* a lot of the l*c in the cases below could be removed because the verbs lack IRS, but we're leaving them in for now */ \
-     /* reflexives, which include nubs, do not require a FULL version.  i.~ and i:~ don't need PACK versions either, since they deal in full indexes only */ \
+     /* a lot of the l*wsct in the cases below could be removed because the verbs lack IRS, but we're leaving them in for now */ \
+     /* reflexives, whih include nubs, do not require a FULL version.  i.~ and i:~ don't need PACK versions either, since they deal in full indexes only */ \
    case IIMODREFLEX+IIMODFULL+IIDOT: \
    case IIMODREFLEX+IIDOT: \
-     {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+     {I zi=hh->currentindexofst, zi0=zi, zie=zi+asct;  I * RESTRICT zv=AV(z)+l*asct-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
       while(zi!=zie){I vv = hu[mwv[zi]]; if(vv<zi0)vv=zi; hu[mwv[zi]]=(Ttype)vv; zv[zi]=vv-zi0;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
    case IIMODBASE0+IIMODREFLEX+IIMODFULL+IIDOT: \
    case IIMODBASE0+IIMODREFLEX+IIDOT: \
-     {I zi=0;  I * RESTRICT zv=AV(z)+l*m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
-      while(zi!=m){I vv = hu[wv[zi]]; if(vv==m)vv=zi; hu[wv[zi]]=(Ttype)vv; zv[zi]=vv;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
+     {I zi=0;  I * RESTRICT zv=AV(z)+l*asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; /* biased start,end+1 index, and data pointers */ \
+      while(zi!=asct){I vv = hu[wv[zi]]; if(vv==asct)vv=zi; hu[wv[zi]]=(Ttype)vv; zv[zi]=vv;  ++zi;} } break; /* scan sequentially; if prev value present, rewrite it, otherwise write index */ \
    case IIMODREFLEX+IIMODFULL+IICO: \
    case IIMODREFLEX+IICO: \
-     {I zi=hh->currentindexofst, zi0=zi, zie=zi+m;  I * RESTRICT zv=AV(z)+l*m-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
+     {I zi=hh->currentindexofst, zi0=zi, zie=zi+asct;  I * RESTRICT zv=AV(z)+l*asct-zi; T* RESTRICT mwv=wv-zi; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
       do{--zie; I vv = hu[mwv[zie]]; if(vv<zi0)vv=zie; hu[mwv[zie]]=(Ttype)vv; zv[zie]=vv-zi0;}while(zie!=zi); } break; /* same in reverse */ \
    case IIMODBASE0+IIMODREFLEX+IIMODFULL+IICO: \
    case IIMODBASE0+IIMODREFLEX+IICO: \
-     {I zie=m-1;  I * RESTRICT zv=AV(z)+l*m; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
-      do{I vv = hu[wv[zie]]; if(vv==m)vv=zie; hu[wv[zie]]=(Ttype)vv; zv[zie]=vv; --zie; }while(zie>=0); } break; /* same in reverse */ \
+     {I zie=asct-1;  I * RESTRICT zv=AV(z)+l*asct; Ttype* RESTRICT hu=hh->data.Ttype-min+hh->currentlo; \
+      do{I vv = hu[wv[zie]]; if(vv==asct)vv=zie; hu[wv[zie]]=(Ttype)vv; zv[zie]=vv; --zie; }while(zie>=0); } break; /* same in reverse */ \
  \
     /* NUB types use Boolean masks but do not depend on FULL, since they cannot miss.  But they must support PACK. */ \
    case IIMODFULL+INUBSV: \
-   case INUBSV:            {SNUB (B * RESTRICT zv=BAV(z)+l*m;  ,  zv[zi]=v;) } break; \
+   case INUBSV:            {SNUB (B * RESTRICT zv=BAV(z)+l*asct;  ,  zv[zi]=v;) } break; \
    case IIMODPACK+IIMODFULL+INUBSV: \
-   case IIMODPACK+INUBSV:  {SNUBP(B * RESTRICT zv=BAV(z)+l*m;  ,  zv[zi]=v;) } break; \
+   case IIMODPACK+INUBSV:  {SNUBP(B * RESTRICT zv=BAV(z)+l*asct;  ,  zv[zi]=v;) } break; \
    case IIMODFULL+INUB: \
    case INUB:              {SNUB (T * RESTRICT zv=(T*)AV(z); T *zv0=zv;   ,  *zv=wv[zi]; zv+=v;) *AS(z)=zv-zv0; AN(z)=n*(zv-zv0); } break;  \
    case IIMODPACK+IIMODFULL+INUB: \
@@ -1063,31 +1022,31 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
    case IIMODPACK+IIMODFULL+INUBI: \
    case IIMODPACK+INUBI:   {SNUBP(I * RESTRICT zv=AV(z); I *zv0=zv;   ,   *zv=zi; zv+=v;) *AS(z)=AN(z)=zv-zv0; } break;  \
      /* non-reflexives can benefit from FULL checking.  IIDOT and IICO need full indexes (and thus use BASE0, but no PACK); everything else is Boolean */\
-   case IIDOT:             {SDQA(T,Ttype);  SCOZ(T,Ttype,m);} break;  \
-   case IIMODFULL+IIDOT:   {SDQA(T,Ttype);  SCOZF(T,Ttype,m);} break;  \
-   case IIMODBASE0+IIDOT:  {SDQA0(T,Ttype);  SCOZ0(T,Ttype,m);} break;  \
-   case IIMODBASE0+IIMODFULL+IIDOT: {SDQA0(T,Ttype);  SCOZF0(T,Ttype,m);} break;  \
-   case IICO:              {SDOA(T,Ttype);  SCOZ(T,Ttype,m);} break;  \
-   case IIMODFULL+IICO:    {SDOA(T,Ttype); SCOZF(T,Ttype,m);} break;  \
-   case IIMODBASE0+IICO:   {SDOA(T,Ttype);  SCOZ0(T,Ttype,m);} break;  \
-   case IIMODBASE0+IIMODFULL+IICO: {SDOA(T,Ttype); SCOZF0(T,Ttype,m);} break;  \
+   case IIDOT:             {SDQA(T,Ttype);  SCOZ(T,Ttype,asct);} break;  \
+   case IIMODFULL+IIDOT:   {SDQA(T,Ttype);  SCOZF(T,Ttype,asct);} break;  \
+   case IIMODBASE0+IIDOT:  {SDQA0(T,Ttype);  SCOZ0(T,Ttype,asct);} break;  \
+   case IIMODBASE0+IIMODFULL+IIDOT: {SDQA0(T,Ttype);  SCOZF0(T,Ttype,asct);} break;  \
+   case IICO:              {SDOA(T,Ttype);  SCOZ(T,Ttype,asct);} break;  \
+   case IIMODFULL+IICO:    {SDOA(T,Ttype); SCOZF(T,Ttype,asct);} break;  \
+   case IIMODBASE0+IICO:   {SDOA(T,Ttype);  SCOZ0(T,Ttype,asct);} break;  \
+   case IIMODBASE0+IIMODFULL+IICO: {SDOA(T,Ttype); SCOZF0(T,Ttype,asct);} break;  \
     /* Boolean indexes from here on.  These must support FULL and PACK */ \
    SMFULLPACKEPS(T,0,IEPS,  (T,0,zv[i]=v;)) /* EPS scans FULL args backwards for cache coherence */ \
    SMFULLPACK(T,1,ILESS,  DCLZVO(T,0) T *zv0=zv; , (T,1,*zv=mwv[i]; zv+=v;); *AS(z)= zv-zv0; AN(z)=n*(zv-zv0);)  \
-   SMFULLPACK(T,0,II0EPS, DCLZVO(I,0) I s=c; , (T,0,if(!v){s+=i; break;});*zv++=s;)  \
-   SMFULLPACK(T,0,II1EPS, DCLZVO(I,0) I s=c; , (T,0,if(v){s+=i; break;});*zv++=s; )  \
-   SMFULLPACQ(T,0,IJ0EPS, DCLZVQ(I,0) I s=c; , (T,0,if(!v){s=i; break;});*zv++=s;)  \
-   SMFULLPACQ(T,0,IJ1EPS, DCLZVQ(I,0) I s=c; , (T,0,if(v){s=i; break;}); *zv++=s;)  \
+   SMFULLPACK(T,0,II0EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(!v){s+=i; break;});*zv++=s;)  \
+   SMFULLPACK(T,0,II1EPS, DCLZVO(I,0) I s=wsct; , (T,0,if(v){s+=i; break;});*zv++=s; )  \
+   SMFULLPACQ(T,0,IJ0EPS, DCLZVQ(I,0) I s=wsct; , (T,0,if(!v){s=i; break;});*zv++=s;)  \
+   SMFULLPACQ(T,0,IJ1EPS, DCLZVQ(I,0) I s=wsct; , (T,0,if(v){s=i; break;}); *zv++=s;)  \
    SMFULLPACK(T,0,IANYEPS,DCLZVO(B,0) B s=0; , (T,0,if(v){s=1; break;}); *zv++=s;)  \
    SMFULLPACK(T,0,IALLEPS,DCLZVO(B,0) B s=1; , (T,0,if(!v){s=0; break;}); *zv++=s;)  \
    SMFULLPACK(T,0,ISUMEPS,DCLZVO(I,0) I s=0; , (T,0,s+=v;); *zv++=s;)  \
-   SMFULLPACK(T,0,IIFBEPS,DCLZVO(I,0) I *zv0=zv; , (T,0,*zv=i+c; zv+=v;); *AS(z)=AN(z)=zv-zv0;)  \
+   SMFULLPACK(T,0,IIFBEPS,DCLZVO(I,0) I *zv0=zv; , (T,0,*zv=i+wsct; zv+=v;); *AS(z)=AN(z)=zv-zv0;)  \
    }  \
   }  \
   R z; \
  }
 // init to 1 for ~. ~: NUBI LESS   others to 0
-#if 0
+#if 0  // scaf
 /* scaf printf("hu[mwv[zi]]=%d ",hu[mwv[zi]]); *//* scaf printf("mwv[zi]=%d, vv=%d\n",mwv[zi],vv); */
 /* scaf printf("zi=%d, zie=%d\n",zi,zie); */\
 /* scaf   ASSERTSYS(zi0==hh->currentindexofst,"zi0 error"); ASSERTSYS(mwv[zi]>=min,"value too low"); ASSERTSYS(mwv[zi]<=max,"value too high"); ASSERTSYS(vv<(I)hh->currentindexend,"vv too high"); */ \
@@ -1220,13 +1179,13 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
 #define SCDO(T,xe,exp)  \
  {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
-   case IIDOT: {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zv++=j+m;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IICO:  {T*av=(T*)u; DQ(ac, DQ(c, x=(xe); j=m-1; while(0<=j&&(exp))--j; *zv++=0>j?m:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IEPS:  {T*av=(T*)u+m; DQ(ac, DQ(c, x=(xe); j=-m;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IIDOT: {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zv++=j+asct;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IICO:  {T*av=(T*)u; DQ(ac, DQ(wsct, x=(xe); j=asct-1; while(0<=j&&(exp))--j; *zv++=0>j?asct:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IEPS:  {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
-static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
- p=1<ac?m:0; q=1<wc||1<c;
+static void jtiosc(J jt,I mode,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
+ p=1<ac?asct:0; q=1<wc||1<wsct;
  zn=AN(z); 
  zv=AV(z); zb=(B*)zv; u=AV(a); v=AV(w); 
  switch(CTTZ(AT(a))){
@@ -1246,13 +1205,12 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
 
 
 // ***************** fifth class: boxed arguments ************************
-// should scrap this and do a recursive hash on the entire box, and use the normal hash code.  would require managing -0 in the hash for float/complex
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
-static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
+static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I ad,t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
  av=AAV(a); ad=(I)a*ARELATIVE(a);
- DO(ac*m, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
+ DO(ac*asct, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
 
@@ -1262,10 +1220,10 @@ static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
 // We grade a, producing the ordering permutation.  Then we go through it to discard duplicates
 // should not do the duplicate-removal pass, since it requires an entire pass over the a argument; instead, check
 //  for duplicates as matches are found, and mark when a check has been made.  Duplicate removal might be reasonable for prehashing
-static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u,*v;I*hi,*hu,*hv,l,m1,q;
- RZ(h=irs1(a,0L,acr,jtgrade1)); hv=AV(h)+bk*(m-1); av=AAV(a);
+static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,B b,B bk){A*av,h,*u,*v;I*hi,*hu,*hv,l,m1,q;
+ RZ(h=irs1(a,0L,acr,jtgrade1)); hv=AV(h)+bk*(asct-1); av=AAV(a);
  // if not self-index, close up the duplicates
- if(!b)for(l=0;l<ac;++l,av+=acn,hv+=m){  // for each item of the overall result
+ if(!b)for(l=0;l<ac;++l,av+=acn,hv+=asct){  // for each item of the overall result
   // hi->next index in the grade result, q is its value, u->A block for that index
   // hu->next output position.  The first result always stays in place
   hi=hv; q=*hi; u=av+n*q;
@@ -1273,8 +1231,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
   // should not bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with 1-(length of shortened list).  This will be detected
   // and the sign changed to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DO(m-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu--=q;}); m1=hv-hu; if(m>m1)hv[1-m]=1-m1;}
-  else  {hu=++hi; DO(m-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu++=q;}); m1=hu-hv; if(m>m1)hv[m-1]=1-m1;}
+  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=1-m1;}
+  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if(!eqa(n,u,v,ad,ad)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=1-m1;}
  }
  R h;
 } 
@@ -1288,7 +1246,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hiinc; u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DO(m-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;}); /* 
+  DO(asct-1, q=*hiinc; v=av+n*q; if(eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1316,8 +1274,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
  }}
 
 // macros to create ascending or descending binary search, executing zstmt afterwards
-#define BSLOOPAW(zstmt)     BSLOOPAWX(0  ,i< c,++i,u+=n,zstmt)
-#define BSLOOQAW(zstmt)     BSLOOPAWX(c-1,i>=0,--i,u-=n,zstmt)
+#define BSLOOPAW(zstmt)     BSLOOPAWX(0  ,i< wsct,++i,u+=n,zstmt)
+#define BSLOOQAW(zstmt)     BSLOOPAWX(wsct-1,i>=0,--i,u-=n,zstmt)
 
 // index by sorting a into order, then doing binary search on each item of w.
 // Used only when ct=0 and (boxed rank>1 or boxes contain numeric arrays)
@@ -1325,33 +1283,33 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI); 
- if(mode==INUB||mode==INUBI){GATV(y,B01,m,1,0); yb=BAV(y);}
+ if(mode==INUB||mode==INUBI){GATV(y,B01,asct,1,0); yb=BAV(y);}
  md=w==mark?-1:mode<IPHOFFSET?mode:mode-IPHOFFSET;
  av=AAV(a); ad=(I)a*ARELATIVE(a); acn=ak/sizeof(A);
  wv=AAV(w); wd=(I)w*ARELATIVE(w); wcn=wk/sizeof(A);
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
- if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,ad,n,m,b,bk));
+ if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,ad,n,asct,b,bk));
  if(w==mark)R mark;
- hv=AV(h)+bk*(m-1); jt->complt=-1; jt->compgt=1;
- for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=m){  // loop for each result in a
+ hv=AV(h)+bk*(asct-1); jt->complt=-1; jt->compgt=1;
+ for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=asct){  // loop for each result in a
   // m1=index of last item, which may be less than m if there were discarded duplicates (signaled by last index <0)
-  s=hv[bk?1-m:m-1]; m1=0>s?-s:m-1; hu=hv-m1*bk;
+  s=hv[bk?1-asct:asct-1]; m1=0>s?-s:asct-1; hu=hv-m1*bk;
   if(b)switch(md){  // self-indexes
-   case IIDOT:        BSLOOPAA(hi++,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
-   case IICO:         BSLOOPAA(hi--,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=m;     break;
-   case INUBSV:       BSLOOPAA(hi++,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=m;     break;
-   case INUB:         BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
-   case INUBI:        BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(m, if(yb[i])*zi++=i;);                  ZISHAPE; break;
+   case IIDOT:        BSLOOPAA(hi++,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
+   case IICO:         BSLOOPAA(hi--,zv[p]=p,zv[q]=p,zv[q]=p=q); zv+=asct;     break;
+   case INUBSV:       BSLOOPAA(hi++,zb[p]=1,zb[q]=0,zb[q]=1  ); zb+=asct;     break;
+   case INUB:         BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i]){MC(zc,av+i*n,k); zc+=k;}); ZCSHAPE; break;
+   case INUBI:        BSLOOPAA(hi++,yb[p]=1,yb[q]=0,yb[q]=1  ); DO(asct, if(yb[i])*zi++=i;);                  ZISHAPE; break;
   }else switch(md){  // searches, by binary search
-   case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
-   case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:m);                       break;
+   case IIDOT:        BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
+   case IICO:         BSLOOPAW(*zv++=-2==q?hu[j]:asct);                       break;
    case IEPS:         BSLOOPAW(*zb++=-2==q);                               break;
    case ILESS:        BSLOOPAW(if(-2< q){MC(zc,u,k); zc+=k;}); ZCSHAPE;    break;
-   case II0EPS:  s=m; BSLOOPAW(if(-2< q){s=i; break;});        *zi++=s;    break;
-   case IJ0EPS:  s=m; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
-   case II1EPS:  s=m; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
-   case IJ1EPS:  s=m; BSLOOQAW(if(-2==q){s=i; break;});        *zi++=s;    break;
+   case II0EPS:  s=asct; BSLOOPAW(if(-2< q){s=i; break;});        *zi++=s;    break;
+   case IJ0EPS:  s=asct; BSLOOQAW(if(-2< q){s=i; break;});        *zi++=s;    break;
+   case II1EPS:  s=asct; BSLOOPAW(if(-2==q){s=i; break;});        *zi++=s;    break;
+   case IJ1EPS:  s=asct; BSLOOQAW(if(-2==q){s=i; break;});        *zi++=s;    break;
    case IANYEPS: s=0; BSLOOPAW(if(-2==q){s=1; break;});        *zb++=1&&s; break;
    case IALLEPS: s=1; BSLOOPAW(if(-2< q){s=0; break;});        *zb++=1&&s; break;
    case ISUMEPS: s=0; BSLOOPAW(if(-2==q)++s);                  *zi++=s;    break;
@@ -1763,7 +1721,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      if(!mk){jt->idothash0=h; ra(h);}  // If not prehashing a table, save this and protect against removal
-#if 0
+#if 0 // obsolete
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
       // the allocated position and index
@@ -1811,7 +1769,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,
      // it would be a shame to tie up vast amounts of memory waiting for a large search.  To compromise, we keep the buffer unless it is much bigger than the L3 cache
      if(!mk&&hh->datasize<5*L3CACHESIZE){jt->idothash1=h; ra(h);}  // If not prehashing a table, save this and protect against removal
-#if 0
+#if 0  // obsolete
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
       // the allocated position and index
@@ -2016,7 +1974,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // support for a i."1 &.|:w or a i:"1 &.|:w
 
 // function definition
-#define IOCOLF(f)     void f(J jt,I m,I c,I d,A a,A w,A z,A h)
+#define IOCOLF(f)     void f(J jt,I asct,I wsct,I d,A a,A w,A z,A h)
 #define IOCOLDECL(T)  D tl=1-jt->ct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
@@ -2030,15 +1988,15 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // For each column, clear the hash table, then hash the items of a, then look up the items of w 
 #define IOCOLFT(T,f,hasha,hashl,hashr,exp)  \
  IOCOLF(f){IOCOLDECL(T);                                                   \
-  for(l=0;l<c;++l){                                                        \
-   DO(p, hv[i]=m;);                                                        \
-   v=av;         DO(m, j=(hasha)%pm; FIND(exp); if(m==hj)hv[j]=i; v+=c;);  \
+  for(l=0;l<wsct;++l){                                                        \
+   DO(p, hv[i]=asct;);                                                        \
+   v=av;         DO(asct, j=(hasha)%pm; FIND(exp); if(asct==hj)hv[j]=i; v+=wsct;);  \
    v=wv; u=zv;                                                             \
    for(i=0;i<d;++i){                                                       \
     x=*(D*)v;                                                              \
     j=jr=(hashl)%pm;           FIND(exp); *u=hj;                           \
     j=   (hashr)%pm; if(j!=jr){FIND(exp); *u=MIN(*u,hj);}                  \
-    v+=c; u+=c;                                                            \
+    v+=wsct; u+=wsct;                                                            \
    }                                                                       \
    ++av; ++wv; ++zv;                                                       \
  }}
@@ -2046,25 +2004,25 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 // Similar, but search backward
 #define JOCOLFT(T,f,hasha,hashl,hashr,exp)  \
  IOCOLF(f){IOCOLDECL(T);I q;                                               \
-  for(l=0;l<c;++l){                                                        \
-   DO(p, hv[i]=m;);                                                        \
-   v=av+c*(m-1); DQ(m, j=(hasha)%pm; FIND(exp); if(m==hj)hv[j]=i; v-=c;);  \
+  for(l=0;l<wsct;++l){                                                        \
+   DO(p, hv[i]=asct;);                                                        \
+   v=av+wsct*(asct-1); DQ(asct, j=(hasha)%pm; FIND(exp); if(asct==hj)hv[j]=i; v-=wsct;);  \
    v=wv; u=zv;                                                             \
    for(i=0;i<d;++i){                                                       \
     x=*(D*)v;                                                              \
     j=jr=(hashl)%pm;           FIND(exp); *u=q=hj;                         \
-    j=   (hashr)%pm; if(j!=jr){FIND(exp); if(m>hj&&(hj>q||q==m))*u=hj;}    \
-    v+=c; u+=c;                                                            \
+    j=   (hashr)%pm; if(j!=jr){FIND(exp); if(asct>hj&&(hj>q||q==asct))*u=hj;}    \
+    v+=wsct; u+=wsct;                                                            \
    }                                                                       \
    ++av; ++wv; ++zv;                                                       \
  }}
 
 // create the index-of routines.  These hash just the real part of a complex value
-static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[c*hj]))
-static IOCOLFT(Z,jtiocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
+static IOCOLFT(D,jtiocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[wsct*hj]))
+static IOCOLFT(Z,jtiocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
 
-static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[c*hj]))
-static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
+static JOCOLFT(D,jtjocold,hid(*v),    hid(tl*x),hid(tr*x),!teq(*v,av[wsct*hj]))
+static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
 
 // support for a i."1 &.|:w or a i:"1 &.|:w   used only by some sparse-array stuff
 A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();

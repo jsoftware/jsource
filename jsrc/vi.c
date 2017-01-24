@@ -671,7 +671,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // should have 64-bit versions that use ctmask directly (it should be in machine byte order)
 // create tolerant hash for a single D
 // Note: the masking may cause a nonzero to hash to negative zero.  This is OK, because any nonzero will not be
-// tequal to +0 or -0.  But be must ensure that -0 hashes to the same value as +0, since those two numbers are equal.
+// tequal to +0 or -0.  But we must ensure that -0 hashes to the same value as +0, since those two numbers are equal.
 #define HIDMSK(v) (*(UI*)v!=NEGATIVE0?CRC32L(-1L,*(UI*)v&jt->ctmask):CRC32L(-1L,0))
 // save the mask result in m
 #define HIDMSKSV(m,v) ((m=*(UI*)v&jt->ctmask), (*(UI*)v!=NEGATIVE0?CRC32L(-1L,m):CRC32L(-1L,0)) )
@@ -685,41 +685,38 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 
 // hash a single D type.  If complex, hash the real part only (hashing both parts would require 4 hashes for tolerance)
 // obsolete #define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
-#define THASHA(expa)        {x=*(D*)v; HASHSLOT(HIDMSK(v)); FIND(expa); if(asct==hj)hv[j]=i;}
-// boxed type.  "hash" the data, as best we can
-#define THASHBX(expa)       {HASHSLOT(hia(1.0,AADR(d,*v)))            FIND(expa); if(asct==hj)hv[j]=i;}
+// obsolete #define THASHA(expa)        {x=*(D*)v; HASHSLOT(HIDMSK(v)); FIND(expa); if(asct==hj)hv[j]=i;}
+// obsolete // boxed type.  "hash" the data, as best we can
+// obsolete #define THASHBX(expa)       {HASHSLOT(hia(1.0,AADR(d,*v)))            FIND(expa); if(asct==hj)hv[j]=i;}
 
 // functions for searching the hash table
 
 // find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
-#define TFINDXY(expa,expw)  \
- {x=*(D*)v;                                                                            \
+#define TFINDXY(TH,expa,expw)  \
+ {UI dl, dr; D x=*(D*)v;                                                                            \
   MASK(dl,x*tl);            HASHSLOT(HID(dl)) FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){HASHSLOT(HID(dr)) FIND(expw);    ir=hj;}       \
  }
-// same idea, but also throw in an exact match on the value itself (rounded to a bucket value).  Used for reflexive searches, in which
-// we have not initialized the hash table.  We first add an (exact) entry for the current value, and then search for tolerant matches
-// We have to add an entry for the current value always, because a hashed value may be tolerantly equal to y but not tequal some
-// other value tequal to y.  -0 will always get hashed as +0, and possibly -0 as well
-// I think this is a failing attempt to create equivalence classes
-#define TFINDYY(expa,expw)  \
- {x=*(D*)v;                                                                             \
+// same idea, for reflexives like i.~.  We start by hashing the value itself, so that we can find it
+// if there are no previous matches
+#define TFINDYY(TH,expa,expw)  \
+ {UI dl, dr, dx; D x=*(D*)v;                                                                             \
   /* obsolete MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  */ \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(asct==hj)hv[j]=i;  \
+  HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(asct==hj)hv[j]=(TH)i;  \
 /*  MASK(dl,x*tl);                j=dl==dx?jx:HID(dl)%pm; FIND(expw); il=ir=hj; */      \
 /*  MASK(dr,x*tr); if(dr!=dl){j=dr==dx?jx:HID(dr)%pm; FIND(expw);    ir=hj;}    */   \
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
  }
 // Here the match on the value itself is not exact.
-#define TFINDY1(expa,expw)  \
- {x=*(D*)v;                                                                             \
-  HASHSLOT(HIDMSKSV(dx,v)) jx=j; FIND(expa); if(asct==hj)hv[j]=i;  \
+#define TFINDY1(TH,expa,expw)  \
+ {UI dl, dr, dx; D x=*(D*)v;                                                                             \
+  HASHSLOT(HIDMSKSV(dx,v)) jx=j; FIND(expa); if(asct==hj)hv[j]=(TH)i;  \
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
  }
 // here comparing boxes
-#define TFINDBX(expa,expw)   \
+#define TFINDBX(TH,expa,expw)   \
  {HASHSLOT(hia(tl,AADR(d,*v))) jx=j;           FIND(expw); il=ir=hj;   \
      HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FIND(expw);    ir=hj;}  \
  }
@@ -727,63 +724,71 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // loop to search the hash table.  b means self-index, bx means boxed
 // Fxx is a TFIND macro, charged with setting il and ir; stmt tells what to do with il/ir
 // should combine the cases for all ks to save a test?
-#define TDO(FXY,FYY,expa,expw,stmt)  \
- switch(4*bx+2*b+(k==sizeof(D))){                       \
-  default: DO(wsct, FXY(expa,expw); stmt; v+=cn;); break;  \
-  case 1:  DO(wsct, FXY(expa,expw); stmt; ++v;  ); break;  \
-  case 2:  DO(wsct, FYY(expa,expw); stmt; v+=cn;); break;  \
-  case 3:  DO(wsct, FYY(expa,expw); stmt; ++v;  );         \
+#define TDO(TH,FXY,FYY,expa,expw,stmt)  \
+ switch(rflg){                       \
+  default: DO(wsct, FXY(TH,expa,expw); stmt; v+=cn;); break;  \
+  case 3:  DO(wsct, FXY(TH,expa,expw); stmt; ++v;  ); break; /* NOTreflexive, len=sizeof(D) */ \
+  case 0:  DO(wsct, FYY(TH,expa,expw); stmt; v+=cn;); break; /* reflexive, len!=sizeof(D) */ \
+  case 1:  DO(wsct, FYY(TH,expa,expw); stmt; ++v;  );      /* reflexive, len=sizeof(D) */   \
  }
 // Same, but search from the end of y backwards (e. i: 0 etc)
-#define TDQ(FXY,FYY,expa,expw,stmt)  \
+#define TDQ(TH,FXY,FYY,expa,expw,stmt)  \
  v+=cn*(wsct-1);                                           \
- switch(4*bx+2*b+(k==sizeof(D))){                       \
-  default: DQ(wsct, FXY(expa,expw); stmt; v-=cn;); break;  \
-  case 1:  DQ(wsct, FXY(expa,expw); stmt; --v;  ); break;  \
-  case 2:  DQ(wsct, FYY(expa,expw); stmt; v-=cn;); break;  \
-  case 3:  DQ(wsct, FYY(expa,expw); stmt; --v;  );         \
+ switch(rflg){                       \
+  default: DQ(wsct, FXY(TH,expa,expw); stmt; v-=cn;); break;  \
+  case 3:  DQ(wsct, FXY(TH,expa,expw); stmt; --v;  ); break;  /* NOTreflexive, len=sizeof(D) */ \
+  case 0:  DQ(wsct, FYY(TH,expa,expw); stmt; v-=cn;); break;  /* reflexive, len!=sizeof(D) */ \
+  case 1:  DQ(wsct, FYY(TH,expa,expw); stmt; --v;  );  /* reflexive, len=sizeof(D) */        \
  }
 // Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
-#define TMV(FXY,FYY,expa,expw,prop)   \
- switch(4*bx+2*b+(k==sizeof(D))){                                  \
-  default: DO(wsct, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 1:  DO(wsct, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
-  case 2:  DO(wsct, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
-  case 3:  DO(wsct, FYY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;         \
+#define TMV(TH,FXY,FYY,expa,expw,prop)   \
+ switch(rflg){                                  \
+  default: DO(wsct, FXY(TH,expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
+  case 3:  DO(wsct, FXY(TH,expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  /* NOTreflexive, len=sizeof(D) */ \
+  case 0:  DO(wsct, FYY(TH,expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  /* reflexive, len!=sizeof(D) */ \
+  case 1:  DO(wsct, FYY(TH,expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;    /* reflexive, len=sizeof(D) */      \
  }
 
 // Do the operation.  Build a hash for a except when unboxed self-index
-#define IOFT(T,f,FA,FXY,FYY,expa,expw)   \
- IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;UI dl,dr,dx;I d,e,il,ir,jx,md,s; B*zb;C*zc;I*zi; \
-  md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                                         \
-  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI);              \
-  zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(asct-1); bx=1&&BOX&AT(a);                           \
+#define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
+ IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,  \
+        wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
+        D ct=jt->ct,tl=1-jt->ct,tr=1/tl;I rflg,il,ir,jx;  /* rflg bit 0:length=sizeof(D) 1:NOTreflexive 2:boxed */  \
+        IH *hh=IHAV(*hp); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH;  \
+  __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
+  _mm256_zeroupper();  \
+  vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
+  md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
+  rflg=(k==sizeof(D))+((AT(a)&BOX)>>(BOXX-2))+2;  \
+  if(a==w&&ac==wc)rflg&=~(2&(~(((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<1)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
+  /* obsolete e=cn*(asct-1); bx=1&&BOX&AT(a);  */                          \
   jx=0;                                                                     \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
-   if(mode<IPHOFFSET){                                                                           \
-    DO(p,hv[i]=asct;);                                                                              \
-    if(bx||!b){                                                                                  \
-     d=ad; v=av; jt->ct=0.0;                                                                     \
-     if(IICO==mode){v+=e; DQ(asct, FA(expa); v-=cn;);}else DO(asct, FA(expa); v+=cn;);                 \
+   if(mode<IPHOFFSET){                                                                         \
+    hashallo(hh,p,asct,mode);                                                           \
+    if(6&rflg){   /* boxed, or not reflexive */                                            \
+     /* obsolete d=ad; v=av; */jt->ct=0.0;                                         \
+     /* obsolete if(IICO==mode){v+=e; DQ(asct, FA(expa); v-=cn;);}else DO(asct, FA(expa); v+=cn;); */                \
+     if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn);                 \
      jt->ct=ct; if(w==mark)break;                                                                \
    }}                                                                                            \
-   d=wd; v=wv; D cct=1.0-jt->ct;                                                                   \
+   d=wd;                                                                    \
    switch(md){                                                                                   \
-    case IIDOT:        TDO(FXY,FYY,expa,expw,*zv++=MIN(il,ir));                          break;  \
-    case IICO:  zv+=wsct; TDQ(FXY,FYY,expa,expw,*--zv=asct==il?ir:asct==ir?il:MAX(il,ir)); zv+=wsct; break;  \
-    case INUBSV:       TDO(FXY,FYY,expa,expw,*zb++=i==MIN(il,ir));                       break;  \
-    case INUB:         TMV(FXY,FYY,expa,expw,i==MIN(il,ir));                 ZCSHAPE;    break;  \
-    case ILESS:        TMV(FXY,FYY,expa,expw,asct==il&&asct==ir);                  ZCSHAPE;    break;  \
-    case INUBI:        TDO(FXY,FYY,expa,expw,if(i==MIN(il,ir))*zi++=i;);     ZISHAPE;    break;  \
-    case IEPS:         TDO(FXY,FYY,expa,expw,*zb++=asct>il||asct>ir             );             break;  \
-    case II0EPS:  s=wsct; TDO(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;    break;  \
-    case II1EPS:  s=wsct; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;    break;  \
-    case IJ0EPS:  s=wsct; TDQ(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;    break;  \
-    case IJ1EPS:  s=wsct; TDQ(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;    break;  \
-    case ISUMEPS: s=0; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir)++s          ); *zi++=s;    break;  \
-    case IANYEPS: s=0; TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir){s=1; break;}); *zb++=1&&s; break;  \
-    case IALLEPS: s=1; TDO(FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=0; break;}); *zb++=1&&s; break;  \
-    case IIFBEPS:      TDO(FXY,FYY,expa,expw,if(asct> il||asct> ir)*zi++=i      ); ZISHAPE;    break;  \
+    case IIDOT: {T *v=wv; I j, hj; I * RESTRICT zi=zv; TDO(TH,FXY,FYY,expa,expw,*zi++=MIN(il,ir)); zv=zi; } break;  \
+    case IICO:  {T *v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQ(TH,FXY,FYY,expa,expw,*--zi=asct==il?ir:asct==ir?il:MAX(il,ir));} break;  \
+    case INUBSV:{T *v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDO(TH,FXY,FYY,expa,expw,*zb++=i==MIN(il,ir)); zv=(I*)zb;} break;  /* zv must keep running */  \
+    case INUB:  {T *v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMV(TH,FXY,FYY,expa,expw,i==MIN(il,ir)); ZCSHAPE; }    break;  \
+    case ILESS: {T *v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMV(TH,FXY,FYY,expa,expw,asct==il&&asct==ir); ZCSHAPE; }    break;  \
+    case INUBI: {T *v=wv; I j, hj; I * RESTRICT zi=zv; TDO(TH,FXY,FYY,expa,expw,if(i==MIN(il,ir))*zi++=i;); ZISHAPE;} break;  \
+    case IEPS:  {T *v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDO(TH,FXY,FYY,expa,expw,*zb++=asct>il||asct>ir); zv=(I*)zb;} break;   /* zv must keep running */ \
+    case II0EPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDO(TH,FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;} break;  \
+    case II1EPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDO(TH,FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;} break;  \
+    case IJ0EPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQ(TH,FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=i; break;}); *zi++=s;} break;  \
+    case IJ1EPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQ(TH,FXY,FYY,expa,expw,if(asct> il||asct> ir){s=i; break;}); *zi++=s;} break;  \
+    case ISUMEPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; I s=0; TDO(TH,FXY,FYY,expa,expw,if(asct> il||asct> ir)++s          ); *zi++=s;}  break;  \
+    case IANYEPS: {T *v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=0; TDO(TH,FXY,FYY,expa,expw,if(asct> il||asct> ir){s=1; break;}); *zb++=1&&s;} break;  \
+    case IALLEPS: {T *v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=1; TDO(TH,FXY,FYY,expa,expw,if(asct==il&&asct==ir){s=0; break;}); *zb++=1&&s;} break;  \
+    case IIFBEPS: {T *v=wv; I j, hj; I * RESTRICT zi=zv; TDO(TH,FXY,FYY,expa,expw,if(asct> il||asct> ir)*zi++=i); ZISHAPE;} break;  \
   }}                                                                                             \
   R z;                                                                                           \
  }
@@ -795,18 +800,29 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // jtoiz1 tolerant CMPX atom
 
 // CMPLX array
-static IOFT(Z,jtioz, THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
+static IOFT(Z,US,jtioz, HIDMSK(v), TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
-static IOFT(Z,jtioz1,THASHA, TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
+static IOFT(Z,US,jtioz1,HIDMSK(v), TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
 // FL array
-static IOFT(D,jtiod, THASHA, TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,cct)               )
-// FL list
-// should use macro for teq
-static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !TCMPEQ(cct,x,av[hj] )                 )
+static IOFT(D,US,jtiod, HIDMSK(v), TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl)               )
+// FL atom
+static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXY,TFINDY1,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
 // singleton box
-static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,US,jtioa1,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+
+static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
+// CMPLX atom
+static IOFT(Z,UI4,jtioz12,HIDMSK(v), TFINDXY,TFINDYY,fcmp0((D*)v,(D*)(av+n*hj),  2), !zeq( *v,av[hj] )               )
+// FL array
+static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXY,TFINDYY,fcmp0(v,av+n*hj,n  ), !jeqd(n,v,av+n*hj,tl)               )
+// FL atom
+static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXY,TFINDY1,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
+// boxed array with more than 1 box
+static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+// singleton box
+static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -1441,17 +1457,17 @@ static AF fntbl[]={
  jtiox,jtioq,
  jtiobs,
  jtioc2,jtioc2,jtioc2,jtioc2,jtioi2,jtioi2,jtioi2,jtioi2,  // bool, INT
- jtiod,jtioc02,jtiod1,jtioc012,jtio14,jtio24,jtio44,jtioi12,   // FL (then small-range, then ONEINT)
- jtioz,jtioz02,jtioz1,jtioz012,   // CMPX
- jtioa,jtioax12,jtioau2,jtioa1,  // atomic types
+ jtiod2,jtioc02,jtiod12,jtioc012,jtio14,jtio24,jtio44,jtioi12,   // FL (then small-range, then ONEINT)
+ jtioz2,jtioz02,jtioz12,jtioz012,   // CMPX
+ jtioa2,jtioax12,jtioau2,jtioa12,  // atomic types
  jtiox2,jtioq2,
  jtiobs
 };
 static S fnflags[]={  // 0 values reserved for small-range.  They turn off booladj
  IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // bool, INT
- -1,IIMODFULL,-1,IIMODFULL,0,0,0,IIMODFULL,   // FL (then small-range, then ONEINT)
- -1,IIMODFULL,-1,IIMODFULL,   // CMPX
- -1,IIMODFULL,IIMODFULL,-1,  // atomic types
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,0,0,0,IIMODFULL,   // FL (then small-range, then ONEINT)
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,   // CMPX
+ IIMODFULL,IIMODFULL,IIMODFULL,IIMODFULL,  // atomic types
  IIMODFULL,IIMODFULL,
  -2
 };

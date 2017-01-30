@@ -263,7 +263,10 @@
 #define IIMODFORCE0     (1LL<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
 #define IPHCALC         0x200   // set when we are calculating a prehashed table
 #define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
-#define IPHOFFSET       0x800              /* offset for prehashed versions - set when we are using a prehashed table   */
+#define IIOREPSX        11
+#define IIOREPS         (1LL<<IIOREPSX)  // internal flag, set if mode is i./i:/e., but not if prehashing
+#define IREVERSED       0x1000   // set if we have decided to reverse the hash in a small-range situation
+#define IPHOFFSET       0x2000              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
 #define IPHICO          (IPHOFFSET+IICO)
 // obsolete #define IPHLESS         34

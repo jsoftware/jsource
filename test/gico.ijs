@@ -49,6 +49,10 @@ f 2+10?@$1000
 'domain error' -: i: etx _2.3
 'domain error' -: i: etx <3
 
+mtchontally =: ((<:@(*>:) i:~) -: (# i: ]))
+mtchonreshape =: ((i:~@] + (<:@[ * #@])) -: (,/@($ ,:) i: ]))
+mtchontally0 =: ((<:@(*>:) i:!.0~) -: (# i:!.0 ]))
+mtchonreshape0 =: ((i:!.0~@] + (<:@[ * #@])) -: (,/@($ ,:) i:!.0 ]))
 
 NB. x i:y ---------------------------------------------------------------
 
@@ -63,6 +67,12 @@ a-:(a i:[&.(0j1&*)a){a
 (#a)=a i:4 5 6 7 8
 (#a)=a i:'abcde'
 (b{_1 0+#a) -: (a=:(>:?200)$0) i: b=:?30$2
+20 mtchontally a =: (5 + ? 100) ?@$ 2
+20 mtchonreshape a =: (5 + ? 100) ?@$ 2
+20 mtchontally a =: (5 + ? 20 20) ?@$ 2
+20 mtchonreshape a =: (5 + ? 20 20) ?@$ 2
+20 mtchontally a =: (5 + ? 10 10 10) ?@$ 2
+20 mtchonreshape a =: (5 + ? 10 10 10) ?@$ 2
 
 NB. literal
 a=:a.{~32+?10 5$95
@@ -84,6 +94,12 @@ a-:(i:~a){a
 (1|.a) -: (a i: 1|.a){a=:a.{~?12000 4$#a.
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:a.{~?7 23000 2$#a.
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:a.{~?7 12000 4$#a.
+20 ((<:@(*>:) i:~) -: (# i: ])) a =: a. {~ (5 + ? 100) ?@$ #a.
+20 ((i:~@] + (<:@[ * #@])) -: (,/@($ ,:) i: ])) a =: a. {~ (5 + ? 100) ?@$ #a.
+20 ((<:@(*>:) i:~) -: (# i: ])) a =: a. {~ (5 + ? 20 20) ?@$ #a.
+20 ((i:~@] + (<:@[ * #@])) -: (,/@($ ,:) i: ])) a =: a. {~ (5 + ? 20 20) ?@$ #a.
+20 ((<:@(*>:) i:~) -: (# i: ])) a =: a. {~ (5 + ? 10 10 10) ?@$ #a.
+20 ((i:~@] + (<:@[ * #@])) -: (,/@($ ,:) i: ])) a =: a. {~ (5 + ? 10 10 10) ?@$ #a.
 
 NB. literal2
 a=:adot1{~32+?10 5$95
@@ -105,6 +121,14 @@ a-:(i:~a){a
 (1|.a) -: (a i: 1|.a){a=:adot1{~?12000 4$#adot1
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:adot1{~?7 23000 2$#adot1
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:adot1{~?7 12000 4$#adot1
+(#a)=a i: (}.$a)$'a'  NB. shouldn't match
+(#a)=a i: (}.$a)$'a'  NB. shouldn't match
+20 mtchontally a =: adot1 {~ (5 + ? 100) ?@$ #adot1
+20 mtchonreshape a =: adot1 {~ (5 + ? 100) ?@$ #adot1
+20 mtchontally a =: adot1 {~ (5 + ? 20 20) ?@$ #adot1
+20 mtchonreshape a =: adot1 {~ (5 + ? 20 20) ?@$ #adot1
+20 mtchontally a =: adot1 {~ (5 + ? 10 10 10) ?@$ #adot1
+20 mtchonreshape a =: adot1 {~ (5 + ? 10 10 10) ?@$ #adot1
 
 NB. literal4
 a=:adot2{~32+?10 5$95
@@ -126,6 +150,13 @@ a-:(i:~a){a
 (1|.a) -: (a i: 1|.a){a=:adot2{~?12000 4$#adot2
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:adot2{~?7 23000 2$#adot2
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:adot2{~?7 12000 4$#adot2
+(#a)=a i: (}.$a)$'a'  NB. shouldn't match
+20 mtchontally a =: adot2 {~ (5 + ? 100) ?@$ #adot2
+20 mtchonreshape a =: adot2 {~ (5 + ? 100) ?@$ #adot2
+20 mtchontally a =: adot2 {~ (5 + ? 20 20) ?@$ #adot2
+20 mtchonreshape a =: adot2 {~ (5 + ? 20 20) ?@$ #adot2
+20 mtchontally a =: adot2 {~ (5 + ? 10 10 10) ?@$ #adot2
+20 mtchonreshape a =: adot2 {~ (5 + ? 10 10 10) ?@$ #adot2
 
 NB. symbol
 a=:sdot0{~32+?10 5$95
@@ -147,6 +178,13 @@ a-:(i:~a){a
 (1|.a) -: (a i: 1|.a){a=:sdot0{~?12000 4$#sdot0
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:sdot0{~?7 23000 2$#sdot0
 (1|."2 a) -: (a i:"(2) 1|."2 a){"_1 a=:sdot0{~?7 12000 4$#sdot0
+(#a)=a i: (}.$a)$s: 'dlfdlgjd '  NB. shouldn't match
+20 mtchontally a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
+20 mtchonreshape a =: sdot0 {~ (5 + ? 100) ?@$ #sdot0
+20 mtchontally a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
+20 mtchonreshape a =: sdot0 {~ (5 + ? 20 20) ?@$ #sdot0
+20 mtchontally a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
+20 mtchonreshape a =: sdot0 {~ (5 + ? 10 10 10) ?@$ #sdot0
 
 NB. integer
 a=:?10 5$100
@@ -168,6 +206,20 @@ a -: (i:~a){a=: _5 2147483647               NB. large integers
 a -: (i:~a){a=:  2 2147483647               NB. large integers
 a -: (i:~a){a=: ?4000$123456                NB. large integers
 (1000{.a) -: (a i:1000{.a){a=:?4000$123456  NB. large integers
+(#a)=a i: (}.$a)$_1
+NB. long i. short, small-range then hashed
+20 mtchontally a =: (5 + ? 100) ?@$ 50
+20 mtchonreshape a =: (5 + ? 100) ?@$ 50
+20 mtchontally a =: (5 + ? 20 20) ?@$ 200
+20 mtchonreshape a =: (5 + ? 20 20) ?@$ 200
+20 mtchontally a =: (5 + ? 10 10 10) ?@$ 200
+20 mtchonreshape a =: (5 + ? 10 10 10) ?@$ 200
+20 mtchontally a =: (5 + ? 100) ?@$ 1e6
+20 mtchonreshape a =: (5 + ? 100) ?@$ 1e6
+20 mtchontally a =: (5 + ? 20 20) ?@$ 1e6
+20 mtchonreshape a =: (5 + ? 20 20) ?@$ 1e6
+20 mtchontally a =: (5 + ? 10 10 10) ?@$ 1e6
+20 mtchonreshape a =: (5 + ? 10 10 10) ?@$ 1e6
 
 NB. floating point
 a=:o._40+?10 5$100
@@ -184,7 +236,16 @@ a-:(a i:!.0 [&.(0j1&*)a){a
 (#a)=a i:    'abcde'
 (#a)=a i:!.0 'abcde'
 (b{({:(a=4.95)#i.#a),#a) -: (a=:(>:?40)$4.95 9 _1.62) i:    (b=:?70$2){4.95 1234
+(#a)=a i: (}.$a)$_1
 (b{({:(a=4.95)#i.#a),#a) -: (a=:(>:?40)$4.95 9 _1.62) i:!.0 (b=:?70$2){4.95 1234
+(#a)=a i: (}.$a)$_1
+NB. long i: short intolerant
+20 mtchontally0 a =: (5 + ? 100) ?@$ 0
+20 mtchonreshape0 a =: (5 + ? 100) ?@$ 0
+20 mtchontally0 a =: (5 + ? 20 20) ?@$ 0
+20 mtchonreshape0 a =: (5 + ? 20 20) ?@$ 0
+20 mtchontally0 a =: (5 + ? 10 10 10) ?@$ 0
+20 mtchonreshape0 a =: (5 + ? 10 10 10) ?@$ 0
 
 NB. complex
 a=:r.?10 5$1000
@@ -199,7 +260,15 @@ a-:(i:!.0 ~a){a
 (#a)=a i:    'abcde'
 (#a)=a i:!.0 'abcde'
 (b{({:(a=4j95)#i.#a),#a) -: (a=:(>:?40)$4j95 9 _1.62) i:    (b=:?30$2){4j95 1234
+(#a)=a i: (}.$a)$_1
 (b{({:(a=4j95)#i.#a),#a) -: (a=:(>:?40)$4j95 9 _1.62) i:!.0 (b=:?30$2){4j95 1234
+(#a)=a i: (}.$a)$_1
+20 mtchontally0 a =: (5 + ? 100) (([: j./ [: ? 2 $ ])"0)@$ 0
+20 mtchonreshape0 a =: (5 + ? 100) (([: j./ [: ? 2 $ ])"0)@$ 0
+20 mtchontally0 a =: (5 + ? 20 20) (([: j./ [: ? 2 $ ])"0)@$ 0
+20 mtchonreshape0 a =: (5 + ? 20 20) (([: j./ [: ? 2 $ ])"0)@$ 0
+20 mtchontally0 a =: (5 + ? 10 10 10) (([: j./ [: ? 2 $ ])"0)@$ 0
+20 mtchonreshape0 a =: (5 + ? 10 10 10) (([: j./ [: ? 2 $ ])"0)@$ 0
 
 NB. boxed
 t=:(1=?70$3)<;.1 ?70$100
@@ -224,6 +293,13 @@ a-:(i:!.0~a){a
 (20$<:#x) -: i:!.0~x=:(?20$3){'';($0);(0$<'')
 (20$<:#x) -: i:   ~x=:(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4
 (20$<:#x) -: i:!.0~x=:(?20$3){3 4;([&.o.3 4);[&.(0j1&*)3 4
+19 = (20 # <'abc') i: (10 # <'abc')
+20 mtchontally0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 100) $ 10
+20 mtchonreshape0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 100) $ 10
+20 mtchontally0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 20 20) $ 10
+20 mtchonreshape0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 20 20) $ 10
+20 mtchontally0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 10 10 10) $ 10
+20 mtchonreshape0 a =: (a. {~ (#a.) ?@$~ ?)&.> (5 + ? 10 10 10) $ 10
 
 
 NB. x i:y encore --------------------------------------------------------
@@ -740,5 +816,6 @@ f2"0] 10^i.2 10
 
 
 4!:55 ;:'a adot1 adot2 sdot0 b c ciof ct f f1 f2 g ico j map n p q t test x y yy'
+4!:55 ;: 'mtchontally mtchonreshape mtchontally0 mtchonreshape0'
 
 

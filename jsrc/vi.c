@@ -7,7 +7,6 @@
 #include "vcomp.h"
 
 // TODO: should have packed-bit version of reverse hash for e.
-// should revise ctmask calc
 // see if there are jt variables, like max & min, no longer needed
 
 // Table of hash-table sizes
@@ -61,10 +60,12 @@ void bucketinit(){I j;
 #endif
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
+// should calculate more accurately
+static void ctmask(J jt){
+#if 0
+DI p,x,y;UINT c,d,e,m,q;
 // we calculate this using pi as a reference: find pi +- ct, and see which bits are different.  Everything
 // above the bits that are changed by ct is considered significant
-// should calculate more accurately
-static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  p.d=PI;                      /* pi itself                */
  x.d=PI*(1-jt->ct);           /* lower bound              */
  y.d=PI/(1-jt->ct);           /* upper bound              */
@@ -74,6 +75,20 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  q=m;
  while(m){m>>=1; q|=m;}       /* q=:+./\m as a bit vector */
  jt->ctmask=~(UI)q;
+#else
+ // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
+ // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
+ // At that point the tolerance band above is t/(t+1) times the approx value (2 in the example).  The tolerance band below is about the same,
+ // and the sum of the two must not exceed the mask size.  We calculate the mask in floating point as 2 - 2 * 2*(t/(t+1)) which will
+ // give its floating-point representation.  We then adjust the mask by forcing the exponent to be masked, and clearing any bits below the
+ // highest clear bit
+ if(jt->ct!=0){
+  D p=2.0 - (4.0*jt->ct)/(1.0+jt->ct);
+  I q=0xffffffff00000000LL | *(I*)&p;
+  q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
+  jt->ctmask=q;
+ }else{jt->ctmask = ~0;}
+#endif
 }    /* 1 iff significant wrt comparison tolerance */
 
 

@@ -17,6 +17,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
  R z;
 }
 
+// run jtfx on each box in w
 F1(jtfxeach){R every(w,0L,jtfx);}
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
@@ -219,7 +220,7 @@ static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d;
 A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  RZ(a&&w);
  ASSERT(VERB&AT(a)&&BOX&AT(w)||BOX&AT(a)&&VERB&AT(w),EVDOMAIN);
- na=1&&BOX&AT(a); y=na?a:w; n=AN(y);
+ na=1&&BOX&AT(a); y=na?a:w; n=AN(y);  // na is 1 for gerund}; y is the gerund
  ASSERT(1>=AR(y),EVRANK);
  ASSERT(2==n||3==n,EVLENGTH);
  ASSERT(BOX&AT(y),EVDOMAIN);

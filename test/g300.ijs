@@ -114,6 +114,28 @@ g=: 4 : 0
 1   g j./ 2 97 ?@$ 1e4
 1   g~j./ 2 97 ?@$ 1e4
 
+NB. test float variants
+f=: 4 : 0
+ p =. 1 + ? 32
+ xx=: (x,p) ?@$ 0
+ yy=: (p,y) ?@$ 0
+ assert. xx test yy
+ 1
+)
+3 : 0 ''
+f"0/~ i. 10
+f"0/~ 64 + i: 10
+f"0/~ 128 + i: 10
+NB. No longer is it settable if. 1 (17 b.) arch =: 6!:6 (0) do.   NB. 6!:6 returns bit 0 set if AVX supported
+NB.  NB. Rerun with AVX off
+NB.  f"0/~ i. 10
+NB.  f"0/~ 64 + i: 10
+NB.  f"0/~ 128 + i: 10
+NB. end.
+NB. 6!:6 arch   NB. Restore AVX
+1
+)
+
 0 -: 0     +/ .* _
 0 -: 0     +/ .*~_
 0 -: 0     +/ .* __
@@ -229,6 +251,6 @@ eqf=: 4 : 0
 
 9!:19 ct
 
-4!:55 ;:'ct eqf f g h m sh test x xx yy'
+4!:55 ;:'arch ct eqf f g h m sh test x xx yy'
 
 

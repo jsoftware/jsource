@@ -85,6 +85,7 @@ typedef I SI;
 #define AV(x)           ( (I*)((C*)(x)+AK(x)))  /* pointer to ravel        */
 #define BAV(x)          (      (C*)(x)+AK(x) )  /* boolean                 */
 #define CAV(x)          (      (C*)(x)+AK(x) )  /* character               */
+#define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
@@ -402,6 +403,35 @@ typedef struct {I a,e,i,x;} P;
 #define SPA(p,a)        ((A)((p)->a+(C*)(p)))  // a is one of aeix; result is A pointer for that component
 #define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
 
+// Header for hashtables used in i.
+// This sits at the beginning of the allocated block, holding info about the stored values
+typedef struct {
+ I datasize;   // number of bytes in the data area
+ I hashelelgsize;  // lg(size of a hashed element)
+ UI currentlo;   // the lowest position in the hashtable of the current allocation.  The first position is a sentinel when hashing is used.
+ UI currenthi;   // the highest position+1 of the current allocation.  The last position is a sentinel always
+ UI currentindexofst;   // the value in the hashtable that the minimum value in the input will map to
+ UI currentindexend;    // the highest value that can possibly be written, +1
+ UI previousindexend;  // All positions from 0 to currenthi are known to be less than currentindexend.
+             // Positions from currenthi to the end are known to be less than previousindexend.
+ UI invalidlo;   // the start of the area that does not have constrained values because it was used for a bit table (as an index into hashtable, rounded up to multiple of I for endian reasons)
+ UI invalidhi;   // the end+1 of the area used for a bit table  (as an index into hash table, rounded up to multiple of I)
+ I datamin;  // (for small-range use) minimum value in the data
+ UI datarange;  // (for small-range use) range+1 of the data
+ union {   // We index into the data with varying strides, depending on the range of the data
+  UC UC[];
+  US US[];
+  UI4 UI4[];
+  UI UI[];
+ } data;
+} IH;
+#define IHAV(x)         ((IH*)((C*)(x)+AK(x)))  //  how to refer to the header area
+
+// Return value from condrange
+typedef struct {
+ I min;  // smallest value found
+ I range;  // max+1-min, or 0 if range exceeds max given
+} CR;
 
 /* performance monitoring stuff */
 

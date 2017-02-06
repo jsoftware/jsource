@@ -138,11 +138,11 @@ typedef struct {VA2 p1[6];} UA;
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1)
 
-#define AHDR1(f,Tz,Tx)          void f(J jt,            I n,Tz* RESTRICT z,Tx* RESTRICT x)
-#define AHDR2(f,Tz,Tx,Ty)       void f(J jt,B b,I m,    I n,Tz* RESTRICT z,Tx* RESTRICT x,Ty* RESTRICT y)
-#define AHDRP(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
-#define AHDRR(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
-#define AHDRS(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICT z,Tx* RESTRICT x)
+#define AHDR1(f,Tz,Tx)          void f(J jt,            I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
+#define AHDR2(f,Tz,Tx,Ty)       void f(J jt,B b,I m,    I n,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y)
+#define AHDRP(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
+#define AHDRR(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
+#define AHDRS(f,Tz,Tx)          void f(J jt,    I m,I c,I n,Tz* RESTRICTI z,Tx* RESTRICTI x)
 
 /*
  b    1 iff cell rank of a <= cell rank of w

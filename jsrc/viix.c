@@ -85,7 +85,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define TT(s,t) (((s)<<5)+(t))
 
-F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wd,wr,*ws,wt,*zv;int cc;
+F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wd,wr,*ws,wt,* RESTRICT zv;int cc;
  RZ(a&&w);
  ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar?ar-1:0;
  wr=AR(w); wt=AT(w); ws=AS(w); b=!AN(a)||!AN(w);
@@ -94,7 +94,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
  ASSERT(b||HOMO(at,wt),EVDOMAIN);
  ASSERT(b||at&DENSE&&wt&DENSE,EVNONCE);
  t=maxtype(at,wt);
- RE(m=prod(wr-r,ws)); RE(c=prod(r,ws+wr-r));
+ CPROD(AN(a),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);
  GATV(z,INT,m,wr-r,ws); zv=AV(z);
  if(!m||!n||!c){DO(m, *zv++=0;); R z;}
  if(1==c){

@@ -73,7 +73,7 @@ typedef struct {
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
- A*   tstack;           // current frame, holding NTSTACK bytes.  First extry is to next-lower block
+ A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower block
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
  A    symp;             /* symbol pool array                               */
  I    rela;             /* if a is relative, a itself; else 0              */
@@ -81,6 +81,8 @@ typedef struct {
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  I    nvrtop;           /* top of nvr stack; # valid entries               */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
+ A    idothash0;        // 2-byte hash table for use by i.
+ A    idothash1;        // 4-byte hash table for use by i.
 // --- end cache linepair 2
 
  I    arg;              /* integer argument                                */

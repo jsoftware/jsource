@@ -288,8 +288,10 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  R over(x,str(4L," : 0"));
 }
 
+// Main routine for () and linear rep.  w is to be represented
 static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  RZ(w);
+ // If noun, return the linear rep of the noun
  if(AT(w)&NOUN)R lnoun(w);
  if(AT(w)&NAME)R sfn(0,w);
  v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; fl=v->flag;
@@ -305,6 +307,8 @@ static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  R linsert(t,w);
 }
 
+// Create linear representation of w.  Call lrr, which creates an A for the text plus jt->ltext which is appended to it.
+// jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
 F1(jtlrep){PROLOG(0056);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
  RE(z=lrr(w));
@@ -313,6 +317,8 @@ F1(jtlrep){PROLOG(0056);A z;
  EPILOG(z);
 }
 
+// Create paren representation of w.  Call lrr, which creates an A for the text plus jt->ltext which is appended to it.
+// jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
 F1(jtprep){PROLOG(0057);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
  RE(z=lrr(w));

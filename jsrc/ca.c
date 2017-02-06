@@ -208,9 +208,13 @@ F2(jtampco){AF f1=on1;C c,d;I flag;V*wv;
 static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
 static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 
+// Here for m&i. and m&i:, computing a prehashed table from a
+// v->h is the info/hash/bytemask result from calculating the prehash
 static DF1(ixfixedleft  ){V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
+// Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
 static DF1(ixfixedright ){V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
 
+// Here if ct was 0 when the compound was created - we must keep it 0
 static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=VAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->f,w,v->h); jt->ct=old; 
  R z;
@@ -238,6 +242,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // assigned to a name, which will protects values inside it.
    rat1s(a);
    if(AN(a)&&AR(a)){
+     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+     // Also set b if the fit is !.0
     if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f); 
     mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
    }
@@ -260,9 +266,11 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // assigned to a name, which will protects values inside it.
    rat1s(w);
    if(AN(w)&&AR(w)){
+     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+     // Also set b if the fit is !.0
     c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
     if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */
-    else      mode=c==CEPS?IEPS:c==CLESS?ILESS:-1;
+    else      mode=c==CEPS?IEPS:/* obsolete c==CLESS?ILESS:*/-1;
    }
    if(0<=mode){
     if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}

@@ -155,24 +155,44 @@
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
 // the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
 // after writing to *z, so we don't turn RESTRICT on for 32-bit
-#if SY_64
 #if SY_WIN32 
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
 #define RESTRICTF __declspec(restrict)
+#define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
+#define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1
 #endif
 #if SY_LINUX || SY_MAC
 #define RESTRICT __restrict
 // No RESTRICTF on GCC
+#define PREFETCH __builtin_prefetch(x)
+#define PREFETCH2(x) __builtin_prefetch((x),2)   // prefetch into L2 cache but not L1
 #endif
+
+#if SY_64
+#if SY_WIN32 
+// RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
+// the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
+// same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
+// as a temp, which means we can't take the liberties there
+#define RESTRICTI __restrict
 #endif
+#if SY_LINUX || SY_MAC
+#define RESTRICTI __restrict
+#endif
+#endif  // SY_64
+
 #ifndef RESTRICT
 #define RESTRICT
 #endif
 #ifndef RESTRICTF
 #define RESTRICTF
 #endif
+#ifndef RESTRICTI
+#define RESTRICTI
+#endif
+// If PREFETCH is not defined, we won't generate prefetch instrs
 
 // If the user switch C_NOMULTINTRINSIC is defined, suppress using it
 #ifdef C_NOMULTINTRINSIC
@@ -196,6 +216,10 @@
 #endif
 #endif
 
+#if !defined(C_AVX)
+#define C_AVX 0
+#endif
+
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
@@ -207,14 +231,17 @@
 
 #define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
 
-#define IIDOT           0               /* modes for indexofsub()          */
+// modes for indexofsub()
+#define IIOPMSK         0xf     // operation bits
+#define IIDOT           0        // IIDOT and IICO must be 0-1
 #define IICO            1
 #define INUBSV          2
 #define INUB            3
 #define ILESS           4
 #define INUBI           5
 #define IEPS            6
-#define II0EPS          7
+// the I...EPS values below are wired into the function table at the end of vcompsc.c
+#define II0EPS          7  // this must come first; other base on it
 #define II1EPS          8
 #define IJ0EPS          9
 #define IJ1EPS          10
@@ -222,20 +249,30 @@
 #define IANYEPS         12
 #define IALLEPS         13
 #define IIFBEPS         14
-
-#define IPHOFFSET       30              /* offset for prehashed versions   */
-#define IPHIDOT         30
-#define IPHICO          31
-#define IPHLESS         34
-#define IPHEPS          36
-#define IPHI0EPS        37
-#define IPHI1EPS        38
-#define IPHJ0EPS        39
-#define IPHJ1EPS        40
-#define IPHSUMEPS       41
-#define IPHANYEPS       42
-#define IPHALLEPS       43
-#define IPHIFBEPS       44
+#define IIMODFIELD      0x70  // bits used to indicate processing options
+#define IIMODPACK       0x10  // modifier for type.  (small-range search except i./i:) In IIDOT/IICO, indicates reflexive application.  In others, indicates that the
+                              // bitmask should be stored as packed bits rather than bytes
+#define IIMODREFLEX     0x10  // (small-range i. and i:) this is i.~/i:~
+#define IIMODFULL       0x20  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required
+#define IIMODBASE0      0x40  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes
+#define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Set only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
+#define IIMODFORCE0X    8
+#define IIMODFORCE0     (1LL<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
+#define IPHCALC         0x200   // set when we are calculating a prehashed table
+#define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
+#define IPHOFFSET       0x800              /* offset for prehashed versions - set when we are using a prehashed table   */
+#define IPHIDOT         (IPHOFFSET+IIDOT)
+#define IPHICO          (IPHOFFSET+IICO)
+// obsolete #define IPHLESS         34
+#define IPHEPS          (IPHOFFSET+IEPS)
+#define IPHI0EPS        (IPHOFFSET+II0EPS)
+#define IPHI1EPS        (IPHOFFSET+II1EPS)
+#define IPHJ0EPS        (IPHOFFSET+IJ0EPS)
+#define IPHJ1EPS        (IPHOFFSET+IJ1EPS)
+#define IPHSUMEPS       (IPHOFFSET+ISUMEPS)
+#define IPHANYEPS       (IPHOFFSET+IANYEPS)
+#define IPHALLEPS       (IPHOFFSET+IALLEPS)
+#define IPHIFBEPS       (IPHOFFSET+IIFBEPS)
 
 #define jfloor          floor
 
@@ -247,6 +284,12 @@
 #define BW              32
 #define LGSZI 2
 #endif
+#define LGSZUI4  2  // lg(#bytes in a UI4)
+#define LGSZUS   1  // lg(bytes in a US)
+
+#define L1CACHESIZE (1LL<<15)
+#define L2CACHESIZE (1LL<<18)
+#define L3CACHESIZE (1LL<<22)
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
@@ -287,7 +330,7 @@
 // Size-of-block calculations.  VSZ when size is constant or variable
 // Because the Boolean dyads write beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(AH*SZI+sizeof(NM)+SZI+mhb):(AH*SZI+SZI+mhb) : (AH*SZI+mhb)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
-// here when size is constant.  The number of bytes must not exceed 2^(PMINL+5)
+// here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size%SZI)?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+AH+mhw+((size)/SZI)*(atoms))))  // # bytes to allocate
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
@@ -341,9 +384,11 @@
 #if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
+#define NANTEST         (_SW_INVALID&_statusfp())
 #else
 #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
+#define NANTEST         (_SW_INVALID&_clearfp())
 #endif
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
@@ -460,7 +505,6 @@
 #include "a.h"
 #include "s.h"
 
-
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0
 // CTTZI(w) counts trailing zeros in an argument of type I (32 or 64 bits depending on architecture)
@@ -562,7 +606,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-#define CACHELINESIZE 128  // free pool is aligned on this boundary
+#define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 
 #if C_HASH
 #define HASH0           224273737UL

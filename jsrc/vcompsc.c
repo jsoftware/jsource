@@ -577,7 +577,7 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  ifbeqS,ifbneS,ifbltS,ifbleS,ifbgeS,ifbgtS, 0L,0L,
 };
 
-
+// the special case for compounds like +/@e.
 static F2( jti0eps){R indexofsub( II0EPS,w,a);}
 static F2( jti1eps){R indexofsub( II1EPS,w,a);}
 static F2( jtj0eps){R indexofsub( IJ0EPS,w,a);}

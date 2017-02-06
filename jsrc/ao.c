@@ -29,7 +29,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
 #define OBQCASE(t,id)    ((t)+(9*(id)))
 
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
- {Tw*u,*v,*ww=(Tw*)wv;Tz x,*zz;                  \
+ {Tw* RESTRICT u,*v,*ww=(Tw*)wv;Tz x,* RESTRICT zz;                  \
   b=1; k=n1;                                     \
   GA(z,zt,d*c,r-1,1+s); *AS(z)=d; zz=(Tz*)AV(z); \
   DO(n,  v=ww+i;      u=v+n1*MIN(i,m1);     init; while(v<=(u-=n1))expr; *zz++=x;);  \
@@ -95,7 +95,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
 #define PMCASE(t,c,d)   (65536*(c)+256*(d)+(t))
 
 #define PMLOOP(Tw,Tz,zt,expr0,expr)  \
- {Tw*aa=(Tw*)av,*u,*v,*ww=(Tw*)wv;Tz x,*zv;  \
+ {Tw*aa=(Tw*)av,* RESTRICT u,* RESTRICT v,*ww=(Tw*)wv;Tz x,* RESTRICT zv;  \
   b=1; GATVS(z,zt,zn,1,0,zt##SIZE); zv=(Tz*)AV(z);       \
   for(i=0;i<zn;++i){                         \
    j=MIN(i,m1); u=aa+j; v=ww+i-j;            \

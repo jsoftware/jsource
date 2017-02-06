@@ -75,6 +75,8 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ASSERT(CFF!=*CAV(x),EVDOMAIN);
   lk=1;
  }
+ // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
+ // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
  RZ(y=fullname(AAV0(w)));
  RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
  if(jt->slistn==i){

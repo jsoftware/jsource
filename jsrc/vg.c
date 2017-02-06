@@ -224,7 +224,10 @@ static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
 
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
-void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
+// returns 2 if n=0 (??)
+void irange(I n,I*v,I*base,I*top){I i,p,q;
+#if 0  // obsolete
+ I d,m=n/2,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=IMAX; p=IMIN;}else p=q=0;
  for(i=0;i<m;++i){
   x=*v++; y=*v++; 
@@ -232,10 +235,19 @@ void irange(I n,I*v,I*base,I*top){I d,i,m=n/2,p,q,x,y;
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
  *base=q; d=p-q; *top=0>d||d==IMAX?0:1+d;
-}    /* min and max in 1.5*n comparisons */
+#else
+ q=IMAX; p=IMIN;
+ for(i=0;i<n;++i){I x=*v++;
+  if(x>p)p=x; if(x<q)q=x; 
+ }
+ *base=q; *top=MAX(1+p-q,0);
+#endif
+}
 
 // copy of irange for sizeof(C4)==sizeof(int)
-void c4range(I n,C4*v,C4*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
+void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
+#if 0  // obsolete
+ I d,i,m=n/2;C4 p,q,x,y;
  if(n>m+m)p=q=*v++; else if(n){q=C4MAX; p=C4MIN;}else p=q=0;
  for(i=0;i<m;++i){
   x=*v++; y=*v++; 
@@ -243,7 +255,14 @@ void c4range(I n,C4*v,C4*base,I*top){I d,i,m=n/2;C4 p,q,x,y;
   else   {if(y<q)q=y; if(p<x)p=x;}
  }
  *base=q; d=(I)p-(I)q; *top=0>d||d>=IMAX?0:1+d;
-}    /* min and max in 1.5*n comparisons */
+#else
+ q=C4MAX; p=C4MIN;
+ for(i=0;i<n;++i){C4 x=*v++;
+  if(x>p)p=x; if(x<q)q=x; 
+ }
+ *base=q; *top=MAX(1+(I)p-(I)q,0);
+#endif
+}
 
 F1(jtmaxmin){I base,top;
  RZ(w);
@@ -391,12 +410,21 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wr,zn;
+F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wn,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
- f=wr-r; s=AS(w); m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1;
- RE(zn=mult(m,n)); GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
- if(!c||1>=n)R reshape(shape(z),IX(n));
+ f=wr-r; s=AS(w);
+ // Calculate m: #cells in w   n: #items in a cell of w   c: #atoms in a cell of w
+ n=r?s[f]:1; if(wn=AN(w)){
+  // If w is not empty, it must have an acceptable number of cells
+// obsolete  m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1; RE(zn=mult(m,n));
+  PROD(m,f,s); PROD(c,r,f+s); zn=m*n;
+ }else{
+  // empty w.  The number of cells may overflow, but reshape will catch that
+  RE(zn=mult(prod(f,s),n));
+ }
+ GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
+ if(!wn||1>=n)R reshape(shape(z),IX(n));
  if     (t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z)))
  else if(t&SBT            )RZ(grs(m,c,n,w,AV(z)))
  else if(t&FL             )RZ(grd(m,c,n,w,AV(z)))
@@ -432,16 +460,18 @@ F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND
    if(OSGT(1,2))if(OSGT(0,2))P3(2,0,1) else XC(1,2);         \
  }
 
+// Partitioning function for order statistics
+// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
 #define OSLOOP(T,ATOMF)  \
 {T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
   while(1){                                                                            \
-   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}                                              \
+   if(4>=n){u=tv; SORT4; R ATOMF(tv[j]);}        /* stop loop on small partition */       \
    p0=tv[qv[i]%n]; ++i; if(i==qn)i=0;                                                  \
-   p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}                    \
+   p1=tv[qv[i]%n]; ++i; if(i==qn)i=0; if(p0>p1){q=p0; p0=p1; p1=q;}       /* create pivots p0, p1 selected from input, with p0 <= p1  */             \
    if(p0==p1){m0=m1=0; v=tv; DO(n, if(p0>*v)++m0;                     ++v;);}          \
-   else      {m0=m1=0; v=tv; DO(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}          \
-   c=m0+m1; m=j<m0?m0:j<c?m1:n-c;                                                      \
+   else      {m0=m1=0; v=tv; DO(n, if(p0>*v)++m0; else if(p1>*v)++m1; ++v;);}  /* count m0: # < p0; and m1: # p0<=x<p1  */         \
+   c=m0+m1; m=j<m0?m0:j<c?m1:n-c;    /* calc size of partition holding the result */        \
    if(t)u=v=tv; else{GA(t,wt,m,1,0); u=tv=(T*)AV(t); v=wv;}                            \
    if     (j<m0){       DO(n, if(*v<p0        )*u++=*v; ++v;); n=m;}                   \
    else if(j<c ){j-=m0; DO(n, if(p0<=*v&&*v<p1)*u++=*v; ++v;); n=m;}                   \
@@ -455,6 +485,7 @@ F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));
  RE(j=i0(a)); if(0>j)j+=n;
  ASSERT(0<=j&&j<n,EVINDEX);
+ // deal 53 random large integers to provide pivots.  We reuse them if needed
  RZ(q=df2(sc(qn),sc(IMAX),atop(ds(CQUERY),ds(CDOLLAR)))); qv=AV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
@@ -463,7 +494,7 @@ F2(jtordstati){A t;I n,wt;
  RZ(a&&w);
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade1(w));
- RZ(t=ordstat(a,w));
+ RZ(t=ordstat(a,w));   // Get the value of the ath order statistic, then look up its index
  I j=0;  // =0 needed to stifle warning
  if(wt&FL){D p=*DAV(t),*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}
  else     {I p=* AV(t),*v= AV(w); DO(n, if(p==*v++){j=i; break;});}

@@ -81,7 +81,7 @@ test (10&u:&.>'foo';'upon';'thee'){~?20 2$3
 test (s:@<"0&.> 'foo';'upon';'thee'){~?20 2$3
 test (<"0@s: 'foo';'upon';'thee'){~?20 2$3
 
-test=: 3 : 0
+test=: 3 : 0  NB. ~: without rank
  yy=: y
  b=: ~: yy
  assert. 1=type b
@@ -115,7 +115,7 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s:' miasma chthonic chronic kaki
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: u: 128+a.i. ' miasma chthonic chronic kakistocracy dado'
 test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma chthonic chronic kakistocracy dado'
 
-test=: 3 : 0
+test=: 3 : 0   NB. ~:"_1
  yy=: y
  b=: ~:"_1 yy
  assert. 1=type b

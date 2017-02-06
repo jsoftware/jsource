@@ -50,7 +50,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 #endif
 
 #define RBFXLOOP(T,pfx)  \
- {T*xx=(T*)x,*yy,*z0,*zz=(T*)z;   \
+ {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
   for(j=0;j<m;++j){               \
    yy=xx; xx-=q; z0=zz; DO(q, --xx; --yy; --zz; *zz=pfx(*xx,*yy););    \
@@ -58,7 +58,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  }}  /* non-commutative */
 
 #define RCFXLOOP(T,pfx)  \
- {T*xx=(T*)x,*yy,*z0,*zz=(T*)z;   \
+ {T* RESTRICT xx=(T*)x,* RESTRICT yy,*z0,* RESTRICT zz=(T*)z;   \
   q=d/sizeof(T);                  \
   for(j=0;j<m;++j){               \
    yy=xx; xx+=q; z0=zz; DO(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;);    \

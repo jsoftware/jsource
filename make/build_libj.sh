@@ -58,7 +58,7 @@ COMPILE="$darwin -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
-darwin_j64AVX) # darwin intel 64bit avx
+darwin_j64avx) # darwin intel 64bit avx
 TARGET=libj.dylib
 COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"

@@ -34,6 +34,12 @@ COMPILE="$common -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 
+linux_j64avx) # linux intel 64bit avx
+TARGET=libj.so
+COMPILE="$common -mavx -DC_NOMULTINTRINSIC -DC_AVX=1"
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
+;;
+
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
 COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC "
@@ -45,11 +51,19 @@ TARGET=libj.dylib
 COMPILE="$darwin -m32 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
+
 darwin_j64) # darwin x86
 TARGET=libj.dylib
 COMPILE="$darwin -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
+
+darwin_j64AVX) # darwin intel 64bit avx
+TARGET=libj.dylib
+COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
+LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
+;;
+
 *)
 echo no case for those parameters
 exit

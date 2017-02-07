@@ -119,6 +119,31 @@ test@:(t"_ {~ 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: s: 10&u: 65536+a.i. ' miasma cht
 
 0   -: 3 e. i.4 3
 
+NB. Test reversed hashes, including bit and packed-bit mode
+g =: 4 : 0
+xx =: x
+yy =: y
+assert. (yy&i. xx) -: yy i. xx
+assert. ((#yy) ~: yy i. xx) -: xx e. yy
+assert. (e.&yy xx) -: xx e. yy
+1
+)
+NB. Test on small-range integer
+g&>/~ (-&.>   1000 ?@$~ #) ?@(# 1.5&*)&.> 1000 10000 100000 1000000 10000000
+NB. Test on hashing
+g&>/~ (-&.>   1000 ?@$~ #) ?@(,&2 $ ])&.> 1000 10000 100000 1000000
+
+NB. Repeat with rank _1
+g =: 4 : 0
+xx =: x
+yy =: y
+assert. (yy i."i."_1 xx) -: yy i."_1 xx
+assert. ((1 { $yy) ~: yy i."_1 xx) -: xx e."_1 yy
+assert. (xx e."e."_1 yy) -: xx e."_1 yy
+1
+)
+g&>/~ (-&.>   1000 ?@$~ #) ?@(3&, $ ])&.> 1000 10000 100000 1000000 10000000
+g&>/~ (-&.>   1000 ?@$~ #) ?@((3 , ,&2) $ ])&.> 1000 10000 100000 1000000
 
 NB. x e."r y ------------------------------------------------------------
 
@@ -146,6 +171,6 @@ x (g"4 3 -: e."4 3) y=:?11  7 4 5$5
 (i.0 3 4) (g"1 -: e."1) i.0 3 7
 
 
-4!:55 ;:'b g i nan t test x y yy'
+4!:55 ;:'b g i nan t test x xx y yy'
 
 

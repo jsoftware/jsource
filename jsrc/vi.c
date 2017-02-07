@@ -108,8 +108,10 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // Round p up to multiple of I, then convert to hashtable entries. Must do this for endian reasons, to avoid a hole in the invalid region
   p = (p+(SZI-1))&-SZI;  // round up to number of bytes that need to be cleared to clear Is
   // Clear the bits before returning.  We init packed bits to 0, but byte-bits to a value that depends on the function being performed.
- // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
-  memset(hh->data.UC,(md&(IIMODPACK+IIOPMSK))<=INUBI,p);
+  // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
+  // REVERSED types always initialize to 1, whether packed or not
+  // this is a kludge - the initialization value should be passed in tby the caller, in asct
+  memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -755,6 +757,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!equ(AADR(d,*v),AA
 
 // ********************* third class: small-range arguments ****************************
 
+// b is a bit index; BYTENO is byte number, BITNO is bit within byte
 #define BYTENO(b) ((b)>>3)
 #define BITNO(b) ((b)&7)
 
@@ -1150,6 +1153,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 // used when w is shorter than a and thus more likely to fit into cache.  Also allows early exit when all results found.
 //  Intolerant comparisons only.   Used for i./i:/e. only, and never reflexive
 
+#if 0
 // Get the next value (j) from position i, and look at the hash (hv[j], called hj) to see if this is a new class.  It is, if the hashtable still contains
 // its initial wsct value.  If new class, remember it in the hashtable and initialize result to not found.  If old class, the hash value is the class; remember it.
 #define XDOWSP(T,TH,TZ,zptr,nfval) {I j, hj; DO(wsct, j=wv[i]; hj=hv[j]; if(hj==wsct){++chainct;indtdd[i]=(TH)i;hv[j]=(TH)i;zptr[i]=(TZ)nfval;}else{indtdd[i]=(TH)hj;})}
@@ -1183,6 +1187,77 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
   }                                                                                  \
   R h;                                                                               \
  }
+#else
+// Get the next value (j) from position i, and look at the hash (hv[j], called hj) to see if this is a new class.  It is, if the hashtable still contains
+// its initial wsct value.  If new class, remember it in the hashtable and (complemented) in the result.  If old class, the hash value is the class; remember it.
+// When we are done, each result value has the complement of the first matching index in w
+#define XDOWSP(T,TH) {I j, hj; DO(wsct, j=wv[i]; hj=hv[j]; if(hj==wsct){++chainct;hv[j]=(TH)i;zv[i]=~i;}else{zv[i]=~hj;})}
+// Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value and set so we only do that once
+#define XDOWSA(T,TH,earlyexit) {I j, hj; DO(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
+// Same but reverse scan through a
+#define XDQWSA(T,TH,earlyexit) {I j, hj; DQ(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
+// Go through the result table.  If the value is positive, it is a valid found value.  If negative, its complement is the self-classify index in w.  If this
+// self-classify index matches the result index, that means the item was never found; store 'not found' result.  Otherwise copy from the earlier index.
+#define XDOWGETRESULT {I zvv; DO(wsct, if((zvv=zv[i])<0){zv[i]=(zvv=~zvv)==i?asct:zv[zvv];})}
+
+// same for bit table, which doesn't need to self-classify w
+#define XDOWSB(T,TH) {I j, hj; DO(wsct, j=wv[i]; hj=hv[j]; if(hj>0){++chainct;hv[j]=(TH)0;})}
+// After the results have been calculated, go through the indirect table and copy the result from the table
+// Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
+#define XDOWSAB(T,TH,earlyexit) {I j, hj; DO(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj==0){hv[j]=(TH)1; if(--chainct==0)goto earlyexit;})}
+#define XDOWGETRESULTB(T,TH,zptr) {DO(wsct, zptr[i]=(TH)hv[wv[i]];)}
+
+// same, but for packed bits.  We know that bits are inited to 1, set to 0 when found in w, and set back to 1 when found in a
+#define XDOWSPB(T,TH) {I j, hj; DO(wsct, j=wv[i]; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(hj&bitmsk){++chainct;hv[BYTENO(j)]=(TH)(hj^bitmsk);})}
+// Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
+#define XDOWSAPB(T,TH,earlyexit) {I j, hj; DO(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^bitmsk); if(--chainct==0)goto earlyexit;})}
+// After the results have been calculated, go through the indirect table and copy the result for any value that is not start-of-class
+#define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)((hv[BYTENO(wv[i])]>>BITNO(wv[i]))&1);)}
+
+// convert the hashtable in *hv to a packed-bit hashtable in *hvp, preserving the validity limits
+#define XDOWREPACK(T,TH) {I *hvpw = (I*)hvp+(maximum+1)/BW; TH *hv2=hv+maximum; I q = 0; DQ((maximum+1)&(BW-1), q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q; \
+  DQ(((hv2-hv)-minimum+1)/BW, DQ(BW, q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q;) I fct=(hv2-hv)-minimum+1; DQ(fct, q=q+q+(*hv2-->=(TH)wsct);) q<<=(64-fct); *hvpw=q; \
+ }
+// Do forward scan of a through bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
+#define XDOWSARPB(T,TH,earlyexit) {I j, hj; DO(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+// Same for reverse scan
+#define XDQWSARPB(T,TH,earlyexit) {I j, hj; DQ(asct, \
+  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+
+#define IOFXWS(f,T,TH)   \
+ IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
+  wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
+  /* establish min/max of data; create biased pointer to table area;  */ \
+  /* When we allocated the table we left room for the extra entry */ \
+  IH *hh=IHAV(h); I minimum=hh->datamin; p=hh->datarange; I maximum=minimum+p; \
+  /* if the hashtable for i./i: exceeds the cache size, allocate a packed-bit version of it. \
+  We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
+  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,2+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum);} \
+  \
+  md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
+  for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
+   /* zv progresses through the result - for those versions that support IRS */ \
+   hashallo(hh,p,wsct,mode); \
+     \
+   switch(md){                                                                       \
+    /* start by adding an 'empty' entry after the end of the table.  This will be referred to by out-of-bounds values of a */ \
+   case IICO:\
+   case IIDOT: {TH * RESTRICT hv=hh->data.TH-minimum; hv[maximum]=(TH)wsct; I * RESTRICT zv=AV(z)+l*wsct; XDOWSP(T,TH); \
+     if(hvp==0){if(md==IIDOT)XDOWSA(T,TH,allfound1)else XDQWSA(T,TH,allfound1)} \
+     else{XDOWREPACK(T,TH) if(md==IIDOT)XDOWSARPB(T,TH,allfound1)else XDQWSARPB(T,TH,allfound1) } \
+     allfound1: XDOWGETRESULT } break; \
+   case IEPS: {UC * RESTRICT hv=hh->data.UC-minimum; hv[maximum]=1; B * RESTRICT zb=BAV(z)+l*wsct; XDOWSB(T,B); XDOWSAB(T,B,allfound2); allfound2: XDOWGETRESULTB(T,B,zb); } break; \
+   case IEPS|IIMODPACK: {UC * RESTRICT hv=hh->data.UC-BYTENO(minimum); hv[BYTENO(maximum)]|=1<<BITNO(maximum); B * RESTRICT zb=BAV(z)+l*wsct; XDOWSPB(T,B); XDOWSAPB(T,B,allfound3); allfound3: XDOWGETRESULTPB(T,B,zb); } break; \
+   } \
+  }                                                                                  \
+  R h;                                                                               \
+ }
+#endif
 
 
 static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // 4-byte items, using small/large hashtable
@@ -1336,9 +1411,9 @@ static S fnflags[]={  // 0 values reserved for small-range.  They turn off boola
  IIMODFULL,IIMODFULL,
  -2,
  
-
+// Reversed hashes, where supported.  IIMODFULL is not needed by the reversed-hash code so we continue its use, started above, as a flag to turn off booleans
  IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,  // bool, INT
- IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,   // FL (then small-range, then ONEINT)
+ IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,IREVERSED|IIMODFULL,IREVERSED,IREVERSED,IREVERSED,IIMODFULL,   // FL (then small-range, then ONEINT)
  IIMODFULL,IREVERSED|IIMODFULL,IIMODFULL,IREVERSED|IIMODFULL   // CMPX
 
 };
@@ -1353,6 +1428,10 @@ static S fnflags[]={  // 0 values reserved for small-range.  They turn off boola
 #define PREHRESIVN 6
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
+#define COMPARESPERHASHWRITE 10  // writing to hash+range test cost is like this many compares
+#define COMPARESPERHASHREAD 8   // consulting hash is like this many compares
+#define OVERHEADHASHALLO 100  // clearing hash, calculating fnx costs this many compares
+#define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
@@ -1369,7 +1448,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((1LL<<IIDOT)|(1LL<<IICO)|(1LL<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
-  if(1==ar&&1>=wr&&TYPESEQ(at,wt)&&(mode&IIOREPS)&&1==acr&&wr==wcr&&an&&wn&&((D)an*(D)wn<(4*an)+2.5*(D)wn)&&!(at|wt)&SPARSE){
+  if(1==ar&&1>=wr&&TYPESEQ(at,wt)&&(mode&IIOREPS)&&1==acr&&wr==wcr&&an&&wn&&
+    ((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES)&&!(at|wt)&SPARSE){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
    GATV(z,INT,wn,wr,ws);
    jtiosc(jt,mode,an,wn,1,1,a,w,z); // simple sequential search without hashing.
@@ -1489,10 +1569,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
 
  // Choose the function to use for performing the operation
  // See if we should simply do sequential search.    We do this only when the cell of a is a list.
- // The cost of such a search is (4 inst per loop) and the expected number of loops is half of
- // m*number of results.  The cost of small-range hashing is at best 8 cycles per atom added to the table and 5 cycles per lookup.
- // (full hashing is considerably more expensive)
- if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((D)m*(D)zn<(4*m)+2.5*(D)zn)){
+ // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
+ // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
+ // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
+ if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO)){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=0==jt->ct;  // b means 'intolerant comparison'
 // jtioa* BOX
@@ -1561,7 +1641,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
       // than the bitmask for a
       rangearg=a; rangearglen=m; fnprov=FNTBLSMALL4;   // values for forward check
       if(mode&IIOREPS){  // if reverse check is possible, see if it is desired
-       if((m>>(booladj?(m>MAXBYTEBOOL?5:2):1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }
+       if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
       }
       CR crres = condrange(AV(rangearg),(AN(rangearg)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
@@ -1591,7 +1671,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fmods>=0){IH * RESTRICT hh;
-   if(fmods){mode |= fmods; booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
+   if(fmods){mode |= fmods; if(fmods&IIMODFULL)booladj=0;}   // If IMODFULL is required, bring it in; if not small-range, turn off bit mode
+
    // make sure we have a hashtable of the requisite size.  p has the number of entries, booladj indicates whether they are 1 bit each.
    // if the #entries fits in a US, use the short table.  But bits always use the long table
 

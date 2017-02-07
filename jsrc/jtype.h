@@ -50,7 +50,7 @@ typedef int              (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
 typedef struct {D re,im;}  Z;
-typedef union {D d;UINT i[2];} DI;
+typedef union {D d;UINT i[2];UI ui;} DI;
 
 #if (SYS & SYS_PC+SYS_MACINTOSH)        /* for use by the session manager  */
 typedef S SI;
@@ -88,6 +88,8 @@ typedef I SI;
 #define UCAV(x)         (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define USAV(x)         ((US*)((C*)(x)+AK(x)))  /* wchar                   */
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
+#define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
+#define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AK(x)))  /* name                    */
 #define IAV(x)          AV(x)                   /* integer                 */
@@ -408,8 +410,8 @@ typedef struct {I a,e,i,x;} P;
 typedef struct {
  I datasize;   // number of bytes in the data area
  I hashelelgsize;  // lg(size of a hashed element)
- UI currentlo;   // the lowest position in the hashtable of the current allocation.  The first position is a sentinel when hashing is used.
- UI currenthi;   // the highest position+1 of the current allocation.  The last position is a sentinel always
+ UI currentlo;   // the lowest position in the hashtable of the current allocation.
+ UI currenthi;   // the highest position+1 of the current allocation.
  UI currentindexofst;   // the value in the hashtable that the minimum value in the input will map to
  UI currentindexend;    // the highest value that can possibly be written, +1
  UI previousindexend;  // All positions from 0 to currenthi are known to be less than currentindexend.
@@ -418,11 +420,13 @@ typedef struct {
  UI invalidhi;   // the end+1 of the area used for a bit table  (as an index into hash table, rounded up to multiple of I)
  I datamin;  // (for small-range use) minimum value in the data
  UI datarange;  // (for small-range use) range+1 of the data
+ // 11 words here; 7 words of header (we allocate no shape); 2 words of memory-allocation header; so this block is 20 words after the
+ // memory allocation, and thus is on the same 256-bit boundary as the allocation.
  union {   // We index into the data with varying strides, depending on the range of the data
-  UC UC[];
-  US US[];
-  UI4 UI4[];
-  UI UI[];
+  UC UC[1];  // cannot have union of 
+  US US[1];
+  UI4 UI4[1];
+  UI UI[1];
  } data;
 } IH;
 #define IHAV(x)         ((IH*)((C*)(x)+AK(x)))  //  how to refer to the header area

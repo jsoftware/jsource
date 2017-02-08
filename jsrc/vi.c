@@ -6,8 +6,9 @@
 #include "j.h"
 #include "vcomp.h"
 
-// TODO: should have packed-bit version of reverse hash for e.
-// see if there are jt variables, like max & min, no longer needed
+// should check variant 3 for faster conditionals
+// should see if ?: can save conditional code
+// look at inefficient wide insts
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
@@ -60,7 +61,6 @@ void bucketinit(){I j;
 #endif
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
-// should calculate more accurately
 static void ctmask(J jt){
 #if 0
 DI p,x,y;UINT c,d,e,m,q;
@@ -91,7 +91,13 @@ DI p,x,y;UINT c,d,e,m,q;
 #endif
 }    /* 1 iff significant wrt comparison tolerance */
 
-
+// fill 64-bit words with the 32-bit value in storeval
+static void __forceinline fillwords(__m128i* storeptr, UI4 storeval, I nstores){
+ // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
+ __m128i store128; store128=_mm_set1_epi32(storeval);
+ DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
+ if(nstores&1)_mm_storel_epi64 (storeptr, store128);  // If there is an odd word, store it
+}
 
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
@@ -111,7 +117,12 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in tby the caller, in asct
+#if 0
   memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
+#else
+  UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
+  fillwords((__m128i*)hh->data.UI, fillval, p>>LGSZI);  // fill 64-bit words with 32-bit values
+#endif
   // If the invalid area grows, update the invalid hwmk, and also the partition
   p >>= hh->hashelelgsize;  // convert p to hash index 
   if(p>hh->invalidhi){
@@ -125,7 +136,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 
  // if we are forced to start over, do so
  md |= IINOTALLOCATED;   // indicate not allocated yet
- if(!(md&IIMODFORCE0)){
+ if(!(md&IIMODFORCE0)){   // this is never true for AVX code, which always clears the region
   // Not forced to start over, choose an allocation
 
   // First of all: it's moot if the allocation won't fit on the right
@@ -180,17 +191,13 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   md |= IIMODBASE0;  // if we clear the region, mention that so that we get the fastest code
   // Clear the entries of the first allocation to asct.  Use fullword stores or cache-line stores.  Our allocations are always multiples of fullwords,
   // so it is safe to overfill with fullword stores
-  UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16; if(SZI>4)storeval |= storeval<<(32%BW);  // Pad store value to 64 bits, dropping excess on smaller machines
+  UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-#if 1  // without AVX
+#if 0  // without AVX
+  if(SZI>4)storeval |= storeval<<(32%BW);
   I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
 #else
-  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
-  {__m128i* storeptr=(__m128i*)hh->data.UI;  // point to area to be cleared
-   __m128i store128; store128=_mm_set1_epi32 ((UI4)storeval);
-   DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
-   if(nstores&1)*(I*)storeptr=storeval;  // If there is an odd word, store it
-  }
+  fillwords((__m128i*)hh->data.UI, (UI4)storeval, nstores);  // fill 64-bit words with 32-bit values
 #endif
   // Clear everything past the first allocation to 0, indicating 'not touched yet'.  But we can elide this if it is already 0, which we can tell by
   // examining the partition pointer and the right-hand index.  This is important if FORCE0 was set for i."r: we will repeatedly reset the base, and
@@ -346,7 +353,7 @@ static UI hix(X*v){A y=*v;   R hici(AN(y),UIAV(y));}
 static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
 
 
-// Hash a single double, using only the bits in ctmask.  -0 is hashed differently than +0.  Should we take the sign bit out of ct?  Only if ct=0?
+// Hash a single double, using only the bits in ctmask.
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
 static UI jthid(J jt,D d){R *(I*)&d!=NEGATIVE0?CRC32L(-1L,*(I*)&d&jt->ctmask):CRC32L(-1L,0);}
 
@@ -1038,7 +1045,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*
   RZ(h=nodupgrade(a,(I)h,ac,acn,ad,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
- hv=AV(h)+bk*(asct-1); jt->complt=-1; jt->compgt=1;
+ hv=AV(h)+bk*(asct-1); jt->complt=-1; jt->compgt=1;  // set comparison mode for our comparisons
  for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=asct){  // loop for each result in a
   // m1=index of last item-1, which may be less than m-1 if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-asct:asct-1]; m1=0>s?~s:asct-1; hu=hv-m1*bk;
@@ -1194,10 +1201,10 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 #define XDOWSP(T,TH) {I j, hj; DO(wsct, j=wv[i]; hj=hv[j]; if(hj==wsct){++chainct;hv[j]=(TH)i;zv[i]=~i;}else{zv[i]=~hj;})}
 // Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value and set so we only do that once
 #define XDOWSA(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
 // Same but reverse scan through a
 #define XDQWSA(T,TH,earlyexit) {I j, hj; DQ(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zv[hj]=i; if(--chainct==0)goto earlyexit;})}
 // Go through the result table.  If the value is positive, it is a valid found value.  If negative, its complement is the self-classify index in w.  If this
 // self-classify index matches the result index, that means the item was never found; store 'not found' result.  Otherwise copy from the earlier index.
 #define XDOWGETRESULT {I zvv; DO(wsct, if((zvv=zv[i])<0){zv[i]=(zvv=~zvv)==i?asct:zv[zvv];})}
@@ -1207,14 +1214,14 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 // After the results have been calculated, go through the indirect table and copy the result from the table
 // Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
 #define XDOWSAB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj==0){hv[j]=(TH)1; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; hj=hv[j]; if(hj==0){hv[j]=(TH)1; if(--chainct==0)goto earlyexit;})}
 #define XDOWGETRESULTB(T,TH,zptr) {DO(wsct, zptr[i]=(TH)hv[wv[i]];)}
 
 // same, but for packed bits.  We know that bits are inited to 1, set to 0 when found in w, and set back to 1 when found in a
 #define XDOWSPB(T,TH) {I j, hj; DO(wsct, j=wv[i]; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(hj&bitmsk){++chainct;hv[BYTENO(j)]=(TH)(hj^bitmsk);})}
 // Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
 #define XDOWSAPB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^bitmsk); if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^bitmsk); if(--chainct==0)goto earlyexit;})}
 // After the results have been calculated, go through the indirect table and copy the result for any value that is not start-of-class
 #define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)((hv[BYTENO(wv[i])]>>BITNO(wv[i]))&1);)}
 
@@ -1224,10 +1231,10 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
  }
 // Do forward scan of a through bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
 #define XDOWSARPB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 // Same for reverse scan
 #define XDQWSARPB(T,TH,earlyexit) {I j, hj; DQ(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 
 #define IOFXWS(f,T,TH)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
@@ -1517,7 +1524,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
  }
 
  // Convert dissimilar types
- th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange should do away with jt->min
+ th=HOMO(at,wt); /* noavx jt->min=0; */  // are args compatible?
  if(th&&TYPESNE(t,at))RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))
  if(th&&TYPESNE(t,wt))RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
 
@@ -1772,7 +1779,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
     case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
     case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
    }
-   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fntbl[fnx]; xv[5]=ztype; 
+   xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[fnx]; xv[5]=ztype; 
    zv[0]=x; zv[1]=h; zv[2]=hi;
   }
  }  // end of 'not sequential comparison' which means we may need a hashtable
@@ -1786,7 +1793,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  // hv is (info vector);(hashtable);(byte index valididty)
  hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
  // get the info from the info vector
- xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
+ xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4]; ztype=xv[5]; 
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;
@@ -1811,7 +1818,7 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
   case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,    0,  0 ); break;
  }
  // save info used by the routines
- jt->hin=AN(hi); jt->hiv=AV(hi);  // should go away?
+ // noavx jt->hin=AN(hi); jt->hiv=AV(hi);  // should go away?
  // convert type of w if needed; and if unconverted FL/CMPX, touch to change -0 to 0
  // this is dodgy: if the comparison tolerance doen't change, there should be no need for conversion; but
  // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable & revert to

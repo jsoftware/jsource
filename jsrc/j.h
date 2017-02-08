@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
+#include <immintrin.h>
+
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -167,8 +169,8 @@
 #if SY_LINUX || SY_MAC
 #define RESTRICT __restrict
 // No RESTRICTF on GCC
-#define PREFETCH __builtin_prefetch(x)
-#define PREFETCH2(x) __builtin_prefetch((x),2)   // prefetch into L2 cache but not L1
+#define PREFETCH(x) __builtin_prefetch(x)
+#define PREFETCH2(x) __builtin_prefetch((x),0,2)   // prefetch into L2 cache but not L1
 #endif
 
 #if SY_64

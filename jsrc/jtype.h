@@ -423,10 +423,10 @@ typedef struct {
  // 11 words here; 7 words of header (we allocate no shape); 2 words of memory-allocation header; so this block is 20 words after the
  // memory allocation, and thus is on the same 256-bit boundary as the allocation.
  union {   // We index into the data with varying strides, depending on the range of the data
-  UC UC[];
-  US US[];
-  UI4 UI4[];
-  UI UI[];
+  UC UC[1];  // cannot have union of 
+  US US[1];
+  UI4 UI4[1];
+  UI UI[1];
  } data;
 } IH;
 #define IHAV(x)         ((IH*)((C*)(x)+AK(x)))  //  how to refer to the header area

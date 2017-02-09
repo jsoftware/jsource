@@ -1271,31 +1271,38 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // 4-byte items, usin
 // The return is a CR struct holding max and range+1.  But if the range+1 is >= maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
-#if 0  // obsolete - slow CMOVs
+#if 1
+// We keep this version, using CMOV, because on Ivy Bridge CMOVs execute at one per clock (latency 2) and thus cannot update a
+// single min/max every 2 cycles - and there is no other way to update faster than one per clock.  On Broadwell, CMOVs execute 2
+// per clock with latency 1 and thus just can update both min and max each clock with 2 copies.  This is faster than taken branches
+// which retire only 0.5 per clock
 static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
- min1=min0=min; max0=max1=max;  // initial values
- if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
+ min0=min1=min; max0=max1=max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
  if(n>>=1){  // n=#pairs of words left
-  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
+  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
   do{  // We keep this short loop separate because it always finishes with a misprediction.
-   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
   }while(--i>=0);
-  // Every so often, coalesce the results & see if input maxrange has been exceeded
-  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   while(n--){  // Do the remaining 64-word blocks
-   i=31;
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=15;  // # 4-groups-1
    do{  // This loop, which is always 64 words, will never mispredict
-    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
    }while(--i>=0);
-   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   }
- } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
+ }
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
  ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.range=0; R ret;
@@ -1304,27 +1311,30 @@ fail: ret.range=0; R ret;
 static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
- min1=min0=min; max0=max1=max;  // initial values
- if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
+ min0=min1=min; max0=max1=max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
  if(n>>=1){  // n=#pairs of words left
-  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
+  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
   do{  // We keep this short loop separate because it always finishes with a misprediction.
-   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
   }while(--i>=0);
-  // Every so often, coalesce the results & see if input maxrange has been exceeded
-  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   while(n--){  // Do the remaining 64-word blocks
-   i=31;
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=15;  // # 4-groups-1
    do{  // This loop, which is always 64 words, will never mispredict
-    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
    }while(--i>=0);
-   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   }
- } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
+ }
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
  ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.range=0; R ret;
@@ -1336,12 +1346,10 @@ static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;
  while(n){
   --n;i=n&63; n&=~63;  // do a block of compares
   do{x=*s++;
-   // Combine the logical ops into one branch.  This is better than conditional moves, which have latency of 2 cycles.  The branch
-   // will usually be predicted correctly.  The subtracts can be in parallel.  Unfortunately this tests TRUE when x==min or max,
-   // but if you reverse the test to ..|..<0 the OR does not fuse with the branch, and would take an extra cycle always.
-   if(((min-x)&(x-max))>=0){  // if min-new >=0, OR if max-new >= 0; if one test overflows and misses, the other one will catch it
-    if(x>=max)max=x;else min=x;  // change the appropriate limit
-   }
+   // Use Conditional ops, which have latency of 2 but throughput of 1, so should result in 1 compare per cycle, which
+   // is the best we can do, and doesn't rely on branch prediction.  Reassess if conditional ops get 2 ports (more likely,
+   // use wide instructions)
+   min=(x<min)?x:min; max=(x>max)?x:max;
   }while(--i>=0);
   if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
  }
@@ -1355,12 +1363,10 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
  while(n){
   --n;i=n&63; n&=~63;  // do a block of compares
   do{x=*s++;
-   // Combine the logical ops into one branch.  This is better than conditional moves, which have latency of 2 cycles.  The branch
-   // will usually be predicted correctly.  The subtracts can be in parallel.  Unfortunately this tests TRUE when x==min or max,
-   // but if you reverse the test to ..|..<0 the OR does not fuse with the branch, and would take an extra cycle always.
-   if(((min-x)&(x-max))>=0){  // if min-new >=0, OR if max-new >= 0; if one test overflows and misses, the other one will catch it
-    if(x>=max)max=x;else min=x;  // change the appropriate limit
-   }
+   // Use Conditional ops, which have latency of 2 but throughout of 1, so should result in 1 compare per cycle, which
+   // is the best we can do, and doesn't rely on barch prediction.  Reassess if conditional ops get 2 ports (more likely,
+   // use wide instructions)
+   min=(x<min)?x:min; max=(x>max)?x:max;
   }while(--i>=0);
   if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
  }

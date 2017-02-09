@@ -6,8 +6,6 @@
 #include "j.h"
 #include "vcomp.h"
 
-// should check variant 3 for faster conditionals
-// should see if ?: can save conditional code
 // look at inefficient wide insts
 
 // Table of hash-table sizes
@@ -929,9 +927,9 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
 #define SCDO(T,xe,exp)  \
  {T*v0=(T*)v,*wv=(T*)v,x; \
   switch(mode){                     \
-   case IIDOT: {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zv++=j+asct;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IICO:  {T*av=(T*)u; DQ(ac, DQ(wsct, x=(xe); j=asct-1; while(0<=j&&(exp))--j; *zv++=0>j?asct:j; wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IEPS:  {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zb++=j<0;     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IIDOT: {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zv++=j+=asct;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IICO:  {T*av=(T*)u; DQ(ac, DQ(wsct, x=(xe); j=asct-1; while(0<=j&&(exp))--j; *zv++=(j=0>j?asct:j); wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IEPS:  {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zb++=(UI)j>>(BW-1);     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
 static void jtiosc(J jt,I mode,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
@@ -1218,23 +1216,23 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 #define XDOWGETRESULTB(T,TH,zptr) {DO(wsct, zptr[i]=(TH)hv[wv[i]];)}
 
 // same, but for packed bits.  We know that bits are inited to 1, set to 0 when found in w, and set back to 1 when found in a
-#define XDOWSPB(T,TH) {I j, hj; DO(wsct, j=wv[i]; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(hj&bitmsk){++chainct;hv[BYTENO(j)]=(TH)(hj^bitmsk);})}
+#define XDOWSPB(T,TH) {I j, hj; DO(wsct, j=wv[i]; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(hj&bitmsk){++chainct;hv[BYTENO(j)]=(TH)(hj^=bitmsk);})}
 // Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
 #define XDOWSAPB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^bitmsk); if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; UC bitmsk=1<<BITNO(j); hj=hv[BYTENO(j)]; if(!(hj&bitmsk)){hv[BYTENO(j)]=(TH)(hj^=bitmsk); if(--chainct==0)goto earlyexit;})}
 // After the results have been calculated, go through the indirect table and copy the result for any value that is not start-of-class
 #define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)((hv[BYTENO(wv[i])]>>BITNO(wv[i]))&1);)}
 
 // convert the hashtable in *hv to a packed-bit hashtable in *hvp, preserving the validity limits
 #define XDOWREPACK(T,TH) {I *hvpw = (I*)hvp+(maximum+1)/BW; TH *hv2=hv+maximum; I q = 0; DQ((maximum+1)&(BW-1), q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q; \
-  DQ(((hv2-hv)-minimum+1)/BW, DQ(BW, q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q;) I fct=(hv2-hv)-minimum+1; DQ(fct, q=q+q+(*hv2-->=(TH)wsct);) q<<=(64-fct); *hvpw=q; \
+  DQ(((hv2-hv)-minimum+1)/BW, DQ(BW, q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q;) I fct=(hv2-hv)-minimum+1; DQ(fct, q=q+q+(*hv2-->=(TH)wsct);) q<<=(BW-fct); *hvpw=q; \
  }
-// Do forward scan of a through bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
+// Do forward scan of a packed bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
 #define XDOWSARPB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 // Same for reverse scan
 #define XDQWSARPB(T,TH,earlyexit) {I j, hj; DQ(asct, \
-  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 
 #define IOFXWS(f,T,TH)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
@@ -1255,11 +1253,11 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
     /* start by adding an 'empty' entry after the end of the table.  This will be referred to by out-of-bounds values of a */ \
    case IICO:\
    case IIDOT: {TH * RESTRICT hv=hh->data.TH-minimum; hv[maximum]=(TH)wsct; I * RESTRICT zv=AV(z)+l*wsct; XDOWSP(T,TH); \
-     if(hvp==0){if(md==IIDOT)XDOWSA(T,TH,allfound1)else XDQWSA(T,TH,allfound1)} \
-     else{XDOWREPACK(T,TH) if(md==IIDOT)XDOWSARPB(T,TH,allfound1)else XDQWSARPB(T,TH,allfound1) } \
-     allfound1: XDOWGETRESULT } break; \
-   case IEPS: {UC * RESTRICT hv=hh->data.UC-minimum; hv[maximum]=1; B * RESTRICT zb=BAV(z)+l*wsct; XDOWSB(T,B); XDOWSAB(T,B,allfound2); allfound2: XDOWGETRESULTB(T,B,zb); } break; \
-   case IEPS|IIMODPACK: {UC * RESTRICT hv=hh->data.UC-BYTENO(minimum); hv[BYTENO(maximum)]|=1<<BITNO(maximum); B * RESTRICT zb=BAV(z)+l*wsct; XDOWSPB(T,B); XDOWSAPB(T,B,allfound3); allfound3: XDOWGETRESULTPB(T,B,zb); } break; \
+     if(hvp==0){if(md==IIDOT)XDOWSA(T,TH,allfound3)else XDQWSA(T,TH,allfound3)} \
+     else{XDOWREPACK(T,TH) if(md==IIDOT)XDOWSARPB(T,TH,allfound3)else XDQWSARPB(T,TH,allfound3) } \
+     allfound3: XDOWGETRESULT } break; \
+   case IEPS: {UC * RESTRICT hv=hh->data.UC-minimum; hv[maximum]=1; B * RESTRICT zb=BAV(z)+l*wsct; XDOWSB(T,B); XDOWSAB(T,B,allfound4); allfound4: XDOWGETRESULTB(T,B,zb); } break; \
+   case IEPS|IIMODPACK: {UC * RESTRICT hv=hh->data.UC-BYTENO(minimum); hv[BYTENO(maximum)]|=1<<BITNO(maximum); B * RESTRICT zb=BAV(z)+l*wsct; XDOWSPB(T,B); XDOWSAPB(T,B,allfound5); allfound5: XDOWGETRESULTPB(T,B,zb); } break; \
    } \
   }                                                                                  \
   R h;                                                                               \
@@ -1269,11 +1267,11 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 
 static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // 4-byte items, using small/large hashtable
 
-
 // Routine to find range of an array of I
-// The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
+// The return is a CR struct holding max and range+1.  But if the range+1 is >= maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
+#if 0  // obsolete - slow CMOVs
 static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
@@ -1331,18 +1329,42 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0
  R ret;
 fail: ret.range=0; R ret;
 }
-#if 0  // the simpler non-unrolled version
-// Same for US types
-static CR condrange2(US *s,I n,I max){CR ret;I i,p,q;US x;
- q=IMAX; p=IMIN;
+#else  // the simpler non-unrolled version
+static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;
+ if(!n){ret.range=0; R ret;}; // return failure if no data
+ if(min>max){min=max=*s++; --n;}  // init min & max to valid, so that only one changes at a time
  while(n){
-  n--; i=n&63; n&=~63;  // do a block of compares
+  --n;i=n&63; n&=~63;  // do a block of compares
   do{x=*s++;
-   if(x>p)p=x; if(x<q)q=x; 
-  }while(i-->=0);
-  if((p-q)<0 || (p-q)>=max){ret.range=0; R ret;}
+   // Combine the logical ops into one branch.  This is better than conditional moves, which have latency of 2 cycles.  The branch
+   // will usually be predicted correctly.  The subtracts can be in parallel.  Unfortunately this tests TRUE when x==min or max,
+   // but if you reverse the test to ..|..<0 the OR does not fuse with the branch, and would take an extra cycle always.
+   if(((min-x)&(x-max))>=0){  // if min-new >=0, OR if max-new >= 0; if one test overflows and misses, the other one will catch it
+    if(x>=max)max=x;else min=x;  // change the appropriate limit
+   }
+  }while(--i>=0);
+  if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
  }
- ret.min=q; ret.range=1+p-q;  // 1+p-q can never be < 0, from the previous test, except first time, when we return garbage
+ ret.min=min; ret.range=1+max-min;  // 1+p-q can never be < 0, from the previous test
+ R ret;
+}
+// Same for US types
+static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
+ if(!n){ret.range=0; R ret;}; // return failure if no data
+ if(min>max){min=max=*s++; --n;}  // init min & max to valid, so that only one changes at a time
+ while(n){
+  --n;i=n&63; n&=~63;  // do a block of compares
+  do{x=*s++;
+   // Combine the logical ops into one branch.  This is better than conditional moves, which have latency of 2 cycles.  The branch
+   // will usually be predicted correctly.  The subtracts can be in parallel.  Unfortunately this tests TRUE when x==min or max,
+   // but if you reverse the test to ..|..<0 the OR does not fuse with the branch, and would take an extra cycle always.
+   if(((min-x)&(x-max))>=0){  // if min-new >=0, OR if max-new >= 0; if one test overflows and misses, the other one will catch it
+    if(x>=max)max=x;else min=x;  // change the appropriate limit
+   }
+  }while(--i>=0);
+  if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
+ }
+ ret.min=min; ret.range=1+max-min;  // 1+p-q can never be < 0, from the previous test
  R ret;
 }
 #endif

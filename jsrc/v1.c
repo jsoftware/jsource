@@ -134,7 +134,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  // do the comparison, leaving the last result in b
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
- default:   c *= bp(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (memcmp(av,wv,c)&1)^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
+ default:   c *= bp(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
  case FLX:   if(jt->ct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break; // obsolete    R mn?x[0]:b1;
  case CMPXX: if(jt->ct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
  case XNUMX: INNERT(X,equ); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;

@@ -978,7 +978,9 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
+  printf("before BOXX");
   case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
+  printf("after BOXX");
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }

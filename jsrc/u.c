@@ -143,6 +143,18 @@ I CTTZI(I w){
 #endif
 #endif
 
+I CTLZI_(UI w, UI4*out){
+ UI4 t = 0;
+#if BW==64
+ if (w & 0xffffffff00000000LL){ w >>= 32; t += 32; }
+#endif
+ if (w & 0xffff0000LL){ w >>= 16; t += 16; }
+ if (w & 0xff00LL){ w >>= 8; t += 8; }
+ if (w & 0xf0LL){ w >>= 4; t += 4; }
+ if (w & 0xcLL){ w >>= 2; t += 2; }
+ *out = t + (UI4)(w >>= 1);
+ R 0;
+}
 
 #if BW==64
 #define ALTBYTES 0x00ff00ff00ff00ffLL

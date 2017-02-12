@@ -86,7 +86,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  }
  jt->slisti=i;    jt->glock=1==jt->glock?1:lk?2:0;
  z=line(x,jt->glock?-1L:i,ce,(B)(jt->glock?0:tso)); 
- jt->slisti=oldi; jt->glock=1==jt->glock?1:oldk;
+ jt->slisti=oldi; jt->glock=(C)(1==jt->glock?1:oldk);
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif

@@ -537,75 +537,81 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
 // use 6!:5 to start audit I i,j;MS *x; if(jt->peekdata){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 // audit free list {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}
 
- I pushx=jt->tnextpushx;  // start reads for tpush
- A* tstack=jt->tstack;
- if(blockx>PLIML){             /* large block: straight malloc    */
-  mfreeb=jt->mfreegenallo;    // bytes in large allocations
-  JBREAK0;  // See if we are interrupted
-#if ALIGNTOCACHE
-  // Allocate the block, and start it on a cache-line boundary
-  I *v;
-  ASSERT(v=MALLOC(n+CACHELINESIZE),EVWSFULL);
-  av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
-  av->a = (I*)v;    // save address of original allocation
-#else
-  // Allocate without alignment
-  ASSERT(av=MALLOC(n),EVWSFULL);
+ if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
+  I pushx=jt->tnextpushx;  // start reads for tpush
+  A* tstack=jt->tstack;
+  if(blockx<=PLIML){             /* large block: straight malloc    */
+   av=jt->mfree[-PMINL+blockx].pool;   // tentatively use head of free list as result
+   mfreeb=jt->mfree[-PMINL+blockx].ballo; // bytes in pool allocations
+   if(av){         // allocate from a chain of free blocks
+    jt->mfree[-PMINL+blockx].pool = (MS *)av->a;  // remove & use the head of the free chain
 #if MEMAUDIT&1
-  av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
+    if(av->j!=blockx)*(I*)0=0;  // verify block has correct size
 #endif
-#endif
-  av->j = (US)blockx;    // Save the size of the allocation so we know how to free it and how big it was
-  jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
- } else {
-  av=jt->mfree[-PMINL+blockx].pool;   // tentatively use head of free list as result
-  mfreeb=jt->mfree[-PMINL+blockx].ballo; // bytes in pool allocations
-  JBREAK0;  // See if we are interrupted
-  if(av){         // allocate from a chain of free blocks
-   jt->mfree[-PMINL+blockx].pool = (MS *)av->a;  // remove & use the head of the free chain
-#if MEMAUDIT&1
-   if(av->j!=blockx)*(I*)0=0;  // verify block has correct size
-#endif
-  }else{MS *x;C* u;I nblocks=PSIZE>>blockx;                    // small block, but chain is empty.  Alloc PSIZE and split it into blocks
+   }else{MS *x;C* u;I nblocks=PSIZE>>blockx;                    // small block, but chain is empty.  Alloc PSIZE and split it into blocks
 #if ALIGNTOCACHE
-   // align the buffer list on a cache-line boundary
-   I *v;
-   ASSERT(v=MALLOC(PSIZE+CACHELINESIZE),EVWSFULL);
-   av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
-   ((I**)av)[-1] = (I*)v;   // save address of entire allocation in the word before the aligned section
+    // align the buffer list on a cache-line boundary
+    I *v;
+    ASSERT(v=MALLOC(PSIZE+CACHELINESIZE),EVWSFULL);
+    av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+    ((I**)av)[-1] = (I*)v;   // save address of entire allocation in the word before the aligned section
 #else
    // allocate without alignment
-   ASSERT(av=MALLOC(PSIZE),EVWSFULL);
+    ASSERT(av=MALLOC(PSIZE),EVWSFULL);
 #endif
-   u=(C*)av; DO(nblocks, x=(MS*)u; u+=n; x->a=(I*)u; x->j=(US)blockx; x->blkx=(US)i;); x->a=0;  // chain blocks to each other; set chain of last block to 0
-   jt->mfree[-PMINL+blockx].pool=(MS*)((C*)av+n);  // the second block becomes the head of the free list
-   mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
-   jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
-  }
+    u=(C*)av; DO(nblocks, x=(MS*)u; u+=n; x->a=(I*)u; x->j=(US)blockx; x->blkx=(US)i;); x->a=0;  // chain blocks to each other; set chain of last block to 0
+    jt->mfree[-PMINL+blockx].pool=(MS*)((C*)av+n);  // the second block becomes the head of the free list
+    mfreeb-=PSIZE;     // We are adding a bunch of free blocks now...
+    jt->mfreegenallo+=PSIZE;   // ...add them to the total bytes allocated
+   }
 #if MEMAUDIT&1
-  av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
+   av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
 #endif
-  jt->mfree[-PMINL+blockx].ballo=mfreeb+=n;
- }
- z=(A)&av[1];  // advance past the memory header
- // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it
- if(mfreeb&MFREEBCOUNTING){jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;}
+   jt->mfree[-PMINL+blockx].ballo=mfreeb+=n;
+  } else {
+   mfreeb=jt->mfreegenallo;    // bytes in large allocations
+#if ALIGNTOCACHE
+   // Allocate the block, and start it on a cache-line boundary
+   I *v;
+   ASSERT(v=MALLOC(n+CACHELINESIZE),EVWSFULL);
+   av=(MS *)(((I)v+CACHELINESIZE)&-CACHELINESIZE);   // get cache-aligned section
+   av->a = (I*)v;    // save address of original allocation
+#else
+   // Allocate without alignment
+   ASSERT(av=MALLOC(n),EVWSFULL);
+#if MEMAUDIT&1
+   av->a=(I*)0xdeadbeefdeadbeefLL;  // flag block as allocated (only if a not used for base pointer)
+#endif
+#endif
+   av->j = (US)blockx;    // Save the size of the allocation so we know how to free it and how big it was
+   jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
+  }
+
+  z=(A)&av[1];  // advance past the memory header
 #if MEMAUDIT&2
- audittstack(jt,z,0);  // verify buffer not on stack
+  audittstack(jt,z,0);  // verify buffer not on stack
 #endif
 #if MEMAUDIT&8
- DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
+  DO((1<<(blockx-LGSZI))-2, lfsr = (lfsr<<1) ^ (lfsr<0?0x1b:0); ((I*)z)[i] = lfsr;);   // fill block with garbage
 #endif
- AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
- *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;}
- jt->tnextpushx=pushx;
- R z;
+  AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
+  *(I*)((I)tstack+(pushx&(NTSTACK-1)))=(I)z; pushx+=SZI;
+  if((pushx&(NTSTACK-1))){jt->tnextpushx=pushx;}else{RZ(tg(pushx)); jt->tnextpushx=pushx+SZI;}  // advance to next slot; skip over chain if new block needed
+  // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it
+  if(!(mfreeb&MFREEBCOUNTING))R z;  // this is a so-far-fruitless attempt to fall through to a return
+  jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
+  R z;
+ }else{jsignal(EVBREAK); R 0;}  // If there was a break event, take it
 }
 
-RESTRICTF A jtgafv(J jt, I bytes){I j=PMINL, n=PMIN; 
- ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT);
- while(n<bytes)n<<=1, ++j;
- R jtgaf(jt,j);
+RESTRICTF A jtgafv(J jt, I bytes){UI4 j; 
+ CTLZI((UI)(bytes-1),j); ++j;   // 3 or 4 should return 2; 5 should return 3
+ if((UI)bytes<=(UI)jt->mmax){
+// obsolete  ASSERT((UI)bytes<=(UI)jt->mmax,EVLIMIT);
+  j=(j<PMINL)?PMINL:j;
+// obsolete  while(n<bytes)n<<=1, ++j;
+  R jtgaf(jt,(I)j);
+ }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
 
 RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
@@ -613,23 +619,26 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  // trailing NUL (because boolean-op code needs it)
  I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
- ASSERT((UI)atoms<TOOMANYATOMS,EVLIMIT); // check for too many atoms, to preempt overflow
+ if((UI)atoms<TOOMANYATOMS){ // check for too many atoms, to preempt overflow
+// obsolete ASSERT(,EVLIMIT);
 #else
- ASSERT(bytes>atoms&&atoms>=0,EVLIMIT);   /* beware integer overflow */
+ if(bytes>atoms&&atoms>=0){ // beware integer overflow
+// obsolete ASSERT(bytes>atoms&&atoms>=0,EVLIMIT);   /* beware integer overflow */
 #endif
- RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
- I akx=AKXR(rank);   // Get offset to data
- if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-mhb-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
-   // All non-DIRECT types have items that are multiples of I, so no need to round the length
- else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
-    // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
-    // To find that byte, back out the SZI added nulls 
- AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
- // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
- AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
- if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
- AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
- R z;
+  RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
+  I akx=AKXR(rank);   // Get offset to data
+  if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-mhb-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
+    // All non-DIRECT types have items that are multiples of I, so no need to round the length
+  else if(type&LAST0){((I*)((C*)z+((bytes-SZI-mhb)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
+     // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
+     // To find that byte, back out the SZI added nulls 
+  AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
+  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
+  AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
+  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+  AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
+  R z;
+ }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
 
 // free a block.  The usecount must make it freeable
@@ -650,7 +659,17 @@ void jtmf(J jt,A w){I mfreeb;
 #if MEMAUDIT&4
  DO((1<<(blockx-LGSZI))-2, ((I*)w)[i] = (I)0xdeadbeefdeadbeefLL;);   // wipe the block clean before we free it
 #endif
- if(PLIML+1<=blockx){   // allocated by malloc
+ if(PLIML>=blockx){   // allocated by malloc
+#if MEMAUDIT&1
+  if(((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // a field is set in pool allocs
+#endif
+  mfreeb = jt->mfree[-PMINL+blockx].ballo;   // number of bytes allocated at this size (biased zero point)
+  ((MS*)w)[-1].a=(I*)jt->mfree[-PMINL+blockx].pool;  // append free list to the new addition...
+  jt->mfree[-PMINL+blockx].pool=((MS*)w-1);   //  ...and make new addition the new head
+  if(0 > (mfreeb-=n))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
+   // if this kicks the list into garbage-collection mode, indicate that
+  jt->mfree[-PMINL+blockx].ballo=mfreeb;
+ }else{                // buffer allocated from subpool.
   mfreeb = jt->mfreegenallo;
 #if ALIGNTOCACHE
   FREECHK(((MS*)w)[-1].a);  // point to initial allocation and free it
@@ -661,16 +680,6 @@ void jtmf(J jt,A w){I mfreeb;
   FREECHK((MS*)w-1);  // point to initial allocation and free it
 #endif
   jt->mfreegenallo = mfreeb-n;
- }else{                // buffer allocated from subpool.
-#if MEMAUDIT&1
-  if(((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // a field is set in pool allocs
-#endif
-  mfreeb = jt->mfree[-PMINL+blockx].ballo;   // number of bytes allocated at this size (biased zero point)
-  ((MS*)w)[-1].a=(I*)jt->mfree[-PMINL+blockx].pool;  // append free list to the new addition...
-  jt->mfree[-PMINL+blockx].pool=((MS*)w-1);   //  ...and make new addition the new head
-  if(0 > (mfreeb-=n))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
-   // if this kicks the list into garbage-collection mode, indicate that
-  jt->mfree[-PMINL+blockx].ballo=mfreeb;
  }
  if(mfreeb&MFREEBCOUNTING){jt->bytes -= n;}  // keep track of total allocation only if asked to
 }

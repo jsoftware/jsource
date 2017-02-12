@@ -380,8 +380,8 @@
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 #define INF(x)          ((x)==inf||(x)==infm)
 #define IX(n)           apv((n),0L,1L)
-#define JATTN           {if(*jt->adbreak&&!jt->breakignore){jsignal(EVATTN); R 0;}}
-#define JBREAK0         {if(2<=*jt->adbreak&&!jt->breakignore){jsignal(EVBREAK); R 0;}}
+#define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
+#define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
 #define JTINPLACEW      1   // turn this on in jt to indicate that w can be inplaced
 #define JTINPLACEA      2   // turn this on in jt to indicate that a can be inplaced
 #define MAX(a,b)        ((a)>(b)?(a):(b))
@@ -536,8 +536,10 @@
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
 #define CTTZI(w) _tzcnt_u64((UI)(w))
+#define CTLZI(in,out) _BitScanReverse64(&(out),in)
 #else
 #define CTTZI(w) _tzcnt_u32((UINT)(w))
+#define CTLZI(in,out) _BitScanReverse(&(out),in)
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
@@ -546,8 +548,10 @@
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64
 #define CTTZI(w) __builtin_ctzll((UI)(w))
+#define CTLZI(w,out) (out=(63-__builtin_clzll((UI)(w))))
 #else
 #define CTTZI(w) __builtin_ctzl((UINT)(w))
+#define CTLZI(w,out) (out=(31-__builtin_clzl((UI)(w))))
 #endif
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
@@ -575,6 +579,10 @@
 extern I CTTZ(I);
 extern I CTTZI(I);
 extern I CTTZZ(I);
+#endif
+#if !defined(CTLZI)
+extern I CTLZI_(UI,UI4*);
+#define CTLZI(in,out) CTLZI_(in,&(out))
 #endif
 
 // Set these switches for testing

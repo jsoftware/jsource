@@ -204,6 +204,12 @@ static DF2(jtkey){PROLOG(0011);
  EPILOG(z);
 }    /* a f/. w */
 
+typedef struct {   // return struct from jtkeyrs
+ CR minrange;  // detected min/range
+ I type;  // pseudotype to use
+} CRT;
+
+
 static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
  at=AT(a); ac=aii(a);
  if(2>=ac)switch(CTTZ(at)){
@@ -369,18 +375,25 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
 #define GRPIX(T,asgn,j,k)   {T*v=(T*)wv; DO(n, j=asgn; if(m>=j)*cu[k]++=i; \
                                  else{GATV(x,INT,cv[k],1,0); *zv++=x; u=AV(x); *u++=m=j; cu[k]=u;})}
 
-F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv,zn=0;
+// indexed by [chartype][k]
+UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2T, B01, LIT
+
+F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR rng;
  RZ(w);
  if(SPARSE&AT(w))RZ(w=denseit(w));
- n=IC(w); t=AT(w); p=q=0; b=0; k=n?aii(w)*bp(t):0;
+ n=IC(w); t=AT(w); k=n?aii(w)*bp(t):0;
  if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
- if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
- if(k==sizeof(C4)&&t&C4T){C4 cp=(C4)p; c4range(n,C4AV(w),&cp,&q); p=cp;}
- if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
- if(b=q&&(2>=k||q<=2*n)){
-  GATV(c,INT,q,1,0); cv=AV(c)-p;  /* counts  */
-  GATV(d,INT,q,1,0); dv=AV(d)-p;  /* indices */
-  wv=AV(w); v=dv+p; DO(q, *v++=-1;);
+// obsolete if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
+ if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
+// obsolete else if(k==sizeof(C4)&&t&C4T){C4 cp=(C4)p; c4range(n,C4AV(w),&cp,&q); p=cp;}
+ else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,IMAX,IMIN,2*n);}
+// obsolete else if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
+ else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
+ else{rng.range=0;}
+ if(rng.range){
+  GATV(c,INT,rng.range,1,0); cv=AV(c)-rng.min;  /* counts  */
+  GATV(d,INT,rng.range,1,0); dv=AV(d)-rng.min;  /* indices */
+  wv=AV(w); v=dv+rng.min; DO(rng.range, *v++=-1;);
   switch(k){
    case 1:   GRPCD(UC); break;
    case 2:   GRPCD(US); break;
@@ -395,7 +408,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;B b;I**cu,*cv,*dv,j,k,m,n,p,q,t,*u,*v,*wv
  }
  GATV(z,BOX,zn,1,0); zv=AAV(z);
  m=-1; cu=(I**)cv;
- switch(b*k){
+ switch(!!rng.range*k){
   case 1:   GRPIX(UC,dv[k=*v++],j,k); break;
   case 2:   GRPIX(US,dv[k=*v++],j,k); break;
 #if SY_64

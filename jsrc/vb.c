@@ -59,7 +59,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
 /* -3: rank > 2                             */
 /* -4: not discrete type or range too large */
 
-static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,m,n,t,wr,wt,memlimit;C4 ccaw;
+static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR rng;
  ar=AR(a); at=AT(a); m=AN(a);
  wr=AR(w); wt=AT(w); n=AN(w);
  ASSERT(ar==wr||!ar&&1==wr,EVRANK);
@@ -76,28 +76,32 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,c=0,ca,cw,d=IMAX,da,dw,
  switch(CTTZNOFLAG(t)){
   // calculate the number of distinct values in the range of the two operands.
   // for strings, we just assume the worst (all codes)
-  // for ints, actually look at the data to get the range (min and #values+1).  If there is
-  // an error getting the range (da or dw==0), leave d==IMAX.  If the min is > 0, and
+  // for ints, actually look at the data to get the range (min and #values+1).  If the min is > 0, and
   // the range can be extended to cover 0..d-1 without exceeding the bound on d, do so to make
   // the SUB0 and SUB1 expressions into EBLOOP simpler
   // We allocate an array for each result in range, so we have to get c and d right
-  case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
-            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
-            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case SBTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
-            if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
-            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case C2TX: d=65536; break;
-  case C4TX: c4range(m,C4AV(a),&ccaw,&da); ca=ccaw; if(da){c4range(n,C4AV(w),&ccaw,&dw); cw=ccaw; }
-            if(da&&dw){c=MIN((C4)ca,(C4)cw); d=MAX(((C4)ca)+da,((C4)cw)+dw)-(C4)c;} // This may make d overflow (if c<0), but we catch that at exit
-            if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
-  case LITX: d=256;   break;
-  case B01X: d=2;     break;
+  case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
+             if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
+  case C4TX: rng = condrange4(C4AV(a),m,IMAX,IMIN,memlimit);
+             if(rng.range){rng = condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
+// obsolete   case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
+// obsolete             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
+// obsolete             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
+// obsolete   case SBTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
+// obsolete             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit
+// obsolete             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
+// obsolete   case C4TX: c4range(m,C4AV(a),&ccaw,&da); ca=ccaw; if(da){c4range(n,C4AV(w),&ccaw,&dw); cw=ccaw; }
+// obsolete             if(da&&dw){c=MIN((C4)ca,(C4)cw); d=MAX(((C4)ca)+da,((C4)cw)+dw)-(C4)c;} // This may make d overflow (if c<0), but we catch that at exit
+// obsolete             if(0<c&&c+d<=memlimit){d+=c;} break;  // Extend lower bound to 0 if that doesn't make d too big
+  case C2TX: // obsolete rng.range=65536; rng.min=0; break;
+  case LITX: // obsolete rng.range=256; rng.min=0;   break;
+  case B01X: rng.min=0; rng.range=shortrange[t&B01+LIT][1]; break;// obsolete rng.range=2; rng.min=0;     break;
  }
- *zc=c;  // Now that we know c, return it
+ if(0<rng.min&&rng.range&&rng.min+rng.range<=memlimit){rng.range+=rng.min; rng.min=0;}  // Extend lower bound to 0 if that doesn't make range too big
+ *zc=rng.min;  // Now that we know c, return it
  // if the range of integers is too big, revert to simple search.
  // Also revert for continuous type.  But always use fast search for character/boolean types
- R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<d&&d<=memlimit ? d : -4;
+ R t&B01+LIT+C2T||t&INT+SBT+C4T&&0<rng.range&&rng.range<=memlimit ? rng.range : -4;
 }
 
 #define EBLOOP(T,SUB0,SUB1,ZFUNC)  \

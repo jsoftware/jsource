@@ -827,6 +827,9 @@ extern I        bsum(I,B*);
 extern void     bucketinit();
 extern C        cf(A);
 extern C        cl(A);
+extern CR       condrange(I *,I,I,I,I);
+extern CR       condrange2(US *,I,I,I,I);
+extern CR       condrange4(C4 *,I,I,I,I);
 extern I        efr(I,I);
 extern B        evoke(A);
 extern void     fillv(I,I,C*);        /* "fill" name conflict on Mac             */
@@ -893,6 +896,7 @@ extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
 extern A        pst[];
 extern I        ptab[];
+extern UI4      shortrange[3][4];
 extern A        udot;
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vdot;

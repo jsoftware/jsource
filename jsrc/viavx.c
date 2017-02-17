@@ -528,7 +528,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
- _mm256_zeroupper();  \
+  _mm256_zeroupper();  \
   vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
@@ -849,6 +849,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBX,!equ(AADR(d,*v),AA
 #define IOFSMALLRANGE(f,T,Ttype)    \
  IOF(f){IH *hh=IHAV(h);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
+  _mm256_zeroupper();  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
   e=1==wc?0:wsct; if(w==mark){wsct=0;} \
@@ -920,7 +921,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
 
 // ******************* fourth class: sequential comparison ***************************************
 
-// we is the expression for reading one comparand, exp is the expression
+// xe is the expression for reading one comparand, exp is the expression for 'no match between x and av[j]')
 // loop through storing the index at which a match was found
 #define SCDO(T,xe,exp)  \
  {T*v0=(T*)v,*wv=(T*)v,x; \
@@ -1242,6 +1243,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
   UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,2+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum);} \
   \
+  _mm256_zeroupper();  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \
@@ -1263,7 +1265,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
 #endif
 
 
-static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // 4-byte items, using small/large hashtable
+static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, using small/large hashtable
 
 // Routine to find range of an array of I
 // The return is a CR struct holding max and range+1.  But if the range+1 is >= maxrange,
@@ -1275,7 +1277,39 @@ static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // 4-byte items, usin
 // per clock with latency 1 and thus just can update both min and max each clock with 2 copies.  This is faster than taken branches
 // which retire only 0.5 branches per clock
 #define ASSESSBLOCKSIZE 64  // every so many inputs, check for range too large
-static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
+CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
+ // Unroll loop once to keep the compares rolling
+ if(!n)goto fail;
+ min0=min1=min; max0=max1=max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
+ if(n>>=1){  // n=#pairs of words left
+  --n; i=n&(ASSESSBLOCKSIZE/2-1); n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
+  do{  // We keep this short loop separate because it always finishes with a misprediction.
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
+  }while(--i>=0);
+  while(n--){  // Do the remaining 64-word blocks
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=(ASSESSBLOCKSIZE/4-1);  // # 4-groups-1
+   do{  // This loop, which is always 64 words, will never mispredict
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
+   }while(--i>=0);
+  }
+ }
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+ ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.range=0; R ret;
+}
+// Same for 4-bytes types, such as C4T
+CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;C4 x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
  min0=min1=min; max0=max1=max;  // initial values
@@ -1307,7 +1341,7 @@ static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,m
 fail: ret.range=0; R ret;
 }
 // Same for US types
-static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
+CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
  min0=min1=min; max0=max1=max;  // initial values

@@ -316,8 +316,9 @@
 #define CLEARZOMBIE     {jt->assignsym=0; jt->zombieval=0;}  // Used when we know there shouldn't be an assignsym, just in case
 #define DF1(f)          A f(J jt,    A w,A self)
 #define DF2(f)          A f(J jt,A a,A w,A self)
-#define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}
-#define DQ(n,stm)       {I i=(n)-1;    for(;i>=0;--i){stm}}
+#define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
+#define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
+#define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0
 #define ds(c)           pst[(UC)(c)]
 #define FDEPDEC(d)      {jt->fdepi-=d;}
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=d+jt->fdepi,EVSTACK); jt->fdepi+=d;}
@@ -531,7 +532,7 @@
 // If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
 // for the complete spec for CTTZ and CTTZZ.
 
-#if SY_WIN32 
+#if SY_WIN32
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
@@ -621,6 +622,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 

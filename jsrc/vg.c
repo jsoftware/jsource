@@ -271,42 +271,75 @@ F1(jtmaxmin){I base,top;
  R v2(base,base+top-1);
 }
 
-static GF(jtgri){A x,y;B b,up;I d,e,*g,*h,i,j,k,p,ps,q,s,*v,*wv,*xv,*yv;
- wv=AV(w); d=c/n; k=4*n;
- irange(AN(w),wv,&q,&p); 
- if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
- if(0<q&&q<k-p){p+=q; q=0;}
- GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
- if(1<d){GATV(x,INT,n,1,0); xv=AV(x);}
- for(i=0;i<m;++i){
-  s=0; j=p; memset(yv,C0,ps);
+static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
+ wv=AV(w); d=c/n;  // d=# ints in an item
+ // see if we can grade using small-range methods
+ // figure out whether we should do small-range processing
+ // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
+ // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
+ // approximate lg(n) with bit count.  And always use small-range if range is < 256
+ UI4 lgn; CTLZI(n,lgn);
+ I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
+// obsolete irange(AN(w),wv,&q,&p); 
+ if(!rng.range)R c==n&&n>(I)(65536/1.5)?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);  // revert to other methods if not small-range
+// obsolete if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
+// obsolete if(0<q&&q<k-p){p+=q; q=0;}
+ // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
+ GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
+ // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
+ // should start in correct position to end in z
+ if(1<d){GATV(x,INT,n,1,0); xv=AV(x);
+ }
+ for(i=0;i<m;++i){  // Loop over each cell of w
+  // if d>1, we will use zv and xv as alternate output pointers, leaving the final result in *zv.
+  // If d is odd, we end up in the block we start in; not if d is even.  So, if d is even, we swap
+  // zv and xv, to end up in zv.  xv is always defined when d is even.
+  if(!(d&1)){I *tv=zv; zv=xv; xv=tv;}  // zv<->xv
+  memset(yvb,C0,rng.range*sizeof(UI4));  // clear the table
+  v=wv+d-1;   // start in the lowest-significance column
+  // create frequency count for each value
+// obsolete   if(rng.min) DO(n, ++yv[*v-rng.min]; v+=d;) 
+  DQ(n, ++yv[*v]; v+=d;);
+  // create +/\ of the counts (+/\. for grade down)
+  if(up){UI4 k,s=0,*yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
+  else{UI4 k,s=0;  DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
+  // refetch each input and take its position from the +/\ list.  After taking a position, add 1 so the next identical value gets the next position
+  // store the index of the fetched input value into the indicated position
+  v=wv+d-1;  // rescan lowest-significance column
+// obsolete   if(rng.min) DO(n, zv[yv[*v-rng.min]++]=i; v+=d;) else
+  DO(n, zv[yv[*v]++]=i; v+=d;);
   v=wv+d-1;
-  if(q) DO(n, ++yv[*v-q]; v+=d;) 
-  else  DO(n, ++yv[*v  ]; v+=d;);
-  if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
-  else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
-  v=wv+d-1;
-  if(q) DO(n, zv[yv[*v-q]++]=i; v+=d;) 
-  else  DO(n, zv[yv[*v  ]++]=i; v+=d;);
-  v=wv+d-1;
-  for(e=d-2,b=0;0<=e;--e){
-   --v;
-   if(b){g=xv; h=zv; b=0;}else{g=zv; h=xv; b=1;}
-   s=0; j=p; memset(yv,C0,ps);
-   if(q) DO(n, ++yv[*(v+d*g[i])-q];) 
-   else  DO(n, ++yv[*(v+d*g[i])  ];);
-   if(up)DO(p,      if(k=yv[i]){yv[i]=s; s+=k;}) 
-   else  DO(p, --j; if(k=yv[j]){yv[j]=s; s+=k;});
-   if(q) DO(n, h[yv[*(v+d*g[i])-q]++]=g[i];) 
-   else  DO(n, h[yv[*(v+d*g[i])  ]++]=g[i];);
+  // if items contain multiple atoms, process the remanining atoms similarly, from lowest to highest significance
+  for(e=d-2;0<=e;--e){  // loop d-1 times
+   // exchange xv and zv.  We will now process from xv (the previous result) and output to zv.
+   {I *tv=zv; zv=xv; xv=tv;}  // zv<->xv
+   --v;  // back up to next-higher-significance column
+   // clear the area
+   memset(yvb,C0,rng.range*sizeof(UI4));
+   // *v is the base of the vector to process, which has stride d.  Process the elements in the order given by the previous grade.
+   // should not bother with indirection on the counting pass, since all get counted in the end
+// obsolete    if(rng.min) DO(n, ++yv[*(v+d*g[i])-rng.min];) 
+// obsolete    else  DO(n, ++yv[*(v+d*g[i])  ];);
+   {I *vv=v; DQ(n, ++yv[*vv]; vv+=d;); }  // scan all the values
+   // create running sum
+// obsolete    if(up)DO(rng.range,      if(k=yv[i]){yv[i]=s; s+=k;}) 
+// obsolete    else  DO(rng.range, --j; if(k=yv[j]){yv[j]=s; s+=k;});
+   if(up){UI4 k, s=0, *yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
+   else {UI4 k,s=0; DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
+   // process the input atoms in the order of the grade so far, and find the result position as above.  Move the original index
+   // for the item into the result
+// obsolete    if(rng.min) DO(n, h[yv[*(v+d*g[i])-rng.min]++]=g[i];) else
+   {I *gg=xv+n; DP(n, zv[yv[v[d*gg[i]]]++]=gg[i];);}
   }
-  if(b)DO(n, zv[i]=xv[i];);
+  // At this point zv always points to the actual result area, so we can increment zv for the next run
   wv+=c; zv+=n;
  }
  R 1;
 }    /* grade"r w on small-range integers w */
 
 
+#if 0  // obsolete
 static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
  wv=C4AV(w); d=c/n; k=4*n;
  c4range(AN(w),wv,&q,&p); 
@@ -340,6 +373,39 @@ static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
   wv+=c; zv+=n;
  }
  R 1;
+#else
+static GF(jtgru){A x,y;B up;I d,e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;
+ wv=C4AV(w); d=c/n;
+ UI4 lgn; CTLZI(n,lgn);
+ I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ CR rng = condrange4(wv,AN(w),IMAX,IMIN,maxrange);
+ if(!rng.range)R c==n&&n>(I)(65536/1.5)?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
+ GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
+ if(1<d){GATV(x,INT,n,1,0); xv=AV(x);
+ }
+ for(i=0;i<m;++i){
+  if(!(d&1)){I *tv=zv; zv=xv; xv=tv;}
+  memset(yvb,C0,rng.range*sizeof(UI4));
+  v=wv+d-1;
+  DQ(n, ++yv[*v]; v+=d;);
+  if(up){UI4 k,s=0,*yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
+  else{UI4 k,s=0; DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
+  v=wv+d-1;
+  DO(n, zv[yv[*v]++]=i; v+=d;);
+  v=wv+d-1;
+  for(e=d-2;0<=e;--e){
+   {I *tv=zv; zv=xv; xv=tv;} 
+   --v;
+   memset(yvb,C0,rng.range*sizeof(UI4));
+   {C4 *vv=v; DQ(n, ++yv[*vv]; vv+=d;); }
+   if(up){UI4 k, s=0, *yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
+   else {UI4 k,s=0; DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
+   {I *gg=xv+n; DP(n, zv[yv[v[d*gg[i]]]++]=gg[i];);}
+  }
+  wv+=c; zv+=n;
+ }
+ R 1;
+#endif
 }    /* grade"r w on small-range c4t w */
 
 

@@ -186,7 +186,7 @@ extern F1(jtlrx);
 extern F1(jtmag);
 extern F1(jtmap);
 extern F1(jtmat);
-extern F1(jtmaxmin);
+// obsolete extern F1(jtmaxmin);
 extern F1(jtmema);
 extern F1(jtmemf);
 extern F1(jtmemo);

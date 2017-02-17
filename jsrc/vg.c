@@ -225,6 +225,7 @@ static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
 // returns 2 if n=0 (??)
+// superseded by condrange
 void irange(I n,I*v,I*base,I*top){I i,p,q;
 #if 0  // obsolete
  I d,m=n/2,x,y;
@@ -264,13 +265,13 @@ void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
 #endif
 }
 
-F1(jtmaxmin){I base,top;
- RZ(w);
- ASSERT(INT&AT(w),EVDOMAIN);
- irange(AN(w),AV(w),&base,&top);
- R v2(base,base+top-1);
-}
-
+// obsolete F1(jtmaxmin){I base,top;
+// obsolete  RZ(w);
+// obsolete  ASSERT(INT&AT(w),EVDOMAIN);
+// obsolete  irange(AN(w),AV(w),&base,&top);
+// obsolete  R v2(base,base+top-1);
+// obsolete }
+// obsolete 
 static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
  wv=AV(w); d=c/n;  // d=# ints in an item
  // see if we can grade using small-range methods

@@ -132,14 +132,17 @@ static F1(jtprime1d){A d,z;D*wv,x,*zv;I*dv,k,n;
  ASSERT(0,EVLIMIT);
 }
 
-F1(jtprime){PROLOG(0061);A z;B b=1;I n,p,q,t;
+F1(jtprime){PROLOG(0061);A z;B b=1;I n,t;
  RZ(w);
  if(!p4792){RZ(p4792=prime1(IX(4792L))); ACX(p4792);}
  n=AN(w); t=AT(w);
  if(!(t&INT))RZ(w=pcvt(INT,w));
  if(INT&AT(w)){
-  irange(n,AV(w),&p,&q);
-  if(0<q&&PMAX>=p+q-1){b=0; RZ(z=prime1(w));}
+  // if the maximum in the argument is <= PMAX, call prime1.  Force minimum of interval to <=0
+  // so that full range compares against PMAX
+  if(condrange(AV(w),n,0,IMIN,PMAX).range){b=0; RZ(z=prime1(w));}
+ // obsolete irange(n,AV(w),&p,&q);
+ // obsolete if(0<q&&PMAX>=p+q-1){b=0; RZ(z=prime1(w));}
  }
  if(b)RZ(z=prime1d(FL&AT(w)?w:cvt(FL,w)));
  if(t&XNUM+RAT)RZ(z=cvt(XNUM,z));

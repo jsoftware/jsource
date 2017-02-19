@@ -160,6 +160,7 @@ OBJS="\
  vgsort.o \
  vgsp.o \
  vi.o \
+ viavx.o \
  viix.o \
  visp.o \
  vm.o \

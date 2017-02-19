@@ -3,8 +3,6 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-#include <immintrin.h>
-
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -221,6 +219,10 @@
 
 #if !defined(C_AVX)
 #define C_AVX 0
+#endif
+
+#if C_AVX
+#include <immintrin.h>
 #endif
 
 #define NALP            256             /* size of alphabet                */

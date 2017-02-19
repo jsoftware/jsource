@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Verbs: Index-of                                                         */
 
+#if !C_AVX /* see viavx.c */
+
 #include "j.h"
 #include "vcomp.h"
 
@@ -1738,3 +1740,5 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  fn(jt,m,c,d,a,w,z,h);
  R z;
 }    /* a i."1 &.|:w or a i:"1 &.|:w */
+
+#endif /* !C_AVX */

@@ -186,7 +186,7 @@ extern F1(jtlrx);
 extern F1(jtmag);
 extern F1(jtmap);
 extern F1(jtmat);
-extern F1(jtmaxmin);
+// obsolete extern F1(jtmaxmin);
 extern F1(jtmema);
 extern F1(jtmemf);
 extern F1(jtmemo);
@@ -827,6 +827,9 @@ extern I        bsum(I,B*);
 extern void     bucketinit();
 extern C        cf(A);
 extern C        cl(A);
+extern CR       condrange(I *,I,I,I,I);
+extern CR       condrange2(US *,I,I,I,I);
+extern CR       condrange4(C4 *,I,I,I,I);
 extern I        efr(I,I);
 extern B        evoke(A);
 extern void     fillv(I,I,C*);        /* "fill" name conflict on Mac             */
@@ -834,8 +837,8 @@ extern UI       hic(I,UC*);
 extern UI       hic2(I,UC*);
 extern UI       hic4(I,UC*);
 extern I        hsize(I);
-extern void     irange(I,I*,I*,I*);
-extern void     c4range(I,C4*,C4*,I*);
+// obsolete extern void     irange(I,I*,I*,I*);
+// obsolete extern void     c4range(I,C4*,C4*,I*);
 extern J        jinit(void);
 extern void     jsto(J,I,C*);
 extern void     jstpoll(J);
@@ -893,6 +896,7 @@ extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
 extern A        pst[];
 extern I        ptab[];
+extern UI4      shortrange[3][4];
 extern A        udot;
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vdot;

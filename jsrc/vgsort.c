@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "vg.h"
+#pragma intrinsic(memset)
 
 
 #define SF(f)         A f(J jt,I m,I c,I n,A w)
@@ -86,6 +87,7 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
 
 static SF(jtsorti1);
 
+#if 0 // obsolete
 static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
  wv=AV(w);
  irange(AN(w),wv,&q,&p); p1=(D)p;
@@ -105,6 +107,35 @@ static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
  }}
  R z;
 }    /* w grade"1 w on small-range integers */
+#else
+static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
+ wv=AV(w);
+ // figure out whether we should do small-range processing
+ // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
+ // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
+ // approximate lg(n) with bit count.  And always use small-range if range is < 256
+ UI4 lgn; CTLZI(n,lgn);
+ I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
+ // if range too large (comes back as 0, ='invalid') use general sort
+ if(!rng.range)R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ // allocate area for the data, and result area
+ GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
+ GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
+ // clear all totals to 0, then bias address of area so the data fits
+ for(i=0;i<m;++i){  // for each list...
+  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
+  DO(n, ++yv[*wv++];);  // increment total for each input atom
+  // run through the totals, copying in the requisite # repetitions of each value
+  // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
+  I incr = jt->compgt; I zincr = (incr&1)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>compgt is 1 or -1
+  DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
+//  if(jt->compgt==1){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
+//  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DO(s, *zv++=j  ;););}
+ }
+ R z;
+}    /* w grade"1 w on small-range integers */
+#endif
 
 static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
@@ -132,24 +163,57 @@ static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
 
 static SF(jtsortu1);
 
-static SF(jtsortu){A y,z;B up;D p1;I i,p,ps,s,*yv;C4 j,*wv,*zv,q;
- wv=C4AV(w);
- c4range(AN(w),wv,&q,&p); p1=(D)p;
- if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
- if(0<q&&p1+q<4*n){p+=q; q=0;}
- GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
+// see jtsorti above
+static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
+#if 0  // obsolete 
+   A y,z;I i; UI4 s,*yv;C4 j,*wv,*zv; wv=C4AV(w);
+ // figure out whether we should do small-range processing
+ // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
+ // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
+ // approximate lg(n) with bit count.  And always use small-range if range is < 256
+ UI4 lgn; CTLZI(n,lgn);
+ I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+// obsolete  c4range(AN(w),wv,&q,&p); p1=(D)p;
+// obsolete  if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ CR rng = condrange4(wv,AN(w),IMAX,IMIN,maxrange);
+ // if range too large (comes back as 0, ='invalid') use general sort
+ if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+// obsolete  if(0<q&&p1+q<4*n){p+=q; q=0;}
+ // allocate area for the data, and result area
+ GATV(y,C4T,rng.range,1,0); yv=C4AV(y);  // yv->totals area
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
- memset(yv,C0,ps);
- for(i=0;i<m;++i){
-  if(q)DO(n, ++yv[*wv++-q];) 
-  else DO(n, ++yv[*wv++  ];);
-  switch(2*up+(1&&q)){
-   case 0: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
-   case 1: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
-   case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
-   case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
- }}
+ // clear all totals to 0, then bias address of area so the data fits
+ memset(yv,C0,rng.range*SZI); yv-=rng.min;
+ for(i=0;i<m;++i){  // for each list...
+// obsolete  if(q)DO(n, ++yv[*wv++-q];) else
+  DO(n, ++yv[*wv++  ];);  // increment total for each input atom
+// obsolete   switch(2*up+(1&&q)){
+// obsolete    case 0: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
+// obsolete    case 1: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
+// obsolete    case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
+// obsolete    case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
+// obsolete   }
+  // run through the totals, copying in the requisite # repetitions of each value
+  if(jt->compgt==1){ j=(C4)rng.min; DQ(rng.range, s=yv[j]; yv[j]=0; DQ(s, *zv++=j;); ++j;);}
+  else{j=(C4)(rng.min+rng.range); DQ(rng.range, --j; s=yv[j]; yv[j]=0; DQ(s, *zv++=j  ;););}
+ }
  R z;
+#else
+ wv=C4AV(w);
+ UI4 lgn; CTLZI(n,lgn);
+ I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ CR rng = condrange4(wv,AN(w),-1,0,maxrange);
+ if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;
+ GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
+ for(i=0;i<m;++i){
+  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
+  DO(n, ++yv[*wv++];);
+  I incr = jt->compgt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+((incr>>(BW-1))&(rng.range-1)));
+  DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
+ }
+ R z;
+#endif
 }    /* w grade"1 w on small-range literal4 */
 
 static SF(jtsortu1){A x,y,z;B b;C4*g,*h,*xu,*wv,*zu;I d,e,i,k,p;UI *yv;int up;

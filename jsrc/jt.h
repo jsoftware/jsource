@@ -30,14 +30,8 @@ typedef struct {
 // The first cache line is the hottest real estate in J, because it is brought in by every
 // memory-allocation function.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
- B    breakignore;      /* 1 to ignore break (input_jfe_ output_jfe_       */
- B    spfreeneeded;     // When set, we should perform a garbage-collection pass
- B    asgn;             /* 1 iff last operation on this line is assignment */
- B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
- C    dbss;             /* single step mode                                */
- B    stch;             /* enable setting of changed bit                   */
- C    jerr;             /* error number (0 means no error)                 */
- C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
+ C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
+// obsolete B    breakignore;      /* 1 to ignore break (input_jfe_ output_jfe_       */
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   MS *pool;             // pointer to first free block
@@ -63,7 +57,14 @@ typedef struct {
  A    stloc;            /* locales symbol table                            */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  I    db;               /* debug flag; see 13!:0                           */
- I    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+ B    spfreeneeded;     // When set, we should perform a garbage-collection pass
+ B    asgn;             /* 1 iff last operation on this line is assignment */
+ B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
+ C    dbss;             /* single step mode                                */
+ B    stch;             /* enable setting of changed bit                   */
+ C    jerr;             /* error number (0 means no error)                 */
+ C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
+ C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
 // --- end cache linepair 1
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */

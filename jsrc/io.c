@@ -64,9 +64,7 @@ static I advl(I j,I n,C*s){B b;C c,*v;
 void breakclose(J jt);
 
 static C* nfeinput(J jt,C* s){A y;
- jt->breakignore=1;
- y=exec1(cstr(s));
- jt->breakignore=0;
+ jt->adbreakr=&breakdata; y=exec1(cstr(s)); jt->adbreakr=jt->adbreak;
  if(!y){breakclose(jt);exit(2);} /* J input verb failed */
  jtwri(jt,MTYOLOG,"",strlen(CAV(y)),CAV(y));
  return CAV(y); /* don't combine with previous line! CAV runs (x) 2 times! */
@@ -100,14 +98,14 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  R inpl(b,(I)strlen(v),v);
 }
 
-extern C breakdata;
+// obsolete extern C breakdata;
 
 #if SYS&SYS_UNIX
 void breakclose(J jt)
 {
  if(jt->adbreak==&breakdata) return;
  munmap(jt->adbreak,1);
- jt->adbreak=&breakdata;
+ jt->adbreakr=jt->adbreak=&breakdata;
  close((intptr_t)jt->breakfh);
  jt->breakfh=0;
  unlink(jt->breakfn);
@@ -118,7 +116,7 @@ void breakclose(J jt)
 {
  if(jt->adbreak==&breakdata) return;
  UnmapViewOfFile(jt->adbreak);
- jt->adbreak=&breakdata;
+ jt->adbreakr=jt->adbreak=&breakdata;
  CloseHandle(jt->breakmh);
  jt->breakmh=0;
  CloseHandle(jt->breakfh);
@@ -212,7 +210,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
 
 static char breaknone=0;
 
-B jtsesminit(J jt){jt->adbreak=&breakdata; R 1;}
+B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
 int _stdcall JDo(J jt, C* lp){int r;
  r=(int)jdo(jt,lp);
@@ -269,7 +267,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
   jt->mtyostr=s;
   e=jt->jerr; ex=jt->etxn;
   jt->jerr=0; jt->etxn=0;
-  jt->breakignore=1;exec1(cstr(q));jt->breakignore=0;
+  jt->adbreakr=&breakdata;exec1(cstr(q));jt->adbreakr=jt->adbreak;
   jt->jerr=e; jt->etxn=ex; 
  }else{
   // Normal output.  Call the output routine
@@ -341,7 +339,7 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  strcpy(jt->breakfn,CAV(w));
  jt->breakfh=fh;
  jt->breakmh=mh;
- jt->adbreak=ad;
+ jt->adbreakr=jt->adbreak=ad;
  R mtm;
 }
 

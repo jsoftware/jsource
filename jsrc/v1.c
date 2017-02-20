@@ -14,7 +14,7 @@ static F2(jtmatchs);
 // set *x++ to b1 if *u=*v, b0 otherwise
 #define QLOOP         b=b1; DO(q, if(u[i]!=v[i]){b^=1; break;}); *x++=b;
 // comparison, with special cases for 1/more than 1, and looping over repeated cells
-// we know there is a frame somewhere.  This is for plain byte compartison - no tolerance
+// we know there is a frame somewhere.  This is for plain byte comparison - no tolerance
 #define EQV(T)        \
  {T h,* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;                                                   \
   q=k/sizeof(T);                                                             \
@@ -53,7 +53,7 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT 
  else if(1==k)            EQV(C)
  else{
 // obsolete    c=af?k:0; d=wf?k:0;
-// obsolete   if(1==n)      DO(m,       *x++=(memcmp(av,wv,k)&1)^b1; av+=k;   wv+=k;)
+// obsolete   if(1==n)      DO(m,       *x++=(!!memcmp(av,wv,k))^b1; av+=k;   wv+=k;)
   if(af<wf)DO(m, DO(n, *x++=(!!memcmp(av,wv,k))^b1; wv+=k;); av+=k;)
   else          DO(m, DO(n, *x++=(!!memcmp(av,wv,k))^b1; av+=k;); wv+=k;);
  }
@@ -77,7 +77,6 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=VAV(a),*v=VAV(w);
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
-// The result is stored in the harmless location &b
 #define EQA(a,w)  matchsub(0L,0L,1L,1L,a,w,0,C1)
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))

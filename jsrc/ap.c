@@ -387,15 +387,20 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wd,wr,*ws,wt,zc;
    DO(p, s=yv; DO(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
  }}
 
-static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,s,t,wt;
+static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
  p=IC(w)-m; wt=AT(w); c=aii(w);
  switch((wt&B01?0:wt&INT?2:4)+avg){
   case 0:       MOVSUMAVG(B,I,INT,I,INT,x,  SETZ ); break;
   case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
   case 2: 
-   irange(AN(w),AV(w),&s,&t); t=0<t&&IMAX>=d*((D)s+(D)t);
-   if(t)        MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
-   else         MOVSUMAVG(I,D,FL, D,FL, x,  SETZ ); break;
+   // start min at 0 so range is max+1; make sure all totals fit in an int; use integer code if so
+   {I maxval = (I)((D)IMAX/(D)MAX(2,m))-1;
+   CR rng=condrange(AV(w),AN(w),0,0,maxval<<1);
+   if(rng.range && MAX(rng.range,-rng.min)<maxval){
+// obsolete   irange(AN(w),AV(w),&s,&t); t=0<t&&IMAX>=d*((D)s+(D)t);
+// obsolete   if(t)
+    MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
+   }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;}
   case 3:       MOVSUMAVG(I,D,FL, D,FL, x/d,SETZD); break;
   case 4: NAN0; MOVSUMAVG(D,D,FL, D,FL, x,  SETZ ); NAN1; break;
   case 5: NAN0; MOVSUMAVG(D,D,FL, D,FL, x/d,SETZD); NAN1; break;

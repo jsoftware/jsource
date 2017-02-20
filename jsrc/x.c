@@ -21,11 +21,23 @@
 static DF1(secf1){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1((AF)*   AV(h) ,  w,self);}
 static DF2(secf2){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL2((AF)*(1+AV(h)),a,w,self);}
 
-static DF1(jtfindrange){I base,n,top;
- RZ(w);
- n=AN(w);
- irange(n,AV(w),&base,&top);
- R v2(base,top);
+static DF2(jtfindrange){
+ RZ(a&&w);
+ I *av = AV(a);
+ CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);
+ R v2(rng.min,rng.range);
+}
+static DF2(jtfindrange4){
+ RZ(a&&w);
+ I *av = AV(a);
+ CR rng = condrange4(C4AV(w),AN(w),av[0],av[1],av[2]);
+ R v2(rng.min,rng.range);
+}
+static DF2(jtfindrange2){
+ RZ(a&&w);
+ I *av = AV(a);
+ CR rng = condrange2(USAV(w),AN(w),av[0],av[1],av[2]);
+ R v2(rng.min,rng.range);
 }
 
 F2(jtforeign){I p,q;
@@ -203,8 +215,9 @@ F2(jtforeign){I p,q;
   case XC(13,20): R CDERIV(CIBEAM, jtdbstepover1,jtdbstepover2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,21): R CDERIV(CIBEAM, jtdbstepinto1,jtdbstepinto2,VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,22): R CDERIV(CIBEAM, jtdbstepout1, jtdbstepout2, VFLAGNONE,RMAX,RMAX,RMAX);
-
-  case XC(13,80): R CDERIV(CIBEAM, jtfindrange,  0,            VFLAGNONE,RMAX,0,   0   );
+  case XC(13,80): R CDERIV(CIBEAM, 0,            jtfindrange,  VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
 
   case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE,0,   1L,  1L  );
   case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,0,   0   );

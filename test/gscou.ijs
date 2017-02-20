@@ -100,8 +100,9 @@ s -: _2 s: 1|.u: c
 s -: _3 s: (<;._1 u: c) ,&> ((>./ - ])#;._1 c)$&.>u: 0
 s -: _4 s: ];._1 u: c
 s -: _5 s: <;._1 u: c
-
+0 s: 11
 1 [ s: <u: 128+a.i. 'force even alignment ',":?1e9
+0 s: 11
 1 [ s: <u: 128+a.i. 'force padding ',":?1e9
 
 0 s: 11

@@ -1112,80 +1112,143 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 
 I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
-
 // Routine to find range of an array of I
-// The return is a CR struct holding max and range+1.  But if the range+1 is > maxrange,
+// The return is a CR struct holding max and range+1.  But if the range+1 is >= maxrange,
 // we abort and return 0 range.
 // min and max are initial values for min/max
-static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
+#if 1
+// We keep this version, using CMOV, because on Ivy Bridge CMOVs execute at one per clock (latency 2) and thus cannot update a
+// single min/max every 2 cycles - and there is no other way to update faster than one per clock.  On Broadwell, CMOVs execute 2
+// per clock with latency 1 and thus just can update both min and max each clock with 2 copies.  This is faster than taken branches
+// which retire only 0.5 branches per clock
+#define ASSESSBLOCKSIZE 64  // every so many inputs, check for range too large
+CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
- min1=min0=min; max0=max1=max;  // initial values
- if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
+ min0=min1=min; max0=max1=max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
  if(n>>=1){  // n=#pairs of words left
-  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
+  --n; i=n&(ASSESSBLOCKSIZE/2-1); n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
   do{  // We keep this short loop separate because it always finishes with a misprediction.
-   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
   }while(--i>=0);
-  // Every so often, coalesce the results & see if input maxrange has been exceeded
-  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   while(n--){  // Do the remaining 64-word blocks
-   i=31;
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=(ASSESSBLOCKSIZE/4-1);  // # 4-groups-1
    do{  // This loop, which is always 64 words, will never mispredict
-    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
    }while(--i>=0);
-   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
   }
- } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
- ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
- R ret;
-fail: ret.range=0; R ret;
-}
-// Same for US types
-static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
- // Unroll loop once to keep the compares rolling
- if(!n)goto fail;
- min1=min0=min; max0=max1=max;  // initial values
- if(n&1){min1=max1=*s++;}  // if odd number of words, take first word to even it up
- if(n>>=1){  // n=#pairs of words left
-  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left
-  do{  // We keep this short loop separate because it always finishes with a misprediction.
-   x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-   x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
-  }while(--i>=0);
-  // Every so often, coalesce the results & see if input maxrange has been exceeded
-  if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-  if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
-  while(n--){  // Do the remaining 64-word blocks
-   i=31;
-   do{  // This loop, which is always 64 words, will never mispredict
-    x=*s++; if(x>max0)max0=x; if(x<min0)min0=x; 
-    x=*s++; if(x>max1)max1=x; if(x<min1)min1=x; 
-   }while(--i>=0);
-   if(max1>max0)max0=max1; if(min1<min0)min0=min1; 
-   if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;
-  }
- } else {if(max1>max0)max0=max1; if(min1<min0)min0=min1; if((max0-min0)<0 || (max0-min0)>=maxrange)goto fail;}  // there were 1 or 2 words.  Combine them
- ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
- R ret;
-fail: ret.range=0; R ret;
-}
-#if 0  // the simpler non-unrolled version
-// Same for US types
-static CR condrange2(US *s,I n,I max){CR ret;I i,p,q;US x;
- q=IMAX; p=IMIN;
- while(n){
-  n--; i=n&63; n&=~63;  // do a block of compares
-  do{x=*s++;
-   if(x>p)p=x; if(x<q)q=x; 
-  }while(i-->=0);
-  if((p-q)<0 || (p-q)>=max){ret.range=0; R ret;}
  }
- ret.min=q; ret.range=1+p-q;  // 1+p-q can never be < 0, from the previous test, except first time, when we return garbage
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+ ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.min=ret.range=0; R ret;
+}
+// Same for 4-bytes types, such as C4T
+CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,max1;C4 x;
+ // Unroll loop once to keep the compares rolling
+ if(!n)goto fail;
+ min0=min1=(C4)min; max0=max1=(C4)max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
+ if(n>>=1){  // n=#pairs of words left
+  --n; i=n&(ASSESSBLOCKSIZE/2-1); n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
+  do{  // We keep this short loop separate because it always finishes with a misprediction.
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
+  }while(--i>=0);
+  while(n--){  // Do the remaining 64-word blocks
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=(ASSESSBLOCKSIZE/4-1);  // # 4-groups-1
+   do{  // This loop, which is always 64 words, will never mispredict
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
+   }while(--i>=0);
+  }
+ }
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+ ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.min=ret.range=0; R ret;
+}
+// Same for US types
+CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i; US min0,min1,max0,max1;US x;
+ // Unroll loop once to keep the compares rolling
+ if(!n)goto fail;
+ min0=min1=(US)min; max0=max1=(US)max;  // initial values
+ if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
+ if(n>>=1){  // n=#pairs of words left
+  --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
+  do{  // We keep this short loop separate because it always finishes with a misprediction.
+   x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+   x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+   s+=2;  // advance to next set
+  }while(--i>=0);
+  while(n--){  // Do the remaining 64-word blocks
+   // Every so often, coalesce the results & see if input maxrange has been exceeded
+   max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+   i=15;  // # 4-groups-1
+   do{  // This loop, which is always 64 words, will never mispredict
+    x=s[0]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0; // this generates CMOVcc in VS
+    x=s[1]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    x=s[2]; max0=(x>max0)?x:max0; min0=(x<min0)?x:min0;
+    x=s[3]; max1=(x>max1)?x:max1; min1=(x<min1)?x:min1;
+    s+=4;  // advance to next set
+   }while(--i>=0);
+  }
+ }
+ // combine last results
+ max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
+ ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
+ R ret;
+fail: ret.min=ret.range=0; R ret;
+}
+#else  // the simpler non-unrolled version
+static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;
+ if(!n){ret.range=0; R ret;}; // return failure if no data
+ if(min>max){min=max=*s++; --n;}  // init min & max to valid, so that only one changes at a time
+ while(n){
+  --n;i=n&63; n&=~63;  // do a block of compares
+  do{x=*s++;
+   // Use Conditional ops, which have latency of 2 but throughput of 1, so should result in 1 compare per cycle, which
+   // is the best we can do, and doesn't rely on branch prediction.  Reassess if conditional ops get 2 ports (more likely,
+   // use wide instructions)
+   min=(x<min)?x:min; max=(x>max)?x:max;
+  }while(--i>=0);
+  if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
+ }
+ ret.min=min; ret.range=1+max-min;  // 1+p-q can never be < 0, from the previous test
+ R ret;
+}
+// Same for US types
+static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
+ if(!n){ret.range=0; R ret;}; // return failure if no data
+ if(min>max){min=max=*s++; --n;}  // init min & max to valid, so that only one changes at a time
+ while(n){
+  --n;i=n&63; n&=~63;  // do a block of compares
+  do{x=*s++;
+   // Use Conditional ops, which have latency of 2 but throughout of 1, so should result in 1 compare per cycle, which
+   // is the best we can do, and doesn't rely on barch prediction.  Reassess if conditional ops get 2 ports (more likely,
+   // use wide instructions)
+   min=(x<min)?x:min; max=(x>max)?x:max;
+  }while(--i>=0);
+  if((UI)(max-min)>=(UI)maxrange){ret.range=0; R ret;}
+ }
+ ret.min=min; ret.range=1+max-min;  // 1+p-q can never be < 0, from the previous test
  R ret;
 }
 #endif
@@ -1354,7 +1417,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(2==k){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);   // get the range
+    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),-1,0,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);   // get the range
     if(crres.range){
       datamin=crres.min;
       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
@@ -1430,7 +1493,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // the allocated position and index
       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
       // It's OK to round the fill up to the length of an I
-      UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+      UI fillval=m|(m<<16); if(SZI>4)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
@@ -1474,7 +1537,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
        mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
        fillval=m; 
       }  // fill bits with 0; fill full hashes with m
-      if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
+      if(SZI>4)fillval|=fillval<<(32%BW);  // fill entire words
       UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data

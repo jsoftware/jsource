@@ -112,6 +112,10 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
  // n is # atoms in an item of w (and result)
  // p is number of inner-product muladds (length of a row of a, and # items of w)
  // point to cache-aligned areas we will use for staging the inner-product info
+#if C_AVX
+ // Since we sometimes use 128-bit instructions, make sure we don't get stuck in slow state
+ _mm256_zeroupper();
+#endif
  D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
  D *cva = (D*)(((I)cvw+(CACHEHEIGHT+1)*CACHEWIDTH*sizeof(D)+(CACHELINESIZE-1))&-CACHELINESIZE);   // place where expanded rows of a are staged
  // zero the result area

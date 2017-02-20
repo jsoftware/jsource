@@ -29,7 +29,7 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
 
 B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;
- jt->adbreak=&breakdata; /* required for ma to work */
+ jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
  s=bitdisp; 
  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );

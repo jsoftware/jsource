@@ -539,7 +539,7 @@
 #define key(x,y,z)                  jtkey(jt,(x),(y),(z))
 #define keyi(x,y,z)                 jtkeyi(jt,(x),(y),(z))
 #define keysp(x,y,z)                jtkeysp(jt,(x),(y),(z))
-#define keyrs(x,y,z)                jtkeyrs(jt,(x),(y),(z))
+#define keyrs(x,y)                  jtkeyrs(jt,(x),(y))
 #define keytally(x,y,z)             jtkeytally(jt,(x),(y),(z))
 #define keytallysp(x)               jtkeytallysp(jt,(x))
 #define laguerre(x,y,z)             jtlaguerre(jt,(x),(y),(z))

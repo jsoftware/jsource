@@ -82,7 +82,7 @@ static I jtebarprep(J jt,A a,A w,A*za,A*zw,I*zc){I ar,at,m,n,t,wr,wt,memlimit;CR
   // We allocate an array for each result in range, so we have to get c and d right
   case INTX: case SBTX: rng = condrange(AV(a),m,IMAX,IMIN,memlimit);
              if(rng.range){rng = condrange(AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
-  case C4TX: rng = condrange4(C4AV(a),m,IMAX,IMIN,memlimit);
+  case C4TX: rng = condrange4(C4AV(a),m,-1,0,memlimit);
              if(rng.range){rng = condrange4(C4AV(w),n,rng.min,rng.min+rng.range-1,memlimit);} break;
 // obsolete   case INTX: irange(m,AV(a),&ca,&da); if(da)irange(n,AV(w),&cw,&dw); 
 // obsolete             if(da&&dw){c=MIN(ca,cw); d=MAX(ca+da,cw+dw)-c;} // This may make d overflow (if c<0), but we catch that at exit

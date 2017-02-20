@@ -101,7 +101,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   // approximate lg(n) with bit count.  And always use small-range if range is < 256
   UI4 lgn; CTLZI(wn,lgn);
   I maxrange = wn<64?256:(I)((wn*lgn)*(4/4.5) - wn*(6/4.5));
-  rng = (wt&INT?condrange:condrange4)((void*)wv,wn,IMAX,IMIN,maxrange);
+  rng = wt&INT?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
  }else if(k<=2){rng.range=shortrange[wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;
 // obsolete  else switch(k){

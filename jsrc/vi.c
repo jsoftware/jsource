@@ -1147,13 +1147,13 @@ CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;I x
  max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
  ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
  R ret;
-fail: ret.range=0; R ret;
+fail: ret.min=ret.range=0; R ret;
 }
 // Same for 4-bytes types, such as C4T
 CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,max1;C4 x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
- min0=min1=min; max0=max1=max;  // initial values
+ min0=min1=(C4)min; max0=max1=(C4)max;  // initial values
  if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
  if(n>>=1){  // n=#pairs of words left
   --n; i=n&(ASSESSBLOCKSIZE/2-1); n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
@@ -1177,15 +1177,15 @@ CR condrange4(C4 *s,I n,I min,I max,I maxrange){CR ret;I i; C4 min0,min1,max0,ma
  }
  // combine last results
  max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
- ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
  R ret;
-fail: ret.range=0; R ret;
+fail: ret.min=ret.range=0; R ret;
 }
 // Same for US types
-CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;US x;
+CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i; US min0,min1,max0,max1;US x;
  // Unroll loop once to keep the compares rolling
  if(!n)goto fail;
- min0=min1=min; max0=max1=max;  // initial values
+ min0=min1=(US)min; max0=max1=(US)max;  // initial values
  if(n&1)min1=max1=*s++;  // if odd number of words, take first word to even it up
  if(n>>=1){  // n=#pairs of words left
   --n; i=n&31; n>>=5;  // do a block of compares to get on boundary; n=#64-words blocks left, i=size-1 of this block
@@ -1209,9 +1209,9 @@ CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i,min0,min1,max0,max1;U
  }
  // combine last results
  max0=(max1>max0)?max1:max0; min0=(min1<min0)?min1:min0; if((UI)(max0-min0)>=(UI)maxrange)goto fail;
- ret.min=min0; ret.range=max0-min0+1;  // because the tests succeed, this will give the proper range
+ ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
  R ret;
-fail: ret.range=0; R ret;
+fail: ret.min=ret.range=0; R ret;
 }
 #else  // the simpler non-unrolled version
 static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;
@@ -1413,7 +1413,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(2==k){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);   // get the range
+    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),-1,0,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);   // get the range
     if(crres.range){
       datamin=crres.min;
       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
@@ -1489,7 +1489,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // the allocated position and index
       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
       // It's OK to round the fill up to the length of an I
-      UI fillval=m|(m<<16); if(SZI>8)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+      UI fillval=m|(m<<16); if(SZI>4)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
@@ -1533,7 +1533,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
        mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use.  Only for non-Boolean
        fillval=m; 
       }  // fill bits with 0; fill full hashes with m
-      if(SZI>48)fillval|=fillval<<(32%BW);  // fill entire words
+      if(SZI>4)fillval|=fillval<<(32%BW);  // fill entire words
       UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data

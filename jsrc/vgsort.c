@@ -202,7 +202,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  wv=C4AV(w);
  UI4 lgn; CTLZI(n,lgn);
  I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
- CR rng = condrange4(wv,AN(w),IMAX,IMIN,maxrange);
+ CR rng = condrange4(wv,AN(w),-1,0,maxrange);
  if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);

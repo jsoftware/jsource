@@ -222,6 +222,7 @@ static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
  R 1;
 }    /* grade"r w on c4t w where c==n */
 
+#if 0  // obsolete
 // returns *base = smallest value, *top = #values (1..2 is 2 values)
 // returns 0 for *top if range is not representable in an integer
 // returns 2 if n=0 (??)
@@ -272,6 +273,8 @@ void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
 // obsolete  R v2(base,base+top-1);
 // obsolete }
 // obsolete 
+#endif
+
 static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
  wv=AV(w); d=c/n;  // d=# ints in an item
  // see if we can grade using small-range methods
@@ -379,7 +382,7 @@ static GF(jtgru){A x,y;B up;I d,e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;
  wv=C4AV(w); d=c/n;
  UI4 lgn; CTLZI(n,lgn);
  I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
- CR rng = condrange4(wv,AN(w),IMAX,IMIN,maxrange);
+ CR rng = condrange4(wv,AN(w),-1,0,maxrange);
  if(!rng.range)R c==n&&n>(I)(65536/1.5)?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
  if(1<d){GATV(x,INT,n,1,0); xv=AV(x);

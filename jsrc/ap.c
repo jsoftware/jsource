@@ -394,11 +394,13 @@ static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
   case 1:       MOVSUMAVG(B,I,INT,D,FL, x/d,SETZD); break;
   case 2: 
    // start min at 0 so range is max+1; make sure all totals fit in an int; use integer code if so
-   if(condrange(AV(w),AN(w),0,IMIN,(I)((D)IMAX/(D)m)-1).range){
+   {I maxval = (I)((D)IMAX/(D)MAX(2,m))-1;
+   CR rng=condrange(AV(w),AN(w),0,0,maxval<<1);
+   if(rng.range && MAX(rng.range,-rng.min)<maxval){
 // obsolete   irange(AN(w),AV(w),&s,&t); t=0<t&&IMAX>=d*((D)s+(D)t);
 // obsolete   if(t)
     MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
-   }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;
+   }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;}
   case 3:       MOVSUMAVG(I,D,FL, D,FL, x/d,SETZD); break;
   case 4: NAN0; MOVSUMAVG(D,D,FL, D,FL, x,  SETZ ); NAN1; break;
   case 5: NAN0; MOVSUMAVG(D,D,FL, D,FL, x/d,SETZD); NAN1; break;

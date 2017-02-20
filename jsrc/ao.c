@@ -210,18 +210,17 @@ typedef struct {   // return struct from jtkeyrs
 } CRT;
 
 
-static I jtkeyrs(J jt,A a,I*zr,I*zs){I ac,at,r=0,s=0;
- at=AT(a); ac=aii(a);
- if(2>=ac)switch(CTTZ(at)){
-  case C2TX: if(1==ac)s=65536;                      break;
-  case C4TX: if(1==ac){C4 cr=(C4)r; c4range(AN(a),C4AV(a),&cr,&s); r=cr;} break;
-  case B01X: if(1==ac)s=2;   else{s=258;   at=C2T;} break;
-  case LITX: if(1==ac)s=256; else{s=65536; at=C2T;} break;
-  case INTX: if(1==ac)irange(AN(a),AV(a),&r,&s);    break;
-  case SBTX: if(1==ac){at=INT; s=jt->sbun; if(65536<s)irange(AN(a),AV(a),&r,&s);}
+static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
+ res.minrange.min=res.minrange.range=0; res.type=AT(a); ac=aii(a);
+ if(2>=ac)switch(CTTZ(res.type)){
+  case C2TX: if(1==ac)res.minrange.range=65536;                      break;
+  case C4TX: if(1==ac){res.minrange=condrange4(C4AV(a),AN(a),-1,0,maxrange);} break;
+  case B01X: if(1==ac)res.minrange.range=2;   else{res.minrange.range=258;   res.type=C2T;} break;
+  case LITX: if(1==ac)res.minrange.range=256; else{res.minrange.range=65536; res.type=C2T;} break;
+  case INTX: if(1==ac)res.minrange=condrange(AV(a),AN(a),IMAX,IMIN,maxrange);    break;
+  case SBTX: if(1==ac){res.type=INT; res.minrange.range=jt->sbun; if(65536<res.minrange.range)res.minrange=condrange(AV(a),AN(a),IMAX,IMIN,maxrange);}
  }
- *zr=r; *zs=s;
- R at;
+ R res;
 }
 
 #define KCASE(d,t)          (t+5*d)
@@ -262,8 +261,10 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
      wt&SBT&&(d==CMIN||d==CMAX)||
      wt&INT&&(17<=d&&d<=25)||
      wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
- at=keyrs(a,&r,&s); c=aii(w); m=s;
- zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s&&s<=MAX(2*n,65536);
+// obsolete CRT rng=keyrs(a,&r,&s); c=aii(w); m=s;
+// obsolete  zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s&&s<=MAX(2*n,65536);
+ CRT rng=keyrs(a,MAX(2*n,65536)); c=aii(w); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; m=s;
+ zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s!=0;
  if(bb){
   GATV(b,B01,s,  1,0); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
@@ -320,9 +321,9 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
  wt=AT(w); wv=AV(w); wr=AR(w);
  ASSERT(n==IC(w),EVLENGTH);
  if(!(AN(a)&&AN(w)&&at&DENSE&&wt&B01+INT+FL))R df2(a,w,folk(sldot(slash(ds(CPLUS))),ds(CDIV),sldot(ds(CPOUND))));
- at=keyrs(a,&r,&s); c=aii(w);
+ CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; c=aii(w);
  if(wt&FL)NAN0;
- if(s&&s<=MAX(2*n,65536)){
+ if(s){
   GATV(p,INT,s,  1, 0    ); pv= AV(p); memset(pv,C0,s*  SZI); pv-=r;
   GATV(q,FL, s*c,1, 0    ); qv=DAV(q); memset(qv,C0,s*c*SZD); qv-=r*c;
   GATV(z,FL, s*c,wr,AS(w)); zv=DAV(z);
@@ -386,7 +387,7 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
 // obsolete if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
  if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
 // obsolete else if(k==sizeof(C4)&&t&C4T){C4 cp=(C4)p; c4range(n,C4AV(w),&cp,&q); p=cp;}
- else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,IMAX,IMIN,2*n);}
+ else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
 // obsolete else if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
  else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
  else{rng.range=0;}
@@ -442,15 +443,15 @@ static F1(jtkeytallysp){PROLOG(0015);A b,e,q,x,y,z;I c,d,j,k,*u,*v;P*p;
                          u=(T*)av; DO(n, ++*(qv+*u++););  \
                          u=(T*)av; DO(n, v=qv+*u++; if(*v){*zv++=*v; *v=0; if(s==++j)break;});}
 
-static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
+static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r,s,*qv,*u,*v;
  RZ(a&&w);
  n=IC(a); at=AT(a); av=AV(a);
  ASSERT(n==IC(w),EVLENGTH);
  if(!AN(a))R vec(INT,n?1:0,&n);
  if(at&SPARSE)R keytallysp(a);
- at=keyrs(a,&r,&s);
+ CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  if(n&&at&B01&&1>=AR(a)){B*b=(B*)av; k=bsum(n,b); R !k||n==k?vci(k?k:n):v2(*b?k:n-k,*b?n-k:k);}
- if(s&&s<=MAX(2*n,65536)){A z;I*zv;
+ if(s){A z;I*zv;
   GATV(z,INT,s,1,0); zv=AV(z);
   GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;);
@@ -481,13 +482,14 @@ static DF2(jtkeytally){PROLOG(0016);A q;I at,*av,j=0,k,n,r=0,s=0,*qv,*u,*v;
   AN(z)=zz-(Tz*)zv;                       \
  }
 
-static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv,*u,*v,wt,*zv;
+static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,*v,wt,*zv;
  RZ(a&&w);
  n=IC(a); wt=AT(w);
  ASSERT(n==IC(w),EVLENGTH);
  ASSERT(!n||wt&NUMERIC,EVDOMAIN);
  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
- at=keyrs(a,&r,&s); av=AV(a); 
+ CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
+ av=AV(a); 
  f=VAV(self)->f; f=VAV(f)->f; b=CHEAD==ID(f);
  if(at&B01&&1>=AR(a)){B*c,*d,*p=(B*)av;I i,j,m;
   c=d=p;
@@ -498,7 +500,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r=0,s=0,*qv
   GATV(y,INT,m,1,0); v=AV(y); *v++=i<j||!d?k:n-k; if(c&&d)*v=i<j?n-k:k;
   R stitch(b?from(x,w):y,b?y:from(x,w));
  }
- if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s&&s<=MAX(2*n,65536)){
+ if(at&LIT+C2T+C4T+INT+SBT&&wt&B01+INT+FL&&s){
   GA(z,wt&FL?FL:INT,2*s,2,0); zv=AV(z);
   GATV(q,INT,s,1,0); qv=AV(q)-r;
   u=qv+r; DO(s, *u++=0;); k=0;

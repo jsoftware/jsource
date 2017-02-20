@@ -1804,4 +1804,4 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  R z;
 }    /* a i."1 &.|:w or a i:"1 &.|:w */
 
-#endif /* !C_AVX */
+#endif /* C_AVX */

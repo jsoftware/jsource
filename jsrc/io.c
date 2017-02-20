@@ -139,7 +139,8 @@ F1(jtjoff){I x;
  x=i0(w);
  jt->jerr=0; jt->etxn=0; /* clear old errors */
  if(jt->sesm)jsto(jt, MTYOEXIT,(C*)x); else JFree(jt);
- exit((int)x);
+// let front-end to handle exit
+// exit((int)x);
  R 0;
 }
 

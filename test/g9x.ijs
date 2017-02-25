@@ -300,10 +300,13 @@ t -: 9!:38 ''
 'limit error'  -: 9!:39 etx 2 1000
 
 NB. 9!:46
+1 [ initspace =: 7!:0''
+ 
 3 : 0 ''
 if. 0 = #f =. 9!:46'' do. 1 return. end.  NB. Can''t test if no file
 try.
- for_n. i. 1e8 do.
+ n =. 0
+ while. 1e8 > n =. >: n do.  NB. Using for. here leaks memory as noted in cx.c/CBBLOCK
   if. 0 = 10000 | n do.
    (1{a.) 1!:12 f;0  NB. Request normal break, goes out through normal exit
   end.
@@ -313,6 +316,7 @@ catch.
 end. 
 ) 
 
+(7!:0'') < initspace+20000
 'break' -: 3 : 0 etx ''
 if. 0 = #f =. 9!:46'' do. 1 return. end.  NB. Can''t test if no file
 try.
@@ -326,8 +330,18 @@ catch.
 end. 
 ) 
 
+(7!:0'') < initspace+40000
+
+NB. Repeat for tacit - attention interrupt
+namedvb =: {.
+'attention interrupt' -: (namedvb^:100000 [ ((1{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
+
+(7!:0'') < initspace+40000
+
 NB. Repeat for tacit - exigent interrupt
 'break' -: ({.^:100000 [ ((2{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
+
+(7!:0'') < initspace+40000
 
 NB. 9!:48 and 9!:49 -----------------------------------------------------
 
@@ -364,7 +378,7 @@ NB. 9!:51 old
 
 
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
-4!:55 ;:'drop1 erase evmq evms nub old p ppq pps promptq '
+4!:55 ;:'drop1 erase evmq evms namedvb nub old p ppq pps promptq '
 4!:55 ;:'prompts q read rlq rls s t v '
 
 

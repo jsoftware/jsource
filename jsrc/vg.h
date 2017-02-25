@@ -33,8 +33,9 @@ extern int  compspssD(J,I,I);
 extern int  compspssI(J,I,I);
 extern int  compspssZ(J,I,I);
 
-extern void grcol(I,I,I*,I,I*,I*,const I,US*,int,int,int);
-extern void grcolu(I,I,UI*,I,UI*,UI*,const I,US*,int,int,int);
+extern I grcol4(I,I,UI4*,I,I*,I*,const I,US*,I);
+extern I grcol2(I,I,US*,I,I*,I*,const I,US*,I);
+// obsolete extern void grcolu(I,I,UI*,I,UI*,UI*,const I,US*,int,int,int);
 
 extern void jtmsort(J,I,I*,I*);
 
@@ -51,3 +52,10 @@ extern void jtmsort(J,I,I*,I*);
 #else
 #define IND4(x) {UINT xx = (x); ii = 0xf&((xx>>21)|(xx>>14)|(xx>>7)|xx);}
 #endif
+
+// endian constants for 16-bit radix sorts
+#define FPLSBWDX (C_LE?0:3)
+#define FPMSBWDX (C_LE?3:0)
+#define INTLSBWDX (C_LE?0:(SZI/2-1))
+#define INTMSBWDX (C_LE?(SZI/2-1):0)
+#define WDINC (C_LE?1:-1)

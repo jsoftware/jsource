@@ -101,28 +101,127 @@ static GF(jtgrx){A x;I ck,d,t,*xv;
 /* up:    1 if sort up; 0 if sort down                         */
 /* split: 1 iff do split pass of halfword range                */
 /* sort:  1 if sort; 0 if grade                                */
+// flags: 8: full clear of buckets not needed; 4: sort mode; 2: up; 1: split
 
-void grcol(I d,I c,I*yv,I n,I*xv,I*zv,const I m,US*u,int up,int split,int sort){
-     D*xx,*zz;I k,s,*t;US*v;
- s=0; memset(c+yv,C0,d*SZI); 
- v=u; 
- DO(n, ++yv[*v]; v+=m;);
- switch(up+2*split){
-  case 0: t=yv+c+d;     DO(d,   --t; if(k=*t){*t=s; s+=k;}); break;
-  case 1: t=yv+c-1;     DO(d,   ++t; if(k=*t){*t=s; s+=k;}); break;
-  case 2: t=yv+c+d/2;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); 
-          t=yv+c+d  ;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); break;
-  case 3: t=yv+c+d/2-1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;}); 
-          t=yv+c    -1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;});
- }
- v=u;
- if(sort){
-  if(2==m)                       DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
-  else    {zz=(D*)zv; xx=(D*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
- }else if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
- else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
+// bucket sort, 16 bits at a time
+I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
+     I split;US*v;I ct00, ctff;
+ // clear the bucket area, unless the flags tell us that only the first and last buckets need be cleared
+ yv[0]=yv[65535]=0;  // always clear the sign-extension values
+ if(flags&8){
+ // Here we know that the previous pass found all the values were sign-extensions.  So we just clear the first and last values, and the flag
+  flags &= ~8;
+ }else{memset(c+yv,C0,d*sizeof(*yv));}  // full clear if the fast option is not selected
+ // increment the bucket for each input value
+ v=u; DO(n, ++yv[*v]; v+=m;);
+ // If all the values are sign-extensions (which will happen often) we can short-circuit much of the processing, including the rolling sum
+ // Do this only when there is data/index to copy, to save us the trouble of having a case for synthesizing the index
+ if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
+  // All sign extensions.  If there is only one, do nothing except copy the input to the output
+  flags|=8;  // tell the next pass the good news
+  if(ct00&&ctff){S *vs=(S*)u;  // since we know they're sign-extensions, extend when we load
+   // There are both positive & negative sign-extensions.  Simulate the full processing, but without the fetches from the table
+   // We need the output index for 00 and ff values, which will depend on the up/split values
+   // Copy 00 values into index 0 if up && !split  or !up && split; otherwise to ctff
+   // copy ff values into index 0 if !up && !split  or  up && split; otherwise to ct00
+   // So, zero the appropriate index & use ctff as the pos index, ct00 as the neg
+   {I writeposto0=(((flags>>1)^flags)&1); ctff&=(writeposto0-=1); ct00&=~writeposto0;}  // if up^split, generate 1,0,ff, clearing ctff; otherwise 0,ff,00, clearing ct00
+   // Read each data-value, and move the value (data or index) to the indicated output position
+   if(flags&4){
+    // sort mode. copy the data
+// obsolete     if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
+// obsolete     else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
+    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 4 bytes
+    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 8 bytes
+   }else{
+    // copy the index, refer through it to get the data.  xv[i] is the initial index mapped to current i.  We fetch the current word for that index, call that xvv
+    // Depending on whether xvv is ffff or 0000, move the index xv[i] to the selected output location, and increment whichever
+    // pointer it was moved to.
+    xv+=n; DP(n, I xvv=vs[m*xv[i]]; zv[(ct00&xvv)+(ctff&~xvv)]=xv[i]; ct00-=xvv; ctff-=~xvv;)
+   }
+  }else{
+   // All the sign-extensions are the same.  All there is to do is copy the input to the output.  could try to save the copy with pointer tricks?
+   // The length, as below, depends on the operation mode
+   memcpy(zv,xv,n*((flags&4)?m*sizeof(US):sizeof(I)));
+  }
+ }else{UI4 k;
+  // Normal case.  Create +/\ of the bucket totals, or +/\. if sorting down (to preserve stability)
+  // if this slice contains the sign bit, offset the scan to start at max neg (in the middle)
+  // the result of this stage is the starting position in the output of each input value
+  I tct = d>>(split=flags&1);  // number of iterations per section
+  I tinc = (flags&2)-1;  // +1 if up, -1 if down
+  UI4 *t=yv+c+(tct&((tinc>>(BW-1))|-split))+(tinc>>(BW-1));  // starting position: based on up/split: 00: +d-1  01: +d/2-1  10: +0  11: +d/2
+  UI4 s=0; do{DP(tct, k=*t; *t=s; s+=k; t+=tinc;) t-=tinc*d;}while(--split>=0);  // 1 iteration if not split, 2 if split
+// obsolete  switch(up+2*split){
+// obsolete   case 0: t=yv+c+d;     DO(d,   --t; if(k=*t){*t=s; s+=k;}); break;
+// obsolete   case 1: t=yv+c-1;     DO(d,   ++t; if(k=*t){*t=s; s+=k;}); break;
+// obsolete   case 2: t=yv+c+d/2;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); 
+// obsolete           t=yv+c+d  ;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); break;
+// obsolete   case 3: t=yv+c+d/2-1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;}); 
+// obsolete           t=yv+c    -1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;});
+// obsolete  }
+  // create the output.  Each input produces an output in the position indicated by yv.
+  // If sort is set, we move the value; otherwise move the index.
+  // First time through, when xv==0, we use an implied null index vector
+  v=u;
+  if(flags&4){
+   // sort mode. copy the data
+// obsolete   if(2==m)                       DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
+// obsolete   else    {zz=(D*)zv; xx=(D*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
+   if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
+   else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
+  }else{
+   // copy the index, using xv or implied index vector
+// obsolete   if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
+// obsolete   else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
+   if(!xv) {DO(n, zv[yv[*v]++]= i; v+=m;)}
+   else{xv+=n; DP(n, zv[yv[v[m*xv[i]]]++]=xv[i];)}
+  }
+ }  // end special-case test
+ R flags;  // return input flags, with info about clearing the next buffer
 }
 
+// version using 2-byte table, same as above
+I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
+     I split;US*v;I ct00, ctff;
+ yv[0]=yv[65535]=0;
+ if(flags&8){
+  flags &= ~8;
+ }else{memset(c+yv,C0,d*sizeof(*yv));}
+ v=u; DO(n, ++yv[*v]; v+=m;);
+ if(xv&&((ct00=yv[0])+(ctff=yv[65535])==n)){
+  flags|=8;
+  if(ct00&&ctff){S *vs=(S*)u;
+   {I writeposto0=(((flags>>1)^flags)&1); ctff&=(writeposto0-=1); ct00&=~writeposto0;}
+   if(flags&4){
+    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 4 bytes
+    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 8 bytes
+   }else{
+    xv+=n; DP(n, I xvv=vs[m*xv[i]]; zv[(ct00&xvv)+(ctff&~xvv)]=xv[i]; ct00-=xvv; ctff-=~xvv;)
+   }
+  }else{
+   memcpy(zv,xv,n*((flags&4)?m*sizeof(US):sizeof(I)));
+  }
+ }else{US k;
+  I tct = d>>(split=flags&1);
+  I tinc = (flags&2)-1;
+  US *t=yv+c+(tct&((tinc>>(BW-1))|-split))+(tinc>>(BW-1));
+  US s=0; do{DP(tct, k=*t; *t=s; s+=k; t+=tinc;) t-=tinc*d;}while(--split>=0);
+  v=u;
+  if(flags&4){
+   if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
+   else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
+  }else{
+   if(!xv) {DO(n, zv[yv[*v]++]= i; v+=m;)}
+   else{xv+=n; DP(n, zv[yv[v[m*xv[i]]]++]=xv[i];)}
+  }
+ }
+ R flags;
+}
+
+
+#if 0  // obsolete
+// should use integer col
 void grcolu(I d,I c,UI*yv,I n,UI*xv,UI*zv,const I m,US*u,int up,int split,int sort){
      C4*xx,*zz;UI k,s,*t;US*v;
  s=0; memset(c+yv,C0,d*SZI); 
@@ -143,80 +242,134 @@ void grcolu(I d,I c,UI*yv,I n,UI*xv,UI*zv,const I m,US*u,int up,int split,int so
  }else if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
  else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
 }
-
-static GF(jtgrd){A x,y;B b;D*v,*wv;I d,e,*g,*h,i,k,p,q,*xv,*yv;int up;US*u;
- if(!(c==n&&n>65536/3.5))R grx(m,c,n,w,zv);
- p=65536; q=p/2; up=1==jt->compgt; wv=DAV(w);
- GATV(y,INT,p,1,0); yv=AV(y);
- GATV(x,INT,n,1,0); xv=AV(x);
-#if C_LE
- d= 1; e=0;
-#else
- d=-1; e=3;
 #endif
- for(i=0;i<m;++i){
-  u=e+(US*)wv; 
-  v=wv; k=0; DO(n, if(0>*v++)++k;); b=0<k&&k<n;
+
+// grade doubles
+// should do final polish of this code
+static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;
+  // if not large and 1 atom per key, go do general grade
+ if(!(c==n&&n>65536/3.5))R grx(m,c,n,w,zv);
+ // grade float by radix sort of halfwords.  Save some control parameters
+ wv=DAV(w);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
+ GATV(x,INT,n,1,0); xv=AV(x);  // allocate a ping-pong buffer for the result
+// obsolete #if C_LE
+// obsolete  d= 1; e=0; msbx=3;
+// obsolete #else
+// obsolete  d=-1; e=3; msbx=0;
+// obsolete #endif
+ for(i=0;i<m;++i){I colflags;  // loop over each cell of input
+  u=(US*)wv+FPLSBWDX;   // point to LSB of input
+  // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
+  // If we are doing all negative values, just change the direction and return the sorted values without reversal
+  {v=wv; nneg=0; DO(n, nneg+=(((US*)v)[FPMSBWDX]>>15); ++v;); b=0<nneg&&nneg<n;}
+  // set the ping-pong buffer pointers so we will end up with the output in zv.  If b is set, we have 5 passes (one final sign-correction pass); if not, 4
+  // h is the even-numbered output buffer.  if b is off, we start writing to x and finish in z; if b is set, we start writing to z, finish the 4th pass
+  // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
-  grcol(p,    0L,      yv,n,0L,h,sizeof(D)/sizeof(US),u+0*d,k==n?!up:up,0,0);
-  grcol(p,    0L,      yv,n,h, g,sizeof(D)/sizeof(US),u+1*d,k==n?!up:up,0,0);
-  grcol(p,    0L,      yv,n,g, h,sizeof(D)/sizeof(US),u+2*d,k==n?!up:up,0,0);
-  grcol(b?p:q,k==n?q:0,yv,n,h, g,sizeof(D)/sizeof(US),u+3*d,k==n?!up:up,0,0);
-  if(b){D d;I j,m,*u,*v,*vv;
-   if(up){ICPY(k+zv,  xv,n-k); u=zv;     v=n+xv;}
-   else  {ICPY(  zv,k+xv,n-k); u=zv+n-k; v=k+xv;}
+  // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
+  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,((jt->compgt+1)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
+  colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
+  colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);
+  // for the MSB, which is signed, do the same thing, but to save a few cycles tell grcol if all the values are negative or nonnegative.  grcol will
+  // save the time for clearing the unused half of the buffer.  If all neg, call with 32768,32768; if all nonneg, 32768,0; otherwise 65536,0
+  grcol(32768<<b,(nneg==n)<<15,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
+
+  if(b){D d;I j,m,*u,*v,*vv;I nneg0; 
+   // the input contained a mixture of neg/nonneg.  They are sorted into unsigned order in *xv.  Reorder them to have neg first, in reversed order, followed by positive
+   // first, merge +0 and -0, which are widely separated in the reult (each at the beginning of their areas).  The merged result must be in
+   // ascending order of index
+   if(colflags&2){  // values were sorted up, & so now contain +0,  +, -0,  -
+    I npos0; u=xv+(n-nneg); for(npos0=-(n-nneg);npos0<0&&wv[u[npos0]]==0;++npos0); npos0+=(n-nneg);  // Count +0
+    u=xv+n; for(nneg0=-nneg;nneg0<0&&wv[u[nneg0]]==0;++nneg0); nneg0+=nneg;  // Count -0
+    u=zv+nneg-nneg0; I ppos=0,pneg=0; DO(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[ppos]<xv[n-nneg+pneg]))?xv[ppos++]:xv[n-nneg+pneg++];)  // merge
+    // Copy the positives
+    ICPY(u,xv+npos0,n-nneg-npos0); //  /: copy the nonnegatives to the end of result area
+    u=zv;     v=xv+n;
+   }else{  // values were sorted down, & so now contain  - , -0,  +, +0
+    I npos0; u=xv+nneg-1; for(npos0=n-nneg;npos0>0&&wv[u[npos0]]==0;--npos0); npos0=(n-nneg)-npos0;  // Count +0
+    u=xv-1; for(nneg0=nneg;nneg0>0&&wv[u[nneg0]]==0;--nneg0); nneg0=nneg-nneg0;  // Count -0
+    u=zv+n-nneg-npos0; I ppos=0,pneg=0; DO(npos0+nneg0, *u++=(pneg>=nneg0||(ppos<npos0&&xv[n-npos0+ppos]<xv[nneg-nneg0+pneg]))?xv[n-npos0+ppos++]:xv[nneg-nneg0+pneg++];)  // merge
+    // Copy the positives
+    ICPY(zv,xv+nneg,n-nneg-npos0); //  /: copy the positives to the beginning of result area
+    u=zv+n-nneg+nneg0;     v=xv+nneg-nneg0;
+   }
+// obsolete   {ICPY(  zv,nneg+xv,n-nneg); u=zv+n-nneg; v=nneg+xv;}  // \: copy the nonnegatives to the beginning of the result area
+// BUG: should copy down in other order to avoid pointing past valid region.  As written will run over into the shape... but that will always be positive, at least
+   // copy in the negatives, reversing the order.  Here u->place to put negatives, v->last+1 negative
+   // as we copy, we have to keep equal keys in the original order, i. e. don't reverse them.
    j=0; d=wv[*(v-1)];
-   DO(1+k, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
+   // At start of this loop, d has the last of a set of (possibly only 1) equal values, j has the index of the output location where
+   // the set will be stored.  v scans back through the negatives, looking for a new value, and when it finds one copies out all
+   // the old values.  We know that there is at least one positive value in front of the first negative value, and that it must not compare equal,
+   // so that each value will get pushed out
+   DO(1+nneg-nneg0, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
   }
   wv+=c; zv+=n;
  }
  R 1;
 }    /* grade"r w on real w; main code here is for c==n */
 
-static GF(jtgri1){A x,y;I*wv;I d,e,i,p,*xv,*yv;int up;US*u;
- p=65536; up=1==jt->compgt; wv=AV(w);
- GATV(y,INT,p,1,0); yv=AV(y);
+// ai==1 and n is large (>40000): grade by repeated bucketsort
+static GF(jtgri1){A x,y;I*wv;I i,*xv;US*u;void *yv;
+ wv=AV(w);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
+ // allocate ping-pong for output area
  GATV(x,INT,n,1,0); xv=AV(x);
- e=SY_64?3:1;
-#if C_LE
-  d= 1; 
-#else
-  d=-1;
-#endif
- for(i=0;i<m;++i){
-  u=e*(-1==d)+(US*)wv;
-  grcol(p,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,    up,0,0);
+// obsolete e=SY_64?3:1;  // number-1 of 16-bit sections to process
+// obsolete #if C_LE
+// obsolete  d= 1;   // direction of processing, from LSB to MSB
+// obsolete  e=0;  // offset to LSB
+// obsolete #else
+// obsolete  d=-1;
+// obsolete  e=SY_64?3:1;  // offset to LSB
+// obsolete #endif
+ // for each sort...
+ for(i=0;i<m;++i){I colflags;
+  // process each 16-bit section of input
+  u=(US*)wv+INTLSBWDX;   // point to LSB
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,jt->compgt+1);  // move 'up' to bit 1
 #if SY_64
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+1*d,up,0,0);
-  grcol(p,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+2*d,up,0,0);
+  colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
+  colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
 #endif
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+e*d,up,1,0);
-  wv+=c; zv+=n;
+  grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+=WDINC,colflags|1);  // the 1 means 'handle sign bit'
+  wv+=c; zv+=n;  // advance to next input/output area
  }
  R 1;
 }    /* grade"r w on integer w where c==n */
 
-static GF(jtgru1){A x,y;B b;C4*v,*wv;I d,e,i,k,p,*xv,*yv;UI*g,*h;int up;US*u;
- p=65536; up=1==jt->compgt; wv=C4AV(w);
- GATV(y,INT,p,1,0); yv=AV(y);
+// should recopy this from int (not float)
+static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;
+ wv=C4AV(w);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
-#if C_LE
- d= 1; e=0;
-#else
- d=-1; e=1;
-#endif
- for(i=0;i<m;++i){
-  u=e+(US*)wv; 
-  v=wv; k=0; b=0;
-  g=b?xv:zv; h=b?zv:xv;
-  grcolu(p, 0L, yv,n,0L,h,sizeof(C4)/sizeof(US),u+0*d,k==n?!up:up,0,0);
-  grcolu(p, 0L, yv,n, h,g,sizeof(C4)/sizeof(US),u+1*d,k==n?!up:up,0,0);
-  if(b){C4 d;I j,m,*u,*v,*vv;
-   if(up){ICPY(k+zv,  xv,n-k); u=zv;     v=n+xv;}
-   else  {ICPY(  zv,k+xv,n-k); u=zv+n-k; v=k+xv;}
-   j=0; d=wv[*(v-1)];
-   DO(1+k, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
-  }
+// obsolete #if C_LE
+// obsolete  d= 1; e=0;
+// obsolete #else
+// obsolete  d=-1; e=1;
+// obsolete #endif
+ for(i=0;i<m;++i){I colflags;
+// obsolete   u=e+(US*)wv; 
+// obsolete   v=wv; k=0; b=0;
+// obsolete   g=b?xv:zv; h=b?zv:xv;
+  u=(US*)wv+INTLSBWDX;   // point to LSB
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,jt->compgt+1);  // move 'up' to bit 1
+  grcol(65536,0L,yv,n,xv,zv,sizeof(C4)/sizeof(US),u+=WDINC,colflags);
+// obsolete   grcolu(p, 0L, yv,n,0L,h,sizeof(C4)/sizeof(US),u+0*d,k==n?!up:up,0,0);
+// obsolete   grcolu(p, 0L, yv,n, h,g,sizeof(C4)/sizeof(US),u+1*d,k==n?!up:up,0,0);
+// obsolete   if(b){C4 d;I j,m,*u,*v,*vv;
+// obsolete    if(up){ICPY(k+zv,  xv,n-k); u=zv;     v=n+xv;}
+// obsolete    else  {ICPY(  zv,k+xv,n-k); u=zv+n-k; v=k+xv;}
+// obsolete    j=0; d=wv[*(v-1)];
+// obsolete    DO(1+k, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
+// obsolete   }
   wv+=c; zv+=n;
  }
  R 1;
@@ -480,28 +633,36 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-F1(jtgr1){PROLOG(0075);A z;I c,f,m,n,r,*s,t,wn,wr,zn;
+// /: and \: with IRS support
+F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  RZ(w);
  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  f=wr-r; s=AS(w);
- // Calculate m: #cells in w   n: #items in a cell of w   c: #atoms in a cell of w
+ // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
  n=r?s[f]:1; if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
 // obsolete  m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1; RE(zn=mult(m,n));
-  PROD(m,f,s); PROD(c,r,f+s); zn=m*n;
+  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; PROD(c,r,f+s); zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   RE(zn=mult(prod(f,s),n));
  }
+ // allocate the entire result area, one int per item in each input cell
  GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
+ // if there are no atoms, or we are sorting things with 0-1 item, return an index vector of the appropriate shape 
  if(!wn||1>=n)R reshape(shape(z),IX(n));
- if     (t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z)))
- else if(t&SBT            )RZ(grs(m,c,n,w,AV(z)))
- else if(t&FL             )RZ(grd(m,c,n,w,AV(z)))
- else if(t&INT            )RZ(gri(m,c,n,w,AV(z)))
- else if(t&IS1BYTE+C2T)    RZ(grc(m,c,n,w,AV(z)))
- else if(t&C4T)            RZ(gru(m,c,n,w,AV(z)))
- else                      RZ(grx(m,c,n,w,AV(z)));
+ // do the grade, using a special-case routine if possible
+ switch(CTTZ(t)) {
+ case B01X:
+// obsolete   if(t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z))) break;  // Booleans, multiples of 4 bytes
+  if(0==(ai&3)){RZ(grb(m,c,n,w,AV(z))) break;}  // Booleans, multiples of 4 bytes, otherwise fall through to...
+ case LITX: case C2T: RZ(grc(m,c,n,w,AV(z))) break;  // other 1- or 2-byte types
+ case SBTX: RZ(grs(m,c,n,w,AV(z))) break;   // symbols
+ case FLX: RZ(grd(m,c,n,w,AV(z))) break;  // floats, any shape
+ case INTX: RZ(gri(m,c,n,w,AV(z))) break;  // integer, any shape
+ case C4TX: RZ(gru(m,c,n,w,AV(z))) break;  // 4-byte characters
+ default: RZ(grx(m,c,n,w,AV(z))); break;   // anything else
+ }
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 

@@ -137,25 +137,28 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 }    /* w grade"1 w on small-range integers */
 #endif
 
-static SF(jtsorti1){A x,y,z;I*wv;I d,e,i,p,q,*xv,*yv,*zv;int up;
+
+static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
- p=65536; up=1==jt->compgt; wv=AV(w);
- GATV(y,INT,p,1,0); yv=AV(y);
+ wv=AV(w);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
- e=SY_64?3:1;
-#if C_LE
-  d= 1; 
-#else
-  d=-1;
-#endif
- q=e*(-1==d);
- for(i=0;i<m;++i){
-  grcol(p,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    q+(US*)wv,up,0,1);
+// obsolete  e=SY_64?3:1;
+// obsolete #if C_LE
+// obsolete   d= 1; 
+// obsolete #else
+// obsolete   d=-1;
+// obsolete #endif
+// obsolete  q=e*(-1==d);
+ for(i=0;i<m;++i){I colflags;
+  colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+(jt->compgt+1));  // 'sort', and move 'up' to bit 1
 #if SY_64
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),1*d+q+(US*)xv,up,0,1);
-  grcol(p,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*d+q+(US*)zv,up,0,1);
+  colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),1*WDINC+INTLSBWDX+(US*)xv,colflags);
+  colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*WDINC+INTLSBWDX+(US*)zv,colflags);
 #endif
-  grcol(p,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),e*d+q+(US*)xv,up,1,1);
+  grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),INTMSBWDX+(US*)xv,colflags|1);
   wv+=c; zv+=n;
  }
  R z;
@@ -216,53 +219,59 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
 #endif
 }    /* w grade"1 w on small-range literal4 */
 
-static SF(jtsortu1){A x,y,z;B b;C4*g,*h,*xu,*wv,*zu;I d,e,i,k,p;UI *yv;int up;
+static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  GA(z,AT(w),AN(w),AR(w),AS(w));
- p=65536; up=1==jt->compgt; wv=C4AV(w); zu=C4AV(z);
- GATV(y,INT,p,1,0); yv=AV(y);
+ wv=C4AV(w); zu=C4AV(z);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,C4T,n,1,0); xu=C4AV(x);
-#if C_LE
- d= 1; e=0;
-#else
- d=-1; e=1;
-#endif
- for(i=0;i<m;++i){
-  k=0; b=0;
-  g=b?xu:zu; h=b?zu:xu;
-  grcolu(p, 0L, yv,n,(UI*)wv,(UI*)h,sizeof(C4)/sizeof(US),e+0*d+(US*)wv,k==n?!up:up,0,1);
-  grcolu(p, 0L, yv,n,(UI*)h, (UI*)g,sizeof(C4)/sizeof(US),e+1*d+(US*)h ,k==n?!up:up,0,1);
-  if(b){
-   g=zu;
-   if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
-   else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
-  }
+// obsolete #if C_LE
+// obsolete  d= 1; e=0;
+// obsolete #else
+// obsolete  d=-1; e=1;
+// obsolete #endif
+ for(i=0;i<m;++i){I colflags;
+// obsolete   k=0; b=0;
+// obsolete   g=b?xu:zu; h=b?zu:xu;
+// obsolete   grcolu(p, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),e+0*d+(US*)wv,k==n?!up:up,0,1);
+// obsolete   grcolu(p, 0L, yv,n,(UI*)h, (UI*)g,sizeof(C4)/sizeof(US),e+1*d+(US*)h ,k==n?!up:up,0,1);
+  colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+(jt->compgt+1));  // 'sort' + 'up' moved to bit 1
+  grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
+// obsolete   if(b){
+// obsolete    g=zu;
+// obsolete    if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
+// obsolete    else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
+// obsolete   }
   wv+=c; zu+=n;
  }
  R z;
 }    /* w grade"r w on large-range literal4 */
 
-static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I d,e,i,k,p,q,*yv;int up;
+static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  if(n<8000)R irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GA(z,AT(w),AN(w),AR(w),AS(w));
- p=65536; q=p/2; up=1==jt->compgt; wv=DAV(w); zu=DAV(z);
- GATV(y,INT,p,1,0); yv=AV(y);
+ wv=DAV(w); zu=DAV(z);
+ // choose bucket table size & function; allocate the bucket area
+ I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,FL, n,1,0); xu=DAV(x);
-#if C_LE
- d= 1; e=0;
-#else
- d=-1; e=3;
-#endif
- for(i=0;i<m;++i){
-  g=wv; k=0; DO(n, if(0>*g++)++k;); b=0<k&&k<n;
-  g=b?xu:zu; h=b?zu:xu;
-  grcol(p,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),e+0*d+(US*)wv,k==n?!up:up,0,1);
-  grcol(p,    0L,      yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),e+1*d+(US*)h ,k==n?!up:up,0,1);
-  grcol(p,    0L,      yv,n,(I*)g, (I*)h,sizeof(D)/sizeof(US),e+2*d+(US*)g ,k==n?!up:up,0,1);
-  grcol(b?p:q,k==n?q:0,yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),e+3*d+(US*)h ,k==n?!up:up,0,1);
-  if(b){
+// obsolete #if C_LE
+// obsolete  d= 1; e=0;
+// obsolete #else
+// obsolete  d=-1; e=3;
+// obsolete #endif
+ for(i=0;i<m;++i){I colflags;
+  g=wv; nneg=0; DO(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
+  g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv
+  colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((nneg==n)<<1)^(jt->compgt+1))); // 'sort', plus 'up' in bit 1, but reversed if all neg
+  colflags=grcol(65536,    0L,      yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+1*WDINC+(US*)h ,colflags);
+  colflags=grcol(65536,    0L,      yv,n,(I*)g, (I*)h,sizeof(D)/sizeof(US),FPLSBWDX+2*WDINC+(US*)g ,colflags);
+  grcol(32768<<b,(nneg==n)<<15,yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+3*WDINC+(US*)h ,colflags);
+  if(b){  // if there was not a mix of neg & nonneg, the result is ready now
    g=zu;
-   if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
-   else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
+   if(colflags&2){h=n+xu; DO(nneg,   *g++=*--h;); h=  xu; DO(n-nneg, *g++=*h++;);}  // up: reverse neg, foll by nonneg
+   else  {h=nneg+xu; DO(n-nneg, *g++=*h++;); h=nneg+xu; DO(nneg,   *g++=*--h;);}  // down: nonneg foll by reverse neg
   }
   wv+=c; zu+=n;
  }

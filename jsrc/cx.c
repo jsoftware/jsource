@@ -274,7 +274,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}
+    if(cd){rat1(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // rat1 because we will rat() on the way out; here no loos is possible except at top level
     i=ci->go;
     break;
    case CCASE:
@@ -325,7 +325,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...
    default:   //    CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
-    BASSERT(2>*jt->adbreakr,EVBREAK);  // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
+    if(2<=*jt->adbreakr) {if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);} BASSERT(0,EVBREAK);} 
+      // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
 // obsolete    JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}

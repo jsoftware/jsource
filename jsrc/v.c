@@ -17,7 +17,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
-  if((I)jtinplace&JTINPLACEW && (f<wr) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w)){  // inplace allowed, result rank (f+1) <= current rank, usecount is right, and it's a dense array
+  if((I)jtinplace&JTINPLACEW && (f<wr) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))){  // inplace allowed, result rank (f+1) <= current rank, usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell)
    AR(w)=1+f; AS(w)[f]=m; R w;
   }

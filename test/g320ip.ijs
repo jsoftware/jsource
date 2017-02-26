@@ -729,6 +729,18 @@ f =: 3 : 0
 )
 'aaaac' -: f ''
 
+
+NB. Verify assignment-in-place does not modify an aliased name
+NB. Add a line here whenever new verbs are inplaced
+3 : 0 ''
+y =. i. 5 5
+3 : 'y =. ,y' y
+assert. y -: i. 5 5
+3 : 'y =. y , i. 5'
+assert. y -: i. 5 5
+1
+)
+
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 
 

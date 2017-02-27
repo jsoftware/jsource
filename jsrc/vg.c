@@ -175,7 +175,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 // obsolete   if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
 // obsolete   else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
    if(!xv) {DO(n, zv[yv[*v]++]= i; v+=m;)}
-   else{xv+=n; DP(n, zv[yv[v[m*xv[i]]]++]=xv[i];)}
+   else{xv+=n; DP(n, I buckno=(UI4)v[m*xv[i]]; I buckval=yv[buckno]; zv[buckval]=xv[i]; yv[buckno]=(UI4)(buckval+=1);)}
   }
  }  // end special-case test
  R flags;  // return input flags, with info about clearing the next buffer
@@ -213,7 +213,7 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
   }else{
    if(!xv) {DO(n, zv[yv[*v]++]= i; v+=m;)}
-   else{xv+=n; DP(n, zv[yv[v[m*xv[i]]]++]=xv[i];)}
+   else{xv+=n; DP(n, I buckno=v[m*xv[i]]; I buckval=(US)yv[buckno]; zv[buckval]=xv[i]; yv[buckno]=(US)(buckval+=1);)}
   }
  }
  R flags;
@@ -432,11 +432,11 @@ static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
  wv=AV(w); d=c/n;  // d=# ints in an item
  // see if we can grade using small-range methods
  // figure out whether we should do small-range processing
- // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
- // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
+ // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles (since the compare usually stops after one word); the cost of small-range indexing is
+ // d*range*4.5 (.5 to clear, 2 to read) + d*n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
  // approximate lg(n) with bit count.  And always use small-range if range is < 256
  UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
 // obsolete irange(AN(w),wv,&q,&p); 
  if(!rng.range)R c==n&&n>(I)(65536/1.5)?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);  // revert to other methods if not small-range
@@ -534,7 +534,7 @@ static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
 static GF(jtgru){A x,y;B up;I d,e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;
  wv=C4AV(w); d=c/n;
  UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
  if(!rng.range)R c==n&&n>(I)(65536/1.5)?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;

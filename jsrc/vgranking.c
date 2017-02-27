@@ -86,11 +86,11 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  wt=AT(w); wv=CAV(w); wn=AN(w);
- ws=AS(w); n=wcr?ws[wf]:1;
+ ws=AS(w); n=wcr?ws[wf]:1;  // n=#cells in w; m is number of atoms in w
 // obsolete RE(m=prod(wf,ws));
  if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),zero);}
- wk=bp(wt); PROD(icn,wcr-1,ws+wf+1); k=icn*wk;  // wk=size of atom in bytes; k = *bytes in an item of a CELL of w
+ wk=bp(wt); PROD(icn,wcr-1,ws+wf+1); k=icn*wk;  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
 // obsolete  wk=bp(wt); k=wk*(wcr?prod(wcr-1,ws+wf+1):1);
  // if Boolean 2- or 4-byte, go off to handle that special case
  if(wt&B01&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
@@ -100,7 +100,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
   // approximate lg(n) with bit count.  And always use small-range if range is < 256
   UI4 lgn; CTLZI(wn,lgn);
-  I maxrange = wn<64?256:(I)((wn*lgn)*(4/4.5) - wn*(6/4.5));
+  I maxrange = wn<64?256:(I)((lgn*4-6)*(D)wn/(4.5*(D)icn));
   rng = wt&INT?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
  }else if(k<=2){rng.range=shortrange[wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;

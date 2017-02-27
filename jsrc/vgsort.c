@@ -115,7 +115,7 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
  // approximate lg(n) with bit count.  And always use small-range if range is < 256
  UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
  // if range too large (comes back as 0, ='invalid') use general sort
  if(!rng.range)R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
@@ -204,7 +204,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
 #else
  wv=C4AV(w);
  UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
+ I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
  if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;

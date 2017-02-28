@@ -36,7 +36,7 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 linux_j64avx) # linux intel 64bit avx
 TARGET=libj.so
-COMPILE="$common -mavx -DC_NOMULTINTRINSIC -DC_AVX=1"
+COMPILE="$common -mavx -DC_AVX=1"
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

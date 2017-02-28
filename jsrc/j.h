@@ -549,6 +549,10 @@
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
+#if SY_LINUX
+#define __forceinline __attribute__((always_inline))
+#endif
+
 #if SY_LINUX || SY_MAC
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64

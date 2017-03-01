@@ -12,7 +12,12 @@
 /* merge sort with special code for n<:5                                */
 /*                                                                      */
 /************************************************************************/
-
+#define VS(i,j)          (0<CALL1(jt->comp,u[i],u[j]))
+#define XC(i,j)          {q=u[i]; u[i]=u[j]; u[j]=q;}
+#define P3(i,j,k)        {ui=u[i]; uj=u[j]; uk=u[k]; u[0]=ui; u[1]=uj; u[2]=uk;}
+#define P5(i,j,k,l,m)    {ui=u[i]; uj=u[j]; uk=u[k]; ul=u[l]; um=u[m];  \
+                          u[0]=ui; u[1]=uj; u[2]=uk; u[3]=ul; u[4]=um;}
+#if 0
 static void jtmsmerge(J jt,I n,I*u,I*v){I m,q,*x,*xx,*y,*yy,*z;int c;
  q=n/2; z=v;
  x=u;   xx=u+q-1;
@@ -23,11 +28,6 @@ static void jtmsmerge(J jt,I n,I*u,I*v){I m,q,*x,*xx,*y,*yy,*z;int c;
   else   {*z++=*x++; if(x>xx){m=z-v;                                DO(m, *u++=*v++;); break;}}
 }}
 
-#define VS(i,j)          (0<CALL1(jt->comp,u[i],u[j]))
-#define XC(i,j)          {q=u[i]; u[i]=u[j]; u[j]=q;}
-#define P3(i,j,k)        {ui=u[i]; uj=u[j]; uk=u[k]; u[0]=ui; u[1]=uj; u[2]=uk;}
-#define P5(i,j,k,l,m)    {ui=u[i]; uj=u[j]; uk=u[k]; ul=u[l]; um=u[m];  \
-                          u[0]=ui; u[1]=uj; u[2]=uk; u[3]=ul; u[4]=um;}
 
 void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
  switch(n){
@@ -60,6 +60,107 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
     msort(n-q,u+q,v);
     msmerge(n,u,v);
 }}}
+#else
+// merge the sorted lists of pointers lo[] and hi[] into a single list, and return the address of that list
+// comp() is the comparison function and compn is a numeric parameter to it.  comp(op0,op1,compn) returns 1 if op0 comes before op1,
+//  i. e. comp returns the number of the after argument
+// wk[] is a workarea, big enough to hold the combined result.  It may overlap with hi[]
+static void** jmerge(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), I hin, void *(wk[])){
+ // First, see if the last key in lo comes before the first key in hi.  If so, we have found a presorted list
+ // and we return it right away.
+ if((*comp)(compn,lo[lon-1],hi[0])){
+  // Presorted list.  If the two lists are contiguous, just return their address.  Otherwise copy to be contiguous
+  if(lo+lon!=hi){void **lox=lo+lon; DO(hin, lox[i]=hi[i];)}
+  R lo;  // return contiguous result
+ }
+ void **loend=lo+lon, **hiend=hi+hin; void**wkptr=wk;
+ // Perform the merge into wk[].
+ do{
+  // We keep processing until one of the lists has been exhausted.  At that point, we copy the other list
+  // to the output and return.
+  if(lo!=loend){
+   if(hi!=hiend){
+    // Normal case. compare the leading keys, moving and incrementing the lower.  We do the address arithmetic
+    // without branches to avoid misprediction
+    void *loaddr=*lo, *hiaddr=*hi;  // adresses of items to compare
+    I lomove = (*comp)(compn,loaddr,hiaddr);  // 1 if we should move lo
+    lo+=lomove;  // increment lo if we're moving it
+    loaddr=(lomove^=1)?hiaddr:loaddr; hi+=lomove;  // increment hi if we're moving it, create store value in loaddr
+    *wkptr++=(void *)loaddr;   // move the selected value
+   }else{
+    // hi[] was exhausted.  Copy the remnant of lo
+    DQ(loend-lo, *wkptr++=*lo++;);
+    break;  // all finished
+   }
+  }else{
+   // lo[] was exhausted.  Copy the remnant of hi. But
+   // if hi[] is occupying the last part of wk[], and lo[] is exhausted first, the remaining part of hi[] is
+   // already in place and doesn't need to be copied.
+   if(wkptr!=hi)DQ(hiend-hi, *wkptr++=*hi++;);
+   break;  // all finished
+  }
+ }while(1);
+ R wk;  // We have merged into the workarea
+}
+
+// Compare and exchange v0 and v1, leaving result in order in v0 and v2
+#define CXCHG(v0,v1,v2) {v2=v0; v2+=v1; v0=!(*comp)(compn,v0,v1)?v1:v0; v2-=v0;}
+
+// sort the values in *in, using *wk as a work area of the same size.  The graded pointers will go into either
+// in or wk, and the result will be the address of the graded data
+static void** jmsort(CMP comp, I compn, void *(in[]), I n, void *(wk[])){I a,b,c,d,e,f;
+ switch(n){
+ case 0: case 1: R in;
+ case 2:  // happens only if original input is 2 long
+  if(!(*comp)(compn,in[0],in[1])){void *tmp=in[0]; in[0]=in[1]; in[1]=tmp;} R in;
+ case 3:
+  a=(I)in[0]; b=(I)in[1];c=(I)in[2];  // abc
+  CXCHG(b,c,d);  // abd
+  CXCHG(a,b,c);  // acd
+  CXCHG(c,d,b);  // acb
+  in[0]=(void *)a; in[1]=(void *)c; in[2]=(void *)b; R in;
+ case 4:
+  a=(I)in[0]; b=(I)in[1];c=(I)in[2]; d=(I)in[3]; // abcd
+  CXCHG(a,b,e);   // aecd
+  CXCHG(c,d,b);   // aecb
+  CXCHG(e,b,d);   // aecd
+  CXCHG(a,c,b);   // aebd
+  CXCHG(e,b,c);   // aecd
+  in[0]=(void *)a; in[1]=(void *)e; in[2]=(void *)c; in[3]=(void *)d; R in;
+ case 5:
+  a=(I)in[0]; b=(I)in[1];c=(I)in[2]; d=(I)in[3]; e=(I)in[4]; // abcde
+  CXCHG(b,c,f);   // abfde
+  CXCHG(d,e,c);   // abfdc
+  CXCHG(b,d,e);   // abfec
+  CXCHG(a,f,d);   // abdec
+  CXCHG(d,c,f);   // abdef
+  CXCHG(a,e,c);   // abdcf
+  CXCHG(a,b,e);   // aedcf
+  CXCHG(d,c,b);   // aedbf
+  CXCHG(e,d,c);   // aecdf
+  in[0]=(void *)a; in[1]=(void *)e; in[2]=(void *)c; in[3]=(void *)d; in[4]=(void *)f; R in;
+ default:
+  // sort the low and high halves, and then merge the results, giving as workarea whatever buffer does not contain lo
+  {I lohalf=n>>1; I hihalf=n-lohalf;
+   void *lo=jmsort(comp, compn, in, lohalf, wk); void *hi=jmsort(comp, compn, in+lohalf, hihalf, wk+lohalf);
+   R jmerge(comp,compn,lo,lohalf,hi,hihalf,(void *)((I)in+(I)wk-(I)lo));
+  }
+ }
+}
+
+// Prepare for grade & clean up after
+// sparse should set compusejt
+void jtmsort(J jt, I n, void **zv, void **xv){
+ // Initialize the result area to be 'in', with pointers to the input items
+ C* item = jt->compv; C*item0=item;  I inc = jt->compk; void **zvv = (void**)zv; DQ(n, *zvv++=item; item+=inc;)
+ // Do the grade
+ void **sortres = jmsort(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
+ // Convert the result to item numbers in the main result area.  Use rounding multiply to avoid divide throughput
+ D recipinc = (D)n/((D)n*(D)inc-0.25);  // make sure the result is correct after truncation, by shading the factor to the high side
+ DO(n, zv[i]=(void*)(I)(((C*)sortres[i]-item0)*recipinc););
+}
+
+#endif
 
 
 #define GF(f)         B f(J jt,I m,I c,I n,A w,I*zv)
@@ -70,22 +171,30 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 /* w  - array to be graded                  */
 /* zv - result values                       */
 
+static CMP comproutine[][2][2] = {  // index is [bitx][c==n][up]
+[B01X]={{compcd,compcu} , {compcd,compcu}}, [LITX]={{compcd,compcu} , {compcd,compcu}}, [INTX]={{compid,compiu} , {compi1d,compi1u}}, [FLX]={{compdd,compdu} , {compd1d,compd1u}},
+[CMPXX]={{comppd,comppu} , {comppd,comppu}},[BOXX]={{compr,compr} , {compr,compr}}, [XNUMX]={{compxd,compxu} , {compxd,compxu}}, [RATX]={{compqd,compqu} , {compqd,compqu}},
+[C2TX]={{compud,compuu} , {compud,compuu}}, [C4TX]={{comptd,comptu} , {compt1d,compt1u}}, [SBTX]={{compcd,compcu} , {compcd,compcu}}}
+;
+
+// should change args to avoid divide
 static GF(jtgrx){A x;I ck,d,t,*xv;
- t=AT(w); ck=c*bp(t); 
- jt->compk=ck/n; d=c/n; jt->compn=d; jt->compv=CAV(w); jt->compw=w;
- switch(CTTZ(t)){
-  case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
-  case C2TX:  jt->comp=compu;                    break;
-  case C4TX:  jt->comp=c==n?compt1:compt;        break;
-  case INTX:  jt->comp=c==n?compi1:compi;        break;
-  case FLX:   jt->comp=c==n?compd1:compd;        break;
-  case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
-  case XNUMX: jt->comp=compx;                    break;
-  case RATX:  jt->comp=compq;                    break;
-  default:   jt->comp=compc;
- }
+ t=AT(w); ck=c*bp(t);
+ jt->compk=ck/n; d=c/n; jt->compn=d; jt->compv=CAV(w); jt->compw=ARELATIVE(w)?w:0;
+ jt->comp=comproutine[CTTZ(t)][c==n][jt->compgt==1]; jt->compusejt = !!(t&BOX+XNUM+RAT);
+// obsolete  switch(CTTZ(t)){
+// obsolete   case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
+// obsolete   case C2TX:  jt->comp=compu;                    break;
+// obsolete   case C4TX:  jt->comp=c==n?compt1:compt;        break;
+// obsolete   case INTX:  jt->comp=c==n?compi1:compi;        break;
+// obsolete   case FLX:   jt->comp=c==n?compd1:compd;        break;
+// obsolete   case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
+// obsolete   case XNUMX: jt->comp=compx;                    break;
+// obsolete   case RATX:  jt->comp=compq;                    break;
+// obsolete   default:   jt->comp=compc;
+// obsolete  }
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
- DO(m, DO(n, zv[i]=i;); msort(n,zv,xv); jt->compv+=ck; zv+=n;);
+ DO(m, /* obsolete DO(n, zv[i]=i;); */ msort(n,(void**)zv,(void**)xv); jt->compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
 
@@ -137,6 +246,7 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
     // copy the index, refer through it to get the data.  xv[i] is the initial index mapped to current i.  We fetch the current word for that index, call that xvv
     // Depending on whether xvv is ffff or 0000, move the index xv[i] to the selected output location, and increment whichever
     // pointer it was moved to.
+// should use conditionals to save arithmetic
     xv+=n; DP(n, I xvv=vs[m*xv[i]]; zv[(ct00&xvv)+(ctff&~xvv)]=xv[i]; ct00-=xvv; ctff-=~xvv;)
    }
   }else{
@@ -622,7 +732,7 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w);
  GATV(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
  GATV(x,INT,n,1,0); xv=AV(x);
- msort(n,zv,xv);
+ msort(n,(void**)zv,(void**)xv);
  EPILOG(z);
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
 

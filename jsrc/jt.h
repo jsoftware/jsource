@@ -103,6 +103,7 @@ typedef struct {
  A    cdstr;            /* strings for cdarg                               */
  CMP  comp;             /* comparison function in sort                     */
  int  compgt;           /* comparison: denotes greater than                */
+ B    compusejt;        // set if the parameter to comparison function is jt rather than n
  I    compk;            /* comparison: byte size of each item              */
  int  complt;           /* comparison: denotes less    than                */
  I    compn;            /* comparison: number of atoms in each item        */

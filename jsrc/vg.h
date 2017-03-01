@@ -9,20 +9,45 @@ extern F2(jtgr2);
 extern F1(jtgrd1sp);
 extern F2(jtgrd2sp);
 
+extern I compid(I,I*,I*);
+extern I compiu(I,I*,I*);
+extern I compcu(I,UC*,UC*);
+extern I compcd(I,UC*,UC*);
+extern I compuu(I,US*,US*);
+extern I compud(I,US*,US*);
+extern I comptu(I,C4*,C4*);
+extern I comptd(I,C4*,C4*);
+extern I compdu(I,D*,D*);
+extern I compdd(I,D*,D*);
+extern I compr(I,A1*,A1*);
+extern I comppu(I,D*,D*);
+extern I comppd(I,D*,D*);
+extern I compxu(I,X*,X*);
+extern I compxd(I,X*,X*);
+extern I compqu(I,Q*,Q*);
+extern I compqd(I,Q*,Q*);
+extern I compi1u(I,I*,I*);
+extern I compi1d(I,I*,I*);
+extern I compd1u(I,D*,D*);
+extern I compd1d(I,D*,D*);
+extern I compt1u(I,C4*,C4*);
+extern I compt1d(I,C4*,C4*);
+
+extern int  compp(J,I,I);
+#if 0
 extern int  compa(J,I,I);
 extern int  compc(J,I,I);
 extern int  compd(J,I,I);
 extern int  compd1(J,I,I);
 extern int  compi(J,I,I);
 extern int  compi1(J,I,I);
-extern int  compp(J,I,I);
 extern int  compq(J,I,I);
 extern int  compr(J,I,I);
 extern int  compu(J,I,I);
 extern int  compt(J,I,I);
 extern int  compt1(J,I,I);
 extern int  compx(J,I,I);
-
+#endif
 extern int  compspdsB(J,I,I);
 extern int  compspdsD(J,I,I);
 extern int  compspdsI(J,I,I);
@@ -37,7 +62,7 @@ extern I grcol4(I,I,UI4*,I,I*,I*,const I,US*,I);
 extern I grcol2(I,I,US*,I,I*,I*,const I,US*,I);
 // obsolete extern void grcolu(I,I,UI*,I,UI*,UI*,const I,US*,int,int,int);
 
-extern void jtmsort(J,I,I*,I*);
+extern void jtmsort(J,I,void**,void**);
 
 // Convert 2 Booleans to a code 0-3
 #if C_LE

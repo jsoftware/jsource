@@ -284,7 +284,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr;
  // ?cr= rank of the cells being sorted; t= type of w
  acr=jt->rank?jt->rank[0]:AR(a); 
  wcr=jt->rank?jt->rank[1]:AR(w); t=AT(w);
- // Handle special in-place cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
+ // Handle special reflexive cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
  if(a==w&&acr==wcr&&wcr>0&&AN(a)){
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
@@ -299,7 +299,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr;
   else if(1==wcr&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
   else if(1==wcr&&t&FL )             RZ(z=sortd (m,n,n,w)); // floating-point lists
  }
- // If not a supported in-place case, grade w and then select those values from a
+ // If not a supported reflexive case, grade w and then select those values from a
  if(!z)RZ(z=irs2(gr1(w),a,0L,1L,acr,jtfrom));
  EPILOG(z);
 }    /* a grade"r w main control for dense w */

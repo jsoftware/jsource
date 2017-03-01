@@ -530,7 +530,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
-  vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
+  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
   if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
@@ -695,7 +695,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH;  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
-  vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
+  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   rflg=(k==sizeof(D))+((AT(a)&BOX)>>(BOXX-2))+2;  \
   if(a==w&&ac==wc)rflg&=~(2&(~(((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<1)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
@@ -1112,7 +1112,7 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
-  vp=_mm_xor_si128(vp,vp);  /* to avoid warnings */ \
+  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
   A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)/SZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
@@ -1691,7 +1691,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(2==k){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
+    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
     if(crres.range){
       datamin=crres.min;
       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because

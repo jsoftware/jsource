@@ -58,34 +58,12 @@ DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
 
-/* version text up to first / is the J System ID and it */
-/* identifies the J Front Ends, J Engine, and J Library */
-/* and is used in Unix to find profile.ijs              */
-/* j804/j64/windows/release/a/GPL3/unknown/datetime */
-static F1(jtversqx){
-	char m[1000];char d[12]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12";
-	ASSERTMTV(w);
-	strcpy(m,"j"jversion"/");
 #if SY_64
-	strcat(m,"j64/");
+#if C_AVX
+#define bits "64avx"
 #else
-	strcat(m,"j32/");
-#endif
-	strcat(m,jplatform"/"jtype"/"jlicense"/"jbuilder"/");
-	strcpy(d,__DATE__);
-	if(' '== d[4]) d[4] = '0';
-	strncat(m,d+7,4);
-	strcat(m,"-");
-	d[3] = 0;
-	strncat(m,3 + strstr(months,d),2);
-	strcat(m,"-");
-	strncat(m,d + 4,3);
-	strcat(m,__TIME__);
-	R cstr(m);
-}
-
-#if SY_64
 #define bits "64"
+#endif
 #else
 #define bits "32"
 #endif

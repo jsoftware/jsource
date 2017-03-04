@@ -6,6 +6,10 @@
 #include "j.h"
 #include "vg.h"
 
+// Ideas for work:
+// for sort, don't convert the pointers back to indexes - just copy the data
+// Sort/grade 2-integer lists by radix?
+// check whether testing 6 at a time would help
 
 /************************************************************************/
 /*                                                                      */
@@ -17,7 +21,18 @@
 #define P3(i,j,k)        {ui=u[i]; uj=u[j]; uk=u[k]; u[0]=ui; u[1]=uj; u[2]=uk;}
 #define P5(i,j,k,l,m)    {ui=u[i]; uj=u[j]; uk=u[k]; ul=u[l]; um=u[m];  \
                           u[0]=ui; u[1]=uj; u[2]=uk; u[3]=ul; u[4]=um;}
-#if 0
+
+// Revised version, with renamed variables, for use in mincomp
+#define VS2(i,j)          (!COMPFN(compn,in[i],in[j]))
+#define XC2(i,j)          {void *q=in[i]; in[i]=in[j]; in[j]=q;}
+#define P32(i,j,k)        {void *ui=in[i]; void *uj=in[j]; void *uk=in[k]; in[0]=ui; in[1]=uj; in[2]=uk;}
+#define P52(i,j,k,l,m)    {void *ui=in[i]; void *uj=in[j]; void *uk=in[k]; void *ul=in[l]; void *um=in[m];  \
+                          in[0]=ui; in[1]=uj; in[2]=uk; in[3]=ul; in[4]=um;}
+
+// Compare and exchange v0 and v1, leaving result in order in v0 and v2
+#define CXCHG(v0,v1,v2) {v2=v0; v2=(void *)((I)v2+(I)v1); v0=!COMPFN(compn,v0,v1)?v1:v0; v2=(void *)((I)v2-(I)v0);}
+
+#if 0  // obsolete 
 static void jtmsmerge(J jt,I n,I*u,I*v){I m,q,*x,*xx,*y,*yy,*z;int c;
  q=n/2; z=v;
  x=u;   xx=u+q-1;
@@ -61,105 +76,70 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
     msmerge(n,u,v);
 }}}
 #else
-// merge the sorted lists of pointers lo[] and hi[] into a single list, and return the address of that list
-// comp() is the comparison function and compn is a numeric parameter to it.  comp(op0,op1,compn) returns 1 if op0 comes before op1,
-//  i. e. comp returns the number of the after argument
-// wk[] is a workarea, big enough to hold the combined result.  It may overlap with hi[]
-static void** jmerge(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), I hin, void *(wk[])){
- // First, see if the last key in lo comes before the first key in hi.  If so, we have found a presorted list
- // and we return it right away.
- if((*comp)(compn,lo[lon-1],hi[0])){
-  // Presorted list.  If the two lists are contiguous, just return their address.  Otherwise copy to be contiguous
-  if(lo+lon!=hi){void **lox=lo+lon; DO(hin, lox[i]=hi[i];)}
-  R lo;  // return contiguous result
- }
- void **loend=lo+lon, **hiend=hi+hin; void**wkptr=wk;
- // Perform the merge into wk[].
- do{
-  // We keep processing until one of the lists has been exhausted.  At that point, we copy the other list
-  // to the output and return.
-  if(lo!=loend){
-   if(hi!=hiend){
-    // Normal case. compare the leading keys, moving and incrementing the lower.  We do the address arithmetic
-    // without branches to avoid misprediction
-    void *loaddr=*lo, *hiaddr=*hi;  // adresses of items to compare
-    I lomove = (*comp)(compn,loaddr,hiaddr);  // 1 if we should move lo
-    lo+=lomove;  // increment lo if we're moving it
-    loaddr=(lomove^=1)?hiaddr:loaddr; hi+=lomove;  // increment hi if we're moving it, create store value in loaddr
-    *wkptr++=(void *)loaddr;   // move the selected value
-   }else{
-    // hi[] was exhausted.  Copy the remnant of lo
-    DQ(loend-lo, *wkptr++=*lo++;);
-    break;  // all finished
-   }
-  }else{
-   // lo[] was exhausted.  Copy the remnant of hi. But
-   // if hi[] is occupying the last part of wk[], and lo[] is exhausted first, the remaining part of hi[] is
-   // already in place and doesn't need to be copied.
-   if(wkptr!=hi)DQ(hiend-hi, *wkptr++=*hi++;);
-   break;  // all finished
-  }
- }while(1);
- R wk;  // We have merged into the workarea
-}
 
-// Compare and exchange v0 and v1, leaving result in order in v0 and v2
-#define CXCHG(v0,v1,v2) {v2=v0; v2+=v1; v0=!(*comp)(compn,v0,v1)?v1:v0; v2-=v0;}
+static I __forceinline compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static I __forceinline compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+static I __forceinline compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static I __forceinline compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
 
-// sort the values in *in, using *wk as a work area of the same size.  The graded pointers will go into either
-// in or wk, and the result will be the address of the graded data
-static void** jmsort(CMP comp, I compn, void *(in[]), I n, void *(wk[])){I a,b,c,d,e,f;
- switch(n){
- case 0: case 1: R in;
- case 2:  // happens only if original input is 2 long
-  if(!(*comp)(compn,in[0],in[1])){void *tmp=in[0]; in[0]=in[1]; in[1]=tmp;} R in;
- case 3:
-  a=(I)in[0]; b=(I)in[1];c=(I)in[2];  // abc
-  CXCHG(b,c,d);  // abd
-  CXCHG(a,b,c);  // acd
-  CXCHG(c,d,b);  // acb
-  in[0]=(void *)a; in[1]=(void *)c; in[2]=(void *)b; R in;
- case 4:
-  a=(I)in[0]; b=(I)in[1];c=(I)in[2]; d=(I)in[3]; // abcd
-  CXCHG(a,b,e);   // aecd
-  CXCHG(c,d,b);   // aecb
-  CXCHG(e,b,d);   // aecd
-  CXCHG(a,c,b);   // aebd
-  CXCHG(e,b,c);   // aecd
-  in[0]=(void *)a; in[1]=(void *)e; in[2]=(void *)c; in[3]=(void *)d; R in;
- case 5:
-  a=(I)in[0]; b=(I)in[1];c=(I)in[2]; d=(I)in[3]; e=(I)in[4]; // abcde
-  CXCHG(b,c,f);   // abfde
-  CXCHG(d,e,c);   // abfdc
-  CXCHG(b,d,e);   // abfec
-  CXCHG(a,f,d);   // abdec
-  CXCHG(d,c,f);   // abdef
-  CXCHG(a,e,c);   // abdcf
-  CXCHG(a,b,e);   // aedcf
-  CXCHG(d,c,b);   // aedbf
-  CXCHG(e,d,c);   // aecdf
-  in[0]=(void *)a; in[1]=(void *)e; in[2]=(void *)c; in[3]=(void *)d; in[4]=(void *)f; R in;
- default:
-  // sort the low and high halves, and then merge the results, giving as workarea whatever buffer does not contain lo
-  {I lohalf=n>>1; I hihalf=n-lohalf;
-   void *lo=jmsort(comp, compn, in, lohalf, wk); void *hi=jmsort(comp, compn, in+lohalf, hihalf, wk+lohalf);
-   R jmerge(comp,compn,lo,lohalf,hi,hihalf,(void *)((I)in+(I)wk-(I)lo));
-  }
- }
-}
+// General sort, with comparisons by function call
+#define GRADEFNNAME jmsort
+#define MERGEFNNAME jmerge
+#define COMPFN (*comp)
+#include "vgmerge.h"
 
-// Prepare for grade & clean up after
-// sparse should set compusejt
-void jtmsort(J jt, I n, void **zv, void **xv){
+// General sort, when comparisons are expensive.  Does minimal comparisons
+#define GRADEFNNAME jmsortmincomp
+#define MERGEFNNAME jmerge
+#define COMPFN (*comp)
+#include "vgmergemincomp.h"
+
+// Sorts with inline comparisons
+#define GRADEFNNAME jmsortiu
+#define MERGEFNNAME jmergeiu
+#define COMPFN compiu
+#include "vgmerge.h"
+
+#define GRADEFNNAME jmsortid
+#define MERGEFNNAME jmergeid
+#define COMPFN compid
+#include "vgmerge.h"
+
+#define GRADEFNNAME jmsortdu
+#define MERGEFNNAME jmergedu
+#define COMPFN compdu
+#include "vgmerge.h"
+
+#define GRADEFNNAME jmsortdd
+#define MERGEFNNAME jmergedd
+#define COMPFN compdd
+#include "vgmerge.h"
+
+
+// Perform grade.  zv contains pointers to items, filled in here
+static void jtmsortitems(J jt, void **(*sortfunc)(),  I n, void **zv, void **xv){
  // Initialize the result area to be 'in', with pointers to the input items
  C* item = jt->compv; C*item0=item;  I inc = jt->compk; void **zvv = (void**)zv; DQ(n, *zvv++=item; item+=inc;)
  // Do the grade
- void **sortres = jmsort(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
- // Convert the result to item numbers in the main result area.  Use rounding multiply to avoid divide throughput
- D recipinc = (D)n/((D)n*(D)inc-0.25);  // make sure the result is correct after truncation, by shading the factor to the high side
- DO(n, zv[i]=(void*)(I)(((C*)sortres[i]-item0)*recipinc););
+ void **sortres = (*sortfunc)(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
+ // Convert the result to item numbers in the main result area.
+ I shift=CTTZI(inc);  // bit number of LSB
+ if(inc==1LL<<shift){DQ(n, *zv++=(void *)((I)((C*)*sortres++-item0)>>shift););  // use shift for power of 2 itemsize
+ }else{
+  // Not a power of 2.  Use rounding multiply to avoid divide throughput
+  D recipinc = (D)n/((D)n*(D)inc-0.25);  // make sure the result is correct after truncation, by shading the factor to the high side
+  DQ(n, *zv++=(void*)(I)(((C*)*sortres++-item0)*recipinc););
+ }
 }
 
+
+// Perform grade when zv contains indexes (or whatever else the caller needs), already filled in
+void jtmsort(J jt, I n, void **zv, void **xv){
+ // Do the grade
+ void **sortres = jmsortmincomp(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
+ // Convert the result to the main result area, if it's not already there
+ if(sortres!=zv)DQ(n, *zv++=*sortres++;);
+}
 #endif
 
 
@@ -171,17 +151,23 @@ void jtmsort(J jt, I n, void **zv, void **xv){
 /* w  - array to be graded                  */
 /* zv - result values                       */
 
-static CMP comproutine[][2][2] = {  // index is [bitx][c==n][up]
-[B01X]={{compcd,compcu} , {compcd,compcu}}, [LITX]={{compcd,compcu} , {compcd,compcu}}, [INTX]={{compid,compiu} , {compi1d,compi1u}}, [FLX]={{compdd,compdu} , {compd1d,compd1u}},
-[CMPXX]={{comppd,comppu} , {comppd,comppu}},[BOXX]={{compr,compr} , {compr,compr}}, [XNUMX]={{compxd,compxu} , {compxd,compxu}}, [RATX]={{compqd,compqu} , {compqd,compqu}},
-[C2TX]={{compud,compuu} , {compud,compuu}}, [C4TX]={{comptd,comptu} , {compt1d,compt1u}}, [SBTX]={{compcd,compcu} , {compcd,compcu}}}
-;
+static struct {
+ CMP comproutine;
+ void **(*sortfunc)();
+} sortroutines[][2] = {  // index is [bitx][up]
+[B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,jmsortid},{0,jmsortiu}}, [FLX]={{0,jmsortdd},{0,jmsortdu}},
+[CMPXX]={{0,jmsortdd},{0,jmsortdu}},[BOXX]={{compr,jmsortmincomp},{compr,jmsortmincomp}}, [XNUMX]={{compxd,jmsortmincomp},{compxu,jmsortmincomp}}, [RATX]={{compqd,jmsortmincomp},{compqu,jmsortmincomp}},
+[C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}, [SBTX]={{compcd,jmsort},{compcu,jmsort}}
+};
+
+
 
 // should change args to avoid divide
 static GF(jtgrx){A x;I ck,d,t,*xv;
  t=AT(w); ck=c*bp(t);
- jt->compk=ck/n; d=c/n; jt->compn=d; jt->compv=CAV(w); jt->compw=ARELATIVE(w)?w:0;
- jt->comp=comproutine[CTTZ(t)][c==n][jt->compgt==1]; jt->compusejt = !!(t&BOX+XNUM+RAT);
+ jt->compk=ck/n; d=c/n; jt->compn=!(t&CMPX)?d:(d<<1); jt->compv=CAV(w); jt->compw=ARELATIVE(w)?w:0;
+ jt->comp=sortroutines[CTTZ(t)][jt->compgt==1].comproutine; jt->compusejt = !!(t&BOX+XNUM+RAT);
+ void **(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
 // obsolete  switch(CTTZ(t)){
 // obsolete   case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
 // obsolete   case C2TX:  jt->comp=compu;                    break;
@@ -194,7 +180,7 @@ static GF(jtgrx){A x;I ck,d,t,*xv;
 // obsolete   default:   jt->comp=compc;
 // obsolete  }
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
- DO(m, /* obsolete DO(n, zv[i]=i;); */ msort(n,(void**)zv,(void**)xv); jt->compv+=ck; zv+=n;);
+ DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
 
@@ -540,16 +526,67 @@ void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
 
 static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
  wv=AV(w); d=c/n;  // d=# ints in an item
- // see if we can grade using small-range methods
- // figure out whether we should do small-range processing
- // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles (since the compare usually stops after one word); the cost of small-range indexing is
- // d*range*4.5 (.5 to clear, 2 to read) + d*n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
- // approximate lg(n) with bit count.  And always use small-range if range is < 256
- UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
- CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
+ // select algorithm based on size & range.  To develop models for the different algorithms, modify the code here to force one choice
+ // & run test lines.
+ // Test line for lists for dependence on length of list:
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: y ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 3 + 10 %~ i. 30  // tweak range to places of interest
+ // Results 3/2/2017 on Ivy Bridge:
+ // smallrange 6.5e_14 5.5e_9 _8e_8 2e_4
+ // radix 8.4e_14 2e_9 _1.4e_8 1.6e_4 
+ // merge 1.2e_13 2.6e_8 _3e_7 4.5e_4
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: y ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 2 + 10 %~ i. 20
+ // smallrange _8e_14 2.5E_9 _2.3e_8 2.7e_6
+ // radix 8e_13 _4.6e_10 1.5e_8 6.5e_5
+ // merge _1.5e_12 1.2e_8 _6.2e_8 3.7e_6
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: y ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 0 + 10 %~ i. 20
+ // smallrange _1.3e_10 5.9e_9 _2.3e_8 5.5e_7
+ // radix 9.8e_8 _4.7e_6 2.3e_5 _1.3e_5
+ // merge _1.6e_10 1.4e_8 _4.2e_8 5.8e_7
+
+// for lists, smallrange beats radix if range<~70000; smallrange beats merge if range<n*65; radix beats merge if n>1250 (or more depending on how well sign-detection works)
+
+ // Test line for tables of 2 atoms/item:
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: (y,2) ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 0 + 10 %~ i. 20
+ // smallrange 3.6e_10 _1.2e_8 5.9e_8 5.3e_7
+ // merge _1.7e_10 2.8e_9 3e_8 4.4e_7
+ // for items of length 2, smallrange wins unless range too big
+
+ // Test line for tables of 3 atoms/item:
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: (y,3) ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 0 + 10 %~ i. 20
+ // smallrange _4e_10 6.6e_9 5.5e_9 5.1e_7
+ // merge _1e_10 1.1e_8 _2.5e_8 5.6e_7
+ // for items of length 3, smallrange wins unless range too big
+
+ // Test line to see effect of range alone on smallrange speed:
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: 1000 ?@$ y'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 1 + 10 %~ i. 50
+ // smallrange _1.3e_15 5.6e_10 _7.4e_9 7.3e_6
+
+ // Test line to see effect of length alone on smallrange speed:
+ // (((20) 6!:2 '/: a'&(4 : 'x [ a =: y ?@$ 1000'))"0  %.  (*: ,. (* 2&^.) ,. ] ,. 1:)) <. 10 ^ 1 + 10 %~ i. 50
+ // smallrange _4e_15 2.2e_9 _2.8e_8 1.9e_5
+
+ // length causes time to increase at 1e_3 per 100000; range at 2.5e_4 per 100000, for 1-item keys
+ // merge costs 1.2e_2 per 100000  (for <10000 items)
+ // Mcost = 1.2e_2*n
+ // Scost = 1e_3*n*(2*keylength-1) + 2.5e_4*r*keylength
+ // so max range is n*(1.2e_2 - 1e_3*(2*keylength-1) / 2.5e_4*keylength
+ // which we can approximate as 80>>keylength, where keylength<=6
+
+
+ // figure out what algorithm to use
+ // smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
+ // (80>>keylength)*(n-32) where 32 takes get/free overhead into account (merge starts right away, smallrange has to allocate and
+ // clear buffers)
+ I maxrange; CR rng;
+ if(d<=6 && 0<(maxrange=MIN(16,80>>d)*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // test may overflow; OK
+ }else rng.range=0;  // if smallrange impossible
+// obsolete  UI4 lgn; CTLZI(n,lgn);
+// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
+// obsolete  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // for perf testing, change maxrange to IMAX
 // obsolete irange(AN(w),wv,&q,&p); 
- if(!rng.range)R c==n&&n>(I)(65536/1.5)?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);  // revert to other methods if not small-range
+ // tweak this line to select path for timing
+ // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
+ if(!rng.range)R c==n&&n>2000?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);  // revert to other methods if not small-range
 // obsolete if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
 // obsolete if(0<q&&q<k-p){p+=q; q=0;}
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
@@ -585,7 +622,6 @@ static GF(jtgri){A x,y;B up;I d,e,i,*v,*wv,*xv;UI4 *yv,*yvb;
    // clear the area
    memset(yvb,C0,rng.range*sizeof(UI4));
    // *v is the base of the vector to process, which has stride d.  Process the elements in the order given by the previous grade.
-   // should not bother with indirection on the counting pass, since all get counted in the end
 // obsolete    if(rng.min) DO(n, ++yv[*(v+d*g[i])-rng.min];) 
 // obsolete    else  DO(n, ++yv[*(v+d*g[i])  ];);
    {I *vv=v; DQ(n, ++yv[*vv]; vv+=d;); }  // scan all the values
@@ -643,10 +679,10 @@ static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
 #else
 static GF(jtgru){A x,y;B up;I d,e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;
  wv=C4AV(w); d=c/n;
- UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
- CR rng = condrange4(wv,AN(w),-1,0,maxrange);
- if(!rng.range)R c==n&&n>(I)(65536/1.5)?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
+ I maxrange; CR rng;
+ if(d<=6 && 0<(maxrange=MIN(16,80>>d)*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
+ }else rng.range=0;
+ if(!rng.range)R c==n&&n>1500?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);  // revert to other methods if not small-range
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
  if(1<d){GATV(x,INT,n,1,0); xv=AV(x);
  }
@@ -729,10 +765,10 @@ static GF(jtgrs){R gri(m,c,n,sborder(w),zv);}
 
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
- jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w);
- GATV(z,INT,n,1,0); zv=AV(z); DO(n, zv[i]=i;);
+ jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w); jt->compusejt=1;
+ GATV(z,INT,n,1,0); zv=AV(z); /* obsolete DO(n, zv[i]=i;); */
  GATV(x,INT,n,1,0); xv=AV(x);
- msort(n,(void**)zv,(void**)xv);
+ msortitems(jmsort,n,(void**)zv,(void**)xv);
  EPILOG(z);
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
 
@@ -742,6 +778,17 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /* /: and \: main control                                               */
 /*                                                                      */
 /************************************************************************/
+
+#define GF(f)         B f(J jt,I m,I c,I n,A w,I*zv)
+
+/* m  - # cells (# individual grades to do) */
+/* c  - # atoms in a cell                   */
+/* n  - length of sort axis                 */
+/* w  - array to be graded                  */
+/* zv - result values                       */
+
+static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
+[B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [C2TX]=jtgrc, [C4TX]=jtgru, [SBTX]=jtgrs};
 
 // /: and \: with IRS support
 F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
@@ -762,17 +809,18 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  // if there are no atoms, or we are sorting things with 0-1 item, return an index vector of the appropriate shape 
  if(!wn||1>=n)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
- switch(CTTZ(t)) {
- case B01X:
-// obsolete   if(t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z))) break;  // Booleans, multiples of 4 bytes
-  if(0==(ai&3)){RZ(grb(m,c,n,w,AV(z))) break;}  // Booleans, multiples of 4 bytes, otherwise fall through to...
- case LITX: case C2T: RZ(grc(m,c,n,w,AV(z))) break;  // other 1- or 2-byte types
- case SBTX: RZ(grs(m,c,n,w,AV(z))) break;   // symbols
- case FLX: RZ(grd(m,c,n,w,AV(z))) break;  // floats, any shape
- case INTX: RZ(gri(m,c,n,w,AV(z))) break;  // integer, any shape
- case C4TX: RZ(gru(m,c,n,w,AV(z))) break;  // 4-byte characters
- default: RZ(grx(m,c,n,w,AV(z))); break;   // anything else
- }
+ RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jt,m,c,n,w,AV(z)))
+// obsolete  switch(CTTZ(t)) {
+// obsolete  case B01X:
+// obsolete // obsolete   if(t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z))) break;  // Booleans, multiples of 4 bytes
+// obsolete   if(0==(ai&3)){RZ(grb(m,c,n,w,AV(z))) break;}  // Booleans, multiples of 4 bytes, otherwise fall through to...
+// obsolete  case LITX: case C2T: RZ(grc(m,c,n,w,AV(z))) break;  // other 1- or 2-byte types
+// obsolete  case SBTX: RZ(grs(m,c,n,w,AV(z))) break;   // symbols
+// obsolete  case FLX: RZ(grd(m,c,n,w,AV(z))) break;  // floats, any shape
+// obsolete  case INTX: RZ(gri(m,c,n,w,AV(z))) break;  // integer, any shape
+// obsolete  case C4TX: RZ(gru(m,c,n,w,AV(z))) break;  // 4-byte characters
+// obsolete  default: RZ(grx(m,c,n,w,AV(z))); break;   // anything else
+// obsolete  }
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 

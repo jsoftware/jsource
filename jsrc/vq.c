@@ -98,7 +98,7 @@ static QF2(jtqpow){PROLOG(0089);B c;I p,q,s;Q t,z;X d;
  QEPILOG(z);
 }
 
-int jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
+I jtqcompare(J jt,Q a,Q w){R QCOMP(a,w);}
 
 static X jtqbin(J jt,Q a,Q w){ASSERT(QX1(a.d)&&QX1(w.d),EWIRR); R xbin(a.n,w.n);}
 

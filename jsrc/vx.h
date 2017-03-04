@@ -47,7 +47,7 @@ extern XF2(jtxpow);
 extern XF2(jtxtymes);
 
 extern X   jtxc(J,I);
-extern int jtxcompare(J,X,X);
+extern I jtxcompare(J,X,X);
 extern X   jtxdiv(J,X,X,I);
 extern B   jtxdivrem(J,X,X,X*,X*);
 extern X   jtxev1(J,A,C*);

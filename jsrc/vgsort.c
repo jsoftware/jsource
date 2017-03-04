@@ -110,15 +110,19 @@ static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
 #else
 static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);
- // figure out whether we should do small-range processing
- // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
- // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
- // approximate lg(n) with bit count.  And always use small-range if range is < 256
- UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
- CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
- // if range too large (comes back as 0, ='invalid') use general sort
- if(!rng.range)R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ // figure out whether we should do small-range processing.  Comments in vg.c
+ I maxrange; CR rng;
+ if(0<(maxrange=16*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
+ }else rng.range=0;
+ if(!rng.range)R n>3000?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+// obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
+// obsolete  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
+// obsolete  // approximate lg(n) with bit count.  And always use small-range if range is < 256
+// obsolete  UI4 lgn; CTLZI(n,lgn);
+// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
+// obsolete  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
+// obsolete  // if range too large (comes back as 0, ='invalid') use general sort
+// obsolete  if(!rng.range)R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  // allocate area for the data, and result area
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
@@ -203,10 +207,14 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  R z;
 #else
  wv=C4AV(w);
- UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
- CR rng = condrange4(wv,AN(w),-1,0,maxrange);
- if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ I maxrange; CR rng;
+ if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
+ }else rng.range=0;
+ if(!rng.range)R n>3000?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+// obsolete  UI4 lgn; CTLZI(n,lgn);
+// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
+// obsolete  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
+// obsolete  if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){

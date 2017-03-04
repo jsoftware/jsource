@@ -63,7 +63,7 @@ XF1(jtxstd){A z;B b;I c=0,d,i,j,k,m=XBASE,n,*zv;
  R j==n?z:vec(INT,j,zv);
 }    /* convert to standard form */
 
-int jtxcompare(J jt,X a,X w){I*av,j,m,n,x,y,*wv;int s,t;
+I jtxcompare(J jt,X a,X w){I*av,j,m,n,x,y,*wv;int s,t;
  RE(1);
  m=AN(a); av=AV(a); x=av[m-1]; s=SGN(x);
  n=AN(w); wv=AV(w); y=wv[n-1]; t=SGN(y);

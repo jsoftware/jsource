@@ -632,6 +632,7 @@
 #define mr_next31()                 jtmr_next31(jt)
 #define msmerge(x,y,z)              jtmsmerge(jt,(x),(y),(z))
 #define msort(x,y,z)                jtmsort(jt,(x),(y),(z))
+#define msortitems(w,x,y,z)         jtmsortitems(jt,(w),(x),(y),(z))
 #define mt_init_by_array(x,y)       jtmt_init_by_array(jt,(x),(y))
 #define mt_init(x)                  jtmt_init(jt,(x))
 #define mt_next()                   jtmt_next(jt)

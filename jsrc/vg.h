@@ -26,14 +26,14 @@ extern I compxu(I,X*,X*);
 extern I compxd(I,X*,X*);
 extern I compqu(I,Q*,Q*);
 extern I compqd(I,Q*,Q*);
-extern I compi1u(I,I*,I*);
-extern I compi1d(I,I*,I*);
-extern I compd1u(I,D*,D*);
-extern I compd1d(I,D*,D*);
-extern I compt1u(I,C4*,C4*);
-extern I compt1d(I,C4*,C4*);
+// obsolete extern I compi1u(I,I*,I*);
+// obsolete extern I compi1d(I,I*,I*);
+// obsolete extern I compd1u(I,D*,D*);
+// obsolete extern I compd1d(I,D*,D*);
+// obsolete extern I compt1u(I,C4*,C4*);
+// obsolete extern I compt1d(I,C4*,C4*);
+extern I compp(I,I*,I*);
 
-extern int  compp(J,I,I);
 #if 0
 extern int  compa(J,I,I);
 extern int  compc(J,I,I);

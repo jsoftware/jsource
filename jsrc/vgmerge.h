@@ -36,7 +36,7 @@ static void** MERGEFNNAME(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), 
  }
  void **hiend=hi+hin;  // end+1 of hi
  // Perform the merge into wk[].
- void *loaddr=*lo, *hiaddr=*hi;
+ void *loaddr=*lo, *hiaddr=*hi;  //loaddr and hiaddr contain the addresses of the next values to merge
  do{
 #if 1
  if(COMPFN(compn,loaddr,hiaddr)){++lo; *wkptr++=loaddr; if(lo!=loend)loaddr=*lo;else{if(wkptr!=hi)DQ(hiend-hi, *wkptr++=*hi++;); break;}}

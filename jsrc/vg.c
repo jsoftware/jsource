@@ -10,6 +10,7 @@
 // for sort, don't convert the pointers back to indexes - just copy the data
 // Sort/grade 2-integer lists by radix?
 // check whether testing 6 at a time would help
+// in the fast cases, could save the refetch of *loaddr and *hiaddr every time
 
 /************************************************************************/
 /*                                                                      */
@@ -226,14 +227,14 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
     // sort mode. copy the data
 // obsolete     if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
 // obsolete     else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
-    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 4 bytes
-    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 8 bytes
+    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 4 bytes
+    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 8 bytes
    }else{
     // copy the index, refer through it to get the data.  xv[i] is the initial index mapped to current i.  We fetch the current word for that index, call that xvv
     // Depending on whether xvv is ffff or 0000, move the index xv[i] to the selected output location, and increment whichever
     // pointer it was moved to.
 // should use conditionals to save arithmetic
-    xv+=n; DP(n, I xvv=vs[m*xv[i]]; zv[(ct00&xvv)+(ctff&~xvv)]=xv[i]; ct00-=xvv; ctff-=~xvv;)
+    xv+=n; DP(n, I xvv=vs[m*xv[i]]; I writeval=ct00; ct00-= xvv; writeval=(xvv+=1)?ctff:writeval; ctff+=xvv; zv[writeval]=xv[i];)
    }
   }else{
    // All the sign-extensions are the same.  All there is to do is copy the input to the output.  could try to save the copy with pointer tricks?
@@ -290,10 +291,10 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
   if(ct00&&ctff){S *vs=(S*)u;
    {I writeposto0=(((flags>>1)^flags)&1); ctff&=(writeposto0-=1); ct00&=~writeposto0;}
    if(flags&4){
-    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 4 bytes
-    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; zvc[(ct00&vv)+(ctff&~vv)]=xvc[i]; ct00-=vv; ctff-=~vv; vs+=m;)}  // result and intermediates are 8 bytes
+    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 4 bytes
+    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 8 bytes
    }else{
-    xv+=n; DP(n, I xvv=vs[m*xv[i]]; zv[(ct00&xvv)+(ctff&~xvv)]=xv[i]; ct00-=xvv; ctff-=~xvv;)
+    xv+=n; DP(n, I xvv=vs[m*xv[i]]; I writeval=ct00; ct00-= xvv; writeval=(xvv+=1)?ctff:writeval; ctff+=xvv; zv[writeval]=xv[i];)
    }
   }else{
    memcpy(zv,xv,n*((flags&4)?m*sizeof(US):sizeof(I)));

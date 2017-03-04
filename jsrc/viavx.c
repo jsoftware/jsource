@@ -89,7 +89,7 @@ DI p,x,y;UINT c,d,e,m,q;
 }    /* 1 iff significant wrt comparison tolerance */
 
 // fill 64-bit words with the 32-bit value in storeval
-static void __forceinline fillwords(__m128i* storeptr, UI4 storeval, I nstores){
+static __forceinline void fillwords(__m128i* storeptr, UI4 storeval, I nstores){
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
  __m128i store128; store128=_mm_set1_epi32(storeval);
  DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)

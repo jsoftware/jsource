@@ -71,27 +71,44 @@ static void** MERGEFNNAME(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), 
 }
 // sort the values in *in, using *wk as a work area of the same size.  The graded pointers will go into either
 // in or wk, and the result will be the address of the graded data
-static void** GRADEFNNAME(CMP comp, I compn, void *(in[]), I n, void *(wk[])){void *a,*b,*c,*d,*e,*f;
+static void** GRADEFNNAME(CMP comp, I compn, void *(in[]), I n, void *(wk[])){void *a,*b,*c,*d,*e;
  switch(n){
  case 0: case 1: R in;
  case 2:  // happens only if original input is 2 long
   if(!COMPFN(compn,in[0],in[1])){void *tmp=in[0]; in[0]=in[1]; in[1]=tmp;} R in;
  case 3:
   a=in[0]; b=in[1];c=in[2];  // abc
+#if 0  // obsolete
   CXCHG(b,c,d);  // abd
   CXCHG(a,b,c);  // acd
   CXCHG(c,d,b);  // acb
   in[0]=a; in[1]=c; in[2]=b; R in;
+#else
+  CXCHG2(b,c);
+  CXCHG2(a,b);
+  CXCHG2(b,c);
+  in[0]=a; in[1]=b; in[2]=c; R in;
+#endif
  case 4:
   a=in[0]; b=in[1];c=in[2]; d=in[3]; // abcd
+#if 0  // obsolete
   CXCHG(a,b,e);   // aecd
   CXCHG(c,d,b);   // aecb
   CXCHG(e,b,d);   // aecd
   CXCHG(a,c,b);   // aebd
   CXCHG(e,b,c);   // aecd
   in[0]=a; in[1]=e; in[2]=c; in[3]=d; R in;
+#else
+  CXCHG2(a,b);
+  CXCHG2(c,d);
+  CXCHG2(a,c);
+  CXCHG2(b,d);
+  CXCHG2(b,c);
+  in[0]=a; in[1]=b; in[2]=c; in[3]=d; R in;
+#endif
  case 5:
   a=in[0]; b=in[1];c=in[2]; d=in[3]; e=in[4]; // abcde
+#if 0  // obsolete
   CXCHG(b,c,f);   // abfde
   CXCHG(d,e,c);   // abfdc
   CXCHG(b,d,e);   // abfec
@@ -102,6 +119,19 @@ static void** GRADEFNNAME(CMP comp, I compn, void *(in[]), I n, void *(wk[])){vo
   CXCHG(d,c,b);   // aedbf
   CXCHG(e,d,c);   // aecbf
   in[0]=a; in[1]=e; in[2]=c; in[3]=(void *)b; in[4]=(void *)f; R in;
+#else
+  CXCHG2(b,c);
+  CXCHG2(d,e);
+  CXCHG2(b,d);
+  CXCHG2(a,c);
+  CXCHG2(a,d);
+  CXCHG2(c,e);
+  CXCHG2(a,b);
+  CXCHG2(c,d);
+  CXCHG2(b,c);
+  in[0]=a; in[1]=b; in[2]=c; in[3]=(void *)d; in[4]=(void *)e; R in;
+#endif
+
  default:
   // sort the low and high halves, and then merge the results, giving as workarea whatever buffer does not contain lo
   {I lohalf=n>>1; I hihalf=n-lohalf;

@@ -30,8 +30,10 @@
 #define P52(i,j,k,l,m)    {void *ui=in[i]; void *uj=in[j]; void *uk=in[k]; void *ul=in[l]; void *um=in[m];  \
                           in[0]=ui; in[1]=uj; in[2]=uk; in[3]=ul; in[4]=um;}
 
-// Compare and exchange v0 and v1, leaving result in order in v0 and v2
-#define CXCHG(v0,v1,v2) {v2=v0; v2=(void *)((I)v2+(I)v1); v0=!COMPFN(compn,v0,v1)?v1:v0; v2=(void *)((I)v2-(I)v0);}
+// Compare and exchange v0 and v1
+// obsolete #define CXCHG(v0,v1,v2) {v2=v0; v2=(void *)((I)v2+(I)v1); v0=!COMPFN(compn,v0,v1)?v1:v0; v2=(void *)((I)v2-(I)v0);}
+// This sequence compiles to move/testb/cmovne/cmovne with no branch & 1 test.  The first move is handled by renaming
+#define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
 #if 0  // obsolete 
 static void jtmsmerge(J jt,I n,I*u,I*v){I m,q,*x,*xx,*y,*yy,*z;int c;
@@ -78,12 +80,14 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 }}}
 #else
 
-static __forceinline I compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static __forceinline I compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
-static __forceinline I compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static __forceinline I compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+// Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
+// On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
+static __forceinline B compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static __forceinline B compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+static __forceinline B compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static __forceinline B compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
 
-// General sort, with comparisons by function call
+// General sort, with comparisons by function call, but may do extra comparisons to avoid mispredicted branches
 #define GRADEFNNAME jmsort
 #define MERGEFNNAME jmerge
 #define COMPFN (*comp)

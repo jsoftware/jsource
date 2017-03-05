@@ -46,7 +46,7 @@ typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
 typedef void             (*VF)();
-typedef I                (*CMP)();    /* comparison function in sort     */
+typedef B                (*CMP)();    /* comparison function in sort     */
 typedef A                  X;
 typedef struct {X n,d;}    Q;
 typedef struct {D re,im;}  Z;

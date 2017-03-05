@@ -32,26 +32,26 @@ CF(compp){COMPDCLP(I);I*cv=jt->compsyv,xi,yi;
 #else
 // inlinable functions are moved to vg.c
 
-I compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I compcd(I n, UC *a, UC *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(*a,jt->compw),(A)AABS(*b,jt->compw)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
+B compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B compcd(I n, UC *a, UC *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
+B compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(*a,jt->compw),(A)AABS(*b,jt->compw)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
 // obsolete I comppu(I n, D *a, D *b){n<<=1; do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 // obsolete I comppd(I n, D *a, D *b){n<<=1; do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-I compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-I compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-I compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-I compqd(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compqd(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 // obsolete I compi1u(I n, I *a, I *b){R (*a<*b)|((*a==*b)&(a<b));}
 // obsolete I compi1d(I n, I *a, I *b){R (*a>*b)|((*a==*b)&(a<b));}
 // obsolete I compd1u(I n, D *a, D *b){R (*a<*b)|((*a==*b)&(a<b));}
 // obsolete I compd1d(I n, D *a, D *b){R (*a>*b)|((*a==*b)&(a<b));}
 // obsolete I compt1u(I n, C4 *a, C4 *b){R (*a<*b)|((*a==*b)&(a<b));}
 // obsolete I compt1d(I n, C4 *a, C4 *b){R (*a>*b)|((*a==*b)&(a<b));}
-I compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, I usea=a[cv[i]]<b[cv[i]]; if(a[cv[i]]!=b[cv[i]])R usea;); R a<b;}
+B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, if(a[cv[i]]!=b[cv[i]])R a[cv[i]]<b[cv[i]];); R a<b;}
 #endif
 
 #define CF(f)            int f(J jt,I a,I b)

@@ -1048,7 +1048,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 // zstmt creates the result when a match has been found.  At that point q=-2 if there was no match, otherwise
 //  it holds the index of the match
 #define BSLOOPAWX(ii,icmp,iinc,uinc,zstmt)  \
- {A* RESTRICT u=wv+n*(ii),* RESTRICT v;I i,j,p,q;int t;  \
+ {A* RESTRICT u=wv+n*(ii),* RESTRICT v;I i,j,p,q;I t;  \
   for(i=ii;icmp;iinc,uinc){          \
    p=0; q=m1;                        \
    while(p<=q){                      \

@@ -21,9 +21,8 @@ jsrc/jversion.h
 # windows - need to run with different versions of vs
 # following files are in repo for vs2013
 # but are not pushed to avoid getting unwanted user specific changes
+# *.vcxproj was excluded but that meant clone did not work - 
 *.sln
-*.vcxproj
-*.vcxproj.*
 !*.template
 
 # mac

@@ -10,6 +10,7 @@ jplatform=linux
 # should not be necessary to edit after here
 j32=$jbld/j32/bin/jconsole
 j64=$jbld/j64/bin/jconsole
+j64avx=$jbld/j64avx/bin/jconsole
 jmake=$jgit/make
 
 export jgit jbld j32 j64 jmake

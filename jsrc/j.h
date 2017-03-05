@@ -550,7 +550,8 @@
 #endif
 
 #if SY_LINUX
-#define __forceinline __attribute__((always_inline)) inline
+// #define __forceinline __attribute__((always_inline)) inline
+#define __forceinline inline
 #endif
 
 #if SY_LINUX || SY_MAC

@@ -78,10 +78,10 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 }}}
 #else
 
-static I __forceinline compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static I __forceinline compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
-static I __forceinline compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static I __forceinline compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+static __forceinline I compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static __forceinline I compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+static __forceinline I compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
+static __forceinline I compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
 
 // General sort, with comparisons by function call
 #define GRADEFNNAME jmsort

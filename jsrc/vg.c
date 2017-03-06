@@ -11,6 +11,9 @@
 // Sort/grade 2-integer lists by radix?
 // check whether testing 6 at a time would help
 // in the fast cases, could save the refetch of *loaddr and *hiaddr every time
+// use movsb to copy blocks of addresses
+// go bottom-up, grouping by 5 at a time.  Avoids function calls and guarantees 16B boundary alignment
+//  after the bottom merge
 
 /************************************************************************/
 /*                                                                      */

@@ -31,8 +31,10 @@ static void** MERGEFNNAME(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), 
    if(loend!=hi){DQ(hin, *loend++=*hi++;)}
    R lo;  // return contiguous result
   }
-  // Partial presort.  Copy the ordered part to the output and set to compare the rest
-  DQ(orderedlen, *wkptr++=*lo++;);
+  // Partial presort.  Because the presorted part is larger, leave it in place and copy the shorter remnant at the end
+  // to the workarea; then change the pointers so we merge the moved remnant onto the end of the presorted fragment
+  wk=lo; wkptr+=lon; lo+=lon; lon-=orderedlen; DP(lon, wkptr[i]=lo[i];)   // move wkptr&lo to end of block; lon=length of remnant; move remnant to wk; point wk to start of original input
+  loend=wkptr; wkptr=lo-lon; lo=loend-lon;   // lo, loend point into workarea; wkptr-> input area
  }
  void **hiend=hi+hin;  // end+1 of hi
  // Perform the merge into wk[].

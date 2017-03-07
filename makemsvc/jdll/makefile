@@ -161,7 +161,7 @@ TARGET= j32.dll
 endif
 
 $(TARGET) : $(OBJS) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res advapi32.lib ole32.lib oleaut32.lib shell32.lib uuid.lib
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D NDEBUG /D _USING_V110_SDK71_ -R -FO$@ $(RCS)

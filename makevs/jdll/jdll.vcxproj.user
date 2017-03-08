@@ -8,4 +8,8 @@
     <LocalDebuggerCommand>$(userprofile)\jbld\jout\j\x64\debug64\jconsole.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">
+    <LocalDebuggerCommand>$(userprofile)\jbld\jout\$(ProjectName)\$(Platform)\$(Configuration)\jconsole.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

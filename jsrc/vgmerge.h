@@ -41,8 +41,8 @@ static void** MERGEFNNAME(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), 
  void *loaddr=*lo, *hiaddr=*hi;  //loaddr and hiaddr contain the addresses of the next values to merge
  do{
 #if 1
- if(COMPFN(compn,loaddr,hiaddr)){++lo; *wkptr++=loaddr; if(lo!=loend)loaddr=*lo;else{if(wkptr!=hi)DQ(hiend-hi, *wkptr++=*hi++;); break;}}
- else{++hi; *wkptr++=hiaddr; if(hi!=hiend)hiaddr=*hi;else{DQ(loend-lo, *wkptr++=*lo++;); break;}}
+  if(COMPFN(compn,loaddr,hiaddr)){++lo; *wkptr++=loaddr; if(lo!=loend)loaddr=*lo;else{if(wkptr!=hi)DQ(hiend-hi, *wkptr++=*hi++;); break;}}
+  else{++hi; *wkptr++=hiaddr; if(hi!=hiend)hiaddr=*hi;else{DQ(loend-lo, *wkptr++=*lo++;); break;}}
 #else  // this version does not requires prediction of the test but runs slower - odd, since it does just a fetch + test + branch extra
   // We keep processing until one of the lists has been exhausted.  At that point, we copy the other list
   // to the output and return.
@@ -53,8 +53,8 @@ static void** MERGEFNNAME(CMP comp, I compn, void *(lo[]), I lon, void *(hi[]), 
     void *loaddr=*lo, *hiaddr=*hi;  // adresses of items to compare
     I lomove = COMPFN(compn,loaddr,hiaddr);  // 1 if we should move lo
     lo+=lomove;  // increment lo if we're moving it
-    loaddr=(lomove^=1)?hiaddr:loaddr; hi+=lomove;  // increment hi if we're moving it, create store value in loaddr
-    *wkptr++=(void *)loaddr;   // move the selected value
+    loaddr=(lomove=-lomove)?loaddr:hiaddr; hi+=lomove+1;  // increment hi if we're moving it, create store value in loaddr
+    *wkptr++=loaddr;   // move the selected value
    }else{
     // hi[] was exhausted.  Copy the remnant of lo
     DQ(loend-lo, *wkptr++=*lo++;);

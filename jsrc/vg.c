@@ -85,10 +85,12 @@ void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
 
 // Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
 // On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
-static __forceinline B compiu(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static __forceinline B compid(I n, I *a, I *b){I av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
-static __forceinline B compdu(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av<bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av<bv;} R a<b;}
-static __forceinline B compdd(I n, D *a, D *b){D av=*a, bv=*b; if(av!=bv) R av>bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av>bv;} R a<b;}
+// #define COMPGRADE(T,t) T av=*a, bv=*b; if(av!=bv) R av t bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av t bv;} R a<b;
+#define COMPGRADE(T,t) do{T av=*a, bv=*b; if(av!=bv) R av t bv; if(!--n)break; ++a; ++b;}while(1); R a<b;
+static __forceinline B compiu(I n, I *a, I *b){COMPGRADE(I,<)}
+static __forceinline B compid(I n, I *a, I *b){COMPGRADE(I,>)}
+static __forceinline B compdu(I n, D *a, D *b){COMPGRADE(D,<)}
+static __forceinline B compdd(I n, D *a, D *b){COMPGRADE(D,>)}
 
 // General sort, with comparisons by function call, but may do extra comparisons to avoid mispredicted branches
 #define GRADEFNNAME jmsort

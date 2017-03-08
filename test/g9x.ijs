@@ -376,6 +376,16 @@ NB. 'rank error'   -: 9!:51 etx 3 4$'abc'
 NB. 
 NB. 9!:51 old
 
+NB. 9!:54 and 9!:55 -----------------------------------------------------
+
+old=: 9!:54 ''
+9!:55 ]0
+'A' = 7 u: 65
+'A' = 8 u: 65
+9!:55 ]1
+'domain error' -: ex '''A'' = 7 u: 65'
+'domain error' -: ex '''A'' = 8 u: 65'
+9!:55 old
 
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
 4!:55 ;:'drop1 erase evmq evms namedvb nub old p ppq pps promptq '

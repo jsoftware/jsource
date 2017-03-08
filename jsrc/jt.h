@@ -250,6 +250,7 @@ typedef struct {
  I    th2bufn;          /* current max length of buf                       */
  UI   timelimit;        /* execution time limit milliseconds               */
  A    xep;              /* exit execution phrase                           */
+ C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
  B    assert;           /* 1 iff evaluate assert. statements               */
  B    iepdo;            /* 1 iff do iep                                    */
  B    nflag;            /* 1 if space required before name                 */

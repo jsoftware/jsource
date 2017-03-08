@@ -241,3 +241,15 @@ F1(jtasgzombs){I k;
  jt->asgzomblevel=(C)k;
  R mtm;
 }
+
+F1(jtunicodex78q){
+ ASSERTMTV(w);
+ R sc(jt->unicodex78);
+}
+
+F1(jtunicodex78s){I k;
+ RE(k=i0(w));
+ ASSERT(0<=k&&k<=1,EVDOMAIN);
+ jt->unicodex78=(C)k;
+ R mtm;
+}

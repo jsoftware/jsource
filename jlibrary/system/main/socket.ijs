@@ -216,7 +216,7 @@ sdinit=: 3 : 0
 if. 0=nc<'SOCKETS_jsocket_' do. 0 return. end.
 SOCKETS_jsocket_=: ''
 if. IFUNIX do. 0 return. end.
-if. 0~:res WSAStartupJ 257;1000$' ' do. _1[mbinfo'Socket Error' else. 0 end.
+if. 0~:res WSAStartupJ 257;1000$' ' do. _1[sminfo'Socket Error' else. 0 end.
 )
 sdrecv=: 3 : 0"1
 's size'=. 2{.y

@@ -17,8 +17,6 @@ PDFReader_nox
 ReadCatalog
 RecentMax
 XDiff
-Tags
-UserDict
 Editor
 Editor_nox
 RGBSEQ

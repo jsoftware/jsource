@@ -17,6 +17,9 @@ end.
 if. notdef 'IFJA' do.
   IFJA=: 0
 end.
+if. notdef 'IFJNET' do.
+  IFJNET=: 0
+end.
 if. notdef 'FHS' do.
   FHS=: 0
 end.
@@ -31,6 +34,7 @@ if. notdef 'UNAME' do.
     UNAME=: 'Win'
   end.
 end.
+'libc.so.6 setlocale > x i *c'&(15!:0)^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
     cpu=. 2!:0 'cat /proc/cpuinfo'
@@ -39,11 +43,11 @@ if. notdef 'IFRASPI' do.
     IFRASPI=: 0
   end.
 end.
-if. IF64 +. IFIOS +. IFRASPI +. UNAME-:'Android' do.
+if. IF64 +. IFIOS do.
   IFWOW64=: 0
 else.
   if. IFUNIX do.
-    IFWOW64=: '64'-:_2{.(2!:0 'uname -m')-.10{a.
+    IFWOW64=: '64'-:_2{.(2!:0 (UNAME-:'Android'){::'uname -m';'getprop ro.product.cpu.abi')-.10{a.
   else.
     IFWOW64=: 'AMD64'-:2!:5'PROCESSOR_ARCHITEW6432'
   end.
@@ -270,8 +274,8 @@ else.
 end.
 ''
 )
-isutf8=: 1:@(7&u:) :: 0:
-isutf16=: 1:@(8&u:) :: 0:
+isutf8=: 0:`(1:@(7&u:) :: 0:)@.(2=3!:0)
+isutf16=: 0:`(1:@(8&u:) :: 0:)@.(131072=3!:0)
 items=: "_1
 fetch=: {::
 leaf=: L:0
@@ -325,6 +329,7 @@ sign=: *
 sminfo=: 3 : 0
 if. IFQT do. wdinfo_jqtide_ y
 elseif. IFJA do. wdinfo_ja_ y
+elseif. IFJNET do. wdinfo_jnet_ y
 elseif. do. smoutput >_1{.boxopen y end.
 )
 smoutput=: 0 0 $ 1!:2&2
@@ -1302,7 +1307,7 @@ else.
 end.
 )
 ftype=: 3 : 0
-(1:@(1!:4) :: 0:)^:IFWIN < f=. }: ^: ('/' = {:) > fboxname y
+(1:@(1!:4) :: 0:)^:IFWIN < f=. }: ^: ('/' = {:) , > fboxname y
 d=. 1!:0 f
 if. #d do.
   >: 'd' = 4 { > 4 { ,d
@@ -1333,8 +1338,10 @@ fwrites=: 4 : 0
 )
 cocurrent 'z'
 install=: 3 : 0
+'' install y
+:
 require 'pacman'
-do_install_jpacman_ y
+x do_install_jpacman_ y
 )
 getqtbin=: 3 : 0
 if. (<UNAME) -.@e. 'Linux';'Darwin';'Win' do. return. end.
@@ -1777,7 +1784,7 @@ f=. jpath '~addons/docs/help/',y
 if. fexist ({.~ i:&'#') f do.
   browse file2url f
 else.
-  f=. 'http://www.jsoftware.com/docs/help', '805'
+  f=. 'http://www.jsoftware.com/docs/help', '806'
   browse f,'/',y
 end.
 )
@@ -1886,7 +1893,7 @@ case. do.
     PDFReader=. dfltpdfreader''
   end.
   PDFReader=. dquote PDFReader
-  cmd=. PDFReader,' ',dquote cmd
+  cmd=. PDFReader,' ',(dquote cmd),' &'
   try.
     2!:1 cmd
   catch.
@@ -2004,20 +2011,6 @@ Public=: i. 0 2
 UserFolders=: i. 0 2
 getignore=: 3 : 0
 r=. ' colib compare convert coutil dates dir dll files libpath strings text'
-if. IFIOS do.
-  r=. r, ' qtide ide/qt'
-else.
-  r=. r, ' ide/ios'
-end.
-if. -.IFQT do.
-  r=. r, ' qtide ide/qt'
-end.
-if. (((UNAME-:'Android')>IFJA)+.IFIOS+.IFJHS) do.
-  r=. r,' gl2 graphics/gl2'
-end.
-if. -.IFJA do.
-  r=. r,' ja ide/ja'
-end.
 Ignore=: <;._1 r
 )
 
@@ -2243,10 +2236,10 @@ a=. (,&'=: ',sub @ (3 : j)) each y
 )
 xedit=: xedit_j_
 wcsize=: 3 : 0
-if. (-.IFQT+.IFJHS+.IFIOS) *. UNAME-:'Linux' do.
+if. (-.IFQT+.IFJNET+.IFJHS+.IFIOS) *. UNAME-:'Linux' do.
   |.@".@(-.&LF)@(2!:0) :: (Cwh_j_"_) '/bin/stty size 2>/dev/null'
 else.
-  Cwh_j_
+  (Cwh_j_"_)`((0 ". wd) :: (Cwh_j_"_))@.IFQT 'sm get termcwh'
 end.
 )
 coclass 'jcompare'

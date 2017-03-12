@@ -31,7 +31,7 @@ bracket=: ('['"_ , ": , '] '"_) each
 dab=: -. & ' '
 firstones=: > (0: , }:)
 groupndx=: 4 : '<: (#x) }. (+/\r<#x) /: r=. /: x,y'
-info=: mbinfo @ ('Performance Monitor'&;)
+info=: sminfo @ ('Performance Monitor'&;)
 lastones=: > (}. , 0:)
 maskdef=: [: * [: +/\ _1&= - 0: , }:@:(_2&=)
 nolocale=: (i.&'_') {. ]

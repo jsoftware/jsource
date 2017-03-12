@@ -391,6 +391,9 @@
 #define JTINPLACEA      2   // turn this on in jt to indicate that a can be inplaced
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
+#define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
+#define MCI(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // copy items of source
+#define MCIL(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // use when copy expected to bo long
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
 #define NAN0            (_clearfp())

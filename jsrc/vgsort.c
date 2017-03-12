@@ -8,6 +8,106 @@
 #pragma intrinsic(memset)
 
 
+#define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
+
+// Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
+// On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
+// #define COMPGRADE(T,t) T av=*a, bv=*b; if(av!=bv) R av t bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av t bv;} R a<b;
+#define COMPGRADE(T,t) do{T av=*a, bv=*b; if(av!=bv) R av t bv; if(!--n)break; ++a; ++b;}while(1); R 1;
+static __forceinline B compiu(I n, I *a, I *b){COMPGRADE(I,<)}
+static __forceinline B compid(I n, I *a, I *b){COMPGRADE(I,>)}
+static __forceinline B compdu(I n, D *a, D *b){COMPGRADE(D,<)}
+static __forceinline B compdd(I n, D *a, D *b){COMPGRADE(D,>)}
+static B compcd(I n, UC *a, UC *b){COMPGRADE(UC,>)}
+static B compcu(I n, UC *a, UC *b){COMPGRADE(UC,<)}
+static B compud(I n, US *a, US *b){COMPGRADE(US,>)}
+static B compuu(I n, US *a, US *b){COMPGRADE(US,<)}
+static B comptd(I n, C4 *a, C4 *b){COMPGRADE(C4,>)}
+static B comptu(I n, C4 *a, C4 *b){COMPGRADE(C4,<)}
+
+// General sort, with comparisons by function call, but may do extra comparisons to avoid mispredicted branches
+#define GRADEFNNAME jmsort
+#define MERGEFNNAME jmerge
+#define COMPFN (*comp)
+#define T void
+#define PTRADD(p,item) ((void *)((C*)p+(item)*bpi))
+#define MVITEMS(dest,src,nitems) {MC(dest,src,(nitems)*bpi); dest=PTRADD(dest,nitems); src=PTRADD(src,nitems);}
+#include "vgsort.h"
+
+// Sorts with inline comparisons
+#define GRADEFNNAME jmsortiu
+#define MERGEFNNAME jmergeiu
+#define COMPFN compiu
+#define T I
+#define PTRADD(p,item) ((p)+(item)*(compn))
+#define MVITEMS(dest,src,nitems) {I _i = (nitems)*(compn); do{*dest++=*src++;}while(--_i);}
+#include "vgsort.h"
+
+#define GRADEFNNAME jmsortid
+#define MERGEFNNAME jmergeid
+#define COMPFN compid
+#define T I
+#define PTRADD(p,item) ((p)+(item)*(compn))
+#define MVITEMS(dest,src,nitems) {I _i = (nitems)*(compn); do{*dest++=*src++;}while(--_i);}
+#include "vgsort.h"
+
+#define GRADEFNNAME jmsortdu
+#define MERGEFNNAME jmergedu
+#define COMPFN compdu
+#define T D
+#define PTRADD(p,item) ((p)+(item)*(compn))
+#define MVITEMS(dest,src,nitems) {I _i = (nitems)*(compn); do{*dest++=*src++;}while(--_i);}
+#include "vgsort.h"
+
+#define GRADEFNNAME jmsortdd
+#define MERGEFNNAME jmergedd
+#define COMPFN compdd
+#define T D
+#define PTRADD(p,item) ((p)+(item)*(compn))
+#define MVITEMS(dest,src,nitems) {I _i = (nitems)*(compn); do{*dest++=*src++;}while(--_i);}
+#include "vgsort.h"
+
+
+static struct {
+ CMP comproutine;
+ void *(*sortfunc)();
+} sortroutines[][2] = {  // index is [bitx][up]
+[B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,jmsortid},{0,jmsortiu}}, [FLX]={{0,jmsortdd},{0,jmsortdu}},
+[CMPXX]={{0,jmsortdd},{0,jmsortdu}},
+[C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}
+};
+
+// sort for direct types, without pointers.  When the operand overflows cache the pointer method is very slow
+// We support B01/LIT/C2T/C4T/INT/FL/CMPX
+static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
+ t=AT(w);
+ // Create putative output area, same size as input.  If there is more than one cell in result, this will always be the result.
+ GA(z,AT(w),AN(w),AR(w),AS(w));
+ I cpi=api<<((t>>CMPXX)&1);  // compares per item on a sort
+ I bpi=api*bp(t);  // bytes per item of a sort
+ I bps=bpi*n;  // bytes per sort
+ void * RESTRICT wv=voidAV(w); void * RESTRICT zv=voidAV(z);
+ CMP cmpfunc=sortroutines[CTTZ(t)][jt->compgt==1].comproutine;
+ void *(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
+ // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
+ // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
+ // won't matter, since the shape will never be used elsewhere
+ GA(x,t,n*api,AR(w),AS(w)); void * RESTRICT xv=voidAV(x);  /* work area for msmerge() */
+ DO(m,   // sort each cell
+  void *sortres=(*sortfunc)(cmpfunc,cpi,n,bpi,(void*)zv,(void*)xv,wv);
+  if(m==1){
+   // If there is only one cell, it may be either *zv or *xv, but either way it should be the result
+   R (sortres==zv)?z:x;
+  }else{
+   // If there is more than one cell, we have to make sure all the data migrates to *zv, if it's not there already
+   if(sortres!=zv)MCL(zv,sortres,bps);
+  }
+  wv=(void*)((C*)wv+=bps); zv=(void*)((C*)zv+=bps);
+ );
+ R z;  // multiple cells - return original z
+}    /* w grade"r w for direct types, by moving the data without pointers */
+
+
 #define SF(f)         A f(J jt,I m,I c,I n,A w)
 
 /* m - # cells (# individual grades to do) */
@@ -114,7 +214,8 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>3000?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
+ if(!rng.range)R n>1300?sorti1(m,n,n,w):jtsortdirect(jt,m,1,n,w);// obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
 // obsolete  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
 // obsolete  // approximate lg(n) with bit count.  And always use small-range if range is < 256
@@ -210,7 +311,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>3000?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>700?sortu1(m,n,n,w):jtsortdirect(jt,m,1,n,w);  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  UI4 lgn; CTLZI(n,lgn);
 // obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
 // obsolete  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
@@ -257,7 +358,8 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 }    /* w grade"r w on large-range literal4 */
 
 static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
- if(n<8000)R irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ // Radix sort almost always wins, presumably because filling the radix table is so fast
+ if(n<50)jtsortdirect(jt,m,1,n,w);  // obsolete R irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
@@ -286,8 +388,9 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  R z;
 }    /* w grade"1 w on real w */
 
+
 // x /:"r y
-F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr; 
+F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr; 
  RZ(a&&w);
  // ?cr= rank of the cells being sorted; t= type of w
  acr=jt->rank?jt->rank[0]:AR(a); 
@@ -297,15 +400,26 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,d,f,m,n,*s,t,wcr;
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
 // obsolete  f=AR(w)-wcr; s=AS(w); m=prod(f,s); n=(AR(w))?s[f]:1; d=bp(t)*prod(wcr-1,1+f+s);
-  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(d,wcr-1,1+f+s); d*=bp(t);
+  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s); d=api*bp(t);
   if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,n,w))  // sorting Booleans, when all grades start on a word boundary
   else if(1==d)                      RZ(z=sortc (m,n,n,w))  // sorting single bytes (character or Boolean)
   else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,n,w))  // Booleans with cell-items 2 bytes long
   else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,n,w))  // long character strings with cell-items 2 bytes long
-  else if(1==wcr&&t&C4T)             RZ(z=sortu (m,n,n,w))  // literal4 string lists
+   // if there is only one atom per item (usually in lists), try one of the fast methods
+  else if(1==api&&t&C4T)             RZ(z=sortu (m,n,n,w))  // literal4 string lists
+  else if(1==api&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
+  else if(1==api&&t&FL )             RZ(z=sortd (m,n,n,w)) // floating-point lists
   else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,n,w))  // Booleans with cell-items 4 bytes long
-  else if(1==wcr&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
-  else if(1==wcr&&t&FL )             RZ(z=sortd (m,n,n,w)); // floating-point lists
+   // for direct types, we have the choice of direct/indirect.  For indirect, we do grade followed by from to apply the grading permutation.
+   // for direct, we move the data around until we get the final sort.  Direct is better for short items, for which the copy is cheap;
+   // and the cutoff rises with the length of the sort, as the indirect sort flags when the items themselves start to fall out of cache.
+   // Empirically (Ivy Bridge) we find that the length of the item above which indirect is better depends on sortlength:
+   // for 1e6 items - 80 bytes; 1e5 - 64 bytes; 1e4 - 40 bytes - 1e3 - 48 bytes
+   // We roughly approximate this curve
+  else if(t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
+   UI4 lgn; CTLZI(n,lgn);
+   if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jt,m,api,n,w))
+  }
  }
  // If not a supported reflexive case, grade w and then select those values from a
  if(!z)RZ(z=irs2(gr1(w),a,0L,1L,acr,jtfrom));

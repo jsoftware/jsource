@@ -15,14 +15,15 @@ test=: 3 : 0
 )
 
 test1=: 3 : 0
- t=. (/:"1 y){"1 y
- assert. t -: y/:"1 y
- assert. t -: /:~"1 y
- assert. t -: /:"1~ y
- t=. (\:"1 y){"1 y
- assert. t -: y\:"1 y
- assert. t -: \:~"1 y
- assert. t -: \:"1~ y
+ yy =: y
+ t=: (/:"1 y){"1 y
+ assert. t -: t1 =: y/:"1 y
+ assert. t -: t1 =: /:~"1 y
+ assert. t -: t1 =: /:"1~ y
+ t=: (\:"1 y){"1 y
+ assert. t -: t1 =: y\:"1 y
+ assert. t -: t1 =: \:~"1 y
+ assert. t -: t1 =: \:"1~ y
  1
 )
 
@@ -245,6 +246,6 @@ test1 0.01*(--:n) + 3 1002 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1003 ?@$ n=: IF64{1e9 1e18
 
 
-4!:55 ;:'adot1 adot2 sdot0 b n test test1'
+4!:55 ;:'adot1 adot2 sdot0 b n t t1 test test1 yy'
 
 

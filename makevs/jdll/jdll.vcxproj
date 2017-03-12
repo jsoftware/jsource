@@ -1099,6 +1099,7 @@
     <ClInclude Include="..\..\jsrc\VA.H" />
     <ClInclude Include="..\..\jsrc\vasm.h" />
     <ClInclude Include="..\..\jsrc\VE.H" />
+    <ClInclude Include="..\..\jsrc\vgsort.h" />
     <ClInclude Include="..\..\jsrc\VX.H" />
     <ClInclude Include="..\..\jsrc\VZ.H" />
     <ClInclude Include="..\..\jsrc\W.H" />

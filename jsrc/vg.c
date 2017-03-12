@@ -809,7 +809,7 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  n=r?s[f]:1; if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
 // obsolete  m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1; RE(zn=mult(m,n));
-  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; PROD(c,r,f+s); zn=m*n;
+  PROD(m,f,s); PROD(ai,r-1,f+s+1); /* obsolete c=ai*n; */ PROD(c,r,f+s); zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   RE(zn=mult(prod(f,s),n));

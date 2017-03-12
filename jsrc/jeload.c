@@ -5,18 +5,10 @@
 #define PLEN 1000 // path length
 #ifdef _WIN32
  #include <windows.h>
-
-#ifdef UNDER_CE
- #define GETPROCADDRESS(h,p) GetProcAddress(h,_T(p))
-#else
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
-#endif
  #define JDLLNAME "j.dll"
  #define filesep '\\'
  #define filesepx "\\"
-// setfocus e required for pocketpc and doesn't hurt others
-#define ijx "11!:0'pc ijx closeok;xywh 0 0 300 200;cc e editijx rightmove bottommove ws_vscroll ws_hscroll;setfont e \"Courier New\" 12;setfocus e;pas 0 0;pgroup jijx;pshow;'[18!:4<'base'"
-
 #else
  #include <unistd.h>
  #include <dlfcn.h>
@@ -24,7 +16,6 @@
  #define _stdcall
  #define filesep '/'
  #define filesepx "/"
- #define ijx "11!:0'pc ijx closeok;xywh 0 0 300 200;cc e editijx rightmove bottommove ws_vscroll ws_hscroll;setfont e monospaced 12;pas 0 0;pgroup jijx;pshow;'[18!:4<'base'"
  #ifdef __MACH__
   #define JDLLNAME "libj.dylib"
  #else
@@ -41,8 +32,8 @@ static JDoType jdo;
 static JFreeType jfree;
 static JgaType jga;
 static JGetLocaleType jgetlocale;
-static char path[PLEN];
-static char pathdll[PLEN];
+char path[PLEN];
+char pathdll[PLEN];
 static char jdllver[20];
 static int FHS=0;
 #ifdef ANDROID
@@ -82,7 +73,7 @@ J jeload(void* callbacks)
 
 // set path and pathdll (wpath also set for win)
 // WIN arg is 0, Unix arg is argv[0]
-void jepath(char* arg)
+void jepath(char* arg,char* lib)
 {
 #ifdef _WIN32
  WCHAR wpath[PLEN];
@@ -178,7 +169,17 @@ void jepath(char* arg)
  }
 #endif
 #endif
- // fprintf(stderr,"arg4 %s\n",path);
+ if(*lib)
+ {
+	 if(filesep==*lib || '\\'==filesep && ':'==lib[1])
+		 strcpy(pathdll,lib); // absolute path
+	 else
+	 {
+		 strcpy(pathdll,path);
+		 strcat(pathdll,filesepx);
+		 strcat(pathdll,lib); // relative path
+	 }
+ }
 }
 
 // called by jwdp (java jnative.c) to set path
@@ -221,7 +222,7 @@ int jefirst(int type,char* arg)
 	else if(1==type)
 		strcat(input,"(3 : '0!:0 y')2{ARGV");
 	else if(2==type)
-		strcat(input,ijx);
+		strcat(input,"");
 	else
 		strcat(input,"i.0 0");
 	strcat(input,"[ARGV_z_=:");
@@ -252,6 +253,18 @@ int jefirst(int type,char* arg)
 	}
 	*q=0;
 	strcat(input,"'");
+
+	strcat(input,"[LIBFILE_z_=:'");
+	p=pathdll;
+	q=input+strlen(input);
+	while(*p)
+	{
+		if(*p=='\'') *q++='\'';	// 's doubled
+		*q++=*p++;
+	}
+	*q=0;
+	strcat(input,"'");
+
 	r=jedo(input);
 	free(input);
 	return r;

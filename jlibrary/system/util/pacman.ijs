@@ -33,6 +33,7 @@ graphics/gl2
 graphics/gnuplot
 graphics/graph
 graphics/graphviz
+graphics/grid
 graphics/jturtle
 graphics/print
 graphics/tgsj
@@ -40,6 +41,8 @@ graphics/treemap
 gui/monthview
 gui/util
 ide/qt
+ide/ja
+ide/jnet
 math/tabula
 media/animate
 media/gdiplus
@@ -78,7 +81,7 @@ setfiles=: 3 : 0
 ADDCFG=: jpath '~addons/config/'
 makedir ADDCFG
 ADDCFGIJS=: ADDCFG,'config.ijs'
-JRELEASE=: 'j805'
+JRELEASE=: 'j806'
 LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
@@ -315,7 +318,7 @@ end.
 )
 shellcmd=: 3 : 0
 if. IFUNIX do.
-  hostcmd y
+  hostcmd_j_ y
 else.
   spawn_jtask_ y
 end.
@@ -357,7 +360,7 @@ if. IFUNIX do.
   else.
     e=. shellcmd 'tar ',((IFIOS+:UNAME-:'Android')#(('Darwin'-:UNAME){::'--no-same-owner --no-same-permissions';'-o -p')),' -xzf ',file,' -C ',dir
   end.
-  if. ('/usr/'-:5{.dir) *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
+  if. ('/usr/'-:5{.dir-.'"') *. ('root'-:2!:5'USER') +. (<2!:5'HOME') e. 0;'/var/root';'/root';'';,'/' do.
     shellcmd ::0: 'find ',dir,' -type d -exec chmod a+rx {} \+'
     shellcmd ::0: 'find ',dir,' -type f -exec chmod a+r {} \+'
   end.
@@ -698,6 +701,113 @@ txt=. 'NB. Addon configuration',LF2
 txt=. txt,'ADDLABS=: 0 : 0',LF,ADDLABS,')',LF
 txt fwrites ADDCFGIJS
 )
+cocurrent 'jpacman'
+
+JEpath=: 'http://www.jsoftware.com/download/jengine'
+jengine_install=: 3 : 0
+y=. y,(0=#y)#'status'
+'only valid for j8xx'assert'8'=1{9!:14''
+'plat name bname'=. jengine_sub''
+'update not supported for this type of install'assert 1=ftype bname
+jens=. jengine_version_from_web''
+if. jens -: 0 do. return. end.
+if. y -: 'status' do.
+  jengine_status jens
+else.
+  jengine_update jens;y
+end.
+)
+jengine_status=: 3 : 0
+t=. 'Current engine: ',(9!:14''),LF2
+if. 0=#y do.
+  t=. t,'No new engines are available for this platform.'
+else.
+  t=. t,'Available engines:',,LF,.":('name';'version'),y
+  t=. t,LF2,'To install a new engine, call ''jengine'' install with the engine name, e.g.',LF2
+  t=. t,'   ''jengine'' install ''',(0 0{::y),''''
+end.
+echo t
+)
+testaccessfile=: 3 : 0
+f=. <jpath y
+try.
+  '' 1!:2 f
+  1!:55 f
+  1
+catch.
+  0
+end.
+)
+jengine_update=: 3 : 0
+'jens id'=. y
+if. jens-:0 do. return. end.
+if. 0=#jens do.
+  echo 'No new engines are available for this platform.' return.
+end.
+if. -. (<id) e. {."1 jens do.
+  echo 'There is no new engine with this name: ',id return.
+end.
+'plat name bname'=. jengine_sub''
+'access error - protected folder - must run as admin/sudo'assert testaccessfile bname,'.temp'
+'rc p'=. httpget JEpath,'/',id,'/',name
+if. rc do.
+  echo 'httpget failed when downloading the engine' return.
+end.
+jenew=. fread p
+jeold=. fread bname
+oname=. bname,'.original'
+renamed=. bname,'.',((isotimestamp 6!:0'')rplc' ';'-';':';'-';'.';'-'),'.renamed'
+if. -.fexist oname do.
+  echo oname,' : copy of original created'
+  jeold fwrite oname
+else.
+  echo oname,' : copy of original already exists'
+end.
+renamed frename bname
+echo bname,' renamed as ',renamed
+jenew fwrite bname
+if. (UNAME-:'Linux') *. 1~:ftype '~bin/',name do.
+  hostcmd_j_ ' chmod 644 ',bname
+end.
+echo'new JE installed'
+echo'this J instance continues to use the old image'
+echo'shutdown J, restart, and check 9!:14'''''
+i.0 0
+)
+jengine_sub=: 3 : 0
+i=. ('Win';'Darwin')i.<UNAME
+plat=. ;i{'windows';'darwin';'linux'
+name=. ;i{'j.dll';'libj.dylib';'libj.so'
+bname=. '~bin/',name
+if. 1~:ftype bname do.
+  if. UNAME-:'Linux' do.
+    v=. ({.~i.&'/')}.9!:14''
+    sub=. '' [ '.',({.v),'.',}.v
+    sub=. '.8.06'
+    if. IFRASPI do.
+      bname=. '/usr/lib/arm-linux-gnueabihf/',name,sub
+    elseif. IF64 do.
+      bname=. '/usr/lib/x86_64-linux-gnu/',name,sub
+    elseif. do.
+      bname=. '/usr/lib/i386-linux-gnu/',name,sub
+    end.
+  end.
+end.
+plat;name;bname
+)
+jengine_version_from_web=: 3 : 0
+'rc p'=. httpget JEpath,'/jengine.txt'
+if. rc do.
+  echo 'Could not read jengine directory from J website'
+  0 return.
+end.
+plat=. 0 pick jengine_sub''
+r=. 'b' fread p
+r=. r #~ (1 e. (>IF64{'j32';'j64') E.]) &> r
+r=. r #~ (1 e. plat E. ]) &> r
+r=. ((i.&' ') ({.;}.@}.) ]) &> r
+r #~ (<9!:14'') ~: {:"1 r
+)
 show_console=: 4 : 0
   if. -. init_console 'read' do. '' return. end.
   select. x
@@ -1003,8 +1113,10 @@ jpkg=: 4 : 0
     msg,'  update, upgrade'
   end.
 )
-do_install=: 3 : 0
+do_install=: 4 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.
+if. x-:'jengine' do. jengine_install y return. end.
+if. -. x-:'' do. smoutput 'Invalid left argument' return. end.
 'update' jpkg ''
 if. -. (<y) e. 'all';'qtide' do.
   'install' jpkg y return.
@@ -1015,6 +1127,7 @@ end.
 'install' jpkg (y-:'all') pick 'base library ide/qt';'all'
 getqtbin 0
 msg=. (+/ 2 1 * IFWIN,'Darwin'-:UNAME) pick 'jqt.sh';'the jqt icon';'jqt.cmd'
+if. '/usr/share/j/' -: 13{. jpath'~install' do. msg=. 'jqt' end.
 smoutput 'Exit and restart J using ',msg
 )
 do_getqtbin=: 3 : 0
@@ -1033,12 +1146,12 @@ elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
   z1=. 'libjqt.dylib'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j805/qtide/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j806/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
 d=. jpath '~bin'
-fhs=. ('Linux'-:UNAME) *. '/usr/lib/'-:9{.libjqt
+fhs=. '/usr/share/j/' -: 13{. jpath'~install'
 if. IFWIN do.
   unzip_jpacman_ p;d
 else.
@@ -1051,7 +1164,8 @@ else.
       elseif. do.
         d1=. '/usr/lib/i386-linux-gnu/.'
       end.
-      hostcmd_jpacman_ 'cd /usr/bin && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && chmod 644 libjqt.so && mv libjqt.so ',d1
+      echo 'cd /usr/bin && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && chmod 644 libjqt.so && mv libjqt.so ',d1,' && ldconfig'
+      hostcmd_jpacman_ 'cd /usr/bin && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && chmod 644 libjqt.so && mv libjqt.so ',d1,' && ldconfig'
     else.
       hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
     end.
@@ -1077,7 +1191,7 @@ if. IFWIN do.
 else.
   z=. 'qt56-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j805/qtlib/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j806/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.

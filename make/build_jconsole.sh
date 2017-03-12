@@ -9,11 +9,11 @@ case $jplatform\_$1 in
 
 linux_j32)
 COMPILE="$common -m32 -DREADLINE"
-LINK=" $jgit/unix/libedit.a -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -o jconsole "
+LINK=" -l:libedit.so.2 -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -o jconsole "
 ;;
 linux_j64)
 COMPILE="$common -DREADLINE"
-LINK=" $jgit/unix/libedit64.a -ldl -lncursesw -o jconsole "
+LINK=" -ledit -ldl -lncursesw -o jconsole "
 ;;
 raspberry_j32)
 COMPILE="$common -DREADLINE -DRASPI"

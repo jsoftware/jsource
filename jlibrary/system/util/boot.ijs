@@ -3,7 +3,7 @@
 NB. =========================================================
 NB. android specific
 startupandroid=: 3 : 0
-dver_z_=: 3 : '1!:55 ::0: <jpath ''~install/assets_version.txt'''
+dver_z_=: 3 : '1!:55 ::0: <jpath ''~bin/../../shared_prefs/jpreferences.xml'' [ 1!:55 ::0: <jpath ''~install/assets_version.txt'''
 if. 0~:4!:0<'APILEVEL_ja_' do.
   APILEVEL_ja_=: 0&". LF-.~ 2!:0 'getprop ro.build.version.sdk'
 end.
@@ -37,10 +37,10 @@ load sys,'util/scripts.ijs'
 load 'regex'
 load 'task'
 load sys,'util/configure.ijs'
-load sys,'main/ctag.ijs'
-load sys,'util/jadetag.ijs'
 load^:IFQT '~addons/ide/qt/qt.ijs'
 load^:IFJA '~addons/ide/ja/ja.ijs'
+load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet'
+load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet/util/jadefull'
 
 NB. ---------------------------------------------------------
 NB. JVERSION_z_ (used in about box)
@@ -59,7 +59,11 @@ if. IFQT do.
 elseif. IFJA do.
   r=. r,LF,'J Android: ',wd'version'
 end.
-r=. r,LF,'Platform: ',UNAME,' ',IF64 pick '32';'64'
+if. UNAME-:'Android' do.
+  r=. r,LF,'Platform: ',UNAME,' ',(IF64 pick '32';'64'),' (', ')',~ LF-.~ 2!:0'getprop ro.product.cpu.abi'
+else.
+  r=. r,LF,'Platform: ',UNAME,' ',IF64 pick '32';'64'
+end.
 r=. r,LF,'Installer: ',LF -.~ 1!:1 :: ('unknown'"_) <jpath'~bin/installer.txt'
 r=. r,LF,'InstallPath: ',jpath '~install'
 r=. r,LF,'Contact: ',f

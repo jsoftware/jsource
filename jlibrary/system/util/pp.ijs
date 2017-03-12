@@ -61,7 +61,7 @@ noun \: 0
 noun \define
 )
 findfor=: 'for_'&-: @ (4&{.) *. ('.'&=) @ {:
-info=: mbinfo @ ('Lint'&;)
+info=: sminfo @ ('Lint'&;)
 lastones=: > (}. , 0:)
 tolist=: }.@;@:(LF&,@,@":&.>)
 findcontrols=: (1: e. (CONTS"_ (1: e. E.) &> <)) &>

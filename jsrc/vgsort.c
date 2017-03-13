@@ -72,9 +72,9 @@ static struct {
  CMP comproutine;
  void *(*sortfunc)();
 } sortroutines[][2] = {  // index is [bitx][up]
-[B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,jmsortid},{0,jmsortiu}}, [FLX]={{0,jmsortdd},{0,jmsortdu}},
-[CMPXX]={{0,jmsortdd},{0,jmsortdu}},
-[C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}
+[B01X]={{compcd,(void*)jmsort},{compcu,(void*)jmsort}}, [LITX]={{compcd,(void*)jmsort},{compcu,(void*)jmsort}}, [INTX]={{0,(void*)jmsortid},{0,(void*)jmsortiu}}, [FLX]={{0,(void*)jmsortdd},{0,(void*)jmsortdu}},
+[CMPXX]={{0,(void*)jmsortdd},{0,(void*)jmsortdu}},
+[C2TX]={{compud,(void*)jmsort},{compuu,(void*)jmsort}}, [C4TX]={{comptd,(void*)jmsort},{comptu,(void*)jmsort}}
 };
 
 // sort for direct types, without pointers.  When the operand overflows cache the pointer method is very slow

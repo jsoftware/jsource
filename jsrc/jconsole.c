@@ -144,7 +144,8 @@ int main(int argc, char* argv[])
  jepath(argv[0],flag?argv[2]:"");
  if(flag)
  {
-	 for(int i=1;i<argc-2;++i)
+   int i;
+	 for(i=1;i<argc-2;++i)
 	 {
 		 argv[i]=argv[i+2];
 	 }

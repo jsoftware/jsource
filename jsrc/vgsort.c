@@ -18,12 +18,12 @@ static __forceinline B compiu(I n, I *a, I *b){COMPGRADE(I,<)}
 static __forceinline B compid(I n, I *a, I *b){COMPGRADE(I,>)}
 static __forceinline B compdu(I n, D *a, D *b){COMPGRADE(D,<)}
 static __forceinline B compdd(I n, D *a, D *b){COMPGRADE(D,>)}
-static B compcd(I n, UC *a, UC *b){COMPGRADE(UC,>)}
-static B compcu(I n, UC *a, UC *b){COMPGRADE(UC,<)}
-static B compud(I n, US *a, US *b){COMPGRADE(US,>)}
-static B compuu(I n, US *a, US *b){COMPGRADE(US,<)}
-static B comptd(I n, C4 *a, C4 *b){COMPGRADE(C4,>)}
-static B comptu(I n, C4 *a, C4 *b){COMPGRADE(C4,<)}
+// obsolete static B compcd(I n, UC *a, UC *b){COMPGRADE(UC,>)}
+// obsolete static B compcu(I n, UC *a, UC *b){COMPGRADE(UC,<)}
+// obsolete static B compud(I n, US *a, US *b){COMPGRADE(US,>)}
+// obsolete static B compuu(I n, US *a, US *b){COMPGRADE(US,<)}
+// obsolete static B comptd(I n, C4 *a, C4 *b){COMPGRADE(C4,>)}
+// obsolete static B comptu(I n, C4 *a, C4 *b){COMPGRADE(C4,<)}
 
 // General sort, with comparisons by function call, but may do extra comparisons to avoid mispredicted branches
 #define GRADEFNNAME jmsort
@@ -102,7 +102,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
    // If there is more than one cell, we have to make sure all the data migrates to *zv, if it's not there already
    if(sortres!=zv)MCL(zv,sortres,bps);
   }
-  wv=(void*)((C*)wv+=bps); zv=(void*)((C*)zv+=bps);
+  wv=(void*)((C*)wv+bps); zv=(void*)((C*)zv+bps);
  );
  R z;  // multiple cells - return original z
 }    /* w grade"r w for direct types, by moving the data without pointers */

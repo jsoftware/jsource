@@ -31,7 +31,7 @@ CF(compp){COMPDCLP(I);I*cv=jt->compsyv,xi,yi;
 
 #else
 // inlinable functions are moved to vg.c
-
+// functions differing between merge & sort are moved to those modules
 B compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compcd(I n, UC *a, UC *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}

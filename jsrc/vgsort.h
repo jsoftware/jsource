@@ -55,7 +55,7 @@ static void* MERGEFNNAME(CMP comp, I compn, I bpi, T * lo, I lon, T * hi, I hin,
     MCL(wkptr,lo,(C*)loend-(C*)lo); break;
    }
   }
-#else  // this version does not requires prediction of the test but runs slower - odd, since it does just a fetch + test + branch extra
+#else  // this version does not requires prediction of the test.  Faster, because we are mostly in cache and there is not a long delay for any fetch
   // We keep processing until one of the lists has been exhausted.  At that point, we copy the other list
   // to the output and return.
   if(lo!=loend){

@@ -72,8 +72,8 @@ static struct {
  CMP comproutine;
  void *(*sortfunc)();
 } sortroutines[][2] = {  // index is [bitx][up]
-[B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,jmsortid},{0,jmsortiu}}, [FLX]={{0,jmsortdd},{0,jmsortdu}},
-[CMPXX]={{0,jmsortdd},{0,jmsortdu}},
+[B01X]={{compcd,jmsort},{compcu,jmsort}}, [LITX]={{compcd,jmsort},{compcu,jmsort}}, [INTX]={{0,(void *(*)())jmsortid},{0,(void *(*)())jmsortiu}}, [FLX]={{0,(void *(*)())jmsortdd},{0,(void *(*)())jmsortdu}},
+[CMPXX]={{0,(void *(*)())jmsortdd},{0,(void *(*)())jmsortdu}},
 [C2TX]={{compud,jmsort},{compuu,jmsort}}, [C4TX]={{comptd,jmsort},{comptu,jmsort}}
 };
 
@@ -91,7 +91,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
  void *(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
- // won't matter, since the shape will never be used elsewhere
+ // won't matter, since the shape will never be used elsewhere)
  GA(x,t,n*api,AR(w),AS(w)); void * RESTRICT xv=voidAV(x);  /* work area for msmerge() */
  DO(m,   // sort each cell
   void *sortres=(*sortfunc)(cmpfunc,cpi,n,bpi,(void*)zv,(void*)xv,wv);
@@ -108,7 +108,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
 }    /* w grade"r w for direct types, by moving the data without pointers */
 
 
-#define SF(f)         A f(J jt,I m,I c,I n,A w)
+#define SF(f)         A f(J jt,I m,I n,A w)
 
 /* m - # cells (# individual grades to do) */
 /* c - # atoms in a cell                   */
@@ -215,7 +215,7 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  if(0<(maxrange=16*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
  }else rng.range=0;
  // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
- if(!rng.range)R n>1300?sorti1(m,n,n,w):jtsortdirect(jt,m,1,n,w);// obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);// obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
 // obsolete  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
 // obsolete  // approximate lg(n) with bit count.  And always use small-range if range is < 256
@@ -243,6 +243,7 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
 #endif
 
 
+// We are known to have 1 atom per item
 static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
  wv=AV(w);
@@ -264,7 +265,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*WDINC+INTLSBWDX+(US*)zv,colflags);
 #endif
   grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),INTMSBWDX+(US*)xv,colflags|1);
-  wv+=c; zv+=n;
+  wv+=n; zv+=n;
  }
  R z;
 }    /* w grade"r w on large-range integers */
@@ -311,7 +312,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>700?sortu1(m,n,n,w):jtsortdirect(jt,m,1,n,w);  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  UI4 lgn; CTLZI(n,lgn);
 // obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
 // obsolete  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
@@ -328,6 +329,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
 #endif
 }    /* w grade"1 w on small-range literal4 */
 
+// We are known to have 1 atom per item
 static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=C4AV(w); zu=C4AV(z);
@@ -352,11 +354,12 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 // obsolete    if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
 // obsolete    else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
 // obsolete   }
-  wv+=c; zu+=n;
+  wv+=n; zu+=n;
  }
  R z;
 }    /* w grade"r w on large-range literal4 */
 
+// We are known to have 1 atom per item
 static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  // Radix sort almost always wins, presumably because filling the radix table is so fast
  if(n<50)jtsortdirect(jt,m,1,n,w);  // obsolete R irs2(gr1(w),w,0L,1L,1L,jtfrom);
@@ -383,7 +386,7 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
    if(colflags&2){h=n+xu; DO(nneg,   *g++=*--h;); h=  xu; DO(n-nneg, *g++=*h++;);}  // up: reverse neg, foll by nonneg
    else  {h=nneg+xu; DO(n-nneg, *g++=*h++;); h=nneg+xu; DO(nneg,   *g++=*--h;);}  // down: nonneg foll by reverse neg
   }
-  wv+=c; zu+=n;
+  wv+=n; zu+=n;
  }
  R z;
 }    /* w grade"1 w on real w */
@@ -401,15 +404,15 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   // d = #bytes in an item of a cell of w
 // obsolete  f=AR(w)-wcr; s=AS(w); m=prod(f,s); n=(AR(w))?s[f]:1; d=bp(t)*prod(wcr-1,1+f+s);
   f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s); d=api*bp(t);
-  if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,n,w))  // sorting Booleans, when all grades start on a word boundary
-  else if(1==d)                      RZ(z=sortc (m,n,n,w))  // sorting single bytes (character or Boolean)
-  else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,n,w))  // Booleans with cell-items 2 bytes long
-  else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,n,w))  // long character strings with cell-items 2 bytes long
+  if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,w))  // sorting Booleans, when all grades start on a word boundary
+  else if(1==d)                      RZ(z=sortc (m,n,w))  // sorting single bytes (character or Boolean)
+  else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
+  else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long
    // if there is only one atom per item (usually in lists), try one of the fast methods
-  else if(1==api&&t&C4T)             RZ(z=sortu (m,n,n,w))  // literal4 string lists
-  else if(1==api&&t&INT)             RZ(z=sorti (m,n,n,w))  // integer lists
-  else if(1==api&&t&FL )             RZ(z=sortd (m,n,n,w)) // floating-point lists
-  else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,n,w))  // Booleans with cell-items 4 bytes long
+  else if(1==api&&t&C4T)             RZ(z=sortu (m,n,w))  // literal4 string lists
+  else if(1==api&&t&INT)             RZ(z=sorti (m,n,w))  // integer lists
+  else if(1==api&&t&FL )             RZ(z=sortd (m,n,w)) // floating-point lists
+  else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long
    // for direct types, we have the choice of direct/indirect.  For indirect, we do grade followed by from to apply the grading permutation.
    // for direct, we move the data around until we get the final sort.  Direct is better for short items, for which the copy is cheap;
    // and the cutoff rises with the length of the sort, as the indirect sort flags when the items themselves start to fall out of cache.

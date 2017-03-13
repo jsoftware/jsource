@@ -244,7 +244,7 @@ UI hic(I k, UC *v) {
  if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
  if(k&=7){  // last few bytes
-  crc2=CRC32L(crc2,((UI*)v)[0]&~(-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
+  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
  RETCRC3;
 }

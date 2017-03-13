@@ -3,7 +3,7 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-#include <immintrin.h>
+// #include <immintrin.h>
 
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"

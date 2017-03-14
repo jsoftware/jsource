@@ -7,6 +7,7 @@
 #include "vg.h"
 #pragma intrinsic(memset)
 
+// Places marked TUNE have parameters that must be tuned to the hardware
 
 #define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
@@ -215,7 +216,7 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  if(0<(maxrange=16*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
  }else rng.range=0;
  // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
- if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);// obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
 // obsolete  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
 // obsolete  // approximate lg(n) with bit count.  And always use small-range if range is < 256
@@ -312,7 +313,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  UI4 lgn; CTLZI(n,lgn);
 // obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
 // obsolete  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
@@ -362,7 +363,7 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 // We are known to have 1 atom per item
 static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  // Radix sort almost always wins, presumably because filling the radix table is so fast
- if(n<50)jtsortdirect(jt,m,1,n,w);  // obsolete R irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(n<50)jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete R irs2(gr1(w),w,0L,1L,1L,jtfrom);
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
@@ -407,7 +408,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,w))  // sorting Booleans, when all grades start on a word boundary
   else if(1==d)                      RZ(z=sortc (m,n,w))  // sorting single bytes (character or Boolean)
   else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
-  else if(2==d  &&t&LIT+C2T&&30000<n)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long
+  else if(2==d  &&t&LIT+C2T&&n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
    // if there is only one atom per item (usually in lists), try one of the fast methods
   else if(1==api&&t&C4T)             RZ(z=sortu (m,n,w))  // literal4 string lists
   else if(1==api&&t&INT)             RZ(z=sorti (m,n,w))  // integer lists
@@ -421,7 +422,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
    // We roughly approximate this curve
   else if(t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
    UI4 lgn; CTLZI(n,lgn);
-   if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jt,m,api,n,w))
+   if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jt,m,api,n,w))  //  TUNE
   }
  }
  // If not a supported reflexive case, grade w and then select those values from a

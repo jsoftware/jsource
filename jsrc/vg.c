@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "vg.h"
+// Places marked TUNE have parameters that must be tuned to the hardware
 
 // Ideas for work:
 // Sort/grade 2-integer lists by radix?
@@ -206,7 +207,7 @@ static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
 /* up:    1 if sort up; 0 if sort down                         */
 /* split: 1 iff do split pass of halfword range                */
 /* sort:  1 if sort; 0 if grade                                */
-// flags: 8: full clear of buckets not needed; 4: sort mode; 2: up; 1: split
+// flags: 8: full clear of buckets not needed; 4: on for sort, off for grade; 2: up; 1: split
 
 // bucket sort, 16 bits at a time
 I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
@@ -353,7 +354,7 @@ void grcolu(I d,I c,UI*yv,I n,UI*xv,UI*zv,const I m,US*u,int up,int split,int so
 static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
   // if not large and 1 atom per key, go do general grade
 // obsolete if(!(c==n&&n>65536/3.5))R grx(m,c,n,w,zv);
- if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover
+ if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
  // grade float by radix sort of halfwords.  Save some control parameters
  wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area
@@ -586,7 +587,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  // (80>>keylength)*(n-32) where 32 takes get/free overhead into account (merge starts right away, smallrange has to allocate and
  // clear buffers)
  I maxrange; CR rng;
- if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // test may overflow; OK
+ if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
 // obsolete  UI4 lgn; CTLZI(n,lgn);
 // obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
@@ -594,7 +595,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 // obsolete irange(AN(w),wv,&q,&p); 
  // tweak this line to select path for timing
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
- if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range
+ if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
 // obsolete if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
 // obsolete if(0<q&&q<k-p){p+=q; q=0;}
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
@@ -688,9 +689,9 @@ static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
 static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  wv=C4AV(w);
  I maxrange; CR rng;
- if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
+ if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);   //  TUNE
  }else rng.range=0;
- if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range
+ if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
  if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);
  }
@@ -743,7 +744,7 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
 // obsolete  if(ai>4*log((D)n))R grx(m,ai,ai,n,w,zv); 
  UI4 lgn; CTLZI(n,lgn);
- if((UI)ai>4*lgn)R grx(m,ai,n,w,zv); 
+ if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
  q=ai/4; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
  if(1<q){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
@@ -759,7 +760,7 @@ static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
 // obsolete  d=C2T&AT(w)?2*c/n:c/n;
 // obsolete  if(ai>log((D)n))R grx(m,ai,ai,n,w,zv);
  UI4 lgn; CTLZI(n,lgn);
- if((UI)ai>lgn)R grx(m,ai,n,w,zv); 
+ if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
  p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
  q=C2T&AT(w) && C_LE;

@@ -212,9 +212,7 @@ static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
 static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);
  // figure out whether we should do small-range processing.  Comments in vg.c
- I maxrange; CR rng;
- if(0<(maxrange=16*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
- }else rng.range=0;
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,n<<(n>(L2CACHESIZE/SZI)?2:4));
  // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
  if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
 // obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
@@ -400,27 +398,32 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
  acr=jt->rank?jt->rank[0]:AR(a); 
  wcr=jt->rank?jt->rank[1]:AR(w); t=AT(w);
  // Handle special reflexive cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
- if(a==w&&acr==wcr&&wcr>0&&AN(a)){
+ if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
 // obsolete  f=AR(w)-wcr; s=AS(w); m=prod(f,s); n=(AR(w))?s[f]:1; d=bp(t)*prod(wcr-1,1+f+s);
-  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s); d=api*bp(t);
-  if     (1==d  &&t&B01&&(m==1||0==(n&(SZI-1))))   RZ(z=sortb (m,n,w))  // sorting Booleans, when all grades start on a word boundary
-  else if(1==d)                      RZ(z=sortc (m,n,w))  // sorting single bytes (character or Boolean)
-  else if(2==d  &&t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
-  else if(2==d  &&t&LIT+C2T&&n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
-   // if there is only one atom per item (usually in lists), try one of the fast methods
-  else if(1==api&&t&C4T)             RZ(z=sortu (m,n,w))  // literal4 string lists
-  else if(1==api&&t&INT)             RZ(z=sorti (m,n,w))  // integer lists
-  else if(1==api&&t&FL )             RZ(z=sortd (m,n,w)) // floating-point lists
-  else if(4==d  &&t&B01)             RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long
+  f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s);
+  d=api*bp(t);
+   // There are special types supported, but for very short sorts we should just skip the checking and go do a sort-in-place.
+   // Test that threshold here
+  if(n>5){   //  TUNE
+   if(t&(C4T+INT+FL)){
+    // If this datatype supports smallrange or radix sorting, go try that
+    if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jt,m,n,w))   // Lists of INT/FL/C4T
+   else if(d==2){
+    // 2-byte types, which must be B01/LIT/C2T.  Use special code, unless strings too short
+    if(t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long
+    if(t&LIT+C2T&&n>4600)RZ(z=sortc2(m,n,w))  // long character strings with cell-items 2 bytes long   TUNE
+   }else if(d<2)RZ(z=(t&B01&&(m==1||0==(n&(SZI-1)))?jtsortb:jtsortc)(jt,m,n,w))  // Lists of B01/LIT
+   }else if(d==4&&t&B01) RZ(z=sortb4(m,n,w))  // Booleans with cell-items 4 bytes long
+  }
    // for direct types, we have the choice of direct/indirect.  For indirect, we do grade followed by from to apply the grading permutation.
    // for direct, we move the data around until we get the final sort.  Direct is better for short items, for which the copy is cheap;
    // and the cutoff rises with the length of the sort, as the indirect sort flags when the items themselves start to fall out of cache.
    // Empirically (Ivy Bridge) we find that the length of the item above which indirect is better depends on sortlength:
    // for 1e6 items - 80 bytes; 1e5 - 64 bytes; 1e4 - 40 bytes - 1e3 - 48 bytes
    // We roughly approximate this curve
-  else if(t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
+  if(!z){  // not a special case
    UI4 lgn; CTLZI(n,lgn);
    if(d<40||(UI4)d<(lgn<<4))RZ(z=jtsortdirect(jt,m,api,n,w))  //  TUNE
   }

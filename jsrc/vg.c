@@ -584,10 +584,9 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 
  // figure out what algorithm to use
  // smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
- // (80>>keylength)*(n-32) where 32 takes get/free overhead into account (merge starts right away, smallrange has to allocate and
- // clear buffers)
+ // (80>>keylength)*(n), smaller if the range would exceed cache size
  I maxrange; CR rng;
- if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // test may overflow; OK   TUNE
+ if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
 // obsolete  UI4 lgn; CTLZI(n,lgn);
 // obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));

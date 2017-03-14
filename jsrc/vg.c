@@ -585,7 +585,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  // figure out what algorithm to use
  // smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
  // (80>>keylength)*(n), smaller if the range would exceed cache size
- I maxrange; CR rng;
+ CR rng;
  if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
 // obsolete  UI4 lgn; CTLZI(n,lgn);
@@ -687,8 +687,8 @@ static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
 #else
 static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  wv=C4AV(w);
- I maxrange; CR rng;
- if(ai<=6 && 0<(maxrange=MIN(16,80>>ai)*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);   //  TUNE
+ CR rng;
+ if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;

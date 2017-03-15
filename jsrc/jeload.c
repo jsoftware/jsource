@@ -7,8 +7,12 @@
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
  #define JDLLNAME "j.dll"
+ #define JAVXDLLNAME "javx.dll"
  #define filesep '\\'
  #define filesepx "\\"
+ #ifdef _MSC_VER
+ #define strcasecmp _stricmp
+ #endif
 #else
  #include <unistd.h>
  #include <dlfcn.h>
@@ -18,8 +22,11 @@
  #define filesepx "/"
  #ifdef __MACH__
   #define JDLLNAME "libj.dylib"
+  #define JAVXDLLNAME "libavxj.dylib"
  #else
+  #include <sys/utsname.h>
   #define JDLLNAME "libj.so"
+  #define JAVXDLLNAME "libjavx.so"
  #endif
 #endif
 #include "j.h"
@@ -36,6 +43,7 @@ char path[PLEN];
 char pathdll[PLEN];
 static char jdllver[20];
 static int FHS=0;
+static int AVX=0;
 #ifdef ANDROID
 static char install[PLEN];
 #endif
@@ -80,6 +88,27 @@ void jepath(char* arg,char* lib)
  GetModuleFileNameW(0,wpath,_MAX_PATH);
  *(wcsrchr(wpath, '\\')) = 0;
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
+#if SY_64
+ char *jeavx=getenv("JEAVX");
+ if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
+ else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
+ else { // auto detect
+//  AVX= 0!=(0x4UL & GetEnabledXStateFeatures());
+// above line not worked for pre WIN7 SP1
+// Working with XState Context (Windows)
+// https://msdn.microsoft.com/en-us/library/windows/desktop/hh134240(v=vs.85).aspx
+// Windows 7 SP1 is the first version of Windows to support the AVX API.
+ #define XSTATE_MASK_AVX   (XSTATE_MASK_GSSE)
+ typedef DWORD64 (WINAPI *GETENABLEDXSTATEFEATURES)();
+ GETENABLEDXSTATEFEATURES pfnGetEnabledXStateFeatures = NULL;
+ // Get the addresses of the AVX XState functions.
+ HMODULE hm = GetModuleHandleA("kernel32.dll");
+ if ((pfnGetEnabledXStateFeatures = (GETENABLEDXSTATEFEATURES)GetProcAddress(hm, "GetEnabledXStateFeatures")) &&
+     ((pfnGetEnabledXStateFeatures() & XSTATE_MASK_AVX) != 0))
+  AVX=1;
+ FreeLibrary(hm);
+ }
+#endif
 #elif defined(ANDROID)
 #define AndroidPackage "com.jsoftware.j.android"
  struct stat st; int qsdcard; char tmp[PLEN];
@@ -87,7 +116,7 @@ void jepath(char* arg,char* lib)
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
- strcat(pathdll,JDLLNAME);
+ strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
  strcpy(tmp, "/sdcard/Android/data");
  qsdcard=stat(tmp,&st);
  strcpy(install,(qsdcard)?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/");
@@ -115,6 +144,21 @@ void jepath(char* arg,char* lib)
  n=_NSGetExecutablePath(arg2,&len);
  if(0!=n) strcat(arg2,arg);
 #else
+#if SY_64
+// http://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+// Linux: supported since kernel version 2.6.30 released on June 9, 2009.
+ char *jeavx=getenv("JEAVX");
+ if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
+ else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
+ else { // auto detect by uname -r
+ struct utsname unm;
+ if (!uname(&unm) &&
+     (unm.release[0]>'2'||
+      (unm.release[0]=='2'&&unm.release[2]=='6'&&unm.release[5]!=0&&unm.release[4]=='3')))
+  AVX= 0!= __builtin_cpu_supports("avx");
+// fprintf(stderr,"kernel release :%s:\n",unm.release);
+ }
+#endif
  n=readlink("/proc/self/exe",arg2,sizeof(arg2));
  if(-1==n) strcpy(arg2,arg); else arg2[n]=0;
 #endif
@@ -155,7 +199,7 @@ void jepath(char* arg,char* lib)
 #ifndef ANDROID
  strcpy(pathdll,path);
  strcat(pathdll,filesepx);
- strcat(pathdll,JDLLNAME);
+ strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
 #ifndef _WIN32
  struct stat st;
  if(stat(pathdll,&st)) FHS=1;
@@ -165,7 +209,7 @@ void jepath(char* arg,char* lib)
   jdllver[0]=_jdllver[0];
   jdllver[1]='.';
   strcat(jdllver+2,_jdllver+1);
-  strcpy(pathdll,JDLLNAME);
+  strcpy(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
  }
 #endif
 #endif

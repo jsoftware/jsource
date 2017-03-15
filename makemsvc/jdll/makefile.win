@@ -101,6 +101,7 @@ OBJS=  \
  ../../jsrc/vgsort.o \
  ../../jsrc/vgsp.o \
  ../../jsrc/vi.o \
+ ../../jsrc/viavx.o \
  ../../jsrc/viix.o \
  ../../jsrc/visp.o \
  ../../jsrc/vm.o \

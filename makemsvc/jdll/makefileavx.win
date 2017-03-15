@@ -1,10 +1,10 @@
-ifdef x64
-CFLAGS= /D _JDLL /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+!ifdef x64
+CFLAGS= /D _JDLL /DC_AVX=1 /arch:AVX /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
 FLAGS= /DLL /NOLOGO /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
-else
-CFLAGS= /D _JDLL /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+!else
+CFLAGS= /D _JDLL /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D _UNICODE /D WIN32 /D _WINDOWS
 FLAGS= /DLL /NOLOGO /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
-endif
+!endif
 
 .SUFFIXES: .o
 
@@ -139,30 +139,30 @@ OBJS=  \
 
 DEF= ../../dllsrc/jdll.def
 RCS= ../../dllsrc/jdll.rc
-ifdef x64
+!ifdef x64
 ASM= ../../makevs/jdll/winasm64.obj 
-else
+!else
 ASM=
-endif
+!endif
 
-ifndef LD
+!ifndef LD
 LD=link
-endif
+!endif
 
-%.o: %.c
+.c.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-%.o: %.cpp
+.cpp.o:
 	$(CC) $(CFLAGS) /Fo$@ /c $<
 
-ifdef x64
-TARGET= j.dll
-else
+!ifdef x64
+TARGET= javx.dll
+!else
 TARGET= j32.dll
-endif
+!endif
 
 $(TARGET) : $(OBJS) jdll.res
-	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res ole32.lib advapi32.lib oleaut32.lib
+	$(LD) /NOLOGO /DEF:$(DEF) $(FLAGS) /out:$@ $(OBJS) $(ASM) jdll.res advapi32.lib ole32.lib oleaut32.lib shell32.lib uuid.lib
 
 jdll.res : $(RCS)
 	$(RC) /L 0x409 /D NDEBUG /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
@@ -170,6 +170,6 @@ jdll.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	rm -f *.lib *.exp *.res $(OBJS)
+	erase /q *.lib *.exp *.res ..\..\jsrc\*.o ..\..\dllsrc\*.o
 
 .PHONY: all clean

@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 {
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0;
 
- if(argc>=2&&!strcmp(argv[1],"-lib")) flag=1;
+ if(argc>=3&&!strcmp(argv[1],"-lib")) flag=1;
  jepath(argv[0],flag?argv[2]:"");
  if(flag)
  {

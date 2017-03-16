@@ -153,8 +153,9 @@ void jepath(char* arg,char* lib)
  else { // auto detect by uname -r
  struct utsname unm;
  if (!uname(&unm) &&
-     (unm.release[0]>'2'||
-      (unm.release[0]=='2'&&unm.release[2]=='6'&&unm.release[5]!=0&&unm.release[4]=='3')))
+     ((unm.release[0]>'2'&&unm.release[0]<='9')||  // avoid sign/unsigned char difference
+      (strlen(unm.release)>5&&unm.release[0]=='2'&&unm.release[2]=='6'&&unm.release[4]=='3'&&
+       (unm.release[5]>='0'&&unm.release[5]<='9'))))
   AVX= 0!= __builtin_cpu_supports("avx");
 // fprintf(stderr,"kernel release :%s:\n",unm.release);
  }

@@ -11,7 +11,7 @@ cd ~
 # gcc-6 -O1 needs -fno-if-conversion2 for x15.c double trick
 # but clang does not have this flag
 # gcc
-common="-fPIC -O1 -fno-if-conversion2 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
+common="-fPIC -O1 -fno-if-conversion2 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 # clang
 # common="-Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-clobbered -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
 darwin="-fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
@@ -30,7 +30,7 @@ LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl -o libj.so "
 ;;
 linux_j64) # linux x86
 TARGET=libj.so
-COMPILE="$common -DC_NOMULTINTRINSIC "
+COMPILE="$common -msse2 -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 

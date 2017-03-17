@@ -81,7 +81,7 @@ J jeload(void* callbacks)
 
 // set path and pathdll (wpath also set for win)
 // WIN arg is 0, Unix arg is argv[0]
-void jepath(char* arg,char* lib)
+void jepath(char* arg,char* lib,int forceavx)
 {
 #ifdef _WIN32
  WCHAR wpath[PLEN];
@@ -90,7 +90,9 @@ void jepath(char* arg,char* lib)
  WideCharToMultiByte(CP_UTF8,0,wpath,1+(int)wcslen(wpath),path,PLEN,0,0);
 #if SY_64
  char *jeavx=getenv("JEAVX");
- if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
+ if (forceavx==1) AVX=1;       // force enable avx
+ else if (forceavx==2) AVX=0;  // force disable avx
+ else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
  else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
  else { // auto detect
 //  AVX= 0!=(0x4UL & GetEnabledXStateFeatures());
@@ -144,11 +146,13 @@ void jepath(char* arg,char* lib)
  n=_NSGetExecutablePath(arg2,&len);
  if(0!=n) strcat(arg2,arg);
 #else
-#if SY_64
+#if defined(__x86_64__)
 // http://en.wikipedia.org/wiki/Advanced_Vector_Extensions
 // Linux: supported since kernel version 2.6.30 released on June 9, 2009.
  char *jeavx=getenv("JEAVX");
- if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
+ if (forceavx==1) AVX=1;       // force enable avx
+ else if (forceavx==2) AVX=0;  // force disable avx
+ else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
  else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
  else { // auto detect by uname -r
  struct utsname unm;
@@ -211,12 +215,13 @@ void jepath(char* arg,char* lib)
   jdllver[1]='.';
   strcat(jdllver+2,_jdllver+1);
   strcpy(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
+  strcat(pathdll,".");
+  strcat(pathdll,jdllver);
  }
-#endif
 #endif
  if(*lib)
  {
-	 if(filesep==*lib || '\\'==filesep && ':'==lib[1])
+	 if(filesep==*lib || ('\\'==filesep && ':'==lib[1]))
 		 strcpy(pathdll,lib); // absolute path
 	 else
 	 {
@@ -225,6 +230,7 @@ void jepath(char* arg,char* lib)
 		 strcat(pathdll,lib); // relative path
 	 }
  }
+#endif
 }
 
 // called by jwdp (java jnative.c) to set path
@@ -319,5 +325,5 @@ void jefail(char* msg)
 {
 	strcpy(msg, "Load library ");
 	strcat(msg, pathdll);
-	strcat(msg," failed.");
+	strcat(msg," failed.\n");
 }

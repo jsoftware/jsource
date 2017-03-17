@@ -138,22 +138,25 @@ J jt;
 
 int main(int argc, char* argv[])
 {
- void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0;
+ void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0; int forceavx=0;
 
- if(argc>=3&&!strcmp(argv[1],"-lib")) flag=1;
- jepath(argv[0],flag?argv[2]:"");
- if(flag)
+ if(argc>=3&&!strcmp(argv[1],"-lib")&&'-'!=*(argv[2])) flag=1;
+ else if(!flag&&argc>=2&&!strcmp(argv[1],"-avx")) forceavx=1;  // avx
+ else if(!flag&&argc>=2&&!strcmp(argv[1],"-noavx")) forceavx=2;  // no avx
+ jepath(argv[0],flag?argv[2]:"",forceavx);
+ if(argc>=2&&(!strcmp(argv[1],"-lib")||forceavx)) // remove processed arg
  {
-   int i;
-	 for(i=1;i<argc-2;++i)
+	 int i;
+	 int n=(flag)?2:1;
+	 for(i=1;i<argc-n;++i)
 	 {
-		 argv[i]=argv[i+2];
+		 argv[i]=argv[i+n];
 	 }
-	 argc=argc-2;
+	 argc=argc-n;
  }
 
  jt=jeload(callbacks);
- if(!jt){char m[1000]; jefail(m), fputs(m,stdout); exit(1);}
+ if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata
  signal(SIGINT,sigint);
  

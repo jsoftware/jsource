@@ -75,7 +75,11 @@
 #endif
 
 #define IMIN            (~IMAX)   /* ANSI C LONG_MIN is  -LONG_MAX */
+#if SY_64
 #define NEGATIVE0       0x8000000000000000LL   // IEEE -0
+#else
+#define NEGATIVE0       0x80000000L   // IEEE -0
+#endif
 
 #define C4MAX           0xffffffffUL
 #define C4MIN           0L

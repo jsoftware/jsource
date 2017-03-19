@@ -102,18 +102,19 @@ l1:
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block
 #define OPWIDTH 4  // width of outer-product block
-#define CACHEWIDTH 64  // width of resident cache block
+#define CACHEWIDTH 64  // width of resident cache block (in D atoms)
 #define CACHEHEIGHT 16  // height of resident cache block
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn
-static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH + 2*CACHELINESIZE/sizeof(D)];
+static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // m is # 1-cells of a
- // n is # atoms in an item of w (and result)
+ // n is # values in an item of w (and result)
  // p is number of inner-product muladds (length of a row of a, and # items of w)
  // point to cache-aligned areas we will use for staging the inner-product info
+ // cmpx is 0 for float, 1 for complex, i. e. lg2(# values per atom).  If cmpx is set, n and p are even, and give the lengths of the arguments in values
 #if C_AVX
- // Since we sometimes use 128-bit instructions, make sure we don't get stuck in slow state
+ // Since we sometimes use 128-bit instructions in other places, make sure we don't get stuck in slow state
  _mm256_zeroupper();
 #endif
  D *cvw = (D*)(((I)&c+(CACHELINESIZE-1))&-CACHELINESIZE);  // place where cache-blocks of w are staged
@@ -123,9 +124,9 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
  // process each 64-float vertical stripe of w, producing the corresponding columns of z
  D* w0base = wv; D* z0base = zv; I w0rem = n;
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
-  // process each 16x64 section of w, adding each result to the columns of z
-  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p;
-  for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT,w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
+  // process each 16x64 section of w, adding each result to the columns of z.  Each section goes through a different set of 16/32 columns of a 
+  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>cmpx;
+  for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT<<cmpx,w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
    // read the 16x64 section of w into the cache area (8KB, 2 ways of cache), with prefetch of rows
    for(i=MIN(CACHEHEIGHT,w1rem),cvx=cvw;i;--i){I j;
     D* RESTRICT w1x=w1next; w1next+=n;  // save start of current input row, point to next row...
@@ -136,22 +137,29 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
    for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0;
 
    // w1next is left pointing to the next cache block in the column.  We will use that to prefetch
+#ifdef PREFETCH
+   D *nextprefetch=w1next;  // start prefetches for the next block at the beginning
+#endif
 
-   // the nx16 vertical strip of a will be multiplied by the 16x64 section of w and accumulated into z
+   // the mx16 vertical strip of a (mx32 if cmpx) will be multiplied by the 16x64 section of w and accumulated into z
    // process each 2x16 section of a against the 16x64 cache block
    D *a2base0=a1base; D* w2base=w1base; I a2rem=m; D* z2base=z1base; D* c2base=cvw;
    for(;a2rem>0;a2rem-=OPHEIGHT,a2base0+=OPHEIGHT*p,z2base+=OPHEIGHT*n){
     static D missingrow[CACHEHEIGHT]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-    // Prepare for the 2x16 block of a
+    // Prepare for the 2x16 block of a (2x32 if cmpx)
     // If the second row of a is off the end of the data, we mustn't fetch it - switch the pointer to a row of 1s so it won't give NaN error on multiplying by infinity
     D *a2base1 = (a2rem>1)?a2base0+p:missingrow;
 #if C_AVX
-    // Make 4 sequential copies of each float in a, to support the parallel multiply for the outer product.  Interleave the values
+    // Make 4(or 8) sequential copies of each float in a, to support the parallel multiply for the outer product.  Interleave the values
     // from the two rows, putting them in the correct order for the multiply.  We fetch each row in order, to make sure we get fast page mode
     // for the row
+    // For floats, the values repose in *cvx in order a[0][0], a[1][0], a[0][1], a[1][1], etc...  with each a value replicated 4 times
+    // For complex, the values are replicated rIrI then irir where I=negative of ci, the imaginary value
+// order TBD after loop is written
+
     {__m256d *cvx;D *a0x;I j;
      for(a0x=a2base0,i=0;i<OPHEIGHT;++i,a0x=a2base1){
-      for(cvx=(__m256d*)cva+i,j=MIN(CACHEHEIGHT,w1rem);j;--j,++a0x,cvx+=OPHEIGHT){
+      for(cvx=(__m256d*)cva+i,j=MIN(CACHEHEIGHT<<cmpx,w1rem);j;--j,++a0x,cvx+=OPHEIGHT){
        *cvx = _mm256_set_pd(*a0x,*a0x,*a0x,*a0x);
       }
       // Because of loop unrolling, we fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
@@ -162,13 +170,16 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
 #ifdef PREFETCH
     // While we are processing the sections of a, move the next cache block into L2 (not L1, so we don't overrun it)
     // We would like to do all the prefetches for a CACHEWIDTH at once to stay in page mode
-    // but that might overrun the prefetch queue, which holds 10 prefetches.  So we just squeeze off 3 at a time
-    if(a2rem<=4*OPHEIGHT*CACHEHEIGHT){I offset= (a2rem&(3*OPHEIGHT))*(2*CACHELINESIZE/OPHEIGHT);
-     PREFETCH2((C*)w1next+offset); PREFETCH2((C*)w1next+offset+CACHELINESIZE); PREFETCH2((C*)w1next+offset+2*CACHELINESIZE);
-     if(offset==CACHELINESIZE*3*OPHEIGHT)w1next += n;  // advance to next row for next time
+    // but that might overrun the prefetch queue, which holds 10 prefetches.
+    // The length of a cache row is (CACHEWIDTH*sizeof(D))/CACHELINESIZE=8 cache lines, plus one in case the data is misaligned.
+    // We start the prefetches when we get to within 3*CACHEHEIGHT iterations from the end, which gives us 3 iterations
+    // to fetch each row of the cache, 3 fetches per iteration.
+    if(a2rem<=3*OPHEIGHT*CACHEHEIGHT+(OPHEIGHT-1)){
+     PREFETCH2((C*)nextprefetch); PREFETCH2((C*)nextprefetch+CACHELINESIZE); PREFETCH2((C*)nextprefetch+2*CACHELINESIZE);  // 3 prefetches
+     if(nextprefetch==(D*)((C*)w1next+6*CACHELINESIZE)){nextprefetch = w1next += n;}else{nextprefetch+=(3*CACHELINESIZE)/sizeof(*nextprefetch);}  // next col, or next row after 9 prefetches
     }
 #endif
-    // process each 16x4 section of cache, accumulating into z
+    // process each 16x4 section of cache, accumulating into z  (this holds 16x2 complex values, if cmpx)
     I a3rem=MIN(w0rem,CACHEWIDTH);
     D* RESTRICT z3base=z2base; D* c3base=c2base;
     for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH,z3base+=OPWIDTH){
@@ -203,6 +214,7 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
      }
 #endif
 
+     // Now do the 16 outer products for the block, each 2ax4w (or 2ax2w if cmpx)
      I a4rem=MIN(w1rem,CACHEHEIGHT);
      D* RESTRICT c4base=c3base;
 #if C_AVX  // This version if AVX instruction set is available.
@@ -251,22 +263,41 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p){D c[(CACHEHEIGHT+1)*CACH
      }
 
 #else   // If no AVX instructions
-     D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
-     do{
-      // read the 2x1 a values and the 1x4 cache values
-      // form outer product, add to accumulator
-      D t0,t1,a0,a1,c0,c1,c2,c3;
-      a0=a4base0[0]; t0=c4base[0]; 
-      a1=a4base1[0]; c0=c4base[0];
-      t0 *= a0; c0 *= a1;
-      t1=c4base[1]; c1=c4base[1]; t1 *= a0; c1 *= a1;
-      z00 += t0; t0 = c4base[2]; c2 = c4base[2]; c3 = c4base[3];
-      z10 += c0; z01 += t1; z11 += c1;
-      t0 *= a0; c2 *= a1; a0 *= c3; c3 *= a1;
-      z02 += t0; z12 += c2; z03 += a0; z13 += c3;
-      a4base0++,a4base1++;
-      c4base+=CACHEWIDTH;
-     }while(--a4rem>0);
+     if(cmpx==0){  // real
+      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
+      do{  // loop for each small outer product
+       // read the 2x1 a values and the 1x4 cache values
+       // form outer product, add to accumulator
+       D t0,t1,a0,a1,c0,c1,c2,c3;
+       a0=a4base0[0]; t0=c4base[0]; 
+       a1=a4base1[0]; c0=c4base[0];
+       t0 *= a0; c0 *= a1;
+       t1=c4base[1]; c1=c4base[1]; t1 *= a0; c1 *= a1;
+       z00 += t0; t0 = c4base[2]; c2 = c4base[2]; c3 = c4base[3];
+       z10 += c0; z01 += t1; z11 += c1;
+       t0 *= a0; c2 *= a1; a0 *= c3; c3 *= a1;
+       z02 += t0; z12 += c2; z03 += a0; z13 += c3;
+       a4base0++,a4base1++;
+       c4base+=CACHEWIDTH;
+      }while(--a4rem>0);
+     }else{
+      // complex.  The 1x4 cache values represent 1x2 complex values.  The a is fetches as 2x1 complex values.  Result is 2x2 conplex values
+      D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
+      do{  // loop for each small outer product
+       // read the 2x1 a values and the 1x4 cache values
+       // form outer product, add to accumulator
+       z00+=a4base0[0]*c4base[0]-a4base0[1]*c4base[1];
+       z01+=a4base0[0]*c4base[1]+a4base0[1]*c4base[0];
+       z02+=a4base0[0]*c4base[2]-a4base0[1]*c4base[3];
+       z03+=a4base0[0]*c4base[3]+a4base0[1]*c4base[2];
+       z10+=a4base1[0]*c4base[0]-a4base1[1]*c4base[1];
+       z11+=a4base1[0]*c4base[1]+a4base1[1]*c4base[0];
+       z12+=a4base1[0]*c4base[2]-a4base1[1]*c4base[3];
+       z13+=a4base1[0]*c4base[3]+a4base1[1]*c4base[2];
+       a4base0+=2,a4base1+=2;
+       c4base+=CACHEWIDTH;
+      }while(--a4rem>0);
+     }
 
      // Store accumulator into z.  Don't store outside the array
      z3base[0]=z00;
@@ -358,30 +389,39 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    }
 #endif
    break;
-  case FLX:
-   {NAN0;
-    cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p);
-    // If there was a floating-point error, retry it the old way in case it was _ * 0
-    if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
-     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
-     NAN0;
-     if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
-     else for(i=0;i<m;++i,v=wv,zv+=n){
-             x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
-      DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=*v?c**v:0.0; ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
-     }
-     NAN1;
+ case FLX:
+  {NAN0;
+   cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do the fast matrix multiply - real
+   // If there was a floating-point error, retry it the old way in case it was _ * 0
+   if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
+    u=DAV(a); v=wv=DAV(w); zv=DAV(z);
+    NAN0;
+    if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
+    else for(i=0;i<m;++i,v=wv,zv+=n){
+            x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
+     DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=*v?c**v:0.0; ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
     }
+    NAN1;
    }
-   break;
-  case CMPXX:
-   {Z c,*u,*v,*wv,*x,*zv;
+  }
+  break;
+ case CMPXX:
+  {NAN0;
+   cachedmmult(DAV(a),DAV(w),DAV(z),m,n*2,p*2,1);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms
+   if(NANTEST){Z c,*u,*v,*wv,*x,*zv;
+    // There was a floating-point error.  In case it was 0*_ retry old-style
     u=ZAV(a); v=wv=ZAV(w); zv=ZAV(z);
+    NAN0;
     if(1==n)DO(m, v=wv; c=zeroZ; DO(p, c.re+=ZRE(*u,*v); c.im+=ZIM(*u,*v); ++u; ++v;); *zv++=c;)
     else for(i=0;i<m;++i,v=wv,zv+=n){
             x=zv; c=*u++; DO(n, x->re =ZRE(c,*v); x->im =ZIM(c,*v); ++x; ++v;);
      DO(p1, x=zv; c=*u++; DO(n, x->re+=ZRE(c,*v); x->im+=ZIM(c,*v); ++x; ++v;););
- }}}
+    }
+    NAN1;
+   }
+  }
+  break;
+ }
  EPILOG(z);
 }
 

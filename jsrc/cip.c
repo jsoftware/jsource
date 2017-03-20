@@ -154,16 +154,16 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
     // from the two rows, putting them in the correct order for the multiply.  We fetch each row in order, to make sure we get fast page mode
     // for the row
     // For floats, the values repose in *cvx in order a[0][0], a[1][0], a[0][1], a[1][1], etc...  with each a value replicated 4 times
-    // For complex, the values are replicated rIrI then irir where I=negative of ci, the imaginary value
+    // For complex, the values are in the order a[0][0], a[0][1], a[1][0], a[1][1], a[0][2]  etc (real then imag) with each value replicated 4 times
 // order TBD after loop is written
 
     {__m256d *cvx;D *a0x;I j;
      for(a0x=a2base0,i=0;i<OPHEIGHT;++i,a0x=a2base1){
-      for(cvx=(__m256d*)cva+i,j=MIN(CACHEHEIGHT<<cmpx,w1rem);j;--j,++a0x,cvx+=OPHEIGHT){
-       *cvx = _mm256_set_pd(*a0x,*a0x,*a0x,*a0x);
+      for(cvx=(__m256d*)cva+(i<<cmpx),j=MIN(CACHEHEIGHT,w1rem);j;--j,cvx+=(OPHEIGHT<<cmpx)){__m256d *cvx0=cvx; I k=cmpx;  // start at offset from i; skip over stride of OPHEIGHT values
+       do{*cvx0++ = _mm256_set_pd(*a0x,*a0x,*a0x,*a0x); ++a0x;}while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
       }
-      // Because of loop unrolling, we fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
-      *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);
+      // Because of loop unrolling, we used to fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
+      *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);  // obsolete?
      }
     }
 #endif
@@ -185,8 +185,8 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
     for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH,z3base+=OPWIDTH){
      // initialize accumulator with the z values accumulated so far.
 #if C_AVX
-     __m256d z00,z01,z10,z11,z20,z21; static I valmask[8]={0, 0,0,0,-1,-1,-1,-1};
-     z21 = z20 = z11 = z10 = _mm256_set_pd(0.0,0.0,0.0,0.0);
+     __m256d z00,z01,z10,z11,z20,z21,z30,z31; static I valmask[8]={0, 0,0,0,-1,-1,-1,-1};
+     z31 = z30 = z21 = z20 = z11 = z10 = _mm256_set_pd(0.0,0.0,0.0,0.0);
      // We have to use masked load at the edges of the array, to make sure we don't fetch from undefined memory.  Fill anything not loaded with 0
      if(a3rem>3){z00 = _mm256_loadu_pd(z3base);if(a2rem>1)z01 = _mm256_loadu_pd(z3base+n); else z01=z21;   // In the main area, do normal (unaligned) loads
      }else{z01 = z00 = z20;
@@ -216,46 +216,58 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
 
      // Now do the 16 outer products for the block, each 2ax4w (or 2ax2w if cmpx)
      I a4rem=MIN(w1rem,CACHEHEIGHT);
-     D* RESTRICT c4base=c3base;
 #if C_AVX  // This version if AVX instruction set is available.
+     __m256d * RESTRICT c4base= (__m256d *)c3base;
      __m256d *a4base0=(__m256d *)cva;   // Can't put RESTRICT on this - the loop to init *cva gets optimized away
+     if(cmpx==0){
       // read the 2x1 a values and the 1x4 cache values
       // form outer product, add to accumulator
-// This loop is hand-unrolled because the compiler doesn't seem to do it.  Unroll 3 times - needed on dual ALUs
-     __m256d cval0 = _mm256_load_pd(c4base);  // read from cache
+      do{
+       z00 = _mm256_add_pd(z00 , _mm256_mul_pd(c4base[0],a4base0[0]));    // accumulate into z
+       z01 = _mm256_add_pd(z01 , _mm256_mul_pd(c4base[0],a4base0[1]));    // add latency is 3, so need 3 copies for dual-ALU machines
+       if(--a4rem<=0)break;
 
-     __m256d cval1 = _mm256_load_pd(c4base+CACHEWIDTH);
-     __m256d aval00 = _mm256_mul_pd(cval0,a4base0[0]);  // multiply by a
-     __m256d aval01 = _mm256_mul_pd(cval0,a4base0[1]);
+       z10 = _mm256_add_pd(z10 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[2]));
+       z11 = _mm256_add_pd(z11 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[3]));
+       if(--a4rem<=0)break;
 
-     do{
-      __m256d cval2 = _mm256_load_pd(c4base+2*CACHEWIDTH);
-      __m256d aval10 = _mm256_mul_pd(cval1,a4base0[2]);
-      __m256d aval11 = _mm256_mul_pd(cval1,a4base0[3]);
-      z00 = _mm256_add_pd(z00 , aval00);    // accumulate into z
-      z01 = _mm256_add_pd(z01 , aval01);
-      if(--a4rem<=0)break;
+       z20 = _mm256_add_pd(z20 , _mm256_mul_pd(c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]));
+       z21 = _mm256_add_pd(z21 , _mm256_mul_pd(c4base[2*CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]));
+       if(--a4rem<=0)break;
 
-      cval0 = _mm256_load_pd(c4base+3*CACHEWIDTH);
-      __m256d aval20 = _mm256_mul_pd(cval2,a4base0[4]);
-      __m256d aval21 = _mm256_mul_pd(cval2,a4base0[5]);
-      z10 = _mm256_add_pd(z10 , aval10);
-      z11 = _mm256_add_pd(z11 , aval11);
-      if(--a4rem<=0)break;
+       a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
+       c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*3;
+      }while(1);
+      // Collect the sums of products
+      z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
+     }else{
+      // Do the multiply.  We need at least 6 accumulators for latency, as in the real case; since we have real & imaginary parts separately, we need 8 
+      do{
 
-      cval1 = _mm256_load_pd(c4base+4*CACHEWIDTH);
-      aval00 = _mm256_mul_pd(cval0,a4base0[6]);
-      aval01 = _mm256_mul_pd(cval0,a4base0[7]);
-      z20 = _mm256_add_pd(z20 , aval20);
-      z21 = _mm256_add_pd(z21 , aval21);
-      if(--a4rem<=0)break;
+       z00 = _mm256_add_pd(z00 , _mm256_mul_pd(c4base[0],a4base0[0]));    // c0 riri * a0 rrrr  holds riri for first row
+       z10 = _mm256_add_pd(z10 , _mm256_mul_pd(c4base[0],a4base0[1]));    // c0 riri * a0 iiii  holds iRiR for first row
+       z01 = _mm256_add_pd(z01 , _mm256_mul_pd(c4base[0],a4base0[2]));    // c0 riri * a1 rrrr  holds riri for second row
+       z11 = _mm256_add_pd(z11 , _mm256_mul_pd(c4base[0],a4base0[3]));    // c0 riri * a1 iiii  holds iRiR for second row
+       if(--a4rem<=0)break;
 
-      a4base0 += OPHEIGHT*3;  // OPWIDTH is implied by __m256d type
-      c4base+=CACHEWIDTH*3;
-     }while(1);
+       z20 = _mm256_add_pd(z20 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[4]));    // c1 riri * a2 rIrI
+       z30 = _mm256_add_pd(z30 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[5]));    // c1 riri * a2 irir
+       z21 = _mm256_add_pd(z21 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[6]));    // c1 riri * a3 rIrI
+       z31 = _mm256_add_pd(z31 , _mm256_mul_pd(c4base[CACHEWIDTH*sizeof(D)/sizeof(c4base[0])],a4base0[7]));    // c1 riri * a3 irir
+       if(--a4rem<=0)break;
 
-     // Collect the sums of products
-     z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
+       a4base0 += OPHEIGHT*2*2;  // OPWIDTH is implied by __m256d type; this is 2 number, 2 instances per loop
+       c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*2;
+      }while(1);
+
+      // Collect the sums of products.  First collect the 2 accumulators into one set
+      z00 = _mm256_add_pd(z00,z20); z01 = _mm256_add_pd(z01,z21); z10 = _mm256_add_pd(z10,z30);z11 = _mm256_add_pd(z11,z31);
+      // Add odd+even to combine real & imaginary parts, leaving z01 as first row, z01 as second
+      z10 = _mm256_permute_pd(z10, 0x5); z11 = _mm256_permute_pd(z11, 0x5);  // Convert iRiR to RiRi
+      z00 = _mm256_addsub_pd(z00,z10); z01 = _mm256_addsub_pd(z01,z11);   // riri -+ RiRi to get total real/imag 
+     }
+
+
      // Store accumulator into z.  Don't store outside the array
      if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
      }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
@@ -263,6 +275,7 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
      }
 
 #else   // If no AVX instructions
+      D * RESTRICT c4base=c3base;
      if(cmpx==0){  // real
       D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
       do{  // loop for each small outer product
@@ -281,7 +294,7 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
        c4base+=CACHEWIDTH;
       }while(--a4rem>0);
      }else{
-      // complex.  The 1x4 cache values represent 1x2 complex values.  The a is fetches as 2x1 complex values.  Result is 2x2 conplex values
+      // complex.  The 1x4 cache values represent 1x2 complex values.  The a is fetched as 2x1 complex values.  Result is 2x2 conplex values
       D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
       do{  // loop for each small outer product
        // read the 2x1 a values and the 1x4 cache values

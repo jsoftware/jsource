@@ -116,6 +116,42 @@ static UI hicx(J jt,I k,UC*v){UI z=HASH0;I*u=jt->hiv; DO(jt->hin, z=(149*i+10000
 /* hic4: hash the low order bytes of a string of length k (k multiple of 4) */
 /* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
 
+#if defined(CRC32C)
+
+#include <stdint.h>
+extern uint32_t crc32c(uint32_t crc, const void *buf, size_t len);
+UI hic (I k,UC*v) {R crc32c(0,v,k);}
+UI hicx (J jt,I k,UC*v) {R crc32c(0,(UC*)jt->hiv,sizeof(I)*(jt->hin));}
+UI hicnz (I k,UC*v) {R crc32c(0,v,k);}
+UI hic2 (I k, UC* v){I cct=k/sizeof(US);
+  DQ(cct, if(((US*)v)[i]>255)R hic(k,v);); // if upper significance, hash C2T: 2 bytes per char
+  UC*t= v; US*u=(US*)v;
+  DO(cct, *t++ = (UC)*u++;)  // in place conversion to LIT
+  UI r= hic(k/2,v);
+  DQ(cct, *--u = (US)*--t;)  // revert to C2T
+  R r;
+}
+UI hic4 (I k,UC*v) {I cct=k/sizeof(UI4);
+ I max = 0;
+ DQ(cct, max |= ((UI4*)v)[i]; if(((UI4*)v)[i]>65535)R hic(k,v););  // If significance > C2T, hash as C4T - 4 bytes per char
+ if(max<=255){  // if nothing bigger than LIT, hash as LIT as a canonical form
+  UC*t= v; UI4*u=(UI4*)v;
+  DO(cct, *t++ = (UC)*u++;)  // in place conversion to LIT
+  UI r= hic(k/4,v);
+  DQ(cct, *--u = (UI4)*--t;)  // revert to C4T
+  R r;
+ } else {
+  // there was a non-ASCII character, so hash as if C2T
+  US*t= (US*)v; UI4*u=(UI4*)v;
+  DO(cct, *t++ = (US)*u++;)  // in place conversion to C2T
+  UI r= hic(k/2,v);
+  DQ(cct, *--u = (UI4)*--t;)  // revert to C4T
+  R r;
+ }
+}
+
+#else
+
        UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
 
 static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(i+1000003)*c^z<<1;); R z;}
@@ -132,6 +168,8 @@ static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u
        UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
 #else
        UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1; v+=4;); R z;}
+#endif
+
 #endif
 
 #endif

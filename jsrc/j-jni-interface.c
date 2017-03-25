@@ -59,6 +59,8 @@ void javaOutput(JNIEnv *env, jobject obj,int type, const char*chars)
   }
 }
 
+int javaWd(JNIEnv *env, jobject obj, J jt,int type, A w, A *pz, const char*locale);
+
 int _stdcall wdHandler(J jt,int type, A w, A *pz)
 {
   R javaWd(local_jnienv,local_baseobj,jt,type,w,pz,getlocale(jt));

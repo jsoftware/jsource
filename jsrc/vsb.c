@@ -14,7 +14,8 @@
 #define FILLFACTOR      (jt->sbfillfactor)
 #define GAP             (jt->sbgap)  
 
-static const  SBU       sentinel = {0,0,HASH0,BLACK,0,0,0,IMIN,0,0,0};
+// The hash field is filled in at initialization, but that's OK because it's always set to the same value
+static SBU       sentinel = {0,0,0,BLACK,0,0,0,IMIN,0,0,0};
 
 /* #define TMP */
 #ifdef TMP
@@ -814,9 +815,11 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */
+ UI hash0=hic(0,0);  // hash value of empty string
+ sentinel.h=hash0;  // initialize the hash value for the empty symbol
  jt->sbuv[0]=sentinel;
  jt->sbun=1;
- jt->sbhv[HASH0%AN(jt->sbh)]=0;
+ jt->sbhv[hash0%AN(jt->sbh)]=0;  // clear symbol-table entry for empty symbol
  R 1;
 }    /* initialize global data for SBT datatype */
 

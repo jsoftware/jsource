@@ -106,7 +106,7 @@ l1:
 #define CACHEHEIGHT 16  // height of resident cache block
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
-// a is shape mxp, w is shape pxn
+// a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if overflow
 static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // m is # 1-cells of a
  // n is # values in an item of w (and result)
@@ -125,13 +125,14 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
  D* w0base = wv; D* z0base = zv; I w0rem = n;
  for(;w0rem>0;w0rem-=CACHEWIDTH,w0base+=CACHEWIDTH,z0base+=CACHEWIDTH){
   // process each 16x64 section of w, adding each result to the columns of z.  Each section goes through a different set of 16/32 columns of a 
-  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>cmpx;
-  for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT<<cmpx,w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
+  D* a1base=av; D* w1base=w0base; D* z1base=z0base; I w1rem=p>>(cmpx&1);
+  for(;w1rem>0;w1rem-=CACHEHEIGHT,a1base+=CACHEHEIGHT<<(cmpx&1),w1base+=CACHEHEIGHT*n){D* RESTRICT cvx;D* w1next=w1base;I i;
    // read the 16x64 section of w into the cache area (8KB, 2 ways of cache), with prefetch of rows
    for(i=MIN(CACHEHEIGHT,w1rem),cvx=cvw;i;--i){I j;
     D* RESTRICT w1x=w1next; w1next+=n;  // save start of current input row, point to next row...
     // I don't think it's worth the trouble to move the data with AVX instructions - though it was to prefetch it
-    for(j=0;j<MIN(CACHEWIDTH,w0rem);++j)*cvx++=*w1x++; for(;j<CACHEWIDTH;++j)*cvx++=0.0;   // move current row during prefetch
+    for(j=0;j<MIN(CACHEWIDTH,w0rem);++j){D fv = *w1x; if(cmpx>1)fv=(D)*(I*)w1x; *cvx++=fv; w1x++;}  // move the valid data
+    for(;j<CACHEWIDTH;++j)*cvx++=0.0;   // fill the rest with 0
    }
    // Because of loop unrolling, we fetch and multiply one extra value in each cache column.  We make sure those values are 0 to avoid NaN errors
    for(i=0;i<MIN(CACHEWIDTH,w0rem);++i)*cvx++=0.0;
@@ -159,11 +160,17 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
 
     {__m256d *cvx;D *a0x;I j;
      for(a0x=a2base0,i=0;i<OPHEIGHT;++i,a0x=a2base1){
-      for(cvx=(__m256d*)cva+(i<<cmpx),j=MIN(CACHEHEIGHT,w1rem);j;--j,cvx+=(OPHEIGHT<<cmpx)){__m256d *cvx0=cvx; I k=cmpx;  // start at offset from i; skip over stride of OPHEIGHT values
-       do{*cvx0++ = _mm256_set_pd(*a0x,*a0x,*a0x,*a0x); ++a0x;}while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
+      for(cvx=(__m256d*)cva+(i<<(cmpx&1)),j=MIN(CACHEHEIGHT,w1rem);j;--j,cvx+=(OPHEIGHT<<(cmpx&1))){__m256d *cvx0=cvx; I k=cmpx&1;  // start at offset from i; skip over stride of OPHEIGHT values
+       // For INT inputs, convert to float and use the float multiply.  It's just so much faster in parallel, and with no need for overflow checks
+       // This is a kludge that depends on sizeof(I) equaling sizeof(D)
+       do{D fv = *a0x;
+ if(cmpx>1)fv=(D)*(I*)a0x; 
+*cvx0++ = _mm256_set_pd(fv,fv,fv,fv);
+ ++a0x;}
+while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
       }
-      // Because of loop unrolling, we used to fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
-      *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);  // obsolete?
+// obsolete       // Because of loop unrolling, we used to fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
+// obsolete       *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);  // obsolete?
      }
     }
 #endif
@@ -219,7 +226,7 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
 #if C_AVX  // This version if AVX instruction set is available.
      __m256d * RESTRICT c4base= (__m256d *)c3base;
      __m256d *a4base0=(__m256d *)cva;   // Can't put RESTRICT on this - the loop to init *cva gets optimized away
-     if(cmpx==0){
+     if(cmpx!=1){
       // read the 2x1 a values and the 1x4 cache values
       // form outer product, add to accumulator
       do{
@@ -241,7 +248,7 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
       // Collect the sums of products
       z10 = _mm256_add_pd(z10,z20);z11 = _mm256_add_pd(z11,z21); z00 = _mm256_add_pd(z00,z10); z01 = _mm256_add_pd(z01,z11);
      }else{
-      // Do the multiply.  We need at least 6 accumulators for latency, as in the real case; since we have real & imaginary parts separately, we need 8 
+      // FLT case.  Do the multiply.  We need at least 6 accumulators for latency, as in the real case; since we have real & imaginary parts separately, we need 8 
       do{
 
        z00 = _mm256_add_pd(z00 , _mm256_mul_pd(c4base[0],a4base0[0]));    // c0 riri * a0 rrrr  holds riri for first row
@@ -259,14 +266,12 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
        a4base0 += OPHEIGHT*2*2;  // OPWIDTH is implied by __m256d type; this is 2 number, 2 instances per loop
        c4base+=(CACHEWIDTH*sizeof(D)/sizeof(c4base[0]))*2;
       }while(1);
-
       // Collect the sums of products.  First collect the 2 accumulators into one set
       z00 = _mm256_add_pd(z00,z20); z01 = _mm256_add_pd(z01,z21); z10 = _mm256_add_pd(z10,z30);z11 = _mm256_add_pd(z11,z31);
       // Add odd+even to combine real & imaginary parts, leaving z01 as first row, z01 as second
       z10 = _mm256_permute_pd(z10, 0x5); z11 = _mm256_permute_pd(z11, 0x5);  // Convert iRiR to RiRi
       z00 = _mm256_addsub_pd(z00,z10); z01 = _mm256_addsub_pd(z01,z11);   // riri -+ RiRi to get total real/imag 
      }
-
 
      // Store accumulator into z.  Don't store outside the array
      if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
@@ -275,12 +280,21 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
      }
 
 #else   // If no AVX instructions
-      D * RESTRICT c4base=c3base;
+     D * RESTRICT c4base=c3base;
      if(cmpx==0){  // real
       D* RESTRICT a4base0=a2base0; D* RESTRICT a4base1=a2base1; 
       do{  // loop for each small outer product
        // read the 2x1 a values and the 1x4 cache values
        // form outer product, add to accumulator
+       z00+=a4base0[0]*c4base[0];
+       z01+=a4base0[0]*c4base[1];
+       z02+=a4base0[0]*c4base[2];
+       z03+=a4base0[0]*c4base[3];
+       z10+=a4base1[0]*c4base[0];
+       z11+=a4base1[0]*c4base[1];
+       z12+=a4base1[0]*c4base[2];
+       z13+=a4base1[0]*c4base[3];
+#if 0  // obsolete
        D t0,t1,a0,a1,c0,c1,c2,c3;
        a0=a4base0[0]; t0=c4base[0]; 
        a1=a4base1[0]; c0=c4base[0];
@@ -290,6 +304,23 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
        z10 += c0; z01 += t1; z11 += c1;
        t0 *= a0; c2 *= a1; a0 *= c3; c3 *= a1;
        z02 += t0; z12 += c2; z03 += a0; z13 += c3;
+#endif
+       a4base0++,a4base1++;
+       c4base+=CACHEWIDTH;
+      }while(--a4rem>0);
+     }else if(cmpx==2){  // INT
+      I* RESTRICT a4base0=(I*)a2base0; I* RESTRICT a4base1=(I*)a2base1; 
+      do{  // loop for each small outer product
+       // read the 2x1 a values and the 1x4 cache values
+       // form outer product, add to accumulator
+       z00+=(D)a4base0[0]*(D)c4base[0];
+       z01+=(D)a4base0[0]*(D)c4base[1];
+       z02+=(D)a4base0[0]*(D)c4base[2];
+       z03+=(D)a4base0[0]*(D)c4base[3];
+       z10+=(D)a4base1[0]*(D)c4base[0];
+       z11+=(D)a4base1[0]*(D)c4base[1];
+       z12+=(D)a4base1[0]*(D)c4base[2];
+       z13+=(D)a4base1[0]*(D)c4base[3];
        a4base0++,a4base1++;
        c4base+=CACHEWIDTH;
       }while(--a4rem>0);
@@ -341,30 +372,32 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // n is # atoms in an item of w
  // p is number of inner-product muladds (length of a row of a)
 
- RZ(z=ipprep(a,w,t&B01?INT:t&INT&&!SY_64?FL:t,&m,&n,&p));
+ // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
+ RZ(z=ipprep(a,w,t&B01?INT:t&INT/*obsolete&&!SY_64*/?FL:t,&m,&n,&p));
  if(!p){memset(AV(z),C0,AN(z)*bp(AT(z))); R z;}
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
  // Perform the inner product according to the type
  switch(CTTZNOFLAG(t)){
-  case B01X:
-   if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
-    q=p/255; r=p%255; nw=(n+SZI-1)/SZI;
-    GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
-    u=BAV(a); v=wv=BAV(w); zv=AV(z);
-    for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); DO(q, BBLOCK(255);); BBLOCK(r);}
-   }else{B*u,*v,*wv;I*x,*zv;
-    u=BAV(a); v=wv=BAV(w); zv=AV(z);
-    for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; if(*u++)DO(n, *x++ =*v++;) else{v+=n; DO(n, *x++=0;);}
-     DO(p1, x=zv; if(*u++)DO(n, *x+++=*v++;) else v+=n;);
-   }}
-   break;
-  case INTX:
+ case B01X:
+  if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
+   q=p/255; r=p%255; nw=(n+SZI-1)/SZI;
+   GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
+   u=BAV(a); v=wv=BAV(w); zv=AV(z);
+   for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); DO(q, BBLOCK(255);); BBLOCK(r);}
+  }else{B*u,*v,*wv;I*x,*zv;
+   u=BAV(a); v=wv=BAV(w); zv=AV(z);
+   for(i=0;i<m;++i,v=wv,zv+=n){
+           x=zv; if(*u++)DO(n, *x++ =*v++;) else{v+=n; DO(n, *x++=0;);}
+    DO(p1, x=zv; if(*u++)DO(n, *x+++=*v++;) else v+=n;);
+   }
+  }
+  break;
+ case INTX:
+  {
 #if SY_64
-   {I er=0;I c,* RESTRICT u,* RESTRICT v,* RESTRICT wv,* RESTRICT x,* RESTRICT zv;
-    u=AV(a); v=wv=AV(w); zv=AV(z);
+// obsolete     u=AV(a); v=wv=AV(w); zv=AV(z);
  /*
    for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; er=asmtymes1v(n,x,c,v);    if(er)break; v+=n;
@@ -372,17 +405,59 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
  */
 #if C_NA   // non-assembler version
+#if 1
+   // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
+   // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
+   // performs vector inner products, accumulating in registers.  And we have two versions of that: one when the totals can't get close to
+   // overflow, and one belt-and-suspenders one for arbitrary inputs
+   if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;D * RESTRICT zvd; 
+    // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
+    I er=0;  // will be set if overflow detected
+    I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} if(wvv<0)tot-=wvv;else tot+=wvv; wv++;)
+    if(!er){
+     // w fits in 32 bits.  Try to accumulate the products.  If we can be sure tat the total will not exceed 32 bits unless
+     // an a-value does, do the fastest loop
+     zv=AV(z); av=AV(a);
+     if(p*tot<0x100000000){
+      // The total in w is so small that a mere m values each less than 2^31 cannot overflow
+      DO(m, I tot=0; wv=AV(w); DO(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd)goto oflo1; tot+=prod;) *zv++=tot;)
+     }else{
+      // w has some big numbers, so we have to check each individual product
+      DO(m, I tot=0; wv=AV(w); DO(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd||prod!=(I4)prod)goto oflo1; tot+=prod;) *zv++=tot;)
+     }
+     AT(z)=INT; break;
+    }
+oflo1:
+    // Something overflowed 32 bits.  See if it fits in 64.
+    zv=AV(z); av=AV(a);
+    DO(m, I lp; I tot=0; wv=AV(w); DO(p, DPMULD(*av++,*wv++, lp, goto oflo2;) I oc=(~tot)^lp; tot+=lp; lp^=tot; if(XANDY(oc,lp)<0)goto oflo2;) *zv++=tot;)
+    AT(z)=INT; break;
+oflo2:
+    // Result does not fit in INT.  Do the computation as float, with float result
+    zvd=DAV(z); av=AV(a);
+    DO(m, D tot=0; wv=AV(w); DO(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
+   }else{
+    cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do the fast matrix multiply - integer-to-float conversion
+    // If the result has a value that has been truncated, we should keep it as a float.  Unfortunately, there is no way to be sure that some
+    // overflow has not occurred.  So we guess.  If the result is much less than the dynamic range of a float integer, convert the result
+    // to integer.
+    I i; D *zv=DAV(z);
+    for(zv=DAV(z), i=AN(z); i; --i, ++zv)if(*zv>1e13 || *zv<-1e13)break;   // see if any value is out of range
+    if(!i){AT(z)=INT;for(zv=DAV(z), i=AN(z); i; --i, ++zv)*(I*)zv=(I)*zv;}  // if not, convert all to integer
+   }
+#else  // obsolete - this required the er loop to work
+   I er=0;I c,* RESTRICT u,* RESTRICT v,* RESTRICT wv,* RESTRICT x,* RESTRICT zv;
     for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,oc,lp;
      x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
     DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if(XANDY(oc,o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
     }
-#else
+#endif
+#else  // !C_NA
     for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;
      DO(p1, x=zv; c=*u++; er=asminnerprodx(n,x,c,v); if(er)break; v+=n;);
      if(er)break;
     }
-#endif
     if(er){A z1;D c,* RESTRICT x,* RESTRICT zv;I* RESTRICT u,* RESTRICT v,* RESTRICT wv;
      GATV(z1,FL,AN(z),AR(z),AS(z)); z=z1;
      u=AV(a); v=wv=AV(w); zv=DAV(z);
@@ -390,7 +465,9 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
              x=zv; c=(D)*u++; DO(n, *x++ =c**v++;);
       DO(p1, x=zv; c=(D)*u++; DO(n, *x+++=c**v++;););
    }}}
+#endif
 #else
+   // 32-bit version - old style, converting to float
    {D c,*x,*zv;I*u,*v,*wv;
     u=AV(a); v=wv=AV(w); zv=DAV(z);
     if(1==n)DO(m, v=wv; c=0.0; DO(p, c+=*u++*(D)*v++;); *zv++=c;)
@@ -398,15 +475,25 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
             x=zv; c=(D)*u++; DO(n, *x++ =c**v++;);
      DO(p1, x=zv; c=(D)*u++; DO(n, *x+++=c**v++;););
     }
-    RZ(z=icvt(z));
    }
+  // convert float result back to int if it will fit
+  RZ(z=icvt(z));
 #endif
-   break;
+  }
+  break;
  case FLX:
-  {NAN0;
-   cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do the fast matrix multiply - real
+  {I smallprob; 
+   // As for INT, handle the cases where n=1 separately, because they are used internally & don't require as much setup as matrix multiply
+   NAN0;
+   if(n==1){D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
+    zv=DAV(z); av=DAV(a);
+    DO(m, D tot=0; wv=DAV(w); DO(p, tot+=*av++**wv++;) *zv++=tot;)
+    smallprob=0;  // Don't compute it again
+   }else if(!(smallprob = m*n*p<1000)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
+    cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do the fast matrix multiply - real
+   }
    // If there was a floating-point error, retry it the old way in case it was _ * 0
-   if(NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
+   if(smallprob||NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     NAN0;
     if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}

@@ -72,9 +72,9 @@ AHDR2(minusIB,I,I,B){I u;I v;I w;I oflo=0;
 
 // II multiply, in double precision
 AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;if(jt->jerr)R; I *zi=z;
- if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo); ; z++; x++; y++; )
- else if(b)DO(m, u=*x; DO(n, v=*y; DPMUL(u,v,z, goto oflo); z++; y++;) x++;)
- else      DO(m, v=*y; DO(n, u=*x; DPMUL(u,v,z, goto oflo); z++; x++;) y++;)
+ if(1==n)  DO(m, u=*x; v=*y; DPMUL(u,v,z, goto oflo;) z++; x++; y++; )
+ else if(b)DO(m, u=*x; DO(n, v=*y; DPMUL(u,v,z, goto oflo;) z++; y++;) x++;)
+ else      DO(m, v=*y; DO(n, u=*x; DPMUL(u,v,z, goto oflo;) z++; x++;) y++;)
 exit: jt->mulofloloc += z-zi; R;
 oflo: jt->jerr = EWOVIP+EWOVIPMULII; *x=u; *y=v; goto exit;  // back out the last store, in case it's in-place; gcc stores before overflow
 }

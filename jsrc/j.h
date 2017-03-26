@@ -650,11 +650,11 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 #if C_USEMULTINTRINSIC
 #if SY_WIN32 
-#define DPMULDECLS I l,h;
+#define DPMULDECLS
 // DPMUL: *z=x*y, execute s if overflow
-#define DPMUL(x,y,z,s) *z=l=_mul128(x,y,&h); if(h+((UI)l>>(BW-1)))s
-#define DPMULDDECLS I h;
-#define DPMULD(x,y,z,s) z=_mul128(x,y,&h); if(h+((UI)z>>(BW-1)))s
+#define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+((UI)_l>>(BW-1)))s}
+#define DPMULDDECLS
+#define DPMULD(x,y,z,s) {I _h; z=_mul128(x,y,&_h); if(_h+((UI)z>>(BW-1)))s}
 #else
 #define DPMULDECLS
 #define DPMUL(x,y,z,s) if(__builtin_smulll_overflow(x,y,z))s
@@ -662,10 +662,10 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define DPMULD(x,y,z,s) if(__builtin_smulll_overflow(x,y,&z))s
 #endif
 #else // C_USEMULTINTRINSIC 0 - use standard-C version (64-bit)
-#define DPMULDECLS I _l;D _d;
-#define DPMUL(x,y,z,s) _l=(x)*(y); _d=(D)(x)*(D)(y)-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s  // *z may be the same as x or y
-#define DPMULDDECLS I _l;D _d;
-#define DPMULD(x,y,z,s) _l=(x)*(y); _d=(D)(x)*(D)(y)-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8)s
+#define DPMULDECLS
+#define DPMUL(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; *z=_l; _d=ABS(_d); if(_d>1e8)s}  // *z may be the same as x or y
+#define DPMULDDECLS
+#define DPMULD(x,y,z,s) {I _l, _x=(x), _y=(y); D _d; _l=_x*_y; _d=(D)_x*(D)_y-(D)_l; z=_l; _d=ABS(_d); if(_d>1e8)s}
 #endif
 
 #else  // 32-bit

@@ -364,7 +364,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  wr=AR(w); wt=AN(w)?AT(w):B01;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
- if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&at+wt)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
+ if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  t=coerce2(&a,&w,B01);  // convert a/w to common type, using b01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
  // Allocate result area and calculate loop controls
@@ -415,7 +415,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
     I er=0;  // will be set if overflow detected
     I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} if(wvv<0)tot-=wvv;else tot+=wvv; wv++;)
     if(!er){
-     // w fits in 32 bits.  Try to accumulate the products.  If we can be sure tat the total will not exceed 32 bits unless
+     // w fits in 32 bits.  Try to accumulate the products.  If we can be sure that the total will not exceed 32 bits unless
      // an a-value does, do the fastest loop
      zv=AV(z); av=AV(a);
      if(p*tot<0x100000000){

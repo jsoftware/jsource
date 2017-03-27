@@ -698,7 +698,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
   vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   rflg=(k==sizeof(D))+((AT(a)&BOX)>>(BOXX-2))+2; /* box/!reflex/atom */ \
-  if(a==w&&ac==wc)rflg&=~(2&(~(((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<1)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
+  if(a==w&&ac==wc)rflg&=((~2)|(~(((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<1)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
    if(!(mode&IPHOFFSET)){                                                                         \

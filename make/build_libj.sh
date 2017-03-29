@@ -23,14 +23,14 @@ linux_j32) # linux x86
 TARGET=libj.so
 # faster, but sse2 not available for 32-bit amd cpu
 # sse does not support mfpmath=sse in 32-bit gcc
-COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC -DCRC32C "
+COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl -o libj.so "
 ;;
 linux_j64) # linux x86
 TARGET=libj.so
-COMPILE="$common -msse2 -DC_NOMULTINTRINSIC -DCRC32C "
+COMPILE="$common -msse2 -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 
@@ -42,7 +42,7 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC -DCRC32C "
+COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
 ;;
 
@@ -94,7 +94,6 @@ OBJS="\
  cp.o \
  cpdtsp.o \
  cr.o \
- crc32c.o \
  crs.o \
  ct.o \
  cu.o \

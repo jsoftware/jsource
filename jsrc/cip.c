@@ -408,8 +408,8 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 #if 1
    // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
-   // performs vector inner products, accumulating in registers.  And we have two versions of that: one when the totals can't get close to
-   // overflow, and one belt-and-suspenders one for arbitrary inputs
+   // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
+   // overflow, and other belt-and-suspenders variants for arbitrary inputs
    if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;D * RESTRICT zvd; 
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected

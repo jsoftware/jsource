@@ -631,15 +631,15 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
 // the first block that hashed to this address)
 #define FIND(exp) while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
+
 // FIND for read.  Stop loop if endtest is true; execute fstmt if match ((exp) is false).  hj holds the index of the value being tested
 #define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(--hindex<0)hindex+=p;}while(1);
-// store i into the hashtable if not found
+
+// FIND for write.
+// store i into the hashtable if not found.  The test shoud be intolerant
 #define FINDWR(TH,exp) do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(--j<0)j+=p;}while(1);
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
-
-// hash a single D type.  If complex, hash the real part only (hashing both parts would require 4 hashes for tolerance)
-// functions for searching the hash table
 
 // find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
 #define TFINDXY(TH,expa,expw)  \
@@ -667,45 +667,61 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
  }
 
-// find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
+// find a tolerant match for *v.  The hashtable has already been created.
+// We have to look in two buckets: for the interval containing the value, and for the neighboring interval
+// containing tolerantly equal values.  Because the interval is always at least as wide as the
+// tolerant diameter (i. e. 2 tolerances wide), only one neighboring interval need be checked.
+// For the default tolerance, the interval width is just a smidgen above the diameter for intervals
+// near 1.1111; it is twice the diameter for intervals near 1.00000.  This means that a random
+// value will have its tolerance circle spilling into the neighboring interval about
+// 3/4 of the time.  because of that, we don't bother to check whether the circle actually
+// does overlap [that would require calculating the upper and lower bounds and then doing bit fiddling on the result];
+// we simply probe in the neighboring interval closer to the given value.
+// We stack up as much calculation as possible before the searches to reduce the cost of a misprediction
+//
+// We calculate a half-interval above and below the value; one of those is in the neighboring interval,
+// the other is in the same interval; we XOR to preserve the neighbor
+//
+// At the end of this calculation il contains the index of a match, or asct if no match.
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UI dl, dr, dx; x=*(D*)v;                                                                            \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; dl=dx-halfmsk; dr=dx+halfmsk; dx^=dl; dx^=dr; HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
+// Same idea, but used for reflexives, where the table has not been built yet.  We save replicating the hash calculation, and also
+// we know that there will be a match in the first search, which simplifies that search.
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UI dl, dr, dx; x=*(D*)v;                                                                             \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; dl=dx-halfmsk; dr=dx+halfmsk; dx^=dl; dx^=dr; FINDWR(TH,expa);  \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,0,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
-// loop to search the hash table.
-// Fxx is a TFIND macro, charged with setting il
-#define TDOX(T,TH,FXY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
+// loop to process each item of w.
+// FXY is a TFIND macro, charged with setting il.
+// Set il, execute the statement, advance to the next item
+#define TDOXY(T,TH,FXY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
  DO(wsct, FXY(TH,expa,expw,fstmt0,endtest1,fstmt1); stmt; v=(T*)((C*)v+k);)
-#define TDOY(T,TH,FYY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
- DO(wsct, FYY(TH,expa,expw,fstmt0,endtest1,fstmt1); stmt; v=(T*)((C*)v+k);)
 
 // Same, but search from the end of y backwards (e. i: 0 etc)
-#define TDQX(T,TH,FXY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
+#define TDQXY(T,TH,FXY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
  v=(T*)((C*)v+k*(wsct-1)); DQ(wsct, FXY(TH,expa,expw,fstmt0,endtest1,fstmt1); stmt; v=(T*)((C*)v-k);)
-#define TDQY(T,TH,FYY,expa,expw,fstmt0,endtest1,fstmt1,stmt)  \
- v=(T*)((C*)v+k*(wsct-1)); DQ(wsct, FYY(TH,expa,expw,fstmt0,endtest1,fstmt1); stmt; v=(T*)((C*)v-k);)
 
 // Version for ~. y and x -. y .  move the item to *zc++
+// If we know the item is a single value we store it always and ratify the value by incrementing the pointer, using conditional instructions
+// If the item might be long we move it only if it is valid
 // For -.
 #define TMVX(T,TH,FXY,expa,expw)   \
   {if(k==sizeof(D)){DO(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(D); found3: v=(T*)((C*)v+k); );  \
             }else{DO(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
  }
-// for ~.
+// for ~.  Same idea, but reflexive
 #define TMVY(T,TH,FYY,expa,expw)   \
   {if(k==sizeof(D)){DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found1;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(D); found1: v=(T*)((C*)v+k); );     \
              }else{DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found0;,hj==asct,if(hj<i)goto found0;); {MC(zc,v,k); zc+=k;}; found0: v=(T*)((C*)v+k); );}   \
  }
 
 
-// here comparing boxes
+// here comparing boxes.  Consider modifying hia to take a self/neighbor flag rather than a tolerance
 #define TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
  {HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
  HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
@@ -798,11 +814,11 @@ above could be better for reflexive
 could use goto in some of the above
 #endif
 
-// Do the operation.  Build a hash for a except when unboxed self-index
+// Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
-        D ct=jt->ct,tl=1-jt->ct,tr=1/tl;I il,jx; D x;    \
+        D tl=1-jt->ct,tr=1/tl;I il,jx; D x;    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UI ctmask=jt->ctmask, halfmsk=((~ctmask)+1)>>1;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
@@ -819,23 +835,24 @@ could use goto in some of the above
    }}                                                                                            \
    d=wd;                                                                    \
    switch(md){                                                                                   \
-    case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
-    case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
-    case IICO:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQX(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
-    case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
-    case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
+    /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
+    case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
+    case IIDOT|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
+    case IICO:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
+    case IICO|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi; zi=zv+=wsct; TDQXY(T,TH,FYY,expa,expw,{},hj==asct,il=il==asct?hj:il;il=hj>il?hj:il;,*--zi=il;);} break;  \
+    case INUBSV|IIMODREFLEX:{T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zb++=i==il;); zv=(I*)zb;} break;  /* zv must keep running */  \
     case INUB|IIMODREFLEX:  {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVY(T,TH,FYY,expa,expw); ZCSHAPE; }    break;  \
     case ILESS: {T * RESTRICT v=wv; I j, hj; D * RESTRICT zd=(D*)zv; C * RESTRICT zc=(C*)zv; TMVX(T,TH,FXY,expa,expw); ZCSHAPE; }    break;  \
-    case INUBI|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi=i; zi+=(i==il);); ZISHAPE;} break;  \
-    case IEPS:  {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zb++=(il!=asct);); zv=(I*)zb;} break;   /* zv must keep running */ \
-    case II0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi++=s;} break;  \
-    case II1EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct!=il){s=i; break;}); *zi++=s;} break;  \
-    case IJ0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi++=s;} break;  \
-    case IJ1EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct!=il){s=i; break;}); *zi++=s;} break;  \
-    case ISUMEPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=0; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,s+=(asct>il);); *zi++=s;}  break;  \
-    case IANYEPS: {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=0; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct>il){s=1; break;}); *zb++=1&&s;} break;  \
-    case IALLEPS: {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=1; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=0; break;}); *zb++=1&&s;} break;  \
-    case IIFBEPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOX(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi=i; zi+=(asct>il);); ZISHAPE;} break;  \
+    case INUBI|IIMODREFLEX: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FYY,expa,expw,{},hj>=il,il=hj;,*zi=i; zi+=(i==il);); ZISHAPE;} break;  \
+    case IEPS:  {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zb++=(il!=asct);); zv=(I*)zb;} break;   /* zv must keep running */ \
+    case II0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi=s;} break;  \
+    case II1EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct!=il){s=i; break;}); *zi=s;} break;  \
+    case IJ0EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=i; break;}); *zi=s;} break;  \
+    case IJ1EPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=wsct; TDQXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct!=il){s=i; break;}); *zi=s;} break;  \
+    case ISUMEPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; I s=0; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,s+=(asct>il);); *zi=s;}  break;  \
+    case IANYEPS: {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=0; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct>il){s=1; break;}); *zb=(B)s;} break;  \
+    case IALLEPS: {T * RESTRICT v=wv; I j, hj; B * RESTRICT zb=(B*)zv; I s=1; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,if(asct==il){s=0; break;}); *zb=(B)s;} break;  \
+    case IIFBEPS: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi=i; zi+=(asct>il);); ZISHAPE;} break;  \
   }}                                                                                             \
   R h;                                                                                           \
  }

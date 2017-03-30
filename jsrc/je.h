@@ -664,6 +664,7 @@ extern B        jtecvt(J,D,I,int*,int*,C*);
 extern B        jtecvtinit(J);
 extern A        jtenqueue(J,A,A,I);
 extern B        jtequ(J,A,A);
+extern B        jtequ0(J,A,A);
 extern A        jtev1(J,A,C*);
 extern A        jtev2(J,A,A,C*);
 extern A        jteva(J,A,C*);

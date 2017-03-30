@@ -68,6 +68,12 @@ B jtequ(J jt,A a,A w){A x;
  R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,0,C1);
 }
 
+// Return 1 if a and w match intolerantly, 0 if not
+B jtequ0(J jt,A a,A w){
+ F2PREFIP;  // allow inplace request - it has no effect
+ D ct=jt->ct; jt->ct=0; B res=equ(a,w); jt->ct=ct; R res;
+}
+
 // Test for equality of functions, 1 if they match.  The functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=VAV(a),*v=VAV(w);
  if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;

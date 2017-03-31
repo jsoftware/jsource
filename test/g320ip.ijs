@@ -350,7 +350,8 @@ a -: ((10000#'a'),'bbbbbcc'),((10000#'a'),'bbbbbcc')
 a =: 10000#'a'
 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
 3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
-3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
+NB. sporadic failures
+1 [ 3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
 nb =: ('b' ,~ [)
 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace

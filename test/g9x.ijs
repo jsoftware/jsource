@@ -388,7 +388,7 @@ old=: 9!:54 ''
 9!:55 old
 
 4!:55 ;:'a a12 a6 a9 b boxq boxs c dispq disps '
-4!:55 ;:'drop1 erase evmq evms namedvb nub old p ppq pps promptq '
+4!:55 ;:'drop1 erase evmq evms initspace namedvb nub old p ppq pps promptq '
 4!:55 ;:'prompts q read rlq rls s t v '
 
 

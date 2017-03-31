@@ -95,6 +95,7 @@ void jepath(char* arg,char* lib,int forceavx)
  else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
  else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
  else { // auto detect
+#if 0
 //  AVX= 0!=(0x4UL & GetEnabledXStateFeatures());
 // above line not worked for pre WIN7 SP1
 // Working with XState Context (Windows)
@@ -109,6 +110,7 @@ void jepath(char* arg,char* lib,int forceavx)
      ((pfnGetEnabledXStateFeatures() & XSTATE_MASK_AVX) != 0))
   AVX=1;
  FreeLibrary(hm);
+#endif
  }
 #endif
 #elif defined(ANDROID)
@@ -155,6 +157,7 @@ void jepath(char* arg,char* lib,int forceavx)
  else if (jeavx&&!strcasecmp(jeavx,"avx")) AVX=1;
  else if (jeavx&&!strcasecmp(jeavx,"noavx")) AVX=0;
  else { // auto detect by uname -r
+#if 0
  struct utsname unm;
  if (!uname(&unm) &&
      ((unm.release[0]>'2'&&unm.release[0]<='9')||  // avoid sign/unsigned char difference
@@ -162,6 +165,7 @@ void jepath(char* arg,char* lib,int forceavx)
        (unm.release[5]>='0'&&unm.release[5]<='9'))))
   AVX= 0!= __builtin_cpu_supports("avx");
 // fprintf(stderr,"kernel release :%s:\n",unm.release);
+#endif
  }
 #endif
  n=readlink("/proc/self/exe",arg2,sizeof(arg2));

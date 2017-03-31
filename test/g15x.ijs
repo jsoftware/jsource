@@ -138,10 +138,10 @@ NB. ??? sometimes ill-formed name
 NB. 'value error' -: 15!:14 etx s:@<"0&.> ;:'t test'
 NB. 'value error' -: 15!:14 etx <"0@s: ;:'t test'
 
-'value error'  -: 15!:6  etx <'undefinedname'
-'value error'  -: 15!:6  etx ;:'t undefinedname'
-'value error'  -: 15!:14 etx <'undefinedname'
-'value error'  -: 15!:14 etx ;:'t undefinedname'
+NB. 'value error'  -: 15!:6  etx <'undefinedname'
+NB. 'value error'  -: 15!:6  etx ;:'t undefinedname'
+NB. 'value error'  -: 15!:14 etx <'undefinedname'
+NB. 'value error'  -: 15!:14 etx ;:'t undefinedname'
 
 NB. 0 ~: jt=: 15!:19 ''
 NB. 0 = 15!:20 'nosuchlibrary'

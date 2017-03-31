@@ -33,8 +33,8 @@
 // These are designed to be used in IF statements where they can produce fused comparisons
 #define TCMPEQ(cct,a,b) ((((a)>(cct)*(b))?1:0) != (((b)<=(cct)*(a))?1:0))
 #define TCMPNE(cct,a,b) ((((a)>(cct)*(b))?1:0) == (((b)<=(cct)*(a))?1:0))
-#define TCMPLT(cct,a,b) (((a)<(b)) & TCMPNE(cct,a,b))
-#define TCMPLE(cct,a,b) (!(((a)>(b)) & TCMPNE(cct,a,b)))
+#define TCMPLT(cct,a,b) (((a)<(b)) & ((((a)>(cct)*(b))?1:0) ^ (((b)>(cct)*(a))?1:0)))
+#define TCMPLE(cct,a,b) (((a)<(b)) | ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0)))  // must use | to make _. always compare false
 
 
 #define TEQ(u,v)       TCMPEQ(1-jt->ct,(u),(v))

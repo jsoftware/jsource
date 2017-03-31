@@ -729,7 +729,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
  }
 // for ~.  Same idea, but reflexive
 #define TMVY(T,TH,FYY,expa,expw)   \
-  {if(k==sizeof(D)){DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found1;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(D); found1: v=(T*)((C*)v+k); );     \
+  {if(k==sizeof(T)){DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found1;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(i==il)*sizeof(T); found1: v=(T*)((C*)v+k); );     \
              }else{DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found0;,hj==asct,if(hj<i)goto found0;); {MC(zc,v,k); zc+=k;}; found0: v=(T*)((C*)v+k); );}   \
  }
 
@@ -1557,7 +1557,7 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 // jtioz1 tolerant CMPX atom
 // Table to look up routine from index
 // 0-11, 16-19 are hashes for various types, calculated by bit-twisting
-// 32-51 are reverse hashes
+// 32-51 are reverse hashes (i. e hash w, look up items of a)
 #define FNTBLSMALL1 12  // small-range, 1-byte items
 #define FNTBLSMALL2 13  // small-range, 1-byte items
 #define FNTBLSMALL4 14  // small-range, 1-byte items

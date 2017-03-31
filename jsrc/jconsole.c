@@ -141,8 +141,9 @@ int main(int argc, char* argv[])
  void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0; int forceavx=0;
 
  if(argc>=3&&!strcmp(argv[1],"-lib")&&'-'!=*(argv[2])) flag=1;
- else if(!flag&&argc>=2&&!strcmp(argv[1],"-avx")) forceavx=1;  // avx
- else if(!flag&&argc>=2&&!strcmp(argv[1],"-noavx")) forceavx=2;  // no avx
+// something like the following to eventuaully allow autodetection
+// else if(!flag&&argc>=2&&!strcmp(argv[1],"-avx")) forceavx=1;  // avx
+// else if(!flag&&argc>=2&&!strcmp(argv[1],"-noavx")) forceavx=2;  // no avx
  jepath(argv[0],flag?argv[2]:"",forceavx);
  if(argc>=2&&(!strcmp(argv[1],"-lib")||forceavx)) // remove processed arg
  {

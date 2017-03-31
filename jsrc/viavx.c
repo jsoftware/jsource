@@ -724,7 +724,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // If the item might be long we move it only if it is valid
 // For -.
 #define TMVX(T,TH,FXY,expa,expw)   \
-  {if(k==sizeof(D)){DO(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(D); found3: v=(T*)((C*)v+k); );  \
+  {if(k==sizeof(T)){DO(wsct, FXY(TH,expa,expw,goto found3;,hj==asct,il=hj;); *(T*)zc=*(T*)v; zc+=(il==asct)*sizeof(T); found3: v=(T*)((C*)v+k); );  \
             }else{DO(wsct, FXY(TH,expa,expw,goto found2;,hj==asct,goto found2;); {MC(zc,v,k); zc+=k;}; found2: v=(T*)((C*)v+k); );}  \
  }
 // for ~.  Same idea, but reflexive

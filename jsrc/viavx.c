@@ -627,11 +627,6 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 #define HID(y)              CRC32L(-1L,(y))
 #define MASK(dd,xx)         {D dv=(xx); if(*(UI*)&dv!=NEGATIVE0){dd=*(UI*)&dv&ctmask;}else{dd=0;} }
 
-// start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
-// (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
-// the first block that hashed to this address)
-#define FIND(exp) while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
-
 // FIND for read.  Stop loop if endtest is true; execute fstmt if match ((exp) is false).  hj holds the index of the value being tested
 #define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(--hindex<0)hindex+=p;}while(1);
 
@@ -640,7 +635,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 #define FINDWR(TH,exp) do{if(asct==(hj=hv[j])){hv[j]=(TH)i; break;}if(!(exp))break;if(--j<0)j+=p;}while(1);
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
-
+#if 0 // obsolete
 // find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
 #define TFINDXY(TH,expa,expw)  \
  {UI dl, dr; D x=*(D*)v;                                                                            \
@@ -666,6 +661,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
  }
+#endif
 
 // find a tolerant match for *v.  The hashtable has already been created.
 // We have to look in two buckets: for the interval containing the value, and for the neighboring interval
@@ -690,12 +686,29 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
  }
 // Same idea, but used for reflexives, where the table has not been built yet.  We save replicating the hash calculation, and also
 // we know that there will be a match in the first search, which simplifies that search.
+// For this routine expa MUST be an intolerant comparison
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UI dl, dr, dx; x=*(D*)v;                                                                             \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; dl=dx-halfmsk; dr=dx+halfmsk; dx^=dl; dx^=dr; FINDWR(TH,expa);  \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,0,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
+
+// here comparing boxes.  Consider modifying hia to take a self/neighbor flag rather than a tolerance
+#define TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
+ {HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
+ }
+// reflexive.  Because the compare for expa does not force intolerance, we must do so here.  This is required only for boxes, since the other expas are intolerant
+#define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
+ {HASHSLOT(hia(1.0,AADR(d,*v)))  D ct=jt->ct; jt->ct=0.0; FINDWR(TH,expa); jt->ct=ct; \
+ HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
+ }
+
+
+
+
 // loop to process each item of w.
 // FXY is a TFIND macro, charged with setting il.
 // Set il, execute the statement, advance to the next item
@@ -720,19 +733,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
              }else{DO(wsct, FYY(TH,expa,expw,if(hj<i)goto found0;,hj==asct,if(hj<i)goto found0;); {MC(zc,v,k); zc+=k;}; found0: v=(T*)((C*)v+k); );}   \
  }
 
-
-// here comparing boxes.  Consider modifying hia to take a self/neighbor flag rather than a tolerance
-#define TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
- }
-// reflexive
-#define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(1.0,AADR(d,*v))) FINDWR(TH,expa);  \
- HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
- }
-
+#if 0 // obsolete
 // loop to search the hash table.  b means self-index, bx means boxed
 // Fxx is a TFIND macro, charged with setting il and ir; stmt tells what to do with il/ir
 #define TDO(TH,FXY,FYY,expa,expw,stmt)  \
@@ -759,6 +760,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
   case 0:  DO(wsct, FYY(TH,expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  /* reflexive, len!=sizeof(D) */ \
   case 1:  DO(wsct, FYY(TH,expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd;    /* reflexive, len=sizeof(D) */      \
  }
+#endif
 
 #if 0  // obsolete 
     case IIDOT: {T *v=wv; I j, hj; I * RESTRICT zi=zv; TDOT(TH,FXY,FYY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
@@ -816,9 +818,9 @@ could use goto in some of the above
 
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,  \
+ IOF(f){RDECL;I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
-        D tl=1-jt->ct,tr=1/tl;I il,jx; D x;    \
+        D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UI ctmask=jt->ctmask, halfmsk=((~ctmask)+1)>>1;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
@@ -826,12 +828,12 @@ could use goto in some of the above
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
-  for(l=0;l<ac;++l,av+=acn,wv+=wcn){                                                             \
-   if(!(mode&IPHOFFSET)){                                                                         \
+  for(;ac>0;av+=acn,wv+=wcn,--ac){                                                             \
+   if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */                                        \
     hashallo(hh,p,asct,mode);                                                           \
-    if(!(IIMODREFLEX&md)){   /* not reflexive */                                            \
-     if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn);                 \
-     /* obsolete jt->ct=ct; */ if(w==mark)break;                                                                \
+    if(!(IIMODREFLEX&md)){I cn= k/sizeof(T);  /* not reflexive */                                            \
+     D ct=jt->ct; jt->ct=0.0; if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn); jt->ct=ct;  /* all writes to hash must use intolerant compare */                \
+     if(w==mark)break;                                                                \
    }}                                                                                            \
    d=wd;                                                                    \
    switch(md){                                                                                   \
@@ -872,9 +874,9 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !jeqd
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa0(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
 // singleton box
-static IOFT(A,US,jtioa1,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ0(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,US,jtioa1,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
 static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
@@ -884,9 +886,9 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !je
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa0(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
 // singleton box
-static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ0(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -2116,6 +2118,11 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 #define IOCOLDECL(T)  D tl=1-jt->ct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
+
+// start searching at index j, and stop when j points to a slot that is empty, or for which exp is false
+// (exp is a test for not-equal, normally referring to v (the current element being hashed) and hv (the data field for
+// the first block that hashed to this address)
+#define FIND(exp) while(asct>(hj=hv[j])&&(exp)){if(--j<0)j+=p;}
 
 // function to search forward
 // T is the type of the data

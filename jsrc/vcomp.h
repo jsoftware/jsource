@@ -30,10 +30,11 @@
 // If both a&b are same infinity, <= will succeed, > will fail, giving ==
 // If only one is infinite, it will dominate both tests, giving !=
 // If anything is _., all comparisons fail, giving !=
-#define TCMPEQ(cct,a,b) ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0))
-#define TCMPNE(cct,a,b) (1 ^ TCMPEQ(cct,a,b))
+// These are designed to be used in IF statements where they can produce fused comparisons
+#define TCMPEQ(cct,a,b) ((((a)>(cct)*(b))?1:0) != (((b)<=(cct)*(a))?1:0))
+#define TCMPNE(cct,a,b) ((((a)>(cct)*(b))?1:0) == (((b)<=(cct)*(a))?1:0))
 #define TCMPLT(cct,a,b) (((a)<(b)) & TCMPNE(cct,a,b))
-#define TCMPLE(cct,a,b) (((a)<(b)) | TCMPEQ(cct,a,b))
+#define TCMPLE(cct,a,b) (!(((a)>(b)) & TCMPNE(cct,a,b)))
 
 
 #define TEQ(u,v)       TCMPEQ(1-jt->ct,(u),(v))

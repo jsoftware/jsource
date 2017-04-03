@@ -680,16 +680,20 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 //
 // At the end of this calculation il contains the index of a match, or asct if no match.
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UI dl, dr, dx; x=*(D*)v;                                                                            \
-  HASHSLOT(HIDUMSKSV(dx,v)) jx=j; dl=dx-halfmsk; dr=dx+halfmsk; dx^=dl; dx^=dr; HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
+ {UI dx; x=*(D*)v;                                                                            \
+  HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
+  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0); \
+  HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
 // Same idea, but used for reflexives, where the table has not been built yet.  We save replicating the hash calculation, and also
 // we know that there will be a match in the first search, which simplifies that search.
 // For this routine expa MUST be an intolerant comparison
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UI dl, dr, dx; x=*(D*)v;                                                                             \
-  HASHSLOT(HIDUMSKSV(dx,v)) jx=j; dl=dx-halfmsk; dr=dx+halfmsk; dx^=dl; dx^=dr; FINDWR(TH,expa);  \
+ {UI dx; x=*(D*)v;                                                                             \
+  HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
+  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0); \
+  FINDWR(TH,expa);  \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,0,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
@@ -821,9 +825,10 @@ could use goto in some of the above
  IOF(f){RDECL;I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
         D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
-        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UI ctmask=jt->ctmask, halfmsk=((~ctmask)+1)>>1;   \
+        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UI ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper();  \
+  __m128d tltr, xval, xnew, xrot; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr); \
   vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \

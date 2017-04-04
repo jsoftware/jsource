@@ -5,12 +5,15 @@
 
 #include "j.h"
 #include "w.h"
+#include "cpuinfo.h"
 
 #if SYS & SYS_FREEBSD
 #include <floatingpoint.h>
 #endif
 
 J gjt=0; // JPF debug
+int      hwavx=0;
+int      hwcrc=-1;  // indicate uninitialized
 
 void startup(void);
 
@@ -186,6 +189,22 @@ static void jtjtinit(J jt){
  }
 #endif
 // cpuarch will be left 0 on other architectures
+ if(hwcrc==-1){  // run once
+ cpuInit();
+#if defined(__aarch64__)
+ hwcrc=1;  // 64-bit armv8 should support hardware crc
+#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+ hwcrc=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2)?1:0;
+ hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
+#else
+ hwcrc=0;
+#endif
+#if C_AVX
+ if(!hwavx){
+/* what should we do? */
+ }
+#endif
+ }
 
 }
 

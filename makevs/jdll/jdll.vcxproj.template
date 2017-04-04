@@ -556,6 +556,7 @@
     <ClCompile Include="..\..\jsrc\CL.C" />
     <ClCompile Include="..\..\jsrc\CP.C" />
     <ClCompile Include="..\..\jsrc\cpdtsp.c" />
+    <ClCompile Include="..\..\jsrc\cpuinfo.c" />
     <ClCompile Include="..\..\jsrc\CR.C" />
     <ClCompile Include="..\..\jsrc\CRS.C" />
     <ClCompile Include="..\..\jsrc\CT.C" />

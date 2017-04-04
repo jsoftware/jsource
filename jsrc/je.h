@@ -240,6 +240,7 @@ extern F1(jtpps);
 extern F1(jtprep);
 extern F1(jtprime);
 extern F1(jtprocarch);
+extern F1(jtprocfeat);
 extern F1(jtprx);
 extern F1(jtqpctr);
 extern F1(jtqpfreq);
@@ -918,7 +919,10 @@ extern A        zero;
 extern A        zeroi;
 extern Z        zeroZ;
 extern A        zpath;
-
+/* cpu feature */
+extern int      hwavx;
+extern int      hwcrc;
+ 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

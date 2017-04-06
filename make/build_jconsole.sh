@@ -13,7 +13,7 @@ LINK=" -l:libedit.so.2 -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -o jco
 ;;
 linux_j64)
 COMPILE="$common -DREADLINE"
-LINK=" -ledit -ldl -lncursesw -o jconsole "
+LINK=" -ledit -ldl -o jconsole "
 ;;
 raspberry_j32)
 COMPILE="$common -DREADLINE -DRASPI"

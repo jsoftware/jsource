@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './git.ijs'
 NB. x i. y timing tests -------------------------------------------------
 
 ss =: +/ @: *:

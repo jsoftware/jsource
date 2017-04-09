@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gsp520sd.ijs'
 NB. x{y for sparse x, dense y -------------------------------------------
 
 p=: (?7 3 5$2) * ?7 3 5 4$10

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g332s.ijs'
 NB. x;:y ----------------------------------------------------------------
 
 NB. example 0: English words

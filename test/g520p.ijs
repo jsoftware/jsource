@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g520p.ijs'
 NB. { permutations and permutation groups -------------------------------
 
 NB. Generating any permutation as a sequence of 0&C. (rotating by 1)

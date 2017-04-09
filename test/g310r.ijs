@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g310r.ijs'
 NB. : representations of explicit operators -----------------------------
 
 nl=: 10{a.

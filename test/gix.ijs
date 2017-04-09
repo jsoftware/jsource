@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gix.ijs'
 NB. x i.y with wrong rank/shape -----------------------------------------
 
 f0=: 4 : 0

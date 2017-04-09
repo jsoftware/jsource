@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gctrl.ijs'
 NB. control word parsing ------------------------------------------------
 
 f0 =. 3 : 'if. if. 1 do. 2 end. do. 3 else. 4 end.'

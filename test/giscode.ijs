@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './giscode.ijs'
 NB. i. special code -----------------------------------------------------
 
 test=: 2 : 0

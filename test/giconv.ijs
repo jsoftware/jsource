@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './giconv.ijs'
 NB. almost integers as integer arguments --------------------------------
 
 f=: 3 : 0 " 0

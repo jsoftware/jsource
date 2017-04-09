@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gsdot.ijs'
 NB. S: ------------------------------------------------------------------
 
 phi=: * -.@%@~.&.q:      NB. Euler's totient function

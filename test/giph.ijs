@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './giph.ijs'
 NB. prehashed i. family of functions ------------------------------------
 
 randuni''

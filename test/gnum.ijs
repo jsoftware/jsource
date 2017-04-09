@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gnum.ijs'
 NB. numeric constants ---------------------------------------------------
 
 3j4      -: ". '3j4'

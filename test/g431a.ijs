@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g431a.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
 
 randuni''

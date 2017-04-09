@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g202b.ijs'
 NB. ^: with boxed right argument ----------------------------------------
 
 (>:   ^:(i.1000)  1     ) -: >:   ^:(<1000)  1

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g0.ijs'
 NB. handling -0 (-0 on some systems) ------------------------------------
 
 test=: 3 : 0

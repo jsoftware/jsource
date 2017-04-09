@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gdll_df.ijs'
 NB. DLL call with d f declarations
 NB. these will fail on builds with C_DF=0
 NB. as cd on these platforms can not handle f results

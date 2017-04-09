@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g412.ijs'
 NB. !: treatement of placeholder argument -------------------------------
 
 F=: 2 : 0

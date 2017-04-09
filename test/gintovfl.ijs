@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gintovfl.ijs'
 NB. integer operations --------------------------------------------------
 
 B =: IF64{31 63

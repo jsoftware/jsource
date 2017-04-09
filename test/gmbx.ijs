@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gmbx.ijs'
 NB. mapped boxed arrays -------------------------------------------------
 
 load 'jmf'

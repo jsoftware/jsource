@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gdll.ijs'
 NB. DLL call ------------------------------------------------------------
 
 load'dll'

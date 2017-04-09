@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gx132.ijs'
 NB. %: on extended integers ---------------------------------------------
 
 0 1 _ -: 0x %: 0 1 2x

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g430a2.ijs'
 NB. 2 f/\y and 2 f~/\y for vector y -------------------------------------
 
 randuni''

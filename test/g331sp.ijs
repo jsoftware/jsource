@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g331sp.ijs'
 NB. x f;.n y for sparse x, n e. _2 _1 1 2 -------------------------------
 
 randuni''

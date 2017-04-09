@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gu.ijs'
 NB. Unicode 2-byte characters -------------------------------------------
 
 UTYPE=: 131072   NB. type code for Unicode

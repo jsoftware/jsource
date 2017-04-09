@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g331bx.ijs'
 NB. x f;.n y for boxed x, n e. _2 _1 1 2 --------------------------------
 
 stdx  =: #@$@] {. }.@(1&;)@[

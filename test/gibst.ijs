@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gibst.ijs'
 NB. i.!.0 and associates timing tests -----------------------------------
 
 randuni''

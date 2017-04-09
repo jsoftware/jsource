@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g600ip.ijs'
 
 NB. atomic"n in-place and not -------------------------------
 randuni''

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gq.ijs'
 NB. rational numbers ----------------------------------------------------
 
 NB. test failed on small ct

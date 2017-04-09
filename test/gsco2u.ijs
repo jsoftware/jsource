@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gsco2u.ijs'
 NB. s: unicode ------------------------------------------------------------------
 
 NB. create test data set 

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g530t.ijs'
 NB. a=: c}x,y,... ,:z timing tests --------------------------------------
 
 randuni''

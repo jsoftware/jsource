@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gq201.ijs'
 NB. ^. on extended integers and rational numbers ------------------------
 
 test=: 4 : 0

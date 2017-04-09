@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g430d.ijs'
 NB. x ]\y and x [\y and x ,\ y ------------------------------------------
 
 randuni''

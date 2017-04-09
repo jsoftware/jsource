@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './goox.ijs'
 NB. order of execution --------------------------------------------------
 
 g=: 3 : 0

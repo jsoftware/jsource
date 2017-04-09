@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gss.ijs'
 NB. Speedy Singletons ------------------------------------------------------------------
 
 randuni''

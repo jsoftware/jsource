@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gi0.ijs'
 NB. x i.y on boolean scalar y -------------------------------------------
 
 f0=: 4 : 0 " 0

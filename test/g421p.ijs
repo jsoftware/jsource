@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g421p.ijs'
 NB.  x +//.@(*/) y special code -----------------------------------------
 
 test=: 4 : 0

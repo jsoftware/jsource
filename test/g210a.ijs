@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g210a.ijs'
 NB. $ shape overflow ----------------------------------------------------
 
 NB. Some tests fail because memory is obtained in 65536 word increments, 

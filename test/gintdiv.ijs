@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gintdiv.ijs'
 NB. integer division and remainder --------------------------------------
 
 f1=: 4 : 0

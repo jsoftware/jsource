@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gmbx3.ijs'
 NB. mapped boxed arrays -------------------------------------------------
 
 0!:0 <testpath,'gmbx.ijs'

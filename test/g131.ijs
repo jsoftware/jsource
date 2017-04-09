@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g131.ijs'
 NB. %. ------------------------------------------------------------------
 
 NB. mdiv failed on small ct

@@ -27,6 +27,8 @@ NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: (<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'
+blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip.ijs'
+blacklist=: blacklist, (IFRASPI)#(<testpath),each 'gsco1u.ijs';'gsco1w.ijs'
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays
@@ -176,6 +178,8 @@ RESUB2=: (13 : '-.0!:3 RESUB1 y')"0
 RECHO=: 13 : '+/ RESUB2 y'
 
 NB. bill extensions
+
+ECHOFILENAME=: 0   NB. echo file name
 
 RUNN=: 4 : 0
 x123=. x>.1

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gibs.ijs'
 NB. i.!.0 and associates ------------------------------------------------
 
 NB. i.!.0 using grading and binary search

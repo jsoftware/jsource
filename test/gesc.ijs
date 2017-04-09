@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gesc.ijs'
 NB. e. special code -----------------------------------------------------
 
 E=: 1 : 0

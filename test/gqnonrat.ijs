@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gqnonrat.ijs'
 NB. rational approximations of non-rational functions -------------------
 
 NB. e f  x -- compute f x within error e

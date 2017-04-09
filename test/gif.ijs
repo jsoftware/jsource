@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gif.ijs'
 NB. if/else -------------------------------------------------------------
 
 fa =. 3 : 'if. y do. 1 else. 0 end.'

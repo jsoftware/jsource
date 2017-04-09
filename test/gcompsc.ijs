@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gcompsc.ijs'
 NB. fork special code for the following cases: --------------------------
 NB.    comp i. 0:          i.&0@:comp
 NB.    comp i. 1:          i.&1@:comp

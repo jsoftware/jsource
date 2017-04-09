@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g421i.ijs'
 NB.  x f//. y special code for + +. *. >. <. = ~: -----------------------
 
 randuni''

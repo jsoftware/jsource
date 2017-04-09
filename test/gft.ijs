@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gft.ijs'
 NB. f. and performance --------------------------------------------------
 
 tally=: #

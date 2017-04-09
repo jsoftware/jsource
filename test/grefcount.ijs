@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './grefcount.ijs'
 NB. reference count ------------------------------------------------------
 
 x=: 89$<'x=: 11 22 33'

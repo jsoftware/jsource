@@ -1,16 +1,17 @@
+1:@:(echo^:ECHOFILENAME) './gipht.ijs'
 NB. prehashed i. family of functions ------------------------------------
 
 randuni''
 
 3 : 0 ''
-if. IFRASPI do.
- echo'gipht IFRASPI ignores timings, but runs all sentences (coarse timer??)'
+if. (IFRASPI+.UNAME-:'Android') do.
+ echo'gipht Android/IFRASPI ignores timings, but runs all sentences (coarse timer??)'
 end.
 )
 
 f0=: 4 : 0
  f=: x&i.
- assert. IFRASPI +. THRESHOLD +. </ (1,threshold) %~ t=: timer 'f y',:'x i. y'
+ assert. (IFRASPI+.UNAME-:'Android') +. THRESHOLD +. </ (1,threshold) %~ t=: timer 'f y',:'x i. y'
  1
 )
 

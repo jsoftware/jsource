@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
 0 0 $  0 : 0

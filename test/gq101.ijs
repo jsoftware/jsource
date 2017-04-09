@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gq101.ijs'
 NB. rational numbers +. -------------------------------------------------
 
 gcd=: 4 : 0 " 0

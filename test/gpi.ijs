@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gpi.ijs'
 NB. pi ------------------------------------------------------------------
 
 NB. pi and the common mean (AGM, arithmetic-geometric mean)

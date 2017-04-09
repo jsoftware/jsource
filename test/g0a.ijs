@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g0a.ijs'
 NB. handling empty arrays -----------------------------------------------
 
 (i.n) -: /: (n,0 5)$0    [ n=:0

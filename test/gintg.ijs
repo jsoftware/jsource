@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gintg.ijs'
 NB. scalar function integrals -------------------------------------------
 
 I      =: 1 : 'x d. _1'

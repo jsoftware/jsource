@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gscou.ijs'
 NB. s: unicode -----------------------------------------------------
 
 NB. literal2

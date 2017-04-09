@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gsco2.ijs'
 NB. s: ------------------------------------------------------------------
 
 NB. create test data set 

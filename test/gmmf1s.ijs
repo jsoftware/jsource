@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gmmf1s.ijs'
 NB. memory mapped files -------------------------------------------------
 
 1 [ 18!:4 <'base' [ load 'jmf'

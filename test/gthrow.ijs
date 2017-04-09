@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gthrow.ijs'
 NB. throw./catcht. ------------------------------------------------------
 
 f=: 3 : 0

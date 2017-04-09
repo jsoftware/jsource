@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gxinf.ijs'
 NB. x: and infinity -----------------------------------------------------
 
 match=: -:&(3!:1)

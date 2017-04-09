@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gchar.ijs'
 NB. char signed vs unsigned
 1[0 : 0
 signed char   - default char on windows/linux/darwin compilers

@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g420t.ijs'
 NB. f/ timing tests -----------------------------------------------------
 
 randuni''

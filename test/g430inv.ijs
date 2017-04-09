@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g430inv.ijs'
 NB. inverses of scans ---------------------------------------------------
 
 inv=: 1 : 'x^:_1'

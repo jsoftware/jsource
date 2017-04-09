@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gspi.ijs'
 NB. (dense vector) i. sparse , also i: ----------------------------------
 
 df=: $.^:_1

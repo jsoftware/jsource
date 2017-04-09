@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './gxco1.ijs'
 NB. extended precision integers -----------------------------------------
 
 NB. create test data

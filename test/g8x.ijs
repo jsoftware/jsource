@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g8x.ijs'
 NB. 8!:n ----------------------------------------------------------------
 
 NB. require 'numeric'           NB. for round

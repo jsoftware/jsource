@@ -1,3 +1,4 @@
+1:@:(echo^:ECHOFILENAME) './g331col.ijs'
 NB. x <;.n y for boxed x and matrix y -----------------------------------
 
 cutcol=: 2 : 0

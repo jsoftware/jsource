@@ -188,6 +188,8 @@ static void jtjtinit(J jt){
   jt->cpuarchavx = (xcrFeatureMask & 0x6) == 0x6;
  }
 #endif
+
+#if 0
 // cpuarch will be left 0 on other architectures
  if(hwcrc==-1){  // run once
  cpuInit();
@@ -205,6 +207,7 @@ static void jtjtinit(J jt){
  }
 #endif
  }
+#endif
 
 }
 

@@ -93,7 +93,6 @@ OBJS="\
  cl.o \
  cp.o \
  cpdtsp.o \
- cpuinfo.o \
  cr.o \
  crs.o \
  ct.o \

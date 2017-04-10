@@ -5,6 +5,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h> 
+#include <fcntl.h>
 #else
 #include <unistd.h>
 #define _isatty isatty
@@ -172,6 +173,9 @@ int main(int argc, char* argv[])
  else
 	 type=0;
  addargv(argc,argv,input+strlen(input));
+#if !defined(READLINE) && defined(__MINGW32__)
+  _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
+#endif
  jefirst(type,input);
  while(1){jedo(Jinput(jt,"   "));}
  jefree();

@@ -47,6 +47,9 @@ static void jtwrf(J jt,I n,C*v,F f){C*u,*x;I j=0,m;
 
 A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
  if(n&&(c=*(s+n-1),CLF==c||CCR==c))--n;
+#if _WIN32
+ if(n&&(c=*(s+n-1),CCR==c))--n;
+#endif
  ASSERT(!*jt->adbreak,EVINPRUPT);
  if(!b){ /* 1==b means literal input */
   if(n&&COFF==*(s+n-1))joff(zero);

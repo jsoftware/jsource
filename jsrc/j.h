@@ -59,7 +59,7 @@
 #define FMTI04          "%04lli"
 #define FMTI05          "%05lli"
 
-#if SY_WIN32
+#if defined(_MSC_VER)  // SY_WIN32
 #define strtoI         _strtoi64
 #else
 #define strtoI          strtoll
@@ -158,7 +158,7 @@
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
 // the result has been written.  On 32-bit machines, registers are so short that sometimes the compilers refetch an input
 // after writing to *z, so we don't turn RESTRICT on for 32-bit
-#if SY_WIN32 
+#if defined(_MSC_VER)  // SY_WIN32
 // RESTRICT is an attribute of a pointer, and indicates that no other pointer points to the same area
 #define RESTRICT __restrict
 // RESTRICTF is an attribute of a function, and indicates that the object returned by the function is not aliased with any other object
@@ -166,22 +166,40 @@
 #define PREFETCH(x) _mm_prefetch((x),_MM_HINT_T0)
 #define PREFETCH2(x) _mm_prefetch((x),_MM_HINT_T1)   // prefetch into L2 cache but not L1
 #endif
-#if SY_LINUX || SY_MAC
+#ifdef __GNUC__
 #define RESTRICT __restrict
 // No RESTRICTF on GCC
 #define PREFETCH(x) __builtin_prefetch(x)
 #define PREFETCH2(x) __builtin_prefetch((x),0,2)   // prefetch into L2 cache but not L1
 #endif
 
+#ifdef __MINGW32__
+#ifndef _SW_INVALID
+#define _SW_INVALID    0x00000010 /* invalid */
+#endif
+#ifndef _EM_ZERODIVIDE
+#define _EM_ZERODIVIDE  0x00000008
+#endif
+#define EM_INVALID    _SW_INVALID
+#define EM_ZERODIVIDE _EM_ZERODIVIDE
+#if defined(__STRICT_ANSI__)
+extern int __cdecl _isnan (double);
+extern unsigned int __cdecl _clearfp (void);
+#endif
+#ifndef _MAX_PATH
+#define _MAX_PATH  (260)
+#endif
+#endif
+
 #if SY_64
-#if SY_WIN32 
+#if defined(_MSC_VER)  // SY_WIN32
 // RESTRICTI (for in-place) is used for things like *z++=*x++ - *y++;  Normally you wouldn't store to a z unless you were done reading
 // the x and y, so it would be safe to get the faster loop that RESTRICT generates, even though strictly speaking if x or y is the
 // same address as z the terms of the RESTRICT are violated.  But on 32-bit machines, registers are so tight that sometimes *z is used
 // as a temp, which means we can't take the liberties there
 #define RESTRICTI __restrict
 #endif
-#if SY_LINUX || SY_MAC
+#ifdef __GNUC__
 #define RESTRICTI __restrict
 #endif
 #endif  // SY_64
@@ -539,7 +557,7 @@
 // If CTTZ is not defined, the default routine defined in u.c will be used.  You can look there
 // for the complete spec for CTTZ and CTTZZ.
 
-#if SY_WIN32
+#if defined(_MSC_VER)  // SY_WIN32
 #include <intrin.h>
 #define CTTZ(w) _tzcnt_u32((UINT)(w))
 #if SY_64
@@ -552,11 +570,21 @@
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
-#if SY_LINUX || SY_MAC
+#ifndef _MSC_VER
+#ifndef __forceinline
 #define __forceinline inline
 #endif
+#endif
+#ifdef __MINGW32__
+// original definition
+// #define __forceinline extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#ifdef __forceinline
+#undef __forceinline
+#endif
+#define __forceinline __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#endif
 
-#if SY_LINUX || SY_MAC
+#ifdef __GNUC__
 #define CTTZ(w) __builtin_ctzl((UINT)(w))
 #if SY_64
 #define CTTZI(w) __builtin_ctzll((UI)(w))
@@ -649,7 +677,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #if SY_64
 
 #if C_USEMULTINTRINSIC
-#if SY_WIN32 
+#if defined(_MSC_VER)  // SY_WIN32
 #define DPMULDECLS
 // DPMUL: *z=x*y, execute s if overflow
 #define DPMUL(x,y,z,s) {I _l,_h; *z=_l=_mul128(x,y,&_h); if(_h+((UI)_l>>(BW-1)))s}
@@ -671,7 +699,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #else  // 32-bit
 
 #if C_USEMULTINTRINSIC
-#if SY_WIN32 
+#if defined(_MSC_VER)  // SY_WIN32
 // optimizer can't handle this #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u32(0,addend,sumlo,&sumlo); _addcarry_u32(c,0,sumhi,&sumhi);}
 #define DPMULDECLS unsigned __int64 _p;
 #define DPMUL(x,y,z,s) _p = __emul(x,y); *z=(I)_p; if((_p+0x80000000U)>0xFFFFFFFFU)s
@@ -695,7 +723,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 // define single+double-recision integer add
 #if SY_64
-#if SY_WIN32 
+#if defined(_MSC_VER)  // SY_WIN32
 #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
 #endif
 #endif
@@ -706,7 +734,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 // end of addition builtins
 
 // Create (x&y) where x and y are signed, so we can test for overflow.
-#if SY_WIN32
+#if defined(_MSC_VER)  // SY_WIN32
 #define XANDY(x,y) ((x)&(y))
 #else
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
@@ -714,7 +742,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 
 // The following definitions are used only in builds for the AVX instruction set
 #if SY_64
-#if SY_WIN32
+#if defined(_MSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
 #define CRC32L(x,y) _mm_crc32_u64(x,y)  // takes UI, returns UI (top 32 bits 0)

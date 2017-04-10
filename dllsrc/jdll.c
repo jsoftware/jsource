@@ -21,8 +21,8 @@
 // 10. run jreg with new tlb files
 
 #include <windows.h>
-#include "..\jsrc\j.h"
-#include "..\jsrc\jlib.h"
+#include "../jsrc/j.h"
+#include "../jsrc/jlib.h"
 
 extern void wtom(US* src, I srcn, UC* snk);
 extern void utow(C4* src, I srcn, US* snk);
@@ -216,7 +216,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 		A* ap;
 		VARIANT *v;
 
-		for (ap=AAV(a), SafeArrayAccessData(psa, &v);
+		for (ap=AAV(a), SafeArrayAccessData(psa, (void **)&v);
 			 ap<AAV(a)+k;
 			 ++ap, ++v)
 		{
@@ -357,7 +357,7 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 			r = 0;
 		}
 		RE(a=ga(BOX, k, r, (I*)&shape));
-		ASSERT(S_OK==SafeArrayAccessData(psa, &pv),EVFACE);
+		ASSERT(S_OK==SafeArrayAccessData(psa, (void **)&pv),EVFACE);
 		boxes = AAV(a);
 		while(k--)
 		{
@@ -413,7 +413,7 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 	case VT_I4 | VT_ARRAY:
 		RE(a=ga(INT, k, r, (I*)&shape));
 #if SY_64
-		pint32src = (long*)psa->pvData;
+		pint32src = (int*)psa->pvData;
 		pintsnk = AV(a);
 		while(k--)
 			*pintsnk++ = *pint32src++;
@@ -503,7 +503,7 @@ static A v2a(J jt, VARIANT* v, int dobstrs)
 	}
 	return a;
 }
-#endif wince
+#endif // wince
 
 // copy non-nulls only
 static void touninx(C* src, WCHAR* sink, UI n)
@@ -576,7 +576,7 @@ void oleoutput(J jt, I n, char* s)
 	else
 	{
 		I len = SysStringLen(jt->opbstr);
-		SysReAllocStringLen(&(BSTR)jt->opbstr, 0, (UINT)(len+n+k));
+		SysReAllocStringLen((BSTR*)&jt->opbstr, 0, (UINT)(len+n+k));
 		fixoutput(s, (BSTR)jt->opbstr + len, n);
 	}
 }
@@ -668,7 +668,7 @@ int _stdcall JDoR(J jt, C* p, VARIANT* v)
 	v->bstrVal=jt->opbstr;
 	R e;
 }
-#endif wince
+#endif // wince
 
 // previously in separate file when jdll.c and jcom.c both exisited
 char modulepath[_MAX_PATH];

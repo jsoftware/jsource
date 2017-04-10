@@ -6,6 +6,11 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <winbase.h>
+#ifdef _MSC_VER
+#include <time.h>
+#else
+#include <sys/time.h>
+#endif
 #else
 #include <sys/time.h>
 #include <unistd.h>

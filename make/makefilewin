@@ -1,0 +1,15 @@
+vpath % $(jgit)/jsrc:$(jgit)/dllsrc
+
+%.o: %.cpp
+	$(CXX) -c $(CPPFLAGS) $^
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) $^
+
+CFLAGS=$(COMPILE)
+CPPFLAGS=$(COMPILE)
+$(TARGET) : $(OBJS) $(DLLOBJS) $(LIBJRES)
+	$(CXX) $(OBJS) $(DLLOBJS) $(LIBJDEF) $(LIBJRES) $(LINK)
+
+jdllres.o: jdll.rc
+	$(WINDRES) -D NDEBUG -o$@ $^

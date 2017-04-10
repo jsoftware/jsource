@@ -59,9 +59,10 @@ typedef struct JDLLServer JDLLServer;
 
 /* header files for imported files */
 #include "oaidl.h"
+#include "rpcndr.h"
 
-void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
-void __RPC_USER MIDL_user_free( void __RPC_FAR * ); 
+// void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
+// void __RPC_USER MIDL_user_free( void __RPC_FAR * ); 
 
 #ifndef __IJDLLServer_INTERFACE_DEFINED__
 #define __IJDLLServer_INTERFACE_DEFINED__

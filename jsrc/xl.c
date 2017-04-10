@@ -44,7 +44,11 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;long c;fpos_t v; fpos_t q;
 #endif
 #endif
  fsetpos(f,(fpos_t*)&q);
+#ifdef __MINGW32__
+ R !e?1:(errno==EEXIST||errno==ENOENT||errno==EACCES)?0:(B)(intptr_t)jerrno();
+#else
  R !e?1:errno==EACCES?0:(B)(intptr_t)jerrno();
+#endif
 }
 #endif
 

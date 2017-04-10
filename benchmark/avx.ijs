@@ -1,3 +1,5 @@
+NB. do not use - latest vertsion is in JHS misc folder
+
 NB. j64-805
 NB.  load avx.ijs
 NB.  run'' - save results in ~temp/avxrun.dat

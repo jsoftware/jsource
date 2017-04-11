@@ -145,7 +145,7 @@ void cpuInit(void)
       ((pfnGetEnabledXStateFeatures() & XSTATE_MASK_AVX) != 0))
     AVX=1;
   FreeLibrary(hm);
-  if (!check_xcr0_ymm()) AVX=0;
+  if (!(g_cpuFeatures & CPU_X86_FEATURE_AVX) || !check_xcr0_ymm()) AVX=0;
 #elif defined(__MACH__)
 // TODO
   AVX=1;
@@ -156,7 +156,7 @@ void cpuInit(void)
        (strlen(unm.release)>5&&unm.release[0]=='2'&&unm.release[2]=='6'&&unm.release[4]=='3'&&
         (unm.release[5]>='0'&&unm.release[5]<='9'))))
     AVX=1;
-  if (!check_xcr0_ymm()) AVX=0;
+  if (!(g_cpuFeatures & CPU_X86_FEATURE_AVX) || !check_xcr0_ymm()) AVX=0;
 #endif
   if (!(AVX&&OSXSAVE)) {
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;

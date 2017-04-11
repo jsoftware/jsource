@@ -32,7 +32,6 @@ OBJS=  \
  ../../jsrc/cl.o \
  ../../jsrc/cp.o \
  ../../jsrc/cpdtsp.o \
- ../../jsrc/cpuinfo.o \
  ../../jsrc/cr.o \
  ../../jsrc/crs.o \
  ../../jsrc/ct.o \

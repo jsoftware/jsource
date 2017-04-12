@@ -33,10 +33,6 @@
 #undef C_NA
 #define C_NA 1   // scaf force noasm
 
-#ifndef C_HASH // alternate hash function
-#define C_HASH 0
-#endif
-
 /*
 C_CD_?
 cd ABI config for traditional J platorms done with SYS_? and SY_?

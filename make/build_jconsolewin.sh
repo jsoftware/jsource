@@ -10,7 +10,7 @@ case $jplatform\_$1 in
 linux_j32)
 TARGET=jconsole
 COMPILE="$common -m32 -DREADLINE"
-LINK=" -l:libedit.so.2 -m32 -ldl -l:libncursesw.so.5.9 -l:libtinfo.so.5.9 -o jconsole "
+LINK=" -l:libedit.so.2 -m32 -ldl -o jconsole "
 ;;
 linux_j64)
 TARGET=jconsole

@@ -9,15 +9,15 @@
 
 #if TEMPLATE==0
 #if VALENCE==1
-#define RDECLS  A prevyw
-#define RCALL   CALL1(f1,prevyw=yw,fs)
+#define RDECLS
+#define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-#define RARG    {if(yw==prevyw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
-#define RARG1   {if(yw==prevyw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
+#define RARG1   {if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #else
-#define RDECLS  A prevya,prevyw
-#define RCALL   CALL2(f2,prevya=ya,prevyw=yw,fs)
+#define RDECLS
+#define RCALL   CALL2(f2,ya,yw,fs)
 #define RDIRECT (at&DIRECT&&wt&DIRECT)
 #define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
@@ -26,13 +26,13 @@
 // reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
 // when a cell is to be repeated.  NEWY? allocates a new argument cell, and MOVEY? copies to it.
 #define RARG    {if(++jj==n)jj=0; \
-                 if(!b||jj==0){if(ya==prevya||ACUC1<AC(ya)){cc = 0;NEWYA;} MOVEYA;}  \
-                 if( b||jj==0){if(yw==prevyw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;} }
+                 if(!b||jj==0){if(y==ya||ACUC1<AC(ya)){cc = 0;NEWYA;} MOVEYA;}  \
+                 if( b||jj==0){if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;} }
 // If the use-count in y? has been incremented, it means that y? was incorporated into an indirect
 // noun and must not be modified.  In that case, we reallocate it.  This is used to reallocate the
 // first cell only.
-#define RARG1   {if(ya==prevya||ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
-                 if(yw==prevyw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG1   {if(y==ya||ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
+                 if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #endif
 
 #define EMSK(x) (1<<((x)-1))

@@ -4,9 +4,9 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Thu Jan 12 17:46:21 2017
+/* at Wed Apr 19 22:40:31 2017
  */
-/* Compiler settings for jdll.odl:
+/* Compiler settings for jdll.idl:
     Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
     protocol : dce , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
@@ -32,8 +32,8 @@
 #endif // __RPCNDR_H_VERSION__
 
 
-#ifndef __jdllodl_h__
-#define __jdllodl_h__
+#ifndef __jdllidl_h__
+#define __jdllidl_h__
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -66,62 +66,63 @@ extern "C"{
 
 
 
-#ifndef __JDLL_LIBRARY_DEFINED__
-#define __JDLL_LIBRARY_DEFINED__
+#ifndef __JDLLServerLib_LIBRARY_DEFINED__
+#define __JDLLServerLib_LIBRARY_DEFINED__
 
-/* library JDLL */
-/* [version][lcid][helpstring][uuid] */ 
+/* library JDLLServerLib */
+/* [custom][custom][helpstring][version][uuid] */ 
 
 
-EXTERN_C const IID LIBID_JDLL;
+
+EXTERN_C const IID LIBID_JDLLServerLib;
 
 #ifndef __IJDLLServer_INTERFACE_DEFINED__
 #define __IJDLLServer_INTERFACE_DEFINED__
 
 /* interface IJDLLServer */
-/* [object][dual][helpstring][uuid] */ 
+/* [object][oleautomation][dual][helpstring][uuid] */ 
 
 
 EXTERN_C const IID IID_IJDLLServer;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("21EB05EC-1AB3-11cf-A2AC-8FF70874C460")
+    MIDL_INTERFACE("21EB05EC-1AB3-11CF-A2AC-8FF70874C460")
     IJDLLServer : public IDispatch
     {
     public:
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Do( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Do( 
             /* [in] */ BSTR input,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Show( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Show( 
             /* [in] */ long b,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Log( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Log( 
             /* [in] */ long b,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE IsBusy( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE IsBusy( 
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Break( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Break( 
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Quit( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Quit( 
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Get( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Get( 
             /* [in] */ BSTR jname,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Set( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Set( 
             /* [in] */ BSTR jname,
             /* [in] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE GetM( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE GetM( 
             /* [in] */ BSTR jname,
             /* [out] */ long *jtype,
             /* [out] */ long *jrank,
@@ -129,7 +130,7 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ long *jdata,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE SetM( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE SetM( 
             /* [in] */ BSTR jname,
             /* [in] */ long *jtype,
             /* [in] */ long *jrank,
@@ -137,44 +138,44 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [in] */ long *jdata,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ErrorText( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE ErrorText( 
             /* [in] */ long error,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ErrorTextM( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE ErrorTextM( 
             /* [in] */ long error,
             /* [out] */ long *text,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Clear( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Clear( 
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Transpose( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Transpose( 
             /* [in] */ long b,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE ErrorTextB( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE ErrorTextB( 
             /* [in] */ long error,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE GetB( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE GetB( 
             /* [in] */ BSTR jname,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE SetB( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE SetB( 
             /* [in] */ BSTR jname,
             /* [in] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE DoR( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE DoR( 
             /* [in] */ BSTR input,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Int64( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Int64( 
             /* [in] */ long b,
             /* [retval][out] */ long *r) = 0;
         
@@ -236,46 +237,46 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [annotation][out] */ 
             _Out_opt_  UINT *puArgErr);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Do )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Do )( 
             IJDLLServer * This,
             /* [in] */ BSTR input,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Show )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Show )( 
             IJDLLServer * This,
             /* [in] */ long b,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Log )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Log )( 
             IJDLLServer * This,
             /* [in] */ long b,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *IsBusy )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *IsBusy )( 
             IJDLLServer * This,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Break )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Break )( 
             IJDLLServer * This,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Quit )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Quit )( 
             IJDLLServer * This,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Get )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Get )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Set )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Set )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [in] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *GetM )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *GetM )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [out] */ long *jtype,
@@ -284,7 +285,7 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ long *jdata,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *SetM )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *SetM )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [in] */ long *jtype,
@@ -293,52 +294,52 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [in] */ long *jdata,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ErrorText )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *ErrorText )( 
             IJDLLServer * This,
             /* [in] */ long error,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ErrorTextM )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *ErrorTextM )( 
             IJDLLServer * This,
             /* [in] */ long error,
             /* [out] */ long *text,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Clear )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Clear )( 
             IJDLLServer * This,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Transpose )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Transpose )( 
             IJDLLServer * This,
             /* [in] */ long b,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *ErrorTextB )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *ErrorTextB )( 
             IJDLLServer * This,
             /* [in] */ long error,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *GetB )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *GetB )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *SetB )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *SetB )( 
             IJDLLServer * This,
             /* [in] */ BSTR jname,
             /* [in] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *DoR )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *DoR )( 
             IJDLLServer * This,
             /* [in] */ BSTR input,
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Int64 )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Int64 )( 
             IJDLLServer * This,
             /* [in] */ long b,
             /* [retval][out] */ long *r);
@@ -451,10 +452,10 @@ EXTERN_C const CLSID CLSID_JDLLServer;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("21EB05EA-1AB3-11cf-A2AC-8FF70874C460")
+class DECLSPEC_UUID("21EB05EA-1AB3-11CF-A2AC-8FF70874C460")
 JDLLServer;
 #endif
-#endif /* __JDLL_LIBRARY_DEFINED__ */
+#endif /* __JDLLServerLib_LIBRARY_DEFINED__ */
 
 /* Additional Prototypes for ALL interfaces */
 

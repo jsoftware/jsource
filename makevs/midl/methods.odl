@@ -54,6 +54,6 @@
 	[helpstring("Execute string and return formatted output in variant BSTR.).")]
 	HRESULT DoR([in] BSTR input, [out] VARIANT* v, [out, retval] long* r);
 
-	[helpstring("Enable/disable (1/0) return Int64 integer.")]
-	HRESULT Int64([in] long b, [out, retval] long* r);
+	[helpstring("Enable/disable (1/0) return 64-bit integer.")]
+	HRESULT Int64R([in] long b, [out, retval] long* r);
 

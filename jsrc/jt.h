@@ -261,7 +261,7 @@ typedef struct {
  B    tostdout;         /* 1 if output to stdout                           */
  B    tsubst;           /* tacit translator                                */
  B    xco;              /* 1 iff doing x: conversion                       */
- I    int64flag;        /* com flag for returning 64-bit integers          */
+ I    int64rflag;       /* com flag for returning 64-bit integers          */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
  TA*  ttab;             /* tacit translator                                */

@@ -1332,7 +1332,7 @@ int _stdcall JClear(J jt);
 int _stdcall JTranspose(J jt, long b);
 int _stdcall JErrorTextB(J jt, long ec, VARIANT* v);
 int _stdcall JDoR(J jt, C* p, VARIANT* v);
-int _stdcall JInt64(J jt, long b);
+int _stdcall JInt64R(J jt, long b);
 #endif
 
 // procedures in jlib.h
@@ -1360,7 +1360,7 @@ JIsBusy,
 JSet,
 JSetB,
 JTranspose,
-JInt64,
+JInt64R,
 #endif
 };
 
@@ -1388,7 +1388,7 @@ static C* jfntnm[]={
 "JSet",
 "JSetB",
 "JTranspose",
-"JInt64",
+"JInt64R",
 #endif
 };
 

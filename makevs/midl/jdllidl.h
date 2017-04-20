@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 8.00.0603 */
-/* at Wed Apr 19 22:40:31 2017
+/* at Thu Apr 20 10:46:59 2017
  */
 /* Compiler settings for jdll.idl:
     Oicf, W1, Zp8, env=Win32 (32b run), target_arch=X86 8.00.0603 
@@ -175,7 +175,7 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r) = 0;
         
-        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Int64( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Int64R( 
             /* [in] */ long b,
             /* [retval][out] */ long *r) = 0;
         
@@ -339,7 +339,7 @@ EXTERN_C const IID IID_IJDLLServer;
             /* [out] */ VARIANT *v,
             /* [retval][out] */ long *r);
         
-        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Int64 )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Int64R )( 
             IJDLLServer * This,
             /* [in] */ long b,
             /* [retval][out] */ long *r);
@@ -434,8 +434,8 @@ EXTERN_C const IID IID_IJDLLServer;
 #define IJDLLServer_DoR(This,input,v,r)	\
     ( (This)->lpVtbl -> DoR(This,input,v,r) ) 
 
-#define IJDLLServer_Int64(This,b,r)	\
-    ( (This)->lpVtbl -> Int64(This,b,r) ) 
+#define IJDLLServer_Int64R(This,b,r)	\
+    ( (This)->lpVtbl -> Int64R(This,b,r) ) 
 
 #endif /* COBJMACROS */
 

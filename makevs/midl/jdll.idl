@@ -114,8 +114,8 @@ library JDLLServerLib
                         [in] BSTR input,
                         [out] VARIANT* v,
                         [out, retval] long* r);
-        [id(0x60020012), helpstring("Enable/disable (1/0) return Int64 integer.")]
-        HRESULT Int64(
+        [id(0x60020012), helpstring("Enable/disable (1/0) return 64-bit integer.")]
+        HRESULT Int64R(
                         [in] long b,
                         [out, retval] long* r);
     };

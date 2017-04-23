@@ -121,6 +121,25 @@ void jepath(char* arg,char* lib,int forceavx)
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
  strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
+ if(stat(pathdll,&st)){ /* android 5 or newer */
+#if defined(__aarch64__)
+#define arch "arm64"
+#elif defined(__x86_64__)
+#define arch "x86_64"
+#elif defined(__i386__)
+#define arch "x86"
+#else
+#define arch "arm"
+#endif
+ int i;
+ for(i=0;i<10;i++){
+  if(i)
+   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s",AndroidPackage,i,arch,(AVX)?JAVXDLLNAME:JDLLNAME);
+  else
+   sprintf(pathdll,"/data/app/%s/lib/%s/%s",AndroidPackage,arch,(AVX)?JAVXDLLNAME:JDLLNAME);
+  if(!stat(pathdll,&st))break;
+ }
+ }
  strcpy(tmp, "/sdcard/Android/data");
  qsdcard=stat(tmp,&st);
  strcpy(install,(qsdcard)?"/storage/emulated/0/Android/data/":"/sdcard/Android/data/");

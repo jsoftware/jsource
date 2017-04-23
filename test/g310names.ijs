@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g310names.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g310names.ijs'
 NB. names ----------------------------------------------------------------
 
 abc_xyz_ -: p: i._5 [ 3 : '    abc_xyz_  =. p: i._5  ' 0

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gs.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gs.ijs'
 NB. S: ------------------------------------------------------------------
 
 phi=. * -.@%@~.&.q:      NB. Euler's totient function

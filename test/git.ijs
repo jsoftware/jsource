@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './git.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './git.ijs'
 NB. x i. y timing tests -------------------------------------------------
 
 ss =: +/ @: *:

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g630.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g630.ijs'
 NB. & -------------------------------------------------------------------
 
 ((|.x),|.y) -: (x=:'Cogito, ergo sum.') ,&|. y=:'I think not'

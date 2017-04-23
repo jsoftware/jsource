@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsco1u.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco1u.ijs'
 NB. s: unicode ------------------------------------------------------------------
 
 0 s: 11

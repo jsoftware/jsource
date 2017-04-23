@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './giph.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './giph.ijs'
 NB. prehashed i. family of functions ------------------------------------
 
 randuni''

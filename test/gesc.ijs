@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gesc.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gesc.ijs'
 NB. e. special code -----------------------------------------------------
 
 E=: 1 : 0

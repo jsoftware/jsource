@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gfft.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gfft.ijs'
 NB. FFT addon -----------------------------------------------------------
 
 s48=: 9!:48 ''

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g400e.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g400e.ijs'
 NB. x #^:_1 y (expand) --------------------------------------------------
 
 randuni''

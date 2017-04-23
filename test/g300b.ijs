@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g300b.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g300b.ijs'
 NB. boolean inner products, +./ .*. and ~:/ .*. , etc. ------------------
 
 ip=: 4 : 0

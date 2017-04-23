@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gimaxmin.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gimaxmin.ijs'
 NB. i.<./ ---------------------------------------------------------------
 
 test=: 3 : 0

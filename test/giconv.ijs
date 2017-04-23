@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './giconv.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './giconv.ijs'
 NB. almost integers as integer arguments --------------------------------
 
 f=: 3 : 0 " 0

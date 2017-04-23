@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gipht.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gipht.ijs'
 NB. prehashed i. family of functions ------------------------------------
 
 randuni''

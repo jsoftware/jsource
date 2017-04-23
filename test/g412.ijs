@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g412.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g412.ijs'
 NB. !: treatement of placeholder argument -------------------------------
 
 F=: 2 : 0

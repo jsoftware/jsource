@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gibst.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gibst.ijs'
 NB. i.!.0 and associates timing tests -----------------------------------
 
 randuni''

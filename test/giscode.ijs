@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './giscode.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './giscode.ijs'
 NB. i. special code -----------------------------------------------------
 
 test=: 2 : 0

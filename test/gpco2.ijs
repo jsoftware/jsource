@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gpco2.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gpco2.ijs'
 NB. p: dyad -------------------------------------------------------------
 
 isprime=: (1 = #@q:) :: 0: "0

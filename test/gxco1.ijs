@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gxco1.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gxco1.ijs'
 NB. extended precision integers -----------------------------------------
 
 NB. create test data

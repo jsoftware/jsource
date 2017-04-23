@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g300.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g300.ijs'
 NB. +/ .* ---------------------------------------------------------------
 
 NB. test failed on small ct

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g330t.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g330t.ijs'
 NB. ;y timing tests -----------------------------------------------------
 
 ss   =: +/ @: *:

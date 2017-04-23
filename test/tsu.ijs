@@ -12,7 +12,7 @@ else.
 end. 
 if. UNAME-:'Android' do.
  arch=. LF-.~ 2!:0'getprop ro.product.cpu.abi'
- LIBTSDLL=: jpath'~bin/../libexec/',arch,'/',n,' '
+ LIBTSDLL=: jpath'~bin/../libexec/android-libs/',arch,'/',n,' '
 else.
  LIBTSDLL=: jpath'~bin/',n,' '
 end.
@@ -27,7 +27,8 @@ NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: (<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'
-blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip.ijs'
+NB. blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip.ijs'
+blacklist=: blacklist, (IFRASPI)#(<testpath),each <'g600ip.ijs'
 blacklist=: blacklist, (IFRASPI)#(<testpath),each 'gsco1u.ijs';'gsco1w.ijs'
 
 ddall    =: blacklist -.~ testfiles 'g'

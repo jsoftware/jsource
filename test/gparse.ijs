@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gparse.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gparse.ijs'
 NB. parsing edge cases ----------------------------------
 
 'syntax error' -: ex 'a =: 5 b =: )' [  a =: 0

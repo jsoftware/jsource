@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g640k.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g640k.ijs'
 NB. x ?@$ y -------------------------------------------------------------
 
 NRNG=: 5  NB. number of RNGs

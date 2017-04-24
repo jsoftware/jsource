@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './goox.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './goox.ijs'
 NB. order of execution --------------------------------------------------
 
 g=: 3 : 0

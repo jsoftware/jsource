@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g422sort.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g422sort.ijs'
 NB. y/:y and y\:y -------------------------------------------------------
 
 randuni''

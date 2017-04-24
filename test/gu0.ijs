@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gu0.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gu0.ijs'
 NB. Unicode 4-byte characters -------------------------------------------
 
 UTYPE=: 262144      NB. type code for Unicode

@@ -132,7 +132,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 
 	case INT:
 #if SY_64
-		if(jt->int64flag) {
+		if(jt->int64rflag) {
 		  if(!r) {v->vt=VT_I8; v->llVal = (I)(*pi); return 0;}
 		  vt=VT_I8;
 		  cb=k*sizeof(long long);
@@ -236,7 +236,7 @@ static int a2v (J jt, A a, VARIANT *v, int dobstrs)
 #if SY_64
   case INT:
   {
-    if (!jt->int64flag) {
+    if (!jt->int64rflag) {
       long *p1=psa->pvData;
       I *p2=AV(a);
       while (k--)
@@ -629,10 +629,10 @@ int _stdcall JErrorText(J jt, long ec, VARIANT* v)
 
 int _stdcall JClear(J jt){ return 0;};
 
-int _stdcall JInt64(J jt, long b)
+int _stdcall JInt64R(J jt, long b)
 {
 #if SY_64
-	jt->int64flag = b;
+	jt->int64rflag = b;
 #endif
 	return 0;
 }

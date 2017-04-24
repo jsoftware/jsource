@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsp530n.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp530n.ijs'
 NB. } scattered amendment ------------------------------------------------
 
 d=: (?23 5$2)*?23 5 7 3 2$4

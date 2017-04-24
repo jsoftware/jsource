@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './glapack.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glapack.ijs'
 NB. LAPACK --------------------------------------------------------------
 
 s48=: 9!:48 ''

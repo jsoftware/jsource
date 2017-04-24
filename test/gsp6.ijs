@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsp6.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp6.ijs'
 NB. ": ------------------------------------------------------------------
 
 (<;._1 '/domain error/nonce error') e.~< ($.4$0j4) ": etx   i.3 4

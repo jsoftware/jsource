@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsco.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco.ijs'
 NB. s: ------------------------------------------------------------------
 
 x0=: ' Cogito , ergo sum.'

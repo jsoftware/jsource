@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gq.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gq.ijs'
 NB. rational numbers ----------------------------------------------------
 
 NB. test failed on small ct

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g9x.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g9x.ijs'
 NB. 9!:0 and 9!:1 -------------------------------------------------------
 
 rlq =: 9!:0
@@ -318,7 +318,7 @@ end.
 ) 
 
 (7!:0'') < initspace+20000
-1:^:(IFRASPI) 'break' -: 3 : 0 etx ''
+1:^:(0=#(9!:46)'') 'break' -: 3 : 0 etx ''
 if. 0 = #f =. 9!:46'' do. 1 return. end.  NB. Can''t test if no file
 try.
  for_n. i. 1e8 do.
@@ -335,12 +335,12 @@ end.
 
 NB. Repeat for tacit - attention interrupt
 namedvb =: {.
-'attention interrupt' -: (namedvb^:100000 [ ((1{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
+1:^:(0=#(9!:46)'') 'attention interrupt' -: (namedvb^:100000 [ ((1{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
 
 (7!:0'') < initspace+40000
 
 NB. Repeat for tacit - exigent interrupt
-'break' -: ({.^:100000 [ ((2{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
+1:^:(0=#(9!:46)'') 'break' -: ({.^:100000 [ ((2{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
 
 (7!:0'') < initspace+40000
 

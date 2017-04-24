@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsp5x5.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp5x5.ijs'
 NB. 5!:5 sparse arrays --------------------------------------------------
 
 test=: 3 : 0

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './glocale.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glocale.ijs'
 NB. locatives -----------------------------------------------------------
 
 ab__=: x=: ?20$1e9

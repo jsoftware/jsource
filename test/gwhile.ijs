@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gwhile.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gwhile.ijs'
 NB. while ---------------------------------------------------------------
 
 fa =: 3 : 0

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gft.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gft.ijs'
 NB. f. and performance --------------------------------------------------
 
 tally=: #

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g421i.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g421i.ijs'
 NB.  x f//. y special code for + +. *. >. <. = ~: -----------------------
 
 randuni''

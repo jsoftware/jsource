@@ -68,16 +68,16 @@ class CJServer : public SERVERCLASS
         STDMETHODIMP SetM(BSTR, long*, long*, long*, long*, long*);
         STDMETHODIMP ErrorText(long, VARIANT*, long*);
         STDMETHODIMP ErrorTextM(long, long*, long*);
-		STDMETHODIMP Clear(long*);
-		STDMETHODIMP Show(long, long*);
-		STDMETHODIMP Log(long, long*);
-		STDMETHODIMP Transpose(long, long*);
-		STDMETHODIMP Quit(long*);
+        STDMETHODIMP Clear(long*);
+        STDMETHODIMP Show(long, long*);
+        STDMETHODIMP Log(long, long*);
+        STDMETHODIMP Transpose(long, long*);
+        STDMETHODIMP Quit(long*);
         STDMETHODIMP ErrorTextB(long, VARIANT*, long*);
         STDMETHODIMP GetB(BSTR, VARIANT*, long*);
         STDMETHODIMP SetB(BSTR, VARIANT*, long*);
         STDMETHODIMP DoR(BSTR, VARIANT*, long*);
-		STDMETHODIMP Int64(long, long*);
+        STDMETHODIMP Int64R(long, long*);
     };
 
 void ObjectDestroyed(void);

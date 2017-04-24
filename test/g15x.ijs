@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g15x.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g15x.ijs'
 NB. 15!: ----------------------------------------------------------------
 
 NB. runs as noop as winapi.ijs is no longer supported - might be resurrected some day

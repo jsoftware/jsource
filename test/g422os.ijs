@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g422os.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g422os.ijs'
 NB. x{/:~y (order statistics) -------------------------------------------
 
 (/:~y) -: (i.#y) ({/:~)"0 1 y=:       100 ?@$ 60

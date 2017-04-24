@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gct.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gct.ijs'
 NB. comparison tolerance ------------------------------------------------
 
 e=: 0, 2 ^ - 42 43  45 46  52 53

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g128x3.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g128x3.ijs'
 NB. 128!:3 crc-32 -------------------------------------------------------
 
 NB. modified from Henry Rich msg to J forum 2005-01-10

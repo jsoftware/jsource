@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gsco2.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco2.ijs'
 NB. s: ------------------------------------------------------------------
 
 NB. create test data set 

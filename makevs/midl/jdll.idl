@@ -1,0 +1,122 @@
+// Generated .IDL file (by the OLE/COM Object Viewer)
+//
+// typelib filename: j.dll
+
+[
+  uuid(21EB05EB-1AB3-11CF-A2AC-8FF70874C460),
+  version(3.0),
+  helpstring("Jsoftware : JDLLServer Type Library"),
+  custom(DE77BA64-517C-11D1-A2DA-0000F8773CE9, 83951780),
+  custom(DE77BA63-517C-11D1-A2DA-0000F8773CE9, 961689316)
+
+]
+library JDLLServerLib
+{
+    // TLib :     // TLib : OLE Automation : {00020430-0000-0000-C000-000000000046}
+    importlib("stdole2.tlb");
+
+    // Forward declare all types defined in this typelib
+    interface IJDLLServer;
+
+    [
+      uuid(21EB05EA-1AB3-11CF-A2AC-8FF70874C460),
+      helpstring("Jsoftware : JDLLServer Class={}{3}{21EB05EA-1AB3-11cf-A2AC-8FF70874C460 }")
+    ]
+    coclass JDLLServer {
+        [default] interface IJDLLServer;
+    };
+
+    [
+      odl,
+      uuid(21EB05EC-1AB3-11CF-A2AC-8FF70874C460),
+      helpstring("Jsoftware : JDLLServer Interface"),
+      dual,
+      oleautomation
+    ]
+    interface IJDLLServer : IDispatch {
+        [id(0x60020000), helpstring("Execute string.")]
+        HRESULT Do(
+                        [in] BSTR input,
+                        [out, retval] long* r);
+        [id(0x60020001), helpstring("Show (1) or hide (0) J EXE Server.")]
+        HRESULT Show(
+                        [in] long b,
+                        [out, retval] long* r);
+        [id(0x60020002), helpstring("Display (1) or discard (0) J EXE Server session manager input and output.")]
+        HRESULT Log(
+                        [in] long b,
+                        [out, retval] long* r);
+        [id(0x60020003), helpstring("Returns 0 if ready to execute a line, or an error code if not ready.")]
+        HRESULT IsBusy([out, retval] long* r);
+        [id(0x60020004), helpstring("Break (interrupt) J execution.")]
+        HRESULT Break([out, retval] long* r);
+        [id(0x60020005), helpstring("Quit causes J EXE Server to close when last object is released.")]
+        HRESULT Quit([out, retval] long* r);
+        [id(0x60020006), helpstring("Get variant value from J variable.")]
+        HRESULT Get(
+                        [in] BSTR jname,
+                        [out] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x60020007), helpstring("Set variant value in J variable.")]
+        HRESULT Set(
+                        [in] BSTR jname,
+                        [in] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x60020008), helpstring("Get J variable description and memory addresses of shape and data.")]
+        HRESULT GetM(
+                        [in] BSTR jname,
+                        [out] long* jtype,
+                        [out] long* jrank,
+                        [out] long* jshape,
+                        [out] long* jdata,
+                        [out, retval] long* r);
+        [id(0x60020009), helpstring("Set J variable from description and memory addresses of shape and data.")]
+        HRESULT SetM(
+                        [in] BSTR jname,
+                        [in] long* jtype,
+                        [in] long* jrank,
+                        [in] long* jshape,
+                        [in] long* jdata,
+                        [out, retval] long* r);
+        [id(0x6002000a), helpstring("Get variant with error code text.")]
+        HRESULT ErrorText(
+                        [in] long error,
+                        [out] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x6002000b), helpstring("Get memory address of error code text.")]
+        HRESULT ErrorTextM(
+                        [in] long error,
+                        [out] long* text,
+                        [out, retval] long* r);
+        [id(0x6002000c), helpstring("Clear all J memory allocations. Erases all J variables and definitions.")]
+        HRESULT Clear([out, retval] long* r);
+        [id(0x6002000d), helpstring("Enable/disable (1/0) row-major(variant)/row-minor(J) conversions.")]
+        HRESULT Transpose(
+                        [in] long b,
+                        [out, retval] long* r);
+        [id(0x6002000e), helpstring("Get variant BSTR with error code text.")]
+        HRESULT ErrorTextB(
+                        [in] long error,
+                        [out] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x6002000f), helpstring("Get variant value from J variable (BSTR).")]
+        HRESULT GetB(
+                        [in] BSTR jname,
+                        [out] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x60020010), helpstring("Set variant value in J variable (BSTR).")]
+        HRESULT SetB(
+                        [in] BSTR jname,
+                        [in] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x60020011), helpstring("Execute string and return formatted output in BSTR.")]
+        HRESULT DoR(
+                        [in] BSTR input,
+                        [out] VARIANT* v,
+                        [out, retval] long* r);
+        [id(0x60020012), helpstring("Enable/disable (1/0) return 64-bit integer.")]
+        HRESULT Int64R(
+                        [in] long b,
+                        [out, retval] long* r);
+    };
+};

@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gmnom.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gmnom.ijs'
 NB. x p. y multinomials -------------------------------------------------
 
 p1=: 4 : 0 " 1 0

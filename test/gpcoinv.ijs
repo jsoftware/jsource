@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gpcoinv.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gpcoinv.ijs'
 NB. p:^:_1 --------------------------------------------------------------
 
 f =: p:^:_1

@@ -151,7 +151,7 @@ jt->assert = 1;
  jt->retcomm=1;
  jt->tostdout=1;
  jt->transposeflag=1;
- jt->int64flag=0;
+// jt->int64rflag=0;
  jt->xmode=XMEXACT;
  R 1;
 }

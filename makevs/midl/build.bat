@@ -1,1 +1,1 @@
-midl /h jdllodl.h jdll.odl
+midl /h jdllidl.h jdll.idl

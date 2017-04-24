@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gmemo.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gmemo.ijs'
 NB. M. ------------------------------------------------------------------
 
 fib=: 3 : 0 M.

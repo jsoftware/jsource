@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gselect.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gselect.ijs'
 NB. select. -------------------------------------------------------------
 
 f0=: 3 : 0

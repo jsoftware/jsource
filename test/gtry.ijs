@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gtry.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gtry.ijs'
 NB. try/catch -----------------------------------------------------------
 
 fa =: 3 : 'try. 3+y catch. ''bad'' end.'

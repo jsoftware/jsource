@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g431.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g431.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
 en     =: #@]
 

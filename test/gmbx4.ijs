@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gmbx4.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gmbx4.ijs'
 NB. mapped boxed arrays -------------------------------------------------
 
 0!:0 <testpath,'gmbx.ijs'

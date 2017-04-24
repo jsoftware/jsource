@@ -27,4 +27,4 @@ EXPORTS
                 JDoR                @25
                 JGetA               @26
                 JSetA               @27
-                JInt64              @28
+                JInt64R             @28

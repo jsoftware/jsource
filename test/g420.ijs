@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g420.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g420.ijs'
 NB. f/y for atomic verbs ------------------------------------------------
 
 randuni''

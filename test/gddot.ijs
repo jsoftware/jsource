@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './gddot.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gddot.ijs'
 NB. d. scalar functions -------------------------------------------------
 
 equ=: 2 : '''x'' -:&(5!:5)&< ''y'''

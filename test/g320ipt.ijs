@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g320ipt.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g320ipt.ijs'
 NB. x,y Append in place timing tests ------------------------------------
 
 ss   =: +/ @: *:

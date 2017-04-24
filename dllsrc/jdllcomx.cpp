@@ -54,7 +54,7 @@ extern "C"
 	JGetBType		JGetB;
 	JSetBType		JSetB;
 	JDoRType		JDoR;
-	JInt64Type	JInt64;
+	JInt64RType	JInt64R;
 }
 #else
 	JDoType			*JDo;
@@ -75,7 +75,7 @@ extern "C"
 	JGetBType		*JGetB;
 	JSetBType		*JSetB;
 	JDoRType		*JDoR;
-	JInt64Type	*JInt64;
+	JInt64RType	*JInt64R;
 #endif
 
 char jclass[100] = "";
@@ -504,9 +504,9 @@ STDMETHODIMP CJServer::Quit(long* pr)
     return NOERROR;
 }
 
-STDMETHODIMP CJServer::Int64(long b, long* pr)
+STDMETHODIMP CJServer::Int64R(long b, long* pr)
 {
-	*pr = JInt64(m_pjst, b);
+	*pr = JInt64R(m_pjst, b);
     return NOERROR;
 }
 

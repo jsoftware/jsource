@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g131.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g131.ijs'
 NB. %. ------------------------------------------------------------------
 
 NB. mdiv failed on small ct

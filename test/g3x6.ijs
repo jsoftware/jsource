@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g3x6.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g3x6.ijs'
 NB. 3!:6 ----------------------------------------------------------------
 
 f=. <jpath'~temp/test.ijl'

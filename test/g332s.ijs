@@ -1,4 +1,4 @@
-1:@:(echo^:ECHOFILENAME) './g332s.ijs'
+1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g332s.ijs'
 NB. x;:y ----------------------------------------------------------------
 
 NB. example 0: English words

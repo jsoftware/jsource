@@ -13,7 +13,7 @@
 #define TYMESXB(u,v)  (v?u:0)
 #define TYMESID(u,v)  (u   ?u*v:0)
 #define TYMESDI(u,v)  (   v?u*v:0)
-#define TYMESDD(u,v)  (u&&v?u*v:0)
+#define TYMESDD(u,v)  TYMES(u,v)
 
 // II add, noting overflow and leaving it, possibly in place
 AHDR2(plusII,I,I,I){I u;I v;I w;I oflo=0;

@@ -53,7 +53,8 @@
 
 
 #if SY_64
-#define IMAX            9223372036854775807L
+#define IMAX            9223372036854775807LL
+#define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FMTI            "%lli"
 #define FMTI02          "%02lli"
 #define FMTI04          "%04lli"
@@ -67,6 +68,7 @@
 
 #else
 #define IMAX            2147483647L
+#define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FMTI            "%li"
 #define FMTI02          "%02li"
 #define FMTI04          "%04li"
@@ -74,7 +76,6 @@
 #define strtoI          strtol
 #endif
 
-#define IMIN            (~IMAX)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define NEGATIVE0       0x8000000000000000LL   // IEEE -0 (double precision)
 
 #define C4MAX           0xffffffffUL

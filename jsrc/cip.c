@@ -496,10 +496,10 @@ oflo2:
    if(smallprob||NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
     u=DAV(a); v=wv=DAV(w); zv=DAV(z);
     NAN0;
-    if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=s&&t?s*t:0;); *zv++=c;);}
+    if(1==n){DO(m, v=wv; c=0.0; DO(p, s=*u++; t=*v++; c+=TYMES(s,t);); *zv++=c;);}
     else for(i=0;i<m;++i,v=wv,zv+=n){
-            x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =*v?c**v:0.0; ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
-     DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=*v?c**v:0.0; ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
+            x=zv; if(c=*u++){if(INF(c))DO(n, *x++ =TYMES(*v,c); ++v;)else DO(n, *x++ =c**v++;);}else{v+=n; DO(n, *x++=0.0;);}
+     DO(p1, x=zv; if(c=*u++){if(INF(c))DO(n, *x+++=TYMES(*v,c); ++v;)else DO(n, *x+++=c**v++;);}else v+=n;);
     }
     NAN1;
    }

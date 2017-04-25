@@ -650,6 +650,15 @@ extern J gjt; // global for JPF (procs without jt)
 #define strchr(a,b)     (C*)strchr((unsigned char*)(a), (unsigned char)(b))
 #endif
 
+/* workaround clang branch prediction side effect */
+#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) || (__clang_minor__ > 5)))
+#define dmul2(u,v) ({asm volatile("" ::: "memory");(u)*(v);})
+#define ddiv2(u,v) ({asm volatile("" ::: "memory");(u)/(v);})
+#else
+#define dmul2(u,v) ((u)*(v))
+#define ddiv2(u,v) ((u)/(v))
+#endif
+
 #if SYS & SYS_UNIX
 #include <fenv.h>
 #define _isnan       isnan

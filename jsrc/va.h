@@ -102,9 +102,9 @@ typedef struct {VA2 p1[6];} UA;
 #define PLUSO(u,v)      ((u)+(D)(v))
 #define MINUS(u,v)      ((u)-   (v))
 #define MINUSO(u,v)     ((u)-(D)(v))
-#define TYMES(u,v)      ((u)&&(v)?(u)*   (v):0)
-#define TYMESO(u,v)     ((u)&&(v)?(u)*(D)(v):0)
-#define DIV(u,v)        ((u)||(v)?(u)/(v):0)
+#define TYMES(u,v)      ((u)&&(v)?dmul2(u,v):0)
+#define TYMESO(u,v)     ((u)&&(v)?dmul2(u,(D)v):0)
+#define DIV(u,v)        ((u)||(v)?ddiv2(u,v):0)
 
 #define SBORDER(v)      (SBUV(v)->order)
 

@@ -6,7 +6,7 @@
 #include "j.h"
 #include "vasm.h"
 
-#define DIVI(u,v)     (u||v ? u/(D)v : 0.0) 
+#define DIVI(u,v)     (u||v ? ddiv2(u,(D)v) : 0.0)
 #define DIVBB(u,v)    (v?u:u?inf:0.0)
 
 #define TYMESBX(u,v)  (u?v:0)

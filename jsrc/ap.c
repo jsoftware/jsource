@@ -13,7 +13,7 @@
 #define MINUSPX(b,r,u,v)  if(b)r=xminus(u,v); else r=xplus(u,v);
 #define MINUSPQ(b,r,u,v)  if(b)r=qminus(u,v); else r=qplus(u,v);
 
-#define DIVPA(b,r,u,v)    r=b?(DIV(u,(D)v)):u*v;
+#define DIVPA(b,r,u,v)    r=b?(DIV(u,(D)v)):TYMES(u,v);
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
 #define PREFIXPFX(f,Tz,Tx,pfx)  \

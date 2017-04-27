@@ -571,7 +571,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define CTTZZ(w) ((w)==0 ? 32 : CTTZ(w))
 #endif
 
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#define NOINLINE __declspec(noinline)
+#else
+#define NOINLINE __attribute__((noinline))
 #ifndef __forceinline
 #define __forceinline inline
 #endif

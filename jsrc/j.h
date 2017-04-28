@@ -246,6 +246,10 @@ extern unsigned int __cdecl _clearfp (void);
 #include <immintrin.h>
 #endif
 
+#if defined(__aarch64__)
+#include <arm_neon.h>
+#endif
+
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
@@ -746,8 +750,16 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
 #endif
 
+#if defined(__aarch64__)
+#define CRC32CW(crc, value) __asm__("crc32cw %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
+#define CRC32CX(crc, value) __asm__("crc32cx %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
+#define CRC32(crc,value)  ({ uint32_t crci=crc; CRC32CW(crci, value); crci; })
+#define CRC32L(crc,value) ({ uint64_t crci=crc; CRC32CX(crci, value); crci; })
+#define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
+#endif
+
 // The following definitions are used only in builds for the AVX instruction set
-#if SY_64
+#if SY_64 && C_AVX
 #if defined(_MSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4
@@ -757,4 +769,5 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define CRC32(x,y) __builtin_ia32_crc32si(x,y)  // returns UI4
 #define CRC32L(x,y) __builtin_ia32_crc32di(x,y)  // returns UI
 #endif
+#define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif

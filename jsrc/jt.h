@@ -119,7 +119,7 @@ typedef struct {
  A    compw;            /* comparison: orig arg. (for relative addressing) */
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
- UI   ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
+ UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    curlocn;          /* current locale name corresp. to curname         */
  A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */

@@ -9,7 +9,7 @@ cd ~
 echo $TARGET
 echo $COMPILE
 echo $LINK
-mkdir -p $jbld/jout/$TARGET/$1
+mkdir -p $jbld/jout/$TARGET/$1/blis
 cd $jbld/jout/$TARGET/$1
 
 make -f $jmake/makefile

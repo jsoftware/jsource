@@ -17,6 +17,7 @@ enum {
     CPU_X86_FEATURE_RDRAND = (1 << 7),
     CPU_X86_FEATURE_AVX2 =   (1 << 8),
     CPU_X86_FEATURE_SHA_NI = (1 << 9),
+    CPU_X86_FEATURE_FMA    = (1 << 10),
 };
 
 #endif /* CPU_INFO_H */

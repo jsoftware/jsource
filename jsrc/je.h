@@ -356,6 +356,8 @@ extern F1(jtxco1);
 extern F1(jtxepq);
 extern F1(jtxeps);
 
+// extern F1(jttest1);
+
 extern F2(jtabase2);
 extern F2(jtadot2);
 extern F2(jtadverse);
@@ -921,6 +923,7 @@ extern Z        zeroZ;
 extern A        zpath;
 /* cpu feature */
 extern int      hwavx;
+extern int      hwfma;
 extern int      hwcrc;
  
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)

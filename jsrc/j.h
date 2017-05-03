@@ -33,6 +33,7 @@
 #endif
 
 #if 1
+#include <stdint.h>
 #include <float.h>
 #include <limits.h>
 #define link unused_syscall_link
@@ -253,6 +254,16 @@ extern unsigned int __cdecl _clearfp (void);
 
 #if defined(__aarch64__)
 #include <arm_neon.h>
+#endif
+
+/* msvc does not define __SSE2__ */
+#if !defined(__SSE2__)
+#if defined(_MSC_VER)
+#if _M_IX86_FP==2
+#define __SSE2__ 1
+#include <xmmintrin.h>   /* header file for _mm_prefetch() */
+#endif
+#endif
 #endif
 
 #define NALP            256             /* size of alphabet                */
@@ -758,6 +769,35 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define SPDPADD(addend, sumlo, sumhi) sumlo += addend; sumhi += (addend > sumlo);
 #endif
 // end of addition builtins
+
+// aligned memory allocation, assume align is power of 2
+static __forceinline void* aligned_malloc(size_t size, size_t align) {
+ void *result;
+ align = (align>=sizeof(void*))?align:sizeof(void*);
+#ifdef _WIN32
+ result = _aligned_malloc(size, align);
+#elif ( !defined(ANDROID) || defined(__LP64__) )
+ if(posix_memalign(&result, align, size)) result = 0;
+#else
+ void *mem = malloc(size+(align-1)+sizeof(void*));
+ if(mem){
+  result = (void*)((uintptr_t)(mem+(align-1)+sizeof(void*)) & ~(align-1));
+  ((void**)result)[-1] = mem;
+ } else result = 0;
+#endif
+ return result;
+}
+
+static __forceinline void aligned_free(void *ptr) {
+#ifdef _WIN32
+ _aligned_free(ptr);
+#elif ( !defined(ANDROID) || defined(__LP64__) )
+ free(ptr);
+#else
+ free(((void**)ptr)[-1]);
+#endif
+}
+
 
 // Create (x&y) where x and y are signed, so we can test for overflow.
 #if defined(_MSC_VER)  // SY_WIN32

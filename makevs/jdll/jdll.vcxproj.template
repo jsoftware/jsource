@@ -545,6 +545,12 @@
     <ClCompile Include="..\..\jsrc\AR.C" />
     <ClCompile Include="..\..\jsrc\AS.C" />
     <ClCompile Include="..\..\jsrc\AU.C" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_c-ref.c" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_int-aarch64.c" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_int-avx.c" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_int-fma.c" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_int-sse2.c" />
+    <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
     <ClCompile Include="..\..\jsrc\C.C" />
     <ClCompile Include="..\..\jsrc\CA.C" />
     <ClCompile Include="..\..\jsrc\CC.C" />
@@ -556,6 +562,7 @@
     <ClCompile Include="..\..\jsrc\CL.C" />
     <ClCompile Include="..\..\jsrc\CP.C" />
     <ClCompile Include="..\..\jsrc\cpdtsp.c" />
+    <ClCompile Include="..\..\jsrc\cpuinfo.c" />
     <ClCompile Include="..\..\jsrc\CR.C" />
     <ClCompile Include="..\..\jsrc\CRS.C" />
     <ClCompile Include="..\..\jsrc\CT.C" />
@@ -571,6 +578,7 @@
     <ClCompile Include="..\..\jsrc\F.C" />
     <ClCompile Include="..\..\jsrc\F2.C" />
     <ClCompile Include="..\..\jsrc\fbu.c" />
+    <ClCompile Include="..\..\jsrc\gemm.c" />
     <ClCompile Include="..\..\jsrc\I.C" />
     <ClCompile Include="..\..\jsrc\IO.C" />
     <ClCompile Include="..\..\jsrc\J.C" />

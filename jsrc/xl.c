@@ -21,6 +21,7 @@ typedef long long INT64;
 #if (SYS & SYS_UNIX)
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/file.h>
 #else
 #include <sys/locking.h>
 #include <io.h>

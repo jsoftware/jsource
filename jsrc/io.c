@@ -447,3 +447,15 @@ int _stdcall JErrorTextM(J jt, I ec, I* p)
 	*p = (I)esub(jt, ec);
 	return 0;
 }
+
+#if 0
+int enabledebug=0;
+F1(jttest1){
+ RZ(w);
+ if((AT(w)&B01+INT)&&AN(w)){
+  enabledebug=i0(w);
+ }
+ R sc(1);
+}
+#endif
+

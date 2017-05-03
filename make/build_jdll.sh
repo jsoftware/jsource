@@ -8,11 +8,22 @@ cd ~
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
  
+USE_OPENMP="${USE_OPENMP:=0}"
+if [ $USE_OPENMP == 1 ]
+then
+OPENMP=" -fopenmp "
+# LDOPENMP=" -fopenmp "
+# LDOPENMP32=" /usr/lib/i386-linux-gnu/libgomp.so.1 "    # gcc
+# LDOPENMP32=" /usr/lib/i386-linux-gnu/libomp.so.5 "     # clang
+LDOPENMP=" -fopenmp `$CC -print-file-name=libgomp.a` "   # windows -fopenmp for pthread
+LDOPENMP32=" -fopenmp `$CC -print-file-name=libgomp.a` "
+fi
+
 # gcc
-common="-fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
+common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 # clang 3.5 .. 5.0
-# common="-Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
-darwin="-fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
+# common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
+darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in
 
@@ -24,83 +35,83 @@ TARGET=libj.so
 COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 # slower, use 387 fpu and truncate extra precision
 # COMPILE="$common -m32 -ffloat-store "
-LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl -o libj.so "
+LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 ;;
 
 linux_j64) # linux intel 64bit
 TARGET=libj.so
-COMPILE="$common "
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
+COMPILE="$common $OPENMP "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 
 linux_j64avx) # linux intel 64bit avx
 TARGET=libj.so
-COMPILE="$common -mavx -DC_AVX=1"
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
+COMPILE="$common -mavx -DC_AVX=1 $OPENMP "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
 COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC "
-LINK=" -shared -Wl,-soname,libj.so -lm -ldl -o libj.so "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
 COMPILE="$darwin -m32 -mmacosx-version-min=10.5"
-LINK=" -dynamiclib -lm -ldl -m32 -mmacosx-version-min=10.5 -o libj.dylib"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
 darwin_j64) # darwin x86
 TARGET=libj.dylib
 COMPILE="$darwin -mmacosx-version-min=10.5"
-LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
 darwin_j64avx) # darwin intel 64bit avx
 TARGET=libj.dylib
 COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
-LINK=" -dynamiclib -lm -ldl -mmacosx-version-min=10.5 -o libj.dylib"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
+OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
 windows_j32) # windows x86
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "
-export DLLOBJS LIBJDEF LIBJRES
 TARGET=j.dll
 COMPILE="$common -msse2 -mfpmath=sse -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL "
-LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ -o j.dll "
+LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP32 -o j.dll "
 ;;
 
 windows_j32avx) # windows x86
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "
-export DLLOBJS LIBJDEF LIBJRES
 TARGET=j.dll
 COMPILE="$common -msse2 -mfpmath=sse -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL -mavx -DC_AVX=1 "
-LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ -o j.dll "
+LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP32 -o j.dll "
+OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
 windows_j64) # windows x86
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "
-export DLLOBJS LIBJDEF LIBJRES
 TARGET=j.dll
 COMPILE="$common -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL "
-LINK=" -shared -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ -o j.dll "
+LINK=" -shared -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP -o j.dll "
 ;;
 
 windows_j64avx) # windows x86
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "
-export DLLOBJS LIBJDEF LIBJRES
 TARGET=j.dll
 COMPILE="$common -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL -mavx -DC_AVX=1 "
-LINK=" -shared -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ -o j.dll "
+LINK=" -shared -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP -o j.dll "
+OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
 *)
@@ -121,6 +132,11 @@ OBJS="\
  ar.o \
  as.o \
  au.o \
+ blis/gemm_c-ref.o \
+ blis/gemm_int-aarch64.o \
+ blis/gemm_int-avx.o \
+ blis/gemm_int-sse2.o \
+ blis/gemm_vec-ref.o \
  c.o \
  ca.o \
  cc.o \
@@ -132,6 +148,7 @@ OBJS="\
  cl.o \
  cp.o \
  cpdtsp.o \
+ cpuinfo.o \
  cr.o \
  crs.o \
  ct.o \
@@ -147,6 +164,7 @@ OBJS="\
  f.o \
  f2.o \
  fbu.o \
+ gemm.o \
  i.o \
  io.o \
  j.o \
@@ -235,6 +253,7 @@ OBJS="\
  xt.o \
  xu.o "
 
-export OBJS COMPILE LINK TARGET
+export OBJS OBJS_FMA COMPILE LINK TARGET
+export DLLOBJS LIBJDEF LIBJRES
 $jmake/domakewin.sh $1
 

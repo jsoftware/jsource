@@ -13,6 +13,7 @@
 
 J gjt=0; // JPF debug
 int      hwavx=0;
+int      hwfma=0;
 int      hwcrc=-1;  // indicate uninitialized
 
 void startup(void);
@@ -189,25 +190,20 @@ static void jtjtinit(J jt){
  }
 #endif
 
-#if 0
-// cpuarch will be left 0 on other architectures
- if(hwcrc==-1){  // run once
+// for auto-tuning
+ if(hwcrc==-1){  // run once, not thread safe
  cpuInit();
 #if defined(__aarch64__)
- hwcrc=1;  // 64-bit armv8 should support hardware crc
+ hwcrc=1;  // 64-bit armv8a in android supports hardware crc. not sure for iOS
 #elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
  hwcrc=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2)?1:0;
  hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
+ hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
+// fprintf(stderr,"hwcrc %d hwavx %d hwfma %d\n",hwcrc,hwavx,hwfma);
 #else
  hwcrc=0;
 #endif
-#if C_AVX
- if(!hwavx){
-/* what should we do? */
  }
-#endif
- }
-#endif
 
 }
 

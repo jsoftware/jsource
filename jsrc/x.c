@@ -262,6 +262,7 @@ F2(jtforeign){I p,q;
   case XC(128,3): R CDERIV(CIBEAM, jtcrc1,       jtcrc2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(128,4): R CDERIV(CIBEAM, jtrngraw,     0,            VASGSAFE,RMAX,0,   0   );
   case XC(128,5): R CDERIV(CIBEAM, jtisnan,      0,            VASGSAFE,RMAX,0,   0   );
+//  case XC(128,110): R CDERIV(CIBEAM, jttest1,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 
   default:        R foreignextra(a,w);
 }}

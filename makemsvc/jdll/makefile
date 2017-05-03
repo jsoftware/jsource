@@ -1,8 +1,8 @@
 ifdef x64
-CFLAGS= /D _JDLL /DC_NA=0 /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+CFLAGS= /D _JDLL /DC_NA=0 /openmp /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
 FLAGS= /DLL /NOLOGO /MACHINE:X64 /SUBSYSTEM:WINDOWS,5.02
 else
-CFLAGS= /D _JDLL /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
+CFLAGS= /D _JDLL /openmp /WX /W3 /O2 /Ot /Ob1 /D _USING_V110_SDK71_ /D _CRT_SECURE_NO_WARNINGS /MT /D NDEBUG /D WIN32 /D _WINDOWS
 FLAGS= /DLL /NOLOGO /MACHINE:X86 /SUBSYSTEM:WINDOWS,5.01
 endif
 
@@ -21,6 +21,12 @@ OBJS=  \
  ../../jsrc/ar.o \
  ../../jsrc/as.o \
  ../../jsrc/au.o \
+ ../../jsrc/blis/gemm_c-ref.o \
+ ../../jsrc/blis/gemm_int-aarch64.o \
+ ../../jsrc/blis/gemm_int-avx.o \
+ ../../jsrc/blis/gemm_int-fma.o \
+ ../../jsrc/blis/gemm_int-sse2.o \
+ ../../jsrc/blis/gemm_vec-ref.o \
  ../../jsrc/c.o \
  ../../jsrc/ca.o \
  ../../jsrc/cc.o \
@@ -32,6 +38,7 @@ OBJS=  \
  ../../jsrc/cl.o \
  ../../jsrc/cp.o \
  ../../jsrc/cpdtsp.o \
+ ../../jsrc/cpuinfo.o \
  ../../jsrc/cr.o \
  ../../jsrc/crs.o \
  ../../jsrc/ct.o \
@@ -47,6 +54,7 @@ OBJS=  \
  ../../jsrc/f.o \
  ../../jsrc/f2.o \
  ../../jsrc/fbu.o \
+ ../../jsrc/gemm.o \
  ../../jsrc/i.o \
  ../../jsrc/io.o \
  ../../jsrc/j.o \

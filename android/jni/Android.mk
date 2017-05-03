@@ -1,4 +1,6 @@
 
+LOCAL_DISABLE_FATAL_LINKER_WARNINGS := true
+
 LOCAL_PATH:=(call my-dir)
 
 include jni/jsrc/Android.mk

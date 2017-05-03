@@ -118,6 +118,9 @@ void cpuInit(void)
   if ((regs[2] & (1 << 30)) != 0) {
     g_cpuFeatures |= CPU_X86_FEATURE_RDRAND;
   }
+  if ((regs[2] & (1 << 12)) != 0) {
+    g_cpuFeatures |= CPU_X86_FEATURE_FMA;
+  }
 // OSXSAVE
   int OSXSAVE = 0;
   if ((regs[2] & (1 << 27)) != 0) {
@@ -161,6 +164,7 @@ void cpuInit(void)
   if (!(AVX&&OSXSAVE)) {
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX;
     g_cpuFeatures &= ~CPU_X86_FEATURE_AVX2;
+    g_cpuFeatures &= ~CPU_X86_FEATURE_FMA;
   }
 #endif
 

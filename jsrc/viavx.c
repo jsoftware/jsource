@@ -2,12 +2,13 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Index-of                                                         */
-#if C_AVX || defined(__aarch64__)
 
 #include "j.h"
 #include "vcomp.h"
 
-#if C_AVX
+#if (C_AVX&&SY_64) || defined(__aarch64__)
+
+#if C_AVX&&SY_64
 #define VOID
 #define _mm_set1_epi32_ _mm_set1_epi32
 
@@ -16,7 +17,20 @@
 #define _mm256_zeroupper(x)
 typedef int64x2_t __m128i;
 typedef float64x2_t __m128d;
-#define _mm_set1_epi32_ vdupq_n_s32
+#define _mm_set1_epi32_ vdupq_n_s64
+#ifndef __clang__
+#define __ai static inline __attribute__((__always_inline__))
+__ai uint64x2_t vreinterpretq_u64_f64(float64x2_t __p0) {
+  uint64x2_t __ret;
+  __ret = (uint64x2_t)(__p0);
+  return __ret;
+}
+__ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
+  float64x2_t __ret;
+  __ret = (float64x2_t)(__p0);
+  return __ret;
+}
+#endif
 
 #endif  /* !C_AVX */
 
@@ -725,7 +739,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 #if C_AVX
 #define SETXVAL  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #elif defined(__aarch64__)
-#define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=veorq_u64(xnew,xval); xnew=veorq_u64(xnew,xrot); dx=vgetq_lane_s64(xnew,0);
+#define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xval))); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xrot))); dx=vgetq_lane_u64(vreinterpretq_u64_f64(xnew),0);
 #endif
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UIL dx; x=*(D*)v;                                                                            \

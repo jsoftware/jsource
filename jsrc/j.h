@@ -52,6 +52,10 @@
 #include <math.h>
 #include <string.h>  
 
+#ifdef ANDROID
+#include <android/log.h>
+#define logcat_d(msg) __android_log_write(ANDROID_LOG_DEBUG,(const char*)"libj",msg)
+#endif
 
 #if SY_64
 #define IMAX            9223372036854775807LL

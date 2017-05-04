@@ -3,10 +3,10 @@
 /*                                                                         */
 /* Verbs: Index-of                                                         */
 
-#if !C_AVX && !defined(__aarch64__) /* see viavx.c */
-
 #include "j.h"
 #include "vcomp.h"
+
+#if !(C_AVX&&SY_64) && !defined(__aarch64__) /* see viavx.c */
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2

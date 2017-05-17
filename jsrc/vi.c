@@ -3,7 +3,7 @@
 /*                                                                         */
 /* Verbs: Index-of                                                         */
 
-#if !C_AVX /* see viavx.c */
+#if !C_AVX && !defined(__aarch64__) /* see viavx.c */
 
 #include "j.h"
 #include "vcomp.h"
@@ -70,7 +70,7 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  if(c==y.i[MSW]){e=y.i[LSW]; m|=(d&~e)|(~d&e);}
  q=m;
  while(m){m>>=1; q|=m;}       /* q=:+./\m as a bit vector */
- jt->ctmask=~(UI)q;
+ jt->ctmask= 0xffffffff00000000LL | (UIL)~q;
 }    /* 1 iff significant wrt comparison tolerance */
 
 

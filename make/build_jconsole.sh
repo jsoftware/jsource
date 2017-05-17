@@ -3,7 +3,7 @@
 cd ~
 . jvars.sh
 
-common=" -fPIC -O1 -Wextra "
+common=" -fPIC -O1 -Wextra -Wno-unused-parameter "
 
 case $jplatform\_$1 in
 

@@ -15,6 +15,8 @@ typedef unsigned long long BT;
 typedef long long          I;
 typedef long long          SB;
 typedef unsigned long long UI;
+typedef unsigned long long UIL;   /* for typecast 8 byte double */
+typedef long long          IL;
 
 #else
 typedef long               A1;
@@ -22,6 +24,8 @@ typedef unsigned long      BT;
 typedef long               I;
 typedef long               SB;
 typedef unsigned long      UI;
+typedef unsigned long long UIL;
+typedef long long          IL;
 #endif
 
 typedef char               B;

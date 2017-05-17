@@ -2,10 +2,23 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Index-of                                                         */
-#if C_AVX
+#if C_AVX || defined(__aarch64__)
 
 #include "j.h"
 #include "vcomp.h"
+
+#if C_AVX
+#define VOID
+#define _mm_set1_epi32_ _mm_set1_epi32
+
+#elif defined(__aarch64__)
+#define VOID void
+#define _mm256_zeroupper(x)
+typedef int64x2_t __m128i;
+typedef float64x2_t __m128d;
+#define _mm_set1_epi32_ vdupq_n_s32
+
+#endif  /* !C_AVX */
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
@@ -71,7 +84,7 @@ DI p,x,y;UINT c,d,e,m,q;
  if(c==y.i[MSW]){e=y.i[LSW]; m|=(d&~e)|(~d&e);}
  q=m;
  while(m){m>>=1; q|=m;}       /* q=:+./\m as a bit vector */
- jt->ctmask=~(UI)q;
+ jt->ctmask= 0xffffffff00000000LL | (UIL)~q;
 #else
  // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
  // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
@@ -81,20 +94,22 @@ DI p,x,y;UINT c,d,e,m,q;
  // highest clear bit
  if(jt->ct!=0){
   D p=2.0 - (4.0*jt->ct)/(1.0+jt->ct);
-  I q=0xffffffff00000000LL | *(I*)&p;
+  IL q=0xffffffff00000000LL | *(UIL*)&p;
   q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
-  jt->ctmask=q;
- }else{jt->ctmask = ~0;}
+  jt->ctmask=(UIL)q;
+ }else{jt->ctmask = ~0LL;}
 #endif
 }    /* 1 iff significant wrt comparison tolerance */
 
+#if C_AVX
 // fill 64-bit words with the 32-bit value in storeval
 static __forceinline void fillwords(__m128i* storeptr, UI4 storeval, I nstores){
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
- __m128i store128; store128=_mm_set1_epi32(storeval);
+ __m128i store128; store128=_mm_set1_epi32_(storeval);
  DQ(nstores>>1, _mm_storeu_si128 (storeptr, store128); storeptr++;)
  if(nstores&1)_mm_storel_epi64 (storeptr, store128);  // If there is an odd word, store it
 }
+#endif
 
 // Routine to allocate sections of the hash tables
 // *hh is the hash table we have selected, p is the number of hash entries we need, asct is the maximum+1 value that needs to be stored in an entry
@@ -114,7 +129,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-#if 0
+#if !C_AVX
   memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
 #else
   UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
@@ -139,7 +154,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // First of all: it's moot if the allocation won't fit on the right
   I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
   I selside=0;  // default to allocating on the left (i. e. at 0)
-  UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible index for this table
+  UI maxindex = (1LL<<(((UIL)SZI)<<hh->hashelelgsize))-1;  // largest possible index for this table
   UI indexceil=maxindex-asct;  // max starting index
 
   // Cost of allocating on the left comes
@@ -190,7 +205,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-#if 0  // without AVX
+#if !C_AVX
   if(SZI>4)storeval |= storeval<<(32%BW);
   I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
 #else
@@ -229,6 +244,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 }
 
 // All hashes must return a CRC result, because that is evenly distributed throughout the lower 32 bits
+// CRC32L  takes UI  (4 or 8 bytes)
+// CRC32LL takes UIL (8 bytes)
 
 #define RETCRC3 R CRC32L(crc0,CRC32L(crc1,crc2))
 // Create CRC32 of the k bytes in *v.  Uses CRC32L to process 8 bytes at a time
@@ -311,7 +328,7 @@ UI hic2(I k, UC* v){I cct=k/sizeof(US);
 }
 
 // Hash a single INT-sized atom
-#define hici1(x) CRC32L(-1LL,*x)
+#define hici1(x) CRC32L(-1LL,*(x))
 
 // Hash an INT list
 static __forceinline UI hici(I k, UI* v){
@@ -329,17 +346,17 @@ static __forceinline UI hici(I k, UI* v){
 }
 
 // Hash a single FL atom, with check for -0 and +0
-#define hic01(x) ((*(x)!=NEGATIVE0)?CRC32L(-1L,*x):CRC32L(-1L,0))
+#define hic01(x) ((*(UIL*)(x)!=NEGATIVE0)?CRC32LL(-1L,*(UIL*)(x)):CRC32LL(-1L,0))
 
 // Hash a FL list, with check for -0 and +0
-static UI hic0(I k, UI* v){
+static UI hic0(I k, UIL* v){
  // Owing to latency, hash pairs of inputs.  Check each for -0
  UI crc0=-1, crc1=crc0;
  for(k-=2;k>=0;v+=2, k-=2){
-  if(v[0]!=NEGATIVE0){crc0=CRC32L(crc0,v[0]);}else{crc0=CRC32L(crc0,0);}
-  if(v[1]!=NEGATIVE0){crc1=CRC32L(crc1,v[1]);}else{crc1=CRC32L(crc1,0);}
+  if(v[0]!=NEGATIVE0){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}
+  if(v[1]!=NEGATIVE0){crc1=CRC32LL(crc1,v[1]);}else{crc1=CRC32LL(crc1,0);}
  }
- if(k>-2){if(v[0]!=NEGATIVE0){crc0=CRC32L(crc0,v[0]);}else{crc0=CRC32L(crc0,0);}}
+ if(k>-2){if(v[0]!=NEGATIVE0){crc0=CRC32LL(crc0,v[0]);}else{crc0=CRC32LL(crc0,0);}}
  R CRC32L(crc0,crc1);
 }
 
@@ -352,7 +369,7 @@ static UI hiq(Q*v){A y=v->n; R hici(AN(y),UIAV(y));}
 
 // Hash a single double, using only the bits in ctmask.
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-static UI jthid(J jt,D d){R *(I*)&d!=NEGATIVE0?CRC32L(-1L,*(I*)&d&jt->ctmask):CRC32L(-1L,0);}
+static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmask):CRC32LL(-1L,0);}
 
 // Hash the data in the given A, which is an element of the box we are hashing
 // If empty or boxed, hash the shape
@@ -475,7 +492,11 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 
 // Calculate the hash slot.  The hash calculation (input parm) relies on the name v and produces the name j.  We have moved v to an xmm register to reduce register pressure
 // here, so extract its parts for use as needed
-#define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*p)>>32;
+#if C_AVX
+#define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*(UIL)(p))>>32;
+#elif defined(__aarch64__)
+#define HASHSLOTP(T,hash) v=(T*)vgetq_lane_s64(vp,0); j=((hash)*(UIL)(p))>>32;
+#endif
 // Conditionally insert a new value into the hash table.  The initial value of hj (the table scan pointer) has been fetched.  name is the name holding the slot to be added
 // (it will be j, j1, or j2 depending on where we are in the processing pipeline),
 // exp is a comparison expression meaning 'mismatch' that returns 0 if the data indexed by the slot is equal to *v (the expression will use *v as the new value, and hj as the index into the
@@ -487,11 +508,19 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 // only if the hash search does not find a match.  If (store) is 2, the entry that we found is cleared, by setting it to maxcount+1, when we find a match.
 // When (store)=2, we also ignore hash entries containing maxcount+1, treating them as failed compares
 // Independent of (store), (fstmt) is executed if the item is found in the hash table, and (nfstmt) is executed if it is not found.
+#if C_AVX
 #define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
   if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
   if((store!=2||hj<hsrc##sct)&&(v=(T*)_mm_extract_epi64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
   if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
   }while(1);
+#elif defined(__aarch64__)
+#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
+  if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
+  if((store!=2||hj<hsrc##sct)&&(v=(T*)vgetq_lane_s64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
+  if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
+  }while(1);
+#endif
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
 // For each item we do HASHSLOT folowed by FINDP, and adjust the (v) values (both stored in xmm variable vp) to keep track
@@ -500,11 +529,19 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 // q+2 is being calculated).
 // The (fstmt,nfstmt,store) arguments indicate what to do when a match/notmatch is resolved.
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
+#if C_AVX
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
  {I i, j, hj; T *v; d=src##d; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
+#elif defined(__aarch64__)
+#define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
+ {I i, j, hj; T *v; d=src##d; vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
+ HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=vaddq_s64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=vaddq_s64(vp,vpstride); vpstride=vdupq_n_s64(vgetq_lane_s64(vpstride,0));  \
+ for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride); hj=hv[j1];} \
+ FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
+#endif
 
 // Traverse a in forward direction, adding values to the hash table
 #define XDOAP(T,TH,hash,exp,stride) XSEARCH(T,TH,a,a,hash,exp,stride,{},{},1,0, (i=0;i<asct-2;++i) ,asct-1)
@@ -515,9 +552,15 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #define XDQP(T,TH,hash,exp,stride,fstmt,nfstmt,reflex) XSEARCH(T,TH,w,a,hash,exp,(-(stride)),fstmt,nfstmt,reflex,cn*(wsct-1), (i=wsct-1;i>1;--i) ,0)
 
 // special lookup routines to move the data rather than store its index, used for nub/less
+#if C_AVX
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)_mm_extract_epi64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)_mm_extract_epi64(vp,1),k); zc+=k;},reflex); }
+#elif defined(__aarch64__)
+#define XMVP(T,TH,hash,exp,stride,reflex)      \
+ if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)vgetq_lane_s64(vp,1); zc+=SZI;},reflex); }  \
+ else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)vgetq_lane_s64(vp,1),k); zc+=k;},reflex); }
+#endif
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
 
@@ -528,8 +571,8 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper();  \
-  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
+  _mm256_zeroupper(VOID);  \
+  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
   if(a==w&&ac==wc)md|=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);  /* remember if this is reflexive, which doesn't prehash */  \
@@ -595,10 +638,10 @@ static IOFX(Q,US,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)
 static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFX(I,US,jtioi,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
 static IOFX(I,US,jtioi1,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,US,jtioc01, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,US,jtioz01, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,US,jtioc0, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,US,jtioz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(D,US,jtioc01, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,US,jtioz01, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,US,jtioc0, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,US,jtioz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 static IOFX(A,UI4,jtioax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
 static IOFX(A,UI4,jtioau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
@@ -607,10 +650,10 @@ static IOFX(Q,UI4,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               c
 static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFX(I,UI4,jtioi2,  hici(n,v),            icmpeq(v,av+n*hj,n),          cn  )  // INT array, not float
 static IOFX(I,UI4,jtioi12,  hici1(v),           *v!=av[hj],                    1 )  // len=8, not float
-static IOFX(D,UI4,jtioc012, hic01((UI*)v),    *v!=av[hj],                      1) // float atom
-static IOFX(Z,UI4,jtioz012, hic0(2,(UI*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
-static IOFX(D,UI4,jtioc02, hic0(n,(UI*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
-static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
+static IOFX(D,UI4,jtioc012, hic01((UIL*)v),    *v!=av[hj],                      1) // float atom
+static IOFX(Z,UI4,jtioz012, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av[hj].im), 1) // complex atom
+static IOFX(D,UI4,jtioc02, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
+static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
 
 // ********************* second class: tolerant comparisons, possibly boxed **********************
@@ -618,14 +661,14 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // create tolerant hash for a single D
 // Note: the masking may cause a nonzero to hash to negative zero.  This is OK, because any nonzero will not be
 // tequal to +0 or -0.  But we must ensure that -0 hashes to the same value as +0, since those two numbers are equal.
-#define HIDMSK(v) (*(UI*)v!=NEGATIVE0?CRC32L(-1L,*(UI*)v&ctmask):CRC32L(-1L,0))
+#define HIDMSK(v) (*(UIL*)v!=NEGATIVE0?CRC32LL(-1L,*(UIL*)v&ctmask):CRC32LL(-1L,0))
 // save the mask result in m
-#define HIDMSKSV(m,v) ((m=*(UI*)v&ctmask), (*(UI*)v!=NEGATIVE0?CRC32L(-1L,m):CRC32L(-1L,0)) )
+#define HIDMSKSV(m,v) ((m=*(UIL*)v&ctmask), (*(UIL*)v!=NEGATIVE0?CRC32LL(-1L,m):CRC32LL(-1L,0)) )
 // save the unmasked bitmask in m
-#define HIDUMSKSV(m,v) ((m=*(UI*)v), (m!=NEGATIVE0?CRC32L(-1L,m&ctmask):CRC32L(-1L,0)) )
+#define HIDUMSKSV(m,v) ((m=*(UIL*)v), (m!=NEGATIVE0?CRC32LL(-1L,m&ctmask):CRC32LL(-1L,0)) )
 // create hash for a D type
-#define HID(y)              CRC32L(-1L,(y))
-#define MASK(dd,xx)         {D dv=(xx); if(*(UI*)&dv!=NEGATIVE0){dd=*(UI*)&dv&ctmask;}else{dd=0;} }
+#define HID(y)              CRC32LL(-1L,(y))
+#define MASK(dd,xx)         {D dv=(xx); if(*(UIL*)&dv!=NEGATIVE0){dd=*(UIL*)&dv&ctmask;}else{dd=0;} }
 
 // FIND for read.  Stop loop if endtest is true; execute fstmt if match ((exp) is false).  hj holds the index of the value being tested
 #define FINDRD(exp,hindex,endtest,fstmt) do{hj=hv[hindex]; if(endtest)break;if(!(exp)){fstmt break;}if(--hindex<0)hindex+=p;}while(1);
@@ -638,14 +681,14 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 #if 0 // obsolete
 // find a tolerant match for *v.  Check a threshold below and a threshold above, and set il and ir to the lower/upper buckets matched
 #define TFINDXY(TH,expa,expw)  \
- {UI dl, dr; D x=*(D*)v;                                                                            \
+ {UIL dl, dr; D x=*(D*)v;                                                                            \
   MASK(dl,x*tl);            HASHSLOT(HID(dl)) FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){HASHSLOT(HID(dr)) FIND(expw);    ir=hj;}       \
  }
 // same idea, for reflexives like i.~.  We start by hashing the value itself, so that we can find it
 // if there are no previous matches
 #define TFINDYY(TH,expa,expw)  \
- {UI dl, dr, dx; D x=*(D*)v;                                                                             \
+ {UIL dl, dr, dx; D x=*(D*)v;                                                                             \
   HASHSLOT(HIDMSKSV(dx,v)) jx=j; jt->ct=0.0; FIND(expa); jt->ct=ct; if(asct==hj)hv[j]=(TH)i;  \
 /*  MASK(dl,x*tl);                j=dl==dx?jx:HID(dl)%pm; FIND(expw); il=ir=hj; */      \
 /*  MASK(dr,x*tr); if(dr!=dl){j=dr==dx?jx:HID(dr)%pm; FIND(expw);    ir=hj;}    */   \
@@ -656,7 +699,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // if there are no previous matches
 // Here the comparison expa is implicitly exact, so jt->ct does not need to be changed
 #define TFINDY1(TH,expa,expw)  \
- {UI dl, dr, dx; D x=*(D*)v;                                                                             \
+ {UIL dl, dr, dx; D x=*(D*)v;                                                                             \
   HASHSLOT(HIDMSKSV(dx,v)) jx=j; FINDWR(TH,expa);  \
   MASK(dl,x*tl);                if(dl==dx){j=jx;}else{HASHSLOT(HID(dl))} FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr!=dl){if(dr==dx){j=jx;}else{HASHSLOT(HID(dr))} FIND(expw);    ir=hj;}      \
@@ -679,10 +722,15 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // the other is in the same interval; we XOR to preserve the neighbor
 //
 // At the end of this calculation il contains the index of a match, or asct if no match.
+#if C_AVX
+#define SETXVAL  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
+#elif defined(__aarch64__)
+#define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=veorq_u64(xnew,xval); xnew=veorq_u64(xnew,xrot); dx=vgetq_lane_s64(xnew,0);
+#endif
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UI dx; x=*(D*)v;                                                                            \
+ {UIL dx; x=*(D*)v;                                                                            \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
-  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0); \
+  SETXVAL \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,asct==hj,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
  }
@@ -690,9 +738,9 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n), 
 // we know that there will be a match in the first search, which simplifies that search.
 // For this routine expa MUST be an intolerant comparison
 #define TFINDY1T(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
- {UI dx; x=*(D*)v;                                                                             \
+ {UIL dx; x=*(D*)v;                                                                             \
   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
-  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0); \
+  SETXVAL \
   FINDWR(TH,expa);  \
   HASHSLOT(HID(dx&=ctmask)) FINDRD(expw,jx,0,fstmt0); il=hj; \
   FINDRD(expw,j,endtest1,fstmt1); \
@@ -820,16 +868,21 @@ above could be better for reflexive
 could use goto in some of the above
 #endif
 
+#if C_AVX
+#define SETXNEW  tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
+#elif defined(__aarch64__)
+#define SETXNEW  tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
+#endif
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
         D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
-        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UI ctmask=jt->ctmask;   \
+        IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper();  \
-  __m128d tltr, xval, xnew, xrot; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr); \
-  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
+  _mm256_zeroupper(VOID);  \
+  __m128d tltr, xval, xnew, xrot; SETXNEW \
+  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \
   jx=0;                                                                     \
@@ -986,7 +1039,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AA
 #define IOFSMALLRANGE(f,T,Ttype)    \
  IOF(f){IH *hh=IHAV(h);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
-  _mm256_zeroupper();  \
+  _mm256_zeroupper(VOID);  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
   e=1==wc?0:wsct; if(w==mark){wsct=0;} \
@@ -1247,8 +1300,8 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper();  \
-  vp=_mm_set1_epi32(0);  /* to avoid warnings */ \
+  _mm256_zeroupper(VOID);  \
+  vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
   A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)/SZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
@@ -1272,10 +1325,10 @@ static IOFXW(Q,US,jtiowq,  hiq(v),            !eqq(n,v,wv+n*hj),               c
 static IOFXW(C,US,jtiowc,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFXW(I,US,jtiowi,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
 static IOFXW(I,US,jtiowi1,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,US,jtiowc01, hic01((UI*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,US,jtiowz01, hic0(2,(UI*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,US,jtiowc0, hic0(n,(UI*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,US,jtiowz0, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(D,US,jtiowc01, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
+static IOFXW(Z,US,jtiowz01, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D,US,jtiowc0, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
+static IOFXW(Z,US,jtiowz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
 static IOFXW(A,UI4,jtiowax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed exact 1-element item */   
 static IOFXW(A,UI4,jtiowau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed uniform type         */
@@ -1284,10 +1337,10 @@ static IOFXW(Q,UI4,jtiowq2,  hiq(v),            !eqq(n,v,wv+n*hj),              
 static IOFXW(C,UI4,jtiowc2,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
 static IOFXW(I,UI4,jtiowi2,  hici(n,v),            icmpeq(v,wv+n*hj,n),          cn  )  // INT array, not float
 static IOFXW(I,UI4,jtiowi12,  hici1(v),           *v!=wv[hj],                    1 )  // len=8, not float
-static IOFXW(D,UI4,jtiowc012, hic01((UI*)v),    *v!=wv[hj],                      1) // float atom
-static IOFXW(Z,UI4,jtiowz012, hic0(2,(UI*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
-static IOFXW(D,UI4,jtiowc02, hic0(n,(UI*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
-static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
+static IOFXW(D,UI4,jtiowc012, hic01((UIL*)v),    *v!=wv[hj],                      1) // float atom
+static IOFXW(Z,UI4,jtiowz012, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=wv[hj].im), 1) // complex atom
+static IOFXW(D,UI4,jtiowc02, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
+static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
 
 // *************************** seventh class: small-range processing of w ***********************
@@ -1380,7 +1433,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UI*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n)
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
   UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,2+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum);} \
   \
-  _mm256_zeroupper();  \
+  _mm256_zeroupper(VOID);  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \

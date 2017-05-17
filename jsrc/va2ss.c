@@ -231,7 +231,7 @@ SSINGF2(jtssmult) SSNUMPREFIX
    else SSSTORE((D)av*(D)wv,z,FL,D)
    R z;}
   case SSINGDD: {D av=SSRDD(a), wv=SSRDD(w);
-   SSSTORE(av&&wv?av*wv:0.0,z,FL,D) R z;}
+   SSSTORE(TYMES(av,wv),z,FL,D) R z;}
  }
 }
 
@@ -252,7 +252,7 @@ SSINGF2(jtssdiv) SSNUMPREFIX
   case SSINGBI: {B av=SSRDB(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGIB: {I av=SSRDI(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGII: {I av=SSRDI(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
-  case SSINGDD: {NAN0; SSSTORE((SSRDD(a)||SSRDD(w))?SSRDD(a)/(D)SSRDD(w):0.0,z,FL,D) NAN1; R z;}
+  case SSINGDD: {NAN0; SSSTORE(DIV(SSRDD(a),(D)SSRDD(w)),z,FL,D) NAN1; R z;}
  }
 }
 

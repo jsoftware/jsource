@@ -210,7 +210,25 @@ static void double_trick(double*v, I n){I i=0;
  #elif SY_UNIX64
   #ifdef __PPC64__
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7],dd[8],dd[9],dd[10],dd[11],dd[12]);
-  #elif defined(__x86_64__)||defined(__aarch64__)
+  #elif defined(__x86_64__)
+#if 0
+   #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
+#else
+/* might be faster */
+   #define dtrick \
+  __asm__ ("movq (%0),%%xmm0\n\t"       \
+        "movq  8(%0), %%xmm1\n\t"       \
+        "movq 16(%0), %%xmm2\n\t"       \
+        "movq 24(%0), %%xmm3\n\t"       \
+        "movq 32(%0), %%xmm4\n\t"       \
+        "movq 40(%0), %%xmm5\n\t"       \
+        "movq 48(%0), %%xmm6\n\t"       \
+        "movq 56(%0), %%xmm7\n\t"       \
+        : /* no output operands */      \
+        : "r" (dd)                      \
+        : "xmm0","xmm1","xmm2","xmm3","xmm4","xmm5","xmm6","xmm7","cc");
+#endif
+  #elif defined(__aarch64__)
    #define dtrick double_trick(dd[0],dd[1],dd[2],dd[3],dd[4],dd[5],dd[6],dd[7]);
   #endif
  #else
@@ -529,29 +547,38 @@ static void double_trick(double*v, I n){I i=0;
                   d[56],d[57],d[58],d[59],d[60],d[61],d[62],d[63]);break;  \
 }
 
-static I     stdcalli(STDCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
+#if defined(__clang__) && ( (__clang_major__ > 3) || ((__clang_major__ == 3) || (__clang_minor__ > 5)))
+/* needed by clang newer versions, no matter double_trick is inline asm or not */
+#define NOOPTIMIZE __attribute__((optnone))
+#elif __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 3))
+#define NOOPTIMIZE __attribute__((optimize("O0")))
+#else
+#define NOOPTIMIZE
+#endif
+
+static I     NOOPTIMIZE stdcalli(STDCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
  SWITCHCALL;
  R r;
 }  /* I result */
-static I     altcalli(ALTCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
+static I     NOOPTIMIZE altcalli(ALTCALLI fp,I*d,I cnt,DoF*dd,I dcnt){I r;
  SWITCHCALL;
  R r;
 }
-static D     stdcalld(STDCALLD fp,I*d,I cnt,DoF*dd,I dcnt){D r;
+static D     NOOPTIMIZE stdcalld(STDCALLD fp,I*d,I cnt,DoF*dd,I dcnt){D r;
  SWITCHCALL;
  R r;
 }  /* D result */
-static D     altcalld(ALTCALLD fp,I*d,I cnt,DoF*dd,I dcnt){D r;
+static D     NOOPTIMIZE altcalld(ALTCALLD fp,I*d,I cnt,DoF*dd,I dcnt){D r;
  SWITCHCALL;
  R r;
 }
 
 #if SY_64 || defined(__arm__)
-static float stdcallf(STDCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
+static float NOOPTIMIZE stdcallf(STDCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 SWITCHCALL;
 R r;
 }  /* J64 float result */
-static float altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
+static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
   SWITCHCALL;
  R r;
 }

@@ -5,6 +5,16 @@
 
 // #include <immintrin.h>
 
+// Debugging switches
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free
+ // 2 will detect double-frees before they happen, at the time of the erroneous tpush
+
+// set FINDNULLRET to trap when a routine returns 0 without having set an error message
+#define FINDNULLRET 0
+
+
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
 #endif
@@ -328,6 +338,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
+#define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ACX(a)          {AC(a)=IMAX/2;}
 #define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}
@@ -466,11 +477,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
+#if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
+#define R0 {if(jt->jerr)R A0;else *(I*)0=0;}
+#else
+#define R0 R 0;
+#endif
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
 #define RNE(exp)        {R jt->jerr?0:(exp);}
-#define RZ(exp)         {if(!(exp))R 0;}
+#define RZ(exp)         {if(!(exp))R0}
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
 #define SGN(a)          ((0<(a))-(0>(a)))
@@ -676,10 +692,6 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 }
 #endif
 
-// Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
-                     // 16=audit freelist at every alloc/free
- // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 
 // Define integer multiply, *z=x*y but do something else if integer overflow.

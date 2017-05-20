@@ -151,8 +151,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
  if(jt->dotnames){
-  IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
-  IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
+  if(a)IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
+  if(w)IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
  }
  // If we are in debug mode, and the current stack frame has the DCCALL type, set up
  // so that the debugger can look inside this execution: point to the local symbols,

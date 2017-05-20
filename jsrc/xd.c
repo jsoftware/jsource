@@ -120,7 +120,7 @@ F1(jtfullname){C*s; C dirpath[1000];
 
 F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  F1RANK(0,jtjfperm1,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(fn=toutf16x(y));
  p=USAV(fn); q=p+AN(fn)-3;
  GAT(z,LIT,3,1,0); s=CAV(z);
@@ -133,7 +133,7 @@ F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
 
 F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
  F2RANK(1,0,jtjfperm2,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(a=vs(a)); ASSERT(3==AN(a),EVLENGTH); 
  RZ(fn=toutf16x(y));
  s=CAV(y);
@@ -149,7 +149,7 @@ F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
 
 F1(jtjfperm1){A y,z;C*p,*q,*s;F f; DWORD attr;
  F1RANK(0,jtjfperm1,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  p=CAV(y); q=p+AN(y)-3;
  GAT(z,LIT,3,1,0); s=CAV(z);
  if((attr=GetFileAttributes(tounibuf(p)))==0xFFFFFFFF)R jerrno();
@@ -228,7 +228,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
 
 F1(jtjfatt1){A y,fn;F f;U x;
  F1RANK(0,jtjfatt1,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(fn=toutf16x(y));
  x=GetFileAttributesW(USAV(fn));
  if(-1!=x) R attv(x);
@@ -238,7 +238,7 @@ F1(jtjfatt1){A y,fn;F f;U x;
 F2(jtjfatt2){A y,fn;F f;U x;
  F2RANK(1,0,jtjfatt2,0);
  RE(x=attu(a));
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=AAV0(w);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(fn=toutf16x(y));
  if(SetFileAttributesW(USAV(fn), x)) R one;
  jsignal(EVFNAME); R 0;
@@ -373,7 +373,7 @@ F2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 F1(jtjfperm1){A y;F f;
  F1RANK(0,jtjfperm1,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=str0(AAV0(w));
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=str0(AAV0(w)),EVFNUM)
  if(0!=stat(CAV(y),&jt->dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(jt->dirstatbuf.st_mode));
 }
@@ -393,7 +393,7 @@ static struct tperms {C*c;I p[4];} permtab[]=
 
 F2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
  F2RANK(1,0,jtjfperm2,0);
- RE(f=stdf(w)); if(f)ASSERT(y=fname(sc((I)f)),EVFNUM) else y=str0(AAV0(w));
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=str0(AAV0(w)),EVFNUM)
  RZ(a=vs(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);
  for(i=0;i<9;i++)
     {ASSERT(NULL!=(m=strchr(permtab[i].c,s[i])),EVDOMAIN);

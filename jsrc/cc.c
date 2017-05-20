@@ -518,7 +518,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    if(!(TYPESEQ(yt,AT(y))&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
    while(IC(z)<=m+ym){RZ(z=ext(0,z)); zv=CAV(z); b1=0;}
    MC(zv+m*yk,CAV(y),ym*yk); 
-   if(b1)gc(yt&DIRECT?0:y,old);
+   if(b1&&!(yt&DIRECT))gc(y,old);
    b1=1; m+=ym; p-=q; v=u;
   }
   if(!b1&&ie)GA(z,wt,AN(w),r,s);
@@ -561,11 +561,11 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
  av=AV(a); pv=AV(p); wv=CAV(w);
  nr=pv[0]; sr=av[2]; mr=av[0]; mi=r*mr; tr=ws[0];
  nc=pv[1]; sc=av[3]; mc=av[1]; mj=k*mc; sj=k*sc;
- RZ(nr&&nc&&nr>=sr&&nc>=sc);
+ if(!(nr&&nc&&nr>=sr&&nc>=sc))R A0;  // abort if can't use this code
  GA(y,t,sr*sc,2,2+av); yv=CAV(y);
  u=yv; v=wv; DO(sr, MC(u,v,sj); u+=sj; v+=r;); 
  RZ(z0=CALL1(f1,y,fs)); zt=AT(z0); 
- RZ(zt&DIRECT);
+ if(!(zt&DIRECT))R A0;
  zn=AN(z0); zr=AR(z0); zs=AS(z0); zk=zn*bp(zt); m=zr*SZI;
  GA(z,zt,zn*nr*nc,2+zr,0); s1=AS(z); ICPY(s1,pv,2); ICPY(2+s1,zs,zr); zv=CAV(z);
  old=jt->tnextpushx;
@@ -573,15 +573,15 @@ static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,
   v=v0=wv+i*mi;
   DO(nc, 
       u=yv; DO(sr, MC(u,v,sj); u+=sj; v+=r;); v=v0+=mj; RZ(x=CALL1(f1,y,fs));
-      RZ(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
+      if(!(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))))R A0; MC(zv,AV(x),zk); zv+=zk; tpop(old););  // abort if result mismatch
  }else for(i=0;i<nr;++i){  /* f;. 3 */
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   DO(nc, yc=MIN(tc,sc); tc-=mc; s=yc*k; 
       u=yv; DO(yr, MC(u,v,s ); u+=sj; v+=r;); v=v0+=mj; RZ(x=CALL1(f1,yr<sr||yc<sc?take(v2(yr,yc),y):y,fs));
-      RZ(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))); MC(zv,AV(x),zk); zv+=zk; tpop(old););
+      if(!(TYPESEQ(zt,AT(x))&&zr==AR(x)&&!(m&&memcmp(zs,AS(x),m))))R A0; MC(zv,AV(x),zk); zv+=zk; tpop(old););  // abort if result mismatch
  }
  R z;
-}    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size, uniform f */
+}    /* f;._3 (1=e) or f;.3 (0=e), matrix w, positive size, hopefully uniform f */
 
 static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*wv,*yv;
      I*av,i,j,k,mc,mi,mj,mr,nc,nr,*pv,r,s,sc,sj,sr,t,tc,tr,*ws,yc,yr;

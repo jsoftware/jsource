@@ -25,7 +25,7 @@
 /* returns 0 if error, 1 if ok                                 */
 
 static NUMH(jtnumd){C c,*t;D*v,x,y;
- RZ(n);
+ if(!(n))R 0;
  v=(D*)vv;
  if('-'==*s&&3>n)
   if(1==n){*v=inf; R 1;}
@@ -42,11 +42,11 @@ static NUMH(jtnumd){C c,*t;D*v,x,y;
 static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
  v=(Z*)vv;
  if(t=memchr(s,'j',n))ta=0; else t=ta=memchr(s,'a',n);
- RZ(numd(t?t-s:n,s,&x));
- if(t){t+=ta?2:1; RZ(numd(n+s-t,t,&y));} else y=0;
+ if(!(numd(t?t-s:n,s,&x)))R 0;
+ if(t){t+=ta?2:1; if(!(numd(n+s-t,t,&y)))R 0;} else y=0;
  if(ta){C c;
   c=*(1+ta);
-  RZ(0<=x&&(c=='d'||c=='r'));
+  if(!(0<=x&&(c=='d'||c=='r')))R 0;
   if(c=='d')y*=PI/180; if(y<=-P2||P2<=y)y-=P2*jfloor(y/P2); if(0>y)y+=P2;
   v->re=y==0.5*PI||y==1.5*PI?0:x*cos(y); v->im=y==PI?0:x*sin(y);
  }else{v->re=x; v->im=y;}
@@ -54,12 +54,12 @@ static NUMH(jtnumj){C*t,*ta;D x,y;Z*v;
 }
 
 static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
- if(neg='-'==*s){++s; --n; RZ(n);}
+ if(neg='-'==*s){++s; --n; if(!n)R 0;}
  for(;*s=='0'&&n>1;--n,++s);  // skip leading zeros, as long as there is more than one character
- RZ(19>=n);   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
+ if(!(19>=n))R 0;   // 2^63 is 9223372036854775808.  So a 20-digit input must overflow, and the most a
   // 19-digit number can be is a little way into the negative; so testing for negative will be a valid test for overflow
- j=0; DO(n, RZ(t=memchr(dig,*s++,10L)); j=10*j+(t-dig););
- RZ(0<=j||neg&&j==IMIN);  // overflow if negative AND not the case of -2^63, whichs shows as IMIN with a negative flag
+ j=0; DO(n, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig););
+ if(!(0<=j||neg&&j==IMIN))R 0;  // overflow if negative AND not the case of -2^63, whichs shows as IMIN with a negative flag
  *(I*)vv=0>j||!neg?j:-j;   // if j<0, it must be IMIN, keep it neg; otherwise change sign if neg
  R 1;
 }     /* called only if SY_64 */
@@ -67,11 +67,11 @@ static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
 static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
  v=(X*)vv;
  d=*(s+n-1); b='-'==*s; c='x'==d||'r'==d; s+=b;
- if('-'==d){RZ(2>=n); RZ(*v=vci(1==n?XPINF:XNINF)); R 1;}
- n-=b+c; RZ(m=(n+XBASEN-1)/XBASEN); k=n-XBASEN*(m-1);
+ if('-'==d){if(!(2>=n))R 0; if(!(*v=vci(1==n?XPINF:XNINF)))R 0; R 1;}
+ n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV(y,INT,m,1,0); yv=m+AV(y);
- DO(m, j=0; DO(k, RZ(t=memchr(dig,*s++,10L)); j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
- RZ(*v=yv[m-1]?y:xstd(y));
+ DO(m, j=0; DO(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
+ if(!(*v=yv[m-1]?y:xstd(y)))R 0;
  R 1;
 }
 
@@ -86,9 +86,9 @@ static X jtx10(J jt,I e){A z;I c,m,r,*zv;
 static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
  v=(Q*)vv;
  nf=0; i.d=iv1; f.d=iv1;
- if(te=memchr(s,'e',n)){ne=n-(te-s)-1; e=strtoI(1+te,(char**)&t,10);  RZ(!*t&&10>ne);}
- if(td=memchr(s,'.',n)){nf=te?(te-td)-1:n-(td-s)-1; if(nf)RZ(numx(nf,td+1,&f.n));}
- ni=td?td-s:te?te-s:n; RZ(numx(ni,s,&i.n));
+ if(te=memchr(s,'e',n)){ne=n-(te-s)-1; e=strtoI(1+te,(char**)&t,10);  if(!(!*t&&10>ne))R 0;}
+ if(td=memchr(s,'.',n)){nf=te?(te-td)-1:n-(td-s)-1; if(nf)if(!(numx(nf,td+1,&f.n)))R 0;}
+ ni=td?td-s:te?te-s:n; if(!(numx(ni,s,&i.n)))R 0;
  x=i;
  if(nf){y.n=iv1; y.d=x10(nf); RE(x='-'==*s?qminus(x,qtymes(f,y)):qplus(x,qtymes(f,y)));}
  if(te){if(0>e){y.n=iv1; y.d=x10(-e);}else{y.n=x10(e); y.d=iv1;} RE(x=qtymes(x,y));}
@@ -98,12 +98,12 @@ static NUMH(jtnume){C*t,*td,*te;I e,ne,nf,ni;Q f,i,*v,x,y;
 
 static NUMH(jtnumr){C c,*t;I m,p,q;Q*v;
  v=(Q*)vv;
- m=(t=memchr(s,'r',n))?t-s:n; RZ(numx(m,s,&v->n)); v->d=iv1;
+ m=(t=memchr(s,'r',n))?t-s:n; if(!(numx(m,s,&v->n)))R 0; v->d=iv1;
  if(t){
-  c=s[n-1]; RZ('r'!=c&&'x'!=c);
-  RZ(numx(n-m-1,s+m+1,&v->d));
+  c=s[n-1]; if(!('r'!=c&&'x'!=c))R 0;
+  if(!(numx(n-m-1,s+m+1,&v->d)))R 0;
   p=*AV(v->n); q=*AV(v->d); 
-  RZ(p!=XPINF&&p!=XNINF||q!=XPINF&&q!=XNINF);
+  if(!(p!=XPINF&&p!=XNINF||q!=XPINF&&q!=XNINF))R 0;
   RE(*v=qstd(*v));
  }
  R 1;
@@ -119,25 +119,25 @@ static Z zpi={PI,0};
 static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
   static C dig[]="0123456789abcdefghijklmnopqrstuvwxyz";I m=strlen(dig);
  if(!n){*v=zeroZ; R 1;}
- RZ(d=indexof(str(m,dig),str(n,s)));
- RZ(all0(eps(sc(m),d)));
+ if(!(d=indexof(str(m,dig),str(n,s))))R 0;
+ if(!(all0(eps(sc(m),d))))R 0;
  k=sizeof(Z);
- GAT(c,CMPX,1,0,0); MC(AV(c),&b,k); RZ(y=base2(c,d)); MC(v,AV(y),k);
+ GAT(c,CMPX,1,0,0); MC(AV(c),&b,k); if(!(y=base2(c,d)))R 0; MC(v,AV(y),k);
  R 1;
 }
 
 static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
  v=(Z*)vv;
  if(t=memchr(s,'b',n)){
-  RZ(numbpx(t-s,s,&b));
+  if(!(numbpx(t-s,s,&b)))R 0;
   ++t; if(ne='-'==*t)++t;
   m=k=n+s-t; if(u=memchr(t,'.',m))k=u-t;
-  RZ(ne||m>(1&&u));
-  RZ(numb(k,t,&p,b));
+  if(!(ne||m>(1&&u)))R 0;
+  if(!(numb(k,t,&p,b)))R 0;
   if(u){
    k=m-(1+k);
    if(ze=!(b.re||b.im))b.re=1;
-   RZ(numb(k,1+u,&q,b));
+   if(!(numb(k,1+u,&q,b)))R 0;
    if(ze){if(q.re)p.re=inf;} else{DO(k,q=zdiv(q,b);); p=zplus(p,q);}
   }
   *v=p; if(ne){v->re=-v->re; v->im=-v->im;}
@@ -145,7 +145,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
  }
  if(t=memchr(s,'p',n))u=0; else t=u=memchr(s,'x',n);
  if(!t)R numj(n,s,v);
- RZ(numj(t-s,s,&x)); ++t; RZ(numj(n+s-t,t,&y));
+ if(!(numj(t-s,s,&x)))R 0; ++t; if(!(numj(n+s-t,t,&y)))R 0;
  if(u)*v=ztymes(x,zexp(y)); else *v=ztymes(x,zpow(zpi,y));
  R 1;
 }

@@ -172,7 +172,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 #define SSGULOOP(T)  \
  {T*v=(T*)zv;                      \
   for(i=0;i<n1;++i){               \
-   RZ(q=CALL2(f2,x,y,fs)); RZ(TYPESEQ(t,AT(q))&&!AR(q)); \
+   RZ(q=CALL2(f2,x,y,fs)); if(!(TYPESEQ(t,AT(q))&&!AR(q)))R A0; /* error if error; abort if not compatible scalar */ \
    *v--=*(T*)AV(q);                \
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
@@ -198,7 +198,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
   case sizeof(Z): SSGULOOP(Z); break;
   default:
    for(i=0;i<n1;++i){       
-    RZ(q=CALL2(f2,x,y,fs)); RZ(TYPESEQ(t,AT(q))&&r==AR(q)&&!ICMP(AS(y),AS(q),r)); 
+    RZ(q=CALL2(f2,x,y,fs)); if(!(TYPESEQ(t,AT(q))&&r==AR(q)&&!ICMP(AS(y),AS(q),r)))R A0;  // error if error; abort if incompatible result
     MC(zv,CAV(q),k); zv-=k; 
     AK(x)-=k; AK(y)-=k; 
     tpop(old);

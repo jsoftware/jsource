@@ -63,7 +63,7 @@ I jtprod(J jt,I n,I*v){I z;
  // So we check each number as it is read, and exit early if 0 is encountered.  When we multiply, we suppress
  // the error assertion.  Then, at the end, if the product is 0, it must mean that there was an error, and
  // we report it then.  This way we don't need a separate pass to check for 0.
- RZ(z=*v++); DO(n-1, RZ(v[i]);z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
+ if(!(z=*v++))R 0; DO(n-1, if(!(v[i]))R 0; z=jtmult(0,z,v[i]););  // the 0 to jtmult suppresses error assertion there
  ASSERT(z!=0,EVLIMIT)
  R z;
 }
@@ -76,9 +76,9 @@ I jtprod(J jt,I n,I*v){D z=1; DO(n, z*=(D)v[i];); ASSERT(z<=IMAX,EVLIMIT); R(I)z
 
 #endif
 
-B all0(A w){RZ(w); R !memchr(AV(w),C1,AN(w));}
+B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
 
-B all1(A w){RZ(w); R !memchr(AV(w),C0,AN(w));}
+B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
 
 // Number of atoms in an item.  should check AN and avoid multiply.  bug: must check result of prod() on empty lists
 // obsolete I jtaii(J jt,A w){I m=IC(w); R m&&!(SPARSE&AT(w))?AN(w)/m:prod(AR(w)-1,1+AS(w));}
@@ -96,7 +96,7 @@ A jtapv(J jt,I n,I b,I m){A z;I j=b-m,p=b+m*(n-1),*x;
  R z;
 }    /* b+m*i.n */
 
-B jtb0(J jt,A w){RZ(w); ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}
+B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}
 
 B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
  GATV(t,B01,n,1,0); b=BAV(t);
@@ -180,9 +180,10 @@ I bsum(I n,B*b){I q=n>>LGSZI,z=0;UC*u;UI t,*v;
  R z;
 }    /* sum of boolean vector b */
 
-C cf(A w){RZ(w); R*CAV(w);}
+C cf(A w){if(!w)R 0; R*CAV(w);}  // first character in a character array
 
-C cl(A w){RZ(w); R*(CAV(w)+AN(w)-1);}
+C cl(A w){if(!w)R 0; R*(CAV(w)+AN(w)-1);}  // last character in a character array
+
 
 // Choose type to use for joined arguments; convert the arguments to that type if needed
 // *a and *w are blocks to read/modify
@@ -191,12 +192,12 @@ C cl(A w){RZ(w); R*(CAV(w)+AN(w)-1);}
 // If none of those are given we choose the larger type from the (empty) arguments
 // Then convert as needed
 I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
- RZ(*a&&*w);
+ if(!(*a&&*w))R 0;
  at=AT(*a); at1=AN(*a)?at:0;
  wt=AT(*w); wt1=AN(*w)?wt:0; RE(t=maxtype(at1,wt1)); RE(t=maxtype(t,mt));
  if(!t)RE(t=maxtype(at,wt));
- if(TYPESNE(t,at))RZ(*a=cvt(t,*a));
- if(TYPESNE(t,wt))RZ(*w=cvt(t,*w));
+ if(TYPESNE(t,at))if(!(*a=cvt(t,*a)))R 0;
+ if(TYPESNE(t,wt))if(!(*w=cvt(t,*w)))R 0;
  R t;
 }
 
@@ -205,7 +206,7 @@ A jtcstr(J jt,C*s){R str((I)strlen(s),s);}
 // Return 1 iff w is the evocation of a name
 B evoke(A w){V*v=VAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
 
-I jti0(J jt,A w){RZ(w=vi(w)); ASSERT(!AR(w),EVRANK); R*AV(w);}
+I jti0(J jt,A w){if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R*AV(w);}
 
 A jtifb(J jt,I n,B*b){A z;I m,*zv; 
  m=bsum(n,b); 

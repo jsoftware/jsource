@@ -88,10 +88,10 @@ B jtprimitive(J jt,A w){A x=w;V*v;
 // Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
 B jtboxatop(J jt,A w){RZ(w); R boxat(VAV(w)->f);}
 
-// w is a verb
+// x is a verb
 // Return 1 if verb is of the form <@:g  (or <@g when g has infinite rank)
 B boxat(A x){C c;V*v;
- RZ(x);
+ if(!x)R 0;
  v=VAV(x); c=v->id;   // x->f, v->value, c=id of f
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
  if(CBOX==ID(v->f)) {  // if u is <...
@@ -105,7 +105,7 @@ B boxat(A x){C c;V*v;
 // Result has bit 0 set if the verb is [ or ...@[, bit 1 set if ] or ...@]   (or @:)
 // The set bit indicates that argument WILL NOT be examined when w is executed
 I atoplr(A w){
- RZ(w);
+ if(!w)R 0;
  V *v=VAV(w);     // v->verb info, c=id of w
  C id = v->id;if(v->id==CAT||v->id==CATCO)id = VAV(v->g)->id;
  switch(id){

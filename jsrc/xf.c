@@ -40,7 +40,7 @@ static int rmdir2(J jt, const wchar_t *dir);
 
 #if SY_64
 static I fsize(F f){fpos_t z;
- RZ(f);
+ if(!f)R 0;
 #if SY_WIN32
  _lseeki64(_fileno(f),0,SEEK_END); 
 #else
@@ -230,8 +230,8 @@ F1(jtjmkdir){A y,z;
 F1(jtjferase){A y,fn;US*s;I h;
  F1RANK(0,jtjferase,0);
  RE(h=fnum(w));
- if(h) y=str0(fname(sc(h))); else y=AAV0(w);
- ASSERT(y,EVFNUM);
+ if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=AAV0(w),EVFNUM);
+// obsolete  ASSERT(y,EVFNUM);  now in fname
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
 #if 0

@@ -30,7 +30,7 @@ static KF1(jtcvt2bit){I c,i,m,q,r,r1,wr,*ws,*wv;UC k,*zv=(UC*)yv;
 
 static KF1(jtC1fromC2){UC*x;US c,*v;
  v=USAV(w); x=(C*)yv;
- DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
+ DO(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
  R 1;
 }
 
@@ -42,13 +42,13 @@ static KF1(jtC2fromC1){UC*v;US*x;
 
 static KF1(jtC1fromC4){UC*x;C4 c,*v;
  v=C4AV(w); x=(C*)yv;
- DO(AN(w), c=*v++; RZ(256>c); *x++=(UC)c;);
+ DO(AN(w), c=*v++; if(!(256>c))R 0; *x++=(UC)c;);
  R 1;
 }
 
 static KF1(jtC2fromC4){US*x;C4 c,*v;
  v=C4AV(w); x=(US*)yv;
- DO(AN(w), c=*v++; RZ(65536>c); *x++=(US)c;);
+ DO(AN(w), c=*v++; if(!(65536>c))R 0; *x++=(US)c;);
  R 1;
 }
 
@@ -142,15 +142,15 @@ static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->j
 
 static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
- DO(AN(w), q=v[i]; e=*AV(q); RZ(1==AN(q)&&(0==e||1==e)); x[i]=(B)e;);
+ DO(AN(w), q=v[i]; e=*AV(q); if(!(1==AN(q)&&(0==e||1==e)))R 0; x[i]=(B)e;);
  R 1;
 }
 
 static KF1(jtIfromX){I a,i,m,n,*u,*x;X c,p,q,*v;
  v=XAV(w); x=(I*)yv; n=AN(w);
- RZ(p=xc(IMAX)); RZ(q=xminus(negate(p),xc(1L)));
+ if(!(p=xc(IMAX)))R 0; if(!(q=xminus(negate(p),xc(1L))))R 0;
  for(i=0;i<n;++i){
-  c=v[i]; RZ(1!=xcompare(q,c)&&1!=xcompare(c,p));
+  c=v[i]; if(!(1!=xcompare(q,c)&&1!=xcompare(c,p)))R 0;
   m=AN(c); u=AV(c)+m-1; a=0; DO(m, a=*u--+a*XBASE;); x[i]=a;
  }
  R 1;
@@ -175,7 +175,7 @@ static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
 static KF1(jtQfromX){X*v=XAV(w),*x=(X*)yv; DO(AN(w), *x++=*v++; *x++=iv1;); R 1;}
 
 static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
- RZ(w);
+ if(!(w))R 0;
  n=AN(w); wv=DAV(w); x=(Q*)yv; tv=3*liln+(S*)&t;
  for(i=0;i<n;++i){
   t=wv[i]; 
@@ -210,8 +210,8 @@ static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c
    d=0.0; f=1.0; v=AV(q); DO(qn, d+=f*v[i]; f*=xb;);
    x[i]=n/d;
   }else{
-   k=5+qn; if(!x2)RZ(x2=xc(2L));
-   RZ(c=xdiv(take(sc(-(k+pn)),p),q,XMFLR));
+   k=5+qn; if(!x2)if(!(x2=xc(2L)))R 0;
+   if(!(c=xdiv(take(sc(-(k+pn)),p),q,XMFLR)))R 0;
    cn=AN(c); m=MIN(cn,5); r=cn-(m+k); v=AV(c)+cn-m; 
    n=0.0; f=1.0; DO(m, n+=f*v[i]; f*=xb;);
    d=1.0; DO(ABS(r), d*=xb;);
@@ -222,7 +222,7 @@ static KF1(jtDfromQ){D d,f,n,*x,xb=(D)XBASE;I cn,i,k,m,nn,pn,qn,r,*v,wn;Q*wv;X c
 
 static KF1(jtXfromQ){Q*v;X*x;
  v=QAV(w); x=(X*)yv;
- DO(AN(w), RZ(equ(iv1,v->d)); *x++=v->n; ++v;);           
+ DO(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
  R !jt->jerr;
 }
 
@@ -261,7 +261,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
 static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
- RZ(w);
+ if(!(w))R 0;
  r=AR(w); s=AS(w);
  // Handle sparse
  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
@@ -300,7 +300,7 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
    case CVCASE(BITX, B01X): R cvt2bit(w, yv);
    case CVCASE(BITX, INTX): R cvt2bit(w, yv);
    case CVCASE(BITX, FLX): R cvt2bit(w, yv);
-   case CVCASE(BITX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R cvt2bit(d, yv);
+   case CVCASE(BITX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R cvt2bit(d, yv);
    default:                ASSERT(0, EVDOMAIN);
   }
  }
@@ -320,21 +320,21 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
   case CVCASE(XNUMX, FLX): R XfromD(w, yv);
   case CVCASE(RATX, FLX): R QfromD(w, yv);
   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
-  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R BfromD(d, yv);
-  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R IfromD(d, yv);
-  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R XfromD(d, yv);
-  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); RZ(DfromZ(w, AV(d))); R QfromD(d, yv);
+  case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R BfromD(d, yv);
+  case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R IfromD(d, yv);
+  case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R XfromD(d, yv);
+  case CVCASE(RATX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R QfromD(d, yv);
   case CVCASE(FLX, CMPXX): R DfromZ(w, yv);
   case CVCASE(B01X, XNUMX): R BfromX(w, yv);
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
   case CVCASE(RATX, XNUMX): R QfromX(w, yv);
   case CVCASE(FLX, XNUMX): R DfromX(w, yv);
-  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); RZ(DfromX(w, AV(d))); R ccvt(t, d, y);
-  case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R BfromX(d, yv);
-  case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); RZ(XfromQ(w, AV(d))); R IfromX(d, yv);
+  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ccvt(t, d, y);
+  case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
+  case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
   case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
   case CVCASE(FLX, RATX): R DfromQ(w, yv);
-  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); RZ(DfromQ(w, AV(d))); R ccvt(t, d, y);
+  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ccvt(t, d, y);
   default:                ASSERT(0, EVDOMAIN);
  }
 }

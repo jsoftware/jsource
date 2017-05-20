@@ -36,7 +36,7 @@ B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
    c=i!=d->dcstop; d->dcstop=i; R c;
  }       
  if(i==d->dcstop){d->dcstop=-2; R 0;}     /* not stopping if already stopped at the same place */
- RZ(jt->dbstops); s=CAV(jt->dbstops); sprintf(nw,FMTI,i);
+ if(!(jt->dbstops))R 0; s=CAV(jt->dbstops); sprintf(nw,FMTI,i);
  a=d->dca; n=d->dcm; t=NAV(a)->s; md=d->dcx&&d->dcy?2:1; 
  while(s){
   while(' '==*s)++s; if(b='~'==*s)++s; while(' '==*s)++s;

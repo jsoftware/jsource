@@ -36,11 +36,11 @@ static ST state[10][9]={
 };
 /*         CX      CS      CA      CN      CB      C9      CD      CC      CQ   */
 
-// w points to a string
+// w points to a string A-block
 // result is word index & length; z is (# words),(i0,l0),(i1,l1),...
 // (# words) is negated if the last word is NB.
 F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
- RZ(w);
+ RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
  nv=0; s=SS;   // set not creating numeric constant; init state (after space)
  n=AN(w); v=UAV(w); GATV(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
   // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes

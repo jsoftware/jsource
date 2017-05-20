@@ -84,7 +84,7 @@ static Z jtnewt(J jt,I m,Z*a,Z x,I n){I i,j;D e=EPS/1024.0;Z c,p,q,*v;
 
 static B jtdeflateq(J jt,B k,I m,Q*v,Q x){Q q,r,*u;
  u=v+m; q=*u--; DO(m, r=*u--;       q=qplus(r,qtymes(q,x)););
- RE(0); RZ(QEQ(q,zeroQ));
+ RE(0); if(!(QEQ(q,zeroQ)))R 0;
  u=v+m; q=*u--; DO(m, r=*u; *u--=q; q=qplus(r,qtymes(q,x)););
  R 1;
 }    /* deflate by x which may or may not be a root. result is 1 iff x is a root. k is ignored. */

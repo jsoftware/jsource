@@ -7,7 +7,7 @@
 
 
 static B jtiscons(J jt,A w){A x;V*v; 
- RZ(w);
+ if(!w)R 0;
  v=VAV(w); x=v->f;
  R CQQ==v->id&&NOUN&AT(x)&&!AR(x);
 }
@@ -15,7 +15,7 @@ static B jtiscons(J jt,A w){A x;V*v;
 static C ispoly1[]={CLEFT,CRIGHT,CLE,CGE,CNOT,CMINUS,CPLUSCO,CHALVE,CCIRCLE,CJDOT,0};
 
 static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
- RZ(w);
+ if(!w)R 0;
  v=VAV(w); id=v->id;
  if(id==CFCONS||iscons(w))R 1;
  if(strchr(ispoly1,id))R 2;
@@ -23,21 +23,21 @@ static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
  f=v->f; nf=f&&NOUN&AT(f); vf=!nf; 
  g=v->g; ng=g&&NOUN&AT(g); vg=!ng; x=nf?f:g; t=x?AT(x):0; h=nf?g:f; c=h?ID(h):0;
  if(id==CFORK){
-  RZ(vf&&vg);
+  if(!(vf&&vg))R 0;
   m=ispoly(f); n=ispoly(v->h);
   switch(m&&n?ID(g):0){
    case CPLUS: R MAX(m,n);
    case CSTAR: R m+n-1;
  }}
  if(vf&&vg&&(id==CAT||id==CATCO||id==CAMP||id==CAMPCO)){m=ispoly(f); n=ispoly(g); if(m&&n)R 1+(m-1)*(n-1);}
- RZ(id==CAMP&&(t&NUMERIC||c==CPOLY));
+ if(!(id==CAMP&&(t&NUMERIC||c==CPOLY)))R 0;
  if(nf&&1>=AR(x)&&c==CPOLY){
-  RZ(t&BOX+NUMERIC);
+  if(!(t&BOX+NUMERIC))R 0;
   k=IC(x);
   if(t&NUMERIC)R k;
-  y=*(AAV(x)+k-1); RZ(2>=AR(y));
+  y=*(AAV(x)+k-1); if(!(2>=AR(y)))R 0;
   if(1>=AR(y))R 1+IC(y);
-  RZ(2==*(1+AS(y)));
+  if(!(2==*(1+AS(y))))R 0;
   RZ(e=irs1(y,0L,1L,jttail));
   RZ(equ(e,floor1(e))&&all1(le(zero,e)));
   RZ(y=aslash(CMAX,cvt(INT,e)));
@@ -138,7 +138,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  f=v->f; nf=1&&NOUN&AT(f);
  g=v->g; ng=1&&NOUN&AT(g);
  h=nf?g:f; id=ID(h); x=nf?f:g; 
- RZ(!AR(x)||id==CPOLY);
+ if(!(!AR(x)||id==CPOLY))R 0;
  switch(id){
   case CPLUS:  R qq(one,zero);
   case CSTAR:  R qq(x,zero);
@@ -169,7 +169,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
      case 6:   R amp(num[5],h);
      case 7:   R atop(atop(ds(CDIV),ds(CSTARCO)),amp(num[6],h));
  }}}
- R 0;
+ R A0;
 }
 
 static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
@@ -219,7 +219,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
    if(vf&&vg){
     p=ispoly(f); q=ispoly(g);
     if(p&&q)R dpoly(df1(IX(1+(p-1)*(q-1)),tdot(w)));
-    RZ(dg=diff0(g)); RZ(df=diff0(f)); v=VAV(df); x=v->f; 
+    if(!(dg=diff0(g)))R A0; if(!(df=diff0(f)))R A0; v=VAV(df); x=v->f; 
     if(CQQ!=v->id)R ftymes(dg,atop(df,g));
     switch(CQQ==v->id&&AT(x)&B01+INT?i0(x):9){
      case 0:      R df;
@@ -243,8 +243,8 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
    h=v->h;
    if(NOUN&AT(f))R diff0(folk(qq(f,zero),g,h));
    if(CCAP==ID(f))R diff0(atco(g,h));
-   p=ispoly(f); df=diff0(f);
-   q=ispoly(h); dh=diff0(h); b=p&&q;
+   p=ispoly(f); if(!(df=diff0(f)))R A0;
+   q=ispoly(h); if(!(dh=diff0(h)))R A0; b=p&&q;
    switch(ID(g)){
     case CPLUS:   z=fplus (df,dh); R b?fpoly(MAX(p,q)-1,z):z;
     case CMINUS:  z=fminus(df,dh); R b?fpoly(MAX(p,q)-1,z):z;
@@ -261,7 +261,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
                    R ftymes(df,ftymes(h,folk(f,g,qq(decrem(k),zero))));
                   }
  }}
- R 0;
+ R A0;
 }
 
 static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
@@ -270,7 +270,7 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  f=v->f; nf=1&&NOUN&AT(f);
  g=v->g; ng=1&&NOUN&AT(g);
  h=nf?g:f; id=ID(h); x=nf?f:g; 
- RZ(!AR(x)||id==CPOLY);
+ if(!(!AR(x)||id==CPOLY))R A0;
  switch(id){
   case CPLUS:  R ipoly(over(x,one));
   case CSTAR:  R ipoly(over(zero,x));
@@ -333,7 +333,7 @@ static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
 
 static F2(jtintgtymes){A f=a,g=w;
  RZ(a&&w);
- R 0;
+ R A0;
 }    /* integral of a * w */
 
 static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
@@ -451,7 +451,7 @@ static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
   case CFIT:
    if(nf&&1>=AR(x)&&(y=VAV(h)->f,CPOLY==ID(y)))R dpoly(df1(IX(IC(x)),tdot(w)));
   }
-  R 0;
+  R A0;
 }
 
 static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
@@ -504,13 +504,13 @@ static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
     case CSTAR:  R fplus(ftymes(df,h),ftymes(f,dh));
     case CDIV:   R folk(fminus(ftymes(df,h),ftymes(f,dh)), ds(CDIV), atop(ds(CSTARCO),h));
  }}
- R 0;
+ R A0;
 }
 
 static F1(jtintg){ASSERT(0,EVNONCE);}
 
 static A jtdtab(J jt,A a,I d){A h;V*v;
- RZ(a);
+ if(!a)R A0;  // return 0 if not found in table
  if(CDCAP==ID(a)&&(v=VAV(a),NOUN&AT(v->f)&&d==i0(v->g))){h=VAV(a)->h; R*(1+AAV(h));}
  switch(SGN(d)){
   default: ASSERTSYS(0,"dtab");

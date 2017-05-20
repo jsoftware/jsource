@@ -111,7 +111,7 @@ B jtspfree(J jt){I i;MS*p;
 
 static F1(jtspfor1){
  RZ(w);
- if(BOX&AT(w)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), spfor1(WVR(i)););}
+ if(BOX&AT(w)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(1e9>AC(w)||AFSMM&AFLAG(w))
   if(AFNJA&AFLAG(w)){I j,m,n,p;
@@ -259,19 +259,19 @@ static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
 static void jttraverse(J jt,A wd,AF f){
  switch(CTTZ(AT(wd))){
   case XDX:
-   {DX*v=(DX*)AV(wd); DO(AN(wd), CALL1(f,v->x,0L); ++v;);} break;
+   {DX*v=(DX*)AV(wd); DO(AN(wd), if(v->x)CALL1(f,v->x,0L); ++v;);} break;
   case RATX:  
-   {A*v=AAV(wd); DO(2*AN(wd), CALL1(f,*v++,0L););} break;
+   {A*v=AAV(wd); DO(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
    if(!(AFLAG(wd)&AFNJA+AFSMM)){A*wv=AAV(wd);
-    if(AFLAG(wd)&AFREL){DO(AN(wd), CALL1(f,WVR(i),0L););}
-    else{DO(AN(wd), CALL1(f,wv[i],0L););}
+    if(AFLAG(wd)&AFREL){DO(AN(wd), if(WVR(i))CALL1(f,WVR(i),0L););}
+    else{DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(wd); CALL1(f,v->f,0L); CALL1(f,v->g,0L); CALL1(f,v->h,0L);} break;
+   {V*v=VAV(wd); if(v->f)CALL1(f,v->f,0L); if(v->g)CALL1(f,v->g,0L); if(v->h)CALL1(f,v->h,0L);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-   {P*v=PAV(wd); CALL1(f,SPA(v,a),0L); CALL1(f,SPA(v,e),0L); CALL1(f,SPA(v,i),0L); CALL1(f,SPA(v,x),0L);} break;
+   {P*v=PAV(wd); if(SPA(v,a))CALL1(f,SPA(v,a),0L); if(SPA(v,e))CALL1(f,SPA(v,e),0L); if(SPA(v,i))CALL1(f,SPA(v,i),0L); if(SPA(v,x))CALL1(f,SPA(v,x),0L);} break;
  }
 }
 

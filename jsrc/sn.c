@@ -7,29 +7,29 @@
 
 // validate fullname (possibly locative).  s->name, n=length.  Returns 1 if name valid, 0 if not
 B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
- RZ(n);  // error if empty string
+ if(!(n))R 0;  // error if empty string
  c=*s; d=*(s+n-1);   // c = first char of name, d is the last
  if(jt->dotnames&&2==n&&'.'==d&&('m'==c||'n'==c||'u'==c||'v'==c||'x'==c||'y'==c))R 1;  // if x. y. ..., that's OK
- RZ(CA==ctype[(UC)c]);   // first char must be alphabetic
+ if(!(CA==ctype[(UC)c]))R 0;   // first char must be alphabetic
  // c='a';    // Now c='this character', d='previous character'; assign c to harmless value (not needed)
  j=0;  // Init no indirect locative found
  // scan the string: verify all remaining characters alphameric (incl _); set j=index of first indirect locative (pointing to the __), or 0 if no ind loc
   // (the string can't start with _)
- DO(n, d=c; c=s[i]; t=ctype[(UC)c]; RZ(t==CA||t==C9); if(c=='_'&&d=='_'&&!j&&i!=n-1){j=i-1;});
+ DO(n, d=c; c=s[i]; t=ctype[(UC)c]; if(!(t==CA||t==C9))R 0; if(c=='_'&&d=='_'&&!j&&i!=n-1){j=i-1;});
  // If the last char is _, any ind loc is invalid; scan to find previous _ (call its index j, error if 0); audit locale name, or OK if empty (base locale)
- if(c=='_'){RZ(!j); DO(j=n-1, if('_'==s[--j])break;); RZ(j); k=n-j-2; R(!k||vlocnm(k,s+j+1));}
+ if(c=='_'){if(!(!j))R 0; DO(j=n-1, if('_'==s[--j])break;); if(!(j))R 0; k=n-j-2; R(!k||vlocnm(k,s+j+1));}
  // Here last char was not _, and j is still pointed after __ if any
  if(j==0)R 1;  // If no ind loc, OK
  // There is an indirect locative.  Scan all of them, verifying first char of each name is alphabetic (all chars were verified alphameric above)
  // Also verify that any _ is preceded or followed by _
- DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){RZ(CA==ctype[(UC)s[j+i+2]]);}else{RZ(s[j+i-1]=='_');}});
+ DO(n-j-1, if(s[j+i]=='_'){if(s[j+i+1]=='_'){if(!(CA==ctype[(UC)s[j+i+2]]))R 0;}else{if(!(s[j+i-1]=='_'))R 0;}});
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
 B vlocnm(I n,C*s){C c,t;
  if(!n)R 0;  // error is name empty
- DO(n, t=ctype[(UC)(c=s[i])]; RZ(c!='_'&&(t==CA||t==C9)););  // error if non-alphameric or _
- if(C9==ctype[(UC)*s]){RZ('0'!=*s||1==n); DO(n, c=s[i]; RZ('0'<=c&&c<='9'););}  // if numeric locale, verify first char not '0' unless it's just 1 char; and all chars numeric
+ DO(n, t=ctype[(UC)(c=s[i])]; if(!(c!='_'&&(t==CA||t==C9)))R 0;);  // error if non-alphameric or _
+ if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; and all chars numeric
  R 1;
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 
@@ -74,12 +74,12 @@ F1(jtnfb){A y;C*s;I n;
 
 // w is an A for a name; return NAME block or 0 if error
 static F1(jtstdnm){C*s;I j,n,p,q;
- RZ(w=vs(w));  // convert to ASCII
+ if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string
- RZ(n);
+ if(!(n))R 0;
  j=0;   DO(n, if(' '!=s[j++])break;); p=j-1;
  j=n-1; DO(n, if(' '!=s[j--])break;); q=(n-2)-j;
- RZ(vnm(n-(p+q),p+s));   // Validate name
+ if(!(vnm(n-(p+q),p+s)))R 0;   // Validate name
  R nfs(n-(p+q),p+s);   // Create NAME block for name
 }    /* 0 result means error or invalid name */
 

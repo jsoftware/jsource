@@ -79,7 +79,7 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  if(jt->dcs){
   ++jt->dcs->dcn; j=jt->dcs->dci; 
   y=jt->dcs->dcy; n=AN(y); s=UAV(y);
-  RZ(j<n);
+  if(!(j<n))R 0;
   jt->dcs->dcj=k=j;
   jt->dcs->dci=j=advl(j,n,s);
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;

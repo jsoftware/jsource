@@ -145,8 +145,9 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
  RZ(t=ravel(w));
  n=AN(w);
  if(7<n||1<n&&1<AR(w)){
-  d=minus(from(one,t),b=from(zero,t)); if(jt->jerr)RESETERR;
-  p=equ(t,plus(b,tymes(d,IX(n)))); if(jt->jerr)RESETERR;
+  // see if we can use a clever encoding
+  d=minus(from(one,t),b=from(zero,t)); // obsolete if(jt->jerr)RESETERR;
+  p=equ(t,plus(b,tymes(d,IX(n)))); // obsolete if(jt->jerr)RESETERR;
   if(p){
    if(equ(d,zero))R over(lsh(w),lnum1(b));
    GAT(y,BOX,6,1,0); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;
@@ -157,7 +158,10 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
    }
    v[4]=spellout(CIOTA); v[5]=thorn1(p?shape(w):negate(shape(w)));
    RE(y); R raze(y);
- }}
+  }
+  RESETERR;   // if there was an error getting to p, clear it
+ }
+ // not clever; just out the atoms
  R over(lshape(w),lnum1(t));
 }    /* dense numeric non-empty array */
 
@@ -231,12 +235,12 @@ static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=VAV(w);
 }
 
 static B laa(A a,A w){C c,d;
- RZ(a&&w);
+ if(!(a&&w))R 0;
  c=ctype[(UC)cl(a)]; d=ctype[(UC)cf(w)];
  R (c==C9||c==CA)&&(d==C9||d==CA);
 }
 
-static B lnn(A a,A w){C c; RZ(a&&w); c=cl(a); R ('x'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
+static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||C9==ctype[(UC)c])&&C9==ctype[(UC)cf(w)];}
 
 static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I ad,n;V*v;
  RZ(a&&w);

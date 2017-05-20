@@ -41,8 +41,9 @@ I jtfnum(J jt,A w){A y;I h,j;
 }    /* file# corresp. to standard argument w */
 
 F1(jtfname){I j; 
- RE(j=i0(indexof(jt->fopf,w))); 
- R j<jt->fopn?ca(*(j+AAV(jt->fopa))):(A)0;
+ RE(j=i0(indexof(jt->fopf,w)));
+ ASSERT(j<jt->fopn,EVFNUM);
+ R ca(*(j+AAV(jt->fopa)));
 }    /* string name corresp. to file# w */
 
 F1(jtjfiles){A y;
@@ -92,7 +93,7 @@ F1(jtjopen){A z;I h;
  if(!AN(w))R w;
  if(AR(w))R rank1ex(w,0L,0L,jtjopen);
  RE(h=fnum(w));
- if(h){RZ(z=sc(h)); ASSERT(fname(z),EVFNUM); R z;}
+ if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}
  else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
   RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE));

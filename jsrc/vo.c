@@ -37,7 +37,7 @@ F1(jtboxopen){RZ(w); if(AN(w)&&BOX&AT(w)){rat1(w); R w;}else{R box(w);}}
 F2(jtlink){RZ(a&&w); if(AN(w)&&AT(w)&BOX){rat1(w);}else{w = box(w);} R over(box(a),w);}
 
 static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
- RZ(w);
+ if(!w)R 0;
  r=AR(w); n=AN(w); k=bp(AT(w)); v=CAV(w);
  if(1>=r){MC(x,v,k*n); R 1;}
  m=AN(a); u=AV(a); s=AS(w);

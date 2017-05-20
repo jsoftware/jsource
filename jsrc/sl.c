@@ -79,7 +79,7 @@ F1(jtlocsizes){I p,q,*v;
 
 
 static A jtstfindnum(J jt,B b,I k){A y;I j;
- RZ(y=indexof(jt->stnum,sc(k))); j=*AV(y); 
+ if(!(y=indexof(jt->stnum,sc(k))))R 0; j=*AV(y); 
  if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
  else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
  else R 0;
@@ -154,9 +154,9 @@ F2(jtlocnl2){UC*u;
 static A jtlocale(J jt,B b,A w){A g,*wv,y;I wd;
  RZ(vlocnl(1,w));
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
- DO(AN(w), y=WVR(i); RZ(g=stfind(b,AN(y),CAV(y))););
+ DO(AN(w), y=WVR(i); if(!(g=stfind(b,AN(y),CAV(y))))R 0;);
  R g;
-}    /* last locale (symbol table) from boxed locale names */
+}    /* last locale (symbol table) from boxed locale names; 0 if none */
 
 F1(jtlocpath1){A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); R LOCPATH(g);}
      /* 18!:2  query locale path */

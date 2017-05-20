@@ -212,7 +212,7 @@ F1(jttparse){A*s,t,x;C d;I b,*c,e,i,j,k,m,n;TA*stack;
    b=cases[i].b; j=n+b;
    e=cases[i].e; k=n+e;
    stack[k]=(cases[i].vf)(jt,j,k,stack);
-   RZ(stack[k].a);
+   if(!(stack[k].a))R A0;
    DO(b,stack[--k]=stack[--j];); n=k;
   } else {stack[n-1]=vmove(n,m-1,stack); RE(0); n-=0<m--;}
  } while(0<=m);

@@ -274,7 +274,7 @@ static B gerar(J jt, A w){A x; C c;
   // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
-  RZ(n==2);  // verify 2 boxes
+  if(!(n==2))R 0;  // verify 2 boxes
   wv = AAV(w); wd = (I)w*ARELATIVE(w); x=WVR(0); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
@@ -284,11 +284,11 @@ static B gerar(J jt, A w){A x; C c;
    else if(c=='3')bmin=bmax=3;
   }
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
-  if(bmin==0){RZ(gerar(jt,x)); bmin=1,bmax=2;}
+  if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
   x = WVR(1);   // point to second box
-  RZ(BOX&AT(x) && 1==AR(x));   // verify it contains a list of boxes
-  RZ(bmin<=AN(x)&&bmax>=AN(x));  // verify correct number of boxes
+  if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
+  if(!(bmin<=AN(x)&&bmax>=AN(x)))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
  } else R 0;
  R 1;
@@ -296,10 +296,10 @@ static B gerar(J jt, A w){A x; C c;
 
 B jtgerexact(J jt, A w){
  A*wv; I wd;
- RZ(BOX&AT(w));   // verify gerund is boxed
- RZ(AN(w));   // verify there are boxes
+ if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
+ if(!(AN(w)))R 0;   // verify there are boxes
  wv = AAV(w); wd = (I)w*ARELATIVE(w);  // point to pointers to contents
- DO(AN(w), RZ(gerar(jt, WVR(i))););   // fail if any box contains a non-gerund
+ DO(AN(w), if(!(gerar(jt, WVR(i))))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 

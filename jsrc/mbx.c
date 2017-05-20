@@ -72,7 +72,7 @@ static B smmsplit(A a,I j){I i,k,**mfree,p;MS*x,*y;
  mfree=SMMFREE(a); p=MLEN;
  i=j;
  while(p>i&&!mfree[i])++i;
- RZ(p>i);
+ if(!(p>i))R 0;
  k=(I)1<<(i-1);
  while(j<i){
   x=(MS*)AABS(a,mfree[i]);
@@ -247,5 +247,5 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
 //  R w;
 // }    /* w has addresses relative to a; works in place */
 
-A relocate(I m,A w){A1*wv; RZ(w); AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
+A relocate(I m,A w){A1*wv; if(!w)R 0; AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
      /* add m to the addresses in w; works in place */

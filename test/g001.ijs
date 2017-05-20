@@ -213,6 +213,11 @@ fb 3
 fb 4
 fb 5  
 
+NB. leaks that have been fixed
+a =. 7!:0''
+1: ]^:0: <"0 i. 1e4
+a = 7!:0''
+
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first'
 4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r second sscript'

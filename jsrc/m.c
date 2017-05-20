@@ -303,6 +303,14 @@ if(c<0){
  I c2=*cc;  // get usecount after tpop
  *cc=c;  // restore inplaceability, if the block is inplaceable
  if(c2>ACUC1){
+  // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
+  // We have corrected the usecount back to inplaceable.  Return without pushing onto the stack a second time.
+  // If w is traversible, its contents have had their usecount incremented, so we'd better undo that
+  // since we are not going to put the contents on the stack for later free (they're already there).
+  // But the contents might have been popped above, if they were allocated late, and their usecount might now
+  // be only 1.  In that case, we have to push them rather than decrementing the usecount, which would free prematurely.
+  // This might evolve into a recursive tpop someday, saving the traversal overhead on each use
+  if(tt&TRAVERSIBLE)jtfaorpush(jt,w,tt); 
 #if MEMAUDIT&2
   audittstack(jt,w,ACUC(w));
 #endif
@@ -315,6 +323,9 @@ R w;
 }
 
 
+// similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
+// is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
+// the enclosing area
 I jtgc3(J jt,A x,A y,A z,I old){
  if(x)ra(x);    if(y)ra(y);    if(z)ra(z);
  tpop(old);
@@ -394,6 +405,46 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
   if(SPA(v,a))fa(SPA(v,a)); if(SPA(v,e))fa(SPA(v,e)); if(SPA(v,i))fa(SPA(v,i)); if(SPA(v,x))fa(SPA(v,x)); 
+ }
+ R 1;
+}
+
+// Same as fa, but if the usecount would go to 0, we instead do a tpush to defer the free
+// It would be best to handle this with a recursive usecount
+static I jtfaorpush(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
+ if(t&BOX){AD* np;
+  // boxed.  Loop through each box, recurring if called for.
+  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
+  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+  while(1){AD* np0;
+   if(--n<0)break;
+   if(n){
+    np0=(A)((I)*wv+(I)wrel); ++wv;   // point to block for next box
+   }
+   if(np){    // it could be 0 if there was error
+    I tp=AT(np);  // fetch type
+#ifdef PREFETCH
+    PREFETCH((C*)np0);   // prefetch the next box
+#endif
+    I c = AC(np);  // fetch usecount
+    if(tp&TRAVERSIBLE)jtfaorpush(jt,np,tp);  // recur before we free this block
+    if(--c<=0){tpush1(np)}else AC(np)=c;  // decrement usecount; push if it goes to 0; otherwise store decremented count
+   }
+   np = np0;  // advance to next box
+  }
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+  // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
+  // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
+  // count in a static variable before calling this routine, we had to increment the usecount at the same time
+  // we increment execct.
+  if(v->execct){--v->execct;}else{fa(v->f); fa(v->g); fa(v->h);}  // this path is rare (f.) & doesn't have problems, so we lazily use fa
+ } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+  // single-level indirect forms.  handle each block
+  DO(t&RAT?2*n:n, faorpush1(*v); ++v;);
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
+  faorpush1(SPA(v,a)); faorpush1(SPA(v,e)); faorpush1(SPA(v,i)); faorpush1(SPA(v,x)); 
  }
  R 1;
 }

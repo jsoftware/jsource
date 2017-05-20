@@ -24,7 +24,7 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
    u=v+c*i; p=u[j];  /* pivot */
    DO(c, u[i]=qminus(u[i],qtymes(p,x[i])););
   }
-  gc(w,old);
+  gc3(w,0L,0L,old);  // use simple gc3 to ensure all changes use the stack, since w is modified inplace
  }
  R w;
 }    /* Gaussian elimination in place */
@@ -45,7 +45,7 @@ static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
    u=v+c*i;
    if(XDIG(u[j].n)){p=qdiv(u[j],x[j]); for(k=j+1;k<r;++k)u[k]=qminus(u[k],qtymes(p,x[k]));}
   }
-  gc(w,old);
+  gc3(w,0L,0L,old);  // use simple gc3 to ensure all changes use the stack, since w is modified inplace
  }
  d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DO(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);

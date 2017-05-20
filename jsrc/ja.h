@@ -325,6 +325,7 @@
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 #define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtmf(jt,x);}else *cc=Zc;}} 
+#define faorpush1(x)                {if(x){I* cc=&AC(x); I Zc=*cc; if(--Zc<=0){tpush1(x);}else *cc=Zc;}} 
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    

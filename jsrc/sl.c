@@ -206,7 +206,8 @@ F2(jtloccre2){
 }    /* 18!:3  create locale with specified hash table size */
 
 
-F1(jtlocswitch){A g; 
+F1(jtlocswitch){A g;
+ RZ(w);
  ASSERT(!AR(w),EVRANK); 
  RZ(g=locale(1,w)); 
  jt->global=g; jt->stswitched=1;

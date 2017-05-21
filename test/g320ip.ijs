@@ -743,6 +743,12 @@ assert. y -: i. 5 5
 1
 )
 
+NB. Verify fork does not execute f if there is an error in f
+'domain error' -: (18!:4 [ 1&+) etx <'nonexlocale'
+-. (<'nonexlocale') e. 18!:1]0 
+'domain error' -: 1 (18!:4@] [ +) etx <'nonexlocale'
+-. (<'nonexlocale') e. 18!:1]0 
+
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 
 

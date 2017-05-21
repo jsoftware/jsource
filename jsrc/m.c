@@ -25,6 +25,8 @@
 #endif
 
 static void jttraverse(J,A,AF);
+static I jtfaorpush(J,AD * RESTRICT,I);
+
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;

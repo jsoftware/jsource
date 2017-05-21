@@ -10,7 +10,7 @@ static DF1(jtonf1){PROLOG(0021);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  PREF1(jtonf1);
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- z=CALL1(f1,CALL1(g1,w,gs),fs);
+ RZ(z=CALL1(f1,CALL1(g1,w,gs),fs));
  jt->xmode=m;
  EPILOG(z);
 }
@@ -20,7 +20,7 @@ static DF2(jtuponf2){PROLOG(0022);DECLFG;A z;I flag=sv->flag,m=jt->xmode;
  if(primitive(gs))if(flag&VFLR)jt->xmode=XMFLR; else if(flag&VCEIL)jt->xmode=XMCEIL;
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a));
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w));
- z=INT&AT(a)&&INT&AT(w)&&CDIV==ID(gs)?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs);
+ RZ(z=INT&AT(a)&&INT&AT(w)&&CDIV==ID(gs)?intdiv(a,w):CALL1(f1,CALL2(g2,a,w,gs),fs));
  jt->xmode=m;
  EPILOG(z);
 }
@@ -75,14 +75,14 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpo
 
 // If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
 static CS1IP(on1, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs);  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
+POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
 ,0113)
 static CS2IP(jtupon2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs);  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs);} \
+POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
 ,0114)
 
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
@@ -90,9 +90,9 @@ static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z;
  // here for execution on a single cell
  A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
  // take inplaceability of each monad from the corresponding dyad argument
- gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs);
- ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs);
- POPZOMB; z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs); 
+ RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
+ RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
+ POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs)); 
  EPILOG(z);
 }
 

@@ -5,15 +5,6 @@
 
 // #include <immintrin.h>
 
-// Debugging switches
-// Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
-                     // 16=audit freelist at every alloc/free
- // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-
-// set FINDNULLRET to trap when a routine returns 0 without having set an error message
-#define FINDNULLRET 0
-
 
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
@@ -691,6 +682,15 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
  feclearexcept(FE_ALL_EXCEPT); return r;
 }
 #endif
+
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free
+ // 2 will detect double-frees before they happen, at the time of the erroneous tpush
+
+// set FINDNULLRET to trap when a routine returns 0 without having set an error message
+#define FINDNULLRET 0
+
 
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 

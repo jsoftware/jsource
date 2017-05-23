@@ -6,11 +6,12 @@
 #include "j.h"
 #include "vcomp.h"
 
-#if (C_AVX&&SY_64) || defined(__aarch64__)
+// platforms with hardware crc32c
+#if C_CRC32C || (C_AVX&&SY_64) || defined(__aarch64__) || (defined(ANDROID) && defined(__x86_64__))
 
 #if C_AVX&&SY_64
 #define VOID
-#define _mm_set1_epi32_ _mm_set1_epi32
+#define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
 
 #elif defined(__aarch64__)
 #define VOID void
@@ -30,6 +31,85 @@ __ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
   __ret = (float64x2_t)(__p0);
   return __ret;
 }
+#endif /* clang */
+
+#else   /* android with hardware crc32 */
+#define VOID void
+#define _mm256_zeroupper(x)
+#ifdef _MSC_VER
+typedef union __declspec(align(16)) __m128i {
+   __int8 m128i_i8[16];
+   __int16 m128i_i16[8];
+   __int32 m128i_i32[4];
+   __int64 m128i_i64[2];
+   unsigned __int8 m128i_u8[16];
+   unsigned __int16 m128i_u16[8];
+   unsigned __int32 m128i_u32[4];
+   unsigned __int64 m128i_u64[2];
+} __m128i;
+typedef struct __declspec(align(16)) __m128d {
+    double              m128d_f64[2];
+} __m128d;
+
+#if SY_64
+#define SSEREGI(x) x##.m128i_i64
+#else
+#define SSEREGI(x) x##.m128i_i32
+#endif
+#define SSEREGD(x) x##.m128d_f64
+#define SSEREGDI(x) ((UIL*)&(x##.m128d_f64))
+
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    z.m128i_i32[0]=
+    z.m128i_i32[1]=
+    z.m128i_i32[2]=
+    z.m128i_i32[3]=a;
+    return z;
+  }
+#else
+#if SY_64
+typedef long long __m128i __attribute__ ((__vector_size__ (16), __may_alias__));
+typedef union __attribute__ ((aligned (16))) st__m128i {
+   signed char m128i_i8[16];
+   int16_t m128i_i16[8];
+   int32_t m128i_i32[4];
+   int64_t m128i_i64[2];
+   unsigned char m128i_u8[16];
+   uint16_t m128i_u16[8];
+   uint32_t m128i_u32[4];
+   uint64_t m128i_u64[2];
+} st__m128i;
+#else
+typedef      long __m128i __attribute__ ((__vector_size__ ( 8), __may_alias__));
+typedef union __attribute__ ((aligned ( 8))) st__m128i {
+   int32_t m128i_i64[2];
+   uint32_t m128i_u64[2];
+} st__m128i;
+#endif
+typedef double __m128d __attribute__ ((__vector_size__ (16), __may_alias__));
+
+#define SSEREGI(x) (x)
+#define SSEREGD(x) (x)
+#define SSEREGDI(x) ((UIL*)&(x))
+
+#if SY_64
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    (*(st__m128i*)&z).m128i_i32[0]=
+    (*(st__m128i*)&z).m128i_i32[1]=
+    (*(st__m128i*)&z).m128i_i32[2]=
+    (*(st__m128i*)&z).m128i_i32[3]=a;
+    return z;
+  }
+#else
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    (*(st__m128i*)&z).m128i_i64[0]=
+    (*(st__m128i*)&z).m128i_i64[1]=a;
+    return z;
+  }
+#endif
 #endif
 
 #endif  /* !C_AVX */
@@ -115,7 +195,7 @@ DI p,x,y;UINT c,d,e,m,q;
 #endif
 }    /* 1 iff significant wrt comparison tolerance */
 
-#if C_AVX
+#if C_AVX&&SY_64
 // fill 64-bit words with the 32-bit value in storeval
 static __forceinline void fillwords(__m128i* storeptr, UI4 storeval, I nstores){
  // use 128-bit moves because 256-bit ops have a warmup time on Ivy Bridge.  Eventually convert this to 256-bit stores
@@ -143,7 +223,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // ~. ~: I.@~. -.   all prefer the table to be complemented and thus initialized to 1.
   // REVERSED types always initialize to 1, whether packed or not
   // this is a kludge - the initialization value should be passed in by the caller, in asct
-#if !C_AVX
+#if !(C_AVX&&SY_64)
   memset(hh->data.UC,md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI),p);
 #else
   UI4 fillval = md&IREVERSED?(md&IIMODPACK?255:1):((md&(IIMODPACK+IIOPMSK))<=INUBI); fillval|=fillval<<8; fillval|=fillval<<16;
@@ -219,7 +299,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // so it is safe to overfill with fullword stores
   UI storeval=asct; if(hh->hashelelgsize==1)storeval |= storeval<<16;  // Pad store value to 64 bits, dropping excess on smaller machines
   I nstores=((p<<hh->hashelelgsize)+SZI-1)>>LGSZI;  // get count of partially-filled words
-#if !C_AVX
+#if !(C_AVX&&SY_64)
   if(SZI>4)storeval |= storeval<<(32%BW);
   I i; for(i=0;i<nstores;++i){hh->data.UI[i]=storeval;}  // fill them all
 #else
@@ -268,15 +348,27 @@ UI hic(I k, UC *v) {
  // Do 3 CRCs in parallel because the latency of the CRC instruction is 3 clocks.
  // This is executed repeatedly so we expect all the branches to predict correctly
  UI crc0=-1, crc1=crc0, crc2=crc0;  // init all CRCs
+#if SY_64
  for(;k>=24;v+=24,k-=24){  // Do blocks of 24 bytes
+#else
+ for(;k>=12;v+=12,k-=12){  // Do blocks of 12 bytes
+#endif
   crc0=CRC32L(crc0,((UI*)v)[0]); crc1=CRC32L(crc1,((UI*)v)[1]); crc2=CRC32L(crc2,((UI*)v)[2]);
  }
  // The order of this runout is replicated in the other character routines
+#if SY_64
  if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
  if(k&=7){  // last few bytes
   crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
+#else
+ if(k>=4){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
+ if(k>=8){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
+ if(k&=3){  // last few bytes,  k<<3 convert to # of bits
+  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
+ }
+#endif
  RETCRC3;
 }
 
@@ -299,24 +391,48 @@ UI hic4(I k, UC* v){I cct=k/sizeof(UI4);
  UI crc0=-1, crc1=crc0, crc2=crc0;
  if(max<=255){  // if nothing bigger than LIT, hash as LIT as a canonical form
   // hash as if LIT
+#if SY_64
   for(;cct>=24;v+=24*sizeof(UI4),cct-=24){  // Do blocks of 24 bytes
    crc0=CRC32L(crc0,fetchspread(v,2,3,8,0)); crc1=CRC32L(crc1,fetchspread(v,2,3,8,8)); crc2=CRC32L(crc2,fetchspread(v,2,3,8,16));
+#else
+  for(;cct>=12;v+=12*sizeof(UI4),cct-=12){  // Do blocks of 12 bytes
+   crc0=CRC32L(crc0,fetchspread(v,2,3,4,0)); crc1=CRC32L(crc1,fetchspread(v,2,3,4,4)); crc2=CRC32L(crc2,fetchspread(v,2,3,4,8));
+#endif
   }
   // The order of this runout exactly matches hic(): crc0 gets first full 8 if any, crc1 gets next full 8; crc2 takes any shard
+#if SY_64
   if(cct>=8){crc0=CRC32L(crc0,fetchspread(v,2,3,8,0)); v+=32;}  // finish the remnant
   if(cct>=16){crc1=CRC32L(crc1,fetchspread(v,2,3,8,0)); v+=32;}
   if(cct&=7){  // last few bytes
    crc2=CRC32L(crc2,fetchspread(v,2,3,cct,0));  // mask out invalid bytes
+#else
+  if(cct>=4){crc0=CRC32L(crc0,fetchspread(v,2,3,4,0)); v+=16;}  // finish the remnant
+  if(cct>=8){crc1=CRC32L(crc1,fetchspread(v,2,3,4,0)); v+=16;}
+  if(cct&=3){  // last few bytes
+   crc2=CRC32L(crc2,fetchspread(v,2,3,cct,0));  // mask out invalid bytes
+#endif
   }
  } else {
   // there was a non-ASCII character, so hash as if C2T
+#if SY_64
   for(;cct>=12;v+=12*sizeof(UI4),cct-=12){  // Do blocks of 24 bytes
    crc0=CRC32L(crc0,fetchspread(v,2,4,4,0)); crc1=CRC32L(crc1,fetchspread(v,2,4,4,4)); crc2=CRC32L(crc2,fetchspread(v,2,4,4,8));
+#else
+  for(;cct>=6;v+=6*sizeof(UI4),cct-=6){  // Do blocks of 12 bytes
+   crc0=CRC32L(crc0,fetchspread(v,2,4,2,0)); crc1=CRC32L(crc1,fetchspread(v,2,4,2,2)); crc2=CRC32L(crc2,fetchspread(v,2,4,2,4));
+#endif
   }
+#if SY_64
   if(cct>=4){crc0=CRC32L(crc0,fetchspread(v,2,4,4,0)); v+=16;}  // finish the remnant
   if(cct>=8){crc1=CRC32L(crc1,fetchspread(v,2,4,4,0)); v+=16;}
   if(cct&=3){  // last few bytes
    crc2=CRC32L(crc2,fetchspread(v,2,4,cct,0));  // mask out invalid bytes
+#else
+  if(cct>=2){crc0=CRC32L(crc0,fetchspread(v,2,4,2,0)); v+=8;}  // finish the remnant
+  if(cct>=4){crc1=CRC32L(crc1,fetchspread(v,2,4,2,0)); v+=8;}
+  if(cct&=1){  // last few bytes
+   crc2=CRC32L(crc2,fetchspread(v,2,4,cct,0));  // mask out invalid bytes
+#endif
   }
  }
  RETCRC3;
@@ -330,13 +446,25 @@ UI hic2(I k, UC* v){I cct=k/sizeof(US);
  DQ(cct, if(((US*)v)[i]>255)R hic(k,v);); // if upper significance, hash C2T: 2 bytes per char
  // hash as if LIT, low bytes only
  UI crc0=-1, crc1=crc0, crc2=crc0;
+#if SY_64
  for(;cct>=24;v+=24*sizeof(US),cct-=24){  // Do blocks of 24 bytes
   crc0=CRC32L(crc0,fetchspread(v,1,3,8,0)); crc1=CRC32L(crc1,fetchspread(v,1,3,8,8)); crc2=CRC32L(crc2,fetchspread(v,1,3,8,16));
+#else
+ for(;cct>=12;v+=12*sizeof(US),cct-=12){  // Do blocks of 12 bytes
+  crc0=CRC32L(crc0,fetchspread(v,1,3,4,0)); crc1=CRC32L(crc1,fetchspread(v,1,3,4,4)); crc2=CRC32L(crc2,fetchspread(v,1,3,4,8));
+#endif
  }
+#if SY_64
  if(cct>=8){crc0=CRC32L(crc0,fetchspread(v,1,3,8,0)); v+=16;}  // finish the remnant
  if(cct>=16){crc1=CRC32L(crc1,fetchspread(v,1,3,8,0)); v+=16;}
  if(cct&=7){  // last few bytes
   crc2=CRC32L(crc2,fetchspread(v,1,3,cct,0));  // mask out invalid bytes
+#else
+ if(cct>=4){crc0=CRC32L(crc0,fetchspread(v,1,3,4,0)); v+=8;}  // finish the remnant
+ if(cct>=8){crc1=CRC32L(crc1,fetchspread(v,1,3,4,0)); v+=8;}
+ if(cct&=3){  // last few bytes
+  crc2=CRC32L(crc2,fetchspread(v,1,3,cct,0));  // mask out invalid bytes
+#endif
  }
  RETCRC3;
 }
@@ -490,7 +618,11 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 
 
 // get hash slot and set up for the search.  j holds the slot
+#if SY_64
 #define HASHSLOT(hash) j=((hash)*p)>>32;
+#else
+#define HASHSLOT(hash) j=((hash)*(UIL)(p))>>32;
+#endif
 
 // define ad and wd, which are bases to be added to boxed addresses
 #define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
@@ -510,6 +642,8 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #define HASHSLOTP(T,hash) v=(T*)_mm_extract_epi64(vp,0); j=((hash)*(UIL)(p))>>32;
 #elif defined(__aarch64__)
 #define HASHSLOTP(T,hash) v=(T*)vgetq_lane_s64(vp,0); j=((hash)*(UIL)(p))>>32;
+#else
+#define HASHSLOTP(T,hash) v=(T*)SSEREGI(vp)[0]; j=((hash)*(UIL)(p))>>32;
 #endif
 // Conditionally insert a new value into the hash table.  The initial value of hj (the table scan pointer) has been fetched.  name is the name holding the slot to be added
 // (it will be j, j1, or j2 depending on where we are in the processing pipeline),
@@ -534,6 +668,12 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
   if((store!=2||hj<hsrc##sct)&&(v=(T*)vgetq_lane_s64(vp,1),!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
   if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
   }while(1);
+#else
+#define FINDP(T,TH,hsrc,name,exp,fstmt,nfstmt,store) do{if(hj==hsrc##sct){ \
+  if(store==1)hv[name]=(TH)i; nfstmt break;}  /* this is the not-found case */ \
+  if((store!=2||hj<hsrc##sct)&&(v=(T*)SSEREGI(vp)[1],!(exp))){if(store==2)hv[name]=(TH)(hsrc##sct+1); fstmt break;} /* found */ \
+  if(--name<0)name+=p; hj=hv[name]; /* miscompare, nust continue search */ \
+  }while(1);
 #endif
 
 // Traverse the hash table for one argument.  (src) indicates which argument, a or w, we are looping through; (hsrc) indicates which argument provided the hash table.
@@ -555,6 +695,12 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=vaddq_s64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=vaddq_s64(vp,vpstride); vpstride=vdupq_n_s64(vgetq_lane_s64(vpstride,0));  \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
+#else
+#define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
+ {I i, j, hj; T *v; d=src##d; SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
+ HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; SSEREGI(vpstride)[1]=SSEREGI(vpstride)[0]; \
+ for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; hj=hv[j1];} \
+ FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1];} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 #endif
 
 // Traverse a in forward direction, adding values to the hash table
@@ -574,6 +720,10 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #define XMVP(T,TH,hash,exp,stride,reflex)      \
  if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)vgetq_lane_s64(vp,1); zc+=SZI;},reflex); }  \
  else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)vgetq_lane_s64(vp,1),k); zc+=k;},reflex); }
+#else
+#define XMVP(T,TH,hash,exp,stride,reflex)      \
+ if(k==SZI){XDOP(T,TH,hash,exp,stride,{},{*(I*)zc=*(I*)SSEREGI(vp)[1]; zc+=SZI;},reflex); }  \
+ else      {XDOP(T,TH,hash,exp,stride,{},{MC(zc,(C*)SSEREGI(vp)[1],k); zc+=k;},reflex); }
 #endif
 
 // The main search routine, given a, w, mode, etc, for datatypes with no comparison tolerance
@@ -740,6 +890,15 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 #define SETXVAL  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #elif defined(__aarch64__)
 #define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xval))); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xrot))); dx=vgetq_lane_u64(vreinterpretq_u64_f64(xnew),0);
+#else
+#define SETXVAL  \
+   HASHSLOT(HIDUMSKSV(dx,v)) jx=j; \
+   SSEREGD(xval)[0]=SSEREGD(xval)[1]=*(D*)v; \
+   SSEREGD(xnew)[0]=SSEREGD(xval)[0]*SSEREGD(tltr)[0]; SSEREGD(xnew)[1]=SSEREGD(xval)[1]*SSEREGD(tltr)[1]; \
+   SSEREGD(xrot)[0]=SSEREGD(xnew)[1]; SSEREGD(xrot)[1]=SSEREGD(xnew)[0]; \
+   SSEREGDI(xnew)[0]^=SSEREGDI(xval)[0]; SSEREGDI(xnew)[1]^=SSEREGDI(xval)[1]; \
+   SSEREGDI(xnew)[0]^=SSEREGDI(xrot)[0]; SSEREGDI(xnew)[1]^=SSEREGDI(xrot)[1]; \
+   dx=SSEREGDI(xnew)[0];
 #endif
 #define TFINDXYT(TH,expa,expw,fstmt0,endtest1,fstmt1)  \
  {UIL dx; x=*(D*)v;                                                                            \
@@ -886,6 +1045,11 @@ could use goto in some of the above
 #define SETXNEW  tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
 #elif defined(__aarch64__)
 #define SETXNEW  tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
+#else
+#define SETXNEW  \
+   SSEREGD(tltr)[0]=tr; SSEREGD(tltr)[1]=tl; \
+   SSEREGD(xnew)[0]=SSEREGD(xrot)[0]=SSEREGD(xval)[0]=0.0; \
+   SSEREGD(xnew)[1]=SSEREGD(xrot)[1]=SSEREGD(xval)[1]=0.0;
 #endif
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \

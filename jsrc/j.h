@@ -766,6 +766,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
 #endif
 
+// Supported in architecture ARMv8.1 and later
 #if defined(__aarch64__)
 #define CRC32CW(crc, value) __asm__("crc32cw %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32CX(crc, value) __asm__("crc32cx %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
@@ -775,7 +776,8 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 
 // The following definitions are used only in builds for the AVX instruction set
-#if SY_64 && C_AVX
+// 64-bit Atom cpu in android has hardware crc32c but not AVX
+#if (SY_64 && C_AVX) || (defined(ANDROID) && defined(__x86_64__))
 #if defined(_MSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4

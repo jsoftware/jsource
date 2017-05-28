@@ -7,7 +7,7 @@
 #include "vcomp.h"
 
 // platforms with hardware crc32c
-#if C_CRC32C || (C_AVX&&SY_64) || defined(__aarch64__) || (defined(ANDROID) && defined(__x86_64__))
+#if C_CRC32C
 
 #if C_AVX&&SY_64
 #define VOID

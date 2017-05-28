@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := hostdefs
 
-LOCAL_LDLIBS := -ldl -lc
+LOCAL_LDLIBS := -ldl
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_CFLAGS := -fPIC -O1 -fwrapv -fno-strict-aliasing -march=armv8-a
@@ -16,7 +16,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -fPIC -Os -fwrapv -fno-strict-aliasing -mfloat-abi=softfp -mfpu=vfp -march=armv6
+  LOCAL_CFLAGS := -fPIC -Os -fwrapv -fno-strict-aliasing -mfloat-abi=softfp -mfpu=vfp -march=armv5te
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH),x86_64)

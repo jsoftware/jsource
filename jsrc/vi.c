@@ -7,7 +7,7 @@
 #include "vcomp.h"
 
 // platforms without hardware crc32c
-#if !(C_CRC32C || (C_AVX&&SY_64) || defined(__aarch64__) || (defined(ANDROID) && defined(__x86_64__)))
+#if !C_CRC32C
 
 // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2

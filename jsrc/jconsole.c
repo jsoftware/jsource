@@ -25,6 +25,7 @@ static char input[30000];
 #ifdef READLINE
 /* readlin.h */
 #if defined(ANDROID)||defined(_WIN32)
+/* if not working properly, export TERM=dumb */
 #include "linenoise.h"
 #define add_history    linenoiseHistoryAdd
 #define read_history   linenoiseHistoryLoad

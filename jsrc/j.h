@@ -3,8 +3,6 @@
 /*                                                                         */
 /* Global Definitions                                                      */
 
-// #include <immintrin.h>
-
 
 #ifndef SYS // include js.h only once - dtoa.c
 #include "js.h"
@@ -242,10 +240,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define C_USEMULTINTRINSIC 0
 #endif
 #endif
-#endif
-
-#if !defined(C_AVX)
-#define C_AVX 0
 #endif
 
 #if C_AVX
@@ -806,8 +800,15 @@ static __forceinline void aligned_free(void *ptr) {
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
 #endif
 
+#if (SY_64 && C_AVX)
+#ifdef C_CRC32C
+#undef C_CRC32C
+#endif
+#define C_CRC32C 1
+#endif
+
 // Supported in architecture ARMv8.1 and later
-#if defined(__aarch64__)
+#if (C_CRC32C && defined(__aarch64__))
 #define CRC32CW(crc, value) __asm__("crc32cw %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32CX(crc, value) __asm__("crc32cx %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32(crc,value)  ({ uint32_t crci=crc; CRC32CW(crci, value); crci; })
@@ -817,7 +818,7 @@ static __forceinline void aligned_free(void *ptr) {
 
 // The following definitions are used only in builds for the AVX instruction set
 // 64-bit Atom cpu in android has hardware crc32c but not AVX
-#if (SY_64 && C_AVX) || (defined(ANDROID) && defined(__x86_64__))
+#if C_CRC32C && (defined(_M_X64) || defined(__x86_64__))
 #if defined(_MSC_VER)  // SY_WIN32
 // Visual Studio definitions
 #define CRC32(x,y) _mm_crc32_u32(x,y)  // takes UI4, returns UI4

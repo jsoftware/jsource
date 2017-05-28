@@ -6,7 +6,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := tsdll
 LOCAL_MODULE_FILENAME    := libtsdll
 
-LOCAL_LDLIBS := -lc
+LOCAL_LDLIBS := 
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -march=armv8-a
@@ -17,7 +17,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
-  LOCAL_CFLAGS := -fPIC -Os -fwrapv -Werror -fno-strict-aliasing -mfloat-abi=softfp -march=armv6
+  LOCAL_CFLAGS := -fPIC -Os -fwrapv -Werror -fno-strict-aliasing -mfloat-abi=softfp -march=armv5te
   LOCAL_ARM_MODE := arm
 endif
 ifeq ($(TARGET_ARCH),x86_64)

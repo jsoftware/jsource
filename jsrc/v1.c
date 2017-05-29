@@ -158,7 +158,7 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; r=ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; jt->rank=0;
- if(ar>acr||wr>wcr)R rank2ex(a,w,0L,acr,wcr,jtmatchs);
+ if(ar>acr||wr>wcr)R rank2ex(a,w,0L,RMAX,RMAX,acr,wcr,jtmatchs);
  if(ar!=wr||memcmp(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R zero;
  GATV(x,B01,r,1L,0L); b=BAV(x); memset(b,C0,r);
  if(SPARSE&AT(a)){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}

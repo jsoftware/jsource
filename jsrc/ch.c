@@ -45,7 +45,7 @@ static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn
 
 static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=VAV(self);
  RZ(a&&w);
- if(AR(w))R rank2ex(a,w,self,0L,0L,jthgeom2);
+ if(AR(w))R rank2ex(a,w,self,0L,0L,0L,0L,jthgeom2);  // H. is not marked as supporting IRS, so this really doesn't matter
  RZ(a=AT(a)&FL+CMPX?vib(a):vi(a));
  an=AN(a); av=AV(a); n=0; DO(an, j=av[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
  if(!n)R tymes(zero,a);

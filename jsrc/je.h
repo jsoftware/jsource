@@ -750,7 +750,7 @@ extern I        jtqcompare(J,Q,Q);
 extern I        jtra(J,AD* RESTRICT,I);
 extern A        jtraa(J,I,A);
 extern A        jtrank1ex(J,A,A,I,AF);
-extern A        jtrank2ex(J,A,A,A,I,I,AF);
+extern A        jtrank2ex(J,A,A,A,I,I,I,I,AF);
 extern A        jtrd(J,F,I,I);
 extern B        jtredef(J,A,L*);
 extern B        jtrnginit(J);

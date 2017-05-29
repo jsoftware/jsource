@@ -48,7 +48,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  // a (and w).  This has implications for empty arguments.
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- if(ar>acr)R rank2ex(a,w,0L,acr,wcr,jtifrom);  // split a into cells if needed
+ if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on a single cell of w)
  an=AN(a); wn=AN(w); ws=AS(w);
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
@@ -144,7 +144,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- if(ar>acr)R rank2ex(a,w,0L,acr,wcr,jtbfrom);
+ if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
  // items, where 0 { empty is an index error!  In that case, we set wr to 0, in effect making it an atom (since failing exec on fill-cell produces atomic result)
@@ -316,7 +316,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=
  wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  if(ar){
   if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
-  R wr==wcr?rank2ex(a,w,0L,0L,wcr,jtafrom):
+  R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
       df2(rank1ex(a,0L,acr,jtbox),rank1ex(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); cd=(I)c*ARELATIVE(c); 

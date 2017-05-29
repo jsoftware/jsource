@@ -47,7 +47,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*z
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- if(af)R rank2ex(a,w,0L,acr,wcr,jtfromis);
+ if(af)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtfromis);
  wn=AN(w); ws=AS(w); wt=AT(w);
  RZ(ind=pind(wcr?*(ws+wf):1,a));
  GA(z,wt,1L,ar+wr-(0<wcr),ws); v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);

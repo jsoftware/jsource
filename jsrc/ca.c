@@ -70,7 +70,7 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  R sc(b?z-m:z);
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
-static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,jtmodpow2);}
+static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.

@@ -49,8 +49,9 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd
 static DF1(jteach1){DECLF; R every (  w,fs,f1);}
 static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 
-DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,-1L, RMAX,VAV(self)->f2);}
-DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,RMAX,-1L, VAV(self)->f2);}
+// apply f2 on operate on items of a or w.  Pass on rank of f2 to reduce rank nesting
+DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,-1L, RMAX,VAV(self)->f2);}
+DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,RMAX,-1L, VAV(self)->f2);}
 
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
 static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}

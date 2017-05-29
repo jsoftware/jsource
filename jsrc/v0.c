@@ -287,7 +287,7 @@ static F2(jtpoly2a){A c,e,x;I m;
 
 F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
- if(1<AR(a))R rank2ex(a,w,0L,1L,0L,jtpoly2);
+ if(1<AR(a))R rank2ex(a,w,0L,1L,0L,1L,0L,jtpoly2);
  an=AN(a); at=AT(a); b=1&&BOX&at;
  wn=AN(w); wt=AT(w);
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);

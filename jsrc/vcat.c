@@ -177,7 +177,7 @@ F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,w
  r=acr+wcr?MAX(acr,wcr):1;
  // if max cell-rank>2, or an argument is empty, or (joining tables with row of different lengths) or something is relative, do general case
  if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||ARELATIVE(a)||ARELATIVE(w)){
-  jt->rank=0; R rank2ex(a,w,0L,acr,wcr,jtovg);
+  jt->rank=0; R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg);
  }
  acn=1>=acr?p:p*as[af+acr-2]; ma=!acr&&2==wcr?q:acn;
  wcn=1>=wcr?q:q*ws[wf+wcr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;

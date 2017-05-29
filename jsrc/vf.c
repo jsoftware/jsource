@@ -189,7 +189,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
-  if(wf!=*AV(a1))R rank2ex(a,w,0L,1L,wcr,jtreshape);
+  if(wf!=*AV(a1))R rank2ex(a,w,0L,1L,wcr,1L,wcr,jtreshape);
   RE(m=prod(1+d,av)); n=IC(y); q=n*(m/ws[wf]); r=m%ws[wf];
   v=AV(y); DO(n, if(r<=*v)break; ++q; v+=c;);
   GATV(t,INT,q,1,0); u=AV(t); v=v0=AV(y);
@@ -208,7 +208,7 @@ F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,z
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); jt->rank=0;
- if(1<acr||acr<ar)R rank2ex(a,w,0L,MIN(1,acr),wcr,jtreshape);
+ if(1<acr||acr<ar)R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreshape);
  RZ(a=vip(a)); r=AN(a); u=AV(a);
  if(SPARSE&AT(w))R reshapesp(a,w,wf,wcr);
  wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);
@@ -228,7 +228,7 @@ F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; m=MIN(1,acr);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; jt->rank=0;
- if(1<acr||acr<ar)R rank2ex(a,w,0L,m,wcr,jtreitem);
+ if(1<acr||acr<ar)R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreitem);
  if(1>=wcr)y=a;
  else{ 
   RZ(a=vi(a)); an=AN(a); m=1;

@@ -419,6 +419,13 @@ f=: 4 : 'x#y'
 (i.1e9     0) -: 1e4#   i.1e5   0
 (i.1e9 2e4 0) -: 1e4#"2 i.1e9 2 0
 
+NB. Test integrated rank support on verbs with rank other than 0 or _
+2 2 5 5 -: $ (0 1 ,: 1 0)  |:"2 2   i. 2 3 5
+2 2 6 5 -: $ (,. 5 6) $"2 2 i. 2 3 5
+2 2 6 -: $ (,. 5 6) ($,)"2 2 i. 2 3 5
+2 2 1 5 -: $ (0 1 0,: 1 0 0)  #"2 2   i. 2 3 5
+2 2 6 5 -: $ (,. 5 6) {."{."2 2 i. 2 3 5
+2 2 1 5 -: $ (,. 2 3) }."2 2 i. 2 3 5
 
 4!:55 ;:'a adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n tally x xx y '
 

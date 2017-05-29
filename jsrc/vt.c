@@ -77,7 +77,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  if(!(SPARSE&AT(w)))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- if(af||1<acr)R rank2ex(a,w,0L,af?acr:1L,wcr,jttake);
+ if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);
  n=AN(a); 
  ASSERT(!wcr||n<=wcr,EVLENGTH);
  if(AT(a)&B01+INT)RZ(s=a=vi(a))
@@ -100,7 +100,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  RZ((a=vib(a))&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; 
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
- if(af||1<acr)R rank2ex(a,w,0L,af?acr:1L,wcr,jtdrop);
+ if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);
  n=AN(a); u=AV(a);
  ASSERT(!wcr||n<=wcr,EVLENGTH);
  if(wcr){RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; v[i]=d<-m?0:d<0?d+m:d<m?d-m:0;);}

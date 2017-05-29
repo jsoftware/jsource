@@ -1054,7 +1054,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wd,wr,*ws,wt;
  RZ(a&&w);
  if(!jt->cdarg)RZ(cdinit());
- if(1<AR(a))R rank2ex(a,w,0L,1L,1L,jtcd);
+ if(1<AR(a))R rank2ex(a,w,0L,1L,1L,1L,1L,jtcd);
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  ASSERT(wt&DENSE,EVDOMAIN);
  RZ(cc=cdparse(a,0)); 

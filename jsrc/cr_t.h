@@ -17,26 +17,8 @@
 #define RARG1   {if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #else
 #define RDECLS
-#define RCALL   CALL2(f2,ya,yw,fs)
-#define RDIRECT (at&DIRECT&&wt&DIRECT)
-#define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-// Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
-// with the shorter frame (when jj==n we have run out of repeats).  Whenever we have to copy, we first
-// check to see if the cell-workarea has been incorporated into a result noun; if so, we have to
-// reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
-// when a cell is to be repeated.  NEWY? allocates a new argument cell, and MOVEY? copies to it.
-#define RARG    {if(++jj==n)jj=0; \
-                 if(!b||jj==0){if(y==ya||ACUC1<AC(ya)){cc = 0;NEWYA;} MOVEYA;}  \
-                 if( b||jj==0){if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;} }
-// If the use-count in y? has been incremented, it means that y? was incorporated into an indirect
-// noun and must not be modified.  In that case, we reallocate it.  This is used to reallocate the
-// first cell only.
-#define RARG1   {if(y==ya||ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
-                 if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
-#endif
 
-#define EMSK(x) (1<<((x)-1))
-#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
+#endif
 
 // Assignments from cr.c:
 // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
@@ -59,7 +41,7 @@
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}
  } 
 
- // yt=type, yr=rank, ys->shape, yn=#atoms k=#bytes  of first-cell result
+ // yt=type, yr=rank, ys->shape, yn=#atoms k=#bytes of first-cell result
  yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
  // First shot: zip through the cells, laying the results into the output area
  // one by one.  We can do this if the results are direct (i. e. not pointers),
@@ -80,7 +62,8 @@
    if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
    MC(zv+=k,AV(y),k);   // move the result-cell to the output
    if(cc)tpop(old);  // Now that we have copied to the output area: if we have not reallocated a cell on the stack, free what the verb did
- }}
+  }
+ }
  if(j<mn){A q,*x,yz;
   // Here we were not able to build the result in the output area; type/rank/shape changed.
   // We will create a boxed result, boxing each cell, and then open it.  If this works, great.
@@ -108,5 +91,3 @@
 
 
 #undef TEMPLATE
-#undef EXIGENTERROR
-#undef EMSK

@@ -81,7 +81,7 @@ F2(jtcant2){A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
  q=jt->rank?jt->rank[0]:AR(a); 
  r=jt->rank?jt->rank[1]:AR(w); jt->rank=0;
- if(1<q||q<AR(a))R rank2ex(a,w,0L,MIN(1,q),r,jtcant2);
+ if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV(p,INT,AN(y),1,0); pv=AV(p);

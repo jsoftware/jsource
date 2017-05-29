@@ -269,7 +269,7 @@ F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 
  at=AT(a); ab=1&&at&DENSE;
  wt=AT(w); wb=1&&wt&DENSE;
- if(1<acr||acr<ar)R rank2ex(a,w,0L,MIN(1,acr),wcr,jtrepeat);
+ if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+AS(w))),EVLENGTH);
  if(!acr||!wcr)R ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr);
  if(at&CMPX+SCMPX)R ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr);

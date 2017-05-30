@@ -477,7 +477,7 @@ oflo2:
    NAN0;
    if(n==1){D* RESTRICT zv; I* RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=AV(a);
-    DO(m, D tot=0; wv=AV(w); DO(p, tot+=*av++**wv++;) *zv++=tot;)
+    DO(m, D tot=0; wv=AV(w); DO(p, tot+=((D)*av++)*((D)*wv++);) *zv++=tot;)
     smallprob=0;  // Don't compute it again
    }else if(!(smallprob = m*n*(IL)p<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
       memset(DAV(z),C0,m*n*sizeof(D));

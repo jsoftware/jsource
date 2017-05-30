@@ -417,7 +417,11 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  RZ(a&&w);
  ar=AR(a); l=efr(ar,l);
  wr=AR(w); r=efr(wr,r);
- R l<ar||r<wr?rank2ex(a,w,fs,VAV(fs)->lr,VAV(fs)->rr,l,r,f2):CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite
+ if(l<ar||r<wr) {I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of werb we are going to call
+  // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
+  if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->f; f2=VAV(fs)->f2;}
+  R rank2ex(a,w,fs,llr,lrr,l,r,f2);
+ }else R CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite
 }
 
 

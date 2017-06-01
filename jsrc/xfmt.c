@@ -183,15 +183,19 @@ static D jtafzrndID(J jt,I dp,D y){R SGN(y)*roundID(dp,ABS(y));}
 
 static D jtexprndID(J jt, I d, D y){I e,s;D f,q,c,x1,x2;DI8 f8,y8,c8;
  s=SGN(y); e=-(I)jfloor(log10(y=ABS(y)));  // s=sign, e=-1-#digits above decimal point
- if(308 >= ABS(d+e)){e+=d;d=0;}  // e=#places to shift left to put dec point at top
- // we want to multiply y by 10^-log(e), but that power may overflow.  So we split
+ // obsolete if(308 >= ABS(d+e)){e+=d;d=0;}  // e=#places to shift left to put rounding point at decimal point
+ // we want to multiply y by 10^-log(y), but that power may overflow.  So we split
  // the power into two halves, and multiply one at a time
- x1=pow(10,(D)(e>>1));x2=pow(10,(D)(e-(e>>1)));
- q=x2*ppwrs[d];
- q*=y;
+ // obsolete x1=pow(10,(D)(e>>1));x2=pow(10,(D)(e-(e>>1)));
+ // obsolete q=x2*ppwrs[d];
+ e+=d; x1=pow(2,(D)e); x2=pow(5,(D)e); 
+ q=x2*y;
  q*=x1; /* avoid overflow to Infinity */
- f=((npwrs[d]* jfloor( q))/x1)/x2;
- c=((npwrs[d]*-jfloor(-q))/x1)/x2;
+ // obsolete  f=((npwrs[d]* jfloor( q))/x1)/x2;
+ // obsolete  c=((npwrs[d]*-jfloor(-q))/x1)/x2;
+ f=jfloor( q)/x1; f/=x2;
+ c=(-jfloor(-q))/x1; c/=x2;
+
  if(f==c) R s*c;
  /*ASSERTSYS(f<=y && y<=c, "exprndID: fyc");*/ /* why does this fail? */
  f8.d=f; y8.d=y; c8.d=c;

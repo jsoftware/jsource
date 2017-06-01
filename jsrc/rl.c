@@ -12,7 +12,7 @@
 
 static F1(jtlnoun);
 static F1(jtlnum);
-static F1(jtlrr);
+static DF1(jtlrr);
 
 #define NUMV(c)  (c==C9||c==CD||c==CA||c==CS)
 
@@ -293,7 +293,7 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
 }
 
 // Main routine for () and linear rep.  w is to be represented
-static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
+static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  RZ(w);
  // If noun, return the linear rep of the noun
  if(AT(w)&NOUN)R lnoun(w);
@@ -306,8 +306,9 @@ static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);
  GATV(t,BOX,m,1,0); tv=AAV(t);
  if(2<m)RZ(tv[2]=lrr(hs));
- if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,fxeach(gs),0L):lrr(gs));
- if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,fxeach(fs),0L):lrr(fs));
+ // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
+ if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,self?fxeachacv(gs):fxeach(gs),0L):lrr(gs));
+ if(0<m)RZ(tv[0]=fl&VGERL?CALL1(jt->ltie,self?fxeachacv(fs):fxeach(fs),0L):lrr(fs));
  R linsert(t,w);
 }
 
@@ -315,7 +316,7 @@ static F1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
 // jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
 F1(jtlrep){PROLOG(0056);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpa; jt->ltie=jtltiea;
- RE(z=lrr(w));
+ RE(z=jtlrr(jt,w,w));  // the w for self is just any nonzero to indicate top-level call
  if(jt->ltext)z=over(z,jt->ltext);
  jt->ltext=0;
  EPILOG(z);
@@ -325,7 +326,7 @@ F1(jtlrep){PROLOG(0056);A z;
 // jt->lcp and jt->ltie are routines for handling adding enclosing () and handling `
 F1(jtprep){PROLOG(0057);A z;
  jt->ltext=0; jt->lcp=(AF)jtlcpb; jt->ltie=jtltieb;
- RE(z=lrr(w));
+ RE(z=jtlrr(jt,w,w));
  if(jt->ltext)z=over(z,jt->ltext);
  jt->ltext=0;
  EPILOG(z);

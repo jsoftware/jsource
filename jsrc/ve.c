@@ -208,7 +208,7 @@ static I jtremid(J jt,I a,D b){D r;I k;
 
 APFX(remID, I,I,D, remid)
 
-static I remii(I a,I b){I r; R!a?b:(r=b%a,0<a?r+a*(0>r):r+a*(0<r));}
+static I remii(I a,I b){I r; R (a!=(a>>(BW-1)))?(r=b%a,0<a?r+(a&(r>>(BW-1))):r+(a&((-r)>>(BW-1)))):a?0:b;}  // must handle IMIN/-1, which overflows.  If a=0, return b.
 
 AHDR2(remII,I,I,I){I u,v;
  if(1==n)  DO(m,               *z++=remii(*x,*y); x++; y++; )
@@ -366,18 +366,31 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);
  ASSERT(at&DENSE&&wt&DENSE,EVNONCE);
- if(!ar)R residue(a,w);
+ if(1>ar)R residue(a,w);
  if(1==ar&&at&B01+INT&&wt&B01+INT){I*av,d,r,*u,*wv,x,*zv;
+  // both types are int/boolean, and ar is a list
   RZ(coerce2(&a,&w,INT));
-  RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); *(wr+AS(z))=an;
-  av=an+AV(a); wv=wn+AV(w); zv=zn+AV(z);
-  if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,j,k;
-   k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;  // should use CTTZ
-   if(d==j)DO(wn, x=*--wv; *--zv=x&d1; *--zv=x>>k;)
-   else    DO(wn, x=*--wv; if(0<=x){*--zv=x%d; *--zv=x/d;}else{*--zv=d+x%d; *--zv=-1+x/d;})  // kludge this line discrepant w/ previous
+  // If a ends with _1 followed by any number of 1, there will be overflow if w contains any imin.  Detect that very rare case
+  av=an+AV(a); wv=wn+AV(w);
+  for(zv=av, d=an;d&&*--zv==1;--d);
+  if(d&&*zv==-1){zv=wv; DO(wn, if(*--zv==IMIN){d=0; break;}) if(!d){RZ(a=cvt(FL,a)); R abase2(a,w);}}
+  RE(zn=mult(an,wn)); GATV(z,INT,zn,1+wr,AS(w)); *(wr+AS(z))=an;  // allocate result area
+  zv=zn+AV(z);
+  if(2==an&&!av[-2]&&0<(d=av[-1])){I d1,k;
+   // Special case: a is (0,d) where d is positive
+   if(d&(d1=d-1)){I q,r,xs;
+    // d is not a power of 2
+    DO(wn, x=*--wv; xs=(x>>(BW-1)); q=(x-xs)/d+xs; r=x-q*d; *--zv=r; *--zv=q;)  // remainder has same sign as dividend.  If neg, add 1, divide, sub 1 from quotient; then make remainder right
+   }else{
+    // d is a power of 2
+    k=CTTZ(d);  // k = #zeros below the 1 in d
+// obsolete   k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;  // should use CTTZ
+    DO(wn, x=*--wv; *--zv=x&d1; *--zv=x>>k;)
+   }
   }else DO(wn, x=*--wv; u=av; DO(an, d=*--u; *--zv=r=remii(d,x); x=d?(x-r)/d:0;););
   R z;
- }else{PROLOG(0070);A y,*zv;C*u,*yv;I k;
+ }
+ {PROLOG(0070);A y,*zv;C*u,*yv;I k;
   F2RANK(1,0,jtabase2,0);
   k=bp(at); u=an*k+CAV(a);
   GA(y,at, 1, 0,0); yv=CAV(y);

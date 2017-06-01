@@ -41,13 +41,10 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
 static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k,m,n,*u,*ws;
  RZ(a&&w);
  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h);}
- id=h?0:ID(fs); d=h?0:id==CBOX?1:2; 
+ id=h?0:ID(fs); d=h?0:id==CBOX?1:2;   // d= 0: gerund u  1: <  2: other u
  if(1>=AR(a))RZ(a=lamin2(zero,a));
- RZ(a=vib(a));
- if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
-  if     (2==AN(a)&&1==AR(w))R cut02v(a,w);
-  else if(4>=AN(a)&&2==AR(w))R cut02m(a,w);
- as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);
+ RZ(a=vib(a));  // audit for valid integers
+ as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # cells in a
  ASSERT(2==as[m]&&c<=AR(w),EVLENGTH);
  if(!n){  /* empty result; figure out result type */
   switch(d){
@@ -55,8 +52,14 @@ static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k
    case 1: y=ace; break;
    case 2: y=CALL1(f1,w,fs); RESETERR; break;
   }
-  GA(z,y?AT(y):B01,n,m,as); R z;
+  if(y==0)y=zero;  // use zero as fill result if error
+  GA(z,AT(y),n,m+AR(y),0); I *zs=AS(z); I *ys=AS(y); 
+  DO(m, *zs++=as[i];) DO(AR(y), *zs++=ys[i];)  // move in frame of a followed by shape of result-cell
+  R z;
  }
+ if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
+  if     (2==AN(a)&&1==AR(w))R cut02v(a,w);
+  else if((4==AN(a)||2==AN(a))&&2==AR(w))R cut02m(a,w);
  ws=AS(w); 
  GATV(z,BOX,n,m,as); zv=AAV(z);
  GATV(q,BOX,c,1,0); qv=AAV(q);

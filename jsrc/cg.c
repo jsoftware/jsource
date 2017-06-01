@@ -19,6 +19,8 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
 
 // run jtfx on each box in w
 F1(jtfxeach){R every(w,0L,jtfx);}
+// run jtfx on each box in w, EXCEPT on nouns, which we return as is
+F1(jtfxeachacv){R every(w,w,jtfx);}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);

@@ -48,7 +48,7 @@ F1(jtimmea){A t,z;
  R z;
 }
 
-static A jtcex(J jt,A w,AF f){A z; RE(w); z=f(jt,w); RESETERR; R z;}
+static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
      /* conditional execute */
 
 F1(jtexg){A*v,*wv,x,y,z;I n,wd;
@@ -59,7 +59,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n,wd;
  if(VERB&AT(w))R w;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GATV(z,BOX,n,1,0); v=AAV(z);
- DO(n, x=WVR(i); RZ(*v++=(y=cex(x,jtfx))?y:exg(x)););
+ DO(n, x=WVR(i); RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););
  R parse(z);
 }
 

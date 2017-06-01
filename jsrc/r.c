@@ -72,7 +72,8 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
 }
 
 // Convert an AR to an A block.  w is a gerund that has been opened
-F1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
+// self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value
+DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
  RZ(w);
  // if string, handle that special case (verb/primitive)
  if(LIT&AT(w))R fxchar(w);
@@ -88,7 +89,7 @@ F1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
   y=WVR(1); n=AN(y); yv=AAV(y); yd=(I)y*ARELATIVE(y);
-  if(id==CNOUN)R y;
+  if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);
  }

@@ -675,6 +675,18 @@ f =: g@.
 f =: @.('abc'&i.)
 (lr<'f') -: '@.(''abc''&i.)'
 
+f =: 0`
+(lr<'f') -: '0`'
+f =: (<'0';0)`
+(lr<'f') -: '<''0'';0`'
+f =: `0
+(lr<'f') -: '`0'
+f =: `(<'0';0)
+(lr<'f') -: '`(<''0'';0)'
+
+
+
+
 4!:55 ;:'a act adot1 adot2 sdot0 alp ar base bot boxc boxed bp bs '
 4!:55 ;:'bsd c center connect cp cross dash dig dotco em '
 4!:55 ;:'en extent f f3 fx g gap graft h hfork '

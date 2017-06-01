@@ -44,11 +44,11 @@ g=: 1 : 0
  for_i. i.#c do.
   j=. >i{c
   t=. (j{x) j}r$a:
-  s=. i. >+/&.>t#~(t e.a:)*:*$y
-  assert. s -: t u;. 1 y 
-  assert. s -: t u;._1 y 
-  assert. s -: t u;. 2 y 
-  assert. s -: t u;._2 y 
+  s=.   >+/&.>t#~(t e.a:)*:*$y
+  assert. s -: (-#$u y) }. $ t u;. 1 y 
+  assert. s -: (-#$u y) }. $ t u;._1 y 
+  assert. s -: (-#$u y) }. $ t u;. 2 y 
+  assert. s -: (-#$u y) }. $ t u;._2 y 
  end.
  1
 )

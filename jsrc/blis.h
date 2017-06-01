@@ -341,7 +341,7 @@ ZGEMM(ukn_ref)
 
 #define dgemm_micro_kernel BLIS_DGEMM_UKERNEL
 #define zgemm_micro_kernel BLIS_ZGEMM_UKERNEL
-#if C_AVX && (defined(_WIN64)||defined(__LP64__))
+#ifdef BLIS_DGEMM2_UKERNEL
 #define dgemm2_micro_kernel BLIS_DGEMM2_UKERNEL
 #define zgemm2_micro_kernel BLIS_ZGEMM2_UKERNEL
 #else

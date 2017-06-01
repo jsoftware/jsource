@@ -13,8 +13,8 @@
 #ifdef ZIM
 #undef ZIM
 #endif
-#define ZRE(x,y)        ((x).real*(y).real-(x).imag*(y).imag)
-#define ZIM(x,y)        ((x).real*(y).imag+(x).imag*(y).real)
+#define ZRE(x,y)        ((TYMES((x).real,(y).real))-TYMES((x).imag,(y).imag))
+#define ZIM(x,y)        ((TYMES((x).real,(y).imag))+TYMES((x).imag,(y).real))
 #define MC  BLIS_DEFAULT_MC_D
 #define KC  BLIS_DEFAULT_KC_D
 #define NC  BLIS_DEFAULT_NC_D

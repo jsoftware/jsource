@@ -32,8 +32,8 @@
 #define ZCJ(u,v)        ((u).re==(v).re && (u).im==-(v).im)
 #define ZOV(v)          (ABS((v).re)> OVERFLOW||ABS((v).im)> OVERFLOW)
 #define ZUN(v)          (ABS((v).re)<UNDERFLOW||ABS((v).im)<UNDERFLOW)
-#define ZRE(x,y)        ((x).re*(y).re-(x).im*(y).im)
-#define ZIM(x,y)        ((x).re*(y).im+(x).im*(y).re)
+#define ZRE(x,y)        (TYMES((x).re,(y).re)-TYMES((x).im,(y).im))
+#define ZIM(x,y)        (TYMES((x).re,(y).im)+TYMES((x).im,(y).re))
 
 extern ZF1(jtzceil);
 extern ZF1(jtzconjug);

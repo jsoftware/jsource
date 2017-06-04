@@ -40,14 +40,9 @@ void bli_dgemm_opt_4x4
   PREFETCH2((void*)vb);
   PREFETCH2((void*)(vb+1));
 
-  float64x2_t P0_Q0 = vdupq_n_f64(0.0);
-  float64x2_t P0_Q1 = vdupq_n_f64(0.0);
-  float64x2_t P1_Q0 = vdupq_n_f64(0.0);
-  float64x2_t P1_Q1 = vdupq_n_f64(0.0);
-  float64x2_t P2_Q0 = vdupq_n_f64(0.0);
-  float64x2_t P2_Q1 = vdupq_n_f64(0.0);
-  float64x2_t P3_Q0 = vdupq_n_f64(0.0);
-  float64x2_t P3_Q1 = vdupq_n_f64(0.0);
+  float64x2_t P0_Q0, P0_Q1, P1_Q0, P1_Q1, P2_Q0, P2_Q1, P3_Q0, P3_Q1;
+  P0_Q0 = P0_Q1 = P1_Q0 = P1_Q1 = P2_Q0 = P2_Q1 = P3_Q0 = P3_Q1 = vdupq_n_f64(0.0);
+  const double *p; float64x2_t pp[2];
 
   PREFETCH2((void*)&c[0*rs_c+0*cs_c]);
   PREFETCH2((void*)&c[0*rs_c+1*cs_c]);
@@ -119,37 +114,38 @@ void bli_dgemm_opt_4x4
     }
   }
 
-  const double *p = (const double *) &P0_Q0;
+  p = (const double *) &pp;
+  pp[0] = P0_Q0;
+  pp[1] = P0_Q1;
+
   c[0*rs_c+0*cs_c] += p[0];
   c[0*rs_c+1*cs_c] += p[1];
+  c[0*rs_c+2*cs_c] += p[2];
+  c[0*rs_c+3*cs_c] += p[3];
 
-  p = (const double *) &P0_Q1;
-  c[0*rs_c+2*cs_c] += p[0];
-  c[0*rs_c+3*cs_c] += p[1];
+  pp[0] = P1_Q0;
+  pp[1] = P1_Q1;
 
-  p = (const double *) &P1_Q0;
   c[1*rs_c+0*cs_c] += p[0];
   c[1*rs_c+1*cs_c] += p[1];
+  c[1*rs_c+2*cs_c] += p[2];
+  c[1*rs_c+3*cs_c] += p[3];
 
-  p = (const double *) &P1_Q1;
-  c[1*rs_c+2*cs_c] += p[0];
-  c[1*rs_c+3*cs_c] += p[1];
+  pp[0] = P2_Q0;
+  pp[1] = P2_Q1;
 
-  p = (const double *) &P2_Q0;
   c[2*rs_c+0*cs_c] += p[0];
   c[2*rs_c+1*cs_c] += p[1];
+  c[2*rs_c+2*cs_c] += p[2];
+  c[2*rs_c+3*cs_c] += p[3];
 
-  p = (const double *) &P2_Q1;
-  c[2*rs_c+2*cs_c] += p[0];
-  c[2*rs_c+3*cs_c] += p[1];
+  pp[0] = P3_Q0;
+  pp[1] = P3_Q1;
 
-  p = (const double *) &P3_Q0;
   c[3*rs_c+0*cs_c] += p[0];
   c[3*rs_c+1*cs_c] += p[1];
-
-  p = (const double *) &P3_Q1;
-  c[3*rs_c+2*cs_c] += p[0];
-  c[3*rs_c+3*cs_c] += p[1];
+  c[3*rs_c+2*cs_c] += p[2];
+  c[3*rs_c+3*cs_c] += p[3];
 
 }
 
@@ -196,31 +192,13 @@ void bli_zgemm_opt_4x4
   PREFETCH2((void*)(vb+4));
   PREFETCH2((void*)(vb+6));
 
-  float64x2x2_t P0_Q0;
-  float64x2x2_t P0_Q1;
-  float64x2x2_t P1_Q0;
-  float64x2x2_t P1_Q1;
-  float64x2x2_t P2_Q0;
-  float64x2x2_t P2_Q1;
-  float64x2x2_t P3_Q0;
-  float64x2x2_t P3_Q1;
+  float64x2x2_t P0_Q0, P0_Q1, P1_Q0, P1_Q1, P2_Q0, P2_Q1, P3_Q0, P3_Q1;
 
-  P0_Q0.val[0] = vdupq_n_f64(0.0);
-  P0_Q0.val[1] = vdupq_n_f64(0.0);
-  P1_Q0.val[0] = vdupq_n_f64(0.0);
-  P1_Q0.val[1] = vdupq_n_f64(0.0);
-  P2_Q0.val[0] = vdupq_n_f64(0.0);
-  P2_Q0.val[1] = vdupq_n_f64(0.0);
-  P3_Q0.val[0] = vdupq_n_f64(0.0);
-  P3_Q0.val[1] = vdupq_n_f64(0.0);
-  P0_Q1.val[0] = vdupq_n_f64(0.0);
-  P0_Q1.val[1] = vdupq_n_f64(0.0);
-  P1_Q1.val[0] = vdupq_n_f64(0.0);
-  P1_Q1.val[1] = vdupq_n_f64(0.0);
-  P2_Q1.val[0] = vdupq_n_f64(0.0);
-  P2_Q1.val[1] = vdupq_n_f64(0.0);
-  P3_Q1.val[0] = vdupq_n_f64(0.0);
-  P3_Q1.val[1] = vdupq_n_f64(0.0);
+  P0_Q0.val[0] = P0_Q0.val[1] = P1_Q0.val[0] = P1_Q0.val[1] = \
+  P2_Q0.val[0] = P2_Q0.val[1] = P3_Q0.val[0] = P3_Q0.val[1] = \
+  P0_Q1.val[0] = P0_Q1.val[1] = P1_Q1.val[0] = P1_Q1.val[1] = \
+  P2_Q1.val[0] = P2_Q1.val[1] = P3_Q1.val[0] = P3_Q1.val[1] = vdupq_n_f64(0.0);
+  const double *pr,*pi; float64x2_t ppr[2],ppi[2];
 
   PREFETCH2((void*)&c[0*rs_c+0*cs_c]);
   PREFETCH2((void*)&c[0*rs_c+1*cs_c]);
@@ -365,69 +343,63 @@ void bli_zgemm_opt_4x4
     }
   }
 
-  const double *p = (const double *) &P0_Q0.val[0];
-  c[0*rs_c+0*cs_c].real += p[0];
-  c[0*rs_c+1*cs_c].real += p[1];
+  pr = (const double *) &ppr;
+  pi = (const double *) &ppi;
+  ppr[0] = P0_Q0.val[0];
+  ppi[0] = P0_Q0.val[1];
+  ppr[1] = P0_Q1.val[0];
+  ppi[1] = P0_Q1.val[1];
 
-  p = (const double *) &P0_Q0.val[1];
-  c[0*rs_c+0*cs_c].imag += p[0];
-  c[0*rs_c+1*cs_c].imag += p[1];
+  c[0*rs_c+0*cs_c].real += pr[0];
+  c[0*rs_c+0*cs_c].imag += pi[0];
+  c[0*rs_c+1*cs_c].real += pr[1];
+  c[0*rs_c+1*cs_c].imag += pi[1];
+  c[0*rs_c+2*cs_c].real += pr[2];
+  c[0*rs_c+2*cs_c].imag += pi[2];
+  c[0*rs_c+3*cs_c].real += pr[3];
+  c[0*rs_c+3*cs_c].imag += pi[3];
 
-  p = (const double *) &P0_Q1.val[0];
-  c[0*rs_c+2*cs_c].real += p[0];
-  c[0*rs_c+3*cs_c].real += p[1];
+  ppr[0] = P1_Q0.val[0];
+  ppi[0] = P1_Q0.val[1];
+  ppr[1] = P1_Q1.val[0];
+  ppi[1] = P1_Q1.val[1];
 
-  p = (const double *) &P0_Q1.val[1];
-  c[0*rs_c+2*cs_c].imag += p[0];
-  c[0*rs_c+3*cs_c].imag += p[1];
+  c[1*rs_c+0*cs_c].real += pr[0];
+  c[1*rs_c+0*cs_c].imag += pi[0];
+  c[1*rs_c+1*cs_c].real += pr[1];
+  c[1*rs_c+1*cs_c].imag += pi[1];
+  c[1*rs_c+2*cs_c].real += pr[2];
+  c[1*rs_c+2*cs_c].imag += pi[2];
+  c[1*rs_c+3*cs_c].real += pr[3];
+  c[1*rs_c+3*cs_c].imag += pi[3];
 
-  p = (const double *) &P1_Q0.val[0];
-  c[1*rs_c+0*cs_c].real += p[0];
-  c[1*rs_c+1*cs_c].real += p[1];
+  ppr[0] = P2_Q0.val[0];
+  ppi[0] = P2_Q0.val[1];
+  ppr[1] = P2_Q1.val[0];
+  ppi[1] = P2_Q1.val[1];
 
-  p = (const double *) &P1_Q0.val[1];
-  c[1*rs_c+0*cs_c].imag += p[0];
-  c[1*rs_c+1*cs_c].imag += p[1];
+  c[2*rs_c+0*cs_c].real += pr[0];
+  c[2*rs_c+0*cs_c].imag += pi[0];
+  c[2*rs_c+1*cs_c].real += pr[1];
+  c[2*rs_c+1*cs_c].imag += pi[1];
+  c[2*rs_c+2*cs_c].real += pr[2];
+  c[2*rs_c+2*cs_c].imag += pi[2];
+  c[2*rs_c+3*cs_c].real += pr[3];
+  c[2*rs_c+3*cs_c].imag += pi[3];
 
-  p = (const double *) &P1_Q1.val[0];
-  c[1*rs_c+2*cs_c].real += p[0];
-  c[1*rs_c+3*cs_c].real += p[1];
+  ppr[0] = P3_Q0.val[0];
+  ppi[0] = P3_Q0.val[1];
+  ppr[1] = P3_Q1.val[0];
+  ppi[1] = P3_Q1.val[1];
 
-  p = (const double *) &P1_Q1.val[1];
-  c[1*rs_c+2*cs_c].imag += p[0];
-  c[1*rs_c+3*cs_c].imag += p[1];
-
-  p = (const double *) &P2_Q0.val[0];
-  c[2*rs_c+0*cs_c].real += p[0];
-  c[2*rs_c+1*cs_c].real += p[1];
-
-  p = (const double *) &P2_Q0.val[1];
-  c[2*rs_c+0*cs_c].imag += p[0];
-  c[2*rs_c+1*cs_c].imag += p[1];
-
-  p = (const double *) &P2_Q1.val[0];
-  c[2*rs_c+2*cs_c].real += p[0];
-  c[2*rs_c+3*cs_c].real += p[1];
-
-  p = (const double *) &P2_Q1.val[1];
-  c[2*rs_c+2*cs_c].imag += p[0];
-  c[2*rs_c+3*cs_c].imag += p[1];
-
-  p = (const double *) &P3_Q0.val[0];
-  c[3*rs_c+0*cs_c].real += p[0];
-  c[3*rs_c+1*cs_c].real += p[1];
-
-  p = (const double *) &P3_Q0.val[1];
-  c[3*rs_c+0*cs_c].imag += p[0];
-  c[3*rs_c+1*cs_c].imag += p[1];
-
-  p = (const double *) &P3_Q1.val[0];
-  c[3*rs_c+2*cs_c].real += p[0];
-  c[3*rs_c+3*cs_c].real += p[1];
-
-  p = (const double *) &P3_Q1.val[1];
-  c[3*rs_c+2*cs_c].imag += p[0];
-  c[3*rs_c+3*cs_c].imag += p[1];
+  c[3*rs_c+0*cs_c].real += pr[0];
+  c[3*rs_c+0*cs_c].imag += pi[0];
+  c[3*rs_c+1*cs_c].real += pr[1];
+  c[3*rs_c+1*cs_c].imag += pi[1];
+  c[3*rs_c+2*cs_c].real += pr[2];
+  c[3*rs_c+2*cs_c].imag += pi[2];
+  c[3*rs_c+3*cs_c].real += pr[3];
+  c[3*rs_c+3*cs_c].imag += pi[3];
 
 }
 

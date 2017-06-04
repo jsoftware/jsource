@@ -191,15 +191,15 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->db=od;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
-    BASSERT(0,EWTHROW);
+    BASSERT(0,EVTHROW);
    case CBBLOCK:
     // B-block (present on every sentence in the B-block)
     // run the sentence
     tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
-    // if the error is THROW, and there is a catcht. block, go there, otherwise error
-    else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
+    // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
+    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
     // for other error, go to the error location; if that's out of range, keep the error; if not,
     // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
     // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
@@ -219,7 +219,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(ci->canend&2)tpop(old);else gc(z,old);   // 2 means previous B can't be the result
     t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
-    else if(EWTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EWTHROW);}
+    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
     break;
    case CFOR:

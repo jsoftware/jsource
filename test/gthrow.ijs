@@ -52,8 +52,8 @@ sub=: 3 : 0
 'catcht bbb'      -: main 2
 'catcht cc'       -: main 6
 '10 not cut back' -: main 10
-
-sub _1   NB. throw without catcht
+NB. There is no way to test uncaught throw!  It will terminate the test perforce.
+NB. 'uncaught throw.' -: sub etx _1   NB. throw without catcht
 
 main1=: 3 : 0   NB. throw with adverse
  try. 
@@ -145,11 +145,12 @@ main5=: 3 : 0   NB. catcht at multiple levels
  end.
 )
 
-'catcht aaaa'     -: main5 _1
-'catcht bbb'      -: main5 2
-'catcht cc'       -: main5 6
-'catcht d'        -: main5 99
-'10 not cut back' -: main5 10
+NB. None of these did anything - main5 has nothing to catch the throws
+NB. 'catcht aaaa'     -: main5 _1
+NB. 'catcht bbb'      -: main5 2
+NB. 'catcht cc'       -: main5 6
+NB. 'catcht d'        -: main5 99
+NB. '10 not cut back' -: main5 10
 
 18!:55 <'jthrow'
 

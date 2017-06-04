@@ -37,7 +37,8 @@
 #define EVALLOC         32
 #define EVNAN           33
 #define EVNONNOUN       34
-#define NEVM            34      /* number of event codes       */
+#define EVTHROW         35      // uncaught throw.
+#define NEVM            35      /* number of event codes       */
 
 /* The following codes are never displayed to the user (but may show up in a 13!:12 query)   */
 
@@ -45,9 +46,8 @@
 #define EWIRR           46      /* irrational result           */
 #define EWRAT           47      /* rational   result           */
 #define EWDIV0          48      /* division by zero            */
-#define EWTHROW         49      /* throw. executed             */
 #define EWOV            50      // integer overflow from the old routines that do not support recovery.  Anything >= EWOV is an overflow.  Leave at 50 until asm routines are retired
-#define EWOV1           51      // integer overflow that can be recovered because the flota version has already been saved
+#define EWOV1           51      // integer overflow that can be recovered because the float version has already been saved
 #define EWOVIP          52      // overflow, but recoverable even though executed in place.  It starts here, but identifies the routine it came from:
 #define EWOVIPPLUSII    0
 #define EWOVIPPLUSBI    1

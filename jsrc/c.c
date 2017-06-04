@@ -14,10 +14,11 @@ static CS2IP(obv2, z=(f2)(jtinplace,a,w,fs),0104)
 F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
 
 
+// Adverse.  Run f, and if that fails (and not with THROW), run g
 static DF1(ad1){DECLFG;A z;I od=jt->db; 
  RZ(w); 
  jt->db=0; z=CALL1(f1,  w,fs); jt->db=od;
- if(EWTHROW==jt->jerr)R 0;
+ if(EVTHROW==jt->jerr)R 0;
  RESETERR;  
  R z?z:CALL1(g1,  w,gs);
 }
@@ -25,7 +26,7 @@ static DF1(ad1){DECLFG;A z;I od=jt->db;
 static DF2(ad2){DECLFG;A z;I od=jt->db;
  RZ(a&&w); 
  jt->db=0; z=CALL2(f2,a,w,fs); jt->db=od;
- if(EWTHROW==jt->jerr)R 0;
+ if(EVTHROW==jt->jerr)R 0;
  RESETERR; 
  R z?z:CALL2(g2,a,w,gs);
 }

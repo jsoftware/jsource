@@ -154,6 +154,7 @@ void jtmsort(J jt, I n, void **zv, void **xv){
 #endif
 
 
+// m: #cells in w (# sorts to do)   n: #items in a cell of w   ai: #atoms in an item of a cell of w
 #define GF(f)         B f(J jt,I m,I ai,I n,A w,I*zv)
 
 /* m  - # cells (# individual grades to do) */

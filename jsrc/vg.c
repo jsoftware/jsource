@@ -410,9 +410,11 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
    j=0; d=wv[*(v-1)];
    // At start of this loop, d has the last of a set of (possibly only 1) equal values, j has the index of the output location where
    // the set will be stored.  v scans back through the negatives, looking for a new value, and when it finds one copies out all
-   // the old values.  We know that there is at least one positive value in front of the first negative value, and that it must not compare equal,
-   // so that each value will get pushed out
-   DO(1+nneg-nneg0, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
+   // the old values.
+   DO(nneg-nneg0, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
+   // We have to push out the last set by hand because *v is outside the input area.  That wouldn't pose a problem
+   // except when there is rank; then *v may be the same value as d and a change would be missed
+   DO(nneg-nneg0-j, *u++=*v++;);  // v starts pointing to first neg
   }
   wv+=c; zv+=n;
  }

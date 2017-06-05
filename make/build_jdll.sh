@@ -8,21 +8,40 @@ cd ~
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
  
+if [ x$CC = x'' ] ; then
+if [ -f "/usr/bin/cc" ]; then
+CC=cc
+export CC
+else
+CC=gcc
+export CC
+fi
+fi
+if [ $($CC -v 2>&1 | grep -c "clang version") -eq 1 ] ; then
+COMPILER='clang'
+else
+COMPILER='gcc'
+fi
+export COMPILER
+echo "COMPILER $COMPILER"
+
 USE_OPENMP="${USE_OPENMP:=0}"
-if [ $USE_OPENMP == 1 ]
-then
+if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 # LDOPENMP=" -fopenmp "
-# LDOPENMP32=" /usr/lib/i386-linux-gnu/libgomp.so.1 "    # gcc
-# LDOPENMP32=" /usr/lib/i386-linux-gnu/libomp.so.5 "     # clang
+# LDOPENMP32=" -l:libgomp.so.1 "    # gcc
+# LDOPENMP32=" -l:libomp.so.5 "     # clang
 LDOPENMP=" -fopenmp `$CC -print-file-name=libgomp.a` "   # windows -fopenmp for pthread
 LDOPENMP32=" -fopenmp `$CC -print-file-name=libgomp.a` "
 fi
 
+if [ x$COMPILER = x'gcc' ] ; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
+else
 # clang 3.5 .. 5.0
-# common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
+common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"
+fi
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in

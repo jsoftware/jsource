@@ -9,6 +9,18 @@
 
 #include <immintrin.h>
 
+#define NO_FMA 1
+
+#if NO_FMA
+#define MM256_FMADD_PD(a,b,c) _mm256_add_pd(_mm256_mul_pd(a,b),c)
+#define BLI_DGEMM bli_dgemm_int_8x6
+#define BLI_ZGEMM bli_zgemm_int_4x3
+#else
+#define MM256_FMADD_PD(a,b,c) _mm256_fmadd_pd(a,b,c)
+#define BLI_DGEMM bli_dgemm2_int_8x6
+#define BLI_ZGEMM bli_zgemm2_int_4x3
+#endif
+
 #define MC  BLIS_DEFAULT_MC_D
 #define KC  BLIS_DEFAULT_KC_D
 #define NC  BLIS_DEFAULT_NC_D
@@ -16,11 +28,11 @@
 #define NR  BLIS_DEFAULT_NR_D
 
 #define NRv (NR/4)              // 4 lanes
-#if !((MR==4)&&(NR==8))
+#if !((MR==8)&&(NR==6))
 #error "invalid MR NR"
 #endif
 
-void bli_dgemm_int_4x8
+void BLI_DGEMM
 (
   dim_t               k,
   double*    restrict alpha_,
@@ -34,100 +46,206 @@ void bli_dgemm_int_4x8
 {
   double alpha=*alpha_, beta=*beta_;
 
-  __m256d b0, b1, tmp1, tmp2;
+  register __m256d b_re, b_im;
+  register __m256d a_0, a_1;
 
-  double *vb = b;
-  PREFETCH2((void*)vb);
-  PREFETCH2((void*)(vb+4));
+  const double *vb = (const double *)b;
 
   _mm256_zeroupper();
-  __m256d P0_Q0, P0_Q1, P1_Q0, P1_Q1, P2_Q0, P2_Q1, P3_Q0, P3_Q1;
-  P0_Q0 = P0_Q1 = P1_Q0 = P1_Q1 = \
-  P2_Q0 = P2_Q1 = P3_Q0 = P3_Q1 = _mm256_setzero_pd();
-  const double *p; __m256d pp[2];
+  register __m256d t0_0r, t0_1r, t0_0i, t0_1i;
+  register __m256d t1_0r, t1_1r, t1_0i, t1_1i;
+  register __m256d t2_0r, t2_1r, t2_0i, t2_1i;
 
-  PREFETCH2((void*)&c[0*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+7*cs_c]);
+  t0_0r = _mm256_setzero_pd(); t0_1r = _mm256_setzero_pd(); t0_0i = _mm256_setzero_pd(); t0_1i = _mm256_setzero_pd();
+  t1_0r = _mm256_setzero_pd(); t1_1r = _mm256_setzero_pd(); t1_0i = _mm256_setzero_pd(); t1_1i = _mm256_setzero_pd();
+  t2_0r = _mm256_setzero_pd(); t2_1r = _mm256_setzero_pd(); t2_0i = _mm256_setzero_pd(); t2_1i = _mm256_setzero_pd();
 
-  PREFETCH2((void*)&c[1*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+7*cs_c]);
+  const double *p0,*p1; __m256d pp0[6],pp1[6];
 
-  PREFETCH2((void*)&c[2*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+7*cs_c]);
-
-  PREFETCH2((void*)&c[3*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+7*cs_c]);
+  PREFETCH((void*)&c[0*cs_c]);
+  PREFETCH((void*)&c[1*cs_c]);
+  PREFETCH((void*)&c[2*cs_c]);
+  PREFETCH((void*)&c[3*cs_c]);
+  PREFETCH((void*)&c[4*cs_c]);
+  PREFETCH((void*)&c[5*cs_c]);
 
   gint_t l;
-  for (l=0; l<k; ++l) {
-    PREFETCH((void*)(a+MR));
-    __m256d a_0 = _mm256_broadcast_sd( a );
-    __m256d a_1 = _mm256_broadcast_sd( a+1 );
-    __m256d a_2 = _mm256_broadcast_sd( a+2 );
-    __m256d a_3 = _mm256_broadcast_sd( a+3 );
+  gint_t ki = k/4;  // unroll
+  gint_t kr = k%4;
+  for (l=0; l<ki; ++l) {
 
-    PREFETCH2((void*)(vb+8));
-    b0 =_mm256_loadu_pd(vb);
+// iter 0
+    PREFETCH((void*)(a+64));  //   PREFETCH((void*)(a+2*4*MR));
 
-    tmp1 = _mm256_mul_pd(a_0, b0);
-    P0_Q0 = _mm256_add_pd(P0_Q0, tmp1);
-    tmp2 = _mm256_mul_pd(a_1, b0);
-    P1_Q0 = _mm256_add_pd(P1_Q0, tmp2);
-    tmp1 = _mm256_mul_pd(a_2, b0);
-    P2_Q0 = _mm256_add_pd(P2_Q0, tmp1);
-    tmp2 = _mm256_mul_pd(a_3, b0);
-    P3_Q0 = _mm256_add_pd(P3_Q0, tmp2);
+    a_0 = _mm256_load_pd( (double*)a );
+    a_1 = _mm256_load_pd( 4+(double*)a );
 
-    PREFETCH2((void*)(vb+12));
-    b1 =_mm256_loadu_pd(vb+4);
+    b_re = _mm256_broadcast_sd( vb );
+    b_im = _mm256_broadcast_sd( vb+1 );
 
-    tmp1 = _mm256_mul_pd(a_0, b1);
-    P0_Q1 = _mm256_add_pd(P0_Q1, tmp1);
-    tmp2 = _mm256_mul_pd(a_1, b1);
-    P1_Q1 = _mm256_add_pd(P1_Q1, tmp2);
-    tmp1 = _mm256_mul_pd(a_2, b1);
-    P2_Q1 = _mm256_add_pd(P2_Q1, tmp1);
-    tmp2 = _mm256_mul_pd(a_3, b1);
-    P3_Q1 = _mm256_add_pd(P3_Q1, tmp2);
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+2 );
+    b_im = _mm256_broadcast_sd( vb+3 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+4 );
+    b_im = _mm256_broadcast_sd( vb+5 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+// iter 1
+    a_0 = _mm256_load_pd( 8+(double*)a );
+    a_1 = _mm256_load_pd( 12+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb+6 );
+    b_im = _mm256_broadcast_sd( vb+7 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+8 );
+    b_im = _mm256_broadcast_sd( vb+9 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+10 );
+    b_im = _mm256_broadcast_sd( vb+11 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+// iter 2
+    PREFETCH((void*)(a+72)); // PREFETCH((void*)(a+MR+2*4*MR));
+
+    a_0 = _mm256_load_pd( 16+(double*)a );
+    a_1 = _mm256_load_pd( 20+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb+12 );
+    b_im = _mm256_broadcast_sd( vb+13 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+14 );
+    b_im = _mm256_broadcast_sd( vb+15 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+16 );
+    b_im = _mm256_broadcast_sd( vb+17 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+// iter 3
+    a_0 = _mm256_load_pd( 24+(double*)a );
+    a_1 = _mm256_load_pd( 28+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb+18 );
+    b_im = _mm256_broadcast_sd( vb+19 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+20 );
+    b_im = _mm256_broadcast_sd( vb+21 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+22 );
+    b_im = _mm256_broadcast_sd( vb+23 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+    a += 4*MR;      // unroll*MR
+    vb += 4*NR;     // unroll*NR  vb is pointer to double
+  }
+
+  for (l=0; l<kr; ++l) {
+    PREFETCH((void*)(a+64)); // PREFETCH((void*)(a+2*4*MR));
+
+    a_0 = _mm256_load_pd( (double*)a );
+    a_1 = _mm256_load_pd( 4+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb );
+    b_im = _mm256_broadcast_sd( vb+1 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+2 );
+    b_im = _mm256_broadcast_sd( vb+3 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+4 );
+    b_im = _mm256_broadcast_sd( vb+5 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
 
     a += MR;
-    vb += 8;    // double
+    vb += NR;       // vb is pointer to double
   }
 
   if (alpha!=1.0) {
-    __m256d valpha = _mm256_broadcast_sd( alpha_ );
-    P0_Q0 = _mm256_mul_pd(P0_Q0, valpha);
-    P0_Q1 = _mm256_mul_pd(P0_Q1, valpha);
-    P1_Q0 = _mm256_mul_pd(P1_Q0, valpha);
-    P1_Q1 = _mm256_mul_pd(P1_Q1, valpha);
-    P2_Q0 = _mm256_mul_pd(P2_Q0, valpha);
-    P2_Q1 = _mm256_mul_pd(P2_Q1, valpha);
-    P3_Q0 = _mm256_mul_pd(P3_Q0, valpha);
-    P3_Q1 = _mm256_mul_pd(P3_Q1, valpha);
+    b_re = _mm256_broadcast_sd( (double*)alpha_ );
+
+    t0_0r = _mm256_mul_pd ( b_re , t0_0r );
+    t0_1r = _mm256_mul_pd ( b_re , t0_1r );
+    t0_0i = _mm256_mul_pd ( b_re , t0_0i );
+    t0_1i = _mm256_mul_pd ( b_re , t0_1i );
+
+    t1_0r = _mm256_mul_pd ( b_re , t1_0r );
+    t1_1r = _mm256_mul_pd ( b_re , t1_1r );
+    t1_0i = _mm256_mul_pd ( b_re , t1_0i );
+    t1_1i = _mm256_mul_pd ( b_re , t1_1i );
+
+    t2_0r = _mm256_mul_pd ( b_re , t2_0r );
+    t2_1r = _mm256_mul_pd ( b_re , t2_1r );
+    t2_0i = _mm256_mul_pd ( b_re , t2_0i );
+    t2_1i = _mm256_mul_pd ( b_re , t2_1i );
+
   }
 
   if (beta!=1.0) {
@@ -140,58 +258,92 @@ void bli_dgemm_int_4x8
     }
   }
 
-  p = (const double *) &pp;
-  pp[0] = P0_Q0;
-  pp[1] = P0_Q1;
+//  t0_0r t0_0i t0_1r t0_1i
+//  t1_0r t1_0i t1_1r t1_1i
+//  t2_0r t2_0i t2_1r t2_1i
+//  row order in rr ri ir ii
+//  col order in t0 t1 t2
 
-  c[0*rs_c+0*cs_c] += p[0];
-  c[0*rs_c+1*cs_c] += p[1];
-  c[0*rs_c+2*cs_c] += p[2];
-  c[0*rs_c+3*cs_c] += p[3];
+  p0 = (const double *) &pp0;
+  p1 = (const double *) &pp1;
+  pp0[0] = t0_0r;    // p0 0
+  pp0[1] = t1_0r;    // p0 4
+  pp0[2] = t2_0r;    // p0 8
+  pp0[3] = t0_0i;    // p0 12
+  pp0[4] = t1_0i;    // p0 16
+  pp0[5] = t2_0i;    // p0 20
+  pp1[0] = t0_1r;    // p1 0
+  pp1[1] = t1_1r;    // p1 4
+  pp1[2] = t2_1r;    // p1 8
+  pp1[3] = t0_1i;    // p1 12
+  pp1[4] = t1_1i;    // p1 16
+  pp1[5] = t2_1i;    // p1 20
 
-  c[0*rs_c+4*cs_c] += p[4];
-  c[0*rs_c+5*cs_c] += p[5];
-  c[0*rs_c+6*cs_c] += p[6];
-  c[0*rs_c+7*cs_c] += p[7];
+  gint_t pc;
 
-  pp[0] = P1_Q0;
-  pp[1] = P1_Q1;
+  pc = 0;
+  c[pc      ] += p0[0];
+  c[pc+=cs_c] += p0[12];
+  c[pc+=cs_c] += p0[4];
+  c[pc+=cs_c] += p0[16];
+  c[pc+=cs_c] += p0[8];
+  c[pc+=cs_c] += p0[20];
 
-  c[1*rs_c+0*cs_c] += p[0];
-  c[1*rs_c+1*cs_c] += p[1];
-  c[1*rs_c+2*cs_c] += p[2];
-  c[1*rs_c+3*cs_c] += p[3];
+  pc = rs_c;
+  c[pc      ] += p0[1];
+  c[pc+=cs_c] += p0[13];
+  c[pc+=cs_c] += p0[5];
+  c[pc+=cs_c] += p0[17];
+  c[pc+=cs_c] += p0[9];
+  c[pc+=cs_c] += p0[21];
 
-  c[1*rs_c+4*cs_c] += p[4];
-  c[1*rs_c+5*cs_c] += p[5];
-  c[1*rs_c+6*cs_c] += p[6];
-  c[1*rs_c+7*cs_c] += p[7];
+  pc = 2*rs_c;
+  c[pc      ] += p0[2];
+  c[pc+=cs_c] += p0[14];
+  c[pc+=cs_c] += p0[6];
+  c[pc+=cs_c] += p0[18];
+  c[pc+=cs_c] += p0[10];
+  c[pc+=cs_c] += p0[22];
 
-  pp[0] = P2_Q0;
-  pp[1] = P2_Q1;
+  pc = 3*rs_c;
+  c[pc      ] += p0[3];
+  c[pc+=cs_c] += p0[15];
+  c[pc+=cs_c] += p0[7];
+  c[pc+=cs_c] += p0[19];
+  c[pc+=cs_c] += p0[11];
+  c[pc+=cs_c] += p0[23];
 
-  c[2*rs_c+0*cs_c] += p[0];
-  c[2*rs_c+1*cs_c] += p[1];
-  c[2*rs_c+2*cs_c] += p[2];
-  c[2*rs_c+3*cs_c] += p[3];
+  pc = 4*rs_c;
+  c[pc      ] += p1[0];
+  c[pc+=cs_c] += p1[12];
+  c[pc+=cs_c] += p1[4];
+  c[pc+=cs_c] += p1[16];
+  c[pc+=cs_c] += p1[8];
+  c[pc+=cs_c] += p1[20];
 
-  c[2*rs_c+4*cs_c] += p[4];
-  c[2*rs_c+5*cs_c] += p[5];
-  c[2*rs_c+6*cs_c] += p[6];
-  c[2*rs_c+7*cs_c] += p[7];
+  pc = 5*rs_c;
+  c[pc      ] += p1[1];
+  c[pc+=cs_c] += p1[13];
+  c[pc+=cs_c] += p1[5];
+  c[pc+=cs_c] += p1[17];
+  c[pc+=cs_c] += p1[9];
+  c[pc+=cs_c] += p1[21];
 
-  pp[0] = P3_Q0;
-  pp[1] = P3_Q1;
+  pc = 6*rs_c;
+  c[pc      ] += p1[2];
+  c[pc+=cs_c] += p1[14];
+  c[pc+=cs_c] += p1[6];
+  c[pc+=cs_c] += p1[18];
+  c[pc+=cs_c] += p1[10];
+  c[pc+=cs_c] += p1[22];
 
-  c[3*rs_c+0*cs_c] += p[0];
-  c[3*rs_c+1*cs_c] += p[1];
-  c[3*rs_c+2*cs_c] += p[2];
-  c[3*rs_c+3*cs_c] += p[3];
-
-  c[3*rs_c+4*cs_c] += p[4];
-  c[3*rs_c+5*cs_c] += p[5];
-  c[3*rs_c+6*cs_c] += p[6];
-  c[3*rs_c+7*cs_c] += p[7];
+  pc = 7*rs_c;
+  c[pc      ] += p1[3];
+  c[pc+=cs_c] += p1[15];
+  c[pc+=cs_c] += p1[7];
+  c[pc+=cs_c] += p1[19];
+  c[pc+=cs_c] += p1[11];
+  c[pc+=cs_c] += p1[23];
 
 }
 
@@ -211,11 +363,11 @@ void bli_dgemm_int_4x8
 
 
 #define NRv (NR/4)              // 4 lanes
-#if !((MR==4)&&(NR==8))
+#if !((MR==4)&&(NR==3))
 #error "invalid MR NR"
 #endif
 
-void bli_zgemm_int_4x8
+void BLI_ZGEMM
 (
   dim_t               k,
   dcomplex*  restrict alpha_,
@@ -229,173 +381,238 @@ void bli_zgemm_int_4x8
 {
   dcomplex alpha=*alpha_, beta=*beta_;
 
-  __m256d b0re, b1re, b0im, b1im;
-  __m256d bt0,bt2;
-  __m256d tmp1re, tmp2re, tmp1im, tmp2im;
-  __m256d a_0re,a_0im,a_1re,a_1im,a_2re,a_2im,a_3re,a_3im;
-  __m256d AreBim1, BreAim1, AreBim2, BreAim2;
+  register __m256d b_re, b_im;
+  register __m256d a_0, a_1;
 
   const double *vb = (const double *)b;
-  PREFETCH2((void*)(vb));
-  PREFETCH2((void*)(vb+4));
-  PREFETCH2((void*)(vb+8));
-  PREFETCH2((void*)(vb+12));
 
   _mm256_zeroupper();
-  __m256d P0_Q0re, P0_Q1re, P1_Q0re, P1_Q1re, P2_Q0re, P2_Q1re, P3_Q0re, P3_Q1re;
-  __m256d P0_Q0im, P0_Q1im, P1_Q0im, P1_Q1im, P2_Q0im, P2_Q1im, P3_Q0im, P3_Q1im;
+  register __m256d t0_0r, t0_1r, t0_0i, t0_1i;
+  register __m256d t1_0r, t1_1r, t1_0i, t1_1i;
+  register __m256d t2_0r, t2_1r, t2_0i, t2_1i;
 
-  P0_Q0re = P0_Q1re = P1_Q0re = P1_Q1re = \
-  P2_Q0re = P2_Q1re = P3_Q0re = P3_Q1re = \
-  P0_Q0im = P0_Q1im = P1_Q0im = P1_Q1im = \
-  P2_Q0im = P2_Q1im = P3_Q0im = P3_Q1im = _mm256_setzero_pd();
-  const double *pr,*pi; __m256d ppr[2],ppi[2];
+  t0_0r = _mm256_setzero_pd(); t0_1r = _mm256_setzero_pd(); t0_0i = _mm256_setzero_pd(); t0_1i = _mm256_setzero_pd();
+  t1_0r = _mm256_setzero_pd(); t1_1r = _mm256_setzero_pd(); t1_0i = _mm256_setzero_pd(); t1_1i = _mm256_setzero_pd();
+  t2_0r = _mm256_setzero_pd(); t2_1r = _mm256_setzero_pd(); t2_0i = _mm256_setzero_pd(); t2_1i = _mm256_setzero_pd();
 
-  PREFETCH2((void*)&c[0*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[0*rs_c+7*cs_c]);
+  const double *p0,*p1; __m256d pp0[3],pp1[3];
 
-  PREFETCH2((void*)&c[1*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[1*rs_c+7*cs_c]);
-
-  PREFETCH2((void*)&c[2*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[2*rs_c+7*cs_c]);
-
-  PREFETCH2((void*)&c[3*rs_c+0*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+1*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+2*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+3*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+4*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+5*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+6*cs_c]);
-  PREFETCH2((void*)&c[3*rs_c+7*cs_c]);
+  PREFETCH((void*)&c[0*cs_c]);
+  PREFETCH((void*)&c[1*cs_c]);
+  PREFETCH((void*)&c[2*cs_c]);
 
   gint_t l;
-  for (l=0; l<k; ++l) {
-    PREFETCH((void*)(a+MR));
-    a_0re = _mm256_broadcast_sd( (double*)a );
-    a_0im = _mm256_broadcast_sd( 1+(double*)a );
-    a_1re = _mm256_broadcast_sd( (double*)(a+1) );
-    a_1im = _mm256_broadcast_sd( 1+(double*)(a+1) );
-    a_2re = _mm256_broadcast_sd( (double*)(a+2) );
-    a_2im = _mm256_broadcast_sd( 1+(double*)(a+2) );
-    a_3re = _mm256_broadcast_sd( (double*)(a+3) );
-    a_3im = _mm256_broadcast_sd( 1+(double*)(a+3) );
+  gint_t ki = k/4;  // unroll
+  gint_t kr = k%4;
+  for (l=0; l<ki; ++l) {
 
-    PREFETCH2((void*)(vb+16));
-    PREFETCH2((void*)(vb+20));
-    bt0 = _mm256_loadu_pd(vb);               // [a b c d ]
-    bt2 = _mm256_loadu_pd(vb+4);             // [e f g h ]
-    b0re = _mm256_unpacklo_pd(bt0, bt2);     // [a e c g ]  in-lane interleave !!
-    b0im = _mm256_unpackhi_pd(bt0, bt2);     // [b f d h ]
-    // b0re, db0im in-lane interleave !!
+// iter 0
+    PREFETCH((void*)(a+32)); // PREFETCH((void*)(a+2*4*MR));
 
-    tmp1re = _mm256_mul_pd(a_0re,b0re);
-    tmp1im = _mm256_mul_pd(a_0im,b0im);
-    AreBim1 = _mm256_mul_pd(a_0re,b0im);
-    BreAim1 = _mm256_mul_pd(a_0im,b0re);
-    P0_Q0re = _mm256_add_pd(_mm256_sub_pd(tmp1re, tmp1im), P0_Q0re);
-    P0_Q0im = _mm256_add_pd(_mm256_add_pd(AreBim1, BreAim1), P0_Q0im);
+    a_0 = _mm256_load_pd( (double*)a );
+    a_1 = _mm256_load_pd( 4+(double*)a );
 
-    tmp2re = _mm256_mul_pd(a_1re,b0re);
-    tmp2im = _mm256_mul_pd(a_1im,b0im);
-    AreBim2 = _mm256_mul_pd(a_1re,b0im);
-    BreAim2 = _mm256_mul_pd(a_1im,b0re);
-    P1_Q0re = _mm256_add_pd(_mm256_sub_pd(tmp2re, tmp2im), P1_Q0re);
-    P1_Q0im = _mm256_add_pd(_mm256_add_pd(AreBim2, BreAim2), P1_Q0im);
+    b_re = _mm256_broadcast_sd( vb );
+    b_im = _mm256_broadcast_sd( vb+1 );
 
-    tmp1re = _mm256_mul_pd(a_2re,b0re);
-    tmp1im = _mm256_mul_pd(a_2im,b0im);
-    AreBim1 = _mm256_mul_pd(a_2re,b0im);
-    BreAim1 = _mm256_mul_pd(a_2im,b0re);
-    P2_Q0re = _mm256_add_pd(_mm256_sub_pd(tmp1re, tmp1im), P2_Q0re);
-    P2_Q0im = _mm256_add_pd(_mm256_add_pd(AreBim1, BreAim1), P2_Q0im);
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
 
-    tmp2re = _mm256_mul_pd(a_3re,b0re);
-    tmp2im = _mm256_mul_pd(a_3im,b0im);
-    AreBim2 = _mm256_mul_pd(a_3re,b0im);
-    BreAim2 = _mm256_mul_pd(a_3im,b0re);
-    P3_Q0re = _mm256_add_pd(_mm256_sub_pd(tmp2re, tmp2im), P3_Q0re);
-    P3_Q0im = _mm256_add_pd(_mm256_add_pd(AreBim2, BreAim2), P3_Q0im);
+    b_re = _mm256_broadcast_sd( vb+2 );
+    b_im = _mm256_broadcast_sd( vb+3 );
 
-    PREFETCH2((void*)(vb+24));
-    PREFETCH2((void*)(vb+28));
-    bt0 = _mm256_loadu_pd(vb+8);
-    bt2 = _mm256_loadu_pd(vb+12);
-    b1re = _mm256_unpacklo_pd(bt0, bt2);
-    b1im = _mm256_unpackhi_pd(bt0, bt2);
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
 
-    tmp1re = _mm256_mul_pd(a_0re,b1re);
-    tmp1im = _mm256_mul_pd(a_0im,b1im);
-    AreBim1 = _mm256_mul_pd(a_0re,b1im);
-    BreAim1 = _mm256_mul_pd(a_0im,b1re);
-    P0_Q1re = _mm256_add_pd(_mm256_sub_pd(tmp1re, tmp1im), P0_Q1re);
-    P0_Q1im = _mm256_add_pd(_mm256_add_pd(AreBim1, BreAim1), P0_Q1im);
+    b_re = _mm256_broadcast_sd( vb+4 );
+    b_im = _mm256_broadcast_sd( vb+5 );
 
-    tmp2re = _mm256_mul_pd(a_1re,b1re);
-    tmp2im = _mm256_mul_pd(a_1im,b1im);
-    AreBim2 = _mm256_mul_pd(a_1re,b1im);
-    BreAim2 = _mm256_mul_pd(a_1im,b1re);
-    P1_Q1re = _mm256_add_pd(_mm256_sub_pd(tmp2re, tmp2im), P1_Q1re);
-    P1_Q1im = _mm256_add_pd(_mm256_add_pd(AreBim2, BreAim2), P1_Q1im);
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
 
-    tmp1re = _mm256_mul_pd(a_2re,b1re);
-    tmp1im = _mm256_mul_pd(a_2im,b1im);
-    AreBim1 = _mm256_mul_pd(a_2re,b1im);
-    BreAim1 = _mm256_mul_pd(a_2im,b1re);
-    P2_Q1re = _mm256_add_pd(_mm256_sub_pd(tmp1re, tmp1im), P2_Q1re);
-    P2_Q1im = _mm256_add_pd(_mm256_add_pd(AreBim1, BreAim1), P2_Q1im);
+// iter 1
+    a_0 = _mm256_load_pd( 8+(double*)a );
+    a_1 = _mm256_load_pd( 12+(double*)a );
 
-    tmp2re = _mm256_mul_pd(a_3re,b1re);
-    tmp2im = _mm256_mul_pd(a_3im,b1im);
-    AreBim2 = _mm256_mul_pd(a_3re,b1im);
-    BreAim2 = _mm256_mul_pd(a_3im,b1re);
-    P3_Q1re = _mm256_add_pd(_mm256_sub_pd(tmp2re, tmp2im), P3_Q1re);
-    P3_Q1im = _mm256_add_pd(_mm256_add_pd(AreBim2, BreAim2), P3_Q1im);
+    b_re = _mm256_broadcast_sd( vb+6 );
+    b_im = _mm256_broadcast_sd( vb+7 );
 
-    a += MR;
-    vb += 16;       // vb is pointer to double
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+8 );
+    b_im = _mm256_broadcast_sd( vb+9 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+10 );
+    b_im = _mm256_broadcast_sd( vb+11 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+// iter 2
+    PREFETCH((void*)(a+36)); // PREFETCH((void*)(a+MR+2*4*MR));
+
+    a_0 = _mm256_load_pd( 16+(double*)a );
+    a_1 = _mm256_load_pd( 20+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb+12 );
+    b_im = _mm256_broadcast_sd( vb+13 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+14 );
+    b_im = _mm256_broadcast_sd( vb+15 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+16 );
+    b_im = _mm256_broadcast_sd( vb+17 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+// iter 3
+    a_0 = _mm256_load_pd( 24+(double*)a );
+    a_1 = _mm256_load_pd( 28+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb+18 );
+    b_im = _mm256_broadcast_sd( vb+19 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+20 );
+    b_im = _mm256_broadcast_sd( vb+21 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+22 );
+    b_im = _mm256_broadcast_sd( vb+23 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+    a += 4*MR;        // unroll*MR
+    vb += 4*NR*2;     // unroll*NR  vb is pointer to double
   }
 
+  for (l=0; l<kr; ++l) {
+
+    PREFETCH((void*)(a+32)); // PREFETCH((void*)(a+2*4*MR));
+
+    a_0 = _mm256_load_pd( (double*)a );
+    a_1 = _mm256_load_pd( 4+(double*)a );
+
+    b_re = _mm256_broadcast_sd( vb );
+    b_im = _mm256_broadcast_sd( vb+1 );
+
+    t0_0r = MM256_FMADD_PD(a_0, b_re, t0_0r);
+    t0_1r = MM256_FMADD_PD(a_1, b_re, t0_1r);
+    t0_0i = MM256_FMADD_PD(a_0, b_im, t0_0i);
+    t0_1i = MM256_FMADD_PD(a_1, b_im, t0_1i);
+
+    b_re = _mm256_broadcast_sd( vb+2 );
+    b_im = _mm256_broadcast_sd( vb+3 );
+
+    t1_0r = MM256_FMADD_PD(a_0, b_re, t1_0r);
+    t1_1r = MM256_FMADD_PD(a_1, b_re, t1_1r);
+    t1_0i = MM256_FMADD_PD(a_0, b_im, t1_0i);
+    t1_1i = MM256_FMADD_PD(a_1, b_im, t1_1i);
+
+    b_re = _mm256_broadcast_sd( vb+4 );
+    b_im = _mm256_broadcast_sd( vb+5 );
+
+    t2_0r = MM256_FMADD_PD(a_0, b_re, t2_0r);
+    t2_1r = MM256_FMADD_PD(a_1, b_re, t2_1r);
+    t2_0i = MM256_FMADD_PD(a_0, b_im, t2_0i);
+    t2_1i = MM256_FMADD_PD(a_1, b_im, t2_1i);
+
+    a += MR;
+    vb += NR*2;       // vb is pointer to double
+  }
+
+  t0_0i = _mm256_permute_pd ( t0_0i , 0x5 );
+  t0_1i = _mm256_permute_pd ( t0_1i , 0x5 );
+
+  t1_0i = _mm256_permute_pd ( t1_0i , 0x5 );
+  t1_1i = _mm256_permute_pd ( t1_1i , 0x5 );
+
+  t2_0i = _mm256_permute_pd ( t2_0i , 0x5 );
+  t2_1i = _mm256_permute_pd ( t2_1i , 0x5 );
+
+  t0_0r = _mm256_addsub_pd ( t0_0r , t0_0i );
+  t0_1r = _mm256_addsub_pd ( t0_1r , t0_1i );
+
+  t1_0r = _mm256_addsub_pd ( t1_0r , t1_0i );
+  t1_1r = _mm256_addsub_pd ( t1_1r , t1_1i );
+
+  t2_0r = _mm256_addsub_pd ( t2_0r , t2_0i );
+  t2_1r = _mm256_addsub_pd ( t2_1r , t2_1i );
+
   if (alpha.real!=1.0||alpha.imag!=0.0) {
-    __m256d valpha_re = _mm256_broadcast_sd( (double*)alpha_ );
-    __m256d valpha_im = _mm256_broadcast_sd( 1+(double*)alpha_ );
-    P0_Q0re = _mm256_sub_pd(_mm256_mul_pd(P0_Q0re,valpha_re) , _mm256_mul_pd(P0_Q0im,valpha_im));
-    P0_Q0im = _mm256_add_pd(_mm256_mul_pd(P0_Q0re,valpha_im) , _mm256_mul_pd(P0_Q0im,valpha_re));
-    P0_Q1re = _mm256_sub_pd(_mm256_mul_pd(P0_Q1re,valpha_re) , _mm256_mul_pd(P0_Q1im,valpha_im));
-    P0_Q1im = _mm256_add_pd(_mm256_mul_pd(P0_Q1re,valpha_im) , _mm256_mul_pd(P0_Q1im,valpha_re));
+    b_re = _mm256_broadcast_sd( (double*)alpha_ );
+    b_im = _mm256_broadcast_sd( 1+(double*)alpha_ );
 
-    P1_Q0re = _mm256_sub_pd(_mm256_mul_pd(P1_Q0re,valpha_re) , _mm256_mul_pd(P1_Q0im,valpha_im));
-    P1_Q0im = _mm256_add_pd(_mm256_mul_pd(P1_Q0re,valpha_im) , _mm256_mul_pd(P1_Q0im,valpha_re));
-    P1_Q1re = _mm256_sub_pd(_mm256_mul_pd(P1_Q1re,valpha_re) , _mm256_mul_pd(P1_Q1im,valpha_im));
-    P1_Q1im = _mm256_add_pd(_mm256_mul_pd(P1_Q1re,valpha_im) , _mm256_mul_pd(P1_Q1im,valpha_re));
+    t0_0i = _mm256_permute_pd ( t0_0r , 0x5 );
+    t0_0r = _mm256_mul_pd ( b_re , t0_0r );
+    t0_0i = _mm256_mul_pd ( b_im , t0_0i );
+    t0_0r = _mm256_addsub_pd ( t0_0r, t0_0i );
 
-    P2_Q0re = _mm256_sub_pd(_mm256_mul_pd(P2_Q0re,valpha_re) , _mm256_mul_pd(P2_Q0im,valpha_im));
-    P2_Q0im = _mm256_add_pd(_mm256_mul_pd(P2_Q0re,valpha_im) , _mm256_mul_pd(P2_Q0im,valpha_re));
-    P2_Q1re = _mm256_sub_pd(_mm256_mul_pd(P2_Q1re,valpha_re) , _mm256_mul_pd(P2_Q1im,valpha_im));
-    P2_Q1im = _mm256_add_pd(_mm256_mul_pd(P2_Q1re,valpha_im) , _mm256_mul_pd(P2_Q1im,valpha_re));
+    t0_0i = _mm256_permute_pd ( t0_1r , 0x5 );
+    t0_1r = _mm256_mul_pd ( b_re , t0_1r );
+    t0_0i = _mm256_mul_pd ( b_im , t0_0i );
+    t0_1r = _mm256_addsub_pd ( t0_1r, t0_0i );
 
-    P3_Q0re = _mm256_sub_pd(_mm256_mul_pd(P3_Q0re,valpha_re) , _mm256_mul_pd(P3_Q0im,valpha_im));
-    P3_Q0im = _mm256_add_pd(_mm256_mul_pd(P3_Q0re,valpha_im) , _mm256_mul_pd(P3_Q0im,valpha_re));
-    P3_Q1re = _mm256_sub_pd(_mm256_mul_pd(P3_Q1re,valpha_re) , _mm256_mul_pd(P3_Q1im,valpha_im));
-    P3_Q1im = _mm256_add_pd(_mm256_mul_pd(P3_Q1re,valpha_im) , _mm256_mul_pd(P3_Q1im,valpha_re));
+    t1_0i = _mm256_permute_pd ( t1_0r , 0x5 );
+    t1_0r = _mm256_mul_pd ( b_re , t1_0r );
+    t1_0i = _mm256_mul_pd ( b_im , t1_0i );
+    t1_0r = _mm256_addsub_pd ( t1_0r, t1_0i );
+
+    t1_0i = _mm256_permute_pd ( t1_1r , 0x5 );
+    t1_1r = _mm256_mul_pd ( b_re , t1_1r );
+    t1_0i = _mm256_mul_pd ( b_im , t1_0i );
+    t1_1r = _mm256_addsub_pd ( t1_1r, t1_0i );
+
+    t2_0i = _mm256_permute_pd ( t2_0r , 0x5 );
+    t2_0r = _mm256_mul_pd ( b_re , t2_0r );
+    t2_0i = _mm256_mul_pd ( b_im , t2_0i );
+    t2_0r = _mm256_addsub_pd ( t2_0r, t2_0i );
+
+    t2_0i = _mm256_permute_pd ( t2_1r , 0x5 );
+    t2_1r = _mm256_mul_pd ( b_re , t2_1r );
+    t2_0i = _mm256_mul_pd ( b_im , t2_0i );
+    t2_1r = _mm256_addsub_pd ( t2_1r, t2_0i );
+
   }
 
   if (beta.real!=1.0||beta.imag!=0.0) {
@@ -409,99 +626,59 @@ void bli_zgemm_int_4x8
     }
   }
 
-  pr = (const double *) &ppr;
-  pi = (const double *) &ppi;
-  ppr[0] = P0_Q0re;
-  ppi[0] = P0_Q0im;
-  ppr[1] = P0_Q1re;
-  ppi[1] = P0_Q1im;
+//  each row 3 pairs of re im
+//  t0_0r t1_0r t2_0r : row 0 and row 1
+//  t0_1r t1_1r t2_1r : row 2 and row 3
+//
+//  t0_0r a b c d
+//  t1_0r e f g h
+//  t2_0r i j k l
+//         re im re im re im
+//  row 0: a  b  e  f  i  j
+//  row 1: c  d  g  h  k  l
 
-  c[0*rs_c+0*cs_c].real += pr[0];
-  c[0*rs_c+0*cs_c].imag += pi[0];
-  c[0*rs_c+1*cs_c].real += pr[2];   // compensate in-lane interleave
-  c[0*rs_c+1*cs_c].imag += pi[2];
-  c[0*rs_c+2*cs_c].real += pr[1];
-  c[0*rs_c+2*cs_c].imag += pi[1];
-  c[0*rs_c+3*cs_c].real += pr[3];
-  c[0*rs_c+3*cs_c].imag += pi[3];
+  p0 = (const double *) &pp0;
+  p1 = (const double *) &pp1;
+  pp0[0] = t0_0r;    // p0 0
+  pp0[1] = t1_0r;    // p0 4
+  pp0[2] = t2_0r;    // p0 8
+  pp1[0] = t0_1r;    // p1 0
+  pp1[1] = t1_1r;    // p1 4
+  pp1[2] = t2_1r;    // p1 8
 
-  c[0*rs_c+4*cs_c].real += pr[4];
-  c[0*rs_c+4*cs_c].imag += pi[4];
-  c[0*rs_c+5*cs_c].real += pr[6];
-  c[0*rs_c+5*cs_c].imag += pi[6];
-  c[0*rs_c+6*cs_c].real += pr[5];
-  c[0*rs_c+6*cs_c].imag += pi[5];
-  c[0*rs_c+7*cs_c].real += pr[7];
-  c[0*rs_c+7*cs_c].imag += pi[7];
+  gint_t pc;
 
-  ppr[0] = P1_Q0re;
-  ppi[0] = P1_Q0im;
-  ppr[1] = P1_Q1re;
-  ppi[1] = P1_Q1im;
+  pc = 0;
+  c[pc      ].real += p0[0];
+  c[pc      ].imag += p0[1];
+  c[pc+=cs_c].real += p0[4];
+  c[pc      ].imag += p0[5];
+  c[pc+=cs_c].real += p0[8];
+  c[pc      ].imag += p0[9];
 
-  c[1*rs_c+0*cs_c].real += pr[0];
-  c[1*rs_c+0*cs_c].imag += pi[0];
-  c[1*rs_c+1*cs_c].real += pr[2];
-  c[1*rs_c+1*cs_c].imag += pi[2];
-  c[1*rs_c+2*cs_c].real += pr[1];
-  c[1*rs_c+2*cs_c].imag += pi[1];
-  c[1*rs_c+3*cs_c].real += pr[3];
-  c[1*rs_c+3*cs_c].imag += pi[3];
+  pc = rs_c;
+  c[pc      ].real += p0[2];
+  c[pc      ].imag += p0[3];
+  c[pc+=cs_c].real += p0[6];
+  c[pc      ].imag += p0[7];
+  c[pc+=cs_c].real += p0[10];
+  c[pc      ].imag += p0[11];
 
-  c[1*rs_c+4*cs_c].real += pr[4];
-  c[1*rs_c+4*cs_c].imag += pi[4];
-  c[1*rs_c+5*cs_c].real += pr[6];
-  c[1*rs_c+5*cs_c].imag += pi[6];
-  c[1*rs_c+6*cs_c].real += pr[5];
-  c[1*rs_c+6*cs_c].imag += pi[5];
-  c[1*rs_c+7*cs_c].real += pr[7];
-  c[1*rs_c+7*cs_c].imag += pi[7];
+  pc = 2*rs_c;
+  c[pc      ].real += p1[0];
+  c[pc      ].imag += p1[1];
+  c[pc+=cs_c].real += p1[4];
+  c[pc      ].imag += p1[5];
+  c[pc+=cs_c].real += p1[8];
+  c[pc      ].imag += p1[9];
 
-  ppr[0] = P2_Q0re;
-  ppi[0] = P2_Q0im;
-  ppr[1] = P2_Q1re;
-  ppi[1] = P2_Q1im;
-
-  c[2*rs_c+0*cs_c].real += pr[0];
-  c[2*rs_c+0*cs_c].imag += pi[0];
-  c[2*rs_c+1*cs_c].real += pr[2];
-  c[2*rs_c+1*cs_c].imag += pi[2];
-  c[2*rs_c+2*cs_c].real += pr[1];
-  c[2*rs_c+2*cs_c].imag += pi[1];
-  c[2*rs_c+3*cs_c].real += pr[3];
-  c[2*rs_c+3*cs_c].imag += pi[3];
-
-  c[2*rs_c+4*cs_c].real += pr[4];
-  c[2*rs_c+4*cs_c].imag += pi[4];
-  c[2*rs_c+5*cs_c].real += pr[6];
-  c[2*rs_c+5*cs_c].imag += pi[6];
-  c[2*rs_c+6*cs_c].real += pr[5];
-  c[2*rs_c+6*cs_c].imag += pi[5];
-  c[2*rs_c+7*cs_c].real += pr[7];
-  c[2*rs_c+7*cs_c].imag += pi[7];
-
-  ppr[0] = P3_Q0re;
-  ppi[0] = P3_Q0im;
-  ppr[1] = P3_Q1re;
-  ppi[1] = P3_Q1im;
-
-  c[3*rs_c+0*cs_c].real += pr[0];
-  c[3*rs_c+0*cs_c].imag += pi[0];
-  c[3*rs_c+1*cs_c].real += pr[2];
-  c[3*rs_c+1*cs_c].imag += pi[2];
-  c[3*rs_c+2*cs_c].real += pr[1];
-  c[3*rs_c+2*cs_c].imag += pi[1];
-  c[3*rs_c+3*cs_c].real += pr[3];
-  c[3*rs_c+3*cs_c].imag += pi[3];
-
-  c[3*rs_c+4*cs_c].real += pr[4];
-  c[3*rs_c+4*cs_c].imag += pi[4];
-  c[3*rs_c+5*cs_c].real += pr[6];
-  c[3*rs_c+5*cs_c].imag += pi[6];
-  c[3*rs_c+6*cs_c].real += pr[5];
-  c[3*rs_c+6*cs_c].imag += pi[5];
-  c[3*rs_c+7*cs_c].real += pr[7];
-  c[3*rs_c+7*cs_c].imag += pi[7];
+  pc = 3*rs_c;
+  c[pc      ].real += p1[2];
+  c[pc      ].imag += p1[3];
+  c[pc+=cs_c].real += p1[6];
+  c[pc      ].imag += p1[7];
+  c[pc+=cs_c].real += p1[10];
+  c[pc      ].imag += p1[11];
 
 }
 

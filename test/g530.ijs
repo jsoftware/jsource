@@ -500,6 +500,20 @@ a =: i. 4
 'domain error' -: f12 etx ''
 2 0 -: f13''
 
+NB. Noun components of AR
+'agifuwy' -: 3 1 ((5!:1<'x')`[`])} 'aeiouwy' [ x =. 'fg' 
+'agifuwy' -: 'fg' ([`(5!:1<'x')`])} 'aeiouwy' [ x =. 3 1
+'agifuwy' -: 'fg' ([`]`(5!:1<'x'))} 3 1 [ x =. 'aeiouwy'
+
+x =. /
+'domain error' -: ex '((5!:1<''x'')`[`])}'
+'domain error' -: ex '([`(5!:1<''x'')`])}'
+'domain error' -: ex '([`]`(5!:1<''x''))}'
+x =. "
+'domain error' -: ex '((5!:1<''x'')`[`])}'
+'domain error' -: ex '([`(5!:1<''x'')`])}'
+'domain error' -: ex '([`]`(5!:1<''x''))}'
+
 
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'

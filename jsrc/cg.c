@@ -17,7 +17,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
  R z;
 }
 
-// run jtfx on each box in w
+// run jtfx on each box in w, turning AR into an A block
 F1(jtfxeach){R every(w,0L,jtfx);}
 // run jtfx on each box in w, EXCEPT on nouns, which we return as is
 F1(jtfxeachacv){R every(w,w,jtfx);}  // the second w is just any nonzero
@@ -230,29 +230,45 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  R fdef(id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 
-static DF1(jtgav1){DECLF;A ff,*hv=AAV(sv->h);I d;
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
- R df1(df1(w,hv[2]),ff);
+// verb executed for v0`v1`v2} y
+static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->h);I d;
+ // first, get the indexes to use.  Since this is going to call m} again, we protect against
+ // stack overflow in the loop in case the generated ff generates a recursive call to }
+ // If the AR is a noun, just leave it as is
+ if(AT(hv[1])&NOUN){ffm=hv[1];
+ }else{ RE(d=fdep(hv[1])); FDEPINC(d);
+  ffm = df1(w,hv[1]);  // x v1 y - no inplacing
+  FDEPDEC(d);
+ }
+ RZ(ffm);  // OK to fail after FDEPDEC
+ RZ(ff=df1(ffm,ds(sv->id)));   // now ff represents (v1 y)}
+// obsolete RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
+ if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(ffx=df1(w,hv[2]))}
+ R df1(ffx,ff);
 }
 
-// verb executed for x v0`v1`v2} y
 static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->h);I d;   // hv->gerunds
 A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
- // stack overflow - but why do we stop with the execution of the }, which is not inside the
- // potential loop?
- RE(d=fdep(hv[1])); FDEPINC(d);
- ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing
- ff=df1(ffm,ds(sv->id)); FDEPDEC(d);   // now ff represents (x v1 y)}
+ // stack overflow in the loop in case the generated ff generates a recursive call to }
+ // If the AR is a noun, just leave it as is
+ if(AT(hv[1])&NOUN){ffm=hv[1];
+ }else{ RE(d=fdep(hv[1])); FDEPINC(d);
+  ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing
+  FDEPDEC(d);
+ }
  RZ(ffm);  // OK to fail after FDEPDEC
+ RZ(ff=df1(ffm,ds(sv->id)));   // now ff represents (x v1 y)}
  // Protect any input that was returned by v1 (must be ][)
  if(a==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB
- // execute the gerunds that will give the arguments to ff
+ // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (VAV(hv[2])->f2)(a!=w&&(VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ if(AT(hv[2])&NOUN){ffy=hv[2];
+ }else{RZ(ffy = (VAV(hv[2])->f2)(a!=w&&(VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));}  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ if(AT(hv[0])&NOUN){ffx=hv[0];
+ }else{RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));}
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
  POPZOMB; R (VAV(ff)->f2)(VAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
@@ -267,10 +283,11 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  ASSERT(n&&n<=3,EVLENGTH);  // verify 1-3 gerunds
  ASSERT(BOX&AT(w),EVDOMAIN);
  RZ(hs=fxeach(3==n?w:behead(reshape(num[4],w))));   // convert to v0`v0`v0, v1`v0`v1, or v0`v1`v2; convert each gerund to verb
- // hs is a BOX array, but its elements are VERBs
+ // hs is a BOX array, but its elements are ARs
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
- I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
+ ASSERT(AT(AAV(hs)[0])&(NOUN|VERB)&&AT(AAV(hs)[1])&(NOUN|VERB)&&AT(AAV(hs)[2])&(NOUN|VERB),EVDOMAIN);
+ I flag=(((AT(AAV(hs)[0])&NOUN)?-1:VAV(AAV(hs)[0])->flag)&((AT(AAV(hs)[1])&NOUN)?-1:VAV(AAV(hs)[1])->flag)&((AT(AAV(hs)[2])&NOUN)?-1:VAV(AAV(hs)[2])->flag)&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
  R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

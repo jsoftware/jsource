@@ -1,6 +1,9 @@
 1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g5x4.ijs'
 NB. 5!:4 ----------------------------------------------------------------
 
+oldboxc =: 9!:6''   NB. controlled environment
+9!:7 '+++++++++|-'
+
 ar      =: 5!:1
 lr      =: 3 : '5!:5 <''y'''
 boxed   =: 32&= @ (3!:0)
@@ -123,12 +126,13 @@ f =. g@.*
 h =. g`:6@*
 (0 5}.jtr<'f') -: 0 4}.jtr<'h'
 
+9!:7 oldboxc        NB. restored original boxc
 
 NB. jtr appears twice, one is global another local
 4!:55 ;:'a ar bot boxc boxed c center connect cross dash '
 4!:55 ;:'extent f fx g gap ger graft h inv ip '
 4!:55 ;:'jtr jtr kern kernb kernt lab label leaf left limb limb1 '
-4!:55 ;:'lr mat mt oarg pad pfx rc rep right root '
+4!:55 ;:'lr mat mt oarg oldboxc pad pfx rc rep right root '
 4!:55 ;:'shl shr take test th tr trcase tree trg trgl trgr '
 4!:55 ;:'trnoun trtil trx '
 

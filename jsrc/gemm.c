@@ -315,7 +315,7 @@ dgemm_nn         (I              m,
             kc    = (l!=kb-1 || _kc==0) ? KC   : _kc;
             _beta = (l==0) ? beta : 1.0;
 
-            double * _B = aligned_malloc(KC*NC*SZD, alignv);
+            double * _B = aligned_malloc((KC+1)*NC*SZD, alignv);  /* extra bytes for pre-read */
             pack_B(kc, nc,
                    &B[l*KC*rs_b+j*NC*cs_b], rs_b, cs_b,
                    _B);
@@ -327,7 +327,7 @@ dgemm_nn         (I              m,
                 I mc;
                 mc = (i!=mb-1 || _mc==0) ? MC : _mc;
 
-                double * _A = aligned_malloc(MC*KC*SZD, alignv);
+                double * _A = aligned_malloc(MC*(KC+1)*SZD, alignv);
                 pack_A(mc, kc,
                        &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
                        _A);
@@ -498,7 +498,7 @@ igemm_nn         (I              m,
             kc    = (l!=kb-1 || _kc==0) ? KC   : _kc;
             _beta = (l==0) ? (double)beta : 1.0;
 
-            double * _B = aligned_malloc(KC*NC*SZD, alignv);
+            double * _B = aligned_malloc((1+KC)*NC*SZD, alignv);
             ipack_B(kc, nc,
                    &B[l*KC*rs_b+j*NC*cs_b], rs_b, cs_b,
                    _B);
@@ -510,7 +510,7 @@ igemm_nn         (I              m,
                 I mc;
                 mc = (i!=mb-1 || _mc==0) ? MC : _mc;
 
-                double * _A = aligned_malloc(MC*KC*SZD, alignv);
+                double * _A = aligned_malloc(MC*(1+KC)*SZD, alignv);
                 ipack_A(mc, kc,
                        &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
                        _A);
@@ -828,7 +828,7 @@ zgemm_nn         (I              m,
             kc    = (l!=kb-1 || _kc==0) ? KC   : _kc;
             _beta = (l==0) ? beta : zone;
 
-            dcomplex * _B = aligned_malloc(2*KC*NC*SZD, alignv);
+            dcomplex * _B = aligned_malloc(2*(1+KC)*NC*SZD, alignv);
             zpack_B(kc, nc,
                    &B[l*KC*rs_b+j*NC*cs_b], rs_b, cs_b,
                    _B);
@@ -840,7 +840,7 @@ zgemm_nn         (I              m,
                 I mc;
                 mc = (i!=mb-1 || _mc==0) ? MC : _mc;
 
-                dcomplex * _A = aligned_malloc(2*MC*KC*SZD, alignv);
+                dcomplex * _A = aligned_malloc(2*MC*(1+KC)*SZD, alignv);
                 zpack_A(mc, kc,
                        &A[i*MC*rs_a+l*KC*cs_a], rs_a, cs_a,
                        _A);

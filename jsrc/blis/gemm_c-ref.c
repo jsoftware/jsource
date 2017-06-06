@@ -5,7 +5,7 @@
 
 #include "../blis.h"
 
-#if BLIS_DRIVER == BLIS_DRIVER_GENERIC
+#if 1 // BLIS_DRIVER == BLIS_DRIVER_GENERIC
 
 #ifdef TYMES
 #undef TYMES
@@ -19,6 +19,7 @@
 #define TYMES(u,v)      ((u)*(v))   /* let it failed on 0 * _ as in other micro kernel */
 #define ZRE(x,y)        ((TYMES((x).real,(y).real))-TYMES((x).imag,(y).imag))
 #define ZIM(x,y)        ((TYMES((x).real,(y).imag))+TYMES((x).imag,(y).real))
+
 #define MC  BLIS_DEFAULT_MC_D
 #define KC  BLIS_DEFAULT_KC_D
 #define NC  BLIS_DEFAULT_NC_D

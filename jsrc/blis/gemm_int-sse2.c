@@ -9,6 +9,11 @@
 
 #include <emmintrin.h>
 
+/*
+ Note:
+ intel cacheline size = 64 bytes
+*/
+
 #define MM_FMADD_PD(a,b,c) _mm_add_pd(_mm_mul_pd(a,b),c)
 
 #define MC  BLIS_DEFAULT_MC_D
@@ -17,12 +22,14 @@
 #define MR  BLIS_DEFAULT_MR_D
 #define NR  BLIS_DEFAULT_NR_D
 
-#define NRv (NR/2)              // 2 lanes
-#if !((MR==4)&&(NR==6))
+#if !((MR==4)&&(NR==4))
 #error "invalid MR NR"
 #endif
 
-void bli_dgemm_int_d4x6
+#define LOOKAHEAD_A   4*16  // multiple of 16 = 4*MR (16*8 bytes)
+#define LOOKAHEAD_B   4*16  // multiple of 16 = 4*NR (16*8 bytes)
+
+void bli_dgemm_int_d4x4
 (
   dim_t               k,
   double*    restrict alpha_,
@@ -36,35 +43,46 @@ void bli_dgemm_int_d4x6
 {
   double alpha=*alpha_, beta=*beta_;
 
-  register __m128d b_re, b_im;
-  register __m128d a_0, a_1;
-
-  const double *vb = (const double *)b;
-
-  register __m128d t0_0r, t0_1r, t0_0i, t0_1i;
 #if defined(_WIN64)||defined(__LP64__)
-  register __m128d t1_0r, t1_1r, t1_0i, t1_1i;
-  register __m128d t2_0r, t2_1r, t2_0i, t2_1i;
+  register __m128d a_re, a_im, d_re, d_im;
+  register __m128d b_0, b_1, b_2, b_3;
 #else
-  __m128d t1_0r, t1_1r, t1_0i, t1_1i;
-  __m128d t2_0r, t2_1r, t2_0i, t2_1i;
+  __m128d a_re, a_im, d_re, d_im;
+  __m128d b_0, b_1, b_2, b_3;
 #endif
 
-  t0_0r = _mm_setzero_pd(); t0_1r = _mm_setzero_pd(); 
-  t0_0i = _mm_setzero_pd(); t0_1i = _mm_setzero_pd();
-  t1_0r = _mm_setzero_pd(); t1_1r = _mm_setzero_pd(); 
-  t1_0i = _mm_setzero_pd(); t1_1i = _mm_setzero_pd();
-  t2_0r = _mm_setzero_pd(); t2_1r = _mm_setzero_pd(); 
-  t2_0i = _mm_setzero_pd(); t2_1i = _mm_setzero_pd();
+  const double *va = (const double *)a;
 
-  const double *p0,*p1; __m128d pp0[6],pp1[6];
+  register __m128d t0_00, t0_01, t0_02, t0_03;
+  register __m128d t1_00, t1_01, t1_02, t1_03;
 
-  PREFETCH((void*)&c[0*cs_c]);
-  PREFETCH((void*)&c[1*cs_c]);
-  PREFETCH((void*)&c[2*cs_c]);
-  PREFETCH((void*)&c[3*cs_c]);
-  PREFETCH((void*)&c[4*cs_c]);
-  PREFETCH((void*)&c[5*cs_c]);
+  t0_00 = _mm_setzero_pd();
+  t0_01 = _mm_setzero_pd();
+  t0_02 = _mm_setzero_pd();
+  t0_03 = _mm_setzero_pd();
+  t1_00 = _mm_setzero_pd();
+  t1_01 = _mm_setzero_pd();
+  t1_02 = _mm_setzero_pd();
+  t1_03 = _mm_setzero_pd();
+
+  const double *p0,*p1;
+  __m128d pp0[4],pp1[4];
+
+  a_re = _mm_set1_pd( va[0] );
+  a_im = _mm_set1_pd( va[1] );
+
+  b_0 = _mm_load_pd( (double*)b );
+  b_1 = _mm_load_pd( 2+(double*)b );
+
+  PREFETCH2((void*)&c[0*cs_c]);
+  PREFETCH2((void*)&c[1*cs_c]);
+  PREFETCH2((void*)&c[2*cs_c]);
+  PREFETCH2((void*)&c[3*cs_c]);
+
+  PREFETCH2((void*)&c[1*rs_c+0*cs_c]);
+  PREFETCH2((void*)&c[1*rs_c+1*cs_c]);
+  PREFETCH2((void*)&c[1*rs_c+2*cs_c]);
+  PREFETCH2((void*)&c[1*rs_c+3*cs_c]);
 
   gint_t l;
   gint_t ki = k/4;  // unroll
@@ -72,177 +90,150 @@ void bli_dgemm_int_d4x6
   for (l=0; l<ki; ++l) {
 
 // iter 0
-    PREFETCH((void*)(a+32)); // PREFETCH((void*)(a+2*4*MR));
 
-    a_0 = _mm_load_pd( (double*)a );
-    a_1 = _mm_load_pd( 2+(double*)a );
+    b_2 = _mm_load_pd( 4+(double*)b );
+    PREFETCH((void*)(b+LOOKAHEAD_B )); // PREFETCH((void*)(a+2*4*MR));
+    b_3 = _mm_load_pd( 6+(double*)b );
+    PREFETCH((void*)(va+LOOKAHEAD_A ));
 
-    b_re = _mm_set1_pd( vb[0] );
-    b_im = _mm_set1_pd( vb[1] );
+    d_re = _mm_set1_pd( va[2] );
+    d_im = _mm_set1_pd( va[3] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[2] );
-    b_im = _mm_set1_pd( vb[3] );
+    a_re = _mm_set1_pd( va[4] );
+    a_im = _mm_set1_pd( va[5] );
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[4] );
-    b_im = _mm_set1_pd( vb[5] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
+    CCBLOCK;
 
 // iter 1
-    a_0 = _mm_load_pd( 4+(double*)a );
-    a_1 = _mm_load_pd( 6+(double*)a );
 
-    b_re = _mm_set1_pd( vb[6] );
-    b_im = _mm_set1_pd( vb[7] );
+    b_0 = _mm_load_pd( 8+(double*)b );
+    b_1 = _mm_load_pd( 10+(double*)b );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    d_re = _mm_set1_pd( va[6] );
+    d_im = _mm_set1_pd( va[7] );
 
-    b_re = _mm_set1_pd( vb[8] );
-    b_im = _mm_set1_pd( vb[9] );
+    t0_00 = MM_FMADD_PD(b_2, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_3, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_2, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_3, a_im, t0_03);
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
+    a_re = _mm_set1_pd( va[8] );
+    a_im = _mm_set1_pd( va[9] );
 
-    b_re = _mm_set1_pd( vb[10] );
-    b_im = _mm_set1_pd( vb[11] );
+    t1_00 = MM_FMADD_PD(b_2, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_3, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_2, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_3, d_im, t1_03);
+    CCBLOCK;
 
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
-   
 // iter 2
-    PREFETCH((void*)(a+36)); // PREFETCH((void*)(a+MR+2*4*MR));
 
-    a_0 = _mm_load_pd( 8+(double*)a );
-    a_1 = _mm_load_pd( 10+(double*)a );
+    b_2 = _mm_load_pd( 12+(double*)b );
+    PREFETCH((void*)(b+LOOKAHEAD_B +8));
+    b_3 = _mm_load_pd( 14+(double*)b );
+    PREFETCH((void*)(va+LOOKAHEAD_A +8));
 
-    b_re = _mm_set1_pd( vb[12] );
-    b_im = _mm_set1_pd( vb[13] );
+    d_re = _mm_set1_pd( va[10] );
+    d_im = _mm_set1_pd( va[11] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[14] );
-    b_im = _mm_set1_pd( vb[15] );
+    a_re = _mm_set1_pd( va[12] );
+    a_im = _mm_set1_pd( va[13] );
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[16] );
-    b_im = _mm_set1_pd( vb[17] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
+    CCBLOCK;
 
 // iter 3
-    a_0 = _mm_load_pd( 12+(double*)a );
-    a_1 = _mm_load_pd( 14+(double*)a );
 
-    b_re = _mm_set1_pd( vb[18] );
-    b_im = _mm_set1_pd( vb[19] );
+    b_0 = _mm_load_pd( 16+(double*)b );
+    b_1 = _mm_load_pd( 18+(double*)b );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    d_re = _mm_set1_pd( va[14] );
+    d_im = _mm_set1_pd( va[15] );
 
-    b_re = _mm_set1_pd( vb[20] );
-    b_im = _mm_set1_pd( vb[21] );
+    t0_00 = MM_FMADD_PD(b_2, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_3, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_2, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_3, a_im, t0_03);
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
+    a_re = _mm_set1_pd( va[16] );
+    a_im = _mm_set1_pd( va[17] );
 
-    b_re = _mm_set1_pd( vb[22] );
-    b_im = _mm_set1_pd( vb[23] );
+    t1_00 = MM_FMADD_PD(b_2, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_3, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_2, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_3, d_im, t1_03);
+    CCBLOCK;
 
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
-
-    a += 4*MR;        // unroll*MR
-    vb += 4*NR;       // unroll*NR  vb is pointer to double
+    b += 4*NR;        // unroll*NR
+    va += 4*MR;       // unroll*MR  va is pointer to double
   }
+
+  PREFETCH2((void*)&c[2*rs_c+0*cs_c]);
+  PREFETCH2((void*)&c[2*rs_c+1*cs_c]);
+  PREFETCH2((void*)&c[2*rs_c+2*cs_c]);
+  PREFETCH2((void*)&c[2*rs_c+3*cs_c]);
+
+  PREFETCH2((void*)&c[3*rs_c+0*cs_c]);
+  PREFETCH2((void*)&c[3*rs_c+1*cs_c]);
+  PREFETCH2((void*)&c[3*rs_c+2*cs_c]);
+  PREFETCH2((void*)&c[3*rs_c+3*cs_c]);
 
   for (l=0; l<kr; ++l) {
 
-    PREFETCH((void*)(a+32)); // PREFETCH((void*)(a+2*4*MR));
+    d_re = _mm_set1_pd( va[2] );
+    d_im = _mm_set1_pd( va[3] );
 
-    a_0 = _mm_load_pd( (double*)a );
-    a_1 = _mm_load_pd( 2+(double*)a );
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
+    CCBLOCK;
 
-    b_re = _mm_set1_pd( vb[0] );
-    b_im = _mm_set1_pd( vb[1] );
+    a_re = _mm_set1_pd( va[4] );
+    a_im = _mm_set1_pd( va[5] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
 
-    b_re = _mm_set1_pd( vb[2] );
-    b_im = _mm_set1_pd( vb[3] );
+    b_0 = _mm_load_pd( 4+(double*)b );
+    b_1 = _mm_load_pd( 6+(double*)b );
+    CCBLOCK;
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[4] );
-    b_im = _mm_set1_pd( vb[5] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
-
-    a += MR;
-    vb += NR;       // vb is pointer to double
+    b += NR;
+    va += MR;       // va is pointer to double
   }
 
   if (alpha!=1.0) {
-    b_re = _mm_set1_pd( alpha );
+    a_re = _mm_set1_pd( alpha );
 
-    t0_0r = _mm_mul_pd ( b_re , t0_0r );
-    t0_1r = _mm_mul_pd ( b_re , t0_1r );
-    t0_0i = _mm_mul_pd ( b_re , t0_0i );
-    t0_1i = _mm_mul_pd ( b_re , t0_1i );
+    t0_00 = _mm_mul_pd ( a_re , t0_00 );
+    t0_01 = _mm_mul_pd ( a_re , t0_01 );
+    t0_02 = _mm_mul_pd ( a_re , t0_02 );
+    t0_03 = _mm_mul_pd ( a_re , t0_03 );
 
-    t1_0r = _mm_mul_pd ( b_re , t1_0r );
-    t1_1r = _mm_mul_pd ( b_re , t1_1r );
-    t1_0i = _mm_mul_pd ( b_re , t1_0i );
-    t1_1i = _mm_mul_pd ( b_re , t1_1i );
-
-    t2_0r = _mm_mul_pd ( b_re , t2_0r );
-    t2_1r = _mm_mul_pd ( b_re , t2_1r );
-    t2_0i = _mm_mul_pd ( b_re , t2_0i );
-    t2_1i = _mm_mul_pd ( b_re , t2_1i );
+    t1_00 = _mm_mul_pd ( a_re , t1_00 );
+    t1_01 = _mm_mul_pd ( a_re , t1_01 );
+    t1_02 = _mm_mul_pd ( a_re , t1_02 );
+    t1_03 = _mm_mul_pd ( a_re , t1_03 );
 
   }
 
@@ -250,7 +241,7 @@ void bli_dgemm_int_d4x6
     gint_t i;
     for (i=0; i<MR; ++i) {
       gint_t j;
-      for (j=0; j<NR; ++j) {               // !!! NOT NRv
+      for (j=0; j<NR; ++j) {
         c[i*rs_c+j*cs_c] *= beta;
       }
     }
@@ -258,61 +249,51 @@ void bli_dgemm_int_d4x6
 
   p0 = (const double *) &pp0;
   p1 = (const double *) &pp1;
-  pp0[0] = t0_0r;    // p0 0
-  pp0[1] = t1_0r;    //
-  pp0[2] = t2_0r;    //
-  pp0[3] = t0_0i;    //
-  pp0[4] = t1_0i;    //
-  pp0[5] = t2_0i;    //
-  pp1[0] = t0_1r;    // p1 0
-  pp1[1] = t1_1r;    //
-  pp1[2] = t2_1r;    //
-  pp1[3] = t0_1i;    //
-  pp1[4] = t1_1i;    //
-  pp1[5] = t2_1i;    //
+  pp0[0] = t0_00;
+  pp0[1] = t0_01;
+  pp0[2] = t0_02;
+  pp0[3] = t0_03;
+  pp1[0] = t1_00;
+  pp1[1] = t1_01;
+  pp1[2] = t1_02;
+  pp1[3] = t1_03;
 
   gint_t pc;
 
   pc = 0;
   c[pc      ] += p0[0];
-  c[pc+=cs_c] += p0[6];
+  c[pc+=cs_c] += p0[1];
   c[pc+=cs_c] += p0[2];
-  c[pc+=cs_c] += p0[8];
-  c[pc+=cs_c] += p0[4];
-  c[pc+=cs_c] += p0[10];
-
-  pc = rs_c;
-  c[pc      ] += p0[1];
-  c[pc+=cs_c] += p0[7];
   c[pc+=cs_c] += p0[3];
-  c[pc+=cs_c] += p0[9];
+
+  pc = 1*rs_c;
+  c[pc      ] += p0[4];
   c[pc+=cs_c] += p0[5];
-  c[pc+=cs_c] += p0[11];
+  c[pc+=cs_c] += p0[6];
+  c[pc+=cs_c] += p0[7];
 
   pc = 2*rs_c;
   c[pc      ] += p1[0];
-  c[pc+=cs_c] += p1[6];
+  c[pc+=cs_c] += p1[1];
   c[pc+=cs_c] += p1[2];
-  c[pc+=cs_c] += p1[8];
-  c[pc+=cs_c] += p1[4];
-  c[pc+=cs_c] += p1[10];
+  c[pc+=cs_c] += p1[3];
 
   pc = 3*rs_c;
-  c[pc      ] += p1[1];
-  c[pc+=cs_c] += p1[7];
-  c[pc+=cs_c] += p1[3];
-  c[pc+=cs_c] += p1[9];
+  c[pc      ] += p1[4];
   c[pc+=cs_c] += p1[5];
-  c[pc+=cs_c] += p1[11];
+  c[pc+=cs_c] += p1[6];
+  c[pc+=cs_c] += p1[7];
 
 }
-#undef NRv
 
 #undef MC
 #undef KC
 #undef NC
 #undef MR
 #undef NR
+
+#undef LOOKAHEAD_A
+#undef LOOKAHEAD_B
 
 #define MC  BLIS_DEFAULT_MC_Z
 #define KC  BLIS_DEFAULT_KC_Z
@@ -321,12 +302,14 @@ void bli_dgemm_int_d4x6
 #define NR  BLIS_DEFAULT_NR_Z
 
 
-#define NRv (NR/2)              // 2 lanes
-#if !((MR==2)&&(NR==3))
+#if !((MR==2)&&(NR==2))
 #error "invalid MR NR"
 #endif
 
-void bli_zgemm_int_d2x3
+#define LOOKAHEAD_A   4*16  // multiple of 16 = 4*MR*2 (16*8 bytes)
+#define LOOKAHEAD_B   4*8   // multiple of  8 = 4*NR   (8*16 bytes)
+
+void bli_zgemm_int_d2x2
 (
   dim_t               k,
   dcomplex*  restrict alpha_,
@@ -340,32 +323,39 @@ void bli_zgemm_int_d2x3
 {
   dcomplex alpha=*alpha_, beta=*beta_;
 
-  register __m128d b_re, b_im;
-  register __m128d a_0, a_1;
-
-  const double *vb = (const double *)b;
-
-  register __m128d t0_0r, t0_1r, t0_0i, t0_1i;
 #if defined(_WIN64)||defined(__LP64__)
-  register __m128d t1_0r, t1_1r, t1_0i, t1_1i;
-  register __m128d t2_0r, t2_1r, t2_0i, t2_1i;
+  register __m128d a_re, a_im, d_re, d_im;
+  register __m128d b_0, b_1, b_2, b_3;
 #else
-  __m128d t1_0r, t1_1r, t1_0i, t1_1i;
-  __m128d t2_0r, t2_1r, t2_0i, t2_1i;
+  __m128d a_re, a_im, d_re, d_im;
+  __m128d b_0, b_1, b_2, b_3;
 #endif
 
-  t0_0r = _mm_setzero_pd(); t0_1r = _mm_setzero_pd(); 
-  t0_0i = _mm_setzero_pd(); t0_1i = _mm_setzero_pd();
-  t1_0r = _mm_setzero_pd(); t1_1r = _mm_setzero_pd(); 
-  t1_0i = _mm_setzero_pd(); t1_1i = _mm_setzero_pd();
-  t2_0r = _mm_setzero_pd(); t2_1r = _mm_setzero_pd(); 
-  t2_0i = _mm_setzero_pd(); t2_1i = _mm_setzero_pd();
+  const double *va = (const double *)a;
 
-  const double *p0,*p1; __m128d pp0[3],pp1[3];
+  register __m128d t0_00, t0_01, t0_02, t0_03;
+  register __m128d t1_00, t1_01, t1_02, t1_03;
 
-  PREFETCH((void*)&c[0*rs_c+0*cs_c]);
-  PREFETCH((void*)&c[0*rs_c+1*cs_c]);
-  PREFETCH((void*)&c[0*rs_c+2*cs_c]);
+  t0_00 = _mm_setzero_pd();
+  t0_01 = _mm_setzero_pd();
+  t0_02 = _mm_setzero_pd();
+  t0_03 = _mm_setzero_pd();
+  t1_00 = _mm_setzero_pd();
+  t1_01 = _mm_setzero_pd();
+  t1_02 = _mm_setzero_pd();
+  t1_03 = _mm_setzero_pd();
+
+  const double *p0,*p1;
+  __m128d pp0[2],pp1[2];
+
+  a_re = _mm_set1_pd( va[0] );
+  a_im = _mm_set1_pd( va[1] );
+
+  b_0 = _mm_load_pd( (double*)b );
+  b_1 = _mm_load_pd( 2+(double*)b );
+
+  PREFETCH2((void*)&c[0*cs_c]);
+  PREFETCH2((void*)&c[1*cs_c]);
 
   gint_t l;
   gint_t ki = k/4;  // unroll
@@ -373,237 +363,198 @@ void bli_zgemm_int_d2x3
   for (l=0; l<ki; ++l) {
 
 // iter 0
-    PREFETCH((void*)(a+16)); // PREFETCH((void*)(a+2*4*MR));
 
-    a_0 = _mm_load_pd( (double*)a );
-    a_1 = _mm_load_pd( 2+(double*)a );
+    b_2 = _mm_load_pd( 4+(double*)b );
+    PREFETCH((void*)(b+LOOKAHEAD_B )); // PREFETCH((void*)(b+2*4*NR));
+    b_3 = _mm_load_pd( 6+(double*)b );
+    PREFETCH((void*)(va+LOOKAHEAD_A ));
 
-    b_re = _mm_set1_pd( vb[0] );
-    b_im = _mm_set1_pd( vb[1] );
+    d_re = _mm_set1_pd( va[2] );
+    d_im = _mm_set1_pd( va[3] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[2] );
-    b_im = _mm_set1_pd( vb[3] );
+    a_re = _mm_set1_pd( va[4] );
+    a_im = _mm_set1_pd( va[5] );
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[4] );
-    b_im = _mm_set1_pd( vb[5] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
+    CCBLOCK;
 
 // iter 1
-    a_0 = _mm_load_pd( 4+(double*)a );
-    a_1 = _mm_load_pd( 6+(double*)a );
 
-    b_re = _mm_set1_pd( vb[6] );
-    b_im = _mm_set1_pd( vb[7] );
+    b_0 = _mm_load_pd( 8+(double*)b );
+    b_1 = _mm_load_pd( 10+(double*)b );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    d_re = _mm_set1_pd( va[6] );
+    d_im = _mm_set1_pd( va[7] );
 
-    b_re = _mm_set1_pd( vb[8] );
-    b_im = _mm_set1_pd( vb[9] );
+    t0_00 = MM_FMADD_PD(b_2, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_3, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_2, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_3, a_im, t0_03);
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
+    a_re = _mm_set1_pd( va[8] );
+    a_im = _mm_set1_pd( va[9] );
 
-    b_re = _mm_set1_pd( vb[10] );
-    b_im = _mm_set1_pd( vb[11] );
+    t1_00 = MM_FMADD_PD(b_2, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_3, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_2, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_3, d_im, t1_03);
+    CCBLOCK;
 
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
-   
 // iter 2
-    PREFETCH((void*)(a+18)); // PREFETCH((void*)(a+MR+2*4*MR));
 
-    a_0 = _mm_load_pd( 8+(double*)a );
-    a_1 = _mm_load_pd( 10+(double*)a );
+    b_2 = _mm_load_pd( 12+(double*)b );
+    PREFETCH((void*)(b+LOOKAHEAD_B +4));
+    b_3 = _mm_load_pd( 14+(double*)b );
+    PREFETCH((void*)(va+LOOKAHEAD_A +8));
 
-    b_re = _mm_set1_pd( vb[12] );
-    b_im = _mm_set1_pd( vb[13] );
+    d_re = _mm_set1_pd( va[10] );
+    d_im = _mm_set1_pd( va[11] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[14] );
-    b_im = _mm_set1_pd( vb[15] );
+    a_re = _mm_set1_pd( va[12] );
+    a_im = _mm_set1_pd( va[13] );
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[16] );
-    b_im = _mm_set1_pd( vb[17] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
+    CCBLOCK;
 
 // iter 3
-    a_0 = _mm_load_pd( 12+(double*)a );
-    a_1 = _mm_load_pd( 14+(double*)a );
 
-    b_re = _mm_set1_pd( vb[18] );
-    b_im = _mm_set1_pd( vb[19] );
+    b_0 = _mm_load_pd( 16+(double*)b );
+    b_1 = _mm_load_pd( 18+(double*)b );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    d_re = _mm_set1_pd( va[14] );
+    d_im = _mm_set1_pd( va[15] );
 
-    b_re = _mm_set1_pd( vb[20] );
-    b_im = _mm_set1_pd( vb[21] );
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
+    t0_00 = MM_FMADD_PD(b_2, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_3, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_2, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_3, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[22] );
-    b_im = _mm_set1_pd( vb[23] );
+    a_re = _mm_set1_pd( va[16] );
+    a_im = _mm_set1_pd( va[17] );
 
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
+    t1_00 = MM_FMADD_PD(b_2, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_3, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_2, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_3, d_im, t1_03);
+    CCBLOCK;
 
-    a += 4*MR;        // unroll*MR
-    vb += 4*NR*2;     // unroll*NR  vb is pointer to double
+    b += 4*NR;        // unroll*NR
+    va += 4*MR*2;     // unroll*MR  va is pointer to double
   }
+
+  PREFETCH2((void*)&c[1*rs_c+0*cs_c]);
+  PREFETCH2((void*)&c[1*rs_c+1*cs_c]);
 
   for (l=0; l<kr; ++l) {
 
-    PREFETCH((void*)(a+16)); // PREFETCH((void*)(a+2*4*MR));
+    d_re = _mm_set1_pd( va[2] );
+    d_im = _mm_set1_pd( va[3] );
 
-    a_0 = _mm_load_pd( (double*)a );
-    a_1 = _mm_load_pd( 2+(double*)a );
+    t0_00 = MM_FMADD_PD(b_0, a_re, t0_00);
+    t0_01 = MM_FMADD_PD(b_1, a_re, t0_01);
+    t0_02 = MM_FMADD_PD(b_0, a_im, t0_02);
+    t0_03 = MM_FMADD_PD(b_1, a_im, t0_03);
 
-    b_re = _mm_set1_pd( vb[0] );
-    b_im = _mm_set1_pd( vb[1] );
+    a_re = _mm_set1_pd( va[4] );
+    a_im = _mm_set1_pd( va[5] );
 
-    t0_0r = MM_FMADD_PD(a_0, b_re, t0_0r);
-    t0_1r = MM_FMADD_PD(a_1, b_re, t0_1r);
-    t0_0i = MM_FMADD_PD(a_0, b_im, t0_0i);
-    t0_1i = MM_FMADD_PD(a_1, b_im, t0_1i);
+    t1_00 = MM_FMADD_PD(b_0, d_re, t1_00);
+    t1_01 = MM_FMADD_PD(b_1, d_re, t1_01);
+    t1_02 = MM_FMADD_PD(b_0, d_im, t1_02);
+    t1_03 = MM_FMADD_PD(b_1, d_im, t1_03);
 
-    b_re = _mm_set1_pd( vb[2] );
-    b_im = _mm_set1_pd( vb[3] );
+    b_0 = _mm_load_pd( 4+(double*)b );
+    b_1 = _mm_load_pd( 6+(double*)b );
+    CCBLOCK;
 
-    t1_0r = MM_FMADD_PD(a_0, b_re, t1_0r);
-    t1_1r = MM_FMADD_PD(a_1, b_re, t1_1r);
-    t1_0i = MM_FMADD_PD(a_0, b_im, t1_0i);
-    t1_1i = MM_FMADD_PD(a_1, b_im, t1_1i);
-
-    b_re = _mm_set1_pd( vb[4] );
-    b_im = _mm_set1_pd( vb[5] );
-
-    t2_0r = MM_FMADD_PD(a_0, b_re, t2_0r);
-    t2_1r = MM_FMADD_PD(a_1, b_re, t2_1r);
-    t2_0i = MM_FMADD_PD(a_0, b_im, t2_0i);
-    t2_1i = MM_FMADD_PD(a_1, b_im, t2_1i);
-
-    a += MR;
-    vb += NR*2;       // vb is pointer to double
+    b += NR;
+    va += MR*2;       // va is pointer to double
   }
 
-  t0_0i = _mm_shuffle_pd ( t0_0i , t0_0i , 0x1 );
-  t0_1i = _mm_shuffle_pd ( t0_1i , t0_1i , 0x1 );
+  t0_02 = _mm_shuffle_pd ( t0_02 , t0_02 , 0x1 );
+  t0_03 = _mm_shuffle_pd ( t0_03 , t0_03 , 0x1 );
+  t1_02 = _mm_shuffle_pd ( t1_02 , t1_02 , 0x1 );
+  t1_03 = _mm_shuffle_pd ( t1_03 , t1_03 , 0x1 );
 
-  t1_0i = _mm_shuffle_pd ( t1_0i , t1_0i , 0x1 );
-  t1_1i = _mm_shuffle_pd ( t1_1i , t1_1i , 0x1 );
+#if 0
+// if sse3 available
+// but apparently no speed improvement
+#include <pmmintrin.h>
 
-  t2_0i = _mm_shuffle_pd ( t2_0i , t2_0i , 0x1 );
-  t2_1i = _mm_shuffle_pd ( t2_1i , t2_1i , 0x1 );
+  t0_00 = _mm_addsub_pd ( t0_00, t0_02 );
+  t0_01 = _mm_addsub_pd ( t0_01, t0_03 );
 
-  a_0 = _mm_sub_pd ( t0_0r , t0_0i );
-  a_1 = _mm_add_pd ( t0_0r , t0_0i );
-  t0_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+  t1_00 = _mm_addsub_pd ( t1_00, t1_02 );
+  t1_01 = _mm_addsub_pd ( t1_01, t1_03 );
 
-  a_0 = _mm_sub_pd ( t0_1r , t0_1i );
-  a_1 = _mm_add_pd ( t0_1r , t0_1i );
-  t0_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+#else
+  b_0 = _mm_sub_pd ( t0_00 , t0_02 );
+  b_1 = _mm_add_pd ( t0_00 , t0_02 );
 
-  a_0 = _mm_sub_pd ( t1_0r , t1_0i );
-  a_1 = _mm_add_pd ( t1_0r , t1_0i );
-  t1_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+  b_2 = _mm_sub_pd ( t0_01 , t0_03 );
+  b_3 = _mm_add_pd ( t0_01 , t0_03 );
 
-  a_0 = _mm_sub_pd ( t1_1r , t1_1i );
-  a_1 = _mm_add_pd ( t1_1r , t1_1i );
-  t1_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+  t0_00 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
+  t0_01 = _mm_shuffle_pd ( b_2 , b_3 , 0x2 );
 
-  a_0 = _mm_sub_pd ( t2_0r , t2_0i );
-  a_1 = _mm_add_pd ( t2_0r , t2_0i );
-  t2_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+  b_0 = _mm_sub_pd ( t1_00 , t1_02 );
+  b_1 = _mm_add_pd ( t1_00 , t1_02 );
 
-  a_0 = _mm_sub_pd ( t2_1r , t2_1i );
-  a_1 = _mm_add_pd ( t2_1r , t2_1i );
-  t2_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+  b_2 = _mm_sub_pd ( t1_01 , t1_03 );
+  b_3 = _mm_add_pd ( t1_01 , t1_03 );
+
+  t1_00 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
+  t1_01 = _mm_shuffle_pd ( b_2 , b_3 , 0x2 );
+
+#endif
 
   if (alpha.real!=1.0||alpha.imag!=0.0) {
-    b_re = _mm_set1_pd( alpha.real );
-    b_im = _mm_set1_pd( alpha.imag );
+    a_re = _mm_set1_pd( alpha.real );
+    a_im = _mm_set1_pd( alpha.imag );
 
-    t0_0i = _mm_shuffle_pd ( t0_0r , t0_0r , 0x1 );
-    t0_0r = _mm_mul_pd ( b_re , t0_0r );
-    t0_0i = _mm_mul_pd ( b_im , t0_0i );
-    a_0 = _mm_sub_pd ( t0_0r , t0_0i );
-    a_1 = _mm_add_pd ( t0_0r , t0_0i );
-    t0_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+    t0_02 = _mm_shuffle_pd ( t0_00 , t0_00 , 0x1 );
+    t0_00 = _mm_mul_pd ( a_re , t0_00 );
+    t0_02 = _mm_mul_pd ( a_im , t0_02 );
+    b_0 = _mm_sub_pd ( t0_00 , t0_02 );
+    b_1 = _mm_add_pd ( t0_00 , t0_02 );
+    t0_00 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
 
-    t0_0i = _mm_shuffle_pd ( t0_1r , t0_1r , 0x1 );
-    t0_1r = _mm_mul_pd ( b_re , t0_1r );
-    t0_0i = _mm_mul_pd ( b_im , t0_0i );
-    a_0 = _mm_sub_pd ( t0_1r , t0_1i );
-    a_1 = _mm_add_pd ( t0_1r , t0_1i );
-    t0_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+    t0_02 = _mm_shuffle_pd ( t0_01 , t0_01 , 0x1 );
+    t0_01 = _mm_mul_pd ( a_re , t0_01 );
+    t0_02 = _mm_mul_pd ( a_im , t0_02 );
+    b_0 = _mm_sub_pd ( t0_01 , t0_03 );
+    b_1 = _mm_add_pd ( t0_01 , t0_03 );
+    t0_01 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
 
-    t1_0i = _mm_shuffle_pd ( t1_0r , t1_0r , 0x1 );
-    t1_0r = _mm_mul_pd ( b_re , t1_0r );
-    t1_0i = _mm_mul_pd ( b_im , t1_0i );
-    a_0 = _mm_sub_pd ( t1_0r , t1_0i );
-    a_1 = _mm_add_pd ( t1_0r , t1_0i );
-    t1_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+    t1_02 = _mm_shuffle_pd ( t1_00 , t1_00 , 0x1 );
+    t1_00 = _mm_mul_pd ( a_re , t1_00 );
+    t1_02 = _mm_mul_pd ( a_im , t1_02 );
+    b_0 = _mm_sub_pd ( t1_00 , t1_02 );
+    b_1 = _mm_add_pd ( t1_00 , t1_02 );
+    t1_00 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
 
-    t1_0i = _mm_shuffle_pd ( t1_1r , t1_1r , 0x1 );
-    t1_1r = _mm_mul_pd ( b_re , t1_1r );
-    t1_0i = _mm_mul_pd ( b_im , t1_0i );
-    a_0 = _mm_sub_pd ( t1_1r , t1_1i );
-    a_1 = _mm_add_pd ( t1_1r , t1_1i );
-    t1_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
-
-    t2_0i = _mm_shuffle_pd ( t2_0r , t2_0r , 0x1 );
-    t2_0r = _mm_mul_pd ( b_re , t2_0r );
-    t2_0i = _mm_mul_pd ( b_im , t2_0i );
-    a_0 = _mm_sub_pd ( t2_0r , t2_0i );
-    a_1 = _mm_add_pd ( t2_0r , t2_0i );
-    t2_0r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
-
-    t2_0i = _mm_shuffle_pd ( t2_1r , t2_1r , 0x1 );
-    t2_1r = _mm_mul_pd ( b_re , t2_1r );
-    t2_0i = _mm_mul_pd ( b_im , t2_0i );
-    a_0 = _mm_sub_pd ( t2_1r , t2_1i );
-    a_1 = _mm_add_pd ( t2_1r , t2_1i );
-    t2_1r = _mm_shuffle_pd ( a_0 , a_1 , 0x2 );
+    t1_02 = _mm_shuffle_pd ( t1_01 , t1_01 , 0x1 );
+    t1_01 = _mm_mul_pd ( a_re , t1_01 );
+    t1_02 = _mm_mul_pd ( a_im , t1_02 );
+    b_0 = _mm_sub_pd ( t1_01 , t1_03 );
+    b_1 = _mm_add_pd ( t1_01 , t1_03 );
+    t1_01 = _mm_shuffle_pd ( b_0 , b_1 , 0x2 );
 
   }
 
@@ -611,7 +562,7 @@ void bli_zgemm_int_d2x3
     gint_t i;
     for (i=0; i<MR; ++i) {
       gint_t j;
-      for (j=0; j<NR; ++j) {               // !!! NOT NRv
+      for (j=0; j<NR; ++j) {
         c[i*rs_c+j*cs_c].real = c[i*rs_c+j*cs_c].real*beta.real - c[i*rs_c+j*cs_c].imag*beta.imag;
         c[i*rs_c+j*cs_c].imag = c[i*rs_c+j*cs_c].real*beta.imag + c[i*rs_c+j*cs_c].imag*beta.real;
       }
@@ -620,12 +571,10 @@ void bli_zgemm_int_d2x3
 
   p0 = (const double *) &pp0;
   p1 = (const double *) &pp1;
-  pp0[0] = t0_0r;    // p0 0
-  pp0[1] = t1_0r;    // p0 2
-  pp0[2] = t2_0r;    // p0 4
-  pp1[0] = t0_1r;    // p1 0
-  pp1[1] = t1_1r;    // p1 2
-  pp1[2] = t2_1r;    // p1 4
+  pp0[0] = t0_00;
+  pp0[1] = t0_01;
+  pp1[0] = t1_00;
+  pp1[1] = t1_01;
 
   gint_t pc;
 
@@ -634,26 +583,22 @@ void bli_zgemm_int_d2x3
   c[pc      ].imag += p0[1];
   c[pc+=cs_c].real += p0[2];
   c[pc      ].imag += p0[3];
-  c[pc+=cs_c].real += p0[4];
-  c[pc      ].imag += p0[5];
 
   pc = rs_c;
   c[pc      ].real += p1[0];
   c[pc      ].imag += p1[1];
   c[pc+=cs_c].real += p1[2];
   c[pc      ].imag += p1[3];
-  c[pc+=cs_c].real += p1[4];
-  c[pc      ].imag += p1[5];
 
 }
-
-
-#undef NRv
 
 #undef MC
 #undef KC
 #undef NC
 #undef MR
 #undef NR
+
+#undef LOOKAHEAD_A
+#undef LOOKAHEAD_B
 
 #endif  /* __SSE2__  */

@@ -35,6 +35,15 @@
 #endif
 #endif
 
+#ifndef CCBLOCK
+/* (hopefully) turn off some re-scheduling optimization  */
+#ifdef __GNUC__
+#define CCBLOCK __asm__("" ::: "cc")
+#else
+#define CCBLOCK
+#endif
+#endif
+
 #if defined(_WIN64)||defined(__LP64__)
 typedef long long  gint_t;
 #else
@@ -104,10 +113,12 @@ typedef struct cntx_s
 #endif
 
 #if SIMD_REGISTER_WIDTH==256
-#define alignv 32  // (rwidth / 8)
+// #define alignv 32  // (rwidth / 8)
+#define alignv 32   // cacheline alignment
 #define vlen   4   // (rwidth / (8*sizeof(double)))
 #elif SIMD_REGISTER_WIDTH==128
-#define alignv 16  // (rwidth / 8)
+// #define alignv 16  // (rwidth / 8)
+#define alignv 32   // cacheline alignment
 #define vlen   2   // (rwidth / (8*sizeof(double)))
 #else
 #define alignv 8
@@ -209,27 +220,27 @@ ZGEMM(asm_3x4)
 // sandy bridge (FMA if detected)
 
 // intrinsic is almost as good as asm
-#define BLIS_DGEMM_UKERNEL         bli_dgemm_int_8x6
-#define BLIS_DGEMM2_UKERNEL        bli_dgemm2_int_8x6
+#define BLIS_DGEMM_UKERNEL         bli_dgemm_int_6x8
+#define BLIS_DGEMM2_UKERNEL        bli_dgemm2_int_6x8
 #define BLIS_DEFAULT_MC_D          72
 #define BLIS_DEFAULT_KC_D          256
 #define BLIS_DEFAULT_NC_D          4080
-#define BLIS_DEFAULT_MR_D          8
-#define BLIS_DEFAULT_NR_D          6
+#define BLIS_DEFAULT_MR_D          6
+#define BLIS_DEFAULT_NR_D          8
 
-#define BLIS_ZGEMM_UKERNEL         bli_zgemm_int_4x3
-#define BLIS_ZGEMM2_UKERNEL        bli_zgemm2_int_4x3
+#define BLIS_ZGEMM_UKERNEL         bli_zgemm_int_3x4
+#define BLIS_ZGEMM2_UKERNEL        bli_zgemm2_int_3x4
 #define BLIS_DEFAULT_MC_Z          72
 #define BLIS_DEFAULT_KC_Z          256
 #define BLIS_DEFAULT_NC_Z          4080
-#define BLIS_DEFAULT_MR_Z          4
-#define BLIS_DEFAULT_NR_Z          3
+#define BLIS_DEFAULT_MR_Z          3
+#define BLIS_DEFAULT_NR_Z          4
 
 #define BLIS_DRIVER BLIS_DRIVER_AVX
-DGEMM(int_8x6)
-ZGEMM(int_4x3)
-DGEMM2(int_8x6)
-ZGEMM2(int_4x3)
+DGEMM(int_6x8)
+ZGEMM(int_3x4)
+DGEMM2(int_6x8)
+ZGEMM2(int_3x4)
 
 #endif
 
@@ -237,67 +248,67 @@ ZGEMM2(int_4x3)
 
 // sse2 x86_64 or x86
 
-#define BLIS_DGEMM_UKERNEL         bli_dgemm_int_d4x6
+#define BLIS_DGEMM_UKERNEL         bli_dgemm_int_d4x4
 #define BLIS_DEFAULT_MC_D          72
 #define BLIS_DEFAULT_KC_D          256
 #define BLIS_DEFAULT_NC_D          4080
 #define BLIS_DEFAULT_MR_D          4
-#define BLIS_DEFAULT_NR_D          6
+#define BLIS_DEFAULT_NR_D          4
 
-#define BLIS_ZGEMM_UKERNEL         bli_zgemm_int_d2x3
+#define BLIS_ZGEMM_UKERNEL         bli_zgemm_int_d2x2
 #define BLIS_DEFAULT_MC_Z          72 
 #define BLIS_DEFAULT_KC_Z          256
 #define BLIS_DEFAULT_NC_Z          4080
 #define BLIS_DEFAULT_MR_Z          2
-#define BLIS_DEFAULT_NR_Z          3
+#define BLIS_DEFAULT_NR_Z          2
 
 #define BLIS_DRIVER BLIS_DRIVER_SSE2
-DGEMM(int_d4x6)
-ZGEMM(int_d2x3)
+DGEMM(int_d4x4)
+ZGEMM(int_d2x2)
 
 #elif defined(__aarch64__)||defined(_M_ARM64)
 
 // armv8 neon
 
-#define BLIS_DGEMM_UKERNEL         bli_dgemm_opt_8x6
+#define BLIS_DGEMM_UKERNEL         bli_dgemm_opt_6x8
 #define BLIS_DEFAULT_MC_D          72
 #define BLIS_DEFAULT_KC_D          256
 #define BLIS_DEFAULT_NC_D          4080
-#define BLIS_DEFAULT_MR_D          8
-#define BLIS_DEFAULT_NR_D          6
+#define BLIS_DEFAULT_MR_D          6
+#define BLIS_DEFAULT_NR_D          8
 
-#define BLIS_ZGEMM_UKERNEL         bli_zgemm_opt_4x3
+#define BLIS_ZGEMM_UKERNEL         bli_zgemm_opt_3x4
 #define BLIS_DEFAULT_MC_Z          72
 #define BLIS_DEFAULT_KC_Z          256
 #define BLIS_DEFAULT_NC_Z          4080
-#define BLIS_DEFAULT_MR_Z          4
-#define BLIS_DEFAULT_NR_Z          3
+#define BLIS_DEFAULT_MR_Z          3
+#define BLIS_DEFAULT_NR_Z          4
 
 #define BLIS_DRIVER BLIS_DRIVER_AARCH64
-DGEMM(opt_8x6)
-ZGEMM(opt_4x3)
+DGEMM(opt_6x8)
+ZGEMM(opt_3x4)
 
 #elif defined(__GNUC__)
 
 // gcc vector extension
 
-#define BLIS_DGEMM_UKERNEL         bli_dgemm_128_4x6
+#define BLIS_DGEMM_UKERNEL         bli_dgemm_128_6x4
 #define BLIS_DEFAULT_MC_D          72
 #define BLIS_DEFAULT_KC_D          256
 #define BLIS_DEFAULT_NC_D          4080
-#define BLIS_DEFAULT_MR_D          4
-#define BLIS_DEFAULT_NR_D          6
+#define BLIS_DEFAULT_MR_D          6
+#define BLIS_DEFAULT_NR_D          4
 
-#define BLIS_ZGEMM_UKERNEL         bli_zgemm_128_2x3
+#define BLIS_ZGEMM_UKERNEL         bli_zgemm_128_3x2
 #define BLIS_DEFAULT_MC_Z          72
 #define BLIS_DEFAULT_KC_Z          256
 #define BLIS_DEFAULT_NC_Z          4080
-#define BLIS_DEFAULT_MR_Z          2
-#define BLIS_DEFAULT_NR_Z          3
+#define BLIS_DEFAULT_MR_Z          3
+#define BLIS_DEFAULT_NR_Z          2
 
 #define BLIS_DRIVER BLIS_DRIVER_GNUVEC
-DGEMM(128_4x6)
-ZGEMM(128_2x3)
+DGEMM(128_6x4)
+ZGEMM(128_3x2)
 
 #else
 

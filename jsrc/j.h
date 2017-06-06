@@ -682,6 +682,13 @@ extern J gjt; // global for JPF (procs without jt)
 #define ddiv2(u,v) ((u)/(v))
 #endif
 
+/* (hopefully) turn off some re-scheduling optimization  */
+#ifdef __GNUC__
+#define CCBLOCK __asm__("" ::: "cc")
+#else
+#define CCBLOCK
+#endif
+
 #if SYS & SYS_UNIX
 #include <fenv.h>
 #define _isnan       isnan

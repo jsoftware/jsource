@@ -20,7 +20,7 @@ static DF1(ad1){DECLFG;A z;I od=jt->db;
  jt->db=0; z=CALL1(f1,  w,fs); jt->db=od;
  if(EVTHROW==jt->jerr)R 0;
  RESETERR;  
- R z?z:CALL1(g1,  w,gs);
+ R z?z:AT(gs)&NOUN?gs:CALL1(g1,  w,gs);
 }
 
 static DF2(ad2){DECLFG;A z;I od=jt->db;
@@ -28,11 +28,11 @@ static DF2(ad2){DECLFG;A z;I od=jt->db;
  jt->db=0; z=CALL2(f2,a,w,fs); jt->db=od;
  if(EVTHROW==jt->jerr)R 0;
  RESETERR; 
- R z?z:CALL2(g2,a,w,gs);
+ R z?z:AT(gs)&NOUN?gs:CALL2(g2,a,w,gs);
 }
 
-// Set ASGSAFE from operands
-F2(jtadverse){ASSERTVV(a,w); R CDERIV(CADVERSE,ad1,ad2,(VAV(a)->flag&VAV(w)->flag&VASGSAFE),RMAX,RMAX,RMAX);}
+// Set ASGSAFE from operands.  Noun operand is always safe
+F2(jtadverse){ASSERTVVn(a,w); R CDERIV(CADVERSE,ad1,ad2,(VAV(a)->flag&(AT(w)&VERB?VAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)

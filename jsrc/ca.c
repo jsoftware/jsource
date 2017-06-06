@@ -85,6 +85,10 @@ static CS2IP(jtupon2, \
 POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
 ,0114)
 
+// u@n
+static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
+static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
+
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
  PREF2(on2); PUSHZOMB;
  // here for execution on a single cell
@@ -110,7 +114,8 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
 }
 
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv;
- ASSERTVV(a,w);
+ ASSERTVVn(a,w);
+ if(AT(w)&NOUN){R fdef(CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}
  av=VAV(a); c=av->id;
  wv=VAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2

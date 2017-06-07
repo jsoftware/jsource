@@ -57,7 +57,7 @@ pr =. 5!:6
 
 (<'asdfasdf')     -: ar <'asdfasdf'
 (,<'asdfasdf')     -: dr <'asdfasdf'
-(,: '-- asdfasdf')     -: tr <'asdfasdf'
+(,: (2 # 10 { 9!:6'') , ' asdfasdf')     -: tr <'asdfasdf'
 ('asdfasdf')     -: lr <'asdfasdf'
 ('asdfasdf')     -: pr <'asdfasdf'
 

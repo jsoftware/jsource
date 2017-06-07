@@ -1007,6 +1007,7 @@
 #define symbis(x,y,z)               jtsymbis(jt,(x),(y),(z))
 #define symbrd(x)                   jtsymbrd(jt,(x))
 #define symbrdlock(x)               jtsymbrdlock(jt,(x))
+#define symbrdlocknovalerr(x)       jtsymbrdlocknovalerr(jt,(x))
 #define symext(x)                   jtsymext(jt,(x))
 #define symfree(x)                  jtsymfree(jt,(x))
 #define symfreeh(x,y)               jtsymfreeh(jt,(x),(y))

@@ -307,6 +307,7 @@ extern F1(jtstype);
 extern F1(jtswap);
 extern F1(jtsymbrd);
 extern F1(jtsymbrdlock);
+extern F1(jtsymbrdlocknovalerr);
 extern F1(jtsymfreeha);
 extern F1(jtsympool);
 extern F1(jtsysparmq);

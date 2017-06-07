@@ -55,11 +55,11 @@ pr =. 5!:6
 'ill-formed name' -: lr etx <'a b c'
 'ill-formed name' -: pr etx <'a b c'
 
-'value error'     -: ar etx <'asdfasdf'
-'value error'     -: dr etx <'asdfasdf'
-'value error'     -: tr etx <'asdfasdf'
-'value error'     -: lr etx <'asdfasdf'
-'value error'     -: pr etx <'asdfasdf'
+(<'asdfasdf')     -: ar <'asdfasdf'
+(,<'asdfasdf')     -: dr <'asdfasdf'
+(,: '-- asdfasdf')     -: tr <'asdfasdf'
+('asdfasdf')     -: lr <'asdfasdf'
+('asdfasdf')     -: pr <'asdfasdf'
 
 4!:55 ;:'ar dr pr lr tr'
 

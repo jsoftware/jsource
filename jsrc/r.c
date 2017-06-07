@@ -187,10 +187,10 @@ static F2(jtxrep){A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 }    /* explicit representation -- h parameter for : definitions */
 
 
-F1(jtarx){F1RANK(0,  jtarx,0); R arep(  symbrdlock(nfb(w)));}
-F1(jtdrx){F1RANK(0,  jtdrx,0); R drep(  symbrdlock(nfb(w)));}
-F1(jttrx){F1RANK(0,  jttrx,0); R trep(  symbrdlock(nfb(w)));}
-F1(jtlrx){F1RANK(0,  jtlrx,0); R lrep(  symbrdlock(nfb(w)));}
-F1(jtprx){F1RANK(0,  jtprx,0); R prep(  symbrdlock(nfb(w)));}
+F1(jtarx){F1RANK(0,  jtarx,0); R arep(  symbrdlocknovalerr(nfb(w)));}
+F1(jtdrx){F1RANK(0,  jtdrx,0); R drep(  symbrdlocknovalerr(nfb(w)));}
+F1(jttrx){F1RANK(0,  jttrx,0); R trep(  symbrdlocknovalerr(nfb(w)));}
+F1(jtlrx){F1RANK(0,  jtlrx,0); R lrep(  symbrdlocknovalerr(nfb(w)));}
+F1(jtprx){F1RANK(0,  jtprx,0); R prep(  symbrdlocknovalerr(nfb(w)));}
 
 F2(jtxrx){F2RANK(0,0,jtxrx,0); R xrep(a,symbrdlock(nfb(w)));}

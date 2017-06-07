@@ -335,13 +335,28 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
 F1(jtdllsymget){R dllsymaddr(w,0);}
 F1(jtdllsymdat){R dllsymaddr(w,1);}
 
-// look up the name w using full name resolution.  Return the value if found, abort if not found
+// look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name
 F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
 
+// look up name w, return value unless locked or undefined; then return just the name
+F1(jtsymbrdlocknovalerr){A y;L *v;
+ if(!(v=syrd(w,0L))){
+  // no value.  Could be undefined name (no error) or some other error including value error, which means error looking up an indirect locative
+  // If error, abort with it; if undefined, return a reference to the undefined name
+  RE(0);   // if not simple undefined, error
+  R nameref(w);  // return reference to undefined name
+ }
+ // no error.  Return the value unless locked function
+ y=v->val;
+ R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
+}
+
+// Same, but value error if name not defined
 F1(jtsymbrdlock){A y;
  RZ(y=symbrd(w));
  R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
 }
+
 
 // w is a value, v is the symbol-table entry about to be assigned
 // return 0 if there is an attempt to reassign the currently-executing name

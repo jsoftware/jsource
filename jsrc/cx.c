@@ -43,7 +43,7 @@ typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 
 #define WCD            (sizeof(CDATA)/sizeof(I))
 
-typedef struct{I d,t,e;} TD;
+typedef struct{I d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and try.
 #define WTD            (sizeof(TD)/sizeof(I))
 #define NTD            17     /* maximum nesting for try/catch */
 
@@ -71,15 +71,23 @@ static B jtunstackcv(J jt,CDATA*cv){
 }
 
 static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
- v->d=v->t=0;
+ v->b=i;v->d=v->t=0;
  while(t!=CEND){
-  j=(j+cw)->go;
+  j=(j+cw)->go;  // skip through just the control words for this try. structure
   switch(t=(j+cw)->type){
    case CCATCHD: v->d=j; break;
    case CCATCHT: v->t=j; break;
    case CEND:    v->e=j; break;
 }}}  /* processing on hitting try. */
 
+// tdv points to the try stack or 0 if none; tdi is index of NEXT try. slot to fill; i is goto line number
+// if there is a try stack, pop its stack frames if they don't include the line number of the goto
+// result is new value for tdi
+// This is called only if tdi is nonzero & therefore we have a stack
+static I trypopgoto(TD* tdv, I tdi, I dest){
+ while(tdi&&(tdv[tdi-1].b>dest||tdv[tdi-1].e<dest))--tdi;  // discard stack frame if structure does not include dest
+ R tdi;
+}
 
 // We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
 // address/length into parsex.  The address and length of the sentence are filled in as needed
@@ -96,7 +104,7 @@ static void jttryinit(J jt,TD*v,I i,CW*cw){I j=i,t=0;
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named;CDATA*cv;
-  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv;V*sv;X y;
+  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv=0;V*sv;X y;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // z is the final result (initialized here in case there are no executed lines)
@@ -260,9 +268,14 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CCONTS:
     // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
     // any number of SELECTN, up to the SELECT 
-   if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
-   do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
+    if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
+    do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
+     // fall through to...
+   case CBREAK:
+   case CCONT:  // break./continue. in while., outside of select.
     i=ci->go;   // After popping any select. off the stack, continue at new address
+    // It must also pop the try. stack, if the destination is outside the try.-end. range
+    if(tdi)tdi=trypopgoto(tdv,tdi,i);
     break;
    case CBREAKF:
     // break. in a for. must first pop any active select., and then pop the for.
@@ -271,6 +284,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(!(ci->canend&2))rat(z);   // protect possible result from pop
     do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
     i=ci->go;     // continue at new location
+    // It must also pop the try. stack, if the destination is outside the try.-end. range
+    if(tdi)tdi=trypopgoto(tdv,tdi,i);
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
@@ -324,7 +339,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     t=0;  // Indicate no T block, now that we have processed it
     if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...
-   default:   //    CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
+   default:   //   CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
     if(2<=*jt->adbreakr) {if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);} BASSERT(0,EVBREAK);} 
       // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
 // obsolete    JBREAK0;   // Check for interrupts

@@ -418,6 +418,77 @@ y , 'g'
 'noun result was required' -: ex 't$0'
 
 
+NB. break./continue. that leaves try. block
+t =: 3 : 0
+r =. 'a'
+try.
+r =. r,'g'
+while. do.
+  r =. r,'b'
+  try.
+    r =. r,'c'
+    break.
+  catch.
+    r =. r,'d'
+    return.
+  end.
+  r =. r,'e'
+end.
+r =. r,'f'
+catch.
+r =. r,'h'
+end.
+)
+'agbcf' -: t''
+
+NB. break./continue. that leaves try. block
+t =: 3 : 0
+r =. 'a'
+try.
+r =. r,'g'
+for. i. 2 do.
+  r =. r,'b'
+  try.
+    r =. r,'c'
+    break.
+  catch.
+    r =. r,'d'
+    return.
+  end.
+  r =. r,'e'
+end.
+r =. r,'f'
+catch.
+r =. r,'h'
+end.
+)
+'agbcf' -: t''
+
+NB. break./continue. that leaves try. block
+t =: 3 : 0
+r =. 'a'
+try.
+r =. r,'g'
+for. i. 2 do.
+  r =. r,'b'
+  try.
+    r =. r,'c'
+    continue.
+  catch.
+    r =. r,'d'
+    return.
+  end.
+  r =. r,'e'
+end.
+r =. r,'f'
+catch.
+r =. r,'h'
+end.
+)
+'agbcbcf' -: t''
+
+
+
 
 4!:55 ;:'erase f fa fb fc fd fe ff fg fh fi fj goo sub t write x y'
 

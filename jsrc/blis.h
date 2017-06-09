@@ -270,23 +270,23 @@ ZGEMM(int_d2x2)
 
 // armv8 neon
 
-#define BLIS_DGEMM_UKERNEL         bli_dgemm_opt_6x8
+#define BLIS_DGEMM_UKERNEL         bli_dgemm_opt_8x6
 #define BLIS_DEFAULT_MC_D          72
 #define BLIS_DEFAULT_KC_D          256
 #define BLIS_DEFAULT_NC_D          4080
-#define BLIS_DEFAULT_MR_D          6
-#define BLIS_DEFAULT_NR_D          8
+#define BLIS_DEFAULT_MR_D          8
+#define BLIS_DEFAULT_NR_D          6
 
-#define BLIS_ZGEMM_UKERNEL         bli_zgemm_opt_3x4
-#define BLIS_DEFAULT_MC_Z          72
-#define BLIS_DEFAULT_KC_Z          256
-#define BLIS_DEFAULT_NC_Z          4080
-#define BLIS_DEFAULT_MR_Z          3
+#define BLIS_ZGEMM_UKERNEL         bli_zgemm_opt_4x4
+#define BLIS_DEFAULT_MC_Z          64
+#define BLIS_DEFAULT_KC_Z          128
+#define BLIS_DEFAULT_NC_Z          4096
+#define BLIS_DEFAULT_MR_Z          4
 #define BLIS_DEFAULT_NR_Z          4
 
 #define BLIS_DRIVER BLIS_DRIVER_AARCH64
-DGEMM(opt_6x8)
-ZGEMM(opt_3x4)
+DGEMM(opt_8x6)
+ZGEMM(opt_4x4)
 
 #elif defined(__GNUC__)
 

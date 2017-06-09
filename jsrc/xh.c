@@ -44,6 +44,9 @@ F1(jthost){A z;
 #else
 {
  A t;I b;C*fn,*s;F f;I n;
+#ifdef ANDROID
+ const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
+#endif
  n=AN(w);
  GATV(t,LIT,n+5+L_tmpnam,1,0); s=CAV(t);
  fn=5+n+s; MC(s,AV(w),n);
@@ -55,9 +58,12 @@ F1(jthost){A z;
   b=!_wsystem(USAV(fz));
  }
 #else
- const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
- strcpy(fn,ftmp?ftmp:(char*)"/tmp");
- strcat(fn,"/tmp.XXXXXX");
+#ifdef ANDROID
+ strcpy(fn,ftmp);
+#else
+ strcpy(fn,"/tmp");
+#endif
+ strcat(fn,"/tmp.XXXXX");
  {int fd=mkstemp(fn); close(fd);}
  b=!system(s);
 #endif

@@ -185,7 +185,6 @@ void bli_dgemm_128_6x4
 // iter 3
     PREFETCH((void*)(b+LOOKAHEAD_B +24));
 
-    b_0 = _mm_load_pd( 12+(double*)b );
     b_0 = MM_LOAD_PD( 12+(double*)b );
     b_1 = MM_LOAD_PD( 14+(double*)b );
 

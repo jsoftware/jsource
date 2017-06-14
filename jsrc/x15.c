@@ -48,6 +48,7 @@ otherwise the regs may be used and the parameter lost.
 #endif
 #else
 #include <stdlib.h>
+#include <unistd.h>
 typedef unsigned char       BYTE;
 #define CALLBACK
 #define FIXWINUTF8

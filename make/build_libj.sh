@@ -17,7 +17,7 @@ CC=gcc
 export CC
 fi
 fi
-if [ $($CC -v 2>&1 | grep -c "clang version") -eq 1 ] ; then
+if [ $($CC -v 2>&1 | grep -c "clang\ version\|Apple\ LLVM\ version") -eq 1 ] ; then
 COMPILER='clang'
 else
 COMPILER='gcc'

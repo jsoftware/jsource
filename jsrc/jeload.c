@@ -21,7 +21,7 @@
  #define filesep '/'
  #define filesepx "/"
  #ifdef __MACH__
-  extern int _NSGetExecutablePath(char*, int);
+  extern int _NSGetExecutablePath(char*, int*);
   #define JDLLNAME "libj.dylib"
   #define JAVXDLLNAME "libavxj.dylib"
  #else

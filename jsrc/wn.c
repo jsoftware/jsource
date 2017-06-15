@@ -126,13 +126,16 @@ static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
  R 1;
 }
 
+// Convert a constant that is either base or complex
 static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
  v=(Z*)vv;
  if(t=memchr(s,'b',n)){
+  // base given
   if(!(numbpx(t-s,s,&b)))R 0;
-  ++t; if(ne='-'==*t)++t;
-  m=k=n+s-t; if(u=memchr(t,'.',m))k=u-t;
-  if(!(ne||m>(1&&u)))R 0;
+  ++t; if(ne='-'==*t)++t;  // t->first nonsign digit
+  m=k=n+s-t; if(u=memchr(t,'.',m))k=u-t;  // m=total # digits, k=# digits before decimal point
+// obsolete  if(!(ne||m>(1&&u)))R 0;   // assert negative, or ((>1 digit)  or (1 digit) and (there is no decimal point)) i. e. there is at least one non-decimal-point
+  if(!(m>(1&&u)))R 0;   // assert negative, or ((>1 digit)  or (1 digit) and (there is no decimal point)) i. e. there is at least one non-decimal-point
   if(!(numb(k,t,&p,b)))R 0;
   if(u){
    k=m-(1+k);
@@ -143,6 +146,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
   *v=p; if(ne){v->re=-v->re; v->im=-v->im;}
   R 1;
  }
+ // not base, must be complex.  Error if p given
  if(t=memchr(s,'p',n))u=0; else t=u=memchr(s,'x',n);
  if(!t)R numj(n,s,v);
  if(!(numj(t-s,s,&x)))R 0; ++t; if(!(numj(n+s-t,t,&y)))R 0;

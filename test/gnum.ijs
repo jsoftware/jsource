@@ -22,8 +22,8 @@ x -: ". ":!.16 ,.x=:j./  _1e9+?2 20$2e9
 
 ((o.1)^1 2)   -: ". '1p1 1p2'
 
-2b111 5b312   -: ". '2b111 5b312 '
-2b111 5b312   -: ". '2b111 5b312 '
+7 82   -: ". '2b111 5b312 '
+4.6 2 0.5 0.5 1 0.5   -: ". '2.3b20 2.3b2 2b.1 2b0.1 _2b1 _2b1.1 '
 
 0j4 _5        -: ". '4ad90 5ar3.14159265358979'
 
@@ -52,6 +52,10 @@ x    eq ". ":  x
 
 'ill-formed number' -: ". etx '3ee4'
 'ill-formed number' -: ". etx '3jj4'
+'ill-formed number' -: ". etx '_b_'
+'ill-formed number' -: ". etx '6b_'
+'ill-formed number' -: ". etx '6b__'
+'ill-formed number' -: ". etx '6b.'
 
 
 4!:55 ;:'eq x y'

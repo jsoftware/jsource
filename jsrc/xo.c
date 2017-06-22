@@ -62,8 +62,8 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
 {
  C* cs=CAV(t);
  f=fopen(cs,mode);
- if(!f&&errno==ENOENT&&!strcmp(mode,FUPDATE))f=fopen(cs,FUPDATEC);
- if(!f&&errno==EACCES&& strcmp(mode,FREAD  ))f=fopen(cs,FREAD);
+ if(!f&&errno==ENOENT&&!strcmp(mode,FUPDATE_O))f=fopen(cs,FUPDATEC_O);
+ if(!f&&errno==EACCES&& strcmp(mode,FREAD_O  ))f=fopen(cs,FREAD_O);
 }
 #else
 {
@@ -74,13 +74,13 @@ F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
  usmode[i]=0;
 #if !SY_WINCE 
  f=_wfopen(s,usmode);
- if(!f&&errno==ENOENT&&!wcscmp(usmode,FLUPDATE))f=_wfopen(s,FLUPDATEC);
- if(!f&&errno==EACCES&& wcscmp(usmode,FLREAD  ))f=_wfopen(s,FLREAD);
+ if(!f&&errno==ENOENT&&!wcscmp(usmode,FLUPDATE_O))f=_wfopen(s,FLUPDATEC_O);
+ if(!f&&errno==EACCES&& wcscmp(usmode,FLREAD_O  ))f=_wfopen(s,FLREAD_O);
 #else
  {
  f=_wfopen(s,usmode);
- if(!f&&!wcscmp(usmode,FLUPDATE))f=_wfopen(s,FLUPDATEC); // no errno on wince
- if(!f&& wcscmp(usmode,FLREAD  ))f=_wfopen(s,FLREAD);
+ if(!f&&!wcscmp(usmode,FLUPDATE_O))f=_wfopen(s,FLUPDATEC_O); // no errno on wince
+ if(!f&& wcscmp(usmode,FLREAD_O  ))f=_wfopen(s,FLREAD_O);
  }
 #endif
 }
@@ -96,7 +96,7 @@ F1(jtjopen){A z;I h;
  if(h){RZ(z=sc(h)); RZ(fname(z)); R z;}
  else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
-  RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE));
+  RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
   RZ(*(jt->fopn+AAV(jt->fopa))=ww=fullname(AAV0(w)));
   ra(ww);
   ++jt->fopn;

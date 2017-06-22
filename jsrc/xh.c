@@ -11,6 +11,10 @@
 #else
 #include <sys/wait.h>
 #include <unistd.h>
+#ifndef ANDROID
+#include <spawn.h>
+#endif
+#include <fcntl.h>
 #endif
 #include <stdint.h>
 
@@ -43,8 +47,8 @@ F1(jthost){A z;
  ASSERT(0,EVDOMAIN);
 #else
 {
- A t;I b;C*fn,*s;F f;I n;
-#ifdef ANDROID
+ A t;I b=0;C*fn,*s;F f;I n;
+#if defined(ANDROID) || defined(TARGET_OS_IPHONE)
  const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
 #endif
  n=AN(w);
@@ -58,16 +62,38 @@ F1(jthost){A z;
   b=!_wsystem(USAV(fz));
  }
 #else
-#ifdef ANDROID
+#if defined(ANDROID) || defined(TARGET_OS_IPHONE)
  strcpy(fn,ftmp);
 #else
  strcpy(fn,"/tmp");
 #endif
  strcat(fn,"/tmp.XXXXX");
  {int fd=mkstemp(fn); close(fd);}
+#ifdef ANDROID
+/* no posix_spawn */
  b=!system(s);
+#else
+// system() is deprecated
+ *(n+s)=0;  /* use action to redirect */
+ int status;
+ pid_t pid;
+ posix_spawn_file_actions_t action;
+ posix_spawn_file_actions_init(&action);
+ posix_spawn_file_actions_addopen (&action, 1, fn, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+ char * argv[] = {"/bin/sh","-c",NULL,NULL};
+ argv[2] = s;
+ if (!(status = posix_spawn(&pid, argv[0], &action, NULL, &argv[0], NULL))){
+#if defined(TARGET_OS_IPHONE)
+/* ios bug ? no interface error will be reported */
+   waitpid(pid, &status, 0); b=!status;
+#else
+   if (-1!=waitpid(pid, &status, 0)) b = !status;
 #endif
- if(b){f=fopen(fn,FREAD); z=rd(f,0L,-1L); fclose(f);}
+ }
+ posix_spawn_file_actions_destroy(&action);
+#endif
+#endif
+ if(b){f=fopen(fn,FREAD_O); z=rd(f,0L,-1L); fclose(f);}
  unlink(fn);
  ASSERT(b&&f,EVFACE);
 }

@@ -109,7 +109,7 @@ F1(jtjfread){A z;F f;
  F1RANK(0,jtjfread,0);
  RE(f=stdf(w));
  if(f)R 1==(I)f?jgets("\001"):3==(I)f?rdns(stdin):rd(vfn(f),0L,-1L);
- RZ(f=jope(w,FREAD)); z=rd(f,0L,-1L); fclose(f); 
+ RZ(f=jope(w,FREAD_O)); z=rd(f,0L,-1L); fclose(f); 
  R z;
 }
 
@@ -120,7 +120,7 @@ F2(jtjfwrite){B b;F f;
  if(2==(I)f){b=jt->tostdout; jt->tostdout=1; jt->mtyo=MTYOFILE; jpr(a); jt->mtyo=0; jt->tostdout=b; R a;}
  if(4==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stdout)?jerrno():a;}
  if(5==(I)f){R (U)AN(a)!=fwrite(CAV(a),sizeof(C),AN(a),stderr)?jerrno():a;}
- if(b=!f)RZ(f=jope(w,FWRITE)) else RE(vfn(f)); 
+ if(b=!f)RZ(f=jope(w,FWRITE_O)) else RE(vfn(f)); 
  wa(f,0L,a); 
  if(b)fclose(f);else fflush(f);
  RNE(mtm);
@@ -132,7 +132,7 @@ F2(jtjfappend){B b;F f;
  if(2==(I)f){B b=jt->tostdout; jt->tostdout=1; jpr(a); jt->tostdout=b; R a;}
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
- if(b=!f)RZ(f=jope(w,FAPPEND)) else RE(vfn(f));
+ if(b=!f)RZ(f=jope(w,FAPPEND_O)) else RE(vfn(f));
  wa(f,fsize(f),a);
  if(b)fclose(f);else fflush(f);
  RNE(mtm);
@@ -141,7 +141,7 @@ F2(jtjfappend){B b;F f;
 F1(jtjfsize){B b;F f;I m;
  F1RANK(0,jtjfsize,0);
  RE(f=stdf(w));
- if(b=!f)RZ(f=jope(w,FREAD)) else RE(vfn(f)); 
+ if(b=!f)RZ(f=jope(w,FREAD_O)) else RE(vfn(f)); 
  m=fsize(f); 
  if(b)fclose(f);else fflush(f);
  RNE(sc(m));
@@ -171,7 +171,7 @@ static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u,wd;
 
 F1(jtjiread){A z=0;B b;F f;I i,n;
  F1RANK(1,jtjiread,0);
- RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD));
+ RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FREAD_O));
  if(ixin(w,fsize(f),&i,&n))z=rd(f,i,n);
  if(b)fclose(f);else fflush(f);
  R z;
@@ -181,7 +181,7 @@ F2(jtjiwrite){B b;F f;I i;
  F2RANK(RMAX,1,jtjiwrite,0);
  ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);
  ASSERT(1>=AR(a),EVRANK);
- RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE));
+ RE(f=ixf(w)); if(b=!f)RZ(f=jope(w,FUPDATE_O));
  if(ixin(w,fsize(f),&i,0L))wa(f,i,a); 
  if(b)fclose(f);else fflush(f);
  RNE(mtm);

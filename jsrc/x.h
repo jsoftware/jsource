@@ -7,17 +7,18 @@
 #define XCC             127
 #define XC(m,n)         (n+XCC*m)
 
-#define FAPPEND         "ab"
-#define FREAD           "rb"
-#define FUPDATE         "r+b"
-#define FUPDATEC        "w+b"
-#define FWRITE          "wb"
+/* adding suffix _O to avoid possible name conflict with fcntl.h */
+#define FAPPEND_O         "ab"
+#define FREAD_O           "rb"
+#define FUPDATE_O         "r+b"
+#define FUPDATEC_O        "w+b"
+#define FWRITE_O          "wb"
 
-#define FLAPPEND         L"ab"
-#define FLREAD           L"rb"
-#define FLUPDATE         L"r+b"
-#define FLUPDATEC        L"w+b"
-#define FLWRITE          L"wb"
+#define FLAPPEND_O         L"ab"
+#define FLREAD_O           L"rb"
+#define FLUPDATE_O         L"r+b"
+#define FLUPDATEC_O        L"w+b"
+#define FLWRITE_O          L"wb"
 
 #ifndef SEEK_SET
 #define SEEK_SET        0
@@ -29,9 +30,10 @@
 #define SEEK_END        2
 #endif
 
-#ifndef L_tmpnam
-#define L_tmpnam        59
+#ifdef L_tmpnam
+#undef L_tmpnam
 #endif
+#define L_tmpnam        300  /* full path name can be very long */
 
 #if SY_WINCE
 #define _wmkdir(x)	(!CreateDirectory (x,0))

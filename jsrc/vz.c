@@ -91,8 +91,8 @@ ZF2(jtzrem){D a,b,d;Z q;
  // general case, return v - u * <. v % u
  // calculate v % u as (v * +u) % |u
  d=u.re*u.re+u.im*u.im;
- a=u.re*v.re+u.im*v.im; q.re=tfloor(0.5+a/d); 
- b=u.re*v.im-u.im*v.re; q.im=tfloor(0.5+b/d);
+ a=u.re*v.re+u.im*v.im;
+ b=u.re*v.im-u.im*v.re;
  q.re=a/d; q.im=b/d;
 // obsolete q.re=tfloor(0.5+q.re); q.im=tfloor(0.5+q.im);
  q=zfloor(q);  // do proper complex floor

@@ -78,17 +78,24 @@ ZF1(jtzfloor){D p,q;
 
 ZF1(jtzceil){R znegate(zfloor(znegate(v)));}
 
+// u | v
 ZF2(jtzrem){D a,b,d;Z q;
- if(ZEZ(u))R v;
+ if(ZEZ(u))R v;  // if u=0, return v
  ZASSERT(!ZINF(v),EVNAN);
  if(INF(u.re)&&!u.im&&!v.im){
+  // infinity found
   if(u.re==inf )R 0<=v.re?v:u;
   if(u.re==infm)R 0>=v.re?v:u;
  }
  ZASSERT(!ZINF(u),EVNONCE);
+ // general case, return v - u * <. v % u
+ // calculate v % u as (v * +u) % |u
  d=u.re*u.re+u.im*u.im;
  a=u.re*v.re+u.im*v.im; q.re=tfloor(0.5+a/d); 
  b=u.re*v.im-u.im*v.re; q.im=tfloor(0.5+b/d);
+ q.re=a/d; q.im=b/d;
+// obsolete q.re=tfloor(0.5+q.re); q.im=tfloor(0.5+q.im);
+ q=zfloor(q);  // do proper complex floor
  R zminus(v,ztymes(u,q));
 }
 

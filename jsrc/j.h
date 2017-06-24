@@ -338,6 +338,9 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
+// set FINDNULLRET to trap when a routine returns 0 without having set an error message
+#define FINDNULLRET 0
+
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ACX(a)          {AC(a)=IMAX/2;}
@@ -703,9 +706,6 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-
-// set FINDNULLRET to trap when a routine returns 0 without having set an error message
-#define FINDNULLRET 0
 
 
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it

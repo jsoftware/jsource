@@ -1,6 +1,6 @@
 # this file will be overrided by caller's Application.mk if any
 APP_OPTIM=release
-APP_MODULES := libj jconsole jconsole-nopie libtsdll libjpcre netdefs netdefs-nopie hostdefs hostdefs-nopie
+APP_MODULES := libj jnative jconsole jconsole-nopie libtsdll libjpcre netdefs netdefs-nopie hostdefs hostdefs-nopie
 # APP_MODULES := blas libf2c cholrl lapack
 # use ndk r14 gcc-4.9 to build armeabi and armeabi-v7a
 # APP_ABI := armeabi armeabi-v7a

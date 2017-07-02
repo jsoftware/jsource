@@ -40,6 +40,7 @@ static JDoType jdo;
 static JFreeType jfree;
 static JgaType jga;
 static JGetLocaleType jgetlocale;
+static JGetAType jgeta;
 char path[PLEN];
 char pathdll[PLEN];
 static char jdllver[20];
@@ -54,6 +55,7 @@ int jedo(char* sentence)
 	return jdo(jt,sentence);
 }
 
+A jegeta(I n, char* s){return jgeta(jt,n,s);}
 void jefree(){jfree(jt);}
 char* jegetlocale(){return jgetlocale(jt);}
 A jega(I t, I n, I r, I*s){return jga(jt,t,n,r,s);}
@@ -77,6 +79,7 @@ J jeload(void* callbacks)
  jfree=(JFreeType)GETPROCADDRESS(hjdll,"JFree");
  jga=(JgaType)GETPROCADDRESS(hjdll,"Jga");
  jgetlocale=(JGetLocaleType)GETPROCADDRESS(hjdll,"JGetLocale");
+ jgeta=(JGetAType)GETPROCADDRESS(hjdll,"JGetA");
  return jt;
 }
 

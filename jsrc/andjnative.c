@@ -1,16 +1,13 @@
 #include "j.h"
-#include "com_jsoftware_j_android_JInterface.h"
-#include "j-jni-interface.h"
+#include "jeload.h"
+#include "com_jsoftware_j_JInterface.h"
 #include <strings.h>
 #include <stdint.h>
 
-extern I jdo(J jt, C* lp);
-extern C* getlocale(J jt);
-
-// #define JNIGNULL (*env)->NewGlobalRef(env, NULL)
-#define JNIGNULL (void*)0
-
-#define BUFLEN 30000
+#define LOCALOGTAG "libj"
+#include <android/log.h>
+#define LOGD(msg) __android_log_write(ANDROID_LOG_DEBUG,LOCALOGTAG,msg)
+#define LOGFD(...) __android_log_print(ANDROID_LOG_DEBUG,LOCALOGTAG,__VA_ARGS__)
 
 typedef struct A_RECORD {
   I k,flag,m,t,c,n,r,s[1];
@@ -20,20 +17,30 @@ typedef struct AREP_RECORD {
   I n,t,c,r,s[1];
 }* AREP;
 
-
 static JavaVM *jvm;
 static JNIEnv *local_jnienv;
-static jobject local_baseobj;
+static jclass local_basecls;
+static char* next_line_ptr = 0;
 
-jmethodID outputId = 0;
-jmethodID wdId = 0;
+static jmethodID inputId = 0;
+static jmethodID outputId = 0;
+static jmethodID wdId = 0;
 
-void _stdcall logcat(char *msg)
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-  LOGD(msg);
+  LOGD("OnLoad");
+  jvm = vm;
+  if ((*vm)->GetEnv(vm, (void **)&local_jnienv, JNI_VERSION_1_6) != JNI_OK) {
+    return -1;
+  }
+
+  // Get jclass with env->FindClass.
+  // Register methods with env->RegisterNatives.
+
+  return JNI_VERSION_1_6;
 }
 
-int _stdcall GetJavaVM(JavaVM ** pvm, JNIEnv ** penv)
+static int GetJavaVM(JavaVM ** pvm, JNIEnv ** penv)
 {
   LOGD("GetJavaVM");
   *pvm = jvm;
@@ -42,32 +49,34 @@ int _stdcall GetJavaVM(JavaVM ** pvm, JNIEnv ** penv)
   return 0;
 }
 
-void javaOutput(JNIEnv *env, jobject obj,int type, const char*chars)
+static char* javaInput(JNIEnv *env, jclass jcls, const char* chars)
 {
-  LOGD("javaOutput");
-  if(outputId == 0) {
-    jclass the_class = (*env)->GetObjectClass(env,obj);
-    outputId = (*env)->GetMethodID(env,the_class,"output","(ILjava/lang/String;)V" );
-    (*env)->DeleteLocalRef(env,the_class);
-  }
-  if(outputId == 0) {
-    LOGD("failed to get the method id for " "output:" "(ILjava/lang/String;)V");
-  } else {
-    jstring str = (*env)->NewStringUTF(env,chars);
-    (*env)->CallVoidMethod(env,obj,outputId,(jint)type,str);
-    (*env)->DeleteLocalRef(env,str);
-  }
+  LOGD("javaInput");
+  const char *line;
+  /* this method blocks via sleep until a line is available */
+  jstring str = (*env)->NewStringUTF(env,(chars)?chars:(char*)"");
+  jstring res = (jstring) (*env)->CallStaticObjectMethod(env,jcls,inputId,str);
+  (*env)->DeleteLocalRef(env,str);
+  line = (*env)->GetStringUTFChars(env, res, 0);
+  next_line_ptr=realloc(next_line_ptr,1+strlen(line));
+  strcpy(next_line_ptr,line);
+  (*env)->ReleaseStringUTFChars(env, res, line);
+  (*env)->DeleteLocalRef(env,res);
+  return next_line_ptr;
 }
 
-int javaWd(JNIEnv *env, jobject obj, J jt,int type, A w, A *pz, const char*locale)
+static void javaOutput(JNIEnv *env, jclass jcls, int type, const char*chars)
+{
+  LOGD("javaOutput");
+  jstring str = (*env)->NewStringUTF(env,chars);
+  (*env)->CallStaticVoidMethod(env,jcls,outputId,(jint)type,str);
+  (*env)->DeleteLocalRef(env,str);
+}
+
+static int javaWd(JNIEnv *env, jclass jcls, int type, A w, A *pz, const char*locale)
 {
   LOGD("javaWd");
   int i,j,len,rc=0;
-  if(wdId == 0) {
-    jclass the_class = (*env)->GetObjectClass(env,obj);
-    wdId = (*env)->GetMethodID(env,the_class,"wd","(I[I[Ljava/lang/Object;[Ljava/lang/Object;Ljava/lang/String;)I" );
-    (*env)->DeleteLocalRef(env,the_class);
-  }
   if(wdId == 0) {
     LOGD("failed to get the method id for wd" );
     return 3;
@@ -147,7 +156,7 @@ int javaWd(JNIEnv *env, jobject obj, J jt,int type, A w, A *pz, const char*local
 
   (*env)->ReleaseIntArrayElements(env, inta, pinta, 0);
   jstring slocale = (*env)->NewStringUTF(env,locale);
-  rc = (*env)->CallIntMethod(env,obj,wdId,(jint)type,inta,inarr,outarr,slocale);
+  rc = (*env)->CallStaticIntMethod(env,jcls,wdId,(jint)type,inta,inarr,outarr,slocale);
   (*env)->DeleteLocalRef(env,inta);
   (*env)->DeleteLocalRef(env,inarr);
   (*env)->DeleteLocalRef(env,slocale);
@@ -172,16 +181,16 @@ int javaWd(JNIEnv *env, jobject obj, J jt,int type, A w, A *pz, const char*local
       len= (*env)->GetArrayLength(env, array);
       if (itype==LIT) {
         if (ishape[0]==-1) {
-          GATV(*pz,LIT,len,1,0);
+          *pz=jega(LIT,len,1,0);
         } else {
-          GATV(*pz,LIT,len,2,ishape);
+          *pz=jega(LIT,len,2,ishape);
         }
-        (*env)->GetByteArrayRegion(env, array, 0, len, CAV(*pz));
+        (*env)->GetByteArrayRegion(env, array, 0, len, (jbyte*)CAV(*pz));
       } else if (itype==INT) {
         if (ishape[0]==-1) {
-          GATV(*pz,INT,len,1,0);
+          *pz=jega(INT,len,1,0);
         } else {
-          GATV(*pz,INT,len,2,ishape);
+          *pz=jega(INT,len,2,ishape);
         }
 #if SY_64
         jint *parray = (*env)->GetIntArrayElements(env, array, 0);
@@ -202,61 +211,53 @@ int javaWd(JNIEnv *env, jobject obj, J jt,int type, A w, A *pz, const char*local
   return (rc>0)?3:rc;
 }
 
-int _stdcall wdHandler(J jt,int type, A w, A *pz)
+const char * _stdcall inputHandler(J jt,const char* chars)
 {
-  R javaWd(local_jnienv,local_baseobj,jt,type,w,pz,getlocale(jt));
-}
-
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-  LOGD("OnLoad");
-  jvm = vm;
-  if ((*vm)->GetEnv(vm, (void **)&local_jnienv, JNI_VERSION_1_6) != JNI_OK) {
-    return -1;
-  }
-
-  // Get jclass with env->FindClass.
-  // Register methods with env->RegisterNatives.
-
-  return JNI_VERSION_1_6;
-}
-
-JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
-(JNIEnv * env, jobject obj, jlong inst, jstring js)
-{
-  LOGD("JDo");
-  J jengine = (J)(intptr_t)inst;
-
-  const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
-  int jc = JDo(jengine,(C*)nativeString);
-  (*env)->ReleaseStringUTFChars(env, js, nativeString);
-  return (jint) jc;
-}
-
-JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
-(JNIEnv *env, jobject obj, jlong inst)
-{
-  LOGD("JFree");
-  JFree((J)(intptr_t)inst);
-  outputId = 0;
-  wdId = 0;
+  return javaInput(local_jnienv,local_basecls, chars);
 }
 
 void _stdcall outputHandler(J jt,int type, const char* s)
 {
   LOGD("outputHandler");
-  javaOutput(local_jnienv,local_baseobj,type,s);
+  javaOutput(local_jnienv,local_basecls,type,s);
+}
+
+int _stdcall wdHandler(J jt,int type, A w, A *pz)
+{
+  R javaWd(local_jnienv,local_basecls,type,w,pz,jegetlocale());
+}
+
+JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
+(JNIEnv *env, jclass jcls, jstring js)
+{
+  LOGD("JDo");
+  local_jnienv = env;
+
+  const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
+  int jc = jedo((C*)nativeString);
+  (*env)->ReleaseStringUTFChars(env, js, nativeString);
+  return (jint) jc;
+}
+
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
+(JNIEnv *env, jclass jcls)
+{
+  LOGD("JFree");
+  jefree();
+  inputId = 0;
+  outputId = 0;
+  wdId = 0;
 }
 
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetLocale
-(JNIEnv *env, jobject obj, jlong inst)
+(JNIEnv *env, jclass jcls)
 {
   LOGD("JGetLocale");
-  return (*env)->NewStringUTF(env,inst?(C*)JGetLocale((J)(intptr_t)inst):"base");
+  return (*env)->NewStringUTF(env,jegetlocale());
 }
 
 JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
-(JNIEnv *env, jobject obj, jstring jkey, jstring jval)
+(JNIEnv *env, jclass jcls, jstring jkey, jstring jval)
 {
   LOGD("JSetEnv");
   const char* key =  (*env)->GetStringUTFChars(env, jkey, 0);
@@ -266,57 +267,46 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
   (*env)->ReleaseStringUTFChars(env, jval, val);
 }
 
-#ifdef ANDROID
-static char* android_next_ptr = NULL;
-char* javaInput(
-  JNIEnv *env,
-  jobject obj)
-{
-  LOGD("javaInput");
-  const char *line;
-  jclass the_class = (*env)->GetObjectClass(env,obj);
-  jmethodID nextLineId = (*env)->GetMethodID(env,the_class,"nextLine","()Ljava/lang/String;" );
-  /* this method blocks via sleep until a line is available */
-  jstring res = (jstring) (*env)->CallObjectMethod(env,obj,nextLineId);
-  line = (*env)->GetStringUTFChars(env, res, 0);
-  android_next_ptr=realloc(android_next_ptr,1+strlen(line));
-  strcpy(android_next_ptr,line);
-  (*env)->ReleaseStringUTFChars(env, res, line);
-  (*env)->DeleteLocalRef(env,res);
-  (*env)->DeleteLocalRef(env,the_class);
-  return android_next_ptr;
-}
-
-const char * _stdcall inputHandler()
-{
-  return javaInput(local_jnienv,local_baseobj);
-}
-
-#endif
-
 /*
- * Class:     com_jsoftware_j_android_JActivity
+ * Class:     com_jsoftware_j_JInterface
  * Method:    JInit
- * Signature: ()V
+ * Signature: (Ljava/lang/String;)J
  */
 
 JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
-(JNIEnv * env, jobject obj, jboolean async)
+(JNIEnv *env, jclass jcls, jstring libpath)
 {
   LOGD("JInit");
-  if (async) local_jnienv = env;
-  local_baseobj = (*env)->NewGlobalRef(env,obj);
+  local_jnienv = env;
+  local_basecls = (*env)->NewGlobalRef(env,jcls);
   (*env)->ExceptionClear(env);
-  outputId = 0;
-  wdId = 0;
-  J j = JInit();
-#ifdef ANDROID
+  if(inputId == 0) {
+    inputId = (*env)->GetStaticMethodID(env,jcls,"input","(Ljava/lang/String;)Ljava/lang/String;" );
+  }
+  if(inputId == 0) {
+    LOGD("failed to get the method id for " "input:" "(Ljava/lang/String;)Ljava/lang/String;" );
+  }
+  if(outputId == 0) {
+    outputId = (*env)->GetStaticMethodID(env,jcls,"output","(ILjava/lang/String;)V" );
+  }
+  if(outputId == 0) {
+    LOGD("failed to get the method id for " "output:" "(ILjava/lang/String;)V" );
+  }
+  if(wdId == 0) {
+    wdId = (*env)->GetStaticMethodID(env,jcls,"wd","(I[I[Ljava/lang/Object;[Ljava/lang/Object;Ljava/lang/String;)I" );
+  }
+  if(wdId == 0) {
+    LOGD("failed to get the method id for " "wd:" "(I[I[Ljava/lang/Object;[Ljava/lang/Object;Ljava/lang/String;)I" );
+  }
   void* callbacks[] = {outputHandler,wdHandler,inputHandler,0,(void*)SMWIN};  // don't use SMJAVA
-#else
-  void* callbacks[] = {outputHandler,0,0,0,(void*)SMJAVA};
-#endif
-  JSM(j,callbacks);
-  return (jlong)(intptr_t)j;
+  const char *nativeString = (*env)->GetStringUTFChars(env, libpath, 0);
+  char *arg=malloc(strlen(nativeString)+9);
+  strcpy(arg,nativeString);
+  strcat(arg,"/libj.so");
+  jesetpath(arg);
+  free(arg);
+  (*env)->ReleaseStringUTFChars(env, libpath, nativeString);
+  R (jlong)jeload(callbacks);
 }
 
 /*
@@ -324,48 +314,48 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
  */
 
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
-(JNIEnv * env, jobject obj, jlong jt0,  jstring cmd)
+(JNIEnv *env, jclass jcls, jstring cmd)
 {
   int err=1;
-  char inputline[BUFLEN+1];
-  J jt = (J)(intptr_t)jt0;
+  local_jnienv = env;
+  char *inputline;
+  jstring jstr;
   const char *nativecmd = (*env)->GetStringUTFChars(env, cmd, 0);
-  if (sizeof(inputline)<8+strlen(nativecmd)) {
-    (*env)->ReleaseStringUTFChars(env, cmd, nativecmd);
-    (*env)->ExceptionClear(env);
-    return (*env)->NewStringUTF(env,"");
-  }
+  inputline = malloc(8+strlen(nativecmd)+1);
   strcpy(inputline,"r_jrx_=:");
   strcat(inputline,nativecmd);
-  jint ret = jdo(jt,inputline);
+  (*env)->ReleaseStringUTFChars(env, cmd, nativecmd);
+  jint ret = jedo(inputline);
+  (*env)->ExceptionClear(env);
+  free(inputline);
   if (!ret) {
-    if (!jdo(jt,(C*)"q_jrx_=:4!:0<'r_jrx_'")) {
-      A at=JGetA(jt,6,(char*)"q_jrx_");
+    if (!jedo((C*)"q_jrx_=:4!:0<'r_jrx_'")) {
+      A at=jegeta(6,(char*)"q_jrx_");
       AREP p=(AREP) (sizeof(struct A_RECORD) + (char*)at);
       if ((p->t==4) && (p->r==0)) {
-        A r=(0==*(I*)p->s)?JGetA(jt,6,(char*)"r_jrx_"):0;
+        A r=(0==*(I*)p->s)?jegeta(6,(char*)"r_jrx_"):0;
         AREP p1=(AREP) (sizeof(struct A_RECORD) + (char*)r);
         if ((p1->t==2) && (p1->r<2)) {
           if (p1->r==0) {
-            strncpy(inputline,((char*)p1->s),1);
+            inputline = malloc(2);
+            memcpy(inputline,((char*)p1->s),1);
             inputline[1]=0;
             err=0;
           } else {
-            if (BUFLEN>=(p1->c)) {
-              strncpy(inputline,(sizeof(struct AREP_RECORD)+(char*)p1),p1->c);
-              inputline[p1->c]=0;
-              err=0;
-            }
+            inputline = malloc(1+p1->c);
+            memcpy(inputline,(sizeof(struct AREP_RECORD)+(char*)p1),p1->c);
+            inputline[p1->c]=0;
+            err=0;
           }
         }
       }
     }
   }
-  (*env)->ReleaseStringUTFChars(env, cmd, nativecmd);
-  (*env)->ExceptionClear(env);
-  if (!err)
-    return (*env)->NewStringUTF(env,inputline);
-  else
-    return (*env)->NewStringUTF(env,"");
+  if (!err) {
+    jstr = (*env)->NewStringUTF(env,inputline);
+    free(inputline);
+  } else
+    jstr = (*env)->NewStringUTF(env,"");
+  return jstr;
 }
 

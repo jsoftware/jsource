@@ -19,6 +19,7 @@ typedef C*    (_stdcall *JGetLocaleType)(void*);
 typedef void  (_stdcall *JSMType)       (void*, void*);
 typedef void  (_stdcall *JFreeType)     (void*);
 typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
+typedef A     (_stdcall *JGetAType)     (J jt,I n,C* name);
 
 /*  void* callbacks[] = {Joutput, Jwd, Jinput, unused, smoptions}; */
 

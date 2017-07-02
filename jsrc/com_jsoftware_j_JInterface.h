@@ -19,39 +19,53 @@ extern "C" {
 #define com_jsoftware_j_JInterface_MTYOEXIT 5L
 #undef com_jsoftware_j_JInterface_MTYOFILE
 #define com_jsoftware_j_JInterface_MTYOFILE 6L
-
-
 /*
  * Class:     com_jsoftware_j_JInterface
  * Method:    JDo
- * Signature: (JLjava/lang/String;)I
+ * Signature: (Ljava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
-  (JNIEnv *, jobject, jlong, jstring);
-
-/*
- * Class:     com_jsoftware_j_JInterface
- * Method:    JFree
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     com_jsoftware_j_JInterface
- * Method:    JInit
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
-  (JNIEnv *, jobject, jboolean);
+  (JNIEnv *, jclass, jstring);
 
 /*
  * Class:     com_jsoftware_j_JInterface
  * Method:    JDoR
- * Signature: (JLjava/lang/Object;Ljava/lang/String;)Ljava/lang/String;
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
-  (JNIEnv *, jobject, jlong, jstring);
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JFree
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JInit
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JGetLocale
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetLocale
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JSetEnv
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
+  (JNIEnv *, jclass, jstring, jstring);
 
 #ifdef __cplusplus
 }

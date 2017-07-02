@@ -2,6 +2,7 @@
 # jversion-x.h default is in repo
 # jversion.h is your local edit copy and is not in repo
 jsrc/jversion.h
+build
 
 # unix
 *.o

@@ -1,7 +1,5 @@
 #!/bin/bash
 # $1 is j32 or j64
-cd ~
-. jvars.sh
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4

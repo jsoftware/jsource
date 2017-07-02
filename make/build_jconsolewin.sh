@@ -1,7 +1,5 @@
 #!/bin/bash
 # $1 is j32 or j64
-cd ~
-. jvars.sh
 
 common=" -fPIC -O1 -Wextra "
 

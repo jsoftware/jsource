@@ -17,6 +17,11 @@
 #endif
 #include <sys/types.h>
 #define offset(r,f) (((char*)&((r*)0)->f)-((char*)((r*)0)))
+#if defined(_WIN64)||defined(__LP64__)
+#define FMTI            "%lu"
+#else
+#define FMTI            "%u"
+#endif
 int main(){
 	printf ("NB. do not edit -- created by sym2ijs\n\n");
 	printf ("cocurrent <'jdefs'\n\n");
@@ -24,35 +29,35 @@ int main(){
 	printf ("FIONREAD=: %d\n",FIONREAD);
 	printf ("FD_SETSIZE=: %d\n",FD_SETSIZE);
 	puts("");
-	printf ("sockaddr_sz=: %d\n",sizeof (struct sockaddr));
-	printf ("sa_family_off=: %d\n",offset(struct sockaddr,sa_family));
-	printf ("sa_family_sz=: %d\n",sizeof(((struct sockaddr*)0)->sa_family));
-	printf ("sa_data_off=: %d\n",offset(struct sockaddr,sa_data));
-	printf ("sa_data_sz=: %d\n",sizeof(((struct sockaddr*)0)->sa_data));
+	printf ("sockaddr_sz=: " FMTI "\n",sizeof (struct sockaddr));
+	printf ("sa_family_off=: " FMTI "\n",offset(struct sockaddr,sa_family));
+	printf ("sa_family_sz=: " FMTI "\n",sizeof(((struct sockaddr*)0)->sa_family));
+	printf ("sa_data_off=: " FMTI "\n",offset(struct sockaddr,sa_data));
+	printf ("sa_data_sz=: " FMTI "\n",sizeof(((struct sockaddr*)0)->sa_data));
 	puts("");
-	printf ("sockaddr_in_sz=: %d\n",sizeof (struct sockaddr_in));
-	printf ("sin_family_off=: %d\n",offset(struct sockaddr_in,sin_family));
-	printf ("sin_family_sz=: %d\n",sizeof(((struct sockaddr_in*)0)->sin_family));
-	printf ("sin_port_off=: %d\n",offset(struct sockaddr_in,sin_port));
-	printf ("sin_port_sz=: %d\n",sizeof(((struct sockaddr_in*)0)->sin_port));
-	printf ("sin_addr_off=: %d\n",offset(struct sockaddr_in,sin_addr));
-	printf ("sin_addr_sz=: %d\n",sizeof(((struct sockaddr_in*)0)->sin_addr));
+	printf ("sockaddr_in_sz=: " FMTI "\n",sizeof (struct sockaddr_in));
+	printf ("sin_family_off=: " FMTI "\n",offset(struct sockaddr_in,sin_family));
+	printf ("sin_family_sz=: " FMTI "\n",sizeof(((struct sockaddr_in*)0)->sin_family));
+	printf ("sin_port_off=: " FMTI "\n",offset(struct sockaddr_in,sin_port));
+	printf ("sin_port_sz=: " FMTI "\n",sizeof(((struct sockaddr_in*)0)->sin_port));
+	printf ("sin_addr_off=: " FMTI "\n",offset(struct sockaddr_in,sin_addr));
+	printf ("sin_addr_sz=: " FMTI "\n",sizeof(((struct sockaddr_in*)0)->sin_addr));
 	puts("");
-	printf ("in_addr_sz=: %d\n",sizeof (struct in_addr));
-	printf ("s_addr_off=: %d\n",offset(struct in_addr,s_addr));
-	printf ("s_addr_sz=: %d\n",sizeof(((struct in_addr*)0)->s_addr));
+	printf ("in_addr_sz=: " FMTI "\n",sizeof (struct in_addr));
+	printf ("s_addr_off=: " FMTI "\n",offset(struct in_addr,s_addr));
+	printf ("s_addr_sz=: " FMTI "\n",sizeof(((struct in_addr*)0)->s_addr));
 	puts("");
-	printf ("hostent_sz=: %d\n",sizeof (struct hostent));
-	printf ("h_name_off=: %d\n",offset(struct hostent,h_name));
-	printf ("h_name_sz=: %d\n",sizeof(((struct hostent*)0)->h_name));
-	printf ("h_aliases_off=: %d\n",offset(struct hostent,h_aliases));
-	printf ("h_aliases_sz=: %d\n",sizeof(((struct hostent*)0)->h_aliases));
-	printf ("h_addrtype_off=: %d\n",offset(struct hostent,h_addrtype));
-	printf ("h_addrtype_sz=: %d\n",sizeof(((struct hostent*)0)->h_addrtype));
-	printf ("h_length_off=: %d\n",offset(struct hostent,h_length));
-	printf ("h_length_sz=: %d\n",sizeof(((struct hostent*)0)->h_length));
-	printf ("h_addr_list_off=: %d\n",offset(struct hostent,h_addr_list));
-	printf ("h_addr_list_sz=: %d\n",sizeof(((struct hostent*)0)->h_addr_list));
+	printf ("hostent_sz=: " FMTI "\n",sizeof (struct hostent));
+	printf ("h_name_off=: " FMTI "\n",offset(struct hostent,h_name));
+	printf ("h_name_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_name));
+	printf ("h_aliases_off=: " FMTI "\n",offset(struct hostent,h_aliases));
+	printf ("h_aliases_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_aliases));
+	printf ("h_addrtype_off=: " FMTI "\n",offset(struct hostent,h_addrtype));
+	printf ("h_addrtype_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_addrtype));
+	printf ("h_length_off=: " FMTI "\n",offset(struct hostent,h_length));
+	printf ("h_length_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_length));
+	printf ("h_addr_list_off=: " FMTI "\n",offset(struct hostent,h_addr_list));
+	printf ("h_addr_list_sz=: " FMTI "\n",sizeof(((struct hostent*)0)->h_addr_list));
 	puts("");
 	puts("");
 	printf ("SIOCATMARK=: %d\n",SIOCATMARK);
@@ -69,11 +74,11 @@ int main(){
 	printf ("IPPROTO_MAX=: %d\n",IPPROTO_MAX);
 	puts("");
 	puts("");
-	printf ("INADDR_ANY=: %d\n",INADDR_ANY);
+	printf ("INADDR_ANY=: %lu\n",INADDR_ANY);
 	printf ("INADDR_LOOPBACK=: %d\n",INADDR_LOOPBACK);
-	printf ("INADDR_BROADCAST=: %d\n",INADDR_BROADCAST);
+	printf ("INADDR_BROADCAST=: %lu\n",INADDR_BROADCAST);
 #ifdef INADDR_NONE
-	printf ("INADDR_NONE=: %d\n",INADDR_NONE);
+	printf ("INADDR_NONE=: %lu\n",INADDR_NONE);
 #else
 	puts ("INADDR_NONE=: _1");
 #endif
@@ -109,11 +114,11 @@ int main(){
 	printf ("SO_ERROR=: %d\n",SO_ERROR);
 	printf ("SO_TYPE=: %d\n",SO_TYPE);
 	puts("");
-	printf ("linger_sz=: %d\n",sizeof (struct linger));
-	printf ("l_onoff_off=: %d\n",offset(struct linger,l_onoff));
-	printf ("l_onoff_sz=: %d\n",sizeof(((struct linger*)0)->l_onoff));
-	printf ("l_linger_off=: %d\n",offset(struct linger,l_linger));
-	printf ("l_linger_sz=: %d\n",sizeof(((struct linger*)0)->l_linger));
+	printf ("linger_sz=: " FMTI "\n",sizeof (struct linger));
+	printf ("l_onoff_off=: " FMTI "\n",offset(struct linger,l_onoff));
+	printf ("l_onoff_sz=: " FMTI "\n",sizeof(((struct linger*)0)->l_onoff));
+	printf ("l_linger_off=: " FMTI "\n",offset(struct linger,l_linger));
+	printf ("l_linger_sz=: " FMTI "\n",sizeof(((struct linger*)0)->l_linger));
 	puts("");
 	printf ("AF_UNSPEC=: %d\n",AF_UNSPEC);
 	printf ("AF_UNIX=: %d\n",AF_UNIX);
@@ -138,27 +143,27 @@ int main(){
 	printf ("MSG_DONTROUTE=: %d\n",MSG_DONTROUTE);
 	puts("");
 #ifndef _WIN32
-	printf ("msghdr_sz=: %d\n",sizeof (struct msghdr));
-	printf ("msg_name_off=: %d\n",offset(struct msghdr,msg_name));
-	printf ("msg_name_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_name));
-	printf ("msg_namelen_off=: %d\n",offset(struct msghdr,msg_namelen));
-	printf ("msg_namelen_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_namelen));
-	printf ("msg_iov_off=: %d\n",offset(struct msghdr,msg_iov));
-	printf ("msg_iov_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_iov));
-	printf ("msg_iovlen_off=: %d\n",offset(struct msghdr,msg_iovlen));
-	printf ("msg_iovlen_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_iovlen));
+	printf ("msghdr_sz=: " FMTI "\n",sizeof (struct msghdr));
+	printf ("msg_name_off=: " FMTI "\n",offset(struct msghdr,msg_name));
+	printf ("msg_name_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_name));
+	printf ("msg_namelen_off=: " FMTI "\n",offset(struct msghdr,msg_namelen));
+	printf ("msg_namelen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_namelen));
+	printf ("msg_iov_off=: " FMTI "\n",offset(struct msghdr,msg_iov));
+	printf ("msg_iov_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iov));
+	printf ("msg_iovlen_off=: " FMTI "\n",offset(struct msghdr,msg_iovlen));
+	printf ("msg_iovlen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_iovlen));
 #if defined(linux) || defined(Darwin)
-	printf ("msg_control_off=: %d\n",offset(struct msghdr,msg_control));
-	printf ("msg_control_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_control));
-	printf ("msg_controllen_off=: %d\n",offset(struct msghdr,msg_controllen));
-	printf ("msg_controllen_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_controllen));
-	printf ("msg_flags_off=: %d\n",offset(struct msghdr,msg_flags));
-	printf ("msg_flags_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_flags));
+	printf ("msg_control_off=: " FMTI "\n",offset(struct msghdr,msg_control));
+	printf ("msg_control_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_control));
+	printf ("msg_controllen_off=: " FMTI "\n",offset(struct msghdr,msg_controllen));
+	printf ("msg_controllen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_controllen));
+	printf ("msg_flags_off=: " FMTI "\n",offset(struct msghdr,msg_flags));
+	printf ("msg_flags_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_flags));
 #else
-	printf ("msg_accrights_off=: %d\n",offset(struct msghdr,msg_accrights));
-	printf ("msg_accrights_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_accrights));
-	printf ("msg_accrightslen_off=: %d\n",offset(struct msghdr,msg_accrightslen));
-	printf ("msg_accrightslen_sz=: %d\n",sizeof(((struct msghdr*)0)->msg_accrightslen));
+	printf ("msg_accrights_off=: " FMTI "\n",offset(struct msghdr,msg_accrights));
+	printf ("msg_accrights_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_accrights));
+	printf ("msg_accrightslen_off=: " FMTI "\n",offset(struct msghdr,msg_accrightslen));
+	printf ("msg_accrightslen_sz=: " FMTI "\n",sizeof(((struct msghdr*)0)->msg_accrightslen));
 #endif
 #endif
 	puts("");

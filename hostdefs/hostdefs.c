@@ -16,6 +16,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #define offset(r,f) (((char*)&((r*)0)->f)-((char*)((r*)0)))
+#if defined(_WIN64)||defined(__LP64__)
+#define FMTI            "%lu"
+#else
+#define FMTI            "%u"
+#endif
 int main(){
 	printf ("NB. do not edit -- created by sym2ijs\n\n");
 	printf ("cocurrent <'jdefs'\n\n");
@@ -60,17 +65,17 @@ int main(){
 	printf ("F_GETLK=: %d\n",F_GETLK);
 	printf ("F_UNLCK=: %d\n",F_UNLCK);
 	printf ("F_WRLCK=: %d\n",F_WRLCK);
-	printf ("flock_sz=: %d\n",sizeof (struct flock));
-	printf ("l_len_off=: %d\n",offset(struct flock,l_len));
-	printf ("l_len_sz=: %d\n",sizeof(((struct flock*)0)->l_len));
-	printf ("l_pid_off=: %d\n",offset(struct flock,l_pid));
-	printf ("l_pid_sz=: %d\n",sizeof(((struct flock*)0)->l_pid));
-	printf ("l_start_off=: %d\n",offset(struct flock,l_start));
-	printf ("l_start_sz=: %d\n",sizeof(((struct flock*)0)->l_start));
-	printf ("l_type_off=: %d\n",offset(struct flock,l_type));
-	printf ("l_type_sz=: %d\n",sizeof(((struct flock*)0)->l_type));
-	printf ("l_whence_off=: %d\n",offset(struct flock,l_whence));
-	printf ("l_whence_sz=: %d\n",sizeof(((struct flock*)0)->l_whence));
+	printf ("flock_sz=: " FMTI "\n",sizeof (struct flock));
+	printf ("l_len_off=: " FMTI "\n",offset(struct flock,l_len));
+	printf ("l_len_sz=: " FMTI "\n",sizeof(((struct flock*)0)->l_len));
+	printf ("l_pid_off=: " FMTI "\n",offset(struct flock,l_pid));
+	printf ("l_pid_sz=: " FMTI "\n",sizeof(((struct flock*)0)->l_pid));
+	printf ("l_start_off=: " FMTI "\n",offset(struct flock,l_start));
+	printf ("l_start_sz=: " FMTI "\n",sizeof(((struct flock*)0)->l_start));
+	printf ("l_type_off=: " FMTI "\n",offset(struct flock,l_type));
+	printf ("l_type_sz=: " FMTI "\n",sizeof(((struct flock*)0)->l_type));
+	printf ("l_whence_off=: " FMTI "\n",offset(struct flock,l_whence));
+	printf ("l_whence_sz=: " FMTI "\n",sizeof(((struct flock*)0)->l_whence));
 	puts("");
 	printf ("PROT_READ=: %d\n",PROT_READ);
 	printf ("PROT_WRITE=: %d\n",PROT_WRITE);
@@ -86,14 +91,14 @@ int main(){
 	printf ("REG_NOSUB=: %d\n",REG_NOSUB);
 	printf ("REG_NEWLINE=: %d\n",REG_NEWLINE);
 	puts("");
-	printf ("regex_t_sz=: %d\n",sizeof (regex_t));
-	printf ("re_nsub_off=: %d\n",offset(regex_t,re_nsub));
-	printf ("re_nsub_sz=: %d\n",sizeof(((regex_t*)0)->re_nsub));
-	printf ("regmatch_t_sz=: %d\n",sizeof (regmatch_t));
-	printf ("rm_so_off=: %d\n",offset(regmatch_t,rm_so));
-	printf ("rm_so_sz=: %d\n",sizeof(((regmatch_t*)0)->rm_so));
-	printf ("rm_eo_off=: %d\n",offset(regmatch_t,rm_eo));
-	printf ("rm_eo_sz=: %d\n",sizeof(((regmatch_t*)0)->rm_eo));
+	printf ("regex_t_sz=: " FMTI "\n",sizeof (regex_t));
+	printf ("re_nsub_off=: " FMTI "\n",offset(regex_t,re_nsub));
+	printf ("re_nsub_sz=: " FMTI "\n",sizeof(((regex_t*)0)->re_nsub));
+	printf ("regmatch_t_sz=: " FMTI "\n",sizeof (regmatch_t));
+	printf ("rm_so_off=: " FMTI "\n",offset(regmatch_t,rm_so));
+	printf ("rm_so_sz=: " FMTI "\n",sizeof(((regmatch_t*)0)->rm_so));
+	printf ("rm_eo_off=: " FMTI "\n",offset(regmatch_t,rm_eo));
+	printf ("rm_eo_sz=: " FMTI "\n",sizeof(((regmatch_t*)0)->rm_eo));
 	puts("");
 #ifdef linux
 #ifndef ANDROID
@@ -102,16 +107,16 @@ int main(){
 #endif
 	puts("");
 #ifndef _WIN32
-	printf ("fd_set_sz=: %d\n",sizeof (fd_set));
-	printf ("fds_bits_off=: %d\n",offset(fd_set,fds_bits));
-	printf ("fds_bits_sz=: %d\n",sizeof(((fd_set*)0)->fds_bits));
+	printf ("fd_set_sz=: " FMTI "\n",sizeof (fd_set));
+	printf ("fds_bits_off=: " FMTI "\n",offset(fd_set,fds_bits));
+	printf ("fds_bits_sz=: " FMTI "\n",sizeof(((fd_set*)0)->fds_bits));
 #endif
 	printf ("FD_SETSIZE=: %d\n",FD_SETSIZE);
-	printf ("timeval_sz=: %d\n",sizeof (struct timeval));
-	printf ("tv_sec_off=: %d\n",offset(struct timeval,tv_sec));
-	printf ("tv_sec_sz=: %d\n",sizeof(((struct timeval*)0)->tv_sec));
-	printf ("tv_usec_off=: %d\n",offset(struct timeval,tv_usec));
-	printf ("tv_usec_sz=: %d\n",sizeof(((struct timeval*)0)->tv_usec));
+	printf ("timeval_sz=: " FMTI "\n",sizeof (struct timeval));
+	printf ("tv_sec_off=: " FMTI "\n",offset(struct timeval,tv_sec));
+	printf ("tv_sec_sz=: " FMTI "\n",sizeof(((struct timeval*)0)->tv_sec));
+	printf ("tv_usec_off=: " FMTI "\n",offset(struct timeval,tv_usec));
+	printf ("tv_usec_sz=: " FMTI "\n",sizeof(((struct timeval*)0)->tv_usec));
 	puts("");
 	printf ("E2BIG=: %d\n",E2BIG);
 	printf ("EFAULT=: %d\n",EFAULT);

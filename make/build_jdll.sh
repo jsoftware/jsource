@@ -8,7 +8,7 @@ cd ~
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
  
-if [ x$CC = x'' ] ; then
+if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
 CC=cc
 export CC
@@ -35,7 +35,7 @@ LDOPENMP=" -fopenmp `$CC -print-file-name=libgomp.a` "   # windows -fopenmp for 
 LDOPENMP32=" -fopenmp `$CC -print-file-name=libgomp.a` "
 fi
 
-if [ x$COMPILER = x'gcc' ] ; then
+if [ "x$COMPILER" = x'gcc' ] ; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 else

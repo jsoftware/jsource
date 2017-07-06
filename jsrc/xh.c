@@ -69,7 +69,7 @@ F1(jthost){A z;
 #endif
  strcat(fn,"/tmp.XXXXX");
  {int fd=mkstemp(fn); close(fd);}
-#ifdef ANDROID
+#if defined(ANDROID) || (defined(__MACH__) && !defined(TARGET_OS_IPHONE))
 /* no posix_spawn */
  b=!system(s);
 #else

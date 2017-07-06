@@ -306,7 +306,7 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
   jesetpath(arg);
   free(arg);
   (*env)->ReleaseStringUTFChars(env, libpath, nativeString);
-  R (jlong)jeload(callbacks);
+  R (jlong)(intptr_t)jeload(callbacks);
 }
 
 /*

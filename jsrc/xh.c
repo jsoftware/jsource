@@ -74,6 +74,7 @@ F1(jthost){A z;
  b=!system(s);
 #else
 // system() is deprecated
+ extern char **environ;
  *(n+s)=0;  /* use action to redirect */
  int status;
  pid_t pid;
@@ -82,9 +83,10 @@ F1(jthost){A z;
  posix_spawn_file_actions_addopen (&action, 1, fn, O_WRONLY | O_CREAT | O_TRUNC, 0644);
  char * argv[] = {"/bin/sh","-c",NULL,NULL};
  argv[2] = s;
- if (!(status = posix_spawn(&pid, argv[0], &action, NULL, &argv[0], NULL))){
-#if defined(TARGET_OS_IPHONE)
-/* ios bug ? no interface error will be reported */
+ if (!(status = posix_spawn(&pid, argv[0], &action, NULL, &argv[0], environ))){
+#if defined(__MACH__)
+/* macos different behavior (from linux) for SIGCHLD */
+/* no interface error will be reported */
    waitpid(pid, &status, 0); b=!status;
 #else
    if (-1!=waitpid(pid, &status, 0)) b = !status;

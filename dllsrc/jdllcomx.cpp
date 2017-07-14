@@ -672,39 +672,39 @@ int reg(BOOL set, LPSTR keys)
 
 #ifdef _JDLL
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\InprocServer32 = d:\dev\jcom\jcom\windebug\jserver.dll
-	r=SetKeyAndValue(set, keys, szCLSID, "InprocServer32", module);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"InprocServer32", module);
 	if(r) return r;
 
-	r=SetKeyAndNamedValue(set, keys, szCLSID, "InprocServer32", "Apartment", "ThreadingModel");
+	r=SetKeyAndNamedValue(set, keys, szCLSID, (char*)"InprocServer32", (char*)"Apartment", (char*)"ThreadingModel");
 	if(r) return r;
 #else
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\LocalServer32 = d:\dev\jcom\jcom\windebug\jserver.dll
-	r=SetKeyAndValue(set, keys, szCLSID, "LocalServer32", module);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"LocalServer32", module);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\LocalHandler32 = ole32.dll
-	r=SetKeyAndValue(set, keys, szCLSID, "LocalHandler32", "ole32.dll");
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"LocalHandler32", (char*)"ole32.dll");
 	if(r) return r;
 #endif
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\ProgID = JServer.Object.1
-	r=SetKeyAndValue(set, keys, szCLSID, "ProgID", progidcur);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"ProgID", progidcur);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\VersionIndependentProgID = JServer.Object
-	r=SetKeyAndValue(set, keys, szCLSID, "VersionIndependentProgID", progid);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"VersionIndependentProgID", progid);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\TypeLib = {21EB05E1-1AB3-11cf-A2AC-8FF70874C460}
-	r=SetKeyAndValue(set, keys, szCLSID, "TypeLib", szLIBID);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"TypeLib", szLIBID);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\Programmable
-	r=SetKeyAndValue(set, keys, szCLSID, "Programmable", 0);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"Programmable", 0);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\CLSID\{21EB05E0-1AB3-11cf-A2AC-8FF70874C460}\NotInsertable
-	r=SetKeyAndValue(set, keys, szCLSID, "NotInsertable", 0);
+	r=SetKeyAndValue(set, keys, szCLSID, (char*)"NotInsertable", 0);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\TypeLib\{21EB05E1-1AB3-11cf-A2AC-8FF70874C460} = J Server Type Library
@@ -715,11 +715,11 @@ int reg(BOOL set, LPSTR keys)
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\TypeLib\{21EB05E1-1AB3-11cf-A2AC-8FF70874C460}\DIR = d:\dev\jcom
-	r=SetKeyAndValue(set, keys, szLIBTYPELIBID, "DIR", szdir);
+	r=SetKeyAndValue(set, keys, szLIBTYPELIBID, (char*)"DIR", szdir);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\TypeLib\{21EB05E1-1AB3-11cf-A2AC-8FF70874C460}\HELPDIR = d:\dev\jcom\jcomhelp
-	r=SetKeyAndValue(set, keys, szLIBTYPELIBID, "HELPDIR", szdir);
+	r=SetKeyAndValue(set, keys, szLIBTYPELIBID, (char*)"HELPDIR", szdir);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\TypeLib\{21EB05E1-1AB3-11cf-A2AC-8FF70874C460}\1.0 = J Server (Ver 1.0) Type Library
@@ -755,15 +755,15 @@ int reg(BOOL set, LPSTR keys)
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\Interface\{21EB05E2-1AB3-11cf-A2AC-8FF70874C460}\ProxyStubClsid = {00020424-0000-0000-C000-000000000046}
-	r=SetKeyAndValue(set, keys, inter, "ProxyStubClsid", INTERCLSID);
+	r=SetKeyAndValue(set, keys, inter, (char*)"ProxyStubClsid", (char*)INTERCLSID);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\Interface\{21EB05E2-1AB3-11cf-A2AC-8FF70874C460}\ProxyStubClsid32 = {00020424-0000-0000-C000-000000000046}
-	r=SetKeyAndValue(set, keys, inter, "ProxyStubClsid32", INTERCLSID);
+	r=SetKeyAndValue(set, keys, inter, (char*)"ProxyStubClsid32", (char*)INTERCLSID);
 	if(r) return r;
 
 //HKEY_CLASSES_ROOT\Interface\{21EB05E2-1AB3-11cf-A2AC-8FF70874C460}\TypeLib = {21EB05E1-1AB3-11cf-A2AC-8FF70874C460}
-	r=SetKeyAndValue(set, keys, inter, "TypeLib", szLIBID);
+	r=SetKeyAndValue(set, keys, inter, (char*)"TypeLib", szLIBID);
 	if(r) return r;
 	return 0;
 }

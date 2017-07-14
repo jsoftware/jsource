@@ -46,6 +46,8 @@ I       _stdcall xbasic(I*     a,  I     b, I*     c) sum
 char cd[]="test";
 char* _stdcall pc(){ return cd;}
 
+// test in place convert down/up
+void _stdcall downup(I n, short* a, int* b, float* c) {I i; for(i=0;i<n;++i){a[i]=-a[i];b[i]=-b[i];c[i]=-c[i];}}
 
 // test d result and *d
 double _stdcall dipdpd(int c, double* p, double* pr)

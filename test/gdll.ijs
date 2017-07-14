@@ -22,6 +22,17 @@ b1=: 10&u: 402 403
 (9;(,9);2;3 4)=          'xbasic x *x x *x' dcd (,2);2;3 4
 (2;(,2);1;0 1)=          'ibasic i *i i *i' dcd (,1);1;0 1 NB. boolean promotion to int
 
+NB. test convert in place down/up
+(9;(- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = }.'downup n x *s *i *f' dcd 9;(_4+i.9);(_4+i.9);(_4.5+i.9)
+(15;(- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = }.'downup n x *s *i *f' dcd 15;(_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
+
+'s i f'=: (_4+i.9);(_4+i.9);(_4.5+i.9)
+0 = 'downup > n x *s *i *f' dcd 9;s;i;f
+((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f
+'s i f'=: (_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
+0 = 'downup > n x *s *i *f' dcd 15;s;i;f
+((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f
+
 NB. declaration (left argument) and parameter (right argument) checking
 'limit error'  -: (lib,'ibasic i *i i *i',2300$' '  ) cd etx (,2);2;3 4
 'limit error'  -: ((2300$' '),lib,'ibasic i *i i *i') cd etx (,2);2;3 4
@@ -111,6 +122,6 @@ NB. xbasic_add -: ": 15!:21 lib,'xbasic'
 (2 0 -: cder '') *. 'domain error' -: ('0 _',(>IF64{'2333444555';19$'93'),' x x') cd etx (,2);2;3 4
 
 
-4!:55 ;:'a a1 add address b b1 dcd f lib obj_add pc s0 s1 td td1a td3 td4 tf tf3'
+4!:55 ;:'a a1 add address b b1 dcd f i lib obj_add pc s s0 s1 td td1a td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'
 

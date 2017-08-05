@@ -316,6 +316,13 @@ int jefirst(int type,char* arg)
 #elif defined(RASPI)
 	strcat(input,"[IFRASPI_z_=:1");
 #endif
+#if defined(_WIN32)
+	strcat(input,"[UNAME_z_=:'Win'");
+#elif defined(__MACH__)
+	strcat(input,"[UNAME_z_=:'Darwin'");
+#elif !defined(ANDROID)
+	strcat(input,"[UNAME_z_=:'Linux'");
+#endif
 #if 0
 	sprintf(buf,"(" FMTI ")",(I)(intptr_t)hjdll);
 	strcat(input,"[HLIBJ_z_=:");

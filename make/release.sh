@@ -12,9 +12,9 @@ cp $jbld/j32/bin/libtsdll.so    $jgit/release/$jplatform/j32/libtsdll.so
 cp $jbld/j32/bin/libtsdll.dylib $jgit/release/$jplatform/j32/libtsdll.dylib
 
 
-if [ $jplatform = "raspberry" ]; then
-  exit 0
-fi
+# if [ $jplatform = "raspberry" ]; then
+#   exit 0
+# fi
 
 mkdir -p $jgit/release/$jplatform/j64
 rm    -f $jgit/release/$jplatform/j64/*

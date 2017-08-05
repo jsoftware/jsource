@@ -72,7 +72,13 @@ OBJS_FMA=" blis/gemm_int-fma.o "
 
 raspberry_j32) # linux raspbian arm
 TARGET=libj.so
-COMPILE="$common -DRASPI -DC_NOMULTINTRINSIC "
+COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
+LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+;;
+
+raspberry_j64) # linux arm64
+TARGET=libj.so
+COMPILE="$common -march=armv8-a+crc -DRASPI -DC_CRC32C=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 

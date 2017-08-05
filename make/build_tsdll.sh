@@ -15,11 +15,16 @@ LINK=" -shared -Wl,-soname,libtsdll.so  -m32 -o libtsdll.so "
 linux_j64)
 TARGET=libtsdll.so
 COMPILE="$common "
-LINK=" -shared -Wl,-soname,libtsdll.so  -o libtsdll.so "
+LINK=" -shared -Wl,-soname,libtsdll.so -o libtsdll.so "
 ;;
 raspberry_j32)
 TARGET=libtsdll.so
-COMPILE="$common "
+COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp"
+LINK=" -shared -Wl,-soname,libtsdll.so -o libtsdll.so "
+;;
+raspberry_j64)
+TARGET=libtsdll.so
+COMPILE="$common -march=armv8-a+crc "
 LINK=" -shared -Wl,-soname,libtsdll.so -o libtsdll.so "
 ;;
 darwin_j32)

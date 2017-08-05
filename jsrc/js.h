@@ -51,7 +51,7 @@ define one of the following in the build as required
 
 // auto config
 
-#ifdef RASPI
+#if defined(RASPI) && defined(__arm__)
 #ifndef C_CD_ARMHF
 #define C_CD_ARMHF
 #endif

@@ -19,7 +19,7 @@
 typedef int64x2_t __m128i;
 typedef float64x2_t __m128d;
 #define _mm_set1_epi32_ vdupq_n_s64
-#ifndef __clang__
+#if !defined(__clang__) && __GNUC__ < 6
 #define __ai static inline __attribute__((__always_inline__))
 __ai uint64x2_t vreinterpretq_u64_f64(float64x2_t __p0) {
   uint64x2_t __ret;
@@ -1059,7 +1059,7 @@ could use goto in some of the above
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOID);  \
-  __m128d tltr, xval, xnew, xrot; SETXNEW \
+  __m128d tltr=tltr /* avoid warning */, xval, xnew, xrot; SETXNEW \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \

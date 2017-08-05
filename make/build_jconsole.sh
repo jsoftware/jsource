@@ -16,7 +16,11 @@ COMPILE="$common -DREADLINE"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 raspberry_j32)
-COMPILE="$common -DREADLINE -DRASPI"
+COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
+LINK=" -ledit -ldl -o jconsole "
+;;
+raspberry_j64)
+COMPILE="$common -march=armv8-a+crc -DREADLINE -DRASPI"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 darwin_j32)

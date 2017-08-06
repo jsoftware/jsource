@@ -19,7 +19,7 @@ LINK=" -ledit -ldl -o jconsole "
 ;;
 raspberry_j32)
 TARGET=jconsole
-COMPILE="$common --marm march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
+COMPILE="$common -marm march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 raspberry_j64)

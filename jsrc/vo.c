@@ -119,11 +119,15 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  R z;
 }
 
+// > y (rank is immaterial)
+// If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
+// if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
+// We don't support inplacing here yet so just do that always
 F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w); b=ARELATIVE(w);
  if(!(n&&BOX&AT(w)))R ca(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
- if(!AR(w))R b?(A)AABS(*v,w):*v;
+ if(!AR(w)){z=b?(A)AABS(*v,w):*v; ACIPNO(z); R z;}   // turn off inplacing if we are using the contents directly
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i]; 
   q=MIN(q,AR(y)); 

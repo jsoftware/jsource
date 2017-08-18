@@ -1042,11 +1042,11 @@ could use goto in some of the above
 #endif
 
 #if C_AVX
-#define SETXNEW  tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
+#define SETXNEW  __m128d tltr; tltr=_mm_set_pd(tl,tr); xnew=xrot=xval=_mm_sub_pd(tltr,tltr);
 #elif defined(__aarch64__)
-#define SETXNEW  tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
+#define SETXNEW  __m128d tltr=tltr; tltr=vsetq_lane_f64(tl,tltr,1); tltr=vsetq_lane_f64(tr,tltr,0); xnew=xrot=xval=vsubq_f64(tltr,tltr);
 #else
-#define SETXNEW  \
+#define SETXNEW  __m128d tltr; \
    SSEREGD(tltr)[0]=tr; SSEREGD(tltr)[1]=tl; \
    SSEREGD(xnew)[0]=SSEREGD(xrot)[0]=SSEREGD(xval)[0]=0.0; \
    SSEREGD(xnew)[1]=SSEREGD(xrot)[1]=SSEREGD(xval)[1]=0.0;
@@ -1059,7 +1059,7 @@ could use goto in some of the above
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOID);  \
-  __m128d tltr=tltr /* avoid warning */, xval, xnew, xrot; SETXNEW \
+  __m128d xval, xnew, xrot; SETXNEW \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
   if(a==w&&ac==wc)md|=(IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md));  /* remember if this is reflexive, which doesn't prehash */  \

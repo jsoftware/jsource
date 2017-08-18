@@ -89,6 +89,7 @@ POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+J
 static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
+// x u&v y
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
  PREF2(on2); PUSHZOMB;
  // here for execution on a single cell

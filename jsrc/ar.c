@@ -621,7 +621,7 @@ F1(jtslash){A h;AF f1=jtreduce;C c;V*v;
   case CSEMICO: f1=jtredsemi;   break;
   case CUNDER:  if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;}
  }
- RZ(h=qq(w,v2(lr(w),RMAX)));
+ RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  R fdef(CSLASH,VERB, f1,jtoprod, w,0L,h, VAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
 }
 

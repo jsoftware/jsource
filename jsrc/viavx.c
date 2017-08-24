@@ -19,7 +19,8 @@
 typedef int64x2_t __m128i;
 typedef float64x2_t __m128d;
 #define _mm_set1_epi32_ vdupq_n_s64
-#if !defined(__clang__) && __GNUC__ < 6
+// #if !defined(__clang__) && __GNUC__ < 6
+#if !defined(__clang__) && ((__GNUC__ < 4)||((__GNUC__ == 4) && (__GNUC_MINOR__ < 9)))
 #define __ai static inline __attribute__((__always_inline__))
 __ai uint64x2_t vreinterpretq_u64_f64(float64x2_t __p0) {
   uint64x2_t __ret;

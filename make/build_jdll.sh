@@ -275,6 +275,7 @@ OBJS="\
  xl.o \
  xo.o \
  xs.o \
+ xsha.o \
  xt.o \
  xu.o "
 

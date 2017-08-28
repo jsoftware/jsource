@@ -546,7 +546,7 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); jt->rank=0;
  b=1==r&&1==s[f];
- if(2>r&&!b)R ca(w);
+ if(2>r&&!b)RCA(w);
  GA(z,AT(w),AN(w),wr-1,s); 
  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
  if(SPARSE&AT(w))R redcatsp(w,z,r);

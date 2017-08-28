@@ -694,7 +694,7 @@ extern RESTRICTF A jtgafv(J,I);
 extern A        jtgadv(J,A,C);
 extern RESTRICTF A jtgah(J,I,A);
 extern A        jtgc(J,A,I);
-extern I        jtgc3(J,A,A,A,I);
+extern A        jtgc3(J,A,A,A,I);
 extern A        jtgconj(J,A,A,C);
 extern B        jtgerexact(J, A);
 extern B        jtglobinit(J);

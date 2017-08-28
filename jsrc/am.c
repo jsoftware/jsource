@@ -120,7 +120,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  ASSERT(!an||!wn||HOMO(at,wt),EVDOMAIN);  // error if xy not empty and not compatible
  ASSERT(ar<=ir,EVRANK);   // require shape of x to be a suffix of the shape of m
  ASSERT(!ICMP(as,AS(ind)+ir-ar,ar),EVLENGTH);
- if(!wn)R ca(w);  // if y empty, clone it & return.  It's small.  Ignore inplacing
+ if(!wn)RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  RE(t=an?maxtype(at,wt):wt);  // get the type of the result: max of types, but if x empty, leave y as is
  if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
@@ -226,11 +226,12 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z;I sa,sw; B b;I at,ir,it,t,t1,w
   p=PAV(a); if(sa&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); sa=0;}
   if(it&NUMERIC||!ir)z=(b?jtam1e:sa?jtam1sp:jtam1a)(jt,a,z,it&NUMERIC?box(ind):ope(ind),ip);
   else{RE(aindex(ind,z,0L,&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:sa?jtamnsp:jtamna)(jt,a,z,ind,ip);}
+  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
  }else{
   // Dense w.  Convert indexes to integer indexes, transfer to merge2 to do the work
   z=jtmerge2(jtinplace,sa?denseit(a):a,w,jstd(w,ind));
+  EPILOG(z);
  }
- EPILOG(z);
 }
 
 #if 0

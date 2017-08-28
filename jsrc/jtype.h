@@ -214,7 +214,8 @@ typedef I SI;
 // NAME type can have the following information flags set
 #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (is name is reassigned - watch for errors!)   Aliases with SYMB
 #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
-
+#define RECURUCX 31
+#define RECURUC         ((I)1L<<RECURUCX)    // set if it is known that the usecount of this node has been propagated to descendants (i. e. if UC of this node is 1, all descendants have been incremented)
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg

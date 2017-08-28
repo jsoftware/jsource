@@ -259,7 +259,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      // reallocate ww if it was used, which we detect by seeing the usecount incremented.  This requires that everything that
      // touches a buffer either copy it or rat().  So that ] doesn't have to rat(), we also detect reuse here if the same buffer
      // is returned to us
-     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 1:
@@ -271,7 +271,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      SPB(wwp,i,sely(y,qn,p+q-qn,yu[i]+neg));
      SPB(wwp,x,selx(x,qn,p+q-qn));
      RZ(*za++=zz=h?df1(ww,hv[(m-i)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 2:
@@ -279,7 +279,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      q=yu[i]-yu[i-1]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p,1L),x,0L,1L,-1L,jtfrom));
      RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
    case 3:
@@ -287,7 +287,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
      q=yu[i-1]-yu[i]; *AS(ww)=q-neg;
      SPB(wwp,x,irs2(apv(q-neg,p+neg,1L),x,0L,1L,-1L,jtfrom));
      RZ(*za++=zz=h?df1(ww,hv[(i-1)%hn]):CALL1(f1,ww,fs));
-     p+=q; if(ww==zz||ACUC1<AC(ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
+     p+=q; if(WASINCORP1(zz,ww)){RZ(ww=cps(w)); wwp=PAV(ww);}
     }
     break;
   }
@@ -598,7 +598,7 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   for(j=0;j<nc;++j){
    yc=MIN(tc,sc); tc-=mc; s=yc*k; 
-   if(zz==y||ACUC1<AC(y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}  // reallo y is in use, or if returned from ][
+   if(WASINCORP1(zz,y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}  // reallo y is in use, or if returned from ][
    u=yv; DO(yr, MC(u,v,e?sj:s); u+=sj; v+=r;); v=v0+=mj; 
    *zv++=zz=CALL1(f1,e||yr==sr&&yc==sc?y:take(v2(yr,yc),y),fs);
  }}

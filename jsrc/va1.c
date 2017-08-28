@@ -103,7 +103,7 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
   ado=p.f; cv=p.cv;
  }
- if(ado==idf)R rat(w);  // no need to rat, really, but harmless since always DIRECT type
+ if(ado==idf)R w;  // no need to rat, really, but harmless since always DIRECT type   scaf remove rat
  if(b)R va1s(w,id,cv,ado);
  t=atype(cv); zt=rtype(cv);
  if(t&&TYPESNE(t,wt))RZ(w=cvt(t,w));

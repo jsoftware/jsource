@@ -420,6 +420,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
+// Tests for whether a result incorporates its argument.  The argument is always inplaceable, and we signal incorporation either by returning the
+// argument itself or by marking it non-inplaceable (if we box it)
+#define INCORP(z)       (AC(z)&=~ACINPLACE)
+#define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
+#define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
@@ -468,6 +473,7 @@ extern unsigned int __cdecl _clearfp (void);
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
 #define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
+#define EPILOGZOMB(z)       R gc3(z,0L,0L,_ttop)   // z is the result block.  Use this is z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z
 // Routines that do not return A
@@ -485,6 +491,8 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define R0 R 0;
 #endif
+// In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
+#define RCA(w)   R w
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}

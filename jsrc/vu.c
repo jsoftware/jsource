@@ -13,7 +13,7 @@ B jtvc1(J jt,I n,US*v){DO(n, RZ(255>=*v++);); R 1;}
 // if b is 0, raise error if high byte of unicode is not 0
 A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  RZ(w);
- if(LIT&AT(w))R ca(w);  // if already ASCII, clone it and return the clone
+ if(LIT&AT(w))RCA(w);  // if already ASCII, return
  n=AN(w); wv=CAV(w);    // number of characters, pointer to characters if any
  w4=C4AV(w);
  ASSERT(!n||(C2T+C4T)&AT(w),EVDOMAIN);  // must be empty or unicode
@@ -44,7 +44,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
 
 static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
  RZ(w);
- if(C2T&AT(w))R ca(w);
+ if(C2T&AT(w))RCA(w);
  n=AN(w); wv=CAV(w); w4=C4AV(w);
  ASSERT(!n||(LIT+C4T)&AT(w),EVDOMAIN);
  GATV(z,C2T,n,AR(w),AS(w)); zv=CAV(z); z2=USAV(z);

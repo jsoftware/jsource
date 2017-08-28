@@ -43,8 +43,8 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 #define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-#define RARG    {if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
-#define RARG1   {if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
+#define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
     I k,mn,n=1,p,*s,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;I state;
  RZ(w);
@@ -273,8 +273,8 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
       // invoke the function, get the result for one cell
       RZ(y=CALL2(f2,ya,yw,fs));
       // see if the workarea was incorporated into the result, for use next time through the loop
-      if(y==ya||ACUC1<AC(ya))state|=STATEINCORPORATEDA|STATENOPOP;
-      if(y==yw||ACUC1<AC(yw))state|=STATEINCORPORATEDW|STATENOPOP;
+      if(WASINCORP1(y,ya))state|=STATEINCORPORATEDA|STATENOPOP;
+      if(WASINCORP1(y,yw))state|=STATEINCORPORATEDW|STATENOPOP;
 
       // process according to state
       if(state&STATENORM){

@@ -17,24 +17,29 @@ F1(jtlevel1){RZ(w); R sc(level(w));}
 
 F1(jtbox0){R irs1(w,0L,0L,jtbox);}
 
-F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws; 
+F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  RZ(w);
  ASSERT(!(SPARSE&AT(w)),EVNONCE);
- ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; 
- RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws)); 
- k=m*bp(AT(w)); wv=CAV(w);
- GATV(z,BOX,n,f,ws); zv=AAV(z);
- if(f){
-  GA(y,AT(w),m,r,f+ws); yv=CAV(y);
-  if(ARELATIVE(w)){A*v=(A*)wv;A1*u=(A1*)yv; DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
-  else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
- }else {rat1(w); *zv=w;}
+ if(!jt->rank){
+  // single box: fast path.  Mark w as incorporated into the result
+  GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
+ } else {
+  // <"r
+  ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
+  CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
+// obsolete   RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws));   // scaf fix: if no frame, save comp.
+  k=m*bp(t); wv=CAV(w);
+  GATV(z,BOX,n,f,ws); zv=AAV(z);
+  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
+// obsolete   else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
+  else DO(n, GA(y,t,m,r,f+ws); MC(CAV(y),wv,k); wv+=k; zv[i]=y;);
+ }
  R z;
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); if(AN(w)&&BOX&AT(w)){rat1(w); R w;}else{R box(w);}}
+F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}   // obsolete rat1 removed
 
-F2(jtlink){RZ(a&&w); if(AN(w)&&AT(w)&BOX){rat1(w);}else{w = box(w);} R over(box(a),w);}
+F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}  // obsolete rat1 removed
 
 static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;
@@ -126,7 +131,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w); b=ARELATIVE(w);
- if(!(n&&BOX&AT(w)))R ca(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
+ if(!(n&&BOX&AT(w)))RCA(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
  if(!AR(w)){z=b?(A)AABS(*v,w):*v; ACIPNO(z); R z;}   // turn off inplacing if we are using the contents directly
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i]; 

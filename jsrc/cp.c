@@ -69,7 +69,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
  RZ(w);
  sv=VAV(self); 
  switch(n=*AV(sv->h)){
-  case 0:  R ca(w);
+  case 0:  RCA(w);
   case 1:  fs=sv->f; R CALL1(VAV(fs)->f1,w,fs);
   default: 
    fs=sv->f; f1=VAV(fs)->f1;

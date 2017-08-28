@@ -1027,7 +1027,7 @@ static void SHA384_Final(sha2_byte digest[], SHA384_CTX* context)
   MEMSET_BZERO(context, sizeof(SHA384_CTX));
 }
 
-char *SHA384_End(SHA384_CTX* context, char buffer[])
+static char *SHA384_End(SHA384_CTX* context, char buffer[])
 {
   sha2_byte digest[SHA384_DIGEST_LENGTH], *d = digest;
   int  i;
@@ -1051,7 +1051,7 @@ char *SHA384_End(SHA384_CTX* context, char buffer[])
   return buffer;
 }
 
-char* SHA384_Data(const sha2_byte* data, size_t len, char digest[SHA384_DIGEST_STRING_LENGTH])
+static char* SHA384_Data(const sha2_byte* data, size_t len, char digest[SHA384_DIGEST_STRING_LENGTH])
 {
   SHA384_CTX context;
 

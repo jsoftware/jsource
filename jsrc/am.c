@@ -130,7 +130,8 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
       &&TYPESEQ(t,wt)&&(wt&DIRECT||((t&BOX)&&AFNJA&AFLAG(w)))&&w!=a&&w!=ind;
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
- else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
+// obsolete  else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
+ else{RZ(z=cvt(t,w)); RZ(z=RELOCATE(w,z));}
  if(ip&&t&BOX&&AFNJA&AFLAG(w)){A*av,t,x,y;A1*zv;I ad,*tv;
   // in-placeable boxed memory-mapped array
   ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);  // point to items of x and result

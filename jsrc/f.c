@@ -543,7 +543,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
   case BITX:  z=thbit(w);                  break;
   case B01X:  z=thb(w);                    break;
   case LITX:
-   // If we are producing byte output, we simply copy the input.
+   // If we are producing byte output, we simply return the input.
     // If we are allowed to produce C2T output, do so if the string is a list.  An array of
     // multiple U8 strings is problematic - how do you space them? - and the user should have
     // used C2T if he wanted a perfect result.  What we do (at rank 1) is: check for non-ASCII; if there
@@ -552,7 +552,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
     // we hit an invalid non-ASCII sequence, abort and keep the original byte string.
     // The conversion to C2T includes appending NUL to double-wide chars, and conversion up to
     // C4T if there are surrogate pairs or codes above U+FFFF
-   z=jt->thornuni?rank1ex(w,0L,1L,RoutineA) : ca(w);  // check list for U8 codes, return LIT or C2T
+   z=jt->thornuni?rank1ex(w,0L,1L,RoutineA) : RETARG(w);  // check list for U8 codes, return LIT or C2T
    break;
   case C2TX:
    // If C2T output is allowed, keep it as C2T (it's not worth the time to go through

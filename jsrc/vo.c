@@ -130,28 +130,35 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // We don't support inplacing here yet so just do that always
 F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
- n=AN(w); v=AAV(w); b=ARELATIVE(w);
+ n=AN(w); v=AAV(w); b=ARELATIVE(w);  // b=1 if w is relative
  if(!(n&&BOX&AT(w)))RCA(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
  if(!AR(w)){z=b?(A)AABS(*v,w):*v; ACIPNO(z); R z;}   // turn off inplacing if we are using the contents directly
+ // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i]; 
   q=MIN(q,AR(y)); 
-  r=MAX(r,AR(y)); 
+  r=MAX(r,AR(y));
+  // for nonempty contents, check for conformability and save highest-priority type
   if(AN(y)){
    k=AT(y); t=t?t:k; m=t|k;
    if(TYPESNE(t,k)){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
  }}
+ // if there were no nonempty contents, go back & pick highest-priority type of empty
  if(!t)DO(n, y=b?(A)AABS(v[i],w):v[i]; k=AT(y); RE(t=maxtype(t,k)););
+ // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
  GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
+ // find the shape of a result-cell
  DO(n, y=b?(A)AABS(v[i],w):v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
  else{
-  RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k; 
+  RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k;
+  // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); ICPY(AS(z)+AR(w),u,r); x=CAV(z);
-  c=b&&t&BOX;
+  c=b&&t&BOX;   // set if result is relative
   if(c){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);
   for(i=0;i<n;++i){
-   y=b?(A)AABS(v[i],w):v[i];
+   y=b?(A)AABS(v[i],w):v[i];   // get pointer to contents, relocated if need be
+   // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
    if(ARELATIVE(y))RZ(y=relocate((I)y-c*(I)z,ca(y)));
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 

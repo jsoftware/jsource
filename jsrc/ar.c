@@ -551,8 +551,8 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
  if(SPARSE&AT(w))R redcatsp(w,z,r);
  MC(AV(z),AV(w),AN(w)*bp(AT(w)));
- if(ARELATIVE(w)){AFLAG(z)=AFREL; z=relocate((I)w-(I)z,z);}
- R z;
+// obsolete  if(ARELATIVE(w)){AFLAG(z)=AFREL; z=relocate((I)w-(I)z,z);}
+ R RELOCATE(w,z);
 }    /* ,/"r w */
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
@@ -569,7 +569,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  s=AS(w); n=r?s[f]:1;
  ASSERT(n,EVDOMAIN);
  if(1==n)R irs1(w,0L,r,jthead);
- if(1==r)R 2==n?ca(w):irs2(irs2(num[-2],w,0L,0L,1L,jtdrop),irs2(num[-2],w,0L,0L,1L,jttake),0L,1L,0L,jtover);
+ if(1==r)R 2==n?RETARG(w):irs2(irs2(num[-2],w,0L,0L,1L,jtdrop),irs2(num[-2],w,0L,0L,1L,jttake),0L,1L,0L,jtover);
  if(2==r)R irs1(w,0L,2L,jtcant1);
  RZ(c=IX(wr)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));
  if(SPARSE&AT(w)){A x;

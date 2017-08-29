@@ -255,7 +255,7 @@ static DF1(jtsscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok
  y=VAV(self)->f; id=vaid(VAV(y)->f); 
- if(2>n||!wn){if(id){jt->rank=0; R r?ca(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
+ if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
  vasfx(id,wt,&ado,&cv);
  if(!ado)R ssg(w,self);
  if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));

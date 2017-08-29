@@ -432,7 +432,7 @@ static I jtfaorpush(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 #endif
     I c = AC(np);  // fetch usecount
     if(tp&TRAVERSIBLE)jtfaorpush(jt,np,tp);  // recur before we free this block
-    if(--c<=0){*(I*)0=0; tpush1(np)}else AC(np)=c;  // scaf decrement usecount; push if it goes to 0; otherwise store decremented count
+    if(--c<=0){while(1); tpush1(np)}else AC(np)=c;  // scaf decrement usecount; push if it goes to 0; otherwise store decremented count
    }
    np = np0;  // advance to next box
   }

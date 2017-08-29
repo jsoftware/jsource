@@ -1067,6 +1067,7 @@
     <ClCompile Include="..\..\jsrc\XL.C" />
     <ClCompile Include="..\..\jsrc\XO.C" />
     <ClCompile Include="..\..\jsrc\XS.C" />
+    <ClCompile Include="..\..\jsrc\xsha.c" />
     <ClCompile Include="..\..\jsrc\XT.C" />
     <ClCompile Include="..\..\jsrc\xu.c" />
   </ItemGroup>

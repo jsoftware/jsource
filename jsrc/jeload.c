@@ -234,7 +234,9 @@ void jepath(char* arg,char* lib,int forceavx)
  strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
 #ifndef _WIN32
  struct stat st;
- if(stat(pathdll,&st)) FHS=1;
+ char pathdllpx[10];
+ strncpy(pathdllpx,pathdll,10); pathdllpx[9]=0;
+ if(stat(pathdll,&st)&&!strcmp(pathdllpx,"/usr/bin/")) FHS=1;
  if (FHS) {
   char _jdllver[20];
   strcpy(_jdllver,jversion);

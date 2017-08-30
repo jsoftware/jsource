@@ -245,7 +245,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
    // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
    // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
-   // assigned to a name, which will protects values inside it.
+   // assigned to a name, which will protect values inside it.
    rat1s(a);
    if(AN(a)&&AR(a)){
      // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n

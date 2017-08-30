@@ -269,12 +269,9 @@ F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 
  at=AT(a); ab=1&&at&DENSE;
  wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
- // special case: if a is atomic 0 or 1, and cells of w are not atomic
+ // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
  if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];
   if(aval==1)R RETARG(w);   // 1 # y, return y
-  if(aval==0 && wb){   // 0 #"r y, return empty with 0 in the right place
-   GA(w,wt,0,wr,ws); AS(w)[wf]=0; R w;
-  }
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);

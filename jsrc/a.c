@@ -125,7 +125,8 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
    cv[(v-jv)/2]=cu[i]; cu[i]=0; v[0]=u[0]; v[1]=u[1];
   }
   // Free the old buffer.  Transfer the usecount from the old to the new, by adding the number of times the memoed verb will free this buffer
-  q=hv[1]; AC(q)=1; fa(q); ACINCRBY(jj,c); hv[1]=jj;  // force fa(); transfer usecount to new buffer
+  q=hv[1]; AC(q)=1; fa(q); ACINCRBY(jj,c); hv[1]=jj;  // force fa(); transfer usecount to new buffer  RUCT: don't need c, just set u (+1 because of impending tpop)
+// RUCT: test that (xxx=.u M.) y    doesn't leak, as it does now
   q=hv[2]; AC(q)=1; fa(q); ACINCRBY(cc,c); hv[2]=cc;
   tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above.
    // We have to do this because we have no guarantee that our caller will do a tpop before calling us again, and we
@@ -134,7 +135,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I c,*jv,k,m,*mv,*v;
  }
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
- // bump the usecount of the result by the number of times it will be freed by this memoed verb
+ // bump the usecount of the result by the number of times it will be freed by this memoed verb   RUCT: just bump by 1 to account for new ref from recursive 
  cv[(v-jv)/2]=raa(c,z); v[0]=y; v[1]=x; 
  R z;
 }
@@ -151,6 +152,8 @@ static I jtint0(J jt,A w){A x;
 
 static DF1(jtmemo1){DECLF;A z;I x,y;
  RZ(w);
+ ASSERT(!ACIPISOK(self),EVNONCE);  // memoized verb must be assigned before use, to ensure tables are made permanent
+   // this might still leak in a line like 4!:55 <'xxx' [ (xxx =. u M.) y  because the final pop of the anonymous verb is going to lose the contents
  x=IMIN; y=int0(w);
  if(y==IMIN)R CALL1(f1,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL1(f1,w,fs));
@@ -158,6 +161,7 @@ static DF1(jtmemo1){DECLF;A z;I x,y;
 
 static DF2(jtmemo2){DECLF;A z;I x,y; 
  RZ(a&&w);
+ ASSERT(!ACIPISOK(self),EVNONCE);  // memoized verb must be assigned before use, to ensure tables are made permanent
  x=int0(a); y=int0(w);
  if(x==IMIN||y==IMIN)R CALL2(f2,a,w,fs);
  R (z=memoget(x,y,self))?z:memoput(x,y,self,CALL2(f2,a,w,fs));  // if memo lookup returns empty, run the function and remember the result

@@ -77,7 +77,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
  if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;
  f=v->f; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
  g=v->g; vg=g&&VERB&AT(g); ay=g&&NOUN&AT(g)&&!AR(g);
- switch(id){
+ switch(id){  // should handle @. ?
   case CAT:
   case CATCO:  R atomic(1,f)&&atomic(m,g);
   case CUNDER:
@@ -104,6 +104,9 @@ static A jtgjoin(J jt,C c,A a,A w){A f;
  R df2(box(spellout(c)),df2(a,w,f),f);
 }
 
+// u@.v y atomic.  Operate on the nub of y and then rearrange the results
+// kludge TODO: Don't do this if the nub is almost as big as y; also find a way to expose this logic
+// to general verbs
 static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  RZ(w);
  r=AR(w);
@@ -122,7 +125,7 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
   b=0; DO(AN(y), if(b=!AR(yv[i]))break;);
   if(b){
    RZ(x=df2(k,w,sldot(ds(CPOUND)))); xv=AV(x);
-   DO(AN(y), if(!AR(yv[i]))RZ(yv[i]=reshape(sc(xv[i]),yv[i])););
+   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i]));INSTALLBOX(y,yv,i,z);});
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }
@@ -240,7 +243,6 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->h);I d;
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(ff=df1(ffm,ds(sv->id)));   // now ff represents (v1 y)}
-// obsolete RE(d=fdep(hv[1])); FDEPINC(d); ff=df1(df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  if(AT(hv[2])&NOUN){ffx=hv[2];}else{RZ(ffx=df1(w,hv[2]))}
  R df1(ffx,ff);
 }

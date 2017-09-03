@@ -10,7 +10,6 @@
 // calculate +/\ *yv
 #define RANKINGSUMSCAN(p)   \
  {I s=0; TTYPE *u=yv; TTYPE *uend=u+(p); while(u!=uend){t=*u; *u=(TTYPE)s; s+=t; ++u;}}
-// obsolete  {I s,*u; s=0; u=yv; DO(p, if(*u){t=*u; *u=s; s+=t;} ++u;);}
 // create totals of occurrences in *yv (which is yv biased by min); +/\; then for each input value, copy in ordinal
 // and then increment the ordinal for next time 
 #define RANKINGLOOP(T)   \
@@ -87,11 +86,9 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  wt=AT(w); wv=CAV(w); wn=AN(w);
  ws=AS(w); n=wcr?ws[wf]:1;  // n=#cells in w; m is number of atoms in w
-// obsolete RE(m=prod(wf,ws));
  if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),zero);}
  wk=bp(wt); PROD(icn,wcr-1,ws+wf+1); k=icn*wk;  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
-// obsolete  wk=bp(wt); k=wk*(wcr?prod(wcr-1,ws+wf+1):1);
  // if Boolean 2- or 4-byte, go off to handle that special case
  if(wt&B01&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
  // See if the values qualify for small-range processing
@@ -104,13 +101,6 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   rng = wt&INT?condrange((I*)wv,wn,IMAX,IMIN,maxrange):condrange4((C4*)wv,wn,-1,0,maxrange);
  }else if(k<=2){rng.range=shortrange[wt&(B01+LIT)][k]; rng.min=0;  // if B01, must be 1 byte; otherwise 2^(8*k)
  }else rng.range=0;
-// obsolete  else switch(k){
-// obsolete   case 1:   p=wt&B01?2:256; break;
-// obsolete   case 2:   p=65536; break;
-// obsolete   case sizeof(int): 
-// obsolete    if(wt&INT){irange(AN(w)/(k/wk),(I*)wv,&q,&p); if(!(65536>p||0.69*(p+2*n)<n*log((D)n)))p=0;}
-// obsolete    else if(wt&C4T){C4 cq=(C4)q; c4range(AN(w)/(k/wk),(C4*)wv,&cq,&p); q=cq; if(!(65536>p||0.69*(p+2*n)<n*log((D)n)))p=0;}
-// obsolete  }
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location
   RZ(y=irs1(w,0L,wcr,jtgrade1)); yv=AV(y); 
@@ -125,7 +115,6 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   memset(yv,C0,rng.range*sizeof(*yv));
   switch(k){
    case sizeof(I): if(wt&INT){RANKINGLOOP(I); break;}
-// obsolete if(wt&C4T){RANKINGLOOP(C4);} else {RANKINGLOOP(int);} break;
 #if SY_64
    case sizeof(C4):
 #endif

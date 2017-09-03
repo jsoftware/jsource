@@ -324,8 +324,19 @@
 #define exprndID(x,y)               jtexprndID(jt,(x),(y))  
 #define ext(x,y)                    jtext(jt,(x),(y))
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
+// Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
+// the current block is being decremented to 0 usecount or does not have recursive usecount
+#if 0    // obsolete
 #define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtmf(jt,x);}else *cc=Zc;}} 
+#else
+// fa() audits the tstack, for use outside the usual system
+#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc; if(MEMAUDIT&2)audittstack(jt);}}}
+// Within the tpush/tpop, no need to audit fa, since it was checked on the push
+#define fana(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc;}}} 
+#endif
+#if 0 // obsolete
 #define faorpush1(x)                {if(x){I* cc=&AC(x); I Zc=*cc; if(--Zc<=0){while(1); tpush1(x);}else *cc=Zc;}}   // scaf
+#endif
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
@@ -781,9 +792,17 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
+#if 0
 #define ra(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,(x),tt); *cc=(c+1)&~ACINPLACE;}}
+#else
+// Handle top level of ra().  Increment usecount.  Set recursive usecount if starting usecount is inplaceable and recursible; recur on contents if original usecount is not recursive
+// We can have an inplaceable but recursible block, if it was gc'd
+#define ra(x)                       {if(x){I* Zcc=&AC(x); I tt=AT(x); I c=*Zcc; I flg=AFLAG(x); if(c<0 && tt&RECURSIBLE)AFLAG(x)=flg|(tt&TRAVERSIBLE); if((tt^flg)&TRAVERSIBLE)jtra(jt,(x),tt); *Zcc=(c+1)&~ACINPLACE;}}
+#endif
 #define ra1(x)                      jtra1(jt,(x))
+#if 0 // obsolete
 #define raa(x,y)                    jtraa(jt,(x),(y))
+#endif
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
@@ -1085,9 +1104,17 @@
 #define tpoly(x)                    jttpoly(jt,(x))
 #define tpop(x)                     jttpop(jt,(x))
 // if tg() fails, tpush leaves nextpushx unchanged
+#if 0
 #define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
+#else
+// Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
+// We can have an inplaceable but recursible block, if it was gc'd
+#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
+// Internal version, used when the local name pushx is known to hold jt->tnextpushx
+#define tpushi(x)                   {I tt=AT(x); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }
+#endif
 // tpush1 is like tpush, but it does not recur to lower levels
-#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
+#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))

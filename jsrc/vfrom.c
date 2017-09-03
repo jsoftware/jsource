@@ -62,8 +62,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  if(wn){
  // For copying items, we need to compute:
  // m: #cells in w   k: stride between items of a cell of w   wk: stride between cells of w
-// obsolete  j=p?p:1;  // j is #items in a cell of w.  m is #cells of w
-// obsolete   m=prod(wf,ws); RE(zn=mult(an,wn/j)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/j; wk=j*k;
   PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
@@ -155,7 +153,6 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
  if(wn){
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
   PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
-// obsolete  p=p?p:1; RE(m=prod(wf,ws)); RE(zn=mult(an,wn/p)); wcn=wn/(m?m:1); k=bp(AT(w))*wcn/p; wk=p*k;
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
@@ -274,8 +271,6 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  pn=AN(p); pr=AR(p); pv=AV(p);
  qn=AN(q); qr=AR(q); qv=AV(q);
  if(AN(w)){
-// obsolete  RE(m=prod(wf,ws)); RE(c=prod(r,ws+wf)); e=ws[1+wf]; d=c?c/(e*ws[wf]):0;
-// obsolete  RE(zn=mult(m,mult(pn,mult(qn,d))));
   // Set zn=#atoms of result  d=#atoms in a _2-cell of cell of w
   // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
@@ -289,7 +284,6 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  switch(k=d*wk){   // k=*bytes in a _2-cell of a cell of w
   default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
    DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;); R z;}
-// obsolete #define INNER2(T) {T*v=(T*)wv,*x=(T*)zv;I n=c/d;
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
    DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}  // n=#_2-cells in a cell of w
   case sizeof(C): INNER2(C);

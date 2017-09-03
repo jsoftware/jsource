@@ -397,8 +397,6 @@ static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
    {I maxval = (I)((D)IMAX/(D)MAX(2,m))-1;
    CR rng=condrange(AV(w),AN(w),0,0,maxval<<1);
    if(rng.range && MAX(rng.range,-rng.min)<maxval){
-// obsolete   irange(AN(w),AV(w),&s,&t); t=0<t&&IMAX>=d*((D)s+(D)t);
-// obsolete   if(t)
     MOVSUMAVG(I,I,INT,I,INT,x,  SETZ )
    }else{MOVSUMAVG(I,D,FL, D,FL, x,  SETZ );} break;}
   case 3:       MOVSUMAVG(I,D,FL, D,FL, x/d,SETZD); break;

@@ -36,7 +36,6 @@ F1(jtexec1){A z;
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return empty result
  FDEPINC(1); z=parse(tokens(w,1+!!jt->local)); FDEPDEC(1);
-// obsolete if(EVTHROW==jt->jerr){RESETERR; z=mtm;}
  if(z&&!jt->asgn)jpr(z);
  R z;
 }

@@ -79,7 +79,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    R z;
 }}   /* single positive finite exponent */
 
-static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;
+static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;
  hs=sv->h; m=AN(hs); 
  RZ(x=ravel(hs)); RZ(y=from(j=grade1(x),x)); nv=AV(y);
  GATV(x,BOX,m,1,0); xv=AAV(x);
@@ -87,13 +87,13 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,o
  if(p<m){
   RZ(z=ca(w));
   n=nv[m-1]; k=p;
-  while(k<m&&!nv[k]){xv[k]=z; ++k;}
+  while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
   old=jt->tnextpushx;
   for(i=1;i<=n;++i){
    RZ(z=CALL1(f1,y=z,fs));
-   if(q&&equ(y,z)){DO(m-k, xv[k]=z; ++k;); break;}
-   while(k<m&&i==nv[k]){xv[k]=z; ++k; q=k<m?bv[k]:0;}
+   if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}
+   while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}
    if(!(i%10))gc3(x,z,0L,old);
  }}
  if(0<p){
@@ -104,8 +104,8 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,x,*xv,y,z;B*bv,q;I i,k,m,n,*nv,o
   old=jt->tnextpushx;
   for(i=-1;i>=n;--i){
    RZ(z=CALL1(f1,y=z,fs));
-   if(q&&equ(y,z)){DO(1+k, xv[k]=z; --k;); break;}
-   while(0<=k&&i==nv[k]){xv[k]=z; --k; q=0<=k?bv[k]:0;}
+   if(q&&equ(y,z)){DO(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
+   while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
    if(!(i%10))gc3(x,z,0L,old);
  }}
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);

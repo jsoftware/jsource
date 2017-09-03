@@ -414,7 +414,6 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  if(NOUN&AT(a)){ASSERT(0,EVNONCE);}
  if(!nameless(a)||1<r)R CDERIV(CDDOT, jtddot1,0L, 0L, 0L,0L,0L);
  CR rng = condrange(wv,n,IMAX,IMIN,IMAX-1); p=rng.min; q=rng.range;
-// obsolete  irange(n,wv,&p,&q);
  if(!r){
   if(!p){V*v=VAV(a); R v->mr||v->lr||v->rr?qq(a,zero):a;}
   f=0<=p?jtdiff0:jtintg0; y=a; DO(ABS(p), ASSERT(y=CALL1(f,y,0L),EVDOMAIN);); R y;

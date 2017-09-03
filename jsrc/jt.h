@@ -269,6 +269,9 @@ typedef struct {
  I    ttabi0;           /* tacit translator                                */
  A    xmod;             /* extended integer: the m in m&|@f                */  
  I    xmode;            /* extended integer operating mode                 */
+#if MEMAUDIT & 2
+ I    audittstackdisabled;   // set to 1 to disable auditing
+#endif
 } JST;
 
 typedef JST* J; 

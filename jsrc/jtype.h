@@ -214,8 +214,6 @@ typedef I SI;
 // NAME type can have the following information flags set
 #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (is name is reassigned - watch for errors!)   Aliases with SYMB
 #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
-#define RECURUCX 31
-#define RECURUC         ((I)1L<<RECURUCX)    // set if it is known that the usecount of this node has been propagated to descendants (i. e. if UC of this node is 1, all descendants have been incremented)
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg
@@ -245,6 +243,8 @@ typedef I SI;
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
 // Don't call traverse unless one of these bits is set
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
+// Allow recursive usecount in one of these types
+#define RECURSIBLE      (BOX|VERB|ADV|CONJ)
 
 // NOUNSAFE flag
 #define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
@@ -279,11 +279,19 @@ typedef I SI;
 
 
 /* Values for AFLAG(x) field of type A                                     */
+// the flags defined here must be mutually exclusive with TRAVERSIBLE
 
 #define AFRO            (I)1            /* read only; can't change data    */
 #define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
 #define AFSMM           (I)4            /* SMM managed                     */
 #define AFREL           (I)8            /* uses relative addressing        */
+#define AFNOSMREL         (I)16   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
+// Note: in s.c we rely on AFNOSMREL being adjacent to BOX!!
+// The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they indicate that the usecount for the block is recursive, i. e. that
+// the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
+// block is actually freed
+#define AFAUDITUCX      32   // this & above is used for auditing the stack
+#define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack
 
 #define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */

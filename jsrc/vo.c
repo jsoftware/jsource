@@ -27,11 +27,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // <"r
   ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
-// obsolete   RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws));   // scaf fix: if no frame, save comp.
   k=m*bp(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z);
   if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
-// obsolete   else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
   else DO(n, GA(y,t,m,r,f+ws); MC(CAV(y),wv,k); wv+=k; zv[i]=y;);
  }
  R z;

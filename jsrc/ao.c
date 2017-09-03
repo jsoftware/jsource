@@ -261,8 +261,6 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
      wt&SBT&&(d==CMIN||d==CMAX)||
      wt&INT&&(17<=d&&d<=25)||
      wt&INT+FL&&(d==CMIN||d==CMAX||d==CPLUS) )))R key(a,w,self);
-// obsolete CRT rng=keyrs(a,&r,&s); c=aii(w); m=s;
-// obsolete  zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s&&s<=MAX(2*n,65536);
  CRT rng=keyrs(a,MAX(2*n,65536)); c=aii(w); at=rng.type; r=rng.minrange.min; s=rng.minrange.range; m=s;
  zt=d==CPLUS?(wt&B01?INT:wt&INT?FL:wt):wt; bb=s!=0;
  if(bb){
@@ -384,11 +382,8 @@ F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR
  if(SPARSE&AT(w))RZ(w=denseit(w));
  n=IC(w); t=AT(w); k=n?aii(w)*bp(t):0;
  if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
-// obsolete if(2>=k)q=t&B01?(1==k?2:258):t&LIT?(1==k?256:65536):t&C2T?65536:0;
  if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
-// obsolete else if(k==sizeof(C4)&&t&C4T){C4 cp=(C4)p; c4range(n,C4AV(w),&cp,&q); p=cp;}
  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}
-// obsolete else if(k==SZI&&t&INT+SBT)irange(n,AV(w),&p,&q);
  else if(k==SZI&&t&INT+SBT){rng=condrange(AV(w),n,IMAX,IMIN,2*n);}
  else{rng.range=0;}
  if(rng.range){

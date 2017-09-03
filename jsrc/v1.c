@@ -19,7 +19,6 @@ static F2(jtmatchs);
  {T h,* RESTRICT u=(T*)av,* RESTRICT v=(T*)wv;                                                   \
   q=k/sizeof(T);                                                             \
   switch(MCS(q,af,wf)){                                                      \
-/* obsolete   case MCS(1,0,0):              *x++=*u  ==*v?b1:b0; break;   */              \
    case MCS(1,0,1): h=*u; if(b1)DO(mn, *x++=h   ==*v++;) else DO(mn, *x++=h   !=*v++;)  break;  \
    case MCS(1,1,0): h=*v; if(b1)DO(mn, *x++=*u++==h;   ) else DO(mn, *x++=*u++!=h;   ); break;  \
    case MCS(1,1,1): if(b1){                                                  \
@@ -31,7 +30,6 @@ static F2(jtmatchs);
                      else if(af<wf)DO(m, h=*u++; DO(n, *x++=h   !=*v++;);)   \
                      else          DO(m, h=*v++; DO(n, *x++=*u++!=h;   ););  \
                     } break;                                                 \
-/* obsolete   case MCS(2,0,0):        QLOOP;               break;    */                   \
    case MCS(2,0,1): DO(mn, QLOOP;       v+=q;); break;                       \
    case MCS(2,1,0): DO(mn, QLOOP; u+=q;      ); break;                       \
    case MCS(2,1,1): if(1==n)      DO(m,       QLOOP; u+=q;   v+=q;)          \
@@ -52,12 +50,10 @@ static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT 
  else if(0==k%sizeof(S)  )EQV(S)
  else if(1==k)            EQV(C)
  else{
-// obsolete    c=af?k:0; d=wf?k:0;
-// obsolete   if(1==n)      DO(m,       *x++=(!!memcmp(av,wv,k))^b1; av+=k;   wv+=k;)
   if(af<wf)DO(m, DO(n, *x++=(!!memcmp(av,wv,k))^b1; wv+=k;); av+=k;)
   else          DO(m, DO(n, *x++=(!!memcmp(av,wv,k))^b1; av+=k;); wv+=k;);
  }
- R xx[0];   // obsolete mn?xx[mn-1]:b1;
+ R xx[0];
 }    /* what memcmp should have been */
 
 // Return 1 if a and w match, 0 if not
@@ -122,34 +118,33 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level
  // and were handled there).
  PROD(c,p,af+AS(a)); b=p!=q||ICMP(af+AS(a),wf+AS(w),p)||c&&!HOMO(at,wt);
-// obsolete  c=(af>wf?AN(a):AN(w))/(mn?mn:1);
  // If we know the result - either they mismatch, or the cell is empty, or the buffers are identical - return all success/failure
  if(b||!c||a==w){if(x)memset(x,b^b1,m*n); R b^b1;}
  // If we're comparing functions, return that result
  if(t&FUNC)R (!eqf(a,w))^b1;  // true value, but switch if return is not 'match'
  // If the types mismatch, convert as needed to the common (unsafe) type calculated earlier
  if(at!=wt) {
-  if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a)); // obsolete  else if(c0)RZ(a=cvt0(a)); 
-  if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w)); // obsolete else if(c0)RZ(w=cvt0(w));
+  if(at!=t)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a));
+  if(wt!=t)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w));
  }
  // If a has no frame, it might be the shorter frame and therefore repeated; but in that case
  // m will be 1 (1 cell in shorter frame).  So it is safe to increment each address by c in the compare loops
- av=CAV(a);  // obsolete  p=af?c:0;
- wv=CAV(w);  // obsolete  q=wf?c:0;
+ av=CAV(a);
+ wv=CAV(w);
  // do the comparison, leaving the last result in b
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
  default:   c *= bp(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
- case FLX:   if(jt->ct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break; // obsolete    R mn?x[0]:b1;
- case CMPXX: if(jt->ct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
- case XNUMX: INNERT(X,equ); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
- case RATX:  INNERT(Q,EQQ); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
+ case FLX:   if(jt->ct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break;
+ case CMPXX: if(jt->ct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break;
+ case XNUMX: INNERT(X,equ); break;
+ case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
   switch(2*ARELATIVE(a)+ARELATIVE(w)){
-  default:  INNERT(A,EQA); break; // obsolete    R mn?x[0]:b1;    R mn?x[0]:b1;
-  case 1:   INNERT2(0,w,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
-  case 2:   INNERT2(a,0,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
-  case 3:   INNERT2(a,w,EQA); break; // obsolete    R mn?x[0]:b1; R mn?x[0]:b1;
+  default:  INNERT(A,EQA); break;
+  case 1:   INNERT2(0,w,EQA); break;
+  case 2:   INNERT2(a,0,EQA); break;
+  case 3:   INNERT2(a,w,EQA); break;
   } break;
  } R b;
 }

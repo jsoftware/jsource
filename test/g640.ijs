@@ -64,7 +64,9 @@ test1"0 ] IF64#<.   2^3 7 9 32 33 47 53 62
 test1"0 ] IF64#<. 1+2^3 7 9 32 33 47 53 62
 test1"0 ] IF64#<._1+2^3 7 9 32 33 47 53 62
 
+1 [ 9!:57 (1)  NB. disable auditing, since next line is slow
 test1"0 x: 5 555 55555
+1 [ 9!:57 (2)
 
 64 = 3!:0 ?10$20x
 
@@ -279,7 +281,9 @@ test_dx=: 3 : 0
  1
 )
 
+1 [ 9!:57 (1)  NB. disable auditing, since next line is slow
 test_dx 1
+1 [ 9!:57 (2)
 
 
 4!:55 ;:'a B b bigdeal c d deal deal1 dx dx1'

@@ -237,21 +237,6 @@ D jtdgcd(J jt,D a,D b){D a1,b1,t;B stop = 0;
  while(remdd(a1/jfloor(0.5+a1/a),b1)){t=a; if((a=remdd(a,b))==0)break; b=t;}  // avoid infinite loop if a goes to 0
  R a;
 }    /* D.L. Forkes 1984; E.E. McDonnell 1992 */
-// obsolete #if SY_64
-// obsolete #if SY_WIN32 && !C_NA
-// obsolete I jtilcm(J jt,I a,I b){C er=0;I b1,d,z;
-// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; TYMESVV(1L,&z,&a,&b1); if(er)jt->jerr=EWOV; R    z;}else R 0;
-// obsolete }
-// obsolete #else
-// obsolete I jtilcm(J jt,I a,I b){LD z;I b1,d;
-// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(LD)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
-// obsolete }
-// obsolete #endif
-// obsolete #else
-// obsolete I jtilcm(J jt,I a,I b){D z;I b1,d;
-// obsolete  if(a&&b){RZ(d=igcd(a,b)); b1=b/d; z=a*(D)b1; if(z<IMIN||IMAX<z)jt->jerr=EWOV; R (I)z;}else R 0;
-// obsolete }
-// obsolete #endif
 I jtilcm(J jt,I a,I b){I z;I d;
  if(a&&b){RZ(d=igcd(a,b)); if(0==(z=jtmult(0,a,b/d)))jt->jerr=EWOV; R z;}else R 0;
 }
@@ -384,7 +369,6 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
    }else{
     // d is a power of 2
     k=CTTZ(d);  // k = #zeros below the 1 in d
-// obsolete   k=0; j=1; while(d>j){++k; j<<=1;} d1=d-1;  // should use CTTZ
     DO(wn, x=*--wv; *--zv=x&d1; *--zv=x>>k;)
    }
   }else DO(wn, x=*--wv; u=av; DO(an, d=*--u; *--zv=r=remii(d,x); x=d?(x-r)/d:0;););

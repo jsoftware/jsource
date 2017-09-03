@@ -714,7 +714,6 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // m=length of EOL sequence; *eov=EOL sequence
  if(ieol){m=2; eov[0]=CCR; eov[1]=CLF;}else{m=1; eov[0]=CLF; eov[1]=0;}
  // q=#lines in a 2-cell, c=#chars in a row, n=#2-cells, nq=total # lines (without spacing)
-// obsolete  q=1<r?s[r-2]:1; c=r?s[r-1]:1; RE(n=prod(r-2,s)); RE(nq=mult(n,q));
  // if w is empty the values could overflow.  In that case, just display nothing
  q=1<r?s[r-2]:1; c=r?s[r-1]:1; nq=prod(r-1,s); if(jt->jerr){RESETERR z=str(m+1,eov); CAV(z)[m]=0; R z;}
  // c1=#characters to put out per line, lba=max # lines to put out

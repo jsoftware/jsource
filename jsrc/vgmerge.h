@@ -28,12 +28,11 @@ static void** MERGEFNNAME(CMP comp, I compn, void * * RESTRICT lo, I lon, void *
   // There is an ordered prefix.  See if the whole pair is presorted.
   if(orderedlen==lon){
    // Presorted list.  If the two lists are contiguous, just return their address.  Otherwise copy to be contiguous
-   if(loend!=hi){MCIL(loend,hi,hin);}  // obsolete {DO(hin, *loend++=*hi++;)}
+   if(loend!=hi){MCIL(loend,hi,hin);}
    R lo;  // return contiguous result
   }
   // Partial presort.  Because the presorted part is larger, leave it in place and copy the shorter remnant at the end
   // to the workarea; then change the pointers so we merge the moved remnant onto the end of the presorted fragment
-// obsolete   wk=lo; wkptr+=orderedlen; lo+=orderedlen; lon-=orderedlen; DO(lon, *wkptr++=*lo++;)   // move wkptr&lo to end of block; lon=length of remnant; move remnant to wk; point wk to start of original input
   wk=lo; wkptr+=orderedlen; lo+=orderedlen; lon-=orderedlen;MCIL(wkptr,lo,lon);   // move wkptr&lo to end of block; lon=length of remnant; move remnant to wk; point wk to start of original input
   void **tmp = wkptr; loend=wkptr+lon; wkptr=lo; lo=tmp;   // lo, loend point into workarea; wkptr-> input area
  }
@@ -81,48 +80,20 @@ static void** GRADEFNNAME(CMP comp, I compn, void *(in[]), I n, void *(wk[])){vo
   if(!COMPFN(compn,in[0],in[1])){void *tmp=in[0]; in[0]=in[1]; in[1]=tmp;} R in;
  case 3:
   a=in[0]; b=in[1];c=in[2];  // abc
-#if 0  // obsolete
-  CXCHG(b,c,d);  // abd
-  CXCHG(a,b,c);  // acd
-  CXCHG(c,d,b);  // acb
-  in[0]=a; in[1]=c; in[2]=b; R in;
-#else
   CXCHG2(b,c);
   CXCHG2(a,b);
   CXCHG2(b,c);
   in[0]=a; in[1]=b; in[2]=c; R in;
-#endif
  case 4:
   a=in[0]; b=in[1];c=in[2]; d=in[3]; // abcd
-#if 0  // obsolete
-  CXCHG(a,b,e);   // aecd
-  CXCHG(c,d,b);   // aecb
-  CXCHG(e,b,d);   // aecd
-  CXCHG(a,c,b);   // aebd
-  CXCHG(e,b,c);   // aecd
-  in[0]=a; in[1]=e; in[2]=c; in[3]=d; R in;
-#else
   CXCHG2(a,b);
   CXCHG2(c,d);
   CXCHG2(a,c);
   CXCHG2(b,d);
   CXCHG2(b,c);
   in[0]=a; in[1]=b; in[2]=c; in[3]=d; R in;
-#endif
  case 5:
   a=in[0]; b=in[1];c=in[2]; d=in[3]; e=in[4]; // abcde
-#if 0  // obsolete
-  CXCHG(b,c,f);   // abfde
-  CXCHG(d,e,c);   // abfdc
-  CXCHG(b,d,e);   // abfec
-  CXCHG(a,f,d);   // abdec
-  CXCHG(d,c,f);   // abdef
-  CXCHG(a,e,c);   // abdcf
-  CXCHG(a,b,e);   // aedcf
-  CXCHG(d,c,b);   // aedbf
-  CXCHG(e,d,c);   // aecbf
-  in[0]=a; in[1]=e; in[2]=c; in[3]=(void *)b; in[4]=(void *)f; R in;
-#else
   CXCHG2(b,c);
   CXCHG2(d,e);
   CXCHG2(b,d);
@@ -133,7 +104,6 @@ static void** GRADEFNNAME(CMP comp, I compn, void *(in[]), I n, void *(wk[])){vo
   CXCHG2(c,d);
   CXCHG2(b,c);
   in[0]=a; in[1]=b; in[2]=c; in[3]=(void *)d; in[4]=(void *)e; R in;
-#endif
 
  default:
   // sort the low and high halves, and then merge the results, giving as workarea whatever buffer does not contain lo

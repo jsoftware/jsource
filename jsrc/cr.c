@@ -119,19 +119,6 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
 }
 }
 
-// obsolete #define RCALL   CALL2(f2,ya,yw,fs)
-// obsolete #define RDIRECT (at&DIRECT&&wt&DIRECT)
-// obsolete #define RFLAG   (!(AFLAG(a)&AFNJA+AFSMM+AFREL)&&!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-// obsolete #define RARG    {if(++jj==n)jj=0; \
-// obsolete                  if(!b||jj==0){if(y==ya||ACUC1<AC(ya)){cc = 0;NEWYA;} MOVEYA;}  \
-// obsolete                  if( b||jj==0){if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;} }
-// obsolete // If the use-count in y? has been incremented, it means that y? was incorporated into an indirect
-// obsolete // noun and must not be modified.  In that case, we reallocate it.  This is used to reallocate the
-// obsolete // first cell only.
-// obsolete #define RARG1   {if(y==ya||ACUC1<AC(ya)){RZ(ya=ca(ya)); uu=CAV(ya);}  \
-// obsolete                  if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
-
-
 // General setup for verbs that do not go through jtirs[12].  Some of these are marked as IRS verbs.  General
 // verbs derived from u"n also come through here, via jtrank2.
 // A verb u["n] using this function checks to see whether it has multiple cells; if so,
@@ -203,11 +190,6 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  if(innerrptct==1){innerrptct=innerframect; innerframect=1; state &=~(STATEINNERREPEATW|STATEINNERREPEATA);}  // if only one loop needed, make it the inner, with no repeats
 
 
-// obsolete  // b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
-// obsolete  // mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
-// obsolete  //  from shorter-frame argument
-// obsolete  b=af<=wf; p=b?wf:af; q=b?af:wf; s=b?ws:as; RE(mn=prod(p,s)); RE(n=prod(p-q,s+q));
-// obsolete  ASSERT(!ICMP(as,ws,q),EVLENGTH);  // error if frames are not same as prefix
  // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
  // with the shorter frame.  Whenever we have to copy, we first
  // check to see if the cell-workarea has been incorporated into a result noun; if so, we have to

@@ -176,13 +176,16 @@ A jtcpa(J jt,B b,A w){A*wv,z,*zv;I wd;
 
 static B leafrel(A w){A*v;
  if(BOX&AT(w)){
-  if(AFLAG(w)&AFNJA)R 0;
+  if(AFLAG(w)&(AFNJA|AFNOSMREL))R 0;   // exit fast if we know there's no relative
+   // kludge we could improve this by noting that absence of NOSMREL is decisive if recursive usecount
   if(AFLAG(w)&AFSMM+AFREL)R 1;
   v=AAV(w); DO(AN(w), if(leafrel(v[i]))R 1;);
  }
  R 0;
 }    /* 1 iff a leaf of w contains a relative address */
 
+// if w is non-boxed but in the memory-mapped system, clone it to get it out of the memory-mapped boxed area
+// if boxed, check to see if any leaf has AFSMM or AFREL; if so, clone the whole thing
 F1(jtrca){
  RZ(w);
  if(!(BOX&AT(w)))R AFSMM&AFLAG(w)?ca(w):w;

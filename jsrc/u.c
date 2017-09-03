@@ -81,7 +81,6 @@ B all0(A w){if(!w)R 0; R !memchr(AV(w),C1,AN(w));}
 B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
 
 // Number of atoms in an item.  should check AN and avoid multiply.  bug: must check result of prod() on empty lists
-// obsolete I jtaii(J jt,A w){I m=IC(w); R m&&!(SPARSE&AT(w))?AN(w)/m:prod(AR(w)-1,1+AS(w));}
 I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
 
 // return A-block for b+m*i.n

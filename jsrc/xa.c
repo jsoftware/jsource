@@ -253,3 +253,19 @@ F1(jtunicodex78s){I k;
  jt->unicodex78=(C)k;
  R mtm;
 }
+
+// enable/disable tstack auditing, since some testcases run too long with it enabled
+// bit 0 is set to disable, bit 1 is a one-shot to ask for an audit
+// result is old value
+F1(jtaudittdisab){
+#if MEMAUDIT&2
+ I k,oldval;
+ oldval = jt->audittstackdisabled;  // return value
+ RE(k=i0(w));  // get arg
+ if(k&2){jt->audittstackdisabled=0; audittstack(jt);}  // run once if so requested
+ jt->audittstackdisabled=k;
+ R sc(oldval);
+#else
+ R sc(0);
+#endif
+}

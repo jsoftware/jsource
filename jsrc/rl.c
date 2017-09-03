@@ -146,8 +146,8 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
  n=AN(w);
  if(7<n||1<n&&1<AR(w)){
   // see if we can use a clever encoding
-  d=minus(from(one,t),b=from(zero,t)); // obsolete if(jt->jerr)RESETERR;
-  p=equ(t,plus(b,tymes(d,IX(n)))); // obsolete if(jt->jerr)RESETERR;
+  d=minus(from(one,t),b=from(zero,t));
+  p=equ(t,plus(b,tymes(d,IX(n))));
   if(p){
    if(equ(d,zero))R over(lsh(w),lnum1(b));
    GAT(y,BOX,6,1,0); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;

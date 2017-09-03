@@ -31,12 +31,11 @@ static void* MERGEFNNAME(CMP comp, I compn, I bpi, T * lo, I lon, T * hi, I hin,
   // There is an ordered prefix.  See if the whole pair is presorted.
   if(orderedlen==lon){
    // Presorted list.  If the two lists are contiguous, just return their address.  Otherwise copy to be contiguous
-   if(loend!=hi){MCL(loend,hi,hin*bpi);}  // obsolete {DO(hin, *loend++=*hi++;)}
+   if(loend!=hi){MCL(loend,hi,hin*bpi);}
    R lo;  // return contiguous result
   }
   // Partial presort.  Because the presorted part is larger, leave it in place and copy the shorter remnant at the end
   // to the workarea; then change the pointers so we merge the moved remnant onto the end of the presorted fragment
-// obsolete   wk=lo; wkptr+=orderedlen; lo+=orderedlen; lon-=orderedlen; DO(lon, *wkptr++=*lo++;)   // move wkptr&lo to end of block; lon=length of remnant; move remnant to wk; point wk to start of original input
   wk=lo; wkptr=PTRADD(wkptr,orderedlen); lo=PTRADD(lo,orderedlen); lon-=orderedlen;MCL(wkptr,lo,lon*bpi);   // move wkptr&lo to end of block; lon=length of remnant; move remnant to wk; point wk to start of original input
   T *tmp = wkptr; loend=PTRADD(wkptr,lon); wkptr=lo; lo=tmp;   // lo, loend point into workarea; wkptr-> input area
  }
@@ -101,48 +100,20 @@ static T* GRADEFNNAME(CMP comp, I compn, I n, I bpi, T * RESTRICT in, T * RESTRI
   goto exitde;
  case 3:
   c=wv; d=PTRADD(c,1); e=PTRADD(d,1);
-#if 0  // obsolete
-  CXCHG(b,c,d);  // abd
-  CXCHG(a,b,c);  // acd
-  CXCHG(c,d,b);  // acb
-  in[0]=a; in[1]=c; in[2]=b; R in;
-#else
   CXCHG2(d,e);
   CXCHG2(c,d);
   CXCHG2(d,e);
   goto exitcde;
-#endif
  case 4:
   b=wv; c=PTRADD(b,1); d=PTRADD(c,1); e=PTRADD(d,1);
-#if 0  // obsolete
-  CXCHG(a,b,e);   // aecd
-  CXCHG(c,d,b);   // aecb
-  CXCHG(e,b,d);   // aecd
-  CXCHG(a,c,b);   // aebd
-  CXCHG(e,b,c);   // aecd
-  in[0]=a; in[1]=e; in[2]=c; in[3]=d; R in;
-#else
   CXCHG2(b,c);
   CXCHG2(d,e);
   CXCHG2(b,d);
   CXCHG2(c,e);
   CXCHG2(c,d);
   goto exitbcde;
-#endif
  case 5:
   a=wv; b=PTRADD(a,1); c=PTRADD(b,1); d=PTRADD(c,1); e=PTRADD(d,1);
-#if 0  // obsolete
-  CXCHG(b,c,f);   // abfde
-  CXCHG(d,e,c);   // abfdc
-  CXCHG(b,d,e);   // abfec
-  CXCHG(a,f,d);   // abdec
-  CXCHG(d,c,f);   // abdef
-  CXCHG(a,e,c);   // abdcf
-  CXCHG(a,b,e);   // aedcf
-  CXCHG(d,c,b);   // aedbf
-  CXCHG(e,d,c);   // aecbf
-  in[0]=a; in[1]=e; in[2]=c; in[3]=(T *)b; in[4]=(T *)f; R in;
-#else
   CXCHG2(b,c);
   CXCHG2(d,e);
   CXCHG2(b,d);
@@ -163,7 +134,6 @@ exite:
   MVITEMS(in,e,1);
 case 0:
   R iin;
-#endif
 
  default:
   // sort the low and high halves, and then merge the results, giving as workarea whatever buffer does not contain lo

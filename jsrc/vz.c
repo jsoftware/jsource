@@ -94,7 +94,6 @@ ZF2(jtzrem){D a,b,d;Z q;
  a=u.re*v.re+u.im*v.im;
  b=u.re*v.im-u.im*v.re;
  q.re=a/d; q.im=b/d;
-// obsolete q.re=tfloor(0.5+q.re); q.im=tfloor(0.5+q.im);
  q=zfloor(q);  // do proper complex floor
  R zminus(v,ztymes(u,q));
 }

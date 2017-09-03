@@ -35,54 +35,9 @@
                           in[0]=ui; in[1]=uj; in[2]=uk; in[3]=ul; in[4]=um;}
 
 // Compare and exchange v0 and v1
-// obsolete #define CXCHG(v0,v1,v2) {v2=v0; v2=(void *)((I)v2+(I)v1); v0=!COMPFN(compn,v0,v1)?v1:v0; v2=(void *)((I)v2-(I)v0);}
 // This sequence compiles to move/testb/cmovne/cmovne with no branch & 1 test.  The first move is handled by renaming
 #define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
-#if 0  // obsolete 
-static void jtmsmerge(J jt,I n,I*u,I*v){I m,q,*x,*xx,*y,*yy,*z;int c;
- q=n/2; z=v;
- x=u;   xx=u+q-1;
- y=u+q; yy=u+n-1;
- while(1){
-  c=CALL1(jt->comp,*x,*y);
-  if(0<c){*z++=*y++; if(y>yy){m=z-v; z=u+m; DO(1+xx-x, *z++=*x++;); DO(m, *u++=*v++;); break;}}
-  else   {*z++=*x++; if(x>xx){m=z-v;                                DO(m, *u++=*v++;); break;}}
-}}
-
-
-void jtmsort(J jt,I n,I*u,I*v){I a,b,c,d,q,ui,uj,uk,ul,um;
- switch(n){
-  case 2: 
-   if(VS(0,1))XC(0,1); 
-   break;
-  case 3:
-   if(VS(0,1))XC(0,1);
-   if(VS(1,2))if(VS(0,2))P3(2,0,1) else XC(1,2);
-   break;
-  case 4:
-   if(VS(0,1))XC(0,1);
-   if(VS(2,3))XC(2,3);
-   if(VS(1,3)){XC(0,2); XC(1,3);}
-   if(VS(1,2))if(VS(0,2))P3(2,0,1) else XC(1,2);
-   break;
-  case 5: 
-   if(VS(0,1))XC(0,1);
-   if(VS(2,3))XC(2,3);
-   if(VS(1,3)){XC(0,2); XC(1,3);}
-   if(VS(4,1))if(VS(4,3)){a=0; b=1; c=3; d=4;}else{a=0; b=1; c=4; d=3;}
-   else       if(VS(4,0)){a=0; b=4; c=1; d=3;}else{a=4; b=0; c=1; d=3;}
-   if(VS(2,b)){if(3!=c)if(VS(2,c))P5(a,b,c,2,d) else P5(a,b,2,c,d);}
-   else       {        if(VS(2,a))P5(a,2,b,c,d) else P5(2,a,b,c,d);}
-   break;
-  default:
-   if(5<n){
-    q=n/2;
-    msort(q,  u,  v); 
-    msort(n-q,u+q,v);
-    msmerge(n,u,v);
-}}}
-#else
 
 // Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
 // On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
@@ -151,7 +106,6 @@ void jtmsort(J jt, I n, void **zv, void **xv){
  // Convert the result to the main result area, if it's not already there
  if(sortres!=zv)DQ(n, *zv++=*sortres++;);
 }
-#endif
 
 
 // m: #cells in w (# sorts to do)   n: #items in a cell of w   ai: #atoms in an item of a cell of w
@@ -175,22 +129,11 @@ static struct {
 
 
 static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
- t=AT(w); /* obsolete ck=c*bp(t); jt->compk=ck/n; d = c/n */
+ t=AT(w);
  jt->compk=ai*bp(t); ck=jt->compk*n;
  jt->compn=!(t&CMPX)?ai:(ai<<1); jt->compv=CAV(w); jt->compw=ARELATIVE(w)?w:0;
  jt->comp=sortroutines[CTTZ(t)][jt->compgt==1].comproutine; jt->compusejt = !!(t&BOX+XNUM+RAT);
  void **(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
-// obsolete  switch(CTTZ(t)){
-// obsolete   case BOXX:  jt->comp=ARELATIVE(w)?compr:compa; break;
-// obsolete   case C2TX:  jt->comp=compu;                    break;
-// obsolete   case C4TX:  jt->comp=c==n?compt1:compt;        break;
-// obsolete   case INTX:  jt->comp=c==n?compi1:compi;        break;
-// obsolete   case FLX:   jt->comp=c==n?compd1:compd;        break;
-// obsolete   case CMPXX: jt->comp=compd; jt->compn=2*d;     break;
-// obsolete   case XNUMX: jt->comp=compx;                    break;
-// obsolete   case RATX:  jt->comp=compq;                    break;
-// obsolete   default:   jt->comp=compc;
-// obsolete  }
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
  DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->compv+=ck; zv+=n;);
  R !jt->jerr;
@@ -236,8 +179,6 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
    // Read each data-value, and move the value (data or index) to the indicated output position
    if(flags&4){
     // sort mode. copy the data
-// obsolete     if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
-// obsolete     else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
     if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 4 bytes
     else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, I vv=*vs; I writeval=ct00; ct00-= vv; writeval=(vv+=1)?ctff:writeval; ctff+=vv; zvc[writeval]=xvc[i]; vs+=m;)}  // result and intermediates are 8 bytes
    }else{
@@ -259,28 +200,16 @@ I grcol4(I d,I c,UI4*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
   I tinc = (flags&2)-1;  // +1 if up, -1 if down
   UI4 *t=yv+c+(tct&((tinc>>(BW-1))|-split))+(tinc>>(BW-1));  // starting position: based on up/split: 00: +d-1  01: +d/2-1  10: +0  11: +d/2
   UI4 s=0; do{DP(tct, k=*t; *t=s; s+=k; t+=tinc;) t-=tinc*d;}while(--split>=0);  // 1 iteration if not split, 2 if split
-// obsolete  switch(up+2*split){
-// obsolete   case 0: t=yv+c+d;     DO(d,   --t; if(k=*t){*t=s; s+=k;}); break;
-// obsolete   case 1: t=yv+c-1;     DO(d,   ++t; if(k=*t){*t=s; s+=k;}); break;
-// obsolete   case 2: t=yv+c+d/2;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); 
-// obsolete           t=yv+c+d  ;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); break;
-// obsolete   case 3: t=yv+c+d/2-1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;}); 
-// obsolete           t=yv+c    -1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;});
-// obsolete  }
   // create the output.  Each input produces an output in the position indicated by yv.
   // If sort is set, we move the value; otherwise move the index.
   // First time through, when xv==0, we use an implied null index vector
   v=u;
   if(flags&4){
    // sort mode. copy the data
-// obsolete   if(2==m)                       DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
-// obsolete   else    {zz=(D*)zv; xx=(D*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
    if(2==m) {C4 *zvc=(C4*)zv; C4 *xvc=(C4*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 4 bytes
    else {D *zvc=(D*)zv; D *xvc=(D*)xv+n; DP(n, zvc[yv[*v]++]=xvc[i]; v+=m;)}  // result and intermediates are 8 bytes
   }else{
    // copy the index, using xv or implied index vector
-// obsolete   if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
-// obsolete   else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
    if(!xv) {DO(n, zv[yv[*v]++]= i; v+=m;)}
    else{xv+=n; DP(n, I buckno=(UI4)v[m*xv[i]]; I buckval=yv[buckno]; zv[buckval]=xv[i]; yv[buckno]=(UI4)(buckval+=1);)}
   }
@@ -327,34 +256,10 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 }
 
 
-#if 0  // obsolete
-// should use integer col
-void grcolu(I d,I c,UI*yv,I n,UI*xv,UI*zv,const I m,US*u,int up,int split,int sort){
-     C4*xx,*zz;UI k,s,*t;US*v;
- s=0; memset(c+yv,C0,d*SZI); 
- v=u; 
- DO(n, ++yv[*v]; v+=m;);
- switch(up+2*split){
-  case 0: t=yv+c+d;     DO(d,   --t; if(k=*t){*t=s; s+=k;}); break;
-  case 1: t=yv+c-1;     DO(d,   ++t; if(k=*t){*t=s; s+=k;}); break;
-  case 2: t=yv+c+d/2;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); 
-          t=yv+c+d  ;   DO(d/2, --t; if(k=*t){*t=s; s+=k;}); break;
-  case 3: t=yv+c+d/2-1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;}); 
-          t=yv+c    -1; DO(d/2, ++t; if(k=*t){*t=s; s+=k;});
- }
- v=u;
- if(sort){
-  if(sizeof(I)==sizeof(C4))      DO(n, zv[yv[*v        ]++]=xv[i]; v+=m;)
-  else  {zz=(C4*)zv; xx=(C4*)xv; DO(n, zz[yv[*v        ]++]=xx[i]; v+=m;);}
- }else if(!xv)                   DO(n, zv[yv[*v        ]++]=   i ; v+=m;)
- else                            DO(n, zv[yv[v[m*xv[i]]]++]=xv[i];      );
-}
-#endif
 
 // grade doubles
 static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
   // if not large and 1 atom per key, go do general grade
-// obsolete if(!(c==n&&n>65536/3.5))R grx(m,c,n,w,zv);
  if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
  // grade float by radix sort of halfwords.  Save some control parameters
  wv=DAV(w);
@@ -362,11 +267,6 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);  // allocate a ping-pong buffer for the result
-// obsolete #if C_LE
-// obsolete  d= 1; e=0; msbx=3;
-// obsolete #else
-// obsolete  d=-1; e=3; msbx=0;
-// obsolete #endif
  for(i=0;i<m;++i){I colflags;  // loop over each cell of input
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
   // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
@@ -403,7 +303,6 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
     ICPY(zv,xv+nneg,n-nneg-npos0); //  /: copy the positives to the beginning of result area
     u=zv+n-nneg+nneg0;     v=xv+nneg-nneg0;
    }
-// obsolete   {ICPY(  zv,nneg+xv,n-nneg); u=zv+n-nneg; v=nneg+xv;}  // \: copy the nonnegatives to the beginning of the result area
 // BUG: should copy down in other order to avoid pointing past valid region.  As written will run over into the shape... but that will always be positive, at least
    // copy in the negatives, reversing the order.  Here u->place to put negatives, v->last+1 negative
    // as we copy, we have to keep equal keys in the original order, i. e. don't reverse them.
@@ -429,14 +328,6 @@ static GF(jtgri1){A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  // allocate ping-pong for output area
  GATV(x,INT,n,1,0); xv=AV(x);
-// obsolete e=SY_64?3:1;  // number-1 of 16-bit sections to process
-// obsolete #if C_LE
-// obsolete  d= 1;   // direction of processing, from LSB to MSB
-// obsolete  e=0;  // offset to LSB
-// obsolete #else
-// obsolete  d=-1;
-// obsolete  e=SY_64?3:1;  // offset to LSB
-// obsolete #endif
  // for each sort...
  for(i=0;i<m;++i){I colflags;
   // process each 16-bit section of input
@@ -458,83 +349,15 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
-// obsolete #if C_LE
-// obsolete  d= 1; e=0;
-// obsolete #else
-// obsolete  d=-1; e=1;
-// obsolete #endif
  for(i=0;i<m;++i){I colflags;
-// obsolete   u=e+(US*)wv; 
-// obsolete   v=wv; k=0; b=0;
-// obsolete   g=b?xv:zv; h=b?zv:xv;
   u=(US*)wv+INTLSBWDX;   // point to LSB
   colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,jt->compgt+1);  // move 'up' to bit 1
   grcol(65536,0L,yv,n,xv,zv,sizeof(C4)/sizeof(US),u+=WDINC,colflags);
-// obsolete   grcolu(p, 0L, yv,n,0L,h,sizeof(C4)/sizeof(US),u+0*d,k==n?!up:up,0,0);
-// obsolete   grcolu(p, 0L, yv,n, h,g,sizeof(C4)/sizeof(US),u+1*d,k==n?!up:up,0,0);
-// obsolete   if(b){C4 d;I j,m,*u,*v,*vv;
-// obsolete    if(up){ICPY(k+zv,  xv,n-k); u=zv;     v=n+xv;}
-// obsolete    else  {ICPY(  zv,k+xv,n-k); u=zv+n-k; v=k+xv;}
-// obsolete    j=0; d=wv[*(v-1)];
-// obsolete    DO(1+k, --v; if(d!=wv[*v]){vv=1+v; m=i-j; DO(m, *u++=*vv++;); j=i; d=wv[*v];});
-// obsolete   }
   wv+=c; zv+=n;
  }
  R 1;
 }    /* grade"r w on c4t w where c==n */
 
-#if 0  // obsolete
-// returns *base = smallest value, *top = #values (1..2 is 2 values)
-// returns 0 for *top if range is not representable in an integer
-// returns 2 if n=0 (??)
-// superseded by condrange
-void irange(I n,I*v,I*base,I*top){I i,p,q;
-#if 0  // obsolete
- I d,m=n/2,x,y;
- if(n>m+m)p=q=*v++; else if(n){q=IMAX; p=IMIN;}else p=q=0;
- for(i=0;i<m;++i){
-  x=*v++; y=*v++; 
-  if(x<y){if(x<q)q=x; if(p<y)p=y;}
-  else   {if(y<q)q=y; if(p<x)p=x;}
- }
- *base=q; d=p-q; *top=0>d||d==IMAX?0:1+d;
-#else
- q=IMAX; p=IMIN;
- for(i=0;i<n;++i){I x=*v++;
-  if(x>p)p=x; if(x<q)q=x; 
- }
- *base=q; *top=MAX(1+p-q,0);
-#endif
-}
-
-// copy of irange for sizeof(C4)==sizeof(int)
-void c4range(I n,C4*v,C4*base,I*top){I i;C4 p,q;
-#if 0  // obsolete
- I d,i,m=n/2;C4 p,q,x,y;
- if(n>m+m)p=q=*v++; else if(n){q=C4MAX; p=C4MIN;}else p=q=0;
- for(i=0;i<m;++i){
-  x=*v++; y=*v++; 
-  if(x<y){if(x<q)q=x; if(p<y)p=y;}
-  else   {if(y<q)q=y; if(p<x)p=x;}
- }
- *base=q; d=(I)p-(I)q; *top=0>d||d>=IMAX?0:1+d;
-#else
- q=C4MAX; p=C4MIN;
- for(i=0;i<n;++i){C4 x=*v++;
-  if(x>p)p=x; if(x<q)q=x; 
- }
- *base=q; *top=MAX(1+(I)p-(I)q,0);
-#endif
-}
-
-// obsolete F1(jtmaxmin){I base,top;
-// obsolete  RZ(w);
-// obsolete  ASSERT(INT&AT(w),EVDOMAIN);
-// obsolete  irange(AN(w),AV(w),&base,&top);
-// obsolete  R v2(base,base+top-1);
-// obsolete }
-// obsolete 
-#endif
 
 static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  wv=AV(w);
@@ -591,15 +414,9 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  CR rng;
  if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
-// obsolete  UI4 lgn; CTLZI(n,lgn);
-// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
-// obsolete  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);  // for perf testing, change maxrange to IMAX
-// obsolete irange(AN(w),wv,&q,&p); 
  // tweak this line to select path for timing
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
-// obsolete if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gri1(m,c,n,w,zv):grx(m,c,n,w,zv);
-// obsolete if(0<q&&q<k-p){p+=q; q=0;}
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
@@ -614,7 +431,6 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
   memset(yvb,C0,rng.range*sizeof(UI4));  // clear the table
   v=wv+ai-1;   // start in the lowest-significance column
   // create frequency count for each value
-// obsolete   if(rng.min) DO(n, ++yv[*v-rng.min]; v+=d;) 
   DQ(n, ++yv[*v]; v+=ai;);
   // create +/\ of the counts (+/\. for grade down)
   if(up){UI4 k,s=0,*yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
@@ -622,7 +438,6 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
   // refetch each input and take its position from the +/\ list.  After taking a position, add 1 so the next identical value gets the next position
   // store the index of the fetched input value into the indicated position
   v=wv+ai-1;  // rescan lowest-significance column
-// obsolete   if(rng.min) DO(n, zv[yv[*v-rng.min]++]=i; v+=d;) else
   DO(n, zv[yv[*v]++]=i; v+=ai;);
   v=wv+ai-1;
   // if items contain multiple atoms, process the remanining atoms similarly, from lowest to highest significance
@@ -633,17 +448,12 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
    // clear the area
    memset(yvb,C0,rng.range*sizeof(UI4));
    // *v is the base of the vector to process, which has stride d.  Process the elements in the order given by the previous grade.
-// obsolete    if(rng.min) DO(n, ++yv[*(v+d*g[i])-rng.min];) 
-// obsolete    else  DO(n, ++yv[*(v+d*g[i])  ];);
    {I *vv=v; DQ(n, ++yv[*vv]; vv+=ai;); }  // scan all the values
    // create running sum
-// obsolete    if(up)DO(rng.range,      if(k=yv[i]){yv[i]=s; s+=k;}) 
-// obsolete    else  DO(rng.range, --j; if(k=yv[j]){yv[j]=s; s+=k;});
    if(up){UI4 k, s=0, *yvi = yvb+rng.range; DP(rng.range, k=yvi[i]; yvi[i]=s; s+=k;) }
    else {UI4 k,s=0; DQ(rng.range, k=yvb[i]; yvb[i]=s; s+=k;); }
    // process the input atoms in the order of the grade so far, and find the result position as above.  Move the original index
    // for the item into the result
-// obsolete    if(rng.min) DO(n, h[yv[*(v+d*g[i])-rng.min]++]=g[i];) else
    {I *gg=xv+n; DP(n, zv[yv[v[ai*gg[i]]]++]=gg[i];);}
   }
   // At this point zv always points to the actual result area, so we can increment zv for the next run
@@ -653,41 +463,6 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 }    /* grade"r w on small-range integers w */
 
 
-#if 0  // obsolete
-static GF(jtgru){A x,y;B b,up;I d,e,i,j,k,p,ps;C4 s,*v,q,*wv;UI*g,*h,*xv,*yv;
- wv=C4AV(w); d=c/n; k=4*n;
- c4range(AN(w),wv,&q,&p); 
- if(!p||k<p||(0.69*d*(p+2*n))>n*log((D)n))R c==n&&n>65536/1.5?gru1(m,c,n,w,zv):grx(m,c,n,w,zv);
- if(0<q&&(I)q<k-p){p+=q; q=0;}
- GATV(y,INT,p,1,0); yv=(UI*)AV(y); ps=p*SZI; up=1==jt->compgt;
- if(1<d){GATV(x,INT,n,1,0); xv=(UI*)AV(x);}
- for(i=0;i<m;++i){C4 k;
-  s=0; j=p; memset(yv,C0,ps);
-  v=wv+d-1;
-  if(q) DO(n, ++yv[*v-q]; v+=d;) 
-  else  DO(n, ++yv[*v  ]; v+=d;);
-  if(up)DO(p,      if(k=(C4)yv[i]){yv[i]=s; s+=k;}) 
-  else  DO(p, --j; if(k=(C4)yv[j]){yv[j]=s; s+=k;});
-  v=wv+d-1;
-  if(q) DO(n, zv[yv[*v-q]++]=i; v+=d;) 
-  else  DO(n, zv[yv[*v  ]++]=i; v+=d;);
-  v=wv+d-1;
-  for(e=d-2,b=0;0<=e;--e){
-   --v;
-   if(b){g=xv; h=(UI*)zv; b=0;}else{g=(UI*)zv; h=xv; b=1;}
-   s=0; j=p; memset(yv,C0,ps);
-   if(q) DO(n, ++yv[*(v+d*g[i])-q];) 
-   else  DO(n, ++yv[*(v+d*g[i])  ];);
-   if(up)DO(p,      if(k=(C4)yv[i]){yv[i]=s; s+=k;}) 
-   else  DO(p, --j; if(k=(C4)yv[j]){yv[j]=s; s+=k;});
-   if(q) DO(n, h[yv[*(v+d*g[i])-q]++]=g[i];) 
-   else  DO(n, h[yv[*(v+d*g[i])  ]++]=g[i];);
-  }
-  if(b)DO(n, zv[i]=xv[i];);
-  wv+=c; zv+=n;
- }
- R 1;
-#else
 static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  wv=C4AV(w);
  CR rng;
@@ -719,7 +494,6 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
   wv+=c; zv+=n;
  }
  R 1;
-#endif
 }    /* grade"r w on small-range c4t w */
 
 
@@ -744,7 +518,6 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  }
 
 static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
-// obsolete  if(ai>4*log((D)n))R grx(m,ai,ai,n,w,zv); 
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
  q=ai/4; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
@@ -759,8 +532,6 @@ static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
 }    /* grade"r w on boolean w, works 4 columns at a time (d%4 guaranteed to be 0)*/
 
 static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
-// obsolete  d=C2T&AT(w)?2*c/n:c/n;
-// obsolete  if(ai>log((D)n))R grx(m,ai,ai,n,w,zv);
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
@@ -782,7 +553,7 @@ static GF(jtgrs){R gri(m,ai,n,sborder(w),zv);}
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
  jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w); jt->compusejt=1;
- GATV(z,INT,n,1,0); zv=AV(z); /* obsolete DO(n, zv[i]=i;); */
+ GATV(z,INT,n,1,0); zv=AV(z);
  GATV(x,INT,n,1,0); xv=AV(x);
  msortitems(jmsort,n,(void**)zv,(void**)xv);
  EPILOG(z);
@@ -795,7 +566,6 @@ F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /*                                                                      */
 /************************************************************************/
 
-// obsolete #define GF(f)         B f(J jt,I m,I c,I n,A w,I*zv)
 
 /* m  - # cells (# individual grades to do) */
 /* c  - # atoms in a cell                   */
@@ -814,8 +584,7 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
  n=r?s[f]:1; if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
-// obsolete  m=prod(f,s); c=m?AN(w)/m:prod(r,f+s); n=r?s[f]:1; RE(zn=mult(m,n));
-  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; /* obsolete PROD(c,r,f+s);  */zn=m*n;
+  PROD(m,f,s); PROD(ai,r-1,f+s+1); c=ai*n; zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   RE(zn=mult(prod(f,s),n));
@@ -826,17 +595,6 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  if(!wn||1>=n)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
  RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jt,m,ai,n,w,AV(z)))
-// obsolete  switch(CTTZ(t)) {
-// obsolete  case B01X:
-// obsolete // obsolete   if(t&B01&&0==(c/n)%4)RZ(grb(m,c,n,w,AV(z))) break;  // Booleans, multiples of 4 bytes
-// obsolete   if(0==(ai&3)){RZ(grb(m,c,n,w,AV(z))) break;}  // Booleans, multiples of 4 bytes, otherwise fall through to...
-// obsolete  case LITX: case C2T: RZ(grc(m,c,n,w,AV(z))) break;  // other 1- or 2-byte types
-// obsolete  case SBTX: RZ(grs(m,c,n,w,AV(z))) break;   // symbols
-// obsolete  case FLX: RZ(grd(m,c,n,w,AV(z))) break;  // floats, any shape
-// obsolete  case INTX: RZ(gri(m,c,n,w,AV(z))) break;  // integer, any shape
-// obsolete  case C4TX: RZ(gru(m,c,n,w,AV(z))) break;  // 4-byte characters
-// obsolete  default: RZ(grx(m,c,n,w,AV(z))); break;   // anything else
-// obsolete  }
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 

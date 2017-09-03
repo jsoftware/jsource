@@ -172,8 +172,6 @@ static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+
  ++a0x;}
 while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
       }
-// obsolete       // Because of loop unrolling, we used to fetch and multiply one extra outer product.  Make sure it is harmless, to avoid NaN errors
-// obsolete       *cvx = _mm256_set_pd(0.0,0.0,0.0,0.0);  // obsolete?
      }
     }
 #endif
@@ -297,17 +295,6 @@ while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
        z11+=a4base1[0]*c4base[1];
        z12+=a4base1[0]*c4base[2];
        z13+=a4base1[0]*c4base[3];
-#if 0  // obsolete
-       D t0,t1,a0,a1,c0,c1,c2,c3;
-       a0=a4base0[0]; t0=c4base[0]; 
-       a1=a4base1[0]; c0=c4base[0];
-       t0 *= a0; c0 *= a1;
-       t1=c4base[1]; c1=c4base[1]; t1 *= a0; c1 *= a1;
-       z00 += t0; t0 = c4base[2]; c2 = c4base[2]; c3 = c4base[3];
-       z10 += c0; z01 += t1; z11 += c1;
-       t0 *= a0; c2 *= a1; a0 *= c3; c3 *= a1;
-       z02 += t0; z12 += c2; z03 += a0; z13 += c3;
-#endif
        a4base0++,a4base1++;
        c4base+=CACHEWIDTH;
       }while(--a4rem>0);
@@ -376,7 +363,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // p is number of inner-product muladds (length of a row of a)
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
- RZ(z=ipprep(a,w,t&B01?INT:t&INT/*obsolete&&!SY_64*/?FL:t,&m,&n,&p));
+ RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));
  if(!p){memset(AV(z),C0,AN(z)*bp(AT(z))); R z;}
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
@@ -400,7 +387,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  case INTX:
   {
 #if SY_64
-// obsolete     u=AV(a); v=wv=AV(w); zv=AV(z);
  /*
    for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; er=asmtymes1v(n,x,c,v);    if(er)break; v+=n;
@@ -408,7 +394,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
  */
 #if C_NA   // non-assembler version
-#if 1
    // INT product is problematic, because it is used for many internal purposes, such as #. and indexing of { and m} .  For these uses,
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
@@ -450,13 +435,6 @@ oflo2:
     for(zv=DAV(z), i=AN(z); i; --i, ++zv)if(*zv>1e13 || *zv<-1e13)break;   // see if any value is out of range
     if(!i){AT(z)=INT;for(zv=DAV(z), i=AN(z); i; --i, ++zv)*(I*)zv=(I)*zv;}  // if not, convert all to integer
    }
-#else  // obsolete - this required the er loop to work
-   I er=0;I c,* RESTRICT u,* RESTRICT v,* RESTRICT wv,* RESTRICT x,* RESTRICT zv;
-    for(i=0;i<m;++i,v=wv,zv+=n){DPMULDECLS I o,oc,lp;
-     x=zv; c=*u++; DQ(n, DPMUL(c,*v, x, ++er); ++v; ++x;)
-    DQ(p1, x=zv; c=*u++; DQ(n, DPMULD(c,*v, lp, ++er;) o=*x; oc=(~o)^lp; lp+=o; *x++=lp; o^=lp; ++v; if(XANDY(oc,o)<0)++er;) if(er)break;)  // oflo if signs equal, and different from result sign
-    }
-#endif
 #else  // !C_NA
     for(i=0;i<m;++i,v=wv,zv+=n){
      x=zv; c=*u++; TYMES1V(n,x,c,v); if(er)break; v+=n;

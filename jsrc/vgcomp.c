@@ -7,29 +7,6 @@
 #include "vg.h"
 
 // return 1 if a before b, 0 otherwise
-#if 0  // obsolete 
-CF(compi){COMPLOOP (I, jt->compn);          R a>b?1:-1;}
-CF(compc){COMPLOOP (UC,jt->compn);          R a>b?1:-1;}
-CF(compu){COMPLOOP (US,jt->compn);          R a>b?1:-1;}
-CF(compt){COMPLOOP (C4,jt->compn);          R a>b?1:-1;}
-CF(compd){COMPLOOP (D, jt->compn);          R a>b?1:-1;}
-CF(compa){COMPLOOPF(A, jt->compn,compare ); R a>b?1:-1;}
-CF(compr){COMPLOOPR(A1,jt->compn,compare ); R a>b?1:-1;}
-CF(compx){COMPLOOPG(X, jt->compn,xcompare); R a>b?1:-1;}
-CF(compq){COMPLOOPG(Q, jt->compn,QCOMP   ); R a>b?1:-1;}
-
-CF(compt1){C4 p=*(a+(C4*)jt->compv),q=*(b+(C4*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
-CF(compi1){I  p=*(a+ (I*)jt->compv),q=*(b+ (I*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
-CF(compd1){D  p=*(a+ (D*)jt->compv),q=*(b+ (D*)jt->compv); R p>q?jt->compgt:p<q?jt->complt:a>b?1:-1;}
-
-// should make sure this is ported
-CF(compp){COMPDCLP(I);I*cv=jt->compsyv,xi,yi;
- DO(jt->compn, xi=x[cv[i]]; yi=y[cv[i]]; if(xi>yi)R 1; else if(xi<yi)R -1;);
- R a>b?1:-1;
-}
-
-
-#else
 // inlinable functions are moved to vg.c
 // functions differing between merge & sort are moved to those modules
 B compcu(I n, UC *a, UC *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
@@ -39,20 +16,11 @@ B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while
 B comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(*a,jt->compw),(A)AABS(*b,jt->compw)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
-// obsolete I comppu(I n, D *a, D *b){n<<=1; do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-// obsolete I comppd(I n, D *a, D *b){n<<=1; do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqd(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-// obsolete I compi1u(I n, I *a, I *b){R (*a<*b)|((*a==*b)&(a<b));}
-// obsolete I compi1d(I n, I *a, I *b){R (*a>*b)|((*a==*b)&(a<b));}
-// obsolete I compd1u(I n, D *a, D *b){R (*a<*b)|((*a==*b)&(a<b));}
-// obsolete I compd1d(I n, D *a, D *b){R (*a>*b)|((*a==*b)&(a<b));}
-// obsolete I compt1u(I n, C4 *a, C4 *b){R (*a<*b)|((*a==*b)&(a<b));}
-// obsolete I compt1d(I n, C4 *a, C4 *b){R (*a>*b)|((*a==*b)&(a<b));}
 B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, if(a[cv[i]]!=b[cv[i]])R a[cv[i]]<b[cv[i]];); R a<b;}
-#endif
 
 #define CF(f)            int f(J jt,I a,I b)
 

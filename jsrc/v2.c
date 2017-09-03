@@ -141,8 +141,6 @@ F1(jtprime){PROLOG(0061);A z;B b=1;I n,t;
   // if the maximum in the argument is <= PMAX, call prime1.  Force minimum of interval to <=0
   // so that full range compares against PMAX
   if(condrange(AV(w),n,0,IMIN,PMAX).range){b=0; RZ(z=prime1(w));}
- // obsolete irange(n,AV(w),&p,&q);
- // obsolete if(0<q&&PMAX>=p+q-1){b=0; RZ(z=prime1(w));}
  }
  if(b)RZ(z=prime1d(FL&AT(w)?w:cvt(FL,w)));
  if(t&XNUM+RAT)RZ(z=cvt(XNUM,z));

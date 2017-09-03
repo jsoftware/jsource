@@ -308,7 +308,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define IPHOFFSET       0x2000              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
 #define IPHICO          (IPHOFFSET+IICO)
-// obsolete #define IPHLESS         34
 #define IPHEPS          (IPHOFFSET+IEPS)
 #define IPHI0EPS        (IPHOFFSET+II0EPS)
 #define IPHI1EPS        (IPHOFFSET+II1EPS)
@@ -427,6 +426,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
 #define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)
+// Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
+// This also guarantees that z has recursive usecount whenever x does
+#define INSTALLBOX(x,xv,k,z) if(AFLAG(x)&RECURSIBLE)ra(z); xv[k]=z
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
@@ -554,6 +556,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define BS10    0x0100
 #define BS11    0x0101
 #endif
+
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free
+ // 2 will detect double-frees before they happen, at the time of the erroneous tpush
+
+
+#define CACHELINESIZE 64  // size of processor cache line, in case we align to it
+
 
 
 #include "ja.h" 
@@ -710,14 +721,6 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
  feclearexcept(FE_ALL_EXCEPT); return r;
 }
 #endif
-
-// Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
-                     // 16=audit freelist at every alloc/free
- // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-
-
-#define CACHELINESIZE 64  // size of processor cache line, in case we align to it
 
 // Define integer multiply, *z=x*y but do something else if integer overflow.
 // Depending on the compiler, the overflowed result may or may not have been stored

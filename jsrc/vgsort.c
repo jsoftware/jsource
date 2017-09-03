@@ -19,12 +19,6 @@ static __forceinline B compiu(I n, I *a, I *b){COMPGRADE(I,<)}
 static __forceinline B compid(I n, I *a, I *b){COMPGRADE(I,>)}
 static __forceinline B compdu(I n, D *a, D *b){COMPGRADE(D,<)}
 static __forceinline B compdd(I n, D *a, D *b){COMPGRADE(D,>)}
-// obsolete static B compcd(I n, UC *a, UC *b){COMPGRADE(UC,>)}
-// obsolete static B compcu(I n, UC *a, UC *b){COMPGRADE(UC,<)}
-// obsolete static B compud(I n, US *a, US *b){COMPGRADE(US,>)}
-// obsolete static B compuu(I n, US *a, US *b){COMPGRADE(US,<)}
-// obsolete static B comptd(I n, C4 *a, C4 *b){COMPGRADE(C4,>)}
-// obsolete static B comptu(I n, C4 *a, C4 *b){COMPGRADE(C4,<)}
 
 // General sort, with comparisons by function call, but may do extra comparisons to avoid mispredicted branches
 #define GRADEFNNAME jmsort
@@ -188,41 +182,12 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
 
 static SF(jtsorti1);
 
-#if 0 // obsolete
-static SF(jtsorti){A y,z;B up;D p1;I i,j,p,ps,q,s,*wv,*yv,*zv;
- wv=AV(w);
- irange(AN(w),wv,&q,&p); p1=(D)p;
- if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
- if(0<q&&p1+q<4*n){p+=q; q=0;}
- GATV(y,INT,p,1,0); yv=AV(y); ps=p*SZI; up=1==jt->compgt;
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
- memset(yv,C0,ps);
- for(i=0;i<m;++i){
-  if(q)DO(n, ++yv[*wv++-q];) 
-  else DO(n, ++yv[*wv++  ];);
-  switch(2*up+(1&&q)){
-   case 0: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
-   case 1: j=p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
-   case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
-   case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
- }}
- R z;
-}    /* w grade"1 w on small-range integers */
-#else
 static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  wv=AV(w);
  // figure out whether we should do small-range processing.  Comments in vg.c
  CR rng = condrange(wv,AN(w),IMAX,IMIN,n<<(n>(L2CACHESIZE/SZI)?2:4));
  // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
- if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
-// obsolete  // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
-// obsolete  // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
-// obsolete  // approximate lg(n) with bit count.  And always use small-range if range is < 256
-// obsolete  UI4 lgn; CTLZI(n,lgn);
-// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
-// obsolete  CR rng = condrange(wv,AN(w),IMAX,IMIN,maxrange);
-// obsolete  // if range too large (comes back as 0, ='invalid') use general sort
-// obsolete  if(!rng.range)R 3000<n?sorti1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
  // allocate area for the data, and result area
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
@@ -239,7 +204,6 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  }
  R z;
 }    /* w grade"1 w on small-range integers */
-#endif
 
 
 // We are known to have 1 atom per item
@@ -250,13 +214,6 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
-// obsolete  e=SY_64?3:1;
-// obsolete #if C_LE
-// obsolete   d= 1; 
-// obsolete #else
-// obsolete   d=-1;
-// obsolete #endif
-// obsolete  q=e*(-1==d);
  for(i=0;i<m;++i){I colflags;
   colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+(jt->compgt+1));  // 'sort', and move 'up' to bit 1
 #if SY_64
@@ -273,49 +230,11 @@ static SF(jtsortu1);
 
 // see jtsorti above
 static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
-#if 0  // obsolete 
-   A y,z;I i; UI4 s,*yv;C4 j,*wv,*zv; wv=C4AV(w);
- // figure out whether we should do small-range processing
- // Calculate the largest range we can abide.  The cost of a sort is about n*lg(n)*4 cycles; the cost of small-range indexing is
- // range*4.5 (.5 to clear, 2 to read) + n*6 (4 to increment, 2 to write).  So range can be as high as n*lg(n)*4/4.5 - n*6/4.5
- // approximate lg(n) with bit count.  And always use small-range if range is < 256
- UI4 lgn; CTLZI(n,lgn);
- I maxrange = n<64?256:(I)((n*lgn)*(4/4.5) - n*(6/4.5));
-// obsolete  c4range(AN(w),wv,&q,&p); p1=(D)p;
-// obsolete  if(!p||256<p&&0.69*(p1+2*n)>n*log((D)n))R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
- CR rng = condrange4(wv,AN(w),IMAX,IMIN,maxrange);
- // if range too large (comes back as 0, ='invalid') use general sort
- if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
-// obsolete  if(0<q&&p1+q<4*n){p+=q; q=0;}
- // allocate area for the data, and result area
- GATV(y,C4T,rng.range,1,0); yv=C4AV(y);  // yv->totals area
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
- // clear all totals to 0, then bias address of area so the data fits
- memset(yv,C0,rng.range*SZI); yv-=rng.min;
- for(i=0;i<m;++i){  // for each list...
-// obsolete  if(q)DO(n, ++yv[*wv++-q];) else
-  DO(n, ++yv[*wv++  ];);  // increment total for each input atom
-// obsolete   switch(2*up+(1&&q)){
-// obsolete    case 0: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); --j;); break;
-// obsolete    case 1: j=(C4)p-1; DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); --j;); break;
-// obsolete    case 2: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j  ;); ++j;); break;
-// obsolete    case 3: j=0;   DO(p, s=yv[j]; yv[j]=0; DO(s, *zv++=j+q;); ++j;); break;
-// obsolete   }
-  // run through the totals, copying in the requisite # repetitions of each value
-  if(jt->compgt==1){ j=(C4)rng.min; DQ(rng.range, s=yv[j]; yv[j]=0; DQ(s, *zv++=j;); ++j;);}
-  else{j=(C4)(rng.min+rng.range); DQ(rng.range, --j; s=yv[j]; yv[j]=0; DQ(s, *zv++=j  ;););}
- }
- R z;
-#else
  wv=C4AV(w);
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
- if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete irs2(gr1(w),w,0L,1L,1L,jtfrom);
-// obsolete  UI4 lgn; CTLZI(n,lgn);
-// obsolete  I maxrange = n<64?256:(I)((lgn*4-6)*((D)n*(D)n/(4.5*(D)c)));
-// obsolete  CR rng = condrange4(wv,AN(w),-1,0,maxrange);
-// obsolete  if(!rng.range)R 3000<n?sortu1(m,n,n,w):irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
  GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){
@@ -325,7 +244,6 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
  }
  R z;
-#endif
 }    /* w grade"1 w on small-range literal4 */
 
 // We are known to have 1 atom per item
@@ -336,23 +254,9 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,C4T,n,1,0); xu=C4AV(x);
-// obsolete #if C_LE
-// obsolete  d= 1; e=0;
-// obsolete #else
-// obsolete  d=-1; e=1;
-// obsolete #endif
  for(i=0;i<m;++i){I colflags;
-// obsolete   k=0; b=0;
-// obsolete   g=b?xu:zu; h=b?zu:xu;
-// obsolete   grcolu(p, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),e+0*d+(US*)wv,k==n?!up:up,0,1);
-// obsolete   grcolu(p, 0L, yv,n,(UI*)h, (UI*)g,sizeof(C4)/sizeof(US),e+1*d+(US*)h ,k==n?!up:up,0,1);
   colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+(jt->compgt+1));  // 'sort' + 'up' moved to bit 1
   grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
-// obsolete   if(b){
-// obsolete    g=zu;
-// obsolete    if(up){h=n+xu; DO(k,   *g++=*--h;); h=  xu; DO(n-k, *g++=*h++;);}
-// obsolete    else  {h=k+xu; DO(n-k, *g++=*h++;); h=k+xu; DO(k,   *g++=*--h;);}
-// obsolete   }
   wv+=n; zu+=n;
  }
  R z;
@@ -361,18 +265,13 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 // We are known to have 1 atom per item
 static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  // Radix sort almost always wins, presumably because filling the radix table is so fast
- if(n<50)jtsortdirect(jt,m,1,n,w);  // TUNE  // obsolete R irs2(gr1(w),w,0L,1L,1L,jtfrom);
+ if(n<50)jtsortdirect(jt,m,1,n,w);  // TUNE
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
  GATV(x,FL, n,1,0); xu=DAV(x);
-// obsolete #if C_LE
-// obsolete  d= 1; e=0;
-// obsolete #else
-// obsolete  d=-1; e=3;
-// obsolete #endif
  for(i=0;i<m;++i){I colflags;
   g=wv; nneg=0; DO(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv
@@ -401,7 +300,6 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
  if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
-// obsolete  f=AR(w)-wcr; s=AS(w); m=prod(f,s); n=(AR(w))?s[f]:1; d=bp(t)*prod(wcr-1,1+f+s);
   f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s);
   d=api*bp(t);
    // There are special types supported, but for very short sorts we should just skip the checking and go do a sort-in-place.

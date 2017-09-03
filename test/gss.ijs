@@ -44,11 +44,13 @@ compss =: 1 : 0 (&>)
 )
 
 NB. values to use
+NB. Use smaller arrays if doing full memory audit
+arglen =. 100 2 {~ 9!:57 (0) [ 9!:57 (1)
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
-v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 20 ?@$ 0)
-vv0 =: ((<"0) sdot0{~ 100 ?@$ #sdot0)
-vv1 =: ((<"0) adot1{~ 100 ?@$ #adot1)
-vv2 =: ((<"0) adot2{~ 100 ?@$ #adot2)
+v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0)
+vv0 =: ((<"0) sdot0{~ arglen ?@$ #sdot0)
+vv1 =: ((<"0) adot1{~ arglen ?@$ #adot1)
+vv2 =: ((<"0) adot2{~ arglen ?@$ #adot2)
 
 NB.  *./,  faster display scrolling
 *./,   = compss/~ v

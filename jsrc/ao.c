@@ -96,7 +96,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
 
 #define PMLOOP(Tw,Tz,zt,expr0,expr)  \
  {Tw*aa=(Tw*)av,* RESTRICT u,* RESTRICT v,*ww=(Tw*)wv;Tz x,* RESTRICT zv;  \
-  b=1; GATVS(z,zt,zn,1,0,zt##SIZE); zv=(Tz*)AV(z);       \
+  b=1; GATVS(z,zt,zn,1,0,zt##SIZE,R 0); zv=(Tz*)AV(z);       \
   for(i=0;i<zn;++i){                         \
    j=MIN(i,m1); u=aa+j; v=ww+i-j;            \
    p=MIN(1+i,zn-i); p=MIN(p,k);              \

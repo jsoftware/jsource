@@ -1109,12 +1109,12 @@
 #else
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
 // We can have an inplaceable but recursible block, if it was gc'd
-#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
+#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
 // Internal version, used when the local name pushx is known to hold jt->tnextpushx
-#define tpushi(x)                   {I tt=AT(x); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }
+#define tpushi(x)                   {I tt=AT(x); *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }
 #endif
 // tpush1 is like tpush, but it does not recur to lower levels
-#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
+#define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     
 #define treach(x)                   jttreach(jt,(x))

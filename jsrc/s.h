@@ -21,7 +21,7 @@
  F1(f){A z;I*e,i,j,k,m=0,n;L*d;T*zv;                         \
   RZ(w);                                                     \
   n=AN(w); e=1+AV(w);                                  \
-  GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE);                \
+  GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,R 0);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
   for(i=1;i<n;++i){                  \

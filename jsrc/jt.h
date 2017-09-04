@@ -74,8 +74,8 @@ typedef struct {
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
- A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower block
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack
+ A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  A    symp;             /* symbol pool array                               */
  I    rela;             /* if a is relative, a itself; else 0              */
  I    relw;             /* if w is relative, w itself; else 0              */

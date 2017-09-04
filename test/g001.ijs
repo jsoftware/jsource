@@ -214,9 +214,18 @@ fb 4
 fb 5  
 
 NB. leaks that have been fixed
-a =. 7!:0''
+NB. a =. 4 - 3  NB. allocate a as an integer
+a =. 300 + 7!:0''  NB. 300 is slop to allow in memory alloc
 1: ]^:0: <"0 i. 1e4
-a = 7!:0''
+a > 7!:0''
+
+1: +: M. i. 1000
+a > 7!:0''
+
+1: (xxx =: +: M.) i. 1000
+4!:55 <'xxx'
+a > 7!:0''
+
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first'

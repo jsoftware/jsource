@@ -285,13 +285,14 @@ typedef I SI;
 #define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
 #define AFSMM           (I)4            /* SMM managed                     */
 #define AFREL           (I)8            /* uses relative addressing        */
-#define AFNOSMREL         (I)16   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
+#define AFNOSMRELX      4
+#define AFNOSMREL       (I)(1<<AFNOSMRELX)   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
 // Note: in s.c we rely on AFNOSMREL being adjacent to BOX!!
-// The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they indicate that the usecount for the block is recursive, i. e. that
+// The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
 // the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
 // block is actually freed
-#define AFAUDITUCX      32   // this & above is used for auditing the stack
-#define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack
+#define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
+#define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 
 #define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */

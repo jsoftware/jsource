@@ -422,9 +422,12 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  if(!(x&&AFNJA&AFLAG(x))){
   // name to be assigned is undefined, or is defined as a normal J name
   // If the value is a normal J name, we have to check to see if it is shared (we clone it in that case) or is boxed containing
-  // relative addressing (we clone the boxing).  This sucks - we have to traverse the boxing just to find out that nothing is
-  // relative
-  if(!(AFNJA&AFLAG(w)))RZ(w=rca(w));
+  // relative addressing (we clone the boxing).  We do this check only if the name is !NJA, and (SMM or (BOXED and !NOSMREL))
+  // BOX NSM SMM NJA   are  10x0 xx10 ((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOXED|AFNOSMREL))+AFNOSMREL)) & (BOXED<<1)
+  // we are changing the sign of AFNOSMREL and adding to see if the carry through BOXED is set
+  // we are combining all the tests into one here to avoid misprediction, since this code will not be in the branch cache.  We should almost never call this subroutine
+// obsolete  if(!(AFNJA&AFLAG(w)))RZ(w=rca(w));
+  if((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOX|AFNOSMREL))+AFNOSMREL) )) & (BOX<<1))RZ(w=rca(w));
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made [for the nonce we don't support
   // inplace ops on boxed arrays; when we do, it will be the responsibility of the action routine to keep the result valid].

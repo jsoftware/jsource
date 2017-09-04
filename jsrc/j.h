@@ -386,6 +386,8 @@ extern unsigned int __cdecl _clearfp (void);
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+// GAE executes the given expression when there is an error
+#define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
 // When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;
 #define GAT(name,type,atoms,rank,shaape) \
@@ -401,28 +403,30 @@ extern unsigned int __cdecl _clearfp (void);
  AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx;    \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
-#define GATVS(name,type,atoms,rank,shaape,size) \
+#define GATVS(name,type,atoms,rank,shaape,size,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
  AD* ZZz = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
- RZ(ZZz);   \
- if(!(type&DIRECT))memset((C*)ZZz+akx,C0,bytes-mhb-akx);  \
- else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
- AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
- if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
- AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
- name=ZZz;   \
+ if(ZZz){   \
+  if(!(type&DIRECT))memset((C*)ZZz+akx,C0,bytes-mhb-akx);  \
+  else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
+  AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
+  if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
+  AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
+  name=ZZz;   \
+ }else{erraction;} \
 }
-#define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE)
+#define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
+// Mark a name as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
+#define INCORP(z)       (AC(z)&=~ACINPLACE)
 // Tests for whether a result incorporates its argument.  The argument is always inplaceable, and we signal incorporation either by returning the
 // argument itself or by marking it non-inplaceable (if we box it)
-#define INCORP(z)       (AC(z)&=~ACINPLACE)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
 #define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)

@@ -15,22 +15,55 @@ I level(A w){A*wv;I d,j,wd;
 
 F1(jtlevel1){RZ(w); R sc(level(w));}
 
-F1(jtbox0){R irs1(w,0L,0L,jtbox);}
+// obsolete F1(jtbox0){R irs1(w,0L,0L,jtbox);}
+static I v00[] = {0, 0}; // used for rank
+F1(jtbox0){
+ // Process through box code, which already handles rank
+ I *ranksave = jt->rank;
+ if(AR(w))jt->rank=v00;
+ A z=box(w);
+ jt->rank=ranksave;
+ R z;
+}
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  RZ(w);
  ASSERT(!(SPARSE&AT(w)),EVNONCE);
+  // Set NOSMREL if w is not boxed or it has NOSMREL set
+ I newflags = (AFLAG(w) | ((~AT(w))>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
  if(!jt->rank){
-  // single box: fast path.  Mark w as incorporated into the result
+  // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
+  // DO NOT set recursible, because that would trigger a potentially expensive pass through w which may never be needed if this result expires without being assigned
   GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
+  AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
   // <"r
   ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m*bp(t); wv=CAV(w);
-  GATV(z,BOX,n,f,ws); zv=AAV(z);
-  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
-  else DO(n, GA(y,t,m,r,f+ws); MC(CAV(y),wv,k); wv+=k; zv[i]=y;);
+  GATV(z,BOX,n,f,ws); zv=AAV(z); 
+  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
+  else{
+   // The case of interest: non-relative w.  We have allocated the result; now we allocate a block for each cell of w and copy
+   // the w values to the new block.  We set NOSMREL in the top block and the new ones if w is boxed or NOSMREL.  
+   // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
+   // if the result block is assigned).  If w is indirect, we just leave everything nonrecursive to avoid traversing w, because
+   // that will prove unnecessary if this result is not assigned.
+
+   if(t&DIRECT){
+    // Direct w.
+    AFLAG(z) = newflags|BOX;  // Make result inplaceable and recursive
+    // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
+    // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
+    // inplaceable with a free on the tstack.
+    // To avoid the tstack overhead, we hijack the tstack pointers and set them up to have no effect on the actual tstack.  We restore them when we're
+    // finished.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
+    I pushxsave = jt->tnextpushx; A *tstacksave = jt->tstack;  // save tstack info before allocation
+    jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
+    DO(n, jt->tnextpushx=0; GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k; zv[i]=y;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1
+    jt->tstack=tstacksave; jt->tnextpushx=pushxsave;   // restore tstack pointers
+   }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // boxed w; don't set recursible, but inherit nosm from w
+  }
  }
  R z;
 }    /* <"r w */

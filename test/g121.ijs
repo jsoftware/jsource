@@ -231,5 +231,5 @@ NB. obsolete 'length error' -: -.&(i.2 5 3) etx i.5 4
 
 
 4!:55 ;:'adot1 adot2 sdot0 dr f less not rank res s t x xx yy'
-
+randfini''
 

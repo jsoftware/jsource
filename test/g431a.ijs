@@ -1,6 +1,5 @@
 1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g431a.ijs'
 NB. f/. f\  f\. models --------------------------------------------------
-
 randuni''
 
 en     =: #@]
@@ -29,7 +28,6 @@ sd     =: 1 : '(x ob    ) : (x key   )'
 
 
 NB. x f\. y -------------------------------------------------------------
-
 NB. Boolean
 a=:1=?11 5$2
 k (<\.   -: < bsd) a    [ k=:_4+?11
@@ -89,7 +87,6 @@ k (<\.   -: < bsd) a    [ k=:_4+?11
 k (<\.   -: < bsd) ,a   [ k=:_4+?11
 k (]\.   -: ] bsd) a    [ k=:_4+?11
 
-
 NB. x f/\. y ------------------------------------------------------------
 
 testa=: 1 : 0
@@ -105,7 +102,6 @@ testa=: 1 : 0
  1
 )
 
-t=: 0 1; (100 ?@$ 1e9) ; (128 %~ 100 ?@$ 1e4); (100 ?@$ 1000x) ; (%/0 1x + 2 100 ?@$ 1000)
 <. testa&> t , < sdot0{~ 100 ?@$ #sdot0
 >. testa&> t , < sdot0{~ 100 ?@$ #sdot0
 +  testa&> t , < j./ 2 100 ?@$ 1000
@@ -130,4 +126,4 @@ testb"0 ] 16 17 19 21 23 31
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
 4!:55 ;:'prefix sd seg suffix t testa testb'
-
+randfini''

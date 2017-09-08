@@ -289,7 +289,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    if(cd){rat1(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // rat1 because we will rat() on the way out; here no loss is possible except at top level
+    if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
     i=ci->go;
     break;
    case CCASE:

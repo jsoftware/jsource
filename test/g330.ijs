@@ -313,5 +313,5 @@ link  =: <@[ , <`]@.(boxed *. -.@mt)@]
 'domain error' -: ex '>2 3 4;~2;3;(s:@<"0 ''1234'')'
 
 4!:55 ;:'a adot1 adot2 sdot0 boxed link maxr mt raze t templ x y'
-
+randfini''
 

@@ -1774,6 +1774,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
    jtiosc(jt,mode,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    R z;
   }
+ // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
+ // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
@@ -2000,7 +2002,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
    // First check FULL, which is always the right decision if possible - except for self-classify which assumes FULL, or prehash which doesn't go through w at all
    // Don't bother to check if the decision has already been made (this will be set for full hashes, which ignore this bit and require FORCE0)
    if(a!=w&&!(mode&(IIMODFULL|IPHCALC|IREVERSED))){CR crres;
-    // We can get here only if IIMDOFULL is off, which happens only if fmods is 0, which means we are doing a forward small-range hash.  In addition, the
+    // We can get here only if IIMODFULL is off, which happens only if fmods is 0, which means we are doing a forward small-range hash.  In addition, the
     // number of bytes in an item will be 2 or SZI.  We must convert the # atoms to a # of 2- or SZI-sized pieces
     I allowrange;  // where we will build the max allowed range of w
     if(h=jt->idothash1){allowrange=IHAV(h)->datasize>>IHAV(h)->hashelelgsize;}else{allowrange=0;}  // current max capacity of large hash
@@ -2088,11 +2090,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
  EPILOG(z);
 }    /* a i."r w main control */
 
-// verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
+// verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  RZ(a&&w&&hs);
- // hv is (info vector);(hashtable);(byte index valididty)
+ // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
  // get the info from the info vector
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];
@@ -2160,7 +2162,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
- // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
+// if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
 }    /* a-.w */

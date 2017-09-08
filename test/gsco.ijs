@@ -1,5 +1,6 @@
 1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco.ijs'
 NB. s: ------------------------------------------------------------------
+initsymbolstate =: 0 s: 10
 
 x0=: ' Cogito , ergo sum.'
 y0=: s: x0
@@ -478,5 +479,5 @@ NB. s: errors -----------------------------------------------------------
 0 s: 11
 
 4!:55 ;:'c i m offset s sbase sn t uv x x0 x1 x2 y y0 y1 y2 z0 z1'
-
+randfini''
 

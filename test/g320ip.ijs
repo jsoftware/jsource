@@ -74,6 +74,7 @@ f2=: 3 : 0
 (] -: f2) 10&u:'only Hugh can prevent florist friars'
 (] -: f2) s:@<"0 'only Hugh can prevent florist friars'
 (] -: f2) ?1000$1e6
+(] -: f2) 100 $ ;:'only Hugh can prevent florist friars'
 
 f2=: 3 : 0
  z=. ''
@@ -87,6 +88,7 @@ f2=: 3 : 0
 (] -: f2) 10&u:'only Hugh can prevent florist friars'
 (] -: f2) s:@<"0 'only Hugh can prevent florist friars'
 (] -: f2) ?1000$1e6
+(] -: f2) 100 $ ;:'only Hugh can prevent florist friars'
 
 global=: i.7
 f3=: 3 : 'global=. global,y'
@@ -185,6 +187,11 @@ f7=: 3 : 0
  t=. t ,&.> 10&u:'x'
  assert. t -: (10&u:&.>) ;:'onex twox'
  assert. g -: (10&u:&.>) ;:'zero one two three four'
+ g=. <"0 ;: 'zero one two three four'
+ t=. 1 2 { g
+ t=. t ,&.> <<,'x'
+ assert. t -: _2 <\ ;:'one x two x'
+ assert. g -: <"0 ;: 'zero one two three four'
  1
 )
 
@@ -278,6 +285,16 @@ testa=: 4 : 0
 67       testa&> '';,&.> 3 5 7 11 13 67 71
 (<4 5  ) testa&> '';3;5;7
 (<6 4 5) testa&> '';3;5;7; 4 5;2 3;4 3;2 5; 2 3 4;2 4 5;2 7
+
+NB. Verify that we avoid loop in box
+a =: 10000 $ ;:'only Hugh can prevent florist friars'
+b =: <i. 10000
+2000 > 7!:2 'a =: a , a:'
+2000 > 7!:2 'a =: a , b'
+2000 > 7!:2 'a =: a , <b'
+80000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
+80000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
+
 
 NB. Verify no local-to-global aliasing
 f10 =: 3 : 'a =. a , 8'

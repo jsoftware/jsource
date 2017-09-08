@@ -430,9 +430,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
 #define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)
+// true is a has recursive usecount
+#define UCISRECUR(a)    (AFLAG(a)&RECURSIBLE)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does
-#define INSTALLBOX(x,xv,k,z) if(AFLAG(x)&RECURSIBLE)ra(z); xv[k]=z
+#define INSTALLBOX(x,xv,k,z) if(UCISRECUR(x))ra(z); xv[k]=z
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}

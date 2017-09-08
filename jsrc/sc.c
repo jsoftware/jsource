@@ -26,12 +26,13 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jt->global; 
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
- // Execute.  Bump execct to protect against deleting the name while it is running.
- // Because of implementation of fa(), which may be called elsewhere as well, we must also bump usecount
- else{ACINCR(fs); ++fv->execct;
+ // Execute.  ra() to protect against deleting the name while it is running.
+ // This will be fast because we know any name has a recursive usecount before it is assigned
+ else{ra(fs);
+// obsolete ACINCR(fs); ++fv->execct;
   if(a){if(!(fv->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   fa(fs);
- }  /* beware redefs down the stack */
+ }
  if(!jt->stswitched)jt->global=jt->fcallg[i].og;
  jt->stswitched=jt->fcallg[i].sw0;
  if(jt->fcallg[i].flag)locdestroy(i);

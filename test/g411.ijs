@@ -350,5 +350,5 @@ NB. x v!.f y where x is extended and v requires fill --------------------
 
 
 4!:55 ;:'adot1 adot2 sdot0 f i k n p v x y'
-
+randfini''
 

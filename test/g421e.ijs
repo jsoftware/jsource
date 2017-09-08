@@ -61,5 +61,5 @@ test2=: 2 : 0
 9!:19 ct
 
 4!:55 ;:'adot1 adot2 sdot0 ct data test test2 xx yy'
-
+randfini''
 

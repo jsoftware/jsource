@@ -125,5 +125,5 @@ NB. Include negative numbers
 (((*./@:(2 >:/\ ])) *. *./@:~:@])   \:~)  _20000 + 1000 * ?~ 80000
 
 4!:55 ;:'adot1 adot2 sdot0 b n test test1'
-
+randfini''
 

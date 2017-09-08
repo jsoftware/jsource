@@ -434,11 +434,9 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
 
  // Get the action routines and flags to use for the derived verb
  if(NOUN&AT(a)){f1=cons1; f2=cons2; ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;
-  // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
-  // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
-  // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
-  rat1s(a);
+  ACIPNO(a);
   vf=VASGSAFE;    // the noun can't mess up assignment, and does not support IRS
  }else{
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to

@@ -541,5 +541,5 @@ NB. x{.y with infinite left arguments -----------------------------------
 4!:55 ;:'a adot1 adot2 sdot0 case eb ec en f f0 f1 f2 fill '
 4!:55 ;:'g1 g2 head itake jot larg mt n pad raise '
 4!:55 ;:'s t take taker targ ti x '
-
+randfini''
 

@@ -436,5 +436,5 @@ _2 3 (|.!.f"1 2 -: rot"1 2) j./?2 2 3 7$1000 [ f=:0
 1 2 3 (|.!.f"0 _ -: rot"0 _) ?20$10000       [ f=:9
 
 4!:55 ;:'a adot1 adot2 sdot0 f f1 rank rev rot x'
-
+randfini''
 

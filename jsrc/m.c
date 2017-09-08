@@ -11,6 +11,8 @@
 
 #include "j.h"
 
+#define LEAKSNIFF 0
+
 #define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Doesn't seem to help much.
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
@@ -27,6 +29,11 @@
 static void jttraverse(J,A,AF);
 static I jtfaorpush(J,AD * RESTRICT,I);
 
+#if LEAKSNIFF
+static I leakcode;
+static A leakblock;
+static I leaknbufs;
+#endif
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
@@ -37,6 +44,11 @@ B jtmeminit(J jt){I k,m=MLEN;
  jt->mmax =(I)1<<(m-1);
  for(k=PMINL;k<=PLIML;++k){jt->mfree[-PMINL+k].ballo=SBFREEB;jt->mfree[-PMINL+k].pool=0;}  // init so we garbage-collect after SBFREEB frees
  jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
+#if LEAKSNIFF
+ leakblock = 0;
+ leaknbufs = 0;
+ leakcode = 0;
+#endif
  R 1;
 }
 
@@ -254,6 +266,32 @@ static void auditsimreset(A w){I delct;
 
 #endif
 
+// Register the value to insert into leak-sniff records
+void jtsetleakcode(J jt, I code) {
+#if LEAKSNIFF
+ if(!leakblock)GAT(leakblock,INT,10000,1,0); ra(leakblock);
+ leakcode = code;
+#endif
+}
+
+F1(jtleakblockread){
+#if LEAKSNIFF
+if(!leakblock)R zero;
+R vec(INT,2*leaknbufs,IAV(leakblock));
+#else
+R zero;
+#endif
+}
+F1(jtleakblockreset){
+#if LEAKSNIFF
+leakcode = 0;
+leaknbufs = 0;
+R zero;
+#else
+R zero;
+#endif
+}
+
 // Verify that block w does not appear on tstack more than lim times
 void audittstack(J jt){
 #if MEMAUDIT&2
@@ -380,15 +418,13 @@ A jtgc (J jt,A w,I old){
  I *cp=&AC(w); I c=*cp; // save original inplaceability
  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount
  tpop(old);  // delete everything allocated on the stack
- if(c<0){
+ if(c<0){  // scaf
   // Block was originally inplaceable.  Make it inplaceable again
   if(*cp>ACUC1){
    // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
    // Return without pushing onto the stack a second time; but we must undo the ra() from above
    fa(w);  // undo the original protection, and audit
    *cp=c;  // set block back to inplaceable
-  // If w is traversible, its contents have had their usecount incremented, so we'd better undo that
-  // since we are not going to put the contents on the stack for later free (they're already there).
    R w;
   }
   *cp=c;  // set block back to inplaceable
@@ -444,10 +480,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   }
   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
-  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  We use the recursive increment
-  // only for assignments; for temporary locking of a definition, we increment the execct nonrecursively
+  // ACV.  Recur on each component
   ra(v->f); ra(v->g); ra(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
@@ -487,11 +520,9 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    np = np0;  // advance to next box
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
-  // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
-  // count in a static variable before calling this routine, we had to increment the usecount at the same time
-  // we increment execct.
-  if(v->execct){--v->execct;}else{fana(v->f); fana(v->g); fana(v->h);}
+  // ACV.
+// obsolete  if(v->execct){--v->execct;}else{fana(v->f); fana(v->g); fana(v->h);}
+  fana(v->f); fana(v->g); fana(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DO(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
@@ -575,17 +606,13 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   }
 
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  Recur on each component; but this is a problem because it is done in unquote as part of executing
-  // any name.  So we take advantage of the fact that all non-noun references are through names, not values; and
-  // thus it is impossible to delete something that is referred to by a named ACV.  The ACV becomes a non-recursive
-  // usecount, with a separate count of the number of assignments that have been made.  When this count increments to
-  // 1 or decrements to 0, we propagate the change to descendants, but not otherwise
+  // ACV.  Recur on each component
   if(v->f)tpushi(v->f); if(v->g)tpushi(v->g); if(v->h)tpushi(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DO(t&RAT?2*n:n, if(*v)tpushi(*v); ++v;);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
-  if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,i))tpushi(SPA(v,i)); if(SPA(v,x))tpushi(SPA(v,x));
+  if(SPA(v,a))tpushi(SPA(v,a)); if(SPA(v,e))tpushi(SPA(v,e)); if(SPA(v,x))tpushi(SPA(v,x)); if(SPA(v,i))tpushi(SPA(v,i));
  }
  R pushx;
 }
@@ -749,6 +776,16 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;MS *av;I mfreeb;I n = (I)1<<blockx;
   AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
   *(I*)((I)tstack+pushx)=(I)z; pushx+=SZI;
   if((pushx&(NTSTACK-1))){jt->tnextpushx=pushx;}else{RZ(tg(pushx)); jt->tnextpushx=pushx+SZI;}  // advance to next slot; skip over chain if new block needed
+#if LEAKSNIFF
+  if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
+   if(leaknbufs*2 >= AN(leakblock)){
+   }else{
+    I* lv = IAV(leakblock);
+    lv[2*leaknbufs] = (I)z; lv[2*leaknbufs+1] = leakcode;  // install address , code
+    leaknbufs++;  // account for new value
+   }
+  }
+#endif
   // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it
   if(!(mfreeb&MFREEBCOUNTING))R z;  // this is a so-far-fruitless attempt to fall through to a return
   jt->bytes += n; if(jt->bytes>jt->bytesmax)jt->bytesmax=jt->bytes;
@@ -794,6 +831,14 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 void jtmf(J jt,A w){I mfreeb;
 #if MEMAUDIT&16
 {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}
+#endif
+#if LEAKSNIFF
+ if(leakcode){I i;
+  // Remove block from the table if the address matches
+  I *lv=IAV(leakblock);
+  for(i = 0;i<leaknbufs&&lv[2*i]!=(I)w;++i);  // find the match
+  if(i<leaknbufs){while(i+1<leaknbufs){lv[2*i]=lv[2*i+2]; lv[2*i+1]=lv[2*i+3]; ++i;} leaknbufs=i;}  // remove it
+ }
 #endif
 
 // audit free list {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}

@@ -146,6 +146,6 @@ NB. no more 'length error' -: (i.3 4)&i. etx i.2 5
 ((i.3 4)&i. i. 2 5) -: (i.3 4)&(i."i.) i. 2 5
 
 4!:55 ;:'adot1 adot2 sdot0 f fedot fico fidot g h m ss x xx yy'
-
+randfini''
 
  

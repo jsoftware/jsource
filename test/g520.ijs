@@ -887,5 +887,5 @@ x=: ?s$1e9
  
 4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j '
 4!:55 ;:'jot k l n p prod q r s v x y '
-
+randfini''
 

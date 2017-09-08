@@ -149,5 +149,5 @@ p4 =: 3 : 0
 
 4!:55 ;:'Adot1 Adot2 adot1 adot2 sdot0 base boxed dfr grow j ord p p0 '
 4!:55 ;:'p1 p2 p3 p4 pfill pind rfd x y z '
-
+randfini''
 

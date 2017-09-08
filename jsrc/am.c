@@ -127,7 +127,15 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w))))
-      &&TYPESEQ(t,wt)&&(wt&DIRECT||((t&BOX)&&AFNJA&AFLAG(w)))&&w!=a&&w!=ind;
+// obsolete      &&TYPESEQ(t,wt)&&(wt&DIRECT||((t&BOX)&&AFNJA&AFLAG(w)))&&w!=a&&w!=ind;
+      &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind;
+ // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
+ if(ip&&t&BOX){
+  I oldac = ACUC(w);  // remember original UC of w
+  ra0(a);  // ensure a is recursive usecount.  This will be fast if a has 1=L.
+  ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
+ } 
+
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
 // obsolete  else{RZ(z=cvt(t,w)); if(ARELATIVE(w))RZ(z=relocate((I)w-(I)z,z));}
@@ -140,17 +148,23 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
   DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););  // replace pointer to old block with (relative) pointer to new, then free the (absolute) old in smm area
  }else{
-  // normal assignment - just copy the items.  Relocate relative blocks
-  if(ARELATIVE(a))RZ(a=rca(a));
-  if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);          DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
+  // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
+  if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
+  if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);          DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}  // known to be NOT in-place
   else{
-   // Here for non-relative blocks.
+   // Here for non-relative blocks.  Could be in-place.  If boxed,
+   // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.
+   // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
+   // free them before we overwrite them, and we must increment the usecount in the block we store into them
+   // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
    C* RESTRICT av0=CAV(a); I k=bp(t); C * RESTRICT avn=av0+(an*k);
    switch(k){
    case sizeof(C):
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
    case sizeof(I):
-    {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
+    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ra(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}
+    else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
+    break;
    // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
    default:
     {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
@@ -172,7 +186,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
   }
   k=AAV0(ind); n=AN(k);
   GATV(x,INT,wr,1,0); u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);
-  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),0L,VFLAGNONE, RMAX,jtplus);
+  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
  }
  if(!b){n=1; RZ(j=pind(*ws,ind));}
  else{
@@ -193,7 +207,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
    }else k=pind(d,x);
    RZ(j=irs2(tymes(j,sc(d)),k,0L,VFLAGNONE, RMAX,jtplus));
  }}
- R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),0L,VFLAGNONE, RMAX,jtplus);
+ R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
 }    /* convert ind in a ind}w into integer positions */
 
 /* Reference count for w for amend in place */

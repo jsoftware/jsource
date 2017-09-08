@@ -500,7 +500,7 @@ typedef struct{
 
 
 
-typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep;US execct; C id;} V;  // more than 64000 execs will be a stack error anyway
+typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep; C id;} V;
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
 #define VFLAGNONE 0L

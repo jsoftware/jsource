@@ -390,5 +390,5 @@ test4=: 4 : 0
 
 
 4!:55 ;:'a adot1 adot2 sdot0 c d e f g h match n test test1 test2 test3 test4 x xx y yy'
-
+randfini''
 

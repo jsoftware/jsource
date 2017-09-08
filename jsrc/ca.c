@@ -242,11 +242,9 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    f1=withl; v=VAV(w); c=v->id;
    // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
    flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-   // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
-   // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
-   // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
    // assigned to a name, which will protect values inside it.
-   rat1s(a);
+   ACIPNO(a);
    if(AN(a)&&AR(a)){
      // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
      // Also set b if the fit is !.0
@@ -266,11 +264,9 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
    // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
    // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
    flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-   // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
-   // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
-   // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
    // assigned to a name, which will protects values inside it.
-   rat1s(w);
+   ACIPNO(w);
    if(AN(w)&&AR(w)){
      // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
      // Also set b if the fit is !.0

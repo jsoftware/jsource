@@ -698,5 +698,5 @@ f =: `(<'0';0)
 4!:55 ;:'s sd seg shape shl shr slist suffix symb '
 4!:55 ;:'t take test test1 test2 tr trcase tree trg trgl trgr trtil trx '
 4!:55 ;:'value vbox vchar x '
-
+randfini''
 

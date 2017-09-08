@@ -44,6 +44,12 @@ end.
 1053389 -: 50 f 168
 1148904 -: 10 f 57
 
-4!:55 ;:'coeffs combr f fib fibr params pn pnx rec t'
+hwmk =: 7!:0''
+r =: 1: M.
+r"0 i. 10000
+4!:55<'r'
+(hwmk + 1000) > 7!:0''
+ 
+4!:55 ;:'coeffs combr f fib fibr hwmk params pn pnx rec t'
 
 

@@ -500,6 +500,37 @@ a =: i. 4
 'domain error' -: f12 etx ''
 2 0 -: f13''
 
+NB. Boxed in place
+
+a =: <"0 i. 100 1000
+1000000 < 7!:2 '(<1) 0} a'
+30000 > 7!:2 'a =: (<1) 0} a'
+b =: i. 100
+1000000 < 7!:2 '(<b) 0} a'
+30000 > 7!:2 'a =: (<b) 0} a'
+1000000 < 7!:2 '(<a) 0} a'   NB. Avoid loop
+1000000 < 7!:2 '(<<<<a) 0} a'   NB. Avoid loop
+
+size0 =: 7!:0''
+a =: <"0 i. 100 1000
+b =: <i. 500
+size1 =: 7!:0''
+200000 > 7!:2 'a =: b (i. 10)} a'   NB. Write to many cells
+(size1 - 10 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
+4!:55 ;:'a b'
+(size0 + 1000) > 7!:0''
+
+size0 =: 7!:0''
+a =: <"0 i. 100 1000
+b =: <i. 500
+size1 =: 7!:0''
+200000 > 7!:2 'a =: b (10$i. 2)} a'   NB. Rewrite cells
+a -: b , b , 2 }. <"0 i. 100 1000
+(size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
+4!:55 ;:'a b'
+(size0 + 1000) > 7!:0''
+
+
 NB. Noun & other components of AR
 x =: 5
 'domain error' -: ex '((5!:1<''x'')`[`])}'
@@ -518,5 +549,5 @@ x =: "
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save sp t t t0 t1 t2 test x xx xyz y yy z z1 zz '
-
+4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test x xx xyz y yy z z1 zz '
+randfini''

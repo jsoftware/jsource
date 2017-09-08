@@ -82,11 +82,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2
  flag=(VINPLACEOK1|VINPLACEOK2)+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
  if(NOUN&AT(f)){  /* y {~ x i. ] */
-  // Temporarily raise the usecount of the noun.  Because we are in the same tstack frame as the parser, the usecount will stay
-  // raised until any inplace decision has been made regarding this derived verb, protecting the derived verb if the
-  // assigned name is the same as a name appearing here.  If the derived verb is used in another sentence, it must first be
+  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
-  rat1s(f);  // This justifies keeping the result ASGSAFE
+  ACIPNO(f);  // This justifies keeping the result ASGSAFE
   f1=jtnvv1;
   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->f)&&hi==CFORK){
    x=hv->f;

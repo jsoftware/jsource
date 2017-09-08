@@ -116,4 +116,4 @@ x=: (5 1e5 ?@$ 2) * 5 1e5 ?@$ 1000
 
 
 4!:55 ;:'adot1 adot2 sdot0 f g rk x xx y'
-
+randfini''

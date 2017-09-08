@@ -486,5 +486,5 @@ sym1=: (-: 0&|:) *. (-: _2&|:)
 4!:55 ;:'a adot1 adot2 sdot0 cant cant1 cant2 canta ci diag en id0 id1 '
 4!:55 ;:'ind magic magicprop mask mi p perm pfill '
 4!:55 ;:'rank rho sym0 sym1 t vfy X x y'
-
+randfini''
 

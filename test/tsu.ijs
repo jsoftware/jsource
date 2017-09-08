@@ -119,6 +119,7 @@ comb=: 4 : 0
 )
 
 randuni=: 3 : 0
+ initsymbolstate =: 0 s: 10  NB. Preserve init symbol state so it doesn't keep growing
  l2max=. 1024       NB. #literal2 sample   multiple of 256
  l4max=. 1024       NB. #literal4 sample   multiple of 256
  sbmax=. 1024       NB. #symbol sample     multiple of 256
@@ -154,6 +155,10 @@ NB. validation
  assert. l4max=#~.adot2
  assert. sbmax=#~.sdot0
  ''
+)
+randfini =: 3 : 0
+10 s: initsymbolstate
+4!:55 <'initsymbolstate'
 )
 
 NB. ensure ~temp is unique when running multiple instances

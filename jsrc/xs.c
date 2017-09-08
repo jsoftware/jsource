@@ -41,6 +41,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /*        do not display error                  */
 /* tso: echo to stdout                          */
 
+#define SEEKLEAK 0  // scaf
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
  if(equ(w,one))R mtm;
  RZ(w=vs(w));
@@ -52,8 +53,16 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
   case 0: while(x&&!jt->jerr){jt->etxn=0;                           immex(x=jgets("   ")); tpop(old);} break;
   case 1: while(x           ){if(!jt->seclev)showerr(); jt->jerr=0; immex(x=jgets("   ")); tpop(old);} break;
   case 2:
-  case 3: while(x&&!jt->jerr){jt->etxn=0;                           immea(x=jgets("   ")); tpop(old);}
-          jt->asgn=0;
+  case 3: {
+#if SEEKLEAK
+    I stbytes = spbytesinuse();
+#endif
+    while(x&&!jt->jerr){jt->etxn=0;                           immea(x=jgets("   ")); tpop(old);}
+    jt->asgn=0;
+#if SEEKLEAK
+    I endbytes=spbytesinuse(); if(endbytes-stbytes > 1000)printf("%lld bytes lost\n",endbytes-stbytes);
+#endif
+   }
  }
  jt->dcs=xd; jt->tostdout=xt;
  debz();
@@ -77,6 +86,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
  }
  // Remove UTF8 BOM if present - commented out pending resolution.  Other BOMs should not occur
  // if(!memcmp(CAV(x),"\357\273\277",3L))RZ(x=drop(num[3],x))
+ // if this is a new file, record it in the list of scripts
  RZ(y=fullname(AAV0(w)));
  RE(i=i0(indexof(vec(BOX,jt->slistn,AAV(jt->slist)),box(y))));
  if(jt->slistn==i){
@@ -84,6 +94,7 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ra(y); RZ(*(jt->slistn+AAV(jt->slist))=y); 
   ++jt->slistn;
  }
+ // set the current script number
  jt->slisti=i;    jt->glock=1==jt->glock?1:lk?2:0;
  z=line(x,jt->glock?-1L:i,ce,(B)(jt->glock?0:tso)); 
  jt->slisti=oldi; jt->glock=(C)(1==jt->glock?1:oldk);

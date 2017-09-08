@@ -165,10 +165,10 @@ static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
   else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
 }}   /* move an argument into the result area */
 
-
+static I overcode = 0;
 F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
- if(SPARSE&AT(a)||SPARSE&AT(w))R ovs(a,w);  // if either arg is sparse, switch to sparse code
+ if(SPARSE&AT(a)||SPARSE&AT(w)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
  if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);  // If appending vectors at infinite rank, go handle that
@@ -177,7 +177,7 @@ F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,w
  r=acr+wcr?MAX(acr,wcr):1;
  // if max cell-rank>2, or an argument is empty, or (joining tables with row of different lengths) or something is relative, do general case
  if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||ARELATIVE(a)||ARELATIVE(w)){
-  jt->rank=0; R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg);
+  jt->rank=0; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
  }
  acn=1>=acr?p:p*as[af+acr-2]; ma=!acr&&2==wcr?q:acn;
  wcn=1>=wcr?q:q*ws[wf+wcr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;
@@ -227,8 +227,19 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
  // This is 'loose' inplacing, which doesn't scruple about globals appearing on the stack elsewhere
- // In all cases we allow only DIRECT types (I don't know why)
- if((((I)jtinplace&JTINPLACEA) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&DIRECT) {
+ // Allow only DIRECT and BOX types, to simplify usecounting
+ if((((I)jtinplace&JTINPLACEA) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&(DIRECT|BOX)) {I an=AN(a);
+  // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
+  // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
+  // crawl through w looking for a; but then we would still need to know whether w is NOSMREL so we could set the NOSMREL flag correctly in the result.
+  // So, we simply convert w to recursive-usecount.  This may take some time if w is complex, but it will (1) get the NOSMREL flag right (2) increment the
+  // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
+  if(AT(a)&BOX){
+   I oldac = ACUC(a);  // remember original UC of a
+   ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
+   if(AC(a)>oldac || !((AFLAG(a)&AFLAG(w))&AFNOSMREL))an = 0;  // turn off inplacing if w referred to a, or if anything might be relative (kludge should support relatives)
+  } 
+
   // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
   // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes
   // in the shape that are part of the shape of an item), or if a is atomic (because
@@ -236,7 +247,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
   // result would increase, and there's no room in the shape)
   // jt->rank is not set unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
-  if(AN(a)&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
+  if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
    // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
@@ -246,7 +257,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
    // items of w (after its conversion to the precision of a)
-   k=bp(at); ak=k*AN(a); wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
+   k=bp(at); ak=k*an; wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
    p=0; DO(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then
@@ -269,6 +280,8 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
      if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(wr)MC(av,wv,wlen); else mvc(wk,av,k,wv);
+     // if a has recursive usecount, increment the usecount of the added data - including any fill
+     if(UCISRECUR(a)){A* aav=(A*)av; DO(wn, ra(aav[i]);)}
      // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
      *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
      R a;

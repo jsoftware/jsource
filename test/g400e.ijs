@@ -106,5 +106,5 @@ b (exp -: expand) x=: j./ ?2$1e6 [ b=:  (1+?1000)$0
 
 
 4!:55 ;:'adot1 adot2 sdot0 b exp expand f g x'
-
+randfini''
 

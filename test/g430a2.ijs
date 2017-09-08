@@ -186,5 +186,5 @@ NB. THRESHOLD+. >/ t=: 6!:2 '(}:~:}.)y',:'2~:/\y'
 
 
 4!:55 ;:'adot1 adot2 sdot0 f t y'
-
+randfini''
 

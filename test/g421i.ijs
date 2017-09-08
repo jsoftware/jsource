@@ -164,4 +164,4 @@ x (>.//. -: 3 : '>./y'/.) y=: sdot0{~  ?($x)$$sdot0
 
 
 4!:55 ;:'adot1 adot2 sdot0 test v x xx y yy'
-
+randfini''

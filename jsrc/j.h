@@ -564,7 +564,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0   // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 

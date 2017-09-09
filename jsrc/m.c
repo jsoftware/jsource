@@ -232,7 +232,7 @@ static void auditsimdelete(A w){I delct;
  if(!(AFLAG(w)&(AFNJA|AFSMM)) && ((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // verify everything on the stack is still free - only if echt J memory
 #endif
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))*(I*)0=0;   // hang if too many deletes
- if(delct==ACUC(w)&&(AFLAG(w)&RECURSIBLE)){  // we deleted down to 0.  process children
+ if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -250,7 +250,7 @@ static void auditsimreset(A w){I delct;
  if(!w)R;
  delct = AFLAG(w)>>AFAUDITUCX;   // did this recur?
  AFLAG(w) &= AFAUDITUC-1;   // clear count for next time
- if(delct==ACUC(w)&&(AFLAG(w)&RECURSIBLE)){  // if so, recursive reset
+ if(delct==ACUC(w)&&(UCISRECUR(w))){  // if so, recursive reset
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
@@ -418,19 +418,28 @@ A jtgc (J jt,A w,I old){
  I *cp=&AC(w); I c=*cp; // save original inplaceability
  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount
  tpop(old);  // delete everything allocated on the stack
- if(c<0){  // scaf
-  // Block was originally inplaceable.  Make it inplaceable again
-  if(*cp>ACUC1){
-   // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
+ if(*cp>(c&~ACINPLACE)){
+   // usecount coming in was incremented by ra but was not decremented by tpop.  That means it was allocated up the stack.
    // Return without pushing onto the stack a second time; but we must undo the ra() from above
-   fa(w);  // undo the original protection, and audit
-   *cp=c;  // set block back to inplaceable
-   R w;
-  }
-  *cp=c;  // set block back to inplaceable
- } 
- tpush(w);  // put w back on the stack
+  fa(w);
+ }else{tpush(w);}  // if the block was popped, push it again, deferring the deletion correspnding to the ra.  This push is always recursible
+ // either way, the usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
+ // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
+ if(c<0)*cp = c;  // restore inplaceability.  Could use *cp=(c<0)?c:*cp to avoid conditional jump
  R w;
+// obsolete  if(c<0){
+// obsolete   // Block was originally inplaceable.  Make it inplaceable again
+// obsolete   if(*cp>ACUC1){
+// obsolete    // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
+// obsolete    // Return without pushing onto the stack a second time; but we must undo the ra() from above
+// obsolete    fa(w);  // undo the original protection, and audit
+// obsolete    *cp=c;  // set block back to inplaceable
+// obsolete    R w;
+// obsolete   }
+// obsolete   *cp=c;  // set block back to inplaceable
+// obsolete  } 
+// obsolete  tpush(w);  // put w back on the stack
+// obsolete  R w;
 }
 #endif
 
@@ -662,7 +671,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
-   if(--c<=0){if(AFLAG(np)&RECURSIBLE){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
+   if(--c<=0){if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
   }
   // See if there are more blocks to do

@@ -892,6 +892,19 @@ xx=:256$(<"0@s: ;:'Cogito, ergo sum.'),(<"1 ?30 2$1e6),(<?3 4$100),<3j4
 1 1 1 -: (s:@<"0 'abc')~:<"0@s: <'asdf'
 1 1 1 -: (<u:'asdf')~:4 5 6
 
+NB. Hooks and forks that modify the temp cell but don't return it
+y =. ;:'xxxx yyyy'
+(1:@:([ 1:))"0 y
+y -: ;:'xxxx yyyy'
+(1:@:(] ] ]))"0 y
+y -: ;:'xxxx yyyy'
+
+x =. ;:'wwww zzzz'
+x ((] ])@[ 1: (] ])@])"0 y
+x =: ;:'wwww zzzz'
+y -: ;:'xxxx yyyy'
+
+
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
 4!:55 ;:'glob lag mm mrk msh pfx rag rank rk s1 t x xx y '

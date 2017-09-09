@@ -41,7 +41,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 /*        do not display error                  */
 /* tso: echo to stdout                          */
 
-#define SEEKLEAK 0  // scaf
+#define SEEKLEAK 0
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
  if(equ(w,one))R mtm;
  RZ(w=vs(w));

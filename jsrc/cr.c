@@ -18,8 +18,14 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
 #define NEWYA   {GA(ya,at,acn,lr,as+af); uu=CAV(ya);}
 #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
-#define MOVEYA  {MC(uu,u,ak); u+=ak; if(state&STATEAREL)RZ(ya=relocate((I)a-(I)ya,ya));}
-#define MOVEYW  {MC(vv,v,wk); v+=wk; if(state&STATEWREL)RZ(yw=relocate((I)w-(I)yw,yw));}
+// Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
+// that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
+// it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ra()
+// the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
+// if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
+// nonrecursive
+#define MOVEYA  {if(UCISRECUR(ya)){fa(*(A*)uu); AFLAG(ya)&=~RECURSIBLE;} MC(uu,u,ak); if(state&STATEAREL)RZ(ya=relocate((I)a-(I)ya,ya)); u+=ak;}
+#define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL)RZ(yw=relocate((I)w-(I)yw,yw)); v+=wk;}
 
 #define EMSK(x) (1<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure

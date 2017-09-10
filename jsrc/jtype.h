@@ -287,7 +287,7 @@ typedef I SI;
 #define AFREL           (I)8            /* uses relative addressing        */
 #define AFNOSMRELX      4
 #define AFNOSMREL       (I)(1<<AFNOSMRELX)   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
-// Note: in s.c we rely on AFNOSMREL being adjacent to BOX!!
+// Note: in s.c we rely on AFNOSMREL's being adjacent to BOX!!  In cr.c we rely on its being exactly what it is (it matches a hole in STATExxx)
 // The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
 // the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
 // block is actually freed

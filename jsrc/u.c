@@ -205,6 +205,7 @@ A jtcstr(J jt,C*s){R str((I)strlen(s),s);}
 // Return 1 iff w is the evocation of a name
 B evoke(A w){V*v=VAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
 
+// Extract the integer value from w, return it.  Set error if non-integral
 I jti0(J jt,A w){if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R*AV(w);}
 
 A jtifb(J jt,I n,B*b){A z;I m,*zv; 

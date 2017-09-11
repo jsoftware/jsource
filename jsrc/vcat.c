@@ -136,7 +136,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
  if(ARELATIVE(a)||ARELATIVE(w)){AFLAG(z)=AFREL; q=(I)jt->fillv+(I)w-(I)z; mvc(k*zn,x,k,&q);}
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
- R z;
+ INHERITNORELFILL2(z,a,w); R z;
 }    /* a,w general case for array with the same type; jt->rank=0 */
 
 static F2(jtovv){A z;I m,t;
@@ -151,7 +151,7 @@ static F2(jtovv){A z;I m,t;
   MC(x,  AV(a),m      ); 
   MC(x+m,AV(w),k*AN(w));
  }
- R z;
+ INHERITNOREL2(z,a,w); R z;
 }    /* a,w for vectors/scalars with the same type */
 
 static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
@@ -189,7 +189,7 @@ F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,w
  k=bp(t);
  om(k,c,acct,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
  om(k,c,wcct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
- R z;
+ INHERITNORELFILL2(z,a,w); R z;
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){B sp2;I ar,wr;

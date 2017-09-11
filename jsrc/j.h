@@ -430,8 +430,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
 #define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)
-// true is a has recursive usecount
+// true if a has recursive usecount
 #define UCISRECUR(a)    (AFLAG(a)&RECURSIBLE)
+// Structural verbs (dyads #, $, {., { etc) always inherit the SMNOREL status of their ibput, at least to start with
+#define INHERITNOREL(z,w) (AFLAG(z) |= AFLAG(w)&AFNOSMREL)
+// if the verb may add fill, we have to check the fill as well
+#define INHERITNORELFILL(z,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(w):AFLAG(w))&AFNOSMREL)
+#define INHERITNOREL2(z,a,w) (AFLAG(z) |= AFLAG(a)&AFLAG(w)&AFNOSMREL)
+// if the verb may add fill, we have to check the fill as well
+#define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does
 #define INSTALLBOX(x,xv,k,z) if(UCISRECUR(x))ra(z); xv[k]=z

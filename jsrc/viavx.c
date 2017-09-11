@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Verbs: Index-of                                                         */
 
+//TODO: don't EPILOG in indexofsub if there's not much to free.  That will save traversal of large boxed result
+
 #include "j.h"
 #include "vcomp.h"
 

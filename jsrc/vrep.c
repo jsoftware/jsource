@@ -263,7 +263,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 
-F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
+F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 
@@ -275,8 +275,8 @@ F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
- if(!acr||!wcr)R ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr);
- if(at&CMPX+SCMPX)R ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr);
- if(at&B01 +SB01 )R ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr);
- /* integer */    R ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr);
+ if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
+ if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); INHERITNORELFILL(z,w); R z;}
+ if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
+ /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
 }    /* a#"r w main control */

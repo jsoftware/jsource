@@ -77,7 +77,40 @@ THRESHOLD +. threshold < y rsq y1
 1 [ unmap_jmf_ 'q'
 1 [ unmap_jmf_ 'r'
 
+NB. Verify that AFNOSMREL is propagated through structural verbs
+f =: 1 : 0
+u y
+timenoa =: 6!:2 'u y'  NB. cost is verb time + free time.  free time is small unlees the verb runs EPILOGs
+timea =: 6!:2 'b =: u y'  NB. cost is verb time period - should be no free or REL cost
+4!:55<'b'
+timea < timenoa +1e_4
+)
+a =: 1000 $ < <"0 i. 1000
+4!:55 <'b'
 
-4!:55 ;:'f f1 g h h1 mean q r rsq ss tbase tip tnip x x1 y y1'
+> f a
+999&$ f a
+|. f a
+50&|. f a
+|: f a
+, f a
+a:&, f a
+,&a: f a
+,. f a
+,.&a f a
+,: f a
+,:&a: f a
+;&a f a
+(i. 1000)&{ f a
+999&{. f a
+{. f a
+}: f a
+}. f a
+}: f a
+1&}. f a
+-.&a: f a
+;&a f a
+
+4!:55 ;:'a f f1 g h h1 mean q r rsq ss tbase timenoa timea tip tnip x x1 y y1'
 
 

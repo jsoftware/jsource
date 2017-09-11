@@ -107,7 +107,8 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
   DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
   z=b?y:z;
  } 
- R RELOCATE(w,z);
+ RZ(z=RELOCATE(w,z));
+ INHERITNORELFILL(z,w); R z;
 }    /* a|.!.f"r w */
 
 
@@ -154,7 +155,8 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
 #endif
  }
- R RELOCATE(w,z);
+ RZ(z=RELOCATE(w,z));
+ INHERITNORELFILL(z,w); R z;
 }    /* |."r w */
 
 
@@ -214,7 +216,7 @@ F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,z
  RZ(a=vip(a)); r=AN(a); u=AV(a);
  if(SPARSE&AT(w))R reshapesp(a,w,wf,wcr);
  wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);
- ASSERT(n||!m||jt->fill,EVLENGTH);
+ ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
  b=jt->fill&&m>n; if(b)RZ(w=setfv(w,w)); 
  t=AT(w); k=bp(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
@@ -223,7 +225,8 @@ F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,z
  zv=CAV(z); wv=CAV(w); 
  if(b)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
- R RELOCATE(w,z);
+ RZ(z=RELOCATE(w,z));
+ INHERITNORELFILL(z,w); R z;
 }    /* a ($,)"r w */
 
 F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;

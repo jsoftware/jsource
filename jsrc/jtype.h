@@ -284,7 +284,8 @@ typedef I SI;
 #define AFRO            (I)1            /* read only; can't change data    */
 #define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
 #define AFSMM           (I)4            /* SMM managed                     */
-#define AFREL           (I)8            /* uses relative addressing        */
+#define AFRELX          3
+#define AFREL           (I)(1<<AFRELX)            // uses relative addressing.
 #define AFNOSMRELX      4
 #define AFNOSMREL       (I)(1<<AFNOSMRELX)   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
 // Note: in s.c we rely on AFNOSMREL's being adjacent to BOX!!  In cr.c we rely on its being exactly what it is (it matches a hole in STATExxx)

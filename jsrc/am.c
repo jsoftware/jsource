@@ -124,7 +124,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  RE(t=an?maxtype(at,wt):wt);  // get the type of the result: max of types, but if x empty, leave y as is
  if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
- // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a
+ // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w))))
 // obsolete      &&TYPESEQ(t,wt)&&(wt&DIRECT||((t&BOX)&&AFNJA&AFLAG(w)))&&w!=a&&w!=ind;
@@ -132,7 +132,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&BOX){
   I oldac = ACUC(w);  // remember original UC of w
-  ra0(a);  // ensure a is recursive usecount.  This will be fast if a has 1=L.
+  ra0(a);  // ensure a is recursive usecount.  This will be fast if a is one boxing level
   ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
  } 
 
@@ -150,7 +150,11 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  }else{
   // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
-  if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);          DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}  // known to be NOT in-place
+  if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
+   // z is relative.  It may still be in-place, and therefore may have recursive usecount
+   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ra(new); zv[iv[i]]=(A)AREL(new,z););
+   }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
+  }
   else{
    // Here for non-relative blocks.  Could be in-place.  If boxed,
    // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.

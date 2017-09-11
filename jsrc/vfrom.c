@@ -339,15 +339,17 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=
  RE(y); if(b){RZ(y=ca(x=y)); RZ(y=RELOCATE(x,y));} EPILOG(y);
 }    /* a{"r w for boxed index a */
 
-F2(jtfrom){I at;
+F2(jtfrom){I at;A z;
  RZ(a&&w);
  at=AT(a);
  switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
-  case 0:  R at&BOX?afrom(a,w)  :at&B01?bfrom(a,w):ifrom(a,w);
-  case 1:  R at&BOX?frombs(a,w) :                  fromis(a,w);
-  case 2:  R fromsd(a,w);
-  default: R fromss(a,w);
-}}   /* a{"r w main control */
+  case 0: z=at&BOX?afrom(a,w)  :at&B01?bfrom(a,w):ifrom(a,w); break;
+  case 1: z=at&BOX?frombs(a,w) :                  fromis(a,w); break;
+  case 2: z=fromsd(a,w); break;
+  default: z=fromss(a,w); break;
+ }
+ RZ(z); INHERITNOREL(z,w); R z;
+}   /* a{"r w main control */
 
 F2(jtsfrom){A ind;
  RE(aindex1(a,w,0L,&ind));
@@ -365,7 +367,16 @@ F1(jtmap){R mapx(ace,w);}
 
 F2(jtfetch){A*av,t,x=w;I ad,n;
  F2RANK(1,RMAX,jtfetch,0);
- if(!(BOX&AT(a)))RZ(a=box(a));
+ if(!(BOX&AT(a))){
+  // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
+  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVE(w)){I index;A z;
+   RE(index=i0(a));  // extract the index
+   if(index<0)index += AN(w); ASSERT(0<=index && index < AN(w),EVINDEX);   // remap negative index, check range
+   z=AAV(w)[index];  // select the box
+   if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
+  }
+  RZ(a=box(a));  // if not special case, box any unboxed a
+ }
  n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
  if(!n)R w;
  DO(n-1, RZ(t=afrom(box(AVR(i)),x)); ASSERT(!AR(t),EVRANK); RZ(x=ope(t)););

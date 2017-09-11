@@ -23,7 +23,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
   }
   // Not inplaceable.  Allocate and copy
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n*bp(wt)); R RELOCATE(w,z);  // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),n*bp(wt)); z=RELOCATE(w,z); RZ(z); INHERITNOREL(z,w); R z; // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
@@ -55,7 +55,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
  MC(AV(z),AV(w),AN(w)*bp(wt));
- R RELOCATE(w,z);
+ z=RELOCATE(w,z); RZ(z); INHERITNOREL(z,w); R z;
 }
 
 // ] [ and ]"n ["n, dyadic
@@ -79,14 +79,13 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
  GA(z,t,zn,of+r,os); ICPY(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
  k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
- R z;
+ INHERITNOREL(z,w); R z;
 } 
 
 F2(jtleft2 ){R lr2(1,a,w);}
 F2(jtright2){R lr2(0,a,w);}
 
-F1(jtright1){R w;}  // no PROLOG, so no copy required; but callers that check the usecount also need to recognize return of the
-                   // input buffer as a way of being in-use
+F1(jtright1){R w;}
 
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,0);

@@ -74,7 +74,8 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
 F1(jtcant1){I r; 
  RZ(w); 
  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
- R canta(apv(r,r-1,-1L),w);
+ A z=canta(apv(r,r-1,-1L),w);
+ RZ(z);  INHERITNOREL(z,w); R z;
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
@@ -88,5 +89,6 @@ F2(jtcant2){A*av,p,t,y;I ad,j,k,m,n,*pv,q,r,*v;
   m=AN(a); n=AN(t); av=AAV(a); ad=(I)a*ARELATIVE(a);
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
- R r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);
+ A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);
+ RZ(z);  INHERITNOREL(z,w); R z;
 }    /* a|:"r w main control */ 

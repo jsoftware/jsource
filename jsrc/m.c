@@ -906,7 +906,9 @@ F1(jtca){A z;I t;P*wp,*zp;
  t=AT(w);
  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
  else{GA(z,t,AN(w),AR(w),AS(w));}
- if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
+ // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL
+// obsolete  if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
+ AFLAG(z) = (AFLAG(w)&AFNOSMREL) + (!!(AFLAG(w)&AFNJA+AFSMM+AFREL)<<AFRELX);
  if(t&SPARSE){
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));

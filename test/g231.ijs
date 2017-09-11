@@ -359,7 +359,7 @@ NB. x|.!.f y ------------------------------------------------------------
 'domain error' -: 9   |.!.(<4) etx u:'supercalifragilisticexpialidocious'
 'domain error' -: 9   |.!.(<4) etx 10&u:'supercalifragilisticexpialidocious'
 'domain error' -: 9   |.!.(<4) etx s:@<"0 'supercalifragilisticexpialidocious'
-'domain error' -: 0   |.!.(<4) etx o.i.17
+(o.i.17) -: 0 |.!.(<4) etx o.i.17
 
 
 NB. x|."r y -------------------------------------------------------------

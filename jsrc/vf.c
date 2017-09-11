@@ -92,12 +92,13 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
  if(SPARSE&AT(w))R rotsp(a,w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 |. y, return y
- if(1<acr||af&&acr||af&&!wf)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));
+ if(1<acr||af&&acr||af&&!wf)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // handle rank by using " for it
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
- RZ(a=vi(a)); av=AV(a);
+ av=AV(a);
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bp(AT(w));
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;

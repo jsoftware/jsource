@@ -270,7 +270,7 @@ F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  at=AT(a); ab=1&&at&DENSE;
  wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
- if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];
+ if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
   if(aval==1)R RETARG(w);   // 1 # y, return y
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);

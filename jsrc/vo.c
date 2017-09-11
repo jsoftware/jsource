@@ -33,7 +33,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  I newflags = (AFLAG(w) | ((~AT(w))>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
  if(!jt->rank){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
-  // DO NOT set recursible, because that would trigger a potentially expensive pass through w which may never be needed if this result expires without being assigned
+  // DO NOT set recursible, because that would require a potentially expensive pass through w which may never be needed if this result expires without being assigned
   GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {

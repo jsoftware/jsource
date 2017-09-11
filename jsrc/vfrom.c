@@ -364,23 +364,30 @@ static F2(jtmapx){
 
 F1(jtmap){R mapx(ace,w);}
 
+// extract the single box a from w and open it.  Don't mark it no-inplace.
+static F2(jtquicksel){I index;
+ RE(index=i0(a));  // extract the index
+ if(index<0)index += AN(w); ASSERT(0<=index && index < AN(w),EVINDEX);   // remap negative index, check range
+ R AAV(w)[index];  // select the box
+}
 
-F2(jtfetch){A*av,t,x=w;I ad,n;
+F2(jtfetch){A*av, z;I ad,n;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVE(w)){I index;A z;
-   RE(index=i0(a));  // extract the index
-   if(index<0)index += AN(w); ASSERT(0<=index && index < AN(w),EVINDEX);   // remap negative index, check range
-   z=AAV(w)[index];  // select the box
+  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVE(w)){
+   A z=jtquicksel(jt,a,w);
    if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
  n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
- if(!n)R w;
- DO(n-1, RZ(t=afrom(box(AVR(i)),x)); ASSERT(!AR(t),EVRANK); RZ(x=ope(t)););
- RZ(t=afrom(box(AVR(n-1)),x));
- R !AR(t)&&AT(t)&BOX?ope(t):t;
+ if(!n)R w; z=w;
+ DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVE(z)){RZ(z=jtquicksel(jt,next,z))}
+      else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
+   );
+// obsolete  RZ(t=afrom(box(AVR(n-1)),x));
+// obsolete  R !AR(t)&&AT(t)&BOX?ope(t):t;   // open final result only if atomic box
+ if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
 }
 

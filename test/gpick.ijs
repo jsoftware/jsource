@@ -27,6 +27,20 @@ t=: 5!:2 <'pick'
 (< S: 0 t) -: (< S: 1 {::t){::&.><t 
 (<@": S: 0 t) -: (;:5!:5 <'pick') -. ;:'()'
 
+'index error'  -: 2 {:: etx 'a';'b'
+'index error'  -: _3 {:: etx 'a';'b'
+'index error'  -: (<2) {:: etx 'a';'b'
+'index error'  -: (<_3) {:: etx 'a';'b'
+t =: 'a';'b'
+'index error'  -: 2 {:: etx t
+'index error'  -: _3 {:: etx t
+'index error'  -: (<2) {:: etx t
+'index error'  -: (<_3) {:: etx t
+t =: 3;4
+6 = 3 + 0 {:: t
+t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
+(3;4) -: ([  4 + 0&{::) > < 3 ; 4   NB. Value fetched from box is non-inplaceable
+
 
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 

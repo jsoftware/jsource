@@ -376,7 +376,7 @@ F2(jtfetch){A*av, z;I ad,n;
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVE(w)){
-   A z=jtquicksel(jt,a,w);
+   RZ(z=jtquicksel(jt,a,w));
    if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a

@@ -129,7 +129,7 @@ F2(jtadot2){A m,p;I n;
  RZ(a&&w);
  n=IC(w); p=sc(n); if(XNUM&AT(a))p=cvt(XNUM,p); RZ(m=fact(p));
  ASSERT(all1(le(negate(m),a))&&all1(lt(a,m)),EVINDEX);
- if(!AR(w)){RZ(vi(a)); R ca(w);}
+ if(!AR(w)){RZ(vi(a)); RCA(w);}
  RZ(p=dfr(vi(abase2(apv(n,n,-1L),a))));
  R equ(w,IX(n))?p:from(p,w);
 }

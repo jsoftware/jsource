@@ -20,6 +20,8 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 #define EVERYI(exp)  {RZ(*zv++=x=exp); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
+// u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
+// TODO: avoid boxing step for unboxed args
 A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;I wd;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
@@ -46,6 +48,7 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd
  R z;
 }
 
+// u&.> main entry point.  Does not support inplacing.
 static DF1(jteach1){DECLF; R every (  w,fs,f1);}
 static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 

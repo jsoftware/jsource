@@ -142,6 +142,7 @@ OBJS=  \
  ../../jsrc/xl.o \
  ../../jsrc/xo.o \
  ../../jsrc/xs.o \
+ ../../jsrc/xsha.o \
  ../../jsrc/xt.o \
  ../../jsrc/xu.o
 

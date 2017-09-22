@@ -17,24 +17,29 @@ F1(jtlevel1){RZ(w); R sc(level(w));}
 
 F1(jtbox0){R irs1(w,0L,0L,jtbox);}
 
-F1(jtbox){A y,z,*zv;C*wv,*yv;I f,k,m,n,r,wr,*ws; 
+F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  RZ(w);
  ASSERT(!(SPARSE&AT(w)),EVNONCE);
- ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; 
- RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws)); 
- k=m*bp(AT(w)); wv=CAV(w);
- GATV(z,BOX,n,f,ws); zv=AAV(z);
- if(f){
-  GA(y,AT(w),m,r,f+ws); yv=CAV(y);
-  if(ARELATIVE(w)){A*v=(A*)wv;A1*u=(A1*)yv; DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
-  else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
- }else {rat1(w); *zv=w;}
+ if(!jt->rank){
+  // single box: fast path.  Mark w as incorporated into the result
+  GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
+ } else {
+  // <"r
+  ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
+  CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
+// obsolete   RE(n=prod(f,ws)); if(n)m=AN(w)/n; else RE(m=prod(r,f+ws));   // scaf fix: if no frame, save comp.
+  k=m*bp(t); wv=CAV(w);
+  GATV(z,BOX,n,f,ws); zv=AAV(z);
+  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}
+// obsolete   else DO(n, MC(yv,wv,k); wv+=k; RZ(zv[i]=ca(y)););
+  else DO(n, GA(y,t,m,r,f+ws); MC(CAV(y),wv,k); wv+=k; zv[i]=y;);
+ }
  R z;
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); if(AN(w)&&BOX&AT(w)){rat1(w); R w;}else{R box(w);}}
+F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}   // obsolete rat1 removed
 
-F2(jtlink){RZ(a&&w); if(AN(w)&&AT(w)&BOX){rat1(w);}else{w = box(w);} R over(box(a),w);}
+F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}  // obsolete rat1 removed
 
 static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;
@@ -125,28 +130,35 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // We don't support inplacing here yet so just do that always
 F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
- n=AN(w); v=AAV(w); b=ARELATIVE(w);
- if(!(n&&BOX&AT(w)))R ca(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
+ n=AN(w); v=AAV(w); b=ARELATIVE(w);  // b=1 if w is relative
+ if(!(n&&BOX&AT(w)))RCA(w); /* {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
  if(!AR(w)){z=b?(A)AABS(*v,w):*v; ACIPNO(z); R z;}   // turn off inplacing if we are using the contents directly
+ // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
   y=b?(A)AABS(v[i],w):v[i]; 
   q=MIN(q,AR(y)); 
-  r=MAX(r,AR(y)); 
+  r=MAX(r,AR(y));
+  // for nonempty contents, check for conformability and save highest-priority type
   if(AN(y)){
    k=AT(y); t=t?t:k; m=t|k;
    if(TYPESNE(t,k)){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
  }}
+ // if there were no nonempty contents, go back & pick highest-priority type of empty
  if(!t)DO(n, y=b?(A)AABS(v[i],w):v[i]; k=AT(y); RE(t=maxtype(t,k)););
+ // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
  GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
+ // find the shape of a result-cell
  DO(n, y=b?(A)AABS(v[i],w):v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
  else{
-  RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k; 
+  RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k;
+  // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); ICPY(AS(z)+AR(w),u,r); x=CAV(z);
-  c=b&&t&BOX;
+  c=b&&t&BOX;   // set if result is relative
   if(c){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);
   for(i=0;i<n;++i){
-   y=b?(A)AABS(v[i],w):v[i];
+   y=b?(A)AABS(v[i],w):v[i];   // get pointer to contents, relocated if need be
+   // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
    if(ARELATIVE(y))RZ(y=relocate((I)y-c*(I)z,ca(y)));
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 

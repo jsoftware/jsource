@@ -252,7 +252,7 @@ static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
   for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fa((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
-  // if the chain is not empty, chain previous pool from it & make it the base of the free pool
+  // if the chain is empty, chain previous pool from it & make it the base of the free pool
   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
   if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
  }
@@ -306,7 +306,7 @@ if(c<0){
  *cc=c;  // restore inplaceability, if the block is inplaceable
  if(c2>ACUC1){
   // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
-  // We have corrected the usecount back to inplaceable.  Return without pushing onto the stack a second time.
+  // We have corrected the usecount of w back to inplaceable.  Return without pushing onto the stack a second time.
   // If w is traversible, its contents have had their usecount incremented, so we'd better undo that
   // since we are not going to put the contents on the stack for later free (they're already there).
   // But the contents might have been popped above, if they were allocated late, and their usecount might now
@@ -328,11 +328,11 @@ R w;
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area
-I jtgc3(J jt,A x,A y,A z,I old){
+A jtgc3(J jt,A x,A y,A z,I old){
  if(x)ra(x);    if(y)ra(y);    if(z)ra(z);
  tpop(old);
  if(x)tpush(x); if(y)tpush(y); if(z)tpush(z);
- R 1;  // good return
+ R x;  // good return
 }
 
 I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
@@ -432,7 +432,7 @@ static I jtfaorpush(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 #endif
     I c = AC(np);  // fetch usecount
     if(tp&TRAVERSIBLE)jtfaorpush(jt,np,tp);  // recur before we free this block
-    if(--c<=0){tpush1(np)}else AC(np)=c;  // decrement usecount; push if it goes to 0; otherwise store decremented count
+    if(--c<=0){while(1); tpush1(np)}else AC(np)=c;  // scaf decrement usecount; push if it goes to 0; otherwise store decremented count
    }
    np = np0;  // advance to next box
   }

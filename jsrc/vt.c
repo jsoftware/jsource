@@ -100,6 +100,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  RZ((a=vib(a))&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; 
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ // special case: if a is atomic 0, and cells of w are not atomic
+ if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);
  n=AN(a); u=AV(a);
  ASSERT(!wcr||n<=wcr,EVLENGTH);

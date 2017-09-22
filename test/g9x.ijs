@@ -318,8 +318,8 @@ end.
 ) 
 
 (7!:0'') < initspace+20000
-1:^:(0=#(9!:46)'') 'break' -: 3 : 0 etx ''
-if. 0 = #f =. 9!:46'' do. 1 return. end.  NB. Can''t test if no file
+'break' -: 3 : 0 etx ''
+if. 0 = #f =. 9!:46'' do. 'break' return. end.  NB. Can''t test if no file
 try.
  for_n. i. 1e8 do.
   if. 0 = 10000 | n do.
@@ -327,7 +327,7 @@ try.
   end.
  end.
 catch.
- 1
+ 'break'
 end. 
 ) 
 

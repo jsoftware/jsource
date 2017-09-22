@@ -636,7 +636,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }
- if(!n)R ca(w);
+ if(!n)RCA(w);
  if(2>=n){
   RE(b=xop(h)); 
   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR

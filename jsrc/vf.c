@@ -134,7 +134,9 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  if(SPARSE&AT(w))R revsp(w);
  if(jt->fill)R rotate(num[-1],w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
- if(!(r&&AN(w))){RZ(z=ca(w)); R ARELATIVE(w)?relocate((I)w-(I)z,z):z;}
+// obsolete  if(!(r&&AN(w))){RZ(z=ca(w)); R ARELATIVE(w)?relocate((I)w-(I)z,z):z;}
+// obsolete  if(!(r&&AN(w))){RZ(z=ca(w)); R RELOCATE(w,z);}  // no atoms or reversing atoms
+ if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  wt=AT(w); ws=AS(w); wv=CAV(w);
  n=ws[f]; 
  m=1; DO(f, m*=ws[i];);

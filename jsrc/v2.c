@@ -282,7 +282,7 @@ static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
 static F1(jttotient){A b,x,z;B*bv,p=0;I k,n,t;
  RZ(w);
  n=AN(w); t=AT(w);
- if(t&B01)R ca(w);
+ if(t&B01)RCA(w);
  GATV(b,B01,n,AR(w),AS(w)); bv=BAV(b);
  if(t&INT){I*wv=AV(w),*xv;
   GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);

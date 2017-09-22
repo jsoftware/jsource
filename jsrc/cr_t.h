@@ -13,8 +13,8 @@
 #define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
 #define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-#define RARG    {if(y==yw||ACUC1<AC(yw)){cc = 0;NEWYW;} MOVEYW;}
-#define RARG1   {if(y==yw||ACUC1<AC(yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
+#define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 #else
 #define RDECLS
 

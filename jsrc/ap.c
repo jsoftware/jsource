@@ -256,7 +256,7 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  // y is the verb u; id=pseudocharacter for it
  y=VAV(self)->f; id=vaid(VAV(y)->f);
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w
- if(2>n||!wn){if(id){jt->rank=0; R r?ca(w):reshape(over(shape(w),one),w);}else R prefix(w,self);}
+ if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R prefix(w,self);}
  vapfx(id,wt,&ado,&cv);
  if(!ado)R prefix(w,self);
  if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));

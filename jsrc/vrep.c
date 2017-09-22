@@ -263,14 +263,21 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 
-F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt;
+F2(jtrepeat){B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 
  at=AT(a); ab=1&&at&DENSE;
- wt=AT(w); wb=1&&wt&DENSE;
+ wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
+ // special case: if a is atomic 0 or 1, and cells of w are not atomic
+ if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];
+  if(aval==1)R RETARG(w);   // 1 # y, return y
+  if(aval==0 && wb){   // 0 #"r y, return empty with 0 in the right place
+   GA(w,wt,0,wr,ws); AS(w)[wf]=0; R w;
+  }
+ }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
- ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+AS(w))),EVLENGTH);
+ ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
  if(!acr||!wcr)R ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr);
  if(at&CMPX+SCMPX)R ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr);
  if(at&B01 +SB01 )R ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr);

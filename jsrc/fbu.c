@@ -406,9 +406,9 @@ A RoutineA(J jt,A w){A z;I n,t,q,q1,b=0; UC* wv;
  ASSERT(t&LIT,EVDOMAIN);
  if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list 
  DO(n, if(127<*wv++){b=1;break;});
- if(!b)R ca(w);
+ if(!b)RCA(w);
  q=mtowsize(UAV(w),n);
- if(q<0)R ca(w);
+ if(q<0)RCA(w);
  if(q==(q1=mtousize(UAV(w),n))){
   GATV(z,C2T,q,1,0);
   mtow(UAV(w),n,USAV(z));

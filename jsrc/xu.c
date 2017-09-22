@@ -756,7 +756,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  else if(LIT&t) // u16 from u8
  {
   DO(n, if(127<*wv++){b=1;break;});
-  if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
+  if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtowsize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C2T,q,1,0);
@@ -766,7 +766,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  {
   c2v=USAV(w);
   DO(n, if(127<*c2v++){b=1;break;});
-  if(b) R ca(w); // u16 unchanged
+  if(b)RCA(w); // u16 unchanged
   GATV(z,LIT,n,1,0);
   wv=UAV(z);
   c2v=USAV(w);
@@ -799,7 +799,7 @@ F1(jttoutf8a){A z;I n,t,q;
 PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
-if(t&LIT) R ca(w); // char unchanged
+if(t&LIT)RCA(w); // char unchanged
 ASSERT(t&(C2T+C4T), EVDOMAIN);
 if(t&C2T)
 {
@@ -823,7 +823,7 @@ F1(jttoutf8){A z;I n,t,q,j; A c4; C4* c4v; I *v;
 PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty lit list
-if(t&LIT) R ca(w); // char unchanged
+if(t&LIT)RCA(w); // char unchanged
 ASSERT(t&(NUMERIC+JCHAR), EVDOMAIN);
 if(jt->unicodex78){ASSERT(t&JCHAR, EVDOMAIN);}
 if(NUMERIC&t)
@@ -859,7 +859,7 @@ F1(jttoutf16x){A z;I n,t,q;
 PROLOG(0000);
 RZ(w); ASSERT(1>=AR(w),EVRANK); n=AN(w); t=AT(w);
 if(!n) {GATV(z,C2T,n,AR(w),AS(w)); R z;}; // empty list
-if(t&C2T)R ca(w);
+if(t&C2T)RCA(w);
 ASSERT(t&LIT+C4T,EVDOMAIN);
 if(t&C4T)
 {
@@ -901,7 +901,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
  else if(LIT&t) // u32 from u8
  {
   DO(n, if(127<*wv++){b=1;break;});
-  if(!b)R ca(w);  // ascii list unchanged ascii scalar as list
+  if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtousize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
   GATV(z,C4T,q,1,0);
@@ -953,7 +953,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
 F1(jttou32){A z;I n,t,b=0,j; UC* wv; US* c2v; C4* c4v; I* v; UC* c1v;
  PROLOG(0000);
  RZ(w); n=AN(w); t=AT(w); wv=UAV(w);
- if(C4T&AT(w))R ca(w);  // if already C4T, clone it and return the clone
+ if(C4T&AT(w))RCA(w);  // if already C4T, return
  ASSERT(!n||(NUMERIC+JCHAR)&AT(w),EVDOMAIN);  // must be empty or unicode
  if(!n) {GATV(z,C4T,n,AR(w),AS(w)); R z;}; // empty list
  if(NUMERIC&t)
@@ -988,7 +988,7 @@ if(!n) {GATV(z,LIT,n,AR(w),AS(w)); R z;}; // empty list
 ASSERT(t&LIT,EVDOMAIN);
 // convert to utf-16
 q=mtowsize(wv,n);
-if(q<0)R ca(w);
+if(q<0)RCA(w);
 GATV(z,C2T,q,1,0);
 c2v=USAV(z);
 mtow(wv,n,c2v);

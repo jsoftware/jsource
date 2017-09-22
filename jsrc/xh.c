@@ -67,7 +67,7 @@ F1(jthost){A z;
 #else
  strcpy(fn,"/tmp");
 #endif
- strcat(fn,"/tmp.XXXXX");
+ strcat(fn,"/tmp.XXXXXX");
  {int fd=mkstemp(fn); close(fd);}
 #if defined(ANDROID) || (defined(__MACH__) && !defined(TARGET_OS_IPHONE))
 /* no posix_spawn */

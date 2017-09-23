@@ -893,13 +893,13 @@ xx=:256$(<"0@s: ;:'Cogito, ergo sum.'),(<"1 ?30 2$1e6),(<?3 4$100),<3j4
 1 1 1 -: (<u:'asdf')~:4 5 6
 
 NB. Hooks and forks that modify the temp cell but don't return it
-y =. ;:'xxxx yyyy'
+y =: ;:'xxxx yyyy'
 (1:@:([ 1:))"0 y
 y -: ;:'xxxx yyyy'
 (1:@:(] ] ]))"0 y
 y -: ;:'xxxx yyyy'
 
-x =. ;:'wwww zzzz'
+x =: ;:'wwww zzzz'
 x ((] ])@[ 1: (] ])@])"0 y
 x =: ;:'wwww zzzz'
 y -: ;:'xxxx yyyy'

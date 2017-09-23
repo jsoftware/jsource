@@ -123,6 +123,24 @@ testb=: 3 : 0
 testb"0 ] 22 25
 testb"0 ] 16 17 19 21 23 31
 
+NB. test case of dissimilar prefix and suffix
+a=: ". ;._2 [ 0 : 0
+92 34 99
+92 99 92
+ 0 99  0
+34 92  0
+99 92 34
+ 0 92  0
+34 99 34
+ 0 99 92
+92 92 99
+34 34 92
+92 34 92
+34  0 34
+)
+
+(_11 (*/\.) a) -: (*/&> _11 (<\.) a)
+
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
 4!:55 ;:'prefix sd seg suffix t testa testb'

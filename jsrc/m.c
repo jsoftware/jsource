@@ -322,7 +322,7 @@ void audittstack(J jt){
 #endif
 }
 
-/* scaf
+/* obsolete
 I symfreelen(J jt){I l,k;  // scaf
  for(k = jt->sympv[0].next, l=0;k;k=(jt->sympv)[k].next)++l;
  R l;
@@ -541,7 +541,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  R 1;
 }
 
-#if 0
+#if 0  // obsolete
 // Same as fa, but if the usecount would go to 0, we instead do a tpush to defer the free
 // It would be best to handle this with a recursive usecount
 static I jtfaorpush(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);

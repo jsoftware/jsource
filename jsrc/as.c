@@ -296,20 +296,32 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,cv,d,k,kc,m,r,t;V*v;VF ado;
  F2RANK(0,RMAX,jtofxassoc,self);
- m=IC(w); RE(k=i0(a)); c=ABS(k);
+ m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=VAV(self)->f; x=VAV(f)->f; v=VAV(x); id=CBDOT==v->id?(C)*AV(v->f):v->id;
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);
  if(-1<=k){d=m-c;     RZ(i=apv(d,0L, 1L)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
- RZ(p=from(i,df1(w,bslash(f)))); 
- RZ(s=from(j,df1(w,bsdot(f))));
- r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
- RZ(var(id,p,p,t,t,&ado,&cv)); 
- ASSERTSYS(ado,"ofxassoc");
- GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);
- MC(zv,     AV(s),          kc);                     /* {.s           */
- if(1<d)ado(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s) */
- MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     /* {:p           */
+ // d is (number of result cells)-1; i is indexes of last item of the excluded infix for cells AFTER the first
+ // j is indexes of first item AFTER the excluded infix for cells BEFORE the last
+ RZ(p=from(i,df1(w,bslash(f)))); // p is i { u\ w; that is, the totals of the prefixes after the first
+ RZ(s=from(j,df1(w,bsdot(f))));  // s is j { u\. w; totals of suffixes except the last
+ // We need to make sure that p, s, and (p f s) all have the same type.  This is problematic, since we don't actually see
+ // the type of (p f s) which is encoded in cv below.  But since this case is limited to atomic associative verbs, we
+ // know that if p and s have the same type, p f s will also, except that it might overflow, which we will detect after we
+ // run it.
+ //
+ // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
+ if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if dissimilar types
+  r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
+  RZ(var(id,p,p,t,t,&ado,&cv)); // analyze the u operand
+  ASSERTSYS(ado,"ofxassoc");
+  GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);  // allocate result assuming no overflow
+  MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
+  if(1<d)ado(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */
+  MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
+  // If there was overflow on the ado, we have to redo the operation as a float.
+  // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)
+ }
  if(jt->jerr>=EWOV){RESETERR; R ofxassoc(a,cvt(FL,w),self);}else R z;
 }    /* a f/\. w where f is an atomic associative fn */
 

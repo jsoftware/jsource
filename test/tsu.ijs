@@ -2,6 +2,7 @@ NB. test script utilities -----------------------------------------------
 
 cocurrent 'base'
 9!:19[2^_44   NB. default but some tests require a larger ct
+NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
 
 3 : 0 ''
 testpath=: '/',~(t i:'/'){.t=. jpath;(4!:4<'ddall'){4!:3''
@@ -119,7 +120,7 @@ comb=: 4 : 0
 )
 
 randuni=: 3 : 0
- initsymbolstate =: 0 s: 10  NB. Preserve init symbol state so it doesn't keep growing
+ initsymbolstate =: 0 s:^:(0 = {. ". 'NORESETSTABLE') 10  NB. Preserve init symbol state so it doesn't keep growing
  l2max=. 1024       NB. #literal2 sample   multiple of 256
  l4max=. 1024       NB. #literal4 sample   multiple of 256
  sbmax=. 1024       NB. #symbol sample     multiple of 256
@@ -157,7 +158,7 @@ NB. validation
  ''
 )
 randfini =: 3 : 0
-10 s: initsymbolstate
+if. 32 = 3!:0 initsymbolstate do. 10 s: initsymbolstate end.  NB. Reset symbol table if it was saved
 4!:55 <'initsymbolstate'
 )
 

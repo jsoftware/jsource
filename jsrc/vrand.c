@@ -634,20 +634,23 @@ DF2(jtrollk){A g;V*sv;
  R rollksub(a,vi(w));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
-static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
+static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
- c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});  // c=MS digit; if any lower digit non0, add 1
- m=n-(1==c);  // get number of digits in result: same as input unless MSD is 0, which means input was 10000...
+// obsolete c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});  // c=MS digit; if any lower digit non0, add 1
+// obsolete m=n-(1==c);  // get number of digits in result: same as input unless MSD is 1, which means input was 10000...
+ m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
  GATV(q,INT,m,1,0); qv=AV(q);  // allocate place to hold base, qv-> result digits
- DO(m, qv[i]=XBASE;); if(1<c)qv[m-1]=c;  // init base to the largest possible value in each Digit
+// obsolete DO(m, qv[i]=XBASE;); if(1<c)qv[m-1]=c;  // init base to the largest possible value in each Digit
+ DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
  do{
   RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
-  if(1==c)break;  // if there are fewer output Digits than input, can't compare; but fortunately the result is always valid
+// obsolete  if(1==c)break;  // if there are fewer output Digits than input, can't compare; but fortunately the result is always valid
 // obsolete  DO(j=m, --j; if(xv[j]>zv[j]){b=0; break;});  // if any input digit is less than 
-  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1 
+  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
  }while(b);  // loop till b=0
- j=m-1; while(0<=j&&!zv[j])--j; AN(z)=*AS(z)=0>j?1:1+j;
+// obsolete  j=m-1; while(0<=j&&!zv[j])--j; AN(z)=*AS(z)=0>j?1:1+j;  // remove leading 0s from (tail of) result
+ j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 

@@ -292,8 +292,8 @@ b =: <i. 10000
 2000 > 7!:2 'a =: a , a:'
 2000 > 7!:2 'a =: a , b'
 2000 > 7!:2 'a =: a , <b'
-80000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
-80000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
+40000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
+40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
 
 
 NB. Verify no local-to-global aliasing

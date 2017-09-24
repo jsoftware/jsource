@@ -124,6 +124,7 @@ testb"0 ] 22 25
 testb"0 ] 16 17 19 21 23 31
 
 NB. test case of dissimilar prefix and suffix
+NB. J64
 a=: ". ;._2 [ 0 : 0
 92 34 99
 92 99 92
@@ -141,6 +142,22 @@ a=: ". ;._2 [ 0 : 0
 
 (_11 (*/\.) a) -: (*/&> _11 (<\.) a)
 
+NB. J32
+a=: ". ;._2 [ 0 : 0
+65  0  0
+65 65  0
+84 84 79
+ 0 60 97
+ 0 79 65
+65  0  0
+97 84 84
+84 84 65
+84  0 65
+60 65 65
+97 65 97
+)
+
+(_10 (*/\.) a) -: (*/&> _10 (<\.) a)
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix k kay key ob oind omask osub outfix'
 4!:55 ;:'prefix sd seg suffix t testa testb'

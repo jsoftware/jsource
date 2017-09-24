@@ -83,7 +83,8 @@ u y
 timenoa =: 6!:2 'u y'  NB. cost is verb time + free time.  free time is small unlees the verb runs EPILOGs
 timea =: 6!:2 'b =: u y'  NB. cost is verb time period - should be no free or REL cost
 4!:55<'b'
-timea < timenoa +1e_4
+NB. timea < timenoa +1e_4
+THRESHOLD +. threshold < (timenoa +1e_4) rsq timea
 )
 a =: 1000 $ < <"0 i. 1000
 4!:55 <'b'

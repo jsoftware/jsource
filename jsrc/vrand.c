@@ -635,25 +635,29 @@ DF2(jtrollk){A g;V*sv;
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
 static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I c,j,m,n,*qv,*xv,*zv;
- n=AN(x); xv=AV(x);
- c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});
- m=n-(1==c);
- GATV(q,INT,m,1,0); qv=AV(q);
- DO(m, qv[i]=XBASE;); if(1<c)qv[m-1]=c;
- while(b){
-  RZ(z=roll(q)); zv=AV(z);
-  if(1==c)break;
-  DO(j=m, --j; if(xv[j]>zv[j]){b=0; break;});
- }
+ n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
+ c=xv[n-1]; DO(n-1, if(xv[i]){++c; break;});  // c=MS digit; if any lower digit non0, add 1
+ m=n-(1==c);  // get number of digits in result: same as input unless MSD is 0, which means input was 10000...
+ GATV(q,INT,m,1,0); qv=AV(q);  // allocate place to hold base, qv-> result digits
+ DO(m, qv[i]=XBASE;); if(1<c)qv[m-1]=c;  // init base to the largest possible value in each Digit
+ // loop to roll random values until we get one that is less than x
+ do{
+  RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
+  if(1==c)break;  // if there are fewer output Digits than input, can't compare; but fortunately the result is always valid
+// obsolete  DO(j=m, --j; if(xv[j]>zv[j]){b=0; break;});  // if any input digit is less than 
+  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1 
+ }while(b);  // loop till b=0
  j=m-1; while(0<=j&&!zv[j])--j; AN(z)=*AS(z)=0>j?1:1+j;
  EPILOG(z);
 }    /* ?x where x is a single strictly positive extended integer */
 
 static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
- if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));
+ if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
+ // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
  DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=xrand(x)) else{*u++=iv0; c=1;});
+ // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
   RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);

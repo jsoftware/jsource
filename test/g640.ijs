@@ -80,6 +80,7 @@ test1"0 x: 5 555 55555
 9!:43 (2)
 42 666 -: 9!:0 ''
 
+(> 10000&(?@$)) 10000099999x NB. verify extended results in range
 
 'domain error' -: ? etx 'abc'
 'domain error' -: ? etx 2 3 _4

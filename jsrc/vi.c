@@ -1489,8 +1489,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      // If the sizes are such that we should clear this table to save 3 clocks per atom of w, say so.  The clearing is done in hashallo.  Only for non-bits.
      mode |= ((c*3+m)<(p<<(1-(LGSZI-LGSZUI4))))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/2 cycle per atom to clear (without wide insts)
     }
-    I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 to the request:
-         // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes; for hashing, we need a sentinel at the beginning and the end
+    I psizeinbytes = ((p>>booladj)+4)*sizeof(UI4);   // Get length of table in bytes.  We add 4 UI4s to the request:
+         // for small-range to round up to an even word of an I, and possibly padding leading/trailing bytes for packed bits; for hashing, we need a sentinel at the beginning and the end
+         // The 4 UI4s give plenty of slack
     if(mk||!((h=jt->idothash1) && IHAV(h)->datasize >= psizeinbytes)){
      // if we have to reallocate, free the old one
      if(!mk&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
@@ -1512,7 +1513,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
        fillval=m; 
       }  // fill bits with 0; fill full hashes with m
       if(SZI>4)fillval|=fillval<<(32%BW);  // fill entire words
-      UI fillct=(p+((((1LL<<(LGSZI-LGSZUI4))<<booladj)-1)))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is
+      UI fillct=(p+(((2LL<<(LGSZI-LGSZUI4))<<booladj)-1))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is.  We add 2 SZIs because we must pad packed bits on both ends 
       DO(fillct, hh->data.UI[i]=fillval;)
 // obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed

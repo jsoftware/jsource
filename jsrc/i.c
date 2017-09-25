@@ -1,4 +1,4 @@
-/* Copyright 1990-2009, Jsoftware Inc.  All rights reserved.               */
+/* Copyright 1990-2017, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Initializations                                                         */
@@ -11,13 +11,6 @@
 #include <floatingpoint.h>
 #endif
 
-J gjt=0; // JPF debug
-int      hwavx=0;
-int      hwfma=0;
-int      hwcrc=-1;  // indicate uninitialized
-
-void startup(void);
-
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
  GATV(z,NAME,m,1,0); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
@@ -29,8 +22,32 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  ACX(z);
  R z;
 }
-// Use GA for all these initializations, to save space since they're done only once
 
+/* 
+JE can be used by multiple processes (threads and tasks)
+
+a single image of the dll is in memory - global storage is shared by processes
+
+storage belonging to a process MUST be rooted in the J structure
+
+global storage shared by processes must be initialized
+thread-safe/one-time when the dll image is first loaded
+
+global storage that changes after init is a bad bug waiting to happen
+
+global storage must be initialized in globint()
+this is thread-safe in windows - called from dllmain
+not currently thread-safe in unix, but could be, and at least is all in one spot
+*/
+
+// globals 
+J gjt=0; // JPF debug - convenience debug single process
+int      hwavx=0;
+int      hwfma=0;
+int      hwcrc=-1;  // indicate uninitialized
+
+// thread-safe/one-time initialization of all global constants
+// Use GA for all these initializations, to save space since they're done only once
 B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
@@ -82,8 +99,24 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  pf=qpf();
  pinit();
 
+ // crc init
+ if(hwcrc==-1)
+ {  
+  cpuInit();
+#if defined(__aarch64__)
+  hwcrc=1;  // 64-bit armv8a in android supports hardware crc. not sure for iOS
+#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
+  hwcrc=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2)?1:0;
+  hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
+  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
+  // fprintf(stderr,"hwcrc %d hwavx %d hwfma %d\n",hwcrc,hwavx,hwfma);
+#else
+  hwcrc=0;
+#endif
+ }
+
 R 1;
-}    /* called once when dll is loaded to create global constants */
+}
 
 static B jtevinit(J jt){A q,*v;
  GA(q,BOX,1+NEVM,1,0); v=AAV(q);
@@ -140,6 +173,7 @@ if (CTTZZ(0x140000000LL) != 30)*(I *)3 = 103;   // Create program check if error
 // verify that (I)x >> does sign-extension.  jtmult relies on that
 if(((-1) >> 1) != -1)*(I *)4 = 104;
 #endif
+jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
 jt->assert = 1;
  RZ(jt->bxa=cstr("+++++++++|-")); jt->bx=CAV(jt->bxa);
  y=1.0; DO(44, y*=0.5;); jt->ctdefault=jt->ct=jt->fuzz=y;
@@ -158,12 +192,48 @@ jt->assert = 1;
  R 1;
 }
 
-// Initialization of fields in *jt that are not initialized to 0.  *jt itself has been cleared to 0.
-static void jtjtinit(J jt){
-// zero jt->parsercalls=0;
-// zero jt->parserstkbgn=jt->parserstkend1=0;
-// zero CLEARZOMBIE
- jt->asgzomblevel = 1;  // allow premature change to zombie names, but not data-dependent errors
+static C jtjinit3(J jt){S t;
+/* required for jdll and doesn't hurt others */
+ gjt=jt; // global jt for JPF debug
+#if (SYS & SYS_DOS)
+ t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
+#endif
+#if (SYS & SYS_OS2)
+ t=EM_ZERODIVIDE+EM_INVALID+EM_OVERFLOW+EM_UNDERFLOW; _control87(t,t);
+#endif
+#if (SYS & SYS_FREEBSD)
+ fpsetmask(0);
+#endif
+ jt->tssbase=tod();
+ jt->thornuni=0;  // init to non-unicode (normal) state
+ jt->jprx=0;      // init to non jprx jconsole output (normal) state
+ meminit();
+ sesminit();
+ evinit();
+ consinit();
+ symbinit();
+ parseinit();
+ xoinit();
+ xsinit();
+ sbtypeinit();
+ rnginit();
+ bucketinit();
+// #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
+#if (SYS & SYS_DOS+SYS_MACINTOSH)
+ xlinit();
+#endif
+ jtecvtinit(jt);
+ // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
+ // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
+ // look like those symbols have a free outstanding.
+ jt->tnextpushx=SZI;  // first store is to entry 1 of the first block
+ R !jt->jerr;
+}
+
+C jtjinit2(J jt,int dummy0,C**dummy1){jt->sesm=1; R jinit3();}
+
+/* unused cpuInfo
+
 #if 0   // Now we detect architecture at installation time, using C_AVX
  // See if processor supports AVX instructions
  // Tip o' hat to InsufficientlyComplicated and the commenter
@@ -190,62 +260,5 @@ static void jtjtinit(J jt){
   jt->cpuarchavx = (xcrFeatureMask & 0x6) == 0x6;
  }
 #endif
+*/
 
-// for auto-tuning
- if(hwcrc==-1){  // run once, not thread safe
- cpuInit();
-#if defined(__aarch64__)
- hwcrc=1;  // 64-bit armv8a in android supports hardware crc. not sure for iOS
-#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
- hwcrc=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2)?1:0;
- hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
- hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
-// fprintf(stderr,"hwcrc %d hwavx %d hwfma %d\n",hwcrc,hwavx,hwfma);
-#else
- hwcrc=0;
-#endif
- }
-
-}
-
-
-static C jtjinit3(J jt){S t;
-/* required for jdll and doesn't hurt others */
- gjt=jt; // global jt for JPF debug
-#if (SYS & SYS_DOS)
- t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
-#endif
-#if (SYS & SYS_OS2)
- t=EM_ZERODIVIDE+EM_INVALID+EM_OVERFLOW+EM_UNDERFLOW; _control87(t,t);
-#endif
-#if (SYS & SYS_FREEBSD)
- fpsetmask(0);
-#endif
- jt->tssbase=tod();
- jt->thornuni=0;  // init to non-unicode (normal) state
- jt->jprx=0;      // init to non jprx jconsole output (normal) state
- meminit();
- sesminit();
- evinit();
- consinit();
- jtjtinit(jt);
- symbinit();
- parseinit();
- xoinit();
- xsinit();
- sbtypeinit();
- rnginit();
- bucketinit();
-// #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
-#if (SYS & SYS_DOS+SYS_MACINTOSH)
- xlinit();
-#endif
- jtecvtinit(jt);
- // We have completed initial allocation.  Everything allocated so far will not be freed by a tpop, because
- // tpop() isn't called during initialization.  So, to keep the memory auditor happy, we reset ttop so that it doesn't
- // look like those symbols have a free outstanding.
- jt->tnextpushx=SZI;  // first store is to entry 1 of the first block
- R !jt->jerr;
-}
-
-C jtjinit2(J jt,int dummy0,C**dummy1){jt->sesm=1; R jinit3();}

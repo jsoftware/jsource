@@ -282,24 +282,31 @@ void jsto(J jt,I type,C*s){C e;I ex;
 
 #if SYS&SYS_UNIX
 
+/* lock file for thread-safe globinit
+ int f= open("/tmp/j_lockfile",O_RDWR | O_CREAT,00777);
+ if(-1==f){fprintf(stderr,"create /tmp/j_lockfile failed\n");return 0;}
+ if(-1==lockf(f,F_LOCK,0)){fprintf(stderr,"lock /tmp/j_lockfile failed\n");return 0;}
+ ...
+ close(f);
+*/
+
+// non-windows version
+// not thread-safe - could use lock fle lock file for thread-safe globinit
 J JInit(void){
-  J jt;
-  /* jtglobinit must be done once when dll is first loaded
-     Windows does it in dll load routine  - thread safe
-     Unix does it here once, but this is not thread safe */
-  
-  static J g_jt=0;
-  if(!g_jt)
-  {
-    g_jt=malloc(sizeof(JST));
-    if(!g_jt) R 0;
-    memset(g_jt,0,sizeof(JST));
-    if(!jtglobinit(g_jt)){free(g_jt);g_jt=0; R 0;}
-  }
-  RZ(jt=malloc(sizeof(JST)));
-  memset(jt,0,sizeof(JST));
-  if(!jtjinit2(jt,0,0)){free(jt); R 0;};
-  R jt;
+ static J g_jt=0;
+ J jt;
+
+ if(!g_jt)
+ {
+  g_jt=malloc(sizeof(JST));
+  if(!g_jt) R 0;
+  memset(g_jt,0,sizeof(JST));
+  if(!jtglobinit(g_jt)){free(g_jt);g_jt=0; R 0;}
+ }
+ RZ(jt=malloc(sizeof(JST)));
+ memset(jt,0,sizeof(JST));
+ if(!jtjinit2(jt,0,0)){free(jt); R 0;};
+ R jt;
 }
 
 // clean up at the end of a J instance

@@ -24,20 +24,24 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
 }
 
 /* 
-JE can be used by multiple processes (threads and tasks)
+JE can be used by multiple tasks and threads
+tasks are easier than threads
+global memory is distinct between tasks but is shared between threads
 
-a single image of the dll is in memory - global storage is shared by processes
+JE support for multiple tasks is good
 
-storage belonging to a process MUST be rooted in the J structure
+JE support for threads has problems
+ unix globinit is not thread-safe
+ there are a few globals not handled in globinit or that
+  are not constants and they need to be found and sorted out
+ global storage that changes after globinit is a bad bug waiting to happen
 
-global storage shared by processes must be initialized
-thread-safe/one-time when the dll image is first loaded
+storage belonging to a task or thread should be be rooted in the J structure
+there are only a few globals that have storage not in J
 
-global storage that changes after init is a bad bug waiting to happen
-
-global storage must be initialized in globint()
+global storage should be initialized in globint()
 this is thread-safe in windows - called from dllmain
-not currently thread-safe in unix, but could be, and at least is all in one spot
+not currently thread-safe in unix, but could be (at least is all in one spot)
 */
 
 // globals 

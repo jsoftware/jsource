@@ -282,6 +282,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
 
 #if SYS&SYS_UNIX
 
+#ifndef ANDROID
 /* lock file for thread-safe globinit
  int f= open("/tmp/j_lockfile",O_RDWR | O_CREAT,00777);
  if(-1==f){fprintf(stderr,"create /tmp/j_lockfile failed\n");return 0;}
@@ -289,6 +290,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
  ...
  close(f);
 */
+#endif
 
 // non-windows version
 // not thread-safe - could use lock fle lock file for thread-safe globinit

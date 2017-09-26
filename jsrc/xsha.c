@@ -88,7 +88,7 @@ F2(jtshasum2)
   }
   break;
   case 2: {
-    UC d[28],dh[2*28];
+    UC d[32],dh[2*32];
     SHA256_CTX c;
     SHA224_Init(&c);
     SHA256_Update(&c, (const uint8_t *)v, n);

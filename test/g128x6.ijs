@@ -209,13 +209,14 @@ f=: 128!:6
 'domain error' -: f etx 2 3r4
 'domain error' -: f etx 2 3;4
 'domain error' -: f etx s:@<"0 'abc'
+'domain error' -: f etx u: 'abc'
+'domain error' -: f etx 10 u: 'abc'
 
-'rank error'   -: f etx 3 4$'abc'
-'rank error'   -: f etx 3 4$u:'abc'
-'rank error'   -: f etx 3 4$10&u:'abc'
-'rank error'   -: f etx 3 4$s:@<"0 'abc'
-'rank error'   -: (,1)  f etx 'xyz'
-'length error' -: 1 2   f etx 'xyz'
+(f -: f"1 0 1"1 0 1) 3 4$'abc'
+(,1)  (f -: f"1 0 1"1 0 1)  'xyz'
+1 2 (f -: f"1 0 1"1 0 1)  'xyz'
+
+
 
 'domain error' -: 123           f etx 3 4 5
 'domain error' -: 123           f etx 3 4 5x

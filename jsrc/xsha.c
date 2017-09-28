@@ -55,11 +55,11 @@ F2(jtshasum2)
   I n;
   A z;
   UC *v;
-  RZ(a&&w);
+  F2RANK(0,1,jtshasum2,0);  // do rank loop if necessary
   RZ(a=vi(a));
-  ASSERT(1==AN(a),EVLENGTH);
-  ASSERT(0==AR(a),EVRANK);
-  ASSERT(1>=AR(w),EVRANK);
+// obsolete  ASSERT(1==AN(a),EVLENGTH);
+// obsolete   ASSERT(0==AR(a),EVRANK);
+// obsolete   ASSERT(1>=AR(w),EVRANK);
   n=AN(w);
   v=UAV(w);
   ASSERT(!n||AT(w)&LIT,EVDOMAIN);

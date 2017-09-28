@@ -44,10 +44,10 @@ void bli_dgemm_128_6x4
   cntx_t*    restrict cntx
 )
 {
-+#if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6))
+#if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ > 6))
   a = (double*) __builtin_assume_aligned (a, alignv);
   b = (double*) __builtin_assume_aligned (b, alignv);
-+#endif
+#endif
 
   double alpha=*alpha_, beta=*beta_;
 

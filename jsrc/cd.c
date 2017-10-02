@@ -264,13 +264,14 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
  R A0;
 }
 
+// integrals of f&g, where exactly one of f,g is a noun
 static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  RZ(w);
  v=VAV(w);
- f=v->f; nf=1&&NOUN&AT(f);
+ f=v->f; nf=1&&NOUN&AT(f);  // nf means f is a noun, ng means g is a noun
  g=v->g; ng=1&&NOUN&AT(g);
- h=nf?g:f; id=ID(h); x=nf?f:g; 
- if(!(!AR(x)||id==CPOLY))R A0;
+ h=nf?g:f; id=ID(h); x=nf?f:g; // h is the verb operand, x is the noun
+ if(!(!AR(x)||id==CPOLY))R A0;  // give up if noun is not an atom, except for p.
  switch(id){
   case CPLUS:  R ipoly(over(x,one));
   case CSTAR:  R ipoly(over(zero,x));
@@ -279,10 +280,25 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
   case CPOLY:  if(nf)R ipoly(x); break;
   case CBANG:  if(nf&&AT(x))R ipoly(df1(iota(increm(x)),tdot(w))); break;
   case CEXP:
-   if(ng&&!AR(x)){
-    if(equ(x,num[-1]))R ds(CLOG);
+   if(ng){  // obsolete &&!AR(x)  ^&x  x must be an atom here
+    if(equ(x,num[-1]))R ds(CLOG);   // ^_1 => log
     RZ(y=pcvt(INT,x));
-    R INT&AT(y)?ipoly(take(sc(-1-i0(y)),one)):atop(amp(ds(CDIV),increm(y)),amp(ds(CEXP),increm(y)));
+    // if y is an INT and value > 0, integrate as polynomial (ipoly), else do y^(a+1) / (a+1).
+    // For non-positive integer case, J representation is %&(a+1)@(^&(a+1))
+    // We could just use y^(a+1) / (a+1) for all cases, but the ipoly form is better to feed into further symbolic processing
+    R ((INT&AT(y))&&i0(y)>0)? ipoly(take(sc(-1-i0(y)),one)) : atop(amp(ds(CDIV),increm(y)),amp(ds(CEXP),increm(y)));
+   } else {  // x&^
+    /* e.g. a^y for some y (i.e. an exponential without base e). 
+       Integrate as exp(log(a) * y). If a is negative
+       the result will be complex.
+
+       J example: 
+          (2&^) d. _1 
+       %&(^.2)@(2&^)
+     
+       For the case where a=0, this will cause an error.*/
+    if(equ(x,num[0]))R A0;  // 0^h gives domain error
+    R atop(amp(ds(CDIV),logar1(x)), amp(x,ds(CEXP))); // J: %&(^. a)@(a&^)
    }
   case CCIRCLE:
    if(nf){
@@ -295,7 +311,7 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
      case 6:   R amp(num[5],h);
      case 7:   R atop(ds(CLOG),amp(num[6],h));
  }}}
- R 0;
+ R A0;
 }
 
 static F1(jtintg0); 

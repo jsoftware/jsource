@@ -54,8 +54,8 @@ NB. 'domain error' -: x: etx _.
 (": -: ":@(+&(-~1r2)))@x:"0 ] ,1 _1 */ 1e43 1e_43
 (": -: ":@(+&(-~1r2)))@x:"0 ] ,1 _1 */ 2^137 _137
 
-'domain error'      -: 0.5 = etx   10^309x
-'domain error'      -: 0.5 = etx - 10^309x
+_ = 10^309x
+0 = 1.2 % 10^309x
 
 'ill-formed number' -: ex '1x ___'
 

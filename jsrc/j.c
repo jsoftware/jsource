@@ -60,9 +60,9 @@ A   zpath=0;              /* default locale search path           */
 
 #if SY_64
 #if C_AVX
-#define bits "64avx"
-#else
 #define bits "64"
+#else
+#define bits "64nonavx"
 #endif
 #else
 #define bits "32"

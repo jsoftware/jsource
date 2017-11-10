@@ -904,6 +904,12 @@ x ((] ])@[ 1: (] ])@])"0 y
 x =: ;:'wwww zzzz'
 y -: ;:'xxxx yyyy'
 
+NB. Verify sparse rank not totally busted
+(((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: (,: 0 $. i.)@>3 4
+(((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: (,: 0 $. i.)"0 ] 3 4
+(((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: 3 4(,: 0 $. i.)&>3 4
+(((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: 3 4(,: 0 $. i.)"0 ] 3 4
+NB. fails even in 6.02 (((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: 3 4(,: 0 $. i.)@>3 4
 
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '

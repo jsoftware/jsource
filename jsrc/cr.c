@@ -212,10 +212,10 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
       if(state&STATEFIRST){I *is, zn;
        // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
        // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
-       // to avoid having to reallocate immediately
+       // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
 // obsolete        if(yt&DIRECT&&!((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL))){
-       if(!(AFLAG(w)&(AFNJA|AFSMM|AFREL))){
+       if(!( (AFLAG(w)&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
         RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
         state^=(STATEFIRST|STATENORM);  // advance to STATENORM
@@ -252,7 +252,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
         zv = (C*)x;
         state^=(STATEERR0|STATEERR);  // advance to STATEERR
        }
-       // Here for all errors, including the first after it has cleaned up the mess, and for boxed result the very first time with no mess
+       // Here for all errors, including the first after it has cleaned up the mess, and for boxed/sparse result the very first time with no mess
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
 
@@ -418,10 +418,10 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
       if(state&STATEFIRST){I *is, zn;
        // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
        // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
-       // to avoid having to reallocate immediately
+       // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
 // obsolete        if(yt&DIRECT&&!((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL))){
-       if(!((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL))){
+       if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
         RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
         state^=(STATEFIRST|STATENORM);  // advance to STATENORM
@@ -459,7 +459,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
         zv = (C*)x;
         state^=(STATEERR0|STATEERR);  // advance to STATEERR
        }
-       // Here for all errors, including the first after it has cleaned up the mess, and for boxed result the very first time with no mess
+       // Here for all errors, including the first after it has cleaned up the mess, and for boxed/sparse result the very first time with no mess
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
      }

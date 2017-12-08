@@ -21,7 +21,7 @@ DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
-  case DCPARSE:  d->dcy=(A)AAV(y); d->dcj=AN(y); break;
+  case DCPARSE:  d->dcy=(A)AAV(y); d->dcn=AN(y); break;
   case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 
@@ -162,7 +162,7 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
   else                      {z=parseas(as,w);     }
   // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
   // executed 13!:0]0, and we should continue on outside of debug mode
-  if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=/*d->dcj=*/jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; dcj must remain # tokens
+  if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=d->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
  }
  debz();
  R z;

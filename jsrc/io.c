@@ -76,7 +76,7 @@ static C* nfeinput(J jt,C* s){A y;
 A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  *jt->adbreak=0;
  if(b=1==*p)p=""; /* 1 means literal input */
- if(jt->dcs){
+ if(jt->dcs){   // DCSCRIPT debug type
   ++jt->dcs->dcn; j=jt->dcs->dci; 
   y=jt->dcs->dcy; n=AN(y); s=UAV(y);
   if(!(j<n))R 0;

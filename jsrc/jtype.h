@@ -336,8 +336,8 @@ typedef struct DS{      /* 1 2 3                                                
  A dcloc;               /*     x  local symb table (0 if not explicit)                  */
  A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
  I dci;                 /* x x x  index ; next index  ; ptr to line #                   */
- I dcj;                 /* x x x  #tokens;prev index  ; error #                         */
- I dcn;                 /*   x x        ; line #      ; ptr to symb entry               */
+ I dcj;                 /* x x x  error#; prev index  ; error #                         */
+ I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
  I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
  I dcstop;              /*     x  the last stop in this function                        */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */

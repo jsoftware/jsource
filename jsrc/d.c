@@ -78,11 +78,12 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  jt->nflag=b;
 }
 
+// display DCPARSE stack frame
 static void jtseeparse(J jt,DC d){A*v;I m;
  v=(A*)d->dcy;  /* list of tokens */
  m=d->dci-1;         /* index of active token when error found */
  jt->nflag=0; 
- DO(d->dcj, if(i==m)eputs("    "); disp(v[i]););
+ DO(d->dcn, if(i==m)eputs("    "); disp(v[i]););  // display tokens with spaces before error
 }    /* display error line */
 
 F1(jtunparse){A*v,z;
@@ -93,20 +94,22 @@ F1(jtunparse){A*v,z;
  R z;
 }
 
+// Display DCCALL stack frame
 static void jtseecall(J jt,DC d){A a;
  if(a=d->dca)ep(AN(a),NAV(a)->s); 
  efmt(d->dcx&&d->dcy?"[:"FMTI"]":"["FMTI"]",lnumsi(d));
 }    /* display function line */
 
+// display error-message line
 static void jtdhead(J jt,C k,DC d){static C s[]="    "; 
  *s=d&&d->dcsusp?'*':'|'; 
  ep(k+1L,s);
 }    /* preface stack display line */
 
 void jtdebdisp(J jt,DC d){A*x,y;I e,t;
- e=d->dcj;
+ e=d->dcj;   // error #, or 0 if no error (if DCCALL or DCPARSE frame)
  t=d->dctype;
- if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){x=e+AAV(jt->evm); dhead(0,0L); eputl(*x);}
+ if(e&&!jt->etxn&&(t==DCPARSE||t==DCCALL)){x=e+AAV(jt->evm); dhead(0,0L); eputl(*x);}  // if error, display error header
  switch(t){
   case DCPARSE:  dhead(3,d); seeparse(d); if(NETX==jt->etxn)--jt->etxn; eputc(CLF); break;
   case DCCALL:   dhead(0,d); seecall(d);  eputc(CLF); break;

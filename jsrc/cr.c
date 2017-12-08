@@ -443,7 +443,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
 
       if(state&(STATEERR0|STATEERR)){
        if(state&STATEERR0){
-        // We had a wreck.  Either the first cell was not direct, or there was a change of type.  We cope by boxing
+        // We had a wreck.  Either the first cell was not direct/boxed, or there was a change of type.  We cope by boxing
         // each individual result, so that we can open them at the end to produce a single result (which might fail when opened)
         // It would be nice if boxed results didn't go through this path
         // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation

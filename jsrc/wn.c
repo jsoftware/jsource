@@ -146,7 +146,7 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
   R 1;
  }
  // not base, must be complex or p/x-type.  Can be complex or (complex)p(complex) or (complex)x(complex)
- if(t=memchr(s,'p',n))u=0; else t=u=memchr(s,'x',n);  // t=0 means 'no p/x, just plain complex' t=1,u=0 means 'p' t=1,u=1 means 'x'
+ if(t=memchr(s,'p',n))u=0; else t=u=memchr(s,'x',n);  // t=0 means 'no p/x, just plain complex' nonzero t-> p/x u=0 means 'p' non0 u means 'x'
  if(!t)R numj(n,s,v);   // if it's a single (complex) number, return it
  if(!(numj(t-s,s,&x)))R 0; ++t; if(!(numj(n+s-t,t,&y)))R 0;  // if p- or x-type, get x=mantissa y=exponent
  if(u)*v=ztymes(x,zexp(y)); else *v=ztymes(x,zpow(zpi,y));  // calculate x*^y or x*pi^y

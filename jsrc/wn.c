@@ -148,8 +148,13 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
  // not base, must be complex or p/x-type.  Can be complex or (complex)p(complex) or (complex)x(complex)
  if(t=memchr(s,'p',n))u=0; else t=u=memchr(s,'x',n);  // t=0 means 'no p/x, just plain complex' nonzero t-> p/x u=0 means 'p' non0 u means 'x'
  if(!t)R numj(n,s,v);   // if it's a single (complex) number, return it
- if(!(numj(t-s,s,&x)))R 0; ++t; if(!(numj(n+s-t,t,&y)))R 0;  // if p- or x-type, get x=mantissa y=exponent
- if(u)*v=ztymes(x,zexp(y)); else *v=ztymes(x,zpow(zpi,y));  // calculate x*^y or x*pi^y
+ // We have to make sure that numeric parts passed to strtod end with null or a certifiable nonnumeric.  On Linux/Mac, 'x' looks numeric if
+ // the value starts with '0x'.  So we zap the p/x character before converting the mantissa/exponent, and restore.  We know there will be no exceptions, and that
+ // the input area is writable.  The exponent part ends with a natural NUL.
+ C savpx = *t; *t=0; B rc = numj(t-s,s,&x); *t = savpx; RZ(rc);
+ ++t; if(!(numj(n+s-t,t,&y)))R 0;  // if p- or x-type, get x=mantissa y=exponent
+ y = u ? zexp(y) : zpow(zpi,y);  // ^y or pi^y
+ *v = ztymes(x,y);   // calculate x*^y or x*pi^y
  R 1;
 }
 

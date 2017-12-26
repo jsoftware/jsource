@@ -471,7 +471,7 @@ static B jtrngga(J jt,I i,UI**vv){
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
    case MRI: t=FL;  n=MRN; f=jtmr_init; 
   }
-  GA(x,t,n,1,0); ra(x); vv[i]=jt->rngv=AV(x);
+  GA(x,t,n,1,0); ra(x); vv[i]=jt->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngS[i]); jt->rngI[i]=jt->rngi;
  }
  R 1;

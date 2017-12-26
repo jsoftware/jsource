@@ -28,7 +28,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
  // Execute.  ra() to protect against deleting the name while it is running.
  // This will be fast because we know any name has a recursive usecount before it is assigned
- else{ra(fs);
+ else{ra(fs);  // should assert recursive usecount
 // obsolete ACINCR(fs); ++fv->execct;
   if(a){if(!(fv->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   fa(fs);

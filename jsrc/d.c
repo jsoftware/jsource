@@ -146,7 +146,7 @@ F1(jtdbstackz){A y;
 
 static void jtjsigstr(J jt,I e,I n,C*s){
  if(jt->jerr)R; 
- jt->jerr=(C)e; jt->jerr1=e; jt->etxn=0;
+ jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
  if(jt->db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->db=0;}
  ep(n,s);
@@ -178,7 +178,7 @@ void jtjsignal(J jt,I e){A x;
 
 void jtjsignal3(J jt,I e,A w,I j){
  if(jt->jerr)R; 
- jt->jerr=(C)e; jt->jerr1=e; jt->etxn=0;
+ jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
  if(jt->db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->db=0;}
  eputl(*(jt->jerr+AAV(jt->evm)));

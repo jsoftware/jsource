@@ -167,7 +167,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell, v->w data
  wk=wcn*bp(wt); v=CAV(w); NEWYW;
 
- if(!mn){I d, *is, *zs;
+ if(!mn){UC d; I *is, *zs;
   // if there are no cells, execute on a cell of fills.
   if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,rr,ws+wf),filler(w)));
   // Do this quietly, because
@@ -354,7 +354,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  // See how many cells are going to be in the result
  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
 
- if(!mn){I d, *is, *zs;
+ if(!mn){UC d; I *is, *zs;
   // if there are no cells, execute on a cell of fills.
   if(AN(a))MOVEYA else RZ(ya=reshape(vec(INT,lr,as+af),filler(a)));
   if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,rr,ws+wf),filler(w)));
@@ -411,6 +411,8 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
        else{
         // Normal path.  
         MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
+          // If the result-cells are pointers to boxes, we are adding a nonrecursive reference, which does not require any adjustment to usecounts.
+          // If we anticipate making the result recursive, we will have to increment the usecount and also worry about backing out errors and wrecks.
         if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
        }
       }

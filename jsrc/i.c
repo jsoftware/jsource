@@ -11,6 +11,30 @@
 #include <floatingpoint.h>
 #endif
 
+
+// These statics get copied into jt for cache footprint.  If you change them,
+// change the definition in jt.h
+
+// For each Type, the length of a data-item of that type.  The order
+// here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
+// Example: LITX is 1, so location 1 contains sizeof(C)
+static UC typesizes[] = {
+B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
+-1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
+SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, VERBSIZE, ADVSIZE, CONJSIZE,
+ASGNSIZE, MARKSIZE, NAMESIZE, SYMBSIZE, CONWSIZE, LPARSIZE, RPARSIZE,-1,
+};
+
+// Priority is
+// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
+// For sparse types, we encode here the corresponding dense type
+static UC typepriority[] = {   // convert type bit to priority
+0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
+0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
+8, 2, 3};  // SBT C2T C4T
+static UC prioritytype[] = {  // Convert priority to type bit
+B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
+
 static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  m=strlen(s);
  GATV(z,NAME,m,1,0); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
@@ -54,6 +78,9 @@ int      hwcrc=-1;  // indicate uninitialized
 // Use GA for all these initializations, to save space since they're done only once
 B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  liln=1&&C_LE;
+ MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
+ MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
+ MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
  s=bitdisp; 
@@ -199,6 +226,9 @@ jt->assert = 1;
 static C jtjinit3(J jt){S t;
 /* required for jdll and doesn't hurt others */
  gjt=jt; // global jt for JPF debug
+ MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.
+ MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // required for ma.  Repeated for each thread in jtinit3
+ MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // required for ma.  Repeated for each thread in jtinit3
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);
 #endif
@@ -235,6 +265,8 @@ static C jtjinit3(J jt){S t;
 }
 
 C jtjinit2(J jt,int dummy0,C**dummy1){jt->sesm=1; R jinit3();}
+
+
 
 /* unused cpuInfo
 

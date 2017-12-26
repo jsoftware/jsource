@@ -42,4 +42,4 @@ typedef struct {I*a;US j;US blkx;} MS;
 
 
 // bp(type) returns the number of bytes
-#define bp(i) typesizes[CTTZ(i)]
+#define bp(i) (jt->typesizes[CTTZ(i)])

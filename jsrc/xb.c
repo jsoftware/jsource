@@ -36,7 +36,7 @@ F1(jtstype){RZ(w); R sc(UNSAFE(AT(w)));}
 #define BU              (C_LE ? 1 : 0)
 
 
-static I bsize(B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
+static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
  w=WS(d);
  z=BH(d)+w*r;
  if(t&BIT){
@@ -94,7 +94,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  wp=PAV(w);
  n=1+sizeof(P)/SZI; kk=WS(d);
  GATV(z,BOX,n,1,0); zv=AAV(z);
- GATV(y,LIT,bsize(d,1,INT,n,AR(w),AS(w)),1,0);
+ GATV(y,LIT,bsize(jt,d,1,INT,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
  RZ(mvw(v,(C*)&c,1L,BU,b,d,SY_64));  /* reserved for flag */
  zv[0]=y; m=AN(y);
@@ -109,7 +109,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
  RZ(w);
  e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); k=bp(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
- GATV(y,LIT,bsize(d,1,t,n,AR(w),AS(w)),1,0);
+ GATV(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
  if(t&DIRECT)switch(CTTZ(t)){
   case SBTX:
@@ -187,7 +187,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT((t==LOWESTBIT(t))&&t&(B01|INT|FL|CMPX|BOX|XNUM|RAT|LIT|C2T|C4T|SB01|SLIT|SINT|SFL|SCMPX|SBOX|SBT),EVDOMAIN);
  ASSERT(0<=n,EVDOMAIN);
  ASSERT(0<=r&&r<=RMAX,EVRANK);
- p=bsize(d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
+ p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
  GA(z,t,n,r,0); s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 

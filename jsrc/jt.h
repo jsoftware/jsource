@@ -31,69 +31,110 @@ typedef struct {
 // memory-allocation function.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
-// obsolete B    breakignore;      /* 1 to ignore break (input_jfe_ output_jfe_       */
+ I    mfreegenallo;        // Amount allocated through malloc, biased
+ I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
+ A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
+ void *heap;            // heap handle for large allocations
+ I    mmax;             /* space allocation limit                          */
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
   MS *pool;             // pointer to first free block
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
- I    mfreegenallo;        // Amount allocated through malloc, biased
- void*heap;             /* heap handle                                     */
- A    fill;             /* fill                                            */
- C*   fillv;            /* fill value                                      */
-// --- end of cache linepair 0
+// --- end of cache line 2.  1 qword of the pool table spills over
 // parser values
- I*   rank;             /* for integrated rank support                     */
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
  I    parsercalls;      /* # times parser was called                       */
+ DC   sitop;            /* top of SI stack                                 */
+ A*   nvrav;            /* AAV(jt->nvra)                                   */
+ I    nvrtop;           /* top of nvr stack; # valid entries               */
+// --- end of cache line 3
  PSTK* parserstkbgn;     // &start of parser stack
  PSTK* parserstkend1;    // &end+1 of parser stack
- DC   sitop;            /* top of SI stack                                 */
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
  A    symb;             /* symbol table for assignment                     */
- I    symindex;         /* symbol table index (monotonically increasing)   */
- L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
- A    stloc;            /* locales symbol table                            */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
- I    db;               /* debug flag; see 13!:0                           */
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
  C    dbss;             /* single step mode                                */
  B    stch;             /* enable setting of changed bit                   */
- C    jerr;             /* error number (0 means no error)                 */
+ UC   jerr;             /* error number (0 means no error)                 */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
-// --- end cache linepair 1
+ B    assert;           /* 1 iff evaluate assert. statements               */
+ B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
+ B    retcomm;          /* 1 iff retain comments and redundant spaces      */
+ B    tostdout;         /* 1 if output to stdout                           */
+ UC   db;               /* debug flag; see 13!:0                           */
+ UC   dbuser;           /* user-entered value for db                       */
+ UC   jerr1;            /* last non-zero jerr                              */
+ UC   seclev;           /* security level                                  */
+// --- end cache line 4
+ UC   prioritytype[11];  // type bit for the priority types
+ B    stswitched;       /* called fn switched locale                       */
+ B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
+ B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
+ C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
+ B    iepdo;            /* 1 iff do iep                                    */
+ A    fill;             /* fill                                            */
+ I*   rank;             /* for integrated rank support                     */
+ C*   fillv;            /* fill value                                      */
+ C    fillv0[sizeof(Z)];/* default fill value                              */
+ UC   typepriority[19];  // priority value for the noun types
+// end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
+ B    nflag;            /* 1 if space required before name                 */
+ B    sesm;             /* whether there is a session manager              */
+ B    tmonad;           /* tacit translator: 1 iff monad                   */
+ B    tsubst;           /* tacit translator                                */
+ B    xco;              /* 1 iff doing x: conversion                       */
+ A    flkd;             /* file lock data: number, index, length           */
+ I    flkn;             /* file lock count                                 */
+ A    fopa;             /* open files boxed names                          */
+ A    fopf;             /* open files corresp. file numbers                */
+ I    fopn;             /* open files count                                */
+ I    getlasterror;     /* DLL stuff                                       */
+// end cache line 6.
+ UC   disp[7];          /* # different verb displays                       */
+ UC   outeol;           /* output: EOL sequence code                       */
+ I    bytes;            /* bytes currently in use                          */
+ I    bytesmax;         /* high-water mark of "bytes"                      */
+ A    nvra;             /* data blocks that are in execution somewhere     */
+ I    mulofloloc;       // index of the result at which II multiply overflow occurred
+ I    rela;             /* if a is relative, a itself; else 0              */
+ I    relw;             /* if w is relative, w itself; else 0              */
+ C    typesizes[32];    // the length of an allocated item of each type
+// --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
+ I    fcalli;           /* named fn calls: current depth                   */
+ I    fcalln;           /* named fn calls: maximum permissible depth       */
+ I    fdepi;            /* fn calls: current depth                         */
+ I    fdepn;            /* fn calls: maximum permissible depth             */
+ void*dtoa;             /* use internally by dtoa.c                        */
+// --- end cache line 5
+ D    ct;               /* comparison tolerance                            */
+ D    ctdefault;        /* default comparison tolerance                    */
+ UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
+ A    idothash0;        // 2-byte hash table for use by i.
+ A    idothash1;        // 4-byte hash table for use by i.
+ I    hin;              /* used in dyad i. & i:                            */
+ I*   hiv;              /* used in dyad i. & i:                            */
+ I    symindex;         /* symbol table index (monotonically increasing)   */
+// -- end cache line 6
+ A    symp;             /* symbol pool array                               */
+ L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
+ A    stloc;            /* locales symbol table                            */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
- B    stswitched;       /* called fn switched locale                       */
- B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
- B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
- I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
- A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
- A    symp;             /* symbol pool array                               */
- I    rela;             /* if a is relative, a itself; else 0              */
- I    relw;             /* if w is relative, w itself; else 0              */
- A*   nvrav;            /* AAV(jt->nvra)                                   */
- I    nvrtop;           /* top of nvr stack; # valid entries               */
- I    mulofloloc;       // index of the result at which II multiply overflow occurred
- A    idothash0;        // 2-byte hash table for use by i.
- A    idothash1;        // 4-byte hash table for use by i.
-// --- end cache linepair 2
 
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
- C    breakfn[NPATH];   /* break file name                                 */
  I*   breakmh;          /* win break map handle                            */
  C*   bx;               /* box drawing characters                          */
  A    bxa;              /* array of box drawing characters                 */
- I    bytes;            /* bytes currently in use                          */
- I    bytesmax;         /* high-water mark of "bytes"                      */
  A    cdarg;            /* table of 15!:0 parsed left arguments            */
  A    cdhash;           /* hash table of indices into cdarg                */
  A    cdhashl;          /* hash table of indices into cdarg                */
@@ -117,9 +158,6 @@ typedef struct {
  I*   compsyv;          /* comparison: sparse AV(y)                        */
  C*   compv;            /* comparison: beginning of data area              */
  A    compw;            /* comparison: orig arg. (for relative addressing) */
- D    ct;               /* comparison tolerance                            */
- D    ctdefault;        /* default comparison tolerance                    */
- UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    curlocn;          /* current locale name corresp. to curname         */
  A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */
@@ -133,12 +171,10 @@ typedef struct {
  A    dbstops;          /* stops set by the user                           */
  C    dbsusact;         /* suspension action                               */
  A    dbtrap;           /* trap, execute on suspension                     */
- I    dbuser;           /* user-entered value for db                       */
  DC   dcs;              /* ptr to debug stack entry for current script     */
  C*   dirbase;          /* for directory search                            */
  C    diratts[7];       /* set by ismatch, read by dir1                    */
  C    dirmode[11];      /* set by ismatch, read by dir1                    */
- C    dirnamebuf[NPATH];/* for directory search                            */
  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
 #if !SY_WINCE
  struct stat dirstatbuf; //set by ismatch, read by dir1
@@ -147,33 +183,15 @@ typedef struct {
  struct stat dummy2;    // reserve extra to avoid stomping disp
 #endif
 #endif 
- I    disp[7];          /* # different verb displays                       */
  I    dlllasterror;     /* DLL stuff                                       */
- void*dtoa;             /* use internally by dtoa.c                        */
- C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  I    etxn;             /* strlen(etx)                                     */
  I    etxn1;            /* last non-zero etxn                              */
  A    evm;              /* event messages                                  */
- I    fcalli;           /* named fn calls: current depth                   */
- I    fcalln;           /* named fn calls: maximum permissible depth       */
- LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
- I    fdepi;            /* fn calls: current depth                         */
- I    fdepn;            /* fn calls: maximum permissible depth             */
- C    fillv0[sizeof(Z)];/* default fill value                              */
- A    flkd;             /* file lock data: number, index, length           */
- I    flkn;             /* file lock count                                 */
- A    fopa;             /* open files boxed names                          */
- A    fopf;             /* open files corresp. file numbers                */
- I    fopn;             /* open files count                                */
  D    fuzz;             /* fuzz (sometimes set to 0)                       */
  I    fxi;              /* f. depth countdown                              */
  A    fxpath;           /* f. path of names                                */
  A*   fxpv;             /* f. AAV(fxpath)                                  */
- I    getlasterror;     /* DLL stuff                                       */
- I    hin;              /* used in dyad i. & i:                            */
- I*   hiv;              /* used in dyad i. & i:                            */
  A    iep;              /* immediate execution phrase                      */
- I    jerr1;            /* last non-zero jerr                              */
  AF   lcp;              /* linear representation paren function            */
  I    lleft;            /* positive finite left    level                   */
  I    lmon;             /* positive finite monadic level                   */
@@ -182,16 +200,12 @@ typedef struct {
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
  I    min;              /* the r result from irange                        */
- I    mmax;             /* space allocation limit                          */
  I    mtyo;				/* jsto output type - jfwrite arg to jpr           */
  C*   mtyostr;          /* jsto string                                     */
  I    nfe;              /* 1 for J native front end                        */
- B    nla[256];         /* namelist names mask                             */
  I    nlt;              /* namelist type  mask                             */
- A    nvra;             /* data blocks that are in execution somewhere     */
  I    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
- I    outeol;           /* output: EOL sequence code                       */
  I    outmaxafter;      /* output: maximum # lines after truncation        */
  I    outmaxbefore;     /* output: maximum # lines before truncation       */
  I    outmaxlen;        /* output: maximum line length before truncation   */
@@ -204,21 +218,7 @@ typedef struct {
  C    pp[8];            /* print precision                                 */
  AF   pre;              /* preface function for assignment                 */
  I    redefined;        /* symbol table entry of redefined explicit defn   */
- int  reginitflag;      /* 1 iff regular expression stuff initialized      */
- I    rng;              /* RNG: generator selector                         */
- UF   rngF[5];          /* RNG: function to get the next random number     */
- UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
- UF   rngf;             /* RNG: rngF[rng]                                  */
- I    rngI[5];          /* RNG: indices                                    */
- I    rngI0[5];         /* RNG: indices for RNG0                           */
- I    rngi;             /* RNG: current index                              */
- UI   rngM[5];          /* RNG: moduli                                     */
- I    rngS[5];          /* RNG: seeds                                      */
- A    rngseed;          /* RNG: array seed                                 */
- UI*  rngV[5];          /* RNG: state vectors                              */
- UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
- UI*  rngv;             /* RNG: rngV[rng]                                  */
- I    rngw;             /* RNG: # bits in a random #                       */
+// obsolete int  reginitflag;      /* 1 iff regular expression stuff initialized      */
  I    sbfillfactor;     /* SB for binary tree                              */
  I    sbgap;            /* SB for binary tree                              */
  A    sbh;              /* SB hash table of indices; -1 means unused       */
@@ -234,7 +234,6 @@ typedef struct {
  I    scn;              /* S: actual length of sca                         */
  I*   scv;              /* S: AV(sca)                                      */
  int  sdinited;         /* sockets                                         */
- I    seclev;           /* security level                                  */
  A    sf;               /* for $:                                          */
  A    slist;            /* files used in right arg to 0!:                  */
  I    slisti;           /* index into slist of current script              */ 
@@ -250,17 +249,6 @@ typedef struct {
  I    th2bufn;          /* current max length of buf                       */
  UI   timelimit;        /* execution time limit milliseconds               */
  A    xep;              /* exit execution phrase                           */
- C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
- B    assert;           /* 1 iff evaluate assert. statements               */
- B    iepdo;            /* 1 iff do iep                                    */
- B    nflag;            /* 1 if space required before name                 */
- B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
- B    retcomm;          /* 1 iff retain comments and redundant spaces      */
- B    sesm;             /* whether there is a session manager              */
- B    tmonad;           /* tacit translator: 1 iff monad                   */
- B    tostdout;         /* 1 if output to stdout                           */
- B    tsubst;           /* tacit translator                                */
- B    xco;              /* 1 iff doing x: conversion                       */
  I    int64rflag;       /* com flag for returning 64-bit integers          */
  I    transposeflag;    /* com flag for transposed arrays                  */
  D    tssbase;          /* initial time of date                            */
@@ -272,6 +260,25 @@ typedef struct {
 #if MEMAUDIT & 2
  I    audittstackdisabled;   // set to 1 to disable auditing
 #endif
+ B    nla[256];         /* namelist names mask                             */
+ I    rng;              /* RNG: generator selector                         */
+ UF   rngF[5];          /* RNG: function to get the next random number     */
+ UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
+ UF   rngf;             /* RNG: rngF[rng]                                  */
+ I    rngI[5];          /* RNG: indices                                    */
+ I    rngI0[5];         /* RNG: indices for RNG0                           */
+ I    rngi;             /* RNG: current index                              */
+ UI   rngM[5];          /* RNG: moduli                                     */
+ I    rngS[5];          /* RNG: seeds                                      */
+ A    rngseed;          /* RNG: array seed                                 */
+ UI*  rngV[5];          /* RNG: state vectors                              */
+ UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
+ UI*  rngv;             /* RNG: rngV[rng]                                  */
+ I    rngw;             /* RNG: # bits in a random #                       */
+ C    breakfn[NPATH];   /* break file name                                 */
+ C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
+ C    dirnamebuf[NPATH];/* for directory search                            */
+ LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
 } JST;
 
 typedef JST* J; 

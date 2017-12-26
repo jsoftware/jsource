@@ -97,8 +97,9 @@ F1(jtjopen){A z;I h;
  else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
   RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
-  RZ(*(jt->fopn+AAV(jt->fopa))=ww=fullname(AAV0(w)));
-  ra(ww);
+  RZ(ww=fullname(AAV0(w))); ra(ww);
+  RZ(*(jt->fopn+AAV(jt->fopa))=ww);
+ 
   ++jt->fopn;
   R sc(h);
 }}   /* open the file named w if necessary; return file# */

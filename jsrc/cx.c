@@ -56,7 +56,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  cv->x=0;
  cv->k=k=AN(cv->line)-5;                 /* length of item name */
  if(0<k&&cv->n){                         /* for_xyz.            */
-  s=4+CAV(cv->line); RZ(cv->x=x=str(6+k,s)); ra(x); 
+  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ra(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
  }
@@ -104,7 +104,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named;CDATA*cv;
-  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,od=jt->db,old,r=0,st,tdi=0,ti;TD*tdv=0;V*sv;X y;
+  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,old,r=0,st,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->db;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // z is the final result (initialized here in case there are no executed lines)
@@ -152,9 +152,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
  // directly.
  L *ybuckptr = AV(jt->local)[yxbuckets[symtabsize][0]]+jt->sympv;  // pointer to sym block for y
- if(w){ybuckptr->val=w; ybuckptr->sn=jt->slisti; ra(w);}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+ if(w){ ra(w);ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
- if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ybuckptr->val=a; ybuckptr->sn=jt->slisti; ra(a);}
+ if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ra(a); ybuckptr->val=a; ybuckptr->sn=jt->slisti;}
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
@@ -191,7 +191,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // try.  create a try-stack entry, step to next line
     BASSERT(tdi<NTD,EVLIMIT);
     tryinit(tdv+tdi,i,cw);
-    if(jt->db)jt->db=(tdv+tdi)->d?jt->dbuser:DBTRY;
+    if(jt->db)jt->db=(UC)(tdv+tdi)->d?jt->dbuser:DBTRY;
     ++tdi; ++i; 
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
@@ -236,7 +236,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // if it fills up, extend it by 1 as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGATV(cd,INT,r*WCD,1,0); cv=(CDATA*)AV(cd)-1; ra(cd);}
+     else  {r=9; BGATV(cd,INT,r*WCD,1,0); ra(cd); cv=(CDATA*)AV(cd)-1;}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
     // remember the line number of the for./select.

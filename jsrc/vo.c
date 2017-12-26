@@ -34,6 +34,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  if(!jt->rank){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
   // DO NOT set recursible, because that would require a potentially expensive pass through w which may never be needed if this result expires without being assigned
+  // WE SHOULD check to see if w is recursible or direct, and if so mark the result recursive, incrementing the usecount in w while we have it in cache
   GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
@@ -72,7 +73,7 @@ F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}   // obsolete ra
 
 F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}  // obsolete rat1 removed
 
-static B povtake(A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
+static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;
  r=AR(w); n=AN(w); k=bp(AT(w)); v=CAV(w);
  if(1>=r){MC(x,v,k*n); R 1;}
@@ -147,7 +148,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
   }
   for(j=wr-1;j;--j)if(dv[j]==zs[j]){dv[j]=0; ++dv[j-1];}else break;
   v=AV(y1); DO(m1, ICPY(yv,dv,wr); ICPY(yv+yc-k,v,k); yv+=yc; v+=k;); 
-  if(memcmp(1+AS(x1),1+s,SZI*c)){*s=m1; povtake(sh,x1,xv);} else MC(xv,AV(x1),m1*xk);
+  if(memcmp(1+AS(x1),1+s,SZI*c)){*s=m1; povtake(jt,sh,x1,xv);} else MC(xv,AV(x1),m1*xk);
   ++dv[wr-1]; xv+=m1*xk; p+=m1;
  }
  SPB(zp,x,p==m?x:take(sc(p),x));
@@ -193,7 +194,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=
    if(ARELATIVE(y))RZ(y=relocate((I)y-c*(I)z,ca(y)));
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 
-   else if(AN(y))             RZ(povtake(cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
+   else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
    x+=q;
  }}
  EPILOG(z);

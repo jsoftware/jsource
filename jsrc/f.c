@@ -862,7 +862,7 @@ static F1(jtjpr1){PROLOG(0002);A z;
 // w is anything; convert it to character and write it to the display
 // if jt->tostdout is clear (for loading scripts quietly), check for errors but produce no output
 // Result is 0 if error, otherwise a harmless constant
-F1(jtjpr){A y;I i,n,t,*v;
+F1(jtjpr){A y;I i,n,t; UC *v;
  RZ(w);
  t=AT(w);
   // if w is a noun, format it and output it

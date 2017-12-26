@@ -416,7 +416,7 @@ R w;
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be unfilled box)
  I *cp=&AC(w); I c=*cp; // save original inplaceability
- ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount
+ ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  But if VIRTUAL, don't realize - set up to realize if backing block is freed
  tpop(old);  // delete everything allocated on the stack
  if(*cp>(c&~ACINPLACE)){
    // usecount coming in was incremented by ra but was not decremented by tpop.  That means it was allocated up the stack.
@@ -590,7 +590,7 @@ I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pu
 }
 #endif
 
-// Push wd onto the pop stack (and its descendants, if it is not a recursive usecount)
+// Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushx, or 0 if error
 I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){

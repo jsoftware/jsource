@@ -33,13 +33,13 @@ F1(jtcts){D d;
 
 F1(jtdispq){A z; ASSERTMTV(w); GATV(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
 
-F1(jtdisps){I n;
+F1(jtdisps){UC n;
  RZ(w=vi(w));
- n=AN(w);
+ n=(UC)AN(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(all1(nubsieve(w)),EVDOMAIN);
  ASSERT(all1(eps(w,eval("1 2 4 5 6"))),EVINDEX);
- *jt->disp=n; ICPY(1+jt->disp,AV(w),n);
+ *jt->disp=n; DO(n, jt->disp[1+i]=(UC)IAV(w)[i];);
  R mtv;
 }
 
@@ -134,7 +134,7 @@ F1(jtoutparms){I*v;
  ASSERT(0<=v[1],EVDOMAIN);
  ASSERT(0<=v[2],EVDOMAIN);
  ASSERT(0<=v[3],EVDOMAIN);
- jt->outeol      =v[0];
+ jt->outeol      =(UC)v[0];
  jt->outmaxlen   =v[1];
  jt->outmaxbefore=v[2];
  jt->outmaxafter =v[3];
@@ -175,7 +175,7 @@ F1(jtseclevq){ASSERTMTV(w); R sc(jt->seclev);}
 F1(jtseclevs){I k; 
  RE(k=i0(w)); 
  ASSERT(0==k||1==k,EVDOMAIN); 
- if(!jt->seclev&&1==k)jt->seclev=k;
+ if(!jt->seclev&&1==k)jt->seclev=(UC)k;
  R mtm;
 }
 

@@ -103,16 +103,6 @@ B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
  R b;
 }    /* boolean mask from integers: p=(i.n)e.w */
 
-// For each Type, the length of a data-item of that type.  The order
-// here is by number of trailing 0s in the (32-bit) type; aka the bit-number index.
-// Example: LITX is 1, so location 1 contains sizeof(C)
-I typesizes[] = {
-B01SIZE, LITSIZE, INTSIZE, FLSIZE, CMPXSIZE, BOXSIZE, XNUMSIZE, RATSIZE,
--1,           -1, SB01SIZE, SLITSIZE, SINTSIZE, SFLSIZE, SCMPXSIZE, SBOXSIZE,
-SBTSIZE, C2TSIZE, C4TSIZE, XDSIZE, XZSIZE, VERBSIZE, ADVSIZE, CONJSIZE,
-ASGNSIZE, MARKSIZE, NAMESIZE, SYMBSIZE, CONWSIZE, LPARSIZE, RPARSIZE,-1,
-};
-
 // default CTTZ to use if there is no compiler intrinsic
 #if !defined(CTTZ)
 // Return bit #of lowest bit set in w (considering only low 32 bits)
@@ -241,16 +231,6 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 static F1(jtii){RZ(w); R IX(IC(w));}
 
-// Priority is
-// B01 LIT C2T C4T INT BOX XNUM RAT SBT FL CMPX
-// For sparse types, we encode here the corresponding dense type
-static C typepriority[] = {   // convert type bit to priority
-0, 1, 4, 9, 10, 5, 6, 7,  // B01-RAT
-0, 0, 0, 1, 4, 9, 10, 5,  // x x SB01-SBOX
-8, 2, 3};  // SBT C2T C4T
-static C prioritytype[] = {  // Convert priority to type bit
-B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX};
-
 // Return the higher-priority of the types s and t.
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
@@ -261,7 +241,7 @@ I jtmaxtype(J jt,I s,I t){
  // If the types are the same, or one is 0, return quickly.  This handles the common case of equal types
  if((s|t)==t||(s|t)==s)R s|t;
  // If values differ and are both nonzero...
- I resultbit = prioritytype[MAX(typepriority[CTTZ(s)],typepriority[CTTZ(t)])];  // Get the higher-priority type
+ I resultbit = jt->prioritytype[MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)])];  // Get the higher-priority type
  if((s|t)&SPARSE){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If sparse, return sparse version
  R (I)1 << resultbit;   // otherwise, return normal version
 }

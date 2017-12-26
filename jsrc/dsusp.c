@@ -193,10 +193,10 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
 }    /* function call, debug version */
 
 
-F1(jtdbc){I k;
+F1(jtdbc){UC k;
  RZ(w);
  if(AN(w)){
-  RE(k=i0(w));
+  RE(k=(UC)i0(w));
   ASSERT(!k||k==DB1||k==DBERRCAP,EVDOMAIN);
   ASSERT(!k||!jt->glock,EVDOMAIN);
  }

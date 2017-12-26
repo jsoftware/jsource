@@ -685,6 +685,7 @@ extern I        jtfa(J,AD * RESTRICT,I);
 extern A        jtfdef(J,C,I,AF,AF,A,A,A,I,I,I,I);
 extern I        jtfdep(J,A);
 extern void     jtfh(J,A);
+extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */
 extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);
@@ -847,7 +848,6 @@ extern CR       condrange2(US *,I,I,I,I);
 extern CR       condrange4(C4 *,I,I,I,I);
 extern I        efr(I,I);
 extern B        evoke(A);
-extern void     fillv(I,I,C*);        /* "fill" name conflict on Mac             */
 extern UI       hic(I,UC*);
 extern UI       hic2(I,UC*);
 extern UI       hic4(I,UC*);
@@ -915,7 +915,6 @@ extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vdot;
 extern A        vnam;
 extern B        testb[];
-extern I        typesizes[];
 extern C        wtype[];
 extern A        xdot;
 extern A        xnam;

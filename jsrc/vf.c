@@ -22,7 +22,7 @@ F2(jtsetfv){A q=jt->fill;I t;
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n fills of type t to *v
-void fillv(I t,I n,C*v){I k=bp(t);
+void jtfillv(J jt,I t,I n,C*v){I k=bp(t);
  switch(CTTZ(t)){
  case RATX: mvc(n*k,v,k,&zeroQ); break;
  case XNUMX: mvc(n*k,v,k,&xzero); break;

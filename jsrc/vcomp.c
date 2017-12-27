@@ -23,17 +23,7 @@
 #define CMPNE(a,b) ((a)!=(b)?1:0)
 #endif
 
-#if 0
-B jtteq(J jt,D u,D v){D d,s;
- if(u==v)R 1;
- else R 0<u==0<v && 
-    ((0<u ? (u>v ? (s= u,d=u-v) : (s= v,d=v-u))
-          : (u<v ? (s=-u,d=v-u) : (s=-v,d=u-v)) ), d<=s*jt->ct && s!=inf );
-}
-B jttlt(J jt,D u,D v){R u<v && !teq(u,v);}
-#else
 B jtteq(J jt,D u,D v){R TCMPEQ(1.0-jt->ct,u,v);}
-#endif
 
 D jttfloor(J jt,D v){D x; R v<-4e35||4e35<v ? v : (x=jfloor(0.5+v), x-TGT(x,v));}
 D jttceil (J jt,D v){D x; R v<-4e35||4e35<v ? v : (x=jfloor(0.5+v), x+TLT(x,v));}

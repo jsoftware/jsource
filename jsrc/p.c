@@ -132,18 +132,6 @@ F1(jtparse){A z;
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
 
-#if 0
-// Used to verify result of sc() not modified
-static void auditnum(){
- DO(-NUMMIN, if(*AV(num[i+NUMMIN])!=(i+NUMMIN))*(C*)0=0;);
- DO(NUMMAX-1, if(*AV(num[i+2])!=(i+2))*(C*)0=0;);
- if(*BAV(num[0])!=0)*(C*)0=0;
- if(*BAV(num[1])!=1)*(C*)0=0;
- if(*AV(zeroi)!=0)*(C*)0=0;
- if(*AV(onei)!=1)*(C*)0=0;
-}
-#endif
-
 // In-place operations
 //
 // An in-place operation requires an inplaceable argument, which is marked as LSB of AC=0,

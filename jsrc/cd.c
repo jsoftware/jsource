@@ -280,7 +280,7 @@ static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
   case CPOLY:  if(nf)R ipoly(x); break;
   case CBANG:  if(nf&&AT(x))R ipoly(df1(iota(increm(x)),tdot(w))); break;
   case CEXP:
-   if(ng){  // obsolete &&!AR(x)  ^&x  x must be an atom here
+   if(ng){  //  ^&x  x must be an atom here
     if(equ(x,num[-1]))R ds(CLOG);   // ^_1 => log
     RZ(y=pcvt(INT,x));
     // if y is an INT and value > 0, integrate as polynomial (ipoly), else do y^(a+1) / (a+1).

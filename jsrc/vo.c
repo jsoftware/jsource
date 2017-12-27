@@ -15,7 +15,6 @@ I level(A w){A*wv;I d,j,wd;
 
 F1(jtlevel1){RZ(w); R sc(level(w));}
 
-// obsolete F1(jtbox0){R irs1(w,0L,0L,jtbox);}
 static I v00[] = {0, 0}; // used for rank
 F1(jtbox0){
  // Process through box code, which already handles rank
@@ -69,9 +68,9 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  R z;
 }    /* <"r w */
 
-F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}   // obsolete rat1 removed
+F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}
 
-F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}  // obsolete rat1 removed
+F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
 
 static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;

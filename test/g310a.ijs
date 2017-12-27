@@ -73,5 +73,3 @@ f=:(#:1 3)&(+/ .*)
 
 
 4!:55 ;:'boxed f g inv jnc n open pow powg pown powv verb' 
-
-

@@ -16,6 +16,10 @@
 #define MALLOC(n) malloc(n)
 #endif
 
+// **** main blocks are managed by allocating 16 bits for all blocks, free or allocated
+// when the block is on the free list, AK is a chain pointer
+
+// **** following is the layout of SMM blocks, which keep a header before the allocated area
 typedef struct {I*a;US j;US blkx;} MS;
 
 /* layout of the two words before every A array                            */
@@ -39,7 +43,5 @@ typedef struct {I*a;US j;US blkx;} MS;
 #define PSIZE       (1L<<PSIZEL)      /* size of each pool                    */
 
 
-
-
-// bp(type) returns the number of bytes
+// bp(type) returns the number of bytes in an atom of the type
 #define bp(i) (jt->typesizes[CTTZ(i)])

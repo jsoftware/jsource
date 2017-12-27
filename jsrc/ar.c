@@ -551,7 +551,6 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
  if(SPARSE&AT(w))R redcatsp(w,z,r);
  MC(AV(z),AV(w),AN(w)*bp(AT(w)));
-// obsolete  if(ARELATIVE(w)){AFLAG(z)=AFREL; z=relocate((I)w-(I)z,z);}
  R RELOCATE(w,z);
 }    /* ,/"r w */
 

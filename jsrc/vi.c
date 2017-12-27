@@ -324,12 +324,6 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
    hh->currentindexofst=startx; hh->previousindexend=(startx+=m);  // set return value (starting index) and allocated index space
    hh->currentindexend=MAX(startx,hh->currentindexend);  // since currentindexend speaks for the whole left side, we may have to push it up
    // Since the partition (currenthi) is kept to the right of the invalid region, there is no need to clear invalid data
-// obsolete UI clrpt = MIN(hh->currenthi, hh->invalidhi);   // get index to clear to
-// obsolete  I clrfrom = MAX(hh->currentlo,hh->invalidlo);
-// obsolete  I nclrhsh = clrpt-clrfrom;  // get number of hash entries to clear
-// obsolete  if(nclrhsh>0){   // if there is something to clear
-// obsolete     memset(hh->data.UC+(clrfrom<<hh->hashelelgsize), C0,(nclrhsh<<hh->hashelelgsize));  // clear the region to 0
-// obsolete  }
   }else if(hh->currentindexend < indexceil){
    // Allocating left.  Return a region starting at position 0.
    md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated
@@ -665,8 +659,6 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
 // The value in the cell is 0 or 1, since we don't care what the original position was
 // We init the table to 0 or 1 depending on the primitive; but we always use 0 for PACKed bits, because it's never right to add
 // an instruction to building the table
-// obsolete #define SDO(T)  I zi=0, zi0=zi, zie=m; UC* RESTRICT hu=hh->data.UC-min; /* biased start,end+1 index, and data pointers */ \
-// obsolete      if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; while(zi!=zie){hu[mav[zi]]=1; ++zi;} zi=0;}
 #define SDO(T,bitdef)  UC* RESTRICT hu=hh->data.UC-min; if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[mav[i]]=1-bitdef;)}
 #define SDOP(T)  UC* RESTRICT hu=hh->data.UC-BYTENO(min); if(!(mode&IPHOFFSET)){T* RESTRICT mav=av; DO(m, hu[BYTENO(mav[i])]|=1<<BITNO(mav[i]);)}
 
@@ -1421,11 +1413,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
 
 
 
-// obsolete // should have an irange that takes the max value allowed, & returns early if range is exceeded
-// obsolete  if(AT(a)&INT+SBT&&k==SZI){I r; irange(AN(a)*k1/SZI,AV(a),&r,&ss); if(ss){jt->min=r;}}  //  r=min value,ss=max value+1-min value or 0 if no values or range too big
-// obsolete  // compute size of hashtable
-// obsolete  p=1==k?(t&B01?2:256):2==k?(t&B01?258:65536):k==SZI&&ss&&ss<2.1*MAX(m,c)?ss:hsize(m);
-
   // if a hashtable will be needed, allocate it.  It is NOT initialized
   // the hashtable is INT unless we have selected small-range hashing AND we are not looking for the index with i. or i:; then boolean is enough
   if(fn==jtio12||fn==jtio22||fn==jtio42){IH *hh;
@@ -1460,7 +1447,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
-     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
@@ -1469,7 +1456,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // It's OK to round the fill up to the length of an I
       UI fillval=m|(m<<16); if(SZI>4)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
       DO(fillct, hh->data.UI[i]=fillval;)
-// obsolete      memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
      }else{
       // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
@@ -1499,7 +1485,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
      // Fill in the header
      hh=IHAV(h);  // point to the header
-     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=2;  // hash entries are 4 bytes long
      if(mk){
       // The table is being used for prehashing.  Clear the data area (only the part we will use), and also the values used as return values from hashallo, to wit
@@ -1515,7 +1501,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       if(SZI>4)fillval|=fillval<<(32%BW);  // fill entire words
       UI fillct=(p+(((2LL<<(LGSZI-LGSZUI4))<<booladj)-1))>>(booladj+LGSZI-LGSZUI4);  // Round bits/UI4 up to SZI, then convert to count of Is.  We add 2 SZIs because we must pad packed bits on both ends 
       DO(fillct, hh->data.UI[i]=fillval;)
-// obsolete       memset(hh->data.UC,C0,hh->datasize);  // clear the data
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  This will never go through hashallo, so right-side and upper info not needed
      }else{
       // not prehashing.  Fill in the remaining fields, remember this block for later use, and make its allocation permanent
@@ -1555,7 +1540,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
 // should use a lookup
    switch(mode&IIOPMSK){
     default:                    ztype=PREHRESIV; break;  /* integer vector      */
- // obsolete  case ILESS:                 ztype=PREHRESVAR; break;  /* type/shape from arg */
     case IEPS:                  ztype=PREHRESBV; break;  /* boolean vector      */
     case IANYEPS: case IALLEPS: ztype=PREHRESBAN; break;  /* boolean scalar      */
     case ISUMEPS:               ztype=PREHRESIAN; break; 
@@ -1580,8 +1564,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
  wr=AR(w); ws=AS(w); wt=AT(w);
-// obsolete if(1==ztype)r=wr?wr-1:0;
-// obsolete  else        
  r=ar?ar-1:0;
  f1=wr-r;
  RE(c=prod(f1,ws));  // c=#cells of w (and result)
@@ -1589,7 +1571,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
  // Use c as an error flag
  if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
-// obsolete  if(mode==ILESS&&(TYPESNE(t,wt)||AFLAG(w)&AFNJA+AFREL||n!=aii(w)))R less(w,a);
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);
 

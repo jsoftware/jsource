@@ -212,7 +212,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
   case INTX:  RZ(mvw(CAV(z),v,n,  BU,b,SY_64,d)); break;
   case FLX:   RZ(mvw(CAV(z),v,n,  BU,b,1,    1)); break;
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
-  default:   e=n*bp(t); ASSERTSYS(e<=AM(z),"unbinr"); MC(CAV(z),v,e);
+  default:   e=n*bp(t); ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
  }
  RE(z); R z;
 }    /* b iff reverse the bytes; d iff argument is 64-bits */

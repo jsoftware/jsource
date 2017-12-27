@@ -263,7 +263,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
    // Now p<0 if ANY axis of a needs extension - can't inplace then
    if(p>=0) {
     // See if there is room in a to fit w (including trailing zero byte)
-    if(AM(a)>=ak+wk+(1&&at&LAST0)){
+    if(allosize(a)>=ak+wk+(1&&at&LAST0)){
      // We have passed all the tests.  Inplacing is OK.
      // If w must change precision, do.  This is where we catch domain errors.
      if(TYPESGT(at,wt))RZ(w=cvt(at,w));

@@ -165,7 +165,6 @@ static KF1(jtDfromX){D d,*x=(D*)yv,dm,dp;I c,i,n,*v,wn;X p,*wv;
   else if(c==XNINF)d=infm; 
   else{
    d=0.0; DO(n, d=*v--+d*XBASE;);
-// obsolete  always convert to float without error, even to _   ASSERT(jt->xco||dm<=d&&d<=dp,EVDOMAIN);
   }
   x[i]=d;
  } 

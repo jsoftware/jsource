@@ -646,7 +646,7 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
  GAT(st,XNUM,20,1,0); sv=sv0=XAV(st); *sv++=x;
  while(sv-sv0){
   x=*--sv; 
-  if(2>(k=sv-sv0)){GATV(st,XNUM,2*AN(st),1,0); MC(XAV(st),sv0,k*sizeof(A)); sv0=XAV(st); sv=k+sv0;}
+  if(2>(k=sv-sv0)){A stsav = st; GATV(st,XNUM,2*AN(stsav),1,0); MC(XAV(st),sv0,k*sizeof(A)); sv0=XAV(st); sv=k+sv0;}
   if(1>xcompare(x,xc(2147483647L))){RZ(z=over(z,factor(sc(xint(x))))); continue;}
   if(xprimeq(100L,x)){RZ(z=over(z,scx(x))); continue;}
   RZ(g=pollard_p_1(x)); if(g!=xone){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}

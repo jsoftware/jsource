@@ -13,7 +13,7 @@
 
 #define LEAKSNIFF 0
 
-#define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Doesn't seem to help much.
+#define ALIGNTOCACHE 0   // set to 1 to align each block to cache-line boundary.  Will reduce cache usage for headers
 
 #define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
 #define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)
@@ -34,6 +34,19 @@ static I leakcode;
 static A leakblock;
 static I leaknbufs;
 #endif
+
+// Return the total length of the data area of y, i. e. the number of bytes from start-of-data to end-of-allocation
+// The allocation size depends on the type of allocation
+I allosize(A y) {
+ if(!(AFLAG(y)&(AFNJA))) {
+  // normal block, or SMM.  Get the size from the power-of-2 used to allocate it
+  MS *allobgn = (MS*)y-1;
+  R ((I)1<<allobgn->j) + (C*)allobgn - CAV(y);  // allocated size
+ }
+ // Must be NJA
+ R AM(y);
+}
+
 
 // msize[k]=2^k, for sizes up to the size of an I.  Not used in this file any more
 B jtmeminit(J jt){I k,m=MLEN;
@@ -322,12 +335,6 @@ void audittstack(J jt){
 #endif
 }
 
-/* obsolete
-I symfreelen(J jt){I l,k;  // scaf
- for(k = jt->sympv[0].next, l=0;k;k=(jt->sympv)[k].next)++l;
- R l;
-} */
-
 static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
  fr(LOCPATH(w));
@@ -382,37 +389,7 @@ void jtfh(J jt,A w){fr(w);}
 // To solve both problems, we check to see if w is inplaceable.  If it is, we restore it to inplaceable
 // after the tpop.  But if its usecount after tpop was 2, we do not do the tpush.
 
-#if 0  // obsolete
-// macros copied here for reordering & common elimination
-A jtgc (J jt,A w,I old){
-// ra(w)
-RZ(w); I* cc=&AC(w); I tt=AT(w); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,w,tt); *cc=(c+1)&~ACINPLACE;
-// tpop(old)
-I pushx=tpop(old);
-// if block was originally inplaceable, restore it to inplaceable; if usecount was not decremented by tpop, return to avoid the tpush
-if(c<0){
- I c2=*cc;  // get usecount after tpop
- *cc=c;  // restore inplaceability, if the block is inplaceable
- if(c2>ACUC1){
-  // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
-  // We have corrected the usecount of w back to inplaceable.  Return without pushing onto the stack a second time.
-  // If w is traversible, its contents have had their usecount incremented, so we'd better undo that
-  // since we are not going to put the contents on the stack for later free (they're already there).
-  // But the contents might have been popped above, if they were allocated late, and their usecount might now
-  // be only 1.  In that case, we have to push them rather than decrementing the usecount, which would free prematurely.
-  // This might evolve into a recursive tpop someday, saving the traversal overhead on each use
-  if(tt&TRAVERSIBLE)jtfaorpush(jt,w,tt); 
-#if MEMAUDIT&2
-  audittstack(jt,w,ACUC(w));
-#endif
-  R w;  // if the block was not popped, don't push it again
- }
-}
-// tpush(w)
-*(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(w); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,w,tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,w,ACUC(w));
-R w;
-}
-#else
+
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be unfilled box)
  I *cp=&AC(w); I c=*cp; // save original inplaceability
@@ -427,27 +404,13 @@ A jtgc (J jt,A w,I old){
  // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
  if(c<0)*cp = c;  // restore inplaceability.  Could use *cp=(c<0)?c:*cp to avoid conditional jump
  R w;
-// obsolete  if(c<0){
-// obsolete   // Block was originally inplaceable.  Make it inplaceable again
-// obsolete   if(*cp>ACUC1){
-// obsolete    // usecount coming in was 1, but after tpop was >1.  That means it was allocated up the stack.
-// obsolete    // Return without pushing onto the stack a second time; but we must undo the ra() from above
-// obsolete    fa(w);  // undo the original protection, and audit
-// obsolete    *cp=c;  // set block back to inplaceable
-// obsolete    R w;
-// obsolete   }
-// obsolete   *cp=c;  // set block back to inplaceable
-// obsolete  } 
-// obsolete  tpush(w);  // put w back on the stack
-// obsolete  R w;
 }
-#endif
 
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area.  Return the x argument
 A jtgc3(J jt,A x,A y,A z,I old){
- ra(x);    ra(y);    ra(z);
+ ra(x); ra(y); ra(z);
  tpop(old);
  if(x)tpush(x); if(y)tpush(y); if(z)tpush(z);
  R x;  // good return
@@ -470,21 +433,10 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
    }
-#if 0 // obsolete 
-   if(np){    // it can be 0, if there was an error
-    I tp=AT(np);  // fetch type
-#ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box
-#endif
-    AC(np)=(AC(np)+ACUC1)&~ACINPLACE;   // incr usecount
-    if(tp&TRAVERSIBLE)jtra(jt,np,tp);   // recur if recursible
-   }
-#else
    if(np){
     ra(np);  // increment the box, possibly turning it to recursive
     if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
    }
-#endif
    np=np0;  // advance to next box
   }
   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
@@ -516,21 +468,11 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
    }
-#if 0
-   if(np){    // it could be 0 if there was error
-    I tp=AT(np);  // fetch type
-    I c = AC(np);  // fetch usecount
-    if(tp&TRAVERSIBLE)jtfa(jt,np,tp);  // recur before we free this block
-    if(--c<=0)mf(np);else AC(np)=c;  // decrement usecount; free if it goes to 0; otherwise store decremented count
-   }
-#else
    fana(np);  // free the contents, but don't audit
-#endif
    np = np0;  // advance to next box
   }
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.
-// obsolete  if(v->execct){--v->execct;}else{fana(v->f); fana(v->g); fana(v->h);}
   fana(v->f); fana(v->g); fana(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
@@ -541,54 +483,6 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  R 1;
 }
 
-#if 0  // obsolete
-// Same as fa, but if the usecount would go to 0, we instead do a tpush to defer the free
-// It would be best to handle this with a recursive usecount
-static I jtfaorpush(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
- if(t&BOX){AD* np;
-  // boxed.  Loop through each box, recurring if called for.
-  A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
-  while(1){AD* np0;
-   if(--n<0)break;
-   if(n){
-    np0=(A)((I)*wv+(I)wrel); ++wv;   // point to block for next box
-   }
-   if(np){    // it could be 0 if there was error
-    I tp=AT(np);  // fetch type
-#ifdef PREFETCH
-    PREFETCH((C*)np0);   // prefetch the next box
-#endif
-    I c = AC(np);  // fetch usecount
-    if(tp&TRAVERSIBLE)jtfaorpush(jt,np,tp);  // recur before we free this block
-    if(--c<=0){while(1); tpush1(np)}else AC(np)=c;  // scaf decrement usecount; push if it goes to 0; otherwise store decremented count
-   }
-   np = np0;  // advance to next box
-  }
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
-  // ACV.  We look at execct to see if this name is in execution; if so, just decrement the execct and wait till
-  // the executions finish to recursively decrement.  Because of the way we implement fa(), where we decrement the
-  // count in a static variable before calling this routine, we had to increment the usecount at the same time
-  // we increment execct.
-  if(v->execct){--v->execct;}else{fa(v->f); fa(v->g); fa(v->h);}  // this path is rare (f.) & doesn't have problems, so we lazily use fa
- } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
-  // single-level indirect forms.  handle each block
-  DO(t&RAT?2*n:n, faorpush1(*v); ++v;);
- } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
-  faorpush1(SPA(v,a)); faorpush1(SPA(v,e)); faorpush1(SPA(v,i)); faorpush1(SPA(v,x)); 
- }
- R 1;
-}
-#endif
-
-#if 0  // obsolete 
-// subroutine to save space, just like tpush macro
-static I subrtpush(J jt, A wd, I pushx){
-I tt=AT(wd); *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)wd; pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)pushx=jttpush(jt,wd,tt,pushx);  if(MEMAUDIT&2){jt->tnextpushx = pushx; audittstack(jt,wd,ACUC(wd));}R pushx;
-}
-#endif
 
 // Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushx, or 0 if error
@@ -695,13 +589,6 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
  }
 }
 
-
-#if 0  // obsolete
-// Add jt->arg to the usecount of w and all its descendants.
-static F1(jtra1){RZ(w); if(AT(w)&TRAVERSIBLE)traverse(w,jtra1); ACINCRBY(w,jt->arg); R w;}
-// Add k to the usecount of w and all its descendants
-A jtraa(J jt,I k,A w){A z;I m=jt->arg; jt->arg=k; z=ra1(w); jt->arg=m; R z;}  // preserve jt->arg; return w
-#endif
 
 // Protect a value temporarily
 // w is a block that we want to make ineligible for inplacing.  We increment its usecount (which protects it) and tpush it (which
@@ -816,7 +703,6 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
  I bytes = ALLOBYTESVSZ(atoms,rank,bp(type),type&LAST0,0);  // We never use GA for NAME types, so we don't need to check for it
 #if SY_64
  if((UI)atoms<TOOMANYATOMS){ // check for too many atoms, to preempt overflow
-// obsolete ASSERT(,EVLIMIT);
 #else
  if(bytes>atoms&&atoms>=0){ // beware integer overflow
 #endif
@@ -831,7 +717,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
   if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
-  AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
+// obsolete   AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -894,7 +780,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  RZ(z=gafv(SZI*(AH+r)+mhb));
  AT(z)=0;
  if(w){
-  AFLAG(z)=0; AM(z)=AM(w); AT(z)=AT(w); AN(z)=AN(w); AR(z)=r; AK(z)=CAV(w)-(C*)z;
+  AFLAG(z)=AFVIRTUAL; /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);
  }
  R z;
@@ -907,7 +793,6 @@ F1(jtca){A z;I t;P*wp,*zp;
  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
  else{GA(z,t,AN(w),AR(w),AS(w));}
  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL
-// obsolete  if(AFLAG(w)&AFNJA+AFSMM+AFREL)AFLAG(z)=AFREL;
  AFLAG(z) = (AFLAG(w)&AFNOSMREL) + (!!(AFLAG(w)&AFNJA+AFSMM+AFREL)<<AFRELX);
  if(t&SPARSE){
   wp=PAV(w); zp=PAV(z);
@@ -952,14 +837,14 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  GA(z,t,2*AN(w),AR(w),AS(w)); 
  MC(AV(z),AV(w),m*k);                 /* copy old contents      */
  if(b){ra(z); fa(w);}                 /* 1=b iff w is permanent */
- *AS(z)=m1=AM(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
+ *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }
 
 A jtexta(J jt,I t,I r,I c,I m){A z;I k,m1; 
  GA(z,t,m*c,r,0); 
- k=bp(t); *AS(z)=m1=AM(z)/(c*k); AN(z)=m1*c;
+ k=bp(t); *AS(z)=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!(t&DIRECT))memset(AV(z),C0,k*AN(z));
  R z;

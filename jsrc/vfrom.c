@@ -326,7 +326,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=
  }
  if(i){I*ys;
   RZ(y=gah(pr+r-i,w)); ys=AS(y); DO(pr, *ys++=1;); ICPY(ys,s+i,r-i);
-  AM(y)=AN(y)=prod(AR(y),AS(y));
+  /* obsolete AM(y)= */AN(y)=prod(AR(y),AS(y));
   AK(y)=k*m+CAV(w)-(C*)y;
  }
  for(;i<n;i+=2){
@@ -386,8 +386,6 @@ F2(jtfetch){A*av, z;I ad,n;
  DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVE(z)){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
-// obsolete  RZ(t=afrom(box(AVR(n-1)),x));
-// obsolete  R !AR(t)&&AT(t)&BOX?ope(t):t;   // open final result only if atomic box
  if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
 }
 

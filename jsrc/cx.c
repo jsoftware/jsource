@@ -342,7 +342,6 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    default:   //   CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
     if(2<=*jt->adbreakr) {if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);} BASSERT(0,EVBREAK);} 
       // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
-// obsolete    JBREAK0;   // Check for interrupts
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.

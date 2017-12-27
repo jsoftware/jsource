@@ -29,13 +29,13 @@
 #define SMMCFREE        2
 
 #define RMBX            64L                                  /* max rank for mbx      */
-#define SMMFREE(a)      (I**)((I)(a)+8*(AM(a)/8)-SZI*MLEN)   /* address of free lists */
+#define SMMFREE(a)      (I**)((I)(a)+8*(allosize(a)/8)-SZI*MLEN)   /* address of free lists */
 
 static F1(jtsmmblkf);
 
 
 static I smmsize(A a){
- R 8*(AM(a)/8)-SZI*(AH+RMBX+MLEN)-SZA*AN(a)-SZI*((AH+RMBX+MLEN+AN(a))%2);
+ R 8*(allosize(a)/8)-SZI*(AH+RMBX+MLEN)-SZA*AN(a)-SZI*((AH+RMBX+MLEN+AN(a))%2);
 }    /* size of allocateable area */
 
 static C*smmu(A a){I v;
@@ -126,7 +126,7 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  w=WP(t,n,r); m=SZI*w; 
  ASSERT(RMAX>=r&&m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
  RZ(z=smma(a,m));
- AT(z)=t; ACX(z); AN(z)=n; AR(z)=r; AFLAG(z)=AFSMM; AK(z)=AKX(z); AM(z)=m-AK(z); 
+ AT(z)=t; ACX(z); AN(z)=n; AR(z)=r; AFLAG(z)=AFSMM; AK(z)=AKX(z); /* obsolete AM(z)=m-AK(z); */
  if(r&&s)ICPY(AS(z),s,r); else *AS(z)=n;
  if(t&LAST0)*((I*)z+w-1)=0;
  R z;

@@ -66,7 +66,7 @@ typedef I SI;
 
 #define AK(x)           ((x)->k)        /* offset of ravel wrt x           */
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
-#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */
+#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */   // scaf will be removed
 #define AT(x)           ((x)->t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */

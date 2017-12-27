@@ -59,7 +59,7 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 // it calls here, giving a callback; we split the arguments into cells and call the callback,
 // which is often the same original function that called here.
 
-#if 0
+#if 0 // obsolete
 A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
     I k,mn,n=1,p,*s,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;I state;
  RZ(w);
@@ -214,7 +214,6 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
        // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
        // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
-// obsolete        if(yt&DIRECT&&!((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL))){
        if(!( (AFLAG(w)&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
         RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
@@ -242,7 +241,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
         // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
         // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
         C *zv1=CAV(z);   // pointer to cell data
-        GATV(z,BOX,mn,wf,AS(z)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape
+        A zsav = z; GATV(z,BOX,mn,wf,AS(zsav)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape.  Note GATV reassigns z early, need zsav
         // For each previous result, put it into a box and store the address in the result area
         // We have to calculate the number of cells, rather than using the output address, because the length of a cell may be 0
         // wrecki does not include the cell that caused the wreck
@@ -422,7 +421,6 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
        // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
        // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
-// obsolete        if(yt&DIRECT&&!((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL))){
        if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
         RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
@@ -451,7 +449,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
         // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
         // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
         C *zv1=CAV(z);   // pointer to cell data
-        GATV(z,BOX,mn,lof+lif,AS(z)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape
+        A zsav=z; GATV(z,BOX,mn,lof+lif,AS(zsav)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape.  Note GATV reassigns z early, need zsav
         // For each previous result, put it into a box and store the address in the result area
         // We have to calculate the number of cells, rather than using the output address, because the length of a cell may be 0
         // wrecki does not include the cell that caused the wreck

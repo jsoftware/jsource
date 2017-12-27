@@ -101,7 +101,6 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  R inpl(b,(I)strlen(v),v);
 }
 
-// obsolete extern C breakdata;
 
 #if SYS&SYS_UNIX
 void breakclose(J jt)
@@ -183,7 +182,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
       break;
     case FL:
       pd=DAV(w);
-      GATV(w,INT,AN(w),AR(w),0);
+      {A wsav=w; GATV(w,INT,AN(wsav),AR(wsav),0); }
       pi=AV(w);
       DO(AN(w),*pi++=(I)(jfloor(0.5+*pd++)););
       break;

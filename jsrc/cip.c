@@ -610,7 +610,7 @@ static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
 
 static F1(jtminors){A d;
  RZ(d=apv(3L,-1L,1L)); *AV(d)=0;
- R drop(d,df2(one,w,bsdot(ds(CLEFT))));
+ R drop(d,df2(one,w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
 static DF1(jtdet){DECLFG;A h=sv->h;I c,r,*s;

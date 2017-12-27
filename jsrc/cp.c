@@ -79,9 +79,9 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    R z;
 }}   /* single positive finite exponent */
 
-static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;
+static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
  hs=sv->h; m=AN(hs); 
- RZ(x=ravel(hs)); RZ(y=from(j=grade1(x),x)); nv=AV(y);
+ RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);
  GATV(x,BOX,m,1,0); xv=AAV(x);
  while(p<m&&0>nv[p])p++;
  if(p<m){

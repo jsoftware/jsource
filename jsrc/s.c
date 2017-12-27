@@ -426,7 +426,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   // BOX NSM SMM NJA   are  10x0 xx10 ((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOXED|AFNOSMREL))+AFNOSMREL)) & (BOXED<<1)
   // we are changing the sign of AFNOSMREL and adding to see if the carry through BOXED is set
   // we are combining all the tests into one here to avoid misprediction, since this code will not be in the branch cache.  We should almost never call this subroutine
-// obsolete  if(!(AFNJA&AFLAG(w)))RZ(w=rca(w));
   if((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOX|AFNOSMREL))+AFNOSMREL) )) & (BOX<<1))RZ(w=rca(w));
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made [for the nonce we don't support
@@ -444,10 +443,10 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
     // kludge this should not be required, since the incumbent value should never be inplaceable
    // ra() also removes inplaceability
  }else if(x!=w){  /* replacing name with different mapped data */
-  if((wt=AT(w))&BOX)R smmis(x,w);
+  if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
   ASSERT(wt&DIRECT,EVDOMAIN);
-  ASSERT(AM(x)>=m,EVALLOC);
+  ASSERT(allosize(x)>=m,EVALLOC);
   AT(x)=wt; AN(x)=wn; AR(x)=wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined

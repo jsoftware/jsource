@@ -97,7 +97,7 @@ static B jtwidthdp(J jt, A a, I *w, I *d){I n,x,y; C *v;
  RZ(a=ca(a)); n=AN(a); v=CAV(a); 
  DO(n, if(!strchr("0123456789.", *v)) *v=' '; v++;);
 
- x=strspn(CAV(a), " "          ); AK(a)+=x;AM(a)-=x;AN(a)-=x;AS(a)[0]=x;
+ x=strspn(CAV(a), " "          ); AK(a)+=x;/* obsolete unless NJA AM(a)-=x*/;AN(a)-=x;AS(a)[0]=x;
  x=strspn(CAV(a), "0123456789.");
  ASSERT(AN(a)-x==(I)strspn(x+CAV(a), " "), EVDOMAIN);
  AN(a)=AS(a)[0]=x;

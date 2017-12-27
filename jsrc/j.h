@@ -400,8 +400,9 @@ extern unsigned int __cdecl _clearfp (void);
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
  AR(name)=rank;     \
  if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}    \
- AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx;    \
+ /* obsolete AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx; */    \
 }
+#if 0 // obsolete
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 #define GATVS(name,type,atoms,rank,shaape,size,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
@@ -413,10 +414,30 @@ extern unsigned int __cdecl _clearfp (void);
   else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
   AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
   if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
-  AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx;     \
+  /* obsolete AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx; */     \
   name=ZZz;   \
  }else{erraction;} \
 }
+#else
+// Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
+// Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
+#define GATVS(name,type,atoms,rank,shaape,size,erraction) \
+{ I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
+ ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
+ name = jtgafv(jt, bytes);   \
+ I akx=AKXR(rank);   \
+ if(name){   \
+  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-mhb-akx);  \
+  else if(type&LAST0){((I*)((C*)name+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
+  AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=rank;     \
+  if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}   \
+  /* obsolete AM(name)=((I)1<<((MS*)name-1)->j)-mhb-akx; */     \
+  /* obsolete name=ZZz; */   \
+ }else{erraction;} \
+}
+#endif
+
+// see warnings above under GATVS
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
@@ -571,7 +592,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 13  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 

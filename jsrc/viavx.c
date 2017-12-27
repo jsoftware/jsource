@@ -169,20 +169,6 @@ void bucketinit(){I j;
 
 // create a mask of bits in which a difference is considered significant for floating-point purposes.
 static void ctmask(J jt){
-#if 0
-DI p,x,y;UINT c,d,e,m,q;
-// we calculate this using pi as a reference: find pi +- ct, and see which bits are different.  Everything
-// above the bits that are changed by ct is considered significant
- p.d=PI;                      /* pi itself                */
- x.d=PI*(1-jt->ct);           /* lower bound              */
- y.d=PI/(1-jt->ct);           /* upper bound              */
- c=p.i[MSW]; d=p.i[LSW]; m=0;
- if(c==x.i[MSW]){e=x.i[LSW]; m =(d&~e)|(~d&e);}
- if(c==y.i[MSW]){e=y.i[LSW]; m|=(d&~e)|(~d&e);}
- q=m;
- while(m){m>>=1; q|=m;}       /* q=:+./\m as a bit vector */
- jt->ctmask= 0xffffffff00000000LL | (UIL)~q;
-#else
  // New version: we have to find the max maskvalue such that x+tolerance and x-tolerance are not separated by more than one
  // maskpoint, for any x.  The worst-case x occurs where the mantissa of x is as big as it can be, e. g. 1.1111111111...
  // At that point the tolerance band above is t/(t+1) times the approx value (2 in the example).  The tolerance band below is about the same,
@@ -195,7 +181,6 @@ DI p,x,y;UINT c,d,e,m,q;
   q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
   jt->ctmask=(UIL)q;
  }else{jt->ctmask = ~0LL;}
-#endif
 }    /* 1 iff significant wrt comparison tolerance */
 
 #if C_AVX&&SY_64
@@ -1419,41 +1404,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
 // used when w is shorter than a and thus more likely to fit into cache.  Also allows early exit when all results found.
 //  Intolerant comparisons only.   Used for i./i:/e. only, and never reflexive
 
-#if 0
-// Get the next value (j) from position i, and look at the hash (hv[j], called hj) to see if this is a new class.  It is, if the hashtable still contains
-// its initial wsct value.  If new class, remember it in the hashtable and initialize result to not found.  If old class, the hash value is the class; remember it.
-#define XDOWSP(T,TH,TZ,zptr,nfval) {I j, hj; DO(wsct, j=wv[i]; hj=hv[j]; if(hj==wsct){++chainct;indtdd[i]=(TH)i;hv[j]=(TH)i;zptr[i]=(TZ)nfval;}else{indtdd[i]=(TH)hj;})}
-// Scan forward through a.  Read value[i]; if out of bounds, divert to 'not-found' location; read from table; if table has a value, store the result value
-#define XDOWSA(T,TH,TZ,zptr,zvalue,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zptr[hj]=(TZ)zvalue; if(--chainct==0)goto earlyexit;})}
-// Same but reverse scan through a
-#define XDQWSA(T,TH,TZ,zptr,zvalue,earlyexit) {I j, hj; DQ(asct, \
-  j=av[i]; if(j<minimum)j=maximum; if(j>maximum)j=maximum; hj=hv[j]; if(hj<wsct){hv[j]=(TH)wsct; zptr[hj]=(TZ)zvalue; if(--chainct==0)goto earlyexit;})}
 
-
-#define IOFXWS(f,T,TH)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
-        wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
-        /* establish min/max of data; create biased pointer to table area; store an 'empty' value, to be used by out-of-bounds inputs, right after the table data */ \
-        /* When we allocated the table we left room for the extra entry */ \
-        IH *hh=IHAV(h); I minimum=hh->datamin; p=hh->datarange; I maximum=minimum+p; hv=hh->data.TH-minimum; hv[maximum]=(TH)wsct; \
-  \
-  md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
-  A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)/SZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
-  for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
-   /* zv progresses through the result - for those versions that support IRS */ \
-   hashallo(hh,p,wsct,mode); \
-     \
-   switch(md){                                                                       \
-   case IICO:\
-   case IIDOT: {I * RESTRICT zv=AV(z)+l*wsct; XDOWSP(T,TH,I,zv,asct); \
-     if(md==IIDOT)XDOWSA(T,TH,I,zv,i,allfound1)else XDQWSA(T,TH,I,zv,i,allfound1)  allfound1: XDOWINDCLASS(zv); } break;  \
-   case IEPS: {B * RESTRICT zb=BAV(z)+l*wsct; XDOWSP(T,TH,B,zb,0); XDOWSA(T,TH,B,zb,1,allfound2); allfound2: XDOWINDCLASS(zb); } break; \
-   } \
-  }                                                                                  \
-  R h;                                                                               \
- }
-#else
 // Get the next value (j) from position i, and look at the hash (hv[j], called hj) to see if this is a new class.  It is, if the hashtable still contains
 // its initial wsct value.  If new class, remember it in the hashtable and (complemented) in the result.  If old class, the hash value is the class; remember it.
 // When we are done, each result value has the complement of the first matching index in w
@@ -1524,7 +1475,6 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
   }                                                                                  \
   R h;                                                                               \
  }
-#endif
 
 
 static IOFXWS(jtio42w,I,US)  static IOFXWS(jtio44w,I,UI4)  // INT-sized items, using small/large hashtable
@@ -2036,7 +1986,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
      GATV(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))/SZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
-     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=1;  // hash entries are 2 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      if(!(mode&IPHCALC)){ra(h); jt->idothash0=h;}  // If not prehashing a table, save this and protect against removal.
@@ -2063,7 +2013,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
      GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
      // Fill in the header
      hh=IHAV(h);  // point to the header
-     hh->datasize=AM(h)-sizeof(IH);  // number of bytes in data area
+     hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
      hh->hashelelgsize=2;  // hash entries are 4 bytes long
      hh->currenthi = hh->previousindexend = 0;  // This is the minimum need to initialize when FORCE0 is set
      // If the hash size is moderate, there is a gain to be had by preserving it between searches (it will already be in cache).  On the other hand,

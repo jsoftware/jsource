@@ -44,7 +44,33 @@ typedef double             D;
 typedef FILE*              F;
 
 typedef long double        LD;
-typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;
+
+// This is the main structure for J entities
+typedef US                 RANKT;
+typedef UI4                FLAGT;
+
+typedef struct {
+ I k;
+ union {
+  I combflags;  // flag/header/rank.  Used so we do 64-bit writes that don't mess up store forwarding
+  struct {
+#ifdef C_LE
+   RANKT r;   // rank
+   US h;   // reserved for allocator
+   FLAGT flag;  // flags
+#else
+   FLAGT flag;  // flags
+   US h;   // reserved for allocator
+   RANKT r;   // rank
+#endif
+  } fhr;
+ } fhru;
+ I t;  // type
+ I c;  // usecount
+ I n;  // # atoms
+ I s[1];   // shape starts here
+} AD;
+
 typedef AD *A;
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
@@ -65,23 +91,25 @@ typedef I SI;
 /* Fields of type A                                                        */
 
 #define AK(x)           ((x)->k)        /* offset of ravel wrt x           */
-#define AFLAG(x)        ((x)->flag)     /* flag                            */
-#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */   // scaf will be removed
+#define AFLAG(x)        ((x)->fhru.fhr.flag)     /* flag                            */
+// obsolete #define AM(x)           ((x)->m)        /* Max # bytes in ravel            */   // scaf will be removed
 #define AT(x)           ((x)->t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
-#define AR(x)           ((x)->r)        /* Rank                            */
-#define AH              7L              /* # non-shape header words in A   */
+#define AR(x)           ((x)->fhru.fhr.r)        /* Rank                            */
+// #define AH              7L              /* # non-shape header words in A   */
+#define SMMAH           7L   // number of header words in old-fashioned SMM alloc
+#define NORMAH          5L   // number of header words in new system
 #define AS(x)           ((x)->s)        /* Pointer to shape                */
 
 #if SY_64
-#define AKXR(x)         (SZI*(AH+(x)))
-#define WP(t,n,r)       (AH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
-#define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+#define AKXR(x)         (SZI*(NORMAH+(x)))
+#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
+// obsolete #define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
-#define AKXR(x)         (SZI*(AH+((x)|1)))
-#define WP(t,n,r)       (AH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
-#define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+#define AKXR(x)         (SZI*(NORMAH+((x)|1)))
+#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+// obsolete #define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 /* r|1 to make sure array values are double-word aligned */
 #endif
 #define AKX(x)          AKXR(AR(x))

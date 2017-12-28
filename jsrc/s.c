@@ -43,10 +43,10 @@ UI nmhash (I k,UC*v){UI z=*v>>7; DO(k,z=(k-i)^(1000003*z)^*v++;); R z;}
 static I symcol=(sizeof(L)+SZI-1)/SZI;
 
 B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
- if(b){y=jt->symp; j=((MS*)y-1)->j; n=*AS(y); yn=AN(y);}
- else {            j=12;            n=1;      yn=0;    }
- m=(I)1<<(1+j);                              /* new size in bytes           */
- m-=sizeof(MS)+SZI*(AH+2);                  /* less array overhead         */
+ if(b){y=jt->symp; j=allosize(y)+NORMAH*SZI; n=*AS(y); yn=AN(y);}  // extract allo size from header (approx)
+ else {            j=1LL<<12;            n=1;      yn=0;    }
+ m=j<<1;                              /* new size in bytes           */
+ m-=SZI*(NORMAH+2);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */
  s[0]=m; s[1]=symcol; xn=m*symcol;          /* new pool array shape        */
  GATV(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
@@ -447,7 +447,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   wn=AN(w); wr=AR(w); m=wn*bp(wt);
   ASSERT(wt&DIRECT,EVDOMAIN);
   ASSERT(allosize(x)>=m,EVALLOC);
-  AT(x)=wt; AN(x)=wn; AR(x)=wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+  AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
  if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled

@@ -1864,7 +1864,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
 // jtoiz1 tolerant CMPX atom
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
-#define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
+#define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically

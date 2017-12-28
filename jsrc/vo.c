@@ -29,7 +29,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  RZ(w);
  ASSERT(!(SPARSE&AT(w)),EVNONCE);
   // Set NOSMREL if w is not boxed or it has NOSMREL set
- I newflags = (AFLAG(w) | ((~AT(w))>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
+ FLAGT newflags = (AFLAG(w) | ((~AT(w))>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
  if(!jt->rank){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
   // DO NOT set recursible, because that would require a potentially expensive pass through w which may never be needed if this result expires without being assigned

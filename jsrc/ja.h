@@ -800,13 +800,13 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // obsolete #define ra(x)                       {if(x){I* Zcc=&AC(x); I tt=AT(x); I c=*Zcc; I flg=AFLAG(x); if(c<0 && tt&RECURSIBLE)AFLAG(x)=flg|(tt&TRAVERSIBLE); if((tt^flg)&TRAVERSIBLE)jtra(jt,(x),tt); *Zcc=(c+1)&~ACINPLACE;}}
 #if MEMAUDIT&2
-#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); I flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); I flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
-#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); I flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); I flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}}
 #endif
 #endif
 #define ra1(x)                      jtra1(jt,(x))

@@ -659,12 +659,12 @@ static void convertup(I*pi,I n,C t){I j=n;
 static A jtcdgahash(J jt,I n){A z;I hn,*v;
  v=ptab+PTO; while(n>*v)++v; hn=*v;
  GATV(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
- ra(z); R z;
+ ras(z); R z;
 }
 
 static B jtcdinit(J jt){A x;
- RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ra(x); memset(AV(x),C0,AN(x)); jt->cdarg=x;
- RZ(x=exta(LIT,1L,1L,         5000L)); ra(x); memset(AV(x),C0,AN(x)); jt->cdstr=x;
+ RZ(x=exta(LIT,2L,sizeof(CCT),100L )); ras(x); memset(AV(x),C0,AN(x)); jt->cdarg=x;
+ RZ(x=exta(LIT,1L,1L,         5000L)); ras(x); memset(AV(x),C0,AN(x)); jt->cdstr=x;
  RZ(jt->cdhash =cdgahash(4**AS(jt->cdarg)));
  RZ(jt->cdhashl=cdgahash(NLIBS           ));
  jt->cdna=jt->cdns=jt->cdnl=0;

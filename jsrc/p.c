@@ -16,7 +16,8 @@
 /*                                                                      */
 /* jt->nvra      NVR stack a: stack of A values.  LSB is a flag         */
 /* jt->nvrav     AAV(jt->nvra)                                          */
-/* jt->nvrtop    index of top of stack                                  */
+// jt->nvran     AN(jt->nvra)
+/* jt->nvrtop    index of top of stack.  stack grows up                 */
 /*                                                                      */
 /* Each call of the parser records the current NVR stack top (nvrtop),  */
 /* and pop stuff off the stack back to that top on exit       */
@@ -40,7 +41,7 @@
 // dealing with in-place modification.
 
 B jtparseinit(J jt){A x;
- GAT(x,INT,20,1,0); ra(x); jt->nvra=x; jt->nvrav=AAV(x);  // Initial stack.  Size is doubled as needed
+ GAT(x,INT,20,1,0); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
  R 1;
 }
 
@@ -220,7 +221,7 @@ F1(jtparse){A z;
 // Set assignsym for any final execution that assigns to a name.  queue[m] is the name to be assigned.  We use this only if the verb is known to be locale-safe, so it's OK
 // to precalculate the assignment target.  The probe for a locale name will never fail, because we will have preallocated the name.
 //  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h)
-// We set zombieval whenever the local valueis to be reassigned, regardless of usecount.  Users of zombieval must check AC==1 before using it.  zombieval
+// We set zombieval whenever the local value is to be reassigned, regardless of usecount.  Users of zombieval must check AC==1 before using it.  zombieval
 // is used only as an alternative way of detecting inplaceable usecount, not as a way of reusing a non-argument block during final assignment.
 #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE) \
    &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;}
@@ -251,7 +252,7 @@ F1(jtparse){A z;
 #define SM(to,from) stack[to]=stack[from]
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){PSTK *stack;A z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
+F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table entry
  // we know what the compiler does not: that jt->sitop and mark are constant even over function calls.
  // So we move those values into local names.
  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
@@ -269,7 +270,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
-  I otop=jt->nvrtop;
+  UI4 otop=jt->nvrtop;
 
   // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
   // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original
@@ -283,13 +284,13 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
   // make sure there is that much space.  BUT if there were an enormous tacit sentence, that would be
   // very inefficient.  So, if the sentence is too long, we go through and count the number of names,
   // rather than using a poor upper bound.
-  if (m < 128)maxnvrlen = m;   // if short enough, assume they're all names
+  if (m < 128)maxnvrlen = (UI4)m;   // if short enough, assume they're all names
   else {
    maxnvrlen = 0;
    DQ(m, if(NAME&AT(queue[i+1]))++maxnvrlen;)
   }
   // extend the nvr stack, doubling its size each time, till it can hold our names
-  while((jt->nvrtop+maxnvrlen) > AN(jt->nvra)){RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra);}
+  while((jt->nvrtop+maxnvrlen) > jt->nvran){RZ(jt->nvra = ext(1, jt->nvra)); jt->nvrav = AAV(jt->nvra); jt->nvran=(UI4)AN(jt->nvra);}
 
   // allocate the stack.  No need to initialize it, except for the marks at the end, because we
   // never look at a stack location until we have moved from the queue to that position.
@@ -377,7 +378,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m,maxnvrlen; L* s;  // symbol-table entry
     case PBIDENT:
     EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; break;
     case PPAREN:
-    stack[2].a=stack[1].a; stack[2].t=stack[0].t; stack += 2; break; // Can't fail; use value from expr, token # from (
+    stack[2].a=stack[1].a; stack[2].t=stack[0].t; stack += 2; break;  // Can't fail; use value from expr, token # from (
     case PASGN: if(!(stack=jtis(jt)))EP break;
     }
 

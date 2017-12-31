@@ -150,7 +150,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
    // z is relative.  It may still be in-place, and therefore may have recursive usecount
-   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ra(new); zv[iv[i]]=(A)AREL(new,z););  // this ra() can never encounter a virtual block
+   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ras(new); zv[iv[i]]=(A)AREL(new,z););  // this ra() can never encounter a virtual block
    }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
   }
   else{
@@ -164,7 +164,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
    case sizeof(C):
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
    case sizeof(I):
-    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ra(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ra() cannot be virtual
+    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ra() cannot be virtual
     else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
     break;
    // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though

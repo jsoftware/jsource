@@ -471,7 +471,7 @@ static B jtrngga(J jt,I i,UI**vv){
    case DXI: t=INT; n=DXN; f=jtdx_init; break;
    case MRI: t=FL;  n=MRN; f=jtmr_init; 
   }
-  GA(x,t,n,1,0); ra(x); vv[i]=jt->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
+  GA(x,t,n,1,0); ras(x); vv[i]=jt->rngv=AV(x);   // x will never be freed, but that's OK, it's inited only once
   f(jt,jt->rngS[i]); jt->rngI[i]=jt->rngi;
  }
  R 1;
@@ -568,7 +568,7 @@ F1(jtrngseeds){I k,r;
  if(r){
   // w is not an atom.  the RNG had better be Mersenne Twister.  Initialize using w, and save the w list
   ASSERT(1==r&&MTI==jt->rng,EVRANK);
-  ra(w); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
+  ras(w); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
   mt_init_by_array(AV(w),AN(w));
  }else switch(jt->rng){
   // atomic w.  We can use that for any generator.  Choose the current one.
@@ -774,7 +774,7 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
 
 #define FXSDECL     A z;I i,j=jt->rng;UI*v=jt->rngV[GBI];
 #define FXSDO       {i=j==GBI?jt->rngi:jt->rngI[GBI];                                \
-                     if(!jt->rngfxsv){GAT(z,INT,GBN,1,0); ra(z); jt->rngfxsv=AV(z);}  \
+                     if(!jt->rngfxsv){GAT(z,INT,GBN,1,0); ras(z); jt->rngfxsv=AV(z);}  \
                      jt->rngV[GBI]=jt->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngV[GBI]=v; jt->rngI[GBI]=jt->rngi=i; rngselects(sc(j));}
 

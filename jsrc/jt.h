@@ -48,7 +48,8 @@ typedef struct {
  I    parsercalls;      /* # times parser was called                       */
  DC   sitop;            /* top of SI stack                                 */
  A*   nvrav;            /* AAV(jt->nvra)                                   */
- I    nvrtop;           /* top of nvr stack; # valid entries               */
+ UI4  nvran;            // number of atoms in nvrav
+ UI4  nvrtop;           /* top of nvr stack; # valid entries               */
 // --- end of cache line 3
  PSTK* parserstkbgn;     // &start of parser stack
  PSTK* parserstkend1;    // &end+1 of parser stack

@@ -22,8 +22,8 @@ B jtxoinit(J jt){A x;
  _setmode(_fileno(stdout),_O_BINARY);
  _setmode(_fileno(stderr),_O_BINARY);
 #endif
- GAT(x,BOX,8,1,0); memset(AV(x),C0,AN(x)*SZI); ra(x); jt->fopa=x;
- GAT(x,INT,8,1,0);                             ra(x); jt->fopf=x;
+ GAT(x,BOX,8,1,0); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->fopa=x;
+ GAT(x,INT,8,1,0);                             ras(x); jt->fopf=x;
  R 1;
 }
 
@@ -97,7 +97,7 @@ F1(jtjopen){A z;I h;
  else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
   RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
-  RZ(ww=fullname(AAV0(w))); ra(ww);
+  RZ(ww=fullname(AAV0(w))); ras(ww);
   RZ(*(jt->fopn+AAV(jt->fopa))=ww);
  
   ++jt->fopn;
@@ -108,8 +108,8 @@ B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
  if(f1==NULL) {jt->fopn+=2;R 1;};
  GATV(c,LIT,1+strlen(cmd),1,0);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
  if(jt->fopn+1>=AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
- *cmd='<';x=cstr(cmd); ra(x); RZ(*(jt->fopn+AAV(jt->fopa)  )=x); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
- *cmd='>';x=cstr(cmd); ra(x); RZ(*(jt->fopn+AAV(jt->fopa)+1)=x); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);
+ *cmd='<';x=cstr(cmd); ras(x); RZ(*(jt->fopn+AAV(jt->fopa)  )=x); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
+ *cmd='>';x=cstr(cmd); ras(x); RZ(*(jt->fopn+AAV(jt->fopa)+1)=x); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);
  fa(c); R 1;
 }   /* add 2 entries to jt->fopn table (for hostio); null arg commits entries */
 

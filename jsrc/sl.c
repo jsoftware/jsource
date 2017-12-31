@@ -19,7 +19,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   ra(x); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ra(xx); LOCPATH(g) = xx;   // ra() is never VIRTUAL
+   ras(x); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ra() is never VIRTUAL
    // Assign this name in the locales symbol table to point to the allocated SYMB block
    // This does ra() on g
    symbis(x,g,jt->stloc);
@@ -27,7 +27,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   ra(x); LOCNAME(g)=x; ra(zpath); LOCPATH(g)=zpath;  // ra() is never virtual
+   ras(x); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ra() is never virtual
    ++jt->stused;
    m=AN(jt->stnum);
    // Extend in-use locales list if needed
@@ -37,7 +37,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
    }
    // Put this locale into the in-use list at an empty location.  ra(g) at that time
    pv=AAV(jt->stptr);
-   DO(AN(jt->stnum), if(!pv[i]){ra(g); pv[i]=g; *(i+AV(jt->stnum))=n; break;});
+   DO(AN(jt->stnum), if(!pv[i]){ras(g); pv[i]=g; *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;
    break;
   case 2:  /* local symbol table */
@@ -165,7 +165,7 @@ F2(jtlocpath2){A g,x;
  F2RANK(1,0,jtlocpath2,0);
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
- fa(LOCPATH(g)); ra(x); LOCPATH(g)=x;
+ fa(LOCPATH(g)); ras(x); LOCPATH(g)=x;
  R mtm;
 }    /* 18!:2  set locale path */
 

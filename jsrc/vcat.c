@@ -281,7 +281,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
      // Copy in the actual data, replicating if w is atomic
      if(wr)MC(av,wv,wlen); else mvc(wk,av,k,wv);
      // if a has recursive usecount, increment the usecount of the added data - including any fill
-     if(UCISRECUR(a)){A* aav=(A*)av; DO(wn, ra(aav[i]);)}
+     if(UCISRECUR(a)){A* aav=(A*)av; DO(wn, ras(aav[i]);)}
      // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
      *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
      R a;

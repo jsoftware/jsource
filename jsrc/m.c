@@ -236,7 +236,7 @@ void jtspendtracking(J jt){I i;
  R;
 }
 
-#if MEMAUDIT&2
+#if BW==64 && MEMAUDIT&2
 // Simulate deleting the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
@@ -282,7 +282,7 @@ static void auditsimreset(A w){I delct;
 // Register the value to insert into leak-sniff records
 void jtsetleakcode(J jt, I code) {
 #if LEAKSNIFF
- if(!leakblock)GAT(leakblock,INT,10000,1,0); ra(leakblock);
+ if(!leakblock)GAT(leakblock,INT,10000,1,0); ras(leakblock);
  leakcode = code;
 #endif
 }
@@ -307,7 +307,7 @@ R zero;
 
 // Verify that block w does not appear on tstack more than lim times
 void audittstack(J jt){
-#if MEMAUDIT&2
+#if BW==64 && MEMAUDIT&2
  if(jt->audittstackdisabled&1)R;
  // loop through each block of stack
  A* tstack; I ttop;
@@ -394,13 +394,18 @@ A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be unfilled box)
  I *cp=&AC(w); I c=*cp; // save original inplaceability
  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  But if VIRTUAL, don't realize - set up to realize if backing block is freed
+  // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
  tpop(old);  // delete everything allocated on the stack
- if(*cp>(c&~ACINPLACE)){
-   // usecount coming in was incremented by ra but was not decremented by tpop.  That means it was allocated up the stack.
-   // Return without pushing onto the stack a second time; but we must undo the ra() from above
-  fa(w);
- }else{tpush(w);}  // if the block was popped, push it again, deferring the deletion correspnding to the ra.  This push is always recursible
- // either way, the usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
+ // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
+ // We could just do a tpush of the new block, but (1) we would just as soon do fa() rather than tpush() to save the overhead; (2) if the block was originally inplaceable
+ // we would like to continue with it inplaceable.  The interesting case is when the block was NOT freed during the tpop.  That means that
+ // the block was allocated somewhere else, either farther up the stack or in a name.  If the block is in a name, we must NOT do fa(), in case the
+ // name is reassigned, freeing the components, while one of the components is a result.  OTOH, if the block actually is on the stack, it is safe
+ // to do the fa().  We don't get it exactly right, but we note that any block that is part of a name will not be inplaceable, so we do the fa() only if
+ // w is inplaceable - and in that case we can make the result here also inplaceable.  If the block was not inplaceable, or if it was freed during the tpop,
+ // we push it again here.  In any case, if the input was inplaceable, so is the result.
+ if((c&(1-*cp))<0){fa(w);} else {tpush(w);}  // test is c<0 && *cp>1
+ // The usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
  // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
  if(c<0)*cp = c;  // restore inplaceability.  Could use *cp=(c<0)?c:*cp to avoid conditional jump
  R w;
@@ -410,7 +415,7 @@ A jtgc (J jt,A w,I old){
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area.  Return the x argument
 A jtgc3(J jt,A x,A y,A z,I old){
- ra(x); ra(y); ra(z);
+ ras(x); ras(y); ras(z);
  tpop(old);
  if(x)tpush(x); if(y)tpush(y); if(z)tpush(z);
  R x;  // good return
@@ -442,12 +447,14 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
   // ACV.  Recur on each component
-  ra(v->f); ra(v->g); ra(v->h);
+  ras(v->f); ras(v->g); ras(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DO(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);
- } else if(t&SPARSE){P* RESTRICT v=PAV(wd);
-  ra(SPA(v,a)); ra(SPA(v,e)); ra(SPA(v,i)); ra(SPA(v,x)); 
+ } else if(t&SPARSE){P* RESTRICT v=PAV(wd); A x;
+  // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
+  x = SPA(v,a); ras(x);     x = SPA(v,e); ras(x);     x = SPA(v,i); ras(x);     x = SPA(v,x); ras(x);
+// obsolete   ra(SPA(v,a)); ra(SPA(v,e)); ra(SPA(v,i)); ra(SPA(v,x)); 
  }
  R 1;
 }
@@ -600,6 +607,8 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
 F1(jtrat){RZ(w); ra(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
 F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
+
+A jtras(J jt, AD * RESTRICT w) { ra(w); R w; }  // subroutine version of ra() to save space
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern
@@ -836,7 +845,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
  GA(z,t,2*AN(w),AR(w),AS(w)); 
  MC(AV(z),AV(w),m*k);                 /* copy old contents      */
- if(b){ra(z); fa(w);}                 /* 1=b iff w is permanent */
+ if(b){ras(z); fa(w);}                 /* 1=b iff w is permanent */
  *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;

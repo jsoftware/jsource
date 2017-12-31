@@ -764,7 +764,13 @@ NB. Verify fork does not execute f if there is an error in f
 'domain error' -: (18!:4 [ 1&+) etx <'nonexlocale'
 -. (<'nonexlocale') e. 18!:1]0 
 'domain error' -: 1 (18!:4@] [ +) etx <'nonexlocale'
--. (<'nonexlocale') e. 18!:1]0 
+-. (<'nonexlocale') e. 18!:1]0
+
+NB. Test for intermediate result persisting when the name of which it is a part is reassigned
+qd=: 3 : 'jdlast=: <,''a'''
+t=: >@{:@qd
+(t'')-:t''
+
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 

@@ -50,13 +50,13 @@ typedef struct{I d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and tr
 
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t,EVCTRL);
- ra(t); cv->t=t;                            /* iteration array     */
+ ras(t); cv->t=t;                            /* iteration array     */
  cv->n=IC(t);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
  cv->k=k=AN(cv->line)-5;                 /* length of item name */
  if(0<k&&cv->n){                         /* for_xyz.            */
-  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ra(x); cv->x=x;
+  s=4+CAV(cv->line); RZ(x=str(6+k,s)); ras(x); cv->x=x;
   cv->xv=v=CAV(x); MC(k+v,"_index",6L);  /* index name          */
   cv->iv=s;                              /* item name           */
  }
@@ -152,9 +152,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
  // directly.
  L *ybuckptr = AV(jt->local)[yxbuckets[symtabsize][0]]+jt->sympv;  // pointer to sym block for y
- if(w){ ra(w);ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+ if(w){ ras(w);ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
- if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ra(a); ybuckptr->val=a; ybuckptr->sn=jt->slisti;}
+ if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ras(a); ybuckptr->val=a; ybuckptr->sn=jt->slisti;}
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
@@ -236,7 +236,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // if it fills up, extend it by 1 as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGATV(cd,INT,r*WCD,1,0); ra(cd); cv=(CDATA*)AV(cd)-1;}
+     else  {r=9; BGATV(cd,INT,r*WCD,1,0); ras(cd); cv=(CDATA*)AV(cd)-1;}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
     // remember the line number of the for./select.
@@ -299,7 +299,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(!cv->t){
      BASSERT(t,EVCTRL);
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     t=boxopen(t); ra(t); BZ(cv->t=t); t=0;
+     t=boxopen(t); ras(t); BZ(cv->t=t); t=0;
     }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
@@ -345,11 +345,11 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
- // If it isn't, abortively reexecute the sentence that created the noun-noun result, and flag it as error
+ // If it isn't, abortively reexecute the sentence that created the non-noun result, and flag it as error
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
- if(jt->jerr)z=0; else{if(z){ra(z)} else z=mtm;} // If no error, increment use count in result to protect it from tpop
+ if(jt->jerr)z=0; else{if(z){ras(z);} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
@@ -607,7 +607,7 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
  for(j=1;j<an;++j) {I *zhbase=&zv[j]; I ahx=av[j]; I ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
-   l->name=(jt->sympv)[ahx].name; ra(l->name);  // point symbol table to the name block, and increment its use count accordingly
+   l->name=(jt->sympv)[ahx].name; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly
    l->flag|=LPERMANENT;  // mark entry as PERMANENT, in case we try to delete the name (as in for_xyz. or 4!:55)
    ztx = ztx?(jt->sympv)[ztx].next : *zhbase;  // ztx=index to value we just added.  We avoid address calculation because of the divide.  If we added
       // at head, the added block is the new head; otherwise it's pointed to by previous tail

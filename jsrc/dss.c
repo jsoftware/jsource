@@ -40,7 +40,7 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n,*v;
   case SSSTEPOUT:  if(a)*v=n-1; else --*v; jt->dbss=d->dcss=0;   ssnext(d,c); break;
   case SSCUTBACK:  *v=-2; jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)--*(I*)e->dci;
  }
- fa(jt->dbssexec); if(AN(w)){ra(w); jt->dbssexec=w;}else jt->dbssexec=0;
+ fa(jt->dbssexec); if(AN(w)){ras(w); jt->dbssexec=w;}else jt->dbssexec=0;
  R mtm;                                     /* 0 return to terminate call      */
 }
 

@@ -201,7 +201,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n,wd;L*v;
   RE(y=stdnm(WVR(i)));
   zv[i]=1&&y;
   // If the value is at large in the stacks, increment the use count and call for a later decrement
-  if(y&&(v=syrd(y,0L))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ra(v->val); RZ(symfree(v));}
+  if(y&&(v=syrd(y,0L))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
  }
  R z;
 }    /* 4!:55 expunge */

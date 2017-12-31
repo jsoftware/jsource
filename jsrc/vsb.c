@@ -274,13 +274,13 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  }
  if(AN(jt->sbs)<n+jt->sbsn){            /* extend sbs strings           */
   GATV(x,LIT,2*(n+jt->sbsn),1,0); MC(CAV(x),jt->sbsv,jt->sbsn);
-  fa(jt->sbs); ra(x); jt->sbs=x; jt->sbsv=CAV(x);
+  fa(jt->sbs); ras(x); jt->sbs=x; jt->sbsv=CAV(x);
  }
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
   RZ(x=apv(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
   DO(c, j=v++->h%p; while(0<=hv[j])j=(1+j)%p; hv[j]=i;);
-  fa(jt->sbh); ra(x); jt->sbh=x; jt->sbhv= AV(x);
+  fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
   hi=h%p;                               /* new hi wrt new sbh size      */
   while(0<=hv[hi])hi=(1+hi)%p; 
  }
@@ -658,9 +658,9 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
  RZ(sbcheck1(WVR(0),WVR(1),WVR(2),WVR(3),WVR(4),WVR(5),WVR(6),WVR(7)));
  jt->sbun=*AV(WVR(0));
  jt->sbsn=*AV(WVR(1));
- RZ(x=ca(WVR(2))); ra(x); u=jt->sbu; jt->sbu=x; jt->sbuv=(SBU*)AV(x);
- RZ(x=ca(WVR(3))); ra(x); s=jt->sbs; jt->sbs=x; jt->sbsv=     CAV(x);
- RZ(x=ca(WVR(4))); ra(x); h=jt->sbh; jt->sbh=x; jt->sbhv=      AV(x);
+ RZ(x=ca(WVR(2))); ras(x); u=jt->sbu; jt->sbu=x; jt->sbuv=(SBU*)AV(x);
+ RZ(x=ca(WVR(3))); ras(x); s=jt->sbs; jt->sbs=x; jt->sbsv=     CAV(x);
+ RZ(x=ca(WVR(4))); ras(x); h=jt->sbh; jt->sbh=x; jt->sbhv=      AV(x);
  ROOT      =*AV(WVR(5));
  FILLFACTOR=*AV(WVR(6));
  GAP       =*AV(WVR(7));
@@ -671,7 +671,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
 static void resetdata(J jt){
  fa(jt->sbu); fa(jt->sbs); fa(jt->sbh); // free old symbol
  sbtypeinit();                          // initialization routine
- ra(jt->sbu); ra(jt->sbs); ra(jt->sbh); // prevent automatically freed by tpop()
+ ras(jt->sbu); ras(jt->sbs); ras(jt->sbh); // prevent automatically freed by tpop()
 }    /* re-initialize global symbol table */
 
 static F1(jtsbsetdata2){A *wv;I c,i,sn,wd,offset=0;SBU*uv,*v;C*sv;

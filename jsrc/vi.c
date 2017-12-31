@@ -1463,7 +1463,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is ever used for bits
       hh->currentindexend=hh->previousindexend=(US)-1;  // signal table must be initialized
       // since table is to be initialized, currentlo/currenthi can be left garbage
-      ra(h);  // make the table permanent  this ra() will never be VIRTUAL
+      ras(h);  // make the table permanent  this ra() will never be VIRTUAL
      }
     }
    }else{
@@ -1508,7 +1508,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is invalid because it held bitmasks
       hh->currentindexend=hh->previousindexend=(UI4)-1;  // signal that table must be initialized
       // since table is to be initialized, currentlo/currenthi can be left garbage
-      ra(h);  // make the table permanent   never VIRTUAL
+      ras(h);  // make the table permanent   never VIRTUAL
      }
     }
     // switch the routine pointer to the big table

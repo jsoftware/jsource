@@ -186,7 +186,7 @@ static B jtevinit(J jt){A q,*v;
  v[EVTHROW  ]=cstr("uncaught throw."            );
  v[EVTIME   ]=cstr("time limit"                 );
  v[EVVALUE  ]=cstr("value error"                );
- ra(q); jt->evm=q;
+ ras(q); jt->evm=q;
  if(jt->jerr){printf("evinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }
 

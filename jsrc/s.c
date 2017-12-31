@@ -56,7 +56,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  DO(m-n-1, u++->next=j++;);                 /* build free list extension   */
  if(b)u->next=jt->sympv->next;              /* push extension onto stack   */
  ((L*)v)->next=n;                           /* new stack top               */
- ra(x); jt->symp=x;                           /* preserve new array          */
+ ras(x); jt->symp=x;                           /* preserve new array          */
  jt->sympv=(L*)AV(x);                       /* new array value ptr         */
  if(b)fa(y);                                /* release old array           */
  R 1;
@@ -225,7 +225,7 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
    RZ(l=symnew(&AV(jt->local)[b],tx)); 
-   ra(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
+   ras(a); l->name=a;  // point symbol table to the name block, and increment its use count accordingly
    R l;
   } else {L* l = lx+jt->sympv;  // fetch hashchain headptr, point to L for first symbol
    // negative bucketx (now positive); skip that many items, and then you're at the right place
@@ -257,7 +257,7 @@ L*jtprobeis(J jt,A a,A g){C*s;I*hv,m,tx;L*v;NM*u;
  }
  // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
  RZ(v=symnew(hv,tx)); 
- ra(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
+ ras(a); v->name=a;  // point symbol table to the name block, and increment its use count accordingly
  R v;
 }    /* probe for assignment */
 
@@ -428,8 +428,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   // we are combining all the tests into one here to avoid misprediction, since this code will not be in the branch cache.  We should almost never call this subroutine
   if((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOX|AFNOSMREL))+AFNOSMREL) )) & (BOX<<1))RZ(w=rca(w));
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
-  // addressing - if there was any, it should have been fixed when the original assignment was made [for the nonce we don't support
-  // inplace ops on boxed arrays; when we do, it will be the responsibility of the action routine to keep the result valid].
+  // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.

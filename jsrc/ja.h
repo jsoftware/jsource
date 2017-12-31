@@ -817,6 +817,7 @@
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
+#define ras(x)                      (x = jtras(jt,x))
 #define rat(x)                      jtrat(jt,(x))
 #define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
 #define rat1s(x)                    jtrat1s(jt,(x))  // subroutine version

@@ -16,7 +16,7 @@ F1(jtboxq){ASSERTMTV(w); R ca(jt->bxa);}
 F1(jtboxs){A x;
  RZ(w=vs(w));
  ASSERT(11==*AS(w),EVLENGTH);
- x=jt->bxa; ra(w); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
+ x=jt->bxa; ras(w); RZ(jt->bxa=w); jt->bx=CAV(jt->bxa); fa(x);
  R mtv;
 }
 
@@ -74,7 +74,7 @@ F1(jtevms){A t,*tv,*wv;
  if(ARELATIVE(w))RZ(w=car(w));
  wv=AAV(w);
  DO(NEVM, RZ(*tv++=vs(*wv++)););
- ra(t); fa(jt->evm); jt->evm=t;
+ ras(t); fa(jt->evm); jt->evm=t;
  R mtv;
 }
 
@@ -101,7 +101,7 @@ F1(jtieps){
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  fa(jt->iep);
- ra(w); RZ(jt->iep=w); 
+ ras(w); RZ(jt->iep=w); 
  R mtm;
 }
 
@@ -229,7 +229,7 @@ F1(jtxeps){
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  fa(jt->xep);
- ra(w); RZ(jt->xep=w); 
+ ras(w); RZ(jt->xep=w); 
  R mtm;
 }
 

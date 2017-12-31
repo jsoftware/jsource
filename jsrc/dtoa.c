@@ -3406,7 +3406,7 @@ B jtecvtinit(J jt) {A x; struct dtoa_info *di;
  memset(di->_private_mem, 0, sizeof(di->_private_mem));
  memset(di->_freelist, 0, sizeof(di->_freelist));
  di->jt=jt;
- ra(x); jt->dtoa=di;
+ ras(x); jt->dtoa=di;
  R 1;
 }
 

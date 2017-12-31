@@ -172,12 +172,12 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
  sv=VAV(self); t=sv->f; 
  RZ(d=deba(DCCALL,a,w,self,0L));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
-  ra(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
+  ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */
   i=0; d->dci=(I)&i;
   while(0==i){
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}
-   else              {ra(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
+   else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outwide of debug mode
    if(!z&&jt->db&&(s||DBTRY!=jt->db)){d->dcj=jt->jerr; z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
@@ -215,7 +215,7 @@ F1(jtdbrun ){ASSERTMTV(w); jt->dbsusact=SUSRUN;  R mtm;}
 F1(jtdbnext){ASSERTMTV(w); jt->dbsusact=SUSNEXT; R mtm;}
      /* 13!:5  run next */
 
-F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; ra(w); jt->dbresult=w; R mtm;}
+F1(jtdbret ){RZ(w); jt->dbsusact=SUSRET; ras(w); jt->dbresult=w; R mtm;}
      /* 13!:6  exit with result */
 
 F1(jtdbjump){RE(jt->dbjump=i0(w)); jt->dbsusact=SUSJUMP; R mtm;}
@@ -225,7 +225,7 @@ static F2(jtdbrr){DC d;
  RE(0);
  d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  /* must be explicit verb */
- ra(a); jt->dbalpha=a; ra(w); jt->dbomega=w; 
+ ras(a); jt->dbalpha=a; ras(w); jt->dbomega=w; 
  jt->dbsusact=SUSRUN;
  R mtm;
 }
@@ -236,5 +236,5 @@ F2(jtdbrr2 ){R dbrr(a, w);}
 F1(jtdbtrapq){ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){ra(w); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
+F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){ras(w); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
      /* 13!:15 set trap */

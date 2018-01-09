@@ -866,6 +866,7 @@ extern I        rr(A);
 extern A        relocate(I,A);
 extern C        spellin(I,C*);
 extern void     spellit(C,C*);
+extern I        smmallosize(A);
 extern void     smmfrr(A);
 extern D        tod(void);
 extern B        vlocnm(I,C*);

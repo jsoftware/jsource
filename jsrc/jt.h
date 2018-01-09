@@ -38,7 +38,7 @@ typedef struct {
  I    mmax;             /* space allocation limit                          */
  struct {
   I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
-  A *pool;             // pointer to first free block
+  A pool;             // pointer to first free block
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // --- end of cache line 2.  1 qword of the pool table spills over
 // parser values

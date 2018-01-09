@@ -145,12 +145,12 @@ F1(jtdbstackz){A y;
 
 
 static void jtjsigstr(J jt,I e,I n,C*s){
- if(jt->jerr)R; 
+ if(jt->jerr){jt->curname=0; R;} 
  jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
  if(jt->db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->db=0;}
  ep(n,s);
- if(!jt->glock&&jt->curname){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s); jt->curname=0;}
+ if(jt->curname){if(!jt->glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
  eputc(CLF);
  if(n&&!jt->glock)debsi1(jt->sitop);
  jt->etxn1=jt->etxn;

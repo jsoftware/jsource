@@ -255,12 +255,12 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I ad,an,ar,c,j,k,t,*u,*v,*ws;
 
 static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,k,n,t,*v,*ws;
  RZ(a&&w);
- n=AN(a); t=AT(a); *ind=0;
- ws=wf+AS(w); c=*(AS(a)+AR(a)-1);
- if(!n||!c||t&BOX)R 0;
+ n=AN(a); t=AT(a); *ind=0; if(AR(a)==0)R 0;  // revert to normal code for atomic a
+ ws=wf+AS(w); c=*(AS(a)+AR(a)-1);   // c = length of 1-cell
+ if(!n||!c||t&BOX)R 0;  // revert to normal code for empty or boxed a
  ASSERT(c<=AR(w)-wf,EVLENGTH);
  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
- DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););
+ DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
  *ind=z;
  R 1;
 }    /* verify that <"1 a is valid for (<"1 a){w */

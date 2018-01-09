@@ -263,7 +263,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
-#define RMAX            IMAX            /* max rank                        */
+#define RMAX            65535            /* max rank                        */
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 #define NFDEP           (8000L+12000L*SY_64)             // fn call depth
@@ -391,7 +391,7 @@ extern unsigned int __cdecl _clearfp (void);
 // When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;
 #define GAT(name,type,atoms,rank,shaape) \
-{ ASSERT(!((rank)&~0xffff),EVLIMIT); \
+{ ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,type##SIZE,(type)&LAST0,(type)&NAME); \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
@@ -425,7 +425,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GATVS(name,type,atoms,rank,shaape,size,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
- ASSERT(!((rank)&~0xffff),EVLIMIT); \
+ ASSERT(!((rank)&~RMAX),EVLIMIT); \
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(name){   \
@@ -594,8 +594,8 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 13  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
-                     // 16=audit freelist at every alloc/free
+#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free (starting after you have run 5!:5 (1) to turn it on)
  // 13 will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 

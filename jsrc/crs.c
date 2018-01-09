@@ -114,8 +114,8 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y
  RZ(w=sprarg(wf,w)); wt=AT(w); wp=PAV(w);
  y=SPA(wp,i); v=AS(y); wn=v[0]; wc=v[1]; wv=AV(y); RZ(wb=spredge(y,wf,&wm));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
- GATV(z,BOX,wm,1,0); zv=AAV(z);
- GATV(zi,INT,f*wm,2,0); iv=AV(zi); v=AS(zi); v[0]=wm; v[1]=f;
+ GATV(z,BOX,MAX(1,wm),1,0); zv=AAV(z);
+ GATV(zi,INT,f*MAX(1,wm),2,0); iv=AV(zi); v=AS(zi); v[0]=wm; v[1]=f;
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=0;
  while(1){
   ICPY(iv,wv,f); iv+=f; RZ(zv[j++]=CALL2(f2,a,ww,fs));
@@ -132,8 +132,8 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
  RZ(a=sprarg(af,a)); at=AT(a); ap=PAV(a);
  y=SPA(ap,i); v=AS(y); an=v[0]; ac=v[1]; av=AV(y); RZ(ab=spredge(y,af,&am));
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
- GATV(z,BOX,am,1,0); zv=AAV(z);
- GATV(zi,INT,f*am,2,0); iv=AV(zi); v=AS(zi); v[0]=am; v[1]=f;
+ GATV(z,BOX,MAX(1,am),1,0); zv=AAV(z);
+ GATV(zi,INT,f*MAX(1,am),2,0); iv=AV(zi); v=AS(zi); v[0]=am; v[1]=f;
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa)); j=0;
  while(1){
   ICPY(iv,av,f); iv+=f; RZ(zv[j++]=CALL2(f2,aa,w,fs));
@@ -164,8 +164,8 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
  b=af<wf; j=am*(af<wf?m:1)+wm*(af>wf?m:1);
- GATV(z, BOX,j,  1,0); zv=AAV(z);
- GATV(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
+ GATV(z, BOX,MAX(1,j),  1,0); zv=AAV(z);
+ GATV(zi,INT,MAX(1,j)*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa));
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=s=k=0; u=ii; y=0; v=0;
  if(af==wf)while(av||wv){
@@ -222,8 +222,8 @@ A jtva2s(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I lr,I rr){PROLOG(0047);A aa,ae,
  RZ(aa=sprinit(af,acr,as,at,ap)); RZ(ae=acr?ca(aa):SPA(ap,e));
  RZ(ww=sprinit(wf,wcr,ws,wt,wp)); RZ(we=wcr?ca(ww):SPA(wp,e));
  b=af<wf; j=am*(af<wf?m:1)+wm*(af>wf?m:1);
- GATV(z, BOX,j,  1,0); zv=AAV(z);
- GATV(zi,INT,j*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
+ GATV(z, BOX,MAX(1,j),  1,0); zv=AAV(z);
+ GATV(zi,INT,MAX(1,j)*g,2,0); v=AS(zi); v[0]=j; v[1]=g; iv=AV(zi); 
  RE(aj=ak=spradv(an,ab,af,acr,0L,ap,&aa));
  RE(wj=wk=spradv(wn,wb,wf,wcr,0L,wp,&ww)); j=s=k=0; u=ii; y=0; v=0;
  if(af==wf)while(av||wv){

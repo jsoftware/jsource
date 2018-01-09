@@ -47,31 +47,34 @@ typedef long double        LD;
 
 // This is the main structure for J entities
 typedef US                 RANKT;
-typedef UI4                FLAGT;
+typedef I                  FLAGT;
 
-typedef struct {
- I k;
+typedef struct AD AD;
+typedef AD *A;
+
+// typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
+
+typedef struct AD {
  union {
-  I combflags;  // flag/header/rank.  Used so we do 64-bit writes that don't mess up store forwarding
-  struct {
-#ifdef C_LE
-   RANKT r;   // rank
-   US h;   // reserved for allocator
-   FLAGT flag;  // flags
-#else
-   FLAGT flag;  // flags
-   US h;   // reserved for allocator
-   RANKT r;   // rank
-#endif
-  } fhr;
- } fhru;
- I t;  // type
+  I k;
+  A chain;   // used when block is on free chain
+ } kchain;
+ FLAGT flag;
+ I m;  // multipurpose word, normally unused
+ union {
+  I t;  // type
+  A proxychain;  // used when block is on free chain
+ } tproxy;
  I c;  // usecount
  I n;  // # atoms
+ RANKT r;  // rank
+ US h;   // reserved for allocator.  Not used for AFNJA memory
+#if BW==64
+ UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+#endif
  I s[1];   // shape starts here
 } AD;
 
-typedef AD *A;
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
@@ -90,17 +93,17 @@ typedef I SI;
 
 /* Fields of type A                                                        */
 
-#define AK(x)           ((x)->k)        /* offset of ravel wrt x           */
-#define AFLAG(x)        ((x)->fhru.fhr.flag)     /* flag                            */
-// obsolete #define AM(x)           ((x)->m)        /* Max # bytes in ravel            */   // scaf will be removed
-#define AT(x)           ((x)->t)        /* Type; one of the #define below  */
+#define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x           */
+#define AFLAG(x)        ((x)->flag)     /* flag                            */
+#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */
+#define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
-#define AR(x)           ((x)->fhru.fhr.r)        /* Rank                            */
-// #define AH              7L              /* # non-shape header words in A   */
+#define AR(x)           ((x)->r)        /* Rank                            */
+// obsolete #define AH              7L              /* # non-shape header words in A   */
 #define SMMAH           7L   // number of header words in old-fashioned SMM alloc
-#define NORMAH          5L   // number of header words in new system
-#define AS(x)           ((x)->s)        /* Pointer to shape                */
+#define NORMAH          7L   // number of header words in new system
+#define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
 
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
@@ -436,7 +439,7 @@ typedef struct{UI hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
 // bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
 //   is guaranteed to be at that position  
-/* m:    length of non-locale part of name                                 */
+// m:    length of non-locale part of name note 255-byte limit!
 // sn:   symbol table number on last reference  no longer used
 // e:    symbol pool entry   on last reference  no longer used
 /* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */

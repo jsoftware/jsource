@@ -6,15 +6,23 @@ randuni''
 bp=: (IF64{1 1 4 8 16 4 4 2 4,:1 1 8 8 16 8 8 2 4) {~ 1 2 4 8 16 32 65536 131072 262144 i. 3!:0
 sp=: 7!:5
 f =: 3 : '7!:5 <''y'''
+fmapped =: 3 : '7!:5 <''y'''
 
 g =: 3 : 0
  w=. IF64{4 8
- z=. w*2                              NB. 2 words for memory management
+ z=. w*0                              NB. 0 words for memory management
  z=. z + w*7                          NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
  z=. z + ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072 262144  NB. atoms & trailing 0 word (uses whole word of padding)
  >.&.(2&^.) z
 )
+gmapped =: 3 : 0  NB. contiguous header only
+ w=. IF64{4 8
+ z=. w*0                              NB. 0 words for memory management
+ z=. z + w*7+64+(-.IF64)                     NB. fixed shape area
+ z=. z + >.&.(%&w) ((bp y)**/$y) + w*(3!:0 y)e. 1 2 131072 262144  NB. atoms & trailing 0 word (uses whole word of padding)
+)
+
 
 (f -: g) 23
 (f -: g) 2.3
@@ -142,16 +150,16 @@ f=: <jpath '~temp/q.jmf'
 map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 '' -: q
 
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=:     (?1e4)?@$2
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: a.{~(?1e4)?@$#a.
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: adot1{~(?1e4)?@$#adot1
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: adot2{~(?1e4)?@$#adot2
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: (?100 100)?@$1e6
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: o.(?30 30 30)?@$1e6
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: j./(2,?100 100)?@$1e6
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 a.{~(?1e4)?@$#a.
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 adot1{~(?1e4)?@$#adot1
-(7!:5 <'q') -: 7!:5 <'x' [ q=:x=: s: <"0 adot2{~(?1e4)?@$#adot2
+(fmapped -: gmapped) q [ q=:x=:     (?1e4)?@$2
+(fmapped -: gmapped) q [ q=:x=: a.{~(?1e4)?@$#a.
+(fmapped -: gmapped) q [ q=:x=: adot1{~(?1e4)?@$#adot1
+(fmapped -: gmapped) q [ q=:x=: adot2{~(?1e4)?@$#adot2
+(fmapped -: gmapped) q [ q=:x=: (?100 100)?@$1e6
+(fmapped -: gmapped) q [ q=:x=: o.(?30 30 30)?@$1e6
+(fmapped -: gmapped) q [ q=:x=: j./(2,?100 100)?@$1e6
+(fmapped -: gmapped) q [ q=:x=: s: <"0 a.{~(?1e4)?@$#a.
+(fmapped -: gmapped) q [ q=:x=: s: <"0 adot1{~(?1e4)?@$#adot1
+(fmapped -: gmapped) q [ q=:x=: s: <"0 adot2{~(?1e4)?@$#adot2
 
 1 [ unmap_jmf_ 'q'
 

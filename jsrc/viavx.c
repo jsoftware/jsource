@@ -509,7 +509,7 @@ static UI jthid(J jt,D d){R *(UIL*)&d!=NEGATIVE0?CRC32LL(-1L,*(UIL*)&d&jt->ctmas
 //  is ctmask=~0 for exact compares?  Better be.
 static UI jthia(J jt,D hct,A y){UC*yv;D d;I n,t;Q*u;
  n=AN(y); t=AT(y); yv=UAV(y);
- if(!n||t&BOX)R hic(AR(y)*SZI,(UC*)AS(y));
+ if(!n||t&BOX)R hic((I)AR(y)*SZI,(UC*)AS(y));
  switch(CTTZ(t)){
   case LITX:  R hic(n,yv);
   case C2TX:  R hic2(2*n,yv);
@@ -1454,7 +1454,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
   IH *hh=IHAV(h); I minimum=hh->datamin; p=hh->datarange; I maximum=minimum+p; \
   /* if the hashtable for i./i: exceeds the cache size, allocate a packed-bit version of it. \
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
-  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,2+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum);} \
+  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,3+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
   \
   _mm256_zeroupper(VOID);  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
@@ -1864,7 +1864,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
 // jtoiz1 tolerant CMPX atom
 
 #define SMALLHASHCACHE L2CACHESIZE/sizeof(US)  // number of US entries that fit in L2
-#define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
+#define SMALLHASHMAX (131072-2-(2*SZI/sizeof(US))-((NORMAH*SZI+sizeof(IH))/sizeof(US)))  // max # US entries allowed in small hash.  More than 2^16 entries, to allow small-range expansion.
   // we allocate 4 extra entries to make sure we can write a quadword at the end, and to ensure there are sentinels
 
 // testing#define HASHFACTOR 6.0  // multiple of p over m, found empirically

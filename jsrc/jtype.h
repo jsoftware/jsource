@@ -44,8 +44,37 @@ typedef double             D;
 typedef FILE*              F;
 
 typedef long double        LD;
-typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;
+
+// This is the main structure for J entities
+typedef US                 RANKT;
+typedef I                  FLAGT;
+
+typedef struct AD AD;
 typedef AD *A;
+
+// typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
+
+typedef struct AD {
+ union {
+  I k;
+  A chain;   // used when block is on free chain
+ } kchain;
+ FLAGT flag;
+ I m;  // multipurpose word, normally unused
+ union {
+  I t;  // type
+  A proxychain;  // used when block is on free chain
+ } tproxy;
+ I c;  // usecount
+ I n;  // # atoms
+ RANKT r;  // rank
+ US h;   // reserved for allocator.  Not used for AFNJA memory
+#if BW==64
+ UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+#endif
+ I s[1];   // shape starts here
+} AD;
+
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();
 typedef UI               (*UF)();
@@ -64,24 +93,26 @@ typedef I SI;
 
 /* Fields of type A                                                        */
 
-#define AK(x)           ((x)->k)        /* offset of ravel wrt x           */
+#define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x           */
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
-#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */   // scaf will be removed
-#define AT(x)           ((x)->t)        /* Type; one of the #define below  */
+#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */
+#define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
-#define AH              7L              /* # non-shape header words in A   */
-#define AS(x)           ((x)->s)        /* Pointer to shape                */
+// obsolete #define AH              7L              /* # non-shape header words in A   */
+#define SMMAH           7L   // number of header words in old-fashioned SMM alloc
+#define NORMAH          7L   // number of header words in new system
+#define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
 
 #if SY_64
-#define AKXR(x)         (SZI*(AH+(x)))
-#define WP(t,n,r)       (AH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
-#define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+#define AKXR(x)         (SZI*(NORMAH+(x)))
+#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
+// obsolete #define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
-#define AKXR(x)         (SZI*(AH+((x)|1)))
-#define WP(t,n,r)       (AH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
-#define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
+#define AKXR(x)         (SZI*(NORMAH+((x)|1)))
+#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+// obsolete #define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 /* r|1 to make sure array values are double-word aligned */
 #endif
 #define AKX(x)          AKXR(AR(x))
@@ -408,7 +439,7 @@ typedef struct{UI hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
 // bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
 //   is guaranteed to be at that position  
-/* m:    length of non-locale part of name                                 */
+// m:    length of non-locale part of name note 255-byte limit!
 // sn:   symbol table number on last reference  no longer used
 // e:    symbol pool entry   on last reference  no longer used
 /* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */

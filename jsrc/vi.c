@@ -732,7 +732,7 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
  IOF(f){IH *hh=IHAV(*hp);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
   av=(T*)AV(a); wv=(T*)AV(w); \
-  min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; /* scaf printf("min=%d, max=%d, mode=0x%x\n",min,max,mode);*/\
+  min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1;\
   e=1==wc?0:c; if(w==mark){c=0; mode|=IPHCALC;} \
   for(l=0;l<ac;++l,av+=m,wv+=e){ \
    if(!(mode&(IPHOFFSET|IPHCALC))){mode = hashallo(hh,p,m,mode);}  /* set parms for this loop - only if not prehashing or using prehashed table, which always start at offset 0 */ \
@@ -796,10 +796,6 @@ static IOFSMALLRANGE(jtio4,I ,SCOZ1,SCOW0,SCOW1,SCOW0,SCQW0,SCQW1)  /* word size
  }
 // init to 1 for ~. ~: NUBI LESS   others to 0
 #if 0
-/* scaf printf("hu[mwv[zi]]=%d ",hu[mwv[zi]]); *//* scaf printf("mwv[zi]=%d, vv=%d\n",mwv[zi],vv); */
-/* scaf printf("zi=%d, zie=%d\n",zi,zie); */\
-/* scaf   ASSERTSYS(zi0==hh->currentindexofst,"zi0 error"); ASSERTSYS(mwv[zi]>=min,"value too low"); ASSERTSYS(mwv[zi]<=max,"value too high"); ASSERTSYS(vv<(I)hh->currentindexend,"vv too high"); */ \
-/* scaf   ASSERTSYS(hh->currentindexend-hh->currentindexofst==m,"range not same as m"); scaf*/ \
 
 #define SCOZ(T,Ttype,vv) {T* RESTRICT mwv=wv-zi; Ttype def[1]; zie=zi+c; def[0]=(Ttype)(vv+zi0); \
                           while(zi!=zie){T v=mwv[zi]; Ttype *hv=hu+v; if(v<min)hv=def; if(v>max)hv=def; I hvv; if((hvv=(I)*hv-zi0)<0)hvv=vv; zv[zi]=(Ttype)hvv; ++zi;}}
@@ -1436,7 +1432,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
-   if(p<(65536-((AH*SZI+sizeof(IH)+sizeof(MS))/sizeof(US))) && booladj==0 && m<65536){
+   if(p<(65536-((NORMAH*SZI+sizeof(IH))/sizeof(US))) && booladj==0 && m<65536){
     // using the short table.  Allocate it if it hasn't been allocated yet, or if this is prehashing, where we will build a separate table.
     // It would be nice to use the main table for m&i. to avoid having to clear a custom table, since m&i. may never get assigned to a name;
     // but if it IS assigned, the main table may be too big, and we don't have any good way to trim it down
@@ -1444,7 +1440,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     // Clearing also saves 1 clock per input word
     mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
     if(mk||!(h=jt->idothash0)){
-     GATV(h,INT,((65536*sizeof(US)-((AH*SZI+sizeof(MS))))/SZI),0,0);  // size too big for GAT
+     GATV(h,INT,((65536*sizeof(US)-((NORMAH*SZI)))/SZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area

@@ -218,10 +218,10 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
 
 static A jtaxbytes1(J jt,I t,I an,I m,I xr,I*xs){I k,z;
   k=bp(t);
-  z =SZI*AH+SZI*(an+xr)+sizeof(P);
-  z+=SZI*AH+k;
-  z+=SZI*AH+SZI*(1+xr)+k*m*prod(xr,xs);
-  z+=SZI*AH+SZI*2+SZI*m*an;
+  z =SZI*NORMAH+SZI*(an+xr)+sizeof(P);
+  z+=SZI*NORMAH+k;
+  z+=SZI*NORMAH+SZI*(1+xr)+k*m*prod(xr,xs);
+  z+=SZI*NORMAH+SZI*2+SZI*m*an;
   R sc(z);
 }
 

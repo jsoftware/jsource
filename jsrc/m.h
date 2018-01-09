@@ -19,21 +19,17 @@
 // **** main blocks are managed by allocating 16 bits for all blocks, free or allocated
 // when the block is on the free list, AK is a chain pointer
 
-// **** following is the layout of SMM blocks, which keep a header before the allocated area
-typedef struct {I*a;US j;US blkx;} MS;
-
 /* layout of the two words before every A array                            */
 /* a: ptr to next block (when in free list)                                */
 /*    address of SMM array, or 0 (when allocated)                          */
 /* j: mfree/msize index                                                    */
 /* blkx: distance to go back to get to the first pool buffer from the allocation (0 for first) */
 
-#define mhb sizeof(MS)                  /* # bytes in memory header             */
-#define mhw (sizeof(MS) / SZI)              /* # words in memory header             */
+// obsolete #define mhw (sizeof(MS) / SZI)              /* # words in memory header             */
 
 // Memory-allocation info
 // PMINL is lg2(size of smallest pool buffer).  It must be big enough to hold at least one I. 
-#define PMINL ((AH*SZI+mhb+SZI)<=64?6:7)
+#define PMINL 6   // ((AH*SZI+mhb+SZI)<=64?6:7) smaller buffers possible on 32-bit, but we don't bother
 #define PMIN (1L<<PMINL)   // size of smallest block
 // PLIML is lg2(size of largest pool buffer), 10 or 11
 #define PLIML       (4+PMINL)            // lg2(PLIM)

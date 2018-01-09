@@ -272,7 +272,8 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
 
 A jtodom(J jt,I r,I n,I*s){A q,z;I j,m,mn,*u,*zv;
  RE(m=prod(n,s)); RE(mn=mult(m,n));
- GATV(z,INT,mn,2==r?2:n,s); zv=AV(z)-n;
+ GATV(z,INT,mn,2==r?2:n,s);
+zv=AV(z)-n;
  if(2==r){u=AS(z); u[0]=m; u[1]=n;}
  if(!(m&&n))R z;
  if(1==n)DO(m, *++zv=i;)

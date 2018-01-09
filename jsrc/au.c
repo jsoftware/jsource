@@ -96,7 +96,7 @@ B boxat(A x){C c;V*v;
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
  if(CBOX==ID(v->f)) {  // if u is <...
    if(COMPOSECO(c))R 1;  // always OK if @: &:
-   R v->g&&VERB&AT(v->g)&&VAV(v->g)->mr==IMAX;
+   R v->g&&VERB&AT(v->g)&&VAV(v->g)->mr==RMAX;
  }
  R 0; 
 }    /* 1 iff "last" function in w is <@f */

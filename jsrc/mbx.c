@@ -31,15 +31,20 @@
 #define RMBX            64L                                  /* max rank for mbx      */
 #define SMMFREE(a)      (I**)((I)(a)+8*(allosize(a)/8)-SZI*MLEN)   /* address of free lists */
 
+// **** following is the layout of SMM blocks, which keep a header before the allocated area
+typedef struct {I*a;US j;US blkx;} MS;
+
+#define mhb sizeof(MS)                  /* # bytes in memory header             */
+
 static F1(jtsmmblkf);
 
 
 static I smmsize(A a){
- R 8*(allosize(a)/8)-SZI*(AH+RMBX+MLEN)-SZA*AN(a)-SZI*((AH+RMBX+MLEN+AN(a))%2);
+ R 8*(allosize(a)/8)-SZI*(SMMAH+RMBX+MLEN)-SZA*AN(a)-SZI*((SMMAH+RMBX+MLEN+AN(a))%2);
 }    /* size of allocateable area */
 
 static C*smmu(A a){I v;
- v=(I)(a)+SZI*(AH+RMBX)+AN(a)*SZA;  /* 1st allocateable address   */
+ v=(I)(a)+SZI*(SMMAH+RMBX)+AN(a)*SZA;  /* 1st allocateable address   */
  R (C*)(((4+v)>>3)<<3);             /* ensure double word aligned */
 }    /* first allocateable address */
 
@@ -67,6 +72,10 @@ void smmfrr(A w){A a;A1*wv;I j,**mfree;MS*x;
  mfree[j]=(I*)AREL(x,a);
 }    /* free */
 
+// Return the size of the allocated block w.  This is a power of 2.
+I smmallosize(A w){
+  R (1LL<<(((MS *)w-1)->j));
+}
 
 static B smmsplit(A a,I j){I i,k,**mfree,p;MS*x,*y;
  mfree=SMMFREE(a); p=MLEN;
@@ -126,7 +135,7 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  w=WP(t,n,r); m=SZI*w; 
  ASSERT(RMAX>=r&&m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
  RZ(z=smma(a,m));
- AT(z)=t; ACX(z); AN(z)=n; AR(z)=r; AFLAG(z)=AFSMM; AK(z)=AKX(z); /* obsolete AM(z)=m-AK(z); */
+ AT(z)=t; ACX(z); AN(z)=n; AR(z)=(RANKT)r; AFLAG(z)=AFSMM; AK(z)=AKX(z); /* obsolete AM(z)=m-AK(z); */
  if(r&&s)ICPY(AS(z),s,r); else *AS(z)=n;
  if(t&LAST0)*((I*)z+w-1)=0;
  R z;
@@ -156,7 +165,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wd,wn,wr;
  if(a==w)R a;
  wn=AN(w); wr=AR(w);
  if(smmin(a,w))RZ(w=cpa(1,w));
- AK(a)=SZI*(AH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=wr;
+ AK(a)=SZI*(SMMAH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=(RANKT)wr;
  if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;}
  av=A1AV(a); wv=AAV(w); wd=(I)w*ARELATIVE(w);
  DO(wn, x=smmcar(a,WVR(i)); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););

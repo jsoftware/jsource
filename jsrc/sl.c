@@ -43,7 +43,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
   case 2:  /* local symbol table */
    // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
    // that was used to create the table
-   AR(g)=p;
+   AR(g)=(RANKT)p;
    ;
  }
  R g;

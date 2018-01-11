@@ -67,10 +67,18 @@ typedef struct AD {
  } tproxy;
  I c;  // usecount
  I n;  // # atoms
+#if C_LE
  RANKT r;  // rank
  US h;   // reserved for allocator.  Not used for AFNJA memory
 #if BW==64
  UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+#endif
+#else
+#if BW==64
+ UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+#endif
+ US h;   // reserved for allocator.  Not used for AFNJA memory
+ RANKT r;  // rank
 #endif
  I s[1];   // shape starts here
 } AD;

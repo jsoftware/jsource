@@ -425,9 +425,13 @@ oflo2:
     zvd=DAV(z); av=AV(a);
     DO(m, D tot=0; wv=AV(w); DO(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
    }else{
-//  cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do the fast matrix multiply - integer-to-float conversion
-    memset(DAV(z),C0,m*n*sizeof(D));
-    igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
+     I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
+     if(probsize < 5000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
+     else {
+      // for large problem, use BLAS
+      memset(DAV(z),C0,m*n*sizeof(D));
+      igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
+    }
     // If the result has a value that has been truncated, we should keep it as a float.  Unfortunately, there is no way to be sure that some
     // overflow has not occurred.  So we guess.  If the result is much less than the dynamic range of a float integer, convert the result
     // to integer.
@@ -484,10 +488,16 @@ oflo2:
     zv=DAV(z); av=DAV(a);
     DO(m, D tot=0; wv=DAV(w); DO(p, tot+=*av++**wv++;) *zv++=tot;)
     smallprob=0;  // Don't compute it again
-   }else if(!(smallprob = m*n*(IL)p<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-//    cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do the fast matrix multiply - real
-     memset(DAV(z),C0,m*n*sizeof(D));
-     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+   }else {
+     I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
+     if(!(smallprob = probsize<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
+       if(probsize < 5000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160
+       else{
+         // If the problem is really big, use BLAS
+         memset(DAV(z),C0,m*n*sizeof(D));
+         dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+       }
+     }
    }
    // If there was a floating-point error, retry it the old way in case it was _ * 0
    if(smallprob||NANTEST){D c,s,t,*u,*v,*wv,*x,*zv;
@@ -504,9 +514,13 @@ oflo2:
   break;
  case CMPXX:
   {NAN0;
-//   cachedmmult(DAV(a),DAV(w),DAV(z),m,n*2,p*2,1);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms
-   memset(DAV(z),C0,2*m*n*sizeof(D));
-   zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
+   I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
+   if(probsize<2000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n*2,p*2,1);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+   else {
+     // Large problem - start up BLAS
+     memset(DAV(z),C0,2*m*n*sizeof(D));
+     zgemm_nn(m,n,p,zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,zzero,(dcomplex*)DAV(z),n,1);
+   }
    if(NANTEST){Z c,*u,*v,*wv,*x,*zv;
     // There was a floating-point error.  In case it was 0*_ retry old-style
     u=ZAV(a); v=wv=ZAV(w); zv=ZAV(z);

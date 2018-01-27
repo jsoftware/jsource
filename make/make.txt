@@ -1,57 +1,45 @@
-how to build/test j32/64 for linux/darwin/raspberry/...
+How to build/test j32/64 for linux/darwin/raspberry/...
 
-$jplatform (set by jvars.sh) determines compiler/link flags
-
-$jplatform is a simple name that implies OS and hardware
-
-linux     implies intel
-darwin    implies intel
-raspberry implies linux/arm/little-endian
-
-to support linux on arm big-endian you need to add support in
-build_jconsole.sh,... for a new platform (perhaps named linux_arm_be)
+Note:  on a 64 bit linux system, the following packages will be needed:
+	gcc-multilib
+	libedit-dev
 
 **************************************************************************
-# commands are assumed to run in ~ and depend on jvars.sh
+# In what follows ROOT is the root directory of your J project
 
+cd $ROOT/jsrc
+cp jversion-x.h jversion.h
+
+# Edit jversion.h
+
+cd $ROOT/make
 # make sure shell scripts are executable
-chmod +x gitdev/jsource/make/*.sh
+chmod +x *.sh
 
-# copy jvars.sh to ~ (for finding things)
-cp gitdev/jsource/make/jvars.sh .
-cat jvars.sh
-
-# read jvars.sh and edit as appropriate - other steps depend on jvars.sh
+# Edit jplatform in file make.sh
 # !!! edit platform to be appropriate for the system doing the builds !!!
 # valid platforms are: linux darwin raspberry
 
-# create clean build folders
-. jvars.sh
-$jmake/install.sh
+./make.sh
 
-# ensure proper jsrc/jversion.h (jversion-x.h template)
+# The above line builds the system into the ROOT/build directory
 
-# !!! makefiles do not have h file dependencies !!!
-# after h file changes, run clean.sh to rm all *.o fles for clean build
-$jmake/clean.sh
+# To install to /opt do:
 
-# build j64 binaries
-$jmake/build_jconsole.sh j64
-$jmake/build_libj.sh     j64
-$jmake/build_tsdll.sh    j64
+sudo ./install-opt.sh
 
-# test j64
-$j64
-   load'gitdev/jsource/test/tsu.ijs'
-...
-   RUN ddall
+# Set path to access J
 
-# build/test j32 binaries the same way (j32 instead of j64)
+export PATH=/opt/J/j64/bin:$PATH
 
-# build everything from scratch
-$jmake/build_all.sh
+# To run jconsole
 
-# release clean builds to the repo release folder
-. jvars.sh
-$jmake/release.sh
+jconsole
 
+# To run the browser based IDE
+
+jhs
+
+# then go to the following URL on your browser:
+
+http://127.0.0.1:65001/jijx

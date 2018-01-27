@@ -3,9 +3,6 @@
 # run by build_jconsole and build_libj
 # $1 is j32 or j64
 
-cd ~
-. jvars.sh
-
 echo $TARGET
 echo $COMPILE
 echo $LINK

@@ -1,7 +1,5 @@
 #!/bin/bash
 # copy binaries to release folder
-cd ~
-. jvars.sh
 
 mkdir -p $jgit/release/$jplatform/j32
 rm    -f $jgit/release/$jplatform/j32/*

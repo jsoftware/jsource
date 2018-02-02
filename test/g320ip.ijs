@@ -771,6 +771,13 @@ qd=: 3 : 'jdlast=: <,''a'''
 t=: >@{:@qd
 (t'')-:t''
 
+NB. Verify that names defined up the stack prevents assignment through assignsym
+t =: 5 6 7
+5 6 7 -: ([ 3 : 't =: 4 (1}) t'@+:) t
+
+t =: 5 6 7
+5 6 7 -: ([ 3 : 't =: t , 0'@+:) t
+
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp local nb test testa unsafename undefinedname'
 

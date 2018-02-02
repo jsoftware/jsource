@@ -45,18 +45,19 @@ typedef struct {
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
- I    parsercalls;      /* # times parser was called                       */
  DC   sitop;            /* top of SI stack                                 */
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  UI4  nvran;            // number of atoms in nvrav
+ I4   slisti;           /* index into slist of current script              */ 
  UI4  nvrtop;           /* top of nvr stack; # valid entries               */
+ UI4  nvrotop;          // previous top of nvr stack
 // --- end of cache line 3
+ I    parsercalls;      /* # times parser was called                       */
  PSTK* parserstkbgn;     // &start of parser stack
  PSTK* parserstkend1;    // &end+1 of parser stack
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
  A    symb;             /* symbol table for assignment                     */
- I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
@@ -113,7 +114,7 @@ typedef struct {
  I    fdepi;            /* fn calls: current depth                         */
  I    fdepn;            /* fn calls: maximum permissible depth             */
  void*dtoa;             /* use internally by dtoa.c                        */
-// --- end cache line 5
+// --- end cache line 8
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
@@ -122,7 +123,7 @@ typedef struct {
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
  I    symindex;         /* symbol table index (monotonically increasing)   */
-// -- end cache line 6
+// -- end cache line 9
  A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  A    stloc;            /* locales symbol table                            */
@@ -130,6 +131,7 @@ typedef struct {
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
+ I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
 
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
@@ -237,7 +239,6 @@ typedef struct {
  int  sdinited;         /* sockets                                         */
  A    sf;               /* for $:                                          */
  A    slist;            /* files used in right arg to 0!:                  */
- I    slisti;           /* index into slist of current script              */ 
  I    slistn;           /* slist # of real entries                         */
  I    sm;               /* sm options set by JSM()                         */
  void*smdowd;

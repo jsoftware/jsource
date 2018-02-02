@@ -228,7 +228,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
  // This is 'loose' inplacing, which doesn't scruple about globals appearing on the stack elsewhere
  // Allow only DIRECT and BOX types, to simplify usecounting
- if((((I)jtinplace&JTINPLACEA) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&(AC(a)<=1||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&(DIRECT|BOX)) {I an=AN(a);
+ if((((I)jtinplace&JTINPLACEA) && (ACIPISOK(a) || jt->assignsym&&jt->assignsym->val==a&&((AC(a)<=1&&notonupperstack(a))||(AFNJA&AFLAG(a)&&AC(a)==2)))) && AT(a)&(DIRECT|BOX)) {I an=AN(a);
   // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
   // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
   // crawl through w looking for a; but then we would still need to know whether w is NOSMREL so we could set the NOSMREL flag correctly in the result.

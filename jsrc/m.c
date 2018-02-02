@@ -291,9 +291,6 @@ void jtspendtracking(J jt){I i;
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
  if(!w)R;
-#if MEMAUDIT&1
- if(!(AFLAG(w)&(AFNJA|AFSMM)) && ((MS*)w)[-1].a!=(I*)0xdeadbeefdeadbeefLL)*(I*)0=0;  // verify everything on the stack is still free - only if echt J memory
-#endif
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))*(I*)0=0;   // hang if too many deletes
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){

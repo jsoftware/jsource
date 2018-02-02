@@ -126,7 +126,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
- I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w))))
+ I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&AFLAG(w))))
       &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind;
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&BOX){

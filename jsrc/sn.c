@@ -94,7 +94,7 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,wd,*zv;L*v;
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(WVR(i)));  // point to (the possibly relative) name, audit for validity
-  if(y){if(v=syrd(y,0L)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
+  if(y){if(v=syrd(y)){x=v->val; t=AT(x);}else{x=0; if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).
@@ -142,7 +142,7 @@ F1(jtscind){A*wv,x,y,z;I n,wd,*zv;L*v;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); wd=(I)w*ARELATIVE(w);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- DO(n, x=WVR(i); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y,0L); RESETERR; zv[i]=v?v->sn:-1;);
+ DO(n, x=WVR(i); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y); RESETERR; zv[i]=v?v->sn:-1;);
  R z;
 }    /* 4!:4  script index */
 
@@ -200,8 +200,9 @@ F1(jtex){A*wv,y,z;B*zv;I i,n,wd;L*v;
  for(i=0;i<n;++i){
   RE(y=stdnm(WVR(i)));
   zv[i]=1&&y;
-  // If the value is at large in the stacks, increment the use count and call for a later decrement
-  if(y&&(v=syrd(y,0L))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
+  // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
+// obsolete   if(y&&(v=syrd(y))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
+  if(y&&(v=syrd(y))){if(jt->db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} RZ(symfree(v));}
  }
  R z;
 }    /* 4!:55 expunge */

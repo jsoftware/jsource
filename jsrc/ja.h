@@ -673,6 +673,7 @@
 #define nor(x,y)                    jtnor(jt,(x),(y))  
 #define norm(x)                     jtnorm(jt,(x))  
 #define not(x)                      jtnot(jt,(x))
+#define notonupperstack(x)          jtnotonupperstack(jt,(x))
 #define nub(x)                      jtnub(jt,(x))     
 #define nubi(x)                     jtnubi(jt,(x))     
 #define nubsieve(x)                 jtnubsieve(jt,(x))
@@ -689,7 +690,7 @@
 #define numx(x,y,z)                 jtnumx(jt,(x),(y),(z))
 #define nvrpop(x)                   jtnvrpop(jt,(x))
 #define nvrpush(x)                  jtnvrpush(jt,(x))
-#define nvrredef(x)                 jtnvrredef(jt,(x))
+// obsolete #define nvrredef(x)                 jtnvrredef(jt,(x))
 #define oblique(x,y)                jtoblique(jt,(x),(y))
 #define obqfslash(x,y)              jtobqfslash(jt,(x),(y))
 #define obverse(x,y)                jtobverse(jt,(x),(y))
@@ -800,9 +801,9 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // obsolete #define ra(x)                       {if(x){I* Zcc=&AC(x); I tt=AT(x); I c=*Zcc; I flg=AFLAG(x); if(c<0 && tt&RECURSIBLE)AFLAG(x)=flg|(tt&TRAVERSIBLE); if((tt^flg)&TRAVERSIBLE)jtra(jt,(x),tt); *Zcc=(c+1)&~ACINPLACE;}}
 #if MEMAUDIT&2
-#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); UI4 flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
 #define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
@@ -1046,7 +1047,9 @@
 #define symfreeha(x)                jtsymfreeha(jt,(x))
 #define symnew(x,y)                 jtsymnew(jt,(x),(y))
 #define sympoola(x)                 jtsympoola(jt,(x))
-#define syrd(x,y)                   jtsyrd(jt,(x),(y))
+#define sybaseloc(x)                jtsybaseloc(jt,(x))
+#define syrdfromloc(x,y)            jtsyrdfromloc(jt,(x),(y))
+#define syrd(x)                     jtsyrd(jt,(x))
 #define syrd1(x,y,z)                jtsyrd1(jt,(x),(y),(z))
 #define table(x)                    jttable(jt,(x))   
 #define tail(x)                     jttail(jt,(x))    

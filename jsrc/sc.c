@@ -11,10 +11,14 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  RE(0);
  JATTN;
  v=VAV(self);
- aa=v->f; RE(e=syrd(aa,&g)); 
- fs=v->h?v->h:e?e->val:0;  /* see namerefop() re v->h */
+// obsolete aa=v->f; RE(e=syrd(aa,&g));
+ A jtg = jt->global;  // fetch current locale
+ aa=v->f; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
+ RE(e=syrdfromloc(aa,g));   // finish looking up name, which can be undefined (0 return) or error (0 return with error set)
+ if((I)g&1)g=jtg;  // if not locative, default to current locale
+ fs=v->h?v->h:e?e->val:0;  /* see namerefop() re v->h */  // fs is the routine to call; 0 if name undefined
  oldn=jt->curname; jt->curname=aa;
- oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;
+ oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
  ASSERT(fs,EVVALUE); 
  ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);
  V *fv=VAV(fs);  // point to V struct in fs
@@ -23,19 +27,20 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
  lk=jt->glock||VLOCK&fv->flag;
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
- jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jt->global; 
+ jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
+// obsolete  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
- if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // save last sym lookup as debug parm
+ if(jt->db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // if debugging, go do that.  save last sym lookup as debug parm
  // Execute.  ra() to protect against deleting the name while it is running.
  // This will be fast because we know any name has a recursive usecount before it is assigned
  else{ra(fs);  // should assert recursive usecount
   if(a){if(!(fv->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   fa(fs);
  }
- if(!jt->stswitched)jt->global=jt->fcallg[i].og;
+ if(!jt->stswitched)jt->global=jt->fcallg[i].og;  // do this better.  Remove stswitched?  og not needed elsewhere - just stack it here
  jt->stswitched=jt->fcallg[i].sw0;
  if(jt->fcallg[i].flag)locdestroy(i);
- jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; 
+ jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; // no need for this?
  FDEPDEC(d); --jt->fcalli;  // ASSERT OK now
  if(0<jt->pmctr)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
  jt->curlocn=oln;
@@ -56,7 +61,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // We are about to create a reference to a name.  Since this reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: we have to expunge any reference to local
  // buckets.
- NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info
+ NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
  v=VAV(y);
  // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
  // is used.  Thus, we can't guarantee inplaceability by copying INPLACE bits from f to the result, and we just set INPLACE for everything
@@ -73,7 +78,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
 //  the name will be dereferenced when the function is executed
 F1(jtnameref){
  RZ(w);
- R namerefacv(w,syrd(w,0L));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
+ R namerefacv(w,syrd(w));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
 F2(jtnamerefop){V*v;

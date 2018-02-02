@@ -297,6 +297,25 @@ static A jtlocindirect(J jt,I n,C*u){A a,g=jt->global,x,y;B lcl=1;C*s,*v,*xv;I k
  R g;
 }
 
+// look up name; return starting locale of locative, or 1 if not locative, or 0 if error
+A jtsybaseloc(J jt,A a) {I m,n;NM*v;
+ n=AN(a); v=NAV(a); m=v->m;
+ if(n<=m) R (A)1;
+ // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
+ R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s):stfind(1,n-m-2,1+m+v->s);
+}
+
+// like syrd, but starting with the locale looked up.  Does not set the local-name flag in the result
+L* jtsyrdfromloc(J jt, A a,A g) {
+ if((I)g&1) {L *e;
+  // If there is a local symbol table, search it first
+  if(e = probelocal(a)){R e;}
+  g=jt->global;  // Start with the current locale
+ }
+ R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
+}
+
+#if 0 // obsolete
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
 // side effect: if symb is nonzero, *symb is set to the symbol table that was the base of the path
@@ -315,6 +334,20 @@ L*jtsyrd(J jt,A a,A*symb){A g;I m,n;NM*v;
  }
  R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
 }
+#endif
+// look up a name (either simple or locative) using the full name resolution
+// result is symbol-table slot for the name if found, or 0 if not found
+// LSB of result is set if the name was found in the local symbol table
+L*jtsyrd(J jt,A a){A g;
+ RZ(a);
+ RZ(g=sybaseloc(a));
+ if((I)g&1) {L *e;
+  // If there is a local symbol table, search it first
+  if(e = probelocal(a)){R e;}  // return flagging the result if local
+  g=jt->global;  // Start with the current locale
+ }
+ R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
+}
 
 
 static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
@@ -323,7 +356,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){
-  x=WVR(i); v=syrd(nfs(AN(x),CAV(x)),0L); 
+  x=WVR(i); v=syrd(nfs(AN(x),CAV(x))); 
   ASSERT(v,EVVALUE);
   y=v->val;
   ASSERT(NOUN&AT(y),EVDOMAIN);
@@ -336,11 +369,11 @@ F1(jtdllsymget){R dllsymaddr(w,0);}
 F1(jtdllsymdat){R dllsymaddr(w,1);}
 
 // look up the name w using full name resolution.  Return the value if found, abort if not found or invalid name
-F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w,0L),EVVALUE,w); R v->val;}
+F1(jtsymbrd){L*v; RZ(w); ASSERTN(v=syrd(w),EVVALUE,w); R v->val;}
 
 // look up name w, return value unless locked or undefined; then return just the name
 F1(jtsymbrdlocknovalerr){A y;L *v;
- if(!(v=syrd(w,0L))){
+ if(!(v=syrd(w))){
   // no value.  Could be undefined name (no error) or some other error including value error, which means error looking up an indirect locative
   // If error, abort with it; if undefined, return a reference to the undefined name
   RE(0);   // if not simple undefined, error
@@ -370,7 +403,7 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
   ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==VAV(f)->id)==(CCOLON==VAV(w)->id),EVSTACK);
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
-  // Reassignment outside of debug waits until the name is off the stack, using nvrredef
+  // Reassignment outside of debug waits until the name is off the stack
   if(CCOLON==VAV(w)->id)jt->redefined=(I)v;
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
@@ -418,8 +451,11 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  }
  if(jt->db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
- ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
- if(!(x&&AFNJA&AFLAG(x))){
+ I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
+ if(x)xaf=AFLAG(x);  // if assigned, get the actual flags
+// obsolete ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
+// obsolete if(!(x&&AFNJA&AFLAG(x))){
+ if(!((AFRO|AFNJA)&xaf)){
   // name to be assigned is undefined, or is defined as a normal J name
   // If the value is a normal J name, we have to check to see if it is shared (we clone it in that case) or is boxed containing
   // relative addressing (we clone the boxing).  We do this check only if the name is !NJA, and (SMM or (BOXED and !NOSMREL))
@@ -435,18 +471,24 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
    ra(w);
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
-   // that value until its last use.  We call nvrredef to see whether the name is out there; if it is, nvrredef has scheduled a deferred
-   // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
-   if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
+   // that value until its last use.
+// obsolete  We call nvrredef to see whether the name is out there; if it is, nvrredef has scheduled a deferred
+// obsolete     // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
+// obsolete   if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
+   if(!(xaf&AFNVRUNFREED)){fa(x);} else if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);}  // x may be 0.  Free if not protected; then unprotect
+   e->val=w;   // install the new value
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
     // kludge this should not be required, since the incumbent value should never be inplaceable
    // ra() also removes inplaceability
- }else if(x!=w){  /* replacing name with different mapped data */
-  if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode
-  wn=AN(w); wr=AR(w); m=wn*bp(wt);
-  ASSERT(wt&DIRECT,EVDOMAIN);
-  ASSERT(allosize(x)>=m,EVALLOC);
-  AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+ } else {  // x exists, and is either read-only or memory-mapped
+  ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
+  if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
+   if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode
+   wn=AN(w); wr=AR(w); m=wn*bp(wt);
+   ASSERT(wt&DIRECT,EVDOMAIN);
+   ASSERT(allosize(x)>=m,EVALLOC);
+   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+  }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
  if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled

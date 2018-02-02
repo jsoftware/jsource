@@ -331,15 +331,19 @@ typedef I SI;
 // The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
 // the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
 // block is actually freed
-// INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
-// that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
-// We achieve this by realizing whenever ra() - but not ra0() - is called for the block
+#define AFNVRX          8
+#define AFNVR           (1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
+#define AFNVRUNFREEDX   18
+#define AFNVRUNFREED    (1<<AFNVRUNFREEDX)  // This value does NOT need to be freed by the parser, even though it was stacked
 #define AFVIRTUALX      17      // matches C2TX
 #define AFVIRTUAL       (1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
                                  // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.
-#define AFINDIRECT      (VINPLACEOK1|VINPLACEOK2)  // set both bits
+// obsolete // INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
+// obsolete // that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
+// obsolete // We achieve this by realizing whenever ra() - but not ra0() - is called for the block
+// obsolete #define AFINDIRECT      (VINPLACEOK1|VINPLACEOK2)  // set both bits
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 

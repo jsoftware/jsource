@@ -23,39 +23,54 @@
 /* and pop stuff off the stack back to that top on exit       */
 /*                                                                      */
 // The nvr stack contains pointers to values, added as names are moved
-// from the queue to the stack.  The LSB of a pointer is set to indicate that the
-// value must have the use count decremented at a safe time.
-// nvrpop(otop): pop stuff off the NVR stack back to the old top otop,
-//  performing deferred frees
-// nvrredef(w):  w is the value of a name about to be redefined
-//   (reassigned or erased).  If w is in the nvr stack, the use count of w
-//   is incremented.  We expect the caller to immediately decrementing the use-count
-//   and we are nullifying that operation
-
-// This design is questionable, because it requires a linear scan of all names extant
-// at all levels of function-call (the scan is performed only during nvrredef, which mitigates
-// the problem).  Also, names once stacked are considered extant for the duration of the sentence.
-// An alternative is to (1) use flags in the block to indicate a block that is extant or has
-// a deferred free outstanding, thus avoiding the search; (2) handle the deferred frees at the end of each action routine,
-// thus reducing the number of extant names.  This should be revisited when we come to
-// dealing with in-place modification.
+// from the queue to the stack. 
+// obsolete  The LSB of a pointer is set to indicate that the
+// obsolete // value must have the use count decremented at a safe time.
+// obsolete // nvrpop(otop): pop stuff off the NVR stack back to the old top otop,
+// obsolete //  performing deferred frees
+// obsolete // nvrredef(w):  w is the value of a name about to be redefined
+// obsolete //   (reassigned or erased).  If w is in the nvr stack, the use count of w
+// obsolete //   is incremented.  We expect the caller to immediately decrementing the use-count
+// obsolete //   and we are nullifying that operation
+// obsolete 
+// obsolete // This design is questionable, because it requires a linear scan of all names extant
+// obsolete // at all levels of function-call (the scan is performed only during nvrredef, which mitigates
+// obsolete // the problem).  Also, names once stacked are considered extant for the duration of the sentence.
+// obsolete // An alternative is to (1) use flags in the block to indicate a block that is extant or has
+// obsolete // a deferred free outstanding, thus avoiding the search; (2) handle the deferred frees at the end of each action routine,
+// obsolete // thus reducing the number of extant names.  This should be revisited when we come to
+// obsolete // dealing with in-place modification.
 
 B jtparseinit(J jt){A x;
  GAT(x,INT,20,1,0); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
  R 1;
 }
 
-// w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
-// a deferred decrement for the block.  Return 1 if a deferred decrement was created, 0 if not (including
-// the case where there was already a deferred-decrement)
-B jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
- // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
- // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
- // then, to make sure we don't increment the same use count twice by continued scanning
- DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){*v = (A)~(I)w; R 1;}else if(~0==s) break; ++v;);
- R 0;  // if we get through without requesting a decrement, return 0
-}    /* stack handling for w which is about to be redefined */
+// w is a block that looks ripe for in-place assignment.  We just have to make sure that it is not in use somewhere up the stack.
+// It isn't, if (1) it isn't on the stack at all; (2) if it was put on the stack by the currently-executing sentence.  We call this
+// routine only when we are checking inplacing for final assignments, for which the parser stack is guaranteed to be empty; so any
+// use of the name that was called for by this sentence must be finished
+I jtnotonupperstack(J jt, A w) {
+  // w is known nonzero
+  // see if name was stacked (for the first time) in this very sentence
+  A *v=jt->nvrotop+jt->nvrav;  // point to current-sentence region of the nvr area
+// obsolete   DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
+  DO(jt->nvrtop-jt->nvrotop, if(*v==w)R 1; ++v;);   // if name stacked in this sentence, that's OK
+  // see if name was not stacked at all
+  R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
+}
 
+// obsolete // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
+// obsolete // a deferred decrement for the block.  Return 1 if a deferred decrement was created, 0 if not (including
+// obsolete // the case where there was already a deferred-decrement)
+// obsolete B jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
+// obsolete  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
+// obsolete  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
+// obsolete  // then, to make sure we don't increment the same use count twice by continued scanning
+// obsolete  DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){*v = (A)~(I)w; R 1;}else if(~0==s) break; ++v;);
+// obsolete  R 0;  // if we get through without requesting a decrement, return 0
+// obsolete }    /* stack handling for w which is about to be redefined */
+// obsolete 
 static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
 
 static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
@@ -270,7 +285,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   PSTK *obgn=jt->parserstkbgn, *oend1=jt->parserstkend1;  // push the parser stack
-  UI4 otop=jt->nvrtop;
+  UI4 ootop=jt->nvrotop; jt->nvrotop=jt->nvrtop; // push top 2 levels of NVR stack
 
   // to simulate the mark at the head of the queue, we set queue to point to the -1 position which
   // is an out-of-bounds entry that must never be referenced.  m=0 corresponds to this mark; otherwise queue[m] is original
@@ -410,18 +425,27 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
         // otherwise resolve nouns to values, and others to 'name~' references
         // To save some overhead, we inline this and do the analysis in a different order here
         *dci = prem;  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
-        if(s=syrd(y,0L)) {   // look up the name in the symbol tables.  0L=Don't bother storing which symbol table was used
-          A sv;  // pointer to value block for the name
+        if(s=syrd(y)) {   // look up the name in the symbol tables.  0L=Don't bother storing which symbol table was used
+         A sv;  // pointer to value block for the name
         
-          if(!(sv = s->val))FP  // symbol table entry, but no value.
-            // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
+         if(!(sv = s->val))FP  // symbol table entry, but no value.
+         I svf = AFLAG(sv);
+           // Following the original parser, we assume this is an error that has been reported earlier.  No ASSERT here, since we must pop nvr stack
 
-          // The name is defined.  If it's a noun, use its value (the common & fast case)
-          // Or, for special names (x. u. etc) that are always stacked by value, keep the value
-          // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
-          if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
-           y=sv;
-          } else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
+         // The name is defined.  If it's a noun, use its value (the common & fast case)
+         // Or, for special names (x. u. etc) that are always stacked by value, keep the value
+         // Otherwise (normal adv/verb/conj name), replace with a 'name~' reference
+         if(AT(sv)&NOUN || at&NAMEBYVALUE){   // use value if noun or special name
+          y=sv;
+          // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
+          // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the globals
+          // Stack a named value only once.  This is needed only for names whose VALUE is put onto the stack; if we stack a REFERENCE
+          // (via namerefacv), no special protection is needed
+          if(!(svf&AFNVR)){ 
+           jt->nvrav[jt->nvrtop++] = sv;   // record the place where the value was protected
+           AFLAG(sv) = svf|(AFNVR|AFNVRUNFREED);  // mark the value as protected and not yet deferred-freed
+          }
+         } else if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
         } else {
           // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
           if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
@@ -429,9 +453,6 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
             // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
         }
 
-        // In case the name is assigned during this sentence (including subroutines), remember the data block that the name created
-        // NOTE: the nvr stack may have been relocated by action routines, so we must refer to the globals
-        jt->nvrav[jt->nvrtop++] = y;
        }
 
       // If the new word was not a name (whether assigned or not), look to see if it is ) or a conjunction,
@@ -459,9 +480,10 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
   // them now.  There may be references to these names in the result (if we are returning a verb/adv/conj),
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result
-  v=otop+jt->nvrav;  // point to our region of the nvr area
-  DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
-  jt->nvrtop=otop;  // deallocate the region used in this routine
+  v=jt->nvrotop+jt->nvrav;  // point to our region of the nvr area
+// obsolete   DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
+  DO(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVR))*(I*)0=0; /*scaf*/ if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
+  jt->nvrtop=jt->nvrotop; jt->nvrotop=ootop;  // deallocate the region used in this routine
 
   jt->parserstkbgn=obgn, jt->parserstkend1=oend1;  // pop the parser stack
 
@@ -482,7 +504,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
    *dci=0;  // error token if error found
    I at=AT(y = queue[1]);  // fetch the word
    if(at&NAME) {
-    if(s=syrd(y,0L)) {     // Resolve the name.
+    if(s=syrd(y)) {     // Resolve the name.
       A sv;  // pointer to value block for the name
       RZ(sv = s->val);  // symbol table entry, but no value.  Must be in an explicit definition, so there is no need to raise an error
       if(AT(sv)&NOUN || at&NAMEBYVALUE){   // in noun or special name, use value

@@ -1,3 +1,5 @@
+For unix builds, see make/make.txt rather than this file.
+
 examples assume ~/gitdev/jsource and builds in ~/jbld
 
 put jsource anywhere (adjust examples etc.)

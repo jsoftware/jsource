@@ -57,7 +57,6 @@
 #endif
 
 static void jttraverse(J,A,AF);
-static I jtfaorpush(J,AD * RESTRICT,I);
 
 #if LEAKSNIFF
 static I leakcode;
@@ -479,18 +478,16 @@ A jtgc (J jt,A w,I old){
  A origw = w;  // remember original input block, in case it has to be realized
  I c=AC(w); // save original inplaceability
  // If w is a virtual block that is backed by a DIRECT or recursible block b, we can raise the usecount of both b and w through the free.  Afterwards, if
- // b has not been deleted, w can survive as is; but if b is deleted, we must realize w.
+ // b must be deleted, w can survive as is; but if b is to be deleted, we must realize w.
  if(AFLAG(w)&AFVIRTUAL){
-if(AC(w)>1)*(I*)0=0;  // scaf
   A b=ABACK(w);  // backing block for w
   if(AT(b)&DIRECT || UCISRECUR(b)) {
    // b is DIRECT or recursible.  In either case we can protect b and its descendants by incrementing the usecount of b.  Protect both b and r that way.
    ACINCR(b);  // Increment usecount of b and remember it
    AC(w)=(c+1)&~ACINPLACE;  // likewise protect w from being freed
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-   if(AC(b)<=1){w = realize(w); fa(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w
-// eventually   else tpush(w);  // if b will survive, undo incrementing its usecount.  It's not worth testing the new usecount to see if fa could be used instead
-   else{if(AC(w)>1)fa(w) else tpush(w);}  // scaf to ensure usecount never > 1 in virtual block
+   if(AC(b)<=1){RZ(w=realize(w)); fa(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w
+   else tpush(w);  // if b will survive, undo incrementing its usecount.  It's not worth testing the new usecount to see if fa could be used instead; usecount of virtual block is never more than 1
    fa(b);   // undo incrementing usecount of b, possibly freeing it
    R w;  // if realize() failed, this could be returning 0
   }
@@ -907,7 +904,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  RZ(z=gafv(SZI*(NORMAH+r)));
  AT(z)=0;
  if(w){
-  /* AFLAG(z)=AFVIRTUAL; scaf reinstate */ /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
+  /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);
  }
  R z;

@@ -334,9 +334,6 @@
 // Within the tpush/tpop, no need to audit fa, since it was checked on the push
 #define fana(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc;}}} 
 #endif
-#if 0 // obsolete
-#define faorpush1(x)                {if(x){I* cc=&AC(x); I Zc=*cc; if(--Zc<=0){while(1); tpush1(x);}else *cc=Zc;}}   // scaf
-#endif
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
@@ -799,20 +796,18 @@
 #else
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
+// If block is virtual, realize it, because we may be about to assign it or otherwise save the value long-term
 // obsolete #define ra(x)                       {if(x){I* Zcc=&AC(x); I tt=AT(x); I c=*Zcc; I flg=AFLAG(x); if(c<0 && tt&RECURSIBLE)AFLAG(x)=flg|(tt&TRAVERSIBLE); if((tt^flg)&TRAVERSIBLE)jtra(jt,(x),tt); *Zcc=(c+1)&~ACINPLACE;}}
 #if MEMAUDIT&2
-#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {if(x){I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if(flg&AFVIRTUAL)RZ((x)=realize(x)); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL)RZ((x)=realize(x)); AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
-#define ra(x)                       {if(x){I* Zcc=&AC(x); I c=*Zcc; I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}; *Zcc=(c+1)&~ACINPLACE;}}
-// If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){AFLAG(x)=flg|(tt&RECURSIBLE); jtra(jt,(x),tt);}}
+#define ra(x)                       {if(x){I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if(flg&AFVIRTUAL)RZ((x)=realize(x)); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
+// If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
+// virtual block unless it is a recursible type
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL)RZ((x)=realize(x)); AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
 #endif
-#endif
-#define ra1(x)                      jtra1(jt,(x))
-#if 0 // obsolete
-#define raa(x,y)                    jtraa(jt,(x),(y))
 #endif
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))

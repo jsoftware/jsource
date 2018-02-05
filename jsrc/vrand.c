@@ -568,7 +568,7 @@ F1(jtrngseeds){I k,r;
  if(r){
   // w is not an atom.  the RNG had better be Mersenne Twister.  Initialize using w, and save the w list
   ASSERT(1==r&&MTI==jt->rng,EVRANK);
-  ras(w); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
+  RZ(ras(w)); fa(jt->rngseed); jt->rngseed=w;   // note ra before fa, in case same buffers
   mt_init_by_array(AV(w),AN(w));
  }else switch(jt->rng){
   // atomic w.  We can use that for any generator.  Choose the current one.

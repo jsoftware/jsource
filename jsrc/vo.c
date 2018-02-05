@@ -26,15 +26,15 @@ F1(jtbox0){
 }
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
- RZ(w);
- ASSERT(!(SPARSE&AT(w)),EVNONCE);
+ RZ(w); I wt=AT(w); FLAGT waf=AFLAG(w);
+ ASSERT(!(SPARSE&wt),EVNONCE);
   // Set NOSMREL if w is not boxed or it has NOSMREL set
- FLAGT newflags = (AFLAG(w) | ((~AT(w))>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
+ FLAGT newflags = (waf | ((~wt)>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
  if(!jt->rank){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
-  // DO NOT set recursible, because that would require a potentially expensive pass through w which may never be needed if this result expires without being assigned
-  // WE SHOULD check to see if w is recursible or direct, and if so mark the result recursive, incrementing the usecount in w while we have it in cache
+  // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
   GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
+  if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
   // <"r

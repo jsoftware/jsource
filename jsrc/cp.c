@@ -82,19 +82,19 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
  hs=sv->h; m=AN(hs); 
  RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);
- GATV(x,BOX,m,1,0); xv=AAV(x);
+ GATV(x,BOX,m,1,0); xv=AAV(x);  // cannot be virtual
  while(p<m&&0>nv[p])p++;
  if(p<m){
   RZ(z=ca(w));
   n=nv[m-1]; k=p;
   while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
-  old=jt->tnextpushx;
+  old=jt->tnextpushx;  // should move this up
   for(i=1;i<=n;++i){
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}
    while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}
-   if(!(i%10))gc3(x,z,0L,old);
+   if(!(i%16))if(!gc3(&x,&z,0L,old))R0;
  }}
  if(0<p){
   RZ(fs=inv(fs)); f1=VAV(fs)->f1;
@@ -106,7 +106,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
    RZ(z=CALL1(f1,y=z,fs));
    if(q&&equ(y,z)){DO(1+k, INSTALLBOX(x,xv,k,z); --k;); break;}
    while(0<=k&&i==nv[k]){INSTALLBOX(x,xv,k,z); --k; q=0<=k?bv[k]:0;}
-   if(!(i%10))gc3(x,z,0L,old);
+   if(!(i%16))if(!gc3(&x,&z,0L,old))R0;
  }}
  z=ope(reshape(shape(hs),from(grade1(j),x))); EPILOG(z);
 }

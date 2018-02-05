@@ -60,7 +60,10 @@ typedef struct AD {
   A chain;   // used when block is on free chain
  } kchain;
  FLAGT flag;
- I m;  // multipurpose word, normally unused
+ union {
+  I m;  // For NJA/SMM blocks, size of allocation. 
+  A back; // For VIRTUAL blocks, points to backing block
+} mback;
  union {
   I t;  // type
   A proxychain;  // used when block is on free chain
@@ -103,7 +106,8 @@ typedef I SI;
 
 #define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x           */
 #define AFLAG(x)        ((x)->flag)     /* flag                            */
-#define AM(x)           ((x)->m)        /* Max # bytes in ravel            */
+#define AM(x)           ((x)->mback.m)        /* Max # bytes in ravel            */
+#define ABACK(x)        ((x)->mback.back)        /* Max # bytes in ravel            */
 #define AT(x)           ((x)->tproxy.t)        /* Type; one of the #define below  */
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */

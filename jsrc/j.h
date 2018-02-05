@@ -512,7 +512,7 @@ extern unsigned int __cdecl _clearfp (void);
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
 #define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
-#define EPILOGZOMB(z)       R gc3(z,0L,0L,_ttop)   // z is the result block.  Use this is z may contain inplaceable contents that would free prematurely
+#define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; R (z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z
 // Routines that do not return A

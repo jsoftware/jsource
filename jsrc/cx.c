@@ -50,7 +50,7 @@ typedef struct{I d,t,e,b;} TD;  // line numbers of catchd., catcht., end. and tr
 
 static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
  ASSERT(t,EVCTRL);
- ras(t); cv->t=t;                            /* iteration array     */
+ RZ(ras(t)); cv->t=t;                            /* iteration array     */
  cv->n=IC(t);                            /* # of items in t     */
  cv->j=-1;                               /* iteration index     */
  cv->x=0;
@@ -152,9 +152,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
  // directly.
  L *ybuckptr = AV(jt->local)[yxbuckets[symtabsize][0]]+jt->sympv;  // pointer to sym block for y
- if(w){ ras(w);ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+ if(w){ RZ(ras(w));ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
- if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); ras(a); ybuckptr->val=a; ybuckptr->sn=jt->slisti;}
+ if(a){ybuckptr = ((yxbuckets[symtabsize][0]==yxbuckets[symtabsize][1] ? ybuckptr->next : AV(jt->local)[yxbuckets[symtabsize][1]])+jt->sympv); RZ(ras(a)); ybuckptr->val=a; ybuckptr->sn=jt->slisti;}
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
@@ -299,7 +299,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(!cv->t){
      BASSERT(t,EVCTRL);
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     t=boxopen(t); ras(t); BZ(cv->t=t); t=0;
+     t=boxopen(t); RZ(ras(t)); BZ(cv->t=t); t=0;
     }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
@@ -349,8 +349,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
  FDEPDEC(1);  // OK to ASSERT now
- if(jt->jerr)z=0; else{if(z){ras(z);} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
+ if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else z=mtm;} // If no error, increment use count in result to protect it from tpop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism

@@ -10,10 +10,11 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);
  ASSERT(2==AR(w),EVRANK);
- s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); v=QAV(w); m=c*bp(AT(w));
+ s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); m=c*bp(AT(w));
  GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r1;++j){
+  v=QAV(w);
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   ASSERT(0<=e,EVDOMAIN);
   x=v+c*j; 
@@ -24,7 +25,7 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
    u=v+c*i; p=u[j];  /* pivot */
    DO(c, u[i]=qminus(u[i],qtymes(p,x[i])););
   }
-  gc3(w,0L,0L,old);  // use simple gc3 to ensure all changes use the stack, since w is modified inplace
+  if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }
  R w;
 }    /* Gaussian elimination in place */
@@ -32,10 +33,10 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
 static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  s=AS(w); r=s[0]; c=s[1];
- v=QAV(w); 
  m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r;++j){
+  v=QAV(w); 
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   if(0>e)R cvt(RAT,zero);
   x=v+c*j;
@@ -45,7 +46,7 @@ static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
    u=v+c*i;
    if(XDIG(u[j].n)){p=qdiv(u[j],x[j]); for(k=j+1;k<r;++k)u[k]=qminus(u[k],qtymes(p,x[k]));}
   }
-  gc3(w,0L,0L,old);  // use simple gc3 to ensure all changes use the stack, since w is modified inplace
+  if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }
  d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DO(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);

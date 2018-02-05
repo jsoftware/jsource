@@ -496,7 +496,7 @@ static XF1(jtpollard_rho){I i,n,old=jt->tnextpushx;X g,y1,y2;
   RZ(y2=xrem(w,xplus(xone,xsq(xplus(xone,xsq(y2))))));
   RZ(g=xgcd(w,xrem(w,xminus(y2,y1))));
   if(!equ(g,xone)&&!equ(g,w))R g;
-  gc3(y1,y2,0L,old);
+  if(!gc3(&y1,&y2,0L,old))R0;
  }
  R xone;
 }
@@ -538,7 +538,7 @@ static B jtecd(J jt,X n,X a,X b,X*q,X*z){I old=jt->tnextpushx;X m,s,x2,y2,yy,z2;
   RZ(z2=xtymes(xc(2L),xtymes(q[1],q[2])));
   RZ(z[0]=xrem(n,x2)); RZ(z[1]=xrem(n,y2)); RZ(z[2]=xrem(n,z2));
  }
- gc3(z[0],z[1],z[2],old);
+ if(!gc3(z,z+1,z+2,old))R0;
  R 1;
 }    /* elliptic curve double point (mod proj coord) */
 
@@ -562,7 +562,7 @@ static B jteca(J jt,X n,X a,X b,X*p,X*q,X*z){I old=jt->tnextpushx;
    RZ(z3=xtymes(p[2],xtymes(q[2],w)));
    RZ(z[0]=xrem(n,x3)); RZ(z[1]=xrem(n,y3)); RZ(z[2]=xrem(n,z3));
  }}
- gc3(z[0],z[1],z[2],old);
+ if(!gc3(z,z+1,z+2,old))R0;
  R 1;
 }    /* elliptic curve add (mod proj coord) */
 
@@ -583,7 +583,7 @@ static B jtecm(J jt,X n,X a,X b,I m,X*p,X*z){I old=jt->tnextpushx;
   DO(k, RZ(ecd(n,a,b,q,q)); if(BIT0&(c^d))RZ(eca(n,a,b,q,c&BIT0?p:pm,q)); c<<=1; d<<=1;);
   z[0]=q[0]; z[1]=q[1]; z[2]=q[2];
  }
- gc3(z[0],z[1],z[2],old);
+ if(!gc3(z,z+1,z+2,old))R0;
  R 1;
 }    /* scalar mult ladder (mod proj coord) */
 
@@ -593,7 +593,7 @@ static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tnex
  x[0]=q[0]; x[1]=q[1]; x[2]=q[2];
  DO(m, d=(D)*pv++; dd=(I)pow(d,jfloor(5e-14+lg/log(d))); RZ(ecm(n,a,b,dd,x,x)););
  z[0]=x[0]; z[1]=x[1]; z[2]=x[2];
- gc3(z[0],z[1],z[2],old);
+ if(!gc3(z,z+1,z+2,old))R0;
  R 1;
 }
 
@@ -610,7 +610,7 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
   di=pd[i];
   DO(di/d, RZ(eca(n,a,b,x,sdd,x)););
   RZ(eca(n,a,b,x,sd+3*(di%d),x));
-  gc3(x[0],x[1],x[2],old);
+ if(!gc3(x,x+1,x+2,old))R0;
  }
  z[0]=x[0]; z[1]=x[1]; z[2]=x[2];
  R 1;

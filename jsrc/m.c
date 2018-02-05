@@ -421,6 +421,38 @@ static void jttraverse(J jt,A wd,AF f){
 
 void jtfh(J jt,A w){fr(w);}
 
+// allocate a virtual block, given the backing block
+// offset is offset in atoms from start of w; r is rank, s (optional) -> shape
+// result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
+// If s given, we copy that in & fill in AN(z)
+RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
+ ASSERT(RMAX>=r,EVLIMIT); 
+ I t=AT(w);  // type of input
+ I tal=bp(t);  // length of an atom of t
+ RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
+ AFLAG(z)=AFVIRTUAL; AC(z)= ACUC1; ABACK(z)=w; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
+ if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shaope given, copy it & count atoms
+ R z;
+}    /* allocate header */ 
+
+
+// realize a virtual block
+// allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure
+// only non-sparse nouns can be virtual
+// If the input is not virtual, just return it
+A jtrealize(J jt, A w){A z; I t;
+// allocate a block of the correct type and size.  Copy the shape
+ RZ(w);
+ t=AT(w);
+ GA(z,t,AN(w),AR(w),AS(w));
+ // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL.
+ // new block is not VIRTUAL, not RECURSIBLE
+ AFLAG(z) = (AFLAG(w)&AFNOSMREL) + (!!(AFLAG(w)&AFNJA+AFSMM+AFREL)<<AFRELX);
+// copy the contents
+ MC(AV(z),AV(w),AN(w)*bp(t)); 
+ R z;
+}
+
 // Free temporary buffers, while preventing the result from being freed
 //
 // Here w is a result that needs to be protected against being deleted.  We increment its usecount,
@@ -435,14 +467,38 @@ void jtfh(J jt,A w){fr(w);}
 //
 // To solve both problems, we check to see if w is inplaceable.  If it is, we restore it to inplaceable
 // after the tpop.  But if its usecount after tpop was 2, we do not do the tpush.
+//
+// If w is a virtual block, we avoid realizing it unless its backing block is deleted
+//
+// result is the address of the block, which may have changed if it had to be realized.  result can be 0
+// if the block could not be realized
 
 
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be unfilled box)
- I *cp=&AC(w); I c=*cp; // save original inplaceability
- ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  But if VIRTUAL, don't realize - set up to realize if backing block is freed
+ A origw = w;  // remember original input block, in case it has to be realized
+ I c=AC(w); // save original inplaceability
+ // If w is a virtual block that is backed by a DIRECT or recursible block b, we can raise the usecount of both b and w through the free.  Afterwards, if
+ // b has not been deleted, w can survive as is; but if b is deleted, we must realize w.
+ if(AFLAG(w)&AFVIRTUAL){
+if(AC(w)>1)*(I*)0=0;  // scaf
+  A b=ABACK(w);  // backing block for w
+  if(AT(b)&DIRECT || UCISRECUR(b)) {
+   // b is DIRECT or recursible.  In either case we can protect b and its descendants by incrementing the usecount of b.  Protect both b and r that way.
+   ACINCR(b);  // Increment usecount of b and remember it
+   AC(w)=(c+1)&~ACINPLACE;  // likewise protect w from being freed
+   tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
+   if(AC(b)<=1){w = realize(w); fa(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w
+// eventually   else tpush(w);  // if b will survive, undo incrementing its usecount.  It's not worth testing the new usecount to see if fa could be used instead
+   else{if(AC(w)>1)fa(w) else tpush(w);}  // scaf to ensure usecount never > 1 in virtual block
+   fa(b);   // undo incrementing usecount of b, possibly freeing it
+   R w;  // if realize() failed, this could be returning 0
+  }
+ }
+ // non-VIRTUAL path, or the backing block was not DIRECT or recursible.
+ ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  If w is virtual, realize it.  If this realizes w, the value of w changes
   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
- tpop(old);  // delete everything allocated on the stack
+ tpop(old);  // delete everything allocated on the stack, except for w which was protected
  // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
  // We could just do a tpush of the new block, but (1) we would just as soon do fa() rather than tpush() to save the overhead; (2) if the block was originally inplaceable
  // we would like to continue with it inplaceable.  The interesting case is when the block was NOT freed during the tpop.  That means that
@@ -451,21 +507,28 @@ A jtgc (J jt,A w,I old){
  // to do the fa().  We don't get it exactly right, but we note that any block that is part of a name will not be inplaceable, so we do the fa() only if
  // w is inplaceable - and in that case we can make the result here also inplaceable.  If the block was not inplaceable, or if it was freed during the tpop,
  // we push it again here.  In any case, if the input was inplaceable, so is the result.
- if((c&(1-*cp))<0){fa(w);} else {tpush(w);}  // test is c<0 && *cp>1
+ // If w was virtual, it cannot have been inplaceable, and will always go through the tpush path, whether it was realized or not
+ //
+ // NOTE: certain functions (ex: rational determinant) perform operations 'in place' on non-direct names and then protect those names using gc().  The protection is
+ // ineffective if the code goes through the fa() path here, because components that were modified will be freed immediately rather than later.  In those places we
+ // must either use gc3() which always does the tpush, or do ACIPNO to force us through the tpush path here.  We generally use gc3().
+ if((c&(1-AC(w)))<0){fa(w);} else {tpush(w);}  // test is c<0 && AC(w)>1
  // The usecount of w is now back to where it started, or possibly lower, if the block was popped multiple times.
  // But we know for sure that if the block was inplaceable to begin with, its usecount is 1 now, and we should make it inplaceable on exit
- if(c<0)*cp = c;  // restore inplaceability.  Could use *cp=(c<0)?c:*cp to avoid conditional jump
+ // Note: a block that was originally VIRTUAL cannot have been inplaceable
+ if(c<0)AC(w) = c;  // restore inplaceability.  Could use AC(w)=(c<0)?c:AC(w) to avoid conditional jump
  R w;
 }
 
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area.  Return the x argument
-A jtgc3(J jt,A x,A y,A z,I old){
- ras(x); ras(y); ras(z);
+// The xyz arguments MUST NOT be virtual
+I jtgc3(J jt,A *x,A *y,A *z,I old){
+ if(x)RZ(ras(*x)); if(y)RZ(ras(*y)); if(z)RZ(ras(*z));
  tpop(old);
- if(x)tpush(x); if(y)tpush(y); if(z)tpush(z);
- R x;  // good return
+ if(x)tpush(*x); if(y)tpush(*y); if(z)tpush(*z);
+ R 1;  // good return
 }
 
 // This routine handles the recursion for ra().  ra() itself does the top level, this routine handles the contents
@@ -844,7 +907,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  RZ(z=gafv(SZI*(NORMAH+r)));
  AT(z)=0;
  if(w){
-  AFLAG(z)=AFVIRTUAL; /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
+  /* AFLAG(z)=AFVIRTUAL; scaf reinstate */ /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);
  }
  R z;
@@ -900,7 +963,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
  GA(z,t,2*AN(w),AR(w),AS(w)); 
  MC(AV(z),AV(w),m*k);                 /* copy old contents      */
- if(b){ras(z); fa(w);}                 /* 1=b iff w is permanent */
+ if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent */
  *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;

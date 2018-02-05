@@ -659,7 +659,7 @@ static void convertup(I*pi,I n,C t){I j=n;
 static A jtcdgahash(J jt,I n){A z;I hn,*v;
  v=ptab+PTO; while(n>*v)++v; hn=*v;
  GATV(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
- ras(z); R z;
+ R ras(z);
 }
 
 static B jtcdinit(J jt){A x;

@@ -158,7 +158,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy;D*axv,c,d,*dv,*wxv,*zyv;
    }
    if(aiv>=aivm||i<(p=*aiv++)){    /* done with row i in a, emit row i in z */
     RZ(mmharvest(i,zjv-zjv0,zj,zyv,&n,&zi,&zx));
-    gc3(zj,zi,zx,old);
+    gc3(&zj,&zi,&zx,old);  // these connot be virtual
     zjv=zjv0; k=-1; i=p;
  }}}
  NAN1;

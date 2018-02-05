@@ -225,7 +225,7 @@ static F2(jtdbrr){DC d;
  RE(0);
  d=jt->sitop; while(d&&DCCALL!=d->dctype)d=d->dclnk; 
  ASSERT(d&&VERB&AT(d->dcf)&&!d->dcc,EVDOMAIN);  /* must be explicit verb */
- ras(a); jt->dbalpha=a; ras(w); jt->dbomega=w; 
+ RZ(ras(a)); jt->dbalpha=a; RZ(ras(w)); jt->dbomega=w; 
  jt->dbsusact=SUSRUN;
  R mtm;
 }
@@ -236,5 +236,5 @@ F2(jtdbrr2 ){R dbrr(a, w);}
 F1(jtdbtrapq){ASSERTMTV(w); R jt->dbtrap?jt->dbtrap:mtv;}   
      /* 13!:14 query trap */
 
-F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){ras(w); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
+F1(jtdbtraps){RZ(w=vs(w)); fa(jt->dbtrap); if(AN(w)){RZ(ras(w)); jt->dbtrap=w;}else jt->dbtrap=0L; R mtm;}
      /* 13!:15 set trap */

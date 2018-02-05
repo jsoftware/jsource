@@ -133,7 +133,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
  // bump the usecount of the result to account for new ref from table
- ras(z); cv[(v-jv)/2]=z; v[0]=y; v[1]=x; 
+ RZ(ras(z)); cv[(v-jv)/2]=z; v[0]=y; v[1]=x; 
  R z;
 }
 

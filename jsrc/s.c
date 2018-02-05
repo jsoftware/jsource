@@ -468,6 +468,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
+   // This realize any virtual value, and make the usecount recursive if the value is boxed
    ra(w);
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete

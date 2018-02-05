@@ -216,7 +216,7 @@ XF2(jtxgcd){I c,d,old;X p,q,t;
   t=p;
   RZ(p=xrem(p,q));
   q=t;
-  gc3(p,q,0L,old);
+  if(!gc3(&p,&q,0L,old))R0;
  }
  R q;
 }

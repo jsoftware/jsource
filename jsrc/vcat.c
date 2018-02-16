@@ -142,10 +142,10 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
- if(t&BOX){A1*u,*v;B p,q,r;
-  p=ARELATIVE(a); q=ARELATIVE(w); r=p||q; if(r)AFLAG(z)=AFREL; v=A1AV(z);
-  u=A1AV(a); m=p*(I)a-r*(I)z; DO(AN(a), *v++=m+*u++;);
-  u=A1AV(w); m=q*(I)w-r*(I)z; DO(AN(w), *v++=m+*u++;);
+ if(t&BOX&&(AFLAG(a)|AFLAG(w))&(AFREL|AFSMM|AFNJA)){A1* RESTRICT u,* RESTRICT v;B p,q;
+  p=ARELATIVE(a); q=ARELATIVE(w); AFLAG(z)=AFREL; v=A1AV(z);
+  u=A1AV(a); m=p*(I)a-(I)z; DO(AN(a), *v++=m+*u++;);
+  u=A1AV(w); m=q*(I)w-(I)z; DO(AN(w), *v++=m+*u++;);
  }else{C*x;I k;
   k=bp(t); m=k*AN(a); x=CAV(z); 
   MC(x,  AV(a),m      ); 
@@ -238,7 +238,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
    I oldac = ACUC(a);  // remember original UC of a
    ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
    if(AC(a)>oldac || !((AFLAG(a)&AFLAG(w))&AFNOSMREL))an = 0;  // turn off inplacing if w referred to a, or if anything might be relative (kludge should support relatives)
-  } 
+  }
 
   // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
   // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes

@@ -475,7 +475,8 @@ typedef struct {I a,e,i,x;} P;
 /* x: value cells corresponding to rows of i                               */
 
 #define SPA(p,a)        ((A)((p)->a+(C*)(p)))  // a is one of aeix; result is A pointer for that component
-#define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
+// obsolete #define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
+#define SPB(p,a,x)      {A ZWo = (x); if(ZWo){INCORP(ZWo)} (p)->a=(C*)ZWo-(C*)(p); RZ(ZWo);}  // store x into component (a); return if x is 0.  a is one of aeix
 
 // Header for hashtables used in i.
 // This sits at the beginning of the allocated block, holding info about the stored values

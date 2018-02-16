@@ -1459,7 +1459,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       hh->invalidlo=IMAX; hh->invalidhi=0;  // none of this is ever used for bits
       hh->currentindexend=hh->previousindexend=(US)-1;  // signal table must be initialized
       // since table is to be initialized, currentlo/currenthi can be left garbage
-      ras(h);  // make the table permanent  this ra() will never be VIRTUAL
+      ras(h);  // make the table permanent  this ras() will never be VIRTUAL
      }
     }
    }else{
@@ -1530,7 +1530,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
   if(mk){A x,*zv;I*xv,ztype;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
-   // The caller must ra() this result to protect it, if it is going to be saved
+   // The caller must ras() this result to protect it, if it is going to be saved
    GAT(z,BOX,3,1,0); zv=AAV(z);
    GAT(x,INT,6,1,0); xv=AV(x);
 // should use a lookup

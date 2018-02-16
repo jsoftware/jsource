@@ -209,7 +209,7 @@ static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*y
  for(i=1;i<n;++i){   // loop through items
   v-=k;    // v-> next item to apply
   GA(y,yt,yn,yr,ys); u=CAV(y);   // allocate block for item, u->data area
-  // copy the item into the allocated block
+  // copy the item into the allocated block, preserving relative status
   if(p){A1*wv=(A1*)v,*yv=(A1*)u;I d=(I)w-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
   RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
   gc(z,old);   // free the buffers we allocated, except for the result
@@ -522,7 +522,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  GATV(q,INT,n-(c&&d),1,0); v=AV(q); DO(wr, if(b[i])*v++=i-(i>f);); SPB(zp,a,q);
  if(c&&d){          /* sparse sparse */
   SPB(zp,x,ca(x));
-  SPB(zp,i,q=repeatr(ne(a,sc(f)),y));
+  SPB(zp,i,repeatr(ne(a,sc(f)),y)); q=SPA(zp,i);  // allow for virtualization of SPB
   v=j+AV(q); u=j+AV(y);
   DO(m, *v=p*u[0]+u[1]; v+=n1; u+=n;);
  }else if(!c&&!d){  /* dense dense */

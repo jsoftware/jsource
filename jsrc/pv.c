@@ -184,13 +184,13 @@ static F1(jtvfinal){I i;V*u,*v;
  if(!(VERB&AT(w)))R w;
  v=VAV(w);
  if(CFORK!=v->id){i=tvi(w); R 0<=i?vfinal(jt->ttab[i].t):w;}
- RZ(v->f=tine(vfinal(v->f)));
- RZ(v->g=tine(vfinal(v->g)));
- RZ(v->h=tine(vfinal(v->h)));
+ RZ(v->f=incorp(tine(vfinal(v->f))));
+ RZ(v->g=incorp(tine(vfinal(v->g))));
+ RZ(v->h=incorp(tine(vfinal(v->h))));
  if(VERB&AT(v->f)){
   u=VAV(v->f); 
-  if(CFCONS==u->id)v->f=u->h;
-  else if(CQQ==u->id&&NOUN&AT(u->f)&&equ(ainf,u->g))v->f=u->f;
+  if(CFCONS==u->id)v->f=u->h;  // must be incorped already
+  else if(CQQ==u->id&&NOUN&AT(u->f)&&equ(ainf,u->g))v->f=u->f;  // must be incorped already
   if(NOUN&AT(v->f))RZ(w=folk(v->f,v->g,v->h));
  }
  R tine(w);

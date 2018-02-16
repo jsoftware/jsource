@@ -55,6 +55,7 @@ F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 A jtfdef(J jt,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GA(z,t,1,0,0); v=VAV(z);
+ if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
  v->f1    =f1?f1:jtdomainerr1;  /* monad C function */
  v->f2    =f2?f2:jtdomainerr2;  /* dyad  C function */
  v->f     =fs;                  /* monad            */

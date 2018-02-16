@@ -134,6 +134,37 @@ PT cases[] = {
  LPAR,      CAVN,      RPAR, ANY,       0,    jtvpunc,  0,2,0,
 };
 
+#if AUDITEXECRESULTS
+// go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
+// Initial call has nonrecurok and virtok both set
+static void auditblock(A wd, I nonrecurok, I virtok) {
+ if(!wd)R;
+ I nonrecur = (AT(wd)&RECURSIBLE) && ((AT(wd)^AFLAG(wd))&RECURSIBLE);  // recursible type, but not marked recursive
+ I virt = (AFLAG(wd)&AFVIRTUAL)!=0;  // any virtual
+ if(nonrecur&&!nonrecurok)*(I*)0=0;
+ if(virt&&!virtok)*(I*)0=0;
+ switch(CTTZ(AT(wd))){
+  case RATX:  
+   {A*v=AAV(wd); DO(2*AN(wd), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+  case XNUMX:
+   {A*v=AAV(wd); DO(AN(wd), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+  case BOXX:
+   if(!(AFLAG(wd)&AFNJA+AFSMM)){A*wv=AAV(wd);
+    if(AFLAG(wd)&AFREL){DO(AN(wd), auditblock(WVR(i),nonrecur,0););}
+    else{DO(AN(wd), auditblock(wv[i],nonrecur,0););}
+   }
+   break;
+  case VERBX: case ADVX:  case CONJX: 
+   {V*v=VAV(wd); auditblock(v->f,nonrecur,0); auditblock(v->g,nonrecur,0); auditblock(v->h,nonrecur,0);} break;
+  case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
+   {P*v=PAV(wd); auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
+ }
+}
+#endif
+
+
+
+
 // Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
 F1(jtparse){A z;
  RZ(w);
@@ -378,22 +409,27 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
     // Return the new stack pointer, which is the relocated beginning-of-stack
     // Set the in-place flags for verb arguments
     // STO stores the result; SM closes up the stack
+#if AUDITEXECRESULTS
+#define BRK(x) auditblock(stack[x].a,1,1); break  // audit result.  At top level allow nonrecur or virtual blocks
+#else
+#define BRK(x) break
+#endif
     case PMONAD1:
-    DFSIP1(1,2,1) STO1(2,2,1) SM(1,0); stack += 1; break;
+    DFSIP1(1,2,1) STO1(2,2,1) SM(1,0); stack += 1; BRK(1);
     case PMONAD2:
-    DFSIP1(2,3,0) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; break;  // stack is not executing last verb here, so zomb=0
+    DFSIP1(2,3,0) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; BRK(2);  // stack is not executing last verb here, so zomb=0
     case PDYAD:
-    DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; break;  //STO(z,a,w,toksource)
+    DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; BRK(1);  //STO(z,a,w,toksource)
     case PADV:
-    EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; break;
+    EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);
     case PCONJ:
-    EPZ(stack[3].a = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; break;
+    EPZ(stack[3].a = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; BRK(1);
     case PTRIDENT:
-    EPZ(stack[3].a = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; break;
+    EPZ(stack[3].a = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; SM(2,0); stack += 2; BRK(1);
     case PBIDENT:
-    EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; break;
+    EPZ(stack[2].a = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);
     case PPAREN:
-    stack[2].a=stack[1].a; stack[2].t=stack[0].t; stack += 2; break;  // Can't fail; use value from expr, token # from (
+    stack[2].a = stack[1].a; stack[2].t=stack[0].t; stack += 2; BRK(0);  // Can't fail; use value from expr, token # from (
     case PASGN: if(!(stack=jtis(jt)))EP break;
     }
 

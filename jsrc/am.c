@@ -126,8 +126,9 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
- I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&AFLAG(w))))
-      &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind;
+ I waf = AFLAG(w);  // w flags
+ I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
+      &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&BOX){
   I oldac = ACUC(w);  // remember original UC of w
@@ -135,10 +136,10 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
  } 
 
- if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
+ if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  else{RZ(z=cvt(t,w)); RZ(z=RELOCATE(w,z));}
- if(ip&&t&BOX&&AFNJA&AFLAG(w)){A*av,t,x,y;A1*zv;I ad,*tv;
+ if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I ad,*tv;
   // in-placeable boxed memory-mapped array
   ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
   GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);   // allocate an array of pointers, one per item of x; clear to 0
@@ -150,7 +151,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
    // z is relative.  It may still be in-place, and therefore may have recursive usecount
-   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ras(new); zv[iv[i]]=(A)AREL(new,z););  // this ra() can never encounter a virtual block
+   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ras(new); zv[iv[i]]=(A)AREL(new,z););  // this ras() can never encounter a virtual block
    }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
   }
   else{
@@ -164,7 +165,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
    case sizeof(C):
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
    case sizeof(I):
-    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ra() cannot be virtual
+    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
     else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
     break;
    // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
@@ -228,7 +229,7 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z;I sa,sw; B b;I at,ir,it,t,t1,w
  ASSERT(it&NUMERIC+BOX||!AN(ind),EVDOMAIN);
  ASSERT(it&DENSE,EVNONCE);  // m must be dense, and numeric or boxed
  if(sw){
-  // Sparse w.  a an t must be compatible; sparse w must not be boxed
+  // Sparse w.  a and t must be compatible; sparse w must not be boxed
   ASSERT(!(wt&BOX),EVNONCE); ASSERT(HOMO(at,wt),EVDOMAIN);
   // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be
   RE(t=maxtype(at,wt)); t1=STYPE(t); RZ(a=TYPESEQ(t,at)?a:cvt(sa?t1:t,a));

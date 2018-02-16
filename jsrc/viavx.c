@@ -2032,7 +2032,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
   if((mode&IPHCALC)){A x,*zv;I*xv;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
-   // The caller must ra() this result to protect it, if it is going to be saved
+   // The caller must ras() this result to protect it, if it is going to be saved
    GAT(z,BOX,3,1,0); zv=AAV(z);
    GAT(x,INT,6,1,0); xv=AV(x);
    xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */

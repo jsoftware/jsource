@@ -7,7 +7,7 @@
 
 // Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
 // n is length of name (or locale# to allocate, for numbered locales), u->name
-// Result is SYMB type for the symbol table.  For global tables only, ra() has been executed
+// Result is SYMB type for the symbol table.  For global tables only, ras() has been executed
 // on the result and on the name and path
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  GATV(g,SYMB,ptab[p]+SYMLINFOSIZE,0,0);   // have prime number of hashchains, excluding LINFO
@@ -19,15 +19,15 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
-   RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ra() is never VIRTUAL
+   RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
    // Assign this name in the locales symbol table to point to the allocated SYMB block
-   // This does ra() on g
+   // This does ras() on g
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
-   RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ra() is never virtual
+   RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual
    ++jt->stused;
    m=AN(jt->stnum);
    // Extend in-use locales list if needed
@@ -35,7 +35,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
     x=ext(1,jt->stnum); y=ext(1,jt->stptr); RZ(x&&y); jt->stnum=x; jt->stptr=y;
     nv=m+AV(jt->stnum); pv=m+AAV(jt->stptr); DO(AN(x)-m, *nv++=-1; *pv++=0;); 
    }
-   // Put this locale into the in-use list at an empty location.  ra(g) at that time
+   // Put this locale into the in-use list at an empty location.  ras(g) at that time
    pv=AAV(jt->stptr);
    DO(AN(jt->stnum), if(!pv[i]){ras(g); pv[i]=g; *(i+AV(jt->stnum))=n; break;});
    jt->stmax=n<IMAX?MAX(jt->stmax,1+n):-1;

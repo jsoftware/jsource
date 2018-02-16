@@ -20,7 +20,7 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
 // Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
 // that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
-// it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ra()
+// it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ras()
 // the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
 // if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
 // nonrecursive
@@ -49,7 +49,6 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
 #define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
-#define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 #define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
 #define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 
@@ -60,6 +59,7 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 // which is often the same original function that called here.
 
 #if 0 // obsolete
+#define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
 A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
     I k,mn,n=1,p,*s,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;I state;
  RZ(w);

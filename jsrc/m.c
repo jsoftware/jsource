@@ -288,6 +288,25 @@ void jtspendtracking(J jt){I i;
 #if BW==64 && MEMAUDIT&2
 // Simulate deleting the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
+static void auditsimverify0(A w){
+ if(!w)R;
+ if(AFLAG(w)>>AFAUDITUCX)*(I*)0=0;   // hang if nonzero count
+ if(UCISRECUR(w)){  // process children
+  if(AT(w)&BOX){
+   I n=AN(w); I af=AFLAG(w);
+   A* RESTRICT wv=AAV(w);  // pointer to box pointers
+   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
+   if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
+   DO(n, auditsimverify0((A)((I)wv[i]+(I)wrel)););
+  }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
+   auditsimverify0(v->f); auditsimverify0(v->g); auditsimverify0(v->h);
+  }else *(I*)0=0;  // inadmissible type for recursive usecount
+ }
+ R;
+}
+
+// Simulate deleting the input block.  If that produces a delete count that equals the usecount,
+// recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
  if(!w)R;
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))*(I*)0=0;   // hang if too many deletes
@@ -295,7 +314,7 @@ static void auditsimdelete(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFREL?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimdelete((A)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
@@ -313,7 +332,7 @@ static void auditsimreset(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFREL?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimreset((A)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
@@ -355,8 +374,19 @@ R zero;
 void audittstack(J jt){
 #if BW==64 && MEMAUDIT&2
  if(jt->audittstackdisabled&1)R;
- // loop through each block of stack
  A* tstack; I ttop;
+ // verify counts start clear
+ for(tstack=jt->tstack,ttop=jt->tnextpushx;ttop>0;){I j;
+  // loop through each entry, skipping the first which is a chain
+  for(j=(ttop-SZI);j&(NTSTACK-1);j-=SZI){
+   A stkent = *(A*)((I)tstack+j);
+   auditsimverify0(stkent);
+  }
+  // back up to previous block
+  ttop = (ttop-SZI)&-NTSTACK;  // decrement to start of block, will roll over boundary above
+  tstack=(A*)*(I*)((I)tstack+j); // back up to data for previous field
+ }
+ // loop through each block of stack
  for(tstack=jt->tstack,ttop=jt->tnextpushx;ttop>0;){I j;
   // loop through each entry, skipping the first which is a chain
   for(j=(ttop-SZI);j&(NTSTACK-1);j-=SZI){
@@ -420,6 +450,30 @@ static void jttraverse(J jt,A wd,AF f){
 
 void jtfh(J jt,A w){fr(w);}
 
+// overview of the usecount routines
+//
+// gc() protects a result, and pops the stack.  It preserves inplacing and virtuality if possible.  It cannot be used on blocks
+//   that contain contents younger than the block
+// gc3() is a simple-minded gc() that works on all blocks, and can handle up to 3 at a time.
+// virtual() creates a virtual block that refers to a part of another block
+// realize() creates a real block that has the contents referred to by a virtual block
+// realizeifvirtual() does what its name implies.
+// ra(x) raises the usecount of a block and its descendants.  It traverses, stopping a path when it becomes recursible.  It marks its result recursible.  x may not be 0, and may be modified.
+// ras() does realizeifvirtual() followed by ra().  x may be 0, and may be modified
+// rat() does ras() followed by tpush().  It is used to protect a result over some operation other than tpop()
+// rat1() is like rat() but it merely increments the usecount rather than calling ra()
+// fa() lowers the usecount of a block and its descendants.  It traverses and stops a path that is recursible and has usecount going in > 1.  If the usecount is reduced to 0, the block is freed with mf()
+// tpush() puts a block and its descendants onto the stack.  In effect this is a call for a later fa().  It traverses, stopping a path when it becomes recursible.  Every block allocated
+//   by ga*() starts out with a tpush already performed, which is how blocks are normally freed.
+// tpush1() puts the block onto the stack, but does not recur to descendants.
+// tpop() processes the stack up to a given point.  The usecount is decremented; if it goes to 0 the block is freed by mf() if not recursible, or by fa() if recursible.
+//       The fa() will free the descendants.
+// ga*() allocates a block and does an initial tpush()
+// mf() frees a block.  If what if freed is a symbol table, all the symbols are freed first.
+
+// mark w incorporated, reassigning if necessary.  Return the address of the block
+A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
+
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank, s (optional) -> shape
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
@@ -429,8 +483,10 @@ RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
  I t=AT(w);  // type of input
  I tal=bp(t);  // length of an atom of t
  RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
- AFLAG(z)=AFVIRTUAL; AC(z)= ACUC1; ABACK(z)=w; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
- if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shaope given, copy it & count atoms
+ AFLAG(z)=AFVIRTUAL | (AFLAG(w)&AFNOSMREL); AC(z)=ACUC1; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
+ if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed
+ if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
+ ABACK(z)=w;   // set the pointer to the base: w or its base
  R z;
 }    /* allocate header */ 
 
@@ -474,25 +530,27 @@ A jtrealize(J jt, A w){A z; I t;
 
 
 A jtgc (J jt,A w,I old){
- RZ(w);  // return if no input (could be unfilled box)
- A origw = w;  // remember original input block, in case it has to be realized
- I c=AC(w); // save original inplaceability
+ RZ(w);  // return if no input (could be error or unfilled box)
  // If w is a virtual block that is backed by a DIRECT or recursible block b, we can raise the usecount of both b and w through the free.  Afterwards, if
- // b must be deleted, w can survive as is; but if b is to be deleted, we must realize w.
+ // b need not deleted, w can survive as is; but if b is to be deleted, we must realize w.
  if(AFLAG(w)&AFVIRTUAL){
   A b=ABACK(w);  // backing block for w
   if(AT(b)&DIRECT || UCISRECUR(b)) {
    // b is DIRECT or recursible.  In either case we can protect b and its descendants by incrementing the usecount of b.  Protect both b and r that way.
    ACINCR(b);  // Increment usecount of b and remember it
-   AC(w)=(c+1)&~ACINPLACE;  // likewise protect w from being freed
+   ACINCR(w);  // likewise protect w from being freed
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-   if(AC(b)<=1){RZ(w=realize(w)); fa(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w
-   else tpush(w);  // if b will survive, undo incrementing its usecount.  It's not worth testing the new usecount to see if fa could be used instead; usecount of virtual block is never more than 1
+   if(AC(b)<=1){A origw = w; RZ(w=realize(w)); mf(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w.  Since we
+                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
+   else tpush1(w);  // if b will survive, undo incrementing the usecount of w.  It's not worth testing the new usecount to see if fa could be used instead; usecount of virtual block is never more than 1
+                   // we push ONLY the virtual block itself; the descendants are in b and must not be disturbed
    fa(b);   // undo incrementing usecount of b, possibly freeing it
    R w;  // if realize() failed, this could be returning 0
   }
  }
  // non-VIRTUAL path, or the backing block was not DIRECT or recursible.
+ realizeifvirtual(w);
+ I c=AC(w); // save original inplaceability (after realize, which may make the block inplaceable)
  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  If w is virtual, realize it.  If this realizes w, the value of w changes
   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
  tpop(old);  // delete everything allocated on the stack, except for w which was protected
@@ -520,7 +578,7 @@ A jtgc (J jt,A w,I old){
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
 // the enclosing area.  Return the x argument
-// The xyz arguments MUST NOT be virtual
+// If the arguments are virtual, they will be realized
 I jtgc3(J jt,A *x,A *y,A *z,I old){
  if(x)RZ(ras(*x)); if(y)RZ(ras(*y)); if(z)RZ(ras(*z));
  tpop(old);
@@ -533,7 +591,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   I anysmrel=af&(AFREL|AFSMM)?0:AFNOSMREL;   // init with the status for this block
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
@@ -546,6 +604,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 #endif
    }
    if(np){
+if(AFLAG(np)&AFVIRTUAL)*(I*)0=0; // scaf debug
     ra(np);  // increment the box, possibly turning it to recursive
     if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
    }
@@ -561,7 +620,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); ras(x);     x = SPA(v,e); ras(x);     x = SPA(v,i); ras(x);     x = SPA(v,x); ras(x);
-// obsolete   ra(SPA(v,a)); ra(SPA(v,e)); ra(SPA(v,i)); ra(SPA(v,x)); 
+// obsolete   ras(SPA(v,a)); ras(SPA(v,e)); ras(SPA(v,i)); ras(SPA(v,x)); 
  }
  R 1;
 }
@@ -571,7 +630,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
   while(1){AD* np0;
@@ -605,7 +664,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  I wrel = af&AFREL?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
    A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
@@ -712,10 +771,10 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 // If the noun is assigned as part of a named derived verb, protection is not needed (but harmless) because if the same value is
 // assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
-F1(jtrat){RZ(w); ra(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
+F1(jtrat){ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
 F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
 
-A jtras(J jt, AD * RESTRICT w) { ra(w); R w; }  // subroutine version of ra() to save space
+A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern
@@ -928,8 +987,10 @@ F1(jtca){A z;I t;P*wp,*zp;
  R z;
 }
 
+// clone recursive.  The result is not relative, even if w is
 F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
  RZ(z=ca(w));
+ AFLAG(z) &= ~AFREL; // if w was rel/smm/nja, ca() marks the result REL.  Undo that
  n=AN(w);
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;
@@ -944,7 +1005,7 @@ F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
    break;
   case VERBX: case ADVX: case CONJX: 
    v=VAV(z); 
-   if(v->f)RZ(v->f=car(v->f)); 
+   if(v->f)RZ(v->f=car(v->f)); // no need to INCORP these, since no one will look and they aren't virtual
    if(v->g)RZ(v->g=car(v->g)); 
    if(v->h)RZ(v->h=car(v->h));
  }

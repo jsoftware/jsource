@@ -483,6 +483,7 @@
 #define ilcm(x,y)                   jtilcm(jt,(x),(y))   
 #define immea(x)                    jtimmea(jt,(x))
 #define immex(x)                    jtimmex(jt,(x))
+#define incorp(x)                   jtincorp(jt,(x))  
 #define increm(x)                   jtincrem(jt,(x))  
 #define indexof(x,y)                jtindexof(jt,(x),(y))
 #define indexofprehashed(x,y,z)     jtindexofprehashed(jt,(x),(y),(z))
@@ -791,23 +792,18 @@
 #define qrr(x)                      jtqrr(jt,(x))  
 #define qstd(x)                     jtqstd(jt,(x))
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
-#if 0
-#define ra(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I c=*cc; if(tt&TRAVERSIBLE)jtra(jt,(x),tt); *cc=(c+1)&~ACINPLACE;}}
-#else
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // If block is virtual, realize it, because we may be about to assign it or otherwise save the value long-term
-// obsolete #define ra(x)                       {if(x){I* Zcc=&AC(x); I tt=AT(x); I c=*Zcc; I flg=AFLAG(x); if(c<0 && tt&RECURSIBLE)AFLAG(x)=flg|(tt&TRAVERSIBLE); if((tt^flg)&TRAVERSIBLE)jtra(jt,(x),tt); *Zcc=(c+1)&~ACINPLACE;}}
 #if MEMAUDIT&2
-#define ra(x)                       {if(x){I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if(flg&AFVIRTUAL)RZ((x)=realize(x)); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL)RZ((x)=realize(x)); AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
-#define ra(x)                       {if(x){I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if(flg&AFVIRTUAL)RZ((x)=realize(x)); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
-// virtual block unless it is a recursible type
-#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL)RZ((x)=realize(x)); AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
-#endif
+// virtual block unless it is a recursible type.
+#define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
 #endif
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
@@ -828,6 +824,7 @@
 #define rdns(x)                     jtrdns(jt,(x))   
 #define rdot1(x)                    jtrdot1(jt,(x))   
 #define realize(x)                  jtrealize(jt,(x))
+#define realizeifvirtual(x)         {if(AFLAG(x)&AFVIRTUAL)RZ((x)=realize(x));}
 #define reaxis(x,y)                 jtreaxis(jt,(x),(y))
 #define recip(x)                    jtrecip(jt,(x))   
 #define rect(x)                     jtrect(jt,(x))

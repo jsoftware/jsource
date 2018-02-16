@@ -447,9 +447,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 // Mark a name as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
-#define INCORP(z)       (AC(z)&=~ACINPLACE)
-// Tests for whether a result incorporates its argument.  The argument is always inplaceable, and we signal incorporation either by returning the
-// argument itself or by marking it non-inplaceable (if we box it)
+// If a block is virtual, it must be realized before it can be incorporated
+#define INCORP(z)       {realizeifvirtual(z); (AC(z)&=~ACINPLACE);}  // z is an assignable name
+// same, but for nonassignable argument
+#define INCORPNA(z)     incorp(z)
+// Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
+// and we signal incorporation either by returning the argument itself or by marking it non-inplaceable (if we box it)
 #define WASINCORP1(z,w)    ((z)==(w)||0<=AC(w))
 #define WASINCORP2(z,a,w)  ((z)==(w)||(z)==(a)||0<=(AC(a)|AC(w)))
 #define INF(x)          ((x)==inf||(x)==infm)
@@ -463,8 +466,8 @@ extern unsigned int __cdecl _clearfp (void);
 // if the verb may add fill, we have to check the fill as well
 #define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
-// This also guarantees that z has recursive usecount whenever x does
-#define INSTALLBOX(x,xv,k,z) if(UCISRECUR(x))ra(z); xv[k]=z
+// This also guarantees that z has recursive usecount whenever x does, and that z is realized
+#define INSTALLBOX(x,xv,k,z) if(UCISRECUR(x))ras(z); xv[k]=z
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
@@ -593,11 +596,19 @@ extern unsigned int __cdecl _clearfp (void);
 #define BS11    0x0101
 #endif
 
+// Debugging options
+
 // Use MEMAUDIT to sniff out errant memory alloc/free
 #define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
+
+#define AUDITEXECRESULTS 1   // When set, we go through all execution results to verify recursive and virtual bits are OK
+#define FORCEVIRTUALINPUTS 0  // When set, we make all noun inputs to executions VIRTUAL
+
+
+
 
 
 #define CACHELINESIZE 64  // size of processor cache line, in case we align to it

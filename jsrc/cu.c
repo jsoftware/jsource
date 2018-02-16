@@ -17,7 +17,7 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
  R z;
 }
 
-#define EVERYI(exp)  {RZ(*zv++=x=exp); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
+#define EVERYI(exp)  {RZ(x=exp); INCORP(x); RZ(*zv++=x); ASSERT(!(SPARSE&AT(x)),EVNONCE);}
      /* note: x can be non-noun */
 
 // u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable

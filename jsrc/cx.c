@@ -261,14 +261,15 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CENDSEL:
     // end. for select., and do. for for. after the last iteration, must pop the stack - just once
     // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-    if(!(ci->canend&2))rat(z); unstackcv(cv); --cv; ++r; 
+    // (this includes ONLY xyz_index, so perhaps we should avoid rat if stack empty or xyz_index not used)
+    if(!(ci->canend&2))BZ(z=rat(z)); unstackcv(cv); --cv; ++r; 
     i=ci->go;    // continue at new location
     break;
    case CBREAKS:
    case CCONTS:
     // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
     // any number of SELECTN, up to the SELECT 
-    if(!(ci->canend&2))rat(z);   // protect possible result from pop, if it might be the final result
+    if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
     do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
      // fall through to...
    case CBREAK:
@@ -281,7 +282,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // break. in a for. must first pop any active select., and then pop the for.
     // We just pop till we have popped a non-select.
     // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
-    if(!(ci->canend&2))rat(z);   // protect possible result from pop
+    if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop
     do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
     i=ci->go;     // continue at new location
     // It must also pop the try. stack, if the destination is outside the try.-end. range
@@ -289,7 +290,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    if(cd){rat(z); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
+    if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
     i=ci->go;
     break;
    case CCASE:
@@ -629,8 +630,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  if((C2T+C4T)&AT(w))RZ(w=cvt(LIT,w));
  if(10<n){s=CAV(w); p=AN(w); if(p&&CLF==s[p-1])RZ(w=str(p-1,s));}
  else{
-  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d));
-  if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}
+  RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
+  if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}  //  for 4 :, make the single def given the monadic one
   GAT(h,BOX,2*HN,1,0); hv=AAV(h);
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;

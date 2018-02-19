@@ -604,7 +604,7 @@ extern unsigned int __cdecl _clearfp (void);
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 
-#define AUDITEXECRESULTS 1   // When set, we go through all execution results to verify recursive and virtual bits are OK
+#define AUDITEXECRESULTS 1   // When set, we go through all execution results to verify recursive and virtual bits are OK   // scaf turn off for release
 #define FORCEVIRTUALINPUTS 0  // When set, we make all noun inputs to executions VIRTUAL
 
 

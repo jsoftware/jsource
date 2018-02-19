@@ -35,7 +35,7 @@ B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, if(a[cv[i]]!=
 #define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
 #define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
 
-
+// this is used by routines outside of sort/merge & therefore a & w can be dissimilar
 I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
  RZ(a&&w);
  an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
@@ -68,11 +68,11 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
    case CMPXX: COMPLOOQ (D, m+m);         break;
    case XNUMX: COMPLOOQG(X, m, xcompare); break;
    case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
-   case BOXX:  switch(2*ARELATIVE(a)+ARELATIVE(w)){ 
+   case BOXX:  switch((ARELATIVEB(a)?2:0)+ARELATIVEB(w)){ 
     case 0: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
-    case 1: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],   (A)AABS(y[i],w)))R j;);} break;
-    case 2: {COMPDCLQ(A);I j; DO(m, if(j=compare((A)AABS(x[i],a),        y[i]   ))R j;);} break;
-    case 3: {COMPDCLQ(A);I j; DO(m, if(j=compare((A)AABS(x[i],a),(A)AABS(y[i],w)))R j;);} break;
+    case 1: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
+    case 2: {COMPDCLQ(A);I j; RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
+    case 3: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
  }}}
  if(1>=ar)R an>wn?jt->compgt:an<wn?jt->complt:0;
  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->compgt; else if (c<d)R jt->complt;);

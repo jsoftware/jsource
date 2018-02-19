@@ -105,7 +105,7 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
-A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
+A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t;
  RZ(w);
  e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); k=bp(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
@@ -128,7 +128,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t,wd;
  }
  if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n*k);}
  else     RZ(q=1<AR(w)?ravel(w):w);
- m=AN(y); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ m=AN(y); wv=AAV(w); RELBASEASGNB(w,w);
  GATV(z,BOX,1+e,1,0); zv=AAV(z); 
  *zv++=y;
  DO(e, RZ(*zv++=q=brep(b,d,WVR(i))); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
@@ -297,7 +297,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 }}
 
 
-static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top,yd;
+static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
  RZ(w);
  GATV(x,INT,BOX&AT(w)?2*AN(w):1,1,0); xv=AAV(x);
  *xv=w; top=1;
@@ -305,21 +305,21 @@ static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top,yd;
   --top; y=xv[top]; n=AN(y); t=AT(y);
   if(t&FL+CMPX){v=DAV(y); DO(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
   else if(t&BOX){
-   m=top+n; yv=AAV(y); yd=(I)y*ARELATIVE(y);
+   m=top+n; yv=AAV(y); RELBASEASGN(y,y);
    if(m>AN(y)){GATV(x1,INT,2*m,1,0); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
    u=xv+top; DO(n, q=YVR(i); if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
  }}
  R 0;
 }
 
-F1(jtisnan){A*wv,z;B*u;D*v;I n,t,wd;
+F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  RZ(w);
  n=AN(w); t=AT(w);
  ASSERT(t&DENSE,EVNONCE);
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if     (t&FL  ){v=DAV(w); DO(n, *u++=_isnan(*v++););}
  else if(t&CMPX){v=DAV(w); DO(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
- else if(t&BOX ){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(n, *u++=isnanq(WVR(i));); RE(0);}
+ else if(t&BOX ){wv=AAV(w); RELBASEASGN(w,w); DO(n, *u++=isnanq(WVR(i));); RE(0);}
  else memset(u,C0,n);
  R z;
 }

@@ -6,9 +6,9 @@
 #include "j.h"
 
 
-A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n,wd;
+A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  ASSERT(r>=AR(w),EVRANK);
  ASSERT(n,EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -162,13 +162,13 @@ static DF2(jtcase2){A u;V*sv;
 }
 
 // @.n
-static F2(jtgerfrom){A*av,*v,z;I ad,n;
+static F2(jtgerfrom){A*av,*v,z;I n;
  RZ(a&&w);  /* 1==AR(w)&&BOX&AT(w) */
  ASSERT(1>=AR(a),EVRANK);
  if(NUMERIC&AT(a))R from(a,w);
  else{
   ASSERT(BOX&AT(a),EVDOMAIN);
-  n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
+  n=AN(a); av=AAV(a); RELBASEASGN(a,a);
   GATV(z,BOX,n,1,0); v=AAV(z);
   DO(n, RZ(*v++=gerfrom(AVR(i),w)););
   R z;

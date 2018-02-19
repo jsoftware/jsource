@@ -141,43 +141,43 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  R z;
 }
 
-static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
+static B jtsmmin(J jt,A a,A w){A*wv;MS*x;
  if(AFNJA&AFLAG(w))R a==w;
  x=(MS*)w-1;
  if((I)a==AABS(x,x->a))R 1;
- if(BOX&AT(w)){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
+ if(BOX&AT(w)){wv=AAV(w); RELBASEASGN(w,w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
  R 0;
 }   /* 1 iff any leaf of w is part of SMM array a */
 
-F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t,wd;
+F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
  RZ(w);
  n=AN(w); t=AT(w); 
  ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+BOX+SBT,EVDOMAIN);
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
  zv=A1AV(z); wv=AAV(w);
- if(t&BOX){wd=(I)w*ARELATIVE(w); DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
+ if(t&BOX){RELBASEASGN(w,w); DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
  else MC(zv,wv,n*bp(t));
  R z;
 }    /* make copy of w in SMM area of a */
 
-F2(jtsmmis){A*wv,x;A1*av;I wd,wn,wr;
+F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
  RZ(a&&w);   
  if(a==w)R a;
  wn=AN(w); wr=AR(w);
  if(smmin(a,w))RZ(w=cpa(1,w));
  AK(a)=SZI*(SMMAH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=(RANKT)wr;
  if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;}
- av=A1AV(a); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w);
  DO(wn, x=smmcar(a,WVR(i)); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
  ICPY(AS(a),AS(w),wr);
  R a;
 }    /* a=:w where a is mapped and w is boxed */
 
 
-A jtcpa(J jt,B b,A w){A*wv,z,*zv;I wd;
+A jtcpa(J jt,B b,A w){A*wv,z,*zv;
  if(0==b&&AFNJA&AFLAG(w)){R ras(w); }
  if(!(BOX&AT(w)))R ca(w);
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  GATV(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);
  DO(AN(w), RZ(zv[i]=cpa(b,WVR(i))););
  R z;
@@ -259,5 +259,5 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
 //  R w;
 // }    /* w has addresses relative to a; works in place */
 
-A relocate(I m,A w){A1*wv; if(!w)R 0; AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
+A relocate(I m,A w){A1*wv; RZ(w); AFLAG(w)|=AFREL; wv=A1AV(w); DO(AN(w), wv[i]+=m;); R w;}
      /* add m to the addresses in w; works in place */

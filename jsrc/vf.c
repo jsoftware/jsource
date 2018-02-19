@@ -5,7 +5,10 @@
 
 #include "j.h"
 
-
+// a and w (which may be the same) are 2 nouns.  We pick the fill based  on the types of a/w (a first, then w, skipping a if empty)
+// if jt->fill is set, we use that value instead
+// we put one atom of fill into jt->fillv0 and point jt->fillv to that atom
+// w is expected to be the reference input; if it is relative, we relocate jt->fillv to be wrt w
 F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
  t=AN(a)?AT(a):AN(w)?AT(w):0;
@@ -110,7 +113,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
   DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
   z=b?y:z;
  } 
- RZ(z=RELOCATE(w,z));
+ RELOCATE(w,z);
  INHERITNORELFILL(z,w); R z;
 }    /* a|.!.f"r w */
 
@@ -156,7 +159,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
 #endif
  }
- RZ(z=RELOCATE(w,z));
+ RELOCATE(w,z);
  INHERITNORELFILL(z,w); R z;
 }    /* |."r w */
 
@@ -226,7 +229,7 @@ F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,z
  zv=CAV(z); wv=CAV(w); 
  if(b)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
- RZ(z=RELOCATE(w,z));
+ RELOCATE(w,z);
  INHERITNORELFILL(z,w); R z;
 }    /* a ($,)"r w */
 

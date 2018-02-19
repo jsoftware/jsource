@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-static I jtfdepger(J jt,A w){A*wv;I d=0,k,wd; 
- wv=AAV(w); wd=(I)w*ARELATIVE(w); 
+static I jtfdepger(J jt,A w){A*wv;I d=0,k; 
+ wv=AAV(w); RELBASEASGN(w,w); 
  DO(AN(w), k=fdep(fx(WVR(i))); d=MAX(d,k);); 
  R d;
 }

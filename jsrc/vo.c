@@ -6,9 +6,9 @@
 #include "j.h"
 
 
-I level(A w){A*wv;I d,j,wd;
+I level(A w){A*wv;I d,j;
  if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
- d=0; wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ d=0; wv=AAV(w); RELBASEASGN(w,w);
  DO(AN(w), j=level(WVR(i)); if(d<j)d=j;);
  R 1+d;
 }
@@ -42,7 +42,8 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m*bp(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z); 
-  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); DO(n, DO(m, u[i]=AABS(*v++,w);); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
+// obsolete   if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A*v=(A*)wv; A1*u=(A1*)CAV(y); RELORIGIN(wrel,w); DO(n, DO(m, u[i]=AABS(*v++,wrel);); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
+  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y); RELORIGIN(wrel,w); DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
   else{
    // The case of interest: non-relative w.  We have allocated the result; now we allocate a block for each cell of w and copy
    // the w values to the new block.  We set NOSMREL in the top block and the new ones if w is boxed or NOSMREL.  
@@ -159,14 +160,16 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
+F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn,zrel;
  RZ(w);
- n=AN(w); v=AAV(w); b=ARELATIVE(w);  // b=1 if w is relative
+ n=AN(w); v=AAV(w);
  if(!(n&&BOX&AT(w)))RCA(w); /* obsolete {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
- if(!AR(w)){z=b?(A)AABS(*v,w):*v; ACIPNO(z); R z;}   // turn off inplacing if we are using the contents directly
+ RELORIGINB(wrel,w);  // wrel is relocation amount for w, 0 if not relative
+ if(!AR(w)){z=(A)AABS(*v,wrel); ACIPNO(z); R z;}   // scalar boz: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
-  y=b?(A)AABS(v[i],w):v[i]; 
+// obsolete  y=b?(A)AABS(v[i],w):v[i]; 
+  y=(A)AABS(v[i],wrel); 
   q=MIN(q,AR(y)); 
   r=MAX(r,AR(y));
   // for nonempty contents, check for conformability and save highest-priority type
@@ -175,22 +178,22 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=
    if(TYPESNE(t,k)){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);}
  }}
  // if there were no nonempty contents, go back & pick highest-priority type of empty
- if(!t)DO(n, y=b?(A)AABS(v[i],w):v[i]; k=AT(y); RE(t=maxtype(t,k)););
+ if(!t)DO(n, y=(A)AABS(v[i],wrel); k=AT(y); RE(t=maxtype(t,k)););
  // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
  GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  // find the shape of a result-cell
- DO(n, y=b?(A)AABS(v[i],w):v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
+ DO(n, y=(A)AABS(v[i],wrel); s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
  else{
   RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); ICPY(AS(z)+AR(w),u,r); x=CAV(z);
-  c=b&&t&BOX;   // set if result is relative
-  if(c){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);  // init to a: relative, or fills
+  zrel=(wrel&&t&BOX)?RELORIGINNULL(z):0;   // set if result is relative
+  if(zrel){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);  // init to a: relative, or fills
   for(i=0;i<n;++i){
-   y=b?(A)AABS(v[i],w):v[i];   // get pointer to contents, relocated if need be
+   y=(A)AABS(v[i],wrel);   // get pointer to contents, relocated if need be
    // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
-   if(ARELATIVE(y))RZ(y=relocate((I)y-c*(I)z,ca(y)));
+   if(ARELATIVE(y)){RELORIGIN(yrel,y); RZ(y=relocate(yrel-zrel,ca(y)));}  // todo kludge clone not required - relocation would do
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 
    else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
@@ -200,10 +203,10 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B b,c,h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=
 }
 
 // ; y general case, where rank > 1
-// w is the data to raze, t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
-// zb=1 if any of the contents uses relative addressing
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I c=0,d,i,j,k,m,q,*s,*v1,yr,*ys;UI p;
- d=SZI*(r-1); b=ARELATIVE(w);   // d=#bytes in (stored shape of result-cell)  b=1 if w uses relative addressing
+// w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
+// zrel=1 if any of the contents uses relative addressing
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* RESTRICT zv;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
+ d=SZI*(r-1); RELORIGINB(wrel,w);   // d=#bytes in (stored shape of result-cell)  b=relocation offset for w (0 if not relative)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
  GATV(h,INT,r,1,0); s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
@@ -211,7 +214,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
   // to c, the total # items in result; otherwise it is a single cell that will be promoted in rank to
   // become one result-cell.  Error if overflow (should be impossible).  j=#leading length-1 axes that need to be added
-  y=b?(A)AABS(v[i],w):v[i]; yr=AR(y); ys=AS(y); c+=(0==(j=r-yr))?*ys:1; ASSERT(0<=c,EVLIMIT); 
+  y=(A)AABS(v[i],wrel); yr=AR(y); ys=AS(y); c+=(0==(j=r-yr))?*ys:1; ASSERT(0<=c,EVLIMIT); 
   if(!yr)continue;   // do not perform rank extension of atoms
   // here we find the max cell size in *(s+1). *s is not used.  The maximum shape is taken
   // over extension axes of length 1, followed by the actual shape of the contents
@@ -229,7 +232,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
   if(t&&m) {  // Check cell-contents only if there are some nonempty contents, and if the result-cell is nonempty
      // these are different, eg for 0 1$4 which has no cells but they are nonempty, or 1 0 1$4 which has an empty result-cell
    for(i=0;i<n;++i) {   // for each box of contents
-    y=b?(A)AABS(v[i],w):v[i]; yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
+    y=(A)AABS(v[i],wrel); yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
     if(!yr)continue; ys=AS(y);   // atoms are replicated, never filled; otherwise point to shape
     if(r==yr&&0==ys[0])continue;  // if y is unextended and has no cells, it will not contribute, no matter what the cell-shape
     // see if the shape of y-cell (after rank extension) matches the shape of result-cell.  If not, there will be fill
@@ -247,22 +250,22 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
   // we have to scan to get a precision from among the empties
   // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
 //  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}
-  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
+  if(!t){DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
  }
 
  // Now we know the type of the result.  Create the result.
  k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
  GATV(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
- GA(z,t,m,r,s); if(zb)AFLAG(z)=AFREL;   // create result area, shape s
+ GA(z,t,m,r,s); if(zrel){zrel=RELORIGINNULL(z); AFLAG(z)=AFREL;}   // create result area, shape s; zrel now is relocation offset for result
  zu=CAV(z); zv=AAV(z);  // output pointers
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
-  y=b?(A)AABS(v[i],w):v[i];  // y->address of A block for v[i]
+  y=(A)AABS(v[i],wrel);  // y->address of A block for v[i]
   if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y));   // convert to result type if needed
   yr=AR(y); ys=AS(y);    // yr=rank of y, ys->shape of y
   if(!yr){
    // atomic contents; perform atomic replication
-   if(t&BOX){x=(A)(*AV(y)+ARELATIVE(y)*(I)y-zb*(I)z); DO(p/SZA, *zv++=x;);}  // see jtraze; replicate pointer to data
+   if(t&BOX){RELORIGINB(yrel,y); x=(A)(*AV(y)+yrel-zrel); DO(p/SZA, *zv++=x;);}  // see jtraze; replicate pointer to data
    else     {mvc(p,zu,k,AV(y)); zu+=p;}   // copy the data, replicating
   } else {
    // nonatomic contents: rank extension+fill rather than replication
@@ -270,37 +273,42 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,B zb){A h,h1,x,y,*yv,z,*zv;B b;C*zu;I 
    if(j=r-yr){DO(j,v1[i]=1;); ICPY(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
    if(memcmp(1+s,1+AS(y),d)){*s=IC(y); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
-   if(t&BOX){yv=AAV(y); q=ARELATIVE(y)*(I)y-zb*(I)z; DO(AN(y), *zv++=(A)((I)yv[i]+q););}  // copy as above, no replication this time
+// obsolete    if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); yrel-=zrel; DO(AN(y), *zv++=(A)((I)yv[i]+yrel););}  // copy as above, no replication this time
+   if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // copy as above, no replication this time
    else     {j=k*AN(y); MC(zu,AV(y),j); zu+=j;}
   }
  }
+ // todo kludge should inherit nosmrel
  R z;
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
+F1(jtraze){A*v,y,* RESTRICT yv,z,* RESTRICT zv;C* RESTRICT zu;I d,i,k,m=0,n,r=1,t=0,yt,zrel;
  RZ(w);
- n=AN(w); v=AAV(w); b=ARELATIVE(w); zb=b;  // n=#,w  v->w data  zb=b='boxed relative addressing'
+ n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- if(1==n){RZ(z=b?(A)AABS(*v,w):*v); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
+ RELORIGINB(wrel,w); zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
+ if(1==n){RZ(z=(A)AABS(*v,wrel)); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
  // scan the boxes to create the following values:
  // m = total # atoms in contents; r = maximum rank of contents
  // t = type of result (maxtype among types of nonempty contents)
- // zb set if any of the nonempty contents uses relative addressing
+ // zrel set if any of the nonempty contents uses relative addressing
  // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
  // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
  // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
  // So, we don't check compatibility for empty boxes.
  for(i=0;i<n;++i){
-  y=b?(A)AABS(v[i],w):v[i]; m+=d=AN(y); r=MAX(r,AR(y)); 
+  y=(A)AABS(v[i],wrel); m+=d=AN(y); r=MAX(r,AR(y)); 
   if(d){
    yt=AT(y); 
    if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtype(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
-   zb=zb||ARELATIVE(y);
+   zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
  }}
+ // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
+ zrel = zrel>=0;
  // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
- if(1<r)R razeg(w,t,n,r,v,zb);
+ if(1<r)R razeg(w,t,n,r,v,zrel);
  // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
  // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
@@ -310,31 +318,35 @@ F1(jtraze){A*v,y,*yv,z,*zv;B b,zb;C*zu;I d,i,k,m=0,n,q,r=1,t=0,yt;
  // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
  // but this is how it was done originally
   // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
-// if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
- if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
- GA(z,t,m,r,0); if(zb&&!(t&DIRECT))AFLAG(z)=AFREL;  // allocate the result area; mark relative if any contents relative
- zu=CAV(z); zv=AAV(z); k=bp(t); // inpout pointers, depending on type; length of an item
+// obsolete if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
+// obsolete  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
+ if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
+ GA(z,t,m,r,0); if(zrel&&!(t&DIRECT)){zrel=RELORIGINNULL(z); AFLAG(z)=AFREL;}  // allocate the result area; mark relative if any contents relative
+ // now zrel has been repurposed to relocation offset for z (0 if not relative)
+ zu=CAV(z); zv=AAV(z); k=bp(t); // input pointers, depending on type; length of an item
  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed
  for(i=0;i<n;++i){
-  y=b?(A)AABS(v[i],w):v[i];   // y->box[i]
+  y=(A)AABS(v[i],wrel);   // y->box[i]
   if(AN(y)){
    // if contents are boxes, calculate q to be the offset to add to make relative: 
    // if neither y nor z is relative, that's 0 (absolute addressing)
    // if z is relative and y is not, that's -z (convert absolute y to relative to z)
    // if z and y are both relative, it's y-z (convert y to absolute, then make relative to z)
    // y relative and z not is impossible
-   if(t&BOX){yv=AAV(y); q=ARELATIVE(y)*(I)y-zb*(I)z; DO(AN(y), *zv++=(A)((I)yv[i]+q););}  // yv->contents, copy each pointer
+// obsolete   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; DO(AN(y), *zv++=(A)((I)yv[i]+yrel););}  // yv->contents, copy each pointer
+   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // yv->contents, copy each pointer
    // For other (always nonrelative) contents, convert data if necessary, then copy it
    else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
  }}
+ // todo kludge should inherit nosmrel
  R z;
 }
 
-F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
+F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w); y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
  DO(n, y=WVR(i); r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
  GA(z,t,p*c,2,0); s=AS(z); *s=p; *(1+s)=c; 
  zv=CAV(z); ck=c*k;
@@ -361,7 +373,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t,wd;
 F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
  RZ(a&&w);
  an=AN(a); wn=AN(w);
- if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)&&!ARELATIVE(w)&&1==AR(w)&&1<wn&&an>10*wn){
+ if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)&&!ARELATIVEB(w)&&1==AR(w)&&1<wn&&an>10*wn){
   wv=AAV(w); y=*wv; r=AR(y); s=1+AS(y); n=B01&AT(a)?2:wn;
   for(i=m=t=0;b&&i<n;++i){
    y=wv[i]; b=r==AR(y)&&!(1<r&&ICMP(s,1+AS(y),r-1));

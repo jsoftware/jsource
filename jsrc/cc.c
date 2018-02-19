@@ -104,10 +104,10 @@ DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
 }    /* a ;@:(<;.0) vector */
 
 
-static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,ad,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
+static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  RZ(a&&w&&self);
  sv=VAV(self); q=*AV(sv->g);
- an=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a); ws=AS(w);
+ an=AN(a); av=AAV(a); RELBASEASGN(a,a); ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV(x,BOX,an,1,0); xv=AAV(x);
  GATV(y,BOX,an,1,0); yv=AAV(y);
@@ -234,8 +234,8 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   case 3: v+=yn-1; DO(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,d-p);} --v;);
  }
  yu=AV(yy); p=pfx?yu[m]:0;
- if(t&DENSE){C*wv;I c,k,r,*s,wd;
-  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); wd=(I)w*ARELATIVE(w);
+ if(t&DENSE){C*wv;I c,k,r,*s;
+  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); RELBASEASGNB(w,w);
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
   GATV(z,INT,m,1,0); zi=AV(z); 
@@ -354,7 +354,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* wd   1 iff w is relative              */
 
 static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
-     I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wd,wt,*zi,*zs;V*vf;VF ado;
+     I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
  p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
@@ -372,7 +372,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
  ASSERT(n==IC(a),EVLENGTH);
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); wd=(I)w*ARELATIVE(w);
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
   case 0: if(AT(a)&B01&&C1==sep)m=bsum(n,v); 
           else{--v;    DO(n, if(sep==*++v) ++m;                    ); v=CAV(a);}    break;

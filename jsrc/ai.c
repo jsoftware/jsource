@@ -48,7 +48,7 @@ static DF1(jtexpandf){A f; RZ(w&&self); f=VAV(self)->f; R expand(VAV(f)->f,w);}
 static DF1(jtexpandg){A f,g,z;V*v;
  RZ(w&&self);
  f=VAV(self)->f; v=VAV(f); g=v->g;
- jt->fill=VAV(g)->g; z=expand(v->f,w); jt->fill=0; 
+ jt->fill=VAV(g)->g; z=expand(v->f,w); jt->fill=0;   // elements of VAV cannot be virtual
  R z;
 }
 
@@ -65,11 +65,11 @@ static F2(jtdiag){I d,k,m,p,r,t,*v;
   ASSERT(0,EVNONCE);
 }}
 
-static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws,wd;
+static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  RZ(w);
  ASSERT(0,EVNONCE);
  ASSERT(BOX&AT(w),EVDOMAIN);
- wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); RELBASEASGN(w,w);
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),zero));
  GATV(x,INT,wr,1,0); u=AV(x); memset(u,C0,wr*SZI);

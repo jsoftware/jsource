@@ -30,7 +30,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  RZ(y=from(q,shape(w))); s=AV(y);
  b=0; DO(r-m, if(b=u[i+m]!=s[i+m])break;);
  c=0; DO(m,   if(c=u[i  ]!=s[i  ])break;);
- if(b){jt->fill=SPA(wp,e); x=irs2(vec(INT,r-m,m+u),SPA(wp,x),0L,1L,-1L,jttake); jt->fill=0; RZ(x);}
+ if(b){jt->fill=SPA(wp,e); x=irs2(vec(INT,r-m,m+u),SPA(wp,x),0L,1L,-1L,jttake); jt->fill=0; RZ(x);}  // fill cannot be virtual
  else x=SPA(wp,x);
  if(c){A j;C*xv,*yv;I d,i,*iv,*jv,k,n,t;
   d=0; t=AT(x); k=bp(t)*aii(x);
@@ -49,12 +49,14 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  EPILOG(z);
 }    /* take on sparse array w */
 
+// general take routine.  a is take values, w is array
 static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(t&SPARSE)R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});
  if(b||!AN(w))R tk0(b,a,w);
  k=bp(t); z=w; c=q=1;
+ // process take one axis at a time
  for(i=0;i<n;++i){
   c*=q; p=u[i]; q=ABS(p); m=s[i];  // q can be IMIN out of this
   if(q!=m){
@@ -66,8 +68,8 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
    DO(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
    b=1; z=y;
  }}
- if(!b)z=ca(w); 
- z=RELOCATE(w,z);
+ if(!b)z=ca(w);   // todo kludge no need to ca()
+ RELOCATE(w,z);   // if w was relative, rebase the cells on z
  EPILOG(z);
 }
 
@@ -92,12 +94,12 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  if(!((n-1)|wf|(SPARSE&wt))&&wcr){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
-  I tkasgn = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
+  I tkasign = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
   I nitems = ws[0];  // number of items of w
-  I tkabs = (tklen^tkasgn)-tkasgn;  // ABS(tklen)
+  I tkabs = (tklen^tkasign)-tkasign;  // ABS(tklen)
   if((UI)tkabs<=(UI)nitems) {  // if this is not an overtake...  (unsigned to handle overflow, if tklen=IMIN).  The expr is ABS(tklen)
     // calculate offset
-    I woffset = tkasgn&(tklen + nitems);   // x+#y if x neg, 0 if x pos
+    I woffset = tkasign&(tklen + nitems);   // x+#y if x neg, 0 if x pos
     // get length of a cell of w
     I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
     I offset = woffset * wcellsize;  // offset in bytes of the virtual data

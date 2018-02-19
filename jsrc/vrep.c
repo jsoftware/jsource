@@ -109,7 +109,7 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
    }
    if(r){B*c=(B*)iv; DO(r, if(c[i]){MC(zv,u+i*k,k); zv+=k;});}
  }}}
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
@@ -123,7 +123,7 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
  if(!zn)R z;
  RE(c=prod(wf,AS(w))); k=AN(w)/(c*m)*bp(AT(w));
  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;););
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #endif
 
@@ -206,7 +206,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  wv=CAV(w); zv=CAV(z);
  RE(c=prod(wf,ws)); k=AN(w)/(c*n)*bp(AT(w)); zk=p*k;
  DO(c*n, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;
 }    /* scalar #"r dense   or   dense #"0 dense */
 
 static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
@@ -250,7 +250,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  }}}else{A xx;      /* along dense  axis */
   j=0; DO(wcr, j+=!b[wf+i];);
   RZ(y=ca(y));
-  if(d){xx=jt->fill; jt->fill=e;}
+  if(d){xx=jt->fill; jt->fill=e;}  // e cannot be virtual
   x=irs2(AR(a)&&CMPX&AT(a)?a:d?jdot2(sc(c),sc(d)):sc(c),x,0L,1L,j,jtrepeat); 
   if(d)jt->fill=xx; 
   RZ(x);

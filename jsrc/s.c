@@ -350,9 +350,9 @@ L*jtsyrd(J jt,A a){A g;
 }
 
 
-static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,wd,*zv;L*v;
+static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){
@@ -484,7 +484,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
-   if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode
+   if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode   todo BUG: misses assignments after this block
    wn=AN(w); wr=AR(w); m=wn*bp(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);

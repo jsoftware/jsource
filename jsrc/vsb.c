@@ -408,10 +408,10 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  R z;
 }    /* each row of literal array w less the trailing "blanks" is a symbol */
 
-static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n,wd;SB*zv;
+static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
- m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ m=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
   x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
@@ -649,12 +649,12 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
 
 static F1(jtsbcheck){R sbcheck1(sc(jt->sbun),sc(jt->sbsn),jt->sbu,jt->sbs,jt->sbh,sc(ROOT),sc(FILLFACTOR),sc(GAP));}
 
-static F1(jtsbsetdata){A h,s,u,*wv,x;I wd;
+static F1(jtsbsetdata){A h,s,u,*wv,x;
  RZ(w);
  ASSERTD(BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(8==AN(w), "arg length");
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  RZ(sbcheck1(WVR(0),WVR(1),WVR(2),WVR(3),WVR(4),WVR(5),WVR(6),WVR(7)));
  jt->sbun=*AV(WVR(0));
  jt->sbsn=*AV(WVR(1));
@@ -674,13 +674,13 @@ static void resetdata(J jt){
  ras(jt->sbu); ras(jt->sbs); ras(jt->sbh); // prevent automatically freed by tpop()
 }    /* re-initialize global symbol table */
 
-static F1(jtsbsetdata2){A *wv;I c,i,sn,wd,offset=0;SBU*uv,*v;C*sv;
+static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  RZ(w);
  ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(!AN(w)||4<=AN(w), "arg length");
  if(!AN(w)){resetdata(jt); R one; }
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
  c=*AV(WVR(0));                         // cardinality
  if(1<AN(WVR(0)))offset=*(1+AV(WVR(0)));// offset
@@ -697,10 +697,10 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,wd,offset=0;SBU*uv,*v;C*sv;
  R one;
 }
 
-static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n,wd;B*zv;
+static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
- m=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ m=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  GATV(z,B01,m,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<m;++i){
   x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 

@@ -241,7 +241,7 @@ static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 
 #define FIND(exp)  while(m>(hj=hv[j])&&(exp)){++j; if(j==p)j=0;}
 // define ad and wd, which are bases to be added to boxed addresses
 // should use conditional statement
-#define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
+#define RDECL      RELBASEASGN(a,a); RELBASEASGN(w,w);
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
@@ -942,9 +942,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
-  printf("before BOXX");
   case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
-  printf("after BOXX");
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
@@ -955,9 +953,9 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
 // should scrap this and do a recursive hash on the entire box, and use the normal hash code.  would require managing -0 in the hash for float/complex
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
-static B jtusebs(J jt,A a,I ac,I m){A*av,x;I ad,t;
+static B jtusebs(J jt,A a,I ac,I m){A*av,x;I t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
- av=AAV(a); ad=(I)a*ARELATIVE(a);
+ av=AAV(a); RELBASEASGN(a,a);
  DO(ac*m, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
@@ -1028,13 +1026,13 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 // index by sorting a into order, then doing binary search on each item of w.
 // Used only when ct=0 and (boxed rank>1 or boxes contain numeric arrays)
 // 
-static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*zi,*zv;
+static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI); 
  if(mode==INUB||mode==INUBI){GATV(y,B01,m,1,0); yb=BAV(y);}
  md=w==mark?-1:mode<IPHOFFSET?mode:mode-IPHOFFSET;
- av=AAV(a); ad=(I)a*ARELATIVE(a); acn=ak/sizeof(A);
- wv=AAV(w); wd=(I)w*ARELATIVE(w); wcn=wk/sizeof(A);
+ av=AAV(a); RELBASEASGN(a,a); acn=ak/sizeof(A);
+ wv=AAV(w); RELBASEASGN(w,w); wcn=wk/sizeof(A);
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
  if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,ad,n,m,b,bk));
@@ -1066,9 +1064,9 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md
  R z;
 }    /* a i.!.0 w on boxed a,w by grading and binary search */
 
-static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
+static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
- m=AN(w)/c; wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ m=AN(w)/c; wv=AAV(w); RELBASEASGN(w,w);
  DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */

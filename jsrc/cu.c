@@ -22,25 +22,26 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 
 // u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
 // TODO: avoid boxing step for unboxed args
-A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;I wd;
+A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
  if(!(BOX&AT(w)))RZ(w=box0(w));
  GATV(z,BOX,AN(w),AR(w),AS(w));
- zv=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ zv=AAV(z); wv=AAV(w); RELBASEASGN(w,w);
  DO(AN(w), EVERYI(CALL1(f1,WVR(i),fs)););
  R z;
 }
 
-A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I ad,an,ar,*as,wd,wn,wr,*ws;
+A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr,*ws;
+// todo kludge should rewrite with single flag word
  RZ(a&&w); 
- an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a)); ad=(I)a*ARELATIVE(a);
- wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w)); wd=(I)w*ARELATIVE(w);
+ an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a)); // obsolete ad=(I)a*ARELATIVE(a);
+ wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w)); // obsolete wd=(I)w*ARELATIVE(w);
  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
  GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
- if(ar&&!ab)RZ(a=box0(a)); av=AAV(a);
- if(wr&&!wb)RZ(w=box0(w)); wv=AAV(w);
+ if(ar&&!ab)RZ(a=box0(a)); av=AAV(a); RELBASEASGN(a,a);
+ if(wr&&!wb)RZ(w=box0(w)); wv=AAV(w); RELBASEASGN(w,w);
  if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,AVR(i),      WVR(i),      fs))) 
  else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           WVR(i),      fs)));}
  else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,AVR(i),      w,           fs)));}

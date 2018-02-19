@@ -71,7 +71,7 @@ F1(jtevms){A t,*tv,*wv;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GAT(t,BOX,1+NEVM,1,0); tv=AAV(t); 
  *tv++=mtv;
- if(ARELATIVE(w))RZ(w=car(w));
+ if(ARELATIVEB(w))RZ(w=car(w));
  wv=AAV(w);
  DO(NEVM, RZ(*tv++=vs(*wv++)););
  ras(t); fa(jt->evm); jt->evm=t;
@@ -189,12 +189,12 @@ F1(jtsysparmq){I k;
   case 3:  R sc(jt->fcalli);
 }}
 
-F1(jtsysparms){A*wv;I k,m,wd;
+F1(jtsysparms){A*wv;I k,m;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  RE(k=i0(WVR(0)));
  switch(k){
   default: ASSERT(0,EVINDEX);

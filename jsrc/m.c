@@ -171,7 +171,7 @@ B jtspfree(J jt){I i;A p;
 
 static F1(jtspfor1){
  RZ(w);
- if(BOX&AT(w)){A*wv=AAV(w);I wd=(I)w*ARELATIVE(w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
+ if(BOX&AT(w)){A*wv=AAV(w);RELBASEASGN(w,w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(1e9>AC(w)||AFSMM&AFLAG(w)) {
 #if 0 // wrong?
@@ -201,9 +201,9 @@ static F1(jtspfor1){
  R mtm;
 }
 
-F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
+F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
@@ -217,9 +217,9 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n,wd;
  R z;
 }    /* 7!:5 space for named object; w is <'name' */
 
-F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,wd,*yv;L*u;
+F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); v=&jt->spfor;
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w); v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
@@ -483,7 +483,8 @@ RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
  I t=AT(w);  // type of input
  I tal=bp(t);  // length of an atom of t
  RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
- AFLAG(z)=AFVIRTUAL | (AFLAG(w)&AFNOSMREL); AC(z)=ACUC1; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
+ AFLAG(z)=AFVIRTUAL + (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA+AFSMM+AFREL)?AFREL:0);
+ AC(z)=ACUC1; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed
  if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
  ABACK(z)=w;   // set the pointer to the base: w or its base
@@ -491,7 +492,7 @@ RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
 }    /* allocate header */ 
 
 
-// realize a virtual block
+// realize a virtual block (error if not virtual)
 // allocate a new block, copy the data to it.  result is address of new block; can be 0 if allocation failure
 // only non-sparse nouns can be virtual
 // If the input is not virtual, just return it
@@ -502,9 +503,10 @@ A jtrealize(J jt, A w){A z; I t;
  GA(z,t,AN(w),AR(w),AS(w));
  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL.
  // new block is not VIRTUAL, not RECURSIBLE
- AFLAG(z) = (AFLAG(w)&AFNOSMREL) + (!!(AFLAG(w)&AFNJA+AFSMM+AFREL)<<AFRELX);
-// copy the contents
- MC(AV(z),AV(w),AN(w)*bp(t)); 
+ AFLAG(z) = (AFLAG(w)&AFNOSMREL);
+// copy the contents.  If the block is boxed relative, relocate it
+ if(!ARELATIVE(w)){MC(AV(z),AV(w),AN(w)*bp(t));
+ }else { AFLAG(z) |= AFREL; I rel = (I)ABACK(w)-(I)z; A * RESTRICT wa=AAV(w), * RESTRICT za=AAV(z); RELOCOPY(za,wa,AN(w),rel); }
  R z;
 }
 
@@ -604,7 +606,6 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 #endif
    }
    if(np){
-if(AFLAG(np)&AFVIRTUAL)*(I*)0=0; // scaf debug
     ra(np);  // increment the box, possibly turning it to recursive
     if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
    }
@@ -659,12 +660,13 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
 
 // Push wd onto the pop stack, and its descendants, possibly recurring on the descendants
 // Result is new value of jt->tnextpushx, or 0 if error
+// Note: wd CANNOT be virtual
 I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = ARELATIVEB(wd)?RELORIGINNULL(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
    A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
@@ -677,7 +679,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
      // pushx has crossed the block boundary.  Allocate a new block.
      RZ(tstack=tg(pushx)); pushx+=SZI;   // If error, abort with values set; if not, step pushx over the chain field
     } // if the buffer ran out, allocate another, save its address
-    if((tp^flg)&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // recur, and restore stack pointers after recursion
+    if((tp^flg)&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // if NOT recursive usecount, recur, and restore stack pointers after recursion
    }
   }
 
@@ -969,14 +971,14 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  R z;
 }    /* allocate header */ 
 
-// clone w, returning the address of the cloned area
+// clone w, returning the address of the cloned area.  If w is boxed relative it must be RELOCATED later
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
  else{GA(z,t,AN(w),AR(w),AS(w));}
  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL
- AFLAG(z) = (AFLAG(w)&AFNOSMREL) + (!!(AFLAG(w)&AFNJA+AFSMM+AFREL)<<AFRELX);
+ AFLAG(z) = (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA+AFSMM+AFREL)?AFREL:0);
  if(t&SPARSE){
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));
@@ -988,14 +990,14 @@ F1(jtca){A z;I t;P*wp,*zp;
 }
 
 // clone recursive.  The result is not relative, even if w is
-F1(jtcar){A*u,*wv,z;I n,wd;P*p;V*v;
+F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  RZ(z=ca(w));
  AFLAG(z) &= ~AFREL; // if w was rel/smm/nja, ca() marks the result REL.  Undo that
  n=AN(w);
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;
   case XNUMX:
-  case BOXX:  u=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(n, RZ(*u++=car(WVR(i)));); break;
+  case BOXX:  u=AAV(z); wv=AAV(w); RELBASEASGN(w,w); DO(n, RZ(*u++=car(WVR(i)));); break;
   case SB01X: case SLITX: case SINTX: case SFLX: case SCMPXX: case SBOXX:
    p=PAV(z); 
    SPB(p,a,car(SPA(p,a)));

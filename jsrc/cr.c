@@ -24,8 +24,9 @@ I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 // the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
 // if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
 // nonrecursive
-#define MOVEYA  {if(UCISRECUR(ya)){fa(*(A*)uu); AFLAG(ya)&=~RECURSIBLE;} MC(uu,u,ak); if(state&STATEAREL)RZ(ya=relocate((I)a-(I)ya,ya)); u+=ak;}
-#define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL)RZ(yw=relocate((I)w-(I)yw,yw)); v+=wk;}
+// todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
+#define MOVEYA  {if(UCISRECUR(ya)){fa(*(A*)uu); AFLAG(ya)&=~RECURSIBLE;} MC(uu,u,ak); if(state&STATEAREL){RELORIGIN(aorg,a); RZ(ya=relocate(aorg-(I)ya,ya));} u+=ak;}
+#define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
 
 #define EMSK(x) (1<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
@@ -144,7 +145,8 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
  I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
- wr=AR(w); ws=AS(w); rr=efr(wr,rr); wf=wr-rr; if(ARELATIVE(w))state|=STATEWREL;
+ wr=AR(w); ws=AS(w); rr=efr(wr,rr); wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
+// obsolete if(ARELATIVE(w))state|=STATEWREL;
  if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
 
@@ -201,7 +203,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
       // process according to state
       if(state&STATENORM){
        // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
-       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape
+       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)||ARELATIVE(y)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
        else{
         // Normal path.  
         MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
@@ -251,7 +253,9 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
         zv = (C*)x;
         state^=(STATEERR0|STATEERR);  // advance to STATEERR
        }
-       // Here for all errors, including the first after it has cleaned up the mess, and for boxed/sparse result the very first time with no mess
+       // Here for all errors, including the first after it has cleaned up the mess, and for sparse result the very first time with no mess
+       // we are incorporating y into the boxed z, so we have to mark it as such (and possibly reallocate it)
+       INCORP(y);
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
 
@@ -291,8 +295,10 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#total frame (inner+outer), for each argument
  // if inner rank is > outer rank, set it equal to outer rank
  I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
- ar=AR(a); as=AS(a); lr=efr(ar,lr); lcr=efr(ar,lcr); if(lr>lcr)lr=lcr; af=ar-lr; if(ARELATIVE(a))state|=STATEAREL;
- wr=AR(w); ws=AS(w); rr=efr(wr,rr); rcr=efr(wr,rcr); if(rr>rcr)rr=rcr; wf=wr-rr; if(ARELATIVE(w))state|=STATEWREL;
+ ar=AR(a); as=AS(a); lr=efr(ar,lr); lcr=efr(ar,lcr); if(lr>lcr)lr=lcr; af=ar-lr; state |= STATEAREL&~ARELATIVES(a);   // relies on STATEAREL>BOX
+// obsolete if(ARELATIVE(a))state|=STATEAREL;
+ wr=AR(w); ws=AS(w); rr=efr(wr,rr); rcr=efr(wr,rcr); if(rr>rcr)rr=rcr; wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
+// obsolete if(ARELATIVE(w))state|=STATEWREL;
  if(!af&&!wf){R CALL2(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
 
@@ -406,9 +412,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
       // process according to state
       if(state&STATENORM){
        // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
-       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape
+       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)||ARELATIVE(y)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
        else{
-        // Normal path.  
+        // Normal path.
         MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
           // If the result-cells are pointers to boxes, we are adding a nonrecursive reference, which does not require any adjustment to usecounts.
           // If we anticipate making the result recursive, we will have to increment the usecount and also worry about backing out errors and wrecks.
@@ -418,8 +424,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
 
       if(state&STATEFIRST){I *is, zn;
        // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
-       // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
-       // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
+       // we have to go through the box/unbox drill, because the blocks coming out will have different relocations that must be preserved.
+       //  In that case, we switch this allocation to be a single box per result-cell.
+       //  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
        if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
@@ -445,7 +452,6 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
        if(state&STATEERR0){
         // We had a wreck.  Either the first cell was not direct/boxed, or there was a change of type.  We cope by boxing
         // each individual result, so that we can open them at the end to produce a single result (which might fail when opened)
-        // It would be nice if boxed results didn't go through this path
         // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
         // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
         C *zv1=CAV(z);   // pointer to cell data
@@ -459,7 +465,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
         zv = (C*)x;
         state^=(STATEERR0|STATEERR);  // advance to STATEERR
        }
-       // Here for all errors, including the first after it has cleaned up the mess, and for boxed/sparse result the very first time with no mess
+       // Here for all errors, including the first after it has cleaned up the mess, and for sparse result the very first time with no mess
+       // we are incorporating y into the boxed z, so we have to mark it as such (and possibly reallocate it)
+       INCORP(y);
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
      }

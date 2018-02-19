@@ -569,8 +569,8 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  }else{
   // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
   b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-  jt->rela=ARELATIVE(a)*(I)a;   // set flags indicating 'indirect datatype' for use during compare
-  jt->relw=ARELATIVE(w)*(I)w;
+  {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
+  {RELORIGINBR(wrel,w); jt->relw=wrel;}
   switch(id){
     // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
    case CEQ: *ado=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:

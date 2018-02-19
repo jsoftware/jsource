@@ -50,7 +50,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
   default: if(it&B01)DO(c,         MC(zc,wc+k*(*b++?i+c:i),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;
 }
 
 #define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=bv[i]?yv[i]:xv[i];); R z;}
@@ -138,10 +138,11 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
 
  if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
- else{RZ(z=cvt(t,w)); RZ(z=RELOCATE(w,z));}
- if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I ad,*tv;
-  // in-placeable boxed memory-mapped array
-  ad=(I)a*ARELATIVE(a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
+ // after this, z cannot be virtual
+ else{RZ(z=cvt(t,w)); RELOCATE(w,z);}
+ if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I *tv;
+  // in-placeable boxed memory-mapped array (therefore not virtual)
+  RELBASEASGN(a,a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
   GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);   // allocate an array of pointers, one per item of x; clear to 0
   DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);   // copy the items of x (repeated as needed) into the smm area of result
   if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
@@ -150,7 +151,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
-   // z is relative.  It may still be in-place, and therefore may have recursive usecount
+   // z is relative.  It may still be in-place, and therefore may have recursive usecount; but never virtual (which are never in-place)
    if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ras(new); zv[iv[i]]=(A)AREL(new,z););  // this ras() can never encounter a virtual block
    }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
   }
@@ -177,7 +178,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  R z;
 }
 
-A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
+A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
  wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);
  if(!wr)R from(ind,zero);
  if(b&&AR(ind)){
@@ -196,7 +197,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,id,n,r,*s,*u,wr,*ws;
   ind=AAV0(ind); n=AN(ind); r=AR(ind);
   ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);
   if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));
-  v=AAV(ind); id=(I)ind*ARELATIVE(ind);
+  v=AAV(ind); RELBASEASGN(i,ind);
   ASSERT(1>=r,EVINDEX);
   ASSERT(n<=wr,EVINDEX);
   d=n; DO(n, --d; if(!equ(ace,AADR(id,v[d])))break;); if(n)++d; n=d;
@@ -264,9 +265,9 @@ static DF2(amccv2){F2PREFIP;DECLF;
 static DF1(mergn1){       R merge1(w,VAV(self)->f);}
 static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
-static B ger(A w){A*wv,x;I wd;
+static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  DO(AN(w), x=WVR(i); if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
@@ -283,13 +284,13 @@ static B gerar(J jt, A w){A x; C c;
    UC p = spellin(n,stg);
    R p>=128||ds(p);  // return if valid primitive (all pseudochars are valid primitives, but 0: is not in pst[])
   }
- } else if(AT(w)&BOX) {A *wv;I wd,bmin=0,bmax=0;
+ } else if(AT(w)&BOX) {A *wv;I bmin=0,bmax=0;
   // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
   // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
   if(!(n==2))R 0;  // verify 2 boxes
-  wv = AAV(w); wd = (I)w*ARELATIVE(w); x=WVR(0); // point to pointers to boxes; point to first box contents
+  wv = AAV(w); RELBASEASGN(w,w); x=WVR(0); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
    c = CAV(x)[0];   // fetch that character
@@ -308,11 +309,10 @@ static B gerar(J jt, A w){A x; C c;
  R 1;
 }
 
-B jtgerexact(J jt, A w){
- A*wv; I wd;
+B jtgerexact(J jt, A w){A*wv;
  if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
  if(!(AN(w)))R 0;   // verify there are boxes
- wv = AAV(w); wd = (I)w*ARELATIVE(w);  // point to pointers to contents
+ wv = AAV(w); RELBASEASGN(w,w);  // point to pointers to contents
  DO(AN(w), if(!(gerar(jt, WVR(i))))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */

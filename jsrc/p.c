@@ -137,27 +137,27 @@ PT cases[] = {
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
 // Initial call has nonrecurok and virtok both set
-static void auditblock(A wd, I nonrecurok, I virtok) {
- if(!wd)R;
- I nonrecur = (AT(wd)&RECURSIBLE) && ((AT(wd)^AFLAG(wd))&RECURSIBLE);  // recursible type, but not marked recursive
- I virt = (AFLAG(wd)&AFVIRTUAL)!=0;  // any virtual
+static void auditblock(A w, I nonrecurok, I virtok) {
+ if(!w)R;
+ I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
+ I virt = (AFLAG(w)&AFVIRTUAL)!=0;  // any virtual
  if(nonrecur&&!nonrecurok)*(I*)0=0;
  if(virt&&!virtok)*(I*)0=0;
- switch(CTTZ(AT(wd))){
+ switch(CTTZ(AT(w))){
   case RATX:  
-   {A*v=AAV(wd); DO(2*AN(wd), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+   {A*v=AAV(w); DO(2*AN(w), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
   case XNUMX:
-   {A*v=AAV(wd); DO(AN(wd), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+   {A*v=AAV(w); DO(AN(w), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
   case BOXX:
-   if(!(AFLAG(wd)&AFNJA+AFSMM)){A*wv=AAV(wd);
-    if(AFLAG(wd)&AFREL){DO(AN(wd), auditblock(WVR(i),nonrecur,0););}
-    else{DO(AN(wd), auditblock(wv[i],nonrecur,0););}
+   if(!(AFLAG(w)&AFNJA+AFSMM)){A*wv=AAV(w); RELBASEASGN(w,w);
+    if(AFLAG(w)&AFREL){DO(AN(w), auditblock(WVR(i),nonrecur,0););}
+    else{DO(AN(w), auditblock(wv[i],nonrecur,0););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(wd); auditblock(v->f,nonrecur,0); auditblock(v->g,nonrecur,0); auditblock(v->h,nonrecur,0);} break;
+   {V*v=VAV(w); auditblock(v->f,nonrecur,0); auditblock(v->g,nonrecur,0); auditblock(v->h,nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-   {P*v=PAV(wd); auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
+   {P*v=PAV(w); auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
  }
 }
 #endif

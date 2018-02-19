@@ -93,11 +93,11 @@ A jtstfind(J jt,B b,I n,C*u){I old;L*v;
   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
 }}   /* find the symbol table for locale u, create if b and non-existent */
 
-static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n,wd;
+static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  for(i=0;i<n;++i){
   y=WVR(i); m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
@@ -114,9 +114,9 @@ static I jtprobenum(J jt,C*u){I j;
 }    /* probe for numbered locales */
 
 
-F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,wd,*zv;
+F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  for(i=0;i<n;++i){
   y=WVR(i); m=AN(y); u=CAV(y); c=*u; 
@@ -151,9 +151,9 @@ F2(jtlocnl2){UC*u;
  R locnlx(w); 
 }    /* 18!:1 locale name list */
 
-static A jtlocale(J jt,B b,A w){A g,*wv,y;I wd;
+static A jtlocale(J jt,B b,A w){A g,*wv,y;
  RZ(vlocnl(1,w));
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  DO(AN(w), y=WVR(i); if(!(g=stfind(b,AN(y),CAV(y))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none */
@@ -243,9 +243,9 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
-F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv,wd;L*v;
+F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv;L*v;
  RZ(vlocnl(1,w));
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){

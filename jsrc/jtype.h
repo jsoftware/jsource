@@ -351,17 +351,56 @@ typedef I SI;
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 
-#define AABS(rel,k)     ((I)(rel)+(I)(k))   /* absolute address from relative address */
+// convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
+#define AABS(rel,k)     ((I)(rel)+(I)(k))
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
-#define ARELATIVE(w)    (AFLAG(w)&AFNJA+AFSMM+AFREL&&AT(w)&BOX)
+#define ARELATIVEB(w)   ((AFLAG(w)&AFNJA+AFSMM+AFREL)!=0)  // test if we know w is boxed - may be used in branches or computation
+// obsolete #define ARELATIVE(w)    (ARELATIVEB(w)&&AT(w)&BOX)   // test if we don't, branchless and returning the value in bit BOXX
+#define ARELATIVES(w)   ((AT(w)|(~BOX))+(AFLAG(w)&(AFNJA+AFSMM+AFREL)))  // test for relative, leave in sign bit (sign is 0 if RELATIVE)
+                               // the test uses the fact that AF* is less than BOX
+#define ARELATIVESB(w)   ((AFLAG(w)&(AFNJA+AFSMM+AFREL))-1)  // test for relative, leave in sign bit (sign is 0 if RELATIVE) - if known boxed
+#define ARELATIVE(w)    (ARELATIVES(w) >= 0)   // test if we don't, branchless
+#define AORWRELATIVE(a,w) ((ARELATIVES(a)&ARELATIVES(w))>=0)  // true if EITHER has sign 0
+#define AORWRELATIVEB(a,w) (((AFLAG(a)|AFLAG(w))&AFNJA+AFSMM+AFREL)!=0)  // same test, but this time known to be boxed.  branches or computation
 #define AADR(w,z)       (A)((I)(w)+(I)(z))   // was ((w)?(A)((I)(w)+(I)(z)):(z))
+// get the base to add to relative refs.  It's the origin of this block unless this block is virtual: then the origin of the backing block
+// here the block is known (or assumed) to be relative and boxed.  asgn is an I name we declare and use for assignment.  Result is I
+// obsolete #define RELORIGIN(asgn,w)    ((I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w))
+#define RELORIGIN(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w);
+// here we know the block is boxed, but its relative status is unknown
+// obsolete #define RELORIGINB(w)   (RELORIGIN(w) & (AFLAG(w)&AFNJA+AFSMM+AFREL?~0:0))
+#define RELORIGINB(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(AFLAG(w)&AFNJA+AFSMM+AFREL?asgn:0);
+// here the block is unknown
+// obsolete #define RELORIGINBR(w)  (ARELATIVE(w)?RELORIGIN(w):0)
+#define RELORIGINBR(asgn,w)   I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(ARELATIVE(w)?asgn:0);
+// use this to indicate the relocation factor for a non-virtual, non-relative block
+#define RELORIGINNULL(w) ((I)(w))
+
+// set up the relative base-offset ad,id... lett is a,i... as a reminder that the suffix must be d.  w is the block.  The result is germane
+// only if boxed, but we don't test for boxing here
+// obsolete #define RELBASEASGN(lett,w) {lett##d = RELORIGIN(w); lett##d = (AFLAG(w)&(AFNJA+AFSMM+AFREL))?lett##d:0;}
+#define RELBASEASGN(lett,w) RELORIGINB(lett##d,w)
+// same, but include the test for boxing
+// obsolete #define RELBASEASGNB(lett,w) {lett##d = RELORIGIN(w); lett##d = (AT(w)&BOX)?lett##d:0; lett##d = (AFLAG(w)&(AFNJA+AFSMM+AFREL))?lett##d:0;}
+#define RELBASEASGNB(lett,w) RELORIGINBR(lett##d,w)
 #define AVR(i)          AADR(ad,av[i])
 #define IVR(i)          AADR(id,iv[i])
 #define WVR(i)          AADR(wd,wv[i])
 #define YVR(i)          AADR(yd,yv[i])
-#define AAV0(w)         (ARELATIVE(w)?(A)(*AV(w)+(I)(w)):*AAV(w))
-#define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
-
+// obsolete #define AAV0(w)         (ARELATIVE(w)?(A)(*AV(w)+(I)(w)):*AAV(w))
+#define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA+AFSMM+AFREL?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
+// if w is relative, relocate the contents of z from w to z.  We must have moved the contents of w into output block z without relocating, and now we are fixing it up
+// z must be known to be relative and nonvirtual.  This has no result.  z is never disturbed.
+// obsolete #define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
+#define RELOCATE(w,z)   if(ARELATIVE(w)){RELORIGIN(wrel,w); relocate(wrel-(I)(z),(z));}
+// copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
+#define RELOCOPY(to,from,n,offset) DO(n, to[i]=(A)((I)from[i]+offset);)
+// same, but use an incrementing pointer for to
+#define RELOCOPYT(to,from,n,offset) DO(n, *to++ =(A)((I)from[i]+offset);)
+// same, but use an incrementing pointer for from
+#define RELOCOPYF(to,from,n,offset) DO(n, to[i]=(A)((I)*from++ +offset);)
+// same, but use an incrementing pointer for to and from
+#define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)((I)*from++ +offset);)
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;
 

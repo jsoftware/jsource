@@ -1052,7 +1052,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  R 1;
 }
 
-F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wd,wr,*ws,wt;
+F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  RZ(a&&w);
  if(!jt->cdarg)RZ(cdinit());
  if(1<AR(a))R rank2ex(a,w,0L,1L,1L,1L,1L,jtcd);
@@ -1068,7 +1068,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wd,wr,*ws,wt;
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w)); 
  }
- wv=CAV(w); zv=CAV(z); k=bp(wt); wd=(I)w*ARELATIVE(w);
+ wv=CAV(w); zv=CAV(z); k=bp(wt); RELBASEASGNB(w,w);
  if(1==m)RZ(cdexec1(cc,zv,wv,k,wt,wd))
  else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(cdexec1(cc,zv,wv,k,wt,wd)); wv+=p; zv+=q;);}
  R z;

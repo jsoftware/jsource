@@ -28,7 +28,7 @@ static DF2(jtfitpoly2){
  R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),VAV(self)->g,slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
-static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; R z;}
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; R z;}  // gs cannot be virtual
 static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; R z;}
 
 static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;

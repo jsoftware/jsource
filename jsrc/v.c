@@ -23,7 +23,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
   }
   // Not inplaceable.  Allocate and copy
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n*bp(wt)); z=RELOCATE(w,z); RZ(z); INHERITNOREL(z,w); R z; // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),n*bp(wt)); RELOCATE(w,z); INHERITNOREL(z,w); R z; // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
@@ -55,7 +55,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
  MC(AV(z),AV(w),AN(w)*bp(wt));
- z=RELOCATE(w,z); RZ(z); INHERITNOREL(z,w); R z;
+ RELOCATE(w,z); INHERITNOREL(z,w); R z;
 }
 
 // ] [ and ]"n ["n, dyadic

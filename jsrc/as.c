@@ -206,11 +206,11 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  R z;
 }    /* same as ssg but for uniform function f */
 
-static DF1(jtssg){A fs,q,y,z,*zv;AF f2;B p;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self);
+static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self);
  if(jt->rank&&jt->rank[1]<AR(w))R rank1ex(w,self,jt->rank[1],jtssg);
  jt->rank=0; 
  fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
- n=IC(w); p=ARELATIVE(w);
+ n=IC(w); RELORIGINBR(wrel,w)
  if(DIRECT&AT(w)){RE(z=ssgu(w,self)); if(z)R z;}
  GATV(z,BOX,n,1,0); zv=n+AAV(z); 
  RZ(*--zv=q=tail(w)); yt=AT(q); yn=AN(q); yr=AR(q); ys=1+AS(w);
@@ -218,7 +218,8 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;B p;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(
  for(i=1;i<n;++i){
   v-=k;
   GA(y,yt,yn,yr,ys); u=CAV(y); 
-  if(p){A1*wv=(A1*)v,*yv=(A1*)u;I d=(I)w-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k);
+// obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u;I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k);
+  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u;I d=wrel-RELORIGINNULL(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k);
   RZ(*--zv=q=CALL2(f2,y,q,fs));
  }
  R ope(z);

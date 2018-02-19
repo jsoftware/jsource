@@ -447,8 +447,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
 // Mark a name as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
-// If a block is virtual, it must be realized before it can be incorporated
-#define INCORP(z)       {realizeifvirtual(z); (AC(z)&=~ACINPLACE);}  // z is an assignable name
+// If a block is virtual, it must be realized before it can be incorporated.  realized blocks are always noninplaceable
+#define INCORP(z)       {if(!(AFLAG(z)&AFVIRTUAL))(AC(z)&=~ACINPLACE); else RZ((z)=realize(z));}
 // same, but for nonassignable argument
 #define INCORPNA(z)     incorp(z)
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,

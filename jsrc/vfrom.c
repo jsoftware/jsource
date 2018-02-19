@@ -6,10 +6,10 @@
 #include "j.h"
 
 
-F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u,wd;
+F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  DO(n, x=WVR(i); if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
  RE(t=maxtype(B01,t)); k=bp(t);
  GA(b,t,n,1,0);      bv=CAV(b);
@@ -90,7 +90,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
     if(1==an){wv+=k*j; DO(m,                     x=(S*)zv; u=(S*) wv;      DO(q, *x++=*u++;); zv+=k;   wv+=wk;);}
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
  }}
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -203,7 +203,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
    else DO(m, b=av; DO(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;  // todo kludge should inherit norel
 }    /* a{"r w for boolean a */
 
 A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
@@ -233,11 +233,11 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  R z;
 }    /* (<"1 a){"r w, dense w, integer array a */
 
-B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I ad,an,ar,c,j,k,t,*u,*v,*ws;
+B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  RZ(a&&w);
  an=AN(a); *ind=0;
  if(!an)R 0;
- ws=wf+AS(w); ar=AR(a); av=AAV(a); ad=(I)a*ARELATIVE(a); q=AVR(0); c=AN(q);
+ ws=wf+AS(w); ar=AR(a); av=AAV(a); RELBASEASGN(a,a); q=AVR(0); c=AN(q);
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
  GATV(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
@@ -304,7 +304,7 @@ static A jtafi(J jt,I n,A w){A x;
  R AN(x)?less(IX(n),pind(n,x)):ace; 
 }
 
-static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
+static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
@@ -313,7 +313,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
       df2(rank1ex(a,0L,acr,jtbox),rank1ex(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
- c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); cd=(I)c*ARELATIVE(c); 
+ c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); RELBASEASGNB(c,c);  // B prob not reqd 
  k=bp(AT(w)); s=AS(w)+wr-r;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=r,EVLENGTH);
@@ -335,8 +335,8 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,cd,i=
   else if(p!=ace)   {b=0; y=irs2(p,y,0L,AR(p),r-i,jtifrom);}
   else if(q!=ace)   {b=0; y=irs2(q,y,0L,AR(q),r-j,jtifrom);}
   p=0;
- }
- RE(y); if(b){RZ(y=ca(x=y)); RZ(y=RELOCATE(x,y));} EPILOG(y);
+ }  // todo kludge should remove b and ca() which seems to be used only if out=in
+ RE(y); if(b){RZ(y=ca(x=y)); RELOCATE(x,y);} EPILOG(y);    // todo kludge should inherit norel
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;
@@ -371,19 +371,19 @@ static F2(jtquicksel){I index;
  R AAV(w)[index];  // select the box
 }
 
-F2(jtfetch){A*av, z;I ad,n;
+F2(jtfetch){A*av, z;I n;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVE(w)){
+  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVEB(w)){
    RZ(z=jtquicksel(jt,a,w));
    if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
- n=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
+ n=AN(a); av=AAV(a); RELBASEASGN(a,a);
  if(!n)R w; z=w;
- DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVE(z)){RZ(z=jtquicksel(jt,next,z))}
+ DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVEB(z)){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
  if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable

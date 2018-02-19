@@ -198,7 +198,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
    // u^:n.  Check for special types.
    if(BOX&AT(w)){A x,y;AF f1,f2;
     // Boxed v.  It could be <n or [v0`]v1`v2.
-    if(ARELATIVE(w))RZ(w=car(w));   // if relative, make a non-relative copy
+    if(ARELATIVEB(w))RZ(w=car(w));   // if relative, make a non-relative copy
     if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
      // here for <n or <''.  That will be handled by special code.
      f1=jtpowseq; f2=jtply2; v=VAV(a);

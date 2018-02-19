@@ -190,18 +190,18 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
+static DF1(jtredg){PROLOG(0020);DECLF;A y,z;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
- n=IC(w); p=ARELATIVE(w);  // n=#items of cell, p=REL flag
+ n=IC(w); RELORIGINBR(wrel,w);  // n=#items of cell, w = relocation offset for w (0 if non-relative)
  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
  // z will hold the result from the iterations.  Init to value of last cell
  // yt=type, yn=#atoms, yr=rank, ys->shape of input cell
- // Since there are multiple cells, z mst be in a new block and therefore inplaceable
+ // Since there are multiple cells, z will be in a virtual block
  RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
  // k=length of input cell in bytes, v->last cell data
  k=yn*bp(yt); v=CAV(w)+k*(n-1);
@@ -210,7 +210,8 @@ static DF1(jtredg){PROLOG(0020);DECLF;A y,z;B p;C*u,*v;I i,k,n,old,r,wr,yn,yr,*y
   v-=k;    // v-> next item to apply
   GA(y,yt,yn,yr,ys); u=CAV(y);   // allocate block for item, u->data area
   // copy the item into the allocated block, preserving relative status
-  if(p){A1*wv=(A1*)v,*yv=(A1*)u;I d=(I)w-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
+// obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u; I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
+  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u; I d=wrel-RELORIGINNULL(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k); 
   RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
   gc(z,old);   // free the buffers we allocated, except for the result
  }
@@ -551,7 +552,7 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
  if(SPARSE&AT(w))R redcatsp(w,z,r);
  MC(AV(z),AV(w),AN(w)*bp(AT(w)));
- R RELOCATE(w,z);
+ RELOCATE(w,z); R z;
 }    /* ,/"r w */
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
@@ -582,16 +583,16 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
   R y;
 }}   /* ,./"r w */
 
-static DF1(jtredstiteach){A*wv,y;I n,p,r,t,wd;
+static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
  RZ(w);
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
- wv=AAV(w); wd=(I)w*ARELATIVE(w); y=WVR(0); p=IC(y); t=AT(y);
+ wv=AAV(w); RELBASEASGN(w,w); y=WVR(0); p=IC(y); t=AT(y);
  DO(n, y=WVR(i); r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
  R box(razeh(w));
 }    /* ,.&.>/ w */
 
-static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;I n1=0,n2=0;
+static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0,n2=0;
  RZ(w);
  wr=AR(w); ws=AS(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  n=r?ws[f]:1;
@@ -602,7 +603,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wd,wr,*ws,zm,zn;I n
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
  GATV(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
- zv=AAV(z); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ zv=AAV(z); wv=AAV(w); RELBASEASGN(w,w);
  DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); RZ(*zv++=raze(x));); wv+=mn;);
  R z;
 }    /* ,&.>/"r w */

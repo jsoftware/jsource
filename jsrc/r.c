@@ -73,12 +73,12 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
 
 // Convert an AR to an A block.  w is a gerund that has been opened
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value
-DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
+DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,yd;
  RZ(w);
  // if string, handle that special case (verb/primitive)
  if(LIT&AT(w))R fxchar(w);
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
- m=AN(w); wd=(I)w*ARELATIVE(w);  // m=#atoms, wd=relative offset (if any), used by WVR/AADR macro
+ m=AN(w); RELBASEASGN(w,w);  // m=#atoms, wd=relative offset (if any), used by WVR/AADR macro
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==m||2==m,EVLENGTH);
@@ -88,7 +88,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0,wd,yd;
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
-  y=WVR(1); n=AN(y); yv=AAV(y); yd=(I)y*ARELATIVE(y);
+  y=WVR(1); n=AN(y); yv=AAV(y); RELBASEASGN(ty,y); yd=tyd;  // yd is needed outside this block.  We never look at it unless m>1
   if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);

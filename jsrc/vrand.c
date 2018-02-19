@@ -534,12 +534,12 @@ static B jtrngstates1(J jt,I j,I n,UI**vv,I i,I k,A x,B p){D*u;UI*xv;
  R 1;
 }
 
-F1(jtrngstates){A*wv;I k,wd;UI**vv=jt->rngV;
+F1(jtrngstates){A*wv;I k;UI**vv=jt->rngV;
  RZ(w);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(2<=AN(w),EVLENGTH);
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  RZ(rngselects(WVR(0)));  /* changes jt->rng */
  ASSERT(AN(w)==(jt->rng?3:9),EVLENGTH);
  switch(jt->rng){

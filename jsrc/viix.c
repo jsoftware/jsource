@@ -104,6 +104,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
    if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
  }}
  jt->complt=-1; jt->compgt=1; cc=0; uu=CAV(a); vv=CAV(a)+bp(at)*c*(n-1);
+ // first decide if the input array is ascending or descending  todo kludge just compare first to last
  switch(CTTZ(at)){
   default:   ASSERT(0,EVNONCE);
   case B01X:  COMPVLOOP(B, c);           break;
@@ -117,8 +118,8 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
-   av=AAV(a); ad=(I)a*ARELATIVE(a); 
-   wv=AAV(w); wd=(I)w*ARELATIVE(w); 
+   av=AAV(a); RELBASEASGN(ta,a); ad=tad; 
+   wv=AAV(w); RELBASEASGN(tw,w); wd=twd;  // ad, wd needed below
    DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
  }
  ge=cc; gt=-ge;

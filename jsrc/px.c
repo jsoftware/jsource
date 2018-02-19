@@ -50,9 +50,9 @@ F1(jtimmea){A t,z;
 static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
      /* conditional execute */
 
-F1(jtexg){A*v,*wv,x,y,z;I n,wd;
+F1(jtexg){A*v,*wv,x,y,z;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  ASSERT(n,EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
  if(VERB&AT(w))R w;

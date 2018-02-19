@@ -274,11 +274,11 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  R z;
 }
 
-F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*v;
+F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  RZ(a=w);
  ASSERT(1==AR(a),EVRANK);
  ASSERT(BOX&AT(a),EVDOMAIN);
- an=AN(a); av=AAV(a); ad=(I)a*ARELATIVE(a);
+ an=AN(a); av=AAV(a); RELBASEASGN(a,a);
  ASSERT(2<=an&&an<=4,EVLENGTH);
  RE(f=i0(AVR(0)));
  ASSERT(0<=f&&f<=5,EVINDEX);
@@ -308,10 +308,10 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I ad,an,c,e,f,ijrd[4],k,p,q,*sv,*
  R z;
 }    /* check left argument of x;:y */
 
-static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I ad,c,f,*ijrd,k,md,n,p,q,*v;
+static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,p,q,*v;
  RZ(a&&w);
  if(chka)RZ(a=fsmvfya(a)); 
- av=AAV(a); ad=(I)a*ARELATIVE(a);
+ av=AAV(a); RELBASEASGN(a,a);
  f=i0(AVR(0)); s=AVR(1); m=AVR(2); ijrd=AV(AVR(3));
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT(0<=ijrd[0]&&ijrd[0]<n,EVINDEX);
@@ -326,7 +326,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I ad,c,f,*
   ASSERT(BOX&AT(m),EVDOMAIN);
   RZ(y=raze(m)); r=AR(y); k=AN(y);
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
-  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m); md=(I)m*ARELATIVE(m); 
+  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m); RELBASEASGN(m,m); 
   DO(c, j=i; t=AADR(md,mv[i]); if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););}
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}

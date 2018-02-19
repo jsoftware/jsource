@@ -140,11 +140,13 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case XNUMX: INNERT(X,equ); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
-  switch(2*ARELATIVE(a)+ARELATIVE(w)){
-  default:  INNERT(A,EQA); break;
-  case 1:   INNERT2(0,w,EQA); break;
-  case 2:   INNERT2(a,0,EQA); break;
-  case 3:   INNERT2(a,w,EQA); break;
+  {RELORIGINB(arel,a); RELORIGINB(wrel,w);
+   if(!(arel|wrel)){INNERT(A,EQA);} else {INNERT2(arel,wrel,EQA);}
+// obsolete   switch(2*ARELATIVE(a)+ARELATIVE(w)){
+// obsolete   default:  INNERT(A,EQA); break;
+// obsolete   case 1:   INNERT2(0,w,EQA); break;
+// obsolete   case 2:   INNERT2(a,0,EQA); break;
+// obsolete   case 3:   INNERT2(a,w,EQA); break;
   } break;
  } R b;
 }

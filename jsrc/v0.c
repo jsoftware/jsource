@@ -51,9 +51,9 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  R p>b?cvt(FL,z):z;
 }
 
-static F1(jtcfr){A c,r,*wv;I t,wd;
+static F1(jtcfr){A c,r,*wv;I t;
  ASSERT(!AR(w)||2==AN(w),EVLENGTH);
- wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ wv=AAV(w); RELBASEASGN(w,w);
  if(AR(w)){c=WVR(0); r=WVR(1);}else{c=one; r=WVR(0);}
  ASSERT(!AR(c)&&1>=AR(r),EVRANK);
  ASSERT(NUMERIC&AT(c)&&(!AN(r)||NUMERIC&AT(r)),EVDOMAIN);
@@ -150,8 +150,8 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
  if(!(wt&RAT))RZ(w=cvt(RAT,w)); wv=QAV(w);
  rdx=maxdenom(1+m,wv);  // rdx = max denominator in the polynomial, in rational form
  RZ(x=cvt(CMPX,w)); xv=ZAV(x); // set x = complex form of w, xv->first complex coeff
- RZ(y=take(sc(1+m),x)); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff
- RZ(q=take(sc(1+m),w)); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
+ RZ(y=take(sc(1+m),x)); realizeifvirtual(y); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff.  These are modified by deflate[q]() and must not be virtual
+ RZ(q=take(sc(1+m),w)); realizeifvirtual(q); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
  GATV(z,RAT,m,1,0); zv=QAV(z);        // allocate space for exact rational roots, zv->first result location
  i=j=0;
  // loop to find each root by Laguerre's method
@@ -163,7 +163,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
   // that is close to the real part of the root
   RE(rq=multiple(r.re,rdx));
   b=0;  // set 'no rational root found'
-  // If the value found IS a root, deivide it from the polynomial repeatedly, and move a copy
+  // If the value found IS a root, divide it from the polynomial repeatedly, and move a copy
   // to the result for each repetition
   while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   // Laguerre came up empty.  Try something else
@@ -182,7 +182,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
    r=newt(m,xv,r,10L); b=!r.im||i==m-1;
    // Divide out the root - or the pair of them, if they are complex.
    deflate(b,m-i,yv,r); i+=2-b;
-   // We don't use te roots we find here - we just have to make some progress
+   // We don't use the roots we find here - we just have to make some progress
    // before the next iteration
  }}
  AN(z)=*AS(z)=j; *zz=z; RZ(*ww=cvt(FL,q));
@@ -256,10 +256,10 @@ F1(jtpoly1){A c,e,x;
 }
 
 
-static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r,wd;
+static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
  RZ(w);
  if(BOX&AT(w)){
-  n=AN(w); wv=AAV(w); wd=(I)w*ARELATIVE(w); RZ(s=sc(m));
+  n=AN(w); wv=AAV(w); RELBASEASGN(w,w); RZ(s=sc(m));
   GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
   for(i=0;i<n;++i){
    x=WVR(i); r=AR(x); 
@@ -293,7 +293,7 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
  ASSERT(!wn||wt&NUMERIC+BOX,EVDOMAIN);
  if(!an)R reshape(shape(w),zero);
- if(b){A*av=AAV(a);I ad=(I)a*ARELATIVE(a);
+ if(b){A*av=AAV(a); RELBASEASGN(a,a);
   ASSERT(2>=an,EVLENGTH);
   c=1==an?one:AVR(0); a=AVR(1!=an); 
   if(1==an&&2==AR(a))R poly2a(a,w);

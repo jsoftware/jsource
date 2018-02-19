@@ -542,7 +542,7 @@ static B jteqq(J jt,I n,Q*u,Q*v){DO(n, if(!QEQ(*u,*v))R 0; ++u; ++v;); R 1;}
 static B jeqd(I n,D*u,D*v,D cct){DO(n, if(!TCMPEQ(cct,*u,*v))R 0; ++u; ++v;); R 1;}
 static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
-// test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
+// test a subset of two boxed arrays for match.  u/v point to pointers to contents, c and d are the relative flags
 // We test n subboxes
 static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
 // same but intolerant (used for write probes)
@@ -613,7 +613,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #endif
 
 // define ad and wd, which are bases to be added to boxed addresses
-#define RDECL      I ad=(I)a*ARELATIVE(a),wd=(I)w*ARELATIVE(w)
+#define RDECL      RELBASEASGN(a,a); RELBASEASGN(w,w)
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
@@ -1202,9 +1202,9 @@ static void jtiosc(J jt,I mode,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j,p,q
 // ***************** fifth class: boxed arguments ************************
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
-static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I ad,t;
+static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
- av=AAV(a); ad=(I)a*ARELATIVE(a);
+ av=AAV(a); RELBASEASGN(a,a);
  DO(ac*asct, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
@@ -1274,12 +1274,12 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 
 // This function does not need h, but it does need acr for the sort.  So, we pass acr in through h
 // (if prehashing, we pass in acr only for the prehash, and h thereafter)
-static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*zi,*zv;
+static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  md=mode&IIOPMSK;  // just the operation bits
  I bk=1&(((1<<IICO)|(1<<IJ0EPS)|(1<<IJ1EPS))>>md);  // set if the dup-scan is reverse direction
  if(mode==INUB||mode==INUBI){GATV(y,B01,asct,1,0); yb=BAV(y);}
- av=AAV(a); ad=(I)a*ARELATIVE(a); acn=ak/sizeof(A);
- wv=AAV(w); wd=(I)w*ARELATIVE(w); wcn=wk/sizeof(A);
+ av=AAV(a); RELBASEASGN(a,a); acn=ak/sizeof(A);
+ wv=AAV(w); RELBASEASGN(w,w); wcn=wk/sizeof(A);
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
@@ -1317,9 +1317,9 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,ad,*hu,*hv,l,m1,md,s,wcn,wd,*
  R h;
 }    /* a i.!.0 w on boxed a,w by grading and binary search */
 
-static I jtutype(J jt,A w,I c){A*wv,x;I m,t,wd;
+static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
- m=AN(w)/c; wv=AAV(w); wd=(I)w*ARELATIVE(w);
+ m=AN(w)/c; wv=AAV(w); RELBASEASGN(w,w);
  DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t){if(!(TYPESEQ(t,AT(x))))R 0;} else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */

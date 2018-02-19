@@ -102,24 +102,26 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
 }    /* a,"r w where a or w or both are sparse */
 
 
-static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){B b;I d,n,p=c*m,q,*u,*v;
- b=ARELATIVE(z);
+static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
+ RELORIGINBR(zrel,z);  // z may not be boxed; but if it is, w must be also.  zrel=relocation offset, 0 if not relative
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-  if((!n||d)&&!b)mvc(k*p,x,k,jt->fillv);
-  if(n&&n<p){v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
+  if((!n||d)&&!zrel)mvc(k*p,x,k,jt->fillv);
+  if(n&&n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
   if(n){
-   if(b){q=ARELATIVE(w)*(I)w-(I)z; u=(I*)x; v=AV(w); DO(AN(w), *u++=q+*v++;);}
+// obsolete    if(zrel){RELORIGINB(wrel,w); wrel-=zrel; u=(I*)x; v=AV(w); DO(AN(w), *u++=wrel+*v++;);}
+// obsolete   if(zrel){A *u,*v; RELORIGINB(wrel,w); wrel-=zrel; u=(A*)x; v=AAV(w); DO(AN(w), *u++=wrel+*v++;);}
+   if(zrel){A * RESTRICT u,* RESTRICT v; RELORIGINB(wrel,w); wrel-=zrel; u=(A*)x; v=AAV(w); RELOCOPY(u,v,AN(w),wrel);}
    else MC(x,AV(w),k*AN(w));
   }
- }else{
-  if(b){q=*AV(w)+ARELATIVE(w)*(I)w-(I)z; u=(I*)x; DO(p, *u++=q;);} 
+ }else{  // scalar replication
+  if(zrel){A *u; RELORIGINB(wrel,w); wrel=*AV(w)+wrel-zrel; u=(A*)x; DO(p, *u++=(A)wrel;);} 
   else mvc(k*p,x,k,AV(w));
  }
  R x+k*p;
 }    /* move an argument into the result area */
 
-static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
+static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,wr,*ws,zn;
  RZ(a&&w);
  RZ(w=setfv(a,w)); RZ(coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
@@ -133,7 +135,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
  RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bp(AT(a));
- if(ARELATIVE(a)||ARELATIVE(w)){AFLAG(z)=AFREL; q=(I)jt->fillv+(I)w-(I)z; mvc(k*zn,x,k,&q);}
+ if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL; RELORIGINB(q,w); q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  INHERITNORELFILL2(z,a,w); R z;
@@ -142,10 +144,12 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,q,r,*sv,wr,*ws,zn;
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
- if(t&BOX&&(AFLAG(a)|AFLAG(w))&(AFREL|AFSMM|AFNJA)){A1* RESTRICT u,* RESTRICT v;B p,q;
-  p=ARELATIVE(a); q=ARELATIVE(w); AFLAG(z)=AFREL; v=A1AV(z);
-  u=A1AV(a); m=p*(I)a-(I)z; DO(AN(a), *v++=m+*u++;);
-  u=A1AV(w); m=q*(I)w-(I)z; DO(AN(w), *v++=m+*u++;);
+ if(t&BOX&&AORWRELATIVEB(a,w)){A* RESTRICT u,* RESTRICT v;
+  AFLAG(z)=AFREL; v=AAV(z);
+// obsolete  RELORIGINB(arel,a); u=A1AV(a); m=arel-(I)z; DO(AN(a), *v++=m+*u++;);
+  RELORIGINB(arel,a); u=AAV(a); m=arel-RELORIGINNULL(z); RELOCOPYT(v,u,AN(a),m);
+// obsolete   RELORIGINB(wrel,w); u=A1AV(w); m=wrel-(I)z; DO(AN(w), *v++=m+*u++;);
+  RELORIGINB(wrel,w); u=AAV(w); m=wrel-RELORIGINNULL(z); RELOCOPY(v,u,AN(w),m);
  }else{C*x;I k;
   k=bp(t); m=k*AN(a); x=CAV(z); 
   MC(x,  AV(a),m      ); 
@@ -176,7 +180,7 @@ F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,w
  wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;
  r=acr+wcr?MAX(acr,wcr):1;
  // if max cell-rank>2, or an argument is empty, or (joining tables with row of different lengths) or something is relative, do general case
- if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||ARELATIVE(a)||ARELATIVE(w)){
+ if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||AORWRELATIVE(a,w)){
   jt->rank=0; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
  }
  acn=1>=acr?p:p*as[af+acr-2]; ma=!acr&&2==wcr?q:acn;

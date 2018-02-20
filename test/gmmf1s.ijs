@@ -68,7 +68,7 @@ jdata=: (s:<'x') 1} jdata      NB. amend in-place
 jdata -: 3 3$s:<"0'abcxxxcda'
 
 jdata=: i. 2 3
-additem_jmf_ 'jdata'
+jdata=: jdata,0
 3 = #jdata
 jdata=: 23 (_1)} jdata 
 jdata -: (i.2 3),23

@@ -211,7 +211,7 @@ static DF1(jtredg){PROLOG(0020);DECLF;A y,z;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt
   GA(y,yt,yn,yr,ys); u=CAV(y);   // allocate block for item, u->data area
   // copy the item into the allocated block, preserving relative status
 // obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u; I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
-  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u; I d=wrel-RELORIGINNULL(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k); 
+  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u; I d=wrel-RELORIGINDEST(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k); 
   RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
   gc(z,old);   // free the buffers we allocated, except for the result
  }

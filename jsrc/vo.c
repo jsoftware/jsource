@@ -188,7 +188,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
   RE(m=prod(r,u)); RE(zn=mult(n,m)); k=bp(t); q=m*k;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); ICPY(AS(z)+AR(w),u,r); x=CAV(z);
-  zrel=(wrel&&t&BOX)?RELORIGINNULL(z):0;   // set if result is relative
+  zrel=(wrel&&t&BOX)?RELORIGINDEST(z):0;   // set if result is relative
   if(zrel){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);  // init to a: relative, or fills
   for(i=0;i<n;++i){
    y=(A)AABS(v[i],wrel);   // get pointer to contents, relocated if need be
@@ -256,7 +256,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
  // Now we know the type of the result.  Create the result.
  k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
  GATV(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
- GA(z,t,m,r,s); if(zrel){zrel=RELORIGINNULL(z); AFLAG(z)=AFREL;}   // create result area, shape s; zrel now is relocation offset for result
+ GA(z,t,m,r,s); if(zrel){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}   // create result area, shape s; zrel now is relocation offset for result
  zu=CAV(z); zv=AAV(z);  // output pointers
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
@@ -321,7 +321,7 @@ F1(jtraze){A*v,y,* RESTRICT yv,z,* RESTRICT zv;C* RESTRICT zu;I d,i,k,m=0,n,r=1,
 // obsolete if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
 // obsolete  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
- GA(z,t,m,r,0); if(zrel&&!(t&DIRECT)){zrel=RELORIGINNULL(z); AFLAG(z)=AFREL;}  // allocate the result area; mark relative if any contents relative
+ GA(z,t,m,r,0); if(zrel&&!(t&DIRECT)){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}  // allocate the result area; mark relative if any contents relative
  // now zrel has been repurposed to relocation offset for z (0 if not relative)
  zu=CAV(z); zv=AAV(z); k=bp(t); // input pointers, depending on type; length of an item
  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed

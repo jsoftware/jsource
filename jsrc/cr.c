@@ -209,9 +209,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
         MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
         if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
        }
-      }
-
-      if(state&STATEFIRST){I *is, zn;
+      } else if(state&STATEFIRST){I *is, zn;
        // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
        // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
        // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
@@ -420,9 +418,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
           // If we anticipate making the result recursive, we will have to increment the usecount and also worry about backing out errors and wrecks.
         if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
        }
-      }
-
-      if(state&STATEFIRST){I *is, zn;
+      } else if(state&STATEFIRST){I *is, zn;
        // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
        // we have to go through the box/unbox drill, because the blocks coming out will have different relocations that must be preserved.
        //  In that case, we switch this allocation to be a single box per result-cell.

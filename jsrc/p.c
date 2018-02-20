@@ -174,6 +174,50 @@ F1(jtparse){A z;
  R z;
 }
 
+#if FORCEVIRTUALINPUTS
+// For wringing out places where virtual blocks are incorporated into results, we make virtual blocks show up all over
+// any noun block that is not in-placeable and enabled for inplacing in jt will be replaced by a virtual block.  Then the audit of the
+// result will catch any virtual blocks that slipped through into an incorporating entity.
+
+static A virtifnonip(J jt, I ipok, A buf) {
+ if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf))) {
+  buf=virtual(buf,0,AR(buf),AS(buf)); if(!buf)*(I*)0=0;  // replace non-inplaceable w with virtual block; shouldn't fail
+ }
+ R buf;
+}
+
+// We intercept all the function calls, for this file only
+static A virtdfs1(J jtip, A w, A self){
+ J jt = (J)((I)jtip&-4);  // estab legit jt
+ w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
+ R jtdfs1(jtip,w,self);
+}
+static A virtdfs2(J jtip, A a, A w, A self){
+ J jt = (J)((I)jtip&-4);  // estab legit jt
+ a = virtifnonip(jt,(I)jtip&JTINPLACEA,a);
+ w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
+ R jtdfs2(jtip,a,w,self);
+}
+static A virtfolk(J jtip, A f, A g, A h){
+ J jt = (J)((I)jtip&-4);  // estab legit jt
+ f = virtifnonip(jt,0,f);
+ g = virtifnonip(jt,0,g);
+ h = virtifnonip(jt,0,h);
+ R jtfolk(jtip,f,g,h);
+}
+static A virthook(J jtip, A f, A g){
+ J jt = (J)((I)jtip&-4);  // estab legit jt
+ f = virtifnonip(jt,0,f);
+ g = virtifnonip(jt,0,g);
+ R jthook(jtip,f,g);
+}
+
+// redefine the names for when they are used below
+#define jtdfs1 virtdfs1
+#define jtdfs2 virtdfs2
+#define jtfolk virtfolk
+#define jthook virthook
+#endif
 
 #define FP {stack = 0; goto exitparse;}   // indicate parse failure
 #define EP goto exitparse;   // exit parser, preserving current status

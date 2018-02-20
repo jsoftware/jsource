@@ -471,7 +471,7 @@ void jtfh(J jt,A w){fr(w);}
 // ga*() allocates a block and does an initial tpush()
 // mf() frees a block.  If what if freed is a symbol table, all the symbols are freed first.
 
-// mark w incorporated, reassigning if necessary.  Return the address of the block
+// mark w incorporated, reassigning if necessary.  Return the address of the block.  Used when w is an rvalue
 A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 
 // allocate a virtual block, given the backing block
@@ -666,7 +666,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  I wrel = ARELATIVEB(wd)?RELORIGINNULL(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
    A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box

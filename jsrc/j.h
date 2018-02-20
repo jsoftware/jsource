@@ -605,7 +605,8 @@ extern unsigned int __cdecl _clearfp (void);
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
 
 #define AUDITEXECRESULTS 1   // When set, we go through all execution results to verify recursive and virtual bits are OK   // scaf turn off for release
-#define FORCEVIRTUALINPUTS 0  // When set, we make all noun inputs to executions VIRTUAL
+#define FORCEVIRTUALINPUTS 1  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run   // scaf 0 for release
+                           // When 2 set, make all outputs from gc() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 
 
 

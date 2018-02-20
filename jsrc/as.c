@@ -219,7 +219,7 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self
   v-=k;
   GA(y,yt,yn,yr,ys); u=CAV(y); 
 // obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u;I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k);
-  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u;I d=wrel-RELORIGINNULL(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k);
+  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u;I d=wrel-RELORIGINDEST(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k);
   RZ(*--zv=q=CALL2(f2,y,q,fs));
  }
  R ope(z);

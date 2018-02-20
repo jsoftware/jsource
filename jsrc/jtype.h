@@ -373,8 +373,8 @@ typedef I SI;
 // here the block is unknown
 // obsolete #define RELORIGINBR(w)  (ARELATIVE(w)?RELORIGIN(w):0)
 #define RELORIGINBR(asgn,w)   I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(ARELATIVE(w)?asgn:0);
-// use this to indicate the relocation factor for a non-virtual, non-relative block
-#define RELORIGINNULL(w) ((I)(w))
+// use this to indicate the relocation factor for a non-virtual, non-relative block (usually a destination that has been allocated recently)
+#define RELORIGINDEST(w) ((I)(w))
 
 // set up the relative base-offset ad,id... lett is a,i... as a reminder that the suffix must be d.  w is the block.  The result is germane
 // only if boxed, but we don't test for boxing here

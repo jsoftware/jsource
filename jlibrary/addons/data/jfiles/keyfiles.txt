@@ -1,0 +1,75 @@
+keyfiles.ijs
+============
+
+This script contains definitions for a keyed file system.
+
+This is a modification and enhancement of the "kfiles" system.
+
+A keyed file is a J component file in which data is accessed
+using keywords.
+
+The keyed file directory is stored in a single component.
+
+Data may be stored in two ways. By default, data is stored in
+one component per key; this is appropriate where the data for
+any key can be arbitrarily large. Otherwise, data can be stored
+in a single component for all records; here this is called
+"extra" data. A keyed file may contain either or both types
+of data.
+
+For example, a keyed filed might have stock identifiers as the
+key, and timeseries of stock prices as the data. Extra data
+could include the full stock name.
+
+Data can be accessed using one or more keys. A single key may
+be given as an open item, two or more keys as a boxed list.
+Omitting the keys is equivalent to specifying all keys.
+
+Results are boxed lists, with the same shape as the boxed keys.
+
+-----------------------------------------------------
+main functions:
+
+      keycreate 'file'            create keyed file
+
+      keydir 'file'               keyword directory
+      keyerase 'file'             erase file
+
+      keyread 'file'[;keys]       read data
+ data keywrite 'file'[;keys]      write data
+
+      keyreadx 'file'[;keys]      read extra data
+ data keywritex 'file'[;keys]     write extra data
+
+      keydrop 'file';keys         drop keys
+
+Here, "keys" is a boxed list of one or more keys, so
+that 'file';keys is a 2-element list. An open list is
+treated as a single key, for example:
+
+      keyread 'file';'one'
+      keyread 'file';<'one';'two';'three'
+
+-----------------------------------------------------
+On write, an open item is boxed. Otherwise, the length of
+the data should be a scalar, or match the number of keys
+being written.
+
+-----------------------------------------------------
+file layout:
+
+  cpt   description
+   0    'keyed file 2'
+  1-7   unused
+   8    extras directory
+   9    directory
+  10+   data components
+
+-----------------------------------------------------
+error results:
+
+   0  file create failed
+  _1  file not found
+  _2  invalid component
+  _3  invalid data
+  _4  invalid key

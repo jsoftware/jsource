@@ -452,7 +452,7 @@
       <OutputFile>.\Release64/Jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\j.dll</Command>
+      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\j-nonavx.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release64avx|x64'">
@@ -505,8 +505,7 @@
       <OutputFile>.\Release64/Jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\javx.dll
-; copy $(outdir)\j.dll $(userprofile)\jbld\j64avx\bin\j.dll</Command>
+      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\j.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64avx|x64'">

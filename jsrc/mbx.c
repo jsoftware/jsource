@@ -142,9 +142,12 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
 }
 
 static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
- if(AFNJA&AFLAG(w))R a==w;
- x=(MS*)w-1;
- if((I)a==AABS(x,x->a))R 1;
+ if(AFNJA&AFLAG(w))R a==w;  // if w is an NJA name, see if it equals a
+ if(AFSMM&AFLAG(w)){  // if an SMM name, the prefix to the header points to the base block
+  x=(MS*)w-1;
+  if((I)a==AABS(x,x->a))R 1;  // here w is a box allocated inside a
+ }
+ // otherwise, recur on contents
  if(BOX&AT(w)){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
  R 0;
 }   /* 1 iff any leaf of w is part of SMM array a */

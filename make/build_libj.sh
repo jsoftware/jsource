@@ -58,13 +58,13 @@ COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 ;;
 
-linux_j64) # linux intel 64bit
+linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
 COMPILE="$common "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 
-linux_j64avx) # linux intel 64bit avx
+linux_j64) # linux intel 64bit avx
 TARGET=libj.so
 COMPILE="$common -mavx -DC_AVX=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
@@ -89,13 +89,13 @@ COMPILE="$darwin -m32 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
-darwin_j64) # darwin x86
+darwin_j64nonavx) # darwin intel 64bit nonavx
 TARGET=libj.dylib
 COMPILE="$darwin -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
-darwin_j64avx) # darwin intel 64bit avx
+darwin_j64) # darwin intel 64bit
 TARGET=libj.dylib
 COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"

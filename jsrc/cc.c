@@ -328,7 +328,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
    za=AAV(z); DO(ii, RZ(*za++=box(*za));); *za++=y; \
    old=jt->tnextpushx;                          \
   }                                                 \
-  gc(y,old);                                        \
+  y=gc(y,old);                                        \
   p-=q; v=u;                                        \
  }
 
@@ -521,7 +521,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
    if(!(TYPESEQ(yt,AT(y))&&yr==AR(y)&&(1>=yr||!ICMP(1+AS(y),1+ys,yr-1)))){z=0; break;}
    while(IC(z)<=m+ym){RZ(z=ext(0,z)); zv=CAV(z); b1=0;}
    MC(zv+m*yk,CAV(y),ym*yk); 
-   if(b1&&!(yt&DIRECT))gc(y,old);
+   if(b1&&!(yt&DIRECT))y=gc(y,old);
    b1=1; m+=ym; p-=q; v=u;
   }
   if(!b1&&ie)GA(z,wt,AN(w),r,s);

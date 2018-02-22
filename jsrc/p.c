@@ -157,7 +157,12 @@ static void auditblock(A w, I nonrecurok, I virtok) {
   case VERBX: case ADVX:  case CONJX: 
    {V*v=VAV(w); auditblock(v->f,nonrecur,0); auditblock(v->g,nonrecur,0); auditblock(v->h,nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
-   {P*v=PAV(w); auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
+   {P*v=PAV(w);  A x;
+   x = SPA(v,a); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,e); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,i); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,x); if(!(AT(x)&DIRECT))*(I*)0=0;
+   auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
+  case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))*(I*)0=0; break;
+  case ASGNX: break;
+  default: break; *(I*)0=0;
  }
 }
 #endif
@@ -177,10 +182,10 @@ F1(jtparse){A z;
 #if FORCEVIRTUALINPUTS
 // For wringing out places where virtual blocks are incorporated into results, we make virtual blocks show up all over
 // any noun block that is not in-placeable and enabled for inplacing in jt will be replaced by a virtual block.  Then the audit of the
-// result will catch any virtual blocks that slipped through into an incorporating entity.
+// result will catch any virtual blocks that slipped through into an incorporating entity.  sparse blocks cannot be virtualized.
 
 static A virtifnonip(J jt, I ipok, A buf) {
- if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf))) {
+ if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !(AT(buf)&SPARSE)) {
   buf=virtual(buf,0,AR(buf),AS(buf)); if(!buf)*(I*)0=0;  // replace non-inplaceable w with virtual block; shouldn't fail
  }
  R buf;

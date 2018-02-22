@@ -83,7 +83,7 @@ spred =: ' ' -.~ sel {:: predflds  NB. Select fielda
 atomct =: 3 3 5 # */@> shapes   NB. Get #atoms in each arg/result
 atomsz =: IF64 { 1 4 8 1 4 8 1 1 4 8 8 ,: 1 8 8 1 8 8 1 1 8 8 0   NB. Length of atoms
 allobytes =: +/ >.&.(2&^.) (atomct*atomsz) {~ 'klLqrRBbIDd' i. spred  NB. Total # bytes allocated
-(bytesused>allobytes-3000) *. (bytesused<allobytes+3000)
+IGNOREIFFVI (bytesused>allobytes-3000) *. (bytesused<allobytes+3000)
 )
 
 

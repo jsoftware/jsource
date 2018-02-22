@@ -237,6 +237,10 @@ static A jtsmmblku(J jt,A w){A z;I n;
 
 F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  RZ(w);
+#if FORCEVIRTUALINPUTS
+ // To allow us to run mbx tests in FORCEVIRTUAL compilation, chase any VIRTUAL block back to its ultimate backing block and get stats for that
+ while(AFLAG(w)&AFVIRTUAL)w=ABACK(w);
+#endif
  t=AT(w); 
  ASSERT(AFNJA&AFLAG(w)&&t&BOX,EVDOMAIN);
  RZ(x=smmblku(w));

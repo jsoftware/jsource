@@ -10,18 +10,18 @@ NB. ,y ravel in place -----------------------------------------------
 (,999) -: ,"0 (999)
 (1 1$999) -: ,"0 , 999
 
-20000 > 7!:2 ', 10000$''a'''
-20000 > 7!:2 ', 100 100$''a'''
-20000 > 7!:2 ',"2 (10 10 100$''a'')'
-20000 > 7!:2 ',"3 (10 10 10 10$''a'')'
+IGNOREIFFVI 20000 > 7!:2 ', 10000$''a'''
+IGNOREIFFVI 20000 > 7!:2 ', 100 100$''a'''
+IGNOREIFFVI 20000 > 7!:2 ',"2 (10 10 100$''a'')'
+IGNOREIFFVI 20000 > 7!:2 ',"3 (10 10 10 10$''a'')'
 a =: 10000#'a'
-2000 > 7!:2 'a =: ,a'
+IGNOREIFFVI 2000 > 7!:2 'a =: ,a'
 a =: 10 1000#'a'
-2000 > 7!:2 'a =: ,a'
+IGNOREIFFVI 2000 > 7!:2 'a =: ,a'
 a =: 10 10 100#'a'
-2000 > 7!:2 'a =: ,"2 a'
+IGNOREIFFVI 2000 > 7!:2 'a =: ,"2 a'
 a =: 10 10 10 10#'a'
-2000 > 7!:2 'a =: ,"3 a'
+IGNOREIFFVI 2000 > 7!:2 'a =: ,"3 a'
 
 NB. x,y Append in place -------------------------------------------------
 
@@ -289,11 +289,11 @@ testa=: 4 : 0
 NB. Verify that we avoid loop in box
 a =: 10000 $ ;:'only Hugh can prevent florist friars'
 b =: <i. 10000
-2000 > 7!:2 'a =: a , a:'
-2000 > 7!:2 'a =: a , b'
-2000 > 7!:2 'a =: a , <b'
-40000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
-40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
+IGNOREIFFVI 2000 > 7!:2 'a =: a , a:'
+IGNOREIFFVI 2000 > 7!:2 'a =: a , b'
+IGNOREIFFVI 2000 > 7!:2 'a =: a , <b'
+IGNOREIFFVI 40000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
+IGNOREIFFVI 40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
 
 
 NB. Verify no local-to-global aliasing
@@ -322,12 +322,12 @@ undefinedname =: ]
 
 NB. Verify inplacing works in forks, including nvv forks
 9!:53 (0)
-1120000 > 7!:2 '(i. , ]) 100000'
+IGNOREIFFVI 1120000 > 7!:2 '(i. , ]) 100000'
 'lrlr' -: (1 {. 'l') (, , ,) (1 {. 'r')
 (10000 # 'lrlr') -: (10000 # 'l') (, , ,) (10000 # 'r')
-24000 > 7!:2 '(10000 # ''l'') (, , ]) (1000 # ''r'')'
+IGNOREIFFVI 24000 > 7!:2 '(10000 # ''l'') (, , ]) (1000 # ''r'')'
 (10000 2000 # 'lr') -: (10000 # 'l') (, , ]) (1000 # 'r')
-24000 > 7!:2 '(10000#''l'') ([: ] ,) (1000#''r'')'
+IGNOREIFFVI 24000 > 7!:2 '(10000#''l'') ([: ] ,) (1000#''r'')'
 0 7 14 21 28 -: (({.7)"_ * ])"0 i. 5  NB. ensure constant function not overwritten
 0 7 14 21 28 -: (({.7) * ])"0 i. 5  NB. ensure n in nvv not overwritten
 b =: 7
@@ -335,65 +335,65 @@ b =: 7
 b -: 7
 9!:53 (0)
 a =: 10000#'a'
-3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  even with 9!:53 (0)
-3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too  even with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  even with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too  even with 9!:53 (0)
 nb =: ('b' ,~ [)
-3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace even with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace even with 9!:53 (0)
 a -: (10000#'a'),'bbb'
 b =: 'c'
-3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment  even with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment  even with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbc'
 
 a =: 10000#'a'   NB. Repeat as left tine of fork - now suppressed when 9!:53 (0)
-3000 < 7!:2 'a =: (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
-3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
-3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
-3000 < 7!:2 'a =: (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0) or console
 nb =: (] ] 'b' ,~ [)
-3000 < 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0) or console
 a -: (10000#'a'),'bbbbb'
 b =: 'c'
-3000 < 7!:2 'a =: (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0) or console
 b -: 'c'
 a -: (10000#'a'),'bbbbbc'
 
-3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
 b -: 'c'
 a -: (10000#'a'),'bbbbbcc'
-3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
 a -: ((10000#'a'),'bbbbbcc'),((10000#'a'),'bbbbbcc')
 
 9!:53 (1)  NB. Now they should inplace
 a =: 10000#'a'
-3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
-3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
+IGNOREIFFVI 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
+IGNOREIFFVI 3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
 NB. sporadic failures
 1 [ 3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
-3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
+IGNOREIFFVI 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
 nb =: ('b' ,~ [)
-3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace
+IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace
 a -: (10000#'a'),'bbbbb'
 b =: 'c'
-3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment
+IGNOREIFFVI 3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment
 b -: 'c'
 a -: (10000#'a'),'bbbbbc'
 
 a =: 10000#'a'   NB. Repeat as left tine of fork - still suppressed when 9!:53 (1) because comes from console
-3000 < 7!:2 'a =: (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
-3000 < 7!:2 'a =: (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
 nb =: (] ] 'b' ,~ [)
-3000 < 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
 a -: (10000#'a'),'bbb'
 b =: 'c'
-3000 < 7!:2 'a =: (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =: (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbc'
 
-3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =: (b ,~ unsafename) a'  NB. unsafe name, not inplace
 b -: 'c'
 a -: (10000#'a'),'bbbcc'
-3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =: (a ,~ ]) a'  NB. same name, not inplace
 a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 NB. Boxed values should cause no trouble, but we don't have anything that inplaces boxed arrays yet
 
@@ -406,64 +406,64 @@ b =. 7
 b -: 7
 9!:53 (0)
 a =. 10000#'a'
-3000 < 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
-3000 < 7!:2 'a =. ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
-3000 < 7!:2 'a =. ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
-3000 < 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =. ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
+IGNOREIFFVI 3000 < 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
 nb =. ('b' ,~ [)
-3000 < 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace  but not with 9!:53 (0)
 a -: (10000#'a'),'bbbbb'
 b =. 'c'
-3000 < 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment  but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbbbc'
 
 a =. 10000#'a'   NB. Repeat as left tine of fork - not allowed when 9!:53 (0)
-3000 < 7!:2 'a =. (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
-3000 < 7!:2 'a =. (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
 nb =. (] ] 'b' ,~ [)
-3000 < 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
 a -: (10000#'a'),'bbbbb'
 b =. 'c'
-3000 < 7!:2 'a =. (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
+IGNOREIFFVI 3000 < 7!:2 'a =. (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbbbc'
 
-3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
 b -: 'c'
 a -: (10000#'a'),'bbbbbcc'
-3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
 a -: ((10000#'a'),'bbbbbcc'),((10000#'a'),'bbbbbcc')
 
 9!:53 (1)
 a =. 10000#'a'
-3000 > 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
-3000 < 7!:2 'a =. ''b'' (] ] [ ,~ ]) a'   NB. Can't inplace h with f in use
-3000 > 7!:2 'a =. ''b'' ([ ] [ ,~ ]) a'   NB. Can inplace with 9!:53 and y free
-3000 > 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too
+IGNOREIFFVI 3000 > 7!:2 'a =. (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
+IGNOREIFFVI 3000 < 7!:2 'a =. ''b'' (] ] [ ,~ ]) a'   NB. Can't inplace h with f in use
+IGNOREIFFVI 3000 > 7!:2 'a =. ''b'' ([ ] [ ,~ ]) a'   NB. Can inplace with 9!:53 and y free
+IGNOREIFFVI 3000 > 7!:2 'a =. (({.''b'') ,~ [) a'  NB. Usecount -1 too
 nb =. ('b' ,~ [)
-3000 > 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace
+IGNOREIFFVI 3000 > 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace
 a -: (10000#'a'),'bbbbb'
 b =. 'c'
-3000 > 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment
+IGNOREIFFVI 3000 > 7!:2 'a =. (b ,~ ]) a'  NB. different name, still inplace assignment
 b -: 'c'
 a -: (10000#'a'),'bbbbbc'
 
 a =. 10000#'a'   NB. Repeat as left tine of fork - allowed when 9!:53 (1)
-3000 > 7!:2 'a =. (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
-3000 > 7!:2 'a =. (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =. (] ] ''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  but not with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =. (] ] ({.''b'') ,~ [) a'  NB. Usecount -1 too  but not with 9!:53 (0)
 nb =. (] ] 'b' ,~ [)
-3000 > 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =. nb a'  NB. usecount=1 inside the name, still inplace but not with 9!:53 (0)
 a -: (10000#'a'),'bbb'
 b =. 'c'
-3000 > 7!:2 'a =. (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
+IGNOREIFFVI 3000 > 7!:2 'a =. (] ] b ,~ ]) a'  NB. different name, still inplace assignment but not with 9!:53 (0)
 b -: 'c'
 a -: (10000#'a'),'bbbc'
 
-3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =. (b ,~ unsafename) a'  NB. unsafe name, not inplace
 b -: 'c'
 a -: (10000#'a'),'bbbcc'
-3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
+IGNOREIFFVI 3000 < 7!:2 'a =. (a ,~ ]) a'  NB. same name, not inplace
 a -: ((10000#'a'),'bbbcc'),((10000#'a'),'bbbcc')
 )
 ipexp''
@@ -487,34 +487,34 @@ a -: 'abcbabcbabc'
 
 NB. hook
 ('c' ,~ 999 $ 'abc') -: (, {:) 999 $ 'abc'
-3000 > 7!:2 '(, {:) 888 $ ''abc'''
+IGNOREIFFVI 3000 > 7!:2 '(, {:) 888 $ ''abc'''
 ('c' ,~ 1000 # 'a') -: (1000 # 'a') (, ]) 'c'
-4000 > 7!:2 '(1000 # ''a'') (, ]) ''c'''
+IGNOREIFFVI 4000 > 7!:2 '(1000 # ''a'') (, ]) ''c'''
 a =: 10000#'a'
-4000 > 7!:2 'a =: (, {.) a'
-4000 < 7!:2 'a =: (] ] (, {.)) a'
+IGNOREIFFVI 4000 > 7!:2 'a =: (, {.) a'
+IGNOREIFFVI 4000 < 7!:2 'a =: (] ] (, {.)) a'
 9!:53 (1)
-4000 > 7!:2 'a =: (, {.) a'
-4000 < 7!:2 'a =: (, {.@unsafename) a'
+IGNOREIFFVI 4000 > 7!:2 'a =: (, {.) a'
+IGNOREIFFVI 4000 < 7!:2 'a =: (, {.@unsafename) a'
 9!:53 (0)
 
 
 NB. u@v
 'b' -: (10000#'a') {:@, 'b'
-20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
+IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
 9!:53 (0)
 a =: 10000#'c'
-3000 < 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 a =: 10000#'c'
-3000 < 7!:2 'a =: a ]@, ''b'''
+IGNOREIFFVI 3000 < 7!:2 'a =: a ]@, ''b'''
 
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#'c'
-assert. 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
 a =: 10000#'c'
-assert. 3000 > 7!:2 'a =: a ]@, ''b'''
-assert. 3000 < 7!:2 'a =: a unsafename@, ''b'''
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: a ]@, ''b'''
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: a unsafename@, ''b'''
 1
 )
 f ''
@@ -522,20 +522,20 @@ f ''
 
 NB. u@:v
 'b' -: (10000#'a') {:@:, 'b'
-20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
+IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
 9!:53 (0)
 a =: 10000#'c'
-3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 a =: 10000#'c'
-3000 < 7!:2 'a =: a ]@:, ''b'''
+IGNOREIFFVI 3000 < 7!:2 'a =: a ]@:, ''b'''
 
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#'c'
-assert. 3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 a =: 10000#'c'
-assert. 3000 > 7!:2 'a =: a ]@:, ''b'''
-assert. 3000 < 7!:2 'a =: a unsafename@:, ''b'''
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: a ]@:, ''b'''
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: a unsafename@:, ''b'''
 1
 )
 f''
@@ -546,14 +546,14 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-3000 < 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
 
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. 3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
 a =: i. 1000
-assert. 3000 < 7!:2 'a =: ($0) {.&(5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&(5 ,~ unsafename) a'
 1
 )
 f''
@@ -564,13 +564,13 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&:(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-3000 < 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. 3000 > 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
 a =: i. 1000
-assert. 3000 < 7!:2 'a =: ($0) {.&:(5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:(5 ,~ unsafename) a'
 1
 )
 f''
@@ -578,18 +578,18 @@ f''
 
 
 NB. u&n
-20000 > 7!:2 ',&''a'' 10000#''b'''
+IGNOREIFFVI 20000 > 7!:2 ',&''a'' 10000#''b'''
 a =: 10000#'a'
 9!:53 (0)
 a =: 10000#'a'
 ('c' ,~ 10000#'a') -: a =: ,&'c' a
-2000 > 7!:2 'a =: ,&({.''c'') a'
+IGNOREIFFVI 2000 > 7!:2 'a =: ,&({.''c'') a'
 
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#'a'
 assert. ('c' ,~ 10000#'a') -: a =: ,&'c' a
-assert. 2000 > 7!:2 'a =: ,&({.''c'') a'
+assert. IGNOREIFFVI 2000 > 7!:2 'a =: ,&({.''c'') a'
 1
 )
 f''
@@ -599,51 +599,51 @@ NB. m&v
 (5,.i.4) -: (6-1)&,"0 i. 4  NB. Verify constant not overwritten
 
 NB. u&.v
-20000 > 7!:2 ',&''b''&.] 10000#''a'''
+IGNOREIFFVI 20000 > 7!:2 ',&''b''&.] 10000#''a'''
 9!:53 (0)
 a =: 10000#5
 (6 ,~ 10000#5) -: a =: ,&6&.] a
-3000 < 7!:2 'a =: ,&6&.] a'
-3000 < 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
+IGNOREIFFVI 3000 < 7!:2 'a =: ,&6&.] a'
+IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-22000 < 7!:2 'a =: ]&.(,&({.''b'')) a'
-22000 < 7!:2 'a =: ]&.(,&(''b'')) a'
+IGNOREIFFVI 22000 < 7!:2 'a =: ]&.(,&({.''b'')) a'
+IGNOREIFFVI 22000 < 7!:2 'a =: ]&.(,&(''b'')) a'
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#5
 assert. (6 ,~ 10000#5) -: a =: ,&6&.] a
-assert. 3000 > 7!:2 'a =: ,&6&.] a'
-assert. 3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.] a'
+assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-assert. 22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
-assert. 22000 > 7!:2 'a =: ]&.(,&(''b'')) a'
-assert. 22000 < 7!:2 'a =: unsafename&.(,&(''b'')) a'
+assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
+assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.(,&(''b'')) a'
+assert. IGNOREIFFVI 22000 < 7!:2 'a =: unsafename&.(,&(''b'')) a'
 1
 )
 f''
 9!:53 (0)
 
 NB. u&.:v
-20000 > 7!:2 ',&''b''&.:] 10000#''a'''
+IGNOREIFFVI 20000 > 7!:2 ',&''b''&.:] 10000#''a'''
 9!:53 (0)
 a =: 10000#5
 (6 ,~ 10000#5) -: a =: ,&6&.:] a
-3000 < 7!:2 'a =: ,&6&.:] a'
-3000 < 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+IGNOREIFFVI 3000 < 7!:2 'a =: ,&6&.:] a'
+IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-22000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
-22000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
+IGNOREIFFVI 22000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
+IGNOREIFFVI 22000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
 
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#5
 assert. (6 ,~ 10000#5) -: a =: ,&6&.:] a
-assert. 3000 > 7!:2 'a =: ,&6&.:] a'
-assert. 3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.:] a'
+assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-assert. 22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
-assert. 22000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
-assert. 22000 < 7!:2 'a =: unsafename&.:(,&(''b'')) a'
+assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
+assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
+assert. IGNOREIFFVI 22000 < 7!:2 'a =: unsafename&.:(,&(''b'')) a'
 1
 )
 f''
@@ -651,41 +651,41 @@ f''
 
 NB. u^:v
 a =: 10000#'a'
-3000 > 7!:2 ']^:0 a'
-3000 > 7!:2 ']^:1 a'
+IGNOREIFFVI 3000 > 7!:2 ']^:0 a'
+IGNOREIFFVI 3000 > 7!:2 ']^:1 a'
 b =: 10000#a:
-3000 > 7!:2 ']^:0 b'
-3000 > 7!:2 ']^:1 b'
-23000 > 7!:2 '(10000#''a'') ,^:0: ''b'''
-23000 > 7!:2 '(10000#''a'') ,^:1: ''b'''
+IGNOREIFFVI 3000 > 7!:2 ']^:0 b'
+IGNOREIFFVI 3000 > 7!:2 ']^:1 b'
+IGNOREIFFVI 23000 > 7!:2 '(10000#''a'') ,^:0: ''b'''
+IGNOREIFFVI 23000 > 7!:2 '(10000#''a'') ,^:1: ''b'''
 9!:53 (0)
 i =: i. 5000
-3000 > 7!:2 'i =: 0 ,~^:0 i'
+IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:0 i'
 i -: (i. 5000) 
-3000 > 7!:2 'i =: 0 ,~^:1 i'   NB. u^:1 is equivalent to u
+IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:1 i'   NB. u^:1 is equivalent to u
 i -: (i. 5000) , 0
-3000 > 7!:2 'i =: 0 ,~^:[ i'
+IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:[ i'
 i -: (i. 5000) , 0
-3000 > 7!:2 'i =: 1 ,~^:[ i'
+IGNOREIFFVI 3000 > 7!:2 'i =: 1 ,~^:[ i'
 i -: (i. 5000) , 0 1
-3000 < 7!:2 'i =: 1 ,~^:([  0 ,~ ]) i'
+IGNOREIFFVI 3000 < 7!:2 'i =: 1 ,~^:([  0 ,~ ]) i'
 i -: (i. 5000) , 0 1 1
 f =: 3 : 0
 9!:53 (1)
 i =: i. 5000
-assert. 3000 > 7!:2 'i =: 0 ,~^:0 i'
+assert. IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:0 i'
 assert. i -: (i. 5000) 
-assert. 3000 > 7!:2 'i =: 0 ,~^:1 i'
+assert. IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:1 i'
 assert. i -: (i. 5000) , 0
-assert. 3000 > 7!:2 'i =: 0 ,~^:[ i'
+assert. IGNOREIFFVI 3000 > 7!:2 'i =: 0 ,~^:[ i'
 assert. i -: (i. 5000) , 0
-assert. 3000 > 7!:2 'i =: 1 ,~^:[ i'
+assert. IGNOREIFFVI 3000 > 7!:2 'i =: 1 ,~^:[ i'
 assert. i -: (i. 5000) , 0 1
-assert. 3000 > 7!:2 'i =: i ,^:] 1'
+assert. IGNOREIFFVI 3000 > 7!:2 'i =: i ,^:] 1'
 assert. i -: (i. 5000) , 0 1 1
-assert. 3000 < 7!:2 'i =: 1 ,~^:([  0 ,~ ]) i'
+assert. IGNOREIFFVI 3000 < 7!:2 'i =: 1 ,~^:([  0 ,~ ]) i'
 assert. i -: (i. 5000) , 0 1 1 1
-assert. 3000 < 7!:2 'i =: i ,^:unsafename 1'
+assert. IGNOREIFFVI 3000 < 7!:2 'i =: i ,^:unsafename 1'
 assert. i -: (i. 5000) , 0 1 1 1 1
 1
 )
@@ -695,27 +695,27 @@ f''
 
 NB. u@.v
 i =: i. 5000
-(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`>:@.] 0'
-(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 1'
+IGNOREIFFVI (9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`>:@.] 0'
+IGNOREIFFVI (9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 1'
 i =: i. 5000
-(9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 2'
-(500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 1'
+IGNOREIFFVI (9000 * IF64{4 8) > 7!:2 '(i. 5000) ,`]`[`>:@.] 2'
+IGNOREIFFVI (500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 1'
 i =: i. 5000
-(500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 2'
+IGNOREIFFVI (500 * IF64{4 8) > 7!:2 'i ,`]`[`>:@.] 2'
 9!:53 (0)
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 0'
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 0'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
 i =: i. 5000
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
-3000 < 7!:2 'i =: i ,`]`[`>:@.] 3'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
+IGNOREIFFVI 3000 < 7!:2 'i =: i ,`]`[`>:@.] 3'
 9!:53 (1)
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 0'
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 0'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 1'
 i =: i. 5000
-4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
-3000 < 7!:2 'i =: i ,`unsafename`[`>:@.] 0'
-3000 < 7!:2 'i =: i ,`]`[`unsafename@.] 0'
-3000 < 7!:2 'i =: i ,`]`[`>:@.unsafename 0'
+IGNOREIFFVI 4000 > 7!:2 'i =: i ,`]`[`>:@.] 2'
+IGNOREIFFVI 3000 < 7!:2 'i =: i ,`unsafename`[`>:@.] 0'
+IGNOREIFFVI 3000 < 7!:2 'i =: i ,`]`[`unsafename@.] 0'
+IGNOREIFFVI 3000 < 7!:2 'i =: i ,`]`[`>:@.unsafename 0'
 9!:53 (2)   NB. default
 
 NB. The following failed when we didn't properly set the inplace flags for the selected verb

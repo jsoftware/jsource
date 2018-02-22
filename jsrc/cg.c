@@ -45,7 +45,7 @@ static DF1(jtinsert){A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
  GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
- DO(n-1, k=--j%m; RZ(z=CALL2(hf[k],from(sc(j),w),z,hv[k])); gc(z,old);)
+ DO(n-1, k=--j%m; RZ(z=CALL2(hf[k],from(sc(j),w),z,hv[k])); z=gc(z,old);)
  R z;
 }
 

@@ -282,10 +282,10 @@ link  =: <@[ , <`]@.(boxed *. -.@mt)@]
 (0$<'')      (; -: link) 10&u:''
 (0$<'')      (; -: link) s:''
 
-(IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$'chthonic'
-(IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$u:'chthonic'
-(IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$10&u:'chthonic'
-(IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic'
+IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$'chthonic'
+IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$u:'chthonic'
+IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$10&u:'chthonic'
+IGNOREIFFVI (IF64{1200 2800) > 7!:2 'x;y' [ x=: i.1e4 [ y=: 2e4$s:@<"0 'chthonic'
 
 'domain error' -: ex '>''abc''; 2 3 4     '
 'domain error' -: ex '>''abc'';~2 3 4     '

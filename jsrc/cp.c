@@ -75,7 +75,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    fs=sv->f; f1=VAV(fs)->f1;
    z=w; 
    old=jt->tnextpushx; 
-   DO(n, RZ(z=CALL1(f1,z,fs)); gc(z,old);); 
+   DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
    R z;
 }}   /* single positive finite exponent */
 

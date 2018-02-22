@@ -127,7 +127,7 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,old,wr,wcr;
    if(!AN(x))continue;
    RZ(x=less(IX(m),pind(m,x)));
   }
-  RZ(z=irs2(x,z,VFLAGNONE, RMAX,wcr-j,jtfromis)); gc(z,old);
+  RZ(z=irs2(x,z,VFLAGNONE, RMAX,wcr-j,jtfromis)); z=gc(z,old);
  }
  R z;
 }    /* (<ind){"r w, sparse w */

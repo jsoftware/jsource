@@ -155,7 +155,7 @@ g4=: 3 : 0  NB. in place, boolean selection
  end.
  t=: 7!:2 'yy=: b}yy,:xx'
  assert. q -: yy
- assert. t<IF64{2000 4000
+ assert. IGNOREIFFVI t<IF64{2000 4000
  1
 )
 
@@ -449,24 +449,24 @@ hoo =. 3 : 0
 )
 
 9!:53(0)
-((50000*2-b32) < 0 3 7 8 {t) , (5000*2-b32)> 1 2 4 5 6 { t=:foo 1
-((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
-((50000*2-b32) < 0 3 7 8 {t) , (5000*2-b32)> 1 2 4 5 6 { t=:hoo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (5000*2-b32)> 1 2 4 5 6 { t=:foo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 7 8 {t) , (5000*2-b32)> 1 2 4 5 6 { t=:hoo 1
 9!:53(1)
-((50000*2-b32) < 0 3 {t) , (5000*2-b32)> 1 2 4 5 6 7 8 { t=:foo 1
-((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
-((50000*2-b32) < 0 3 {t) , (5000*2-b32)> 1 2 4 5 6 7 8 { t=:hoo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (5000*2-b32)> 1 2 4 5 6 7 8 { t=:foo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3{t) , (5000*2-b32)> 1 2 { t=:goo 1
+IGNOREIFFVI ((50000*2-b32) < 0 3 {t) , (5000*2-b32)> 1 2 4 5 6 7 8 { t=:hoo 1
 9!:53(2)   NB. Default
 
 abc =. save =. i.10000
-(68500*2-b32) > t1=.sp 'abc=. _123 (0)  }abc'  NB. create copy
-( 2900*2-b32) > t2=.sp 'abc=. _123 (1 2)}abc'  NB. in place
-( 2900*2-b32) > t2=.sp 'abc=. _123 (3 4})abc'  NB. in place
+IGNOREIFFVI (68500*2-b32) > t1=.sp 'abc=. _123 (0)  }abc'  NB. create copy
+IGNOREIFFVI ( 2900*2-b32) > t2=.sp 'abc=. _123 (1 2)}abc'  NB. in place
+IGNOREIFFVI ( 2900*2-b32) > t2=.sp 'abc=. _123 (3 4})abc'  NB. in place
 
 abc =. save =. i.10000
-(68500*2-b32) > t1=.sp 'abc=. abc   0}~ _123'  NB. create copy
-( 2900*2-b32) > t2=.sp 'abc=. abc 1 2}~ _123'  NB. in place
-( 2900*2-b32) > t2=.sp 'abc=. abc 3 4}~ _123'  NB. in place
+IGNOREIFFVI (68500*2-b32) > t1=.sp 'abc=. abc   0}~ _123'  NB. create copy
+IGNOREIFFVI ( 2900*2-b32) > t2=.sp 'abc=. abc 1 2}~ _123'  NB. in place
+IGNOREIFFVI ( 2900*2-b32) > t2=.sp 'abc=. abc 3 4}~ _123'  NB. in place
 
 -. abc -: save
 abc -: (5#_123),5}.i.10000
@@ -477,7 +477,7 @@ save -: i.10000
 
 abc =: ?20 50 100$1e6
 x   =: ?1e6
-10000 > sp 'abc=: x (<10;20;30)}abc'
+IGNOREIFFVI 10000 > sp 'abc=: x (<10;20;30)}abc'
 x -: (<10;20;30){abc
 
 y=: ?1e6
@@ -503,32 +503,32 @@ a =: i. 4
 NB. Boxed in place
 
 a =: <"0 i. 100 1000
-500000 < 7!:2 '(<1) 0} a'
-30000 > 7!:2 'a =: (<1) 0} a'
+IGNOREIFFVI 500000 < 7!:2 '(<1) 0} a'
+IGNOREIFFVI 30000 > 7!:2 'a =: (<1) 0} a'
 b =: i. 100
-500000 < 7!:2 '(<b) 0} a'
-30000 > 7!:2 'a =: (<b) 0} a'
-500000 < 7!:2 '(<a) 0} a'   NB. Avoid loop
-500000 < 7!:2 '(<<<<a) 0} a'   NB. Avoid loop
+IGNOREIFFVI 500000 < 7!:2 '(<b) 0} a'
+IGNOREIFFVI 30000 > 7!:2 'a =: (<b) 0} a'
+IGNOREIFFVI 500000 < 7!:2 '(<a) 0} a'   NB. Avoid loop
+IGNOREIFFVI 500000 < 7!:2 '(<<<<a) 0} a'   NB. Avoid loop
 
 size0 =: 7!:0''
 a =: <"0 i. 100 1000
 b =: <i. 500
 size1 =: 7!:0''
-200000 > 7!:2 'a =: b (i. 10)} a'   NB. Write to many cells
-(size1 - 10 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
+IGNOREIFFVI 200000 > 7!:2 'a =: b (i. 10)} a'   NB. Write to many cells
+IGNOREIFFVI (size1 - 10 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
-(size0 + 1000) > 7!:0''
+IGNOREIFFVI (size0 + 1000) > 7!:0''
 
 size0 =: 7!:0''
 a =: <"0 i. 100 1000
 b =: <i. 500
 size1 =: 7!:0''
-200000 > 7!:2 'a =: b (10$i. 2)} a'   NB. Rewrite cells
+IGNOREIFFVI 200000 > 7!:2 'a =: b (10$i. 2)} a'   NB. Rewrite cells
 a -: b , b , 2 }. <"0 i. 100 1000
-(size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
+IGNOREIFFVI (size1 - 2 * 1000 * IF64{4 8) > 7!:0''  NB. Verify values freed
 4!:55 ;:'a b'
-(size0 + 1000) > 7!:0''
+IGNOREIFFVI (size0 + 1000) > 7!:0''
 
 
 NB. Noun & other components of AR

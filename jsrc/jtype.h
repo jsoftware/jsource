@@ -255,7 +255,7 @@ typedef I SI;
 #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
 #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
 // NAME type can have the following information flags set
-#define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (is name is reassigned - watch for errors!)   Aliases with SYMB
+#define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
 #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
 
 // Planned coding to save bits in type

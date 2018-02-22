@@ -224,7 +224,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // execute and parse line as if for B block, except save the result in t
     // If there is a possibility that the previous B result may become the result of this definition,
     // protect it during the frees during the T block.  Otherwise, just free memory
-    if(ci->canend&2)tpop(old);else gc(z,old);   // 2 means previous B can't be the result
+    if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
     t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}

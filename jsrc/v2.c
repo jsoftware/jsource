@@ -444,7 +444,7 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
   RZ(xdivrem(x,d,&q,&r));   /* d must have only one "digit" */
   while(!xcompare(r,xzero)){*v++=pv[i]; x=q; RZ(xdivrem(q,d,&q,&r));} 
   if(-1==xcompare(q,d))break;
-  gc(x,old);
+  x=gc(x,old);
  }
  if(1>xcompare(x,xc(99460729L))&&!(1==AN(x)&&1==XDIG(x))){*v++=xint(x); x=xone;}
  AN(s)=*AS(s)=v-sv;
@@ -482,7 +482,7 @@ static XF1(jtpollard_p_1){A om=jt->xmod;D p,m;I e,i,n,old,*pv;X c,g,z=xone;
   RZ(c=xpow(c,sc(e)));
   RZ(g=xgcd(w,xminus(c,xone)));
   if(!equ(g,xone)&&!equ(g,w)){z=g; break;}
-  gc((A)c,old);
+  c=(X)gc((A)c,old);
  }
  jt->xmod=om; 
  R z;

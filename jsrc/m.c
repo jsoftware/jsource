@@ -488,6 +488,7 @@ RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed
  if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
  ABACK(z)=w;   // set the pointer to the base: w or its base
+ ACIPNO(w);   // we must also remove inplaceability from w, since z is now aliased to it
  R z;
 }    /* allocate header */ 
 

@@ -33,7 +33,6 @@ COMPILE="$common -m32 "
 LINK=" -m32 -dynamiclib -o libtsdll.dylib "
 ;;
 darwin_j64)
-
 TARGET=libtsdll.dylib
 COMPILE="$common "
 LINK=" -dynamiclib -o libtsdll.dylib "

@@ -6,10 +6,7 @@ $jplatform is a simple name that implies OS and hardware
 
 linux     implies intel
 darwin    implies intel
-raspberry implies linux/arm/little-endian
-
-to support linux on arm big-endian you need to add support in
-build_jconsole.sh,... for a new platform (perhaps named linux_arm_be)
+raspberry implies linux/arm
 
 **************************************************************************
 # commands are assumed to run in ~ and depend on jvars.sh
@@ -28,6 +25,9 @@ cat jvars.sh
 # create clean build folders
 . jvars.sh
 $jmake/install.sh
+
+# copy changes to git jlibrary to jbld folders
+$jmake/copy_jlibrary.sh
 
 # ensure proper jsrc/jversion.h (jversion-x.h template)
 

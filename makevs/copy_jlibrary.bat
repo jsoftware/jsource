@@ -1,4 +1,4 @@
-rem create new jbld folders for j32 and j64
+rem copy git jlibrary to jbld j32/j64
 
 cd %userprofile%
 

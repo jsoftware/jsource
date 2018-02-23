@@ -22,12 +22,15 @@ xp support will be dropped in the next year or so
 
 2. examples use powershell, but command prompt works as well
 
-3. examples assume gitdev\jsource is the jsource folder
+3. examples and bars assume gitdev\jsource is the jsource folder
 
 4. jbld hardwired as build folder
 
 5. create jbld folder
-...> gitdev\jsource\makevs\install.bat gitdev
+...> gitdev\jsource\makevs\install.bat
+
+you can copy any later gitdev jlibrary changes to jbld with
+...> gitdev\jsource\makevs\copy_jlibrary.bat
 
 6. create .sln and .vcxproj files from templates
 ...> gitdev\jsource\makevs\template.bat gitdev

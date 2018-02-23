@@ -1,12 +1,8 @@
 cocurrent 'jmf'
-
 jsystemdefs 'hostdefs'
-
 coinsert 'jdefs'
 
-
 doc=: 0 : 0
-
  map name;filename [;sharename;readonly]
        - map jmf file (self-describing)
 
@@ -33,17 +29,22 @@ doc=: 0 : 0
       2 refs
 
   unmapall''                  - unmap all
-
   createjmf filename;msize    - creates jmf file as empty vector
-                                (self-describing)
-
   share name;sharedname       - share 'sharedname' as name
-
   showmap''                   - show all maps
-
 )
+0 : 0
+807 made changes to the header that affect jmf J code
+before 807 - HADR field is bigendian rrrr (j32) rrrrrrrr (j64)
+after  807 - HADR field is bigendian rrhh (j32) rrhhxxxx (j64)
+this is flipped for little endian (fill,hh,rr)
+hh field flags must not be touched by jmf
+newheader is 1 if 807 header format
+)
+IFBIGENDIAN=: 'a'={.2 ic a.i.'a'
 SZI=: IF64{4 8
 'HADK HADFLAG HADM HADT HADC HADN HADR HADS'=: SZI*i.8
+HADRUS=: HADR +(-.IFBIGENDIAN)*IF64{2 6 NB. address of rank US bytes
 HADCN=: <.HADC%SZI
 HSN=: 7+64
 HS=: SZI*HSN
@@ -64,12 +65,6 @@ fullname=: 3 : 0
 t=. y-.' '
 t,('_'~:{:t)#'_base_'
 )
-
-NB. 807 introduced changes to the header that affect jmf J code
-NB. before 807 - HADR (rank) field is endian rrrr (j32) rrrrrrrr (j64)
-NB. after      - HADR (rank) field is endian rrhh (j32) rrhhxxxx (j64)
-NB. the hh field has allocation flags and must not be touched by jmf
-NB. newheader is 1 if 807 header format - that is, there are hh flags
 newheader=: 0~:memr (gethad'SZI_jmf_'),HADR,1,JINT
 
 setheader=: 4 : 0
@@ -84,7 +79,7 @@ end.
 
 getHADR=: 3 : 0
 if. newheader do.
- _1 (3!:4) memr y,HADR,2,JCHAR
+ _1 (3!:4) memr y,HADRUS,2,JCHAR
 else.
  memr y,HADR,1,JINT
 end.
@@ -92,7 +87,7 @@ end.
 
 setHADR=: 4 : 0
 if. newheader do.
- (1 (3!:4) x) memw y,HADR,2,JCHAR
+ (1 (3!:4) x) memw y,HADRUS,2,JCHAR
 else.
  x memw y,HADR,1,JINT
 end.
@@ -390,6 +385,7 @@ elseif. 0=type do.
   (,t+1) setHADC had
 elseif. 1 do.
   had=. allochdr 127
+  'JBOXED (non-jmf) not supported' assert JBOXED~:type
   bx=. JBOXED=type
   hs=. (+/hsize)*asize=. JSIZES {~ JTYPES i. type
   lshape=. bx}.<.(ts-hs)%(*/tshape)*asize

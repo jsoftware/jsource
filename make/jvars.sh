@@ -1,8 +1,10 @@
 # source shell script (read with . jvars.sh) so stuff is easy to find
 
 # edit following if your install is not standard 
-jgit=~/gitdev/jsource # git jsource folder
-jbld=~/jbld           # test libraries and binaries will be put here
+cd ..
+jgit=$(pwd)
+cd make
+jbld=$jgit/build
 
 # edit platform to build - linux darwin raspberry
 jplatform=linux

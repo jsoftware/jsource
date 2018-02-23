@@ -2,6 +2,7 @@
 # jversion-x.h default is in repo
 # jversion.h is your local edit copy and is not in repo
 jsrc/jversion.h
+build
 
 # unix
 *.o
@@ -17,6 +18,7 @@ jsrc/jversion.h
 **/jconsole/**/
 **/jdll/**/
 **/tsdll/**/
+**/*~
 
 # windows - need to run with different versions of vs
 # following files are in repo for vs2013

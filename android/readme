@@ -1,6 +1,12 @@
 1. make a symlink in jni folder
 
-$ cd jni ; ln -s ../../jsrc jsrc ; cd ..
+$ cd jni
+$ ln -sf ../../jsrc .
+$ ln -sf ../../hostdefs.
+$ ln -sf ../../netdefs .
+$ ln -sf ../../../../src/pcre .
+$ ln -sf ../../../../src/pcre2 .
+$ cd ..
 
 2. build using ndk in the current folder
 

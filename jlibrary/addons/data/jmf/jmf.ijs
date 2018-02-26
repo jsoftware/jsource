@@ -35,16 +35,16 @@ doc=: 0 : 0
 )
 0 : 0
 807 made changes to the header that affect jmf J code
-before 807 - HADR field is bigendian rrrr (j32) rrrrrrrr (j64)
-after  807 - HADR field is bigendian rrhh (j32) rrhhxxxx (j64)
-this is flipped for little endian (fill,hh,rr)
+before 807 - HADR field bytes are (lilendian) rrrr (j32) rrrrrrrr (j64)
+after  807 - HADR field bytes are (lilendian) rrhh (j32) rrhhxxxx (j64)
+flipped for bigendian (fill,hh,rr)
 hh field flags must not be touched by jmf
 newheader is 1 if 807 header format
 )
-IFBIGENDIAN=: 'a'={.2 ic a.i.'a'
+IFBE=: 'a'~:{.2 ic a.i.'a'
 SZI=: IF64{4 8
 'HADK HADFLAG HADM HADT HADC HADN HADR HADS'=: SZI*i.8
-HADRUS=: HADR +(-.IFBIGENDIAN)*IF64{2 6 NB. address of rank US bytes
+HADRUS=: HADR+IFBE*IF64{2 6 NB. address of rank US bytes
 HADCN=: <.HADC%SZI
 HSN=: 7+64
 HS=: SZI*HSN
@@ -250,6 +250,7 @@ WINERRNOS=: 0 ". 2 {.&> j
 WINERRMSG=: 3 }.each j
 createjmf=: 3 : 0
 'fn msize'=. y
+fn=. jpath fn
 msize=. <. msize
 ts=. HS+msize
 if. IFUNIX do.
@@ -325,6 +326,7 @@ type =. nountype type
 'trailing shape may not be zero' assert -. 0 e. tshape
 
 'name fn sn ro'=. 4{.y,(#y)}.'';'';'';0
+fn=. jpath fn
 sn=. '/' (('\'=sn)#i.#sn)} sn
 name=. fullname name
 c=. #mappings

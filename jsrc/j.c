@@ -59,7 +59,7 @@ Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
 
 #if SY_64
-#if C_AVX
+#if C_AVX || !(defined(_M_X64) || defined(__x86_64__))
 #define bits "64"
 #else
 #define bits "64nonavx"

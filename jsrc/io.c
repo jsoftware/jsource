@@ -146,6 +146,7 @@ F1(jtjoff){I x;
 
 I jdo(J jt, C* lp){I e,old;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
+ if(jt->capture) jt->capture[0]=0; // clear capture buffer
  old=jt->tnextpushx;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
@@ -221,6 +222,10 @@ int _stdcall JDo(J jt, C* lp){int r;
  R r;
 } 
 
+C* _stdcall JGetR(J jt){
+ R jt->capture?jt->capture:"";
+}
+
 /* socket protocol CMDGET name */
 A _stdcall JGetA(J jt, I n, C* name){A x;
  jt->jerr=0;
@@ -258,6 +263,8 @@ A _stdcall Jga(J jt, I t, I n, I r, I*s){
 
 void oleoutput(J jt, I n, char* s);	/* SY_WIN32 only */
 
+#define capturesize 1000
+
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
 void jsto(J jt,I type,C*s){C e;I ex;
@@ -273,11 +280,18 @@ void jsto(J jt,I type,C*s){C e;I ex;
   jt->jerr=e; jt->etxn=ex; 
  }else{
   // Normal output.  Call the output routine
-  if(jt->smoutput) ((outputtype)(jt->smoutput))(jt,(int)type,s);
+  if(jt->smoutput){((outputtype)(jt->smoutput))(jt,(int)type,s);R;} // JFE output
 #if SY_WIN32 && !SY_WINCE
-  if(type & MTYOFM) oleoutput(jt,strlen(s),s);	/* save output for ole */
+  if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;}	// ole output
 #endif
-}}
+  if(!jt->capture){jt->capture=MALLOC(capturesize);jt->capture[0]=0;}
+  if(capturesize>2+strlen(jt->capture)+strlen(s))
+   strcat(jt->capture,s);
+  else
+   strcpy(jt->capture,"too much output ...\n");
+ }
+ R;
+}
 
 #if SYS&SYS_UNIX
 

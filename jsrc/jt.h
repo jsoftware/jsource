@@ -281,6 +281,7 @@ typedef struct {
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    dirnamebuf[NPATH];/* for directory search                            */
  LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
+ C*   capture;          // capture output for python->J etc.
 } JST;
 
 typedef JST* J; 

@@ -16,9 +16,9 @@ make -f $jmake/makefile
 
 if [ $1 = "j64nonavx" ] ; then
  if [ $TARGET = "libj.dylib" ] ; then
-  cp $TARGET $jbld/j64/bin/libj-nonavx.dylib
+  cp $TARGET $jbld/j64/bin/libjnonavx.dylib
  else
-  cp $TARGET $jbld/j64/bin/libj-nonavx.so
+  cp $TARGET $jbld/j64/bin/libjnonavx.so
  fi
 else
  cp $TARGET $jbld/$1/bin

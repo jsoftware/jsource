@@ -247,12 +247,12 @@ I _stdcall JSetA(J jt,I n,C* name,I dlen,C* d){I old;
 /* set jclient callbacks */
 void _stdcall JSM(J jt, void* callbacks[])
 {
-	jt->smoutput = (outputtype)callbacks[0];
-	jt->smdowd = callbacks[1];
-	jt->sminput = (inputtype)callbacks[2];
-	jt->smpoll = (polltype)callbacks[3];
-	jt->sm = 0xff & (I)callbacks[4];
-	jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
+ jt->smoutput = (outputtype)callbacks[0];
+ jt->smdowd = callbacks[1];
+ jt->sminput = (inputtype)callbacks[2];
+ jt->smpoll = (polltype)callbacks[3];
+ jt->sm = 0xff & (I)callbacks[4];
+ jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}
@@ -261,7 +261,7 @@ A _stdcall Jga(J jt, I t, I n, I r, I*s){
  return ga(t, n, r, s);
 }
 
-void oleoutput(J jt, I n, char* s);	/* SY_WIN32 only */
+void oleoutput(J jt, I n, char* s); /* SY_WIN32 only */
 
 #define capturesize 1000
 
@@ -282,7 +282,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
   // Normal output.  Call the output routine
   if(jt->smoutput){((outputtype)(jt->smoutput))(jt,(int)type,s);R;} // JFE output
 #if SY_WIN32 && !SY_WINCE
-  if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;}	// ole output
+  if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
 #endif
   if(!jt->capture){jt->capture=MALLOC(capturesize);jt->capture[0]=0;}
   if(capturesize>2+strlen(jt->capture)+strlen(s))
@@ -294,6 +294,22 @@ void jsto(J jt,I type,C*s){C e;I ex;
 }
 
 #if SYS&SYS_UNIX
+
+__attribute__((constructor)) static void Initializer(int argc, char** argv, char** envp)
+{
+ static J g_jt=0;
+
+ printf("DllInitializer\n");
+    
+ if(!g_jt)
+ {
+  g_jt=malloc(sizeof(JST));
+  if(!g_jt) R 0;
+  memset(g_jt,0,sizeof(JST));
+  if(!jtglobinit(g_jt)){free(g_jt);g_jt=0; R 0;}
+ }
+
+}
 
 #ifndef ANDROID
 /* lock file for thread-safe globinit
@@ -307,6 +323,8 @@ void jsto(J jt,I type,C*s){C e;I ex;
 
 // non-windows version
 // not thread-safe - could use lock fle lock file for thread-safe globinit
+
+/*
 J JInit(void){
  static J g_jt=0;
  J jt;
@@ -323,6 +341,16 @@ J JInit(void){
  if(!jtjinit2(jt,0,0)){free(jt); R 0;};
  R jt;
 }
+*/
+
+J JInit(void){
+ J jt;
+ RZ(jt=malloc(sizeof(JST)));
+ memset(jt,0,sizeof(JST));
+ if(!jtjinit2(jt,0,0)){free(jt); R 0;};
+ R jt;
+}
+
 
 // clean up at the end of a J instance
 int JFree(J jt){I old;
@@ -370,104 +398,104 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
 
 int valid(C* psrc, C* psnk)
 {
-	while(*psrc == ' ') ++psrc;
-	if(!isalpha(*psrc)) return EVILNAME;
-	while(isalnum(*psrc) || *psrc=='_') *psnk++ = *psrc++;
-	while(*psrc == ' ') ++psrc;
-	if(*psrc) return EVILNAME;
-	*psnk = 0;
-	return 0;		
+ while(*psrc == ' ') ++psrc;
+ if(!isalpha(*psrc)) return EVILNAME;
+ while(isalnum(*psrc) || *psrc=='_') *psnk++ = *psrc++;
+ while(*psrc == ' ') ++psrc;
+ if(*psrc) return EVILNAME;
+ *psnk = 0;
+ return 0;  
 }
 
 int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
-	A a; char gn[256];
-	if(strlen(name) >= sizeof(gn)) return EVILNAME;
-	if(valid(name, gn)) return EVILNAME;
-	RZ(a=symbrdlock(nfs(strlen(gn),gn)));
+ A a; char gn[256];
+ if(strlen(name) >= sizeof(gn)) return EVILNAME;
+ if(valid(name, gn)) return EVILNAME;
+ RZ(a=symbrdlock(nfs(strlen(gn),gn)));
     if(FUNC&AT(a))R EVDOMAIN;
-	*jtype = AT(a);
-	*jrank = AR(a);
-	*jshape = (I)AS(a);
-	*jdata = (I)AV(a);
-	return 0;
+ *jtype = AT(a);
+ *jrank = AR(a);
+ *jshape = (I)AS(a);
+ *jdata = (I)AV(a);
+ return 0;
 }
 
 static int setterm(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
-	A a;
-	I k=1,i,n;
-	char gn[256];
+ A a;
+ I k=1,i,n;
+ char gn[256];
 
-	switch(CTTZNOFLAG(*jtype))
-	{
-	case LITX:
-	case B01X:
-		n = sizeof(char);
-		break;
+ switch(CTTZNOFLAG(*jtype))
+ {
+ case LITX:
+ case B01X:
+  n = sizeof(char);
+  break;
 
-	case C2TX:
-		n = sizeof(unsigned short);
-		break;
+ case C2TX:
+  n = sizeof(unsigned short);
+  break;
 
-	case C4TX:
-		n = sizeof(unsigned int);
-		break;
+ case C4TX:
+  n = sizeof(unsigned int);
+  break;
 
-	case INTX:
-	case SBTX:
-		n = sizeof(I);
-		break;
-		
-	case FLX:
-		n = sizeof(double);
-		break;
-		
-	case CMPXX:
-		n = 2 * sizeof(double);
-		break;
-		
-	default:
-		return EVDOMAIN;	
-	}
+ case INTX:
+ case SBTX:
+  n = sizeof(I);
+  break;
+  
+ case FLX:
+  n = sizeof(double);
+  break;
+  
+ case CMPXX:
+  n = 2 * sizeof(double);
+  break;
+  
+ default:
+  return EVDOMAIN; 
+ }
 
-	// validate name
-	if(strlen(name) >= sizeof(gn)) return EVILNAME;
-	if(valid(name, gn)) return EVILNAME; 
-	for(i=0; i<*jrank; ++i)	k *= ((I*)(*jshape))[i];
-	a = ga(*jtype, k, *jrank, (I*)*jshape);
-	if(!a) return EVWSFULL;
-	MC(AV(a), (void*)*jdata, n*k);
-	jset(gn, a);
-	return jt->jerr;
+ // validate name
+ if(strlen(name) >= sizeof(gn)) return EVILNAME;
+ if(valid(name, gn)) return EVILNAME; 
+ for(i=0; i<*jrank; ++i) k *= ((I*)(*jshape))[i];
+ a = ga(*jtype, k, *jrank, (I*)*jshape);
+ if(!a) return EVWSFULL;
+ MC(AV(a), (void*)*jdata, n*k);
+ jset(gn, a);
+ return jt->jerr;
 }
 
 int _stdcall JSetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata)
 {
-	int er;
+ int er;
 
-	PROLOG(0051);
-	er = setterm(jt, name, jtype, jrank, jshape, jdata);
-	tpop(_ttop);
-	return er;
+ PROLOG(0051);
+ er = setterm(jt, name, jtype, jrank, jshape, jdata);
+ tpop(_ttop);
+ return er;
 }
 
-#define EDCBUSY	-1
-#define EDCEXE	-2
+#define EDCBUSY -1
+#define EDCEXE -2
 
 C* esub(J jt, I ec)
 {
-	if(!ec) return "";
-	if(ec == EDCBUSY) return "busy with previous input";
-	if(ec == EDCEXE) return "not supported in EXE server";
-	if(ec > NEVM || ec < 0) return "unknown error";
-	return (C*)AV(*(ec+AAV(jt->evm)));
+ if(!ec) return "";
+ if(ec == EDCBUSY) return "busy with previous input";
+ if(ec == EDCEXE) return "not supported in EXE server";
+ if(ec > NEVM || ec < 0) return "unknown error";
+ return (C*)AV(*(ec+AAV(jt->evm)));
 }
 
 int _stdcall JErrorTextM(J jt, I ec, I* p)
 {
-	*p = (I)esub(jt, ec);
-	return 0;
+ *p = (I)esub(jt, ec);
+ return 0;
 }
 
 #if 0

@@ -300,8 +300,6 @@ C dll_initialized= 0; // dll init sets to 1
 // dll init on load - eqivalent to windows DLLMAIN DLL_ATTACH_PROOCESS
 __attribute__((constructor)) static void Initializer(int argc, char** argv, char** envp)
 {
- printf("DllInitializer\n");
-    
  J jt=malloc(sizeof(JST));
  if(!jt) R;
  memset(jt,0,sizeof(JST));

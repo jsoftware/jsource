@@ -1,4 +1,4 @@
-/* Copyright 1990-2011, Jsoftware Inc.  All rights reserved.               */
+/* Copyright 1990-2018, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Global Variables                                                        */
@@ -6,6 +6,7 @@
 #include "j.h"
 #include "jversion.h"
 
+// globals start - set by globinit at dll initialization
 A   a0j1=0;               /* 0j1                                  */
 A   ace=0;                /* a:                                   */
 A   ainf=0;               /* _                                    */
@@ -57,6 +58,7 @@ Q   zeroQ={0,0};          /* 0r1                                  */
 DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
 A   zpath=0;              /* default locale search path           */
+// globals end
 
 #if SY_64
 #if C_AVX || !(defined(_M_X64) || defined(__x86_64__))
@@ -71,20 +73,20 @@ A   zpath=0;              /* default locale search path           */
 char jeversion[]= "je9!:14 j"jversion"/j"bits"/"jplatform"/"jtype"/"jlicense"/"jbuilder"/"__DATE__"T"__TIME__;
 
 F1(jtversq){
-	char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
-	ASSERTMTV(w);
-	strcpy(m,jeversion+8);
-	p= m+strlen(m)-20;
-	strcpy(d,p);
-	*p=0;
-	if(' '== d[4]) d[4] = '0';
-	strncat(p,d+7,4);
-	strcat(p,"-");
-	d[3] = 0;
-	q= strstr(months,d);
-	strncat(p,3 + strstr(months,d),2);
-	strcat(p,"-");
-	strncat(p,d + 4,2);
-	strcat(p,d+11);
-	R cstr(m);
+ char m[1000];char d[21]; char months[] = "Jan01Feb02Mar03Apr04May05Jun06Jul07Aug08Sep09Oct10Nov11Dec12"; C* p; C* q;
+ ASSERTMTV(w);
+ strcpy(m,jeversion+8);
+ p= m+strlen(m)-20;
+ strcpy(d,p);
+ *p=0;
+ if(' '== d[4]) d[4] = '0';
+ strncat(p,d+7,4);
+ strcat(p,"-");
+ d[3] = 0;
+ q= strstr(months,d);
+ strncat(p,3 + strstr(months,d),2);
+ strcat(p,"-");
+ strncat(p,d + 4,2);
+ strcat(p,d+11);
+ R cstr(m);
 }

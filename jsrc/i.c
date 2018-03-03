@@ -70,7 +70,6 @@ not currently thread-safe in unix, but could be (at least is all in one spot)
 
 // globals 
 J gjt=0; // JPF debug - convenience debug single process
-int hwfma=0; // BLIS cpu tuning
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once

@@ -263,7 +263,7 @@ A _stdcall Jga(J jt, I t, I n, I r, I*s){
 
 void oleoutput(J jt, I n, char* s); /* SY_WIN32 only */
 
-#define capturesize 1000
+#define capturesize 80000
 
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
@@ -284,6 +284,7 @@ void jsto(J jt,I type,C*s){C e;I ex;
 #if SY_WIN32 && !SY_WINCE
   if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
 #endif
+  // lazy - malloc failure will crash and should alloc larger when full
   if(!jt->capture){jt->capture=MALLOC(capturesize);jt->capture[0]=0;}
   if(capturesize>2+strlen(jt->capture)+strlen(s))
    strcat(jt->capture,s);

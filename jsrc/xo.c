@@ -106,7 +106,7 @@ F1(jtjopen){A z;I h;
 
 B jtadd2(J jt,F f1,F f2,C*cmd){A c,x;
  if(f1==NULL) {jt->fopn+=2;R 1;};
- GATV(c,LIT,1+strlen(cmd),1,0);MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
+ GATV(c,LIT,1+strlen(cmd),1,0);RZ(ras(c));MC(CAV(c)+1,cmd,AN(c)-1);cmd=CAV(c);
  if(jt->fopn+1>=AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
  *cmd='<';x=cstr(cmd); RZ(ras(x)); RZ(*(jt->fopn+AAV(jt->fopa)  )=x); RZ(*(jt->fopn+IAV(jt->fopf)  )=(I)f1);
  *cmd='>';x=cstr(cmd); RZ(ras(x)); RZ(*(jt->fopn+AAV(jt->fopa)+1)=x); RZ(*(jt->fopn+IAV(jt->fopf)+1)=(I)f2);

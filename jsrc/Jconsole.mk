@@ -17,7 +17,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 endif
 ifeq ($(TARGET_ARCH_ABI),armeabi)
   LOCAL_CFLAGS := -fPIC -Os -fwrapv -Werror -fno-strict-aliasing -DREADLINE -mfloat-abi=softfp -mfpu=vfp -march=armv5te
-  LOCAL_ARM_MODE := arm
+  LOCAL_ARM_MODE := thumb
 endif
 ifeq ($(TARGET_ARCH),x86_64)
   LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -DREADLINE -march=x86-64 -mtune=intel -msse4.2 -mpopcnt -fno-stack-protector

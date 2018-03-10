@@ -941,9 +941,7 @@ extern A        zeroi;
 extern Z        zeroZ;
 extern A        zpath;
 /* cpu feature */
-extern int      hwavx;
 extern int      hwfma;
-extern int      hwcrc;
  
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */

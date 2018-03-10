@@ -14,7 +14,7 @@ extern void __cpuid(int CPUInfo[4], int InfoType);
 #endif
 #endif
 
-static  uint64_t           g_cpuFeatures;
+uint64_t g_cpuFeatures;
 
 #if defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
 static int check_xcr0_ymm()

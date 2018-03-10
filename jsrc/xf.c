@@ -16,6 +16,19 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fts.h>
+#ifdef ANDROID
+/*
+ * Strictly these functions were available before Lollipop/21, but there was an accidental ABI
+ * breakage in 21 that means you can't write code that runs on current devices and pre-21 devices,
+ * so we break the tie in favor of current and future devices.
+ */
+
+FTSENT* fts_children(FTS* __fts, int __options);
+int fts_close(FTS* __fts);
+FTS* fts_open(char* const* __path, int __options, int (*__comparator)(const FTSENT** __lhs, const FTSENT** __rhs));
+FTSENT* fts_read(FTS* __fts);
+int fts_set(FTS* __fts, FTSENT* __entry, int __options);
+#endif
 #endif
 
 #include "j.h"

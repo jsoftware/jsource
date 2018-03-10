@@ -70,9 +70,6 @@ not currently thread-safe in unix, but could be (at least is all in one spot)
 
 // globals 
 J gjt=0; // JPF debug - convenience debug single process
-int      hwavx=0;
-int      hwfma=0;
-int      hwcrc=-1;  // indicate uninitialized
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
@@ -130,23 +127,13 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  pf=qpf();
  pinit();
 
- // crc init
- if(hwcrc==-1)
- {  
-  cpuInit();
-#if defined(__aarch64__)
-  hwcrc=1;  // 64-bit armv8a in android supports hardware crc. not sure for iOS
-#elif defined(__x86_64__)||defined(__i386__)||defined(_MSC_VER)
-  hwcrc=(getCpuFeatures()&CPU_X86_FEATURE_SSE4_2)?1:0;
-  hwavx=(getCpuFeatures()&CPU_X86_FEATURE_AVX)?1:0;
-  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
-  // fprintf(stderr,"hwcrc %d hwavx %d hwfma %d\n",hwcrc,hwavx,hwfma);
-#else
-  hwcrc=0;
+#if C_AVX && (defined(_M_X64) || defined(__x86_64__))
+ cpuInit();
+ hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
+ // fprintf(stderr,"hwfma %d\n",hwfma);
 #endif
- }
 
-R 1;
+ R 1;
 }
 
 static B jtevinit(J jt){A q,*v;

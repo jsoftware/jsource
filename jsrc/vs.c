@@ -176,8 +176,8 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
  if(wt&DENSE)R sparseit(w,a,selm(wt));
  r=AR(w); ws=AS(w); wp=PAV(w);
  GA(z,wt,1L,r,ws); zp=PAV(z); 
- SPB(zp,a,a1=vaxis(r,a)); 
- SPB(zp,e,e=ca(SPA(wp,e)));
+ SPBV(zp,a,a1,vaxis(r,a)); 
+ SPBV(zp,e,e,ca(SPA(wp,e)));
  a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); m=*AS(y);
  if(all1(eps(a,a1))){I*s;  /* old is subset of new */
   RZ(p=eps(daxis(r,a),a1)); b=BAV(p);
@@ -186,7 +186,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
   s=AS(x); c=1; DO(AN(p), d=s[1+i]; if(b[i]){c*=d; v[k++]=d;}else u[j++]=d;); *u=c*m;
   RZ(x=reshape(vec(INT,j,u),cant2(increm(dgrade1(p)),x)));
   RZ(q=not(irs2(x,reshape(vec(INT,AR(x)-1,1+AS(x)),e),0L,-1L,RMAX,jtmatch)));
-  SPB(zp,x,x=repeat(q,x));
+  SPBV(zp,x,x,repeat(q,x));
   RZ(y=stitch(repeat(sc(c),y),reshape(v2(c*m,k),abase2(vec(INT,k,v),IX(c)))));
   RZ(p=grade1(over(a,less(a1,a))));
   if(equ(p,IX(AN(p))))SPB(zp,i,repeat(q,y))

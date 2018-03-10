@@ -6,7 +6,7 @@ NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
 
 NB. settings to change when compiling the JE in a debug mode
 NB. If FORCEVIRTUALINPUTS is set, space consumption changes.  Set IGNOREIFFVI to 1: in that case
-IGNOREIFFVI =: ]
+IGNOREIFFVI_z_ =: ]
 
 3 : 0 ''
 testpath=: '/',~(t i:'/'){.t=. jpath;(4!:4<'ddall'){4!:3''
@@ -31,7 +31,7 @@ testfiles=: 3 : 0   NB. y. is prefix - e.g., 'g' or 'gm' or 'gs'
 NB. black list
 NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
-blacklist=: (<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'
+blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 NB. blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip.ijs'
 blacklist=: blacklist, (IFRASPI)#(<testpath),each <'g600ip.ijs'
 blacklist=: blacklist, (IFRASPI)#(<testpath),each 'gsco1u.ijs';'gsco1w.ijs'

@@ -110,7 +110,7 @@ F1(jtjfread){A z;F f;
  RE(f=stdf(w));
  if(f)R 1==(I)f?jgets("\001"):3==(I)f?rdns(stdin):rd(vfn(f),0L,-1L);
  RZ(f=jope(w,FREAD_O)); z=rd(f,0L,-1L); fclose(f); 
- R z;
+ RETF(z);
 }
 
 F2(jtjfwrite){B b;F f;

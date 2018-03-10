@@ -362,7 +362,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Give this result a short lease on life
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
  if(z)tpush(z);
- R z;
+ RETF(z);
 }
 
 
@@ -648,8 +648,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
   // Don't bother to create a symbol table for an empty definition, since it is a domain error
-  if(AN(hv[1]))RZ(hv[3] = crelocalsyms(hv[0],hv[1],n,0,flag));  // tokens,cws,type,monad,flag
-  if(AN(hv[HN+1]))RZ(hv[HN+3] = crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag));  // tokens,cws,type,dyad,flag
+  if(AN(hv[1]))RZ(hv[3] = rifvs(crelocalsyms(hv[0],hv[1],n,0,flag)));  // tokens,cws,type,monad,flag
+  if(AN(hv[HN+1]))RZ(hv[HN+3] = rifvs(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // tokens,cws,type,dyad,flag
  }
 
  switch(n){

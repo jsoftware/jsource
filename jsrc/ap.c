@@ -368,7 +368,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
   case 2: MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
   case 3: MCREL(x,y,n); if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
  }
- R z;
+ RETF(z);
 }    /* a[\w and a]\w and a,\w */
 
 
@@ -404,7 +404,7 @@ static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
   case 4: NAN0; MOVSUMAVG(D,D,FL, D,FL, x,  SETZ ); NAN1; break;
   case 5: NAN0; MOVSUMAVG(D,D,FL, D,FL, x/d,SETZD); NAN1; break;
  }
- R z;
+ RETF(z);
 }    /* m +/\w or (if 0=avg) m (+/%#)\w (if 1=avg); bool or integer or float; 0<m */
 
 static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
@@ -473,7 +473,7 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
   case 4: MOVMINMAX(D,FL, inf ,<=); break;
   case 5: MOVMINMAX(D,FL, infm,>=); break;
  }
- R z;
+ RETF(z);
 }    /* a <./\w (0=max) or a >./\ (1=max); vector w; integer or float; 0<m */
 
 static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,*zv;I c,i,j,p;
@@ -497,7 +497,7 @@ static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,
    }
    SETZ;
  }}
- R z;
+ RETF(z);
 }    /* a *./\w (0=or) or a +./\ (1=or); boolean w; 0<m */
 
 static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
@@ -510,7 +510,7 @@ static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
   case 2: DO(1+p, ICPY(zv,u,c); t=u+=c; DO(m-1, s=zv; DO(c, *s++&=*t++;);); zv+=c;); break;
   case 3: DO(1+p, ICPY(zv,u,c); t=u+=c; DO(m-1, s=zv; DO(c, *s++|=*t++;);); zv+=c;); break;
  }
- R z;
+ RETF(z);
 }    /* a 17 b./\w (0=or) or a 23 b./\ (1=or); integer w; 0<m */
 
 static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
@@ -524,7 +524,7 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
   case 2: DO(m, s=yv; DO(c,       *s++^=   *v++;);); SETZ;    DO(p, s=yv; DO(c,       *zv++=*s++^=   *u++^ *v++;);); break;
   case 3: DO(m, s=yv; DO(c, x=*s; *s++ =x==*v++;);); SETZ;    DO(p, s=yv; DO(c, x=*s; *zv++=*s++ =x==*u++==*v++;););
  }
- R z;
+ RETF(z);
 }    /* m ~:/\w (0=eq) or m =/\ (1=eq); boolean w; 0<m */
 
 static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
@@ -538,7 +538,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
   case 2: DO(m, s=yv; DO(c,       *s++^=    *v++ ;);); SETZ;    DO(p, s=yv; DO(c,       *zv++=*s++^=      *u++^*v++  ;);); break;
   case 3: DO(m, s=yv; DO(c, x=*s; *s++ =~(x^*v++););); SETZ;    DO(p, s=yv; DO(c, x=*s; *zv++=*s++ =~(x^~(*u++^*v++));););
  }
- R z;
+ RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
 static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;VF ado;

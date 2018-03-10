@@ -18,9 +18,9 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
 }
 
 // run jtfx on each box in w, turning AR into an A block
-F1(jtfxeach){R every(w,0L,jtfx);}
+F1(jtfxeach){RETF(every(w,0L,jtfx));}
 // run jtfx on each box in w, EXCEPT on nouns, which we return as is
-F1(jtfxeachacv){R every(w,w,jtfx);}  // the second w is just any nonzero
+F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
@@ -46,7 +46,7 @@ static DF1(jtinsert){A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
  DO(n-1, k=--j%m; RZ(z=CALL2(hf[k],from(sc(j),w),z,hv[k])); z=gc(z,old);)
- R z;
+ RETF(z);
 }
 
 F2(jtevger){A hs;I k;
@@ -68,9 +68,15 @@ F2(jttie){RZ(a&&w); R over(VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}
 
 
 static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
+ // char types that are atomic both dyad and monad
+ // CFCONS should not be atomic.  But who would use it by itself?  It must be part of
+ // some compound, so we will pretend it's atomic.  It's too much trouble to add an 'atomic result'
+ // type, and tests rely on 1: being treated as atomic.  It's been this way a long time.
  static C atomic12[]={CMIN, CLE, CMAX, CGE, CPLUS, CPLUSCO, CSTAR, CSTARCO, CMINUS, CDIV, CROOT, 
      CEXP, CLOG, CSTILE, CBANG, CLEFT, CRIGHT, CJDOT, CCIRCLE, CRDOT, CHGEOM, CFCONS, 0};
+ // atomic monad-only
  static C atomic1[]={CNOT, CHALVE, 0};
+ // atomic dyad-only
  static C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
  RZ(w&&VERB&AT(w));
  v=VAV(w); id=v->id;
@@ -112,20 +118,25 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  r=AR(w);
  if(1<r)RZ(w=gah(1L,w));
  sv=VAV(self); g=sv->g;
+ // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(k=df1(w,g))
  else{RZ(k=df1(w,qq(g,zero))); ASSERT(AR(k)==AR(w)&&AN(k)==AN(w),EVRANK);}
  if(B01&AT(k)){
+  // v produced a binary list.  Pull out the operands for u[0] and u[1], operate on them individually,
+  // and interleave the results
   h=sv->h; ASSERT(2<=AN(h),EVINDEX); hv=AAV(h);
   RZ(x=df1(t=repeat(not(k),w),hv[0])); if(!AR(x))RZ(x=reshape(tally(t),x));
   RZ(y=df1(t=repeat(k,     w),hv[1])); if(!AR(y))RZ(y=reshape(tally(t),y));
   RZ(z=!AN(x)?y:!AN(y)?x:from(grade1(grade1(k)),over(x,y)));
  }else{
+  // v produced non-binary. apply k u/. y and shuffle the results to their proper positions
   RZ(u=nub(k));
   RZ(y=df2(k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->f))))); yv=AAV(y);
   b=0; DO(AN(y), if(b=!AR(yv[i]))break;);
   if(b){
    RZ(x=df2(k,w,sldot(ds(CPOUND)))); xv=AV(x);
-   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i]));INSTALLBOX(y,yv,i,z);});
+   y=rifvs(y); yv=AAV(y);   // mustn't install into virtual
+   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOX(y,yv,i,z);});
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }

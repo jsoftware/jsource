@@ -75,7 +75,7 @@ static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)(n%2-1); x+=k; DO(m, DO(d,
   if     (ar==wr)DO(an, x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
   else if(ar< wr)DO(an, x=*av++; DO(wn/an, y=*wv++; *zv++=op(x,y););)  \
   else           DO(wn, y=*wv++; DO(an/wn, x=*av++; *zv++=op(x,y););); \
-  RE(0); R z;                                                          \
+  RE(0); RETF(z);                                                          \
  }
 
 #if SY_64
@@ -120,7 +120,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;V
  else                      f=bwC[j];
  f(jt,b,m,n,AV(z),AV(x),AV(y)); 
  *(zn+CAV(z))=0;
- R z;
+ RETF(z);
 }
 
 /* compute z=: t{~ a.i.w if t=: c&(m b.) a.                             */

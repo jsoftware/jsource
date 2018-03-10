@@ -64,7 +64,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   GATV(p,LIT,m,1,0); v=CAV(p); memset(v,' ',m);
   if(1==d)*(v+j)=jt->bx[10]; else{memset(v+j,jt->bx[9],d); *(v+j)=*jt->bx; *(v+k-1)=jt->bx[6];}
  }
- RZ(zv[0]=stitch(p,t));
+ RZ(zv[0]=rifvs(stitch(p,t)));
  R z;
 }
 
@@ -122,17 +122,17 @@ static F1(jttreach){R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
 
 static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
- if(AT(w)&NOUN+NAME)R tleaf(lrep(w));
+ if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
  v=VAV(w); id=v->id; fl=v->flag; fs=v->f; gs=v->g; hs=v->h; 
- if(fl&VXOPCALL)R trr(hs);
+ if(fl&VXOPCALL){RETF(trr(hs));}
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  m=!!fs+(gs||ex)+(id==CFORK||xop&&hs);
- if(!m)R tleaf(spella(w));
- if(evoke(w))R tleaf(sfn(0,fs));
+ if(!m){RETF(tleaf(spella(w)));}
+ if(evoke(w)){RETF(tleaf(sfn(0,fs)));}
  GATV(t,BOX,m,1,0); x=AAV(t);
- if(0<m)RZ(x[0]=fl&VGERL?treach(fxeach(fs)):trr(fs));
- if(1<m)RZ(x[1]=fl&VGERR?treach(fxeach(gs)):ex?trr(unparsem(zero,w)):trr(gs));
- if(2<m)RZ(x[2]=trr(hs));
+ if(0<m)RZ(x[0]=rifvs(fl&VGERL?treach(fxeach(fs)):trr(fs)));
+ if(1<m)RZ(x[1]=rifvs(fl&VGERR?treach(fxeach(gs)):ex?trr(unparsem(zero,w)):trr(gs)));
+ if(2<m)RZ(x[2]=rifvs(trr(hs)));
  s=xop?spellout('0'):fl&VDDOP?(hv=AV(hs),over(thorn1(sc(hv[0])),over(spellout(id),thorn1(sc(hv[1]))))):spellout(id);
  z=troot(s,graft(ope(t)));
  EPILOG(z);

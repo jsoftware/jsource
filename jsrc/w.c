@@ -85,8 +85,8 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  RZ(t=wordil(w));
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
  GATV(z,BOX,n,1,0); x=AAV(z);
- DO(n, k=*y++; RZ(*x++=str(*y++,s+k)););
- AFLAG(z) |= AFNOSMREL; R z;  // always boxed chars, and not relative
+ DO(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
+ AFLAG(z) |= AFNOSMREL; RETF(z);  // always boxed chars, and not relative
 }
 
 
@@ -113,7 +113,7 @@ static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
 // env is the environment for which this is being parsed: 0=tacit translator, 1=keyboard/immex with no locals, 2=for explicit defn
 A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
- s=CAV(w); u=AV(a); n=*u++; n=0>n?-(1+n):n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
+ s=CAV(w); u=AV(a); n=*u++; n=(n>>(BW-1))^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
  GATV(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
@@ -142,7 +142,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
    case CA: ASSERTN(vnm(wl,wi),EVILNAME,nfs(wl,wi)); RZ(*x=nfs(wl,wi)); if((env==2)&&(NAV(*x)->flag&NMDOT)){AT(*x)|=NAMEBYVALUE;}  // starts with alphabetic, make it a name, error if invalid name
     // If the name is a call-by-value name (x y u. etc), we mark it as BYVALUE if it is slated for execution in an explicit definition
   }
-
+  // Since the word is being incorporated into a list, we must realize it
+  rifv(*x);
   // Mark the word as not-inplaceable.  Since all allocations start life marked in-placeable, we get into trouble if words in
   // a explicit definition are left that way, because the sentences may get reexecuted and any constant marked inplaceable could
   // be modified by each use.  The trouble happens only if the definition is not assigned (if it's assigned all the usecounts
@@ -171,13 +172,13 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     GATV(y,BOX,m+3,1,0); yv=AAV(y);   // Allocate the argument
     c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
     j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmp(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
-    yv[m]=v[2]; RZ(yv[m+1]=sc(c)); yv[m+2]=z;    // add the 3 ending elements
+    yv[m]=v[2]; RZ(yv[m+1]=rifvs(sc(c))); yv[m+2]=z;    // add the 3 ending elements
     x[0]=v[0]; x[1]=v[1]; x[2]=ds(CCASEV); x[3]=y;  // build the sentence
-    R z1;  // that's what we'll execute
+    RETF(z1);  // that's what we'll execute
    }
   }
  }
- R z;
+ RETF(z);
 }    /* produce boxed list of words suitable for parsing */
                                                             
 /* locals in enqueue:                                           */
@@ -204,8 +205,8 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 #define CHKJ(j)             ASSERT(0<=(j),EVINDEX);
 #define EXTZ(T,p)           while(uu<p+u){k=u-(T*)AV(z); RZ(z=ext(0,z)); u=k+(T*)AV(z); uu=(T*)AV(z)+AN(z);}
 
-#define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=str(p,(j)+wv));}
-#define EMIT0b(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=vec(B01,p,(j)+wv));}
+#define EMIT0c(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(str(p,(j)+wv)));}
+#define EMIT0b(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); RZ(*u++=rifvsdebug(vec(B01,p,(j)+wv)));}
 #define EMIT0x(T,j,i,r,c)   {CHKJ(j); p=(i)-(j); EXTZ(T,1); GA(x,t0,p*wm,wr,AS(w0));  \
                                 *AS(x)=p; MC(AV(x),wv0+wk*(j),wk*p); *u++=x;}
 #define EMIT1(T,j,i,r,c)    {CHKJ(j); p=(i)-(j);            cc=(j)+wv; DO(p, *u++=*cc++;);}
@@ -304,8 +305,8 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
  GAT(z,BOX,4,1,0); zv=AAV(z);
- RZ(zv[0]=sc(f)); zv[1]=s; zv[2]=m; RZ(zv[3]=vec(INT,4L,ijrd));
- R z;
+ RZ(zv[0]=rifvs(sc(f))); RZ(zv[1]=rifvs(s)); RZ(zv[2]=rifvs(m)); RZ(zv[3]=rifvs(vec(INT,4L,ijrd)));
+ EPILOG(z);
 }    /* check left argument of x;:y */
 
 static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijrd,k,n,p,q,*v;

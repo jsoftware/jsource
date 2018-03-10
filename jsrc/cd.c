@@ -435,9 +435,9 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
   f=0<=p?jtdiff0:jtintg0; y=a; DO(ABS(p), ASSERT(y=CALL1(f,y,0L),EVDOMAIN);); R y;
  }
  q+=p-1; p=0>p?p:0; q=0<q?q:0;
- GATV(x,BOX,1+q-p,1,0); xv=AAV(x); xv[-p]=a;
- if(0>p){y=a; j=-p; DO(-p, ASSERT(y=intg0(y),EVDOMAIN); xv[--j]=y;);}
- if(0<q){y=a; j=-p; DO( q, ASSERT(y=diff0(y),EVDOMAIN); xv[++j]=y;);}
+ GATV(x,BOX,1+q-p,1,0); xv=AAV(x); xv[-p]=incorp(a);
+ if(0>p){y=a; j=-p; DO(-p, ASSERT(y=intg0(y),EVDOMAIN); xv[--j]=incorp(y););}
+ if(0<q){y=a; j=-p; DO( q, ASSERT(y=diff0(y),EVDOMAIN); xv[++j]=incorp(y););}
  j=n; z=xv[wv[--j]-p]; DO(n-1, RZ(z=folk(xv[wv[--j]-p],ds(CCOMMA),z)););
  R qq(z,zero);
 }
@@ -547,10 +547,10 @@ static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
  RZ(a=cvt(t,a)); RZ(y=cvt(t,w)); GA(p,t,1,0,0);
  if(t&CMPX){Z*av=ZAV(a),e,*pv=ZAV(p),*v=ZAV(y),x;
   e.re=1e-7; e.im=0.0; *pv=ZNZ(*av)?*av:e; 
-  DO(n, if(r)*pv=ZNZ(av[i])?av[i]:e; x=v[i]; v[i]=zplus(v[i],*pv); RZ(zv[i]=divide(minus(df2(p,y,fs),f0),p)); v[i]=x;);
+  DO(n, if(r)*pv=ZNZ(av[i])?av[i]:e; x=v[i]; v[i]=zplus(v[i],*pv); RZ(zv[i]=incorp(divide(minus(df2(p,y,fs),f0),p))); v[i]=x;);
  }else     {D*av=DAV(a),e,*pv=DAV(p),*v=DAV(y),x;
   e=1e-7;              *pv=    *av ?*av:e;
-  DO(n, if(r)*pv=    av[i] ?av[i]:e; x=v[i]; v[i]+=*pv;            RZ(zv[i]=divide(minus(df2(p,y,fs),f0),p)); v[i]=x;);
+  DO(n, if(r)*pv=    av[i] ?av[i]:e; x=v[i]; v[i]+=*pv;            RZ(zv[i]=incorp(divide(minus(df2(p,y,fs),f0),p))); v[i]=x;);
  }
  R ope(z); /* cant2(IX(AR(w)),ope(z)); */
 }
@@ -563,7 +563,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  GAT(t,INT,1,0,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
  RZ(s=ca(self)); v=VAV(s); v->g=t; v->lr=v->mr;
  GATV(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
- DO(n, *tv=d=gv[i]; zv[i]=(ff=dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s););
+ DO(n, *tv=d=gv[i]; zv[i]=(ff=incorp(dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s)););
  RE(0); R ope(z);
 }
 

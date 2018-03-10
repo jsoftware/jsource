@@ -78,7 +78,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  n=AN(w);
  GATV(z,LIT,n,AR(w),AS(w)); zv=UAV(z); wv=UAV(w);
  if(!bitwisecharamp(f,n,wv,zv))DO(n, *zv++=f[*wv++];); 
- R z;
+ RETF(z);
 }    /* f&.(a.&i.) w */
 
 F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;

@@ -67,7 +67,8 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
    dz=d*m; zv=CAV(z); if(0>p&&m>q)zv+=d*(m-q);
    DO(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
    b=1; z=y;
- }}
+  }
+ }
  if(!b)z=ca(w);   // todo kludge no need to ca()
  RELOCATE(w,z);   // if w was relative, rebase the cells on z
  EPILOG(z);
@@ -80,9 +81,10 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);  // if multiple x values, loop over them
+ // canonicalize x
  n=AN(a);    // n = #axes in a
  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
- I *ws=AS(w);  // ws->shape of s
+ I * RESTRICT ws=AS(w);  // ws->shape of w
  if(AT(a)&B01+INT)RZ(s=a=vi(a))  // convert boolean arg to int
  else{
   RZ(t=vib(a));   // convert to int in new buffer
@@ -91,24 +93,24 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
   DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
   s=a=t;
  }
- if(!((n-1)|wf|(SPARSE&wt))&&wcr){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!((n-1)|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
   I nitems = ws[0];  // number of items of w
   I tkabs = (tklen^tkasign)-tkasign;  // ABS(tklen)
-  if((UI)tkabs<=(UI)nitems) {  // if this is not an overtake...  (unsigned to handle overflow, if tklen=IMIN).  The expr is ABS(tklen)
-    // calculate offset
-    I woffset = tkasign&(tklen + nitems);   // x+#y if x neg, 0 if x pos
-    // get length of a cell of w
-    I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
-    I offset = woffset * wcellsize;  // offset in bytes of the virtual data
-    // allocate virtual block
-    s = virtual(w,offset,wr,0); I *ss = AS(s); // allocate block; ss-> shape 
-    // fill in shape
-    ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
-    AN(s)=tkabs*wcellsize;  // install # atoms
-    R s;
+  if((UI)tkabs<=(UI)nitems) {  // if this is not an overtake...  (unsigned to handle overflow, if tklen=IMIN).
+   // calculate offset
+   I woffset = tkasign&(tklen + nitems);   // x+#y if x neg, 0 if x pos
+   // get length of a cell of w
+   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
+   I offset = woffset * wcellsize;  // offset in bytes of the virtual data
+   // allocate virtual block
+   s = virtual(w,offset,wr);    // allocate block
+   // fill in shape
+   I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+   AN(s)=tkabs*wcellsize;  // install # atoms
+   RETF(s);
   }
  }
  // full processing for more complex a
@@ -123,13 +125,33 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
 F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  RZ((a=vib(a))&&w);  // convert & audit a
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
+ // virtual case: scalar a
+ if(!((n-1)|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
+  I * RESTRICT ws=AS(w);  // ws->shape of w
+  I droplen = IAV(a)[0];  // get the one number in a, the take amount
+  I dropabs = droplen<0?-droplen:droplen;  // ABS(droplen), but may be as high as IMIN
+  I remlen = ws[0]-dropabs; remlen=remlen<0?0:remlen;  // length remaining after drop: (#y)-abs(x), 0 if overdrop
+  // calculate offset
+  I woffset = droplen<0?0:droplen;   // x if x pos, 0 if x neg.  May be out of bounds if overdrop, but there will be no elements
+  // get length of a cell of w
+  I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
+  I offset = woffset * wcellsize;  // offset in bytes of the virtual data
+  // allocate virtual block
+  s = virtual(w,offset,wr);    // allocate block
+  // fill in shape
+  I* RESTRICT ss=AS(s); ss[0]=remlen; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+  AN(s)=remlen*wcellsize;  // install # atoms
+  RETF(s);
+ }
+
    // length error if too many axes
- if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; v[i]=d<-m?0:d<0?d+m:d<m?d-m:0;);}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
+ // obsolete if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; v[i]=d<-m?0:d<0?d+m:d<m?d-m:0;);}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
+ if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=((m^d)>>(BW-1)););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
  else{GATV(s,INT,wr+n,1,0); v=AV(s); ICPY(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
  R tk(s,w);
 }

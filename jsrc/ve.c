@@ -300,7 +300,7 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
  if(c)DO(m, p=0; d=1; DO(c, if(*--v)p+=d; d+=d;); *--x=p;)
  else memset(x-m,C0,m*SZI);
- R z;
+ RETF(z);
 }
 
 F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
@@ -334,7 +334,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // But we can't delete a digit if any of the values were negative - all are significant then
   if(i0(aslash(CPLUSDOT,ravel(lt(w,zero)))))R z;
   if(0==i0(aslash(CMAX,ravel(irs1(z,0L,1L,jthead)))))R irs1(z,0L,1L,jtbehead);
-  R z;
+  RETF(z);
  }
  // Integer.  Calculate x=max magnitude encountered (minimum of 1, to leave 1 output value)
  x=1; v=AV(w);
@@ -343,7 +343,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  GATV(z,B01,n*c,1+r,AS(w)); *(r+AS(z))=c;  // Allocate result area, install shape
  v=n+AV(w); zv=AN(z)+BAV(z);  // v->last input location (prebiased), zv->last result location (prebiased)
  DO(n, x=*--v; DO(c, *--zv=(B)(x&1); x>>=1;));  // copy in the bits, starting with the LSB
- R z;
+ RETF(z);
 }
 
 F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
@@ -372,7 +372,7 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
     DO(wn, x=*--wv; *--zv=x&d1; *--zv=x>>k;)
    }
   }else DO(wn, x=*--wv; u=av; DO(an, d=*--u; *--zv=r=remii(d,x); x=d?(x-r)/d:0;););
-  R z;
+  RETF(z);
  }
  {PROLOG(0070);A y,*zv;C*u,*yv;I k;
   F2RANK(1,0,jtabase2,0);
@@ -392,5 +392,5 @@ F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
  b=(B*)&mask; DO(k, b[i]=1;);
  b=(B*)&m; DO(q, DO(k, b[i]=*v; v+=k;); *u++=mask&m;)
  b=(B*)u; wi=AV(w)+q*k; DO(r, *b++=1&*wi++?1:0;);
- R z;
+ RETF(z);
 }

@@ -335,11 +335,11 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
   j=v[i]; m=v[1+i];         // j=index, m=length of word
   if(0>k)k=j;              // k=index of start of sentence, set at start or when we have processed a control word
   if(conword(m,j+s)){     // when we hit a control word...
-   if(k<j)RZ(*zv++=str(j-k,k+s));  // if a sentence was in progress, emit it
-   RZ(*zv++=str(m,j+s));           // then emit the control word
+   if(k<j)RZ(*zv++=rifvs(str(j-k,k+s)));  // if a sentence was in progress, emit it
+   RZ(*zv++=rifvs(str(m,j+s)));           // then emit the control word
    k=-1;           // reset start-of-sentence search
  }}
- if(0<=k)RZ(*zv++=str(j+m-k,k+s)); // if there was a final sentence in progress, append it
+ if(0<=k)RZ(*zv++=rifvs(str(j+m-k,k+s))); // if there was a final sentence in progress, append it
  R vec(BOX,zv-z0,z0);  // keep only the boxes that we used
 }    /* partition by controls */
 
@@ -386,7 +386,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    // append the words (which are a queue or a cw) to the list of words
    if(x){                               // queue or 
     while(AN(l)<m+q){RZ(l=ext(0,l)); lv=AAV(l);}  // if word buffer filled, extend it & refresh data pointer
-    if(k)lv[m]=x; else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
+    if(k)lv[m]=rifvs(x); else ICPY(m+lv,AAV(x),q);   // install word(s): the cw, or the words of the queue
    }
    // Now that the words have been moved, install the index to them, and their number, into the cw info; step word pointer over the words added 
    d->i=m; d->n=(US)q; m+=q;
@@ -399,7 +399,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
  // Audit control structures and point the go linw correctly
  ASSERTCW(    0>(i= conall(n,cv   )),(i+cv)->source);
  // Install the number of words and cws into the return blocks, and return those blocks
- AN(l)=*AS(l)=m; *zl=l;
- AN(c)=*AS(c)=n; *zc=c;
+ AN(l)=*AS(l)=m; *zl=rifvs(l);
+ AN(c)=*AS(c)=n; *zc=rifvs(c);
  R try;
 }

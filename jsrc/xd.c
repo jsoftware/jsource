@@ -193,15 +193,15 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
  rwx[1]=f->dwFileAttributes & FILE_ATTRIBUTE_READONLY ?'-':'w';
  rwx[2]=strcmp(t,"exe")&&strcmp(t,"bat")&&strcmp(t,"com")?'-':'x';
  GAT(z,BOX,5,1,0); zv=AAV(z);
- RZ(zv[0]=str(n,s)); 
- RZ(zv[1]=vec(INT,6L,ts));
+ RZ(zv[0]=rifvs(str(n,s))); 
+ RZ(zv[1]=rifvs(vec(INT,6L,ts)));
 #if SY_64
- RZ(zv[2]=sc(((I)f->nFileSizeHigh<<32) + (I)f->nFileSizeLow));
+ RZ(zv[2]=rifvs(sc(((I)f->nFileSizeHigh<<32) + (I)f->nFileSizeLow)));
 #else
  RZ(zv[2]=sc(   (f->nFileSizeHigh || 0>(I)f->nFileSizeLow)?-1:f->nFileSizeLow ));  
 #endif
- RZ(zv[3]=str(3L,rwx));
- RZ(zv[4]=attv((S)f->dwFileAttributes));
+ RZ(zv[3]=rifvs(str(3L,rwx)));
+ RZ(zv[4]=rifvs(attv((S)f->dwFileAttributes)));
  R z;
 }
 
@@ -217,7 +217,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
    name = fnbuffer;
    if(strcmp(name,".")&&strcmp(name,"..")){
     if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}
-    RZ(zv[j++]=jtdir1(jt,&f,fnbuffer)); 
+    RZ(zv[j++]=rifvs(jtdir1(jt,&f,fnbuffer))); 
    }
   } while (FindNextFileW(fh,&f));
   FindClose(fh);

@@ -38,5 +38,5 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=m?zn/m:0;
  GA(z,zt,zn,b?wr:ar,b?ws:as); if(!zn)R z;
  ado(jt,b,m,n,CAV(z),CAV(a),CAV(w));
- R z;
+ RETF(z);
 }

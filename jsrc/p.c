@@ -71,7 +71,7 @@ I jtnotonupperstack(J jt, A w) {
 // obsolete  R 0;  // if we get through without requesting a decrement, return 0
 // obsolete }    /* stack handling for w which is about to be redefined */
 // obsolete 
-static F2(jtisf){R symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb);} 
+static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R mark;} 
 
 static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
  n=stack[0].a; v=stack[2].a;   // extract arguments
@@ -93,7 +93,16 @@ static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1;
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
   f=stack[1].a; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
   // if simple assignment to a name (normal case), do it
-  if(NAME&AT(n)) symbis(n,v,jt->symb);
+  if(NAME&AT(n)){
+#if FORCEVIRTUALINPUTS
+   // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
+   // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
+   // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
+   // not a bad idea generally, but not needed normally
+   stack[2].a=
+#endif
+   symbis(n,v,jt->symb);
+  }
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
   else if(!AR(n))symbis(onm(n),v,jt->symb);
   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
@@ -137,17 +146,19 @@ PT cases[] = {
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
 // Initial call has nonrecurok and virtok both set
-static void auditblock(A w, I nonrecurok, I virtok) {
+void auditblock(A w, I nonrecurok, I virtok) {
  if(!w)R;
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  I virt = (AFLAG(w)&AFVIRTUAL)!=0;  // any virtual
+ if(virt)if(AFLAG(ABACK(w))&AFVIRTUAL)*(I*)0=0;  // make sure backer is valid and not virtual
  if(nonrecur&&!nonrecurok)*(I*)0=0;
  if(virt&&!virtok)*(I*)0=0;
+ if(AT(w)==0xdeadbeefdeadbeef)*(I*)0=0;
  switch(CTTZ(AT(w))){
   case RATX:  
-   {A*v=AAV(w); DO(2*AN(w), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+   {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))*(I*)0=0;);} break;
   case XNUMX:
-   {A*v=AAV(w); DO(AN(w), if(*v)if(!(AT(*v)&INT))*(I*)0=0;);} break;
+   {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))*(I*)0=0;);} break;
   case BOXX:
    if(!(AFLAG(w)&AFNJA+AFSMM)){A*wv=AAV(w); RELBASEASGN(w,w);
     if(AFLAG(w)&AFREL){DO(AN(w), auditblock(WVR(i),nonrecur,0););}
@@ -183,10 +194,13 @@ F1(jtparse){A z;
 // For wringing out places where virtual blocks are incorporated into results, we make virtual blocks show up all over
 // any noun block that is not in-placeable and enabled for inplacing in jt will be replaced by a virtual block.  Then the audit of the
 // result will catch any virtual blocks that slipped through into an incorporating entity.  sparse blocks cannot be virtualized.
-
-static A virtifnonip(J jt, I ipok, A buf) {
- if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !(AT(buf)&SPARSE)) {
-  buf=virtual(buf,0,AR(buf),AS(buf)); if(!buf)*(I*)0=0;  // replace non-inplaceable w with virtual block; shouldn't fail
+// if ipok is set, inplaceable blocks WILL NOT be virtualized
+A virtifnonip(J jt, I ipok, A buf) {
+ RZ(buf);
+ if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !(AT(buf)&SPARSE) && !(AFLAG(buf)&(AFNJA|AFSMM))) {A oldbuf=buf;
+  buf=virtual(buf,0,AR(buf)); if(!buf && jt->jerr!=EVATTN && jt->jerr!=EVBREAK)*(I*)0=0;  // replace non-inplaceable w with virtual block; shouldn't fail except for break testing
+  I* RESTRICT s=AS(buf); I* RESTRICT os=AS(oldbuf); DO(AR(oldbuf), s[i]=os[i];);  // shape of virtual matches shape of w except for #items
+    AN(buf)=AN(oldbuf);  // install # atoms
  }
  R buf;
 }
@@ -318,7 +332,8 @@ static A virthook(J jtip, A f, A g){
 //  A verb, such as a derived hook, might support inplaceability but one of its components could be locale-unsafe; example (, unsafeverb h)
 // We set zombieval whenever the local value is to be reassigned, regardless of usecount.  Users of zombieval must check AC==1 before using it.  zombieval
 // is used only as an alternative way of detecting inplaceable usecount, not as a way of reusing a non-argument block during final assignment.
-#define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE) \
+// obsolete #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE)
+#define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&((stack+(w)+1)>=stackmarks)&&(VAV(stack[v].a)->flag&VASGSAFE) \
    &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m]):probeisquiet(queue[m]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;}
 
 // In-place operands
@@ -360,7 +375,8 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
  A *queue=AAV(w)-1;
- m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci; A locmark = mark;
+ m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci;
+// obsolete  A locmark = mark;
  if(m>1) {  // normal case where there is a fragment to parse
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
@@ -401,7 +417,8 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
     stack=(PSTK*)((uintptr_t)jt->parserstkbgn+allo)-3;  // point to the ending marks
   }
   // We have the initial stack pointer.  Grow the stack down from there
-  stack[0].a = stack[1].a = stack[2].a = locmark;  // install initial ending marks.  word numbers are unused
+  PSTK *stackmarks = stack;  // remember the point beyond which the stack is empty
+  stack[0].a = stack[1].a = stack[2].a = mark;  // install initial ending marks.  word numbers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   es = 2;
@@ -550,7 +567,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
       // y has the resolved value, which is never a NAME unless there is an assignment immediately following
       stack[0].a = y;   // finish setting the stack entry, with the new word
      }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-       if(prem==0) {stack[0].a = locmark; break;}  // move in the mark and use it, and pop the stack
+       if(prem==0) {stack[0].a = mark; break;}  // realize the virtual mark and use it
        EP       // if there's nothing more to pull, parse is over
      }
     }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
@@ -579,7 +596,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
   // before we exited, we backed the stack to before the initial mark entry.  At this point stack[0] is invalid,
   // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
   z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
-  ASSERT(AT(z)&MARK+CAVN&&stack[3].a==locmark,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
+  ASSERT(AT(z)&MARK+CAVN&&(stack+3)>=stackmarks,(*dci = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
   R z;  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted
@@ -602,7 +619,7 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
     }
    }
    ASSERT(AT(y)&CAVN,EVSYNTAX);
-  }else y=locmark;  // empty input - return with 'mark' as the value, which means nothing to parse
+  }else y=mark;  // empty input - return with 'mark' as the value, which means nothing to parse
   R y;
  }
 

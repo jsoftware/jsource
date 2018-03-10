@@ -106,7 +106,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   RZ(y=irs1(w,0L,wcr,jtgrade1)); yv=AV(y); 
   GATV(z,INT,m*n,1+wf,ws); if(!wcr)*(AS(z)+wf)=1; zv=AV(z); 
   DO(m, DO(n, zv[*yv++]=i;); zv+=n;);
-  R z;
+  RETF(z);
  }
  // here for small-range ordinals, processed through the ranking loop
  GATV(z,INT,m*n,1+wf,ws); if(!wcr)*(AS(z)+wf)=1; zv=AV(z);
@@ -133,5 +133,5 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE
   }
   wv+=n*k;
  }
- R z;
+ RETF(z);
 }

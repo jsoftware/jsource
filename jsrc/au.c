@@ -29,20 +29,20 @@ F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 DF1(jtdf1){RZ(self); R CALL1(VAV(self)->f1,  w,self);}
 DF2(jtdf2){RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
 
-DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; R z;}
+DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
 A s=jt->sf,z; 
 RZ(self); 
 z=CALL2IP(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; 
-R z;}    
+RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
 A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(VAV(self)->f1,  w,self0);}
 A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,self0);}
      // used to treat self as an argument.  Used with routines that don't really use self
 
-F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); R z;}
-F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); R z;}
+F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); RETF(z);}
+F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); RETF(z);}
 
 A jtac1(J jt,AF f){R fdef(0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}

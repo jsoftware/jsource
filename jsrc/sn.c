@@ -56,7 +56,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=nmhash(m,s); // Install length, and calculate quick-and-dirty CJS hash of name
- R z;
+ RETF(z);
 }    /* name from string */
 
 A jtsfn(J jt,B b,A w){NM*v; RZ(w); v=NAV(w); R str(b?v->m:AN(w),v->s);}
@@ -101,15 +101,15 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
   // Would have to mod locindirect too
   zv[i]=!y?-2:!x?-1:t&NOUN?0:t&VERB?3:t&ADV?1:2;  // calculate the type, store in result array
  }
- R z;
+ RETF(z);
 }    /* 4!:0  name class */
 
 
 static SYMWALK(jtnlxxx, A,BOX,20,1, jt->nla[*((UC*)NAV(d->name)->s)]&&jt->nlt&AT(d->val), 
-    RZ(*zv++=sfn(1,d->name)) )
+    RZ(*zv++=rifvs(sfn(1,d->name))) )
 
        SYMWALK(jtnlsym, A,BOX,20,1, jt->nla[*((UC*)NAV(d->name)->s)],
-    RZ(*zv++=sfn(1,d->name)) )
+    RZ(*zv++=rifvs(sfn(1,d->name))) )
 
 static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -143,7 +143,7 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
  wv=AAV(w); RELBASEASGN(w,w);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  DO(n, x=WVR(i); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y); RESETERR; zv[i]=v?v->sn:-1;);
- R z;
+ RETF(z);
 }    /* 4!:4  script index */
 
 
@@ -204,5 +204,5 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
 // obsolete   if(y&&(v=syrd(y))){if(jt->db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
   if(y&&(v=syrd(y))){if(jt->db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} RZ(symfree(v));}
  }
- R z;
+ RETF(z);
 }    /* 4!:55 expunge */

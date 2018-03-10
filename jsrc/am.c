@@ -108,7 +108,8 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
   case 24: CASENZ(C);  case 25: CASENZ(I);  case 26: CASENZ(D);  case 27: CASENZ(Z);
   case 28: CASENZ(US); case 29: CASENZ(C4); case 30: CASENZ(I);
   default: ASSERTSYS(0,"casev");
-}}   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
+ }
+}   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
 // Handle a ind} w after indices have been converted to integer
 static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn,wt;
@@ -126,6 +127,9 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
+ // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
+ // the stack is empty, so if there is a virtual block it must be in a hhigher sentence, and the backing name must appear on the
+ // stack in that sentence if the usecount is only 1.
  I waf = AFLAG(w);  // w flags
  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
       &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
@@ -138,16 +142,20 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
 
  if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
- // after this, z cannot be virtual
+ // after this, z cannot be virtual unless it is an inplace memory-mapped boxed array
  else{RZ(z=cvt(t,w)); RELOCATE(w,z);}
+#if 0  // obsolete mapped boxed
  if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I *tv;
-  // in-placeable boxed memory-mapped array (therefore not virtual)
+  // in-placeable boxed memory-mapped array (possibly virtual)
+  // if z is virtual, we have to realize it now, can't inplace
+  realizeifvirtual(z);
   RELBASEASGN(a,a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
   GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);   // allocate an array of pointers, one per item of x; clear to 0
   DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);   // copy the items of x (repeated as needed) into the smm area of result
   if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
   DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););  // replace pointer to old block with (relative) pointer to new, then free the (absolute) old in smm area
  }else{
+#endif
   // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
@@ -174,8 +182,10 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
     {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
    }
   }
+#if 0  // goes with above
  }
- R z;
+#endif
+ RETF(z);
 }
 
 A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;

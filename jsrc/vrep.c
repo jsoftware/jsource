@@ -275,8 +275,8 @@ F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
- if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
- if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); INHERITNORELFILL(z,w); R z;}
- if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
- /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); INHERITNOREL(z,w); R z;}
+ if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}
+ if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); INHERITNORELFILL(z,w); RETF(z);}
+ if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}
+ /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}
 }    /* a#"r w main control */

@@ -110,7 +110,7 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
  GA(z,zt,n,AR(w),AS(w));
  ado(jt,n,AV(z),AV(w));
  if(jt->jerr)R NEVM<jt->jerr?va1(w,id):0; 
- else    R cv&VRI+VRD?cvz(cv,z):z;
+ else    {RETF(cv&VRI+VRD?cvz(cv,z):z);}
 }
 
 

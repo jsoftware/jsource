@@ -122,7 +122,7 @@ F1(jtoutparmq){A z;D*u,x;I*v;
   v[2]=jt->outmaxbefore;
   v[3]=jt->outmaxafter;
  }
- R z;
+ RETF(z);
 }
 
 F1(jtoutparms){I*v;

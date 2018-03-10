@@ -30,21 +30,21 @@ A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
 F1(jtexec1){A z;
  F1RANK(1,jtexec1,0);
  FDEPINC(1); z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0; FDEPDEC(1);
- R z&&AT(z)&VERB+ADV+CONJ+MARK?mtv:z;
+ RETF(z&&AT(z)&VERB+ADV+CONJ+MARK?mtv:z);
 }
 
 F1(jtimmex){A z;
  if(!w)R A0;  // if no string, return empty result
  FDEPINC(1); z=parse(tokens(w,1+!!jt->local)); FDEPDEC(1);
  if(z&&!jt->asgn)jpr(z);
- R z;
+ RETF(z);
 }
 
 F1(jtimmea){A t,z;
  z=immex(w); 
  ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(one,z),
      all1(AT(z)&SPARSE?df1(t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
- R z;
+ RETF(z);
 }
 
 static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}

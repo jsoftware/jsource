@@ -22,7 +22,7 @@ F1(jtbox0){
  if(AR(w))jt->rank=v00;
  A z=box(w);
  jt->rank=ranksave;
- R z;
+ RETF(z);
 }
 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
@@ -66,12 +66,28 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
    }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // boxed w; don't set recursible, but inherit nosm from w
   }
  }
- R z;
+ RETF(z);
 }    /* <"r w */
 
 F1(jtboxopen){RZ(w); if(!(AN(w)&&BOX&AT(w))){w = box(w);} R w;}
 
-F2(jtlink){RZ(a&&w); if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
+F2(jtlink){
+RZ(a&&w);
+#if FORCEVIRTUALINPUTS
+ // to allow mapped-boxed tests to run, we detect when the virtual block being realized is at offset 0 from its
+ // base block, and has the same atomsct/rank/shape.  Then we just return the base block, since the virtual block
+ // is a complete alias for it.  This gets the flags right for mapped boxes, and doesn't require recopying a lot of memory for others
+ // We also need this for DLL code that inplaces.
+ // It's OK to revert to the original block, since we are mainly trying to see whether a virtual block is incorporated
+ // We do this only for NJA base blocks, because otherwise would defeat the purpose of virtualizing everything
+ if(AFLAG(w)&AFVIRTUAL && CAV(w)==CAV(ABACK(w)) && AN(w)==AN(ABACK(w)) && AR(w)==AR(ABACK(w))){
+  I i; for(i=AR(w)-1; i>=0&&AS(w)[i]==AS(ABACK(w))[i];--i); if(i<0)w = ABACK(w);
+ }
+ if(AFLAG(a)&AFVIRTUAL && CAV(a)==CAV(ABACK(a)) && AN(a)==AN(ABACK(a)) && AR(a)==AR(ABACK(a))){
+  I i; for(i=AR(a)-1; i>=0&&AS(a)[i]==AS(ABACK(a))[i];--i); if(i<0)a = ABACK(a);
+ }
+#endif
+if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
 
 static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;
@@ -279,7 +295,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
   }
  }
  // todo kludge should inherit nosmrel
- R z;
+ RETF(z);
 }    /* raze general case */
 
 // ; y
@@ -339,7 +355,7 @@ F1(jtraze){A*v,y,* RESTRICT yv,z,* RESTRICT zv;C* RESTRICT zu;I d,i,k,m=0,n,r=1,
    else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
  }}
  // todo kludge should inherit nosmrel
- R z;
+ RETF(z);
 }
 
 F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
@@ -364,7 +380,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
    case sizeof(C):                 DO(p, *xv=*yv++;            xv+=ck;);  break;
    default:                        DO(p, MC(xv,yv,dk); yv+=dk; xv+=ck;); 
  }}
- R z;
+ RETF(z);
 }    /* >,.&.>/,w */
 
 
@@ -393,5 +409,5 @@ F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
    y=wv[j];     d=k*AN(y); EXTZ; MC(v,AV(y),d); v+=d;
  }}
  AN(z)=(v-CAV(z))/k; *AS(z)=AN(z)/c;     
- R z;
+ RETF(z);
 }    /* a ;@:{ w */

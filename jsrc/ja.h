@@ -332,7 +332,7 @@
 // fa() audits the tstack, for use outside the usual system
 #define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc; if(MEMAUDIT&2)audittstack(jt);}}}
 // Within the tpush/tpop, no need to audit fa, since it was checked on the push
-#define fana(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc;}}} 
+#define fana(x)                     {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc;}}} 
 #endif
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
@@ -794,7 +794,7 @@
 #define qtymes(x,y)                 jtqtymes(jt,(x),(y))
 // Handle top level of ra().  Increment usecount.  Set usecount recursive usecount if recursible type; recur on contents if original usecount is not recursive
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
-// If block is virtual, realize it, because we may be about to assign it or otherwise save the value long-term
+// ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible
 #if MEMAUDIT&2
 #define ra(x)                       {I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
@@ -809,6 +809,7 @@
 #define rank1ex(x0,x1,x2,x3)        jtrank1ex(jt,(x0),(x1),(x2),(x3))
 #define rank2ex(x0,x1,x2,x3,x4,x5,x6,x7)  jtrank2ex(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
 #define rankingb(x0,x1,x2,x3,x4,x5) jtrankingb(jt,(x0),(x1),(x2),(x3),(x4),(x5))
+// ras does rifv followed by ra
 #define ras(x)                      ((x) = jtras(jt,x))
 #define rat(x)                      jtrat(jt,(x))
 #define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
@@ -825,6 +826,16 @@
 #define rdot1(x)                    jtrdot1(jt,(x))   
 #define realize(x)                  jtrealize(jt,(x))
 #define realizeifvirtual(x)         {if(AFLAG(x)&AFVIRTUAL)RZ((x)=realize(x));}
+#define rifv(x)                     realizeifvirtual(x)
+#define rifvs(x)                    jtrifvs(jt,(x))
+// We have used rifvs liberally through the code to guarantee that all functions can deal with virtual blocks returned.
+// In some cases, the call is to an internal routine that we know will not return a virtual block normally, and is in an
+// important performance path.  We use rifvsdebug for these places.  rifvs is called only during debugging.  Review them from time to time.
+#if FORCEVIRTUALINPUTS==2
+#define rifvsdebug(x)               rifvs(x)
+#else
+#define rifvsdebug(x)               (x)
+#endif
 #define reaxis(x,y)                 jtreaxis(jt,(x),(y))
 #define recip(x)                    jtrecip(jt,(x))   
 #define rect(x)                     jtrect(jt,(x))
@@ -1181,7 +1192,7 @@
 #define vi(x)                       jtvi(jt,(x))
 #define vib(x)                      jtvib(jt,(x))
 #define vip(x)                      jtvip(jt,(x))
-#define virtual(x,y,z,w)            jtvirtual(jt,(x),(y),(z),(w))
+#define virtual(x,y,z)            jtvirtual(jt,(x),(y),(z))
 #define vlocnl(x,y)                 jtvlocnl(jt,(x),(y))
 #define vmove(x,y,z)                jtvmove(jt,(x),(y),(z))
 #define vnm(x,y)                    jtvnm(jt,(x),(y))

@@ -111,7 +111,7 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
  RZ(a&&w);
  f=atcompf(a,w,self);
  jt->ct=0; z=f?f(jt,a,w,self):upon2(a,w,self); jt->ct=oldct; 
- R z;
+ RETF(z);
 }
 
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv;

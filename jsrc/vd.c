@@ -50,7 +50,7 @@ F1(jtqr){A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  if(FL&AT(r)){D*v=DAV(r);  DO(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);} 
  else        {Z*v=ZAV(r);  DO(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*jt->fuzz,EVDOMAIN);
- R z;
+ RETF(z);
 }
 
 static F2(jticor){D d,*v;I n;

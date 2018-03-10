@@ -9,7 +9,7 @@
 
 static F1(jtdfrep){RZ(w); R NOUN&AT(w)?w:lrep(w);}
 
-static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=sfn(0,d->name)); RZ(*zv++=dfrep(d->val));})
+static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=rifvs(sfn(0,d->name))); RZ(*zv++=rifvs(dfrep(d->val)));})
 
 static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y;C c;
  fs=si->dcf;
@@ -39,5 +39,5 @@ F1(jtdbcall){A y,*yv,z,*zv;DC si,s0=0;I c=9,m=0,*s;
  RZ(y=from(scind(irs1(z,0L,1L,jthead)),over(snl(mtv),ace)));
  yv=AAV(y); zv=5+AAV(z);
  DO(m, *zv=incorp(*yv); yv++; zv+=c;);
- R z;
+ RETF(z);
 }    /* 13!:13 function call matrix */

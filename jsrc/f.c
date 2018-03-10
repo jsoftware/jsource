@@ -109,7 +109,7 @@ static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
   else    {MC(y,bitdisp+2*BB**x,2*BB-1); ++x; y+=2*BB-1;}
   x+=r1;
  }
- R z;
+ RETF(z);
 }
 
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
@@ -118,7 +118,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
  x=BAV(w); y=CAV(z);
  DO(m, DO(c-1, *y++=*x++?'1':'0'; *y++=' ';); *y++=*x++?'1':'0';);
- R z;
+ RETF(z);
 }
 
 static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
@@ -135,7 +135,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
   GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
   y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(c>1+i),y,p); y+=wd;););
  }
- R z;
+ RETF(z);
 }
 
 // cvt SB string to utf8
@@ -729,8 +729,9 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  RE(zn=(3+m)+(q?p*m:0)+mult(h,ch?c+m+(3+m)*(1+c/maxlen):c1+m+3*(c1<c)));
  // If the input was character type, count the number of embedded multiline EOLs, and add a byte for each
  if(ch&&1<m)zn+=countonlines(scaneol,t,v,h,nq,c,lb,la);
- // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing
- if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
+ // If the input was character, boxed, or sparse, count the number of bytes that must be added for UTF-8 framing.
+ // If the input is another type, there can be no UTF-8 in the string
+ nbx=0; if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
  GATV(z,LIT,zn,1,0); zu=zv=CAV(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number

@@ -94,6 +94,7 @@ y test y
 x test y [ x=: 811 0$a: [ y=: 947 0$a:
 y test y
 
+1: 0 : 0  NB. mapped boxed no longer supported
 NB. mapped boxed arrays 
 
 0!:0 <testpath,'gmbx.ijs'
@@ -107,6 +108,7 @@ r=: y=: (547 2 ?@$ #u){u
 
 1 [ unmap_jmf_ 'q'
 1 [ unmap_jmf_ 'r'
+)
 
 4!:55 ;:'a b f f1 g mean q r test u x y'
 

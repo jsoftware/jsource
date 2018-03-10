@@ -52,7 +52,7 @@ typedef I                  FLAGT;
 typedef struct AD AD;
 typedef AD *A;
 
-// typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
+// obsolete typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
 
 typedef struct AD {
  union {
@@ -515,7 +515,9 @@ typedef struct {I a,e,i,x;} P;
 
 #define SPA(p,a)        ((A)((p)->a+(C*)(p)))  // a is one of aeix; result is A pointer for that component
 // obsolete #define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
-#define SPB(p,a,x)      {A ZWo = (x); if(ZWo){INCORP(ZWo)} (p)->a=(C*)ZWo-(C*)(p); RZ(ZWo);}  // store x into component (a); return if x is 0.  a is one of aeix
+// obsolete #define SPB(p,a,x)      {A ZWo = (x); if(ZWo){INCORP(ZWo)} (p)->a=(C*)ZWo-(C*)(p); RZ(ZWo);}  // store x into component (a); return if x is 0.  a is one of aeix
+#define SPBV(p,a,v,x)      {RZ(v = (x)); INCORP(v); (p)->a=(C*)v-(C*)(p);}  // store x into component (a); return if x is 0.  a is one of aeix.  Result in v
+#define SPB(p,ZWa,x)      {A ZWo = (x); SPBV((p),ZWa,ZWo,(x))}  // store x into component (a); return if x is 0.  a is one of aeix
 
 // Header for hashtables used in i.
 // This sits at the beginning of the allocated block, holding info about the stored values

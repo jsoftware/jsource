@@ -68,14 +68,14 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
   case sizeof(D): CANTA(D, *u++=v[d];); break;
 #endif
  }else MC(zv,wv,k*zn);
- RELOCATE(w,z); R z;
+ RELOCATE(w,z); RETF(z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 
  RZ(w); 
  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
  A z=canta(apv(r,r-1,-1L),w);
- RZ(z);  INHERITNOREL(z,w); R z;
+ RZ(z);  INHERITNOREL(z,w); RETF(z);
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
@@ -90,5 +90,5 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);
- RZ(z);  INHERITNOREL(z,w); R z;
+ RZ(z);  INHERITNOREL(z,w); RETF(z);
 }    /* a|:"r w main control */ 

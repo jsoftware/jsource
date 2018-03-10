@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-F1(jttally ){A z; RZ(w); z=sc(IC(w));            R AT(w)&XNUM+RAT?xco1(z):z;}
-F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); R AT(w)&XNUM+RAT?xco1(z):z;}
+F1(jttally ){A z; RZ(w); z=sc(IC(w));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
+F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 
 // ,y and ,"r y
@@ -23,7 +23,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
   }
   // Not inplaceable.  Allocate and copy
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n*bp(wt)); RELOCATE(w,z); INHERITNOREL(z,w); R z; // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),n*bp(wt)); RELOCATE(w,z); INHERITNOREL(z,w); RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
@@ -45,7 +45,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  SPB(zp,e,ca(SPA(wp,e)));
  SPB(zp,x,x);
  SPB(zp,i,y); 
- R z;
+ RETF(z);
 }
 
 F1(jttable){A z;I f,r,*s,wr,*ws,wt;
@@ -55,7 +55,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
  MC(AV(z),AV(w),AN(w)*bp(wt));
- RELOCATE(w,z); INHERITNOREL(z,w); R z;
+ RELOCATE(w,z); INHERITNOREL(z,w); RETF(z);
 }
 
 // ] [ and ]"n ["n, dyadic
@@ -69,8 +69,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.  We can do this because we have no PROLOG
- if(left){if(af>=wf)R a; os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
- else    {if(wf>=af)R w; os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
+ if(left){if(af>=wf){RETF(a);} os=AS(w); r=acr; s=af+AS(a); t=AT(a); v=CAV(a); n=AN(a); of=wf; }
+ else    {if(wf>=af){RETF(w);} os=AS(a); r=wcr; s=wf+AS(w); t=AT(w); v=CAV(w); n=AN(w); of=af; }
  // If the cells of the surviving arg must be replicated, do so
  // r=cell-rank, s->cell-shape, t=type, v->data, n=#atoms   of surviving arg
  // of=frame os->shape   of non-surviving arg
@@ -79,13 +79,13 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
  GA(z,t,zn,of+r,os); ICPY(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
  k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
- INHERITNOREL(z,w); R z;
+ INHERITNOREL(z,w); RETF(z);
 } 
 
 F2(jtleft2 ){R lr2(1,a,w);}
 F2(jtright2){R lr2(0,a,w);}
 
-F1(jtright1){R w;}
+F1(jtright1){RETF(w);}
 
 F1(jtiota){A z;I m,n,*v;
  F1RANK(1,jtiota,0);
@@ -94,7 +94,7 @@ F1(jtiota){A z;I m,n,*v;
  if(1==n){m=*v; R 0>m?apv(-m,-m-1,-1L):IX(m);}
  RE(m=prod(n,v)); z=reshape(mag(w),IX(ABS(m)));
  DO(n, if(0>v[i])z=irs1(z,0L,n-i,jtreverse););
- R z;
+ RETF(z);
 }
 
 F1(jtjico1){A y,z;B b;D d,*v;I c,m,n; 
@@ -106,7 +106,7 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  if(b&&m*c==2*ABS(n))z=apv(1+m,-n,0>d?-c:c);
  else                z=plus(scf(0>d?d:-d),tymes(scf(2*ABS(d)/m),apv(1+m,0>d?m:0L,0>d?-1L:1L)));
  if(AT(w)&XNUM+RAT)z=cvt(AT(w)&XNUM||equ(w,floor1(w))?XNUM:RAT,z);
- R z;
+ RETF(z);
 }
 
 DF1(jtnum1){RZ(   w&&self); R VAV(self)->h;}
@@ -137,5 +137,5 @@ A jtcharmap(J jt,A w,A x,A y){A z;B bb[256];I k,n,wn;UC c,*u,*v,zz[256];
  GATV(z,LIT,wn,AR(w),AS(w)); v=UAV(z); u=UAV(w);
  if(k&&n==AN(y))DO(wn, c=*u++; ASSERT(bb[c],EVINDEX); *v++=zz[c];)
  else if(!bitwisecharamp(zz,wn,u,v))DO(wn, *v++=zz[*u++];);
- R z;
+ RETF(z);
 }    /* y {~ x i. w */

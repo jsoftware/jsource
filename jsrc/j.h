@@ -337,6 +337,19 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
+
+// Debugging options
+
+// Use MEMAUDIT to sniff out errant memory alloc/free
+#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+                     // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
+ // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
+ // 2 will detect double-frees before they happen, at the time of the erroneous tpush
+
+#define AUDITEXECRESULTS 0   // When set, we go through all execution results to verify recursive and virtual bits are OK
+#define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
+                           // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
+
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
@@ -446,9 +459,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
-// Mark a name as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
-// If a block is virtual, it must be realized before it can be incorporated.  realized blocks are always noninplaceable
-#define INCORP(z)       {if(!(AFLAG(z)&AFVIRTUAL))(AC(z)&=~ACINPLACE); else RZ((z)=realize(z));}
+// Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
+// If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable
+// z is an lvalue
+// Use INCORPNA if you need to tell the caller that the block e sent you has been incoroprated.  If you created the block being incorporated,
+// even by calling a function that returns it, you can get by using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
+// but that's OK as long as you pass it to some place where it can become an argument to another function
+#define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); AC(z)&=~ACINPLACE; }
 // same, but for nonassignable argument
 #define INCORPNA(z)     incorp(z)
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
@@ -467,7 +484,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
-#define INSTALLBOX(x,xv,k,z) if(UCISRECUR(x))ras(z); xv[k]=z
+#define INSTALLBOX(x,xv,k,z) rifv(z); if(UCISRECUR(x))ra(z); xv[k]=z
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
@@ -509,13 +526,14 @@ extern unsigned int __cdecl _clearfp (void);
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
 #define PROLOG(x)       I _ttop=jt->tnextpushx
-#define EPILOG(z)       R gc(z,_ttop)   // z is the result block
+#define EPILOG(z)       RETF(gc(z,_ttop))   // z is the result block
+#define EPILOGNOVIRT(z)       R rifvsdebug((gc(z,_ttop)))   // use this when the repercussions of allowing virtual result are too severe
 // Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
 // For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed
 // by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
 // the block that was allocated in the current primitive
-#define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); R z;}   // z is the result block
-#define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; R (z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
+#define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); RETF(z);}   // z is the result block
+#define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; RETF(z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z
 // Routines that do not return A
@@ -534,12 +552,18 @@ extern unsigned int __cdecl _clearfp (void);
 #define R0 R 0;
 #endif
 // In the original JE many verbs returned a clone of the input, i. e. R ca(w).  We have changed these to avoid the clone, but we preserve the memory in case we need to go back
-#define RCA(w)   R w
+#define RCA(w)          R w
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(!(exp))R0}
+// RETF is the normal function return.  For debugging we hook into it
+#if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
+#define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
+#else
+#define RETF(exp)       R exp
+#endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
 #define SGN(a)          ((0<(a))-(0>(a)))
@@ -595,20 +619,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define BS10    0x0100
 #define BS11    0x0101
 #endif
-
-// Debugging options
-
-// Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
-                     // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
- // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
- // 2 will detect double-frees before they happen, at the time of the erroneous tpush
-
-#define AUDITEXECRESULTS 1   // When set, we go through all execution results to verify recursive and virtual bits are OK   // scaf turn off for release
-#define FORCEVIRTUALINPUTS 1  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run   // scaf 0 for release
-                           // When 2 set, make all outputs from gc() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
-
-
 
 
 

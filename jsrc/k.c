@@ -103,7 +103,7 @@ static KF1(jtDfromZ){D d,*x;I n;Z*v;
 
 static KF1(jtXfromB){B*v;I n,u[1];X*x;
  n=AN(w); v=BAV(w); x=(X*)yv;
- DO(n, *u=v[i]; x[i]=vec(INT,1L,u););           
+ DO(n, *u=v[i]; x[i]=rifvsdebug(vec(INT,1L,u)););           
  R !jt->jerr;
 }
 
@@ -114,7 +114,7 @@ static KF1(jtXfromI){B b;I c,d,i,j,n,r,u[XIDIG],*v;X*x;
   DO(XIDIG, u[i]=r=d%XBASE; d=d/XBASE; if(r)j=i;);
   ++j; *u+=b;
   if(0>c)DO(XIDIG, u[i]=-u[i];);
-  x[i]=vec(INT,j,u);
+  x[i]=rifvsdebug(vec(INT,j,u));
  }
  R !jt->jerr;
 }
@@ -138,7 +138,7 @@ static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  EPILOG(z);
 }
 
-static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=xd1(v[i]);); R !jt->jerr;}
+static KF1(jtXfromD){D*v=DAV(w);X*x=(X*)yv; DO(AN(w), x[i]=rifvsdebug(xd1(v[i]));); R !jt->jerr;}
 
 static KF1(jtBfromX){A q;B*x;I e;X*v;
  v=XAV(w); x=(B*)yv;
@@ -191,6 +191,7 @@ static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
    if(recip){q.d=xtymes(xd1(t/pow(2.0,e-53.0)),xpow(xc(2L),xc(e-53))); q.n=ca(iv1);}
    else     {q.n=xtymes(xd1(t/pow(2.0,e-53.0)),xpow(xc(2L),xc(e-53))); q.d=ca(iv1);}
   }
+  q.n=rifvsdebug(q.n); q.d=rifvsdebug(q.d);
   if(neg){v=AV(q.n); DO(AN(q.n), *v=-*v; ++v;);}
   *x++=q;
  }

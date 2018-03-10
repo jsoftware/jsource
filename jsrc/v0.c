@@ -35,7 +35,7 @@ static F1(jtrsort){A t,z;D d=jt->ct;
  t=over(mag(w),cant1(rect(w)));
  z=dgrade2(w,cant1(irs2(irs2(t,t,0L,1L,1L,jtindexof),t,0L,1L,1L,jtfrom)));
  jt->ct=d;
- R z;
+ RETF(z);
 }
 
 static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
@@ -215,7 +215,7 @@ static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
    DO(m, zv[i]=newt(m,xv,zv[i],10L););
  }}
  if(real){B b=1; DO(m, if(zv[i].im){b=0; break;}); if(b)z=cvt(FL,z);}
- R z;
+ RETF(z);
 }    /* roots from coefficients, degree m is 2 or more */
 
 // roots from coefficients.  w is (possibly empty) list of coefficients
@@ -321,7 +321,7 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
   case 4: DO(wn, p=d; x=*wd++; j=an; DO(an,p=ad[--j]+x*p;); *zd++=p;);         break;
   case 5: DO(wn, q=e; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;);
  }
- R z;
+ RETF(z);
 }    /* a p. w */
 
 

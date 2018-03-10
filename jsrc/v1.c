@@ -198,7 +198,7 @@ F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
  mn=m*n;  // total number of matches to do, i. e. # results
  GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C1);
- R z;
+ RETF(z);
 }    /* a -:"r w */
 
 F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
@@ -222,5 +222,5 @@ F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  else     {f=wf; s=AS(w); PROD(m,af,s); PROD(n,wf-af,af+s);}
  mn=m*n;  // total number of matches to do, i. e. # results
  GATV(z,B01,mn,f,s); matchsub(af,wf,m,n,a,w,BAV(z),C0);
- R z;
+ RETF(z);
 }    /* a -.@-:"r w */

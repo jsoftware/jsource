@@ -120,8 +120,10 @@ typedef struct {
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    idothash0;        // 2-byte hash table for use by i.
  A    idothash1;        // 4-byte hash table for use by i.
+#if !C_CRC32C
  I    hin;              /* used in dyad i. & i:                            */
  I*   hiv;              /* used in dyad i. & i:                            */
+#endif
  I    symindex;         /* symbol table index (monotonically increasing)   */
 // -- end cache line 9
  A    symp;             /* symbol pool array                               */

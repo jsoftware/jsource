@@ -32,7 +32,7 @@ b -: isnan x
 'domain error' -: 0 (128!:5) etx 3 4 5
 'domain error' -: 1 (128!:5) etx 3 4 5
 
-
+1: 0 : 0  NB. mapped boxed no longer supported
 NB. 128!:5 and mapped boxed arrays --------------------------------------
 
 0!:0 <testpath,'gmbx.ijs'
@@ -45,5 +45,6 @@ r=: x=: (5!:1 <'mean') ; _. ; (<<<3j4 _.) ; (] , <@(s:"0)) 'abc' ; (u: 128+a.i. 
 
 0 = unmap_jmf_ 'q'
 0 = unmap_jmf_ 'r'
+)
 
 4!:55 ;:'b f f1 g i isnan mean q r x'

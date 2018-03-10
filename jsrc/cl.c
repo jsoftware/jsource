@@ -27,7 +27,7 @@ static DF1(jtlcapco1){A z;I m;V*v=VAV(self);
  m=jt->lmon; jt->lmon=efflev(0L,v->h,w); 
  z=lev1(w,self);
  jt->lmon=m;
- R z;
+ RETF(z);
 }
 
 static DF2(jtlcapco2){A z;I l,r;V*v=VAV(self);
@@ -37,14 +37,14 @@ static DF2(jtlcapco2){A z;I l,r;V*v=VAV(self);
  z=lev2(a,w,self);
  jt->lleft =l;
  jt->lright=r;
- R z;
+ RETF(z);
 }
 
 
 static F1(jtscfn){
  RZ(w);
  if(jt->scn==AN(jt->sca)){RZ(jt->sca=ext(1,jt->sca)); jt->scv=AV(jt->sca);}
- jt->scv[jt->scn++]=(I)w;
+ jt->scv[jt->scn++]=(I)rifvs(w);
  R zero;
 }
 
@@ -71,7 +71,7 @@ static DF1(jtscapco1){A x,z=0;I m;V*v=VAV(self);
  jt->lmon=m;
  if(x)z=ope(vec(BOX,jt->scn,jt->scv)); 
  fa(jt->sca); 
- R z;
+ RETF(z);
 }
 
 static DF2(jtscapco2){A x,z=0;I l,r;V*v=VAV(self); 
@@ -85,7 +85,7 @@ static DF2(jtscapco2){A x,z=0;I l,r;V*v=VAV(self);
  jt->lright=r;
  if(x)z=ope(vec(BOX,jt->scn,jt->scv)); 
  fa(jt->sca); 
- R z;
+ RETF(z);
 }
 
 

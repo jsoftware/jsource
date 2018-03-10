@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-static DF1(jtfitct1){DECLFG;F1PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL1IP(f1,  w,fs); jt->ct=old; R z;}
-static DF2(jtfitct2){DECLFG;F2PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL2IP(f2,a,w,fs); jt->ct=old; R z;}
+static DF1(jtfitct1){DECLFG;F1PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL1IP(f1,  w,fs); jt->ct=old; RETF(z);}
+static DF2(jtfitct2){DECLFG;F2PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL2IP(f2,a,w,fs); jt->ct=old; RETF(z);}
 
 static F2(jtfitct){D d;V*sv;
  RZ(a&&w);
@@ -28,14 +28,14 @@ static DF2(jtfitpoly2){
  R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),VAV(self)->g,slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
-static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; R z;}  // gs cannot be virtual
-static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; R z;}
+static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
+static DF2(jtfitfill2){DECLFG;F2PREFIP;A z; jt->fill=gs; z=CALL2IP(f2,a,w,fs); jt->fill=0; RETF(z);}
 
 static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
  MC(d,s,8L); 
  sprintf(s,FMTI"g",*AV(gs)); 
  z=CALL1(f1,w,fs); MC(s,d,8L);
- R z;
+ RETF(z);
 }
 
 static DF1(jtfitf1){V*sv=VAV(self); R df1(  w,fit(fix(sv->f),sv->g));}

@@ -100,7 +100,7 @@ F1(jtspcount){A z;I c=0,i,j,*v;A x;
  GATV(z,INT,2*(-PMINL+PLIML+1),2,0); v=AV(z);
  for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
  v=AS(z); v[0]=c; v[1]=2; AN(z)=2*c;
- R z;
+ RETF(z);
 }    /* 7!:3 count of unused blocks */
 
 // Garbage collector.  Called when free has decided a call is needed
@@ -214,7 +214,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
   RZ(y=symbrd(nfs(m,s))); 
   *v=0.0; spfor1(y); zv[i]=*v;
  }
- R z;
+ RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */
 
 F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
@@ -239,11 +239,11 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
   }
   zv[i]=*v;
  }
- R z;
+ RETF(z);
 }    /* 7!:6 space for a locale */
 
 
-F1(jtmmaxq){ASSERTMTV(w); R sc(jt->mmax);}
+F1(jtmmaxq){ASSERTMTV(w); RETF(sc(jt->mmax));}
      /* 9!:20 space limit query */
 
 F1(jtmmaxs){I j,m=MLEN,n;
@@ -251,7 +251,7 @@ F1(jtmmaxs){I j,m=MLEN,n;
  ASSERT(1E5<=n,EVLIMIT);
  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
  jt->mmax=(I)1<<j;
- R mtm;
+ RETF(mtm);
 }    /* 9!:21 space limit set */
 
 
@@ -286,11 +286,12 @@ void jtspendtracking(J jt){I i;
 }
 
 #if BW==64 && MEMAUDIT&2
-// Simulate deleting the input block.  If that produces a delete count that equals the usecount,
-// recur on children if any.  If it produces a delete count higher than the use count in the block, abort
+// Make sure all deletecounts start at 0
 static void auditsimverify0(A w){
  if(!w)R;
  if(AFLAG(w)>>AFAUDITUCX)*(I*)0=0;   // hang if nonzero count
+ if(AFLAG(w)&AFVIRTUAL)auditsimverify0(ABACK(w));  // check backer
+ if(AT(w)&(RAT|XNUM)) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimverify0(*v); ++v;)}
  if(UCISRECUR(w)){  // process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
@@ -305,11 +306,20 @@ static void auditsimverify0(A w){
  R;
 }
 
-// Simulate deleting the input block.  If that produces a delete count that equals the usecount,
+// Simulate tpop on the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(A w){I delct;
  if(!w)R;
+ if(AN(w)==0xdeadbeefdeadbeef||AN(w)==0xfeeefeeefeeefeee)*(I*)0=0;
  if((delct = ((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))*(I*)0=0;   // hang if too many deletes
+ if(AFLAG(w)&AFVIRTUAL && AFLAG(w)&RECURSIBLE)*(I*)0=0;
+ if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
+  // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to
+  // handle nonrecursive children.  All recursible types will be recursive
+  if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)*(I*)0=0;
+  auditsimdelete(wb);  // delete backer of virtual block, recursibly
+  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
+ }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
@@ -328,6 +338,10 @@ static void auditsimreset(A w){I delct;
  if(!w)R;
  delct = AFLAG(w)>>AFAUDITUCX;   // did this recur?
  AFLAG(w) &= AFAUDITUC-1;   // clear count for next time
+ if(AFLAG(w)&AFVIRTUAL){A wb = ABACK(w);
+  auditsimreset(wb);  // reset backer of virtual block
+  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimreset(*v); ++v;)}  // reset children
+ }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // if so, recursive reset
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
@@ -455,7 +469,8 @@ void jtfh(J jt,A w){fr(w);}
 // gc() protects a result, and pops the stack.  It preserves inplacing and virtuality if possible.  It cannot be used on blocks
 //   that contain contents younger than the block
 // gc3() is a simple-minded gc() that works on all blocks, and can handle up to 3 at a time.
-// virtual() creates a virtual block that refers to a part of another block
+// virtual() creates a virtual block that refers to a part of another block.  It looks at the inplacing flags to see if it can get away with modifying the
+//    block given rather than creating a new one
 // realize() creates a real block that has the contents referred to by a virtual block
 // realizeifvirtual() does what its name implies.
 // ra(x) raises the usecount of a block and its descendants.  It traverses, stopping a path when it becomes recursible.  It marks its result recursible.  x may not be 0, and may be modified.
@@ -477,18 +492,18 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank, s (optional) -> shape
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
-// If s given, we copy that in & fill in AN(z)
-RESTRICTF A jtvirtual(J jt, A w, I offset, I r, I* RESTRICT s){A z;
- ASSERT(RMAX>=r,EVLIMIT); 
+RESTRICTF A jtvirtual(J jt, A w, I offset, I r){A z;
+ ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  I tal=bp(t);  // length of an atom of t
  RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
  AFLAG(z)=AFVIRTUAL + (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA+AFSMM+AFREL)?AFREL:0);
  AC(z)=ACUC1; AT(z)=t; AR(z)=(RANKT)r; AK(z)=(CAV(w)-(C*)z)+offset*tal; // virtual, not inplaceable
- if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed
- if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
+ if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+// obsolete  if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
  ABACK(z)=w;   // set the pointer to the base: w or its base
- ACIPNO(w);   // we must also remove inplaceability from w, since z is now aliased to it
+// obsolete ACIPNO(w);   // we must also remove inplaceability from w, since z is now aliased to it
+ ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
  R z;
 }    /* allocate header */ 
 
@@ -534,27 +549,38 @@ A jtrealize(J jt, A w){A z; I t;
 
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be error or unfilled box)
- // If w is a virtual block that is backed by a DIRECT or recursible block b, we can raise the usecount of both b and w through the free.  Afterwards, if
- // b need not deleted, w can survive as is; but if b is to be deleted, we must realize w.
+  I c=AC(w);  // remember original usecount/inplaceability
+ // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&AFVIRTUAL){
-  A b=ABACK(w);  // backing block for w
-  if(AT(b)&DIRECT || UCISRECUR(b)) {
-   // b is DIRECT or recursible.  In either case we can protect b and its descendants by incrementing the usecount of b.  Protect both b and r that way.
-   ACINCR(b);  // Increment usecount of b and remember it
-   ACINCR(w);  // likewise protect w from being freed
-   tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-   if(AC(b)<=1){A origw = w; RZ(w=realize(w)); mf(origw); }  // if b is about to be deleted, get w out of the way and undo raising the usecount of w.  Since we
-                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
-   else tpush1(w);  // if b will survive, undo incrementing the usecount of w.  It's not worth testing the new usecount to see if fa could be used instead; usecount of virtual block is never more than 1
-                   // we push ONLY the virtual block itself; the descendants are in b and must not be disturbed
-   fa(b);   // undo incrementing usecount of b, possibly freeing it
-   R w;  // if realize() failed, this could be returning 0
+  A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
+  // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
+  // b need not deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
+  // (could look at relative size to make this decision).  Because virtual blocks are never assigned or ra()d, we know that the usecount of w
+  // coming in is 1
+// obsolete  if(AT(b)&DIRECT || UCISRECUR(b)) {
+// obsolete   ACINCR(w);  // likewise protect w from being freed, and remember
+  AC(w)=2;  // protect w from being freed
+  tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
+  // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
+  // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
+  if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+                                      // raised the usecount of w only, we use mf rather than fa to free just the virtual block
+                                      // fa the backer to undo the ra when the virtual block was created
+  // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we must replace
+  // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value.  In case we ever want
+  // to have virtual inplaceable blocks (imaginable for rank)
+  else{
+    if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
+    AC(w)=c;  // restore initial usecount and inplaceability
   }
+// obsolete  else if(AC(w)>1)AC(w)=c;  // b was not deleted, and w was not deleted: restore original usecount
+// obsolete  else { tpush1(w);  // w was deleted - restore its stack entry.  Push only top level, undoing the increment of top-level usecount
+  R w;  // if realize() failed, this could be returning 0
+// obsolete  }
  }
- // non-VIRTUAL path, or the backing block was not DIRECT or recursible.
- realizeifvirtual(w);
- I c=AC(w); // save original inplaceability (after realize, which may make the block inplaceable)
- ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.  If w is virtual, realize it.  If this realizes w, the value of w changes
+ // non-VIRTUAL path
+// obsolete realizeifvirtual(w);
+ ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.
   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
  tpop(old);  // delete everything allocated on the stack, except for w which was protected
  // Now we need to undo the effect of the initial ra and get the usecount back to its original value, with a matching tpush on the stack.
@@ -580,7 +606,7 @@ A jtgc (J jt,A w,I old){
 
 // similar to jtgc, but done the simple way, by ra/pop/push always.  This is the thing to use if the argument
 // is nonstandard, such as an argument that is operated on in-place with the result that the contents are younger than
-// the enclosing area.  Return the x argument
+// the enclosing area.  Modify the args if they need to be realized
 // If the arguments are virtual, they will be realized
 I jtgc3(J jt,A *x,A *y,A *z,I old){
  if(x)RZ(ras(*x)); if(y)RZ(ras(*y)); if(z)RZ(ras(*z));
@@ -741,7 +767,8 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
-   if(--c<=0){if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
+// obsolete    if(--c<=0){if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
+   if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
   }
   // See if there are more blocks to do
@@ -758,7 +785,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
    // The return point:
 #if MEMAUDIT&2
    jt->tnextpushx -= endingtpushx;
-   audittstack(jt);   // one audit for each tpop
+   audittstack(jt);   // one audit for each tpop.  Mustn't audit inside tpop loop, because that's inconsistent state
 #endif
    R jt->tnextpushx=endingtpushx;  // On last time through, update starting pointer for next push, and return that value
   }
@@ -778,6 +805,7 @@ F1(jtrat){ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit
 F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
 
 A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
+A jtrifvs(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue
 
 #if MEMAUDIT&8
 static I lfsr = 1;  // holds varying memory pattern

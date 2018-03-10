@@ -10,7 +10,7 @@ F1(jtunname){A x;V*v;
  RZ(w); 
  v=VAV(w);
  if(CTILDE==v->id&&!jt->glock&&!(VLOCK&v->flag)){x=v->f; if(NAME&AT(x))R symbrd(x);}
- R w;
+ RETF(w);
 }
 
 static B jtselfq(J jt,A w){A hs,*u;V*v;
@@ -70,7 +70,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
     RZ(y=sfn(0,f));
     if(all1(eps(box(y),jt->fxpath)))R w;
     ASSERT(jt->fxi,EVLIMIT);
-    jt->fxpv[--jt->fxi]=y; 
+    jt->fxpv[--jt->fxi]=rifvs(y); 
     if(x=symbrdlock(f)){
      RZ(z=fixa(aa,x));
      if(a!=zero&&selfq(x))RZ(z=fixrecursive(a,z));
@@ -90,7 +90,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
 F1(jtfix){PROLOG(0005);A z;I*rv=jt->rank;
  RZ(w);
  jt->rank=0;
- RZ(jt->fxpath=reshape(sc(jt->fxi=(I)255),ace)); jt->fxpv=AAV(jt->fxpath);
+ RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);
  RZ(z=fixa(zero,AT(w)&VERB?w:symbrdlock(w)));

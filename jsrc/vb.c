@@ -35,7 +35,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
    DO(n, u=av; b=0; DO(si, MC(au,u,s); MC(wu,v,s); if(b=!equ(ya,yw)  )break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
    zv+=c; v=v0=wv+=r;
  }}
- R z;
+ RETF(z);
 }    /* E. on matrix arguments */
 
 static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
@@ -47,7 +47,7 @@ static F2(jtebarvec){A y,z;B*zv;C*av,*wv,*yv;I an,k,n,s,t,wn;
  if(an&&wn>an)memset(zv+n,C0,wn-n); else memset(zv,C0,wn);
  if(t&B01+LIT+C2T+C4T+INT+SBT||0==jt->ct&&t&FL+CMPX)DO(n, zv[i]=!memcmp(av,wv,s); wv+=k;)
  else{GA(y,t,an,AR(a),0); yv=CAV(y); DO(n, MC(yv,wv,s); zv[i]=equ(a,y); wv+=k;);}
- R z;
+ RETF(z);
 }    /* E. on vector arguments */
 
 /* preparations for ebar                    */
@@ -223,5 +223,5 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)IFB1);
  }
  AN(z)=*AS(z)=zv-AV(z);
- R z;
+ RETF(z);
 }    /* a ([: I. E.) w where a and w are atoms or lists */

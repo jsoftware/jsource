@@ -84,14 +84,14 @@ XF2(jtxplus){PROLOG(0094);A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  wn=AN(w); wv=AV(w); d=wv[wn-1];
  if(c==XPINF||c==XNINF||d==XPINF||d==XNINF){
   ASSERT(!(c==XPINF&&d==XNINF||c==XNINF&&d==XPINF),EVNAN);
-  R vci(c==XPINF||d==XPINF?XPINF:XNINF);
+  R rifvsdebug(vci(c==XPINF||d==XPINF?XPINF:XNINF));
  }
  m=MAX(an,wn); n=MIN(an,wn);
  GATV(z,INT,m,1,0); zv=AV(z);
  DO(n, *zv++=*av+++*wv++;);
  if(m>n)ICPY(zv,an>wn?av:wv,m-n);
  z=xstd(z);
- EPILOG(z);
+ EPILOGNOVIRT(z);
 }
 
 XF2(jtxminus){PROLOG(0095);A z;I an,*av,c,d,m,n,wn,*wv,*zv;
@@ -100,14 +100,14 @@ XF2(jtxminus){PROLOG(0095);A z;I an,*av,c,d,m,n,wn,*wv,*zv;
  wn=AN(w); wv=AV(w); d=wv[wn-1];
  if(c==XPINF||c==XNINF||d==XPINF||d==XNINF){
   ASSERT(c!=d,EVNAN);
-  R vci(c==XPINF||d==XNINF?XPINF:XNINF);
+  R rifvsdebug(vci(c==XPINF||d==XNINF?XPINF:XNINF));
  }
  m=MAX(an,wn); n=MIN(an,wn);
  GATV(z,INT,m,1,0); zv=AV(z);
  DO(n, *zv++=*av++-*wv++;);
  if(m>n){if(an>wn)ICPY(zv,av,m-n); else DO(m-n, *zv++=-*wv++;);}
  z=xstd(z);
- EPILOG(z);
+ EPILOGNOVIRT(z);
 }
 
 XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
@@ -115,7 +115,7 @@ XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
  an=AN(a); av=AV(a); c=av[an-1];
  wn=AN(w); wv=AV(w); d=wv[wn-1];
  if(!c||!d)R xzero;
- if(c==XPINF||c==XNINF||d==XPINF||d==XNINF)R vci(0<c*d?XPINF:XNINF);
+ if(c==XPINF||c==XNINF||d==XPINF||d==XNINF)R rifvsdebug(vci(0<c*d?XPINF:XNINF));
  n=an+wn; GATV(z,INT,n,1,0); zv=v=AV(z); memset(zv,C0,n*SZI);
  for(i=0;i<an;++i,++zv){
   if(c=av[i])for(j=0;j<wn;++j){
@@ -123,7 +123,7 @@ XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
    if     (m<= d){e=  d /m; zv[j]-=e*m; zv[1+j]+=e;}
    else if(m<=-d){e=(-d)/m; zv[j]+=e*m; zv[1+j]-=e;}
  }}
- R v[n-1]?z:vec(INT,v[n-2]?n-1:1,v);
+ R rifvsdebug(v[n-1]?z:vec(INT,v[n-2]?n-1:1,v));
 }
 
 static X jtshift10(J jt,I e,X w){A z;I c,d,k,m,n,q,r,*wv,*zv;
@@ -149,32 +149,32 @@ B jtxdivrem(J jt,X a,X w,X*qz,X*rz){B b,c;I*av,d,j,n,*qv,r,y;X q;
  }
  if(r&&b!=c){--qv[0]; DO(n-1, if(qv[i]>-XBASE)break; qv[i]=0; --qv[1+i];);}
  if(1<n&&!qv[n-1])AN(q)=*AS(q)=n-1;
- *qz=q; *rz=vec(INT,1L,&r); R 1;
+ *qz=q; *rz=rifvsdebug(vec(INT,1L,&r)); R 1;
 }    /* (<.a%w),(w|a) where w has a single "digit" and is nonzero */
  
 X jtxdiv(J jt,X a,X w,I mode){PROLOG(0096);B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn,*wv,yn;X q,r,y;
  RZ(a&&w&&!jt->jerr);
  an=AN(a); av=AV(a); c=c0=av[an-1];
  wn=AN(w); wv=AV(w); d=   wv[wn-1]; di=d==XPINF||d==XNINF;
- if(c&&!d)R vci(0<c?XPINF:XNINF);
- if(c==XPINF||c==XNINF){ASSERT(!di,EVNAN); R vci(0<c*d?XPINF:XNINF);}
+ if(c&&!d)R rifvsdebug(vci(0<c?XPINF:XNINF));
+ if(c==XPINF||c==XNINF){ASSERT(!di,EVNAN); R rifvsdebug(vci(0<c*d?XPINF:XNINF));}
  if(di)R xzero;
  if(1==wn&&d){I*v;
-  RZ(xdivrem(a,w,&q,&r));
+  RZ(xdivrem(a,w,&q,&r));  // must not return virtual
   if(!*AV(r)||mode==XMFLR)R q;
   ASSERT(mode==XMCEIL,EWRAT);
   v=AV(q); ++*v; 
-  R XBASE>*v?q:xstd(q);
+  R rifvsdebug(XBASE>*v?q:xstd(q));
  }
  switch((0<=c?2:0)+(0<=d)){
-  case 0: R xdiv(negate(a),negate(w),mode);
-  case 1: R negate(xdiv(negate(a),w,mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode));
-  case 2: R negate(xdiv(a,negate(w),mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode));
+  case 0: R rifvsdebug(xdiv(negate(a),negate(w),mode));
+  case 1: R rifvsdebug(negate(xdiv(negate(a),w,mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode)));
+  case 2: R rifvsdebug(negate(xdiv(a,negate(w),mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode)));
   default:
    if(1!=(e=xcompare(a,w))){
     ASSERT(!(c&&e&&mode==XMEXACT),EWRAT); 
     d=c&&(mode||!e); 
-    R vec(INT,1L,&d);
+    R rifvsdebug(vec(INT,1L,&d));
    }
    if(1<an)c=av[an-2]+c*XBASE;
    if(1<wn)d=wv[wn-2]+d*XBASE;
@@ -186,22 +186,23 @@ X jtxdiv(J jt,X a,X w,I mode){PROLOG(0096);B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn
    s=XBASEN*(an-yn)+(c0>=e?k:-k); 
    if(s){q=shift10(s,q); y=shift10(s,y);}
    A z=xplus(q,xdiv(xminus(a,y),w,mode));
-   EPILOG(z);
-}}   /* <.a%w (mode=XMFLR) or >.a%w (mode=XMCEIL) or a%w (mode=XMEXACT) */
+   EPILOGNOVIRT(z);
+  }
+}   /* <.a%w (mode=XMFLR) or >.a%w (mode=XMCEIL) or a%w (mode=XMEXACT) */
 
 XF2(jtxrem){I c,d,e;X q,r,y;
  RZ(a&&w);
  c=XDIG(a); d=XDIG(w);
- if(!c)R w;
+ if(!c)R rifvs(w);
  ASSERT(!(d==XPINF||d==XNINF),EVNAN);
  if(c==XPINF)R 0<=d?w:a;
  if(c==XNINF)R 0>=d?w:a;
- if(1==AN(a)&&c){RZ(xdivrem(w,a,&q,&r)); R r;}
+ if(1==AN(a)&&c){RZ(xdivrem(w,a,&q,&r)); R rifvsdebug(r);}
  switch((0<=c?2:0)+(0<=d)){
-  case 0:  R negate(xrem(negate(a),negate(w)));
-  case 1:  y=xrem(negate(a),w); R xcompare(y,xzero)? xplus(a,y):y;
-  case 2:  y=xrem(a,negate(w)); R xcompare(y,xzero)?xminus(a,y):y;
-  default: R 0<=(e=xcompare(a,w)) ? (e?w:xzero) : xminus(w,xtymes(a,xdiv(w,a,XMFLR)));
+  case 0:  R rifvsdebug(negate(xrem(negate(a),negate(w))));
+  case 1:  y=xrem(negate(a),w); R rifvsdebug(xcompare(y,xzero)? xplus(a,y):y);
+  case 2:  y=xrem(a,negate(w)); R rifvsdebug(xcompare(y,xzero)?xminus(a,y):y);
+  default: R rifvsdebug(0<=(e=xcompare(a,w)) ? (e?w:xzero) : xminus(w,xtymes(a,xdiv(w,a,XMFLR))));
 }}
                                              
 XF2(jtxgcd){I c,d,old;X p,q,t;
@@ -209,8 +210,8 @@ XF2(jtxgcd){I c,d,old;X p,q,t;
  c=XDIG(a); if(0>c)RZ(a=negate(a)); 
  d=XDIG(w); if(0>d)RZ(w=negate(w));
  ASSERT(!(c==XPINF||c==XNINF||d==XPINF||d==XNINF),EVNAN);
- if(!c)R w;
- if(!d)R a;
+ if(!c)R rifvsdebug(w);
+ if(!d)R rifvsdebug(a);
  p=a; q=w; old=jt->tnextpushx;
  while(XDIG(p)){
   t=p;
@@ -218,19 +219,19 @@ XF2(jtxgcd){I c,d,old;X p,q,t;
   q=t;
   if(!gc3(&p,&q,0L,old))R0;
  }
- R q;
+ R rifvsdebug(q);
 }
 
-XF2(jtxlcm){R xtymes(a,xdiv(w,xgcd(a,w),XMEXACT));}
+XF2(jtxlcm){R rifvsdebug(xtymes(a,xdiv(w,xgcd(a,w),XMEXACT)));}
 
 static X jtxexp(J jt,X w,I mode){I k,m;X s,y;
  RZ(w);
  k=XDIG(w);
  ASSERT(!k||mode!=XMEXACT,EWIRR);
- if(0>k)R xc(mode);
- m=(I)(2.71828*xint(w)); k=2; s=xplus(xone,w); y=w;
+ if(0>k)R rifvsdebug(xc(mode));
+ m=(I)(2.718281828*xint(w)); k=2; s=xplus(xone,w); y=w;
  DO(m, y=xtymes(y,w); s=xplus(xtymes(s,xc(k)),y); ++k;);
- R xdiv(s,xev1(apv(1+m,1L,1L),"*/"),mode);
+ R rifvsdebug(xdiv(s,xev1(apv(1+m,1L,1L),"*/"),mode));
 }
 
 XF2(jtxpow){PROLOG(0097);I c,d,e,r;X m,t,z;
@@ -238,18 +239,18 @@ XF2(jtxpow){PROLOG(0097);I c,d,e,r;X m,t,z;
  c=XDIG(a); d=XDIG(w); e=*AV(w);
  if(c==XPINF||c==XNINF){
   ASSERT(0<c||d!=XPINF,EVDOMAIN); 
-  R vci(!d?1L:0>d?0L:0<c?c:1&e?XNINF:XPINF);
+  R rifvsdebug(vci(!d?1L:0>d?0L:0<c?c:1&e?XNINF:XPINF));
  }
  if(d==XPINF||d==XNINF){
   ASSERT(0<=c||d==XNINF,EVDOMAIN); 
-  R vci(1==c&&1==AN(a)?1L:!c&&0>d||c&&0<d?XPINF:0L);
+  R rifvsdebug(vci(1==c&&1==AN(a)?1L:!c&&0>d||c&&0<d?XPINF:0L));
  }
  if(1==AN(a)&&(1==c||-1==c))R 1==c||0==e%2?xone:xc(-1L); 
  if(!c){ASSERT(0<=d,EWRAT); R d?xzero:xone;}
  if(0>d){
   ASSERT(!jt->xmod,EVDOMAIN); 
   ASSERT(jt->xmode!=XMEXACT,EWRAT); 
-  r=jt->xmode==XMCEIL; R xc(0<c?r:1&e?r-1:r);
+  r=jt->xmode==XMCEIL; R rifvsdebug(xc(0<c?r:1&e?r-1:r));
  }
  t=a; z=xone; m=jt->xmod?*XAV(jt->xmod):0;
  if(!m||1>xcompare(w,xc(IMAX))){
@@ -265,7 +266,7 @@ XF2(jtxpow){PROLOG(0097);I c,d,e,r;X m,t,z;
    b=1; c=0; u=v+n;
    DO(n, d=c+*--u; c=1&d?XBASE:0; *u=d>>1; if(b&=!*u)--n;);  /* e=.<.e%2 */
  }}
- EPILOG(z);
+ EPILOGNOVIRT(z);
 }
 
 XF1(jtxsq){R xtymes(w,w);}
@@ -282,13 +283,13 @@ XF1(jtxsqrt){I c,m,n,p,q,*wv;X e,x;
  p=xcompare(w,xsq(x));
  switch(jt->xmode){
   default:     ASSERTSYS(0,"xsqrt");
-  case XMFLR:  if(-1==p){--*AV(x); R xstd(x);}else R x;
-  case XMCEIL: if( 1==p){++*AV(x); R xstd(x);}else R x;
+  case XMFLR:  if(-1==p){--*AV(x); R xstd(x);}else R rifvsdebug(x);
+  case XMCEIL: if( 1==p){++*AV(x); R xstd(x);}else R rifvsdebug(x);
   case XMEXACT: 
-   if(!p)R x; 
+   if(!p)R rifvsdebug(x); 
    *AV(x)+=p; RZ(x=xstd(x));
    ASSERT(!xcompare(w,xsq(x)),EWIRR);
-   R x;
+   R rifvsdebug(x);
 }}
 
 static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
@@ -296,7 +297,7 @@ static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
  wn=AN(w); wv=AV(w); d=wv[wn-1]; 
  ASSERT(0<=d,EWIMAG);
  if(1==wn&&(0==d||1==d))R 1==d?xone:0<=c?xzero:vci(XPINF);
- if(!c&&0<d)R vci(XPINF);
+ if(!c&&0<d)R rifvsdebug(vci(XPINF));
  r=xint(a); if(jt->jerr){RESETERR; R xone;}
  if(2==r)R xsqrt(w);
  x=xlogabs(w)/r;
@@ -310,8 +311,8 @@ static XF2(jtxroot){A q;D x;I an,*av,c,d,r,wn,*wv;X n,n1,p,t,z;
   if(1>xcompare(z,t))break;
   RZ(z=xdiv(xplus(t,xtymes(z,n1)),n,XMFLR))
  }
- if(XMFLR==jt->xmode||!xcompare(w,xtymes(z,p)))R z;
- if(XMCEIL==jt->xmode)R xplus(z,xone);
+ if(XMFLR==jt->xmode||!xcompare(w,xtymes(z,p)))R rifvsdebug(z);
+ if(XMCEIL==jt->xmode)R rifvsdebug(xplus(z,xone));
  ASSERT(0,EWIRR);
 }
 
@@ -325,7 +326,7 @@ static XF1(jtxlog1){B b;I c;
  c=XDIG(w); b=1==c&&1==AN(w);
  ASSERT(0<=c,EWIMAG);
  ASSERT(b||jt->xmode!=XMEXACT,EWIRR);
- R xc((I)xlogabs(w)+(!b&&jt->xmode==XMCEIL));
+ R rifvsdebug(xc((I)xlogabs(w)+(!b&&jt->xmode==XMCEIL)));
 }
 
 static D jtxlogd1(J jt,X w){ASSERT(0<=XDIG(w),EWIMAG); R xlogabs(w);}
@@ -339,31 +340,31 @@ static XF2(jtxlog2){D c,d,x,y;I an,*av,j,k,m,n,wn,*wv;X p,q;
  RZ(a&&w);
  an=AN(a); av=AV(a); c=(D)av[an-1]; if(1<an)c=av[an-2]+c*XBASE;
  wn=AN(w); wv=AV(w); d=(D)wv[wn-1]; if(1<wn)d=wv[wn-2]+d*XBASE;
- if(2<an)R xlog2sub(a,w);
+ if(2<an)R rifvsdebug(xlog2sub(a,w));
  ASSERT(0<=c,EWIMAG);
  if(!c){ASSERT(d,EVDOMAIN); R xzero;}
- if(!d){ASSERT(0<c,EVDOMAIN); R vci(XNINF);}
+ if(!d){ASSERT(0<c,EVDOMAIN); R rifvsdebug(vci(XNINF));}
  ASSERT(0<d,EVDOMAIN);
- if(1==c)R 1==d?xzero:vci(XPINF);
+ if(1==c)R rifvsdebug(1==d?xzero:vci(XPINF));
  x=log(c)+XBASEN*(2<an?an-2:0)*2.3025850929940457;
  y=log(d)+XBASEN*(2<wn?wn-2:0)*2.3025850929940457;
  m=n=(I)(y/x+(an<wn));
  RZ(p=q=xpow(a,xc(m))); j=k=xcompare(p,w);
- if     (0<j){--m; RZ(p=xdiv(p,a,XMEXACT)); j=xcompare(p,w); if(0<j)R xlog2sub(a,w);}
- else if(0>j){++n; RZ(q=xtymes(p,a));       k=xcompare(q,w); if(0>k)R xlog2sub(a,w);}
+ if     (0<j){--m; RZ(p=xdiv(p,a,XMEXACT)); j=xcompare(p,w); if(0<j)R rifvsdebug(xlog2sub(a,w));}
+ else if(0>j){++n; RZ(q=xtymes(p,a));       k=xcompare(q,w); if(0>k)R rifvsdebug(xlog2sub(a,w));}
  ASSERT(jt->xmode!=XMEXACT||!j||!k,EWIRR); 
- R xc(!j?m:!k?n:jt->xmode==XMCEIL?n:m);
+ R rifvsdebug(xc(!j?m:!k?n:jt->xmode==XMCEIL?n:m));
 }
 
-F2(jtxlog2a){A z; GAT(z,XNUM,1L,0L,0L); *XAV(z)=xlog2(*XAV(a),*XAV(w)); RNE(z);}
-F2(jtxroota){A z; GAT(z,XNUM,1L,0L,0L); *XAV(z)=xroot(*XAV(a),*XAV(w)); RNE(z);}
+F2(jtxlog2a){A z; GAT(z,XNUM,1L,0L,0L); *XAV(z)=rifvsdebug(xlog2(*XAV(a),*XAV(w))); RNE(z);}
+F2(jtxroota){A z; GAT(z,XNUM,1L,0L,0L); *XAV(z)=rifvsdebug(xroot(*XAV(a),*XAV(w))); RNE(z);}
 
 XF1(jtxfact){I n;
  n=*AV(w);
  if(n==XPINF||n==XNINF)R vci(XPINF);
  RE(n=xint(w)); 
- if(0>n)R vci(n%2?XPINF:XNINF);
- R xev1(apv(n,1L,1L),"*/");
+ if(0>n)R rifvsdebug(vci(n%2?XPINF:XNINF));
+ R rifvsdebug(xev1(apv(n,1L,1L),"*/"));
 }
 
 static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
@@ -375,7 +376,7 @@ static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
   c=over(p,q);
   d=repeat(v2(AN(p),AN(q)),v2(1L,-1L));
   A z=xev1(repeat(ev2(c,d,"+//."),nub(c)),"*/");
-  EPILOG(z);
+  EPILOGNOVIRT(z);
  }else{
   p=q=xone; r=w;  
   for(i=0;i<n;++i){
@@ -384,7 +385,7 @@ static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
    d=xgcd(p,q); p=xdiv(p,d,XMEXACT); q=xdiv(q,d,XMEXACT);
    if(jt->jerr)R 0;
   }
-  EPILOG(p);
+  EPILOGNOVIRT(p);
 }}   /* non-negative x,y; x<=y */
 
 XF2(jtxbin){X d,z;
@@ -396,12 +397,13 @@ XF2(jtxbin){X d,z;
   case 1: /* 0 0 1 */ 
   case 4: /* 1 0 0 */ 
   case 7: /* 1 1 1 */  R xzero;
-  case 0: /* 0 0 0 */  R xbinp(a,w);
+  case 0: /* 0 0 0 */  R rifvsdebug(xbinp(a,w));
   case 3: /* 0 1 1 */  
-   z=xbinp(a,xminus(a,xplus(w,xone)));           R*AV(a)%2?negate(z):z;
+   z=xbinp(a,xminus(a,xplus(w,xone)));           R rifvsdebug(*AV(a)%2?negate(z):z);
   case 6: /* 1 1 0 */  
-   z=xbinp(xminus(xc(-1L),w),xminus(xc(-1L),a)); R*AV(d)%2?negate(z):z;
-}}
+   z=xbinp(xminus(xc(-1L),w),xminus(xc(-1L),a)); R rifvsdebug(*AV(d)%2?negate(z):z);
+ }
+}
 
 static A jtpiev(J jt,I n,X b){A e;I ek,i,n1=n-1;X bi,e0,e1,*ev,t;
  GATV(e,XNUM,n,1,0); ev=XAV(e);
@@ -413,7 +415,7 @@ static A jtpiev(J jt,I n,X b){A e;I ek,i,n1=n-1;X bi,e0,e1,*ev,t;
   e1=xtymes(e1,xc(1+i));  /* e1 = ! i   */
   bi=xtymes(bi,b);        /* bi = b^i   */
  }
- ev[i]=xtymes(e0,xtymes(XCUBE(e1),bi));
+ ev[i]=rifvsdebug(xtymes(e0,xtymes(XCUBE(e1),bi)));
  RE(e); R e;
 }
 
@@ -438,7 +440,7 @@ static XF1(jtxpi){A e;B p;I i,n,n1,sk;X a,b,c,d,*ev,k,f,m,q,s,s0,t;
  f=xtymes(d,f);
  q=xpow(xc(10L),xc(14*n1));
  k=xtymes(xtymes(a,m),xsqrt(xtymes(b,xsq(q))));
- R xdiv(xtymes(k,w),xtymes(f,q),jt->xmode);
+ R rifvsdebug(xdiv(xtymes(k,w),xtymes(f,q),jt->xmode));
 }    /* Chudnovsky Bros. */
 
 APFX( plusXX, X,X,X, xplus )
@@ -453,15 +455,15 @@ APFX(  maxXX, X,X,X, XMAX  )
 APFX(  powXX, X,X,X, xpow  )
 APFX(  binXX, X,X,X, xbin  )
 
-AMON( sgnX, X,X, *z=  xsgn(*x);)
-AMON(sqrtX, X,X, *z= xsqrt(*x);)
-AMON( expX, X,X, *z=  xexp(*x,jt->xmode);)
-AMON( logX, X,X, *z= xlog1(*x);)
+AMON( sgnX, X,X, *z=  rifvsdebug(xsgn(*x));)
+AMON(sqrtX, X,X, *z= rifvsdebug(xsqrt(*x));)
+AMON( expX, X,X, *z=  rifvsdebug(xexp(*x,jt->xmode));)
+AMON( logX, X,X, *z= rifvsdebug(xlog1(*x));)
 AMON(logXD, D,X, *z=xlogd1(*x);)
 AMON(logXZ, Z,X, *z=xlogz1(*x);)
-AMON( absX, X,X, *z=   mag(*x);)
-AMON(factX, X,X, *z= xfact(*x);)
-AMON( pixX, X,X, *z=   xpi(*x);)
+AMON( absX, X,X, *z=   rifvs(mag(*x));)
+AMON(factX, X,X, *z= rifvsdebug(xfact(*x));)
+AMON( pixX, X,X, *z=   rifvsdebug(xpi(*x));)
 
 
 F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
@@ -481,7 +483,7 @@ F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
  }
  AN(z)=*AS(z)=n=zv-zv0; 
  zv=zv0; v=zv0+n-1; DO(n/2, c=*zv; *zv++=*v; *v--=c;); /* reverse in place */
- R z;
+ RETF(z);
 }    /* "."0@": w */
 
 

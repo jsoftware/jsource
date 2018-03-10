@@ -9,6 +9,10 @@
 F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);
+ // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in
+ // w are actually in the backer, and the backer has had ra() applied; so blocks in the backer are going to be freed
+ // twice: storing a newly-allocated block will produce a double-free.  So we have to realize any virtual block coming in.
+ w=rifvsdebug(w);  // must realize before in-place operations, as above
  ASSERT(2==AR(w),EVRANK);
  s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); m=c*bp(AT(w));
  GATV(t,LIT,m,1,0); tv=CAV(t);
@@ -32,6 +36,7 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
 
 static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
+ w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
  m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;

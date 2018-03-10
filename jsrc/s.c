@@ -136,7 +136,7 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
   *xv++=pv->sn;    
   *xv++=pv->next;
   *xv++=pv->prev;
-  RZ(*yv++=(q=pv->name)?sfn(1,q):mtv);
+  RZ(*yv++=(q=pv->name)?rifvs(sfn(1,q)):mtv);
  }
  // Allocate box 3: locale name
  GATV(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
@@ -144,19 +144,19 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  n=AN(jt->stloc); v=AV(jt->stloc); 
  for(i=0;i<n;++i)if(j=v[i]){    /* per named locales    */
   x=(j+jt->sympv)->val; 
-  RZ(yv[j]=yv[*AV(x)]=aa=sfn(1,LOCNAME(x)));
+  RZ(yv[j]=yv[*AV(x)]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  n=AN(jt->stptr); pu=AAV(jt->stptr);
  for(i=0;i<n;++i)if(x=pu[i]){   /* per numbered locales */
-  RZ(      yv[*AV(x)]=aa=sfn(1,LOCNAME(x)));
+  RZ(      yv[*AV(x)]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  if(x=jt->local){               /* per local table      */
-  RZ(      yv[*AV(x)]=aa=cstr("**local**"));
+  RZ(      yv[*AV(x)]=aa=rifvs(cstr("**local**")));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- R z;
+ RETF(z);
 }    /* 18!:31 symbol pool */
 
 
@@ -362,7 +362,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
   ASSERT(NOUN&AT(y),EVDOMAIN);
   zv[i]=flag?(I)AV(y):(I)v;
  }
- R z;
+ RETF(z);
 }    /* 15!:6 (0=flag) or 15!:14 (1=flag) */
 
 F1(jtdllsymget){R dllsymaddr(w,0);}
@@ -456,6 +456,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
 // obsolete ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
 // obsolete if(!(x&&AFNJA&AFLAG(x))){
  if(!((AFRO|AFNJA)&xaf)){
+#if 0  // obsolete - mapped boxed arrays
   // name to be assigned is undefined, or is defined as a normal J name
   // If the value is a normal J name, we have to check to see if it is shared (we clone it in that case) or is boxed containing
   // relative addressing (we clone the boxing).  We do this check only if the name is !NJA, and (SMM or (BOXED and !NOSMREL))
@@ -463,6 +464,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   // we are changing the sign of AFNOSMREL and adding to see if the carry through BOXED is set
   // we are combining all the tests into one here to avoid misprediction, since this code will not be in the branch cache.  We should almost never call this subroutine
   if((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOX|AFNOSMREL))+AFNOSMREL) )) & (BOX<<1))RZ(w=rca(w));
+#endif
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
@@ -484,8 +486,11 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  } else {  // x exists, and is either read-only or memory-mapped
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
-   if((wt=AT(w))&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode   todo BUG: misses assignments after this block
-   wn=AN(w); wr=AR(w); m=wn*bp(wt);
+   realizeifvirtual(w);  // realize if virtual.  The copy stored in the mapped array must be real
+#if 0  // obsolete - mapped boxed arrays
+   if(wt&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode   todo BUG: misses assignments after this block
+#endif
+   wt=AT(w); wn=AN(w); wr=AR(w); m=wn*bp(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
@@ -493,5 +498,5 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined
  if(jt->stch&&(m<n||jt->local!=g&&jt->stloc!=g))e->flag|=LCH;  // update 'changed' flag if enabled
- R mark;   // Return not meaningful
+ R w;   // Return used during testing
 }    /* a: name; w: value; g: symbol table */

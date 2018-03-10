@@ -160,7 +160,7 @@ F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
   RZ(x=cant2(less(IX(AR(x)),sc(wf)),x));
   SPB(zp,x,x);
  }else SPB(zp,x,ifrom(SPA(ap,x),w));
- R z;
+ RETF(z);
 }    /* a{"r w, sparse a, dense w */
 
 F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,*wp,*xp,*zp;
@@ -188,5 +188,5 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  DO(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
  SPB(zp,i,y);
  SPB(zp,x,SPA(xp,x));
- R z;
+ RETF(z);
 }    /* a{"r w, sparse a, sparse w */

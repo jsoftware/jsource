@@ -67,11 +67,11 @@ static NUMH(jtnumi){B neg;C*t;I j;static C*dig="0123456789";
 static NUMH(jtnumx){A y;B b,c;C d,*t;I j,k,m,*yv;X*v;static C*dig="0123456789";
  v=(X*)vv;
  d=*(s+n-1); b='-'==*s; c='x'==d||'r'==d; s+=b;
- if('-'==d){if(!(2>=n))R 0; if(!(*v=vci(1==n?XPINF:XNINF)))R 0; R 1;}
+ if('-'==d){if(!(2>=n))R 0; if(!(*v=rifvs(vci(1==n?XPINF:XNINF))))R 0; R 1;}
  n-=b+c; if(!(m=(n+XBASEN-1)/XBASEN))R 0; k=n-XBASEN*(m-1);
  GATV(y,INT,m,1,0); yv=m+AV(y);
  DO(m, j=0; DO(k, if(!(t=memchr(dig,*s++,10L)))R 0; j=10*j+(t-dig);); *--yv=b?-j:j; k=XBASEN;);
- if(!(*v=yv[m-1]?y:xstd(y)))R 0;
+ if(!(*v=yv[m-1]?y:rifvs(xstd(y))))R 0;  // this stores into the extended result
  R 1;
 }
 
@@ -194,7 +194,7 @@ static void jtnumcase(J jt,I n,C*s,B*b,B*j,B*x,B*q,B*ii){B e;C c;
 A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',0<=k&&k<=9)R num[ k]; else R ainf;}
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',0<=k&&k<=9)R num[-k];}
- RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;
+ RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;  // s->null-terminated string
  GATV(y,INT,1+n,1,0); yv=AV(y);
  DO(n, c=*v; *v++=c=c==CSIGN?'-':c==CTAB||c==' '?C0:c; b=C0==c; if(p!=b)yv[d++]=i; p=b;);
  if(d%2)yv[d++]=n; m=d/2;

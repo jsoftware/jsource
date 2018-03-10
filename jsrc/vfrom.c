@@ -89,8 +89,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
     q=1+k/sizeof(S);
     if(1==an){wv+=k*j; DO(m,                     x=(S*)zv; u=(S*) wv;      DO(q, *x++=*u++;); zv+=k;   wv+=wk;);}
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
- }}
- RELOCATE(w,z); R z;  // todo kludge should inherit norel
+  }
+ }
+ RELOCATE(w,z); RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -203,7 +204,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
    else DO(m, b=av; DO(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- RELOCATE(w,z); R z;  // todo kludge should inherit norel
+ RELOCATE(w,z); RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for boolean a */
 
 A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
@@ -230,7 +231,7 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
   RZ(q=gah(r,w)); v=AS(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
- R z;
+ RETF(z);
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
@@ -377,7 +378,7 @@ F2(jtfetch){A*av, z;I n;
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVEB(w)){
    RZ(z=jtquicksel(jt,a,w));
-   if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
+   if(!ACIPISOK(w))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable if the w argument is not inplaceable
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -386,6 +387,6 @@ F2(jtfetch){A*av, z;I n;
  DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVEB(z)){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
- if(!ACIPISOK(w))ACIPNO(z); R z;   // Mark the box as non-inplaceable if the w argument is not inplaceable
+ if(!ACIPISOK(w))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable if the w argument is not inplaceable
 }
 

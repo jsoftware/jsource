@@ -1704,7 +1704,7 @@ static S fnflags[]={  // 0 values reserved for small-range.  They turn off boola
 #define OVERHEADHASHALLO 100  // clearing hash, calculating fnx costs this many compares
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
-A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
+A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -2033,21 +2033,21 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B th;
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
    // The caller must ras() this result to protect it, if it is going to be saved
-   GAT(z,BOX,3,1,0); zv=AAV(z);
+   GAT(z,BOX,2,1,0); zv=AAV(z);
    GAT(x,INT,6,1,0); xv=AV(x);
    xv[0]=mode; xv[1]=n; xv[2]=k; /* noavx xv[3]=jt->min; */ xv[4]=(I)fntbl[fnx]; /* xv[5]=ztypefromitype[mode&IIOPMSK]; */
-   zv[0]=x; zv[1]=h; zv[2]=hi;
+   zv[0]=x; zv[1]=rifvs(h);
   }
  }  // end of 'not sequential comparison' which means we may need a hashtable
  EPILOG(z);
 }    /* a i."r w main control */
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
-A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
+A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
      r,t,*xv,wr,*ws,wt;
  RZ(a&&w&&hs);
  // hv is (info vector);(hashtable);(byte index validity)
- hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
+ hv=AAV(hs); x=hv[0]; h=hv[1]; 
  // get the info from the info vector
  xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; /* noavx jt->min=xv[3]; */ fn=(AF)xv[4];
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 

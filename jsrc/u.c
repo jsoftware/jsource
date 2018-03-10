@@ -190,7 +190,7 @@ I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
  R t;
 }
 
-A jtcstr(J jt,C*s){R str((I)strlen(s),s);}
+A jtcstr(J jt,C*s){R rifvs(str((I)strlen(s),s));}  // used only for initialization, so ensure real string returned
 
 // Return 1 iff w is the evocation of a name
 B evoke(A w){V*v=VAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
@@ -229,7 +229,7 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
  R z;
 }    /* integer vector from boolean mask */
 
-static F1(jtii){RZ(w); R IX(IC(w));}
+static F1(jtii){RZ(w); RETF(IX(IC(w)));}
 
 // Return the higher-priority of the types s and t.
 // If either is sparse, convert the result to sparse.
@@ -286,26 +286,26 @@ zv=AV(z)-n;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GAT(z,INT, 1,0,0); *IAV(z)=k;     R z;}
-A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     R z;}
-A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     R z;}  // really should be num[b]
-A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     R z;}
-A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     R z;}
-A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); R z;}
+A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
+A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}
+A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
+A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}
+A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     RETF(z);}
+A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}
 
 // return A-block for the string *s with length n
-A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); R z;}
+A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); RETF(z);}
 
-F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; R z;}
+F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
-A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; R z;}
+A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; RETF(z);}
 
 // return A-block for singleton integer list whose value is k
-A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; R z;}
+A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; RETF(z);}
 
 // return A-block for list of type t, length v, and values *v 
-A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); R z;}
+A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); RETF(z);}
 
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
@@ -331,10 +331,10 @@ F1(jtvib){A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
     else if(++e,FEQ(d,e))zv[i]=d<p?p:q<d?q:(I)e;
     else ASSERT(0,EVDOMAIN);
  }}
- jt->rank=old; R z;
+ jt->rank=old; RETF(z);
 }
 
-F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); R w;}
+F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
 
 F1(jtvs){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
      /* verify string */

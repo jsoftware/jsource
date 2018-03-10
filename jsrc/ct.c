@@ -18,7 +18,7 @@ static F1(jttpoly){A z;
  RZ(w);
  RZ(z=atop(amp(ds(CLBRACE),over(AT(w)&CMPX?w:xco1(w),zero)),amp(tally(w),ds(CMIN))));
  VAV(z)->flag=VTAYFINITE;
- R z;
+ RETF(z);
 }
 
 static F1(jtfacit){A c;V*u,*v;

@@ -508,7 +508,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
  // if return is EWOV, it's an integer overflow and we must restart.
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result
- if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;R z;}else R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(cv&VRI+VRD?cvz(cv,z):z);}
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;
@@ -580,7 +580,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
   v=AS(y); 
   RE(v[f+1]=mult(s[f],s[f+2])); ICPY(v+f+2,s+3+f,r-3);
   --AR(y); 
-  R y;
+  RETF(y);
 }}   /* ,./"r w */
 
 static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
@@ -604,8 +604,8 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  GATV(z,BOX,zn,wr-1,ws); ICPY(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
  zv=AAV(z); wv=AAV(w); RELBASEASGN(w,w);
- DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); RZ(*zv++=raze(x));); wv+=mn;);
- R z;
+ DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); A Zz; RZ(Zz=raze(x)); rifv(Zz); *zv++ = Zz;); wv+=mn;);
+ RETF(z);
 }    /* ,&.>/"r w */
 
 static DF2(jtoprod){R df2(a,w,VAV(self)->h);}
@@ -661,5 +661,5 @@ DF1(jtmean){A z;I c,f,m,n,r,wn,wr,*ws,wt;
  PROD(m,f,ws); PROD(c,r,f+ws);
  if(wt&INT)meanI(m,c,n,DAV(z), AV(w)); 
  else      meanD(m,c,n,DAV(z),DAV(w));
- RE(0); R z;
+ RE(0); RETF(z);
 }    /* (+/%#)"r w */

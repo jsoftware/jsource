@@ -124,7 +124,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
   else if(c<='9') zv[i]=0<=probenum(u)?1:-1;
   else            zv[i]=probe(nfs(m,u),jt->stloc)?0:-1;
  }
- R z;
+ RETF(z);
 }    /* 18!:0 locale name class */
 
 static F1(jtlocnlx){A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
@@ -158,7 +158,7 @@ static A jtlocale(J jt,B b,A w){A g,*wv,y;
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none */
 
-F1(jtlocpath1){A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); R LOCPATH(g);}
+F1(jtlocpath1){A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); RETF(LOCPATH(g));}
      /* 18!:2  query locale path */
 
 F2(jtlocpath2){A g,x;
@@ -224,7 +224,7 @@ static SYMWALK(jtlocmap1,I,INT,18,3,1,
     {I t=AT(d->val);
      *zv++=i; 
      *zv++=t&NOUN?0:t&VERB?3:t&ADV?1:t&CONJ?2:(t==SYMB)?6:-2;
-     *zv++=(I)sfn(1,d->name);})
+     *zv++=(I)rifvs(sfn(1,d->name));})  // this is going to be put into a box
 
 F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  RZ(w);
@@ -233,6 +233,7 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  ASSERT(g,EVLOCALE);
  RZ(q=locmap1(g)); qv=AV(q);
  m=*AS(q);
+ // split the q result between two boxes
  GATV(x,INT,m*3,2,AS(q)); xv= AV(x);
  GATV(y,BOX,m,  1,0    ); yv=AAV(y);
  DO(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);

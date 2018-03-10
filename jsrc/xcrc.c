@@ -37,8 +37,8 @@ F1(jtcrccompile){A h,*hv;UINT z; UINT crctab[256];
  RZ(w);
  GAT(h,BOX,2,1,0); hv=AAV(h);
  RE(z=crcvalidate(w,crctab));
- RZ(hv[0]=vec(LIT,sizeof(crctab),crctab));  // Save the table.  We don't have any other good type to use
- RZ(hv[1]=sc((I)z));
+ RZ(hv[0]=rifvs(vec(LIT,sizeof(crctab),crctab)));  // Save the table.  We don't have any other good type to use
+ RZ(hv[1]=rifvs(sc((I)z)));
  R h;
 }
 

@@ -499,14 +499,14 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
   case SMI: 
    GAT(z,BOX,9,1,0); zv=AAV(z);
    RZ(*zv++=zero);
-   RZ(*zv++=sc(jt->rngI0[GBI])); RZ(*zv++=vec(INT,GBN,jt->rngV0[GBI]));
-   RZ(*zv++=sc(jt->rngI0[MTI])); RZ(*zv++=vec(INT,MTN,jt->rngV0[MTI]));
-   RZ(*zv++=sc(jt->rngI0[DXI])); RZ(*zv++=vec(INT,DXN,jt->rngV0[DXI]));
+   RZ(*zv++=rifvs(sc(jt->rngI0[GBI]))); RZ(*zv++=rifvs(vec(INT,GBN,jt->rngV0[GBI])));
+   RZ(*zv++=rifvs(sc(jt->rngI0[MTI]))); RZ(*zv++=rifvs(vec(INT,MTN,jt->rngV0[MTI])));
+   RZ(*zv++=rifvs(sc(jt->rngI0[DXI]))); RZ(*zv++=rifvs(vec(INT,DXN,jt->rngV0[DXI])));
 #if SY_64
-   RZ(*zv++=sc(jt->rngI0[MRI])); RZ(*zv++=vec(INT,MRN,jt->rngV0[MRI]));
+   RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); RZ(*zv++=rifvs(vec(INT,MRN,jt->rngV0[MRI])));
 #else
    u=(D*)jt->rngV0[MRI]; GAT(x,INT,MRN,1,0); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
-   RZ(*zv++=sc(jt->rngI0[MRI])); *zv++=x;
+   RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); *zv++=x;
 #endif
    R z;
   case GBI: n=GBN; v=jt->rngv; break;
@@ -519,7 +519,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #endif
  }
  GAT(z,BOX,3,1,0); zv=AAV(z);
- RZ(*zv++=sc(jt->rng)); RZ(*zv++=sc(jt->rngi)); RZ(*zv++=vec(INT,n,v));
+ RZ(*zv++=rifvs(sc(jt->rng))); RZ(*zv++=rifvs(sc(jt->rngi))); RZ(*zv++=rifvs(vec(INT,n,v)));
  R z;
 }
 
@@ -631,7 +631,7 @@ DF2(jtrollk){A g;V*sv;
  RZ(a&&w&&self);
  sv=VAV(self); g=sv->h?sv->h:sv->g;
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(a,w,g));
- R rollksub(a,vi(w));
+ RETF(rollksub(a,vi(w)));
 }    /* ?@$ or ?@# or [:?$ or [:?# */
 
 static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
@@ -653,7 +653,7 @@ static F1(jtrollxnum){A z;B c=0;I d,n;X*u,*v,x;
  n=AN(w); v=XAV(w);
  GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
  // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
- DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=xrand(x)) else{*u++=iv0; c=1;});
+ DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
  // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
  if(c){D*d;I mk,sh;
   INITD;
@@ -742,7 +742,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  if(    2==m)RZ(z=roll2   (w,&b));
  if(!b&&0!=m)RZ(z=rollnot0(w,&b));
  if(!b      )RZ(z=rollany (w,&b));
- R z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z;
+ RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
 F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];
@@ -768,7 +768,7 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
   DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   AN(z)=*AS(z)=m;
  }
- R at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z;
+ RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
 }
 
 

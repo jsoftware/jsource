@@ -16,10 +16,10 @@ F2(jtsetfv){A q=jt->fill;I t;
   RE(t=maxtype(t,AT(q))); 
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));
   if(ARELATIVE(q))RZ(q=cpa(1,q));
-  jt->fillv=CAV(q);
- }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}
- if(ARELATIVE(w)){*(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,w); jt->fillv=jt->fillv0;}
- R TYPESEQ(t,AT(w))?w:cvt(t,w);
+  jt->fillv=CAV(q);   // jt->fillv points to the fill atom
+ }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
+ if(ARELATIVE(w)){RELORIGIN(wrel,w); *(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,wrel); jt->fillv=jt->fillv0;}  // relative w, make fillv0 relative to w
+ R TYPESEQ(t,AT(w))?w:cvt(t,w);  // notw if w is boxed this won't change it, so relo is still valid
 }
 
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
@@ -114,7 +114,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
   z=b?y:z;
  } 
  RELOCATE(w,z);
- INHERITNORELFILL(z,w); R z;
+ INHERITNORELFILL(z,w); RETF(z);
 }    /* a|.!.f"r w */
 
 
@@ -160,7 +160,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
 #endif
  }
  RELOCATE(w,z);
- INHERITNORELFILL(z,w); R z;
+ INHERITNORELFILL(z,w); RETF(z);
 }    /* |."r w */
 
 
@@ -230,7 +230,7 @@ F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,z
  if(b)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
  RELOCATE(w,z);
- INHERITNORELFILL(z,w); R z;
+ INHERITNORELFILL(z,w); RETF(z);
 }    /* a ($,)"r w */
 
 F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
@@ -306,7 +306,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
    if(p){ASSERT(wx>=wv+p,EVLENGTH); MC(zv,wv,p); wv+=p;}
  }
  ASSERT(wx==wv,EVLENGTH);
- INHERITNORELFILL(z,w); R z;
+ INHERITNORELFILL(z,w); RETF(z);
 }    /* a&#^:_1 w or a&#^:_1!.f w */
 
 

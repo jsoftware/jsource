@@ -16,7 +16,7 @@ static F2(jtth2box){A z;I n,p,q,*v,x,y;
  jt->pos[0]=x; jt->pos[1]=y;
  z=thorn1(w); 
  jt->pos[0]=p; jt->pos[1]=q;
- R z;
+ RETF(z);
 }
 
 // Convert a formatted numeric string from C format to J format

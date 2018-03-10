@@ -3,6 +3,12 @@ NB. mapped boxed arrays -------------------------------------------------
 
 0!:0 <testpath,'gmbx.ijs'
 
+q=: <"0 i.5
+x=: <"0 i.5
+y=: (<3e6$'boustrophedonic')2}<"0 'abc'
+'allocation error' -: ex 'q=: y 0 1 2}q'
+(mbxcheck_jmf_ q), x -: q
+
 
 NB. [ -------------------------------------------------------------------
 

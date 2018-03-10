@@ -694,7 +694,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   else if(c)DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk;         wv+=wk;); av+=ak;)  // if right frame is longer, repeat cells of a
   else      DO(mf, DO(nf, ado(jt,b,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-  if(!jt->jerr){R cv&VRI+VRD?cvz(cv,z):z;  // normal return is here.  The rest is error recovery
+  if(!jt->jerr){RETF(cv&VRI+VRD?cvz(cv,z):z);  // normal return is here.  The rest is error recovery
   }else if(jt->jerr-EWOVIP>=0){A zz;C *zzv;I zzk; I nipw;
    // Here for overflow that can be corrected in place
    // If the original result block cannot hold the D result, allocate a separate result area
@@ -823,7 +823,7 @@ static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
     }
     NAN1;
  }}
- R z;
+ RETF(z);
 }    /* a +/@:* w for non-scalar a and w */
 
 static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,CLE,CGT,CGE};
@@ -868,7 +868,7 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
   case CGT:      SUMBFLOOP(GT  ); break;
   case CGE:      SUMBFLOOP(GE  ); break;
  }
- R z;
+ RETF(z);
 }    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
 
 DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m,
@@ -916,5 +916,5 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
   DO(nn-1, av-=ak; wv-=wk; ado(jt,b,m,n,yv,av,wv); adof(jt,b,zn,1L,p?zv:zu,yv,p?zu:zv); p=!p;);
   if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
  }
- RE(0); R z;
+ RE(0); RETF(z);
 }    /* a f/@:g w */

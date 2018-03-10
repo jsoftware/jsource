@@ -317,7 +317,7 @@ catch.
 end. 
 ) 
 
-(7!:0'') < initspace+20000
+IGNOREIFFVI (7!:0'') < initspace+20000
 'break' -: 3 : 0 etx ''
 if. 0 = #f =. 9!:46'' do. 'break' return. end.  NB. Can''t test if no file
 try.
@@ -331,18 +331,18 @@ catch.
 end. 
 ) 
 
-(7!:0'') < initspace+40000
+IGNOREIFFVI (7!:0'') < initspace+40000
 
 NB. Repeat for tacit - attention interrupt
 namedvb =: {.
 1:^:(0=#(9!:46)'') 'attention interrupt' -: (namedvb^:100000 [ ((1{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
 
-(7!:0'') < initspace+40000
+IGNOREIFFVI (7!:0'') < initspace+40000
 
 NB. Repeat for tacit - exigent interrupt
 1:^:(0=#(9!:46)'') 'break' -: ({.^:100000 [ ((2{a.)&(1!:12))@(;&0))^:(*@#) etx 9!:46''
 
-(7!:0'') < initspace+40000
+IGNOREIFFVI (7!:0'') < initspace+40000
 
 NB. 9!:48 and 9!:49 -----------------------------------------------------
 

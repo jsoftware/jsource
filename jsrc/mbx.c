@@ -141,11 +141,14 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  R z;
 }
 
-static B jtsmmin(J jt,A a,A w){A*wv;MS*x;
- if(AFNJA&AFLAG(w))R a==w;
- x=(MS*)w-1;
- if((I)a==AABS(x,x->a))R 1;
- if(BOX&AT(w)){wv=AAV(w); RELBASEASGN(w,w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
+static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
+ if(AFNJA&AFLAG(w))R a==w;  // if w is an NJA name, see if it equals a
+ if(AFSMM&AFLAG(w)){  // if an SMM name, the prefix to the header points to the base block
+  x=(MS*)w-1;
+  if((I)a==AABS(x,x->a))R 1;  // here w is a box allocated inside a
+ }
+ // otherwise, recur on contents
+ if(BOX&AT(w)){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
  R 0;
 }   /* 1 iff any leaf of w is part of SMM array a */
 
@@ -157,7 +160,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
  zv=A1AV(z); wv=AAV(w);
  if(t&BOX){RELBASEASGN(w,w); DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
  else MC(zv,wv,n*bp(t));
- R z;
+ RETF (z);
 }    /* make copy of w in SMM area of a */
 
 F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
@@ -170,7 +173,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
  av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w);
  DO(wn, x=smmcar(a,WVR(i)); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
  ICPY(AS(a),AS(w),wr);
- R a;
+ RETF(a);
 }    /* a=:w where a is mapped and w is boxed */
 
 
@@ -210,7 +213,7 @@ static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); ++q;                           v=x->a;});
  GATV(z,INT,2*q,2,0); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); *zv++=(I)x; *zv++=(I)1<<(x->j); v=x->a;});
- R z;
+ RETF(z);
 }    /* blocks free as a 2-column matrix of (address,size) */
 
 static I smmblkun(B b,A w){A1*wv;I z=0;MS*x;
@@ -252,7 +255,7 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  v=AV(y); DO(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );
  RZ(z=grade2(z,z)); zv=AV(z);
  *zv++=(I)smmu(w); *zv++=smmsize(w); *zv++=SMMCTOTAL;
- R z;
+ RETF(z);
 }    /* 15!:12 all the blocks in an SMM variable as 3-column matrix */
 
 

@@ -75,10 +75,10 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  ap=PAV(a); ay=SPA(ap,i); ax=SPA(ap,x); if(TYPESNE(t,at))RZ(ax=cvt(t,ax));
  wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(TYPESNE(t,at))RZ(wx=cvt(t,wx));
  GA(z,STYPE(t),1,r,zs); zp=PAV(z);
- SPB(zp,a,za); SPB(zp,e,ze=ca(TYPESEQ(t,at)?ae:we));
+ SPB(zp,a,za); SPBV(zp,e,ze,ca(TYPESEQ(t,at)?ae:we));
  if(*zb){
   SPB(zp,x,  over(ax,wx));
-  SPB(zp,i,y=over(ay,wy)); v=AV(y)+AN(ay); m=*as; DO(*AS(wy), *v+=m; v+=c;);
+  SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DO(*AS(wy), *v+=m; v+=c;);
  }else{C*av,*wv,*xv;I am,ak,i,j,k,mn,p,*u,wk,wm,xk,*yv;
   i=j=p=0; k=bp(t); 
   m=*AS(ay); u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
@@ -98,7 +98,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
   }
   SPB(zp,i,p?take(sc(mn-p),y):y); SPB(zp,x,p?take(sc(mn-p),x):x);
  }
- R z;
+ RETF(z);
 }    /* a,"r w where a or w or both are sparse */
 
 
@@ -138,7 +138,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,wr,*ws,zn;
  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL; RELORIGINB(q,w); q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
- INHERITNORELFILL2(z,a,w); R z;
+ INHERITNORELFILL2(z,a,w); RETF(z);
 }    /* a,w general case for array with the same type; jt->rank=0 */
 
 static F2(jtovv){A z;I m,t;
@@ -155,7 +155,7 @@ static F2(jtovv){A z;I m,t;
   MC(x,  AV(a),m      ); 
   MC(x+m,AV(w),k*AN(w));
  }
- INHERITNOREL2(z,a,w); R z;
+ INHERITNOREL2(z,a,w); RETF(z);
 }    /* a,w for vectors/scalars with the same type */
 
 static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
@@ -193,7 +193,7 @@ F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,w
  k=bp(t);
  om(k,c,acct,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
  om(k,c,wcct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
- INHERITNORELFILL2(z,a,w); R z;
+ INHERITNORELFILL2(z,a,w); RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){B sp2;I ar,wr;
@@ -288,7 +288,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
      if(UCISRECUR(a)){A* aav=(A*)av; DO(wn, ras(aav[i]);)}
      // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
      *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
-     R a;
+     RETF(a);
     }
    }
   }

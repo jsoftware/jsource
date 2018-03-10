@@ -59,7 +59,7 @@ static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
               if(at&B01)PDTBY(D,I,IINC) else PDTXB(D,I,IINC,c=(D)*u++);
  }}
  NAN1;
- R z;
+ RETF(z);
 }    /* x +/ .* y where x or y (but not both) is Boolean */
 
 #define BBLOCK(nn)  \

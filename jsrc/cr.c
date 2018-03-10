@@ -495,7 +495,7 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
  if(m>=wr)R CALL1IP(f1,w,fs);
  rv[0]=0;
  old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old; 
- R z;
+ RETF(z);
 }
 
 // IRS setup for dyads x op y
@@ -517,7 +517,7 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
   // Not all setup verbs (*f2)() use the fs argument.  
- R z;
+ RETF(z);
 }
 
 

@@ -619,7 +619,12 @@ extern A jtssnor(J,A,A);
 extern A jtssoutof(J,A,A);
 extern A jtssplus(J,A,A);
 extern A jtsspow(J,A,A);
-
+#if AUDITEXECRESULTS
+extern void auditblock(A w, I nonrecurok, I virtok);
+#endif
+#if FORCEVIRTUALINPUTS
+extern A virtifnonip(J jt, I ipok, A buf);
+#endif
 extern void     audittstack(J);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);
@@ -764,6 +769,7 @@ extern A        jtrank1ex(J,A,A,I,AF);
 extern A        jtrank2ex(J,A,A,A,I,I,I,I,AF);
 extern A        jtrd(J,F,I,I);
 extern A        jtrealize(J,A);
+extern A        jtrifvs(J,AD* RESTRICT);
 extern B        jtredef(J,A,L*);
 extern B        jtrnginit(J);
 extern B        jtsbtypeinit(J);
@@ -831,7 +837,7 @@ extern A        jtvci(J,I);
 extern A        jtvec(J,I,I,void*);
 extern F        jtvfn(J,F);
 extern A        jtvger2(J,C,A,A);
-extern A        jtvirtual(J,A,I,I,I* RESTRICT);
+extern A        jtvirtual(J,A,I,I);
 extern B        jtvnm(J,I,C*);
 extern void     jtwri(J,I,C*,I,C*);
 extern A        jtxcvt(J,I,A);

@@ -39,7 +39,7 @@ A jttoc1(J jt,B h,A w){A z;C*wv,*zv;I n;C4*w4;
  if(h)DO(n, *zv++=(UC)*w4++; ) else DO(n, *zv++=(UC)*w4++; ASSERT(*(w4-1)<256UL,EVDOMAIN);)
  }
 #endif
- R z;
+ RETF(z);
 }    /* convert 2-byte or 4-byte chars to 1-byte chars; 0==h iff high order byte(s) must be 0 */
 
 static F1(jttoc2){A z;C*wv,*zv;I n;C4*w4;US*z2;
@@ -79,7 +79,7 @@ static F1(jttoc2e){A z;I m,n,r;
  ASSERT(0==m%2,EVLENGTH);
  GATV(z,C2T,n/2,r,AS(w)); *(AS(z)+r-1)=m/2;
  MC(AV(z),AV(w),n);
- R z;
+ RETF(z);
 }    /* convert pairs of 1-byte chars to 2-byte chars */
 
 // extended to C4
@@ -95,7 +95,7 @@ static F1(jtifc2){A z;I n,t,*zv;
 #else
  else          {I*v=(I*)AV(w); DO(n, *zv++=*v++;);}
 #endif
- R z;
+ RETF(z);
 }    /* integers from 1- or 2-byte or 4-byte chars */
 
 static F1(jtc2fi){A z;I j,n,*v;US*zv;
@@ -103,7 +103,7 @@ static F1(jtc2fi){A z;I j,n,*v;US*zv;
  n=AN(w); v=AV(w);
  GATV(z,C2T,n,AR(w),AS(w)); zv=USAV(z);
  DO(n, j=*v++; ASSERT(SMIN<=j&&j<=SMAX,EVINDEX); *zv++=(US)j;);
- R z;
+ RETF(z);
 }    /* 2-byte chars from integers */
 
 F1(jtuco1){I t;

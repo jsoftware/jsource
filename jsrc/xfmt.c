@@ -69,10 +69,10 @@ static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
  for(i=0;i<n;++i){
   c=wv[i]; 
   if(t){if(c==q)t=0;}
-  else if(c==','){RZ(*u++=str(i-j,wv+j)); j=i+1;}
+  else if(c==','){RZ(*u++=rifvs(str(i-j,wv+j))); j=i+1;}
   else if(s=strchr(pp,c)){t=1; q=qq[s-pp];}
  }
- RZ(*u=str(n-j,wv+j));
+ RZ(*u=rifvs(str(n-j,wv+j)));
  R z;
 } /* format phrases: boxed from char */
 
@@ -145,7 +145,7 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
    d=wv[mi];
    ASSERT(s=strchr(cu,d),EVDOMAIN);
    j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; fb|=(I)1<<j; 
-   if(s=strchr(cu1,d)){if(i-mi>3)RZ(zv[s-cu1]=str(i-mi-3,wv+mi+2));}else ASSERT(1==i-mi,EVDOMAIN);
+   if(s=strchr(cu1,d)){if(i-mi>3)RZ(zv[s-cu1]=rifvs(str(i-mi-3,wv+mi+2)));}else ASSERT(1==i-mi,EVDOMAIN);
   }
   mi=i;
   if('0'<=c&&c<='9'){RZ(widthdp(str(n-i,wv+i),vals,vals+1)); break;} 
@@ -154,9 +154,9 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
   x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
   ASSERT(0==n%2&&10>=n,EVDOMAIN);
   DO(n/2, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
-  RZ(zv[NMODVALS]=str(5L,subs));
+  RZ(zv[NMODVALS]=rifvs(str(5L,subs)));
  }
- vals[2]=fb; RZ(*zv=vec(INT,3,vals));
+ vals[2]=fb; RZ(*zv=rifvs(vec(INT,3,vals)));
  R z;
 }
 
@@ -552,6 +552,6 @@ F2(jtfmt22){A z;I mode,r,*s;
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */
 
-F1(jtfmt01){RZ(w); R fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:0 monad */
-F1(jtfmt11){RZ(w); R fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:1 monad */
-F1(jtfmt21){RZ(w); R fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w);} /* 8!:2 monad */
+F1(jtfmt01){RZ(w); RETF(fmt02(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:0 monad */
+F1(jtfmt11){RZ(w); RETF(fmt12(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:1 monad */
+F1(jtfmt21){RZ(w); RETF(fmt22(AR(w)?reshape(sc(*(AS(w)+AR(w)-1)),ace):ace,w));} /* 8!:2 monad */

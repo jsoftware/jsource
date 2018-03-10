@@ -40,7 +40,7 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
    if(b)break;
  }}
  i=zv-AV(z); *AS(z)=d=i/wn-1; AN(z)=d*wn; ICPY(1+AS(z),AS(w),wr); 
- R z;
+ RETF(z);
 }    /* {&a^:(<_) w */
 
 static DF1(jtindexseqlim1){A fs;
@@ -76,7 +76,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    z=w; 
    old=jt->tnextpushx; 
    DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
-   R z;
+   RETF(z);
 }}   /* single positive finite exponent */
 
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
@@ -135,11 +135,11 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
   if(TYPESNE(t,AT(y))||r!=AR(y)||ICMP(AS(y),s,r))R ply1(w,self);
   DIST(i,y);
  }
- R z;
+ RETF(z);
 }    /* f^:n w, non-negative finite n, well-behaved f */
 
-static DF1(jtinv1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); R z;}
-static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); R z;}
+static DF1(jtinv1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); RETF(z);}
+static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); RETF(z);}
 
 static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)
 

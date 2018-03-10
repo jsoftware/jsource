@@ -32,7 +32,7 @@ F1(jtvaspz){A e,x,y;B c,*u,*xu,*xv;I j,n,*v,*yu,*yv,xc,yc;P*wp;
  if(1==xc)memset(xv,c,n);
  *AS(y)=n; AN(y)=n*yc;
  *AS(x)=n; AN(x)=n*xc;
- R w;
+ RETF(w);
 }    /* post processing on result; modifies argument in place */
 
 static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P*p,*zp;

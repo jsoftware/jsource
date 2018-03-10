@@ -141,7 +141,7 @@ static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[
  GATV(z,LIT,2*n,2,s);  
  u=CAV(y); v=CAV(z); 
  DO(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
- R z;
+ RETF(z);
 }
 
 F1(jtbinrep1){RZ(w); ASSERT(NOUN&AT(w),EVDOMAIN); R brep(BU,SY_64,w);}  /* 3!:1 w */
@@ -175,7 +175,7 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  n=AN(w)/2; u=CAV(w);
  GATV(z,LIT,n,1,0); v=UAV(z);
  DO(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
- RE(z); R z;
+ RE(z); RETF(z);
 }
 
 static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p,r,*s,t,*vv;
@@ -200,7 +200,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
    j=vv[i]; 
    ASSERT(0<=j&&j<m,EVINDEX);
    if(i>iv[i])zv[i]=zv[iv[i]];
-   else{while(k<e&&j>=vv[k])++k; zv[i]=unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j));}
+   else{while(k<e&&j>=vv[k])++k; zv[i]=rifvs(unbinr(b,d,pre601,k<e?vv[k]-j:m-j,(A)(u+j)));}
  }}else if(t&SPARSE){P*zp=PAV(z);
   j=vv[1]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,a,unbinr(b,d,pre601,vv[2]-j,(A)(u+j)));
   j=vv[2]; ASSERT(0<=j&&j<m,EVINDEX); SPB(zp,e,unbinr(b,d,pre601,vv[3]-j,(A)(u+j)));
@@ -214,7 +214,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
   case CMPXX: RZ(mvw(CAV(z),v,n+n,BU,b,1,    1)); break;
   default:   e=n*bp(t); ASSERTSYS(e<=allosize(z),"unbinr"); MC(CAV(z),v,e);
  }
- RE(z); R z;
+ RE(z); RETF(z);
 }    /* b iff reverse the bytes; d iff argument is 64-bits */
 
 F1(jtunbin){A q;B b,d;C*v;I c,i,k,m,n,r,t;
@@ -268,15 +268,15 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
-  case -4: y1=(UI4*)x;    DO(m, *v++=    *y1++;); R z;
-  case  4: y1=(UI4*)v;    DO(n, *y1++=(UI4)*x++;); R z;
-  case -3: ICPY(v,x,m); R z;
-  case  3: MC(v,x,m);   R z;
-  case -2: y=(I4*)x;      DO(m, *v++=    *y++;); R z;
-  case  2: y=(I4*)v;      DO(n, *y++=(I4)*x++;); R z;
-  case -1: s=(S*)x;       DO(m, *v++=    *s++;); R z;
-  case  1: s=(S*)v;       DO(n, *s++=(S) *x++;); R z;
-  case  0: u=(U short*)x; DO(m, *v++=    *u++;); R z;
+  case -4: y1=(UI4*)x;    DO(m, *v++=    *y1++;); {RETF(z);}
+  case  4: y1=(UI4*)v;    DO(n, *y1++=(UI4)*x++;); {RETF(z);}
+  case -3: ICPY(v,x,m); {RETF(z);}
+  case  3: MC(v,x,m);   {RETF(z);}
+  case -2: y=(I4*)x;      DO(m, *v++=    *y++;); {RETF(z);}
+  case  2: y=(I4*)v;      DO(n, *y++=(I4)*x++;); {RETF(z);}
+  case -1: s=(S*)x;       DO(m, *v++=    *s++;); {RETF(z);}
+  case  1: s=(S*)v;       DO(n, *s++=(S) *x++;); {RETF(z);}
+  case  0: u=(U short*)x; DO(m, *v++=    *u++;); {RETF(z);}
 }}
 
 F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
@@ -290,10 +290,10 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  GA(z,zt,m,1,0); v=DAV(z); x=DAV(w);
  switch(j){
   default: ASSERT(0,EVDOMAIN);
-  case -2: MC(v,x,n); R z;
-  case  2: MC(v,x,m); R z;
-  case -1: s=(float*)x; DO(m, *v++=       *s++;); R z;
-  case  1: s=(float*)v; DO(n, *s++=(float)*x++;); R z;
+  case -2: MC(v,x,n); {RETF(z);}
+  case  2: MC(v,x,m); {RETF(z);}
+  case -1: s=(float*)x; DO(m, *v++=       *s++;); {RETF(z);}
+  case  1: s=(float*)v; DO(n, *s++=(float)*x++;); {RETF(z);}
 }}
 
 
@@ -321,7 +321,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  else if(t&CMPX){v=DAV(w); DO(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
  else if(t&BOX ){wv=AAV(w); RELBASEASGN(w,w); DO(n, *u++=isnanq(WVR(i));); RE(0);}
  else memset(u,C0,n);
- R z;
+ RETF(z);
 }
 
 

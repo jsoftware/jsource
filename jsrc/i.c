@@ -114,7 +114,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  GA(x,MARK,1,0,0     ); ACX(x); * AV(x)=0;                mark       =x; 
  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
- RZ(y=str(1L,"z"));     ACX(y);
+ RZ(y=rifvs(str(1L,"z")));     ACX(y);
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;
  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;

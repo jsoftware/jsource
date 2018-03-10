@@ -22,7 +22,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
  // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
 // if((m==0 || n==0) && (m+n>0)){R reitem(sc(m+n-1),x);}  This change withdrawn pending further deliberation
- R x;
+ RETF(x);
 }
 
 
@@ -150,7 +150,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  }}
  if(t&FL+CMPX)NAN1; RE(0);
  if(!b)R obqfslash(df2(a,w,g),f);
- R z;
+ RETF(z);
 }    /* f//.@(g/) for atomic f, g */
 
 

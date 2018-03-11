@@ -22,9 +22,9 @@ static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  GA(z,t,1,0,0); ACX(z); v=VAV(z);
  v->f1=f1?f1:jtdomainerr1;  /* monad C function */
  v->f2=f2?f2:jtdomainerr2;  /* dyad  C function */
- v->mr=m;                   /* monadic rank     */
- v->lr=l;                   /* left    rank     */
- v->rr=r;                   /* right   rank     */
+ v->mr=(RANKT)m;                   /* monadic rank     */
+ v->lr=(RANKT)l;                   /* left    rank     */
+ v->rr=(RANKT)r;                   /* right   rank     */
  v->fdep=1;                 /* function depth   */
  v->id=id;                  /* spelling         */
  v->flag=flag;              // flags

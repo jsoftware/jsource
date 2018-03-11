@@ -5,16 +5,12 @@
 
 #include "j.h"
 
-#define DR(r)           (0>r?RMAX:r)
+#define DR(r)           (((UI)(I)(r)>RMAX)?RMAX:r)   // return RMAX if input is negative or > RMAX
 
 
-I mr(A w){R VAV(w)->mr;}
-I lr(A w){R VAV(w)->lr;}
-I rr(A w){R VAV(w)->rr;}
-
-// effective rank: ar is rank of argument, r is rank of verb (may be negative)
-// result is rank of argument cell
-I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
+// obsolete // effective rank: ar is rank of argument, r is rank of verb (may be negative)
+// obsolete // result is rank of argument cell
+// obsolete I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
 #define NEWYA   {GA(ya,at,acn,lr,as+af); uu=CAV(ya);}
 #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
@@ -66,7 +62,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
  RZ(w);
  wt=AT(w);
  if(wt&SPARSE)R sprank1(w,fs,rr,f1);
- wr=AR(w); ws=AS(w); rr=efr(wr,rr); wf=wr-rr;
+ wr=AR(w); ws=AS(w); efr(rr,wr,rr); wf=wr-rr;
  state=0; if(ARELATIVE(w))state=STATEWREL;
  if(!wf)R CALL1(f1,w,fs);
  PROD(wcn,rr,wf+ws); wk=wcn*bp(wt); v=CAV(w); NEWYW;  // if this PROD overflows, the reshape below will fail
@@ -145,7 +141,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
  I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
- wr=AR(w); ws=AS(w); rr=efr(wr,rr); wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
+ wr=AR(w); ws=AS(w); efr(rr,wr,rr); wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
 // obsolete if(ARELATIVE(w))state|=STATEWREL;
  if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
@@ -293,10 +289,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#total frame (inner+outer), for each argument
  // if inner rank is > outer rank, set it equal to outer rank
  I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
- ar=AR(a); as=AS(a); lr=efr(ar,lr); lcr=efr(ar,lcr); if(lr>lcr)lr=lcr; af=ar-lr; state |= STATEAREL&~ARELATIVES(a);   // relies on STATEAREL>BOX
+ ar=AR(a); as=AS(a); efr(lr,ar,lr); efr(lcr,ar,lcr); if(lr>lcr)lr=lcr; af=ar-lr; state |= STATEAREL&~ARELATIVES(a);   // relies on STATEAREL>BOX
 // obsolete if(ARELATIVE(a))state|=STATEAREL;
- wr=AR(w); ws=AS(w); rr=efr(wr,rr); rcr=efr(wr,rcr); if(rr>rcr)rr=rcr; wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
-// obsolete if(ARELATIVE(w))state|=STATEWREL;
+ wr=AR(w); ws=AS(w); efr(rr,wr,rr); efr(rcr,wr,rcr); if(rr>rcr)rr=rcr; wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
  if(!af&&!wf){R CALL2(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
 
@@ -490,7 +485,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
 
 A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr; 
  F1PREFIP; RZ(w);
- wr=AR(w); rv[1]=m=efr(wr,m);
+ wr=AR(w); rv[1]=efr(m,wr,m);
  if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(m>=wr)R CALL1IP(f1,w,fs);
  rv[0]=0;
@@ -510,8 +505,8 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
 A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
  F1PREFIP; RZ(a&&w);
- ar=AR(a); rv[0]=l=efr(ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
- wr=AR(w); rv[1]=r=efr(wr,r); wf=wr-r;     // ...for both args
+ ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
+ wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(!(af||wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
@@ -527,11 +522,13 @@ static DF2(cons2a){R VAV(self)->f;}
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){V*sv=VAV(self);
  RZ(w);
- R rank1ex(w,self,efr(AR(w),*AV(sv->h)),cons1a);
+ I mr; efr(mr,AR(w),*AV(sv->h));
+ R rank1ex(w,self,mr,cons1a);
 }
 static DF2(cons2){V*sv=VAV(self);I*v=AV(sv->h);
  RZ(a&&w);
- R rank2ex(a,w,self,AR(a),AR(w),efr(AR(a),v[1]),efr(AR(w),v[2]),cons2a);
+ I lr2,rr2; efr(lr2,AR(a),v[1]); efr(rr2,AR(w),v[2]);
+ R rank2ex(a,w,self,AR(a),AR(w),lr2,rr2,cons2a);
 }
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
@@ -543,15 +540,15 @@ static DF2(rank2i){DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  RZ(w);
- wr=AR(w); m=efr(wr,v[0]);
+ wr=AR(w); efr(m,wr,v[0]);
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  RZ(a&&w);
- ar=AR(a); l=efr(ar,l);
- wr=AR(w); r=efr(wr,r);
+ ar=AR(a); efr(l,ar,l);
+ wr=AR(w); efr(r,wr,r);
  if(l<ar||r<wr) {I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of werb we are going to call
   // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
   if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->f; f2=VAV(fs)->f2;}
@@ -571,7 +568,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
   n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;
-  // The floating-list is what we will call the v operand
+  // The floating-list is what we will call the v operand into rank?ex.  It holds the nominal verb ranks which may be negative
   // h is the integer version
   w=t;
  }else{
@@ -584,6 +581,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
   hv[1]=v[3==n]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  r[2]=DR(hv[2]);
  }
+ // r is the actual verb ranks, never negative.
 
  // Get the action routines and flags to use for the derived verb
  if(NOUN&AT(a)){f1=cons1; f2=cons2; ACIPNO(a);// use the constant routines for nouns; mark the constant non-inplaceable since it may be reused;

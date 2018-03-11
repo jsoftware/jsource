@@ -310,7 +310,7 @@ static int ismatch(J jt,C*pat,C*name){
  jt->diratts[0]=(jt->dirrwx[0]=='r'&&jt->dirrwx[1]=='-')?'r':'-';
  jt->diratts[1]=('.'==name[0])?'h':'-';
 // obsolete  strcpy(jt->dirmode,modebuf(jt->dirstatbuf.st_mode));
- modebuf(jt->dirstatbuf.st_mode,jt->dirmode));
+ modebuf(jt->dirstatbuf.st_mode,jt->dirmode);
  jt->diratts[4]=('d'==jt->dirmode[0])?'d':'-';
  R 1;
 }

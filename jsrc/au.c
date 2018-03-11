@@ -62,9 +62,9 @@ A jtfdef(J jt,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  v->g     =gs;                  /* dyad             */      
  v->h     =hs;                  /* fork right tine or other auxiliary stuff */
  v->flag  =flag;
- v->mr    =m;                   /* monadic rank     */
- v->lr    =l;                   /* left    rank     */
- v->rr    =r;                   /* right   rank     */
+ v->mr    =(RANKT)m;                   /* monadic rank     */
+ v->lr    =(RANKT)l;                   /* left    rank     */
+ v->rr    =(RANKT)r;                   /* right   rank     */
  v->fdep  =0;                   /* function depth   */
  v->id    =id;                  /* spelling         */
  R z;

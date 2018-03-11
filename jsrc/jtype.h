@@ -599,16 +599,19 @@ typedef struct{
 
 
 
-typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep; C id;} V;
+typedef struct {AF f1,f2;A f,g,h;I flag,fdep; RANKT mr,lr,rr; C id;} V;
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
 #define VFLAGNONE 0L
 #define VRTNNONE ((A)0)
   
                                         /* type V flag values              */
+// bits 0-7 are used in comparison compounds to encode the type of compound, see vcompsc.c
+// for other types, they are defined as follows:
 #define VFATOPL          JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR          JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
-                                        /* < 256 see vcompsc.c             */
+#define VFUISBOXATOP     ((I)(1LL<<2))   // (in u"v)  u was <@f, and f[12] point to f
+// bits 8 and above are available for all functions:
 #define VGERL           (I)256          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
@@ -628,8 +631,9 @@ typedef struct {AF f1,f2;A f,g,h;I flag,mr,lr,rr,fdep; C id;} V;
 #define VDDOP           (I)16777216     /* 24 derived from a derived operator */
 #define VINPLACEOK1     (I)33554432L    // 25 monad can handle in-place args
 #define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
-#define VASGSAFE        ((I)1L<<27)     // does not alter locale/path
-#define VISATOMIC1      ((I)1L<<28)     // processes each atom individually (should have had rank 0, but didn't)
+#define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
+#define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (should have had rank 0, but didn't)
+#define VISBOXATOP      ((I)(1L<<29))     // function is <@f or <@:(f"_)
 
 
 typedef struct {DX re;DX im;} ZX;

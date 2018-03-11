@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Verbs: Bit Type                                                         */
 
+#if 0  // no bit type
 /* 1 bit per element                                                       */
 /* total # elements <: IMAX                                                */
 /* dimension length <: IMAX                                                */
@@ -510,3 +511,4 @@ F1(jtbitadv){A x;V*v;
     case CNE:      R BITDEF1(jtbitscanne);
     case CEQ:      R BITDEF1(jtbitscaneq);
 }}}
+#endif

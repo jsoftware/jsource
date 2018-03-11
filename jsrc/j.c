@@ -5,6 +5,7 @@
 
 #include "j.h"
 #include "jversion.h"
+#include "gemm.h"
 
 // globals start - set by globinit at dll initialization
 A   a0j1=0;               /* 0j1                                  */
@@ -19,6 +20,7 @@ UC  bitc[256]={0};        /* # 1 bits in each possible byte       */
 C   bitdisp[256*16]={0};  /* display for each possible byte       */
 C   breakdata=0;
 A   chr[256]={0};         /* scalar for each character, or 0      */
+double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
 A   iv0=0;                /* ,0                                   */
@@ -45,6 +47,7 @@ A   udot=0;               /* u.                                   */
 A   unam=0;               /* u as a name                          */
 A   vdot=0;               /* v.                                   */
 A   vnam=0;               /* v as a name                          */
+I   v00[2]={0,0};         // vector value to use for rank 0 0
 C   wtype[256]={0};
 A   xdot=0;               /* x.                                   */
 A   xnam=0;               /* x as a name                          */
@@ -57,9 +60,34 @@ A   zeroi=0;              // integer 0
 Q   zeroQ={0,0};          /* 0r1                                  */
 DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
+dcomplex zone={1.0,0.0};  // used gy gemm
+dcomplex zzero={0.0,0.0};
 A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
 int hwfma=0;              // blis cpu tuning
+ // Table of hash-table sizes
+// These are primes (to reduce collisions), and big enough to just fit into a power-of-2
+// block after leaving 2 words for memory header, AH words for A-block header, 1 for rank (not used for symbol tables),
+// and SYMLINFOSIZE for the unused first word, which (for symbol tables) holds general table info.
+// symbol tables allocate ptab[]+SYMLINFOSIZE entries, leaving ptab[] entries for symbols.  i.-family
+// operations use tables of size ptab[].  i.-family operations have rank 1.  So the prime in the table
+// must be no more than (power-of-2)-10.
+ // If AH changes, these numbers need to be revisited
+// The first row of small values was added to allow for small symbol tables to hold local
+// variables.  Hardwired references to ptab in the code have 3 added so that they correspond to
+// the correct values.  User locale sizes also refer to the original values, and have 3 added before use.
+I ptab[]={
+        3,         5,        19,
+       53,       113,       241,       499,     1013, 
+     2029,      4079,      8179,     16369,    32749, 
+    65521,    131059,    262133,    524269,  1048559, 
+  2097133,   4194287,   8388593,  16777199, 33554393, 
+ 67108837, 134217689, 268435399, 536870879
+};
+// The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
+// created with size i.  The argument names supported are ynam and xnam.
+I yxbuckets[nptab][2];    // bucket positions for x. and y.
+
 // globals end
 
 #if SY_64

@@ -25,9 +25,6 @@
 
 #include "blis.h"
 
-static double dzero=0.0;
-static dcomplex zzero={0.0,0.0};
-static dcomplex zone={1.0,0.0};
 
 #define MC  BLIS_DEFAULT_MC_D
 #define KC  BLIS_DEFAULT_KC_D

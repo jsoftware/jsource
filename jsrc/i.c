@@ -124,6 +124,9 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  zeroQ.n =xzero; zeroQ.d =xone;
  zeroDX.e=0;     zeroDX.x=xzero;
  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
+ // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
+ // ptab is statically initialized
+ bucketinit();  // init yxbucket
  pf=qpf();
  pinit();
 
@@ -238,7 +241,6 @@ static C jtjinit3(J jt){S t;
  xsinit();
  sbtypeinit();
  rnginit();
- bucketinit();
 // #if (SYS & SYS_DOS+SYS_MACINTOSH+SYS_UNIX)
 #if (SYS & SYS_DOS+SYS_MACINTOSH)
  xlinit();

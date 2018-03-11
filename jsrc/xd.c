@@ -268,8 +268,8 @@ F2(jtjfatt2){A y,fn;F f;U x;
 #endif
 
 
-/* Return mode_t formatted into a static 10-character buffer. */
-static C*modebuf(mode_t m){C c;static C b[11];I t=m;
+/* Return mode_t formatted into 11-character buffer supplied by the caller.  The last byte of the buffer is the string terminator \0 */
+static C*modebuf(mode_t m,C* b){C c;I t=m;
  strcpy(b+1,"rwxrwxrwx");
  DO(9, if(!(m&1))b[9-i]='-'; m>>=1;); 
  if(t&S_ISUID)b[3]=(b[3]=='x')?'s':'S';
@@ -309,7 +309,8 @@ static int ismatch(J jt,C*pat,C*name){
  strcpy(jt->diratts,"------");
  jt->diratts[0]=(jt->dirrwx[0]=='r'&&jt->dirrwx[1]=='-')?'r':'-';
  jt->diratts[1]=('.'==name[0])?'h':'-';
- strcpy(jt->dirmode,modebuf(jt->dirstatbuf.st_mode));
+// obsolete  strcpy(jt->dirmode,modebuf(jt->dirstatbuf.st_mode));
+ modebuf(jt->dirstatbuf.st_mode,jt->dirmode));
  jt->diratts[4]=('d'==jt->dirmode[0])?'d':'-';
  R 1;
 }
@@ -371,11 +372,11 @@ F1(jtjfatt1){ASSERT(0,EVNONCE);}
 F2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 
-F1(jtjfperm1){A y;F f;
+F1(jtjfperm1){A y;F f;C b[11];
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=str0(AAV0(w)),EVFNUM)
  if(0!=stat(CAV(y),&jt->dirstatbuf))R jerrno();
- R vec(LIT,9L,1+modebuf(jt->dirstatbuf.st_mode));
+ R vec(LIT,9L,1+modebuf(jt->dirstatbuf.st_mode,b));
 }
 
 

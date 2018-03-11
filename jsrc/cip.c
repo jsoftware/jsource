@@ -7,7 +7,7 @@
 #include "vasm.h"
 #include "gemm.h"
 
-static dcomplex zone={1.0,0.0},zzero={0.0,0.0};
+// obsolete static dcomplex zone={1.0,0.0},zzero={0.0,0.0};
 
 // Analysis for inner product
 // a,w are arguments

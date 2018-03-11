@@ -222,6 +222,7 @@ typedef struct {
  I    pos[2];           /* boxed output x-y positioning                    */
  C    pp[8];            /* print precision                                 */
  AF   pre;              /* preface function for assignment                 */
+ A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
 // obsolete int  reginitflag;      /* 1 iff regular expression stuff initialized      */
  I    sbfillfactor;     /* SB for binary tree                              */

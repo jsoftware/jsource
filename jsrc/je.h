@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Extern Declarations                                                     */
-
+#include "gemm.h"
 
 extern F1(jtabase1);
 extern F1(jtadot1);
@@ -885,6 +885,8 @@ extern D        tod(void);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
 
+
+
 extern A        a0j1;
 extern A        ace;
 extern A        ainf;
@@ -898,6 +900,7 @@ extern C        bitdisp[];
 extern C        breakdata;
 extern A        chr[];
 extern C        ctype[];
+extern double dzero;
 extern D        inf;
 extern D        infm;
 extern A        iv0;
@@ -912,7 +915,6 @@ extern A        mtm;
 extern A        mtv;
 extern A        ndot;
 extern A        nnam;
-extern I        nptab;
 extern A*       num;
 extern A        numv[];
 extern A        one;
@@ -921,12 +923,14 @@ extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
 extern A        pst[];
-extern I        ptab[];
+extern I        ptab[27];
+#define nptab (sizeof(ptab)/sizeof(ptab[0]))
 extern UI4      shortrange[3][4];
 extern A        udot;
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vdot;
 extern A        vnam;
+extern I        v00[2];
 extern B        testb[];
 extern C        wtype[];
 extern A        xdot;
@@ -935,14 +939,15 @@ extern X        xone;
 extern X        xzero;
 extern A        ydot;
 extern A        ynam;
-extern I        yxbuckets[][2];
+extern I yxbuckets[nptab][2];
 extern A        zero;
 extern A        zeroi;
 extern Z        zeroZ;
+extern dcomplex zone;
+extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
 extern int      hwfma;
- 
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

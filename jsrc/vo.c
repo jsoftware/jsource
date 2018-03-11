@@ -15,7 +15,7 @@ I level(A w){A*wv;I d,j;
 
 F1(jtlevel1){RZ(w); R sc(level(w));}
 
-static I v00[] = {0, 0}; // used for rank
+// obsolete static I v00[] = {0, 0}; // used for rank
 F1(jtbox0){
  // Process through box code, which already handles rank
  I *ranksave = jt->rank;

@@ -7,7 +7,7 @@
  #include <windows.h>
  #define GETPROCADDRESS(h,p) GetProcAddress(h,p)
  #define JDLLNAME "j.dll"
- #define JAVXDLLNAME "javx.dll"
+ #define JNONAVXDLLNAME "j-nonavx.dll"
  #define filesep '\\'
  #define filesepx "\\"
  #ifdef _MSC_VER
@@ -23,16 +23,20 @@
  #ifdef __MACH__
   extern int _NSGetExecutablePath(char*, int*);
   #define JDLLNAME "libj.dylib"
-  #define JAVXDLLNAME "libavxj.dylib"
+  #define JNONAVXDLLNAME "libj-nonavx.dylib"
  #else
   #include <sys/utsname.h>
   #define JDLLNAME "libj.so"
-  #define JAVXDLLNAME "libjavx.so"
+  #define JNONAVXDLLNAME "libj-nonavx.so"
  #endif
 #endif
 #include "j.h"
 #include "jversion.h"
 #include <stdint.h>
+#if !(defined(_M_X64) || defined(__x86_64__))
+#undef JNONAVXDLLNAME
+#define JNONAVXDLLNAME JDLLNAME
+#endif
 
 static void* hjdll;
 static J jt;
@@ -124,7 +128,7 @@ void jepath(char* arg,char* lib,int forceavx)
  strcat(path,AndroidPackage);
  strcpy(pathdll,path);
  strcat(pathdll,"/lib/");
- strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
+ strcat(pathdll,(AVX)?JDLLNAME:JNONAVXDLLNAME);
  if(stat(pathdll,&st)){ /* android 5 or newer */
 #if defined(__aarch64__)
 #define arch "arm64"
@@ -138,9 +142,9 @@ void jepath(char* arg,char* lib,int forceavx)
  int i;
  for(i=0;i<10;i++){
   if(i)
-   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s",AndroidPackage,i,arch,(AVX)?JAVXDLLNAME:JDLLNAME);
+   sprintf(pathdll,"/data/app/%s-%d/lib/%s/%s",AndroidPackage,i,arch,(AVX)?JDLLNAME:JNONAVXDLLNAME);
   else
-   sprintf(pathdll,"/data/app/%s/lib/%s/%s",AndroidPackage,arch,(AVX)?JAVXDLLNAME:JDLLNAME);
+   sprintf(pathdll,"/data/app/%s/lib/%s/%s",AndroidPackage,arch,(AVX)?JDLLNAME:JNONAVXDLLNAME);
   if(!stat(pathdll,&st))break;
  }
  }
@@ -231,7 +235,7 @@ void jepath(char* arg,char* lib,int forceavx)
 #ifndef ANDROID
  strcpy(pathdll,path);
  strcat(pathdll,filesepx);
- strcat(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
+ strcat(pathdll,(AVX)?JDLLNAME:JNONAVXDLLNAME);
 #ifndef _WIN32
  struct stat st;
  char pathdllpx[10];
@@ -243,7 +247,7 @@ void jepath(char* arg,char* lib,int forceavx)
   jdllver[0]=_jdllver[0];
   jdllver[1]='.';
   strcat(jdllver+2,_jdllver+1);
-  strcpy(pathdll,(AVX)?JAVXDLLNAME:JDLLNAME);
+  strcpy(pathdll,(AVX)?JDLLNAME:JNONAVXDLLNAME);
   strcat(pathdll,".");
   strcat(pathdll,jdllver);
  }

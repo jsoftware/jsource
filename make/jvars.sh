@@ -13,5 +13,5 @@ j64=$jbld/j64/bin/jconsole
 j64nonavx="$jbld/j64/bin/jconsole -lib libj-nonavx.so"
 jmake=$jgit/make
 
-export jgit jbld j32 j64 j64avx jmake
+export jgit jbld j32 j64 j64nonavx jmake
 

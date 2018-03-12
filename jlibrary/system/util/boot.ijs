@@ -53,7 +53,7 @@ else.
   r=. 'Engine: ', a,'/',b,'/',c
   r=. r,LF,(toupper {.d),(}.d),': ',e,'/',g
 end.
-r=. r,LF,'Library: ',LF -.~ 1!:1<jpath '~system/config/version.txt'
+r=. r,LF,'Library: ',JLIB
 if. IFQT do.
   r=. r,LF,'Qt IDE: ',wd'version'
 elseif. IFJA do.
@@ -86,7 +86,6 @@ if. 'Android'-:UNAME do.
   end.
 end.
 
-NB. f=. jpath '~config/startup',((-.IFQT)#'_console'),'.ijs'
 f=. jpath '~config/startup.ijs'
 if. 1!:4 :: 0: <f do.
   try.

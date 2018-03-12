@@ -1,126 +1,185 @@
-NB. Regular expression pattern matching
-NB.
-NB. PCRE: Perl-compatible regular expression library
-NB. with POSIX interface
-NB.
-NB. =========================================================
-NB. main definitions:
-NB.   rxmatch          single match
-NB.   rxmatches        all matches
-NB.
-NB.   rxcomp           compile pattern
-NB.   rxfree           free pattern handles
-NB.   rxhandles        list pattern handles
-NB.   rxinfo           info on pattern handles
-NB.
-NB. regex utilities:
-NB.   rxeq             -:
-NB.   rxin             e.
-NB.   rxindex          i.
-NB.   rxE              E.
-NB.   rxfirst          {.@{    (first match)
-NB.   rxall            {       (all matches)
-NB.   rxrplc           search and replace
-NB.   rxapply          apply verb to pattern
-NB.
-NB.   rxerror          last regex error message
-NB.
-NB. other utilities:
-NB.   rxcut            cut string into nomatch/match list
-NB.   rxfrom           matches from string
-NB.   rxmerge          replace matches in string
-NB.
-NB. =========================================================
-NB. Form:
-NB.   here:  pat      = pattern, or pattern handle
-NB.          phnd     = pattern handle
-NB.          patndx   = pattern;index  or  phnd;index
-NB.          str      = character string
-NB.          bstr     = boxed list of str
-NB.          mat      = result of regex search
-NB.          nsub     = #subexpressions in pattern
-NB.
-NB.  mat=.  pat or patndx   rxmatch   str
-NB.  mat=.  pat or patndx   rxmatches str
-NB.
-NB.  phnd=.                 rxcomp    pat
-NB.  empty=.                rxfree    phnd
-NB.  phnds=.                rxhandles ''
-NB.  'nsub pat'=.           rxinfo    phnd
-NB.
-NB.  boolean=.        pat   rxeq      str
-NB.  index=.          pat   rxindex   str
-NB.  mask=.           pat   rxE       str
-NB.  bstr=.           pat   rxfirst   str
-NB.  bstr=.           pat   rxall     str
-NB.  str=.     (patndx;new) rxrplc    str
-NB.  str=.     patndx (verb rxapply)  str
-NB.
-NB.  errormsg=.             rxerror   ''
-NB.
-NB.  bstr             mat   rxcut     str
-NB.  bstr=.           mat   rxfrom    str
-NB.  str=.         new (mat rxmerge)  str
-
-NB. =========================================================
-NB. following defined in z:
-NB.*rxmatch v single match
-NB.*rxmatches v all matches
-NB.*rxcomp v compile pattern
-NB.*rxfree v free pattern handles
-NB.*rxhandles v list pattern handles
-NB.*rxinfo v info on pattern handles
-NB.*rxeq v regex equivalent of -:
-NB.*rxin v regex equivalent of e.
-NB.*rxindex v regex equivalent of i.
-NB.*rxE v regex equivalent of E.
-NB.*rxfirst v regex equivalent of {.@{ (first match)
-NB.*rxall v regex equivalent of { (all matches)
-NB.*rxrplc v search and replace
-NB.*rxapply v apply verb to pattern
-NB.*rxerror v last regex error message
-NB.*rxcut v cut string into nomatch/match list
-NB.*rxfrom v matches from string
-NB.*rxmerge v replace matches in string
-NB.*rxutf8 v set UTF-8 support 1=on(default), 0=off
+NB. regular expressions
+NB.%regex.ijs - regular expressions
+NB.-This script defines regular expression utilities
+NB.-Definitions are loaded into the jregex locale with
+NB.-cover functions in the z locale
 
 coclass <'jregex'
-
-NB. =========================================================
-NB. flag to enable UTF-8 support
-RX_OPTIONS_UTF8=: 1
+NB. util
 
 Rxnna=: '(^|[^[:alnum:]_])'
 Rxnnz=: '($|[^[:alnum:]_.:])'
 Rxass=: '[[:space:]]*=[.:]'
-NB. defs
+
+ischar=: 2=3!:0
 
 NB. =========================================================
-NB. rxdll is in bin or tools/regex
+NB. user compilation flags (0=off, 1=on)
+RX_OPTIONS_MULTILINE=: 1  NB. enable newline support, default on
+RX_OPTIONS_UTF8=: 1  NB. enable UTF-8 support, default on
+
+NB. =========================================================
+NB. clear last values, not saved compiles
+regclear=: 3 : 0
+lastcomp=: lasthandle=: lastmatch=: lastnsub=: 0
+lastpattern=: ''
+EMPTY
+)
+
+NB. =========================================================
+regcomp=: 3 : 0
+if. -.ischar y do. reghandle y return. end.
+if. (0<#y) *. y-:lastpattern do. return. end.
+regfree''
+lastpattern=: y
+msg=. ,2
+off=. ,2
+flg=. PCRE2_MULTILINE*RX_OPTIONS_MULTILINE
+lastcomp=: 0 pick jpcre2_compile (,y);(#y);flg;msg;off;<<0
+if. 0=lastcomp do. regerror msg,off end.
+lasthandle=: 0
+lastmatch=: 0 pick jpcre2_match_data_create_from_pattern (<lastcomp);<<0
+lastnsub=: 0 pick jpcre2_get_ovector_count <<lastmatch
+EMPTY
+)
+
+NB. =========================================================
+NB. regerror
+regerror=: 3 : 0
+m=. regerrormsg y
+lasterror=: m
+regfree''
+m 13!:8[12
+)
+
+NB. =========================================================
+regerrormsg=: 3 : 0
+'msg off'=. 2 {. y,_1
+m=. ({.~ i.&(0{a.)) 2 pick jpcre2_get_error_message msg;(256#' ');256
+if. off >: 0 do.
+  m=. m,' at offset ',(":off),LF
+  m=. m,lastpattern,LF,(off#' '),'^',LF
+end.
+)
+
+NB. =========================================================
+regfree=: 3 : 0
+if. lasthandle=0 do.
+  if. lastmatch do.
+    jpcre2_match_data_free <<lastmatch
+  end.
+  if. lastcomp do.
+    jpcre2_code_free <<lastcomp
+  end.
+end.
+regclear''
+)
+
+NB. =========================================================
+NB. set handle
+reghandle=: 3 : 0
+reghandlecheck y
+ndx=. cmhandles i. y
+'lastcomp lastmatch lastnsub'=: ndx{cmtable
+lastpattern=: ndx pick cmpatterns
+lasthandle=: ndx{cmhandles
+EMPTY
+)
+
+NB. =========================================================
+reghandlecheck=: 3 : 0
+if. y e. cmhandles do. y return. end.
+m=. 'handle not found: ',":y
+m 13!:8[12
+)
+
+NB. =========================================================
+regmatch1=: 3 : 0
+regmatchtab 0 pick jpcre2_match (<lastcomp);(,y);(#y);0;0;(<lastmatch);<<0
+)
+
+NB. =========================================================
+regmatch2=: 3 : 0
+'s p'=. y
+regmatchtab 0 pick jpcre2_match (<lastcomp);(,s);(#s);p;PCRE2_NOTBOL;(<lastmatch);<<0
+)
+
+NB. =========================================================
+NB. get match table
+regmatchtab=: 3 : 0
+if. y >: 0 do.
+  p=. 0 pick jpcre2_get_ovector_pointer <<lastmatch
+  'b e'=. |:_2 [\ memr p,0,(2*lastnsub),4
+  _1 0 (I.b=_1) } b,.e-b
+elseif. y=_1 do.
+  ,:_1 0
+elseif. do.
+  regerror y
+end.
+)
+
+NB. =========================================================
+NB. show all matches
+regshow=: 4 : 0
+m=. x rxmatches y
+r=. ,:y
+if. 0 = # m do. return. end.
+for_i. i. 1 { $ m do.
+  a=. i {"2 m
+  x=. ;({."1 a) (+i.) each {:"1 a
+  r=. r, '^' x } (#y) # ' '
+end.
+)
+
+NB. =========================================================
+NB. for now just check if comp is a valid compiled pattern
+regvalid=: 3 : 0
+len=. 0 pick jpcre2_pattern_info (<y);PCRE2_INFO_SIZE;<<0
+rc=. 0 pick jpcre2_pattern_info (<y);PCRE2_INFO_SIZE;<len$' '
+if. rc>:0 do. 1 else. 0[echo (regerrormsg rc),': ',":y end.
+)
+
+NB. =========================================================
+showhandles=: 3 : 0
+cls=. ;:'pattern handle comp match nsub valid'
+if. #cmpatterns do.
+  val=. regvalid &> {."1 cmtable
+  dat=. (>cmpatterns);<@,."1 |: cmhandles,.cmtable,.val
+else.
+  dat=. (#cls)#<EMPTY
+end.
+cls,:dat
+)
+
+NB. =========================================================
+NB. utility to show rxmatches at top level
+showmatches=: 4 : 0
+m=. x rxmatches y
+r=. ,:y
+if. 0 = # m do. return. end.
+'b e'=. |:{."2 m
+p=. ;b (+ i.) each e
+r, '^' p } (#y) # ' '
+)
+NB. lib
+
+NB. =========================================================
+NB. compile flags:
+PCRE2_NOTBOL=: 16b1
+PCRE2_NOTEOL=: 16b2
+PCRE2_MULTILINE=: 16b400
+
+NB. info types:
+PCRE2_INFO_SIZE=: 22
+
+NB. =========================================================
+NB. pcre2 library is in bin or tools/regex
 3 : 0''
 select. UNAME
-case. 'Win' do. t=. 'jpcre.dll'
-case. 'Darwin' do. t=. 'libjpcre.dylib'
-fcase. 'Linux' do.   NB. fall throught
-  if. 2 0-:('libpcreposix.so.3 dummyfunction n')&(15!:0) ::(15!:10) '' do.
-    rxdll=: 'libpcreposix.so.3'
-  elseif. 2 0-:('libpcreposix.so.2 dummyfunction n')&(15!:0) ::(15!:10) '' do.
-    rxdll=: 'libpcreposix.so.2'
-  elseif. 2 0-:('libpcreposix.so.1 dummyfunction n')&(15!:0) ::(15!:10) '' do.
-    rxdll=: 'libpcreposix.so.1'
-  elseif. 2 0-:('libpcreposix.so.0 dummyfunction n')&(15!:0) ::(15!:10) '' do.
-    rxdll=: 'libpcreposix.so.0'
-  elseif. do.
-    rxdll=: ''
-  end.
-  if. #rxdll do.
-    jregcomp=: (rxdll,' pcreposix_regcomp i *x *c i')&(15!:0)
-    jregexec=: (rxdll,' pcreposix_regexec i *x *c x *i i')&(15!:0)
-    jregerror=: (rxdll,' pcreposix_regerror x i * *c x')&(15!:0)
-    jregfree=: (rxdll,' pcreposix_regfree n *x')&(15!:0)
-    '' return.
-  end.
-case. do. t=. 'libjpcre.so'
+case. 'Win' do. t=. 'jpcre2.dll'
+case. 'Darwin' do. t=. 'libjpcre2.dylib'
+case. 'Linux' do. t=. 'libjpcre2.so'
+case. 'Android' do. t=. 'libjpcre2.so'
 end.
 
 f=. BINPATH,'/',t
@@ -130,138 +189,92 @@ end.
 
 NB. fall back one more time
 if. ('Android'-:UNAME) *. 0 = 1!:4 :: 0: <f do.
-  arch=. LF-.~ 2!:0'getprop ro.product.cpu.abi'
-  f=. jpath '~bin/../libexec/',arch,'/',t
+  f=. (({.~i:&'/')LIBFILE),'/',t
+elseif. ('Linux'-:UNAME) *. (IFUNIX>'/'e.LIBFILE) *. 0 = 1!:4 :: 0: <f do.
+  f=. 'libpcre2-8.so.0'
 elseif. 0 = 1!:4 :: 0: <f do.
   f=. t
 end.
 
-rxdll=: f
-
-NB. =========================================================
-NB. J DLL calls corresponding to the four extended regular expression
-NB. functions defined in The Single Unix Specification, Version 2
-jregcomp=: ('"',rxdll,'" regcomp + i *x *c i')&(15!:0)
-jregexec=: ('"',rxdll,'" regexec + i *x *c x *i i')&(15!:0)
-jregerror=: ('"',rxdll,'" regerror + x i * *c x')&(15!:0)
-jregfree=: ('"',rxdll,'" regfree + n *x')&(15!:0)
-''
-)
-NB. regex
-
-NB. =========================================================
-NB. Global definitions used by the regex script functions
-rxmp=: 50 NB. Allocation granule size for compiled patterns.
-rxms=: 50 NB. Maximum number of sub-expressions per pattern.
-rxszi=: IF64{4 8
-rxregxsz=: 3 NB. J ints for pcre regex_t
-re_nsub_off=: 1
-rxlastrc=: 0
-rxlastxrp=: rxregxsz$2-2
-NB. rxpatterns defined only if not already defined
-rxpatterns_jregex_=: (3 0 $ _1 ; rxlastxrp ; '') [^:(0:=#@]) ". 'rxpatterns_jregex_'
-
-NB. =========================================================
-NB. rxmatch
-rxmatch=: 4 : 0
-if. lb=. 32 = 3!:0 x do. ph=. >0{x else. ph=. x end.
-if. cx=. 2 = 3!:0 ph do. hx=. rxcomp ph
-else. rxlastxrp=: > 1{((hx=. ph) - 1) ({"1) rxpatterns end.
-nsub=. rxnsub rxlastxrp
-rxlastrc=: >0{rv=. jregexec rxlastxrp ; (,y) ; rxms ; ((2*rxms)$_1 0) ; 0
-if. cx do. rxfree hx end.
-m=. (nsub,2)$>4{rv
-t=. (0{"1 m)
-m=. t,.-~/"1 m
-m=. _1 0 ((t=_1)#i.#t)} m
-if. lb do. (>1{x){ m else. m end.
+pcre2dll=: f
 )
 
 NB. =========================================================
-NB. rxmatches
-rxmatches=: 4 : 0
-if. lb=. 32 = 3!:0 x do.
-  ph=. >0{x else. ph=. x end.
-if. cx=. 2 = 3!:0 ph do.
-  hx=. rxcomp ph else.	NB. rxcomp sets rxlastxrp
-  rxlastxrp=: > 1{((hx=. ph) - 1) ({"1) rxpatterns end.
-nsub=. rxnsub rxlastxrp
-o=. 0
-rxm=. (0, nsub, 2)$0
-while. 1 do.
-  m=. hx rxmatch o}.y
-  if. 0 e. $m do. break. end.
-  if. _1 = 0{0{m do. break. end.
-  m=. m+ ($m)$o,0
-  rxm=. rxm , m
-NB. stop if anchor at the beginning
-  if. '^'={.ph do. break. end.
-NB. Advance the offset o beyond this match.
-NB. The match length can be zero (with the *? operators),
-NB. so take special care to advance at least to the next
-NB. position.  If that reaches beyond the end, exit the loop.
-  o=. (>:o) >. +/0{m
-  if. o >: #y do. break. end.
-end.
-if. cx do. rxfree hx end.
-if. lb do. (>1{x){"2 rxm else. rxm end.
+makefn=: 3 : 0
+'name decl'=. y
+('j',name)=: ('"',pcre2dll,'" ',name,'_8 ',(IFWIN#'+ '),decl)&(15!:0)
+EMPTY
 )
 
-NB. =========================================================
-NB. rxcomp
+NB. void pcre2_code_free_8 (pcre2_code_8 *);
+NB. pcre2_code_8 *pcre2_compile_8 (PCRE2_SPTR8, size_t, uint32_t, int *, size_t *, pcre2_compile_context_8 *);
+NB. int pcre2_get_error_message_8 (int, PCRE2_UCHAR8 *, size_t);
+NB. uint32_t pcre2_get_ovector_count_8 (pcre2_match_data_8 *);
+NB. size_t *pcre2_get_ovector_pointer_8 (pcre2_match_data_8 *);
+NB. int pcre2_match_8 (const pcre2_code_8 *, PCRE2_SPTR8, size_t, size_t, uint32_t, pcre2_match_data_8 *, pcre2_match_context_8 *);
+NB. pcre2_match_data_8 *pcre2_match_data_create_from_pattern_8 (const pcre2_code_8 *, pcre2_general_context_8 *);
+NB. void pcre2_match_data_free_8 (pcre2_match_data_8 *);
+NB. int pcre2_pattern_info_8 (const pcre2_code_8 *, uint32_t, void *);
+
+makefn 'pcre2_code_free';'n *'
+makefn 'pcre2_compile';'* *c x i *i *x *'
+makefn 'pcre2_get_error_message';'i i *c x'
+makefn 'pcre2_get_ovector_count';'i *'
+makefn 'pcre2_get_ovector_pointer';'*x *'
+makefn 'pcre2_match';'i * *c x x i * *'
+makefn 'pcre2_match_data_create_from_pattern';'* * *'
+makefn 'pcre2_match_data_free';'n *'
+makefn 'pcre2_pattern_info';'i * i *c'
+NB. compile
 NB.
-NB. options rxcomp pattern
+NB. globals:
+NB. cmhandles is a list of handles
+NB. cmpatterns is a corresponding list of patterns
+NB. cmtable is a corresponding table of compile,match,nsub
+
+NB. =========================================================
+NB. compile pattern, return handle
 rxcomp=: 3 : 0
-'rxlastrc rxlastxrp'=: 2 {. jregcomp (rxregxsz$2-2); (,y); 2 + RX_OPTIONS_UTF8*16b40
-if. rxlastrc do. (rxerror'') 13!:8 [12 end.
-if. ({:$rxpatterns) = hx=. (<_1) i.~ 0 { rxpatterns do.
-  rxpatterns=: rxpatterns ,. (rxmp$<_1),(rxmp$<rxregxsz$2-2), ,:rxmp$<''
-end.
-rxpatterns=: ((hx+1);rxlastxrp;y) (<a:;hx)} rxpatterns
-hx + 1
-)
-
-NB. =========================================================
-rxnsub=: [: >: 1&{   NB. Number of main+sub-expressions from Perl regex_t
-
-NB. =========================================================
-NB. rxerror
-rxerror=: 3 : 0
-r=. >3{jregerror rxlastrc;rxlastxrp;(80#' ');80
-({.~ i.&(0{a.)) r
+if. -.ischar y do. reghandlecheck y return. end.
+ndx=. cmpatterns i. <y
+if. ndx < #cmpatterns do. ndx{cmhandles return. end.
+regcomp y
+cmpatterns=: cmpatterns,<y
+cmhandles=: cmhandles, cmseq=: cmseq + 1
+cmtable=: cmtable,lastcomp,lastmatch,lastnsub
+lasthandle=: ndx{cmhandles
 )
 
 NB. =========================================================
 rxfree=: 3 : 0
-hx=. ,y - 1
-while. 0<#hx do.
-  ix=. 0{hx
-  jregfree 1{ix ({"_1) rxpatterns
-  rxpatterns=: ((<_1),(<rxregxsz$2-2),<'') (<(<$0);ix)} rxpatterns
-  hx=. }.hx
+ndx=. cmhandles i. y
+if. ndx=#cmhandles do. EMPTY return. end.
+if. -. lastpattern -: ndx pick cmpatterns do.
+  'comp match nsub'=. ndx{cmtable
+  jpcre2_match_data_free <<match
+  jpcre2_code_free <<comp
 end.
-i.0 0
+ndx=. <<<ndx
+cmtable=: ndx{cmtable
+cmhandles=: ndx{cmhandles
+cmpatterns=: ndx{cmpatterns
+EMPTY
 )
 
 NB. =========================================================
-NB. rxhandles
-rxhandles=: 3 : 0
-h=. >0{rxpatterns
-(h~:_1)#h
-)
-
-NB. =========================================================
-NB. rxinfo
 rxinfo=: 3 : 0
-i=. (y-1){"1 rxpatterns
-|:(<"_1 rxnsub >1{i) ,: 2{i
+ndx=. cmhandles i. y
+if. ndx=#cmhandles do. 'handle not found: ',":y return. end.
+((<ndx;2){cmtable);ndx{cmpatterns
 )
 
 NB. =========================================================
-NB. rxfrom=: <@({~ (+ i.)/)"1~
+rxhandles=: 3 : 'cmhandles'
+NB. main methods
+
 rxfrom=: ,."1@[ <;.0 ]
-rxeq=: {.@rxmatch -: 0: , #@]
-rxin=: _1: ~: {.@{.@rxmatch
+rxeq=: {.@rxmatch -: 0 , #@]
+rxin=: _1 ~: {.@{.@rxmatch
 rxindex=: #@] [^:(<&0@]) {.@{.@rxmatch
 rxE=: i.@#@] e. {.@{."2 @ rxmatches
 rxfirst=: {.@rxmatch >@rxfrom ]
@@ -295,6 +308,33 @@ f=. < @ (({. + i.@{:)@[ { ] )
 )
 
 NB. =========================================================
+rxerror=: 3 : 'lasterror'
+
+NB. =========================================================
+rxmatch=: 4 : 0
+'p n'=. 2 {. boxopen x
+regcomp p
+r=. regmatch1 y
+if. #n do. n{r end.
+)
+
+NB. =========================================================
+rxmatches=: 4 : 0
+'p n'=. 2 {. boxopen x
+regcomp p
+m=. regmatch1 y
+if. _1 = {.{.m do. i.0 1 2 return. end.
+s=. 1 >. +/{.m
+r=. ,: m
+while. s <#y do.
+  if. _1 = {.{.m=. regmatch2 y;s do. break. end.
+  s=. (s+1) >. +/ {.m
+  r=. r, m
+end.
+if. #n do. n{"2 r end.
+)
+
+NB. =========================================================
 rxmerge=: 1 : 0
 :
 p=. _2 ]\ m rxcut y
@@ -312,12 +352,51 @@ new mat rxmerge y
 )
 
 NB. =========================================================
-NB. set UTF-8 support on/off
-NB. result is previous setting
-rxutf8=: 3 : 0
-(RX_OPTIONS_UTF8=: y) ] RX_OPTIONS_UTF8
+rxutf8=: 3 : '(RX_OPTIONS_UTF8=: y) ] RX_OPTIONS_UTF8'
+NB. nouns for applying regular expressions to J code
+NB.
+NB.   Jname        name
+NB.   Jnumitem     numeric item
+NB.   Jnum         number or blank
+NB.   Jcharitem    character item
+NB.   Jchar        character
+NB.   Jconst       constant
+NB.
+NB.   Jlassign     local assign
+NB.   Jgassign     global assign
+NB.   Jassign      any assign
+NB.
+NB.   Jlpar        left paren
+NB.   Jrpar        right paren
+NB.
+NB.   Jsol         start of line
+NB.   Jeol         end of line
+
+Jname=: '[[:alpha:]][[:alnum:]_]*|x\.|y\.|m\.|n\.|u\.|v\.'
+Jnumitem=: '[[:digit:]_][[:alnum:]_.]*'
+Jnum=: '([[:digit:]_][[:alnum:]_.]*|[[:blank:]])?'
+Jcharitem=: '''(''''|[^''])'''
+Jchar=: '''(''''|[^''])*'''
+Jconst=: '([[:digit:]_][[:alnum:]_.]*|[[:blank:]])?|''(''''|[^''])*''|a:|a\.'
+Jlassign=: '=\.'
+Jgassign=: '=:'
+Jassign=: '=[.:]'
+Jlpar=: '\('
+Jrpar=: '\)'
+Jsol=: '^[[:blank:]]*'
+Jeol=: '[[:blank:]]*(NB\..*)?$'
+NB. fini
+
+NB. =========================================================
+3 : 0''
+if. _1=nc <'cmhandles' do.
+  cmhandles=: cmpatterns=: $0
+  cmseq=: 0
+  cmtable=: i.0 3
+end.
+lasterror=: ''
+regclear''
 )
-NB. zdefs
 
 NB. =========================================================
 NB. define z locale names:

@@ -63,7 +63,6 @@ noun \define
 findfor=: 'for_'&-: @ (4&{.) *. ('.'&=) @ {:
 info=: sminfo @ ('Lint'&;)
 lastones=: > (}. , 0:)
-tolist=: }.@;@:(LF&,@,@":&.>)
 findcontrols=: (1: e. (CONTS"_ (1: e. E.) &> <)) &>
 firstones=: > (0 , }:)
 maskselectside=: +./\ *. +./\.

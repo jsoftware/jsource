@@ -29,7 +29,7 @@ case. do.
   wcdm=: 1 : ']'
   LIB=: c
   closesocketJ=: 'close i i' scdm
-  ioctlsocketJ=: 'ioctl i i i *i' scdm
+  ioctlsocketJ=: 'ioctl i i x *i' scdm
 end.
 empty''
 )
@@ -196,7 +196,7 @@ r=. getsocknameJ y;(sockaddr_in_sz#{.a.);,sockaddr_in_sz
 (rc0 r);data2string r
 )
 sdsend=: 4 : 0"1
-if. '' -: $x do. x =. ,x end.
+if. '' -: $x do. x=. ,x end.
 r=. >{.sendJ (>0{y);x;(#x);>1{y
 if. _1=r do. 0;~sdsockerror'' else. 0;r end.
 )

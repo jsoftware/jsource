@@ -120,7 +120,7 @@ NB. tarx tar;path - write tar files to path
 tarx=: 3 : 0
 'file path'=. y
 file=. jpathsep^:IFWIN file [ path=. jpathsep^:IFWIN path
-mkdir_j_ jpath path
+mkdir_j_ path
 assert. 2=ftype path['path folder must exist'
 d=. fread file
 assert. _1-.@-:d['can not read file'
@@ -138,9 +138,10 @@ while. #d do.
   select. type
   case. '5' do.
     d=. 512}.d
-    mkdir_j_ jpath f
+    mkdir_j_ f
     assert. 2=ftype f
   case. '0' do.
+    mkdir_j_ (f i: '/'){.f
     data=. count{.512}.d
     d=. (512*1+>.count%512)}.d
     assert. (#data)=data fwrite f

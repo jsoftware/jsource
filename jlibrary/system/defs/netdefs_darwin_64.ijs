@@ -2,7 +2,7 @@ NB. do not edit -- created by sym2ijs
 
 cocurrent <'jdefs'
 
-FIONBIO=: -2147195266
+FIONBIO=: 16b8004667e
 FIONREAD=: 1074030207
 FD_SETSIZE=: 1024
 
@@ -128,4 +128,3 @@ msg_controllen_off=: 40
 msg_controllen_sz=: 4
 msg_flags_off=: 44
 msg_flags_sz=: 4
-

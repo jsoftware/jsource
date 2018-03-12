@@ -1,6 +1,8 @@
 18!:4 <'z'
 3 : 0 ''
 
+JLIB=: '8.07.07'
+
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
 jpathsep=: '/'&(('\' I.@:= ])})
@@ -8,6 +10,7 @@ winpathsep=: '\'&(('/' I.@:= ])})
 PATHJSEP_j_=: '/'
 IFDEF=: 3 : '0=4!:0<''DEF'',y,''_z_'''
 IF64=: 16={:$3!:3[2
+IFBE=: 'a'~:{.2 (3!:4) a.i.'a'
 'IFUNIX IFWIN IFWINCE'=: 5 6 7 = 9!:12''
 IFJHS=: 0
 IFWINE=: (0 ~: 'ntdll wine_get_version >+ x'&(15!:0)) ::0:`0:@.IFUNIX ''
@@ -20,8 +23,8 @@ end.
 if. notdef 'IFJNET' do.
   IFJNET=: 0
 end.
-if. notdef 'FHS' do.
-  FHS=: 0
+if. notdef 'BINPATH' do.
+  BINPATH=: '/j/bin'
 end.
 if. notdef 'UNAME' do.
   if. IFUNIX do.
@@ -34,11 +37,17 @@ if. notdef 'UNAME' do.
     UNAME=: 'Win'
   end.
 end.
+if. notdef 'LIBFILE' do.
+  LIBFILE=: BINPATH,'/',IFUNIX{::'j.dll';(UNAME-:'Darwin'){::'libj.so';'libj.dylib'
+end.
+if. notdef 'FHS' do.
+  FHS=: IFUNIX>'/'e.LIBFILE
+end.
 'libc.so.6 setlocale > x i *c'&(15!:0)^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
     cpu=. 2!:0 'cat /proc/cpuinfo'
-    IFRASPI=: (1 e. 'BCM2708' E. cpu) +. 1 e. 'BCM2709' E. cpu
+    IFRASPI=: (1 e. 'BCM2708' E. cpu) +. (1 e. 'BCM2709' E. cpu) +. 1 e. 'BCM2710' E. cpu
   else.
     IFRASPI=: 0
   end.
@@ -330,7 +339,8 @@ sminfo=: 3 : 0
 if. IFQT do. wdinfo_jqtide_ y
 elseif. IFJA do. wdinfo_ja_ y
 elseif. IFJNET do. wdinfo_jnet_ y
-elseif. do. smoutput >_1{.boxopen y end.
+elseif. (0-:11!:0 ::0:'qwd') < 3=4!:0<'wdinfo' do. wdinfo y
+elseif. do. smoutput >{:boxopen y end.
 )
 smoutput=: 0 0 $ 1!:2&2
 tmoutput=: 0 0 $ 1!:2&4
@@ -343,6 +353,7 @@ table=: 1 : 0~
 take=: {.
 timespacex=: 6!:2 , 7!:2@]
 timex=: 6!:2
+tolist=: }.@;@:(LF&,@,@":&.>)
 tolower=: 3 : 0
 x=. I. 26 > n=. ((65+i.26){a.) i. t=. ,y
 ($y) $ ((x{n) { (97+i.26){a.) x}t
@@ -514,7 +525,9 @@ XOR=: $:/ : (22 b.)
 break=: 3 : 0
 class=. >(0=#y){y;'default'
 p=. 9!:46''
-q=. (>:p i: '/'){.p
+if. '~' = {.q=. jpath '~break/' do.
+  q=. (>:p i: '/'){.p
+end.
 fs=. (<q),each {."1[1!:0<q,'*.',class
 fs=. fs-.<p
 for_f. fs do.
@@ -893,9 +906,6 @@ if. 0={:opt do. fls=. 1#~#dr=. fls#dr end.
 if. 0=#dr do. empty'' return. end.
 nms=. {."1 dr
 nms=. nms ,&.> fls{ps;''
-if. IFWIN do.
-  nms=. tolower &.> nms
-end.
 ndx=. /: (":,.fls),.>nms
 if. 0=opt do.
   list >ndx{nms
@@ -906,9 +916,6 @@ elseif. fmt<2=opt do.
   ndx{nms,.}."1 dr
 elseif. fmt do.
   'nms ts size'=. |:3{."1 dr
-  if. IFWIN do.
-    nms=. tolower L:0 nms
-  end.
   ds=. '   <dir>    ' ((-.fls)#i.#fls) } 12 ":,.size
   mth=. _3[\'   JanFebMarAprMayJunJulAugSepOctNovDec'
   f=. > @ ([: _2&{. [: '0'&, ": )&.>
@@ -1055,9 +1062,6 @@ if. x do.
   r=. r #~ h &> r
 end.
 if. #t do. r=. r,<}:t end.
-if. IFWIN do.
-  r=. tolower each r
-end.
 /:~ r
 )
 dirss=: 4 : 0
@@ -1130,10 +1134,7 @@ if. #dl=. 1!:0 path,'*' do.
     r=. r,;x&dirtree@(path&,@,&(ps,ext)) &.> dr
   end.
 end.
-r=. r #~ (ts x) <: ts &> 1{"1 r
-if. IFWIN *. #r do.
-  (tolower L:0 {."1 r) 0 }"0 1 r
-end.
+r #~ (ts x) <: ts &> 1{"1 r
 )
 dirused=: [: (# , +/ @ ; @ (2: {"1 ])) 0&dirtree
 cocurrent 'z'
@@ -1338,10 +1339,8 @@ fwrites=: 4 : 0
 )
 cocurrent 'z'
 install=: 3 : 0
-'' install y
-:
 require 'pacman'
-x do_install_jpacman_ y
+do_install_jpacman_ y
 )
 getqtbin=: 3 : 0
 if. (<UNAME) -.@e. 'Linux';'Darwin';'Win' do. return. end.
@@ -1548,7 +1547,7 @@ b=. b > (1,}:b) +. }.c,0
 3 : 0''
 if. IFIOS do.
   r=. 'Engine: ',9!:14''
-  r=. r,LF,'Library: ',LF -.~ 1!:1<'/j/system/config/version.txt'
+  r=. r,LF,'Library: ',JLIB
   r=. r,LF,'J/iOS Version: ',VERSION
   r=. r,LF,'Platform: ',UNAME,' ',IF64 pick '32';'64'
   r=. r,LF,'InstallPath: ', (2!:5'HOME'), '/Documents/j'
@@ -1581,10 +1580,21 @@ seldir=: #~ '-d'&-:"1 @ (1 4&{"1) @ > @ (4&{"1)
 spath=: #~ [: *./\. '/'&~:
 termLF=: , (0 < #) # LF -. {:
 termsep=: , (0 < #) # '/' -. {:
-tolist=: }.@;@:(LF&,each)
 remsep=: }.~ [: - '/' = {:
 
 path2proj=: ,'/',ProjExt ,~ spath
+win2lower=: 3 : 0
+if. 0=#CasePaths_j_ do. tolower y return. end.
+p=. jpathsep y
+n=. 1 + p i. ':'
+d=. n {. p
+if. (<d) e. CasePaths_j_ do. y return. end.
+b=. n }. p
+p=. d,(('/'~:{.b)#'/'), b,'/'
+p=. (1 + p i: '/') {. p
+p=. (I.p='/') {.each <p
+if. 1 e. p e. CasePaths_j_ do. y else. tolower y end.
+)
 3 : 0''
 if. UNAME-:'Darwin' do.
   filecase=: tolower
@@ -1593,8 +1603,8 @@ elseif. IFUNIX do.
   filecase=: ]
   isroot=: '/' = {.
 elseif. do.
-  filecase=: tolower
-  isroot=: ':' = {.@}.
+  filecase=: win2lower
+  isroot=: ('\\' -: 2&{.) +. ('//' -: 2&{.) +. (':' = {.@}.)
 end.
 0
 )
@@ -1784,7 +1794,7 @@ f=. jpath '~addons/docs/help/',y
 if. fexist ({.~ i:&'#') f do.
   browse file2url f
 else.
-  f=. 'http://www.jsoftware.com/docs/help', '806'
+  f=. 'http://www.jsoftware.com/docs/help', '807'
   browse f,'/',y
 end.
 )
@@ -2010,7 +2020,7 @@ Loaded=: ''
 Public=: i. 0 2
 UserFolders=: i. 0 2
 getignore=: 3 : 0
-r=. ' colib compare convert coutil dates dir dll files libpath strings text'
+r=. ' colib compare convert coutil dates dir dll files libpath strings text gl2 graphics/gl2'
 Ignore=: <;._1 r
 )
 

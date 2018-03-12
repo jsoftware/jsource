@@ -73,7 +73,7 @@ if. newheader do.
  (6{x)  setHADR y
  (7}.x) memw y,HADS,(#7}.x),JINT
 else.
- h memw y,0,(#x),JINT
+ x memw y,0,(#x),JINT
 end.
 )
 

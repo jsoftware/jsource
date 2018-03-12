@@ -1,7 +1,6 @@
 coclass 'jpm'
 
-SIZE=: 1e7
-SCREENGLOBALS=: 0
+SIZE=: IF64{1e8 1e9
 unpack=: 6!:11
 counter=: 6!:12
 stats=: 6!:13
@@ -197,6 +196,8 @@ if. bnx do.
   mbgn=. bnx }. mbgn
   mend=. bnx }. mend
 end.
+
+if. 0 e. (#mbgn),#mend do. i.0 4 return. end.
 
 msk=. 0 < mbgn usage mend
 
@@ -403,20 +404,29 @@ name;loc;given
 )
 read=: 3 : 0
 if. PMREAD do. 1 return. end.
+
 if. 0 = +/ 6!:13'' do.
   smoutput 'There are no PM records'
   0 return.
 end.
-
 PMTIME=: 6!:11 ''
 PMSTATS=: 6!:13 ''
 6!:10 ''
-PM=: PMTIME
-locndx=. (1;0) {:: PMTIME
-PMNAMES=: 6 pick PMTIME
-PMLOCALES=: locndx }. PMNAMES
-PMNAMES=: locndx {. PMNAMES
+a=. 'recorded ',(0{PMSTATS) pick 'entry and exit only';'all lines'
+a=. a,LF,'used and max record count:',;' ' ,each 'c' (8!:0) 3 2 { PMSTATS
+if. 4 { PMSTATS do.
+  a=. a,LF,'the PM data area has overflowed and records have been lost'
+end.
+smoutput a,LF
+'namx locx all'=. 0 1 6 { PMTIME
+PMNAMES=: (~.namx){all
+namx=. PMNAMES i. namx{all
+locndx=. #namx
+PMLOCALES=: (~.locx){all
+locx=. locndx + PMLOCALES i. locx{all
+PMTIME=: (namx;locx;<PMNAMES,PMLOCALES) 0 1 6} PMTIME
 PMNDX=: > 3 {. PMTIME
+PM=: PMTIME
 ndx=. I. (1: e. '__'&E.) &> PMNAMES
 
 if. #ndx do.
@@ -438,8 +448,6 @@ if. #ndx do.
 
   ndx merge nms
 end.
-ind=. (0 { PMNDX) { PMNAMES i. PMNAMES
-PMNDX=: ind 0 } PMNDX
 PMLINES=: 3 pick PMTIME
 PMSPACE=: 0, +/\ }: 4 pick PMTIME
 PMTIME=: 5 pick PMTIME

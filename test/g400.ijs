@@ -434,6 +434,46 @@ NB. Now virtual (6!:2 '0 }. a') < 0.01 * 6!:2 '1 }. a'
 (6!:2 '0 |. a') < 0.01 * 6!:2 '1 |. a'
 (6!:2 '0 |.!.5 a') < 0.01 * 6!:2 '1 |.!.5 a'
 
-4!:55 ;:'a adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n tally x xx y '
+NB. test virtual implementation
+f =: 3 : 0
+siz12002 =: 0.6 * 7!:2 'a =: 100 12000 $ y'
+a0 =: '' $ a
+siz1200 =: 0.6 * 7!:2 '({:$a) $ a0'
+NB. assert. siz1200 > 7!:2 '+/ {. a'
+NB. assert. siz1200 < 7!:2 '+/ b =: {. a'
+
+NB. assert. siz12002 > 7!:2 '+/ }. a'
+NB. assert. siz12002 < 7!:2 '+/ b =: }. a'
+
+assert. siz1200 > 7!:2 '$ 1 {. a'
+assert. siz1200 < 7!:2 '$ b =: 1 {. a'
+assert. siz1200 < 7!:2 '$ (,1) {. a'
+assert. siz1200 > 7!:2 '$ _1 {. a'
+assert. siz1200 < 7!:2 '$ b =: _1 {. a'
+assert. siz12002 > 7!:2 '$ 90 {. a'
+assert. siz12002 < 7!:2 '$ b =: 90 {. a'
+
+assert. siz12002 > 7!:2 '$ 1 }. a'
+assert. siz12002 < 7!:2 '$ b =: 1 }. a'
+assert. siz12002 < 7!:2 '$ (,1) }. a'
+assert. siz12002 > 7!:2 '$ _1 }. a'
+assert. siz12002 < 7!:2 '$ b =: _1 }. a'
+assert. siz12002 > 7!:2 '$ 10 }. a'
+assert. siz12002 < 7!:2 '$ b =: 10 }. a'
+
+assert. siz1200 > 7!:2 '$@]"1 a'
+assert. siz1200 > 7!:2 'a $@]"1 a'
+1
+)
+f 0
+f 2
+f 5.5
+f 1j1
+f a:
+f s: 'word'
+f u: 'a'
+f 10 u: 'a'
+
+4!:55 ;:'a adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
 randfini''
 

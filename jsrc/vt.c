@@ -93,7 +93,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
   DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
   s=a=t;
  }
- if(!((n-1)|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
@@ -131,7 +131,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
- if(!((n-1)|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
   I * RESTRICT ws=AS(w);  // ws->shape of w
   I droplen = IAV(a)[0];  // get the one number in a, the take amount
   I dropabs = droplen<0?-droplen:droplen;  // ABS(droplen), but may be as high as IMIN

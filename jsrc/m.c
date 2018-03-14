@@ -546,13 +546,11 @@ A jtrealize(J jt, A w){A z; I t;
 // result is the address of the block, which may have changed if it had to be realized.  result can be 0
 // if the block could not be realized
 
+#if 0  // scaf for audit
 static void checkgloga(A w) {
  if(AC(w)!=ACPERMANENT)*(I*)0=0;
  if((AFLAG(w)^AT(w))&TRAVERSIBLE)*(I*)0=0;
 }
-
-A jtgc (J jt,A w,I old){
-#if 1  // scaf for audit
 int jj;
 checkgloga(a0j1);
 checkgloga(ace);
@@ -588,6 +586,8 @@ checkgloga(zero);
 checkgloga(zeroi);
 checkgloga(zpath);
 #endif
+
+A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be error or unfilled box)
   I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately

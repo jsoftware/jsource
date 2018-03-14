@@ -12,15 +12,15 @@
 // obsolete // result is rank of argument cell
 // obsolete I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
-#define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
-// Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
-// that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
-// it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ras()
-// the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
-// if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
-// nonrecursive
-// todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
-#define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
+// obsolete #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
+// obsolete // Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
+// obsolete // that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
+// obsolete // it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ras()
+// obsolete // the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
+// obsolete // if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
+// obsolete // nonrecursive
+// obsolete // todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
+// obsolete #define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
 
 #define EMSK(x) (1<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
@@ -38,8 +38,8 @@
 #define STATEWRELX 10
 #define STATEWREL (1<<STATEWRELX)
 #define STATENOPOP 0x800   // set if not OK to tpop the stack
-#define STATEINCORPORATEDA 0x1000
-#define STATEINCORPORATEDW 0x2000
+// obsolete #define STATEINCORPORATEDA 0x1000
+// obsolete #define STATEINCORPORATEDW 0x2000
 
 
 #define RCALL   CALL1(f1,yw,fs)
@@ -52,87 +52,9 @@
 // A verb u["n] using this function checks to see whether it has multiple cells; if so,
 // it calls here, giving a callback; we split the arguments into cells and call the callback,
 // which is often the same original function that called here.
-
-#if 0 // obsolete
-#define RFLAG   (!(AFLAG(w)&AFNJA+AFSMM+AFREL))
-A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,y0,yw,z;C*v,*vv;
-    I k,mn,n=1,p,*s,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;I state;
- RZ(w);
- wt=AT(w);
- if(wt&SPARSE)R sprank1(w,fs,rr,f1);
- wr=AR(w); ws=AS(w); efr(rr,wr,rr); wf=wr-rr;
- state=0; if(ARELATIVE(w))state=STATEWREL;
- if(!wf)R CALL1(f1,w,fs);
- PROD(wcn,rr,wf+ws); wk=wcn*bp(wt); v=CAV(w); NEWYW;  // if this PROD overflows, the reshape below will fail
- p=wf; s=ws; mn=prod(wf,ws);
- if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,rr,ws+wf),filler(w)));
-
-// Assignments from cr.c:
-// ?r=rank, ?s->shape, ?cr=effective rank, ?f=#frame, ?b=relative flag, for each argument
-// ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv point to one cell before aw data
-// Allocate y? to hold one cell of ?, with uu,vv pointing to the data of y?
-// b means 'w frame is larger'; p=#larger frame; q=#shorter frame; s->larger frame
-// mn=#cells in larger frame (& therefore #cells in result); n=# times to repeat each cell
-//  from shorter-frame argument
-
-{B cc=1;C*zv;I j=0,jj=0,old;
- if(mn){y0=y=RCALL; RZ(y);}  // if there are cells, execute on the first one
- else{I d;
-  // if there are no cells, execute on a cell of fills.  Do this quietly, because
-  // if there is an error, we just want to use a value of 0 for the result; thus debug
-  // mode off and RESETERR on failure.
-  // However, if the error is a non-computational error, like out of memory, it
-  // would be wrong to ignore it, because the verb might execute erroneously with no
-  // indication that anything unusual happened.  So fail then
-  d=jt->db; jt->db=0; y=RCALL; jt->db=d;
-  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}
- } 
-
- // yt=type, yr=rank, ys->shape, yn=#atoms k=#bytes of first-cell result
- yt=AT(y); yr=AR(y); ys=AS(y); yn=AN(y); k=yn*bp(yt);
- // First shot: zip through the cells, laying the results into the output area
- // one by one.  We can do this if the results are direct (i. e. not pointers),
- // or if there are no results at all; and we can continue until we hit an incompatible result-type.
- // With luck this will process the entire input.
- if(!mn||yt&DIRECT&&RFLAG){I zn;
-  RARG1; RE(zn=mult(mn,yn));   // Reallocate y? if needed; zn=number of atoms in all result cells (if they stay homogeneous)
-  GA(z,yt,zn,p+yr,0L); ICPY(AS(z),s,p); ICPY(p+AS(z),ys,yr);  // allocate output area, move in long frame followed by result-shape
-  if(mn){zv=CAV(z); MC(zv,AV(y),k);}   // If there was a first cell, copy it in
-  // Establish the point we will free to after each call.  This must be after the allocated result area, and
-  // after the starting result cell.  After we call the verb we will free up what it allocated, until we have to
-  // reallocate the result cell; then we would be wiping out a cell that we ourselves allocated, so we stop
-  // freeing then
-  old=jt->tnextpushx;
-  for(j=1;j<mn;++j){   // for each additional result-cell...
-   RARG;    // establish argument cells
-   RZ(y=RCALL);  // call the function
-   if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr))break;  // break if there is a change of cell type/rank/shape
-   MC(zv+=k,AV(y),k);   // move the result-cell to the output
-   if(cc)tpop(old);  // Now that we have copied to the output area: if we have not reallocated a cell on the stack, free what the verb did
-  }
- }
- if(j<mn){A q,*x,yz;
-  // Here we were not able to build the result in the output area; type/rank/shape changed.
-  // We will create a boxed result, boxing each cell, and then open it.  If this works, great.
-  jj=j%n;   // j = #cells we processed before the wreck; jj=position in the smaller cell (not used for monad; compiler should optimize it away)
-  GATV(yz,BOX,mn,p,s); x=AAV(yz);   // allocate place for boxed result
-  // For each previous result, put it into a box and store the address in the result area
-  if(j){
-   zv=CAV(z)-k;
-   DO(j, GA(q,AT(y0),AN(y0),AR(y0),AS(y0)); MC(AV(q),zv+=k,k); *x++=q;);  // We know the type/shape/rank of y0 matches them all
-  }
-  *x++=y;   // move in the result that caused the wreck
-  DO(mn-j-1, RARG; RZ(y=RCALL); *x++=y;);   // for all the rest, execute the cells and move pointer to output area
-  z=ope(yz);  // We have created x <@f y; this creates > x <@f y which is the final result
- }
- EPILOG(z);  // If the result is boxed, we know we had no wastage at this level except for yz, which is small compared to z
-}
-}
-#else
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
-A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
-   C*v,*vv;I k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
-
+A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,z,virtw;
+   I k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(w);
  wt=AT(w);
  if(wt&SPARSE)R sprank1(w,fs,rr,f1);  // this needs to be updated to handle multiple ranks
@@ -144,121 +66,106 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
  if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
 
- // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
- // with the shorter frame.  Whenever we have to copy, we first
- // check to see if the cell-workarea has been incorporated into a result noun; if so, we have to
- // reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
- // when a cell is to be repeated.  NEWY? allocates a new argument cell, and MOVEY? copies to it.
- // b&1 is set if the inner repeat is for w, b&2 is set if the outer repeat is for w.
- // innerphase tells where we are in in inner repetition cycle.  When it hits 0, we advance, otherwise repeat.
- // outerphase[01] tell where we are in the outer repetition cycle.  When outerphase0 hits 0, we do one check of
- //  outerphase1, advancing if it hits 0, repeating otherwise
- // The phase counters are advanced by RARG and not touched by RCALL, so that if we have to switch loops we can continue using
- // them.
-
+ I wn=AN(w);  // empty-operand indicator
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
  RE(mn=prod(wf,ws)); PROD(wcn,rr,ws+wf);   // number of cells, number of atoms in a cell
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
- // ?cn=number of atoms in a cell, ?k=#bytes in a cell, v->w data
- wk=wcn*bp(wt); v=CAV(w); NEWYW;
+ // ?cn=number of atoms in a cell, ?k=#bytes in a cell
+ wk=wcn*bp(wt);
+ // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
+ // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
+ // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
+ // if the cells are empty but the frame does not contain 0)
+ if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
+ else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
- if(!mn){UC d; I *is, *zs;
-  // if there are no cells, execute on a cell of fills.
-  if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,rr,ws+wf),filler(w)));
+ if(mn){I i0, old;C *zv;
+  // Normal case where there are cells.
+  // loop over the frame
+  for(i0=mn;i0;--i0){
+   RZ(y=CALL1(f1,virtw,fs));
+   // see if the workarea was incorporated into the result, for use next time through the loop
+   if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
+
+   // process according to state
+   if(state&STATENORM){
+    // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
+    if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)||ARELATIVE(y)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
+    else{
+     // Normal path.  
+     MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
+     if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
+    }
+   } else if(state&STATEFIRST){I *is, zn;
+    // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
+    // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
+    // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
+    yt=AT(y);  // type of the first result
+    if(!( (AFLAG(w)&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
+     yr=AR(y); yn=AN(y);
+     RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
+     state^=(STATEFIRST|STATENORM);  // advance to STATENORM
+     // If the results are not going to be DIRECT, they will be allocated up the stack, and we mustn't pop the stack between results
+     if(!(yt&DIRECT))state |= STATENOPOP;
+    }else{
+     yt=BOX; yr=0; zn=mn; state^=(STATEFIRST|STATEERR);
+    }
+    GA(z,yt,zn,wf+yr,0L); I *zs=AS(z); zv=CAV(z);
+    is = ws; DO(wf, *zs++=*is++;);  // copy frame
+    if(!(state&STATEERR)){
+     ys=AS(y); k=yn*bp(yt);   // save info about the first cell for later use
+     is = AS(y); DO(yr, *zs++=*is++;);    // copy result shape - if going to error, not used
+     MC(zv,AV(y),k); zv+=k;   // If there was a first cell, copy it in & advance to next output spot
+     old=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
+    }
+   }
+
+   if(state&(STATEERR0|STATEERR)){
+    if(state&STATEERR0){
+     // We had a wreck.  Either the first cell was not direct, or there was a change of type.  We cope by boxing
+     // each individual result, so that we can open them at the end to produce a single result (which might fail when opened)
+     // It would be nice if boxed results didn't go through this path
+     // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
+     // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
+     C *zv1=CAV(z);   // pointer to cell data
+     A zsav = z; GATV(z,BOX,mn,wf,AS(zsav)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape.  Note GATV reassigns z early, need zsav
+     // For each previous result, put it into a box and store the address in the result area
+     // We have to calculate the number of cells, rather than using the output address, because the length of a cell may be 0
+     // wrecki does not include the cell that caused the wreck
+     I wrecki = mn-i0;
+     DQ(wrecki , A q; GA(q,yt,yn,yr,ys); MC(AV(q),zv1,k); zv1+=k; *x++=q;)  // We know the type/shape/rank of the first result matches them all
+     // from now on the main output pointer, zv, points into the result area for z
+     zv = (C*)x;
+     state^=(STATEERR0|STATEERR);  // advance to STATEERR
+    }
+    // Here for all errors, including the first after it has cleaned up the mess, and for sparse result the very first time with no mess
+    // we are incorporating y into the boxed z, so we have to mark it as such (and possibly reallocate it)
+    INCORP(y);
+    *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
+   }
+   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
+   AK(virtw)+=wk;
+  }
+ }else{UC d; I *is, *zs;
+  // no cells - execute on a cell of fills
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
   // mode off and RESETERR on failure.
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  d=jt->db; jt->db=0; y=CALL1(f1,yw,fs); jt->db=d;
+  d=jt->db; jt->db=0; y=CALL1(f1,virtw,fs); jt->db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}  // use 0 as result if error encountered
   GA(z,AT(y),0L,wf+AR(y),0L); zs=AS(z);
   is = ws; DO(wf, *zs++=*is++;);  // copy frame
   is = AS(y); DO(AR(y), *zs++=*is++;);    // copy result shape
- }else{I i0, old;C *zv;
-  // Normal case where there are cells.
-  // loop over the frame
-  for(i0=mn;i0;--i0){
-     // establish argument cells by using MOVEY? to move the cell into the workarea y?.  Before we do that,
-     // we have to see whether the previous value in y? was incorporated into a result (which it is if it IS
-     // the result, or if its usecount has been incremented).  If it has been so incorporated, we must reallocate
-     // the workarea and also stop freeing blocks allocated up the stack, lest we free our workarea as well
-     // if an argument is going to be repeated, establish it here
-      if(state&STATEINCORPORATEDW){state&=~(STATEINCORPORATEDW);NEWYW;} MOVEYW;
-      // invoke the function, get the result for one cell
-      RZ(y=CALL1(f1,yw,fs));
-      // see if the workarea was incorporated into the result, for use next time through the loop
-      if(WASINCORP1(y,yw))state|=STATEINCORPORATEDW|STATENOPOP;
-      // if the result is boxed, accumulate the SMREL info
-      if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
-
-      // process according to state
-      if(state&STATENORM){
-       // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
-       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)||ARELATIVE(y)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
-       else{
-        // Normal path.  
-        MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
-        if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
-       }
-      } else if(state&STATEFIRST){I *is, zn;
-       // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
-       // we have to go through the box/unbox drill (why I don't know).  In that case, we switch this allocation to be a single box per result-cell,
-       // to avoid having to reallocate immediately.  We also have to do this for sparse results, so that they will be collected into a single result at the end
-       yt=AT(y);  // type of the first result
-       if(!( (AFLAG(w)&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
-        yr=AR(y); yn=AN(y);
-        RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
-        state^=(STATEFIRST|STATENORM);  // advance to STATENORM
-        // If the results are not going to be DIRECT, they will be allocated up the stack, and we mustn't pop the stack between results
-        if(!(yt&DIRECT))state |= STATENOPOP;
-       }else{
-        yt=BOX; yr=0; zn=mn; state^=(STATEFIRST|STATEERR);
-       }
-       GA(z,yt,zn,wf+yr,0L); I *zs=AS(z); zv=CAV(z);
-       is = ws; DO(wf, *zs++=*is++;);  // copy frame
-       if(!(state&STATEERR)){
-        ys=AS(y); k=yn*bp(yt);   // save info about the first cell for later use
-        is = AS(y); DO(yr, *zs++=*is++;);    // copy result shape - if going to error, not used
-        MC(zv,AV(y),k); zv+=k;   // If there was a first cell, copy it in & advance to next output spot
-        old=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
-       }
-      }
-
-      if(state&(STATEERR0|STATEERR)){
-       if(state&STATEERR0){
-        // We had a wreck.  Either the first cell was not direct, or there was a change of type.  We cope by boxing
-        // each individual result, so that we can open them at the end to produce a single result (which might fail when opened)
-        // It would be nice if boxed results didn't go through this path
-        // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
-        // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
-        C *zv1=CAV(z);   // pointer to cell data
-        A zsav = z; GATV(z,BOX,mn,wf,AS(zsav)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape.  Note GATV reassigns z early, need zsav
-        // For each previous result, put it into a box and store the address in the result area
-        // We have to calculate the number of cells, rather than using the output address, because the length of a cell may be 0
-        // wrecki does not include the cell that caused the wreck
-        I wrecki = mn-i0;
-        DQ(wrecki , A q; GA(q,yt,yn,yr,ys); MC(AV(q),zv1,k); zv1+=k; *x++=q;)  // We know the type/shape/rank of the first result matches them all
-        // from now on the main output pointer, zv, points into the result area for z
-        zv = (C*)x;
-        state^=(STATEERR0|STATEERR);  // advance to STATEERR
-       }
-       // Here for all errors, including the first after it has cleaned up the mess, and for sparse result the very first time with no mess
-       // we are incorporating y into the boxed z, so we have to mark it as such (and possibly reallocate it)
-       INCORP(y);
-       *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
-      }
-
-  }
  }
+
  if(state&STATEERR){z=ope(z);  // If we went to error state, we have created x <@f y; this creates > x <@f y which is the final result
  }else{AFLAG(z)|=state&AFNOSMREL;}  // if not error, we saw all the subcells, so if they're all non-rel we know.  This may set NOSMREL in a non-boxed result, but that's OK
  EPILOG(z);
 }
-
-#endif
 
 A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virta,virtw,z;
    I acn,af,ak,ar,*as,at,k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
@@ -331,7 +238,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
  // gone through the fill path (& caught the overflow)
  PROD(acn,lr,as+af); PROD(wcn,rr,ws+wf);
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
- // ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv->aw data
+ // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  ak=acn*bp(at);    // reshape below will catch any overflow
  wk=wcn*bp(wt);
 

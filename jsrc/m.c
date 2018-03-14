@@ -173,7 +173,7 @@ static F1(jtspfor1){
  RZ(w);
  if(BOX&AT(w)){A*wv=AAV(w);RELBASEASGN(w,w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
- if(1e9>AC(w)||AFSMM&AFLAG(w)) {
+ if(!ACISPERM(AC(w))||AFSMM&AFLAG(w)) {
 #if 0 // wrong?
   if(AFNJA&AFLAG(w)){I j,m,n,p;
    m=SZI*WP(AT(w),AN(w),AR(w)); 
@@ -476,11 +476,11 @@ void jtfh(J jt,A w){fr(w);}
 // ra(x) raises the usecount of a block and its descendants.  It traverses, stopping a path when it becomes recursible.  It marks its result recursible.  x may not be 0, and may be modified.
 // ras() does realizeifvirtual() followed by ra().  x may be 0, and may be modified
 // rat() does ras() followed by tpush().  It is used to protect a result over some operation other than tpop()
-// rat1() is like rat() but it merely increments the usecount rather than calling ra()
+// obsolete rat1() is like rat() but it merely increments the usecount rather than calling ra()
 // fa() lowers the usecount of a block and its descendants.  It traverses and stops a path that is recursible and has usecount going in > 1.  If the usecount is reduced to 0, the block is freed with mf()
 // tpush() puts a block and its descendants onto the stack.  In effect this is a call for a later fa().  It traverses, stopping a path when it becomes recursible.  Every block allocated
 //   by ga*() starts out with a tpush already performed, which is how blocks are normally freed.
-// tpush1() puts the block onto the stack, but does not recur to descendants.
+// tpush1() puts the block onto the stack, but does not recur to descendants.  Used for virtual blocks only
 // tpop() processes the stack up to a given point.  The usecount is decremented; if it goes to 0 the block is freed by mf() if not recursible, or by fa() if recursible.
 //       The fa() will free the descendants.
 // ga*() allocates a block and does an initial tpush()
@@ -546,8 +546,48 @@ A jtrealize(J jt, A w){A z; I t;
 // result is the address of the block, which may have changed if it had to be realized.  result can be 0
 // if the block could not be realized
 
+static void checkgloga(A w) {
+ if(AC(w)!=ACPERMANENT)*(I*)0=0;
+ if((AFLAG(w)^AT(w))&TRAVERSIBLE)*(I*)0=0;
+}
 
 A jtgc (J jt,A w,I old){
+#if 1  // scaf for audit
+int jj;
+checkgloga(a0j1);
+checkgloga(ace);
+checkgloga(ainf);
+checkgloga(alp);
+checkgloga(aqq);
+checkgloga(asgnlocsimp);
+checkgloga(asgngloname);
+for(jj=0;jj<256;++jj)if(chr[jj])checkgloga(chr[jj]);
+checkgloga(iv0);
+checkgloga(iv1);
+checkgloga(mark);
+checkgloga(mdot);
+checkgloga(mnam);
+checkgloga(mtm);
+checkgloga(mtv);
+checkgloga(ndot);
+checkgloga(nnam);
+for(jj=NUMMIN;jj<=NUMMAX;++jj)checkgloga(numv[jj-NUMMIN]);
+checkgloga(one);
+checkgloga(onei);
+checkgloga(pie);
+for(jj=0;jj<256;++jj)if(pst[jj])checkgloga(pst[jj]);
+checkgloga(udot);
+checkgloga(unam);
+checkgloga(vdot);
+checkgloga(vnam);
+checkgloga(xdot);
+checkgloga(xnam);
+checkgloga(ydot);
+checkgloga(ynam);
+checkgloga(zero);
+checkgloga(zeroi);
+checkgloga(zpath);
+#endif
  RZ(w);  // return if no input (could be error or unfilled box)
   I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
@@ -570,8 +610,8 @@ A jtgc (J jt,A w,I old){
   // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value.  In case we ever want
   // to have virtual inplaceable blocks (imaginable for rank)
   else{
-    if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
-    AC(w)=c;  // restore initial usecount and inplaceability
+   if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
+   AC(w)=c;  // restore initial usecount and inplaceability
   }
 // obsolete  else if(AC(w)>1)AC(w)=c;  // b was not deleted, and w was not deleted: restore original usecount
 // obsolete  else { tpush1(w);  // w was deleted - restore its stack entry.  Push only top level, undoing the increment of top-level usecount
@@ -706,7 +746,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
      // pushx has crossed the block boundary.  Allocate a new block.
      RZ(tstack=tg(pushx)); pushx+=SZI;   // If error, abort with values set; if not, step pushx over the chain field
     } // if the buffer ran out, allocate another, save its address
-    if((tp^flg)&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // if NOT recursive usecount, recur, and restore stack pointers after recursion
+    if(!ACISPERM(AC(np))&&(tp^flg)&TRAVERSIBLE){RZ(pushx=jttpush(jt,np,tp,pushx)); tstack=jt->tstack;}  // if NOT recursive usecount, recur, and restore stack pointers after recursion
    }
   }
 
@@ -767,6 +807,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 #if MEMAUDIT&2
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
+   // We never tpush a PERMANENT block so we needn't check for it
 // obsolete    if(--c<=0){if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
@@ -802,7 +843,7 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 // assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
 F1(jtrat){ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
-F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
+// obsolete F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
 
 A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
 A jtrifvs(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue

@@ -355,7 +355,6 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
-#define ACX(a)          {AC(a)=IMAX/2;}
 #define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(!(b)){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {RZ(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
@@ -465,7 +464,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Use INCORPNA if you need to tell the caller that the block e sent you has been incoroprated.  If you created the block being incorporated,
 // even by calling a function that returns it, you can get by using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you pass it to some place where it can become an argument to another function
-#define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); AC(z)&=~ACINPLACE; }
+#define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ACIPNO(z); }
 // same, but for nonassignable argument
 #define INCORPNA(z)     incorp(z)
 // Tests for whether a result incorporates its argument.  The originator, who is going to check this, always marks the argument inplaceable,
@@ -528,11 +527,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define PROLOG(x)       I _ttop=jt->tnextpushx
 #define EPILOG(z)       RETF(gc(z,_ttop))   // z is the result block
 #define EPILOGNOVIRT(z)       R rifvsdebug((gc(z,_ttop)))   // use this when the repercussions of allowing virtual result are too severe
-// Some primitives (such as x { y, x {. y, etc.) only copy the first level (i. e. direct data, or pointers to indirect data) and never make any copies of indirect data.
-// For such primitives, it is unnecessary to check the descendants of the result: they are not going to be deleted by the tpop for the primitive, and increasing the usecount followed
-// by decreasing it in the caller can never change the point at which a block will be freed.  So for these cases, we increment the usecount, and perform a final tpush, only of
-// the block that was allocated in the current primitive
-#define EPILOG1(z)       {ACINCR(z); tpop(_ttop); tpush1(z); RETF(z);}   // z is the result block
 #define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; RETF(z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder
 #define EPILOGNULL(z)   R z

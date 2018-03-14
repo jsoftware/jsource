@@ -73,7 +73,7 @@ J gjt=0; // JPF debug - convenience debug single process
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
+B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
  liln=1&&C_LE;
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
@@ -112,7 +112,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
  RZ(y=rifvs(str(1L,"z")));     ACX(y);
- GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;
+ GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;  AFLAG(zpath) |= AFNOSMREL|(AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
  RZ(mnam=makename("m")); RZ(mdot=makename("m."));
@@ -135,7 +135,8 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;
  hwfma=(getCpuFeatures()&CPU_X86_FEATURE_FMA)?1:0;
  // fprintf(stderr,"hwfma %d\n",hwfma);
 #endif
-
+ // take all the permanent blocks off the tpop stack so that we don't decrement their usecount.  All blocks allocated here must be permanent
+ jt->tnextpushx=oldpushx;
  R 1;
 }
 

@@ -1,8 +1,8 @@
 1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glapack.ijs'
 NB. LAPACK --------------------------------------------------------------
 
-s48=: 9!:48 ''
-9!:49 ]1
+NB. obsolete s48=: 9!:48 ''
+NB. obsolete 9!:49 ]1
 
 tol=: 2^_34
 
@@ -80,7 +80,7 @@ tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 9
 tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 10
 tol test j./ 131072 %~ _5e6+?(2,n,n)$1e7 [ n=: 11
 
-9!:49 s48
+NB. obsolete 9!:49 s48
 
 
 4!:55 ;:'A e L mp n R s0 s1 s48 test tol'

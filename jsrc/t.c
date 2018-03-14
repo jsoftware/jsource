@@ -20,6 +20,7 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 
 static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  GA(z,t,1,0,0); ACX(z); v=VAV(z);
+ AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  v->f1=f1?f1:jtdomainerr1;  /* monad C function */
  v->f2=f2?f2:jtdomainerr2;  /* dyad  C function */
  v->mr=(RANKT)m;                   /* monadic rank     */
@@ -36,7 +37,7 @@ B jtpinit(J jt){A t;C*s;
  MC(wtype,ctype,256L); wtype['N']=CN; wtype['B']=CB;
  GAT(alp,LIT,NALP,1,0); s=CAV(alp); DO(NALP,*s++=(C)i;); 
  /*  a. */  pst[(UC)CALP ]=t=alp;                 ACX(t);
- /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);
+ /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);  AFLAG(t) |= AFNOSMREL|(AT(t)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  /*  (  */  pst[(UC)CLPAR]=t=sc4(LPAR,0L);        ACX(t);
  /*  )  */  pst[(UC)CRPAR]=t=sc4(RPAR,0L);        ACX(t);
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;

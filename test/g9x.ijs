@@ -344,17 +344,17 @@ NB. Repeat for tacit - exigent interrupt
 
 IGNOREIFFVI (7!:0'') < initspace+40000
 
-NB. 9!:48 and 9!:49 -----------------------------------------------------
+NB. obsolete NB. 9!:48 and 9!:49 -----------------------------------------------------
 
-old=: 9!:48 ''
-9!:49 ]0
-'spelling error' -: ex 'x.=: 1'
-'spelling error' -: ex 'y.=: 1'
-'spelling error' -: ex 'm.=: 1'
-'spelling error' -: ex 'n.=: 1'
-'spelling error' -: ex 'u.=: +'
-'spelling error' -: ex 'v.=: +'
-9!:49 old
+NB. obsolete old=: 9!:48 ''
+NB. obsolete 9!:49 ]0
+NB. obsolete 'spelling error' -: ex 'x.=: 1'
+NB. obsolete 'spelling error' -: ex 'y.=: 1'
+NB. obsolete 'spelling error' -: ex 'm.=: 1'
+NB. obsolete 'spelling error' -: ex 'n.=: 1'
+NB. obsolete 'spelling error' -: ex 'u.=: +'
+NB. obsolete 'spelling error' -: ex 'v.=: +'
+NB. obsolete 9!:49 old
 
 
 NB. 9!:50 and 9!:51 -----------------------------------------------------

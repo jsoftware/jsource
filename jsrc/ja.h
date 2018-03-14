@@ -327,14 +327,10 @@
 #define exta(x0,x1,x2,x3)           jtexta(jt,(x0),(x1),(x2),(x3))
 // Handle top level of fa(), which decrements use count and decides whether recursion is needed.  We recur if the contents are traversible and
 // the current block is being decremented to 0 usecount or does not have recursive usecount
-#if 0    // obsolete
-#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; if(tt&TRAVERSIBLE)jtfa(jt,(x),tt); if(--Zc<=0){jtmf(jt,x);}else *cc=Zc;}} 
-#else
 // fa() audits the tstack, for use outside the usual system
-#define fa(x)                       {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc; if(MEMAUDIT&2)audittstack(jt);}}}
+#define fa(x)                       {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc; if(MEMAUDIT&2)audittstack(jt);}}}}
 // Within the tpush/tpop, no need to audit fa, since it was checked on the push
-#define fana(x)                     {if(x){I* cc=&AC(x); I tt=AT(x); I Zc=*cc; I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {*cc=Zc;}}} 
-#endif
+#define fana(x)                     {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc;}}}}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
@@ -378,7 +374,7 @@
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))
 #define fpolyc(x)                   jtfpolyc(jt,(x))
-#define fr(x)                       {if(x){I Zs = AC(x)-1; if(Zs<=0)mf(x);else AC(x)=Zs;}}
+#define fr(x)                       {if(x){I Zs = AC(x); if(!ACISPERM(Zs)){if(--Zs<=0)mf(x);else AC(x)=Zs;}}}
 #define fram(x0,x1,x2,x3,x4)        jtfram(jt,(x0),(x1),(x2),(x3),(x4))   
 #define from(x,y)                   jtfrom(jt,(x),(y))   
 #define frombs(x,y)                 jtfrombs(jt,(x),(y))
@@ -799,13 +795,13 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible
 #if MEMAUDIT&2
-#define ra(x)                       {I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}
+#define ra(x)                       {I c=AC(x); if(!ACISPERM(c){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
-#define ra(x)                       {I c=AC(x); I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}
+#define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.  Since we aren't liable to assign the block, we don't have to realize a
-// virtual block unless it is a recursible type.
+// virtual block unless it is a recursible type.  NOTE that PERMANENT blocks are always marked recursible if they are of recursible type
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); jtra(jt,(x),tt);}}
 #endif
 #define ranec(x0,x1,x2,x3,x4,x5)    jtranec(jt,(x0),(x1),(x2),(x3),(x4),(x5))
@@ -815,8 +811,8 @@
 // ras does rifv followed by ra
 #define ras(x)                      ((x) = jtras(jt,x))
 #define rat(x)                      jtrat(jt,(x))
-#define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
-#define rat1s(x)                    jtrat1s(jt,(x))  // subroutine version
+// obsolete #define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
+// obsolete #define rat1s(x)                    jtrat1s(jt,(x))  // subroutine version
 #define ravel(x)                    jtravel(jt,(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    
@@ -1131,12 +1127,13 @@
 #define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+(pushx&(NTSTACK-1)))=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if(tt&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt,(x),ACUC(x));}
 #else
 // Handle top level of tpush().  push the current block, and recur if it is traversible and does not have recursive usecount
-// We can have an inplaceable but recursible block, if it was gc'd
-#define tpush(x)                    {I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
+// We can have an inplaceable but recursible block, if it was gc'd.  We never push a PERMANENT block, so that we won't try to free it
+// NOTE that PERMANENT blocks are always marked traversible if they are of traversible type, so we will not recur on them internally
+#define tpush(x)                    {if(!ACISPERM(AC(x))){I tt=AT(x); I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}}
 // Internal version, used when the local name pushx is known to hold jt->tnextpushx
-#define tpushi(x)                   {I tt=AT(x); *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }
+#define tpushi(x)                   {if(!ACISPERM(AC(x))){I tt=AT(x); *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} if((tt^AFLAG(x))&TRAVERSIBLE)RZ(pushx=jttpush(jt,(x),tt,pushx)); }}
 #endif
-// tpush1 is like tpush, but it does not recur to lower levels
+// tpush1 is like tpush, but it does not recur to lower levels.  Used only for virtual block (which cannot be PERMANENT)
 #define tpush1(x)                   {I pushx=jt->tnextpushx; *(I*)((I)jt->tstack+pushx)=(I)(x); pushx+=SZI; if(!(pushx&(NTSTACK-1))){RZ(tg(pushx)); pushx+=SZI;} jt->tnextpushx=pushx; if(MEMAUDIT&2)audittstack(jt);}
 #define traverse(x,y)               jttraverse(jt,(x),(y))
 #define trc(x)                      jttrc(jt,(x))     

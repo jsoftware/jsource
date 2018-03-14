@@ -310,15 +310,17 @@ typedef I SI;
 
 // Flags in the count field of type A
 #define ACINPLACE       (I)(((UI)-1>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACPERMANENT     ((I)((UI)ACINPLACE>>1))  // next-to-top bit, set in blocks that should never modify the AC field
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACIPNO(a)       (AC(a)&=~ACINPLACE)
 #define ACIPYES(a)      (AC(a)|=ACINPLACE)
 #define ACIPISOK(a)     (AC(a)<0)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
-#define ACINCRBY(a,w)   (AC(a)=(AC(a)+(w))&~ACINPLACE)  // add w to usecount; always clear INPLACE at that time
-#define ACINCR(a)       ACINCRBY(a,1)
-#define ACDECR(a)       (AC(a)-=ACUSECOUNT)  // No ACINPLACE needed, since values >1 are never inplace
+// obsolete #define ACINCRBY(a,w)   (AC(a)=(AC(a)+(w))&~ACINPLACE)  // add w to usecount; always clear INPLACE at that time
+#define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
+#define ACX(a)          {AC(a)=ACPERMANENT;}
+#define ACISPERM(c)     (((c)+(c))<0)  // is PERMANENT bit set?
 
 
 /* Values for AFLAG(x) field of type A                                     */

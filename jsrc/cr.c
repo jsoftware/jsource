@@ -12,7 +12,6 @@
 // obsolete // result is rank of argument cell
 // obsolete I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
 
-#define NEWYA   {GA(ya,at,acn,lr,as+af); uu=CAV(ya);}
 #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
 // Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
 // that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
@@ -21,7 +20,6 @@
 // if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
 // nonrecursive
 // todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
-#define MOVEYA  {if(UCISRECUR(ya)){fa(*(A*)uu); AFLAG(ya)&=~RECURSIBLE;} MC(uu,u,ak); if(state&STATEAREL){RELORIGIN(aorg,a); RZ(ya=relocate(aorg-(I)ya,ya));} u+=ak;}
 #define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
 
 #define EMSK(x) (1<<((x)-1))
@@ -262,8 +260,8 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,yw,z;
 
 #endif
 
-A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,yw,z;
-   C*u,*uu,*v,*vv;I acn,af,ak,ar,*as,at,k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
+A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virta,virtw,z;
+   I acn,af,ak,ar,*as,at,k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
 
  RZ(a&&w);
@@ -301,7 +299,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  if(!((lcr>lr||rcr>rr)&&((aof>0)||(wof>0))&&aof!=wof)){los=0; lof=aof=wof=0; outerframect=outerrptct=1;  // no outer frame unless it's needed
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
-  if(aof>wof){wof&=~(wof>>(BW-1)); lof=aof; sof=wof; los=as;}else{aof&=~(aof>>(BW-1)); lof=wof; sof=aof; los=ws; state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
+  if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=as;}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=ws; state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
   ASSERT(!ICMP(as,ws,sof),EVLENGTH);  // prefixes must agree
   RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
  }
@@ -324,81 +322,45 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
  RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
  RE(innerframect=prod(sif,lis));   // number of cells in matched frame
 
+ I an=AN(a), wn=AN(w);  // empty-operand indicators
  // Migrate loops with count=1 toward the inner to reduce overhead.  We choose not to promote the outer to the inner if both
  // innerframect & innerrptct are 1, on grounds of rarity
  if(innerrptct==1){innerrptct=innerframect; innerframect=1; state &=~(STATEINNERREPEATW|STATEINNERREPEATA);}  // if only one loop needed, make it the inner, with no repeats
-
-
- // Set up y? with the next cell data.  The data might be unchanged from the previous, for the argument
- // with the shorter frame.  Whenever we have to copy, we first
- // check to see if the cell-workarea has been incorporated into a result noun; if so, we have to
- // reallocate.  We assume that the cell-workarea is not modified by RCALL, because we reuse it in situ
- // when a cell is to be repeated.  NEWY? allocates a new argument cell, and MOVEY? copies to it.
- // b&1 is set if the inner repeat is for w, b&2 is set if the outer repeat is for w.
- // innerphase tells where we are in in inner repetition cycle.  When it hits 0, we advance, otherwise repeat.
- // outerphase[01] tell where we are in the outer repetition cycle.  When outerphase0 hits 0, we do one check of
- //  outerphase1, advancing if it hits 0, repeating otherwise
- // The phase counters are advanced by RARG and not touched by RCALL, so that if we have to switch loops we can continue using
- // them.
 
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
  PROD(acn,lr,as+af); PROD(wcn,rr,ws+wf);
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell, uv->aw data
- ak=acn*bp(at); u=CAV(a); NEWYA;  // reshape below will catch any overflow
- wk=wcn*bp(wt); v=CAV(w); NEWYW;
+ ak=acn*bp(at);    // reshape below will catch any overflow
+ wk=wcn*bp(wt);
 
  // See how many cells are going to be in the result
  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
 
- if(!mn){UC d; I *is, *zs;
-  // if there are no cells, execute on a cell of fills.
-  if(AN(a))MOVEYA else RZ(ya=reshape(vec(INT,lr,as+af),filler(a)));
-  if(AN(w))MOVEYW else RZ(yw=reshape(vec(INT,rr,ws+wf),filler(w)));
-  // Do this quietly, because
-  // if there is an error, we just want to use a value of 0 for the result; thus debug
-  // mode off and RESETERR on failure.
-  // However, if the error is a non-computational error, like out of memory, it
-  // would be wrong to ignore it, because the verb might execute erroneously with no
-  // indication that anything unusual happened.  So fail then
-  d=jt->db; jt->db=0; y=CALL2(f2,ya,yw,fs); jt->db=d;
-  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}  // use 0 as result if error encountered
-  GA(z,AT(y),0L,lof+lif+AR(y),0L); zs=AS(z);
-  is = los; DO(lof, *zs++=*is++;);  // copy outer frame
-  is = lis; DO(lif, *zs++=*is++;);  // copy inner frame
-  is = AS(y); DO(AR(y), *zs++=*is++;);    // copy result shape
- }else{I i0, i1, i2, i3, old;C *zv;
+ // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
+ // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
+ // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
+ // if the cells are empty but the frame does not contain 0)
+ if(mn|an){RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn;}
+ else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
+ if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
+ else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
+
+ if(mn){I i0, i1, i2, i3, old;C *zv;
   // Normal case where there are cells.
   // loop over the matched part of the outer frame
   for(i0=outerframect;i0;--i0){
-   C *outerrptstart=state&STATEOUTERREPEATA?u:v;
+   I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);
    // loop over the unmatched part of the outer frame, repeating the shorter argument
    for(i1=outerrptct;i1;--i1){  // make MOVEY? post-increment
-    if(!(state&STATEOUTERREPEATA))v=outerrptstart;
-    else u=outerrptstart;  // if we loop, we know we must be repeating one or the other
+    AK(state&STATEOUTERREPEATA?virta:virtw)=outerrptstart;   // if we loop, we know we must be repeating one or the other
     // loop over the matched part of the inner frame
     for(i2=innerframect;i2;--i2){
-     // establish argument cells by using MOVEY? to move the cell into the workarea y?.  Before we do that,
-     // we have to see whether the previous value in y? was incorporated into a result (which it is if it IS
-     // the result, or if its usecount has been incremented).  If it has been so incorporated, we must reallocate
-     // the workarea and also stop freeing blocks allocated up the stack, lest we free our workarea as well
-     // if an argument is going to be repeated, establish it here
-     // Since we don't allow inplacing in our call to f2, we know that the arg cell cannot be modified, though it
-     // may be incorporated and have its usecount incremented.  Thus it is safe to establish a repeated arg cell
-     // outside the inner loop:
-     if((state&STATEINNERREPEATA)){if(state&STATEINCORPORATEDA){state&=~(STATEINCORPORATEDA);NEWYA;} MOVEYA;}
-     if((state&STATEINNERREPEATW)){if(state&STATEINCORPORATEDW){state&=~(STATEINCORPORATEDW);NEWYW;} MOVEYW;}
      // loop over the unmatched part of the inner frame, repeating the shorter argument
      for(i3=innerrptct;i3;--i3){
-      // establish any argument that is not going to be repeated
-      if(!(state&STATEINNERREPEATA)){if(state&STATEINCORPORATEDA){state&=~(STATEINCORPORATEDA);NEWYA;} MOVEYA;}
-      if(!(state&STATEINNERREPEATW)){if(state&STATEINCORPORATEDW){state&=~(STATEINCORPORATEDW);NEWYW;} MOVEYW;}
       // invoke the function, get the result for one cell
-      RZ(y=CALL2(f2,ya,yw,fs));
-      // see if the workarea was incorporated into the result, for use next time through the loop
-      if(WASINCORP1(y,ya))state|=STATEINCORPORATEDA|STATENOPOP;
-      if(WASINCORP1(y,yw))state|=STATEINCORPORATEDW|STATENOPOP;
+      RZ(y=CALL2(f2,virta,virtw,fs));
       // if the result is boxed, accumulate the SMREL info
       if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
 
@@ -461,11 +423,32 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,ya,y
        INCORP(y);
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
+      // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything
+      if(!(state&STATEINNERREPEATA))AK(virta)+=ak;
+      if(!(state&STATEINNERREPEATW))AK(virtw)+=wk;
      }
+      // advance input pointers for next cell.  We increment any block that was being held constant in the inner loop.  There can be only one such
+     if(state&STATEINNERREPEATA)AK(virta)+=ak;
+     if(state&STATEINNERREPEATW)AK(virtw)+=wk;
     }
    }
   }
+ }else{UC d; I *is, *zs;
+  // if there are no cells, execute on a cell of fills.
+  // Do this quietly, because
+  // if there is an error, we just want to use a value of 0 for the result; thus debug
+  // mode off and RESETERR on failure.
+  // However, if the error is a non-computational error, like out of memory, it
+  // would be wrong to ignore it, because the verb might execute erroneously with no
+  // indication that anything unusual happened.  So fail then
+  d=jt->db; jt->db=0; y=CALL2(f2,virta,virtw,fs); jt->db=d;
+  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}  // use 0 as result if error encountered
+  GA(z,AT(y),0L,lof+lif+AR(y),0L); zs=AS(z);
+  is = los; DO(lof, *zs++=*is++;);  // copy outer frame
+  is = lis; DO(lif, *zs++=*is++;);  // copy inner frame
+  is = AS(y); DO(AR(y), *zs++=*is++;);    // copy result shape
  }
+
  if(state&STATEERR){z=ope(z);  // If we went to error state, we have created x <@f y; this creates > x <@f y which is the final result
  }else{AFLAG(z)|=state&AFNOSMREL;}  // if not error, we saw all the subcells, so if they're all non-rel we know.  This may set NOSMREL in a non-boxed result, but that's OK
  EPILOG(z);

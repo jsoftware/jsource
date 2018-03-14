@@ -127,7 +127,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
   }cu[i]=0;}  // always clear the pointer to the value so that we don't free the value when we free the old table
   // Free the old buffers, ras() the new to make them recursive usect, then clear the tpops to bring the usecount down to 1
   q=hv[1]; AC(q)=1; fa(q); INSTALLBOX(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
-  q=hv[2]; AC(q)=1; fa(q); realizeifvirtual(cc); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the count in the value.  But we do in the cc itself
+  q=hv[2]; AC(q)=1; fa(q); ACINCR(cc); hv[2]=cc;   // not INSTALLBOX(h,hv,2,cc); because we DO NOT want to increment the count in the value.  But we do in the cc itself
   tpop(_ttop);  // get the new buffers off the tpush stack so we can safely free them in the lines above. (no longer needed)
  }
  ++*mv;

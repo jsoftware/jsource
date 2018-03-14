@@ -326,22 +326,22 @@ x f__u y
 f =: -
 2 -: 7 (<'base') c [: 5
 
-svxy =: 9!:48''
-9!:49 (1)
-c =: 2 : 0
-f__u y.
-)
-f =: -
-_5 -: (<'base') c [: 5
+NB. obsolete svxy =: 9!:48''
+NB. obsolete 9!:49 (1)
+NB. obsolete c =: 2 : 0
+NB. obsolete f__u y.
+NB. obsolete )
+NB. obsolete f =: -
+NB. obsolete _5 -: (<'base') c [: 5
 
-c =: 2 : 0
-:
-x. f__u 5
-)
-f =: -
-2 -: 7 (<'base') c [: 5
+NB. obsolete c =: 2 : 0
+NB. obsolete :
+NB. obsolete x. f__u 5
+NB. obsolete )
+NB. obsolete f =: -
+NB. obsolete 2 -: 7 (<'base') c [: 5
 
-9!:49 svxy
+NB. obsolete 9!:49 svxy
 9!:41 ws
 
 4!:55 ;:'a ar c det dyad eq f f0 f1 f2 f3 f4'

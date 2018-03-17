@@ -234,14 +234,22 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
       con[i].canend = 2; break;  // These are by definition not an end
      case CRETURN:
       con[i].canend = 1; break;  // These by definition ARE an end
-     case CASSERT: case CTBLOCK: case CFOR: case CSELECTN: case CSELECT: case CLABEL:
+     case CFOR: case CSELECTN: case CSELECT: case CLABEL:
       // These blocks inherit only from NSI
-      if(i>=n-1)con[i].canend = 1;  // If fall off the end, that's end
+      if(i>=n-1)con[i].canend = 1;  // The last line of the function is the end
       else con[i].canend = con[i+1].canend;  // Only successor is NSI, use that
+      break;
+     case CTBLOCK: case CASSERT:
+      // These blocks inherit from NSI only, but if go is NOT off the end, they also inherit from go, which is
+      // catch. or the like.  If go is off the end, the function is taking an error and the result is immaterial
+      if(i>=n-1)con[i].canend = 1;  // The last line of the function is the end
+      else if(con[i].go>=n)con[i].canend = con[i+1].canend;   // if go is off the end, use NSI
+      else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
+      else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
       break;
      case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
       // These blocks inherit either from NSI or from go
-      if(i==n-1)con[i].canend = 1;  // If fall off the end, that's end
+      if(i==n-1)con[i].canend = 1;  // The last line of the function is the end
       else if(con[i].go>=n)con[i].canend = 1;   // if go is off the end, use that
       else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
       else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2

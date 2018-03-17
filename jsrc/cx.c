@@ -228,7 +228,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
-    else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
+    else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
     break;
    case CFOR:
    case CSELECT: case CSELECTN:

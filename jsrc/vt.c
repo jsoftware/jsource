@@ -6,8 +6,8 @@
 #include "j.h"
 
 
-F1(jtbehead ){R drop(one,    w);}
-F1(jtcurtail){R drop(num[-1],w);}
+F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,onei,    w);}
+F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num[-1],w);}
 
 F1(jtshift1){R drop(num[-1],over(one,w));}
 
@@ -75,6 +75,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
 }
 
 F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
+ F2PREFIP;
  RZ(a&&w); I wt = AT(w);  // wt=type of w
  if(SPARSE&AT(a))RZ(a=denseit(a));
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
@@ -93,7 +94,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
   DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
   s=a=t;
  }
- if(!(ar|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
   I tklen = IAV(a)[0];  // get the one number in a, the take amount
   I tkasign = tklen>>(BW-1);  // 0 if tklen nonneg, ~0 if neg
@@ -105,8 +106,8 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
    // get length of a cell of w
    I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
    I offset = woffset * wcellsize;  // offset in bytes of the virtual data
-   // allocate virtual block
-   s = virtual(w,offset,wr);    // allocate block
+   // allocate virtual block, passing in the in-place status from w
+   RZ(s = virtualip(w,offset,wr));    // allocate block
    // fill in shape
    I* RESTRICT ss=AS(s); ss[0]=tkabs; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
    AN(s)=tkabs*wcellsize;  // install # atoms
@@ -123,6 +124,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
 }
 
 F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
+ F2PREFIP;
  RZ((a=vib(a))&&w);  // convert & audit a
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; I wt=AT(w);
@@ -131,7 +133,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
- if(!(ar|wf|(SPARSE&wt)|!wcr)){  // if there is only 1 take axis, w has no frame and is not atomic
+ if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
   I * RESTRICT ws=AS(w);  // ws->shape of w
   I droplen = IAV(a)[0];  // get the one number in a, the take amount
   I dropabs = droplen<0?-droplen:droplen;  // ABS(droplen), but may be as high as IMIN
@@ -141,8 +143,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
   // get length of a cell of w
   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
   I offset = woffset * wcellsize;  // offset in bytes of the virtual data
-  // allocate virtual block
-  s = virtual(w,offset,wr);    // allocate block
+  // allocate virtual block.  May use inplace w
+  RZ(s = virtualip(w,offset,wr));    // allocate block
   // fill in shape
   I* RESTRICT ss=AS(s); ss[0]=remlen; DO(wr-1, ss[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   AN(s)=remlen*wcellsize;  // install # atoms
@@ -166,15 +168,17 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
 }
 
 F1(jthead){I wcr,wf,wr;
+ F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- R !wcr||*(wf+AS(w))? from(num[ 0],w) : 
+ R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) : 
      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }
 
 F1(jttail){I wcr,wf,wr;
+ F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- R !wcr||*(wf+AS(w))?from(num[-1],w) :
+ R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :
      SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }

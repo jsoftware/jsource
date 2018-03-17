@@ -436,14 +436,31 @@ NB. Now virtual (6!:2 '0 }. a') < 0.01 * 6!:2 '1 }. a'
 
 NB. test virtual implementation
 f =: 3 : 0
-siz12002 =: 0.6 * 7!:2 'a =: 100 12000 $ y'
-a0 =: '' $ a
-siz1200 =: 0.6 * 7!:2 '({:$a) $ a0'
-NB. assert. siz1200 > 7!:2 '+/ {. a'
-NB. assert. siz1200 < 7!:2 '+/ b =: {. a'
+direct =. (3!:0 y) e. 1 2 4 8 16 65536 131072 262144
+siz12002 =: 1000 + 0.6 * 7!:2 'a =: 100 12000 $ y'
+a0 =: '' ($,) a
+siz1200 =: 1000 + 0.6 * 7!:2 '({:$a) $ a0'
 
-NB. assert. siz12002 > 7!:2 '+/ }. a'
-NB. assert. siz12002 < 7!:2 '+/ b =: }. a'
+a1 =: ,: a
+
+
+assert. siz1200 > 7!:2 '0: {. a'
+assert. siz1200 < 7!:2 '0: b =: {. a'
+b =: 1 |. _1 |. a
+assert. direct = siz1200 > 7!:2 'b =: {. b'
+
+assert. siz1200 > 7!:2 '0: {: a'
+assert. siz1200 < 7!:2 '0: b =: {: a'
+b =: 1 |. _1 |. a
+assert. direct = siz1200 > 7!:2 'b =: {: b'
+
+assert. siz12002 > 7!:2 '0: }. a'
+assert. siz12002 < 7!:2 '0: b =: }. a'
+assert. direct = siz1200 > 7!:2 'b =: }. b'
+
+assert. siz12002 > 7!:2 '0: }: a'
+assert. siz12002 < 7!:2 '0: b =: }: a'
+assert. direct = siz1200 > 7!:2 'b =: }: b'
 
 assert. siz1200 > 7!:2 '$ 1 {. a'
 assert. siz1200 < 7!:2 '$ b =: 1 {. a'
@@ -452,6 +469,7 @@ assert. siz1200 > 7!:2 '$ _1 {. a'
 assert. siz1200 < 7!:2 '$ b =: _1 {. a'
 assert. siz12002 > 7!:2 '$ 90 {. a'
 assert. siz12002 < 7!:2 '$ b =: 90 {. a'
+assert. direct = siz1200 > 7!:2 'b =: 89 {. b'
 
 assert. siz12002 > 7!:2 '$ 1 }. a'
 assert. siz12002 < 7!:2 '$ b =: 1 }. a'
@@ -460,9 +478,50 @@ assert. siz12002 > 7!:2 '$ _1 }. a'
 assert. siz12002 < 7!:2 '$ b =: _1 }. a'
 assert. siz12002 > 7!:2 '$ 10 }. a'
 assert. siz12002 < 7!:2 '$ b =: 10 }. a'
+assert. direct = siz1200 > 7!:2 'b =: 10 }. b'
 
-assert. siz1200 > 7!:2 '$@]"1 a'
-assert. siz1200 > 7!:2 'a $@]"1 a'
+assert. siz1200 > 7!:2 '$ (3-2) { a'
+assert. siz1200 > 7!:2 '$ 1 { a'
+assert. siz1200 > 7!:2 '$ 0 { a'
+assert. siz1200 > 7!:2 '$ 1 2 3 { a'
+assert. siz1200 > 7!:2 '$ _3 _2 _1 { a'
+assert. siz1200 > 7!:2 '$ _1 { a'
+assert. siz1200 < 7!:2 '$ b =: 1 { a'
+assert. siz1200 < 7!:2 '$ b =: 1 2 3 { a'
+assert. siz1200 > 7!:2 '$ (1,:2) { a'
+
+assert. siz12002 > 7!:2 '$ , a'
+assert. siz12002 < 7!:2 '$ b =: , a'
+assert. siz12002 > 7!:2 '$ ,"1 a'
+assert. siz12002 < 7!:2 '$ b =: ,"1 a'
+assert. siz12002 > 7!:2 '$ ,"0 a'
+b =: 1 |. _1 |. a
+assert. siz1200 > 7!:2 'b =: ,"1 b'
+b =: 1 |. _1 |. a
+assert. siz1200 > 7!:2 'b =: , b'
+assert. siz1200 > 7!:2 'b =: , b'
+
+assert. siz12002 > 7!:2 '$ 99 $ a'
+assert. siz12002 < 7!:2 '$ b =: 99 $ a'
+assert. siz12002 < 7!:2 '$ 101 $ a'
+assert. siz12002 < 7!:2 '$ 11000 $"1 a'
+assert. siz12002 > 7!:2 '$ 99 $"2 a1'
+b =: 1 |. _1 |. a
+assert. direct = siz1200 > 7!:2 'b =: 99 $ b'
+
+assert. siz12002 > 7!:2 '$ 99 11000 ($,) a'
+assert. siz12002 < 7!:2 '$ b =: 99 11000 ($,) a'
+assert. siz12002 < 7!:2 '$ 101 12000 ($,) a'
+assert. siz12002 < 7!:2 '$ 11000 ($,)"1 a'
+assert. siz12002 > 7!:2 '$ 99 11000 ($,)"2 a1'
+b =: 1 |. _1 |. a
+assert. direct = siz1200 > 7!:2 'b =: 99 11000 ($,) b'
+
+
+
+
+assert. (siz1200+800) > 7!:2 '0:@]"1 a'   NB. rank operator
+assert. (siz1200+800) > 7!:2 'a 0:@]"1 a'
 1
 )
 f 0
@@ -474,6 +533,6 @@ f s: 'word'
 f u: 'a'
 f 10 u: 'a'
 
-4!:55 ;:'a adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
+4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
 randfini''
 

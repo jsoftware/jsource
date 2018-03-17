@@ -130,7 +130,7 @@ fm =. 3 : 'if. (4j5-4j5)+23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fm 23
 'not 23' -: fm 17
 
-NB. Verify don't twiddle usecount on lines that cannot be result lines
+NB. Verify don't twiddle usecount on lines that cannot be result lines (canend)
 slow =: 3 : 0
 bigbox =. <"0 i. 100000
 if. 0 do. end.
@@ -208,10 +208,56 @@ label_xxx.
 5
 )
 
+NB. Verify that we don't refer to result that is reassigned
+fib =: 3 : 0
+a =: 100 12000 $ y
+if. y<2 do. y else. (y-1) +&fib (y-2) end.
+)
+f =: 3 : 0
+a =: 100 12000 $ y
+if. a =: 5   NB. reassign result
+    fib 10   NB. stir up memory
+    'a' + 5
+do. end.
+5    NB. This will prevent us from protecting the original result of a
+)
+'domain error' -: ". etx 'f 4'
+
+f =: 3 : 0
+a =: 100 12000 $ y
+assert. 'a' + fib a =: 9   NB. reassign result
+5    NB. This will prevent us from protecting the original result of a
+)
+'domain error' -: ". etx 'f 4'
+
+NB. But we keep it if it's needed by catch.
+f =: 3 : 0
+a =: 10
+try.
+ if. a =: 5
+     fib 10   NB. stir up memory
+     'a' + 5
+ do. end.
+ 5
+catch.
+end.
+)
+10 = f 4
+
+f =: 3 : 0
+a =: 10
+try.
+ assert. 'a' + fib a =: 9   NB. reassign result
+ 5
+catch.
+end.
+)
+10 = f 4
+
 THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast 0')
 THRESHOLD+. (6!:2 'slow2 0') > 1.5 * (6!:2 'fast 0')
 THRESHOLD+. (6!:2 'slow 0') > 1.5 * (6!:2 'fast2 0')
 
-4!:55 ;:'fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
+4!:55 ;:'a f fib fa fb fc fd fe ff fg fi fj fk fl fm t slow slow2 fast fast2 '
 
 

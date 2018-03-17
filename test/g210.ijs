@@ -329,6 +329,39 @@ f =: 4 : 'x$y' " 1 _
 1e6 2 3 4 5 0 1e4 -: $ 2 3 4 5 0 $"1 2 i.1e6 0 1e4 
 1e6 2 3 4 5 0 0   -: $ 2 3 4 5 0 $"1 2 i.1e6 1e4 0
 
+NB. x ($,)"r y -------------------------------------------------------
+
+f =: 3 : 0
+ya =: ,: ,: y  NB. Test with leading axes of 1
+for. #$ya do.
+ xa =: ? +: $ ya
+ while. #xa do.
+  for_r. i.>:#$ya do.
+   rk =: r
+   yb =: xa ($,)"(1,r) ya
+   assert. yb -: xa 4 : 'x $ , y'"(1,r) ya
+   NB. repeat inplaceable
+   yc =: 1 |. _1 |. ya
+   yc =: xa ($,)"(1,r) yc
+   assert. yc -: xa 4 : 'x $ , y'"(1,r) ya
+  end.
+  xa =: }: xa
+ end.
+ ya =: ,/ ya
+end.
+1
+)
+
+f ?2 3 4$2
+f a.{~?2 3 4$256
+f ?2 3 4$1000
+f o.?2 3 4$1000
+f r./?2 2 3 4$1000
+f 2 3 4$;:'Cogito, ergo sum. sui generis'
+f 2 3 4$(u:&.>) ;:'Cogito, ergo sum. sui generis'
+f 2 3 4$(10&u:&.>) ;:'Cogito, ergo sum. sui generis'
+f 2 3 4$s:@<"0&.> ;:'Cogito, ergo sum. sui generis'
+f 2 3 4$<"0@s: ;:'Cogito, ergo sum. sui generis'
 
 NB. x$!.f y -------------------------------------------------------------
 
@@ -389,6 +422,6 @@ NB. x$!.f y -------------------------------------------------------------
 'domain error' -: 9 3 $!.(<4) etx s:@<"0 'eleemosynary'
 'domain error' -: 9 3 $!.(<4) etx i.2 3
 
-4!:55 ;:'adot1 adot2 sdot0 b f res s t'
+4!:55 ;:'adot1 adot2 sdot0 b f res rk s t ya xa yb yc'
 randfini''
 

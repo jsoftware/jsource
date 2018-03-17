@@ -17,11 +17,14 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
-  if((I)jtinplace&JTINPLACEW && (f<wr) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))){  // inplace allowed, result rank (f+1) <= current rank, usecount is right
+  if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell)
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; R w;
+   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
   }
-  // Not inplaceable.  Allocate and copy
+  // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
+  if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
+
+  // If we have to allocate a new block, do so
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
   MC(AV(z),AV(w),n*bp(wt)); RELOCATE(w,z); INHERITNOREL(z,w); RETF(z); // if dense, move the data and relocate it as needed
  }

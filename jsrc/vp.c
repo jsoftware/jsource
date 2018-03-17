@@ -24,17 +24,22 @@ F1(jtpinv){I m=0,n,*v;
 A jtpind(J jt,I n,A w){A z;I j,m,*v;
  RE(n); RZ(w);
  m=-n;
- RZ(z=ca(vi(w))); v=AV(z);
- DO(AN(z), j=*v; ASSERT(m<=j&&j<n,EVINDEX); *v++=0>j?j+n:j;);
+ RZ(z=ca(vi(w))); v=AV(z);  // force w to integral and make a copy which we will modify
+//  obsolete DO(AN(z), j=*v; ASSERT(m<=j&&j<n,EVINDEX); *v++=0>j?j+n:j;);
+ DO(AN(z), j=v[i]; if(j<0)v[i]=j+=n; ASSERT(((j-n)^j)<0,EVINDEX););  // add n if neg; sign of j-n must differ from sign of j, meaning 0<=j<n
  R z;
 }    /* positive indices */
 
-A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv,*v;I*wv,*zv;
- RZ(w=pind(n,w));  wv=AV(w);
- GATV(z,INT,n,1,0); zv=AV(z);
- GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
- DO(AN(w), v=bv+wv[i]; ASSERT(*v,EVINDEX); *v=0;);
- DO(n, if(bv[i])*zv++=i;); ICPY(zv,wv,AN(w));
+// n is the order of permutation w; w may omit some indexes
+// result is full permutation, with the omitted values coming first, in ascending order, followed by w
+// if w has negative indexes, they are first made positive
+A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
+ RZ(w=pind(n,w));  wv=AV(w);  // convert to positive indexes, wv-> indexes
+ GATV(z,INT,n,1,0); zv=AV(z);  // allocate result area
+ GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);   // binary vector, init to 1
+// obsolete DO(AN(w), v=bv+wv[i]; ASSERT(*v,EVINDEX); *v=0;);  // verify each index appears at most once
+ DO(AN(w), bv[wv[i]]=0;);  // clear flag in indexes that appear
+ DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEX); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
  EPILOG(z);
 }
 

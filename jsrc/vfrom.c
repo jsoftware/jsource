@@ -43,13 +43,14 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  }
 
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
+ F1PREFIP;
  RZ(a&&w);
  // This routine is implemented as if it had infinite rank: if no rank is specified, it operates on the entire
  // a (and w).  This has implications for empty arguments.
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
- // From here on, execution on a single cell of a (on a single cell of w)
+ // From here on, execution on a single cell of a (on a matching cell of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
@@ -59,17 +60,38 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  // audit for index error, though).  If w is not empty, there is no need to check for such overflow.  So we split the computation here.
  // Either way, we need   zn: #atoms in result   p: #items in a cell of w
  p=wcr?*(ws+wf):1;
+ av=AV(a);  // point to the selectors
+ I wflag=AFLAG(w);
  if(wn){
- // For copying items, we need to compute:
- // m: #cells in w   k: stride between items of a cell of w   wk: stride between cells of w
-  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
+  // For virtual results we need: kn: number of atoms in an item of a cell of w;   
+  PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
+  // Also  m: #cells in w 
+  PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
+  if((zn>1)&&!(wf|(wflag&(AFSMM|AFNJA)))){
+   // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
+   I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
+   // check the last item before checking the middle.
+   I indexn = av[an-1]; indexn+=(indexn>>(BW-1))&p;
+   if(indexn==index0+an-1){
+     I indexp=index0; DO(an-1, indexn=av[1+i]; indexn+=(indexn>>(BW-1))&p; if(indexn!=indexp+1){indexn=p; break;} indexp=indexn;);
+   }else indexn=p;
+   if((index0|(p-indexn-1))>=0){  // index0>0 and indexn<=p-1
+    // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
+    RZ(z=virtualip(w,index0*k,ar+wr-1));
+    // fill in shape and number of atoms.  ar can be anything
+    I* as=AS(a); AN(z)=zn; s=AS(z); DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
+    RETF(z);
+   }
+  }
+  // for copying items, we need    k: size in bytes of an item of a cell of w
+  k*=bp(AT(w));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
  s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
- av=AV(a);  // point to the selectors
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
+ wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
  if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k/sizeof(D));}
  else switch(k){
@@ -341,15 +363,16 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;
+ F2PREFIP;
  RZ(a&&w);
  at=AT(a);
  switch((at&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){
-  case 0: z=at&BOX?afrom(a,w)  :at&B01?bfrom(a,w):ifrom(a,w); break;
+  case 0: z=at&BOX?afrom(a,w)  :at&B01&&AN(a)!=1?bfrom(a,w):jtifrom(jtinplace,a,w); break;  // make 0{ and 1{ allow virtual result
   case 1: z=at&BOX?frombs(a,w) :                  fromis(a,w); break;
   case 2: z=fromsd(a,w); break;
   default: z=fromss(a,w); break;
  }
- RZ(z); INHERITNOREL(z,w); R z;
+ RZ(z); INHERITNOREL(z,w); RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){A ind;

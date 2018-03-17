@@ -67,7 +67,7 @@ B jtpinit(J jt){A t;C*s;
  /*  ^  */  pdef(CEXP,    VERB, jtexpn1,   jtexpn2,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
  /*  ^. */  pdef(CLOG,    VERB, jtlogar1,  jtlogar2, 0,   0,   0   ,VISATOMIC1|VASGSAFE|VINPLACEOK1);
  /*  ^: */  pdef(CPOWOP,  CONJ, 0L,        jtpowop,  0,   0,   0   ,VFLAGNONE);
- /*  $  */  pdef(CDOLLAR, VERB, jtshapex,  jtreitem, RMAX,1,   RMAX,VASGSAFE|VIRS2);
+ /*  $  */  pdef(CDOLLAR, VERB, jtshapex,  jtreitem, RMAX,1,   RMAX,VASGSAFE|VIRS2|VINPLACEOK2);
  /*  $. */  pdef(CSPARSE, VERB, jtsparse1, jtsparse2,RMAX,RMAX,RMAX,VASGSAFE);
  /*  $: */  pdef(CSELF,   VERB, jtself1,   jtself2,  RMAX,RMAX,RMAX,VFLAGNONE);
  /*  ~  */  pdef(CTILDE,  ADV,  jtswap,    0L,       0,   0,   0   ,VFLAGNONE);
@@ -103,13 +103,13 @@ B jtpinit(J jt){A t;C*s;
  /*  [  */  pdef(CLEFT,   VERB, jtright1,  jtleft2,  RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1);
  /*  [: */  pdef(CCAP,    VERB, 0L,        0L,       RMAX,RMAX,RMAX,VFLAGNONE);   // not ASGSAFE since used for not-yet-defined names
  /*  ]  */  pdef(CRIGHT,  VERB, jtright1,  jtright2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1);
- /*  {  */  pdef(CLBRACE, VERB, jtcatalog, jtfrom,   1,   0,   RMAX,VASGSAFE|VIRS2);
- /*  {. */  pdef(CHEAD,   VERB, jthead,    jttake,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);  // alias CTAKE
- /*  {: */  pdef(CTAIL,   VERB, jttail,    0L,       RMAX,0,   0   ,VASGSAFE|VIRS1);
+ /*  {  */  pdef(CLBRACE, VERB, jtcatalog, jtfrom,   1,   0,   RMAX,VASGSAFE|VIRS2|VINPLACEOK2);
+ /*  {. */  pdef(CHEAD,   VERB, jthead,    jttake,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2);  // alias CTAKE
+ /*  {: */  pdef(CTAIL,   VERB, jttail,    0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VINPLACEOK1);
  /*  }  */  pdef(CRBRACE, ADV,  jtamend,   0L,       0,   0,   0   ,VASGSAFE|VINPLACEOK2);
  /*  }* */  pdef(CCASEV,  VERB, jtcasev,   0L,       RMAX,RMAX,RMAX,VFLAGNONE);   // f2 gets filled in with pointer to a name when this is used
- /*  }. */  pdef(CBEHEAD, VERB, jtbehead,  jtdrop,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);  // alias CDROP
- /*  }: */  pdef(CCTAIL,  VERB, jtcurtail, 0L,       RMAX,0,   0   ,VASGSAFE|VIRS1);
+ /*  }. */  pdef(CBEHEAD, VERB, jtbehead,  jtdrop,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2);  // alias CDROP
+ /*  }: */  pdef(CCTAIL,  VERB, jtcurtail, 0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VINPLACEOK1);
  /*  "  */  pdef(CQQ,     CONJ, 0L,        jtqq,     0,   0,   0   ,VFLAGNONE);
  /*  ". */  pdef(CEXEC,   VERB, jtexec1,   jtexec2,  1,   RMAX,RMAX,VFLAGNONE);
  /*  ": */  pdef(CTHORN,  VERB, jtthorn1,  jtthorn2, RMAX,1,   RMAX,VASGSAFE);

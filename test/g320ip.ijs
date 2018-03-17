@@ -606,8 +606,8 @@ a =: 10000#5
 IGNOREIFFVI 3000 < 7!:2 'a =: ,&6&.] a'
 IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-IGNOREIFFVI 22000 < 7!:2 'a =: ]&.(,&({.''b'')) a'
-IGNOREIFFVI 22000 < 7!:2 'a =: ]&.(,&(''b'')) a'
+IGNOREIFFVI 17000 < 7!:2 'a =: ]&.(,&({.''b'')) a'
+IGNOREIFFVI 17000 < 7!:2 'a =: ]&.(,&(''b'')) a'
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#5
@@ -615,9 +615,9 @@ assert. (6 ,~ 10000#5) -: a =: ,&6&.] a
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.] a'
 assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
-assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.(,&(''b'')) a'
-assert. IGNOREIFFVI 22000 < 7!:2 'a =: unsafename&.(,&(''b'')) a'
+assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
+assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.(,&(''b'')) a'
+assert. IGNOREIFFVI 17000 < 7!:2 'a =: unsafename&.(,&(''b'')) a'
 1
 )
 f''
@@ -631,8 +631,8 @@ a =: 10000#5
 IGNOREIFFVI 3000 < 7!:2 'a =: ,&6&.:] a'
 IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-IGNOREIFFVI 22000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
-IGNOREIFFVI 22000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
+IGNOREIFFVI 17000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
+IGNOREIFFVI 17000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
 
 f =: 3 : 0
 9!:53 (1)
@@ -641,9 +641,9 @@ assert. (6 ,~ 10000#5) -: a =: ,&6&.:] a
 assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.:] a'
 assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
-assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
-assert. IGNOREIFFVI 22000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
-assert. IGNOREIFFVI 22000 < 7!:2 'a =: unsafename&.:(,&(''b'')) a'
+assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
+assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.:(,&(''b'')) a'
+assert. IGNOREIFFVI 17000 < 7!:2 'a =: unsafename&.:(,&(''b'')) a'
 1
 )
 f''

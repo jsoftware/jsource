@@ -215,9 +215,9 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    u=VAV(a); c=u->id; f1=jthook1; f2=jthook2;
    v=VAV(w); d=v->id; e=ID(v->f);
    // Set flag to use: ASGSAFE if both operands are safe, and INPLACEOK to match f1,f2
-   flag=((u->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);  // start with in-place enabled, as befits f1/f2
+   flag=((u->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA)switch(c){
-    case CDOLLAR: f2=jtreshape; flag+=VIRS2; flag &=~VINPLACEOK2; break;
+    case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
     case CFROM:   f2=jthkfrom; flag &=~VINPLACEOK2;  break;
     case CTAKE:   f2=jthktake; flag &=~VINPLACEOK2;  break;
     case CDROP:   f2=jthkdrop; flag &=~VINPLACEOK2;  break;

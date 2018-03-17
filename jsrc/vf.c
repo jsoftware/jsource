@@ -19,7 +19,7 @@ F2(jtsetfv){A q=jt->fill;I t;
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
  if(ARELATIVE(w)){RELORIGIN(wrel,w); *(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,wrel); jt->fillv=jt->fillv0;}  // relative w, make fillv0 relative to w
- R TYPESEQ(t,AT(w))?w:cvt(t,w);  // notw if w is boxed this won't change it, so relo is still valid
+ R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed this won't change it, so relo is still valid
 }
 
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
@@ -186,7 +186,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  wz=0; DO(wcr, if(!ws[wf+i])wz=1;);
  ASSERT(az||!wz,EVLENGTH);
  if(!an)R reshapesp0(a,w,wf,wcr);
- wp=PAV(w); a1=SPA(wp,a); c=AN(a1); RZ(b=bfi(wr,a1,1));
+ wp=PAV(w); a1=SPA(wp,a); c=AN(a1); RZ(b=bfi(wr,a1,1));  // b=bitmask, length wr, with 1s for each value in a1
  RZ(e=ca(SPA(wp,e))); x=SPA(wp,x); y=SPA(wp,i);
  u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
  if(m||an<wcr) R reshapesp(a,irs1(w,0L,wcr,jtravel),wf,1L);
@@ -212,28 +212,44 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
-F2(jtreshape){A z;B b;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,zn;
+F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,zn;
+ F2PREFIP;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); jt->rank=0;
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreshape);
- RZ(a=vip(a)); r=AN(a); u=AV(a);
- if(SPARSE&AT(w))R reshapesp(a,w,wf,wcr);
- wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);
+ // now a is an atom or a list.  w can have any rank
+ RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
+ if(SPARSE&AT(w)){RETF(reshapesp(a,w,wf,wcr));}
+ wn=AN(w); RE(m=prod(r,u)); CPROD(wn,c,wf,ws); CPROD(wn,n,wcr,wf+ws);  // m=*/a (#atoms in result)  c=#cells of w  n=#atoms/cell of w
  ASSERT(n||!m||jt->fill,EVLENGTH);  // error if attempt to extend array of no items to some items without fill
- b=jt->fill&&m>n; if(b)RZ(w=setfv(w,w)); 
- t=AT(w); k=bp(t); p=k*m; q=k*n;
+ t=AT(w); filling = 0;
+ if(m<=n){  // no wraparound
+  if(c==1) {  // if there is only 1 cell of w...
+   // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
+   // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
+   if((I)jtinplace&JTINPLACEW && (m==n||t&DIRECT) && r<=wcr && ASGNINPLACE(w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
+    // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
+    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; DO(r, ws[i]=u[i];) RETF(w);   // Start the copy after the (unchanged) frame
+   }
+   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
+   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
+   // for NJA/SMM, fall through to nonvirtual code
+  }
+ }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
+ k=bp(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
  GA(z,t,zn,r+wf,0); s=AS(z); ICPY(s,ws,wf); ICPY(wf+s,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
- if(b)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
+ if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
  RELOCATE(w,z);
  INHERITNORELFILL(z,w); RETF(z);
 }    /* a ($,)"r w */
 
 F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
+ F2PREFIP;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; m=MIN(1,acr);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; jt->rank=0;
@@ -244,7 +260,7 @@ F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
   GATV(y,INT,an+r,1,0); v=AV(y);
   ICPY(v,AV(a),an); ICPY(v+an,AS(w)+wr-r,r);
  }
- R ar==acr&&wr==wcr?reshape(y,w):irs2(y,w,0L,m,wcr,jtreshape);
+ R ar==acr&&wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,m,wcr,jtreshape);
 }    /* a $"r w */
 
 #if SY_64

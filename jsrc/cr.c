@@ -383,12 +383,12 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
  RETF(z);
 }
 
-// IRS setup for dyads x op y
+// IRS setup for dyads x op y.  This routine sets jt->rank and calls the verb, which loops if it needs to
 // a is x, w is y
 // fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none
 //  if inplacing is enabled in jt, fs must be given
 // l, r are nominal ranks of fs
-// f2 is a setup verb (jtover, jtreshape, etc)
+// f2 is the verb that does the work (jtover, jtreshape, etc).  Normally it will loop using rank?ex if it needs to
 // IRS verbs are those that look at jt->rank.  This is where we set up jt->rank.  Once
 // we have it, we call the setup verb, which will go on to do its internal looping and (optionally) call
 // the verb f2 to finish operation on a cell
@@ -398,10 +398,10 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
  wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
- if(!(af||wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
+ if(!(af|wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
-  // Not all setup verbs (*f2)() use the fs argument.  
+  // Not all verbs (*f2)() use the fs argument.  
  RETF(z);
 }
 

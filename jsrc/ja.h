@@ -795,7 +795,7 @@
 // We can have an inplaceable but recursible block, if it was gc'd or created that way
 // ra() DOES NOT realize a virtual block, so that it can be used in places where virtual blocks are not possible
 #if MEMAUDIT&2
-#define ra(x)                       {I c=AC(x); if(!ACISPERM(c){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
+#define ra(x)                       {I c=AC(x); if(!ACISPERM(c)){I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&TRAVERSIBLE){AFLAG(x)=flg|=(tt&RECURSIBLE); if(tt&RECURSIBLE&&!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}; AC(x)=(c+1)&~ACINPLACE;}}
 // If this is a recursible type, make it recursible if it isn't already, by traversing the descendants.  This is like raising the usecount by 0.
 #define ra0(x)                      {I tt=AT(x); FLAGT flg=AFLAG(x); if((tt^flg)&RECURSIBLE){if(flg&AFVIRTUAL){RZ((x)=realize(x)); flg=AFLAG(x);} AFLAG(x)=flg|=(tt&RECURSIBLE); if(!(flg&(AFNJA|AFSMM))&&AC(x)>=2&&AC(x)<0x3000000000000000)*(I*)0=0; jtra(jt,(x),tt);}}
 #else
@@ -1193,7 +1193,8 @@
 #define vi(x)                       jtvi(jt,(x))
 #define vib(x)                      jtvib(jt,(x))
 #define vip(x)                      jtvip(jt,(x))
-#define virtual(x,y,z)            jtvirtual(jt,(x),(y),(z))
+#define virtual(x,y,z)              jtvirtual(jt,(x),(y),(z))
+#define virtualip(x,y,z)            jtvirtual(jtinplace,(x),(y),(z))
 #define vlocnl(x,y)                 jtvlocnl(jt,(x),(y))
 #define vmove(x,y,z)                jtvmove(jt,(x),(y),(z))
 #define vnm(x,y)                    jtvnm(jt,(x),(y))

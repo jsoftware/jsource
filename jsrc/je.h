@@ -837,7 +837,7 @@ extern A        jtvci(J,I);
 extern A        jtvec(J,I,I,void*);
 extern F        jtvfn(J,F);
 extern A        jtvger2(J,C,A,A);
-extern A        jtvirtual(J,A,I,I);
+extern A        jtvirtual(J,AD * RESTRICT,I,I);
 extern B        jtvnm(J,I,C*);
 extern void     jtwri(J,I,C*,I,C*);
 extern A        jtxcvt(J,I,A);

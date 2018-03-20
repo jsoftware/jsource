@@ -49,7 +49,11 @@ char path[PLEN];
 char pathdll[PLEN];
 static char jdllver[20];
 static int FHS=0;
+#if !(defined(_M_X64) || defined(__x86_64__))
 static int AVX=0;
+#else
+static int AVX=1;
+#endif
 #ifdef ANDROID
 static char install[PLEN];
 #endif

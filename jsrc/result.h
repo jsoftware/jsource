@@ -211,6 +211,7 @@ do{
   zzwf+=zzcelllen;  // leave zzwf as the total length of result frame
   zzcelllen=nbytes;   // cell length, for use in the main body
   zzboxp=AAV(zz); zzboxp=(ZZFLAGWORD&ZZFLAGBOXATOP)?zzboxp:0;  // Start out zzboxp so we can use it as a counter of cells processed before zzbox needed
+  zzcellp=0;  // init output offset in zz to 0
  }
 }while(1);  // go back to store the first result
 
@@ -225,17 +226,17 @@ do{
  }
 // result is now in zz
 #undef ZZFLAGWORD
-#undef ZZFLAGNOPOPX
-#undef ZZFLAGNOPOP
-#undef ZZFLAGBOXATOPX
-#undef ZZFLAGBOXATOP
-#undef ZZFLAGUSEOPENX
-#undef ZZFLAGUSEOPEN
-#undef ZZFLAGHASUNBOXX
-#undef ZZFLAGHASUNBOX
-#undef ZZFLAGHASBOXX
-#undef ZZFLAGHASBOX
-#undef ZZFLAGBOXALLOX
-#undef ZZFLAGBOXALLO
+// obsolete #undef ZZFLAGNOPOPX
+// obsolete #undef ZZFLAGNOPOP
+// obsolete #undef ZZFLAGBOXATOPX
+// obsolete #undef ZZFLAGBOXATOP
+// obsolete #undef ZZFLAGUSEOPENX
+// obsolete #undef ZZFLAGUSEOPEN
+// obsolete #undef ZZFLAGHASUNBOXX
+// obsolete #undef ZZFLAGHASUNBOX
+// obsolete #undef ZZFLAGHASBOXX
+// obsolete #undef ZZFLAGHASBOX
+// obsolete #undef ZZFLAGBOXALLOX
+// obsolete #undef ZZFLAGBOXALLO
 #undef ZZEXIT
 #endif

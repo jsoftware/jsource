@@ -95,8 +95,8 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
   // loop over the frame
 #define ZZDECL
 #include "result.h"
-
   ZZPARMS(0,0,ws,wf,mn,1)
+
   for(i0=mn;i0;--i0){
    RZ(z=CALL1(f1,virtw,fs));
 
@@ -110,7 +110,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
 #define ZZEXIT
 #include "result.h"
 
- }else{UC d; I *is, *zs;A z;
+ }else{UC d; I *is, *zzs;
   // no cells - execute on a cell of fills
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
@@ -120,9 +120,9 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
   // indication that anything unusual happened.  So fail then
   d=jt->db; jt->db=0; z=CALL1(f1,virtw,fs); jt->db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
-  GA(zz,AT(z),0L,wf+AR(z),0L); zs=AS(zz);
-  is = ws; DO(wf, *zs++=*is++;);  // copy frame
-  is = AS(z); DO(AR(z), *zs++=*is++;);    // copy result shape
+  GA(zz,AT(z),0L,wf+AR(z),0L); zzs=AS(zz);
+  is = ws; DO(wf, *zzs++=*is++;);  // copy frame
+  is = AS(z); DO(AR(z), *zzs++=*is++;);    // copy result shape
  }
 
 // result is now in zz
@@ -131,8 +131,8 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  EPILOG(zz);
 }
 
-A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virta,virtw,z;
-   I acn,af,ak,ar,*as,at,k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
+A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,virtw,z;
+   I acn,af,ak,ar,*as,at,mn,n=1,wcn,wf,wk,wr,*ws,wt;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
  F2PREFIP;
  RZ(a&&w);
@@ -157,11 +157,23 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
 
  // ?r=rank, ?s->shape, ?cr=effective rank, ?f=#total frame (inner+outer), for each argument
  // if inner rank is > outer rank, set it equal to outer rank
- I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
+#define ZZFLAGWORD state
+ I ZZFLAGWORD=0;  // init flags, including zz flags
+// obsolete  I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
  ar=AR(a); as=AS(a); efr(lcr,ar,lcr); efr(lr,lcr,lr);// obsolete  if(lr>lcr)lr=lcr;
 // obsolete  state |= STATEAREL&~ARELATIVES(a);   // relies on STATEAREL>BOX
 // obsolete if(ARELATIVE(a))state|=STATEAREL;
  wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);// obsolete  if(rr>rcr)rr=rcr;
+
+ // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
+ if(fs&&VAV(fs)->flag2&VF2RANKATOP2){I lrn, rrn;  // prospective new ranks to include
+  efr(lrn,lr,(I)VAV(fs)->lr); efr(rrn,rr,(I)VAV(fs)->rr);  // get the ranks if we accept the new cell
+  if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
+   lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
+   state = (VAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  }
+ }
+
  af=ar-lr; wf=wr-rr;   // frames wrt innermost cell
 // obsolete  state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
  if(!(af|wf)){R CALL2(f2,a,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
@@ -222,9 +234,15 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
  if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
  else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
- if(mn){I i0, i1, i2, i3, old;C *zv;
+ A zz=0;  // place where we will build up the homogeneous result cells
+ if(mn){I i0, i1, i2, i3;
   // Normal case where there are cells.
   // loop over the matched part of the outer frame
+
+#define ZZDECL
+#include "result.h"
+  ZZPARMS(los,lof,lis,lif,mn,2)
+
   for(i0=outerframect;i0;--i0){
    I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);
    // loop over the unmatched part of the outer frame, repeating the shorter argument
@@ -235,7 +253,12 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
      // loop over the unmatched part of the inner frame, repeating the shorter argument
      for(i3=innerrptct;i3;--i3){
       // invoke the function, get the result for one cell
-      RZ(y=CALL2(f2,virta,virtw,fs));
+      RZ(z=CALL2(f2,virta,virtw,fs));
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+#if 0
       // if the result is boxed, accumulate the SMREL info
       if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
 
@@ -298,6 +321,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
        INCORP(y);
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
+#endif
       // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything
       if(!(state&STATEINNERREPEATA))AK(virta)+=ak;
       if(!(state&STATEINNERREPEATW))AK(virtw)+=wk;
@@ -308,7 +332,11 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
     }
    }
   }
- }else{UC d; I *is, *zs;
+
+#define ZZEXIT
+#include "result.h"
+
+ }else{UC d; I *is, *zzs;
   // if there are no cells, execute on a cell of fills.
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
@@ -316,17 +344,20 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virt
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  d=jt->db; jt->db=0; y=CALL2(f2,virta,virtw,fs); jt->db=d;
-  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}  // use 0 as result if error encountered
-  GA(z,AT(y),0L,lof+lif+AR(y),0L); zs=AS(z);
-  is = los; DO(lof, *zs++=*is++;);  // copy outer frame
-  is = lis; DO(lif, *zs++=*is++;);  // copy inner frame
-  is = AS(y); DO(AR(y), *zs++=*is++;);    // copy result shape
+  d=jt->db; jt->db=0; z=CALL2(f2,virta,virtw,fs); jt->db=d;
+  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
+  GA(zz,AT(z),0L,lof+lif+AR(z),0L); zzs=AS(zz);
+  is = los; DO(lof, *zzs++=*is++;);  // copy outer frame
+  is = lis; DO(lif, *zzs++=*is++;);  // copy inner frame
+  is = AS(z); DO(AR(z), *zzs++=*is++;);    // copy result shape
  }
 
- if(state&STATEERR){z=ope(z);  // If we went to error state, we have created x <@f y; this creates > x <@f y which is the final result
- }else{AFLAG(z)|=state&AFNOSMREL;}  // if not error, we saw all the subcells, so if they're all non-rel we know.  This may set NOSMREL in a non-boxed result, but that's OK
- EPILOG(z);
+// obsolete  if(state&STATEERR){z=ope(z);  // If we went to error state, we have created x <@f y; this creates > x <@f y which is the final result
+// obsolete  }else{AFLAG(z)|=state&AFNOSMREL;}  // if not error, we saw all the subcells, so if they're all non-rel we know.  This may set NOSMREL in a non-boxed result, but that's OK
+// result is now in zz
+
+ AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+ EPILOG(zz);
 }
 
 /* Integrated Rank Support                              */

@@ -14,14 +14,14 @@ cd $jbld/jout/$TARGET/$1
 
 make -f $jmake/makefilewin
 
-if [ $1 = "j64avx" ] ; then
+if [ $1 = "j64nonavx" ] ; then
  if [ $TARGET = "libj.dylib" ] ; then
-  cp $TARGET $jbld/j64/bin/libjavx.dylib
+  cp $TARGET $jbld/j64/bin/libj-nonavx.dylib
  else
  if [ $TARGET = "libj.so" ] ; then
-  cp $TARGET $jbld/j64/bin/libjavx.so
+  cp $TARGET $jbld/j64/bin/libj-nonavx.so
  else
-  cp $TARGET $jbld/j64/bin/javx.dll
+  cp $TARGET $jbld/j64/bin/j-nonavx.dll
  fi
  fi
 else

@@ -57,13 +57,13 @@ COMPILE="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
 LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 ;;
 
-linux_j64) # linux intel 64bit
+linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
 COMPILE="$common $OPENMP "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 
-linux_j64avx) # linux intel 64bit avx
+linux_j64) # linux intel 64bit avx
 TARGET=libj.so
 COMPILE="$common -mavx -DC_AVX=1 $OPENMP "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
@@ -88,13 +88,13 @@ COMPILE="$darwin -m32 -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
-darwin_j64) # darwin x86
+darwin_j64nonavx) # darwin x86 nonavx
 TARGET=libj.dylib
 COMPILE="$darwin -mmacosx-version-min=10.5"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
 ;;
 
-darwin_j64avx) # darwin intel 64bit avx
+darwin_j64) # darwin intel 64bit avx
 TARGET=libj.dylib
 COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
@@ -110,17 +110,7 @@ COMPILE="$common -msse2 -mfpmath=sse -Wno-write-strings -D_FILE_OFFSET_BITS=64 -
 LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP32 -o j.dll "
 ;;
 
-windows_j32avx) # windows x86
-DLLOBJS=" jdll.o jdllcomx.o "
-LIBJDEF=" $jgit/dllsrc/jdll.def "
-LIBJRES=" jdllres.o "
-TARGET=j.dll
-COMPILE="$common -msse2 -mfpmath=sse -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL -mavx -DC_AVX=1 "
-LINK=" -shared -Wl,--enable-stdcall-fixup -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP32 -o j.dll "
-OBJS_FMA=" blis/gemm_int-fma.o "
-;;
-
-windows_j64) # windows x86
+windows_j64nonavx) # windows intel 64bit nonavx
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "
@@ -129,7 +119,7 @@ COMPILE="$common -Wno-write-strings -D_FILE_OFFSET_BITS=64 -D_JDLL "
 LINK=" -shared -lm -lole32 -loleaut32 -luuid -static-libgcc -static-libstdc++ $LDOPENMP -o j.dll "
 ;;
 
-windows_j64avx) # windows x86
+windows_j64) # windows intel 64bit avx
 DLLOBJS=" jdll.o jdllcomx.o "
 LIBJDEF=" $jgit/dllsrc/jdll.def "
 LIBJRES=" jdllres.o "

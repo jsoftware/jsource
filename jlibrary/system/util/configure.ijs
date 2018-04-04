@@ -64,7 +64,6 @@ r1,new
 
 NB. =========================================================
 configbase=: 3 : 0
-Snapshots_j_=: 0
 0!:100 ;LF ,each cbread2 'base.cfg'
 9!:3 DisplayForm
 9!:7 BoxForm { Boxes
@@ -77,6 +76,16 @@ end.
 9!:37 Output
 0!:100 ;(}:,'_j_=:',]) each <;.2 jdefs
 EMPTY
+)
+
+NB. =========================================================
+configcase=: 3 : 0
+CasePaths_j_=: ''
+dat=. cbread1 'case.cfg'
+if. (0=#dat) +. dat -: _1 do. return. end.
+dat=. jpathsep each dat
+dat=. (-'/'={:&> dat) }.each dat
+CasePaths_j_=: dat -. a:
 )
 
 NB. =========================================================
@@ -115,6 +124,7 @@ EMPTY
 NB. =========================================================
 configrun=: 3 : 0
 configbase''
+configcase''
 configfolders''
 configrecent''
 coerase <'jcfg'

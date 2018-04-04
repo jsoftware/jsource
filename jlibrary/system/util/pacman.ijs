@@ -5,6 +5,9 @@ BASELIB=: 'base library'
 DATAMASK=: 0
 HWNDP=: ''
 ISGUI=: 0
+INITDONE=: 0
+HASFILEACCESS=: 0
+HASADDONSDIR=: 0
 ONLINE=: 0
 PKGDATA=: 0 7$a:
 SECTION=: ,<'All'
@@ -29,7 +32,6 @@ general/sfl
 graphics/d3
 graphics/fvj3
 graphics/fvj4
-graphics/gl2
 graphics/gnuplot
 graphics/graph
 graphics/graphviz
@@ -81,14 +83,13 @@ setfiles=: 3 : 0
 ADDCFG=: jpath '~addons/config/'
 makedir ADDCFG
 ADDCFGIJS=: ADDCFG,'config.ijs'
-JRELEASE=: 'j806'
+JRELEASE=: 'j','.'-.~({.~i:&'.') JLIB
 LIBTREE=: readtree''
 if. IFIOS do.
   WWW=: '/jal/',JRELEASE,'/'
 else.
   WWW=: 'http://www.jsoftware.com/jal/',JRELEASE,'/'
 end.
-LIBVER=: jpath '~system/config/version.txt'
 )
 destroy=: codestroy
 CFGFILES=: <;._2 (0 : 0)
@@ -113,7 +114,6 @@ ischar=: 2 = 3!:0
 rnd=: [ * [: <. 0.5 + %~
 sep2under=: '/' & (I.@('_' = ])})
 termLF=: , (0 < #) # LF -. {:
-tolist=: }. @ ; @: (LF&,@,@":each)
 isjpkgout=: ((4 = {:) *. 2 = #)@$ *. 1 = L.
 getintro=: ('...' ,~ -&3@[ {. ])^:(<#)
 info=: smoutput
@@ -293,6 +293,15 @@ else.
   x fwrite y
 end.
 )
+getjqtversion=: 3 : 0
+suffix=. (IFUNIX>'/'e.LIBFILE)#'-8.07'
+dat=. fread '~bin/jqt',suffix,IFWIN#'.exe'
+if. dat-:_1 do. '' return. end.
+ndx=. I. 'jqtversion:' E. dat
+if. 0=#ndx do. '' return. end.
+dat=. 50 {. (11+{.ndx) }. dat
+<;._1 '/',(dat i. ':') {. dat
+)
 platformparent=: 3 : 0
 ((< _2 {. y) e. '32';'64') # _2 }. y
 )
@@ -405,21 +414,23 @@ Setup repository using Internet connection now?
 Select No if not connected, to complete setup later. After Setup is done, repository can be used offline with more options in Tools menu and Preferences dialog.
 )
 checkaccess=: 3 : 0
-if. testaccess'' do. 1 return. end.
-msg=. 'Unable to run Package Manager, as you do not have access to the installation folder.'
+if. testaccess'' do. 1 [ HASFILEACCESS_jpacman_=: 1 return. end.
+msg=. 'Package Manager will run in read-only mode, as you do not have access to the installation folder.'
 if. IFWIN do.
   msg=. msg,LF2,'To run as Administrator, right-click the J icon, select Run as... and '
   msg=. msg,'then select Adminstrator.'
+else.
+  msg=. msg,LF2,'To run as root, open a terminal and use sudo to run J.'
 end.
 info msg
 0
 )
 checkaddonsdir=: 3 : 0
 d=. jpath '~addons'
-if. # 1!:0 d do. 1 return. end.
+if. # 1!:0 d do. 1 [ HASADDONSDIR_jpacman_=: 1 return. end.
 if. 1!:5 :: 0: <d do.
   log 'Created addons directory: ',d
-  1 return.
+  1 [ HASADDONSDIR=: 1 return.
 end.
 info CHECKADDONSDIR rplc 'XX';d
 0
@@ -606,28 +617,28 @@ readlocal''
 pacman_init 0
 )
 install_console=: 3 : 0
-  if. -. init_console 'server' do. '' return. end.
-  pkgs=. getnames y
-  if. pkgs -: ,<'all' do. pkgs=. 1 {"1 PKGDATA end.
-  pkgs=. pkgs (e. # [) ~. (<'base library'), ((pkgnew +. pkgups) # 1&{"1@]) PKGDATA
-  pkgs=. pkgs -. Ignore
-  pkgs=. getdepend_console pkgs
-  if. 0 = num=. #pkgs do. '' return. end.
-  many=. 1 < num
-  msg=. 'Installing ',(":num),' package',many#'s'
-  log msg
-  installdo pkgs
-  log 'Done.'
-  readlocal''
-  pacman_init ''
-  checkstatus''
+if. -. init_console 'server' do. '' return. end.
+pkgs=. getnames y
+if. pkgs -: ,<'all' do. pkgs=. 1 {"1 PKGDATA end.
+pkgs=. pkgs (e. # [) ~. (<'base library'), ((pkgnew +. pkgups) # 1&{"1@]) PKGDATA
+pkgs=. pkgs -. Ignore
+pkgs=. getdepend_console pkgs
+if. 0 = num=. #pkgs do. '' return. end.
+many=. 1 < num
+msg=. 'Installing ',(":num),' package',many#'s'
+log msg
+installdo pkgs
+log 'Done.'
+readlocal''
+pacman_init ''
+checkstatus''
 )
 upgrade_console=: 3 : 0
-  if. -. init_console 'read' do. '' return. end.
-  pkgs=. getnames y
-  if. (0=#pkgs) +. pkgs -: ,<'all' do. pkgs=. 1{"1 PKGDATA end.
-  pkgs=. pkgs (e. # [) (pkgups # 1&{"1@])PKGDATA
-  install_console pkgs
+if. -. init_console 'read' do. '' return. end.
+pkgs=. getnames y
+if. (0=#pkgs) +. pkgs -: ,<'all' do. pkgs=. 1{"1 PKGDATA end.
+pkgs=. pkgs (e. # [) (pkgups # 1&{"1@])PKGDATA
+install_console pkgs
 )
 installdo=: 3 : 0
 msk=. -. y e. <BASELIB
@@ -701,207 +712,100 @@ txt=. 'NB. Addon configuration',LF2
 txt=. txt,'ADDLABS=: 0 : 0',LF,ADDLABS,')',LF
 txt fwrites ADDCFGIJS
 )
-cocurrent 'jpacman'
-
-JEpath=: 'http://www.jsoftware.com/download/jengine'
-jengine_install=: 3 : 0
-y=. y,(0=#y)#'status'
-'only valid for j8xx'assert'8'=1{9!:14''
-'plat name bname'=. jengine_sub''
-'update not supported for this type of install'assert 1=ftype bname
-jens=. jengine_version_from_web''
-if. jens -: 0 do. return. end.
-if. y -: 'status' do.
-  jengine_status jens
-else.
-  jengine_update jens;y
-end.
-)
-jengine_status=: 3 : 0
-t=. 'Current engine: ',(9!:14''),LF2
-if. 0=#y do.
-  t=. t,'No new engines are available for this platform.'
-else.
-  t=. t,'Available engines:',,LF,.":('name';'version'),y
-  t=. t,LF2,'To install a new engine, call ''jengine'' install with the engine name, e.g.',LF2
-  t=. t,'   ''jengine'' install ''',(0 0{::y),''''
-end.
-echo t
-)
-testaccessfile=: 3 : 0
-f=. <jpath y
-try.
-  '' 1!:2 f
-  1!:55 f
-  1
-catch.
-  0
-end.
-)
-jengine_update=: 3 : 0
-'jens id'=. y
-if. jens-:0 do. return. end.
-if. 0=#jens do.
-  echo 'No new engines are available for this platform.' return.
-end.
-if. -. (<id) e. {."1 jens do.
-  echo 'There is no new engine with this name: ',id return.
-end.
-'plat name bname'=. jengine_sub''
-'access error - protected folder - must run as admin/sudo'assert testaccessfile bname,'.temp'
-'rc p'=. httpget JEpath,'/',id,'/',name
-if. rc do.
-  echo 'httpget failed when downloading the engine' return.
-end.
-jenew=. fread p
-jeold=. fread bname
-oname=. bname,'.original'
-renamed=. bname,'.',((isotimestamp 6!:0'')rplc' ';'-';':';'-';'.';'-'),'.renamed'
-if. -.fexist oname do.
-  echo oname,' : copy of original created'
-  jeold fwrite oname
-else.
-  echo oname,' : copy of original already exists'
-end.
-renamed frename bname
-echo bname,' renamed as ',renamed
-jenew fwrite bname
-if. (UNAME-:'Linux') *. 1~:ftype '~bin/',name do.
-  hostcmd_j_ ' chmod 644 ',bname
-end.
-echo'new JE installed'
-echo'this J instance continues to use the old image'
-echo'shutdown J, restart, and check 9!:14'''''
-i.0 0
-)
-jengine_sub=: 3 : 0
-i=. ('Win';'Darwin')i.<UNAME
-plat=. ;i{'windows';'darwin';'linux'
-name=. ;i{'j.dll';'libj.dylib';'libj.so'
-bname=. '~bin/',name
-if. 1~:ftype bname do.
-  if. UNAME-:'Linux' do.
-    v=. ({.~i.&'/')}.9!:14''
-    sub=. '' [ '.',({.v),'.',}.v
-    sub=. '.8.06'
-    if. IFRASPI do.
-      bname=. '/usr/lib/arm-linux-gnueabihf/',name,sub
-    elseif. IF64 do.
-      bname=. '/usr/lib/x86_64-linux-gnu/',name,sub
-    elseif. do.
-      bname=. '/usr/lib/i386-linux-gnu/',name,sub
-    end.
-  end.
-end.
-plat;name;bname
-)
-jengine_version_from_web=: 3 : 0
-'rc p'=. httpget JEpath,'/jengine.txt'
-if. rc do.
-  echo 'Could not read jengine directory from J website'
-  0 return.
-end.
-plat=. 0 pick jengine_sub''
-r=. 'b' fread p
-r=. r #~ (1 e. (>IF64{'j32';'j64') E.]) &> r
-r=. r #~ (1 e. plat E. ]) &> r
-r=. ((i.&' ') ({.;}.@}.) ]) &> r
-r #~ (<9!:14'') ~: {:"1 r
-)
 show_console=: 4 : 0
-  if. -. init_console 'read' do. '' return. end.
-  select. x
-  case. 'search' do.
-    pkgs=. getnames y
-    res=. (pkgsearch pkgs) # 1 2 3 4 {"1 PKGDATA
-    res=. curtailcaption res
-  case. 'show' do.
-    pkgs=. getnames y
-    if. pkgs -: ,<'all' do. pkgs=. 1 {"1 PKGDATA end.
-    res=. (msk=. pkgshow pkgs) # 5 {"1 PKGDATA
-    if. #res do.
-      res=. ,((<'== '), &.> msk # 1 {"1 PKGDATA) ,. res
-      res=. (2#LF) joinstring (70&foldtext)&.> res
-    end.
-  case. 'showinstalled' do.
-    dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
-    res=. (-.@pkgnew # ])dat
-    res=. curtailcaption res
-  case. 'shownotinstalled' do.
-    dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
-    res=. (pkgnew # 0 2 3&{"1@])dat
-    res=. curtailcaption res
-  case. 'showupgrade' do.
-    dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
-    res=. (pkgups # ])dat
-    res=. curtailcaption res
-  case. 'status' do.
-    res=. checklastupdate''
-    res=. res,LF,checkstatus''
-  end.
-  res
-)
-showfiles_console=: 4 : 0
-  if. -. init_console 'read' do. '' return. end.
+if. -. init_console 'read' do. '' return. end.
+select. x
+case. 'search' do.
   pkgs=. getnames y
-  pkgs=. pkgs (e. # [) (-.@pkgnew # 1&{"1@]) PKGDATA
-  pkgs=. pkgs -. <BASELIB
-  if. 0=#pkgs do. '' return. end.
-  fn=. (<'~addons/') ,&.> (pkgs) ,&.> <'/',x,(x-:'history'){::'.ijs';'.txt'
-  res=. res #~ msk=. (<_1) ~: res=. fread@jpath &.> fn
-  if. #res do.
-    res=. ,((<'== '), &.> msk#pkgs) ,. res
-    res=. (2#LF) joinstring res
-  end.
-)
-remove_console=: 3 : 0
-  if. -. init_console 'edit' do. '' return. end.
+  res=. (pkgsearch pkgs) # 1 2 3 4 {"1 PKGDATA
+  res=. curtailcaption res
+case. 'show' do.
   pkgs=. getnames y
   if. pkgs -: ,<'all' do. pkgs=. 1 {"1 PKGDATA end.
-  pkgs=. pkgs (e. # [) (-.@pkgnew # 1&{"1@]) PKGDATA
-  pkgs=. pkgs -. <BASELIB
-  if. 0 = num=. #pkgs do. '' return. end.
-  many=. 1 < num
-  msg=. 'Removing ',(":num),' package',many#'s'
-  log msg
-  remove_addon each pkgs
-  log 'Done.'
-  readlocal''
-  pacman_init ''
-  checkstatus''
+  res=. (msk=. pkgshow pkgs) # 5 {"1 PKGDATA
+  if. #res do.
+    res=. ,((<'== '), &.> msk # 1 {"1 PKGDATA) ,. res
+    res=. (2#LF) joinstring (70&foldtext)&.> res
+  end.
+case. 'showinstalled' do.
+  dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
+  res=. (-.@pkgnew # ])dat
+  res=. curtailcaption res
+case. 'shownotinstalled' do.
+  dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
+  res=. (pkgnew # 0 2 3&{"1@])dat
+  res=. curtailcaption res
+case. 'showupgrade' do.
+  dat=. (isjpkgout y) {:: (1 2 3 4 {"1 PKGDATA);<y
+  res=. (pkgups # ])dat
+  res=. curtailcaption res
+case. 'status' do.
+  res=. checklastupdate''
+  res=. res,LF,checkstatus''
+end.
+res
+)
+showfiles_console=: 4 : 0
+if. -. init_console 'read' do. '' return. end.
+pkgs=. getnames y
+pkgs=. pkgs (e. # [) (-.@pkgnew # 1&{"1@]) PKGDATA
+pkgs=. pkgs -. <BASELIB
+if. 0=#pkgs do. '' return. end.
+fn=. (<'~addons/') ,&.> (pkgs) ,&.> <'/',x,(x-:'history'){::'.ijs';'.txt'
+res=. res #~ msk=. (<_1) ~: res=. fread@jpath &.> fn
+if. #res do.
+  res=. ,((<'== '), &.> msk#pkgs) ,. res
+  res=. (2#LF) joinstring res
+end.
+)
+remove_console=: 3 : 0
+if. -. init_console 'edit' do. '' return. end.
+pkgs=. getnames y
+if. pkgs -: ,<'all' do. pkgs=. 1 {"1 PKGDATA end.
+pkgs=. pkgs (e. # [) (-.@pkgnew # 1&{"1@]) PKGDATA
+pkgs=. pkgs -. <BASELIB
+if. 0 = num=. #pkgs do. '' return. end.
+many=. 1 < num
+msg=. 'Removing ',(":num),' package',many#'s'
+log msg
+remove_addon each pkgs
+log 'Done.'
+readlocal''
+pacman_init ''
+checkstatus''
 )
 
 remove_addon=: 3 : 0
-  log 'Removing ',y,'...'
-  treepath=. jpath '~addons/',y
-  if. ((0 < #@dirtree) *. -.@deltree) treepath do.
-    nf=. #dirtree treepath
-    nd=. <: # dirpath treepath
-    nd=. nd + (tolower treepath) e. dirpath jpath '~addons/', '/' taketo y
-    msg=. (":nd),' directories and ',(":nf),' files not removed.'
-    log 'Remove failed: ',msg
-    info 'Remove failed:',LF2,msg
-    return.
-  end.
-  remove_addins y
-  remove_config y
+log 'Removing ',y,'...'
+treepath=. jpath '~addons/',y
+if. ((0 < #@dirtree) *. -.@deltree) treepath do.
+  nf=. #dirtree treepath
+  nd=. <: # dirpath treepath
+  nd=. nd + (tolower treepath) e. dirpath jpath '~addons/', '/' taketo y
+  msg=. (":nd),' directories and ',(":nf),' files not removed.'
+  log 'Remove failed: ',msg
+  info 'Remove failed:',LF2,msg
+  return.
+end.
+remove_addins y
+remove_config y
 )
 remove_addins=: 3 :0
-  fl=. ADDCFG,'addins.txt'
-  ins=. fixjal2 freads fl
-  ins=. ins #~ (<y) ~: {."1 ins
-  (fmtjal2 ins) fwrites fl
+fl=. ADDCFG,'addins.txt'
+ins=. fixjal2 freads fl
+ins=. ins #~ (<y) ~: {."1 ins
+(fmtjal2 ins) fwrites fl
 )
 remove_config=: 3 : 0
-  ADDLABS=: ''
-  0!:0 :: ] < ADDCFGIJS
-  remove_labs y
-  write_config''
+ADDLABS=: ''
+0!:0 :: ] < ADDCFGIJS
+remove_labs y
+write_config''
 )
 remove_labs=: 3 : 0
-  txt=. <;._2 ADDLABS
-  txt=. txt #~ (<jpathsep y) ~: (#y)&{. each txt
-  ADDLABS=: ; txt ,each LF
+txt=. <;._2 ADDLABS
+txt=. txt #~ (<jpathsep y) ~: (#y)&{. each txt
+ADDLABS=: ; txt ,each LF
 )
 LOG=: 1
 log=: 3 : 0
@@ -913,7 +817,7 @@ if. ONLINE do.
 end.
 )
 readlin=: 3 : 0
-LIN=: 6 1 1 >. fixver freads LIBVER
+LIN=: 6 1 1 >. fixver JLIB
 )
 readlocal=: 3 : 0
 readlin''
@@ -981,58 +885,35 @@ info msg
 0
 )
 updatejal=: 3 : 0
-  log 'Updating server catalog...'
-  if. -. init_console 'server' do. '' return. end.
-  refreshaddins''
-  readlocal''
-  pacman_init''
-  res=. checklastupdate''
-  res,LF,checkstatus''
-)
-RELIBMSG=: 0 : 0
-You are now using the XX base library, and can switch to the YY base library.
-
-This will download the YY version of the base library and overwrite existing files. Addons are not affected.
-
-OK to switch to the YY library?
-)
-prelib=: 3 : 0
-old=. LIBTREE
-new=. (('stable';'current') i. <old) pick 'current';'beta'
-msg=. RELIBMSG rplc ('XX';'YY'),.old;new
-if. 0 = query SYSNAME;msg do.
-  info 'Not done.' return.
-end.
-switchlibrary 1 pick new
-)
-switchlibrary=: 3 : 0
-'' fwrite LIBVER
-writetree LIBTREE=: y
-refreshjal''
+log 'Updating server catalog...'
+if. -. init_console 'server' do. '' return. end.
+refreshaddins''
 readlocal''
-pmview_setpn''
+pacman_init''
+res=. checklastupdate''
+res,LF,checkstatus''
 )
 masklib=: 3 : 0
 (1 {"1 y) = <BASELIB
 )
 pkglater=: 3 : 0
-dat=. (s=.isjpkgout y){:: PKGDATA;<y
+dat=. (s=. isjpkgout y){:: PKGDATA;<y
 if. 0=#dat do. $0 return. end.
 loc=. fixvers > (2-s) {"1 dat
 srv=. fixvers > (3-s) {"1 dat
 {."1 /:"2 srv ,:"1 loc
 )
 pkgnew=: 3 : 0
-dat=. (s=.isjpkgout y){:: PKGDATA;<y
+dat=. (s=. isjpkgout y){:: PKGDATA;<y
 if. 0=#dat do. $0 return. end.
 0 = # &> (2-s) {"1 dat
 )
 pkgups=: pkgnew < pkglater
 pkgsearch=: 3 : 0
-  +./"1 +./ y E."1&>"(0 _) 1{"1 PKGDATA
++./"1 +./ y E."1&>"(0 _) 1{"1 PKGDATA
 )
 pkgshow=: 3 : 0
-  y e.~ 1{"1 PKGDATA
+y e.~ 1{"1 PKGDATA
 )
 setshowall=: 3 : 0
 PKGDATA=: (<y) (<(I.DATAMASK);0) } PKGDATA
@@ -1074,67 +955,82 @@ DATAMASK=: (#PKGDATA) $ 1
 EMPTY
 )
 init_console=: 3 : 0
-  if. 0=#y do. y=. 'read' end.
-  select. y
-  fcase. 'edit';'server' do.
-    if. -. checkaccess'' do. 0 return. end.
-  case. 'read' do.
-    if. -. checkaddonsdir'' do. 0 return. end.
-    setfiles''
-    readlocal''
-    pacman_init ''
-    res=. 1
-  case. do. res=. 0
-  end.
-  if. y -: 'server' do. res=. getserver''  end.
-  res
+if. 0=#y do. y=. 'read' end.
+select. y
+fcase. 'edit';'server' do.
+  if. -. HASFILEACCESS do. 0 return. end.
+case. 'read' do.
+  if. -. HASADDONSDIR do. 0 return. end.
+  setfiles''
+  readlocal''
+  pacman_init ''
+  res=. 1
+case. do. res=. 0
+end.
+if. y -: 'server' do. res=. getserver'' end.
+res
 )
 jpkg=: 4 : 0
-  select. x
-  case. 'history';'manifest' do.
-    x showfiles_console y
-  case. 'install' do.
-    install_console y
-  case. 'reinstall' do.
-    remove_console y
-    install_console y
-  case. 'remove' do.
-    remove_console y
-  case. ;:'show search showinstalled shownotinstalled showupgrade status' do.
-    x show_console y
-  case. 'update'  do.
-    updatejal ''
-  case. 'upgrade' do.
-    upgrade_console y
-  case. do.
-    msg=. 'Valid options are:',LF
-    msg=. msg,'  history, install, manifest, remove, reinstall, show, search,',LF
-    msg=. msg,'  showinstalled, shownotinstalled, showupgrade, status,',LF
-    msg,'  update, upgrade'
-  end.
+if. -.INITDONE_jpacman_ do.
+  checkaccess''
+  checkaddonsdir''
+  INITDONE_jpacman_=: 1
+end.
+select. x
+case. 'history';'manifest' do.
+  x showfiles_console y
+case. 'install' do.
+  if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
+  install_console y
+case. 'reinstall' do.
+  if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
+  remove_console y
+  install_console y
+case. 'remove' do.
+  if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
+  remove_console y
+case. ;:'show search showinstalled shownotinstalled showupgrade status' do.
+  x show_console y
+case. 'update' do.
+  if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
+  updatejal ''
+case. 'upgrade' do.
+  if. -. HASFILEACCESS*.HASADDONSDIR do. 'file permission error' return. end.
+  upgrade_console y
+case. do.
+  msg=. 'Valid options are:',LF
+  msg=. msg,'  history, install, manifest, remove, reinstall, show, search,',LF
+  msg=. msg,'  showinstalled, shownotinstalled, showupgrade, status,',LF
+  msg,'  update, upgrade'
+end.
 )
-do_install=: 4 : 0
+do_install=: 3 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.
-if. x-:'jengine' do. jengine_install y return. end.
-if. -. x-:'' do. smoutput 'Invalid left argument' return. end.
 'update' jpkg ''
-if. -. (<y) e. 'all';'qtide' do.
+if. y -: 'addons' do. y=. 'all' end.
+if. -. (<y) e. 'full';'qtide';'slim' do.
   'install' jpkg y return.
 end.
 if. IFQT do.
   smoutput 'Must run from jconsole' return.
 end.
-'install' jpkg (y-:'all') pick 'base library ide/qt';'all'
-getqtbin 0
+if. y-:'qtide' do.
+  s=. 'slim'-: 4 {. ;getjqtversion_jpacman_''
+  y=. s pick 'full';'slim'
+end.
+'install' jpkg 'base library ide/qt'
+getqtbin y
 msg=. (+/ 2 1 * IFWIN,'Darwin'-:UNAME) pick 'jqt.sh';'the jqt icon';'jqt.cmd'
 if. '/usr/share/j/' -: 13{. jpath'~install' do. msg=. 'jqt' end.
 smoutput 'Exit and restart J using ',msg
 )
 do_getqtbin=: 3 : 0
-smoutput 'Installing JQt binaries...'
+
+bin=. 'JQt ',(((y-:'slim')#'slim ')),'binaries.'
+smoutput 'Installing ',bin,'..'
 if. 'Linux'-:UNAME do.
   if. IFRASPI do.
-    z=. 'jqt-raspi-32.tar.gz'
+    z=. 'jqt-',((y-:'slim') pick 'raspi';'raspislim'),'-',(IF64 pick '32';'64'),'.tar.gz'
   else.
     z=. 'jqt-',((y-:'slim') pick 'linux';'slim'),'-',(IF64 pick 'x86';'x64'),'.tar.gz'
   end.
@@ -1146,7 +1042,7 @@ elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
   z1=. 'libjqt.dylib'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j806/qtide/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j807/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1158,14 +1054,14 @@ else.
   if. 'Linux'-:UNAME do.
     if. fhs do.
       if. IFRASPI do.
-        d1=. '/usr/lib/arm-linux-gnueabihf/.'
-      elseif. IF64 do.
-        d1=. '/usr/lib/x86_64-linux-gnu/.'
+        d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/.';'/usr/lib/aarch64-linux-gnu/.'
       elseif. do.
-        d1=. '/usr/lib/i386-linux-gnu/.'
+        d1=. IF64{::'/usr/lib/i386-linux-gnu/.';'/usr/lib/x86_64-linux-gnu/.'
       end.
-      echo 'cd /usr/bin && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && chmod 644 libjqt.so && mv libjqt.so ',d1,' && ldconfig'
-      hostcmd_jpacman_ 'cd /usr/bin && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && chmod 644 libjqt.so && mv libjqt.so ',d1,' && ldconfig'
+      echo 'install libjqt.so to ',d1
+      hostcmd_jpacman_ 'rm -f /usr/bin/jqt'
+      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-8.07 && chmod 644 libjqt.so && mv libjqt.so ',d1,'/libjqt.so.8.07 && ldconfig'
+      hostcmd_jpacman_ 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-8.07 807'
     else.
       hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
     end.
@@ -1175,9 +1071,9 @@ else.
 end.
 ferase p
 if. #1!:0 fhs{::(jpath '~bin/',z1);'/usr/bin/jqt' do.
-  m=. 'Finished install of JQt binaries.'
+  m=. 'Finished install of ',bin
 else.
-  m=. 'Unable to install JQt binaries.',LF
+  m=. 'Unable to install ',bin,LF
   m=. m,'check that you have write permission for: ',LF,fhs{::(jpath '~bin');'/usr/bin'
 end.
 smoutput m
@@ -1185,13 +1081,14 @@ if. 'Linux'-:UNAME do. return. end.
 
 tgt=. jpath IFWIN{::'~install/Qt';'~bin/Qt5Core.dll'
 y=. (*#y){::0;y
+
 smoutput 'Installing Qt library...'
 if. IFWIN do.
-  z=. 'qt56-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt59-win-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 else.
-  z=. 'qt56-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
+  z=. 'qt59-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j806/qtlib/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j807/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1203,20 +1100,20 @@ else.
 end.
 ferase p
 if. #1!:0 tgt do.
-  m=. 'Finished install of Qt binaries.'
+  m=. 'Finished install of Qt library.'
 else.
-  m=. 'Unable to install Qt binaries.',LF
+  m=. 'Unable to install Qt library.',LF
   m=. m,'check that you have write permission for: ',LF,IFWIN{::tgt;jpath'~bin'
 end.
 smoutput m
 
 )
 jpkg_z_=: 3 : 0
-  'help' jpkg y
-  :
-  a=. conew 'jpacman'
-  res=. x jpkg__a y
-  destroy__a''
-  res
+'help' jpkg y
+:
+a=. conew 'jpacman'
+res=. x jpkg__a y
+destroy__a''
+res
 )
 jpkgv_z_=: (<@:>"1@|:^:(0 ~: #))@jpkg

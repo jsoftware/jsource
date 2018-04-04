@@ -3,13 +3,227 @@
 /*                                                                         */
 /* Conjunctions: Rank Associates                                           */
 
-#include "j.h"
+// result collection and assembly for modifiers
+// this file will be included 3 times:
+// * outside of the loops to declare variables
+// * after a result has been calculated, to store it into the final result
+// * just before exit
+//
+// define the name ZZDEFN, ZZDECL, ZZBODY, or ZZEXIT to get the appropriate sectio 
 
-#define DR(r)           (((UI)(I)(r)>RMAX)?RMAX:r)   // return RMAX if input is negative or > RMAX
+// names used here and relating to the result are all prefixed zz
 
-#define ZZDEFN
-#include "result.h"
+// flags are accessed in the user's flag word; the user tells us the name of the flag word and the name of the flags to use
+// non-flags are expected to be in the names specified by this code
 
+//********** defines *******************
+#ifdef ZZDEFN
+// obsolete #define ZZFLAGNORMX 0 // bit for 'normal' state
+// obsolete #define ZZFLAGNORM (1LL<<ZZFLAGNORMX)
+// obsolete #define ZZFLAGERRORX 1  // bit for 'error' state NORM+ERROR 00=FIRST  10=NORMAL  01=ERRn  11=ERRFIRST
+// obsolete #define ZZFLAGERROR (1LL<<ZZFLAGERRORX)
+#define ZZFLAGNOPOPX 2 // set to suppress tpop
+#define ZZFLAGNOPOP (1LL<<ZZFLAGNOPOPX)
+#define ZZFLAGBOXATOPX 3 // set if u is <@f
+#define ZZFLAGBOXATOP (1LL<<ZZFLAGBOXATOPX)
+#define ZZFLAGUSEOPENX 4  // result contains a cell for which a full call to OPEN will be required (viz sparse)
+#define ZZFLAGUSEOPEN (1LL<<ZZFLAGUSEOPENX)
+#define ZZFLAGHASUNBOXX 5  // result contains a nonempty non-box (this must equal BOX)
+#define ZZFLAGHASUNBOX (1LL<<ZZFLAGHASUNBOXX)
+#define ZZFLAGHASBOXX 6  // result contains a nonempty box
+#define ZZFLAGHASBOX (1LL<<ZZFLAGHASBOXX)
+#define ZZFLAGBOXALLOX 7  // zzbox has been allocated
+#define ZZFLAGBOXALLO (1LL<<ZZFLAGBOXALLOX)
+
+// Set up initial frame info.  The names are used to save variables and to push these names into registers
+ // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
+ // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
+#define ZZPARMS(oframe,oframelen,iframe,iframelen,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); \
+ if(fs&&VAV(fs)->flag&VF2BOXATOP##valence){ZZFLAGWORD|=ZZFLAGBOXATOP; fs=VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
+
+
+#undef ZZDEFN
+#endif
+
+//********** declarations ***************
+#ifdef ZZDECL
+// user should define:
+// ZZFLAGWORD name of flags
+
+
+jt->rank=0;  // needed for cvt
+
+#undef ZZDECL
+#endif
+
+
+//*********** storing results *************
+
+#ifdef ZZBODY
+// result is in z.  state here cannot be ERRFIRST
+
+// obsolete // if the result is boxed, accumulate the SMREL info
+// obsolete if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
+
+// process according to state.  Ordering is to minimize branch misprediction
+do{
+ if(zz){  // if we have allocated the result area, we are into normal processing
+  // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
+  if(!(ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?
+   // not forced-boxed.  Move the result cell into the result area unless the shape changes
+   // first check the shape
+   I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzwf; I zexprank=zzr-zzwf;
+     // change in rank/shape: fail
+   zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
+   DO(zexprank, zexprank=(zs[i]!=zzs[i])?-1:zexprank;)  // if shapes don't match, set zexprank
+   if(!(zt&SPARSE) && zexprank==zr){  // if there was no wreck...
+    // rank/shape did not change.  What about the type?
+    if(TYPESNE(zt,zzt)){
+     // The type changed.  Convert the types to match.
+     I zpri=jt->typepriority[CTTZ(zt)]; I zzpri=jt->typepriority[CTTZ(zzt)]; zt=jt->prioritytype[zzpri>zpri?zzt:zt];  // get larger priority   code copied from jtmaxtype but we know not sparse, not 0
+     if(AN(z)){I zatomct;
+      // nonempty cells. we must convert the actual data.  See which we have to change
+      if(zt==zzt){
+       // Here the type of z must change.  Just convert it
+       ASSERT(z=cvt(zt,z),EVDOMAIN);
+      }else{I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zt))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
+       // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
+       zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
+       AT(zz)|=NOUNCVTVALIDCT; ASSERT(ccvt(zt,zz,&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms
+       // change the strides to match the new cellsize
+       zzcelllen<<=zexpshift; zzcellp<<=zexpshift;
+      }
+     }else{
+      // empty cells.  Just adjust the type, using the type priority
+      AT(zz)=zt;  // use highest-priority empty
+     }
+    }
+    // The result area and the new result now have compatible types.  Move the cells
+    if(zzcelllen){  // questionable
+     // Here there are cells to move
+     if(zt&RECURSIBLE){
+      // The result being built is recursible (meaning boxed, since it's a noun).  It has recursive count, so we have to increment the usecount of any blocks we add.
+      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by noting the special case when z is recursive with
+      // a usecount of 1: then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
+      // actually have to touch them.
+      if(ACIPISOK(zt)&&AFLAG(zt)&RECURSIBLE){
+       AFLAG(zt)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
+       MC(CAV(zz)+zzcellp,AV(y),zzcelllen);  // move the result-cell to the output, advance to next output spot
+      }else{
+       // copy and raise the elements (normal path)
+       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(AN(z), ra(zbase[i]); zzbase[i]=zbase[i];)
+      }
+     }else{
+      MC(CAV(zz)+zzcellp,AV(y),zzcelllen);  // move the result-cell to the output, advance to next output spot
+     }
+     zzcellp+=zzcelllen;  // advance to next cell
+    }
+    if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
+   }else{  // there was a wreck
+    if(zt&SPARSE){  // A good compiler will elide this test
+     // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
+     ZZFLAGWORD|=ZZFLAGUSEOPEN;
+    }
+    do{
+     if(ZZFLAGWORD&ZZFLAGBOXALLO){
+      // not the first wreck: we have a pointer to the A block for the boxed area
+      // while we have the cell in cache, update the maximum-result-cell-shape
+      I zcsr=AS(zzcellshape)[0];  // 
+      if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s
+       I *zcsold=IAV(zzcellshape);  // save pointer to current cell size
+       if(zr>=AN(zzcellshape)){GATV(zzcellshape,INT,zr+3,1,0); AS(zzcellshape)[0]=zr;}   // If old cell not big enough to hold new, reallocate with a little headroom.  Leave 1 extra for later
+       I *zcsnew=IAV(zzcellshape);  // pointer to new cell size
+       DO(zr-zcsr, *zcsnew++=1;) DO(zcsr, *zcsnew++=*zcsold++;)
+      }
+      // compare the old against the new, taking the max.  extend new with 1s if short
+      I *zcs=IAV(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
+      // Store the address of the result in the next slot
+      INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
+      *zzboxp=z;
+      // update the result priority based on the type.  We prioritize all non-empties over empties
+      I zpri=jt->typepriority[CTTZ(zt)]; zpri+=AN(z)?256:0; zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri;
+      break;
+     }else{I nboxes;
+      // first wreck.  Allocate a boxed array to hold the results that mismatch zz
+      // use zzboxp to tell how many results have been processed already; allocate space for the rest
+      PROD(nboxes,AS(zz),zzwf); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
+      // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
+      // so that we can tell which result-cells come from zz and which from zzbox.
+      // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  This is OK because we stop freeing
+      GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
+      zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
+      zzresultpri=0;  // initialize the result type to low-value
+      // init the vector where we will accumulate the maximum shape along each axis.  The N field holds the allocated size and AS holds the actual size
+      GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; I *zzv=IAV(zz)+zzwf, *zzcs=IAV(zzcellshape); DO(AS(zzcellshape)[0], zzcv[i]=zzv[i]);
+      ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
+     }
+    }while(1);
+   }
+  }else{
+   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with
+   ASSERT(!(AT(z)&SPARSE),EVNONCE);
+   realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
+   *(A*)(CAV(zz)+zzboxp)=z;  // install the new box.  zzboxp is ALWAYS a popinter to a box
+  }
+  zzboxp++;  // advance the box pointer, whether it points to valid data or is just a counter of early results
+  break;  // skip the first-cell processing
+ } else{I * RESTRICT is;
+  // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
+  // Get the rank/type to allocate for the presumed result
+  // Get the type to allocate
+  I natoms=AN(z);  // number of atoms per result cell
+  I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
+  // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
+  zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
+  I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
+  // Get the number of atoms in the presumed result, as the number of cells times atoms per cell.
+  // names used for initial values: zzcelllen=aframelen  zzcellp->aframe  zzboxp->wframe  zzwf=wframelen
+  // Get # cell in result, to use later
+  zzncells = mult(prod(zzcelllen,(I*)zzcellp),prod(zzwf,(I*)zzboxp));
+  // Get # atoms to allocate
+  RE(natoms=mult(natoms,zzncells));
+  // Allocate the result
+  GA(zz,zzt,natoms,zzcelllen+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);
+  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty)
+  AFLAG(zz) |= zzt&RECURSIBLE;  // if recursible type, (viz box), make it recursible.  Leave usecount unchanged
+  // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
+  ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
+  // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
+  old=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
+  // Install shape
+  is = (I*)zzcellp; DO(zzcelllen, *zzs++=*is++;);  // copy outer frame
+  is = (I*)zzboxp; DO(zzwf, *zzs++=*is++;);  // copy inner frame
+  // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
+  // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
+  is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
+  // Set up the pointers/sizes for the rest of the operation
+  zzwf+=zzcelllen;  // leave zzwf as the total length of result frame
+  zzcelllen=nbytes;   // cell length, for use in the main body
+  zzboxp=0;  // Start out zzboxp so we can use it as a counter of cells processed before zzbox needed
+ }
+}while(1);  // go back to store the first result
+
+#undef ZZBODY
+#endif
+
+//*********** exit ************************
+#ifdef ZZEXIT
+// If the results were homogeneous, just return zz
+if(!(ZZFLAGWORD&ZZFLAGBOXALLO)
+ zz=assembleresults(jt,ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf);  // inhomogeneous results: go assemble them
+// result is now in zz
+
+#undef ZZFLAGWORD
+#undef ZZFLAGNORM
+#undef ZZFLAGERROR
+#undef ZZFLAGNOPOP
+#undef ZZFLAGBOXATOP
+#undef ZZFLAGUSEOPEN
+#undef ZZFLAGBOXALLO
+#undef ZZEXIT
+#endif
+
+#if 0
 // obsolete // effective rank: ar is rank of argument, r is rank of verb (may be negative)
 // obsolete // result is rank of argument cell
 // obsolete I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
@@ -24,30 +238,30 @@
 // obsolete // todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
 // obsolete #define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
 
-#define EMSK(x) (1LL<<((x)-1))
+#define EMSK(x) (1<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
 
-#define STATEOUTERREPEATA 0x0200
-#define STATEINNERREPEATA 0x0400
-#define STATEINNERREPEATW 0x0800
+#define STATEOUTERREPEATA 0x01
+#define STATEINNERREPEATA 0x04
+#define STATEINNERREPEATW 0x08
 // 0x10 left open because it accumulates AFNOSMREL
-#define STATENORM 0x2000
-#define STATEFIRST 0x4000
-#define STATEERR0 0x8000
-#define STATEERR 0x10000
-#define STATEARELX 17
+#define STATENORM 0x20
+#define STATEFIRST 0x40
+#define STATEERR0 0x80
+#define STATEERR 0x100
+#define STATEARELX 9
 #define STATEAREL (1<<STATEARELX)
-#define STATEWRELX 18
+#define STATEWRELX 10
 #define STATEWREL (1<<STATEWRELX)
-#define STATENOPOP 0x80000   // set if not OK to tpop the stack
+#define STATENOPOP 0x800   // set if not OK to tpop the stack
 // obsolete #define STATEINCORPORATEDA 0x1000
 // obsolete #define STATEINCORPORATEDW 0x2000
 
 
-// obsolete #define RCALL   CALL1(f1,yw,fs)
+#define RCALL   CALL1(f1,yw,fs)
 #define RDIRECT (wt&DIRECT)
-// obsolete #define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
-// obsolete #define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
+#define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
+#define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 
 // General setup for verbs that do not go through jtirs[12].  Some of these are marked as IRS verbs.  General
 // verbs derived from u"n also come through here, via jtrank2.
@@ -55,23 +269,19 @@
 // it calls here, giving a callback; we split the arguments into cells and call the callback,
 // which is often the same original function that called here.
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
-A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
-   I mn,n=1,wcn,wf,wk,wr,*ws,wt;
- F1PREFIP;
+A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A y,z,virtw;
+   I k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  RZ(w);
  wt=AT(w);
  if(wt&SPARSE)R sprank1(w,fs,rr,f1);  // this needs to be updated to handle multiple ranks
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
- wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
- // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here.
- if(fs&&VAV(fs)->flag2&VF2RANKATOP1){
-  I mr=VAV(fs)->mr; efr(rr,rr,mr);  // rr = cell rank: max of old cell and new
- }
- wf=wr-rr; // obsolete state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
+ I state=STATEFIRST|AFNOSMREL;  // initial state: working on first item, OK to pop stack, no relative contents, etc
+ wr=AR(w); ws=AS(w); efr(rr,wr,rr); wf=wr-rr; state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
 // obsolete if(ARELATIVE(w))state|=STATEWREL;
  if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
+
  I wn=AN(w);  // empty-operand indicator
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
@@ -86,28 +296,11 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
  else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
- A zz=0;  // place where we will build up the homogeneous result cells
- if(mn){I i0;
+ if(mn){I i0, old;C *zv;
   // Normal case where there are cells.
   // loop over the frame
-#define ZZFLAGWORD state
-#if 1
- A zzbox=0;  // place where we will save boxed inhomogeneous result cells
- A *zzboxp;  // pointer to next slot in zzbox.  Before zzbox is allocated, this is used to count the number of cells processed.  At start: &inner frame
- I zzcellp;  // offset (in bytes) of the next homogeneous result cell.  No gaps are left when an inhomogeneous cell is encountered.  At start: &outer frame
- I zzcelllen;  // length in by of a homogeneous result cell.  At start: length of outer frame
- I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
- A zzcellshape;  // INT array holding shape of result-cell, with one extra empty at the end
- I zzncells;   // number of cells in the result
- I zzwf;  // length of frame of result.  At start: length of inner frame
- I zzold;  // place to tpop to between executions
- I ZZFLAGWORD = 0; 
-#endif
-  ZZPARMS(0,0,ws,wf,1)
   for(i0=mn;i0;--i0){
-   RZ(z=CALL1(f1,virtw,fs));
-
-#if 0
+   RZ(y=CALL1(f1,virtw,fs));
    // see if the workarea was incorporated into the result, for use next time through the loop
    if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
 
@@ -167,166 +360,10 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
     INCORP(y);
     *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
    }
-#else
-do{
- if(zz){  // if we have allocated the result area, we are into normal processing
-  // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
-  if(!(ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
-   // not forced-boxed.  Move the result cell into the result area unless the shape changes
-   // first check the shape
-   I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzwf; I zexprank=zzr-zzwf;
-   // The main result must be recursive if boxed, because it has to get through EPILOG.  To avoid having to pass through the result issuing
-   // ra() on the elements, we ra() each one as it comes along, while we have it in cache.  This leads to some fancy footwork at the end,
-   // if we have to transfer the boxes from zz to a different output block: we want to avoid having to do usecount work then.  To assist
-   // this, we want to be able to know that a result that contains boxes contains ONLY boxes - that way we know there will be no
-   // conversion and no possible error during assembly.  We keep 2 flag bits to indicate the presence of boxed/nonboxed
-   I zzbxm = (zt&BOX)+ZZFLAGHASUNBOX; zzbxm=AN(z)?zzbxm:0; ZZFLAGWORD |= zzbxm;  // accumulate error mask
-     // change in rank/shape: fail
-   zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
-   DO(zexprank, zexprank=(zs[i]!=zzs[i])?-1:zexprank;)  // if shapes don't match, set zexprank
-   if(!(zt&SPARSE) && zexprank==zr){  // if there was no wreck...
-    // rank/shape did not change.  What about the type?
-    if(TYPESNE(zt,zzt)){
-     // The type changed.  Convert the types to match.
-     I zpri=jt->typepriority[CTTZ(zt)]; I zzpri=jt->typepriority[CTTZ(zzt)]; zt=zzpri>zpri?zzt:zt;  // get larger priority   code copied from jtmaxtype but we know not sparse, not 0
-     if(AN(z)){I zatomct;
-      // nonempty cells. we must convert the actual data.  See which we have to change
-      if(zt==zzt){
-       // Here the type of z must change.  Just convert it to type zt
-       ASSERT(z=cvt(zt,z),EVDOMAIN);
-      }else{I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
-       // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
-       zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
-       ASSERT(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms
-       // change the strides to match the new cellsize
-       zzcelllen<<=zexpshift; zzcellp<<=zexpshift;
-       // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
-       // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
-       ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((zt&DIRECT)?0:ZZFLAGNOPOP)|(ZZFLAGWORD>>(ZZFLAGBOXALLOX-ZZFLAGNOPOPX));
-       zzold=jt->tnextpushx;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
-      }
-     }else{
-      // empty cells.  Just adjust the type, using the type priority
-      AT(zz)=zt;  // use highest-priority empty
-     }
-    }
-    // The result area and the new result now have compatible types.  Move the cells
-    if(zzcelllen){  // questionable
-     // Here there are cells to move
-     if(zt&RECURSIBLE){
-      // The result being built is recursible (meaning boxed, since it's a noun).  It has recursive count, so we have to increment the usecount of any blocks we add.
-      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by noting the special case when z is recursive with
-      // a usecount of 1: then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
-      // actually have to touch them.
-      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
-       AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
-       MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
-      }else{
-       // copy and raise the elements (normal path)
-       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(AN(z), A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
-      }
-     }else{
-      MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
-     }
-     zzcellp+=zzcelllen;  // advance to next cell
-    }
-    if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(zzold);  // Now that we have copied to the output area, free what the verb allocated
-   }else{  // there was a wreck
-    if(zt&SPARSE){  // A good compiler will elide this test
-     // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
-     ZZFLAGWORD|=ZZFLAGUSEOPEN;
-    }
-    do{
-     if(ZZFLAGWORD&ZZFLAGBOXALLO){
-      // not the first wreck: we have a pointer to the A block for the boxed area
-      // while we have the cell in cache, update the maximum-result-cell-shape
-      I zcsr=AS(zzcellshape)[0];  // z cell rank
-      if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s
-       I *zcsold=IAV(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
-       if(zr>=AN(zzcellshape)){GATV(zzcellshape,INT,zr+3,1,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  Leave 1 extra for later
-       AS(zzcellshape)[0]=zr;   // set the new result-cell rank
-       I *zcsnew=IAV(zzcellshape)+zr;  // pointer to end+1 of new cell size
-       DO(zcsr, *--zcsnew=*--zcsold;) DO(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
-      }
-      // compare the old against the new, taking the max.  extend new with 1s if short
-      I *zcs=IAV(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
-      // Store the address of the result in the next slot
-      INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
-      *zzboxp=z;
-      // update the result priority based on the type.  We prioritize all non-empties over empties
-      I zpri=jt->typepriority[CTTZ(zt)]; zpri+=AN(z)?256:0; zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri;
-      break;
-     }else{I nboxes;
-      // first wreck.  Allocate a boxed array to hold the results that mismatch zz
-      // use zzboxp to tell how many results have been processed already; allocate space for the rest
-      PROD(nboxes,zzwf,AS(zz)); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
-      // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
-      // so that we can tell which result-cells come from zz and which from zzbox.
-      // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  This is OK because we stop tpop'ing
-      GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
-      zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
-      zzresultpri=0;  // initialize the result type to low-value
-      // init the vector where we will accumulate the maximum shape along each axis.  The N field holds the allocated size and AS holds the actual size
-      GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; I *zzv=AS(zz)+zzwf, *zzcs=IAV(zzcellshape); DO(AS(zzcellshape)[0], zzcs[i]=zzv[i];);
-      ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
-     }
-    }while(1);
-   }
-  }else{
-   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with
-   ASSERT(!(AT(z)&SPARSE),EVNONCE);
-   realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
-   *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
-  }
-  zzboxp++;  // advance the box pointer, whether it points to valid data or is just a counter of early results
-  break;  // skip the first-cell processing
- } else{I * RESTRICT is;
-  // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
-  // Get the rank/type to allocate for the presumed result
-  // Get the type to allocate
-  I natoms=AN(z);  // number of atoms per result cell
-  I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
-  // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
-  zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
-  I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
-  // Get the number of atoms in the presumed result, as the number of cells times atoms per cell.
-  // names used for initial values: zzcelllen=aframelen  zzcellp->aframe  zzboxp->wframe  zzwf=wframelen
-  // Get # cells in result, to use later
-  zzncells = mult(prod(zzcelllen,(I*)zzcellp),prod(zzwf,(I*)zzboxp));
-  // Get # atoms to allocate
-  RE(natoms=mult(natoms,zzncells));
-  // Allocate the result
-  GA(zz,zzt,natoms,zzcelllen+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);
-  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty)
-  AFLAG(zz) |= zzt&RECURSIBLE;  // if recursible type, (viz box), make it recursible.  Leave usecount unchanged
-  // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
-  ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
-  // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
-  zzold=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
-  // Install shape
-  is = (I*)zzcellp; DO(zzcelllen, *zzs++=*is++;);  // copy outer frame
-  is = (I*)zzboxp; DO(zzwf, *zzs++=*is++;);  // copy inner frame
-  // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
-  // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
-  is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
-  // Set up the pointers/sizes for the rest of the operation
-  zzwf+=zzcelllen;  // leave zzwf as the total length of result frame
-  zzcelllen=nbytes;   // cell length, for use in the main body
-  zzboxp=AAV(zz); zzboxp=(ZZFLAGWORD&ZZFLAGBOXATOP)?zzboxp:0;  // Start out zzboxp so we can use it as a counter of cells processed before zzbox needed
- }
-}while(1);  // go back to store the first result
-#endif
    // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
    AK(virtw)+=wk;
   }
-#if 1
-  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
-  if(ZZFLAGWORD&ZZFLAGBOXALLO){
-    RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf));  // inhomogeneous results: go assemble them
-  }
-#undef ZZFLAGWORD
-#endif
- }else{UC d; I *is, *zs;A z;
+ }else{UC d; I *is, *zs;
   // no cells - execute on a cell of fills
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
@@ -334,28 +371,22 @@ do{
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  d=jt->db; jt->db=0; z=CALL1(f1,virtw,fs); jt->db=d;
-  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
-  GA(zz,AT(z),0L,wf+AR(z),0L); zs=AS(zz);
+  d=jt->db; jt->db=0; y=CALL1(f1,virtw,fs); jt->db=d;
+  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(y); y=zero; RESETERR;}  // use 0 as result if error encountered
+  GA(z,AT(y),0L,wf+AR(y),0L); zs=AS(z);
   is = ws; DO(wf, *zs++=*is++;);  // copy frame
-  is = AS(z); DO(AR(z), *zs++=*is++;);    // copy result shape
+  is = AS(y); DO(AR(y), *zs++=*is++;);    // copy result shape
  }
 
-#if 0
  if(state&STATEERR){z=ope(z);  // If we went to error state, we have created x <@f y; this creates > x <@f y which is the final result
  }else{AFLAG(z)|=state&AFNOSMREL;}  // if not error, we saw all the subcells, so if they're all non-rel we know.  This may set NOSMREL in a non-boxed result, but that's OK
-#else
-// result is now in zz
-#endif
-
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
- EPILOG(zz);
+ EPILOG(z);
 }
 
 A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A y,virta,virtw,z;
    I acn,af,ak,ar,*as,at,k,mn,n=1,wcn,wf,wk,wr,*ws,wt,yn,yr,*ys,yt;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
- F2PREFIP;
+
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  if(at&SPARSE||wt&SPARSE)R sprank2(a,w,fs,lcr,rcr,f2);  // this needs to be updated to handle multiple ranks
@@ -579,7 +610,7 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
 // the verb f2 to finish operation on a cell
 A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
- F2PREFIP; RZ(a&&w);
+ F1PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
  wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
@@ -608,41 +639,32 @@ static DF2(cons2){V*sv=VAV(self);I*v=AV(sv->h);
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
 // If inplacing is allowed here, pass that on to irs.  It will see whether the action verb can support inplacing.
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
+// NOTHING HERE MAY DEREFERENCE jt!!
 static DF1(rank1i){DECLF;A h=sv->h;I*v=AV(h); R irs1(w,fs,*v,f1);}
 static DF2(rank2i){DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
 static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  RZ(w);
  wr=AR(w); efr(m,wr,v[0]);
- // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.
- while(VAV(fs)->flag2&VF2RANKONLY1){
-  h=VAV(fs)->h; efr(m,m,AV(h)[0]); fs=VAV(fs)->f; f1=VAV(fs)->f1;
- }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
-// THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
 static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  RZ(a&&w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);
- if(l<ar||r<wr) {
-  I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of verb we are going to call
-// obsolete   // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
-// obsolete   // should move this to before runtime
-// obsolete   if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->f; f2=VAV(fs)->f2;}
+ if(l<ar||r<wr) {I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of werb we are going to call
+  // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
+  if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->f; f2=VAV(fs)->f2;}
   R rank2ex(a,w,fs,llr,lrr,l,r,f2);
  }else R CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite
 }
 
 
 // a"w; result is a verb
-F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
+F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,*v;
  RZ(a&&w);
  // The h value in the function will hold the ranks from w.  Allocate it
  GAT(h,INT,3,1,0); hv=AV(h);  // hv->rank[0]
@@ -679,10 +701,11 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   V* av=VAV(a);   // point to verb info
   vf=av->flag&VASGSAFE;  // inherit ASGSAFE from u
-  if(av->flag&VISATOMIC1){f1=av->f1;}else if(av->flag&VIRS1){f1=rank1i;vf|=VINPLACEOK1;}else{f1=rank1;flag2|=VF2RANKONLY1;}
-  if(av->flag&VIRS2){f2=rank2i;vf|=VINPLACEOK2;}else{f2=rank2;flag2|=VF2RANKONLY2;}
+  if(av->flag&VISATOMIC1){f1=av->f1;}else if(av->flag&VIRS1){f1=rank1i;vf|=VINPLACEOK1;}else{f1=rank1;}
+  if(av->flag&VIRS2){f2=rank2i;vf|=VINPLACEOK2;}else{f2=rank2;}
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports irs
- R fdef((flag2<<8)|CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
+ R fdef(CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
 }
+#endif

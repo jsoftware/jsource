@@ -27,10 +27,10 @@ NB. test convert in place down/up
 (15;(- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = }.'downup n x *s *i *f' dcd 15;(_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
 
 's i f'=: (_4+i.9);(_4+i.9);(_4.5+i.9)
-0 = 'downup > n x *s *i *f' dcd 9;s;i;f
+0 = 'downup > n x &s &i &f' dcd 9;s;i;f
 ((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f
 's i f'=: (_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
-0 = 'downup > n x *s *i *f' dcd 15;s;i;f
+0 = 'downup > n x &s &i &f' dcd 15;s;i;f
 ((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f
 
 NB. declaration (left argument) and parameter (right argument) checking

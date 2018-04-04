@@ -2,9 +2,9 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Box & Open                                                       */
-
 #include "j.h"
-
+#define ZZDEFN
+#include "result.h"
 
 I level(A w){A*wv;I d,j;
  if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
@@ -88,6 +88,155 @@ RZ(a&&w);
  }
 #endif
 if(!(AN(w)&&AT(w)&BOX)){w = box(w);} R over(box(a),w);}
+
+// Calculate the value to use for r arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)
+// zs, zr = address/length of shape of result cell   s,r = address/length of shape of cell to copy
+static I rescellrarg(I *zs, I zr, I *s, I r){
+ zs+=zr, s+=r;  // advance to end+1 of shapes
+ zr-=r; zr*=(RMAX+1);  // amount of surplus rank, moved to high bits
+ for(;r;--r)if(*--zs!=*--s)break;  // leave r with #axes up to & including the last requiring fill
+ R (r-zr)<<1;  // join fields & return
+}
+
+// copy w into memory area z, which is known to be big enough to hold it (like povtake, but recursive implementation that doesn't require pre-fill)
+// the types of w and z are the same
+// sizes is +/\. (shape of z),bp(t(z)), i. e. the number of bytes in a result cell of each possible rank
+// r (bits 16 up) is the negative of number of leading axes of rank 1 to be appended to w
+// r (bits 1-15) is the number of axes of w requiring fill (lower axes are taken in full)
+// r (bit 0) is set if what is being moved is boxed pointers that need ra()
+// s is the shape of w, *s being the length of the first axis after the leading appended 1s
+// jt->fillv is set up, expanded to 16 bytes
+// result is the new position in w after the move
+static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>1;
+ // if the entire w matches z, just copy it without fill
+ if(r==0){
+  // r=0   This can only happen if lower r was 0 originally, since we stop recursion at r=1.  r=0 means that
+  // the entire r matched the suffix of the shape of zcell, and we can copy the entire cell
+  wadv=sizes[0];
+  if(rf&1){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
+  R wadv+w;
+ }
+ // otherwise there will be fill
+ C *endoffill=z+sizes[0];  // save address of end of area
+ if(r==1){
+  // r=1 (after r1 exhausted).  Lower cells are taken in full, so we can copy the cells en bloc
+  wadv = s[0]*sizes[1]; // number of bytes to move
+  if(rf&1){DO(wadv>>LGSZI, A a=((A*)w)[i]; ra(a); ((A*)z)[i]=a;)}else{MC(z,w,wadv);}
+  w+=wadv; z+=wadv; // move the valid data, and advance pointers
+ }else if(r<1){
+  // There is a leading 1 axis.  Recur once to copy the one cell
+  w=copyresultcell(jt,z,w,sizes+1,rf+((RMAX+1)<<1),s); z+=sizes[1];  // z advances 1 cell
+ }else{I i;
+  // leading axis of w is given.  Loop to copy each cell with fill
+  for(i=s[0];i;--i){
+   w = copyresultcell(jt,z,w,sizes+1,rf-2,s+1);  // advance w to next input
+   z += sizes[1];   // advance z to next output
+  }
+ }
+ // copy the fill, from z (new output pointer) to endoffill (end+1 of output cell)
+ mvc(endoffill-z,z,sizeof(jt->fillv0),jt->fillv0);
+ R w;
+}
+
+A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I zzcelllen, I zzresultpri, A zzcellshape, I zzncells, I zzwf) {A zztemp;  // if we never allocated the boxed area (including force-boxed cases which never do) we just keep zz as the final result
+ // Create a homogeneous array of results, by processing zzbox and zz one cell at a time from the end.
+ //  Allocate the result area. (1) if USEOPEN and zz is empty, use zzbox; (2) if the largest cell-result is not bigger than the cells
+ //  in zz, use zz.  Otherwise allocate a new area.
+
+ I zzt=AT(zz);  // type of zz
+ I natomszzcell; PROD(natomszzcell,AR(zz)-zzwf,AS(zz)+zzwf);  // number of atoms in cell of zz
+ A* box0=AAV(zzbox);  // address of first valid box pointer
+ C* zzcell=CAV(zz)+zzcellp;  // address of last+1 cell moved to zz
+
+ if(!(ZZFLAGWORD&ZZFLAGUSEOPEN)){
+  // No sparse results.  We will bypass jtope and move the results into the result area here, with conversion and fill
+
+  // Create the fill-cell we will need
+  I zpri=jt->typepriority[CTTZ(zzt)]; zpri+=AN(zz)?256:0;   // priority of unboxed results, giving high pri to nonempty
+  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=1LL<<(jt->prioritytype[zzresultpri&255]);
+  fillv(zft,1L,jt->fillv0); I zfs=bp(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill
+
+  I *zzcs=IAV(zzcellshape);  // zzcs->shape of padded result cell
+  I zzcr=AS(zzcellshape)[0];  // zzcr=rank of result cell
+  zzcs[zzcr]=zfs;  // length of 0-cell is length of atom - store after the shape - we know there's room
+
+  // if the result has different type from the values in zz, convert zz en bloc to type zft
+  if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
+   // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
+   I zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
+   ASSERT(ccvt(zft|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms.  Not worth checking for empty
+   // change the strides to match the new cellsize
+   zzcelllen<<=zexpshift; zzcellp<<=zexpshift; zzcell=CAV(zz)+zzcellp;  // rescale sizes, and recalc address of last+1 cell moved to zz
+  }
+
+  I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // * atoms in actual result-cell
+  I natomsresult=natomsresultcell*zzncells;  // number of atoms in result
+  // Since we know the result-cell size in zzcellshape must be able to contain a cell of zz, we can test for equal rank and equal number of atoms.
+  // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
+  if((TYPESXOR(zft,AT(zz)) | ((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
+   // The overall result-cell differs in shape or type from the cells of zz.  We must allocate a new result area.
+   GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  I *zzts=AS(zztemp);  I *zzs=AS(zz); // allocate result area, and point to shape
+   DO(zzwf, *zzts++ = zzs[i];) DO(zzcr, *zzts++ = zzcs[i];)   // move in the frame followed by result-cell shape
+   // since zztemp is becoming the new result area, it needs to become inplace recursive if the type is recursible, and zz needs to
+   // become nonrecursive.  This is possible because we know there will be no type conversions when we are building a boxed result
+   AFLAG(zztemp) |= zft&RECURSIBLE; AFLAG(zz)=0; // mark zztemp as recursive if recursible; clear in zz
+  }else zztemp=zz;  // now zztemp has the result area, which might be the same as zz
+  C *tempp=CAV(zztemp)+(natomsresult*zfs);   // point to end+1 of result area
+
+  // Calculate the vector of cell-lengths
+  DQ(zzcr, zzcs[i]=zfs*=zzcs[i];);  // convert each atom of result-cell shape to the length in bytes of the corresponding cell
+  // Now zfs is the length in bytes of each result-cell
+
+  // Calculate r to use if we move from zz
+  I *zzcopyress=AS(zz)+zzwf;  // shape of a cell of zz
+  I zzcopyresr=rescellrarg(zzcs,zzcr,zzcopyress,AR(zz)-zzwf);  // does not ever need ra
+
+  // For each result cell, copy (with conversion if necessary) from whichever source is valid
+  // zzboxp points after the last box created; zzcell points after the last cell of zz; tempp points after last cell of result
+  // box0 points to the first valid box location - everything before that comes from zz
+  while(--zzncells>=0){A zzboxcell;
+   zzboxp--; tempp-=zfs;  // back pointers to next input/output positions
+   if((I)(zzboxp-box0)>=0 && (zzboxcell= *zzboxp)){
+    // cell comes from zzboxp.  Convert if necessary, then move.  Before moving, calculate the rank to use for the fill.
+    // Don't convert empties, because we have to make sure there can be no failures while we have the contents of zz not attached to any recursive block
+    if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell)))RZ(zzboxcell=cvt(zft,zzboxcell)); I *zzbcs=AS(zzboxcell);  // convert if needed, point to shape
+    // if this block is recursible, we must ra() its contents during the copy, because zzbox is not recursive and zztemp is.  The exception is
+    // if the block is inplace recursible, which we can copy by making the block nonrecursive, transferring its usecount
+    I zzbxf=AFLAG(zzboxcell);  // flag for the box we are about to move
+    I inplacerecur=(AC(zzboxcell)>>(BW-1))&zzbxf&RECURSIBLE;  // if inplace recursive, this is the recursive bits
+    AFLAG(zzboxcell)=zzbxf^=inplacerecur;  // if inplace recursible, turn off recursible; store to the block
+    copyresultcell(jt, tempp, CAV(zzboxcell), zzcs, rescellrarg(zzcs,zzcr,zzbcs,AR(zzboxcell))+!!(zft&(~inplacerecur)&RECURSIBLE),zzbcs);  // combine rank and recursible flags
+   }else{
+    // C *copyresultcell(J jt, C *z, C *w, I *sizes, I r, I *s){I wadv;
+    zzcell-=zzcelllen;   // back up to next input cell
+    if(tempp==zzcell)break;  // if we start to copy in-place, we must be before the first wreck, and we can leave remaining cells in place
+    copyresultcell(jt,tempp,zzcell,zzcs,zzcopyresr,zzcopyress);
+   }
+  }
+  zz=zztemp;  // switch main result pointer to our result value
+ }else{
+  // some results were sparse.  We will have to use the general jtope code to sort them out.  Ecch
+  if(AS(zz)[0]<0){zztemp=zzbox;  // if ALL results are in the boxed area, use the boxed area
+  }else{
+   // there are sparse results, but they came after we started boxing.  We have to allocate a full-sized boxed area and move the results to it,
+   // boxing anything that comes from zz.  We use faux-virtual blocks for boxing cells of zz.  What a lot of code that so seldom gets used!
+   GATV(zztemp,BOX,zzncells,zzwf,AS(zz));  // one box per result cell.  GA clears area to 0, which is unnecessary
+   A* tempp=AAV(zztemp);   // point to beginning of result area
+   while(--zzncells>=0){   // for each output position, from the end
+    --zzboxp;  // point to next input values, boxed and not
+    if((I)(zzboxp-box0)>=0 && *zzboxp)tempp[zzncells]=*zzboxp;  // the boxed version is valid: copy it
+    else{A zzz;  // we have to box the value from zz
+     zzcell-=zzcelllen;  // back up to next cell in zz
+     GA(zzz,zzt,0,zzwf,AS(zz)+zzwf); AN(zzz)=natomszzcell; AK(zzz)=zzcell-(C*)zzz;  // allocate empty header; fill in length; point to data in zz
+       // All these blocks are single-use so we keep them nonrecursible
+     tempp[zzncells]=zzz;
+    }
+   }
+  }
+  zz=ope(zztemp);  // do the full open on the result 
+ }
+ R zz;
+}
 
 static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
  if(!w)R 0;

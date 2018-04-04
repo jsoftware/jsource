@@ -263,7 +263,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NALP            256             /* size of alphabet                */
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
-#define RMAX            65535            /* max rank                        */
+#define RMAXX           16              // number of bits in rank
+#define RMAX            ((1LL<<RMAXX)-1)   // max rank
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 #define NFDEP           (8000L+12000L*SY_64)             // fn call depth

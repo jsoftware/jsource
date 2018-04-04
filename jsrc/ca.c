@@ -114,14 +114,16 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
  RETF(z);
 }
 
-F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv;
+// u@v
+F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
- if(AT(w)&NOUN){R fdef(CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}
+ if(AT(w)&NOUN){R fdef(CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}  // u@n
  av=VAV(a); c=av->id;
  wv=VAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((av->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
  switch(c){
+  case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
   case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
   case CSLASH:  if(d==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} break;
@@ -139,7 +141,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv
    if((d==CEXP||d==CAMP&&CEXP==ID(wv->g))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->g)){
     h=x; flag+=VMOD; 
     if(d==CEXP){f2=jtmodpow2; flag&=~VINPLACEOK2;} else{f1=jtmodpow1; flag&=~VINPLACEOK1;}
- }}
+  }
+ }
 // bug: +/@e.&m y does ,@e. not e.
 // if(d==CEBAR||(b=FIT0(CEPS,wv))){
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
@@ -150,17 +153,21 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag,m=-1;V*av,*wv
   switch(0<=m?d:-1){
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
- }}
- R fdef(CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
+  }
+ }
+ // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+ flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
+ R fdef((flag2<<8)|CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
-F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag,j,m=-1;V*av,*wv;
+F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=VAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
  wv=VAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((av->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
  switch(c){
+  case CBOX:    flag2 |= (((wv->mr+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP1X)); flag2 |= ((((wv->lr&wv->rr)+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP2X)); break;  // mark this as <@f if rank of f is _ or _ _
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
   case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
@@ -194,18 +201,19 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag,j,m=-1;V*av,*wv;
 //   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
- R fdef(CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ R fdef((flag2<<8)|CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
-F2(jtampco){AF f1=on1;C c,d;I flag;V*wv;
+F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
- c=ID(a); wv=VAV(w); d=wv->id;
+ c=ID(a); wv=VAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
- if     (c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
+ if(c==CBOX){flag2 |= (((wv->mr+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP1X));}  // mark this as <@f if rank of f is _ - monad only
+ else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
- R fdef(CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ R fdef((flag2<<8)|CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
 // m&v and u&n.  No inplacing if rank is given; otherwise never inplace the noun argument, since the verb may
@@ -233,7 +241,7 @@ static DF1(ixfixedright0){A z;D old=jt->ct;V*v=VAV(self);
 
 static DF2(with2){R df1(w,powop(self,a,0));}
 
-F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
+F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
   default: ASSERTSYS(0,"amp");
@@ -282,7 +290,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
   case VV:
    // u@v
    f1=on1; f2=on2;
-   v=VAV(w); c=v->id; r=v->mr;
+   v=VAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
    // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
    flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
    if(c==CFORK||c==CAMP){
@@ -291,11 +299,14 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,mode=-1,p,r;V*u,*v;
      u=VAV(a); d=u->id;
      if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
    }}else switch(ID(a)){
+    case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
     case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
     case CSLASH: if(c==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} break;
     case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
     case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
     case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
    }
-   R fdef(CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
+   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+   flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
+   R fdef((flag2<<8)|CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
 }}

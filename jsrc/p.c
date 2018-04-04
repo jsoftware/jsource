@@ -98,7 +98,7 @@ static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1;
    // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
    // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
-   // not a bad idea generally, but not needed normally
+   // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
    stack[2].a=
 #endif
    symbis(n,v,jt->symb);

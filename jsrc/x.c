@@ -18,8 +18,8 @@
  fdef(id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
 
 
-static DF1(secf1){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1((AF)*   AV(h) ,  w,self);}
-static DF2(secf2){A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL2((AF)*(1+AV(h)),a,w,self);}
+static DF1(secf1){F1PREFIP; A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1IP((AF)*   AV(h) ,  w,self);}
+static DF2(secf2){F2PREFIP; A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL2IP((AF)*(1+AV(h)),a,w,self);}
 
 static DF2(jtfindrange){
  RZ(a&&w);
@@ -227,7 +227,7 @@ F2(jtforeign){I p,q;
   case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
 
-  case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE,0,   1L,  1L  );
+  case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VINPLACEOK2,0,   1L,  1L  );
   case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,2):  R SDERIV(CIBEAM, 0,            jtmemw,       VASGSAFE,0,   RMAX,RMAX);
   case XC(15,3):  R SDERIV(CIBEAM, jtmema,       0,            VASGSAFE,RMAX,0,   0   );
@@ -242,6 +242,7 @@ F2(jtforeign){I p,q;
   case XC(15,12): R CDERIV(CIBEAM, jtsmmblks,    0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,13): R CDERIV(CIBEAM, jtcallback,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,14): R SDERIV(CIBEAM, jtdllsymdat,  0,            VASGSAFE,RMAX,0,   0   );
+  case XC(15,15): R SDERIV(CIBEAM, jtmemu,       0,            VASGSAFE|VINPLACEOK1,RMAX,0,   0   );
   case XC(15,16): R SDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,17): R SDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,18): R SDERIV(CIBEAM, jtnfeoutstr,  0,            VASGSAFE,RMAX,0,   0   );

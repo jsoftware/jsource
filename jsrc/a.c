@@ -87,7 +87,7 @@ F1(jtbdot){A b,h=0;I j,n,*v;
 
 
 /* The h parameter in self for u M.                 */
-/* 3 elememt boxed list                             */
+/* 3 element boxed list                             */
 /* 0 - integer atom of # of entries in hash table   */
 /* 1 - 2-column integer table of arguments          */
 /*     arguments are machine word integers          */

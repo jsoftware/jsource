@@ -151,7 +151,7 @@ typedef struct {
  B zbx;                         /* > 1 iff result is boxed              */
  B fpreset;                     /* % 1 iff do FPRESET after call        */
  B alternate;                   /* + 1 iff alternate calling convention */
- B star[NCDARGS];               /* arguments star or not                */
+ C star[NCDARGS];               // arguments star or not: 0=not 1=* 2=&
  C tletter[NCDARGS];            /* arguments type letters, cwusi etc.   */
 } CCT;
 
@@ -785,7 +785,8 @@ static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:c=='j'?CMPX:(c=='f'||c=
 /*  f   FL    4 byte float                                      */
 /*  d   FL    8 byte float                                      */
 /*  j   CMPX  16 byte complex (must be preceded by *)           */
-/*  *         pointer                                           */
+/*  *         pointer (memu will be applied before call)                                           */
+//  &         pointer NOT requiring memu
 /*  n   INT   no result (integer 0)                             */
 
 static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,li,pi;
@@ -829,8 +830,8 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   ++i; der=DEDEC+256*(1+i);
   CDASSERT(i<NCDARGS,DECOUNT);
   cc->tletter[i]=0; cc->star[i]=0;
-  CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);
-  if('*'==c){cc->star[i]=1; c=*s++; if(!c)break; if(' '==c)continue;}
+  CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
+  if('*'==c||'&'==c){cc->star[i]=1+('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
   cc->tletter[i]=c;
   CDASSERT(strchr("cwusilxfdj",c),der);
   CDASSERT(c!='j'||cc->star[i],der);
@@ -894,10 +895,12 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx,lit,star;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
     data[NCDARGS*2],dcnt=0,fcnt=0,*dv,i,n,per,t,xn,xr,xt,*xv; DoF dd[NCDARGS];
+ FPREFIP;  // save inplace flag
  n=cc->n;
- CDASSERT(!n||wt&BOX||!(u=memchr(cc->star,C1,n)),DEPARM+256*(((B*)u)-cc->star));
+ if(n&&!(wt&BOX)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}
+// obsolete  CDASSERT(!n||wt&BOX||!(u=memchr(cc->star,C1,n)),DEPARM+256*(((B*)u)-cc->star));
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;
- for(i=0;i<n;++i){
+ for(i=0;i<n;++i,++zv){
 #if SY_UNIX64 && defined(__x86_64__)
   if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
 #elif SY_UNIX64 && defined(__aarch64__)
@@ -911,18 +914,20 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
    lit=star&&xt&LIT&&(c=='s'&&0==xn%2||c=='f'&&0==xn%4);
    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
-   xv=AV(x); if(zbx)*zv++=x;
+   xv=AV(x); if(zbx)*zv=x;
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
    CDASSERT(xv,per); 
-   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv++=y;}
+   if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv=y;}
   }
-  if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer */
+  if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer - NOT memu'd */
    y=AAV0(x);
    CDASSERT(!AR(y)&&AT(y)&B01+INT,per);
    if(AT(y)&B01){CDASSERT(0==*BAV(y),per); *dv++=0;}else *dv++=*AV(y);
   }else if(star){
-   CDASSERT(xr,per);                /* pointer can't point at scalar */
+   CDASSERT(xr&&(xt&DIRECT),per);                /* pointer can't point at scalar, and it must point to direct values */
+   // if type is * (not &), make a safe copy.
+   if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=x; xv=AV(x);}
    *dv++=(I)xv;                     /* pointer to J array memory     */
    CDASSERT(xt&LIT+C2T+C4T+INT+FL+CMPX,per);
    if(!lit&&(c=='s'||c=='f'||SY_64&&c=='i')){
@@ -930,7 +935,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
     cipn[cipcount]=xn; 
     cipt[cipcount]=c; 
     ++cipcount;
-  }}else switch(c){
+   }
+  }else switch(c){
    case 'c': *dv++=*(C*)xv;  break;
    case 'w': *dv++=*(US*)xv; break;
    case 'u': *dv++=*(C4*)xv; break;
@@ -1022,7 +1028,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
 #endif
 #endif
- }}
+  }
+ }  // end of loop for each argument
 #ifdef C_CD_ARMHF
 // CDASSERT(16>=fcnt,DELIMIT);
 // CDASSERT(16>=dcnt,DELIMIT);
@@ -1053,12 +1060,13 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 }
 
 F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
+ F2PREFIP;
  RZ(a&&w);
  if(!jt->cdarg)RZ(cdinit());
  if(1<AR(a))R rank2ex(a,w,0L,1L,1L,1L,1L,jtcd);
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  ASSERT(wt&DENSE,EVDOMAIN);
- RZ(cc=cdparse(a,0)); 
+ RZ(cc=cdparse(a,0)); // should do outside rank2 loop?
  n=cc->n; 
  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); *(AS(z)+AR(z)-1)=1+n;}
@@ -1069,8 +1077,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w)); 
  }
  wv=CAV(w); zv=CAV(z); k=bp(wt); RELBASEASGNB(w,w);
- if(1==m)RZ(cdexec1(cc,zv,wv,k,wt,wd))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(cdexec1(cc,zv,wv,k,wt,wd)); wv+=p; zv+=q;);}
+ if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,wd))
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,wd)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 
@@ -1182,6 +1190,9 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  MC(u,AV(a),m*k);
  R mtm;
 }    /* 15!:2  memory write */
+
+// 15!:15 memu - make a copy of y if it is not inplaceable
+F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); RETF(w); }
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */

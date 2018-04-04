@@ -29,7 +29,7 @@ typedef long long          IL;
 #endif
 
 typedef char               B;
-typedef char               C;
+typedef unsigned char      C;
 typedef char*              Ptr;
 typedef short              S;
 typedef short              C2;
@@ -252,8 +252,9 @@ typedef I SI;
 #define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOUN types can have the following informational bits set
-#define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
-#define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
+// obsolete #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
+// obsolete #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
+#define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // NAME type can have the following information flags set
 #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
 #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
@@ -290,16 +291,29 @@ typedef I SI;
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ)
 
 // NOUNSAFE flag
-#define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
-#define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
-#define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
-#define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
-#define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
-#define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack
-#define TYPESEQ(x,y)    (0==UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
-#define TYPESNE(x,y)    (0!=UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
-#define TYPESLT(x,y)    (UNSAFE(x)<UNSAFE(y))  // type x < type y
-#define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
+// obsolete #define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
+// obsolete #define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
+// obsolete #define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
+// obsolete #define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
+// obsolete #define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
+// obsolete #define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack
+// scaf expunge all the following
+#define SAFE(x)         (x)    // type, current block and descendants safe from tstack
+#define SAFED(x)        (x)    // type, descendants safe from tstack
+#define SAFE0(x)        (x)    // type, current block safe from tstack
+#define UNSAFE(x)       (x)   // type, not safe from tstack
+#define UNSAFED(x)      (x)   // type, descendants not safe from tstack
+#define UNSAFE0(x)      (x)   // type, not safe from tstack
+
+// obsolete #define TYPESEQ(x,y)    (0==UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
+// obsolete #define TYPESNE(x,y)    (0!=UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
+// obsolete #define TYPESLT(x,y)    (UNSAFE(x)<UNSAFE(y))  // type x < type y
+// obsolete #define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
+#define TYPESEQ(x,y)    ((x)==(y))  // types are equal, ignoring NOUNSAFE bits
+#define TYPESXOR(x,y)    ((x)^(y))  // types are not equal, ignoring NOUNSAFE bits, using full-word logical
+#define TYPESNE(x,y)    ((x)!=(y))  // types are equal, ignoring NOUNSAFE bits
+#define TYPESLT(x,y)    ((x)<(y))  // type x < type y
+#define TYPESGT(x,y)    ((x)>(y)) // type x > type y
 
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))
@@ -602,7 +616,7 @@ typedef struct{
 
 
 
-typedef struct {AF f1,f2;A f,g,h;I flag,fdep; RANKT mr,lr,rr; C id;} V;
+typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id;} V;
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
 #define VFLAGNONE 0L
@@ -613,7 +627,6 @@ typedef struct {AF f1,f2;A f,g,h;I flag,fdep; RANKT mr,lr,rr; C id;} V;
 // for other types, they are defined as follows:
 #define VFATOPL          JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR          JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
-#define VFUISBOXATOP     ((I)(1LL<<2))   // (in u"v)  u was <@f, and f[12] point to f
 // bits 8 and above are available for all functions:
 #define VGERL           (I)256          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
@@ -635,8 +648,22 @@ typedef struct {AF f1,f2;A f,g,h;I flag,fdep; RANKT mr,lr,rr; C id;} V;
 #define VINPLACEOK1     (I)33554432L    // 25 monad can handle in-place args
 #define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
-#define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (should have had rank 0, but didn't)
-#define VISBOXATOP      ((I)(1L<<29))     // function is <@f or <@:(f"_)
+#define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
+
+// bits in flag2:
+#define VF2RANKONLY1X     0   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
+#define VF2RANKONLY2X     1   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
+#define VF2RANKATOP1X     2   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
+#define VF2RANKATOP2X     3   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))
+#define VF2BOXATOP1X      4   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+#define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+#define VF2BOXATOP2X      5   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+#define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+
 
 
 typedef struct {DX re;DX im;} ZX;

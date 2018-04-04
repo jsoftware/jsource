@@ -1105,6 +1105,7 @@
     <ClInclude Include="..\..\jsrc\jtype.h" />
     <ClInclude Include="..\..\jsrc\m.h" />
     <ClInclude Include="..\..\jsrc\P.H" />
+    <ClInclude Include="..\..\jsrc\result.h" />
     <ClInclude Include="..\..\jsrc\VA.H" />
     <ClInclude Include="..\..\jsrc\vasm.h" />
     <ClInclude Include="..\..\jsrc\VE.H" />

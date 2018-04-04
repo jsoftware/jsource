@@ -614,7 +614,7 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*
   v=v0=wv+i*mi; yr=MIN(tr,sr); tr-=mr; tc=ws[1];
   for(j=0;j<nc;++j){
    yc=MIN(tc,sc); tc-=mc; s=yc*k; 
-   if(WASINCORP1(zz,y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}  // reallo y is in use, or if returned from ][
+   if(WASINCORP1(zz,y)){GA(y,t,sr*sc,2,2+av); yv=CAV(y);}  // reallo y if in use, or if returned from ][
    u=yv; DO(yr, MC(u,v,e?sj:s); u+=sj; v+=r;); v=v0+=mj;   // copy in the next input item
    *zv++=zz=rifvs(CALL1(f1,e||yr==sr&&yc==sc?y:take(v2(yr,yc),y),fs));
   }
@@ -639,10 +639,72 @@ static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  }
  R cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self);
 }
+#if 0  // WIP
+
+static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
+ RZ(a&&w);
+ RZ(a=vib(a));    // convert a to integer
+ t=AT(a);
+ r=AR(a); s=AS(a); ac=c=r?s[r-1]:1; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
+ ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
+ if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
+ // Remove trailing axes that have max size
+ for(s=av+s[0]*c-1;c;--c)if(*av>=AS(w)[c-1] || *av<=-AS(w)[c-1])break;
+ GATV(x,INT,2*c,2,0); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
+ u=AV(x); v=u+c; s=AS(w);
+ if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; *v++=k==p?s[i]:k==-p?-s[i]:k;);
+ if(2> r)DO(c,   *u++=1;     k=av[i];   *v++=k==p?s[i]:k==-p?-s[i]:k;);
+ RETF(x);
+}    /* tesselation standardized left argument */
+
+static DF2(jttess2){A gs,p,y,z;I*av,n,t;
+ PREF2(jttess2);   // enforce left rank 2
+ RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
+ RZ(p=tesos(a,w,n));  // outer shape of overall result, from argument sizes and cut type
+ I wr=AR(w);  // rank of w
+ if(!(DENSE&AT(w)&&wr)){
+  // w is sparse or atomic.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
+  // trailing axes taken in full will be ok
+  RETF(cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self));}
+ I *as=AS(a); I axisct=as[1];  // a-> shape of a, axisct=# axes in a
+ DECLF;  // get the function pointers
+ if(axisct>2) {
+  // We do two axes of tessellation at a time.  If there are more than two axes, replace the verb with a verb that will reapply
+  // the tessellation lacking the first two axes
+  fs = amp(drop(v2(0,2),a),fs); f1=VAV(fs)->f1;  // we will call (0 1}.a)&(original cut)
+ }
+ // Figure out the size of the cells we will be making blocks of.  They have all but the first 1 or 2 axes of a/w
+ if(axisct==1){
+  // Here there is just one axis.  Create a virtual block to point to cells; fill in its length, shape, and atomct
+  // Calculate the stride between subarrays
+  // Get the first result.  Handle reversal and shards
+  // Allocate and initialize the result area
+  // Call for the remaining subarrays, and install their results in the result area
+ }
+ // Here there are at least 2 axes.  We will process the first 2, carefully laying the cells into memory to require minimal copying of data
+ // We will advance along the leading axis, building up a tall narrow strip of cells.  When we advance along the second axis, we will be able to
+ // reuse the overlapping parts of the strip.
+ // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
+ // Calculate the amount to add to the strip position when we move along the leading axis.  If there is no overlap on either axis, move 0
+ // Calculate the information needed to copy the initial block into the strip.  This is:
+ //  #rows    #cols   size of 1 block in bytes    stride between source rows     stride between strip rows
+ // Calculate # lines that we DO NOT need to copy when moving along leading axis before any second-axis moves (these lines overlap the previous subarray)
+ // Calculate #cols that we do not need to copy when moving along the second axis
+ // Calculate the size of the temp area.  Allocate it.
+ // Create a virtual block to point to cells; fill in its length, shape, and atomct
+ // Set source and strip pointers to point to the start of their areas
+ // Move in starting subarray.  Handle reversal and shards
+ // Execute the verb on the first subarray
+ // Allocate and initialize the result area
+ // Execute on the rest of the cells in the strip, move results into result area
+ // For the rest of the columns, make one horizontal move followed by vertical moves.  Overlapping data does not need to be copied.
+ 
+}
+#endif
 
 static DF1(jttess1){A s;I m,r,*v;
  RZ(w);
- r=AR(w); RZ(s=shape(w)); v=AV(s);
+ r=AR(w); RZ(s=shape(w)); rifvs(s); v=AV(s);
  m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);
  R tess2(s,w,self);
 }

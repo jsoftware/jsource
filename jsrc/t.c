@@ -18,7 +18,7 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 };
 /*   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   */
 
-static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
+static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  GA(z,t,1,0,0); ACX(z); v=VAV(z);
  AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  v->f1=f1?f1:jtdomainerr1;  /* monad C function */
@@ -27,8 +27,9 @@ static B jtpdef(J jt,C id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->lr=(RANKT)l;                   /* left    rank     */
  v->rr=(RANKT)r;                   /* right   rank     */
  v->fdep=1;                 /* function depth   */
- v->id=id;                  /* spelling         */
- v->flag=flag;              // flags
+ v->id=(C)id;                  /* spelling         */
+ v->flag=(UI4)flag;              // flags
+ v->flag2=(UI4)(id>>8);
  ds(id)=z;             /* other fields are zeroed in ga() */
  R 1;
 }

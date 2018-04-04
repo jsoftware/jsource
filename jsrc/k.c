@@ -260,7 +260,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // Convert the data in w to the type t.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
-static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
+B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTVALIDCT;
  if(!(w))R 0;
  r=AR(w); s=AS(w);
  // Handle sparse
@@ -278,10 +278,16 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  }
  // Now known to be non-sparse
  n=AN(w); wt=AT(w); wv=AV(w);
- // If type is already correct, return a clone
+ // If type is already correct, return a clone - should not occur
  if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
- GA(*y,t,n,r,s); yv=AV(*y); 
+ // Kludge for result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
+ // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and AN(w) for the subroutines.
+ // The caller must restore AN(w) if it needs it
+ // TODO: same-length conversion could be done in place
+ I inputn=*(I*)y;  // fetch input, in case it is called for
+ GA(*y,t,n,r,s); yv=AV(*y);  // allocate the same # atoms, even if we will convert fewer
+ n=(tflagged&NOUNCVTVALIDCT)?inputn:n; AN(w)=n;  // override atom count if called for
  if(t&CMPX)fillv(t,n,(C*)yv); 
  if(!n)R 1;
  // Perform the conversion based on data types
@@ -339,6 +345,7 @@ static B jtccvt(J jt,I t,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;
  }
 }
 
+// set jt->rank to 0 before calling xvt
 A jtcvt(J jt,I t,A w){A y;B b;I*oq; 
  oq=jt->rank; jt->rank=0; b=ccvt(t,w,&y); jt->rank=oq; 
  ASSERT(b,EVDOMAIN);

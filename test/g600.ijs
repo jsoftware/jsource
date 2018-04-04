@@ -911,8 +911,13 @@ NB. Verify sparse rank not totally busted
 (((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: 3 4(,: 0 $. i.)"0 ] 3 4
 NB. fails even in 6.02 (((,: 0 $. i.) 3) ,: ((,: 0 $. i.) 4)) -: 3 4(,: 0 $. i.)@>3 4
 
+NB. Combined dyadic rank loop
+minus =: -
+(0 100 -"1 1"2 2 i. 3 2 2) -: 0 100 minus"1 1"2 2 i. 3 2 2
+(0 100 -"1 _1"2 2 i. 3 2 2) -: 0 100 minus"1 _1"2 2 i. 3 2 2
+
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
-4!:55 ;:'glob lag mm mrk msh pfx rag rank rk s1 t x xx y '
+4!:55 ;:'glob lag minus mm mrk msh pfx rag rank rk s1 t x xx y '
 randfini''
 

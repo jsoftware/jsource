@@ -376,13 +376,13 @@ static DF1(xadv){R xdefn(w, 0L,self);}
 static F1(jtxopcall){R jt->db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:mark;}
 
 static DF1(xop1){A ff,x;
- RZ(ff=fdef(CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
+ RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
  RZ(x=xopcall(one));
  R x==mark?ff:namerefop(x,ff);
 }
 
 static DF2(xop2){A ff,x;
- RZ(ff=fdef(CCOLON,VERB, xn1,jtxdefn, a,self,w,  VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
+ RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
  RZ(x=xopcall(one));
  R x==mark?ff:namerefop(x,ff);
 }
@@ -623,7 +623,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  if(VERB&AT(a)&&VERB&AT(w)){V*va,*vw;
   va=VAV(a); if(CCOLON==va->id&&VERB&AT(va->f)&&VERB&AT(va->g))a=va->f;
   vw=VAV(w); if(CCOLON==vw->id&&VERB&AT(vw->f)&&VERB&AT(vw->g))w=vw->g;
-  R fdef(CCOLON,VERB,xv1,xv2,a,w,0L,((VAV(a)->flag&VAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
+  R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((VAV(a)->flag&VAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));
  if(equ(w,zero)){RZ(w=colon0(mark)); if(!n)R w;}
@@ -653,10 +653,10 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  }
 
  switch(n){
-  case 1:  R fdef(CCOLON, ADV,  b?xop1:xadv,0L,    num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 2:  R fdef(CCOLON, CONJ, 0L,b?xop2:jtxdefn, num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 3:  R fdef(CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
-  case 4:  R fdef(CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
+  case 1:  R fdef(0,CCOLON, ADV,  b?xop1:xadv,0L,    num[n],0L,h, flag, RMAX,RMAX,RMAX);
+  case 2:  R fdef(0,CCOLON, CONJ, 0L,b?xop2:jtxdefn, num[n],0L,h, flag, RMAX,RMAX,RMAX);
+  case 3:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
+  case 4:  R fdef(0,CCOLON, VERB, xn1,jtxdefn,       num[n],0L,h, flag, RMAX,RMAX,RMAX);
   case 13: R vtrans(w);
   default: ASSERT(0,EVDOMAIN);
 }}

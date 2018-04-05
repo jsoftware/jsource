@@ -10,44 +10,12 @@
 #define ZZDEFN
 #include "result.h"
 
-// obsolete // effective rank: ar is rank of argument, r is rank of verb (may be negative)
-// obsolete // result is rank of argument cell
-// obsolete I efr(I ar,I r){R 0>r?MAX(0,r+ar):MIN(r,ar);}
-
-// obsolete #define NEWYW   {GA(yw,wt,wcn,rr,ws+wf); vv=CAV(yw);}
-// obsolete // Move a cell from the argument to the temporary area y? whose data is *uu or *vv.  The temp area starts out as nonrecursive, but it is possible
-// obsolete // that the previous routine turned it recursive but left it marked as inplaceable.  In that case, we might reuse the block (or we might not, if
-// obsolete // it's the last block - then we will just leave it as inplaceable recursive and its descendants will be freed eventually).  We don't just ras()
-// obsolete // the new block, because the ra might be unnecessary.  Instead, we check BEFORE overwriting the block, and decrement the usecount in the old descendant
-// obsolete // if the block has turned recursive (to account for the increment implied in the recursiveness).  We then make sure the temp starts each cell as
-// obsolete // nonrecursive
-// obsolete // todo kludge BUG: the call to fa() must loop over the contents.  But this may go away if the cell becomes VIRTUAL
-// obsolete #define MOVEYW  {if(UCISRECUR(yw)){fa(*(A*)vv); AFLAG(yw)&=~RECURSIBLE;} MC(vv,v,wk); if(state&STATEWREL){RELORIGIN(worg,w); RZ(yw=relocate(worg-(I)yw,yw));} v+=wk;}
-
 #define EMSK(x) (1LL<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
 
 #define STATEOUTERREPEATA 0x0200
 #define STATEINNERREPEATA 0x0400
 #define STATEINNERREPEATW 0x0800
-// 0x10 left open because it accumulates AFNOSMREL
-#define STATENORM 0x2000
-#define STATEFIRST 0x4000
-#define STATEERR0 0x8000
-#define STATEERR 0x10000
-#define STATEARELX 17
-#define STATEAREL (1<<STATEARELX)
-#define STATEWRELX 18
-#define STATEWREL (1<<STATEWRELX)
-#define STATENOPOP 0x80000   // set if not OK to tpop the stack
-// obsolete #define STATEINCORPORATEDA 0x1000
-// obsolete #define STATEINCORPORATEDW 0x2000
-
-
-// obsolete #define RCALL   CALL1(f1,yw,fs)
-// obsolete #define RDIRECT (wt&DIRECT)
-// obsolete #define RARG    {if(WASINCORP1(y,yw)){cc = 0;NEWYW;} MOVEYW;}
-// obsolete #define RARG1   {if(WASINCORP1(y,yw)){RZ(yw=ca(yw)); vv=CAV(yw);}}
 
 // General setup for verbs that do not go through jtirs[12].  Some of these are marked as IRS verbs.  General
 // verbs derived from u"n also come through here, via jtrank2.
@@ -506,5 +474,5 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports irs
- R fdef((flag2<<8)|CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
+ R fdef(flag2,CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
 }

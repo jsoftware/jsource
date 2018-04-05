@@ -647,5 +647,5 @@ F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
    if(c==CPLUS )f2=jtpdt; 
    if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));
  }}
- R fdef(CDOT,VERB, jtdet,f2, a,w,h, 0L, 2L,RMAX,RMAX);
+ R fdef(0,CDOT,VERB, jtdet,f2, a,w,h, 0L, 2L,RMAX,RMAX);
 }

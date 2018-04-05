@@ -553,5 +553,5 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2=jtkey;C c,d,e;I flag=0;V*v;
                 c=ID(v->f); d=ID(v->g); e=ID(v->h); 
                 if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD))f2=jtkeyheadtally;
  }}
- R fdef(CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
+ R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }

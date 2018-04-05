@@ -14,7 +14,7 @@ static F2(jtfitct){D d;V*sv;
  ASSERT(!AR(w),EVRANK);
  sv=VAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- R fdef(CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ R fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
 }
 
 static DF2(jtfitexp2){

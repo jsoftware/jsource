@@ -41,8 +41,8 @@
 #define CS2IP(f,exp,x)  DF2(f){F2PREFIP;PROLOG(x);DECLFG;A z;PREF2(f); exp; EPILOG(z);}
 
 
-#define ADERIV(id,f1,f2,flag,m,l,r)  fdef(id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
-#define CDERIV(id,f1,f2,flag,m,l,r)  fdef(id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
+#define ADERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),w,0L,0L,(flag),(I)(m),(I)(l),(I)(r))
+#define CDERIV(id,f1,f2,flag,m,l,r)  fdef(0,id,VERB,(AF)(f1),(AF)(f2),a,w ,0L,(flag),(I)(m),(I)(l),(I)(r))
 
 #define ASSERTVV(a,w)   RZ(a&&w); ASSERT(VERB&AT(a)&&VERB&AT(w),EVDOMAIN)
 #define ASSERTVVn(a,w)  RZ(a&&w); ASSERT(VERB&AT(a)&&(VERB|NOUN)&AT(w),EVDOMAIN)

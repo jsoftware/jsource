@@ -90,7 +90,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
    x=hv->f;
    if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->g)&&CRIGHT==ID(hv->h)){f1=jtcharmapa;  flag &=~(VINPLACEOK1);}
   }
-  R fdef(CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
+  R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
  fv=VAV(f); fi=fv->id; if(fi!=CCAP)flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
  switch(fi){
@@ -136,7 +136,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
  // argument.  In that case h can inplace the unused aegument.
  if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
- R fdef(CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
+ R fdef(0,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
 
@@ -231,7 +231,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VINPLACEOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VINPLACEOK2;}
    }
    // Return the derived verb
-   R fdef(CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+   R fdef(0,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
   // All other cases produce an adverb
   case BD(ADV, ADV ): f1=taa; break;
   case BD(NOUN,CONJ):
@@ -244,5 +244,5 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    f1=tcv; id=ID(a);
    if(BOX&AT(w)&&(id==CGRAVE||id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;
  }
- R fdef(CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
+ R fdef(0,CADVF, ADV, f1,0L, a,w,0L, flag, 0L,0L,0L);
 }

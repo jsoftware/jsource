@@ -80,7 +80,7 @@ F2(jthgeom){A c,d,h=0;B p,q;I at,wt;
  if(p){c=a; ASSERT(!AN(a)||at&NUMERIC,EVDOMAIN); ASSERT(1>=AR(a),EVRANK);}
  if(q){d=w; ASSERT(!AN(w)||wt&NUMERIC,EVDOMAIN); ASSERT(1>=AR(w),EVRANK);}
  RZ(h=cancel(c,d));
- R fdef(CHGEOM,VERB, jthgeom1,jthgeom2, a,w,h, 0L, 0L,0L,0L);
+ R fdef(0,CHGEOM,VERB, jthgeom1,jthgeom2, a,w,h, 0L, 0L,0L,0L);
 }    /* a H. w */
 
 F1(jthgdiff){A*hv,p,q,x,y;V*v=VAV(w);

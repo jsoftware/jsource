@@ -117,7 +117,7 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
 // u@v
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
- if(AT(w)&NOUN){R fdef(CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}  // u@n
+ if(AT(w)&NOUN){R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}  // u@n
  av=VAV(a); c=av->id;
  wv=VAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
@@ -157,7 +157,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  }
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
- R fdef((flag2<<8)|CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
+ R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
 F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
@@ -201,7 +201,7 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
 //   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
- R fdef((flag2<<8)|CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
 F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
@@ -213,7 +213,7 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
- R fdef((flag2<<8)|CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ R fdef(flag2,CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
 // m&v and u&n.  No inplacing if rank is given; otherwise never inplace the noun argument, since the verb may
@@ -266,7 +266,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
     case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VINPLACEOK1; break;
     case CIBEAM: if(v->f&&v->g&&128==i0(v->f)&&3==i0(v->g)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VINPLACEOK1;}
    }
-   R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VN: 
    f1=withr; v=VAV(a);
    // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
@@ -286,7 +286,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
     if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}
     else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VINPLACEOK1;}
    }
-   R fdef(CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
   case VV:
    // u@v
    f1=on1; f2=on2;
@@ -308,5 +308,5 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    }
    // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
-   R fdef((flag2<<8)|CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
+   R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
 }}

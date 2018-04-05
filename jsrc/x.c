@@ -12,10 +12,10 @@
 #include "x.h"
 
 #define SDERIV(id,f1,f2,flag,m,l,r)  \
- fdef(id,VERB,secf1,secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,secf1,secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
 
 #define SDERI2(id,f1,f2,flag,m,l,r)  \
- fdef(id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
+ fdef(0,id,VERB,f1,   secf2,a,w,v2((I)(f1?f1:jtdomainerr1),(I)(f2?f2:jtdomainerr2)),(flag),(I)m,(I)l,(I)r)
 
 
 static DF1(secf1){F1PREFIP; A h=VAV(self)->h; ASSERT(!jt->seclev,EVSECURE); R CALL1IP((AF)*   AV(h) ,  w,self);}
@@ -43,7 +43,7 @@ static DF2(jtfindrange2){
 F2(jtforeign){I p,q;
  RZ(a&&w);
  p=i0(a); q=i0(w); RE(0);
- if(11==p)R fdef(CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
+ if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
  if(q<0||XCC<=q)R CDERIV(CIBEAM, 0,0,  VASGSAFE,RMAX,RMAX,RMAX);
  switch(XC(p,q)){
   case XC(0,  0): 
@@ -109,7 +109,7 @@ F2(jtforeign){I p,q;
   case XC(4,5):   R CDERIV(CIBEAM, jtnch,        0,            VASGSAFE,RMAX,0,   0   );
   case XC(4,55):  R CDERIV(CIBEAM, jtex,         0,            VASGSAFE,0,   0,   0   );
 
-  case XC(5,0):   R fdef(CIBEAM,ADV, jtfxx,0L,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
+  case XC(5,0):   R fdef(0,CIBEAM,ADV, jtfxx,0L,  a,w,0L,        VASGSAFE,0L,  0L,  0L  );
   case XC(5,1):   R CDERIV(CIBEAM, jtarx,        0,            VASGSAFE,0,   0,   0   );
   case XC(5,2):   R CDERIV(CIBEAM, jtdrx,        0,            VASGSAFE,0,   0,   0   );
   case XC(5,4):   R CDERIV(CIBEAM, jttrx,        0,            VASGSAFE,0,   0,   0   );

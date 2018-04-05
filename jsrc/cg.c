@@ -56,10 +56,10 @@ F2(jtevger){A hs;I k;
  RZ(hs=fxeachv(RMAX,a));
  switch(k){
   case GAPPEND:
-   R fdef(CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);
+   R fdef(0,CGRCO,VERB, jtcon1,jtcon2, a,w,hs, VGERL, RMAX,RMAX,RMAX);
   case GINSERT:
    ASSERT(1>=AR(a),EVRANK);
-   R fdef(CGRCO,VERB, jtinsert,0L,   a,w,hs, VGERL, RMAX,0L,0L);
+   R fdef(0,CGRCO,VERB, jtinsert,0L,   a,w,hs, VGERL, RMAX,0L,0L);
   default:
    ASSERT(0,EVDOMAIN);
 }}
@@ -192,7 +192,7 @@ F2(jtagenda){I flag;
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
  flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!
- R fdef(CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|VAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
+ R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|VAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.
@@ -241,7 +241,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
  ASSERT(2==n||3==n,EVLENGTH);
  ASSERT(BOX&AT(y),EVDOMAIN);
  RZ(hs=fxeach(3==n?y:link(scc(CLEFT),y)));
- R fdef(id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
+ R fdef(0,id,VERB, na?jtgcl1:jtgcr1,na?jtgcl2:jtgcr2, a,w,hs, na?VGERL:VGERR, RMAX,RMAX,RMAX);
 }
 
 // verb executed for v0`v1`v2} y
@@ -295,7 +295,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(AAV(hs)[0])&VERB&&AT(AAV(hs)[1])&VERB&&AT(AAV(hs)[2])&VERB,EVDOMAIN);
  I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
- R fdef(id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
+ R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
 
@@ -306,5 +306,5 @@ A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);
  ASSERT(2==AN(x),EVLENGTH);
  RZ(h=fxeachv(1L,x)); hv=AAV(h); v=VAV(*hv);
- R fdef(id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,(I)v->lr,(I)v->rr);
+ R fdef(0,id,VERB, jtgf1,jtgf2, x,a?w:0L, h, VGERL, (I)v->mr,(I)v->lr,(I)v->rr);
 }    /* verify and define 2-element gerund */

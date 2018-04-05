@@ -336,7 +336,7 @@
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))    
 #define factor(x)                   jtfactor(jt,(x))  
-#define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10))
+#define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #define fdep(x)                     jtfdep(jt,(x))
 #define fdepger(x)                  jtfdepger(jt,(x))
 #define fh(x)                       jtfh(jt,(x))

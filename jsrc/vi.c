@@ -272,8 +272,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   // First of all: it's moot if the allocation won't fit on the right
   I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
   I selside=0;  // default to allocating on the left (i. e. at 0)
-  UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible index for this table
-  UI indexceil=maxindex-m;  // max starting index
+  UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible value stored into this table
+  UI indexceil=maxindex-m;  // max value that can be accepted in the table already.  We will write from indexceil to maxindex
 
   // Cost of allocating on the left comes
   // (1) now, as we use (m*currenthi) units of index space
@@ -289,9 +289,11 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   // plus cache expense of p<.currenthi cache words
   // The cost of a cache word is reckoned at 1/2 store per word
 
-  // That's not worth figuring out for every call.  So, we will just allocate on the right unless
-  // the invalid area is empty and m<4096 (about the size of L1 cache), to get the caching benefit for small arguments
-  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (m>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
+  // That's not worth figuring out for every call.  So, we will just allocate on the right as long as the request fits vertically and horizontally,
+  // and there is not invalid region on the right, EXCEPT when m<4096 (about the size of L1 cache) and there is no invalid region on the left:
+  // this last exception to keep the cache footprint small for short requests
+  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && hh->invalidhi<hh->currenthi && !(m<4096 && hh->invalidlo>=p)) {  // the right side is a possibility
+//obsolete  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (m>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
    // Allocating right.  Return a region starting at currenthi
    md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated it
    hh->currentlo=hh->currenthi; hh->currenthi+=p;   // set return value (starting position) and partition

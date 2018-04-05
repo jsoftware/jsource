@@ -690,7 +690,7 @@ extern A        jtevery2(J,A,A,A,AF);
 extern A        jtext(J,B,A);
 extern A        jtexta(J,I,I,I,I);
 extern I        jtfa(J,AD * RESTRICT,I);
-extern A        jtfdef(J,I,I,AF,AF,A,A,A,I,I,I,I);
+extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 extern I        jtfdep(J,A);
 extern void     jtfh(J,A);
 extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */

@@ -684,7 +684,9 @@ static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  // Here there are at least 2 axes.  We will process the first 2, carefully laying the cells into memory to require minimal copying of data
  // We will advance along the leading axis, building up a tall narrow strip of cells.  When we advance along the second axis, we will be able to
  // reuse the overlapping parts of the strip.
+
  // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
+
  // Calculate the amount to add to the strip position when we move along the leading axis.  If there is no overlap on either axis, move 0
  // Calculate the information needed to copy the initial block into the strip.  This is:
  //  #rows    #cols   size of 1 block in bytes    stride between source rows     stride between strip rows
@@ -698,6 +700,7 @@ static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  // Allocate and initialize the result area
  // Execute on the rest of the cells in the strip, move results into result area
  // For the rest of the columns, make one horizontal move followed by vertical moves.  Overlapping data does not need to be copied.
+ // transpose the result
  
 }
 #endif
@@ -717,9 +720,9 @@ F2(jtcut){A h=0;I flag=0,k;
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(3!=k&&-3!=k,EVNONCE);}
  switch(k){
-  case 0:          R fdef(CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX);
+  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX);
   case 1: case -1:
-  case 2: case -2: R fdef(CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
-  case 3: case -3: R fdef(CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
+  case 2: case -2: R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
+  case 3: case -3: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
   default:         ASSERT(0,EVDOMAIN);
 }}

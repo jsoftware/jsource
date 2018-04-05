@@ -225,7 +225,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
    }
    // If not special case, fall through to handle general case
    b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ 
-   R fdef(CPOWOP,VERB, b||!m?jtply1:!r&&0<=n?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for (empty or contains _/__), (scalar n>=0)
+   R fdef(0,CPOWOP,VERB, b||!m?jtply1:!r&&0<=n?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for (empty or contains _/__), (scalar n>=0)
       VFLAGNONE, RMAX,RMAX,RMAX);
    // no reason to inplace this, since it has to keep the old value to check for changes
 }}

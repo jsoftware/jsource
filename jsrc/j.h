@@ -376,7 +376,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ds(c)           pst[(UC)(c)]
 #define FDEPDEC(d)      {jt->fdepi-=d;}
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=d+jt->fdepi,EVSTACK); jt->fdepi+=d;}
-#define FCONS(x)        fdef(CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
+#define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)
 #define F2(f)           A f(J jt,A a,A w)

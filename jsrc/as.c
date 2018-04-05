@@ -330,7 +330,7 @@ static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}
 
 F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
  RZ(w);
- if(NOUN&AT(w))R fdef(CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=VAV(w);
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;

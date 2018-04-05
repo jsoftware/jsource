@@ -98,7 +98,7 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  RZ(t=vib(w)); v=AV(t);
  GAT(h,INT,3,1,0); hv=AV(h);
  hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];
- R fdef(id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
+ R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
 }
 
 F2(jtlcapco){R lsub(CLCAPCO,a,w);}

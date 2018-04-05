@@ -44,15 +44,15 @@ A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,s
 F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); RETF(z);}
 F2(jtself2){A z;I d=fdep(jt->sf); FDEPINC(d); z=df2(a,w,jt->sf); FDEPDEC(d); RETF(z);}
 
-A jtac1(J jt,AF f){R fdef(0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
-A jtac2(J jt,AF f){R fdef(0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac1(J jt,AF f){R fdef(0,0,VERB, f,0L, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
+A jtac2(J jt,AF f){R fdef(0,0,VERB, 0L,f, 0L,0L,0L, VFLAGNONE, RMAX,RMAX,RMAX);}
 
 F1(jtdomainerr1){ASSERT(0,EVDOMAIN);}
 F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 
 // create a block for a function (verb/adv/conj).  The meanings of all fields depend on the function executed in f1/f2
 // if there has been a previous error this function returns 0
-A jtfdef(J jt,I id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
+A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
  GA(z,t,1,0,0); v=VAV(z);
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
@@ -67,7 +67,7 @@ A jtfdef(J jt,I id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  v->rr    =(RANKT)r;                   /* right   rank     */
  v->fdep  =0;                   /* function depth   */
  v->id    =(C)id;                  /* spelling         */
- v->flag2 = (UI4)(id>>8);         // more flags
+ v->flag2 = (UI4)flag2;         // more flags
  R z;
 }
 

@@ -223,7 +223,7 @@ int _stdcall JDo(J jt, C* lp){int r;
 } 
 
 C* _stdcall JGetR(J jt){
- R jt->capture?jt->capture:"";
+ R jt->capture?jt->capture:(C*)"";
 }
 
 /* socket protocol CMDGET name */

@@ -22,6 +22,17 @@ b1=: 10&u: 402 403
 (9;(,9);2;3 4)=          'xbasic x *x x *x' dcd (,2);2;3 4
 (2;(,2);1;0 1)=          'ibasic i *i i *i' dcd (,1);1;0 1 NB. boolean promotion to int
 
+NB. simple tests that 807 automatic memu prevents
+NB. changing shared memory and verify & declaration
+NB. allows side effects - i.e. the user lied
+(9;(,9);2;3 4)=          'ibasic i *i i *i' dcd (,2)   ;2;3 4
+(9;(,9);2;3 4)=          'ibasic i *i i *i' dcd (a=:,2);2;3 4
+a-:,2 NB. automatic memu protected a
+(9;(,9);2;3 4)=          'ibasic i *i i *i' dcd a      ;2;3 4
+a-:,2 NB. automatic memu protected a
+(9;(,9);2;3 4)=          'ibasic i &i i *i' dcd a      ;2;3 4
+a-:,9 NB. & avoided the protection
+
 NB. test convert in place down/up
 (9;(- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = }.'downup n x *s *i *f' dcd 9;(_4+i.9);(_4+i.9);(_4.5+i.9)
 (15;(- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = }.'downup n x *s *i *f' dcd 15;(_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)

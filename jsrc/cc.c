@@ -4,6 +4,11 @@
 /* Conjunctions: Cuts                                                      */
 
 #include "j.h"
+#define ZZDEFN
+#include "result.h"
+#define STATEHASGERUNDX 8
+#define STATEHASGERUND (1LL<<STATEHASGERUNDX)
+
 
 
 static DF1(jtcut01){DECLF;A h,x;
@@ -78,7 +83,8 @@ static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k
    case 0: RZ(*zv++=rifvs(df1(y,hv[ii%hn]))); break;
    case 1: RZ(*zv++=rifvs(y));                break;
    case 2: RZ(*zv++=rifvs(CALL1(f1,y,fs)));   break;
- }}
+  }
+ }
  RETF(1==d?z:ope(z));
 }    /* a f;.0 w */
 
@@ -129,7 +135,9 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
     case -1: DO(bn, if(bv[i]){*u++=i+1; if(0<=j)*v++=i-j-1; j=i;}); *v=bn-j-1; break;
     case  2: DO(bn, if(bv[i]){*u++=j+1;         *v++=i-j  ; j=i;}); break;
     case -2: DO(bn, if(bv[i]){*u++=j+1;         *v++=i-j-1; j=i;}); break;
- }}}
+   }
+  }
+ }
  RZ(x=ope(catalog(x)));
  RZ(y=ope(catalog(y)));
  RZ(t=AN(x)?irs2(x,y,0L,1L,1L,jtlamin2):iota(over(shape(x),v2(2L,0L))));
@@ -307,6 +315,278 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  R CAV(y);
 }    /* pointer to identity element */
 
+/* locals in cut2:                       */
+/* b    1 iff _1 cut                     */
+/* c    atoms in an item of w            */
+/* d    adjusted length of current cut   */
+/* e    max width of a cut               */
+/* h    gerund                           */
+/* hv   gerund                           */
+/* id   function code                    */
+/* k    # bytes in an item of w          */
+/* m    # of cuts                        */
+/* n    #a and #w                        */
+/* neg  1 iff _1 or _2 cut               */
+/* p    remaining length in a            */
+/* pfx  1 iff 1 or _1 cut                */
+/* q    length of current cut            */
+/* sep  the cut character                */
+/* u    ptr to a for next    cut         */
+/* v    ptr to a for current cut         */
+/* v1   ptr to w for current cut         */
+/* wd   non0 iff w is relative              */
+#if 0
+// lengths are stored as if item0 is a fret, and item n+1 is a fret
+// then if suffix, remove the last fret; if prefix remove the first
+// if suffix set v1=wv; if prefix set v1 pointing  past the discarded fret
+// if prefix neg, set v1 to skip 1st item
+// init pd to point to first item to proc, skipping 1st if prefix
+// init pd0 to start of first buffer
+// 1st word in buf is chain, 2nd is end+1 of data
+#define EACHCUT(stmt) \
+ do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */ \
+  while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */ \
+   UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;} d=len-neg;  /* fetch size, adjust if neg */ \
+   stmt;  /* perform user function */  \
+   v1 += len*k;  /* advance to next fret position in w */ \
+  }  /* loop till buffer all processed */ \
+  if(!(pd0=(UC**)pd0[0]))break;  /* step to next buffer; exit if none */ \
+  pd=(UC*)&pd0[2];  /* point to 1st d */  \
+ }while(1);  /* when buffer exhausted, chain to next; stop when no next */
+
+
+// allocate a new fret buffer and chain it to the old one
+// pd is &last element (i. e. chain field of current buffer)
+// pd0 is &current buffer
+// result is &new buffer, or 0 if error
+// we fill in the chain and length fields in the current buffer, and set the length field of the new
+// buffer to the size we allocated
+#define FRETALLOSIZE (512-10)  // number of frets to allocate at a time
+static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
+ pd0[1]=pd;  // fill in size of current buffer
+ GATV(new,INT,FRETALLOSIZE,0,0);  // get a new buffer.  rank immaterial.  Use GATV because of large size
+ pd0[0]=(UC*)IAV(new);  // chain the new block to the old
+ pd0=(UC**)pd0[0];  // step pd0 to new block
+ pd0[1]=((UC*)&pd0[FRETALLOSIZE]-10);  // return value: endptr of new buffer
+ R pd0;  // return address of data in the new block
+}
+
+
+static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
+     I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
+ PREF2(jtcut2); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
+ if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
+#define ZZFLAGWORD state
+ I state=0;  // init flags, including zz flags
+ p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
+ if(a!=mark){  // dyadic forms
+  if(!AN(a)&&n){  // empty x, do one call if y is non-empty
+   if(VGERL&sv->flag){h=sv->h; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->f1,w,h);}
+   else R CALL1(f1,w,fs);
+  }
+  if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
+  if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary
+  if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
+  v=CAV(a); sep=C1;
+ }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:n-1];}  // monadic forms: 1-byte w, use w itself as the fret vector
+ else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}  // multibyte w, calculate frets
+ // now v->byte vector of frets, sep=fret character
+ ASSERT(n==IC(a),EVLENGTH);
+ vf=VAV(fs);
+ if(VGERL&sv->flag){state |= STATEHASGERUND; h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
+// Create the frets from the data
+// *fret points to the fret, *fv points to the data to be searched
+// classify search based on type:
+//   direct non-float types
+//    fixed length: 1 2 4 8
+//     1-byte boolean
+//     1-byte literal
+//     others by length
+//    general, short enough to avoid misprediction
+//    general but branch out of loop
+//   direct float types, both tolerant and intolerant
+//    short (no misprediction)
+//    long (mispredicted)
+//   indirect types by call to equ
+#if 0
+ // count the frets
+ switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
+  case 0: if(AT(a)&B01&&C1==sep)m=bsum(n,v); 
+          else{--v;    DO(n, if(sep==*++v) ++m;                    ); v=CAV(a);}    break;
+  case 1: if(AT(a)&B01&&C1==*v )m=bsum(n,v);
+          else{u=v+=n; DO(n, if(sep==*--v){++m;               u=v;}); p-=u-v; v=u;} break;
+  case 2: u=--v;       DO(n, if(sep==*++v){++m; e=MAX(e,v-u); u=v;}); v=CAV(a);     break;
+  case 3: u=v+=n;      DO(n, if(sep==*--v){++m; e=MAX(e,u-v); u=v;}); p-=u-v; v=u;
+ }
+#else
+// lengths are stored as if item0 is a fret, and item n+1 is a fret
+
+// *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
+ C*av=wv;  // scaf
+ C *fret=av+k*((n-1)&(pfx-1));  // scaf
+{C val=*(C*)fret, *avv=(C*)av; d=-pfx; I nleft=n;
+ I valI=val|((UI)val<<8); valI|=valI<<16;
+#if BW==64
+ valI|=valI<<32;
+#endif
+ /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret,
+ subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the
+ final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret
+ distance, and the remnant at the end AFTER that last fret is discarded. */
+ while(nleft){I cmpres=0;  // =0 for the warning
+  /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */
+  while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */
+   I avvdiff=valI^avvI; avvdiff=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080; if(avvdiff!=0){  /* if we can't skip,  exit loop and search byte by byte */
+    I skiphalf=((avvdiff&IHALF0)==0)<<(LGSZI-1); avv+=skiphalf; d+=skiphalf; nleft-=skiphalf;  /* if first half empty, skip over it - remove if unaligned load penalty */
+    break;
+   }
+   avv+=SZI; d+=SZI; nleft-=SZI;  /* skip the whole 8 bytes */
+  }
+  
+  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */
+  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */
+  I testi=testct; do{I match=val==*avv; ++avv; cmpres=2*cmpres+match;}while(--testi);
+  /* process them out of cmpres, writing lengths */
+  testi=testct;  // save # cells processed
+  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */
+  while(cmpres){
+   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */
+   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */
+  }
+  d += testct;  /* add in any bits not shifted out of cmpres as going into d */
+  nleft -= testi;  /* decr number of cells to do */
+ }
+}
+ // partition sizes have been calculated.
+ // prepare for the looping.  We need:
+ // pd0 pointing to first buffer
+ // pd->first d to process.  We skip the first d if pfx
+ // m has # d values
+ // v1->first w-cell to process, taking into account skipped cells owing to neg and omitted headers
+
+ // if pfx, emit the runout field for the last d (if suffix these are discarded).  We muust add one to d
+ // to include the prefix in the length of d
+ if(pfx){++d; if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}}
+ // close the last d buffer
+ pd0[0]=0; pd0[1]=pd;  // set end-of-chain and endptr in last d buffer
+ // chase the chains to count the number of d values.  Each is one byte long, except for the long ones which are 1+SZI bytes.  But we subtracted SZI from m for
+ // every long encoding, so if we just total the number of bytes in the blocks and add it to m, we will have the number of d-values
+ for(pd0=(UC**)&d1; pd0; pd0=(UC**)pd0[0])m += pd0[1]-(UC*)&pd0[2];  // add in bufend-bufstart
+ // set pointers to first d and first cell
+ v1=wv; pd0=(UC**)&d1; pd=(UC*)&pd0[2];
+ // if pfx, skip over the first d and any w-cells indicated in it.  Also skip over 1 more w-cell if neg indicates the first cell should be skipped
+ if(pfx){
+  UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;}  // get first d and skip over it
+  v1+=(len+neg)*k;  // skip over the before-first-prefix cells, and the fret cell if neg
+  --m;  // remove the discarded d from the count
+ } 
+
+#endif
+ // process, handling special cases
+ switch(wd?0:id){
+  case CPOUND:
+   GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;); 
+   break;
+  case CDOLLAR:
+   GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;);
+   R irs2(zz,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);
+  case CHEAD:
+   GA(zz,wt,m*c,r,s); zc=CAV(zz); *AS(zz)=m;
+   EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,c,zc); zc+=k;);
+   break;
+  case CTAIL:
+   GA(zz,wt,m*c,r,s); zc=CAV(zz); *AS(zz)=m;
+   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,c,zc); zc+=k;);
+   break;
+  case CCOMMA:
+  case CLEFT:
+  case CRIGHT:
+// scaf MUST CALCULATE e or discard this, which might be better
+   e-=e&&neg; RE(d=mult(m*c,e));
+   GA(zz,wt,d,id==CCOMMA?2:1+r,s-1); zc=CAV(zz); fillv(wt,d,zc);
+   zs=AS(zz); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;
+   EACHCUT(MC(zc,v1,d*k);  zc+=ke;);
+   break;
+// obsolete  case CBOX:
+// obsolete // scaf perhaps should discard this, if the box can be labeled BOXATOP+null fn (result will create recursive block)
+// obsolete   GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
+// obsolete    EACHCUT(GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),v1,d*k); *za++=z;);
+// obsolete    break;
+  case CAT: case CATCO: case CAMP: case CAMPCO:
+// scaf should take this under BOXATOP?
+   if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){
+    GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
+    EACHCUT(d=d?d-1:0; GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),id1==CBEHEAD?v1+k:v1,d*k); *za++=z;);
+   }
+   break;
+  case CSLASH:
+   vains(vaid(vf->f),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
+   if(ado){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
+    zt=rtype(cv);
+    GA(zz,zt,m*c,r,s); *AS(zz)=m; 
+    if(!AN(zz))R zz;
+    zc=CAV(zz); zk=c*bp(zt);
+    if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+    EACHCUT(if(d)ado(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
+        if(!z0){if(z)R z; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
+    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,zz):zz;
+  }
+ }
+
+ // If we didn't get a result from the special cases, run the normal result loop
+ if(!zz){
+  if(m){
+   // There are cells.  Run the result loop over them
+   ZZFLAGWORD |= (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+
+   // Allocate the virtual block we will use for arguments
+   A virtw; RZ(virtw=virtual(w,0,r));
+   // Copy in the shape of a cell.  The number of cells will depend on d
+   I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
+   // Set the offset to the first data
+   AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
+
+#define ZZDECL
+#include "result.h"
+   {I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,virtw,1);}
+   I gerundx=0;  // if we have gerunds, this indicates which one we should run next
+
+   do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */
+    while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */
+     UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;} d=len-neg;  /* fetch size, adjust if neg */
+     AS(virtw)[0]=d; AN(virtw)=c*d; // install the size of the partition into the virtual block, and # atoms
+     // call the user's function
+     if(!(state&STATEHASGERUND)){
+      RZ(z=CALL1(f1,virtw,fs));  //normal case
+     }else{
+      RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
+     }
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+     AK(virtw) += len*k;  /* advance to next fret position in w */
+    }  /* loop till buffer all processed */
+    if(!(pd0=(UC**)pd0[0]))break;  /* step to next buffer; exit if none */
+    pd=(UC*)&pd0[2];  /* point to 1st d */
+   }while(1);  /* when buffer exhausted, chain to next; stop when no next */
+
+#define ZZEXIT  // handle fill & dissimilar results
+#include "result.h"
+
+  }else{
+   // No frets.  Apply the operand to 0 items; return i. 0,$result (or $,'' if error on fill-cell)
+//  scaf should check for exigent errors
+   z=reitem(zero,w); zz=h?df1(z,*hv):CALL1(f1,z,fs); RESETERR; R iota(over(zero,shape(z?z:mtv)));
+  }
+ }
+ EPILOG(zz);
+}    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
+#else
+
 // execute stmt on each fret.  Here we are handling special cases so we know the results are well-behaved
 // and stmt can just move its result to the output area
 #define EACHCUT(stmt)  \
@@ -317,6 +597,9 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   stmt;                                             \
   p-=q; v=u;                                        \
  }
+
+
+
 // Here for general case, where results must be boxed & reopened. y is a temp name used for the input cell and its result.
 // allbx starts as 1; if all results return atomic boxes, it stays there.  When allbx is set, the contents of the
 // result (a single A) is copied to the result; otherwise the result itself is copied as a cell (& will be unboxed later).
@@ -339,27 +622,6 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   y=gc(y,old);                                        \
   p-=q; v=u;                                        \
  }
-
-/* locals in cut2:                       */
-/* b    1 iff _1 cut                     */
-/* c    atoms in an item of w            */
-/* d    adjusted length of current cut   */
-/* e    max width of a cut               */
-/* h    gerund                           */
-/* hv   gerund                           */
-/* id   function code                    */
-/* k    # bytes in an item of w          */
-/* m    # of cuts                        */
-/* n    #a and #w                        */
-/* neg  1 iff _1 or _2 cut               */
-/* p    remaining length in a            */
-/* pfx  1 iff 1 or _1 cut                */
-/* q    length of current cut            */
-/* sep  the cut character                */
-/* u    ptr to a for next    cut         */
-/* v    ptr to a for current cut         */
-/* v1   ptr to w for current cut         */
-/* wd   non0 iff w is relative              */
 
 static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
      I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;
@@ -451,7 +713,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
  }
  EPILOG(z);
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
-
+#endif
 static DF1(jtcut1){R cut2(mark,w,self);}
 
 
@@ -548,16 +810,7 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}
 
-
-static A jttesos(J jt,A a,A w,I n){A p;I*av,c,k,m,*pv,s,*ws;
- RZ(a&&w);
- c=*(1+AS(a)); av=AV(a); ws=AS(w);
- GATV(p,INT,c,1,0); pv=AV(p);
- if(3==n)DO(c, m=av[i]; s=ws[i]; pv[i]=m?(s+m-1)/m:1&&s;)
- else    DO(c, m=av[i]; k=av[c+i]; s=ws[i]-ABS(k); pv[i]=0>s?0:m?(k||s%m)+s/m:1;);
- R p;
-}    /* tesselation result outer shape */
-
+#if 0 // obsolete
 static F2(jttesa){A x;I*av,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RZ(a&&w);
  t=AT(a);
@@ -573,7 +826,21 @@ static F2(jttesa){A x;I*av,c,d,k,p=IMAX,r,*s,t,*u,*v;
  s+=c;   DO(d-c, *u++=0; *v++=*s++;);
  RETF(x);
 }    /* tesselation standardized left argument */
+#endif
+// if pv given, it is the place to put the shapes of the top 2 result axes.  If omitted, do them all and return an A block for them
+// if pv is given, set pv[0] to 0 if there is a 0 anywhere in the result frame
+// we look at all the axes even if we don't store them all; if any are 0 we set
+static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
+ RZ(a&&w);
+ axisct=c=AS(a)[1]; av=AV(a); ws=AS(w);
+ if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
+ }else{GATV(p,INT,c,1,0); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
+ if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0;; if(i<c)pv[i]=m;)
+ else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
+ R p;
+}    /* tesselation result outer shape */
 
+#if 0
 static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,*yv,*zv;
      I*av,i,k,m,mc,mi,mj,mr,nc,nr,old,*pv,r,s,*s1,sc,sj,sr,t,tc,tr,*ws,yc,yr,zk,zn,zr,*zs,zt;
  ws=AS(w); t=AT(w); k=bp(t); r=k*ws[1];
@@ -639,7 +906,8 @@ static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  }
  R cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self);
 }
-#if 0  // WIP
+#else // WIP
+
 
 static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RZ(a&&w);
@@ -648,8 +916,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  r=AR(a); s=AS(a); ac=c=r?s[r-1]:1; av=AV(a); d=AR(w);  // r = rank of x; s->shape of x; c=#axes specd in x, av->data; d=rank of w
  ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
- // Remove trailing axes that have max size
- for(s=av+s[0]*c-1;c;--c)if(*av>=AS(w)[c-1] || *av<=-AS(w)[c-1])break;
+ if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
  GATV(x,INT,2*c,2,0); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
  u=AV(x); v=u+c; s=AS(w);
  if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; *v++=k==p?s[i]:k==-p?-s[i]:k;);
@@ -657,51 +924,192 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RETF(x);
 }    /* tesselation standardized left argument */
 
-static DF2(jttess2){A gs,p,y,z;I*av,n,t;
- PREF2(jttess2);   // enforce left rank 2
+#define STATEREFLECTX 0x100
+#define STATEREFLECTY 0x200
+#define STATETAKE 0x400
+static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
+ PROLOG(600); PREF2(jttess2);   // enforce left rank 2
+#define ZZFLAGWORD state
+ I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- RZ(p=tesos(a,w,n));  // outer shape of overall result, from argument sizes and cut type
- I wr=AR(w);  // rank of w
- if(!(DENSE&AT(w)&&wr)){
-  // w is sparse or atomic.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
-  // trailing axes taken in full will be ok
-  RETF(cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self));}
- I *as=AS(a); I axisct=as[1];  // a-> shape of a, axisct=# axes in a
+ A gs=VAV(self)->g; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // set TAKE bit if code=3: we will shorten out-of-bounds args
+ I wr=AR(w); I wt=AT(w); // rank of w, type of w
+ I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
+ // get shape of final result
+ tesos(a,w,n,rs);      // vert/horiz shape of 1st 2 axes of result, from argument sizes and cut type
+ I nregcells; PROD(nregcells,axisct,av+axisct);  // get size of a region, not including taken-in-full axes.  Must be no bigger than # atoms in w
+ if((-(wt&DENSE)&(-wr)&(-AN(w))&(-nregcells)&(-AN(a))&(-rs[0]))>=0){A p;  // if any of those is 0...
+  // w is sparse, atomic, or empty, or the region has no axes or is empty, or the result is empty.  Go the slow way: create a selector block for each cell, and then apply u;.0 to each cell
+  // trailing axes taken in full will be omitted from the shape of the result
+  RZ(p=tesos(a,w,n,0));  // recalculate all the result shapes
+  RETF(cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w
+ }
  DECLF;  // get the function pointers
- if(axisct>2) {
+ I *ws=AS(w);  // ws-> shape of w
+ // get address of end+1 of the source data, so we can avoid out-of-bounds
+ C *sdataend=CAV(w)+AN(w)*bp(wt);  // addr+1 of source data
+ I inrecursion=(n+256)&512;   // 512 if bit 8 and 9 of n have different values, otherwise 0
+ if(axisct>2) {A next2;  // we build the u for the next 2 axes here
   // We do two axes of tessellation at a time.  If there are more than two axes, replace the verb with a verb that will reapply
-  // the tessellation lacking the first two axes
-  fs = amp(drop(v2(0,2),a),fs); f1=VAV(fs)->f1;  // we will call (0 1}.a)&(original cut)
+  // the tessellation lacking the first two axes.  Unfortunately this differs considerably between ;.3 and ;._3
+  // The ;._3 cut is pretty efficient, moving the data only once per pair of axes added.  The ;.3 cut creates argument cells, which
+  // is inefficient; but that case will be very rare
+  next2=qq(amp(drop(v2(0,2),a),cut(ds((((4-axisct)|n)<0)?CRIGHT:CBOX),sc(n^256^(inrecursion>>1)))),num[-2]);  // RIGHT if n<0 or axisct>4
+  if(n<0){
+   // ;._3, the more usual and faster case
+   // we will recur on ((0 2}.x)&(];.n)"_2 to build up _2-cells of the final result.  To save a smidgen, we will suppress the final
+   // transpose during the recursion by using a large value for n; we will undo all the transposes at once during the last return
+   // build the recursion down 2 levels: (0 2}.x)&(];.n)"_2
+   // If this is the top level of recursion, prefix it with (original cut)"wr@:(??...&|:)@:
+   if(!inrecursion){
+    // The shape returned from ];.n is a mixture of subarray shapes Sn and result shapes Rn.  The first two result-shape values R0 and R1
+    // are implied, as they are encoded in the position of the current cell.  The other shapes are interleaved:
+    // 3 axes: S0 S1 R2 S2 [rest of ws beyond the axes]
+    // 4 axes: S0 S1 R3 R2 S2 S3 [rest of ws beyond the axes]
+    // 5 axes: S0 S1 R3 R2 S2 S3 R4 S4 [rest of ws beyond the axes]
+    // these must be transposed to result in R2..Rn S0..Sn Wx..Wn
+    A xposearg; GATV(xposearg,INT,wr+axisct-2,1,0); AS(xposearg)[0]=wr+axisct-2; I *xpv=IAV(xposearg);
+    DO((axisct>>1)-1, *xpv++ = 4*i+3; *xpv++=4*i+2;) if(axisct&1)*xpv++=2*axisct-4;  // Rn
+    DO(axisct>>1, *xpv++ = 4*i+0; *xpv++=4*i+1;) if(axisct&1)*xpv++=2*axisct-3;  // Sn
+    DO(wr-axisct, *xpv++=2*axisct+i-2;);  // Wn, all the rest
+    next2=atco(atco(qq(fs,sc(wr)),amp(xposearg,ds(CCANT))),next2);  // combine it all
+   }
+  }else{
+   // ;.3.  The cells coming out of the lower tessellations may have dissimilar shape so we have to box them
+   // If the next level is the last, it becomes (0 2}.x)&(<;.n)"_2  - adding one boxing level.  Otherwise use ] instead of < above
+   next2=qq(amp(drop(v2(0,2),a),cut(ds(CBOX),sc(n^256^(inrecursion>>1)))),num[-2]);
+   // collect the components that contribute to a single input-to-u, one box for each : (<@:>"2)@:(0 1&|:)@:next2
+   next2=atco(atco(qq(atco(ds(CBOX),ds(COPE)),num[2]),amp(v2(0,1),ds(CCANT))),next2);
+   if(!inrecursion){
+    // at the top level, add on u@>
+    next2=atco(atop(fs,ds(COPE)),next2);
+   }
+  }
+  fs=next2; f1=VAV(fs)->f1;   // get the function corresponding to the new verb
  }
+ // Now that we really know what fs is, see if it is a BOXATOP form
+ state |= ((VAV(fs)->mr>=wr?VF2BOXATOP1:0)&VAV(fs)->flag2)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP and it will generate a single box, set so for result loop.  Don't touch fs yet, since we might not loop
+
+ // Start preparing for loop
+ I axisproc=axisct; axisproc=axisct>2?2:axisproc;  // number of axes to process here: 1 or 2
+ vmv=av[0]; vsz=av[axisct+0];  // v movement vector and size
+ PROD(cellatoms,wr-axisproc,ws+axisproc); cellbytes = cellatoms*bp(wt);  // get # atoms in cell, then #bytes
  // Figure out the size of the cells we will be making blocks of.  They have all but the first 1 or 2 axes of a/w
- if(axisct==1){
-  // Here there is just one axis.  Create a virtual block to point to cells; fill in its length, shape, and atomct
-  // Calculate the stride between subarrays
-  // Get the first result.  Handle reversal and shards
-  // Allocate and initialize the result area
-  // Call for the remaining subarrays, and install their results in the result area
+ if(axisproc==1){
+  // Here there is just one axis.  We will never have to move anything.
+  // Set up the variables for the 2-D loop, most of which we don't need
+  vds=cellbytes*vmv;  // the amount by which we advance the virtual-block pointer: 1 row 
+  rs[1]=1;  // one horizontal iteration
+  hsz=1;  // treat horiz size as one cell
+  htrunc=0; hkeep1=hsz; hmv=0;  // no truncation owing to horizontal position
+  vtrc=vlrc=0;  // stifle all copying to the strip, which doesn't exist
+  hss=hds=lrchsiz=0; vds1=vss1=0; vss=0; svh=dvh=0; // no horiz looping, so this is immaterial
+  vss=0;   // since we never loop back in horiz loop, this is immaterial
+
+  RZ(virtw=virtual(w,0,wr));  // allocate the virtual block, pointing into w
+ }else{
+  // Here there are at least 2 axes.  We will process the first 2, carefully laying the cells into memory to require minimal copying of data
+  // We will advance along the leading axis, building up a tall narrow strip of cells.  When we advance along the second axis, we will be able to
+  // reuse the overlapping parts of the strip.
+
+  hmv=av[1];  hsz=av[axisct+1];    // h movement vector and size
+  state|=(vsz>>(BW-1))&STATEREFLECTY; state|=(hsz>>(BW-1))&STATEREFLECTX; 
+  vsz=(vsz<0)?-vsz:vsz; hsz=(hsz<0)?-hsz:hsz;  // take abs(size)
+  // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
+  hss = hmv*cellbytes; I hdsc=(hmv>=hsz)?0:hmv;  // horiz source stride, dest stride in cells.  A mv of 0 must have the same effect as an mv of infinity
+  // Calculate the amount to add to the strip position when we move along the leading axis.  If there is no overlap on either axis, move 0.  If horiz overlap only, move vsize.  If vert overlap, move vert mv
+  vss1 = cellbytes*ws[1]; vss=vss1*vmv; vds1=cellbytes*hsz; I vdsc=(hdsc==0)?0:vsz; vdsc=(((vmv-1)|(vsz-vmv-1))<0)?vdsc:vmv;   // if vmv<=0 || vsz-vmv<=0
+                           // vert source stride to move 1 row, stride betw cells, dest stride 1 row (in bytes), 1 result cell (in dest rows)
+  // number of rows to move to dest when going down 1 cell
+  vlrc=vmv; vlrc=(vlrc>vsz)?vsz:vlrc;  // vert pos of lower-right corner.
+  lrchsiz=hmv; lrchsiz=(hdsc==0)?hsz:lrchsiz;   // length uncovered by a move, but size if that is 0 (meaning no move & thus no left side)
+  vds = vdsc*vds1;  hds=hdsc*cellbytes; lrchsiz*=cellbytes; // make into byte counts
+  // figure out how many (if any) of the cells for each axis are going to be truncated; and what the size of the first truncated block will be
+  if(state&STATETAKE){I space, nfit;  // 3-cut, which may have shards - calcuate horizontal shard info
+   // space after first; divide by mv; count how many fit including the first; get vi when we hit truncation; see how many items are valid in 1st truncated cell 
+   space=ws[1]-hsz; nfit=hmv?(space/hmv):0; nfit=(space<0)?0:nfit+1; htrunc=rs[1]-nfit; hkeep1=ws[1]-nfit*hmv;
+  }
+  // see how many atoms are needed in the strip.  There needs to be enough for one top, plus all the bottoms, plus destination stride for each horizontal move
+  I stripn = (hsz*(vsz-vlrc+vlrc*rs[0])+hdsc*rs[1])*cellatoms;  // total number of atoms in the strip
+  // Allocate the area we will use for the strip
+  GA(strip,wt,stripn,0,0);  // allocate strip - rank immaterial
+  // Allocate the virtual block we will use to address subarrays
+  RZ(virtw=virtual(strip,0,wr));
+  // Move in the left side of the first strip (the left edge of first column)
+  svh=CAV(w); dvh=CAV(strip);   // ?vh=pointer to top-left of first column
+  C *svb=svh; C *dvb=dvh;  // running pointers used to fill the strip
+  // Start with the first cell, above the bottom part.  Copy the left-hand side (length vds1-lrchsiz).
+  vtrc=vsz-vlrc;  // number of lines to copy in top half
+  DO(vtrc, I sh=sdataend-(svb+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb,sh); svb+=vss1; dvb+=vds1;);  // copies to dest are all sequential; sequential rows of src
+  // copy the bottom-left part of the first cell, and of all cells if the cells overlap (i. e. vds!=0) (length vds1-lrchsiz)
+  DO(vds?rs[0]:1, C *svb1=svb; DO(vlrc, I sh=sdataend-(svb1+vds1-lrchsiz); sh=(sh>=0)?0:sh; sh+=vds1-lrchsiz; sh=(sh<0)?0:sh; MC(dvb,svb1,sh); svb1+=vss1; dvb+=vds1;); svb+=vss;);  // sequential to dest; hop to cells of src
+  // advance the horiz pointers, which now point to the top-left of the top cell, to the top-left of the top-right area of that cell
+  svh+=(vds1-lrchsiz); dvh+=(vds1-lrchsiz);
  }
- // Here there are at least 2 axes.  We will process the first 2, carefully laying the cells into memory to require minimal copying of data
- // We will advance along the leading axis, building up a tall narrow strip of cells.  When we advance along the second axis, we will be able to
- // reuse the overlapping parts of the strip.
+ // The rest is the same for 1- and 2-axis cut
+ I hvirtofst=AK(virtw); I *virtws=AS(virtw);  // save initial offset (to top-left of source)
+ // Install shape/item count into the virtual array.  First install height; then width if given; then the rest of the shape of w
+ *virtws++=vsz; if(axisproc>1){*virtws++=hsz;} DO(wr-axisproc, *virtws++=ws[axisproc+i];); AN(virtw) = vsz*hsz*cellatoms;
+ // calculate vertical shard info & see if there are any shards
+ if(state&STATETAKE){I space, nfit;  // 3-cut, which may have shards
+  // space after first; divide by mv; count how many fit including the first; get vi when we hit truncation; see how many items are valid in 1st truncated cell 
+  space=ws[0]-vsz; nfit=vmv?(space/vmv):0; nfit=(space<0)?0:nfit+1; vtrunc=rs[0]-nfit; vkeep1=ws[0]-nfit*vmv;
+  if(vtrunc<=0&&htrunc<=0)state &= ~STATETAKE;  // if we don't have any shards after all, turn off looking for them
+ }
+ // for each horizontal position, move in the right edge and process
 
- // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
+#define ZZDECL
+#include "result.h"
+ I mn=rs[0]*rs[1];  // number of cells in the result
+ rs[2]=rs[0]; ZZPARMS(0,0,rs+axisproc-1,axisproc,mn,virtw,1)  // Note the 2-axis result is transposed, so shape is reversed here for that case
 
- // Calculate the amount to add to the strip position when we move along the leading axis.  If there is no overlap on either axis, move 0
- // Calculate the information needed to copy the initial block into the strip.  This is:
- //  #rows    #cols   size of 1 block in bytes    stride between source rows     stride between strip rows
- // Calculate # lines that we DO NOT need to copy when moving along leading axis before any second-axis moves (these lines overlap the previous subarray)
- // Calculate #cols that we do not need to copy when moving along the second axis
- // Calculate the size of the temp area.  Allocate it.
- // Create a virtual block to point to cells; fill in its length, shape, and atomct
- // Set source and strip pointers to point to the start of their areas
- // Move in starting subarray.  Handle reversal and shards
- // Execute the verb on the first subarray
- // Allocate and initialize the result area
- // Execute on the rest of the cells in the strip, move results into result area
- // For the rest of the columns, make one horizontal move followed by vertical moves.  Overlapping data does not need to be copied.
- // transpose the result
- 
+ for(hi=rs[1];hi;--hi){C *svv, *dvv;  // pointers within the lower-right corner, starting at the top-left of the corner.  Before that we use them to advance through top-right
+  // move in the top-right part of top cell, stopping before the lower-right corner.
+  svv=svh; dvv=dvh; // init to top-left of right edge (length=lcrhsiz)
+  DO(vtrc, I sh=sdataend-(svv+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvv,svv,sh); svv+=vss1; dvv+=vds1;);
+  // now ?vv points to top-left of lower-right quadrant of top cell
+  // point the virtual-block pointer to the top of the row
+  AK(virtw)=hvirtofst;
+  // move horiz calc outside loop
+  I hkeep=hkeep1-(htrunc-hi)*hmv;  // horiz length to keep
+  // for each cell in the vertical strip, move in the lower-right corner and execute
+  for(vi=rs[0];vi;--vi){A opcell=virtw;
+   // move in the lower-right corner.  Avoid overrun, and detect if there was overrun.  Watch out for addresses wrapping around the end of memory (length=lcrhsiz)
+   C *dvlrc=dvv, *svlrc=svv; DO(vlrc, I sh=sdataend-(svlrc+lrchsiz); sh=(sh>=0)?0:sh; sh+=lrchsiz; sh=(sh<0)?0:sh; MC(dvlrc,svlrc,sh); svlrc+=vss1; dvlrc+=vds1;);
+   // If a copy was truncated, take only the valid elements.
+   if(state&(STATEREFLECTX|STATEREFLECTY|STATETAKE)){  // something might be truncated/reflected
+    I vkeep=vkeep1-(vtrunc-vi)*vmv; vkeep=(vkeep>vsz)?vsz:vkeep; // vertical length to keep
+    if(((vkeep-vsz)|(hkeep-hsz))<0){   // if either axis must be shortened...
+     RZ(opcell=take((hkeep-hsz)>=0?sc(vkeep):v2(vkeep,hkeep),virtw));
+    }
+    if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
+    if(state&STATEREFLECTX)RZ(opcell=df1(opcell,qq(ds(CREV),num[-1])));  // reverse horizontal
+   }
+   // execute the verb on the cell and assemble results
+   RZ(z=CALL1(f1,opcell,fs)); 
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+   // advance to next vertical (i. e. first-axis) position
+   AK(virtw)+=vds; svv+=vss; dvv+=vds;
+  }
+  // advance to next horizontal position
+  svh+=hss; dvh+=hds; hvirtofst+=hds;
+ }
+
+#define ZZEXIT
+#include "result.h"
+
+// if we took 2 axes, they are transposed in the result.  reverse the transpose. - unless this is a recursive call and we are deferring the transpose until the top level because n is negative
+ if(!(((axisproc<<9)|(inrecursion&n))&512)){A xposeaxes;  // axisproc=1, or bit 9 of n mismatches bit 8 (with n>0), is enough to turn off transpose
+  RZ(xposeaxes=IX(AR(zz))); realizeifvirtual(xposeaxes); IAV(xposeaxes)[0]=1;  IAV(xposeaxes)[1]=0;  // xpose arg, 1 0 2 3 4...
+  RZ(zz=cant2(xposeaxes,zz));
+ }
+
+ AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+ EPILOG(zz);
+
 }
 #endif
 
@@ -718,11 +1126,11 @@ F2(jtcut){A h=0;I flag=0,k;
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w));
  RE(k=i0(w));
- if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(3!=k&&-3!=k,EVNONCE);}
+ if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
   case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX);
   case 1: case -1:
   case 2: case -2: R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
-  case 3: case -3: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
+  case 3: case -3: case 259: case -259: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
   default:         ASSERT(0,EVDOMAIN);
 }}

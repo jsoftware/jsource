@@ -387,7 +387,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
-#define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+// obsolete #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+#define F2RANK(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 
 // Memory-allocation macros
 // Size-of-block calculations.  VSZ when size is constant or variable
@@ -572,6 +573,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define VAL2            '\002'
 
 #if C_LE
+#if BW==64
+#define IHALF0  0x00000000ffffffff
+#else
+#define IHALF0  0x0000ffff
+#endif
 #define B0000   0x00000000
 #define B0001   0x01000000
 #define B0010   0x00010000
@@ -593,6 +599,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define BS10    0x0001
 #define BS11    0x0101
 #else
+#if BW==64
+#define IHALF0  0xffffffff00000000
+#else
+#define IHALF0  0xffff0000
+#endif
 #define B0000   0x00000000
 #define B0001   0x00000001
 #define B0010   0x00000100

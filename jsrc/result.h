@@ -22,19 +22,22 @@
 #define ZZFLAGNOPOP (1LL<<ZZFLAGNOPOPX)
 #define ZZFLAGBOXATOPX 1 // set if u is <@f
 #define ZZFLAGBOXATOP (1LL<<ZZFLAGBOXATOPX)
-#define ZZFLAGUSEOPENX 2  // result contains a cell for which a full call to OPEN will be required (viz sparse)
+#define ZZFLAGUSEOPENX (LGSZI^1)  // result contains a cell for which a full call to OPEN will be required (viz sparse)
 #define ZZFLAGUSEOPEN (1LL<<ZZFLAGUSEOPENX)
-#define ZZFLAGBOXALLOX 3  // zzbox has been allocated
+#define ZZFLAGBOXALLOX LGSZI  // zzbox has been allocated
 #define ZZFLAGBOXALLO (1LL<<ZZFLAGBOXALLOX)
-#define ZZFLAGHASUNBOXX 5  // result contains a nonempty non-box (this must equal BOX)
+#define ZZFLAGWILLUNBOXRESULTX 4  // result feeds into ;, so we can leave virtual blocks in it, as long as they aren't ones we will modify.  Requires BOXATOP also.
+#define ZZFLAGWILLUNBOXRESULT (1LL<<ZZFLAGWILLUNBOXRESULTX)  // must be below the flags for all recursive types
+#define ZZFLAGHASUNBOXX BOXX  // result contains a nonempty non-box (this must equal BOX)
 #define ZZFLAGHASUNBOX (1LL<<ZZFLAGHASUNBOXX)
-#define ZZFLAGHASBOXX 6  // result contains a nonempty box
+#define ZZFLAGHASBOXX (ZZFLAGHASUNBOXX+1)  // result contains a nonempty box (must be one bit above FLAGHASUNBOX)
 #define ZZFLAGHASBOX (1LL<<ZZFLAGHASBOXX)
 
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
- // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
- // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
-#define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells); \
+// THIS MUST NOT BE EXECUTED UNTIL YOU HAVE COMMITTED TO THE RESULT LOOP!
+// If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
+// if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
+#define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,protected,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells); zzprotected=(protected); \
  if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
 
 
@@ -54,10 +57,10 @@
  I zzncells;   // number of cells in the result (input)
  I zzwf;  // length of frame of result.  At start: length of inner frame
  I zzold;  // place to tpop to between executions
+ A zzprotected;  // address, if any, of the virtual block used in the outer loop.  We will not incorporate it into a WILLUNBOX result
  jt->rank=0;  // needed for cvt ?? scaf
 #undef ZZDECL
 #endif
-
 
 //*********** storing results *************
 
@@ -97,12 +100,12 @@ do{
       }else{I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
        // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
        zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
-       ASSERT(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms
+       ASSERT(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
        // change the strides to match the new cellsize
-       zzcelllen<<=zexpshift; zzcellp<<=zexpshift;
+       if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;} 
        // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
        // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
-       ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((zt&DIRECT)?0:ZZFLAGNOPOP)|(ZZFLAGWORD>>(ZZFLAGBOXALLOX-ZZFLAGNOPOPX));
+       ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((((zt&DIRECT)==0)|(ZZFLAGWORD>>ZZFLAGBOXALLOX))&1)<<ZZFLAGNOPOPX;
        zzold=jt->tnextpushx;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
       }
      }else{
@@ -147,6 +150,7 @@ do{
        AS(zzcellshape)[0]=zr;   // set the new result-cell rank
        I *zcsnew=IAV(zzcellshape)+zr;  // pointer to end+1 of new cell size
        DO(zcsr, *--zcsnew=*--zcsold;) DO(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
+       zcsr=zr;  // now the stored cell has a new rank
       }
       // compare the old against the new, taking the max.  extend new with 1s if short
       I *zcs=IAV(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
@@ -173,12 +177,23 @@ do{
     }while(1);
    }
   }else{
-   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with
+   // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless RAZERESULT is set
    ASSERT(!(AT(z)&SPARSE),EVNONCE);
-   realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
+   if(!(ZZFLAGWORD&ZZFLAGWILLUNBOXRESULT)) {
+    // normal case where we are creating the result box.  Must incorp the result
+    realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
+   } else {
+    // The result of this verb will be feeding into raze, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
+    // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive
+    if(z==zzprotected){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); z=newz;}
+   }
    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
   }
-  zzboxp++;  // advance the box pointer, whether it points to valid data or is just a counter of early results
+  // zzboxp does double duty.  Before the first wreck, it just counts the number of times we wrote to zz before the wreck.  After the first
+  // wreck (or for ANY force-boxed), it points to the place where the next boxed result will be stored.  In this mode, boxp is advanced for
+  // every result-cell, skipping over any that went into zz, so that we can use zzbox to tell which result-cell comes from zz and which from zzbox.
+  // Thus, zzboxp is always incremented.
+  ++zzboxp;
   break;  // skip the first-cell processing
  } else{I * RESTRICT is;
   // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
@@ -195,8 +210,8 @@ do{
   RE(natoms=mult(natoms,zzncells));
   // Allocate the result
   GA(zz,zzt,natoms,zzcelllen+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);
-  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty)
-  AFLAG(zz) |= zzt&RECURSIBLE;  // if recursible type, (viz box), make it recursible.  Leave usecount unchanged
+  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty), unless WILLUNBOX is set, since then we may put virtual blocks in the boxed array
+  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLUNBOXRESULT)-1);  // if recursible type, (viz box), make it recursible.  But not if RAZERESULT set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later

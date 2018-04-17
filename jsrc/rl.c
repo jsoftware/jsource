@@ -298,9 +298,9 @@ static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  // If noun, return the linear rep of the noun
  if(AT(w)&NOUN)R lnoun(w);
  if(AT(w)&NAME)R sfn(0,w);
- v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; fl=v->flag;
+ v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
- m=!!fs+!!gs+(id==CFORK)+(hs&&id==CCOLON&&VXOP&fl);
+ m=!!fs+(gs&&id!=CBOX)+(id==CFORK)+(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);
  if(evoke(w))R sfn(0,fs);
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);

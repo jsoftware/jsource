@@ -458,7 +458,7 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
  if(x==s)q=r=s;
  *m=df1(str(q-p,p),cut(ds(CBOX),num[-2]));
  *d=df1(str(s-r,r),cut(ds(CBOX),num[-2]));
- R 1;
+ R *m&&*d;
 }    /* literal fret-terminated or matrix sentences into monad/dyad */
 
 static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;

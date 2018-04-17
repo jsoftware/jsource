@@ -12,7 +12,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(AT(w)&NOUN)R w;
  if(AT(w)&NAME)R sfn(0,w);
  v=VAV(w); id=v->id; fl=v->flag; 
- fs=v->f; gs=v->g; hs=v->h; 
+ fs=v->f; gs=v->g; hs=v->h; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  b=id==CHOOK||id==CADVF; c=id==CFORK;
@@ -36,7 +36,7 @@ F1(jtdrep){A z=drr(w); R z&&AT(z)&BOX?z:ravel(box(z));}
 F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  RZ(w);
  if(FUNC&AT(w)){
-  v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; 
+  v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
   if(VXOPCALL&v->flag)R aro(hs);
   xop=1&&VXOP&v->flag;
   ex=hs&&id==CCOLON&&!xop;

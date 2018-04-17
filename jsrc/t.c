@@ -168,5 +168,9 @@ B jtpinit(J jt){A t;C*s;
  /*  x: */  pdef(CXCO,    VERB, jtxco1,    jtxco2,   RMAX,RMAX,RMAX,VASGSAFE|VISATOMIC1);
  /*  y. */       /* see above */
 
+// modify the BOX verb so that it is flagged BOXATOP (for result purposes), with a g field of ].  Result verbs will
+// treat it as <@], but normal processing as <
+VAV(ds(CBOX))->flag2 |= VF2BOXATOP1; VAV(ds(CBOX))->g=ds(CRIGHT);
+
  if(jt->jerr){printf("pinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }

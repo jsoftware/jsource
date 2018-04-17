@@ -10,8 +10,6 @@
 #define ZZDEFN
 #include "result.h"
 
-#define EMSK(x) (1LL<<((x)-1))
-#define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure
 
 #define STATEOUTERREPEATA 0x0200
 #define STATEINNERREPEATA 0x0400
@@ -63,7 +61,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
   // loop over the frame
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(0,0,ws,wf,mn,1)
+  ZZPARMS(0,0,ws,wf,mn,virtw,1)
 
   for(i0=mn;i0;--i0){
    RZ(z=CALL1(f1,virtw,fs));
@@ -209,7 +207,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
 
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(los,lof,lis,lif,mn,2)
+  ZZPARMS(los,lof,lis,lif,mn,virtw,2)
 
   for(i0=outerframect;i0;--i0){
    I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);

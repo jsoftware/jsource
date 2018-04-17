@@ -230,7 +230,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
 
   // That's not worth figuring out for every call.  So, we will just allocate on the right unless
   // the invalid area is empty and asct<4096 (about the size of L1 cache), to get the caching benefit for small arguments
-  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (asct>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
+  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && hh->invalidhi<hh->currenthi && !(asct<4096 && (hh->invalidlo>=p))) {  // the right side is a possibility
    // Allocating right.  Return a region starting at currenthi
    md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated it
    hh->currentlo=hh->currenthi; hh->currenthi+=p;   // set return value (starting position) and partition
@@ -1701,8 +1701,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
    jtiosc(jt,mode,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    R z;
   }
- // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
- // prehash is set if w argument is omitted (we are just prehashing the a arg)
+  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
+  // prehash is set if w argument is omitted (we are just prehashing the a arg)
   f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found

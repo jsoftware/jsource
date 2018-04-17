@@ -166,7 +166,8 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    I zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
    ASSERT(ccvt(zft|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms.  Not worth checking for empty
    // change the strides to match the new cellsize
-   zzcelllen<<=zexpshift; zzcellp<<=zexpshift; zzcell=CAV(zz)+zzcellp;  // rescale sizes, and recalc address of last+1 cell moved to zz
+   if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
+   zzcell=CAV(zz)+zzcellp;  //  recalc address of last+1 cell moved to zz
   }
 
   I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // * atoms in actual result-cell
@@ -198,7 +199,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    zzboxp--; tempp-=zfs;  // back pointers to next input/output positions
    if((I)(zzboxp-box0)>=0 && (zzboxcell= *zzboxp)){
     // cell comes from zzboxp.  Convert if necessary, then move.  Before moving, calculate the rank to use for the fill.
-    // Don't convert empties, because we have to make sure there can be no failures while we have the contents of zz not attached to any recursive block
+    // Don't convert empties, ??? because we have to make sure there can be no failures while we have the contents of zz not attached to any recursive block (???)
     if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell)))RZ(zzboxcell=cvt(zft,zzboxcell)); I *zzbcs=AS(zzboxcell);  // convert if needed, point to shape
     // if this block is recursible, we must ra() its contents during the copy, because zzbox is not recursive and zztemp is.  The exception is
     // if the block is inplace recursible, which we can copy by making the block nonrecursive, transferring its usecount

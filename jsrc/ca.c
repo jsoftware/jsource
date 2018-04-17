@@ -73,7 +73,7 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
 static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
-// If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
+// If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
 static CS1IP(on1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \

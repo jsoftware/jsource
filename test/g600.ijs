@@ -184,6 +184,17 @@ f=: 4 : 0
 (t -: , x <@;"1   y) , x          -: x f"1   y [ t=: '' [ mm=: ?  #x
 
 
+NB. Verify all kinds of changes of shape and precision.  This is testing assembly, which is common to monad & dyad
+ops =: (0$0);(0$'a');(0$4);(0$1.5);(0$a:);(0$5x);(0$4r6);(0$u:'a');(0$10 u:'a')
+ops =: ops , (0 1$0);(1 0$'a');(0 2$4);(2 0$1.5);(0 1 3$a:);(3 2 0$5x);(1 0 4$4r6);(4 0 5$u:'a');(0 5 0$10 u:'a')
+ops =: ops , (0);(1$'a');(2$4);(2 1$1.5);(3$a:);(3 1$5x);(2$4r6);(1 2 3$u:'a');(3$10 u:'a')
+y =: <@(ops {~ (#ops) ?@$~ ])"0 ] 2 + 100000 ?@$ 3
+(> etx -: >"0 etx)@> y
+NB. Test with different shapes/types of nonempty
+ops =: (0);('a');(4);(1.5);(a:);(5x);(4r6);(u:'a');(10 u:'a')
+y =: <@(((ops {::~ ?@(#ops)) $~ 10 ?@$~ >:@?)&.>@(#&4)"0) ] 1 + 10000 ?@$ 3
+(> etx -: >"0 etx)@> y
+
 NB. f"r zero frames -----------------------------------------------------
 
 (0 7 3 4$0) -: 3 4&$        "1 i.0 7 9 
@@ -918,6 +929,6 @@ minus =: -
 
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
-4!:55 ;:'glob lag minus mm mrk msh pfx rag rank rk s1 t x xx y '
+4!:55 ;:'glob lag minus mm mrk msh ops pfx rag rank rk s1 svy t x xx y '
 randfini''
 

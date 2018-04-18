@@ -1153,7 +1153,9 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
    case IEPS:  {T*av=(T*)u+asct; DQ(ac, DQ(wsct, x=(xe); j=-asct;   while(j<0 &&(exp))++j; *zb++=(UI)j>>(BW-1);     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 
-static void jtiosc(J jt,I mode,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
+// ac is # outer cells of a, asct=#items in 1 inner cell, wc is #outer search cells, wsct is #items to search for per outer cell
+// n is #atoms in a cell
+static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v,zn,*zv;
  p=1<ac?asct:0; q=1<wc||1<wsct;
  mode&=IIOPMSK;
  zn=AN(z); 
@@ -1679,6 +1681,7 @@ static S fnflags[]={  // 0 values reserved for small-range.  They turn off boola
 #define OVERHEADHASHALLO 100  // clearing hash, calculating fnx costs this many compares
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
+// mode indicates the type of operation, defined in j.h
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
     I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
@@ -1695,10 +1698,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((1LL<<IIDOT)|(1LL<<IICO)|(1LL<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
   if(1==ar&&1>=wr&&TYPESEQ(at,wt)&&(mode&IIOREPS)&&1==acr&&wr==wcr&&an&&wn&&
-    ((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES)&&!(at|wt)&SPARSE){
+// obsolete   if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|((mode&IIOREPS)-1)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
+    (/*(wcr==0)||*/((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES))&&!((at|wt)&SPARSE)){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
    GATV(z,INT,wn,wr,ws);
-   jtiosc(jt,mode,an,wn,1,1,a,w,z); // simple sequential search without hashing.
+   jtiosc(jt,mode,1,an,wn,1,1,a,w,z); // simple sequential search without hashing.
    R z;
   }
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
@@ -1748,8 +1752,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
  // We do this only if af!=0, because we have already set up to repeat cells of a if af=0
- if((wf-af)>0&&af){f1+=wf-af; wf=af;}
- if(an&&wn){
+// obsolete  if((wf-af)>0&&af){f1+=wf-af; wf=af;}
+ if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // wf>af & af>0
+ if(((an-1)|(wn-1))>=0){
   // Neither arg is empty.  We can safely count the number of cells
   PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell
@@ -1790,7 +1795,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
  }
 
  // Create result for empty/inhomogeneous arguments
- if(!(m&&n&&zn&&(th>0))){
+// obsolete if(!(m&&n&&zn&&(th>0))){
+ if(((m-1)|(n-1)|(zn-1)|(th-1))<0){  // if one of those is 0...
   I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK|IPHCALC)){  // prehash passes through
   // If empty argument or result, or inhomogeneous arguments, return an appropriate empty or not-found
@@ -1816,12 +1822,13 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;B th;
 
 
  // Choose the function to use for performing the operation
- // See if we should simply do sequential search.    We do this only when the cell of a is a list.
+ // See if we should simply do sequential search.    We do this only for i./i:/e., only when w-cells match with a-cells or w has a single repeated cell
  // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
- if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO)){
-  jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
+ // obsolete if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO)){
+ if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((wcr==acr-1)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){
+  jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
  }else{B b=0==jt->ct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM

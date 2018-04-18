@@ -569,6 +569,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define SZA             ((I)sizeof(A))
 #define SZD             ((I)sizeof(D))
 #define SZI             ((I)sizeof(I))
+#define LGSZD    3  // lg(#bytes in a D)
 #define VAL1            '\001'
 #define VAL2            '\002'
 

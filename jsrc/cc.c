@@ -4,6 +4,7 @@
 /* Conjunctions: Cuts                                                      */
 
 #include "j.h"
+#include "vcomp.h"
 #define ZZDEFN
 #include "result.h"
 #define STATEHASGERUNDX 8
@@ -336,12 +337,107 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* v1   ptr to w for current cut         */
 /* wd   non0 iff w is relative              */
 #if 0
-// lengths are stored as if item0 is a fret, and item n+1 is a fret
-// then if suffix, remove the last fret; if prefix remove the first
-// if suffix set v1=wv; if prefix set v1 pointing  past the discarded fret
-// if prefix neg, set v1 to skip 1st item
-// init pd to point to first item to proc, skipping 1st if prefix
-// init pd0 to start of first buffer
+// the values are 1 byte, either 8 bits or 1 bit
+#define FRETLOOPBYTE(decl,compI,comp) \
+{ \
+ UC val=*(UC*)fret, *avv=(UC*)av;  /* compare value, pointer to input */ \
+ decl /* other variables needed */ \
+ d=-pfx; I nleft=n;  /* if prefix, first omitted fret starts at length 0; set number of items yet to process */ \
+ /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret, \
+ subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the \
+ final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret \
+ distance, and the remnant at the end AFTER that last fret is discarded. */ \
+ while(nleft){I cmpres=0;  /* =0 for the warning */ \
+  /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */ \
+  while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */ \
+   compI  /* Code (if any) to convert avvI to a value that is non0 iff there is a match */ \
+   if(avvI!=0){  /* if we can't skip,  exit loop and search byte by byte */ \
+    I skiphalf=((avvI&IHALF0)==0)<<(LGSZI-1); avv+=skiphalf; d+=skiphalf; nleft-=skiphalf;  /* if first half empty, skip over it - remove if unaligned load penalty */ \
+    break; \
+   } \
+   avv+=SZI; d+=SZI; nleft-=SZI;  /* skip the whole 8 bytes */ \
+  } \
+  if(!nleft)break;  /* if we skipped over everything, we're through */ \
+  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */ \
+  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */ \
+  I testi=testct; do{UI match=(comp); ++avv; cmpres=2*cmpres+match;}while(--testi); \
+  /* process them out of cmpres, writing lengths */ \
+  testi=testct;  /* save # cells processed */ \
+  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ \
+  while(cmpres){ \
+   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
+   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
+  } \
+  d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
+  nleft -= testi;  /* decr number of cells to do */ \
+ } \
+}
+
+// Template for comparisons without byte-wide checks
+#define FRETLOOPNONBYTE(decl, comp) \
+{ \
+ decl \
+ d=-pfx; I nleft=n;  /* if prefix, first omitted fret starts at length 0; set number of items yet to process */ \
+ /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret, \
+ subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the \
+ final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret \
+ distance, and the remnant at the end AFTER that last fret is discarded. */ \
+ while(nleft){I cmpres=0;  /* =0 for the warning */ \
+  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */ \
+  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */ \
+  I testi=testct; do{comp   cmpres=2*cmpres+match;}while(--testi); \
+  /* process them out of cmpres, writing lengths */ \
+  testi=testct;  /* save # cells processed */ \
+  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ \
+  while(cmpres){ \
+   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
+   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
+  } \
+  d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
+  nleft -= testi;  /* decr number of cells to do */ \
+ } \
+}
+
+// the values are intolerant values that match a machine variable size
+#define FRETLOOPSGL(T) FRETLOOPNONBYTE(T val=*(T*)fret; T *avv=(T*)av;  , \
+  UI match=(val==*avv); ++avv; \
+)
+
+// the values are of irregular length, but short enough that we should do all the comparisons to avoid misprediction
+// k is the number of bytes to compare
+#define FRETLOOPMULTFIX FRETLOOPNONBYTE(void *avv=av;  , \
+   I ni; UI match=1;void *f=fret; \
+   for(ni=k-SZI;ni>=0;ni-=SZI){match&=(*(I*)f==*(I*)avv); avv=(I*)avv+1; f=(I*)f+1;} /* compare the fullwords */ \
+   if((BW==64)&&(k&4)){match&=(*(UI4*)f==*(UI4*)avv); avv=(UI4*)avv+1; f=(UI4*)f+1;} \
+   if(k&2){match&=(*(US*)f==*(US*)avv); avv=(US*)avv+1; f=(US*)f+1;} \
+   if(k&1){match&=(*(UC*)f==*(UC*)avv); avv=(UC*)avv+1; f=(UC*)f+1;} \
+)
+
+// the values are of irregular length and we break out of the compare loop
+// k is the number of bytes to compare
+#define FRETLOOPMULTVAR FRETLOOPNONBYTE(void *avv=av;  , \
+   I ni; void *f=fret; I match; \
+   for(ni=k-SZI;ni>=0;ni-=SZI){if(*(I*)f!=*(I*)avv)break; avv=(I*)avv+1; f=(I*)f+1;} /* compare the fullwords */ \
+   if(!(match=(UI)ni>>(BW-1))){avv=(C*)avv+ni+SZI; f=(C*)f+ni+SZI; \
+   }else{if((BW==64)&&(k&4)){match&=(*(UI4*)f==*(UI4*)avv); avv=(UI4*)avv+1; f=(UI4*)f+1;} \
+   if(k&2){match&=(*(US*)f==*(US*)avv); avv=(US*)avv+1; f=(US*)f+1;} \
+   if(k&1){match&=(*(UC*)f==*(UC*)avv); avv=(UC*)avv+1; f=(UC*)f+1;} \
+   } \
+)
+
+// the values are of irregular length and we break out of the compare loop - tolerant version
+// k is the number of bytes to compare
+#define FRETLOOPMULTVARTOL FRETLOOPNONBYTE(D *avv=(D*)av; D ctol=1-jt->ct;  , \
+   I ni; D *f=(D*)fret; I match; \
+   for(ni=k>>LGSZD;ni>0;ni--){if(TCMPNE(ctol,*f,*avv))break; avv=avv+1; f=f+1;} /* compare the fullwords */ \
+   match=(UI)(ni-1)>>(BW-1); avv=avv+ni; f=f+ni; \
+)
+
+
 // 1st word in buf is chain, 2nd is end+1 of data
 #define EACHCUT(stmt) \
  do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */ \
@@ -395,20 +491,6 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
  vf=VAV(fs);
  if(VGERL&sv->flag){state |= STATEHASGERUND; h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
-// Create the frets from the data
-// *fret points to the fret, *fv points to the data to be searched
-// classify search based on type:
-//   direct non-float types
-//    fixed length: 1 2 4 8
-//     1-byte boolean
-//     1-byte literal
-//     others by length
-//    general, short enough to avoid misprediction
-//    general but branch out of loop
-//   direct float types, both tolerant and intolerant
-//    short (no misprediction)
-//    long (mispredicted)
-//   indirect types by call to equ
 #if 0
  // count the frets
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
@@ -423,43 +505,45 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
 // lengths are stored as if item0 is a fret, and item n+1 is a fret
 
 // *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
- C*av=wv;  // scaf
- C *fret=av+k*((n-1)&(pfx-1));  // scaf
-{C val=*(C*)fret, *avv=(C*)av; d=-pfx; I nleft=n;
- I valI=val|((UI)val<<8); valI|=valI<<16;
-#if BW==64
- valI|=valI<<32;
-#endif
- /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret,
- subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the
- final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret
- distance, and the remnant at the end AFTER that last fret is discarded. */
- while(nleft){I cmpres=0;  // =0 for the warning
-  /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */
-  while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */
-   I avvdiff=valI^avvI; avvdiff=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080; if(avvdiff!=0){  /* if we can't skip,  exit loop and search byte by byte */
-    I skiphalf=((avvdiff&IHALF0)==0)<<(LGSZI-1); avv+=skiphalf; d+=skiphalf; nleft-=skiphalf;  /* if first half empty, skip over it - remove if unaligned load penalty */
-    break;
-   }
-   avv+=SZI; d+=SZI; nleft-=SZI;  /* skip the whole 8 bytes */
-  }
-  
-  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */
-  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */
-  I testi=testct; do{I match=val==*avv; ++avv; cmpres=2*cmpres+match;}while(--testi);
-  /* process them out of cmpres, writing lengths */
-  testi=testct;  // save # cells processed
-  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */
-  while(cmpres){
-   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */
-   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */
-   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */
-   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */
-  }
-  d += testct;  /* add in any bits not shifted out of cmpres as going into d */
-  nleft -= testi;  /* decr number of cells to do */
- }
-}
+ void *av=wv;  // scaf
+ void *fret=(C*)av+k*((n-1)&(pfx-1));  // scaf
+// Create the frets from the data
+// fret points to the fret, av points to the data to be searched
+// classify search based on type:
+//   direct non-float types
+//    fixed length: 1 2 4 8
+//     1-byte boolean
+//     1-byte literal
+//     others by length
+//    general, short enough to avoid misprediction
+//    general but branch out of loop
+//   direct float types, both tolerant and intolerant
+//    short (no misprediction)
+//    long (mispredicted)
+//   indirect types by call to equ
+ // boolean
+ FRETLOOPBYTE(    ,
+      ,
+  *avv
+ )
+ // characters
+ FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<32;   ,
+  I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
+  val==*avv
+ )
+ // 2-byte
+ FRETLOOPSGL(US)
+ // 4-byte
+ FRETLOOPSGL(UI4)
+ // 8-byte
+ FRETLOOPSGL(UI)
+ // multibyte fixed
+ FRETLOOPMULTFIX
+ // multibyte var
+ FRETLOOPMULTVAR
+ // multiword tolerant
+ FRETLOOPMULTVARTOL
+
  // partition sizes have been calculated.
  // prepare for the looping.  We need:
  // pd0 pointing to first buffer

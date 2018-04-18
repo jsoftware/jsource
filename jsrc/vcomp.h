@@ -35,7 +35,8 @@
 #define TCMPNE(cct,a,b) ((((a)>(cct)*(b))?1:0) == (((b)<=(cct)*(a))?1:0))
 #define TCMPLT(cct,a,b) (((a)<(b)) & ((((a)>(cct)*(b))?1:0) ^ (((b)>(cct)*(a))?1:0)))
 #define TCMPLE(cct,a,b) (((a)<(b)) | ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0)))  // must use | to make _. always compare false
-
+// This version to produce a boolean result
+#define TCMPEQB(cct,a,b) ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0))
 
 #define TEQ(u,v)       TCMPEQ(1-jt->ct,(u),(v))
 #define TEQXD(u,v)     TEQ((D)u,   v)

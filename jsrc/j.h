@@ -575,7 +575,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #if C_LE
 #if BW==64
-#define IHALF0  0x00000000ffffffff
+#define IHALF0  0x00000000ffffffffLL
 #else
 #define IHALF0  0x0000ffff
 #endif
@@ -601,7 +601,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define BS11    0x0101
 #else
 #if BW==64
-#define IHALF0  0xffffffff00000000
+#define IHALF0  0xffffffff00000000LL
 #else
 #define IHALF0  0xffff0000
 #endif

@@ -167,7 +167,7 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((av->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
  switch(c){
-  case CBOX:    flag2 |= (((wv->mr+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP1X)); flag2 |= ((((wv->lr&wv->rr)+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP2X)); break;  // mark this as <@f if rank of f is _ or _ _
+  case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
   case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
@@ -201,6 +201,8 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
 //   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
+ // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+ flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
  R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
@@ -209,10 +211,12 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  c=ID(a); wv=VAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
- if(c==CBOX){flag2 |= (((wv->mr+1)&(RMAX+1))>>(RMAXX-VF2BOXATOP1X));}  // mark this as <@f if rank of f is _ - monad only
+ if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
+ // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+ flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
  R fdef(flag2,CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 

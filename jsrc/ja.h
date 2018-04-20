@@ -612,7 +612,7 @@
 #define matth1(x)                   jtmatth1(jt,(x))
 #define maxdenom(x,y)               jtmaxdenom(jt,(x),(y))
 #define maximum(x,y)                jtmaximum(jt,(x),(y))
-#define maxtype(x,y)                jtmaxtype(jt,(x),(y))
+#define maxtype(x,y)                (((x)==(y))?(x):jtmaxtype(jt,(x),(y)))
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))

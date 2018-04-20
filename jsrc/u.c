@@ -231,16 +231,16 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
 
 static F1(jtii){RZ(w); RETF(IX(IC(w)));}
 
-// Return the higher-priority of the types s and t.
+// Return the higher-priority of the types s and t.  s and t are known to be not equal.
 // If either is sparse, convert the result to sparse.
 // Error if one argument is sparse and the other is non-sparsable
 // s or t may be set to 0 to suppress the argument (if argument is empty, usually)
 // Result is always an UNSAFE type
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
- t=UNSAFE(t); s=UNSAFE(s);  // We must ignore the flag bits during this test
- // If the types are the same, or one is 0, return quickly.  This handles the common case of equal types
- if((s|t)==t||(s|t)==s)R s|t;
+// obsolete  t=UNSAFE(t); s=UNSAFE(s);  // We must ignore the flag bits during this test
+ // If one of the types is 0, return the other
+ if(((-s)&(-t))>=0)R s+t;
  // If values differ and are both nonzero...
  I resultbit = jt->prioritytype[MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)])];  // Get the higher-priority type
  if((s|t)&SPARSE){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If either operand sparse, return sparse version
@@ -290,7 +290,7 @@ F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}
 A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
-A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}
+A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}  // create scalar character
 A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     RETF(z);}
 A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}
 

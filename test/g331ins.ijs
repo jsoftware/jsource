@@ -22,7 +22,7 @@ test=: 1 : 0
   b=: ?(#yy)$2
   p=: sp  'b u/;.1 yy'
   q=: spa  b u/;.1 yy
-  assert. p <: q*IF64{1.5 2 
+  assert. p <: q*IF64{2 2.5
  end.
  1
 )

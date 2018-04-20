@@ -336,7 +336,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* v    ptr to a for current cut         */
 /* v1   ptr to w for current cut         */
 /* wd   non0 iff w is relative              */
-#if 0
+#if 1
 // the values are 1 byte, either 8 bits or 1 bit
 #define FRETLOOPBYTE(decl,compI,comp) \
 { \
@@ -348,6 +348,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret \
  distance, and the remnant at the end AFTER that last fret is discarded. */ \
  while(nleft){I cmpres=0;  /* =0 for the warning */ \
+if(nleft>n)*(I*)0=0; /* scaf */ \
   /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */ \
   while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */ \
    compI  /* Code (if any) to convert avvI to a value that is non0 iff there is a match */ \
@@ -368,7 +369,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
    UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
    if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
    if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
-   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
+   cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
   } \
   d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
   nleft -= testi;  /* decr number of cells to do */ \
@@ -395,7 +396,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
    UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
    if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
    if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
-   cmpres<<=len; d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
+   cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bits up to & incl the fret; clear the carryover of #cells in partition */ \
   } \
   d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
   nleft -= testi;  /* decr number of cells to do */ \
@@ -407,6 +408,11 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   UI match=(val==*avv); ++avv; \
 )
 
+// the values are D, which use tolerance
+#define FRETLOOPSGLD FRETLOOPNONBYTE(D val=*(D*)fret; D *avv=(D*)av; D cct=1.0-jt->ct;  , \
+  UI match=(TCMPEQB(cct,val,*avv)); ++avv; \
+)
+#if 0 // scaf not used
 // the values are of irregular length, but short enough that we should do all the comparisons to avoid misprediction
 // k is the number of bytes to compare
 #define FRETLOOPMULTFIX FRETLOOPNONBYTE(void *avv=av;  , \
@@ -436,7 +442,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
    for(ni=k>>LGSZD;ni>0;ni--){if(TCMPNE(ctol,*f,*avv))break; avv=avv+1; f=f+1;} /* compare the fullwords */ \
    match=(UI)(ni-1)>>(BW-1); avv=avv+ni; f=f+ni; \
 )
-
+#endif
 
 // 1st word in buf is chain, 2nd is end+1 of data
 #define EACHCUT(stmt) \
@@ -468,29 +474,36 @@ static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
 }
 
 
-static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
-     I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
+static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B b,neg,pfx;C id,*v1,*wv,*zc;
+     I ak,at,c,cv,e=0,d,hn,k,m=0,n,p,r,*s,wt,*zi;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
  PREF2(jtcut2); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
  p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);  // r=rank>.1, s->w shape, wv->w data, c=#atoms in cell of w, k=#bytes in cell of w; neg, pfx, b=_1 cut  (scaf use flag word)
+ // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
+ if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
+ }else{
+  state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
+ }
  if(a!=mark){  // dyadic forms
   if(!AN(a)&&n){  // empty x, do one call if y is non-empty
-   if(VGERL&sv->flag){h=sv->h; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->f1,w,h);}
+   if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->f1,w,h);}
    else R CALL1(f1,w,fs);
   }
   if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
-  if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary
+  if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
   if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
-  v=CAV(a); sep=C1;
- }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:n-1];}  // monadic forms: 1-byte w, use w itself as the fret vector
- else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}  // multibyte w, calculate frets
- // now v->byte vector of frets, sep=fret character
+  ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean
+ }else{
+  // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
+  // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than 1
+  if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&&k&&((BW==32&&wt&FL&&k==SZD)||(k<=SZI&&(k&-k)==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
+  }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
+ }
  ASSERT(n==IC(a),EVLENGTH);
- vf=VAV(fs);
- if(VGERL&sv->flag){state |= STATEHASGERUND; h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
 #if 0
  // count the frets
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
@@ -502,47 +515,65 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
   case 3: u=v+=n;      DO(n, if(sep==*--v){++m; e=MAX(e,u-v); u=v;}); p-=u-v; v=u;
  }
 #else
-// lengths are stored as if item0 is a fret, and item n+1 is a fret
 
-// *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
- void *av=wv;  // scaf
- void *fret=(C*)av+k*((n-1)&(pfx-1));  // scaf
-// Create the frets from the data
-// fret points to the fret, av points to the data to be searched
-// classify search based on type:
-//   direct non-float types
-//    fixed length: 1 2 4 8
-//     1-byte boolean
-//     1-byte literal
-//     others by length
-//    general, short enough to avoid misprediction
-//    general but branch out of loop
-//   direct float types, both tolerant and intolerant
-//    short (no misprediction)
-//    long (mispredicted)
-//   indirect types by call to equ
- // boolean
- FRETLOOPBYTE(    ,
-      ,
-  *avv
- )
- // characters
- FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<32;   ,
-  I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
-  val==*avv
- )
- // 2-byte
- FRETLOOPSGL(US)
- // 4-byte
- FRETLOOPSGL(UI4)
- // 8-byte
- FRETLOOPSGL(UI)
- // multibyte fixed
- FRETLOOPMULTFIX
- // multibyte var
- FRETLOOPMULTVAR
- // multiword tolerant
- FRETLOOPMULTVARTOL
+ // *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
+ void *av=VAV(a);  // point to the start of the fret data
+ void *fret=(C*)av+ak*((n-1)&(pfx-1));  // point to the fret
+ // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
+ I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
+ switch(rtnx){
+ case 0: // single bytes
+  FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
+   I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
+   val==*avv
+   ) break;
+ case 1: // 2 bytes
+  FRETLOOPSGL(US) break;
+ case 2: // 4 bytes
+  FRETLOOPSGL(UI4) break;
+#if BW==64
+ case 3: // 8 bytes
+  FRETLOOPSGL(UI) break;
+#endif
+ case 4: // single-byte Boolean, looking for 1s
+ { 
+ UC val=*(UC*)fret, *avv=(UC*)av;  /* compare value, pointer to input */ 
+ d=-pfx; I nleft=n;  /* if prefix, first omitted fret starts at length 0; set number of items yet to process */ 
+ /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret, 
+ subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the 
+ final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret 
+ distance, and the remnant at the end AFTER that last fret is discarded. */ 
+ while(nleft){I cmpres=0;  /* =0 for the warning */ 
+if(nleft>n)*(I*)0=0; /* scaf */ 
+  /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */ 
+  while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */ 
+   if(avvI!=0){  /* if we can't skip,  exit loop and search byte by byte */ 
+    I skiphalf=((avvI&IHALF0)==0)<<(LGSZI-1); avv+=skiphalf; d+=skiphalf; nleft-=skiphalf;  /* if first half empty, skip over it - remove if unaligned load penalty */ 
+    break; 
+   } 
+   avv+=SZI; d+=SZI; nleft-=SZI;  /* skip the whole 8 bytes */ 
+  } 
+  if(!nleft)break;  /* if we skipped over everything, we're through */ 
+  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */ 
+  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */ 
+  I testi=testct; do{UI match=(*avv); ++avv; cmpres=2*cmpres+match;}while(--testi); 
+  /* process them out of cmpres, writing lengths */ 
+  testi=testct;  /* save # cells processed */ 
+  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ 
+  while(cmpres){ 
+   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ 
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ 
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ 
+   cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ 
+  } 
+  d += testct;  /* add in any bits not shifted out of cmpres as going into d */ 
+  nleft -= testi;  /* decr number of cells to do */ 
+ } 
+} break;
+// FRETLOOPBYTE( , , *avv) break;
+ case 5: // float (tolerant)
+  FRETLOOPSGLD break;
+ }
 
  // partition sizes have been calculated.
  // prepare for the looping.  We need:
@@ -585,27 +616,27 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
    GA(zz,wt,m*c,r,s); zc=CAV(zz); *AS(zz)=m;
    EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,c,zc); zc+=k;);
    break;
-  case CCOMMA:
-  case CLEFT:
-  case CRIGHT:
+// obsolete   case CCOMMA:
+// obsolete   case CLEFT:
+// obsolete   case CRIGHT:
 // scaf MUST CALCULATE e or discard this, which might be better
-   e-=e&&neg; RE(d=mult(m*c,e));
-   GA(zz,wt,d,id==CCOMMA?2:1+r,s-1); zc=CAV(zz); fillv(wt,d,zc);
-   zs=AS(zz); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;
-   EACHCUT(MC(zc,v1,d*k);  zc+=ke;);
-   break;
+// obsolete    e-=e&&neg; RE(d=mult(m*c,e));
+// obsolete    GA(zz,wt,d,id==CCOMMA?2:1+r,s-1); zc=CAV(zz); fillv(wt,d,zc);
+// obsolete    zs=AS(zz); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;
+// obsolete    EACHCUT(MC(zc,v1,d*k);  zc+=ke;);
+// obsolete    break;
 // obsolete  case CBOX:
 // obsolete // scaf perhaps should discard this, if the box can be labeled BOXATOP+null fn (result will create recursive block)
 // obsolete   GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
 // obsolete    EACHCUT(GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),v1,d*k); *za++=z;);
 // obsolete    break;
-  case CAT: case CATCO: case CAMP: case CAMPCO:
+// obsolete   case CAT: case CATCO: case CAMP: case CAMPCO:
 // scaf should take this under BOXATOP?
-   if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){
-    GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
-    EACHCUT(d=d?d-1:0; GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),id1==CBEHEAD?v1+k:v1,d*k); *za++=z;);
-   }
-   break;
+// obsolete    if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){
+// obsolete     GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
+// obsolete     EACHCUT(d=d?d-1:0; GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),id1==CBEHEAD?v1+k:v1,d*k); *za++=z;);
+// obsolete    }
+// obsolete    break;
   case CSLASH:
    vains(vaid(vf->f),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
    if(ado){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
@@ -624,8 +655,9 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
  if(!zz){
   if(m){
    // There are cells.  Run the result loop over them
-   ZZFLAGWORD |= (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
-
+   // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs is invalid and we mustn't check it.
+   // We honor BOXATOP if the verb can operate on a cell of w in its entirety
+   if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=r?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
    // Allocate the virtual block we will use for arguments
    A virtw; RZ(virtw=virtual(w,0,r));
    // Copy in the shape of a cell.  The number of cells will depend on d
@@ -664,7 +696,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,z=0,zz=0,*za;B b,neg,pfx;C id,id
   }else{
    // No frets.  Apply the operand to 0 items; return i. 0,$result (or $,'' if error on fill-cell)
 //  scaf should check for exigent errors
-   z=reitem(zero,w); zz=h?df1(z,*hv):CALL1(f1,z,fs); RESETERR; R iota(over(zero,shape(z?z:mtv)));
+   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
   }
  }
  EPILOG(zz);

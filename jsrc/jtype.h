@@ -245,6 +245,7 @@ typedef I SI;
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
+// NOTE maxtype & maybe others require bit 31 to be 0!!
 #define ASGNX 24
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
@@ -256,7 +257,7 @@ typedef I SI;
 // obsolete #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // NAME type can have the following information flags set
-#define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
+// obsolete #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
 #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
 
 // Planned coding to save bits in type
@@ -269,10 +270,10 @@ typedef I SI;
 // ASGN   xy10    x=ASGNLOCAL y=ASGNTONAME
 // CONW   0100    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 // SYMB   1100
-// NAME   1000
+// NAME   100v    v=NAMEBYVALUE
 // RPAR   0011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 // LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-// 1000 and 0100 are used as flag bits for NOUNSAFE
+// obsolete // 1000 and 0100 are used as flag bits for NOUNSAFE
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
@@ -651,11 +652,11 @@ typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C 
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 
 // bits in flag2:
-#define VF2RANKONLY1X     0   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKONLY1X     0   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
 #define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
-#define VF2RANKONLY2X     1   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKONLY2X     1
 #define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
-#define VF2RANKATOP1X     2   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKATOP1X     2   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
 #define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
 #define VF2RANKATOP2X     3   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
 #define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))

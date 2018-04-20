@@ -87,4 +87,5 @@ A jtspella(J jt,A w){C c,s[3];V*v;
  R str(s[2]?3L:s[1]?2L:1L,s);
 }
 
+// returns the string for primitive whose pseudochar is c - 1, 2, or 3 characters long
 A jtspellout(J jt,C c){C s[3]; spellit(c,s); R str(s[2]?3L:s[1]?2L:1L,s);}

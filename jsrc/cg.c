@@ -104,10 +104,10 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
 
 static A jtgjoin(J jt,C c,A a,A w){A f;
  RZ(a&&w);
- ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);
- ASSERT((!AN(a)||BOX&AT(a))&&(!AN(w)||BOX&AT(w)),EVDOMAIN);
- RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zero));
- R df2(box(spellout(c)),df2(a,w,f),f);
+ ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);  // both ranks<2
+ ASSERT((!AN(a)||BOX&AT(a))&&(!AN(w)||BOX&AT(w)),EVDOMAIN);  // both boxed or empty
+ RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zero));  // f = <@,"0
+ R df2(box(spellout(c)),df2(a,w,f),f);   // gerund: (<c) <@,"0 a <@,"0 w
 }
 
 // u@.v y atomic.  Operate on the nub of y and then rearrange the results

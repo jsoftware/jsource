@@ -33,7 +33,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  // if inner rank is > outer rank, set it equal to outer rank
  wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here.
- if(fs&&VAV(fs)->flag2&VF2RANKATOP1){
+ if(fs&&VAV(fs)->flag2&(VF2RANKATOP1|VF2BOXATOP1)){
   I mr=VAV(fs)->mr; efr(rr,rr,mr);  // rr = cell rank: min of old cell and new
   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
  }
@@ -132,7 +132,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
  wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);// obsolete  if(rr>rcr)rr=rcr;
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
- if(fs&&VAV(fs)->flag2&VF2RANKATOP2){I lrn, rrn;  // prospective new ranks to include
+ if(fs&&VAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2)){I lrn, rrn;  // prospective new ranks to include
   efr(lrn,lr,(I)VAV(fs)->lr); efr(rrn,rr,(I)VAV(fs)->rr);  // get the ranks if we accept the new cell
   if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
    lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...

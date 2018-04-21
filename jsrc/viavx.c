@@ -1158,7 +1158,7 @@ static IOFSMALLRANGE(jtio42,I,US)  static IOFSMALLRANGE(jtio44,I,UI4)  // 4-byte
  {T*v0=(T*)v,*wv=(T*)v; \
   switch(mode){                     \
    case IIDOT: {T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);   *zv++=j+=asct;       wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
-   case IICO:  {T*av=(T*)u; DQ(ac, DQ(wsct, j=asct-1;   T*avv=av+asct*n; do{avv-=n; I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break;}while(--j>=0);     *zv++=(j=0>j?asct:j); wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
+   case IICO:  {T*av=(T*)u; DQ(ac, DQ(wsct, j=asct-1;  T*avv=av+asct*n; do{avv-=n; I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break;}while(--j>=0);     *zv++=(j=0>j?asct:j); wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
    case IEPS:  {T*av=(T*)u; DQ(ac, DQ(wsct, j=-asct;   T*avv=av; do{I jj=n-1; T* wvv=wv; do{if(exp)break;}while(--jj>=0); if(jj<0)break; avv+=n;}while(++j<0);    *zb++=(UI)j>>(BW-1);     wv+=q;); av+=p; if(1==wc)wv=v0;);} break;  \
  }}
 

@@ -9,6 +9,8 @@
 #include "result.h"
 #define STATEHASGERUNDX 8
 #define STATEHASGERUND (1LL<<STATEHASGERUNDX)
+#define STATENEEDSASSEMBLYX 9
+#define STATENEEDSASSEMBLY (1LL<<STATENEEDSASSEMBLYX)
 
 
 
@@ -17,6 +19,7 @@ static DF1(jtcut01){DECLF;A h,x;
  if(VGERL&sv->flag){h=sv->h; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
+#if 0  // special cases no longer used
 static F2(jtcut02v){A z;I*av,e,j,k,m,t,wk;
  m=AN(w); t=AT(w); wk=bp(t);
  av=AV(a); j=av[0]; e=av[1]; k=ABS(e);
@@ -43,50 +46,102 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
  DO(k0, MC(u,v,c); u+=c; v+=d;);
  RETF(0>e1?irs1(z,0L,1L,jtreverse):z);
 }    /* a ];.0 matrix */
+#endif
 
-static DF2(jtcut02){DECLF;A h=0,*hv,q,qq,*qv,y,z,*zv;C id;I*as,c,d,e,hn,i,ii,j,k,m,n,*u,*ws;
+static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
  RZ(a&&w);
- if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h);}  // h points to gerunds, or 0 if not gerund u
- id=h?0:ID(fs); d=h?0:id==CBOX?1:2;   // d= 0: gerund u  1: <  2: other u   id is pseudochar of u, or 0 if gerund
+#define ZZFLAGWORD state
+ I state=0;  // init flags, including zz flags
+ if(!(VGERL&sv->flag)){hv=0; id=ID(fs);  // if verb, point to its data and fetch its pseudocharacter
+ }else{
+  state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
+ }
+ I wr=AR(w);  // rank of w
+// obsolete  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h);}  // h points to gerunds, or 0 if not gerund u
+// obsolete  id=h?0:ID(fs); d=h?0:id==CBOX?1:2;   // d= 0: gerund u  1: <  2: other u   id is pseudochar of u, or 0 if gerund
  if(1>=AR(a))RZ(a=lamin2(zero,a));   // default list to be lengths starting at origin
  RZ(a=vib(a));  // audit for valid integers
- as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # cells in a, c = #axes of subarray given, m is index of next-last axis of a
- ASSERT(2==as[m]&&c<=AR(w),EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
+ as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
+ ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
  if(!n){  /* empty result; figure out result type */
-  switch(d){
-   case 0: y=df1(w,*hv); RESETERR; break;
-   case 1: y=ace; break;
-   case 2: y=CALL1(f1,w,fs); RESETERR; break;
-  }
-  if(y==0)y=zero;  // use zero as fill result if error
-  GA(z,AT(y),n,m+AR(y),0); I *zs=AS(z); I *ys=AS(y); 
-  DO(m, *zs++=as[i];) DO(AR(y), *zs++=ys[i];)  // move in frame of a followed by shape of result-cell
-  RETF(z);
+  if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
+  if(z==0)z=zero;  // use zero as fill result if error
+  GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
+  DO(m, *zzs++=as[i];) DO(AR(z), *zzs++=zs[i];)  // move in frame of a followed by shape of result-cell
+  RETF(zz);
  }
- // Handle special cases of ] or [ with direct data, if vector or table
- if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
-  if     (2==AN(a)&&1==AR(w))R cut02v(a,w);   //  todo kludge why not allow any rank > 0?
-  else if((4==AN(a)||2==AN(a))&&2==AR(w))R cut02m(a,w);  // why not rank > 0?
+// obsolete // Handle special cases of ] or [ with direct data, if vector or table
+// obsolete  if(2==AR(a)&&(id==CLEFT||id==CRIGHT)&&AT(w)&DIRECT)
+// obsolete   if     (2==AN(a)&&1==AR(w))R cut02v(a,w);   //  todo kludge why not allow any rank > 0?
+// obsolete   else if((4==AN(a)||2==AN(a))&&2==AR(w))R cut02m(a,w);  // why not rank > 0?
  // otherwise general case, one axis at a time
- ws=AS(w); 
- GATV(z,BOX,n,m,as); zv=AAV(z);
- GATV(q,BOX,c,1,0); qv=AAV(q);
- GAT(qq,BOX,1,0,0); *AAV(qq)=q;
- for(ii=0;ii<n;++ii){
-  for(i=0;i<c;++i){
-   m=ws[i]; j=u[i]; e=u[i+c]; k=ABS(e); 
-   ASSERT(!e||-m<=j&&j<m,EVINDEX);
-   if(0>j){j+=1+m-k; if(0>j){k+=j; j=0;}}else k=MIN(k,m-j);
-   RZ(qv[i]=0>e?apv(k,j+k-1,-1L):0==j&&k==m?ace:apv(k,j,1L));
-  }
-  RZ(y=from(qq,w)); u+=c+c;
-  switch(d){
-   case 0: RZ(*zv++=rifvs(df1(y,hv[ii%hn]))); break;
-   case 1: RZ(*zv++=rifvs(y));                break;
-   case 2: RZ(*zv++=rifvs(CALL1(f1,y,fs)));   break;
-  }
+ ws=AS(w);
+ // obsolete GATV(zz,BOX,n,m,as); zv=AAV(zz);
+#define ZZDECL
+#include "result.h"
+if(m){
+   // There is a frame; we will have to assemble the results, even if there is only one
+   // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs is invalid and we mustn't check it.
+   // We honor BOXATOP if the verb can operate on a cell of w in its entirety
+   state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
+   if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=wr?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
+   ZZPARMS(0,0,as,m,n,0,1);  // set frame & # cells
  }
- RETF(1==d?z:ope(z));
+ I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
+ for(ii=n;ii;--ii){  // for each 2-cell of a.  u points to the cell
+  if((-(c^1)|(e=u[c]))>=0){  // e=length of 1st axis
+   // non-reversed selection along a single axis: calculate length {. start }. w
+   m=ws[0]; j=u[0];  // m=length of axis, j=starting position
+   ASSERT(((-e)&((j+m)|(m-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
+   if(j>=0){e=MIN(e,m-j);}else{j+=m; e=MIN(e,j+1); j-=(e-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
+   // Allocate a virtual block & fill it in
+   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w.  Doesn't change, but not worth testing for & factoring out
+   I offset = j * wcellsize;  // offset in bytes of the virtual data
+   // allocate virtual block, passing in the in-place status from w
+   RZ(z = virtual(w,offset,wr));    // allocate block
+   // fill in shape
+   I* RESTRICT zs=AS(z); zs[0]=e; DO(wr-1, zs[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+   AN(z)=e*wcellsize;  // install # atoms
+  }else{
+   // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input ot {) on grounds of rarity
+   do{
+    if(q){  // if we have already allocated the input area to {, fill it in
+     // For each axis, create a boxed vector of boxed indexes to fetch, in the correct order
+     for(i=0;i<c;++i){  // for each axis of the cell of a
+      m=ws[i]; j=u[i]; e=u[i+c]; k=e; e>>=(BW-1); k^=e; k-=e;  // m=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
+// obsolete     ASSERT(!e||-m<=j&&j<m,EVINDEX);  // validate j in range if length not zero
+      ASSERT(((-k)&((j+m)|(m-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
+// obsolete    if(0>j){j+=1+m-k; if(0>j){k+=j; j=0;}}else k=MIN(k,m-j);  // adjust j/k for negative j; clip endpoint to length of axis
+// obsolete   RZ(qv[i]=0>e?apv(k,j+k-1,-1L):0==j&&k==m?ace:apv(k,j,1L));  // create ascending or descending vector
+      if(j>=0){k=MIN(k,m-j); j+=e&(k-1);}else{j+=m; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
+      RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
+     }
+     break;  // this is the loop exit
+    }else{  // we have not allocated the input to {; do so now
+     GATV(q,BOX,c,1,0); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
+     GAT(qq,BOX,1,0,0); *AAV(qq)=q;  // enclose that vector of boxes in a box to pass into {
+    }
+   }while(1);
+   RZ(z=from(qq,w));
+  }
+  if(!(state&STATEHASGERUND))z=CALL1(f1,z,fs);else{z=df1(z,hv[gerundx]); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
+  if(!(state&STATENEEDSASSEMBLY)){EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly
+#define ZZBODY
+#include "result.h"
+
+  u += 2*c;  // step to the next cell of a
+// obsolete   RZ(*zv++=z);
+// obsolete   RZ(*zv++=rifvs(df1(z,hv[ii%hn])));
+// obsolete   switch(d){
+// obsolete    case 0: RZ(*zv++=rifvs(df1(y,hv[ii%hn]))); break;
+// obsolete    case 1: RZ(*zv++=rifvs(y));                break;
+// obsolete    case 2: RZ(*zv++=rifvs(CALL1(f1,y,fs)));   break;
+// obsolete    }
+ }
+#define ZZEXIT
+#include "result.h"
+ EPILOG(zz);
 }    /* a f;.0 w */
 
 DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
@@ -348,7 +403,6 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret \
  distance, and the remnant at the end AFTER that last fret is discarded. */ \
  while(nleft){I cmpres=0;  /* =0 for the warning */ \
-if(nleft>n)*(I*)0=0; /* scaf */ \
   /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */ \
   while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */ \
    compI  /* Code (if any) to convert avvI to a value that is non0 iff there is a match */ \
@@ -474,14 +528,14 @@ static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
 }
 
 
-static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B b,neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,c,cv,e=0,d,hn,k,m=0,n,p,r,*s,wt,*zi;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
+static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
+     I ak,at,c,cv,e=0,d,hn,k,m=0,n,r,*s,wt,*zi;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
  PREF2(jtcut2); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
- p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);  // r=rank>.1, s->w shape, wv->w data, c=#atoms in cell of w, k=#bytes in cell of w; neg, pfx, b=_1 cut  (scaf use flag word)
+ n=IC(w); wt=AT(w); k=*AV(sv->g); neg=(UI)k>>(BW-1); pfx=k&1;  // n=#items of w; k is a temp; neg=cut type is _1/_2; pfx=cut type is 1/_1
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);  // r=rank>.1, s->w shape, wv->w data, c=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
  }else{
@@ -489,11 +543,11 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B b,neg,pfx;C id,*v1,*wv,*z
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
  if(a!=mark){  // dyadic forms
-  if(!AN(a)&&n){  // empty x, do one call if y is non-empty
+  if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
    if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->f1,w,h);}
    else R CALL1(f1,w,fs);
   }
-  if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
+  if(((-AN(a))&(-(BOX&AT(a))))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
   if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
   if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
   ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean
@@ -504,17 +558,6 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B b,neg,pfx;C id,*v1,*wv,*z
   }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
  }
  ASSERT(n==IC(a),EVLENGTH);
-#if 0
- // count the frets
- switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
-  case 0: if(AT(a)&B01&&C1==sep)m=bsum(n,v); 
-          else{--v;    DO(n, if(sep==*++v) ++m;                    ); v=CAV(a);}    break;
-  case 1: if(AT(a)&B01&&C1==*v )m=bsum(n,v);
-          else{u=v+=n; DO(n, if(sep==*--v){++m;               u=v;}); p-=u-v; v=u;} break;
-  case 2: u=--v;       DO(n, if(sep==*++v){++m; e=MAX(e,v-u); u=v;}); v=CAV(a);     break;
-  case 3: u=v+=n;      DO(n, if(sep==*--v){++m; e=MAX(e,u-v); u=v;}); p-=u-v; v=u;
- }
-#else
 
  // *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
  void *av=VAV(a);  // point to the start of the fret data
@@ -536,41 +579,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B b,neg,pfx;C id,*v1,*wv,*z
   FRETLOOPSGL(UI) break;
 #endif
  case 4: // single-byte Boolean, looking for 1s
- { 
- UC val=*(UC*)fret, *avv=(UC*)av;  /* compare value, pointer to input */ 
- d=-pfx; I nleft=n;  /* if prefix, first omitted fret starts at length 0; set number of items yet to process */ 
- /* The search step finds one fret and consumes it.  For pfx, the first count is the #items BEFORE the first fret, 
- subsequent items are the interfret distance, and the last is the length of the remnant PLUS 1 to account for the 
- final fret which is in the last partition.  For !pfx, the first count INCLUDES the first fret, subsequent items are interfret 
- distance, and the remnant at the end AFTER that last fret is discarded. */ 
- while(nleft){I cmpres=0;  /* =0 for the warning */ 
-if(nleft>n)*(I*)0=0; /* scaf */ 
-  /* for byte-at-a-time searches we can save some time by skipping 4/8 bytes at a time */ 
-  while(nleft>=SZI){I avvI = *(I*)avv; /* read one word */ 
-   if(avvI!=0){  /* if we can't skip,  exit loop and search byte by byte */ 
-    I skiphalf=((avvI&IHALF0)==0)<<(LGSZI-1); avv+=skiphalf; d+=skiphalf; nleft-=skiphalf;  /* if first half empty, skip over it - remove if unaligned load penalty */ 
-    break; 
-   } 
-   avv+=SZI; d+=SZI; nleft-=SZI;  /* skip the whole 8 bytes */ 
-  } 
-  if(!nleft)break;  /* if we skipped over everything, we're through */ 
-  I testct=BW; testct=(nleft>testct)?testct:nleft;  /* testct=# compares to do, BW max */ 
-  /* rattle off compares; save the number in cmpres, MSB=1st compare.  We keep the count the same for prediction */ 
-  I testi=testct; do{UI match=(*avv); ++avv; cmpres=2*cmpres+match;}while(--testi); 
-  /* process them out of cmpres, writing lengths */ 
-  testi=testct;  /* save # cells processed */ 
-  cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ 
-  while(cmpres){ 
-   UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ 
-   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ 
-   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ 
-   cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ 
-  } 
-  d += testct;  /* add in any bits not shifted out of cmpres as going into d */ 
-  nleft -= testi;  /* decr number of cells to do */ 
- } 
-} break;
-// FRETLOOPBYTE( , , *avv) break;
+  FRETLOOPBYTE( , , *avv) break;
  case 5: // float (tolerant)
   FRETLOOPSGLD break;
  }
@@ -599,7 +608,6 @@ if(nleft>n)*(I*)0=0; /* scaf */
   --m;  // remove the discarded d from the count
  } 
 
-#endif
  // process, handling special cases
  switch(wd?0:id){
   case CPOUND:
@@ -695,8 +703,7 @@ if(nleft>n)*(I*)0=0; /* scaf */
 
   }else{
    // No frets.  Apply the operand to 0 items; return i. 0,$result (or $,'' if error on fill-cell)
-//  scaf should check for exigent errors
-   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
+   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
   }
  }
  EPILOG(zz);

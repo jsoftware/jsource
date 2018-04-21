@@ -75,13 +75,13 @@ static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
 static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
-A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,j,m=-1;V*fv,*gv,*hv,*v;
+A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id;
  hv=VAV(h); hi=hv->id;
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2
  flag=(VINPLACEOK1|VINPLACEOK2)+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
- if(NOUN&AT(f)){  /* y {~ x i. ] */
+ if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
   ACIPNO(f);  // This justifies keeping the result ASGSAFE
@@ -94,7 +94,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  fv=VAV(f); fi=fv->id; if(fi!=CCAP)flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
  switch(fi){
-  case CCAP:                      f1=jtcork1; f2=jtcork2;  break; /* [: g h */
+  case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;  break; /* [: g h */
   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
   case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
@@ -136,7 +136,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
  // argument.  In that case h can inplace the unused aegument.
  if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
- R fdef(0,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
+ R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
 

@@ -37,8 +37,9 @@
 // THIS MUST NOT BE EXECUTED UNTIL YOU HAVE COMMITTED TO THE RESULT LOOP!
 // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
+// Where f is depends on whether the modifier is f@:g or ([: g h)
 #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,protected,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells); zzprotected=(protected); \
- if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
+ if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
 
 
 #undef ZZDEFN

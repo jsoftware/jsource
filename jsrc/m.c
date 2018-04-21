@@ -490,7 +490,7 @@ void jtfh(J jt,A w){fr(w);}
 A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 
 // allocate a virtual block, given the backing block
-// offset is offset in atoms from start of w; r is rank, s (optional) -> shape
+// offset is offset in atoms from start of w; r is rank
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller

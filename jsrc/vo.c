@@ -171,7 +171,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   }
 
   I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // * atoms in actual result-cell
-  I natomsresult=natomsresultcell*zzncells;  // number of atoms in result
+  I natomsresult; RE(natomsresult=mult(natomsresultcell,zzncells));  // number of atoms in result
   // Since we know the result-cell size in zzcellshape must be able to contain a cell of zz, we can test for equal rank and equal number of atoms.
   // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
   if((TYPESXOR(zft,AT(zz)) | ((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){

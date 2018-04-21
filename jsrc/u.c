@@ -84,14 +84,15 @@ B all1(A w){if(!w)R 0; R !memchr(AV(w),C0,AN(w));}
 I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
 
 // return A-block for b+m*i.n
-A jtapv(J jt,I n,I b,I m){A z;I j=b-m,p=b+m*(n-1),*x;
- GATV(z,INT,n,1,0); x=AV(z);
- switch(m){
-  case  0: DO(n, *x++=b;);      break;
-  case -1: while(j!=p)*x++=--j; break;
-  case  1: while(j!=p)*x++=++j; break;
-  default: while(j!=p)*x++=j+=m;
- }
+A jtapv(J jt,I n,I b,I m){A z;
+ GATV(z,INT,n,1,0); I *x=AV(z);
+  DO(n, x[i]=b; b+=m;)
+// obsolete I j=b-m,p=b+m*(n-1),*x; switch(m){
+// obsolete   case  0: DO(n, *x++=b;);      break;
+// obsolete   case -1: while(j!=p)*x++=--j; break;
+// obsolete   case  1: while(j!=p)*x++=++j; break;
+// obsolete   default: while(j!=p)*x++=j+=m;
+// obsolete  }
  R z;
 }    /* b+m*i.n */
 

@@ -105,7 +105,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
    I woffset = tkasign&(tklen + nitems);   // x+#y if x neg, 0 if x pos
    // get length of a cell of w
    I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w
-   I offset = woffset * wcellsize;  // offset in bytes of the virtual data
+   I offset = woffset * wcellsize;  // offset in atoms of the virtual data
    // allocate virtual block, passing in the in-place status from w
    RZ(s = virtualip(w,offset,wr));    // allocate block
    // fill in shape

@@ -664,6 +664,11 @@ typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C 
 #define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
 #define VF2BOXATOP2X      5   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
 #define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+#define VF2ISCCAPX        6   // flags (if any) came from ([: g h) rather than f@:g
+#define VF2ISCCAP       ((I)(1LL<<VF2ISCCAPX))
+#define VF2WILLBEOPENEDX  7   // The result of this verb will be immediately opened (by > or ;)
+#define VF2WILLBEOPENED   ((I)(1LL<<VF2WILLBEOPENEDX))
+
 
 
 

@@ -29,7 +29,7 @@
 #define SMMCFREE        2
 
 #define RMBX            64L                                  /* max rank for mbx      */
-#define SMMFREE(a)      (I**)((I)(a)+8*(allosize(a)/8)-SZI*MLEN)   /* address of free lists */
+#define SMMFREE(a)      (I**)((I)(a)+(allosize(a)&-8)-SZI*MLEN)   /* address of free lists */
 
 // **** following is the layout of SMM blocks, which keep a header before the allocated area
 typedef struct {I*a;US j;US blkx;} MS;
@@ -40,7 +40,7 @@ static F1(jtsmmblkf);
 
 
 static I smmsize(A a){
- R 8*(allosize(a)/8)-SZI*(SMMAH+RMBX+MLEN)-SZA*AN(a)-SZI*((SMMAH+RMBX+MLEN+AN(a))%2);
+ R (allosize(a)&-8)-SZI*(SMMAH+RMBX+MLEN)-SZA*AN(a)-SZI*((SMMAH+RMBX+MLEN+AN(a))&1);
 }    /* size of allocateable area */
 
 static C*smmu(A a){I v;

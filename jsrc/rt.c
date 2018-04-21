@@ -71,7 +71,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
 static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
  RZ(a);
  n=AN(a); RE(zn=mult(m,n)); GATV(z,LIT,zn,2,0); s=AS(z); *s=m; *++s=n;
- x=CAV(z); memset(x,' ',AN(z)); MC(x+n*(j+(m-(j+k))/2),AV(a),n);
+ x=CAV(z); memset(x,' ',AN(z)); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
  R z;
 }
 

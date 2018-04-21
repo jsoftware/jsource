@@ -531,7 +531,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
    case 28: KEYHEADTALLY(I,SB,I,wv[i],*v   ); break;
    case 29: KEYHEADTALLY(D,SB,D,wv[i],(D)*v); break;
   }
-  *AS(z)=AN(z)/2; *(1+AS(z))=2;
+  *AS(z)=AN(z)>>1; *(1+AS(z))=2;
  }else{
   RZ(q=indexof(a,a));
   x=repeat(eq(q,IX(n)),w); y=keytally(q,q,0L); z=stitch(b?x:y,b?y:x);

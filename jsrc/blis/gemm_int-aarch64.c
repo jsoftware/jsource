@@ -69,8 +69,8 @@ void bli_dgemm_opt_8x6
   PREFETCH((void*)&c[5*cs_c]);
 
   gint_t l;
-  gint_t ki = k/4;  // unroll
-  gint_t kr = k%4;
+  gint_t ki = k>>2;  // unroll
+  gint_t kr = k&3;
   for (l=0; l<ki; ++l) {
 
 // iter 0

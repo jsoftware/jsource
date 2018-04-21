@@ -29,18 +29,18 @@ static DF1(jtreduce);
 static void vdone(I m,I n,B*x,B*z,B pc){B b,*u;
  if(1==m){UI s,*xi;
   s=0; b=0;
-  xi=(I*)x; DO(n/SZI, s^=*xi++;); 
-  u=(B*)xi; DO(n%SZI, b^=*u++;);
+  xi=(I*)x; DO(n>>LGSZI, s^=*xi++;); 
+  u=(B*)xi; DO(n&(SZI-1), b^=*u++;);
   u=(B*)&s; DO(SZI,   b^=*u++;);
   *z=b==pc;
- }else if(0==n%sizeof(UI  ))VDONE(UI,  PARITYW)
- else  if(0==n%sizeof(UINT))VDONE(UINT,PARITY4)
- else  if(0==n%sizeof(US  ))VDONE(US,  PARITY2)
+ }else if(0==(n&(sizeof(UI  )-1)))VDONE(UI,  PARITYW)
+ else  if(0==(n&(sizeof(UINT)-1)))VDONE(UINT,PARITY4)
+ else  if(0==(n&(sizeof(US  )-1)))VDONE(US,  PARITY2)
  else  DO(m, b=0; DO(n, b^=*x++;); *z++=b==pc;);
 }
 #else
 static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
- q=n/SZI; r=n%SZI; y=(UI*)x;
+ q=n>>LGSZI; r=n&(SZI-1); y=(UI*)x;
  switch((r?2:0)+pc){
   case 0: DO(m, s=0; DO(q, s^=*y++;); PARITYW;                            *z++=!b;); break;
   case 1: DO(m, s=0; DO(q, s^=*y++;); PARITYW;                            *z++= b;); break;
@@ -71,7 +71,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 #else
 #define RBFXODDSIZE(pfx,bpfx)  \
  {B*zz;I r,t,*xi,*yi,*zi;                                                       \
-  q=d/SZI; r=d%SZI; xi=(I*)x; zz=z;                                             \
+  q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zz=z;                                             \
   for(j=0;j<m;++j,zz-=d){                                                       \
    yi=xi; xi=(I*)((B*)xi-d); zi=(I*)zz;                                         \
    DO(q, --xi; --yi; *--zi=pfx(*xi,*yi););                                      \
@@ -82,7 +82,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 
 #define RCFXODDSIZE(pfx,bpfx)  \
  {I r,t,*xi,*yi,*zi;                                                            \
-  q=d/SZI; r=d%SZI;                                                             \
+  q=d>>LGSZI; r=d&(SZI-1);                                                             \
   for(j=0;j<m;++j,x+=d,z+=d){                                                   \
    yi=(I*)x; x+=d; xi=(I*)x; zi=(I*)z; DO(q, *zi++=pfx(*yi,*xi); ++xi; ++yi;); t=pfx(*yi,*xi); MC(zi,&t,r);    \
    DO(n-2,   x+=d; xi=(I*)x; zi=(I*)z; DO(q, *zi++=pfx(*zi,*xi); ++xi;      ); t=pfx(*zi,*xi); MC(zi,&t,r););  \
@@ -112,7 +112,7 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
   else                      RBFXODDSIZE(pfx,bpfx)  \
  }  /* non-commutative */
 
-REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n%2)))
+REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
 REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  DO(m, *z++=1&&memchr(x,C1,n);                         x+=c;)) 
 REDUCECFX( andinsB, AND, IAND, SAND, BAND, DO(m, *z++=!  memchr(x,C0,n);                         x+=c;))
@@ -130,7 +130,7 @@ REDUCEPFX(plusinsB,I,B,PLUS)
 AHDRR(plusinsB,I,B){I d,dw,i,p,q,r,r1,s;UC*tu;UI*v;
  if(c==n&&n<SZI)DO(m, s=0; DO(n, s+=*x++;); *z++=s;)
  else if(c==n){UI t;
-  p=n/SZI; q=p/255; r=p%255; r1=n%SZI; tu=(UC*)&t;
+  p=n>>LGSZI; q=p/255; r=p%255; r1=n&(SZI-1); tu=(UC*)&t;
   for(i=0;i<m;++i){
    s=0; v=(UI*)x; 
    DO(q, t=0; DO(255, t+=*v++;); DO(SZI, s+=tu[i];));
@@ -138,7 +138,7 @@ AHDRR(plusinsB,I,B){I d,dw,i,p,q,r,r1,s;UC*tu;UI*v;
    x=(B*)v; DO(r1, s+=*x++;); 
    *z++=s;
  }}else{A t;UI*tv;
-  d=c/n; dw=(d+SZI-1)/SZI; p=dw*SZI; memset(z,C0,m*d*SZI);
+  d=c/n; dw=(d+SZI-1)>>LGSZI; p=dw*SZI; memset(z,C0,m*d*SZI);
   q=n/255; r=n%255;
   t=ga(INT,dw,1,0); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
@@ -234,8 +234,8 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
   case CNE:
    ASSERT(B01&AT(e),EVNONCE); 
    if(!n)*BAV(z)=p; 
-   b=1; DO(r, if(!(s[i]%2)){b=0; break;}); 
-   R !p==*BAV(e)&&b!=n%2?not(z):z;
+   b=1; DO(r, if(!(s[i]&1)){b=0; break;}); 
+   R !p==*BAV(e)&&b!=(n&1)?not(z):z;
 }}   /* f/w on sparse vector w, post processing */
 
 static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P*wp;
@@ -271,8 +271,8 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  switch(id){
   case CPLUS: if(!equ(e,zero))RZ(e=tymes(e,sc(n))); break; 
   case CSTAR: if(!equ(e,one )&&!equ(e,zero))RZ(e=expn2(e,sc(n))); break;
-  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==n%2)e=one; break;
-  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==n%2)e=zero;
+  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==(n&1))e=one; break;
+  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==(n&1))e=zero;
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
@@ -322,8 +322,8 @@ static B jtredspse(J jt,C id,I wm,I xt,A e,A zx,A sn,A*ze,A*zzx){A b;B nz;I t,zt
   case CSTARDOT: if(nz)RZ(zx=lcm(zx,from(b,over(one ,e))));                 break;
   case CMIN:     if(nz)RZ(zx=minimum(zx,from(b,over(zt&B01?one: zt&INT?sc(IMAX):ainf,     e)))); break;
   case CMAX:     if(nz)RZ(zx=maximum(zx,from(b,over(zt&B01?zero:zt&INT?sc(IMIN):scf(infm),e)))); break;
-  case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(zero,residue(num[2],sn)))); if(!(wm%2))e=one;  break;
-  case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(one, residue(num[2],sn)))); if(!(wm%2))e=zero; break;
+  case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(zero,residue(num[2],sn)))); if(!(wm&1))e=one;  break;
+  case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(one, residue(num[2],sn)))); if(!(wm&1))e=zero; break;
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  *ze=e; *zzx=zx;
@@ -390,12 +390,12 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
 }    /* f/"r for sparse w */
 
 #define BR2IFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
-                         GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
+                         GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
                          if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=x F y; ); u+=d; v+=d;)  \
                          else   DO(m,       x=*u++; y=*u++; *zv++=x F y;               ); \
                         }
 #define BR2PFX(T,F)     {T*u=(T*)wv,*v=u+d,x,y;                                           \
-                         GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z);                               \
+                         GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z);                               \
                          if(1<d)DO(m, DO(d, x=*u++; y=*v++; *zv++=F(x,y);); u+=d; v+=d;)  \
                          else   DO(m,       x=*u++; y=*u++; *zv++=F(x,y);              ); \
                         }
@@ -413,7 +413,7 @@ static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;
 
 static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m,wn,wr,*ws,*wv;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w);
- PROD(m,f,ws); PROD(c,r,f+ws); d=c/2;
+ PROD(m,f,ws); PROD(c,r,f+ws); d=c>>1;
  switch(BR2CASE(CTTZ(AT(w)),id)){
   case BR2CASE(B01X,CEQ     ): if(b=1==r)BTABIFX(==   ); break;
   case BR2CASE(B01X,CNE     ): if(b=1==r)BTABIFX(!=   ); break;
@@ -453,7 +453,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
   case BR2CASE(FLX, CGE     ): BR2PFX(D,TGE); break;
   case BR2CASE(FLX, CNE     ): BR2PFX(D,TNE); break;
  }
- if(b){S*u=(S*)wv; GATV(z,B01,wn/2,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
+ if(b){S*u=(S*)wv; GATV(z,B01,wn>>1,wr-1,ws); zv=BAV(z); DO(m, *zv++=btab[*u++];);}
  if(z&&1<r){I*u=f+AS(z),*v=f+1+ws; DO(r-1, *u++=*v++;);}
  *zz=z;
  R 1;

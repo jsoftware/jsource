@@ -77,7 +77,7 @@ static F1(jtfmtbfc){A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
 } /* format phrases: boxed from char */
 
 static B jtfmtcomma(J jt, C *x, I l, I d, C *subs) {C *v,*u;I j,n,c;
- n=l-(c=(l-!!d-d)/4); u=x+l-1;
+ n=l-(c=(l-!!d-d)>>2); u=x+l-1;
  if(v=memchr(x, SUBd, n)){j=n-(v-x); u-=j; memmove(u+1,v,j); v--;} else v=x+n-1;
  j=0;
  DO(v-x+1, if('0'<=*v&&*v<='9'){if(j==3){*u--=SUBc; j=0;} j++;} *u--=*v--;);
@@ -152,8 +152,8 @@ static F1(jtfmtparse){A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdblc",*cu1
  }
  if(mtv!=zv[NMODVALS]){C*cu="e,.-*",*cv,subs[5];
   x=zv[NMODVALS]; n=AN(x); cv=CAV(x); MC(subs,cu,5L); memset(ml,C1,5L);
-  ASSERT(0==n%2&&10>=n,EVDOMAIN);
-  DO(n/2, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
+  ASSERT(0==(n&1)&&10>=n,EVDOMAIN);
+  DO(n>>1, ASSERT(s=strchr(cu,*cv++),EVDOMAIN); j=s-cu; ASSERT(ml[j],EVDOMAIN); ml[j]=0; subs[j]=*cv++;);
   RZ(zv[NMODVALS]=rifvs(str(5L,subs)));
  }
  vals[2]=fb; RZ(*zv=rifvs(vec(INT,3,vals)));
@@ -478,7 +478,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
       y=*iv < 0; g=0; 
       if(*iv < 0 && mMN) { y=nM; g=nN; }
       else if(*iv>=0 && mPQ) { y=nP; g=nQ; }
-      m=*il-y-g; if(mC) m=m-(m-!!d-d)/4;
+      m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
       RZ(sprintfI(cv+y, m, d, *iv, subs));
       if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
       if     (*iv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }
@@ -489,7 +489,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
       y=*dv < 0; g=0;
       if(*dv < 0 && mMN) { y=nM; g=nN; }
       else if(*dv>=0 && mPQ) { y=nP; g=nQ; }
-      m=*il-y-g; if(mC) m=m-(m-!!d-d)/4;
+      m=*il-y-g; if(mC) m=m-((m-!!d-d)>>2);
       RZ(sprintfnD(cv+y, m, d, afzrndID(d,*dv), subs));
       if(mC) RZ(fmtcomma(cv+y, *il-y-g, d, subs));
       if     (*dv < 0 && mMN) { MC(cv, cM, nM); MC(cv+*il-nN, cN, nN); }

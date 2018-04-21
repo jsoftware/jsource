@@ -337,7 +337,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  v=AV(y);   // v-> (#words),(index,length) for each word; #words neg if last is NB.
  n=2**v++;                 // n=# ints in (index,length) pairs, v->index0
  n=0>n?-(2+n):n;                   /* remove NB. pair            */
- GATV(z,BOX,n/2,1,0); z0=zv=AAV(z);  // allocate one box per word
+ GATV(z,BOX,n>>1,1,0); z0=zv=AAV(z);  // allocate one box per word
  s=CAV(w);                         // s-> original text
  for(i=0;i<n;i+=2){     // for each word...
   j=v[i]; m=v[1+i];         // j=index, m=length of word

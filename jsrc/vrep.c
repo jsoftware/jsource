@@ -72,7 +72,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  RZ(a&&w);
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
- m=AN(a); q=m/SZI; r=m%SZI;
+ m=AN(a); q=m>>LGSZI; r=m&(SZI-1);
  ASSERT(m==*(wf+AS(w)),EVLENGTH);
  b=BAV(a); p=bsum(m,b); zn=m?p*(AN(w)/m):0; 
  ASSERT(0<=zn,EVLIMIT);

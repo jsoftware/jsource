@@ -210,7 +210,7 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case -1: R mtv;
   case -4: R icap(ebarvec(a,w));
  }
- GATV(z,INT,MAX(22,n/128),1,0); zv=AV(z); zu=zv+AN(z);
+ GATV(z,INT,MAX(22,n>>7),1,0); zv=AV(z); zu=zv+AN(z);
  GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)

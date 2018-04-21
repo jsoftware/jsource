@@ -236,7 +236,7 @@ typedef struct {VA2 p1[6];} UA;
   if(0==r)for(j=0;j<m;++j){                                    \
    c=*a++; DO(SZI, p[i]=c;); DO(q, v=*yi++; *zz++=pfx(u,v););  \
   }else   for(j=0;j<m;++j){                                    \
-   q=(t-k)/SZI; r=(t-k)%SZI;                                   \
+   q=(t-k)>>LGSZI; r=(t-k)&(SZI-1);                                   \
    c=*a++; DO(SZI, p[i]=c;); DO(q, v=*yi++; *zz++=pfx(u,v););  \
    if(0==r)k=0;                                                \
    else{                                                       \
@@ -248,7 +248,7 @@ typedef struct {VA2 p1[6];} UA;
 
 #define BPFX(f,pfx,bpfx,pfyx,bpfyx)  \
  AHDR2(f,B,B,B){B c,d;I dd,q,r,t,u,v,*xx,*yy,*zz;       \
-  t=1==n?m:n; q=t/SZI; r=t%SZI;                         \
+  t=1==n?m:n; q=t>>LGSZI; r=t&(SZI-1);                         \
   xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
   if(1==n){                                             \
    DO(q, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \

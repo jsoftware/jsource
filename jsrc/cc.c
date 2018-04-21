@@ -151,7 +151,7 @@ DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
  if(!((2==ar||3==ar)&&wt&IS1BYTE&&1==AR(w)))R raze(df2(a,w,cut(ds(CBOX),zero)));
  ASSERT(2==as[ar-2]&&1==as[ar-1],EVLENGTH);
  RZ(a=vib(a)); av=AV(a);
- RZ(z=exta(wt,1L,1L,n/2)); zn=AN(z); zv=CAV(z); zu=zn+zv;
+ RZ(z=exta(wt,1L,1L,n>>1)); zn=AN(z); zv=CAV(z); zu=zn+zv;
  for(i=0;i<m;++i){
   j=*av++; k=*av++; 
   ASSERT(-n<=j&&j<n,EVINDEX);

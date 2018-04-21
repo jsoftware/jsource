@@ -126,9 +126,9 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
 COMPSPDS(compspdsB,B,0,                   e       )
 COMPSPDS(compspdsI,I,0,                   e       )
 COMPSPDS(compspdsD,D,0,                   e       )
-COMPSPDS(compspdsZ,D,*(1+(D*)jt->compsev),i%2?e1:e)
+COMPSPDS(compspdsZ,D,*(1+(D*)jt->compsev),(i&1)?e1:e)
 
 COMPSPSS(compspssB,B,0,                   e       )
 COMPSPSS(compspssI,I,0,                   e       )
 COMPSPSS(compspssD,D,0,                   e       )
-COMPSPSS(compspssZ,D,*(1+(D*)jt->compsev),i%2?e1:e)
+COMPSPSS(compspssZ,D,*(1+(D*)jt->compsev),(i&1)?e1:e)

@@ -57,8 +57,8 @@ static AHDRR(bw1100insC,UC,UC){I d=c/n,k=c-d;                 if(1<n)DO(m, DO(d,
        AHDRR(bw0101insI,UI,UI){I d=c/n,k=c-d;                  x+=k; DO(m, DO(d, *z++=  *x++;); x+=k;);}
 static AHDRR(bw0101insC,UC,UC){I d=c/n,k=c-d;                  x+=k; DO(m, DO(d, *z++=  *x++;); x+=k;);}
 
-       AHDRR(bw1010insI,UI,UI){I d=c/n,k=c-d;UI t=     n%2-1 ; x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
-static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)(n%2-1); x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
+       AHDRR(bw1010insI,UI,UI){I d=c/n,k=c-d;UI t=     (n&1)-1 ; x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
+static AHDRR(bw1010insC,UC,UC){I d=c/n,k=c-d;UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d, *z++=t^*x++;); x+=k;);}
 
 
 
@@ -137,7 +137,7 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];VF f;
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
  f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;
- f(jt,1,1L,(n+SZI-1)/SZI,zv,pv,wv); zv[n]=0;
+ f(jt,1,1L,(n+SZI-1)>>LGSZI,zv,pv,wv); zv[n]=0;
  R 1;
 }
 
@@ -161,7 +161,8 @@ DF1(jtbitwiseinsertchar){A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
   case  0: R scc(0);
   case  3: R scc(*wv);
   case  5: R scc(*(wv+wn-1));
-  case 10: x=*(wv+wn-1); R scc((UC)(wn%2?x:~x));
+// obsolete   case 10: x=*(wv+wn-1); R scc((UC)(wn%2?x:~x));
+  case 10: x=*(wv+wn-1); R scc((UC)(((wn&1)-1))^x);
   case 12: R scc((UC)~*wv);
   case 15: R scc((UC)255);
   case  1: case 6: case 7: case 9: f=bwinsI[j]; c=n=n/d;

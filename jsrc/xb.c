@@ -172,7 +172,7 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  RZ(w);
  c=*(1+AS(w));
  ASSERT(c==8||c==16,EVLENGTH);  
- n=AN(w)/2; u=CAV(w);
+ n=AN(w)>>1; u=CAV(w);
  GATV(z,LIT,n,1,0); v=UAV(z);
  DO(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
  RE(z); RETF(z);

@@ -105,7 +105,7 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
 #else
  mm=15;
  if(!ptab[1]){UI t[8],x;
-  DO(8, t[i]=0; *((i/2)+(UC*)(i+t))=i%2?0x01:0x10;);
+  DO(8, t[i]=0; *((i>>1)+(UC*)(i+t))=(i&1)?0x01:0x10;);
   DO(256, c=(UC)i; x=0; DO(8, if(c&(UC)1)x|=t[i]; c>>=1;); ptab[i]=x;);
  }
 #endif
@@ -431,7 +431,7 @@ static F2(jtbitindexof){I j,n;UC*u,y;UI*v,x;
  }
 
 #define REPDO(T,exp0,exp1)  {T*u=(T*)wv,*v=(T*)zv;      \
- DO((n+BB-1)/BB, k=*av++; REPSWITCH(k/16, exp0, exp1); REPSWITCH(k%16, exp0, exp1););}
+ DO((n+BB-1)/BB, k=*av++; REPSWITCH(k>>4, exp0, exp1); REPSWITCH(k&15, exp0, exp1););}
 
 
 static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;

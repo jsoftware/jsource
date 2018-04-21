@@ -6,8 +6,8 @@
 #include "j.h"
 
 // create inplace bits as copy of W, or swap A & W
-static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&JTINPLACEW)),(f2)((J)((I)jt|(((I)jtinplace<<1)+(I)jtinplace)),w,w,fs));}
-static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)((I)jt|(((((I)jtinplace<<2)+(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
+static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&JTINPLACEW)),(f2)((J)((I)jt+3*(I)jtinplace),w,w,fs));}
+static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)((I)jt+(((5*(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
 
 // w~, which is either reflexive/passive or evoke
 F1(jtswap){A y;C*s;I n;
@@ -106,7 +106,7 @@ static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
  h=VAV(self)->h; hv=AAV(h); 
  q=hv[1]; jv=AV(q); m=*AS(q);
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}
- R*(AAV(hv[2])+(v-jv)/2);
+ R*(AAV(hv[2])+((v-jv)>>1));
 }
 
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
@@ -123,7 +123,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
   for(i=0,u=ju;i<n;++i,u+=2){if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
    // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
-   cv[(v-jv)/2]=cu[i]; v[0]=u[0]; v[1]=u[1];
+   cv[(v-jv)>>1]=cu[i]; v[0]=u[0]; v[1]=u[1];
   }cu[i]=0;}  // always clear the pointer to the value so that we don't free the value when we free the old table
   // Free the old buffers, ras() the new to make them recursive usect, then clear the tpops to bring the usecount down to 1
   q=hv[1]; AC(q)=1; fa(q); INSTALLBOX(h,hv,1,jj);  // expunge old table, install new one.  Could use mf().  h is not virtual
@@ -133,7 +133,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  ++*mv;
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
  // bump the usecount of the result to account for new ref from table
- RZ(ras(z)); cv[(v-jv)/2]=z; v[0]=y; v[1]=x; 
+ RZ(ras(z)); cv[(v-jv)>>1]=z; v[0]=y; v[1]=x; 
  R z;
 }
 

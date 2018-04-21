@@ -63,21 +63,21 @@ static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(
 static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u++]^z<<1;      ); R z;}
 
 #if C_LE
-       UI hic2(     I k,UC*v){UI z=0;             DO(k/2,     z=(i+1000003)**v     ^z<<1;
+       UI hic2(     I k,UC*v){UI z=0;             DO(k>>1,     z=(i+1000003)**v     ^z<<1;
                                                        if(*(v+1)){z=(i+1000003)**(v+1) ^z<<1;} v+=2;); R z;}
 #else
-       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k/2,     z=(i+1000003)**v     ^z<<1;
+       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k>>1,     z=(i+1000003)**v     ^z<<1;
                                                        if(*(v-1)){z=(i+1000003)**(v-1) ^z<<1;} v+=2;); R z;}
 #endif
 
 #if C_LE
-       UI hic4(     I k,UC*v){UI z=0;             DO(k/4,     z=(i+1000003)**v     ^z<<1;
+       UI hic4(     I k,UC*v){UI z=0;             DO(k>>2,     z=(i+1000003)**v     ^z<<1;
                                                if(*(v+2)||*(v+3)){z=(i+1000003)**(v+1) ^z<<1;
                                                                   z=(i+1000003)**(v+2) ^z<<1;
                                                                   z=(i+1000003)**(v+3) ^z<<1;}
                                                   else if(*(v+1)){z=(i+1000003)**(v+1) ^z<<1;} v+=4;); R z;}
 #else
-       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k/4,     z=(i+1000003)**v     ^z<<1;
+       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k>>2,     z=(i+1000003)**v     ^z<<1;
                                                if(*(v-2)||*(v-3)){z=(i+1000003)**(v-1) ^z<<1;
                                                                   z=(i+1000003)**(v-2) ^z<<1;
                                                                   z=(i+1000003)**(v-3) ^z<<1;}
@@ -989,7 +989,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
   for(i=ii;icmp;iinc,uinc){          \
    p=0; q=m1;                        \
    while(p<=q){                      \
-    t=0; j=(p+q)/2; v=av+n*hu[j];    \
+    t=0; j=(p+q)>>1; v=av+n*hu[j];    \
     DO(n, if(t=compare(AADR(wd,u[i]),AADR(ad,v[i])))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
    }                                 \
@@ -1372,7 +1372,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     if(cvtsneeded&2)RZ(w=cvt0(w));
     if(k==SZI&&!(t&FL)){  // non-float, might be INT or SBT
      if(t&INT+SBT){  // same here, for I types
-      CR crres = condrange(AV(a),(AN(a)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
+      CR crres = condrange(AV(a),(AN(a)*k1)>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,p)<<booladj);
       if(crres.range){
        datamin=crres.min;
        p=crres.range; fn=jtio42;
@@ -1415,7 +1415,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     // Clearing also saves 1 clock per input word
     mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
     if(mk||!(h=jt->idothash0)){
-     GATV(h,INT,((65536*sizeof(US)-((NORMAH*SZI)))/SZI),0,0);  // size too big for GAT
+     GATV(h,INT,((65536*sizeof(US)-((NORMAH*SZI)))>>LGSZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area

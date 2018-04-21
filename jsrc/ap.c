@@ -91,9 +91,9 @@
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
  AHDRP(f,B,B){B* RESTRICT y;I d=c/n,j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
-  else if(0==d%sizeof(UI  ))PREFIXBFXLOOP(UI,   pfx)  \
-  else if(0==d%sizeof(UINT))PREFIXBFXLOOP(UINT,ipfx)  \
-  else if(0==d%sizeof(US  ))PREFIXBFXLOOP(US,  spfx)  \
+  else if(0==(d&(sizeof(UI  )-1)))PREFIXBFXLOOP(UI,   pfx)  \
+  else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
+  else if(0==(d&(sizeof(US  )-1)))PREFIXBFXLOOP(US,  spfx)  \
   else DO(m, y=z; DO(d, *z++=*x++;); DO(n-1, DO(d, *z++=bpfx(*y,*x); ++x; ++y;)));  \
  }    /* f/\"r z for boolean associative atomic function f */
 #else
@@ -145,7 +145,7 @@ static B jtpscangt(J jt,I m,I c,I n,B*z,B*x,B a,B pp,B pa,B ps){
   A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;C*u;I d,i,j;
  if(c==n)for(i=0;i<m;++i){
   if(v=memchr(x,a,n)){
-   j=v-x; b=1&&j%2; 
+   j=v-x; b=j&1; 
    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b!=pa;
   }else mvc(n,z,2L,p);
   z+=c; x+=c;
@@ -154,7 +154,7 @@ static B jtpscangt(J jt,I m,I c,I n,B*z,B*x,B a,B pp,B pa,B ps){
   for(i=0;i<m;++i){
    e=pp; memset(u,C0,d);
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
-     if(a==x[i]){b=1&&j%2; z[i]=b!=pa; u[i]=b!=ps?'1':'0';}else z[i]=e;);
+     if(a==x[i]){b=j&1; z[i]=b!=pa; u[i]=b!=ps?'1':'0';}else z[i]=e;);
     e=!e; z+=d; x+=d;); 
  }}
  R 1;

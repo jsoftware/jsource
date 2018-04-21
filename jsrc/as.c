@@ -70,7 +70,7 @@
  AHDRS(f,B,B){B v;I d,i,q,r,t,*xi,*yi,*zi;                         \
   d=c/n; x+=m*c; z+=m*c;                                           \
   if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
-  q=d/SZI; r=d%SZI; xi=(I*)x; zi=(I*)z;                            \
+  q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zi=(I*)z;                            \
   if(0==r)for(i=0;i<m;++i){                                        \
    yi=zi; DO(q, *--zi=*--xi;);                                     \
    DO(n-1, DO(q, --xi; --yi; --zi; *zi=pfx(*xi,*yi);));            \

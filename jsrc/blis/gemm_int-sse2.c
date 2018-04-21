@@ -85,8 +85,8 @@ void bli_dgemm_int_d4x4
   PREFETCH2((void*)&c[1*rs_c+3*cs_c]);
 
   gint_t l;
-  gint_t ki = k/4;  // unroll
-  gint_t kr = k%4;
+  gint_t ki = k>>2;  // unroll
+  gint_t kr = k&3;
   for (l=0; l<ki; ++l) {
 
 // iter 0
@@ -358,8 +358,8 @@ void bli_zgemm_int_d2x2
   PREFETCH2((void*)&c[1*cs_c]);
 
   gint_t l;
-  gint_t ki = k/4;  // unroll
-  gint_t kr = k%4;
+  gint_t ki = k>>2;  // unroll
+  gint_t kr = k&3;
   for (l=0; l<ki; ++l) {
 
 // iter 0

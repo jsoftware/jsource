@@ -62,7 +62,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
   if(i==zn){RZ(z=ext(0,z)); zv=AAV(z); zn=AN(z);}
   RZ(zv[i++]=rifvs(vec(INT,u-qv,qv)));
  }
- AN(z)=*AS(z)=zn=i; j=zn-1; DO(zn/2, x=zv[i]; zv[i]=zv[j]; zv[j]=x; --j;);
+ AN(z)=*AS(z)=zn=i; j=zn-1; DO(zn>>1, x=zv[i]; zv[i]=zv[j]; zv[j]=x; --j;);
  R z;
 }    /* cycle from direct */
 

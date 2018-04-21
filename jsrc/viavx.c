@@ -1257,7 +1257,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
   for(i=ii;icmp;iinc,uinc){          \
    p=0; q=m1;                        \
    while(p<=q){                      \
-    t=0; j=(p+q)/2; v=av+n*hu[j];    \
+    t=0; j=(p+q)>>1; v=av+n*hu[j];    \
     DO(n, if(t=compare(AADR(wd,u[i]),AADR(ad,v[i])))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
    }                                 \
@@ -1359,7 +1359,7 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
   _mm256_zeroupper(VOID);  \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
-  A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)/SZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
+  A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)>>LGSZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \
    hashallo(hh,p,wsct,mode); \
@@ -1925,7 +1925,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
       if(mode&IIOREPS){  // if reverse check is possible, see if it is desired
        if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
       }
-      CR crres = condrange(AV(rangearg),(AN(rangearg)*k1)/SZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
+      CR crres = condrange(AV(rangearg),(AN(rangearg)*k1)>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
       }else{fnx=FNTBLONEINT;}  // select integer hashing if range too big...
      }else{fnx=FNTBLONEINT;}   // ... or some other 8-byte length (not float, though)
@@ -1974,7 +1974,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
      crres = condrange2(USAV(w),(AN(w)*k1)/sizeof(US),datamin,datamin+p-1,allowrange);
     }else{
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange(AV(w),(AN(w)*k1)/SZI,datamin,datamin+p-1,allowrange);
+     crres = condrange(AV(w),(AN(w)*k1)>>LGSZI,datamin,datamin+p-1,allowrange);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  
@@ -1992,7 +1992,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     mode |= IIMODFORCE0;
 #endif
     if((mode&IPHCALC)||!(h=jt->idothash0)){
-     GATV(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))/SZI),0,0);  // size too big for GAT
+     GATV(h,INT,((SMALLHASHMAX*sizeof(US)+SZI+(SZI-1))>>LGSZI),0,0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area

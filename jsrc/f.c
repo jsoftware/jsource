@@ -76,7 +76,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
   case XNUMX: case RATX:
    RZ(t=thxqe(w)); p=AN(t); if(ov=n<p)p=n4; MC(y,AV(t),p); y+=p; break;
   case B01X:
-   if(ov=n<2*wn)p=n4/2; else p=wn; DO(p, *y++=*x++?'1':'0'; *y++=' ';); break;
+   if(ov=n<2*wn)p=n4>>1; else p=wn; DO(p, *y++=*x++?'1':'0'; *y++=' ';); break;
   case INTX:
 	{C*t;I i,*v,x;
 	v=AV(w);
@@ -143,13 +143,13 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
 static I sbtou8size(J jt,SBU*u,I*dw){I q=u->n;
  if(dw)*dw=q;
  if(u->flag&SBC4){
-  q=utomsize((C4*)SBSV(u->i),u->n/4);
+  q=utomsize((C4*)SBSV(u->i),u->n>>2);
   q=(q<0)?-q:q;
-  if(dw&&q>0)*dw=stringdisplaywidth(jt, 2,(void*)SBSV(u->i),u->n/4);
+  if(dw&&q>0)*dw=stringdisplaywidth(jt, 2,(void*)SBSV(u->i),u->n>>2);
  }else if(u->flag&SBC2){
-  q=wtomsize((US*)SBSV(u->i),u->n/2);
+  q=wtomsize((US*)SBSV(u->i),u->n>>1);
   q=(q<0)?-q:q;
-  if(dw&&q>0)*dw=stringdisplaywidth(jt, 1,(void*)SBSV(u->i),u->n/2);
+  if(dw&&q>0)*dw=stringdisplaywidth(jt, 1,(void*)SBSV(u->i),u->n>>1);
  }else{
   if(dw&&q>0)*dw=stringdisplaywidth(jt, 0,(void*)SBSV(u->i),u->n);
  }
@@ -159,9 +159,9 @@ static I sbtou8size(J jt,SBU*u,I*dw){I q=u->n;
 // cvt SB string to utf8
 static void sbtou8(J jt,SBU*u,C*s){
  if(u->flag&SBC4)
-  utom((C4*)SBSV(u->i),u->n/4,s);
+  utom((C4*)SBSV(u->i),u->n>>2,s);
  else if(u->flag&SBC2)
-  wtom((US*)SBSV(u->i),u->n/2,s);
+  wtom((US*)SBSV(u->i),u->n>>1,s);
  else
   MC(s,SBSV(u->i),u->n);
 }

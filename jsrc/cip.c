@@ -372,7 +372,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  switch(CTTZNOFLAG(t)){
  case B01X:
   if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
-   q=p/255; r=p%255; nw=(n+SZI-1)/SZI;
+   q=p/255; r=p%255; nw=(n+SZI-1)>>LGSZI;
    GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
    u=BAV(a); v=wv=BAV(w); zv=AV(z);
    for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); DO(q, BBLOCK(255);); BBLOCK(r);}
@@ -561,7 +561,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
  RZ(a&&w);
  RZ(z=ipprep(a,w,B01,&m,&n,&p));
  // m=#1-cells of a, n=# bytes in 1-cell of w, p=length of individual inner product creating an atom
- ana=!!AR(a); wc=AR(w)?n:0; q=n/SZI; r=n%SZI;  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords in an item of w, r=remainder
+ ana=!!AR(a); wc=AR(w)?n:0; q=n>>LGSZI; r=n&(SZI-1);  // ana = 1 if a is not atomic; wc = stride between items of w; q=#fullwords in an item of w, r=remainder
  // Set c0 & c1 to classify the g operation
  switch(B01&AT(w)?d:0){
   case CEQ:                             c0=IPBXNW; c1=IPBXW;  break;

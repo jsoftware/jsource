@@ -204,7 +204,7 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
  if(m==n)R IX(n);
  GATV(z,INT,m,1,0); zv=AV(z);
 #if !SY_64 && SY_WIN32
- {I i,q=SZI*(n/SZI),*u=(I*)b;
+ {I i,q=n&-SZI,*u=(I*)b;
   for(i=0;i<q;i+=SZI)switch(*u++){
     case B0001:                                *zv++=i+3; break;
     case B0010:                     *zv++=i+2;            break;

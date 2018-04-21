@@ -207,7 +207,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   if(0x2&jt->smoption) z=ca(z);
   if(e==-2){      // e==-2 is lit pairs
     RZ(z=df1(z,cut(ds(CBOX),num[-2])));
-    RETF(reshape(v2(AN(z)/2,2L),z));
+    RETF(reshape(v2(AN(z)>>1,2L),z));
   } else {RETF(z);}
 }
 

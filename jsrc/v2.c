@@ -93,8 +93,8 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  for(;0<=p&&p<m;p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u); c=j+q/3;
-  if(x>c)for(i=1-p%2;i<q;i+=2)j+=b[i];
-  else   for(i=1-p%2;i<q;i+=2)
+  if(x>c)for(i=1-(p&1);i<q;i+=2)j+=b[i];
+  else   for(i=1-(p&1);i<q;i+=2)
    if(b[i]){while(j==x){zv[dv[k++]]=i+p; if(n==k)R z; x=wv[dv[k]];} ++j;}
  }
  while(n>k)zv[dv[k++]]=p; RETF(z);
@@ -175,9 +175,9 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
   }
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u);
   if(x>p+q)
-   for(i=1-p%2;i<q;i+=2)j+=b[i];
+   for(i=1-(p&1);i<q;i+=2)j+=b[i];
   else     
-   for(i=1-p%2;i<q;i+=2)if(b[i]){
+   for(i=1-(p&1);i<q;i+=2)if(b[i]){
     while(x<=p+i){zv[dv[k++]]=j; if(n==k){i=q; break;} x=wv[dv[k]];}
     ++j;
  }}
@@ -253,14 +253,14 @@ static F1(jtnextprime){A b,fs,x,y;B*bv;I k,n,*xv,*yv;X*wv;
  RZ(fs=eval("2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
  if(INT&AT(w)){B b=1;I*wv=AV(w);
-  DO(n, k=*wv++; if(k==IMAX){b=0; break;}else *xv++=2>k?2:k+1+(k%2););
+  DO(n, k=*wv++; if(k==IMAX){b=0; break;}else *xv++=2>k?2:(k+1)|1;);
   if(b)R rank1ex(x,fs,0L,VAV(fs)->f1);
   RZ(w=cvt(XNUM,w));
  }
  if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,floor1(       w )));
  if(AT(w)&CMPX  )RZ(w=cvt(XNUM,floor1(cvt(FL,w))));
  GATV(b,B01,n,AR(w),AS(w)); bv=BAV(b); wv=XAV(w);
- DO(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; *xv++=*yv%2?2:1;);
+ DO(n, y=*wv++; yv=AV(y); *bv++=0<yv[AN(y)-1]; *xv++=(*yv&1)+1;);
  R rank1ex(tymes(b,plus(w,x)),fs,0L,VAV(fs)->f1);
 }
 
@@ -271,13 +271,13 @@ static F1(jtprevprime){A fs,x,y;I k,m,n,*xv,*yv;X*wv;
  RZ(fs=eval("_2&+^:(0&p:)^:_"));
  GATV(x,INT,n,AR(w),AS(w)); xv=AV(x);
  if(INT&AT(w)){I*wv=AV(w);
-  DO(n, k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:k-(1+k%2););
+  DO(n, k=*wv++; ASSERT(2<k,EVDOMAIN); *xv++=3==k?2:(k-2)|1;);
   R rank1ex(x,fs,0L,VAV(fs)->f1);
  }
  if(AT(w)&FL+RAT)RZ(w=cvt(XNUM,ceil1(       w )));
  if(AT(w)&CMPX  )RZ(w=cvt(XNUM,ceil1(cvt(FL,w))));
  wv=XAV(w);
- DO(n, y=*wv++; yv=AV(y); m=AN(y); k=*yv; ASSERT(0<yv[m-1]&&(1<m||2<k),EVDOMAIN); *xv++=1==m&&3==k?1:1+k%2;);
+ DO(n, y=*wv++; yv=AV(y); m=AN(y); k=*yv; ASSERT(0<yv[m-1]&&(1<m||2<k),EVDOMAIN); *xv++=1==m&&3==k?1:1+(k&1););
  R rank1ex(minus(w,x),fs,0L,VAV(fs)->f1);
 }
 
@@ -464,7 +464,7 @@ static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,old,*pv;X d,m,t,x,
  pv=AV(jt->p4792);
  GAT(h,XNUM,1,0,0); *XAV(h)=y; jt->xmod=h; 
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,xone)); 
- while(0==*AV(m)%2){++k; RZ(m=xdiv(m,t,XMFLR));}
+ while(0==(*AV(m)&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
  GAT(d,INT,1,1,0); dv=AV(d);
  old=jt->tnextpushx;
  for(i=0;i<n;++i){
@@ -526,7 +526,7 @@ static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
  RZ(t=cvt(FL,scx(w))); d=*DAV(t); 
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;
  DO(n, c=lg*pow(r,i/n1); p=c*log(c); if(p>=2147483647)break; *v++=(I)jfloor(c); *v++=(I)p;);
- m=(v-zv)/2; ASSERT(m,EVLIMIT);
+ m=(v-zv)>>1; ASSERT(m,EVLIMIT);
  *AS(z)=m; AN(z)=2*m;
  R z;
 }
@@ -604,7 +604,7 @@ static B jtecm_s1(J jt,X n,X a,X b,I b1,X*q,X*z){A tt;D d,lg;I dd,m,old=jt->tnex
 static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,p0,*pd,*v;X*s1,*sd,*sd0,*sdd,*t,x[3];
  RZ(tt=plt(v2(b1,b2))); v=AV(tt); m=(v[1]-v[0])-1;
  RZ(tt=prime1(apv(1+m,v[0],1L))); pd=v=AV(tt); p0=*v;
- d=0; DO(m, v[0]=k=-1+(v[1]-v[0])/2; ++v; d=MAX(d,k);); d=MIN(100,1+d);
+ d=0; DO(m, v[0]=k=-1+((v[1]-v[0])>>1); ++v; d=MAX(d,k);); d=MIN(100,1+d);
  GATV(sda,XNUM,3*d,2,0); sd0=sd=XAV(sda); v=AS(sda); v[0]=d; v[1]=3;
  RZ(ecd(n,a,b,q,sd)); s1=t=sd; sd+=3;
  DO(d-1, eca(n,a,b,s1,t,sd); t=sd; sd+=3;); sd=sd0; sdd=t;

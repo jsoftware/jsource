@@ -10,7 +10,7 @@ static F1(jtnorm){R sqroot(pdt(w,conjug(w)));}
 
 F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
  F1RANK(2,jtrinv,0);
- r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)/2;
+ r=AR(w); s=AS(w); n=2>r?1:s[1]; m=(1+n)>>1;
  ASSERT(!r||n==s[0],EVLENGTH);
  if(1>=n)R recip(w);
  ai=rinv(take(v2(m,m),w));
@@ -22,7 +22,7 @@ F1(jtrinv){PROLOG(0066);A ai,bx,di,z;I m,n,r,*s;
 
 static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  RZ(w);
- if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)/2;} 
+ if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;} 
  if(1>=n){
   t=norm(ravel(w));
   ASSERT(!AN(w)||!equ(t,zero),EVDOMAIN);

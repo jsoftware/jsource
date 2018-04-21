@@ -189,7 +189,7 @@ static F1(jtspfor1){
   if(AFNJA&AFLAG(w)) {
    if(AK(w)>0&&AK(w)<=AM(w))jt->spfor += SZI*WP(AT(w),AN(w),64);  // fixed rank of 64 in NJA memory
    else{
-    jt->spfor += SZI*((1&&AT(w)&LAST0)+((AT(w)&NAME?sizeof(NM):0)+(AN(w))*bp(AT(w))+SZI-1)/SZI);  // data size only
+    jt->spfor += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w))*bp(AT(w))+SZI-1)>>LGSZI));  // data size only
     jt->spfor += alloroundsize(w);  // add in the header
    }
   } else {

@@ -282,8 +282,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    if(AN(w)&&AR(w)){
      // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
      // Also set b if the fit is !.0
-    c=v->id; p=v->flag%256; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
-    if(7==p%8)mode=II0EPS+p/8;  /* (e.i.0:)  etc. */
+    c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
+    if(7==(p&7))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
     else      mode=c==CEPS?IEPS:-1;
    }
    if(0<=mode){

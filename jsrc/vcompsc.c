@@ -77,7 +77,7 @@
  static F2(f){A z;I an,n,wn,*zu,*zv;T0*av,x;T1*wv,y;                \
   an=AN(a); av=(T0*)AV(a);                                          \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;   \
-  RZ(z=exta(INT,1L,1L,MAX(22,n/8))); zv=AV(z); zu=zv+AN(z);         \
+  RZ(z=exta(INT,1L,1L,MAX(22,n>>7))); zv=AV(z); zu=zv+AN(z);         \
   if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))IFB1;);} \
   else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))IFB1;);} \
   else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))IFB1;);} \
@@ -103,7 +103,7 @@
  static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                 \
   an=AN(a); av=AV(a);                                                             \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
-  q=n/SZI; r=n%SZI;                                                               \
+  q=n>>LGSZI; r=n&(SZI-1);                                                               \
   xv=(B*)&x; yv=(B*)&y;                                                           \
   if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))INDB3;); y=F(x,  *wv);}  \
   else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))INDB3;); y=F(*av,x  );}  \
@@ -116,7 +116,7 @@
  static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                             \
   an=AN(a); av=AV(a);                                                                         \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                                  \
-  q=n/SZI; r=n%SZI;                                                                           \
+  q=n>>LGSZI; r=n&(SZI-1);                                                                           \
   xv=(B*)&x; yv=(B*)&y;                                                                       \
   if     (!AR(a)){ASSIGNX(av); wv+=q; JNDBR(F(x,  *wv)); DO(q, if(y=F(x,    *--wv))JNDB3;);}  \
   else if(!AR(w)){ASSIGNX(wv); av+=q; JNDBR(F(*av,x  )); DO(q, if(y=F(*--av,x    ))JNDB3;);}  \
@@ -128,7 +128,7 @@
  static F2(f){B*xv;I an,*av,n,p,q,r,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
   an=AN(a); av=AV(a);                                                        \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
-  p=n/SZI; q=p/255; r=p%255; r1=n%SZI;                                       \
+  p=n>>LGSZI; q=p/255; r=p%255; r1=n&(SZI-1);                                       \
   xv=(B*)&x; tu=(UC*)&t;                                                     \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
@@ -150,7 +150,7 @@
  static F2(f){B*xv;     I an,*av,n,p,r1,  wn,*wv,x;                                 \
   an=AN(a); av=AV(a);                                                               \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
-  p=n/SZI; r1=n%SZI;;                                                               \
+  p=n>>LGSZI; r1=n&(SZI-1);                                                        \
   xv=(B*)&x;                                                                        \
   if     (!AR(a)){ASSIGNX(av); DO(p, if(   F(x,    *wv++))R one; ); x=F(x,  *wv);}  \
   else if(!AR(w)){ASSIGNX(wv); DO(p, if(   F(*av++,x    ))R one; ); x=F(*av,x  );}  \
@@ -163,7 +163,7 @@
  static F2(f){B*xv;C*tv;I an,*av,n,p,r1,t,wn,*wv,x;                                 \
   an=AN(a); av=AV(a);                                                               \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
-  p=n/SZI; r1=n%SZI;;                                                               \
+  p=n>>LGSZI; r1=n&(SZI-1);                                                               \
   xv=(B*)&x; tv=(C*)&t; DO(SZI, tv[i]=1;);                                          \
   if     (!AR(a)){ASSIGNX(av); DO(p, if(t!=F(x,    *wv++))R zero;); x=F(x,  *wv);}  \
   else if(!AR(w)){ASSIGNX(wv); DO(p, if(t!=F(*av++,x    ))R zero;); x=F(*av,x  );}  \
@@ -210,9 +210,9 @@
  static F2(f){A z;B*xv,*yv;I an,*av,m=0,n,q,r,wn,*wv,x,y,*zu,*zv;                        \
   an=AN(a); av=AV(a);                                                                    \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                             \
-  q=n/SZI; r=n%SZI;                                                                      \
+  q=n>>LGSZI; r=n&(SZI-1);                                                                      \
   xv=(B*)&x; yv=(B*)&y;                                                                  \
-  RZ(z=exta(INT,1L,1L,MAX(22,n/SZI))); zv=AV(z); zu=zv+AN(z)-SZI;                        \
+  RZ(z=exta(INT,1L,1L,MAX(22,n>>LGSZI))); zv=AV(z); zu=zv+AN(z)-SZI;                        \
   if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))IFB3; m+=SZI;); y=F(x,  *wv);}  \
   else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))IFB3; m+=SZI;); y=F(*av,x  );}  \
   else           {             DO(q, if(y=F(*av++,*wv++))IFB3; m+=SZI;); y=F(*av,*wv);}  \
@@ -614,9 +614,9 @@ AF jtatcompf(J jt,A a,A w,A self){AF f;I ar,at,m,wr,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a);
  wt=AT(w); wr=AR(w);
- m=VAV(self)->flag%256;
- if(1<ar||1<wr){if(32<=m&&m<=37||40<=m&&m<=45||48<=m&&m<=53)R(AF)jtfslashatg; RZ(7==m%8);}
- ASSERT(AN(a)==AN(w)||!ar||!wr||5<m%8,EVLENGTH);
+ m=VAV(self)->flag&255;
+ if(1<ar||1<wr){if(32<=m&&m<=37||40<=m&&m<=45||48<=m&&m<=53)R(AF)jtfslashatg; RZ(7==(m&7));}
+ ASSERT(AN(a)==AN(w)||!ar||!wr||5<(m&7),EVLENGTH);
  f=atcompX[m];
  if(!f){
   if(at&B01+INT+FL&&wt&B01+INT+FL)f=atcompxy[9*m+3*(at&B01?0:at&INT?1:2)+(wt&B01?0:wt&INT?1:2)];

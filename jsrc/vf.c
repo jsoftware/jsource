@@ -303,7 +303,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
  ASSERT(1==AR(a),EVRANK);
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num[-2],w));
- av=BAV(a); an=AN(a); q=an/SZI; r=an%SZI; au=(I*)av;
+ av=BAV(a); an=AN(a); q=an>>LGSZI; r=an&(SZI-1); au=(I*)av;
  wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bp(wt); wk=k*wc; wx=wv+wk**AS(w);
  RE(zn=mult(an,wc));
  GA(z,wt,zn,AR(w),AS(w)); *AS(z)=an; zv=CAV(z);

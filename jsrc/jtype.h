@@ -119,11 +119,11 @@ typedef I SI;
 
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
-#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)  // # I to allocate
+#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))  // # I to allocate
 // obsolete #define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
 #define AKXR(x)         (SZI*(NORMAH+((x)|1)))
-#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)/SZI)
+#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))
 // obsolete #define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 /* r|1 to make sure array values are double-word aligned */
 #endif

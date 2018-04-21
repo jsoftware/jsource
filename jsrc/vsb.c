@@ -251,7 +251,7 @@ static statusEnum insert(J jt, I key) {
     x->left  = 0;
     x->right = 0;
     x->color = RED;
-    x->order = (rorder+lorder)/2;
+    x->order = (rorder+lorder)>>1;
     x->up    = to_the_right; DOWN(to_the_right)=key;
     x->down  = to_the_left;  UP(to_the_left)   =key;
 
@@ -294,12 +294,12 @@ static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
 // p = (-m)&(c2+(c2>>1));               /* pad for alignment (leaner)   */
- p=c2&SBC4?(m%4?4-m%4:0):c2&SBC2?m%2:0; /* pad for alignment            */
+ p=c2&SBC4?((-m)&3):c2&SBC2?(m&1):0;    /* pad for alignment            */
  RE(hi=sbextend(n+p,s,h,hi));           /* extend global tables as req'd*/
  if(c2==c0)
   MC(SBSV(m+p),s,n);                    /* copy string into sbs         */
  else{
-  if     (c0&SBC4&& c2&SBC2){C4*ss=(C4*)s; US*s0=(US*)SBSV(m+p); DO(n/2, *s0++=(US)*ss++;);}
+  if     (c0&SBC4&& c2&SBC2){C4*ss=(C4*)s; US*s0=(US*)SBSV(m+p); DO(n>>1, *s0++=(US)*ss++;);}
   else if(c0&SBC4&&!c2&SBC2){C4*ss=(C4*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
   else                      {US*ss=(US*)s; UC*s0=(UC*)SBSV(m+p); DO(n,   *s0++=(UC)*ss++;);}
  }
@@ -316,8 +316,8 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
  if(!n)R(SB)0;   // sentinel
 // optimize storage if ascii or short
  S c0=c2;  // save original flag
- if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DO(n/4,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
- else if(SBC2&c2){US*ss=(US*)s;c2=c2&~SBC2; DO(n/2,if(127<*ss++){c2|=SBC2;break;});}
+ if(SBC4&c2){C4*ss=(C4*)s;     c2=c2&~SBC4; DO(n>>2,if(65535<*ss){c2|=SBC4;break;}else if(127<*ss++){c2|=SBC2;});}
+ else if(SBC2&c2){US*ss=(US*)s;c2=c2&~SBC2; DO(n>>1,if(127<*ss++){c2|=SBC2;break;});}
 
 // hash using c0 on original data
  h=(c0&SBC4?hic4:c0&SBC2?hic2:hic)(n,us);
@@ -334,14 +334,14 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
 //         c0  us  n                u->flag  t  u->n
    switch((c0&SBC4?6:c0&SBC2?3:0)+(u->flag&SBC4?2:u->flag&SBC2?1:0)){
 // c0==0
-    case 1: if(n==u->n/2){US*q=(US*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
-    case 2: if(n==u->n/4){C4*q=(C4*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+    case 1: if(n==u->n>>1){US*q=(US*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+    case 2: if(n==u->n>>2){C4*q=(C4*)t;  b=1; DO(n,   if(us[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
 // c0==SBC2
-    case 3: if(n==u->n*2){US*q=(US*)us;               b=1; DO(n/2, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
-    case 5: if(n==u->n/2){US*q=(US*)us; C4*t1=(C4*)t; b=1; DO(n/2, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+    case 3: if(n==u->n*2){US*q=(US*)us;               b=1; DO(n>>1, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
+    case 5: if(n==u->n>>1){US*q=(US*)us; C4*t1=(C4*)t; b=1; DO(n>>1, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
 // c0==SBC4
-    case 6: if(n==u->n*4){C4*q=(C4*)us;               b=1; DO(n/4, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
-    case 7: if(n==u->n*2){C4*q=(C4*)us; US*t1=(US*)t; b=1; DO(n/4, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
+    case 6: if(n==u->n*4){C4*q=(C4*)us;               b=1; DO(n>>2, if(t[i]!=q[i]) {b=0; break;}); if(b)R(SB)ui;} break;
+    case 7: if(n==u->n*2){C4*q=(C4*)us; US*t1=(US*)t; b=1; DO(n>>2, if(t1[i]!=q[i]){b=0; break;}); if(b)R(SB)ui;} break;
 // c0==u->flag
     case 4:
     case 8:
@@ -472,7 +472,7 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
  n=AN(w); v=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
- DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=rifvs(SBC4&u->flag?vec(C4T,u->n/4,s):SBC2&u->flag?vec(C2T,u->n/2,s):str(u->n,s))););
+ DO(n, u=SBUV(*v++); s=SBSV(u->i); RZ(*zv++=rifvs(SBC4&u->flag?vec(C4T,u->n>>2,s):SBC2&u->flag?vec(C2T,u->n>>1,s):str(u->n,s))););
  R z;
 }    /* boxed strings for symbol array w */
 
@@ -488,7 +488,7 @@ static A jtsbstr(J jt,I q,A w){A z;S c2=0;C c;I m,n;SB*v,*v0;SBU*u;
  m=n=AN(w); v=v0=SBAV(w); c=1==q?'`':C0;
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
 // promote to the highest character type for output
- DO(n, u=SBUV(*v++); if(u->flag&SBC4){c2=SBC4; m+=u->n/4;}else if(u->flag&SBC2){c2=MAX(c2,SBC2); m+=u->n/2;}else m+=u->n;); 
+ DO(n, u=SBUV(*v++); if(u->flag&SBC4){c2=SBC4; m+=u->n>>2;}else if(u->flag&SBC2){c2=MAX(c2,SBC2); m+=u->n>>1;}else m+=u->n;); 
  v=v0; 
  GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,m,1,0);
  if(c2&SBC4){C4*zv;
@@ -588,15 +588,15 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
   ASSERTD(0<=vi&&vi<=sn,"u index");
-  ASSERTD(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4)),"u index alignment");
-  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4))),"u length");
+  ASSERTD(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3)),"u index alignment");
+  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
   k=(c2&SBC4?hic4:c2&SBC2?hic2:hic)(vn,vc);
   ASSERTD(k==v->h,"u hash");
   j=k%hn; while(i!=hv[j]&&0<=hv[j])j=(1+j)%hn;
   ASSERTD(i==hv[j],"u/h mismatch");
   ASSERTD(BLACK==v->color||RED==v->color,"u color");
-  RZ(xv[i]=rifvs(c2&SBC4?vec(C4T,vn/4,vc):c2&SBC2?vec(C2T,vn/2,vc):str(vn,vc)));
+  RZ(xv[i]=rifvs(c2&SBC4?vec(C4T,vn>>2,vc):c2&SBC2?vec(C2T,vn>>1,vc):str(vn,vc)));
   yv[i]=ord=v->order;
   j=v->parent; ASSERTD(    0<=j&&j<c&&2>=++ptv[j],"u parent");                        
   j=v->left;   ASSERTD(!j||0<=j&&j<c&&1>=++lfv[j]&&     ord>(j+uv)->order ,"u left"       );
@@ -640,8 +640,8 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
   ASSERTD(!c2||(c2&SBC2)||(c2&SBC4),"u flag");
   ASSERTD(!c2||(1&&c2&SBC2)^(1&&c2&SBC4),"u flag");
   ASSERTD(0<=vi&&vi<=sn,"u index");
-  ASSERTD(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4)),"u index alignment");
-  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi%2))||(c2&SBC4&&!(vi%4))),"u length");
+  ASSERTD(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3)),"u index alignment");
+  ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
  }
  EPILOG(one);

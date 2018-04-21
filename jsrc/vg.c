@@ -131,7 +131,7 @@ static struct {
 static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  t=AT(w);
  jt->compk=ai*bp(t); ck=jt->compk*n;
- jt->compn=!(t&CMPX)?ai:(ai<<1); jt->compv=CAV(w); RELORIGINB(crel,w); jt->compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values
+ jt->compn=ai<<((t>>CMPXX)&1); jt->compv=CAV(w); RELORIGINB(crel,w); jt->compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values
  jt->comp=sortroutines[CTTZ(t)][jt->compgt==1].comproutine; jt->compusejt = !!(t&BOX+XNUM+RAT);
  void **(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
@@ -265,7 +265,7 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
  wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);  // allocate a ping-pong buffer for the result
  for(i=0;i<m;++i){I colflags;  // loop over each cell of input
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
@@ -325,7 +325,7 @@ static GF(jtgri1){A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  wv=AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
  // allocate ping-pong for output area
  GATV(x,INT,n,1,0); xv=AV(x);
  // for each sort...
@@ -347,7 +347,7 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  wv=C4AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))/SZI)<<use4,1,0); yv=AV(y);}
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
  for(i=0;i<m;++i){I colflags;
   u=(US*)wv+INTLSBWDX;   // point to LSB
@@ -412,7 +412,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  // smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
  // (80>>keylength)*(n), smaller if the range would exceed cache size
  CR rng;
- if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
+ if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
  // tweak this line to select path for timing
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
@@ -466,7 +466,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  wv=C4AV(w);
  CR rng;
- if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<L2CACHESIZE/SZI)?16:4),80>>ai))*n);   //  TUNE
+ if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
  GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
@@ -520,10 +520,10 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
- q=ai/4; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
+ q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
  if(1<q){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
-  vv=wv+ai; b=1&&q%2;
+  vv=wv+ai; b=(q&1);
   if(q){   vv-=4; DOCOL4(p, *(int*)v, *(int*)v,         i,   v+=ai);}
   DO(q-1,  vv-=4; DOCOL4(p, *(int*)v, *(int*)(v+ai*g[i]),g[i],v   ););
   wv+=c; zv+=n;
@@ -539,7 +539,7 @@ static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  q=C2T&AT(w) && C_LE;
  if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
-  b=(B)(ai%2); if(q){e=-3; vv=wv+ai-2;}else{e=-1; vv=wv+ai-1;}
+  b=(B)(ai&1); if(q){e=-3; vv=wv+ai-2;}else{e=-1; vv=wv+ai-1;}
                  DOCOL1(p,*v,*v,       i,   v+=ai); if(q)e=1==e?(q==1?-3:-5):1; 
   DO(ai-1, vv+=e; DOCOL1(p,*v,v[ai*g[i]],g[i],v   ); if(q)e=1==e?(q==1?-3:-5):1;);
   wv+=ai*n; zv+=n;

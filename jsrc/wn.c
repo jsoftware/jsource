@@ -197,7 +197,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
  RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;  // s->null-terminated string
  GATV(y,INT,1+n,1,0); yv=AV(y);
  DO(n, c=*v; *v++=c=c==CSIGN?'-':c==CTAB||c==' '?C0:c; b=C0==c; if(p!=b)yv[d++]=i; p=b;);
- if(d%2)yv[d++]=n; m=d/2;
+ if(d&1)yv[d++]=n; m=d>>1;
  numcase(n,s,&b,&j,&x,&q,&ii);
  f=q?jtnumq:x?jtnumx:b||j?jtnumbpx:ii?jtnumi:jtnumd; 
  t=q?RAT   :x?XNUM  :b||j?CMPX    :ii?INT   :FL;     k=bp(t);

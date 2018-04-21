@@ -847,7 +847,7 @@ static C sumbf[]={CSTARDOT,CMIN,CSTAR,CPLUSDOT,CMAX,CEQ,CNE,CSTARCO,CPLUSCO,CLT,
 static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I dw,n,p,q,r,*s,zn,* RESTRICT zv;UC* RESTRICT tu;UI* RESTRICTI tv,*u,*v;
  RZ(a&&w);
  s=AS(w); n=*s;
- zn=AN(w)/n; dw=(zn+SZI-1)/SZI; p=dw*SZI;
+ zn=AN(w)/n; dw=(zn+SZI-1)>>LGSZI; p=dw*SZI;
  q=n/255; r=n%255;
  GATV(z,INT,zn,AR(w)-1,1+s); zv=AV(z); memset(zv,C0,zn*SZI);
  GATV(t,INT,dw,1,0); tu=UAV(t); tv=(UI*)tu;
@@ -904,7 +904,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
  GA(z,zt,zn,r-1,1+s);
  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
   av=CAV(a); wv=CAV(w); yv=(UI*)AV(y); zv=AV(z); memset(zv,C0,zn*SZI);
-  tn=(zn+SZI-1)/SZI; GATV(t,INT,tn,1,0); tc=UAV(t); ti=(UI*)tc;
+  tn=(zn+SZI-1)>>LGSZI; GATV(t,INT,tn,1,0); tc=UAV(t); ti=(UI*)tc;
   for(j=nn;0<j;j-=255){
    memset(ti,C0,tn*SZI); 
    DO(MIN(j,255), ado(jt,b,m,n,yv,av,wv); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););

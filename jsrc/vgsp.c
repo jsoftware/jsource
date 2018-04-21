@@ -39,7 +39,7 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  if(p==tn-cv[cn]){++cv[cn]; cv[1+cn]-=2;}
  cn+=2;
  AN(t)=    *AS(t)=tn;   *zt=t;  /* cell divisions (row indices in y)            */
- AN(c)=cn; *AS(c)=cn/2; *zc=c;  /* item divisions (indices in t, # of elements) */
+ AN(c)=cn; *AS(c)=cn>>1; *zc=c;  /* item divisions (indices in t, # of elements) */
  R 1;
 }    /* frame: all sparse; cell: 1 or more sparse, then dense */
 

@@ -54,7 +54,7 @@ static F1(jtravtranspose){I i,n,s;Z t,*v;UC*iv,*jv;UI j;
  n=AN(w); v=ZAV(w);
  j=n; s=SY_64?64:32; while(1<j){j>>=1; --s;} 
  iv=(UC*)&i; jv=(UC*)&j;
- if(128!=revb[1])DO(256, revb[i]=16*revb16[i%16]+revb16[i/16];);
+ if(128!=revb[1])DO(256, revb[i]=(revb16[i&15]<<4)+revb16[i>>4];);
  for(i=0;i<n;++i){
   REVBITS(iv,jv); j>>=s;
   if(j>(UI)i){t=v[i]; v[i]=v[j]; v[j]=t;}

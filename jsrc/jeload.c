@@ -60,12 +60,12 @@ static char install[PLEN];
 
 int jedo(char* sentence)
 {
-	return jdo(jt,sentence);
+	return jdo(jt,(C*)sentence);
 }
 
-A jegeta(I n, char* s){return jgeta(jt,n,s);}
+A jegeta(I n, char* s){return jgeta(jt,n,(C*)s);}
 void jefree(){jfree(jt);}
-char* jegetlocale(){return jgetlocale(jt);}
+char* jegetlocale(){return (char*)jgetlocale(jt);}
 A jega(I t, I n, I r, I*s){return jga(jt,t,n,r,s);}
 void* jehjdll(){return hjdll;}
 

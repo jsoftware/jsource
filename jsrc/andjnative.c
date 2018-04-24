@@ -234,7 +234,7 @@ JNIEXPORT jint JNICALL Java_com_jsoftware_j_JInterface_JDo
   local_jnienv = env;
 
   const char *nativeString = (*env)->GetStringUTFChars(env, js, 0);
-  int jc = jedo((C*)nativeString);
+  int jc = jedo((char*)nativeString);
   (*env)->ReleaseStringUTFChars(env, js, nativeString);
   return (jint) jc;
 }
@@ -329,7 +329,7 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
   (*env)->ExceptionClear(env);
   free(inputline);
   if (!ret) {
-    if (!jedo((C*)"q_jrx_=:4!:0<'r_jrx_'")) {
+    if (!jedo("q_jrx_=:4!:0<'r_jrx_'")) {
       A at=jegeta(6,(char*)"q_jrx_");
       AREP p=(AREP) (sizeof(struct A_RECORD) + (char*)at);
       if ((p->t==4) && (p->r==0)) {

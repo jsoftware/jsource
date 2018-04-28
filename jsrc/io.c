@@ -144,9 +144,14 @@ F1(jtjoff){I x;
  R 0;
 }
 
+#define capturesize 80000
+
 I jdo(J jt, C* lp){I e,old;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
- if(jt->capture) jt->capture[0]=0; // clear capture buffer
+ if(jt->capture){
+  if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
+  else jt->capture[0]=0; // clear capture buffer
+ }
  old=jt->tnextpushx;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
@@ -263,8 +268,6 @@ A _stdcall Jga(J jt, I t, I n, I r, I*s){
 
 void oleoutput(J jt, I n, char* s); /* SY_WIN32 only */
 
-#define capturesize 80000
-
 /* jsto - display output in output window */
 // type is mtyo of string, s->null-terminated string
 void jsto(J jt,I type,C*s){C e;I ex;
@@ -284,12 +287,12 @@ void jsto(J jt,I type,C*s){C e;I ex;
 #if SY_WIN32 && !SY_WINCE
   if(jt->oleop && (type & MTYOFM)){oleoutput(jt,strlen(s),s);R;} // ole output
 #endif
-  // lazy - malloc failure will crash and should alloc larger when full
-  if(!jt->capture){jt->capture=MALLOC(capturesize);jt->capture[0]=0;}
-  if(capturesize>2+strlen(jt->capture)+strlen(s))
+  // lazy - should check alloc size is reasonable
+  if(!jt->capture){jt->capture=MALLOC(jt->capturemax=MAX(2+strlen(s),capturesize));strcpy(jt->capture,s);}
+  else {
+   if(jt->capturemax<2+strlen(jt->capture)+strlen(s))jt->capture=REALLOC(jt->capture,jt->capturemax=2+strlen(jt->capture)+strlen(s)+capturesize);
    strcat(jt->capture,s);
-  else
-   strcpy(jt->capture,"too much output ...\n");
+  }
  }
  R;
 }

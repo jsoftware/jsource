@@ -205,7 +205,7 @@ typedef struct {
  A    ltext;            /* linear representation text                      */
  AF   ltie;             /* linear representation tie   function            */
  I    min;              /* the r result from irange                        */
- I    mtyo;				/* jsto output type - jfwrite arg to jpr           */
+ I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
  C*   mtyostr;          /* jsto string                                     */
  I    nfe;              /* 1 for J native front end                        */
  I    nlt;              /* namelist type  mask                             */
@@ -214,7 +214,7 @@ typedef struct {
  I    outmaxafter;      /* output: maximum # lines after truncation        */
  I    outmaxbefore;     /* output: maximum # lines before truncation       */
  I    outmaxlen;        /* output: maximum line length before truncation   */
- C    outseq[3];		/* EOL: "LF" "CR" "CRLF"                           */
+ C    outseq[3];		    /* EOL: "LF" "CR" "CRLF"                           */
  I    peekdata;         /* our window into the interpreter                 */
  A    pma;              /* perf. monitor: data area                        */
  PM0* pmu;              /* perf. monitor: (PM0)AV(pma)                     */
@@ -284,7 +284,8 @@ typedef struct {
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    dirnamebuf[NPATH];/* for directory search                            */
  LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
- C*   capture;          // capture output for python->J etc.
+ C*   capture;          /* capture output for python->J etc.               */
+ I    capturemax;       /* size of capture buffer allocated                */
 } JST;
 
 typedef JST* J; 

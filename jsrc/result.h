@@ -26,12 +26,17 @@
 #define ZZFLAGUSEOPEN (1LL<<ZZFLAGUSEOPENX)
 #define ZZFLAGBOXALLOX LGSZI  // zzbox has been allocated
 #define ZZFLAGBOXALLO (1LL<<ZZFLAGBOXALLOX)
-#define ZZFLAGWILLUNBOXRESULTX 4  // result feeds into ;, so we can leave virtual blocks in it, as long as they aren't ones we will modify.  Requires BOXATOP also.
-#define ZZFLAGWILLUNBOXRESULT (1LL<<ZZFLAGWILLUNBOXRESULTX)  // must be below the flags for all recursive types
+// next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP and lower than all recursible type-flags
+#define ZZFLAGWILLBEOPENEDX 4  // the result will be unboxed by the next primitive, so we can leave virtual blocks in it, as long as they aren't ones we will modify.  Requires BOXATOP also.
+#define ZZFLAGWILLBEOPENED (1LL<<ZZFLAGWILLBEOPENEDX)
 #define ZZFLAGHASUNBOXX BOXX  // result contains a nonempty non-box (this must equal BOX)
 #define ZZFLAGHASUNBOX (1LL<<ZZFLAGHASUNBOXX)
 #define ZZFLAGHASBOXX (ZZFLAGHASUNBOXX+1)  // result contains a nonempty box (must be one bit above FLAGHASUNBOX)
 #define ZZFLAGHASBOX (1LL<<ZZFLAGHASBOXX)
+// next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP
+#define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
+#define ZZFLAGCOUNTITEMS (1LL<<ZZFLAGCOUNTITEMSX)
+
 
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
 // THIS MUST NOT BE EXECUTED UNTIL YOU HAVE COMMITTED TO THE RESULT LOOP!
@@ -39,7 +44,7 @@
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
 // Where f is depends on whether the modifier is f@:g or ([: g h)
 #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,protected,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells); zzprotected=(protected); \
- if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
+ if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
 
 
 #undef ZZDEFN
@@ -58,8 +63,9 @@
  I zzncells;   // number of cells in the result (input)
  I zzwf;  // length of frame of result.  At start: length of inner frame
  I zzold;  // place to tpop to between executions
- A zzprotected;  // address, if any, of the virtual block used in the outer loop.  We will not incorporate it into a WILLUNBOX result
+ A zzprotected;  // address, if any, of the virtual block used in the outer loop.  We will not incorporate it into a WILLBEOPENED result
  jt->rank=0;  // needed for cvt ?? scaf
+#define ZZBOXATOPONLY 0  // user defines this to 1 to get code that assumes BOXATOP is always set
 #undef ZZDECL
 #endif
 
@@ -75,7 +81,7 @@
 do{
  if(zz){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
-  if(!(ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
+  if(!(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzwf; I zexprank=zzr-zzwf;
@@ -180,15 +186,24 @@ do{
   }else{
    // forced-boxed result.  Must not be sparse.  The result box is recursive to begin with, unless RAZERESULT is set
    ASSERT(!(AT(z)&SPARSE),EVNONCE);
-   if(!(ZZFLAGWORD&ZZFLAGWILLUNBOXRESULT)) {
+   if(!(ZZFLAGWORD&ZZFLAGWILLBEOPENED)) {
     // normal case where we are creating the result box.  Must incorp the result
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
    } else {
-    // The result of this verb will be feeding into raze, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
+    // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
     // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive
     if(z==zzprotected){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); z=newz;}
+    // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.
    }
    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
+   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+    // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
+    // and item-shape.  If one does not, we turn off special raze processing
+    A result0=AAV(zz)[0]; I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
+    I diff=TYPESXOR(AT(z),AT(result0))|(zr^resr); zr=(zr>resr)?resr:zr;  DO(zr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch
+    ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
+    I nitems=1; nitems=(zr!=0)?zs[0]:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
+   }
   }
   // zzboxp does double duty.  Before the first wreck, it just counts the number of times we wrote to zz before the wreck.  After the first
   // wreck (or for ANY force-boxed), it points to the place where the next boxed result will be stored.  In this mode, boxp is advanced for
@@ -201,7 +216,7 @@ do{
   // Get the rank/type to allocate for the presumed result
   // Get the type to allocate
   I natoms=AN(z);  // number of atoms per result cell
-  I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
+  I zzt=AT(z); I zzr=AR(z); zzt=(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
   // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
@@ -211,8 +226,8 @@ do{
   RE(natoms=mult(natoms,zzncells));
   // Allocate the result
   GA(zz,zzt,natoms,zzcelllen+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);
-  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty), unless WILLUNBOX is set, since then we may put virtual blocks in the boxed array
-  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLUNBOXRESULT)-1);  // if recursible type, (viz box), make it recursible.  But not if RAZERESULT set. Leave usecount unchanged
+  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
+  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if RAZERESULT set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
@@ -226,8 +241,9 @@ do{
   // Set up the pointers/sizes for the rest of the operation
   zzwf+=zzcelllen;  // leave zzwf as the total length of result frame
   zzcelllen=nbytes;   // cell length, for use in the main body
-  zzboxp=AAV(zz); zzboxp=(ZZFLAGWORD&ZZFLAGBOXATOP)?zzboxp:0;  // Start out zzboxp so we can use it as a counter of cells processed before zzbox needed
   zzcellp=0;  // init output offset in zz to 0
+  zzboxp=AAV(zz); zzboxp=ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
+  AM(zz)=0;   // in case we count items in AM, init the count to 0 
  }
 }while(1);  // go back to store the first result
 
@@ -236,12 +252,21 @@ do{
 
 //*********** exit ************************
 #ifdef ZZEXIT
+ // result is now in zz, which must not be 0
+ // if ZZFLAGCOUNTITEMS is still set, we got through assembly with all boxed homogeneous. Mark the result.
+ // Any bypass path to here must clear ZZFLAGCOUNTITEMS.   
+ AFLAG(zz)|=(ZZFLAGWORD&ZZFLAGCOUNTITEMS)<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX);
+
+  // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any bocks, and we kept the
+  // result as a nonrecursive block.
+ if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){RETF(zz);}  // no need to set NOSMREL either, or check for inhomogeneous results
+
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf));  // inhomogeneous results: go assemble them
  }
-// result is now in zz
 #undef ZZFLAGWORD
+#undef ZZBOXATOPONLY
 // obsolete #undef ZZFLAGNOPOPX
 // obsolete #undef ZZFLAGNOPOP
 // obsolete #undef ZZFLAGBOXATOPX

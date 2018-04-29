@@ -355,12 +355,35 @@ A jtcvt(J jt,I t,A w){A y;B b;I*oq;
 // Convert numeric type to lowest precision that fits.  Push fuzz/rank onto a stack,
 // and use 'exact' and 'no rank' for them.  If mode=0, do not promote XNUM/RAT to fixed-length types.
 // Result is a new buffer, always
-A jtbcvt(J jt,C mode,A w){A y,z=w;D ofuzz;I*oq;
+A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;I*oq;
  RZ(w);
  ofuzz=jt->fuzz; oq=jt->rank; 
  jt->fuzz=0;     jt->rank=0;
  // for rationals, try converting to XNUM; otherwise stay at rational
  if(RAT&AT(w))z=ccvt(XNUM,w,&y)?y:w;
+#ifdef NANFLAG
+ // there may be values (especially b types) that were nominally CMPX but might actually be integers.  Those were
+ // stored with the real part being the actual integer value and the imaginary part as the special 'flag' value.  We
+ // handle those here.  If all the imaginary parts were flags, we accept all the integer parts and change the type
+ // to integer.  If none of the imaginary parts were flags, we leave the input unchanged.  If some were flags, we
+ // convert the flagged values to float and keep the result as complex
+ if((((AN(w)-1)|(AT(w)&CMPX)-1))>=0){  // not empty AND complex
+  I allflag=1, anyflag=0; Z *wv = ZAV(w); DO(AN(w), I isflag=*(I*)&wv[i].im==NANFLAG; allflag&=isflag; anyflag|=isflag;)
+  if(anyflag){
+   I ipok=(-(I)jtinplace&JTINPLACEW) & AC(w);  // both sign bits set (<0) if inplaceable
+   if(allflag){
+    if(ipok>=0)GATV(z,INT,AN(w),AR(w),AS(w));
+    I *zv=IAV(z);  // output area
+    DO(AN(w), zv[i]=*(I*)&wv[i].re;)  // copy the results as integers
+   }else{
+    if(ipok>=0)GATV(z,CMPX,AN(w),AR(w),AS(w));
+    Z *zv=ZAV(z);  // output area
+    DO(AN(w), if(*(I*)&wv[i].im==NANFLAG){zv[i].re=(D)*(I*)&wv[i].re; zv[i].im=0.0;}else{zv[i]=wv[i];})  // copy floats, and converts any integers back to float
+   }
+   w=z;  // this result is now eligible for further demotion
+  }
+ }
+#endif
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode||!(AT(w)&XNUM+RAT))z=ccvt(B01,w,&y)?y:ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w; 
  jt->fuzz=ofuzz; jt->rank=oq;

@@ -115,9 +115,9 @@ static NUMH(jtnumq){B b=0;C c,*t;
 }
 
 static Z zpi={PI,0};
-
+static C dig[]="0123456789abcdefghijklmnopqrstuvwxyz";
 static B jtnumb(J jt,I n,C*s,Z*v,Z b){A c,d,y;I k;
-  static C dig[]="0123456789abcdefghijklmnopqrstuvwxyz";I m=strlen(dig);
+ I m=strlen(dig);
  if(!n){*v=zeroZ; R 1;}
  if(!(d=indexof(str(m,dig),str(n,s))))R 0;
  if(!(all0(eps(sc(m),d))))R 0;
@@ -135,6 +135,17 @@ static NUMH(jtnumbpx){B ne,ze;C*t,*u;I k,m;Z b,p,q,*v,x,y;
   ++t; if(ne='-'==*t)++t;  // t->first nonsign digit
   m=k=n+s-t; if(u=memchr(t,'.',m))k=u-t;  // m=total # digits, k=# digits before decimal point
   if(!(m>(1&&u)))R 0;   // assert negative, or ((>1 digit)  or (1 digit) and (there is no decimal point)) i. e. there is at least one non-decimal-point
+#ifdef NANFLAG
+  // if the base is an integer, we can't just do everything in the complex domain because of loss of precision.
+  // in that case reproduce the calculation from numb, but with the integer base, and if the result is still integral, flag it
+  I intbase=(I)b.re; if(!u && b.im==0.0 && b.re==(D)intbase){A d;
+   if(!(d=indexof(str(strlen(dig),dig),str(m,t))))R 0;  // convert digits to iindex numbers
+   if(!(all0(eps(sc(strlen(dig)),d))))R 0;   // verify only allowed digits in the field
+   if(ne)if(!(d=negate(d)))R 0;  // recover negative sign
+   if(!(d=bcvt(0,base2(sc(intbase),d))))R 0;  // d =. base #. d converted to smallest possible precision
+   if(AT(d)&INT){*(I*)&v->re=IAV(d)[0]; *(I*)&v->im=NANFLAG; R 1;}  // if result is INT, keep it at full precision
+  }
+#endif
   if(!(numb(k,t,&p,b)))R 0;
   if(u){
    k=m-(1+k);
@@ -194,7 +205,7 @@ static void jtnumcase(J jt,I n,C*s,B*b,B*j,B*x,B*q,B*ii){B e;C c;
 A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0,e,k,m,t,*yv;
  if(1==n)                {if(k=s[0]-'0',0<=k&&k<=9)R num[ k]; else R ainf;}
  else if(2==n&&CSIGN==*s){if(k=s[1]-'0',0<=k&&k<=9)R num[-k];}
- RZ(y=str(1+n,s)); s=v=CAV(y); s[n]=0;  // s->null-terminated string
+ RZ(y=str(1+n,s)); rifvs(y); s=v=CAV(y); s[n]=0;  // s->null-terminated string
  GATV(y,INT,1+n,1,0); yv=AV(y);
  DO(n, c=*v; *v++=c=c==CSIGN?'-':c==CTAB||c==' '?C0:c; b=C0==c; if(p!=b)yv[d++]=i; p=b;);
  if(d&1)yv[d++]=n; m=d>>1;
@@ -207,7 +218,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
   if(!ii){t=FL; f=jtnumd; GA(z,t,m,1!=m,0); v=CAV(z);}
  }
  if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);
- if(t&FL+CMPX)RZ(z=cvt0(z));
+// obsolete  if(t&FL+CMPX)RZ(z=cvt0(z));   // we no longer fear -0
  z=bcvt(0,z);
  EPILOG(z);
 }
@@ -401,11 +412,13 @@ F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
  // Classify the input y according the types it contains
  numcase(m*n,CAV(w),&b,&j,&x,&q,&ii);
 
- // Select the conversion routine.  If the return is float/complex, make sure -0 is replaced by 0
- if(at&CMPX)                z=cvt0(exec2z(a,w,n,m,c));  // If x argument is complex, force that mode
- else if(q)                 z=     exec2q(a,w,n,m,c);  // Otherwise, if data contains rationals, use that mode
- else if(x&&at&B01+INT+XNUM)z=     exec2x(a,w,n,m,c);   // Otherwise if data contains extended integers, use that mode as long as x is compatible
- else                       z=cvt0(exec2r(a,w,n,m,c));  // otherwise do normal int/float conversion
+ // Select the conversion routine.  We allow -0 in the result now
+// obsolete if(at&CMPX)                z=cvt0(exec2z(a,w,n,m,c));  // If x argument is complex, force that mode
+ if(at&CMPX)                z=exec2z(a,w,n,m,c);  // If x argument is complex, force that mode
+ else if(q)                 z=exec2q(a,w,n,m,c);  // Otherwise, if data contains rationals, use that mode
+ else if(x&&at&B01+INT+XNUM)z=exec2x(a,w,n,m,c);   // Otherwise if data contains extended integers, use that mode as long as x is compatible
+// obsolete else                       z=cvt0(exec2r(a,w,n,m,c));  // otherwise do normal int/float conversion
+ else                       z=exec2r(a,w,n,m,c);  // otherwise do normal int/float conversion
  // Select the precision to use: the smallest that can hold the data
  R bcvt(0,z);
 }

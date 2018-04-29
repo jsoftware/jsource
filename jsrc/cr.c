@@ -36,6 +36,9 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  if(fs&&VAV(fs)->flag2&(VF2RANKATOP1|VF2BOXATOP1)){
   I mr=VAV(fs)->mr; efr(rr,rr,mr);  // rr = cell rank: min of old cell and new
   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
+  // marking the result block as having uniform items if we didn't go through the assembly loop here
+  state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
  }
  wf=wr-rr; // obsolete state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
 // obsolete if(ARELATIVE(w))state|=STATEWREL;
@@ -137,6 +140,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
   if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
    lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
    state = (VAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
+   // marking the result block as having uniform items if we didn't go through the assembly loop here
+   state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
   }
  }
 

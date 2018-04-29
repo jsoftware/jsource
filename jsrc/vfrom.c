@@ -65,9 +65,12 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  if(wn){
   // For virtual results we need: kn: number of atoms in an item of a cell of w;   
   PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
-  // Also  m: #cells in w 
+  // Also m: #cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
-  if((zn>1)&&!(wf|(wflag&(AFSMM|AFNJA)))){
+// obsolete  if((zn>1)&&!(wf|(wflag&(AFSMM|AFNJA)))){
+// correct  if(((zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
+  // scaf no virtual if not direct or recursible
+  if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
    // check the last item before checking the middle.

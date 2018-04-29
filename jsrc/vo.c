@@ -368,7 +368,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
  EPILOG(z);
 }
 
-// ; y general case, where rank > 1
+// ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 // zrel=1 if any of the contents uses relative addressing
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* RESTRICT zv;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
@@ -449,7 +449,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,* RESTRICT yv,z,* RESTRICT zv;C* RESTRICT zu;I d,i,k,m=0,n,r=1,t=0,yt,zrel;
+F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt,zrel;
  RZ(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
@@ -457,54 +457,75 @@ F1(jtraze){A*v,y,* RESTRICT yv,z,* RESTRICT zv;C* RESTRICT zu;I d,i,k,m=0,n,r=1,
  RELORIGINB(wrel,w); zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
  if(1==n){RZ(z=(A)AABS(*v,wrel)); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
  // scan the boxes to create the following values:
- // m = total # atoms in contents; r = maximum rank of contents
+ // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
  // t = type of result (maxtype among types of nonempty contents)
  // zrel set if any of the nonempty contents uses relative addressing
- // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
- // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
- // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
- // So, we don't check compatibility for empty boxes.
- for(i=0;i<n;++i){
-  y=(A)AABS(v[i],wrel); m+=d=AN(y); r=MAX(r,AR(y)); 
-  if(d){
-   yt=AT(y); 
-   if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtype(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
-   zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
- }}
- // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
- zrel = zrel>=0;
- // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
- if(1<r)R razeg(w,t,n,r,v,zrel);
- // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
- // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
+ // if the block has been flagged as having homogeneous items, we can skip this step.  Such flagging indicates a compound like ;@:(<@f) where we knew during
+ // result-assembly that we were going to raze the result, and we took the trouble to inspect the contents' shapes as they were going by.
+ if(!(AFLAG(w)&AFUNIFORMITEMS)) {  // normal case
+  // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
+  // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
+  // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
+  // So, we don't check compatibility for empty boxes.
+  for(i=0;i<n;++i){
+   y=(A)AABS(v[i],wrel); m+=d=AN(y); r=MAX(r,AR(y));
+     // the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
+   if(d){
+    yt=AT(y); 
+    if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtype(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
+    zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
+   }
+  }
+  // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
+  zrel = zrel>=0;
+  // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
+  if(1<r)R razeg(w,t,n,r,v,zrel);
+  // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
+  // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
- // If all the contents were empty, rescan and set the result type to the
- // largest type of the (empty) contents.  Note that this scan takes the simple
- // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
- // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
- // but this is how it was done originally
-  // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
-// obsolete if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
-// obsolete  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
- if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
- GA(z,t,m,r,0); if(zrel&&!(t&DIRECT)){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}  // allocate the result area; mark relative if any contents relative
- // now zrel has been repurposed to relocation offset for z (0 if not relative)
- zu=CAV(z); zv=AAV(z); k=bp(t); // input pointers, depending on type; length of an item
- // loop through the boxes copying: the pointers, if boxed; the data, if not boxed
- for(i=0;i<n;++i){
-  y=(A)AABS(v[i],wrel);   // y->box[i]
-  if(AN(y)){
-   // if contents are boxes, calculate q to be the offset to add to make relative: 
-   // if neither y nor z is relative, that's 0 (absolute addressing)
-   // if z is relative and y is not, that's -z (convert absolute y to relative to z)
-   // if z and y are both relative, it's y-z (convert y to absolute, then make relative to z)
-   // y relative and z not is impossible
+  // If all the contents were empty, rescan and set the result type to the
+  // largest type of the (empty) contents.  Note that this scan takes the simple
+  // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
+  // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
+  // but this is how it was done originally
+   // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
+ // obsolete if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}}
+ // obsolete  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}}
+  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=(A)AABS(v[i],wrel); t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
+  GA(z,t,m,r,0); // obsolete if(zrel&&!(t&DIRECT)){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}  // allocate the result area; mark relative if any contents relative
+  // now zrel has been repurposed to relocation offset for z (0 if not relative)
+  zu=CAV(z); zv=AAV(z); k=bp(t); // input pointers, depending on type; length of an item
+  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed
+  for(i=0;i<n;++i){
+ // obsolete  y=(A)AABS(v[i],wrel);   // y->box[i]
+   y=v[i]; if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
+// obsolete    // if contents are boxes, calculate q to be the offset to add to make relative: 
+// obsolete    // if neither y nor z is relative, that's 0 (absolute addressing)
+// obsolete    // if z is relative and y is not, that's -z (convert absolute y to relative to z)
+// obsolete    // if z and y are both relative, it's y-z (convert y to absolute, then make relative to z)
+// obsolete    // y relative and z not is impossible
 // obsolete   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; DO(AN(y), *zv++=(A)((I)yv[i]+yrel););}  // yv->contents, copy each pointer
-   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // yv->contents, copy each pointer
-   // For other (always nonrelative) contents, convert data if necessary, then copy it
-   else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
- }}
+// obsolete    if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // yv->contents, copy each pointer
+// obsolete    // For other (always nonrelative) contents, convert data if necessary, then copy it
+// obsolete   else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
+  }
+ }else{
+  // special case where the result-assembly code checked to make sure the items were uniform.  In this case the number of items was hidden away in the AM field (otherwise unneeded, since we know the block isn't virtual)
+  // and we just need to extract the rank and the type, and calculate the atoms-per-item.  We know there is at least one box.
+  A ww0=AAV(w)[0]; t=AT(ww0); r=AR(ww0); r+=(UI)(r-1)>>(BW-1); wws=&AS(ww0)[0]; // ww0->1st contents; t=type; r=rank>.1; wws->item shape
+  PROD(m,r-1,wws+1);  // get #atoms in an item of w
+  I nitems=AM(w);  // total # result items is stored in w
+  GA(z,t,m*nitems,r,wws); AS(z)[0]=nitems; // allocate the result area; finish shape
+  // now zrel has been repurposed to relocation offset for z (0 if not relative)
+  zu=CAV(z); zv=AAV(z); k=bp(t); // input pointers, depending on type; length of an item
+  // loop through the boxes copying the data into sequential output positions
+  for(i=0;i<n;++i){
+   y=v[i]; if(AN(y)){d=k*AN(y); MC(zu,AV(y),d); zu+=d;}
+  }
+ }
+
  // todo kludge should inherit nosmrel
+ AFLAG(z)|=AFNOSMREL;  // scaf till removed
  RETF(z);
 }
 

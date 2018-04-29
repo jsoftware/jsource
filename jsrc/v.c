@@ -10,7 +10,7 @@ F1(jttally ){A z; RZ(w); z=sc(IC(w));            RETF(AT(w)&XNUM+RAT?xco1(z):z);
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 
-// ,y and ,"r y
+// ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);  // n=#atoms, ws->shape, wt=type, d=1 if dense
@@ -18,7 +18,9 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
-   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell)
+   // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
+   // the self-virtual-block code in virtual() because we can do it for indirect blocks also, since we know we are not changing
+   // the number of atoms
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
@@ -67,8 +69,11 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
   wcr,wf,wr,zn;
  RZ(a&&w);
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+ // We know that jt->rank is nonzero, because the caller checked it
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+ ar=AR(a); acr=jt->rank[0]; af=ar-acr;
+ wr=AR(w); wcr=jt->rank[1]; wf=wr-wcr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.  We can do this because we have no PROLOG
@@ -85,8 +90,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  INHERITNOREL(z,w); RETF(z);
 } 
 
-F2(jtleft2 ){R lr2(1,a,w);}
-F2(jtright2){R lr2(0,a,w);}
+F2(jtleft2 ){if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
+F2(jtright2){if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
 
 F1(jtright1){RETF(w);}
 

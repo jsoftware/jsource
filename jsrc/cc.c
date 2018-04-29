@@ -7,9 +7,9 @@
 #include "vcomp.h"
 #define ZZDEFN
 #include "result.h"
-#define STATEHASGERUNDX 8
+#define STATEHASGERUNDX 10
 #define STATEHASGERUND (1LL<<STATEHASGERUNDX)
-#define STATENEEDSASSEMBLYX 9
+#define STATENEEDSASSEMBLYX 11
 #define STATENEEDSASSEMBLY (1LL<<STATENEEDSASSEMBLYX)
 
 
@@ -1047,9 +1047,9 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RETF(x);
 }    /* tesselation standardized left argument */
 
-#define STATEREFLECTX 0x100
-#define STATEREFLECTY 0x200
-#define STATETAKE 0x400
+#define STATEREFLECTX 0x400
+#define STATEREFLECTY 0x800
+#define STATETAKE 0x1000
 static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
  PROLOG(600); PREF2(jttess2);   // enforce left rank 2
 #define ZZFLAGWORD state

@@ -132,7 +132,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VINPLACEOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VINPLACEOK1;} break;
   case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VINPLACEOK2;} break;
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VINPLACEOK2;} break;
-  case CRAZE:   if(d==CCUT&&boxatop(w)){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);} break;
+  case CRAZE:   if(ACIPISOK(w))wv->flag2|=VF2WILLBEOPENED|VF2COUNTITEMS;  // indicate v will be opened - only if the block is not shared
+                if(d==CCUT&&boxatop(w)){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);} break;  // special case ;@cut
   case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->f)){f2=jtpolymult; flag&=~VINPLACEOK2;} break;
   case CQQ:     if(d==CTHORN&&CEXEC==ID(av->f)&&equ(zero,av->g)){f1=jtdigits10; flag&=~VINPLACEOK1;} break;
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VINPLACEOK1;} break;
@@ -180,7 +181,8 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
    if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VINPLACEOK2;}
    if(d==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
    break;
-  case CSEMICO: 
+
+  case CSEMICO: if(ACIPISOK(w))wv->flag2|=VF2WILLBEOPENED|VF2COUNTITEMS;  // indicate v will be opened - only if the block is not shared
    if(d==CLBRACE){f2=jtrazefrom; flag&=~VINPLACEOK2;}
    else if(d==CCUT){
     j=i0(wv->g);

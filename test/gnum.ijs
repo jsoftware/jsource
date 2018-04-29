@@ -64,6 +64,21 @@ x    eq ". ":  x
 'ill-formed number' -: ". etx '6b__'
 'ill-formed number' -: ". etx '6b.'
 
+NB. verify large b-type integers on 64-bit
+3 : 0 ''
+if. -. IF64 do. 1 return. end.
+assert. 16b123456789abcdef =!.0 ] 81985529216486895
+assert. 16 = 3!:0 ] 16b123456789abcdef 2j2
+assert. 8 = 3!:0 ] 16b123456789abcdef 4.2
+assert. 4 = 3!:0 ] 16b123456789abcdef 3
+assert. 16b123456789abcdef 3 = 81985529216486896 3
+assert. (0 ". '16b123456789abcdef') =!.0 ] 81985529216486895
+assert. 16 = 3!:0 ] (0 ". '16b123456789abcdef 2j2')
+assert. 8 = 3!:0 ] (0 ". '16b123456789abcdef 4.2')
+assert. 4 = 3!:0 ] (0 ". '16b123456789abcdef 3')
+assert. (0 ". '16b123456789abcdef 3') = 81985529216486896 3
+1
+)
 
 4!:55 ;:'eq x y'
 

@@ -157,7 +157,6 @@
 #ifndef UNDERFLOW
 #define UNDERFLOW       ((D)4.450147717014403e-308)
 #endif
-
 // RESTRICT causes the compiler to generate better code by assuming no overlap of regions pointed to by pointers
 // We use RESTRICT for routines that operate in-place on an argument.  This is strictly speaking a violation of the rule,
 // but normally something like *z = *x + *y will not cause trouble because there is no reason to refetch an input after
@@ -403,7 +402,7 @@ extern unsigned int __cdecl _clearfp (void);
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
 // When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
-// For best results declare name as: AD* RESTRICT name;
+// For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GAT(name,type,atoms,rank,shaape) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
  I bytes = ALLOBYTES(atoms,rank,type##SIZE,(type)&LAST0,(type)&NAME); \

@@ -285,7 +285,7 @@ typedef struct {
  C    dirnamebuf[NPATH];/* for directory search                            */
  LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
  C*   capture;          /* capture output for python->J etc.               */
- I    capturemax;       /* size of capture buffer allocated                */
+ UI   capturemax;       /* size of capture buffer allocated                */
 } JST;
 
 typedef JST* J; 

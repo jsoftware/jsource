@@ -57,7 +57,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
  // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
  // if the cells are empty but the frame does not contain 0)
- if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
+ if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;}
  else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
@@ -66,7 +66,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
   // loop over the frame
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(0,0,ws,wf,mn,virtw,1)
+  ZZPARMS(0,0,ws,wf,mn,1)
 
   for(i0=mn;i0;--i0){
    RZ(z=CALL1(f1,virtw,fs));
@@ -203,9 +203,9 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
  // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
  // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
  // if the cells are empty but the frame does not contain 0)
- if(mn|an){RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn;}
+ if(mn|an){RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE; }
  else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
- if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;}
+ if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;}
  else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
@@ -215,7 +215,7 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
 
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(los,lof,lis,lif,mn,virtw,2)
+  ZZPARMS(los,lof,lis,lif,mn,2)
 
   for(i0=outerframect;i0;--i0){
    I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);

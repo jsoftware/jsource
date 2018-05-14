@@ -367,6 +367,9 @@ typedef I SI;
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
                                  // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.
+#define AFUNINCORPABLEX 19      // matches XDX
+#define AFUNINCORPABLE  (1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
+                                // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
 // obsolete // INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
 // obsolete // that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
 // obsolete // We achieve this by realizing whenever ra() - but not ra0() - is called for the block

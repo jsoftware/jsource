@@ -93,7 +93,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
  I wcellsize;  // size of a cell in atoms of w.
  I origoffset;  // offset from virtual block to start of w
  I wcellbytes;  // size of a cell in bytes
- A virtw=0;  // virtual block to use if any
+ A virtw;  // virtual block to use if any
  if(c==1){
   PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
   // allocate virtual block
@@ -103,6 +103,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
   // remember original offset.  Others will be based on this
   origoffset=AK(virtw);
   wcellbytes=wcellsize*bp(AT(w));  // bytes per cell
+  AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
  }
  if(m){
    // There is a frame; we will have to assemble the results, even if there is only one
@@ -110,7 +111,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=wr?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
-   ZZPARMS(0,0,as,m,n,virtw,1);  // set frame & # cells
+   ZZPARMS(0,0,as,m,n,1);  // set frame & # cells
  }
  I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
  for(ii=n;ii;--ii){  // for each 2-cell of a.  u points to the cell
@@ -732,10 +733,11 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
    I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
+   AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
 
 #define ZZDECL
 #include "result.h"
-   {I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,virtw,1);}
+   {I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);}
    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
    do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */
@@ -1223,7 +1225,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // Allocate the area we will use for the strip
   GA(strip,wt,stripn,0,0);  // allocate strip - rank immaterial
   // Allocate the virtual block we will use to address subarrays
-  RZ(virtw=virtual(strip,0,wr));
+  RZ(virtw=virtual(strip,0,wr)); AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
+
   // Move in the left side of the first strip (the left edge of first column)
   svh=CAV(w); dvh=CAV(strip);   // ?vh=pointer to top-left of first column
   C *svb=svh; C *dvb=dvh;  // running pointers used to fill the strip
@@ -1250,7 +1253,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZDECL
 #include "result.h"
  I mn=rs[0]*rs[1];  // number of cells in the result
- rs[2]=rs[0]; ZZPARMS(0,0,rs+axisproc-1,axisproc,mn,virtw,1)  // Note the 2-axis result is transposed, so shape is reversed here for that case
+ rs[2]=rs[0]; ZZPARMS(0,0,rs+axisproc-1,axisproc,mn,1)  // Note the 2-axis result is transposed, so shape is reversed here for that case
 
  for(hi=rs[1];hi;--hi){C *svv, *dvv;  // pointers within the lower-right corner, starting at the top-left of the corner.  Before that we use them to advance through top-right
   // move in the top-right part of top cell, stopping before the lower-right corner.

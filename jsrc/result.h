@@ -43,7 +43,7 @@
 // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
 // Where f is depends on whether the modifier is f@:g or ([: g h)
-#define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,protected,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells); zzprotected=(protected); \
+#define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells);  \
  if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
 
 
@@ -63,7 +63,6 @@
  I zzncells;   // number of cells in the result (input)
  I zzwf;  // length of frame of result.  At start: length of inner frame
  I zzold;  // place to tpop to between executions
- A zzprotected;  // address, if any, of the virtual block used in the outer loop.  We will not incorporate it into a WILLBEOPENED result
  jt->rank=0;  // needed for cvt ?? scaf
 #define ZZBOXATOPONLY 0  // user defines this to 1 to get code that assumes BOXATOP is always set
 #undef ZZDECL
@@ -191,14 +190,17 @@ do{
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
    } else {
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
-    // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive
-    if(z==zzprotected){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); z=newz;}
+    // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
+    // But if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
+    // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
+    if(AFLAG(z)&AFUNINCORPABLE){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); z=newz;}
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.
    }
    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
    if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
     // if the result will be razed next, we will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
-    // and item-shape.  If one does not, we turn off special raze processing
+    // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
+    // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
     A result0=AAV(zz)[0]; I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
     I diff=TYPESXOR(AT(z),AT(result0))|(zr^resr); zr=(zr>resr)?resr:zr;  DO(zr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch
     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 

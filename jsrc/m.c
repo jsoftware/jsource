@@ -509,7 +509,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
-  AFLAG(z)=AFVIRTUAL + (wf&AFNOSMREL) + ((wf&AFNJA+AFSMM+AFREL)?AFREL:0);
+  AFLAG(z)=AFVIRTUAL + (wf&AFNOSMREL) + ((wf&AFNJA+AFSMM+AFREL)?AFREL:0);  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset*tal; AR(z)=(RANKT)r;  // virtual, not inplaceable
   if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
  // obsolete  if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms

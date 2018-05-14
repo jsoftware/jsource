@@ -93,10 +93,10 @@ char* Jinput_stdio(char* prompt)
 C* _stdcall Jinput(J jt,C* prompt){
 #ifdef READLINE
     if(isatty(0)){
-		return Jinput_rl(prompt);
+		return (C*)Jinput_rl((char*)prompt);
     } else 
 #endif
-	return Jinput_stdio(prompt);
+	return (C*)Jinput_stdio((char*)prompt);
 }
 
 /* J calls for output */
@@ -110,22 +110,22 @@ void _stdcall Joutput(J jt,int type, C* s)
 #endif
   exit((int)(intptr_t)s);
  }
- fputs(s,stdout);
+ fputs((char*)s,stdout);
  fflush(stdout);
 }
 
-void addargv(int argc, char* argv[], C* d)
+void addargv(int argc, char* argv[], char* d)
 {
  C *p,*q; I i;
 
- p=d+strlen(d);
+ p=(C*)d+strlen(d);
  for(i=0;i<argc;++i)
  {
   if(sizeof(input)<(100+strlen(d)+2*strlen(argv[i]))) exit(100);
   if(1==argc){*p++=',';*p++='<';}
   if(i)*p++=';';	
   *p++='\'';
-  q=argv[i];
+  q=(C*)argv[i];
   while(*q)
   {
    *p++=*q++;
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
   _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
 #endif
  jefirst(type,input);
- while(1){jedo(Jinput(jt,"   "));}
+ while(1){jedo((char*)Jinput(jt,(C*)"   "));}
  jefree();
  return 0;
 }

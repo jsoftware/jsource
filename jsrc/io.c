@@ -176,8 +176,8 @@ I jdo(J jt, C* lp){I e,old;A x;
 C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); R CAV(y);}
 
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
-  F1RANK(1,jtwd,self);
   F1PREFIP;
+  F1RANK(1,jtwd,self);
   RZ(w);
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);

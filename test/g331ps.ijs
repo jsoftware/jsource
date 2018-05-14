@@ -63,12 +63,14 @@ x testb y [ x=: ?n$2 [ y=: ? n   $2
 x testb y [ x=: ?n$2 [ y=: ?(n,7)$2
 
 testn=: 4 : 0
+if. 1 = 3!:0 y do.
  x =  test y
  x <  test y
+ x +. test y
+end.
  x <. test y
  x >. test y
  x +  test y
- x +. test y
  x -  test y
  x *  test y
 )

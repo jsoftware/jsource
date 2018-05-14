@@ -49,7 +49,7 @@
 #define CPOUND     (C)'#'          /*  35 043 23                              */
 #define CDOLLAR    (C)'$'          /*  36 044 24                              */
 #define CDIV       (C)'%'          /*  37 045 25                              */
-#define CAMP       (C)'&'          /*  38 046 26                              */
+// obsolete #define CAMP       (C)'&'          /*  38 046 26                              */
 #define CQUOTE     (C)'\047'       /*  39 047 27     single quote             */
 #define CLPAR      (C)'('          /*  40 050 28                              */
 #define CRPAR      (C)')'          /*  41 051 29                              */
@@ -74,7 +74,7 @@
 #define COPE       (C)'>'          /*  62 076 3e                              */
 #define CGT        (C)'>'          /*  62 076 3e                              */
 #define CQUERY     (C)'?'          /*  63 077 3f                              */
-#define CAT        (C)'@'          /*  64 100 40                              */
+// obsolete #define CAT        (C)'@'          /*  64 100 40                              */
 // 65-90 free
 #define CLEFT      (C)'['          /*  91 133 5b                              */
 #define CBSLASH    (C)'\134'       /*  92 134 5c \   backslash                */
@@ -84,6 +84,11 @@
 #define CINF       (C)'_'          /*  95 137 5f     infinity                 */
 #define CGRAVE     (C)'`'          /*  96 140 60                              */
 // 97-122 free
+#define CAT        (C)'@'          /*  64 100 40                              */
+#define CAMP       (C)'&'          /*  38 046 26                              */
+#define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
+#define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
+
 #define CLBRACE    (C)'{'          /* 123 173 7b                              */
 #define CFROM      (C)'{'          /* 123 173 7b                              */
 #define CSTILE     (C)'|'          /* 124 174 7c                              */
@@ -152,9 +157,9 @@
 #define CGRDOT     (C)'\262'       /* 178 262 b2 `.                           */
 #define CGRCO      (C)'\263'       /* 179 263 b3 `:                           */
 #define CATDOT     (C)'\264'       /* 180 264 b4 @.                           */
-#define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
+// obsolete #define CATCO      (C)'\265'       /* 181 265 b5 @:                           */
 #define CUNDER     (C)'\266'       /* 182 266 b6 &.                           */
-#define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
+// obsolete #define CAMPCO     (C)'\267'       /* 183 267 b7 &:                           */
 #define CQRYDOT    (C)'\270'       /* 184 270 b8 ?.                           */
 #define CQRYCO     (C)'\271'       /* 185 271 b9 ?:                           */
 

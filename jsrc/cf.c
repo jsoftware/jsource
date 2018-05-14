@@ -32,8 +32,9 @@ POPZOMB; RZ(z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw?( (J)((I)jt|JTINPLACEW) 
 #define CAP2 {A hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); RZ(hx=(h2)((VAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs));  \
 POPZOMB; RZ(z=(g1)(VAV(gs)->flag&VINPLACEOK1&&hx!=protw&&hx!=prota?( (J)((I)jt|JTINPLACEW) ):jt,hx,gs));}
 
-static DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
-static DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
+DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
+DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
+
 static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
 static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
@@ -94,7 +95,20 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  fv=VAV(f); fi=fv->id; if(fi!=CCAP)flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
  switch(fi){
-  case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;  break; /* [: g h */
+  case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
+               if(ACIPISOK(h)){I flag2copy=0;  // do flag processing like @:
+                if(gv->flag2&VF2USESITEMCOUNT){
+                 if(hi==CCUT){I wgi=IAV(hv->g)[0]; // wfv;.wgi
+                  if(wgi==0){V *wfv=VAV(hv->f);
+                   if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+                    flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+                   }
+                  }
+                 }else if(hi==CAT||hi==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if " or @ (not @:)
+                }
+                hv->flag2 |= (gv->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+               }
+               break; /* [: g h */
   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
   case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
@@ -106,7 +120,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
    if(gi==CLBRACE&&hi==CRIGHT){                                   
     p=fv->f; q=fv->g; 
     if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->f,CLT==ID(x)&&equ(one,v->g))){f2=jtsfrom; flag &=~(VINPLACEOK2);}
- }}
+   }
+ }
  switch(fi==CCAP?gi:hi){
   case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VINPLACEOK2);}  break;
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VINPLACEOK2);} break;
@@ -119,8 +134,21 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 else if(hi==CCUT){
                  j=i0(hv->g);
                  if(CBOX==ID(hv->f)&&!j){f2=jtrazecut0; flag &=~(VINPLACEOK2);}
-                 else if(boxatop(h)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag &=~(VINPLACEOK1|VINPLACEOK2);}
- }}
+                 else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
+                  if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+                   A wf=hv->f; V *wfv=VAV(wf); A hg=wfv->g; V *hgv=VAV(hg);  // w is <@g;.k  find g
+                   if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+                    A hgf=hgv->f; V *hgfv=VAV(hgf);  // find gf
+                    if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+                     f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
+                    }
+                   }
+                  }
+                 }
+
+// obsolete                  else if(boxatop(h)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag &=~(VINPLACEOK1|VINPLACEOK2);}
+                }
+ }
  if(0<=m){
   v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->g);
   switch(b?ID(v->f):v->id){
@@ -132,19 +160,20 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
    case CGT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=5+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
    case CEBAR: f2=b?jtfolkcomp0:jtfolkcomp; flag|=6+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
    case CEPS:  f2=b?jtfolkcomp0:jtfolkcomp; flag|=7+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
- }}
+  }
+ }
+
  // If this fork is not a special form, set the flags to indicate whether the f verb does not use an
  // argument.  In that case h can inplace the unused aegument.
  if(f1==jtfolk1 && f2==jtfolk2) flag |= atoplr(f);
  R fdef(flag2,CFORK,VERB, f1,f2, f,g,h, flag, RMAX,RMAX,RMAX);
 }
 
-
 static DF1(taa){TDECL;A t=df1(w,fs); ASSERT(!t||AT(t)&NOUN+VERB,EVSYNTAX); R df1(t,gs);}
 static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
-// If the CS? loops (should not occur), it will be noninplaceable.  If it falls through, we can inplace it.
+// If the CS? loops, it will be noninplaceable.  If it falls through, we can inplace it.
 static CS1IP(jthook1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=CALL1(g1,w,gs));  /* Cannot inplace the call to g */ \
 /* inplace gx unless it is protected; inplace w (as left arg) if the caller allowed it*/ \

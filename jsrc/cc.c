@@ -52,7 +52,15 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
  RZ(a&&w);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
+
+
  if(!(VGERL&sv->flag)){hv=0; id=ID(fs);  // if verb, point to its data and fetch its pseudocharacter
+  // not gerund, OK to test fs
+  if(VAV(fs)->mr>=AR(w)){
+   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  }
  }else{
   state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
@@ -80,29 +88,44 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
  // obsolete GATV(zz,BOX,n,m,as); zv=AAV(zz);
 #define ZZDECL
 #include "result.h"
-if(m){
+ // If there is only one column, we will be using  a virtual block to access the subarray, so allocate it here
+ //  (if the subarray is revered, we won't need the block, but that's rare)
+ I wcellsize;  // size of a cell in atoms of w.
+ I origoffset;  // offset from virtual block to start of w
+ I wcellbytes;  // size of a cell in bytes
+ A virtw=0;  // virtual block to use if any
+ if(c==1){
+  PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
+  // allocate virtual block
+  RZ(virtw = virtual(w,0,wr));    // allocate block
+  // fill in shape
+  I* RESTRICT vs=AS(virtw); DO(wr-1, vs[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+  // remember original offset.  Others will be based on this
+  origoffset=AK(virtw);
+  wcellbytes=wcellsize*bp(AT(w));  // bytes per cell
+ }
+ if(m){
    // There is a frame; we will have to assemble the results, even if there is only one
    // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs is invalid and we mustn't check it.
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=wr?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
-   ZZPARMS(0,0,as,m,n,0,1);  // set frame & # cells
+   ZZPARMS(0,0,as,m,n,virtw,1);  // set frame & # cells
  }
  I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
  for(ii=n;ii;--ii){  // for each 2-cell of a.  u points to the cell
-  if((-(c^1)|(e=u[c]))>=0){  // e=length of 1st axis
+  if((-(c^1)|(e=u[1]))>=0){  // e=length of 1st axis
    // non-reversed selection along a single axis: calculate length {. start }. w
    m=ws[0]; j=u[0];  // m=length of axis, j=starting position
    ASSERT(((-e)&((j+m)|(m-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
    if(j>=0){e=MIN(e,m-j);}else{j+=m; e=MIN(e,j+1); j-=(e-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
    // Allocate a virtual block & fill it in
-   I wcellsize; PROD(wcellsize,wr-1,ws+1);  // size of a cell in atoms of w.  Doesn't change, but not worth testing for & factoring out
-   I offset = j * wcellsize;  // offset in bytes of the virtual data
-   // allocate virtual block, passing in the in-place status from w
-   RZ(z = virtual(w,offset,wr));    // allocate block
-   // fill in shape
-   I* RESTRICT zs=AS(z); zs[0]=e; DO(wr-1, zs[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
-   AN(z)=e*wcellsize;  // install # atoms
+   // locate virtual block
+   AK(virtw)=origoffset+j*wcellbytes;
+   // fill in shape.  Rest of shape filled in at allocation
+   AS(virtw)[0]=e; // shape of virtual matches shape of w except for #items
+   AN(virtw)=e*wcellsize;  // install # atoms
+   z = virtw;  // use the virtual block for the computation
   }else{
    // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input ot {) on grounds of rarity
    do{
@@ -125,7 +148,7 @@ if(m){
    }while(1);
    RZ(z=from(qq,w));
   }
-  if(!(state&STATEHASGERUND))z=CALL1(f1,z,fs);else{z=df1(z,hv[gerundx]); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
+  if(!(state&STATEHASGERUND)){RZ(z=CALL1(f1,z,fs));}else{RZ(z=df1(z,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
   if(!(state&STATENEEDSASSEMBLY)){EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly
 #define ZZBODY
 #include "result.h"
@@ -144,13 +167,41 @@ if(m){
  EPILOG(zz);
 }    /* a f;.0 w */
 
-DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
+// self is a compound, using @/@:/&/&:, that we tried to run with special code, but we found that we don't support the arguments
+// here we revert to the non-special code for the compound
+DF2(jtspecialatoprestart){
+  RZ(a&&w&&self);  // return fast if there has been an error
+  V *sv=VAV(self);  // point to verb info for the current overall compound
+  R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // call the verb
+}
+
+
+// a ;@:(<;.0) w where a has one column.  We allocate a single area and copy in the items
+// if we encounter a reversal, we abort
+// if it's a case we can't handle, we fail over to the normal code, with BOXATOP etc flags set
+DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  RZ(a&&w);
- n=AN(w); wt=AT(w); wv=CAV(w); 
- ar=AR(a); as=AS(a); m=2==ar?1:*as;
- if(!((2==ar||3==ar)&&wt&IS1BYTE&&1==AR(w)))R raze(df2(a,w,cut(ds(CBOX),zero)));
- ASSERT(2==as[ar-2]&&1==as[ar-1],EVLENGTH);
- RZ(a=vib(a)); av=AV(a);
+ wt=AT(w); wv=CAV(w);
+ ar=AR(a); as=AS(a);
+// obsolete  if(!((2==ar||3==ar)&&wt&IS1BYTE&&1==AR(w)))R raze(df2(a,w,cut(ds(CBOX),zero)));
+ // we need rank of a>2 (otherwise why bother?), rank of w>0, w not sparse, a not empty, w not empty (to make item-size easier)
+ if((((ar-3)|(-(wt&SPARSE))|(AR(w)-1)|(AN(a)-1)))<0)R jtspecialatoprestart(jt,a,w,self);
+ // the 1-cells of a must be 2x1
+ if((as[ar-2]^2)|(as[ar-1]^1))R jtspecialatoprestart(jt,a,w,self);
+// obsolete ASSERT(2==as[ar-2]&&1==as[ar-1],EVLENGTH);
+ n=AS(w)[0]; m=AN(a)>>1;  // number of items of w, number of w-items in result
+ // pass through a, counting result items.  abort if there is a reversal - too rare to bother with in the fast path
+ RZ(a=vib(a)); av=(I(*)[2])AV(a); I nitems=0;
+ // verify starting value in range (unless length=0); truncate length if overrun
+ DO(m, j=av[i][0]; k=av[i][1]; if(k<0)R jtspecialatoprestart(jt,a,w,self); I jj=j+n; jj=(j>=0)?j:jj; ASSERT(((jj^(jj-n))|(k-1))<0,EVINDEX); j=n-jj; k=k>j?j:k; nitems+=k; ASSERT(nitems>=0,EVLIMIT))
+ // audits passed and we have counted the items.  Allocate the result and copy
+ I wcn; PROD(wcn,AR(w)-1,AS(w)+1);  // number of atoms per cell of w
+ I zn; RE(zn=mult(wcn,nitems));  // number of atoms in result
+ GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
+ // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
+ I wcb=wcn*bp(wt);  // number of bytes in a cell of w
+ DO(m, j=av[i][0]; k=av[i][1]; I jj=j+n; jj=(j>=0)?j:jj; j=n-jj; k=k>j?j:k; k*=wcb; MC(zv,wv+jj*wcb,k); zv+=k;)
+#if 0 // obsolete
  RZ(z=exta(wt,1L,1L,n>>1)); zn=AN(z); zv=CAV(z); zu=zn+zv;
  for(i=0;i<m;++i){
   j=*av++; k=*av++; 
@@ -164,6 +215,7 @@ DF2(jtrazecut0){A z;C*v,*wv,*zu,*zv;I ar,*as,*av,c,d,i,j,k,m,n,q,wt,zn;
    case 3: v=wv+j;       DO(d, *zv++=*v++;);
  }}
  AN(z)=*AS(z)=zv-CAV(z);
+#endif
  RETF(z);
 }    /* a ;@:(<;.0) vector */
 
@@ -517,7 +569,8 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 // result is &new buffer, or 0 if error
 // we fill in the chain and length fields in the current buffer, and set the length field of the new
 // buffer to the size we allocated
-#define FRETALLOSIZE (512-10)  // number of frets to allocate at a time
+#define FRETALLOSIZE (512-10)  // number of frets to allocate at a time - if they are long type (i. e. I).  For frets less than 255
+   // items long, we can store 4 or 8 times as many
 static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
  pd0[1]=pd;  // fill in size of current buffer
  GATV(new,INT,FRETALLOSIZE,0,0);  // get a new buffer.  rank immaterial.  Use GATV because of large size
@@ -534,10 +587,17 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
+
  n=IC(w); wt=AT(w); k=*AV(sv->g); neg=(UI)k>>(BW-1); pfx=k&1;  // n=#items of w; k is a temp; neg=cut type is _1/_2; pfx=cut type is 1/_1
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);  // r=rank>.1, s->w shape, wv->w data, c=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
+  // not gerund: OK to test fs
+  if(VAV(fs)->mr>=AR(w)){
+   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  }
  }else{
   state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
@@ -591,7 +651,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  // m has # d values
  // v1->first w-cell to process, taking into account skipped cells owing to neg and omitted headers
 
- // if pfx, emit the runout field for the last d (if suffix these are discarded).  We muust add one to d
+ // if pfx, emit the runout field for the last d (if suffix these are discarded).  We must add one to d
  // to include the prefix in the length of d
  if(pfx){++d; if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}}
  // close the last d buffer
@@ -871,21 +931,22 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
  R z;
 }    /* [: ; <@(ie/\);.k  on vector w */
 
-DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d,k,m=0,n,p,q,r,*s,wt;
+// ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required
+DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d,k,m=0,n,p,q,r,*s,wt;
     V*fv,*sv,*vv;VF ado=0;
  RZ(a&&w);
- sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // gs is f
+ sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // ;@gs  gs is y;.1   y is ?@[:]fs  ? must be <
  p=n=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
- fv=VAV(fs); id=fv->id;
- if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){
+ fv=VAV(fs); id=fv->id;  // fs is vv id   where id is \ \.
+// obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
-  ie=vaid(vv->f);
-  if(id==CBSLASH)vapfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\ );.n */
-  else           vasfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\.);.n */
- }
- if(SPARSE&AT(w))R raze(cut2(a,w,gs));  // if sparse w, do it the long way
+ vv=VAV(fv->f); ie=vaid(vv->f);  //  vv is   ie /
+ if(id==CBSLASH)vapfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\ );.n */
+ else           vasfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\.);.n */
+// obsolete }
+ if(SPARSE&AT(w)||!ado)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
-  if(!(AN(a)&&1==AR(a)&&AT(a)&B01+SB01))R raze(cut2(a,w,gs));  // if a is not nonempty boolean list, do it the long way
+  if(!(AN(a)&&1==AR(a)&&AT(a)&B01+SB01))R jtspecialatoprestart(jt,a,w,self);  // if a is not nonempty boolean list, do it the long way.  This handles ;@: when a has rank>1
   if(AT(a)&SB01)RZ(a=cvt(B01,a));
   v=CAV(a); sep=C1;
  }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:n-1];}  // monad.  Create char list of frets
@@ -894,21 +955,24 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
  ASSERT(n==IC(a),EVLENGTH);
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt);
  if(pfx){u=v+n; while(u>v&&sep!=*v)++v; p=u-v;}
- if(ado){I t,zk,zt;                     /* atomic function f/\ or f/\. */
-  if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-  zt=rtype(cv); zk=c*bp(zt);
-  if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,cv,pfx,id,ie)); if(z)R z;}
-  GA(z,zt,AN(w),r,s); zv=CAV(z);
-  while(p){
-   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
-   q=u-v;
-   if(d=q-neg){
-    ado(jt,1L,c*d,d,zv,wv+k*(b+n-p));
-    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
-    m+=d; zv+=d*zk; 
-   }
-   p-=q; v=u;  
+// obsolete  if(ado){
+ I t,zk,zt;                     /* atomic function f/\ or f/\. */
+ if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+ zt=rtype(cv); zk=c*bp(zt);
+ if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,cv,pfx,id,ie)); if(z)R z;}
+ GA(z,zt,AN(w),r,s); zv=CAV(z);
+ while(p){
+  if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
+  q=u-v;
+  if(d=q-neg){
+   ado(jt,1L,c*d,d,zv,wv+k*(b+n-p));
+   if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
+   m+=d; zv+=d*zk; 
   }
+  p-=q; v=u;  
+ }
+ *AS(z)=m; AN(z)=m*c; R cv&VRI+VRD?cvz(cv,z):z;
+#if 0 // obsolete.  It handled other BOXATOPs, but we do that better in result.h now
  }else{B b1=0;I old,wc=c,yk,ym,yr,*ys,yt;   /* general f */
   RZ(x=gah(r,w)); ICPY(AS(x),s,r);  // allocate a header for the cell
   while(p){
@@ -928,8 +992,10 @@ DF2(jtrazecut2){A fs,gs,x,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0
  }
  // if z is nonzero, it has the result.  Otherwise failover to the slow way
  if(z){*AS(z)=m; AN(z)=m*c; R cv&VRI+VRD?cvz(cv,z):z;}
- else R raze(cut2(B01&AT(a)?a:eq(scc(sep),a),w,gs));
-}    /* ;@((<@f);.n) or ([: ; <@f;.n) , monad and dyad */
+// obsolete  else R raze(cut2(B01&AT(a)?a:eq(scc(sep),a),w,gs));
+ else R jtspecialatoprestart(jt,a,w,self);
+#endif
+}    // ;@((<@f);._2 _1 1 2)
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}
 

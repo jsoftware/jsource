@@ -657,27 +657,33 @@ typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C 
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 
 // bits in flag2:
-#define VF2RANKONLY1X     0   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
-#define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
-#define VF2RANKONLY2X     1
-#define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
-#define VF2RANKATOP1X     2   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
-#define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
-#define VF2RANKATOP2X     3   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
-#define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))
-// next flag must match defn in result.h
+// bit 0 unused
+#define VF2BOXATOP1X      1   // This verb is one of  <  <@f   <@:f   <&f   <&:f    f@.>  f&.:>
+#define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))
+#define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f@.>  f&.:>
+#define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))
+// next flag must be one below WILLBEOPENED
+#define VF2WILLOPENX      3   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN       ((I)(1LL<<VF2WILLOPENX))
+// next flag must match defn in result.h and must not move
 #define VF2WILLBEOPENEDX  4   // The result of this verb will be immediately opened (by > or ;)
 #define VF2WILLBEOPENED   ((I)(1LL<<VF2WILLBEOPENEDX))
 #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g
 #define VF2ISCCAP         ((I)(1LL<<VF2ISCCAPX))
-// 6 free
+// next flag must be one below COUNTITEMS
+#define VF2USESITEMCOUNTX 6   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT  ((I)(1LL<<VF2USESITEMCOUNTX))
 // next flag must match defn in result.h
 #define VF2COUNTITEMSX    7   // The result of this verb will fed into jtraze; the verb should count the items and see if they are homogeneous, if it can
-#define VF2COUNTITEMS   ((I)(1LL<<VF2COUNTITEMSX))
-#define VF2BOXATOP1X      8   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
-#define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
-#define VF2BOXATOP2X      9   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
-#define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))   // (in u"v)  u was <@f or <&f, and f[12] point to f (i. e. monad)
+#define VF2COUNTITEMS    ((I)(1LL<<VF2COUNTITEMSX))
+#define VF2RANKATOP1X     8   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
+#define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
+#define VF2RANKATOP2X     9   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))
+#define VF2RANKONLY1X     10   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
+#define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
+#define VF2RANKONLY2X     11
+#define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
 
 
 

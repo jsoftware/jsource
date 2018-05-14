@@ -107,7 +107,7 @@ I boxat(A x, I m, I l, I r){C c;V*v;
    R res;
  }
  R 0; 
-}    /* 1 iff "last" function in w is <@f */
+}    /* 1 iff w is <@:f or <@f where f has infinite rank */
 
 // w is a verb
 // Result has bit 0 set if the verb is [ or ...@[, bit 1 set if ] or ...@]   (or @:)

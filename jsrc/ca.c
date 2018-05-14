@@ -74,12 +74,12 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,j
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
-static CS1IP(on1, \
+CS1IP(on1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
 ,0113)
-static CS2IP(jtupon2, \
+CS2IP(jtupon2, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
@@ -114,6 +114,36 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
  RETF(z);
 }
 
+// The combining modifiers keep track of some flags used by partitions and Result Assembly.
+//
+// VF2BOXATOP? in the verb V means that V ends with <@(f) or <@:(f) and thus produces a single box per execution.
+// Compounds can call f directly and tell RA to supply the boxing.  If they do, they must be careful not to recognize the flag
+// until it is executed at a rank that will produce a single boxed result.
+//
+// VF2RANKONLY? is set when V is u"r.   A sequence of these can be combined into a single rank loop for any monad and for dyads as long as the maximum number of ranks -
+// two for each argument - is not exceeded.
+//
+// VF2RANKATOP? is set when V starts with a rank loop, perhaps with F?RANK.  The rank loop for V can be subsumed into an outer rank loop as long as the rank
+// limits are not exceeded.
+//
+// VF2WILLOPEN indicates that monad V's first action will be opening its argument.  Knowing that the next verb in a sequence WILLOPEN, RA can produce a boxed result
+// more efficiently: it need not make the result recursive, it can include a virtual block as contents without realizing them, and it can avoid EPILOG
+//
+// VF2USESITEMCOUNT indicates that monad V's first action is RAZE; thus, WILLOPEN will also be set.  If the next verb in a sequence is USESITEMCOUNT,
+// RA can perform the first step of raze processing (counting the items and checking shapes) as the items are calculated.  This will save a pass over
+// tzhe items, which is valuable if the result is larger than cache.
+//
+// VF2WILLBEOPENED and VF2COUNTITEMS are stored into a verb V to hold the values of VF2WILLOPEN/VF2USESITEMCOUNT in the NEXT verb to be executed.  RA in V looks at
+// VF2WILLBEOPENED/VF2COUNTITEMS to perform the actions mentioned above.  VF2WILLBEOPENED can be set any time the next verb opens.  VF2COUNTITEMS should be set
+// only when the result of RA will be fed directly into the raze: it's not fatal to set it otherwise, but it does waste time on an item-count that is not used.
+// Setting COUNTITEMS requires understanding the processing of the partitioning modifier it is being set in.  We recognize the following cases:
+// ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
+// ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
+// ;@:(<@:v;.0)   ditto  also &:
+// ;@(<@:v;._3 _2 _1 1 2 3)  also &:
+//
+// we copy into another verb only if it is inplaceable, as it normally is
+
 // u@v
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
@@ -132,8 +162,19 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VINPLACEOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VINPLACEOK1;} break;
   case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VINPLACEOK2;} break;
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VINPLACEOK2;} break;
-  case CRAZE:   if(ACIPISOK(w))wv->flag2|=VF2WILLBEOPENED|VF2COUNTITEMS;  // indicate v will be opened - only if the block is not shared
-                if(d==CCUT&&boxatop(w)){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);} break;  // special case ;@cut
+  case CRAZE:  // detect ;@(<@(f/\));.
+   if(d==CCUT&&boxatop(w)){  // w is <@g;.k
+    if((1LL<<(*AV(wv->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+     A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+     if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+      A gf=gv->f; V *gfv=VAV(gf);  // find gf
+      if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
+      }
+     }
+    }
+   }
+   break;
   case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->f)){f2=jtpolymult; flag&=~VINPLACEOK2;} break;
   case CQQ:     if(d==CTHORN&&CEXEC==ID(av->f)&&equ(zero,av->g)){f1=jtdigits10; flag&=~VINPLACEOK1;} break;
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VINPLACEOK1;} break;
@@ -156,8 +197,28 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
   }
  }
+ // Copy the open/raze status from v into u@v
+ flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+
+ // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
+ // 
+ if(ACIPISOK(w)){I flag2copy=0;
+   // look for ;@(<@:v;._3 _2 _1 1 2 3)  also &:
+  if(av->flag2&VF2USESITEMCOUNT){
+   if(d==CCUT){I wgi=IAV(wv->g)[0]; // wfv;.wgi
+    if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=VAV(wv->f);
+     if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+      flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+     }
+    }
+   }
+  }
+  wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+ }
+
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
+ flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
@@ -182,12 +243,24 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
    if(d==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
    break;
 
-  case CSEMICO: if(ACIPISOK(w))wv->flag2|=VF2WILLBEOPENED|VF2COUNTITEMS;  // indicate v will be opened - only if the block is not shared
-   if(d==CLBRACE){f2=jtrazefrom; flag&=~VINPLACEOK2;}
+  case CSEMICO:
+   if(d==CLBRACE){f2=jtrazefrom; flag&=~VINPLACEOK2;}  // detect ;@:{
    else if(d==CCUT){
-    j=i0(wv->g);
-    if(CBOX==ID(wv->f)&&!j){f2=jtrazecut0; flag&=~VINPLACEOK2;}
-    else if(boxatop(w)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);}
+    j=*AV(wv->g);   // cut type
+    if(CBOX==ID(wv->f)&&!j){f2=jtrazecut0; flag&=~VINPLACEOK2;}  // detect ;@:(<;.0), used for substring extraction
+    else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
+     if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+      A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+       A gf=gv->f; V *gfv=VAV(gf);  // find gf
+       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
+       }
+      }
+     }
+    }
+
+// scaf needs tightening    else if(boxatop(w)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);}
  }}
  if(0<=m){
   b=d==CFIT&&equ(zero,wv->g);
@@ -203,6 +276,27 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
 //   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
+ // Copy the open/raze status from v into u@v
+ flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+
+ // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
+ // 
+ if(ACIPISOK(w)){I flag2copy=0;
+  // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
+  // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
+  // ;@:(<@:v;.0)   ditto  also &:
+  if(av->flag2&VF2USESITEMCOUNT){
+   if(d==CCUT){I wgi=IAV(wv->g)[0]; // wfv;.wgi
+    if(wgi==0){V *wfv=VAV(wv->f);
+     if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+      flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+     }
+    }
+   }else if(d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if " or @ (not @:)
+  }
+  wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+ }
+
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
  R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
@@ -215,8 +309,22 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
- else if(c==CRAZE&&d==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
+ else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
+  if((1LL<<(*AV(wv->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+   A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+   if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+    A gf=gv->f; V *gfv=VAV(gf);  // find gf
+    if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+     f1=jtrazecut1; flag&=~(VINPLACEOK1);
+    }
+   }
+  }
+ }
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
+
+ // Copy the open/raze status from v into u@v
+ flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
  R fdef(flag2,CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
@@ -304,14 +412,32 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
     if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){
      u=VAV(a); d=u->id;
      if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
-   }}else switch(ID(a)){
+    }
+   }else switch(ID(a)){
     case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
     case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
     case CSLASH: if(c==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} break;
     case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
     case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
-    case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
+// obsolete scaf must tighten    case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
+    case CRAZE:  // detect ;@(<@(f/\));.
+     if(c==CCUT&&boxatop(w)){  // w is <@g;.k
+      if((1LL<<(*AV(v->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+       A wf=v->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+        A gf=gv->f; V *gfv=VAV(gf);  // find gf
+        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+         f1=jtrazecut1; flag&=~(VINPLACEOK1);
+        }
+       }
+      }
+     }
+     break;
    }
+
+   // Copy the open/raze status from v into u@v
+   flag2 |= v->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+
    // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
    R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);

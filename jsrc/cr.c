@@ -32,9 +32,11 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
  wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
- // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here.
- if(fs&&VAV(fs)->flag2&(VF2RANKATOP1|VF2BOXATOP1)){
-  I mr=VAV(fs)->mr; efr(rr,rr,mr);  // rr = cell rank: min of old cell and new
+// scaf must look at COUNT in salf,  work on ;@:(<@:f"r)   also dyad
+ // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here,
+ // as long as its rank is not less than the outer rank (if it's smaller, we cannot elide it because the order of fill may change)
+ if(fs&&VAV(fs)->flag2&VF2BOXATOP1){
+  I mr=VAV(fs)->mr; efr(rr,mr,rr);
   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
@@ -135,15 +137,15 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
  wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);// obsolete  if(rr>rcr)rr=rcr;
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
- if(fs&&VAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2)){I lrn, rrn;  // prospective new ranks to include
+ if(fs&&(I)(((VAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-(rr^rcr))|(-(lr^lcr)))>=0){I lrn, rrn;  // prospective new ranks to include
   efr(lrn,lr,(I)VAV(fs)->lr); efr(rrn,rr,(I)VAV(fs)->rr);  // get the ranks if we accept the new cell
-  if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
-   lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
-   state = (VAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
-   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
-   // marking the result block as having uniform items if we didn't go through the assembly loop here
-   state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
-  }
+// obsolete   if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
+  lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
+  state = (VAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
+  // marking the result block as having uniform items if we didn't go through the assembly loop here
+  state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
+// obsolete  }
  }
 
  af=ar-lr; wf=wr-rr;   // frames wrt innermost cell
@@ -404,9 +406,10 @@ static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  RZ(w);
  wr=AR(w); efr(m,wr,v[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.
+ // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
  while(VAV(fs)->flag2&VF2RANKONLY1){
-  h=VAV(fs)->h; efr(m,m,AV(h)[0]); fs=VAV(fs)->f; f1=VAV(fs)->f1;
+  h=VAV(fs)->h; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+  m=hm; fs=VAV(fs)->f; f1=VAV(fs)->f1;
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
@@ -419,11 +422,15 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  wr=AR(w); efr(r,wr,r);
  if(((l-ar)|(r-wr))<0) {I llr=l, lrr=r;  // inner ranks, if any
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them
-  while(VAV(fs)->flag2&VF2RANKONLY2){I llrn, lrrn;  // prospective new inner ranks
-   h=VAV(fs)->h; efr(llrn,llr,AV(h)[1]); efr(lrrn,lrr,AV(h)[2]);  // get the ranks if we accept the new cell
-   if((((llrn-llr)&(llr-l))|((lrrn-lrr)&(lrr-r)))<0)break;  //  if either side has 3 different ranks, stop, no room
-   llr=llrn; lrr=lrrn;   // here it fits, use the new ranks
+ // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
+ // This may lead to error until we support multiple fill neighborhoods
+  while(VAV(fs)->flag2&VF2RANKONLY2){
+   h=VAV(fs)->h; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+   if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
+    if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
+    llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
+   }
+   // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
    fs=VAV(fs)->f; f2=VAV(fs)->f2;   // advance to the new function
   }
 // obsolete   I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of verb we are going to call

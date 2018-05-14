@@ -927,6 +927,7 @@ minus =: -
 (0 100 -"1 1"2 2 i. 3 2 2) -: 0 100 minus"1 1"2 2 i. 3 2 2
 (0 100 -"1 _1"2 2 i. 3 2 2) -: 0 100 minus"1 _1"2 2 i. 3 2 2
 
+(2 2 2$2 3 4 0 5 1 0 0) -: (1&+@>)"1 ] 2 2 $ 1 2;3;4;0   NB. Verify fill done in correct order
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
 4!:55 ;:'glob lag minus mm mrk msh ops pfx rag rank rk s1 svy t x xx y '

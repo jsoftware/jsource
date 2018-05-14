@@ -171,6 +171,9 @@ B jtpinit(J jt){A t;C*s;
 // modify the BOX verb so that it is flagged BOXATOP (for result purposes), with a g field of ].  Result verbs will
 // treat it as <@], but normal processing as <
 VAV(ds(CBOX))->flag2 |= VF2BOXATOP1; VAV(ds(CBOX))->g=ds(CRIGHT);
+// the verbs (all monads) that open their operand are flagged so that their compounds can also be flagged
+VAV(ds(CSEMICO))->flag2 |= VF2WILLOPEN|VF2USESITEMCOUNT;
+VAV(ds(COPE))->flag2 |= VF2WILLOPEN;
 
  if(jt->jerr){printf("pinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }

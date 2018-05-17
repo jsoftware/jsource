@@ -24,11 +24,21 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  R z;
 }    /* w is sparse */
 
+#if 0
 #define CANTA(T,exp)  \
  {T*u=(T*)zv,*v=(T*)wv;                                                  \
   DO(zn, exp; j=r-1; ++tv[j]; d+=mv[j];                                  \
   while(j&&sv[j]==tv[j]){d+=mv[j-1]-mv[j]*sv[j]; tv[j]=0; ++tv[--j];});  \
  }
+#else
+// do the innermost loop fast.  r must be >= 2 (no way for it to be 1)
+#define CANTA(T,exp)  \
+ {T*u=(T*)zv,*v=(T*)wv;                                                  \
+  do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; d+=mvr1;)                        \
+   do{d-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; d+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
+  }while(j>=0); \
+ }
+#endif
 
 static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
  RZ(a&&w);
@@ -53,10 +63,14 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
  b=1&&SPARSE&AT(w);
  GA(z,AT(w),b?1:zn,zr,sv);
  if(b)R cants(a,w,z); if(!zn)R z;  
- d=1; r=zr; j=wr; DO(wr, --j; if(j!=av[j])break; d*=sv[j]; --r;);
- if(1<d)DO(r, mv[i]/=d;);
- zn=zn/d; k=d*bp(AT(w)); zv=CAV(z); wv=CAV(w); d=0; memset(tv,C0,r*SZI);
- if(r)switch(k){
+ d=1; r=zr; j=wr; DO(wr, --j; if(j!=av[j])break; d*=sv[j]; --r;);  // collect trailing unmodified axes into the cell-size
+ if(1<d)DO(r, mv[i]/=d;);  // if cell-size has increased, reduce movement vector accordingly, since it counts in cells (questionable decision)
+ k=bp(AT(w)); zv=CAV(z); wv=CAV(w);  // k = size of atom, in bytes
+ if(r){
+  k *= d;  // repurpose k to be the size of a cell, in bytes
+  d=0;  // inside the loop d will hold the input pointer
+  memset(tv,C0,r*SZI);  // clear initial rep of the input pointer
+  switch(k){
   case sizeof(C): CANTA(C, *u++=v[d];); break;
   case sizeof(S): CANTA(S, *u++=v[d];); break;
 #if SY_64
@@ -67,9 +81,10 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
   case sizeof(D): if(AT(w)&FL){CANTA(D, *u++=v[d];); break;}
     // move as D type only if echt floats - otherwise they get corrupted.  If not float, fall through to...
 #endif
-  default:        CANTA(C, MC(u,v+d*k,k); u+=k;); break;       
- }else MC(zv,wv,k*zn);
- RELOCATE(w,z); RETF(z);
+  default:        CANTA(C, MC(u,v+d*k,k); u+=k;); break;
+  }     
+ }else{MC(zv,wv,k*zn);}  // could return w
+ RELOCATE(w,z); RETF(z);  // should EPILOG?
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 

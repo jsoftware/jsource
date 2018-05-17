@@ -412,6 +412,13 @@ NB. |:"r ----------------------------------------------------------------
 (1 0,:0 1) (|:"1 2 -: cant2"1 2) sdot0{~?2 3 4 5$#sdot0
 (1 0,:0 2) (|:"1 3 -: cant2"1 3) sdot0{~?2 3 4 5$#sdot0
 
+3 : 0 ''
+if. -. IF64 do.
+ assert. (-: 1 0 2&|:) 1 1 2 $ 10 u: 1110024676 _539451   NB. verify float not used for moving 2 C4Ts
+end.
+1
+)
+
 NB. magic cubes due to Professor James G. Mauldon
 
 magic=: 4 : 0

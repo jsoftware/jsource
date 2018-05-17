@@ -57,7 +57,6 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
  if(1<d)DO(r, mv[i]/=d;);
  zn=zn/d; k=d*bp(AT(w)); zv=CAV(z); wv=CAV(w); d=0; memset(tv,C0,r*SZI);
  if(r)switch(k){
-  default:        CANTA(C, MC(u,v+d*k,k); u+=k;); break;       
   case sizeof(C): CANTA(C, *u++=v[d];); break;
   case sizeof(S): CANTA(S, *u++=v[d];); break;
 #if SY_64
@@ -65,8 +64,10 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,c,d,j,k,*mv,r,*sv,*tv,wf,wr,*ws,z
 #endif
   case sizeof(I): CANTA(I, *u++=v[d];); break;
 #if !SY_64 && SY_WIN32
-  case sizeof(D): CANTA(D, *u++=v[d];); break;
+  case sizeof(D): if(AT(w)&FL){CANTA(D, *u++=v[d];); break;}
+    // move as D type only if echt floats - otherwise they get corrupted.  If not float, fall through to...
 #endif
+  default:        CANTA(C, MC(u,v+d*k,k); u+=k;); break;       
  }else MC(zv,wv,k*zn);
  RELOCATE(w,z); RETF(z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */

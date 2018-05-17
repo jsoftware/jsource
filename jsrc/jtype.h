@@ -64,7 +64,9 @@ typedef struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // For NJA/SMM blocks, size of allocation. 
+  I m;  // Triple-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
+        // raze of the noun (if the types are identical) (3) for other blocks, a pointer to the tstack entry for the block, so that we can 'increment' the usecount by
+        // removing the slot that will free it
   A back; // For VIRTUAL blocks, points to backing block
 } mback;
  union {

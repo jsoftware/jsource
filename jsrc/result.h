@@ -71,7 +71,7 @@
 //*********** storing results *************
 
 #ifdef ZZBODY
-// result is in z.  state here cannot be ERRFIRST
+// result is in z.
 
 // obsolete // if the result is boxed, accumulate the SMREL info
 // obsolete if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking

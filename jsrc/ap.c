@@ -8,6 +8,10 @@
 #include "ve.h"
 
 
+#define ZZDEFN
+#include "result.h"
+
+
 #define MINUSPA(b,r,u,v)  r=b?u-v:u+v;
 #define MINUSPZ(b,r,u,v)  if(b)r=zminus(u,v); else r=zplus(u,v);
 #define MINUSPX(b,r,u,v)  if(b)r=xminus(u,v); else r=xplus(u,v);
@@ -224,6 +228,7 @@ PREFIXPFX(bw0111pfxI, UI,UI, BW0111)
 PREFIXPFX(bw1001pfxI, UI,UI, BW1001)
 PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
 
+// This old prefix support is needed for sparse matrices
 
 static DF1(jtprefix){DECLF;I r;
  RZ(w);
@@ -266,6 +271,8 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
 }    /* f/\"r w atomic f main control */
 
+// This old infix support is needed for sparse matrices
+
 // block a contains (start,length) of infix.  w is the A for the data.
 // Result is new block containing the extracted infix
 static F2(jtseg){A z;I c,k,m,n,*u,zn;
@@ -286,7 +293,9 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
 static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  RZ(w);
  // p=|m, n=#items of w, d=#applications of u (depending on overlapping/nonoverlapping)
- p=ABS(m); n=IC(w); d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);
+ p=ABS(m); n=IC(w);
+// obsolete d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);
+ if(m>=0){d=MAX(0,1+n-m);}else{d=1+(n-1)/p; d=(n==0)?n:d;}
  // Allocate result, a dx2 table; install shape
  GATV(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;
  // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
@@ -349,6 +358,196 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   RZ(x=df1(reshape(s,filler(w)),*hv));
   R reshape(over(zero,shape(x)),x);
 }}
+
+#if 1
+#define STATEHASGERUND 0x1000  // f is a gerund
+#define STATEISPREFIX 0x2000  // this is prefix rather than infix
+#define STATESLASH2 0x4000  // f is f'/ and x is 2
+
+// prefix and infix: prefix is a is mark
+static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
+   I hn,wt;
+ 
+ RZ(w);
+ PREF2(jtinfixprefix2);  // handle rank loop if needed
+ wt=AT(w);
+ if(wt&SPARSE){
+  // Use the old-style non-virtual code for sparse types
+  switch(((VAV(self)->flag&VGERL)>>(VGERLX-1)) + (a==mark)) {  // 2: is gerund  1: is prefix
+  case (0+0): R jtinfix(jt,a,w,self);
+  case (0+1): R jtprefix(jt,w,self);
+  case (2+0): R jtginfix(jt,a,w,self);
+  case (2+1): R jtgprefix(jt,w,self);
+  }
+ }
+ // Not sparse.  Calculate the # result items
+#define ZZFLAGWORD state
+ I state=0;  // init flags, including zz flags
+
+ // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
+ if(!(VGERL&sv->flag)){V *vf=VAV(fs);  // if verb, point to its data
+  // not gerund: OK to test fs
+  if(vf->mr>=AR(w)){
+   // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
+   state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+  }
+ }else{
+  state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+ }
+
+ I zi;  // number of items in the result
+ I ilnval;  // value of a, set to -1 for prefix (for fill purposes)
+ I ilnabs;  // abs(ilnval), or 1 if prefix.  Clamped to the # items of w
+ I wc;  // number of atoms in a cell of w
+ I remlen;  // number of items of w not processed yet (at start of loop, does not include the first infix).  When this goes to 0, we're done
+ I stride;  // number of items to advance virtual-arg pointers by between cells
+ I strideb;  // stride*number of bytes per cell (not used for prefix)
+
+ I wi=IC(w);  // wi=#items of w
+ PROD(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
+ // set up for prefix/infix.  Calculate # result slots
+ if(a!=mark){
+  // infix.
+  ilnval; RE(ilnval=i0(vib(a))); // ilnval=infix # (error if nonintegral; convert inf to HIGH_VALUE)
+  if(ilnval>=0){
+   // positive infix.  Stride is 1 cell.
+   ilnabs=ilnval;
+   zi=1+wi-ilnval;  // number of infix positions.  May be negative if no infixes.
+   stride=1;   // advance 1 position per iteration
+   remlen=zi;  // length is # nonoverlapping segments to do
+  }else{
+   // negative infix.  Stride is multiple cells.
+   ilnabs=-ilnval; ilnabs^=ilnabs>>(BW-1);  // abs(ilnval), and handle overflow
+   zi=1+(wi-1)/ilnabs; zi=(wi==0)?wi:zi;  // calc number of partial infixes.  Because of C's rounding toward zero, we have to handle the wi==0 case separately, and anyway it
+      // requires a design decision: we choose to treat it as 0 partitions of 0 length (rather than 1 partition of 0 length, or 0 partitions of length ilnabs)
+// obsolete    zi=(ilnval<=-IMAX)?1:zi;   // For compatibility, we make ilnval of __ produce 1 cell when wi==0 (it happens because of abs() error in jtinfix)   scaf remove
+   stride=ilnabs;  // advance by the stride
+   remlen=wi;  // since there are no overlaps, set length-to-do to total length
+  }
+  strideb = stride * wc * bp(wt);  // get stride in bytes, for incrementing virtual-block offsets
+ }else{
+  // prefix.
+  zi=wi;  // one prefix per item
+  ilnabs=1;  // allocation of initial prefix is for 1 item
+  ilnval=-1;  // set neg infix len to suppress fill if there are no result items
+  stride=1;  // used only as loop counter
+  remlen=zi;  // count # prefixes
+  state |= STATEISPREFIX;
+ }
+
+ A zz=0;  // place where we will build up the homogeneous result cells
+ if(zi>0){A z;
+  // Normal case where there are cells.
+  // loop over the infixes
+#define ZZDECL
+#include "result.h"
+  {I zitmp=zi; ZZPARMS(0,0,&zitmp,1,zi,1)}
+
+  // Allocate a virtual block for the argument, and give it initial shape and atomcount
+  A virtw, virta;
+  I vr=AR(w); vr+=(vr==0);  // rank of infix is same as rank of w, except that atoms are promoted to singleton lists
+
+  // check for special case of 2 f/\ y; if found, set new function and allocate a second virtual argument
+  if(((VAV(fs)->id^CSLASH)|((ilnabs|(zi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if zi is odd and ilnval is neg)
+   // normal case, infix/prefix.  Allocate a virtual block
+   virtw = virtual(w,0,vr);
+   ilnabs=(ilnabs>wi)?wi:ilnabs;  // ilnabs will be used to allocate virtual arguments - limit to size of w
+   I *virtws=AS(virtw); virtws[0]=ilnabs; DO(vr-1, virtws[i+1]=AS(w)[i+1];) AN(virtw)=ilnabs*wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (infix size),(shape of cell)  tally is #items*celllength
+  }else{
+   // 2 f/\ y.  The virtual args are now ITEMS of w rather than subarrays
+   virta = virtual(w,0,vr-1);  // first block is for a
+   I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i];) AN(virta)=wc; AFLAG(virta)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+   virtw = virtual(w,wc,vr-1);  // second is w
+   virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+   // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
+   fs=VAV(fs)->f; f1=VAV(fs)->f2;
+   // mark that we are handling this case
+   state |= STATESLASH2;
+  }
+
+  I gerundx = 0;  // in case we are doing gerunds, start on the first one
+  while(1){
+
+   // call the user's function
+   if(!(state&(STATEHASGERUND|STATESLASH2))){
+    // normal case: prefix/infix, no gerund
+    RZ(z=CALL1(f1,virtw,fs));  //normal case
+   }else if(state&STATESLASH2){
+    // 2 f/\ y case
+    RZ(z=CALL2(f1,virta,virtw,fs));  //normal case
+   }else{
+    // prefix/infix, gerund case
+    RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
+   }
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
+   // We can't advance until after the assembly code has run, in case the verb returned the virtual block as its result
+
+   // calculate the amount of data unprocessed after the result we just did.  If there is none, we're finished
+   if((remlen-=stride)<=0)break;
+
+   if(!(state&STATEISPREFIX)){
+    // infix case, or 2 f/\ y.  Add to the virtual-block offset.  If this is a shard, reduce the size of the virtual block.
+    // If this is 2 f/\ y, advance the second block as well.  It can't be both.
+    AK(virtw) += strideb;
+    if(((remlen-stride)|(-(state&(STATESLASH2))))<0){
+     // we either have a shard or 2 f/\ y.
+     if(state&STATESLASH2){
+      // 2 f/\ y.  Advance the second pointer also.
+      AK(virta) += strideb;
+     }else{
+      // we have hit a shard.  Reduce the shape and tally of the next argument
+      AS(virtw)[0] += remlen-stride;   // reduce the # items by the amount of overhang
+      AN(virtw) += (remlen-stride)*wc;  // reduce # atoms by amount of overhang, in atoms
+     }
+    }
+   }else{
+    // prefix.  enlarge the virtual block by 1 cell.
+    AS(virtw)[0]++;  // one more cell
+    AN(virtw) += wc;  // include its atoms
+   }
+  }
+
+#define ZZEXIT
+#include "result.h"
+
+ }else{A z;
+  // no cells - execute on a cell of fills
+  // Do this quietly, because
+  // if there is an error, we just want to use a value of 0 for the result; thus debug
+  // mode off and RESETERR on failure.
+  // However, if the error is a non-computational error, like out of memory, it
+  // would be wrong to ignore it, because the verb might execute erroneously with no
+  // indication that anything unusual happened.  So fail then
+
+  // The cell to execute on depends on the arguments:
+  // for prefix, 0 items of fill
+  // for infix +, invabs items of fill
+  // for infix -, 0 items of fill
+// scaf todo make the cut fill-proc look like this
+  RZ(z=reitem(zeroi,w));  // create 0 items of the type of w
+  if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
+  UC d=jt->db; jt->db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+  RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
+ }
+
+// result is now in zz
+
+ AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+ EPILOG(zz);
+}
+
+// prefix, vectors to common processor.  Handles IRS
+static DF1(jtinfixprefix1){
+ I *rankp=jt->rank; jt->rank=0;
+ if(rankp&&rankp[1]<AR(w)){R rank1ex(w,self,rankp[1],jtprefix);}
+ R jtinfixprefix2(jt,mark,w,self);
+}
+#endif
 
 #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
 
@@ -544,7 +743,8 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
 static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;VF ado;
  PREF2(jtmovfslash);
  p=IC(w); wt=AT(w);
- RE(m0=i0(vib(a))); m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
+ RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m=abs(m0), handling IMIN 
+// obsolete m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
  if(2==m0)R infix2(a,w,self);
  x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
@@ -575,9 +775,11 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
 
 static DF1(jtiota1){R apv(IC(w),1L,1L);}
 
-F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
+// obsolete F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
+F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
  RZ(w);
- if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=VAV(w); f=VAV(w)->f;
  switch(v->id){
   case CPOUND:

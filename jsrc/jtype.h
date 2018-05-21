@@ -639,7 +639,8 @@ typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C 
 #define VFATOPL          JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR          JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
 // bits 8 and above are available for all functions:
-#define VGERL           (I)256          /* gerund left  argument           */
+#define VGERLX          8
+#define VGERL           (1LL<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */

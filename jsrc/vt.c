@@ -175,7 +175,7 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) : 
+ R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }
 
@@ -183,6 +183,6 @@ F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :
+ R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }

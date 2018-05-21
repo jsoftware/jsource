@@ -594,9 +594,9 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
   // not gerund: OK to test fs
-  if(VAV(fs)->mr>=AR(w)){
+  if(vf->mr>=AR(w)){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-   state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
@@ -764,8 +764,11 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
 #include "result.h"
 
   }else{
-   // No frets.  Apply the operand to 0 items; return i. 0,$result (or $,'' if error on fill-cell)
-   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
+   // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell)
+   RZ(z=reitem(zeroi,w));  // create 0 items of the type of w
+   UC d=jt->db; jt->db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+   RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
+// obsolete   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
   }
  }
  EPILOG(zz);

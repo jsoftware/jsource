@@ -249,27 +249,6 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  R ope(z);
 }    /* g\"r w for gerund g */
 
-//  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
- RZ(w);
- wt=AT(w);   // get type of w
- if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
- // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
- wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
- // m = #cells, c=#atoms/cell, n = #items per cell
- PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
- // y is the verb u; id=pseudocharacter for it
- y=VAV(self)->f; id=vaid(VAV(y)->f);
- // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w
- if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R prefix(w,self);}
- vapfx(id,wt,&ado,&cv);
- if(!ado)R prefix(w,self);
- if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(cv); jt->rank=0;
- GA(z,zt,wn,wr,ws);
- ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
-}    /* f/\"r w atomic f main control */
 
 // This old infix support is needed for sparse matrices
 
@@ -449,7 +428,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   I vr=AR(w); vr+=(vr==0);  // rank of infix is same as rank of w, except that atoms are promoted to singleton lists
 
   // check for special case of 2 f/\ y; if found, set new function and allocate a second virtual argument
-  if(((VAV(fs)->id^CSLASH)|((ilnabs|(zi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if zi is odd and ilnval is neg)
+  if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
    virtw = virtual(w,0,vr);
    ilnabs=(ilnabs>wi)?wi:ilnabs;  // ilnabs will be used to allocate virtual arguments - limit to size of w
@@ -457,9 +436,9 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   }else{
    // 2 f/\ y.  The virtual args are now ITEMS of w rather than subarrays
    virta = virtual(w,0,vr-1);  // first block is for a
-   I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i];) AN(virta)=wc; AFLAG(virta)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+   I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virta)=wc; AFLAG(virta)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
    virtw = virtual(w,wc,vr-1);  // second is w
-   virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+   virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
    fs=VAV(fs)->f; f1=VAV(fs)->f2;
    // mark that we are handling this case
@@ -528,7 +507,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   // for prefix, 0 items of fill
   // for infix +, invabs items of fill
   // for infix -, 0 items of fill
-// scaf todo make the cut fill-proc look like this
   RZ(z=reitem(zeroi,w));  // create 0 items of the type of w
   if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
   UC d=jt->db; jt->db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
@@ -548,6 +526,28 @@ static DF1(jtinfixprefix1){
  R jtinfixprefix2(jt,mark,w,self);
 }
 #endif
+
+//  f/\"r y    w is y, fs is in self
+static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+ RZ(w);
+ wt=AT(w);   // get type of w
+ if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
+ // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
+ wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
+ // m = #cells, c=#atoms/cell, n = #items per cell
+ PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
+ // y is the verb u; id=pseudocharacter for it
+ y=VAV(self)->f; id=vaid(VAV(y)->f);
+ // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w
+ if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R jtinfixprefix1(jt,w,self);}
+ vapfx(id,wt,&ado,&cv);
+ if(!ado)R jtinfixprefix1(jt,w,self);
+ if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ zt=rtype(cv); jt->rank=0;
+ GA(z,zt,wn,wr,ws);
+ ado(jt,m,c,n,AV(z),AV(w));
+ if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+}    /* f/\"r w atomic f main control */
 
 #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
 
@@ -609,14 +609,14 @@ static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
 static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
  z=movsumavg1(m,w,fs,avg);
  if(jt->jerr==EVNAN)RESETERR else R z;
- R infix(sc(m),w,fs);
+ R jtinfixprefix2(jt,sc(m),w,fs);
 }
 
 static DF2(jtmovavg){I m;
  PREF2(jtmovavg);
  RE(m=i0(vib(a)));
  if(0<m&&m<=IC(w)&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1); 
- R infix(a,w,self);
+ R jtinfixprefix2(jt,a,w,self);
 }    /* a (+/ % #)\w */
 
 #define MOVMINMAX(T,type,ie,CMP)    \
@@ -745,7 +745,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
  p=IC(w); wt=AT(w);
  RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m=abs(m0), handling IMIN 
 // obsolete m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
- if(2==m0)R infix2(a,w,self);
+//obsolete  if(2==m0)R infix2(a,w,self);
+ if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);
  x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
  if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
@@ -761,8 +762,11 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  vains(id,wt,&ado,&cv);
- if(!ado||!m||m>p)R infix(a,w,self);
- d=0<=m0?1+p-m:(p+m-1)/m; c=aii(w); cm=c*m; b=0>m0&&0<p%m;
+// obsolete  if(!ado||!m||m>p)R jtinfixprefix2(jt,a,w,self);
+ if(!ado)R jtinfixprefix2(jt,a,w,self);
+// obsolete d=0<=m0?1+p-m:(p+m-1)/m;
+ if(m0>=0){d=MAX(0,1+p-m);}else{d=1+(p-1)/m; d=(p==0)?p:d;}
+ c=aii(w); cm=c*m; b=0>m0&&0<p%m;
  zt=rtype(cv); jt->rank=0; 
  GA(z,zt,c*d,MAX(1,AR(w)),AS(w)); *AS(z)=d;
  if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}

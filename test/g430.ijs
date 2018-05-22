@@ -558,6 +558,26 @@ f=: i.@:>:@:$
 
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
+NB. Verify that special forms are detected
+a =. 1e6 $ 'abc'
+(7!:2 '40 ]@<\ a') > 1.2 * 7!:2 '40 <\ a'
+(40 <\ a) -: 40 ]@<\ a
+
+(7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks
+(; 40 <\ a) -: 40 ;@:(<\) a
+
+(7!:2 '; 40 <\ a') > 1.2 * 7!:2 '40 ]@;@:(<\) a'  NB. smaller because boxes contain (cloned) virtual blocks
+(; 40 <\ a) -: 40 ]@;@:(<\) a
+
+((10) 6!:2 '_3 ,&]/\ a') > 1.5 * (10) 6!:2 '_2 ,&]/\ a'  NB. special code for dyad
+
+a =. i. 1000 1000
+(7!:2 '; 2 (<@{.\) a') > 1.5 * 7!:2 '2 ;@:(<@{.\) a'
+(; 2 (<@{.\) a) -: 2 ;@:(<@{.\) a
+
+(7!:2 '; 2 (<@(]@]/)\) a') > 1.5 * 7!:2 '2 ;@:(<@(]@]/)\) a'
+(; 2 (<@(]@]/)\) a) -: 2 ;@:(<@(]@]/)\) a
+
 
 4!:55 ;:'A a adot1 adot2 sdot0 b base bs bsd em en f iind '
 4!:55 ;:'infix inv k kay key n ob oind omask osub '

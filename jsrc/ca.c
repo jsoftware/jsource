@@ -156,7 +156,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
   case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
-  case CSLASH:  if(d==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} break;
+  case CSLASH:  if(d==CCOMMA){f1=jtredravel; } break;
   case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VINPLACEOK1|VINPLACEOK2);  break;
   case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VINPLACEOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VINPLACEOK1;} break;
@@ -240,7 +240,7 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
   case CAMP:    if(g==zero||g==one){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
   case CSLASH:  
    if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VINPLACEOK2;}
-   if(d==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
+   if(d==CCOMMA){f1=jtredravel; } else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
    break;
 
   case CSEMICO:
@@ -308,7 +308,7 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
  flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
- else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; flag&=~VINPLACEOK1;}
+ else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
   if((1LL<<(*AV(wv->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
@@ -416,7 +416,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    }else switch(ID(a)){
     case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
     case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
-    case CSLASH: if(c==CCOMMA){f1=jtredravel; flag&=~VINPLACEOK1;} break;
+    case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
     case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
     case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
 // obsolete scaf must tighten    case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}

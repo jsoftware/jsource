@@ -539,7 +539,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD+VIP;     break;
   }
   RESETERR;
- }else if(!((t=UNSAFE(at|wt))&~NUMERIC)){
+ }else if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
   // Normal case where we are not retrying: here for numeric arguments
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.

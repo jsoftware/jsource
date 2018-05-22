@@ -50,7 +50,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
- // From here on, execution on a single cell of a (on a matching cell of w, or all w).  The cell of a may have any rank
+ // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
  if(!(INT&AT(a)))RZ(a=cvt(INT,a));
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce error, if w has no
@@ -105,13 +105,13 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
 #endif
   case sizeof(I): IFROMLOOP(I); break;
   default:
-   if     (0==k%sizeof(I))IFROMLOOP2(I,k/sizeof(I))
+   if     (0==(k&(SZI-1)))IFROMLOOP2(I,k>>LGSZI)
 #if SY_64
-   else if(0==k%sizeof(int))IFROMLOOP2(int,k/sizeof(int))
+   else if(0==(k&(SZI4-1)))IFROMLOOP2(int,k>>LGSZI4)
 #endif
-   else if(0==k%sizeof(S))IFROMLOOP2(S,k/sizeof(S))
+   else if(0==(k&(SZS-1)))IFROMLOOP2(S,k>>LGSZS)
    else{S*x,*u;
-    q=1+k/sizeof(S);
+    q=1+(k>>LGSZS);
     if(1==an){wv+=k*j; DO(m,                     x=(S*)zv; u=(S*) wv;      DO(q, *x++=*u++;); zv+=k;   wv+=wk;);}
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
   }

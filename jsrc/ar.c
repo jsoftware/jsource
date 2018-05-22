@@ -247,9 +247,11 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
 }    /* f/"r w for sparse vector w */
 
 DF1(jtredravel){A f,x,z;C id;I cv,n;P*wp;VF ado;
+ F1PREFIP;
  RZ(w);
  f=VAV(self)->f;
- if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
+// obsolete if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
+ if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
  id=vaid(VAV(f)->f);
  while(1){  // Loop to handle restart on overflow
@@ -474,7 +476,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
  // Handle the special cases: neutrals, single items, reduce on 2 items
  switch(n){
   case 0: R red0(w,self);    // neutrals
-  case 1: R tail(w);    // reduce on single items - note that jt->rank is still set
+  case 1: R head(w);    // reduce on single items - note that jt->rank is still set
   case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
  }
  // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if

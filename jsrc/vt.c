@@ -163,6 +163,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 }
 
 
+// create 1 cell of fill when head/tail of an array with no items (at the given rank)
 static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  ws=AS(w);
@@ -175,8 +176,24 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :  // scaf should generate virtual block here for speed
-     SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
+// obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :  // scaf should generate virtual block here for speed
+// obsolete      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
+ if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
+  if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
+   // just one cell.  Create a virtual block for it, at offset 0
+   I wn=AN(w); wcr--; wcr=(wcr<0)?wr:wcr;  // wn=#atoms of w, wcr=rank of cell being created
+   A z; RZ(z=virtualip(w,0,wcr));  // allocate the cell.  Now fill in shape & #atoms
+    // if w is empty we have to worry about overflow when calculating #atoms
+   I zn=1; I *ws=AS(w)+1, *zs=AS(z); DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);})   // copy shape of CELL of w into z
+   AN(z)=zn;
+   // No need to jet jt->rank to 0 here: if it was nonzero, wf would have been nonzero & we wouldn't be here
+   RETF(z);
+  }else{
+   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that rank is still set, so this may produce multiple cells
+   RETF(jtfrom(jtinplace,zeroi,w));  // could call jtfromi directly for non-sparse w
+  }
+ }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills
+ }
 }
 
 F1(jttail){I wcr,wf,wr;

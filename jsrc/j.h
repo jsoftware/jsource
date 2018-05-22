@@ -328,9 +328,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define BW              32
 #define LGSZI 2
 #endif
-#define LGSZUI4  2  // lg(#bytes in a UI4)
-#define LGSZUS   1  // lg(bytes in a US)
 
+// nominal cache sizes for current processors
 #define L1CACHESIZE (1LL<<15)
 #define L2CACHESIZE (1LL<<18)
 #define L3CACHESIZE (1LL<<22)
@@ -569,6 +568,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define SZD             ((I)sizeof(D))
 #define SZI             ((I)sizeof(I))
 #define LGSZD    3  // lg(#bytes in a D)
+#define SZI4            ((I)sizeof(I4))
+#define LGSZI4   2  // lg (bytes in an I4)
+#define SZUI4            ((I)sizeof(UI4))
+#define LGSZUI4  2  // lg(#bytes in a UI4)
+#define SZUS            ((I)sizeof(US))
+#define LGSZUS   1  // lg(bytes in a US)
+#define SZS            ((I)sizeof(S))
+#define LGSZS   1  // lg (bytes in an S)
+
 #define VAL1            '\001'
 #define VAL2            '\002'
 

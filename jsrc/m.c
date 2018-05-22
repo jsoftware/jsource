@@ -1043,6 +1043,9 @@ void jtmf(J jt,A w){I mfreeb;
  if(mfreeb&MFREEBCOUNTING){jt->bytes -= allocsize;}  // keep track of total allocation only if asked to
 }
 
+// allocate header with rank r; if r==1, move the item count to be the shape also
+// a header is a simplified virtual block, for temporary use only, that must never escape into the wild, either in full or
+// as a backer for a virtual block
 RESTRICTF A jtgah(J jt,I r,A w){A z;
  ASSERT(RMAX>=r,EVLIMIT); 
  RZ(z=gafv(SZI*(NORMAH+r)));

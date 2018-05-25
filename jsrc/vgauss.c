@@ -6,7 +6,7 @@
 #include "j.h"
 
                     
-F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
+F1(jtgausselm){I c,e,i,j,old,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,0);
  ASSERT(RAT&AT(w),EVNONCE);
  // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in
@@ -14,42 +14,44 @@ F1(jtgausselm){A t;C*tv;I c,e,i,j,m,old,r,r1,*s;Q p,*u,*v,*x;
  // twice: storing a newly-allocated block will produce a double-free.  So we have to realize any virtual block coming in.
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  ASSERT(2==AR(w),EVRANK);
- s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c); m=c*bp(AT(w));
- GATV(t,LIT,m,1,0); tv=CAV(t);
+ s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c);
+// obsolete  m=c*bt(AT(w)); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r1;++j){
   v=QAV(w);
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   ASSERT(0<=e,EVDOMAIN);
   x=v+c*j; 
-  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m);} /* interchange rows e and j */
-  p=x[j]; DO(c, x[i]=qdiv(x[i],p););
+ // obsolete  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m);} /* interchange rows e and j */
+  if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;);} /* interchange rows e and j */
+  p=x[j]; ra(p.n); ra(p.d); DO(c, Q z=qdiv(x[i],p); INSTALLRAT(w,x,i,z);); fa(p.n); fa(p.d);
   for(i=0;i<r;++i){
    if(i==j)continue;
    u=v+c*i; p=u[j];  /* pivot */
-   DO(c, u[i]=qminus(u[i],qtymes(p,x[i])););
+   ra(p.n); ra(p.d); DO(c, Q z=qminus(u[i],qtymes(p,x[i])); INSTALLRAT(w,u,i,z);); fa(p.n); fa(p.d);
   }
   if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }
  R w;
 }    /* Gaussian elimination in place */
 
-static F1(jtdetr){A t,z;C*tv;I c,e,g=1,i,j,k,m,old,r,*s;Q d,p,*u,*v,*x;
+static F1(jtdetr){A z;I c,e,g=1,i,j,k,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
- m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
+// obsolete  m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r;++j){
   v=QAV(w); 
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   if(0>e)R cvt(RAT,zero);
   x=v+c*j;
-  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m); g=-g;}  /* interchange rows e and j */
+// obsolete  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m); g=-g;}  /* interchange rows e and j */
+  if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;); g=-g;}  /* interchange rows e and j */
   i=XDIG(x[j].n); if(i==XPINF||i==XNINF)R mark;
   for(i=j+1;i<r;++i){
    u=v+c*i;
-   if(XDIG(u[j].n)){p=qdiv(u[j],x[j]); for(k=j+1;k<r;++k)u[k]=qminus(u[k],qtymes(p,x[k]));}
+   if(XDIG(u[j].n)){p=qdiv(u[j],x[j]); ra(p.n); ra(p.d); for(k=j+1;k<r;++k){Q z=qminus(u[k],qtymes(p,x[k]));INSTALLRAT(w,u,k,z);} fa(p.n); fa(p.d);}
   }
   if(!gc3(&w,0L,0L,old))R 0;  // use simple gc3 to ensure all changes use the stack, since w is modified inplace.  Alternatively could turn off inplacing here
  }

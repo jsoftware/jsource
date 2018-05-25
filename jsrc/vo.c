@@ -151,14 +151,14 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
  if(!(ZZFLAGWORD&ZZFLAGUSEOPEN)){
   // No sparse results.  We will bypass jtope and move the results into the result area here, with conversion and fill
 
-  // Create the fill-cell we will need
+  // Create the fill-cell we will need.  Note: all recursible fills must have the PERMANENT flag set, since we may not increment the usecount
   I zpri=jt->typepriority[CTTZ(zzt)]; zpri+=AN(zz)?256:0;   // priority of unboxed results, giving high pri to nonempty
-  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=1LL<<(jt->prioritytype[zzresultpri&255]);
-  fillv(zft,1L,jt->fillv0); I zfs=bp(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill
+  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=1LL<<(jt->prioritytype[zzresultpri&255]);  // zft=highest precision encountered
+  fillv(zft,1L,jt->fillv0); I zfs=bp(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
 
   I *zzcs=IAV(zzcellshape);  // zzcs->shape of padded result cell
   I zzcr=AS(zzcellshape)[0];  // zzcr=rank of result cell
-  zzcs[zzcr]=zfs;  // length of 0-cell is length of atom - store after the shape - we know there's room
+  zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room
 
   // if the result has different type from the values in zz, convert zz en bloc to type zft
   if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
@@ -169,19 +169,32 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
    zzcell=CAV(zz)+zzcellp;  //  recalc address of last+1 cell moved to zz
   }
+  // Now zz has the type zft
 
-  I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // * atoms in actual result-cell
+  I natomsresultcell; RE(natomsresultcell=prod(zzcr,zzcs));  // # atoms in actual result-cell.  Could overflow, if there is a mix of tall & wide
   I natomsresult; RE(natomsresult=mult(natomsresultcell,zzncells));  // number of atoms in result
   // Since we know the result-cell size in zzcellshape must be able to contain a cell of zz, we can test for equal rank and equal number of atoms.
   // But if the cell is empty, we can't rely on # atoms to verify the shape, and then we have to reallocate
-  if((TYPESXOR(zft,AT(zz)) | ((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
+  if((/* obsolete TYPESXOR(zft,AT(zz)) | */ ((AR(zz)-zzwf)^zzcr) | (natomsresultcell^natomszzcell) | !natomsresultcell)){
    // The overall result-cell differs in shape or type from the cells of zz.  We must allocate a new result area.
    GA(zztemp,zft,natomsresult,zzwf+zzcr,0);  I *zzts=AS(zztemp);  I *zzs=AS(zz); // allocate result area, and point to shape
    DO(zzwf, *zzts++ = zzs[i];) DO(zzcr, *zzts++ = zzcs[i];)   // move in the frame followed by result-cell shape
-   // since zztemp is becoming the new result area, it needs to become inplace recursive if the type is recursible, and zz needs to
-   // become nonrecursive.  This is possible because we know there will be no type conversions when we are building a boxed result
-   AFLAG(zztemp) |= zft&RECURSIBLE; AFLAG(zz)=0; // mark zztemp as recursive if recursible; clear in zz
-  }else zztemp=zz;  // now zztemp has the result area, which might be the same as zz
+
+   // since zztemp is becoming the new result area, it should become inplace recursive if the type is recursible, and zz needs to
+   // become nonrecursive, to transfer ownership of the contents of zz's blocks to zztemp without requiring explicit usecounting.
+   // This might not work for XNUM/RAT types, because conversions may be required on results coming from zzbox, and those conversions
+   // might fail: that would lose the blocks in zz that have not been copied to zztemp.  The problem does not exist for BOX type,
+   // because we have already verified that there is not a mix of box/nonbox, so we can guarantee no failures until we get the
+   // result area built.
+// obsolete   AFLAG(zztemp) |= zft&RECURSIBLE; AFLAG(zz)=0; // mark zztemp as recursive if recursible; clear in zz
+   I zzrecur = AFLAG(zz)&BOX; AFLAG(zztemp) |= zzrecur; AFLAG(zz)^=zzrecur;  // transfer recursibility from zz to zztemp, but only for boxed result
+  }else{
+   // zz has the same item-shape as the final result (the items in zzbox must be smaller).  We can just keep zz as the final result area, and move the
+   // items from zzbox into it.  NOTE that this may leave zztemp as a recursive XNUM/RAT, which it can't be if it was allocated above
+   zztemp=zz;
+  } // now zztemp has the result area, which might be the same as zz
+
+
   C *tempp=CAV(zztemp)+(natomsresult*zfs);   // point to end+1 of result area
 
   // Calculate the vector of cell-lengths
@@ -189,27 +202,37 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   // Now zfs is the length in bytes of each result-cell
 
   // Calculate r to use if we move from zz
-  I *zzcopyress=AS(zz)+zzwf;  // shape of a cell of zz
+  I *zzcopyress=AS(zz)+zzwf;  // &shape of a cell of zz
   I zzcopyresr=rescellrarg(zzcs,zzcr,zzcopyress,AR(zz)-zzwf);  // does not ever need ra
 
   // For each result cell, copy (with conversion if necessary) from whichever source is valid
   // zzboxp points after the last box created; zzcell points after the last cell of zz; tempp points after last cell of result
   // box0 points to the first valid box location - everything before that comes from zz
+  I zztemprecur = !!(AFLAG(zztemp)&RECURSIBLE);  // remember if we are moving into a recursive block
   while(--zzncells>=0){A zzboxcell;
-   zzboxp--; tempp-=zfs;  // back pointers to next input/output positions
+   zzboxp--; tempp-=zfs;  // back box and result pointers to next input/output positions.  These pointers move for every result-cell
    if((I)(zzboxp-box0)>=0 && (zzboxcell= *zzboxp)){
     // cell comes from zzboxp.  Convert if necessary, then move.  Before moving, calculate the rank to use for the fill.
-    // Don't convert empties, ??? because we have to make sure there can be no failures while we have the contents of zz not attached to any recursive block (???)
-    if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell)))RZ(zzboxcell=cvt(zft,zzboxcell)); I *zzbcs=AS(zzboxcell);  // convert if needed, point to shape
-    // if this block is recursible, we must ra() its contents during the copy, because zzbox is not recursive and zztemp is.  The exception is
-    // if the block is inplace recursible, which we can copy by making the block nonrecursive, transferring its usecount
-    I zzbxf=AFLAG(zzboxcell);  // flag for the box we are about to move
-    I inplacerecur=(AC(zzboxcell)>>(BW-1))&zzbxf&RECURSIBLE;  // if inplace recursive, this is the recursive bits
-    AFLAG(zzboxcell)=zzbxf^=inplacerecur;  // if inplace recursible, turn off recursible; store to the block
-    copyresultcell(jt, tempp, CAV(zzboxcell), zzcs, rescellrarg(zzcs,zzcr,zzbcs,AR(zzboxcell))+!!(zft&(~inplacerecur)&RECURSIBLE),zzbcs);  // combine rank and recursible flags
+    // Don't convert empties, to make sure we don't have a failure while we are processing boxed results
+    if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell))){
+     if(!(zzboxcell=cvt(zft,zzboxcell))){
+      // error during conversion.  THIS IS THE ONLY PLACE WHERE ERROR IS POSSIBLE DURING THE COPY.
+      // If zz and zztemp are the same block, and that block is recursive, it may be in an invalid state: values have been copied
+      // from zzcell up the the end of the block and are now duplicated.  To fix it, we have to zero out everything in the range from the
+      // current zzcell up to the last tempp that was filled
+      if(zztemp==zz&&zztemprecur)memset(zzcell,C0,tempp+zfs-zzcell);
+      R 0;
+     }
+    }
+    I *zzbcs=AS(zzboxcell);  // convert if needed, point to shape
+    // if zztemp is recursible, we must ra() the new block during the copy, since it comes from nonrecursive zzbox
+    copyresultcell(jt, tempp, CAV(zzboxcell), zzcs, rescellrarg(zzcs,zzcr,zzbcs,AR(zzboxcell))+zztemprecur,zzbcs);  // combine rank and recursible flags
    }else{
+    // cell comes from zz.  It needs no conversion, since we convert zz whenever we see a precision change.
+    // If type is BOX, we know that zz was originally recursive and that its recursive status has been copied/identitied into zztemp; either way no ra is required
+    // For other recursible types, the only way for zztemp to be recursive is for it to be identical with zz, so no ra is called for then either.
     // C *copyresultcell(J jt, C *z, C *w, I *sizes, I r, I *s){I wadv;
-    zzcell-=zzcelllen;   // back up to next input cell
+    zzcell-=zzcelllen;   // back up to next input cell.  This pointer moves only for results that come from zz
     if(tempp==zzcell)break;  // if we start to copy in-place, we must be before the first wreck, and we can leave remaining cells in place
     copyresultcell(jt,tempp,zzcell,zzcs,zzcopyresr,zzcopyress);
    }

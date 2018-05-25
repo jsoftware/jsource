@@ -32,7 +32,6 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
  wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
-// scaf must look at COUNT in salf,  work on ;@:(<@:f"r)   also dyad
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here,
  // as long as its rank is not less than the outer rank (if it's smaller, we cannot elide it because the order of fill may change)
  if(fs&&VAV(fs)->flag2&VF2BOXATOP1){

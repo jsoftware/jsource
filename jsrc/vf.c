@@ -233,7 +233,6 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; DO(r, ws[i]=u[i];) RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
-   // scaf virtual only direct or recursible blocks
 // correct   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
    if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code

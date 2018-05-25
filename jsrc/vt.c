@@ -94,7 +94,6 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
   DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
   s=a=t;
  }
- // scaf no virtual if not direct or recursible
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
  if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis
@@ -136,7 +135,6 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  n=AN(a); u=AV(a);     // n=#axes to drop, u->1st axis
  // virtual case: scalar a
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
- // scaf not virtual if not direct or recursible
  if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
   I * RESTRICT ws=AS(w);  // ws->shape of w
   I droplen = IAV(a)[0];  // get the one number in a, the take amount
@@ -176,7 +174,7 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
-// obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :  // scaf should generate virtual block here for speed
+// obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :
 // obsolete      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
  if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
   if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
@@ -186,10 +184,10 @@ F1(jthead){I wcr,wf,wr;
     // if w is empty we have to worry about overflow when calculating #atoms
    I zn=1; I *ws=AS(w)+1, *zs=AS(z); DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);})   // copy shape of CELL of w into z
    AN(z)=zn;
-   // No need to jet jt->rank to 0 here: if it was nonzero, wf would have been nonzero & we wouldn't be here
+   // No need to set jt->rank to 0 here: if it was nonzero, wf would have been nonzero & we wouldn't be here
    RETF(z);
   }else{
-   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that rank is still set, so this may produce multiple cells
+   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->rank is still set, so this may produce multiple cells
    RETF(jtfrom(jtinplace,zeroi,w));  // could call jtfromi directly for non-sparse w
   }
  }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills

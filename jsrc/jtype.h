@@ -294,7 +294,7 @@ typedef I SI;
 // Don't call traverse unless one of these bits is set
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
-#define RECURSIBLE      (BOX|VERB|ADV|CONJ)
+#define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
 
 // NOUNSAFE flag
 // obsolete #define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
@@ -329,7 +329,7 @@ typedef I SI;
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 
 // Flags in the count field of type A
-#define ACINPLACE       (I)(((UI)-1>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
+#define ACINPLACE       (I)((((UI)-1)>>1)^(UI)-1)  // set when this block CAN be used in inplace operations.  Always the sign bit.
 #define ACPERMANENT     ((I)((UI)ACINPLACE>>1))  // next-to-top bit, set in blocks that should never modify the AC field
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACIPNO(a)       (AC(a)&=~ACINPLACE)

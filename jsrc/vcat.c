@@ -284,10 +284,11 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
      if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(wr)MC(av,wv,wlen); else mvc(wk,av,k,wv);
-     // if a has recursive usecount, increment the usecount of the added data - including any fill
-     if(UCISRECUR(a)){A* aav=(A*)av; DO(wn, ras(aav[i]);)}
      // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
      *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
+     // if a has recursive usecount, increment the usecount of the added data - including any fill
+     // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
+     if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ras(aav[i]);)}
      RETF(a);
     }
    }

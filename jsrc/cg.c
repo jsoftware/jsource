@@ -136,7 +136,7 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
   if(b){
    RZ(x=df2(k,w,sldot(ds(CPOUND)))); xv=AV(x);
    y=rifvs(y); yv=AAV(y);   // mustn't install into virtual
-   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOX(y,yv,i,z);});
+   DO(AN(y), if(!AR(yv[i])){RZ(z=reshape(sc(xv[i]),yv[i])); INSTALLBOXNF(y,yv,i,z);});
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }

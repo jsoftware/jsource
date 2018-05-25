@@ -483,7 +483,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
-#define INSTALLBOX(x,xv,k,z) rifv(z); if(UCISRECUR(x))ra(z); xv[k]=z
+#define INSTALLBOX(x,xv,k,z) rifv(z); if(UCISRECUR(x)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z
+#define INSTALLBOXNF(x,xv,k,z) rifv(z); if(UCISRECUR(x)){ra(z);} xv[k]=z   // Don't do the free - if we are installing into known 0 or known nonrecursive
+#define INSTALLBOXRECUR(xv,k,z) rifv(z); {I zzK=(k); {A zzZ=xv[zzK]; ra(z); fa(zzZ);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
+// Same thing for RAT type.  z is a Q, xv[k] is a Q
+#define INSTALLRAT(x,xv,k,z) if(UCISRECUR(x)){Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[k]=z
+#define INSTALLRATNF(x,xv,k,z) if(UCISRECUR(x)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0
+#define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); fa(zzZ.n); fa(zzZ.d);} xv[zzK]=z;}  // Don't test - we know we are installing into a recursive block
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}

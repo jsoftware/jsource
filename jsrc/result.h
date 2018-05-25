@@ -112,29 +112,35 @@ do{
        // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
        // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
        ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((((zt&DIRECT)==0)|(ZZFLAGWORD>>ZZFLAGBOXALLOX))&1)<<ZZFLAGNOPOPX;
+       // NOTE that if we are converting to an indirect type, the converted block might NOT be recursive
        zzold=jt->tnextpushx;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
       }
      }else{
       // empty cells.  Just adjust the type, using the type priority
       AT(zz)=zt;  // use highest-priority empty
+      AFLAG(zz) &= ~RECURSIBLE; AFLAG(zz) |= (zt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // move RECURSIBLE, if any, to new position
      }
     }
-    // The result area and the new result now have compatible types.  Move the cells
+    // The result area and the new result now have identical shapes and precisions (or compatible precisions and are empty).  Move the cells
     if(zzcelllen){  // questionable
      // Here there are cells to move
-     if(zt&RECURSIBLE){
-      // The result being built is recursible (meaning boxed, since it's a noun).  It has recursive count, so we have to increment the usecount of any blocks we add.
-      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by noting the special case when z is recursive with
-      // a usecount of 1: then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
-      // actually have to touch them.
-      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
+     if(AFLAG(zz)&RECURSIBLE){
+      // The result being built is recursive.  It has recursive count, so we have to increment the usecount of any blocks we add.
+      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by noting the special case when z is recursive inplaceable:
+      // then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
+      // actually have to touch them.  This is a transfer of ownership, and would fail if the new block is not inplaceable: for example, if the block is in a name, with
+      // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
+      // name would be corrupted
+//      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
+      if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive
        AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
        MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
       }else{
-       // copy and raise the elements (normal path)
-       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(AN(z), A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
+       // copy and raise the elements (normal path).  We copy the references as A types, since there may be 1 or 2 per atom of z
+       // because these are cells of an ordinary array (i. e. not WILLBEOPENED) the elements cannot be virtual
+       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(zzcelllen>>LGSZI, A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
       }
-     }else{
+     }else{  // not recursible
       MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
      }
      zzcellp+=zzcelllen;  // advance to next cell
@@ -176,7 +182,7 @@ do{
       GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
       zzresultpri=0;  // initialize the result type to low-value
-      // init the vector where we will accumulate the maximum shape along each axis.  The N field holds the allocated size and AS holds the actual size
+      // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AS holds the actual size
       GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; I *zzv=AS(zz)+zzwf, *zzcs=IAV(zzcellshape); DO(AS(zzcellshape)[0], zzcs[i]=zzv[i];);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }
@@ -202,7 +208,7 @@ do{
     // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and
     // (1) will never assemble or epilog; (2) will feed directly into a verb that will discard it without doing any usecount modification
     A result0=AAV(zz)[0]; I* zs=AS(z); I* ress=AS(result0); I zr=AR(z); I resr=AR(result0); //fetch info
-    I diff=TYPESXOR(AT(z),AT(result0))|(zr^resr); zr=(zr>resr)?resr:zr;  DO(zr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch
+    I diff=TYPESXOR(AT(z),AT(result0))|(zr^resr); zr=(zr>resr)?resr:zr;  DO(zr-1, diff|=zs[i+1]^ress[i+1];)  // see if there is a mismatch.  Fixed loop to avoid misprediction
     ZZFLAGWORD^=(diff!=0)<<ZZFLAGCOUNTITEMSX;  // turn off bit if so 
     I nitems=1; nitems=(zr!=0)?zs[0]:nitems; AM(zz)+=nitems;  // add new items to count in zz.  zs[0] will never segfault, even if z is empty
    }
@@ -228,8 +234,8 @@ do{
   RE(natoms=mult(natoms,zzncells));
   // Allocate the result
   GA(zz,zzt,natoms,zzcelllen+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);
-  // If zz is boxed, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
-  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if RAZERESULT set. Leave usecount unchanged
+  // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
+  AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later

@@ -69,7 +69,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // obsolete  if((zn>1)&&!(wf|(wflag&(AFSMM|AFNJA)))){
 // correct  if(((zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
-  // scaf no virtual if not direct or recursible
   if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
@@ -293,7 +292,7 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,k,n,t,*v,*ws;
 
 static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTRICT pv,
   qn,qr,* RESTRICT qv,* RESTRICT s,wf,wk,wr,* RESTRICT ws,zn;
- wr=AR(w); ws=AS(w); wf=wr-r; wk=bp(AT(w));
+ wr=AR(w); ws=AS(w); wf=wr-r; I wt=AT(w); wk=bp(wt);
  pn=AN(p); pr=AR(p); pv=AV(p);
  qn=AN(q); qr=AR(q); qv=AV(q);
  if(AN(w)){
@@ -301,27 +300,29 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
  }else{zn=0;}
- GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
+ GA(z,wt,zn,wf+pr+qr+r-2,ws);
  s=AS(z)+wf; ICPY(s,AS(p),pr); 
  s+=pr;      ICPY(s,AS(q),qr);
  s+=qr;      ICPY(s,ws+wf+2,r-2);
  if(!zn)R z;  // If no data to move, exit with empty.  Rank is right
  wv=CAV(w); zv=CAV(z); 
  switch(k=d*wk){   // k=*bytes in a _2-cell of a cell of w
-  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
-   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;); R z;}
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
    DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}  // n=#_2-cells in a cell of w
+  case sizeof(I): INNER2(I);
   case sizeof(C): INNER2(C);
   case sizeof(S): INNER2(S);
 #if SY_64
-  case sizeof(int): INNER2(int);
+  case sizeof(I4): INNER2(I4);
 #endif
-  case sizeof(I): INNER2(I);
 #if !SY_64 && SY_WIN32
-  case sizeof(D): INNER2(D);
+  case sizeof(D): if(wt&FL)INNER2(D);
+   // copy only echt floats using floating-point moves.  Otherwise fall through to...
 #endif
-}}   /* (<p;q){"r w  for positive integer arrays p,q */
+  default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
+   DO(m, DO(pn, j=e*pv[i]; DO(qn, MC(x+=k,v+k*(j+qv[i]),k);)); v+=n;); R z;}
+ }   /* (<p;q){"r w  for positive integer arrays p,q */
+}
 
 static A jtafi(J jt,I n,A w){A x;
  if(!(AN(w)&&BOX&AT(w)))R pind(n,w);

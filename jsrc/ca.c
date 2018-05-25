@@ -259,9 +259,8 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
       }
      }
     }
-
-// scaf needs tightening    else if(boxatop(w)&&j&&-2<=j&&j<=2){f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);}
- }}
+   }
+ }
  if(0<=m){
   b=d==CFIT&&equ(zero,wv->g);
   switch(b?ID(wv->f):d){
@@ -419,7 +418,6 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
     case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
     case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
     case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
-// obsolete scaf must tighten    case CRAZE:  if(c==CCUT&&boxatop(w)){f1=jtrazecut1; flag&=~VINPLACEOK1;}
     case CRAZE:  // detect ;@(<@(f/\));.
      if(c==CCUT&&boxatop(w)){  // w is <@g;.k
       if((1LL<<(*AV(v->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?

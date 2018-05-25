@@ -301,6 +301,7 @@ static void auditsimverify0(A w){
    DO(n, auditsimverify0((A)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(v->f); auditsimverify0(v->g); auditsimverify0(v->h);
+  }else if(AT(w)&RAT|XNUM) {
   }else *(I*)0=0;  // inadmissible type for recursive usecount
  }
  R;
@@ -329,6 +330,7 @@ static void auditsimdelete(A w){I delct;
    DO(n, auditsimdelete((A)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->f); auditsimdelete(v->g); auditsimdelete(v->h);
+  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
   }else *(I*)0=0;  // inadmissible type for recursive usecount
  }
  R;
@@ -351,6 +353,7 @@ static void auditsimreset(A w){I delct;
    DO(n, auditsimreset((A)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->f); auditsimreset(v->g); auditsimreset(v->h);
+  }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
   }else *(I*)0=0;  // inadmissible type for recursive usecount
  }
  R;

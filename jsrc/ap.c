@@ -400,7 +400,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    ilnabs=-ilnval; ilnabs^=ilnabs>>(BW-1);  // abs(ilnval), and handle overflow
    zi=1+(wi-1)/ilnabs; zi=(wi==0)?wi:zi;  // calc number of partial infixes.  Because of C's rounding toward zero, we have to handle the wi==0 case separately, and anyway it
       // requires a design decision: we choose to treat it as 0 partitions of 0 length (rather than 1 partition of 0 length, or 0 partitions of length ilnabs)
-// obsolete    zi=(ilnval<=-IMAX)?1:zi;   // For compatibility, we make ilnval of __ produce 1 cell when wi==0 (it happens because of abs() error in jtinfix)   scaf remove
    stride=ilnabs;  // advance by the stride
    remlen=wi;  // since there are no overlaps, set length-to-do to total length
   }

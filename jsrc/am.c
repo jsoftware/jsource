@@ -132,9 +132,9 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // stack in that sentence if the usecount is only 1.
  I waf = AFLAG(w);  // w flags
  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
-      &&TYPESEQ(t,wt)&&(wt&(DIRECT|BOX))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
+      &&TYPESEQ(t,wt)&&(wt&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
- if(ip&&t&BOX){
+ if(ip&&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
   ra0(a);  // ensure a is recursive usecount.  This will be fast if a is one boxing level
   ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
@@ -173,10 +173,14 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
    switch(k){
    case sizeof(C):
     {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
-   case sizeof(I):
-    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
+   case sizeof(I):  // includes BOX and RAT, which may be recursive
+// obsolete    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
+    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
     else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
     break;
+   case sizeof(Q):  // includes Q, which may be recursive
+    if(UCISRECUR(z)){Q * RESTRICT zv=QAV(z); Q *RESTRICT av=(Q*)av0; DO(in, Q new=*av; INSTALLRATRECUR(zv,iv[i],new);   if((++av)==(Q*)avn)av=(Q*)av0;); break;}  // ras() cannot be virtual
+    // if not recursive Q, fall through to...
    // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
    default:
     {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data

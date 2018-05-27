@@ -605,7 +605,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wcr,af,ak,an,ar,*as,at,cv,f,m,
+static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,b,c;C*av,*wv,*zv;I acr,wcr,af,ak,an,ar,*as,at,cv,f,m,
      mf,n,nf,*oq,r,*s,*sf,t,wf,wk,wn,wr,*ws,wt,zcn,zk,zn,zt;VF ado;
  RZ(a&&w);F2PREFIP;
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a);   // #,x  #$x  address of $x   type of x
@@ -615,12 +615,15 @@ static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wc
  // when there is an empty - but it guarantees that execution on n empty never fails.
  // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
  // support nonnumeric sparse now
- if(((-(flag=(at|wt)&SPARSE))|(an-1)|(wn-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
+ if(((-((at|wt)&SPARSE))|(an-1)|(wn-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
+  // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
+  if((at|wt)&SPARSE){
+   at=(SPARSE&at)?DTYPE(at):at;
+   wt=(SPARSE&wt)?DTYPE(wt):wt;
+   jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'
+  }
   if(an==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
   if(wn==0){wt=B01;if(!(at&NUMERIC))at=B01;}
-  // if an operand is sparse, replace its type with the corresponding non-sparse type
-  at=(SPARSE&at)?DTYPE(at):at;
-  wt=(SPARSE&wt)?DTYPE(wt):wt;
  }
 
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
@@ -633,7 +636,6 @@ static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wc
   b=ar<=wr; zn=b?wn:an; m=b?an:wn; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /*n=m?zn/m:0;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
   DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
   c=2;  // flag to indicate 'no rank specified'
-  flag+=FLAGNORANK;  // indicate no rank specified
   // Extract zt, the type of the result, and t, the type to use for the arguments
   // computation, and cv, the flags indicating the types selected for the arguments and the result
   // Must do this after agreement test (could suppress the ASSERT in var)
@@ -652,12 +654,11 @@ static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wc
   DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
   b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; I shortr=b?acr:wcr; I longf=b?wf:af; s=b?ws:as; s+=longf; PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
-  flag+=2*c+b;  // install flags indicating frame and cell sizes
   // Extract zt, the type of the result, and t, the type to use for the arguments
   // computation, and cv, the flags indicating the types selected for the arguments and the result
   // Must do this after agreement test (could suppress the ASSERT in var)
   RZ(var(FAV(self)->id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
-  if(!(flag&FLAGSPARSE)){  // This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
+  if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
    PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
    RE(zn=mult(mf,mult(nf,zcn)));  // zn=total # result atoms  (only if non-sparse)
    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
@@ -679,7 +680,7 @@ static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wc
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
  // so we have to RE when we call them
- if(!(flag&FLAGSPARSE)){
+ if(jtinplace){   // if not sparse...
   // Not sparse.
 
   // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.

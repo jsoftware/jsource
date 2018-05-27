@@ -152,6 +152,7 @@ typedef I SI;
 #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed                   */
 #define A1AV(x)         ((A1*)((C*)(x)+AK(x)))  /* boxed relative address  */
 #define VAV(x)          ( (V*)((C*)(x)+AK(x)))  /* verb, adverb, conj      */
+#define FAV(x)          ( (V*)((C*)(x)+AKXR(0)) )  // verb, adverb, conj - always at fixed offset
 #define PAV(x)          ( (P*)((C*)(x)+AK(x)))  /* sparse                  */
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown

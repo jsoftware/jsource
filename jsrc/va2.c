@@ -15,7 +15,7 @@
 #define VIPDI (VIP0I+VIPOKA)  // inplace D, and I if I is same length as D: I is right arg
 
 static VA va[]={
-/*       */ {
+/* non-atomic functions      */ {
  {{0,0}, {0,0}, {0,0},                                /* BB BI BD              */
   {0,0}, {0,0}, {0,0},                                /* IB II ID              */
   {0,0}, {0,0}, {0,0},                                /* DB DI DD              */
@@ -388,12 +388,12 @@ static UC vaptr[256]={
 /*   1   2   3   4   5   6   7     8   9   a   b   c   d   e   f   */
 
 C jtvaid(J jt,A w){A x;C c;I k;V*v;
- v=VAV(w); c=v->id;
+ v=FAV(w); c=v->id;
  if(c==CBDOT){x=v->f; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),16<=k&&k<=31))c=(C)k;}
  R vaptr[(UC)c]?c:0;
 }
 
-static A jtva2(J,A,A,C);
+static A jtva2(J,A,A,A);
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
 #define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w);
@@ -406,50 +406,50 @@ static A jtva2(J,A,A,C);
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
 
-F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R va2(a,w,(C)16);}
-F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R va2(a,w,(C)17);}
-F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R va2(a,w,(C)18);}
-F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R va2(a,w,(C)19);}
+F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R va2(a,w,ds(16));}
+F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R va2(a,w,ds(17));}
+F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R va2(a,w,ds(18));}
+F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R va2(a,w,ds(19));}
 
-F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R va2(a,w,(C)20);}
-F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R va2(a,w,(C)21);}
-F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R va2(a,w,(C)22);}
-F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R va2(a,w,(C)23);}
+F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R va2(a,w,ds(20));}
+F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R va2(a,w,ds(21));}
+F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R va2(a,w,ds(22));}
+F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R va2(a,w,ds(23));}
 
-F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R va2(a,w,(C)24);}
-F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R va2(a,w,(C)25);}
-F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R va2(a,w,(C)26);}
-F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R va2(a,w,(C)27);}
+F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R va2(a,w,ds(24));}
+F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R va2(a,w,ds(25));}
+F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R va2(a,w,ds(26));}
+F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R va2(a,w,ds(27));}
 
-F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R va2(a,w,(C)28);}
-F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R va2(a,w,(C)29);}
-F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R va2(a,w,(C)30);}
-F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R va2(a,w,(C)31);}
+F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R va2(a,w,ds(28));}
+F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R va2(a,w,ds(29));}
+F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R va2(a,w,ds(30));}
+F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R va2(a,w,ds(31));}
 
 F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
 F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
 F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
 
-F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,CEQ     );}
-F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,CLT     );}
-F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,CMIN    );}
-F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,CLE     );}
-F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,CGT     );}
-F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,CMAX    );}
-F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,CGE     );}
-F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,CPLUS   );}
-F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,CPLUSDOT);}
-F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,CPLUSCO );}
-F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,CSTAR   );}
-F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,CSTARDOT);}
-F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,CSTARCO );}
-F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,CMINUS  );}
-F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,CDIV    );}
-F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,CEXP    );}
-F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,CNE     );}
-F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,CBANG   );}
-F2(jtcircle ){R va2(a,w,CCIRCLE );}
-F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,CSTILE);}
+F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,ds(CEQ     ));}
+F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,ds(CLT     ));}
+F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,ds(CMIN    ));}
+F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,ds(CLE     ));}
+F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,ds(CGT     ));}
+F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,ds(CMAX    ));}
+F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,ds(CGE     ));}
+F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,ds(CPLUS   ));}
+F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,ds(CPLUSDOT));}
+F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,ds(CPLUSCO ));}
+F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,ds(CSTAR   ));}
+F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,ds(CSTARDOT));}
+F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO ));}
+F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS  ));}
+F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV    ));}
+F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}
+F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,ds(CNE     ));}
+F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG   ));}
+F2(jtcircle ){R va2(a,w,ds(CCIRCLE ));}
+F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE));}
 
 
 // These are the unary ops that are implemented using a canned argument
@@ -487,8 +487,8 @@ A jtcvz(J jt,I cv,A w){I t;
    jt->jerr=0;                                 \
    *ado=(id==CPLUS?fp:id==CMINUS?fm:ft);       \
    *cv=VD;                                     \
-  }else if(t&NUMERIC+SBT){                     \
-   p=(va+vaptr[(UC)id])->ptr+(t&B01?0:t&INT?1:t&FL?2:t&CMPX?3:t&XNUM?4:t&RAT?5:6);  \
+  }else if(t&=NUMERIC+SBT){                     \
+   p=(va+vaptr[(UC)id])->ptr+(t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6);  \
    *ado=p->f; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
@@ -588,14 +588,24 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
     p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
     ASSERT(p->f,EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
     *ado=p->f; *cv=p->cv;  // return the values read
- }}
+  }
+ }
  R 1;
 }    /* function and control for rank */
+
+// fields defined in 'flag'
+#define FLAGSPARSE SPARSE   // if any  of these is set, something is sparse
+#define FLAGWRANKHIGHX 0  // set if w has the higher-or-equal rank (thus cells of a are repeated)
+#define FLAGWRANKHIGH  (1LL<<FLAGWRANKHIGHX)
+#define FLAGWFRAMELONGX 1  // set if rank given, and w frame is longer (thus a must be repeated in its entirety)
+#define FLAGWFRAMELONG  (1LL<<FLAGWFRAMELONGX)
+#define FLAGNORANKX 2  // set if rank not given
+#define FLAGNORANK  (1LL<<FLAGNORANKX)
 
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an,ar,*as,at,cv,f,m,
+static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,an,ar,*as,at,cv,f,m,
      mf,n,nf,*oq,q,r,*s,*sf,t,wcn,wcr,wf,wk,wn,wr,*ws,wt,zcn,zk,zn,zt;VF ado;
  RZ(a&&w);F2PREFIP;
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a);   // #,x  #$x  address of $x   type of x
@@ -605,15 +615,24 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  // when there is an empty - but it guarantees that execution on n empty never fails.
  // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
  // support nonnumeric sparse now
- if(an==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
- if(wn==0){wt=B01;if(!(at&NUMERIC))at=B01;}
- // if an operand is sparse, remember that fact and replace its type with the corresponding non-sparse type
- if(SPARSE&at){sp=1; at=DTYPE(at);}
- if(SPARSE&wt){sp=1; wt=DTYPE(wt);}
+ if(((-(flag=(at|wt)&SPARSE))|(an-1)|(wn-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
+  if(an==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
+  if(wn==0){wt=B01;if(!(at&NUMERIC))at=B01;}
+  // if an operand is sparse, replace its type with the corresponding non-sparse type
+  at=(SPARSE&at)?DTYPE(at):at;
+  wt=(SPARSE&wt)?DTYPE(wt):wt;
+ }
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
  // We detect agreement error before domain error
  oq=jt->rank;  // save original rank before we change it, in case we have to restart the operation
- if(jt->rank){
+ if(!jt->rank){
+  // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
+// obsolete  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
+  f=0; sf=0; mf=nf=1;  // kludge with mf==1, there will be only one call to ado, so most of these names could be left alone except for sparse, and compiler warnings
+  b=ar<=wr; zn=b?wn:an; m=b?an:wn; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /*n=m?zn/m:0;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
+  DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
+  c=2;  // flag to indicate 'no rank specified'
+ }else{
   // Here, a rank was specified.
   r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
   r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
@@ -622,26 +641,20 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   // we do this before we generate failures
   jt->rank=0;
   // if the frames don't agree, that's always an agreement error
-  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
+// obsolete  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
   c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
-  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; n=m?zcn/m:0; r=b?wcr:acr; s=b?ws+wf:as+af;   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
+  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; s=b?ws+wf:as+af; n=m?zcn/m:0;   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
- }else{
-  // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
-  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
-  af=wf=f=0; acr=ar; wcr=wr; sf=0; mf=nf=1;  // kludge with mf==1, there will be only one call to ado, so most of these names could be left alone except for sparse, and compiler warnings
-  b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=m?zn/m:0; r=b?wr:ar; s=b?ws:as;   // treat the entire operands as one big cell; get the rest of the values needed
-  c=2;  // flag to indicate 'no rank specified'
+  DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
  }
- if(id==CEXP&&1==wn&&FL&wt&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial in that case
-// analyze the verb/operands, returning ado, the address of the action routine for the
+ if(FAV(self)->id==CEXP&&((-(wn^1)|(wt<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
  // computation, and cv, the flags indicating the types selected for the arguments and the result.
  // Extract zt, the type of the result, and t, the type to use for the arguments
- RZ(var(id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
- // If a single input type has been selected AND if both arguments are non-sparse: convert them to the selected type.
+ RZ(var(FAV(self)->id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
+ // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
  // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
- // might fail because the type in t is incompatible with the actual type in a.
- if(t&&!sp&&an&&wn){B xn = !!(t&XNUM);
+ // might fail because the type in t is incompatible with the actual type in a.  t is rare.
+ if(t&&(((-(flag&FLAGSPARSE))|(an-1)|(wn-1))>=0)){B xn = !!(t&XNUM);  // t not 0, and none of  sparse, an==0, wn==0
   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.
   if(TYPESNE(t,at)){RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));jtinplace = (J)((I)jtinplace | JTINPLACEA);}
@@ -653,7 +666,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
  // so we have to RE when we call them
- if(sp){z=vasp(a,w,id,ado,cv,t,zt,af,acr,wf,wcr,f,r); if(!jt->jerr)R z;}  // handle sparse srrays separately
+ if(flag&FLAGSPARSE){if(c==2)af=wf=0, acr=ar, wcr=wr; z=vasp(a,w,FAV(self)->id,ado,cv,t,zt,af,acr,wf,wcr,f,r); if(!jt->jerr)R z;}  // handle sparse srrays separately
  else{
    // Not sparse.  If rank given, calculate the numbers of loops to do
   if(c!=2) {  // if rank was given initially...
@@ -662,7 +675,8 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
    // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
    // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
-   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
+   DO(MIN(acr,wcr), ASSERT(as[af+i]==ws[wf+i],EVLENGTH);)
+// this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
    // if looping required, calculate the strides for input & output
    if((mf|nf)>1){zk=zcn*bp(zt); ak=acn*bp(AT(a)); wk=wcn*bp(AT(w));}//else {ak=wk=zk=0;}
    // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
@@ -680,13 +694,15 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
   // use the inplacing from the action routine to qualify the caller's inplacing, EXCEPT
   // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
   // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
-  if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
-  jtinplace = (J)((I)jtinplace & (cv>>VIPOKWX));  // qualify input flags based on routine result
-  // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
-  // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
-  if((I)jtinplace&JTINPLACEW && zn==wn && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(cv&VCANHALT && jt->asgzomblevel<2)) && (wr==f+r)){z=w; AT(z)=zt;
-  }else if((I)jtinplace&JTINPLACEA && zn==an && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(cv&VCANHALT && jt->asgzomblevel<2)) && (ar==f+r)){z=a; AT(z)=zt;
-  }else{GA(z,zt,zn,f+r,sf); ICPY(f+AS(z),s,r);}
+// obsolete   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
+  {I inplaceallow = ((I)jtinplace & (cv>>VIPOKWX) & (((a==w)|(((mf|nf)>1)&zt))-1));  // qualify input flags based on routine result
+      // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
+   // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
+   // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
+   if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
+   }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
+   }else{GA(z,zt,zn,f+r,sf); I *zs=AS(z)+f; DO(r, zs[i]=s[i];);}  // obsolete ICPY(f+AS(z),s,r);
+  }
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   av=CAV(a); wv=CAV(w); zv=CAV(z);   // point to the data
   // Call the action routines: 
@@ -742,7 +758,7 @@ static A jtva2(J jt,A a,A w,C id){A z;B b,c,sp=0;C*av,*wv,*zv;I acn,acr,af,ak,an
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
  // do overflow recovery in-place
- R NEVM<jt->jerr?(jt->rank=oq,va2(a,w,id)):0;
+ R NEVM<jt->jerr?(jt->rank=oq,va2(a,w,self)):0;
 }    /* scalar fn primitive and f"r main control */
 
 /*
@@ -887,7 +903,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,cv,cvf,m
   if(at&B01&&wt&B01&&1==n&&(0==zn%SZI||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
    if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R sumattymes(a,w,self);
-   if(!ar||!wr){  // if either argument is atomic, apply the distributive propoerty to save multiplies
+   if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
   }}

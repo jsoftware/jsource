@@ -312,7 +312,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,cv,d,k,kc,m,r,t;V*v;VF ado;
  // run it.
  //
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
- if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if dissimilar types
+ if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
   RZ(var(id,p,p,t,t,&ado,&cv)); // analyze the u operand
   ASSERTSYS(ado,"ofxassoc");

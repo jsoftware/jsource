@@ -621,7 +621,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  ASSERT(n==IC(a),EVLENGTH);
 
  // *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
- void *av=VAV(a);  // point to the start of the fret data
+ void *av=voidAV(a);  // point to the start of the fret data
  void *fret=(C*)av+ak*((n-1)&(pfx-1));  // point to the fret
  // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
  I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL

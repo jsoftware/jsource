@@ -521,7 +521,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  // for it, and return.
  if(jt->jerr){
   switch(VARCASE(jt->jerr,id)){
-   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled nternal error should not occur.  Force error out
+   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled internal error should not occur.  Force error out
    case VARCASE(EWIMAG,CCIRCLE ): *ado=(VF)cirZZ;   *cv=VZ+VZZ+VRD; break;
    case VARCASE(EWIMAG,CEXP    ): *ado=(VF)powZZ;   *cv=VZ+VZZ+VRD; break;
    case VARCASE(EWIRR ,CBANG   ): *ado=(VF)binDD;   *cv=VD+VDD;     break;
@@ -605,8 +605,8 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,an,ar,*as,at,cv,f,m,
-     mf,n,nf,*oq,q,r,*s,*sf,t,wcn,wcr,wf,wk,wn,wr,*ws,wt,zcn,zk,zn,zt;VF ado;
+static A jtva2(J jt,A a,A w,A self){A z;I acn,wcn,flag,b,c;C*av,*wv,*zv;I acr,wcr,af,ak,an,ar,*as,at,cv,f,m,
+     mf,n,nf,*oq,r,*s,*sf,t,wf,wk,wn,wr,*ws,wt,zcn,zk,zn,zt;VF ado;
  RZ(a&&w);F2PREFIP;
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a);   // #,x  #$x  address of $x   type of x
  wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(w);   // #,y  #$y  address of $y   type of y
@@ -622,6 +622,7 @@ static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,
   at=(SPARSE&at)?DTYPE(at):at;
   wt=(SPARSE&wt)?DTYPE(wt):wt;
  }
+
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
  // We detect agreement error before domain error
  oq=jt->rank;  // save original rank before we change it, in case we have to restart the operation
@@ -632,7 +633,12 @@ static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,
   b=ar<=wr; zn=b?wn:an; m=b?an:wn; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /*n=m?zn/m:0;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
   DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
   c=2;  // flag to indicate 'no rank specified'
- }else{
+  flag+=FLAGNORANK;  // indicate no rank specified
+  // Extract zt, the type of the result, and t, the type to use for the arguments
+  // computation, and cv, the flags indicating the types selected for the arguments and the result
+  // Must do this after agreement test (could suppress the ASSERT in var)
+  RZ(var(FAV(self)->id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
+ }else{I q;
   // Here, a rank was specified.
   r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
   r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
@@ -643,33 +649,15 @@ static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,
   // if the frames don't agree, that's always an agreement error
 // obsolete  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
   c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
-  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; s=b?ws+wf:as+af; n=m?zcn/m:0;   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
-    // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
   DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
- }
- if(FAV(self)->id==CEXP&&((-(wn^1)|(wt<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
- // computation, and cv, the flags indicating the types selected for the arguments and the result.
- // Extract zt, the type of the result, and t, the type to use for the arguments
- RZ(var(FAV(self)->id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
- // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
- // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
- // might fail because the type in t is incompatible with the actual type in a.  t is rare.
- if(t&&(((-(flag&FLAGSPARSE))|(an-1)|(wn-1))>=0)){B xn = !!(t&XNUM);  // t not 0, and none of  sparse, an==0, wn==0
-  // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
-  // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.
-  if(TYPESNE(t,at)){RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));jtinplace = (J)((I)jtinplace | JTINPLACEA);}
-  if(TYPESNE(t,wt)){RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));jtinplace = (J)((I)jtinplace | JTINPLACEW);}
- }
- // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
- // rank, type, etc. using the original input block.  That's OK.
-
- // finish up the computation of sizes.  We have to defer this till after var() because
- // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
- // so we have to RE when we call them
- if(flag&FLAGSPARSE){if(c==2)af=wf=0, acr=ar, wcr=wr; z=vasp(a,w,FAV(self)->id,ado,cv,t,zt,af,acr,wf,wcr,f,r); if(!jt->jerr)R z;}  // handle sparse srrays separately
- else{
-   // Not sparse.  If rank given, calculate the numbers of loops to do
-  if(c!=2) {  // if rank was given initially...
+  b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; I shortr=b?acr:wcr; I longf=b?wf:af; s=b?ws:as; s+=longf; PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
+    // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
+  flag+=2*c+b;  // install flags indicating frame and cell sizes
+  // Extract zt, the type of the result, and t, the type to use for the arguments
+  // computation, and cv, the flags indicating the types selected for the arguments and the result
+  // Must do this after agreement test (could suppress the ASSERT in var)
+  RZ(var(FAV(self)->id,a,w,at,wt,&ado,&cv)); zt=rtype(cv); t=atype(cv);
+  if(!(flag&FLAGSPARSE)){  // This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
    PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
    RE(zn=mult(mf,mult(nf,zcn)));  // zn=total # result atoms  (only if non-sparse)
    // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
@@ -677,10 +665,35 @@ static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,
    // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
    DO(MIN(acr,wcr), ASSERT(as[af+i]==ws[wf+i],EVLENGTH);)
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-   // if looping required, calculate the strides for input & output
-   if((mf|nf)>1){zk=zcn*bp(zt); ak=acn*bp(AT(a)); wk=wcn*bp(AT(w));}//else {ak=wk=zk=0;}
+   // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
+   {zk=zcn*bp(zt); ak=acn*bp(AT(a)); wk=wcn*bp(AT(w));}//else {ak=wk=zk=0;}
    // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
   }
+ }
+
+ // Special case of x ^ 0.5.  We know there was no forced conversion on ^ .  Bugs: this does not pass the rank into sqroot, and loses frame of w, if it has any
+ if(FAV(self)->id==CEXP&&((-(wn^1)|(wt<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
+ // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
+ // rank, type, etc. using the original input block.  That's OK.
+
+ // finish up the computation of sizes.  We have to defer this till after var() because
+ // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
+ // so we have to RE when we call them
+ if(!(flag&FLAGSPARSE)){
+  // Not sparse.
+
+  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
+  // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
+  // might fail because the type in t is incompatible with the actual type in a.  t is rare.
+  //
+  // Because of the priority of errors we mustn't check the type until we have verified agreement above
+  if(t&&(((an-1)|(wn-1))>=0)){B xn = !!(t&XNUM);  // t not 0, and none of  sparse, an==0, wn==0
+   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
+   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
+   if(TYPESNE(t,at)){RZ(a=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));jtinplace = (J)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
+   if(TYPESNE(t,wt)){RZ(w=xn?xcvt((cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));jtinplace = (J)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
+  }
+
   // Allocate a result area of the right type, and copy in its cell-shape after the frame
   // If an argument can be overwritten, use it rather than allocating a new one
   // Argument can be overwritten if: action routine allows it; flagged in jtinplace; usecount 1 or zombie; same # atoms as result; atoms same size as in result;
@@ -753,7 +766,7 @@ static A jtva2(J jt,A a,A w,A self){A z;I flag,b,c;C*av,*wv,*zv;I acn,acr,af,ak,
    RESETERR
    R zz;  // Return the result after overflow has been corrected
   }
- }
+ }else{if(c==2)af=wf=0, acr=ar, wcr=wr; z=vasp(a,w,FAV(self)->id,ado,cv,t,zt,af,acr,wf,wcr,f,r); if(!jt->jerr)R z;}  // handle sparse arrays separately
  // If we got an internal-only error during execution of the verb, restart to see if it's
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't

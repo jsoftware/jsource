@@ -295,7 +295,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "inverse" */
 
-static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,cv,d,k,kc,m,r,t;V*v;VF ado;
+static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=VAV(self)->f; x=VAV(f)->f; v=VAV(x); id=CBDOT==v->id?(C)*AV(v->f):v->id;
@@ -314,11 +314,12 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,cv,d,k,kc,m,r,t;V*v;VF ado;
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
  if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
-  RZ(var(id,p,p,t,t,&ado,&cv)); // analyze the u operand
-  ASSERTSYS(ado,"ofxassoc");
+// obsolete  adocv=var(id,p,p,t,t,&ado,&cv)); // analyze the u operand
+  adocv=var(x,t,t); // analyze the u operand
+  ASSERTSYS(adocv.f,"ofxassoc");
   GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
-  if(1<d)ado(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */
+  if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)

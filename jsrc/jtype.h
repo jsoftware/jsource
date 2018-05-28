@@ -143,7 +143,7 @@ typedef I SI;
 #define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
-#define NAV(x)          ((NM*)((C*)(x)+AK(x)))  /* name                    */
+#define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */
@@ -628,7 +628,8 @@ typedef struct{
 
 
 
-typedef struct {AF f1,f2;A f,g,h;I flag; UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id;} V;
+typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id;} V;
+// the localuse field is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only
 
 #define ID(f)           (f&&FUNC&AT(f)?VAV(f)->id:C0)
 #define VFLAGNONE 0L
@@ -707,3 +708,6 @@ typedef struct {
  A a;  // pointer to block
  I t;  // token number for this block
 } PSTK;
+
+// Info for calling an atomic verb
+typedef struct {VF f;I cv;} VA2;

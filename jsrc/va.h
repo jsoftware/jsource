@@ -3,7 +3,6 @@
 /*                                                                         */
 /* Verbs: Macros and Defined Constants for Atomic (Scalar) Verbs           */
 
-typedef struct {VF f;I cv;} VA2;
 typedef struct {VA2 p2[13];VA2 pins[7];VA2 ppfx[7];VA2 psfx[7];} VA;
 typedef struct {VA2 p1[6];} UA;
 

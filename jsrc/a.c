@@ -63,7 +63,10 @@ F1(jtbdot){A b,h=0;I j,n,*v;
   RZ(h=cant2(IX(AR(w)),from(w,b)));
   R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, VFLAGNONE, RMAX,0L,0L);
  }else switch(j){
-  default: ASSERT(0,EVNONCE);
+  case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+  case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+  case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+#if 0 // obsolete
   case 16: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
   case 17: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0001, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
   case 18: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0010, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
@@ -80,10 +83,14 @@ F1(jtbdot){A b,h=0;I j,n,*v;
   case 29: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1101, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
   case 30: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1110, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
   case 31: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1111, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-  case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-  case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-}}
+  default: ASSERT(0,EVNONCE);
+#else
+  // The code uses a VERB with id CBDOT to stand for the derived verb of m b. .  This is used for spellout and for inverses, so we retain it.
+  // We copy the other information from the verb that executes the function.  This contains pointers to the routines, and to the function table
+  default: {A z=ca(ds(j)); RZ(z); FAV(z)->f=w; FAV(z)->id=CBDOT; RETF(z);}
+#endif
+ }
+}
 
 
 /* The h parameter in self for u M.                 */

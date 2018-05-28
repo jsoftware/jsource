@@ -30,6 +30,7 @@ static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->id=(C)id;                  /* spelling         */
  v->flag=(UI4)flag;              // flags
  v->flag2=(UI4)(id>>8);
+ va2primsetup(z);  // install info, if any, needed by va2
  ds(id)=z;             /* other fields are zeroed in ga() */
  R 1;
 }
@@ -44,22 +45,22 @@ B jtpinit(J jt){A t;C*s;
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
  /*  =: */  GAT(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
 
- /*  bw */  pdef(CBW0000, VERB, 0,  jtbitwise0000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0001, VERB, 0,  jtbitwise0001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0010, VERB, 0,  jtbitwise0010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0011, VERB, 0,  jtbitwise0011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0100, VERB, 0,  jtbitwise0100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0101, VERB, 0,  jtbitwise0101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0110, VERB, 0,  jtbitwise0110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW0111, VERB, 0,  jtbitwise0111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1000, VERB, 0,  jtbitwise1000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1001, VERB, 0,  jtbitwise1001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1010, VERB, 0,  jtbitwise1011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1011, VERB, 0,  jtbitwise1011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1100, VERB, 0,  jtbitwise1100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1101, VERB, 0,  jtbitwise1101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1110, VERB, 0,  jtbitwise1110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  bw */  pdef(CBW1111, VERB, 0,  jtbitwise1111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0000, VERB, jtbitwise1,  jtbitwise0000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0001, VERB, jtbitwise1,  jtbitwise0001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0010, VERB, jtbitwise1,  jtbitwise0010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0011, VERB, jtbitwise1,  jtbitwise0011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0100, VERB, jtbitwise1,  jtbitwise0100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0101, VERB, jtbitwise1,  jtbitwise0101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0110, VERB, jtbitwise1,  jtbitwise0110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW0111, VERB, jtbitwise1,  jtbitwise0111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1000, VERB, jtbitwise1,  jtbitwise1000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1001, VERB, jtbitwise1,  jtbitwise1001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1010, VERB, jtbitwise1,  jtbitwise1010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1011, VERB, jtbitwise1,  jtbitwise1011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1100, VERB, jtbitwise1,  jtbitwise1100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1101, VERB, jtbitwise1,  jtbitwise1101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1110, VERB, jtbitwise1,  jtbitwise1110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
+ /*  bw */  pdef(CBW1111, VERB, jtbitwise1,  jtbitwise1111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
  /*  =  */  pdef(CEQ,     VERB, jtsclass,  jteq,     RMAX,0,   0   ,VASGSAFE|VIRS2|VINPLACEOK2);
  /*  =. */       /* see above */
  /*  =: */       /* see above */

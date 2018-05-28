@@ -837,7 +837,7 @@ extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
 extern C        jtvaid(J,A);
 extern void     jtvains(J,C,I,VF*,I*);
 extern void     jtvapfx(J,C,I,VF*,I*);
-extern B        jtvar(J,C,A,A,I,I,VF*,I*);
+extern VA2      jtvar(J,A,I,I);
 extern void     jtvasfx(J,C,I,VF*,I*);
 extern A        jtvasp(J,A,A,C,VF,I,I,I,I,I,I,I,I,I);
 extern B        jtvc1(J,I,US*);
@@ -886,6 +886,7 @@ extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
 extern D        tod(void);
+extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);
 

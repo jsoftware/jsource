@@ -401,82 +401,6 @@ void va2primsetup(A w){
  FAV(w)->localuse=(xlatedid?&va[xlatedid]:0);  // point to the line, or 0 if invalid
 }
 
-static A jtva2(J,AD* RESTRICT,AD* RESTRICT,AD* RESTRICT);
-
-// If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w);
-#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT)))R f(jt,a,w);
-#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op);
-#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT+LIT+C2T+C4T)))R f(jt,a,w,op);
-#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w)
-#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;}
-
-// These are the entry points for the individual verbs.  They pick up the verb-name
-// and transfer to jtva2 which does the work
-
-F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R va2(a,w,ds(16));}
-F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R va2(a,w,ds(17));}
-F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R va2(a,w,ds(18));}
-F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R va2(a,w,ds(19));}
-
-F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R va2(a,w,ds(20));}
-F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R va2(a,w,ds(21));}
-F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R va2(a,w,ds(22));}
-F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R va2(a,w,ds(23));}
-
-F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R va2(a,w,ds(24));}
-F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R va2(a,w,ds(25));}
-F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R va2(a,w,ds(26));}
-F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R va2(a,w,ds(27));}
-
-F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R va2(a,w,ds(28));}
-F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R va2(a,w,ds(29));}
-F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R va2(a,w,ds(30));}
-F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R va2(a,w,ds(31));}
-
-F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
-F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
-F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
-
-F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,ds(CEQ     ));}
-F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,ds(CLT     ));}
-F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,ds(CMIN    ));}
-F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,ds(CLE     ));}
-F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,ds(CGT     ));}
-F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,ds(CMAX    ));}
-F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,ds(CGE     ));}
-F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,ds(CPLUS   ));}
-F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,ds(CPLUSDOT));}
-F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,ds(CPLUSCO ));}
-F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,ds(CSTAR   ));}
-F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,ds(CSTARDOT));}
-F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO ));}
-F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS  ));}
-F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV    ));}
-F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}
-F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,ds(CNE     ));}
-F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG   ));}
-F2(jtcircle ){R va2(a,w,ds(CCIRCLE ));}
-F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE));}
-
-
-// These are the unary ops that are implemented using a canned argument
-
-// Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
-#define IPSHIFTWA (jt = (J)(((I)jt+JTINPLACEW)&-JTINPLACEA))
-
-F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(onei,w);}
-F1(jtnegate){R minus(zeroi,  w);}
-F1(jtdecrem){IPSHIFTWA; R minus(w,     onei);}
-F1(jtincrem){R plus(onei,   w);}
-F1(jtduble ){R tymes(num[2],w);}
-F1(jtsquare){R tymes(w,     w);}   // leave inplaceable in w only
-F1(jtrecip ){R divide(onei,   w);}
-F1(jthalve ){IPSHIFTWA; R divide(w,     num[2]);}
-
-static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
-static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
-
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
  if(cv&VRD&&!(t&FL) )R pcvt(FL,w);
@@ -518,173 +442,11 @@ VAF(jtvasfx,psfx, plussfxO,minussfxO,tymessfxO)
 // entry 10 for XNUM, 11 for some RAT 
 static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 
-// Analyze the verb and arguments and come up with *ado, address of the routine to handle one
-// list of arguments producing a list of results; and *cv, the conversion control which specifies
-// the precision inputs must be converted to, and what the result type will be.
-// The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
-// result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
-#if 0
-// Returned value is 0 for failure, 1 for success
-B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
- // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
- // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
- // for it, and return.
- if(jt->jerr){
-  switch(VARCASE(jt->jerr,id)){
-   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled internal error should not occur.  Force error out
-   case VARCASE(EWIMAG,CCIRCLE ): *ado=(VF)cirZZ;   *cv=VZ+VZZ+VRD; break;
-   case VARCASE(EWIMAG,CEXP    ): *ado=(VF)powZZ;   *cv=VZ+VZZ+VRD; break;
-   case VARCASE(EWIRR ,CBANG   ): *ado=(VF)binDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWIRR ,CEXP    ): *ado=(VF)powDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWRAT ,CDIV    ): *ado=(VF)divQQ;   *cv=VQ+VQQ;     break;
-   case VARCASE(EWRAT ,CEXP    ): *ado=(VF)powQQ;   *cv=VQ+VQQ;     break;
-   case VARCASE(EWDIV0,CDIV    ): *ado=(VF)divDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS):
-    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOVIP+EWOVIPMINUSII  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSBI  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSIB  ,CMINUS):
-    *ado=(VF)minusIO; *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOVIP+EWOVIPMULII,CSTAR): *ado=(VF)tymesIO; *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
-   case VARCASE(EWOV  ,CSTARDOT): *ado=(VF)lcmIO;   *cv=VD+VII;     break;
-   case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD+VIP;     break;
-  }
-  RESETERR;
- }else if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
-  // Normal case where we are not retrying: here for numeric arguments
-  // vaptr converts the character pseudocode into an entry in va;
-  // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
-  // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
-  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
-  // [20-26] for verb\, and [27-33] for verb\.
-  if(t<CMPX) {
-   // Here for the fast and important case, where the arguments are both B01/INT/FL
-   // The index into va is atype*3 + wtype, calculated sneakily
-   p = &va[vaptr[(UC)id]].p2[((at>>1)+((at+wt)>>2))&(CMPX-1)];
-   *cv = p->cv;
-   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
-  } else {
-   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
-   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
-   // the type to use
-   p = &va[vaptr[(UC)id]].p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
-   x = p->cv;
-   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
-   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
-   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
-   if((t&FL)&&!(x&(VBB|VII|VDD|VZZ))){x = (x&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
-   *cv = x;
-  }
-  *ado = p->f;   // finish getting the output values - cv was done above
- }else{
-  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-  b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-  {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
-  {RELORIGINBR(wrel,w); jt->relw=wrel;}
-  switch(id){
-    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
-   case CEQ: *ado=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
-                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
-                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
-                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
-    // similarly for ~:
-   case CNE: *ado=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
-                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
-                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
-                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
-   default:
-    // If not = ~:, it had better be a symbol operation.
-    ASSERT(at&SBT&&wt&SBT,EVDOMAIN);
-    p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
-    ASSERT(p->f,EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
-    *ado=p->f; *cv=p->cv;  // return the values read
-  }
- }
- R 1;
-}    /* function and control for rank */
-#else
-VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
- // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
- // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
- // for it, and return.
- if(!jt->jerr){
-  VA *vainfo=(VA*)FAV(self)->localuse;  // extract table line from the primitive
-  if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
-  // Normal case where we are not retrying: here for numeric arguments
-  // vaptr converts the character pseudocode into an entry in va;
-  // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
-  // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
-  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
-  // [20-26] for verb\, and [27-33] for verb\.
-  if(t<CMPX) {
-   // Here for the fast and important case, where the arguments are both B01/INT/FL
-   // The index into va is atype*3 + wtype, calculated sneakily
-   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
-   R vainfo->p2[(UNSAFE(at)>>1)+((UNSAFE(at)+UNSAFE(wt))>>2)];
-  } else {
-   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
-   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
-   // the type to use
-   VA2 selva2 = vainfo->p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
-   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
-   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
-   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
-   if((t&FL)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
-   R selva2;
-  }
- }else{
-  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-  VA2 retva2;  // where we build the return value
-  UC id=(UC)FAV(self)->id;  // extract the 
-  b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-// obsolete   {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
-// obsolete   {RELORIGINBR(wrel,w); jt->relw=wrel;}   // relative no longer supported
-  switch(id){
-    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
-   case CEQ: retva2.f=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
-                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
-                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
-                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
-    // similarly for ~:
-   case CNE: retva2.f=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
-                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
-                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
-                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
-   default:
-    // If not = ~:, it had better be a symbol operation.
-    if(!(at&wt&SBT)){retva2.f=0; R retva2;}  // if not symbol, return not found
-    R vainfo->p2[12];  // fetch the 'symbol' entry and return it - it may be not found too
-  }
-  R retva2;  // mult be =/~:, return what we created
- }
- }else{VA2 retva2;
-  retva2.f=0;  // error if not filled in
-  switch((UC)FAV(self)->id){
-  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=cirZZ; retva2.cv=VZ+VZZ+VRD;} break;
-  case CEXP: if(jt->jerr==EWIMAG){retva2.f=powZZ; retva2.cv=VZ+VZZ+VRD;}
-             else if(jt->jerr==EWRAT){retva2.f=powQQ; retva2.cv=VQ+VQQ;}
-             else if(jt->jerr==EWIRR){retva2.f=powDD; retva2.cv=VD+VDD;} break;
-  case CBANG: if(jt->jerr==EWIRR){retva2.f=binDD; retva2.cv=VD+VDD;} break;
-  case CDIV: if(jt->jerr==EWRAT){retva2.f=divQQ; retva2.cv=VQ+VQQ;}
-             else if(jt->jerr==EWDIV0){retva2.f=divDD; retva2.cv=VD+VDD;} break;
-  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=plusIO; retva2.cv=VD+VII;} break;
-  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=minusIO; retva2.cv=VD+VII;} break;
-  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=tymesIO; retva2.cv=VD+VII;} break;
-  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=gcdIO; retva2.cv=VD+VII;} break;
-  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=lcmIO; retva2.cv=VD+VII;} break;
-  case CSTILE: if(jt->jerr==EWOV){retva2.f=remDD; retva2.cv=VD+VDD+VIP;} break;
-  }
-  if(retva2.f){RESETERR}else{if(jt->jerr>NEVM){RESETERR jsignal(EVSYSTEM);}}  // system error if unhandled exception.  Otherwise reset error only if we handled it
-  R retva2;
- }
-}    /* function and control for rank */
-#endif
 
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
-static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bc;I ak,f,m,
+ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bc;I ak,f,m,
      mf,n,nf,*oq,r,* RESTRICT s,*sf,t,wk,zcn,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
  I an = AN(a);
@@ -1096,3 +858,241 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  }
  RE(0); RETF(z);
 }    /* a f/@:g w */
+
+
+// If each argument has a single direct-numeric atom, go process through speedy-singleton code
+#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w);
+#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT)))R f(jt,a,w);
+#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op);
+#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT+LIT+C2T+C4T)))R f(jt,a,w,op);
+#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w)
+#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;}
+
+// These are the entry points for the individual verbs.  They pick up the verb-name
+// and transfer to jtva2 which does the work
+
+F2(jtbitwise0000){CHECKSSINGOP(a,w,jtssbitwise,0) R va2(a,w,ds(16));}
+F2(jtbitwise0001){CHECKSSINGOP(a,w,jtssbitwise,1) R va2(a,w,ds(17));}
+F2(jtbitwise0010){CHECKSSINGOP(a,w,jtssbitwise,2) R va2(a,w,ds(18));}
+F2(jtbitwise0011){CHECKSSINGOP(a,w,jtssbitwise,3) R va2(a,w,ds(19));}
+
+F2(jtbitwise0100){CHECKSSINGOP(a,w,jtssbitwise,4) R va2(a,w,ds(20));}
+F2(jtbitwise0101){CHECKSSINGOP(a,w,jtssbitwise,5) R va2(a,w,ds(21));}
+F2(jtbitwise0110){CHECKSSINGOP(a,w,jtssbitwise,6) R va2(a,w,ds(22));}
+F2(jtbitwise0111){CHECKSSINGOP(a,w,jtssbitwise,7) R va2(a,w,ds(23));}
+
+F2(jtbitwise1000){CHECKSSINGOP(a,w,jtssbitwise,8) R va2(a,w,ds(24));}
+F2(jtbitwise1001){CHECKSSINGOP(a,w,jtssbitwise,9) R va2(a,w,ds(25));}
+F2(jtbitwise1010){CHECKSSINGOP(a,w,jtssbitwise,10) R va2(a,w,ds(26));}
+F2(jtbitwise1011){CHECKSSINGOP(a,w,jtssbitwise,11) R va2(a,w,ds(27));}
+
+F2(jtbitwise1100){CHECKSSINGOP(a,w,jtssbitwise,12) R va2(a,w,ds(28));}
+F2(jtbitwise1101){CHECKSSINGOP(a,w,jtssbitwise,13) R va2(a,w,ds(29));}
+F2(jtbitwise1110){CHECKSSINGOP(a,w,jtssbitwise,14) R va2(a,w,ds(30));}
+F2(jtbitwise1111){CHECKSSINGOP(a,w,jtssbitwise,15) R va2(a,w,ds(31));}
+
+F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
+F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
+F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
+
+F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,ds(CEQ     ));}
+F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,ds(CLT     ));}
+F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,ds(CMIN    ));}
+F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,ds(CLE     ));}
+F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,ds(CGT     ));}
+F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,ds(CMAX    ));}
+F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,ds(CGE     ));}
+F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,ds(CPLUS   ));}
+F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,ds(CPLUSDOT));}
+F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,ds(CPLUSCO ));}
+F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,ds(CSTAR   ));}
+F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,ds(CSTARDOT));}
+F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO ));}
+F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS  ));}
+F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV    ));}
+F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}
+F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,ds(CNE     ));}
+F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG   ));}
+F2(jtcircle ){R va2(a,w,ds(CCIRCLE ));}
+F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE));}
+
+
+// These are the unary ops that are implemented using a canned argument
+
+// Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
+#define IPSHIFTWA (jt = (J)(((I)jt+JTINPLACEW)&-JTINPLACEA))
+
+F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(onei,w);}
+F1(jtnegate){R minus(zeroi,  w);}
+F1(jtdecrem){IPSHIFTWA; R minus(w,     onei);}
+F1(jtincrem){R plus(onei,   w);}
+F1(jtduble ){R tymes(num[2],w);}
+F1(jtsquare){R tymes(w,     w);}   // leave inplaceable in w only
+F1(jtrecip ){R divide(onei,   w);}
+F1(jthalve ){IPSHIFTWA; R divide(w,     num[2]);}
+
+static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
+static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
+
+// Analyze the verb and arguments and come up with *ado, address of the routine to handle one
+// list of arguments producing a list of results; and *cv, the conversion control which specifies
+// the precision inputs must be converted to, and what the result type will be.
+// The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
+// result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
+#if 0
+// Returned value is 0 for failure, 1 for success
+B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
+ // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
+ // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
+ // for it, and return.
+ if(jt->jerr){
+  switch(VARCASE(jt->jerr,id)){
+   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled internal error should not occur.  Force error out
+   case VARCASE(EWIMAG,CCIRCLE ): *ado=(VF)cirZZ;   *cv=VZ+VZZ+VRD; break;
+   case VARCASE(EWIMAG,CEXP    ): *ado=(VF)powZZ;   *cv=VZ+VZZ+VRD; break;
+   case VARCASE(EWIRR ,CBANG   ): *ado=(VF)binDD;   *cv=VD+VDD;     break;
+   case VARCASE(EWIRR ,CEXP    ): *ado=(VF)powDD;   *cv=VD+VDD;     break;
+   case VARCASE(EWRAT ,CDIV    ): *ado=(VF)divQQ;   *cv=VQ+VQQ;     break;
+   case VARCASE(EWRAT ,CEXP    ): *ado=(VF)powQQ;   *cv=VQ+VQQ;     break;
+   case VARCASE(EWDIV0,CDIV    ): *ado=(VF)divDD;   *cv=VD+VDD;     break;
+   case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS):
+    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // used only for sparse arrays
+   case VARCASE(EWOVIP+EWOVIPMINUSII  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSBI  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSIB  ,CMINUS):
+    *ado=(VF)minusIO; *cv=VD+VII;     break;   // used only for sparse arrays
+   case VARCASE(EWOVIP+EWOVIPMULII,CSTAR): *ado=(VF)tymesIO; *cv=VD+VII;     break;   // used only for sparse arrays
+   case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
+   case VARCASE(EWOV  ,CSTARDOT): *ado=(VF)lcmIO;   *cv=VD+VII;     break;
+   case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD+VIP;     break;
+  }
+  RESETERR;
+ }else if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
+  // Normal case where we are not retrying: here for numeric arguments
+  // vaptr converts the character pseudocode into an entry in va;
+  // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
+  // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
+  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
+  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
+  // [20-26] for verb\, and [27-33] for verb\.
+  if(t<CMPX) {
+   // Here for the fast and important case, where the arguments are both B01/INT/FL
+   // The index into va is atype*3 + wtype, calculated sneakily
+   p = &va[vaptr[(UC)id]].p2[((at>>1)+((at+wt)>>2))&(CMPX-1)];
+   *cv = p->cv;
+   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
+  } else {
+   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
+   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
+   // the type to use
+   p = &va[vaptr[(UC)id]].p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
+   x = p->cv;
+   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
+   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
+   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
+   if((t&FL)&&!(x&(VBB|VII|VDD|VZZ))){x = (x&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
+   *cv = x;
+  }
+  *ado = p->f;   // finish getting the output values - cv was done above
+ }else{
+  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
+  b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
+  {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
+  {RELORIGINBR(wrel,w); jt->relw=wrel;}
+  switch(id){
+    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
+   case CEQ: *ado=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
+                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
+                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
+                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
+    // similarly for ~:
+   case CNE: *ado=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
+                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
+                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
+                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
+   default:
+    // If not = ~:, it had better be a symbol operation.
+    ASSERT(at&SBT&&wt&SBT,EVDOMAIN);
+    p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
+    ASSERT(p->f,EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
+    *ado=p->f; *cv=p->cv;  // return the values read
+  }
+ }
+ R 1;
+}    /* function and control for rank */
+#else
+VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
+ // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
+ // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
+ // for it, and return.
+ if(!jt->jerr){
+  VA *vainfo=(VA*)FAV(self)->localuse;  // extract table line from the primitive
+  if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
+  // Normal case where we are not retrying: here for numeric arguments
+  // vaptr converts the character pseudocode into an entry in va;
+  // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
+  // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
+  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
+  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
+  // [20-26] for verb\, and [27-33] for verb\.
+  if(t<CMPX) {
+   // Here for the fast and important case, where the arguments are both B01/INT/FL
+   // The index into va is atype*3 + wtype, calculated sneakily
+   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
+   R vainfo->p2[(UNSAFE(at)>>1)+((UNSAFE(at)+UNSAFE(wt))>>2)];
+  } else {
+   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
+   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
+   // the type to use
+   VA2 selva2 = vainfo->p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
+   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
+   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
+   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
+   if((t&FL)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
+   R selva2;
+  }
+ }else{
+  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
+  VA2 retva2;  // where we build the return value
+  UC id=(UC)FAV(self)->id;  // extract the 
+  b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
+// obsolete   {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
+// obsolete   {RELORIGINBR(wrel,w); jt->relw=wrel;}   // relative no longer supported
+  switch(id){
+    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
+   case CEQ: retva2.f=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
+                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
+                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
+                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
+    // similarly for ~:
+   case CNE: retva2.f=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
+                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
+                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
+                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
+   default:
+    // If not = ~:, it had better be a symbol operation.
+    if(!(at&wt&SBT)){retva2.f=0; R retva2;}  // if not symbol, return not found
+    R vainfo->p2[12];  // fetch the 'symbol' entry and return it - it may be not found too
+  }
+  R retva2;  // mult be =/~:, return what we created
+ }
+ }else{VA2 retva2;
+  retva2.f=0;  // error if not filled in
+  switch((UC)FAV(self)->id){
+  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=cirZZ; retva2.cv=VZ+VZZ+VRD;} break;
+  case CEXP: if(jt->jerr==EWIMAG){retva2.f=powZZ; retva2.cv=VZ+VZZ+VRD;}
+             else if(jt->jerr==EWRAT){retva2.f=powQQ; retva2.cv=VQ+VQQ;}
+             else if(jt->jerr==EWIRR){retva2.f=powDD; retva2.cv=VD+VDD;} break;
+  case CBANG: if(jt->jerr==EWIRR){retva2.f=binDD; retva2.cv=VD+VDD;} break;
+  case CDIV: if(jt->jerr==EWRAT){retva2.f=divQQ; retva2.cv=VQ+VQQ;}
+             else if(jt->jerr==EWDIV0){retva2.f=divDD; retva2.cv=VD+VDD;} break;
+  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=plusIO; retva2.cv=VD+VII;} break;
+  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=minusIO; retva2.cv=VD+VII;} break;
+  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=tymesIO; retva2.cv=VD+VII;} break;
+  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=gcdIO; retva2.cv=VD+VII;} break;
+  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=lcmIO; retva2.cv=VD+VII;} break;
+  case CSTILE: if(jt->jerr==EWOV){retva2.f=remDD; retva2.cv=VD+VDD+VIP;} break;
+  }
+  if(retva2.f){RESETERR}else{if(jt->jerr>NEVM){RESETERR jsignal(EVSYSTEM);}}  // system error if unhandled exception.  Otherwise reset error only if we handled it
+  R retva2;
+ }
+}    /* function and control for rank */
+#endif

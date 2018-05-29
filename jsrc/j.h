@@ -515,7 +515,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-#define PROD(result,length,ain) {I _i; if((_i=(length)-1)<0)result=1;else{result=*(ain);if(_i>0){I *_ain=(ain); do{result*=*++_ain;}while(--_i);}}}
+// obsolete #define PROD(result,length,ain) {I _i; if((_i=(length)-1)<0)result=1;else{result=*(ain);if(_i>0){I *_ain=(ain); do{result*=*++_ain;}while(--_i);}}}
+#define PROD(result,length,ain) {I _i; if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
 #define CPROD(t,z,x,a)if(t)PROD(z,x,a)else RE(z=prod(x,a))

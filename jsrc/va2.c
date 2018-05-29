@@ -730,7 +730,7 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ac
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
-// not needed    sf = 0;  // there is no frame: suppress copying the frame+rank, since we always copy the rank separately
+// obsolete not needed    sf = 0;  // there is no frame: suppress copying the frame+rank, since we always copy the rank separately
     bc=b;  // save the combined bc for loop control
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
@@ -783,22 +783,6 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ac
  if(jtinplace){   // if not sparse...
   // Not sparse.
 
-  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
-  // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
-  // might fail because the type in t is incompatible with the actual type in a.  t is rare.
-  //
-  // Because of the priority of errors we mustn't check the type until we have verified agreement above
-// obsolete  if(t&&(((an-1)|(wn-1))>=0)){  // t not 0, and none of  sparse, an==0, wn==0
-  if(t&&zn>0){  // t not 0, and none of  sparse, an==0, wn==0
-   // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
-   // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
-   if(TYPESNE(t,AT(a))){RZ(a=t&XNUM?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));jtinplace = (J)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
-   if(TYPESNE(t,AT(w))){RZ(w=t&XNUM?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));jtinplace = (J)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
-  }
-  // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
-  // rank, type, etc. using the original input block.  That's OK.
-
-  // Allocate a result area of the right type, and copy in its cell-shape after the frame
   // If an argument can be overwritten, use it rather than allocating a new one
   // Argument can be overwritten if: action routine allows it; flagged in jtinplace; usecount 1 or zombie; same # atoms as result; atoms same size as in result;
   // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
@@ -812,19 +796,46 @@ static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ac
   // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
   // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
 // obsolete   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
-  {I inplaceallow = ((I)jtinplace & (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1));  // qualify input flags based on routine result
+// less regs, more comp   {I inplaceallow = ((I)jtinplace & (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1));  // qualify input flags based on routine result
+  {I inplaceallow = (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));
+   
       // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
       // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
       // only the bottom 2 bits of inplaceallow are valid
+
+   // an,wn,ar,wr not used from here on
+
+   // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
+   // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
+   // might fail because the type in t is incompatible with the actual type in a.  t is rare.
+   //
+   // Because of the priority of errors we mustn't check the type until we have verified agreement above
+// obsolete  if(t&&(((an-1)|(wn-1))>=0)){  // t not 0, and none of  sparse, an==0, wn==0
+   if(t&&zn>0){  // t not 0, and the result is not empty
+    // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
+    // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
+    if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
+    if(TYPESNE(t,AT(w))){RZ(w=!(t&XNUM)?cvt(t,w):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
+   }  // the function call here inhibits register assignment to temporaries.  It might be better to do the conversion earlier, and defer the error
+      // until here.  We will have to look at the generated code when we can use all the registers
+   // acn, wcn are not used beyond this point
+   // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
+   // rank, type, etc. using the original input block.  That's OK.
+
+   inplaceallow &= (I)jtinplace;  // allow only blocks originally marked inplaceable
+  
+   // Allocate a result area of the right type, and copy in its cell-shape after the frame
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
-   if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
-   }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
+// more regs, less comp   if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
+// more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
+   if((inplaceallow&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
+   }else if((inplaceallow&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
    }else{GA(z,zt,zn,f+r,0); I * RESTRICT zs=AS(z); I i=f; while(--i>=0){zs[i]=sf[i];} while(--r>=0){zs[f+r]=s[r];}}; // obsolete ICPY(f+AS(z),s,r); the trick here is to prevent the compiler from calling memcpy.  Maybe write out the loop?
   }
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)R z;  // If the result is empty, the allocated area says it all
-  // ar, wr, an, wn, zn  ARE NOT USED FROM HERE ON
+  // zn  NOT USED FROM HERE ON
 
   // End of setup phase.  The execution phase:
 

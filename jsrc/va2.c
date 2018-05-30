@@ -442,15 +442,15 @@ VAF(jtvasfx,psfx, plussfxO,minussfxO,tymessfxO)
 // entry 10 for XNUM, 11 for some RAT 
 static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 
-
+extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
- static A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bc;I ak,f,m,
+A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bcip;I ak,f,m,
      mf,n,nf,*oq,r,* RESTRICT s,*sf,t,wk,zcn,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
- I an = AN(a);
- I wn = AN(w);
+#define an  AN(a)
+#define wn AN(w)
  {I at=AT(a);
   I wt=AT(w);
   // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
@@ -482,10 +482,13 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
  // We detect agreement error before domain error
  oq=jt->rank;  // save original rank before we change it, in case we have to restart the operation
  {I *as = AS(a); I *ws = AS(w);
-  if(!jt->rank){I b;
+  if(!jt->rank){I b;I ipa;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
 // obsolete  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
-   b=ar<=wr; zn=b?wn:an; m=b?an:wn; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /*n=m?zn/m:0;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
+   r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /* m=an+wn-zn;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
+// obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((((zn^an)|(ar^r))==0)*2 + (((zn^wn)|(wr^r))==0));  // inplaceability (see below)
+   ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((ar==r)*2 + (wr==r));  // inplaceability (see below)
+   bcip=ipa+8*b;  // save the combined bcip for loop control
    DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
 // obsolete    c=2;  // flag to indicate 'no rank specified'
    f = 0;  // no frame since we didn't have rank
@@ -493,13 +496,12 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
     // Non-sparse setup for copy loop, no rank
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
 // obsolete not needed    sf = 0;  // there is no frame: suppress copying the frame+rank, since we always copy the rank separately
-    bc=b;  // save the combined bc for loop control
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
     ak=ar; wk=wr; mf=0; nf=0;
    }
-  }else{I af,wf,acr,wcr,q,b,c;
+  }else{I af,wf,acr,wcr,q,b,c;I ipa;
    // Here, a rank was specified.  That means there must be a frame, according the to IRS rules
    r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
    r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
@@ -510,9 +512,11 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
    // if the frames don't agree, that's always an agreement error
  // obsolete  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
    c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
-   DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
    b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; I shortr=b?acr:wcr; I longf=b?wf:af; s=b?ws:as; s+=longf; PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
      // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
+   ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((ar==(f+r))*2 + (wr==(f+r)));  //  calc inplaceability - see below
+   bcip=ipa+c*4+8*b;  // save combined loop control
+   DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
     PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
 #ifdef DPMULD
@@ -520,6 +524,7 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
 #else
     RE(zn=mult(mf,mult(nf,zcn)));  // zn=total # result atoms  (only if non-sparse)
 #endif
+// obsolete     ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));  //  calc inplaceability - see below
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
@@ -528,7 +533,6 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     {zk=zcn*bp(zt); ak=acn*bp(AT(a)); wk=wcn*bp(AT(w));}//else {ak=wk=zk=0;}
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
-    bc=c*2+b;  // save combined loop control
    }else{ak=acr; wk=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }
  }
@@ -537,35 +541,13 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
  ASSERT(adocv.f,EVDOMAIN);
 
  // Special case of x ^ 0.5.  We know there was no forced conversion on ^ .  Bugs: this does not pass the rank into sqroot, and loses frame of w, if it has any
- if(FAV(self)->id==CEXP&&((-(wn^1)|(AT(w)<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
+ if(FAV(self)->id==CEXP&&((-(AN(w)^1)|(AT(w)<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
 
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
  // so we have to RE when we call them
  if(jtinplace){   // if not sparse...
   // Not sparse.
-
-  // If an argument can be overwritten, use it rather than allocating a new one
-  // Argument can be overwritten if: action routine allows it; flagged in jtinplace; usecount 1 or zombie; same # atoms as result; atoms same size as in result;
-  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
-  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
-  // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
-  // just not likely to be used reflexively)
-  // 
-  // If the # atoms is same as result, each atom must be read only once & can be written after it has been read
-  // This holds true even if the atoms have different types, as long as they have the same size (this is encoded in the IPOK bits of cv)
-  // use the inplacing from the action routine to qualify the caller's inplacing, EXCEPT
-  // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
-  // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
-// obsolete   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
-// less regs, more comp   {I inplaceallow = ((I)jtinplace & (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1));  // qualify input flags based on routine result
-  {I inplaceallow = (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));
-   
-      // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
-      // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
-      // only the bottom 2 bits of inplaceallow are valid
-
-   // an,wn,ar,wr not used from here on
 
    // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
    // Incompatible arguments were detected in var().  If there is an empty operand, skip conversions which
@@ -584,17 +566,37 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
    // From here on we have possibly changed the address of a and w, but we are still using shape pointers,
    // rank, type, etc. using the original input block.  That's OK.
 
-   inplaceallow &= (I)jtinplace;  // allow only blocks originally marked inplaceable
+// less regs, more comp    inplaceallow &= (I)jtinplace;  // allow only blocks originally marked inplaceable
   
    // Allocate a result area of the right type, and copy in its cell-shape after the frame
+  // If an argument can be overwritten, use it rather than allocating a new one
+  // Argument can be overwritten if: action routine allows it; flagged in jtinplace; usecount 1 or zombie; rank equals (length of longer frame)+(length of longer cell)
+  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
+  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
+  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
+  // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are
+  // just not likely to be used reflexively)
+  // 
+  // If the # atoms is same as result, each atom must be read only once & can be written after it has been read
+  // This holds true even if the atoms have different types, as long as they have the same size (this is encoded in the IPOK bits of cv)
+  // use the inplacing from the action routine to qualify the caller's inplacing, EXCEPT
+  // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
+  // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
+// obsolete   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
+// obsolete   {I inplaceallow = ((I)jtinplace & (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1));  // qualify input flags based on routine result
+// less regs, more comp   {I inplaceallow = (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));
+   
+      // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
+      // (mf|nf)>1 is a better test than f!=0, because it handles frame of all 1s, but it's slower in the normal case
+      // only the bottom 2 bits of inplaceallow are valid
+
    // Establish the result area z; if we're reusing an argument, make sure the type is updated to the result type
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
-// more regs, less comp   if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
+// more regs, less comp    if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
 // more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
-   if((inplaceallow&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
-   }else if((inplaceallow&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
-   }else{GA(z,zt,zn,f+r,0); I * RESTRICT zs=AS(z); I i=f; while(--i>=0){zs[i]=sf[i];} while(--r>=0){zs[f+r]=s[r];}}; // obsolete ICPY(f+AS(z),s,r); the trick here is to prevent the compiler from calling memcpy.  Maybe write out the loop?
-  }
+  if((bcip&(I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
+  }else if((bcip&(I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
+  }else{GA(z,zt,zn,f+r,0); I * RESTRICT zs=AS(z); I i=f; while(--i>=0){zs[i]=sf[i];} while(--r>=0){zs[f+r]=s[r];}}; // obsolete ICPY(f+AS(z),s,r); the trick here is to prevent the compiler from calling memcpy.  Maybe write out the loop?
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -605,17 +607,17 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
    // Call the action routines: 
 #if 1  // register spills make this code faster.  Probably will change if r12-15 can be used
    // note: the compiler unrolls these call loops.  Would be nice to suppress that
-   if(1==nf){I i=mf; while(1){adocv.f(jt,bc&1,m,n,zv,av,wv); if(!--i)break; zv+=zk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
-   else if(bc&2){I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
-   else         {I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
+   if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zv,av,wv); if(!--i)break; zv+=zk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
+   else if(bcip&4){I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
+   else         {I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
 // obsolete    else      DO(mf, DO(nf, adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
 #else
    I wkm,wkn,akm,akn;
 // compbug   if(f) {  // increments are immaterial if there is no looping, and the increments are on the stack and therefore slow to calculate... and the compiler inits the variables anyway in VS13
-    wkm=wk, akn=ak; wkn=(bc<<(BW-2))>>(BW-1);   // wkn=111.111 iff wk increments with n (and therefore ak with m)
+    wkm=wk, akn=ak; wkn=(bcip<<(BW-1-2))>>(BW-1);   // wkn=111.111 iff wk increments with n (and therefore ak with m)
     akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
 // compbug    }
-   I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
+   I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
 #endif
   }
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
@@ -636,17 +638,17 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
     adocv.f=tymesIIO;  // multiply-repair routine
     {C *av=CAV(a); C *wv=CAV(w);
 #if 0  // for this rare case, use the shorter version
-     if(1==nf){I i=mf; while(1){adocv.f(jt,bc&1,m,n,zzv,av,wv); if(--i==0)break; zzv+=zzk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
-     else if(bc&2){I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zzv,av,wv); zzv+=zzk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
-     else         {I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zzv,av,wv); zzv+=zzk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
+     if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zzv,av,wv); if(--i==0)break; zzv+=zzk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
+     else if(bcip&4){I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zzv,av,wv); zzv+=zzk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
+     else         {I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zzv,av,wv); zzv+=zzk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
 // obsolete    else      DO(mf, DO(nf, adocv.f(jt,bc&1,m,n,zzv,av,wv); zzv+=zzk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
 #else
      I wkm,wkn,akm,akn;
 // compbug   if(f) {  // increments are immaterial if there is no looping, and the increments are on the stack and therefore slow to calculate... and the compiler inits the variables anyway in VS13
-      wkm=wk, akn=ak; wkn=(bc<<(BW-2))>>(BW-1);   // wkn=111.111 iff wk increments with n (and therefore ak with m)
+      wkm=wk, akn=ak; wkn=(bcip<<(BW-1-2))>>(BW-1);   // wkn=111.111 iff wk increments with n (and therefore ak with m)
       akm=akn&wkn; wkn&=wkm; wkm^=wkn; akn^=akm;  // if c, akm=ak/wkn=wk; else akn=ak/wkm=wk.  The other incr is 0
 // compbug    }
-     I im=mf; do{I in=nf; do{adocv.f(jt,bc&1,m,n,zzv,av,wv); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
+     I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zzv,av,wv); zzv+=zzk; av+=akn; wv +=wkn;}while(--in); if(!--im)break; av+=akm; wv +=wkm;}while(1);
 #endif
     }
    } else {I nipw;   // not multiply repair
@@ -669,7 +671,7 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
     // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
     // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
     {C *av, *zv=CAV(z);
-     if(nipw){av=CAV(w), ak=wk;}else{av=CAV(a);}  if(nipw==(bc>>1)){mf *= nf; nf = 1;} if(nipw==(bc&1)){m *= n; n = 1;}
+     if(nipw){av=CAV(w), ak=wk;}else{av=CAV(a);}  if(nipw==((bcip>>2)&1)){mf *= nf; nf = 1;} if(nipw==((bcip>>3)&1)){m *= n; n = 1;}
      // We have set up ado,nf,mf,nipw,m,n for the conversion.  Now call the repair routine.  n is # times to repeat a for each z, m*n is # atoms of z/zz
      DO(mf, DO(nf, adocv.f(jt,nipw,m,n,zzv,av,zv); zzv+=zzk; zv+=zk;); av+=ak;)  // use each cell of a (nf) times
     }
@@ -682,7 +684,9 @@ static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
  // do overflow recovery in-place
- R NEVM<jt->jerr?(jt->rank=oq,va2(a,w,self)):0;
+ R NEVM<jt->jerr?(jt->rank=oq,jtva2recur(jt,a,w,self)):0;
+#undef an
+#undef wn
 }    /* scalar fn primitive and f"r main control */
 
 /*
@@ -861,12 +865,12 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w);
-#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT)))R f(jt,a,w);
-#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w,op);
-#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL+SBT+LIT+C2T+C4T)))R f(jt,a,w,op);
-#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL)))R f(jt,a,w)
-#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&~(B01+INT+FL))){A z = f(jt,a,w); if(z)R z;}
+#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w);
+#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT))))R f(jt,a,w);
+#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w,op);
+#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT+LIT+C2T+C4T))))R f(jt,a,w,op);
+#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
+#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL)))){A z = f(jt,a,w); if(z)R z;}
 
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work

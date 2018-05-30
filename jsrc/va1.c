@@ -129,3 +129,5 @@ F1(jtlogar1){CHECKSSINGNZ(w,jtsslog) R va1(w,CLOG  );}
 F1(jtmag   ){CHECKSSING(w,jtssmag) R va1(w,CSTILE);}
 F1(jtfact  ){CHECKSSING(w,jtssfact) R va1(w,CBANG );}
 F1(jtpix   ){CHECKSSING(w,jtsspix) R XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL)?va1(w,CCIRCLE):tymes(pie,w);}
+
+extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self){R va2(a,w,self);}  // put in this module so compiler doesn't know it's recursive

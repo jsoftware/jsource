@@ -447,7 +447,7 @@ extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
 A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bcip;I ak,f,m,
-     mf,n,nf,*oq,r,* RESTRICT s,*sf,t,wk,zk,zn,zt;VA2 adocv;
+     mf,n,nf,*oq,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
 #define an AN(a)
 #define wn AN(w)
@@ -470,9 +470,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   }
 
   // Figure out the result type.  Don't signal the error from it yet, because domain has lower priority than agreement
-  // Extract zt, the type of the result, and t, the type to use for the arguments
-  // computation, and cv, the flags indicating the types selected for the arguments and the result
-  adocv=var(self,at,wt); zt=rtype(adocv.cv); t=atype(adocv.cv);
+  // Extract zt, the type of the result, and cv, the flags indicating the types selected for the arguments and the result
+  adocv=var(self,at,wt); zt=rtype(adocv.cv);
  }
 
  I ar = AR(a);
@@ -485,7 +484,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   if(!jt->rank){I b;I ipa;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
 // obsolete  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
-   r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; /* m=an+wn-zn;*/ PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
+   r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
 // obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((((zn^an)|(ar^r))==0)*2 + (((zn^wn)|(wr^r))==0));  // inplaceability (see below)
    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((ar==r)*2 + (wr==r));  // inplaceability (see below)
    bcip=ipa+8*b;  // save the combined bcip for loop control
@@ -555,7 +554,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    //
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
 // obsolete  if(t&&(((an-1)|(wn-1))>=0)){  // t not 0, and none of  sparse, an==0, wn==0
-   if(t&&zn>0){  // t not 0, and the result is not empty
+   if(adocv.cv&VARGMSK&&zn>0){I t=atype(adocv.cv);  // t not 0, and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
     if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
@@ -679,7 +678,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    RESETERR
    R zz;  // Return the result after overflow has been corrected
   }
- }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,t,zt,mf,ak,nf,wk,f,r); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
+ }else{z=vasp(a,w,FAV(self)->id,adocv.f,adocv.cv,atype(adocv.cv),zt,mf,ak,nf,wk,f,r); if(!jt->jerr)R z;}  // handle sparse arrays separately.  at this point ak/wk/mf/nf hold acr/wcr/af/wf
  // If we got an internal-only error during execution of the verb, restart to see if it's
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't

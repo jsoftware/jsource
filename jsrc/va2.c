@@ -447,9 +447,9 @@ extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
 A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bcip;I ak,f,m,
-     mf,n,nf,*oq,r,* RESTRICT s,*sf,t,wk,zcn,zk,zn,zt;VA2 adocv;
+     mf,n,nf,*oq,r,* RESTRICT s,*sf,t,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
-#define an  AN(a)
+#define an AN(a)
 #define wn AN(w)
  {I at=AT(a);
   I wt=AT(w);
@@ -501,7 +501,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
     ak=ar; wk=wr; mf=0; nf=0;
    }
-  }else{I af,wf,acr,wcr,q,b,c;I ipa;
+  }else{I af,wf,acr,wcr,q,b,c,zcn;I ipa;
    // Here, a rank was specified.  That means there must be a frame, according the to IRS rules
    r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
    r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
@@ -605,13 +605,13 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 
   {C *av=CAV(a); C *wv=CAV(w); C *zv=CAV(z);   // point to the data
    // Call the action routines: 
-#if 1  // register spills make this code faster.  Probably will change if r12-15 can be used
+#if 1  // register spills make this code faster.
    // note: the compiler unrolls these call loops.  Would be nice to suppress that
    if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zv,av,wv); if(!--i)break; zv+=zk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
    else if(bcip&4){I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
    else         {I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
 // obsolete    else      DO(mf, DO(nf, adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
-#else
+#else  // would be faster if all loop variables moved to registers
    I wkm,wkn,akm,akn;
 // compbug   if(f) {  // increments are immaterial if there is no looping, and the increments are on the stack and therefore slow to calculate... and the compiler inits the variables anyway in VS13
     wkm=wk, akn=ak; wkn=(bcip<<(BW-1-2))>>(BW-1);   // wkn=111.111 iff wk increments with n (and therefore ak with m)

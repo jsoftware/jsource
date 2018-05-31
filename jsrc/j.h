@@ -500,6 +500,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
 #define MCI(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // copy items of source
 #define MCIL(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // use when copy expected to bo long
+#define MCIS(dest,src,n) {I *_d=(dest); I *_s=(src); I *_e=_d+(n); while((I)_d+((n)>>(BW-1))!=(I)_e)*_d++=*_s++;}  // use for short copies.  n must not be negative
+#define MCISd(dest,src,n) {I *_s=(src); I *_e=dest+(n); while((I)dest+((n)>>(BW-1))!=(I)_e)*dest++=*_s++;}  // ... this version when d increments through the loop
+#define MCISs(dest,src,n) {I *_d=(dest); I *_e=_d+(n); while((I)_d+((n)>>(BW-1))!=(I)_e)*_d++=*src++;}  // ... this when s increments through the loop
+#define MCISds(dest,src,n) {I *_e=dest+(n); while((I)dest+((n)>>(BW-1))!=(I)_e)*dest++=*src++;}  // ...this when both
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
 #define NAN0            (_clearfp())

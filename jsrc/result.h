@@ -183,7 +183,7 @@ do{
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AS holds the actual size
-      GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; I *zzv=AS(zz)+zzwf, *zzcs=IAV(zzcellshape); DO(AS(zzcellshape)[0], zzcs[i]=zzv[i];);
+      GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; MCIS(IAV(zzcellshape),AS(zz)+zzwf,AR(zz)-zzwf);  /* scaf I *zzv=AS(zz)+zzwf, *zzcs=IAV(zzcellshape); DO(AS(zzcellshape)[0], zzcs[i]=zzv[i];); */
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }
     }while(1);
@@ -199,7 +199,7 @@ do{
     // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
     // But if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
-    if(AFLAG(z)&AFUNINCORPABLE){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); z=newz;}
+    if(AFLAG(z)&AFUNINCORPABLE){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); MCIS(AS(newz),AS(z),(I)AR(z)); /* scaf I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); */ z=newz;}
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.
    }
    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result

@@ -190,32 +190,37 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){PROLOG(0020);DECLF;A y,z;C*u,*v;I i,k,n,old,r,wr,yn,yr,*ys,yt;
+static DF1(jtredg){PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
- n=IC(w); RELORIGINBR(wrel,w);  // n=#items of cell, w = relocation offset for w (0 if non-relative)
+ n=AS(w)[0]; // n=#items of cell
  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
- // z will hold the result from the iterations.  Init to value of last cell
- // yt=type, yn=#atoms, yr=rank, ys->shape of input cell
- // Since there are multiple cells, z will be in a virtual block
- RZ(z=tail(w)); yt=AT(z); yn=AN(z); yr=AR(z); ys=1+AS(w);
- // k=length of input cell in bytes, v->last cell data
- k=yn*bp(yt); v=CAV(w)+k*(n-1);
- old=jt->tnextpushx; // save stack mark for subsequent frees
+ // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
+ RZ(a=virtual(w,0,r-1));
+ old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the x argument over the calls, but allow the w to be deleted
+ // w will hold the result from the iterations.  Init to value of last cell
+ // Since there are multiple cells, w will be in a virtual block
+ RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
+ // fill in the shape, offset, and item-count of the virtual block
+ AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
+ // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
+ // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
+ // As a compromise we free every few iterations: at least one per 8 iterations, and at least 8 times through the process
+#define LGMINGCS 3  // lg2 of minimum number of times we call gc
+#define MINGCINTERVAL 8  // max spacing between frees
+ I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
  for(i=1;i<n;++i){   // loop through items
-  v-=k;    // v-> next item to apply
-  GA(y,yt,yn,yr,ys); u=CAV(y);   // allocate block for item, u->data area
-  // copy the item into the allocated block, preserving relative status
-// obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u; I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k); 
-  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u; I d=wrel-RELORIGINDEST(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k); 
-  RZ(z=(f2)(jtip,y,z,fs));   // apply the verb to the arguments
-  z=gc(z,old);   // free the buffers we allocated, except for the result
+  RZ(w=(f2)(jtip,a,w,fs));   // apply the verb to the arguments
+  if(--freephase==0){w=gc(w,old); freephase=freedist;}   // free the buffers we allocated, except for the result
+  // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
+  if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCIS(AS(w),AS(a),r-1);}
+  AK(a)-=k;  // back up to next input
  }
- EPILOG(z);
+ EPILOG(w);  // this frees the virtual block, at the least
 }    /* f/"r w for general f and 1<(-r){$w */
 
 
@@ -477,7 +482,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
  switch(n){
   case 0: R red0(w,self);    // neutrals
   case 1: R head(w);    // reduce on single items - note that jt->rank is still set
-  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
+// obsolete  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
  }
  // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
  // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
@@ -511,6 +516,8 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result
  if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(cv&VRI+VRD?cvz(cv,z):z);}
+
+
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;

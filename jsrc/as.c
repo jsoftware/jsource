@@ -249,21 +249,21 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+static DF1(jtsscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok
- y=VAV(self)->f; id=vaid(VAV(y)->f); 
- if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
- vasfx(id,wt,&ado,&cv);
- if(!ado)R ssg(w,self);
- if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(cv); jt->rank=0;
+ y=VAV(self)->f; // y is f/   // obsolete id=vaid(VAV(y)->f); 
+ if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
+ VA2 adocv = vasfx(VAV(y)->f,wt);  // analyze f
+ if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ zt=rtype(adocv.cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
- ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ adocv.f(jt,m,c,n,AV(z),AV(w));
+ if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
 

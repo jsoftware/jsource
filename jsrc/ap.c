@@ -527,7 +527,7 @@ static DF1(jtinfixprefix1){
 #endif
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
+static DF1(jtpscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
@@ -535,17 +535,16 @@ static DF1(jtpscan){A y,z;C id;I c,cv,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;VF ado;
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
  PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
- // y is the verb u; id=pseudocharacter for it
- y=VAV(self)->f; id=vaid(VAV(y)->f);
- // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w
- if(2>n||!wn){if(id){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R jtinfixprefix1(jt,w,self);}
- vapfx(id,wt,&ado,&cv);
- if(!ado)R jtinfixprefix1(jt,w,self);
- if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(cv); jt->rank=0;
+ y=VAV(self)->f; // y is the verb u, which is f/
+ // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
+ if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R jtinfixprefix1(jt,w,self);}
+ VA2 adocv = vapfx(VAV(y)->f,wt);  // analyze f
+ if(!adocv.f)R jtinfixprefix1(jt,w,self);
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ zt=rtype(adocv.cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
- ado(jt,m,c,n,AV(z),AV(w));
- if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R cv&VRI+VRD?cvz(cv,z):z;
+ adocv.f(jt,m,c,n,AV(z),AV(w));
+ if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
@@ -739,7 +738,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;VF ado;
+static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,d,m,m0,p,t,wk,wt,zk,zt;
  PREF2(jtmovfslash);
  p=IC(w); wt=AT(w);
  RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m=abs(m0), handling IMIN 
@@ -760,19 +759,19 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,cv,d,m,m0,p,t,wk,wt,zk,zt;
   case CBW1001:  if(wt&    INT   )R movbwneeq(m,w,self,1); break;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
- vains(id,wt,&ado,&cv);
+ VA2 adocv = vains(ds(id),wt);
 // obsolete  if(!ado||!m||m>p)R jtinfixprefix2(jt,a,w,self);
- if(!ado)R jtinfixprefix2(jt,a,w,self);
+ if(!adocv.f)R jtinfixprefix2(jt,a,w,self);
 // obsolete d=0<=m0?1+p-m:(p+m-1)/m;
  if(m0>=0){d=MAX(0,1+p-m);}else{d=1+(p-1)/m; d=(p==0)?p:d;}
  c=aii(w); cm=c*m; b=0>m0&&0<p%m;
- zt=rtype(cv); jt->rank=0; 
+ zt=rtype(adocv.cv); jt->rank=0; 
  GA(z,zt,c*d,MAX(1,AR(w)),AS(w)); *AS(z)=d;
- if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=bp(zt)*c; 
  wv=CAV(w); wk=bp(wt)*(0<=m0?c:c*m);
- DO(d-b, ado(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
- if(b)ado(jt,1L,c*(p%m),p%m,zv,wv);
+ DO(d-b, adocv.f(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
+ if(b)adocv.f(jt,1L,c*(p%m),p%m,zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 

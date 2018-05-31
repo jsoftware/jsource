@@ -638,8 +638,8 @@ typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RAN
                                         /* type V flag values              */
 // bits 0-7 are used in comparison compounds to encode the type of compound, see vcompsc.c
 // for other types, they are defined as follows:
-#define VFATOPL          JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
-#define VFATOPR          JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
+#define VFATOPL         JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
+#define VFATOPR         JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
 // bits 8 and above are available for all functions:
 #define VGERLX          8
 #define VGERL           (1LL<<VGERLX)          /* gerund left  argument           */
@@ -663,6 +663,7 @@ typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RAN
 #define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
+#define VISATOMIC2      ((I)(1L<<29))    // dyad is stomic.  localuse will point to the VA entry for the verb
 
 // bits in flag2:
 // bit 0 unused

@@ -399,6 +399,7 @@ C jtvaid(J jt,A w){A x;C c;I k;V*v;
 void va2primsetup(A w){
  UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
  FAV(w)->localuse=(xlatedid?&va[xlatedid]:0);  // point to the line, or 0 if invalid
+ if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
 }
 
 A jtcvz(J jt,I cv,A w){I t;
@@ -424,15 +425,32 @@ A jtcvz(J jt,I cv,A w){I t;
    *ado=p->f; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
+// Routine to lookup function/flags
+// ptr is the type of lookup (insert/prefix/suffix) to generate the function for
+// In the function, id is the pseudochar for the function to look up
+//  t is the argument type
+//  action routine is stored in *ado, flags in *cv.  If no action routine, *ado=0
+#define VA2F(fname,ptr,fp,fm,ft)   \
+ static VA2 fname##EWOV[] = { {ft,VD} , {fp,VD}, {fm,VD}, {0,0} }; \
+ VA2 jt##fname(J jt,A self,I t){  \
+  if(!(jt->jerr>=EWOV)){                          \
+   if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
+    R ((VA*)(FAV(self)->localuse))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
+   }else R fname##EWOV[3];                                \
+  }else{ \
+   jt->jerr=0;                                 \
+   R fname##EWOV[2*(FAV(self)->id==CMINUS) + (FAV(self)->id==CPLUS)]; \
+  }  \
+ }
 
 // Lookup the action routine & flags for insert/prefix/suffix
 // first name is name of the generated function
 // second name (e. g. pins) is the name of the structure element containing the action-routine pointers
 // other names are the names of overflow action routines for plus,minus,times respectively
 
-VAF(jtvains,pins, plusinsO,minusinsO,tymesinsO)
-VAF(jtvapfx,ppfx, pluspfxO,minuspfxO,tymespfxO)
-VAF(jtvasfx,psfx, plussfxO,minussfxO,tymessfxO)
+VA2F(vains,pins, plusinsO,minusinsO,tymesinsO)
+VA2F(vapfx,ppfx, pluspfxO,minuspfxO,tymespfxO)
+VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 
 #define VARCASE(e,c) (70*(e)+(c))
 

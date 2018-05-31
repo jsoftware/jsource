@@ -173,7 +173,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
 DF2(jtspecialatoprestart){
   RZ(a&&w&&self);  // return fast if there has been an error
   V *sv=VAV(self);  // point to verb info for the current overall compound
-  R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // call the verb
+  R a==mark?(sv->id==CFORK?jtcork1:on1)(jt,w,self) : (sv->id==CFORK?jtcork2:jtupon2)(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it
 }
 
 
@@ -583,7 +583,7 @@ static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
 
 
 static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,c,cv,e=0,d,hn,k,m=0,n,r,*s,wt,*zi;V*vf;VF ado;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
+     I ak,at,c,e=0,d,hn,k,m=0,n,r,*s,wt,*zi;V*vf;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
  PREF2(jtcut2); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
@@ -707,16 +707,19 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
 // obsolete    }
 // obsolete    break;
   case CSLASH:
-   vains(vaid(vf->f),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
-   if(ado){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
-    zt=rtype(cv);
+   {
+   VA2 adocv = vains(vf->f,wt);  // qualify the operation, returning action routine and conversion info
+   if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
+    zt=rtype(adocv.cv);
     GA(zz,zt,m*c,r,s); *AS(zz)=m; 
     if(!AN(zz))R zz;
     zc=CAV(zz); zk=c*bp(zt);
-    if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    EACHCUT(if(d)ado(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
+    if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+    EACHCUT(if(d)adocv.f(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
         if(!z0){if(z)R z; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
-    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,zz):zz;
+    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
+    break;
+    }
   }
  }
 
@@ -937,19 +940,20 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 }    /* [: ; <@(ie/\);.k  on vector w */
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required
-DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d,k,m=0,n,p,q,r,*s,wt;
-    V*fv,*sv,*vv;VF ado=0;
+// NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
+//  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
+DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I c,d,k,m=0,n,p,q,r,*s,wt;
+    V *sv,*vv;VA2 adocv;
  RZ(a&&w);
- sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // ;@gs  gs is y;.1   y is ?@[:]fs  ? must be <
+ sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  
  p=n=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
- fv=VAV(fs); id=fv->id;  // fs is vv id   where id is \ \.
+ id=VAV(fs)->id;  // fs is f/id   where id is \ \.
 // obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
- vv=VAV(fv->f); ie=vaid(vv->f);  //  vv is   ie /
- if(id==CBSLASH)vapfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\ );.n */
- else           vasfx(ie,wt,&ado,&cv);  /* [: ; <@(f/\.);.n */
+ if(id==CBSLASH)adocv = vapfx(VAV(VAV(fs)->f)->f,wt);   // VAV(fs)->f is f/    VAV(VAV(fs)->f)->f is f
+ else           adocv = vasfx(VAV(VAV(fs)->f)->f,wt); 
 // obsolete }
- if(SPARSE&AT(w)||!ado)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
+ if(SPARSE&AT(w)||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
   if(!(AN(a)&&1==AR(a)&&AT(a)&B01+SB01))R jtspecialatoprestart(jt,a,w,self);  // if a is not nonempty boolean list, do it the long way.  This handles ;@: when a has rank>1
   if(AT(a)&SB01)RZ(a=cvt(B01,a));
@@ -962,21 +966,21 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d
  if(pfx){u=v+n; while(u>v&&sep!=*v)++v; p=u-v;}
 // obsolete  if(ado){
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
- if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
- zt=rtype(cv); zk=c*bp(zt);
- if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,cv,pfx,id,ie)); if(z)R z;}
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
+ zt=rtype(adocv.cv); zk=c*bp(zt);
+ if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->f))); if(z)R z;}
  GA(z,zt,AN(w),r,s); zv=CAV(z);
  while(p){
   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
   q=u-v;
   if(d=q-neg){
-   ado(jt,1L,c*d,d,zv,wv+k*(b+n-p));
+   adocv.f(jt,1L,c*d,d,zv,wv+k*(b+n-p));
    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
    m+=d; zv+=d*zk; 
   }
   p-=q; v=u;  
  }
- *AS(z)=m; AN(z)=m*c; R cv&VRI+VRD?cvz(cv,z):z;
+ *AS(z)=m; AN(z)=m*c; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 #if 0 // obsolete.  It handled other BOXATOPs, but we do that better in result.h now
  }else{B b1=0;I old,wc=c,yk,ym,yr,*ys,yt;   /* general f */
   RZ(x=gah(r,w)); ICPY(AS(x),s,r);  // allocate a header for the cell
@@ -1000,7 +1004,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,ie=0,sep,*u,*v,*wv,*zv;I c,cv=0,d
 // obsolete  else R raze(cut2(B01&AT(a)?a:eq(scc(sep),a),w,gs));
  else R jtspecialatoprestart(jt,a,w,self);
 #endif
-}    // ;@((<@f);._2 _1 1 2)
+}   
 
 DF1(jtrazecut1){R razecut2(mark,w,self);}
 

@@ -94,7 +94,7 @@ F1(jtfix){PROLOG(0005);A z;I*rv=jt->rank;
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);
  RZ(z=fixa(zero,AT(w)&VERB?w:symbrdlock(w)));
- if(AT(z)&VERB+ADV+CONJ){V*v=VAV(z); if(v->f){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}
+ if(AT(z)&VERB+ADV+CONJ){V*v=VAV(z); if(v->f){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
  jt->rank=rv; jt->fxpath=0;
  EPILOG(z);
 }

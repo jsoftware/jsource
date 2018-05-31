@@ -251,20 +251,20 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
-DF1(jtredravel){A f,x,z;C id;I cv,n;P*wp;VF ado;
+DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  RZ(w);
  f=VAV(self)->f;
 // obsolete if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
- id=vaid(VAV(f)->f);
+// obsolete  id=vaid(VAV(f)->f);
  while(1){  // Loop to handle restart on overflow
-  vains(id,AT(x),&ado,&cv);
-  ASSERT(ado,EVNONCE);
-  GA(z,rtype(cv),1,0,0);
-  if(n)ado(jt,1L,n,n,AV(z),AV(x));
-  if(jt->jerr<EWOV)R redsp1a(id,z,SPA(wp,e),n,AR(w),AS(w));;
+  VA2 adocv = vains(VAV(f)->f,AT(x));
+  ASSERT(adocv.f,EVNONCE);
+  GA(z,rtype(adocv.cv),1,0,0);
+  if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
+  if(jt->jerr<EWOV)R redsp1a(vaid(VAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
@@ -369,29 +369,31 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  R z;
 }    /* f/"r w for sparse w, rank > 1, sparse axis */
 
-static DF1(jtreducesp){A a,g,x,y,z;B b;C id;I cv,f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;P*wp;VF ado;
+static DF1(jtreducesp){A a,g,x,y,z;B b;I f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;P*wp;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
- g=VAV(self)->f; id=vaid(g);
+ g=VAV(self)->f;
  if(!n)R red0(w,self);
- vains(id,wt,&ado,&cv);
- if(2==n&&!(ado&&strchr(fca,id))){
+// obsolete  vains(id,wt,&ado,&cv);
+ C id=vaid(g);
+ VA2 adocv = vains(g,wt);
+ if(2==n&&!(adocv.f&&strchr(fca,id))){
   rr[0]=0; rr[1]=r;
   jt->rank=rr; x=from(zero,w); 
   jt->rank=rr; y=from(one, w); 
   R df2(x,y,g);
  }
- if(!ado)R redg(w,self);
+ if(!adocv.f)R redg(w,self);
  if(1==n)R tail(w);
- zt=rtype(cv);
+ zt=rtype(adocv.cv);
  jt->rank=0;
- if(1==wr)z=redsp1(w,self,id,ado,cv,f,r,zt);
+ if(1==wr)z=redsp1(w,self,id,adocv.f,adocv.cv,f,r,zt);
  else{
   wp=PAV(w); a=SPA(wp,a); v=AV(a);
   b=0; DO(AN(a), if(f==v[i]){b=1; break;});
-  z=b?redsps(w,self,id,ado,cv,f,r,zt):redspd(w,self,id,ado,cv,f,r,zt);
+  z=b?redsps(w,self,id,adocv.f,adocv.cv,f,r,zt):redspd(w,self,id,adocv.f,adocv.cv,f,r,zt);
  }
  R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reducesp(w,self)):z;
 }    /* f/"r for sparse w */
@@ -466,7 +468,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
 
-static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF ado;
+static DF1(jtreduce){A z;I c,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;
  RZ(w);
  wn=AN(w); wt=wn?AT(w):B01;   // Treat empty as Boolean type
  if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
@@ -477,7 +479,7 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
   r=jtr[1]; f=wr-r; if(r)n=ws[f];
  }else{r=wr; f=0; if(r)n=ws[0];
  }
- id=vaid(VAV(self)->f);
+// obsolete  id=vaid(VAV(self)->f);
  // Handle the special cases: neutrals, single items, reduce on 2 items
  switch(n){
   case 0: R red0(w,self);    // neutrals
@@ -490,9 +492,9 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
  // are no atoms written
 
  // Normal processing for multiple items.  Get the routine & flags to process it
- vains(id,wt,&ado,&cv);
+ VA2 adocv = vains(FAV(self)->f,wt);
  // If there is no special routine, go perform general reduce
- if(!ado)R redg(w,self);
+ if(!adocv.f)R redg(w,self);
  // Here for primitive reduce handled by special code.
  // Calculate m: #cells of w to operate on; c: #atoms in a cell of w (NOT a cell to which u is applied);
  // zn: #atoms in result
@@ -506,16 +508,16 @@ static DF1(jtreduce){A z;C id;I c,cv,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;VF 
   m=1; c=wn;   // one cell, containing all the atoms
  }
  // Allocate the result area
- zt=rtype(cv);
+ zt=rtype(adocv.cv);
  GA(z,zt,zn,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
  // Convert inputs if needed 
- if((t=atype(cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  // call the selected reduce routine.
- ado(jt,m,c,n,AV(z),AV(w));
+ adocv.f(jt,m,c,n,AV(z),AV(w));
  // if return is EWOV, it's an integer overflow and we must restart.
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result
- if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(cv&VRI+VRD?cvz(cv,z):z);}
+ if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 
 
 }    /* f/"r w main control */

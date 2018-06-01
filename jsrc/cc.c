@@ -945,7 +945,7 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I c,d,k,m=0,n,p,q,r,*s,wt;
     V *sv,*vv;VA2 adocv;
  RZ(a&&w);
- sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  
+ sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
  p=n=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
  id=VAV(fs)->id;  // fs is f/id   where id is \ \.
 // obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){

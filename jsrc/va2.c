@@ -652,7 +652,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
     // Multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
     DO(jt->mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float
     // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
-    adocv.f=tymesIIO;  // multiply-repair routine
+    adocv.f=(VF)tymesIIO;  // multiply-repair routine
     {C *av=CAV(a); C *wv=CAV(w);
 #if 0  // for this rare case, use the shorter version
      if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zzv,av,wv); if(--i==0)break; zzv+=zzk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
@@ -1098,19 +1098,19 @@ VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
  }else{VA2 retva2;
   retva2.f=0;  // error if not filled in
   switch((UC)FAV(self)->id){
-  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=cirZZ; retva2.cv=VZ+VZZ+VRD;} break;
-  case CEXP: if(jt->jerr==EWIMAG){retva2.f=powZZ; retva2.cv=VZ+VZZ+VRD;}
-             else if(jt->jerr==EWRAT){retva2.f=powQQ; retva2.cv=VQ+VQQ;}
-             else if(jt->jerr==EWIRR){retva2.f=powDD; retva2.cv=VD+VDD;} break;
-  case CBANG: if(jt->jerr==EWIRR){retva2.f=binDD; retva2.cv=VD+VDD;} break;
-  case CDIV: if(jt->jerr==EWRAT){retva2.f=divQQ; retva2.cv=VQ+VQQ;}
-             else if(jt->jerr==EWDIV0){retva2.f=divDD; retva2.cv=VD+VDD;} break;
-  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=plusIO; retva2.cv=VD+VII;} break;
-  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=minusIO; retva2.cv=VD+VII;} break;
-  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=tymesIO; retva2.cv=VD+VII;} break;
-  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=gcdIO; retva2.cv=VD+VII;} break;
-  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=lcmIO; retva2.cv=VD+VII;} break;
-  case CSTILE: if(jt->jerr==EWOV){retva2.f=remDD; retva2.cv=VD+VDD+VIP;} break;
+  case CCIRCLE: if(jt->jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VZ+VZZ+VRD;} break;
+  case CEXP: if(jt->jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VZ+VZZ+VRD;}
+             else if(jt->jerr==EWRAT){retva2.f=(VF)powQQ; retva2.cv=VQ+VQQ;}
+             else if(jt->jerr==EWIRR){retva2.f=(VF)powDD; retva2.cv=VD+VDD;} break;
+  case CBANG: if(jt->jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VD+VDD;} break;
+  case CDIV: if(jt->jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VQ+VQQ;}
+             else if(jt->jerr==EWDIV0){retva2.f=(VF)divDD; retva2.cv=VD+VDD;} break;
+  case CPLUS: if(jt->jerr==EWOVIP+EWOVIPPLUSII||jt->jerr==EWOVIP+EWOVIPPLUSBI||jt->jerr==EWOVIP+EWOVIPPLUSIB){retva2.f=(VF)plusIO; retva2.cv=VD+VII;} break;
+  case CMINUS: if(jt->jerr==EWOVIP+EWOVIPMINUSII||jt->jerr==EWOVIP+EWOVIPMINUSBI||jt->jerr==EWOVIP+EWOVIPMINUSIB){retva2.f=(VF)minusIO; retva2.cv=VD+VII;} break;
+  case CSTAR: if(jt->jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VD+VII;} break;
+  case CPLUSDOT: if(jt->jerr==EWOV){retva2.f=(VF)gcdIO; retva2.cv=VD+VII;} break;
+  case CSTARDOT: if(jt->jerr==EWOV){retva2.f=(VF)lcmIO; retva2.cv=VD+VII;} break;
+  case CSTILE: if(jt->jerr==EWOV){retva2.f=(VF)remDD; retva2.cv=VD+VDD+VIP;} break;
   }
   if(retva2.f){RESETERR}else{if(jt->jerr>NEVM){RESETERR jsignal(EVSYSTEM);}}  // system error if unhandled exception.  Otherwise reset error only if we handled it
   R retva2;

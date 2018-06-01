@@ -65,6 +65,7 @@
  I zzold;  // place to tpop to between executions
  jt->rank=0;  // needed for cvt ?? scaf
 #define ZZBOXATOPONLY 0  // user defines this to 1 to get code that assumes BOXATOP is always set
+#define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #undef ZZDECL
 #endif
 
@@ -105,7 +106,12 @@ do{
        ASSERT(z=cvt(zt,z),EVDOMAIN);
       }else{I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zt))-zzatomshift;  // convert zz from type zzt to type zt.  shift for size of atom; expansion factor of the conversion, as shift amount
        // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
+#if !ZZSTARTATEND
        zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
+#else
+       zatomct=((zzcellp+zzcelllen)>>zzatomshift)-AN(zz);   // get # atoms that have been filled in, not including what we haven't filled yet in this cell
+                   // make negative to tell ccvt that the value to change are at the end of the block
+#endif
        ASSERT(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
        // change the strides to match the new cellsize
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;} 
@@ -143,7 +149,11 @@ do{
      }else{  // not recursible
       MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
      }
+#if !ZZSTARTATEND
      zzcellp+=zzcelllen;  // advance to next cell
+#else
+     zzcellp-=zzcelllen;  // back up to next cell
+#endif
     }
     if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(zzold);  // Now that we have copied to the output area, free what the verb allocated
    }else{  // there was a wreck
@@ -175,7 +185,11 @@ do{
      }else{I nboxes;
       // first wreck.  Allocate a boxed array to hold the results that mismatch zz
       // use zzboxp to tell how many results have been processed already; allocate space for the rest
+#if !ZZSTARTATEND  // going forwards
       PROD(nboxes,zzwf,AS(zz)); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
+#else
+      nboxes = (zzboxp-(A*)0)+1;   // if box-pointer counts down, it already holds the # boxes left to do
+#endif
       // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
       // so that we can tell which result-cells come from zz and which from zzbox.
       // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  This is OK because we stop tpop'ing
@@ -196,7 +210,7 @@ do{
     realizeifvirtual(z); ra(z);   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv=INCORP
    } else {
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
-    // be reusing in this loop.  The user gives us the address of that.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
+    // be reusing in this loop.  The user flags those UNINCORPABLE.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
     // But if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
     if(AFLAG(z)&AFUNINCORPABLE){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); MCIS(AS(newz),AS(z),(I)AR(z)); /* scaf I *RESTRICT xzs=AS(newz); I *RESTRICT zs=AS(z); DO(AR(z), xzs[i]=zs[i];); */ z=newz;}
@@ -217,7 +231,11 @@ do{
   // wreck (or for ANY force-boxed), it points to the place where the next boxed result will be stored.  In this mode, boxp is advanced for
   // every result-cell, skipping over any that went into zz, so that we can use zzbox to tell which result-cell comes from zz and which from zzbox.
   // Thus, zzboxp is always incremented.
+#if !ZZSTARTATEND  // going forwards
   ++zzboxp;
+#else
+  --zzboxp;
+#endif
   break;  // skip the first-cell processing
  } else{I * RESTRICT is;
   // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
@@ -228,7 +246,7 @@ do{
   // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
-  // names used for initial values: zzcelllen=aframelen  zzcellp->aframe  zzboxp->wframe  zzwf=wframelen
+  // names used for initial values: ((zzcelllen))=aframelen  ((zzcellp))->aframe  ((zzboxp))->wframe  ((zzwf))=wframelen
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate
   RE(natoms=mult(natoms,zzncells));
@@ -241,16 +259,21 @@ do{
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
   zzold=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
   // Install shape
-  is = (I*)zzcellp; DO(zzcelllen, *zzs++=*is++;);  // copy outer frame
-  is = (I*)zzboxp; DO(zzwf, *zzs++=*is++;);  // copy inner frame
+  is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
+  is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
   // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
   is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
-  zzwf+=zzcelllen;  // leave zzwf as the total length of result frame
+  zzwf+=((zzcelllen));  // leave zzwf as the total length of result frame by adding aframelen
   zzcelllen=nbytes;   // cell length, for use in the main body
-  zzcellp=0;  // init output offset in zz to 0
   zzboxp=AAV(zz); zzboxp=ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
+#if !ZZSTARTATEND  // going forwards
+  zzcellp=0;  // init output offset in zz to 0
+#else
+  zzcellp=zzcelllen*(zzncells-1);  // init output offset in zz to end+1 of 
+  zzboxp+=zzncells-1;     // move zzboxp to end of block
+#endif
   AM(zz)=0;   // in case we count items in AM, init the count to 0 
  }
 }while(1);  // go back to store the first result
@@ -271,7 +294,7 @@ do{
 
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
-  RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf));  // inhomogeneous results: go assemble them
+  RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
 #undef ZZFLAGWORD
 #undef ZZBOXATOPONLY

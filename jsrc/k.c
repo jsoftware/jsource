@@ -225,6 +225,12 @@ static KF1(jtXfromQ){Q*v;X*x;
  DO(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
  R !jt->jerr;
 }
+// obsolete   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
+
+// Imaginary parts have already been cleared
+static KF1(jtZfromD){
+ D *wv=DAV(w); Z *zv=yv; DO(AN(w), zv++->re=*wv++;) R 1;
+}
 
 static B jtDXfI(J jt,I p,A w,DX*x){B b;I e,c,d,i,j,n,r,u[XIDIG],*v;
  n=AN(w); v=AV(w);
@@ -281,14 +287,24 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
  // If type is already correct, return a clone - should not occur
  if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
- // Kludge for result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
- // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and AN(w) for the subroutines.
- // The caller must restore AN(w) if it needs it
+ // Kludge on behalf of result assembly: we want to be able to stop converting after the valid cells.  If NOUNCVTVALIDCT is set in the type,
+ // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
+ // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
- I inputn=*(I*)y;  // fetch input, in case it is called for
- GA(*y,t,n,r,s); yv=AV(*y);  // allocate the same # atoms, even if we will convert fewer
- n=(tflagged&NOUNCVTVALIDCT)?inputn:n; AN(w)=n;  // override atom count if called for
- if(t&CMPX)fillv(t,n,(C*)yv); 
+ GA(d,t,n,r,s); yv=AV(d);  // allocate the same # atoms, even if we will convert fewer
+ if(tflagged&NOUNCVTVALIDCT){
+  I inputn=*(I*)y;  // fetch input, in case it is called for
+  if(inputn>0){  // if converting the leading values, just update the counts
+   n=inputn;  // set the counts for local use, and in the block to be converted
+  }else{  // if converting trailing values...
+   I offset=bp(t)*(n+inputn);  // byte offset to start of data
+   AK(w)+=bp(wt)*(n+inputn); yv=(I*)((C*)yv+bp(t)*(n+inputn));  // advance input and output pointers to new area
+   n=-inputn;  // get positive # atoms to convert
+  }
+  AN(w)=n;  // change atomct of w to # atoms to convert
+ }
+ *y=d;  // return the address of the new block
+ if(t&CMPX)fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(!n)R 1;
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the C2T and C4T and BIT conversions into one block, and
@@ -325,7 +341,8 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
   case CVCASE(INTX, FLX): R IfromD(w, yv);
   case CVCASE(XNUMX, FLX): R XfromD(w, yv);
   case CVCASE(RATX, FLX): R QfromD(w, yv);
-  case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
+// obsolete   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
+  case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
   case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R BfromD(d, yv);
   case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R IfromD(d, yv);
   case CVCASE(XNUMX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R XfromD(d, yv);
@@ -335,12 +352,14 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
   case CVCASE(RATX, XNUMX): R QfromX(w, yv);
   case CVCASE(FLX, XNUMX): R DfromX(w, yv);
-  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ccvt(t, d, y);
+// obsolete   case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ccvt(t, d, y);
+  case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
   case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
   case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
   case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
   case CVCASE(FLX, RATX): R DfromQ(w, yv);
-  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ccvt(t, d, y);
+// obsolete   case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ccvt(t, d, y);
+  case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
   default:                ASSERT(0, EVDOMAIN);
  }
 }

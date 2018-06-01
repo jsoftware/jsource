@@ -631,7 +631,7 @@ extern void auditblock(A w, I nonrecurok, I virtok);
 #if FORCEVIRTUALINPUTS
 extern A virtifnonip(J jt, I ipok, A buf);
 #endif
-extern A        jtassembleresults(J,I, A, A,A*,I,I,I,A,I,I);
+extern A        jtassembleresults(J,I, A, A,A*,I,I,I,A,I,I,I);
 extern void     audittstack(J);
 extern A        jtac1(J,AF);
 extern A        jtac2(J,AF);

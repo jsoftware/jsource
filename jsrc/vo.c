@@ -138,14 +138,15 @@ static C *copyresultcell(J jt, C *z, C *w, I *sizes, I rf, I *s){I wadv;I r=rf>>
  R w;
 }
 
-A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I zzcelllen, I zzresultpri, A zzcellshape, I zzncells, I zzwf) {A zztemp;  // if we never allocated the boxed area (including force-boxed cases which never do) we just keep zz as the final result
+A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I zzcelllen, I zzresultpri, A zzcellshape, I zzncells, I zzwf, I startatend) {A zztemp;  // if we never allocated the boxed area (including force-boxed cases which never do) we just keep zz as the final result
+ // startatend is 0 for forward, ~0 for reverse
  // Create a homogeneous array of results, by processing zzbox and zz one cell at a time from the end.
  //  Allocate the result area. (1) if USEOPEN and zz is empty, use zzbox; (2) if the largest cell-result is not bigger than the cells
  //  in zz, use zz.  Otherwise allocate a new area.
 
  I zzt=AT(zz);  // type of zz
  I natomszzcell; PROD(natomszzcell,AR(zz)-zzwf,AS(zz)+zzwf);  // number of atoms in cell of zz
- A* box0=AAV(zzbox);  // address of first valid box pointer
+ A* box0=AAV(zzbox)+(startatend&(AN(zzbox)-1));  // address of last valid box pointer, depending on direction of movement
  C* zzcell=CAV(zz)+zzcellp;  // address of last+1 cell moved to zz
 
  if(!(ZZFLAGWORD&ZZFLAGUSEOPEN)){
@@ -163,7 +164,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   // if the result has different type from the values in zz, convert zz en bloc to type zft
   if(TYPESNE(zft,zzt)){I zzatomshift=CTTZ(bp(zzt)); I zexpshift = CTTZ(bp(zft))-zzatomshift;  // shift for size of atom; expansion factor of the conversion, as shift amount
    // here the old values in zz must change.  Convert them.  Use the special flag to cvt that converts only as many atoms as given
-   I zatomct=zzcellp>>zzatomshift;   // get # atoms that have been filled in
+   I zatomct=(zzcellp>>zzatomshift)-(startatend&(AN(zz)-(zzcelllen>>zzatomshift)));   // get # atoms that have been filled in
    ASSERT(ccvt(zft|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert zcellct atoms.  Not worth checking for empty
    // change the strides to match the new cellsize
    if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;}
@@ -195,7 +196,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   } // now zztemp has the result area, which might be the same as zz
 
 
-  C *tempp=CAV(zztemp)+(natomsresult*zfs);   // point to end+1 of result area
+  C *tempp=CAV(zztemp)+((~startatend)&(natomsresult*zfs));   // point to end+1 of result area, or beginning if going reverse
 
   // Calculate the vector of cell-lengths
   DQ(zzcr, zzcs[i]=zfs*=zzcs[i];);  // convert each atom of result-cell shape to the length in bytes of the corresponding cell
@@ -205,22 +206,38 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   I *zzcopyress=AS(zz)+zzwf;  // &shape of a cell of zz
   I zzcopyresr=rescellrarg(zzcs,zzcr,zzcopyress,AR(zz)-zzwf);  // does not ever need ra
 
+  // Adjust for loop direction
+  tempp -= (~startatend)&zfs;  // tempp points to the current element.  If normal direction, we must back up to last-+1-1
+  startatend = 2*startatend+1;  // from here on startatend is 1 for normal, -1 for reverse.  Use it to DEcrement zzboxp
+  zfs *= startatend;  // include direction-of-movement in the size increment
+  zzcelllen *= startatend;  // also in cell size, which from now on is now used only as the increment between cells of zz
+
   // For each result cell, copy (with conversion if necessary) from whichever source is valid
   // zzboxp points after the last box created; zzcell points after the last cell of zz; tempp points after last cell of result
   // box0 points to the first valid box location - everything before that comes from zz
   I zztemprecur = !!(AFLAG(zztemp)&RECURSIBLE);  // remember if we are moving into a recursive block
   while(--zzncells>=0){A zzboxcell;
-   zzboxp--; tempp-=zfs;  // back box and result pointers to next input/output positions.  These pointers move for every result-cell
-   if((I)(zzboxp-box0)>=0 && (zzboxcell= *zzboxp)){
+   // We have to make sure we don't access zzboxp out of bounds, but it can go in either direction, which makes checking for out-of-bounds
+   // a pain.  So we check before incrementing to see if zzboxp is exactly at the end: if so, we fail the test and leave it there permanently
+// obsolete    zzboxp--; if((I)(zzboxp-box0)>=0 && (zzboxcell= *zzboxp)){
+   if(zzboxp!=box0 && (zzboxp-=startatend, zzboxcell= *zzboxp)){
     // cell comes from zzboxp.  Convert if necessary, then move.  Before moving, calculate the rank to use for the fill.
     // Don't convert empties, to make sure we don't have a failure while we are processing boxed results
     if(AN(zzboxcell)&&TYPESNE(zft,AT(zzboxcell))){
      if(!(zzboxcell=cvt(zft,zzboxcell))){
       // error during conversion.  THIS IS THE ONLY PLACE WHERE ERROR IS POSSIBLE DURING THE COPY.
       // If zz and zztemp are the same block, and that block is recursive, it may be in an invalid state: values have been copied
-      // from zzcell up the the end of the block and are now duplicated.  To fix it, we have to zero out everything in the range from the
-      // current zzcell up to the last tempp that was filled
-      if(zztemp==zz&&zztemprecur)memset(zzcell,C0,tempp+zfs-zzcell);
+      // from zzcell up the the end of the block and are now duplicated.  To fix it, we have to zero out anything was was copied but
+      // not overwritten: for the forward case, everything in the range from the
+      // current zzcell up to the last tempp that was filled (note that *tempp has not been filled yet).  In other words, we have
+      // to fill zzncells+1 cells: the ones we haven't started, plus the one we failed on
+      if(zztemp==zz&&zztemprecur){
+// obsolete       memset(zzcell,C0,tempp+zfs-zzcell);
+// obsolete       memset(tempp,C0,zzcell-tempp);
+       memset((startatend>0)?zzcell:tempp,C0,(startatend>0)?tempp+zfs-zzcell:zzcell-tempp);  // clear, depending on direction.  If normal, we are going
+         // from zzcell, which has been copied from, through the end of tempp, which has not been copied to yet.  If reverse, we go from
+         // tempp, which has not been copied to, to zzcell, which has been copied.
+      }
       R 0;
      }
     }
@@ -236,6 +253,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
     if(tempp==zzcell)break;  // if we start to copy in-place, we must be before the first wreck, and we can leave remaining cells in place
     copyresultcell(jt,tempp,zzcell,zzcs,zzcopyresr,zzcopyress);
    }
+   tempp-=zfs;  // back result pointers to next input/output positions.  This pointer moves for every result-cell.  zzboxp also moves for every result, till it pegs out
   }
   zz=zztemp;  // switch main result pointer to our result value
  }else{
@@ -245,16 +263,21 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
    // there are sparse results, but they came after we started boxing.  We have to allocate a full-sized boxed area and move the results to it,
    // boxing anything that comes from zz.  We use faux-virtual blocks for boxing cells of zz.  What a lot of code that so seldom gets used!
    GATV(zztemp,BOX,zzncells,zzwf,AS(zz));  // one box per result cell.  GA clears area to 0, which is unnecessary
-   A* tempp=AAV(zztemp);   // point to beginning of result area
+   A* tempp=AAV(zztemp)+((~startatend)&(zzncells-1));   // point to beginning of result area
+   // Adjust for loop direction
+   startatend = 2*startatend+1;  // from here on startatend is 1 for normal, -1 for reverse.  Use it to DEcrement zzboxp
+
    while(--zzncells>=0){   // for each output position, from the end
-    --zzboxp;  // point to next input values, boxed and not
-    if((I)(zzboxp-box0)>=0 && *zzboxp)tempp[zzncells]=*zzboxp;  // the boxed version is valid: copy it
+// obsolete     --zzboxp;  // point to next input values, boxed and not
+    if(zzboxp!=box0 && (zzboxp-=startatend, *zzboxp))*tempp=*zzboxp;
+// obsolete     if((I)(zzboxp-box0)>=0 && *zzboxp)tempp[zzncells]=*zzboxp;  // the boxed version is valid: copy it
     else{A zzz;  // we have to box the value from zz
      zzcell-=zzcelllen;  // back up to next cell in zz
      GA(zzz,zzt,0,zzwf,AS(zz)+zzwf); AN(zzz)=natomszzcell; AK(zzz)=zzcell-(C*)zzz;  // allocate empty header; fill in length; point to data in zz
-       // All these blocks are single-use so we keep them nonrecursible
-     tempp[zzncells]=zzz;
+       // All these blocks are single-use so we keep them nonrecursible and don't bother to mark them virtual or incur the overhead thereof.  Could use gah
+     *tempp=zzz;
     }
+    tempp-=startatend;   // back/forward to next output location
    }
   }
   zz=ope(zztemp);  // do the full open on the result 

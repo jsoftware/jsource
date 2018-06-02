@@ -429,10 +429,13 @@ NB. Test integrated rank support on verbs with rank other than 0 or _
 
 NB. Test the short-circuit cases that don't have to do anything on their arguments
 a =: i. 1e6
-(6!:2 '1 # a') < 0.01 * 6!:2 '2 # a'
+NB. (6!:2 '1 # a') < 0.01 * 6!:2 '2 # a'
+THRESHOLD +. (1-threshold) > (6!:2 '1 # a') % 0.01 * 6!:2 '2 # a'
 NB. Now virtual (6!:2 '0 }. a') < 0.01 * 6!:2 '1 }. a'
-(6!:2 '0 |. a') < 0.01 * 6!:2 '1 |. a'
-(6!:2 '0 |.!.5 a') < 0.01 * 6!:2 '1 |.!.5 a'
+NB. (6!:2 '0 |. a') < 0.01 * 6!:2 '1 |. a'
+NB. (6!:2 '0 |.!.5 a') < 0.01 * 6!:2 '1 |.!.5 a'
+THRESHOLD +. (1-threshold) > (6!:2 '0 |. a') % 0.01 * 6!:2 '1 |. a'
+THRESHOLD +. (1-threshold) > (6!:2 '0 |.!.5 a') % 0.01 * 6!:2 '1 |.!.5 a'
 
 NB. test virtual implementation
 f =: 3 : 0

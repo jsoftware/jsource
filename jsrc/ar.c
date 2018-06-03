@@ -197,7 +197,7 @@ static DF1(jtredg){PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
- n=AS(w)[0]; // n=#items of cell
+ n=AS(w)[0]; // n=#cells
  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
  // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
  RZ(a=virtual(w,0,r-1));
@@ -480,44 +480,45 @@ static DF1(jtreduce){A z;I c,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;
  }else{r=wr; f=0; if(r)n=ws[0];
  }
 // obsolete  id=vaid(VAV(self)->f);
- // Handle the special cases: neutrals, single items, reduce on 2 items
- switch(n){
-  case 0: R red0(w,self);    // neutrals
-  case 1: R head(w);    // reduce on single items - note that jt->rank is still set
-// obsolete  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
- }
- // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
- // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
- // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
- // are no atoms written
+ // Handle the special cases: neutrals, single items
+ if(n>1){
+  // Normal case, >1 item.
+  // The case of empty w is interesting, because the #cells, and the #atoms in an item of a cell, may both overflow if
+  // n=0.  But we have handled that case above.  If n is not 0, there may be other zeros in the shape that allow
+  // an overflow when an infix of the shape is multiplied; but that won't matter because the other 0 will guarantee that there
+  // are no atoms written
 
- // Normal processing for multiple items.  Get the routine & flags to process it
- VA2 adocv = vains(FAV(self)->f,wt);
- // If there is no special routine, go perform general reduce
- if(!adocv.f)R redg(w,self);
- // Here for primitive reduce handled by special code.
- // Calculate m: #cells of w to operate on; c: #atoms in a cell of w (NOT a cell to which u is applied);
- // zn: #atoms in result
- PROD(zn,r-1,f+ws+1);  //  */ }. $ cell
- if(jtr){
-  // Rank specified.  m=*/ frame (i. e. #cells to operate on), c=*/ $ cell of w (#atoms in cell), zn=m * */ }. $ cell (# result atoms).
-  // r cannot be 0 (would be handled above).  Calculate low part of zn first
-  PROD(m,f,ws); c=zn*ws[f]; zn*=m; jt->rank=0;   // clear rank now that we've used it
- }else{
-  // No rank, just operate on whole of w
-  m=1; c=wn;   // one cell, containing all the atoms
- }
- // Allocate the result area
- zt=rtype(adocv.cv);
- GA(z,zt,zn,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
- // Convert inputs if needed 
- if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- // call the selected reduce routine.
- adocv.f(jt,m,c,n,AV(z),AV(w));
- // if return is EWOV, it's an integer overflow and we must restart.
- // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
- // have to do is change the type of the result
- if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+  // Normal processing for multiple items.  Get the routine & flags to process it
+  VA2 adocv = vains(FAV(self)->f,wt);
+  // If there is no special routine, go perform general reduce
+  if(!adocv.f)R redg(w,self);
+  // Here for primitive reduce handled by special code.
+  // Calculate m: #cells of w to operate on; c: #atoms in a cell of w (NOT a cell to which u is applied);
+  // zn: #atoms in result
+  PROD(zn,r-1,f+ws+1);  //  */ }. $ cell
+  if(jtr){
+   // Rank specified.  m=*/ frame (i. e. #cells to operate on), c=*/ $ cell of w (#atoms in cell), zn=m * */ }. $ cell (# result atoms).
+   // r cannot be 0 (would be handled above).  Calculate low part of zn first
+   PROD(m,f,ws); c=zn*ws[f]; zn*=m; jt->rank=0;   // clear rank now that we've used it
+  }else{
+   // No rank, just operate on whole of w
+   m=1; c=wn;   // one cell, containing all the atoms
+  }
+  // Allocate the result area
+  zt=rtype(adocv.cv);
+  GA(z,zt,zn,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+  // Convert inputs if needed 
+  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
+  // call the selected reduce routine.
+  adocv.f(jt,m,c,n,AV(z),AV(w));
+  // if return is EWOV, it's an integer overflow and we must restart.
+  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
+  // have to do is change the type of the result
+  if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+ }else if(n==1)R head(w);    // reduce on single items - note that jt->rank is still set
+ else R red0(w,self);    // 0 items - neutrals
+// obsolete  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
+
 
 
 }    /* f/"r w main control */

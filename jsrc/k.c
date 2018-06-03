@@ -266,7 +266,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
 // Convert the data in w to the type t.  A new buffer is always created (with a
 // copy of the data if w is already of the right type), and returned in *y.  Result is
 // 0 if error, 1 if success.  If the conversion loses precision, error is returned
-B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTVALIDCT;
+B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NOUNCVTVALIDCT;
  if(!(w))R 0;
  r=AR(w); s=AS(w);
  // Handle sparse
@@ -283,7 +283,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
    R 1;
  }
  // Now known to be non-sparse
- n=AN(w); wt=AT(w); wv=AV(w);
+ n=AN(w); wt=AT(w);
  // If type is already correct, return a clone - should not occur
  if(TYPESEQ(t,wt)){RZ(*y=ca(w)); R 1;}
  // else if(n&&t&JCHAR){ASSERT(HOMO(t,wt),EVDOMAIN); RZ(*y=uco1(w)); R 1;}
@@ -291,7 +291,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
  // we use the input *y as as override on the # cells to convert.  We use it to replace n (for use here) and yv, and AK(w) and AN(w) for the subroutines.
  // If NOUNCVTVALIDCT is set, w is modified: the caller must restore AN(w) and AK(w) if it needs it
  // TODO: same-length conversion could be done in place
- GA(d,t,n,r,s); yv=AV(d);  // allocate the same # atoms, even if we will convert fewer
+ GA(d,t,n,r,s); yv=voidAV(d);  // allocate the same # atoms, even if we will convert fewer
  if(tflagged&NOUNCVTVALIDCT){
   I inputn=*(I*)y;  // fetch input, in case it is called for
   if(inputn>0){  // if converting the leading values, just update the counts
@@ -303,7 +303,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt,*wv,*yv;I t=tflagged&~NOUNCVTV
   }
   AN(w)=n;  // change atomct of w to # atoms to convert
  }
- *y=d;  // return the address of the new block
+ *y=d;  wv=voidAV(w); // return the address of the new block
  if(t&CMPX)fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(!n)R 1;
  // Perform the conversion based on data types

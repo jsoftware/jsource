@@ -6,6 +6,8 @@
 #include "j.h"
 #include "vasm.h"
 #include "ve.h"
+#define ZZDEFN
+#include "result.h"
 
 
 #define SUFFIXPFX(f,Tz,Tx,pfx)  \
@@ -177,6 +179,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
+#if 0
 static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
  r=AR(w)-1; n1=IC(w)-1; m=aii(w); t=AT(w); k=m*bp(t);
@@ -225,6 +228,73 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self
  R ope(z);
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
 
+#else
+static DF1(jtssg){PROLOG(0020);AD * RESTRICT a, * RESTRICT z;I i,k,n,r,wr;
+ RZ(w);
+ ASSERT(DENSE&AT(w),EVNONCE);
+ // loop over rank
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
+ if(r<wr)R rank1ex(w,self,r,jtssg);
+ // From here on we are doing a single scan
+ n=AS(w)[0]; // n=#cells
+#define ZZFLAGWORD state
+ I state;  // init flags, including zz flags
+
+ A fs=FAV(FAV(self)->f)->f; AF f2=FAV(fs)->f2; // self = f/\.   FAV(self)->f = f/  FAV(FAV(self)->f)->f = f   fetch dyad for f
+ // Set BOXATOP if appropriate.  Since {:y is always the last cell, BOXATOP is allowed only when the rank of w is 1, meaning that
+ // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
+ state = ((wr-2)>>(BW-1))&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
+ // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
+ state |= (-state) & VAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+#define ZZWILLBEOPENEDNEVER 1
+
+ // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
+ RZ(a=virtual(w,0,r-1));
+ // z will hold the result from the iterations.  Init to value of last cell
+ // Since there are multiple cells, z will be in a virtual block (usually)
+ RZ(z=tail(w)); k=AN(z)*bp(AT(z)); // k=length of input cell in bytes
+ // fill in the shape, offset, and item-count of the virtual block
+ AN(a)=AN(z); AK(a)+=(n-1)*k; MCIS(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
+   // to the last item; the pointer is unused in the first iteration, and we then back up to the second-last item, which is the first one we
+   // process as a
+
+#define ZZPOPNEVER 1   // we mustn't TPOP after copying the result atoms, because they are reused.  This will leave the memory used for type-conversions unclaimed.
+   // if we implement the annulment of tpop pointers, we should use that to hand-free results that have been converted
+ // We have to dance a bit for BOXATOP verbs, because the result comes back unboxed, but it has to be put into a box
+ // to be fed into the next iteration.  This is still a saving, because we can use the same box to point to each successive result.
+ // Exception: if the reusable box gets incorporated, it is no longer reusable and must be reallocated.  We will use the original z box,
+ // which will NEVER be virtual because it is an atom whenever BOXATOP is set, as the starting pointer to the prev boxed result
+ A boxedz = z; z=(state&ZZFLAGBOXATOP)?AAV(z)[0]:z;  // init current pointer for the temp box; if BOXATOP, use >{:y as the first (to-be-boxed) result
+
+#define ZZDECL
+#define ZZSTARTATEND 1   // build result from bottom up
+#include "result.h"
+
+ {I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)}   // set up for assembly loop
+
+ AD * RESTRICT zz=0;
+ for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself
+  if(i){RZ(z=CALL2(f2,a,z,fs));}   // apply the verb to the arguments (except the first time)
+#define ZZBODY
+#include "result.h"
+  // If BOXATOP, we need to reinstate the boxing around z for the next iteration.
+  if(state&ZZFLAGBOXATOP){
+   // If boxedz itself has been incorporated into the result, we have to reallocate it.  We don't need the usual check for z==boxedz, because we know we INCORPed z into
+   // the boxed result, so if it was the same as boxedz, the usecount of boxedz was incremented then
+   if(!ACIPISOK(boxedz))GAT(boxedz,BOX,1,0,0);   // reallocate boxedz if needed
+   AAV(boxedz)[0]=z; z=boxedz;  // point boxedz to the previous result, and make that the new argument for next time
+  }
+  // if result happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
+  else if(a==z){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCIS(AS(z),AS(a),r-1);}
+
+  AK(a)-=k;  // back up to next input
+ }
+#define ZZEXIT
+#include "result.h"
+ EPILOG(zz);  // this frees the virtual block, at the least
+}    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
+#endif
+
 A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
@@ -254,9 +324,10 @@ static DF1(jtsscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
- PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok
- y=VAV(self)->f; // y is f/   // obsolete id=vaid(VAV(y)->f); 
- if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}
+ PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+ y=VAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
+ if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+   // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(VAV(y)->f,wt);  // analyze f
  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));

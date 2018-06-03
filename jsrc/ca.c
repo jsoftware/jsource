@@ -291,7 +291,7 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
      }
     }
-   }else if(d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if " or @ (not @:)
+   }else if(d==CBSLASH||d==CBSDOT||d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if \ \. " or @ (not @:)
   }
   wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
  }

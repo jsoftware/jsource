@@ -89,7 +89,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
 #define ZZDECL
 #include "result.h"
  // If there is only one column, we will be using  a virtual block to access the subarray, so allocate it here
- //  (if the subarray is revered, we won't need the block, but that's rare)
+ //  (if the subarray is reversed, we won't need the block, but that's rare)
  I wcellsize;  // size of a cell in atoms of w.
  I origoffset;  // offset from virtual block to start of w
  I wcellbytes;  // size of a cell in bytes
@@ -150,7 +150,7 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    RZ(z=from(qq,w));
   }
   if(!(state&STATEHASGERUND)){RZ(z=CALL1(f1,z,fs));}else{RZ(z=df1(z,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
-  if(!(state&STATENEEDSASSEMBLY)){EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly
+  if(!(state&STATENEEDSASSEMBLY)){EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly (for speed)
 #define ZZBODY
 #include "result.h"
 
@@ -594,7 +594,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
   // not gerund: OK to test fs
-  if(vf->mr>=AR(w)){
+  if(vf->mr>=r){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
@@ -727,9 +727,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
  if(!zz){
   if(m){
    // There are cells.  Run the result loop over them
-   // See if this verb is BOXATOP.  NOTE that if this is a gerund, fs is invalid and we mustn't check it.
-   // We honor BOXATOP if the verb can operate on a cell of w in its entirety
-   if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=r?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+// obsolete    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=r?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
    // Allocate the virtual block we will use for arguments
    A virtw; RZ(virtw=virtual(w,0,r));
    // Copy in the shape of a cell.  The number of cells will depend on d

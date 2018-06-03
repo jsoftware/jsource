@@ -556,15 +556,20 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
 }    /* ,/"r w for sparse w, 2<r */
 
 static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
- RZ(w);
+ RZ(w);F1PREFIP;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); jt->rank=0;
- b=1==r&&1==s[f];
- if(2>r&&!b)RCA(w);
- GA(z,AT(w),AN(w),wr-1,s); 
- if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
- if(SPARSE&AT(w))R redcatsp(w,z,r);
- MC(AV(z),AV(w),AN(w)*bp(AT(w)));
- RELOCATE(w,z); R z;
+ b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
+ if(2>r&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
+ // use virtual block (possibly self-virtual) for all cases except sparse
+ if(!(SPARSE&AT(w))){
+  RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
+  I *zs=AS(z); MCISds(zs,s,f); if(!b){RE(zs[0]=mult(s[0],s[1])); MCIS(zs+1,s+2,r-2);}
+  R z;
+ }else{
+  GA(z,AT(w),AN(w),wr-1,s); 
+  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); ICPY(1+v,2+f+s,r-2);}
+  R redcatsp(w,z,r);
+ }
 }    /* ,/"r w */
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
@@ -623,18 +628,18 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 static DF2(jtoprod){R df2(a,w,VAV(self)->h);}
 
 
-F1(jtslash){A h;AF f1=jtreduce;C c;V*v;
+F1(jtslash){A h;AF f1=jtreduce;C c;V*v;I flag=0;
  RZ(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));
  v=VAV(w); 
  switch(v->id){
-  case CCOMMA:  f1=jtredcat;    break;
+  case CCOMMA:  f1=jtredcat; flag=VINPLACEOK1;   break;
   case CCOMDOT: f1=jtredstitch; break;
   case CSEMICO: f1=jtredsemi;   break;
   case CUNDER:  if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;}
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
- R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, VAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
+ R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|VAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}

@@ -102,7 +102,7 @@ static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
  x=UAV(w); y=CAV(z);
- q=c/BB; r=c%BB; r1=c%BW?(BW-c%BW)/BB:0;
+ q=c>>LGBB; r=c&(BB-1); r1=c&(BW-1)?(BW-(c&(BW-1)))>>LGBB:0;
  for(i=0;i<m;++i){
   DO(q-!r, MC(y,bitdisp+2*BB**x,2*BB  ); ++x; y+=2*BB  ;);
   if(r)   {MC(y,bitdisp+2*BB**x,2*r -1); ++x; y+=2*r -1;}
@@ -737,9 +737,11 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
  h=lba<nq+(q?p:0)?lb:IMAX;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data
+ I remqi=1;  // 1+number of lines before we put out an intercell spacing.  Could start at q+1, which would simplify ENGAP.  Later.
  for(i=lc=0;i<nq;++i){
   // Emit leading EOLs according to number of boundary crossings - only when we cross a 2-cell boundary
-  if(0==i%q)ENGAP(i,r,s,EOLC(zv));
+// obsolete   if(0==i%q)ENGAP(i,r,s,EOLC(zv));
+  if(0==--remqi){remqi=q; ENGAP(i,r,s,EOLC(zv));}  // put out a gap every q lines
   // If we have emitted all the beginning lines, and the suffix isn't big enough to hold all the lines,
   // emit ..., advance v and i to the suffix, and set h so we don't come here again.
   // NOTE this test is imperfect.  The nq>la is needed only because internal EOLs in character data

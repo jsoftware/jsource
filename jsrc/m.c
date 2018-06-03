@@ -1107,13 +1107,18 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
 
 // Double the allocation of w (twice as many atoms), then round up # items to max allowed in allocation
 // if b=1, the result will replace w, so decrement usecount of w and increment usecount of new buffer
+// the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  RZ(w);                               /* assume AR(w)&&AN(w)    */
- m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
- GA(z,t,2*AN(w),AR(w),AS(w)); 
- MC(AV(z),AV(w),m*k);                 /* copy old contents      */
+// obsolete m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
+ m=*AS(w); PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
+ GA(z,t,2*AN(w),AR(w),AS(w));
+ m1=allosize(z)/k;  // start this divide before the copy
+// obsolete MC(AV(z),AV(w),m*k);                 /* copy old contents      */
+ MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
  if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent */
- *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
+// obsolete  *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
+ *AS(z)=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }

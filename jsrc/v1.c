@@ -43,11 +43,11 @@ static F2(jtmatchs);
 // If we get here, we know that at least one of the arguments has a frame
 static B eqv(I af,I wf,I m,I n,I k,C*av,C*wv,B* RESTRICT x,B b1){B b,* RESTRICT xx=x;I mn=m*n,q;
   // select a comparison loop based on the size of the data area.  It's all about the fastest way to compare bytes
- if     (0==k%sizeof(I)  )EQV(I)
+ if     (0==(k&(SZI-1))  )EQV(I)
 #if SY_64
- else if(0==k%sizeof(int))EQV(int)
+ else if(0==(k&(SZI4-1)))EQV(int)
 #endif
- else if(0==k%sizeof(S)  )EQV(S)
+ else if(0==(k&(SZS-1))  )EQV(S)
  else if(1==k)            EQV(C)
  else{
   if(af<wf)DO(m, DO(n, *x++=(!!memcmp(av,wv,k))^b1; wv+=k;); av+=k;)

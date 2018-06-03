@@ -371,11 +371,11 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // Perform the inner product according to the type
  switch(CTTZNOFLAG(t)){
  case B01X:
-  if(0==n%SZI||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,q,r,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
-   q=p/255; r=p%255; nw=(n+SZI-1)>>LGSZI;
+  if(0==(n&(SZI-1))||!SY_ALIGN){A tt;B*u,*v,*wv;I nw,*x,*zv;UC*c,*tc;UI*d,*ti,*vi;
+   nw=(n+SZI-1)>>LGSZI;
    GATV(tt,INT,nw,1,0); ti=(UI*)AV(tt); tc=(UC*)ti;
    u=BAV(a); v=wv=BAV(w); zv=AV(z);
-   for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); DO(q, BBLOCK(255);); BBLOCK(r);}
+   for(i=0;i<m;++i,v=wv,zv+=n){x=zv; DO(n, *x++=0;); I pp=p; while((pp-=255)>=0){BBLOCK(255);} BBLOCK(pp+255);}
   }else{B*u,*v,*wv;I*x,*zv;
    u=BAV(a); v=wv=BAV(w); zv=AV(z);
    for(i=0;i<m;++i,v=wv,zv+=n){

@@ -238,7 +238,7 @@ typedef I SI;
 #define MARKSIZE sizeof(I)
 #define NAMEX 26
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
-#define NAMESIZE sizeof(C)
+#define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
 #define SYMBX 27
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(I)

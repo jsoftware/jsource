@@ -179,7 +179,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
-#if 0
+#if 0  // obsolete
 static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
  fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
  r=AR(w)-1; n1=IC(w)-1; m=aii(w); t=AT(w); k=m*bp(t);

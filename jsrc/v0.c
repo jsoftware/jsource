@@ -101,6 +101,7 @@ static void jtdeflate(J jt,B k,I m,Z*v,Z x){
 static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,zm,zm1;
  static D cyclefracs[8] = {0.5,0.25,0.75,0.13,0.87,0.63,0.37,0.95};
  zm=zrj0((D)m); zm1=zrj0((D)m-1);
+ I kicktimer=2*CSZ1;  // give it a respectable start before we start kicking it
  for(i=0;;++i){
   ZASSERT(i<400,EVLIMIT);
   c=d=zeroZ; b=a[m]; e=zmag(b); ax=zmag(x);
@@ -122,7 +123,7 @@ static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,
   if(zmag(zminus(x,y))<=EPS*zmag(x))R x;  // if we didn't move much, call it converged.  We hope it's a root.
   // This algorithm is subject to hitting limit cycles (_48 1 0 0 0 1 is an example)
   // To prevent that, every so often we make a partial move
-  if(((i-1)%CSZ1)==0)x=zplus(x,ztymes(dx,zrj0(cyclefracs[(i>>3)&8])));
+  if(!--kicktimer){kicktimer=CSZ1; x=zplus(x,ztymes(dx,zrj0(cyclefracs[(i>>3)&8])));}
 }}   // Press et al., "Numerical Recipes in C" with additions from 2d edition
 
 static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
@@ -223,7 +224,8 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
   ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);  // coeffs must be dense numeric
-  RZ(r=jico2(ne(w,zero),one)); m=*AV(r)%n;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
+// obsolete  RZ(r=jico2(ne(w,zero),one)); m=*AV(r)%n;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
+  RZ(r=jico2(ne(w,zero),one)); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
   ASSERT(m||equ(zero,head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
  // switch based on degree of polynomial

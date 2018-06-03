@@ -16,7 +16,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
  if(1>=r){*v=m=AN(w); n=1;}else{m=*u++; n=*u++; *v++=m*n; ICPY(v,u,r-2);}  // set shape of y as _2-cells of w
  // Create x=+"0 1&i./ 2 {. $y
  RZ(x=irs2(IX(m),IX(n),0L,0L,1L,jtplus)); AR(x)=1; *AS(x)=AN(x);
- // perform x f/. y, which does the requested operation
+ // perform x f/. y, which does the requested operation, collecting the identical keys
  RZ(x=df2(x,y,sldot(VAV(self)->f)));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result

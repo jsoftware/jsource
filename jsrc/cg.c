@@ -38,14 +38,14 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  R ope(z);
 }
 
-static DF1(jtinsert){A f,hs,*hv,z;AF*hf;I j,k,m,n,old;
+static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
  RZ(w);
- n=IC(w); j=n-1; hs=VAV(self)->h; m=AN(hs); hv=AAV(hs);
+ n=IC(w); j=n-1; hs=VAV(self)->h; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
- GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
+// obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
- DO(n-1, k=--j%m; RZ(z=CALL2(hf[k],from(sc(j),w),z,hv[k])); z=gc(z,old);)
+ --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->f2,from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
 }
 

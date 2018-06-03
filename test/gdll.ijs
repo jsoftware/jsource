@@ -39,10 +39,10 @@ NB. test convert in place down/up
 
 's i f'=: (_4+i.9);(_4+i.9);(_4.5+i.9)
 0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 9;s;i;f
-((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f [[ 's i f'=. 2}.cdrc
+((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f [[ 's i f'=: 2}.cdrc
 's i f'=: (_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
 0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 15;s;i;f
-((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f [[ 's i f'=. 2}.cdrc
+((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f [[ 's i f'=: 2}.cdrc
 
 NB. declaration (left argument) and parameter (right argument) checking
 'limit error'  -: (lib,'ibasic i *i i *i',2300$' '  ) cd etx (,2);2;3 4

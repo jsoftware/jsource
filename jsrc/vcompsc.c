@@ -125,22 +125,22 @@
  }
 
 #define SUMB(f,T0,T1,F)  \
- static F2(f){B*xv;I an,*av,n,p,q,r,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
+ static F2(f){B*xv;I an,*av,n,p,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
   an=AN(a); av=AV(a);                                                        \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
-  p=n>>LGSZI; q=p/255; r=p%255; r1=n&(SZI-1);                                       \
+  p=n>>LGSZI; r1=n&(SZI-1);                                       \
   xv=(B*)&x; tu=(UC*)&t;                                                     \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
-   DO(q, t=0; DO(255, t+=F(x,    *wv++);); DO(SZI,z+=tu[i];););              \
-         t=0; DO(r,   t+=F(x,    *wv++);); DO(SZI,z+=tu[i];); x=F(x,  *wv);  \
+   while((p-=255)>0){t=0; DO(255, t+=F(x,    *wv++);); DO(SZI,z+=tu[i];);}              \
+         t=0; DO(p+255,   t+=F(x,    *wv++);); DO(SZI,z+=tu[i];); x=F(x,  *wv);  \
   }else if(!AR(w)){                                                          \
    ASSIGNX(wv);                                                              \
-   DO(q, t=0; DO(255, t+=F(*av++,x    );); DO(SZI,z+=tu[i];););              \
-         t=0; DO(r,   t+=F(*av++,x    );); DO(SZI,z+=tu[i];); x=F(*av,x  );  \
+   while((p-=255)>0){t=0; DO(255, t+=F(*av++,x    );); DO(SZI,z+=tu[i];);}              \
+         t=0; DO(p+255,   t+=F(*av++,x    );); DO(SZI,z+=tu[i];); x=F(*av,x  );  \
   }else{                                                                     \
-   DO(q, t=0; DO(255, t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];););              \
-         t=0; DO(r,   t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];); x=F(*av,*wv);  \
+   while((p-=255)>0){t=0; DO(255, t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];);}              \
+         t=0; DO(p+255,   t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];); x=F(*av,*wv);  \
   }                                                                          \
   DO(r1, z+=xv[i];);                                                         \
   R sc(z);                                                                   \

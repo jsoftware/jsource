@@ -729,12 +729,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 
 
 
-static DF2(jtsumattymes){A z;B b;I an,ar,*as,at,m,n,nn,r,*s,t,wn,wr,*ws,wt,zn;
- RZ(a&&w&&self);
- an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01;
- wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01; 
- t=maxtype(at,wt); b=ar<=wr; r=b?wr:ar; s=b?ws:as; nn=*s;
- zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;
+static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
+ RZ(a&&w);
  switch(CTTZNOFLAG(t)){
   case B01X:
    {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
@@ -833,13 +829,16 @@ static A jtsumatgbool(J jt,A a,A w,C id){A t,z;B* RESTRICTI av,* RESTRICTI wv;I 
 }    /* a +/@:g w  for boolean a,w where a-:&(* /@$)w; see also plusinsB */
 
 DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
-     n,nn,r,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;V*sv;VA2 adocv,adocvf;
+     n,nn,r,rs,*s,t,wk,wn,wr,*ws,wt,yt,zn,zt;V*sv;VA2 adocv,adocvf;
  RZ(a&&w&&self);
  an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01; sv=VAV(self); 
- wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01; b=ar<=wr; r=b?wr:ar; s=b?ws:as; nn=r?*s:1;
+ wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01;
+ b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
- if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->h:sv->g),b?sv->g:sv->f);}
- zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;
+ if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->h:sv->g),b?sv->g:sv->f);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+// obsolete  zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg
+ rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
+   // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  if(CFORK==sv->id){fs=sv->g; gs=sv->h;}else{fs=sv->f; gs=sv->g;}
  y=VAV(fs)->f; c=ID(y); d=ID(gs);
  adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
@@ -847,11 +846,12 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  if(c==CPLUS){
   if(at&B01&&wt&B01&&1==n&&(0==(zn&(SZI-1))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
-   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R sumattymes(a,w,self);
+   if(ar&&wr&&TYPESEQ(at,wt)&&at&B01+FL+(INT*!SY_64))R jtsumattymes(jt,a,w,b,at,m,n,nn,r,s,zn);
    if(!ar||!wr){  // if either argument is atomic, apply the distributive property to save multiplies
     z=!ar?tymes(a,df1(w,fs)):tymes(w,df1(a,fs));
     if(jt->jerr==EVNAN)RESETERR else R z;
-  }}
+   }
+  }
   sb=1&&yt&B01;
  }
  if(!(sb||TYPESEQ(yt,zt)))R df1(df2(a,w,gs),fs);
@@ -860,7 +860,8 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   if(TYPESNE(t,at))RZ(a=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
   if(TYPESNE(t,wt))RZ(w=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
- ak=(an/nn)*bp(AT(a)); wk=(wn/nn)*bp(AT(w));  
+// obsolete ak=(an/nn)*bp(AT(a)); wk=(wn/nn)*bp(AT(w));
+ ak=b?m:zn; wk=b?zn:m; ak=an<nn?0:ak; wk=wn<nn?0:wk; ak*=bp(AT(a));wk*=bp(AT(w));
  GA(y,yt,zn,1,0); 
  GA(z,zt,zn,r-1,1+s);
  if(sb){A t;I j,tn,*zv;UC*tc;UI*ti,*yv;  /* +/@:g for boolean-valued g */
@@ -870,7 +871,8 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
    memset(ti,C0,tn*SZI); 
    DO(MIN(j,255), adocv.f(jt,b,m,n,yv,av,wv); av+=ak; wv+=wk; DO(tn,ti[i]+=yv[i];););
    DO(zn, zv[i]+=tc[i];);
- }}else{A z1;B p=0;C*yv,*zu,*zv;
+  }
+ }else{A z1;B p=0;C*yv,*zu,*zv;
   av=CAV(a)+ak*(nn-1); wv=CAV(w)+wk*(nn-1); yv=CAV(y); zv=CAV(z);
   GA(z1,zt,zn,r-1,1+s); zu=CAV(z1);
   adocv.f(jt,b,m,n,zv,av,wv);
@@ -878,7 +880,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   if(NEVM<jt->jerr){jt->jerr=0; z=df1(df2(a,w,gs),fs);}else if(p)z=z1;
  }
  RE(0); RETF(z);
-}    /* a f/@:g w */
+}    /* a f/@:g w where f and g are atomic*/
 
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code

@@ -158,42 +158,90 @@ static F2(jtovv){A z;I m,t;
  INHERITNOREL2(z,a,w); RETF(z);
 }    /* a,w for vectors/scalars with the same type */
 
-static void om(I k,I c,I d,I m,I m1,I n,I r,C*u,C*v){I e,km,km1,kn;
- e=c/d; km=k*m; km1=k*m1; kn=k*n;
+static void om(I k,I c,I d,I e,I m,I m1,I n,I r,C*u,C*v){I km,km1,kn;
+ km=k*m; km1=k*m1; kn=k*n;
  if(!r&&m1!=n)DO(c, mvc(km1,u,kn,v); u+=km;)
  else if(1<e){
-  if(m1>n)DO(c/e, DO(e, mvc(km1,u,kn,v); u+=km;); v+=kn;)
-  else    DO(c/e, DO(e, MC(u,v,kn);      u+=km;); v+=kn;);
+  if(m1>n)DO(d, DO(e, mvc(km1,u,kn,v); u+=km;); v+=kn;)
+  else    DO(d, DO(e, MC(u,v,kn);      u+=km;); v+=kn;);
  }else{
   if(m1>n)DO(c,         mvc(km1,u,kn,v); u+=km;   v+=kn;)
   else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
 }}   /* move an argument into the result area */
 
-static I overcode = 0;
-F2(jtover){A z;C*zv;I acct,wcct,acn,acr,af,ar,*as,c,f,k,m,ma,mw,p,q,r,*s,t,wcn,wcr,wf,wr,*ws,zn;
+static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ I arptct=arptreset-1; I wrptct=wrptreset-1;
+ if((arptct|wrptct)==0) {
+   // fastest case: no replication, no scalars
+  while(--c>=0){
+   // copy one cell from a; advance z; advance a if not repeated
+   MC(zv,av,ma); zv+=ma; av+=ma;
+   // repeat for w
+   MC(zv,wv,mw); zv+=mw; wv+=mw;
+  }
+ }else{
+  while(--c>=0){
+   // copy one cell from a; advance z; advance a if not repeated
+   MC(zv,av,ma); zv+=ma; --arptct; av+=(arptct>>(BW-1))&ma; arptct+=(arptct>>(BW-1))&arptreset;
+   // repeat for w
+   MC(zv,wv,mw); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&mw; wrptct+=(wrptct>>(BW-1))&wrptreset;
+  }
+ }
+}
+static void moveawVS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ I arptct=arptreset-1; I wrptct=wrptreset-1;
+ while(--c>=0){
+  // copy one cell from a; advance z; advance a if not repeated
+  MC(zv,av,ma); zv+=ma; --arptct; av+=(arptct>>(BW-1))&ma; arptct+=(arptct>>(BW-1))&arptreset;
+  // repeat for w
+  mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&k; wrptct+=(wrptct>>(BW-1))&wrptreset;
+ }
+}
+static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
+ I arptct=arptreset-1; I wrptct=wrptreset-1;
+ while(--c>=0){
+  // copy one cell from a; advance z; advance a if not repeated
+  mvc(ma,zv,k,av); zv+=ma; --arptct; av+=(arptct>>(BW-1))&k; arptct+=(arptct>>(BW-1))&arptreset;
+  // repeat for w
+  MC(zv,wv,mw); zv+=mw; --wrptct; wv+=(wrptct>>(BW-1))&mw; wrptct+=(wrptct>>(BW-1))&wrptreset;
+ }
+}
+int (*p[4]) (int x, int y);
+static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
+// obsolete static I overcode = 0;
+F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,c,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
- if(SPARSE&AT(a)||SPARSE&AT(w)){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
- RZ(t=coerce2(&a,&w,0L));  // convert args to compatible precisions, changing a and w if needed
+ if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
+ if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
+// obsolete  RZ(t=coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w);
- if(!jt->rank&&2>ar&&2>wr)R ovv(a,w);  // If appending vectors at infinite rank, go handle that
- acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;
- wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;
- r=acr+wcr?MAX(acr,wcr):1;
- // if max cell-rank>2, or an argument is empty, or (joining tables with row of different lengths) or something is relative, do general case
- if(2<r||!AN(a)||!AN(w)||2<acr+wcr&&p!=q||AORWRELATIVE(a,w)){
+ if(!jt->rank&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
+ acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
+ wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;  // wcr=rank of cell, wf=len of frame, ws->shape, q=len of last axis of cell
+// obsolete r=acr+wcr?MAX(acr,wcr):1;
+ r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
+ // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
+ if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty
   jt->rank=0; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
  }
- acn=1>=acr?p:p*as[af+acr-2]; ma=!acr&&2==wcr?q:acn;
- wcn=1>=wcr?q:q*ws[wf+wcr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;
- PROD(acct,af,as); PROD(wcct,wf,ws);  // Number of cells in a and w; known non-empty shapes
- if(af<=wf){f=wf; s=ws; c=wcct;}else{f=af; s=as; c=acct;};
- RE(zn=mult(c,m));
- GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1; 
- if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}
- k=bp(t);
- om(k,c,acct,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
- om(k,c,wcct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
- INHERITNORELFILL2(z,a,w); RETF(z);
+ // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
+ acn=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:acn;  // acn is #atoms in a cell of a  ma is acn EXCEPT when joining atom a to table w: then length of row of w
+ wcn=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
+// obsolete if(af<=wf){f=wf; s=ws; c=wcct;}else{f=af; s=as; c=acct;};
+ I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
+ PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
+ c=replct*framect;  // scaf
+// obsolete c=(wf>=af)?wcct:acct;  // f=frame of longer shape, s->longer shape, c=#cells in longer shape
+ RE(zn=mult(c,m));  // total # atoms in result
+ GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1;   // allocate result; repurpose s to point to END of shape field
+ if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
+ k=bp(t);   // # bytes per atom of result
+ // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
+ moveawtbl[(!acr&&ma>1)*2+(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
+// obsolete  om(k,c,(wf>=af)?1:replct,(wf>=af)?replct:1,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
+// obsolete  om(k,c,(wf>=af)?replct:1,(wf>=af)?1:replct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
+// obsolete  INHERITNORELFILL2(z,a,w);
+ RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
 F2(jtstitch){B sp2;I ar,wr;

@@ -258,8 +258,8 @@ APFX(lcmZZ, Z,Z,Z, zlcm )
 
 
 #define GETD          {d=*wv++; if(!d){z=0; break;}}
-#define INTDIVF(c,d)  (0>c==0>d?c/d:c%d?c/d-1:c/d)
-#define INTDIVC(c,d)  (0>c!=0>d?c/d:c%d?c/d+1:c/d)
+#define INTDIVF(c,d)  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)
+#define INTDIVC(c,d)  (((c^d)<0)?c/d:c%d?c/d+1:c/d)
 
 F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
  RZ(a&&w);
@@ -385,12 +385,12 @@ F2(jtabase2){A z;I an,ar,at,wn,wr,wt,zn;
 }}
 
 // Compute 2 | w for INT w, leaving Boolean result.   kludge this should shift into mask & store fullwords
-F1(jtintmod2){A z;B*b,*v;I k=SZI,mask,m,n,q,r,*u,*wi;
+F1(jtintmod2){A z;B*b,*v;I mask,m,n,q,r,*u,*wi;
  RZ(w);F1PREFIP;  // allow inplacing but don't use it, since the input is INT and the result is B01
- n=AN(w); q=n/k; r=n%k; v=BAV(w)+!liln*(k-1);
+ n=AN(w); q=n>>LGSZI; r=n&(SZI-1); v=BAV(w)+!liln*(SZI-1);
  GATV(z,B01,n,AR(w),AS(w)); u=AV(z);
- b=(B*)&mask; DO(k, b[i]=1;);
- b=(B*)&m; DO(q, DO(k, b[i]=*v; v+=k;); *u++=mask&m;)
- b=(B*)u; wi=AV(w)+q*k; DO(r, *b++=1&*wi++?1:0;);
+ b=(B*)&mask; DO(SZI, b[i]=1;);
+ b=(B*)&m; DO(q, DO(SZI, b[i]=*v; v+=SZI;); *u++=mask&m;)
+ b=(B*)u; wi=AV(w)+(q<<LGSZI); DO(r, *b++=1&*wi++?1:0;);
  RETF(z);
 }

@@ -614,6 +614,8 @@
 #define maxdenom(x,y)               jtmaxdenom(jt,(x),(y))
 #define maximum(x,y)                jtmaximum(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):jtmaxtype(jt,(x),(y)))
+// Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
+#define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))

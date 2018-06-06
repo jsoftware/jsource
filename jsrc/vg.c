@@ -625,6 +625,7 @@ F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND
 
 // Partitioning function for order statistics
 // j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
+// TODO: should do the % ops before the partitioning loop; should rewrite partitioning to avoid misprediction
 #define OSLOOP(T,ATOMF)  \
 {T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \

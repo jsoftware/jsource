@@ -346,7 +346,7 @@ static UI fetchspread(UC *v, I lgspacing, I lgsize, I count, I index){UI ret = 0
 // Scan to see if the C4T can be represented exactly as a C2T or LIT; if so,
 // hash only those bytes
 // k is the number of BYTES (for compatibility with previously-existing interfaces)
-UI hic4(I k, UC* v){I cct=k/sizeof(UI4);
+UI hic4(I k, UC* v){I cct=k>>LGSZI4;
  // Scan to find precision needed.  Since this will probably kick out quickly, we don't bother
  // unrolling the loop
  I max = 0;
@@ -403,7 +403,7 @@ UI hic4(I k, UC* v){I cct=k/sizeof(UI4);
 }
 
 // Similarly, hash a C2T for compatibility with LIT
-UI hic2(I k, UC* v){I cct=k/sizeof(US);
+UI hic2(I k, UC* v){I cct=k>>LGSZS;
  // Scan to find precision needed.  Since this will probably kick out quickly, we don't bother
  // unrolling the loop
  DQ(cct, if(((US*)v)[i]>255)R hic(k,v);); // if upper significance, hash C2T: 2 bytes per char
@@ -1277,8 +1277,8 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
  md=mode&IIOPMSK;  // just the operation bits
  I bk=1&(((1<<IICO)|(1<<IJ0EPS)|(1<<IJ1EPS))>>md);  // set if the dup-scan is reverse direction
  if(mode==INUB||mode==INUBI){GATV(y,B01,asct,1,0); yb=BAV(y);}
- av=AAV(a); RELBASEASGN(a,a); acn=ak/sizeof(A);
- wv=AAV(w); RELBASEASGN(w,w); wcn=wk/sizeof(A);
+ av=AAV(a); RELBASEASGN(a,a); acn=ak>>LGSZI;
+ wv=AAV(w); RELBASEASGN(w,w); wcn=wk>>LGSZI;
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
@@ -1435,8 +1435,8 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
 #define XDOWGETRESULTPB(T,TZ,zptr) {DO(wsct, zptr[i]=(TZ)((hv[BYTENO(wv[i])]>>BITNO(wv[i]))&1);)}
 
 // convert the hashtable in *hv to a packed-bit hashtable in *hvp, preserving the validity limits
-#define XDOWREPACK(T,TH) {I *hvpw = (I*)hvp+(maximum+1)/BW; TH *hv2=hv+maximum; I q = 0; DQ((maximum+1)&(BW-1), q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q; \
-  DQ(((hv2-hv)-minimum+1)/BW, DQ(BW, q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q;) I fct=(hv2-hv)-minimum+1; DQ(fct, q=q+q+(*hv2-->=(TH)wsct);) q<<=(BW-fct); *hvpw=q; \
+#define XDOWREPACK(T,TH) {I *hvpw = (I*)hvp+((maximum+1)>>LGBW); TH *hv2=hv+maximum; I q = 0; DQ((maximum+1)&(BW-1), q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q; \
+  DQ(((hv2-hv)-minimum+1)>>LGBW, DQ(BW, q=q+q+(*hv2-->=(TH)wsct);) *hvpw--=q;) I fct=(hv2-hv)-minimum+1; DQ(fct, q=q+q+(*hv2-->=(TH)wsct);) q<<=(BW-fct); *hvpw=q; \
  }
 // Do forward scan of a packed bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
 #define XDOWSARPB(T,TH,earlyexit) {I j, hj; DO(asct, \
@@ -1453,7 +1453,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
   IH *hh=IHAV(h); I minimum=hh->datamin; p=hh->datarange; I maximum=minimum+p; \
   /* if the hashtable for i./i: exceeds the cache size, allocate a packed-bit version of it. \
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
-  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,3+(p/BW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
+  UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,3+(p>>LGBW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
   \
   _mm256_zeroupper(VOID);  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
@@ -1898,7 +1898,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(2==k){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)*k1)/sizeof(US),-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
+    CR crres = condrange2(USAV(a),(AN(a)*k1)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
     if(crres.range){
       datamin=crres.min;
       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
@@ -1971,7 +1971,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
     if(k==2){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange2(USAV(w),(AN(w)*k1)/sizeof(US),datamin,datamin+p-1,allowrange);
+     crres = condrange2(USAV(w),(AN(w)*k1)>>LGSZS,datamin,datamin+p-1,allowrange);
     }else{
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
      crres = condrange(AV(w),(AN(w)*k1)>>LGSZI,datamin,datamin+p-1,allowrange);

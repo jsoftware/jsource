@@ -95,7 +95,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
- if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k/sizeof(D));}
+ if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k>>LGSZD);}
  else switch(k){
   case sizeof(C): IFROMLOOP(C); break; 
   case sizeof(S): IFROMLOOP(S); break;  
@@ -278,14 +278,32 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  R 1;
 }    /* <"1 a to a where a is an integer index array */
 
-static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,k,n,t,*v,*ws;
+static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  RZ(a&&w);
  n=AN(a); t=AT(a); *ind=0; if(AR(a)==0)R 0;  // revert to normal code for atomic a
  ws=wf+AS(w); c=*(AS(a)+AR(a)-1);   // c = length of 1-cell
  if(!n||!c||t&BOX)R 0;  // revert to normal code for empty or boxed a
  ASSERT(c<=AR(w)-wf,EVLENGTH);
- RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
- DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+// obsolete  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
+// obsolete  DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+ PROD(n,AR(a)-1,AS(a));  v=AV(a); // n now=number of 1-cells of a   v=running pointer through a
+ // Go through a fast verification pass.  If all values nonnegative and valid, return original a
+ if(t&INT){  // if it's INT already, we don't need to move it.
+  switch(c){I c0,c1,c2;
+  case 2:
+   c0=ws[0], c1=ws[1]; for(i=n;i>0;--i){if(v[0]<0)break; ASSERT(c0>v[0],EVINDEX); if(v[1]<0)break; ASSERT(c1>v[1],EVINDEX); v+=2;} break;
+  case 3:
+   c0=ws[0], c1=ws[1], c2=ws[2]; for(i=n;i>0;--i){if(v[0]<0)break; ASSERT(c0>v[0],EVINDEX); if(v[1]<0)break; ASSERT(c1>v[1],EVINDEX); if(v[2]<0)break; ASSERT(c2>v[2],EVINDEX); v+=3;} break;
+  default:
+   for(i=n;i>0;--i){DO(c, k=*v; if(k<0)break; ASSERT(k<ws[i],EVINDEX); ++v;); if(k<0)break;} break; 
+  }
+ }else i=1;  // if not INT to begin with, we must convert
+ if(i==0){z=a;  // If all indexes OK, return the original block
+ }else{
+  // There was a negative index.  Allocate a new block for a and copy to it.
+  RZ(z=t&INT?ca(a):cvt(INT,a));  v=AV(z);
+  DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+ }
  *ind=z;
  R 1;
 }    /* verify that <"1 a is valid for (<"1 a){w */

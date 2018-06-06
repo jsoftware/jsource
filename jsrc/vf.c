@@ -69,14 +69,18 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  EPILOG(z);
 }    /* a|."r w on sparse arrays */
 
-#define ROF(r) r=r<-n?-n:n<r?n:r; x=dk*ABS(r); y=e-x; j=0>r?x:0; k=0>r?0:x;
-#define ROT(r) r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+#define ROF(r) if((r<-n)|(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
+// obsolete #define ROF(r) r=r<-n?-n:n<r?n:r; x=dk*ABS(r); y=e-x; j=0>r?x:0; k=0>r?0:x;
+#define ROT(r) if((r<-n)|(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 
-static void jtrot(J jt,I m,I c,I n,I k,I p,I*av,C*u,C*v){I dk,e,j,r,x,y;
- e=c*k; dk=e/n; if(jt->fill)mvc(m*e,v,k,jt->fillv);   
- switch((jt->fill?0:2)+(1<p)){
-  case 0: r=p?*av:0;     ROF(r); DO(m, MC(j+v,k+u,y);            u+=e; v+=e;); break;
-  case 1: DO(m, r=av[i]; ROF(r);       MC(j+v,k+u,y);            u+=e; v+=e;); break;
+// m=#cells d=#atoms per item  n=#items per cell
+// obsolete static void jtrot(J jt,I m,I c,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
+// obsolete e=c*atomsize; dk=e/n; // e=#bytes per cell  dk=bytes per item    // obsolete if(jt->fill)mvc(m*e,v,k,jt->fillv);   
+static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
+ e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item    // obsolete if(jt->fill)mvc(m*e,v,k,jt->fillv);   
+ switch((2*!jt->fill)+(1<p)){
+  case 0: r=p?*av:0;     ROF(r); DO(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;); break;
+  case 1: DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;); break;
   case 2: r=p?*av:0;     ROT(r); DO(m, MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;); break;
   case 3: DO(m, r=av[i]; ROT(r);       MC(v,j+u,k); MC(k+v,u,j); u+=e; v+=e;);
 }}
@@ -90,27 +94,31 @@ static void jtrot(J jt,I m,I c,I n,I k,I p,I*av,C*u,C*v){I dk,e,j,r,x,y;
    u   source data area 
    v   target data area      */
 
-F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,k,m,n,p,*s,wcr,wf,wn,wr;
+F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a&&w);
  if(SPARSE&AT(w))R rotsp(a,w);
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
+ ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;  // p=#axes to rotate
  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
- if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 |. y, return y
- if(1<acr||af&&acr||af&&!wf)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // handle rank by using " for it
- if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
- ASSERT(!wcr||p<=wcr,EVLENGTH);
+// obsolete  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 |. y, return y
+ if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
+// obsolete  if(1<acr||af&&acr||af&&!wf)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // handle rank by using " for it
+ if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has frame) handle rank by using " for it
+ if(((wcr-1)&(1-p))<0){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
+ ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
  av=AV(a);
- RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bp(AT(w));
+ RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bp(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
- PROD(m,wf,s); n=wcr?s[wf]:1;
- rot(m,wn/m,n,k,1>=p?AN(a):1L,av,u,v);
+ PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); n=wcr?s[wf]:1;  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
+// obsolete  rot(m,wn/m,n,k,1>=p?AN(a):1L,av,u,v);
+ rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
   b=0; s+=wf;
-  DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
+// obsolete   DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
+  DO(p-1, m*=n; n=*++s; d/=n; rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
   z=b?y:z;
  } 
  RELOCATE(w,z);

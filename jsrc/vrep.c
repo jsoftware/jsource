@@ -113,17 +113,22 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
+ // wf and wcr are set
  RZ(a&&w);
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);
- b=BAV(a); p=bsum(m,b); zn=m?p*(AN(w)/m):0; 
- ASSERT(0<=zn,EVLIMIT);
- GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;
- wv=CAV(w); zv=CAV(z);
+ b=BAV(a); p=bsum(m,b);  // p=# 1s in result, i. e. length of result item axis
+ PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); zn=c*k*p;  // c=#cells, k=#atoms per item of cell, zn=#atoms in result
+   // no overflow possible unless a is empty; nothing  moved then, and zn is 0
+// obsolete zn=m?p*(AN(w)/m):0;
+// obsolete ASSERT(0<=zn,EVLIMIT);
+ GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;  // allocate result, move in length of item axis
  if(!zn)R z;
- RE(c=prod(wf,AS(w))); k=AN(w)/(c*m)*bp(AT(w));
+ wv=CAV(w); zv=CAV(z);
+// obsolete RE(c=prod(wf,AS(w))); k=AN(w)/(c*m)*bp(AT(w));
+ k*=bp(AT(w));
  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;););
- RELOCATE(w,z); R z;
+ R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #endif
 
@@ -189,24 +194,27 @@ static REPF(jtrepisx){A e,q,x,y;I c,j,m,p=0,*qv,*xv,*yv;P*ap;
 
 static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  RZ(a&&w);
- t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;
+ t=AT(a); m=AN(a); ws=AS(w); n=wcr?ws[wf]:1;  // n=length of item axis in input.  If aton, is repeated to length of a
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
   else   R repzdx(a,irs2(apv(m,0L,0L),w,0L,1L,0L,jtfrom),wf,1L ); 
  }
- if(t&B01){B*x=BAV(a); DO(m,p+=x[i];);}
- else{I*x; 
+ if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier // obsolete B*x=BAV(a);DO(m,p+=x[i];);}
+ }else{I*x; 
   RZ(a=vi(a)); x=AV(a); 
-  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););
+  DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result
  }
- RE(q=mult(p,n));
- RE(zn=n?mult(q,AN(w)/n):0);
+ RE(q=mult(p,n));  // q=length of result item  axis.  +/a copies, each of length n
+// obsolete  RE(zn=n?mult(q,AN(w)/n):0);
+ RE(zn=mult(p,AN(w)));
  GA(z,AT(w),zn,AR(w)+!wcr,ws); *(wf+AS(z))=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
- RE(c=prod(wf,ws)); k=AN(w)/(c*n)*bp(AT(w)); zk=p*k;
- DO(c*n, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
- RELOCATE(w,z); R z;
+// obsolete RE(c=prod(wf,ws)); k=AN(w)/(c*n)*bp(AT(w));
+ PROD(c,wf+(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k *=bp(AT(w));  // c=#cell-items to process  k=#atoms per cell-item // obsolete k=AN(w)/(c*n)*bp(AT(w));
+ zk=p*k;  // # bytes to fill per item
+ DO(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
+ R z;
 }    /* scalar #"r dense   or   dense #"0 dense */
 
 static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
@@ -271,11 +279,14 @@ F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
  if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
-  if(aval==1)R RETARG(w);   // 1 # y, return y
+  if(!(aval&-2LL)){  // 0 or 1
+   if(aval==1)R RETARG(w);   // 1 # y, return y
+   if(!(wt&SPARSE)){GA(z,wt,0,AR(w),AS(w)); AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
+  }
  }
- if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);
+ if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);  // loop if multiple cells of a
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
- if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}
+ if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
  if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); INHERITNORELFILL(z,w); RETF(z);}
  if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}
  /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); INHERITNOREL(z,w); RETF(z);}

@@ -434,7 +434,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
   DO(yr, s[j]=MAX(ys[i],s[j]); ++j;);
  }
  // Install the number of result items in s; m=total #result atoms
- *s=c; m=prod(r,s);
+ *s=c; RE(m=prod(r,s)); PROD(p,r-1,s+1);
  // Now that we know the shape of the result-cell, we can decide, for each box, whether the
  // box contributes to the result, and whether it will be filled.  This matters only if a fill-cell has been specified.
  // If fill has been specified, we include its type in the result-type (a) only if some block gets filled
@@ -466,7 +466,8 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
  }
 
  // Now we know the type of the result.  Create the result.
- k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
+// obsolete k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
+ k=bp(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
  GATV(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
  GA(z,t,m,r,s); if(zrel){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}   // create result area, shape s; zrel now is relocation offset for result
  zu=CAV(z); zv=AAV(z);  // output pointers
@@ -477,7 +478,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
   yr=AR(y); ys=AS(y);    // yr=rank of y, ys->shape of y
   if(!yr){
    // atomic contents; perform atomic replication
-   if(t&BOX){RELORIGINB(yrel,y); x=(A)(*AV(y)+yrel-zrel); DO(p/SZA, *zv++=x;);}  // see jtraze; replicate pointer to data
+   if(t&BOX){RELORIGINB(yrel,y); x=(A)(*AV(y)+yrel-zrel); DO(p>>LGSZA, *zv++=x;);}  // see jtraze; replicate pointer to data
    else     {mvc(p,zu,k,AV(y)); zu+=p;}   // copy the data, replicating
   } else {
    // nonatomic contents: rank extension+fill rather than replication

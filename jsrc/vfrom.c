@@ -282,7 +282,7 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  RZ(a&&w);
  n=AN(a); t=AT(a); *ind=0; if(AR(a)==0)R 0;  // revert to normal code for atomic a
  ws=wf+AS(w); c=*(AS(a)+AR(a)-1);   // c = length of 1-cell
- if(!n||!c||t&BOX)R 0;  // revert to normal code for empty or boxed a
+ if(((n-1)|(c-1)|-(t&BOX))<0)R 0;  // revert to normal code for empty or boxed a
  ASSERT(c<=AR(w)-wf,EVLENGTH);
 // obsolete  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
 // obsolete  DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range

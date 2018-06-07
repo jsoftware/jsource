@@ -106,7 +106,8 @@ F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
 
 static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  RZ(w);
- n=*(AS(w)+AR(w)-1); m=n?AN(w)/n:0; v=AV(w);
+// obsolete n=*(AS(w)+AR(w)-1); m=n?AN(w)/n:0; v=AV(w);
+ n=*(AS(w)+AR(w)-1); PROD(m,AR(w)-1,AS(w)); v=AV(w);
  GATV(z,INT,AN(w),AR(w),AS(w)); x=AV(z);
  for(i=0;i<m;++i){
   DO(n, x[i]=i;);
@@ -116,10 +117,10 @@ static F1(jtdfr){A z;I c,d,i,j,m,n,*v,*x;
  R z;
 }    /* direct from reduced */
 
-static F1(jtrfd){A z;I j,k,n,r,*s,*x;
+static F1(jtrfd){A z;I j,k,m,n,r,*s,*x;
  RZ(z=ca(w)); x=AV(z);
- r=AR(w); s=AS(w); 
- if(n=s[r-1])DO(AN(w)/n, j=n-1; ++x; DO(n-1, k=0; DO(j--, k+=*x>x[i];); *x++=k;););
+ r=AR(w); s=AS(w); PROD(m,r-1,s);
+ if(n=s[r-1])DO(m, j=n-1; ++x; DO(n-1, k=0; DO(j--, k+=*x>x[i];); *x++=k;););
  R z;
 }    /* reduced from direct */
 

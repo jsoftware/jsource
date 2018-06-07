@@ -578,6 +578,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define SMIN            (-65536)
 #define SYMHASH(h,n)    ((h)%(n)+SYMLINFOSIZE)   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #define SZA             ((I)sizeof(A))
+#define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))
 #define SZI             ((I)sizeof(I))
 #define LGSZD    3  // lg(#bytes in a D)

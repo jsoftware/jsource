@@ -250,9 +250,9 @@ static B jtsprintfeD(J jt, C *x, I m, I dp, D dw, C *subs) {I y,y0;int decpt,sig
 #define mods_coldp 0x40000000 /* applied to modifiers when we're computing this columns # of decimal places */
 
 static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
-     I d,i,*ib,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nc,nf,*s,wr,*ws,wt;
+     I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nc,nf,*s,wr,*ws,wt;
  RZ(a&&w); 
- nf=1==AR(a)?1:*AS(a); n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;
+ nf=1==AR(a)?1:*AS(a); n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;  // nf=#cells, nc=length of 1-cell (# columns)
  ASSERT(wt&B01+INT+FL, EVDOMAIN);
  if(1<nf){GATV(base,INT,nf*4,2,0); s=AS(base); *s++=nf; *s=4;}else GATV(base,INT,3+nc,1,0);
  GATV(strs,BOX,nf*NMODVALS,2,0); s=AS(strs); *s++=nf; *s=NMODVALS;
@@ -270,9 +270,12 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
    DO(nf, if(ib[1]==-1)ib[1]=0; ib+=4;);     /* boolean always has 0 decimal places: */
    break;
   case INTX:
-   iw=AV(w); ib=AV(base); iv=AV(len); /* use len to store dp */
+   iw=AV(w); // obsolete ib=AV(base);
+   iv=AV(len); /* use len to store dp */
+   imod=1;  // row size counter
    for(i=0;i<n;++i){
-    if(i%nf) ib += 4; else ib=AV(base);
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
+// obsolete    if(i%nf) ib += 4; else ib=AV(base);
     d=ib[1];
     if(d==-1) *bits |= BITSe * (2000000000L < ABS(*iw));
     /* BITS_, BITS__, and BITS_d are 0 */
@@ -280,18 +283,24 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
     if(d==-1) *iv = dpone(*bits,(D)*iw);
     bits++; iw++; iv++;
    }
-   ib=AV(base); iv=AV(len); 
+   imod=1;  // row size counter
+// obsolete    ib=AV(base);
+   iv=AV(len); 
    for(i=0;i<n;++i){
-    if(i%nf) ib += 4; else ib=AV(base);
+// obsolete    if(i%nf) ib += 4; else ib=AV(base);
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     if(ib[1]==-1) ib[2] |= mods_coldp; 
     if(ib[2]&mods_coldp && *iv>ib[1]) ib[1]=*iv; 
     iv++; 
    }
    break;
   case FLX:
-   dw=DAV(w); ib=AV(base); iv=AV(len); /* use len to store dp */
+   dw=DAV(w); // obsolete ib=AV(base);
+   iv=AV(len); /* use len to store dp */
+   imod=1;  // row size counter
    for(i=0;i<n;++i){
-    if(i%nf) ib+=4; else ib=AV(base); 
+// obsolete    if(i%nf) ib+=4; else ib=AV(base); 
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     d=ib[1];
     dtmp=ABS(*dw);    
     if(d==-1) *bits |= BITSe*(TNE(0,dtmp) && (TLT(dtmp,1e-9)||TLT(2e9,dtmp)));
@@ -302,17 +311,22 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
     else *bits |= BITSz*(TEQ(*dw, 0) || (!(*bits&BITSf+BITSe) && TLT(dtmp, npwrs[d]/2)));
     bits++; dw++; iv++; 
    }
-   ib=AV(base); iv=AV(len);
+// obsolete    ib=AV(base);
+   iv=AV(len);
+   imod=1;  // row size counter
    for(i=0;i<n;++i){
-    if(i%nf) ib+=4; else ib=AV(base); 
+// obsolete    if(i%nf) ib+=4; else ib=AV(base); 
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     if(ib[1]==-1) ib[2] |= mods_coldp;
     if(ib[2]&mods_coldp&&*iv>ib[1]) ib[1]=*iv;
     ASSERTSYS(0<=ib[1]&&9>=ib[1], "jtfmtprecomp: d oob");
     iv++; 
    }
-   bits=BAV(fb); dw=DAV(w); ib=AV(base);
+   bits=BAV(fb); dw=DAV(w); // obsolete ib=AV(base);
+   imod=1;  // row size counter
    DO(n, 
-    if(i%nf) ib+=4; else ib=AV(base);
+// obsolete    if(i%nf) ib+=4; else ib=AV(base);
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     d=ib[1]; 
     if(ib[2]&mods_coldp){
      *bits |= BITSz*(TEQ(*dw, 0) || (!(*bits&BITSf+BITSe) && TLT(ABS(*dw), npwrs[d]/2)));
@@ -323,10 +337,14 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
 
  iv=AV(len); bits=BAV(fb);
  iw=AV(w); dw=DAV(w); maxl=-1;
- ib=AV(base); u=AAV(strs)-1;
+// obsolete  ib=AV(base); u=AAV(strs)-1;
+ imod=1;  // row size counter
+ I imodc=-1;  // 
  for(i=0;i<n;i++) {
-       if(i%nf){ib+=4; u+=NMODVALS;}
-       else{ib=AV(base);u=AAV(strs)-1;}
+// obsolete    if(i%nf){ib+=4; u+=NMODVALS;}
+// obsolete       else{ib=AV(base);u=AAV(strs)-1;}
+       ib+=4; u+=NMODVALS; --imod; ib=(imod==0)?AV(base):ib; u=(imod==0)?AAV(strs)-1:u; imod=(imod==0)?nf:imod;
+       ++imodc; imodc=(imodc==nc)?0:imodc;  // imodc is i%nc
        nB=AN(uB); nD=AN(uD); nMN=AN(uM)+AN(uN); nPQ=AN(uP)+AN(uQ);
        d=ib[1]; mods=ib[2]; 
        if(*bits&BITSf) { if(mD) *iv=nD; else *iv=2-!!(*bits&BITS_); }
@@ -370,7 +388,8 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
        ASSERTSYS(0 <= *iv, "jtfmtprecomp: cell length");
        if(*iv > maxl) maxl=*iv;
        if(1<nf && *iv > ib[3]) ib[3]=*iv;
-       else if(1==nf && *iv > ib[3+i%nc]) ib[3+i%nc]=*iv;
+// obsolete       else if(1==nf && *iv > ib[3+i%nc]) ib[3+i%nc]=*iv;
+       else if(1==nf && *iv > ib[3+imodc]) ib[3+imodc]=*iv;
        bits++; dw++; iw++; iv++;
  }
  ib=AV(base);
@@ -382,7 +401,7 @@ static F2(jtfmtprecomp) {A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
 /* w is argument to format, but with BO1, INT, or FL type. */
 static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
     B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cv,**cvv,*cx,*subs;D dtmp,*dv;
-    I coll,d,g,h,i,*ib,*iv,*il,j,k,l,m,mods,n,nB,nD,nM,nN,nP,nQ,nR,nc,nf,t,wr,*ws,y,zs[2];
+    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,n,nB,nD,nM,nN,nP,nQ,nR,nc,nf,t,wr,*ws,y,zs[2];
  RZ(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;
  RZ(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); nc=wr?ws[wr-1]:1;
  ASSERT(B01+INT+FL&t, EVDOMAIN);
@@ -390,9 +409,12 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
  nf=1==AR(base)?1:AS(base)[0];
  switch(mode){
   case 0:
-   GATV(x, BOX, n, wr, ws); a1v=AAV(x); il=AV(len); ib=AV(base);
+   GATV(x, BOX, n, wr, ws); a1v=AAV(x); il=AV(len);
+   ib=AV(base);
+   imod=1;
    DO(n, 
-    if(i%nf) ib+=4; else ib=AV(base);
+// obsolete     if(i%nf) ib+=4; else ib=AV(base);
+    ib+=4; --imod; ib=(imod==0)?AV(base):ib; imod=(imod==0)?nf:imod;
     if(0<ib[0]) GATV(*a1v, LIT, ib[0], 1, 0)
     else GATV(*a1v, LIT, *il, 1, 0) 
     memset(CAV(*a1v), ' ', AN(*a1v)); 
@@ -404,7 +426,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    GATV(v, LIT, nc*SZA, 1, 0); cvv=(C**)AV(v); 
    DO(nc,
     if(0<ib[0]) zs[1]=ib[0]; 
-    else zs[1]=ib[3+(1<nf?0:i%nc)]; 
+// obsolete    else zs[1]=ib[3+(1<nf?0:i%nc)]; 
+    else zs[1]=ib[3+(1<nf?0:i)]; 
     GATV(*a1v, LIT, zs[0]*zs[1], 2, zs); 
     memset(CAV(*a1v), ' ', AN(*a1v)); 
     *cvv++=CAV(*a1v);
@@ -414,7 +437,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    break;
   case 2:
    coll=0; ib=AV(base);
-   DO(nc, if(0<ib[0]) coll+=ib[0]; else coll+=ib[3+(1<nf?0:i%nc)];
+// obsolete    DO(nc, if(0<ib[0]) coll+=ib[0]; else coll+=ib[3+(1<nf?0:i%nc)];
+   DO(nc, if(0<ib[0]) coll+=ib[0]; else coll+=ib[3+(1<nf?0:i)];
           if(1<nf) ib+=4; );
    zs[0]=prod(wr-1,ws); zs[1]=coll;
    GATV(x, LIT, zs[0]*zs[1], 2, zs);

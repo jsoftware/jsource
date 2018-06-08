@@ -24,15 +24,16 @@ F1(jtstype){RZ(w); R sc(UNSAFE(AT(w)));}
 /*      other  pre 601 header                                              */
 
 
-#define WS(d)           (d?8:4)                 /* word size in bytes              */
-#define BH(d)           (4*WS(d))               /* # non-shape header bytes in A   */
+#define LGWS(d)         ((d)+2)  // LG(WS(d))
+#define WS(d)           (1LL<<LGWS(d))                 /* word size in bytes              */
+#define BH(d)           (4LL<<LGWS(d))               /* # non-shape header bytes in A   */
 #define BF(d,a)         ((C*)(a)        )       /* flag                            */
 #define BT(d,a)         ((C*)(a)+  WS(d))       /* type                            */
 #define BTX(d,pre601,a) ((C*)(a)+  WS(d)*!pre601)
-#define BN(d,a)         ((C*)(a)+2*WS(d))       /* # elements in ravel             */
-#define BR(d,a)         ((C*)(a)+3*WS(d))       /* rank                            */
-#define BS(d,a)         ((C*)(a)+4*WS(d))       /* shape                           */
-#define BV(d,a,r)       (BS(d,a)+(r)*WS(d))     /* value                           */
+#define BN(d,a)         ((C*)(a)+(2LL<<LGWS(d)))       /* # elements in ravel             */
+#define BR(d,a)         ((C*)(a)+(3LL<<LGWS(d)))       /* rank                            */
+#define BS(d,a)         ((C*)(a)+(4LL<<LGWS(d)))       /* shape                           */
+#define BV(d,a,r)       (BS(d,a)+((r)<<LGWS(d)))     /* value                           */
 #define BU              (C_LE ? 1 : 0)
 
 
@@ -44,7 +45,8 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
   R z+w*m*((c+w*BB-1)/(w*BB));
  }else{
   k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
-  R z+w*((n*k+(tb&&t&LAST0)+w-1)/w);
+// obsolete   R z+w*((n*k+(tb&&t&LAST0)+w-1)/w);
+  R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
 }}   /* size in byte of binary representation */
 
 
@@ -137,7 +139,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t;
 
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));
- n=AN(y); s[0]=n/WS(d); s[1]=2*WS(d); 
+ n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
  GATV(z,LIT,2*n,2,s);  
  u=CAV(y); v=CAV(z); 
  DO(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
@@ -151,14 +153,14 @@ F2(jtbinrep2){I k;
  RZ(a&&w);
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(k<=0||k<=3,EVDOMAIN);
- R brep((B)(k%2),(B)(2<=k),w);
+ R brep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:1 w */
 
 F2(jthexrep2){I k;
  RZ(a&&w); 
  RE(k=i0(a)); if(10<=k)k-=8;
  ASSERT(k<=0||k<=3,EVDOMAIN);
- R hrep((B)(k%2),(B)(2<=k),w);
+ R hrep((B)(k&1),(B)(2<=k),w);
 }    /* a 3!:3 w */
 
 
@@ -262,9 +264,10 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
 #else
  ASSERT(ABS(j)<=2,EVDOMAIN);
 #endif
- p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
- if(0<j){m=n*p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
- else   {m=n/p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n%p),EVLENGTH);} 
+// long way p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
+ p=ABS(j); p+=(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
+ if(0<j){m=n<<p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
+ else   {m=n>>p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((1LL<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
@@ -284,9 +287,10 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
  RE(j=i0(a));
- p=2==j||-2==j?sizeof(D):sizeof(float);
- if(0<j){m=n*p; zt=LIT; if(!(FL&AT(w)))RZ(w=cvt(FL,w));}
- else   {m=n/p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n%p),EVLENGTH);} 
+// obsolete  p=2==j||-2==j?sizeof(D):sizeof(float);
+ p=2==j||-2==j?LGSZD:2;
+ if(0<j){m=n<<p; zt=LIT; if(!(FL&AT(w)))RZ(w=cvt(FL,w));}
+ else   {m=n>>p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((1LL<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=DAV(z); x=DAV(w);
  switch(j){
   default: ASSERT(0,EVDOMAIN);

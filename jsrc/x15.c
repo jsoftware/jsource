@@ -912,7 +912,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(wt&BOX){
    x=WVR(i); xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
-   lit=star&&xt&LIT&&(c=='s'&&0==xn%2||c=='f'&&0==xn%4);
+   lit=star&&xt&LIT&&(c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
    xv=AV(x); if(zbx)*zv=x;
   }else{
@@ -970,8 +970,8 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
             {f=(float)*(D*)xv; 
              if(fcnt<16&&dcnt<=16){
                dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
-               if ((0==fcnt%2) && (fcnt<dcnt)) fcnt=dcnt;
-               if ((1==fcnt%2) && (fcnt>dcnt)) dcnt=fcnt+1;
+               if ((0==(fcnt&1)) && (fcnt<dcnt)) fcnt=dcnt;
+               if ((1==(fcnt&1)) && (fcnt>dcnt)) dcnt=fcnt+1;
              }else{
                if(dv-data>=4){
                  *(float*)(dv++)=f;
@@ -1010,17 +1010,18 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
                *(D*)(dd+dcnt++)= *(D*)xv; dcnt++;
              }else{
                if(dv-data>=4){
-                 if((dv-data)%2)dv++;
+                 if((dv-data)&1)dv++;
                  *(D*)(dv++)=*(D*)xv; dv++;
                  dcnt=(dv-data)+12;
                }else{
                  dcnt=MAX(fcnt,dcnt);
-                 if(dcnt%2)dcnt++;
+// obsolete                 if(dcnt%2)dcnt++;
+                 dcnt = (dcnt+1)&-2;
                  *(D*)(data+dcnt++ -12)=*(D*)xv; dcnt++;
              }}}
 #else
 #ifdef C_CD_ARMEL
-             if((data-dv)%2) *dv++=0;   /* 8-byte alignment for double */
+             if((data-dv)&1) *dv++=0;   /* 8-byte alignment for double */
 #endif
              *dv++=xv[0];
 #if !SY_64

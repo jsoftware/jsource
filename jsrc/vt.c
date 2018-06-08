@@ -49,28 +49,32 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  EPILOG(z);
 }    /* take on sparse array w */
 
-// general take routine.  a is take values, w is array
+// general take routine.  a is result frame followed by take values i. e. shape of result, w is array
 static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(t&SPARSE)R tks(a,w);
- DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});
- if(b||!AN(w))R tk0(b,a,w);
- k=bp(t); z=w; c=q=1;
+ DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
+ if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
+ k=bp(t); z=w; c=q=1;  // c will be #cells for this axis
  // process take one axis at a time
- for(i=0;i<n;++i){
-  c*=q; p=u[i]; q=ABS(p); m=s[i];  // q can be IMIN out of this
-  if(q!=m){
-   RE(d=mult(AN(z)/m,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN
-   if(q>m)mvc(k*AN(y),CAV(y),k,jt->fillv);
-   d=AN(z)/(m*c)*k; e=d*MIN(m,q);
-   dy=d*q; yv=CAV(y); if(0>p&&q>m)yv+=d*(q-m);
-   dz=d*m; zv=CAV(z); if(0>p&&m>q)zv+=d*(m-q);
+ for(i=0;i<n;++i){I itemsize;
+  c*=q; p=u[i]; q=ABS(p); m=s[i];  // q=length of take can be IMIN out of this   m=length of axis
+  if(q!=m){  // if axis unchanged, skip it.  This includes the first axis
+   PROD(itemsize,r-i-1,s+i+1);  // size of item of cell
+// obsolete   RE(d=mult(AN(z)/m,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN: mult error or GA error
+   RE(d=mult(c*itemsize,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
+   if(q>m)mvc(k*AN(y),CAV(y),k,jt->fillv);   // overtake - fill the whole area
+   /* obsolete d=AN(z)/(m*c)*k; */ itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
+   dy=itemsize*q; yv=CAV(y);
+   dz=itemsize*m; zv=CAV(z);
+// obsolete   if((p&(m-q))<0)yv+=itemsize*(q-m); if((p&(q-m))<0)zv+=itemsize*(m-q);
+   if((p&(m-q))<0)yv+=dy-dz; if((p&(q-m))<0)zv+=dz-dy;
    DO(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
-   b=1; z=y;
+   /* obsolete b=1; */ z=y;
   }
  }
- if(!b)z=ca(w);   // todo kludge no need to ca()
- RELOCATE(w,z);   // if w was relative, rebase the cells on z
+// obsolete  if(!b)z=ca(w);   // todo kludge no need to ca()
+// obsolete RELOCATE(w,z);   // if w was relative, rebase the cells on z
  EPILOG(z);
 }
 

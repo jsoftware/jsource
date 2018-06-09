@@ -3,6 +3,7 @@
 /*                                                                         */
 /* Adverbs: b. bitwise functions                                           */
 
+// TODO: rewrite & simplify, and remove divides
 #include "j.h"
 #include "ve.h"
 #include "ar.h"
@@ -124,7 +125,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,d,j,m,n,wn,wr,*ws,wt,zn;V
 }
 
 /* compute z=: t{~ a.i.w if t=: c&(m b.) a.                             */
-/* http://www.jsoftware.com/jwiki/Essays/Bitwise_Functions_on_Charcters */
+/* http://www.jsoftware.com/jwiki/Essays/Bitwise_Functions_on_Characters */
 
 B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];VF f;
  i=t[0]; j=t[255];
@@ -152,11 +153,12 @@ static VF bwinsI[16]={bw0000insI,bw0001insI,bw0010insI,bw0011insI, bw0100insI,bw
 /* m b./&.(a.i.]) w */
 /* m e. 16+i.16     */
 
-DF1(jtbitwiseinsertchar){A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
+DF1(jtbitwiseinsertchar){A fs,z;I c,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
  RZ(w&&self);
  wr=AR(w); c=wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->f; fs=VAV(z)->f;
- if(!(wn&&d<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);
- m=wn/n; wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];
+ if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);
+// obsolete m=wn/n; wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];
+ PROD(m,wr-1,AS(w)+1); wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];
  if(1==wr)switch(j){
   case  0: R scc(0);
   case  3: R scc(*wv);
@@ -165,17 +167,17 @@ DF1(jtbitwiseinsertchar){A fs,z;I c,d=SZI,j,m,n,r,wn,wr;UC*u,*v,*wv,x,*zv;VF f;
   case 10: x=*(wv+wn-1); R scc((UC)(((wn&1)-1))^x);
   case 12: R scc((UC)~*wv);
   case 15: R scc((UC)255);
-  case  1: case 6: case 7: case 9: f=bwinsI[j]; c=n=n/d;
- }else if(0==m%d){f=bwinsI[j]; c/=d;}
+  case  1: case 6: case 7: case 9: f=bwinsI[j]; c=n=n>>LGSZI;
+ }else if(0==(m&(SZI-1))){f=bwinsI[j]; c>>=LGSZI;}
  GATV(z,LIT,m,wr-1,1+AS(w)); zv=CAV(z);
  f(jt,1L,c,n,zv,wv);
  if(1==wr){
-  r=wn-n*d; u=wv+n*d; x=*zv; v=1+zv; 
+  r=wn-(n<<LGSZI); u=wv+(n<<LGSZI); x=*zv; v=1+zv; 
   switch(j){
-   case 1: DO(d-1, x=BW0001(x,*v); ++v;); DO(r, x=BW0001(x,*u); ++u;); break;
-   case 6: DO(d-1, x=BW0110(x,*v); ++v;); DO(r, x=BW0110(x,*u); ++u;); break;
-   case 7: DO(d-1, x=BW0111(x,*v); ++v;); DO(r, x=BW0111(x,*u); ++u;); break;
-   case 9: DO(d-1, x=BW1001(x,*v); ++v;); DO(r, x=BW1001(x,*u); ++u;); break;
+   case 1: DO(SZI-1, x=BW0001(x,*v); ++v;); DO(r, x=BW0001(x,*u); ++u;); break;
+   case 6: DO(SZI-1, x=BW0110(x,*v); ++v;); DO(r, x=BW0110(x,*u); ++u;); break;
+   case 7: DO(SZI-1, x=BW0111(x,*v); ++v;); DO(r, x=BW0111(x,*u); ++u;); break;
+   case 9: DO(SZI-1, x=BW1001(x,*v); ++v;); DO(r, x=BW1001(x,*u); ++u;); break;
   }
   *(I*)zv=0; *zv=x;
  }

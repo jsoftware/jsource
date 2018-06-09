@@ -118,7 +118,8 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
   b=0; s+=wf;
 // obsolete   DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
-  DO(p-1, m*=n; n=*++s; d/=n; rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
+// obsolete   DO(p-1, m*=n; n=*++s; d/=n; rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
+  DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);  // s has moved past the frame
   z=b?y:z;
  } 
  RELOCATE(w,z);

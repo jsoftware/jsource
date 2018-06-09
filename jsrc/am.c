@@ -143,7 +143,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  // after this, z cannot be virtual unless it is an inplace memory-mapped boxed array
- else{RZ(z=cvt(t,w)); RELOCATE(w,z);}
+ else{RZ(z=cvt(t,w)); /* obsolete RELOCATE(w,z); */}
 #if 0  // obsolete mapped boxed
  if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I *tv;
   // in-placeable boxed memory-mapped array (possibly virtual)
@@ -155,7 +155,6 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
   DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););  // replace pointer to old block with (relative) pointer to new, then free the (absolute) old in smm area
  }else{
-#endif
   // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
   if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
   if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
@@ -164,29 +163,30 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
    }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
   }
   else{
-   // Here for non-relative blocks.  Could be in-place.  If boxed,
-   // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.
-   // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
-   // free them before we overwrite them, and we must increment the usecount in the block we store into them
-   // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
-   C* RESTRICT av0=CAV(a); I k=bp(t); C * RESTRICT avn=av0+(an*k);
-   switch(k){
-   case sizeof(C):
-    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
-   case sizeof(I):  // includes BOX and RAT, which may be recursive
+#endif
+ // Here for non-relative blocks.  Could be in-place.  If boxed,
+ // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.
+ // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
+ // free them before we overwrite them, and we must increment the usecount in the block we store into them
+ // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
+ C* RESTRICT av0=CAV(a); I k=bp(t); C * RESTRICT avn=av0+(an*k);
+ switch(k){
+ case sizeof(C):
+  {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
+ case sizeof(I):  // includes BOX and RAT, which may be recursive
 // obsolete    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
-    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
-    else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
-    break;
-   case sizeof(Q):  // includes Q, which may be recursive
-    if(UCISRECUR(z)){Q * RESTRICT zv=QAV(z); Q *RESTRICT av=(Q*)av0; DO(in, Q new=*av; INSTALLRATRECUR(zv,iv[i],new);   if((++av)==(Q*)avn)av=(Q*)av0;); break;}  // ras() cannot be virtual
-    // if not recursive Q, fall through to...
-   // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
-   default:
-    {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
-   }
+  if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
+  else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
+  break;
+ case sizeof(Q):  // includes Q, which may be recursive
+  if(UCISRECUR(z)){Q * RESTRICT zv=QAV(z); Q *RESTRICT av=(Q*)av0; DO(in, Q new=*av; INSTALLRATRECUR(zv,iv[i],new);   if((++av)==(Q*)avn)av=(Q*)av0;); break;}  // ras() cannot be virtual
+  // if not recursive Q, fall through to...
+ // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
+ default:
+  {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
+ }
+#if 0  // obsolete goes with above
   }
-#if 0  // goes with above
  }
 #endif
  RETF(z);

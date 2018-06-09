@@ -97,16 +97,16 @@ static __inline int Vcompare(J jt,I a,I b){I m,n;SBU*u,*v;UC*s,*t;US*p,*q;C4*f,*
  switch((SBC4&u->flag?6:SBC2&u->flag?3:0)+(SBC4&v->flag?2:SBC2&v->flag?1:0)){
 // u LIT
   case 0: {                                DO(MIN(m,n), if(*s!=*t)R *s<*t; ++s; ++t;);} break;
-  case 1: {          q=(US*)t;       n/=2; DO(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
-  case 2: {          g=(C4*)t;       n/=4; DO(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
+  case 1: {          q=(US*)t;       n>>=1; DO(MIN(m,n), if(*s!=*q)R *s<*q; ++s; ++q;);} break;
+  case 2: {          g=(C4*)t;       n>>=2; DO(MIN(m,n), if(*s!=*g)R *s<*g; ++s; ++g;);} break;
 // u C2T
-  case 3: {p=(US*)s;           m/=2;       DO(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
-  case 4: {p=(US*)s; q=(US*)t; m/=2; n/=2; DO(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
-  case 5: {p=(US*)s; g=(C4*)t; m/=2; n/=4; DO(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
+  case 3: {p=(US*)s;           m>>=1;       DO(MIN(m,n), if(*p!=*t)R *p<*t; ++p; ++t;);} break;
+  case 4: {p=(US*)s; q=(US*)t; m>>=1; n>>=1; DO(MIN(m,n), if(*p!=*q)R *p<*q; ++p; ++q;);} break;
+  case 5: {p=(US*)s; g=(C4*)t; m>>=1; n>>=2; DO(MIN(m,n), if(*p!=*g)R *p<*g; ++p; ++g;);} break;
 // u C4T
-  case 6: {f=(C4*)s;           m/=4;       DO(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
-  case 7: {f=(C4*)s; q=(US*)t; m/=4; n/=2; DO(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
-  case 8: {f=(C4*)s; g=(C4*)t; m/=4; n/=4; DO(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
+  case 6: {f=(C4*)s;           m>>=2;       DO(MIN(m,n), if(*f!=*t)R *f<*t; ++f; ++t;);} break;
+  case 7: {f=(C4*)s; q=(US*)t; m>>=2; n>>=1; DO(MIN(m,n), if(*f!=*q)R *f<*q; ++f; ++q;);} break;
+  case 8: {f=(C4*)s; g=(C4*)t; m>>=2; n>>=2; DO(MIN(m,n), if(*f!=*g)R *f<*g; ++f; ++g;);} break;
  }
  R m<n;
 }
@@ -292,7 +292,8 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
 // optimize storage if ascii or short
 // c2 new flag; c0 original flag
- if(c2!=c0)n/=(c0&SBC4&&c2&SBC2)?2:(c0&SBC4&&!c2&SBC2)?4:2;
+// obsolete if(c2!=c0)n/=(c0&SBC4&&c2&SBC2)?2:(c0&SBC4&&!c2&SBC2)?4:2;
+ if(c2!=c0)n>>=(c0&SBC4&&!c2&SBC2)?2:1;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
 // p = (-m)&(c2+(c2>>1));               /* pad for alignment (leaner)   */
@@ -483,8 +484,8 @@ static F1(jtsbbox){A z,*zv;C*s;I n;SB*v;SBU*u;
 
 #define C2FSB(zv,u,q,m,c)  \
  {UC*s=SBSV(u->i);I k=u->n;US*us=(US*)s;                            \
-  if(SBC4&u->flag){MC(zv,s,k); zv+=k/=4;}                          \
-  else if(SBC2&u->flag){k/=2; DO(k, *zv++=*us++;);}else DO(k, *zv++=*s++;);  \
+  if(SBC4&u->flag){MC(zv,s,k); zv+=k>>=2;}                          \
+  else if(SBC2&u->flag){k>>=1; DO(k, *zv++=*us++;);}else DO(k, *zv++=*s++;);  \
   if(2==q)*zv++=c; else if(3==q)DO(m-k, *zv++=c;);                 \
  }
 
@@ -520,7 +521,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
  n=AN(w); v=v0=SBAV(w);
  ASSERT(!n||SBT&AT(w),EVDOMAIN);
 // promote to the highest character type for output
- DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=SBC4; k/=4;} else if(u->flag&SBC2){c2=MAX(c2,SBC2);  k/=2;} if(m<k)m=k;); 
+ DO(n, u=SBUV(*v++); k=u->n; if(u->flag&SBC4){c2=SBC4; k>>=2;} else if(u->flag&SBC2){c2=MAX(c2,SBC2);  k>>=1;} if(m<k)m=k;); 
  v=v0;
  GA(z,c2&SBC4?C4T:c2&SBC2?C2T:LIT,n*m,1+AR(w),AS(w)); *(AR(w)+AS(z))=m;
  if(c2&SBC4){C4*zv=C4AV(z); DO(n, u=SBUV(*v++); C2FSB(zv,u,3,m,c););}
@@ -778,7 +779,7 @@ F2(jtsb2){A z;I j,k,n;
   case 18:   GAP--;                                         R sc(GAP);
   case 19:   FILLFACTOR=1024;                               R sc(FILLFACTOR);
   case 20:   FILLFACTOR*=2;                                 R sc(FILLFACTOR);
-  case 21:   FILLFACTOR/=2; ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(FILLFACTOR);
+  case 21:   FILLFACTOR>>=1; ASSERT(FILLFACTOR>GAP,EVLIMIT); R sc(FILLFACTOR);
 #ifdef TMP
   case 22:
     GAT(z,INT,10,1,0); zv=AV(z);

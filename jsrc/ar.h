@@ -6,6 +6,7 @@
 // n=#items in a CELL of w
 // m=#cells to operate on
 // c=#atoms in a cell
+// d=#atoms in an item of a cell of w (thus c=d*n)
 
 #if 0
 #define REDUCEPFX(f,Tz,Tx,pfx)  \

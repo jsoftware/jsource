@@ -247,7 +247,7 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
  GA(z,zt,1,0,0);
 // obsolete if(n){ado(jt,1L,n,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
- if(n){ado(jt,1L,1LL,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
+ if(n){ado(jt,1L,1L,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
@@ -264,7 +264,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
 // obsolete   if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
-  if(n)adocv.f(jt,1L,1LL,n,AV(z),AV(x));
+  if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
   if(jt->jerr<EWOV)R redsp1a(vaid(VAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 

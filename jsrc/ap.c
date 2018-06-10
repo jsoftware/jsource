@@ -102,8 +102,8 @@
  }    /* f/\"r z for boolean associative atomic function f */
 #else
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
- AHDRP(f,B,B){B*tv;I d,i,q,r,t,*xi,*yi,*zi;                      \
-  d=c/n; q=d/SZI; r=d%SZI; xi=(I*)x; zi=(I*)z; tv=(B*)&t;        \
+ AHDRP(f,B,B){B*tv;I i,q,r,t,*xi,*yi,*zi;                      \
+  q=d/SZI; r=d%SZI; xi=(I*)x; zi=(I*)z; tv=(B*)&t;        \
   if(1==d)   for(r=0;r<m;++r){vexp}                              \
   else if(!r)for(i=0;i<m;++i){                                   \
    yi=zi; DO(q, *zi++=*xi++;);                                   \
@@ -246,8 +246,8 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  jt->rank=0;
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z);
- DO(n, RZ(zv[i]=df1(take(sc(1+i),w),hv[i%m])););
+ GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ DO(n, if(imod==m)imod=0; RZ(zv[i]=df1(take(sc(1+i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\"r w for gerund g */
 

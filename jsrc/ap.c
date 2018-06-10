@@ -22,8 +22,8 @@
 
 #define PREFIXPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
-  if(c==n)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=    *x++;);                                        \
    DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
  }}}  /* for associative functions only */
@@ -31,8 +31,8 @@
 #define PREFIXNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
   NAN0;                                                               \
-  if(c==n)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=    *x++;);                                        \
    DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
   }}                                                                   \
@@ -41,16 +41,16 @@
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
-  if(c==n)DO(m, *z++=v=(Tz)*x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  if(d==1)DO(m, *z++=v=(Tz)*x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=(Tz)*x++;);                                        \
    DO(n-1, DO(d, *z=pfx(*y,*x); ++z; ++x; ++y;));                     \
  }}}  /* for associative functions only */
 
 #define PREFIXALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
-  if(c==n)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                                               \
+  if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=    *x++;); b=0;                                                    \
    DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
@@ -58,8 +58,8 @@
 #define PREALTNAN(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
   NAN0;                                                                                \
-  if(c==n)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                                               \
+  if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=    *x++;); b=0;                                                    \
    DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
   }}                                                                                    \
@@ -68,18 +68,18 @@
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
-  if(c==n)DO(m, *z++=v=(Tz)*x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                                               \
+  if(d==1)DO(m, *z++=v=(Tz)*x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=(Tz)*x++;); b=0;                                                    \
    DO(n-1, b=!b; DO(d, pfx(b,*z,*y,*x); ++z; ++x; ++y;));                              \
  }}}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
  AHDRP(f,I,I){C er=0;I i,*xx=x,* RESTRICT y,*zz=z;                      \
-  if(c==n){                                                         \
+  if(d==1){                                                         \
    if(1==n)DO(m, *z++=*x++;)                                        \
-   else    DO(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;)                \
-  }else{I d=c/n; for(i=0;i<m;++i){                                           \
+   else {I c=d*n;    DO(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;) }               \
+  }else{for(i=0;i<m;++i){                                           \
    y=z; DO(d, *z++=*x++;); zz=z; xx=x;                              \
    DO(n-1, fvv(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d;);             \
  }}}
@@ -93,7 +93,7 @@
  }
 
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
- AHDRP(f,B,B){B* RESTRICT y;I d=c/n,j,q;                        \
+ AHDRP(f,B,B){B* RESTRICT y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
   else if(0==(d&(sizeof(UI  )-1)))PREFIXBFXLOOP(UI,   pfx)  \
   else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
@@ -121,7 +121,7 @@
 #endif
 
 #define BFXANDOR(c0,c1)  \
- {B*y=memchr(x,c0,n); if(y){q=y-x; memset(z,c1,q); memset(z+q,c0,n-q);}else memset(z,c1,n); x+=c; z+=c;}
+ {B*y=memchr(x,c0,n); if(y){q=y-x; memset(z,c1,q); memset(z+q,c0,n-q);}else memset(z,c1,n); x+=d*n; z+=d*n;}
 
 PREFIXBFX( orpfxB, OR, IOR, SOR, BOR,  BFXANDOR(C1,C0))
 PREFIXBFX(andpfxB, AND,IAND,SAND,BAND, BFXANDOR(C0,C1))
@@ -129,9 +129,11 @@ PREFIXBFX( nepfxB, NE, INE, SNE, BNE, {B b=0; DO(n, *z++=b^=  *x++;);})
 PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DO(n, *z++=b=b==*x++;);})
 
 
-static B jtpscanlt(J jt,I m,I c,I n,B*z,B*x,B p){A t;B*v;I d,i;
- d=c/n; memset(z,!p,m*c); 
- if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=c; x+=c;)
+static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
+// obsolete d=c/n; memset(z,!p,m*c); 
+// obsolete if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=c; x+=c;)
+ memset(z,!p,m*n*d); 
+ if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
   GATV(t,B01,d,1,0); v=BAV(t);
   for(i=0;i<m;++i){
@@ -141,20 +143,20 @@ static B jtpscanlt(J jt,I m,I c,I n,B*z,B*x,B p){A t;B*v;I d,i;
  R 1;
 }    /* f/\"1 w for < and <: */
 
-AHDRP(ltpfxB,B,B){pscanlt(m,c,n,z,x,C1);}
-AHDRP(lepfxB,B,B){pscanlt(m,c,n,z,x,C0);}
+AHDRP(ltpfxB,B,B){pscanlt(m,d,n,z,x,C1);}
+AHDRP(lepfxB,B,B){pscanlt(m,d,n,z,x,C0);}
 
 
-static B jtpscangt(J jt,I m,I c,I n,B*z,B*x,B a,B pp,B pa,B ps){
-  A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;C*u;I d,i,j;
- if(c==n)for(i=0;i<m;++i){
+static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
+  A t;B b,*cc="\000\001\000",e,*p=cc+pp,*v;C*u;I i,j;
+ if(d==1)for(i=0;i<m;++i){
   if(v=memchr(x,a,n)){
    j=v-x; b=j&1; 
    mvc(j,z,2L,p); memset(z+j,b!=ps,n-j); *(z+j)=b!=pa;
   }else mvc(n,z,2L,p);
-  z+=c; x+=c;
+  z+=n; x+=n;
  }else{
-  d=c/n; GATV(t,B01,d,1,0); u=BAV(t);
+  GATV(t,B01,d,1,0); u=BAV(t);
   for(i=0;i<m;++i){
    e=pp; memset(u,C0,d);
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
@@ -164,19 +166,19 @@ static B jtpscangt(J jt,I m,I c,I n,B*z,B*x,B a,B pp,B pa,B ps){
  R 1;
 }    /* f/\"1 w for > >: +: *: */
 
-AHDRP(  gtpfxB,B,B){pscangt(m,c,n,z,x,C0,C1,C0,C0);}
-AHDRP(  gepfxB,B,B){pscangt(m,c,n,z,x,C1,C0,C1,C1);}
-AHDRP( norpfxB,B,B){pscangt(m,c,n,z,x,C1,C0,C1,C0);}
-AHDRP(nandpfxB,B,B){pscangt(m,c,n,z,x,C0,C1,C0,C1);}
+AHDRP(  gtpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C0);}
+AHDRP(  gepfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C1);}
+AHDRP( norpfxB,B,B){pscangt(m,d,n,z,x,C1,C0,C1,C0);}
+AHDRP(nandpfxB,B,B){pscangt(m,d,n,z,x,C0,C1,C0,C1);}
 
 
 PREFIXOVF( pluspfxI, I, I,  PLUSP, PLUSVV)
 PREFIXOVF(tymespfxI, I, I, TYMESP,TYMESVV)
 
-AHDRP(minuspfxI,I,I){C er=0;I d=c/n,i,j,n1=n-1,*xx=x,*y,*zz=z;
+AHDRP(minuspfxI,I,I){C er=0;I i,j,n1=n-1,*xx=x,*y,*zz=z;
  if(1==d){
   if(1==n)DO(m, *z++=*x++;)
-  else    DO(m, MINUSP(n,z,x); RER; z=zz+=c; x=xx+=c;);
+  else    DO(m, MINUSP(n,z,x); RER; z=zz+=d*n; x=xx+=d*n;);
  }else for(i=0;i<m;++i){                               
   y=z; DO(d, *z++=*x++;); zz=z; xx=x; j=0;
   DO(n1, MINUSVV(d,z,y,x); RER; x=xx+=d; y=zz; z=zz+=d; if(n1<=++j)break;
@@ -527,14 +529,15 @@ static DF1(jtinfixprefix1){
 #endif
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
+static DF1(jtpscan){A y,z;I d,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
- PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
+// obsolete PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
+ PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=VAV(self)->f; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R jtinfixprefix1(jt,w,self);}
@@ -543,7 +546,7 @@ static DF1(jtpscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(adocv.cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
- adocv.f(jt,m,c,n,AV(z),AV(w));
+ adocv.f(jt,m,d,n,AV(z),AV(w));
  if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
@@ -738,10 +741,10 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,d,m,m0,p,t,wk,wt,zk,zt;
+static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  PREF2(jtmovfslash);
- p=IC(w); wt=AT(w);
- RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m=abs(m0), handling IMIN 
+ p=IC(w); wt=AT(w);   // p=#items of w
+ RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m0=infx x,  m=abs(m0), handling IMIN 
 // obsolete m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
 //obsolete  if(2==m0)R infix2(a,w,self);
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);
@@ -763,15 +766,18 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I c,cm,d,m,m0,p,t,wk,wt,zk,zt;
 // obsolete  if(!ado||!m||m>p)R jtinfixprefix2(jt,a,w,self);
  if(!adocv.f)R jtinfixprefix2(jt,a,w,self);
 // obsolete d=0<=m0?1+p-m:(p+m-1)/m;
- if(m0>=0){d=MAX(0,1+p-m);}else{d=1+(p-1)/m; d=(p==0)?p:d;}
- c=aii(w); cm=c*m; b=0>m0&&0<p%m;
+ if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
+// obsolete  c=aii(w); cm=c*m; b=0>m0&&0<p%m;   // b='has shard'
+ d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); jt->rank=0; 
- GA(z,zt,c*d,MAX(1,AR(w)),AS(w)); *AS(z)=d;
+ GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); *AS(z)=zi;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
- zv=CAV(z); zk=bp(zt)*c; 
- wv=CAV(w); wk=bp(wt)*(0<=m0?c:c*m);
- DO(d-b, adocv.f(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
- if(b)adocv.f(jt,1L,c*(p%m),p%m,zv,wv);
+ zv=CAV(z); zk=bp(zt)*d; 
+ wv=CAV(w); wk=bp(wt)*(0<=m0?d:d*m);
+//  obsolete  DO(zi-b, adocv.f(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
+ DO(zi-b, adocv.f(jt,1L,d,m,zv,wv); zv+=zk; wv+=wk;);
+// obsolete  if(b)adocv.f(jt,1L,d*(p%m),p%m,zv,wv);
+ if(b)adocv.f(jt,1L,d,p-m*(zi-1),zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 

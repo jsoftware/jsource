@@ -89,9 +89,8 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
  }}  /* commutative */
 
 #define REDUCECFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
- AHDRP(f,B,B){B*y=0;I d,j,q;                       \
-  if(c==n){vdo; R;}                                \
-  d=c/n;                                           \
+ AHDRP(f,B,B){B*y=0;I j,q;                       \
+  if(d==1){vdo; R;}                                \
   if(1==n)DO(d, *z++=*x++;)                        \
   else if(0==d%sizeof(UI  ))RCFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RCFXLOOP(UINT,ipfx)    \
@@ -102,9 +101,9 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 #endif
 
 #define REDUCEBFX(f,pfx,ipfx,spfx,bpfx,vdo)  \
- AHDRP(f,B,B){B*y=0;I d,j,q;                       \
-  if(c==n){vdo; R;}                                \
-  d=c/n; x+=m*c; z+=m*d;                           \
+ AHDRP(f,B,B){B*y=0;I j,q;                       \
+  if(d==1){vdo; R;}                                \
+  x+=m*d*n; z+=m*d;                           \
   if(1==n)DO(d, *--z=*--x;)                        \
   else if(0==d%sizeof(UI  ))RBFXLOOP(UI,   pfx)    \
   else if(0==d%sizeof(UINT))RBFXLOOP(UINT,ipfx)    \
@@ -114,22 +113,22 @@ static void vdone(I m,I n,B*x,B*z,B pc){B b;I q,r;UC*u;UI s,*y;
 
 REDUCECFX(  eqinsB, EQ,  IEQ,  SEQ,  BEQ,  vdone(m,n,x,z,(B)(n&1)))
 REDUCECFX(  neinsB, NE,  INE,  SNE,  BNE,  vdone(m,n,x,z,1       ))
-REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  DO(m, *z++=1&&memchr(x,C1,n);                         x+=c;)) 
-REDUCECFX( andinsB, AND, IAND, SAND, BAND, DO(m, *z++=!  memchr(x,C0,n);                         x+=c;))
-REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  DO(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;))
-REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  DO(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;))
-REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  DO(m, y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;))
-REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  DO(m, y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;))
-REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, DO(m, y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;))
-REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,DO(m, y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;))
+REDUCECFX(  orinsB, OR,  IOR,  SOR,  BOR,  {I c=d*n; DO(m, *z++=1&&memchr(x,C1,n);                         x+=c;)}) 
+REDUCECFX( andinsB, AND, IAND, SAND, BAND, {I c=d*n; DO(m, *z++=!  memchr(x,C0,n);                         x+=c;}))
+REDUCEBFX(  ltinsB, LT,  ILT,  SLT,  BLT,  {I c=d*n; DO(m, *z++= *(x+n-1)&&!memchr(x,C1,n-1)?1:0;          x+=c;)})
+REDUCEBFX(  leinsB, LE,  ILE,  SLE,  BLE,  {I c=d*n; DO(m, *z++=!*(x+n-1)&&!memchr(x,C0,n-1)?0:1;          x+=c;)})
+REDUCEBFX(  gtinsB, GT,  IGT,  SGT,  BGT,  {I c=d*n; DO(m, y=memchr(x,C0,n); *z++=1&&(y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX(  geinsB, GE,  IGE,  SGE,  BGE,  {I c=d*n; DO(m, y=memchr(x,C1,n); *z++=!  (y?1&(y-x):1&n);      x+=c;)})
+REDUCEBFX( norinsB, NOR, INOR, SNOR, BNOR, {I c=d*n; DO(m, y=memchr(x,C1,n); d=y?y-x:n; *z++=(1&d)==d<n-1; x+=c;)})
+REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DO(m, y=memchr(x,C0,n); d=y?y-x:n; *z++=(1&d)!=d<n-1; x+=c;)})
 
 
 #if SY_ALIGN
 REDUCEPFX(plusinsB,I,B,PLUS)
 #else
-AHDRR(plusinsB,I,B){I d,dw,i,p,q,r,r1,s;UC*tu;UI*v;
- if(c==n&&n<SZI)DO(m, s=0; DO(n, s+=*x++;); *z++=s;)
- else if(c==n){UI t;
+AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
+ if(d==1&n<SZI)DO(m, s=0; DO(n, s+=*x++;); *z++=s;)
+ else if(d==1){UI t;
   p=n>>LGSZI; q=p/255; r=p%255; r1=n&(SZI-1); tu=(UC*)&t;
   for(i=0;i<m;++i){
    s=0; v=(UI*)x; 
@@ -138,7 +137,7 @@ AHDRR(plusinsB,I,B){I d,dw,i,p,q,r,r1,s;UC*tu;UI*v;
    x=(B*)v; DO(r1, s+=*x++;); 
    *z++=s;
  }}else{A t;UI*tv;
-  d=c/n; dw=(d+SZI-1)>>LGSZI; p=dw*SZI; memset(z,C0,m*d*SZI);
+  dw=(d+SZI-1)>>LGSZI; p=dw*SZI; memset(z,C0,m*d*SZI);
   q=n/255; r=n%255;
   t=ga(INT,dw,1,0); if(!t)R;
   tu=UAV(t); tv=(UI*)tu; v=(UI*)x;
@@ -247,7 +246,8 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
  RZ(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); n=AN(x); m=*AS(w);
  GA(z,zt,1,0,0);
- if(n){ado(jt,1L,n,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
+// obsolete if(n){ado(jt,1L,n,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
+ if(n){ado(jt,1L,1LL,n,AV(z),AV(x)); RE(0); if(m==n)R z;}
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
@@ -263,7 +263,8 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   VA2 adocv = vains(VAV(f)->f,AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
-  if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
+// obsolete   if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
+  if(n)adocv.f(jt,1L,1LL,n,AV(z),AV(x));
   if(jt->jerr<EWOV)R redsp1a(vaid(VAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 
@@ -274,7 +275,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  xr=r; v=AV(a); DO(AN(a), if(f<v[i])--xr;); xf=AR(x)-xr;
  m=prod(xf,s); c=m?AN(x)/m:0; n=s[xf];
  GA(zx,zt,AN(x)/n,AR(x)-1,s); ICPY(xf+AS(zx),1+xf+s,xr-1); 
- ado(jt,m,c,n,AV(zx),AV(x)); RE(0);
+ ado(jt,m,c/n,n,AV(zx),AV(x)); RE(0);
  switch(id){
   case CPLUS: if(!equ(e,zero))RZ(e=tymes(e,sc(n))); break; 
   case CSTAR: if(!equ(e,one )&&!equ(e,zero))RZ(e=expn2(e,sc(n))); break;
@@ -353,7 +354,8 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;
   p1=1+(B*)memchr(pv,C1,yr); n=p1-pv; if(sn)sv[i]=wm-n; pv=p1;
   vv=qv?yv+yc**v:yv; DO(yc-1, *yu++=vv[dv[i]];);
-  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ado(jt,1L,n*xc,n,zv,qv?xxv:xv); RE(0);}
+ // obsolete if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ado(jt,1L,n*xc,n,zv,qv?xxv:xv); RE(0);}
+  if(1<n){if(qv){u=xxv; DO(n, MC(u,xv+xk*v[i],xk); u+=xk;);} ado(jt,1L,xc,n,zv,qv?xxv:xv); RE(0);}
   else   if(zk==xk)MC(zv,qv?xv+xk**v:xv,xk);
   else   {if(!x1)GA(x1,xt,xc,1,0); MC(AV(x1),qv?xv+xk**v:xv,xk); RZ(y=cvt(zt,x1)); MC(zv,AV(y),zk);}
   zv+=zk; if(qv)v+=n; else{xv+=n*xk; yv+=n*yc;}
@@ -468,7 +470,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
  R 1;
 }    /* f/"r for dense w over an axis of length 2 */
 
-static DF1(jtreduce){A z;I c,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;
+static DF1(jtreduce){A z;I d,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  RZ(w);
  wn=AN(w); wt=wn?AT(w):B01;   // Treat empty as Boolean type
  if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
@@ -493,24 +495,24 @@ static DF1(jtreduce){A z;I c,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zn,zt;
   // If there is no special routine, go perform general reduce
   if(!adocv.f)R redg(w,self);
   // Here for primitive reduce handled by special code.
-  // Calculate m: #cells of w to operate on; c: #atoms in a cell of w (NOT a cell to which u is applied);
+  // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w cell of w (a cell to which u is applied);
   // zn: #atoms in result
-  PROD(zn,r-1,f+ws+1);  //  */ }. $ cell
+  PROD(d,r-1,f+ws+1);  //  */ }. $ cell
   if(jtr){
    // Rank specified.  m=*/ frame (i. e. #cells to operate on), c=*/ $ cell of w (#atoms in cell), zn=m * */ }. $ cell (# result atoms).
    // r cannot be 0 (would be handled above).  Calculate low part of zn first
-   PROD(m,f,ws); c=zn*ws[f]; zn*=m; jt->rank=0;   // clear rank now that we've used it
+   PROD(m,f,ws); /* obsolete c=zn*ws[f]; zn*=m; */ jt->rank=0;   // clear rank now that we've used it
   }else{
    // No rank, just operate on whole of w
-   m=1; c=wn;   // one cell, containing all the atoms
+   m=1; /* obsolete c=wn; */   // one cell, containing all the atoms
   }
   // Allocate the result area
   zt=rtype(adocv.cv);
-  GA(z,zt,zn,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
   // Convert inputs if needed 
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.
-  adocv.f(jt,m,c,n,AV(z),AV(w));
+  adocv.f(jt,m,d,n,AV(z),AV(w));
   // if return is EWOV, it's an integer overflow and we must restart.
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result
@@ -647,9 +649,9 @@ A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),one));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
 
-static AHDRR(jtmeanD,D,D){I d,i;D*y;D v,*zz;
- d=c/n;
+static AHDRR(jtmeanD,D,D){I i;D*y;D v,*zz;
  NAN0;
+// obsolete  d=c/n;
  if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *z++=v/n;)
  else for(i=0;i<m;++i){
   y=x; x+=d; zz=z; DO(d, *z++ =*x+++   *y++;);
@@ -659,8 +661,8 @@ static AHDRR(jtmeanD,D,D){I d,i;D*y;D v,*zz;
  NAN1V;
 }    /* based on REDUCEPFX; 2<n */
 
-static AHDRR(jtmeanI,D,I){I d,i;I*y;D v,*zz;
- d=c/n;
+static AHDRR(jtmeanI,D,I){I i;I*y;D v,*zz;
+// obsolete  d=c/n;
  if(1==d)DO(m, v=(D)*x++; DO(n-1, v+=*x++;); *z++=v/n;)
  else for(i=0;i<m;++i){
   y=x; x+=d; zz=z; DO(d, *z++ =*x+++(D)*y++;);
@@ -668,15 +670,17 @@ static AHDRR(jtmeanI,D,I){I d,i;I*y;D v,*zz;
              z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
 }}   /* based on REDUCEPFX; 2<n */
 
-DF1(jtmean){A z;I c,f,m,n,r,wn,wr,*ws,wt;
+DF1(jtmean){A z;I d,f,m,n,r,wn,wr,*ws,wt;
  RZ(w);
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
  wt=AT(w); wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
  // there must be atoms, so it's OK to PROD infixes of shape
- GATV(z,FL,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
- PROD(m,f,ws); PROD(c,r,f+ws);
- if(wt&INT)meanI(m,c,n,DAV(z), AV(w)); 
- else      meanD(m,c,n,DAV(z),DAV(w));
+// obsolete  PROD(m,f,ws); PROD(c,r,f+ws);
+ PROD(m,f,ws); PROD(d,r-1,f+ws+1);
+// obsolete  GATV(z,FL,wn/n,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
+ GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)ICPY(f+AS(z),f+1+ws,r-1);
+ if(wt&INT)meanI(m,d,n,DAV(z), AV(w)); 
+ else      meanD(m,d,n,DAV(z),DAV(w));
  RE(0); RETF(z);
 }    /* (+/%#)"r w */

@@ -12,9 +12,9 @@
 
 #define SUFFIXPFX(f,Tz,Tx,pfx)  \
  AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
-  x+=m*c; z+=m*c;                                              \
-  if(c==n)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  x+=m*d*n; z+=m*d*n;                                              \
+  if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=    *--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
  }}}
@@ -22,9 +22,9 @@
 #define SUFFIXNAN(f,Tz,Tx,pfx)  \
  AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
   NAN0;                                                               \
-  x+=m*c; z+=m*c;                                              \
-  if(c==n)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  x+=m*d*n; z+=m*d*n;                                              \
+  if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=    *--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
   }}                                                                   \
@@ -33,20 +33,20 @@
 
 #define SUFFICPFX(f,Tz,Tx,pfx)  \
  AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
-  x+=m*c; z+=m*c;                                              \
-  if(c==n)DO(m, *--z=v=(Tz)*--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
-  else{I d=c/n; for(i=0;i<m;++i){                                              \
+  x+=m*d*n; z+=m*d*n;                                              \
+  if(d==1)DO(m, *--z=v=(Tz)*--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
+  else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *--z=(Tz)*--x;);                                        \
    DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
  }}}
 
 #define SUFFIXOVF(f,Tz,Tx,fs1,fvv)  \
  AHDRS(f,I,I){C er=0;I i,*xx,*y,*zz;                      \
-  xx=x+=m*c; zz=z+=m*c;                              \
-  if(c==n){                                                 \
+  xx=x+=m*d*n; zz=z+=m*d*n;                              \
+  if(d==1){                                                 \
    if(1==n)DO(m, *--z=*--x;)                                \
-   else    DO(m, z=zz-=c; x=xx-=c; fs1(n,z,x); RER;)        \
-  }else{I d=c/n; for(i=0;i<m;++i){                                   \
+   else    DO(m, z=zz-=d*n; x=xx-=d*n; fs1(n,z,x); RER;)        \
+  }else{for(i=0;i<m;++i){                                   \
    DO(d, *--zz=*--xx;);                                     \
    DO(n-1, x=xx-=d; y=zz; z=zz-=d; fvv(d,z,x,y); RER;);     \
  }}}
@@ -59,8 +59,8 @@
  }
   
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
- AHDRP(f,B,B){B v,* RESTRICT y;I d,q;                                        \
-  d=c/n; x+=m*c; z+=m*c;                                           \
+ AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
+  x+=m*d*n; z+=m*d*n;                                           \
   if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
   if(0==d%sizeof(UI  )){SUFFIXBFXLOOP(UI,   pfx); R;}              \
   if(0==d%sizeof(UINT)){SUFFIXBFXLOOP(UINT,ipfx); R;}              \
@@ -69,8 +69,8 @@
  }
 #else
 #define SUFFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)  \
- AHDRS(f,B,B){B v;I d,i,q,r,t,*xi,*yi,*zi;                         \
-  d=c/n; x+=m*c; z+=m*c;                                           \
+ AHDRS(f,B,B){B v;I i,q,r,t,*xi,*yi,*zi;                         \
+  x+=m*d*n; z+=m*d*n;                                           \
   if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
   q=d>>LGSZI; r=d&(SZI-1); xi=(I*)x; zi=(I*)z;                            \
   if(0==r)for(i=0;i<m;++i){                                        \
@@ -319,12 +319,13 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
+static DF1(jtsscan){A y,z;I d,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
- PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+// obsolete  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+ PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=VAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
  if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
    // note that the above line always takes the r==0 case
@@ -333,7 +334,7 @@ static DF1(jtsscan){A y,z;I c,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(adocv.cv); jt->rank=0;
  GA(z,zt,wn,wr,ws);
- adocv.f(jt,m,c,n,AV(z),AV(w));
+ adocv.f(jt,m,d,n,AV(z),AV(w));
  if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 

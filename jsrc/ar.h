@@ -55,21 +55,21 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
 
 #else
 #define REDUCEPFX(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-  if(c==n){x += m*c; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(c, *z++=    *x++;)}else{MC((C*)z,(C*)x,c*sizeof(Tz));}}          \
-  else{d=c/n; x+=m*c; zz=z+=m*d;                                       \
+ AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
+  if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
+  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
+  else{zz=z+=m*d; x+=m*d*n;                                      \
    for(i=0;i<m;++i,zz-=d){                                    \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}}
 
 #define REDUCENAN(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
+ AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
   NAN0;                                                           \
-  if(c==n){x += m*c; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(c, *z++=    *x++;)}else{MC((C*)z,(C*)x,c*sizeof(Tz));}}          \
-  else{d=c/n; x+=m*c; zz=z+=m*d;                                       \
+  if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
+  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
+  else{zz=z+=m*d; x+=m*d*n;                                        \
    for(i=0;i<m;++i,zz-=d){                                    \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
@@ -79,10 +79,10 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
 #endif
 
 #define REDUCCPFX(f,Tz,Tx,pfx)  \
- AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
-  if(c==n){x += m*c; z+=m; DQ(m, v=(Tz)*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
-  else if(1==n){DQ(c, *z++= (Tz)*x++;)}          \
-  else{d=c/n; x+=m*c; zz=z+=m*d;                                       \
+ AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
+  if(d==1){x += m*n; z+=m; DQ(m, v=(Tz)*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
+  else if(1==n){DQ(d, *z++= (Tz)*x++;)}          \
+  else{zz=z+=m*d; x+=m*d*n;                                       \
    for(i=0;i<m;++i,zz-=d){                                    \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
@@ -92,10 +92,10 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
 
 
 #define REDUCEOVF(f,Tz,Tx,fr1,fvv,frn)  \
- AHDRR(f,I,I){C er=0;I d,i,* RESTRICT xx,*y,* RESTRICT zz;                          \
-  if(c==n){xx=x; zz=z; DQ(m, z=zz++; x=xx; fr1(n,z,x); RER; xx += c;); R;}        \
-  if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(c, *z++=*x++;)}else{MC((C*)z,(C*)x,c*sizeof(Tz));} R;}   \
-  d=c/n; xx=x+=m*c; zz=z+=m*d;                                  \
+ AHDRR(f,I,I){C er=0;I i,* RESTRICT xx,*y,* RESTRICT zz;                          \
+  if(d==1){xx=x; zz=z; DQ(m, z=zz++; x=xx; fr1(n,z,x); RER; xx += n;); R;}        \
+  if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=*x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));} R;}   \
+  zz=z+=m*d; xx=x+=m*d*n;                                  \
   xx-=d; zz-=d;                                                 \
   for(i=0;i<m;++i,xx-=d,zz-=d){                                 \
    y=xx;   x=xx-=d; z=zz; fvv(d,z,x,y); RER;                    \

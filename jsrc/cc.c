@@ -713,10 +713,12 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
     zt=rtype(adocv.cv);
     GA(zz,zt,m*c,r,s); *AS(zz)=m; 
     if(!AN(zz))R zz;
-    zc=CAV(zz); zk=c*bp(zt);
+    I atomsize=bp(zt);
+    zc=CAV(zz); zk=c*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    EACHCUT(if(d)adocv.f(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
-        if(!z0){if(z)R z; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
+// obsolete     EACHCUT(if(d)adocv.f(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
+    EACHCUT(if(d)adocv.f(jt,1L,c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n
+        if(!z0){if(z)R z; else break;}} mvc(zk,zc,atomsize,z0);} zc+=zk;);
     if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
     break;
     }
@@ -940,11 +942,11 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required
 // NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
-DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I c,d,k,m=0,n,p,q,r,*s,wt;
+DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     V *sv,*vv;VA2 adocv;
  RZ(a&&w);
  sv=VAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=n=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
+ p=wi=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
  id=VAV(fs)->id;  // fs is f/id   where id is \ \.
 // obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
@@ -956,29 +958,30 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I c,d,k,m=0,n,p
   if(!(AN(a)&&1==AR(a)&&AT(a)&B01+SB01))R jtspecialatoprestart(jt,a,w,self);  // if a is not nonempty boolean list, do it the long way.  This handles ;@: when a has rank>1
   if(AT(a)&SB01)RZ(a=cvt(B01,a));
   v=CAV(a); sep=C1;
- }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:n-1];}  // monad.  Create char list of frets
- else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}
+ }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:wi-1];}  // monad.  Create char list of frets
+ else{RZ(a=wi?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}
  // v-> byte list of frets, sep is the fret char
- ASSERT(n==IC(a),EVLENGTH);
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt);
- if(pfx){u=v+n; while(u>v&&sep!=*v)++v; p=u-v;}
+ ASSERT(wi==IC(a),EVLENGTH);
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d*bp(wt);
+ if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
 // obsolete  if(ado){
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
- zt=rtype(adocv.cv); zk=c*bp(zt);
- if(1==r&&!neg&&B01&AT(a)&&p==n&&v[pfx?0:n-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->f))); if(z)R z;}
+ zt=rtype(adocv.cv); zk=d*bp(zt);
+ if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[pfx?0:wi-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->f))); if(z)R z;}
  GA(z,zt,AN(w),r,s); zv=CAV(z);
- while(p){
+ while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
   q=u-v;
-  if(d=q-neg){
-   adocv.f(jt,1L,c*d,d,zv,wv+k*(b+n-p));
+  if(n=q-neg){
+// obsolete    adocv.f(jt,1L,c*d,d,zv,wv+k*(b+n-p));
+   adocv.f(jt,1L,d,n,zv,wv+k*(b+wi-p));
    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
-   m+=d; zv+=d*zk; 
+   m+=n; zv+=n*zk; 
   }
   p-=q; v=u;  
  }
- *AS(z)=m; AN(z)=m*c; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ *AS(z)=m; AN(z)=m*d; R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 #if 0 // obsolete.  It handled other BOXATOPs, but we do that better in result.h now
  }else{B b1=0;I old,wc=c,yk,ym,yr,*ys,yt;   /* general f */
   RZ(x=gah(r,w)); ICPY(AS(x),s,r);  // allocate a header for the cell

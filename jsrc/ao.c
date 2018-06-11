@@ -4,6 +4,7 @@
 /* Adverbs: Oblique and Key                                                */
 
 #include "j.h"
+// TODO: remove idiv from keymean
 
 // This is the derived verb for f/. y
 static DF1(jtoblique){A x,y;I m,n,r,*u,*v;

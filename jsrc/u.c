@@ -222,7 +222,7 @@ A jtifb(J jt,I n,B*b){A z;I m,*zv;
     case B1110: *zv++=i; *zv++=i+1; *zv++=i+2;            break;
     case B1111: *zv++=i; *zv++=i+1; *zv++=i+2; *zv++=i+3;
   }
-  b=(B*)u; DO(n%SZI, if(*b++)*zv++=q+i;);
+  b=(B*)u; DO(n&(SZI-1), if(*b++)*zv++=q+i;);
  }
 #else
  DO(n, if(b[i])*zv++=i;);

@@ -247,7 +247,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
  GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
- DO(n, if(imod==m)imod=0; RZ(zv[i]=df1(take(sc(1+i),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(take(sc(1+i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\"r w for gerund g */
 

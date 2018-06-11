@@ -3,6 +3,8 @@
 /*                                                                         */
 /* Xenos: DLL call driver                                                  */
 
+// TODO: remove idiv from hashing here
+
 /*
 switchcall builds all the required dll calls.
 The dll call stack frame is built entirely with I values.

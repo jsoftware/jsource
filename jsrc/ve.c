@@ -258,8 +258,8 @@ APFX(lcmZZ, Z,Z,Z, zlcm )
 
 
 #define GETD          {d=*wv++; if(!d){z=0; break;}}
-#define INTDIVF(c,d)  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)
-#define INTDIVC(c,d)  (((c^d)<0)?c/d:c%d?c/d+1:c/d)
+#define INTDIVF(c,d)  (((c^d)>=0)?c/d:c%d?c/d-1:c/d)  // c/d - (c^d)<0 && c%d
+#define INTDIVC(c,d)  (((c^d)<0)?c/d:c%d?c/d+1:c/d)   // c/d + (c^d)>=0 && c%d
 
 F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
  RZ(a&&w);

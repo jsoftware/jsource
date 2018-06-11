@@ -62,9 +62,9 @@
  AHDRP(f,B,B){B v,* RESTRICT y;I q;                                        \
   x+=m*d*n; z+=m*d*n;                                           \
   if(1==d){DO(m, *--z=v=*--x; DO(n-1, --x; --z; *z=v=vexp;)); R;}  \
-  if(0==d%sizeof(UI  )){SUFFIXBFXLOOP(UI,   pfx); R;}              \
-  if(0==d%sizeof(UINT)){SUFFIXBFXLOOP(UINT,ipfx); R;}              \
-  if(0==d%sizeof(US  )){SUFFIXBFXLOOP(US,  spfx); R;}              \
+  if(0==(d&(sizeof(UI  )-1))){SUFFIXBFXLOOP(UI,   pfx); R;}              \
+  if(0==(d&(sizeof(UI4)-1))){SUFFIXBFXLOOP(UINT,ipfx); R;}              \
+  if(0==(d&(sizeof(US  )-1))){SUFFIXBFXLOOP(US,  spfx); R;}              \
   DO(m, y=z; DO(d, *--z=*--x;); DO(n-1, DO(d, --x; --y; --z; *z=bpfx(*x,*y);)));  \
  }
 #else
@@ -166,8 +166,8 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  jt->rank=0;
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z);
- DO(n, RZ(zv[i]=df1(drop(sc(i),w),hv[i%m])););
+ GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(drop(sc(i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\."r w for gerund g */
 
@@ -352,8 +352,8 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  n=IC(x);
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z);
- DO(n, RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])););
+ GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])); ++imod;);
  R ope(z);
 }
 

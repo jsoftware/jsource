@@ -91,7 +91,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
    AK(virtw) = virtwk += wk;
    if(AFLAG(virtw)&AFVIRTUALINPLACE){
         // The block was self-virtualed.  Restore its original shape
-     AR(virtw)=(RANKT)rr; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+     AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
    }
   }
 
@@ -338,14 +338,14 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
        AK(virta) = virtak += ak;
        if(AFLAG(virta)&AFVIRTUALINPLACE){
         // The block was self-virtualed.  Restore its original shape
-        AR(virta)=(RANKT)lr; MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+        AR(virta)=(RANKT)lr; AT(virta)=at; MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
        }
       }
 
       if(!(state&STATEINNERREPEATW)){
        AK(virtw) = virtwk += wk;
        if(AFLAG(virtw)&AFVIRTUALINPLACE){
-        AR(virtw)=(RANKT)rr; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+        AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
        }
       }
      }

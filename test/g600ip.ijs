@@ -467,6 +467,14 @@ NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this 
 
 9!:53 (1)   NB. Reset the default
 
+NB. Verify that cells are reset after being modified; here, type is changed by divide
+(% i. 4 5) -: (2 % ])"1 +: i. 4 5
+(% i. 4 5) -: 2 ([ % ])"1 +: i. 4 5
+(% i. 4 5) -: (+: i. 4 5) (] % [)"1 (2)
+(%/"1 |: +: i. 4 5) -: ([ % ])/ +: i. 4 5
+(%~/"1 |: +: i. 4 5) -: ([ % ])~/ +: i. 4 5
+
+
 4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
 4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys IMIN IMAX'

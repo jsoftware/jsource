@@ -98,8 +98,8 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Recreate the execution of the failing sentence, and show an error for it */ \
     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), -1, &cw[ti], d,stkblk); \
-    /* go to error loc; if we are in a try., send this error to the catch. */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; if (tdi){ --tdi; jt->db = od; } }  \
+    /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->db = od; } }else z=0;  \
     break; }
 
 // Processing of explicit definitions, line by line
@@ -207,14 +207,14 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
+    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);}  // z might not be protected if we hit error
     // for other error, go to the error location; if that's out of range, keep the error; if not,
     // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
     // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}}
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->db=od;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     break;
    case CASSERT:
     // assert.  If assertions disabled, skip the line and continue
@@ -228,7 +228,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
-    else{i=ci->go; if(i<SMAX){RESETERR; if(tdi){--tdi; jt->db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+      // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
    case CFOR:
    case CSELECT: case CSELECTN:
@@ -348,10 +349,11 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
  // If it isn't, abortively reexecute the sentence that created the non-noun result, and flag it as error
  // The -1 means 'flag as non-noun, don't actually execute'
- if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk);
+ if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
  FDEPDEC(1);  // OK to ASSERT now
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
- if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else z=mtm;} // If no error, increment use count in result to protect it from tpop
+if((jt->jerr!=0)!=(z==0))*(I*)0=0;  // scaf
+ if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism

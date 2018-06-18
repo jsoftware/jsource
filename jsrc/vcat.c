@@ -160,6 +160,7 @@ static F2(jtovv){A z;I m,t;
  INHERITNOREL2(z,a,w); RETF(z);
 }    /* a,w for vectors/scalars with the same type */
 
+#if 0 // obsolete
 static void om(I k,I c,I d,I e,I m,I m1,I n,I r,C*u,C*v){I km,km1,kn;
  km=k*m; km1=k*m1; kn=k*n;
  if(!r&&m1!=n)DO(c, mvc(km1,u,kn,v); u+=km;)
@@ -170,6 +171,7 @@ static void om(I k,I c,I d,I e,I m,I m1,I n,I r,C*u,C*v){I km,km1,kn;
   if(m1>n)DO(c,         mvc(km1,u,kn,v); u+=km;   v+=kn;)
   else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
 }}   /* move an argument into the result area */
+#endif
 
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  I arptct=arptreset-1; I wrptct=wrptreset-1;

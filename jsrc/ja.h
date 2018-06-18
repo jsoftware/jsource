@@ -616,6 +616,8 @@
 #define maxtype(x,y)                (((x)==(y))?(x):jtmaxtype(jt,(x),(y)))
 // Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
 #define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
+// Same, but with default if both empty
+#define maxtypeawd(a,w,d)           ((AN(a)|AN(w))?((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15]):d)
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))
@@ -846,7 +848,7 @@
 #define redcatsp(x,y,z)             jtredcatsp(jt,(x),(y),(z))
 #define redef(x,y)                  jtredef(jt,(x),(y))
 #define redefg(x)                   jtredefg(jt,(x))
-#define redg(x,y)                   jtredg(jt,(x),(y))
+#define redg(x,y)                   jtredg(jtinplace,(x),(y))
 #define redsp1(x0,x1,x2,x3,x4,x5,x6,x7)             jtredsp1(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))
 #define redsp1a(x0,x1,x2,x3,x4,x5)                  jtredsp1a(jt,(x0),(x1),(x2),(x3),(x4),(x5))
 #define redspd(x0,x1,x2,x3,x4,x5,x6,x7)             jtredspd(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7))

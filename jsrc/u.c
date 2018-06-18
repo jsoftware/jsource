@@ -175,6 +175,7 @@ C cf(A w){if(!w)R 0; R*CAV(w);}  // first character in a character array
 C cl(A w){if(!w)R 0; R*(CAV(w)+AN(w)-1);}  // last character in a character array
 
 
+#if 0  // obsolete 
 // Choose type to use for joined arguments; convert the arguments to that type if needed
 // *a and *w are blocks to read/modify
 // mt is the type to use if none is given
@@ -190,7 +191,7 @@ I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
  if(TYPESNE(t,wt))if(!(*w=cvt(t,*w)))R 0;
  R t;
 }
-
+#endif
 A jtcstr(J jt,C*s){R rifvs(str((I)strlen(s),s));}  // used only for initialization, so ensure real string returned
 
 // Return 1 iff w is the evocation of a name

@@ -10,10 +10,13 @@
 #define ZZDEFN
 #include "result.h"
 
-
-#define STATEOUTERREPEATA 0x0200
-#define STATEINNERREPEATA 0x0400
-#define STATEINNERREPEATW 0x0800
+#define STATEOUTERREPEATAX 9
+#define STATEOUTERREPEATA (1LL<<STATEOUTERREPEATAX)
+#define STATEINNERREPEATWX 10
+#define STATEINNERREPEATW (1LL<<STATEINNERREPEATWX)
+#define STATEINNERREPEATAX 11
+#define STATEINNERREPEATA (1LL<<STATEINNERREPEATAX)
+// There must be NO higher bits than STATEINNERREPEATA, because we shift down and OR into flags
 
 // General setup for verbs that do not go through jtirs[12].  Some of these are marked as IRS verbs.  General
 // verbs derived from u"n also come through here, via jtrank2.
@@ -21,10 +24,9 @@
 // it calls here, giving a callback; we split the arguments into cells and call the callback,
 // which is often the same original function that called here.
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
-A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
+A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    I mn,n=1,wcn,wf,wk,wr,*ws,wt;
- F1PREFIP;
- RZ(w);
+  RZ(w);
  wt=AT(w);
  if(wt&SPARSE)R sprank1(w,fs,rr,f1);  // this needs to be updated to handle multiple ranks
 #define ZZFLAGWORD state
@@ -45,36 +47,52 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
 // obsolete if(ARELATIVE(w))state|=STATEWREL;
  if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
  // multiple cells.  Loop through them.
- I wn=AN(w);  // empty-operand indicator
+// obsolete  I wn=AN(w);  // empty-operand indicator
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
  RE(mn=prod(wf,ws)); PROD(wcn,rr,ws+wf);   // number of cells, number of atoms in a cell
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  wk=wcn*bp(wt);
- // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
- // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
- // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
- // if the cells are empty but the frame does not contain 0)
- if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;}
- else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
  if(mn){I i0;
   // Normal case where there are cells.
+  // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
+  // The base pointer AK advances through the source argument. 
+  //
+  // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
+  // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
+  // us through a flag bit.
+  jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
+// obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
+  RZ(virtw = virtual(w,0,rr)); MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;
+  // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
+  // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid if the backing block is recursive.  Maybe could do this if it isn't?)
+  // We will leave jtinplace set as it was coming into this routine.  It will be set only if the called function can handle inplacing; and <@f is inplaceable only if f is.
+  // The final test for inplaceability lies with the function, and it will not detect reassignments of the cell.  Pity.
+  // To save tests later we turn off inplacing if we can't use it here
   // loop over the frame
+  I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
+  AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
 #define ZZDECL
 #include "result.h"
   ZZPARMS(0,0,ws,wf,mn,1)
 
   for(i0=mn;i0;--i0){
-   RZ(z=CALL1(f1,virtw,fs));
+   RZ(z=CALL1IP(f1,virtw,fs));
 
 #define ZZBODY  // assemble results
 #include "result.h"
 
-   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
-   AK(virtw)+=wk;
+   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything; but the virtual block was inplaceable the
+   // AK, AN, AR, AS, AT fields may have been modified.  We restore them
+// obsolete   if(!((I)jtinplace&JTINPLACEW)){
+   AK(virtw) = virtwk += wk;
+   if(AFLAG(virtw)&AFVIRTUALINPLACE){
+        // The block was self-virtualed.  Restore its original shape
+     AR(virtw)=(RANKT)rr; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+   }
   }
 
 #define ZZEXIT
@@ -82,6 +100,7 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
 
  }else{UC d; I *is, *zzs;
   // no cells - execute on a cell of fills
+  RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));  // The cell of fills
   // Do this quietly, because
   // if there is an error, we just want to use a value of 0 for the result; thus debug
   // mode off and RESETERR on failure.
@@ -101,10 +120,9 @@ A jtrank1ex(J jt,A w,A fs,I rr,AF f1){PROLOG(0041);A z,virtw;
  EPILOG(zz);
 }
 
-A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,virtw,z;
+A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f2){F2PREFIP;PROLOG(0042);A virta,virtw,z;
    I acn,af,ak,ar,*as,at,mn,n=1,wcn,wf,wk,wr,*ws,wt;
  I outerframect, outerrptct, innerframect, innerrptct, aof, wof, sof, lof, sif, lif, *lis, *los;
- F2PREFIP;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  if(at&SPARSE||wt&SPARSE)R sprank2(a,w,fs,lcr,rcr,f2);  // this needs to be updated to handle multiple ranks
@@ -198,18 +216,37 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
  // See how many cells are going to be in the result
  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
 
+ // See which arguments we can inplace.  The key is that they have to be not repeated.  This means outerrptct=1, and the specified argument not repeated in the inner loop.  Also,
+ // a and w mustn't be the same block (one cannot be a virtual of the other unless the backer's usecount disables inplacing)
+ jtinplace = (J)((I)jtinplace & ~(((a==w)|(outerrptct!=1))*(JTINPLACEA+JTINPLACEW)|(state>>STATEINNERREPEATWX)));  // turn off inplacing if variable is inner-repeated, or any outer repeat, or identical args
+
  // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
  // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
- // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have cells,
+ // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have nonempty cells,
  // if the cells are empty but the frame does not contain 0)
- if(mn|an){RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE; }
- else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
- if(mn|wn){RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;}
- else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
+ //
+ // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
+ // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
+ // us through a flag bit.
+ if(mn|an){
+  jtinplace = (J)((I)jtinplace & ((((at&DIRECT)!=0)&(((1-acn)&AC(a))>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable, and #atoms>1.
+// obsolete  RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
+  RZ(virta = virtual(a,0,lr)); MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
+  AC(virta)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original a was direct inplaceable, and inplacing is allowed by u
+ }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
+
+ if(mn|wn){  // repeat for w
+  jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
+  RZ(virtw = virtual(w,0,rr)); MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;
+  AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
+ }else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
  if(mn){I i0, i1, i2, i3;
   // Normal case where there are cells.
+  I virtak=AK(virta);  // save virtual-operand pointer in case modified
+  I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
+  
   // loop over the matched part of the outer frame
 
 #define ZZDECL
@@ -217,16 +254,16 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
   ZZPARMS(los,lof,lis,lif,mn,2)
 
   for(i0=outerframect;i0;--i0){
-   I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);
+   I outerrptstart=state&STATEOUTERREPEATA?virtak:virtwk;
    // loop over the unmatched part of the outer frame, repeating the shorter argument
    for(i1=outerrptct;i1;--i1){  // make MOVEY? post-increment
-    AK(state&STATEOUTERREPEATA?virta:virtw)=outerrptstart;   // if we loop, we know we must be repeating one or the other
+    if(state&STATEOUTERREPEATA){AK(virta) = virtak = outerrptstart;}else{AK(virtw) = virtwk = outerrptstart;}
     // loop over the matched part of the inner frame
     for(i2=innerframect;i2;--i2){
      // loop over the unmatched part of the inner frame, repeating the shorter argument
      for(i3=innerrptct;i3;--i3){
       // invoke the function, get the result for one cell
-      RZ(z=CALL2(f2,virta,virtw,fs));
+      RZ(z=CALL2IP(f2,virta,virtw,fs));
 
 #define ZZBODY  // assemble results
 #include "result.h"
@@ -295,11 +332,24 @@ A jtrank2ex(J jt,A a,A w,A fs,I lr,I rr,I lcr,I rcr,AF f2){PROLOG(0042);A virta,
        *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
       }
 #endif
-      // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything
-      if(!(state&STATEINNERREPEATA))AK(virta)+=ak;
-      if(!(state&STATEINNERREPEATW))AK(virtw)+=wk;
+      // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything; but if the virtual block was inplaceable the
+   // AK, AN, AR, AS, AT fields may have been modified.  We restore them
+      if(!(state&STATEINNERREPEATA)){
+       AK(virta) = virtak += ak;
+       if(AFLAG(virta)&AFVIRTUALINPLACE){
+        // The block was self-virtualed.  Restore its original shape
+        AR(virta)=(RANKT)lr; MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+       }
+      }
+
+      if(!(state&STATEINNERREPEATW)){
+       AK(virtw) = virtwk += wk;
+       if(AFLAG(virtw)&AFVIRTUALINPLACE){
+        AR(virtw)=(RANKT)rr; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+       }
+      }
      }
-      // advance input pointers for next cell.  We increment any block that was being held constant in the inner loop.  There can be only one such
+      // advance input pointers for next cell.  We increment any block that was being held constant in the inner loop.  There can be only one such.  Such an arg is never inplaced
      if(state&STATEINNERREPEATA)AK(virta)+=ak;
      if(state&STATEINNERREPEATW)AK(virtw)+=wk;
     }
@@ -357,7 +407,7 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
 
 // IRS setup for dyads x op y.  This routine sets jt->rank and calls the verb, which loops if it needs to
 // a is x, w is y
-// fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none
+// fs is the f field of the verb (the verb to be applied repeatedly) - or 0 if none (if we are called internally)
 //  if inplacing is enabled in jt, fs must be given
 // l, r are nominal ranks of fs
 // f2 is the verb that does the work (jtover, jtreshape, etc).  Normally it will loop using rank?ex if it needs to
@@ -406,9 +456,9 @@ static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  wr=AR(w); efr(m,wr,v[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
- while(VAV(fs)->flag2&VF2RANKONLY1){
-  h=VAV(fs)->h; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
-  m=hm; fs=VAV(fs)->f; f1=VAV(fs)->f1;
+ while(FAV(fs)->flag2&VF2RANKONLY1){
+  h=FAV(fs)->h; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+  m=hm; fs=FAV(fs)->f; f1=FAV(fs)->f1;
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
@@ -423,14 +473,14 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
  // This may lead to error until we support multiple fill neighborhoods
-  while(VAV(fs)->flag2&VF2RANKONLY2){
-   h=VAV(fs)->h; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+  while(FAV(fs)->flag2&VF2RANKONLY2){
+   h=FAV(fs)->h; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
    if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
     if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
     llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
    }
    // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
-   fs=VAV(fs)->f; f2=VAV(fs)->f2;   // advance to the new function
+   fs=FAV(fs)->f; f2=FAV(fs)->f2;   // advance to the new function
   }
 // obsolete   I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of verb we are going to call
 // obsolete   // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
@@ -477,12 +527,12 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
-  V* av=VAV(a);   // point to verb info
-  vf=av->flag&VASGSAFE;  // inherit ASGSAFE from u
-  if(av->flag&VISATOMIC1){f1=av->f1;}else if(av->flag&VIRS1){f1=rank1i;vf|=VINPLACEOK1;}else{f1=rank1;flag2|=VF2RANKONLY1;}
-  if(av->flag&VIRS2){f2=rank2i;vf|=VINPLACEOK2;}else{f2=rank2;flag2|=VF2RANKONLY2;}
+  V* av=FAV(a);   // point to verb info
+  vf=av->flag&(VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // inherit ASGSAFE from u, and inplacing   scaf 
+  if(av->flag&VISATOMIC1){f1=av->f1;}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=rank1;flag2|=VF2RANKONLY1;}}
+  if(av->flag&VIRS2){f2=rank2i;}else{f2=rank2;flag2|=VF2RANKONLY2;}
  }
 
- // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports irs
+ // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing
  R fdef(flag2,CQQ,VERB, f1,f2, a,w,h, vf, r[0],r[1],r[2]);
 }

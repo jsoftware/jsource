@@ -121,9 +121,11 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
  R x+k*p;
 }    /* move an argument into the result area */
 
-static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,wr,*ws,zn;
+static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(a&&w);
- RZ(w=setfv(a,w)); RZ(coerce2(&a,&w,0L));
+ RZ(w=setfv(a,w));
+// obsolete RZ(coerce2(&a,&w,0L));
+  if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
  RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);   // Allocate list for shape of composite item
  // Calculate the shape of the result: the shape of the item, max of input shapes

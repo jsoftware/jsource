@@ -355,7 +355,8 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
  if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
- t=coerce2(&a,&w,B01);  // convert a/w to common type, using b01 if both empty
+// obsolete t=coerce2(&a,&w,B01);  // convert a/w to common type, using b01 if both empty
+ {t=maxtypeawd(a,w,B01); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
  // Allocate result area and calculate loop controls
  // m is # 1-cells of a

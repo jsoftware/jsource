@@ -94,7 +94,7 @@ BITWISE(jtgenbitwiserotate,UI,BWROT   )
 BITWISE(jtgenbitwiseshift, UI,BWSHIFT )
 BITWISE(jtgenbitwiseshifta,I, BWSHIFTA)
 
-DF1(jtbitwise1){R CALL2(VAV(self)->f2,zero,w,self);}
+DF1(jtbitwise1){R CALL2(VAV(self)->f2,zero,w,self);}   // inplaceable - don't touch jt
 
 
 static VF bwC[16]={(VF)bw0000CC,(VF)bw0001CC,(VF)bw0010CC,(VF)bw0011CC, (VF)bw0100CC,(VF)bw0101CC,(VF)bw0110CC,(VF)bw0111CC,

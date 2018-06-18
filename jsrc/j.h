@@ -495,8 +495,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
-#define JTINPLACEW      1   // turn this on in jt to indicate that w can be inplaced
-#define JTINPLACEA      2   // turn this on in jt to indicate that a can be inplaced
+#define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
+#define JTINPLACEW      (1LL<<JTINPLACEWX)
+#define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
+#define JTINPLACEA      (1LL<<JTINPLACEAX)
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
@@ -508,6 +510,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
+#define MODVIRTINPLACE(x)  (AFLAG(x) |= (AFLAG(x)&AFVIRTUAL)<<(AFVIRTUALINPLACEX-AFVIRTUALX))
+
 #define NAN0            (_clearfp())
 #if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}

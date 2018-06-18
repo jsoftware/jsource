@@ -110,8 +110,8 @@ F1(jtuco1){I t;
  RZ(w);
  t=AT(w);
  ASSERT(!AN(w)||t&JCHAR+NUMERIC,EVDOMAIN);
- R t&NUMERIC?c2fi(w):t&C2T?ca(w):toc2(w);
-}    /* copy 2-byte chars; convert 1-byte or 4-byte to 2-byte */
+ R t&NUMERIC?c2fi(w):t&C2T?w:toc2(w);  // was ca(w)
+}    /* return 2-byte chars unchanged; convert 1-byte or 4-byte to 2-byte */
 
 F2(jtuco2){I j;
  RZ(a&&w);

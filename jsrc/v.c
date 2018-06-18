@@ -21,7 +21,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect blocks also, since we know we are not changing
    // the number of atoms
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);
+   AR(w)=(RANKT)(1+f); AS(w)[f]=m; MODVIRTINPLACE(w); RETF(w);  // if virtual inplace, notify the originator
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
@@ -90,8 +90,8 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  INHERITNOREL(z,w); RETF(z);
 } 
 
-F2(jtleft2 ){if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
-F2(jtright2){if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
+F2(jtleft2 ){F2PREFIP;if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
+F2(jtright2){F2PREFIP;if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
 
 F1(jtright1){RETF(w);}
 

@@ -80,9 +80,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  RZ(f&&g&&h);
  gv=VAV(g); gi=gv->id;
  hv=VAV(h); hi=hv->id;
- // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2
- flag=(VINPLACEOK1|VINPLACEOK2)+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+ // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
+  flag=(hv->flag&(VINPLACEOK1|VINPLACEOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
   ACIPNO(f);  // This justifies keeping the result ASGSAFE
@@ -93,7 +93,14 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   }
   R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
- fv=VAV(f); fi=fv->id; if(fi!=CCAP)flag &= fv->flag|~VASGSAFE;  // remove ASGSAFE if f is unsafe
+ fv=VAV(f); fi=fv->id;
+ if(fi!=CCAP){
+  // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
+  flag=((fv->flag|hv->flag)&(VINPLACEOK1|VINPLACEOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+ }else{
+  // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
+  flag=(hv->flag&(VINPLACEOK1|VINPLACEOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+ }
  switch(fi){
   case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
                if(ACIPISOK(h)){I flag2copy=0;  // do flag processing like @:

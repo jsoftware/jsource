@@ -508,6 +508,9 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w)){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   AK(w)+=offset*tal; AR(w)=(RANKT)r;
+  // inplaceable virtual blocks occur only inside operations that understand them.  Since they reuse their virtual blocks, it is expensive to
+  // modify one.  If we do, we flag it
+  MODVIRTINPLACE(w);  // if virtual inplaceable, show that we changed it
   R w;
  }else{
   // not self-virtual block: allocate a new one
@@ -521,7 +524,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;
  }
-}    /* allocate header */ 
+}  
 
 
 // realize a virtual block (error if not virtual)
@@ -876,7 +879,9 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n = (I)1<<blockx;
 #if MEMAUDIT&16
 {I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)*(I*)0=0; Wx=AFCHAIN(Wx); ++Wj;}}}}
 #endif
-
+#if MEMAUDIT&15
+if((I)jt&3)*(I*)0=0;
+#endif
  if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
   I pushx=jt->tnextpushx;  // start reads for tpush
   A* tstack=jt->tstack;
@@ -995,6 +1000,9 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 void jtmf(J jt,A w){I mfreeb;
 #if MEMAUDIT&16
 {I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)*(I*)0=0; Wx=AFCHAIN(Wx); ++Wj;}}}}
+#endif
+#if MEMAUDIT&15
+if((I)jt&3)*(I*)0=0;
 #endif
 #if LEAKSNIFF
  if(leakcode){I i;

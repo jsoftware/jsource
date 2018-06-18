@@ -80,7 +80,7 @@ static A jtva1s(J jt,A w,C id,I cv,VF ado){A e,x,z,ze,zx;B c;C ee;I n,t,zt;P*wp,
 #define VA1CASE(e,f) (256*(e)+(f))
 
 static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
- RZ(w);
+ RZ(w);F1PREFIP;
  n=AN(w); wt=n?AT(w):B01;
  ASSERT(wt&NUMERIC,EVDOMAIN);
  if(b=1&&wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
@@ -115,8 +115,8 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
 
 
 // If argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w); F1PREFIP;
-#define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;} F1PREFIP;  // fall through if returns 0
+#define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w);
+#define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
 
 
 F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOOR);}

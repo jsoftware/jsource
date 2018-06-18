@@ -189,7 +189,7 @@ static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DF1(jtredg){PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
+static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
@@ -197,15 +197,26 @@ static DF1(jtredg){PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
  n=AS(w)[0]; // n=#cells
- J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
+// obsolete  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
  // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
  RZ(a=virtual(w,0,r-1));
  old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the x argument over the calls, but allow the w to be deleted
  // w will hold the result from the iterations.  Init to value of last cell
- // Since there are multiple cells, w will be in a virtual block
+ // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
  RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
+ // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
+ // We can inplace the right arg the first time is it is direct inplaceable, and always after that.  This is subject to approval by the verb u
+ // and the input jtinplace.  We do not inplace the a argument if it contains only 1 atom: we need to know if the shape etc. has been changed (which it can be
+ // in 2 places: self-virtual blocks and speedy singletons); we don't want to slow down the singletons by forcing them to notify us; so we
+ // don't inplace singletons and check for the VIRTUALIP flag to see if we need to reload the 
+ I inplacelaterw = (VAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
+ jtinplace = (J)((I)jtinplace&(~(JTINPLACEW+JTINPLACEA)) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&DIRECT)!=0)&(((1-AN(w))&AC(w))>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
+ // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
+ AC(a)=AC(w)=ACUC1+ACINPLACE;
+ // Save the info we will need to restore the virtual block if it is modified
+ I ak=AK(a); I an=AN(a);
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
  // As a compromise we free every few iterations: at least one per 8 iterations, and at least 8 times through the process
@@ -213,11 +224,19 @@ static DF1(jtredg){PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
 #define MINGCINTERVAL 8  // max spacing between frees
  I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
  for(i=1;i<n;++i){   // loop through items
-  RZ(w=(f2)(jtip,a,w,fs));   // apply the verb to the arguments
+// obsolete   RZ(w=(f2)(jtip,a,w,fs));   // apply the verb to the arguments
+  RZ(w=CALL2IP(f2,a,w,fs));
   if(--freephase==0){w=gc(w,old); freephase=freedist;}   // free the buffers we allocated, except for the result
   // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
   if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCIS(AS(w),AS(a),r-1);}
-  AK(a)-=k;  // back up to next input
+  // move to next input cell
+  AK(a) = ak -= k;
+  if(AFLAG(a)&AFVIRTUALINPLACE){
+        // The block was self-virtualed.  Restore its original shape
+    AR(a)=(RANKT)r-1; MCIS(AS(a),AS(w)+1,r); AN(a)=an; AFLAG(a) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+  }
+  // set larger inplaceability for iterations after the first
+  jtinplace = (J)((I)jtinplace|inplacelaterw);
  }
  EPILOG(w);  // this frees the virtual block, at the least
 }    /* f/"r w for general f and 1<(-r){$w */
@@ -372,7 +391,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
 }    /* f/"r w for sparse w, rank > 1, sparse axis */
 
 static DF1(jtreducesp){A a,g,x,y,z;B b;I f,n,r,rr[2],*v,wn,wr,*ws,wt,zt;P*wp;
- RZ(w);
+ RZ(w);J jtinplace=jt;
  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
@@ -471,7 +490,7 @@ static B jtreduce2(J jt,A w,C id,I f,I r,A*zz){A z=0;B b=0,btab[258],*zv;I c,d,m
 }    /* f/"r for dense w over an axis of length 2 */
 
 static DF1(jtreduce){A z;I d,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
- RZ(w);
+ RZ(w);F1PREFIP;
  wn=AN(w); wt=wn?AT(w):B01;   // Treat empty as Boolean type
  if(SPARSE&AT(w))R reducesp(w,self);  // If sparse, go handle it
  wr=AR(w); ws=AS(w); n=1;
@@ -517,6 +536,8 @@ static DF1(jtreduce){A z;I d,f,*jtr,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
   // have to do is change the type of the result
   if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
+
+  // special cases:
  }else if(n==1)R head(w);    // reduce on single items - note that jt->rank is still set
  else R red0(w,self);    // 0 items - neutrals
 // obsolete  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
@@ -630,15 +651,16 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 static DF2(jtoprod){R df2(a,w,VAV(self)->h);}
 
 
-F1(jtslash){A h;AF f1=jtreduce;C c;V*v;I flag=0;
+F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
  RZ(w);
  if(NOUN&AT(w))R evger(w,sc(GINSERT));
- v=VAV(w); 
- switch(v->id){
+ v=FAV(w); 
+ switch(v->id){  // select the monadic case
   case CCOMMA:  f1=jtredcat; flag=VINPLACEOK1;   break;
-  case CCOMDOT: f1=jtredstitch; break;
-  case CSEMICO: f1=jtredsemi;   break;
-  case CUNDER:  if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;}
+  case CCOMDOT: f1=jtredstitch; flag=0; break;
+  case CSEMICO: f1=jtredsemi; flag=0; break;
+  case CUNDER:  f1=jtreduce; if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} flag=0; break;
+  default: f1=jtreduce; flag=(v->flag&VINPLACEOK2)>>(VINPLACEOK2X-VINPLACEOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|VAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);

@@ -342,6 +342,8 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
  }   /* (<p;q){"r w  for positive integer arrays p,q */
 }
 
+// n is length of axis, w is doubly-unboxed selector
+// result is list of selectors - complementary if w is boxed
 static A jtafi(J jt,I n,A w){A x;
  if(!(AN(w)&&BOX&AT(w)))R pind(n,w);
  ASSERT(!AR(w),EVINDEX);
@@ -369,7 +371,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
   pr+=AR(p); 
   m+=*AV(p)*prod(r-i-1,1+i+s);
  }
- if(i){I*ys;
+ if(i){I*ys;  // TODO use virtual block for this
   RZ(y=gah(pr+r-i,w)); ys=AS(y); DO(pr, *ys++=1;); ICPY(ys,s+i,r-i);
   /* obsolete AM(y)= */AN(y)=prod(AR(y),AS(y));
   AK(y)=k*m+CAV(w)-(C*)y;
@@ -380,7 +382,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
   else if(p!=ace)   {b=0; y=irs2(p,y,0L,AR(p),r-i,jtifrom);}
   else if(q!=ace)   {b=0; y=irs2(q,y,0L,AR(q),r-j,jtifrom);}
   p=0;
- }  // todo kludge should remove b and ca() which seems to be used only if out=in
+ }
  RE(y); if(b){RZ(y=ca(x=y)); RELOCATE(x,y);} EPILOG(y);    // todo kludge should inherit norel
 }    /* a{"r w for boxed index a */
 

@@ -283,7 +283,7 @@ typedef I SI;
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
-#define NUMERIC         (B01+BIT+INT+FL+CMPX+XNUM+RAT+XD+XZ+SB01+SINT+SFL+SCMPX)
+#define NUMERIC         (B01+BIT+INT+FL+CMPX+XNUM+RAT+SB01+SINT+SFL+SCMPX)
 #define DIRECT          (LIT+C2T+C4T+B01+BIT+INT+FL+CMPX+SBT)
 #define JCHAR           (LIT+C2T+C4T+SLIT)
 #define NOUN            (NUMERIC+JCHAR+BOX+SBOX+SBT)
@@ -373,6 +373,8 @@ typedef I SI;
 #define AFUNINCORPABLEX 19      // matches XDX
 #define AFUNINCORPABLE  (1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
+#define AFVIRTUALINPLACEX 20      // matches XZX
+#define AFVIRTUALINPLACE (1<<AFVIRTUALINPLACEX)  // this block started as virtual inplaceable but has been modified.  Used to tell rank etc. that the block info must be rewritten
 // obsolete // INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
 // obsolete // that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
 // obsolete // We achieve this by realizing whenever ra() - but not ra0() - is called for the block
@@ -659,8 +661,10 @@ typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RAN
 #define VTRY1           (I)4194304      /* monad contains try.             */
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
 #define VDDOP           (I)16777216     /* 24 derived from a derived operator */
-#define VINPLACEOK1     (I)33554432L    // 25 monad can handle in-place args
-#define VINPLACEOK2     (I)67108864LL    // 26 dyad can handle in-place args
+#define VINPLACEOK1X    25    // 25 monad can handle in-place args
+#define VINPLACEOK1     (1LL<<VINPLACEOK1X)
+#define VINPLACEOK2X    26    // 26 dyad can handle in-place args
+#define VINPLACEOK2     (1LL<<VINPLACEOK2X)
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is stomic.  localuse will point to the VA entry for the verb

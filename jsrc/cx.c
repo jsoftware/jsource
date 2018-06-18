@@ -195,7 +195,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     ++tdi; ++i; 
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
-    // catch.  pop the try-stack, go to end., reset debug state.  here should always be a try. stack here
+    // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
     if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->db=od;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
@@ -291,7 +291,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
     if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
-    i=ci->go;
+    i=ci->go; if(tdi)jt->db=od;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
    case CFCASE:

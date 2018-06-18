@@ -150,8 +150,10 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  if(AT(w)&NOUN){R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}  // u@n
  av=VAV(a); c=av->id;
  wv=VAV(w); d=wv->id;
- // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
- flag = ((av->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
+ // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
+ // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
+ // unless v can handle it
+ flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VINPLACEOK1|VINPLACEOK2));
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
@@ -226,8 +228,10 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
  ASSERTVV(a,w);
  av=VAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
  wv=VAV(w); d=wv->id;
- // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
- flag = ((av->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
+ // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
+ // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
+ // unless v can handle it
+ flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VINPLACEOK1|VINPLACEOK2));
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
@@ -304,8 +308,8 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
 F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=VAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
- // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
- flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
+ // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
+ flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
@@ -404,8 +408,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    // u@v
    f1=on1; f2=on2;
    v=VAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
-   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2
-   flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);
+   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
+   flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
    if(c==CFORK||c==CAMP){
     if(c==CFORK)d=ID(v->h);
     if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){

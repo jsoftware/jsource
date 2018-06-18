@@ -9,7 +9,7 @@
 B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
  if(!(n))R 0;  // error if empty string
  c=*s; d=*(s+n-1);   // c = first char of name, d is the last
- if(jt->dotnames&&2==n&&'.'==d&&('m'==c||'n'==c||'u'==c||'v'==c||'x'==c||'y'==c))R 1;  // if x. y. ..., that's OK
+// obsolete  if(jt->dotnames&&2==n&&'.'==d&&('m'==c||'n'==c||'u'==c||'v'==c||'x'==c||'y'==c))R 1;  // if x. y. ..., that's OK
  if(!(CA==ctype[(UC)c]))R 0;   // first char must be alphabetic
  // c='a';    // Now c='this character', d='previous character'; assign c to harmless value (not needed)
  j=0;  // Init no indirect locative found

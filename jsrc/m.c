@@ -608,7 +608,7 @@ checkgloga(zpath);
 
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be error or unfilled box)
-  I c=AC(w);  // remember original usecount/inplaceability
+ I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&AFVIRTUAL){
   A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w

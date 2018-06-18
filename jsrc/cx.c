@@ -115,7 +115,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // bi is the control-word number for the last b-block sentence executed
  // *tci is the CW info for the last t-block sentence executed
  z=mtm; cd=t=u=v=0; sv=VAV(self); st=AT(self);
- // lk=this definition is locked; named=this definition is named; cl=current name, cl=current locale
+ // lk=this definition is locked; named=this definition is named; cn=current name, cl=current locale
  lk=jt->glock||VLOCK&sv->flag; named=VNAMED&sv->flag?1:0; cn=jt->curname; cl=jt->curlocn;
  d=named&&jt->db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
  // If this is a verb referring to x or y, set u, v to the operands, and sv to the saved text
@@ -158,10 +158,10 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
- if(jt->dotnames){
-  if(a)IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
-  if(w)IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
- }
+// obsolete  if(jt->dotnames){
+// obsolete   if(a)IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
+// obsolete   if(w)IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
+// obsolete  }
  // If we are in debug mode, and the current stack frame has the DCCALL type, set up
  // so that the debugger can look inside this execution: point to the local symbols,
  // to the control-word table, and to where we store the currently-executing line number
@@ -349,21 +349,20 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
  // If it isn't, abortively reexecute the sentence that created the non-noun result, and flag it as error
  // The -1 means 'flag as non-noun, don't actually execute'
- if(z&&!(st&ADV+CONJ)&&!(AT(z)&NOUN))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
+ if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
  FDEPDEC(1);  // OK to ASSERT now
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
-if((jt->jerr!=0)!=(z==0))*(I*)0=0;  // scaf
- if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
+// obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
+ z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
- tpop(_ttop);   // finish freeing memory
+// obsolete  tpop(_ttop);   // finish freeing memory
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0;
- // Give this result a short lease on life
  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
- if(z)tpush(z);
+// obsolete  if(z)tpush(z);
  RETF(z);
 }
 
@@ -410,9 +409,9 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
     if(AT(w)&NAME){
      // Get length/string pointer
      I n=AN(w); C *s=NAV(w)->s;
-     // if dotnames allowed, and last character is '.', back up 1
+// obsolete      // if dotnames allowed, and last character is '.', back up 1
      if(n){
-      if(s[n-1]=='.'&&jt->dotnames)--n;
+// obsolete       if(s[n-1]=='.'&&jt->dotnames)--n;
       // Set flags if this is a special name, or an indirect locative referring to a special name in the last position
       if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
        if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')mnuv=1;
@@ -507,10 +506,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
  RZ(probeis(ynam,pfst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,pfst));}
  if(type<3){RZ(probeis(unam,pfst));RZ(probeis(mnam,pfst)); if(type==2){RZ(probeis(vnam,pfst));RZ(probeis(nnam,pfst));}}
- if (jt->dotnames){
-  RZ(probeis(ydot,pfst));if(dyad){RZ(probeis(xdot,pfst));}
-  if(type<3){RZ(probeis(udot,pfst));RZ(probeis(mdot,pfst)); if(type==2){RZ(probeis(vdot,pfst));RZ(probeis(ndot,pfst));}}
- }  
+// obsolete  if (jt->dotnames){
+// obsolete   RZ(probeis(ydot,pfst));if(dyad){RZ(probeis(xdot,pfst));}
+// obsolete   if(type<3){RZ(probeis(udot,pfst));RZ(probeis(mdot,pfst)); if(type==2){RZ(probeis(vdot,pfst));RZ(probeis(ndot,pfst));}}
+// obsolete  }  
  // Go through the definition, looking for local assignment.  If the previous token is a simplename, add it
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box

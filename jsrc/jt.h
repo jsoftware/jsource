@@ -60,7 +60,6 @@ typedef struct {
  A    symb;             /* symbol table for assignment                     */
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
- B    dotnames;         /* 1 iff x. y. etc. names are permitted            */
  C    dbss;             /* single step mode                                */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
@@ -74,6 +73,7 @@ typedef struct {
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
  UC   seclev;           /* security level                                  */
+ B    unused;          // was dotnames
 // --- end cache line 4
  UC   prioritytype[11];  // type bit for the priority types
  B    stswitched;       /* called fn switched locale                       */

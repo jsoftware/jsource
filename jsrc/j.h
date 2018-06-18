@@ -542,7 +542,8 @@ extern unsigned int __cdecl _clearfp (void);
 // by the next-higher-level function.  Thus, when X calls Y inside PROLOG/EPILOG, the result of Y (which is an A block), has the same viability as any other GA executed in X
 // (unless its usecount is > 1 because it was assigned elsewhere)
 #define PROLOG(x)       I _ttop=jt->tnextpushx
-#define EPILOG(z)       RETF(gc(z,_ttop))   // z is the result block
+#define EPILOGNORET(z) (gc(z,_ttop))   // protect z and return its address
+#define EPILOG(z)       RETF(EPILOGNORET(z))   // z is the result block
 #define EPILOGNOVIRT(z)       R rifvsdebug((gc(z,_ttop)))   // use this when the repercussions of allowing virtual result are too severe
 #define EPILOGZOMB(z)       if(!gc3(&(z),0L,0L,_ttop))R0; RETF(z);   // z is the result block.  Use this if z may contain inplaceable contents that would free prematurely
 // Routines that do little except call a function that does PROLOG/EPILOG have EPILOGNULL as a placeholder

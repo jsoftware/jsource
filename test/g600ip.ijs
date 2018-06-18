@@ -474,6 +474,9 @@ NB. Verify that cells are reset after being modified; here, type is changed by d
 (%/"1 |: +: i. 4 5) -: ([ % ])/ +: i. 4 5
 (%~/"1 |: +: i. 4 5) -: ([ % ])~/ +: i. 4 5
 
+NB. Verify result of explicit def is inplaceable
+(2200000 * IF64 { 4 8) > 7!:2 '2 + 3 : ''+: y'' i. 1000000'
+
 
 4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'

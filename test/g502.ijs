@@ -12,9 +12,10 @@ f =: cc +/ *:
 cc=: c1
 c1=: c2
 c2=: [:
+f =: cc +/ *:
 (+/*:x) -: f x=:_40+?20$1000
-cc =. %:
-((%:x)+/*:x) -: f x
+NB. no longer honored cc =. %:
+NB. no longer honored ((%:x)+/*:x) -: f x
 
 'domain error' -: [: etx 1 0 1
 'domain error' -: [: etx 3 4$'chthonic'

@@ -39,16 +39,16 @@ static DF1(jtfolk1){F1PREFIP;DECLFGH;PROLOG(0028);A z; FOLK1; EPILOG(z);}
 static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
 // see if f is defined as [:, perhaps through a chain of references
-static B jtcap(J jt,A x){V*v;
- while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(x=symbrd(v->f)));
+static B jtcap(J jt,A x){V*v;L *l;
+ while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(l=syrd(v->f))&&(x=l->val));  // go through chain of names
  R CCAP==v->id;
 }
 
-// (name g h).  If name is ultimately defined as [:, we redefine the derived verb and then run it, with no inplacing for it.  Deprecated.
-// The normal path supports inplacing
-static DF1(jtcorx1){F1PREFIP;DECLFGH;PROLOG(0030);A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
-static DF2(jtcorx2){F2PREFIP;DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
-     /* f g h where f may be [: */
+// obsolete // (name g h).  If name is ultimately defined as [:, we redefine the derived verb and then run it, with no inplacing for it.  Deprecated.
+// obsolete // The normal path supports inplacing
+// obsolete static DF1(jtcorx1){F1PREFIP;DECLFGH;PROLOG(0030);A z; if(cap(fs))RZ(z=df1(  w,folk(ds(CCAP),gs,hs))) else FOLK1; EPILOG(z);}
+// obsolete static DF2(jtcorx2){F2PREFIP;DECLFGH;PROLOG(0031);A z; if(cap(fs))RZ(z=df2(a,w,folk(ds(CCAP),gs,hs))) else FOLK2; EPILOG(z);}
+// obsolete      /* f g h where f may be [: */
 
 // nvv forks.  n must not be inplaced, since the fork may be reused.  hx can be inplaced unless protected by caller.
 static DF1(jtnvv1){F1PREFIP;DECLFGH;PROLOG(0032);
@@ -97,7 +97,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   }
   R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
- fv=VAV(f); fi=fv->id;
+ fv=VAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
  if(fi!=CCAP){
   // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
   flag=((fv->flag|hv->flag)&(VINPLACEOK1|VINPLACEOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
@@ -120,7 +120,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 hv->flag2 |= (gv->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
                }
                break; /* [: g h */
-  case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
+// obsolete   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
   case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
   case CFORK:  /* (x i. ]) { y"_ */

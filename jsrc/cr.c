@@ -398,9 +398,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr; 
  F1PREFIP; RZ(w);
  wr=AR(w); rv[1]=efr(m,wr,m);
- if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
+// obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(m>=wr)R CALL1IP(f1,w,fs);
- rv[0]=0;
+ rv[0]=0;  // why?
  old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old; 
  RETF(z);
 }
@@ -415,11 +415,11 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
 // we have it, we call the setup verb, which will go on to do its internal looping and (optionally) call
 // the verb f2 to finish operation on a cell
 A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
- // push the jt->rank (pointer to ranks) stack.  push/pop may not match, no problem
+ // optionally push the jt->rank (pointer to ranks) stack.
  F2PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
  wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
- if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
+// obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(!(af|wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
  old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack

@@ -75,14 +75,14 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,j
 
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
 CS1IP(on1, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)((VAV(gs)->flag&VINPLACEOK1)?jtinplace:jt,w,gs));  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(jtinplace,w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
+POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
 ,0113)
 CS2IP(jtupon2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)((VAV(gs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,gs));  /* inplace g */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)(VAV(fs)->flag&VINPLACEOK1&&gx!=protw&&gx!=prota?( (J)((I)jt+JTINPLACEW) ):jt,gx,fs));} \
+POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=prota))),gx,fs));} \
 ,0114)
 
 // u@n
@@ -95,9 +95,11 @@ static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z;
  // here for execution on a single cell
  A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
  // take inplaceability of each monad from the corresponding dyad argument
- RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
- RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
- POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt+((ga!=prota?JTINPLACEA:0)+(gw!=protw?JTINPLACEW:0))) ):jt,ga,gw,fs)); 
+// obsolete  RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
+ RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs));
+// obsolete  RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
+ RZ(ga=(g1)((J)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  // Move bit 1 to bit 0, clear bit 1
+ POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
  EPILOG(z);
 }
 

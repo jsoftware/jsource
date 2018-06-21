@@ -408,6 +408,7 @@ extern F2(jtcircle);
 extern F2(jtcolon);
 extern DF2(jtcork2);
 extern F2(jtcrc2);
+extern DF2(jtcut2);
 extern F2(jtcut);
 extern F2(jtdbrr2);
 extern F2(jtdbsig2);

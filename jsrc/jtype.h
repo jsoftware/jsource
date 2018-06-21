@@ -122,6 +122,12 @@ typedef I SI;
 #define NORMAH          7L   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
 
+// The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.
+#define CUTFRETCHAIN(x) ((x)->kchain.chain)  // pointer to next block of frets
+#define CUTFRETCOUNT(x) ((x)->kchain.k)  // when passed into cut, this is # frets.  Overwritten by CUTFRETCHAIN
+#define CUTFRETFRETS(x) ((UC*)((x)->s))   // address of first fret
+#define CUTFRETEND(x)   ((x)->n)   // address of last+1 fret
+
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
 #define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))  // # I to allocate

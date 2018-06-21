@@ -177,36 +177,91 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  EPILOG(z);
 }
 
-static DF2(jtkeyi){PROLOG(0009);A j,p,z;B*pv;I*av,c,d=-1,n,*jv;D ctold=jt->ct;
+// a u/. w.  Self-classify a, then rearrange w and call cut
+static DF2(jtkey){PROLOG(0009);A frets,wperm,z;I i;D ctold=jt->ct;
  RZ(a&&w);
+ ASSERT(IC(a)==IC(w),EVLENGTH);  // verify agreement
+ if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
+ RZ(a=indexof(a,a));  rifv(a); // self-classify the input; we are going to modify a, so make sure it's not virtual
  jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
- n=IC(a); av=AV(a);
- RZ(j=grade1(a)); jv=AV(j);
- GATV(p,B01,n,1,0); pv=BAV(p);
- DO(n, c=d; d=av[*jv++]; *pv++=c<d;);
- z=df2(p,from(j,w),cut(VAV(self)->f,one));
+ // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
+ GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all
+ // a has i.~ x.  Go through it back-to-front leaving the elements in buckets chained together
+ I nitems=AN(a);
+#if BW==32
+ GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
+#else
+ frets=a;
+#endif
+// simple way I *av=AV(a); DQ(nitems, I root=av[i]; if(root<i){av[i]=av[root]; av[root]=i;});  // don't store if root>i.  Faster if blocks are big; but not much faster
+ I *av=AV(a);
+ DQ(nitems, I root=av[i];
+    I storei=av[root]; I storeroot=i; storeroot=(root<i)?storeroot:storei; storei=(root<i)?storei:root; 
+    av[i]=storei; av[root]=storeroot;);  // if root<i, store av[root] and i.   Otherwise store av[i] and av[root], i. e. stand pat
+ I celllen; PROD(celllen,AR(w)-1,AS(w)+1); celllen *= bp(AT(w));  // length of a cell of w, in bytes
+ // now the group anchored at i is chained together with the last chain field equal to i
+ // Process each bucket, moving the values into wperm and the lengths into frets.  We can write frets on top of
+ // a (for 64-but systems) since there can be no more than 5 bytes per bucket
+ UC *fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 4 bytes for groups longer than 254
+ I nfrets=0;  // We will accumulate # frets found
+ // av still points to the first bucket
+ I nchainx=av[0];  // init first chain pointer
+ I *wv=IAV(w), *wpv=IAV(wperm);   // source & target pointers
+ for(i=0;i<nitems;){
+  // av[i] is the next bucket-root, nchainx is its value.  Chase the chain, moving the values and counting the length.  Clear each element after use.
+  // The chain ends when the chain field equals the index of the root i.
+  I bucketlen=0;   // # items in bucket
+  I chainx=i;  // start at head of bucket
+  while(1){
+   ++bucketlen;  // increment # items in bucket
+   I* srcp = (I*)((C*)wv+celllen*chainx);
+   MCISds(wpv,srcp,celllen>>LGSZI);  // scaf use MC if long enough
+   if(celllen&(SZI-1)){
+#if LGSZI>2
+    if(celllen&4){*(I4*)wpv=*(I4*)srcp; wpv=(I*)((C*)wpv+SZI4); srcp=(I*)((C*)srcp+SZI4);}
+#endif
+    if(celllen&2){*(S*)wpv=*(S*)srcp; wpv=(I*)((C*)wpv+SZS); srcp=(I*)((C*)srcp+SZS);}
+    if(celllen&1){*(C*)wpv=*(C*)srcp; wpv=(I*)((C*)wpv+1); srcp=(I*)((C*)srcp+1);}
+   }
+   av[chainx]=0;  // mark slot as used so we don't try to start a bucket there
+   if(nchainx==i)break;  // stop when we come to end of chain (it's a closed ring)
+   chainx=nchainx;  // move up to process next in chain
+   nchainx=av[chainx];  // get address of next in chain
+  };
+  // bucket has been moved; write its length into the fret area.  The coding is described in cc.c
+  if(bucketlen<255)*fretp++ = (UC)bucketlen; else{*fretp++ = 255; *(UI4*)fretp=(UI4)bucketlen; fretp+=SZUI4; nfrets-=SZUI4;}
+  // move to next slot, and keep moving until we find one that hasn't been processed
+  do{++i;}while(i<nitems&&!(nchainx=av[i]));
+ }
+ // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets
+ CUTFRETCOUNT(frets)=fretp-CUTFRETFRETS(frets)+nfrets;  // # frets is #bytes stored, minus the length of the extended encodings
+ CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
+// obsolete z=df2(frets,wperm,cut(VAV(self)->f,one));  // scaf remove the call to cut and put one in as g; use fs.  Verify that display is correct with g set
+ // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
+ // We pass the self pointer for /. into cut, at it uses that fact to interpret a
+ z=jtcut2((J)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->f)->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  jt->ct=ctold;
  EPILOG(z);
-}    /* a f/. w where a is i.~x for dense x & w */
+}    /* a f/. w for dense x & w */
 
-static DF2(jtkeybox){PROLOG(0010);B b;I*wv;
- RZ(a&&w);
- ASSERT(IC(a)==IC(w),EVLENGTH);
- if(SPARSE&AT(a))R keysp(a,w,self);
- if(b=INT&AT(w)&&1==AR(w)){wv=AV(w); DO(AN(w), if(i!=*wv++){b=0; break;});}
- if(b)R group(a);
- A z=keyi(indexof(a,a),w,self);
- EPILOG(z);
-}    /* a </. w */
-
-static DF2(jtkey){PROLOG(0011);
- RZ(a&&w);
- ASSERT(IC(a)==IC(w),EVLENGTH);
- if(SPARSE&AT(a))R keysp(a,w,self);
- A z=keyi(indexof(a,a),w,self);
- EPILOG(z);
-}    /* a f/. w */
-
+// obsolete static DF2(jtkeybox){PROLOG(0010);B b;I*wv;
+// obsolete  RZ(a&&w);
+// obsolete  ASSERT(IC(a)==IC(w),EVLENGTH);
+// obsolete  if(SPARSE&AT(a))R keysp(a,w,self);
+// obsolete  if(b=INT&AT(w)&&1==AR(w)){wv=AV(w); DO(AN(w), if(i!=*wv++){b=0; break;});}
+// obsolete  if(b)R group(a);   not worth checking - user could have told us
+// obsolete  A z=keyi(indexof(a,a),w,self);
+// obsolete  EPILOG(z);
+// obsolete }    /* a </. w */
+// obsolete 
+// obsolete static DF2(jtkey){PROLOG(0011);
+// obsolete  RZ(a&&w);
+// obsolete  ASSERT(IC(a)==IC(w),EVLENGTH);
+// obsolete  if(SPARSE&AT(a))R keysp(a,w,self);
+// obsolete  A z=keyi(indexof(a,a),w,self);
+// obsolete  RETF(z);
+// obsolete }    /* a f/. w */
+// obsolete 
 typedef struct {   // return struct from jtkeyrs
  CR minrange;  // detected min/range
  I type;  // pseudotype to use
@@ -544,6 +599,8 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
 
 
 F1(jtsldot){A h=0;AF f1=jtoblique,f2=jtkey;C c,d,e;I flag=0;V*v;
+// NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
+// by /. and ;.1 must be the same as far as flags etc.
  RZ(w);
  if(NOUN&AT(w)){flag=VGERL; RZ(h=fxeachv(1L,w));}
  else{
@@ -551,10 +608,12 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2=jtkey;C c,d,e;I flag=0;V*v;
   switch(ID(w)){
    case CPOUND: f2=jtkeytally; break;
    case CSLASH: f2=jtkeyslash; if(vaid(v->f))f1=jtobqfslash; break;
-   case CBOX:   f2=jtkeybox;   break;
+// obsolete    case CBOX:   f2=jtkeybox;   break;
    case CFORK:  if(v->f1==(AF)jtmean){f2=jtkeymean; break;}
                 c=ID(v->f); d=ID(v->g); e=ID(v->h); 
-                if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD))f2=jtkeyheadtally;
- }}
+                if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD))f2=jtkeyheadtally; break;
+   default: flag = (FAV(w)->flag&VASGSAFE);  // pass through ASGSAFE
+  }
+ }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }

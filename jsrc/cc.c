@@ -333,8 +333,6 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  R z;
 }    /* ((i+i.r){y)-"1 ({:$y){.j */
 
-static DF2(jtcut2);
-
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
  n=IC(w); t=AT(w); m=*AV(sv->g); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
@@ -474,8 +472,8 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ \
   while(cmpres){ \
    UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
-   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
-   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */ \
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */ \
    cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bit up to & incl the fret; clear the carryover of #cells in partition */ \
   } \
   d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
@@ -501,8 +499,8 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
   cmpres<<=BW-testct;  /* if we didn't shift in BW bits, move the first one we did shift to the MSB */ \
   while(cmpres){ \
    UI4 ctz; CTLZI(cmpres,ctz); I len=BW-ctz; testct-=len; d+=len; /* get # leading bits including the 1; decr count of unprocessed bits; set d=length of next field to output */ \
-   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}  /* write out encoded length; keep track of # long fields emitted */ \
-   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=pd0[1]; pd=(C*)&pd0[2];}  /* if we filled the current buffer, get a new one */ \
+   if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */ \
+   if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */ \
    cmpres<<=1; cmpres<<=(len-=1); d=0;   /* discard bits up to & incl the fret; clear the carryover of #cells in partition */ \
   } \
   d += testct;  /* add in any bits not shifted out of cmpres as going into d */ \
@@ -553,137 +551,156 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 
 // 1st word in buf is chain, 2nd is end+1 of data
 #define EACHCUT(stmt) \
- do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */ \
+ do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */ \
   while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */ \
-   UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;} d=len-neg;  /* fetch size, adjust if neg */ \
+   UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */ \
    stmt;  /* perform user function */  \
    v1 += len*k;  /* advance to next fret position in w */ \
   }  /* loop till buffer all processed */ \
-  if(!(pd0=(UC**)pd0[0]))break;  /* step to next buffer; exit if none */ \
-  pd=(UC*)&pd0[2];  /* point to 1st d */  \
+  if(!(pd0=CUTFRETCHAIN(pd0)))break;  /* step to next buffer; exit if none */ \
+  pd=CUTFRETFRETS(pd0);  /* point to 1st d */  \
  }while(1);  /* when buffer exhausted, chain to next; stop when no next */
 
 
 // allocate a new fret buffer and chain it to the old one
-// pd is &last element (i. e. chain field of current buffer)
+// pd is &last element+1 (i. e. endptr of current buffer)
 // pd0 is &current buffer
 // result is &new buffer, or 0 if error
 // we fill in the chain and length fields in the current buffer, and set the length field of the new
 // buffer to the size we allocated
 #define FRETALLOSIZE (512-10)  // number of frets to allocate at a time - if they are long type (i. e. I).  For frets less than 255
    // items long, we can store 4 or 8 times as many
-static UC** jtgetnewpd(J jt, UC* pd, UC** pd0){A new;
- pd0[1]=pd;  // fill in size of current buffer
+static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
+ CUTFRETEND(pd0)=(I)pd;  // fill in size of current buffer
  GATV(new,INT,FRETALLOSIZE,0,0);  // get a new buffer.  rank immaterial.  Use GATV because of large size
- pd0[0]=(UC*)IAV(new);  // chain the new block to the old
- pd0=(UC**)pd0[0];  // step pd0 to new block
- pd0[1]=((UC*)&pd0[FRETALLOSIZE]-10);  // return value: endptr of new buffer
+ CUTFRETCHAIN(pd0)=new;  // chain the new block to the old
+ pd0=new;  // step pd0 to new block
+ CUTFRETEND(pd0)=(I)(CUTFRETFRETS(pd0)+(FRETALLOSIZE*SZI)-10);  // return value: endptr of new buffer
  R pd0;  // return address of data in the new block
 }
 
 
-static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,c,e=0,d,hn,k,m=0,n,r,*s,wt,*zi;V*vf;I d1[128]; UC**pd0=(C**)&d1;UC *pd=(UC*)&pd0[2],*pdend;
- PREF2(jtcut2); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
+DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
+     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[128]; A pd0; UC *pd, *pdend;
+ PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
 
- n=IC(w); wt=AT(w); k=*AV(sv->g); neg=(UI)k>>(BW-1); pfx=k&1;  // n=#items of w; k is a temp; neg=cut type is _1/_2; pfx=cut type is 1/_1
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);  // r=rank>.1, s->w shape, wv->w data, c=#atoms in cell of w, k=#bytes in cell of w;
+ n=IC(w); wt=AT(w);   // n=#items of w; wt=type of w
+ r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn*bp(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
- if(!(VGERL&sv->flag)){vf=VAV(fs); id=vf->id;  // if verb, point to its data and fetch its pseudocharacter
+ if(!(VGERL&sv->flag)){id=FAV(fs)->id;  // if verb, point to its data and fetch its pseudocharacter
   // not gerund: OK to test fs
-  if(vf->mr>=r){
+  if(FAV(fs)->mr>=r){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-   state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
-   state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
   state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
- if(a!=mark){  // dyadic forms
-  if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
-   if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->f1,w,h);}
-   else R CALL1(f1,w,fs);
+
+ // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
+ if(sv->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
+  pfx=IAV(sv->g)[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+  if(a!=mark){  // dyadic forms
+   if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
+    if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->f1,w,h);}
+    else R CALL1(f1,w,fs);
+   }
+   if(((-AN(a))&(-(BOX&AT(a))))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
+   if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
+   if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
+   ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean
+  }else{
+   // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
+   // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than 1
+   if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&&k&&((BW==32&&wt&FL&&k==SZD)||(k<=SZI&&(k&-k)==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
+   }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
-  if(((-AN(a))&(-(BOX&AT(a))))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
-  if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary, error if impossible
-  if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
-  ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean
- }else{
-  // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
-  // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than 1
-  if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&&k&&((BW==32&&wt&FL&&k==SZD)||(k<=SZI&&(k&-k)==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
-  }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
- }
- ASSERT(n==IC(a),EVLENGTH);
+  ASSERT(n==IC(a),EVLENGTH);
 
- // *fret is value to match; n is #items to match; pd0=&d1, pd->d1[2] pdend=&pd[max+1] (pointers into current fret buffer) k=item length av->data to compare
- void *av=voidAV(a);  // point to the start of the fret data
- void *fret=(C*)av+ak*((n-1)&(pfx-1));  // point to the fret
- // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
- I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
- switch(rtnx){
- case 0: // single bytes
-  FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
-   I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
-   val==*avv
-   ) break;
- case 1: // 2 bytes
-  FRETLOOPSGL(US) break;
- case 2: // 4 bytes
-  FRETLOOPSGL(UI4) break;
+  // *fret is value to match; n is #items to match; pd0=&d1, pd->d1 fretarea pdend=&d1[max+1] (pointers into current fret buffer) k=item length av->data to compare
+  pd0=(A)&d1; pd=CUTFRETFRETS(pd0); pdend=(C*)&d1+sizeof(d1)-10;  // pd0, pd, pdend start out set for first buffer
+
+  void *av=voidAV(a);  // point to the start of the fret data
+  void *fret=(C*)av+ak*((n-1)&(pfx-1));  // point to the fret
+  // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
+  I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
+  switch(rtnx){
+  case 0: // single bytes
+   FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
+    I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
+    val==*avv
+    ) break;
+  case 1: // 2 bytes
+   FRETLOOPSGL(US) break;
+  case 2: // 4 bytes
+   FRETLOOPSGL(UI4) break;
 #if BW==64
- case 3: // 8 bytes
-  FRETLOOPSGL(UI) break;
+  case 3: // 8 bytes
+   FRETLOOPSGL(UI) break;
 #endif
- case 4: // single-byte Boolean, looking for 1s
-  FRETLOOPBYTE( , , *avv) break;
- case 5: // float (tolerant)
-  FRETLOOPSGLD break;
+  case 4: // single-byte Boolean, looking for 1s
+   FRETLOOPBYTE( , , *avv) break;
+  case 5: // float (tolerant)
+   FRETLOOPSGLD break;
+  }
+
+  // partition sizes have been calculated.
+  // prepare for the looping.  We need:
+  // pd0 pointing to first buffer
+  // pd->first d to process.  We skip the first d if pfx
+  // m has # d values
+  // v1->first w-cell to process, taking into account skipped cells owing to neg and omitted headers
+
+  // if pfx, emit the runout field for the last d (if suffix these are discarded).  We must add one to d
+  // to include the prefix in the length of d
+  if(pfx){++d; if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}}
+  // close the last d buffer
+  CUTFRETCHAIN(pd0)=0; CUTFRETEND(pd0)=(I)pd;  // set end-of-chain and endptr in last d buffer
+  // chase the chains to count the number of d values.  Each is one byte long, except for the long ones which are 1+SZI bytes.  But we subtracted SZI from m for
+  // every long encoding, so if we just total the number of bytes in the blocks and add it to m, we will have the number of d-values
+  for(pd0=(A)&d1; pd0; pd0=CUTFRETCHAIN(pd0))m += (UC*)CUTFRETEND(pd0)-CUTFRETFRETS(pd0);  // add in bufend-bufstart
+  // set pointers to first d and first cell
+  v1=wv; pd0=(A)&d1; pd=CUTFRETFRETS(pd0);
+  // if pfx, skip over the first d and any w-cells indicated in it.  Also skip over 1 more w-cell if neg indicates the first cell should be skipped
+  if(pfx){
+   UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;}  // get first d and skip over it
+   v1+=(len+neg)*k;  // skip over the before-first-prefix cells, and the fret cell if neg
+   --m;  // remove the discarded d from the count
+  }
+ }else{
+  // Here we are processing /.; the original a had the fret sizes built already.  Just set up the loop variables based on them
+  m=CUTFRETCOUNT(a);  // # frets, set by caller
+  pd0=a;  // &first block of frets
+  pd=CUTFRETFRETS(a);  // &first fret
+  CUTFRETCHAIN(a)=0;  // indicate only 1 block in use.  Note this overlaps with AK & thus cannot be set until pd extracted
+  v1=wv;  // we always start with the first cell
+     // CUTFRETEND in input block is set by caller
+  pfx=1; neg=0;  // This is a ;.1 cut
  }
 
- // partition sizes have been calculated.
- // prepare for the looping.  We need:
- // pd0 pointing to first buffer
- // pd->first d to process.  We skip the first d if pfx
- // m has # d values
- // v1->first w-cell to process, taking into account skipped cells owing to neg and omitted headers
-
- // if pfx, emit the runout field for the last d (if suffix these are discarded).  We must add one to d
- // to include the prefix in the length of d
- if(pfx){++d; if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(I*)pd=d; pd+=SZI; m-=SZI;}}
- // close the last d buffer
- pd0[0]=0; pd0[1]=pd;  // set end-of-chain and endptr in last d buffer
- // chase the chains to count the number of d values.  Each is one byte long, except for the long ones which are 1+SZI bytes.  But we subtracted SZI from m for
- // every long encoding, so if we just total the number of bytes in the blocks and add it to m, we will have the number of d-values
- for(pd0=(UC**)&d1; pd0; pd0=(UC**)pd0[0])m += pd0[1]-(UC*)&pd0[2];  // add in bufend-bufstart
- // set pointers to first d and first cell
- v1=wv; pd0=(UC**)&d1; pd=(UC*)&pd0[2];
- // if pfx, skip over the first d and any w-cells indicated in it.  Also skip over 1 more w-cell if neg indicates the first cell should be skipped
- if(pfx){
-  UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;}  // get first d and skip over it
-  v1+=(len+neg)*k;  // skip over the before-first-prefix cells, and the fret cell if neg
-  --m;  // remove the discarded d from the count
- } 
+ // At this point we have m, the number of result cells; pd0, pointer to first block of lengths; pd, pointer to first fret-length to use; v1, pointer to first participating cell of w; pfx, neg
 
  // process, handling special cases
- switch(wd?0:id){
+ zz=0;   // indicate no result from special cases
+ switch(id){
   case CPOUND:
    GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;); 
    break;
   case CDOLLAR:
    GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;);
-   R irs2(zz,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);
+   R irs2(zz,vec(INT,MAX(0,r-1),AS(w)+1),0L,0L,1L,jtover);
   case CHEAD:
-   GA(zz,wt,m*c,r,s); zc=CAV(zz); *AS(zz)=m;
-   EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,c,zc); zc+=k;);
+   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); *AS(zz)=m;
+   EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,wcn,zc); zc+=k;);
    break;
   case CTAIL:
-   GA(zz,wt,m*c,r,s); zc=CAV(zz); *AS(zz)=m;
-   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,c,zc); zc+=k;);
+   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); *AS(zz)=m;
+   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
    break;
 // obsolete   case CCOMMA:
 // obsolete   case CLEFT:
@@ -708,16 +725,16 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
 // obsolete    break;
   case CSLASH:
    {
-   VA2 adocv = vains(vf->f,wt);  // qualify the operation, returning action routine and conversion info
+   VA2 adocv = vains(FAV(fs)->f,wt);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
-    GA(zz,zt,m*c,r,s); *AS(zz)=m; 
+    GA(zz,zt,m*wcn,r,AS(w)); *AS(zz)=m; 
     if(!AN(zz))R zz;
     I atomsize=bp(zt);
-    zc=CAV(zz); zk=c*atomsize;
+    zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
 // obsolete     EACHCUT(if(d)adocv.f(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); 
-    EACHCUT(if(d)adocv.f(jt,1L,c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n
+    EACHCUT(if(d)adocv.f(jt,1L,wcn,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n
         if(!z0){if(z)R z; else break;}} mvc(zk,zc,atomsize,z0);} zc+=zk;);
     if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
     break;
@@ -732,21 +749,25 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
 // obsolete    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=r?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
    // Allocate the virtual block we will use for arguments
    A virtw; RZ(virtw=virtual(w,0,r));
-   // Copy in the shape of a cell.  The number of cells will depend on d
-   I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
+   // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
+   MCIS(AS(virtw)+1,AS(w)+1,r-1); // obsolete I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
    // Set the offset to the first data
-   AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
+   I virtwk=AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
+   // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
+   // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
+   // us through a flag bit.  Because of this we don't inplace lists, which is regrettable.
+   jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
 
 #define ZZDECL
 #include "result.h"
    {I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);}
    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
-   do{UC *pdend=(C*)pd0[1];   /* 1st ele is # eles; get &chain  */
+   do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */
     while(pd<pdend){   /* step to first/next; process each fret.  Quit when pointing to end */
-     UI len=*pd++; if(len==255){len=*(UI*)pd; pd+=SZI;} d=len-neg;  /* fetch size, adjust if neg */
-     AS(virtw)[0]=d; AN(virtw)=c*d; // install the size of the partition into the virtual block, and # atoms
+     UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
+     AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
      if(!(state&STATEHASGERUND)){
       RZ(z=CALL1(f1,virtw,fs));  //normal case
@@ -757,10 +778,14 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A *hv,z=0,zz=0;B neg,pfx;C id,*v1,*wv,*zc;
 #define ZZBODY  // assemble results
 #include "result.h"
 
-     AK(virtw) += len*k;  /* advance to next fret position in w */
+     AK(virtw) = virtwk += len*k;   // advance to data position of next fret
+     if(AFLAG(virtw)&AFVIRTUALINPLACE){
+          // The block was self-virtualed or otherwise modified its header.  Restore its original shape/type
+       AR(virtw)=(RANKT)r; AT(virtw)=wt; MCIS(AS(virtw)+1,AS(w)+1,r-1); AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+     }
     }  /* loop till buffer all processed */
-    if(!(pd0=(UC**)pd0[0]))break;  /* step to next buffer; exit if none */
-    pd=(UC*)&pd0[2];  /* point to 1st d */
+    if(!(pd0=CUTFRETCHAIN(pd0)))break;  /* step to next buffer; exit if none */
+    pd=CUTFRETFRETS(pd0);  /* point to 1st d */
    }while(1);  /* when buffer exhausted, chain to next; stop when no next */
 
 #define ZZEXIT  // handle fill & dissimilar results
@@ -1322,6 +1347,8 @@ static DF1(jttess1){A s;I m,r,*v;
 
 
 F2(jtcut){A h=0;I flag=0,k;
+// NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
+// by /. and ;.1 must be the same as far as flags etc.  For the shared case, inplacing is OK
  RZ(a&&w);
  ASSERT(NOUN&AT(w),EVDOMAIN);
  RZ(w=vi(w));
@@ -1330,7 +1357,7 @@ F2(jtcut){A h=0;I flag=0,k;
  switch(k){
   case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX);
   case 1: case -1:
-  case 2: case -2: R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
+  case 2: case -2: if(!(NOUN&AT(a)))flag=(FAV(a)->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1); R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
   case 3: case -3: case 259: case -259: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
   default:         ASSERT(0,EVDOMAIN);
 }}

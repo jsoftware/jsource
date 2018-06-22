@@ -17,14 +17,15 @@
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
 #define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t);}
+#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
+#define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
+#define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
 #define SSNUMPREFIX A z; I wtc=CTTZ(AT(w));  \
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand */ \
 /* If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
-/* Try the zombiesym last, saving it as a trump card */ \
-/* Clear zombieval after use to avoid overwriting it */ \
+/* Clear zombieval after use to avoid overwriting it ??? */ \
 {  \
  if (WINPLACE){ z=w; } \
  else {GATV(z, FL, 1, AR(w), AS(w));} \
@@ -39,11 +40,11 @@ SSINGF1(jtssfloor) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w),z,B01,B) R z;
-  case INTX: SSSTORE(SSRDI(w),z,INT,I) R z;
+  case B01X: SSSTORENV(SSRDB(w),z,B01,B) R z;
+  case INTX: SSSTORENV(SSRDI(w),z,INT,I) R z;
   case FLX:
    f = tfloor(SSRDD(w));
-   if(f == (D)(I)f) SSSTORE((I)f,z,INT,I) else SSSTORE(f,z,FL,D)
+   if(f == (D)(I)f) SSSTORE((I)f,z,INT,I) else SSSTORENVFL(f,z,FL,D)
    R z;
  }
 }
@@ -54,11 +55,11 @@ SSINGF1(jtssceil) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w),z,B01,B) R z;
-  case INTX: SSSTORE(SSRDI(w),z,INT,I) R z;
+  case B01X: SSSTORENV(SSRDB(w),z,B01,B) R z;
+  case INTX: SSSTORENV(SSRDI(w),z,INT,I) R z;
   case FLX:
    f = tceil(SSRDD(w));
-   if(f == (D)(I)f) SSSTORE((I)f,z,INT,I) else SSSTORE(f,z,FL,D)
+   if(f == (D)(I)f) SSSTORE((I)f,z,INT,I) else SSSTORENVFL(f,z,FL,D)
    R z;
  }
 }
@@ -69,8 +70,8 @@ SSINGF1(jtsssignum) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w),z,B01,B) R z;
-  case INTX: SSSTORE(SSRDI(w)>0?1:SSRDI(w)<0?-1:0,z,INT,I) R z;
+  case B01X: SSSTORENV(SSRDB(w),z,B01,B) R z;
+  case INTX: SSSTORENV(SSRDI(w)>0?1:SSRDI(w)>>(BW-1),z,INT,I) R z;
   case FLX:
    f = SSRDD(w);
    SSSTORE(f>=jt->ct?1:f<=-jt->ct?-1:0,z,INT,I)
@@ -84,12 +85,12 @@ SSINGF1(jtsssqrt) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f; I i;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w),z,INT,I) R z;  // normal code returns B01, but INT seems better
+  case B01X: SSSTORENV(SSRDB(w),z,INT,I) R z;  // normal code returns B01, but INT seems better
   case INTX:
     if((i = SSRDI(w))>=0){SSSTORE(sqrt((D)i),z,FL,D) R z;}   // return value if real
     jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
   case FLX:
-    if((f = SSRDD(w))>=0){SSSTORE(sqrt(f),z,FL,D) R z;}   // return value if real
+    if((f = SSRDD(w))>=0){SSSTORENVFL(sqrt(f),z,FL,D) R z;}   // return value if real
     jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
  }
 }
@@ -100,13 +101,13 @@ SSINGF1(jtssexp) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f; I i;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w)?2.71828182845904523536:1.0,z,FL,D) R z;
+  case B01X: SSSTORENV(SSRDB(w)?2.71828182845904523536:1.0,z,FL,D) R z;
   case INTX:
     i = SSRDI(w);
     SSSTORE(i<EMIN?0.0:EMAX<i?inf:exp((D)i),z,FL,D) R z;
   case FLX:
     f = SSRDD(w);
-    SSSTORE(f<EMIN?0.0:EMAX<f?inf:exp(f),z,FL,D) R z;
+    SSSTORENVFL(f<EMIN?0.0:EMAX<f?inf:exp(f),z,FL,D) R z;
  }
 }
 
@@ -116,12 +117,12 @@ SSINGF1(jtsslog) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f; I i;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w)?0.0:infm,z,FL,D) R z;
+  case B01X: SSSTORENV(SSRDB(w)?0.0:infm,z,FL,D) R z;
   case INTX:
     if((i = SSRDI(w))>=0){SSSTORE(log((D)i),z,FL,D) R z;}   // return value if real
     jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
   case FLX:
-    if((f = SSRDD(w))>=0){SSSTORE(log(f),z,FL,D) R z;}   // return value if real
+    if((f = SSRDD(w))>=0){SSSTORENVFL(log(f),z,FL,D) R z;}   // return value if real
     jt->jerr=EWIMAG; R 0;   // otherwise fall through to normal code, returning complex
  }
 }
@@ -132,11 +133,11 @@ SSINGF1(jtssmag) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f; I i;
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
+  case B01X: SSSTORENV(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
   case INTX:
-    if((i = SSRDI(w))>IMIN){SSSTORE(i>=0?i:-i,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
+    if((i = SSRDI(w))>IMIN){SSSTORENV(i>=0?i:-i,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
   case FLX:
-    f = SSRDD(w); SSSTORE(ABS(f),z,FL,D) R z;
+    f = SSRDD(w); SSSTORENVFL(ABS(f),z,FL,D) R z;
  }
 }
 
@@ -146,11 +147,11 @@ SSINGF1(jtssfact) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {D f;
   default: R 0;
-  case B01X: SSSTORE(1,z,INT,I) R z;   // return INT rather than normal B01
+  case B01X: SSSTORENV(1,z,INT,I) R z;   // return INT rather than normal B01
   case INTX:
     SSSTORE(dgamma(1.0+(D)SSRDI(w)),z,FL,D) RE(0) R z;
   case FLX:
-    f = SSRDD(w); SSSTORE(_isnan(f)?f:dgamma(1.0+f),z,FL,D) RE(0) R z;
+    f = SSRDD(w); SSSTORENVFL(_isnan(f)?f:dgamma(1.0+f),z,FL,D) RE(0) R z;
  }
 }
 
@@ -160,10 +161,10 @@ SSINGF1(jtsspix) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(wtc) {
   default: R 0;
-  case B01X: SSSTORE(SSRDB(w)?PI:0.0,z,FL,D) R z;
+  case B01X: SSSTORENV(SSRDB(w)?PI:0.0,z,FL,D) R z;
   case INTX:
     SSSTORE(PI*(D)SSRDI(w),z,FL,D) R z;
   case FLX:
-    SSSTORE(PI*SSRDD(w),z,FL,D) R z;
+    SSSTORENVFL(PI*SSRDD(w),z,FL,D) R z;
  }
 }

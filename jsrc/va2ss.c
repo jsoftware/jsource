@@ -45,7 +45,9 @@
 #define SSINGSS SSINGENC(SBT,SBT)
 
 #define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t);}
+#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
+#define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
+#define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
@@ -95,12 +97,12 @@ static A ssingallo(J jt,I r,I t){A z;
 {I ar = AR(a); I wr = AR(w); \
  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
  else if (ar >= wr){ \
-  if (AINPLACE){ z = a; AT(z) = B01; } \
-  else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; } \
+  if (AINPLACE){ z = a; AT(z) = B01; MODVIRTINPLACE(z); } \
+  else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; MODVIRTINPLACE(z); } \
   else if (ar + wr == 0)z = 0; \
   else {GATV(z, B01, 1, ar, AS(a));} \
  } else { \
-  if (WINPLACE){ z = w; AT(z) = B01; } \
+  if (WINPLACE){ z = w; AT(z) = B01; MODVIRTINPLACE(z);} \
   else if (ar + wr == 0)z = 0; \
   else {GATV(z, B01, 1, wr, AS(w));} \
  } \
@@ -115,28 +117,26 @@ SSINGF2(jtssplus) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(SSRDB(a)+SSRDB(w),z,INT,I) R z;
-  case SSINGBD: SSSTORE(SSRDB(a)+SSRDD(w),z,FL,D) R z;
-  case SSINGDB: SSSTORE(SSRDD(a)+SSRDB(w),z,FL,D) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)+SSRDB(w),z,INT,I) R z;  // NV because B01 is never virtual inplace
+  case SSINGBD: SSSTORENV(SSRDB(a)+SSRDD(w),z,FL,D) R z;
+  case SSINGDB: SSSTORENV(SSRDD(a)+SSRDB(w),z,FL,D) R z;
   case SSINGID: SSSTORE(SSRDI(a)+SSRDD(w),z,FL,D) R z;
   case SSINGDI: SSSTORE(SSRDD(a)+SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
    {B av = SSRDB(a); I wv = SSRDI(w); I zv = av+wv;
-   if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if(zv<wv)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGIB:
    {I av = SSRDI(a); B wv = SSRDB(w); I zv = av + wv;
-
-
-   if (zv<av)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (zv<av)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGII:
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av + wv;
-   if (XANDY((zv^av),(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (XANDY((zv^av),(zv^wv))<0)SSSTORE((D)av+(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGDD:
    {
-   NAN0; SSSTORE(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
+   NAN0; SSSTORENVFL(SSRDD(a)+SSRDD(w),z,FL,D) NAN1; R z;}
  }
 }
 
@@ -147,26 +147,26 @@ SSINGF2(jtssminus) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(SSRDB(a)-SSRDB(w),z,INT,I) R z;
-  case SSINGBD: SSSTORE(SSRDB(a)-SSRDD(w),z,FL,D) R z;
-  case SSINGDB: SSSTORE(SSRDD(a)-SSRDB(w),z,FL,D) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)-SSRDB(w),z,INT,I) R z;
+  case SSINGBD: SSSTORENV(SSRDB(a)-SSRDD(w),z,FL,D) R z;
+  case SSINGDB: SSSTORENV(SSRDD(a)-SSRDB(w),z,FL,D) R z;
   case SSINGID: SSSTORE(SSRDI(a)-SSRDD(w),z,FL,D) R z;
   case SSINGDI: SSSTORE(SSRDD(a)-SSRDI(w),z,FL,D) R z;
   case SSINGBI: 
    {B av = SSRDB(a); I wv = SSRDI(w); I zv = av-wv;
-   if(wv<0&&zv<=av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if(wv<0&&zv<=av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGIB:
    {I av = SSRDI(a); I wv = (I)SSRDB(w); I zv = av - wv;   
-   if (zv>av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (zv>av)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGII:
    {I av = SSRDI(a); I wv = SSRDI(w); I zv = av - wv;
-   if (XANDY((zv^av),~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORE(zv,z,INT,I)
+   if (XANDY((zv^av),~(zv^wv))<0)SSSTORE((D)av-(D)wv,z,FL,D) else SSSTORENV(zv,z,INT,I)
    R z;}
   case SSINGDD:
    {
-   NAN0; SSSTORE(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}
+   NAN0; SSSTORENVFL(SSRDD(a)-SSRDD(w),z,FL,D) NAN1;  R z;}
  }
 }
 
@@ -177,16 +177,16 @@ SSINGF2(jtssmin) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: SSSTORE(SBMIN(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
-  case SSINGBB: SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;
-  case SSINGBD: SSSTORE(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
-  case SSINGDB: SSSTORE(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
+  case SSINGSS: SSSTORENV(SBMIN(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;
+  case SSINGBD: SSSTORENV(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDB: SSSTORENV(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
   case SSINGID: SSSTORE(MIN(SSRDI(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDI: SSSTORE(MIN(SSRDD(a),SSRDI(w)),z,FL,D) R z;
-  case SSINGBI: SSSTORE(MIN(SSRDB(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGIB: SSSTORE(MIN(SSRDI(a),SSRDB(w)),z,INT,I) R z;
-  case SSINGII: SSSTORE(MIN(SSRDI(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGDD: SSSTORE(MIN(SSRDD(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGBI: SSSTORENV(MIN(SSRDB(a),SSRDI(w)),z,INT,I) R z;
+  case SSINGIB: SSSTORENV(MIN(SSRDI(a),SSRDB(w)),z,INT,I) R z;
+  case SSINGII: SSSTORENV(MIN(SSRDI(a),SSRDI(w)),z,INT,I) R z;
+  case SSINGDD: SSSTORENVFL(MIN(SSRDD(a),SSRDD(w)),z,FL,D) R z;
  }
 }
 
@@ -197,16 +197,16 @@ SSINGF2(jtssmax) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: SSSTORE(SBMAX(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
-  case SSINGBB: SSSTORE(SSRDB(a)|SSRDB(w),z,B01,B) R z;
-  case SSINGBD: SSSTORE(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
-  case SSINGDB: SSSTORE(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
+  case SSINGSS: SSSTORENV(SBMAX(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)|SSRDB(w),z,B01,B) R z;
+  case SSINGBD: SSSTORENV(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGDB: SSSTORENV(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
   case SSINGID: SSSTORE(MAX(SSRDI(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDI: SSSTORE(MAX(SSRDD(a),SSRDI(w)),z,FL,D) R z;
-  case SSINGBI: SSSTORE(MAX(SSRDB(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGIB: SSSTORE(MAX(SSRDI(a),SSRDB(w)),z,INT,I) R z;
-  case SSINGII: SSSTORE(MAX(SSRDI(a),SSRDI(w)),z,INT,I) R z;
-  case SSINGDD: SSSTORE(MAX(SSRDD(a),SSRDD(w)),z,FL,D) R z;
+  case SSINGBI: SSSTORENV(MAX(SSRDB(a),SSRDI(w)),z,INT,I) R z;
+  case SSINGIB: SSSTORENV(MAX(SSRDI(a),SSRDB(w)),z,INT,I) R z;
+  case SSINGII: SSSTORENV(MAX(SSRDI(a),SSRDI(w)),z,INT,I) R z;
+  case SSINGDD: SSSTORENVFL(MAX(SSRDD(a),SSRDD(w)),z,FL,D) R z;
  }
 }
 
@@ -218,20 +218,20 @@ SSINGF2(jtssmult) SSNUMPREFIX
     // +/@, on sparse relied on this test: it didn't abort on NaN found during scan
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;
-  case SSINGBD: SSSTORE(SSRDB(a)?SSRDD(w):0.0,z,FL,D) R z;
-  case SSINGDB: SSSTORE(SSRDB(w)?SSRDD(a):0.0,z,FL,D) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;
+  case SSINGBD: SSSTORENV(SSRDB(a)?SSRDD(w):0.0,z,FL,D) R z;
+  case SSINGDB: SSSTORENV(SSRDB(w)?SSRDD(a):0.0,z,FL,D) R z;
   case SSINGID: {I av=SSRDI(a); SSSTORE(av?av*SSRDD(w):0.0,z,FL,D) R z;}
   case SSINGDI: {I wv=SSRDI(w); SSSTORE(wv?wv*SSRDD(a):0.0,z,FL,D) R z;}
-  case SSINGBI: SSSTORE(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
-  case SSINGIB: SSSTORE(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
+  case SSINGBI: SSSTORENV(SSRDB(a)?SSRDI(w):0,z,INT,I) R z;
+  case SSINGIB: SSSTORENV(SSRDB(w)?SSRDI(a):0,z,INT,I) R z;
   case SSINGII: {I av=SSRDI(a), wv=SSRDI(w), zv;
-   if(!(av&&wv)) SSSTORE(0L,z,INT,I)
-   else if (zv=jtmult(0,av,wv)) SSSTORE(zv,z,INT,I)  // 0 result on errors
+   if(!(av&&wv)) SSSTORENV(0L,z,INT,I)
+   else if (zv=jtmult(0,av,wv)) SSSTORENV(zv,z,INT,I)  // 0 result on errors
    else SSSTORE((D)av*(D)wv,z,FL,D)
    R z;}
   case SSINGDD: {D av=SSRDD(a), wv=SSRDD(w);
-   SSSTORE(TYMES(av,wv),z,FL,D) R z;}
+   SSSTORENVFL(TYMES(av,wv),z,FL,D) R z;}
  }
 }
 
@@ -244,15 +244,15 @@ SSINGF2(jtssdiv) SSNUMPREFIX
  if(jt->jerr&&jt->jerr!=EWRAT)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
  switch(sw) {
   default: R 0;
-  case SSINGBB: {B av=SSRDB(a); B wv=SSRDB(w); SSSTORE(wv?av:av?inf:0.0,z,FL,D) R z;}
-  case SSINGBD: {B av=SSRDB(a); D wv=SSRDD(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
-  case SSINGDB: {D av=SSRDD(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGBB: {B av=SSRDB(a); B wv=SSRDB(w); SSSTORENV(wv?av:av?inf:0.0,z,FL,D) R z;}
+  case SSINGBD: {B av=SSRDB(a); D wv=SSRDD(w); SSSTORENV((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
+  case SSINGDB: {D av=SSRDD(a); B wv=SSRDB(w); SSSTORENV((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGID: {I av=SSRDI(a); D wv=SSRDD(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGDI: {D av=SSRDD(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGBI: {B av=SSRDB(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGIB: {I av=SSRDI(a); B wv=SSRDB(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
   case SSINGII: {I av=SSRDI(a); I wv=SSRDI(w); SSSTORE((av||wv)?av/(D)wv:0.0,z,FL,D) R z;}
-  case SSINGDD: {NAN0; SSSTORE(DIV(SSRDD(a),(D)SSRDD(w)),z,FL,D) NAN1; R z;}
+  case SSINGDD: {NAN0; SSSTORENVFL(DIV(SSRDD(a),(D)SSRDD(w)),z,FL,D) NAN1; R z;}
  }
 }
 
@@ -264,7 +264,7 @@ SSINGF2(jtssgcd) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
  if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
  switch(sw) {
   default: R 0;
-  case SSINGBB: {SSSTORE(SSRDB(a)|SSRDB(w),z,B01,B) R z;}
+  case SSINGBB: {SSSTORENV(SSRDB(a)|SSRDB(w),z,B01,B) R z;}
   case SSINGBD: {adv=SSRDB(a); wdv=SSRDD(w); goto flresult;}
   case SSINGDB: {adv=SSRDD(a); wdv=SSRDB(w); goto flresult;}
   case SSINGID: {adv=(D)SSRDI(a); wdv=SSRDD(w); goto flresult;}
@@ -288,7 +288,7 @@ SSINGF2(jtsslcm) SSNUMPREFIX  I aiv,wiv; D adv,wdv,zdv;
  if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
  switch(sw) {
   default: R 0;
-  case SSINGBB: {SSSTORE(SSRDB(a)&SSRDB(w),z,B01,B) R z;}
+  case SSINGBB: {SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;}
   case SSINGBD: {adv=SSRDB(a); wdv=SSRDD(w); goto flresult;}
   case SSINGDB: {adv=SSRDD(a); wdv=SSRDB(w); goto flresult;}
   case SSINGID: {adv=(D)SSRDI(a); wdv=SSRDD(w); goto flresult;}
@@ -354,7 +354,7 @@ SSINGF2(jtssoutof) SSNUMPREFIX  D adv,wdv,zdv;
  if(jt->jerr)R 0;  // If we have encountered error, give no result.  A bit kludgey, but that's how it was done.
  switch(sw) {
   default: R 0;
-  case SSINGBB: SSSTORE(SSRDB(a)<=SSRDB(w),z,B01,B) R z;
+  case SSINGBB: SSSTORENV(SSRDB(a)<=SSRDB(w),z,B01,B) R z;
   case SSINGBD: adv=SSRDB(a); wdv=SSRDD(w);  break;
   case SSINGDB: adv=SSRDD(a); wdv=SSRDB(w);  break;
   case SSINGID: adv=(D)SSRDI(a); wdv=SSRDD(w);  break;
@@ -442,7 +442,7 @@ SSINGF2(jtsspow) SSNUMPREFIX
   case SSINGBI: SSSTORE(SSRDB(a)?1.0:(t=(D)SSRDI(w))<0?inf:t==0?1:0,z,FL,D) R z;
   case SSINGIB: SSSTORE(SSRDB(w)?(D)SSRDI(a):1.0,z,FL,D) R z;
   case SSINGII: RE(t=intpow((D)SSRDI(a),SSRDI(w))) SSSTORE(t,z,FL,D) R z;
-  case SSINGDD: RE(t=pospow(SSRDD(a),SSRDD(w))) SSSTORE(t,z,FL,D) R z;
+  case SSINGDD: RE(t=pospow(SSRDD(a),SSRDD(w))) SSSTORENVFL(t,z,FL,D) R z;
  }
 }
 

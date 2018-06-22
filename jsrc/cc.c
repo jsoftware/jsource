@@ -754,10 +754,9 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // Set the offset to the first data
    I virtwk=AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
-   // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
-   // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
-   // us through a flag bit.  Because of this we don't inplace lists, which is regrettable.
-   jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
+   // Self-virtual blocks also modify the shape of a block, but that code notifies
+   // us through a flag bit.
+   jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
 
 #define ZZDECL
 #include "result.h"

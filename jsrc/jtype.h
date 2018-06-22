@@ -302,7 +302,17 @@ typedef I SI;
 #define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
-
+// Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
+// If an executing verb modifies an inplace virtual block, it must set the AFVIRTUALINPLACE flag to tell the caller that the block has been modified.
+// For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
+// real block but not for an inplaced virtual block, whose virtual data may be shorter than a FL.  The pure solution would be for the singleton code
+// to refrain from modifying a virtual block that is shorter than a FL, but that means we would have to test for it for every arithmetic operation.  Thus
+// we take the alternative, which is to not mark a virtual block inplaceable if it is a type shorter than a FL.  The type must also be DIRECT since we
+// can't keep track of individual usecounts for non-DIRECT blocks.
+//
+// Note: arithmetic dyads on bytes have similar issues, because the 8-byte-at-a-time operations may execute outside the cell of the array.  We detect
+// those cases inside the atomic-dyad code in va2.c.
+#define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))
 // NOUNSAFE flag
 // obsolete #define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
 // obsolete #define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack

@@ -206,11 +206,9 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
  // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
  // We can inplace the right arg the first time is it is direct inplaceable, and always after that.  This is subject to approval by the verb u
- // and the input jtinplace.  We do not inplace the a argument if it contains only 1 atom: we need to know if the shape etc. has been changed (which it can be
- // in 2 places: self-virtual blocks and speedy singletons); we don't want to slow down the singletons by forcing them to notify us; so we
- // don't inplace singletons and check for the VIRTUALIP flag to see if we need to reload the 
+ // and the input jtinplace.
  I inplacelaterw = (VAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
- jtinplace = (J)(((I)jtinplace&(~(JTINPLACEW+JTINPLACEA))) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&DIRECT)!=0)&(((1-AN(w))&origwc)>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
+ jtinplace = (J)(((I)jtinplace&(~(JTINPLACEW+JTINPLACEA))) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace

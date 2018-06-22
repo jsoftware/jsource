@@ -61,10 +61,9 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
   // The base pointer AK advances through the source argument. 
   //
-  // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
-  // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
+  // Self-virtual blocks modify the shape of a block, but that code notifies
   // us through a flag bit.
-  jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
+  jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
 // obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
   RZ(virtw = virtual(w,0,rr)); MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;
   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
@@ -225,18 +224,17 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // replace any empty operand with a cell of fills.  (Note that operands can have no atoms and yet the result can have nonempty cells,
  // if the cells are empty but the frame does not contain 0)
  //
- // We suppress inplacing an argument if the argument has only one atom.  This is so our inplaceable virtual block will not go through the speedy singleton code.
- // That code may change the rank and type of its argument, and we don't want to slow it down.  Self-virtual blocks also modify the shape of a block, but that code notifies
+ // Self-virtual blocks modify the shape of a block, but that code notifies
  // us through a flag bit.
  if(mn|an){
-  jtinplace = (J)((I)jtinplace & ((((at&DIRECT)!=0)&(((1-acn)&AC(a))>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable, and #atoms>1.
+  jtinplace = (J)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable, and #atoms>1.
 // obsolete  RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
   RZ(virta = virtual(a,0,lr)); MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
   AC(virta)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original a was direct inplaceable, and inplacing is allowed by u
  }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
-  jtinplace = (J)((I)jtinplace & ((((wt&DIRECT)!=0)&(((1-wcn)&AC(w))>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
+  jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
   RZ(virtw = virtual(w,0,rr)); MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;
   AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
  }else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}

@@ -36,11 +36,18 @@ a =. a (+ , +) b
 )
 2 2 -: v''
 
-NB. Verify that singleton gets same result as 1 item of an array
+NB. Verify that singleton gets same result as 1 item of an array, and also that 
 compss =: 1 : 0 (&>)
-(u etx y) -: (({.@:(u&(2 $ ,:))) etx y)
+yy =: y
+assert. (u etx y) -: (({.@:(u&(2 $ ,:))) etx y)
+assert. (u"0&:(5&$) y) -: 5&$@:u y 
+1
 :
-(x u etx y) -: (x ({.@:(u&(2 $ ,:))) etx y)
+xx =: x
+yy =: y
+assert. (x u etx y) -: (x ({.@:(u&(2 $ ,:))) etx y)
+assert. (x u"0&:(5&$) etx y) -: x 5&$@:u etx y 
+1
 )
 
 NB. values to use
@@ -194,5 +201,5 @@ NB. Same for %:y and ^.y
 NB. Verify that the contents of a non-inplacable box are not inplaced
 (2 2 1 $ 0 _2 2 0) -: -&>/~ ((<"_1) ,._1 1)
 
-4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2'
+4!:55 ;:'adot1 adot2 sdot0 b compss compssn compssp dou filecase iptime iptime1 iptime2 iptime3 niptime ops tolower v v1 v2 v3 vv0 vv1 vv2 xx yy'
 randfini''

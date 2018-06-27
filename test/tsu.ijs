@@ -266,12 +266,7 @@ end.
 ''
 )
 
-NB. =======================================================
-
-echo 9!:14''
-
-echo 0 : 0
-
+tsu_notes=: 0 : 0
 many scripts have timing tests
 typically comparing timing/result of j vs j model
 these tests can be essential for new/changed code
@@ -286,8 +281,9 @@ THRESHOLD should be applied as false failures are discovered
 gfft/glapack not in ddall - run separately with: RUN1'gfft'
 g18x fails on subsequent runs - no idea why
 g401 occasionally fails (random data?) but then runs clean
+)
 
-
+tsu_usage=: 0 : 0
    RUN  ddall  NB. report scripts that fail
  n RUNN ddall  NB. same as RUN but run for n times
    
@@ -306,3 +302,13 @@ g401 occasionally fails (random data?) but then runs clean
    
    RECHO ddall NB. echo script names as run and final count of failures
 )
+
+echo 0 : 0
+see tsu_notes for caveats and tsu_usage for details
+
+   RUN  ddall  NB. report scripts that fail
+   RECHO ddall NB. echo script names as run and final count of failures
+)
+
+echo 9!:14''
+

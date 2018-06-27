@@ -22,6 +22,10 @@ COMPILER='clang'
 else
 COMPILER='gcc'
 fi
+
+# June 2018 - clang default - code above can perhaps be removed - rpi?
+COMPILER=clang
+ 
 export COMPILER
 echo "COMPILER $COMPILER"
 

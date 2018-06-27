@@ -6,6 +6,9 @@
 cd ~
 . jvars.sh
 
+CC=clang
+
+echo $CC
 echo $TARGET
 echo $COMPILE
 echo $LINK

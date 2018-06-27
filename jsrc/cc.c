@@ -760,7 +760,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 
 #define ZZDECL
 #include "result.h"
-   {I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);}
+   I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);
    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */

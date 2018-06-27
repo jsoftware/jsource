@@ -229,7 +229,7 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
 
 #else
-static DF1(jtssg){PROLOG(0020);AD * RESTRICT a, * RESTRICT z;I i,k,n,r,wr;
+static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
@@ -270,7 +270,7 @@ static DF1(jtssg){PROLOG(0020);AD * RESTRICT a, * RESTRICT z;I i,k,n,r,wr;
 #define ZZSTARTATEND 1   // build result from bottom up
 #include "result.h"
 
- {I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)}   // set up for assembly loop
+ I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)   // set up for assembly loop
 
  AD * RESTRICT zz=0;
  for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself

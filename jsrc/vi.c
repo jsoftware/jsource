@@ -56,32 +56,35 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 /* hic4: hash the bytes of a string of length k (k multiple of 4)  */
 /* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
 
-       UI hic (     I k,UC*v){UI z=0;             DO(k,       z=(i+1000003)**v++   ^z<<1;      ); R z;}
+#define HASHINIT(z)  z=2166136261    // FNV-1a 32 bits
+#define HASHSTEP(z,byte)  (z=(UI4)((z^(byte))*16777619L))    // FNV-1a 32 bits
 
-static UI hicnz(    I k,UC*v){UI z=0;UC c;        DO(k, c=*v++; if(c&&c!=255)z=(i+1000003)*c^z<<1;); R z;}
+       UI hic (     I k,UC*v){UI HASHINIT(z);             DO(k,       HASHSTEP(z,*v++);      ); R z;}
 
-static UI hicx(J jt,I k,UC*v){UI z=0;I*u=jt->hiv; DO(jt->hin, z=(i+1000003)*v[*u++]^z<<1;      ); R z;}
+static UI hicnz(    I k,UC*v){UI HASHINIT(z);UC c;        DO(k, c=*v++; if(c&&c!=255)HASHSTEP(z,c);); R z;}
+
+static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->hiv; DO(jt->hin, HASHSTEP(z,v[*u++]);      ); R z;}
 
 #if C_LE
-       UI hic2(     I k,UC*v){UI z=0;             DO(k>>1,     z=(i+1000003)**v     ^z<<1;
-                                                       if(*(v+1)){z=(i+1000003)**(v+1) ^z<<1;} v+=2;); R z;}
+       UI hic2(     I k,UC*v){UI HASHINIT(z);             DO(k>>1,     HASHSTEP(z,v[0]);
+                                                       if(*(v+1)){HASHSTEP(z,v[1]);} v+=2;); R z;}
 #else
-       UI hic2(     I k,UC*v){UI z=0; ++v;        DO(k>>1,     z=(i+1000003)**v     ^z<<1;
-                                                       if(*(v-1)){z=(i+1000003)**(v-1) ^z<<1;} v+=2;); R z;}
+       UI hic2(     I k,UC*v){UI HASHINIT(z); ++v;        DO(k>>1,     HASHSTEP(z,v[0]);
+                                                       if(*(v-1)){HASHSTEP(z,v[-1]);} v+=2;); R z;}
 #endif
 
 #if C_LE
-       UI hic4(     I k,UC*v){UI z=0;             DO(k>>2,     z=(i+1000003)**v     ^z<<1;
-                                               if(*(v+2)||*(v+3)){z=(i+1000003)**(v+1) ^z<<1;
-                                                                  z=(i+1000003)**(v+2) ^z<<1;
-                                                                  z=(i+1000003)**(v+3) ^z<<1;}
-                                                  else if(*(v+1)){z=(i+1000003)**(v+1) ^z<<1;} v+=4;); R z;}
+       UI hic4(     I k,UC*v){UI HASHINIT(z);             DO(k>>2,     HASHSTEP(z,v[0]);
+                                               if(*(v+2)||*(v+3)){HASHSTEP(z,v[1]);
+                                                                  HASHSTEP(z,v[2]);
+                                                                  HASHSTEP(z,v[3]);}
+                                                  else if(*(v+1)){HASHSTEP(z,v[1]);} v+=4;); R z;}
 #else
-       UI hic4(     I k,UC*v){UI z=0; v+=3;       DO(k>>2,     z=(i+1000003)**v     ^z<<1;
-                                               if(*(v-2)||*(v-3)){z=(i+1000003)**(v-1) ^z<<1;
-                                                                  z=(i+1000003)**(v-2) ^z<<1;
-                                                                  z=(i+1000003)**(v-3) ^z<<1;}
-                                                  else if(*(v-1)){z=(i+1000003)**(v-1) ^z<<1;} v+=4;); R z;}
+       UI hic4(     I k,UC*v){UI HASHINIT(z); v+=3;       DO(k>>2,     HASHSTEP(z,v[0]);
+                                               if(*(v-2)||*(v-3)){HASHSTEP(z,v[-1]);
+                                                                  HASHSTEP(z,v[-2]);
+                                                                  HASHSTEP(z,v[-3]);}
+                                                  else if(*(v-1)){HASHSTEP(z,v[-1]);} v+=4;); R z;}
 #endif
 
 

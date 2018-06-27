@@ -245,7 +245,7 @@ static DF1(jtssg){PROLOG(0020);AD * RESTRICT a, * RESTRICT z;I i,k,n,r,wr;
  // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
  state = ((wr-2)>>(BW-1))&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
- state |= (-state) & VAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+ state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address

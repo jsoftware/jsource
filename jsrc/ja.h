@@ -672,6 +672,7 @@
 #define nlsym(x)                    jtnlsym(jt,(x))
 #define nlx(x)                      jtnlx(jt,(x))
 #define nlxxx(x)                    jtnlxxx(jt,(x))
+#define nmhash(x,y)                 hic((x),(y))
 #define nodupgrade(x0,x1,x2,x3,x4,x5,x6,x7,x8)      jtnodupgrade(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8))
 #define nor(x,y)                    jtnor(jt,(x),(y))  
 #define norm(x)                     jtnorm(jt,(x))  

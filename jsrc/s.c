@@ -38,7 +38,7 @@
 /* named locales:                                                          */
 /* jt->stloc:  locales symbol table                                        */
 
-UI nmhash (I k,UC*v){UI z=*v>>7; DO(k,z=(k-i)^(1000003*z)^*v++;); R z;}
+// obsolete use hic UI nmhash (I k,UC*v){UI z=*v>>7; DO(k,z=(k-i)^(1000003*z)^*v++;); R z;}
 
 static I symcol=(sizeof(L)+SZI-1)/SZI;
 

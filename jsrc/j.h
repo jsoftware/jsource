@@ -581,7 +581,12 @@ extern unsigned int __cdecl _clearfp (void);
 #define SGN(a)          ((0<(a))-(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)
-#define SYMHASH(h,n)    ((h)%(n)+SYMLINFOSIZE)   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
+#if SY_64
+#define SYMHASH(h,n)    (((UI)(h)*(UI)(n)>>32)+SYMLINFOSIZE)   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
+#else
+#define SYMHASH(h,n)    ((UI)(((D)(h)*(D)(n)*(1.0/4294967296.0))+SYMLINFOSIZE))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
+#endif
+// obsolete #define SYMHASH(h,n)    ((h)%(n)+(SYMLINFOSIZE-0.49999999999))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

@@ -533,7 +533,7 @@ typedef struct{A og,g;I ptr,flag;B sw0;} LS;
 /* sw0:  old value of stswitched                                           */
 
 
-typedef struct{UI hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
+typedef struct{UI4 hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
 
 /* hash: hash for  non-locale part of name                                 */
 // bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local

@@ -880,7 +880,7 @@ extern void     jststop(J);
 extern I        level(A);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
-extern UI       nmhash (I,UC*);
+// obsolete extern UI       nmhash (I,UC*);
 extern D        qpf(void);
 extern A        relocate(I,A);
 extern C        spellin(I,C*);

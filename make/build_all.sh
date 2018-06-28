@@ -1,7 +1,6 @@
 #!/bin/bash
 # build all binaries
 cd ~
-. jvars.sh
 
 $jmake/install.sh
 

@@ -1,4 +1,4 @@
-how to build/test j32/64 for linux/darwin/raspberry/...
+how to build/test j32/64/j64nonavx for linux/darwin/raspberry/...
 
 $jplatform (set by jvars.sh) determines compiler/link flags
 
@@ -12,15 +12,17 @@ raspberry implies linux/arm
 # commands are assumed to run in ~ and depend on jvars.sh
 
 # make sure shell scripts are executable
-chmod +x gitdev/jsource/make/*.sh
+chmod +x git/jsource/make/*.sh
 
 # copy jvars.sh to ~ (for finding things)
-cp gitdev/jsource/make/jvars.sh .
+cp git/jsource/make/jvars.sh .
 cat jvars.sh
 
 # read jvars.sh and edit as appropriate - other steps depend on jvars.sh
-# !!! edit platform to be appropriate for the system doing the builds !!!
-# valid platforms are: linux darwin raspberry
+
+# create clean build folders and build all binaries
+. jvars.sh
+$jmake/buld_all.sh
 
 # create clean build folders
 . jvars.sh
@@ -40,18 +42,8 @@ $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64
 $jmake/build_tsdll.sh    j64
 
-# test j64
+# test j64 ($j64nonavx or $j32)
 $j64
-   load'gitdev/jsource/test/tsu.ijs'
-...
    RUN ddall
 
-# build/test j32 binaries the same way (j32 instead of j64)
-
-# build everything from scratch
-$jmake/build_all.sh
-
-# release clean builds to the repo release folder
-. jvars.sh
-$jmake/release.sh
-
+# build/test j32 j64nonavx binaries the same way (j32 or j64nonavx)

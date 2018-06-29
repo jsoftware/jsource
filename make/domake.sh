@@ -4,15 +4,21 @@
 # $1 is j32 or j64
 
 cd ~
-. jvars.sh
 
-echo $TARGET
-echo $COMPILE
-echo $LINK
 mkdir -p $jbld/jout/$TARGET/$1/blis
 cd $jbld/jout/$TARGET/$1
 
-make -f $jmake/makefile
+targ=$1
+avx=""
+if [ $1 = "j64nonavx" ] ; then
+ targ=j64
+ avx=-nonavx
+fi 
+
+echo "building  $jbld/$targ/bin/$TARGET $avx"
+echo "output in $jbld/$targ/bin/build_$TARGET$avx.txt"
+make -f $jmake/makefile >$jbld/$targ/bin/build_$TARGET$avx.txt
+echo `egrep -w 'warning|error|note' $jbld/$targ/bin/build_$TARGET$avx.txt`
 
 if [ $1 = "j64nonavx" ] ; then
  if [ $TARGET = "libj.dylib" ] ; then

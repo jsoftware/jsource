@@ -1,42 +1,24 @@
 #!/bin/bash
 # $1 is j32 or j64
 cd ~
-. jvars.sh
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
  
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-export CC
-else
-CC=gcc
-export CC
-fi
-fi
-if [ $($CC -v 2>&1 | grep -c "clang\ version\|Apple\ LLVM\ version") -eq 1 ] ; then
-COMPILER='clang'
-else
-COMPILER='gcc'
-fi
-export COMPILER
-echo "COMPILER $COMPILER"
-
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ "x$COMPILER" = x'gcc' ] ; then
+if [ "x$CC" = x'gcc' ] ; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
 fi
 fi
 
-if [ "x$COMPILER" = x'gcc' ] ; then
+if [ "x$CC" = x'gcc' ] ; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 else
@@ -46,7 +28,6 @@ fi
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
 case $jplatform\_$1 in
-
 
 linux_j32) # linux x86
 TARGET=libj.so

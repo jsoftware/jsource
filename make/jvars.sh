@@ -1,17 +1,22 @@
 # source shell script (read with . jvars.sh) so stuff is easy to find
 
 # edit following if your install is not standard 
-jgit=~/gitdev/jsource # git jsource folder
-jbld=~/jbld           # test libraries and binaries will be put here
+jgit=~/git/jsource # git jsource folder
+jbld=~/jbld        # test libraries and binaries will be put here
 
-# edit platform to build - linux darwin raspberry
-jplatform=linux
+# platform and shared library suffix
+jplatform=uname|tr '[:upper:]' '[:lower]'
+jsuffix=so
+if [ $jplatform = "darwin" ] ; then jsuffix=dylib ; fi
+
+CC=clang # compiler
 
 # should not be necessary to edit after here
-j32=$jbld/j32/bin/jconsole
-j64=$jbld/j64/bin/jconsole
-j64nonavx="$jbld/j64/bin/jconsole -lib libj-nonavx.so"
+tsu=$jgit/test/tsu.ijs
+j32="$jbld/j32/bin/jconsole $tsu"
+j64="$jbld/j64/bin/jconsole $tsu"
+j64nonavx="$jbld/j64/bin/jconsole -lib libj-nonavx.$jsuffix $tsu"
 jmake=$jgit/make
 
-export jgit jbld j32 j64 j64nonavx jmake
+export jgit jbld jplatform j32 j64 j64nonavx jmake CC
 

@@ -40,7 +40,8 @@ static A jtmakename(J jt,C*s){A z;I m;NM*zv;
  GATV(z,NAME,m,1,0); zv=NAV(z);  // Use GATV because GA doesn't support NAME type
  MC(zv->s,s,m); *(m+zv->s)=0;
  zv->m   =(UC)m; 
- zv->bucket=zv->bucketx=0;
+ zv->bucket=0;
+ zv->bucketx=0;
  zv->flag=NMDOT;
  zv->hash=(UI4)nmhash(m,s);
  ACX(z);
@@ -111,7 +112,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
  GA(x,MARK,1,0,0     ); ACX(x); * AV(x)=0;                mark       =x; 
  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;
- RZ(y=rifvs(str(1L,"z")));     ACX(y);
+ RZ(y=rifvs(str(1L,"z")));     ACX(y); AS(y)[0]=BUCKETXLOC(1,"z");   // for paths, the shape holds the bucketx
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;  AFLAG(zpath) |= AFNOSMREL|(AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
@@ -211,6 +212,8 @@ jt->assert = 1;
  jt->transposeflag=1;
 // jt->int64rflag=0;
  jt->xmode=XMEXACT;
+ MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
+ jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
  R 1;
 }
 
@@ -236,7 +239,7 @@ static C jtjinit3(J jt){S t;
  sesminit();
  evinit();
  consinit();
- symbinit();
+ symbinit();  // must be after consinit
  parseinit();
  xoinit();
  xsinit();

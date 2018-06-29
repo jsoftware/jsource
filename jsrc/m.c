@@ -224,11 +224,11 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
   x=WVR(i); m=AN(x); s=CAV(x);  // x is the name
-  if(!m){m=4; s="base";}
+  if(!m){m=sizeof(jt->baselocale); s=jt->baselocale;}
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vlocnm(m,s),EVILNAME);
-  y=stfind(0,m,s);   // y is the block for the locale
+  y=stfind(m,s,BUCKETXLOC(m,s));   // y is the block for the locale
   ASSERT(y,EVLOCALE);
   *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name

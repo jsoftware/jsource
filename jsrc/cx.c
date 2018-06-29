@@ -178,8 +178,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
   // If the executing verb was reloaded during debug, switch over to it
   if(jt->redefined&&jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
    self=jt->sitop->dcf; sv=VAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
-   // Clear all the bucket info in the definition, since it doesn't match the symbol table now
-   DO(AN(hv[0+hi]), if(AT(line[i])&NAME){NAV(line[i])->bucket=NAV(line[i])->bucketx=0;});
+   // Clear all local bucket info in the definition, since it doesn't match the symbol table now
+   DO(AN(hv[0+hi]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
    jt->redefined=0;
    if(i>=n)break;
   }

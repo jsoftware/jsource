@@ -533,14 +533,16 @@ typedef struct{A og,g;I ptr,flag;B sw0;} LS;
 /* sw0:  old value of stswitched                                           */
 
 
-typedef struct{UI4 hash;I4 bucket;I4 bucketx;UC m;C flag,s[1];} NM;
+typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 
 /* hash: hash for  non-locale part of name                                 */
 // bucket: (for local simple names) the index of the hash chain for this symbol when viewed as a local
-//   0 if chain index not known
+//   0 if chain index not known or name is a locative
 // bucketx: (for local simple names, only if bucket!=0) the number of chain entries to discard before
 //   starting name search.  If negative, use one's complement and do not bother with name search - symbol-table entry
-//   is guaranteed to be at that position  
+//   is guaranteed to be at that position
+//   (for direct locatives) the hash of the locative - if numbered, the number itself.
+//   (for indirect locatives) hash of the last indirect name
 // m:    length of non-locale part of name note 255-byte limit!
 // sn:   symbol table number on last reference  no longer used
 // e:    symbol pool entry   on last reference  no longer used

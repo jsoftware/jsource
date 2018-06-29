@@ -56,7 +56,7 @@ B jtsymbinit(J jt){A q;I n=40;
  GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains
  RZ(q=apv(n,-1L,0L));    jt->stnum=q;
  GATV(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
- RZ(jt->global=stcreate(0,5L+PTO,4L,"base"));
+ RZ(jt->global=stcreate(0,5L+PTO,sizeof(jt->baselocale),jt->baselocale));
  RZ(           stcreate(0,7L+PTO,1L,"z"   ));
  R 1;
 }
@@ -78,20 +78,35 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 
-static A jtstfindnum(J jt,B b,I k){A y;I j;
+static A jtstfindnum(J jt,I k){A y;I j;
  if(!(y=indexof(jt->stnum,sc(k))))R 0; j=*AV(y); 
  if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
- else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
+// obsolete  else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
  else R 0;
 }    /* stfind for numbered locales */
 
-A jtstfind(J jt,B b,I n,C*u){I old;L*v;
- if(!n){n=4; u="base";}
- if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
+A jtstfind(J jt,I n,C*u,I bucketx){L*v;
+ if(!n){n=sizeof(jt->baselocale); u=jt->baselocale;bucketx=jt->baselocalehash;}
+// obsolete if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
+ if('9'>=*u)R stfindnum(bucketx);
  else{
-  old=jt->tnextpushx; v=probe(nfs(n,u),jt->stloc); tpop(old);
-  R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
-}}   /* find the symbol table for locale u, create if b and non-existent */
+// obsolete   old=jt->tnextpushx; v=probe(nfs(n,u),jt->stloc); tpop(old);
+  v=probe(n,u,(UI4)bucketx,jt->stloc);
+  R v?v->val:0;   // if there is a symbol, return its value
+// obsolete   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
+ }
+}   /* find the symbol table for locale u which has length n and hash h, create if b and non-existent */
+
+// look up locale name, and create the locale if not found
+A jtstfindcre(J jt,I n,C*u,I bucketx){
+ A v = stfind(n,u,bucketx);  // lookup
+ if(v)R v;  // return if found
+ if('9'<*u){  // nonnumeric locale:
+  R stcreate(0,jt->locsize[0]+PTO,n,u);  // create it with name
+ }else{
+  ASSERT(bucketx>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,bucketx,0L);  // numeric locale: create with number
+ }
+}
 
 static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
@@ -122,7 +137,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
   y=WVR(i); m=AN(y); u=CAV(y); c=*u; 
   if(!vlocnm(m,u))zv[i]=-2;
   else if(c<='9') zv[i]=0<=probenum(u)?1:-1;
-  else            zv[i]=probe(nfs(m,u),jt->stloc)?0:-1;
+  else            zv[i]=probe(m,u,(UI4)nmhash(m,u),jt->stloc)?0:-1;
  }
  RETF(z);
 }    /* 18!:0 locale name class */
@@ -154,18 +169,21 @@ F2(jtlocnl2){UC*u;
 static A jtlocale(J jt,B b,A w){A g,*wv,y;
  RZ(vlocnl(1,w));
  wv=AAV(w); RELBASEASGN(w,w);
- DO(AN(w), y=WVR(i); if(!(g=stfind(b,AN(y),CAV(y))))R 0;);
+ DO(AN(w), y=WVR(i); if(!(g=(b?jtstfindcre:jtstfind)(jt,AN(y),CAV(y),BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none */
 
-F1(jtlocpath1){A g; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); RETF(LOCPATH(g));}
+F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z; }
+ // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored
      /* 18!:2  query locale path */
 
-F2(jtlocpath2){A g,x;
+F2(jtlocpath2){A g; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,0);
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
- fa(LOCPATH(g)); ras(x); LOCPATH(g)=x;
+ // paths are special: the shape of each string holds the bucketx for the string.  Install that.
+ AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AAV(x)[i])); AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)
+ fa(LOCPATH(g)); ras(z); LOCPATH(g)=z;
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -174,7 +192,7 @@ static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
  RZ(a&&w);
  if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
- if(v=probe(nfs(n,s),jt->stloc)){
+ if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){
   g=v->val; 
   u=1+AV(g); DO(AN(g)-1, ASSERT(!u[i],EVLOCALE););
   RZ(symfreeh(g,v));
@@ -252,7 +270,7 @@ F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv;L*v;
  for(i=0;i<n;++i){
   zv[i]=1; y=WVR(i); g=0; m=AN(y); u=CAV(y); b='9'>=*u;
   if(b){j=probenum(u);               if(0<=j)g=pv[j]; }
-  else {v=probe(nfs(m,u),jt->stloc); if(v   )g=v->val;}
+  else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}
   if(g){
    c=1;
    DO(1+jt->fcalli, if(g==jt->fcallg[i].g){jt->fcallg[i].flag=1+b; jt->fcallg[i].ptr=b?j:(I)v; c=0; break;});

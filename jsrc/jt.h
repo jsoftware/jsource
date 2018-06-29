@@ -126,15 +126,17 @@ typedef struct {
 #endif
  I    symindex;         /* symbol table index (monotonically increasing)   */
 // -- end cache line 9
- A    symp;             /* symbol pool array                               */
- L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  A    stloc;            /* locales symbol table                            */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
+ C    baselocale[4];    // will be "base"
+ UI4  baselocalehash;   // name hash for base locale
 
+ A    symp;             /* symbol pool array                               */
+ L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  I    arg;              /* integer argument                                */
  I*   breakfh;          /* win break file handle                           */
  I*   breakmh;          /* win break map handle                            */

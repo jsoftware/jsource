@@ -47,13 +47,20 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  }
  ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
- GATV(z,NAME,n,1,0); zv=NAV(z);
+ GATV(z,NAME,n,1,0); zv=NAV(z);   // the block is cleared to 0
  MC(zv->s,s,n); *(n+zv->s)=0;  // copy in the name, null-terminate it
  f=0; m=n; p=0;
- // Split name into simplename and locale, verify length of each; set flag for locative/indirect locative
- if('_'==*t){--t; while(s<t&&'_'!=*t)--t; f=NMLOC;  p=n-2-(t-s); m=n-(2+p);}  // t->_ before localename, p=#locale name, m=#simplename
- else DO(n, if('_'==s[i]&&'_'==s[1+i]){   f=NMILOC; p=n-2-i;     m=n-(2+p); break;});  // p=#locales, m=#simplename
- ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.  NOTE kludge: fails if total length of __locs exceeds 255
+ // Split name into simplename and locale, verify length of each; set flag and hash for locative/indirect locative
+ if('_'==*t){
+   // name ends with _: direct locative
+   --t; while(s<t&&'_'!=*t)--t; f=NMLOC; p=n-2-(t-s); m=n-(2+p);  // t->_ before localename, p=#locale name, m=#simplename
+   // install hash/number for the direct locale
+   zv->bucketx=BUCKETXLOC(p,t+1);  // number if numeric, hash otherwise
+ }else{
+   // otherwise either simple name or indirect locative.  Look for the __
+   DO(n, if('_'==s[i]&&'_'==s[1+i]){ f=NMILOC; p=n-2-i; for(m=n; s[m-1]!='_'||s[m-2]!='_';--m); zv->bucketx=(I)nmhash(n-m,s+m); m=n-(2+p); break;});  // p=#locales, m=#simplename, hash last indirect if there is one
+ }
+ ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.
  zv->flag=f;  // Install locative flag
  zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of name
  RETF(z);

@@ -62,7 +62,7 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  }
  ASSERT(m<=255&&p<=255,EVLIMIT);  // error if name too long.
  zv->flag=f;  // Install locative flag
- zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of name
+ zv->m=(UC)m; zv->hash=(UI4)nmhash(m,s); // Install length, and calculate hash of simple name
  RETF(z);
 }    /* name from string */
 
@@ -79,7 +79,7 @@ F1(jtnfb){A y;C*s;I n;
  R nfs(n,s);
 }    /* name from scalar boxed string */
 
-// w is an A for a name; return NAME block or 0 if error
+// w is an A for a name string; return NAME block or 0 if error
 static F1(jtstdnm){C*s;I j,n,p,q;
  if(!(w=vs(w)))R 0;  // convert to ASCII
  n=AN(w); s=CAV(w);  // n = #characters, s->string

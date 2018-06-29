@@ -1034,7 +1034,7 @@
 #define stdnm(x)                    jtstdnm(jt,(x))
 #define stfind(x,y,z)               jtstfind(jt,(x),(y),(z))
 #define stfindcre(x,y,z)            jtstfindcre(jt,(x),(y),(z))
-#define stfindnum(x)                jtstfindnum(jt,(x))
+// obsolete #define stfindnum(x)                jtstfindnum(jt,(x))
 #define stitch(x,y)                 jtstitch(jt,(x),(y)) 
 #define stitchsp2(x,y)              jtstitchsp2(jt,(x),(y)) 
 #define str(x,y)                    jtstr(jt,(x),(y))

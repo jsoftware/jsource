@@ -297,20 +297,20 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A a,x,y;C*s,*v,*xv;I k,xn;
  s=n+u;   // s->end+1 of name
  while(u<s){
   v=s; while('_'!=*--v); ++v;  // v->start of last indirect locative
-  k=s-v; s=v-2; RZ(a=nfs(k,v));   // k=length of indirect locative; s->end+1 of next name if any
+  k=s-v; s=v-2;    // k=length of indirect locative; s->end+1 of next name if any
   if(!e){  // first time through
    if(jt->local)e=probe(k,v,hash,jt->local);  // look up local first
    if(!e)e=syrd1(k,v,hash,jt->global);
   }else e=syrd1(k,v,(UI4)nmhash(k,v),g);   // look up later indirect locatives, yielding an A block for a locative
-  ASSERTN(e,EVVALUE,a);  // verify found
+  ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
-  ASSERTN(!AR(y),EVRANK,a);   // verify atomic
-  ASSERTN(BOX&AT(y),EVDOMAIN,a);  // verify box
+  ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
+  ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
   x=AAV0(y); xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-  ASSERTN(1>=AR(x),EVRANK,a);   // verify list (or atom)
-  ASSERTN(xn,EVLENGTH,a);   // verify not empty
-  ASSERTN(LIT&AT(x),EVDOMAIN,a);  // verify string
-  ASSERTN(vlocnm(xn,xv),EVILNAME,a);  // verify legal name
+  ASSERTN(1>=AR(x),EVRANK,nfs(k,v));   // verify list (or atom)
+  ASSERTN(xn,EVLENGTH,nfs(k,v));   // verify not empty
+  ASSERTN(LIT&AT(x),EVDOMAIN,nfs(k,v));  // verify string
+  ASSERTN(vlocnm(xn,xv),EVILNAME,nfs(k,v));  // verify legal name
   RZ(g=stfindcre(xn,xv,BUCKETXLOC(xn,xv)));  // find st for the name
  }
  R g;

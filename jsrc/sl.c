@@ -95,6 +95,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 // obsolete   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
  }else{
 // obsolete   R stfindnum(bucketx);
+  // scaf   should do some kind of MRU ordering to speed access to recent locales
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==bucketx)R AAV(jt->stptr)[i];
 // obsolete   A y; if(!(y=indexof(jt->stnum,sc(bucketx))))R 0; j=*AV(y); 
 // obsolete   if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
@@ -129,6 +130,7 @@ static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  R w;
 }    /* validate namelist of locale names */
 
+// rewrite this to loop here rather than call indexof scaf
 static I jtprobenum(J jt,C*u){I j; 
  RE(j=i0(indexof(jt->stnum,sc((I)strtoI(u,NULL,(I)10))))); 
  R j<AN(jt->stnum)?j:-1;

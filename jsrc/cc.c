@@ -76,7 +76,8 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
   if(z==0)z=zero;  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
-  DO(m, *zzs++=as[i];) DO(AR(z), *zzs++=zs[i];)  // move in frame of a followed by shape of result-cell
+// obsolete  DO(m, *zzs++=as[i];) DO(AR(z), *zzs++=zs[i];)  // move in frame of a followed by shape of result-cell
+  MCISd(zzs,as,m) MCISd(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
  }
 // obsolete // Handle special cases of ] or [ with direct data, if vector or table
@@ -111,15 +112,17 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    // We honor BOXATOP if the verb can operate on a cell of w in its entirety
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=wr?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
-   ZZPARMS(0,0,as,m,n,1);  // set frame & # cells
+// obsolete    ZZPARMS(0,0,as,m,n,1);  // set frame & # cells
+   ZZPARMS(m,n,1)
+#define ZZINSTALLFRAME(optr) MCISd(optr,as,m)
  }
  I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
  for(ii=n;ii;--ii){  // for each 2-cell of a.  u points to the cell
-  if((-(c^1)|(e=u[1]))>=0){  // e=length of 1st axis
+  if((-(c^1)|(e=u[1]))>=0){I axislen;  // e=length of 1st axis
    // non-reversed selection along a single axis: calculate length {. start }. w
-   m=ws[0]; j=u[0];  // m=length of axis, j=starting position
-   ASSERT(((-e)&((j+m)|(m-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
-   if(j>=0){e=MIN(e,m-j);}else{j+=m; e=MIN(e,j+1); j-=(e-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
+   axislen=ws[0]; j=u[0];  // axislen=length of axis, j=starting position
+   ASSERT(((-e)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
+   if(j>=0){e=MIN(e,axislen-j);}else{j+=axislen; e=MIN(e,j+1); j-=(e-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
    // Allocate a virtual block & fill it in
    // locate virtual block
    AK(virtw)=origoffset+j*wcellbytes;
@@ -127,18 +130,18 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    AS(virtw)[0]=e; // shape of virtual matches shape of w except for #items
    AN(virtw)=e*wcellsize;  // install # atoms
    z = virtw;  // use the virtual block for the computation
-  }else{
+  }else{I axislen;
    // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input ot {) on grounds of rarity
    do{
     if(q){  // if we have already allocated the input area to {, fill it in
      // For each axis, create a boxed vector of boxed indexes to fetch, in the correct order
      for(i=0;i<c;++i){  // for each axis of the cell of a
-      m=ws[i]; j=u[i]; e=u[i+c]; k=e; e>>=(BW-1); k^=e; k-=e;  // m=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
+      axislen=ws[i]; j=u[i]; e=u[i+c]; k=e; e>>=(BW-1); k^=e; k-=e;  // axislen=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
 // obsolete     ASSERT(!e||-m<=j&&j<m,EVINDEX);  // validate j in range if length not zero
-      ASSERT(((-k)&((j+m)|(m-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
+      ASSERT(((-k)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
 // obsolete    if(0>j){j+=1+m-k; if(0>j){k+=j; j=0;}}else k=MIN(k,m-j);  // adjust j/k for negative j; clip endpoint to length of axis
 // obsolete   RZ(qv[i]=0>e?apv(k,j+k-1,-1L):0==j&&k==m?ace:apv(k,j,1L));  // create ascending or descending vector
-      if(j>=0){k=MIN(k,m-j); j+=e&(k-1);}else{j+=m; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
+      if(j>=0){k=MIN(k,axislen-j); j+=e&(k-1);}else{j+=axislen; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
       RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
      }
      break;  // this is the loop exit
@@ -760,7 +763,9 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 
 #define ZZDECL
 #include "result.h"
-   I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);
+// obsolete    I mtmp=m; ZZPARMS(0,0,&mtmp,1,m,1);
+   ZZPARMS(1,m,1)
+#define ZZINSTALLFRAME(optr) *optr++=m;
    I gerundx=0;  // if we have gerunds, this indicates which one we should run next
 
    do{UC *pdend=(UC*)CUTFRETEND(pd0);   /* 1st ele is # eles; get &chain  */
@@ -1285,7 +1290,9 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZDECL
 #include "result.h"
  I mn=rs[0]*rs[1];  // number of cells in the result
- rs[2]=rs[0]; ZZPARMS(0,0,rs+axisproc-1,axisproc,mn,1)  // Note the 2-axis result is transposed, so shape is reversed here for that case
+// obsolete  rs[2]=rs[0]; ZZPARMS(0,0,rs+axisproc-1,axisproc,mn,1)  // Note the 2-axis result is transposed, so shape is reversed here for that case
+  ZZPARMS(axisproc,mn,1)
+#define ZZINSTALLFRAME(optr) *optr++=rs[axisproc-1];if(axisproc>1)*optr++=rs[0];  // Note the 2-axis result is transposed, so shape is reversed here for that case
 
  for(hi=rs[1];hi;--hi){C *svv, *dvv;  // pointers within the lower-right corner, starting at the top-left of the corner.  Before that we use them to advance through top-right
   // move in the top-right part of top cell, stopping before the lower-right corner.

@@ -76,8 +76,9 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(0,0,ws,wf,mn,1)
-
+// obsolete   ZZPARMS(0,0,ws,wf,mn,1)
+  ZZPARMS(wf,mn,1)
+#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wf)  // Note the 2-axis result is transposed, so shape is reversed here for that case
   for(i0=mn;i0;--i0){
    RZ(z=CALL1IP(f1,virtw,fs));
 
@@ -249,7 +250,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
 #define ZZDECL
 #include "result.h"
-  ZZPARMS(los,lof,lis,lif,mn,2)
+// obsolete   ZZPARMS(los,lof,lis,lif,mn,2)
+  ZZPARMS(lof+lif,mn,2)
+#define ZZINSTALLFRAME(optr) MCISd(optr,los,lof) MCISd(optr,lis,lif)  // Note the 2-axis result is transposed, so shape is reversed here for that case
 
   for(i0=outerframect;i0;--i0){
    I outerrptstart=state&STATEOUTERREPEATA?virtak:virtwk;

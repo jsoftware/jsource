@@ -353,6 +353,10 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  FDEPDEC(1);  // OK to ASSERT now
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
+ // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
+ // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
+ // to be worth the trouble.
+ if(z)realizeifvirtual(z);
  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.

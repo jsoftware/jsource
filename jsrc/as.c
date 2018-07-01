@@ -270,7 +270,9 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
 #define ZZSTARTATEND 1   // build result from bottom up
 #include "result.h"
 
- I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)   // set up for assembly loop
+// obsolete  I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)   // set up for assembly loop
+  ZZPARMS(1,n,2)
+#define ZZINSTALLFRAME(optr) *optr++=n;
 
  AD * RESTRICT zz=0;
  for(i=0;i<n;++i){   // loop through items, noting that the first is the tail itself

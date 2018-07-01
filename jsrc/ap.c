@@ -422,7 +422,8 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   // loop over the infixes
 #define ZZDECL
 #include "result.h"
-  I zitmp=zi; ZZPARMS(0,0,&zitmp,1,zi,1)
+  ZZPARMS(1,zi,1)
+#define ZZINSTALLFRAME(optr) *optr++=zi;
 
   // Allocate a virtual block for the argument, and give it initial shape and atomcount
   A virtw, virta;

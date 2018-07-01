@@ -477,8 +477,25 @@ NB. Verify that cells are reset after being modified; here, type is changed by d
 NB. Verify result of explicit def is inplaceable
 (2200000 * IF64 { 4 8) > 7!:2 '2 + 3 : ''+: y'' i. 1000000'
 
+NB. Verify that result of explicit def is not virtual.  This crashes if it is, because the backer gets freed
+p1=: 3 : 0
+rt=. 0$0
+rt=. rt, 1:^:(0=]) p2 ''
+''
+)
+p2=: 3 : 0
+''&$@:, 0{:: rc=. ,< p3''  NB. Result of this expression is virtual
+)
+p3 =: 3 : '103 + 0'  NB. returns inplaceable value
+p1''
+p1''
+p1''
+p1''
+p1''   NB. Fails on the second call
 
-4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy pred'
+
+
+4!:55 ;:'adot1 adot2 sdot0 allobytes allopred atomct atomsz bx by bytesused checkallosize dx dy ix iy p1 p2 p3 pred'
 4!:55 ;:'predflds predr r resultprec resvalidity sel shapes sn spred svbx svby svdx svdy'
 4!:55 ;:'svix sviy svxy testinplace testinplacer tr tx ty vb xs xyzs ys IMIN IMAX'
 randfini''

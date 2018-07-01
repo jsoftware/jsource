@@ -43,8 +43,11 @@
 // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
 // Where f is depends on whether the modifier is f@:g or ([: g h)
-#define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzwf=(iframelen); zzncells=(ncells);  \
+// obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
+#define ZZPARMS(framelen,ncells,valence) zzframelen=(framelen); zzncells=(ncells);  \
  if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
+
+// user must define ZZINSTALLFRAME(optr) to move frame into optr++
 
 
 #undef ZZDEFN
@@ -61,7 +64,7 @@
  I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
  A zzcellshape;  // INT array holding shape of result-cell, with one extra empty at the end
  I zzncells;   // number of cells in the result (input)
- I zzwf;  // length of frame of result.  At start: length of inner frame
+ I zzframelen;  // length of frame of result.  At start: length of inner frame
  I zzold;  // place to tpop to between executions
  jt->rank=0;  // needed for cvt ?? scaf
 #ifndef ZZWILLBEOPENEDNEVER
@@ -94,7 +97,7 @@ do{
   if(!(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
    // first check the shape
-   I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzwf; I zexprank=zzr-zzwf;
+   I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
    // The main result must be recursive if boxed, because it has to get through EPILOG.  To avoid having to pass through the result issuing
    // ra() on the elements, we ra() each one as it comes along, while we have it in cache.  This leads to some fancy footwork at the end,
    // if we have to transfer the boxes from zz to a different output block: we want to avoid having to do usecount work then.  To assist
@@ -198,7 +201,7 @@ do{
       // first wreck.  Allocate a boxed array to hold the results that mismatch zz
       // use zzboxp to tell how many results have been processed already; allocate space for the rest
 #if !ZZSTARTATEND  // going forwards
-      PROD(nboxes,zzwf,AS(zz)); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
+      PROD(nboxes,zzframelen,AS(zz)); nboxes -= (zzboxp-(A*)0);   // see how many boxes we need: the number of cells, minus the number of cells processed so far
 #else
       nboxes = (zzboxp-(A*)0)+1;   // if box-pointer counts down, it already holds the # boxes left to do
 #endif
@@ -209,7 +212,7 @@ do{
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AS holds the actual size
-      GATV(zzcellshape,INT,AR(zz)-zzwf+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzwf; MCIS(IAV(zzcellshape),AS(zz)+zzwf,AR(zz)-zzwf);
+      GATV(zzcellshape,INT,AR(zz)-zzframelen+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzframelen; MCIS(IAV(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }
     }while(1);
@@ -264,12 +267,11 @@ do{
   // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
-  // names used for initial values: ((zzcelllen))=aframelen  ((zzcellp))->aframe  ((zzboxp))->wframe  zzwf=wframelen
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate
   RE(natoms=mult(natoms,zzncells));
   // Allocate the result
-  GA(zz,zzt,natoms,((zzcelllen))+zzwf+zzr,0L); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
+  GA(zz,zzt,natoms,zzframelen+zzr,0L); I * RESTRICT zzs=AS(zz);  // rank is aframelen+wframelen+resultrank
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
   AFLAG(zz) |= (zzt&RECURSIBLE) & ((ZZFLAGWORD&ZZFLAGWILLBEOPENED)-1);  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
@@ -278,14 +280,15 @@ do{
 #endif
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
   zzold=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
-  // Install shape
-  is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
-  is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
-  // If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
+  // Install frame by running user's routine
+  ZZINSTALLFRAME(zzs)
+// obsolete   is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
+// obsolete   is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
+  // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
   is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
-  zzwf+=((zzcelllen));  // leave zzwf as the total length of result frame by adding aframelen
+// obsolete   zzwf+=((zzcelllen));  // leave zzwf as the total length of result frame by adding aframelen
   zzcelllen=nbytes;   // cell length, for use in the main body
   zzboxp=AAV(zz); zzboxp=ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards
@@ -296,8 +299,9 @@ do{
 #endif
 #else  // ZZBOXATOPONLY.  We don't need zzcell variables, and we don't honor STARTATEND
   GATV(zz,BOX,zzncells,zzcelllen+zzwf,0L); I * RESTRICT zzs=AS(zz);   // rank is aframelen+wframelen, since results are atoms
-  is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
-  is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
+  ZZINSTALLFRAME(zzs)
+// obsolete   is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
+// obsolete   is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
   zzboxp=AAV(zz);
   // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
   AFLAG(zz) |= (ZZFLAGWORD&ZZFLAGWILLBEOPENED)<<(BOXX-ZZFLAGWILLBEOPENEDX));  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
@@ -326,13 +330,14 @@ do{
 
  ASSERT((ZZFLAGWORD&(ZZFLAGHASUNBOX|ZZFLAGHASBOX))!=(ZZFLAGHASUNBOX|ZZFLAGHASBOX),EVDOMAIN);  // if there is a mix of boxed and non-boxed results, fail
  if(ZZFLAGWORD&ZZFLAGBOXALLO){
-  RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzwf,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
+  RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
 #undef ZZFLAGWORD
 #undef ZZBOXATOPONLY
 #undef ZZWILLBEOPENEDNEVER
 #undef ZZSTARTATEND
 #undef ZZPOPNEVER
+#undef ZZINSTALLFRAME
 
 #undef ZZEXIT
 #endif

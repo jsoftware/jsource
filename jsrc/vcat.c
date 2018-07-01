@@ -213,7 +213,7 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
 // obsolete static I overcode = 0;
-F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,c,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
+F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
@@ -234,9 +234,8 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,c,k,m,ma,mw,p,q,r,t,wcn,w
 // obsolete if(af<=wf){f=wf; s=ws; c=wcct;}else{f=af; s=as; c=acct;};
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
- c=replct*framect;  // scaf
 // obsolete c=(wf>=af)?wcct:acct;  // f=frame of longer shape, s->longer shape, c=#cells in longer shape
- RE(zn=mult(c,m));  // total # atoms in result
+ RE(zn=mult(replct*framect,m));  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1;   // allocate result; repurpose s to point to END of shape field
  if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
  k=bp(t);   // # bytes per atom of result

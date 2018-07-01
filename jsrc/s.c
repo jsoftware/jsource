@@ -291,7 +291,7 @@ static L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
 // u is address of indirect locative: in a__b__c, it points to the b
 // n is the length of the entire locative (4 in this example)
 // result is address of symbol table to use for name lookup (if not found, it is created)
-static A jtlocindirect(J jt,I n,C*u,UI4 hash){A a,x,y;C*s,*v,*xv;I k,xn;
+static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
  A g;  // current locale.
  L *e=0;  // value looked up
  s=n+u;   // s->end+1 of name

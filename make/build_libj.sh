@@ -6,19 +6,21 @@ cd ~
 # new fast code uses builtins not available in gcc 4
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
- 
+
+compiler=${CC:0:3}
+
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ "x$CC" = x'gcc' ] ; then
+if [ "x$compiler" = x'gcc' ] ; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
 fi
 fi
 
-if [ "x$CC" = x'gcc' ] ; then
+if [ "x$compiler" = x'gcc' ] ; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 else

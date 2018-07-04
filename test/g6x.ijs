@@ -14,7 +14,11 @@ t =: ts ''
 *./ (1&<: *. <:&12 31) 1 2{t
 24 60 60 *./ . > 3 4 5{t
 
-NB. 0.5>|(x=:t-~tss '')-[dl 5 [ t=:tss ''
+NB. Run the following by hand to verify timing.  Commented out here because long delays are possible
+NB. 0.1>|(x=:t-~(6!:1) '')-[(6!:3) 5 [ t=:(6!:1) ''
+NB. 0.1>|(x=:t-~(6!:1) '')-[(6!:3) 0.2 [ t=:(6!:1) ''
+NB. 0.1>|(x=:t-~(6!:1) '')-[(6!:3) 0.7 [ t=:(6!:1) ''
+NB. 0.1>|(x=:t-~(6!:1) '')-[(6!:3) 1.5 [ t=:(6!:1) ''
 
 0<:time 't=:+/i.5000'
 t -: +/i.5000

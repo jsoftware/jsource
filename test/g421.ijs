@@ -240,6 +240,15 @@ a=:x{~?11 3$#x=:(1=?70$3)<;.1 ?70$110
 k (</. -: < key) a      [ k=:?11$4
 k (]/. -: ] key) a      [ k=:?11$4
 
+NB. Verify inplacing
+NB. We can't reliably check the sizes because the call to i. allocates memory; also there are differences dep. type of result of u/.
+NB. IF64 = '(0: + 0:/.~) +: a' (> 10000&+)&(7!:2) '0:/.~ +: a' [ a =: 10000 ?@$ 400   NB. The right side inplaces (64-bit only)
+NB. '(0: + 0:/.~) +: a' (> 10000&+)&(7!:2) '0:/.~ +: a' [ a =: 10000 2 ?@$ 400   NB. The right side inplaces
+NB. '(0: + 0:/.~) 2 #"1 a' (> 10000&+)&(7!:2) '0:/.~ 2 #"1 a' [ a =: 10 u: 10000 1 ?@$ 400   NB. The right side inplaces
+NB. -. '(0: + 0:/.~) 1 #"1 a' (> 10000&+)&(7!:2) '0:/.~ 1 #"1 a' [ a =: 10 u: 10000 1 ?@$ 400   NB. Does not inplace
+NB. -. '(0: + 0:/.~) 2 # a' (> 10000&+)&(7!:2) '0:/.~ 2 # a' [ a =: 10 u: 5000 ?@$ 400   NB. Does not inplace
+NB. 
+
 ''        -: '' </. ''
 ''        -: '' </. i.0 4 5
 ''        -: (i.0 4 5) </. ''

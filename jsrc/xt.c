@@ -181,7 +181,7 @@ F1(jttsit1){R tsit2(one,w);}
 #ifdef _WIN32
 #define sleepms(i) Sleep(i)
 #else
-#define sleepms(i) sleep((i+500)/1000)
+#define sleepms(i) usleep(i*1000)
 #endif
 
 F1(jtdl){D m,n,*v;UINT ms,s;

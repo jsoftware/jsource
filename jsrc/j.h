@@ -338,6 +338,8 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
+#define MEMCPYTUNE 8192  // (bytes) blocks shorter than this should just use MCISxx
+
 
 // Debugging options
 

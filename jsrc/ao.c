@@ -249,16 +249,16 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  // We don't have to worry about a==w because a has already been modified
  if((I)jtinplace&((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)(AC(w)&(4-celllen)&((SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
  I *av=IAV(a);  // av->a data
- DO(nitems, ++av[av[i]];);  // first time the root of the partition points to & increments itself
+ {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
  // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
  // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
  // moving the data for each input value in turn, reading in order and scatter-writing.
  fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 4 bytes for groups longer than 254
  I i; I nextpartitionx;  // loop index, address of place to store next partition
- I *wv=IAV(w);   // source & target pointers
+ I * RESTRICT wv=IAV(w);   // source & target pointers
  for(i=0, nextpartitionx=(I)IAV(wperm);i<nitems;++i){
+  I * RESTRICT partitionptr;  // pointer to where output will go
   I avvalue=av[i];  // fetch partition length/index
-  I *partitionptr;  // pointer to where output will go
   if(avvalue<i){  // this value extends its partition
    partitionptr=(I*)av[avvalue];  // addr of end of selected partition
   }else{
@@ -267,18 +267,20 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
    if(avvalue<255)*fretp++ = (UC)avvalue; else{*fretp++ = 255; *(UI4*)fretp=(UI4)avvalue; fretp+=SZUI4; nfrets-=SZUI4;}
    partitionptr=(I*)nextpartitionx;  // copy this item's data to the start of the partition
    nextpartitionx+=avvalue*celllen;  // reserve output space for the partition
-   avvalue=i;
+   avvalue=i;   // shift meaning of avvalue from length to index, where the partition pointer will be stored
   }
 
   // copy the data to the end of its partition and advance the partition pointer
-  MCISds(partitionptr,wv,celllen>>LGSZI);  // scaf use MC if long enough
-  if(celllen&(SZI-1)){
+  if(celllen<MEMCPYTUNE) {
+   MCISds(partitionptr,wv,celllen>>LGSZI);  // scaf use MC if long enough
+   if(celllen&(SZI-1)){
 #if LGSZI>2
-   if(celllen&4){*(I4*)partitionptr=*(I4*)wv; partitionptr=(I*)((C*)partitionptr+SZI4); wv=(I*)((C*)wv+SZI4);}
+    if(celllen&4){*(I4*)partitionptr=*(I4*)wv; partitionptr=(I*)((C*)partitionptr+SZI4); wv=(I*)((C*)wv+SZI4);}
 #endif
-   if(celllen&2){*(S*)partitionptr=*(S*)wv; partitionptr=(I*)((C*)partitionptr+SZS); wv=(I*)((C*)wv+SZS);}
-   if(celllen&1){*(C*)partitionptr=*(C*)wv; partitionptr=(I*)((C*)partitionptr+1); wv=(I*)((C*)wv+1);}
-  }
+    if(celllen&2){*(S*)partitionptr=*(S*)wv; partitionptr=(I*)((C*)partitionptr+SZS); wv=(I*)((C*)wv+SZS);}
+    if(celllen&1){*(C*)partitionptr=*(C*)wv; partitionptr=(I*)((C*)partitionptr+1); wv=(I*)((C*)wv+1);}
+   }
+  }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
 
   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move
  }

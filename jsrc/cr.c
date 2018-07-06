@@ -386,11 +386,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
 /* Integrated Rank Support                              */
 /* f knows how to compute f"r                           */
-/* jt->rank points to a 2-element vector of             */
-/* (left, right (monadic)) ranks                        */
-/* 0=jt->rank means f is not being called from rank     */
-/* jt->rank is guaranteed positive                      */
-/* jt->rank is guaranteed <: argument ranks             */
+// jt->ranks is rank of monad or leftrank<<16 + rightrank
+// jt->ranks is ~0 if the call is not through IRS
+  // every call to IRS resets jt->ranks at the end
 /* frame agreement is verified before invoking f        */
 /* frames either match, or one is empty                 */
 /* (i.e. prefix agreement invokes general case)         */

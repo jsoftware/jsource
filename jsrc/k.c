@@ -364,9 +364,9 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  }
 }
 
-// set jt->rank to 0 before calling xvt
+// clear rank before calling ccvt - needed for sparse arrays only
 A jtcvt(J jt,I t,A w){A y;B b;I*oq; 
- oq=jt->rank; RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; 
+ oq=jt->rank; RANK2T oqr=jt->ranks; RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; jt->ranks=oqr;
  ASSERT(b,EVDOMAIN);
  R y;
 }
@@ -376,7 +376,7 @@ A jtcvt(J jt,I t,A w){A y;B b;I*oq;
 // Result is a new buffer, always
 A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;I*oq;
  RZ(w);
- ofuzz=jt->fuzz; oq=jt->rank; 
+ ofuzz=jt->fuzz; oq=jt->rank; RANK2T oqr=jt->ranks;  // save status for comparison, and ranks in case sparse needs them (should let sparse do the saving)
  jt->fuzz=0;     RESETRANK;
  // for rationals, try converting to XNUM; otherwise stay at rational
  if(RAT&AT(w))z=ccvt(XNUM,w,&y)?y:w;
@@ -405,7 +405,7 @@ A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;I*oq;
 #endif
  // for all numerics, try Boolean/int/float in order, stopping when we find one that holds the data
  if(mode||!(AT(w)&XNUM+RAT))z=ccvt(B01,w,&y)?y:ccvt(INT,w,&y)?y:ccvt(FL,w,&y)?y:w; 
- jt->fuzz=ofuzz; jt->rank=oq;
+ jt->fuzz=ofuzz; jt->rank=oq; jt->ranks=oqr;
  RNE(z);
 }    /* convert to lowest type. 0=mode: don't convert XNUM/RAT to other types */
 
@@ -424,8 +424,8 @@ F1(jticvt){A z;D*v,x;I i,k=0,n,*u;
  R z;
 }
 
-A jtpcvt(J jt,I t,A w){A y;B b;I*oq=jt->rank; 
- RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; 
+A jtpcvt(J jt,I t,A w){A y;B b;I*oq=jt->rank; RANK2T oqr=jt->ranks;
+ RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; jt->ranks=oqr;
  R b?y:w;
 }    /* convert w to type t, if possible, otherwise just return w */
 

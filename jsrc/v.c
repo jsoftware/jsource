@@ -14,7 +14,8 @@ F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);  // n=#atoms, ws->shape, wt=type, d=1 if dense
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
+// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
@@ -55,7 +56,10 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
 
 F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  RZ(w);
- wt=AT(w); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
+ wt=AT(w); ws=AS(w);
+// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
+
  if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
@@ -72,8 +76,11 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // We know that jt->rank is nonzero, because the caller checked it
 // obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
 // obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- ar=AR(a); acr=jt->rank[0]; af=ar-acr;
- wr=AR(w); wcr=jt->rank[1]; wf=wr-wcr;
+// obsolete  ar=AR(a); acr=jt->rank[0]; af=ar-acr;
+// obsolete  wr=AR(w); wcr=jt->rank[1]; wf=wr-wcr;
+ I ranks=jt->ranks;
+ ar=AR(a); acr=MIN(ar,ranks>>RANKTX); af=ar-acr;
+ wr=AR(w); wcr=MIN(wr,(RANKT)ranks); wf=wr-wcr;
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.  We can do this because we have no PROLOG
@@ -90,8 +97,10 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  INHERITNOREL(z,w); RETF(z);
 } 
 
-F2(jtleft2 ){F2PREFIP;if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
-F2(jtright2){F2PREFIP;if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
+// obsolete F2(jtleft2 ){F2PREFIP;if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
+// obsolete F2(jtright2){F2PREFIP;if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
+F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(a); RETF(lr2(1,a,w));}
+F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(w); RETF(lr2(0,a,w));}
 
 F1(jtright1){RETF(w);}
 

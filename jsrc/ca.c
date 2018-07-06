@@ -335,11 +335,14 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  R fdef(flag2,CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
-// m&v and u&n.  No inplacing if rank is given; otherwise never inplace the noun argument, since the verb may
+// m&v and u&n.  Never inplace the noun argument, since the verb may
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
-static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
-static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
+// This supports IRS so that it can pass the rank on to the called function
+// obsolete static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
+// obsolete static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
+static DF1(withl){F1PREFIP;DECLFG; I r=(RANK2T)jt->ranks; R r!=(RANK2T)~0?jtirs2(jtinplace,fs,w,gs,RMAX,(RANKT)r,g2):(g2)(jtinplace,fs,w,gs);}
+static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)((I)jt+2*((I)jtinplace&JTINPLACEW)); I r=(RANK2T)jt->ranks; R r!=(RANK2T)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(f2)(jtinplace,w,gs,fs);}
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->h is the info/hash/bytemask result from calculating the prehash

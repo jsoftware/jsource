@@ -155,15 +155,17 @@ SUFFIXPFX(bw1111sfxI, UI,UI, BW1111)
 
 static DF1(jtsuffix){DECLF;I r;
  RZ(w);
- if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtsuffix);}
- RESETRANK;
+// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtsuffix);}
+// obsolete RESETRANK;
+ r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
  R eachl(IX(IC(w)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
 static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  RZ(w);
- if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,jt->rank[1],jtgsuffix);}
- RESETRANK;
+// obsolete if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,jt->rank[1],jtgsuffix);}
+// obsolete RESETRANK;
+ r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
  GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
@@ -233,8 +235,10 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
- if(r<wr)R rank1ex(w,self,r,jtssg);
+// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
+// obsolete  if(r<wr)R rank1ex(w,self,r,jtssg);
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
+
  // From here on we are doing a single scan
  n=AS(w)[0]; // n=#cells
 #define ZZFLAGWORD state
@@ -297,20 +301,23 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
 #endif
 
-A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
+A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
+// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
   RZ(x=denseit(w));
-  rv[1]=r; jt->rank=rv; RZ(z=CALL1(sf,x,self)); RESETRANK; 
-  R z;
+// obsolete   rv[1]=r; jt->rank=rv; RZ(z=CALL1(sf,x,self)); RESETRANK; 
+// obsolete   R z;
+  R irs1(x,self,r,sf);
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
   if(r&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
   j=f; m=0; DO(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
- rv[1]=m; jt->rank=rv; RZ(x=CALL1(sf,x,self)); RESETRANK;
+// obsolete   rv[1]=m; jt->rank=rv; RZ(x=CALL1(sf,x,self)); RESETRANK;
+ RZ(x=irs1(x,self,m,sf));
  t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
  GA(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
  zp=PAV(z); 
@@ -321,23 +328,28 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,rv[2],wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){A y,z;I d,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
+static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
- wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
+// obsolete  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
+ wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
 // obsolete  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=VAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
- if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+// obsolete  if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg
+ if(2>n||!wn){if(vaid(VAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+
    // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(VAV(y)->f,wt);  // analyze f
- if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
+// obsolete  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
+ if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(adocv.cv); RESETRANK;
+ zt=rtype(adocv.cv); // obsolete RESETRANK;
  GA(z,zt,wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
- if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+// obsolete  if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(jt->jerr)R jt->jerr>=EWOV?irs1(w,self,r,jtsscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
 

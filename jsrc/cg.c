@@ -156,7 +156,7 @@ static DF1(jtcase1b){A h,u;V*sv;
 static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  RZ(w);
  F1PREFIP; sv=VAV(self);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); jt->rank=0;
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); RESETRANK;
  if(b=!r&&wr&&AN(w)){h=sv->h; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
  if(b){R case1a(w,self);}   // atomic: go there
  if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability

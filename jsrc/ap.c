@@ -234,17 +234,18 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
 
 static DF1(jtprefix){DECLF;I r;
  RZ(w);
-// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtprefix);}
-// obsolete  jt->rank=0;
- r = (RANKT)jt->ranks; jt->ranks=(RANK2T)~0; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
+// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtprefix);}
+// obsolete  RESETRANK;
+ r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
  R eachl(apv(IC(w),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
 static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
- if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtgprefix);}
- jt->rank=0;
+// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtgprefix);}
+// obsolete  RESETRANK;
+ r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  n=IC(w); 
  h=VAV(self)->h; hv=AAV(h); m=AN(h);
  GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
@@ -341,7 +342,6 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
   R reshape(over(zero,shape(x)),x);
 }}
 
-#if 1
 #define STATEHASGERUND 0x1000  // f is a gerund
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2 0x4000  // f is f'/ and x is 2
@@ -524,32 +524,36 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 
 // prefix, vectors to common processor.  Handles IRS
 static DF1(jtinfixprefix1){
- I *rankp=jt->rank; jt->rank=0;
- if(rankp&&rankp[1]<AR(w)){R rank1ex(w,self,rankp[1],jtprefix);}
+// obsolete  I *rankp=jt->rank; RESETRANK;
+// obsolete  if(rankp&&rankp[1]<AR(w)){R rank1ex(w,self,rankp[1],jtinfixprefix1);}
+ I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtinfixprefix1);}
  R jtinfixprefix2(jt,mark,w,self);
 }
-#endif
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;I d,f,m,n,r,rr[2],t,wn,wr,*ws,wt,zt;
+static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  RZ(w);
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
- wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w);
+// obsolete  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK; f=wr-r; ws=AS(w);
+ wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
 // obsolete PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
  PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=VAV(self)->f; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
- if(2>n||!wn){if(vaid(VAV(y)->f)){jt->rank=0; R r?RETARG(w):reshape(over(shape(w),one),w);}else R jtinfixprefix1(jt,w,self);}
+// obsolete  if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
+ if(2>n||!wn){if(vaid(VAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
  VA2 adocv = vapfx(VAV(y)->f,wt);  // analyze f
- if(!adocv.f)R jtinfixprefix1(jt,w,self);
+// obsolete  if(!adocv.f)R jtinfixprefix1(jt,w,self);
+ if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(adocv.cv); jt->rank=0;
+ zt=rtype(adocv.cv); // RESETRANK;
  GA(z,zt,wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
- if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+// obsolete  if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
 #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
@@ -771,7 +775,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
 // obsolete  c=aii(w); cm=c*m; b=0>m0&&0<p%m;   // b='has shard'
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
- zt=rtype(adocv.cv); jt->rank=0; 
+ zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); *AS(z)=zi;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=bp(zt)*d; 

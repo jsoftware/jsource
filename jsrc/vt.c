@@ -84,7 +84,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  if(SPARSE&AT(a))RZ(a=denseit(a));
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);  // if multiple x values, loop over them
  // canonicalize x
  n=AN(a);    // n = #axes in a
@@ -132,7 +132,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  F2PREFIP;
  RZ((a=vib(a))&&w);  // convert & audit a
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; I wt=AT(w);
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
@@ -167,7 +167,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 
 // create 1 cell of fill when head/tail of an array with no items (at the given rank)
 static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); ICPY(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));

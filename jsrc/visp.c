@@ -177,7 +177,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
 
 F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
  RZ(w);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; jt->rank=0;
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
  n=r?*(AS(w)+wr-r):1;
  if(r<wr)R irs2(IX(n),irs2(w,w,0L,r,r,jtindexof),0L,1L,r?1L:0L,jteq);
  RZ(x=indexof(w,w)); p=PAV(x);

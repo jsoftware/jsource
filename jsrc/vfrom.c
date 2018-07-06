@@ -48,7 +48,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  // This routine is implemented as if it had infinite rank: if no rank is specified, it operates on the entire
  // a (and w).  This has implications for empty arguments.
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
@@ -166,7 +166,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
 static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
@@ -354,7 +354,7 @@ static A jtafi(J jt,I n,A w){A x;
 static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  if(ar){
   if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):

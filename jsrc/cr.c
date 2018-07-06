@@ -424,11 +424,11 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  F2PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
  wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
+ ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((l<<16)+r);  // install as parm to the function.  Set to ~0 if possible
 // obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(!(af|wf))z = CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  else{
-  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
   old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
    // Not all verbs (*f2)() use the fs argument.
  }

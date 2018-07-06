@@ -66,7 +66,7 @@
  I zzncells;   // number of cells in the result (input)
  I zzframelen;  // length of frame of result.  At start: length of inner frame
  I zzold;  // place to tpop to between executions
- jt->rank=0;  // needed for cvt ?? scaf
+ RESETRANK;  // needed for cvt ?? scaf
 #ifndef ZZWILLBEOPENEDNEVER
 #define ZZWILLBEOPENEDNEVER 0
 #endif

@@ -315,7 +315,7 @@ F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to HIGH_VALUE
 F1(jtvib){A z;D d,e,*wv;I i,n,*old,p=-IMAX,q=IMAX,*zv;
  RZ(w);
- old=jt->rank; jt->rank=0;
+ old=jt->rank; RESETRANK;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
  switch(CTTZNOFLAG(AT(w))){
   case INTX:  z=w; break;

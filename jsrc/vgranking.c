@@ -83,7 +83,7 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
 // /:@/:
 F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
  RZ(w);
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  wt=AT(w); wv=CAV(w); wn=AN(w);
  ws=AS(w); n=wcr?ws[wf]:1;  // n=#cells in w; m is number of atoms in w
  if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way

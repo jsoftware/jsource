@@ -52,7 +52,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
 static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
  RZ(a&&w);
  at=AT(a); ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; jt->rank=0;
+ wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; RESETRANK;
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
  if(ar>acr||wr>wcr)R sprank2(a,w,0L,acr,wcr,jtover);
@@ -226,7 +226,7 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty
-  jt->rank=0; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
+  RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
  }
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
  acn=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:acn;  // acn is #atoms in a cell of a  ma is acn EXCEPT when joining atom a to table w: then length of row of w
@@ -256,7 +256,7 @@ F2(jtstitch){B sp2;I ar,wr;
 
 F1(jtlamin1){A x;I*s,*v,wcr,wf,wr; 
  RZ(w);
- wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); jt->rank=0;} wf=wr-wcr;
+ wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); RESETRANK;} wf=wr-wcr;
  GATV(x,INT,1+wr,1,0); v=AV(x);
  s=AS(w); ICPY(v,s,wf); *(v+wf)=1; ICPY(v+1+wf,s+wf,wcr);
  R reshape(x,w);

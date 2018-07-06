@@ -481,10 +481,16 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
 #define BRK(x) break
 #endif
     case PMONAD1:
+if(jt->rank||jt->ranks!=(RANK2T)~0)  // scaf
+  jt->ranks=(RANK2T)~0;
     DFSIP1(1,2,1) STO1(2,2,1) SM(1,0); stack += 1; BRK(1);
     case PMONAD2:
+if(jt->rank||jt->ranks!=(RANK2T)~0)  // scaf
+  jt->ranks=(RANK2T)~0;
     DFSIP1(2,3,0) STO1(3,3,2) SM(2,1); SM(1,0); stack += 1; BRK(2);  // stack is not executing last verb here, so zomb=0
     case PDYAD:
+if(jt->rank||jt->ranks!=(RANK2T)~0)  // scaf
+  jt->ranks=(RANK2T)~0;
     DFSIP2(1,2,3) STO2(3,1,3,1) SM(2,0); stack += 2; BRK(1);  //STO(z,a,w,toksource)
     case PADV:
     EPZ(stack[2].a = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);

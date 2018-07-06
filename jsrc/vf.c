@@ -43,7 +43,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  RZ(a&&w);
  ASSERT(!jt->fill,EVNONCE);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0; 
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; 
  if(1<acr||af)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
@@ -98,7 +98,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a&&w);
  if(SPARSE&AT(w))R rotsp(a,w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;  // p=#axes to rotate
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
 // obsolete  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 |. y, return y
@@ -130,7 +130,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
 static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(w);
  ASSERT(!jt->fill,EVNONCE);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
  m=*(f+AS(w)); wp=PAV(w);
  GA(z,AT(w),1,wr,AS(w)); zp=PAV(z);
  a=SPA(wp,a); n=AN(a); RZ(y=ca(SPA(wp,i))); x=SPA(wp,x);
@@ -225,7 +225,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr
  F2PREFIP;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); RESETRANK;
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreshape);
  // now a is an atom or a list.  w can have any rank
  RZ(a=vip(a)); r=AN(a); u=AV(a);   // r=length of a   u->values of a
@@ -262,7 +262,7 @@ F2(jtreitem){A y;I acr,an,ar,m,r,*v,wcr,wr;
  F2PREFIP;
  RZ(a&&w);
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; m=MIN(1,acr);
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; jt->rank=0;
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; RESETRANK;
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreitem);
  if(1>=wcr)y=a;
  else{ 

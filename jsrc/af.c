@@ -89,7 +89,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
 
 F1(jtfix){PROLOG(0005);A z;  // obsolete I*rv=jt->rank;
  RZ(w);
-// obsolete  jt->rank=0;
+// obsolete  RESETRANK;
  RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);

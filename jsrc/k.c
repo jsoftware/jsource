@@ -366,7 +366,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
 
 // set jt->rank to 0 before calling xvt
 A jtcvt(J jt,I t,A w){A y;B b;I*oq; 
- oq=jt->rank; jt->rank=0; b=ccvt(t,w,&y); jt->rank=oq; 
+ oq=jt->rank; RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; 
  ASSERT(b,EVDOMAIN);
  R y;
 }
@@ -377,7 +377,7 @@ A jtcvt(J jt,I t,A w){A y;B b;I*oq;
 A jtbcvt(J jt,C mode,A w){FPREFIP; A y,z=w;D ofuzz;I*oq;
  RZ(w);
  ofuzz=jt->fuzz; oq=jt->rank; 
- jt->fuzz=0;     jt->rank=0;
+ jt->fuzz=0;     RESETRANK;
  // for rationals, try converting to XNUM; otherwise stay at rational
  if(RAT&AT(w))z=ccvt(XNUM,w,&y)?y:w;
 #ifdef NANFLAG
@@ -425,7 +425,7 @@ F1(jticvt){A z;D*v,x;I i,k=0,n,*u;
 }
 
 A jtpcvt(J jt,I t,A w){A y;B b;I*oq=jt->rank; 
- jt->rank=0; b=ccvt(t,w,&y); jt->rank=oq; 
+ RESETRANK; b=ccvt(t,w,&y); jt->rank=oq; 
  R b?y:w;
 }    /* convert w to type t, if possible, otherwise just return w */
 

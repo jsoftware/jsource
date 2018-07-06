@@ -14,7 +14,7 @@ F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);  // n=#atoms, ws->shape, wt=type, d=1 if dense
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
@@ -55,7 +55,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
 
 F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  RZ(w);
- wt=AT(w); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; jt->rank=0;
+ wt=AT(w); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
  if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;

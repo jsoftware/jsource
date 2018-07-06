@@ -1212,7 +1212,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)
  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; jt->rank=0;  // note: mark is an atom
+ wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -1611,7 +1611,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 F2(jteps){I l,r,rv[2];
  RZ(a&&w);
  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
- rv[1]=l=jt->rank?jt->rank[0]:AR(a); jt->rank=0;
+ rv[1]=l=jt->rank?jt->rank[0]:AR(a); RESETRANK;
  if(SPARSE&AT(a)+AT(w))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));
  jt->rank=rv; 
  R indexofsub(IEPS,w,a);

@@ -400,9 +400,13 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
  F1PREFIP; RZ(w);
  wr=AR(w); rv[1]=efr(m,wr,m);
 // obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
- if(m>=wr)R CALL1IP(f1,w,fs);
- rv[0]=0;  // why?
- old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old; 
+ jt->ranks=(RANK2T)m;   // set rank to use.  May be > actual arg rank.  Set to ~0 if possible
+ if(m>=wr)z = CALL1IP(f1,w,fs);  // just 1 cell
+ else{
+  rv[0]=0;  // why?
+  old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old;
+ }
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
 
@@ -420,11 +424,15 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
  F2PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
  wr=AR(w); rv[1]=efr(r,wr,r); wf=wr-r;     // ...for both args
+ jt->ranks=(RANK2T)((l<<16)+r);  // install as parm to the function.  Set to ~0 if possible
 // obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
- if(!(af|wf))R CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
- ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
- old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
-  // Not all verbs (*f2)() use the fs argument.  
+ if(!(af|wf))z = CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
+ else{
+  ASSERT(!ICMP(AS(a),AS(w),MIN(af,wf)),EVLENGTH);   // verify agreement
+  old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+   // Not all verbs (*f2)() use the fs argument.
+ }
+ jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
 }
 

@@ -595,9 +595,11 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
 
 static DF1(jtredsemi){I f,n,r,*s,wr;
  RZ(w);
- wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); n=r?s[f]:1;
+ wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); n=r?s[f]:1;  // scaf can let the rank run into tail/curtail
  if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}
- if(BOX&AT(w))R irs2(rank1ex(curtail(w),0L,r-1,jtbox),tail(w),0L,r,r-1,jtover);
+// obsolete  if(BOX&AT(w))R irs2(rank1ex(curtail(w),0L,r-1,jtbox),tail(w),0L,r,r-1,jtover);
+ A ct, tl; RZ(ct=curtail(w)); RZ(tl=tail(w)); jt->rank = 0;
+ if(BOX&AT(w))R irs2(irs1(ct,0L,r-1,jtbox),tl,0L,r,r-1,jtover);
  else R irs1(w,0L,r-1,jtbox);
 }    /* ;/"r w */
 

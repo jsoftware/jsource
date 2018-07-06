@@ -50,6 +50,8 @@ typedef long double        LD;
 
 // This is the main structure for J entities
 typedef US                 RANKT;
+#define RANKTX             16   // # bits in a RANKT
+typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 typedef I                  FLAGT;
 
 typedef struct AD AD;

@@ -266,6 +266,7 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  RZ(a&&w); 
  ar=AR(a); p=jt->rank?jt->rank[0]:ar; 
  wr=AR(w); q=jt->rank?jt->rank[1]:wr; 
+ jt->rank = 0;
  if(p)a=irs1(a,0L,p,jtlamin1);
  if(q)w=irs1(w,0L,q,jtlamin1);
  z=irs2(a,w,0L,p+!!p,q+!!q,jtover);

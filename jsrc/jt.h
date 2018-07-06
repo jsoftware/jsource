@@ -83,6 +83,7 @@ typedef struct {
  B    iepdo;            /* 1 iff do iep                                    */
  A    fill;             /* fill                                            */
  I*   rank;             /* for integrated rank support                     */
+ UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
  UC   typepriority[19];  // priority value for the noun types

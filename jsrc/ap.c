@@ -234,8 +234,9 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
 
 static DF1(jtprefix){DECLF;I r;
  RZ(w);
- if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtprefix);}
- jt->rank=0;
+// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; jt->rank=0; R rank1ex(w,self,r,jtprefix);}
+// obsolete  jt->rank=0;
+ r = (RANKT)jt->ranks; jt->ranks=(RANK2T)~0; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
  R eachl(apv(IC(w),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 

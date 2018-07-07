@@ -83,8 +83,10 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  RZ(a&&w); I wt = AT(w);  // wt=type of w
  if(SPARSE&AT(a))RZ(a=denseit(a));
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);  // if multiple x values, loop over them
  // canonicalize x
  n=AN(a);    // n = #axes in a
@@ -131,8 +133,10 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
 F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  F2PREFIP;
  RZ((a=vib(a))&&w);  // convert & audit a
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; I wt=AT(w);
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; I wt=AT(w);
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtdrop);  // if multiple x values, loop over them
@@ -167,7 +171,8 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 
 // create 1 cell of fill when head/tail of an array with no items (at the given rank)
 static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
  RZ(x=vec(INT,wr-1,ws)); ICPY(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));
@@ -177,7 +182,8 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
 F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // leave rank set, in case we call functions below
 // obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :
 // obsolete      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
  if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
@@ -188,20 +194,21 @@ F1(jthead){I wcr,wf,wr;
     // if w is empty we have to worry about overflow when calculating #atoms
    I zn=1; I *ws=AS(w)+1, *zs=AS(z); DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);})   // copy shape of CELL of w into z
    AN(z)=zn;
-   // No need to set jt->rank to 0 here: if it was nonzero, wf would have been nonzero & we wouldn't be here
+   // No need to resetrank here: if it was nonzero, wf would have been nonzero & we wouldn't be here
    RETF(z);
   }else{
-   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->rank is still set, so this may produce multiple cells
+   // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
    RETF(jtfrom(jtinplace,zeroi,w));  // could call jtfromi directly for non-sparse w
   }
- }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills
+ }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set
  }
 }
 
 F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // leave rank set for the functions following
  R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }

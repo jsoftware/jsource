@@ -273,8 +273,10 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 
 F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  RZ(a&&w);
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; 
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; 
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  at=AT(a); ab=1&&at&DENSE;
  wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path

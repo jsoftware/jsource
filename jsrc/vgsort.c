@@ -294,8 +294,10 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr; 
  RZ(a&&w);
  // ?cr= rank of the cells being sorted; t= type of w
- acr=jt->rank?jt->rank[0]:AR(a); 
- wcr=jt->rank?jt->rank[1]:AR(w); t=AT(w);
+// obsolete  acr=jt->rank?jt->rank[0]:AR(a); 
+// obsolete wcr=jt->rank?jt->rank[1]:AR(w); t=AT(w);
+ acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
+ wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; t=AT(w);
  // Handle special reflexive cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
  if(a==w&&acr==wcr&&wcr>0&&AN(a)&&t&(B01+LIT+C2T+C4T+INT+FL+CMPX)){
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;

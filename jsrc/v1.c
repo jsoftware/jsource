@@ -184,7 +184,7 @@ F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
 // obsolete af=jt->rank?AR(a)-jt->rank[0]:0;
 // obsolete wf=jt->rank?AR(w)-jt->rank[1]:0; RESETRANK;
- af=AR(a)-((I)jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-((I)(RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
+ af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
  if(!AN(a)||!AN(w)){B b; I p;
@@ -209,7 +209,7 @@ F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
 // obsolete  af=jt->rank?AR(a)-jt->rank[0]:0;
 // obsolete  wf=jt->rank?AR(w)-jt->rank[1]:0; RESETRANK;
- af=AR(a)-((I)jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-((I)(RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
+ af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
  if(!AN(a)||!AN(w)){B b; I p;

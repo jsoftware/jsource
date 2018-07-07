@@ -51,7 +51,7 @@
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
-static I ssingflen(J jt, I ra, I rw, I ranks){I ca,cw,fa,fw,r;
+static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
 // obsolete  if(jt->rank[0]>=0){if(0>(fa = ra-jt->rank[0]))fa=0;}  // frame for positive rank
 // obsolete  else{if(0>(fa = ra+jt->rank[0]))fa=0;}   // frame for negative rank
 // obsolete  if(jt->rank[1]>=0){if(0>(fw = rw-jt->rank[1]))fw=0;}  // frame for positive rank

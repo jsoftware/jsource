@@ -45,10 +45,11 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  F1PREFIP;
  RZ(a&&w);
- // This routine is implemented as if it had infinite rank: if no rank is specified, it operates on the entire
- // a (and w).  This has implications for empty arguments.
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ // IRS supported.  This has implications for empty arguments.
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
@@ -165,8 +166,10 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
 // a is boolean
 static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);
  an=AN(a); wn=AN(w); ws=AS(w);
  // If a is empty, it needs to simulate execution on a cell of fills.  But that might produce domain error, if w has no
@@ -351,10 +354,12 @@ static A jtafi(J jt,I n,A w){A x;
  R AN(x)?less(IX(n),pind(n,x)):ace; 
 }
 
-static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,r,*s,t,wcr,wf,wr;
+static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,*s,t,wcr,wf,wr;
  RZ(a&&w);
- ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
- wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+// obsolete  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
+// obsolete wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar){
   if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
@@ -362,26 +367,26 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); RELBASEASGNB(c,c);  // B prob not reqd 
- k=bp(AT(w)); s=AS(w)+wr-r;
+ k=bp(AT(w)); s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
- ASSERT(n<=r,EVLENGTH);
+ ASSERT(n<=wcr,EVLENGTH);
  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
- if(r==wr)for(i=m=pr=0;i<n;++i){
+ if(wcr==wr)for(i=m=pr=0;i<n;++i){
   p=afi(s[i],AADR(cd,v[i]));
   if(!(p&&1==AN(p)&&INT&AT(p)))break;
   pr+=AR(p); 
-  m+=*AV(p)*prod(r-i-1,1+i+s);
+  m+=*AV(p)*prod(wcr-i-1,1+i+s);
  }
  if(i){I*ys;  // TODO use virtual block for this
-  RZ(y=gah(pr+r-i,w)); ys=AS(y); DO(pr, *ys++=1;); ICPY(ys,s+i,r-i);
+  RZ(y=gah(pr+wcr-i,w)); ys=AS(y); DO(pr, *ys++=1;); ICPY(ys,s+i,wcr-i);
   /* obsolete AM(y)= */AN(y)=prod(AR(y),AS(y));
   AK(y)=k*m+CAV(w)-(C*)y;
  }
  for(;i<n;i+=2){
   j=1+i; if(!p)p=afi(s[i],AADR(cd,v[i])); q=j<n?afi(s[j],AADR(cd,v[j])):ace; if(!(p&&q))break;
-  if(p!=ace&&q!=ace){b=0; y=afrom2(p,q,y,r-i);}
-  else if(p!=ace)   {b=0; y=irs2(p,y,0L,AR(p),r-i,jtifrom);}
-  else if(q!=ace)   {b=0; y=irs2(q,y,0L,AR(q),r-j,jtifrom);}
+  if(p!=ace&&q!=ace){b=0; y=afrom2(p,q,y,wcr-i);}
+  else if(p!=ace)   {b=0; y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
+  else if(q!=ace)   {b=0; y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
   p=0;
  }
  RE(y); if(b){RZ(y=ca(x=y)); RELOCATE(x,y);} EPILOG(y);    // todo kludge should inherit norel

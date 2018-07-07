@@ -124,8 +124,8 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
 // obsolete  q=jt->rank?jt->rank[0]:AR(a); 
 // obsolete  r=jt->rank?jt->rank[1]:AR(w); RESETRANK;
- q=jt->ranks; r=(RANKT)q; r=AR(w)<r?AR(w):r; 
- q>>=RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
+ q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);

@@ -465,7 +465,7 @@ extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed
 A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bcip;I ak,f,m,
-     mf,n,nf,*oq,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
+     mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
 #define an AN(a)
 #define wn AN(w)
@@ -497,9 +497,10 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
  // We detect agreement error before domain error
- oq=jt->rank;  // save original rank before we change it, in case we have to restart the operation
+ I *oq=jt->rank; RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {I *as = AS(a); I *ws = AS(w);
-  if(!jt->rank){I b;I ipa;
+// obsolete  if(!jt->rank){I b;I ipa;
+  if(savedranks==(RANK2T)~0){I b;I ipa;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
 // obsolete  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
    r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
@@ -520,12 +521,14 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    }
   }else{I af,wf,acr,wcr,q,b,c,zcn;I ipa;
    // Here, a rank was specified.  That means there must be a frame, according the to IRS rules
-   r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
-   r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
+// obsolete    r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
+// obsolete    r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
+   acr=savedranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
+   wcr=(RANKT)savedranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->rank.  All verbs start with jt->rank=0 unless they have "n applied
    // we do this before we generate failures
-   RESETRANK;
+   RESETRANK;  // This is required for xnum/rat/sparse
    // if the frames don't agree, that's always an agreement error
  // obsolete  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
    c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
@@ -701,7 +704,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
  // do overflow recovery in-place
- R NEVM<jt->jerr?(jt->rank=oq,jtva2recur(jt,a,w,self)):0;
+// obsolete  R NEVM<jt->jerr?(jt->rank=oq,jtva2recur(jt,a,w,self)):0;
+ R NEVM<jt->jerr?irs2(a,w,self,savedranks>>RANKTX,(RANKT)savedranks,jtva2):0;
 #undef an
 #undef wn
 }    /* scalar fn primitive and f"r main control */

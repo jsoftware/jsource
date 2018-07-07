@@ -52,9 +52,11 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 
 // a[i] is the axis of the result that axis i of w contributes to
 // This is the inverse permutation of the x in x |: y
+// This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
 static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
  RZ(a&&w);
- av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
+// obsolete  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
+ av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
  if(wf=wr-r){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
   GATV(a,INT,wr,1,0); tv=AV(a); 
@@ -112,15 +114,18 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
 
 F1(jtcant1){I r; 
  RZ(w); 
- if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
+// obsolete  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // leave rank of w unchanged
  A z=canta(apv(r,r-1,-1L),w);
  RZ(z);  INHERITNOREL(z,w); RETF(z);
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
- q=jt->rank?jt->rank[0]:AR(a); 
- r=jt->rank?jt->rank[1]:AR(w); RESETRANK;
+// obsolete  q=jt->rank?jt->rank[0]:AR(a); 
+// obsolete  r=jt->rank?jt->rank[1]:AR(w); RESETRANK;
+ q=jt->ranks; r=(RANKT)q; r=AR(w)<r?AR(w):r; 
+ q>>=RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);

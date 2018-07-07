@@ -394,6 +394,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 /* (i.e. prefix agreement invokes general case)         */
 // If the action verb handles inplacing, we pass that through
 
+// irs1() and irs2() are simply calls to the IRS-savvy function f[12] with the specified rank
+
 A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr; 
  F1PREFIP; RZ(w);
  wr=AR(w); rv[1]=efr(m,wr,m);

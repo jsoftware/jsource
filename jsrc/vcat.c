@@ -51,8 +51,10 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
 
 static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
  RZ(a&&w);
- at=AT(a); ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
- wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; RESETRANK;
+// obsolete at=AT(a); ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
+// obsolete  wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; RESETRANK;
+ acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
+ wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
  if(ar>acr||wr>wcr)R sprank2(a,w,0L,acr,wcr,jtover);
@@ -219,14 +221,19 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
 // obsolete  RZ(t=coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w);
- if(!jt->rank&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
- acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
- wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;  // wcr=rank of cell, wf=len of frame, ws->shape, q=len of last axis of cell
+// obsolete  if(!jt->rank&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
+// obsolete  acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;
+// obsolete  wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;  // wcr=rank of cell, wf=len of frame, ws->shape, q=len of last axis of cell
+ acr=jt->ranks>>RANKTX; as=AS(a); p=as[ar-1]; acr=ar<acr?ar:acr; p=acr?p:1; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
+ wcr=(RANKT)jt->ranks; ws=AS(w); q=ws[wr-1]; wcr=wr<wcr?wr:wcr; q=wcr?q:1; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape, p=len of last axis of cell
+ if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
+ // no RESETRANK - not required here
+
 // obsolete r=acr+wcr?MAX(acr,wcr):1;
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty
-  RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;
+  RESETRANK; z=rank2ex(a,w,0L,acr,wcr,acr,wcr,jtovg); R z;  // ovg calls other functions, so we clear rank
  }
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
  acn=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:acn;  // acn is #atoms in a cell of a  ma is acn EXCEPT when joining atom a to table w: then length of row of w
@@ -256,17 +263,20 @@ F2(jtstitch){B sp2;I ar,wr;
 
 F1(jtlamin1){A x;I*s,*v,wcr,wf,wr; 
  RZ(w);
- wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); RESETRANK;} wf=wr-wcr;
+// obsolete  wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); RESETRANK;} wf=wr-wcr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  GATV(x,INT,1+wr,1,0); v=AV(x);
- s=AS(w); ICPY(v,s,wf); *(v+wf)=1; ICPY(v+1+wf,s+wf,wcr);
+ s=AS(w); MCIS(v,s,wf); *(v+wf)=1; MCIS(v+1+wf,s+wf,wcr);
  R reshape(x,w);
 }    /* ,:"r w */
 
 F2(jtlamin2){A z;I ar,p,q,wr;
  RZ(a&&w); 
- ar=AR(a); p=jt->rank?jt->rank[0]:ar; 
- wr=AR(w); q=jt->rank?jt->rank[1]:wr; 
- jt->rank = 0;
+// obsolete  ar=AR(a); p=jt->rank?jt->rank[0]:ar; 
+// obsolete  wr=AR(w); q=jt->rank?jt->rank[1]:wr; 
+// obsolete  jt->rank = 0;
+ ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
+ wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)a=irs1(a,0L,p,jtlamin1);
  if(q)w=irs1(w,0L,q,jtlamin1);
  z=irs2(a,w,0L,p+!!p,q+!!q,jtover);
@@ -301,9 +311,10 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
   // in the shape that are part of the shape of an item), or if a is atomic (because
   // we would have to replicate a, and anyway how much are you saving?), or if w has higher rank than a (because the rank of the
   // result would increase, and there's no room in the shape)
-  // jt->rank is not set unless there are operand cells, which disqualify us.  There are some cases where it
+  // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
-  if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
+// obsolete   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
+  if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&jt->ranks==(RANK2T)~0){
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
    // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis

@@ -384,7 +384,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  EPILOG(zz);
 }
 
-/* Integrated Rank Support                              */
+// Call a function with Integrated Rank Support
+// The function may leave the rank set on exit; we clear it
 /* f knows how to compute f"r                           */
 // jt->ranks is rank of monad or leftrank<<16 + rightrank
 // jt->ranks is ~0 if the call is not through IRS
@@ -396,7 +397,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
 // irs1() and irs2() are simply calls to the IRS-savvy function f[12] with the specified rank
 
-A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr; 
+A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I rv[2],wr; 
  F1PREFIP; RZ(w);
  wr=AR(w); rv[1]=efr(m,wr,m);
 // obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK1))jtinplace=jt;  // pass inplaceability only if routine supports it
@@ -404,7 +405,8 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
  if(m>=wr)z = CALL1IP(f1,w,fs);  // just 1 cell
  else{
   rv[0]=0;  // why?
-  old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old;
+// obsolete   old=jt->rank; jt->rank=rv; z=CALL1IP(f1,w,fs); jt->rank=old;
+  z=CALL1IP(f1,w,fs);
  }
  jt->ranks=(RANK2T)~0;  // reset rank to infinite
  RETF(z);
@@ -419,7 +421,7 @@ A jtirs1(J jt,A w,A fs,I m,AF f1){A z;I*old,rv[2],wr;
 // IRS verbs are those that look at jt->rank.  This is where we set up jt->rank.  Once
 // we have it, we call the setup verb, which will go on to do its internal looping and (optionally) call
 // the verb f2 to finish operation on a cell
-A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
+A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,rv[2],wf,wr;
  // optionally push the jt->rank (pointer to ranks) stack.
  F2PREFIP; RZ(a&&w);
  ar=AR(a); rv[0]=efr(l,ar,l); af=ar-l;  // get rank, effective rank of u"n, length of frame...
@@ -429,7 +431,8 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I af,ar,*old,rv[2],wf,wr;
 // obsolete  if(fs&&!(VAV(fs)->flag&VINPLACEOK2))jtinplace=jt;  // pass inplaceability only if routine supports it
  if(!(af|wf))z = CALL2IP(f2,a,w,fs);   // if no frame, call setup verb and return result
  else{
-  old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+// obsolete   old=jt->rank; jt->rank=rv; z=CALL2IP(f2,a,w,fs); jt->rank=old;   // save ranks, call setup verb, pop rank stack
+  z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
    // Not all verbs (*f2)() use the fs argument.
  }
  jt->ranks=(RANK2T)~0;  // reset rank to infinite

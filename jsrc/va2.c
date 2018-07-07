@@ -497,7 +497,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
  // We detect agreement error before domain error
- I *oq=jt->rank; RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
+ RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {I *as = AS(a); I *ws = AS(w);
 // obsolete  if(!jt->rank){I b;I ipa;
   if(savedranks==(RANK2T)~0){I b;I ipa;

@@ -58,6 +58,7 @@ typedef struct {
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
  A    symb;             /* symbol table for assignment                     */
+ UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
  C    dbss;             /* single step mode                                */
@@ -65,15 +66,11 @@ typedef struct {
  UC   jerr;             /* error number (0 means no error)                 */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
- B    assert;           /* 1 iff evaluate assert. statements               */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
- B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  B    tostdout;         /* 1 if output to stdout                           */
  UC   db;               /* debug flag; see 13!:0                           */
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
- UC   seclev;           /* security level                                  */
- B    unused;          // was dotnames
 // --- end cache line 4
  UC   prioritytype[11];  // type bit for the priority types
  B    stswitched;       /* called fn switched locale                       */
@@ -82,8 +79,6 @@ typedef struct {
  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
  B    iepdo;            /* 1 iff do iep                                    */
  A    fill;             /* fill                                            */
- I*   rank;             /* for integrated rank support                     */
- UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
  UC   typepriority[19];  // priority value for the noun types
@@ -115,6 +110,10 @@ typedef struct {
  I    fdepi;            /* fn calls: current depth                         */
  I    fdepn;            /* fn calls: maximum permissible depth             */
  void*dtoa;             /* use internally by dtoa.c                        */
+ B    retcomm;          /* 1 iff retain comments and redundant spaces      */
+ UC   seclev;           /* security level                                  */
+ B    assert;           /* 1 iff evaluate assert. statements               */
+// space here
 // --- end cache line 8
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
@@ -177,13 +176,13 @@ typedef struct {
  DC   dbssd;            /* stack entry d corresp. to d->dcss setting       */
  A    dbssexec;         /* single step: execute string                     */
  A    dbstops;          /* stops set by the user                           */
- C    dbsusact;         /* suspension action                               */
  A    dbtrap;           /* trap, execute on suspension                     */
  DC   dcs;              /* ptr to debug stack entry for current script     */
  C*   dirbase;          /* for directory search                            */
  C    diratts[7];       /* set by ismatch, read by dir1                    */
  C    dirmode[11];      /* set by ismatch, read by dir1                    */
  C    dirrwx[3];        /* set by ismatch, read by dir1                    */
+ C    dbsusact;         /* suspension action                               */
 #if !SY_WINCE
  struct stat dirstatbuf; //set by ismatch, read by dir1
 #if !SY_64 && (SYS & SYS_LINUX)
@@ -191,6 +190,8 @@ typedef struct {
  struct stat dummy2;    // reserve extra to avoid stomping disp
 #endif
 #endif 
+ C*   capture;          /* capture output for python->J etc.               */
+ UI   capturemax;       /* size of capture buffer allocated                */
  I    dlllasterror;     /* DLL stuff                                       */
  I    etxn;             /* strlen(etx)                                     */
  I    etxn1;            /* last non-zero etxn                              */
@@ -287,8 +288,6 @@ typedef struct {
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    dirnamebuf[NPATH];/* for directory search                            */
  LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
- C*   capture;          /* capture output for python->J etc.               */
- UI   capturemax;       /* size of capture buffer allocated                */
 } JST;
 
 typedef JST* J; 

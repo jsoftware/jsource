@@ -405,7 +405,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
 // obsolete   rr[0]=0; rr[1]=r;
 // obsolete   jt->rank=rr; x=from(zero,w); 
 // obsolete   jt->rank=rr; y=from(one, w);
- jt->rank=0; // scaf
+// obsolete jt->rank=0; // scaf
   A x=irs2(zero,w,0L,0,r,jtfrom); A y=irs2(one,w,0L,0,r,jtfrom);
 // obsolete   if(!(i0(match(x,xx)) && i0(match(y,yy))))
 // obsolete     rr[0]=0;  // scaf
@@ -613,7 +613,7 @@ static DF1(jtredsemi){I f,n,r,*s,wr;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); n=r?s[f]:1;  // let the rank run into tail/curtail
  if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}
 // obsolete  if(BOX&AT(w))R irs2(rank1ex(curtail(w),0L,r-1,jtbox),tail(w),0L,r,r-1,jtover);
- A ct, tl; RZ(ct=curtail(w)); RZ(tl=tail(w)); jt->rank = 0;
+ A ct, tl; RZ(ct=curtail(w)); RZ(tl=tail(w)); RESETRANK;
  if(BOX&AT(w))R irs2(irs1(ct,0L,r-1,jtbox),tl,0L,r,r-1,jtover);
  else R irs1(w,0L,r-1,jtbox);
 }    /* ;/"r w */

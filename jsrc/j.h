@@ -572,7 +572,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define RE(exp)         {if((exp),jt->jerr)R 0;}
 #define RER             {if(er){jt->jerr=er; R;}}
 #define RESETERR        {jt->etxn=jt->jerr=0;}
-#define RESETRANK       (jt->rank=0, jt->ranks=(RANK2T)~0)
+#define RESETRANK       (jt->ranks=(RANK2T)~0)
 #define RNE(exp)        {R jt->jerr?0:(exp);}
 #define RZ(exp)         {if(!(exp))R0}
 // RETF is the normal function return.  For debugging we hook into it

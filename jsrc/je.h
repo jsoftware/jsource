@@ -22,7 +22,7 @@ extern F1(jtbinrep1);
 extern F1(jtbit1);
 extern F1(jtbitadv);
 extern F1(jtbox);
-extern F1(jtbox0);
+// obsolete extern F1(jtbox0);
 extern F1(jtboxopen);
 extern F1(jtboxq);
 extern F1(jtboxs);

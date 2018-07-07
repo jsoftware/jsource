@@ -107,7 +107,7 @@
 #define genbitwiseshift(x,y)        jtgenbitwiseshift(jt,(x),(y))
 #define genbitwiseshifta(x,y)       jtgenbitwiseshifta(jt,(x),(y))
 #define box(x)                      jtbox(jt,(x))
-#define box0(x)                     jtbox0(jt,(x))
+#define box0(x)                     irs1((x),0L,0,jtbox)
 #define boxatop(x)                  jtboxatop(jt,(x))
 #define boxopen(x)                  jtboxopen(jt,(x))   
 #define bput(x,y,z)                 jtbput(jt,(x),(y),(z))

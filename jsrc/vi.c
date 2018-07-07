@@ -1211,8 +1211,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)
- ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
- wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
+// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
+// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -1583,7 +1585,8 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 F1(jtnubsieve){
  RZ(w);
  if(SPARSE&AT(w))R nubsievesp(w); 
- if(jt->rank)jt->rank[0]=jt->rank[1]; 
+// obsolete  if(jt->rank)jt->rank[0]=jt->rank[1]; 
+ jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
 
@@ -1608,12 +1611,15 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 }    /* a-.w */
 
 // x e. y
-F2(jteps){I l,r,rv[2];
+F2(jteps){I l,r;
  RZ(a&&w);
- rv[0]=r=jt->rank?jt->rank[1]:AR(w);
- rv[1]=l=jt->rank?jt->rank[0]:AR(a); RESETRANK;
- if(SPARSE&AT(a)+AT(w))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));
- jt->rank=rv; 
+// obsolete  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
+// obsolete  rv[1]=l=jt->rank?jt->rank[0]:AR(a); RESETRANK;
+ l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
+ if(SPARSE&AT(a)+AT(w))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
+// obsolete  jt->rank=rv; 
+ jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */
 

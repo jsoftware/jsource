@@ -16,21 +16,23 @@ I level(A w){A*wv;I d,j;
 F1(jtlevel1){RZ(w); R sc(level(w));}
 
 // obsolete static I v00[] = {0, 0}; // used for rank
-F1(jtbox0){
- // Process through box code, which already handles rank
- I *ranksave = jt->rank;
- if(AR(w))jt->rank=v00;
- A z=box(w);
- jt->rank=ranksave;
- RETF(z);
-}
-
+// obsolete F1(jtbox0){
+// obsolete  // Process through box code, which already handles rank
+// obsolete  I *ranksave = jt->rank;
+// obsolete  if(AR(w))jt->rank=v00;
+// obsolete  A z=box(w);
+// obsolete  jt->rank=ranksave;
+// obsolete  RETF(z);
+// obsolete }
+// obsolete 
 F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
  RZ(w); I wt=AT(w); FLAGT waf=AFLAG(w);
  ASSERT(!(SPARSE&wt),EVNONCE);
   // Set NOSMREL if w is not boxed or it has NOSMREL set
  FLAGT newflags = (waf | ((~wt)>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
- if(!jt->rank){
+// obsolete  if(!jt->rank){
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; 
+ if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
   GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
@@ -38,7 +40,8 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
   // <"r
-  ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
+// obsolete   ws=AS(w); wr=AR(w); r=jt->rank[1]; f=wr-r; I t=AT(w);
+  ws=AS(w); I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m*bp(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z); 

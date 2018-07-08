@@ -31,7 +31,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // Set NOSMREL if w is not boxed or it has NOSMREL set
  FLAGT newflags = (waf | ((~wt)>>(BOXX-AFNOSMRELX))) & AFNOSMREL;
 // obsolete  if(!jt->rank){
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; 
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
  if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned

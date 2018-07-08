@@ -79,7 +79,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
 // obsolete  ar=AR(a); acr=jt->rank[0]; af=ar-acr;
 // obsolete  wr=AR(w); wcr=jt->rank[1]; wf=wr-wcr;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;  // RESETRANK not required because we call no primitives from here on
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.  We can do this because we have no PROLOG

@@ -115,8 +115,8 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
 F1(jtcant1){I r; 
  RZ(w); 
 // obsolete  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // leave rank of w unchanged
- A z=canta(apv(r,r-1,-1L),w);
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
+ A z=canta(apv(r,r-1,-1L),w);  // rank is set
  RZ(z);  INHERITNOREL(z,w); RETF(z);
 }    /* |:"r w */
 

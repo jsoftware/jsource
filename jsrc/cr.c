@@ -384,7 +384,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  EPILOG(zz);
 }
 
-// Call a function with Integrated Rank Support
+// Call a function that has Integrated Rank Support
 // The function may leave the rank set on exit; we clear it
 /* f knows how to compute f"r                           */
 // jt->ranks is rank of monad or leftrank<<16 + rightrank

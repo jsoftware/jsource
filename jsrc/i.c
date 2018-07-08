@@ -214,7 +214,7 @@ jt->assert = 1;
  jt->xmode=XMEXACT;
  MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
  jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
- jt->ranks=(RANK2T)~0;  // init both ranks to RMAX
+ RESETRANK;  // init both ranks to RMAX
  R 1;
 }
 

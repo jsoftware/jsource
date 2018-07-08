@@ -393,11 +393,11 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
 static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  RZ(w);J jtinplace=jt;
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // leave rank set
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
  g=VAV(self)->f;
- if(!n)R red0(w,self);
+ if(!n)R red0(w,self);  // red0 uses ranks, and resets them
 // obsolete  vains(id,wt,&ado,&cv);
  C id=vaid(g);
  VA2 adocv = vains(g,wt);
@@ -409,7 +409,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
   A x=irs2(zero,w,0L,0,r,jtfrom); A y=irs2(one,w,0L,0,r,jtfrom);
 // obsolete   if(!(i0(match(x,xx)) && i0(match(y,yy))))
 // obsolete     rr[0]=0;  // scaf
-  R df2(x,y,g);
+  R df2(x,y,g);  // rank has been reset for this call
  }
  // original rank still set
  if(!adocv.f)R redg(w,self);
@@ -507,8 +507,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
 // obsolete   r=jtr[1]; f=wr-r; if(r)n=ws[f];
 // obsolete  }else{r=wr; f=0; if(r)n=ws[0];
 // obsolete  }
- r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; n=r?ws[f]:1;
- // jt->ranks is still set
+ r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; n=r?ws[f]:1;  // no RESETRANK
 // obsolete  id=vaid(VAV(self)->f);
  // Handle the special cases: neutrals, single items
  if(n>1){
@@ -521,7 +520,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // Normal processing for multiple items.  Get the routine & flags to process it
   VA2 adocv = vains(FAV(self)->f,wt);
   // If there is no special routine, go perform general reduce
-  if(!adocv.f)R redg(w,self);  // jt->ranks is still set
+  if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
   // Here for primitive reduce handled by special code.
   // Calculate m: #cells of w to operate on; d: #atoms in an item of a cell of w cell of w (a cell to which u is applied);
   // zn: #atoms in result
@@ -530,7 +529,8 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
 // obsolete   if(f){
   // m=*/ frame (i. e. #cells to operate on)
   // r cannot be 0 (would be handled above).  Calculate low part of zn first
-  PROD(m,f,ws); /* obsolete c=zn*ws[f]; zn*=m; */ RESETRANK;   // clear rank now that we've used it
+  PROD(m,f,ws); /* obsolete c=zn*ws[f]; zn*=m; */
+  RESETRANK;   // clear rank now that we've used it - not really required here?
 // obsolete   }else{
 // obsolete    // No rank, just operate on whole of w
 // obsolete    m=1; /* obsolete c=wn; */   // one cell, containing all the atoms
@@ -542,15 +542,15 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.
   adocv.f(jt,m,d,n,AV(z),AV(w));
-  // if return is EWOV, it's an integer overflow and we must restart.
+  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
   // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
-  // have to do is change the type of the result
+  // have to do is change the type of the result.
 // obsolete   if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,reduce(w,self)):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
   if(jt->jerr)if(jt->jerr==EWOV1){RESETERR;AT(z)=FL;RETF(z);}else {RETF(jt->jerr>=EWOV?irs1(w,self,r,jtreduce):0);} else {RETF(adocv.cv&VRI+VRD?cvz(adocv.cv,z):z);}
 
   // special cases:
- }else if(n==1)R head(w);    // reduce on single items - note that jt->rank is still set
- else R red0(w,self);    // 0 items - neutrals
+ }else if(n==1)R head(w);    // reduce on single items - ranks are still set
+ else R red0(w,self);    // 0 items - neutrals - ranks are still set
 // obsolete  case 2: RZ(reduce2(w,id,f,r,&z)); if(z)R z;   // reduce on 2 items.  If there is no special code for the verb, fall through to...
 
 
@@ -610,12 +610,12 @@ static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
 static DF1(jtredsemi){I f,n,r,*s,wr;
  RZ(w);
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; s=AS(w); n=r?s[f]:1;  // scaf can let the rank run into tail/curtail
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); n=r?s[f]:1;  // let the rank run into tail/curtail
- if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); n=r?s[f]:1;  // let the rank run into tail   n=#items  in a cell of w
+ if(2>n){ASSERT(n,EVDOMAIN); R tail(w);}  // rank still set
 // obsolete  if(BOX&AT(w))R irs2(rank1ex(curtail(w),0L,r-1,jtbox),tail(w),0L,r,r-1,jtover);
- A ct, tl; RZ(ct=curtail(w)); RZ(tl=tail(w)); RESETRANK;
- if(BOX&AT(w))R irs2(irs1(ct,0L,r-1,jtbox),tl,0L,r,r-1,jtover);
- else R irs1(w,0L,r-1,jtbox);
+// obsolete  if(BOX&AT(w)){A ct; RZ(ct=curtail(w));R irs2(irs1(ct,0L,r-1,jtbox),irs1(w,0,r,jttail),0L,r,r-1,jtover);}  // rank goes into curtail, which resets it.  Calculate <"(r-1)@:(}:"r) ,"(r,r-1) {:"r
+ if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
+ else R irs1(w,0L,r-1,jtbox);  // unboxed, just box the cells
 }    /* ;/"r w */
 
 static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;

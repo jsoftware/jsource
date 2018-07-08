@@ -153,9 +153,9 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
 F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  RZ(w);
  if(SPARSE&AT(w))R revsp(w);
- if(jt->fill)R rotate(num[-1],w);
+ if(jt->fill)R rotate(num[-1],w);  // rank is set
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on
  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  wt=AT(w); ws=AS(w); wv=CAV(w);
  n=ws[f]; 

@@ -183,7 +183,7 @@ F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
 // obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // leave rank set, in case we call functions below
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
 // obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :
 // obsolete      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
  if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
@@ -194,13 +194,13 @@ F1(jthead){I wcr,wf,wr;
     // if w is empty we have to worry about overflow when calculating #atoms
    I zn=1; I *ws=AS(w)+1, *zs=AS(z); DO(wcr, zs[i]=ws[i]; if(wn){zn*=ws[i];}else{zn=mult(zn,ws[i]);RE(0);})   // copy shape of CELL of w into z
    AN(z)=zn;
-   // No need to resetrank here: if it was nonzero, wf would have been nonzero & we wouldn't be here
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
+   // left rank is garbage, but since zeroi is an atom it doesn't matter
    RETF(jtfrom(jtinplace,zeroi,w));  // could call jtfromi directly for non-sparse w
   }
- }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set
+ }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }
 }
 
@@ -208,7 +208,7 @@ F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
 // obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // leave rank set for the functions following
+ wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);
 }

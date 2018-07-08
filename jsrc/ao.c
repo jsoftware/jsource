@@ -272,7 +272,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
 
   // copy the data to the end of its partition and advance the partition pointer
   if(celllen<MEMCPYTUNE) {
-   MCISds(partitionptr,wv,celllen>>LGSZI);  // scaf use MC if long enough
+   MCISds(partitionptr,wv,celllen>>LGSZI);  // move full words
    if(celllen&(SZI-1)){
 #if LGSZI>2
     if(celllen&4){*(I4*)partitionptr=*(I4*)wv; partitionptr=(I*)((C*)partitionptr+SZI4); wv=(I*)((C*)wv+SZI4);}
@@ -657,13 +657,14 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
  RZ(w);
  if(NOUN&AT(w)){flag=VGERL; RZ(h=fxeachv(1L,w));}
  v=VAV(w);
- switch(ID(w)){
+ switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
   case CSLASH: f2=jtkeyslash; if(vaid(v->f))f1=jtobqfslash; break;
 // obsolete    case CBOX:   f2=jtkeybox;   break;
   case CFORK:  if(v->f1==(AF)jtmean){f2=jtkeymean; break;}
                c=ID(v->f); d=ID(v->g); e=ID(v->h); 
-               if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD))f2=jtkeyheadtally; break;
+               if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD)){f2=jtkeyheadtally; break;}
+               // otherwise fall through to...
   default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VINPLACEOK2;  // pass through ASGSAFE.  jtkey can handle inplace
  }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);

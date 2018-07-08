@@ -9,7 +9,7 @@
 // obsolete static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)((I)jtinplace&JTINPLACEW)),(f2)((J)((I)jt+3*(I)jtinplace),w,w,fs));}
 // obsolete static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)((I)jt+(((5*(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)((I)jt+3*((I)jtinplace&JTINPLACEW)); RANKT mr=(RANKT)jt->ranks;
- if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else R (f2)(jtinplace,w,w,fs);}
+ if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else{jt->ranks=(RANK2T)~0; R (f2)(jtinplace,w,w,fs);}}  // must expand infinite rank to dyadic size
 static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)((I)jt+2*((I)jtinplace&JTINPLACEW)+(((I)jtinplace&JTINPLACEA)>>1)); RANK2T lrr=jt->ranks;
  if(lrr!=(RANK2T)~0)R jtirs2(jtinplace,w,a,fs,(RANKT)lrr,lrr>>RANKTX,f2); else R (f2)(jtinplace,w,a,fs);}
 

@@ -76,7 +76,7 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
-/* obsolete  if(jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
+/* obsolete  if(jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,FL)) */ /* handle frames */ \
  if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
  else if (ar >= wr){  \
   if (AINPLACE){ z = a; } \
@@ -98,7 +98,7 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
 /* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
 {I ar = AR(a); I wr = AR(w); \
-/* obsolete  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
+/* obsolete  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) */ /* handle frames */ \
  if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
  else if (ar >= wr){ \
   if (AINPLACE){ z = a; AT(z) = B01; MODVIRTINPLACE(z); } \

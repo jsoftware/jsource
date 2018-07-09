@@ -96,7 +96,30 @@ NB. t0=: 6!:2 '    27 b./&.(a.i.]) y'
 NB. t1=: 6!:2 'a.{~27 b./   a.i.   y'
 NB. 2 < t1 % t0
 
+NB. x >.&.(a.&i.) y -------------------------------------------------
 
-4!:55 ;:'f g p q s t t0 t1 test1 test2 test3 x0 x1 y'
+test4=: 1 : 0
+ g=: u
+ f=: u&.(a.&i.)
+ y   NB. to defer execution till y given
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=: 13 47 ?@$ 256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=:       ?   256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=:       ?   256 [ q=: 13 47 ?@$ 256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 47 ?@$ 256 [ q=: 13    ?@$ 256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13    ?@$ 256 [ q=: 13 47 ?@$ 256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13 48 ?@$ 256 [ q=: 13    ?@$ 256
+ assert. (a.{~p g q) -: (p{a.) f q{a. [ p=: 13    ?@$ 256 [ q=: 13 48 ?@$ 256
+ 1
+)
+
+<. test4 ''
+>. test4 ''
+<./ test4 ''   NB. Not special code, but was incorrectly decoded
+>./ test4 ''   NB. Not special code, but was incorrectly decoded
+
+
+
+
+4!:55 ;:'f g p q s t t0 t1 test1 test2 test3 test4 x0 x1 y'
 
 

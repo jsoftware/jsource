@@ -417,7 +417,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
    if(c==CFORK||c==CAMP){
     if(c==CFORK)d=ID(v->h);
-    if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){
+    if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){  // a.&i. or (a. i. ][)
      u=VAV(a); d=u->id;
      if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
     }

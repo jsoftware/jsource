@@ -22,7 +22,8 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  if(CUNDER==v->id)switch(c){
   case CMAX:  zt=LIT; ado=(VF)maxC; break;
   case CMIN:  zt=LIT; ado=(VF)minC; break;
-  case CAT:   z=VAV(v->f)->f; v=VAV(z); if(CAMP==v->id&&256==i0(v->f)&&CSTILE==ID(v->g));
+// not used   this was never detected as special  case CAT:   z=VAV(v->f)->f; v=VAV(z); if(CAMP==v->id&&256==i0(v->f)&&CSTILE==ID(v->g));
+  default: ASSERTSYS(ado,"charfn2 ado");
  }else switch(c){
   case CEQ:   R eq(a,w);
   case CNE:   R ne(a,w);
@@ -30,8 +31,10 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
   case CLE:   zt=B01; ado=(VF)leC;  break;
   case CGE:   zt=B01; ado=(VF)geC;  break;
   case CGT:   zt=B01; ado=(VF)gtC;  break;
+  default: ASSERTSYS(ado,"charfn2 ado");
  }
- if(!ado)R df2(a,w,self);
+ 
+// obsolete  df2 on self just produces infinite loop if(!ado)R df2(a,w,self)
  an=AN(a); ar=AR(a); as=AS(a);
  wn=AN(w); wr=AR(w); ws=AS(w);
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);

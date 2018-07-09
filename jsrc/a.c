@@ -18,7 +18,7 @@ F1(jtswap){A y;C*s;I n;
  RZ(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps
-  I flag = VAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (VAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
+  I flag = FAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (FAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(0,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
   // evoke.  Ii must be LIT and convertible to ASCII.
@@ -36,7 +36,7 @@ static B booltab[64]={
  1,0,0,0, 1,0,0,1, 1,0,1,0, 1,0,1,1,  1,1,0,0, 1,1,0,1, 1,1,1,0, 1,1,1,1,
 };
 
-static DF2(jtbdot2){R from(plus(duble(cvt(B01,a)),cvt(B01,w)),VAV(self)->h);}
+static DF2(jtbdot2){R from(plus(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->h);}
 
 static DF1(jtbdot1){R bdot2(zero,w,self);}
 
@@ -45,7 +45,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  RZ(w=vi(w));
  switch(*AV(w)){
   case 0:
-   GAT(z,FL,3,1,0); x=DAV(z); v=VAV(fs);
+   GAT(z,FL,3,1,0); x=DAV(z); v=FAV(fs);
    j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->lr; x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->rr; x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
@@ -114,7 +114,7 @@ F1(jtbdot){A b,h=0;I j,n,*v;
 #endif
 
 static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
- h=VAV(self)->h; hv=AAV(h); 
+ h=FAV(self)->h; hv=AAV(h); 
  q=hv[1]; jv=AV(q); m=*AS(q);
  k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v&&!(y==*v&&x==v[1])){v+=2; if(v==jv+2*m)v=jv;}
  R*(AAV(hv[2])+((v-jv)>>1));
@@ -122,7 +122,7 @@ static A jtmemoget(J jt,I x,I y,A self){A h,*hv,q;I*jv,k,m,*v;
 
 static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  RZ(z);
- h=VAV(self)->h; hv=AAV(h);  // c = # fa()s needed to deallocate self, not counting the ones that just protect the name
+ h=FAV(self)->h; hv=AAV(h);  // c = # fa()s needed to deallocate self, not counting the ones that just protect the name
  q=hv[0]; mv= AV(q);
  q=hv[1]; jv= AV(q);
  q=hv[2]; cv=AAV(q); m=AN(q);
@@ -180,7 +180,7 @@ static DF2(jtmemo2){DECLF;A z;I x,y;
 F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- v=VAV(w); m=ptab[1+PTO];
+ v=FAV(w); m=ptab[1+PTO];
  GAT(h,BOX,3,1,0); hv=AAV(h);
  GAT(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=rifvs(q));

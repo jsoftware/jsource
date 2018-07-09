@@ -10,25 +10,25 @@
 static F1(jtinvamp);
 
 static B ip(A w,C c,C d){A f,g;V*v;
- v=VAV(w); f=v->f; g=v->g;
- R CSLASH==ID(f)&&c==ID(VAV(f)->f)&&d==ID(g);
+ v=FAV(w); f=v->f; g=v->g;
+ R CSLASH==ID(f)&&c==ID(FAV(f)->f)&&d==ID(g);
 }
 
 static B consf(A w){A f;C c;
  c=ID(w);
- if(c==CFCONS||c==CQQ&&(f=VAV(w)->f,NOUN&AT(f)))R 1;
+ if(c==CFCONS||c==CQQ&&(f=FAV(w)->f,NOUN&AT(f)))R 1;
  R 0;
 }    /* 1 iff w is a constant function */
 
 static F2(jtfong){A f;C c;V*v;
  RZ(a&&w);
- v=VAV(a); c=v->id; f=v->f;
+ v=FAV(a); c=v->id; f=v->f;
  R c==CRIGHT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==ID(f)) ? folk(f,v->g,fong(v->h,w)) : folk(ds(CCAP),a,w);
 }    /* [: f g  with simplifications */
 
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  RZ(w);
- v=VAV(w); RZ(f=unname(v->f)); g=v->g; RZ(h=unname(v->h));
+ v=FAV(w); RZ(f=unname(v->f)); g=v->g; RZ(h=unname(v->h));
  if(CCAP==ID(f))R fong(invrecur(h),invrecur(g));
  c=1&&NOUN&AT(f); b=c||consf(f);
  ASSERT(b!=consf(h),EVDOMAIN);
@@ -36,19 +36,19 @@ static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  RZ(gi=invrecur(b?amp(k,g):amp(g,k)));
  RZ(fi=invrecur(b?h:f));
  if(CAMP==ID(gi)){
-  v=VAV(gi); 
+  v=FAV(gi); 
   if     (NOUN&AT(v->f))RZ(gi=folk(v->f,     v->g, ds(CRIGHT)))
   else if(NOUN&AT(v->g))RZ(gi=folk(v->g,swap(v->f),ds(CRIGHT)));
  }
  R fong(fi,gi);
 }
 
-static DF1(jtexpandf){A f; RZ(w&&self); f=VAV(self)->f; R expand(VAV(f)->f,w);}
+static DF1(jtexpandf){A f; RZ(w&&self); f=FAV(self)->f; R expand(VAV(f)->f,w);}
 
 static DF1(jtexpandg){A f,g,z;V*v;
  RZ(w&&self);
- f=VAV(self)->f; v=VAV(f); g=v->g;
- jt->fill=VAV(g)->g; z=expand(v->f,w); jt->fill=0;   // elements of VAV cannot be virtual
+ f=FAV(self)->f; v=FAV(f); g=v->g;
+ jt->fill=FAV(g)->g; z=expand(v->f,w); jt->fill=0;   // elements of VAV cannot be virtual
  R z;
 }
 
@@ -99,7 +99,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
 
 static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  RZ(w);
- v=VAV(w);
+ v=FAV(w);
  f=v->f; nf=!!(NOUN&AT(f));
  g=v->g; ng=!!(NOUN&AT(g));
  h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   
@@ -114,7 +114,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CJDOT:    R nf?atop(invrecur(ds(CJDOT)),amp(ds(CMINUS),x)):amp(ds(CMINUS),jdot1(x));
   case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
-  case COBVERSE: ff=VAV(h)->g; R amp(nf?x:ff,nf?ff:x);
+  case COBVERSE: ff=FAV(h)->g; R amp(nf?x:ff,nf?ff:x);
   case CPDERIV:  if(!AR(h))R ds(CPDERIV);
   case CXCO:     RE(n=i0(x)); ASSERT(n&&-3<n&&n<3,EVDOMAIN);
   case CROT:
@@ -124,7 +124,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CIOTA:    if(nf)R amp(ds(CLBRACE),x); break;
   case CTHORN:   if(nf)R ds(CEXEC);          break;
   case CTILDE:   
-   if(ff=VAV(h)->f,VERB&AT(ff))R invamp(amp(nf?ff:x,nf?x:ff));
+   if(ff=FAV(h)->f,VERB&AT(ff))R invamp(amp(nf?ff:x,nf?x:ff));
    else{ff=unname(h); R invamp(amp(nf?x:ff,nf?ff:x));}
   case CSCO:     
    ASSERT(nf,EVDOMAIN); 
@@ -154,7 +154,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    }
    break;
   case CFIT:
-   ASSERT(nf&&(CPOUND==ID(VAV(g)->f)),EVDOMAIN);
+   ASSERT(nf&&(CPOUND==ID(FAV(g)->f)),EVDOMAIN);
    ASSERT(1==AR(x),EVRANK);
    R fdef(0,CPOWOP,VERB, jtexpandg,0L, w,num[-1],0L, VFLAGNONE, RMAX,0L,0L);
   case CPOUND:
@@ -213,7 +213,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    if(nf&&(n=i0(x),0>n)&&(d=ID(u->f),d==CLEFT||d==CRIGHT))R slash(ds(CCOMMA));
    break;
   case CIBEAM:
-   x=VAV(h)->f; y=VAV(h)->g;
+   x=FAV(h)->f; y=FAV(h)->g;
    if(NOUN&AT(x)&&equ(x,num[3])&&NOUN&AT(y)){
     RE(n=i0(f));
     if(all1(eps(y,v2(4L,5L)))){ASSERT(n&&-2<=n&&n<=2,EVDOMAIN); R amp(sc(-n),g);}
@@ -222,7 +222,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    break;
   case CBDOT:
    RE(n=i0(x));
-   switch(i0(VAV(h)->f)){
+   switch(i0(FAV(h)->f)){
     case 22: case 25:          R w;
     case 19: case 28:          if(ng)R w; break;
     case 21: case 26:          if(nf)R w; break;
@@ -253,7 +253,7 @@ static C invf[2][29] = {
 A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN); 
- id=ID(w); v=VAV(w);  // id=pseudochar for w, v->verb info
+ id=ID(w); v=FAV(w);  // id=pseudochar for w, v->verb info
  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses
  // in case id indicates a modifier, set (f|g) to the operand, n? if it is a noun or name, v? if it is a verb
  f=v->f; nf=f&&AT(f)&NOUN+NAME; vf=f&&!nf;
@@ -300,7 +300,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
    break;
   case CBSLASH:
   case CBSDOT:
-   if(CSLASH==ID(f)&&(ff=VAV(f)->f,ff&&VERB&AT(ff))){  //  ff/\  or ff/\.
+   if(CSLASH==ID(f)&&(ff=FAV(f)->f,ff&&VERB&AT(ff))){  //  ff/\  or ff/\.
     b=id==CBSDOT;
     switch(ID(ff)){
      case CPLUS: R obverse(eval(b?"- 1&(|.!.0)":" - |.!.0"),w);
@@ -334,7 +334,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
 
 static F1(jtneutral){A x,y;B b;V*v;
  RZ(w);
- v=VAV(w);
+ v=FAV(w);
  ASSERT(!v->lr&&!v->rr,EVDOMAIN);
  RZ(y=v2(0L,1L));
  RZ(x=scf(infm)); b=equ(y,CALL2(v->f2,x,y,w)); RESETERR; if(b)R x;
@@ -350,7 +350,7 @@ static F1(jtneutral){A x,y;B b;V*v;
 
 F1(jtiden){A f,g,x=0;V*u,*v;
  RZ(w=fix(w)); ASSERT(VERB&AT(w),EVDOMAIN);
- v=VAV(w); f=v->f; g=v->g;
+ v=FAV(w); f=v->f; g=v->g;
  switch(v->id){
   default:      RZ(x=neutral(w)); break;
   case CCOMMA:  R eval("i.@(0&,)@(2&}.)@$");
@@ -369,7 +369,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
   case CMIN:    x=ainf; break;
   case CUNDER:  x=df1(df1(mtv,iden(f)),inv(g)); break;
   case CAT:
-   if(CAMP==ID(f)&&(u=VAV(f),NOUN&AT(u->f)&&!AR(u->f)&&CSTILE==ID(u->g)))switch(ID(g)){
+   if(CAMP==ID(f)&&(u=FAV(f),NOUN&AT(u->f)&&!AR(u->f)&&CSTILE==ID(u->g)))switch(ID(g)){
     case CSTAR: case CEXP: x=one;  break;
     case CPLUS:            x=zero;
    }
@@ -390,7 +390,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
 
 F1(jtidensb){A f,g,x=0,w0=w;V*v;
  RZ(w=fix(w)); ASSERT(VERB&AT(w),EVDOMAIN);
- v=VAV(w); f=v->f; g=v->g;
+ v=FAV(w); f=v->f; g=v->g;
  switch(v->id){
   default:      R iden(w0);
   case CMAX:    GATV(x,SBT,1,0,0);*SBAV(x)=0; break;

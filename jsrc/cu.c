@@ -81,23 +81,24 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RETF(z);
 }    /* f&.(a.&i.) w */
 
-F2(jtunder){A x;AF f1,f2;B b,b1;C c;I m,r;V*u,*v;
+F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=jtunder1; f2=jtunder2; r=mr(w); v=VAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
  I flag = (VAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
  switch(v->id){
-  case COPE:  f1=jteach1; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
+  case COPE:  f1=jteach1; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); break;   // &.>
   case CFORK: c=ID(v->h); /* fall thru */
   case CAMP:  
-   u=VAV(a);
-   if(b1=CSLASH==u->id){x=u->f; u=VAV(x);}
-   b=CBDOT==u->id&&(x=u->f,!AR(x)&&INT&AT(x)&&(m=*AV(x),16<=m&&m<32));
-   if(CIOTA==ID(v->g)&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->f)){
-    f1=b&& b1?jtbitwiseinsertchar:jtunderai1; 
-    f2=b&&!b1?jtbitwisechar:u->id==CMAX||u->id==CMIN?jtcharfn2:jtunder2;
+   u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
+   if(b1=CSLASH==(uid=u->id)){x=u->f; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
+   b=CBDOT==uid&&(x=u->f,!AR(x)&&INT&AT(x)&&(m=*AV(x),16<=m&&m<32));   // b if f=m b. where m is atomic int 16<=m<=32
+   if(CIOTA==ID(v->g)&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->f)){   // w is  {a.&i.  or  (a. i. ][)}
+    f1=b&& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
+    f2=b&&!b1?jtbitwisechar:!b1&&(uid==CMAX||uid==CMIN)?jtcharfn2:jtunder2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
     flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
- }}
+   }
+ }
  R CDERIV(CUNDER,f1,f2,flag,r,r,r);
 }
 

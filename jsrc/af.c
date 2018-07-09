@@ -16,7 +16,7 @@ F1(jtunname){A x;V*v;
 static B jtselfq(J jt,A w){A hs,*u;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME)R 0;
- v=VAV(w);
+ v=FAV(w);
  switch(v->id){
   case CSELF:  
    R 1;
@@ -35,7 +35,7 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
 static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
  RZ(a&&w);
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=VAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
+ v=FAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
  if(!(f||g))R w;
  switch(v->id){
   case CSLASH: 
@@ -94,7 +94,7 @@ F1(jtfix){PROLOG(0005);A z;  // obsolete I*rv=jt->rank;
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);
  RZ(z=fixa(zero,AT(w)&VERB?w:symbrdlock(w)));
- if(AT(z)&VERB+ADV+CONJ){V*v=VAV(z); if(v->f){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
+ if(AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->f){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
 // obsolete  jt->rank=rv;
  jt->fxpath=0;
  EPILOG(z);

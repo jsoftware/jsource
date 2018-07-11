@@ -142,8 +142,11 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  RETF(z);
 }    /* f^:n w, non-negative finite n, well-behaved f */
 
-static DF1(jtinv1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); RETF(z);}
+// obsolete static DF1(jtinvh1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); RETF(z);}
+static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->f1)(FAV(i)->flag&VINPLACEOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
+static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->f1)(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); RETF(z);}
+static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
 static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)
 
@@ -224,8 +227,16 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
     switch(n){
     case 0: R ds(CRIGHT);   //  u^:0 is like ]
     case 1: R a;  // u^:1 is like u 
-    case -1: R CDERIV(CPOWOP,jtinv1,jtinv2,VFLAGNONE, RMAX,RMAX,RMAX);  // create verb to calculate the inverse
-    }
+    case -1:
+     // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
+     // must wait until we get arguments
+// obsolete      R CDERIV(CPOWOP,jtinv1,jtinv2,VFLAGNONE, RMAX,RMAX,RMAX);  // create verb to calculate the inverse
+     {A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+      I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VINPLACEOK1:VINPLACEOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
+// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
+     R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
+     }
+   }
    }
    // If not special case, fall through to handle general case
    b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ 

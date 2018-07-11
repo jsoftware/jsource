@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-#define invrecur(x) jtinv(jt,(x),1)  // call inv(), indicating recursive call
 
 static F1(jtinvamp);
 

@@ -365,8 +365,10 @@ x=: 0 1 0;'abc';3;4.5 6;7j8 9 10;(<1 2 3;4.5);1 2 3x;3r4 5r6
 'rank error'   -: unbin etx 5 3$hexrep i.4
 ('rank error';'domain error') e.~ <unbin etx 'f' 2}0 hexrep ?4$10
 ('rank error';'domain error') e.~ <unbin etx 'f' 2}1 hexrep ?4$10
-'rank error'   -: ex '0 1&(3!:1) ^: _1 ] 9'
-'rank error'   -: ex '0 1&(3!:3) ^: _1 ] 9'
+('rank error';'domain error') e.~ < ex '0 1&(3!:1) ^: _1 ] 9'
+('rank error';'domain error') e.~ < ex '0 1&(3!:3) ^: _1 ] 9'
+('rank error';'domain error') e.~ < ex '0 1 (3!:1) ^: _1 ] 9'
+('rank error';'domain error') e.~ < ex '0 1 (3!:3) ^: _1 ] 9'
 
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep ;:'Cogito, ergo sum.'
 'index error'  -: unbin etx ( 7{a.) (>IF64{(20+i.4);40+i.8)}x=: binrep (u:&.>) ;:'Cogito, ergo sum.'

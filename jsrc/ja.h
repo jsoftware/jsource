@@ -502,6 +502,7 @@
 #define intmod2(x)                  jtintmod2(jt,(x))
 #define intpow(x,y)                 jtintpow(jt,(x),(y))
 #define inv(x)                      jtinv(jt,(x),0)
+#define invrecur(x)                 jtinv(jt,(x),1)  // call inv(), indicating recursive call
 #define invamp(x)                   jtinvamp(jt,(x))
 #define invfork(x)                  jtinvfork(jt,(x))
 #define iocol(x,y,z)                jtiocol(jt,(x),(y),(z))

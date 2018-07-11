@@ -78,8 +78,12 @@ s & *:         eq (ambi & *:      )
 s &:*:         eq (ambi &:*:      )
 s & *:@>:      eq (monad& *:@>:   )
 *& s           eq (* & monad      )
-*&.s           eq (* &.monad      )
+NB. illegal *&.s           eq (* &.monad      )
 *&:s           eq (* &:monad      )
+'domain error' -: ex '*&.$:'
+'domain error' -: ex '*&.i.'
+'domain error' -: ex '*&.:$:'
+'domain error' -: ex '*&.:i.'
 
 s : +          eq (monad : +      )
 * : s          eq (*     : dyad   )

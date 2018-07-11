@@ -58,12 +58,22 @@ DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,-1L,
 DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,RMAX,-1L, VAV(self)->f2);}
 
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
-static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),amp(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-
 // PUSH/POP ZOMB is performed in atop/amp/ampco
+// under is for when we could not precalculate the inverse
+static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->f1)(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->f2)(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(FAV(hs)->flag&VINPLACEOK1?jtinplace:jt,w,hs);}
+// obsolete static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(FAV(hs)->flag&VINPLACEOK2?jtinplace:jt,a,w,hs);}
+// obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
+// obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
+// underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
+static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}
+static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(jtinplace,a,w,hs);}
+// undco is for when we could not precalculate the inverse
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
+// obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
 
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);
@@ -83,7 +93,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 
 F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
- c=0; f1=jtunder1; f2=jtunder2; r=mr(w); v=VAV(w);
+ c=0; f1=0; f2=0; r=mr(w); v=VAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
  I flag = (VAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
  switch(v->id){
@@ -95,15 +105,25 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
    b=CBDOT==uid&&(x=u->f,!AR(x)&&INT&AT(x)&&(m=*AV(x),16<=m&&m<32));   // b if f=m b. where m is atomic int 16<=m<=32
    if(CIOTA==ID(v->g)&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->f)){   // w is  {a.&i.  or  (a. i. ][)}
     f1=b&& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
-    f2=b&&!b1?jtbitwisechar:!b1&&(uid==CMAX||uid==CMIN)?jtcharfn2:jtunder2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
+    f2=b&&!b1?(AF)jtbitwisechar:!b1&&(uid==CMAX||uid==CMIN)?(AF)jtcharfn2:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
     flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
    }
  }
- R CDERIV(CUNDER,f1,f2,flag,r,r,r);
+ // If a default routine was selected, create the standard g^:_1 @ (f & g) for it to use
+ A h=0; if(!f1||!f2){if(nameless(w)){h=atop(inv(w),amp(a,w)); ASSERT(h,EVDOMAIN);}} // h must be valid for free.  If no names in w, take the inverse
+ // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
+ // just in case the calculated verb is not inplaceable
+ if(!f1){f1=h?jtunderh1:jtunder1; if(h)flag&=FAV(h)->flag|(!VINPLACEOK1);} if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(!VINPLACEOK2);}
+// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
+ R fdef(0,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }
 
-F2(jtundco){
+F2(jtundco){AF f1,f2;
  ASSERTVV(a,w); 
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
- R CDERIV(CUNDCO,jtundco1,jtundco2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
+// obsolete  R CDERIV(CUNDCO,jtundco1,jtundco2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
+ A h=0; if(nameless(w)){h=atop(inv(w),ampco(a,w)); ASSERT(h,EVDOMAIN);} // h must be valid for free.  If no names in w, take the inverse
+ f1=h?jtunderh1:jtundco1; f2=h?jtunderh2:jtundco2; I flag = (FAV(a)->flag&FAV(w)->flag&VASGSAFE) + (h?FAV(h)->flag&((VINPLACEOK1|VINPLACEOK2)):(VINPLACEOK1|VINPLACEOK2));
+// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
+ R fdef(0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX);
 }

@@ -168,17 +168,17 @@ static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
 // That way we only have to check for 0&1 in one place, and it picks up u^:v and u^:n
 
 // here for u^:v y
-static CS1IP(jtpowv1, \
+CS1IP(static,jtpowv1, \
 A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
 z=(FAV(u)->f1)(VAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
 ,0108)
 // here for x u^:v y 
-static CS2IP(jtpowv2, \
+CS2IP(static,jtpowv2, \
 A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
 z=(VAV(u)->f2)(VAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
-static CS2IP(jtpowv2a, \
+CS2IP(static,jtpowv2a, \
 A u; RZ(u = powop(VAV(fs)->f,CALL2(g2,a,w,gs),(A)1)); \
 z=(VAV(u)->f1)(VAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
 ,0110)

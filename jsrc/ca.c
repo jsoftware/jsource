@@ -74,16 +74,19 @@ static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,j
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
-CS1IP(on1, \
+CS1IP(,on1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(jtinplace,w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
 ,0113)
-CS2IP(jtupon2, \
+CS2IP(,jtupon2, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=prota))),gx,fs));} \
 ,0114)
+// special case for rank 0.  Transfer to loop.  
+// if there is only one cell, process it through on1, which understands this type
+static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
 
 // u@n
 static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
@@ -156,6 +159,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
  flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VINPLACEOK1|VINPLACEOK2));
+ // special cases of u
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
   case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
@@ -189,6 +193,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
     if(d==CEXP){f2=jtmodpow2; flag&=~VINPLACEOK2;} else{f1=jtmodpow1; flag&=~VINPLACEOK1;}
   }
  }
+ // special cases of v
 // bug: +/@e.&m y does ,@e. not e.
 // if(d==CEBAR||(b=FIT0(CEPS,wv))){
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
@@ -201,6 +206,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
   }
  }
+ if(d==COPE&&!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
+
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
 
@@ -221,7 +228,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  }
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+ // If the compound has rank 0, switch to the loop for that
+ if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==0)f1=jton10;}  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
@@ -366,86 +374,92 @@ static DF2(with2){R df1(w,powop(self,a,0));}
 F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
-  default: ASSERTSYS(0,"amp");
-  case NN: ASSERT(0,EVDOMAIN);
-  case NV:
-   f1=withl; v=VAV(w); c=v->id;
-   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
-   flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-   // assigned to a name, which will protect values inside it.
-   ACIPNO(a);
-   if(AN(a)&&AR(a)){
-     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
-     // Also set b if the fit is !.0
-    if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f); 
-    mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
+ default: ASSERTSYS(0,"amp");
+ case NN: ASSERT(0,EVDOMAIN);
+ case NV:
+  f1=withl; v=VAV(w); c=v->id;
+  // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
+  flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
+  // assigned to a name, which will protect values inside it.
+  ACIPNO(a);
+  if(AN(a)&&AR(a)){
+    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+    // Also set b if the fit is !.0
+   if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f); 
+   mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
+  }
+  if(0<=mode){
+   if(b){jt->ct=0.0; h=indexofsub(mode,a,mark); jt->ct=old; f1=ixfixedleft0; flag&=~VINPLACEOK1;}
+   else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VINPLACEOK1;}
+  }else switch(c){
+   case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VINPLACEOK1; break;
+   case CIBEAM: if(v->f&&v->g&&128==i0(v->f)&&3==i0(v->g)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VINPLACEOK1;}
+  }
+  R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+ case VN: 
+  f1=withr; v=VAV(a);
+  // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
+  // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
+  flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
+  // assigned to a name, which will protects values inside it.
+  ACIPNO(w);
+  if(AN(w)&&AR(w)){
+    // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
+    // Also set b if the fit is !.0
+   c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
+   if(7==(p&7))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
+   else      mode=c==CEPS?IEPS:-1;
+  }
+  if(0<=mode){
+   if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}
+   else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VINPLACEOK1;}
+  }
+  R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
+ case VV:
+  // u&v
+  f1=on1; f2=on2;
+  v=VAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
+  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
+  flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
+  if(c==CFORK||c==CAMP){
+   if(c==CFORK)d=ID(v->h);
+   if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){  // a.&i. or (a. i. ][)
+    u=VAV(a); d=u->id;
+    if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
    }
-   if(0<=mode){
-    if(b){jt->ct=0.0; h=indexofsub(mode,a,mark); jt->ct=old; f1=ixfixedleft0; flag&=~VINPLACEOK1;}
-    else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VINPLACEOK1;}
-   }else switch(c){
-    case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VINPLACEOK1; break;
-    case CIBEAM: if(v->f&&v->g&&128==i0(v->f)&&3==i0(v->g)){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VINPLACEOK1;}
-   }
-   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
-  case VN: 
-   f1=withr; v=VAV(a);
-   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
-   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
-   flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-   // assigned to a name, which will protects values inside it.
-   ACIPNO(w);
-   if(AN(w)&&AR(w)){
-     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
-     // Also set b if the fit is !.0
-    c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(zero,v->g))c=ID(v->f);
-    if(7==(p&7))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
-    else      mode=c==CEPS?IEPS:-1;
-   }
-   if(0<=mode){
-    if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}
-    else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VINPLACEOK1;}
-   }
-   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
-  case VV:
-   // u@v
-   f1=on1; f2=on2;
-   v=VAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
-   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-   flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
-   if(c==CFORK||c==CAMP){
-    if(c==CFORK)d=ID(v->h);
-    if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){  // a.&i. or (a. i. ][)
-     u=VAV(a); d=u->id;
-     if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
-    }
-   }else switch(ID(a)){
-    case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
-    case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
-    case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
-    case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
-    case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
-    case CRAZE:  // detect ;@(<@(f/\));.
-     if(c==CCUT&&boxatop(w)){  // w is <@g;.k
-      if((1LL<<(*AV(v->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-       A wf=v->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
-      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-        A gf=gv->f; V *gfv=VAV(gf);  // find gf
-        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-         f1=jtrazecut1; flag&=~(VINPLACEOK1);
-        }
-       }
+  }
+  switch(ID(a)){   // if we matched the a.&i. code above, a must be a. and its ID will be 0
+  case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
+  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
+  case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
+  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
+  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
+  case CRAZE:  // detect ;@(<@(f/\));.
+   if(c==CCUT&&boxatop(w)){  // w is <@g;.k
+    if((1LL<<(*AV(v->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+     A wf=v->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+    if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
+      A gf=gv->f; V *gfv=VAV(gf);  // find gf
+      if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
+       f1=jtrazecut1; flag&=~(VINPLACEOK1);
       }
      }
-     break;
+    }
    }
+   break;
+ }
+ if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2:VF2ATOPOPEN1|VF2ATOPOPEN2;  // &>, but not <&> which would be confused with &.>
 
-   // Copy the open/raze status from v into u@v
-   flag2 |= v->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+ // Copy the open/raze status from v into u@v
+ flag2 |= v->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
 
-   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
-   flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
-   R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
-}}
+// obsolete   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+// obsolete    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
+ // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
+ // If the compound has rank 0, switch to the loop for that
+  if(f1==on1){flag2|=VF2RANKATOP1; if(r==0)f1=jton10;}  flag2|=(f2==on2)<<VF2RANKATOP2X;
+  R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
+ }
+}

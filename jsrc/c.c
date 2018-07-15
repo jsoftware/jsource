@@ -7,8 +7,8 @@
 
 
 // obv1 and obv2 merely pass the call to f.  Since we took the inplace flags for the compound from the original a, we can pass them on too
-static CS1IP(obv1, z=(f1)(jtinplace,w,fs),0103)
-static CS2IP(obv2, z=(f2)(jtinplace,a,w,fs),0104)
+CS1IP(static,obv1, z=(f1)(jtinplace,w,fs),0103)
+CS2IP(static,obv2, z=(f2)(jtinplace,a,w,fs),0104)
 
 // Set ASGSAFE from a&w; set INPLACE from a
 F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}

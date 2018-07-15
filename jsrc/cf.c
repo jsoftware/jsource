@@ -185,12 +185,12 @@ static DF1(tvc){TDECL; R df2(fs,w,gs);}  /* also nc */
 static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
 // If the CS? loops, it will be noninplaceable.  If it falls through, we can inplace it.
-static CS1IP(jthook1, \
+CS1IP(static,jthook1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=CALL1(g1,w,gs));  /* Cannot inplace the call to g */ \
 /* inplace gx unless it is protected; inplace w (as left arg) if the caller allowed it*/ \
 POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs));} \
 ,0111)
-static CS2IP(jthook2, \
+CS2IP(static,jthook2, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(a!=w&&(VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
 /* inplace gx unless it is protected; inplace a if the caller allowed it*/ \
 POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs));} \

@@ -290,7 +290,7 @@ zv=AV(z)-n;
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
 A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
-A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}
+A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
 A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}  // create scalar character
 A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     RETF(z);}

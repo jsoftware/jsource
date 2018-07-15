@@ -21,7 +21,8 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
      /* note: x can be non-noun */
 
 // u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
-// TODO: avoid boxing step for unboxed args
+// We keep this around because it is used for internal calls.  Most (not all, especially calls for jtfx) have fs==0, which we could check for in rank1ex0 and treat as &.>
+// It is also the recursion mechanism for L: and S: in which respect it is hard to replace
 A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
@@ -49,10 +50,6 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr
  R z;
 }
 
-// u&.> main entry point.  Does not support inplacing.
-static DF1(jteach1){DECLF; R every (  w,fs,f1);}
-static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
-
 // apply f2 on operate on items of a or w.  Pass on rank of f2 to reduce rank nesting
 DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,-1L, RMAX,VAV(self)->f2);}
 DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,RMAX,-1L, VAV(self)->f2);}
@@ -67,13 +64,21 @@ static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),am
 // obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
 // obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
-static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}
+static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}  // scaf should EPILOG?
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
 // obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
 // obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
+
+// u&.> main entry point.  Does not support inplacing.
+// obsolete static DF1(jteach1){DECLF; R every (  w,fs,f1);}
+static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
+// versions for rank 0 (including each).  Passes inplaceability through
+// if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
+static DF1(jtunder10){R jtrank1ex0(jt,w,self,jtunder1);}  // pass inplaceability through
+static DF1(jtunderh10){R jtrank1ex0(jt,w,self,jtunderh1);}  // pass inplaceability through
 
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);
@@ -96,8 +101,9 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  c=0; f1=0; f2=0; r=mr(w); v=VAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
  I flag = (VAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
+ I flag2=0;
  switch(v->id){
-  case COPE:  f1=jteach1; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); break;   // &.>
+  case COPE:  f1=jtunderh10; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>   scaf allow inplace
   case CFORK: c=ID(v->h); /* fall thru */
   case CAMP:  
    u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
@@ -109,13 +115,14 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
     flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
    }
  }
- // If a default routine was selected, create the standard g^:_1 @ (f & g) for it to use
- A h=0; if(!f1||!f2){if(nameless(w)){h=atop(inv(w),amp(a,w)); ASSERT(h,EVDOMAIN);}} // h must be valid for free.  If no names in w, take the inverse
+ // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
+ A h=0; if(nameless(w)){h=atop(inv(w),amp(a,w)); ASSERT(h,EVDOMAIN);} // h must be valid for free.  If no names in w, take the inverse
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
- if(!f1){f1=h?jtunderh1:jtunder1; if(h)flag&=FAV(h)->flag|(!VINPLACEOK1);} if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(!VINPLACEOK2);}
+ // The standard verbs start with a rank loop; set the flag indicating that
+ if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);} if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}
 // obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
- R fdef(0,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
+ R fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }
 
 F2(jtundco){AF f1,f2;

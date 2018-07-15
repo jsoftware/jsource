@@ -36,6 +36,9 @@
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP
 #define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
 #define ZZFLAGCOUNTITEMS (1LL<<ZZFLAGCOUNTITEMSX)
+// next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags
+#define ZZFLAGATOPOPENX 8 // set if u is <@f
+#define ZZFLAGATOPOPEN (1LL<<ZZFLAGATOPOPENX)
 
 
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
@@ -44,8 +47,9 @@
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
 // Where f is depends on whether the modifier is f@:g or ([: g h)
 // obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
-#define ZZPARMS(framelen,ncells,valence) zzframelen=(framelen); zzncells=(ncells);  \
- if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(VAV(fs)->flag2&VF2ISCCAP)?VAV(fs)->h:VAV(fs)->g; f##valence=VAV(fs)->f##valence;}
+#define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
+#define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
+ if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->f##valence;}
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++
 

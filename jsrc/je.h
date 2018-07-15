@@ -775,6 +775,7 @@ extern I        jtqcompare(J,Q,Q);
 extern I        jtra(J,AD* RESTRICT,I);
 extern A        jtras(J,AD* RESTRICT);
 extern A        jtrank1ex(J,AD * RESTRICT,A,I,AF);
+extern A        jtrank1ex0(J,AD * RESTRICT,A,AF);
 extern A        jtrank2ex(J,AD * RESTRICT,AD * RESTRICT,A,I,I,I,I,AF);
 extern A        jtrd(J,F,I,I);
 extern A        jtrealize(J,A);

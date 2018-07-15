@@ -560,8 +560,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // Signal domain error if appropriate. Must do this after agreement tests
  ASSERT(adocv.f,EVDOMAIN);
 
- // Special case of x ^ 0.5.  We know there was no forced conversion on ^ .  Bugs: this does not pass the rank into sqroot, and loses frame of w, if it has any
- if(FAV(self)->id==CEXP&&((-(AN(w)^1)|(AT(w)<<(BW-1-FLX)))>=0)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
+// obsolete // Special case of x ^ 0.5.  We know there was no forced conversion on ^ .  Bugs: this does not pass the rank into sqroot, and loses frame of w, if it has any
+// obsolete  if(FAV(self)->id==CEXP&&(AN(w)==1)&&(AT(w)&FL)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
 
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
@@ -937,7 +937,7 @@ F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,ds(CSTARDOT));}
 F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO ));}
 F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS  ));}
 F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV    ));}
-F2(jtexpn2  ){CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}
+F2(jtexpn2  ){RZ(w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}  // use sqrt hardware for sqrt.  Only for atomic w
 F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,ds(CNE     ));}
 F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG   ));}
 F2(jtcircle ){R va2(a,w,ds(CCIRCLE ));}

@@ -709,13 +709,18 @@ typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RAN
 // next flag must match defn in result.h
 #define VF2COUNTITEMSX    7   // The result of this verb will fed into jtraze; the verb should count the items and see if they are homogeneous, if it can
 #define VF2COUNTITEMS    ((I)(1LL<<VF2COUNTITEMSX))
-#define VF2RANKATOP1X     8   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
+// next 2 flags must be spaced from VF2BOXATOP? to match spacing in ZZFLAGS
+#define VF2ATOPOPEN1X     8   // This verb is one of  > @> &> &.>
+#define VF2ATOPOPEN1     ((I)(1LL<<VF2ATOPOPEN1X))
+#define VF2ATOPOPEN2X     9   // This verb is one of  &> &.>
+#define VF2ATOPOPEN2     ((I)(1LL<<VF2ATOPOPEN2X))
+#define VF2RANKATOP1X     10   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
 #define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
-#define VF2RANKATOP2X     9   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
+#define VF2RANKATOP2X     11   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
 #define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))
-#define VF2RANKONLY1X     10   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
+#define VF2RANKONLY1X     12   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
 #define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
-#define VF2RANKONLY2X     11
+#define VF2RANKONLY2X     13
 #define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
 
 

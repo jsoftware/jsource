@@ -26,32 +26,33 @@
 // rr is the rank at which the verb will be applied: in u"n, the smaller of rank-of-u and n
 A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    I mn,n=1,wcn,wf,wk,wr,*ws,wt;
-  RZ(w);
+ RZ(w);
  wt=AT(w);
- if(wt&SPARSE)R sprank1(w,fs,rr,f1);  // this needs to be updated to handle multiple ranks
+ if(wt&SPARSE)R sprank1(w,fs,rr,f1);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
  // wr=rank, ws->shape, wcr=effective rank, wf=#frame (inner+outer)
  // if inner rank is > outer rank, set it equal to outer rank
  wr=AR(w); ws=AS(w); efr(rr,wr,rr);  // get rank at which to apply the verb
- // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here,
- // as long as its rank is not less than the outer rank (if it's smaller, we cannot elide it because the order of fill may change)
- if(fs&&VAV(fs)->flag2&VF2BOXATOP1){
-  I mr=VAV(fs)->mr; efr(rr,mr,rr);
-  state = (VAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+ // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we could include its rank in the loop here,
+ // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
+ // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
+ if(fs&&FAV(fs)->flag2&VF2BOXATOP1){
+  I mr=FAV(fs)->mr; efr(rr,mr,rr);
+  state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
+  state |= (-state) & FAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
  }
  wf=wr-rr; // obsolete state |= STATEWREL&~ARELATIVES(w);   // relies on STATEWREL>BOX
 // obsolete if(ARELATIVE(w))state|=STATEWREL;
- if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Should not occur
+ if(!wf){R CALL1(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.
  // multiple cells.  Loop through them.
 // obsolete  I wn=AN(w);  // empty-operand indicator
  // Get size of each argument cell in atoms.  If this overflows, there must be a 0 in the frame, & we will have
  // gone through the fill path (& caught the overflow)
  RE(mn=prod(wf,ws)); PROD(wcn,rr,ws+wf);   // number of cells, number of atoms in a cell
- // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
  wk=wcn*bp(wt);
 
@@ -78,7 +79,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 #include "result.h"
 // obsolete   ZZPARMS(0,0,ws,wf,mn,1)
   ZZPARMS(wf,mn,1)
-#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wf)  // Note the 2-axis result is transposed, so shape is reversed here for that case
+#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wf)
   for(i0=mn;i0;--i0){
    RZ(z=CALL1IP(f1,virtw,fs));
 
@@ -111,6 +112,109 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,wf+AR(z),0L); zzs=AS(zz);
   is = ws; DO(wf, *zzs++=*is++;);  // copy frame
+  is = AS(z); DO(AR(z), *zzs++=*is++;);    // copy result shape
+ }
+
+// result is now in zz
+
+ AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+ EPILOG(zz);
+}
+
+// Streamlined version when rank is 0.  In this version we look for ATOPOPEN (i. e. each and every)
+// f1 is the function to use if there are no flags, OR if there is just 1 cell with no frame or a cell of fill 
+A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
+   I mn,n=1,wk,wr,*ws,wt;
+ RZ(w);
+ wr=AR(w);   // rank of w
+// obsolete if(ARELATIVE(w))state|=STATEWREL;
+ if(!wr){R CALL1IP(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Make this as fast as possible.
+ // Switch to sparse code if argument is sparse
+ wt=AT(w);
+ if(wt&SPARSE)R sprank1(w,fs,0,f1);
+#define ZZFLAGWORD state
+ // wr=rank, ws->shape
+ // Each cell is an atom.  Get # atoms (=#result cells)
+ // ?k=#bytes in a cell, ?s->shape
+ ws=AS(w); mn=AN(w); wk=bp(wt);
+
+ A zz=0;  // place where we will build up the homogeneous result cells
+
+ // Look for the forms we handle specially: <@:f (not here where rank=0)  <@f  f@>   and their combinations  <@(f@>) f&.> (<@:f)@>  but not as combinations  (<@f)@> (unless f has rank _) <@:(f@>)   also using &
+ I state=0;
+ I razeflags=FAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);  // remember the raze flags from the outer level.  If we take a BOXATOP we will need them
+ while(1){  // loop collecting ATOPs
+  I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
+  if(fstate&state)break;  // If this f overlaps with old, we have to stop
+  // Skip over u"0 forms at the beginning, so that u"r can leave fs pointing there and thus pick up razeflags attached to it
+  if(!fstate){if(state||!(FAV(fs)->flag2&VF2RANKONLY1))break; fs=FAV(fs)->f; f1=FAV(fs)->f1; continue;}  // If no <> flags, it's a processing node, and we have to stop.  Exception: u"0.  Here, all u"r must be u"0
+  if(fstate&ZZFLAGATOPOPEN){
+   // @> &> &.>
+   //  Advance to the f of f@>
+   fs=FAV(fs)->f; f1=FAV(fs)->f1;
+  }else{
+   // <@: <@ <& <&:
+   // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
+   if(state&ZZFLAGATOPOPEN && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
+   // Advance fs to the g of <@g
+   fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f1=FAV(fs)->f1;
+  }
+  state|=fstate;  // We accepted the new f, so take its flags
+ }
+
+ if(mn){I i0;A *wav;   // virtwk is offset of virtual block/pointer to next box
+  // Normal case where there are cells.
+ // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we could include its rank in the loop here,
+ // if its rank is not less than the outer rank (we would simply ignore it), but we don't bother.  If its rank is smaller we can't ignore it because assembly might affect
+ // the order of fill.  But if f is BOXATOP, there will be no fill, and we can safely use the smaller rank
+#define ZZDECL
+#include "result.h"
+// obsolete   ZZPARMS(0,0,ws,wf,mn,1)
+  ZZPARMSNOFS(wr,mn)
+  // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
+  // marking the result block as having uniform items if we didn't go through the assembly loop here
+  state |= (-(state&ZZFLAGBOXATOP)) & razeflags;  // These flags appear on ;@:(<@f)   (not on u"r)
+
+  // Now that we have handled the structural requirements of ATOPOPEN, clear it if w is not open
+  // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
+// obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
+  if(!(state&ZZFLAGATOPOPEN)||!(wt&BOX)){
+   RZ(virtw = virtual(w,0,0)); AN(virtw)=1; state&=~ZZFLAGATOPOPEN;
+  }else{wav=AAV(w); virtw=*wav++;}
+#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wr)
+  for(i0=mn;i0;--i0){
+   RZ(z=CALL1(f1,virtw,fs));
+
+#define ZZBODY  // assemble results
+#include "result.h"
+
+   // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything
+// obsolete   if(!((I)jtinplace&JTINPLACEW)){
+   if(!(state&ZZFLAGATOPOPEN)){AK(virtw) += wk;}else{virtw=*wav++;}
+  }
+
+#define ZZEXIT
+#include "result.h"
+
+ }else{UC d; I *is, *zzs;
+  // no cells - execute on a cell of fills
+  RZ(virtw=filler(w));  // The cell of fills
+  // Do this quietly, because
+  // if there is an error, we just want to use a value of 0 for the result; thus debug
+  // mode off and RESETERR on failure.
+  // However, if the error is a non-computational error, like out of memory, it
+  // would be wrong to ignore it, because the verb might execute erroneously with no
+  // indication that anything unusual happened.  So fail then
+  if(!(state&ZZFLAGBOXATOP)){
+   d=jt->db; jt->db=0; z=CALL1(f1,virtw,fs); jt->db=d;   // normal execution on fill-cell
+  }else{
+   // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
+   // jmf.ijs unknowingly takes advantage of this fact, and would crash if executed on an empty cell
+   z=ace;  // cell 'returned' a:
+  }
+  if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
+  GA(zz,AT(z),0L,wr+AR(z),0L); zzs=AS(zz);
+  is = ws; DO(wr, *zzs++=*is++;);  // copy frame
   is = AS(z); DO(AR(z), *zzs++=*is++;);    // copy result shape
  }
 
@@ -154,14 +258,15 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);// obsolete  if(rr>rcr)rr=rcr;
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
- if(fs&&(I)(((VAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-(rr^rcr))|(-(lr^lcr)))>=0){I lrn, rrn;  // prospective new ranks to include
-  efr(lrn,lr,(I)VAV(fs)->lr); efr(rrn,rr,(I)VAV(fs)->rr);  // get the ranks if we accept the new cell
+ if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-(rr^rcr))|(-(lr^lcr)))>=0){I lrn, rrn;  // prospective new ranks to include
+  efr(lrn,lr,(I)FAV(fs)->lr); efr(rrn,rr,(I)FAV(fs)->rr);  // get the ranks if we accept the new cell
 // obsolete   if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
   lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
-  state = (VAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  state = (FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
+  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2)>>(VF2ATOPOPEN2X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
   // marking the result block as having uniform items if we didn't go through the assembly loop here
-  state |= (-state) & VAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
+  state |= (-state) & FAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);
 // obsolete  }
  }
 
@@ -481,6 +586,10 @@ static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
+// Version for rank 0.  Call rank1ex0, pointing to the u"r so that rank1ex0 gets to look at any razeflags attached to u"r
+static DF1(jtrank10atom){ A fs=FAV(self)->f; R (FAV(fs)->f1)(jt,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
+static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
+
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
@@ -548,7 +657,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
   V* av=FAV(a);   // point to verb info
   vf=av->flag&(VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // inherit ASGSAFE from u, and inplacing
-  if(av->flag&VISATOMIC1){f1=av->f1;}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=rank1;flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=av->f1;}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
   if(av->flag&VIRS2){f2=rank2i;}else{f2=rank2;flag2|=VF2RANKONLY2;}
  }
 

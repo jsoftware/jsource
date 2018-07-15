@@ -22,7 +22,7 @@ static A jteverysp(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;P*wp,*zp;
 
 // u&.> work routine.  Does not inplace; if we modify it to inplace, we must make sure to turn off inplacing of contents of x/y if the arg itself is not inplaceable
 // We keep this around because it is used for internal calls.  Most (not all, especially calls for jtfx) have fs==0, which we could check for in rank1ex0 and treat as &.>
-// It is also the recursion mechanism for L: and S: in which respect it is hard to replace
+// It is also the recursion mechanism for L: and S:; that would require looking at a special flag during ex0 to treat that as &.>
 A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  RZ(w);
  if(SPARSE&AT(w))R everysp(w,fs,f1);
@@ -100,8 +100,9 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=0; f2=0; r=mr(w); v=VAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
- I flag = (VAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
- I flag2=0;
+ I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
+ // If v is WILLOPEN, so will the compound be
+ I flag2=FAV(w)->flag2&VF2WILLOPEN;
  switch(v->id){
   case COPE:  f1=jtunderh10; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>   scaf allow inplace
   case CFORK: c=ID(v->h); /* fall thru */

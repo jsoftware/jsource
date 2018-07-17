@@ -36,9 +36,14 @@
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP
 #define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
 #define ZZFLAGCOUNTITEMS (1LL<<ZZFLAGCOUNTITEMSX)
-// next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags
-#define ZZFLAGATOPOPENX 8 // set if u is <@f
-#define ZZFLAGATOPOPEN (1LL<<ZZFLAGATOPOPENX)
+// next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP1 to ATOPOPEN1
+#define ZZFLAGATOPOPEN1X 8 // set if v is f@>
+#define ZZFLAGATOPOPEN1 (1LL<<ZZFLAGATOPOPEN1X)
+// next 2 flags must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP2W to ATOPOPEN2W.  This means the dyad and monad flags overlap
+#define ZZFLAGATOPOPEN2WX 8 // set if v is f@> for w
+#define ZZFLAGATOPOPEN2W (1LL<<ZZFLAGATOPOPEN2WX)
+#define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a
+#define ZZFLAGATOPOPEN2A (1LL<<ZZFLAGATOPOPEN2AX)
 
 
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
@@ -51,7 +56,7 @@
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
  if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->f##valence;}
 
-// user must define ZZINSTALLFRAME(optr) to move frame into optr++
+// user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 
 
 #undef ZZDEFN

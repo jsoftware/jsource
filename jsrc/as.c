@@ -248,7 +248,7 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
  // Set BOXATOP if appropriate.  Since {:y is always the last cell, BOXATOP is allowed only when the rank of w is 1, meaning that
  // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
  state = ((wr-2)>>(BW-1))&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
- state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2)>>(VF2ATOPOPEN2X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+ state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
  state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly

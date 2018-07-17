@@ -79,6 +79,8 @@ static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
 static DF1(jtunder10){R jtrank1ex0(jt,w,self,jtunder1);}  // pass inplaceability through
 static DF1(jtunderh10){R jtrank1ex0(jt,w,self,jtunderh1);}  // pass inplaceability through
+static DF2(jtunder20){R jtrank2ex0(jt,a,w,self,jtunder2);}  // pass inplaceability through
+static DF2(jtunderh20){R jtrank2ex0(jt,a,w,self,jtunderh2);}  // pass inplaceability through
 
 static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RZ(w);
@@ -104,7 +106,7 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // If v is WILLOPEN, so will the compound be
  I flag2=FAV(w)->flag2&VF2WILLOPEN;
  switch(v->id){
-  case COPE:  f1=jtunderh10; f2=jteach2; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>   scaf allow inplace
+  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
   case CFORK: c=ID(v->h); /* fall thru */
   case CAMP:  
    u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
@@ -121,7 +123,9 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  // The standard verbs start with a rank loop; set the flag indicating that
- if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);} if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}
+ if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);}  // scaf allow inplace
+// obsolete  if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}
+ if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}  // scaf allow inplace
 // obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
  R fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }

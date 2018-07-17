@@ -87,24 +87,38 @@ POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=pro
 // special case for rank 0.  Transfer to loop.  
 // if there is only one cell, process it through on1, which understands this type
 static DF1(jton10){R jtrank1ex0(jt,w,self,on1cell);}  // pass inplaceability through
+static DF2(jtupon20){R jtrank2ex0(jt,a,w,self,jtupon2cell);}  // pass inplaceability through
 
 // u@n
 static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
 // x u&v y
+#if 0 // scaf
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
- PREF2(on2); PUSHZOMB;
- // here for execution on a single cell
- A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
- // take inplaceability of each monad from the corresponding dyad argument
-// obsolete  RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
- RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs));
-// obsolete  RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
+PREF2(on2); PUSHZOMB;
+// obsolete  // here for execution on a single cell
+A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
+// obsolete  // take inplaceability of each monad from the corresponding dyad argument
+// obsolete  // obsolete RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
+RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs));
+// obsolete RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
  RZ(ga=(g1)((J)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  // Move bit 1 to bit 0, clear bit 1
- POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
- EPILOG(z);
+  POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
+  EPILOG(z);
 }
+#else
+CS2IP(static,on2, \
+ A ga;A gw;PUSHZOMB; \
+ /* here for execution on a single cell */ \
+ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); \
+ /* take inplaceability of each monad from the corresponding dyad argument */ \
+ RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs)); \
+ RZ(ga=(g1)((J)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
+ POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); \
+,0023)
+#endif
+static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
 
 static DF2(atcomp){AF f;
  RZ(a&&w); 
@@ -229,7 +243,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that
- if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==0)f1=jton10;}  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+ if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==0)f1=jton10;}  // obsolete  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+ if(f2==jtupon2){flag2|=VF2RANKATOP2; if((wv->lr|wv->rr)==0)f2=jtupon20;}
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
@@ -450,7 +465,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    }
    break;
  }
- if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2:VF2ATOPOPEN1|VF2ATOPOPEN2;  // &>, but not <&> which would be confused with &.>
+ if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
 
  // Copy the open/raze status from v into u@v
  flag2 |= v->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
@@ -459,7 +474,9 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
 // obsolete    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that
-  if(f1==on1){flag2|=VF2RANKATOP1; if(r==0)f1=jton10;}  flag2|=(f2==on2)<<VF2RANKATOP2X;
+  if(f1==on1){flag2|=VF2RANKATOP1; if(r==0)f1=jton10;}
+// obsolete   flag2|=(f2==on2)<<VF2RANKATOP2X;
+  if(f2==on2){flag2|=VF2RANKATOP2; if(r==0)f2=on20;}
   R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
  }
 }

@@ -290,38 +290,58 @@ static F2(jtpoly2a){A c,e,x;I m;
 F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
  if(1<AR(a))R rank2ex(a,w,0L,1L,0L,1L,0L,jtpoly2);
- an=AN(a); at=AT(a); b=1&&BOX&at;
+ an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
  wn=AN(w); wt=AT(w);
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
  ASSERT(!wn||wt&NUMERIC+BOX,EVDOMAIN);
- if(!an)R reshape(shape(w),zero);
+ if(!an)R reshape(shape(w),zero);  // if empty a, return all 0s
  if(b){A*av=AAV(a); RELBASEASGN(a,a);
   ASSERT(2>=an,EVLENGTH);
-  c=1==an?one:AVR(0); a=AVR(1!=an); 
-  if(1==an&&2==AR(a))R poly2a(a,w);
+  c=1==an?one:AVR(0); a=AVR(1!=an); // c=mplr, a=roots
+  if(1==an&&2==AR(a))R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);
   ASSERT(!AR(c),EVRANK);
-  ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));
+  ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
  }
- d=0.0; e=zeroZ;
+// obsolete  d=0.0; e=zeroZ;
  RE(t=maxtype(at,wt)); if(b)RE(t=maxtype(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtype(t,FL));
- if(b){RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);}
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wd=DAV(w); wz=ZAV(w);
- j=0;
+ if(b){
+  // mult/roots: convert and extract the coeff
+  RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);
+ }else{
+  // coeffs: discard trailing 0 coeffs (to avoid 0*_ as our first action), extract high-order coeff.  Leave constant coeff always
+  for(;an>1;--an){if(t&CMPX?ad[2*(an-1)]||ad[2*(an-1)+1]:ad[an-1])break;}  // stop on nonzero
+ }
+ j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule
  if(t&FL+CMPX){
         DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 
-  if(!j)DO(t&FL?wn:wn+wn, x=wd[i]; if(x==inf||x==infm){j=1; break;});
+// obsolete   if(!j)DO(t&FL?wn:wn+wn, x=wd[i]; if(x==inf||x==infm){j=1; break;});
  }
  if(!j&&!(t&XNUM+RAT)){GA(z,t,AN(w),AR(w),AS(w)); zd=DAV(z); zz=ZAV(z);}
  switch((b?0:3)+(j||t&XNUM+RAT?0:t&FL?1:2)){
-  case 0: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
-  case 1: DO(wn, p=d; x=*wd++; DO(an,p*=x-ad[i];); *zd++=p;);                  break;
-  case 2: DO(wn, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); break;
-  case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
-  case 4: DO(wn, p=d; x=*wd++; j=an; DO(an,p=ad[--j]+x*p;); *zd++=p;);         break;
-  case 5: DO(wn, q=e; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;);
+ // mult/roots: d/e are set
+ case 0: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
+ case 1: NAN0; DO(wn, p=d; x=*wd++; DO(an,p*=x-ad[i];); *zd++=p;); NAN1;                  break;
+ case 2: NAN0; DO(wn, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
+ // coeffs: d/e are not set
+ case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
+// obsolete   case 4: DO(wn, p=d; x=*wd++; j=an; DO(an,p=ad[--j]+x*p;); *zd++=p;);         break;  // Horner's rule
+ case 4: NAN0;
+  switch(an){
+  case 2:
+   {D c0=ad[0],c1=ad[1]; DO(wn, x=*wd++; *zd++=c0+x*c1;);} break;
+  case 3:
+   {D c0=ad[0],c1=ad[1],c2=ad[2]; DO(wn, x=*wd++; *zd++=c0+x*(c1+x*c2););} break; 
+  case 4:
+   {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DO(wn, x=*wd++; *zd++=c0+x*(c1+x*(c2+x*c3)););} break;
+  default:
+   DO(wn, p=ad[an-1]; x=*wd++; DQ(an-1,p=ad[i]+x*p;); *zd++=p;); break;
+  }
+  NAN1; break;  // Horner's rule.  First multiply is never 0*_
+ case 5: NAN0; DO(wn, q=zeroZ; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;
  }
  RETF(z);
 }    /* a p. w */

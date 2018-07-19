@@ -54,7 +54,7 @@
 // obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
- if(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->f##valence;}
+ if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->f##valence;}
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 
@@ -79,9 +79,6 @@
 #ifndef ZZWILLBEOPENEDNEVER
 #define ZZWILLBEOPENEDNEVER 0
 #endif
-#ifndef ZZBOXATOPONLY
-#define ZZBOXATOPONLY 0  // user defines this to 1 to get code that assumes BOXATOP is always set
-#endif
 #ifndef ZZSTARTATEND
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #endif
@@ -103,7 +100,7 @@
 do{
  if(zz){  // if we have allocated the result area, we are into normal processing
   // Normal case: not first time.  Move verb result to its resting place, unless the type/shape has changed
-  if(!(ZZBOXATOPONLY||ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
+  if(!(ZZFLAGWORD&ZZFLAGBOXATOP)){  // is forced-boxed result?  If so, just move in the box
    // not forced-boxed.  Move the result cell into the result area unless the shape changes
    // first check the shape
    I zt=AT(z); I zzt=AT(zz); I zr=AR(z); I zzr=AR(zz); I * RESTRICT zs=AS(z); I * RESTRICT zzs=AS(zz)+zzframelen; I zexprank=zzr-zzframelen;
@@ -268,7 +265,6 @@ do{
   break;  // skip the first-cell processing
  } else{I * RESTRICT is;
   // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.
-#if !ZZBOXATOPONLY
   // Get the rank/type to allocate for the presumed result
   // Get the type to allocate
   I natoms=AN(z);  // number of atoms per result cell
@@ -306,19 +302,6 @@ do{
   zzcellp=zzcelllen*(zzncells-1);  // init output offset in zz to end+1 of 
   zzboxp+=zzncells-1;     // move zzboxp to end of block
 #endif
-#else  // ZZBOXATOPONLY.  We don't need zzcell variables, and we don't honor STARTATEND
-  GATV(zz,BOX,zzncells,zzcelllen+zzwf,0L); I * RESTRICT zzs=AS(zz);   // rank is aframelen+wframelen, since results are atoms
-  ZZINSTALLFRAME(zzs)
-// obsolete   is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
-// obsolete   is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
-  zzboxp=AAV(zz);
-  // If zz is recursible, make it recursive-usecount (without actually recurring, since it's empty), unless WILLBEOPENED is set, since then we may put virtual blocks in the boxed array
-  AFLAG(zz) |= (ZZFLAGWORD&ZZFLAGWILLBEOPENED)<<(BOXX-ZZFLAGWILLBEOPENEDX));  // if recursible type, (viz box), make it recursible.  But not if WILLBEOPENED set. Leave usecount unchanged
-  // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
-#if !ZZPOPNEVER
-  ZZFLAGWORD |= ZZFLAGNOPOP;
-#endif
-#endif
   AM(zz)=0;   // in case we count items in AM, init the count to 0 
  }
 }while(1);  // go back to store the first result
@@ -342,7 +325,6 @@ do{
   RZ(zz=assembleresults(ZZFLAGWORD,zz,zzbox,zzboxp,zzcellp,zzcelllen,zzresultpri,zzcellshape,zzncells,zzframelen,-ZZSTARTATEND));  // inhomogeneous results: go assemble them
  }
 #undef ZZFLAGWORD
-#undef ZZBOXATOPONLY
 #undef ZZWILLBEOPENEDNEVER
 #undef ZZSTARTATEND
 #undef ZZPOPNEVER

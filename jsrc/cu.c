@@ -64,7 +64,7 @@ static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),am
 // obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
 // obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
-static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}  // scaf should EPILOG?
+static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
@@ -101,7 +101,8 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=0; f2=0; r=mr(w); v=VAV(w);
- // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
+ // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
+ // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
  // If v is WILLOPEN, so will the compound be
  I flag2=FAV(w)->flag2&VF2WILLOPEN;
@@ -123,9 +124,9 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  // The standard verbs start with a rank loop; set the flag indicating that
- if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);}  // scaf allow inplace
+ if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);}  // allow inplace if v is known inplaceable
 // obsolete  if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}
- if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}  // scaf allow inplace
+ if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}  // allow inplace if v is known inplaceable
 // obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
  R fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }

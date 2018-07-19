@@ -8,9 +8,19 @@
 
 I level(A w){A*wv;I d,j;
  if(!(AN(w)&&AT(w)&BOX+SBOX))R 0;
- d=0; wv=AAV(w); RELBASEASGN(w,w);
- DO(AN(w), j=level(WVR(i)); if(d<j)d=j;);
+ d=0; wv=AAV(w); /* obsolete RELBASEASGN(w,w); */
+ DO(AN(w), j=level(wv[i]); d=d<j?j:d;);
  R 1+d;
+}
+
+// return 0 if the level of w is greater than l, 1 if <=
+// terminates early if possible
+I levelle(A w,I l){
+ if(!(AN(w)&&AT(w)&BOX+SBOX))R 1;  // if arg is unboxed, its level is certainly <= l
+ if(l==0)R 0;  // (arg is boxed) if l is 0, arglevel is  > l
+ --l; A *wv=AAV(w);
+ DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
+ R 1;  // if it never gets big enough, say so, keep looking
 }
 
 F1(jtlevel1){RZ(w); R sc(level(w));}

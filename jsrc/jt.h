@@ -240,9 +240,9 @@ typedef struct {
  A    sbu;              /* SB data for each unique symbol                  */
  I    sbun;             /* SB cardinality                                  */
  SBU* sbuv;             /* SB points to ravel of sbu                       */
- A    sca;              /* S: result vector                                */
- I    scn;              /* S: actual length of sca                         */
- I*   scv;              /* S: AV(sca)                                      */
+ A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
+// obsolete  I    scn;              /* S: actual length of sca                         */
+// obsolete  I*   scv;              /* S: AV(sca)                                      */
  int  sdinited;         /* sockets                                         */
  A    sf;               /* for $:                                          */
  A    slist;            /* files used in right arg to 0!:                  */

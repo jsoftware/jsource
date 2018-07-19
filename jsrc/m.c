@@ -1124,7 +1124,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  m1=allosize(z)/k;  // start this divide before the copy
 // obsolete MC(AV(z),AV(w),m*k);                 /* copy old contents      */
  MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
- if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent */
+ if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
 // obsolete  *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
  *AS(z)=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL

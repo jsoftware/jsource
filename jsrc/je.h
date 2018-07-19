@@ -881,6 +881,7 @@ extern void     jsto(J,I,C*);
 extern void     jstpoll(J);
 extern void     jststop(J);
 extern I        level(A);
+extern I        levelle(A,I);
 extern void     mvc(I,void*,I,void*);
 extern B        nameless(A);
 // obsolete extern UI       nmhash (I,UC*);

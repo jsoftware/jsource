@@ -332,7 +332,8 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // If float, see if we had one digit too many (could happen, if the log was too close to an integer)
   // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
   // But we can't delete a digit if any of the values were negative - all are significant then
-  if(i0(aslash(CPLUSDOT,ravel(lt(w,zero)))))R z;
+  // We also can't delete a digit if there is only 1 digit in the numbers
+  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zero)))))R z;
   if(0==i0(aslash(CMAX,ravel(irs1(z,0L,1L,jthead)))))R irs1(z,0L,1L,jtbehead);
   RETF(z);
  }

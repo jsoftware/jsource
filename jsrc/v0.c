@@ -287,9 +287,11 @@ static F2(jtpoly2a){A c,e,x;I m;
  R 1==m?pdt(irs2(x,ravel(e),0L,0L,2L,jtexpn2),c):pdt(df2(x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
-F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
+// x p. y    Supports IRS on the y argument; supports inplace
+F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
- if(1<AR(a))R rank2ex(a,w,0L,1L,0L,1L,0L,jtpoly2);
+ RANK2T jtr=jt->ranks; RESETRANK; I acr=jtr>=(1L<<RANKTX); I af=AR(a)-acr;   // acr=1 if requested rank >= 1  af=length of frame of a
+ if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); DO(MIN(af,wf), ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);); R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
  an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
  wn=AN(w); wt=AT(w);
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
@@ -307,7 +309,7 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
 // obsolete  d=0.0; e=zeroZ;
  RE(t=maxtype(at,wt)); if(b)RE(t=maxtype(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtype(t,FL));
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
- if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wd=DAV(w); wz=ZAV(w);
+ if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
  if(b){
   // mult/roots: convert and extract the coeff
   RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);
@@ -315,12 +317,16 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
   // coeffs: discard trailing 0 coeffs (to avoid 0*_ as our first action), extract high-order coeff.  Leave constant coeff always
   for(;an>1;--an){if(t&CMPX?ad[2*(an-1)]||ad[2*(an-1)+1]:ad[an-1])break;}  // stop on nonzero
  }
- j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule
+ j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){
         DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 
 // obsolete   if(!j)DO(t&FL?wn:wn+wn, x=wd[i]; if(x==inf||x==infm){j=1; break;});
  }
- if(!j&&!(t&XNUM+RAT)){GA(z,t,AN(w),AR(w),AS(w)); zd=DAV(z); zz=ZAV(z);}
+ // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
+ if(!j&&!(t&XNUM+RAT)){
+  if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else{GA(z,t,AN(w),AR(w),AS(w));}
+  zd=DAV(z); zz=ZAV(z);
+ }
  switch((b?0:3)+(j||t&XNUM+RAT?0:t&FL?1:2)){
  // mult/roots: d/e are set
  case 0: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
@@ -330,7 +336,7 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
 // obsolete   case 4: DO(wn, p=d; x=*wd++; j=an; DO(an,p=ad[--j]+x*p;); *zd++=p;);         break;  // Horner's rule
  case 4: NAN0;
-  switch(an){
+  switch(an){  // special cases for linear, quadratic, cubic
   case 2:
    {D c0=ad[0],c1=ad[1]; DO(wn, x=*wd++; *zd++=c0+x*c1;);} break;
   case 3:
@@ -344,7 +350,7 @@ F2(jtpoly2){A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  case 5: NAN0; DO(wn, q=zeroZ; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;
  }
  RETF(z);
-}    /* a p. w */
+}    /* a p."r w */
 
 
 F1(jtpderiv1){

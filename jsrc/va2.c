@@ -956,7 +956,7 @@ F1(jtincrem){R plus(onei,   w);}
 F1(jtduble ){R tymes(num[2],w);}
 F1(jtsquare){R tymes(w,     w);}   // leave inplaceable in w only
 F1(jtrecip ){R divide(onei,   w);}
-F1(jthalve ){IPSHIFTWA; R divide(w,     num[2]);}
+F1(jthalve ){if(w&&!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);}
 
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
 static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}

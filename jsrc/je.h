@@ -929,6 +929,7 @@ extern A        nnam;
 extern A*       num;
 extern A        numv[];
 extern A        one;
+extern A        onehalf;
 extern A        onei;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */

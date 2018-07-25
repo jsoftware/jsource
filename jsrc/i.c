@@ -109,6 +109,7 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
  GA(x,INT, 1,0,0     ); ACX(x); * AV(x)=1;                onei       =x;
  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=inf;              ainf       =x;
  GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=PI;               pie        =x;
+ GA(x,FL,  1,0,0     ); ACX(x); *DAV(x)=0.5;              onehalf    =x;
  GA(x,MARK,1,0,0     ); ACX(x); * AV(x)=0;                mark       =x; 
  GA(x,B01, 0,2,&zeroZ); ACX(x);                           mtm        =x;
  GA(x,CMPX,1,0,0     ); ACX(x); d=DAV(x); *d=0; *(1+d)=1; a0j1       =x;

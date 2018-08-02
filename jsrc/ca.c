@@ -166,8 +166,16 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
 // u@v
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
- if(AT(w)&NOUN){R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);}  // u@n
- av=VAV(a); c=av->id;
+ av=FAV(a); c=av->id;
+ if(AT(w)&NOUN){  // u@n
+  if(c==CEXEC){  // ".@n
+   // See if the argument is a string containing a single name.  If so, pass the name into the verb.
+   // We can't lex a general sentence because lexing requires context to know how to treat assignments.  And,
+   // there's no use for ".@const besides delayed name resolution
+   if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME)w=AAV(g)[0];
+  }
+  R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
+ }
  wv=VAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace

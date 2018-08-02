@@ -46,6 +46,14 @@ a -: 'kakistocracy'
 y=: 7!:0 ''
 x -: y
 
+a =. 5 6 7
+a -: ".@'a' ''
+aa =. ;:'the time is now'
+aa -: ".@'aa' ''
+f =. (".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a'+".@'a')
+p =. (".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a'+".@']a')
+(20 (6!:2) 'p"0 i. 10000') > 3 * 20 (6!:2) 'f"0 i. 10000'  NB. Verify special code for name
+
 'domain error'      -: ". etx 0 1 0
 'domain error'      -: ". etx 2 3 4
 'domain error'      -: ". etx 2.3 4
@@ -280,6 +288,6 @@ NB. end of dups
 'rank error'   -: 3 4   ". etx '1 2 3'
 
 
-4!:55 ;:'a b eq f n p x y'
+4!:55 ;:'a aa b eq f n p x y'
 
 

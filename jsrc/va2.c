@@ -731,7 +731,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  sf   max of frame shape of a, frame shape of w
 */
 
-
+// +/@:*"1 with IRS
+// TBD
 
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
  RZ(a&&w);

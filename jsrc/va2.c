@@ -737,54 +737,69 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
  RZ(a&&w);
  switch(CTTZNOFLAG(t)){
-  case B01X:
-   {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
-    GATV(z,INT,zn,r-1,1+s); zu=AV(z);
-    if(1==n){
-              zv=zu; DO(m,                     *zv++ =*av++**wv++;);
-     DO(nn-1, zv=zu; DO(m,                     *zv+++=*av++**wv++;););
-    }else if(b){
-              zv=zu; DO(m, u=*av++;      DO(n, *zv++ =u**wv++;););
-     DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
-    }else{
-              zv=zu; DO(m, u=*wv++;      DO(n, *zv++ =u**av++;););
-     DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
-   }}
-   break;
-#if !SY_64
-  case INTX:
-   {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
-    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
-    if(1==n){
-              zv=zu; DO(m,                        *zv++ =*av++*(D)*wv++;);
-     DO(nn-1, zv=zu; DO(m,                        *zv+++=*av++*(D)*wv++;););
-    }else if(b){
-              zv=zu; DO(m, u=(D)*av++;      DO(n, *zv++ =u**wv++;););
-     DO(nn-1, zv=zu; DO(m, u=(D)*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
-    }else{
-              zv=zu; DO(m, u=(D)*wv++;      DO(n, *zv++ =u**av++;););
-     DO(nn-1, zv=zu; DO(m, u=(D)*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
-    }
-    RZ(z=icvt(z));
+ case B01X:  // the aligned cases are handled elsewhere, a word at a time
+  {B*av=BAV(a),u,*wv=BAV(w);I*zu,*zv;
+   GATV(z,INT,zn,r-1,1+s); zu=AV(z);
+   if(1==n){
+             zv=zu; DO(m,                     *zv++ =*av++**wv++;);
+    DO(nn-1, zv=zu; DO(m,                     *zv+++=*av++**wv++;););
+   }else{if(!b){B* tv=av; av=wv; wv=tv;}
+             zv=zu; DO(m, u=*av++;      DO(n, *zv++ =u**wv++;););
+    DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
+// obsolete     }else{
+// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, *zv++ =u**av++;););
+// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
    }
-   break;
+  }
+  break;
+#if !SY_64
+ case INTX:
+  {D u,*zu,*zv;I*av=AV(a),*wv=AV(w);
+   GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
+   if(1==n){
+             zv=zu; DO(m,                        *zv++ =*av++*(D)*wv++;);
+    DO(nn-1, zv=zu; DO(m,                        *zv+++=*av++*(D)*wv++;););
+   }else{if(!b){zv=av; av=wv; wv=zv;}
+             zv=zu; DO(m, u=(D)*av++;      DO(n, *zv++ =u**wv++;););
+    DO(nn-1, zv=zu; DO(m, u=(D)*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
+// obsolete     }else{
+// obsolete               zv=zu; DO(m, u=(D)*wv++;      DO(n, *zv++ =u**av++;););
+// obsolete      DO(nn-1, zv=zu; DO(m, u=(D)*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
+   }
+   RZ(z=icvt(z));
+  }
+  break;
 #endif
-  case FLX:   
-   {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
-    GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
-    NAN0;
+ case FLX:   
+  {D*av=DAV(a),u,v,*wv=DAV(w),*zu,*zv;
+   GATV(z,FL,zn,r-1,1+s); zu=DAV(z);
+   NAN0;
+   // First, try without testing for 0*_ .  If we hit it, it will raise NAN
+   if(1==n){
+             zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u*v; );
+    DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u*v; ););
+   }else{if(!b){zv=av; av=wv; wv=zv;}
+             zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv++ =u*v;););
+    DO(nn-1, zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv+++=u*v;)););
+// obsolete     }else{
+// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
+// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
+   }
+   if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
     if(1==n){
               zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?u*v:0;  );
      DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u&&v?u*v:0;  ););
-    }else if(b){
+    }else{   // don't swap again
               zv=zu; DO(m, u=*av++;      DO(n, v=*wv++; *zv++ =u&&v?u*v:0;););
      DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, v=*wv++; *zv+++=   v?u*v:0;) else wv+=n;););
-    }else{
-              zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
-     DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
+// obsolete     }else{
+// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
+// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
     }
     NAN1;
- }}
+   }
+  }
+ }
  RETF(z);
 }    /* a +/@:* w for non-scalar a and w */
 

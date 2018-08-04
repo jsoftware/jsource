@@ -68,7 +68,8 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
    dy=itemsize*q; yv=CAV(y);
    dz=itemsize*m; zv=CAV(z);
 // obsolete   if((p&(m-q))<0)yv+=itemsize*(q-m); if((p&(q-m))<0)zv+=itemsize*(m-q);
-   if((p&(m-q))<0)yv+=dy-dz; if((p&(q-m))<0)zv+=dz-dy;
+// obsolete    if((p&(m-q))<0)yv+=dy-dz; if((p&(q-m))<0)zv+=dz-dy;
+   m-=q; I yzdiff=dy-dz; yv+=((p&m)>>(BW-1))&yzdiff; zv-=((p&-m)>>(BW-1))&yzdiff;
    DO(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
    /* obsolete b=1; */ z=y;
   }

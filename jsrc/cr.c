@@ -10,11 +10,12 @@
 #define ZZDEFN
 #include "result.h"
 
-#define STATEOUTERREPEATAX 9
+// make sure these don't overlap with bits in result.h
+#define STATEOUTERREPEATAX 12
 #define STATEOUTERREPEATA (1LL<<STATEOUTERREPEATAX)
-#define STATEINNERREPEATWX 10
+#define STATEINNERREPEATWX 13
 #define STATEINNERREPEATW (1LL<<STATEINNERREPEATWX)
-#define STATEINNERREPEATAX 11
+#define STATEINNERREPEATAX 14
 #define STATEINNERREPEATA (1LL<<STATEINNERREPEATAX)
 // There must be NO higher bits than STATEINNERREPEATA, because we shift down and OR into flags
 
@@ -467,8 +468,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
       }
      }
       // advance input pointers for next cell.  We increment any block that was being held constant in the inner loop.  There can be only one such.  Such an arg is never inplaced
-     if(state&STATEINNERREPEATA)AK(virta)+=ak;
-     if(state&STATEINNERREPEATW)AK(virtw)+=wk;
+     if(state&STATEINNERREPEATA)AK(virta) = virtak += ak;
+     else if(state&STATEINNERREPEATW)AK(virtw) = virtwk += wk;
     }
    }
   }
@@ -814,13 +815,21 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   ACIPNO(a);
   vf=VASGSAFE;    // the noun can't mess up assignment, and does not support IRS
  }else{
+  V* av=FAV(a);   // point to verb info
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
-  V* av=FAV(a);   // point to verb info
   vf=av->flag&(VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // inherit ASGSAFE from u, and inplacing
   if(av->flag&VISATOMIC1){f1=av->f1;}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
   if(av->flag&VIRS2){f2=rank2i;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
+  // Test for special cases
+  if(av->f2==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
+   I isfork=av->id==CFORK;
+   if(FAV(FAV(isfork?av->g:av->f)->f)->id==CPLUS && FAV(isfork?av->h:av->g)->id==CSTAR) {
+    // +/@:*"1 1 or ([: +/ *)"1 1 .  Use special rank-1 routine.  It supports IRS, but not inplacing (fslashatg didn't inplace either)
+    f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2;  // switch to new routine, which supports IRS
+   }
+  }
  }
 
  // Create the derived verb.  The derived verb (u"n) NEVER supports IRS; it inplaces if the action verb u supports inplacing

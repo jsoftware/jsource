@@ -732,7 +732,71 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 */
 
 // +/@:*"1 with IRS
-// TBD
+DF2(jtsumattymes1){
+ RZ(a&&w);
+ // Order so the rank of a is <= rank of w.  Since we do not handle outer frames here, this will guarantee that only the
+ // a argument below can have repeated cells
+ I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX; if(ar>wr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
+ // get the cell-ranks to use 
+ acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
+ wcr=wr<wcr?wr:wcr;  // r=right rank of verb, wcr=effective rank
+     // note: the prod above can never fail, because it gives the actual # cells of an existing noun
+   // Now that we have used the rank info, clear jt->ranks.  All verbs start with jt->ranks=RMAXX unless they have "n applied
+   // we do this before we generate failures
+ RESETRANK;  // This is required if we go to slower code
+ I it=MAX(AT(a),AT(w));  // if input types are dissimilar, convert to the larger
+ // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
+ if(((-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
+  R rank2ex(a,w,FAV(self)->f,MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
+ }
+
+ // if cell-ranks are equal and ranks are equal, make the cell-ranks equal to the ranks.
+ I anyframe=(ar^wr)|(acr^wcr); acr=anyframe?acr:ar; wcr=anyframe?wcr:wr;
+ // if either arg has frame AND either cell-rank is >1, rank2ex using the cell-ranks.  This is a rare case and we don't want another level of looping here
+ if((((acr-ar)|(wcr-wr))&(1-(acr|wcr)))<0)R rank2ex(a,w,self,acr,wcr,acr,wcr,jtsumattymes1);
+
+ // We can handle it here, and both ranks are at least 1.  Verify frame matches
+ DO(acr-1, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);) ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+
+ // calculate repeat amounts and result shape, convert arguments, run loop
+ // Because we have punted on the case of staggered frames, we cannot have a result bigger than an argument.  So we can use PROD for calculating sizes
+ I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
+ I ndpo; PROD(ndpo,ar-1,AS(w));  // number of cells of a = # outer loops
+ I ndpi; PROD(ndpi,wr-ar,AS(w)+ar-1);  // number of times each cell of a must be repeated (= excess frame of w)
+
+ if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
+ if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
+
+ A z; GA(z,FL>>(it&B01),ndpo*ndpi,wr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
+ switch(it){
+ case B01:
+  {B *av=BAV(a),*wv=BAV(w); I *zv=IAV(z); DQ(ndpo, I j=ndpi; B *av0=av; while(1){
+   // next line takes one inner product
+   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
+    // next line takes one ip
+    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
+   *zv++=total; if(!--j)break; av=av0;} )
+  break;
+  }
+ case INT:
+  {I *av=IAV(a),*wv=IAV(w); D *zv=DAV(z); DQ(ndpo, I j=ndpi; I *av0=av; while(1){D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total; if(!--j)break; av=av0;})
+  break;
+  }
+ case FL:
+  {
+  NAN0;
+  D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, total+=*av++**wv++;); *zv++=total; if(!--j)break; av=av0;})
+  if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
+   NAN0;
+   D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total; if(!--j)break; av=av0;})
+   NAN1;
+  }
+  break;
+  }
+ }
+ RETF(z);
+}
+
 
 static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn){A z;
  RZ(a&&w);
@@ -786,6 +850,7 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
 // obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
    }
    if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
+    NAN0;
     if(1==n){
               zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?u*v:0;  );
      DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u&&v?u*v:0;  ););
@@ -861,8 +926,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  if(CFORK==sv->id){fs=sv->g; gs=sv->h;}else{fs=sv->f; gs=sv->g;}
  y=VAV(fs)->f; c=ID(y); d=ID(gs);
- adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
- adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);
  if(c==CPLUS){
   if(at&B01&&wt&B01&&1==n&&(0==(zn&(SZI-1))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
@@ -872,8 +935,10 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
     if(jt->jerr==EVNAN)RESETERR else R z;
    }
   }
-  sb=1&&yt&B01;
  }
+ adocv=var(gs,at,wt); ASSERT(adocv.f,EVDOMAIN); yt=rtype(adocv.cv ); t=atype(adocv.cv);
+ adocvf=var(y,yt,yt); ASSERT(adocvf.f,EVDOMAIN); zt=rtype(adocvf.cv);
+ sb=(yt&B01)&&(c==CPLUS);  // +/@:g where g produces Boolean.  Could use &
  if(!(sb||TYPESEQ(yt,zt)))R df1(df2(a,w,gs),fs);
  if(t){
   bb=1&&t&XNUM;

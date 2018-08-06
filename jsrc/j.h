@@ -356,6 +356,16 @@ extern unsigned int __cdecl _clearfp (void);
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #define FINDNULLRET 0
 
+
+#if BW==64
+#define ALTBYTES 0x00ff00ff00ff00ffLL
+// t has totals per byte-lane, result combines them into single total.  t must be an lvalue
+#define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>32) + t, t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
+#else
+#define ALTBYTES 0x00ff00ffLL
+#define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
+#endif
+
 #define A0              0   // a nonexistent A-block
 #define ABS(a)          (0<=(a)?(a):-(a))
 #define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}

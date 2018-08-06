@@ -99,6 +99,96 @@ y=: 30 7 ?@$ >.imax%8
 (4=3!:0 x) *. (imax-1) = x=: (2-1 1) +/@:* 1, imax-2
 (4=3!:0 x) *. (imax-2) = x=: _1 2    +/@:* 1, x:^:_1 <.imax%2x
 
+NB. x u"r"r y --------------------------------------------------------------------
+
+NB. y is lir, rir, lvr, rvr, lnr, rnr   ranks of verbs, ranks of arguments
+f =: 3 : 0"1
+y0 =: y
+'lir rir lvr rvr lnr rnr' =. y
+NB. effective rank is no more than the arg rank
+'ler rer' =. (lvr,rvr) <. (lnr,rnr)
+NB. Create inner frame
+if =. >: 3 ?@$~ 0 >. (ler-lir) <. (rer-rir)
+NB. Create outer frame
+of =. >: 3 ?@$~ (lnr-ler) <. (rnr-rer)
+NB. Create left shape: outer frame (extended as needed) , inner frame (extended as needed) , length of vector.  Empty if noun rank is 0
+ls =. lnr {. (of , >: ((lnr-ler)-$of) ?@$ 4) , (if , >: (0 >. (ler-lir)-$if) ?@$ 4) , >: lir ?@$ 6
+rs =. rnr {. (of , >: ((rnr-rer)-$of) ?@$ 4) , (if , >: (0 >. (rer-rir)-$if) ?@$ 4) , >: rir ?@$ 6
+NB. Create arguments
+xx =: ls ?@$ 0
+yy =: rs ?@$ 0
+tvb =. +&(+/@,)
+tvb1 =. tvb"(lir,rir)
+assert. (xx tvb1"(lvr,rvr) yy) -: (xx tvb"(lir,rir)"(lvr,rvr) yy)
+1
+)
+
+f (#: i.@:(*/)) 6$5
+
+NB. x +/@:*"1 y ---------------------------------------------------------
+
+NB. y is lvr, rvr, lnr, rnr   ranks of verbs, ranks of arguments
+f =: 3 : 0"1
+y0 =: y
+dot =. +/@:*
+'lvr rvr lnr rnr' =. y
+NB. effective rank is no more than the arg rank
+'ler rer' =. (lvr,rvr) <. (lnr,rnr)
+NB. Create inner frame
+if =. >: 3 ?@$~ 0 >. 1 -~ ler <. rer
+NB. Create outer frame
+of =. >: 3 ?@$~ (lnr-ler) <. (rnr-rer)
+NB. Create length of vector
+vl =. >: ? 6
+NB. Create left shape: outer frame (extended as needed) , inner frame (extended as needed) , length of vector.  Empty if noun rank is 0
+ls =. lnr {. (of , >: ((lnr-ler)-$of) ?@$ 4) , (if , >: (0 >. (ler-1)-$if) ?@$ 4) , vl
+rs =. rnr {. (of , >: ((rnr-rer)-$of) ?@$ 4) , (if , >: (0 >. (rer-1)-$if) ?@$ 4) , vl
+NB. Create arguments
+xx =: ls ?@$ 0
+yy =: rs ?@$ 0
+assert. (xx +/@:*"1"(lvr,rvr) yy) -: (xx dot"1"(lvr,rvr) yy)
+1
+)
+
+f (#: i.@:(*/)) 4$5
+
+NB. same but allow 0 in shape
+f =: 3 : 0"1
+y0 =: y
+dot =. +/@:*
+'lvr rvr lnr rnr' =. y
+NB. effective rank is no more than the arg rank
+'ler rer' =. (lvr,rvr) <. (lnr,rnr)
+NB. Create inner frame
+if =. 3 ?@$~ 0 >. 1 -~ ler <. rer
+NB. Create outer frame
+of =. 3 ?@$~ (lnr-ler) <. (rnr-rer)
+NB. Create length of vector
+vl =. ? 6
+NB. Create left shape: outer frame (extended as needed) , inner frame (extended as needed) , length of vector.  Empty if noun rank is 0
+ls =. lnr {. (of , ((lnr-ler)-$of) ?@$ 4) , (if , (0 >. (ler-1)-$if) ?@$ 4) , vl
+rs =. rnr {. (of , ((rnr-rer)-$of) ?@$ 4) , (if , (0 >. (rer-1)-$if) ?@$ 4) , vl
+NB. Create arguments
+xx =: ls ?@$ 0
+yy =: rs ?@$ 0
+assert. (xx +/@:*"1"(lvr,rvr) yy) -: (xx dot"1"(lvr,rvr) yy)
+1
+)
+
+f (#: i.@:(*/)) 4$5
+
+NB. Test argument types
+(20 4 ?@$ 100) (+/@:*"1 -: +/@:*"_"1) 20 4 ?@$ 100
+(x: 20 4 ?@$ 100) (+/@:*"1 -: +/@:*"_"1) x: 20 4 ?@$ 100
+(1r5 * x: 20 4 ?@$ 100) (+/@:*"1 -: +/@:*"_"1) 1r7 * x: 20 4 ?@$ 100
+(3j0.5 * 20 4 ?@$ 100) (+/@:*"1 -: +/@:*"_"1) 4j2 * 20 4 ?@$ 100
+(+/@:*"1 -: +/@:*"_"1)&>/"1 ?@$&2&.> 2&#"0 (i. 32) , (254*8) + i. 100
+'domain error' -: +/@:*"1~ etx 'abc'
+'domain error' -: +/@:*"1~ etx u: 'abc'
+
+NB. Test for NaN
+0 _ 1 (+/@:*"1 -: +/@:*"_"1) _ 0 2   NB. removable NaN
+'NaN error' -: _ 0 __ +/@:*"1 etx  1 1 1
 
 4!:55 ;:'f p q space test testsub x xx y yy x0 y0'
 

@@ -147,23 +147,13 @@ I CTLZI_(UI w, UI4*out){
  R 0;
 }
 
-#if BW==64
-#define ALTBYTES 0x00ff00ff00ff00ffLL
-#else
-#define ALTBYTES 0x00ff00ffLL
-#endif
-
 I bsum(I n,B*b){I q=n>>LGSZI,z=0;UC*u;UI t,*v;
  v=(UI*)b;
  // Do word-size sections, max 255 at a time, till all finished
  while(q>0){
   t=0; DO(MIN(q,255), t+=*v++;); q-=255;  // sig in ffffffffffffffff
-  t=(t&ALTBYTES)+((t>>8)&ALTBYTES);   // sig in 01ff01ff01ff01ff
-#if LGSZI==3
-  t = (t>>32) + t;  // sig in xxxxxxxx03ff03ff
-#endif
-  t = (t>>16) + t;  // sig in xxxxxxxxxxxx07ff
-  z = z + (t & 0xffff);   // clear garbage, add sig
+  ADDBYTESINI(t);  // convert byte-lane total to single total
+  z = z + t;   // clear garbage, add sig
  }
 // finish up any remnant, 7 bytes or less
  u=(UC*)v;DO(n&((1<<LGSZI)-1), z+=*u++;);

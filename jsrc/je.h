@@ -597,6 +597,7 @@ extern DF2(jtrazecut0);
 extern DF2(jtrazecut2);
 extern DF2(jtrollk);
 extern DF2(jtrollkx);
+extern DF2(jtsumattymes1);
 
 extern A jtssceil(J,A);
 extern A jtssexp(J,A);

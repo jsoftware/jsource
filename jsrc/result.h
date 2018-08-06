@@ -18,6 +18,7 @@
 
 //********** defines *******************
 #ifdef ZZDEFN
+// make sure these don't overlap with the definitions in cr.c
 #define ZZFLAGNOPOPX 0 // set to suppress tpop
 #define ZZFLAGNOPOP (1LL<<ZZFLAGNOPOPX)
 #define ZZFLAGBOXATOPX 1 // set if u is <@f

@@ -787,8 +787,8 @@ DF2(jtsumattymes1){
   NAN0;
   D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, total+=*av++**wv++;); *zv++=total; if(!--j)break; av=av0;})
   if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
-   NAN0;
-   D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total; if(!--j)break; av=av0;})
+   D *av=DAV(a),*wv=DAV(w), *zv=DAV(z);
+   NAN0; DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total; if(!--j)break; av=av0;})
    NAN1;
   }
   break;
@@ -849,7 +849,8 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
 // obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
 // obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
    }
-   if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
+   if(NANTEST){   // try again, testing for 0*_
+    av=DAV(a);wv=DAV(w);
     NAN0;
     if(1==n){
               zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?u*v:0;  );

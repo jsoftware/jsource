@@ -731,12 +731,45 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  sf   max of frame shape of a, frame shape of w
 */
 
+
+// 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vertor inner product
+#define SUMATLOOP(ti,to,oneprod) \
+  {ti *av=ti##AV(a),*wv=ti##AV(w); to *zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
+
+// routine to do the dot-product calculations.  Brought out to help the compiler allocate registers
+static A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
+ switch(it){
+ case B01:
+  SUMATLOOP(B,I,
+   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
+    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
+   *zv++=total;
+  )
+  break;
+ case INT:
+  SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
+  break;
+ case FL:
+  NAN0;
+  SUMATLOOP(D,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
+  if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
+   NAN0;
+   SUMATLOOP(D,D,D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total;)
+   NAN1;
+  }
+  break;
+ }
+ RETF(z);
+}
+
+
+
 // +/@:*"1 with IRS
 DF2(jtsumattymes1){
  RZ(a&&w);
  // Order so the rank of a is <= rank of w.  Since we do not handle outer frames here, this will guarantee that only the
  // a argument below can have repeated cells
- I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX; if(ar>wr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
+ I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
  // get the cell-ranks to use 
  acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
  wcr=wr<wcr?wr:wcr;  // r=right rank of verb, wcr=effective rank
@@ -749,52 +782,54 @@ DF2(jtsumattymes1){
  if(((-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
   R rank2ex(a,w,FAV(self)->f,MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
+ // We can handle it here, and both ranks are at least 1.
 
- // if cell-ranks are equal and ranks are equal, make the cell-ranks equal to the ranks.
- I anyframe=(ar^wr)|(acr^wcr); acr=anyframe?acr:ar; wcr=anyframe?wcr:wr;
- // if either arg has frame AND either cell-rank is >1, rank2ex using the cell-ranks.  This is a rare case and we don't want another level of looping here
- if((((acr-ar)|(wcr-wr))&(1-(acr|wcr)))<0)R rank2ex(a,w,self,acr,wcr,acr,wcr,jtsumattymes1);
+ // If there is no additional rank (i. e. highest cell-rank is 1), ignore the given rank (which must be 1 1) and use the argument rank
+ // This promotes the outer loops to inner loops
+ {I rankgiven = (acr|wcr)-1; acr=rankgiven?acr:ar; wcr=rankgiven?wcr:wr;}
 
- // We can handle it here, and both ranks are at least 1.  Verify frame matches
- DO(acr-1, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);) ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+ // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
+ if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
+// obsolete  // if cell-ranks are equal and ranks are equal, make the cell-ranks equal to the ranks.
+// obsolete  I anyframe=(ar^wr)|(acr^wcr); acr=anyframe?acr:ar; wcr=anyframe?wcr:wr;
+// obsolete  // if either arg has frame AND either cell-rank is >1, rank2ex using the cell-ranks.  This is a rare case and we don't want another level of looping here
+// obsolete  if((((acr-ar)|(wcr-wr))&(1-(acr|wcr)))<0)R rank2ex(a,w,self,acr,wcr,acr,wcr,jtsumattymes1);
 
- // calculate repeat amounts and result shape, convert arguments, run loop
- // Because we have punted on the case of staggered frames, we cannot have a result bigger than an argument.  So we can use PROD for calculating sizes
+ // Verify inner frames match
+ DO(acr-1, ASSERT(AS(a)[ar-acr+i]==AS(w)[wr-wcr+i],EVLENGTH);); ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+
+ // calculate inner repeat amounts and result shape
  I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
- I ndpo; PROD(ndpo,ar-1,AS(w));  // number of cells of a = # outer loops
- I ndpi; PROD(ndpi,wr-ar,AS(w)+ar-1);  // number of times each cell of a must be repeated (= excess frame of w)
+ I ndpo; PROD(ndpo,acr-1,AS(w)+wr-wcr);  // number of cells of a = # outer loops
+ I ndpi; PROD(ndpi,wcr-acr,AS(w)+wr-wcr+acr-1);  // number of times each cell of a must be repeated (= excess frame of w)
+ I zn=ndpo*ndpi;  // number of results from 1 inner cell.  This can't overflow since frames agree and operands are not empty
 
+ A z; 
+ // if there is frame, create the outer loop values
+ I nfro,nfri,repeata;  // outer loop counts, and which arg is repeated
+ if(((ar-acr)|(wr-wcr))==0){  // normal case
+  nfro=nfri=1;  // no outer loops, repeata immaterial
+  GA(z,FL>>(it&B01),ndpo*ndpi,wcr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
+ }else{
+  // There is frame, analyze and check it
+  I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *as=AS(a), *ws=AS(w); I *longs=as;
+  repeata=wf>=af; commonf=wf>=af?af:commonf; longs=wf>=af?ws:longs;  // repeat flag, length of common frame, pointer to long shape
+  af+=wf; af-=2*commonf;  // repurpose af to be length of surplus frame
+  DO(commonf, ASSERT(as[i]==ws[i],EVLENGTH);)  // verify common frame
+  PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
+  I zn = ndpo*ndpi*nfro; RE(zn=mult(zn,nfri));  // no error possible till we extend the shape
+  GA(z,FL>>(it&B01),zn,af+commonf+wcr-1,0); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
+  // install the shape
+  MCISd(zs,longs,af+commonf);
+  MCIS(zs,ws+wr-wcr,wcr-1);
+ }
+
+ // Convert argumentsas required
  if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
 
- A z; GA(z,FL>>(it&B01),ndpo*ndpi,wr-1,AS(w));  // type is INT if inputs booleans, otherwise FL
- switch(it){
- case B01:
-  {B *av=BAV(a),*wv=BAV(w); I *zv=IAV(z); DQ(ndpo, I j=ndpi; B *av0=av; while(1){
-   // next line takes one inner product
-   I total=0; I k=dplen; I *avi=(I*)av; I *wvi=(I*)wv;
-    // next line takes one ip
-    while(k>>LGSZI){I kn=MIN(255,k>>LGSZI); k-=kn<<LGSZI; I total2=0; DQ(kn, total2+=*avi++&*wvi++;) ADDBYTESINI(total2); total+=total2;} av=(B*)avi; wv=(B*)wvi; DQ(k, total+=*av++&*wv++;)
-   *zv++=total; if(!--j)break; av=av0;} )
-  break;
-  }
- case INT:
-  {I *av=IAV(a),*wv=IAV(w); D *zv=DAV(z); DQ(ndpo, I j=ndpi; I *av0=av; while(1){D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total; if(!--j)break; av=av0;})
-  break;
-  }
- case FL:
-  {
-  NAN0;
-  D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, total+=*av++**wv++;); *zv++=total; if(!--j)break; av=av0;})
-  if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
-   NAN0;
-   D *av=DAV(a),*wv=DAV(w), *zv=DAV(z); DQ(ndpo, I j=ndpi; D *av0=av; while(1){D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total; if(!--j)break; av=av0;})
-   NAN1;
-  }
-  break;
-  }
- }
- RETF(z);
+ RETF(jtsumattymesprods(jt,it,a,w,dplen,nfro,nfri,ndpo,ndpi,repeata,z);
+);
 }
 
 

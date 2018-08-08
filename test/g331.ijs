@@ -1131,5 +1131,6 @@ NB. Verify that bare < is as good as BOXATOP
 
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m p q size t test testw w x y'
+4!:55 ;: 'a'
 randfini''
 

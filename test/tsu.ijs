@@ -233,10 +233,12 @@ RUND2=: 4 : 0
 x123=. x
 y123=. y
 4!:55 'x';'y'
+save_ran_RUND2=:9!:44''
 oldnl=: (nl'')-.;:'x y'
 while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   echo RLAST=: >y234
+  save_ran=:9!:44''
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
   assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak

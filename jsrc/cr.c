@@ -777,7 +777,7 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
   R rank2ex(a,w,fs,llr,lrr,l,r,f2);
  }else R CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite.  Preserves inplacing
 }
-// Version for rank 0.  Call rank2ex0, pointing to the u"r so that rank2ex0 gets to look at any razeflags attached to u"r
+// Version for rank 0.  Call rank1ex0, pointing to the u"r so that rank1ex0 gets to look at any razeflags attached to u"r
 static DF2(jtrank20atom){ A fs=FAV(self)->f; R (FAV(fs)->f2)(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceability through.
 

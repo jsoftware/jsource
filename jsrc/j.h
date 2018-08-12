@@ -526,25 +526,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define MLEN            (SY_64?63:31)
 #define MODVIRTINPLACE(x)  (AFLAG(x) |= (AFLAG(x)&AFVIRTUAL)<<(AFVIRTUALINPLACEX-AFVIRTUALX))
 
-#ifdef __STDC_IEC_559__
-#include <fenv.h>
-#define NAN0 feclearexcept(FE_ALL_EXCEPTS)
-#define NANTEST (fetestexcept(FE_INVALID))
-#else
 #define NAN0            (_clearfp())
 #if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
-// obsolete #define NAN1            {if(_SW_INVALID&_statusfp()){NAN0;jsignal(EVNAN); R 0;}}
-// obsolete #define NAN1V           {if(_SW_INVALID&_statusfp()){NAN0;jsignal(EVNAN); R  ;}}
+#define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
+#define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_statusfp())
 #else
-// obsolete #define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
-// obsolete #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
+#define NAN1            {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R 0;}}
+#define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
 #endif
-#endif
-#define NAN1            {if(NANTEST){NAN0;jsignal(EVNAN); R 0;}}
-#define NAN1V           {if(NANTEST){NAN0;jsignal(EVNAN); R  ;}}
-
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)

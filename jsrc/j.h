@@ -528,7 +528,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #ifdef __STDC_IEC_559__
 #include <fenv.h>
-#define NAN0 feclearexcept(FE_ALL_EXCEPT)
+#define NAN0 feclearexcept(FE_ALL_EXCEPTS)
 #define NANTEST (fetestexcept(FE_INVALID))
 #else
 #define NAN0            (_clearfp())

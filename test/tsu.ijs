@@ -241,7 +241,7 @@ while. x123~:0 do.
   save_ran=:9!:44''
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
-  assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
+  assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'   NB. no memory leak
   assert. _1 = 4!:0 ;:'x y'
 NB.   11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12

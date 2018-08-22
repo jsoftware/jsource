@@ -824,7 +824,7 @@ DF2(jtsumattymes1){
   MCIS(zs,ws+wr-wcr,wcr-1);
  }
 
- // Convert argumentsas required
+ // Convert arguments as required
  if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
 

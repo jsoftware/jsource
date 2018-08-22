@@ -754,7 +754,7 @@ static A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndp
   SUMATLOOP(D,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
   if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
    NAN0;
-   SUMATLOOP(D,D,D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=u*v;); *zv++=total;)
+   SUMATLOOP(D,D,D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=dmul2(u,v);); *zv++=total;)
    NAN1;
   }
   break;
@@ -887,14 +887,14 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
    if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
     NAN0;
     if(1==n){
-              zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?u*v:0;  );
-     DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u&&v?u*v:0;  ););
+              zv=zu; DO(m, u=*av++;            v=*wv++; *zv++ =u&&v?dmul2(u,v):0;  );
+     DO(nn-1, zv=zu; DO(m, u=*av++;            v=*wv++; *zv+++=u&&v?dmul2(u,v):0;  ););
     }else{   // don't swap again
-              zv=zu; DO(m, u=*av++;      DO(n, v=*wv++; *zv++ =u&&v?u*v:0;););
-     DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, v=*wv++; *zv+++=   v?u*v:0;) else wv+=n;););
+              zv=zu; DO(m, u=*av++;      DO(n, v=*wv++; *zv++ =u&&v?dmul2(u,v):0;););
+     DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, v=*wv++; *zv+++=   v?dmul2(u,v):0;) else wv+=n;););
 // obsolete     }else{
-// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
-// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
+// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?dmul2(u,v):0;););
+// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?dmul2(u,v):0;) else av+=n;););
     }
     NAN1;
    }

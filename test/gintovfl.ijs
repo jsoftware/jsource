@@ -183,7 +183,7 @@ imin   *  C x=: _50 + 10 ?@$ 100
 | E imin
 
 -/ .* E x=: (=i.2) * >. 2 %: imax
--/ .* E x=: 10 2 2 ?@$ <. 2^IF64{17 33
+-/ .* (1 : 'x (-: +. (IF64{1e20 1e15) > |@])  x&.x:') x=: 10 2 2 ?@$ <. 2^IF64{17 33  NB. If determinant is too small, its relative error can be
 
 x   +/ .* C y  [ x=: 4 1 1 1  1 [ y=: 0 _1 0  1,imax
 x   +/ .* C y  [ x=: 4 1 1 1  2 [ y=: 0  0 0  0,imax

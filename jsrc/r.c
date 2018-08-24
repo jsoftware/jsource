@@ -9,8 +9,10 @@
 
 static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m;V*v;
  RZ(w);
- if(AT(w)&NOUN)R w;
+ // If noun, return the linear rep of the noun.  If name, use bare string form of the name
+// obsolete  if(AT(w)&NAME){RZ(z=sfn(0,w)); if(!(AT(w)&NOUN))R z; w=z;}
  if(AT(w)&NAME)R sfn(0,w);
+ if(AT(w)&NOUN)R w;  // no quotes needed
  v=VAV(w); id=v->id; fl=v->flag; 
  fs=v->f; gs=v->g; hs=v->h; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R drr(hs);

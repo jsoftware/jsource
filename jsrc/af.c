@@ -34,8 +34,9 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
 
 static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
  RZ(a&&w);
+ if(NAME&AT(w))R sfn(0,w);  // only way a name gets here is by ".@noun
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=FAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
+ v=VAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
  if(!(f||g))R w;
  switch(v->id){
   case CSLASH: 

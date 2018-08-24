@@ -295,9 +295,9 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
 // Main routine for () and linear rep.  w is to be represented
 static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  RZ(w);
- // If noun, return the linear rep of the noun
+ // If noun, return the linear rep of the noun.  If name, use bare string form of the name UNLESS the name is also flagged as a noun - then treat as a noun  (used by ".@'name')
+ if(AT(w)&NAME){RZ(t=sfn(0,w)); if(!(AT(w)&NOUN))R t; w=t;}
  if(AT(w)&NOUN)R lnoun(w);
- if(AT(w)&NAME)R sfn(0,w);
  v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
  m=!!fs+(gs&&id!=CBOX)+(id==CFORK)+(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it

@@ -172,7 +172,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    // See if the argument is a string containing a single name.  If so, pass the name into the verb.
    // We can't lex a general sentence because lexing requires context to know how to treat assignments.  And,
    // there's no use for ".@const besides delayed name resolution
-   if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME)w=AAV(g)[0];
+   // We give the w the strange flagging of NAME AND ALSO LIT - it will be handled as a name when executed, but as a noun for representations
+   if(AR(w)<=1 && (g=tokens(vs(w),1)) && AN(g)==1 && AT(AAV(g)[0])&NAME){w=AAV(g)[0]; AT(w)|=LIT;}
   }
   R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
  }

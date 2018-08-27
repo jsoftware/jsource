@@ -59,7 +59,7 @@ typedef AD *A;
 
 // obsolete typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
 
-typedef struct AD {
+struct AD {
  union {
   I k;
   A chain;   // used when block is on free chain
@@ -91,7 +91,7 @@ typedef struct AD {
  RANKT r;  // rank
 #endif
  I s[1];   // shape starts here
-} AD;
+};
 
 typedef struct {A a,t;}TA;
 typedef A                (*AF)();

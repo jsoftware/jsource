@@ -47,7 +47,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
   if(evoke(w))R sfn(0,fs);
  }
  GAT(z,BOX,2,1,0); x=AAV(z);
- if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); x[1]=INCORPNA(w); RETF(z);}
+ if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); x[1]=INCORPNA(w); RETF(z);}  // if name, must be ".@'name', format name as noun
  GATV(y,BOX,m,1,0); u=AAV(y);
  if(0<m)RZ(u[0]=rifvs(aro(fs)));
  if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(zero,w):xop?hs:gs)));

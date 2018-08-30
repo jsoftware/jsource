@@ -42,6 +42,9 @@ fork =: (plus,or) f.
 (ar <'hook') -: <(,'2');<ar ;:'plus      or'
 (ar <'fork') -: <(,'3');<ar ;:'plus over or'
 
+f =: ":@'abc'
+(ar <'f') -: < (,'@') ,&< ('":' ,&< (,'0') ,&< 'abc')
+
 f   =: *
 g   =: +
 a   =: >'*y'; ':'; 'x*y'

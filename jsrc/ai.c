@@ -47,7 +47,7 @@ static DF1(jtexpandf){A f; RZ(w&&self); f=FAV(self)->f; R expand(VAV(f)->f,w);}
 static DF1(jtexpandg){A f,g,z;V*v;
  RZ(w&&self);
  f=FAV(self)->f; v=FAV(f); g=v->g;
- jt->fill=FAV(g)->g; z=expand(v->f,w); jt->fill=0;   // elements of VAV cannot be virtual
+ jt->fill=FAV(g)->g; z=expand(v->f,w); jt->fill=0;   // elements of FAV cannot be virtual
  R z;
 }
 

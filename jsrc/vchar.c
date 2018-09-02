@@ -18,7 +18,7 @@ static AIFX(gtC,  B, UC,UC, >  )
 
 DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  RZ(a&&w);
- v=VAV(self); c=ID(v->f);
+ v=FAV(self); c=ID(v->f);
  if(CUNDER==v->id)switch(c){
   case CMAX:  zt=LIT; ado=(VF)maxC; break;
   case CMIN:  zt=LIT; ado=(VF)minC; break;

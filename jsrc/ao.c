@@ -42,7 +42,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
- y=VAV(self)->f; y=VAV(y)->f; id=vaid(y);
+ y=FAV(self)->f; y=VAV(y)->f; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)*bp(wt)); R z;}
@@ -110,9 +110,9 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  at=AT(a); wt=AT(w); t=maxtype(at,wt);
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); at=AT(a); av=CAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wt=AT(w); wv=CAV(w);
- v=VAV(self); 
- f=v->f; y=VAV(f)->f; y=VAV(y)->f; c=vaid(y);
- g=v->g; y=VAV(g)->f;              d=vaid(y);
+ v=FAV(self);  // f//. 
+ f=v->f; y=FAV(f)->f; y=VAV(y)->f; c=vaid(y);  // f/, then f
+ g=v->g; y=VAV(g)->f;              d=vaid(y);   // g taken from g/
  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);
  if(t&FL+CMPX)NAN0;
  switch(PMCASE(CTTZ(t),c,d)){
@@ -366,7 +366,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  at=AT(a); av0=AV(a); n=IC(a); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
  ASSERT(n==IC(w),EVLENGTH);
- x=VAV(self)->f; d=vaid(VAV(x)->f); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
+ x=FAV(self)->f; d=vaid(VAV(x)->f); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
      wt&SBT&&(d==CMIN||d==CMAX)||
@@ -596,7 +596,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  av=AV(a); 
- f=VAV(self)->f; f=VAV(f)->f; b=CHEAD==ID(f);
+ f=FAV(self)->f; f=VAV(f)->f; b=CHEAD==ID(f);
  if(at&B01&&1>=AR(a)){B*c,*d,*p=(B*)av;I i,j,m;
   c=d=p;
   if(*p){i=0; d=(B*)memchr(p,C0,n); j=d?d-p:0;}

@@ -51,8 +51,8 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr
 }
 
 // apply f2 on operate on items of a or w.  Pass on rank of f2 to reduce rank nesting
-DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,-1L, RMAX,VAV(self)->f2);}
-DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,VAV(self)->lr,VAV(self)->rr,RMAX,-1L, VAV(self)->f2);}
+DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,-1L, RMAX,FAV(self)->f2);}
+DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX,-1L, FAV(self)->f2);}
 
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
 // PUSH/POP ZOMB is performed in atop/amp/ampco
@@ -67,8 +67,8 @@ static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),am
 static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
-static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(VAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(VAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->f1)(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->f2)(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
 // obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
 // obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
 
@@ -100,7 +100,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
 
 F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
- c=0; f1=0; f2=0; r=mr(w); v=VAV(w);
+ c=0; f1=0; f2=0; r=mr(w); v=FAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);

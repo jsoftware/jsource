@@ -459,7 +459,7 @@ static void jttraverse(J jt,A wd,AF f){
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(wd); if(v->f)CALL1(f,v->f,0L); if(v->g)CALL1(f,v->g,0L); if(v->h)CALL1(f,v->h,0L);} break;
+   {V*v=FAV(wd); if(v->f)CALL1(f,v->f,0L); if(v->g)CALL1(f,v->g,0L); if(v->h)CALL1(f,v->h,0L);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(wd); if(SPA(v,a))CALL1(f,SPA(v,a),0L); if(SPA(v,e))CALL1(f,SPA(v,e),0L); if(SPA(v,i))CALL1(f,SPA(v,i),0L); if(SPA(v,x))CALL1(f,SPA(v,x),0L);} break;
  }
@@ -698,7 +698,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    np=np0;  // advance to next box
   }
   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   ras(v->f); ras(v->g); ras(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
@@ -731,7 +731,7 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    fana(np);  // free the contents, but don't audit
    np = np0;  // advance to next box
   }
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.
   fana(v->f); fana(v->g); fana(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
@@ -769,7 +769,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
    }
   }
 
- } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=VAV(wd);
+ } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   if(v->f)tpushi(v->f); if(v->g)tpushi(v->g); if(v->h)tpushi(v->h);
  } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
@@ -1103,7 +1103,7 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
    SPB(p,x,car(SPA(p,x)));
    break;
   case VERBX: case ADVX: case CONJX: 
-   v=VAV(z); 
+   v=FAV(z); 
    if(v->f)RZ(v->f=car(v->f)); // no need to INCORP these, since no one will look and they aren't virtual
    if(v->g)RZ(v->g=car(v->g)); 
    if(v->h)RZ(v->h=car(v->h));

@@ -169,7 +169,7 @@ A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
 }
 
 DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
- sv=VAV(self); t=sv->f; 
+ sv=FAV(self); t=sv->f; 
  RZ(d=deba(DCCALL,a,w,self,0L));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);

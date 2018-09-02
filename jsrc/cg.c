@@ -24,23 +24,23 @@ F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
- sv=VAV(self); h=sv->h; hv=AAV(h);
+ sv=FAV(self); h=sv->h; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL1(VAV(*hv)->f1,  w,*hv)); ++hv;);
+ DO(AN(h), RZ(*x++=CALL1(FAV(*hv)->f1,  w,*hv)); ++hv;);
  R ope(z);
 }
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
- sv=VAV(self); h=sv->h; hv=AAV(h);
+ sv=FAV(self); h=sv->h; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL2(VAV(*hv)->f2,a,w,*hv)); ++hv;);
+ DO(AN(h), RZ(*x++=CALL2(FAV(*hv)->f2,a,w,*hv)); ++hv;);
  R ope(z);
 }
 
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
  RZ(w);
- n=IC(w); j=n-1; hs=VAV(self)->h; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
+ n=IC(w); j=n-1; hs=FAV(self)->h; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
 // obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
  RZ(z=from(num[-1],w));
@@ -79,7 +79,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
  // atomic dyad-only
  static C atomic2[]={CEQ, CLT, CGT, CPLUSDOT, CSTARDOT, CNE, 0};
  RZ(w&&VERB&AT(w));
- v=VAV(w); id=v->id;
+ v=FAV(w); id=v->id;
  if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;
  f=v->f; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
  g=v->g; vg=g&&VERB&AT(g); ay=g&&NOUN&AT(g)&&!AR(g);
@@ -117,7 +117,7 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  RZ(w);
  r=AR(w);
  if(1<r)RZ(w=gah(1L,w));
- sv=VAV(self); g=sv->g;
+ sv=FAV(self); g=sv->g;
  // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(k=df1(w,g))
  else{RZ(k=df1(w,qq(g,zero))); ASSERT(AR(k)==AR(w)&&AN(k)==AN(w),EVRANK);}
@@ -146,16 +146,16 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
 
 // m@.v general (non-atomic)case, like dyad case below
 static DF1(jtcase1b){A h,u;V*sv;
- F1PREFIP;sv=VAV(self); h=sv->h;
+ F1PREFIP;sv=FAV(self); h=sv->h;
  RZ(u=from(df1(w,sv->g),h));  // not inplace
  ASSERT(!AR(u),EVRANK);
- R jtdf1(VAV(*AAV(u))->flag&VINPLACEOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
+ R jtdf1(FAV(*AAV(u))->flag&VINPLACEOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // m@.v y.  First check for atomic verbs (special case case1a); if not, process through case1b.  Pass inplacing to case1b only if there is 1 cell
 static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  RZ(w);
- F1PREFIP; sv=VAV(self);
+ F1PREFIP; sv=FAV(self);
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,sv->mr); RESETRANK;
  if(b=!r&&wr&&AN(w)){h=sv->h; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
@@ -167,10 +167,10 @@ static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
 // x m@.v y.  Run v (not inplace); select the "BOX" containing the verb to run; run it, inplacing as called for in the input
 static DF2(jtcase2){A u;V*sv;
  F2PREFIP;PREF2(jtcase2);
- sv=VAV(self);
+ sv=FAV(self);
  RZ(u=from(df2(a,w,sv->g),sv->h));
  ASSERT(!AR(u),EVRANK);
- R jtdf2(VAV(*AAV(u))->flag&VINPLACEOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
+ R jtdf2(FAV(*AAV(u))->flag&VINPLACEOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // @.n
@@ -192,8 +192,8 @@ F2(jtagenda){I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
- flag = VASGSAFE&VAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= VAV(*avbv)->flag; ++avbv;);  // Don't increment inside VAV!
- R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|VAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
+ flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
+ R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.
@@ -274,11 +274,11 @@ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (VAV(hv[2])->f2)(a!=w&&(VAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ RZ(ffy = (FAV(hv[2])->f2)(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (VAV(hv[0])->f2)((VAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->f2)((FAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
- POPZOMB; R (VAV(ff)->f2)(VAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ POPZOMB; R (FAV(ff)->f2)(FAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
@@ -295,13 +295,13 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(AAV(hs)[0])&VERB&&AT(AAV(hs)[1])&VERB&&AT(AAV(hs)[2])&VERB,EVDOMAIN);
- I flag=(VAV(AAV(hs)[0])->flag&VAV(AAV(hs)[1])->flag&VAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
+ I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
 
-static DF1(jtgf1){A h=VAV(self)->h; R df1(  w,*AAV(h));}
-static DF2(jtgf2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
+static DF1(jtgf1){A h=FAV(self)->h; R df1(  w,*AAV(h));}
+static DF2(jtgf2){A h=FAV(self)->h; R df2(a,w,*AAV(h));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);

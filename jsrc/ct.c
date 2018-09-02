@@ -10,27 +10,27 @@ static F1(jttayatop);
 
 static F1(jtcoeff){V*v;
  RZ(w);
- v=VAV(w);
- R VTAYFINITE&v->flag ? curtail(VAV(v->f)->g) : mtv;
+ v=FAV(w);
+ R VTAYFINITE&v->flag ? curtail(FAV(v->f)->g) : mtv;
 }    /* coefficents c in {&c@(n&<.), or empty */
 
 static F1(jttpoly){A z;
  RZ(w);
  RZ(z=atop(amp(ds(CLBRACE),over(AT(w)&CMPX?w:xco1(w),zero)),amp(tally(w),ds(CMIN))));
- VAV(z)->flag=VTAYFINITE;
+ FAV(z)->flag=VTAYFINITE;
  RETF(z);
 }
 
 static F1(jtfacit){A c;V*u,*v;
  RZ(c=coeff(w));
  if(AN(c))R tpoly(tymes(c,fact(AT(c)&XNUM+RAT?xco1(IX(IC(c))):IX(IC(c)))));
- v=VAV(w);
+ v=FAV(w);
  if(CFORK==v->id)switch(ID(v->g)){
   case CDIV:
    if(CBANG==ID(v->h))R v->f; 
    break;
   case CSTAR:
-   if(CFORK==ID(v->h)&&(u=VAV(v->h),CDIV==ID(u->g)&&CBANG==ID(u->h)))R folk(v->f,v->g,u->f);
+   if(CFORK==ID(v->h)&&(u=FAV(v->h),CDIV==ID(u->g)&&CBANG==ID(u->h)))R folk(v->f,v->g,u->f);
    RZ(c=atop(ds(CDIV),ds(CBANG)));
    if(equ(c,v->f))R v->h;
    if(equ(c,v->h))R v->f;
@@ -38,7 +38,7 @@ static F1(jtfacit){A c;V*u,*v;
  R folk(ds(CBANG),ds(CSTAR),w);
 }
 
-static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=VAV(h);
+static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=FAV(h);
  ASSERT(AR(x)<=(nf?v->lr:v->rr),EVRANK);
  switch(v->id){
   case CPLUS:  R tpoly(over(x,one));
@@ -72,7 +72,7 @@ static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=VAV(h);
  ASSERT(0,EVDOMAIN);
 }
 
-static A jttcoamp(J jt,A w,B nf,A x,A h){I j;V*v=VAV(h);
+static A jttcoamp(J jt,A w,B nf,A x,A h){I j;V*v=FAV(h);
  ASSERT(AR(x)<=v->mr,EVRANK);
  switch(v->id){
   case CEXP:   
@@ -92,11 +92,11 @@ static F2(jttayinv){A y;I m,*v;
  R rinv(ev2(apv(m,0L,-1L),df1(y,tdot(a)),"|.!.0\"0 1"));
 }
 
-static DF1(jttayrecip){A f=VAV(self)->f; R from(w,head(tayinv(VAV(f)->g,w)));}
+static DF1(jttayrecip){A f=FAV(self)->f; R from(w,head(tayinv(FAV(f)->g,w)));}
      /* %@f t. w */
 
 static DF1(jttaydiv){A c,f,ft,h,ht,y;I j,m,*u;V*v;
- y=VAV(self)->f; v=VAV(y);
+ y=FAV(self)->f; v=FAV(y);
  RZ(y=vip(w)); u=AV(y);
  m=0; DO(AN(w), m=MAX(m,u[i]);); ++m;
  RZ(y=IX(m)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
@@ -113,14 +113,14 @@ static DF1(jttaydiv){A c,f,ft,h,ht,y;I j,m,*u;V*v;
 }    /* (f % h) t. w */
 
 static DF1(jttaysqrt){A f;I m,*v;
- f=VAV(self)->f;
+ f=FAV(self)->f;
  RZ(w=vip(w)); v=AV(w);
  m=0; DO(AN(w), m=MAX(m,v[i]);); ++m;
  ASSERT(0,EVNONCE);
-  /* R from(w,df2(sc(m),df1(IX(m),tdot(VAV(f)->g)),taysqrt0)); */
+  /* R from(w,df2(sc(m),df1(IX(m),tdot(FAV(f)->g)),taysqrt0)); */
 }    /* %:@f t. w */
 
-static F1(jttayfolk){A c,d,f,ft,g,h,ht,pp;B b;V*v=VAV(w);
+static F1(jttayfolk){A c,d,f,ft,g,h,ht,pp;B b;V*v=FAV(w);
  h=v->h;                                                   ht=tdot(h); RZ(d=coeff(ht));
  f=v->f; if(NOUN&AT(f))R tayfolk(folk(qq(f,ainf),v->g,h)); ft=tdot(f); RZ(c=coeff(ft));
  b=AN(c)&&AN(d); g=v->g; pp=eval("[: +//. */");
@@ -129,12 +129,12 @@ static F1(jttayfolk){A c,d,f,ft,g,h,ht,pp;B b;V*v=VAV(w);
   case CMINUS: R b ? tpoly(df1(lamin2(c,d),slash(g))) : folk(ft,g,ht);
   case CSTAR:  R b ? tpoly(df2(c,d,pp)) : eva(folk(ft,pp,ht),"{ x@(i.@>:@(>./)@,)");
   case CDIV:   R ADERIV(CTDOT,jttaydiv,0L,VISATOMIC1,RMAX,RMAX,RMAX);
-  case CTILDE: g=VAV(g)->f; ASSERT(VERB&AT(f),EVDOMAIN); R tayfolk(folk(h,g,f));
+  case CTILDE: g=FAV(g)->f; ASSERT(VERB&AT(f),EVDOMAIN); R tayfolk(folk(h,g,f));
   case CEXP:   ASSERT(1==AN(d),EVDOMAIN); R tdot(atop(amp(g,head(d)),f));
   default:     ASSERT(0,EVDOMAIN);
 }}
 
-static F1(jttaysum){I n;V*v=VAV(w);
+static F1(jttaysum){I n;V*v=FAV(w);
  switch(ID(w)){
   case CLEFT: case CRIGHT:
    R tpoly(eval("0 _1r2 1r2"));
@@ -147,22 +147,22 @@ static F1(jttaysum){I n;V*v=VAV(w);
  ASSERT(0,EVDOMAIN);
 }
 
-static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=VAV(w);
+static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=FAV(w);
  f=v->f; g=v->g;
  switch(ID(f)){
   case CDIV:  R ADERIV(CTDOT,jttayrecip,0L,VISATOMIC1,RMAX,RMAX,RMAX);
   case CSQRT: R ADERIV(CTDOT,jttaysqrt, 0L,VISATOMIC1,RMAX,RMAX,RMAX);
   case CAMP:
-   c=VAV(f)->f; d=VAV(f)->g;
+   c=FAV(f)->f; d=FAV(f)->g;
    if(CEXP==ID(c)&&INT&AT(d)&&!AR(d)){
     k=*AV(d);
     if(0>k)R tayatop(atop(ds(CDIV),-1==k?g:atop(amp(c,sc(-k)),g)));
  }}
  if(CIOTA==ID(g)){B b;C c;
-  c=ID(f); ft=VAV(f)->f; gt=VAV(f)->g;
+  c=ID(f); ft=FAV(f)->f; gt=FAV(f)->g;
   if(c==CSLASH&&CPLUS==ID(ft))R taysum(ds(CLEFT));
-  b=CSLASH==ID(ft)&&(h=VAV(ft)->f,CPLUS==ID(h));
-  if(b&&(c==CAMPCO||c==CATCO||(c==CAMP||c==CAT)&&1<VAV(gt)->mr))R taysum(gt);
+  b=CSLASH==ID(ft)&&(h=FAV(ft)->f,CPLUS==ID(h));
+  if(b&&(c==CAMPCO||c==CATCO||(c==CAMP||c==CAT)&&1<FAV(gt)->mr))R taysum(gt);
   ASSERT(0,EVDOMAIN);
  }
  ft=tdot(f); RZ(c=coeff(ft)); m=AN(c);
@@ -183,13 +183,13 @@ static AS1(jttdot1, df1(w,tdot(fix(fs))),0104)
 static AS1(jttco1,  df1(w,tco (fix(fs))),0105)
 static CS1(jttcap1, df1(w,tcap(fix(fs),gs)),0106)
 
-static DF1(jttcoh1){R hgcoeff(w,VAV(self)->f);}
+static DF1(jttcoh1){R hgcoeff(w,FAV(self)->f);}
 
 F1(jttdot){A f,g,h;B nf,ng;C id;V*v;
  RZ(w);
  if(NOUN&AT(w))R vger2(CTDOT,0L,w);
  if(!nameless(w))R ADERIV(CTDOT,jttdot1,0L,VISATOMIC1,RMAX,RMAX,RMAX);
- v=VAV(w); id=v->id;
+ v=FAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f);
  g=v->g; ng=g&&NOUN&AT(g);
  h=v->h;
@@ -239,7 +239,7 @@ F1(jttco){A f,g;B nf,ng;C id;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  if(!nameless(w))R ADERIV(CTCO,jttco1,0L,VFLAGNONE, RMAX,RMAX,RMAX);
- v=VAV(w); id=v->id;
+ v=FAV(w); id=v->id;
  f=v->f; nf=f&&NOUN&AT(f);
  g=v->g; ng=g&&NOUN&AT(g);
  if(id==CAMP&&nf!=ng)R tcoamp(w,nf,nf?f:g,nf?g:f);

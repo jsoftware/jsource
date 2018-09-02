@@ -70,8 +70,8 @@ B jtequ0(J jt,A a,A w){
  D ct=jt->ct; jt->ct=0; B res=equ(a,w); jt->ct=ct; R res;
 }
 
-// Test for equality of functions, 1 if they match.  The functions must have the same pseudocharacter and fgh
-static B jteqf(J jt,A a,A w){A p,q;V*u=VAV(a),*v=VAV(w);
+// Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
+static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
  p=u->f; q=v->f; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;
  p=u->g; q=v->g; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;

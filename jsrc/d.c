@@ -49,7 +49,7 @@ void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
 }
 
 static void jtdspell(J jt,C id,A w){C c,s[5];
- if(id==CFCONS){if(jt->nflag)eputc(' '); eputv(VAV(w)->h); eputc(':');}
+ if(id==CFCONS){if(jt->nflag)eputc(' '); eputv(FAV(w)->h); eputc(':');}
  else{
   s[0]=' '; s[4]=0;
   spellit(id,1+s);
@@ -73,7 +73,7 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
   case RPARX: eputc(')');              break;
   case ASGNX: dspell(*CAV(w),w);       break;
   case MARKX:                          break;
-  default:   dspell(VAV(w)->id,w);
+  default:   dspell(FAV(w)->id,w);
  }
  jt->nflag=b;
 }

@@ -338,12 +338,12 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
 // obsolete  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
- y=VAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
+ y=FAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
 // obsolete  if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg
- if(2>n||!wn){if(vaid(VAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(2>n||!wn){if(vaid(FAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
- VA2 adocv = vasfx(VAV(y)->f,wt);  // analyze f
+ VA2 adocv = vasfx(FAV(y)->f,wt);  // analyze f
 // obsolete  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
  if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
@@ -377,7 +377,7 @@ static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
- fs=VAV(self)->f; f=VAV(fs)->f; v=VAV(f); c=v->id; t=AT(w);
+ fs=FAV(self)->f; f=FAV(fs)->f; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);
  z=irs2(df1(w,fs),df2(a,w,bslash(fs)),VFLAGNONE, RMAX,-1L,c==CPLUS?(AF)jtminus:v->f2);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
@@ -386,7 +386,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
- f=VAV(self)->f; x=VAV(f)->f; v=VAV(x); id=CBDOT==v->id?(C)*AV(v->f):v->id;
+ f=FAV(self)->f; x=FAV(f)->f; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->f):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);
  if(-1<=k){d=m-c;     RZ(i=apv(d,0L, 1L)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
@@ -420,7 +420,7 @@ static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}
 F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
  RZ(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
- v=VAV(w);
+ v=FAV(w);  // verb info for w
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:
@@ -433,5 +433,5 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
      f2=jtofxassoc;
  }}
- R ADERIV(CBSDOT,f1,f2,VAV(ds(CBSDOT))->flag,RMAX,0,RMAX);
+ R ADERIV(CBSDOT,f1,f2,FAV(ds(CBSDOT))->flag,RMAX,0,RMAX);
 }

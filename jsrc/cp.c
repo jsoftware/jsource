@@ -49,8 +49,8 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
 
 static DF1(jtindexseqlim1){A fs;
  RZ(w); 
- fs=VAV(self)->f;
- R AT(w)&B01+INT?tclosure(VAV(fs)->g,w):powseqlim(w,fs);
+ fs=FAV(self)->f;  // {&x
+ R AT(w)&B01+INT?tclosure(FAV(fs)->g,w):powseqlim(w,fs);
 }    /* {&x^:(<_) w */
 
 static DF2(jtindexseqlim2){
@@ -60,7 +60,7 @@ static DF2(jtindexseqlim2){
 
 static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  RZ(w);
- sv=VAV(self); fs=sv->f; gs=sv->g;
+ sv=FAV(self); fs=sv->f; gs=sv->g;
  ASSERT(!AR(gs),EVRANK);
  ASSERT(BOX&AT(gs),EVDOMAIN);
  x=*AAV(gs); if(!AR(x))RE(n=i0(vib(x)));
@@ -71,12 +71,12 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
 
 static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
  RZ(w);
- sv=VAV(self); 
+ sv=FAV(self); 
  switch(n=*AV(sv->h)){
   case 0:  RCA(w);
-  case 1:  fs=sv->f; R CALL1(VAV(fs)->f1,w,fs);
+  case 1:  fs=sv->f; R CALL1(FAV(fs)->f1,w,fs);
   default: 
-   fs=sv->f; f1=VAV(fs)->f1;
+   fs=sv->f; f1=FAV(fs)->f1;
    z=w; 
    old=jt->tnextpushx; 
    DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
@@ -101,7 +101,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
    if(!(i&15))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
  if(0<p){
-  RZ(fs=inv(fs)); f1=VAV(fs)->f1;
+  RZ(fs=inv(fs)); f1=FAV(fs)->f1;
   RZ(z=ca(w));
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
@@ -150,8 +150,8 @@ static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible mon
 
 static CS2(jtply2,  df1(w,powop(amp(a,fs),gs,0)),0107)
 
-static DF1(jtpowg1){A h=VAV(self)->h; R df1(  w,*AAV(h));}
-static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
+static DF1(jtpowg1){A h=FAV(self)->h; R df1(  w,*AAV(h));}
+static DF2(jtpowg2){A h=FAV(self)->h; R df2(a,w,*AAV(h));}
 
 // When u^:v is encountered, we replace it with a verb that comes to one of these.
 // This creates a verb, jtpowxx, which calls jtdf1 within a PROLOG/EPILOG pair, after creating several names:
@@ -170,17 +170,17 @@ static DF2(jtpowg2){A h=VAV(self)->h; R df2(a,w,*AAV(h));}
 // here for u^:v y
 CS1IP(static,jtpowv1, \
 A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
-z=(FAV(u)->f1)(VAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
+z=(FAV(u)->f1)(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
 ,0108)
 // here for x u^:v y 
 CS2IP(static,jtpowv2, \
 A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
-z=(VAV(u)->f2)(VAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
+z=(FAV(u)->f2)(FAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
-A u; RZ(u = powop(VAV(fs)->f,CALL2(g2,a,w,gs),(A)1)); \
-z=(VAV(u)->f1)(VAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
+A u; RZ(u = powop(FAV(fs)->f,CALL2(g2,a,w,gs),(A)1)); \
+z=(FAV(u)->f1)(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
 ,0110)
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
@@ -198,9 +198,9 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
   case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
   case VV:
    // u^:v.  Create derived verb to handle it.
-   v=VAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->g)==CRIGHT;
+   v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->g)==CRIGHT;
    // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&VAV(w)->flag&VASGSAFE)+(v->flag&(VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
+   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
   case VN:
    // u^:n.  Check for special types.
    if(BOX&AT(w)){A x,y;AF f1,f2;
@@ -208,7 +208,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
     if(ARELATIVEB(w))RZ(w=car(w));   // if relative, make a non-relative copy
     if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
      // here for <n or <''.  That will be handled by special code.
-     f1=jtpowseq; f2=jtply2; v=VAV(a);
+     f1=jtpowseq; f2=jtply2; v=FAV(a);
      // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
      if((!AN(x)||FL&AT(x)&&inf==*DAV(x))){
       if(CAMP==v->id&&(CFROM==ID(v->f)&&(y=v->g,INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y

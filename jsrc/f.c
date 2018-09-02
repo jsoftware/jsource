@@ -871,9 +871,9 @@ F1(jtjpr){A y;I i,n,t; UC *v;
   // if w is a noun, format it and output it
  if(t&NOUN&&jt->tostdout)RZ(jpr1(w))
  else if(t&VERB+ADV+CONJ){
-  // non-noun result.  If it is the evocation of a name, evaluate the name (unless it is locked - then
+  // function result.  If it is the evocation of a name, evaluate the name (unless it is locked - then
   // just use the name)
-  RZ(y=evoke(w)?symbrdlock(VAV(w)->f):w);
+  RZ(y=evoke(w)?symbrdlock(FAV(w)->f):w);
   if(jt->tostdout){
    // for each representation selected by the user, create the representation and type it
    n=*jt->disp; v=1+jt->disp;

@@ -313,18 +313,19 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
  EPILOG(z);
 }
 
-static DF2(jtinfix2){PROLOG(0019);A f,x,y;B af,d;I c,m,n,n1,r,*s,t; 
+static DF2(jtinfix2){PROLOG(0019);A f;I m,n,t; 
  PREF2(jtinfix); 
  RE(m=i0(vib(a))); t=AT(w); n=IC(w); 
  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
- f=VAV(self)->f; f=VAV(f)->f;
- af=vaid(f); d=af&&t&DIRECT;
- c=AN(w)/n; r=AR(w); s=AS(w); n1=n-1;
- if(d             ){RZ(x=gah(r,w)); ICPY(AS(x),s,r); *AS(x)=n1; AN(x)=c*n1;} 
- else RZ(x=curtail(w));
- if(d&!(t&IS1BYTE)){RZ(y=gah(r,w)); ICPY(AS(y),s,r); *AS(y)=n1; AN(y)=c*n1; AK(y)=AK(w)+(I)w+c*bp(t)-(I)y;}
- else RZ(y= behead(w));
- A z=df2(x,y,af?f:qq(f,num[-1]));
+ f=FAV(self)->f; f=FAV(f)->f;
+// obsolete  af=vaid(f); d=af&&t&DIRECT;
+// obsolete  c=AN(w)/n; r=AR(w); s=AS(w); n1=n-1;
+// obsolete  if(d             ){RZ(x=gah(r,w)); ICPY(AS(x),s,r); *AS(x)=n1; AN(x)=c*n1;} 
+// obsolete  else RZ(x=curtail(w));
+// obsolete  if(d&!(t&IS1BYTE)){RZ(y=gah(r,w)); ICPY(AS(y),s,r); *AS(y)=n1; AN(y)=c*n1; AK(y)=AK(w)+(I)w+c*bp(t)-(I)y;}
+// obsolete  else RZ(y= behead(w));
+// obsolete  A z=df2(x,y,af?f:qq(f,num[-1]));
+ A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
  EPILOG(z);
 }    /* 2 f/\w */
 
@@ -367,13 +368,13 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
  I state=0;  // init flags, including zz flags
 
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
- if(!(VGERL&sv->flag)){V *vf=VAV(fs);  // if verb, point to its data
+ if(!(VGERL&sv->flag)){V *vf=FAV(fs);  // if verb, point to its data
   // not gerund: OK to test fs
   if(vf->mr>=AR(w)){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state &= ~((vf->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state |= (-state) & VAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
   state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
@@ -431,7 +432,8 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   A virtw, virta;
   I vr=AR(w); vr+=(vr==0);  // rank of infix is same as rank of w, except that atoms are promoted to singleton lists
 
-  // check for special case of 2 f/\ y; if found, set new function and allocate a second virtual argument
+  // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
+  // NOTE: gerund/ is encoded are `:, so we can be sure id==SLASH does not have gerund
   if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
    virtw = virtual(w,0,vr);
@@ -444,7 +446,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    virtw = virtual(w,wc,vr-1);  // second is w
    virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
-   fs=VAV(fs)->f; f1=VAV(fs)->f2;
+   fs=FAV(fs)->f; f1=FAV(fs)->f2;
    // mark that we are handling this case
    state |= STATESLASH2;
   }
@@ -542,11 +544,11 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  // m = #cells, c=#atoms/cell, n = #items per cell
 // obsolete PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
  PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
- y=VAV(self)->f; // y is the verb u, which is f/
+ y=FAV(self)->f; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
 // obsolete  if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
- if(2>n||!wn){if(vaid(VAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
- VA2 adocv = vapfx(VAV(y)->f,wt);  // analyze f
+ if(2>n||!wn){if(vaid(FAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
+ VA2 adocv = vapfx(FAV(y)->f,wt);  // analyze f
 // obsolete  if(!adocv.f)R jtinfixprefix1(jt,w,self);
  if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
@@ -564,7 +566,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  wr=AR(w); ws=AS(w); wt=AT(w); n=IC(w);
  RE(m=i0(vib(a))); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);
  if(0>m){p=MIN(p,n); d=p?(n+p-1)/p:0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}
- if(fs=VAV(self)->f,CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
+ if(fs=FAV(self)->f,CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
  s=AS(z); *s++=d; *s++=zc; ICPY(s,1+ws,r-2);
@@ -755,7 +757,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 // obsolete m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
 //obsolete  if(2==m0)R infix2(a,w,self);
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);
- x=VAV(self)->f; x=VAV(x)->f; id=ID(x); 
+ x=FAV(self)->f; x=FAV(x)->f; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
  if(id==CBDOT&&(x=VAV(x)->f,INT&AT(x)&&!AR(x)))id=(C)*AV(x);
  switch(AR(w)&&0<m0&&m0<=*AS(w)?id:0){
@@ -793,9 +795,9 @@ static DF1(jtiota1){R apv(IC(w),1L,1L);}
 // obsolete F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
 F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
  RZ(w);
-// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
- if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
- v=VAV(w); f=VAV(w)->f;
+// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|FAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|FAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+ v=FAV(w); f=FAV(w)->f;
  switch(v->id){
   case CPOUND:
    f1=jtiota1; break;
@@ -806,7 +808,7 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
   case CSLASH: 
    f2=jtmovfslash; if(vaid(f))f1=jtpscan;
  }
- R ADERIV(CBSLASH,f1,f2,VAV(ds(CBSLASH))->flag,RMAX,0L,RMAX);
+ R ADERIV(CBSLASH,f1,f2,FAV(ds(CBSLASH))->flag,RMAX,0L,RMAX);
 }
 
 A jtascan(J jt,C c,A w){RZ(w); R df1(w,bslash(slash(ds(c))));}

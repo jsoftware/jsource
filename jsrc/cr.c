@@ -712,16 +712,16 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
 }
 
 
-static DF1(cons1a){R VAV(self)->f;}
-static DF2(cons2a){R VAV(self)->f;}
+static DF1(cons1a){R FAV(self)->f;}
+static DF2(cons2a){R FAV(self)->f;}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
-static DF1(cons1){V*sv=VAV(self);
+static DF1(cons1){V*sv=FAV(self);
  RZ(w);
  I mr; efr(mr,AR(w),*AV(sv->h));
  R rank1ex(w,self,mr,cons1a);
 }
-static DF2(cons2){V*sv=VAV(self);I*v=AV(sv->h);
+static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->h);
  RZ(a&&w);
  I lr2,rr2; efr(lr2,AR(a),v[1]); efr(rr2,AR(w),v[2]);
  R rank2ex(a,w,self,AR(a),AR(w),lr2,rr2,cons2a);

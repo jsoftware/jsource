@@ -10,7 +10,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  RE(0);
  JATTN;
- v=VAV(self);
+ v=FAV(self);
 // obsolete aa=v->f; RE(e=syrd(aa,&g));
  A jtg = jt->global;  // fetch current locale
  aa=v->f; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
@@ -21,7 +21,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
  ASSERT(fs,EVVALUE); 
  ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);
- V *fv=VAV(fs);  // point to V struct in fs
+ V *fv=FAV(fs);  // point to V struct in fs
  RE(d=fdep(fs));
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
  if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
@@ -62,7 +62,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: we have to expunge any reference to local
  // buckets.
  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
- v=VAV(y);
+ v=FAV(y);
  // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
  // is used.  Thus, we can't guarantee inplaceability by copying INPLACE bits from f to the result, and we just set INPLACE for everything
  // and let unquote use the up-to-date value.
@@ -83,7 +83,7 @@ F1(jtnameref){
 
 F2(jtnamerefop){V*v;
  RZ(a&&w);
- v=VAV(w);
+ v=FAV(w);
  R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);
 }    
 

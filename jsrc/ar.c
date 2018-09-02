@@ -207,9 +207,9 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
  RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
  // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
- // We can inplace the right arg the first time is it is direct inplaceable, and always after that.  This is subject to approval by the verb u
+ // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
  // and the input jtinplace.
- I inplacelaterw = (VAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
+ I inplacelaterw = (FAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
  jtinplace = (J)(((I)jtinplace&(~(JTINPLACEW+JTINPLACEA))) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
@@ -273,18 +273,18 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
 DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  RZ(w);
- f=VAV(self)->f;
+ f=FAV(self)->f;  // f from f/
 // obsolete if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
 // obsolete  id=vaid(VAV(f)->f);
  while(1){  // Loop to handle restart on overflow
-  VA2 adocv = vains(VAV(f)->f,AT(x));
+  VA2 adocv = vains(FAV(f)->f,AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
 // obsolete   if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
   if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
-  if(jt->jerr<EWOV)R redsp1a(vaid(VAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
+  if(jt->jerr<EWOV)R redsp1a(vaid(FAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
@@ -665,12 +665,12 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){R df2(a,w,VAV(self)->h);}
+static DF2(jtoprod){R df2(a,w,FAV(self)->h);}
 
 
 F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
  RZ(w);
- if(NOUN&AT(w))R evger(w,sc(GINSERT));
+ if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
  v=FAV(w); 
  switch(v->id){  // select the monadic case
   case CCOMMA:  f1=jtredcat; flag=VINPLACEOK1;   break;
@@ -680,7 +680,7 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
   default: f1=jtreduce; flag=(v->flag&VINPLACEOK2)>>(VINPLACEOK2X-VINPLACEOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
- R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|VAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
+ R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}

@@ -614,7 +614,7 @@ AF jtatcompf(J jt,A a,A w,A self){AF f;I ar,at,m,wr,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a);
  wt=AT(w); wr=AR(w);
- m=VAV(self)->flag&255;
+ m=FAV(self)->flag&255;
  if(1<ar||1<wr){if(32<=m&&m<=37||40<=m&&m<=45||48<=m&&m<=53)R(AF)jtfslashatg; RZ(7==(m&7));}
  ASSERT(AN(a)==AN(w)||!ar||!wr||5<(m&7),EVLENGTH);
  f=atcompX[m];

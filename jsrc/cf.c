@@ -7,7 +7,7 @@
 
 #define TC1(t)          (t&NOUN?0:t&VERB?3:t&CONJ?2:1)
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
-#define TDECL           V*sv=VAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
+#define TDECL           V*sv=FAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
 
 // handle fork, with support for in-place operations
 #define FOLK1 {A fx,hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=CALL1(h1,  w,hs)); /* the call to h is not inplaceable */ \
@@ -76,14 +76,14 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
  EPILOG(z);
 }
 
-static DF1(jtcharmapa){V*v=VAV(self); R charmap(w,VAV(v->h)->f,v->f);}
-static DF1(jtcharmapb){V*v=VAV(self); R charmap(w,VAV(v->f)->f,VAV(v->h)->f);}
+static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->h)->f,v->f);}
+static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->f)->f,FAV(v->h)->f);}
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
 A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1;V*fv,*gv,*hv,*v;
  RZ(f&&g&&h);
- gv=VAV(g); gi=gv->id;
- hv=VAV(h); hi=hv->id;
+ gv=FAV(g); gi=gv->id;
+ hv=FAV(h); hi=hv->id;
  // Start flags with ASGSAFE (if g and h are safe), and with INPLACEOK to match the setting of f1,f2.  Turn off inplacing that neither f nor h can handle
  if(NOUN&AT(f)){  /* nvv, including y {~ x i. ] */
   flag=(hv->flag&(VINPLACEOK1|VINPLACEOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
@@ -97,7 +97,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   }
   R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
- fv=VAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
+ fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
  if(fi!=CCAP){
   // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
   flag=((fv->flag|hv->flag)&(VINPLACEOK1|VINPLACEOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
@@ -147,9 +147,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                  if(CBOX==ID(hv->f)&&!j){f2=jtrazecut0; flag &=~(VINPLACEOK2);}
                  else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
                   if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-                   A wf=hv->f; V *wfv=VAV(wf); A hg=wfv->g; V *hgv=VAV(hg);  // w is <@g;.k  find g
+                   A wf=hv->f; V *wfv=FAV(wf); A hg=wfv->g; V *hgv=FAV(hg);  // w is <@g;.k  find g
                    if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-                    A hgf=hgv->f; V *hgfv=VAV(hgf);  // find gf
+                    A hgf=hgv->f; V *hgfv=FAV(hgf);  // find gf
                     if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
                      f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
                     }
@@ -188,12 +188,12 @@ static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 CS1IP(static,jthook1, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=CALL1(g1,w,gs));  /* Cannot inplace the call to g */ \
 /* inplace gx unless it is protected; inplace w (as left arg) if the caller allowed it*/ \
-POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs));} \
+POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs));} \
 ,0111)
 CS2IP(static,jthook2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(a!=w&&(VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
+{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(a!=w&&(FAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
 /* inplace gx unless it is protected; inplace a if the caller allowed it*/ \
-POPZOMB; RZ(z=(f2)(VAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs));} \
+POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs));} \
 ,0112)
 
 
@@ -231,8 +231,8 @@ static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
  RZ(w&&self);
  n=AN(w); t=AT(w);
  if(!(1==AR(w)&&t&INT+FL))R hook1(w,self);
- sv=VAV(self); wv=AV(w);
- if(n)switch((t&FL?4:0)+(CICO==ID(sv->f)?2:0)+(CMAX==ID(VAV(sv->g)->f))){
+ sv=FAV(self); wv=AV(w);
+ if(n)switch((t&FL?4:0)+(CICO==ID(sv->f)?2:0)+(CMAX==ID(FAV(sv->g)->f))){
   case  0: iu=iv=    wv;     DO(n, if(*iv<*iu)iu=iv; ++iv;); z=iu-    wv; break;
   case  1: iu=iv=    wv;     DO(n, if(*iv>*iu)iu=iv; ++iv;); z=iu-    wv; break;
   case  2: iu=iv=    wv+n-1; DO(n, if(*iv<*iu)iu=iv; --iv;); z=iu-    wv; break;
@@ -252,11 +252,11 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
   default:            ASSERT(0,EVSYNTAX);
   case BD(VERB,VERB):
    // This is the (V V) case, producing a verb
-   u=VAV(a); c=u->id; f1=jthook1; f2=jthook2;
-   v=VAV(w); d=v->id; e=ID(v->f);
+   u=FAV(a); c=u->id; f1=jthook1; f2=jthook2;
+   v=FAV(w); d=v->id; e=ID(v->f);
    // Set flag to use: ASGSAFE if both operands are safe, and INPLACEOK to match f1,f2
    flag=((u->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);  // start with in-place enabled, as befits hook1/hook2
-   if(d==CCOMMA)switch(c){
+   if(d==CCOMMA)switch(c){   // all of this except for $, could be handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
     case CFROM:   f2=jthkfrom; flag &=~VINPLACEOK2;  break;
     case CTAKE:   f2=jthktake; flag &=~VINPLACEOK2;  break;
@@ -265,7 +265,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    }else        switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)&&CBOX==ID(u->f)){f1=jtgroup; flag &=~VINPLACEOK1;} break;
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)){f1=jthkiota; flag &=~VINPLACEOK1;} break;
-    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->g)&&CSTAR==ID(VAV(v->g)->f)){f1=jthkodom; flag &=~VINPLACEOK1;} break;
+    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->g)&&CSTAR==ID(FAV(v->g)->f)){f1=jthkodom; flag &=~VINPLACEOK1;} break;
     case CIOTA:   
     case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN)){f1=jthkindexofmaxmin; flag &=~VINPLACEOK1;} break;
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VINPLACEOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VINPLACEOK2;}

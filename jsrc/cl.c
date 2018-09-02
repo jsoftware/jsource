@@ -9,7 +9,7 @@
 static A jtlev1(J jt,A w,A self){A fs;
  RZ(w&&self);
 // obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->f; R CALL1(VAV(fs)->f1,w,fs);} else R every(w,self,jtlev1);
- if(levelle(w,jt->lmon)){fs=VAV(self)->f; R CALL1(VAV(fs)->f1,w,fs);} else R every(w,self,jtlev1);
+ if(levelle(w,jt->lmon)){fs=FAV(self)->f; R CALL1(FAV(fs)->f1,w,fs);} else R every(w,self,jtlev1);
 }
 
 static A jtlev2(J jt,A a,A w,A self){A fs;
@@ -33,7 +33,7 @@ static A jtlev2(J jt,A a,A w,A self){A fs;
 
 static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MAX(0,n+t));}
 
-static DF1(jtlcapco1){A z;I m;V*v=VAV(self); 
+static DF1(jtlcapco1){A z;I m;V*v=FAV(self); 
  RZ(w); 
  m=jt->lmon; jt->lmon=efflev(0L,v->h,w); 
  z=lev1(w,self);
@@ -41,7 +41,7 @@ static DF1(jtlcapco1){A z;I m;V*v=VAV(self);
  RETF(z);
 }
 
-static DF2(jtlcapco2){A z;I l,r;V*v=VAV(self);
+static DF2(jtlcapco2){A z;I l,r;V*v=FAV(self);
  RZ(a&&w);
  l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
  r=jt->lright; jt->lright=efflev(2L,v->h,w);
@@ -65,7 +65,7 @@ static F1(jtscfn){
 static A jtlevs1(J jt,A w,A self){A fs;
  RZ(w&&self);
 // obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->f; R scfn(CALL1(VAV(fs)->f1,w,fs));}else R every(w,self,jtlevs1);
- if(levelle(w,jt->lmon)){fs=VAV(self)->f; RZ(scfn(CALL1(VAV(fs)->f1,w,fs)));}else RZ(every(w,self,jtlevs1));
+ if(levelle(w,jt->lmon)){fs=FAV(self)->f; RZ(scfn(CALL1(FAV(fs)->f1,w,fs)));}else RZ(every(w,self,jtlevs1));
  R zero;
 }
 
@@ -87,7 +87,7 @@ static A jtlevs2(J jt,A a,A w,A self){A fs;
   R zero;
 }
 
-static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=VAV(self);
+static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  RZ(w);
  A scastk=jt->sca; m=jt->lmon; jt->lmon=efflev(0L,v->h,w);  // stack level of any executing L:/S:, get level to use
 // obsolete  GAT(x,INT,100,1,0); jt->scv=AV(x); jt->sca=x; jt->scn=0;   // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error
@@ -105,7 +105,7 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=VAV(self);
  EPILOG(z);
 }
 
-static DF2(jtscapco2){PROLOG(556);A x,z=0;I l,r;V*v=VAV(self); 
+static DF2(jtscapco2){PROLOG(556);A x,z=0;I l,r;V*v=FAV(self); 
  RZ(a&&w); 
  A scastk=jt->sca; l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
  r=jt->lright; jt->lright=efflev(2L,v->h,w);

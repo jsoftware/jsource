@@ -114,7 +114,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // r is the count of empty stack frames that have been allocated
  // bi is the control-word number for the last b-block sentence executed
  // *tci is the CW info for the last t-block sentence executed
- z=mtm; cd=t=u=v=0; sv=VAV(self); st=AT(self);
+ z=mtm; cd=t=u=v=0; sv=FAV(self); st=AT(self);
  // lk=this definition is locked; named=this definition is named; cn=current name, cl=current locale
  lk=jt->glock||VLOCK&sv->flag; named=VNAMED&sv->flag?1:0; cn=jt->curname; cl=jt->curlocn;
  d=named&&jt->db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
@@ -177,7 +177,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
   if(0<jt->pmctr&&C1==jt->pmrec&&named)pmrecord(cn,cl,i,a?VAL2:VAL1);
   // If the executing verb was reloaded during debug, switch over to it
   if(jt->redefined&&jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
-   self=jt->sitop->dcf; sv=VAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
+   self=jt->sitop->dcf; sv=FAV(self); LINE(sv); jt->sitop->dcc=hv[1+hi];
    // Clear all local bucket info in the definition, since it doesn't match the symbol table now
    DO(AN(hv[0+hi]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
    jt->redefined=0;
@@ -371,8 +371,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
 }
 
 
-static DF1(xv1){R df1(  w,VAV(self)->f);}
-static DF2(xv2){R df2(a,w,VAV(self)->g);}
+static DF1(xv1){R df1(  w,FAV(self)->f);}
+static DF2(xv2){R df2(a,w,FAV(self)->g);}
 
 static DF1(xn1 ){R xdefn(0L,w, self);}
 static DF1(xadv){R xdefn(w, 0L,self);}
@@ -381,13 +381,13 @@ static DF1(xadv){R xdefn(w, 0L,self);}
 static F1(jtxopcall){R jt->db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:mark;}
 
 static DF1(xop1){A ff,x;
- RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
+ RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|FAV(self)->flag, RMAX,RMAX,RMAX));
  RZ(x=xopcall(one));
  R x==mark?ff:namerefop(x,ff);
 }
 
 static DF2(xop2){A ff,x;
- RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  VXOP|VAV(self)->flag, RMAX,RMAX,RMAX));
+ RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  VXOP|FAV(self)->flag, RMAX,RMAX,RMAX));
  RZ(x=xopcall(one));
  R x==mark?ff:namerefop(x,ff);
 }
@@ -626,9 +626,9 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RZ(a&&w);
  if(VERB&AT(a)&&VERB&AT(w)){V*va,*vw;
-  va=VAV(a); if(CCOLON==va->id&&VERB&AT(va->f)&&VERB&AT(va->g))a=va->f;
-  vw=VAV(w); if(CCOLON==vw->id&&VERB&AT(vw->f)&&VERB&AT(vw->g))w=vw->g;
-  R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((VAV(a)->flag&VAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
+  va=FAV(a); if(CCOLON==va->id&&VERB&AT(va->f)&&VERB&AT(va->g))a=va->f;
+  vw=FAV(w); if(CCOLON==vw->id&&VERB&AT(vw->f)&&VERB&AT(vw->g))w=vw->g;
+  R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));
  if(equ(w,zero)){RZ(w=colon0(mark)); if(!n)R w;}

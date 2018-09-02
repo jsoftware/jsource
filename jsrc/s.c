@@ -399,13 +399,13 @@ F1(jtsymbrdlocknovalerr){A y;L *v;
  }
  // no error.  Return the value unless locked function
  y=v->val;
- R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
+ R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w):y;
 }
 
 // Same, but value error if name not defined
 F1(jtsymbrdlock){A y;
  RZ(y=symbrd(w));
- R FUNC&AT(y)&&(jt->glock||VLOCK&VAV(y)->flag)?nameref(w):y;
+ R FUNC&AT(y)&&(jt->glock||VLOCK&FAV(y)->flag)?nameref(w):y;
 }
 
 
@@ -418,11 +418,11 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
  if(v==(L*)d->dcn){  // if the saved jt->cursymb (from the unquote lookup) matches the name being assigned...
   // insist that the redefinition have the same type, and the same explicit character
   jt->curname=d->dca; f=d->dcf;
-  ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==VAV(f)->id)==(CCOLON==VAV(w)->id),EVSTACK);
+  ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK);
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
   // Reassignment outside of debug waits until the name is off the stack
-  if(CCOLON==VAV(w)->id)jt->redefined=(I)v;
+  if(CCOLON==FAV(w)->id)jt->redefined=(I)v;
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
@@ -462,7 +462,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
   RZ(e=g==jt->local?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(AT(w)&FUNC&&(wv=VAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
+  if(AT(w)&FUNC&&(wv=FAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.

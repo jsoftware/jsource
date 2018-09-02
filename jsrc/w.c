@@ -339,5 +339,5 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
 F2(jtfsm){R fsm0(a,w,1);}
      /* x;:y */
 
-DF1(jtfsmfx){RZ(w&&self); R fsm0(VAV(self)->f,w,0);}
+DF1(jtfsmfx){RZ(w&&self); R fsm0(FAV(self)->f,w,0);}
      /* x&;: y */

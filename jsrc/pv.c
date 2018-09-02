@@ -41,12 +41,12 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
 static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=*AV(w),-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
-static F1(jttine){V*v; R w&&jt->tmonad&&(v=VAV(w),CP==v->f&&RT==v->h)?v->g:w;}
+static F1(jttine){V*v; R w&&jt->tmonad&&(v=FAV(w),CP==v->f&&RT==v->h)?v->g:w;}
      /* if monad and w = [: g ], then g; else just w itself */
 
 static I tvi(A w){A x;I i,z=-1;V*v;
  if(w&&VERB&AT(w)){
-  v=VAV(w);
+  v=FAV(w);
   if(CQQ==v->id&&num[-1]==v->g){
    x=v->f; 
    if(!AR(x)&&INT&AT(x)){i=*AV(x)-TC; z=0<=i&&i<NTTAB?i:-1;}
@@ -66,7 +66,7 @@ TACT(jtvmonad){A fs;TA y,z={one,0};V*v;
  y=stack[e]; fs=stack[b].a;
  if(!y.t)z.a=df1(y.a,fs);
  else{
-  v=VAV(y.t);
+  v=FAV(y.t);
   if(!(CFORK==v->id&&0<=tvi(v->h)))z.t=folk(CP,fs,tine(y.t));
   else if(NOUN&AT(v->f))           z.t=folk(CP,folk(CP,fs,folk(v->f,v->g,RT)),tine(v->h));
   else                             z.t=folk(tine(v->f),folk(CP,fs,v->g),tine(v->h));
@@ -86,8 +86,8 @@ static I jtdcase(J jt,I xi,V*v){
 
 TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one,0};V*u=0,*v=0;
  fs=stack[e-1].a; x=stack[b]; y=stack[e]; sf=swapc(fs);
- if(xt=tine(x.t)){xi=tvi(x.t); u=VAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->f); if(0>xi)xi=tvi(u->h);}}
- if(yt=tine(y.t)){yi=tvi(y.t); v=VAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->f); if(0>yi)yi=tvi(v->h);}}
+ if(xt=tine(x.t)){xi=tvi(x.t); u=FAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->f); if(0>xi)xi=tvi(u->h);}}
+ if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->f); if(0>yi)yi=tvi(v->h);}}
  if(fs==ds(CLEFT)){if(xt)z.t=xt; else z.a=x.a; R z;}
  if(0>xi&&0>yi)switch((xt?2:0)+(yt?1:0)){
   case 0: z.a=df2(x.a,y.a,fs); break;
@@ -182,13 +182,13 @@ static TACT(jtvmove){A t;TA*u,x,z;
 static F1(jtvfinal){I i;V*u,*v;
  RZ(w);
  if(!(VERB&AT(w)))R w;
- v=VAV(w);
+ v=FAV(w);
  if(CFORK!=v->id){i=tvi(w); R 0<=i?vfinal(jt->ttab[i].t):w;}
  RZ(v->f=incorp(tine(vfinal(v->f))));
  RZ(v->g=incorp(tine(vfinal(v->g))));
  RZ(v->h=incorp(tine(vfinal(v->h))));
  if(VERB&AT(v->f)){
-  u=VAV(v->f); 
+  u=FAV(v->f); 
   if(CFCONS==u->id)v->f=u->h;  // must be incorped already
   else if(CQQ==u->id&&NOUN&AT(u->f)&&equ(ainf,u->g))v->f=u->f;  // must be incorped already
   if(NOUN&AT(v->f))RZ(w=folk(v->f,v->g,v->h));

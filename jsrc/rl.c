@@ -224,7 +224,7 @@ static F1(jtlnoun){I t;
   default:  R lnum(w);
 }}
 
-static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=VAV(w);
+static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
  if(VDDOP&v->flag){
   u=AV(v->h); s=buf; 
   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';

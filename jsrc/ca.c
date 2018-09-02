@@ -48,7 +48,7 @@ static I imodpow(I x,I n,I m){I z=1; while(n){if(1&n)z=(z*x)%m;     x=(x*x)%m;  
 
 static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  PREF2(jtmodpow2);
- h=VAV(self)->h; 
+ h=FAV(self)->h; 
  if(RAT&AT(a))RZ(a=pcvt(XNUM,a)) else if(!(AT(a)&INT+XNUM))RZ(a=pcvt(INT,a)); 
  if(RAT&AT(w))RZ(w=pcvt(XNUM,w)) else if(!(AT(w)&INT+XNUM))RZ(w=pcvt(INT,w));
  at=AT(a); wt=AT(w);
@@ -70,7 +70,7 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
  R sc(b?z-m:z);
 }    /* a m&|@^ w ; m guaranteed to be INT or XNUM */
 
-static DF1(jtmodpow1){A g=VAV(self)->g; R rank2ex(VAV(g)->f,w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
+static DF1(jtmodpow1){A g=FAV(self)->g; R rank2ex(FAV(g)->f,w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
@@ -79,6 +79,7 @@ CS1IP(,on1, \
 /* inplace gx unless it is protected */ \
 POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
 ,0113)
+
 CS2IP(,jtupon2, \
 {PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
@@ -177,7 +178,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   }
   R fdef(0,CAT,VERB, onconst1,onconst2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
  }
- wv=VAV(w); d=wv->id;
+ wv=FAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
@@ -196,9 +197,9 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CRAZE:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
     if((1LL<<(*AV(wv->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-     A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+     A wf=wv->f; V *wfv=FAV(wf); A g=wfv->g; V *gv=FAV(g);  // w is <@g;.k  find g
      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-      A gf=gv->f; V *gfv=VAV(gf);  // find gf
+      A gf=gv->f; V *gfv=FAV(gf);  // find gf
       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
       }
@@ -240,7 +241,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    // look for ;@(<@:v;._3 _2 _1 1 2 3)  also &:
   if(av->flag2&VF2USESITEMCOUNT){
    if(d==CCUT){I wgi=IAV(wv->g)[0]; // wfv;.wgi
-    if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=VAV(wv->f);
+    if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=FAV(wv->f);
      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
      }
@@ -260,8 +261,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 
 F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
- av=VAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
- wv=VAV(w); d=wv->id;
+ av=FAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
+ wv=FAV(w); d=wv->id;
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
@@ -288,9 +289,9 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
     if(CBOX==ID(wv->f)&&!j){f2=jtrazecut0; flag&=~VINPLACEOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
      if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-      A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+      A wf=wv->f; V *wfv=FAV(wf); A g=wfv->g; V *gv=FAV(g);  // w is <@g;.k  find g
       if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-       A gf=gv->f; V *gfv=VAV(gf);  // find gf
+       A gf=gv->f; V *gfv=FAV(gf);  // find gf
        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
         f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
        }
@@ -324,7 +325,7 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
   // ;@:(<@:v;.0)   ditto  also &:
   if(av->flag2&VF2USESITEMCOUNT){
    if(d==CCUT){I wgi=IAV(wv->g)[0]; // wfv;.wgi
-    if(wgi==0){V *wfv=VAV(wv->f);
+    if(wgi==0){V *wfv=FAV(wv->f);
      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
      }
@@ -341,16 +342,16 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
 
 F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
- c=ID(a); wv=VAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
- // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
- flag = ((VAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
+ c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
+ // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
+ flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
   if((1LL<<(*AV(wv->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-   A wf=wv->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+   A wf=wv->f; V *wfv=FAV(wf); A g=wfv->g; V *gv=FAV(g);  // w is <@g;.k  find g
    if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-    A gf=gv->f; V *gfv=VAV(gf);  // find gf
+    A gf=gv->f; V *gfv=FAV(gf);  // find gf
     if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
      f1=jtrazecut1; flag&=~(VINPLACEOK1);
     }
@@ -378,17 +379,17 @@ static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)((I)jt+2*((I)jtinplace&JTINPLACE
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->h is the info/hash/bytemask result from calculating the prehash
-static DF1(ixfixedleft  ){V*v=VAV(self); R indexofprehashed(v->f,w,v->h);}
+static DF1(ixfixedleft  ){V*v=FAV(self); R indexofprehashed(v->f,w,v->h);}
 // Here for compounds like (i.&0@:e.)&n or -.&n that compute a prehashed table from w
-static DF1(ixfixedright ){V*v=VAV(self); R indexofprehashed(v->g,w,v->h);}
+static DF1(ixfixedright ){V*v=FAV(self); R indexofprehashed(v->g,w,v->h);}
 
 // Here if ct was 0 when the compound was created - we must keep it 0
-static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=VAV(self); 
+static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=FAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->f,w,v->h); jt->ct=old; 
  R z;
 }
 
-static DF1(ixfixedright0){A z;D old=jt->ct;V*v=VAV(self); 
+static DF1(ixfixedright0){A z;D old=jt->ct;V*v=FAV(self); 
  jt->ct=0.0; z=indexofprehashed(v->g,w,v->h); jt->ct=old; 
  R z;
 }
@@ -401,7 +402,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
  default: ASSERTSYS(0,"amp");
  case NN: ASSERT(0,EVDOMAIN);
  case NV:
-  f1=withl; v=VAV(w); c=v->id;
+  f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
@@ -422,7 +423,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
  case VN: 
-  f1=withr; v=VAV(a);
+  f1=withr; v=FAV(a);
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
   flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
@@ -444,13 +445,13 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
  case VV:
   // u&v
   f1=on1; f2=on2;
-  v=VAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
+  v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-  flag = ((VAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
+  flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
   if(c==CFORK||c==CAMP){
    if(c==CFORK)d=ID(v->h);
    if(CIOTA==ID(v->g)&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->f)){  // a.&i. or (a. i. ][)
-    u=VAV(a); d=u->id;
+    u=FAV(a); d=u->id;
     if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
    }
   }
@@ -463,9 +464,9 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
     if((1LL<<(*AV(v->g)+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-     A wf=v->f; V *wfv=VAV(wf); A g=wfv->g; V *gv=VAV(g);  // w is <@g;.k  find g
+     A wf=v->f; V *wfv=FAV(wf); A g=wfv->g; V *gv=FAV(g);  // w is <@g;.k  find g
     if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-      A gf=gv->f; V *gfv=VAV(gf);  // find gf
+      A gf=gv->f; V *gfv=FAV(gf);  // find gf
       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
        f1=jtrazecut1; flag&=~(VINPLACEOK1);
       }

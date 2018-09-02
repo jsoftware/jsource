@@ -26,19 +26,19 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
 F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 
 // jtdf1 and jtdf2 can be called with or without inplace flags since they don't use jt but merely pass it through
-DF1(jtdf1){RZ(self); R CALL1(VAV(self)->f1,  w,self);}
-DF2(jtdf2){RZ(self); R CALL2(VAV(self)->f2,a,w,self);}
+DF1(jtdf1){RZ(self); R CALL1(FAV(self)->f1,  w,self);}
+DF2(jtdf2){RZ(self); R CALL2(FAV(self)->f2,a,w,self);}
 
-DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(VAV(self)->f1,  w,jt->sf=self); jt->sf=s; RETF(z);}
+DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(FAV(self)->f1,  w,jt->sf=self); jt->sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
 A s=jt->sf,z; 
 RZ(self); 
-z=CALL2IP(VAV(self)->f2,a,w,jt->sf=self); jt->sf=s; 
+z=CALL2IP(FAV(self)->f2,a,w,jt->sf=self); jt->sf=s; 
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
-A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(VAV(self)->f1,  w,self0);}
-A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(VAV(self)->f2,a,w,self0);}
+A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(FAV(self)->f1,  w,self0);}
+A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(FAV(self)->f2,a,w,self0);}
      // used to treat self as an argument.  Used with routines that don't really use self
 
 F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); RETF(z);}
@@ -54,7 +54,7 @@ F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 // if there has been a previous error this function returns 0
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
- GA(z,t,1,0,0); v=VAV(z);
+ GA(z,t,1,0,0); v=FAV(z);
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
  v->f1    =f1?f1:jtdomainerr1;  /* monad C function */
  v->f2    =f2?f2:jtdomainerr2;  /* dyad  C function */
@@ -73,7 +73,7 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
 
 B nameless(A w){A f,g,h;C id;V*v;
  if(!w||NOUN&AT(w))R 1;
- v=VAV(w);
+ v=FAV(w);
  id=v->id; f=v->f; g=v->g; h=v->h;
  R !(id==CTILDE&&NAME&AT(f)) && nameless(f) && nameless(g) && (id==CFORK?nameless(h):1);
 }
@@ -88,21 +88,21 @@ B jtprimitive(J jt,A w){A x=w;V*v;
 
 // w is a conj, f C n
 // Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
-B jtboxatop(J jt,A w){RZ(w); R 1&boxat(VAV(w)->f,RMAX,RMAX,RMAX);}
+B jtboxatop(J jt,A w){RZ(w); R 1&boxat(FAV(w)->f,RMAX,RMAX,RMAX);}
 
 // x is a verb
 // Return if verb is of the form <@:g  (or <@g when g has rank >= input rank)
 // bit 0 for monad case, bit 1 for dyad
 I boxat(A x, I m, I l, I r){C c;V*v;
  if(!x)R 0;
- v=VAV(x); c=v->id;   // x->f, v->value, c=id of f
+ v=FAV(x); c=v->id;   // x->f, v->value, c=id of f
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
  if(CBOX==ID(v->f)) {  // if u is <...
    if(c==CATCO) R 3; if(c==CAMPCO) R 1;  // @: is always good, and &: for monad
    I res = 0;
    if(v->g&&VERB&AT(v->g)){
-    res |= VAV(v->g)->mr>=m;    // monad ok if rank big enough  for either @ or &
-    res |= (c==CAT)&&VAV(v->g)->lr>=l&&VAV(v->g)->rr>=r?2:0;  // dyad for @ only, if rank big enough
+    res |= FAV(v->g)->mr>=m;    // monad ok if rank big enough  for either @ or &
+    res |= (c==CAT)&&FAV(v->g)->lr>=l&&FAV(v->g)->rr>=r?2:0;  // dyad for @ only, if rank big enough
    }
    R res;
  }
@@ -114,8 +114,8 @@ I boxat(A x, I m, I l, I r){C c;V*v;
 // The set bit indicates that argument WILL NOT be examined when w is executed
 I atoplr(A w){
  if(!w)R 0;
- V *v=VAV(w);     // v->verb info, c=id of w
- C id = v->id;if(v->id==CAT||v->id==CATCO)id = VAV(v->g)->id;
+ V *v=FAV(w);     // v->verb info, c=id of w
+ C id = v->id;if(v->id==CAT||v->id==CATCO)id = FAV(v->g)->id;
  switch(id){
   case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
   case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A

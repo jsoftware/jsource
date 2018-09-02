@@ -19,7 +19,7 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 /*   1   2   3   4   5   6   7   8   9   a   b   c   d   e   f   */
 
 static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
- GA(z,t,1,0,0); ACX(z); v=VAV(z);
+ GA(z,t,1,0,0); ACX(z); v=FAV(z);
  AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  v->f1=f1?f1:jtdomainerr1;  /* monad C function */
  v->f2=f2?f2:jtdomainerr2;  /* dyad  C function */
@@ -187,10 +187,10 @@ B jtpinit(J jt){A t;C*s;
 
 // modify the BOX verb so that it is flagged BOXATOP (for result purposes), with a g field of ].  Result verbs will
 // treat it as <@], but normal processing as <
-VAV(ds(CBOX))->flag2 |= VF2BOXATOP1; VAV(ds(CBOX))->g=ds(CRIGHT);
+FAV(ds(CBOX))->flag2 |= VF2BOXATOP1; FAV(ds(CBOX))->g=ds(CRIGHT);
 // the verbs (all monads) that open their operand are flagged so that their compounds can also be flagged
-VAV(ds(CSEMICO))->flag2 |= VF2WILLOPEN|VF2USESITEMCOUNT;
-VAV(ds(COPE))->flag2 |= VF2WILLOPEN;
+FAV(ds(CSEMICO))->flag2 |= VF2WILLOPEN|VF2USESITEMCOUNT;
+FAV(ds(COPE))->flag2 |= VF2WILLOPEN;
 
  if(jt->jerr){printf("pinit failed; error %hhi\n", jt->jerr); R 0;} else R 1;
 }

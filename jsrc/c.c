@@ -11,7 +11,7 @@ CS1IP(static,obv1, z=(f1)(jtinplace,w,fs),0103)
 CS2IP(static,obv2, z=(f2)(jtinplace,a,w,fs),0104)
 
 // Set ASGSAFE from a&w; set INPLACE from a
-F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE)+(VAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
+F2(jtobverse){ASSERTVV(a,w); R CDERIV(COBVERSE,obv1,obv2,((FAV(a)->flag&FAV(w)->flag&VASGSAFE)+(FAV(a)->flag&(VINPLACEOK1|VINPLACEOK2))),mr(a),lr(a),rr(a));}
 
 
 // Adverse.  Run f, and if that fails (and not with THROW), run g
@@ -32,7 +32,7 @@ static DF2(ad2){DECLFG;A z;UC od=jt->db;
 }
 
 // Set ASGSAFE from operands.  Noun operand is always safe
-F2(jtadverse){ASSERTVVn(a,w); R CDERIV(CADVERSE,ad1,ad2,(VAV(a)->flag&(AT(w)&VERB?VAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
+F2(jtadverse){ASSERTVVn(a,w); R CDERIV(CADVERSE,ad1,ad2,(FAV(a)->flag&(AT(w)&VERB?FAV(w)->flag:~0)&VASGSAFE),RMAX,RMAX,RMAX);}
 
 
 static CS1(even1, halve(df1(w,folk(fs,ds(CPLUS ),atop(fs,gs)))),0115)

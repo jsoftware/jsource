@@ -137,7 +137,8 @@ f=: 3 : 0
 i=. LIBTSDLL i:'.'
 t=. (i{.LIBTSDLL),'ê',i}.LIBTSDLL
 (fread LIBTSDLL)fwrite t
-(t,' fubar x')cd ''
+try. (t,' fubar x')cd '' catch. end.
+cder''
 )
 
 2 0-:f''

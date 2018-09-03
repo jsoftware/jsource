@@ -42,6 +42,7 @@ otherwise the regs may be used and the parameter lost.
 #if _WIN32
 #include <windows.h>
 #include <windowsx.h>
+#define FIXWINUTF8 // possibly should not be defined for MINGW32
 #ifdef __MINGW32__
 #ifndef _stdcall
 #define _stdcall __stdcall
@@ -53,7 +54,6 @@ otherwise the regs may be used and the parameter lost.
 #include <unistd.h>
 typedef unsigned char       BYTE;
 #define CALLBACK
-#define FIXWINUTF8
 #endif
 #include <stdint.h>
 #include <wchar.h>

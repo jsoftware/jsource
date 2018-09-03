@@ -559,7 +559,7 @@
       <OutputFile>.\Release64/Jdll.bsc</OutputFile>
     </Bscmake>
     <PostBuildEvent>
-      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64avx\bin\j.dll</Command>
+      <Command>copy $(outdir)\j.dll $(userprofile)\jbld\j64\bin\j.dll</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|Win32'">

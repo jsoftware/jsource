@@ -132,6 +132,15 @@ NB. xbasic_add -: ": 15!:21 lib,'xbasic'
 (2 0 -: cder '') *. 'domain error' -: ('0  ',(>IF64{'2333444555';19$'93'),' x x') cd etx (,2);2;3 4
 (2 0 -: cder '') *. 'domain error' -: ('0 _',(>IF64{'2333444555';19$'93'),' x x') cd etx (,2);2;3 4
 
+NB. test utf8 in proc name - windows FIXWINUFT8
+f=: 3 : 0
+i=. LIBTSDLL i:'.'
+t=. (i{.LIBTSDLL),'ê',i}.LIBTSDLL
+(fread LIBTSDLL)fwrite t
+(t,' fubar x')cd ''
+)
+
+2 0-:f''
 
 4!:55 ;:'a a1 add address b b1 cdrc dcd f i lib obj_add pc s s0 s1 td td1a td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xbasic_add xx yy z'

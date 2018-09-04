@@ -133,10 +133,11 @@ NB. xbasic_add -: ": 15!:21 lib,'xbasic'
 (2 0 -: cder '') *. 'domain error' -: ('0 _',(>IF64{'2333444555';19$'93'),' x x') cd etx (,2);2;3 4
 
 NB. test utf8 in proc name - windows FIXWINUFT8
+NB. ugh - windows ignores trailing blanks in file names
 f=: 3 : 0
 i=. LIBTSDLL i:'.'
-t=. (i{.LIBTSDLL),'ê',i}.LIBTSDLL
-(fread LIBTSDLL)fwrite t
+t=. dtb (i{.LIBTSDLL),'ê',i}.LIBTSDLL
+if. -.fexist t do. (fread dtb LIBTSDLL)fwrite t end. NB. no write if exists - could be in use
 try. (t,' fubar x')cd '' catch. end.
 cder''
 )

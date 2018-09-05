@@ -244,16 +244,17 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  // If y is inplaceable we can probably use it to store the frets, since it is copied sequentially.  The requirements are:
  // The fret area must start at least 5 bytes before the data in y, to leave space for the first fret before the first cell of y is moved (i. e. rank>0 for 64-bit, >1 for 32-bit)
  // The cells must be at least 5 bytes long so that the frets don't overrun them
- // The cells must be in the actual fret area, i. e not virtual or NJA
+ // The cells must be in the actual fret area, i. e not virtual or NJA 
+ // The cells must be DIRECT type so that it is OK to write garbage over them
  // We are taking advantage here of the fact that the shape comes before the cells in a standard GA noun
  // We don't have to worry about a==w because a has already been modified
- if((I)jtinplace&((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)(AC(w)&(4-celllen)&((SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
+ if((I)jtinplace&((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(AT(w)&DIRECT))&AC(w)&(4-celllen)&((SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
  I *av=IAV(a);  // av->a data
  {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
  // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which
  // means it starts a new partition whose length is a[i]-i.  Process the values in order, creating partitions as they come up, and
  // moving the data for each input value in turn, reading in order and scatter-writing.
- fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 4 bytes for groups longer than 254
+ fretp=CUTFRETFRETS(frets);  // Place where we will store the fret-lengths.  They are 1 byte normally, or 5 bytes for groups longer than 254
  I i; I nextpartitionx;  // loop index, address of place to store next partition
  I * RESTRICT wv=IAV(w);   // source & target pointers
  for(i=0, nextpartitionx=(I)IAV(wperm);i<nitems;++i){
@@ -291,7 +292,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
 // obsolete z=df2(frets,wperm,cut(VAV(self)->f,one));  // scaf remove the call to cut and put one in as g; use fs.  Verify that display is correct with g set
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
- // We pass the self pointer for /. into cut, at it uses that fact to interpret a
+ // We pass the self pointer for /. into cut, as it uses that fact to interpret a
  z=jtcut2((J)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->f)->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  jt->ct=ctold;
  EPILOG(z);

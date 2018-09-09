@@ -279,9 +279,9 @@ F2(jtlamin2){A z;I ar,p,q,wr;
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)a=irs1(a,0L,p,jtlamin1);
  if(q)w=irs1(w,0L,q,jtlamin1);
- z=irs2(a,w,0L,p+!!p,q+!!q,jtover);
+ RZ(z=irs2(a,w,0L,p+!!p,q+!!q,jtover));
  if(!p&&!q)z=irs1(z,0L,0L,jtlamin1);
- R z;
+ RETF(z);
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place

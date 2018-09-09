@@ -39,7 +39,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  }
 #else
 // do the innermost loop fast.  r must be >= 1
-// we create result items in order.  tv[] is the representation in the index space of the result.  WWhen
+// we create result items in order.  tv[] is the representation in the index space of the result.  When
 // we move a cell we increment the low-order index and propagate carries up the line.  Each entry of mv[] tells
 // how many bytes to move the input pointer for a move of 1 in the result axis
 #define CANTA(T,exp)  \
@@ -50,10 +50,10 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  }
 #endif
 
-// a[i] is the axis of the result that axis i of w contributes to
+// a[i] is the axis of the result that axis i of w contributes to - known to be valid
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
-static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
+static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
  RZ(a&&w);
 // obsolete  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
@@ -64,9 +64,11 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr;
   av=tv;
  }
  zr=-1; DO(wr, zr=MAX(zr,av[i]);); ++zr;  // zr = result rank: largest axis number in a + 1 (0 if a is atomic)
- GATV(m,INT,zr,1,0); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
- GATV(s,INT,zr,1,0); sv=AV(s);  // sv[i] is the length of axis i in the result
- GATV(t,INT,wr,1,0); tv=AV(t);  // tv[i] starts as # atoms in an i-cell of w
+ if((zr|wr)>sizeof(ms)/sizeof(ms[0])){  // if rank of array is large, allocate space for rank.  Otherwise use stack areas
+   GATV(m,INT,zr,1,0); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
+   GATV(s,INT,zr,1,0); sv=AV(s);  // sv[i] is the length of axis i in the result
+   GATV(t,INT,wr,1,0); tv=AV(t);  // tv[i] starts as # atoms in an i-cell of w
+ }else mv=ms, sv=ss, tv=ts;
  // calculate */\. ws, and simultaneously discard trailing axes that are unchanged in the transpose.  We detect these only
  // for transposes that do not include axes run together, i. e. a contains all the indexes.  [If there is an axis run together we
  // would have trouble deciding whether it could be elided.]  If a trailing axis can be discarded,
@@ -133,6 +135,6 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   m=AN(a); n=AN(t); av=AAV(a); RELBASEASGN(a,a);
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
- A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);
+ A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta
  RZ(z);  INHERITNOREL(z,w); RETF(z);
 }    /* a|:"r w main control */ 

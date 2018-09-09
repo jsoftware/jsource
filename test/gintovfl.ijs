@@ -183,7 +183,8 @@ imin   *  C x=: _50 + 10 ?@$ 100
 | E imin
 
 -/ .* E x=: (=i.2) * >. 2 %: imax
--/ .* (1 : 'x (-: +. (IF64{0 1e15) > |@])  x&.x:') x=: 10 2 2 ?@$ <. 2^IF64{17 33  NB. If determinant is too small, its relative error can be
+NB. -/ .* (1 : 'x (-: +. (IF64{0 1e15) > |@])  x&.x:') x=: 10 2 2 ?@$ <. 2^IF64{17 33  NB. If determinant is too small, its relative error can be
+-/ .* (1 : 'x -:  x&.x:') x=: 10 2 2 ?@$ <. 2^17  NB. still failure for the above guard for J64
 
 x   +/ .* C y  [ x=: 4 1 1 1  1 [ y=: 0 _1 0  1,imax
 x   +/ .* C y  [ x=: 4 1 1 1  2 [ y=: 0  0 0  0,imax

@@ -46,6 +46,8 @@
 #define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a
 #define ZZFLAGATOPOPEN2A (1LL<<ZZFLAGATOPOPEN2AX)
 
+#define ZZFAUXCELLSHAPEMAXRANK 4  // we reserve a faux A block on the stack big enough to handle results of this rank
+
 
 // Set up initial frame info.  The names are used to save variables and to push these names into registers
 // THIS MUST NOT BE EXECUTED UNTIL YOU HAVE COMMITTED TO THE RESULT LOOP!
@@ -67,15 +69,16 @@
 #ifdef ZZDECL
 // user should define:
 // ZZFLAGWORD name of flags
+// ZZINSTALLFRAME(zzs) code to initialize frame into *zzs++
  A zzbox=0;  // place where we will save boxed inhomogeneous result cells
- A *zzboxp;  // pointer to next slot in zzbox.  Before zzbox is allocated, this is used to count the number of cells processed.  At start: &inner frame
- I zzcellp;  // offset (in bytes) of the next homogeneous result cell.  No gaps are left when an inhomogeneous cell is encountered.  At start: &outer frame
- I zzcelllen;  // length in by of a homogeneous result cell.  At start: length of outer frame
+ A *zzboxp;  // pointer to next slot in zzbox.  Before zzbox is allocated, this is used to count the number of cells processed.
+ I zzcellp;  // offset (in bytes) of the next homogeneous result cell.  No gaps are left when an inhomogeneous cell is encountered.
+ I zzcelllen;  // length in bytes of a homogeneous result cell.
  I zzresultpri = 0;  // highest priority of boxed result-cells (bit 8=nonempty flag)
- A zzcellshape;  // INT array holding shape of result-cell, with one extra empty at the end
+ A zzcellshape;  // INT array holding shape of result-cell, with one extra empty at the end.  SA[] is the data, AR is the valid length, AN is the allocated length.  May be a faux block with nothing else valid
  I zzncells;   // number of cells in the result (input)
- I zzframelen;  // length of frame of result.  At start: length of inner frame
- I zzold;  // place to tpop to between executions
+ I zzframelen;  // length of frame of result.
+ I zzfauxcellshape[ZZFAUXCELLSHAPEMAXRANK+1+2];  // will be zzcellshape for ranks < 4.  We reserve space only for AN and AS, and don't touch anything earlier.  1 is to leave 1 spare at the end, 2 is the length of AN and AR
 // obsolete not needed because we never try to convert a sparse result RESETRANK;  // needed for cvt ?? scaf
 #ifndef ZZWILLBEOPENEDNEVER
 #define ZZWILLBEOPENEDNEVER 0
@@ -84,7 +87,8 @@
 #define ZZSTARTATEND 0  // user defines as 1 to build result starting at the end
 #endif
 #ifndef ZZPOPNEVER
-#define ZZPOPNEVER 0  // user defines as 1 to build result starting at the end
+ I zzold;  // place to tpop to between executions
+#define ZZPOPNEVER 0  // user defines as 1 to force us to NEVER tpop in the loop
 #endif
 #undef ZZDECL
 #endif
@@ -113,8 +117,8 @@ do{
    I zzbxm = (zt&BOX)+ZZFLAGHASUNBOX; zzbxm=AN(z)?zzbxm:0; ZZFLAGWORD |= zzbxm;  // accumulate error mask
      // change in rank/shape: fail
    zexprank=(zexprank!=zr)?-1:zexprank;  // if zexprank!=zr, make zexprank negative to make sure loop doesn't overrun the smaller shape
-   DO(zexprank, zexprank=(zs[i]!=zzs[i])?-1:zexprank;)  // if shapes don't match, set zexprank
-   if(!(zt&SPARSE) && zexprank==zr){  // if there was no wreck...
+   DO(zexprank, zexprank+=zs[i]^zzs[i];)  // if shapes don't match, set zexprank
+   if(!((zt&SPARSE) + (zexprank^zr))){  // if there was no wreck...
     // rank/shape did not change.  What about the type?
     if(TYPESNE(zt,zzt)){
      // The type changed.  Convert the types to match.
@@ -135,11 +139,13 @@ do{
        ASSERT(ccvt(zt|NOUNCVTVALIDCT,zz,(A*)&zatomct),EVDOMAIN); zz=(A)zatomct;  // flag means convert only # atoms given in zatomct
        // change the strides to match the new cellsize
        if(zexpshift>=0){zzcelllen<<=zexpshift; zzcellp<<=zexpshift;}else{zzcelllen>>=-zexpshift; zzcellp>>=-zexpshift;} 
+#if !ZZPOPNEVER
        // recalculate whether we can pop the stack.  We can, if the type is DIRECT and zzbox has not been allocated.  We could start zz as B01 (pop OK), then promote to
        // XNUM (pop not OK), then to FL (pop OK again).  It's not vital to be perfect, but then again it's cheap to be
        ZZFLAGWORD&=~ZZFLAGNOPOP; ZZFLAGWORD|=((((zt&DIRECT)==0)|(ZZFLAGWORD>>ZZFLAGBOXALLOX))&1)<<ZZFLAGNOPOPX;
        // NOTE that if we are converting to an indirect type, the converted block might NOT be recursive
        zzold=jt->tnextpushx;  // reset the pop-back point so we don't free zz during a pop.  Could gc if needed
+#endif
       }
      }else{
       // empty cells.  Just adjust the type, using the type priority
@@ -179,7 +185,7 @@ do{
     if(!(ZZFLAGWORD&ZZFLAGNOPOP))tpop(zzold);  // Now that we have copied to the output area, free what the verb allocated
 #endif
    }else{  // there was a wreck
-    if(zt&SPARSE){  // A good compiler will elide this test
+    if(zt&SPARSE){
      // we encountered a sparse result.  Ecch.  We are going to have to box all the results and open them.  Remember that fact
      ZZFLAGWORD|=ZZFLAGUSEOPEN;
     }
@@ -187,17 +193,17 @@ do{
      if(ZZFLAGWORD&ZZFLAGBOXALLO){
       // not the first wreck: we have a pointer to the A block for the boxed area
       // while we have the cell in cache, update the maximum-result-cell-shape
-      I zcsr=AS(zzcellshape)[0];  // z cell rank
+      I zcsr=AR(zzcellshape);  // z cell rank
       if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s
-       I *zcsold=IAV(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
-       if(zr>=AN(zzcellshape)){GATV(zzcellshape,INT,zr+3,1,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  Leave 1 extra for later
-       AS(zzcellshape)[0]=zr;   // set the new result-cell rank
-       I *zcsnew=IAV(zzcellshape)+zr;  // pointer to end+1 of new cell size
+       I *zcsold=AS(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
+       if(zr>=AN(zzcellshape)){GATV(zzcellshape,INT,zr+3,0,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
+       AR(zzcellshape)=(RANKT)zr;   // set the new result-cell rank
+       I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size
        DO(zcsr, *--zcsnew=*--zcsold;) DO(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
        zcsr=zr;  // now the stored cell has a new rank
       }
       // compare the old against the new, taking the max.  extend new with 1s if short
-      I *zcs=IAV(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
+      I *zcs=AS(zzcellshape); I zcs0; I zs0; DO(zcsr-zr, zcs0=*zcs; zcs0=(zcs0==0)?1:zcs0; *zcs++=zcs0;)  DO(zr, zcs0=*zcs; zs0=*zs++; zcs0=(zs0>zcs0)?zs0:zcs0; *zcs++=zcs0;)
       // Store the address of the result in the next slot
       INCORP(z);  // we can't store a virtual block, because its backer may change before we collect the final result
       *zzboxp=z;
@@ -218,8 +224,10 @@ do{
       GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
       zzresultpri=0;  // initialize the result type to low-value
-      // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AS holds the actual size
-      GATV(zzcellshape,INT,AR(zz)-zzframelen+3,1,0); AS(zzcellshape)[0]=AR(zz)-zzframelen; MCIS(IAV(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
+      // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
+      // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
+      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV(zzcellshape,INT,AR(zz)-zzframelen+3,0,0);}
+      AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCIS(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }
     }while(1);
@@ -233,9 +241,9 @@ do{
    } else {
     // The result of this verb will be opened next, so we can take some liberties with it.  We don't need to realize any virtual block EXCEPT one that we might
     // be reusing in this loop.  The user flags those UNINCORPABLE.  Rather than realize it we just make a virtual clone, since realizing might be expensive.
-    // But if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
+    // That is, if z is one of the virtual blocks we use to track subarrays, we mustn't incorporate it, so we clone it.  These subarrays can be inputs to functions
     // but never an output from the block it is created in, since it changes during the loop.  Thus, UNINCORPABLEs are found only in the loop that created them.
-    if(AFLAG(z)&AFUNINCORPABLE){A newz; RZ(newz=virtual(z,0,AR(z))); AN(newz)=AN(z); MCIS(AS(newz),AS(z),(I)AR(z)); z=newz;}
+    if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));}
     // since we are adding the block to a NONrecursive boxed result,  we DO NOT have to raise the usecount of the block.
    }
    *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
@@ -272,7 +280,7 @@ do{
   I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
   // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
-  I nbytes=natoms*bp(zzt);  // number of bytes in one cell.  We have to save this while zzcelllen is tied up
+  zzcelllen=natoms*bp(zzt);  // number of bytes in one cell.
   // # cells in result is passed in as zzncells
   // Get # atoms to allocate
   RE(natoms=mult(natoms,zzncells));
@@ -283,10 +291,10 @@ do{
   // If zz is not DIRECT, it will contain things allocated on the stack and we can't pop back to here
 #if !ZZPOPNEVER
   ZZFLAGWORD |= (zzt&DIRECT)?0:ZZFLAGNOPOP;
-#endif
   // Remember the point before which we allocated zz.  This will be the free-back-to point, unless we require boxes later
   zzold=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
-  // Install frame by running user's routine
+#endif
+  // Install frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)
 // obsolete   is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
 // obsolete   is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
@@ -295,7 +303,7 @@ do{
   is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
 // obsolete   zzwf+=((zzcelllen));  // leave zzwf as the total length of result frame by adding aframelen
-  zzcelllen=nbytes;   // cell length, for use in the main body
+// obsolete    zzcelllen=nbytes;   // cell length, for use in the main body
   zzboxp=AAV(zz); zzboxp=ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards
   zzcellp=0;  // init output offset in zz to 0
@@ -307,6 +315,7 @@ do{
  }
 }while(1);  // go back to store the first result
 
+#undef ZZINSTALLFRAME
 #undef ZZBODY
 #endif
 
@@ -317,7 +326,7 @@ do{
  // Any bypass path to here must clear ZZFLAGCOUNTITEMS.   
  AFLAG(zz)|=(ZZFLAGWORD&ZZFLAGCOUNTITEMS)<<(AFUNIFORMITEMSX-ZZFLAGCOUNTITEMSX);
 
-  // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any bocks, and we kept the
+  // If WILLBEOPENED is set, there is no reason to EPILOG.  We didn't have any wrecks, we didn't allocate any blocks, and we kept the
   // result as a nonrecursive block.
  if(ZZFLAGWORD&ZZFLAGWILLBEOPENED){RETF(zz);}  // no need to set NOSMREL either, or check for inhomogeneous results
 

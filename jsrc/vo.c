@@ -170,8 +170,8 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
   zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=1LL<<(jt->prioritytype[zzresultpri&255]);  // zft=highest precision encountered
   fillv(zft,1L,jt->fillv0); I zfs=bp(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
 
-  I *zzcs=IAV(zzcellshape);  // zzcs->shape of padded result cell
-  I zzcr=AS(zzcellshape)[0];  // zzcr=rank of result cell
+  I *zzcs=AS(zzcellshape);  // zzcs->shape of padded result cell (may be a faux A block) AS[] is shape, AR is rank, AN is allocation
+  I zzcr=AR(zzcellshape);  // zzcr=rank of result cell
   zzcs[zzcr]=zfs;  // length of 0-cell is byte-length of atom - store after the shape - we know there's room
 
   // if the result has different type from the values in zz, convert zz en bloc to type zft

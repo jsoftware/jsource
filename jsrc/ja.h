@@ -155,6 +155,7 @@
 #define checksi()                   jtchecksi(jt)
 #define cirx(x0,x1,x2,x3)           jtcirx(jt,(x0),(x1),(x2),(x3)) 
 #define clonelocalsyms(x)           jtclonelocalsyms(jt,(x))
+#define clonevirtual(z)             jtclonevirtual(jt,(z))
 #define coeff(x)                    jtcoeff(jt,(x))
 #define coerce2(x,y,z)              jtcoerce2(jt,(x),(y),(z))
 #define colon(x,y)                  jtcolon(jt,(x),(y))
@@ -335,8 +336,13 @@
 #define fana(x)                     {if(x){I Zc=AC(x); if(!ACISPERM(Zc)){I tt=AT(x); I Zczero=-(--Zc<=0); if((tt&=TRAVERSIBLE)&(Zczero|~AFLAG(x)))jtfa(jt,(x),tt); if(Zczero){jtmf(jt,x);}else {AC(x)=Zc;}}}}
 #define fac_ecm(x)                  jtfac_ecm(jt,(x))
 #define facit(x)                    jtfacit(jt,(x))
-#define fact(x)                     jtfact(jt,(x))    
-#define factor(x)                   jtfactor(jt,(x))  
+#define fact(x)                     jtfact(jt,(x))
+#define factor(x)                   jtfactor(jt,(x))
+#define fauxblock(z) I z[NORMAH+4]  // define a block that can be passed in to fauxvirtual.  The 4 is the max rank, and must match fauxvirtual
+// v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  If the rank is small enough, we use the fauxblock, otherwise
+// we allocate a block.  We assume that the caller will fill in AN, AS, AC.  Block must be marked UNINCORPABLE so it will not free its backer if freed
+#define fauxvirtual(z,v,w,r) {if(0&&r<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)r; AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE; z=AFLAG(w)&AFVIRTUAL?z:w; ABACK((A)(v))=z; z=(A)(v);} \
+                              else{RZ(z=virtual(w,0,r)); AFLAG(z)|=AFUNINCORPABLE;}}
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #define fdep(x)                     jtfdep(jt,(x))
 #define fdepger(x)                  jtfdepger(jt,(x))

@@ -663,6 +663,7 @@ extern A        jtcharmap(J,A,A,A);
 extern B        jtcheckmf(J);
 extern B        jtchecksi(J);
 extern A        jtclonelocalsyms(J,A);
+extern A        jtclonevirtual(J,A);
 // obsolete extern I        jtcoerce2(J,A*,A*,I);
 extern I        jtcompare(J,A,A);
 extern A        jtconnum(J,I,C*);

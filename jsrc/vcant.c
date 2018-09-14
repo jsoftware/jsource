@@ -64,11 +64,12 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
   av=tv;
  }
  zr=-1; DO(wr, zr=MAX(zr,av[i]);); ++zr;  // zr = result rank: largest axis number in a + 1 (0 if a is atomic)
- if((zr|wr)>sizeof(ms)/sizeof(ms[0])){  // if rank of array is large, allocate space for rank.  Otherwise use stack areas
-   GATV(m,INT,zr,1,0); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
-   GATV(s,INT,zr,1,0); sv=AV(s);  // sv[i] is the length of axis i in the result
-   GATV(t,INT,wr,1,0); tv=AV(t);  // tv[i] starts as # atoms in an i-cell of w
- }else mv=ms, sv=ss, tv=ts;
+ if((zr|wr)<=sizeof(ms)/sizeof(ms[0]))mv=ms, sv=ss, tv=ts;
+ else{  // if rank of array is large, allocate space for rank.  Otherwise use stack areas
+  GATV(m,INT,zr,1,0); mv=AV(m);  // mv[i] is distance (in cells) to move in w corresponding to move of 1 in axis i of the result
+  GATV(s,INT,zr,1,0); sv=AV(s);  // sv[i] is the length of axis i in the result
+  GATV(t,INT,wr,1,0); tv=AV(t);  // tv[i] starts as # atoms in an i-cell of w
+ }
  // calculate */\. ws, and simultaneously discard trailing axes that are unchanged in the transpose.  We detect these only
  // for transposes that do not include axes run together, i. e. a contains all the indexes.  [If there is an axis run together we
  // would have trouble deciding whether it could be elided.]  If a trailing axis can be discarded,

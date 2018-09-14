@@ -154,7 +154,8 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    RZ(z=from(qq,w));
   }
   if(!(state&STATEHASGERUND)){RZ(z=CALL1(f1,z,fs));}else{RZ(z=df1(z,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;}
-  if(!(state&STATENEEDSASSEMBLY)){EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly (for speed)
+  if(!(state&STATENEEDSASSEMBLY)){if(AFLAG(z)&AFUNINCORPABLE){z=clonevirtual(z);} EPILOG(z);}  // if we have just 1 input and no frame, return the one result directly (for speed).  If it is UNINCORPABLE, it must not be allowed to escape - realize it
+      // we use clonevirtual so that ];.0 can return a virtual block
 #define ZZBODY
 #include "result.h"
 

@@ -611,26 +611,33 @@ A jtgc (J jt,A w,I old){
  I c=AC(w);  // remember original usecount/inplaceability
  // We want to avoid realizing w if possible, so we handle virtual w separately
  if(AFLAG(w)&AFVIRTUAL){
-  A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
-  // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
-  // b need not deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
-  // (could look at relative size to make this decision).  Because virtual blocks are never assigned or ra()d, we know that the usecount of w
-  // coming in is 1
+  if(!(AFLAG(w)&AFUNINCORPABLE)){
+   A b=ABACK(w);  // backing block for w.  It is known to be direct or recursible, and had its usecount incremented by w
+   // Raise the count of w to protect it.  Since w raised the count of b when w was created, this protects b also.  Afterwards, if
+   // b need not be deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
+   // (could look at relative size to make this decision).  Because virtual blocks are never assigned or ra()d, we know that the usecount of w
+   // coming in is 1
 // obsolete  if(AT(b)&DIRECT || UCISRECUR(b)) {
 // obsolete   ACINCR(w);  // likewise protect w from being freed, and remember
-  AC(w)=2;  // protect w from being freed
-  tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
-  // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
-  // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
-  if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
+   AC(w)=2;  // protect w from being freed
+   tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
+   // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
+   // finished, we have a brand-new w with usecount necessarily 1, so we can make it in-placeable.  Setting the usecount to inplaceable will undo the ra() for the top block only
+   if(AC(b)<=1){A origw = w; RZ(w=realize(w)); ra(w); AC(w)=ACUC1|ACINPLACE; fa(b); mf(origw); }  // if b is about to be deleted, get w out of the way.  Since we
                                       // raised the usecount of w only, we use mf rather than fa to free just the virtual block
                                       // fa the backer to undo the ra when the virtual block was created
-  // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we must replace
-  // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value.  In case we ever want
-  // to have virtual inplaceable blocks (imaginable for rank)
-  else{
-   if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
-   AC(w)=c;  // restore initial usecount and inplaceability
+   else{
+    // if the backing block survives, w can continue as virtual; we must undo the increment above.  If the usecount was changed by the tpop, we must replace
+    // the stack entry.  Otherwise we can keep the stack entry we have, wherever it is, but we must restore the usecount to its original value.  In case we ever want
+    // to have virtual inplaceable blocks (imaginable for rank)
+    if(AC(w)<2)tpush1(w);  // if the stack entry for w was removed, restore it
+    AC(w)=c;  // restore initial usecount and inplaceability
+   }
+  } else {
+   // w was UNINCORPABLE.  That happens only if it is returned from a function called by the function in which it was created.  Therefore, w must not be on the stack
+   // and we don't have to go through the trouble of protecting it.  And good thing, too, because if w is a faux block its backer has not had its usecount incremented, and
+   // we would end up trying to free the faux block in the code above.  All we need to do is free the stack.
+   tpop(old);
   }
 // obsolete  else if(AC(w)>1)AC(w)=c;  // b was not deleted, and w was not deleted: restore original usecount
 // obsolete  else { tpush1(w);  // w was deleted - restore its stack entry.  Push only top level, undoing the increment of top-level usecount
@@ -1108,6 +1115,13 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
    if(v->g)RZ(v->g=car(v->g)); 
    if(v->h)RZ(v->h=car(v->h));
  }
+ R z;
+}
+
+// clone virtual block, producing a new virtual block
+F1(jtclonevirtual){
+ A z; RZ(z=virtual(w,0,AR(w)));  // allocate a new virtual block
+ AN(z)=AN(w); MCIS(AS(z),AS(w),(I)AR(w));  // copy AN and shape; leave AC alone
  R z;
 }
 

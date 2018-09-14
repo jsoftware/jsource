@@ -936,6 +936,8 @@ minus =: -
 
 0 1 2 3 -: (i. 2 2) ;@:(<@(["1)) i. 2 2  NB. Verify virtual block not incorporated
 0 1 2 3 -: (i. 2 2) ;@:(<@(]"1)) i. 2 2  NB. Verify virtual block not incorporated
+(i. 6) -: ;@:(<@]"0) i. 6  NB. Verify virtual block not incorporated
+(i. 6) -: ;@:(<@]"0)~ i. 6  NB. Verify virtual block not incorporated
 
 4!:55 ;:'a adot1 adot2 sdot0 agree asm b boxr c c1 c2 cells crank cs cshape dr er f fr frame '
 4!:55 ;:'glob lag minus mm mrk msh ops pfx rag rank rk s1 svy t x xx y '

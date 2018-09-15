@@ -96,16 +96,19 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
  I origoffset;  // offset from virtual block to start of w
  I wcellbytes;  // size of a cell in bytes
  A virtw;  // virtual block to use if any
+ fauxblock(virtwfaux);
  if(c==1){
   PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
   // allocate virtual block
-  RZ(virtw = virtual(w,0,wr));    // allocate block
+// obsolete   RZ(virtw = virtual(w,0,wr));    // allocate block
+  fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate UNINCORPORABLE block
   // fill in shape
-  I* RESTRICT vs=AS(virtw); DO(wr-1, vs[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
+  MCIS(AS(virtw)+1,ws+1,wr-1);
+// obsolete   I* RESTRICT vs=AS(virtw); DO(wr-1, vs[i+1]=ws[i+1];);  // shape of virtual matches shape of w except for #items
   // remember original offset.  Others will be based on this
   origoffset=AK(virtw);
   wcellbytes=wcellsize*bp(AT(w));  // bytes per cell
-  AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
+// obsolete   AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
  }
  if(m){
    // There is a frame; we will have to assemble the results, even if there is only one
@@ -754,15 +757,16 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // There are cells.  Run the result loop over them
 // obsolete    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((VAV(fs)->mr>=r?VF2BOXATOP1:0)&(VAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
    // Allocate the virtual block we will use for arguments
-   A virtw; RZ(virtw=virtual(w,0,r));
+   A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block
+// obsolete  RZ(virtw=virtual(w,0,r));
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
    MCIS(AS(virtw)+1,AS(w)+1,r-1); // obsolete I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
    // Set the offset to the first data
    I virtwk=AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
-   AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
+// obsolete    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
    // Self-virtual blocks also modify the shape of a block, but that code notifies
    // us through a flag bit.
-   jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
+   jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
@@ -777,7 +781,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
      if(!(state&STATEHASGERUND)){
-      RZ(z=CALL1(f1,virtw,fs));  //normal case
+      RZ(z=CALL1IP(f1,virtw,fs));  //normal case
      }else{
       RZ(z=df1(virtw,hv[gerundx])); ++gerundx; gerundx=(gerundx==hn)?0:gerundx;  // gerund case.  Advance gerund cyclically
      }
@@ -1221,12 +1225,14 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  // Now that we really know what fs is, see if it is a BOXATOP form
  state |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&FAV(fs)->flag2)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP and it will generate a single box, set so for result loop.  Don't touch fs yet, since we might not loop
  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+ // We don't honor WILLBEOPENED; perhaps we should
 
  // Start preparing for loop
  I axisproc=axisct; axisproc=axisct>2?2:axisproc;  // number of axes to process here: 1 or 2
  vmv=av[0]; vsz=av[axisct+0];  // v movement vector and size
  PROD(cellatoms,wr-axisproc,ws+axisproc); cellbytes = cellatoms*bp(wt);  // get # atoms in cell, then #bytes
  // Figure out the size of the cells we will be making blocks of.  They have all but the first 1 or 2 axes of a/w
+ fauxblock(virtwfaux);
  if(axisproc==1){
   // Here there is just one axis.  We will never have to move anything.
   // Set up the variables for the 2-D loop, most of which we don't need
@@ -1238,7 +1244,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   hss=hds=lrchsiz=0; vds1=vss1=0; vss=0; svh=dvh=0; // no horiz looping, so this is immaterial
   vss=0;   // since we never loop back in horiz loop, this is immaterial
 
-  RZ(virtw=virtual(w,0,wr));  // allocate the virtual block, pointing into w
+// obsolete   RZ(virtw=virtual(w,0,wr));
+  fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate the virtual block, pointing into w
  }else{
   // Here there are at least 2 axes.  We will process the first 2, carefully laying the cells into memory to require minimal copying of data
   // We will advance along the leading axis, building up a tall narrow strip of cells.  When we advance along the second axis, we will be able to
@@ -1266,8 +1273,8 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // Allocate the area we will use for the strip
   GA(strip,wt,stripn,0,0);  // allocate strip - rank immaterial
   // Allocate the virtual block we will use to address subarrays
-  RZ(virtw=virtual(strip,0,wr)); AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
-
+// obsolete   RZ(virtw=virtual(strip,0,wr)); AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
+  fauxvirtual(virtw,virtwfaux,strip,wr,ACUC1);
   // Move in the left side of the first strip (the left edge of first column)
   svh=CAV(w); dvh=CAV(strip);   // ?vh=pointer to top-left of first column
   C *svb=svh; C *dvb=dvh;  // running pointers used to fill the strip
@@ -1280,9 +1287,9 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   svh+=(vds1-lrchsiz); dvh+=(vds1-lrchsiz);
  }
  // The rest is the same for 1- and 2-axis cut
- I hvirtofst=AK(virtw); I *virtws=AS(virtw);  // save initial offset (to top-left of source)
+ I hvirtofst=AK(virtw); I * RESTRICT virtws=AS(virtw);  // save initial offset (to top-left of source)
  // Install shape/item count into the virtual array.  First install height; then width if given; then the rest of the shape of w
- *virtws++=vsz; if(axisproc>1){*virtws++=hsz;} DO(wr-axisproc, *virtws++=ws[axisproc+i];); AN(virtw) = vsz*hsz*cellatoms;
+ *virtws++=vsz; if(axisproc>1){*virtws++=hsz;} MCISd(virtws,ws+axisproc,wr-axisproc) /* obsolete  DO(wr-axisproc, *virtws++=ws[axisproc+i];); */ AN(virtw) = vsz*hsz*cellatoms;
  // calculate vertical shard info & see if there are any shards
  if(state&STATETAKE){I space, nfit;  // 3-cut, which may have shards
   // space after first; divide by mv; count how many fit including the first; get vi when we hit truncation; see how many items are valid in 1st truncated cell 

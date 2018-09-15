@@ -434,17 +434,24 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 
   // check for special case of 2 u/\ y; if found, set new function and allocate a second virtual argument
   // NOTE: gerund/ is encoded are `:, so we can be sure id==SLASH does not have gerund
+  fauxblock(virtafaux); fauxblock(virtwfaux);
   if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
-   virtw = virtual(w,0,vr);
+// obsolete    virtw = virtual(w,0,vr); AFLAG(virtw)|=AFUNINCORPABLE;
+   fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);
+
    ilnabs=(ilnabs>wi)?wi:ilnabs;  // ilnabs will be used to allocate virtual arguments - limit to size of w
-   I *virtws=AS(virtw); virtws[0]=ilnabs; DO(vr-1, virtws[i+1]=AS(w)[i+1];) AN(virtw)=ilnabs*wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (infix size),(shape of cell)  tally is #items*celllength
+   I *virtws=AS(virtw); virtws[0]=ilnabs; MCIS(virtws+1,AS(w)+1,vr-1) /* obsolete DO(vr-1, virtws[i+1]=AS(w)[i+1];) */ AN(virtw)=ilnabs*wc; // shape is (infix size),(shape of cell)  tally is #items*celllength
   }else{
    // 2 f/\ y.  The virtual args are now ITEMS of w rather than subarrays
-   virta = virtual(w,0,vr-1);  // first block is for a
-   I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virta)=wc; AFLAG(virta)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
-   virtw = virtual(w,wc,vr-1);  // second is w
-   virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+// obsolete     virta = virtual(w,0,vr-1);  AFLAG(virta)|=AFUNINCORPABLE;
+   fauxvirtual(virta,virtafaux,w,vr-1,ACUC1); // first block is for a
+   MCIS(AS(virta),AS(w)+1,vr-1); /* obsolete I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) */ AN(virta)=wc; // shape is (shape of cell)  tally is celllength
+   fauxvirtual(virtw,virtwfaux,w,vr-1,ACUC1);  // second is w
+   AK(virtw) += strideb >> ((UI)ilnval>>(BW-1));  // we want to advance 1 cell.  If ilnval is positive, strideb is 1 cell; otherwise strideb is 2 cells
+   MCIS(AS(virtw),AS(w)+1,vr-1); /* obsolete I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) */ AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
+// obsolete    virtw = virtual(w,wc,vr-1);
+// obsolete    virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
    fs=FAV(fs)->f; f1=FAV(fs)->f2;
    // mark that we are handling this case

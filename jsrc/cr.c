@@ -65,17 +65,16 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   //
   // Self-virtual blocks modify the shape of a block, but that code notifies
   // us through a flag bit.
-  jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable, and #atoms in cell > 1
-// obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
-  RZ(virtw = virtual(w,0,rr)); MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw)|=AFUNINCORPABLE;
+  fauxblock(virtwfaux);
   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid if the backing block is recursive.  Maybe could do this if it isn't?)
-  // We will leave jtinplace set as it was coming into this routine.  It will be set only if the called function can handle inplacing; and <@f is inplaceable only if f is.
-  // The final test for inplaceability lies with the function, and it will not detect reassignments of the cell.  Pity.
-  // To save tests later we turn off inplacing if we can't use it here
-  // loop over the frame
+  jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+// obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
+// obsolete   RZ(virtw = virtual(w,0,rr));
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
+  // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
   I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
-  AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
+// obsolete    AFLAG(virtw)|=AFUNINCORPABLE;AC(virtw)=ACUC1|ACINPLACE;
 #define ZZDECL
 #include "result.h"
 // obsolete   ZZPARMS(0,0,ws,wf,mn,1)
@@ -186,8 +185,10 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // Now that we have handled the structural requirements of ATOPOPEN, clear it if w is not open
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
 // obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
+  fauxblock(virtwfaux);
   if(!(state&ZZFLAGATOPOPEN1)||!(wt&BOX)){
-   RZ(virtw = virtual(w,0,0)); AN(virtw)=1; AFLAG(virtw) |= AFUNINCORPABLE; state&=~ZZFLAGATOPOPEN1;
+   fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN1;
+// obsolete    RZ(virtw = virtual(w,0,0)); AFLAG(virtw) |= AFUNINCORPABLE;
   }else{wav=AAV(w); virtw=*wav++;}
 #define ZZINSTALLFRAME(optr) MCISd(optr,ws,wr)
   do{
@@ -349,17 +350,17 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   jtinplace = (J)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
 // obsolete  RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
 // obsolete    RZ(virta = virtual(a,0,lr));
-  fauxvirtual(virta,virtafaux,a,lr) MCIS(AS(virta),as+af,lr); AN(virta)=acn;
+  fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCIS(AS(virta),as+af,lr); AN(virta)=acn;
 // obsolete AFLAG(virta)|=AFUNINCORPABLE;
-  AC(virta)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original a was direct inplaceable, and inplacing is allowed by u
+// obsolete   AC(virta)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original a was direct inplaceable, and inplacing is allowed by u
  }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
   jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
 // obsolete   RZ(virtw = virtual(w,0,rr)); 
-  fauxvirtual(virtw,virtwfaux,w,rr) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
 // obsolete  AFLAG(virtw)|=AFUNINCORPABLE;
-  AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
+// obsolete   AC(virtw)=ACUC1|ACINPLACE; // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
  }else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
@@ -546,6 +547,8 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
  I razeflags=FAV(fs)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS);  // remember the raze flags from the outer level.  If we take a BOXATOP we will need them
 
  A zz=0;  // place where we will build up the homogeneous result cells
+ fauxblock(virtafaux);  fauxblock(virtwfaux);
+
  if(mn){
   // Collect flags <@ and @> from the nodes.  It would be nice to do this even on empty arguments, but that would complicate our job in coming up with a fill-cell or argument cell, because
   // we would have to keep track of whether we passed an ATOPOPEN.  But then we could avoid executing the fill cell any time the is a BOXATOP, even down the stack.  As it is, the only time we
@@ -591,10 +594,12 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // Allocate a non-in-place virtual block unless this is ATOPOPEN and w is boxed, in which case we will just use the value of the A block
 // obsolete  RZ(virtw = virtual(w,0,rr)); {I * virtws = AS(virtw); DO(rr, virtws[i] = ws[wf+i];)} AN(virtw)=wcn;  AFLAG(virtw)|=AFUNINCORPABLE;
   if(!(state&ZZFLAGATOPOPEN2W)||!(wt&BOX)){
-   RZ(virtw = virtual(w,0,0)); AN(virtw)=1; AFLAG(virtw) |= AFUNINCORPABLE; state&=~ZZFLAGATOPOPEN2W;
+   fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN2W;
+// obsolete    RZ(virtw = virtual(w,0,0)); AN(virtw)=1; AFLAG(virtw) |= AFUNINCORPABLE; state&=~ZZFLAGATOPOPEN2W;
   }else{wav=AAV(w); virtw=*wav;}
   if(!(state&ZZFLAGATOPOPEN2A)||!(at&BOX)){
-   RZ(virta = virtual(a,0,0)); AN(virta)=1; AFLAG(virta) |= AFUNINCORPABLE; state&=~ZZFLAGATOPOPEN2A;
+   fauxvirtual(virta,virtafaux,a,0,ACUC1); AN(virta)=1; state&=~ZZFLAGATOPOPEN2A;
+// obsolete    RZ(virta = virtual(a,0,0)); AN(virta)=1; AFLAG(virta) |= AFUNINCORPABLE; state&=~ZZFLAGATOPOPEN2A;
   }else{aav=AAV(a); virta=*aav;}
   
   // loop over the matched part of the outer frame

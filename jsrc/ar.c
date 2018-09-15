@@ -200,9 +200,11 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // From here on we are doing a single reduction
  n=AS(w)[0]; // n=#cells
 // obsolete  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
- // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
- A origw=w; I origwc=AC(w); RZ(a=virtual(w,0,r-1));  // save inplaceability of the original w
- old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the x argument over the calls, but allow the w to be deleted
+ // Allocate virtual block for the running x argument.
+ A origw=w; I origwc=AC(w);  // save inplaceability of the original w
+// obsolete  RZ(a=virtual(w,0,r-1));  
+ fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block, allow inplacing (only if jtinplace determines that the backer is inplaceable)
+ old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
  // w will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
  RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
@@ -214,7 +216,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
- AC(a)=AC(w)=ACUC1+ACINPLACE;
+// obsolete  AC(a)=AC(w)=ACUC1+ACINPLACE;
  // Save the info we will need to restore the virtual block if it is modified
  I ak=AK(a); I an=AN(a);
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the

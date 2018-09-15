@@ -1129,6 +1129,9 @@ NB. Verify that bare < is as good as BOXATOP
 (7!:2 '(1 1,:1 1) <"<;._3 a') > 1.2 * (7!:2 '(1 1,:1 1) <;._3 a') [ a =: i. 100 100
 1 1 -:  $ <@(]"0);.1 'a'   NB. Verify atomic y is analyzed as is rank 1
 
+NB. verify f;.1 in place
+(2.2e6 * IF64 { 4 8) > 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. i. 1e6
+
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m p q size t test testw w x y'
 4!:55 ;: 'a'

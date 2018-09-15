@@ -227,7 +227,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  R z;
 }    /* a ($,)"wcr w for sparse w and scalar or vector a */
 
-F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr,*ws,zn;
+F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wn,wr,* RESTRICT ws,zn;
  F2PREFIP;
  RZ(a&&w);
 // obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
@@ -247,11 +247,11 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,*u,wcr,wf,wn,wr
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
    if((I)jtinplace&JTINPLACEW && (m==n||t&DIRECT) && r<=wcr && ASGNINPLACE(w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
-    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; DO(r, ws[i]=u[i];) RETF(w);   // Start the copy after the (unchanged) frame
+    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISds(ws,u,r) /* obsolete DO(r, ws[i]=u[i];) */ RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
 // correct   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
+   if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) /* obsolete DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) */ RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill

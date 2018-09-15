@@ -254,8 +254,9 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
  state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
- // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
- RZ(a=virtual(w,0,r-1));
+ // Allocate virtual block for the running x argument.  UNINCORPABLE, non-inplaceable
+// obsolete  RZ(a=virtual(w,0,r-1));
+ fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block (usually)
  RZ(z=tail(w)); k=AN(z)*bp(AT(z)); // k=length of input cell in bytes

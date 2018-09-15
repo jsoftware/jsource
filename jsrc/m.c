@@ -505,12 +505,13 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  I c=AC(w);  // count of input
  I wf=AFLAG(w);  // flags in input
   // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
- if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w)){
+  // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
+ if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   AK(w)+=offset*tal; AR(w)=(RANKT)r;
-  // inplaceable virtual blocks occur only inside operations that understand them.  Since they reuse their virtual blocks, it is expensive to
-  // modify one.  If we do, we flag it
-  MODVIRTINPLACE(w);  // if virtual inplaceable, show that we changed it
+// obsolete   // inplaceable virtual blocks occur only inside operations that understand them.  Since they reuse their virtual blocks, it is expensive to
+// obsolete   // modify one.  If we do, we flag it
+// obsolete   MODVIRTINPLACE(w);  // if virtual inplaceable, show that we changed it
   R w;
  }else{
   // not self-virtual block: allocate a new one

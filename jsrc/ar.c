@@ -217,8 +217,8 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
 // obsolete  AC(a)=AC(w)=ACUC1+ACINPLACE;
- // Save the info we will need to restore the virtual block if it is modified
- I ak=AK(a); I an=AN(a);
+// obsolete  // Save the info we will need to restore the virtual block if it is modified
+// obsolete  I ak=AK(a); I an=AN(a);
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
  // As a compromise we free every few iterations: at least one per 8 iterations, and at least 8 times through the process
@@ -232,11 +232,11 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
   // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
   if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCIS(AS(w),AS(a),AR(a));}
   // move to next input cell
-  AK(a) = ak -= k;
-  if(AFLAG(a)&AFVIRTUALINPLACE){
-        // The block was self-virtualed.  Restore its original shape
-    AR(a)=(RANKT)r-1; AT(a)=AT(origw); MCIS(AS(a),AS(origw)+1,r-1); AN(a)=an; AFLAG(a) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
-  }
+  AK(a) -= k;
+// obsolete   if(AFLAG(a)&AFVIRTUALINPLACE){
+// obsolete         // The block was self-virtualed.  Restore its original shape
+// obsolete     AR(a)=(RANKT)r-1; AT(a)=AT(origw); MCIS(AS(a),AS(origw)+1,r-1); AN(a)=an; AFLAG(a) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+// obsolete   }
   // set larger inplaceability for iterations after the first
   jtinplace = (J)((I)jtinplace|inplacelaterw);
  }

@@ -73,7 +73,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 // obsolete   RZ(virtw = virtual(w,0,rr));
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
   // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
-  I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
+// obsolete   I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
 // obsolete    AFLAG(virtw)|=AFUNINCORPABLE;AC(virtw)=ACUC1|ACINPLACE;
 #define ZZDECL
 #include "result.h"
@@ -89,11 +89,11 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
    // advance input pointer for next cell.  We keep the same virtual block because it can't be incorporated into anything; but the virtual block was inplaceable the
    // AK, AN, AR, AS, AT fields may have been modified.  We restore them
 // obsolete   if(!((I)jtinplace&JTINPLACEW)){
-   AK(virtw) = virtwk += wk;
-   if(AFLAG(virtw)&AFVIRTUALINPLACE){
-        // The block was self-virtualed.  Restore its original shape
-     AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
-   }
+   AK(virtw) += wk;
+// obsolete    if(AFLAG(virtw)&AFVIRTUALINPLACE){
+// obsolete         // The block was self-virtualed.  Restore its original shape
+// obsolete      AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+// obsolete    }
   }
 
 #define ZZEXIT
@@ -366,9 +366,9 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  A zz=0;  // place where we will build up the homogeneous result cells
  if(mn){I i0, i1, i2, i3;
   // Normal case where there are cells.
-  I virtak=AK(virta);  // save virtual-operand pointer in case modified
-  I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
-  
+// obsolete    I virtak=AK(virta);  // save virtual-operand pointer in case modified
+// obsolete    I virtwk=AK(virtw);  // save virtual-operand pointer in case modified
+// obsolete    
   // loop over the matched part of the outer frame
 
 #define ZZDECL
@@ -378,10 +378,10 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #define ZZINSTALLFRAME(optr) MCISd(optr,los,lof) MCISd(optr,lis,lif)
 
   for(i0=outerframect;i0;--i0){
-   I outerrptstart=state&STATEOUTERREPEATA?virtak:virtwk;
+   I outerrptstart=state&STATEOUTERREPEATA?AK(virta):AK(virtw);
    // loop over the unmatched part of the outer frame, repeating the shorter argument
    for(i1=outerrptct;i1;--i1){  // make MOVEY? post-increment
-    if(state&STATEOUTERREPEATA){AK(virta) = virtak = outerrptstart;}else{AK(virtw) = virtwk = outerrptstart;}
+    if(state&STATEOUTERREPEATA){AK(virta) = outerrptstart;}else{AK(virtw) = outerrptstart;}
     // loop over the matched part of the inner frame
     for(i2=innerframect;i2;--i2){
      // loop over the unmatched part of the inner frame, repeating the shorter argument
@@ -459,23 +459,23 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
       // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything; but if the virtual block was inplaceable the
    // AK, AN, AR, AS, AT fields may have been modified.  We restore them
       if(!(state&STATEINNERREPEATA)){
-       AK(virta) = virtak += ak;
-       if(AFLAG(virta)&AFVIRTUALINPLACE){
-        // The block was self-virtualed.  Restore its original shape
-        AR(virta)=(RANKT)lr; AT(virta)=at; MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
-       }
+       AK(virta) += ak;
+// obsolete        if(AFLAG(virta)&AFVIRTUALINPLACE){
+// obsolete         // The block was self-virtualed.  Restore its original shape
+// obsolete         AR(virta)=(RANKT)lr; AT(virta)=at; MCIS(AS(virta),as+af,lr); AN(virta)=acn; AFLAG(virta) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+// obsolete        }
       }
 
       if(!(state&STATEINNERREPEATW)){
-       AK(virtw) = virtwk += wk;
-       if(AFLAG(virtw)&AFVIRTUALINPLACE){
-        AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
-       }
+       AK(virtw) += wk;
+// obsolete        if(AFLAG(virtw)&AFVIRTUALINPLACE){
+// obsolete         AR(virtw)=(RANKT)rr; AT(virtw)=wt; MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn; AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+// obsolete        }
       }
      }
       // advance input pointers for next cell.  We increment any block that was being held constant in the inner loop.  There can be only one such.  Such an arg is never inplaced
-     if(state&STATEINNERREPEATA)AK(virta) = virtak += ak;
-     else if(state&STATEINNERREPEATW)AK(virtw) = virtwk += wk;
+     if(state&STATEINNERREPEATA)AK(virta) += ak;
+     else if(state&STATEINNERREPEATW)AK(virtw) += wk;
     }
    }
   }

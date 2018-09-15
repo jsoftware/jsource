@@ -252,14 +252,14 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  }
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- // If the compound has rank 0, switch to the loop for that
- if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==0)f1=jton10;}  // obsolete  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
- if(f2==jtupon2){flag2|=VF2RANKATOP2; if((wv->lr|wv->rr)==0)f2=jtupon20;}
+ // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
+ if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}  // obsolete  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+ if(f2==jtupon2){flag2|=VF2RANKATOP2; if((wv->lr&wv->rr)==RMAX)f2=jtupon2cell; else{if((wv->lr|wv->rr)==0)f2=jtupon20;}}
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
-F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
+F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=FAV(a); c=av->id; f=av->f; g=av->g; e=ID(f); 
  wv=FAV(w); d=wv->id;
@@ -336,11 +336,12 @@ F2(jtatco){A f,g;AF f1=on1,f2=jtupon2;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,
  }
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2)<<VF2RANKATOP2X; 
+ // This is appropriate even though we elide the loop
+ flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=(f2==jtupon2cell)<<VF2RANKATOP2X; 
  R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
-F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
+F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
@@ -364,8 +365,8 @@ F2(jtampco){AF f1=on1;C c,d;I flag,flag2=0;V*wv;
  flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
- R fdef(flag2,CAMPCO,VERB, f1,on2, a,w,0L, flag, RMAX,RMAX,RMAX);
+ flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
+ R fdef(flag2,CAMPCO,VERB, f1,on2cell, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
 // m&v and u&n.  Never inplace the noun argument, since the verb may
@@ -483,10 +484,11 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
 // obsolete   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
 // obsolete    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
- // If the compound has rank 0, switch to the loop for that
-  if(f1==on1){flag2|=VF2RANKATOP1; if(r==0)f1=jton10;}
+ // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
+ // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
+  if(f1==on1){flag2|=VF2RANKATOP1; if(r==RMAX)f1=on1cell; else{if(r==0)f1=jton10;}}
 // obsolete   flag2|=(f2==on2)<<VF2RANKATOP2X;
-  if(f2==on2){flag2|=VF2RANKATOP2; if(r==0)f2=on20;}
+  if(f2==on2){flag2|=VF2RANKATOP2; if(r==RMAX)f2=on2cell; else{if(r==0)f2=on20;}}
   R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
  }
 }

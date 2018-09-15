@@ -762,7 +762,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
    MCIS(AS(virtw)+1,AS(w)+1,r-1); // obsolete I* virts=AS(virtw); DO(r-1, virts[i+1]=s[i+1];)
    // Set the offset to the first data
-   I virtwk=AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
+   AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
 // obsolete    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
    // Self-virtual blocks also modify the shape of a block, but that code notifies
    // us through a flag bit.
@@ -789,11 +789,11 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 #define ZZBODY  // assemble results
 #include "result.h"
 
-     AK(virtw) = virtwk += len*k;   // advance to data position of next fret
-     if(AFLAG(virtw)&AFVIRTUALINPLACE){
-          // The block was self-virtualed or otherwise modified its header.  Restore its original shape/type
-       AR(virtw)=(RANKT)r; AT(virtw)=wt; MCIS(AS(virtw)+1,AS(w)+1,r-1); AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
-     }
+     AK(virtw) += len*k;   // advance to data position of next fret
+// obsolete      if(AFLAG(virtw)&AFVIRTUALINPLACE){
+// obsolete           // The block was self-virtualed or otherwise modified its header.  Restore its original shape/type
+// obsolete        AR(virtw)=(RANKT)r; AT(virtw)=wt; MCIS(AS(virtw)+1,AS(w)+1,r-1); AFLAG(virtw) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
+// obsolete      }
     }  /* loop till buffer all processed */
     if(!(pd0=CUTFRETCHAIN(pd0)))break;  /* step to next buffer; exit if none */
     pd=CUTFRETFRETS(pd0);  /* point to 1st d */

@@ -45,7 +45,8 @@
 #define SSINGSS SSINGENC(SBT,SBT)
 
 #define SSRDD(w) (*(D *)CAV(w))
-#define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
+// obsolete #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
+#define SSSTORE(v,z,t,type) {MODBLOCKTYPE(z,t) *((type *)CAV(z)) = (v);}
 #define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
 
@@ -101,12 +102,12 @@ static A ssingallo(J jt,I r,I t){A z;
 /* obsolete  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) */ /* handle frames */ \
  if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
  else if (ar >= wr){ \
-  if (AINPLACE){ z = a; AT(z) = B01; MODVIRTINPLACE(z); } \
-  else if (WINPLACE && ar == wr){ z = w; AT(z) = B01; MODVIRTINPLACE(z); } \
+  if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
+  else if (WINPLACE && ar == wr){ z = w; MODBLOCKTYPE(z,B01) } \
   else if (ar + wr == 0)z = 0; \
   else {GATV(z, B01, 1, ar, AS(a));} \
  } else { \
-  if (WINPLACE){ z = w; AT(z) = B01; MODVIRTINPLACE(z);} \
+  if (WINPLACE){ z = w; MODBLOCKTYPE(z,B01) } \
   else if (ar + wr == 0)z = 0; \
   else {GATV(z, B01, 1, wr, AS(w));} \
  } \

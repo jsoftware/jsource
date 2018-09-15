@@ -18,11 +18,11 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
-  if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
+  if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect blocks also, since we know we are not changing
    // the number of atoms
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; MODVIRTINPLACE(w); RETF(w);  // if virtual inplace, notify the originator
+   AR(w)=(RANKT)(1+f); AS(w)[f]=m; /* obsolete MODVIRTINPLACE(w); */ RETF(w);  // if virtual inplace, notify the originator
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}

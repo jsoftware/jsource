@@ -305,7 +305,7 @@ typedef I SI;
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.
-// If an executing verb modifies an inplace virtual block, it must set the AFVIRTUALINPLACE flag to tell the caller that the block has been modified.
+// The inplaceability applies to the data area, but not necessarily to the block header: if UNINCORPORABLE is set, the header must not be modified (we clone the header in that case)
 // For speedy singletons, there is the additional problem that the operation expects always to write a FL value to the result area, which is OK for any
 // real block but not for an inplaced virtual block, whose virtual data may be shorter than a FL.  The pure solution would be for the singleton code
 // to refrain from modifying a virtual block that is shorter than a FL, but that means we would have to test for it for every arithmetic operation.  Thus
@@ -391,8 +391,8 @@ typedef I SI;
 #define AFUNINCORPABLEX 19      // matches XDX
 #define AFUNINCORPABLE  (1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
-#define AFVIRTUALINPLACEX 20      // matches XZX
-#define AFVIRTUALINPLACE (1<<AFVIRTUALINPLACEX)  // this block started as virtual inplaceable but has been modified.  Used to tell rank etc. that the block info must be rewritten
+// obsolete #define AFVIRTUALINPLACEX 20      // matches XZX
+// obsolete #define AFVIRTUALINPLACE (1<<AFVIRTUALINPLACEX)  // this block started as virtual inplaceable but has been modified.  Used to tell rank etc. that the block info must be rewritten
 // obsolete // INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
 // obsolete // that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
 // obsolete // We achieve this by realizing whenever ra() - but not ra0() - is called for the block

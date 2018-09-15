@@ -524,7 +524,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
-#define MODVIRTINPLACE(x)  (AFLAG(x) |= (AFLAG(x)&AFVIRTUAL)<<(AFVIRTUALINPLACEX-AFVIRTUALX))
+// obsolete#define MODVIRTINPLACE(x)  (AFLAG(x) |= (AFLAG(x)&AFVIRTUAL)<<(AFVIRTUALINPLACEX-AFVIRTUALX))
+// change the type of the inplaceable block z to t.  We know or assume that the type is being changed.  If the block is UNINCORPABLE (& therefore virtual), replace it with a clone first.  z is an lvalue
+#define MODBLOCKTYPE(z,t)  {if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));} AT(z)=(t);}
 
 #define NAN0            (_clearfp())
 #if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013

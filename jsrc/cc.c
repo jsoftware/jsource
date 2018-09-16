@@ -234,7 +234,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  sv=FAV(self); q=*AV(sv->g);
  an=AN(a); av=AAV(a); RELBASEASGN(a,a); ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
- GATV(x,BOX,an,1,0); xv=AAV(x);
+ GATV(x,BOX,an,1,0); xv=AAV(x);  // could be faux
  GATV(y,BOX,an,1,0); yv=AAV(y);
  for(i=0;i<an;++i){
   b=AVR(i); bn=AN(b); m=ws[i];
@@ -1203,7 +1203,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
     // 4 axes: S0 S1 R3 R2 S2 S3 [rest of ws beyond the axes]
     // 5 axes: S0 S1 R3 R2 S2 S3 R4 S4 [rest of ws beyond the axes]
     // these must be transposed to result in R2..Rn S0..Sn Wx..Wn
-    A xposearg; GATV(xposearg,INT,wr+axisct-2,1,0); AS(xposearg)[0]=wr+axisct-2; I *xpv=IAV(xposearg);
+    A xposearg; fauxblockINT(xfaux,5,1); fauxINT(xposearg,xfaux,wr+axisct-2,1) /* obsolete GATV(xposearg,INT,wr+axisct-2,1,0); AS(xposearg)[0]=wr+axisct-2; */ I *xpv=IAV(xposearg);
     DO((axisct>>1)-1, *xpv++ = 4*i+3; *xpv++=4*i+2;) if(axisct&1)*xpv++=2*axisct-4;  // Rn
     DO(axisct>>1, *xpv++ = 4*i+0; *xpv++=4*i+1;) if(axisct&1)*xpv++=2*axisct-3;  // Sn
     DO(wr-axisct, *xpv++=2*axisct+i-2;);  // Wn, all the rest

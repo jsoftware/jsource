@@ -998,7 +998,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
-  if(1==rank&&!(type&SPARSE))*AS(z)=atoms; else if(shaape&&rank){AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1];)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape/* obsolete &&rank */){MCIS(AS(z),shaape,rank) /* obsolete AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1]; )*/}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
 // obsolete   AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction

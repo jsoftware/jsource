@@ -338,10 +338,15 @@
 #define facit(x)                    jtfacit(jt,(x))
 #define fact(x)                     jtfact(jt,(x))
 #define factor(x)                   jtfactor(jt,(x))
-#define fauxblock(z) I z[NORMAH+4]  // define a block that can be passed in to fauxvirtual.  The 4 is the max rank, and must match fauxvirtual
+#define fauxblock(z) I z[NORMAH+4]  // define a block that can be passed in to fauxvirtual.  The 4 is the max rank, and must match fauxvirtual and fauxplain
+#define fauxblockINT(z,n,r) I z[(AKXR(r)>>LGSZI)+(n)]   // define a block, big enough to hold n atoms at rank r, for use in fauxINT
+// Allocate an INT block. z is the zvalue to hold the result; v is the fauxblock to use if n INTs will fit in the fauxblock, which has rank r
+// shape is not filled in, except when rank is 1; therefore shape will be 0 in any call to GATV
+// scaf We should mark the blocks as NJA for good form, but that messes up relative processing.  Revisit when all trace of boxed mmas has been expunged
+#define fauxINT(z,v,n,r) {if(AKXR(r)+(n)*SZI<=sizeof(v)){z=(A)(v); AK(z)=AKXR(r); AFLAG(z)=0/*AFNJA*/; AT(z)=INT; AC(z)=ACUC1; AN(z)=(n); AR(z)=(RANKT)(r); if(r==1)AS(z)[0]=(n);}else{GATV(z,INT,(n),(r),0);}}
 // v is a block declared by fauxblock, w is the source data, r is the rank.  offset is assumed 0.  c is the initial value for AC.  If the rank is small enough, we use the fauxblock, otherwise
 // we allocate a block.  We assume that the caller will fill in AN, AS.  Block must be marked UNINCORPABLE so it will not free its backer if freed, and so it will not be in-place virtualed
-#define fauxvirtual(z,v,w,r,c) {if(r<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)r; AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE; z=AFLAG(w)&AFVIRTUAL?z:w; ABACK((A)(v))=z; z=(A)(v);} \
+#define fauxvirtual(z,v,w,r,c) {if(r<=4){z=ABACK(w); AK((A)(v))=(CAV(w)-(C*)(v)); AT((A)(v))=AT(w); AR((A)(v))=(RANKT)r; AFLAG((A)(v))=AFVIRTUAL|AFUNINCORPABLE/*|AFNJA*/; z=AFLAG(w)&AFVIRTUAL?z:w; ABACK((A)(v))=z; z=(A)(v);} \
                               else{RZ(z=virtual(w,0,r)); AFLAG(z)|=AFUNINCORPABLE;}  AC(z)=(c);}
 #define fdef(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11)     jtfdef(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6),(x7),(x8),(x9),(x10),(x11))
 #define fdep(x)                     jtfdep(jt,(x))

@@ -261,12 +261,13 @@ F2(jtstitch){B sp2;I ar,wr;
  R sp2 ? stitchsp2(a,w) : irs2(a,w,0L,ar?ar-1:0,wr?wr-1:0,jtover);
 }
 
-F1(jtlamin1){A x;I*s,*v,wcr,wf,wr; 
+F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
  RZ(w);
 // obsolete  wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); RESETRANK;} wf=wr-wcr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
- GATV(x,INT,1+wr,1,0); v=AV(x);
- s=AS(w); MCIS(v,s,wf); *(v+wf)=1; MCIS(v+1+wf,s+wf,wcr);
+// obsolete  GATV(x,INT,1+wr,1,0);
+ fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
+ s=AS(w); MCISds(v,s,wf); *v++=1; MCISds(v,s,wcr);  // frame, 1, shape - the final shape
  R reshape(x,w);
 }    /* ,:"r w */
 

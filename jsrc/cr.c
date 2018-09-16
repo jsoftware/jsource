@@ -269,10 +269,10 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  wr=AR(w); ws=AS(w); efr(rcr,wr,rcr); efr(rr,rcr,rr);// obsolete  if(rr>rcr)rr=rcr;
 
  // RANKONLY verbs were handled in the caller to this routine, but fs might be RANKATOP.  In that case we can include its rank in the loop here, which will save loop setups
- if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-(rr^rcr))|(-(lr^lcr)))>=0){I lrn, rrn;  // prospective new ranks to include
-  efr(lrn,lr,(I)FAV(fs)->lr); efr(rrn,rr,(I)FAV(fs)->rr);  // get the ranks if we accept the new cell
+ if(fs&&(I)(((FAV(fs)->flag2&(VF2RANKATOP2|VF2BOXATOP2))-1)|(-((rr^rcr)|(lr^lcr))))>=0){/* obsolete I lrn, rrn; */  // prospective new ranks to include
+  efr(lr,lr,(I)FAV(fs)->lr); efr(rr,rr,(I)FAV(fs)->rr);  // get the ranks if we accept the new cell
 // obsolete   if((((lrn-lr)&(lr-lcr))|((rrn-rr)&(rr-rcr)))>=0){  //  if either side has 3 different ranks, stop, no room
-  lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
+// obsolete   lr=lrn; rr=rrn;   // We can include the @ in the loop.  That means we can honor its BOXATOP too...
   state = (FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.  Don't touch fs yet, since we might not loop
   state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
   // if we are using the BOXATOP from f, we can also use the raze flags.  Set these only if BOXATOP to prevent us from incorrectly
@@ -378,10 +378,10 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #define ZZINSTALLFRAME(optr) MCISd(optr,los,lof) MCISd(optr,lis,lif)
 
   for(i0=outerframect;i0;--i0){
-   I outerrptstart=state&STATEOUTERREPEATA?AK(virta):AK(virtw);
+   I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);
    // loop over the unmatched part of the outer frame, repeating the shorter argument
    for(i1=outerrptct;i1;--i1){  // make MOVEY? post-increment
-    if(state&STATEOUTERREPEATA){AK(virta) = outerrptstart;}else{AK(virtw) = outerrptstart;}
+    AK(state&STATEOUTERREPEATA?virta:virtw) = outerrptstart;
     // loop over the matched part of the inner frame
     for(i2=innerframect;i2;--i2){
      // loop over the unmatched part of the inner frame, repeating the shorter argument

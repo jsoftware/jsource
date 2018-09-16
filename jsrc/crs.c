@@ -44,7 +44,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
   t=AT(q); zt=STYPE(t);
   GA(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
   zp=PAV(z); SPB(zp,e,q); SPB(zp,a,mtv); 
-  GATV(q,INT,0L,2L,&zeroZ); SPB(zp,i,q); 
+  GATV(q,INT,0L,2L,(I*)&zeroZ); SPB(zp,i,q);   // zeroZ is a pun for 0 0!!
   GA(q,t,0L,1+AR(z),0L); *AS(q)=0; ICPY(1+AS(q),AS(z),AR(z)); SPB(zp,x,q);
   R z;
  }

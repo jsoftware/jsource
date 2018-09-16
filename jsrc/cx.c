@@ -168,7 +168,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
   jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
  }
- // remember tbase.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
+ // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
  old=jt->tnextpushx; 
  // loop over each sentence
@@ -234,7 +234,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CFOR:
    case CSELECT: case CSELECTN:
     // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
-    // if it fills up, extend it by 1 as required
+    // if it fills up, double it as required
     if(!r)
      if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
      else  {r=9; BGATV(cd,INT,r*WCD,1,0); ras(cd); cv=(CDATA*)AV(cd)-1;}
@@ -351,6 +351,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
  FDEPDEC(1);  // OK to ASSERT now
+if(cd)if(cv+1!=(CDATA*)AV(cd))
+  *(I*)0=0; // scaf
  fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that

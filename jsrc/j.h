@@ -428,7 +428,7 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  AR(name)=(RANKT)(rank);     \
- if((1==(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}    \
+ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if((shaape)/* obsolete &&(rank) */){MCIS(AS(name),shaape,rank) /* obsolete AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1]; )*/}   \
  /* obsolete AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx; */    \
 }
 #if 0 // obsolete
@@ -460,7 +460,7 @@ extern unsigned int __cdecl _clearfp (void);
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if((1==(RANKT)(rank))&&!(type&SPARSE))*AS(name)=atoms; else if((shaape)&&(rank)){AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1];)}   \
+ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if((shaape)/* obsolete &&(rank) */){MCIS(AS(name),shaape,rank) /* obsolete AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1]; )*/}   \
   /* obsolete AM(name)=((I)1<<((MS*)name-1)->j)-mhb-akx; */     \
   /* obsolete name=ZZz; */   \
  }else{erraction;} \

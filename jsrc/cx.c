@@ -291,7 +291,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
+// obsolete    if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
     i=ci->go; if(tdi)jt->db=od;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
@@ -342,7 +342,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...
    default:   //   CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
-    if(2<=*jt->adbreakr) {if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);} BASSERT(0,EVBREAK);} 
+    if(2<=*jt->adbreakr) {/* obsolete if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}*/ BASSERT(0,EVBREAK);} 
       // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
@@ -351,13 +351,17 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // The -1 means 'flag as non-noun, don't actually execute'
  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
  FDEPDEC(1);  // OK to ASSERT now
- fa(cd);   // deallocate the explicit-entity stack, which was allocated after we started the loop
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
  // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
  // to be worth the trouble.
  if(z)realizeifvirtual(z);
  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is
+ // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
+ if(cd){
+  CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
+  fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
+ }
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are freed by the normal mechanism

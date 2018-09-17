@@ -184,6 +184,11 @@ f11=: 4 : 0
 (i:~x) -: f11"0 1~x=: ?100$90
 _999 = 1e7 f11 x
 
+f12 =:  3 : 'try. for. +: 2 3 do. 13!:8(1) end. catch. end. 1'
+a =. 7!:0''
+f12 "0 (1000) $ 10  NB. Check for memory leak
+3000 > | a - 7!:0 ''
+
 'ill-formed name' -: ex '3 : ''for_123. 4 5 6 do. 7 end.'' '
 'ill-formed name' -: ex '3 : ''for_1ab. 4 5 6 do. 7 end.'' '
 'ill-formed name' -: ex '3 : ''for__ab. 4 5 6 do. 7 end.'' '
@@ -256,7 +261,7 @@ f=: 4 : 0  NB. assertions on queens n
 (f queens)"0 i.9
  
 
-4!:55 ;:'comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11'
+4!:55 ;:'a comp f f0 f1 f1a f2 f2a f3 f3a f4 f5 f6 f7 f8 f9 f10 f11 f12'
 4!:55 ;:'g0 g1 n queens x '
 
 

@@ -760,6 +760,12 @@ extern unsigned int __cdecl _clearfp (void);
 // table, and it expects TSCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
 #define CTTZNOFLAG(w) (CTTZ(w)&31)
 
+#ifdef __GNUC__
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)
+#endif
+#endif
+
 // Insert other compilers/architectures here
 
 // Insert CTLZ here if CTTZ is not available

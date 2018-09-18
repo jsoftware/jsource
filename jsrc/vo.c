@@ -405,7 +405,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
  // if there were no nonempty contents, go back & pick highest-priority type of empty
  if(!t)DO(n, y=(A)AABS(v[i],wrel); k=AT(y); RE(t=maxtype(t,k)););
  // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
- GATV(cs,INT,r,1,0); u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
+ fauxblockINT(csfaux,4,1); fauxINT(cs,csfaux,r,1) /* obsolete GATV(cs,INT,r,1,0); */ u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  // find the shape of a result-cell
  DO(n, y=(A)AABS(v[i],wrel); s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
@@ -433,7 +433,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* RESTRICT zv;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
  d=SZI*(r-1); RELORIGINB(wrel,w);   // d=#bytes in (stored shape of result-cell)  b=relocation offset for w (0 if not relative)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
- GATV(h,INT,r,1,0); s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
+ fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) /* obsolete GATV(h,INT,r,1,0); */ s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
   // y->A block for contents of w[i]; yr=rank of y; ys->shape of y
   // if contents has the same rank as result, it is an array of result-cells, and each item adds
@@ -481,7 +481,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
  // Now we know the type of the result.  Create the result.
 // obsolete k=bp(t); p=c?k*m/c:0;  // k=#bytes in atom of result; p=#bytes/result cell
  k=bp(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
- GATV(h1,INT,r,1,0); v1=AV(h1);  // create place to hold shape of cell after rank extension
+ fauxblockINT(h1faux,4,1); fauxINT(h1,h1faux,r,1) /* obsolete GATV(h1,INT,r,1,0); */ v1=AV(h1);  // create place to hold shape of cell after rank extension
  GA(z,t,m,r,s); if(zrel){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;}   // create result area, shape s; zrel now is relocation offset for result
  zu=CAV(z); zv=AAV(z);  // output pointers
  // loop through each contents and copy to the result area

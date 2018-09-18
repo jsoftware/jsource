@@ -98,7 +98,7 @@ A jtapv(J jt,I n,I b,I m){A z;
 
 B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}
 
-B*jtbfi(J jt,I n,A w,B p){A t;B*b;I*v;
+B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
  GATV(t,B01,n,1,0); b=BAV(t);
  memset(b,!p,n); v=AV(w); DO(AN(w), b[v[i]]=p;);
  R b;
@@ -190,7 +190,7 @@ B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
 // Extract the integer value from w, return it.  Set error if non-integral
 I jti0(J jt,A w){if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R*AV(w);}
 
-A jtifb(J jt,I n,B*b){A z;I m,*zv; 
+A jtifb(J jt,I n,B* RESTRICT b){A z;I m,* RESTRICT zv; 
  m=bsum(n,b); 
  if(m==n)R IX(n);
  GATV(z,INT,m,1,0); zv=AV(z);
@@ -263,16 +263,24 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
 }}
 */
 
-A jtodom(J jt,I r,I n,I*s){A q,z;I j,m,mn,*u,*zv;
+// odometer, up to the n numbers s[]
+A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
  RE(m=prod(n,s)); RE(mn=mult(m,n));
  GATV(z,INT,mn,2==r?2:n,s);
-zv=AV(z)-n;
+// obsolete zv=AV(z)-n;
  if(2==r){u=AS(z); u[0]=m; u[1]=n;}
- if(!(m&&n))R z;
- if(1==n)DO(m, *++zv=i;)
- else{I k=n*SZI;
+ if(!mn)R z;
+ zv=IAV(z);
+ if(1==n)DO(m, zv[i]=i;)
+ else{
+#if 0 // obsolete
+  I k=n*SZI;
   GATV(q,INT,n,1,0); u=AV(q); memset(u,C0,k); u[n-1]=-1;
   DO(m, ++u[j=n-1]; DO(n, if(u[j]<s[j])break; u[j]=0; ++u[--j];); MC(zv+=n,u,k););
+#else
+  I *zvo=zv-1; DQ(n, *zv++=0;)   // init first row, point zvo to before the first value
+  DQ(m-1, I dontadd=0; zv=zvo+n; zvo=zv+n; DQ(n, I out=*zv + 1 + dontadd; dontadd=(out-s[i])>>(BW-1); *zvo = out&dontadd; --zv; --zvo;))  // add 1 first time, & continue as long as there is carry.  Once dontadd goes to -1 it stays there
+#endif
  }
  R z;
 }

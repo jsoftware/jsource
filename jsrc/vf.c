@@ -275,10 +275,11 @@ F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;
  if((1<acr)|(acr<ar))R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreitem);  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
+ fauxblockINT(yfaux,4,1);
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)
  else{   // rank y > 1: append the shape of an item of y to x
   RZ(a=vi(a)); an=AN(a); acr=1;  // if a was an atom, now it is a list
-  GATV(y,INT,an+r,1,0); v=AV(y);
+  fauxINT(y,yfaux,an+r,1) /* obsolete  GATV(y,INT,an+r,1,0);*/ v=AV(y);
   MCISd(v,AV(a),an); MCISd(v,AS(w)+wr-r,r);
  }
 // obsolete  R ar==acr&&wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,m,wcr,jtreshape);

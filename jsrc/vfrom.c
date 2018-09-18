@@ -239,14 +239,14 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  wr=AR(w); ws=AS(w); wcr=wr-wf;
  DO(ar, if(!as[i]){b=1; break;});
  DO(wr, if(!ws[i]){b=1; break;});
- if(b){
+ if(b){  // empty array, either a or w
   GA(z,AT(w),0,wf+(wcr-h)+(ar-1),0); u=AS(z);
   v=ws;      DO(wf,    *u++=*v++;);
   v=as;      DO(ar-1,  *u++=*v++;);
   v=ws+wf+h; DO(wcr-h, *u++=*v++;);
   R z;
- } 
- GATV(p,INT,h,1,0); v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
+ }
+ fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) /* obsolete GATV(p,INT,h,1,0); */ v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
  r=wr+1-h;
  if(r==wr)
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);

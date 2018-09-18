@@ -58,8 +58,9 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
 // obsolete  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
+ fauxblockINT(afaux,4,1);
  if(wf=wr-r){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
-  GATV(a,INT,wr,1,0); tv=AV(a); 
+  fauxINT(a,afaux,wr,1) /* obsolete GATV(a,INT,wr,1,0); */ tv=AV(a); 
   DO(wf, tv[i]=i;); DO(r, tv[wf+i]=wf+av[i];);  // adjust other axes up to move out of the way of the prefix axes
   av=tv;
  }

@@ -66,7 +66,7 @@ static B jtforinit(J jt,CDATA*cv,A t){A x;C*s,*v;I k;
 static B jtunstackcv(J jt,CDATA*cv){
  if(cv->x){ex(link(cv->x,str(cv->k,cv->iv))); fa(cv->x);}
  fa(cv->t); 
- memset(cv,C0,WCD*SZI); 
+// obsolete  memset(cv,C0,WCD*SZI); 
  R 1;
 }
 

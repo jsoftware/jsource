@@ -181,11 +181,12 @@ void auditblock(A w, I nonrecurok, I virtok) {
 
 
 
-// Run parser, creating a new debug frame.  Explicit defs, which don't take the time, go through jtparseas
+// Run parser, creating a new debug frame.  Explicit defs, which make other tests, go through jtparseas
 F1(jtparse){A z;
  RZ(w);
- RZ(deba(DCPARSE,0L,w,0L,0L));
- z=parsea(w);
+ A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
+ RZ(deba(DCPARSE,queue,(A)m,0L,0L));
+ z=parsea(queue,m);
  debz();
  R z;
 }
@@ -362,10 +363,10 @@ static A virthook(J jtip, A f, A g){
 #define SM(to,from) stack[to]=stack[from]
 
 // Parse a J sentence.  Input is the queue of tokens
-F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table entry
+A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es,i; UI4 maxnvrlen; L* s;  // symbol-table entry
  // we know what the compiler does not: that jt->sitop and mark are constant even over function calls.
  // So we move those values into local names.
- RZ(w);  // if nothing to do, it is OK to exit before we start pushing
+// obsolete  RZ(w);  // if nothing to do, it is OK to exit before we start pushing
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
  // others), it must be set at the time the assignment is executed.  We catch it in the action routine,
@@ -374,8 +375,8 @@ F1(jtparsea){PSTK *stack;A z,*v;I es,i,m; UI4 maxnvrlen; L* s;  // symbol-table 
  // jt->sitop->dci must be set before executing anything that might fail; it holds the original
  // word number+1 of the token that failed.  jt->sitop->dci is set before dispatching an action routine,
  // so that the information is available for formatting an error display
- A *queue=AAV(w)-1;
- m=AN(w); jt->asgn = 0; I *dci=&jt->sitop->dci;
+// obsolete  A *queue=AAV(w)-1;
+ --queue; jt->asgn = 0; I *dci=&jt->sitop->dci;  // it is convenient to start the queue pointing before the actual data
 // obsolete  A locmark = mark;
  if(m>1) {  // normal case where there is a fragment to parse
 

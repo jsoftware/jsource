@@ -24,7 +24,7 @@
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
 // h is the array of saved info for the definition; hv->pointers to boxes;
-// hi=0 for monad, 3 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
+// hi=0 for monad, 4 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
 #define LINE(sv)       {A x; \
                         h=sv->h; hv=AAV(sv->h); hi=a&&w?HN:0; \
                         line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
@@ -92,12 +92,13 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 // We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
 // address/length into parsex.  The address and length of the sentence are filled in as needed
 
-// Fill in 'queue' to point to the words of the sentence: n words starting at index i
-#define makequeue(n,i) (AN(&jt->cxqueuehdr)=(n),AK(&jt->cxqueuehdr)=(I)((C*)(line+i)-(C*)&jt->cxqueuehdr),&jt->cxqueuehdr)
+// obsolete // Fill in 'queue' to point to the words of the sentence: n words starting at index i
+// obsolete #define makequeue(n,i) (AN(&jt->cxqueuehdr)=(n),AK(&jt->cxqueuehdr)=(I)((C*)(line+i)-(C*)&jt->cxqueuehdr),&jt->cxqueuehdr)
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
-    /* Recreate the execution of the failing sentence, and show an error for it */ \
-    i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), -1, &cw[ti], d,stkblk); \
+    /* Signal post-exec error*/ \
+    t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d,stkblk); \
+/* obsolete     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), lk, &cw[ti], d,stkblk); */ \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
     i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->db = od; } }else z=0;  \
     break; }
@@ -203,7 +204,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
    case CBBLOCK:
     // B-block (present on every sentence in the B-block)
     // run the sentence
-    tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
+// obsolete     tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
+    tpop(old); z=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
@@ -217,15 +219,14 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->db=od;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     break;
    case CASSERT:
-    // assert.  If assertions disabled, skip the line and continue
-    if(!jt->assert){++i; break;}
-    // otherwise fall through to process the line.
    case CTBLOCK:
     // execute and parse line as if for B block, except save the result in t
     // If there is a possibility that the previous B result may become the result of this definition,
     // protect it during the frees during the T block.  Otherwise, just free memory
     if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
-    t=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
+    t=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
+    // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
+    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d,stkblk);  // signal post-execution error if result not all 1s.  Sets t to 0
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -347,9 +348,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     i=ci->go;  // Go to the next sentence, whatever it is
  }}
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
- // If it isn't, abortively reexecute the sentence that created the non-noun result, and flag it as error
- // The -1 means 'flag as non-noun, don't actually execute'
- if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
+ // If it isn't, generate a post-eceution error for the non-noun
+// obsolete  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
+ if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d,stkblk);  // sets z to 0
  FDEPDEC(1);  // OK to ASSERT now
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that

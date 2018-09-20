@@ -14,14 +14,14 @@
 /*    d=deba(...);                                       */
 /*    ASSERT(blah,EVDOMAIN);                             */
 /*    debz()                                             */
-// q, if given, is the block to use for the debug stack; otherwise allocated
+// d, if given, is the block to use for the debug stack; otherwise allocated
 
-DC jtdeba(J jt,C t,A x,A y,A fs,DC d){
- if(!d){A q; GATV(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
+DC jtdeba(J jt,C t,void *x,void *y,A fs,DC d){
+ if(!d){A q; GAT(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
-  case DCPARSE:  d->dcy=(A)AAV(y); d->dcn=AN(y); break;
+  case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
   case DCSCRIPT: d->dcy=y; d->dcm=(I)fs; break;
   case DCCALL:   
    d->dcx=x; d->dcy=y; d->dcf=fs; 
@@ -131,15 +131,29 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;I*v;
  R z;
 }
 
-
+#if 0 // obsolete 
 // Parse line & check for assertion
 static A jtparseas(J jt,B as,A w){A z;
  // If w is 0, we don't parse, but instead raise 'noun result was required' error on the beginning of the sentence
  if(!w){jt->sitop->dci=1; jsignal(EVNONNOUN); R 0;}
  // normal path is to execute the sentence
- z=parsea(w);  /* y is destroyed by parsea ??? */
+ z=parsea(AAV(w),AN(w));  /* y is destroyed by parsea ??? */
  if(as&&z)ASSERT(NOUN&AT(z)&&all1(eq(one,z)),EVASSERT);
  R z;
+}
+
+#endif
+
+// post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
+// we reconstruct conditions at the beginning of the parse, and set an error on token 1.
+A jtpee(J jt,A *queue,I m,I err,B lk,CW*ci,DC c,DC d){DC prevtop=jt->sitop;   // next-higher stack frame
+ if((signed char)lk>0)R0  //  locked fn is totally opaque, with no stack
+ RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
+ d->dci=1; jsignal(err);   // indicate failing token# (not needed, since the parse ended OK), signal the requested error
+ // enter debug mode if that is enabled
+ if(jt->db&&(DBTRY!=jt->db)){prevtop->dcj=d->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ debz();
+ R0
 }
 
 /* parsex: parse an explicit defn line              */
@@ -149,17 +163,17 @@ static A jtparseas(J jt,B as,A w){A z;
 /* c  - stack entry for dbunquote for this function */
 // d - DC area to use in deba
 
-A jtparsex(J jt,A w,B lk,CW*ci,DC c,DC d){A z;B as,s;DC t=jt->sitop;
- RZ(w);
+A jtparsex(J jt,A* queue,I m,B lk,CW*ci,DC c,DC d){A z;B s;DC t=jt->sitop;
+// obsolete  RZ(w);
  JATTN;
- as=ci->type==CASSERT;
- if((signed char)lk>0)R parseas(as,w);
- RZ(d=deba(DCPARSE,0L,w,0L,d));
- if((signed char)lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
- if(0==c)z=parseas(as,w);   /* anonymous or not debug */
+// obsolete  as=ci->type==CASSERT;
+ if((signed char)lk>0)R parsea(queue,m);
+ RZ(d=deba(DCPARSE,queue,(A)m,0L,d));
+// obsolete  if((signed char)lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
+ if(0==c)z=parsea(queue,m);   /* anonymous or not debug */
  else{                      /* named and debug        */
   if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
-  else                      {z=parseas(as,w);     }
+  else                      {z=parsea(queue,m);     }
   // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
   // executed 13!:0]0, and we should continue on outside of debug mode
   if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=d->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens

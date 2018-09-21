@@ -298,7 +298,7 @@ static void auditsimverify0(A w){
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
    if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimverify0((A)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimverify0((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(v->f); auditsimverify0(v->g); auditsimverify0(v->h);
   }else if(AT(w)&RAT|XNUM) {
@@ -327,7 +327,7 @@ static void auditsimdelete(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimdelete((A)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimdelete((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->f); auditsimdelete(v->g); auditsimdelete(v->h);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimdelete(*v); ++v;)
@@ -350,7 +350,7 @@ static void auditsimreset(A w){I delct;
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
    I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
    if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
-   DO(n, auditsimreset((A)((I)wv[i]+(I)wrel)););
+   DO(n, auditsimreset((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->f); auditsimreset(v->g); auditsimreset(v->h);
   }else if(AT(w)&RAT|XNUM) {A* v=AAV(w);  DO(AT(w)&RAT?2*AN(w):AN(w), if(*v)auditsimreset(*v); ++v;)
@@ -498,7 +498,7 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller
 RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
- J jt=(J)((I)jtip&~(JTINPLACEW|JTINPLACEA));  // get flag-free pointer to J block
+ J jt=(J)(intptr_t)((I)jtip&~(JTINPLACEW|JTINPLACEA));  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  I tal=bp(t);  // length of an atom of t
@@ -689,11 +689,11 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   I anysmrel=af&(AFREL|AFSMM)?0:AFNOSMREL;   // init with the status for this block
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  np=(A)((I)*wv+(I)wrel); ++wv;  // point to block for the box
+  np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
   while(1){AD* np0;  // n is always > 0 to start
    if(--n<0)break;
    if(n){   // mustn't read past the end of the block, in case of protection check
-    np0=(A)((I)*wv+(I)wrel); ++wv;  // point to block for next box
+    np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for next box
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
@@ -726,11 +726,11 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
-  np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+  np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
   while(1){AD* np0;
    if(--n<0)break;
    if(n){
-    np0=(A)((I)*wv+(I)wrel); ++wv;   // point to block for next box
+    np0=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for next box
 #ifdef PREFETCH
     PREFETCH((C*)np0);   // prefetch the next box
 #endif
@@ -762,7 +762,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
-   A np=(A)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   A np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
     I tp=AT(np); I flg=AFLAG(np); // fetch type
     *(A*)((I)tstack+pushx)=np;  // put the box on the stack

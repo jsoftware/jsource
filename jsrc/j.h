@@ -395,7 +395,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&~(JTINPLACEW+JTINPLACEA))
+#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~(JTINPLACEW+JTINPLACEA))
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell

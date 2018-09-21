@@ -309,7 +309,7 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
 // obsolete  d=0.0; e=zeroZ;
  RE(t=maxtype(at,wt)); if(b)RE(t=maxtype(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtype(t,FL));
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
- if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
+ if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
  if(b){
   // mult/roots: convert and extract the coeff
   RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);

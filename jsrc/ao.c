@@ -293,7 +293,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
 // obsolete z=df2(frets,wperm,cut(VAV(self)->f,one));  // scaf remove the call to cut and put one in as g; use fs.  Verify that display is correct with g set
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // We pass the self pointer for /. into cut, as it uses that fact to interpret a
- z=jtcut2((J)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->f)->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+ z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->f)->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  jt->ct=ctold;
  EPILOG(z);
 }    /* a f/. w for dense x & w */

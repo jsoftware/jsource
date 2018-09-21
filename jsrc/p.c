@@ -207,25 +207,25 @@ A virtifnonip(J jt, I ipok, A buf) {
 
 // We intercept all the function calls, for this file only
 static A virtdfs1(J jtip, A w, A self){
- J jt = (J)((I)jtip&-4);  // estab legit jt
+ J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
  R jtdfs1(jtip,w,self);
 }
 static A virtdfs2(J jtip, A a, A w, A self){
- J jt = (J)((I)jtip&-4);  // estab legit jt
+ J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  a = virtifnonip(jt,(I)jtip&JTINPLACEA,a);
  w = virtifnonip(jt,(I)jtip&JTINPLACEW,w);
  R jtdfs2(jtip,a,w,self);
 }
 static A virtfolk(J jtip, A f, A g, A h){
- J jt = (J)((I)jtip&-4);  // estab legit jt
+ J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
  g = virtifnonip(jt,0,g);
  h = virtifnonip(jt,0,h);
  R jtfolk(jtip,f,g,h);
 }
 static A virthook(J jtip, A f, A g){
- J jt = (J)((I)jtip&-4);  // estab legit jt
+ J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
  g = virtifnonip(jt,0,g);
  R jthook(jtip,f,g);
@@ -349,8 +349,8 @@ static A virthook(J jtip, A f, A g){
 
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb.  zomb is 1 if it is OK to set assignsym/zombieval
-#define DFSIP1(v,w,zomb) if(FAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(FAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w,zomb) if(FAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)(intptr_t)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(FAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)(intptr_t)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  
 // we pass in the stack index of the verb, and infer the operands from that

@@ -411,7 +411,7 @@ typedef I SI;
 #define ARELATIVE(w)    (ARELATIVES(w) >= 0)   // test if we don't, branchless
 #define AORWRELATIVE(a,w) ((ARELATIVES(a)&ARELATIVES(w))>=0)  // true if EITHER has sign 0
 #define AORWRELATIVEB(a,w) (((AFLAG(a)|AFLAG(w))&AFNJA+AFSMM+AFREL)!=0)  // same test, but this time known to be boxed.  branches or computation
-#define AADR(w,z)       (A)((I)(w)+(I)(z))   // was ((w)?(A)((I)(w)+(I)(z)):(z))
+#define AADR(w,z)       (A)(intptr_t)((I)(w)+(I)(z))   // was ((w)?(A)(intptr_t)((I)(w)+(I)(z)):(z))
 // get the base to add to relative refs.  It's the origin of this block unless this block is virtual: then the origin of the backing block
 // here the block is known (or assumed) to be relative and boxed.  asgn is an I name we declare and use for assignment.  Result is I
 // obsolete #define RELORIGIN(asgn,w)    ((I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w))
@@ -443,13 +443,13 @@ typedef I SI;
 // obsolete #define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
 #define RELOCATE(w,z)   if(ARELATIVE(w)){RELORIGIN(wrel,w); relocate(wrel-(I)(z),(z));}
 // copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
-#define RELOCOPY(to,from,n,offset) DO(n, to[i]=(A)((I)from[i]+offset);)
+#define RELOCOPY(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)from[i]+offset);)
 // same, but use an incrementing pointer for to
-#define RELOCOPYT(to,from,n,offset) DO(n, *to++ =(A)((I)from[i]+offset);)
+#define RELOCOPYT(to,from,n,offset) DO(n, *to++ =(A)(intptr_t)((I)from[i]+offset);)
 // same, but use an incrementing pointer for from
-#define RELOCOPYF(to,from,n,offset) DO(n, to[i]=(A)((I)*from++ +offset);)
+#define RELOCOPYF(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)*from++ +offset);)
 // same, but use an incrementing pointer for to and from
-#define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)((I)*from++ +offset);)
+#define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)(intptr_t)((I)*from++ +offset);)
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;
 

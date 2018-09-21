@@ -954,7 +954,7 @@ extern X        xone;
 extern X        xzero;
 extern A        ydot;
 extern A        ynam;
-extern I yxbuckets[nptab][2];
+extern UI4      yxbuckets[14];
 extern A        zero;
 extern A        zeroi;
 extern Z        zeroZ;

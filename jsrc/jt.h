@@ -61,23 +61,23 @@ typedef struct {
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
- C    dbss;             /* single step mode                                */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
  C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
- B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
- B    tostdout;         /* 1 if output to stdout                           */
+ B    assert;           /* 1 iff evaluate assert. statements               */
  UC   db;               /* debug flag; see 13!:0                           */
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
+ C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug redef)
+// 1 byte free
 // --- end cache line 4
  UC   prioritytype[11];  // type bit for the priority types
  B    stswitched;       /* called fn switched locale                       */
- B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
- B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
- C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
  B    iepdo;            /* 1 iff do iep                                    */
+ C    dbss;             /* single step mode                                */
+ B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
+ B    tostdout;         /* 1 if output to stdout                           */
  A    fill;             /* fill                                            */
  C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
@@ -94,6 +94,7 @@ typedef struct {
  A    fopf;             /* open files corresp. file numbers                */
  I    fopn;             /* open files count                                */
  I    getlasterror;     /* DLL stuff                                       */
+ void *dtoa;             /* use internally by dtoa.c                        */
 // end cache line 6.
  UC   disp[7];          /* # different verb displays                       */
  UC   outeol;           /* output: EOL sequence code                       */
@@ -109,11 +110,12 @@ typedef struct {
  I    fcalln;           /* named fn calls: maximum permissible depth       */
  I    fdepi;            /* fn calls: current depth                         */
  I    fdepn;            /* fn calls: maximum permissible depth             */
- void*dtoa;             /* use internally by dtoa.c                        */
+ B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
+ B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
+ C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
- B    assert;           /* 1 iff evaluate assert. statements               */
-// space here
+// 3 bytes here
 // --- end cache line 8
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */

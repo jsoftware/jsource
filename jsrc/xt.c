@@ -207,7 +207,7 @@ F1(jtpmctr){D x;I q;
  ASSERT(jt->pma,EVDOMAIN);
  x=q+(D)jt->pmctr;
  ASSERT(IMIN<=x&&x<=IMAX,EVDOMAIN);
- jt->pmctr=q=(I)x;
+ jt->pmctr=q=(I)x; jt->cxspecials=1;  // tell cx to look for pm
  R sc(q);
 }    /* add w to pmctr */
 

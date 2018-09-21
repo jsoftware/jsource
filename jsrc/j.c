@@ -87,7 +87,7 @@ I ptab[]={
 };
 // The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
 // created with size i.  The argument names supported are ynam and xnam.
-I yxbuckets[nptab][2];    // bucket positions for x. and y.
+UI4 yxbuckets[14];    // bucket positions for x/y (x in high part).  Only 14, because we can't hold more than 16 bits here
 
 // globals end
 

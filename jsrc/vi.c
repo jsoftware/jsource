@@ -9,15 +9,6 @@
 // platforms without hardware crc32c
 #if !C_CRC32C
 
-
-// Emulate bucket calculation for local names.  This is called as part of globinit initialization
-void bucketinit(){I j;
- for(j=0;j<sizeof(yxbuckets)/sizeof(yxbuckets[0]);++j){
-  yxbuckets[j][0]=SYMHASH(NAV(ynam)->hash,ptab[j]);
-  yxbuckets[j][1]=SYMHASH(NAV(xnam)->hash,ptab[j]);
- }
-}
-
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */
 /* VAX                     1 0 3 2 5 4 7 6           */

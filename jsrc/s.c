@@ -422,7 +422,7 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
   // Reassignment outside of debug waits until the name is off the stack
-  if(CCOLON==FAV(w)->id)jt->redefined=(I)v;
+  if(CCOLON==FAV(w)->id){jt->redefined=(I)v; jt->cxspecials=1;}
   // Erase any stack entries after the redefined call
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }

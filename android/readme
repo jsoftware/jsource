@@ -12,6 +12,9 @@ $ cd ..
 
 $ ndk-build
 
+for armeabi and armeabi-v7a targets, use gcc and older version of ndk
+$ NDK_TOOLCHAIN_VERSION=4.9 ~/android/android-ndk-r14b/ndk-build
+
 binaries in libs folder
 
 3. jconsole readline implemented with linenoise

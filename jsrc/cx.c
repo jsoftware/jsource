@@ -29,6 +29,9 @@
                         h=sv->h; hv=AAV(sv->h); hi=a&&w?HN:0; \
                         line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
 
+// Parse/execute a line, result in z.  If locked, reveal nothing
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(attnval){jsignal(EVATTN); z=0;}else if(!lk){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; z=parsea(queue,m);}else if(lk>0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}
+
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
 /* line  'for_xyz.'              */
@@ -88,24 +91,24 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
  while(tdi&&(tdv[tdi-1].b>dest||tdv[tdi-1].e<dest))--tdi;  // discard stack frame if structure does not include dest
  R tdi;
 }
-
-// We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
-// address/length into parsex.  The address and length of the sentence are filled in as needed
-
+// obsolete 
+// obsolete // We use a preallocated header in jt to point to the sentences as they are executed.  This is less of a rewrite than trying to pass
+// obsolete // address/length into parsex.  The address and length of the sentence are filled in as needed
+// obsolete 
 // obsolete // Fill in 'queue' to point to the words of the sentence: n words starting at index i
 // obsolete #define makequeue(n,i) (AN(&jt->cxqueuehdr)=(n),AK(&jt->cxqueuehdr)=(I)((C*)(line+i)-(C*)&jt->cxqueuehdr),&jt->cxqueuehdr)
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Signal post-exec error*/ \
-    t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d,stkblk); \
+    t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d); \
 /* obsolete     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), lk, &cw[ti], d,stkblk); */ \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
     i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->db = od; } }else z=0;  \
     break; }
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,lk,named;CDATA*cv;
-  CW *ci,*cw;DC d=0,stkblk;I bi,symtabsize,hi,i=0,j,m,n,old,r=0,st,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->db;
+static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin,named;I lk; CDATA*cv;
+  CW *ci,*cw;DC d=0;I bi,symtabsize,hi,i=0,j,m,n,old,r=0,st,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->db;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // z is the final result (initialized here in case there are no executed lines)
@@ -119,6 +122,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // lk=this definition is locked; named=this definition is named; cn=current name, cl=current locale
  lk=jt->glock||VLOCK&sv->flag; named=VNAMED&sv->flag?1:0; cn=jt->curname; cl=jt->curlocn;
  d=named&&jt->db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
+if(lk==0 && d)lk=-1;  
  // If this is a verb referring to x or y, set u, v to the operands, and sv to the saved text
  if(VXOP&sv->flag){u=sv->f; v=sv->h; sv=VAV(sv->g);}
  // If this is adv/conj, it must be 1/2 : executed with no x or y
@@ -134,17 +138,25 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
 
  // If the verb contains try., allocate a try-stack area for it
  if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
- // Allocate an area to use for the SI entries for sentences executed here
- // If there is space on the parser stack, use that to avoid the alloc/free overhead.  If there's not
- // enough space there, just use a free block
- if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
- else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
+ // If we are in debug mode, and the current stack frame has the DCCALL type, set up
+ // so that the debugger can look inside this execution: point to the local symbols,
+ // to the control-word table, and to where we store the currently-executing line number
+ if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
+  jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
+ }
+ // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.
+ A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
+ // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging and there is no
+ // debug area now.  Otherwise we will just use the previous one, or allocate a new one for the very first function call.  We have to have 1 debug
+ // frame to hold parse-error information in.
+ B diddeba; if(diddeba = !!jt->db)RZ(deba(DCPARSE,0L,0L,0L,0L));  // if deba fails it will be before it modifies sitop
+// obsolete  if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
+// obsolete   else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
  // in preventing it - still not a full fix, since invalid inplacing may have been done already
  CLEARZOMBIE
 
- FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  // Assign the special names x y m n u v
  // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
  // not an assignment-in-place
@@ -159,16 +171,11 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
+ FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
 // obsolete  if(jt->dotnames){
 // obsolete   if(a)IS(xdot,a); if(u){IS(udot,u); if(NOUN&AT(u))IS(mdot,u);}
 // obsolete   if(w)IS(ydot,w); if(v){IS(vdot,v); if(NOUN&AT(v))IS(ndot,v);}
 // obsolete  }
- // If we are in debug mode, and the current stack frame has the DCCALL type, set up
- // so that the debugger can look inside this execution: point to the local symbols,
- // to the control-word table, and to where we store the currently-executing line number
- if(jt->db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
-  jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;
- }
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
  old=jt->tnextpushx; 
@@ -205,7 +212,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // B-block (present on every sentence in the B-block)
     // run the sentence
 // obsolete     tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
-    tpop(old); z=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
+    tpop(old); parseline(z);  // obsolete  z=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
@@ -224,9 +231,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     // If there is a possibility that the previous B result may become the result of this definition,
     // protect it during the frees during the T block.  Otherwise, just free memory
     if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
-    t=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
+    parseline(t);  // obsolete t=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d,stkblk);  // signal post-execution error if result not all 1s.  Sets t to 0
+    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d);  // signal post-execution error if result not all 1s.  Sets t to 0
     if(t||DB1==jt->db||DBERRCAP==jt->db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -302,7 +309,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(!cv->t){
      BASSERT(t,EVCTRL);
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
-     t=boxopen(t); RZ(ras(t)); BZ(cv->t=t); t=0;
+     t=boxopen(t); BZ(ras(t)); BZ(cv->t=t); t=0;
     }
     i=ci->go;  // Go to next sentence, which might be in the default case (if T block is empty)
     break;
@@ -346,12 +353,15 @@ static DF2(jtxdefn){PROLOG(0048);A cd,cl,cn,h,*hv,*line,loc=jt->local,t,td,u,v,z
     if(2<=*jt->adbreakr) {/* obsolete if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}*/ BASSERT(0,EVBREAK);} 
       // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
     i=ci->go;  // Go to the next sentence, whatever it is
- }}
+  }
+ }
  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
  // If it isn't, generate a post-eceution error for the non-noun
 // obsolete  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
- if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d,stkblk);  // sets z to 0
+ if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d);  // sets z to 0
  FDEPDEC(1);  // OK to ASSERT now
+ if(diddeba)debz();   // pair with the deba if we did one
+ jt->sitop->dcy = savdcy; jt->sitop->dcn = savdcn;  // restore error info for the caller
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
  // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough

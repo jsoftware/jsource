@@ -469,20 +469,20 @@ typedef struct {I i;US n,go,source;C type;C canend;} CW;
 
 typedef struct DS{      /* 1 2 3                                                        */
  struct DS*dclnk;       /* x x x  link to next stack entry                              */
- A dca;                 /*     x  fn/op name                                            */
- A dcf;                 /*     x  fn/op                                                 */
- A dcx;                 /*     x  left argument                                         */
  A dcy;                 /* x x x  &tokens; text       ; right argument                  */
- A dcloc;               /*     x  local symb table (0 if not explicit)                  */
- A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
+ I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
  I dci;                 /* x x x  index ; next index  ; ptr to line #                   */
  I dcj;                 /* x x x  error#; prev index  ; error #                         */
- I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
- I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
- I dcstop;              /*     x  the last stop in this function                        */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */
  B dcsusp;              /* x   x  1 iff begins a debug suspension                       */
  C dcss;                /*     x  single step code                                      */
+ A dca;                 /*     x  fn/op name                                            */
+ A dcf;                 /*     x  fn/op                                                 */
+ A dcx;                 /*     x  left argument                                         */
+ A dcloc;               /*     x  local symb table (0 if not explicit)                  */
+ A dcc;                 /*     x  control matrix   (0 if not explicit)                  */
+ I dcm;                 /*   x x        ; script index; # of non-locale part of name    */
+ I dcstop;              /*     x  the last stop in this function                        */
 } DST;
 
 typedef DST* DC;

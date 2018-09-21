@@ -101,8 +101,8 @@ typedef struct {
  I    bytesmax;         /* high-water mark of "bytes"                      */
  A    nvra;             /* data blocks that are in execution somewhere     */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
- I    rela;             /* if a is relative, a itself; else 0              */
- I    relw;             /* if w is relative, w itself; else 0              */
+ A    curlocn;          /* current locale name corresp. to curname         */
+ A    curname;          /* current name                                    */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
  I    fcalli;           /* named fn calls: current depth                   */
@@ -134,6 +134,8 @@ typedef struct {
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
+ I    rela;             /* if a is relative, a itself; else 0    slated for removal          */
+ I    relw;             /* if w is relative, w itself; else 0    slated for removal          */
 
  A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
@@ -165,10 +167,8 @@ typedef struct {
  I*   compsyv;          /* comparison: sparse AV(y)                        */
  C*   compv;            /* comparison: beginning of data area              */
  A    compw;            /* comparison: orig arg. (for relative addressing) */
- A    curlocn;          /* current locale name corresp. to curname         */
- A    curname;          /* current name                                    */
  L*   cursymb;          /* current symbol table entry                      */
- AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
+// obsolete  AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */

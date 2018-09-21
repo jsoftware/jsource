@@ -70,7 +70,7 @@ I lnumsi(DC d){A c;I i;
 
 
 static DC suspset(DC d){DC e;
- while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find topmost call                 */
+ while(d&&DCCALL!=d->dctype){e=d; d=d->dclnk;}  /* find bottommost call                 */
  if(!(d&&DCCALL==d->dctype))R 0;                /* don't suspend if no such call     */
  if(d->dcc)e->dcsusp=1;                         /* if explicit, set susp on line     */
  else      d->dcsusp=1;                         /* if not explicit, set susp on call */
@@ -146,13 +146,14 @@ static A jtparseas(J jt,B as,A w){A z;
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
-A jtpee(J jt,A *queue,I m,I err,B lk,CW*ci,DC c,DC d){DC prevtop=jt->sitop;   // next-higher stack frame
- if((signed char)lk>0)R0  //  locked fn is totally opaque, with no stack
- RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
- d->dci=1; jsignal(err);   // indicate failing token# (not needed, since the parse ended OK), signal the requested error
+A jtpee(J jt,A *queue,I m,I err,I lk,CW*ci,DC c){
+ ASSERT(!lk,err);  //  locked fn is totally opaque, with no stack
+// obsolete  RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
+ if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
+ jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
- if(jt->db&&(DBTRY!=jt->db)){prevtop->dcj=d->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
- debz();
+ if(c&&jt->db&&(DBTRY!=jt->db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+// obsolete  debz();
  R0
 }
 
@@ -163,22 +164,23 @@ A jtpee(J jt,A *queue,I m,I err,B lk,CW*ci,DC c,DC d){DC prevtop=jt->sitop;   //
 /* c  - stack entry for dbunquote for this function */
 // d - DC area to use in deba
 
-A jtparsex(J jt,A* queue,I m,B lk,CW*ci,DC c,DC d){A z;B s;DC t=jt->sitop;
+A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
 // obsolete  RZ(w);
- JATTN;
+// obsolete  JATTN;
 // obsolete  as=ci->type==CASSERT;
- if((signed char)lk>0)R parsea(queue,m);
- RZ(d=deba(DCPARSE,queue,(A)m,0L,d));
+// obsolete  if((signed char)lk>0)R parsea(queue,m);
+// obsolete RZ(d=deba(DCPARSE,queue,(A)m,0L,d));
 // obsolete  if((signed char)lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
- if(0==c)z=parsea(queue,m);   /* anonymous or not debug */
- else{                      /* named and debug        */
-  if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
-  else                      {z=parsea(queue,m);     }
-  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
-  // executed 13!:0]0, and we should continue on outside of debug mode
-  if(!z&&jt->db&&(s||DBTRY!=jt->db)){t->dcj=d->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
- }
- debz();
+// obsolete  d->dcy=(A)queue; d->dcn=m;
+// obsolete  if(0==c)z=parsea(queue,m);   /* anonymous or not debug */
+// obsolete  else{                      /* named and debug        */
+ if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
+ else                      {z=parsea(queue,m);     }
+ // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
+ // executed 13!:0]0, and we should continue on outside of debug mode
+ if(!z&&jt->db&&(s||DBTRY!=jt->db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+// obsolete  }
+// obsolete debz();
  R z;
 }
 

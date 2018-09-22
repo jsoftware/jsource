@@ -90,7 +90,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  j=3; p=0; e=PT; q=1+(I)sqrt((D)m); x=wv[dv[k]]; 
  GATV(t,B01,q,1,0);         u=BAV(t); sieve(0L,q,u,u); 
  GATV(y,B01,MIN(m,MM),1,0); b=BAV(y); 
- for(;0<=p&&p<m;p+=q){
+ for(;(UI)p<(UI)m;p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u); c=j+q/3;
   if(x>c)for(i=1-(p&1);i<q;i+=2)j+=b[i];
@@ -168,7 +168,7 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  while(n>k&&3>=wv[dv[k]])zv[dv[k++]]=1; 
  while(n>k&&5>=wv[dv[k]])zv[dv[k++]]=2; 
  if(n==k){EPILOG(z);} x=wv[dv[k]]; 
- for(;0<=p&&p<m;p+=q){
+ for(;(UI)p<(UI)m;p+=q){
   if(x>=e){
    while(ptn>c&&x>=ptt[c])++c; 
    if(j<c*PT){p=ptt[c-1]; e=c<ptn?ptt[c]:IMAX; j=c*PT;}

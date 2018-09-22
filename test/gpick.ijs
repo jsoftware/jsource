@@ -40,7 +40,8 @@ t =: 3;4
 6 = 3 + 0 {:: t
 t -: 3;4   NB. Verify the value fetched from t was non-inplaceable
 (3;4) -: ([  4 + 0&{::) > < 3 ; 4   NB. Value fetched from box is non-inplaceable
-
+'Note asdfasdfs' -: ]^:('NB.' -: 3 {. _1 {:: ])&.;: 'Note  asdfasdfs'
+'Noteasdfasdfs' -: ; (] [ 3 {. _1 {:: ]) ;: 'Note  asdfasdfs'
 
 4!:55 ;:'boxed cat map mapp pick S sc spread_temp si sz t'
 

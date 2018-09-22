@@ -31,14 +31,14 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
   *zv++=c=*wv; d=1+c;
   while(c!=d){
    if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}
-   d=c; if(0>c)c+=an; ASSERT(0<=c&&c<an,EVINDEX); *zv++=c=av[c];
+   d=c; if(0>c)c+=an; ASSERT((UI)c<(UI)an,EVINDEX); *zv++=c=av[c];
   }
   d=(zv-AV(z))-1;
  }else{
   ICPY(zv,wv,wn); zu=zv; zv+=wn;
   while(1){
    if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z); zu=zv-wn;}
-   b=1; DO(wn, d=c=*zu++; if(0>c)c+=an; ASSERT(0<=c&&c<an,EVINDEX); *zv++=c=av[c]; if(c!=d)b=0;);
+   b=1; DO(wn, d=c=*zu++; if(0>c)c+=an; ASSERT((UI)c<(UI)an,EVINDEX); *zv++=c=av[c]; if(c!=d)b=0;);
    if(b)break;
   }
   d=(zv-AV(z))/wn-1;

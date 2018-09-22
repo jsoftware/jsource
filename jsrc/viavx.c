@@ -2068,7 +2068,8 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  RE(c=prod(f1,ws));  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c as an error flag
- if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
+// obsolete  if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
+ c &= (~(f1|(ar-r)))>>(BW-1);   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
  if(!(m&&n&&c&&HOMO(t,wt)&&UNSAFE(t)>=UNSAFE(wt)))R indexofsub(mode&IIOPMSK,a,w);

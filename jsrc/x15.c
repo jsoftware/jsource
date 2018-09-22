@@ -1310,7 +1310,7 @@ F1(jtcallback){
  {
   I k;
   RE(k=i0(w));
-  ASSERT(k>=0&&k<sizeof(cbv)/SZI, EVINDEX);
+  ASSERT((UI)k<(UI)sizeof(cbv)/SZI, EVINDEX);
   R sc(cbv[k]);
  }
 }    /* 15!:13 */

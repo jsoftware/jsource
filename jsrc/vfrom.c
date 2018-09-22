@@ -275,7 +275,7 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
   if(!(t&INT))RZ(q=cvt(INT,q));
   if(!(c==AN(q)&&1>=AR(q)))R 0; 
   u=AV(q);
-  DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); *v++=k;);
+  DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); *v++=k;);
  }
  *ind=z;
  R 1;
@@ -305,7 +305,7 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  }else{
   // There was a negative index.  Allocate a new block for a and copy to it.
   RZ(z=t&INT?ca(a):cvt(INT,a));  v=AV(z);
-  DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+  DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
  }
  *ind=z;
  R 1;
@@ -421,17 +421,19 @@ F1(jtmap){R mapx(ace,w);}
 // extract the single box a from w and open it.  Don't mark it no-inplace.
 static F2(jtquicksel){I index;
  RE(index=i0(a));  // extract the index
- if(index<0)index += AN(w); ASSERT(0<=index && index < AN(w),EVINDEX);   // remap negative index, check range
+ if(index<0)index += AN(w); ASSERT((UI)index<(UI)AN(w),EVINDEX);   // remap negative index, check range
  R AAV(w)[index];  // select the box
 }
 
-F2(jtfetch){A*av, z;I n;
+F2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
   if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVEB(w)){
    RZ(z=jtquicksel(jt,a,w));
-   if(!ACIPISOK(w))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable if the w argument is not inplaceable
+   // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
+   // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
+   if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
@@ -440,6 +442,6 @@ F2(jtfetch){A*av, z;I n;
  DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVEB(z)){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
- if(!ACIPISOK(w))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable if the w argument is not inplaceable
+ if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above
 }
 

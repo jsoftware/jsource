@@ -751,7 +751,7 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
  F2RANK(0,0,jtdeal,0);
  RE(m=i0(a)); RE(c=n=i0(w));
- ASSERT(0<=m&&m<=n,EVDOMAIN);
+ ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
   p=hsize(m); GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);

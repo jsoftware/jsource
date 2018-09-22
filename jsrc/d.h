@@ -4,7 +4,7 @@
 /* Debug                                                                   */
 
 
-/* jt->db and jt->dbuser values; 0 means no debug                           */
+/* jt->cx.cx_c.db and jt->dbuser values; 0 means no debug                           */
 
 #define DB1         1       /* full debug                                   */
 #define DBERRCAP    2       /* stack error info capture                     */

@@ -59,14 +59,19 @@ typedef struct {
  A    global;           /* global symbol table                             */
  A    symb;             /* symbol table for assignment                     */
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
+ union {
+  US cx_us;       // accessing both flags at once
+  struct {
+   C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+   UC   db;               /* debug flag; see 13!:0                           */
+  } cx_c;         // accessing as bytes
+ } cx;
  B    spfreeneeded;     // When set, we should perform a garbage-collection pass
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
  C    asgzomblevel;     // 0=do not assign zombie name before final assignment; 1=allow premature assignment of complete result; 2=allow premature assignment even of incomplete result
- C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
  B    assert;           /* 1 iff evaluate assert. statements               */
- UC   db;               /* debug flag; see 13!:0                           */
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug redef)

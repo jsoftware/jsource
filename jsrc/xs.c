@@ -70,7 +70,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  if(3==ce){z=jt->jerr?zero:one; RESETERR; R z;}else RNE(mtm);
 }
 
-static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->glock;
+static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->cx.cx_c.glock;
  RZ(a&&w);
  ASSERT(AT(w)&BOX,EVDOMAIN);
  if(jt->seclev){
@@ -95,9 +95,9 @@ static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->sl
   ++jt->slistn;
  }
  // set the current script number
- jt->slisti=(UI4)i;    jt->glock=1==jt->glock?1:lk?2:0;
- z=line(x,jt->glock?-1L:i,ce,(B)(jt->glock?0:tso)); 
- jt->slisti=(UI4)oldi; jt->glock=(C)(1==jt->glock?1:oldk);
+ jt->slisti=(UI4)i;    jt->cx.cx_c.glock=1==jt->cx.cx_c.glock?1:lk?2:0;
+ z=line(x,jt->cx.cx_c.glock?-1L:i,ce,(B)(jt->cx.cx_c.glock?0:tso)); 
+ jt->slisti=(UI4)oldi; jt->cx.cx_c.glock=(C)(1==jt->cx.cx_c.glock?1:oldk);
 #if SYS & SYS_PCWIN
  if(lk)memset(AV(x),C0,AN(x));  /* security paranoia */
 #endif

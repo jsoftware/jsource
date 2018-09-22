@@ -649,7 +649,7 @@ F2(jtordstat){A q,t=0;I c,i=0,j,m,m0,m1,n,qn=53,*qv,wt;
  n=AN(w); wt=AT(w);
  if(!(!AR(a)&&AT(a)&B01+INT&&4<n&&1==AR(w)&&wt&FL+INT))R from(a,grade2(w,w));
  RE(j=i0(a)); if(0>j)j+=n;
- ASSERT(0<=j&&j<n,EVINDEX);
+ ASSERT((UI)j<(UI)n,EVINDEX);
  // deal 53 random large integers to provide pivots.  We reuse them if needed
  RZ(q=df2(sc(qn),sc(IMAX),atop(ds(CQUERY),ds(CDOLLAR)))); qv=AV(q);
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);

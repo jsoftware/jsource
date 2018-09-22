@@ -10,27 +10,27 @@
 #define TDECL           V*sv=FAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
 
 // handle fork, with support for in-place operations
-#define FOLK1 {A fx,hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=CALL1(h1,  w,hs)); /* the call to h is not inplaceable */ \
+#define FOLK1 {A fx,hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=CALL1(h1,  w,hs)); /* the call to h is not inplaceable */ \
 /* If any result equals protw, it must not be inplaced: if original w is inplaceable, protw will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable, and the hx is NOT the same as y.  Here only the LSB of jtinplace is used */ \
 RZ(fx=(f1)(((FAV(fs)->flag>>VINPLACEOK1X)&(hx!=w))?jtinplace:jt,  w,fs)); /* CALL1 with variable jt */ \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
-POPZOMB; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw?JTINPLACEA:0)+(hx!=protw?JTINPLACEW:0))) ):jt,fx,hx,gs));}
+POPZOMB; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((fx!=protw?JTINPLACEA:0)+(hx!=protw?JTINPLACEW:0))) ):jt,fx,hx,gs));}
 
-#define FOLK2 {A fx,hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); \
-RZ(hx=(h2)(a!=w&&(FAV(hs)->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt,a,w,hs)); /* inplace h if f is x@], but not if a==w */  \
+#define FOLK2 {A fx,hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
+RZ(hx=(h2)(a!=w&&(FAV(hs)->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt,a,w,hs)); /* inplace h if f is x@], but not if a==w */  \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \
-RZ(fx=(f2)((FAV(fs)->flag&VINPLACEOK2)?((J)((I)jtinplace&((hx==w?~JTINPLACEW:~0)&(hx==a?~JTINPLACEA:~0)))):jt ,a,w,fs)); \
+RZ(fx=(f2)((FAV(fs)->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((hx==w?~JTINPLACEW:~0)&(hx==a?~JTINPLACEA:~0)))):jt ,a,w,fs)); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed x/y */ \
-POPZOMB; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2?( (J)((I)jt|((fx!=protw&&fx!=prota?JTINPLACEA:0)+(hx!=protw&&hx!=prota?JTINPLACEW:0))) ):jt,fx,hx,gs));}
+POPZOMB; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((fx!=protw&&fx!=prota?JTINPLACEA:0)+(hx!=protw&&hx!=prota?JTINPLACEW:0))) ):jt,fx,hx,gs));}
 
 // similar for cap, but now we can inplace the call to h
-#define CAP1 {A hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=(h1)(jtinplace,  w,hs)); \
+#define CAP1 {A hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=(h1)(jtinplace,  w,hs)); \
 /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
-POPZOMB; RZ(z=(g1)((J)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw))),hx,gs));}
-#define CAP2 {A hx; PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); RZ(hx=(h2)(jtinplace,a,w,hs));  \
-POPZOMB; RZ(z=(g1)((J)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw)&(hx!=prota))),hx,gs));}
+POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw))),hx,gs));}
+#define CAP2 {A hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); RZ(hx=(h2)(jtinplace,a,w,hs));  \
+POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw)&(hx!=prota))),hx,gs));}
 
 DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
 DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
@@ -52,15 +52,15 @@ static B jtcap(J jt,A x){V*v;L *l;
 
 // nvv forks.  n must not be inplaced, since the fork may be reused.  hx can be inplaced unless protected by caller.
 static DF1(jtnvv1){F1PREFIP;DECLFGH;PROLOG(0032);
-// obsolete  PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A hx; RZ(hx=(h1)((FAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs));
- PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A hx; RZ(hx=(h1)(jtinplace,  w,hs));
-// obsolete  POPZOMB; A z; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2&&hx!=protw?( (J)((I)jt|JTINPLACEW) ):jt,fs,hx,gs)); EPILOG(z);}
- POPZOMB; A z; RZ(z=(g2)((J)((I)jt + ((FAV(gs)->flag>>VINPLACEOK2X)&(hx!=protw))*JTINPLACEW),fs,hx,gs)); EPILOG(z);}
+// obsolete  PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A hx; RZ(hx=(h1)((FAV(hs)->flag&VINPLACEOK1)?jtinplace:jt,  w,hs));
+ PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A hx; RZ(hx=(h1)(jtinplace,  w,hs));
+// obsolete  POPZOMB; A z; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2&&hx!=protw?( (J)(intptr_t)((I)jt|JTINPLACEW) ):jt,fs,hx,gs)); EPILOG(z);}
+ POPZOMB; A z; RZ(z=(g2)((J)(intptr_t)((I)jt + ((FAV(gs)->flag>>VINPLACEOK2X)&(hx!=protw))*JTINPLACEW),fs,hx,gs)); EPILOG(z);}
 static DF2(jtnvv2){F1PREFIP;DECLFGH;PROLOG(0033);
-// obsolete  PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A hx; RZ(hx=(h2)((FAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs));
- PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A hx; RZ(hx=(h2)(jtinplace,a,w,hs));
-// obsolete  POPZOMB; A z; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2&&hx!=protw&&hx!=prota?( (J)((I)jt|JTINPLACEW) ):jt,fs,hx,gs)); EPILOG(z);}
- POPZOMB; A z; RZ(z=(g2)((J)((I)jt + ((FAV(gs)->flag>>VINPLACEOK2X)&(hx!=protw)&(hx!=prota))*JTINPLACEW),fs,hx,gs)); EPILOG(z);}
+// obsolete  PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A hx; RZ(hx=(h2)((FAV(hs)->flag&VINPLACEOK2)?jtinplace:jt,a,w,hs));
+ PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A hx; RZ(hx=(h2)(jtinplace,a,w,hs));
+// obsolete  POPZOMB; A z; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2&&hx!=protw&&hx!=prota?( (J)(intptr_t)((I)jt|JTINPLACEW) ):jt,fs,hx,gs)); EPILOG(z);}
+ POPZOMB; A z; RZ(z=(g2)((J)(intptr_t)((I)jt + ((FAV(gs)->flag>>VINPLACEOK2X)&(hx!=protw)&(hx!=prota))*JTINPLACEW),fs,hx,gs)); EPILOG(z);}
 
 static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  RZ(a&&w);
@@ -186,14 +186,14 @@ static DF1(tcv){TDECL; R df2(w,gs,fs);}  /* also cn */
 
 // If the CS? loops, it will be noninplaceable.  If it falls through, we can inplace it.
 CS1IP(static,jthook1, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=CALL1(g1,w,gs));  /* Cannot inplace the call to g */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=CALL1(g1,w,gs));  /* Cannot inplace the call to g */ \
 /* inplace gx unless it is protected; inplace w (as left arg) if the caller allowed it*/ \
-POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs));} \
+POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|(JTINPLACEA*((I)jtinplace&JTINPLACEW)+(gx!=protw?JTINPLACEW:0))) ):jt,w,gx,fs));} \
 ,0111)
 CS2IP(static,jthook2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(a!=w&&(FAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(a!=w&&(FAV(gs)->flag&VINPLACEOK1)?(J)(intptr_t)((I)jtinplace&~JTINPLACEA):jt,w,gs));  /* Can inplace the call to g for the dyad unless same as a; it has w only */ \
 /* inplace gx unless it is protected; inplace a if the caller allowed it*/ \
-POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs));} \
+POPZOMB; RZ(z=(f2)(FAV(fs)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|(((I)jtinplace&JTINPLACEA)+(gx!=protw?JTINPLACEW:0))) ):jt,a,gx,fs));} \
 ,0112)
 
 

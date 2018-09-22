@@ -407,7 +407,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
      // w fits in 32 bits.  Try to accumulate the products.  If we can be sure that the total will not exceed 32 bits unless
      // an a-value does, do the fastest loop
      zv=AV(z); av=AV(a);
-     if(p*tot<0x100000000 && p*tot>=0){ // integer overflow
+     if((UI)(p*tot)<(UI)0x100000000){ // integer overflow
       // The total in w is so small that a mere m values each less than 2^31 cannot overflow
       DO(m, I tot=0; wv=AV(w); DO(p, I mpcnd=*av++; I prod=mpcnd**wv++; if(mpcnd!=(I4)mpcnd)goto oflo1; tot+=prod;) *zv++=tot;)
      }else{

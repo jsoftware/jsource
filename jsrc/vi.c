@@ -47,7 +47,7 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 /* hic4: hash the bytes of a string of length k (k multiple of 4)  */
 /* hicw: hash a word (32 bit or 64 bit depending on CPU)           */
 
-#define HASHINIT(z)  z=2166136261    // FNV-1a 32 bits
+#define HASHINIT(z)  z=2166136261u    // FNV-1a 32 bits
 #define HASHSTEP(z,byte)  (z=(UI4)((z^(byte))*16777619L))    // FNV-1a 32 bits
 
        UI hic (     I k,UC*v){UI HASHINIT(z);             DO(k,       HASHSTEP(z,*v++);      ); R z;}

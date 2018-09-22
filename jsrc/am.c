@@ -21,7 +21,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 */
 
 #define MCASE(t,k)  ((t)+4*(k))
-#define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT(0<=j&&j<m,EVINDEX);}
+#define MINDEX        {j=*u++; if(0>j)j+=m; ASSERT((UI)j<(UI)m,EVINDEX);}
 
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  RZ(w&&ind);

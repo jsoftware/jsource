@@ -438,7 +438,7 @@ THRESHOLD +. (1-threshold) > (6!:2 '0 |. a') % 0.01 * 6!:2 '1 |. a'
 THRESHOLD +. (1-threshold) > (6!:2 '0 |.!.5 a') % 0.01 * 6!:2 '1 |.!.5 a'
 
 NB. test virtual implementation
-f =: 3 : 0
+f =: 3 : 0`1:@.(IFIOS+.IFRASPI+.UNAME-:'Android')   NB. take too long on mobile
 direct =. (3!:0 y) e. 1 2 4 8 16 65536 131072 262144
 siz12002 =: 1000 + 0.6 * 7!:2 'a =: 100 12000 $ y'
 a0 =: '' ($,) a

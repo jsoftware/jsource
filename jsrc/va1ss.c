@@ -8,8 +8,8 @@
 #include "vcomp.h"
 
 // Support for Speedy Singletons
-#define SSINGF1(f) A f(J jtf, A w){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA)); // header for function definition
-#define SSINGF1OP(f) A f(J jtf, A w, I op){ J jt=(J)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
+#define SSINGF1(f) A f(J jtf, A w){ J jt=(J)(intptr_t)((I)jtf&~(JTINPLACEW+JTINPLACEA)); // header for function definition
+#define SSINGF1OP(f) A f(J jtf, A w, I op){ J jt=(J)(intptr_t)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
 
 // An argument can be inplaced if it is enabled in the block AND in the call
 #define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))

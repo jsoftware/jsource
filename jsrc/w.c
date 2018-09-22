@@ -319,7 +319,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);
  if(!c&&1==AR(m)){
   ASSERT(1>=AR(w),EVRANK);
-  if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););}
+  if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
  }else if(NUMERIC&AT(m)){
   ASSERT(b,EVDOMAIN); 
   ASSERT(1>=AR(w),EVRANK);
@@ -329,7 +329,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
   GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m); RELBASEASGN(m,m); 
   DO(c, j=i; t=AADR(md,mv[i]); if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
-  if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););}
+  if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}
  }
  A z=fsmdo(f,s,m,ijrd,w,w0);

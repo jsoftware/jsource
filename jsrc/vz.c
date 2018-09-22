@@ -272,7 +272,7 @@ DF1(jtexppi){A z;B b;D r,th,y;I k;Z*v,t;
  if(!(CMPX&AT(w)))R expn1(pix(w)); 
  v=ZAV(w); r=exp(PI*v->re); y=v->im; if(b=0>y)y=-y;
  th=y-2*(I)(y/2); k=(I)(2*th); if(k!=2*th)k=-1; else if(b&&k)k=4-k;
- if(!(0<=k&&k<=3))R expn1(pix(w));
+ if(!((UI)k<=(UI)3))R expn1(pix(w));
  switch(k){
   case 0: t.re= r; t.im= 0; break;
   case 1: t.re= 0; t.im= r; break;

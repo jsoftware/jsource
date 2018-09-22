@@ -75,15 +75,15 @@ static DF1(jtmodpow1){A g=FAV(self)->g; R rank2ex(FAV(g)->f,w,self,0L,0L,0L,0L,j
 
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
 CS1IP(,on1, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(jtinplace,w,gs));  /* inplace g.  jtinplace is set for g */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(jtinplace,w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
+POPZOMB; RZ(z=(f1)((J)(intptr_t)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
 ,0113)
 
 CS2IP(,jtupon2, \
-{PUSHZOMB; A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)((J)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=prota))),gx,fs));} \
+POPZOMB; RZ(z=(f1)((J)(intptr_t)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=prota))),gx,fs));} \
 ,0114)
 // special case for rank 0.  Transfer to loop.  
 // if there is only one cell, process it through on1, which understands this type
@@ -99,24 +99,24 @@ static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
 PREF2(on2); PUSHZOMB;
 // obsolete  // here for execution on a single cell
-A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA));
+A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
 // obsolete  // take inplaceability of each monad from the corresponding dyad argument
-// obsolete  // obsolete RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jtinplace&~JTINPLACEA):jt,w,gs));
-RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs));
-// obsolete RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
- RZ(ga=(g1)((J)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  // Move bit 1 to bit 0, clear bit 1
-  POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
+// obsolete  // obsolete RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)(intptr_t)((I)jtinplace&~JTINPLACEA):jt,w,gs));
+RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~JTINPLACEA),w,gs));
+// obsolete RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)(intptr_t)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
+ RZ(ga=(g1)((J)(intptr_t)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  // Move bit 1 to bit 0, clear bit 1
+  POPZOMB; jtinplace=(J)(intptr_t)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
   EPILOG(z);
 }
 #else
 CS2IP(static,on2, \
  A ga;A gw;PUSHZOMB; \
  /* here for execution on a single cell */ \
- A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); \
+ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
  /* take inplaceability of each monad from the corresponding dyad argument */ \
- RZ(gw=(g1)((J)((I)jtinplace&~JTINPLACEA),w,gs)); \
- RZ(ga=(g1)((J)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
- POPZOMB; jtinplace=(J)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); \
+ RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~JTINPLACEA),w,gs)); \
+ RZ(ga=(g1)((J)(intptr_t)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
+ POPZOMB; jtinplace=(J)(intptr_t)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); \
 ,0023)
 #endif
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
@@ -374,9 +374,9 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function
 // obsolete static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
-// obsolete static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
+// obsolete static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(intptr_t)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 static DF1(withl){F1PREFIP;DECLFG; I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,fs,w,gs,RMAX,(RANKT)r,g2):(RESETRANK,(g2)(jtinplace,fs,w,gs));}
-static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)((I)jt+2*((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
+static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jt+2*((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->h is the info/hash/bytemask result from calculating the prehash

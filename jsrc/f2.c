@@ -12,7 +12,7 @@ static F2(jtth2box){A z;I n,p,q,*v,x,y;
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(1==n||2==n,EVLENGTH);
  x=v[0]; y=2>n?0:v[1]; 
- ASSERT(0<=x&&x<=2&&0<=y&&y<=2,EVDOMAIN);
+ ASSERT((UI)x<=2&&(UI)y<=2,EVDOMAIN);
  jt->pos[0]=x; jt->pos[1]=y;
  z=thorn1(w); 
  jt->pos[0]=p; jt->pos[1]=q;
@@ -235,7 +235,7 @@ static B jtth2ctrl(J jt,A a,A*ep,A*mp,A*dp,A*sp,I*zkp){A da,ea,ma,s;B b=1,*ev,r,
    y=au[i].im; d=(I)tfloor(y); ASSERT(teq(y,(D)d),EVDOMAIN); if(0>y)x=1;  // imag is decimal places
   }
   // Take abs of field sizes
-  if(0>m)m=-m; if(0>d)d=-d; ASSERT(0<=m&&0<=d,EVLIMIT);  // verify no overflow
+  if(0>m)m=-m; if(0>d)d=-d; ASSERT(0<=(m|d),EVLIMIT);  // verify no overflow
   // Create sprintf format string for the field, depending on decimal/exponential form
   if(!x)sprintf(sv, "%%"FMTI"."FMTI"f",  m,d);  // %m.df
   else  sprintf(sv, m?"%%- "FMTI"."FMTI"e" :"%%-"FMTI"."FMTI"e", m?m-1:0,d+!!(SYS&SYS_PC));  // %- m.de (m=0)  or %-m.de (m!=0)

@@ -62,9 +62,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // Normal case where there are cells.
   // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
   // The base pointer AK advances through the source argument. 
-  //
-  // Self-virtual blocks modify the shape of a block, but that code notifies
-  // us through a flag bit.
+
   fauxblock(virtwfaux);
   // if the original block was direct inplaceable, make the virtual block inplaceable.  (We can't do this for indirect blocks because a virtual block is not marked recursive - rather it increments
   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid if the backing block is recursive.  Maybe could do this if it isn't?)
@@ -336,7 +334,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
  // See which arguments we can inplace.  The key is that they have to be not repeated.  This means outerrptct=1, and the specified argument not repeated in the inner loop.  Also,
  // a and w mustn't be the same block (one cannot be a virtual of the other unless the backer's usecount disables inplacing)
- jtinplace = (J)((I)jtinplace & ~(((a==w)|(outerrptct!=1))*(JTINPLACEA+JTINPLACEW)|(state>>STATEINNERREPEATWX)));  // turn off inplacing if variable is inner-repeated, or any outer repeat, or identical args
+ jtinplace = (J)(intptr_t)((I)jtinplace & ~(((a==w)|(outerrptct!=1))*(JTINPLACEA+JTINPLACEW)|(state>>STATEINNERREPEATWX)));  // turn off inplacing if variable is inner-repeated, or any outer repeat, or identical args
 
  // allocate the virtual blocks that we will use for the arguments, and fill in the shape of a cell of each
  // The base pointer AK advances through the source argument.  But if an operand is empty (meaning that there are no output cells),
@@ -347,7 +345,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  // us through a flag bit.
  fauxblock(virtwfaux); fauxblock(virtafaux); 
  if(mn|an){
-  jtinplace = (J)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
+  jtinplace = (J)(intptr_t)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
 // obsolete  RZ(virta = virtual(a,0,lr)); {I * virtas = AS(virta); DO(lr, virtas[i] = as[af+i];)} AN(virta)=acn; AFLAG(virta)|=AFUNINCORPABLE;
 // obsolete    RZ(virta = virtual(a,0,lr));
   fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCIS(AS(virta),as+af,lr); AN(virta)=acn;
@@ -356,7 +354,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
-  jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
+  jtinplace = (J)(intptr_t)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
 // obsolete   RZ(virtw = virtual(w,0,rr)); 
   fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
 // obsolete  AFLAG(virtw)|=AFUNINCORPABLE;

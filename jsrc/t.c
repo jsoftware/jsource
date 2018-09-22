@@ -143,7 +143,7 @@ B jtpinit(J jt){A t;C*s;
  /*  ?  */  pdef(CQUERY,  VERB, jtroll,    jtdeal,   0,   0,   0   ,VISATOMIC1|VASGSAFE);
  /*  ?. */  pdef(CQRYDOT, VERB, jtrollx,   jtdealx,  RMAX,0,   0   ,VASGSAFE);
  /*  ?: */       /* undefined */
- /* {:: */  pdef(CFETCH,  VERB, jtmap,     jtfetch,  RMAX,1,   RMAX,VASGSAFE);
+ /* {:: */  pdef(CFETCH,  VERB, jtmap,     jtfetch,  RMAX,1,   RMAX,VASGSAFE|VINPLACEOK2);
  /* }:: */  pdef(CEMEND,  ADV,  jtemend,   0L,       0,   0,   0   ,VFLAGNONE);
  /* &.: */  pdef(CUNDCO,  CONJ, 0L,        jtundco,  0,   0,   0   ,VFLAGNONE);
  /*  a. */       /* see above */

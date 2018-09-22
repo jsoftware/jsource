@@ -559,7 +559,7 @@ f=: i.@:>:@:$
 (5 +`%\1 2 3) -: 5 +`%\1 2 3x
 
 NB. Verify that special forms are detected
-a =: 1e6 $ 'abc'
+a =: 1e4 $ 'abc'
 (7!:2 '40 ]@<\ a') > 1.2 * 7!:2 '40 <\ a'
 (40 <\ a) -: 40 ]@<\ a
 

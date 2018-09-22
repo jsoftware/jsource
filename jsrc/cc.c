@@ -766,7 +766,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 // obsolete    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
    // Self-virtual blocks also modify the shape of a block, but that code notifies
    // us through a flag bit.
-   jtinplace = (J)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+   jtinplace = (J)(intptr_t)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"

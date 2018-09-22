@@ -578,8 +578,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    if(adocv.cv&VARGMSK&&zn>0){I t=atype(adocv.cv);  // t not 0, and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
-    if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
-    if(TYPESNE(t,AT(w))){RZ(w=!(t&XNUM)?cvt(t,w):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
+    if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
+    if(TYPESNE(t,AT(w))){RZ(w=!(t&XNUM)?cvt(t,w):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
    }  // the function call here inhibits register assignment to temporaries.  It might be better to do the conversion earlier, and defer the error
       // until here.  We will have to look at the generated code when we can use all the registers
    // acn, wcn are not used beyond this point
@@ -1063,7 +1063,7 @@ F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE)
 // These are the unary ops that are implemented using a canned argument
 
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
-#define IPSHIFTWA (jt = (J)(((I)jt+JTINPLACEW)&-JTINPLACEA))
+#define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
 F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(onei,w);}
 F1(jtnegate){R minus(zeroi,  w);}

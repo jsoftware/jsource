@@ -199,7 +199,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  if(r<wr)R rank1ex(w,self,r,jtredg);
  // From here on we are doing a single reduction
  n=AS(w)[0]; // n=#cells
-// obsolete  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
+// obsolete  J jtip = jt; if(VAV(fs)->flag&VINPLACEOK2)jtip=(J)(intptr_t)((I)jtip+(JTINPLACEW+JTINPLACEA));  // if f supports inplacing, so do we
  // Allocate virtual block for the running x argument.  We don't mark it UNINCORPABLE because there's only one, and we check its address
  A origw=w; I origwc=AC(w); RZ(a=virtual(w,0,r-1));  // save inplaceability of the original w
  old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the x argument over the calls, but allow the w to be deleted
@@ -210,7 +210,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
  // and the input jtinplace.
  I inplacelaterw = (FAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
- jtinplace = (J)(((I)jtinplace&(~(JTINPLACEW+JTINPLACEA))) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
+ jtinplace = (J)(intptr_t)(((I)jtinplace&(~(JTINPLACEW+JTINPLACEA))) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
@@ -236,7 +236,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
     AR(a)=(RANKT)r-1; AT(a)=AT(origw); MCIS(AS(a),AS(origw)+1,r-1); AN(a)=an; AFLAG(a) &= ~AFVIRTUALINPLACE;  // restore all fields that might have been modified.  Pity there are so many
   }
   // set larger inplaceability for iterations after the first
-  jtinplace = (J)((I)jtinplace|inplacelaterw);
+  jtinplace = (J)(intptr_t)((I)jtinplace|inplacelaterw);
  }
  EPILOG(w);  // this frees the virtual block, at the least
 }    /* f/"r w for general f and 1<(-r){$w */

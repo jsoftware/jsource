@@ -395,7 +395,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)((I)jt&~(JTINPLACEW+JTINPLACEA))
+#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~(JTINPLACEW+JTINPLACEA))
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
@@ -759,6 +759,12 @@ extern unsigned int __cdecl _clearfp (void);
 // set the Z flag if the result is 0.  The optimizer sometimes turns a switch into tests rather than a branch
 // table, and it expects TSCNT to set the Z flag properly.  We use CTTZNOFLAG to set it right
 #define CTTZNOFLAG(w) (CTTZ(w)&31)
+
+#ifdef __GNUC__
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)
+#endif
+#endif
 
 // Insert other compilers/architectures here
 

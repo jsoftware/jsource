@@ -260,7 +260,7 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->h);I d;
 }
 
 static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->h);I d;   // hv->gerunds
-A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
+A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
@@ -270,15 +270,15 @@ A protw = (A)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)((I)a+((I)jtinplace&
  RZ(ffm);  // OK to fail after FDEPDEC
  RZ(ff=df1(ffm,ds(sv->id)));   // now ff represents (x v1 y)}
  // Protect any input that was returned by v1 (must be ][)
- if(a==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)((I)jtinplace&~JTINPLACEW);
+ if(a==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEA); if(w==ffm)jtinplace = (J)(intptr_t)((I)jtinplace&~JTINPLACEW);
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (FAV(hv[2])->f2)(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ RZ(ffy = (FAV(hv[2])->f2)(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (FAV(hv[0])->f2)((FAV(hv[0])->flag&VINPLACEOK2)?((J)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->f2)((FAV(hv[0])->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
- POPZOMB; R (FAV(ff)->f2)(FAV(ff)->flag&VINPLACEOK2?( (J)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ POPZOMB; R (FAV(ff)->f2)(FAV(ff)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive

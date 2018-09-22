@@ -499,7 +499,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,x,y,* RESTRICT yv,z,* R
    if(j=r-yr){DO(j,v1[i]=1;); ICPY(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
    if(memcmp(1+s,1+AS(y),d)){*s=IC(y); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
-// obsolete    if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); yrel-=zrel; DO(AN(y), *zv++=(A)((I)yv[i]+yrel););}  // copy as above, no replication this time
+// obsolete    if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); yrel-=zrel; DO(AN(y), *zv++=(A)(intptr_t)((I)yv[i]+yrel););}  // copy as above, no replication this time
    if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // copy as above, no replication this time
    else     {j=k*AN(y); MC(zu,AV(y),j); zu+=j;}
   }
@@ -564,7 +564,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt,zr
 // obsolete    // if z is relative and y is not, that's -z (convert absolute y to relative to z)
 // obsolete    // if z and y are both relative, it's y-z (convert y to absolute, then make relative to z)
 // obsolete    // y relative and z not is impossible
-// obsolete   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; DO(AN(y), *zv++=(A)((I)yv[i]+yrel););}  // yv->contents, copy each pointer
+// obsolete   if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; DO(AN(y), *zv++=(A)(intptr_t)((I)yv[i]+yrel););}  // yv->contents, copy each pointer
 // obsolete    if(t&BOX){yv=AAV(y); RELORIGINB(yrel,y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // yv->contents, copy each pointer
 // obsolete    // For other (always nonrelative) contents, convert data if necessary, then copy it
 // obsolete   else     {if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=k*AN(y); MC(zu,AV(y),d); zu+=d;}

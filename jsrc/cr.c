@@ -106,7 +106,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  d=jt->cx.cx_c.db; jt->cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->cx.cx_c.db=d;
+  d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->uflags.us.cx.cx_c.db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,wf+AR(z),0L); zzs=AS(zz); MCISds(zzs,ws,wf); MCIS(zzs,AS(z),AR(z));
 // obsolete   is = ws; DO(wf, *zzs++=*is++;);  // copy frame
@@ -215,7 +215,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // indication that anything unusual happened.  So fail then
 // obsolete  if(!(state&ZZFLAGBOXATOP)){
   if(!(FAV(fs)->flag2&VF2BOXATOP1)){
-   d=jt->cx.cx_c.db; jt->cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->cx.cx_c.db=d;   // normal execution on fill-cell
+   d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell
    if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
@@ -489,7 +489,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   // However, if the error is a non-computational error, like out of memory, it
   // would be wrong to ignore it, because the verb might execute erroneously with no
   // indication that anything unusual happened.  So fail then
-  d=jt->cx.cx_c.db; jt->cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->cx.cx_c.db=d;
+  d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->uflags.us.cx.cx_c.db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,lof+lif+AR(z),0L); zzs=AS(zz);
   MCISds(zzs,los,lof); MCISds(zzs,lis,lif); MCIS(zzs,AS(z),AR(z));
@@ -640,7 +640,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   if(!(FAV(fs)->flag2&VF2BOXATOP2)){
    if(!AN(a)){RZ(virta=filler(a));}else{virta = virtual(a,0,0); AN(virta)=1;}  // if there are cells, use first atom; else fill atom
    if(!AN(w)){RZ(virtw=filler(w));}else{virtw = virtual(w,0,0); AN(virtw)=1;}
-   d=jt->cx.cx_c.db; jt->cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->cx.cx_c.db=d;   // normal execution on fill-cell
+   d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->uflags.us.cx.cx_c.db=d;   // normal execution on fill-cell
    if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=zero; RESETERR;}  // use 0 as result if error encountered
   }else{
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.

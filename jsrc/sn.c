@@ -208,8 +208,8 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
   RE(y=stdnm(WVR(i)));
   zv[i]=1&&y;
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
-// obsolete   if(y&&(v=syrd(y))){if(jt->cx.cx_c.db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
-  if(y&&(v=syrd(y))){if(jt->cx.cx_c.db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} RZ(symfree(v));}
+// obsolete   if(y&&(v=syrd(y))){if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
+  if(y&&(v=syrd(y))){if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} RZ(symfree(v));}
  }
  RETF(z);
 }    /* 4!:55 expunge */

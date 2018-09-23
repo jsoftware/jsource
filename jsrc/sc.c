@@ -24,13 +24,13 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  V *fv=FAV(fs);  // point to V struct in fs
  RE(d=fdep(fs));
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
- if(0<jt->pmctr)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
- lk=jt->cx.cx_c.glock||VLOCK&fv->flag;
+ if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(aa,ll,-1L,a?VAL2:VAL1);
+ lk=jt->uflags.us.cx.cx_c.glock||VLOCK&fv->flag;
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
 // obsolete  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
- if(jt->cx.cx_c.db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // if debugging, go do that.  save last sym lookup as debug parm
+ if(jt->uflags.us.cx.cx_c.db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // if debugging, go do that.  save last sym lookup as debug parm
  // Execute.  ra() to protect against deleting the name while it is running.
  // This will be fast because we know any name has a recursive usecount before it is assigned
  else{ra(fs);  // should assert recursive usecount
@@ -42,10 +42,10 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  if(jt->fcallg[i].flag)locdestroy(i);
  jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; // no need for this?
  FDEPDEC(d); --jt->fcalli;  // ASSERT OK now
- if(0<jt->pmctr)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
+ if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(aa,ll,-2L,a?VAL2:VAL1);
  jt->curlocn=oln;
  jt->curname=oldn;
- if(jt->spfreeneeded)spfree();
+ if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();
  R z;
 }
 

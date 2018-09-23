@@ -399,13 +399,13 @@ F1(jtsymbrdlocknovalerr){A y;L *v;
  }
  // no error.  Return the value unless locked function
  y=v->val;
- R FUNC&AT(y)&&(jt->cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w):y;
+ R FUNC&AT(y)&&(jt->uflags.us.cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w):y;
 }
 
 // Same, but value error if name not defined
 F1(jtsymbrdlock){A y;
  RZ(y=symbrd(w));
- R FUNC&AT(y)&&(jt->cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w):y;
+ R FUNC&AT(y)&&(jt->uflags.us.cx.cx_c.glock||VLOCK&FAV(y)->flag)?nameref(w):y;
 }
 
 
@@ -462,12 +462,12 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
   RZ(e=g==jt->local?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(AT(w)&FUNC&&(wv=FAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->cx.cx_c.glock)wv->flag|=VLOCK;}
+  if(AT(w)&FUNC&&(wv=FAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->uflags.us.cx.cx_c.glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.
  }
- if(jt->cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
+ if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
  I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  if(x)xaf=AFLAG(x);  // if assigned, get the actual flags

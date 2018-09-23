@@ -16,8 +16,8 @@
 /*    debz()                                             */
 // d, if given, is the block to use for the debug stack; otherwise allocated
 
-DC jtdeba(J jt,C t,void *x,void *y,A fs,DC d){
- if(!d){A q; GAT(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
+DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
+ {A q; GAT(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
@@ -113,7 +113,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;I*v;
  v=(I*)d->dci; 
  if(0>*v)R 0;
  e=jt->jerr; jt->jerr=0;
- if(DBERRCAP==jt->cx.cx_c.db)errcap(); else susp();
+ if(DBERRCAP==jt->uflags.us.cx.cx_c.db)errcap(); else susp();
  switch(jt->dbsusact){
   case SUSRUN:      
    --*v; break;
@@ -152,7 +152,7 @@ A jtpee(J jt,A *queue,I m,I err,I lk,CW*ci,DC c){
  if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
- if(c&&jt->cx.cx_c.db&&(DBTRY!=jt->cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
 // obsolete  debz();
  R0
 }
@@ -178,7 +178,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode
- if(!z&&jt->cx.cx_c.db&&(s||DBTRY!=jt->cx.cx_c.db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
 // obsolete  }
 // obsolete debz();
  R z;
@@ -186,7 +186,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
 
 DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
  sv=FAV(self); t=sv->f; 
- RZ(d=deba(DCCALL,a,w,self,0L));
+ RZ(d=deba(DCCALL,a,w,self));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */
@@ -196,7 +196,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;I i;V*sv;
    else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
    // executed 13!:8]0, and we should continue on outwide of debug mode
-   if(!z&&jt->cx.cx_c.db&&(s||DBTRY!=jt->cx.cx_c.db)){d->dcj=jt->jerr; z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
+   if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){d->dcj=jt->jerr; z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
    ++i;
@@ -214,10 +214,10 @@ F1(jtdbc){UC k;
  if(AN(w)){
   RE(k=(UC)i0(w));
   ASSERT(!k||k==DB1||k==DBERRCAP,EVDOMAIN);
-  ASSERT(!k||!jt->cx.cx_c.glock,EVDOMAIN);
+  ASSERT(!k||!jt->uflags.us.cx.cx_c.glock,EVDOMAIN);
  }
  jt->redefined=0;
- if(AN(w)){jt->cx.cx_c.db=jt->dbuser=k; jt->fdepn=NFDEP/(k?2:1); jt->fcalln=NFCALL/(k?2:1);}
+ if(AN(w)){jt->uflags.us.cx.cx_c.db=jt->dbuser=k; jt->fdepn=NFDEP/(k?2:1); jt->fcalln=NFCALL/(k?2:1);}
  jt->dbsusact=SUSCLEAR; 
  R mtm;
 }    /* 13!:0  clear stack; enable/disable suspension */

@@ -148,11 +148,11 @@ static void jtjsigstr(J jt,I e,I n,C*s){
  if(jt->jerr){jt->curname=0; R;} 
  jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
- if(jt->cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->cx.cx_c.db=0;}
+ if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
  ep(n,s);
- if(jt->curname){if(!jt->cx.cx_c.glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
+ if(jt->curname){if(!jt->uflags.us.cx.cx_c.glock){eputs(": "); ep(AN(jt->curname),NAV(jt->curname)->s);} jt->curname=0;}
  eputc(CLF);
- if(n&&!jt->cx.cx_c.glock)debsi1(jt->sitop);
+ if(n&&!jt->uflags.us.cx.cx_c.glock)debsi1(jt->sitop);
  jt->etxn1=jt->etxn;
 }    /* signal error e with error text s of length n */ 
 
@@ -180,9 +180,9 @@ void jtjsignal3(J jt,I e,A w,I j){
  if(jt->jerr)R; 
  jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
- if(jt->cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->cx.cx_c.db=0;}
+ if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}
  eputl(*(jt->jerr+AAV(jt->evm)));
- if(!jt->cx.cx_c.glock){
+ if(!jt->uflags.us.cx.cx_c.glock){
   if(e==EVCTRL){dhead(3,0L); efmt("["FMTI"]",j); eputl(w);}
   else{
    dhead(3,0L); eputl(w);

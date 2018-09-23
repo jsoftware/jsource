@@ -207,7 +207,7 @@
 #define dcube(x,y)                  jtdcube(jt,(x),(y))
 #define ddot(x,y)                   jtddot(jt,(x),(y))   
 #define deal(x,y)                   jtdeal(jt,(x),(y))
-#define deba(x0,x1,x2,x3,x4)        jtdeba(jt,(x0),(x1),(x2),(x3),(x4))
+#define deba(x0,x1,x2,x3)           jtdeba(jt,(x0),(x1),(x2),(x3))
 #define debdisp(x)                  jtdebdisp(jt,(x))
 #define debsi1(x)                   jtdebsi1(jt,(x))
 #define debug()                     jtdebug(jt)

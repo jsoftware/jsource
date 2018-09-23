@@ -159,8 +159,8 @@ I jdo(J jt, C* lp){I e,old;A x;
  if(!jt->jerr)immex(x);
  e=jt->jerr;
  jt->jerr=0;
- if(e&&DBERRCAP==jt->cx.cx_c.db&&jt->dbtrap){
-  jt->cx.cx_c.db=0;
+ if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
+  jt->uflags.us.cx.cx_c.db=0;
   immex(jt->dbtrap);
   jt->jerr=0;
  }

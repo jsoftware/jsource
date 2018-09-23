@@ -673,7 +673,7 @@ extern A        jtcvt(J,I,A);
 extern B        jtccvt(J,I,A,A*);
 extern A        jtcvz(J,I,A);
 extern A        jtdaxis(J,I,A);
-extern DC       jtdeba(J,C,void*,void*,A,DC);
+extern DC       jtdeba(J,C,void*,void*,A);
 extern void     jtdebdisp(J,DC);
 extern void     jtdebz(J);
 extern A        jtdfss1(J,A,A,A);

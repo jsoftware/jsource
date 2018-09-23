@@ -185,7 +185,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
 F1(jtparse){A z;
  RZ(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
- RZ(deba(DCPARSE,queue,(A)m,0L,0L));
+ RZ(deba(DCPARSE,queue,(A)m,0L));
  z=parsea(queue,m);
  debz();
  R z;

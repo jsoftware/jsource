@@ -805,7 +805,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   }else{
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell)
    RZ(z=reitem(zeroi,w));  // create 0 items of the type of w
-   UC d=jt->cx.cx_c.db; jt->cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
+   UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
    RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
 // obsolete   z=reitem(zero,w); zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR; R iota(over(zero,shape(zz?zz:mtv)));
   }

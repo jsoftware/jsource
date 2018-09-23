@@ -103,7 +103,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d); \
 /* obsolete     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), lk, &cw[ti], d,stkblk); */ \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->cx.cx_c.db = od; } }else z=0;  \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = od; } }else z=0;  \
     break; }
 
 
@@ -112,7 +112,7 @@ void bucketinit(){I j;
  for(j=0;j<sizeof(yxbuckets)/sizeof(yxbuckets[0]);++j){
   UI4 ybuck=SYMHASH(NAV(ynam)->hash,ptab[j]);
   UI4 xbuck=SYMHASH(NAV(xnam)->hash,ptab[j]);
-  if(xbuck==ybuck)*(I*)0=0;  // scaf
+// obsolete   if(xbuck==ybuck)*(I*)0=0;  // scaf
   yxbuckets[j]=(xbuck<<16)|ybuck;  
  }
 }
@@ -122,7 +122,7 @@ void bucketinit(){I j;
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin;I lk; CDATA*cv;
-  CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->cx.cx_c.db;
+  CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->uflags.us.cx.cx_c.db;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
@@ -140,7 +140,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 // obsolete  cn=jt->curname; cl=jt->curlocn;  // scaf
  // If this is adv/conj, it must be 1/2 : executed with no x or y.  Set uv then
  u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
- if(!(jt->cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
+ if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
   // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
   lk=0; LINE(sv);
  } else {  // something special required
@@ -151,11 +151,11 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
   LINE(sv);
 
   // lk: 0=normal, 1=this definition is locked, -1=debug mode
-  lk=jt->cx.cx_c.glock||sv->flag&VLOCK;
+  lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
   // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
   // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-  if(!lk&&jt->cx.cx_c.db){
-// obsolete    d=sv->flag&VNAMED&&jt->cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
+  if(!lk&&jt->uflags.us.cx.cx_c.db){
+// obsolete    d=sv->flag&VNAMED&&jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
    if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if urrent stack frame is a call
     if(sv->flag&VNAMED){
      d=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
@@ -163,7 +163,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // If we are in debug mode, and the current stack frame has the DCCALL type, set up
     // so that the debugger can look inside this execution: point to the local symbols,
     // to the control-word table, and to where we store the currently-executing line number
-// obsolete    if(jt->cx.cx_c.db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
+// obsolete    if(jt->uflags.us.cx.cx_c.db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
     if(self==jt->sitop->dcf){  // if the stack frame is for this exec
      jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi]; jt->sitop->dci=(I)&i;  // install info about the exec
     }
@@ -171,9 +171,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging and there is no
    // debug area now.  Otherwise we will just use the previous one, or allocate a new one for the very first function call.  We have to have 1 debug
    // frame to hold parse-error information in.
-   RZ(deba(DCPARSE,0L,0L,0L,0L));  // if deba fails it will be before it modifies sitop
+   RZ(deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop
    // Since we have created a new frame, we no longer need to restore the old one.  We clear the saved value as a flag to indicate that we need a pop
-   savdcy = 0;  // debz required
+   savdcy = 0;  // flag for debz required
   }
 
   // If the verb contains try., allocate a try-stack area for it
@@ -220,7 +220,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  while((UI)i<(UI)n){
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
    // if performance monitor is on, collect data for it
-   if(0<jt->pmctr&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->curlocn,i,a?VAL2:VAL1);
+   if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->curlocn,i,a?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    if(jt->redefined){
     if(jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){
@@ -241,12 +241,12 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // try.  create a try-stack entry, step to next line
     BASSERT(tdi<NTD,EVLIMIT);
     tryinit(tdv+tdi,i,cw);
-    if(jt->cx.cx_c.db)jt->cx.cx_c.db=(UC)(tdv+tdi)->d?jt->dbuser:DBTRY;
+    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(UC)(tdv+tdi)->d?jt->dbuser:DBTRY;
     ++tdi; ++i; 
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
     // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-    if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->cx.cx_c.db=od;}else i=ci->go; break;
+    if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->uflags.us.cx.cx_c.db=od;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
     BASSERT(0,EVTHROW);
@@ -256,7 +256,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 // obsolete     tpop(old); z=parsex(makequeue(ci->n,ci->i),lk,ci,d,stkblk);
     tpop(old); parseline(z);  // obsolete  z=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // if there is no error, or ?? debug mode, step to next line
-    if(z||DB1==jt->cx.cx_c.db||DBERRCAP==jt->cx.cx_c.db||!jt->jerr)bi=i,++i;
+    if(z||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);}  // z might not be protected if we hit error
     // for other error, go to the error location; if that's out of range, keep the error; if not,
@@ -265,7 +265,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->cx.cx_c.db=od;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=od;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     break;
    case CASSERT:
    case CTBLOCK:
@@ -276,9 +276,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     parseline(t);  // obsolete t=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d);  // signal post-execution error if result not all 1s.  Sets t to 0
-    if(t||DB1==jt->cx.cx_c.db||DBERRCAP==jt->cx.cx_c.db||!jt->jerr)ti=i,++i;
+    if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->cx.cx_c.db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
    case CFOR:
@@ -342,7 +342,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
 // obsolete    if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
-    i=ci->go; if(tdi)jt->cx.cx_c.db=od;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+    i=ci->go; if(tdi)jt->uflags.us.cx.cx_c.db=od;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
    case CFCASE:
@@ -435,7 +435,7 @@ static DF1(xn1 ){R xdefn(0L,w, self);}
 static DF1(xadv){R xdefn(w, 0L,self);}
 
 
-static F1(jtxopcall){R jt->cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:mark;}
+static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:mark;}
 
 // This handles adverbs that refer to x/y.  Install a[/w] into the derived verb, and copy the flags
 static DF1(xop1){A ff,x;

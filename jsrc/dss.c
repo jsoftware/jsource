@@ -22,7 +22,7 @@ DC jtssnext(J jt,DC d,C c){
 
 static A jtssdo(J jt,A a,A w,C c){DC d,e;I n,*v;
  RZ(w=vs(w));
- ASSERT(jt->cx.cx_c.db,EVDOMAIN);
+ ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
  d=jt->sitop;                               /* cut back to topmost suspension  */
  while(d&&!d->dcsusp){                      /* do until topmost suspension     */
   if(d->dctype==DCCALL)*(I*)(d->dci)=-2;    /* terminate each call             */

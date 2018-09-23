@@ -165,7 +165,7 @@ B jtspfree(J jt){I i;A p;
    jt->mfree[i].ballo = SBFREEB + (jt->mfree[i].ballo & MFREEBCOUNTING);  // set so we trigger rescan when we have allocated another SBFREEB bytes
   }
  }
- jt->spfreeneeded = 0;  // indicate no check needed yet
+ jt->uflags.us.uq.uq_c.spfreeneeded = 0;  // indicate no check needed yet
  R 1;
 }    /* free unused blocks */
 
@@ -1043,7 +1043,7 @@ if((I)jt&3)*(I*)0=0;
   mfreeb = jt->mfree[blockx].ballo;   // number of bytes allocated at this size (biased zero point)
   AFCHAIN(w)=jt->mfree[blockx].pool;  // append free list to the new addition...
   jt->mfree[blockx].pool=w;   //  ...and make new addition the new head
-  if(0 > (mfreeb-=allocsize))jt->spfreeneeded=1;  // Indicate we have one more free buffer;
+  if(0 > (mfreeb-=allocsize))jt->uflags.us.uq.uq_c.spfreeneeded=1;  // Indicate we have one more free buffer;
    // if this kicks the list into garbage-collection mode, indicate that
   jt->mfree[blockx].ballo=mfreeb;
  }else{                // buffer allocated from subpool.

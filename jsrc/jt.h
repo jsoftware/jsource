@@ -60,13 +60,24 @@ typedef struct {
  A    symb;             /* symbol table for assignment                     */
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  union {
-  US cx_us;       // accessing both flags at once
+  UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
-   C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
-   UC   db;               /* debug flag; see 13!:0                           */
-  } cx_c;         // accessing as bytes
- } cx;
- B    spfreeneeded;     // When set, we should perform a garbage-collection pass
+   union {
+    US cx_us;       // accessing both flags at once
+    struct {
+     C    glock;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+     UC   db;               /* debug flag; see 13!:0                           */
+    } cx_c;        // accessing as bytes
+   } cx;   // flags needed by unquote and jtxdefn
+   union {
+    US uq_us;       // accessing both flags at once
+    struct {
+     C    pmctrb;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+     B    spfreeneeded;     // When set, we should perform a garbage-collection pass
+    } uq_c;        // accessing as bytes
+   } uq;   // flags needed only by unquote
+  } us;   // access as US
+ } uflags;
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
@@ -75,7 +86,6 @@ typedef struct {
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug redef)
-// 1 byte free
 // --- end cache line 4
  UC   prioritytype[11];  // type bit for the priority types
  B    stswitched;       /* called fn switched locale                       */

@@ -616,7 +616,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   pfx=IAV(sv->g)[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
-    if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->f1,w,h);}
+    if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
     else R CALL1(f1,w,fs);
    }
    if(((-AN(a))&(-(BOX&AT(a))))<0)R cut2bx(a,w,self);  // handle boxed a separately if a not empty
@@ -857,7 +857,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
  p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
  if(a!=mark){  // dyadic forms
   if(!AN(a)&&n){  // empty x, do one call if y is non-empty
-   if(VGERL&sv->flag){h=sv->h; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->f1,w,h);}
+   if(VGERL&sv->flag){h=sv->h; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->valencefns[0],w,h);}
    else R CALL1(f1,w,fs);
   }
   if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
@@ -1220,7 +1220,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
     next2=atco(atop(fs,ds(COPE)),next2);
    }
   }
-  fs=next2; f1=FAV(fs)->f1;   // get the function corresponding to the new verb
+  fs=next2; f1=FAV(fs)->valencefns[0];   // get the function corresponding to the new verb
  }
  // Now that we really know what fs is, see if it is a BOXATOP form
  state |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&FAV(fs)->flag2)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP and it will generate a single box, set so for result loop.  Don't touch fs yet, since we might not loop

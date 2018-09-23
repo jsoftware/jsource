@@ -336,14 +336,14 @@ static F1(jtneutral){A x,y;B b;V*v;
  v=FAV(w);
  ASSERT(!v->lr&&!v->rr,EVDOMAIN);
  RZ(y=v2(0L,1L));
- RZ(x=scf(infm)); b=equ(y,CALL2(v->f2,x,y,w)); RESETERR; if(b)R x;
- x=ainf;          b=equ(y,CALL2(v->f2,x,y,w)); RESETERR; if(b)R x;
- x=zero;          b=equ(y,CALL2(v->f2,x,y,w)); RESETERR; if(b)R x; 
- x=one;           b=equ(y,CALL2(v->f2,x,y,w)); RESETERR; if(b)R x;
- RZ(x=scf(infm)); b=equ(y,CALL2(v->f2,y,x,w)); RESETERR; if(b)R x;
- x=ainf;          b=equ(y,CALL2(v->f2,y,x,w)); RESETERR; if(b)R x;
- x=zero;          b=equ(y,CALL2(v->f2,y,x,w)); RESETERR; if(b)R x;
- x=one;           b=equ(y,CALL2(v->f2,y,x,w)); RESETERR; if(b)R x;
+ RZ(x=scf(infm)); b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
+ x=ainf;          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
+ x=zero;          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x; 
+ x=one;           b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
+ RZ(x=scf(infm)); b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
+ x=ainf;          b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
+ x=zero;          b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
+ x=one;           b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
  ASSERT(0,EVDOMAIN);
 }    /* neutral of arbitrary rank-0 function */
 

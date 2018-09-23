@@ -73,6 +73,6 @@ F2(jtapplystr){PROLOG(0054);A fs,z;I d;
  RZ(fs=parse(tokens(vs(a),1+!!jt->local)));
  ASSERT(VERB&AT(fs),EVSYNTAX);
  RE(d=fdep(fs));
- FDEPINC(d); z=CALL1(FAV(fs)->f1,w,fs); FDEPDEC(d);
+ FDEPINC(d); z=CALL1(FAV(fs)->valencefns[0],w,fs); FDEPDEC(d);
  EPILOG(z); 
 }    /* execute string a on argument w */

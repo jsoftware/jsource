@@ -26,7 +26,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
  sv=FAV(self); h=sv->h; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL1(FAV(*hv)->f1,  w,*hv)); ++hv;);
+ DO(AN(h), RZ(*x++=CALL1(FAV(*hv)->valencefns[0],  w,*hv)); ++hv;);
  R ope(z);
 }
 
@@ -34,7 +34,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
  sv=FAV(self); h=sv->h; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
- DO(AN(h), RZ(*x++=CALL2(FAV(*hv)->f2,a,w,*hv)); ++hv;);
+ DO(AN(h), RZ(*x++=CALL2(FAV(*hv)->valencefns[1],a,w,*hv)); ++hv;);
  R ope(z);
 }
 
@@ -42,10 +42,10 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
  RZ(w);
  n=IC(w); j=n-1; hs=FAV(self)->h; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
-// obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->f2;);
+// obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->valencefns[1];);
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
- --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->f2,from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
+ --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
  RETF(z);
 }
 
@@ -209,8 +209,8 @@ static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
 
 // this is u^:gerund y
 // Here, f1 is the original u and g1 is the original v; hs points to the gerund
-// First, we run hv[1]->f1 on y (this is gerund v1, the selector/power);
-// then we run (sv->id)->f2 on fs (the original u) and the result of selector/power (with self set to (sv->id):
+// First, we run hv[1]->valencefns[0] on y (this is gerund v1, the selector/power);
+// then we run (sv->id)->valencefns[1] on fs (the original u) and the result of selector/power (with self set to (sv->id):
 //     sv->id is the original conjunction, executed a second time now that we have the selector/power
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
@@ -274,11 +274,11 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (FAV(hv[2])->f2)(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (FAV(hv[0])->f2)((FAV(hv[0])->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
- POPZOMB; R (FAV(ff)->f2)(FAV(ff)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive

@@ -662,7 +662,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
   case CPOUND: f2=jtkeytally; break;
   case CSLASH: f2=jtkeyslash; if(vaid(v->f))f1=jtobqfslash; break;
 // obsolete    case CBOX:   f2=jtkeybox;   break;
-  case CFORK:  if(v->f1==(AF)jtmean){f2=jtkeymean; break;}
+  case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
                c=ID(v->f); d=ID(v->g); e=ID(v->h); 
                if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD)){f2=jtkeyheadtally; break;}
                // otherwise fall through to...

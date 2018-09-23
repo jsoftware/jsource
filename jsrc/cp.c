@@ -74,9 +74,9 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
  sv=FAV(self); 
  switch(n=*AV(sv->h)){
   case 0:  RCA(w);
-  case 1:  fs=sv->f; R CALL1(FAV(fs)->f1,w,fs);
+  case 1:  fs=sv->f; R CALL1(FAV(fs)->valencefns[0],w,fs);
   default: 
-   fs=sv->f; f1=FAV(fs)->f1;
+   fs=sv->f; f1=FAV(fs)->valencefns[0];
    z=w; 
    old=jt->tnextpushx; 
    DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
@@ -101,7 +101,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
    if(!(i&15))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
  if(0<p){
-  RZ(fs=inv(fs)); f1=FAV(fs)->f1;
+  RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
   RZ(z=ca(w));
   n=nv[0]; k=p-1;
   RZ(b=eq(scf(-inf),from(j,ravel(gs)))); bv=BAV(b); q=bv[k];
@@ -143,8 +143,8 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
 }    /* f^:n w, non-negative finite n, well-behaved f */
 
 // obsolete static DF1(jtinvh1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); RETF(z);}
-static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->f1)(FAV(i)->flag&VINPLACEOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
-static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->f1)(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
+static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VINPLACEOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
+static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); RETF(z);}
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
 
@@ -160,7 +160,7 @@ static DF2(jtpowg2){A h=FAV(self)->h; R df2(a,w,*AAV(h));}
 // Here, f1 is the original u and g1 is the original v
 // We call g1 (=original v), passing in y (and gs as self).  This returns v y
 // We then call powop(original u,result of v y), which is the VN case for u^:(v y) and creates a derived verb to perform that function 
-// Finally df1 treats the powop result as self, calling self/powop->f1 (the appropriate power case based on v y)
+// Finally df1 treats the powop result as self, calling self/powop->valencefns[0] (the appropriate power case based on v y)
 //   with the y arg as the w operand (and self/powop included to provide access to the original u)
 // We allow v to create a gerund, but we do not allow a gerund to create a gerund.
 
@@ -170,17 +170,17 @@ static DF2(jtpowg2){A h=FAV(self)->h; R df2(a,w,*AAV(h));}
 // here for u^:v y
 CS1IP(static,jtpowv1, \
 A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
-z=(FAV(u)->f1)(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
 ,0108)
 // here for x u^:v y 
 CS2IP(static,jtpowv2, \
 A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->f2)(FAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
+z=(FAV(u)->valencefns[1])(FAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
 A u; RZ(u = powop(FAV(fs)->f,CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->f1)(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
 ,0110)
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb

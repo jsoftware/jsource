@@ -21,8 +21,8 @@ CA, CA, CA, CA, CA, CA, CA, CA, CA, CA, CA,  0,  0,  0,  0,  0, /* 7 pqrstuvwxyz
 static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  GA(z,t,1,0,0); ACX(z); v=FAV(z);
  AFLAG(z) |= AT(z)&TRAVERSIBLE;  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
- v->f1=f1?f1:jtdomainerr1;  /* monad C function */
- v->f2=f2?f2:jtdomainerr2;  /* dyad  C function */
+ v->valencefns[0]=f1?f1:jtdomainerr1;  /* monad C function */
+ v->valencefns[1]=f2?f2:jtdomainerr2;  /* dyad  C function */
  v->mr=(RANKT)m;                   /* monadic rank     */
  v->lr=(RANKT)l;                   /* left    rank     */
  v->rr=(RANKT)r;                   /* right   rank     */

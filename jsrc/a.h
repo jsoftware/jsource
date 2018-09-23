@@ -18,16 +18,16 @@
 #define VV              0               /* VERB VERB                       */
 
 #define DECLF            V* RESTRICT sv=FAV(self); AD * RESTRICT fs=sv->f;  \
-                        AF f1=fs?FAV(fs)->f1:0,f2=fs?FAV(fs)->f2:0
+                        AF f1=fs?FAV(fs)->valencefns[0]:0,f2=fs?FAV(fs)->valencefns[1]:0
 
 #define DECLG           V* RESTRICT sv=FAV(self);AD * RESTRICT gs=sv->g;  \
-                        AF g1=gs?FAV(gs)->f1:0,g2=gs?FAV(gs)->f2:0
+                        AF g1=gs?FAV(gs)->valencefns[0]:0,g2=gs?FAV(gs)->valencefns[1]:0
 
 #define DECLFG          DECLF;         AD * RESTRICT gs=sv->g;  \
-                        AF g1=gs?FAV(gs)->f1:0,g2=gs?FAV(gs)->f2:0
+                        AF g1=gs?FAV(gs)->valencefns[0]:0,g2=gs?FAV(gs)->valencefns[1]:0
 
 #define DECLFGH         DECLFG;        AD * RESTRICT hs=sv->h;  \
-                        AF h1=hs?FAV(hs)->f1:0,h2=hs?FAV(hs)->f2:0
+                        AF h1=hs?FAV(hs)->valencefns[0]:0,h2=hs?FAV(hs)->valencefns[1]:0
 
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}

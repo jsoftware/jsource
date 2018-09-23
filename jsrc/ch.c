@@ -8,7 +8,7 @@
 
 static A jthparm(J jt,A j,A f,A h){A z;
  if(!(VERB&AT(f)))R shift1(aslash(CSTAR,atab(CPLUS,h,j)));
- RZ(z=CALL1(FAV(f)->f1,j,f));
+ RZ(z=CALL1(FAV(f)->valencefns[0],j,f));
  ASSERT(1>=AR(z),EVRANK); 
  ASSERT(!AR(z)||AN(j)==AN(z),EVLENGTH);
  R z;

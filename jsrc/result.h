@@ -57,7 +57,7 @@
 // obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
- if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->f##valence;}
+ if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f##valence=FAV(fs)->valencefns[valence-1];}
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 
@@ -226,7 +226,7 @@ do{
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
-      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)(intptr_t)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV(zzcellshape,INT,AR(zz)-zzframelen+3,0,0);}
+      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV(zzcellshape,INT,AR(zz)-zzframelen+3,0,0);}
       AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCIS(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }

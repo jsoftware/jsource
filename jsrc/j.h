@@ -939,6 +939,9 @@ static __forceinline void aligned_free(void *ptr) {
 #define XANDY(x,y) ((I)((UI)(x)&(UI)(y)))
 #endif
 
+#if !defined(C_CRC32C)
+#define C_CRC32C 0
+#endif
 #if (SY_64 && C_AVX)
 #ifdef C_CRC32C
 #undef C_CRC32C

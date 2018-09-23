@@ -136,7 +136,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
 A jtvasp(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I af,I acr,I wf,I wcr,I f,I r){A fs,z;
  if(!AR(a)||!AR(w))R vasp0(a,w,ado,cv,t,zt);
  if((SPARSE&AT(a)||SPARSE&AT(w))&&spmult(&z,a,w,id,af,acr,wf,wcr))R z;
- if(af!=wf){RZ(fs=ds(id)); R sprank2(a,w,0L,acr,wcr,VAV(fs)->f2);}
+ if(af!=wf){RZ(fs=ds(id)); R sprank2(a,w,0L,acr,wcr,VAV(fs)->valencefns[1]);}
  if(acr!=wcr)R vaspc(a,w,id,ado,cv,t,zt,af,acr,wf,wcr,f,r);
  R vaspeq(a,w,id,ado,cv,t,zt,f,r);
 }    /* scalar dyadic fns with one or both arguments sparse */

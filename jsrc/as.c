@@ -183,7 +183,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 
 #if 0  // obsolete
 static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
- fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
+ fs=VAV(sv->f)->f; f2=VAV(fs)->valencefns[1];
  r=AR(w)-1; n1=IC(w)-1; m=aii(w); t=AT(w); k=m*bp(t);
  RZ(z=ca(w)); zv=CAV(z)+k*n1;
  RZ(q=tail(w));
@@ -214,7 +214,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
 static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self);
  if(jt->rank&&jt->rank[1]<AR(w))R rank1ex(w,self,jt->rank[1],jtssg);
  RESETRANK; 
- fs=VAV(sv->f)->f; f2=VAV(fs)->f2;
+ fs=VAV(sv->f)->f; f2=VAV(fs)->valencefns[1];
  n=IC(w); RELORIGINBR(wrel,w)
  if(DIRECT&AT(w)){RE(z=ssgu(w,self)); if(z)R z;}
  GATV(z,BOX,n,1,0); zv=n+AAV(z); 
@@ -244,7 +244,7 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
 #define ZZFLAGWORD state
  I state;  // init flags, including zz flags
 
- A fs=FAV(FAV(self)->f)->f; AF f2=FAV(fs)->f2; // self = f/\.   FAV(self)->f = f/  FAV(FAV(self)->f)->f = f   fetch dyad for f
+ A fs=FAV(FAV(self)->f)->f; AF f2=FAV(fs)->valencefns[1]; // self = f/\.   FAV(self)->f = f/  FAV(FAV(self)->f)->f = f   fetch dyad for f
  // Set BOXATOP if appropriate.  Since {:y is always the last cell, BOXATOP is allowed only when the rank of w is 1, meaning that
  // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
  state = ((wr-2)>>(BW-1))&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
@@ -380,7 +380,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
  fs=FAV(self)->f; f=FAV(fs)->f; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);
- z=irs2(df1(w,fs),df2(a,w,bslash(fs)),VFLAGNONE, RMAX,-1L,c==CPLUS?(AF)jtminus:v->f2);
+ z=irs2(df1(w,fs),df2(a,w,bslash(fs)),VFLAGNONE, RMAX,-1L,c==CPLUS?(AF)jtminus:v->valencefns[1]);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
 }    /* a f/\. w where f has an "inverse" */
 

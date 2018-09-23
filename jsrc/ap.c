@@ -453,7 +453,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 // obsolete    virtw = virtual(w,wc,vr-1);
 // obsolete    virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
-   fs=FAV(fs)->f; f1=FAV(fs)->f2;
+   fs=FAV(fs)->f; f1=FAV(fs)->valencefns[1];
    // mark that we are handling this case
    state |= STATESLASH2;
   }
@@ -811,7 +811,7 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
   case CLEFT: case CRIGHT: case CCOMMA:   
    f2=jtinfixd; break;
   case CFORK:  
-   if(v->f1==(AF)jtmean)f2=jtmovavg; break;
+   if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
   case CSLASH: 
    f2=jtmovfslash; if(vaid(f))f1=jtpscan;
  }

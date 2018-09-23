@@ -51,26 +51,26 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr
 }
 
 // apply f2 on operate on items of a or w.  Pass on rank of f2 to reduce rank nesting
-DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,-1L, RMAX,FAV(self)->f2);}
-DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX,-1L, FAV(self)->f2);}
+DF2(jteachl){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,-1L, RMAX,FAV(self)->valencefns[1]);}
+DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX,-1L, FAV(self)->valencefns[1]);}
 
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
 // PUSH/POP ZOMB is performed in atop/amp/ampco
 // under is for when we could not precalculate the inverse
-static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->f1)(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->f2)(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(FAV(hs)->flag&VINPLACEOK1?jtinplace:jt,w,hs);}
-// obsolete static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(FAV(hs)->flag&VINPLACEOK2?jtinplace:jt,a,w,hs);}
-// obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
-// obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
+static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(FAV(hs)->flag&VINPLACEOK1?jtinplace:jt,w,hs);}
+// obsolete static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(FAV(hs)->flag&VINPLACEOK2?jtinplace:jt,a,w,hs);}
+// obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
+// obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
-static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->f1)(jtinplace,w,hs);}
-static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->f2)(jtinplace,a,w,hs);}
+static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
+static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
-static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->f1)(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->f2)(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f1)(jtinplace,w,fullf);}
-// obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->f2)(jtinplace,a,w,fullf);}
+static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
+static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+// obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
+// obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
 
 // u&.> main entry point.  Does not support inplacing.
 // obsolete static DF1(jteach1){DECLF; R every (  w,fs,f1);}

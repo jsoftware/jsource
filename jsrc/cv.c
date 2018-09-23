@@ -75,7 +75,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);
    ASSERT(k<=NPP,EVLIMIT); 
-   R CDERIV(CFIT,jtfitpp1,sv->f2,0L,m,l,r);  // CTHORN lacks VIRS
+   R CDERIV(CFIT,jtfitpp1,sv->valencefns[1],0L,m,l,r);  // CTHORN lacks VIRS
   case CCYCLE:
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
    R CDERIV(CFIT,jtpparity,0L,0L,m,RMAX,RMAX);  // CCYCLE lacks VIRS

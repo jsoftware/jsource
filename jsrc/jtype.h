@@ -650,7 +650,7 @@ typedef struct{
 
 
 
-typedef struct {AF f1,f2;A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id;} V;
+typedef struct {AF valencefns[2];A f,g,h;void *localuse;I4 flag;UI4 fdep; UI4 flag2; RANKT mr,lr,rr; C id;} V;
 // the localuse field is not freed or counted for space, as the f/g/h fields are.  It is for local optimizations only
 
 #define ID(f)           (f&&FUNC&AT(f)?FAV(f)->id:C0)

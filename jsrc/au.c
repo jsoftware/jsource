@@ -26,19 +26,19 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
 F1(jtfdepadv){RZ(w); ASSERT(VERB&AT(w),EVDOMAIN); R sc(fdep(w));}
 
 // jtdf1 and jtdf2 can be called with or without inplace flags since they don't use jt but merely pass it through
-DF1(jtdf1){RZ(self); R CALL1(FAV(self)->f1,  w,self);}
-DF2(jtdf2){RZ(self); R CALL2(FAV(self)->f2,a,w,self);}
+DF1(jtdf1){RZ(self); R CALL1(FAV(self)->valencefns[0],  w,self);}
+DF2(jtdf2){RZ(self); R CALL2(FAV(self)->valencefns[1],a,w,self);}
 
-DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(FAV(self)->f1,  w,jt->sf=self); jt->sf=s; RETF(z);}
+DF1(jtdfs1){F1PREFIP;A s=jt->sf,z; RZ(self); z=CALL1IP(FAV(self)->valencefns[0],  w,jt->sf=self); jt->sf=s; RETF(z);}
 DF2(jtdfs2){F2PREFIP;
 A s=jt->sf,z; 
 RZ(self); 
-z=CALL2IP(FAV(self)->f2,a,w,jt->sf=self); jt->sf=s; 
+z=CALL2IP(FAV(self)->valencefns[1],a,w,jt->sf=self); jt->sf=s; 
 RETF(z);}    
      /* for monads and dyads that can possibly involve $: */
 
-A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(FAV(self)->f1,  w,self0);}
-A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(FAV(self)->f2,a,w,self0);}
+A jtdfss1(J jt, A w, A self, A self0)     {RZ(self); R CALL1(FAV(self)->valencefns[0],  w,self0);}
+A jtdfss2(J jt, A a, A w, A self, A self0){RZ(self); R CALL2(FAV(self)->valencefns[1],a,w,self0);}
      // used to treat self as an argument.  Used with routines that don't really use self
 
 F1(jtself1){A z;I d=fdep(jt->sf); FDEPINC(d); z=df1(  w,jt->sf); FDEPDEC(d); RETF(z);}
@@ -56,8 +56,8 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  RE(0);
  GA(z,t,1,0,0); v=FAV(z);
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
- v->f1    =f1?f1:jtdomainerr1;  /* monad C function */
- v->f2    =f2?f2:jtdomainerr2;  /* dyad  C function */
+ v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
+ v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */
  v->f     =fs;                  /* monad            */
  v->g     =gs;                  /* dyad             */      
  v->h     =hs;                  /* fork right tine or other auxiliary stuff */

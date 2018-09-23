@@ -103,7 +103,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d); \
 /* obsolete     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), lk, &cw[ti], d,stkblk); */ \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = od; } }else z=0;  \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !savdcy; } }else z=0;  \
     break; }
 
 
@@ -112,7 +112,9 @@ void bucketinit(){I j;
  for(j=0;j<sizeof(yxbuckets)/sizeof(yxbuckets[0]);++j){
   UI4 ybuck=SYMHASH(NAV(ynam)->hash,ptab[j]);
   UI4 xbuck=SYMHASH(NAV(xnam)->hash,ptab[j]);
-// obsolete   if(xbuck==ybuck)*(I*)0=0;  // scaf
+  // The next line will fail is there is a collision betwwen x and y.  In that case we have to run a little more code.  We have found that the
+  // AVX code (which uses CRC) does not have collisions, but the non-AVX does.
+// auditing  if(xbuck==ybuck)*(I*)0=0;  // scaf
   yxbuckets[j]=(xbuck<<16)|ybuck;  
  }
 }
@@ -122,14 +124,14 @@ void bucketinit(){I j;
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin;I lk; CDATA*cv;
-  CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;UC od=jt->uflags.us.cx.cx_c.db;
+  CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;
  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
  // be reusing the stack frame, we just save the input once
  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
 // obsolete ASSERTSYS(savdcy,"no frame in cx");  // scaf
- // z is the final result (initialized here in case there are no executed lines)
+ // z is the final result (initialized to non-error for comp ease)
  // t is the result of the current t block, or 0 if not in t block
  // u,v are the operand(s), if this is an explicit modifier
  // sv->text of this explicit entity, st is its type
@@ -173,7 +175,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    // frame to hold parse-error information in.
    RZ(deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop
    // Since we have created a new frame, we no longer need to restore the old one.  We clear the saved value as a flag to indicate that we need a pop
-   savdcy = 0;  // flag for debz required
+   savdcy = 0;  // flag for debz required, proxy for 'debug was set'
   }
 
   // If the verb contains try., allocate a try-stack area for it
@@ -181,7 +183,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 // obsolete  if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
 // obsolete   else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
  }
- // If there are no words at all (empty definition), that's domain error
+ // If there are no words at all (empty definition), that's domain error (actually, valence error).  Pity we have to test explicitly, but the symbol table is invalid if there are no lines
  ASSERT(n,EVDOMAIN);
  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
@@ -190,8 +192,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
  // otherwise clone a copy of it.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
  UI4 yxbucks = yxbuckets[AR(hv[3+hi])&~LSYMINUSE];  // get ptab[] index of this symbol table, and then the yx bucket indexes
- if(AR(hv[3+hi])&LSYMINUSE){RZ(jt->local=clonelocalsyms(hv[3+hi]))}
- else{jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
+ if(!(AR(hv[3+hi])&LSYMINUSE)){jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
+ else{RZ(jt->local=clonelocalsyms(hv[3+hi]))}
  // Assign the special names x y m n u v
  // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
  // not an assignment-in-place
@@ -203,7 +205,8 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  L *xbuckptr = AV(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
  if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
- if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
+   // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
+ if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
  // Do the other assignments, which occur less frequently, with IS
  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
@@ -246,7 +249,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
     // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-    if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->uflags.us.cx.cx_c.db=od;}else i=ci->go; break;
+    if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->uflags.us.cx.cx_c.db=!savdcy;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
     BASSERT(0,EVTHROW);
@@ -265,7 +268,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=od;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!savdcy;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     break;
    case CASSERT:
    case CTBLOCK:
@@ -278,7 +281,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d);  // signal post-execution error if result not all 1s.  Sets t to 0
     if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;
     else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=od;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!savdcy;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
    case CFOR:
@@ -342,7 +345,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
 // obsolete    if(cd){BZ(z=rat(z)); DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}  // OK to rat here, since we rat on the way out
-    i=ci->go; if(tdi)jt->uflags.us.cx.cx_c.db=od;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+    i=ci->go; if(tdi)jt->uflags.us.cx.cx_c.db=!savdcy;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
    case CFCASE:
@@ -397,18 +400,26 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     i=ci->go;  // Go to the next sentence, whatever it is
   }
  }
- // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
- // If it isn't, generate a post-eceution error for the non-noun
-// obsolete  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
- if(z&&!(AT(z)&NOUN)&&!(AT(self)&ADV+CONJ))z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d);  // sets z to 0
  FDEPDEC(1);  // OK to ASSERT now
+// obsolete  if(z&&!(AT(z)&NOUN)&&!(st&ADV+CONJ))i=bi, parsex(makequeue(cw[bi].n,cw[bi].i), -1, &cw[bi], d, stkblk), z=0;
+ if(z){
+  // There was a result (normal case)
+  // If we are executing a verb (whether or not it started with 3 : or [12] :), make sure the result is a noun.
+  // If it isn't, generate a post-eceution error for the non-noun
+  if((AT(z)&NOUN)||(AT(self)&ADV+CONJ)) {
+   // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
+   // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
+   // to be worth the trouble.
+   realizeifvirtual(z);
+  }else {z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d);}  // sets z to 0
+ }else{
+  // No result.  Probably an error, but it could just be that we executed nothing
+  // Since we initialized z to i. 0 0, there's nothing more to do
+ }
+
  if(savdcy){ jt->sitop->dcy = savdcy; jt->sitop->dcn = savdcn;  // restore error info for the caller, if we didn't push the debug stack
  }else{debz();}   // pair with the deba if we did one
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
- // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
- // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
- // to be worth the trouble.
- if(z)realizeifvirtual(z);
  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is
  // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
  if(cd){

@@ -23,6 +23,15 @@ fi
 if [ "x$compiler" = x'gcc' ] ; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
+# alternatively, add comment /* fall through */
+OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
+if [ $OVER_GCC_VER7 -eq 1 ] ; then
+common="$common -Wno-implicit-fallthrough"
+fi
+OVER_GCC_VER8=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 8 | bc)
+if [ $OVER_GCC_VER8 -eq 1 ] ; then
+common="$common -Wno-cast-function-type"
+fi
 else
 # clang 3.5 .. 5.0
 common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"

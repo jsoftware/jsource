@@ -5,6 +5,130 @@
 
 #include "j.h"
 
+#if 1
+// obsolete // Return last name or errorname entry on the stack; 0 if none.  This will be the name used for error messages
+// obsolete A jtcurname(J jt) {
+// obsolete  DQ(jt->callstacknext-1, if(jt->callstack[i].type&(CALLSTACKNAME|CALLSTACKERRORNAME))R jt->callstack[i].value;)
+// obsolete  R 0;
+// obsolete }
+
+// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs) 
+static DF2(jtunquote){A z;
+ F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
+ RE(0);
+ JATTN;
+ V *v=FAV(self);  // V block for this V/A/C reference
+ I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry; execution may add more
+ A thisname=v->f; // the A block for the name of the function (holding an NM)
+ NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+ A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
+ A explocale=0; L *stabent;  // explicit locale (if any - init to 0 as flag); symbol-table entry for this name
+ if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
+  if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
+ } else {  // locative
+  RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
+  stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+ }
+ ASSERT(stabent,EVVALUE);  // name must be defined
+ A fs=stabent->val; fs=v->h?v->h:fs;  // resolve the name.  v->h is used only for namerefops (should try to remove)
+ ASSERT(fs,EVVALUE); // make sure the name's value is given also
+ v=FAV(fs);  // repurpose v to point to the resolved verb block
+ I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
+ I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
+ ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
+ if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale; } // if locative, switch to it, stacking the prev value
+ // ************** no errors till the stack has been popped
+ FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
+
+ if(!(jt->uflags.ui4|(v->flag&VLOCK))) {
+  // No special processing. Just run the entity
+  // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
+  // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
+  ++AC(fs);  // protect the entity
+// obsolete  ra(fs);  // protect against reassignment while executing.  Usecount will always be recursive; could ACINCR   scaf should assert recursive, then ACINCR
+// obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
+  A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,dyadex?w:(A)fs,fs); jt->sf=s;
+  // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
+  if(!--AC(fs)){++AC(fs); fa(fs);}
+ } else {
+  // Extra processing is required.  Check each option individually
+  if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL1:VAL2);  // Record the call to the name, if perf monitoring on
+  if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)){  // The verb is locked if it is marked as locked, or if the script is locked
+   jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm    scaf parms
+  }else{
+   ra(fs);  // should assert recursive usecount
+// obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}  // scaf make faster
+   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,dyadex?w:(A)fs,fs); jt->sf=s;
+   fa(fs);
+  }
+  if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL1:VAL2);  // record the return from call
+  if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
+ }
+ FDEPDEC(d);
+
+ // Now pop the stack.  Execution may have added entries, but our stack frame always starts in the same place.
+ // We may add entries to the end of the caller's stack frame
+ jt->curname=savname;  // restore the executing name
+ if(callstackx!=jt->callstacknext){  // normal case, with no stack, bypasses all this
+  // There are stack entries.  Process them
+  if(callstackx+1==jt->callstacknext && jt->callstack[callstackx].type==CALLSTACKPOPLOCALE) {
+   // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
+   jt->global=jt->callstack[callstackx].value;  // restore global locale
+   jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
+  } else {
+   // Locales were changed or deleted.  Process the stack fully
+   // Find the locale to return to.  This will be the locale of the earliest POP, or jt->global unchanged if there is a POPFROM or there is no POP.
+   I fromfound=0; A earlyloc=0; I i;
+   i=jt->callstacknext;  // back to front
+   do{
+    --i;
+    fromfound|=jt->callstack[i].type&CALLSTACKPOPFROM;  // remember if FROM seen
+    if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE))earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
+   }while(i!=callstackx);
+   if(earlyloc&&!fromfound)jt->global=earlyloc;  // If there is a POP to do, do it
+   // Delete the deletable locales.  If we encounter the current locale, remember that fact and don't delete it.
+   I delcurr=0;  // set if we have to delete jt->global
+   i=jt->callstacknext;  // back to front
+   do{
+    --i;
+    if(jt->callstack[i].type&CALLSTACKDELETE){
+     if(jt->callstack[i].value==jt->global)delcurr=1;else locdestroy(jt->callstack[i].value);  // destroy or mark for later
+    }
+   }while(i!=callstackx);
+   jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
+   // If there is a POPFROM, add a POP in the caller's stack, to the earliest POP[FROM] (which will be the locale in effect when this name started)
+   if(fromfound)pushcallstack1(CALLSTACKPOPLOCALE,earlyloc);
+   // If the current locale was deletable, push an entry to that effect in the caller's stack.  It will be deleted when it becomes un-current (if ever: if
+   // the locale is still in use back to console level, it will not be deleted.  Invariant: if a locale is marked for destruction, it appears
+   // nowhere earlier on the call stack
+   if(delcurr)pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,jt->global);
+  }
+ }
+ // ************** errors OK now
+ R z;
+}
+
+#else
+
+where is call stack reset?
+// obsolete aa=v->f; RE(e=syrd(aa,&g));
+ oldn=jt->curname; jt->curname=aa;
+ oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
+ ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
+ i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
+ jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
+// obsolete  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
+ jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
+ // Execute.  ra() to protect against deleting the name while it is running.
+ // This will be fast because we know any name has a recursive usecount before it is assigned
+ if(!jt->stswitched)jt->global=jt->fcallg[i].og;  // do this better.  Remove stswitched?  og not needed elsewhere - just stack it here
+ jt->stswitched=jt->fcallg[i].sw0;
+ if(jt->fcallg[i].flag)locdestroy(i);
+ jt->fcallg[i].g=jt->fcallg[i].og=0; jt->stswitched=0; // no need for this?
+ --jt->fcalli;  // ASSERT OK now
+ jt->curlocn=oln;
+ jt->curname=oldn;
+
 
 static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
@@ -49,7 +173,10 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  R z;
 }
 
-static DF1(jtunquote1){R unquote(0L,w,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
+#endif
+
+// The monad calls the bivalent case with (w,self,self) so that the inputs can pass through to the executed function
+static DF1(jtunquote1){R unquote(w,(A)self,self);}  // This just transfers to jtunquote.  It passes jt, with inplacing bits, unmodified
 
 // return ref to adv/conj/verb whose name is a and whose symbol-table entry is w
 // if the value is a noun, we just return the value; otherwise we create a 'name~' block

@@ -145,7 +145,7 @@ F1(jtdbstackz){A y;
 
 
 static void jtjsigstr(J jt,I e,I n,C*s){
- if(jt->jerr){jt->curname=0; R;} 
+ if(jt->jerr){jt->curname=0; R;}   // clear error-name indicator
  jt->jerr=(C)e; jt->jerr1=(C)e; jt->etxn=0;
  dhead(0,0L);
  if(jt->uflags.us.cx.cx_c.db&&!spc()){eputs("ws full (can not suspend)"); eputc(CLF); jt->uflags.us.cx.cx_c.db=0;}

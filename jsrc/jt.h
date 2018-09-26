@@ -42,7 +42,7 @@ typedef struct {
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // --- end of cache line 2.  1 qword of the pool table spills over
 // parser values
- A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
+ I    parsercalls;      /* # times parser was called                       */
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
  DC   sitop;            /* top of SI stack                                 */
@@ -52,12 +52,14 @@ typedef struct {
  UI4  nvrtop;           /* top of nvr stack; # valid entries               */
  UI4  nvrotop;          // previous top of nvr stack
 // --- end of cache line 3
- I    parsercalls;      /* # times parser was called                       */
  PSTK* parserstkbgn;     // &start of parser stack
  PSTK* parserstkend1;    // &end+1 of parser stack
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
- A    symb;             /* symbol table for assignment                     */
+// obsolete  I    fcalli;           /* named fn calls: current depth                   */
+ I4   callstacknext;           /* named fn calls: current depth                   */
+ I4   fcalln;           /* named fn calls: maximum permissible depth       */
+ A    curname;          // current name, an A block containing an NM
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -87,15 +89,18 @@ typedef struct {
  UC   jerr1;            /* last non-zero jerr                              */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug redef)
 // --- end cache line 4
+ I4   fdepi;            /* fn calls: current depth                         */
+ I4   fdepn;            /* fn calls: maximum permissible depth             */
+ A    sf;               /* for $:                                          */
  UC   prioritytype[11];  // type bit for the priority types
- B    stswitched;       /* called fn switched locale                       */
+// obsolete B    stswitched;       /* called fn switched locale                       */
+// 1 byte free
  B    iepdo;            /* 1 iff do iep                                    */
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
  A    fill;             /* fill                                            */
  C*   fillv;            /* fill value                                      */
- C    fillv0[sizeof(Z)];/* default fill value                              */
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
@@ -117,14 +122,10 @@ typedef struct {
  I    bytesmax;         /* high-water mark of "bytes"                      */
  A    nvra;             /* data blocks that are in execution somewhere     */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
- A    curlocn;          /* current locale name corresp. to curname         */
- A    curname;          /* current name                                    */
+ C    fillv0[sizeof(Z)];/* default fill value                              */
+// obsolete  A    curlocn;          /* current locale name corresp. to curname         */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
- I    fcalli;           /* named fn calls: current depth                   */
- I    fcalln;           /* named fn calls: maximum permissible depth       */
- I    fdepi;            /* fn calls: current depth                         */
- I    fdepn;            /* fn calls: maximum permissible depth             */
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
@@ -132,6 +133,8 @@ typedef struct {
  UC   seclev;           /* security level                                  */
 // 3 bytes here
 // --- end cache line 8
+ A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
+ A    symb;             /* symbol table for assignment                     */
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
@@ -261,7 +264,6 @@ typedef struct {
 // obsolete  I    scn;              /* S: actual length of sca                         */
 // obsolete  I*   scv;              /* S: AV(sca)                                      */
  int  sdinited;         /* sockets                                         */
- A    sf;               /* for $:                                          */
  A    slist;            /* files used in right arg to 0!:                  */
  I    slistn;           /* slist # of real entries                         */
  I    sm;               /* sm options set by JSM()                         */
@@ -304,7 +306,7 @@ typedef struct {
  C    breakfn[NPATH];   /* break file name                                 */
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    dirnamebuf[NPATH];/* for directory search                            */
- LS   fcallg[1+NFCALL]; /* named fn calls: stack                           */
+ LS   callstack[1+NFCALL]; /* named fn calls: stack                           */
 } JST;
 
 typedef JST* J; 

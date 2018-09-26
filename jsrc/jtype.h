@@ -524,15 +524,32 @@ typedef struct {A name,val;I flag,sn,next,prev;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 
 
-typedef struct{A og,g;I ptr,flag;B sw0;} LS;
+// obsolete typedef struct{A og,g;I ptr,flag;B sw0;} LS;
+// obsolete 
+// obsolete /* og:   old value of global                                               */
+// obsolete /* g:    global at this level                                              */
+// obsolete /* ptr:  index in pv/nv if numbered locale                                 */
+// obsolete /*       pointer to stloc entry if named locale                            */
+// obsolete /* flag: 1 if named    locale marked for destruction                       */
+// obsolete /*       2 if numbered locale marked for destruction                       */
+// obsolete /* sw0:  old value of stswitched                                           */
 
-/* og:   old value of global                                               */
-/* g:    global at this level                                              */
-/* ptr:  index in pv/nv if numbered locale                                 */
-/*       pointer to stloc entry if named locale                            */
-/* flag: 1 if named    locale marked for destruction                       */
-/*       2 if numbered locale marked for destruction                       */
-/* sw0:  old value of stswitched                                           */
+// Definition of callstack
+
+typedef struct {
+ I type;  // type of entry, flagged per below
+ void *value;  // locale or name, depending on the type
+} LS;
+// obsolete #define CALLSTACKNAME 1   // (always the first entry) the name of the executing entity
+#define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
+#define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
+#define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
+// obsolete #define CALLSTACKERRORNAME 16   // name for error message, pushed by ASSERTN
+#define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
+
+// Add an entry to the call stack, and increment the index variable
+#define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
+#define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
 
 
 typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
@@ -545,9 +562,8 @@ typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;
 //   is guaranteed to be at that position
 //   (for direct locatives) the hash of the locative - if numbered, the number itself.
 //   (for indirect locatives) hash of the last indirect name
-// m:    length of non-locale part of name note 255-byte limit!
-// sn:   symbol table number on last reference  no longer used
-// e:    symbol pool entry   on last reference  no longer used
+//   (for locale names in SYMLINFO of a numbered locale) the locale number 
+// m:    length of non-locale part of name note 255-byte limit! (AN holds the length of the entire name including the locative)
 /* s:    string part of full name (1 to ?? characters, including locale of assignment if given)           */
 
 #define NMLOC           1       /* direct   locale abc_lm_                 */

@@ -9,6 +9,8 @@
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ras() has been executed
 // on the result and on the name and path
+// For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
+//   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the number
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  GATV(g,SYMB,ptab[p]+SYMLINFOSIZE,0,0);   // have prime number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
@@ -17,7 +19,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  RZ(v=symnew(&AV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
-   RZ(x=nfs(n,u));
+   RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
    RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
    // Assign this name in the locales symbol table to point to the allocated SYMB block
@@ -26,7 +28,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
    break;
   case 1:  /* numbered locale */
    ASSERT(0<=jt->stmax,EVLOCALE);
-   sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s));
+   sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual
    ++jt->stused;
    m=AN(jt->stnum);
@@ -102,7 +104,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
 // obsolete  else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
  }
  R 0;  // not found
-}   /* find the symbol table for locale u which has length n and hash/number h, create if b and non-existent */
+}   /* find the symbol table for locale with name u which has length n and hash/number h, create if b and non-existent */
 
 // look up locale name, and create the locale if not found
 A jtstfindcre(J jt,I n,C*u,I bucketx){
@@ -130,10 +132,17 @@ static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  R w;
 }    /* validate namelist of locale names */
 
-// rewrite this to loop here rather than call indexof scaf
-static I jtprobenum(J jt,C*u){I j; 
- RE(j=i0(indexof(jt->stnum,sc((I)strtoI(u,NULL,(I)10))))); 
- R j<AN(jt->stnum)?j:-1;
+// get index number for locale with number locno, or -1 if not found
+static I jtindexforloc(J jt,I locno){I i;
+ I *nv=IAV(jt->stnum); I n=AN(jt->stnum);  // address and length of locale numbers
+ for(i=0; i<n; ++i)if(nv[i]==locno)R i;   // return index of first match
+ R -1;   // -1 if no match
+}
+// get index number for a numbered locale, given the name of the locale
+static I jtprobenum(J jt,C*u){
+// obsolete RE(j=i0(indexof(jt->stnum,sc((I)strtoI(u,NULL,(I)10)))));
+// obsolete  R j<AN(jt->stnum)?j:-1;
+  R jtindexforloc(jt, (I)strtoI(u,NULL,(I)10)); // scaf error fails if no terminating NUL, if rank used
 }    /* probe for numbered locales */
 
 
@@ -200,7 +209,7 @@ static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
  RZ(a&&w);
  if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
- if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){
+ if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
   g=v->val; 
   u=1+AV(g); DO(AN(g)-1, ASSERT(!u[i],EVLOCALE););
   RZ(symfreeh(g,v));
@@ -235,8 +244,12 @@ F2(jtloccre2){
 F1(jtlocswitch){A g;
  RZ(w);
  ASSERT(!AR(w),EVRANK); 
- RZ(g=locale(1,w)); 
- jt->global=g; jt->stswitched=1;
+ RZ(g=locale(1,w));
+ // put a marker for the operation on the call stack
+ // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
+ if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
+ jt->global=g;
+// obsolete  jt->stswitched=1;
  R mtm;
 }    /* 18!:4  switch locale */
 
@@ -270,31 +283,43 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
-F1(jtlocexmark){A g,*pv,*wv,y,z;B b,c,*zv;C*u;I i,j,m,n,*nv;L*v;
+F1(jtlocexmark){A g,*pv,*wv,y,z;B b,*zv;C*u;I i,j,m,n,*nv;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   zv[i]=1; y=WVR(i); g=0; m=AN(y); u=CAV(y); b='9'>=*u;
-  if(b){j=probenum(u);               if(0<=j)g=pv[j]; }
-  else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}
-  if(g){
-   c=1;
-   DO(1+jt->fcalli, if(g==jt->fcallg[i].g){jt->fcallg[i].flag=1+b; jt->fcallg[i].ptr=b?j:(I)v; c=0; break;});
-   if(c){
-    if(b){RZ(redefg(g)); RZ(symfreeh(g,0L)); pv[j]=0; nv[j]=-1; --jt->stused;}
-    else {RZ(redefg(g)); RZ(symfreeh(g,v ));}
-    if(g==jt->global)jt->global=0;
- }}}
+  if(b){j=probenum(u);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
+  else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
+  if(g){I k;  // if the specified locale exists in the system...
+   // See if we can find the locale on the execution stack.  If so, set the DELETE flag
+   for(k=0;k<jt->callstacknext;++k)if(jt->callstack[k].value==g)break;
+   if(k<jt->callstacknext)jt->callstack[k].type|=CALLSTACKDELETE;  // name active on stack; mark for deletion
+   else if(g==jt->global){
+    // Name is not on stack but it is executing now.  Add a change+delete entry for it.  There may be multiple of these outstanding
+    pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion
+   } else locdestroy(g);  // not on stack and not running - destroy immediately
+  }
+ }
  R z;
 }    /* 18!:55 destroy a locale (but only mark for destruction if on stack) */
 
-B jtlocdestroy(J jt,I i){A g,*pv;B b;I j,*nv;L*v;
- nv=AV(jt->stnum); pv=AAV(jt->stptr);
- g=jt->fcallg[i].g; b=1==jt->fcallg[i].flag?0:1;
- if(b){j=(I )jt->fcallg[i].ptr; RZ(redefg(g)); RZ(symfreeh(g,0L)); pv[j]=0; nv[j]=-1; --jt->stused;}
- else {v=(L*)jt->fcallg[i].ptr; RZ(redefg(g)); RZ(symfreeh(g,v ));}
+// destroy symbol table g.  
+B jtlocdestroy(J jt,A g){
+ // Look at the name to see whether the locale is named or numbered
+ NM *locname=NAV(LOCNAME(g));  // NM block for name
+ B isnum = '9'>=locname->s[0];  // first char of name tells the type
+ if(isnum){
+  // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
+  I i=jtindexforloc(jt,locname->bucketx);  // find the locale in the list of numbered locales
+  RZ(redefg(g)); RZ(symfreeh(g,0L)); AAV(jt->stptr)[i]=0; AV(jt->stnum)[i]=-1; --jt->stused;
+ } else {
+  // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
+  L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
+if(locsym==0)*(I*)0=0; // scaf
+  RZ(redefg(g)); RZ(symfreeh(g,locsym));
+ }
  if(g==jt->global)jt->global=0;
  R 1;
 }    /* destroy locale jt->callg[i] (marked earlier by 18!:55) */

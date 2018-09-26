@@ -266,10 +266,18 @@ extern unsigned int __cdecl _clearfp (void);
 #define RMAX            ((1LL<<RMAXX)-1)   // max rank
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
-#define NFDEP           (8000L+12000L*SY_64)             // fn call depth
-#define NFCALL          (MAX(40,NFDEP/10)) // call depth for named calls - can be expensive
 
 #define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
+
+// Sizes for the internal stacks.  The goal here is to detect a runaway recursion before it creates a segfault.  This cannot
+// be done with precision because we don't know how much C stack we have, or how much is used by a recursion (and anyway it depends on
+// what J functions are running).
+// There are two limits: maximum depth of J functions, and maximum depth of named functions.  The named-function stack is intelligent
+// and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
+// The depth of J function calls will probably limit stack use.
+#define NFDEP           4000             // fn call depth
+#define NFCALL          (NFDEP/10)      // call depth for named calls, not important
+
 
 // modes for indexofsub()
 #define IIOPMSK         0xf     // operation bits
@@ -371,7 +379,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERT(b,e)     {if(!(b)){jsignal(e); R 0;}}
 #define ASSERTD(b,s)    {if(!(b)){jsigd((s)); R 0;}}
 #define ASSERTMTV(w)    {RZ(w); ASSERT(1==AR(w),EVRANK); ASSERT(!AN(w),EVLENGTH);}
-#define ASSERTN(b,e,nm) {if(!(b)){jt->curname=(nm); jsignal(e); R 0;}}
+#define ASSERTN(b,e,nm) {if(!(b)){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTSYS(b,s)  {if(!(b)){jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
@@ -386,8 +394,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0
 #define ds(c)           pst[(UC)(c)]
-#define FDEPDEC(d)      {jt->fdepi-=d;}
-#define FDEPINC(d)      {ASSERT(jt->fdepn>=d+jt->fdepi,EVSTACK); jt->fdepi+=d;}
+#define FDEPDEC(d)      {jt->fdepi-=(I4)d;}
+#define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)d,EVSTACK); jt->fdepi+=(I4)d;}
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)

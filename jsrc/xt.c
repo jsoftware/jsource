@@ -263,12 +263,12 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
 void jtpmrecord(J jt,A name,A loc,I lc,int val){A x,y;B b;PM*v;PM0*u;
  u=jt->pmu;  // u-> pm control area
  v=jt->pmv+u->i;  // v -> next PM slot to fill
- if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, remember those values
+ if(b=u->wrapped){x=v->name; y=v->loc;}  // If this slot already has valid name/loc, extract those values for free
  ++u->i;  // Advance index to next slot
  if(u->i>u->n){u->wrapped=1; if(u->trunc){u->i=u->n; R;}else u->i=0;}  // If we stepped off the end,
   // reset next pointer to 0 (if not trunc) or stay pegged at then end (if trunc).  Trunc comes from the original x to start_jpm_
  v->name=name; if(name)ACINCR(name);  // move name/loc; incr use counts
- v->loc =loc;  if(loc )ACINCR(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts
+ v->loc =loc;  if(loc )ACINCR(loc ); if(b){fa(x); fa(y);}  // If this slot was overwritten, decr use counts, freeing
  v->val =val;  // Save the NSI data
  v->lc  =lc;
  v->s=jt->bytesmax-u->s;

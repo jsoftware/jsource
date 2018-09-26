@@ -89,7 +89,7 @@ s=: pmstats ''
 t=: pmunpack ''
 
 4 = type s
-s -: 0 0 200,(200<.4+2*n),(200<:4+2*n),0
+s -: 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. 3 not 4: the first EXIT record is not emitted
 
 f=: 4 : 0
  t=. y
@@ -104,10 +104,10 @@ f=: 4 : 0
  1
 )
 
-(4+2*n) f t
-({&:>/0 6{t) -: (1 2,(2*n),1)#;:'pmctr pmstats avg pmctr'
+(3+2*n) f t
+({&:>/0 6{t) -: (0 2,(2*n),1)#;:'pmctr pmstats avg pmctr'
 ({&:>/1 6{t) e. <'base'
-(>3{t) -: _2 _1 _2,((2*n)$_1 _2),_1
+(>3{t) -: _1 _2,((2*n)$_1 _2),_1
 
 200 -: x=: 1 0 pmdata (bhdr+bpe*200)$'c'
 
@@ -121,12 +121,12 @@ s=: pmstats ''
 t=: pmunpack ''
 
 4 = type s
-s -: 1 0 200,(200<.4+5*n),(200<:4+5*n),0
+s -: 1 0 200,(200<.3+5*n),(200<:3+5*n),0
 
-(4+5*n) f t
-({&:>/0 6{t) -: (1 2,(5*n),1)#;:'pmctr pmstats avg pmctr'
+(3+5*n) f t
+({&:>/0 6{t) -: (0 2,(5*n),1)#;:'pmctr pmstats avg pmctr'
 ({&:>/1 6{t) e. <'base'
-(>3{t) -: _2 _1 _2,((5*n)$_1 0 1 2 _2),_1
+(>3{t) -: _1 _2,((5*n)$_1 0 1 2 _2),_1
 
 sum_foo_=: 3 : 0
  +/y
@@ -143,9 +143,9 @@ mean_l6x_=: 3 : 0
 1 [ mean_l6x_ i.12
 0 -: pmctr _1
 t=: 6!:11 ''
-10 f t
-({&:>/0 6{t) -: ;:'pmctr mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
-({&:>/1 6{t) -: ;:'base  l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
+9 f t
+({&:>/0 6{t) -: ;:'mean_l6x_ mean_l6x_ sum sum_foo_ sum_foo_ sum_foo_ sum mean_l6x_ pmctr'
+({&:>/1 6{t) -: ;:'l6x       l6x       l6x foo      foo      foo      l6x l6x       base'
 
 mean_aa_=: 3 : 0
  sum=. +/
@@ -157,9 +157,9 @@ mean_aa_=: 3 : 0
 1 [ mean_aa_ i.12
 0 -: pmctr _1
 t=: 6!:11 ''
-8 f t
-({&:>/0 6{t) -: ;:'pmctr mean_aa_ mean_aa_ mean_aa_ sum sum mean_aa_ pmctr'
-({&:>/1 6{t) -: ;:'base  aa       aa       aa       aa  aa  aa       base'
+7 f t
+({&:>/0 6{t) -: ;:'mean_aa_ mean_aa_ mean_aa_ sum sum mean_aa_ pmctr'
+({&:>/1 6{t) -: ;:'aa       aa       aa       aa  aa  aa       base'
 
 f=: 255$'a'
 12 -: ". f,'=: 12'

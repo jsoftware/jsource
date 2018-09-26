@@ -223,7 +223,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  while((UI)i<(UI)n){
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
    // if performance monitor is on, collect data for it
-   if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->curlocn,i,a?VAL2:VAL1);
+   if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,a?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
    if(jt->redefined){
     if(jt->sitop&&jt->redefined==jt->sitop->dcn&&DCCALL==jt->sitop->dctype&&self!=jt->sitop->dcf){

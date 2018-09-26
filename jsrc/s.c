@@ -277,7 +277,7 @@ L*jtprobeis(J jt,A a,A g){C*s;I*hv,m,tx;L*v;NM*u;
 // look up a non-locative name using the locale path
 // g is the current locale, l/string=length/name, hash is the hash for it
 // result is L* symbol-table slot for the name, or 0 if none
-static L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
+L*jtsyrd1(J jt,I l,C *string,UI4 hash,A g){A*v,x,y;L*e;
 // if(b&&jt->local&&(e=probe(NAV(a)->m,NAV(a)->s,NAV(a)->hash,jt->local))){av=NAV(a); R e;}  // return if found local
  RZ(g);  // make sure there is a locale...
  if(e=probe(l,string,hash,g))R e;  // and if the name is defined there, use it
@@ -316,15 +316,16 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
  R g;
 }
 
-// look up name; return starting locale of locative, or 1 if not locative, or 0 if error
+// look up known locative name; return starting locale of locative, or 0 if error
 A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  n=AN(a); v=NAV(a); m=v->m;
- if(n<=m) R (A)1;
+// obsolete  if(n<=m) R (A)1;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
  R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx):stfindcre(n-m-2,1+m+v->s,v->bucketx);
 }
 
 // like syrd, but starting with the locale looked up.  Does not set the local-name flag in the result
+// all obsolete, subsumed into unquote
 L* jtsyrdfromloc(J jt, A a,A g) {
  if((I)g&1) {L *e;
   // If there is a local symbol table, search it first
@@ -358,12 +359,13 @@ L*jtsyrd(J jt,A a,A*symb){A g;I m,n;NM*v;
 // result is symbol-table slot for the name if found, or 0 if not found
 L*jtsyrd(J jt,A a){A g;
  RZ(a);
- RZ(g=sybaseloc(a));
- if((I)g&1) {L *e;
+// obsolete  RZ(g=sybaseloc(a));
+// obsolete  if((I)g&1) {L *e;
+ if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
   // If there is a local symbol table, search it first
   if(e = probelocal(a)){R e;}  // return flagging the result if local
   g=jt->global;  // Start with the current locale
- }
+ } else RZ(g=sybaseloc(a));
  R syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
 }
 
@@ -411,14 +413,15 @@ F1(jtsymbrdlock){A y;
 
 // w is a value, v is the symbol-table entry about to be assigned
 // return 0 if there is an attempt to reassign the currently-executing name
-B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
+B jtredef(J jt,A w,L*v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
  d=jt->sitop; while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
- oldn=jt->curname;  // save curname
+// obsolete  oldn=curname();  // save curname
  if(v==(L*)d->dcn){  // if the saved jt->cursymb (from the unquote lookup) matches the name being assigned...
   // insist that the redefinition have the same type, and the same explicit character
-  jt->curname=d->dca; f=d->dcf;
-  ASSERT(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK);
+// obsolete   jt->curname=d->dca;
+  f=d->dcf;
+  ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK,d->dca);
   d->dcf=w;
   // If we are redefining the executing explicit definition during debug, remember that.  We will use it to reload the definition.
   // Reassignment outside of debug waits until the name is off the stack
@@ -427,8 +430,8 @@ B jtredef(J jt,A w,L*v){A f,oldn;DC c,d;
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
  // Don't allow redefinition of a name that is suspended higher up on the stack
- c=d; while(c=c->dclnk){jt->curname=c->dca; ASSERT(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK);}
- jt->curname=oldn;  // restore curname
+ c=d; while(c=c->dclnk){/* obsolete jt->curname=c->dca; */ ASSERTN(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK,c->dca);}
+// obsolete  jt->curname=oldn;  // restore curname
  R 1;
 }    /* check for changes to stack */
 

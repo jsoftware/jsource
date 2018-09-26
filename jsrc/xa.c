@@ -186,7 +186,7 @@ F1(jtsysparmq){I k;
   case 0:  R sc(jt->fdepn);
   case 1:  R sc(jt->fdepi);
   case 2:  R sc(jt->fcalln);
-  case 3:  R sc(jt->fcalli);
+  case 3:  R sc(jt->callstacknext);
 }}
 
 F1(jtsysparms){A*wv;I k,m;
@@ -198,9 +198,9 @@ F1(jtsysparms){A*wv;I k,m;
  RE(k=i0(WVR(0)));
  switch(k){
   default: ASSERT(0,EVINDEX);
-  case 0:  RE(m=i0(WVR(1))); jt->fdepn =m; break;
+  case 0:  RE(m=i0(WVR(1))); jt->fdepn =(I4)m; break;
   case 1:  ASSERT(0,EVDOMAIN);  /* jt->fdepi  can not be set */
-  case 2:  RE(m=i0(WVR(1))); jt->fcalln=m; break;
+  case 2:  RE(m=i0(WVR(1))); jt->fcalln=(I4)m; break;
   case 3:  ASSERT(0,EVDOMAIN);  /* jt->fcalli can not be set */
  }
  R mtm;

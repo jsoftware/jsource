@@ -96,6 +96,13 @@ static DF2(jtunquote){A z;
     }
    }while(i!=callstackx);
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller.  The following pushes are onto the caller's stack
+   // NOTE: if there is no higher executing name, these pushes will never get popped.  That would correspond to trying to delete the locale that is running at the console,
+   // or typing (cocurrent 'a') into the console, which would leave a POP on the stack, never to be executed because there is no higher function to return to base locale.
+   // There is no way to detect this, because names that don't change locales don't leave a trace, and there is no guarantee that the function-call stack will
+   // be at 0 when the last name returns, because the name might have been called from the middle of a tacit expression that already had a function-call depth when the
+   // name was called.
+   // So, we reset the name-stack pointer whenever we call from console level.
+
    // If there is a POPFROM, add a POP in the caller's stack, to the earliest POP[FROM] (which will be the locale in effect when this name started)
    if(fromfound)pushcallstack1(CALLSTACKPOPLOCALE,earlyloc);
    // If the current locale was deletable, push an entry to that effect in the caller's stack.  It will be deleted when it becomes un-current (if ever: if

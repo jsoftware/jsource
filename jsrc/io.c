@@ -148,6 +148,7 @@ F1(jtjoff){I x;
 
 I jdo(J jt, C* lp){I e,old;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
+ jt->callstacknext=0;  // discard any unused last-minute pushes on the call stack
  if(jt->capture){
   if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
   else jt->capture[0]=0; // clear capture buffer

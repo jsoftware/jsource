@@ -317,7 +317,6 @@ B jtlocdestroy(J jt,A g){
  } else {
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
   L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
-if(locsym==0)*(I*)0=0; // scaf
   RZ(redefg(g)); RZ(symfreeh(g,locsym));
  }
  if(g==jt->global)jt->global=0;

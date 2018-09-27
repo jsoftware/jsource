@@ -266,13 +266,15 @@ typedef I SI;
 // ASGN type can have the following informational bits set along with ASGN
 #define ASGNLOCAL       ((I)1L<<SYMBX)     // set for =. (but not when assigning to locative)    aliases with SYMB
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
+// NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
 // NOUN types can have the following informational bits set
 // obsolete #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
 // obsolete #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // NAME type can have the following information flags set
 // obsolete #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
-#define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
+// obsolete #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
+#define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg
@@ -754,7 +756,8 @@ typedef struct {DX re;DX im;} ZX;
 // parser stack
 typedef struct {
  A a;  // pointer to block
- I t;  // token number for this block
+ UI4 t;  // token number for this block
+ UI4 pt;  // parser type: code for one of the 9 variants recognized.
 } PSTK;
 
 // Info for calling an atomic verb

@@ -1,7 +1,7 @@
 /* Copyright 1990-2006, Jsoftware Inc.  All rights reserved.               */
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
-/* Symbol Table: Function Call (unquote)                                   */
+/* Symbol Table: Named Function Call (unquote)                                   */
 
 #include "j.h"
 
@@ -37,7 +37,8 @@ static DF2(jtunquote){A z;
   ASSERT(stabent,EVVALUE);  // name must be defined
   fs=stabent->val;  // fetch the value of the name
  }else{
-  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The name is defined, but it has the value before the modifier operands were given
+  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.
+  // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
   thisname=v->g;  // get the actual name
   explocale=0;  // flag no explicit locale
@@ -62,12 +63,12 @@ static DF2(jtunquote){A z;
 // obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,dyadex?w:(A)fs,fs); jt->sf=s;
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
-  if(!--AC(fs)){++AC(fs); fa(fs);}
+  if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {
   // Extra processing is required.  Check each option individually
   if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL1:VAL2);  // Record the call to the name, if perf monitoring on
   if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)){  // The verb is locked if it is marked as locked, or if the script is locked
-   jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm    scaf parms
+   jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
    ra(fs);  // should assert recursive usecount
 // obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}  // scaf make faster

@@ -454,7 +454,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   // We have the initial stack pointer.  Grow the stack down from there
 // obsolete   PSTK *stackmarks = stack;  // remember the point beyond which the stack is empty
 // obsolete   stack[0].a = stack[1].a = stack[2].a = stack[3].a = mark;  // install initial ending marks.  word numbers are unused
-  stack[0].pt = stack[1].pt = stack[2].pt = PM;  // install initial ending marks.  word numbers are unused
+  stack[0].pt = stack[1].pt = stack[2].pt = PM;  // install initial ending marks.  word numbers and value pointers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   es = 2;
@@ -578,51 +578,45 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // for finding its arguments on the stack, storing the result (if no error) over the last
     // stack entry, then closing up any gap between the front-of-stack and the executed fragment,
     // and finally returning the new front-of-stack pointer
-    switch(CTTZ(ptcol[0][stack[0].pt] & ptcol[1][stack[1].pt] & ptcol[2][stack[2].pt] & ptcol[3][stack[3].pt])) {
+    I pline=CTTZ(ptcol[0][stack[0].pt] & ptcol[1][stack[1].pt] & ptcol[2][stack[2].pt] & ptcol[3][stack[3].pt]);
+    // during the period between the final computation of pline and the indirect branch, we have several cycles idle.
+    // Since the branch is usually going to mispredict, we try to fill the idle cycles:
+    // Save the stackpointer in case there is recursion
+    jt->parserstkend1=stack;
+    // Fill in the token# (in case of error) based on the line# we are running
+    *dci = stack[((I)0x056A9>>(pline*2))&3].t;   // in order 9-0: 0 0 1 1 1 2 2 2 2 1->00 00 01 01 01 10 10 10 10 01->0000 0101 0110 1010 1001
+    switch(pline) {
     // Action routines for the parse, when an executable fragment has been detected.  Each routine must:
     // collect the arguments for the action and run it
     // Return failure if the action failed
-    // Save the result in the last stack entry for the fragment
+    // Save the result in the last stack entry for the fragment, and create a parsing-type from the type of the result
     // Set the word-number entry in the last stack entry to the word number that the result will go by
     // Close up any gap between the unexecuted stack elements and the result
     // Return the new stack pointer, which is the relocated beginning-of-stack
     // Set the in-place flags for verb arguments
-    // STO stores the result; SM closes up the stack
+    // STOY stores the result; SM closes up the stack
 #if AUDITEXECRESULTS
 #define BRK(x) auditblock(stack[x].a,1,1); break  // audit result.  At top level allow nonrecur or virtual blocks
 #else
 #define BRK(x) break
 #endif
     case 0:
-     {A y; *dci = stack[(PMONAD1&3)].t;  // set the token-in-error, using the offset encoded into i
-     // Save the current stack pointer for use as end+1 pointer by the next parse.  This is a design issue.  Should we
-     // take the time to store the stack pointer on every execution, or just move it back the maximum possible amount
-     // before the loop?  The maximum possible amount may be much larger than actual stack usage, making for
-     // inefficient use of stack and more frequent allocation; but a store for every execution is expensive.
-     // Because the parser stack is used by jtxdefn for temp storage, we do the store to keep the stack compact.
-     jt->parserstkend1=stack;   // save stack pointer as parm to action routine AND next level of parse
-     DFSIP1(1,2,1) STOY(2,1) stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
+     {A y; DFSIP1(1,2,1) STOY(2,1) stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
     case 1:
-     {A y; *dci = stack[(PMONAD2&3)].t; jt->parserstkend1=stack;
-     DFSIP1(2,3,0) STOY(3,2) stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,1); SM(1,0); stack += 1; BRK(2);}  // stack is not executing last verb here, so zomb=0
+     {A y; DFSIP1(2,3,0) STOY(3,2) stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,1); SM(1,0); stack += 1; BRK(2);}  // stack is not executing last verb here, so zomb=0
     case 2:
-     {A y; *dci = stack[(PDYAD&3)].t; jt->parserstkend1=stack;
-     DFSIP2(1,2,3) STOY(3,1) stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}  //STO(z,a,w,toksource)
+     {A y; DFSIP2(1,2,3) STOY(3,1) stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}  //STO(z,a,w,toksource)
     case 3:
-     {A y; *dci = stack[(PADV&3)].t; jt->parserstkend1=stack;
-     EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
+     {A y; EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
     case 4:
-     {A y; *dci = stack[(PCONJ&3)].t; jt->parserstkend1=stack;
-     EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
+     {A y; EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
     case 5:
-     {A y; *dci = stack[(PTRIDENT&3)].t; jt->parserstkend1=stack;
-     EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
+     {A y; EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
     case 6:
-     {A y; *dci = stack[(PBIDENT&3)].t; jt->parserstkend1=stack;
-     EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
-    case 7: *dci = stack[(PASGN&3)].t; jt->parserstkend1=stack; if(!(stack=jtis(jt)))EP break;  // no mods to stack
+     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
+    case 7: if(!(stack=jtis(jt)))EP break;  // no mods to stack
     case 8: {A y; stack[2].a = y = stack[1].a; stack[2].t=stack[0].t; stack[2].pt=pttype[CTTZ(AT(y))]; stack += 2; BRK(0);}  // Can't fail; use value from expr, token # from (
-    default:  // having a default case, reached by a direct conditional branch, seems faster than usinf case 9 and forcing the indirext branch
+    default:  // having a default case, reached by a direct conditional branch, seems faster than using case 9 and forcing the indirect branch
      goto exitfrags;  // nothing to process, go back to stacking
  // obsolete    }else{  
     } // end of switch

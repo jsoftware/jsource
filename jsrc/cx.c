@@ -442,23 +442,26 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 static DF1(xv1){R df1(  w,FAV(self)->f);}
 static DF2(xv2){R df2(a,w,FAV(self)->g);}
 
-static DF1(xn1 ){R xdefn(0L,w, self);}
+static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code
 static DF1(xadv){R xdefn(w, 0L,self);}
 
-
-static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:mark;}
+// Nilad.  See if an anonymous verb needs to be named.  If so, result is the name, otherwise 0
+static F1(jtxopcall){R jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop->dca:0;}
 
 // This handles adverbs that refer to x/y.  Install a[/w] into the derived verb, and copy the flags
+// If we have to add a name for debugging purposes, do so
 static DF1(xop1){A ff,x;
  RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, w,self,0L, VXOP|FAV(self)->flag, RMAX,RMAX,RMAX));
- RZ(x=xopcall(one));
- R x==mark?ff:namerefop(x,ff);
+// obsolete RZ(x=xopcall(one));
+// obsolete  R x==mark?ff:namerefop(x,ff);
+ R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
 static DF2(xop2){A ff,x;
  RZ(ff=fdef(0,CCOLON,VERB, xn1,jtxdefn, a,self,w,  VXOP|FAV(self)->flag, RMAX,RMAX,RMAX));
- RZ(x=xopcall(one));
- R x==mark?ff:namerefop(x,ff);
+// obsolete  RZ(x=xopcall(one));
+// obsolete  R x==mark?ff:namerefop(x,ff);
+ R (x=xopcall(0))?namerefop(x,ff):ff;
 }
 
 

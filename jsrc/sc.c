@@ -12,25 +12,38 @@
 // obsolete  R 0;
 // obsolete }
 
-// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs) 
+// This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs)
+//
+// This routine called a 'named' function, which was created by name~ or the equivalent for a stacked verb.
+// It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
+// when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
 static DF2(jtunquote){A z;
  F2PREFIP;  // We understand inplacing.  We check inplaceability of the called function.
  RE(0);
  JATTN;
  V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry; execution may add more
- A thisname=v->f; // the A block for the name of the function (holding an NM)
- NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
- A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
- A explocale=0; L *stabent;  // explicit locale (if any - init to 0 as flag); symbol-table entry for this name
- if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
-  if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
- } else {  // locative
-  RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
-  stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+ A thisname=v->f; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
+ if(thisname){
+  // normal path for named functions
+  NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+  if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
+   explocale=0;  // flag no explicit locale
+   if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
+  } else {  // locative
+   RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
+   stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+  }
+  ASSERT(stabent,EVVALUE);  // name must be defined
+  fs=stabent->val;  // fetch the value of the name
+ }else{
+  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The name is defined, but it has the value before the modifier operands were given
+  stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
+  thisname=v->g;  // get the actual name
+  explocale=0;  // flag no explicit locale
+  fs=v->h;  // point to the actual executable
  }
- ASSERT(stabent,EVVALUE);  // name must be defined
- A fs=stabent->val; fs=v->h?v->h:fs;  // resolve the name.  v->h is used only for namerefops (should try to remove)
+ A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
  ASSERT(fs,EVVALUE); // make sure the name's value is given also
  v=FAV(fs);  // repurpose v to point to the resolved verb block
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
@@ -215,13 +228,16 @@ F1(jtnameref){
  R namerefacv(w,syrd(w));  // get the symbol-table slot for the name (don't store the locale-name); return its 'value'
 }    /* argument assumed to be a NAME */
 
+// Create a pseudo-named entity.  a is the name, w is the actual entity
+// Result will go to unquote.  We mark a pseudo-named entity by having f=0, g=name, h=actual entity to execute
 F2(jtnamerefop){V*v;
  RZ(a&&w);
  v=FAV(w);
- R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, a,0L,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);
+ R fdef(0,CCOLON,VERB,  jtunquote1,jtunquote, 0L,a,w, VXOPCALL|v->flag, v->mr,v->lr,v->rr);
 }    
 
 /* namerefop() is used by explicit defined operators when: */
 /* - debug is on                                           */
 /* - operator arguments have been supplied                 */
 /* - function arguments have not yet been supplied         */
+// w is an anonymous entity that we want to give the name a to for debug purposes

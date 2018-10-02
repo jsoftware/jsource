@@ -473,11 +473,12 @@ typedef struct DS{      /* 1 2 3                                                
  struct DS*dclnk;       /* x x x  link to next stack entry                              */
  A dcy;                 /* x x x  &tokens; text       ; right argument                  */
  I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
- I dci;                 /* x x x  index ; next index  ; ptr to line #                   */
+ I dci;                // x x x  index ; next index  ; line# in exp def being executed, or to be exec next
  I dcj;                 /* x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */
  B dcsusp;              /* x   x  1 iff begins a debug suspension                       */
  C dcss;                /*     x  single step code                                      */
+ C dcnewlineno;         //     x  set when debug has installed a new line number into dcix
  A dca;                 /*     x  fn/op name                                            */
  A dcf;                 /*     x  fn/op                                                 */
  A dcx;                 /*     x  left argument                                         */
@@ -753,12 +754,13 @@ typedef struct {DX re;DX im;} ZX;
 /* im - imaginary part                                                     */
 
 
-// parser stack
+// parser stack - this MUST have size equal a power of 2!!
 typedef struct {
- A a;  // pointer to block
- UI4 t;  // token number for this block
  UI4 pt;  // parser type: code for one of the 9 variants recognized.
+ UI4 t;  // token number for this block
+ A a;  // pointer to block
 } PSTK;
+
 
 // Info for calling an atomic verb
 typedef struct {VF f;I cv;} VA2;

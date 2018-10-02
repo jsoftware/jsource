@@ -30,7 +30,8 @@
                         line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(attnval){jsignal(EVATTN); z=0;}else if(!lk){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; z=parsea(queue,m);}else if(lk>0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}
+// obsolete #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(attnval){jsignal(EVATTN); z=0;}else if(!lk){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; z=parsea(queue,m);}else if(lk>0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(lk>=0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -125,7 +126,7 @@ void bucketinit(){I j;
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin;I lk; CDATA*cv;
   CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;
- PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
+// obsolete  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
  // be reusing the stack frame, we just save the input once
@@ -176,6 +177,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    RZ(deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop
    // Since we have created a new frame, we no longer need to restore the old one.  We clear the saved value as a flag to indicate that we need a pop
    savdcy = 0;  // flag for debz required, proxy for 'debug was set'
+   // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated.  Perhaps should be in the caller?  We'll work it out.
+   // We will keep cxspecials set as long as savdcy is 0, i. e. in all levels where debug was set at the start of the frame
+   jt->cxspecials=1;
   }
 
   // If the verb contains try., allocate a try-stack area for it
@@ -221,7 +225,13 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  old=jt->tnextpushx; 
  // loop over each sentence
  while((UI)i<(UI)n){
+  // i holds the control-word number of the current control word
+  ci=i+cw;   // ci->control-word info
+  // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
+   if(!savdcy){
+    // debug mode was on when this execution started.  See if the execution pointer was changed by debug.
+   }
    // if performance monitor is on, collect data for it
    if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,a?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
@@ -234,10 +244,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     jt->redefined=0;
     if(i>=n)break;
    }
-   if(!((I)jt->redefined|(I)jt->pmctr))jt->cxspecials=0;  // if no more special work to do, close the gate
+   if(!((I)jt->redefined|(I)jt->pmctr|(I)savdcy))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
-  // i holds the control-word number of the current control word
-  ci=i+cw;   // ci->control-word info
+
   // process the control word according to its type
   switch(ci->type){
    case CTRY:
@@ -433,7 +442,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 // obsolete  tpop(_ttop);   // finish freeing memory
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=loc; jt->asgn=0;
- jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
+// obsolete  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
 // obsolete  if(z)tpush(z);
  RETF(z);
 }

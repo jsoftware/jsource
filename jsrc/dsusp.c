@@ -7,6 +7,10 @@
 #include "d.h"
 #include "w.h"
 
+// When we move off of a parser frame, or when we go into debug with a new parser frame, fill the frame with
+// the info for the parse that was interrupted
+void moveparseinfotosi(J jt){if(jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)jt->parserqueue; jt->sitop->dcn=(I)jt->parserqueuelen; jt->sitop->dci=(I)jt->parsercurrtok; }}
+
 
 /* deba() and debz() must be coded and executed in pairs */
 /* in particular, do NOT do error exits between them     */
@@ -19,6 +23,7 @@
 DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  {A q; GAT(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}
  memset(d,C0,sizeof(DST));
+ if(jt->sitop)moveparseinfotosi(jt);
  d->dctype=t; d->dclnk=jt->sitop; jt->sitop=d;
  switch(t){
   case DCPARSE:  d->dcy=(A)x; d->dcn=(I)y; break;
@@ -149,7 +154,8 @@ static A jtparseas(J jt,B as,A w){A z;
 A jtpee(J jt,A *queue,I m,I err,I lk,CW*ci,DC c){
  ASSERT(!lk,err);  //  locked fn is totally opaque, with no stack
 // obsolete  RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
- if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
+// obsolete  if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
+ if(lk<=0){jt->parserqueue=queue; jt->parserqueuelen=(I4)m; jt->parsercurrtok=1;}  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
@@ -177,8 +183,8 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
  if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
- // executed 13!:0]0, and we should continue on outside of debug mode
- if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
+ // executed 13!:0]0, and we should continue on outside of debug mode.  Fill in the current si line with the info from the parse
+ if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
 // obsolete  }
 // obsolete debz();
  R z;

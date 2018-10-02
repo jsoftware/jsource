@@ -926,6 +926,7 @@ extern A        mark;
 extern C        minus0[];
 extern A        mnam;
 extern A        mdot;
+extern void     moveparseinfotosi(J);
 extern A        mtm;
 extern A        mtv;
 extern A        ndot;

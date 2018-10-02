@@ -42,10 +42,11 @@ typedef struct {
  }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
 // --- end of cache line 2.  1 qword of the pool table spills over
 // parser values
- I    parsercalls;      /* # times parser was called                       */
+ A    *parserqueue;   // for error purposes: words of the sentence being parsed
+ I4   parserqueuelen;  // number of words in queue
+ I4   parsercurrtok;   // the token number of the word to flag if there is an error
  A    zombieval;        // value of assignsym, if it can be reused
  L    *assignsym;       // symbol-table entry for the symbol about to be assigned
- DC   sitop;            /* top of SI stack                                 */
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  UI4  nvran;            // number of atoms in nvrav
  I4   slisti;           /* index into slist of current script              */ 
@@ -60,6 +61,7 @@ typedef struct {
  I4   callstacknext;           /* named fn calls: current depth                   */
  I4   fcalln;           /* named fn calls: maximum permissible depth       */
  A    curname;          // current name, an A block containing an NM
+ I    parsercalls;      /* # times parser was called                       */
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -80,6 +82,7 @@ typedef struct {
    } uq;   // flags needed only by unquote
   } us;   // access as US
  } uflags;
+// --- end cache line 4
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
@@ -87,8 +90,7 @@ typedef struct {
  B    assert;           /* 1 iff evaluate assert. statements               */
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
- C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug redef)
-// --- end cache line 4
+ C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
  A    sf;               /* for $:                                          */
@@ -99,8 +101,8 @@ typedef struct {
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
- A    fill;             /* fill                                            */
- C*   fillv;            /* fill value                                      */
+ A    stloc;            /* locales symbol table                            */
+ A    symb;             /* symbol table for assignment                     */
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
@@ -122,6 +124,8 @@ typedef struct {
  I    bytesmax;         /* high-water mark of "bytes"                      */
  A    nvra;             /* data blocks that are in execution somewhere     */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
+ A    fill;             /* fill                                            */
+ C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
 // obsolete  A    curlocn;          /* current locale name corresp. to curname         */
  C    typesizes[32];    // the length of an allocated item of each type
@@ -134,7 +138,6 @@ typedef struct {
 // 3 bytes here
 // --- end cache line 8
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
- A    symb;             /* symbol table for assignment                     */
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
@@ -146,7 +149,7 @@ typedef struct {
 #endif
  I    symindex;         /* symbol table index (monotonically increasing)   */
 // -- end cache line 9
- A    stloc;            /* locales symbol table                            */
+ DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */

@@ -202,9 +202,11 @@ void auditblock(A w, I nonrecurok, I virtok) {
 F1(jtparse){A z;
  RZ(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
- RZ(deba(DCPARSE,queue,(A)m,0L));
+ A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;  // Push error info separate from debug stack, for speed
+ RZ(deba(DCPARSE,queue,(A)m,0L));  // We don't need a new stack frame if there is one already and debug is off
  z=parsea(queue,m);
  debz();
+ jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  R z;
 }
 

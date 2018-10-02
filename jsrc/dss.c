@@ -11,7 +11,6 @@
 /* jt->dbssd - the d whose dcss is non-zero                                */
 /* jt->dbss  - single step code for propagation to appropriate function    */
 
-
 DC jtssnext(J jt,DC d,C c){
  d=d->dclnk;
  while(d&&DCCALL!=d->dctype)d=d->dclnk;      /* find next call                 */
@@ -20,25 +19,29 @@ DC jtssnext(J jt,DC d,C c){
  R d;
 }    /* set dcss for next stack level */
 
-static A jtssdo(J jt,A a,A w,C c){DC d,e;I n,*v;
+static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  RZ(w=vs(w));
  ASSERT(jt->uflags.us.cx.cx_c.db,EVDOMAIN);
  d=jt->sitop;                               /* cut back to topmost suspension  */
  while(d&&!d->dcsusp){                      /* do until topmost suspension     */
-  if(d->dctype==DCCALL)*(I*)(d->dci)=-2;    /* terminate each call             */
+  if(d->dctype==DCCALL)DGOTO(d,-1)    /* terminate each call             */
   d=d->dclnk;
  }
  ASSERT(d,EVDOMAIN);                        /* must have a suspension          */
  while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           /* source line # to cw line #      */
- v=(I*)d->dci;                              /* pointer to line #               */
+// obsolete  v=(I*)d->dci;                              /* pointer to line #               */
  jt->dbsusact=SUSSS;
  switch(c){
-  case SSSTEPOVER: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-  case SSSTEPINTO: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-  case SSSTEPOUT:  if(a)*v=n-1; else --*v; jt->dbss=d->dcss=0;   ssnext(d,c); break;
-  case SSCUTBACK:  *v=-2; jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)--*(I*)e->dci;
+// obsolete   case SSSTEPOVER: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
+// obsolete   case SSSTEPINTO: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
+// obsolete   case SSSTEPOUT:  if(a)*v=n-1; else --*v; jt->dbss=d->dcss=0;   ssnext(d,c); break;
+// obsolete   case SSCUTBACK:  *v=-2; jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)--*(I*)e->dci;
+  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
+  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
+  case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=0;   ssnext(d,c); break;
+  case SSCUTBACK:  DGOTO(d,-1) jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)DGOTO(e,e->dcix) break;  // terminate current verb and back up in caller
  }
  fa(jt->dbssexec); if(AN(w)){RZ(ras(w)); jt->dbssexec=w;}else jt->dbssexec=0;
  R mtm;                                     /* 0 return to terminate call      */

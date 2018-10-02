@@ -67,8 +67,7 @@ struct AD {
  FLAGT flag;
  union {
   I m;  // Triple-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (3) for other blocks, a pointer to the tstack entry for the block, so that we can 'increment' the usecount by
-        // removing the slot that will free it (not currently used)
+        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x
   A back; // For VIRTUAL blocks, points to backing block
 } mback;
  union {
@@ -153,6 +152,7 @@ typedef I SI;
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
+#define IAV0(x)         ( (I*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
@@ -473,7 +473,7 @@ typedef struct DS{      /* 1 2 3                                                
  struct DS*dclnk;       /* x x x  link to next stack entry                              */
  A dcy;                 /* x x x  &tokens; text       ; right argument                  */
  I dcn;                 /* x x x  #tokens; line #     ; ptr to symb entry               */
- I dci;                // x x x  index ; next index  ; line# in exp def being executed, or to be exec next
+ I dcix;                // x x x  index ; next index  ; line# in exp def being executed, or to be exec next
  I dcj;                 /* x x x  error#; prev index  ; error #                         */
  C dctype;              /* x x x  type of entry (see #define DC*)                       */
  B dcsusp;              /* x   x  1 iff begins a debug suspension                       */

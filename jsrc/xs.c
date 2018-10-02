@@ -65,7 +65,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
    }
  }
  jt->dcs=xd; jt->tostdout=xt;
- debz();
+  debz();
  FDEPDEC(1);  // ASSERT OK now
  if(3==ce){z=jt->jerr?zero:one; RESETERR; R z;}else RNE(mtm);
 }

@@ -77,11 +77,11 @@ A jtjgets(J jt,C*p){A y;B b;C*v;I j,k,m,n;UC*s;
  *jt->adbreak=0;
  if(b=1==*p)p=""; /* 1 means literal input */
  if(jt->dcs){   // DCSCRIPT debug type
-  ++jt->dcs->dcn; j=jt->dcs->dci; 
+  ++jt->dcs->dcn; j=jt->dcs->dcix; 
   y=jt->dcs->dcy; n=AN(y); s=UAV(y);
   if(!(j<n))R 0;
   jt->dcs->dcj=k=j;
-  jt->dcs->dci=j=advl(j,n,s);
+  jt->dcs->dcix=j=advl(j,n,s);
   m=j-k; if(m&&32>s[k+m-1])--m; if(m&&32>s[k+m-1])--m;
   jtwri(jt,MTYOLOG,p,m,k+s);
   R inpl(b,m,k+s);

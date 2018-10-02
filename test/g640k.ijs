@@ -41,7 +41,7 @@ test=: 4 : 0
  for_i. i.#h do.
   f=: h@.i
   s=: sp '1e5 f y'
-  assert. (IF64{0.01 0.015) > t%~|t-s 
+  assert. (IF64{0.1 0.15) > t%~|t-s 
  end.
      9!:43 j
  1

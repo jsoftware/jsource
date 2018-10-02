@@ -37,3 +37,5 @@ extern DC       jtssnext(J,DC,C);
 extern I        lnumcw(I,A);
 extern I        lnumsi(DC);
 
+// set the stack entry pointed to by s to indicate resumption at line n
+#define DGOTO(s,n) { (s)->dcix=(n); (s)->dcnewlineno=1; }  // set line# & indicate to use it

@@ -81,7 +81,7 @@ static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
 // display DCPARSE stack frame
 static void jtseeparse(J jt,DC d){A*v;I m;
  v=(A*)d->dcy;  /* list of tokens */
- m=d->dci-1;         /* index of active token when error found */
+ m=d->dcix-1;         /* index of active token when error found */
  jt->nflag=0; 
  DO(d->dcn, if(i==m)eputs("    "); disp(v[i]););  // display tokens with spaces before error
 }    /* display error line */

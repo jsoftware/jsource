@@ -222,10 +222,11 @@ static char breaknone=0;
 
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
-int _stdcall JDo(J jt, C* lp){int r;
+int _stdcall JDo(J jt, C* lp){int r;I old;
  r=(int)jdo(jt,lp);
- while(jt->nfe)
-  r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));
+ while(jt->nfe){
+  old=jt->tnextpushx; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
+ }
  R r;
 } 
 

@@ -152,13 +152,36 @@ static C pttype[] = {
 
 // Tables to convert parsing type to mask of matching parse-table rows for each of the stack positions
 // the AND of these gives the matched row (the end-of-table row is always matched)
-static US ptcol[4][10] = {
-//  PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
-{ 0x2BE, 0x23E, 0x200, 0x23E, 0x27F, 0x280, 0x37F, 0x200, 0x27F, 0x27F},
-{ 0x37C, 0x340, 0x340, 0x37B, 0x200, 0x200, 0x200, 0x200, 0x380, 0x380},
-{ 0x2C1, 0x2C8, 0x2D0, 0x2E6, 0x200, 0x200, 0x200, 0x300, 0x200, 0x200},
-{ 0x3DF, 0x3C9, 0x3C9, 0x3F9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9},
+// static US ptcol[4][10] = {
+//    PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
+// { 0x2BE, 0x23E, 0x200, 0x23E, 0x27F, 0x280, 0x37F, 0x200, 0x27F, 0x27F},
+// { 0x37C, 0x340, 0x340, 0x37B, 0x200, 0x200, 0x200, 0x200, 0x280, 0x280},
+// { 0x2C1, 0x2C8, 0x2D0, 0x2E6, 0x200, 0x200, 0x200, 0x300, 0x200, 0x200},
+// { 0x3DF, 0x3C9, 0x3C9, 0x3F9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9},
+// };
+// Remove bits 8-9
+// Distinguish PSN from PS by not having PSN in stack[3] support the ( CAVN ) ANY production (since it must be preceded by NAME)
+// Put something distictive into LPAR that can be used to create line 8
+static UI4 ptcol[10] = {
+0xBE7CC1DF,  // PN
+0x3E40C8C9,  // PA
+0x0040D0C9,  // PC
+0x3E7BE6F9,  // PV
+0x7F0000C9,  // PM
+0x800000C9,  // PNM
+0x7F000100,  // PL
+0x000000C9,  // PR
+0x7F8000C9,  // PS
+0x7F800069  // PSN
 };
+
+// tests for pt types
+#define PTMARK 0x7F0000C9
+#define PTISCAVN(s) ((s).pt&0x4000)
+#define PTISM(s)  ((s).pt==PTMARK)
+#define PTISASGN(s)  ((s).pt&0x800000)
+#define PTISASGNNAME(s)  (!((s).pt&0x80))
+#define PTISRPAR(s)  ((s).pt<0x100)
 
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
@@ -198,7 +221,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
 
 
 
-// Run parser, creating a new debug frame.  Explicit defs, which make other tests, go through jtparseas
+// Run parser, creating a new debug frame.  Explicit defs, which make other tests first, then go through jtparsea
 F1(jtparse){A z;
  RZ(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
@@ -355,7 +378,7 @@ static A virthook(J jtip, A f, A g){
 // obsolete #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&(stack[(w)+1].a==locmark)&&(VAV(stack[v].a)->flag&VASGSAFE)
 // obsolete #define IPSETZOMB(w,v) if((AT(stack[0].a)&(ASGN|ASGNTONAME))==(ASGN|ASGNTONAME)&&((stack+(w)+1)>=stackmarks)&&(FAV(stack[v].a)->flag&VASGSAFE)
 // obsolete #define IPSETZOMB(w,v) {L *s; if((stack[0].pt==PSN)&&((stack+(w)+1)>=stackmarks)&&(FAV(stack[v].a)->flag&VASGSAFE)
-#define IPSETZOMB(w,v) {L *s; if((stack[0].pt==PSN)&&(stack[(w)+1].pt==PM)&&(FAV(stack[v].a)->flag&VASGSAFE) \
+#define IPSETZOMB(w,v) {L *s; if(PTISASGNNAME(stack[0])&&PTISM(stack[(w)+1])&&(FAV(stack[v].a)->flag&VASGSAFE) \
    &&(s=AT(stack[0].a)&ASGNLOCAL?probelocal(queue[m-1]):probeisquiet(queue[m-1]))){jt->assignsym=s; if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;}}
 
 // In-place operands
@@ -447,7 +470,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   // We have the initial stack pointer.  Grow the stack down from there
 // obsolete   PSTK *stackmarks = stack;  // remember the point beyond which the stack is empty
 // obsolete   stack[0].a = stack[1].a = stack[2].a = stack[3].a = mark;  // install initial ending marks.  word numbers are unused
-  stack[0].pt = stack[1].pt = stack[2].pt = PM;  // install initial ending marks.  word numbers and value pointers are unused
+  stack[0].pt = stack[1].pt = stack[2].pt = PTMARK;  // install initial ending marks.  word numbers and value pointers are unused
 
   // Set number of extra words to pull from the queue.  We always need 2 words after the first before a match is possible.
   es = 2;
@@ -476,7 +499,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      at=AT(y = queue[m]);   // fetch the next word from queue; pop the queue; extract the type
      if(at&NAME) {
 // obsolete        if(!(AT(stack[1].a)&ASGN)) {  // Replace a name with its value, unless to left of ASGN
-      if(stack[1].pt<PS) {L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
+      if(!PTISASGN(stack[1])) {L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
 
        // Name, not being assigned
        // Resolve the name.  If the name is x. m. u. etc, always resolve the name to its current value;
@@ -522,10 +545,10 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
      stack[0].a = y;   // finish setting the stack entry, with the new word
-     stack[0].pt=pttype[CTTZ(AT(y))]+(((AT(y)>>CONWX)&(PSN-PS)));   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
+     stack[0].pt=ptcol[pttype[CTTZ(AT(y))]+(((AT(y)>>CONWX)&(PSN-PS)))];   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(m==-1) {stack[0].pt = PM; break;}  // realize the virtual mark and use it
+      if(m==-1) {stack[0].pt = PTMARK; break;}  // realize the virtual mark and use it
       EP       // if there's nothing more to pull, parse is over
     }
    }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error
@@ -574,7 +597,8 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // CODING NOTE: pline could be calculated with 1 less level of indirection by storing the 4 alternatives into the stack & reading the desired one for each stack entry.
     // Before doing this, you would need to check the microarchitecture details of the processors you plan to support.  The store into the stack may be a single
     // 64-bit store or multiple smaller stores.  On the Intel desktop processors these stores would forward, but not on the low-power versions.  Check with Agner.
-    I pline=CTTZ(ptcol[0][stack[0].pt] & ptcol[1][stack[1].pt] & ptcol[2][stack[2].pt] & ptcol[3][stack[3].pt]);
+    // We now do the above, using 4-byte value only.  Insert bit 9 always; bit 8 if first word is LPAR; others from the table
+    I pline=CTTZ(0x200|((stack[0].pt)&(-(I4)stack[0].pt)&0x100)|((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt));
     // during the period between the final computation of pline and the indirect branch, we have several cycles idle.
     // Since the branch is usually going to mispredict, we try to fill the idle cycles:
     // Save the stackpointer in case there is recursion
@@ -596,25 +620,26 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 #else
 #define BRK(x) break
 #endif
-    case 0:
-     {A y; DFSIP1(1,2,1) STOY(2,1) stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
-    case 1:
+    // On verb execs, and forks, we know that the type of the result doesn't change so we don't have to set it
+    case 0:  // monad
+     {A y; DFSIP1(1,2,1) STOY(2,1) /* obsolete stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(1,0); stack += 1; BRK(1);}
+    case 1:  // monad
      // the SM() instructions are split so that the compiler will not generate a 256-bit move, which might be unaligned & would mess up store forwarding.
      // They also require VZEROUPPER to be scattered about the generated code.  Must check this as compiler release changes
-     {A y; DFSIP1(2,3,0) STOY(3,2) SM(2,1); stack[3].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(2);}  // stack is not executing last verb here, so zomb=0
-    case 2:
-     {A y; DFSIP2(1,2,3) STOY(3,1) stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}  //STO(z,a,w,toksource)
-    case 3:
-     {A y; EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
-    case 4:
-     {A y; EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
-    case 5:
-     {A y; EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; stack[3].pt=pttype[CTTZ(AT(y))]; SM(2,0); stack += 2; BRK(1);}
-    case 6:
-     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].t = stack[1].t; stack[2].pt=pttype[CTTZ(AT(y))]; SM(1,0); stack += 1; BRK(1);}
-    case 7: if(!(stack=jtis(jt)))EP break;  // no mods to stack
-    case 8: {A y; stack[2].a = y = stack[1].a; stack[2].t=stack[0].t; stack[2].pt=pttype[CTTZ(AT(y))]; stack += 2; BRK(0);}  // Can't fail; use value from expr, token # from (
-    default:  // having a default case, reached by a direct conditional branch, seems faster than using case 9 and forcing the indirect branch
+     {A y; DFSIP1(2,3,0) STOY(3,2) SM(2,1); /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(1,0); stack += 1; BRK(2);}  // stack is not executing last verb here, so zomb=0
+    case 2:  // dyad
+     {A y; DFSIP2(1,2,3) STOY(3,1) /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(2,0); stack += 2; BRK(1);}  //STO(z,a,w,toksource)
+    case 3:  // adv
+     {A y; EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
+    case 4:  // conj
+     {A y; EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[3].t = stack[1].t; SM(2,0); stack += 2; BRK(1);}
+    case 5:  // fork
+     {A y; EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(2,0); stack += 2; BRK(1);}
+    case 6:  // hook
+     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
+    case 7: if(!(stack=jtis(jt)))EP break;  // assign - no mods to stack
+    case 8: {if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))FP stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a; stack += 2; BRK(0);}  // paren.  Use value from expr, token # from (
+    default:  // having a default case, reached by a direct conditional branch, seems faster than using case 8 and forcing the indirect branch
      goto exitfrags;  // nothing to process, go back to stacking
  // obsolete    }else{  
     } // end of switch
@@ -642,7 +667,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   // stack[1] is the initial mark, stack[2] is the result, and stack[3] had better be the first ending mark
   z=stack[2].a;   // stack[1..2] are the mark; this is the sentence result, if there is no error
 // obsolete ASSERTSYS(stack[2].pt!=PM,"invalid parse result");  // scaf
-  ASSERT(stack[2].pt<PM&&stack[3].pt==PM,(jt->parsercurrtok = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
+  ASSERT(PTISCAVN(stack[2])&&PTISM(stack[3]),(jt->parsercurrtok = 0,EVSYNTAX));  // OK if 0 or 1 words left (0 should not occur)
   R z;  // this is the return point from normal parsing
 
  }else{A y;  // m<2.  Happens fairly often, and full parse can be omitted

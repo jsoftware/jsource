@@ -17,6 +17,8 @@ NB. erase local a
 'syntax error' -: ex ') &'
 'syntax error' -: ex ') /'
 'syntax error' -: ex ') ('
+'syntax error' -: ex 'a (=.) 5'
+
 
 NB. test nvr management: many names on a line, and multiple identical nvrs
 a =: 1

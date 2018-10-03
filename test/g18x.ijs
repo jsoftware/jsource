@@ -54,7 +54,7 @@ pcheck=: 3 : 0
  assert. x -: I. b
 
 NB. p has: index,type,flag,sn,next,prev
- oktypes =. <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 21 22 23 27   NB. Type 0 OK if permanent
+ oktypes =. <. 2 ^ 0 1 2 3 4 5 6 7 10 11 12 13 14 15 16 17 18 24 27 28 29   NB. Type 0 OK if permanent
  f =. 2{"1 p
  h =. 2<:4|f                                   NB. head of linked list
  li=. 4<:8|f                                   NB. locale info

@@ -231,36 +231,39 @@ typedef I SI;
 #define XZX 20
 #define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
 #define XZSIZE sizeof(ZX)
-#define VERBX 21
-#define VERB            ((I)1L<<VERBX)      /* V  verb                         */
-#define VERBSIZE sizeof(V)
-#define ADVX 22
-#define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
-#define ADVSIZE sizeof(V)
-#define CONJX 23
-#define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
-#define CONJSIZE sizeof(V)
 // ASGN see below
-#define MARKX 25
+#define MARKX 22
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */
 #define MARKSIZE sizeof(I)
-#define NAMEX 26
+#define NAMEX 23
 #define NAME            ((I)1L<<NAMEX)    /* NM name                         */
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
-#define SYMBX 27
+#define SYMBX 24
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
 #define SYMBSIZE sizeof(I)
-#define CONWX 28
+#define CONWX 25
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
-#define LPARX 29
+#define LPARX 26
 #define LPAR            ((I)1L<<LPARX)    /* I  left  parenthesis            */
 #define LPARSIZE sizeof(I)
+#define VERBX 27
+#define VERB            ((I)1L<<VERBX)      /* V  verb                         */
+#define VERBSIZE sizeof(V)
+#define ADVX 28
+#define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
+#define ADVSIZE sizeof(V)
+// CONJ must be 1 bit below RPAR, with no parsable type higher than RPAR
+#define CONJX 29
+#define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
+#define CONJSIZE sizeof(V)
 #define RPARX 30
 #define RPAR            ((I)1L<<RPARX)   /* I  right parenthesis            */
 #define RPARSIZE sizeof(I)
 // NOTE maxtype & maybe others require bit 31 to be 0!!
-#define ASGNX 24
+#define RESVX 31    // reserved so types can be I types
+
+#define ASGNX 21
 #define ASGN            ((I)1L<<ASGNX)     /* I  assignment                   */
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // ASGN type can have the following informational bits set along with ASGN

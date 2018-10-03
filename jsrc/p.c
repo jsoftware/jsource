@@ -146,8 +146,8 @@ PT cases[] = {
 static C pttype[] = {
  PN, PN, PN, PN, PN, PN, PN, PN, 
  PN, PN, PN, PN, PN, PN, PN, PN, 
- PN, PN, PN, PN, PN, PV, PA, PC,
- PS, PM, PNM, PX, PX, PL, PR, PX
+ PN, PN, PN, PN, PN, PS, PM, PNM,
+ PX, PX, PL, PV, PA, PC, PR, PX
 };
 
 // Tables to convert parsing type to mask of matching parse-table rows for each of the stack positions
@@ -506,7 +506,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
        // otherwise resolve nouns to values, and others to 'name~' references
        // To save some overhead, we inline this and do the analysis in a different order here
        jt->parsercurrtok = (I4)(m+1);  // syrd can fail, so we have to set the error-word number (before it was decremented) before calling
-       if(s=syrd(y)) {   // look up the name in the symbol tables.  0L=Don't bother storing which symbol table was used
+       if(s=syrd(y)) {   // look up the name in the symbol tables.
         A sv;  // pointer to value block for the name
         
         if(!(sv = s->val))FP  // symbol table entry, but no value.
@@ -541,7 +541,8 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      // NOTE that we are using the original type for the word, which will be obsolete if the word was a
      // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
-     } else if(at&RPAR+CONJ){es = (at>>RPARX)+(1/(RPARX>CONJX));}  // 1 for CONJ, 2 for RPAR; the RPARX>CONJX bit is to give a compile-time error if RPARX is not > CONJX
+// obsolete    } else if(at&RPAR+CONJ){es = (at>>RPARX)+(1/(RPARX>CONJX));}  // 1 for CONJ, 2 for RPAR; the RPARX>CONJX bit is to give a compile-time error if RPARX is not > CONJX
+     } else es = at>>CONJX;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
      stack[0].a = y;   // finish setting the stack entry, with the new word
@@ -639,7 +640,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
     case 7: if(!(stack=jtis(jt)))EP break;  // assign - no mods to stack
     case 8: {if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))FP stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a; stack += 2; BRK(0);}  // paren.  Use value from expr, token # from (
-    default:  // having a default case, reached by a direct conditional branch, seems faster than using case 8 and forcing the indirect branch
+    default:  // having a default case, reached by a direct conditional branch, seems faster than using case 9 and forcing the indirect branch
      goto exitfrags;  // nothing to process, go back to stacking
  // obsolete    }else{  
     } // end of switch

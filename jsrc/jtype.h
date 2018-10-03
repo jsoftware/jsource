@@ -759,6 +759,8 @@ typedef struct {DX re;DX im;} ZX;
 
 // parser stack - this MUST have size equal a power of 2!!
 typedef struct {
+  // Because the parse decode looks mostly at pt, make that the first thing so that it is always aligned to the beginning
+  // of whatever block is usd to copy one stack element to another.
  UI4 pt;  // parser type: code for one of the 9 variants recognized.
  UI4 t;  // token number for this block
  A a;  // pointer to block

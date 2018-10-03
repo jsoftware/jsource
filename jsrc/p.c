@@ -305,7 +305,7 @@ static A virthook(J jtip, A f, A g){
 // has no further use for the argument AND e knows that the callee can handle in-place arguments.
 // An argument is inplaceable only if it is marked as such in the block AND in jt.
 // A caller should set the bit in jt only if it knows that the argument is inplaceable, which
-// will be true if (1) the block was created by the caller; (2) the block was an argument to the caller with jt
+// will be true if (1) the block was created by the caller; or (2) the block was an argument to the caller with jt
 // marked to indicate its inplaceability
 //
 // Bit 0 of jt is for w, bit 1 for a.
@@ -348,11 +348,6 @@ static A virthook(J jtip, A f, A g){
 // an argument WILL NOT be set because it came from evaluating a name.  So, a verb supporting inplace
 // operation must check for (jtinplace&1 && ACIPISOK(w)||jt->zombiesym==w) for example
 // if it wants to inplace the w argument.
-
-// Note kludge: the stack bits to indicate inplaceability could be replaced by performing
-// ra();tpush();  when a word is moved to the stack; but until we
-// get nonrecursive usecounts we don't do that.
-
 
 // Prep for in-place assignments.
 // If the top-of-stack is ASGN, we will peek into the queue to get the symbol-table entry for the
@@ -490,7 +485,6 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     I at;  // type of the new word (before name resolution)
 
     stack--;  // back up to new stack frame, where we will store the new word
-    stack[0].t = (UI4)m;  // install the original token number for the word, and clear in-placeable flag
 // obsolete     I prem = m;  // save m-before-decrement
 
     if(--m>=0) {A y;     // if there is another valid token...
@@ -545,11 +539,12 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      } else es = at>>CONJX;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
-     stack[0].a = y;   // finish setting the stack entry, with the new word
      stack[0].pt=ptcol[pttype[CTTZ(AT(y))]+(((AT(y)>>CONWX)&(PSN-PS)))];   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
+     stack[0].t = (UI4)(m+1);  // install the original token number for the word
+     stack[0].a = y;   // finish setting the stack entry, with the new word
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
     }else{  // No more tokens.  If m was 0, we are at the (virtual) mark; otherwise we are finished
-      if(m==-1) {stack[0].pt = PTMARK; break;}  // realize the virtual mark and use it
+      if(m==-1) {stack[0].pt = PTMARK; break;}  // realize the virtual mark and use it.  a and pt will not be needed
       EP       // if there's nothing more to pull, parse is over
     }
    }while(es-->0);  // Repeat if more pulls required.  We also exit with stack==0 if there is an error

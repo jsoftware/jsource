@@ -169,10 +169,10 @@ static UI4 ptcol[10] = {
 0x3E7BE6F9,  // PV
 0x7F0000C9,  // PM
 0x800000C9,  // PNM
-0x7F000100,  // PL
+0x7F000001,  // PL
 0x000000C9,  // PR
 0x7F8000C9,  // PS
-0x7F800069  // PSN
+0x7F8000C8  // PSN
 };
 
 // tests for pt types
@@ -180,7 +180,7 @@ static UI4 ptcol[10] = {
 #define PTISCAVN(s) ((s).pt&0x4000)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTISASGN(s)  ((s).pt&0x800000)
-#define PTISASGNNAME(s)  (!((s).pt&0x80))
+#define PTISASGNNAME(s)  (!((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 
 #if AUDITEXECRESULTS
@@ -594,7 +594,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // Before doing this, you would need to check the microarchitecture details of the processors you plan to support.  The store into the stack may be a single
     // 64-bit store or multiple smaller stores.  On the Intel desktop processors these stores would forward, but not on the low-power versions.  Check with Agner.
     // We now do the above, using 4-byte value only.  Insert bit 9 always; bit 8 if first word is LPAR; others from the table
-    I pline=CTTZ(0x200|((stack[0].pt)&(-(I4)stack[0].pt)&0x100)|((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt));
+    I pline=CTTZ((2*(stack[0].pt&0x80)+0x100)|((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt));
     // during the period between the final computation of pline and the indirect branch, we have several cycles idle.
     // Since the branch is usually going to mispredict, we try to fill the idle cycles:
     // Save the stackpointer in case there is recursion

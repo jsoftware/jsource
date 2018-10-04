@@ -26,8 +26,8 @@
 // h is the array of saved info for the definition; hv->pointers to boxes;
 // hi=0 for monad, 4 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
 #define LINE(sv)       {A x; \
-                        h=sv->h; hv=AAV(sv->h); hi=a&&w?HN:0; \
-                        line=AAV(hv[hi]); x=hv[1+hi]; n=AN(x); cw=(CW*)AV(x);}
+                        hv=AAV(sv->h)+4*isdyad;  \
+                        line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing
 // obsolete #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(attnval){jsignal(EVATTN); z=0;}else if(!lk){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; z=parsea(queue,m);}else if(lk>0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}
@@ -124,10 +124,11 @@ void bucketinit(){I j;
 
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,fin;I lk; CDATA*cv;
-  CW *ci,*cw;DC d;I bi,hi,i=0,j,m,n,old,r=0,tdi=0,ti;TD*tdv=0;V*sv;X y;
+static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
+  CW *cw;DC d;I bi,i=0,j,n,r=0,tdi=0,ti;TD*tdv=0;
 // obsolete  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  RE(0);
+ I isdyad=(a!=0)&(w!=0);   // avoid branches, and relieve pressure on a and w
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
  // be reusing the stack frame, we just save the input once
 // obsolete  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
@@ -140,84 +141,91 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
  // r is the count of empty stack frames that have been allocated
  // bi is the control-word number for the last b-block sentence executed
  // *tci is the CW info for the last t-block sentence executed
- z=mtm; d=0; cd=t=0; sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
+ z=mtm; d=0; cd=t=0;   // z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
 // obsolete  cn=jt->curname; cl=jt->curlocn;  // scaf
- // If this is adv/conj, it must be 1/2 : executed with no x or y.  Set uv then
- u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
- if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
-  // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
-  lk=0; LINE(sv);
- } else {  // something special required
+ {A *hv;  // will hold pointer to the precompiled parts
+  V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
+  A u,v;  // pointers to args
+  // If this is adv/conj, it must be 1/2 : executed with no x or y.  Set uv then
+  u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
+  if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
+   // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
+   lk=0; LINE(sv);
+  } else {  // something special required
 // obsolete  if(st&ADV+CONJ){u=a; v=w;}
-  // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
-  if(sflg&VXOP){u=sv->f; v=sv->h; sv=VAV(sv->g);}
-  // Read the info for the parsed definition, including control table and number of lines
-  LINE(sv);
+   // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
+   if(sflg&VXOP){u=sv->f; v=sv->h; sv=VAV(sv->g);}
+   // Read the info for the parsed definition, including control table and number of lines
+   LINE(sv);
 
-  // lk: 0=normal, 1=this definition is locked, -1=debug mode
-  lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
-  // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
-  // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
-  if(!lk&&jt->uflags.us.cx.cx_c.db){
+   // lk: 0=normal, 1=this definition is locked, -1=debug mode
+   lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
+   // if we are in debug mode, the call to this defn should be on the stack (unless debug was entered under program control).  If it is, point to its
+   // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
+   if(!lk&&jt->uflags.us.cx.cx_c.db){
 // obsolete    d=sv->flag&VNAMED&&jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
-   if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
-    if(sv->flag&VNAMED){
-     d=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
-    }
-    // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
-    // information about this execution: the local symbols,
-    // the control-word table, and where we store the currently-executing line number
+    if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
+     if(sv->flag&VNAMED){
+      d=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
+     }
+     // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
+     // information about this execution: the local symbols,
+     // the control-word table, and where we store the currently-executing line number
 // obsolete    if(jt->uflags.us.cx.cx_c.db&&jt->sitop&&DCCALL==jt->sitop->dctype&&self==jt->sitop->dcf){
-    if(self==jt->sitop->dcf){  // if the stack frame is for this exec
-     jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1+hi];  // install info about the exec
+     if(self==jt->sitop->dcf){  // if the stack frame is for this exec
+      jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1];  // install info about the exec
 // obsolete jt->sitop->dci=(I)&i;
+     }
     }
+    // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging and there is no
+    // debug area now.  Otherwise we will just use the previous one, or allocate a new one for the very first function call.  We have to have 1 debug
+    // frame to hold parse-error information in.
+    RZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
+    // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
+    // We will keep cxspecials set as long as savdcy is 0, i. e. in all levels where debug was set at the start of the frame
+    jt->cxspecials=1;
    }
-   // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging and there is no
-   // debug area now.  Otherwise we will just use the previous one, or allocate a new one for the very first function call.  We have to have 1 debug
-   // frame to hold parse-error information in.
-   RZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
-   // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
-   // We will keep cxspecials set as long as savdcy is 0, i. e. in all levels where debug was set at the start of the frame
-   jt->cxspecials=1;
-  }
 
-  // If the verb contains try., allocate a try-stack area for it
-  if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
+   // If the verb contains try., allocate a try-stack area for it
+   if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
 // obsolete  if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
 // obsolete   else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
- }
- // End of unusual processing
+  }
+  // End of unusual processing
 
- // If there are no words at all (empty definition), that's domain error (actually, valence error).  Pity we have to test explicitly, but the symbol table is invalid if there are no lines
- ASSERT(n,EVDOMAIN);
+  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
+  // otherwise clone a copy of it.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
+// obsolete  UI4 yxbucks = yxbuckets[AR(hv[3+hi])&~LSYMINUSE];  // get ptab[] index of this symbol table, and then the yx bucket indexes
+  A locsym=hv[3];  // fetch pointer to preallocated symbol table
+  ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
+  UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
+  if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
+  else{RZ(jt->local=clonelocalsyms(locsym))}
+
+  // Assign the special names x y m n u v
+  // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
+  // not an assignment-in-place
+  // So, we short-circuit the process by assigning directly to the name.  We take advantage of the fact that we know the
+  // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
+  // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
+  // directly.
+  L *ybuckptr = IAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
+  L *xbuckptr = IAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
+  if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
+    // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
+    // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
+  if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
+  // Do the other assignments, which occur less frequently, with IS
+  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
+  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
+ }
+// obsolete  // If there are no words at all (empty definition), that's domain error (actually, valence error).  Pity we have to test explicitly, but the symbol table is invalid if there are no lines
+// obsolete  ASSERT(n,EVDOMAIN);
  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
  // in preventing it - still not a full fix, since invalid inplacing may have been done already
  CLEARZOMBIE
- // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
- // otherwise clone a copy of it.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
-// obsolete  UI4 yxbucks = yxbuckets[AR(hv[3+hi])&~LSYMINUSE];  // get ptab[] index of this symbol table, and then the yx bucket indexes
- UI4 yxbucks = (UI4)AM(hv[3+hi]);  // get the yx bucket indexes, stored in AM by crelocalsyms
- if(!(AR(hv[3+hi])&LSYMINUSE)){jt->local=hv[3+hi]; AR(hv[3+hi])|=LSYMINUSE;}
- else{RZ(jt->local=clonelocalsyms(hv[3+hi]))}
- // Assign the special names x y m n u v
- // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
- // not an assignment-in-place
- // So, we short-circuit the process by assigning directly to the name.  We take advantage of the fact that we know the
- // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
- // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
- // directly.
- L *ybuckptr = IAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
- L *xbuckptr = IAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
- if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
-   // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
-   // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
- if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
- // Do the other assignments, which occur less frequently, with IS
- if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
- if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
 // obsolete  if(jt->dotnames){
@@ -226,11 +234,10 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
 // obsolete  }
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
- old=jt->tnextpushx; 
+ I old=jt->tnextpushx; 
  // loop over each sentence
- while((UI)i<(UI)n){
+ while((UI)i<(UI)n){CW *ci;
   // i holds the control-word number of the current control word
-  ci=i+cw;   // ci->control-word info
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
    if(thisframe){DC siparent;
@@ -239,20 +246,19 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
      if(siparent->dcnewlineno){  // the debugger has asked for a jump
       i=siparent->dcix;  // get the jump-to line
       if(!((UI)i<(UI)n))break;  // if it jumped out of the function, exit
-      ci=i+cw;   // ci->new control-word info
       siparent->dcnewlineno=0;  // reset semaphore
      }
      siparent->dcix=i;  // notify the debugger of the line we are on, in case we stop  
     }
    }
    // if performance monitor is on, collect data for it
-   if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,a?VAL2:VAL1);
+   if(0<jt->uflags.us.uq.uq_c.pmctrb&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
-   if(jt->redefined){DC siparent;
+   if(jt->redefined){DC siparent;A *hv;
     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
-     self=siparent->dcf; sv=FAV(self); LINE(sv); siparent->dcc=hv[1+hi];
+     self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];
      // Clear all local bucket info in the definition, since it doesn't match the symbol table now
-     DO(AN(hv[0+hi]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
+     DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
     }
     jt->redefined=0;
     if((UI)i>=(UI)n)break;
@@ -260,6 +266,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    if(!((I)jt->redefined|(I)jt->pmctr|(I)thisframe))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
 
+  ci=i+cw;   // ci->control-word info
   // process the control word according to its type
   switch(ci->type){
    case CTRY:
@@ -311,7 +318,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // for./select. push the stack.  If the stack has not been allocated, start with 9 entries.  After that,
     // if it fills up, double it as required
     if(!r)
-     if(cd){m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
+     if(cd){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
      else  {r=9; BGATV(cd,INT,r*WCD,1,0); ras(cd); cv=(CDATA*)AV(cd)-1;}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
@@ -346,7 +353,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // break./continue-in-while. must pop the stack if there is a select. nested in the loop.  These are
     // any number of SELECTN, up to the SELECT 
     if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop, if it might be the final result
-    do{fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r;}while(!fin);
+    do{B fin=cv->w==CSELECT; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
      // fall through to...
    case CBREAK:
    case CCONT:  // break./continue. in while., outside of select.
@@ -359,7 +366,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // We just pop till we have popped a non-select.
     // Must rat() if the current result might be final result, in case it includes the variables we will delete in unstack
     if(!(ci->canend&2))BZ(z=rat(z));   // protect possible result from pop
-    do{fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r;}while(!fin);
+    do{B fin=cv->w!=CSELECT&&cv->w!=CSELECTN; unstackcv(cv); --cv; ++r; if(fin)break;}while(1);
     i=ci->go;     // continue at new location
     // It must also pop the try. stack, if the destination is outside the try.-end. range
     if(tdi)tdi=trypopgoto(tdv,tdi,i);
@@ -394,9 +401,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
     // do. here is one following if., elseif., or while. .  It always follows a T block, and skips the
     // following B block if the condition is false.  Set b to 1 iff the condition is true
     //  Start by assuming condition is true; set to move to the next line then
-    ++i; b=1;
-    // If there is no t, that's true
-    if(t){
+    ++i;
+    if(!t)break;  // if t omitted, that's true.  i is set and t is 0
+    {B b=1;
      if(SPARSE&AT(t))BZ(t=denseit(t));   // convert sparse to dense
      
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
@@ -405,16 +412,16 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
       switch(CTTZ(AT(t))){
       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
       case RATX:
-      case XNUMX: y=*XAV(t); b=*AV(y)||1<AN(y); break;  // rat/xnum true if first word non0, or multiple words
+      case XNUMX: b=*AV(XAV(t)[0])||1<AN(XAV(t)[0]); break;  // rat/xnum true if first word non0, or multiple words
       case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
       case FLX:   b=0!=*DAV(t);                 break;
       case INTX:  b=0!=*AV(t);                  break;
       case B01X:  b=*BAV(t);
       }
      }    // If no atoms, that's true too
+     t=0;  // Indicate no T block, now that we have processed it
+     if(b)break;  // if true, step to next sentence.  Otherwise
     }
-    t=0;  // Indicate no T block, now that we have processed it
-    if(b)break;  // if true, step to next sentence.  Otherwise
     // fall through to...
    default:   //   CIF CELSE CWHILE CWHILST CELSEIF CGOTO CEND
     if(2<=*jt->adbreakr) {/* obsolete if(cd){DO(AN(cd)/WCD-r, unstackcv(cv); --cv; ++r;);}*/ BASSERT(0,EVBREAK);} 
@@ -435,15 +442,15 @@ static DF2(jtxdefn){PROLOG(0048);A cd,h,*hv,*line,loc=jt->local,t,td,u,v,z;B b,f
    realizeifvirtual(z);
   }else {z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d);}  // sets z to 0
  }else{
-  // No result.  Probably an error, but it could just be that we executed nothing
+  // No result.  Must be an error
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
- z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is
  // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
+ z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.
  if(cd){
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()

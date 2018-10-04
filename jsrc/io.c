@@ -263,6 +263,17 @@ void _stdcall JSM(J jt, void* callbacks[])
  jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
 }
 
+/* set jclient callbacks from values - easier for nodejs */
+void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
+{
+ jt->smoutput = (outputtype)out;
+ jt->smdowd = wd;
+ jt->sminput = (inputtype)in;
+ jt->smpoll = (polltype)poll;
+ jt->sm = 0xff & opts;
+ jt->smoption = ((~0xff) & (UI)opts) >> 8;
+}
+
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}
 
 A _stdcall Jga(J jt, I t, I n, I r, I*s){

@@ -2,9 +2,10 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 
 J _stdcall JInit();                         /* init instance */
-void _stdcall JSM(J jt, void*callbacks[]);  /* set callbacks */ 
+void _stdcall JSM(J jt, void*callbacks[]);  /* set callbacks */
+void _stdcall JSMX(J jt, void*, void*, void*, void*, I);  
 int _stdcall JDo(J jt,C*);                  /* run sentence */
-C* _stdcall JGetLocale(J jt);               /* get locale */			
+C* _stdcall JGetLocale(J jt);               /* get locale */   
 A _stdcall Jga(J jt, I t, I n, I r, I*s);
 int _stdcall JFree(J jt);                   /* free instance */
 A _stdcall JGetA(J jt,I n,C* name);         /* get 3!:1 from name */
@@ -34,12 +35,12 @@ int _stdcall Jwd(J jt, int x, A parg, A* pres);
 C* _stdcall Jinput(J jt, C*);
 
 // output type
-#define MTYOFM		1	/* formatted result array output */
-#define MTYOER		2	/* error output */
-#define MTYOLOG		3	/* output log */
-#define MTYOSYS		4	/* system assertion failure */
-#define MTYOEXIT	5	/* exit */
-#define MTYOFILE	6	/* output 1!:2[2 */
+#define MTYOFM  1 /* formatted result array output */
+#define MTYOER  2 /* error output */
+#define MTYOLOG  3 /* output log */
+#define MTYOSYS  4 /* system assertion failure */
+#define MTYOEXIT 5 /* exit */
+#define MTYOFILE 6 /* output 1!:2[2 */
 
 // smoptions
 #define SMWIN    0  /* j.exe    Jwdw (Windows) front end */

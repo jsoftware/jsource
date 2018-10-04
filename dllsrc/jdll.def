@@ -28,4 +28,6 @@ EXPORTS
                 JGetA               @26
                 JSetA               @27
                 JInt64R             @28
-				JGetR               @29
+                JGetR               @29
+                JSMX                @30
+                

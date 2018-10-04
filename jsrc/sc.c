@@ -37,7 +37,7 @@ static DF2(jtunquote){A z;
   ASSERT(stabent,EVVALUE);  // name must be defined
   fs=stabent->val;  // fetch the value of the name
  }else{
-  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.
+  // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
   thisname=v->g;  // get the actual name
@@ -54,6 +54,7 @@ static DF2(jtunquote){A z;
  // ************** no errors till the stack has been popped
  FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
 
+ // Execute the name.  First check 4 flags at once to see if anything special is afoot
  if(!(jt->uflags.ui4|(v->flag&VLOCK))) {
   // No special processing. Just run the entity
   // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.

@@ -759,7 +759,7 @@ extern B        jtparseinit(J);
 extern A        jtparsex(J,A*,I,CW*,DC);
 extern A        jtpaxis(J,I,A);
 extern A        jtpcvt(J,I,A);
-extern A        jtpee(J,A*,I,I,I,CW*,DC);
+extern A        jtpee(J,A*,CW*,I,I,DC);
 extern A        jtpfill(J,I,A);
 extern A        jtpind(J,I,A);
 extern B        jtpinit(J);

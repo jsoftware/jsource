@@ -752,7 +752,7 @@
 #define pdtspvmmv01(x,y)            jtpdtspvmmv01(jt,(x),(y))
 #define pdtspvmmv0or1(x,y)          jtpdtspvmmv0or1(jt,(x),(y))
 #define pdtspvv(x,y)                jtpdtspvv(jt,(x),(y))
-#define pee(a,b,c,d,e,f)          jtpee(jt,(a),(b),(c),(d),(e),(f))
+#define pee(a,b,c,d,e    )          jtpee(jt,(a),(b),(c),(d),(e))
 #define pfill(x,y)                  jtpfill(jt,(x),(y))
 #define piev(x,y)                   jtpiev(jt,(x),(y))
 #define pind(x,y)                   jtpind(jt,(x),(y))

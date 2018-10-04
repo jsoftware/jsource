@@ -113,6 +113,9 @@ static void jtsusp(J jt){B t;DC d;I old=jt->tnextpushx;
  jt->dcs=d; jt->tostdout=t;
 }    /* user keyboard loop while suspended */
 
+// Go into debug mode.  Run sentences in suspension until we come out of suspension
+// Result is the value that will be used for the failing sentence.  This should not be 0 unless there is an error, because
+// jtxdefn requires nonzero z during normal operation
 static A jtdebug(J jt){A z=0;C e;DC c,d;
  if(jt->dbssd){jt->dbssd->dcss=0; jt->dbssd=0;}
  RZ(d=suspset(jt->sitop));
@@ -139,6 +142,8 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  }
  if(jt->dbsusact!=SUSCLEAR)jt->dbsusact=SUSCONT;
  d->dcsusp=0;
+ // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
+  if(jt->jerr)z=0; else z=z?z:mtm;
  R z;
 }
 
@@ -157,16 +162,16 @@ static A jtparseas(J jt,B as,A w){A z;
 
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
-A jtpee(J jt,A *queue,I m,I err,I lk,CW*ci,DC c){
+A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(!lk,err);  //  locked fn is totally opaque, with no stack
 // obsolete  RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
 // obsolete  if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
- if(lk<=0){jt->parserqueue=queue; jt->parserqueuelen=(I4)m; jt->parsercurrtok=1;}  // unless locked, indicate failing-sentence info
+ if(lk<=0){jt->parserqueue=queue+ci->i; jt->parserqueuelen=(I4)ci->n; jt->parsercurrtok=1;}  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
- if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
+ if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
 // obsolete  debz();
- R0
+ R z;  // if we entered debug, the error may have been cleared
 }
 
 /* parsex: parse an explicit defn line              */

@@ -31,7 +31,7 @@
 
 // Parse/execute a line, result in z.  If locked, reveal nothing
 // obsolete #define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(attnval){jsignal(EVATTN); z=0;}else if(!lk){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; z=parsea(queue,m);}else if(lk>0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(lk>=0)z=parsea(queue,m);else z=parsex(queue,m,ci,d);}else{jsignal(EVATTN); z=0;} }
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(lk>=0)z=parsea(queue,m);else z=parsex(queue,m,ci,callframe);}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -101,10 +101,10 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
 
 #define CHECKNOUN if (!(NOUN&AT(t))){   /* error, T block not creating noun */ \
     /* Signal post-exec error*/ \
-    t=pee(line+cw[ti].i,cw[ti].n,EVNONNOUN,lk,&cw[ti],d); \
+    t=pee(line,&cw[ti],EVNONNOUN,lk,callframe); \
 /* obsolete     i = ti; parsex(makequeue(cw[ti].n,cw[ti].i), lk, &cw[ti], d,stkblk); */ \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !!thisframe; } }else z=0;  \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !!thisframe; } }else z=0; \
     break; }
 
 
@@ -124,24 +124,24 @@ void bucketinit(){I j;
 
 
 // Processing of explicit definitions, line by line
-static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
-  CW *cw;DC d;I bi,i=0,j,n,r=0,tdi=0,ti;TD*tdv=0;
-// obsolete  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
+static DF2(jtxdefn){PROLOG(0048);
  RE(0);
+ A *line;   // pointer to the words of the definition.  Filled in by LINE
+ I n;  // number of lines in the definition.  Filled in by LINE
+ CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
+
+ I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
+ DC callframe=0;  // pointer to the debug frame of the caller to this function, but 0 if we are not debugging
+
+ A td;   // pointer to try. stack, if any
+ TD*tdv=0;  // pointer to base of try. stack
+ I tdi=0;  // index of the next open slot in the try. stack
+
+ A savloc=jt->local;  // stack area for local symbol table pointer; must set before we set new symbol table
+
+// obsolete  PSTK *oldpstkend1=jt->parserstkend1;   // push the parser stackpos
  I isdyad=(a!=0)&(w!=0);   // avoid branches, and relieve pressure on a and w
- // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
- // be reusing the stack frame, we just save the input once
-// obsolete  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
- A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
 // obsolete ASSERTSYS(savdcy,"no frame in cx");  // scaf
- // z is the final result (initialized to non-error for comp ease)
- // t is the result of the current t block, or 0 if not in t block
- // u,v are the operand(s), if this is an explicit modifier
- // sv->text of this explicit entity, st is its type
- // r is the count of empty stack frames that have been allocated
- // bi is the control-word number for the last b-block sentence executed
- // *tci is the CW info for the last t-block sentence executed
- z=mtm; d=0; cd=t=0;   // z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
 // obsolete  cn=jt->curname; cl=jt->curlocn;  // scaf
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  {A *hv;  // will hold pointer to the precompiled parts
@@ -167,7 +167,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
 // obsolete    d=sv->flag&VNAMED&&jt->uflags.us.cx.cx_c.db&&DCCALL==jt->sitop->dctype?jt->sitop:0; /* stack entry for dbunquote for this fn */
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
      if(sv->flag&VNAMED){
-      d=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
+      callframe=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
      }
      // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
      // information about this execution: the local symbols,
@@ -178,8 +178,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
 // obsolete jt->sitop->dci=(I)&i;
      }
     }
-    // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging and there is no
-    // debug area now.  Otherwise we will just use the previous one, or allocate a new one for the very first function call.  We have to have 1 debug
+    // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  We have to have 1 debug
     // frame to hold parse-error information in.
     RZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
@@ -188,7 +187,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
    }
 
    // If the verb contains try., allocate a try-stack area for it
-   if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); *AS(td)=NTD; *(1+AS(td))=WTD; tdv=(TD*)AV(td);}
+   if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); AS(td)[0]=NTD; AS(td)[1]=WTD; tdv=(TD*)AV(td);}
 // obsolete  if((C*)(stkblk = (DC)(oldpstkend1-(sizeof(DST)+sizeof(PSTK)-1)/sizeof(PSTK))) >= (C*)jt->parserstkbgn)jt->parserstkend1=(PSTK *)stkblk;
 // obsolete   else{A stkblka; GAT(stkblka, LIT, sizeof(DST), 1, 0); stkblk=(DC)AV(stkblka);}
   }
@@ -235,7 +234,20 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
  I old=jt->tnextpushx; 
+ // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
+ // be reusing the stack frame, we just save the input once
+// obsolete  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
+ A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
+
  // loop over each sentence
+ A cd=0;  // pointer to block holding the for./select. stack, if any
+ CDATA*cv;  // pointer to the current entry in the for./select. stack
+ I r=0;  // number of unused slots allocated in for./select. stack
+ I i=0;  // control-word number of the executing line
+ A z=mtm;  // last B-block result; will become the result of the execution. z=0 is treated as an error condition inside the loop, so we have to init the result to i. 0 0
+ A t=0;  // last T-block result
+ I bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error
+ I ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
  while((UI)i<(UI)n){CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
@@ -290,7 +302,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
     // if there is no error, or ?? debug mode, step to next line
     if(z||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)bi=i,++i;
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);}  // z might not be protected if we hit error
+    else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);}  // z might not be protected if we hit error
     // for other error, go to the error location; if that's out of range, keep the error; if not,
     // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
     // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
@@ -307,9 +319,9 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
     if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
     parseline(t);  // obsolete t=parsex(line+ci->i,ci->n,lk,ci,d,stkblk);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line+ci->i,ci->n,EVASSERT,lk,ci,d);  // if assert., signal post-execution error if result not all 1s.  Sets t to 0
+    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(one,t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  Sets t to 0
     if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;  // if no error, or debug (which had a chance to look at it), continue on
-    else if(EVTHROW==jt->jerr){if(tdi&&(j=(tdv+tdi-1)->t)){i=1+j; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
+    else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
@@ -440,7 +452,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
    // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
    // to be worth the trouble.
    realizeifvirtual(z);
-  }else {z=pee(line+cw[bi].i,cw[bi].n,EVNONNOUN,lk,&cw[bi],d);}  // sets z to 0
+  }else {pee(line,&cw[bi],EVNONNOUN,lk,callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error
   // Since we initialized z to i. 0 0, there's nothing more to do
@@ -450,7 +462,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
  if(thisframe){debz();}   // pair with the deba if we did one
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop
  // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
- z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.
+ z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  if(cd){
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
@@ -461,7 +473,7 @@ static DF2(jtxdefn){PROLOG(0048);A cd,*line,loc=jt->local,t,td,z;I lk; CDATA*cv;
  if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
 // obsolete  tpop(_ttop);   // finish freeing memory
  // Pop the private-area stack; set no assignment (to call for result display)
- jt->local=loc; jt->asgn=0;
+ jt->local=savloc; jt->asgn=0;
 // obsolete  jt->parserstkend1 = oldpstkend1;  // pop parser stackpos
 // obsolete  if(z)tpush(z);
  RETF(z);

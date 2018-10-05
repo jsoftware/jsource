@@ -507,15 +507,13 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // the only time it is positive here is the initial filling of the queue
 
    do{
-    I at;  // type of the new word (before name resolution)
-
     stack--;  // back up to new stack frame, where we will store the new word
 // obsolete     I prem = m;  // save m-before-decrement
 
     if(--m>=0) {A y;     // if there is another valid token...
      // Move in the new word and check its type.  If it is a name that is not being assigned, resolve its
      // value.  m has the index of the word we just moved
-     at=AT(y = queue[m]);   // fetch the next word from queue; pop the queue; extract the type
+     I at=AT(y = queue[m]);   // fetch the next word from queue; pop the queue; extract the type, save as at
      if(at&NAME) {
 // obsolete        if(!(AT(stack[1].a)&ASGN)) {  // Replace a name with its value, unless to left of ASGN
       if(!PTISASGN(stack[1])) {L *s;  // Replace a name with its value, unless to left of ASGN.  This test is 'not assignment'
@@ -552,6 +550,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
          if (!(y = namerefacv(y, s)))FP    // this will create a ref to undefined name as verb [:
            // if syrd gave an error, namerefacv may return 0.  This will have previously signaled an error
        }
+       at=AT(y);  // refresh the type with the type of the resolved name
 
       }
 
@@ -564,7 +563,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      } else es = at>>CONJX;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
-     PTFROMTYPEASGN(stack[0].pt,AT(y));   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
+     PTFROMTYPEASGN(stack[0].pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
      stack[0].t = (UI4)(m+1);  // install the original token number for the word
      stack[0].a = y;   // finish setting the stack entry, with the new word
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1

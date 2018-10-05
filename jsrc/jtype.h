@@ -170,6 +170,8 @@ typedef I SI;
 
 // NOTE!! the length of NOUN types must be power-of-2 multiples because of jtamend2
 
+// NOTE: all noun types must be below all parsable non-nouns
+
 #define B01X 0
 #define B01             ((I)1L<<B01X)           /* B  boolean                      */
 #define B01SIZE         sizeof(B)       // length of 1 atom
@@ -231,6 +233,9 @@ typedef I SI;
 #define XZX 20
 #define XZ              ((I)1L<<XZX)   /* ZX extended complex             */
 #define XZSIZE sizeof(ZX)
+
+#define LASTNOUNX XZX    // index of last noun bit
+
 // ASGN see below
 #define MARKX 22
 #define MARK            ((I)1L<<MARKX)     /* I  end-of-stack marker          */

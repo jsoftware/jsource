@@ -142,6 +142,7 @@ PT cases[] = {
 #define PSN 9 // ASGN+ASGNNAME
 #define PX 255
 
+#if 0 // obsolete
 // Table to convert AT field to parsing type.  PSN is detected only when we stack from the sentence, since that type is never created
 static C pttype[] = {
  PN, PN, PN, PN, PN, PN, PN, PN, 
@@ -149,11 +150,11 @@ static C pttype[] = {
  PN, PN, PN, PN, PN, PS, PM, PNM,
  PX, PX, PL, PV, PA, PC, PR, PX
 };
-
+#endif
 // Tables to convert parsing type to mask of matching parse-table rows for each of the stack positions
 // the AND of these gives the matched row (the end-of-table row is always matched)
 // static US ptcol[4][10] = {
-//    PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
+//     PN     PA     PC     PV     PM     PNM    PL     PR     PS     PSN
 // { 0x2BE, 0x23E, 0x200, 0x23E, 0x27F, 0x280, 0x37F, 0x200, 0x27F, 0x27F},
 // { 0x37C, 0x340, 0x340, 0x37B, 0x200, 0x200, 0x200, 0x200, 0x280, 0x280},
 // { 0x2C1, 0x2C8, 0x2D0, 0x2E6, 0x200, 0x200, 0x200, 0x300, 0x200, 0x200},
@@ -162,6 +163,7 @@ static C pttype[] = {
 // Remove bits 8-9
 // Distinguish PSN from PS by not having PSN in stack[3] support the ( CAVN ) ANY production (since it must be preceded by NAME)
 // Put something distictive into LPAR that can be used to create line 8
+#if 0
 static UI4 ptcol[10] = {
 0xBE7CC1DF,  // PN
 0x3E40C8C9,  // PA
@@ -174,14 +176,37 @@ static UI4 ptcol[10] = {
 0x7F8000C9,  // PS
 0x7F8000C8  // PSN
 };
+ PN, PN, PN, PN, PN, PS, PM, PNM,
+ PX, PX, PL, PV, PA, PC, PR, PX
+
+#else
+static UI4 ptcol[] = {
+0xBE7CC1DF,  // PN
+0x7F8000C9,  // PS
+0x7F0000C9,  // PM
+0x800000C9,  // PNM
+0,    // PX
+0,    // PX
+0x7F000001,  // PL
+0x3E7BE6F9,  // PV
+0x3E40C8C9,  // PA
+0x0040D0C9,  // PC
+0x000000C9  // PR
+// 0x7F8000C8  // PSN
+};
+#endif
 
 // tests for pt types
 #define PTMARK 0x7F0000C9
+#define PTASGNNAME 0x7F8000C8
 #define PTISCAVN(s) ((s).pt&0x4000)
 #define PTISM(s)  ((s).pt==PTMARK)
 #define PTISASGN(s)  ((s).pt&0x800000)
 #define PTISASGNNAME(s)  (!((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
+// converting type field to pt, store in z
+#define PTFROMTYPE(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}
+#define PTFROMTYPEASGN(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; pt=ptcol[pt-LASTNOUNX]; pt=(t)&CONW?PTASGNNAME:pt; z=(UI4)pt;}
 
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
@@ -539,7 +564,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      } else es = at>>CONJX;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
-     stack[0].pt=ptcol[pttype[CTTZ(AT(y))]+(((AT(y)>>CONWX)&(PSN-PS)))];   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
+     PTFROMTYPEASGN(stack[0].pt,AT(y));   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
      stack[0].t = (UI4)(m+1);  // install the original token number for the word
      stack[0].a = y;   // finish setting the stack entry, with the new word
          // and to reduce required initialization of marks.  Here we take advantage of the fact the CONW is set as a flag ONLY in ASGN type, and that PSN-PS is 1
@@ -594,7 +619,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // Before doing this, you would need to check the microarchitecture details of the processors you plan to support.  The store into the stack may be a single
     // 64-bit store or multiple smaller stores.  On the Intel desktop processors these stores would forward, but not on the low-power versions.  Check with Agner.
     // We now do the above, using 4-byte value only.  Insert bit 9 always; bit 8 if first word is LPAR; others from the table
-    I pline=CTTZ((2*(stack[0].pt&0x80)+0x100)|((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt));
+    I pline=CTTZ((2*(stack[0].pt&0x80)+0x100)+((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt));
     // during the period between the final computation of pline and the indirect branch, we have several cycles idle.
     // Since the branch is usually going to mispredict, we try to fill the idle cycles:
     // Save the stackpointer in case there is recursion
@@ -626,13 +651,13 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     case 2:  // dyad
      {A y; DFSIP2(1,2,3) STOY(3,1) /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(2,0); stack += 2; BRK(1);}  //STO(z,a,w,toksource)
     case 3:  // adv
-     {A y; EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
+     {A y; EPZ(stack[2].a = y = dfs1(stack[1].a, stack[2].a)); PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
     case 4:  // conj
-     {A y; EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[3].t = stack[1].t; SM(2,0); stack += 2; BRK(1);}
+     {A y; EPZ(stack[3].a = y = dfs2(stack[1].a, stack[3].a, stack[2].a)); PTFROMTYPE(stack[3].pt,AT(y))  stack[3].t = stack[1].t; SM(2,0); stack += 2; BRK(1);}
     case 5:  // fork
      {A y; EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(2,0); stack += 2; BRK(1);}
     case 6:  // hook
-     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); stack[2].pt=ptcol[pttype[CTTZ(AT(y))]]; stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
+     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); PTFROMTYPE(stack[2].pt,AT(y))  stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
     case 7: if(!(stack=jtis(jt)))EP break;  // assign - no mods to stack
     case 8: {if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))FP stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a; stack += 2; BRK(0);}  // paren.  Use value from expr, token # from (
     default:  // having a default case, reached by a direct conditional branch, seems faster than using case 9 and forcing the indirect branch

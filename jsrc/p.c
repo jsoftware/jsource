@@ -60,60 +60,6 @@ I jtnotonupperstack(J jt, A w) {
   R !(AFLAG(w)&AFNVR);   // return OK if name not stacked (rare, because if it wasn't stacked in the current sentence why would we think we can inplace it?)
 }
 
-// obsolete // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
-// obsolete // a deferred decrement for the block.  Return 1 if a deferred decrement was created, 0 if not (including
-// obsolete // the case where there was already a deferred-decrement)
-// obsolete B jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
-// obsolete  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
-// obsolete  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
-// obsolete  // then, to make sure we don't increment the same use count twice by continued scanning
-// obsolete  DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){*v = (A)~(I)w; R 1;}else if(~0==s) break; ++v;);
-// obsolete  R 0;  // if we get through without requesting a decrement, return 0
-// obsolete }    /* stack handling for w which is about to be redefined */
-// obsolete 
-static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R mark;} 
-
-static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
- n=stack[0].a; v=stack[2].a;   // extract arguments
- if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(jt->assignsym){symbis(n,v,(A)AT(stack[1].a));}   // Assign to the known name.  Pass in the type of the ASGN
- else {
-  if(LIT&AT(n)&&1>=AR(n)){
-   // lhs is ASCII characters, atom or list.  Convert it to words
-   //ASSERT(1>=AR(n),EVRANK); must be true
-   s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
-   RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
-   if(1==AN(n)){
-    // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
-    if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
-   }
-  }
-  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
-  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
-  // depending on which type of assignment (but if there is no local symbol table, always use the global)
-  f=stack[1].a; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
-  // if simple assignment to a name (normal case), do it
-  if(NAME&AT(n)){
-#if FORCEVIRTUALINPUTS
-   // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
-   // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
-   // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
-   // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
-   stack[2].a=
-#endif
-   symbis(n,v,jt->symb);
-  }
-  // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-  else if(!AR(n))symbis(onm(n),v,jt->symb);
-  // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
-  // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
-  // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
-  // if not AR assignment, just open each box of rhs and assign
-  else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
- }
- RNE(stack+2);  // the result is the same value that was assigned
-}
-
 
 #define AVN   (     ADV+VERB+NOUN)
 #define CAVN  (CONJ+ADV+VERB+NOUN)
@@ -207,6 +153,86 @@ static UI4 ptcol[] = {
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}
 #define PTFROMTYPEASGN(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; pt=ptcol[pt-LASTNOUNX]; pt=(t)&CONW?PTASGNNAME:pt; z=(UI4)pt;}
+
+static PSTK* jtpfork(J jt,A s1, A s2, A s3){
+ A y=folk(s1,s2,s3);  // create the fork
+ PSTK* stack=jt->parserstkend1;  // extract the stack base
+ RZ(y);  // if error, return 0 stackpointer
+ stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
+ stack[2]=stack[0]; R stack+2;  // close up stack & return
+}
+
+static PSTK* jtphook(J jt,A s1, A s2){
+ A y=hook(s1,s2);  // create the hook
+ PSTK* stack=jt->parserstkend1;  // extract the stack base
+ RZ(y);  // if error, return 0 stackpointer
+ PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
+ stack[1]=stack[0]; R stack+1;  // close up stack & return
+}
+
+static PSTK* jtpparen(J jt, A s1, A s2){
+ PSTK* stack=jt->parserstkend1;  // extract the stack base
+ stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value from expr, token # from (
+ stack+=2;  // advance stack pointer to result
+ if(!(AT(s1)&CAVN&&AT(s2)&RPAR))stack=0;  // if error, signal so with 0 stack
+ R stack;
+}
+
+// obsolete // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
+// obsolete // a deferred decrement for the block.  Return 1 if a deferred decrement was created, 0 if not (including
+// obsolete // the case where there was already a deferred-decrement)
+// obsolete B jtnvrredef(J jt,A w){A*v=jt->nvrav;I s;
+// obsolete  // Scan all the extant names, at all levels.  Unchecked names have LSB clear, and match w.  For them,
+// obsolete  // increment the use count.  If the name has already been decremented, it matches ~w; return quickly
+// obsolete  // then, to make sure we don't increment the same use count twice by continued scanning
+// obsolete  DO(jt->nvrtop, if(0 == (s = (I)w ^ (I)*v)){*v = (A)~(I)w; R 1;}else if(~0==s) break; ++v;);
+// obsolete  R 0;  // if we get through without requesting a decrement, return 0
+// obsolete }    /* stack handling for w which is about to be redefined */
+// obsolete 
+static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R mark;} 
+
+static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
+ n=stack[0].a; v=stack[2].a;   // extract arguments
+ if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
+ if(jt->assignsym){symbis(n,v,(A)AT(stack[1].a));}   // Assign to the known name.  Pass in the type of the ASGN
+ else {
+  if(LIT&AT(n)&&1>=AR(n)){
+   // lhs is ASCII characters, atom or list.  Convert it to words
+   //ASSERT(1>=AR(n),EVRANK); must be true
+   s=CAV(n); ger=CGRAVE==*s;   // s->1st character; remember if it is `
+   RZ(n=words(ger?str(AN(n)-1,1+s):n));  // convert to words (discarding leading ` if present)
+   if(1==AN(n)){
+    // Only one name in the list.  If one-name AR assignment, leave as a list so we go through the AR-assignment path below
+    if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
+   }
+  }
+  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
+  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+  // depending on which type of assignment (but if there is no local symbol table, always use the global)
+  f=stack[1].a; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
+  // if simple assignment to a name (normal case), do it
+  if(NAME&AT(n)){
+#if FORCEVIRTUALINPUTS
+   // When forcing everything virtual, there is a problem with jtcasev, which converts its sentence to an inplace special.
+   // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
+   // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
+   // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
+   stack[2].a=
+#endif
+   symbis(n,v,jt->symb);
+  }
+  // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
+  else if(!AR(n))symbis(onm(n),v,jt->symb);
+  // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
+  // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
+  // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
+  // if not AR assignment, just open each box of rhs and assign
+  else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
+ }
+ RNE(stack+2);  // the result is the same value that was assigned
+}
+
+static PSTK * (*(lines58[]))() = {jtpfork,jtphook,jtis,jtpparen};  // handlers for parse lines 5-8
 
 #if AUDITEXECRESULTS
 // go through a block to make sure that the descendants of a recursive block are all recursive, and that no descendant is virtual.
@@ -688,19 +714,12 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      }
     }else{
      // Here for lines 5-8, which branch to a canned routine
-     AF actionfn=lines58[pline-5];  // fetch the routine that will handle this line
-
-
-    case 5:  // fork
-     {A y; EPZ(stack[3].a = y = folk(stack[1].a, stack[2].a, stack[3].a)); stack[3].t = stack[1].t; /* obsolete stack[3].pt=ptcol[pttype[CTTZ(AT(y))]]; */ SM(2,0); stack += 2; BRK(1);}
-    case 6:  // hook
-     {A y; EPZ(stack[2].a = y = hook(stack[1].a, stack[2].a)); PTFROMTYPE(stack[2].pt,AT(y))  stack[2].t = stack[1].t; SM(1,0); stack += 1; BRK(1);}
-    case 7: if(!(stack=jtis(jt)))EP break;  // assign - no mods to stack
-    case 8: {if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))FP stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a; stack += 2; BRK(0);}  // paren.  Use value from expr, token # from (
-
+     PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
+     // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
+     // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
+     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x180>>pline)&3].a);  // 01100 00000 produces 5-8-> 00 10 11 01
+     if(!stack)EP
     }
-     
-
    }
 #else
    while(1) {
@@ -758,8 +777,8 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
  // obsolete    }else{  
     } // end of switch
    } // end of loop executing fragments
-#endif
   exitfrags:;  // here when we have no more fragments
+#endif
   }  // break with stack==0 on error; main exit is when queue is empty (m<0)
  exitparse:
 

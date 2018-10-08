@@ -58,8 +58,7 @@ typedef struct {
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
 // obsolete  I    fcalli;           /* named fn calls: current depth                   */
- I4   callstacknext;           /* named fn calls: current depth                   */
- I4   fcalln;           /* named fn calls: maximum permissible depth       */
+ A    sf;               /* for $:                                          */
  A    curname;          // current name, an A block containing an NM
  I    parsercalls;      /* # times parser was called                       */
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
@@ -93,7 +92,8 @@ typedef struct {
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)
  I4   fdepi;            /* fn calls: current depth                         */
  I4   fdepn;            /* fn calls: maximum permissible depth             */
- A    sf;               /* for $:                                          */
+ I4   callstacknext;           /* named fn calls: current depth                   */
+ I4   fcalln;           /* named fn calls: maximum permissible depth       */
  UC   prioritytype[11];  // type bit for the priority types
 // obsolete B    stswitched;       /* called fn switched locale                       */
 // 1 byte free

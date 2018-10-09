@@ -276,9 +276,13 @@ F1(jtparse){A z;
  RZ(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
  A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;  // Push error info separate from debug stack, for speed
+ // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
+ // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
+ A savsf=jt->sf;
  RZ(deba(DCPARSE,queue,(A)m,0L));  // We don't need a new stack frame if there is one already and debug is off
  z=parsea(queue,m);
  debz();
+ jt->sf=savsf;  // pop $: stack
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  R z;
 }
@@ -496,9 +500,6 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   UI4 ootop=jt->nvrotop; jt->nvrotop=jt->nvrtop; // push top 2 levels of NVR stack
-  // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
-  // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
-  A savsf=jt->sf;
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we move in a mark.
 
@@ -673,7 +674,6 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      if(pmask&0x7){A y;
       // Verb execution.  We must support inplacing, including assignment in place, and support recursion
 // obsolete      A arg1=stack[pline^2].a;   // 1st arg, monad or left dyad
-// obsolete      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad
       jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VINPLACEOK1){L *s;
@@ -795,7 +795,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 // obsolete   DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
   DO(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
   jt->nvrtop=jt->nvrotop; jt->nvrotop=ootop;  // deallocate the region used in this routine
-  jt->sf=savsf;  // pop $: stack
+// obsolete      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad
 
   jt->parserstkend1=oend1; // restore the stack-top
 

@@ -238,6 +238,9 @@ static DF2(jtxdefn){PROLOG(0048);
  // be reusing the stack frame, we just save the input once
 // obsolete  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;
  A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;
+ // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
+ // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
+ A savsf=jt->sf;
 
  // loop over each sentence
  A cd=0;  // pointer to block holding the for./select. stack, if any
@@ -458,6 +461,7 @@ static DF2(jtxdefn){PROLOG(0048);
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
+ jt->sf=savsf;  // pop $: stack
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
 // obsolete if(jt->jerr)z=0; else{if(z){RZ(ras(z));} else{*(I*)0=0;  z=mtm;}} // If no error, increment use count in result to protect it from tpop

@@ -53,16 +53,21 @@ static DF2(jtunquote){A z;
  if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale; } // if locative, switch to it, stacking the prev value
  // ************** no errors till the stack has been popped
  FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
+ w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot
  if(!(jt->uflags.ui4|(v->flag&VLOCK))) {
   // No special processing. Just run the entity
   // We have to raise the usecount, in case the name is deleted while running.  But that will be very rare.  Plus, we know that the executable type is recursive and non-inplaceable.
   // So, all we have to do is increment the usecount.  If it's a PERMANENT symbol no harm will be done, since we decrement below
+  // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
+  // possible before the branch.  Check the generated code on any change of compiler.
+  AF actionfn=v->valencefns[dyadex];
   ++AC(fs);  // protect the entity
 // obsolete  ra(fs);  // protect against reassignment while executing.  Usecount will always be recursive; could ACINCR   scaf should assert recursive, then ACINCR
 // obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
-  A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,dyadex?w:(A)fs,fs); jt->sf=s;
+  // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
+  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {
@@ -73,7 +78,7 @@ static DF2(jtunquote){A z;
   }else{
    ra(fs);  // should assert recursive usecount
 // obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}  // scaf make faster
-   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,dyadex?w:(A)fs,fs); jt->sf=s;
+   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;
    fa(fs);
   }
   if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL1:VAL2);  // record the return from call

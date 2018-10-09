@@ -172,10 +172,9 @@ static PSTK* jtphook(J jt,A s1, A s2){
 
 static PSTK* jtpparen(J jt, A s1, A s2){
  PSTK* stack=jt->parserstkend1;  // extract the stack base
+ if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))R 0;  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
  stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value from expr, token # from (
- stack+=2;  // advance stack pointer to result
- if(!(AT(s1)&CAVN&&AT(s2)&RPAR))stack=0;  // if error, signal so with 0 stack
- R stack;
+ R stack+2;  // advance stack pointer to result
 }
 
 // obsolete // w is a name about to be redefined.  If it is on the nvr list, at any level, set to complement to indicate
@@ -191,10 +190,10 @@ static PSTK* jtpparen(J jt, A s1, A s2){
 // obsolete 
 static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R mark;} 
 
-static PSTK* jtis(J jt){A f,n,v;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
- n=stack[0].a; v=stack[2].a;   // extract arguments
+static PSTK* jtis(J jt,A s1,A v,A n){A f/* obsolete ,n,v */;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
+// obsolete  n=stack[0].a; v=stack[2].a;   // extract arguments
  if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
- if(jt->assignsym){symbis(n,v,(A)AT(stack[1].a));}   // Assign to the known name.  Pass in the type of the ASGN
+ if(jt->assignsym){symbis(n,v,(A)AT(s1));}   // Assign to the known name.  Pass in the type of the ASGN
  else {
   if(LIT&AT(n)&&1>=AR(n)){
    // lhs is ASCII characters, atom or list.  Convert it to words
@@ -497,6 +496,9 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 
   ++jt->parsercalls;  // now we are committed to full parse.  Push stacks.
   UI4 ootop=jt->nvrotop; jt->nvrotop=jt->nvrtop; // push top 2 levels of NVR stack
+  // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
+  // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
+  A savsf=jt->sf;
 
   // We don't actually put a mark in the queue at the beginning.  When m goes down to 0, we move in a mark.
 
@@ -573,8 +575,8 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
          }
         } else {
          if (!(y = namerefacv(y, s)))FP   // Replace other acv with reference
-          at=AT(y);  // refresh the type with the type of the resolved name
-         }
+         at=AT(y);  // refresh the type with the type of the resolved name
+        }
        } else {
          // undefined name.  If special x. u. etc, that's fatal; otherwise create a dummy ref to [: (to have a verb)
          if(at&NAMEBYVALUE){jsignal(EVVALUE);FP}  // Report error (Musn't ASSERT: need to pop nvr stack) and quit
@@ -591,7 +593,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      // name that was replaced by name resolution.  We don't care - RPAR was never a name to begin with, and CONJ
      // is much more likely to be a primitive; and we don't want to take the time to refetch the resolved type
 // obsolete    } else if(at&RPAR+CONJ){es = (at>>RPARX)+(1/(RPARX>CONJX));}  // 1 for CONJ, 2 for RPAR; the RPARX>CONJX bit is to give a compile-time error if RPARX is not > CONJX
-     } else es = at>>CONJX;  // 1 for CONJ, 2 for RPAR, 0 otherwise
+     } else es = (at>>CONJX)?at>>CONJX:es;  // 1 for CONJ, 2 for RPAR, 0 otherwise
 
      // y has the resolved value, which is never a NAME unless there is an assignment immediately following
      PTFROMTYPEASGN(stack[0].pt,at);   // stack the internal type too.  We split the ASGN types into with/without name to speed up IPSETZOMB
@@ -648,7 +650,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
     // and finally returning the new front-of-stack pointer
 
     // First, create the bitmask of parser lines that are eligible to execute
-    I pmask=(0x100-(stack[0].pt&0x80))|((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
+    I pmask=(((~stack[0].pt)&0x80)*2)+((stack[0].pt>>24) & (stack[1].pt>>16) & (stack[2].pt>>8) & stack[3].pt);  // bit 8 is set ONLY for LPAR
     if(!pmask)break;  // If all 0, nothing is dispatchable, go push next word
 
     // We are going to execute an action routine.  This will be an indirect branch, and it will mispredict.  To reduce the cost of the misprediction,
@@ -672,6 +674,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
       // Verb execution.  We must support inplacing, including assignment in place, and support recursion
 // obsolete      A arg1=stack[pline^2].a;   // 1st arg, monad or left dyad
 // obsolete      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad
+      jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
       if((FAV(fs)->flag>>(pline>>1))&VINPLACEOK1){L *s;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
@@ -682,32 +685,33 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 2 if dyadic
       }
+       // jt has been corrupted
+      // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
+      // possible before the branch.  Check the generated code on any change of compiler.
       AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       // Since we have a dozen or so cycles to fill, push the $: stack and close up the execution stack BEFORE we execute the verb.  If we didn't close up the stack, we
       // could avoid having the $: stack by having $: look into the execution stack to find the verb that is being executed.  But overall it is faster to pay the expense of the $:
       // stack in exchange for being able to fill the time before the misprediction
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
-      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad
-      stackfs[0]=stackfs[-1];
-      A arg1=stack[pline^2].a;   // 1st arg, monad or left dyad
-      stack[pline]=stack[0];  // close up the stack
-      stack=stackfs;   // finish relocating stack
-      A savsf=jt->sf; jt->sf=fs;  // push $: stack   scaf move this out
+      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 2 3
+      stackfs[0]=stackfs[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2
+      A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 1 1   0110
+      stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
+      stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 1 2
       y=(*actionfn)(jt,arg1,arg2,fs);
       jt=(J)(intptr_t)((I)jt&~(JTINPLACEW+JTINPLACEA));
-      jt->sf=savsf;  // pop $: stack
+      // jt is OK again
       EPZ(y);  // fail parse if error
-      stack[1].a=y;  // advance stackpointer to former verb position; save result; parsetype is unchanged, token# is immaterial
+      stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial
      }else{
       // Conj/adv execution.  We must get the parsing type of the result, but we don't need to worry about inplacing or recursion
       AF actionfn=FAV(fs)->valencefns[pline-3];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       A arg1=stack[1].a;   // 1st arg, monad or left dyad
       A arg2=stack[pline-1].a;   // 2nd arg, fs or right dyad
       UI4 restok=stack[1].t;  // save token # to use for result
-      // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
       stack[pline-2]=stack[0]; // close up the stack
-      stack=stack+pline-2;  // advance stackpointer to position before result
+      stack=stack+pline-2;  // advance stackpointer to position before result 1 2
       A y=(*actionfn)(jt,arg1,arg2,fs);
       EPZ(y);  // fail parse if error
       PTFROMTYPE(stack[1].pt,AT(y)) stack[1].t=restok; stack[1].a=y;   // save result, move token#, recalc parsetype
@@ -717,11 +721,11 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
      // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
-     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x180>>pline)&3].a);  // 01100 00000 produces 5-8-> 00 10 11 01
+     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)&3].a);  // 00011 00000 produces 5-8-> 11 01 00 00
      if(!stack)EP
     }
    }
-#else
+#else  // obsolete
    while(1) {
     // This is where we execute the action routine.  We give it the stack frame; it is responsible
     // for finding its arguments on the stack, storing the result (if no error) over the last
@@ -791,6 +795,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
 // obsolete   DO(jt->nvrtop-otop, if(1 & (I)*v)tpush((A)~(I)*v); ++v;);   // schedule deferred frees.  Test with LSBs in case of 32-bit systems
   DO(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
   jt->nvrtop=jt->nvrotop; jt->nvrotop=ootop;  // deallocate the region used in this routine
+  jt->sf=savsf;  // pop $: stack
 
   jt->parserstkend1=oend1; // restore the stack-top
 

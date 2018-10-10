@@ -222,10 +222,11 @@ static char breaknone=0;
 
 B jtsesminit(J jt){jt->adbreakr=jt->adbreak=&breakdata; R 1;}
 
-int _stdcall JDo(J jt, C* lp){int r;
+int _stdcall JDo(J jt, C* lp){int r;I old;
  r=(int)jdo(jt,lp);
- while(jt->nfe)
-  r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '"));
+ while(jt->nfe){
+  old=jt->tnextpushx; r=(int)jdo(jt,nfeinput(jt,"input_jfe_'   '")); tpop(old);
+ }
  R r;
 } 
 
@@ -260,6 +261,17 @@ void _stdcall JSM(J jt, void* callbacks[])
  jt->smpoll = (polltype)callbacks[3];
  jt->sm = 0xff & (I)callbacks[4];
  jt->smoption = ((~0xff) & (UI)callbacks[4]) >> 8;
+}
+
+/* set jclient callbacks from values - easier for nodejs */
+void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
+{
+ jt->smoutput = (outputtype)out;
+ jt->smdowd = wd;
+ jt->sminput = (inputtype)in;
+ jt->smpoll = (polltype)poll;
+ jt->sm = 0xff & opts;
+ jt->smoption = ((~0xff) & (UI)opts) >> 8;
 }
 
 C* _stdcall JGetLocale(J jt){return getlocale(jt);}

@@ -208,7 +208,7 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f/* obsolete ,n,v */;B ger=0;C c,*s;PSTK*
   ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
   // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
   // depending on which type of assignment (but if there is no local symbol table, always use the global)
-  f=stack[1].a; c=*CAV(f); jt->symb=jt->local&&c==CASGN?jt->local:jt->global;
+  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
   // if simple assignment to a name (normal case), do it
   if(NAME&AT(n)){
 #if FORCEVIRTUALINPUTS
@@ -218,15 +218,15 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f/* obsolete ,n,v */;B ger=0;C c,*s;PSTK*
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
    stack[2].a=
 #endif
-   symbis(n,v,jt->symb);
+   symbis(n,v,symtab);
   }
   // otherwise, if it's an assignment to an atomic computed name, convert the string to a name and do the single assignment
-  else if(!AR(n))symbis(onm(n),v,jt->symb);
+  else if(!AR(n))symbis(onm(n),v,symtab);
   // otherwise it's multiple assignment (could have just 1 name to assign, if it is AR assignment).
   // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
   // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
   // if not AR assignment, just open each box of rhs and assign
-  else {ASSERT(1==AR(n),EVRANK); jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
+  else {ASSERT(1==AR(n),EVRANK); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
  }
  RNE(stack+2);  // the result is the same value that was assigned
 }

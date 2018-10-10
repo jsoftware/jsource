@@ -26,16 +26,26 @@ static DF2(jtunquote){A z;
  A thisname=v->f; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
  if(thisname){
   // normal path for named functions
-  NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
-  if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
+  if(AM(self)==jt->modifiercounter&&v->localuse){
+   // The most recent lookup is still valid, and it is nonzero.  Use it
+   fs=v->localuse;
    explocale=0;  // flag no explicit locale
-   if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
-  } else {  // locative
-   RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
-   stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+  }else{
+   NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
+   if(!(thisnameinfo->flag&(NMLOC|NMILOC))) {  // simple name
+    explocale=0;  // flag no explicit locale
+    if(!(stabent = probelocal(thisname)))stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,jt->global);  // Try local, then look up the name starting in jt->global
+   } else {  // locative
+    RZ(explocale=sybaseloc(thisname));  //  get the explicit locale .  0 if erroneous locale
+    stabent=syrd1(thisnameinfo->m,thisnameinfo->s,thisnameinfo->hash,explocale);  // Look up the name starting in the locale of the locative
+   }
+   ASSERT(stabent,EVVALUE);  // name must be defined
+   fs=stabent->val;  // fetch the value of the name
+   ASSERT(fs,EVVALUE); // make sure the name's value is given also
+   // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
+   if(v->localuse){v->localuse=fs; AM(self)=jt->modifiercounter;}
+   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   }
-  ASSERT(stabent,EVVALUE);  // name must be defined
-  fs=stabent->val;  // fetch the value of the name
  }else{
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
@@ -43,14 +53,14 @@ static DF2(jtunquote){A z;
   thisname=v->g;  // get the actual name
   explocale=0;  // flag no explicit locale
   fs=v->h;  // point to the actual executable
+  ASSERT(fs,EVVALUE); // make sure the name's value is given also
+  ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
  }
  A savname=jt->curname; jt->curname=thisname;  // stack the name of the previous executing entity, replace it with new
- ASSERT(fs,EVVALUE); // make sure the name's value is given also
+ I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
- I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
- ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
- if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale; } // if locative, switch to it, stacking the prev value
+ if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // i if locative, switch to it, stacking the prev valuenvalidate any extant lookups of modifier names -
  // ************** no errors till the stack has been popped
  FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self
@@ -95,6 +105,7 @@ static DF2(jtunquote){A z;
    // The only thing on the stack is a simple POP.  Do the pop.  This & the previous case account for almost all the calls here
    jt->global=jt->callstack[callstackx].value;  // restore global locale
    jt->callstacknext=(I4)callstackx;  // restore stackpointer for caller
+   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
   } else {
    // Locales were changed or deleted.  Process the stack fully
    // Find the locale to return to.  This will be the locale of the earliest POP, or jt->global unchanged if there is a POPFROM or there is no POP.
@@ -105,7 +116,7 @@ static DF2(jtunquote){A z;
     fromfound|=jt->callstack[i].type&CALLSTACKPOPFROM;  // remember if FROM seen
     if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE))earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
    }while(i!=callstackx);
-   if(earlyloc&&!fromfound)jt->global=earlyloc;  // If there is a POP to do, do it
+   if(earlyloc&&!fromfound){jt->global=earlyloc; ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
    // Delete the deletable locales.  If we encounter the current locale, remember that fact and don't delete it.
    I delcurr=0;  // set if we have to delete jt->global
    i=jt->callstacknext;  // back to front
@@ -214,7 +225,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  if(!y||NOUN&AT(y))R y;  // return if error or it's a noun
  // We are about to create a reference to a name.  Since this reference might escape into another context, either (1) by becoming part of a
  // non-noun result; (2) being assigned to a global name; (3) being passed into an explicit modifier: we have to expunge any reference to local
- // buckets.
+ // buckets.  Tolerable because local ACVs are rare
  NAV(a)->bucket = 0;  // Clear bucket info so we won't try to look up using local info.  kludge this modifies the original a; not so bad, since it's usually not local; but ugly
  v=FAV(y);
  // We cannot be guaranteed that the definition in place when a reference is created is the same value that is there when the reference
@@ -222,7 +233,15 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- R fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ RZ(z); 
+ // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
+ // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition.
+ // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
+ if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
+  FAV(z)->localuse=y; AM(z)=jt->modifiercounter;
+ }
+ R z;
 }
 
 

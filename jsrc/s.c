@@ -457,14 +457,15 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   ASSERT(((I)g&ASGNLOCAL||!probelocal(a)),EVDOMAIN)  //  if global assignment, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
   CLEARZOMBIE   // clear until next use.
- } else {
+ } else {A jtlocal=jt->local;
   n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-  if(n==m)ASSERT(!(jt->local&&g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
+// obsolete   if(n==m)ASSERT(!(jt->local&&g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
+  if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
-  RZ(e=g==jt->local?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
+  RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
   if(AT(w)&FUNC&&(wv=FAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->uflags.us.cx.cx_c.glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
@@ -501,6 +502,8 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
 // obsolete   if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
    if(!(xaf&AFNVRUNFREED)){fa(x);} else if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);}  // x may be 0.  Free if not protected; then unprotect
    e->val=w;   // install the new value
+   // When we assign to a modifier, invalidate all the lookups of modifiers that are extant
+   if(AT(w)&(VERB|CONJ|ADV))++jt->modifiercounter;
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
     // kludge this should not be required, since the incumbent value should never be inplaceable
    // ra() also removes inplaceability

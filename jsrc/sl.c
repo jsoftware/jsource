@@ -19,6 +19,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  RZ(v=symnew(&AV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
+   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
    RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
@@ -27,6 +28,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
+   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual
@@ -46,7 +48,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
    // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
    // that was used to create the table
    AR(g)=(RANKT)p;
-   ;
+   // Don't invalidate ACV lookups, since the local symbol table is not in any path
  }
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
@@ -201,6 +203,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
  AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AAV(x)[i])); AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)
  fa(LOCPATH(g)); ras(z); LOCPATH(g)=z;
+ ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  R mtm;
 }    /* 18!:2  set locale path */
 
@@ -249,6 +252,8 @@ F1(jtlocswitch){A g;
  // If there is no name executing, there would be nothing to process this push; so don't push for unnamed execs (i. e. from console)
  if(jt->curname)pushcallstack1(CALLSTACKPOPFROM,jt->global);
  jt->global=g;
+ ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
+
 // obsolete  jt->stswitched=1;
  R mtm;
 }    /* 18!:4  switch locale */
@@ -307,6 +312,7 @@ F1(jtlocexmark){A g,*pv,*wv,y,z;B b,*zv;C*u;I i,j,m,n,*nv;L*v;
 
 // destroy symbol table g.  
 B jtlocdestroy(J jt,A g){
+ ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  // Look at the name to see whether the locale is named or numbered
  NM *locname=NAV(LOCNAME(g));  // NM block for name
  B isnum = '9'>=locname->s[0];  // first char of name tells the type

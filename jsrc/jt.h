@@ -60,7 +60,7 @@ typedef struct {
 // obsolete  I    fcalli;           /* named fn calls: current depth                   */
  A    sf;               /* for $:                                          */
  A    curname;          // current name, an A block containing an NM
- I    parsercalls;      /* # times parser was called                       */
+ I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -102,7 +102,7 @@ typedef struct {
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
  A    stloc;            /* locales symbol table                            */
- A    symb;             /* symbol table for assignment                     */
+ I    parsercalls;      /* # times parser was called                       */
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
@@ -149,6 +149,7 @@ typedef struct {
 #endif
  I    symindex;         /* symbol table index (monotonically increasing)   */
 // -- end cache line 9
+ A    symb;             /* symbol table for assignment                     */
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
  A    stnum;            /* numbered locale numbers                         */

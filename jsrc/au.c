@@ -54,20 +54,23 @@ F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 // if there has been a previous error this function returns 0
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
- GA(z,t,1,0,0); v=FAV(z);
+// obsolete  GA(z,t,1,0,0); v=FAV(z);
+ GAT(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will bew all filled in
+ AT(z)=t;  // install actual type
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
+ v->localuse=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */
  v->f     =fs;                  /* monad            */
  v->g     =gs;                  /* dyad             */      
  v->h     =hs;                  /* fork right tine or other auxiliary stuff */
  v->flag  =(UI4)flag;
+ v->fdep  =0;                   /* function depth   */
+ v->flag2 = (UI4)flag2;         // more flags
  v->mr    =(RANKT)m;                   /* monadic rank     */
  v->lr    =(RANKT)l;                   /* left    rank     */
  v->rr    =(RANKT)r;                   /* right   rank     */
- v->fdep  =0;                   /* function depth   */
  v->id    =(C)id;                  /* spelling         */
- v->flag2 = (UI4)flag2;         // more flags
  R z;
 }
 

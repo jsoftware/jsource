@@ -15,8 +15,8 @@
 #define CHK3        (!(stack[b].t||stack[1+b].t||stack[e].t))
 #define CP          ds(CCAP)
 #define DCASE(x,y)  (6*(x)+(y))
-#define FGL(v)      folk(v->f,v->g,ds(CLEFT ))
-#define FGR(v)      folk(v->f,v->g,ds(CRIGHT))
+#define FGL(v)      folk(v->fgh[0],v->fgh[1],ds(CLEFT ))
+#define FGR(v)      folk(v->fgh[0],v->fgh[1],ds(CRIGHT))
 #define LF          ds(CLEFT )
 #define RT          ds(CRIGHT)
 #define RZZ(exp)    {if(!(exp))R zz;}
@@ -41,14 +41,14 @@ static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
 static F1(jtcfn){I j; R !AR(w)&&INT&AT(w)&&(j=*AV(w),-9<=j&&j<=9)?FCONS(w):qq(w,ainf);}
      /* constant function with value w */
 
-static F1(jttine){V*v; R w&&jt->tmonad&&(v=FAV(w),CP==v->f&&RT==v->h)?v->g:w;}
+static F1(jttine){V*v; R w&&jt->tmonad&&(v=FAV(w),CP==v->fgh[0]&&RT==v->fgh[2])?v->fgh[1]:w;}
      /* if monad and w = [: g ], then g; else just w itself */
 
 static I tvi(A w){A x;I i,z=-1;V*v;
  if(w&&VERB&AT(w)){
   v=FAV(w);
-  if(CQQ==v->id&&num[-1]==v->g){
-   x=v->f; 
+  if(CQQ==v->id&&num[-1]==v->fgh[1]){
+   x=v->fgh[0]; 
    if(!AR(x)&&INT&AT(x)){i=*AV(x)-TC; z=0<=i&&i<NTTAB?i:-1;}
  }}
  R z;
@@ -67,15 +67,15 @@ TACT(jtvmonad){A fs;TA y,z={one,0};V*v;
  if(!y.t)z.a=df1(y.a,fs);
  else{
   v=FAV(y.t);
-  if(!(CFORK==v->id&&0<=tvi(v->h)))z.t=folk(CP,fs,tine(y.t));
-  else if(NOUN&AT(v->f))           z.t=folk(CP,folk(CP,fs,folk(v->f,v->g,RT)),tine(v->h));
-  else                             z.t=folk(tine(v->f),folk(CP,fs,v->g),tine(v->h));
+  if(!(CFORK==v->id&&0<=tvi(v->fgh[2])))z.t=folk(CP,fs,tine(y.t));
+  else if(NOUN&AT(v->fgh[0]))           z.t=folk(CP,folk(CP,fs,folk(v->fgh[0],v->fgh[1],RT)),tine(v->fgh[2]));
+  else                             z.t=folk(tine(v->fgh[0]),folk(CP,fs,v->fgh[1]),tine(v->fgh[2]));
  }
  R z;
 }
 
 static I jtdcase(J jt,I xi,V*v){
- R !v ? 0 : 0>xi ? 1 : CFORK!=v->id ? 2 : NOUN&AT(v->f) ? 3 : CP==v->f ? 4 : 5;
+ R !v ? 0 : 0>xi ? 1 : CFORK!=v->id ? 2 : NOUN&AT(v->fgh[0]) ? 3 : CP==v->fgh[0] ? 4 : 5;
 }    
 /* 0   x        */
 /* 1      f     */
@@ -86,8 +86,8 @@ static I jtdcase(J jt,I xi,V*v){
 
 TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one,0};V*u=0,*v=0;
  fs=stack[e-1].a; x=stack[b]; y=stack[e]; sf=swapc(fs);
- if(xt=tine(x.t)){xi=tvi(x.t); u=FAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->f); if(0>xi)xi=tvi(u->h);}}
- if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->f); if(0>yi)yi=tvi(v->h);}}
+ if(xt=tine(x.t)){xi=tvi(x.t); u=FAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->fgh[0]); if(0>xi)xi=tvi(u->fgh[2]);}}
+ if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->fgh[0]); if(0>yi)yi=tvi(v->fgh[2]);}}
  if(fs==ds(CLEFT)){if(xt)z.t=xt; else z.a=x.a; R z;}
  if(0>xi&&0>yi)switch((xt?2:0)+(yt?1:0)){
   case 0: z.a=df2(x.a,y.a,fs); break;
@@ -101,41 +101,41 @@ TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one,0};V*u=0,*
    else if(xr&&yr&&jt->tmonad)z.t=swap(fs);
    else z.t=CFORK==u->id&&primitive(yt)?folk(yt,sf,xt):folk(xt,fs,yt);
  }else{B b,c;I i,j,xj,yj;
-  i=dcase(xi,u); if(u&&CFORK==u->id){xi=tvi(u->f); xj=tvi(u->h);}else{xi=-1; xj=tvi(xt);}
-  j=dcase(yi,v); if(v&&CFORK==v->id){yi=tvi(v->f); yj=tvi(v->h);}else{yi=-1; yj=tvi(yt);}
+  i=dcase(xi,u); if(u&&CFORK==u->id){xi=tvi(u->fgh[0]); xj=tvi(u->fgh[2]);}else{xi=-1; xj=tvi(xt);}
+  j=dcase(yi,v); if(v&&CFORK==v->id){yi=tvi(v->fgh[0]); yj=tvi(v->fgh[2]);}else{yi=-1; yj=tvi(yt);}
   z.t=0; b=xj==yj; c=xj==yi;
   switch(DCASE(i,j)){
    case DCASE(0,2): z.t=folk(x.a,fs,yt); break;
    case DCASE(2,0): z.t=folk(y.a,sf,xt); break;
-   case DCASE(0,3): z.t=folk(CP,folk(x.a,fs,FGR(v)),v->h); break;
-   case DCASE(0,4): z.t=folk(CP,folk(x.a,fs,v->g  ),v->h); break;
+   case DCASE(0,3): z.t=folk(CP,folk(x.a,fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(0,4): z.t=folk(CP,folk(x.a,fs,v->fgh[1]  ),v->fgh[2]); break;
    case DCASE(1,2): z.t=folk(xt,fs,yt); break;
    case DCASE(1,3): 
-   case DCASE(1,4): z.t=folk(xt,folk(LF,fs,FGR(v)),v->h); break;
+   case DCASE(1,4): z.t=folk(xt,folk(LF,fs,FGR(v)),v->fgh[2]); break;
    case DCASE(2,1): z.t=folk(xt,fs,yt); break;
    case DCASE(3,1): z.t=folk(xt,fs,yt); break;
    case DCASE(4,1): z.t=folk(xt,fs,yt); break;
    case DCASE(2,2): z.t=folk(xt,fs,yt); break;
-   case DCASE(2,3): z.t=b?folk(CP,folk(RT,    fs,FGR(v)),v->h):folk(xt,  folk(LF,    fs,FGR(v)),v->h); break;
-   case DCASE(2,4): z.t=b?folk(CP,folk(RT,    fs,v->g  ),v->h):folk(xt,  folk(LF,    fs,FGR(v)),v->h); break;
-   case DCASE(3,2): z.t=b?folk(CP,folk(FGR(u),fs,RT    ),yt  ):folk(u->h,folk(FGL(u),fs,RT    ),yt  ); break;
-   case DCASE(3,3): z.t=b?folk(CP,folk(FGR(u),fs,FGR(v)),v->h):folk(u->h,folk(FGL(u),fs,FGR(v)),v->h); break;
-   case DCASE(3,4): z.t=b?folk(CP,folk(FGR(u),fs,v->g  ),v->h):folk(u->h,folk(FGL(u),fs,FGR(v)),v->h); break;
-   case DCASE(4,2): z.t=b?folk(CP,folk(u->g,  fs,RT    ),yt  ):folk(u->h,folk(FGL(u),fs,RT    ),yt  ); break;
-   case DCASE(4,3): z.t=b?folk(CP,folk(u->g,  fs,FGR(v)),v->h):folk(u->h,folk(FGL(u),fs,FGR(v)),v->h); break;
-   case DCASE(4,4): z.t=b?folk(CP,folk(u->g,  fs,v->g  ),v->h):folk(u->h,folk(FGL(u),fs,FGR(v)),v->h); break;
-   case DCASE(0,5):         z.t=folk(v->f,folk(x.a,            fs,v->g),v->h); break; 
-   case DCASE(2,5): if(b||c)z.t=folk(v->f,folk(b?RT:LF,        fs,v->g),v->h); break; 
+   case DCASE(2,3): z.t=b?folk(CP,folk(RT,    fs,FGR(v)),v->fgh[2]):folk(xt,  folk(LF,    fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(2,4): z.t=b?folk(CP,folk(RT,    fs,v->fgh[1]  ),v->fgh[2]):folk(xt,  folk(LF,    fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(3,2): z.t=b?folk(CP,folk(FGR(u),fs,RT    ),yt  ):folk(u->fgh[2],folk(FGL(u),fs,RT    ),yt  ); break;
+   case DCASE(3,3): z.t=b?folk(CP,folk(FGR(u),fs,FGR(v)),v->fgh[2]):folk(u->fgh[2],folk(FGL(u),fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(3,4): z.t=b?folk(CP,folk(FGR(u),fs,v->fgh[1]  ),v->fgh[2]):folk(u->fgh[2],folk(FGL(u),fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(4,2): z.t=b?folk(CP,folk(u->fgh[1],  fs,RT    ),yt  ):folk(u->fgh[2],folk(FGL(u),fs,RT    ),yt  ); break;
+   case DCASE(4,3): z.t=b?folk(CP,folk(u->fgh[1],  fs,FGR(v)),v->fgh[2]):folk(u->fgh[2],folk(FGL(u),fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(4,4): z.t=b?folk(CP,folk(u->fgh[1],  fs,v->fgh[1]  ),v->fgh[2]):folk(u->fgh[2],folk(FGL(u),fs,FGR(v)),v->fgh[2]); break;
+   case DCASE(0,5):         z.t=folk(v->fgh[0],folk(x.a,            fs,v->fgh[1]),v->fgh[2]); break; 
+   case DCASE(2,5): if(b||c)z.t=folk(v->fgh[0],folk(b?RT:LF,        fs,v->fgh[1]),v->fgh[2]); break; 
    case DCASE(3,5):
-   case DCASE(4,5): if(b||c)z.t=folk(v->f,folk(b?FGR(u):FGL(u),fs,v->g),v->h); break; 
-   case DCASE(5,0):         z.t=folk(u->f,folk(y.a,            sf,u->g),u->h); break; 
-   case DCASE(5,2): if(b||c)z.t=folk(u->f,folk(u->g,           fs,b?RT    :LF        ),yt  ); break; 
+   case DCASE(4,5): if(b||c)z.t=folk(v->fgh[0],folk(b?FGR(u):FGL(u),fs,v->fgh[1]),v->fgh[2]); break; 
+   case DCASE(5,0):         z.t=folk(u->fgh[0],folk(y.a,            sf,u->fgh[1]),u->fgh[2]); break; 
+   case DCASE(5,2): if(b||c)z.t=folk(u->fgh[0],folk(u->fgh[1],           fs,b?RT    :LF        ),yt  ); break; 
    case DCASE(5,3):
-   case DCASE(5,4): if(b||c)z.t=folk(u->f,folk(u->g,           fs,b?FGR(v):FGL(v)    ),v->h); break; 
+   case DCASE(5,4): if(b||c)z.t=folk(u->fgh[0],folk(u->fgh[1],           fs,b?FGR(v):FGL(v)    ),v->fgh[2]); break; 
    case DCASE(5,5): if(xi==yi&&xj==yj||xi==yj&&xj==yi)
-                     if(b||  v->g==swapc(v->g))z.t=folk(u->f,folk(u->g,fs,     v->g ),u->h);
-                     else if(u->g==swapc(u->g))z.t=folk(v->f,folk(u->g,fs,     v->g ),v->h);
-                     else                      z.t=folk(u->f,folk(u->g,fs,swap(v->g)),u->h);
+                     if(b||  v->fgh[1]==swapc(v->fgh[1]))z.t=folk(u->fgh[0],folk(u->fgh[1],fs,     v->fgh[1] ),u->fgh[2]);
+                     else if(u->fgh[1]==swapc(u->fgh[1]))z.t=folk(v->fgh[0],folk(u->fgh[1],fs,     v->fgh[1] ),v->fgh[2]);
+                     else                      z.t=folk(u->fgh[0],folk(u->fgh[1],fs,swap(v->fgh[1])),u->fgh[2]);
   }
   RZZ(z.t);
  }
@@ -184,14 +184,14 @@ static F1(jtvfinal){I i;V*u,*v;
  if(!(VERB&AT(w)))R w;
  v=FAV(w);
  if(CFORK!=v->id){i=tvi(w); R 0<=i?vfinal(jt->ttab[i].t):w;}
- RZ(v->f=incorp(tine(vfinal(v->f))));
- RZ(v->g=incorp(tine(vfinal(v->g))));
- RZ(v->h=incorp(tine(vfinal(v->h))));
- if(VERB&AT(v->f)){
-  u=FAV(v->f); 
-  if(CFCONS==u->id)v->f=u->h;  // must be incorped already
-  else if(CQQ==u->id&&NOUN&AT(u->f)&&equ(ainf,u->g))v->f=u->f;  // must be incorped already
-  if(NOUN&AT(v->f))RZ(w=folk(v->f,v->g,v->h));
+ RZ(v->fgh[0]=incorp(tine(vfinal(v->fgh[0]))));
+ RZ(v->fgh[1]=incorp(tine(vfinal(v->fgh[1]))));
+ RZ(v->fgh[2]=incorp(tine(vfinal(v->fgh[2]))));
+ if(VERB&AT(v->fgh[0])){
+  u=FAV(v->fgh[0]); 
+  if(CFCONS==u->id)v->fgh[0]=u->fgh[2];  // must be incorped already
+  else if(CQQ==u->id&&NOUN&AT(u->fgh[0])&&equ(ainf,u->fgh[1]))v->fgh[0]=u->fgh[0];  // must be incorped already
+  if(NOUN&AT(v->fgh[0]))RZ(w=folk(v->fgh[0],v->fgh[1],v->fgh[2]));
  }
  R tine(w);
 }    

@@ -181,7 +181,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   RZ(w);
   ASSERT(2>AR(w),EVRANK);
   sv=VAV(self);
-  t=i0(sv->g);
+  t=i0(sv->fgh[1]);
   if(t>=2000 && t<3000 && AN(w) && !(LIT+C2T+C4T+INT&AT(w))) {
     switch(UNSAFE(AT(w))) {
     case B01:

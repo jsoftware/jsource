@@ -7,7 +7,7 @@
 
 #define TC1(t)          (t&NOUN?0:t&VERB?3:t&CONJ?2:1)
 #define BD(ft,gt)       (4*TC1(ft)+TC1(gt))
-#define TDECL           V*sv=FAV(self);A fs=sv->f,gs=sv->g,hs=sv->h
+#define TDECL           V*sv=FAV(self);A fs=sv->fgh[0],gs=sv->fgh[1],hs=sv->fgh[2]
 
 // handle fork, with support for in-place operations
 #define FOLK1 {A fx,hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=CALL1(h1,  w,hs)); /* the call to h is not inplaceable */ \
@@ -40,7 +40,7 @@ static DF2(jtfolk2){F2PREFIP;DECLFGH;PROLOG(0029);A z; FOLK2; EPILOG(z);}
 
 // see if f is defined as [:, perhaps through a chain of references
 static B jtcap(J jt,A x){V*v;L *l;
- while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->f)&&(l=syrd(v->f))&&(x=l->val));  // go through chain of names
+ while(v=VAV(x),CTILDE==v->id&&NAME&AT(v->fgh[0])&&(l=syrd(v->fgh[0]))&&(x=l->val));  // go through chain of names
  R CCAP==v->id;
 }
 
@@ -76,8 +76,8 @@ static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
  EPILOG(z);
 }
 
-static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->h)->f,v->f);}
-static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->f)->f,FAV(v->h)->f);}
+static DF1(jtcharmapa){V*v=FAV(self); R charmap(w,FAV(v->fgh[2])->fgh[0],v->fgh[0]);}
+static DF1(jtcharmapb){V*v=FAV(self); R charmap(w,FAV(v->fgh[0])->fgh[0],FAV(v->fgh[2])->fgh[0]);}
 
 // Create the derived verb for a fork.  Insert in-placeable flags based on routine, and asgsafe based on fgh
 A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I flag,flag2=0,j,m=-1;V*fv,*gv,*hv,*v;
@@ -91,9 +91,9 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   // assigned to a name, which will protects values inside it.
   ACIPNO(f);  // This justifies keeping the result ASGSAFE
   f1=jtnvv1;
-  if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->f)&&hi==CFORK){
-   x=hv->f;
-   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->g)&&CRIGHT==ID(hv->h)){f1=jtcharmapa;  flag &=~(VINPLACEOK1);}
+  if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->fgh[0])&&hi==CFORK){
+   x=hv->fgh[0];
+   if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VINPLACEOK1);}
   }
   R fdef(0,CFORK,VERB, f1,jtnvv2, f,g,h, flag, RMAX,RMAX,RMAX);
  }
@@ -109,8 +109,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
                if(ACIPISOK(h)){I flag2copy=0;  // do flag processing like @:
                 if(gv->flag2&VF2USESITEMCOUNT){
-                 if(hi==CCUT){I wgi=IAV(hv->g)[0]; // wfv;.wgi
-                  if(wgi==0){V *wfv=VAV(hv->f);
+                 if(hi==CCUT){I wgi=IAV(hv->fgh[1])[0]; // wfv;.wgi
+                  if(wgi==0){V *wfv=VAV(hv->fgh[0]);
                    if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
                     flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
                    }
@@ -120,36 +120,36 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 hv->flag2 |= (gv->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
                }
                break; /* [: g h */
-// obsolete   case CTILDE: if(NAME&AT(fv->f)){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
-  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->f)){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
+// obsolete   case CTILDE: if(NAME&AT(fv->fgh[0])){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
+  case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */
   case CFORK:  /* (x i. ]) { y"_ */
-   if(hi==CQQ&&(y=hv->f,LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->g)&&
-       (x=fv->f,LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->g)&&
-       (fi==CAMP||CRIGHT==ID(fv->h))){f1=jtcharmapb; flag &=~(VINPLACEOK1);} break;
+   if(hi==CQQ&&(y=hv->fgh[0],LIT&AT(y)&&1==AR(y))&&equ(ainf,hv->fgh[1])&&
+       (x=fv->fgh[0],LIT&AT(x)&&1==AR(x))&&CIOTA==ID(fv->fgh[1])&&
+       (fi==CAMP||CRIGHT==ID(fv->fgh[2]))){f1=jtcharmapb; flag &=~(VINPLACEOK1);} break;
   case CAT:    /* <"1@[ { ] */
    if(gi==CLBRACE&&hi==CRIGHT){                                   
-    p=fv->f; q=fv->g; 
-    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->f,CLT==ID(x)&&equ(one,v->g))){f2=jtsfrom; flag &=~(VINPLACEOK2);}
+    p=fv->fgh[0]; q=fv->fgh[1]; 
+    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&equ(one,v->fgh[1]))){f2=jtsfrom; flag &=~(VINPLACEOK2);}
    }
  }
  switch(fi==CCAP?gi:hi){
   case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VINPLACEOK2);}  break;
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VINPLACEOK2);} break;
   case CICAP:   m=7; if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VINPLACEOK1);}} break;
-  case CSLASH:  c=ID(gv->f); m=c==CPLUS?4:c==CPLUSDOT?5:c==CSTARDOT?6:-1; 
-                if(fi==CCAP&&vaid(gv->f)&&vaid(h)){f2=jtfslashatg; flag &=~(VINPLACEOK2);}
+  case CSLASH:  c=ID(gv->fgh[0]); m=c==CPLUS?4:c==CPLUSDOT?5:c==CSTARDOT?6:-1; 
+                if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VINPLACEOK2);}
                 break;
-  case CFCONS:  if(hi==CFCONS){x=hv->h; j=*BAV(x); m=B01&AT(x)?(gi==CIOTA?j:gi==CICO?2+j:-1):-1;} break;
+  case CFCONS:  if(hi==CFCONS){x=hv->fgh[2]; j=*BAV(x); m=B01&AT(x)?(gi==CIOTA?j:gi==CICO?2+j:-1):-1;} break;
   case CRAZE:   if(hi==CLBRACE){f2=jtrazefrom; flag &=~(VINPLACEOK2);}
                 else if(hi==CCUT){
-                 j=i0(hv->g);
-                 if(CBOX==ID(hv->f)&&!j){f2=jtrazecut0; flag &=~(VINPLACEOK2);}
+                 j=i0(hv->fgh[1]);
+                 if(CBOX==ID(hv->fgh[0])&&!j){f2=jtrazecut0; flag &=~(VINPLACEOK2);}
                  else if(boxatop(h)){  // h is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
                   if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
-                   A wf=hv->f; V *wfv=FAV(wf); A hg=wfv->g; V *hgv=FAV(hg);  // w is <@g;.k  find g
+                   A wf=hv->fgh[0]; V *wfv=FAV(wf); A hg=wfv->fgh[1]; V *hgv=FAV(hg);  // w is <@g;.k  find g
                    if((I)(((hgv->id^CBSLASH)-1)|((hgv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
-                    A hgf=hgv->f; V *hgfv=FAV(hgf);  // find gf
+                    A hgf=hgv->fgh[0]; V *hgfv=FAV(hgf);  // find gf
                     if(hgfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
                      f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
                     }
@@ -161,8 +161,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 }
  }
  if(0<=m){
-  v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->g);
-  switch(b?ID(v->f):v->id){
+  v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->fgh[1]);
+  switch(b?ID(v->fgh[0]):v->id){
    case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
    case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
    case CLT:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=2+8*m; flag &=~(VINPLACEOK1|VINPLACEOK2); break;
@@ -232,7 +232,7 @@ static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
  n=AN(w); t=AT(w);
  if(!(1==AR(w)&&t&INT+FL))R hook1(w,self);
  sv=FAV(self); wv=AV(w);
- if(n)switch((t&FL?4:0)+(CICO==ID(sv->f)?2:0)+(CMAX==ID(FAV(sv->g)->f))){
+ if(n)switch((t&FL?4:0)+(CICO==ID(sv->fgh[0])?2:0)+(CMAX==ID(FAV(sv->fgh[1])->fgh[0]))){
   case  0: iu=iv=    wv;     DO(n, if(*iv<*iu)iu=iv; ++iv;); z=iu-    wv; break;
   case  1: iu=iv=    wv;     DO(n, if(*iv>*iu)iu=iv; ++iv;); z=iu-    wv; break;
   case  2: iu=iv=    wv+n-1; DO(n, if(*iv<*iu)iu=iv; --iv;); z=iu-    wv; break;
@@ -253,7 +253,7 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
   case BD(VERB,VERB):
    // This is the (V V) case, producing a verb
    u=FAV(a); c=u->id; f1=jthook1; f2=jthook2;
-   v=FAV(w); d=v->id; e=ID(v->f);
+   v=FAV(w); d=v->id; e=ID(v->fgh[0]);
    // Set flag to use: ASGSAFE if both operands are safe, and INPLACEOK to match f1,f2
    flag=((u->flag&v->flag)&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA)switch(c){   // all of this except for $, could be handled by virtual blocks
@@ -263,9 +263,9 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
     case CDROP:   f2=jthkdrop; flag &=~VINPLACEOK2;  break;
     case CEPS:    f2=jthkeps; flag &=~VINPLACEOK2; break;
    }else        switch(c){
-    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)&&CBOX==ID(u->f)){f1=jtgroup; flag &=~VINPLACEOK1;} break;
-    case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->g)){f1=jthkiota; flag &=~VINPLACEOK1;} break;
-    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->g)&&CSTAR==ID(FAV(v->g)->f)){f1=jthkodom; flag &=~VINPLACEOK1;} break;
+    case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])&&CBOX==ID(u->fgh[0])){f1=jtgroup; flag &=~VINPLACEOK1;} break;
+    case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VINPLACEOK1;} break;
+    case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==ID(v->fgh[1])&&CSTAR==ID(FAV(v->fgh[1])->fgh[0])){f1=jthkodom; flag &=~VINPLACEOK1;} break;
     case CIOTA:   
     case CICO:    if(d==CSLASH&&(e==CMAX||e==CMIN)){f1=jthkindexofmaxmin; flag &=~VINPLACEOK1;} break;
     case CFROM:   if(d==CGRADE){f2=jtordstati; flag &=~VINPLACEOK2;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat; flag &=~VINPLACEOK2;}

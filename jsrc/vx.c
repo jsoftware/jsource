@@ -487,7 +487,7 @@ F1(jtdigits10){A z;B b=0;I c,m,n,*v,*zv,*zv0;X x;
 }    /* "."0@": w */
 
 
-#define DXBODY(exp)  DECLG;A y=sv->h,z;I m=jt->xmode; jt->xmode=XMFLR; z=exp; jt->xmode=m; R z
+#define DXBODY(exp)  DECLG;A y=sv->fgh[2],z;I m=jt->xmode; jt->xmode=XMFLR; z=exp; jt->xmode=m; R z
 #define DX1(f,exp)   DF1(f){DXBODY(exp);} 
 #define DX2(f,exp)   DF2(f){DXBODY(exp);}
 #define XT(w)        tymes(y,w)

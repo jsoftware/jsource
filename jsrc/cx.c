@@ -26,7 +26,7 @@
 // h is the array of saved info for the definition; hv->pointers to boxes;
 // hi=0 for monad, 4 for dyad; line->tokens; x->block for control words; n=#control words; cw->array of control-word data
 #define LINE(sv)       {A x; \
-                        hv=AAV(sv->h)+4*isdyad;  \
+                        hv=AAV(sv->fgh[2])+4*isdyad;  \
                         line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
 
 // Parse/execute a line, result in z.  If locked, reveal nothing
@@ -155,7 +155,7 @@ static DF2(jtxdefn){PROLOG(0048);
   } else {  // something special required
 // obsolete  if(st&ADV+CONJ){u=a; v=w;}
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
-   if(sflg&VXOP){u=sv->f; v=sv->h; sv=VAV(sv->g);}
+   if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
    // Read the info for the parsed definition, including control table and number of lines
    LINE(sv);
 
@@ -484,8 +484,8 @@ static DF2(jtxdefn){PROLOG(0048);
 }
 
 
-static DF1(xv1){R df1(  w,FAV(self)->f);}
-static DF2(xv2){R df2(a,w,FAV(self)->g);}
+static DF1(xv1){R df1(  w,FAV(self)->fgh[0]);}
+static DF2(xv2){R df2(a,w,FAV(self)->fgh[1]);}
 
 static DF1(xn1 ){R xdefn(0L,w, self);}  // Transfer monadic xdef to the common code
 static DF1(xadv){R xdefn(w, 0L,self);}
@@ -746,8 +746,8 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RZ(a&&w);
  if(VERB&AT(a)&&VERB&AT(w)){V*va,*vw;
-  va=FAV(a); if(CCOLON==va->id&&VERB&AT(va->f)&&VERB&AT(va->g))a=va->f;
-  vw=FAV(w); if(CCOLON==vw->id&&VERB&AT(vw->f)&&VERB&AT(vw->g))w=vw->g;
+  va=FAV(a); if(CCOLON==va->id&&VERB&AT(va->fgh[0])&&VERB&AT(va->fgh[1]))a=va->fgh[0];
+  vw=FAV(w); if(CCOLON==vw->id&&VERB&AT(vw->fgh[0])&&VERB&AT(vw->fgh[1]))w=vw->fgh[1];
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));

@@ -256,7 +256,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
-   {V*v=VAV(w); auditblock(v->f,nonrecur,0); auditblock(v->g,nonrecur,0); auditblock(v->h,nonrecur,0);} break;
+   {V*v=VAV(w); auditblock(v->fgh[0],nonrecur,0); auditblock(v->fgh[1],nonrecur,0); auditblock(v->fgh[2],nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(w);  A x;
    x = SPA(v,a); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,e); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,i); if(!(AT(x)&DIRECT))*(I*)0=0; x = SPA(v,x); if(!(AT(x)&DIRECT))*(I*)0=0;

@@ -24,7 +24,7 @@ F1(jtfxeachacv){RETF(every(w,w,jtfx));}  // the second w is just any nonzero
 
 static DF1(jtcon1){A h,*hv,*x,z;V*sv;
  PREF1(jtcon1);
- sv=FAV(self); h=sv->h; hv=AAV(h);
+ sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DO(AN(h), RZ(*x++=CALL1(FAV(*hv)->valencefns[0],  w,*hv)); ++hv;);
  R ope(z);
@@ -32,7 +32,7 @@ static DF1(jtcon1){A h,*hv,*x,z;V*sv;
 
 static DF2(jtcon2){A h,*hv,*x,z;V*sv;
  PREF2(jtcon2);
- sv=FAV(self); h=sv->h; hv=AAV(h);
+ sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAV(z);
  DO(AN(h), RZ(*x++=CALL2(FAV(*hv)->valencefns[1],a,w,*hv)); ++hv;);
  R ope(z);
@@ -40,7 +40,7 @@ static DF2(jtcon2){A h,*hv,*x,z;V*sv;
 
 static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
  RZ(w);
- n=IC(w); j=n-1; hs=FAV(self)->h; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
+ n=IC(w); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
 // obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->valencefns[1];);
  RZ(z=from(num[-1],w));
@@ -81,8 +81,8 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
  RZ(w&&VERB&AT(w));
  v=FAV(w); id=v->id;
  if(strchr(atomic12,id)||strchr(1==m?atomic1:atomic2,id))R 1;
- f=v->f; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
- g=v->g; vg=g&&VERB&AT(g); ay=g&&NOUN&AT(g)&&!AR(g);
+ f=v->fgh[0]; vf=f&&VERB&AT(f); ax=f&&NOUN&AT(f)&&!AR(f);
+ g=v->fgh[1]; vg=g&&VERB&AT(g); ay=g&&NOUN&AT(g)&&!AR(g);
  switch(id){  // should handle @. ?
   case CAT:
   case CATCO:  R atomic(1,f)&&atomic(m,g);
@@ -90,7 +90,7 @@ static B jtatomic(J jt,C m,A w){A f,g;B ax,ay,vf,vg;C c,id;V*v;
   case CUNDCO: R atomic(m,f)&&atomic(1,g);
   case CAMPCO: R atomic(m,f)&&atomic(1,g);
   case CQQ:    R ax||atomic(m,f);
-  case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->h);
+  case CFORK:  R (CCAP==ID(f)?atomic(1,g):atomic(m,f)&&atomic(2,g))&&atomic(m,v->fgh[2]);
   case CHOOK:  R atomic(2,f)&&atomic(1,g);
   case CTILDE: R NAME&AT(f)?atomic(m,fix(f)):atomic(2,f);
   case CFIT:   R atomic(m,f);
@@ -117,21 +117,21 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  RZ(w);
  r=AR(w);
  if(1<r)RZ(w=gah(1L,w));
- sv=FAV(self); g=sv->g;
+ sv=FAV(self); g=sv->fgh[1];
  // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(k=df1(w,g))
  else{RZ(k=df1(w,qq(g,zero))); ASSERT(AR(k)==AR(w)&&AN(k)==AN(w),EVRANK);}
  if(B01&AT(k)){
   // v produced a binary list.  Pull out the operands for u[0] and u[1], operate on them individually,
   // and interleave the results
-  h=sv->h; ASSERT(2<=AN(h),EVINDEX); hv=AAV(h);
+  h=sv->fgh[2]; ASSERT(2<=AN(h),EVINDEX); hv=AAV(h);
   RZ(x=df1(t=repeat(not(k),w),hv[0])); if(!AR(x))RZ(x=reshape(tally(t),x));
   RZ(y=df1(t=repeat(k,     w),hv[1])); if(!AR(y))RZ(y=reshape(tally(t),y));
   RZ(z=!AN(x)?y:!AN(y)?x:from(grade1(grade1(k)),over(x,y)));
  }else{
   // v produced non-binary. apply k u/. y and shuffle the results to their proper positions
   RZ(u=nub(k));
-  RZ(y=df2(k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->f))))); yv=AAV(y);
+  RZ(y=df2(k,w,sldot(gjoin(CATCO,box(scc(CBOX)),from(u,sv->fgh[0]))))); yv=AAV(y);
   b=0; DO(AN(y), if(b=!AR(yv[i]))break;);
   if(b){
    RZ(x=df2(k,w,sldot(ds(CPOUND)))); xv=AV(x);
@@ -146,8 +146,8 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
 
 // m@.v general (non-atomic)case, like dyad case below
 static DF1(jtcase1b){A h,u;V*sv;
- F1PREFIP;sv=FAV(self); h=sv->h;
- RZ(u=from(df1(w,sv->g),h));  // not inplace
+ F1PREFIP;sv=FAV(self); h=sv->fgh[2];
+ RZ(u=from(df1(w,sv->fgh[1]),h));  // not inplace
  ASSERT(!AR(u),EVRANK);
  R jtdf1(FAV(*AAV(u))->flag&VINPLACEOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
 }
@@ -158,7 +158,7 @@ static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  F1PREFIP; sv=FAV(self);
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,sv->mr); RESETRANK;
- if(b=!r&&wr&&AN(w)){h=sv->h; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
+ if(b=!r&&wr&&AN(w)){h=sv->fgh[2]; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
  if(b){R case1a(w,self);}   // atomic: go there
  if(r>=wr){R jtcase1b(jtinplace,w,self);}  // If there is only 1 cell, execute on it, keeping inplaceability
  R rank1ex(w,self,r,jtcase1b);  // Otherwise loop over the cells (perforce not inplace)
@@ -168,7 +168,7 @@ static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
 static DF2(jtcase2){A u;V*sv;
  F2PREFIP;PREF2(jtcase2);
  sv=FAV(self);
- RZ(u=from(df2(a,w,sv->g),sv->h));
+ RZ(u=from(df2(a,w,sv->fgh[1]),sv->fgh[2]));
  ASSERT(!AR(u),EVRANK);
  R jtdf2(FAV(*AAV(u))->flag&VINPLACEOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
@@ -198,11 +198,11 @@ F2(jtagenda){I flag;
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.
 // This creates several names:
-// sv->self data; fs=sv->f (the A block for the f operand); f1=f1 in sv->f (0 if sv->f==0); f2=f2 in sv->f (0 if sv->f==0);
-//                gs=sv->g (the A block for the g operand); g1=f1 in sv->g (0 if sv->g==0); g2=f2 in sv->g (0 if sv->g==0)
+// sv->self data; fs=sv->fgh[0] (the A block for the f operand); f1=f1 in sv->fgh[0] (0 if sv->fgh[0]==0); f2=f2 in sv->fgh[0] (0 if sv->fgh[0]==0);
+//                gs=sv->fgh[1] (the A block for the g operand); g1=f1 in sv->fgh[1] (0 if sv->fgh[1]==0); g2=f2 in sv->fgh[1] (0 if sv->fgh[1]==0)
 
 
-static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
+static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d;
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
@@ -215,17 +215,17 @@ static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->h);I d;
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
-static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
-static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->h);I d; 
+static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
  RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
@@ -246,7 +246,7 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
 }
 
 // verb executed for v0`v1`v2} y
-static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->h);I d;
+static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);I d;
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
@@ -259,7 +259,7 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->h);I d;
  R df1(ffx,ff);
 }
 
-static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->h);I d;   // hv->gerunds
+static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);I d;   // hv->gerunds
 A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
@@ -300,8 +300,8 @@ A jtgadv(J jt,A w,C id){A hs;I n;
 }
 
 
-static DF1(jtgf1){A h=FAV(self)->h; R df1(  w,*AAV(h));}
-static DF2(jtgf2){A h=FAV(self)->h; R df2(a,w,*AAV(h));}
+static DF1(jtgf1){A h=FAV(self)->fgh[2]; R df1(  w,*AAV(h));}
+static DF2(jtgf2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
 
 A jtvger2(J jt,C id,A a,A w){A h,*hv,x;V*v;
  RZ(x=a?a:w);

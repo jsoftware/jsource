@@ -49,7 +49,7 @@ void jtshowerr(J jt){C b[1+2*NETX],*p,*q,*r;
 }
 
 static void jtdspell(J jt,C id,A w){C c,s[5];
- if(id==CFCONS){if(jt->nflag)eputc(' '); eputv(FAV(w)->h); eputc(':');}
+ if(id==CFCONS){if(jt->nflag)eputc(' '); eputv(FAV(w)->fgh[2]); eputc(':');}
  else{
   s[0]=' '; s[4]=0;
   spellit(id,1+s);

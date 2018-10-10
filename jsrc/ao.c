@@ -18,7 +18,7 @@ static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
  // Create x=+"0 1&i./ 2 {. $y
  RZ(x=irs2(IX(m),IX(n),0L,0L,1L,jtplus)); AR(x)=1; *AS(x)=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
- RZ(x=df2(x,y,sldot(VAV(self)->f)));
+ RZ(x=df2(x,y,sldot(VAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as
  // m and n are both non0: when one is 0, result has 0 cells (but that cell is the correct result
  // of execution on a fill-cell).  Correct the length of the 0 case, when the result length should be nonzero
@@ -42,7 +42,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  RZ(w);
  r=AR(w); s=AS(w); wt=AT(w); wv=CAV(w);
  if(!(AN(w)&&1<r&&DENSE&wt))R oblique(w,self);  // revert to default if rank<2, empty, or sparse
- y=FAV(self)->f; y=VAV(y)->f; id=vaid(y);
+ y=FAV(self)->fgh[0]; y=VAV(y)->fgh[0]; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
  if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)*bp(wt)); R z;}
@@ -111,8 +111,8 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); at=AT(a); av=CAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wt=AT(w); wv=CAV(w);
  v=FAV(self);  // f//. 
- f=v->f; y=FAV(f)->f; y=VAV(y)->f; c=vaid(y);  // f/, then f
- g=v->g; y=VAV(g)->f;              d=vaid(y);   // g taken from g/
+ f=v->fgh[0]; y=FAV(f)->fgh[0]; y=VAV(y)->fgh[0]; c=vaid(y);  // f/, then f
+ g=v->fgh[1]; y=VAV(g)->fgh[0];              d=vaid(y);   // g taken from g/
  if(!(m&&1==AR(a)&&n&&1==AR(w)))R obqfslash(df2(a,w,g),f);
  if(t&FL+CMPX)NAN0;
  switch(PMCASE(CTTZ(t),c,d)){
@@ -172,7 +172,7 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
  RZ(x=key(repeat(b,x),from(ravel(by),w),self));
  GAT(q,SB01,1,1,0); *AS(q)=n;  /* q=: 0 by}1$.n;0;1 */
  p=PAV(q); SPB(p,a,iv0); SPB(p,e,one); SPB(p,i,by); SPB(p,x,reshape(tally(by),zero));
- RZ(z=over(df1(repeat(q,w),VAV(self)->f),x));
+ RZ(z=over(df1(repeat(q,w),VAV(self)->fgh[0]),x));
  z=j?cdot2(box(IX(1+j)),z):z;
  EPILOG(z);
 }
@@ -290,10 +290,10 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  // Frets are calculated and w is reordered.  Call cut to finish the job.  We have to store the count and length of the frets
  CUTFRETCOUNT(frets)=fretp-CUTFRETFRETS(frets)+nfrets;  // # frets is #bytes stored, minus the length of the extended encodings
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
-// obsolete z=df2(frets,wperm,cut(VAV(self)->f,one));  // scaf remove the call to cut and put one in as g; use fs.  Verify that display is correct with g set
+// obsolete z=df2(frets,wperm,cut(VAV(self)->fgh[0],one));  // scaf remove the call to cut and put one in as g; use fs.  Verify that display is correct with g set
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // We pass the self pointer for /. into cut, as it uses that fact to interpret a
- z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->f)->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+ z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  jt->ct=ctold;
  EPILOG(z);
 }    /* a f/. w for dense x & w */
@@ -367,7 +367,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  at=AT(a); av0=AV(a); n=IC(a); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
  ASSERT(n==IC(w),EVLENGTH);
- x=FAV(self)->f; d=vaid(VAV(x)->f); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
+ x=FAV(self)->fgh[0]; d=vaid(VAV(x)->fgh[0]); if(B01&wt)d=d==CMAX?CPLUSDOT:d==CMIN||d==CSTAR?CSTARDOT:d;
  if(!(AN(a)&&AN(w)&&at&DENSE&&
      (wt&B01&&(d==CEQ||d==CPLUSDOT||d==CSTARDOT||d==CNE||d==CPLUS)||
      wt&SBT&&(d==CMIN||d==CMAX)||
@@ -597,7 +597,7 @@ static DF2(jtkeyheadtally){PROLOG(0017);A f,q,x,y,z;B b;I at,*av,k,n,r,s,*qv,*u,
  if(SPARSE&AT(a)||1<AR(w)||!n||!AN(a))R key(a,w,self);
  CRT rng = keyrs(a,MAX(2*n,65536)); at=rng.type; r=rng.minrange.min; s=rng.minrange.range;
  av=AV(a); 
- f=FAV(self)->f; f=VAV(f)->f; b=CHEAD==ID(f);
+ f=FAV(self)->fgh[0]; f=VAV(f)->fgh[0]; b=CHEAD==ID(f);
  if(at&B01&&1>=AR(a)){B*c,*d,*p=(B*)av;I i,j,m;
   c=d=p;
   if(*p){i=0; d=(B*)memchr(p,C0,n); j=d?d-p:0;}
@@ -660,10 +660,10 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
  v=VAV(w);
  switch(ID(w)){  // no default for f2: every path must set it
   case CPOUND: f2=jtkeytally; break;
-  case CSLASH: f2=jtkeyslash; if(vaid(v->f))f1=jtobqfslash; break;
+  case CSLASH: f2=jtkeyslash; if(vaid(v->fgh[0]))f1=jtobqfslash; break;
 // obsolete    case CBOX:   f2=jtkeybox;   break;
   case CFORK:  if(v->valencefns[0]==(AF)jtmean){f2=jtkeymean; break;}
-               c=ID(v->f); d=ID(v->g); e=ID(v->h); 
+               c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD)){f2=jtkeyheadtally; break;}
                // otherwise fall through to...
   default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VINPLACEOK2;  // pass through ASGSAFE.  jtkey can handle inplace

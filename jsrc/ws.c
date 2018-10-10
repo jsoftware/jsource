@@ -82,7 +82,7 @@ void spellit(C c,C*s){C*q;I k;
 A jtspella(J jt,A w){C c,s[3];V*v;
  RZ(w);
  v=FAV(w); c=v->id;
- if(c==CFCONS)R over(thorn1(v->h),chr[':']); 
+ if(c==CFCONS)R over(thorn1(v->fgh[2]),chr[':']); 
  spellit(c,s); 
  R str(s[2]?3L:s[1]?2L:1L,s);
 }

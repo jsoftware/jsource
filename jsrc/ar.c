@@ -275,18 +275,18 @@ static A jtredsp1(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A e,x,z;I m,n;P
 DF1(jtredravel){A f,x,z;I n;P*wp;
  F1PREFIP;
  RZ(w);
- f=FAV(self)->f;  // f from f/
+ f=FAV(self)->fgh[0];  // f from f/
 // obsolete if(!(SPARSE&AT(w)))R reduce(AN(w)?gah(1L,w):mtv,f);
  if(!(SPARSE&AT(w)))R reduce(jtravel(jtinplace,w),f);
  wp=PAV(w); x=SPA(wp,x); n=AN(x);
-// obsolete  id=vaid(VAV(f)->f);
+// obsolete  id=vaid(VAV(f)->fgh[0]);
  while(1){  // Loop to handle restart on overflow
-  VA2 adocv = vains(FAV(f)->f,AT(x));
+  VA2 adocv = vains(FAV(f)->fgh[0],AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
 // obsolete   if(n)adocv.f(jt,1L,n,n,AV(z),AV(x));
   if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
-  if(jt->jerr<EWOV)R redsp1a(vaid(FAV(f)->f),z,SPA(wp,e),n,AR(w),AS(w));;
+  if(jt->jerr<EWOV)R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));;
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
@@ -398,7 +398,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
- g=VAV(self)->f;
+ g=VAV(self)->fgh[0];
  if(!n)R red0(w,self);  // red0 uses ranks, and resets them
 // obsolete  vains(id,wt,&ado,&cv);
  C id=vaid(g);
@@ -510,7 +510,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
 // obsolete  }else{r=wr; f=0; if(r)n=ws[0];
 // obsolete  }
  r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; n=r?ws[f]:1;  // no RESETRANK
-// obsolete  id=vaid(VAV(self)->f);
+// obsolete  id=vaid(VAV(self)->fgh[0]);
  // Handle the special cases: neutrals, single items
  if(n>1){
   // Normal case, >1 item.
@@ -520,7 +520,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // are no atoms written
 
   // Normal processing for multiple items.  Get the routine & flags to process it
-  VA2 adocv = vains(FAV(self)->f,wt);
+  VA2 adocv = vains(FAV(self)->fgh[0],wt);
   // If there is no special routine, go perform general reduce
   if(!adocv.f)R redg(w,self);  // jt->ranks is still set.  redg will clear the ranks
   // Here for primitive reduce handled by special code.
@@ -667,7 +667,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){R df2(a,w,FAV(self)->h);}
+static DF2(jtoprod){R df2(a,w,FAV(self)->fgh[2]);}
 
 
 F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
@@ -678,7 +678,7 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
   case CCOMMA:  f1=jtredcat; flag=VINPLACEOK1;   break;
   case CCOMDOT: f1=jtredstitch; flag=0; break;
   case CSEMICO: f1=jtredsemi; flag=0; break;
-  case CUNDER:  f1=jtreduce; if(COPE==ID(v->g)){c=ID(v->f); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} flag=0; break;
+  case CUNDER:  f1=jtreduce; if(COPE==ID(v->fgh[1])){c=ID(v->fgh[0]); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} flag=0; break;
   default: f1=jtreduce; flag=(v->flag&VINPLACEOK2)>>(VINPLACEOK2X-VINPLACEOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad

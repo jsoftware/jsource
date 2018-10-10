@@ -185,7 +185,7 @@ I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
 A jtcstr(J jt,C*s){R rifvs(str((I)strlen(s),s));}  // used only for initialization, so ensure real string returned
 
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
-B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->f&&NAME&AT(v->f);}
+B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
 // Extract the integer value from w, return it.  Set error if non-integral
 I jti0(J jt,A w){if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R*AV(w);}

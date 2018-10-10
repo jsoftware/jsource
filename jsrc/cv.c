@@ -20,12 +20,12 @@ static F2(jtfitct){D d;V*sv;
 static DF2(jtfitexp2){
  F2RANK(0,0,jtfitexp2,self);
  ASSERT(0<=i0(w)&&!jt->jerr,EVDOMAIN);
- R aslash(CSTAR,plus(a,df2(iota(w),FAV(self)->g,slash(ds(CSTAR)))));
+ R aslash(CSTAR,plus(a,df2(iota(w),FAV(self)->fgh[1],slash(ds(CSTAR)))));
 }    /* a ^!.s w */
 
 static DF2(jtfitpoly2){
  F2RANK(1,0,jtfitpoly2,self);
- R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),FAV(self)->g,slash(ds(CSTAR))))))));
+ R aslash(CPLUS,tymes(a,ascan(CSTAR,shift1(plus(w,df2(IX(IC(a)),FAV(self)->fgh[1],slash(ds(CSTAR))))))));
 }    /* a p.!.s w */
 
 static DF1(jtfitfill1){DECLFG;F1PREFIP;A z; jt->fill=gs; z=CALL1IP(f1,  w,fs); jt->fill=0; RETF(z);}  // gs cannot be virtual
@@ -38,8 +38,8 @@ static DF1(jtfitpp1){DECLFG;A z;C d[8],*s=3+jt->pp;
  RETF(z);
 }
 
-static DF1(jtfitf1){V*sv=FAV(self); R df1(  w,fit(fix(sv->f),sv->g));}
-static DF2(jtfitf2){V*sv=FAV(self); R df2(a,w,fit(fix(sv->f),sv->g));}
+static DF1(jtfitf1){V*sv=FAV(self); R df1(  w,fit(fix(sv->fgh[0]),sv->fgh[1]));}
+static DF2(jtfitf2){V*sv=FAV(self); R df2(a,w,fit(fix(sv->fgh[0]),sv->fgh[1]));}
 
 // Fit conjunction u!.n
 // Preserve IRS1/IRS2 from u in result verb (exception: CEXP)
@@ -60,11 +60,11 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
   case CPOWOP:  // support for #^:_1!.n
-   if(VERB&AT(sv->g)||!equ(num[-1],sv->g))R fitct(a,w);
-   f=sv->f; c=ID(f);
+   if(VERB&AT(sv->fgh[1])||!equ(num[-1],sv->fgh[1]))R fitct(a,w);
+   f=sv->fgh[0]; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);
-   f=FAV(f)->g; ASSERT(CPOUND==ID(f),EVDOMAIN);
+   f=FAV(f)->fgh[1]; ASSERT(CPOUND==ID(f),EVDOMAIN);
   case CPOUND:  case CTAKE:  case CTAIL: case CCOMMA:  case CCOMDOT: case CLAMIN: case CRAZE:
    ASSERT(!AR(w),EVRANK);  /* fall thru */
   case CROT: case CDOLLAR: 
@@ -80,7 +80,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    RE(k=i0(w)); ASSERT(2==k,EVDOMAIN); RZ(w=sc(k));
    R CDERIV(CFIT,jtpparity,0L,0L,m,RMAX,RMAX);  // CCYCLE lacks VIRS
   case CTILDE:
-   ASSERT(NOUN&AT(sv->f),EVDOMAIN);
+   ASSERT(NOUN&AT(sv->fgh[0]),EVDOMAIN);
    R CDERIV(CFIT,jtfitf1,jtfitf2,0L,m,l,r);  // m~ has no VIRS
   default:
    ASSERT(0,EVDOMAIN);

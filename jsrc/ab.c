@@ -114,7 +114,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,j,m,n,wn,wr,*ws,wt,zn;VF 
  if(!(an&&wn&&at&LIT&&wt&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=zn/m;
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
- j=i0(VAV(fs)->f)-16;
+ j=i0(VAV(fs)->fgh[0])-16;
  GATV(z,LIT,zn,MAX(ar,wr),b?ws:as);   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}
  else if(!ar||!wr||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; RZ(*p=irs2(sc(SZI),*p,0L,0L,0L,jtrepeat));}
@@ -155,12 +155,12 @@ static VF bwinsI[16]={bw0000insI,bw0001insI,bw0010insI,bw0011insI, bw0100insI,bw
 
 DF1(jtbitwiseinsertchar){A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;VF f;
  RZ(w&&self);
-// obsolete wr=AR(w); c=wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->f; fs=VAV(z)->f;
- wr=AR(w); wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->f; fs=VAV(z)->f;
+// obsolete wr=AR(w); c=wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
+ wr=AR(w); wn=AN(w); n=wr?*AS(w):1; z=VAV(self)->fgh[0]; fs=VAV(z)->fgh[0];
  if(!(wn&&SZI<n&&LIT&AT(w)))R from(df1(indexof(alp,w),fs),alp);
-// obsolete m=wn/n; wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];
-// obsolete PROD(m,wr-1,AS(w)+1); wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];
- PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->f)-16; f=bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
+// obsolete m=wn/n; wv=CAV(w); j=i0(VAV(fs)->fgh[0])-16; f=bwinsC[j];
+// obsolete PROD(m,wr-1,AS(w)+1); wv=CAV(w); j=i0(VAV(fs)->fgh[0])-16; f=bwinsC[j];
+ PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(VAV(fs)->fgh[0])-16; f=bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)switch(j){   // d==1 here
   case  0: R scc(0);
   case  3: R scc(*wv);

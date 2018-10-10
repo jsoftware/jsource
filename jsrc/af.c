@@ -9,7 +9,7 @@
 F1(jtunname){A x;V*v;
  RZ(w); 
  v=VAV(w);
- if(CTILDE==v->id&&!jt->uflags.us.cx.cx_c.glock&&!(VLOCK&v->flag)){x=v->f; if(NAME&AT(x))R symbrd(x);}
+ if(CTILDE==v->id&&!jt->uflags.us.cx.cx_c.glock&&!(VLOCK&v->flag)){x=v->fgh[0]; if(NAME&AT(x))R symbrd(x);}
  RETF(w);
 }
 
@@ -22,12 +22,12 @@ static B jtselfq(J jt,A w){A hs,*u;V*v;
    R 1;
   case CATDOT:
   case CGRCO:
-   if(hs=v->h){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}
+   if(hs=v->fgh[2]){u=AAV(hs); DO(AN(hs), if(selfq(u[i]))R 1;);}
    R 0;
   default:     
-   if(v->f&&selfq(v->f))R 1;
-   if(v->g&&selfq(v->g))R 1;
-   if(v->h&&selfq(v->h))R 1;
+   if(v->fgh[0]&&selfq(v->fgh[0]))R 1;
+   if(v->fgh[1]&&selfq(v->fgh[1]))R 1;
+   if(v->fgh[2]&&selfq(v->fgh[2]))R 1;
  }
  R 0;
 }    /* 1 iff w contains $: */
@@ -36,7 +36,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
  RZ(a&&w);
  if(NAME&AT(w))R sfn(0,w);  // only way a name gets here is by ".@noun
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=VAV(w); f=v->f; g=v->g; h=v->h; wf=ds(v->id); aa=a==zero?num[3]:a;
+ v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); aa=a==zero?num[3]:a;
  if(!(f||g))R w;
  switch(v->id){
   case CSLASH: 
@@ -95,7 +95,7 @@ F1(jtfix){PROLOG(0005);A z;  // obsolete I*rv=jt->rank;
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);
  RZ(z=fixa(zero,AT(w)&VERB?w:symbrdlock(w)));
- if(AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->f){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
+ if(AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
 // obsolete  jt->rank=rv;
  jt->fxpath=0;
  EPILOG(z);

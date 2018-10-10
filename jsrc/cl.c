@@ -8,8 +8,8 @@
 
 static A jtlev1(J jt,A w,A self){A fs;
  RZ(w&&self);
-// obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->f; R CALL1(VAV(fs)->valencefns[0],w,fs);} else R every(w,self,jtlev1);
- if(levelle(w,jt->lmon)){fs=FAV(self)->f; R CALL1(FAV(fs)->valencefns[0],w,fs);} else R every(w,self,jtlev1);
+// obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->fgh[0]; R CALL1(VAV(fs)->valencefns[0],w,fs);} else R every(w,self,jtlev1);
+ if(levelle(w,jt->lmon)){fs=FAV(self)->fgh[0]; R CALL1(FAV(fs)->valencefns[0],w,fs);} else R every(w,self,jtlev1);
 }
 
 static A jtlev2(J jt,A a,A w,A self){A fs;
@@ -19,7 +19,7 @@ static A jtlev2(J jt,A a,A w,A self){A fs;
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
- if(aready&wready){fs=FAV(self)->f; R CALL2(FAV(fs)->valencefns[1],a,w,fs);
+ if(aready&wready){fs=FAV(self)->fgh[0]; R CALL2(FAV(fs)->valencefns[1],a,w,fs);
  }else{R every2(aready?box(a):a,wready?box(w):w,self,jtlev2);}
  // We do this with the if statement rather than a computed branch in the hope that the CPU can detect patterns in the conditions.
  // There may be a structure in the user's data that could be detected for branch prediction.
@@ -27,7 +27,7 @@ static A jtlev2(J jt,A a,A w,A self){A fs;
 // obsolete   case 0:  R every2(a,     w,     self,jtlev2);
 // obsolete   case 1:  R every2(a,     box(w),self,jtlev2);
 // obsolete   case 2:  R every2(box(a),w,     self,jtlev2);
-// obsolete   default: fs=FAV(self)->f; R CALL2(FAV(fs)->valencefns[1],a,w,fs);
+// obsolete   default: fs=FAV(self)->fgh[0]; R CALL2(FAV(fs)->valencefns[1],a,w,fs);
 // obsolete  }
 }
 
@@ -35,7 +35,7 @@ static I jtefflev(J jt,I j,A h,A x){I n,t; n=*(j+AV(h)); R n>=0?n:(t=level(x),MA
 
 static DF1(jtlcapco1){A z;I m;V*v=FAV(self); 
  RZ(w); 
- m=jt->lmon; jt->lmon=efflev(0L,v->h,w); 
+ m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w); 
  z=lev1(w,self);
  jt->lmon=m;
  RETF(z);
@@ -43,8 +43,8 @@ static DF1(jtlcapco1){A z;I m;V*v=FAV(self);
 
 static DF2(jtlcapco2){A z;I l,r;V*v=FAV(self);
  RZ(a&&w);
- l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
- r=jt->lright; jt->lright=efflev(2L,v->h,w);
+ l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
+ r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
  z=lev2(a,w,self);
  jt->lleft =l;
  jt->lright=r;
@@ -64,8 +64,8 @@ static F1(jtscfn){
 
 static A jtlevs1(J jt,A w,A self){A fs;
  RZ(w&&self);
-// obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->f; R scfn(CALL1(VAV(fs)->valencefns[0],w,fs));}else R every(w,self,jtlevs1);
- if(levelle(w,jt->lmon)){fs=FAV(self)->f; RZ(scfn(CALL1(FAV(fs)->valencefns[0],w,fs)));}else RZ(every(w,self,jtlevs1));
+// obsolete  if(jt->lmon>=level(w)){fs=VAV(self)->fgh[0]; R scfn(CALL1(VAV(fs)->valencefns[0],w,fs));}else R every(w,self,jtlevs1);
+ if(levelle(w,jt->lmon)){fs=FAV(self)->fgh[0]; RZ(scfn(CALL1(FAV(fs)->valencefns[0],w,fs)));}else RZ(every(w,self,jtlevs1));
  R zero;
 }
 
@@ -75,21 +75,21 @@ static A jtlevs2(J jt,A a,A w,A self){A fs;
  // If both args are ready to process, do so.  Otherwise, drop down a level and try again.  If one arg is ready but the other isn't,
  // add a boxing level before we drop down so that when it is processed it will be the first level at which it became active.  This result could
  // be achieved by altering the left/right levels, but Roger did it this way.
- if(aready&wready){fs=FAV(self)->f; RZ(scfn(CALL2(FAV(fs)->valencefns[1],a,w,fs)));
+ if(aready&wready){fs=FAV(self)->fgh[0]; RZ(scfn(CALL2(FAV(fs)->valencefns[1],a,w,fs)));
  }else{RZ(every2(aready?box(a):a,wready?box(w):w,self,jtlevs2));}
 // obsolete  switch((jt->lleft>=level(a)?2:0)+(jt->lright>=level(w))){
 // obsolete  switch(2*levelle(a,jt->lleft)+levelle(w,jt->lright)){
 // obsolete  case 0:  RZ(every2(a,     w,     self,jtlevs2)); break;
 // obsolete  case 1:  RZ(every2(a,     box(w),self,jtlevs2)); break;
 // obsolete  case 2:  RZ(every2(box(a),w,     self,jtlevs2)); break;
-// obsolete  default: fs=FAV(self)->f; RZ(scfn(CALL2(FAV(fs)->valencefns[1],a,w,fs))); break;
+// obsolete  default: fs=FAV(self)->fgh[0]; RZ(scfn(CALL2(FAV(fs)->valencefns[1],a,w,fs))); break;
 // obsolete  }
   R zero;
 }
 
 static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  RZ(w);
- A scastk=jt->sca; m=jt->lmon; jt->lmon=efflev(0L,v->h,w);  // stack level of any executing L:/S:, get level to use
+ A scastk=jt->sca; m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w);  // stack level of any executing L:/S:, get level to use
 // obsolete  GAT(x,INT,100,1,0); jt->scv=AV(x); jt->sca=x; jt->scn=0;   // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error
  GAT(x,INT,100,1,0); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
@@ -107,8 +107,8 @@ static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
 
 static DF2(jtscapco2){PROLOG(556);A x,z=0;I l,r;V*v=FAV(self); 
  RZ(a&&w); 
- A scastk=jt->sca; l=jt->lleft;  jt->lleft =efflev(1L,v->h,a);
- r=jt->lright; jt->lright=efflev(2L,v->h,w);
+ A scastk=jt->sca; l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
+ r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
  GAT(x,INT,100,1,0); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0]=# valid results
  ras(jt->sca); 
  x=levs2(a,w,self);

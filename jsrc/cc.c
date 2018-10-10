@@ -16,7 +16,7 @@
 
 static DF1(jtcut01){DECLF;A h,x;
  RZ(x=from(box(every(negate(shape(w)),0L,jtiota)),w));
- if(VGERL&sv->flag){h=sv->h; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
+ if(VGERL&sv->flag){h=sv->fgh[2]; R df1(x,*AAV(h));}else R CALL1(f1,x,fs);
 }    /* f;.0 w */
 
 #if 0  // special cases no longer used
@@ -63,11 +63,11 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
-  state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
  I wr=AR(w);  // rank of w
-// obsolete  if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h);}  // h points to gerunds, or 0 if not gerund u
+// obsolete  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h);}  // h points to gerunds, or 0 if not gerund u
 // obsolete  id=h?0:ID(fs); d=h?0:id==CBOX?1:2;   // d= 0: gerund u  1: <  2: other u   id is pseudochar of u, or 0 if gerund
  if(1>=AR(a))RZ(a=lamin2(zero,a));   // default list to be lengths starting at origin
  RZ(a=vib(a));  // audit for valid integers
@@ -231,7 +231,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 
 static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  RZ(a&&w&&self);
- sv=FAV(self); q=*AV(sv->g);
+ sv=FAV(self); q=*AV(sv->fgh[1]);
  an=AN(a); av=AAV(a); RELBASEASGN(a,a); ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV(x,BOX,an,1,0); xv=AAV(x);  // could be faux
@@ -292,7 +292,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); *za++=y;);             \
    R z;                                                                      \
   case CAT: case CATCO: case CAMP: case CAMPCO:                              \
-   if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){           \
+   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){           \
     GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                        \
     EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);               \
     R z;                                                                     \
@@ -343,13 +343,13 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
 
 static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx);
- n=IC(w); t=AT(w); m=*AV(sv->g); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
+ n=IC(w); t=AT(w); m=*AV(sv->fgh[1]); neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;
  RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==*AS(a),EVLENGTH);
  ap=PAV(a);
  if(!(equ(zero,SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
  vf=VAV(fs);
- if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
+ if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV(yy,INT,1+yn,1,0); yu=AV(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
@@ -423,9 +423,9 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
 
 static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  *zz=0; 
- fs=sv->f;
- RE(y=df1(zero,iden(VAV(fs)->f)));
- if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->g)),amp(fs,ds(COPE))); R 0;}
+ fs=sv->fgh[0];
+ RE(y=df1(zero,iden(VAV(fs)->fgh[0])));
+ if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
 }    /* pointer to identity element */
@@ -607,13 +607,13 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
-  state |= STATEHASGERUND; A h=sv->h; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
+  state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
 
  // Time to find the frets.  If a is the impossible type INT+LIT, a contains the frets already, in the single buffer (that means we are acting on behalf of Key /.)
  if(sv->id==CCUT){   // see if we are acting on behalf of /.  Fall through if not
-  pfx=IAV(sv->g)[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
+  pfx=IAV(sv->fgh[1])[0]; neg=(UI)pfx>>(BW-1); pfx&=1;  // neg=cut type is _1/_2; pfx=cut type is 1/_1
   if(a!=mark){  // dyadic forms
    if(((AN(a)-1)&(-n))<0){  // empty x, do one call on the entire w if y is non-empty
     if(state&STATEHASGERUND){A h=hv[0]; R CALL1(VAV(h)->valencefns[0],w,h);}
@@ -727,14 +727,14 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 // obsolete    break;
 // obsolete   case CAT: case CATCO: case CAMP: case CAMPCO:
 // scaf should take this under BOXATOP?
-// obsolete    if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){
+// obsolete    if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){
 // obsolete     GA(zz,m?BOX:B01,m,1,0); za=AAV(zz);
 // obsolete     EACHCUT(d=d?d-1:0; GA(z,wt,d*c,r,s); *AS(z)=d; MC(AV(z),id1==CBEHEAD?v1+k:v1,d*k); *za++=z;);
 // obsolete    }
 // obsolete    break;
   case CSLASH:
    {
-   VA2 adocv = vains(FAV(fs)->f,wt);  // qualify the operation, returning action routine and conversion info
+   VA2 adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
     GA(zz,zt,m*wcn,r,AS(w)); *AS(zz)=m; 
@@ -854,10 +854,10 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
      I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
- p=n=IC(w); wt=AT(w); k=*AV(sv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
+ p=n=IC(w); wt=AT(w); k=*AV(sv->fgh[1]); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
  if(a!=mark){  // dyadic forms
   if(!AN(a)&&n){  // empty x, do one call if y is non-empty
-   if(VGERL&sv->flag){h=sv->h; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->valencefns[0],w,h);}
+   if(VGERL&sv->flag){h=sv->fgh[2]; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->valencefns[0],w,h);}
    else R CALL1(f1,w,fs);
   }
   if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
@@ -869,7 +869,7 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
  // now v->byte vector of frets, sep=fret character
  ASSERT(n==IC(a),EVLENGTH);
  vf=VAV(fs);
- if(VGERL&sv->flag){h=sv->h; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
+ if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
  // count the frets
  switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
@@ -909,13 +909,13 @@ static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,s
    EACHCUT(GA(y,wt,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); *za++=y;);
    break;
   case CAT: case CATCO: case CAMP: case CAMPCO:
-   if(CBOX==ID(vf->f)&&(id1=ID(vf->g),id1==CBEHEAD||id1==CCTAIL)){
+   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){
     GA(z,m?BOX:B01,m,1,0); za=AAV(z);
     EACHCUT(d=d?d-1:0; GA(y,wt,d*c,r,s); *AS(y)=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);
    }
    break;
   case CSLASH:
-   vains(vaid(vf->f),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
+   vains(vaid(vf->fgh[0]),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
    if(ado){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(cv);
     GA(z,zt,m*c,r,s); *AS(z)=m; 
@@ -981,13 +981,13 @@ static A jtpartfscan(J jt,A a,A w,I cv,B pfx,C id,C ie){A z=0;B*av;I m,n,zt;
 DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     V *sv,*vv;VA2 adocv;
  RZ(a&&w);
- sv=FAV(self); gs=CFORK==sv->id?sv->h:sv->g; vv=VAV(gs); y=vv->f; fs=VAV(y)->g;  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
- p=wi=IC(w); wt=AT(w); k=*AV(vv->g); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
+ sv=FAV(self); gs=CFORK==sv->id?sv->fgh[2]:sv->fgh[1]; vv=VAV(gs); y=vv->fgh[0]; fs=VAV(y)->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
+ p=wi=IC(w); wt=AT(w); k=*AV(vv->fgh[1]); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;
  id=FAV(fs)->id;  // fs is f/id   where id is \ \.
-// obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->f),CSLASH==vv->id)){
+// obsolete  if((id==CBSLASH||id==CBSDOT)&&(vv=VAV(fv->fgh[0]),CSLASH==vv->id)){
   // if f is atomic/\ or atomic /\., set ado and cv with info for the operation
- if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->f)->f,wt);   // FAV(fs)->f is f/    FAV(FAV(fs)->f)->f is f
- else           adocv = vasfx(FAV(FAV(fs)->f)->f,wt); 
+ if(id==CBSLASH)adocv = vapfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt);   // FAV(fs)->fgh[0] is f/    FAV(FAV(fs)->fgh[0])->fgh[0] is f
+ else           adocv = vasfx(FAV(FAV(fs)->fgh[0])->fgh[0],wt); 
 // obsolete }
  if(SPARSE&AT(w)||!adocv.f)R jtspecialatoprestart(jt,a,w,self);  // if sparse w or nonatomic function, do it the long way
  if(a!=mark){   // dyadic case
@@ -1004,7 +1004,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
  zt=rtype(adocv.cv); zk=d*bp(zt);
- if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[pfx?0:wi-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->f))); if(z)R z;}
+ if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[pfx?0:wi-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)R z;}
  GA(z,zt,AN(w),r,s); zv=CAV(z);
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
@@ -1127,13 +1127,13 @@ static A jttesmat(J jt,A a,A w,A self,A p,B e){DECLF;A y,z,*zv,zz=0;C*u,*v,*v0,*
 static DF2(jttess2){A gs,p,y,z;I*av,n,t;
  PREF2(jttess2);
  RZ(a=tesa(a,w));   // expand x to canonical form
- av=AV(a); gs=VAV(self)->g; n=*AV(gs);
+ av=AV(a); gs=VAV(self)->fgh[1]; n=*AV(gs);
  RZ(p=tesos(a,w,n));  // outer shape of overall result, from frames
  if(DENSE&AT(w)&&2==AR(w)&&0<=av[2]&&0<=av[3]){  // matrix with nonreversed blocks
   RE(z=tesmatu(a,w,self,p,(B)(0>n)));   // try uniform-result code first
   if(!z)z=tesmat(a,w,self,p,(B)(0>n));  // try general  matrix code
   if(z&&!AN(z)){  // if result found, but empty, make result an empty with the type of the result of execution on the entire w
-   y=df1(w,VAV(self)->f); RESETERR;
+   y=df1(w,VAV(self)->fgh[0]); RESETERR;
    t=y?AT(y):B01;
    if(TYPESNE(t,AT(z)))GA(z,t,0L,AR(z),AS(z));
   }
@@ -1167,7 +1167,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 #define ZZFLAGWORD state
  I state;
  RZ(a=tesa(a,w));   // expand x to canonical form, with trailing axes-in-full deleted
- A gs=FAV(self)->g; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // set TAKE bit if code=3: we will shorten out-of-bounds args
+ A gs=FAV(self)->fgh[1]; n=IAV(gs)[0]; state=(~n)&STATETAKE;  // set TAKE bit if code=3: we will shorten out-of-bounds args
  I wr=AR(w); I wt=AT(w); // rank of w, type of w
  I *as=AS(a), *av=IAV(a), axisct=as[1];  // a-> shape of a, axisct=# axes in a, av->mv/size area
  // get shape of final result

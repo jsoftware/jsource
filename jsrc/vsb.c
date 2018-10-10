@@ -279,7 +279,7 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
   RZ(x=apv(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
-// obsolete   DO(c, j=v++->h%p; while(0<=hv[j])j=(1+j)%p; hv[j]=i;);
+// obsolete   DO(c, j=v++->fgh[2]%p; while(0<=hv[j])j=(1+j)%p; hv[j]=i;);
   DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
   fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
   hi=h%p;                               /* new hi wrt new sbh size      */
@@ -534,7 +534,7 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  n=jt->sbun; v=jt->sbuv; p=AN(jt->sbh);
  GATV(z,INT,n,1,0); zv=AV(z);
-// obsolete DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){j=(j+1)%p; ++k;} *zv++=k;);
+// obsolete DO(n, j=v++->fgh[2]%p; k=1; while(i!=(jt->sbhv)[j]){j=(j+1)%p; ++k;} *zv++=k;);
  DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){++j; if(j==p)j=0; ++k;} *zv++=k;);
  R z;
 }    /* # queries in hash table for each unique symbol */

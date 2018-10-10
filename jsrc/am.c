@@ -237,7 +237,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
 
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z;I sa,sw; B b;I at,ir,it,t,t1,wt;P*p;
- A ind=VAV(self)->f;
+ A ind=VAV(self)->fgh[0];
  RZ(a&&w&&ind);
  // ?t = underlying type of ?, s?=nonzero if sparse
  at=AT(a); sa=at&SPARSE; if(sa)at=DTYPE(at);
@@ -278,7 +278,7 @@ static DF2(amccv2){F2PREFIP;DECLF;
 }
 
 
-static DF1(mergn1){       R merge1(w,VAV(self)->f);}
+static DF1(mergn1){       R merge1(w,VAV(self)->fgh[0]);}
 static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
 static B ger(A w){A*wv,x;

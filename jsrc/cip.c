@@ -615,9 +615,9 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
 
 static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
  RZ(a&&w&&self);
- sv=FAV(self); fs=sv->f; gs=sv->g;
+ sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];
  if(B01&AT(a)&&AN(a)&&AN(w)&&CSLASH==ID(fs)&&(d=vaid(gs))&&
-     (c=vaid(FAV(fs)->f),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);
+     (c=vaid(FAV(fs)->fgh[0]),c==CSTARDOT||c==CPLUSDOT||c==CNE))R ipbx(a,w,c,d);
  r=lr(gs);
  R df2(a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));
 }
@@ -628,7 +628,7 @@ static F1(jtminors){A d;
  R drop(d,df2(one,w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
-static DF1(jtdet){DECLFG;A h=sv->h;I c,r,*s;
+static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;
  RZ(w);
  r=AR(w); s=AS(w);
  if(h&&1<r&&2==s[r-1]&&s[r-2]==s[r-1])R df1(w,h);
@@ -643,7 +643,7 @@ DF1(jtdetxm){R dotprod(irs1(w,0L,1L,jthead),det(minors(w),self),self);}
 F2(jtdot){A f,h=0;AF f2=jtdotprod;C c,d;
  ASSERTVV(a,w);
  if(CSLASH==ID(a)){
-  f=FAV(a)->f; c=ID(f); d=ID(w);
+  f=FAV(a)->fgh[0]; c=ID(f); d=ID(w);
   if(d==CSTAR){
    if(c==CPLUS )f2=jtpdt; 
    if(c==CMINUS)RZ(h=eval("[: -/\"1 {.\"2 * |.\"1@:({:\"2)"));

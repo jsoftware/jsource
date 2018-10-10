@@ -16,9 +16,9 @@ I jtfdep(J jt,A w){A f,g;I d=0,k;V*v;
  RZ(w);
  v=VAV(w);
  if(v->fdep)R v->fdep;  // for speed, use previous value if it has been calculated
- if(f=v->f) d=VERB&AT(f)?fdep(f):NOUN&AT(f)&&VGERL&v->flag?fdepger(f):0;
- if(g=v->g){k=VERB&AT(g)?fdep(g):NOUN&AT(g)&&VGERR&v->flag?fdepger(g):0; d=MAX(d,k);}
- if(CFORK==v->id){k=fdep(v->h); d=MAX(d,k);}
+ if(f=v->fgh[0]) d=VERB&AT(f)?fdep(f):NOUN&AT(f)&&VGERL&v->flag?fdepger(f):0;
+ if(g=v->fgh[1]){k=VERB&AT(g)?fdep(g):NOUN&AT(g)&&VGERR&v->flag?fdepger(g):0; d=MAX(d,k);}
+ if(CFORK==v->id){k=fdep(v->fgh[2]); d=MAX(d,k);}
  if(!jt->jerr)v->fdep=(UI4)(1+d);  //Save computed value for next time, but not if error; that would lose the error next time
  R 1+d;
 }    /* function depth:  1 + max depth of components */
@@ -61,9 +61,9 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
  v->localuse=0;  // clear the private field
  v->valencefns[0]    =f1?f1:jtdomainerr1;  /* monad C function */
  v->valencefns[1]    =f2?f2:jtdomainerr2;  /* dyad  C function */
- v->f     =fs;                  /* monad            */
- v->g     =gs;                  /* dyad             */      
- v->h     =hs;                  /* fork right tine or other auxiliary stuff */
+ v->fgh[0]     =fs;                  /* monad            */
+ v->fgh[1]     =gs;                  /* dyad             */      
+ v->fgh[2]     =hs;                  /* fork right tine or other auxiliary stuff */
  v->flag  =(UI4)flag;
  v->fdep  =0;                   /* function depth   */
  v->flag2 = (UI4)flag2;         // more flags
@@ -77,35 +77,35 @@ A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A 
 B nameless(A w){A f,g,h;C id;V*v;
  if(!w||NOUN&AT(w))R 1;
  v=FAV(w);
- id=v->id; f=v->f; g=v->g; h=v->h;
+ id=v->id; f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2];
  R !(id==CTILDE&&NAME&AT(f)) && nameless(f) && nameless(g) && (id==CFORK?nameless(h):1);
 }
 
 B jtprimitive(J jt,A w){A x=w;V*v;
  RZ(w);
  v=VAV(w);
- if(CTILDE==v->id&&NOUN&AT(v->f))RZ(x=fix(w));
- R!VAV(x)->f;
+ if(CTILDE==v->id&&NOUN&AT(v->fgh[0]))RZ(x=fix(w));
+ R!VAV(x)->fgh[0];
 }    /* 1 iff w is a primitive */
 
 
 // w is a conj, f C n
 // Return 1 if f is of the form <@:g  (or <@g when g has infinite rank)
-B jtboxatop(J jt,A w){RZ(w); R 1&boxat(FAV(w)->f,RMAX,RMAX,RMAX);}
+B jtboxatop(J jt,A w){RZ(w); R 1&boxat(FAV(w)->fgh[0],RMAX,RMAX,RMAX);}
 
 // x is a verb
 // Return if verb is of the form <@:g  (or <@g when g has rank >= input rank)
 // bit 0 for monad case, bit 1 for dyad
 I boxat(A x, I m, I l, I r){C c;V*v;
  if(!x)R 0;
- v=FAV(x); c=v->id;   // x->f, v->value, c=id of f
+ v=FAV(x); c=v->id;   // x->fgh[0], v->value, c=id of f
  if(!COMPOSE(c))R 0;  // Return if not @ @: & &:
- if(CBOX==ID(v->f)) {  // if u is <...
+ if(CBOX==ID(v->fgh[0])) {  // if u is <...
    if(c==CATCO) R 3; if(c==CAMPCO) R 1;  // @: is always good, and &: for monad
    I res = 0;
-   if(v->g&&VERB&AT(v->g)){
-    res |= FAV(v->g)->mr>=m;    // monad ok if rank big enough  for either @ or &
-    res |= (c==CAT)&&FAV(v->g)->lr>=l&&FAV(v->g)->rr>=r?2:0;  // dyad for @ only, if rank big enough
+   if(v->fgh[1]&&VERB&AT(v->fgh[1])){
+    res |= FAV(v->fgh[1])->mr>=m;    // monad ok if rank big enough  for either @ or &
+    res |= (c==CAT)&&FAV(v->fgh[1])->lr>=l&&FAV(v->fgh[1])->rr>=r?2:0;  // dyad for @ only, if rank big enough
    }
    R res;
  }
@@ -118,7 +118,7 @@ I boxat(A x, I m, I l, I r){C c;V*v;
 I atoplr(A w){
  if(!w)R 0;
  V *v=FAV(w);     // v->verb info, c=id of w
- C id = v->id;if(v->id==CAT||v->id==CATCO)id = FAV(v->g)->id;
+ C id = v->id;if(v->id==CAT||v->id==CATCO)id = FAV(v->fgh[1])->id;
  switch(id){
   case CLEFT: R JTINPLACEW;   // ...@[  ok to inplace W
   case CRIGHT: R JTINPLACEA;   // ...@]  ok to inplace A

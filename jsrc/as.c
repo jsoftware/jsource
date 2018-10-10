@@ -167,7 +167,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 // obsolete RESETRANK;
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  n=IC(w); 
- h=VAV(self)->h; hv=AAV(h); m=AN(h);
+ h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(drop(sc(i),w),hv[imod])); ++imod;);
  R ope(z);
@@ -183,7 +183,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
 
 #if 0  // obsolete
 static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
- fs=VAV(sv->f)->f; f2=VAV(fs)->valencefns[1];
+ fs=VAV(sv->fgh[0])->fgh[0]; f2=VAV(fs)->valencefns[1];
  r=AR(w)-1; n1=IC(w)-1; m=aii(w); t=AT(w); k=m*bp(t);
  RZ(z=ca(w)); zv=CAV(z)+k*n1;
  RZ(q=tail(w));
@@ -214,7 +214,7 @@ static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
 static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self);
  if(jt->rank&&jt->rank[1]<AR(w))R rank1ex(w,self,jt->rank[1],jtssg);
  RESETRANK; 
- fs=VAV(sv->f)->f; f2=VAV(fs)->valencefns[1];
+ fs=VAV(sv->fgh[0])->fgh[0]; f2=VAV(fs)->valencefns[1];
  n=IC(w); RELORIGINBR(wrel,w)
  if(DIRECT&AT(w)){RE(z=ssgu(w,self)); if(z)R z;}
  GATV(z,BOX,n,1,0); zv=n+AAV(z); 
@@ -244,7 +244,7 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
 #define ZZFLAGWORD state
  I state;  // init flags, including zz flags
 
- A fs=FAV(FAV(self)->f)->f; AF f2=FAV(fs)->valencefns[1]; // self = f/\.   FAV(self)->f = f/  FAV(FAV(self)->f)->f = f   fetch dyad for f
+ A fs=FAV(FAV(self)->fgh[0])->fgh[0]; AF f2=FAV(fs)->valencefns[1]; // self = f/\.   FAV(self)->fgh[0] = f/  FAV(FAV(self)->fgh[0])->fgh[0] = f   fetch dyad for f
  // Set BOXATOP if appropriate.  Since {:y is always the last cell, BOXATOP is allowed only when the rank of w is 1, meaning that
  // {:y is a single box, just like the other results.  Also require that w be boxed, lest we make the first z-cell invalid
  state = ((wr-2)>>(BW-1))&(AT(w)>>(BOXX-ZZFLAGBOXATOPX))&((FAV(fs)->flag2&VF2BOXATOP2)>>(VF2BOXATOP2X-ZZFLAGBOXATOPX));  // If rank OK, extract flag.  Rank cannot be 0.  Don't touch fs yet, since we might not loop
@@ -339,12 +339,12 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
 // obsolete  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
- y=FAV(self)->f; // y is f/     // obsolete id=vaid(VAV(y)->f); 
-// obsolete  if(2>n||!wn){if(vaid(VAV(y)->f)){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg
- if(2>n||!wn){if(vaid(FAV(y)->f)){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ y=FAV(self)->fgh[0]; // y is f/     // obsolete id=vaid(VAV(y)->fgh[0]); 
+// obsolete  if(2>n||!wn){if(vaid(VAV(y)->fgh[0])){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg
+ if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
- VA2 adocv = vasfx(FAV(y)->f,wt);  // analyze f
+ VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
 // obsolete  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
  if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
@@ -368,7 +368,7 @@ static F2(jtomask){A c,r,x,y;I m,n,p;
 static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  n=IC(x);
- h=VAV(self)->h; hv=AAV(h); m=AN(h);
+ h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])); ++imod;);
  R ope(z);
@@ -378,7 +378,7 @@ static AS2(jtoutfix, eachl(omask(a,w),w,atop(fs,ds(CPOUND))),0117)
 
 static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
  F2RANK(0,RMAX,jtofxinv,self);
- fs=FAV(self)->f; f=FAV(fs)->f; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
+ fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||(c==CEQ||c==CNE)&&t&B01))R outfix(a,w,self);
  z=irs2(df1(w,fs),df2(a,w,bslash(fs)),VFLAGNONE, RMAX,-1L,c==CPLUS?(AF)jtminus:v->valencefns[1]);
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;
@@ -387,7 +387,7 @@ static DF2(jtofxinv){A f,fs,z;C c;I t;V*v;
 static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
- f=FAV(self)->f; x=FAV(f)->f; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->f):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
+ f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[0]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);
  if(-1<=k){d=m-c;     RZ(i=apv(d,0L, 1L)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
@@ -426,7 +426,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:
    f1=jtsscan; 
-   f=v->f; id=ID(f); if(id==CBDOT){f=VAV(f)->f; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
+   f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[0]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
    switch(id){
     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
      f2=jtofxinv;   break;

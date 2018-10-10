@@ -123,7 +123,7 @@ static F1(jttreach){R troot(scc('0'),graft(ope(every(w,0L,jttrr))));}
 static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  RZ(w);
  if(AT(w)&NOUN+NAME){RETF(tleaf(lrep(w)));}
- v=FAV(w); id=v->id; fl=v->flag; fs=v->f; gs=v->g; hs=v->h; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ v=FAV(w); id=v->id; fl=v->flag; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL){RETF(trr(hs));}
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
  m=!!fs+(gs||ex)+(id==CFORK||xop&&hs);

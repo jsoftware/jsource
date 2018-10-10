@@ -390,7 +390,7 @@ static UC vaptr[256]={
 // return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
 C jtvaid(J jt,A w){A x;C c;I k;V*v;
  v=FAV(w); c=v->id;
- if(c==CBDOT){x=v->f; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),16<=k&&k<=31))c=(C)k;}
+ if(c==CBDOT){x=v->fgh[0]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),16<=k&&k<=31))c=(C)k;}
  R vaptr[(UC)c]?c:0;
 }
 
@@ -422,7 +422,7 @@ A jtcvz(J jt,I cv,A w){I t;
    *cv=VD;                                     \
   }else if(t&=NUMERIC+SBT){                     \
    p=(va+vaptr[(UC)id])->ptr+(t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6);  \
-   *ado=p->f; *cv=p->cv;                       \
+   *ado=p->fgh[0]; *cv=p->cv;                       \
   }else *ado=0;                                \
  }
 // Routine to lookup function/flags
@@ -780,7 +780,7 @@ DF2(jtsumattymes1){
  I it=MAX(AT(a),AT(w));  // if input types are dissimilar, convert to the larger
  // if an argument is empty, sparse, has cell-rank 0, or not a fast arithmetic type, revert to the code for f/@:g atomic
  if(((-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))<0) { // test for all unusual cases
-  R rank2ex(a,w,FAV(self)->f,MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
+  R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
  // We can handle it here, and both ranks are at least 1.
 
@@ -955,12 +955,12 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
- if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->h:sv->g),b?sv->g:sv->f);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
+ if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->fgh[2]:sv->fgh[1]),b?sv->fgh[1]:sv->fgh[0]);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
 // obsolete  zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
- if(CFORK==sv->id){fs=sv->g; gs=sv->h;}else{fs=sv->f; gs=sv->g;}
- y=FAV(fs)->f; c=ID(y); d=ID(gs);
+ if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
+ y=FAV(fs)->fgh[0]; c=ID(y); d=ID(gs);
  if(c==CPLUS){
   if(at&B01&&wt&B01&&1==n&&(0==(zn&(SZI-1))||!SY_ALIGN)&&strchr(sumbf,d))R sumatgbool(a,w,d);
   if(d==CSTAR){
@@ -1134,7 +1134,7 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
    if((t&FL)&&!(x&(VBB|VII|VDD|VZZ))){x = (x&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
    *cv = x;
   }
-  *ado = p->f;   // finish getting the output values - cv was done above
+  *ado = p->fgh[0];   // finish getting the output values - cv was done above
  }else{
   // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
   b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
@@ -1155,8 +1155,8 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
     // If not = ~:, it had better be a symbol operation.
     ASSERT(at&SBT&&wt&SBT,EVDOMAIN);
     p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
-    ASSERT(p->f,EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
-    *ado=p->f; *cv=p->cv;  // return the values read
+    ASSERT(p->fgh[0],EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
+    *ado=p->fgh[0]; *cv=p->cv;  // return the values read
   }
  }
  R 1;

@@ -23,7 +23,7 @@ static DF2(jtunquote){A z;
  JATTN;
  V *v=FAV(self);  // V block for this V/A/C reference
  I callstackx=jt->callstacknext; // Remember where our stack frame starts.  We may add an entry; execution may add more
- A thisname=v->f; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
+ A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
  if(thisname){
   // normal path for named functions
   if(AM(self)==jt->modifiercounter&&v->localuse){
@@ -50,9 +50,9 @@ static DF2(jtunquote){A z;
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
-  thisname=v->g;  // get the actual name
+  thisname=v->fgh[1];  // get the actual name
   explocale=0;  // flag no explicit locale
-  fs=v->h;  // point to the actual executable
+  fs=v->fgh[2];  // point to the actual executable
   ASSERT(fs,EVVALUE); // make sure the name's value is given also
   ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
  }
@@ -149,7 +149,7 @@ static DF2(jtunquote){A z;
 #else
 
 where is call stack reset?
-// obsolete aa=v->f; RE(e=syrd(aa,&g));
+// obsolete aa=v->fgh[0]; RE(e=syrd(aa,&g));
  oldn=jt->curname; jt->curname=aa;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
@@ -173,12 +173,12 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  RE(0);
  JATTN;
  v=FAV(self);
-// obsolete aa=v->f; RE(e=syrd(aa,&g));
+// obsolete aa=v->fgh[0]; RE(e=syrd(aa,&g));
  A jtg = jt->global;  // fetch current locale
- aa=v->f; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
+ aa=v->fgh[0]; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
  RE(e=syrdfromloc(aa,g));   // finish looking up name, which can be undefined (0 return) or error (0 return with error set)
  if((I)g&1)g=jtg;  // if not locative, default to current locale
- fs=v->h?v->h:e?e->val:0;  /* see namerefop() re v->h */  // fs is the routine to call; 0 if name undefined
+ fs=v->fgh[2]?v->fgh[2]:e?e->val:0;  /* see namerefop() re v->fgh[2] */  // fs is the routine to call; 0 if name undefined
  oldn=jt->curname; jt->curname=aa;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
  ASSERT(fs,EVVALUE); 

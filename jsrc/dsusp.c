@@ -202,7 +202,7 @@ A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
 }
 
 DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
- sv=FAV(self); t=sv->f; 
+ sv=FAV(self); t=sv->fgh[0]; 
  RZ(d=deba(DCCALL,a,w,self));
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);

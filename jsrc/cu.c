@@ -108,12 +108,12 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  I flag2=FAV(w)->flag2&VF2WILLOPEN;
  switch(v->id){
   case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
-  case CFORK: c=ID(v->h); /* fall thru */
+  case CFORK: c=ID(v->fgh[2]); /* fall thru */
   case CAMP:  
    u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
-   if(b1=CSLASH==(uid=u->id)){x=u->f; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
-   b=CBDOT==uid&&(x=u->f,!AR(x)&&INT&AT(x)&&(m=*AV(x),16<=m&&m<32));   // b if f=m b. where m is atomic int 16<=m<=32
-   if(CIOTA==ID(v->g)&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->f)){   // w is  {a.&i.  or  (a. i. ][)}
+   if(b1=CSLASH==(uid=u->id)){x=u->fgh[0]; if(AT(x)&VERB){u=FAV(x);uid=u->id;}else uid=0;}   // cases: f&.{f1&g1 or (f1 g1 h1)}  b1=0    f/&.{f1&g1 or (f1 g1 h1)}   b1=1
+   b=CBDOT==uid&&(x=u->fgh[0],!AR(x)&&INT&AT(x)&&(m=*AV(x),16<=m&&m<32));   // b if f=m b. where m is atomic int 16<=m<=32
+   if(CIOTA==ID(v->fgh[1])&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
     f1=b&& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f2=b&&!b1?(AF)jtbitwisechar:!b1&&(uid==CMAX||uid==CMIN)?(AF)jtcharfn2:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
     flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok

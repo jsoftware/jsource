@@ -495,7 +495,7 @@ F1(jtbitadv){A x;V*v;
   case CNE:        R BITDEF2(jtbitne);
   case CFROM:      R BITDEF2(jtbitfrom);
   case CSLASH:
-   switch(ID(v->f)){
+   switch(ID(v->fgh[0])){
     default:       ASSERT(0,EVDOMAIN);
     case CEQ:      R BITDEF1(jtbitsleq);
     case CPLUS:    R BITDEF1(jtbitslplus);
@@ -504,7 +504,7 @@ F1(jtbitadv){A x;V*v;
     case CNE:      R BITDEF1(jtbitslne);
    }
   case CBSLASH:
-   x=v->f; ASSERT(CSLASH==ID(x),EVDOMAIN); x=VAV(x)->f;
+   x=v->fgh[0]; ASSERT(CSLASH==ID(x),EVDOMAIN); x=VAV(x)->fgh[0];
    switch(ID(x)){
     default:       ASSERT(0,EVDOMAIN);
     case CSTARDOT: R BITDEF1(jtbitscanand);

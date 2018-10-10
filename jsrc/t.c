@@ -187,7 +187,7 @@ B jtpinit(J jt){A t;C*s;
 
 // modify the BOX verb so that it is flagged BOXATOP (for result purposes), with a g field of ].  Result verbs will
 // treat it as <@], but normal processing as <
-FAV(ds(CBOX))->flag2 |= VF2BOXATOP1; FAV(ds(CBOX))->g=ds(CRIGHT);
+FAV(ds(CBOX))->flag2 |= VF2BOXATOP1; FAV(ds(CBOX))->fgh[1]=ds(CRIGHT);
 // the verbs (all monads) that open their operand are flagged so that their compounds can also be flagged
 FAV(ds(CSEMICO))->flag2 |= VF2WILLOPEN|VF2USESITEMCOUNT;
 FAV(ds(COPE))->flag2 |= VF2WILLOPEN;

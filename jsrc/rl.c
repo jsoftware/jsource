@@ -226,7 +226,7 @@ static F1(jtlnoun){I t;
 
 static A jtlsymb(J jt,C c,A w){A t;C buf[20],d,*s;I*u;V*v=FAV(w);
  if(VDDOP&v->flag){
-  u=AV(v->h); s=buf; 
+  u=AV(v->fgh[2]); s=buf; 
   *s++=' '; *s++='('; s+=sprintf(s,FMTI,*u); spellit(CIBEAM,s); s+=2; s+=sprintf(s,FMTI,u[1]); *s++=')';
   RZ(t=str(s-buf,buf)); 
  }else RZ(t=spella(w));
@@ -247,9 +247,9 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I n;V*v;
  n=AN(a); av=AAV(a); RELBASEASGN(a,a); 
  vb=VERB==AT(w); v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
- if(1<=n){f=AVR(0); t=v->f; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||id==CFORK&&NOUN&AT(t)&&lp(f);}
- if(2<=n){g=AVR(1); t=v->g; c=ID(t); gt=vb    ?c==CHOOK||c==CFORK:lp(g);}
- if(3<=n){h=AVR(2); t=v->h; c=ID(t); ht=vb&&!b?c==CHOOK          :lp(h);}
+ if(1<=n){f=AVR(0); t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||id==CFORK&&NOUN&AT(t)&&lp(f);}
+ if(2<=n){g=AVR(1); t=v->fgh[1]; c=ID(t); gt=vb    ?c==CHOOK||c==CFORK:lp(g);}
+ if(3<=n){h=AVR(2); t=v->fgh[2]; c=ID(t); ht=vb&&!b?c==CHOOK          :lp(h);}
  switch(!b?id:2==n?CHOOK:CFORK){
   case CADVF:
   case CHOOK:
@@ -265,7 +265,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I n;V*v;
    RZ(u[4]=h=CALL2(jt->lcp,ht,             h,0)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
    R raze(y);
   default:
-   t0=CALL2(jt->lcp,ft||NOUN&AT(v->f)&&!(VGERL&v->flag)&&lp(f),f,0);
+   t0=CALL2(jt->lcp,ft||NOUN&AT(v->fgh[0])&&!(VGERL&v->flag)&&lp(f),f,0);
    t1=lsymb(id,w);
    y=over(t0,laa(t0,t1)?over(chr[' '],t1):t1);
    if(1==n)R y;
@@ -275,7 +275,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I n;V*v;
 
 static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
  RZ(y=unparsem(one,w));
- n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->f));
+ n=AN(y); v=AAV(y); RZ(x=lrr(VAV(w)->fgh[0]));
  if(2>n||2==n&&1==AN(v[0])&&':'==*CAV(v[0])){
   if(!n)R over(x,str(5L," : \'\'"));
   y=lrr(v[2==n]);
@@ -298,7 +298,7 @@ static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  // If noun, return the linear rep of the noun.  If name, use bare string form of the name UNLESS the name is also flagged as a noun - then treat as a noun  (used by ".@'name')
  if(AT(w)&NAME){RZ(t=sfn(0,w)); if(!(AT(w)&NOUN))R t; w=t;}
  if(AT(w)&NOUN)R lnoun(w);
- v=VAV(w); id=v->id; fs=v->f; gs=v->g; hs=v->h; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ v=VAV(w); id=v->id; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
  m=!!fs+(gs&&id!=CBOX)+(id==CFORK)+(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);

@@ -146,7 +146,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   // Here there are cells to execute on.  Collect ATOP flags
 
   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->f; f1=FAV(fs)->valencefns[0];}
+  while(FAV(fs)->flag2&VF2RANKONLY1){fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];}
 
   while(1){  // loop collecting ATOPs
    I fstate=(FAV(fs)->flag2&(VF2BOXATOP1|VF2ATOPOPEN1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
@@ -156,13 +156,13 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    if(fstate&ZZFLAGATOPOPEN1){
     // @> &> &.>
     //  Advance to the f of f@>
-    fs=FAV(fs)->f; f1=FAV(fs)->valencefns[0];
+    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
    }else{
     // <@: <@ <& <&:
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
     // Advance fs to the g of <@g
-    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f1=FAV(fs)->valencefns[0];
+    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f1=FAV(fs)->valencefns[0];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }
@@ -553,23 +553,23 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
   // elide the execution is when BOXATOP occurs at the first node, i.e. for an each that is not boxed
 
   // RANKONLY verbs contain an invalid f1 pointer (it was used to get to a call to here).  We have to step over the RANKONLY to get to what we can execute
-  while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->f; f2=FAV(fs)->valencefns[1];}
+  while(FAV(fs)->flag2&VF2RANKONLY2){fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];}
 
   while(1){  // loop collecting ATOPs
    I fstate=(FAV(fs)->flag2&(VF2BOXATOP2|VF2ATOPOPEN2A|VF2ATOPOPEN2W))>>(VF2BOXATOP2X-ZZFLAGBOXATOPX);  // extract <@ and @> status bits from f
    if(fstate&state||!fstate)break;  // If this f overlaps with old, or it's not a flag-only node, we have to stop
 // obsolete    // Skip over u"r forms at the beginning, so that u"r can leave fs pointing there and thus pick up razeflags attached to it
-// obsolete    if(!fstate){if(state|(~FAV(fs)->flag2&VF2RANKONLY2))break; fs=FAV(fs)->f; f2=FAV(fs)->valencefns[1]; continue;}  // If no <> flags, it's a processing node, and we have to stop.  Exception: u"0 at beginning.  Here, all u"r must be u"0
+// obsolete    if(!fstate){if(state|(~FAV(fs)->flag2&VF2RANKONLY2))break; fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1]; continue;}  // If no <> flags, it's a processing node, and we have to stop.  Exception: u"0 at beginning.  Here, all u"r must be u"0
    if(fstate&ZZFLAGATOPOPEN2W){
     // @> &> &.>
     //  Advance to the f of f@>
-    fs=FAV(fs)->f; f2=FAV(fs)->valencefns[1];
+    fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];
    }else{
     // <@: <@ <& <&:
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
     // Advance fs to the g of <@g
-    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->h:FAV(fs)->g; f2=FAV(fs)->valencefns[1];
+    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f2=FAV(fs)->valencefns[1];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }
@@ -720,16 +720,16 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
 }
 
 
-static DF1(cons1a){R FAV(self)->f;}
-static DF2(cons2a){R FAV(self)->f;}
+static DF1(cons1a){R FAV(self)->fgh[0];}
+static DF2(cons2a){R FAV(self)->fgh[0];}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){V*sv=FAV(self);
  RZ(w);
- I mr; efr(mr,AR(w),*AV(sv->h));
+ I mr; efr(mr,AR(w),*AV(sv->fgh[2]));
  R rank1ex(w,self,mr,cons1a);
 }
-static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->h);
+static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->fgh[2]);
  RZ(a&&w);
  I lr2,rr2; efr(lr2,AR(a),v[1]); efr(rr2,AR(w),v[2]);
  R rank2ex(a,w,self,AR(a),AR(w),lr2,rr2,cons2a);
@@ -738,30 +738,30 @@ static DF2(cons2){V*sv=FAV(self);I*v=AV(sv->h);
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass that through.
 // If inplacing is allowed here, pass that on to irs.  It will see whether the action verb can support inplacing.
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF1(rank1i){DECLF;A h=sv->h;I*v=AV(h); R irs1(w,fs,*v,f1);}
-static DF2(rank2i){DECLF;A h=sv->h;I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
+static DF1(rank1i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs1(w,fs,*v,f1);}
+static DF2(rank2i){DECLF;A h=sv->fgh[2];I*v=AV(h); R irs2(a,w,fs,v[1],v[2],f2);}
 
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF1(rank1){DECLF;A h=sv->h;I m,*v=AV(h),wr;
+static DF1(rank1){DECLF;A h=sv->fgh[2];I m,*v=AV(h),wr;
  RZ(w);
  wr=AR(w); efr(m,wr,v[0]);
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank
  while(FAV(fs)->flag2&VF2RANKONLY1){
-  h=FAV(fs)->h; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
-  m=hm; fs=FAV(fs)->f; f1=FAV(fs)->valencefns[0];
+  h=FAV(fs)->fgh[2]; I hm=AV(h)[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+  m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
  }
  R m<wr?rank1ex(w,fs,m,f1):CALL1(f1,w,fs);
 }
 // Version for rank 0.  Call rank1ex0, pointing to the u"r so that rank1ex0 gets to look at any razeflags attached to u"r
-static DF1(jtrank10atom){ A fs=FAV(self)->f; R (FAV(fs)->valencefns[0])(jt,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
+static DF1(jtrank10atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[0])(jt,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF1(jtrank10){R jtrank1ex0(jt,w,self,jtrank10atom);}  // pass inplaceability through.
 
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // THIS SUPPORTS INPLACING: NOTHING HERE MAY DEREFERENCE jt!!
-static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
+static DF2(rank2){DECLF;A h=sv->fgh[2];I ar,l=AV(h)[1],r=AV(h)[2],wr;
  RZ(a&&w);
  ar=AR(a); efr(l,ar,l);
  wr=AR(w); efr(r,wr,r);
@@ -770,23 +770,23 @@ static DF2(rank2){DECLF;A h=sv->h;I ar,l=AV(h)[1],r=AV(h)[2],wr;
  // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
  // This may lead to error until we support multiple fill neighborhoods
   while(FAV(fs)->flag2&VF2RANKONLY2){
-   h=FAV(fs)->h; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+   h=FAV(fs)->fgh[2]; I hlr=AV(h)[1]; I hrr=AV(h)[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
    if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
     if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
     llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
    }
    // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
-   fs=FAV(fs)->f; f2=FAV(fs)->valencefns[1];   // advance to the new function
+   fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
   }
 // obsolete   I llr=VAV(fs)->lr, lrr=VAV(fs)->rr;  // fetch ranks of verb we are going to call
 // obsolete   // if the verb we are calling is another u"n, we can skip coming through here a second time & just go to the f2 for the nested rank
 // obsolete   // should move this to before runtime
-// obsolete   if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->f; f2=VAV(fs)->valencefns[1];}
+// obsolete   if(f2==rank2&&!(AT(a)&SPARSE||AT(w)&SPARSE)){fs = VAV(fs)->fgh[0]; f2=VAV(fs)->valencefns[1];}
   R rank2ex(a,w,fs,llr,lrr,l,r,f2);
  }else R CALL2(f2,a,w,fs);  // pass in verb ranks to save a level of rank processing if not infinite.  Preserves inplacing
 }
 // Version for rank 0.  Call rank1ex0, pointing to the u"r so that rank1ex0 gets to look at any razeflags attached to u"r
-static DF2(jtrank20atom){ A fs=FAV(self)->f; R (FAV(fs)->valencefns[1])(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
+static DF2(jtrank20atom){ A fs=FAV(self)->fgh[0]; R (FAV(fs)->valencefns[1])(jt,a,w,fs);}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop
 static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceability through.
 
 
@@ -833,7 +833,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f@:g"1 1 where f and g are known atomic
    I isfork=av->id==CFORK;
-   if(FAV(FAV(isfork?av->g:av->f)->f)->id==CPLUS && FAV(isfork?av->h:av->g)->id==CSTAR) {
+   if(FAV(FAV(isfork?av->fgh[1]:av->fgh[0])->fgh[0])->id==CPLUS && FAV(isfork?av->fgh[2]:av->fgh[1])->id==CSTAR) {
     // +/@:*"1 1 or ([: +/ *)"1 1 .  Use special rank-1 routine.  It supports IRS, but not inplacing (fslashatg didn't inplace either)
     f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2;  // switch to new routine, which supports IRS
    }

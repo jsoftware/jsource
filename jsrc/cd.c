@@ -8,7 +8,7 @@
 
 static B jtiscons(J jt,A w){A x;V*v; 
  if(!w)R 0;
- v=VAV(w); x=v->f;
+ v=VAV(w); x=v->fgh[0];
  R CQQ==v->id&&NOUN&AT(x)&&!AR(x);
 }
 
@@ -20,11 +20,11 @@ static I jtispoly(J jt,A w){A e,f,g,h,x,y;B nf,ng,vf,vg;C c,id;I k,m,n,t;V*v;
  if(id==CFCONS||iscons(w))R 1;
  if(strchr(ispoly1,id))R 2;
  if(id==CSTARCO)R 3;
- f=v->f; nf=f&&NOUN&AT(f); vf=!nf; 
- g=v->g; ng=g&&NOUN&AT(g); vg=!ng; x=nf?f:g; t=x?AT(x):0; h=nf?g:f; c=h?ID(h):0;
+ f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=!nf; 
+ g=v->fgh[1]; ng=g&&NOUN&AT(g); vg=!ng; x=nf?f:g; t=x?AT(x):0; h=nf?g:f; c=h?ID(h):0;
  if(id==CFORK){
   if(!(vf&&vg))R 0;
-  m=ispoly(f); n=ispoly(v->h);
+  m=ispoly(f); n=ispoly(v->fgh[2]);
   switch(m&&n?ID(g):0){
    case CPLUS: R MAX(m,n);
    case CSTAR: R m+n-1;
@@ -74,30 +74,30 @@ static F1(jtfpolyc){A b;B*bv;I m,n;
 
 static A jtfpoly(J jt,I n,A f){I m=0>n?1:1+n; RZ(f); R fpolyc(df1(IX(m),tdot(f)));}
 
-static F1(jtfnegate){V*v; RZ(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->f)?v->g:atop(ds(CMINUS),w);}
+static F1(jtfnegate){V*v; RZ(w); v=VAV(w); R CAT==v->id&&CMINUS==ID(v->fgh[0])?v->fgh[1]:atop(ds(CMINUS),w);}
 
 static F2(jtfplus){
  RZ(a&&w);
- if(iscons(a)&&equ(VAV(a)->f,zero))R w;
- if(iscons(w)&&equ(VAV(w)->f,zero))R a;
+ if(iscons(a)&&equ(VAV(a)->fgh[0],zero))R w;
+ if(iscons(w)&&equ(VAV(w)->fgh[0],zero))R a;
  R folk(a,ds(CPLUS),w);
 }
 
 static F2(jtfminus){
  RZ(a&&w);
- if(iscons(a)&&equ(VAV(a)->f,zero))R fnegate(w);
- if(iscons(w)&&equ(VAV(w)->f,zero))R a;
+ if(iscons(a)&&equ(VAV(a)->fgh[0],zero))R fnegate(w);
+ if(iscons(w)&&equ(VAV(w)->fgh[0],zero))R a;
  R folk(a,ds(CMINUS),w);
 }
 
 static F2(jtftymes){A x,y;B b,c;I k;
  RZ(a&&w);
- b=iscons(a); x=VAV(a)->f;
- c=iscons(w); y=VAV(w)->f;
- if(CFORK==ID(w)&&NOUN&AT(y))R ftymes(a,folk(qq(y,ainf),VAV(w)->g,VAV(w)->h));
+ b=iscons(a); x=VAV(a)->fgh[0];
+ c=iscons(w); y=VAV(w)->fgh[0];
+ if(CFORK==ID(w)&&NOUN&AT(y))R ftymes(a,folk(qq(y,ainf),VAV(w)->fgh[1],VAV(w)->fgh[2]));
  if(b&&AT(x)&B01+INT){k=i0(x); if(-1<=k&&k<=1)R !k?a:0<k?w:fnegate(w);}
  if(c&&AT(y)&B01+INT){k=i0(y); if(-1<=k&&k<=1)R !k?w:0<k?a:fnegate(a);}
- if(b&&CFORK==ID(w)&&iscons(y))R ftymes(qq(tymes(x,VAV(y)->f),zero),VAV(w)->h);
+ if(b&&CFORK==ID(w)&&iscons(y))R ftymes(qq(tymes(x,VAV(y)->fgh[0]),zero),VAV(w)->fgh[2]);
  R c?folk(w,ds(CSTAR),a):folk(a,ds(CSTAR),w);
 }
 
@@ -135,8 +135,8 @@ static F1(jticube){R atco(eval("* =/~@(i.@$)"),w);}
 static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  RZ(w);
  v=VAV(w);
- f=v->f; nf=1&&NOUN&AT(f);
- g=v->g; ng=1&&NOUN&AT(g);
+ f=v->fgh[0]; nf=1&&NOUN&AT(f);
+ g=v->fgh[1]; ng=1&&NOUN&AT(g);
  h=nf?g:f; id=ID(h); x=nf?f:g; 
  if(!(!AR(x)||id==CPOLY))R 0;
  switch(id){
@@ -175,8 +175,8 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
 static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
  RZ(w);
  v=VAV(w); id=v->id;
- f=v->f; nf=f&&NOUN&AT(f); vf=f&&!nf;
- g=v->g; ng=g&&NOUN&AT(g); vg=g&&!ng;
+ f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;
+ g=v->fgh[1]; ng=g&&NOUN&AT(g); vg=g&&!ng;
  if(id==CAMP&&nf!=ng)R diffamp0(w);
  switch(id){
   case CLE:
@@ -219,7 +219,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
    if(vf&&vg){
     p=ispoly(f); q=ispoly(g);
     if(p&&q)R dpoly(df1(IX(1+(p-1)*(q-1)),tdot(w)));
-    if(!(dg=diff0(g)))R A0; if(!(df=diff0(f)))R A0; v=VAV(df); x=v->f; 
+    if(!(dg=diff0(g)))R A0; if(!(df=diff0(f)))R A0; v=VAV(df); x=v->fgh[0]; 
     if(CQQ!=v->id)R ftymes(dg,atop(df,g));
     switch(CQQ==v->id&&AT(x)&B01+INT?i0(x):9){
      case 0:      R df;
@@ -240,7 +240,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
    }
    break;
   case CFORK:
-   h=v->h;
+   h=v->fgh[2];
    if(NOUN&AT(f))R diff0(folk(qq(f,zero),g,h));
    if(CCAP==ID(f))R diff0(atco(g,h));
    p=ispoly(f); if(!(df=diff0(f)))R A0;
@@ -268,8 +268,8 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
 static F1(jtintgamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  RZ(w);
  v=VAV(w);
- f=v->f; nf=1&&NOUN&AT(f);  // nf means f is a noun, ng means g is a noun
- g=v->g; ng=1&&NOUN&AT(g);
+ f=v->fgh[0]; nf=1&&NOUN&AT(f);  // nf means f is a noun, ng means g is a noun
+ g=v->fgh[1]; ng=1&&NOUN&AT(g);
  h=nf?g:f; id=ID(h); x=nf?f:g; // h is the verb operand, x is the noun
  if(!(!AR(x)||id==CPOLY))R A0;  // give up if noun is not an atom, except for p.
  switch(id){
@@ -336,7 +336,7 @@ static F2(jtintgatop){A df,f=a,g=w,q,x,y;I m,n;V*v;
  v=VAV(g);
  if(m&&equ(take(sc(-m),one),df1(IX(m),tdot(f)))){  /* ^&m @ g */
   if(CLOG==v->id)R 1==m?ds(CRIGHT):2==m?intg0(g):eva(sc(m-1),"(] * ^&x@^.) - x&* @(^&(x-1)@^. d. _1)");
-  if(CAMP==v->id&&CCIRCLE==ID(v->g)&&(y=v->f,!AR(y)&&equ(y,floor1(y)))){
+  if(CAMP==v->id&&CCIRCLE==ID(v->fgh[1])&&(y=v->fgh[0],!AR(y)&&equ(y,floor1(y)))){
    if(2>=m)R 1==m?ds(CRIGHT):intgamp0(g);
    switch(i0(y)){
     case 1: R eva(sc(m-1),"%&(-x )@(^&(x-1)@(1&o.) * 2&o.) + ((x-1)%x)&*@(^&(x-2)@(1&o.) d. _1)");
@@ -355,8 +355,8 @@ static F2(jtintgtymes){A f=a,g=w;
 static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
  RZ(w);
  id=ID(w); v=VAV(w);
- f=v->f; nf=f&&NOUN&AT(f); if(vf=f&&!nf)fv=VAV(f);
- g=v->g; ng=g&&NOUN&AT(g); if(vg=g&&!ng)gv=VAV(g);
+ f=v->fgh[0]; nf=f&&NOUN&AT(f); if(vf=f&&!nf)fv=VAV(f);
+ g=v->fgh[1]; ng=g&&NOUN&AT(g); if(vg=g&&!ng)gv=VAV(g);
  if(id==CAMP&&nf!=ng)R intgamp0(w);
  switch(id){
   case CLE:       R ipoly(v2(-1L, 1L));
@@ -366,7 +366,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
   case CNOT:      R ipoly(v2( 1L,-1L));
   case CMINUS:    R ipoly(v2( 0L,-1L));
   case CPLUSCO:   R ds(CSTARCO);
-  case CFCONS:    R amp(v->h,ds(CSTAR));
+  case CFCONS:    R amp(v->fgh[2],ds(CSTAR));
   case CSTARCO:   R ipoly(over(v2(0L,0L),one));
   case CHALVE:    R ipoly(over(zero,scf((D)0.5)));
   case CCIRCLE:   R ipoly(over(zero,scf(PI    )));
@@ -408,7 +408,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
    }
    break;
   case CFORK:
-   h=v->h; 
+   h=v->fgh[2]; 
    if(NOUN&AT(f))R intg0(folk(qq(f,zero),g,h));
    dh=intg0(h); n=ispoly(h);
    df=intg0(f); m=ispoly(f);
@@ -421,7 +421,7 @@ static F1(jtintg0){A df,dh,f,g,h;B nf,ng,vf,vg;C id;I m,n,p,q;V*fv,*gv,*v;
  R 0;
 }
 
-static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->f),v->g));}
+static DF1(jtddot1){V*v=VAV(self); R df1(w,ddot(fix(v->fgh[0]),v->fgh[1]));}
 
 F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
  RZ(a&&w);
@@ -446,8 +446,8 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
 static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
  RZ(w);
  v=VAV(w);
- f=v->f; nf=1&&NOUN&AT(f);
- g=v->g; ng=1&&NOUN&AT(g);
+ f=v->fgh[0]; nf=1&&NOUN&AT(f);
+ g=v->fgh[1]; ng=1&&NOUN&AT(g);
  h=nf?g:f; x=nf?f:g;
  switch(ID(h)){
   case CROT:
@@ -464,7 +464,7 @@ static F1(jtdiffamp){A f,g,h,x,y;B nf,ng;V*v;
    if(!AR(x)&&(x=pcvt(INT,x),INT&AT(x)))R dpoly(df1(IX(1+*AV(x)),tdot(w)));
    break;
   case CFIT:
-   if(nf&&1>=AR(x)&&(y=VAV(h)->f,CPOLY==ID(y)))R dpoly(df1(IX(IC(x)),tdot(w)));
+   if(nf&&1>=AR(x)&&(y=VAV(h)->fgh[0],CPOLY==ID(y)))R dpoly(df1(IX(IC(x)),tdot(w)));
   }
   R A0;
 }
@@ -473,9 +473,9 @@ static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=VAV(w); id=v->id; r=v->mr;
- f=v->f; nf=f&&NOUN&AT(f); vf=f&&!nf;
- g=v->g; ng=g&&NOUN&AT(g); vg=g&&!ng;
- if(nf&&id==CFORK)R diff(folk(qq(f,ainf),g,v->h));
+ f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;
+ g=v->fgh[1]; ng=g&&NOUN&AT(g); vg=g&&!ng;
+ if(nf&&id==CFORK)R diff(folk(qq(f,ainf),g,v->fgh[2]));
  if(z=diff0(w))R id==CQQ&&ng&&equ(g,zero)?z:icube(z);
  if(id==CAMP&&nf!=ng)R diffamp(w);
  switch(id){
@@ -490,7 +490,7 @@ static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
   /* ----- commented out because it is incorrect  
   case CBSLASH:
   case CBSDOT:
-   if(CSLASH==ID(f)&&(ff=VAV(f)->f,ff&&VERB&AT(ff))){
+   if(CSLASH==ID(f)&&(ff=VAV(f)->fgh[0],ff&&VERB&AT(ff))){
     b=id==CBSDOT;
     switch(ID(ff)){
      case CPLUS: R eval(b ? "<:/~@(i.@$)" : ">:/~@(i.@$)");
@@ -512,7 +512,7 @@ static F1(jtdiff){A df,dh,f,g,h,z;B nf,ng,vf,vg;C id;I r;V*v;
    if(vf&&vg)R folk(diff(g),eval("+/ .*"),atop(diff(f),g));
    break;
   case CFORK:
-   df=diff(f); h=v->h; dh=diff(h);
+   df=diff(f); h=v->fgh[2]; dh=diff(h);
    switch(ID(g)){
     case CPLUS:  R fplus(df,dh);
     case CMINUS: R fminus(df,dh);
@@ -526,7 +526,7 @@ static F1(jtintg){ASSERT(0,EVNONCE);}
 
 static A jtdtab(J jt,A a,I d){A h;V*v;
  if(!a)R A0;  // return 0 if not found in table
- if(CDCAP==ID(a)&&(v=VAV(a),NOUN&AT(v->f)&&d==i0(v->g))){h=VAV(a)->h; R*(1+AAV(h));}
+ if(CDCAP==ID(a)&&(v=VAV(a),NOUN&AT(v->fgh[0])&&d==i0(v->fgh[1]))){h=VAV(a)->fgh[2]; R*(1+AAV(h));}
  switch(SGN(d)){
   default: ASSERTSYS(0,"dtab");
   case -1: R dtab(intg(a),d+1);
@@ -537,7 +537,7 @@ static A jtdtab(J jt,A a,I d){A h;V*v;
 
 static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
  PREF2(jtsslope);
- fs=sv->f; m=*AV(sv->g);
+ fs=sv->fgh[0]; m=*AV(sv->fgh[1]);
  RZ(fs=1<m?dcapco(fs,sc(m-1)):atop(fs,ds(CRIGHT)));
  r=AR(a); n=AN(w);
  ASSERT(!r||r==AR(w)&&!memcmp(AS(a),AS(w),r*SZI),EVNONCE);
@@ -557,11 +557,11 @@ static DF2(jtsslope){A fs,f0,p,y,z,*zv;I m,n,r,t;V*sv=VAV(self);
 
 static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  PREF1(jtderiv1);
- v=VAV(self); RZ(fs=fix(v->f)); gs=v->g; n=AN(gs); gv=AV(gs); 
+ v=VAV(self); RZ(fs=fix(v->fgh[0])); gs=v->fgh[1]; n=AN(gs); gv=AV(gs); 
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
  RZ(e=scf((D)1e-7));
  GAT(t,INT,1,0,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
- RZ(s=ca(self)); v=VAV(s); v->g=t; v->lr=v->mr;
+ RZ(s=ca(self)); v=VAV(s); v->fgh[1]=t; v->lr=v->mr;
  GATV(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
  DO(n, *tv=d=gv[i]; zv[i]=(ff=incorp(dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s)););
  RE(0); R ope(z);

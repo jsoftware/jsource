@@ -125,8 +125,8 @@ F1(jtjico1){A y,z;B b;D d,*v;I c,m,n;
  RETF(z);
 }
 
-DF1(jtnum1){RZ(   w&&self); R FAV(self)->h;}
-DF2(jtnum2){RZ(a&&w&&self); R FAV(self)->h;}
+DF1(jtnum1){RZ(   w&&self); R FAV(self)->fgh[2];}
+DF2(jtnum2){RZ(a&&w&&self); R FAV(self)->fgh[2];}
 
 F2(jtfromr  ){R irs2(a,w,VFLAGNONE, RMAX,1L,jtfrom  );}
 F2(jtrepeatr){R irs2(a,w,VFLAGNONE, RMAX,1L,jtrepeat);}

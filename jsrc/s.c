@@ -466,7 +466,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
     // locative: s is the length of name_.  Find the symbol table to use, creating one if none found
   // Now g has the symbol table to look in
   RZ(e=g==jtlocal?probeislocal(a) : probeis(a,g));   // set e to symbol-table slot to use
-  if(AT(w)&FUNC&&(wv=FAV(w),wv->f)){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->uflags.us.cx.cx_c.glock)wv->flag|=VLOCK;}
+  if(AT(w)&FUNC&&(wv=FAV(w),wv->fgh[0])){if(wv->id==CCOLON)wv->flag|=VNAMED; if(jt->uflags.us.cx.cx_c.glock)wv->flag|=VLOCK;}
    // If the value is a function created by n : m, this becomes a named function; if running a locked function, this is locked too.
    // kludge  these flags are modified in the input area (w), which means they will be improperly set in the result of the
    // assignment (ex: (nm =: 3 : '...') y).  There seems to be no ill effect, because VNAMED isn't used much.

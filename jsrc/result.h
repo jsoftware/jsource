@@ -57,7 +57,7 @@
 // obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
- if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f##valence=FAV(fs)->valencefns[valence-1];}
+ if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}
 
 // user must define ZZINSTALLFRAME(optr) to move frame into optr++ (don't forget to increment optr!)
 

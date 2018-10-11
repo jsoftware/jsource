@@ -155,16 +155,16 @@ static UI4 ptcol[] = {
 #define PTFROMTYPEASGN(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; pt=ptcol[pt-LASTNOUNX]; pt=(t)&CONW?PTASGNNAME:pt; z=(UI4)pt;}
 
 static PSTK* jtpfork(J jt,A s1, A s2, A s3){
+ PSTK* stack=jt->parserstkend1;  // extract the stack base (completes while the fork is running)
  A y=folk(s1,s2,s3);  // create the fork
- PSTK* stack=jt->parserstkend1;  // extract the stack base
  RZ(y);  // if error, return 0 stackpointer
  stack[3].t = stack[1].t; stack[3].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
  stack[2]=stack[0]; R stack+2;  // close up stack & return
 }
 
 static PSTK* jtphook(J jt,A s1, A s2){
- A y=hook(s1,s2);  // create the hook
  PSTK* stack=jt->parserstkend1;  // extract the stack base
+ A y=hook(s1,s2);  // create the hook
  RZ(y);  // if error, return 0 stackpointer
  PTFROMTYPE(stack[2].pt,AT(y)) stack[2].t = stack[1].t; stack[2].a = y;  // take err tok from f; save result; no need to set parsertype, since it didn't change
  stack[1]=stack[0]; R stack+1;  // close up stack & return

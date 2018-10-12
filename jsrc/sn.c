@@ -210,7 +210,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
   // If the name is defined and is an ACV, invalidate all looked-up ACVs
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
 // obsolete   if(y&&(v=syrd(y))){if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(nvrredef(v->val))ras(v->val); RZ(symfree(v));}
-  if(y&&(v=syrd(y))){if(AT(v->val)&(VERB|CONJ|ADV))++jt->modifiercounter; if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} RZ(symfree(v));}
+  if(y&&(v=syrd(y))){if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} I mod=symfree(v); jt->modifiercounter+=mod&1; RZ(mod); }
  }
  RETF(z);
 }    /* 4!:55 expunge */

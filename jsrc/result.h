@@ -4,7 +4,8 @@
 /* Conjunctions: Rank Associates                                           */
 
 // result collection and assembly for modifiers
-// this file will be included 3 times:
+// this file will be included 4 times:
+// * at the top of the file to get the flag definitions
 // * outside of the loops to declare variables
 // * after a result has been calculated, to store it into the final result
 // * just before exit

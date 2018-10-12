@@ -233,7 +233,9 @@ static DF2(jtxdefn){PROLOG(0048);
 // obsolete  }
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
  // allocation that has to remain throughout this routine
- I old=jt->tnextpushx; 
+ I old=jt->tnextpushx;
+
+ // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
  // When we are not in debug mode, all we have to stack is the queue and length information from the stack frame.  Since we will
  // be reusing the stack frame, we just save the input once
 // obsolete  A savdcy = jt->sitop->dcy; I savdcn = jt->sitop->dcn;

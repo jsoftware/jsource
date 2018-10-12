@@ -19,7 +19,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
  RZ(v=symnew(&AV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
-   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
    RZ(x=nfs(n,u));  // this fills in the hash for the name
    // Install name and path.  Path is 'z' except in z locale itself, which has empty path
    RZ(ras(x)); LOCNAME(g)=x; xx=1==n&&'z'==*u?vec(BOX,0L,0L):zpath; ras(xx); LOCPATH(g) = xx;   // ras() is never VIRTUAL
@@ -28,7 +27,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,*pv,x,xx,y;C s[20];I m,*nv;L*v;
    symbis(x,g,jt->stloc);
    break;
   case 1:  /* numbered locale */
-   ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
    ASSERT(0<=jt->stmax,EVLOCALE);
    sprintf(s,FMTI,n); RZ(x=nfs(strlen(s),s)); NAV(x)->bucketx=n; // this fills in the hash for the name; we save locale# if numeric
    RZ(ras(x)); LOCNAME(g)=x; ras(zpath); LOCPATH(g)=zpath;  // ras() is never virtual

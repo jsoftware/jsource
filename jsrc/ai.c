@@ -23,7 +23,7 @@ static F2(jtfong){A f;C c;V*v;
  RZ(a&&w);
  v=FAV(a); c=v->id; f=v->fgh[0];
  R c==CRIGHT ? w : c==CFORK&&(NOUN&AT(f)||CCAP==ID(f)) ? folk(f,v->fgh[1],fong(v->fgh[2],w)) : folk(ds(CCAP),a,w);
-}    /* [: f g  with simplifications */
+}   // [: f g  with simplifications: [: ] w -> w;  [: (N/[: x y) w -> N/[: x [: y w   and y omittrd if ]
 
 static F1(jtinvfork){A f,fi,g,gi,h,k;B b,c;V*v;
  RZ(w);

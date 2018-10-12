@@ -83,7 +83,9 @@ L* jtsymnew(J jt,I*hv, I tailx){I j;L*u,*v;
 
 // u points to an L; free it, and do fa() on the name and value.
 // If the entry is LPERMANENT, don't free it; just fa() the value and clear val pointer to 0
-B jtsymfree(J jt,L*u){I q;
+// Return 0 on error; otherwise 2, and turn on bit 0 if an ACV was freed, provided it was not xyuvmn
+B jtsymfree(J jt,L*u){I q; B z=2;
+ if(!(u->name->flag&NMDOT)&&u->val&&AT(u->val)&(VERB|ADV|CONJ))z|=1;  // flag if we are deleting an ACV
  if(!(u->flag&LPERMANENT)){
   // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
   q=u->next;
@@ -97,24 +99,28 @@ B jtsymfree(J jt,L*u){I q;
  }
  // For all symbols, free the value, clear the pointer to it
  fa(u->val);u->val=0; 
- R 1;
+ R z;
 }    /* free pool entry pointed to by u */
 
-SYMWALK(jtsymfreeha, B,B01,100,1, 1, RZ(symfree(d)))   /* free pool table entries      */
+
+
+static SYMWALK(jtsymfreehax, B,B01,100,1, 1, {I mod=symfree(d); RZ(mod); jt->arg|=mod;})   /* free pool table entries      */
 // This visits every symbol and frees it.  BUT it doesn't visit symbols that do not have nonnull
 // name and value fields.  But this is OK: You can't have a value without a name; and the only
 // way to have a name without a value is if the name is PERMANENT and either uninitialized or deleted.
 // In either case, we need to leave the name undisturbed.
+// If we freed a non-DOT ACV, invalidate the names
+F1(jtsymfreeha){jt->arg=0; A z=jtsymfreehax(jt,w); jt->modifiercounter+=jt->arg&1; R z;}
 
 B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
  wv=AV(w);
  ASSERTSYS(*wv,"symfreeh");
  u=*wv+jt->sympv; 
- RZ(symfree(u));
+ RZ(symfree(u));   // free the locale name and path.  Since these are never modifiers we don't need to increment moodifiercounter
  RZ(symfreeha(w));
  memset(wv,C0,AN(w)*SZI);
  fa(w);
- if(v){v->val=0; RZ(symfree(v));}
+ if(v){v->val=0; RZ(symfree(v));}  // no need to inc modifiercounter when freeing a NAME
  R 1;
 }    /* free entire hash table w, (optional) pointed by v */
 
@@ -474,7 +480,8 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  if(jt->uflags.us.cx.cx_c.db)RZ(redef(w,e));  // if debug, check for changes to stack
  x=e->val;   // if x is 0, this name has not been assigned yet; if nonzero, x points to the value
  I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
- if(x)xaf=AFLAG(x);  // if assigned, get the actual flags
+ I xt=0;  // If not assigned, use empty type
+ if(x){xaf=AFLAG(x); xt=AT(x);} else {xaf = AFNVRUNFREED; xt=0;}  // if assigned, get the actual flags
 // obsolete ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
 // obsolete if(!(x&&AFNJA&AFLAG(x))){
  if(!((AFRO|AFNJA)&xaf)){
@@ -491,6 +498,10 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
   if(x!=w){
+   // When we assign to, or reassign, a modifier, invalidate all the lookups of modifiers that are extant
+   // It's a pity that we have to do this for ALL assignments, even assignments to uv.  If we don't, a reference to a local modifier may get passed in, and
+   // it will still be considered valid even though the local names have disappeared.  Maybe we could avoid this if the local namespace has no defined modifiers - but then we'd have to keep up with that...
+   if((xt|AT(w))&(VERB|CONJ|ADV))++jt->modifiercounter;
    // Increment the use count of the value being assigned, to reflect the fact that the assigned name will refer to it.
    // This realizes any virtual value, and makes the usecount recursive if the type is recursible
    realizeifvirtual(w); ra(w);
@@ -502,8 +513,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
 // obsolete   if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
    if(!(xaf&AFNVRUNFREED)){fa(x);} else if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);}  // x may be 0.  Free if not protected; then unprotect
    e->val=w;   // install the new value
-   // When we assign to a modifier, invalidate all the lookups of modifiers that are extant
-   if(AT(w)&(VERB|CONJ|ADV))++jt->modifiercounter;
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
     // kludge this should not be required, since the incumbent value should never be inplaceable
    // ra() also removes inplaceability

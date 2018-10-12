@@ -162,7 +162,8 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN1 && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
     // Advance fs to the g of <@g
-    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f1=FAV(fs)->valencefns[0];
+// obsolete     fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f1=FAV(fs)->valencefns[0];
+    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f1=FAV(fs)->valencefns[0];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }
@@ -569,7 +570,8 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
     // Because the outermost rank is 0, <@f by itself is OK; but later, as in (<@f)@>, it is not.  <@:f is.  So check for infinite rank
     if(state&ZZFLAGATOPOPEN2W && FAV(fs)->mr<RMAX)break;  // not first, and not infinite rank: ignore
     // Advance fs to the g of <@g
-    fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f2=FAV(fs)->valencefns[1];
+// obsolete     fs=(FAV(fs)->flag2&VF2ISCCAP)?FAV(fs)->fgh[2]:FAV(fs)->fgh[1]; f2=FAV(fs)->valencefns[1];
+    fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f2=FAV(fs)->valencefns[1];
    }
    state|=fstate;  // We accepted the new f, so take its flags
   }

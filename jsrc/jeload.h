@@ -5,6 +5,7 @@ void jesetpath(char*);
 void* jeload(void* callbacks); // returns J
 int jefirst(int,char*);
 A jegeta(int,char*);
+I jeseta(I n,char* name,I x,char* d);
 int jedo(char*);
 void jefree();
 char* jegetlocale();

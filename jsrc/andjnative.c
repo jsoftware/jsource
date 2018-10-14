@@ -4,10 +4,27 @@
 #include <strings.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+ #define JDLLNAME "j.dll"
+ #define filesepx "\\"
+#else
+ #define filesepx "/"
+ #ifdef __MACH__
+  #define JDLLNAME "libj.dylib"
+ #else
+  #define JDLLNAME "libj.so"
+ #endif
+#endif
+
 #define LOCALOGTAG "libj"
+#ifdef ANDROID
 #include <android/log.h>
 #define LOGD(msg) __android_log_write(ANDROID_LOG_DEBUG,LOCALOGTAG,msg)
 #define LOGFD(...) __android_log_print(ANDROID_LOG_DEBUG,LOCALOGTAG,__VA_ARGS__)
+#else
+#define LOGD(msg)
+#define LOGFD(...)
+#endif
 
 typedef struct A_RECORD {
   I k,flag,m,t,c,n,r,s[1];
@@ -277,6 +294,18 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
 (JNIEnv *env, jclass jcls, jstring libpath)
 {
   LOGD("JInit");
+  return Java_com_jsoftware_j_JInterface_JInit2(env, jcls, libpath, 0);
+}
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JInit2
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit2
+  (JNIEnv *env, jclass jcls, jstring libpath, jstring libj)
+{
+  LOGD("JInit2");
   local_jnienv = env;
   local_basecls = (*env)->NewGlobalRef(env,jcls);
   (*env)->ExceptionClear(env);
@@ -300,12 +329,20 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
   }
   void* callbacks[] = {outputHandler,wdHandler,inputHandler,0,(void*)SMWIN};  // don't use SMJAVA
   const char *nativeString = (*env)->GetStringUTFChars(env, libpath, 0);
-  char *arg=malloc(strlen(nativeString)+9);
+  const char *nativelibj;
+  char *arg;
+  if(libj) nativelibj = (*env)->GetStringUTFChars(env, libj, 0);
+  if(libj&&strlen(nativelibj))
+    arg=malloc(strlen(nativelibj)+1+strlen(nativeString)+1);
+  else
+    arg=malloc(strlen(JDLLNAME)+1+strlen(nativeString)+1);
   strcpy(arg,nativeString);
-  strcat(arg,"/libj.so");
+  if(strlen(arg))strcat(arg,filesepx);
+  strcat(arg,(libj&&strlen(nativelibj))?nativelibj:JDLLNAME);
   jesetpath(arg);
   free(arg);
   (*env)->ReleaseStringUTFChars(env, libpath, nativeString);
+  if(libj) (*env)->ReleaseStringUTFChars(env, libj, nativelibj);
   R (jlong)(intptr_t)jeload(callbacks);
 }
 
@@ -359,3 +396,85 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
   return jstr;
 }
 
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JGetc
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetc
+  (JNIEnv *env, jclass jcls, jstring jname)
+{
+  int err=1;
+  jstring jstr;
+  local_jnienv = env;
+  const char *name = (*env)->GetStringUTFChars(env, jname, 0);
+  char* buf;
+  I len;
+  A r = jegeta(strlen(name),(char*)name);
+  AREP p=(AREP)(sizeof(struct A_RECORD) + (char*)r);
+  if ((p->t==2)&&(p->r<2)) {
+  if (p->r==0) {
+    buf=(char*)calloc(1,sizeof(char));
+    len = 1;
+    memcpy(buf,(char*)p->s,1);
+    err=0;
+  } else {
+    buf=(char*)calloc(p->c,sizeof(char));
+    len = p->c;
+    memcpy(buf,(char*)(sizeof(struct AREP_RECORD)+(char*)p),p->c);
+    err=0;
+  }
+  }
+  if (!err) {
+    jstr = (*env)->NewStringUTF(env,buf);
+    free(buf);
+  } else
+    jstr = (*env)->NewStringUTF(env,"");
+  return jstr;
+}
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JSetc
+ * Signature: (Ljava/lang/String;Ljava/lang/String;J)V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetc
+  (JNIEnv *env, jclass jcls, jstring jname, jstring jsb, jlong slen)
+{
+  local_jnienv = env;
+  const char *name = (*env)->GetStringUTFChars(env, jname, 0);
+  const char *sb = (*env)->GetStringUTFChars(env, jsb, 0);
+
+  int n,hlen,nlen,tlen;
+
+  I hdr[5];
+  n=sizeof(I);
+  hlen=n*5;
+
+  nlen=(int)strlen(name);
+
+  tlen=n*(1+slen/n);
+
+//  hdr[0]=(4==n) ? 225 : 227;
+  hdr[0]=0;
+  unsigned char flag[1];
+#if defined(BIGENDIAN)
+  flag[0]=(4==n) ? 224 : 226;
+#else
+  flag[0]=(4==n) ? 225 : 227;
+#endif
+  memcpy(hdr,flag,1);
+  hdr[1]=2;
+  hdr[3]=1;
+  hdr[2]=hdr[4]=slen;
+
+  C* buf=(C*)calloc(hlen+tlen,sizeof(C));
+  memcpy(buf,hdr,hlen);
+  memcpy(buf+hlen,sb,slen);
+  jeseta(nlen,(char*)name,(hlen+tlen),(char*)buf);
+  free(buf);
+
+  (*env)->ReleaseStringUTFChars(env, jname, name);
+  (*env)->ReleaseStringUTFChars(env, jsb, sb);
+  (*env)->ExceptionClear(env);
+}

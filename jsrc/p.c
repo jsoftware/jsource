@@ -276,13 +276,13 @@ F1(jtparse){A z;
  RZ(w);
  A *queue=AAV(w); I m=AN(w);   // addr and length of sentence
  A *savqueue = jt->parserqueue; I4 savqueuelen = jt->parserqueuelen;  // Push error info separate from debug stack, for speed
- // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
- // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
- A savsf=jt->sf;
+// obsolete  // $: refers to the element that was parsed to produce the verb that executes the $:.  Whenever we start a verb execution, we remember the element
+// obsolete  // in jt->sf.  That provides the place to restart at when we execute $:.  There is a stack of such restart points, pushed whenever we start a parse or execute a name.
+// obsolete  A savsf=jt->sf;
  RZ(deba(DCPARSE,queue,(A)m,0L));  // We don't need a new stack frame if there is one already and debug is off
  z=parsea(queue,m);
  debz();
- jt->sf=savsf;  // pop $: stack
+// obsolete  jt->sf=savsf;  // pop $: stack
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  R z;
 }

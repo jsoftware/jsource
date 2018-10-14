@@ -9,7 +9,7 @@
 
 // When we move off of a parser frame, or when we go into debug with a new parser frame, fill the frame with
 // the info for the parse that was interrupted
-void moveparseinfotosi(J jt){if(jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)jt->parserqueue; jt->sitop->dcn=(I)jt->parserqueuelen; jt->sitop->dcix=(I)jt->parsercurrtok; }}
+void moveparseinfotosi(J jt){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)jt->parserqueue; jt->sitop->dcn=(I)jt->parserqueuelen; jt->sitop->dcix=(I)jt->parsercurrtok; }}
 
 
 /* deba() and debz() must be coded and executed in pairs */

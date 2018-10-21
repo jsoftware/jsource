@@ -45,6 +45,7 @@ static JFreeType jfree;
 static JgaType jga;
 static JGetLocaleType jgetlocale;
 static JGetAType jgeta;
+static JSetAType jseta;
 char path[PLEN];
 char pathdll[PLEN];
 static char jdllver[20];
@@ -64,6 +65,7 @@ int jedo(char* sentence)
 }
 
 A jegeta(I n, char* s){return jgeta(jt,n,(C*)s);}
+I jeseta(I n,char* name,I x,char* d){return jseta(jt,n,(C*)name,x,(C*)d);}
 void jefree(){jfree(jt);}
 char* jegetlocale(){return (char*)jgetlocale(jt);}
 A jega(I t, I n, I r, I*s){return jga(jt,t,n,r,s);}
@@ -88,6 +90,7 @@ J jeload(void* callbacks)
  jga=(JgaType)GETPROCADDRESS(hjdll,"Jga");
  jgetlocale=(JGetLocaleType)GETPROCADDRESS(hjdll,"JGetLocale");
  jgeta=(JGetAType)GETPROCADDRESS(hjdll,"JGetA");
+ jseta=(JSetAType)GETPROCADDRESS(hjdll,"JSetA");
  return jt;
 }
 
@@ -275,7 +278,7 @@ void jesetpath(char* arg)
 {
 	strcpy(pathdll,arg); // jwdp gives path to j.dll
 	strcpy(path,arg);
-	*(strrchr(path,filesep)) = 0;
+	if(strrchr(path,filesep))*(strrchr(path,filesep)) = 0;
 }
 
 // build and run first sentence to set BINPATH, ARGV, and run profile

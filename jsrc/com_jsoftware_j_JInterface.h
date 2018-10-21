@@ -37,6 +37,22 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JDoR
 
 /*
  * Class:     com_jsoftware_j_JInterface
+ * Method:    JGetc
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetc
+  (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JSetc
+ * Signature: (Ljava/lang/String;Ljava/lang/String;J)V
+ */
+JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetc
+  (JNIEnv *, jclass, jstring, jstring, jlong);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
  * Method:    JFree
  * Signature: ()V
  */
@@ -50,6 +66,14 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JFree
  */
 JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit
   (JNIEnv *, jclass, jstring);
+
+/*
+ * Class:     com_jsoftware_j_JInterface
+ * Method:    JInit2
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit2
+  (JNIEnv *, jclass, jstring, jstring);
 
 /*
  * Class:     com_jsoftware_j_JInterface

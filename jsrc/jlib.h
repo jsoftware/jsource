@@ -23,6 +23,7 @@ typedef void  (_stdcall *JSMXType)      (J, void*, void*, void*, void*, I);
 typedef void  (_stdcall *JFreeType)     (J);
 typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
 typedef A     (_stdcall *JGetAType)     (J jt,I n,C* name);
+typedef I     (_stdcall *JSetAType)     (J jt,I n,C* name,I x,C* d);
 
 /*  void* callbacks[] = {Joutput, Jwd, Jinput, unused, smoptions}; */
 

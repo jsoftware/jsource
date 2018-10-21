@@ -390,7 +390,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
  n=AN(w); v=AAV(w);
  if(!(n&&BOX&AT(w)))RCA(w); /* obsolete {GATV(z,B01,0L,1+AR(w),AS(w)); *(AR(w)+AS(w))=0; R z;} */
  RELORIGINB(wrel,w);  // wrel is relocation amount for w, 0 if not relative
- if(!AR(w)){z=(A)AABS(*v,wrel); ACIPNO(z); R z;}   // scalar boz: turn off inplacing if we are using the contents directly
+ if(!AR(w)){z=(A)AABS(*v,wrel); ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
 // obsolete  y=b?(A)AABS(v[i],w):v[i]; 

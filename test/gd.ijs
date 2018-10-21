@@ -69,6 +69,8 @@ _17"_     test '_17"_'
 (*: % +: + 1"0) test '(*: % +: + 1"0)'
 (*:@>: * 2&*)   test '(*:@>: * 2&*)'
 
+(12 27 48;12 18 24;6 6 6) -: (cube D.1;cube D.2; (cube=: ^&3"0) D.3)y=: 2 3 4
+
 'length error' -: 1 2 3&* D etx i.7
 'length error' -: 1 2 3&* D etx i.7 3
 
@@ -93,6 +95,6 @@ _0.5 1&p. eq (2&! d. 1)
 ((10"_ * %:) D. 1) eq ((10 * %:) D. 1)
 
 
-4!:55 ;:'D E b dc eq f g h t test x '
+4!:55 ;:'cube D E b dc eq f g h t test x '
 
 

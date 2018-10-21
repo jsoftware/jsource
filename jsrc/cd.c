@@ -563,7 +563,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  GAT(t,INT,1,0,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
  RZ(s=ca(self)); v=VAV(s); v->fgh[1]=t; v->lr=v->mr;
  GATV(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
- DO(n, *tv=d=gv[i]; zv[i]=(ff=incorp(dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s)););
+ DO(n, *tv=d=gv[i]; zv[i]=(ff=incorp(dtab(fs,d)))?df1(w,ff):sslope(tymes(e,w),w,s););
  RE(0); R ope(z);
 }
 

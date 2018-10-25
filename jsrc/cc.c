@@ -1075,7 +1075,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
  R p;
 }    /* tesselation result outer shape */
 
-#if 0
+#if 0  // obsolete
 static A jttesmatu(J jt,A a,A w,A self,A p,B e){DECLF;A x,y,z,z0;C*u,*v,*v0,*wv,*yv,*zv;
      I*av,i,k,m,mc,mi,mj,mr,nc,nr,old,*pv,r,s,*s1,sc,sj,sr,t,tc,tr,*ws,yc,yr,zk,zn,zr,*zs,zt;
  ws=AS(w); t=AT(w); k=bp(t); r=k*ws[1];
@@ -1159,6 +1159,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  RETF(x);
 }    /* tesselation standardized left argument */
 
+// These bits overlap with those used for ;.0
 #define STATEREFLECTX 0x400
 #define STATEREFLECTY 0x800
 #define STATETAKE 0x1000
@@ -1180,6 +1181,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   RETF(cut02(irs2(cant1(tymes(head(a),cant1(abase2(p,iota(p))))), tail(a),0L,1L,1L,jtlamin2),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w
  }
  DECLF;  // get the function pointers
+ fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
  I *ws=AS(w);  // ws-> shape of w
  // get address of end+1 of the source data, so we can avoid out-of-bounds
  C *sdataend=CAV(w)+AN(w)*bp(wt);  // addr+1 of source data
@@ -1203,7 +1205,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
     // 4 axes: S0 S1 R3 R2 S2 S3 [rest of ws beyond the axes]
     // 5 axes: S0 S1 R3 R2 S2 S3 R4 S4 [rest of ws beyond the axes]
     // these must be transposed to result in R2..Rn S0..Sn Wx..Wn
-    A xposearg; fauxblockINT(xfaux,5,1); fauxINT(xposearg,xfaux,wr+axisct-2,1) /* obsolete GATV(xposearg,INT,wr+axisct-2,1,0); AS(xposearg)[0]=wr+axisct-2; */ I *xpv=IAV(xposearg);
+    A xposearg; fauxINT(xposearg,xfaux,wr+axisct-2,1) /* obsolete GATV(xposearg,INT,wr+axisct-2,1,0); AS(xposearg)[0]=wr+axisct-2; */ I *xpv=IAV(xposearg);
     DO((axisct>>1)-1, *xpv++ = 4*i+3; *xpv++=4*i+2;) if(axisct&1)*xpv++=2*axisct-4;  // Rn
     DO(axisct>>1, *xpv++ = 4*i+0; *xpv++=4*i+1;) if(axisct&1)*xpv++=2*axisct-3;  // Sn
     DO(wr-axisct, *xpv++=2*axisct+i-2;);  // Wn, all the rest
@@ -1358,7 +1360,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 static DF1(jttess1){A s;I m,r,*v;
  RZ(w);
  r=AR(w); RZ(s=shape(w)); rifvs(s); v=AV(s);
- m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);
+ m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg o cut
  R tess2(s,w,self);
 }
 

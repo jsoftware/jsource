@@ -99,8 +99,10 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
  if(fi!=CCAP){
-  // vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
+  // nvv or vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
   flag=((fv->flag|hv->flag)&(VINPLACEOK1|VINPLACEOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
+  // if g has WILLOPEN, indicate WILLBEOPENED in f/h
+
  }else{
   // capped fork.  inplace if h can handle it, ASGSAFE if gh are safe
   flag=(hv->flag&(VINPLACEOK1|VINPLACEOK2))+((gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.

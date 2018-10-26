@@ -87,9 +87,9 @@ F1(jthost){A z;
 #if defined(__MACH__)
 /* macos different behavior (from linux) for SIGCHLD */
 /* no interface error will be reported */
-   waitpid(pid, &status, 0); b=!status;
+   waitpid(pid, &status, 0); b = WIFEXITED(status) && !WEXITSTATUS(status);
 #else
-   if (-1!=waitpid(pid, &status, 0)) b = !status;
+   if (-1!=waitpid(pid, &status, 0)) b = WIFEXITED(status) && !WEXITSTATUS(status);
 #endif
  }
  posix_spawn_file_actions_destroy(&action);

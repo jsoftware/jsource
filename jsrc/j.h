@@ -517,10 +517,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
-#define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
-#define JTINPLACEW      (1LL<<JTINPLACEWX)
-#define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
-#define JTINPLACEA      (1LL<<JTINPLACEAX)
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long

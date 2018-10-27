@@ -57,6 +57,21 @@ typedef I                  FLAGT;
 typedef struct AD AD;
 typedef AD *A;
 
+// Flag bits in the low-order part of jt - used only if the function being called understands inplacing
+#define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
+#define JTINPLACEW      (1LL<<JTINPLACEWX)
+#define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
+#define JTINPLACEA      (1LL<<JTINPLACEAX)
+// Next flag must match result.h and VF2 flags
+#define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
+#define JTWILLBEOPENED  (1LL<<JTWILLBEOPENEDX)
+// Next flag must match result.h and VF2 flags
+#define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
+#define JTCOUNTITEMS    (1LL<<JTCOUNTITEMSX)
+
+#define JTFLAGMSK       255  // mask big enough to cover all defined flags
+#define JTALIGNBDY      8192  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
+
 // obsolete typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
 
 struct AD {
@@ -719,9 +734,9 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 
 // bits in flag2:
 // bit 0 unused
-#define VF2BOXATOP1X      1   // This verb is one of  <  <@f   <@:f   <&f   <&:f    f@.>  f&.:>
+#define VF2BOXATOP1X      1   // This verb is one of  <  <@f   <@:f   <&f   <&:f    f&.>  f&.:>
 #define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))
-#define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f@.>  f&.:>
+#define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f&.>  f&.:>
 #define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))
 // next flag must be one below WILLBEOPENED
 #define VF2WILLOPENX      3   // This verb will open y as its first act.  Monad case only

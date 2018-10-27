@@ -683,7 +683,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
         jt->assignsym=s;  // remember the symbol being assigned
         if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // if the value is being assigned locally & it exists, remember the value.  We have to avoid private/public puns
        }
-       jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 2 if dyadic
+       jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
        // jt has been corrupted
       // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as

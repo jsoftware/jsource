@@ -307,9 +307,10 @@ typedef struct {
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  I    rngw;             /* RNG: # bits in a random #                       */
- C    breakfn[NPATH];   /* break file name                                 */
  C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    dirnamebuf[NPATH];/* for directory search                            */
+ C    breakfn[NPATH];   /* break file name                                 */
+// the offset at this point is about 0x1890, so everything up to here will fit in a single 0x2000-byte DRAM page
  LS   callstack[1+NFCALL]; /* named fn calls: stack                           */
 } JST;
 

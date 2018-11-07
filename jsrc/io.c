@@ -155,16 +155,16 @@ I jdo(J jt, C* lp){I e,old;A x;
  old=jt->tnextpushx;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep);  jt->callstacknext=0; jt->jerr=0; tpop(old);}
+ while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep);  /* jt->callstacknext=0; */ jt->jerr=0; tpop(old);}
  if(!jt->jerr)immex(x);
  e=jt->jerr;
- jt->callstacknext=0; jt->jerr=0;
+ /* jt->callstacknext=0; */ jt->jerr=0;
  if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
   jt->uflags.us.cx.cx_c.db=0;
   immex(jt->dbtrap);
-  jt->callstacknext=0; jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
+  /* jt->callstacknext=0; */ jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
  }
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); jt->callstacknext=0; jt->jerr=0; tpop(old);}
+ while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); /* jt->callstacknext=0; */ jt->jerr=0; tpop(old);}
  showerr();
  spfree();
  tpop(old);

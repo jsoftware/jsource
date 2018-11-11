@@ -520,15 +520,6 @@ assert. siz12002 > 7!:2 '$ 99 11000 ($,)"2 a1'
 b =: 1 |. _1 |. a
 assert. direct = siz1200 > 7!:2 'b =: 99 11000 ($,) b'
 
-NB. Verify that virtuals pass through a sequence of open/box verbs
-a =. <"1 i. 1000 100000
-(7!:2 '{.&.> @: (}.&.>) a') < 1000 * (7!:2 '{.&.> }.&.> a')
-(7!:2 '{.&.> @ (}.&.>) a') < 100 * (7!:2 '{.&.> }.&.> a')
-({.&.> @: (}.&.>) a) -: ({.&.> }.&.> a)
-({.&.> @ (}.&.>) a) -: ({.&.> }.&.> a)
-
- ,(2e6 2e6 _2e6 _2e6)  (*/\  0&=@:- */\ @((o.0)&+))@,&> 3e7 _3e7 3e7 _3e7
-
 
 assert. (siz1200+800) > 7!:2 '0:@]"1 a'   NB. rank operator
 assert. (siz1200+800) > 7!:2 'a 0:@]"1 a'
@@ -542,6 +533,15 @@ f a:
 f s: 'word'
 f u: 'a'
 f 10 u: 'a'
+
+NB. Verify that virtuals pass through a sequence of open/box verbs
+a =. <"1 i. 120 100000
+(7!:2 '{.&.> }.&.> a') > 100 * (7!:2 '{.&.> @ (}.&.>) a')
+({.&.> @: (}.&.>) a) -: ({.&.> }.&.> a)
+({.&.> @ (}.&.>) a) -: ({.&.> }.&.> a)
+
+ ,(2e6 2e6 _2e6 _2e6)  (*/\  0&=@:- */\ @((o.0)&+))@,&> 3e7 _3e7 3e7 _3e7
+
 
 4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
 randfini''

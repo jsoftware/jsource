@@ -738,20 +738,20 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))
 #define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f&.>  f&.:>
 #define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))
-// next flag must be one below WILLBEOPENED
-#define VF2WILLOPENX      3   // This verb will open y as its first act.  Monad case only
-#define VF2WILLOPEN       ((I)(1LL<<VF2WILLOPENX))
-// next flag must match defn in result.h and must not move
-#define VF2WILLBEOPENEDX  4   // The result of this verb will be immediately opened (by > or ;)
-#define VF2WILLBEOPENED   ((I)(1LL<<VF2WILLBEOPENEDX))
+// next flag must be same as JTWILLBEOPENED
+#define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN1       ((I)(1LL<<VF2WILLOPEN1X))
+// must leave a gap for WILLBEOPENED in result.h
+// obsolete #define VF2WILLBEOPENEDX  4   // The result of this verb will be immediately opened (by > or ;)
+// obsolete #define VF2WILLBEOPENED   ((I)(1LL<<VF2WILLBEOPENEDX))
 #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g
 #define VF2ISCCAP         ((I)(1LL<<VF2ISCCAPX))
-// next flag must be one below COUNTITEMS
-#define VF2USESITEMCOUNTX 6   // This verb can make use of an item count stored in m.  Monad case only
-#define VF2USESITEMCOUNT  ((I)(1LL<<VF2USESITEMCOUNTX))
-// next flag must match defn in result.h
-#define VF2COUNTITEMSX    7   // The result of this verb will fed into jtraze; the verb should count the items and see if they are homogeneous, if it can
-#define VF2COUNTITEMS    ((I)(1LL<<VF2COUNTITEMSX))
+// next flag must be same as JTCOUNTITEMS
+#define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT1  ((I)(1LL<<VF2USESITEMCOUNT1X))
+// must leave a gap for COUNTITEMS in result.h
+// obsolete #define VF2COUNTITEMSX    7   // The result of this verb will fed into jtraze; the verb should count the items and see if they are homogeneous, if it can
+// obsolete #define VF2COUNTITEMS    ((I)(1LL<<VF2COUNTITEMSX))
 // next 3 flags must be spaced from VF2BOXATOP? to match spacing in ZZFLAGS
 #define VF2ATOPOPEN1X     8   // This verb is one of  > @> &> &.>
 #define VF2ATOPOPEN1     ((I)(1LL<<VF2ATOPOPEN1X))
@@ -767,6 +767,15 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
 #define VF2RANKONLY2X     14
 #define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
+// Next 4 flags must be spaced so txhey can shift down to WILLOPEN1 and COUNTITEMS1
+#define VF2WILLOPEN2WX      15   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN2W       ((I)(1LL<<VF2WILLOPEN2WX))
+#define VF2WILLOPEN2AX      16   // This verb will open y as its first act.  Monad case only
+#define VF2WILLOPEN2A       ((I)(1LL<<VF2WILLOPEN2AX))
+#define VF2USESITEMCOUNT2WX 18   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT2W  ((I)(1LL<<VF2USESITEMCOUNT2WX))
+#define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in m.  Monad case only
+#define VF2USESITEMCOUNT2A  ((I)(1LL<<VF2USESITEMCOUNT2AX))
 
 
 

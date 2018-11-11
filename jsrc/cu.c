@@ -98,6 +98,7 @@ static DF1(jtunderai1){DECLF;A x,y,z;B b;I j,n,*u,*v;UC f[256],*wv,*zv;
  RETF(z);
 }    /* f&.(a.&i.) w */
 
+// u&.v
 F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  ASSERTVV(a,w);
  c=0; f1=0; f2=0; r=mr(w); v=FAV(w);
@@ -105,7 +106,7 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
  I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
  // If v is WILLOPEN, so will the compound be
- I flag2=FAV(w)->flag2&VF2WILLOPEN;
+ I flag2=FAV(w)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
  switch(v->id){
   case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
   case CFORK: c=ID(v->fgh[2]); /* fall thru */

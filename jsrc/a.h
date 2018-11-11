@@ -32,6 +32,8 @@
 // If there are multiple cells, loop over them & call back; otherwise fall through to handle to single cell
 #define PREF1(f)        {I m=mr(self);            F1RANK(  m,f,self);}
 #define PREF2(f)        {I l=lr(self),r=rr(self); F2RANK(l,r,f,self);}
+#define PREF1IP(f)      {I m=mr(self);            F1RANKIP(  m,f,self);}
+#define PREF2IP(f)      {I l=lr(self),r=rr(self); F2RANKIP(l,r,f,self);}
 
 #define AS1(f,exp,x)      DF1(f){F1PREFIP;PROLOG(x);DECLF ;A z; PREF1(f); z=(exp); EPILOG(z);}
 #define AS2(f,exp,x)      DF2(f){F2PREFIP;PROLOG(x);DECLF ;A z; PREF2(f); z=(exp); EPILOG(z);}

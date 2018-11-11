@@ -685,7 +685,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic
       }
-       // jt has been corrupted
+       // jt has been corrupted, now holding inplacing info
       // CODING NOTE: after considerable trial and error I found this ordering, whose purpose is to start the load of the indirect branch address as early as
       // possible before the branch.  Check the generated code on any change of compiler.
       AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
@@ -700,7 +700,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
       stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
       stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 1 2
       y=(*actionfn)(jt,arg1,arg2,fs);
-      jt=(J)(intptr_t)((I)jt&~(JTINPLACEW+JTINPLACEA));
+      jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
       EPZ(y);  // fail parse if error
       stackfs[1].a=y;  // save result 2 3 3 2 3; parsetype is unchanged, token# is immaterial

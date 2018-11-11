@@ -26,11 +26,27 @@ RZ(fx=(f2)((FAV(fs)->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((hx==w?~JTIN
 POPZOMB; RZ(z=(g2)(FAV(gs)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((fx!=protw&&fx!=prota?JTINPLACEA:0)+(hx!=protw&&hx!=prota?JTINPLACEW:0))) ):jt,fx,hx,gs));}
 
 // similar for cap, but now we can inplace the call to h
-#define CAP1 {A hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); RZ(hx=(h1)(jtinplace,  w,hs)); \
-/* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
-POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw))),hx,gs));}
-#define CAP2 {A hx; PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); RZ(hx=(h2)(jtinplace,a,w,hs));  \
-POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw)&(hx!=prota))),hx,gs));}
+#define CAP1 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
+A hx; RZ(hx=(h1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(hs)->flag>>VINPLACEOK1X)&JTINPLACEW)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,hs));  /* inplace g.  jtinplace is set for g */ \
+/* inplace gx unless it is protected */ \
+POPZOMB; \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((hx!=protw)*JTINPLACEW));  \
+jtinplace=FAV(gs)->flag&VINPLACEOK1?jtinplace:jt; \
+RZ(z=(g1)(jtinplace,hx,gs));}
+
+// obsolete RZ(hx=(h1)(jtinplace,  w,hs)); \
+// obsolete /* The call to g is inplaceable if g allows it, UNLESS fx or hx is the same as disallowed y */ \
+// obsolete POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw))),hx,gs));}
+#define CAP2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
+A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(hs)->flag>>VINPLACEOK1X)&JTINPLACEW)) & FAV(gs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,hs));  /* inplace g */ \
+/* inplace gx unless it is protected */ \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((hx!=prota)&(hx!=protw)*JTINPLACEW));  \
+jtinplace=FAV(gs)->flag&VINPLACEOK1?jtinplace:jt; \
+RZ(z=(g1)(jtinplace,hx,gs));}
+
+
+// obsolete RZ(hx=(h2)(jtinplace,a,w,hs));  \
+// obsolete POPZOMB; RZ(z=(g1)((J)(intptr_t)((I)jt+((FAV(gs)->flag>>VINPLACEOK1X)&(hx!=protw)&(hx!=prota))),hx,gs));}
 
 DF1(jtcork1){F1PREFIP;DECLFGH;PROLOG(0026);A z;  CAP1; EPILOG(z);}
 DF2(jtcork2){F2PREFIP;DECLFGH;PROLOG(0027);A z;  CAP2; EPILOG(z);}
@@ -109,18 +125,18 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  switch(fi){
   case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
-               if(ACIPISOK(h)){I flag2copy=0;  // do flag processing like @:
-                if(gv->flag2&VF2USESITEMCOUNT){
-                 if(hi==CCUT){I wgi=IAV(hv->fgh[1])[0]; // wfv;.wgi
-                  if(wgi==0){V *wfv=VAV(hv->fgh[0]);
-                   if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
-                    flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
-                   }
-                  }
-                 }else if(hi==CAT||hi==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if " or @ (not @:)
-                }
-                hv->flag2 |= (gv->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
-               }
+// obsolete                if(ACIPISOK(h)){I flag2copy=0;  // do flag processing like @:
+// obsolete                 if(gv->flag2&VF2USESITEMCOUNT){
+// obsolete                  if(hi==CCUT){I wgi=IAV(hv->fgh[1])[0]; // wfv;.wgi
+// obsolete                   if(wgi==0){V *wfv=VAV(hv->fgh[0]);
+// obsolete                    if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+// obsolete                     flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+// obsolete                    }
+// obsolete                   }
+// obsolete                  }else if(hi==CAT||hi==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if " or @ (not @:)
+// obsolete                 }
+// obsolete                 hv->flag2 |= (gv->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+// obsolete                }
                break; /* [: g h */
 // obsolete   case CTILDE: if(NAME&AT(fv->fgh[0])){f1=jtcorx1; f2=jtcorx2;}  break; /* name g h */
   case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VINPLACEOK1);} break;  /* +/%# */

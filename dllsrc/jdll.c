@@ -714,12 +714,13 @@ J heapinit(int size)
 
 	h = HeapCreate(0, size, 0);
 	if(!h) return 0;
-	jt = HeapAlloc(h, 0, sizeof(JST));
+	jt = HeapAlloc(h, 0, sizeof(JST)+JTALIGNBDY-1);
 	if(!jt)
 	{
 		HeapDestroy(h);
 		return 0;
 	}
+ jt = (J)(((I)jt+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
 	memset(jt,0,sizeof(JST));
 	jt->heap = h;
 	return jt;

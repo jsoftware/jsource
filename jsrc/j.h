@@ -403,12 +403,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define FPREF           
 #define F1PREF          FPREF
 #define F2PREF          FPREF
-#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~(JTINPLACEW+JTINPLACEA))
+#define FPREFIP         J jtinplace=jt; jt=(J)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtinplace
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 // obsolete #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
+#define F1RANKIP(m,f,self)    {RZ(   w); if(m<AR(w)         )R jtrank1ex(jtinplpace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
+#define F2RANKIP(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)R jtrank2ex(jtinplace,a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 
 // Memory-allocation macros
 // Size-of-block calculations.  VSZ when size is constant or variable

@@ -498,7 +498,7 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller
 RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
- J jt=(J)(intptr_t)((I)jtip&~(JTINPLACEW|JTINPLACEA));  // get flag-free pointer to J block
+ J jt=(J)(intptr_t)((I)jtip&~JTFLAGMSK);  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
  I tal=bp(t);  // length of an atom of t

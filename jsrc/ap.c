@@ -347,12 +347,12 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
 #define STATEISPREFIX 0x2000  // this is prefix rather than infix
 #define STATESLASH2 0x4000  // f is f'/ and x is 2
 
-// prefix and infix: prefix is a is mark
+// prefix and infix: prefix if a is mark
 static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    I hn,wt;
  
  RZ(w);
- PREF2(jtinfixprefix2);  // handle rank loop if needed
+ PREF2IP(jtinfixprefix2);  // handle rank loop if needed
  wt=AT(w);
  if(wt&SPARSE){
   // Use the old-style non-virtual code for sparse types
@@ -372,9 +372,11 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   // not gerund: OK to test fs
   if(vf->mr>=AR(w)){
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
-   state = (vf->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
-   state &= ~((vf->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
+   state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
+   state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
+// obsolete    state |= (-state) & FAV(self)->flag2 & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
@@ -532,12 +534,12 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
  EPILOG(zz);
 }
 
-// prefix, vectors to common processor.  Handles IRS
-static DF1(jtinfixprefix1){
+// prefix, vectors to common processor.  Handles IRS.  Supports inplacing
+static DF1(jtinfixprefix1){F1PREFIP;
 // obsolete  I *rankp=jt->rank; RESETRANK;
 // obsolete  if(rankp&&rankp[1]<AR(w)){R rank1ex(w,self,rankp[1],jtinfixprefix1);}
- I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtinfixprefix1);}
- R jtinfixprefix2(jt,mark,w,self);
+ I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtinplace,w,self,r,jtinfixprefix1);}
+ R jtinfixprefix2(jtinplace,mark,w,self);
 }
 
 //  f/\"r y    w is y, fs is in self
@@ -800,10 +802,11 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
 static DF1(jtiota1){R apv(IC(w),1L,1L);}
 
 // obsolete F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
-F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
+F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
+;
  RZ(w);
-// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|FAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
- if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|FAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
+// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
+ if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
  v=FAV(w); f=FAV(w)->fgh[0];
  switch(v->id){
   case CPOUND:
@@ -813,9 +816,11 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
   case CSLASH: 
-   f2=jtmovfslash; if(vaid(f))f1=jtpscan;
+   f2=jtmovfslash; if(vaid(f))f1=jtpscan; break;
+  default:
+   flag |= VINPLACEOK1|VINPLACEOK2; break; // The default u\ looks at WILLBEOPENED
  }
- R ADERIV(CBSLASH,f1,f2,FAV(ds(CBSLASH))->flag,RMAX,0L,RMAX);
+ R ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX);
 }
 
 A jtascan(J jt,C c,A w){RZ(w); R df1(w,bslash(slash(ds(c))));}

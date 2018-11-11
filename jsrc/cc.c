@@ -48,7 +48,7 @@ static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
 }    /* a ];.0 matrix */
 #endif
 
-static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
+static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u,*ws;PROLOG(876);
  RZ(a&&w);
 #define ZZFLAGWORD state
  I state=0;  // init flags, including zz flags
@@ -60,7 +60,8 @@ static DF2(jtcut02){DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j,k,m,n,*u
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+// obsolete    state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
@@ -525,7 +526,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 #define FRETLOOPSGLD FRETLOOPNONBYTE(D val=*(D*)fret; D *avv=(D*)av; D cct=1.0-jt->ct;  , \
   UI match=(TCMPEQB(cct,val,*avv)); ++avv; \
 )
-#if 0 // scaf not used
+#if 0 // obsolete scaf not used
 // the values are of irregular length, but short enough that we should do all the comparisons to avoid misprediction
 // k is the number of bytes to compare
 #define FRETLOOPMULTFIX FRETLOOPNONBYTE(void *avv=av;  , \
@@ -604,7 +605,8 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // we are going to execute f without any lower rank loop.  Thus we can use the BOXATOP etc flags here.  These flags are used only if we go through the full assemble path
    state = (FAV(fs)->flag2&VF2BOXATOP1)>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state &= ~((FAV(fs)->flag2&VF2ATOPOPEN1)>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
-   state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+// obsolete    state |= (-state) & FAV(self)->flag2 & (VF2WILLBEOPENED|VF2COUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+   state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
   state |= STATEHASGERUND; A h=sv->fgh[2]; hv=AAV(h); hn=AN(h); ASSERT(hn,EVLENGTH);  // Gerund case.  Mark it, set hv->1st gerund, hn=#gerunds.  Verify gerunds not empty
@@ -764,9 +766,9 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
 // obsolete    AFLAG(virtw)|=AFUNINCORPABLE;  // indicate that this is a moving virtual block and cannot EVER be incorporated
-   // Self-virtual blocks also modify the shape of a block, but that code notifies
-   // us through a flag bit.
-   jtinplace = (J)(intptr_t)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+   // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
+   // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
+   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1))&(FAV(fs)->flag>>(VINPLACEOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
@@ -803,7 +805,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
 #include "result.h"
 
   }else{
-   // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell)
+   // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroi,w));  // create 0 items of the type of w
    UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
    RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
@@ -1374,9 +1376,10 @@ F2(jtcut){A h=0;I flag=0,k;
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
-  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag, RMAX,2L,RMAX);
+  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VINPLACEOK2, RMAX,2L,RMAX);
   case 1: case -1:
-  case 2: case -2: if(!(NOUN&AT(a)))flag=(FAV(a)->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1); R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
+// obsolete   case 2: case -2: if(!(NOUN&AT(a)))flag=(FAV(a)->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1); R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
+  case 2: case -2: if(!(NOUN&AT(a)))flag=VINPLACEOK2+VINPLACEOK1; R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
   case 3: case -3: case 259: case -259: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
   default:         ASSERT(0,EVDOMAIN);
 }}

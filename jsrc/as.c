@@ -231,7 +231,7 @@ static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
 
 #else
-static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
+static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
@@ -251,7 +251,8 @@ static DF1(jtssg){PROLOG(0020);A a,z;I i,k,n,r,wr;
  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
- state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+// obsolete  state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
+ state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  UNINCORPABLE, non-inplaceable
@@ -332,7 +333,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
 }    /* f/\"r or f/\."r on sparse w */
 
 static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
- RZ(w);
+ RZ(w);F1PREFIP;
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
 // obsolete  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
@@ -346,7 +347,8 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
    // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
 // obsolete  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
- if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
+// obsolete  if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
+ if(!adocv.f)R irs1ip(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(adocv.cv); // obsolete RESETRANK;
  GA(z,zt,wn,wr,ws);
@@ -418,14 +420,14 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
 
 static DF1(jtiota1rev){R apv(IC(w),IC(w),-1L);}
 
-F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
+F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v;
  RZ(w);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgsuffix,jtgoutfix, w,0L,fxeachv(1L,w), VGERL|VAV(ds(CBSLASH))->flag, RMAX,0L,RMAX);
  v=FAV(w);  // verb info for w
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:
-   f1=jtsscan; 
+   f1=jtsscan; flag|=VINPLACEOK1;
    f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[0]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
    switch(id){
     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               
@@ -434,5 +436,5 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;C id;V*v;
     case CBW0000: case CBW0001: case CBW0011: case CBW0101:  case CBW0111: case CBW1111: 
      f2=jtofxassoc;
  }}
- R ADERIV(CBSDOT,f1,f2,FAV(ds(CBSDOT))->flag,RMAX,0,RMAX);
+ R ADERIV(CBSDOT,f1,f2,flag,RMAX,0,RMAX);
 }

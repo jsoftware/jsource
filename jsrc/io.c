@@ -318,19 +318,22 @@ C dll_initialized= 0; // dll init sets to 1
 // dll init on load - eqivalent to windows DLLMAIN DLL_ATTACH_PROOCESS
 __attribute__((constructor)) static void Initializer(int argc, char** argv, char** envp)
 {
- J jt=malloc(sizeof(JST));
- if(!jt) R;
+ J jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
+ if(!jtnobdy) R;
+ J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
- if(!jtglobinit(jt)){free(jt); R;}
- dll_initialized= 1;
+ if(!jtglobinit(jt)){free(jtnobdy); R;}
+ dll_initialized= 1; jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
 }
 
 J JInit(void){
  if(!dll_initialized) R 0; // constructor failed
- J jt;
- RZ(jt=malloc(sizeof(JST)));
+ J jtnobdy;
+ RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
+ J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
- if(!jtjinit2(jt,0,0)){free(jt); R 0;};
+ if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
+ jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
  R jt;
 }
 
@@ -342,14 +345,18 @@ J JInit(void){
 
  if(!g_jt)
  {
-  g_jt=malloc(sizeof(JST));
-  if(!g_jt) R 0;
+  J g_jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1);
+  if(!g_jtnobdy) R 0;
+  g_jt = (J)(((I)g_jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
   memset(g_jt,0,sizeof(JST));
-  if(!jtglobinit(g_jt)){free(g_jt);g_jt=0; R 0;}
+  if(!jtglobinit(g_jt)){free(g_jtnobdy);g_jt=0; R 0;}
+  g_jt->heap=(HANDLE)g_jtnobdy;  // save allo address for later free
  }
- RZ(jt=malloc(sizeof(JST)));
+ J jtnobdy; RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
+ jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
- if(!jtjinit2(jt,0,0)){free(jt); R 0;};
+ if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
+ jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
  R jt;
 }
 */
@@ -361,7 +368,7 @@ int JFree(J jt){I old;
   jt->jerr=0; jt->etxn=0; /* clear old errors */
   if(jt->xep&&AN(jt->xep)){old=jt->tnextpushx; immex(jt->xep); fa(jt->xep); jt->xep=0; jt->jerr=0; jt->etxn=0; tpop(old); }
   dllquit(jt);  // clean up call dll
-  free(jt);
+  free(jt->heap);  // free the initial allocation
   R 0;
 }
 #endif

@@ -77,7 +77,7 @@ static DF2(jtunquote){A z;
 // obsolete  ra(fs);  // protect against reassignment while executing.  Usecount will always be recursive; could ACINCR   scaf should assert recursive, then ACINCR
 // obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;
+  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {

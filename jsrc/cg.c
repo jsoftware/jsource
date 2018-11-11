@@ -277,7 +277,7 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
  RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
- // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller
+ // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller.  No need ta pass WILLOPEN status, since the verb can't use it
  POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 

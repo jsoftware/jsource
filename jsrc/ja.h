@@ -532,6 +532,8 @@
 #define iprimetest(x)               jtiprimetest(jt,(x)) 
 #define irs1(x0,x1,x2,x3)           jtirs1(jt,(x0),(x1),(x2),(x3))
 #define irs2(x0,x1,x2,x3,x4,x5)     jtirs2(jt,(x0),(x1),(x2),(x3),(x4),(x5))
+#define irs1ip(x0,x1,x2,x3)         jtirs1(jtinplace,(x0),(x1),(x2),(x3))
+#define irs2ip(x0,x1,x2,x3,x4,x5)   jtirs2(jtinplace,(x0),(x1),(x2),(x3),(x4),(x5))
 #define iscons(x)                   jtiscons(jt,(x))
 #define isnanq(x)                   jtisnanq(jt,(x))
 #define ispoly(x)                   jtispoly(jt,(x))

@@ -15,8 +15,8 @@
 #define SSRDU(w) (*(C4*)CAV(w))
 
 // Support for Speedy Singletons
-#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)(intptr_t)((I)jtf&~(JTINPLACEW+JTINPLACEA)); // header for function definition
-#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)(intptr_t)((I)jtf&~(JTINPLACEW+JTINPLACEA));   // header for function definition
+#define SSINGF2(f) A f(J jtf, A a, A w){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK); // header for function definition
+#define SSINGF2OP(f) A f(J jtf, A a, A w, I op){ J jt=(J)(intptr_t)((I)jtf&~JTFLAGMSK);   // header for function definition
 
 // An argument can be inplaced if it is enabled in the block AND in the call
 #define AINPLACE ((I)jtf&JTINPLACEA && ((AC(a)<1) || ((AC(a)==1) && (a==jt->zombieval))))

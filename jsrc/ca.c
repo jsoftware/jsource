@@ -73,17 +73,26 @@ static DF2(jtmodpow2){A h;B b,c;I at,m,n,wt,x,z;
 static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex(FAV(g)->fgh[0],w,self,0L,0L,0L,0L,jtmodpow2);}  // m must be an atom; I think n can have shape.  But we treat w as atomic
      /* m&|@(n&^) w ; m guaranteed to be INT or XNUM */
 
+// u@v and u@:v
 // If the CS? loops, it will be noninplaceable because the calls come from rank?ex.  If it is executed just once, we can inplace it.
+// TODO: no  need for protw checking?
 CS1IP(,on1, \
-{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A gx; RZ(gx=(g1)(jtinplace,w,gs));  /* inplace g.  jtinplace is set for g */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VINPLACEOK1X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)((J)(intptr_t)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw))),gx,fs));} \
+POPZOMB; \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=protw)*JTINPLACEW));  \
+jtinplace=FAV(fs)->flag&VINPLACEOK1?jtinplace:jt; \
+RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0113)
 
 CS2IP(,jtupon2, \
-{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; RZ(gx=(g2)(jtinplace,a,w,gs));  /* inplace g */ \
+{PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \
+RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VINPLACEOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-POPZOMB; RZ(z=(f1)((J)(intptr_t)((I)jt+((FAV(fs)->flag>>VINPLACEOK1X)&(gx!=protw)&(gx!=prota))),gx,fs));} \
+jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=prota)&(gx!=protw)*JTINPLACEW));  \
+jtinplace=FAV(fs)->flag&VINPLACEOK1?jtinplace:jt; \
+RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0114)
 // special case for rank 0.  Transfer to loop.  
 // if there is only one cell, process it through on1, which understands this type
@@ -109,14 +118,16 @@ RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~JTINPLACEA),w,gs));
   EPILOG(z);
 }
 #else
+// We don't bother passing WILLOPEN from u into v, since it's rarely used.  We do pass WILLOPEN into u.
 CS2IP(static,on2, \
  A ga;A gw;PUSHZOMB; \
  /* here for execution on a single cell */ \
  A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
  /* take inplaceability of each monad from the corresponding dyad argument */ \
- RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~JTINPLACEA),w,gs)); \
- RZ(ga=(g1)((J)(intptr_t)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
- POPZOMB; jtinplace=(J)(intptr_t)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); \
+ RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS)),w,gs)); \
+ RZ(ga=(g1)((J)(intptr_t)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW)),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
+ POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; \
+ RZ(z=(f2)(jtinplace,ga,gw,fs)); \
 ,0023)
 #endif
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
@@ -153,17 +164,17 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
 // RA can perform the first step of raze processing (counting the items and checking shapes) as the items are calculated.  This will save a pass over
 // tzhe items, which is valuable if the result is larger than cache.
 //
-// VF2WILLBEOPENED and VF2COUNTITEMS are stored into a verb V to hold the values of VF2WILLOPEN/VF2USESITEMCOUNT in the NEXT verb to be executed.  RA in V looks at
-// VF2WILLBEOPENED/VF2COUNTITEMS to perform the actions mentioned above.  VF2WILLBEOPENED can be set any time the next verb opens.  VF2COUNTITEMS should be set
-// only when the result of RA will be fed directly into the raze: it's not fatal to set it otherwise, but it does waste time on an item-count that is not used.
-// Setting COUNTITEMS requires understanding the processing of the partitioning modifier it is being set in.  We recognize the following cases:
-// ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
-// ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
-// ;@:(<@:v;.0)   ditto  also &:
-// ;@(<@:v;._3 _2 _1 1 2 3)  also &:
-//
-// we copy into another verb only if it is inplaceable, as it normally is
-
+// obsolete // VF2WILLBEOPENED and VF2COUNTITEMS are stored into a verb V to hold the values of VF2WILLOPEN/VF2USESITEMCOUNT in the NEXT verb to be executed.  RA in V looks at
+// obsolete // VF2WILLBEOPENED/VF2COUNTITEMS to perform the actions mentioned above.  VF2WILLBEOPENED can be set any time the next verb opens.  VF2COUNTITEMS should be set
+// obsolete // only when the result of RA will be fed directly into the raze: it's not fatal to set it otherwise, but it does waste time on an item-count that is not used.
+// obsolete // Setting COUNTITEMS requires understanding the processing of the partitioning modifier it is being set in.  We recognize the following cases:
+// obsolete // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
+// obsolete // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
+// obsolete // ;@:(<@:v;.0)   ditto  also &:
+// obsolete // ;@(<@:v;._3 _2 _1 1 2 3)  also &:
+// obsolete //
+// obsolete // we copy into another verb only if it is inplaceable, as it normally is
+// obsolete 
 // u@v
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
@@ -233,24 +244,24 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  if(d==COPE&&!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
 
  // Copy the open/raze status from v into u@v
- flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+ flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
  // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
  // 
- if(ACIPISOK(w)){I flag2copy=0;
-   // look for ;@(<@:v;._3 _2 _1 1 2 3)  also &:
-  if(av->flag2&VF2USESITEMCOUNT){
-   if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
-    if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=FAV(wv->fgh[0]);
-     if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
-      flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
-     }
-    }
-   }
-  }
-  wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
- }
-
+// obsolete  if(ACIPISOK(w)){I flag2copy=0;
+// obsolete    // look for ;@(<@:v;._3 _2 _1 1 2 3)  also &:
+// obsolete   if(av->flag2&VF2USESITEMCOUNT){
+// obsolete    if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
+// obsolete     if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=FAV(wv->fgh[0]);
+// obsolete      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+// obsolete       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+// obsolete      }
+// obsolete     }
+// obsolete    }
+// obsolete   }
+// obsolete   wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+// obsolete  }
+// obsolete 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
  if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}  // obsolete  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
@@ -259,6 +270,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
 }
 
+// u@:v
 F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=-1;V*av,*wv;
  ASSERTVV(a,w);
  av=FAV(a); c=av->id; f=av->fgh[0]; g=av->fgh[1]; e=ID(f); 
@@ -315,25 +327,25 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
  }}
  // Copy the open/raze status from v into u@v
- flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+ flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
- // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
- // 
- if(ACIPISOK(w)){I flag2copy=0;
-  // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
-  // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
-  // ;@:(<@:v;.0)   ditto  also &:
-  if(av->flag2&VF2USESITEMCOUNT){
-   if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
-    if(wgi==0){V *wfv=FAV(wv->fgh[0]);
-     if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
-      flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
-     }
-    }
-   }else if(d==CBSLASH||d==CBSDOT||d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if \ \. " or @ (not @:)
-  }
-  wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
- }
+// obsolete  // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
+// obsolete  // 
+// obsolete  if(ACIPISOK(w)){I flag2copy=0;
+// obsolete   // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
+// obsolete   // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
+// obsolete   // ;@:(<@:v;.0)   ditto  also &:
+// obsolete   if(av->flag2&VF2USESITEMCOUNT){
+// obsolete    if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
+// obsolete     if(wgi==0){V *wfv=FAV(wv->fgh[0]);
+// obsolete      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
+// obsolete       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
+// obsolete      }
+// obsolete     }
+// obsolete    }else if(d==CBSLASH||d==CBSDOT||d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if \ \. " or @ (not @:)
+// obsolete   }
+// obsolete   wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
+// obsolete  }
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // This is appropriate even though we elide the loop
@@ -341,6 +353,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
  R fdef(flag2,CATCO,VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX);
 }
 
+// u&:v
 F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
@@ -361,8 +374,8 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  }
  else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
 
- // Copy the open/raze status from v into u@v
- flag2 |= wv->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+ // Copy the monad open/raze status from v into u&:v
+ flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2; 
@@ -373,10 +386,11 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtinplace is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function
+// We pass the WILLOPEn flags through
 // obsolete static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
 // obsolete static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(intptr_t)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 static DF1(withl){F1PREFIP;DECLFG; I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,fs,w,gs,RMAX,(RANKT)r,g2):(RESETRANK,(g2)(jtinplace,fs,w,gs));}
-static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jt+2*((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
+static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
 
 // Here for m&i. and m&i:, computing a prehashed table from a
 // v->fgh[2] is the info/hash/bytemask result from calculating the prehash
@@ -397,6 +411,7 @@ static DF1(ixfixedright0){A z;D old=jt->ct;V*v=FAV(self);
 
 static DF2(with2){R df1(w,powop(self,a,0));}
 
+// u&v
 F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
@@ -478,8 +493,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
  }
  if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
 
- // Copy the open/raze status from v into u@v
- flag2 |= v->flag2&(VF2WILLOPEN|VF2USESITEMCOUNT);
+ // Copy the monad open/raze status from v into u&v
+ flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
 // obsolete   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
 // obsolete    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 

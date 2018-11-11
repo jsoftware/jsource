@@ -11,12 +11,13 @@ F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);
 F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 
 // ,y and ,"r y - producing virtual blocks
-F1(jtravel){A a,c,q,x,y,y0,z;B*b,d;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
+F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
- n=AN(w); ws=AS(w); wt=AT(w); d=!(wt&SPARSE);  // n=#atoms, ws->shape, wt=type, d=1 if dense
+ n=AN(w); ws=AS(w); wt=AT(w);  // n=#atoms, ws->shape, wt=type, d=1 if dense
 // obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
+  if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: rank of sparse array is always 1)
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on

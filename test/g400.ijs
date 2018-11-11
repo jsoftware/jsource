@@ -495,8 +495,10 @@ assert. siz1200 > 7!:2 '$ (1,:2) { a'
 
 assert. siz12002 > 7!:2 '$ , a'
 assert. siz12002 < 7!:2 '$ b =: , a'
-assert. siz12002 > 7!:2 '$ ,"1 a'
-assert. siz12002 < 7!:2 '$ b =: ,"1 a'
+assert. siz12002 > 7!:2 '$ ,"2 a'
+assert. siz12002 > 7!:2 '$ ,"1 a'  NB. NOP
+assert. siz12002 < 7!:2 '$ b =: ,"2 a'
+assert. siz12002 > 7!:2 '$ b =: ,"1 a'  NB. NOP
 assert. siz12002 > 7!:2 '$ ,"0 a'
 b =: 1 |. _1 |. a
 assert. siz1200 > 7!:2 'b =: ,"1 b'

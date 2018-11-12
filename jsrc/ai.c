@@ -132,7 +132,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CUCO:
    ASSERT(nf,EVDOMAIN); 
    RE(n=i0(x)); ASSERT(1<=n&&n<=4||7<=n&&n<=8,EVDOMAIN);
-   R amp(sc(1==n?2L:2==n?1L:3==n?4L:4==n?3L:7==n?8L:7L),h);
+   R amp(sc(-(1^(-n))/* obsolete 1==n?2L:2==n?1L:3==n?4L:4==n?3L:7==n?8L:7L*/),h);
   case CCANT:    
    ASSERT(nf,EVDOMAIN); 
    R obverse(eva(x,"] |:~ x C.^:_1 i.@#@$"),w);

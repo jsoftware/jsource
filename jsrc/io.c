@@ -148,6 +148,12 @@ F1(jtjoff){I x;
 
 I jdo(J jt, C* lp){I e,old;A x;
  jt->jerr=0; jt->etxn=0; /* clear old errors */
+ // The named-execution stack contains information on resetting the current locale.  If the first named execution deletes the locale it is running in,
+ // that deletion is deferred until the locale is no longer running, which is never detected because there is no earlier named execution to clean up.
+ // To prevent the stack from growing indefinitely, we reset it here.  It would be better (perhaps) if we actually PROCESSED the stack elements we cut,
+ // but we don't bother.  Another possibility would be to reset the callstack only if it was 0, so that a recursive immex will have its deletes handled by
+ // the resumption of the name that was interrupted.
+ I4 savcallstack = jt->callstacknext;
  if(jt->capture){
   if(jt->capturemax>capturesize){FREE(jt->capture); jt->capture=0; jt->capturemax=0;} // dealloc large capture buffer
   else jt->capture[0]=0; // clear capture buffer
@@ -155,16 +161,16 @@ I jdo(J jt, C* lp){I e,old;A x;
  old=jt->tnextpushx;
  *jt->adbreak=0;
  x=inpl(0,(I)strlen(lp),lp);
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep);  /* jt->callstacknext=0; */ jt->jerr=0; tpop(old);}
+ while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)jt->callstacknext=0; jt->jerr=0; tpop(old);}
  if(!jt->jerr)immex(x);
  e=jt->jerr;
- /* jt->callstacknext=0; */ jt->jerr=0;
+ if(savcallstack==0)jt->callstacknext=0;  jt->jerr=0;
  if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
   jt->uflags.us.cx.cx_c.db=0;
   immex(jt->dbtrap);
-  /* jt->callstacknext=0; */ jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
+  if(savcallstack==0)jt->callstacknext=0; jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
  }
- while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); /* jt->callstacknext=0; */ jt->jerr=0; tpop(old);}
+ while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)jt->callstacknext=0; jt->jerr=0; tpop(old);}
  showerr();
  spfree();
  tpop(old);

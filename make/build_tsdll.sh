@@ -2,7 +2,34 @@
 # $1 is j32 or j64
 cd ~
 
+if [ "x$CC" = x'' ] ; then
+if [ -f "/usr/bin/cc" ]; then
+CC=`cc --version | head -n 1 | cut -d ' ' -f 1`
+else
+CC=`gcc --version | head -n 1 | cut -d ' ' -f 1`
+fi
+compiler=$CC
+else
+compiler=`$CC --version | head -n 1 | cut -d ' ' -f 1`
+fi
+compiler=${compiler:0:3}
+echo "CC=$CC"
+echo "compiler=$compiler"
+
 common=" -fPIC -O1 -Werror -Wextra -Wno-unused-parameter"
+
+if [ "x$compiler" = x'gcc' ] ; then
+# gcc
+# alternatively, add comment /* fall through */
+OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
+if [ $OVER_GCC_VER7 -eq 1 ] ; then
+common="$common -Wno-implicit-fallthrough"
+fi
+OVER_GCC_VER8=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 8 | bc)
+if [ $OVER_GCC_VER8 -eq 1 ] ; then
+common="$common -Wno-cast-function-type"
+fi
+fi
 
 case $jplatform\_$1 in
 
@@ -40,6 +67,8 @@ LINK=" -dynamiclib -o libtsdll.dylib "
 echo no case for those parameters
 exit
 esac
+
+echo "COMPILE=$COMPILE"
 
 OBJS="tsdll.o "
 export OBJS COMPILE LINK TARGET

@@ -78,20 +78,20 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex(FAV(g)->fgh[0],w,self,0L,
 // TODO: no  need for protw checking?
 CS1IP(,on1, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VINPLACEOK1X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,gs));  /* inplace g.  jtinplace is set for g */ \
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK1X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=protw)*JTINPLACEW));  \
-jtinplace=FAV(fs)->flag&VINPLACEOK1?jtinplace:jt; \
+jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
 RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0113)
 
 CS2IP(,jtupon2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \
-RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VINPLACEOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,gs));  /* inplace g */ \
+RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=prota)&(gx!=protw)*JTINPLACEW));  \
-jtinplace=FAV(fs)->flag&VINPLACEOK1?jtinplace:jt; \
+jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
 RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0114)
 // special case for rank 0.  Transfer to loop.  
@@ -112,7 +112,7 @@ CS2IP(static,on2, \
  /* take inplaceability of each monad from the corresponding dyad argument */ \
  RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~(JTINPLACEA+JTWILLBEOPENED+JTCOUNTITEMS)),w,gs)); \
  RZ(ga=(g1)((J)(intptr_t)((I)jt+(((I)jtinplace>>JTINPLACEAX)&JTINPLACEW)),a,gs));  /* Move bit 1 to bit 0, clear bit 1 */ \
- POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; \
+ POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VJTFLGOK2?jtinplace:jt; \
  RZ(z=(f2)(jtinplace,ga,gw,fs)); \
 ,0023)
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
@@ -167,18 +167,18 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VINPLACEOK1|VINPLACEOK2));
+ flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
  // special cases of u
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
-  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
-  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
+  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
+  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
   case CSLASH:  if(d==CCOMMA){f1=jtredravel; } break;
-  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
-  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VINPLACEOK1|VINPLACEOK2);  break;
-  case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VINPLACEOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VINPLACEOK1;} break;
-  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VINPLACEOK2;} break;
-  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VINPLACEOK2;} break;
+  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag+=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
+  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag+=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2);  break;
+  case CICAP:   if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
+  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;} break;
+  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
   case CRAZE:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
     if((1LL<<(*AV(wv->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -186,20 +186,20 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
+       f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
       }
      }
     }
    }
    break;
-  case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->fgh[0])){f2=jtpolymult; flag&=~VINPLACEOK2;} break;
-  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(zero,av->fgh[1])){f1=jtdigits10; flag&=~VINPLACEOK1;} break;
-  case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VINPLACEOK1;} break;
+  case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->fgh[0])){f2=jtpolymult; flag&=~VJTFLGOK2;} break;
+  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(zero,av->fgh[1])){f1=jtdigits10; flag&=~VJTFLGOK1;} break;
+  case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
   case CAMP:
    x=av->fgh[0]; if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
    if((d==CEXP||d==CAMP&&CEXP==ID(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==ID(av->fgh[1])){
     h=x; flag+=VMOD; 
-    if(d==CEXP){f2=jtmodpow2; flag&=~VINPLACEOK2;} else{f1=jtmodpow1; flag&=~VINPLACEOK1;}
+    if(d==CEXP){f2=jtmodpow2; flag&=~VJTFLGOK2;} else{f1=jtmodpow1; flag&=~VJTFLGOK1;}
   }
  }
  // special cases of v
@@ -211,8 +211,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   else if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
   else if(c==CAMP&&(g==zero||g==one)){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;}
   switch(0<=m?d:-1){
-   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
-   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
+   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
+   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
   }
  }
  if(d==COPE&&!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
@@ -238,34 +238,34 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
  // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace
  // unless v can handle it
- flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VINPLACEOK1|VINPLACEOK2));
+ flag = ((av->flag&wv->flag)&VASGSAFE)+(wv->flag&(VJTFLGOK1|VJTFLGOK2));
  switch(c){
   case CBOX:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f 
-  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VINPLACEOK2;} break;
-  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
-  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
-  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VINPLACEOK1|VINPLACEOK2); break;
-  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VINPLACEOK2;}  break;
-  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VINPLACEOK2;} break;
-  case CICAP:   m=7; if(d==CNE){f1=jtnubind; flag&=~VINPLACEOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VINPLACEOK1;} break;
+  case CNOT:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2; flag&=~VJTFLGOK2;} break;
+  case CGRADE:  if(d==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
+  case CCEIL:   f1=jtonf1; f2=jtuponf2; flag=VCEIL; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
+  case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
+  case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;
+  case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
+  case CICAP:   m=7; if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
   case CAMP:    if(g==zero||g==one){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
   case CSLASH:  
-   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VINPLACEOK2;}
+   if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
    if(d==CCOMMA){f1=jtredravel; } else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
    break;
 
   case CSEMICO:
-   if(d==CLBRACE){f2=jtrazefrom; flag&=~VINPLACEOK2;}  // detect ;@:{
+   if(d==CLBRACE){f2=jtrazefrom; flag&=~VJTFLGOK2;}  // detect ;@:{
    else if(d==CCUT){
     j=*AV(wv->fgh[1]);   // cut type
-    if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VINPLACEOK2;}  // detect ;@:(<;.0), used for substring extraction
+    if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
      if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
       A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
       if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
        A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
        if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VINPLACEOK1|VINPLACEOK2);
+        f1=jtrazecut1; f2=jtrazecut2; flag&=~(VJTFLGOK1|VJTFLGOK2);
        }
       }
      }
@@ -275,16 +275,16 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
  if(0<=m){
   b=d==CFIT&&equ(zero,wv->fgh[1]);
   switch(b?ID(wv->fgh[0]):d){
-   case CEQ:   f2=b?atcomp0:atcomp; flag+=0+8*m; flag&=~VINPLACEOK2; break;
-   case CNE:   f2=b?atcomp0:atcomp; flag+=1+8*m; flag&=~VINPLACEOK2; break;
-   case CLT:   f2=b?atcomp0:atcomp; flag+=2+8*m; flag&=~VINPLACEOK2; break;
-   case CLE:   f2=b?atcomp0:atcomp; flag+=3+8*m; flag&=~VINPLACEOK2; break;
-   case CGE:   f2=b?atcomp0:atcomp; flag+=4+8*m; flag&=~VINPLACEOK2; break;
-   case CGT:   f2=b?atcomp0:atcomp; flag+=5+8*m; flag&=~VINPLACEOK2; break;
-   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VINPLACEOK2; break;
+   case CEQ:   f2=b?atcomp0:atcomp; flag+=0+8*m; flag&=~VJTFLGOK2; break;
+   case CNE:   f2=b?atcomp0:atcomp; flag+=1+8*m; flag&=~VJTFLGOK2; break;
+   case CLT:   f2=b?atcomp0:atcomp; flag+=2+8*m; flag&=~VJTFLGOK2; break;
+   case CLE:   f2=b?atcomp0:atcomp; flag+=3+8*m; flag&=~VJTFLGOK2; break;
+   case CGE:   f2=b?atcomp0:atcomp; flag+=4+8*m; flag&=~VJTFLGOK2; break;
+   case CGT:   f2=b?atcomp0:atcomp; flag+=5+8*m; flag&=~VJTFLGOK2; break;
+   case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
 // Bug in special code for f@:e. when rank of e. result > 1
-//   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
-   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VINPLACEOK2; break;
+//   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
+   case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
  }}
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
@@ -301,7 +301,7 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  ASSERTVV(a,w);
  c=ID(a); wv=FAV(w); d=wv->id;  // c=pseudochar for u, d=pseudochar for v
  // Set flag wfith ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  Inplace only if monad v can handle it
- flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
+ flag = ((FAV(a)->flag&wv->flag)&VASGSAFE)+((wv->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
@@ -310,12 +310,12 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
    if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
     A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
     if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-     f1=jtrazecut1; flag&=~(VINPLACEOK1);
+     f1=jtrazecut1; flag&=~(VJTFLGOK1);
     }
    }
   }
  }
- else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VINPLACEOK1;flag+=VIRS1;}
+ else if(c==CGRADE&&d==CGRADE)         {f1=jtranking;  flag&=~VJTFLGOK1;flag+=VIRS1;}
 
  // Copy the monad open/raze status from v into u&:v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
@@ -361,7 +361,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
  case NV:
   f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
-  flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+  flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
   ACIPNO(a);
@@ -372,18 +372,18 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
   }
   if(0<=mode){
-   if(b){jt->ct=0.0; h=indexofsub(mode,a,mark); jt->ct=old; f1=ixfixedleft0; flag&=~VINPLACEOK1;}
-   else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VINPLACEOK1;}
+   if(b){jt->ct=0.0; h=indexofsub(mode,a,mark); jt->ct=old; f1=ixfixedleft0; flag&=~VJTFLGOK1;}
+   else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VJTFLGOK1;}
   }else switch(c){
-   case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VINPLACEOK1; break;
-   case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VINPLACEOK1;}
+   case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
+   case CIBEAM: if(v->fgh[0]&&v->fgh[1]&&128==i0(v->fgh[0])&&3==i0(v->fgh[1])){RZ(h=crccompile(a)); f1=jtcrcfixedleft; flag&=~VJTFLGOK1;}
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
  case VN: 
   f1=withr; v=FAV(a);
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
-  flag=((v->flag&(VINPLACEOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
+  flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protects values inside it.
   ACIPNO(w);
@@ -395,8 +395,8 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    else      mode=c==CEPS?IEPS:-1;
   }
   if(0<=mode){
-   if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VINPLACEOK1;}
-   else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VINPLACEOK1;}
+   if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VJTFLGOK1;}
+   else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);
  case VV:
@@ -404,20 +404,20 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   f1=on1; f2=on2;
   v=FAV(w); c=v->id; r=v->mr;   // c=pseudochar for v
   // Set flag with ASGSAFE status from f/g; keep INPLACE? in sync with f1,f2.  To save tests later, inplace only if monad v can handle it
-  flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VINPLACEOK1)*((VINPLACEOK2+VINPLACEOK1)/VINPLACEOK1));
+  flag = ((FAV(a)->flag&v->flag)&VASGSAFE)+((v->flag&VJTFLGOK1)*((VJTFLGOK2+VJTFLGOK1)/VJTFLGOK1));
   if(c==CFORK||c==CAMP){
    if(c==CFORK)d=ID(v->fgh[2]);
    if(CIOTA==ID(v->fgh[1])&&(!d||d==CLEFT||d==CRIGHT)&&equ(alp,v->fgh[0])){  // a.&i. or (a. i. ][)
     u=FAV(a); d=u->id;
-    if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VINPLACEOK2;}
+    if(d==CLT||d==CLE||d==CEQ||d==CNE||d==CGE||d==CGT){f2=jtcharfn2; flag&=~VJTFLGOK2;}
    }
   }
   switch(ID(a)){   // if we matched the a.&i. code above, a must be a. and its ID will be 0
   case CBOX:   flag |= VF2BOXATOP1; break;  // mark this as <@f for the monad
-  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VINPLACEOK1;} break;
+  case CGRADE: if(c==CGRADE){f1=jtranking; flag+=VIRS1; flag&=~VJTFLGOK1;} break;
   case CSLASH: if(c==CCOMMA){f1=jtredravel; } break;
-  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VINPLACEOK1; break;
-  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VINPLACEOK1; break;
+  case CCEIL:  f1=jtonf1; flag+=VCEIL; flag&=~VJTFLGOK1; break;
+  case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
     if((1LL<<(*AV(v->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
@@ -425,7 +425,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
     if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
       if(gfv->id==CSLASH){  // gf is gff/  .  We will analyze gff later
-       f1=jtrazecut1; flag&=~(VINPLACEOK1);
+       f1=jtrazecut1; flag&=~(VJTFLGOK1);
       }
      }
     }

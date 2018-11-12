@@ -45,53 +45,53 @@ B jtpinit(J jt){A t;C*s;
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
  /*  =: */  GAT(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
 
- /*  bw */  pdef(CBW0000, VERB, jtbitwise1,  jtbitwise0000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0001, VERB, jtbitwise1,  jtbitwise0001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0010, VERB, jtbitwise1,  jtbitwise0010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0011, VERB, jtbitwise1,  jtbitwise0011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0100, VERB, jtbitwise1,  jtbitwise0100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0101, VERB, jtbitwise1,  jtbitwise0101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0110, VERB, jtbitwise1,  jtbitwise0110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW0111, VERB, jtbitwise1,  jtbitwise0111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1000, VERB, jtbitwise1,  jtbitwise1000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1001, VERB, jtbitwise1,  jtbitwise1001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1010, VERB, jtbitwise1,  jtbitwise1010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1011, VERB, jtbitwise1,  jtbitwise1011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1100, VERB, jtbitwise1,  jtbitwise1100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1101, VERB, jtbitwise1,  jtbitwise1101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1110, VERB, jtbitwise1,  jtbitwise1110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  bw */  pdef(CBW1111, VERB, jtbitwise1,  jtbitwise1111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  =  */  pdef(CEQ,     VERB, jtsclass,  jteq,     RMAX,0,   0   ,VASGSAFE|VIRS2|VINPLACEOK2);
+ /*  bw */  pdef(CBW0000, VERB, jtbitwise1,  jtbitwise0000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0001, VERB, jtbitwise1,  jtbitwise0001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0010, VERB, jtbitwise1,  jtbitwise0010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0011, VERB, jtbitwise1,  jtbitwise0011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0100, VERB, jtbitwise1,  jtbitwise0100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0101, VERB, jtbitwise1,  jtbitwise0101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0110, VERB, jtbitwise1,  jtbitwise0110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW0111, VERB, jtbitwise1,  jtbitwise0111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1000, VERB, jtbitwise1,  jtbitwise1000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1001, VERB, jtbitwise1,  jtbitwise1001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1010, VERB, jtbitwise1,  jtbitwise1010,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1011, VERB, jtbitwise1,  jtbitwise1011,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1100, VERB, jtbitwise1,  jtbitwise1100,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1101, VERB, jtbitwise1,  jtbitwise1101,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1110, VERB, jtbitwise1,  jtbitwise1110,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  bw */  pdef(CBW1111, VERB, jtbitwise1,  jtbitwise1111,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  =  */  pdef(CEQ,     VERB, jtsclass,  jteq,     RMAX,0,   0   ,VASGSAFE|VIRS2|VJTFLGOK2);
  /*  =. */       /* see above */
  /*  =: */       /* see above */
- /*  <  */  pdef(CBOX,    VERB, jtbox,     jtlt,     RMAX,0,   0   ,VASGSAFE|VIRS1|VIRS2|VINPLACEOK2);  // alias CLT
- /*  <. */  pdef(CFLOOR,  VERB, jtfloor1,  jtminimum,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // alias CMIN
- /*  <: */  pdef(CLE,     VERB, jtdecrem,  jtle,     0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  >  */  pdef(COPE,    VERB, jtope,     jtgt,     0,   0,   0   ,VASGSAFE|VIRS2|VINPLACEOK2);  // alias CGT
- /*  >. */  pdef(CCEIL,   VERB, jtceil1,   jtmaximum,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // alias CMAX
- /*  >: */  pdef(CGE,     VERB, jtincrem,  jtge,     0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  +  */  pdef(CPLUS,   VERB, jtconjug,  jtplus,   0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  +. */  pdef(CPLUSDOT,VERB, jtrect,    jtgcd,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  +: */  pdef(CPLUSCO, VERB, jtduble,   jtnor,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  *  */  pdef(CSTAR,   VERB, jtsignum,  jttymes,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  *. */  pdef(CSTARDOT,VERB, jtpolar,   jtlcm,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK2);
- /*  *: */  pdef(CSTARCO, VERB, jtsquare,  jtnand,   0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  -  */  pdef(CMINUS,  VERB, jtnegate,  jtminus,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  -. */  pdef(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VASGSAFE|VINPLACEOK1);
- /*  -: */  pdef(CHALVE,  VERB, jthalve,   jtmatch,  0,   RMAX,RMAX,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1);  // alias CMATCH
- /*  %  */  pdef(CDIV,    VERB, jtrecip,   jtdivide, 0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
+ /*  <  */  pdef(CBOX,    VERB, jtbox,     jtlt,     RMAX,0,   0   ,VASGSAFE|VIRS1|VIRS2|VJTFLGOK2);  // alias CLT
+ /*  <. */  pdef(CFLOOR,  VERB, jtfloor1,  jtminimum,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // alias CMIN
+ /*  <: */  pdef(CLE,     VERB, jtdecrem,  jtle,     0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  >  */  pdef(COPE,    VERB, jtope,     jtgt,     0,   0,   0   ,VASGSAFE|VIRS2|VJTFLGOK2);  // alias CGT
+ /*  >. */  pdef(CCEIL,   VERB, jtceil1,   jtmaximum,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // alias CMAX
+ /*  >: */  pdef(CGE,     VERB, jtincrem,  jtge,     0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  +  */  pdef(CPLUS,   VERB, jtconjug,  jtplus,   0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK2);
+ /*  +. */  pdef(CPLUSDOT,VERB, jtrect,    jtgcd,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK2);
+ /*  +: */  pdef(CPLUSCO, VERB, jtduble,   jtnor,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  *  */  pdef(CSTAR,   VERB, jtsignum,  jttymes,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  *. */  pdef(CSTARDOT,VERB, jtpolar,   jtlcm,    0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK2);
+ /*  *: */  pdef(CSTARCO, VERB, jtsquare,  jtnand,   0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  -  */  pdef(CMINUS,  VERB, jtnegate,  jtminus,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  -. */  pdef(CNOT,    VERB, jtnot,     jtless,   0,   RMAX,RMAX,VISATOMIC1|VASGSAFE|VJTFLGOK1);
+ /*  -: */  pdef(CHALVE,  VERB, jthalve,   jtmatch,  0,   RMAX,RMAX,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1);  // alias CMATCH
+ /*  %  */  pdef(CDIV,    VERB, jtrecip,   jtdivide, 0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
  /*  %. */  pdef(CDOMINO, VERB, jtminv,    jtmdiv,   2,   RMAX,2   ,VASGSAFE);
- /*  %: */  pdef(CSQRT,   VERB, jtsqroot,  jtroot,   0,   0,   0   ,VISATOMIC1|VASGSAFE|VINPLACEOK1);
- /*  ^  */  pdef(CEXP,    VERB, jtexpn1,   jtexpn2,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
- /*  ^. */  pdef(CLOG,    VERB, jtlogar1,  jtlogar2, 0,   0,   0   ,VISATOMIC1|VASGSAFE|VINPLACEOK1);
+ /*  %: */  pdef(CSQRT,   VERB, jtsqroot,  jtroot,   0,   0,   0   ,VISATOMIC1|VASGSAFE|VJTFLGOK1);
+ /*  ^  */  pdef(CEXP,    VERB, jtexpn1,   jtexpn2,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
+ /*  ^. */  pdef(CLOG,    VERB, jtlogar1,  jtlogar2, 0,   0,   0   ,VISATOMIC1|VASGSAFE|VJTFLGOK1);
  /*  ^: */  pdef(CPOWOP,  CONJ, 0L,        jtpowop,  0,   0,   0   ,VFLAGNONE);
- /*  $  */  pdef(CDOLLAR, VERB, jtshapex,  jtreitem, RMAX,1,   RMAX,VASGSAFE|VIRS2|VINPLACEOK2);
+ /*  $  */  pdef(CDOLLAR, VERB, jtshapex,  jtreitem, RMAX,1,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2);
  /*  $. */  pdef(CSPARSE, VERB, jtsparse1, jtsparse2,RMAX,RMAX,RMAX,VASGSAFE);
  /*  $: */  pdef(CSELF,   VERB, jtself1,   jtself2,  RMAX,RMAX,RMAX,VFLAGNONE);
  /*  ~  */  pdef(CTILDE,  ADV,  jtswap,    0L,       0,   0,   0   ,VFLAGNONE);
  /*  ~. */  pdef(CNUB,    VERB, jtnub,     0L,       RMAX,0,   0   ,VASGSAFE);
- /*  ~: */  pdef(CNE,     VERB, jtnubsieve,jtne,     RMAX,0,   0   ,VASGSAFE|VIRS1|VIRS2|VINPLACEOK2);
- /*  |  */  pdef(CSTILE,  VERB, jtmag,     jtresidue,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
+ /*  ~: */  pdef(CNE,     VERB, jtnubsieve,jtne,     RMAX,0,   0   ,VASGSAFE|VIRS1|VIRS2|VJTFLGOK2);
+ /*  |  */  pdef(CSTILE,  VERB, jtmag,     jtresidue,0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
  /*  |. */  pdef(CREV,    VERB, jtreverse, jtrotate, RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);   // alias CROT
  /*  |: */  pdef(CCANT,   VERB, jtcant1,   jtcant2,  RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2);
  /*  .  */  pdef(CDOT,    CONJ, 0L,        jtdot,    0,   0,   0   ,VFLAGNONE);
@@ -100,7 +100,7 @@ B jtpinit(J jt){A t;C*s;
  /*  :  */  pdef(CCOLON,  CONJ, 0L,        jtcolon,  0,   0,   0   ,VFLAGNONE);
  /*  :. */  pdef(COBVERSE,CONJ, 0L,        jtobverse,0,   0,   0   ,VFLAGNONE);
  /*  :: */  pdef(CADVERSE,CONJ, 0L,        jtadverse,0,   0,   0   ,VFLAGNONE);
- /*  ,  */  pdef(CCOMMA,  VERB, jtravel,   jtapip,   RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2);
+ /*  ,  */  pdef(CCOMMA,  VERB, jtravel,   jtapip,   RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2);
  /*  ,. */  pdef(CCOMDOT, VERB, jttable,   jtstitch, RMAX,RMAX,RMAX,VASGSAFE|VIRS1);
  /*  ,: */  pdef(CLAMIN,  VERB, jtlamin1,  jtlamin2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2);
  /*  ;  */  pdef(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE);
@@ -109,7 +109,7 @@ B jtpinit(J jt){A t;C*s;
  /*  #  */  pdef(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2);
  /*  #. */  pdef(CBASE,   VERB, jtbase1,   jtbase2,  1,   1,   1   ,VASGSAFE);
  /*  #: */  pdef(CABASE,  VERB, jtabase1,  jtabase2, RMAX,1,   0   ,VASGSAFE);
- /*  !  */  pdef(CBANG,   VERB, jtfact,    jtoutof,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1|VINPLACEOK2);
+ /*  !  */  pdef(CBANG,   VERB, jtfact,    jtoutof,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
  /*  !. */  pdef(CFIT,    CONJ, 0L,        jtfit,    0,   0,   0   ,VASGSAFE);
  /*  !: */  pdef(CIBEAM,  CONJ, 0L,        jtforeign,0,   0,   0   ,VFLAGNONE);
  /*  /  */  pdef(CSLASH,  ADV,  jtslash,   0L,       0,   0,   0   ,VIRS1);
@@ -118,16 +118,16 @@ B jtpinit(J jt){A t;C*s;
  /*  \  */  pdef(CBSLASH, ADV,  jtbslash,  0L,       0,   0,   0   ,VIRS1);
  /*  \. */  pdef(CBSDOT,  ADV,  jtbsdot,   0L,       0,   0,   0   ,VIRS1);
  /*  \: */  pdef(CDGRADE, VERB, jtdgrade1, jtdgrade2,RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2);
- /*  [  */  pdef(CLEFT,   VERB, jtright1,  jtleft2,  RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1|VINPLACEOK1|VINPLACEOK2);
+ /*  [  */  pdef(CLEFT,   VERB, jtright1,  jtleft2,  RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1|VJTFLGOK1|VJTFLGOK2);
  /*  [: */  pdef(CCAP,    VERB, 0L,        0L,       RMAX,RMAX,RMAX,VFLAGNONE);   // not ASGSAFE since used for not-yet-defined names
- /*  ]  */  pdef(CRIGHT,  VERB, jtright1,  jtright2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1|VINPLACEOK1|VINPLACEOK2);
- /*  {  */  pdef(CLBRACE, VERB, jtcatalog, jtfrom,   1,   0,   RMAX,VASGSAFE|VIRS2|VINPLACEOK2);
- /*  {. */  pdef(CHEAD,   VERB, jthead,    jttake,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2);  // alias CTAKE
- /*  {: */  pdef(CTAIL,   VERB, jttail,    0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VINPLACEOK1);
- /*  }  */  pdef(CRBRACE, ADV,  jtamend,   0L,       0,   0,   0   ,VASGSAFE|VINPLACEOK2);
+ /*  ]  */  pdef(CRIGHT,  VERB, jtright1,  jtright2, RMAX,RMAX,RMAX,VASGSAFE|VIRS1|VIRS2|VISATOMIC1|VJTFLGOK1|VJTFLGOK2);
+ /*  {  */  pdef(CLBRACE, VERB, jtcatalog, jtfrom,   1,   0,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2);
+ /*  {. */  pdef(CHEAD,   VERB, jthead,    jttake,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2);  // alias CTAKE
+ /*  {: */  pdef(CTAIL,   VERB, jttail,    0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VJTFLGOK1);
+ /*  }  */  pdef(CRBRACE, ADV,  jtamend,   0L,       0,   0,   0   ,VASGSAFE|VJTFLGOK2);
  /*  }* */  pdef(CCASEV,  VERB, jtcasev,   0L,       RMAX,RMAX,RMAX,VFLAGNONE);   // f2 gets filled in with pointer to a name when this is used
- /*  }. */  pdef(CBEHEAD, VERB, jtbehead,  jtdrop,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2);  // alias CDROP
- /*  }: */  pdef(CCTAIL,  VERB, jtcurtail, 0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VINPLACEOK1);
+ /*  }. */  pdef(CBEHEAD, VERB, jtbehead,  jtdrop,   RMAX,1,   RMAX,VASGSAFE|VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2);  // alias CDROP
+ /*  }: */  pdef(CCTAIL,  VERB, jtcurtail, 0L,       RMAX,0,   0   ,VASGSAFE|VIRS1|VJTFLGOK1);
  /*  "  */  pdef(CQQ,     CONJ, 0L,        jtqq,     0,   0,   0   ,VFLAGNONE);
  /*  ". */  pdef(CEXEC,   VERB, jtexec1,   jtexec2,  1,   RMAX,RMAX,VFLAGNONE);
  /*  ": */  pdef(CTHORN,  VERB, jtthorn1,  jtthorn2, RMAX,1,   RMAX,VASGSAFE);
@@ -143,7 +143,7 @@ B jtpinit(J jt){A t;C*s;
  /*  ?  */  pdef(CQUERY,  VERB, jtroll,    jtdeal,   0,   0,   0   ,VISATOMIC1|VASGSAFE);
  /*  ?. */  pdef(CQRYDOT, VERB, jtrollx,   jtdealx,  RMAX,0,   0   ,VASGSAFE);
  /*  ?: */       /* undefined */
- /* {:: */  pdef(CFETCH,  VERB, jtmap,     jtfetch,  RMAX,1,   RMAX,VASGSAFE|VINPLACEOK2);
+ /* {:: */  pdef(CFETCH,  VERB, jtmap,     jtfetch,  RMAX,1,   RMAX,VASGSAFE|VJTFLGOK2);
  /* }:: */  pdef(CEMEND,  ADV,  jtemend,   0L,       0,   0,   0   ,VFLAGNONE);
  /* &.: */  pdef(CUNDCO,  CONJ, 0L,        jtundco,  0,   0,   0   ,VFLAGNONE);
  /*  a. */       /* see above */
@@ -167,8 +167,8 @@ B jtpinit(J jt){A t;C*s;
  /*  m. */       /* see above */
  /*  M. */  pdef(CMCAP,   ADV,  jtmemo,    0L,       0,   0,   0   ,VFLAGNONE);
  /*  n. */       /* see above */
- /*  o. */  pdef(CCIRCLE, VERB, jtpix,     jtcircle, 0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VINPLACEOK1);
- /*  p. */  pdef(CPOLY,   VERB, jtpoly1,   jtpoly2,  1,   1,   0   ,VASGSAFE|VIRS2|VINPLACEOK2);
+ /*  o. */  pdef(CCIRCLE, VERB, jtpix,     jtcircle, 0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1);
+ /*  p. */  pdef(CPOLY,   VERB, jtpoly1,   jtpoly2,  1,   1,   0   ,VASGSAFE|VIRS2|VJTFLGOK2);
  /*  p..*/  pdef(CPDERIV, VERB, jtpderiv1, jtpderiv2,1,   0,   1   ,VASGSAFE);
  /*  p: */  pdef(CPCO,    VERB, jtprime,   jtpco2,   0,   RMAX,RMAX,VISATOMIC1|VIRS1|VASGSAFE);
  /*  q: */  pdef(CQCO,    VERB, jtfactor,  jtqco2,   0,   0,   0   ,VISATOMIC1|VASGSAFE);

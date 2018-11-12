@@ -16,7 +16,7 @@ F1(jtswap){A y;C*s;I n;
  RZ(w); 
  if(VERB&AT(w)){
   // reflexive/passive.  Create verb that swaps
-  I flag = FAV(w)->flag&(VIRS2|VINPLACEOK2); flag = (FAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
+  I flag = FAV(w)->flag&(VIRS2|VJTFLGOK2); flag = (FAV(w)->flag&VASGSAFE)+flag+(flag>>1);  // set ASGSAFE, both inplace/irs bits from dyad; ISATOMIC immaterial, since always dyad
   R fdef(0,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{
   // evoke.  Ii must be LIT and convertible to ASCII.
@@ -65,9 +65,9 @@ F1(jtbdot){A b,h=0;I j,n,*v;
   RZ(h=cant2(IX(AR(w)),from(w,b)));
   R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, VFLAGNONE, RMAX,0L,0L);
  }else switch(j){
-  case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-  case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-  case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
+  case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
+  case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
+  case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VJTFLGOK2, 0L,0L,0L);
   // The code uses a VERB with id CBDOT to stand for the derived verb of m b. .  This is used for spellout and for inverses, so we retain it.
   // We copy the other information from the verb that executes the function.  This contains pointers to the routines, and to the function table
   default: {A z=ca(ds(j)); RZ(z); FAV(z)->fgh[0]=w; FAV(z)->id=CBDOT; RETF(z);}

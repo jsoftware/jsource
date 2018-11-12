@@ -70,7 +70,7 @@ static DF2(jtunquote){A z;
   AF actionfn=v->valencefns[dyadex];
   ++AC(fs);  // protect the entity
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
-  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
+  A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VJTFLGOK1?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {
@@ -80,7 +80,7 @@ static DF2(jtunquote){A z;
    jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
    ra(fs);  // should assert recursive usecount
-   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;
+   A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VJTFLGOK1?jtinplace:jt,a,w,fs); jt->sf=s;
    fa(fs);
   }
   if(0<jt->uflags.us.uq.uq_c.pmctrb)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL1:VAL2);  // record the return from call
@@ -184,7 +184,7 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  // Execute.  ra() to protect against deleting the name while it is running.
  // This will be fast because we know any name has a recursive usecount before it is assigned
  else{ra(fs);  // should assert recursive usecount
-  if(a){if(!(fv->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
+  if(a){if(!(fv->flag&VJTFLGOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(fv->flag&VJTFLGOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   fa(fs);
  }
  if(!jt->stswitched)jt->global=jt->fcallg[i].og;  // do this better.  Remove stswitched?  og not needed elsewhere - just stack it here
@@ -221,7 +221,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // and let unquote use the up-to-date value.
  // ASGSAFE has a similar problem, and that's more serious, because unquote is too late to stop the inplacing.  We try to ameliorate the
  // problem by making [: unsafe.
- A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VINPLACEOK1|VINPLACEOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
+ A z=fdef(0,CTILDE,AT(y), jtunquote1,jtunquote, a,0L,0L, (v->flag&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2), v->mr,v->lr,v->rr);  // return value of 'name~', with correct rank, part of speech, and safe/inplace bits
  RZ(z); 
  // To prevent having to look up the name every time it is executed, we will remember the address of the block (in localuse), AND the modifier counter at the time of the lookup (in AM).  We can't use
  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition.

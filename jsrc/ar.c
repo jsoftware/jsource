@@ -207,7 +207,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
- I inplacelaterw = (FAV(fs)->flag>>(VINPLACEOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
+ I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
@@ -629,11 +629,11 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
  if(NOUN&AT(w))R evger(w,sc(GINSERT));  // treat m/ as m;.6.  This means that a node with CSLASH never contains gerund u
  v=FAV(w); 
  switch(v->id){  // select the monadic case
-  case CCOMMA:  f1=jtredcat; flag=VINPLACEOK1;   break;
+  case CCOMMA:  f1=jtredcat; flag=VJTFLGOK1;   break;
   case CCOMDOT: f1=jtredstitch; flag=0; break;
   case CSEMICO: f1=jtredsemi; flag=0; break;
   case CUNDER:  f1=jtreduce; if(COPE==ID(v->fgh[1])){c=ID(v->fgh[0]); if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} flag=0; break;
-  default: f1=jtreduce; flag=(v->flag&VINPLACEOK2)>>(VINPLACEOK2X-VINPLACEOK1X); break;  // monad is inplaceable if the dyad for u is
+  default: f1=jtreduce; flag=(v->flag&VJTFLGOK2)>>(VJTFLGOK2X-VJTFLGOK1X); break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
  R fdef(0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|FAV(ds(CSLASH))->flag, RMAX,RMAX,RMAX);

@@ -142,7 +142,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  RETF(z);
 }    /* f^:n w, non-negative finite n, well-behaved f */
 
-static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VINPLACEOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
+static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VJTFLGOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); RETF(z);}
 static DF1(jtinverr){F1PREFIP;ASSERT(0,EVDOMAIN);}  // used for uninvertible monads
@@ -169,17 +169,17 @@ static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
 // here for u^:v y
 CS1IP(static,jtpowv1, \
 A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u) \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u) \
 ,0108)
 // here for x u^:v y 
 CS2IP(static,jtpowv2, \
 A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->valencefns[1])(FAV(u)->flag&VINPLACEOK2?jtinplace:jt,a,w,u); \
+z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u); \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
 A u; RZ(u = powop(FAV(fs)->fgh[0],CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VINPLACEOK1?jtinplace:jt,w,u); \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u); \
 ,0110)
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
@@ -199,7 +199,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
    // u^:v.  Create derived verb to handle it.
    v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;
    // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
+   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
   case VN:
    // u^:n.  Check for special types.
    if(BOX&AT(w)){A x,y;AF f1,f2;
@@ -230,7 +230,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
      // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
      // must wait until we get arguments
      {A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-      I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VINPLACEOK1:VINPLACEOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
+      I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
      R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
      }
    }

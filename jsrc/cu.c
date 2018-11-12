@@ -57,14 +57,14 @@ DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX
 // u&.v    kludge should calculate fullf as part of under/undco & pass in via h
 // PUSH/POP ZOMB is performed in atop/amp/ampco
 // under is for when we could not precalculate the inverse
-static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
+static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
 static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
-static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
-static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
+static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VJTFLGOK1?jtinplace:jt,w,fullf);}
+static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VJTFLGOK2?jtinplace:jt,a,w,fullf);}
 
 // u&.> main entry point.  Does not support inplacing.
 static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
@@ -97,11 +97,11 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  c=0; f1=0; f2=0; r=mr(w); v=FAV(w);
  // Set flag with ASGSAFE status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, of we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
- I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2);
+ I flag = (FAV(a)->flag&v->flag&VASGSAFE) + (VJTFLGOK1|VJTFLGOK2);
  // If v is WILLOPEN, so will the compound be
  I flag2=FAV(w)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
  switch(v->id){
-  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VINPLACEOK1|VINPLACEOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
+  case COPE:  f1=jtunderh10; f2=jtunderh20; flag&=~(VJTFLGOK1|VJTFLGOK2); flag2|=VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W|VF2BOXATOP1|VF2BOXATOP2; break;   // &.>
   case CFORK: c=ID(v->fgh[2]); /* fall thru */
   case CAMP:  
    u=FAV(a);  // point to a in a&.w.  w is f1&g1 or (f1 g1 h1)
@@ -110,7 +110,7 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
    if(CIOTA==ID(v->fgh[1])&&(!c||c==CLEFT||c==CRIGHT)&&equ(alp,v->fgh[0])){   // w is  {a.&i.  or  (a. i. ][)}
     f1=b&& b1?jtbitwiseinsertchar:jtunderai1;    // m b./ &. {a.&i.  or  (a. i. ][)}   or  f &. {a.&i.  or  (a. i. ][)}
     f2=b&&!b1?(AF)jtbitwisechar:!b1&&(uid==CMAX||uid==CMIN)?(AF)jtcharfn2:f2;   // m b. &. {a.&i.  or  (a. i. ][)}   or  >. &. {a.&i.  or  (a. i. ][)}   or f &. {a.&i.  or  (a. i. ][)}
-    flag&=~(VINPLACEOK1|VINPLACEOK2);   // not perfect, but ok
+    flag&=~(VJTFLGOK1|VJTFLGOK2);   // not perfect, but ok
    }
  }
  // Create the standard g^:_1 @ (f & g) to use if we have no special processing (not needed if a.&i., but that's rare)
@@ -118,8 +118,8 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // under12 are inplaceable, and pass inplaceability based on the calculated verb.  underh just passes inplaceability through, so we have to transfer the setting from h here,
  // just in case the calculated verb is not inplaceable
  // The standard verbs start with a rank loop; set the flag indicating that
- if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);}  // allow inplace if v is known inplaceable
- if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}  // allow inplace if v is known inplaceable
+ if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VJTFLGOK1);}  // allow inplace if v is known inplaceable
+ if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VJTFLGOK2);}  // allow inplace if v is known inplaceable
  R fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }
 
@@ -127,6 +127,6 @@ F2(jtundco){AF f1,f2;
  ASSERTVV(a,w); 
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
  A h=0; if(nameless(w)){h=atop(inv(w),ampco(a,w)); ASSERT(h,EVDOMAIN);} // h must be valid for free.  If no names in w, take the inverse
- f1=h?jtunderh1:jtundco1; f2=h?jtunderh2:jtundco2; I flag = (FAV(a)->flag&FAV(w)->flag&VASGSAFE) + (h?FAV(h)->flag&((VINPLACEOK1|VINPLACEOK2)):(VINPLACEOK1|VINPLACEOK2));
+ f1=h?jtunderh1:jtundco1; f2=h?jtunderh2:jtundco2; I flag = (FAV(a)->flag&FAV(w)->flag&VASGSAFE) + (h?FAV(h)->flag&((VJTFLGOK1|VJTFLGOK2)):(VJTFLGOK1|VJTFLGOK2));
  R fdef(0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX);
 }

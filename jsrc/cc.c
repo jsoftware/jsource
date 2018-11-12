@@ -673,7 +673,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
    // Remove inplacing if the verb is not inplaceable, possible because we always set u;. to inplaceable so we can get the WILLBEOPENED flags
-   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1))&(FAV(fs)->flag>>(VINPLACEOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
+   jtinplace = (J)(intptr_t)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA)) & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1))&(FAV(fs)->flag>>(VJTFLGOK1X-JTINPLACEWX)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
 
 #define ZZDECL
 #include "result.h"
@@ -1159,9 +1159,9 @@ F2(jtcut){A h=0;I flag=0,k;
  RE(k=i0(w));
  if(NOUN&AT(a)){flag=VGERL; RZ(h=fxeachv(1L,a)); ASSERT(-2<=k&&k<=2,EVNONCE);}
  switch(k){
-  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VINPLACEOK2, RMAX,2L,RMAX);
+  case 0:          R fdef(0,CCUT,VERB, jtcut01,jtcut02, a,w,h, flag|VJTFLGOK2, RMAX,2L,RMAX);
   case 1: case -1:
-  case 2: case -2: if(!(NOUN&AT(a)))flag=VINPLACEOK2+VINPLACEOK1; R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
+  case 2: case -2: if(!(NOUN&AT(a)))flag=VJTFLGOK2+VJTFLGOK1; R fdef(0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX);
   case 3: case -3: case 259: case -259: R fdef(0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX);
   default:         ASSERT(0,EVDOMAIN);
 }}

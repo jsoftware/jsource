@@ -741,7 +741,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
   // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
-  vf=av->flag&(VASGSAFE|VINPLACEOK1|VINPLACEOK2);  // inherit ASGSAFE from u, and inplacing
+  vf=av->flag&(VASGSAFE|VJTFLGOK1|VJTFLGOK2);  // inherit ASGSAFE from u, and inplacing
   if(av->flag&VISATOMIC1){f1=av->valencefns[0];}else{if(av->flag&VIRS1){f1=rank1i;}else{f1=r[0]?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
   if(av->flag&VIRS2){f2=rank2i;}else{f2=(r[1]|r[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases

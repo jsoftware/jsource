@@ -311,9 +311,9 @@ B jtgerexact(J jt, A w){A*wv;
 // u} handling.  This is not inplaceable but the derived verb is
 F1(jtamend){
  RZ(w);
- if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VINPLACEOK2, RMAX,RMAX,RMAX);  // verb} 
+ if(VERB&AT(w)) R ADERIV(CRBRACE,mergv1,amccv2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // verb} 
  else if(ger(w))R gadv(w,CRBRACE);   // v0`v1`v2}
- else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VINPLACEOK2, RMAX,RMAX,RMAX);  // m}
+ else           R ADERIV(CRBRACE,mergn1,jtamendn2,VASGSAFE|VJTFLGOK2, RMAX,RMAX,RMAX);  // m}
 }
 
 static DF2(jtamen2){ASSERT(0,EVNONCE);}

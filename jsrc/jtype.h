@@ -677,10 +677,10 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VTRY1           (I)4194304      /* monad contains try.             */
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
 #define VDDOP           (I)16777216     /* 24 derived from a derived operator */
-#define VINPLACEOK1X    25    // 25 monad can handle in-place args
-#define VINPLACEOK1     (1LL<<VINPLACEOK1X)
-#define VINPLACEOK2X    26    // 26 dyad can handle in-place args
-#define VINPLACEOK2     (1LL<<VINPLACEOK2X)
+#define VJTFLGOK1X    25    // 25 monad can handle in-place args
+#define VJTFLGOK1     (1LL<<VJTFLGOK1X)
+#define VJTFLGOK2X    26    // 26 dyad can handle in-place args
+#define VJTFLGOK2     (1LL<<VJTFLGOK2X)
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is stomic.  localuse will point to the VA entry for the verb

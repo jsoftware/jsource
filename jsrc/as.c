@@ -356,7 +356,7 @@ F1(jtbsdot){A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag;C id;V*v
  switch(v->id){
   case CPOUND: f1=jtiota1rev; break;
   case CSLASH:
-   f1=jtsscan; flag|=VINPLACEOK1;
+   f1=jtsscan; flag|=VJTFLGOK1;
    f=v->fgh[0]; id=ID(f); if(id==CBDOT){f=VAV(f)->fgh[0]; if(INT&AT(f)&&!AR(f))id=(C)*AV(f);}
    switch(id){
     case CPLUS:   case CEQ:     case CNE:     case CBW0110:  case CBW1001:               

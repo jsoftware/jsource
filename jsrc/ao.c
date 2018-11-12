@@ -241,7 +241,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  CUTFRETEND(frets)=(I)fretp;   // pointer to end+1 of data
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // We pass the self pointer for /. into cut, as it uses that fact to interpret a
- z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VINPLACEOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
+ z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
  jt->ct=ctold;
  EPILOG(z);
 }    /* a f/. w for dense x & w */
@@ -595,7 +595,7 @@ F1(jtsldot){A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
                c=ID(v->fgh[0]); d=ID(v->fgh[1]); e=ID(v->fgh[2]); 
                if(d==CCOMMA&&(c==CHEAD&&e==CPOUND||c==CPOUND&&e==CHEAD)){f2=jtkeyheadtally; break;}
                // otherwise fall through to...
-  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VINPLACEOK2;  // pass through ASGSAFE.  jtkey can handle inplace
+  default: f2=jtkey; flag |= (FAV(w)->flag&VASGSAFE)|VJTFLGOK2;  // pass through ASGSAFE.  jtkey can handle inplace
  }
  R fdef(0,CSLDOT,VERB, f1,f2, w,0L,h, flag, RMAX,RMAX,RMAX);
 }

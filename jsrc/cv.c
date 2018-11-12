@@ -14,7 +14,7 @@ static F2(jtfitct){D d;V*sv;
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- R fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ R fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
 }
 
 static DF2(jtfitexp2){
@@ -70,7 +70,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
   case CROT: case CDOLLAR: 
    ASSERT(1>=AR(w),EVRANK);
    ASSERT(!AR(w)||!AN(w),EVLENGTH);
-   R CDERIV(CFIT,jtfitfill1,jtfitfill2,sv->flag&(VIRS1|VIRS2|VINPLACEOK1|VINPLACEOK2),m,l,r); // preserve INPLACE flags
+   R CDERIV(CFIT,jtfitfill1,jtfitfill2,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2),m,l,r); // preserve INPLACE flags
   case CTHORN:
    RE(w=sc(k=i0(w)));
    ASSERT(0<k,EVDOMAIN);

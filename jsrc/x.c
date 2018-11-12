@@ -225,7 +225,7 @@ F2(jtforeign){I p,q;
   case XC(13,81): R CDERIV(CIBEAM, 0,            jtfindrange4, VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,82): R CDERIV(CIBEAM, 0,            jtfindrange2, VFLAGNONE,RMAX,RMAX,RMAX);
 
-  case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VINPLACEOK2,0,   1L,  1L  );
+  case XC(15,0):  R SDERIV(CIBEAM, 0,            jtcd,         VASGSAFE|VJTFLGOK2,0,   1L,  1L  );
   case XC(15,1):  R SDERIV(CIBEAM, jtmemr,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,2):  R SDERIV(CIBEAM, 0,            jtmemw,       VASGSAFE,0,   RMAX,RMAX);
   case XC(15,3):  R SDERIV(CIBEAM, jtmema,       0,            VASGSAFE,RMAX,0,   0   );
@@ -240,7 +240,7 @@ F2(jtforeign){I p,q;
   case XC(15,12): R CDERIV(CIBEAM, jtsmmblks,    0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,13): R CDERIV(CIBEAM, jtcallback,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,14): R SDERIV(CIBEAM, jtdllsymdat,  0,            VASGSAFE,RMAX,0,   0   );
-  case XC(15,15): R SDERIV(CIBEAM, jtmemu,       0,            VASGSAFE|VINPLACEOK1,RMAX,0,   0   );
+  case XC(15,15): R SDERIV(CIBEAM, jtmemu,       0,            VASGSAFE|VJTFLGOK1,RMAX,0,   0   );
   case XC(15,16): R SDERIV(CIBEAM, jtnfes,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,17): R SDERIV(CIBEAM, jtcallbackx,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(15,18): R SDERIV(CIBEAM, jtnfeoutstr,  0,            VASGSAFE,RMAX,0,   0   );

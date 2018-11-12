@@ -782,7 +782,7 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
   case CSLASH: 
    f2=jtmovfslash; if(vaid(f))f1=jtpscan; break;
   default:
-   flag |= VINPLACEOK1|VINPLACEOK2; break; // The default u\ looks at WILLBEOPENED
+   flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }
  R ADERIV(CBSLASH,f1,f2,flag,RMAX,0L,RMAX);
 }

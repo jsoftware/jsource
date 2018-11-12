@@ -148,7 +148,7 @@ static DF1(jtcase1b){A h,u;V*sv;
  F1PREFIP;sv=FAV(self); h=sv->fgh[2];
  RZ(u=from(df1(w,sv->fgh[1]),h));  // not inplace
  ASSERT(!AR(u),EVRANK);
- R jtdf1(FAV(*AAV(u))->flag&VINPLACEOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
+ R jtdf1(FAV(*AAV(u))->flag&VJTFLGOK1?jtinplace:jt,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // m@.v y.  First check for atomic verbs (special case case1a); if not, process through case1b.  Pass inplacing to case1b only if there is 1 cell
@@ -168,7 +168,7 @@ static DF2(jtcase2){A u;V*sv;
  sv=FAV(self);
  RZ(u=from(df2(a,w,sv->fgh[1]),sv->fgh[2]));
  ASSERT(!AR(u),EVRANK);
- R jtdf2(FAV(*AAV(u))->flag&VINPLACEOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
+ R jtdf2(FAV(*AAV(u))->flag&VJTFLGOK2?jtinplace:jt,a,w,*AAV(u));  // inplace if the verb can handle it
 }
 
 // @.n
@@ -191,7 +191,7 @@ F2(jtagenda){I flag;
  A avb; RZ(avb = fxeachv(1L,a));
   // Calculate ASGSAFE from all of the verbs (both a and w), provided the user can handle it
  flag = VASGSAFE&FAV(w)->flag; A* avbv = AAV(avb); DO(AN(avb), flag &= FAV(*avbv)->flag; ++avbv;);  // Don't increment inside FAV!
- R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VINPLACEOK1|VINPLACEOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
+ R fdef(0,CATDOT,VERB, jtcase1,jtcase2, a,w,avb, flag+((VGERL|VJTFLGOK1|VJTFLGOK2)|FAV(ds(CATDOT))->flag), mr(w),lr(w),rr(w));
 }
 
 // When u^:gerund is encountered, we replace it with a verb that comes to one of these.
@@ -272,11 +272,11 @@ A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)
  PUSHZOMB
  // execute the gerunds that will give the arguments to ff.  But if they are nouns, leave as is
  // x v2 y - can inplace an argument that v0 is not going to use, except if a==w
- RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VINPLACEOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
+ RZ(ffy = (FAV(hv[2])->valencefns[1])(a!=w&&(FAV(hv[2])->flag&VJTFLGOK2)?(J)(intptr_t)((I)jtinplace&(sv->flag|~(VFATOPL|VFATOPR))):jt ,a,w,hv[2]));  // flag self about f, since flags may be needed in f
  // x v0 y - can inplace any unprotected argument
- RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VINPLACEOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
+ RZ(ffx = (FAV(hv[0])->valencefns[1])((FAV(hv[0])->flag&VJTFLGOK2)?((J)(intptr_t)((I)jtinplace&((ffm==w||ffy==w?~JTINPLACEW:~0)&(ffm==a||ffy==a?~JTINPLACEA:~0)))):jt ,a,w,hv[0]));
  // execute ff, i. e.  (x v1 y)} .  Allow inplacing xy unless protected by the caller.  No need ta pass WILLOPEN status, since the verb can't use it
- POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VINPLACEOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
+ POPZOMB; R (FAV(ff)->valencefns[1])(FAV(ff)->flag&VJTFLGOK2?( (J)(intptr_t)((I)jt|((ffx!=protw&&ffx!=prota?JTINPLACEA:0)+(ffy!=protw&&ffy!=prota?JTINPLACEW:0))) ):jt,ffx,ffy,ff);
 }
 
 // handle v0`v1[`v2]} to create the verb to process it when [x] and y arrive
@@ -293,7 +293,7 @@ A jtgadv(J jt,A w,C id){A hs;I n;
  // The derived verb is ASGSAFE if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  ASSERT(AT(AAV(hs)[0])&VERB&&AT(AAV(hs)[1])&VERB&&AT(AAV(hs)[2])&VERB,EVDOMAIN);
- I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VINPLACEOK2)+atoplr(AAV(hs)[0]);
+ I flag=(FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&FAV(AAV(hs)[2])->flag&VASGSAFE)+(VGERL|VJTFLGOK2)+atoplr(AAV(hs)[0]);
  R fdef(0,id,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 

@@ -380,8 +380,8 @@ static A virthook(J jtip, A f, A g){
 
 // w here is the index of the last word of the execution. 
 // aa  is the index of the left argument.  v is the verb.  zomb is 1 if it is OK to set assignsym/zombieval
-#define DFSIP1(v,w,zomb) if(FAV(stack[v].a)->flag&VINPLACEOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)(intptr_t)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
-#define DFSIP2(aa,v,w) if(FAV(stack[v].a)->flag&VINPLACEOK2){IPSETZOMB(w,v) y=jtdfs2((J)(intptr_t)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
+#define DFSIP1(v,w,zomb) if(FAV(stack[v].a)->flag&VJTFLGOK1){if(zomb)IPSETZOMB(w,v) y=jtdfs1((J)(intptr_t)((I)jt|JTINPLACEW),stack[w].a,stack[v].a);}else{y=dfs1(stack[w].a,stack[v].a);}
+#define DFSIP2(aa,v,w) if(FAV(stack[v].a)->flag&VJTFLGOK2){IPSETZOMB(w,v) y=jtdfs2((J)(intptr_t)((I)jt|(JTINPLACEW+JTINPLACEA)),stack[aa].a,stack[w].a,stack[v].a);}else{y=dfs2(stack[aa].a,stack[w].a,stack[v].a);}
 // Storing the result
 // We store the result into the stack and move the token-number for it.  
 // we pass in the stack index of the verb, and infer the operands from that
@@ -567,7 +567,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
       // Verb execution.  We must support inplacing, including assignment in place, and support recursion
       jt->sf=fs;  // push $: stack
       // While we are waiting for the branch address, work on inplacing.  See if the primitive being executed is inplaceable
-      if((FAV(fs)->flag>>(pline>>1))&VINPLACEOK1){L *s;
+      if((FAV(fs)->flag>>(pline>>1))&VJTFLGOK1){L *s;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
        if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])&&(FAV(fs)->flag&VASGSAFE)   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
           &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1])) ){

@@ -154,7 +154,7 @@ A jtassembleresults(J jt, I ZZFLAGWORD, A zz, A zzbox, A* zzboxp, I zzcellp, I z
 
   // Create the fill-cell we will need.  Note: all recursible fills must have the PERMANENT flag set, since we may not increment the usecount
   I zpri=jt->typepriority[CTTZ(zzt)]; zpri+=AN(zz)?256:0;   // priority of unboxed results, giving high pri to nonempty
-  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=1LL<<(jt->prioritytype[zzresultpri&255]);  // zft=highest precision encountered
+  zzresultpri=(zpri>zzresultpri)?zpri:zzresultpri; I zft=((I)1)<<(jt->prioritytype[zzresultpri&255]);  // zft=highest precision encountered
   fillv(zft,1L,jt->fillv0); I zfs=bp(zft); mvc(sizeof(jt->fillv0),jt->fillv0,zfs,jt->fillv0);  // create 16 bytes of fill.  zfs is byte=length of 1 atom of result type
 
   I *zzcs=AS(zzcellshape);  // zzcs->shape of padded result cell (may be a faux A block) AS[] is shape, AR is rank, AN is allocation

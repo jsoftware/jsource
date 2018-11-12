@@ -25,7 +25,7 @@ F1(jtstype){RZ(w); R sc(UNSAFE(AT(w)));}
 
 
 #define LGWS(d)         ((d)+2)  // LG(WS(d))
-#define WS(d)           (1LL<<LGWS(d))                 /* word size in bytes              */
+#define WS(d)           (((I)1)<<LGWS(d))                 /* word size in bytes              */
 #define BH(d)           (4LL<<LGWS(d))               /* # non-shape header bytes in A   */
 #define BF(d,a)         ((C*)(a)        )       /* flag                            */
 #define BT(d,a)         ((C*)(a)+  WS(d))       /* type                            */
@@ -266,7 +266,7 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
 // long way p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
  p=ABS(j); p+=(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
  if(0<j){m=n<<p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
- else   {m=n>>p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((1LL<<p)-1)),EVLENGTH);} 
+ else   {m=n>>p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 
  switch(j){
   default: ASSERT(0,EVDOMAIN);
@@ -288,7 +288,7 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  RE(j=i0(a));
  p=2==j||-2==j?LGSZD:2;
  if(0<j){m=n<<p; zt=LIT; if(!(FL&AT(w)))RZ(w=cvt(FL,w));}
- else   {m=n>>p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((1LL<<p)-1)),EVLENGTH);} 
+ else   {m=n>>p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=DAV(z); x=DAV(w);
  switch(j){
   default: ASSERT(0,EVDOMAIN);

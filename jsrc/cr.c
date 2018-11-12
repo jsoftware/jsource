@@ -12,11 +12,11 @@
 
 // make sure these don't overlap with bits in result.h
 #define STATEOUTERREPEATAX 12
-#define STATEOUTERREPEATA (1LL<<STATEOUTERREPEATAX)
+#define STATEOUTERREPEATA (((I)1)<<STATEOUTERREPEATAX)
 #define STATEINNERREPEATWX 13
-#define STATEINNERREPEATW (1LL<<STATEINNERREPEATWX)
+#define STATEINNERREPEATW (((I)1)<<STATEINNERREPEATWX)
 #define STATEINNERREPEATAX 14
-#define STATEINNERREPEATA (1LL<<STATEINNERREPEATAX)
+#define STATEINNERREPEATA (((I)1)<<STATEINNERREPEATAX)
 // There must be NO higher bits than STATEINNERREPEATA, because we shift down and OR into flags
 
 // General setup for verbs that do not go through jtirs[12].  Some of these are marked as IRS verbs.  General

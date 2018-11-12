@@ -266,7 +266,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   // First of all: it's moot if the allocation won't fit on the right
   I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
   I selside=0;  // default to allocating on the left (i. e. at 0)
-  UI maxindex = (1LL<<(8LL<<hh->hashelelgsize))-1;  // largest possible value stored into this table
+  UI maxindex = (((I)1)<<(8LL<<hh->hashelelgsize))-1;  // largest possible value stored into this table
   UI indexceil=maxindex-m;  // max value that can be accepted in the table already.  We will write from indexceil to maxindex
 
   // Cost of allocating on the left comes
@@ -1418,7 +1418,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
       // the allocated position and index
       mode |= IIMODBASE0|IIMODFORCE0;  // we are surely initializing this table now, & it stays that way on every use
       // It's OK to round the fill up to the length of an I
-      UI fillval=m|(m<<16); if(SZI>4)fillval|=fillval<<(32%BW); I fillct=(p+(((1LL<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
+      UI fillval=m|(m<<16); if(SZI>4)fillval|=fillval<<(32%BW); I fillct=(p+(((((I)1)<<(LGSZI-LGSZUS))-1)))>>(LGSZI-LGSZUS);
       DO(fillct, hh->data.UI[i]=fillval;)
       hh->currentlo=0; hh->currentindexofst=0;  // clear the parms.  Leave index 0 for not found
      }else{

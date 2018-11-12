@@ -263,7 +263,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NETX            2000            /* size of error display buffer    */
 #define NPP             20              /* max value for quad pp           */
 #define RMAXX           16              // number of bits in rank
-#define RMAX            ((1LL<<RMAXX)-1)   // max rank
+#define RMAX            ((((I)1)<<RMAXX)-1)   // max rank
 #define NPATH           1024            /* max length for path names,      */
                                         /* including trailing 0 byte       */
 
@@ -302,16 +302,16 @@ extern unsigned int __cdecl _clearfp (void);
                               // bitmask should be stored as packed bits rather than bytes
 
 #define IIMODREFLEXX    4
-#define IIMODREFLEX     (1LL<<IIMODREFLEXX)  // (small-range i. and i:) this is i.~/i:~ (hashing) this is i.~/i:~/~./~:/I.@:~.
+#define IIMODREFLEX     (((I)1)<<IIMODREFLEXX)  // (small-range i. and i:) this is i.~/i:~ (hashing) this is i.~/i:~/~./~:/I.@:~.
 #define IIMODFULL       0x20  // (small-range search) indicates that the min/max values cover the entire range of possible inputs, so no range checking is required.  Always set for hashing
 #define IIMODBASE0      0x40  // set in small-range i./i: (which never use BITS) to indicate that the hashtable starts at index 0 and has m in the place of unused indexes.  Set in hashing always, with same meaning
 #define IIMODBITS       0x80  // set if the hash field stores bits rather than indexes.  Used only for small-range and not i./i:.  IIMODPACK qualifies this, indicating that the bits are packed
 #define IIMODFORCE0X    8
-#define IIMODFORCE0     (1LL<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
+#define IIMODFORCE0     (((I)1)<<IIMODFORCE0X)  // set to REQUIRE a (non-bit) allocation to reset to offset 0 and clear
 #define IPHCALC         0x200   // set when we are calculating a prehashed table
 #define IINOTALLOCATED  0x400  // internal flag, set when the block has not been allocated
 #define IIOREPSX        11
-#define IIOREPS         (1LL<<IIOREPSX)  // internal flag, set if mode is i./i:/e., but not if prehashing
+#define IIOREPS         (((I)1)<<IIOREPSX)  // internal flag, set if mode is i./i:/e., but not if prehashing
 #define IREVERSED       0x1000   // set if we have decided to reverse the hash in a small-range situation
 #define IPHOFFSET       0x2000              /* offset for prehashed versions - set when we are using a prehashed table   */
 #define IPHIDOT         (IPHOFFSET+IIDOT)
@@ -340,9 +340,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define LGBW (LGSZI+LGBB)  // lg (# bits in a word)
 
 // nominal cache sizes for current processors
-#define L1CACHESIZE (1LL<<15)
-#define L2CACHESIZE (1LL<<18)
-#define L3CACHESIZE (1LL<<22)
+#define L1CACHESIZE (((I)1)<<15)
+#define L2CACHESIZE (((I)1)<<18)
+#define L3CACHESIZE (((I)1)<<22)
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 

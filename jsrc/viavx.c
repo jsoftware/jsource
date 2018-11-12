@@ -202,7 +202,7 @@ static I hashallo(IH * RESTRICT hh,UI p,UI asct,I md){
   // First of all: it's moot if the allocation won't fit on the right
   I maxn = hh->datasize>>hh->hashelelgsize;  // get max possible index+1
   I selside=0;  // default to allocating on the left (i. e. at 0)
-  UI maxindex = (1LL<<(((UIL)SZI)<<hh->hashelelgsize))-1;  // largest possible index for this table
+  UI maxindex = (((I)1)<<(((UIL)SZI)<<hh->hashelelgsize))-1;  // largest possible index for this table
   UI indexceil=maxindex-asct;  // max starting index
 
   // Cost of allocating on the left comes
@@ -314,13 +314,13 @@ UI hic(I k, UC *v) {
  if(k>=8){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=16){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
  if(k&=7){  // last few bytes
-  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
+  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
 #else
  if(k>=4){crc0=CRC32L(crc0,((UI*)v)[0]); v+=SZI;}  // finish the remnant
  if(k>=8){crc1=CRC32L(crc1,((UI*)v)[0]); v+=SZI;}
  if(k&=3){  // last few bytes,  k<<3 convert to # of bits
-  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-1LL<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
+  crc2=CRC32L(crc2,((UI*)v)[0]&~((UI)-((I)1)<<(k<<3)));  // mask out invalid bytes - must use 64-bit shift!
  }
 #endif
  RETCRC3;
@@ -1431,10 +1431,10 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
  }
 // Do forward scan of a packed bit hashtable.  When a new value is found, use *hv to give the result location to remember it in
 #define XDOWSARPB(T,TH,earlyexit) {I j, hj; DO(asct, \
-  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=((I)1)<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 // Same for reverse scan
 #define XDQWSARPB(T,TH,earlyexit) {I j, hj; DQ(asct, \
-  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=1LL<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
+  j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=((I)1)<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 
 #define IOFXWS(f,T,TH)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
@@ -1709,7 +1709,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
 
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
-  mode |= IIOREPS&((((1LL<<IIDOT)|(1LL<<IICO)|(1LL<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
+  mode |= IIOREPS&((((((I)1)<<IIDOT)|(((I)1)<<IICO)|(((I)1)<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
   if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|((mode&IIOREPS)-1)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
     ((wcr==0)||((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES))){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
@@ -1927,7 +1927,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    p=m;
    if(((m>>1)>c) && (mode&IIOREPS) && fntbl[fnx+FNTBLREVERSE]){p=c; fnx+=FNTBLREVERSE;}
    // set p based on the length of the argument being hashed
-   if(t&B01&&k<(BW-1)){p=MIN(p,(UI)1LL<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
+   if(t&B01&&k<(BW-1)){p=MIN(p,(UI)((I)1)<<k);}  // Get max # different possible values to hash; the number of items, but less than that for short booleans
    // Find the best hash size, based on empirical studies.  Allow at least 3x hashentries per input value; if that's less than the size of the small hash, go to the limit of
    // the small hash.  But not more than 10 hashtable entries per input (to save time clearing)
    p=MIN(IMAX-5,(p<SMALLHASHMAX/10)?(p*10) : (p<SMALLHASHMAX/3?SMALLHASHMAX:3*p));

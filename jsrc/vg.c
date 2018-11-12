@@ -90,7 +90,7 @@ static void jtmsortitems(J jt, void **(*sortfunc)(),  I n, void **zv, void **xv)
  void **sortres = (*sortfunc)(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
  // Convert the result to item numbers in the main result area.
  I shift=CTTZI(inc);  // bit number of LSB
- if(inc==1LL<<shift){DQ(n, *zv++=(void *)((I)((C*)*sortres++-item0)>>shift););  // use shift for power of 2 itemsize
+ if(inc==((I)1)<<shift){DQ(n, *zv++=(void *)((I)((C*)*sortres++-item0)>>shift););  // use shift for power of 2 itemsize
  }else{
   // Not a power of 2.  Use rounding multiply to avoid divide throughput
   D recipinc = (D)n/((D)n*(D)inc-0.25);  // make sure the result is correct after truncation, by shading the factor to the high side

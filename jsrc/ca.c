@@ -181,7 +181,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
   case CRAZE:  // detect ;@(<@(f/\));.
    if(d==CCUT&&boxatop(w)){  // w is <@g;.k
-    if((1LL<<(*AV(wv->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+    if((((I)1)<<(*AV(wv->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
      A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
      if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -260,7 +260,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
     j=*AV(wv->fgh[1]);   // cut type
     if(CBOX==ID(wv->fgh[0])&&!j){f2=jtrazecut0; flag&=~VJTFLGOK2;}  // detect ;@:(<;.0), used for substring extraction
     else if(boxatop(w)){  // w is <@g;.j   detect ;@:(<@(f/\);._2 _1 1 2
-     if((1LL<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+     if((((I)1)<<(j+3))&0x36) { // fbits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
       A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
       if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
        A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -305,7 +305,7 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
  if(c==CBOX){flag2 |= VF2BOXATOP1;}  // mark this as <@f - monad only
  else if(c==CSLASH&&d==CCOMMA)         {f1=jtredravel; }
  else if(c==CRAZE&&d==CCUT&&boxatop(w)){  // w is <@g;.k    detect ;&:(<@(f/\));._2 _1 1 2
-  if((1LL<<(*AV(wv->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+  if((((I)1)<<(*AV(wv->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
    A wf=wv->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
    if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
     A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf
@@ -420,7 +420,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   case CFLOOR: f1=jtonf1; flag+=VFLR; flag&=~VJTFLGOK1; break;
   case CRAZE:  // detect ;@(<@(f/\));.
    if(c==CCUT&&boxatop(w)){  // w is <@g;.k
-    if((1LL<<(*AV(v->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
+    if((((I)1)<<(*AV(v->fgh[1])+3))&0x36) { // fetch k (cut type); bits are 3 2 1 0 _1 _2 _3; is 1/2-cut?
      A wf=v->fgh[0]; V *wfv=FAV(wf); A g=wfv->fgh[1]; V *gv=FAV(g);  // w is <@g;.k  find g
     if((I)(((gv->id^CBSLASH)-1)|((gv->id^CBSDOT)-1))<0) {  // g is gf\ or gf\.
       A gf=gv->fgh[0]; V *gfv=FAV(gf);  // find gf

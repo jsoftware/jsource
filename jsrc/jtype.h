@@ -59,15 +59,15 @@ typedef AD *A;
 
 // Flag bits in the low-order part of jt - used only if the function being called understands inplacing
 #define JTINPLACEWX     0   // turn this on in jt to indicate that w can be inplaced
-#define JTINPLACEW      (1LL<<JTINPLACEWX)
+#define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
-#define JTINPLACEA      (1LL<<JTINPLACEAX)
+#define JTINPLACEA      (((I)1)<<JTINPLACEAX)
 // Next flag must match result.h and VF2 flags
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
-#define JTWILLBEOPENED  (1LL<<JTWILLBEOPENEDX)
+#define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
 // Next flag must match result.h and VF2 flags
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
-#define JTCOUNTITEMS    (1LL<<JTCOUNTITEMSX)
+#define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
 
 #define JTFLAGMSK       255  // mask big enough to cover all defined flags
 #define JTALIGNBDY      8192  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
@@ -660,7 +660,7 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VFATOPR         JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
 // bits 8 and above are available for all functions:
 #define VGERLX          8
-#define VGERL           (1LL<<VGERLX)          /* gerund left  argument           */
+#define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
 #define VGERR           (I)512          /* gerund right argument           */
 #define VTAYFINITE      (I)1024         /* t. finite polynomial            */
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
@@ -678,9 +678,9 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VTRY2           (I)8388608      /* dyad  contains try.             */
 #define VDDOP           (I)16777216     /* 24 derived from a derived operator */
 #define VJTFLGOK1X    25    // 25 monad can handle in-place args
-#define VJTFLGOK1     (1LL<<VJTFLGOK1X)
+#define VJTFLGOK1     (((I)1)<<VJTFLGOK1X)
 #define VJTFLGOK2X    26    // 26 dyad can handle in-place args
-#define VJTFLGOK2     (1LL<<VJTFLGOK2X)
+#define VJTFLGOK2     (((I)1)<<VJTFLGOK2X)
 #define VASGSAFE        ((I)(1L<<27))     // does not alter locale/path
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
 #define VISATOMIC2      ((I)(1L<<29))    // dyad is stomic.  localuse will point to the VA entry for the verb
@@ -688,43 +688,43 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 // bits in flag2:
 // bit 0 unused
 #define VF2BOXATOP1X      1   // This verb is one of  <  <@f   <@:f   <&f   <&:f    f&.>  f&.:>
-#define VF2BOXATOP1     ((I)(1LL<<VF2BOXATOP1X))
+#define VF2BOXATOP1     ((I)(((I)1)<<VF2BOXATOP1X))
 #define VF2BOXATOP2X      2   // This verb is one of  <@f   <@:f   f&.>  f&.:>
-#define VF2BOXATOP2     ((I)(1LL<<VF2BOXATOP2X))
+#define VF2BOXATOP2     ((I)(((I)1)<<VF2BOXATOP2X))
 // next flag must be same as JTWILLBEOPENED
 #define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only
-#define VF2WILLOPEN1       ((I)(1LL<<VF2WILLOPEN1X))
+#define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
 #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g
-#define VF2ISCCAP         ((I)(1LL<<VF2ISCCAPX))
+#define VF2ISCCAP         ((I)(((I)1)<<VF2ISCCAPX))
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
-#define VF2USESITEMCOUNT1  ((I)(1LL<<VF2USESITEMCOUNT1X))
+#define VF2USESITEMCOUNT1  ((I)(((I)1)<<VF2USESITEMCOUNT1X))
 // must leave a gap for COUNTITEMS in result.h
 // next 3 flags must be spaced from VF2BOXATOP? to match spacing in ZZFLAGS
 #define VF2ATOPOPEN1X     8   // This verb is one of  > @> &> &.>
-#define VF2ATOPOPEN1     ((I)(1LL<<VF2ATOPOPEN1X))
+#define VF2ATOPOPEN1     ((I)(((I)1)<<VF2ATOPOPEN1X))
 #define VF2ATOPOPEN2WX    9   // This verb is one of  &> &.>
-#define VF2ATOPOPEN2W     ((I)(1LL<<VF2ATOPOPEN2WX))
+#define VF2ATOPOPEN2W     ((I)(((I)1)<<VF2ATOPOPEN2WX))
 #define VF2ATOPOPEN2AX    10   // This verb is one of  &> &.>
-#define VF2ATOPOPEN2A     ((I)(1LL<<VF2ATOPOPEN2AX))
+#define VF2ATOPOPEN2A     ((I)(((I)1)<<VF2ATOPOPEN2AX))
 #define VF2RANKATOP1X     11   // set if this verb starts out with rank loop and thus can be subsumed into a higher rank loop
-#define VF2RANKATOP1     ((I)(1LL<<VF2RANKATOP1X)) 
+#define VF2RANKATOP1     ((I)(((I)1)<<VF2RANKATOP1X)) 
 #define VF2RANKATOP2X     12   // set if this verb starts out with an outer rank loop.  " @ & &. and not special-cased
-#define VF2RANKATOP2     ((I)(1LL<<VF2RANKATOP2X))
+#define VF2RANKATOP2     ((I)(((I)1)<<VF2RANKATOP2X))
 #define VF2RANKONLY1X     13   // set if this verb is u"r, not special-cased (i. e. function points to rank processing).  The rank may be subsumed into a higher rank before we see arguments
-#define VF2RANKONLY1     ((I)(1LL<<VF2RANKONLY1X)) 
+#define VF2RANKONLY1     ((I)(((I)1)<<VF2RANKONLY1X)) 
 #define VF2RANKONLY2X     14
-#define VF2RANKONLY2     ((I)(1LL<<VF2RANKONLY2X))
+#define VF2RANKONLY2     ((I)(((I)1)<<VF2RANKONLY2X))
 // Next 4 flags must be spaced so txhey can shift down to WILLOPEN1 and COUNTITEMS1
 #define VF2WILLOPEN2WX      15   // This verb will open y as its first act.  Monad case only
-#define VF2WILLOPEN2W       ((I)(1LL<<VF2WILLOPEN2WX))
+#define VF2WILLOPEN2W       ((I)(((I)1)<<VF2WILLOPEN2WX))
 #define VF2WILLOPEN2AX      16   // This verb will open y as its first act.  Monad case only
-#define VF2WILLOPEN2A       ((I)(1LL<<VF2WILLOPEN2AX))
+#define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
 #define VF2USESITEMCOUNT2WX 18   // This verb can make use of an item count stored in m.  Monad case only
-#define VF2USESITEMCOUNT2W  ((I)(1LL<<VF2USESITEMCOUNT2WX))
+#define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
 #define VF2USESITEMCOUNT2AX 19   // This verb can make use of an item count stored in m.  Monad case only
-#define VF2USESITEMCOUNT2A  ((I)(1LL<<VF2USESITEMCOUNT2AX))
+#define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
 
 
 

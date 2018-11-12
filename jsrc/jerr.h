@@ -58,5 +58,5 @@
 #define EWOVIPMULII    6
 
 // Exigent errors are those errors that must not be ignored if they happen during execution on a fill-cell
-#define EMSK(x) (1LL<<((x)-1))
+#define EMSK(x) (((I)1)<<((x)-1))
 #define EXIGENTERROR (EMSK(EVALLOC) | EMSK(EVATTN) | EMSK(EVBREAK) | EMSK(EVINPRUPT) | EMSK(EVFACE) | EMSK(EVWSFULL) | EMSK(EVTIME) | EMSK(EVSTACK) | EMSK(EVSYSTEM) )  // errors that always create failure

@@ -101,7 +101,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
  v=FAV(w);
  f=v->fgh[0]; nf=!!(NOUN&AT(f));
  g=v->fgh[1]; ng=!!(NOUN&AT(g));
- h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   
+ h=nf?g:f; x=nf?f:g; c=ID(h); u=VAV(h);   // h=verb arg, x=noun arg
  switch(c){
   case CPLUS:    R amp(negate(x),h);
   case CSTAR:    R amp(recip(x), h);
@@ -114,10 +114,10 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CRDOT:    R nf?atop(invrecur(ds(CRDOT)),amp(ds(CDIV  ),x)):amp(ds(CDIV  ),rdot1(x));
   case CLBRACE:  R nf?amp(pinv(x),h):amp(x,ds(CIOTA));
   case COBVERSE: ff=FAV(h)->fgh[1]; R amp(nf?x:ff,nf?ff:x);
-  case CPDERIV:  if(!AR(h))R ds(CPDERIV);
-  case CXCO:     RE(n=i0(x)); ASSERT(n&&-3<n&&n<3,EVDOMAIN);
-  case CROT:
-  case CCIRCLE:  
+  case CPDERIV:  if(nf&&!AR(x))R ds(CPDERIV); break;  // only atom&p.. is invertible
+  case CXCO:     RE(n=i0(x)); ASSERT(n&&-3<n&&n<3,EVDOMAIN);  // fall through to create (-x)&u
+  case CROT:          // fall through to create (-x)&u
+  case CCIRCLE:       // fall through to create (-x)&u
   case CSPARSE:  if(nf)R amp(negate(x),h);   break;
   case CABASE:   if(nf)R amp(x,ds(CBASE));   break;
   case CIOTA:    if(nf)R amp(ds(CLBRACE),x); break;
@@ -183,7 +183,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    RE(q[8]=cstr("'")); RZ(y=raze(y));
    R obverse(eval(CAV(y)),w);
   case CATOMIC:
-   if(ng){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),w);}
+   if(ng){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),w);}  // fall through to common obverse (?)
   case CCYCLE:
    if(nf&&AR(x)<=(c==CCYCLE))R obverse(eva(w,"/:@x@(i.@#) { ]"),w); break;
   case CDROP:
@@ -353,7 +353,7 @@ F1(jtiden){A f,g,x=0;V*u,*v;
  switch(v->id){
   default:      RZ(x=neutral(w)); break;
   case CCOMMA:  R eval("i.@(0&,)@(2&}.)@$");
-  case CDOT:    if(!(ip(w,CPLUS,CSTAR)||ip(w,CPLUSDOT,CSTARDOT)||ip(w,CNE,CSTARDOT)))break;
+  case CDOT:    if(!(ip(w,CPLUS,CSTAR)||ip(w,CPLUSDOT,CSTARDOT)||ip(w,CNE,CSTARDOT)))break;  // if matrix multiply, fall through to...
   case CDOMINO: R atop(atop(ds(CEQ),ds(CGRADE)),ds(CHEAD));
   case CCYCLE:
   case CLBRACE: R atop(ds(CGRADE),ds(CHEAD));

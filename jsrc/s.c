@@ -43,7 +43,7 @@ static I symcol=(sizeof(L)+SZI-1)/SZI;
 
 B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  if(b){y=jt->symp; j=allosize(y)+NORMAH*SZI; n=*AS(y); yn=AN(y);}  // extract allo size from header (approx)
- else {            j=1LL<<12;            n=1;      yn=0;    }
+ else {            j=((I)1)<<12;            n=1;      yn=0;    }
  m=j<<1;                              /* new size in bytes           */
  m-=SZI*(NORMAH+2);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */

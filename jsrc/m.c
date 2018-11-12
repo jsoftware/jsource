@@ -25,7 +25,7 @@
 #define AFCHAIN(a) ((a)->kchain.chain)  // the chain field, when the block is not allocated
 #define AFPROXYCHAIN(a) ((a)->tproxy.proxychain)  // chain field for base proxies during garbage collection
 #define FHRHROOTX 15
-#define FHRHROOT (1LL<<FHRHROOTX)  // set if the current block is the root (the first of the consecutive blocks making up its allocation)
+#define FHRHROOT (((I)1)<<FHRHROOTX)  // set if the current block is the root (the first of the consecutive blocks making up its allocation)
 #define FHRHROOTFREE (2LL<<(PSIZEL-PMINL))   // If this bit is set at the end of garbage-collection, the whole allocation can be freed.  LSB (precisely, lowest 1-bit) is the size indicator
 //
 // the lower bits encode the size of the block, by the position of the lowest 1 bit, and in the upper bits either (1) the full size of the block for large allocations
@@ -35,7 +35,7 @@
 #define ALLOJISPOOL(j) ((j)<=PLIML)     // true if pool allo, false if system (j is lg2(requested size))
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
 #define FHRHPOOLBINSIZE(b) (PMIN<<(b))        // convert bin# to size for pool bin#
-#define FHRHSYSSIZE(h) (1LL<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
+#define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
 #define FHRHSIZE(h) (FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h))
 #define FHRHSYSJHDR(j) ((2*j+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) (2LL<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ
@@ -44,8 +44,8 @@
 #define FHRHISROOTALLOFREE(h) ((h)&FHRHROOTFREE)   // given the root's h after garbage collection, is the entire allocation free?
 #define FHRHROOTADDR(a,m) ((A)((C*)(a) - FHRHBLOCKOFFSET(AFHRH(a),m)))   // address of root for block a.  m is FHRHBLOCKOFFSETMASK
 #define FHRHISALLOFREE(a,m) FHRHISROOTALLOFREE(AFHRH(FHRHROOTADDR(a,m)))      // is the given block a free after garbage collection? m is FHRHBLOCKOFFSETMASK
-#define FHRHRESETROOT(b) (FHRHROOT + (1LL<<(b)))     // value to set root to after garbage-collection if the allocation was NOT freed
-#define FHRHENDVALUE(b) (FHRHROOTFREE + (1LL<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
+#define FHRHRESETROOT(b) (FHRHROOT + (((I)1)<<(b)))     // value to set root to after garbage-collection if the allocation was NOT freed
+#define FHRHENDVALUE(b) (FHRHROOTFREE + (((I)1)<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
 
 // the size of the total allocation of the block for w, always a power of 2
 #define alloroundsize(w) (AFLAG(w)&AFSMM ? smmallosize(w) : FHRHSIZE(AFHRH(w)))
@@ -892,7 +892,7 @@ if((I)jt&3)*(I*)0=0;
    jt->mfreegenallo=mfreeb+=n;    // mfreegenallo is the byte count allocated for large blocks
   }
 #if MEMAUDIT&8
-  DO((1LL<<(blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
+  DO((((I)1)<<(blockx-LGSZI)), lfsr = (lfsr<<1LL) ^ (lfsr<0?0x1b:0); if(i!=6)((I*)z)[i] = lfsr;);   // fill block with garbage - but not the allocation word
 #endif
   AFLAG(z)=0; AC(z)=ACUC1|ACINPLACE;  // all blocks are born inplaceable 
    // we do not attempt to combine the AFLAG write into a 64-bit operation, because as of 2017 Intel processors

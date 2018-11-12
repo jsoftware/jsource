@@ -21,31 +21,31 @@
 #ifdef ZZDEFN
 // make sure these don't overlap with the definitions in cr.c
 #define ZZFLAGNOPOPX 0 // set to suppress tpop
-#define ZZFLAGNOPOP (1LL<<ZZFLAGNOPOPX)
+#define ZZFLAGNOPOP (((I)1)<<ZZFLAGNOPOPX)
 #define ZZFLAGBOXATOPX 1 // set if u is <@f
-#define ZZFLAGBOXATOP (1LL<<ZZFLAGBOXATOPX)
+#define ZZFLAGBOXATOP (((I)1)<<ZZFLAGBOXATOPX)
 #define ZZFLAGUSEOPENX (LGSZI^1)  // result contains a cell for which a full call to OPEN will be required (viz sparse)
-#define ZZFLAGUSEOPEN (1LL<<ZZFLAGUSEOPENX)
+#define ZZFLAGUSEOPEN (((I)1)<<ZZFLAGUSEOPENX)
 #define ZZFLAGBOXALLOX LGSZI  // zzbox has been allocated
-#define ZZFLAGBOXALLO (1LL<<ZZFLAGBOXALLOX)
+#define ZZFLAGBOXALLO (((I)1)<<ZZFLAGBOXALLOX)
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP and lower than all recursible type-flags
 #define ZZFLAGWILLBEOPENEDX 4  // the result will be unboxed by the next primitive, so we can leave virtual blocks in it, as long as they aren't ones we will modify.  Requires BOXATOP also.
-#define ZZFLAGWILLBEOPENED (1LL<<ZZFLAGWILLBEOPENEDX)
+#define ZZFLAGWILLBEOPENED (((I)1)<<ZZFLAGWILLBEOPENEDX)
 #define ZZFLAGHASUNBOXX BOXX  // result contains a nonempty non-box (this must equal BOX)
-#define ZZFLAGHASUNBOX (1LL<<ZZFLAGHASUNBOXX)
+#define ZZFLAGHASUNBOX (((I)1)<<ZZFLAGHASUNBOXX)
 #define ZZFLAGHASBOXX (ZZFLAGHASUNBOXX+1)  // result contains a nonempty box (must be one bit above FLAGHASUNBOX)
-#define ZZFLAGHASBOX (1LL<<ZZFLAGHASBOXX)
+#define ZZFLAGHASBOX (((I)1)<<ZZFLAGHASBOXX)
 // next flag must match VF2 flags in jtype.h, and must be higher than BOXATOP
 #define ZZFLAGCOUNTITEMSX 7  // RA should count the items and verify they are homogeneous (the next primitive is ;)
-#define ZZFLAGCOUNTITEMS (1LL<<ZZFLAGCOUNTITEMSX)
+#define ZZFLAGCOUNTITEMS (((I)1)<<ZZFLAGCOUNTITEMSX)
 // next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP1 to ATOPOPEN1
 #define ZZFLAGATOPOPEN1X 8 // set if v is f@>
-#define ZZFLAGATOPOPEN1 (1LL<<ZZFLAGATOPOPEN1X)
+#define ZZFLAGATOPOPEN1 (((I)1)<<ZZFLAGATOPOPEN1X)
 // next 2 flags must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP2W to ATOPOPEN2W.  This means the dyad and monad flags overlap
 #define ZZFLAGATOPOPEN2WX 8 // set if v is f@> for w
-#define ZZFLAGATOPOPEN2W (1LL<<ZZFLAGATOPOPEN2WX)
+#define ZZFLAGATOPOPEN2W (((I)1)<<ZZFLAGATOPOPEN2WX)
 #define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a
-#define ZZFLAGATOPOPEN2A (1LL<<ZZFLAGATOPOPEN2AX)
+#define ZZFLAGATOPOPEN2A (((I)1)<<ZZFLAGATOPOPEN2AX)
 
 #define ZZFAUXCELLSHAPEMAXRANK 4  // we reserve a faux A block on the stack big enough to handle results of this rank
 

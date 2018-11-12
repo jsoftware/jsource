@@ -74,7 +74,7 @@ void smmfrr(A w){A a;A1*wv;I j,**mfree;MS*x;
 
 // Return the size of the allocated block w.  This is a power of 2.
 I smmallosize(A w){
-  R (1LL<<(((MS *)w-1)->j));
+  R (((I)1)<<(((MS *)w-1)->j));
 }
 
 static B smmsplit(A a,I j){I i,k,**mfree,p;MS*x,*y;

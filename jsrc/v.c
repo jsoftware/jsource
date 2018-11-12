@@ -14,7 +14,6 @@ F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
  n=AN(w); ws=AS(w); wt=AT(w);  // n=#atoms, ws->shape, wt=type, d=1 if dense
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(!(wt&SPARSE)){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: rank of sparse array is always 1)
@@ -23,7 +22,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect blocks also, since we know we are not changing
    // the number of atoms
-   AR(w)=(RANKT)(1+f); AS(w)[f]=m; /* obsolete MODVIRTINPLACE(w); */ RETF(w);  // if virtual inplace, notify the originator
+   AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
@@ -58,7 +57,6 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
 F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  RZ(w);
  wt=AT(w); ws=AS(w);
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
 
  if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
@@ -75,10 +73,6 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  RZ(a&&w);
  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
  // We know that jt->rank is nonzero, because the caller checked it
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
-// obsolete  ar=AR(a); acr=jt->rank[0]; af=ar-acr;
-// obsolete  wr=AR(w); wcr=jt->rank[1]; wf=wr-wcr;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;  // RESETRANK not required because we call no primitives from here on
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
@@ -92,13 +86,11 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
  // The product of these is the number of atoms of the result
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
- GA(z,t,zn,of+r,os); ICPY(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
+ GA(z,t,zn,of+r,os); MCIS(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
  k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
  INHERITNOREL(z,w); RETF(z);
 } 
 
-// obsolete F2(jtleft2 ){F2PREFIP;if(!jt->rank)RETF(a); RETF(lr2(1,a,w));}
-// obsolete F2(jtright2){F2PREFIP;if(!jt->rank)RETF(w); RETF(lr2(0,a,w));}
 F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(a); RETF(lr2(1,a,w));}
 F2(jtright2){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(w); RETF(lr2(0,a,w));}
 

@@ -155,16 +155,12 @@ SUFFIXPFX(bw1111sfxI, UI,UI, BW1111)
 
 static DF1(jtsuffix){DECLF;I r;
  RZ(w);
-// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtsuffix);}
-// obsolete RESETRANK;
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
  R eachl(IX(IC(w)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
 static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  RZ(w);
-// obsolete if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,jt->rank[1],jtgsuffix);}
-// obsolete RESETRANK;
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  n=IC(w); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -181,62 +177,10 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
-#if 0  // obsolete
-static DF1(jtssgu){A fs,q,x,y,z;AF f2;C*zv;I i,k,m,n1,old,r,t;V*sv=VAV(self);
- fs=VAV(sv->fgh[0])->fgh[0]; f2=VAV(fs)->valencefns[1];
- r=AR(w)-1; n1=IC(w)-1; m=aii(w); t=AT(w); k=m*bp(t);
- RZ(z=ca(w)); zv=CAV(z)+k*n1;
- RZ(q=tail(w));
- RZ(y=gah(r,q)); ICPY(AS(y),AS(q),r); AK(y)=(I)zv-(I)y; zv-=k; 
- RZ(x=gah(r,q)); ICPY(AS(x),AS(q),r); AK(x)=(I)zv-(I)x;
- old=jt->tnextpushx;
- switch(r?0:k){
-  case sizeof(C): SSGULOOP(C); break;
-  case sizeof(I): SSGULOOP(I); break;
-#if SY_64
-  case sizeof(int): SSGULOOP(int); break;
-#endif
-  case sizeof(S): SSGULOOP(S); break;
-#if ! SY_64
-  case sizeof(D): SSGULOOP(D); break;
-#endif
-  case sizeof(Z): SSGULOOP(Z); break;
-  default:
-   for(i=0;i<n1;++i){       
-    RZ(q=CALL2(f2,x,y,fs)); if(!(TYPESEQ(t,AT(q))&&r==AR(q)&&!ICMP(AS(y),AS(q),r)))R A0;  // error if error; abort if incompatible result
-    MC(zv,CAV(q),k); zv-=k; 
-    AK(x)-=k; AK(y)-=k; 
-    tpop(old);
- }}
- R z;
-}    /* same as ssg but for uniform function f */
-
-static DF1(jtssg){A fs,q,y,z,*zv;AF f2;C*u,*v;I i,k,n,yn,yr,*ys,yt;V*sv=VAV(self);
- if(jt->rank&&jt->rank[1]<AR(w))R rank1ex(w,self,jt->rank[1],jtssg);
- RESETRANK; 
- fs=VAV(sv->fgh[0])->fgh[0]; f2=VAV(fs)->valencefns[1];
- n=IC(w); RELORIGINBR(wrel,w)
- if(DIRECT&AT(w)){RE(z=ssgu(w,self)); if(z)R z;}
- GATV(z,BOX,n,1,0); zv=n+AAV(z); 
- RZ(*--zv=q=tail(w)); yt=AT(q); yn=AN(q); yr=AR(q); ys=1+AS(w);
- k=yn*bp(yt); v=CAV(w)+k*(n-1);
- for(i=1;i<n;++i){
-  v-=k;
-  GA(y,yt,yn,yr,ys); u=CAV(y); 
-// obsolete   if(wrel){A1*wv=(A1*)v,*yv=(A1*)u;I d=wrel-(I)y; AFLAG(y)=AFREL; DO(yn, yv[i]=d+wv[i];);}else MC(u,v,k);
-  if(wrel){A* RESTRICT wv=(A*)v,* RESTRICT yv=(A*)u;I d=wrel-RELORIGINDEST(y); AFLAG(y)=AFREL; RELOCOPY(yv,wv,yn,d);}else MC(u,v,k);
-  RZ(*--zv=q=CALL2(f2,y,q,fs));
- }
- R ope(z);
-}    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
-
-#else
 static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
  // loop over rank
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
-// obsolete  if(r<wr)R rank1ex(w,self,r,jtssg);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
 
  // From here on we are doing a single scan
@@ -251,12 +195,10 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  state &= ~((FAV(fs)->flag2&VF2ATOPOPEN2W)>>(VF2ATOPOPEN2WX-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
 
  // We cannot honor WILLBEOPENED, because the same box that goes into the result must also be released into the next application of f.
-// obsolete  state |= (-state) & FAV(self)->flag2 & (VF2COUNTITEMS); // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
  state |= (-state) & (I)jtinplace & JTCOUNTITEMS; // remember if this verb is followed by ; - only if we BOXATOP, to avoid invalid flag setting at assembly
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  UNINCORPABLE, non-inplaceable
-// obsolete  RZ(a=virtual(w,0,r-1));
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block (usually)
@@ -278,7 +220,6 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
 #define ZZSTARTATEND 1   // build result from bottom up
 #include "result.h"
 
-// obsolete  I zitmp=n; ZZPARMS(0,0,&zitmp,1,n,2)   // set up for assembly loop
   ZZPARMS(1,n,2)
 #define ZZINSTALLFRAME(optr) *optr++=n;
 
@@ -303,16 +244,12 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
 #include "result.h"
  EPILOG(zz);  // this frees the virtual block, at the least
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
-#endif
 
 A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
   RZ(x=denseit(w));
-// obsolete   rv[1]=r; jt->rank=rv; RZ(z=CALL1(sf,x,self)); RESETRANK; 
-// obsolete   R z;
   R irs1(x,self,r,sf);
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
@@ -320,7 +257,6 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
   j=f; m=0; DO(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
-// obsolete   rv[1]=m; jt->rank=rv; RZ(x=CALL1(sf,x,self)); RESETRANK;
  RZ(x=irs1(x,self,m,sf));
  t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
  GA(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
@@ -336,24 +272,18 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  RZ(w);F1PREFIP;
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
-// obsolete  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; ws=AS(w); 
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
-// obsolete  PROD(m,f,ws); PROD(c,r,f+ws); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
- y=FAV(self)->fgh[0]; // y is f/     // obsolete id=vaid(VAV(y)->fgh[0]); 
-// obsolete  if(2>n||!wn){if(vaid(VAV(y)->fgh[0])){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R suffix(w,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg
+ y=FAV(self)->fgh[0]; // y is f/
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
-// obsolete  if(!adocv.f)R ssg(w,self);   // if not supported atomically, go do general suffix
-// obsolete  if(!adocv.f)R irs1(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if(!adocv.f)R irs1ip(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(adocv.cv); // obsolete RESETRANK;
+ zt=rtype(adocv.cv);
  GA(z,zt,wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
-// obsolete  if(jt->jerr)R jt->jerr>=EWOV?(rr[1]=r,jt->rank=rr,sscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
  if(jt->jerr)R jt->jerr>=EWOV?irs1(w,self,r,jtsscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */
 
@@ -405,7 +335,6 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
  if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
-// obsolete  adocv=var(id,p,p,t,t,&ado,&cv)); // analyze the u operand
   adocv=var(x,t,t); // analyze the u operand
   ASSERTSYS(adocv.f,"ofxassoc");
   GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);  // allocate result assuming no overflow

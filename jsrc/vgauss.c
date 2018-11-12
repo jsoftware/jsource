@@ -15,14 +15,12 @@ F1(jtgausselm){I c,e,i,j,old,r,r1,*s;Q p,*u,*v,*x;
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  ASSERT(2==AR(w),EVRANK);
  s=AS(w); r=s[0]; c=s[1]; r1=MIN(r,c);
-// obsolete  m=c*bt(AT(w)); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r1;++j){
   v=QAV(w);
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   ASSERT(0<=e,EVDOMAIN);
   x=v+c*j; 
- // obsolete  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m);} /* interchange rows e and j */
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;);} /* interchange rows e and j */
   p=x[j]; ra(p.n); ra(p.d); DO(c, Q z=qdiv(x[i],p); INSTALLRAT(w,x,i,z);); fa(p.n); fa(p.d);
   for(i=0;i<r;++i){
@@ -39,14 +37,12 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,old,r,*s;Q d,p,*u,*v,*x;
  RZ(w);
  w=rifvsdebug(w);  // must realize before in-place operations, as above
  s=AS(w); r=s[0]; c=s[1];
-// obsolete  m=c*sizeof(Q); GATV(t,LIT,m,1,0); tv=CAV(t);
  old=jt->tnextpushx;
  for(j=0;j<r;++j){
   v=QAV(w); 
   e=-1; u=v+c*j+j; DO(r-j, if(XDIG(u->n)){e=i+j; break;} u+=c;);  /* find pivot row */
   if(0>e)R cvt(RAT,zero);
   x=v+c*j;
-// obsolete  if(j!=e){u=v+c*e; MC(tv,x,m); MC(x,u,m); MC(u,tv,m); g=-g;}  /* interchange rows e and j */
   if(j!=e){u=v+c*e; DO(c, Q t1=u[i]; u[i]=x[i]; x[i]=t1;); g=-g;}  /* interchange rows e and j */
   i=XDIG(x[j].n); if(i==XPINF||i==XNINF)R mark;
   for(i=j+1;i<r;++i){

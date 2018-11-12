@@ -87,12 +87,6 @@ I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
 A jtapv(J jt,I n,I b,I m){A z;
  GATV(z,INT,n,1,0); I *x=AV(z);
   DO(n, x[i]=b; b+=m;)
-// obsolete I j=b-m,p=b+m*(n-1),*x; switch(m){
-// obsolete   case  0: DO(n, *x++=b;);      break;
-// obsolete   case -1: while(j!=p)*x++=--j; break;
-// obsolete   case  1: while(j!=p)*x++=++j; break;
-// obsolete   default: while(j!=p)*x++=j+=m;
-// obsolete  }
  R z;
 }    /* b+m*i.n */
 
@@ -165,23 +159,6 @@ C cf(A w){if(!w)R 0; R*CAV(w);}  // first character in a character array
 C cl(A w){if(!w)R 0; R*(CAV(w)+AN(w)-1);}  // last character in a character array
 
 
-#if 0  // obsolete 
-// Choose type to use for joined arguments; convert the arguments to that type if needed
-// *a and *w are blocks to read/modify
-// mt is the type to use if none is given
-// We choose the highest-priority type from the nonempty arguments and mt;
-// If none of those are given we choose the larger type from the (empty) arguments
-// Then convert as needed
-I jtcoerce2(J jt,A*a,A*w,I mt){I at,at1,t,wt,wt1;
- if(!(*a&&*w))R 0;
- at=AT(*a); at1=AN(*a)?at:0;
- wt=AT(*w); wt1=AN(*w)?wt:0; RE(t=maxtype(at1,wt1)); RE(t=maxtype(t,mt));
- if(!t)RE(t=maxtype(at,wt));
- if(TYPESNE(t,at))if(!(*a=cvt(t,*a)))R 0;
- if(TYPESNE(t,wt))if(!(*w=cvt(t,*w)))R 0;
- R t;
-}
-#endif
 A jtcstr(J jt,C*s){R rifvs(str((I)strlen(s),s));}  // used only for initialization, so ensure real string returned
 
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
@@ -230,7 +207,6 @@ static F1(jtii){RZ(w); RETF(IX(IC(w)));}
 // Result is always an UNSAFE type
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
-// obsolete  t=UNSAFE(t); s=UNSAFE(s);  // We must ignore the flag bits during this test
  // If one of the types is 0, return the other
  if(((-s)&(-t))>=0)R s+t;
  // If values differ and are both nonzero...
@@ -267,20 +243,13 @@ void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
 A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
  RE(m=prod(n,s)); RE(mn=mult(m,n));
  GATV(z,INT,mn,2==r?2:n,s);
-// obsolete zv=AV(z)-n;
  if(2==r){u=AS(z); u[0]=m; u[1]=n;}
  if(!mn)R z;
  zv=IAV(z);
  if(1==n)DO(m, zv[i]=i;)
  else{
-#if 0 // obsolete
-  I k=n*SZI;
-  GATV(q,INT,n,1,0); u=AV(q); memset(u,C0,k); u[n-1]=-1;
-  DO(m, ++u[j=n-1]; DO(n, if(u[j]<s[j])break; u[j]=0; ++u[--j];); MC(zv+=n,u,k););
-#else
   I *zvo=zv-1; DQ(n, *zv++=0;)   // init first row, point zvo to before the first value
   DQ(m-1, I dontadd=0; zv=zvo+n; zvo=zv+n; DQ(n, I out=*zv + 1 + dontadd; dontadd=(out-s[i])>>(BW-1); *zvo = out&dontadd; --zv; --zvo;))  // add 1 first time, & continue as long as there is carry.  Once dontadd goes to -1 it stays there
-#endif
  }
  R z;
 }

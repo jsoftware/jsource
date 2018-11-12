@@ -43,25 +43,6 @@ F1(jtdisps){UC n;
  R mtv;
 }
 
-// obsolete F1(jtdotnamesq){ASSERTMTV(w); R jt->dotnames?one:zero;}
-// obsolete 
-// obsolete F1(jtdotnamess){B b,c;
-// obsolete  RZ(w);
-// obsolete  ASSERT(!AR(w),EVRANK);
-// obsolete  if(!(B01&AT(w)))RZ(w=cvt(B01,w));
-// obsolete  c=jt->dotnames; jt->dotnames=b=*BAV(w);
-// obsolete  if(c&&!b)ds(CMDOT)=ds(CNDOT)=ds(CUDOT)=ds(CVDOT)=ds(CXDOT)=ds(CYDOT)=0;
-// obsolete  else if(!c&&b){
-// obsolete   ds(CMDOT)=mdot;
-// obsolete   ds(CNDOT)=ndot;
-// obsolete   ds(CUDOT)=udot;
-// obsolete   ds(CVDOT)=vdot;
-// obsolete   ds(CXDOT)=xdot;
-// obsolete   ds(CYDOT)=ydot;
-// obsolete  }
-// obsolete  R mtv;
-// obsolete }
-// obsolete 
 F1(jtevmq){ASSERTMTV(w); R behead(jt->evm);}
 
 F1(jtevms){A t,*tv,*wv;

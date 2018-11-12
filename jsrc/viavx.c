@@ -1700,8 +1700,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  as=AS(a); at=AT(a); an=AN(a);
@@ -1712,7 +1710,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(w==mark){mode |= IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
  else{  // w is given.  See if we need to abort owing to shapes.
   mode |= IIOREPS&((((1LL<<IIDOT)|(1LL<<IICO)|(1LL<<IEPS))<<IIOREPSX)>>mode);  // remember if i./i:/e. (and not prehash)
-// obsolete   if(1==ar&&1>=wr&&TYPESEQ(at,wt)&&(mode&IIOREPS)&&1==acr&&wr==wcr&&an&&wn&&
   if(1==ar&&TYPESEQ(at,wt)&&(((1-wr)|((mode&IIOREPS)-1)|(-(acr^1))|(-(wr^wcr))|(an-1)|(wn-1)|(-((at|wt)&SPARSE)))>=0)&&
     ((wcr==0)||((D)an*(D)wn<COMPARESPERHASHWRITE*an+COMPARESPERHASHREAD*wn+OVERHEADHASHALLO+OVERHEADSHAPES))){
    // Fast path for (vector i./i:/e. atom or short vector) - if not prehashing.  Do sequential search
@@ -1731,8 +1728,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode&IIOPMSK){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R zero;
@@ -1768,7 +1765,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
  // We do this only if af!=0, because we have already set up to repeat cells of a if af=0
-// obsolete  if((wf-af)>0&&af){f1+=wf-af; wf=af;}
  if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // wf>af & af>0
  if(((an-1)|(wn-1))>=0){
   // Neither arg is empty.  We can safely count the number of cells
@@ -1796,11 +1792,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // Allocate the result area
  switch(mode&(IPHCALC|IIOPMSK)){I q;  // prehash passes through
   case IIDOT: 
-  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)ICPY(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
+  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
+  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCIS(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
+  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
   case INUBI:   q=m+1; GATV(z,INT,q,1,0); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
@@ -1814,7 +1810,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  }
 
  // Create result for empty/inhomogeneous arguments
-// obsolete if(!(m&&n&&zn&&(th>0))){
  if((((I)m-1)|(n-1)|(zn-1)|(th-1))<0){  // if one of those is 0...
   I witems = wr>r?ws[0]:1;  // # items of w, in case we are doing i.&0 eg on result of e., which will have that many items
   switch(mode&(IIOPMSK|IPHCALC)){  // prehash passes through
@@ -1845,7 +1840,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // The cost of such a search is (4 inst per loop, at 1/2 cycle each) and the expected number of loops is half of
  // m*number of results.  The cost of small-range hashing is at best 10 cycles per atom added to the table and 8 cycles per lookup.
  // (full hashing is considerably more expensive); also a fair amount of time for range-checking and table-clearing, and further testing here
- // obsolete if(1==acr&&(1==wc||ac==wc)&&a!=w&&(mode&IIOREPS)&&((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO)){
  if(((((-(wc^1))&(-(wc^ac)))|((mode&IIOREPS)-1))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
@@ -2059,7 +2053,6 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,m
  RE(c=prod(f1,ws));  // c=#cells of w (and result)
  // audit conformance of input shapes.  If there is an error, pass to the main code to get the error result
  // Use c as an error flag
-// obsolete  if(!(r<=ar&&0<=f1))c=0;   // w must have rank big enough to hold a cell of a
  c &= (~(f1|(ar-r)))>>(BW-1);   // w must have rank big enough to hold a cell of a.  Clear c if f1<0 or r>ar
  if(ICMP(as+ar-r,ws+f1,r))c=0;  // and its shape at that rank must match the shape of a cell of a
  // If there is any error, switch back to the non-prehashed code.  We must remove any command bits from mode, leaving just the operation type
@@ -2098,7 +2091,6 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 F1(jtnubsieve){
  RZ(w);
  if(SPARSE&AT(w))R nubsievesp(w); 
-// obsolete  if(jt->rank)jt->rank[0]=jt->rank[1]; 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -2117,7 +2109,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+ if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
@@ -2126,12 +2118,9 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // x e. y
 F2(jteps){I l,r;
  RZ(a&&w);
-// obsolete  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
-// obsolete  rv[1]=l=jt->rank?jt->rank[0]:AR(a); RESETRANK;
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
  if(SPARSE&AT(a)+AT(w))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
-// obsolete  jt->rank=rv; 
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */

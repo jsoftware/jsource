@@ -579,7 +579,6 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 // /: and \: with IRS support
 F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  RZ(w);
-// obsolete  t=AT(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
  t=AT(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-r; s=AS(w);
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  

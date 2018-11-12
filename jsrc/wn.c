@@ -218,7 +218,6 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
   if(!ii){t=FL; f=jtnumd; GA(z,t,m,1!=m,0); v=CAV(z);}
  }
  if(!ii)DO(m, d=i+i; e=yv[d]; ASSERT(f(jt,yv[1+d]-e,e+s,v),EVILNUM); v+=k;);
-// obsolete  if(t&FL+CMPX)RZ(z=cvt0(z));   // we no longer fear -0
  z=bcvt(0,z);
  EPILOG(z);
 }
@@ -413,11 +412,9 @@ F2(jtexec2){A z;B b,ii,j,p,q,x;C d,*v;I at,c,i,k,m,n,r,*s;
  numcase(m*n,CAV(w),&b,&j,&x,&q,&ii);
 
  // Select the conversion routine.  We allow -0 in the result now
-// obsolete if(at&CMPX)                z=cvt0(exec2z(a,w,n,m,c));  // If x argument is complex, force that mode
  if(at&CMPX)                z=exec2z(a,w,n,m,c);  // If x argument is complex, force that mode
  else if(q)                 z=exec2q(a,w,n,m,c);  // Otherwise, if data contains rationals, use that mode
  else if(x&&at&B01+INT+XNUM)z=exec2x(a,w,n,m,c);   // Otherwise if data contains extended integers, use that mode as long as x is compatible
-// obsolete else                       z=cvt0(exec2r(a,w,n,m,c));  // otherwise do normal int/float conversion
  else                       z=exec2r(a,w,n,m,c);  // otherwise do normal int/float conversion
  // Select the precision to use: the smallest that can hold the data
  R bcvt(0,z);

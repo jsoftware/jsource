@@ -7,7 +7,6 @@
 #include "vasm.h"
 #include "gemm.h"
 
-// obsolete static dcomplex zone={1.0,0.0},zzero={0.0,0.0};
 
 // Analysis for inner product
 // a,w are arguments
@@ -22,8 +21,8 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
- ICPY(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
- ICPY(AS(z)+ar1,1+ws,wr1);
+ MCIS(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
+ MCIS(AS(z)+ar1,1+ws,wr1);
  R z;
 }    /* argument validation & result for an inner product */
 
@@ -355,7 +354,6 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
  if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
-// obsolete t=coerce2(&a,&w,B01);  // convert a/w to common type, using b01 if both empty
  {t=maxtypeawd(a,w,B01); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
  // Allocate result area and calculate loop controls

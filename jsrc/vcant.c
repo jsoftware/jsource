@@ -24,20 +24,6 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  R z;
 }    /* w is sparse */
 
-#if 0  // obsolete
-#define CANTA(T,exp)  \
- {T*u=(T*)zv,*v=(T*)wv;                                                  \
-  DO(zn, exp; j=r-1; ++tv[j]; d+=mv[j];                                  \
-  while(j&&sv[j]==tv[j]){d+=mv[j-1]-mv[j]*sv[j]; tv[j]=0; ++tv[--j];});  \
- }
-// do the innermost loop fast.  r must be >= 1
-#define CANTA(T,exp)  \
- {T*u=(T*)zv,*v=(T*)wv;                                                  \
-  do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; d+=mvr1;)                        \
-   do{d-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; d+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
-  }while(j>=0); \
- }
-#else
 // do the innermost loop fast.  r must be >= 1
 // we create result items in order.  tv[] is the representation in the index space of the result.  When
 // we move a cell we increment the low-order index and propagate carries up the line.  Each entry of mv[] tells
@@ -48,19 +34,17 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
    do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
   }while(j>=0); \
  }
-#endif
 
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
 static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
  RZ(a&&w);
-// obsolete  av=AV(a); ws=AS(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK;
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
  fauxblockINT(afaux,4,1);
  if(wf=wr-r){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
-  fauxINT(a,afaux,wr,1) /* obsolete GATV(a,INT,wr,1,0); */ tv=AV(a); 
+  fauxINT(a,afaux,wr,1) tv=AV(a); 
   DO(wf, tv[i]=i;); DO(r, tv[wf+i]=wf+av[i];);  // adjust other axes up to move out of the way of the prefix axes
   av=tv;
  }
@@ -79,7 +63,6 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
  // r will hold number of unelided trailing axes of result
  I noelideend=0; I cellsizeb=bp(AT(w)); r=zr; I scanws=1; j=wr;  // cellsizeb is number of bytes in a cell of the transpose, after deleting trailing axes
  DO(wr, --j; tv[j]=scanws; if(noelideend|=(j^av[j])){scanws*=ws[j];}else{cellsizeb*=ws[j]; --r;});  // tv = */\. ws
-// obsolete  d=1; j=wr; DO(wr, --j; tv[j]=d; d*=ws[j];);  // tv = */\. ws
  if(!r)R RETARG(w);  // if all the axes are elided, just return the input unchanged
  for(j=0,zn=1;j<zr;++j){  // for each axis of the result...  (must include deleted axes to get the shape of result axis, and total # items)
   UI axislenres=~0; I axislenin=0;  // axislenin will hold length of axis (in the input), axislenres is length of axis in result
@@ -93,11 +76,8 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
  b=1&&SPARSE&AT(w);
  GA(z,AT(w),b?1:zn,zr,sv);  // allocate result
  if(b)R cants(a,w,z); if(!zn)R z;  // if sparse, go to sparse transpose code.  If result is empty, return it now
-// obsolete  d=1; r=zr; j=wr; DO(wr, --j; if(j!=av[j])break; d*=sv[j]; --r;);  // collect trailing unmodified axes into the result cell-size.
-// obsolete  if(1<d)DO(r, mv[i]/=d;);  // if cell-size has increased, reduce movement vector accordingly, since it counts in cells (questionable decision)
  // now run the transpose
  zv=CAV(z); wv=CAV(w);
-// obsolete if(r){
  memset(tv,C0,r*SZI);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
  case sizeof(C): CANTA(C, *u++=*(C*)v;); break;
@@ -112,13 +92,11 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
 #endif
  default:        CANTA(C, MC(u,v,cellsizeb); u+=cellsizeb;); break;
  }     
-// obsolete }else{MC(zv,wv,c*zn);}  // could return w
  RELOCATE(w,z); RETF(z);  // should EPILOG?
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 
  RZ(w); 
-// obsolete  if(jt->rank){jt->rank[0]=1; r=jt->rank[1];}else r=AR(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
  A z=canta(apv(r,r-1,-1L),w);  // rank is set
  RZ(z);  INHERITNOREL(z,w); RETF(z);
@@ -126,8 +104,6 @@ F1(jtcant1){I r;
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  RZ(a&&w);
-// obsolete  q=jt->rank?jt->rank[0]:AR(a); 
-// obsolete  r=jt->rank?jt->rank[1]:AR(w); RESETRANK;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(1<q||q<AR(a))R rank2ex(a,w,0L,1,RMAX,q,r,jtcant2);

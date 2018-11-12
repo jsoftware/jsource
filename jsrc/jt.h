@@ -57,7 +57,6 @@ typedef struct {
  PSTK* parserstkend1;    // &end+1 of parser stack
  A    local;            /* local symbol table                              */
  A    global;           /* global symbol table                             */
-// obsolete  I    fcalli;           /* named fn calls: current depth                   */
  A    sf;               /* for $:                                          */
  A    curname;          // current name, an A block containing an NM
  I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
@@ -95,7 +94,6 @@ typedef struct {
  I4   callstacknext;           /* named fn calls: current depth                   */
  I4   fcalln;           /* named fn calls: maximum permissible depth       */
  UC   prioritytype[11];  // type bit for the priority types
-// obsolete B    stswitched;       /* called fn switched locale                       */
 // 1 byte free
  B    iepdo;            /* 1 iff do iep                                    */
  C    dbss;             /* single step mode                                */
@@ -127,7 +125,6 @@ typedef struct {
  A    fill;             /* fill                                            */
  C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
-// obsolete  A    curlocn;          /* current locale name corresp. to curname         */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
@@ -192,7 +189,6 @@ typedef struct {
  C*   compv;            /* comparison: beginning of data area              */
  A    compw;            /* comparison: orig arg. (for relative addressing) */
  L*   cursymb;          /* current symbol table entry                      */
-// obsolete  AD   cxqueuehdr;       // Area used by jtxdefn to point to sections of lines to pass to parsex
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
  A    dbomega;          /* right argument for rerun                        */
@@ -252,7 +248,6 @@ typedef struct {
  AF   pre;              /* preface function for assignment                 */
  A    p4792;            // pointer to p: i. 4792, filled in on first use
  I    redefined;        /* symbol table entry of redefined explicit defn   */
-// obsolete int  reginitflag;      /* 1 iff regular expression stuff initialized      */
  I    sbfillfactor;     /* SB for binary tree                              */
  I    sbgap;            /* SB for binary tree                              */
  A    sbh;              /* SB hash table of indices; -1 means unused       */
@@ -265,8 +260,6 @@ typedef struct {
  I    sbun;             /* SB cardinality                                  */
  SBU* sbuv;             /* SB points to ravel of sbu                       */
  A    sca;              // S: result vector  rank=1 AN=#elements AS[0]=#used
-// obsolete  I    scn;              /* S: actual length of sca                         */
-// obsolete  I*   scv;              /* S: AV(sca)                                      */
  int  sdinited;         /* sockets                                         */
  A    slist;            /* files used in right arg to 0!:                  */
  I    slistn;           /* slist # of real entries                         */

@@ -499,21 +499,16 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // We detect agreement error before domain error
  RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
  {I *as = AS(a); I *ws = AS(w);
-// obsolete  if(!jt->rank){I b;I ipa;
   if(savedranks==(RANK2T)~0){I b;I ipa;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
-// obsolete  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);   // agreement error if not prefix match
    r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
-// obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((((zn^an)|(ar^r))==0)*2 + (((zn^wn)|(wr^r))==0));  // inplaceability (see below)
    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((ar==r)*2 + (wr==r));  // inplaceability (see below)
    bcip=ipa+8*b;  // save the combined bcip for loop control
    DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
-// obsolete    c=2;  // flag to indicate 'no rank specified'
    f = 0;  // no frame since we didn't have rank
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
-// obsolete not needed    sf = 0;  // there is no frame: suppress copying the frame+rank, since we always copy the rank separately
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
@@ -521,8 +516,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    }
   }else{I af,wf,acr,wcr,q,b,c,zcn;I ipa;
    // Here, a rank was specified.  That means there must be a frame, according the to IRS rules
-// obsolete    r=jt->rank[0]; acr=MIN(ar,r); af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
-// obsolete    r=jt->rank[1]; wcr=MIN(wr,r); wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
    acr=savedranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
    wcr=(RANKT)savedranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
@@ -530,7 +523,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    // we do this before we generate failures
    RESETRANK;  // This is required for xnum/rat/sparse
    // if the frames don't agree, that's always an agreement error
- // obsolete  ASSERT(!ICMP(as,ws,MIN(af,wf)),EVLENGTH);  // frames must match to the shorter length; agreement error if not
    c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
    b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; I shortr=b?acr:wcr; I longf=b?wf:af; s=b?ws:as; s+=longf; PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
      // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
@@ -544,7 +536,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 #else
     RE(zn=mult(mf,mult(nf,zcn)));  // zn=total # result atoms  (only if non-sparse)
 #endif
-// obsolete     ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));  //  calc inplaceability - see below
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
@@ -560,8 +551,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // Signal domain error if appropriate. Must do this after agreement tests
  ASSERT(adocv.f,EVDOMAIN);
 
-// obsolete // Special case of x ^ 0.5.  We know there was no forced conversion on ^ .  Bugs: this does not pass the rank into sqroot, and loses frame of w, if it has any
-// obsolete  if(FAV(self)->id==CEXP&&(AN(w)==1)&&(AT(w)&FL)&&0.5==*DAV(w))R sqroot(a);  // Now that we have checked for agreement, switch ^&0.5 to %: to use hardware.  jt->rank is immaterial
 
  // finish up the computation of sizes.  We have to defer this till after var() because
  // if we are retrying the operation, we may be in error state until var clears it; and prod and mult can fail,
@@ -574,7 +563,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    // might fail because the type in t is incompatible with the actual type in a.  t is rare.
    //
    // Because of the priority of errors we mustn't check the type until we have verified agreement above
-// obsolete  if(t&&(((an-1)|(wn-1))>=0)){  // t not 0, and none of  sparse, an==0, wn==0
    if(adocv.cv&VARGMSK&&zn>0){I t=atype(adocv.cv);  // t not 0, and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
@@ -602,8 +590,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   // use the inplacing from the action routine to qualify the caller's inplacing, EXCEPT
   // for Boolean inputs: since we do the operations a word at a time, they may overrun the output area and
   // are thus not inplaceable.  The exception is if there is only one loop through the inputs; that's always inplaceable
-// obsolete   if(a==w || ((mf|nf)>1 && zt&B01)){jtinplace=0;}  // If result is Boolean and we have more than 1 loop, suppress inplacing
-// obsolete   {I inplaceallow = ((I)jtinplace & (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1));  // qualify input flags based on routine result
 // less regs, more comp   {I inplaceallow = (adocv.cv>>VIPOKWX) & (((a==w)|((f!=0)&zt))-1) & ((((zn^an)|(ar^(f+r)))==0)*2 + (((zn^wn)|(wr^(f+r)))==0));
    
       // also turn off inplacing if a==w  or if Boolean with repeated cells   uses B01==1
@@ -614,9 +600,9 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    // If the operation is one that can fail partway through, don't allow it to overwrite a zombie input unless so enabled by the user
 // more regs, less comp    if((inplaceallow&(((zn^wn)|(wr^(f+r)))==0)) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; AT(z)=zt;  //  Uses JTINPLACEW==1
 // more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
-  if((bcip&(I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt) /* obsolete AT(z)=zt;  MODVIRTINPLACE(z); */  //  Uses JTINPLACEW==1
-  }else if((bcip&(I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt) /* obsolete AT(z)=zt;  MODVIRTINPLACE(z); */  //  Uses JTINPLACEA==2
-  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISds(zs,sf,f);    MCISds(zs,s,r);} // obsolete ICPY(f+AS(z),s,r); the trick here is to prevent the compiler from calling memcpy.
+  if((bcip&(I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
+  }else if((bcip&(I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
+  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISds(zs,sf,f);    MCISds(zs,s,r);} 
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -630,7 +616,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zv,av,wv); if(!--i)break; zv+=zk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
    else if(bcip&4){I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
    else         {I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zv,av,wv); zv+=zk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
-// obsolete    else      DO(mf, DO(nf, adocv.f(jt,bc&1,m,n,zv,av,wv); zv+=zk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
 #else  // would be faster if all loop variables moved to registers
    I wkm,wkn,akm,akn;
 // compbug   if(f) {  // increments are immaterial if there is no looping, and the increments are on the stack and therefore slow to calculate... and the compiler inits the variables anyway in VS13
@@ -646,7 +631,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    // Here for overflow that can be corrected in place
    // If the original result block cannot hold the D result, allocate a separate result area
    if(sizeof(D)==sizeof(I)){zz=z; AT(zz)=FL; zzk=zk;   // shape etc are already OK
-// obsolete   }else{GATV(zz,FL,zn,f+r,sf); ICPY(f+AS(zz),s,r); zzk=zk*(sizeof(D)/sizeof(I));}
    }else{GATV(zz,FL,AN(z),AR(z),AS(z)); zzk=zk*(sizeof(D)/sizeof(I));}
    // restore pointers to beginning of arguments
    zzv=CAV(zz);  // point to new-result data
@@ -661,7 +645,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
      if(1==nf){I i=mf; while(1){adocv.f(jt,bcip>>3,m,n,zzv,av,wv); if(--i==0)break; zzv+=zzk; av+=ak; wv+=wk;}}  // if the short cell is not repeated, loop over the frame
      else if(bcip&4){I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zzv,av,wv); zzv+=zzk;         wv+=wk;}while(--in); av+=ak;}while(--im);} // if right frame is longer, repeat cells of a
      else         {I im=mf; do{I in=nf; do{adocv.f(jt,bcip>>3,m,n,zzv,av,wv); zzv+=zzk;         av+=ak;}while(--in); wv+=wk;}while(--im);}  // if left frame is longer, repeat cells of w
-// obsolete    else      DO(mf, DO(nf, adocv.f(jt,bc&1,m,n,zzv,av,wv); zzv+=zzk; av+=ak;        ); wv+=wk;);  // if left frame is longer, repeat cells of w
 #else
      I wkm,wkn,akm,akn;
 // compbug   if(f) {  // increments are immaterial if there is no looping, and the increments are on the stack and therefore slow to calculate... and the compiler inits the variables anyway in VS13
@@ -704,7 +687,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // a recoverable error such an overflow during integer addition.  We have to restore
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
  // do overflow recovery in-place
-// obsolete  R NEVM<jt->jerr?(jt->rank=oq,jtva2recur(jt,a,w,self)):0;
  R NEVM<jt->jerr?irs2(a,w,self,savedranks>>RANKTX,(RANKT)savedranks,jtva2):0;
 #undef an
 #undef wn
@@ -790,10 +772,6 @@ DF2(jtsumattymes1){
 
  // Exchange if needed to make the cell-rank of a no greater than that of w.  That way we know that w will never repeat in the inner loop
  if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
-// obsolete  // if cell-ranks are equal and ranks are equal, make the cell-ranks equal to the ranks.
-// obsolete  I anyframe=(ar^wr)|(acr^wcr); acr=anyframe?acr:ar; wcr=anyframe?wcr:wr;
-// obsolete  // if either arg has frame AND either cell-rank is >1, rank2ex using the cell-ranks.  This is a rare case and we don't want another level of looping here
-// obsolete  if((((acr-ar)|(wcr-wr))&(1-(acr|wcr)))<0)R rank2ex(a,w,self,acr,wcr,acr,wcr,jtsumattymes1);
 
  // Verify inner frames match
  DO(acr-1, ASSERT(AS(a)[ar-acr+i]==AS(w)[wr-wcr+i],EVLENGTH);); ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
@@ -845,9 +823,6 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
    }else{if(!b){B* tv=av; av=wv; wv=tv;}
              zv=zu; DO(m, u=*av++;      DO(n, *zv++ =u**wv++;););
     DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
-// obsolete     }else{
-// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, *zv++ =u**av++;););
-// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
    }
   }
   break;
@@ -861,9 +836,6 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
    }else{if(!b){I *tv=av; av=wv; wv=tv;}
              zv=zu; DO(m, u=(D)*av++;      DO(n, *zv++ =u**wv++;););
     DO(nn-1, zv=zu; DO(m, u=(D)*av++; if(u)DO(n, *zv+++=u**wv++;) else wv+=n;););
-// obsolete     }else{
-// obsolete               zv=zu; DO(m, u=(D)*wv++;      DO(n, *zv++ =u**av++;););
-// obsolete      DO(nn-1, zv=zu; DO(m, u=(D)*wv++; if(u)DO(n, *zv+++=u**av++;) else av+=n;););
    }
    RZ(z=icvt(z));
   }
@@ -880,9 +852,6 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
    }else{if(!b){zv=av; av=wv; wv=zv;}
              zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv++ =u*v;););
     DO(nn-1, zv=zu; DO(m, u=*av++; DO(n, v=*wv++; *zv+++=u*v;)););
-// obsolete     }else{
-// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?u*v:0;););
-// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?u*v:0;) else av+=n;););
    }
    if(NANTEST){av-=m*nn;wv-=m*nn*n; // try again, testing for 0*_
     NAN0;
@@ -892,9 +861,6 @@ static A jtsumattymes(J jt, A a, A w, I b, I t, I m, I n, I nn, I r, I *s, I zn)
     }else{   // don't swap again
               zv=zu; DO(m, u=*av++;      DO(n, v=*wv++; *zv++ =u&&v?dmul2(u,v):0;););
      DO(nn-1, zv=zu; DO(m, u=*av++; if(u)DO(n, v=*wv++; *zv+++=   v?dmul2(u,v):0;) else wv+=n;););
-// obsolete     }else{
-// obsolete               zv=zu; DO(m, u=*wv++;      DO(n, v=*av++; *zv++ =u&&v?dmul2(u,v):0;););
-// obsolete      DO(nn-1, zv=zu; DO(m, u=*wv++; if(u)DO(n, v=*av++; *zv+++=   v?dmul2(u,v):0;) else av+=n;););
     }
     NAN1;
    }
@@ -956,7 +922,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
  if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->fgh[2]:sv->fgh[1]),b?sv->fgh[1]:sv->fgh[0]);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
-// obsolete  zn=(b?wn:an)/nn; m=(b?an:wn)/nn; m=m?m:1; n=zn/m;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments
  if(CFORK==sv->id){fs=sv->fgh[1]; gs=sv->fgh[2];}else{fs=sv->fgh[0]; gs=sv->fgh[1];}
@@ -980,7 +945,6 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
   if(TYPESNE(t,at))RZ(a=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a):cvt(t,a));
   if(TYPESNE(t,wt))RZ(w=bb?xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w):cvt(t,w));
  }
-// obsolete ak=(an/nn)*bp(AT(a)); wk=(wn/nn)*bp(AT(w));
  ak=b?m:zn; wk=b?zn:m; ak=an<nn?0:ak; wk=wn<nn?0:wk; ak*=bp(AT(a));wk*=bp(AT(w));
  GA(y,yt,zn,1,0); 
  GA(z,zt,zn,r-1,1+s);
@@ -1197,8 +1161,6 @@ VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
   VA2 retva2;  // where we build the return value
   UC id=(UC)FAV(self)->id;  // extract the 
   b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-// obsolete   {RELORIGINBR(arel,a); jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
-// obsolete   {RELORIGINBR(wrel,w); jt->relw=wrel;}   // relative no longer supported
   switch(id){
     // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
    case CEQ: retva2.f=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:

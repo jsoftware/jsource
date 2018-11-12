@@ -31,13 +31,8 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d,EVDOMAIN);                        /* must have a call                */
  if(a)RE(n=lnumcw(i0(a),d->dcc));           /* source line # to cw line #      */
-// obsolete  v=(I*)d->dci;                              /* pointer to line #               */
  jt->dbsusact=SUSSS;
  switch(c){
-// obsolete   case SSSTEPOVER: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-// obsolete   case SSSTEPINTO: if(a)*v=n-1; else --*v; jt->dbss=d->dcss=c; jt->dbssd=d;   break;
-// obsolete   case SSSTEPOUT:  if(a)*v=n-1; else --*v; jt->dbss=d->dcss=0;   ssnext(d,c); break;
-// obsolete   case SSCUTBACK:  *v=-2; jt->dbss=d->dcss=0; e=ssnext(d,c); if(e)--*(I*)e->dci;
   case SSSTEPOVER: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
   case SSSTEPINTO: DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=c; jt->dbssd=d;   break;
   case SSSTEPOUT:  DGOTO(d,a?n:d->dcix) jt->dbss=d->dcss=0;   ssnext(d,c); break;

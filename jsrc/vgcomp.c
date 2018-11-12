@@ -44,7 +44,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
                    at&SBT?jt->compgt:jt->complt;
  if(ar!=wr)R ar>wr?jt->compgt:jt->complt;
  if(1<ar&&ICMP(1+as,1+ws,ar)){A s;I*v;fauxblockINT(sfaux,4,1);
-  fauxINT(s,sfaux,ar,1) /* obsolete GATV(s,INT,ar,1,0); */ v=AV(s);
+  fauxINT(s,sfaux,ar,1) v=AV(s);
   DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
   RZ(a=take(s,a)); an=wn=AN(a);
   RZ(w=take(s,w));

@@ -142,19 +142,12 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case BOXX:
   {RELORIGINB(arel,a); RELORIGINB(wrel,w);
    if(!(arel|wrel)){INNERT(A,EQA);} else {INNERT2(arel,wrel,EQA);}
-// obsolete   switch(2*ARELATIVE(a)+ARELATIVE(w)){
-// obsolete   default:  INNERT(A,EQA); break;
-// obsolete   case 1:   INNERT2(0,w,EQA); break;
-// obsolete   case 2:   INNERT2(a,0,EQA); break;
-// obsolete   case 3:   INNERT2(a,w,EQA); break;
   } break;
  } R b;
 }
 
 static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
  RZ(a&&w);
-// obsolete ar=AR(a); acr=jt->rank?jt->rank[0]:ar; r=ar;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; r=ar;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,0L,RMAX,RMAX,acr,wcr,jtmatchs);
@@ -182,8 +175,6 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
 F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
-// obsolete af=jt->rank?AR(a)-jt->rank[0]:0;
-// obsolete wf=jt->rank?AR(w)-jt->rank[1]:0; RESETRANK;
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms
@@ -207,8 +198,6 @@ F2(jtmatch){A z;I af,f,m,n,mn,*s,wf;
 F2(jtnotmatch){A z;I af,f,m,n,mn,*s,wf;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w)))R matchs(a,w);
-// obsolete  af=jt->rank?AR(a)-jt->rank[0]:0;
-// obsolete  wf=jt->rank?AR(w)-jt->rank[1]:0; RESETRANK;
  af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
  // If either operand is empty return without any comparisons.  In this case we have to worry that the
  // number of cells may overflow, even if there are no atoms

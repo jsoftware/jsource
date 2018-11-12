@@ -479,7 +479,6 @@ void jtfh(J jt,A w){fr(w);}
 // ra(x) raises the usecount of a block and its descendants.  It traverses, stopping a path when it becomes recursible.  It marks its result recursible.  x may not be 0, and may be modified.
 // ras() does realizeifvirtual() followed by ra().  x may be 0, and may be modified
 // rat() does ras() followed by tpush().  It is used to protect a result over some operation other than tpop()
-// obsolete rat1() is like rat() but it merely increments the usecount rather than calling ra()
 // fa() lowers the usecount of a block and its descendants.  It traverses and stops a path that is recursible and has usecount going in > 1.  If the usecount is reduced to 0, the block is freed with mf()
 // tpush() puts a block and its descendants onto the stack.  In effect this is a call for a later fa().  It traverses, stopping a path when it becomes recursible.  Every block allocated
 //   by ga*() starts out with a tpush already performed, which is how blocks are normally freed.
@@ -509,9 +508,6 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
   AK(w)+=offset*tal; AR(w)=(RANKT)r;
-// obsolete   // inplaceable virtual blocks occur only inside operations that understand them.  Since they reuse their virtual blocks, it is expensive to
-// obsolete   // modify one.  If we do, we flag it
-// obsolete   MODVIRTINPLACE(w);  // if virtual inplaceable, show that we changed it
   R w;
  }else{
   // not self-virtual block: allocate a new one
@@ -519,9 +515,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   AFLAG(z)=AFVIRTUAL + (wf&AFNOSMREL) + ((wf&AFNJA+AFSMM+AFREL)?AFREL:0);  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset*tal; AR(z)=(RANKT)r;  // virtual, not inplaceable
   if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
- // obsolete  if(s){I* RESTRICT zs=AS(z); I nitems = 1; DQ(r, *zs=*s; nitems *= *s; ++s; ++zs;) AN(z)=nitems;}  // if shape given, copy it & count atoms
   ABACK(z)=w;   // set the pointer to the base: w or its base
- // obsolete ACIPNO(w);   // we must also remove inplaceability from w, since z is now aliased to it
   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;
  }
@@ -566,46 +560,6 @@ A jtrealize(J jt, A w){A z; I t;
 // result is the address of the block, which may have changed if it had to be realized.  result can be 0
 // if the block could not be realized
 
-#if 0  // obsolete scaf for audit
-static void checkgloga(A w) {
- if(AC(w)!=ACPERMANENT)*(I*)0=0;
- if((AFLAG(w)^AT(w))&TRAVERSIBLE)*(I*)0=0;
-}
-int jj;
-checkgloga(a0j1);
-checkgloga(ace);
-checkgloga(ainf);
-checkgloga(alp);
-checkgloga(aqq);
-checkgloga(asgnlocsimp);
-checkgloga(asgngloname);
-for(jj=0;jj<256;++jj)if(chr[jj])checkgloga(chr[jj]);
-checkgloga(iv0);
-checkgloga(iv1);
-checkgloga(mark);
-checkgloga(mdot);
-checkgloga(mnam);
-checkgloga(mtm);
-checkgloga(mtv);
-checkgloga(ndot);
-checkgloga(nnam);
-for(jj=NUMMIN;jj<=NUMMAX;++jj)checkgloga(numv[jj-NUMMIN]);
-checkgloga(one);
-checkgloga(onei);
-checkgloga(pie);
-for(jj=0;jj<256;++jj)if(pst[jj])checkgloga(pst[jj]);
-checkgloga(udot);
-checkgloga(unam);
-checkgloga(vdot);
-checkgloga(vnam);
-checkgloga(xdot);
-checkgloga(xnam);
-checkgloga(ydot);
-checkgloga(ynam);
-checkgloga(zero);
-checkgloga(zeroi);
-checkgloga(zpath);
-#endif
 
 A jtgc (J jt,A w,I old){
  RZ(w);  // return if no input (could be error or unfilled box)
@@ -618,8 +572,6 @@ A jtgc (J jt,A w,I old){
    // b need not be deleted, w can survive as is; but if b is to be deleted, we must realize w.  We don't keep b around because it may be huge
    // (could look at relative size to make this decision).  Because virtual blocks are never assigned or ra()d, we know that the usecount of w
    // coming in is 1
-// obsolete  if(AT(b)&DIRECT || UCISRECUR(b)) {
-// obsolete   ACINCR(w);  // likewise protect w from being freed, and remember
    AC(w)=2;  // protect w from being freed
    tpop(old);  // delete everything allocated on the stack, except for w and b which were protected
    // if the block backing w must be deleted, we must realize w to protect it; and we must also ra() w to protect its contents.  When this is
@@ -640,13 +592,9 @@ A jtgc (J jt,A w,I old){
    // we would end up trying to free the faux block in the code above.  All we need to do is free the stack.
    tpop(old);
   }
-// obsolete  else if(AC(w)>1)AC(w)=c;  // b was not deleted, and w was not deleted: restore original usecount
-// obsolete  else { tpush1(w);  // w was deleted - restore its stack entry.  Push only top level, undoing the increment of top-level usecount
   R w;  // if realize() failed, this could be returning 0
-// obsolete  }
  }
  // non-VIRTUAL path
-// obsolete realizeifvirtual(w);
  ra(w);  // protect w and its descendants from tpop; also converts w to recursive usecount.
   // if we are turning w to recursive, this is the last pass through all of w incrementing usecounts.  All currently-on-stack pointers to blocks are compatible with the increment
  tpop(old);  // delete everything allocated on the stack, except for w which was protected
@@ -715,7 +663,6 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  } else if(t&SPARSE){P* RESTRICT v=PAV(wd); A x;
   // all elements of sparse blocks are guaranteed non-virtual, so ra will not reassign them
   x = SPA(v,a); ras(x);     x = SPA(v,e); ras(x);     x = SPA(v,i); ras(x);     x = SPA(v,x); ras(x);
-// obsolete   ras(SPA(v,a)); ras(SPA(v,e)); ras(SPA(v,i)); ras(SPA(v,x)); 
  }
  R 1;
 }
@@ -835,7 +782,6 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
    jt->tnextpushx -= SZI;  // remove the buffer-to-be-freed from the stack for auditing
 #endif
    // We never tpush a PERMANENT block so we needn't check for it
-// obsolete    if(--c<=0){if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    if(--c<=0){if(AFLAG(np)&AFVIRTUAL){A b=ABACK(np); fana(b);} if(UCISRECUR(np)){fana(np);}else{mf(np);}}else AC(np)=c;  // decrement usecount and either store it back or free the block
    np=np0;  // Advance to next block
   }
@@ -870,7 +816,6 @@ I jttpop(J jt,I old){I pushx=jt->tnextpushx; I endingtpushx;
 // assigned to another name, the usecount will be >1 and therefore not inplaceable.  Likewise, the the noun is non-DIRECT we need
 // only protect the top level, because if the named value is incorporated at a lower level its usecount must be >1.
 F1(jtrat){RZ(w); ras(w); tpush(w); R w;}  // recursive.  w can be zero only if explicit definition had a failing sentence
-// obsolete F1(jtrat1s){rat1(w); R w;}   // top level only.  Subroutine version to save code space
 
 A jtras(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); ra(w); R w; }  // subroutine version of ra() to save space
 A jtrifvs(J jt, AD * RESTRICT w) { RZ(w); realizeifvirtual(w); R w; }  // subroutine version of rifv() to save space and be an rvalue
@@ -998,8 +943,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
-  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape/* obsolete &&rank */){MCIS(AS(z),shaape,rank) /* obsolete AS(z)[0]=((I*)shaape)[0]; DO(rank-1, AS(z)[i+1]=((I*)shaape)[i+1]; )*/}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
-// obsolete   AM(z)=((I)1<<((MS*)z-1)->j)-mhb-akx;   // get rid of this
+  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape){MCIS(AS(z),shaape,rank)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -1070,7 +1014,7 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
  RZ(z=gafv(SZI*(NORMAH+r)));
  AT(z)=0;
  if(w){
-  /* obsolete AM(z)=AM(w); */ AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
+  AT(z)=AT(w); AN(z)=AN(w); AR(z)=(RANKT)r; AK(z)=CAV(w)-(C*)z;
   if(1==r)*AS(z)=AN(w);
  }
  R z;
@@ -1133,14 +1077,11 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
 // the itemcount of the result is set as large as will fit evenly, and the atomcount is adjusted accordingly
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  RZ(w);                               /* assume AR(w)&&AN(w)    */
-// obsolete m=*AS(w); c=AN(w)/m; t=AT(w); k=c*bp(t);
  m=*AS(w); PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
  GA(z,t,2*AN(w),AR(w),AS(w));
  m1=allosize(z)/k;  // start this divide before the copy
-// obsolete MC(AV(z),AV(w),m*k);                 /* copy old contents      */
  MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
  if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
-// obsolete  *AS(z)=m1=allosize(z)/k; AN(z)=m1*c;       /* "optimal" use of space */
  *AS(z)=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;

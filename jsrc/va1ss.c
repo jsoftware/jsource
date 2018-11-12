@@ -17,7 +17,6 @@
 #define SSRDB(w) (*(B *)CAV(w))
 #define SSRDI(w) (*(I *)CAV(w))
 #define SSRDD(w) (*(D *)CAV(w))
-// obsolete #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
 #define SSSTORE(v,z,t,type) {MODBLOCKTYPE(z,t) *((type *)CAV(z)) = (v);}
 #define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)

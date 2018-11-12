@@ -224,7 +224,6 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
   ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);  // coeffs must be dense numeric
-// obsolete  RZ(r=jico2(ne(w,zero),one)); m=*AV(r)%n;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
   RZ(r=jico2(ne(w,zero),one)); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
   ASSERT(m||equ(zero,head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
@@ -306,7 +305,6 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
  }
-// obsolete  d=0.0; e=zeroZ;
  RE(t=maxtype(at,wt)); if(b)RE(t=maxtype(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtype(t,FL));
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
@@ -320,7 +318,6 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){
         DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 
-// obsolete   if(!j)DO(t&FL?wn:wn+wn, x=wd[i]; if(x==inf||x==infm){j=1; break;});
  }
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  if(!j&&!(t&XNUM+RAT)){
@@ -334,7 +331,6 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  case 2: NAN0; DO(wn, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
  // coeffs: d/e are not set
  case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
-// obsolete   case 4: DO(wn, p=d; x=*wd++; j=an; DO(an,p=ad[--j]+x*p;); *zd++=p;);         break;  // Horner's rule
  case 4: NAN0;
   switch(an){  // special cases for linear, quadratic, cubic
   case 2:

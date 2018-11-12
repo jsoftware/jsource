@@ -104,20 +104,6 @@ static DF1(onconst1){DECLFG;R (f1)(jt,gs,fs);}
 static DF2(onconst2){DECLFG;R (f1)(jt,gs,fs);}
 
 // x u&v y
-#if 0 // scaf
-static DF2(on2){F2PREFIP;PROLOG(0023);DECLFG;A ga,gw,z; 
-PREF2(on2); PUSHZOMB;
-// obsolete  // here for execution on a single cell
-A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA));
-// obsolete  // take inplaceability of each monad from the corresponding dyad argument
-// obsolete  // obsolete RZ(gw=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)(intptr_t)((I)jtinplace&~JTINPLACEA):jt,w,gs));
-RZ(gw=(g1)((J)(intptr_t)((I)jtinplace&~JTINPLACEA),w,gs));
-// obsolete RZ(ga=(g1)((VAV(gs)->flag&VINPLACEOK1)?(J)(intptr_t)((I)jt+(((I)jtinplace&JTINPLACEA)>>1)):jt,a,gs));
- RZ(ga=(g1)((J)(intptr_t)(((I)jtinplace>>JTINPLACEAX)+(((I)jtinplace>>JTINPLACEAX)&(~JTINPLACEW))),a,gs));  // Move bit 1 to bit 0, clear bit 1
-  POPZOMB; jtinplace=(J)(intptr_t)((I)jt+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; RZ(z=(f2)(jtinplace,ga,gw,fs)); 
-  EPILOG(z);
-}
-#else
 // We don't bother passing WILLOPEN from u into v, since it's rarely used.  We do pass WILLOPEN into u.
 CS2IP(static,on2, \
  A ga;A gw;PUSHZOMB; \
@@ -129,7 +115,6 @@ CS2IP(static,on2, \
  POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEA+JTINPLACEW))+(ga!=prota)*JTINPLACEA+(gw!=protw)*JTINPLACEW); jtinplace=FAV(fs)->flag&VINPLACEOK2?jtinplace:jt; \
  RZ(z=(f2)(jtinplace,ga,gw,fs)); \
 ,0023)
-#endif
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
 
 static DF2(atcomp){AF f;
@@ -164,17 +149,6 @@ static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
 // RA can perform the first step of raze processing (counting the items and checking shapes) as the items are calculated.  This will save a pass over
 // tzhe items, which is valuable if the result is larger than cache.
 //
-// obsolete // VF2WILLBEOPENED and VF2COUNTITEMS are stored into a verb V to hold the values of VF2WILLOPEN/VF2USESITEMCOUNT in the NEXT verb to be executed.  RA in V looks at
-// obsolete // VF2WILLBEOPENED/VF2COUNTITEMS to perform the actions mentioned above.  VF2WILLBEOPENED can be set any time the next verb opens.  VF2COUNTITEMS should be set
-// obsolete // only when the result of RA will be fed directly into the raze: it's not fatal to set it otherwise, but it does waste time on an item-count that is not used.
-// obsolete // Setting COUNTITEMS requires understanding the processing of the partitioning modifier it is being set in.  We recognize the following cases:
-// obsolete // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
-// obsolete // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
-// obsolete // ;@:(<@:v;.0)   ditto  also &:
-// obsolete // ;@(<@:v;._3 _2 _1 1 2 3)  also &:
-// obsolete //
-// obsolete // we copy into another verb only if it is inplaceable, as it normally is
-// obsolete 
 // u@v
 F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1;V*av,*wv;
  ASSERTVVn(a,w);
@@ -248,23 +222,9 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 
  // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
  // 
-// obsolete  if(ACIPISOK(w)){I flag2copy=0;
-// obsolete    // look for ;@(<@:v;._3 _2 _1 1 2 3)  also &:
-// obsolete   if(av->flag2&VF2USESITEMCOUNT){
-// obsolete    if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
-// obsolete     if(wgi>=-3 && wgi <= 3 && wgi!=0){V *wfv=FAV(wv->fgh[0]);
-// obsolete      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
-// obsolete       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
-// obsolete      }
-// obsolete     }
-// obsolete    }
-// obsolete   }
-// obsolete   wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
-// obsolete  }
-// obsolete 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop
- if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}  // obsolete  flag2|=(f2==jtupon2)<<VF2RANKATOP2X;
+ if(f1==on1){flag2|=VF2RANKATOP1; if(wv->mr==RMAX)f1=on1cell; else{if(wv->mr==0)f1=jton10;}}
  if(f2==jtupon2){flag2|=VF2RANKATOP2; if((wv->lr&wv->rr)==RMAX)f2=jtupon2cell; else{if((wv->lr|wv->rr)==0)f2=jtupon20;}}
 
  R fdef(flag2,CAT,VERB, f1,f2, a,w,h, flag, (I)wv->mr,(I)wv->lr,(I)wv->rr);
@@ -329,23 +289,6 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
  // Copy the open/raze status from v into u@v
  flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
 
-// obsolete  // Copy WILLOPEN from u to WILLBEOPENED in v, and COUNTITEMS too if we have an allowable form.  Only if wv is not shared
-// obsolete  // 
-// obsolete  if(ACIPISOK(w)){I flag2copy=0;
-// obsolete   // ;@:(<@v)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u@v) )
-// obsolete   // ;@:(<@v"r)  (since COUNTITEMS without BOXATOP is ignored, we set for any ;@:(u"r) )
-// obsolete   // ;@:(<@:v;.0)   ditto  also &:
-// obsolete   if(av->flag2&VF2USESITEMCOUNT){
-// obsolete    if(d==CCUT){I wgi=IAV(wv->fgh[1])[0]; // wfv;.wgi
-// obsolete     if(wgi==0){V *wfv=FAV(wv->fgh[0]);
-// obsolete      if(wfv->mr==RMAX){  // wfv has infinite rank, i. e <@:() or <@("_)
-// obsolete       flag2copy |= (wfv->flag2&VF2BOXATOP1)<<(VF2USESITEMCOUNTX-VF2BOXATOP1X);  // if it is BOXATOP, enable copying USESITEMCOUNT
-// obsolete      }
-// obsolete     }
-// obsolete    }else if(d==CBSLASH||d==CBSDOT||d==CAT||d==CQQ)flag2copy|=VF2USESITEMCOUNT;  // accept ITEMCOUNT if \ \. " or @ (not @:)
-// obsolete   }
-// obsolete   wv->flag2 |= (av->flag2&(flag2copy|VF2WILLOPEN))<<(VF2WILLBEOPENEDX-VF2WILLOPENX);  //  always take WILLOPEN; ITEMCOUNT only if needed
-// obsolete  }
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // This is appropriate even though we elide the loop
@@ -387,8 +330,6 @@ F2(jtampco){AF f1=on1cell;C c,d;I flag,flag2=0;V*wv;
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
 // This supports IRS so that it can pass the rank on to the called function
 // We pass the WILLOPEn flags through
-// obsolete static DF1(withl){F1PREFIP;DECLFG; R jt->rank?irs2(fs,w,gs,AR(fs),jt->rank[1],g2):(g2)(jtinplace,fs,w,gs);}
-// obsolete static DF1(withr){F1PREFIP;DECLFG; R jt->rank?irs2(w,gs,fs,jt->rank[1],AR(gs),f2):(f2)((J)(intptr_t)(((I)jtinplace+JTINPLACEW)&~JTINPLACEW),w,gs,fs);}
 static DF1(withl){F1PREFIP;DECLFG; I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,fs,w,gs,RMAX,(RANKT)r,g2):(RESETRANK,(g2)(jtinplace,fs,w,gs));}
 static DF1(withr){F1PREFIP;DECLFG; jtinplace=(J)(intptr_t)((I)jtinplace+((I)jtinplace&JTINPLACEW)); I r=(RANKT)jt->ranks; R r!=(RANKT)~0?jtirs2(jtinplace,w,gs,fs,r,RMAX,f2):(RESETRANK,(f2)(jtinplace,w,gs,fs));}
 
@@ -496,13 +437,10 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
  // Copy the monad open/raze status from v into u&v
  flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
 
-// obsolete   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
-// obsolete    flag2|=(f1==on1)<<VF2RANKATOP1X;  flag2|=(f2==on2)<<VF2RANKATOP2X; 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
  // Even though we don't test for infinite, allow this node to be flagged as rankloop so it can combine with others
   if(f1==on1){flag2|=VF2RANKATOP1; if(r==RMAX)f1=on1cell; else{if(r==0)f1=jton10;}}
-// obsolete   flag2|=(f2==on2)<<VF2RANKATOP2X;
   if(f2==on2){flag2|=VF2RANKATOP2; if(r==RMAX)f2=on2cell; else{if(r==0)f2=on20;}}
   R fdef(flag2,CAMP,VERB, f1,f2, a,w,0L, flag, r,r,r);
  }

@@ -72,7 +72,6 @@ typedef AD *A;
 #define JTFLAGMSK       255  // mask big enough to cover all defined flags
 #define JTALIGNBDY      8192  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
 
-// obsolete typedef struct {I k,flag,m,t,c,n,r,s[1];} AD;  // old version
 
 struct AD {
  union {
@@ -133,7 +132,6 @@ typedef I SI;
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
-// obsolete #define AH              7L              /* # non-shape header words in A   */
 #define SMMAH           7L   // number of header words in old-fashioned SMM alloc
 #define NORMAH          7L   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
@@ -147,11 +145,9 @@ typedef I SI;
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
 #define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))  // # I to allocate
-// obsolete #define BP(t,n,r)       ((r*SZI  + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 #else
 #define AKXR(x)         (SZI*(NORMAH+((x)|1)))
 #define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))
-// obsolete #define BP(t,n,r)       (((r|1)*SZI + ((t&LAST0)? (t&NAME)?(AH*SZI+sizeof(NM)+2*SZI-1):(AH*SZI+2*SZI-1) : (AH*SZI+SZI-1)) + (n)*bp(t)) & (-SZI))  // # bytes to allocate
 /* r|1 to make sure array values are double-word aligned */
 #endif
 #define AKX(x)          AKXR(AR(x))
@@ -291,12 +287,8 @@ typedef I SI;
 #define ASGNTONAME      ((I)1L<<CONWX)     // set when assignment is to name    aliases with CONW
 // NOTE: The parser assumes that CONW always means ASGNTONAME, so don't use it in any parseable type (such as NAME, NOUN)
 // NOUN types can have the following informational bits set
-// obsolete #define NOUNSAFE0       ((I)1L<<SYMBX)     // set when the current block does not need to be protected by EPILOG.  Example is name or constant.   Aliases with SYMB
-// obsolete #define NOUNSAFE        ((I)1L<<CONWX)     // set when descendants of the current (necessarily indirect) block do not need to be protected by EPILOG.  Example is 3 {. name.    aliases with CONW
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // NAME type can have the following information flags set
-// obsolete #define NAMEIPOK        ((I)1L<<SYMBX)     // set if the value can be marked inplaceable when it is moved onto the stack (if name is reassigned - watch for errors!)   Aliases with SYMB
-// obsolete #define NAMEBYVALUE     ((I)1L<<CONWX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with CONW
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
 
 // Planned coding to save bits in type
@@ -312,7 +304,6 @@ typedef I SI;
 // NAME   100v    v=NAMEBYVALUE
 // RPAR   0011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
 // LPAR   1011    must be allocated by GAF, & not be copied, unless ca() is modified to use length not type
-// obsolete // 1000 and 0100 are used as flag bits for NOUNSAFE
 
 #define ANY             -1L
 #define SPARSE          (SB01+SINT+SFL+SCMPX+SLIT+SBOX)
@@ -341,12 +332,6 @@ typedef I SI;
 // those cases inside the atomic-dyad code in va2.c.
 #define TYPEVIPOK       (FL+CMPX+SBT+(SZI==SZD?INT:0))
 // NOUNSAFE flag
-// obsolete #define SAFE(x)         ((x)|(NOUNSAFE|NOUNSAFE0))    // type, current block and descendants safe from tstack
-// obsolete #define SAFED(x)        ((x)|NOUNSAFE)    // type, descendants safe from tstack
-// obsolete #define SAFE0(x)        ((x)|NOUNSAFE0)    // type, current block safe from tstack
-// obsolete #define UNSAFE(x)       ((x)&~(NOUNSAFE|NOUNSAFE0))   // type, not safe from tstack
-// obsolete #define UNSAFED(x)      ((x)&~(NOUNSAFE))   // type, descendants not safe from tstack
-// obsolete #define UNSAFE0(x)      ((x)&~(NOUNSAFE0))   // type, not safe from tstack
 // scaf expunge all the following
 #define SAFE(x)         (x)    // type, current block and descendants safe from tstack
 #define SAFED(x)        (x)    // type, descendants safe from tstack
@@ -355,10 +340,6 @@ typedef I SI;
 #define UNSAFED(x)      (x)   // type, descendants not safe from tstack
 #define UNSAFE0(x)      (x)   // type, not safe from tstack
 
-// obsolete #define TYPESEQ(x,y)    (0==UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
-// obsolete #define TYPESNE(x,y)    (0!=UNSAFE((x)^(y)))  // types are equal, ignoring NOUNSAFE bits
-// obsolete #define TYPESLT(x,y)    (UNSAFE(x)<UNSAFE(y))  // type x < type y
-// obsolete #define TYPESGT(x,y)    (UNSAFE(x)>UNSAFE(y)) // type x > type y
 #define TYPESEQ(x,y)    ((x)==(y))  // types are equal, ignoring NOUNSAFE bits
 #define TYPESXOR(x,y)    ((x)^(y))  // types are not equal, ignoring NOUNSAFE bits, using full-word logical
 #define TYPESNE(x,y)    ((x)!=(y))  // types are equal, ignoring NOUNSAFE bits
@@ -381,7 +362,6 @@ typedef I SI;
 #define ACIPISOK(a)     (AC(a)<0)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
-// obsolete #define ACINCRBY(a,w)   (AC(a)=(AC(a)+(w))&~ACINPLACE)  // add w to usecount; always clear INPLACE at that time
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     (((c)+(c))<0)  // is PERMANENT bit set?
@@ -416,12 +396,6 @@ typedef I SI;
 #define AFUNINCORPABLEX 19      // matches XDX
 #define AFUNINCORPABLE  (1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
-// obsolete #define AFVIRTUALINPLACEX 20      // matches XZX
-// obsolete #define AFVIRTUALINPLACE (1<<AFVIRTUALINPLACEX)  // this block started as virtual inplaceable but has been modified.  Used to tell rank etc. that the block info must be rewritten
-// obsolete // INDIRECT means that the data for the block is actually in the value of another block.  Such a block is handled just like any other except
-// obsolete // that it must be inplaced with care, and if it is assigned to a name it must be realized, i. e. the values must be copied to a new block.
-// obsolete // We achieve this by realizing whenever ra() - but not ra0() - is called for the block
-// obsolete #define AFINDIRECT      (VINPLACEOK1|VINPLACEOK2)  // set both bits
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 
@@ -429,7 +403,6 @@ typedef I SI;
 #define AABS(rel,k)     ((I)(rel)+(I)(k))
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
 #define ARELATIVEB(w)   ((AFLAG(w)&AFNJA+AFSMM+AFREL)!=0)  // test if we know w is boxed - may be used in branches or computation
-// obsolete #define ARELATIVE(w)    (ARELATIVEB(w)&&AT(w)&BOX)   // test if we don't, branchless and returning the value in bit BOXX
 #define ARELATIVES(w)   ((AT(w)|(~BOX))+(AFLAG(w)&(AFNJA+AFSMM+AFREL)))  // test for relative, leave in sign bit (sign is 0 if RELATIVE)
                                // the test uses the fact that AF* is less than BOX
 #define ARELATIVESB(w)   ((AFLAG(w)&(AFNJA+AFSMM+AFREL))-1)  // test for relative, leave in sign bit (sign is 0 if RELATIVE) - if known boxed
@@ -439,33 +412,26 @@ typedef I SI;
 #define AADR(w,z)       (A)(intptr_t)((I)(w)+(I)(z))   // was ((w)?(A)(intptr_t)((I)(w)+(I)(z)):(z))
 // get the base to add to relative refs.  It's the origin of this block unless this block is virtual: then the origin of the backing block
 // here the block is known (or assumed) to be relative and boxed.  asgn is an I name we declare and use for assignment.  Result is I
-// obsolete #define RELORIGIN(asgn,w)    ((I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w))
 #define RELORIGIN(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w);
 // here we know the block is boxed, but its relative status is unknown
-// obsolete #define RELORIGINB(w)   (RELORIGIN(w) & (AFLAG(w)&AFNJA+AFSMM+AFREL?~0:0))
 #define RELORIGINB(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(AFLAG(w)&AFNJA+AFSMM+AFREL?asgn:0);
 // here the block is unknown
-// obsolete #define RELORIGINBR(w)  (ARELATIVE(w)?RELORIGIN(w):0)
 #define RELORIGINBR(asgn,w)   I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(ARELATIVE(w)?asgn:0);
 // use this to indicate the relocation factor for a non-virtual, non-relative block (usually a destination that has been allocated recently)
 #define RELORIGINDEST(w) ((I)(w))
 
 // set up the relative base-offset ad,id... lett is a,i... as a reminder that the suffix must be d.  w is the block.  The result is germane
 // only if boxed, but we don't test for boxing here
-// obsolete #define RELBASEASGN(lett,w) {lett##d = RELORIGIN(w); lett##d = (AFLAG(w)&(AFNJA+AFSMM+AFREL))?lett##d:0;}
 #define RELBASEASGN(lett,w) RELORIGINB(lett##d,w)
 // same, but include the test for boxing
-// obsolete #define RELBASEASGNB(lett,w) {lett##d = RELORIGIN(w); lett##d = (AT(w)&BOX)?lett##d:0; lett##d = (AFLAG(w)&(AFNJA+AFSMM+AFREL))?lett##d:0;}
 #define RELBASEASGNB(lett,w) RELORIGINBR(lett##d,w)
 #define AVR(i)          AADR(ad,av[i])
 #define IVR(i)          AADR(id,iv[i])
 #define WVR(i)          AADR(wd,wv[i])
 #define YVR(i)          AADR(yd,yv[i])
-// obsolete #define AAV0(w)         (ARELATIVE(w)?(A)(*AV(w)+(I)(w)):*AAV(w))
 #define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA+AFSMM+AFREL?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
 // if w is relative, relocate the contents of z from w to z.  We must have moved the contents of w into output block z without relocating, and now we are fixing it up
 // z must be known to be relative and nonvirtual.  This has no result.  z is never disturbed.
-// obsolete #define RELOCATE(w,z)   (ARELATIVE(w)?relocate((I)(w)-(I)(z),(z)):(z))
 #define RELOCATE(w,z)   if(ARELATIVE(w)){RELORIGIN(wrel,w); relocate(wrel-(I)(z),(z));}
 // copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
 #define RELOCOPY(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)from[i]+offset);)
@@ -550,15 +516,6 @@ typedef struct {A name,val;I flag,sn,next,prev;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 
 
-// obsolete typedef struct{A og,g;I ptr,flag;B sw0;} LS;
-// obsolete 
-// obsolete /* og:   old value of global                                               */
-// obsolete /* g:    global at this level                                              */
-// obsolete /* ptr:  index in pv/nv if numbered locale                                 */
-// obsolete /*       pointer to stloc entry if named locale                            */
-// obsolete /* flag: 1 if named    locale marked for destruction                       */
-// obsolete /*       2 if numbered locale marked for destruction                       */
-// obsolete /* sw0:  old value of stswitched                                           */
 
 // Definition of callstack
 
@@ -566,11 +523,9 @@ typedef struct {
  I type;  // type of entry, flagged per below
  void *value;  // locale or name, depending on the type
 } LS;
-// obsolete #define CALLSTACKNAME 1   // (always the first entry) the name of the executing entity
 #define CALLSTACKPOPLOCALE 2  // value is jt->global that must be restored after function returns
 #define CALLSTACKPOPFROM 4  // value is jt->global that must be modified in the caller of this function also
 #define CALLSTACKCHANGELOCALE 8  // value is jt->global that was changed within execution of this name
-// obsolete #define CALLSTACKERRORNAME 16   // name for error message, pushed by ASSERTN
 #define CALLSTACKDELETE 256  // the given locale must be deleted, and this is the earliest place on the stack that refers to it
 
 // Add an entry to the call stack, and increment the index variable
@@ -607,8 +562,6 @@ typedef struct {I a,e,i,x;} P;
 /* x: value cells corresponding to rows of i                               */
 
 #define SPA(p,a)        ((A)((p)->a+(C*)(p)))  // a is one of aeix; result is A pointer for that component
-// obsolete #define SPB(p,a,x)      {(p)->a=(C*)(x)-(C*)(p); RZ((p)->a+(C*)(p));}  // store x into component (a); return if x is 0.  a is one of aeix
-// obsolete #define SPB(p,a,x)      {A ZWo = (x); if(ZWo){INCORP(ZWo)} (p)->a=(C*)ZWo-(C*)(p); RZ(ZWo);}  // store x into component (a); return if x is 0.  a is one of aeix
 #define SPBV(p,a,v,x)      {RZ(v = (x)); INCORP(v); (p)->a=(C*)v-(C*)(p);}  // store x into component (a); return if x is 0.  a is one of aeix.  Result in v
 #define SPB(p,ZWa,x)      {A ZWo = (x); SPBV((p),ZWa,ZWo,(x))}  // store x into component (a); return if x is 0.  a is one of aeix
 
@@ -742,16 +695,12 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 #define VF2WILLOPEN1X      4   // This verb will open y as its first act.  Monad case only
 #define VF2WILLOPEN1       ((I)(1LL<<VF2WILLOPEN1X))
 // must leave a gap for WILLBEOPENED in result.h
-// obsolete #define VF2WILLBEOPENEDX  4   // The result of this verb will be immediately opened (by > or ;)
-// obsolete #define VF2WILLBEOPENED   ((I)(1LL<<VF2WILLBEOPENEDX))
 #define VF2ISCCAPX        5   // flags (if any) came from ([: g h) rather than f@:g
 #define VF2ISCCAP         ((I)(1LL<<VF2ISCCAPX))
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT1  ((I)(1LL<<VF2USESITEMCOUNT1X))
 // must leave a gap for COUNTITEMS in result.h
-// obsolete #define VF2COUNTITEMSX    7   // The result of this verb will fed into jtraze; the verb should count the items and see if they are homogeneous, if it can
-// obsolete #define VF2COUNTITEMS    ((I)(1LL<<VF2COUNTITEMSX))
 // next 3 flags must be spaced from VF2BOXATOP? to match spacing in ZZFLAGS
 #define VF2ATOPOPEN1X     8   // This verb is one of  > @> &> &.>
 #define VF2ATOPOPEN1     ((I)(1LL<<VF2ATOPOPEN1X))

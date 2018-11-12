@@ -42,7 +42,6 @@ static DF1(jtinsert){A hs,*hv,z;I hfx,j,m,n,old;
  RZ(w);
  n=IC(w); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
  if(!n)R df1(w,iden(*hv));
-// obsolete GATV(f,INT,m,1,0); hf=(AF*)AV(f); DO(m, hf[i]=VAV(hv[i])->valencefns[1];);
  RZ(z=from(num[-1],w));
  old=jt->tnextpushx;
  --m; DO(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
@@ -140,7 +139,7 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }
- if(1<r){RZ(z=gah(r,z)); ICPY(AS(z),AS(w0),r);}
+ if(1<r){RZ(z=gah(r,z)); MCIS(AS(z),AS(w0),r);}
  R z;
 }
 
@@ -156,7 +155,6 @@ static DF1(jtcase1b){A h,u;V*sv;
 static DF1(jtcase1){A h,*hv;B b;I r,wr;V*sv;
  RZ(w);
  F1PREFIP; sv=FAV(self);
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; r=MIN(r,sv->mr); RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; r=MIN(r,sv->mr); RESETRANK;
  if(b=!r&&wr&&AN(w)){h=sv->fgh[2]; hv=AAV(h); DO(AN(h), if(!atomic(1,hv[i])){b=0; break;});}
  if(b){R case1a(w,self);}   // atomic: go there

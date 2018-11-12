@@ -355,7 +355,6 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  if(1>ar)R residue(a,w);
  if(1==ar&&at&B01+INT&&wt&B01+INT){I*av,d,r,*u,*wv,x,*zv;
   // both types are int/boolean, and ar is a list
-// obsolete   RZ(coerce2(&a,&w,INT));
   {t=maxtypeawd(a,w,INT); t=(t<INT)?INT:t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  INT if both empty
   // If a ends with _1 followed by any number of 1, there will be overflow if w contains any imin.  Detect that very rare case
   av=an+AV(a); wv=wn+AV(w);

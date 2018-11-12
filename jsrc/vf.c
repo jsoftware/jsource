@@ -42,8 +42,6 @@ void jtfillv(J jt,I t,I n,C*v){I k=bp(t);
 static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,*s,*v,wcr,wf,wr;P*wp,*zp;
  RZ(a&&w);
  ASSERT(!jt->fill,EVNONCE);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?*(af+AS(a)):1;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(1<acr||af)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));
@@ -72,14 +70,11 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
 }    /* a|."r w on sparse arrays */
 
 #define ROF(r) if((r<-n)|(r>n))r=(r<0)?-n:n; x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
-// obsolete #define ROF(r) r=r<-n?-n:n<r?n:r; x=dk*ABS(r); y=e-x; j=0>r?x:0; k=0>r?0:x;
 #define ROT(r) if((r<-n)|(r>n))r=r%n;             x=dk*ABS(r); y=e-x; j=0>r?y:x; k=0>r?x:y;
 
 // m=#cells d=#atoms per item  n=#items per cell
-// obsolete static void jtrot(J jt,I m,I c,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
-// obsolete e=c*atomsize; dk=e/n; // e=#bytes per cell  dk=bytes per item    // obsolete if(jt->fill)mvc(m*e,v,k,jt->fillv);   
 static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y;
- e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item    // obsolete if(jt->fill)mvc(m*e,v,k,jt->fillv);   
+ e=n*d*atomsize; dk=d*atomsize; // e=#bytes per cell  dk=bytes per item
  switch((2*!jt->fill)+(1<p)){
   case 0: r=p?*av:0;     ROF(r); DO(m, if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}        u+=e; v+=e;); break;
   case 1: DO(m, r=av[i]; ROF(r);       if(r<0){mvc(k,v,atomsize,jt->fillv); MC(k+v,u,j);}else{MC(v,j+u,k); mvc(j,k+v,atomsize,jt->fillv);}            u+=e; v+=e;); break;
@@ -99,15 +94,11 @@ static void jtrot(J jt,I m,I d,I n,I atomsize,I p,I*av,C*u,C*v){I dk,e,k,j,r,x,y
 F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(a&&w);
  if(SPARSE&AT(w))R rotsp(a,w);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr; p=acr?*(af+AS(a)):1;  // p=#axes to rotate
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; p=acr?*(af+AS(a)):1;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  RZ(a=vi(a));
  // special case: if a is atomic 0, and cells of w are not atomic
-// obsolete  if(wcr&&!ar&&(IAV(a)[0]==0))R RETARG(w);   // 0 |. y, return y
  if((wcr!=0)&(((ar|IAV(a)[0])==0)))R RETARG(w);   // 0 |. y, return y
-// obsolete  if(1<acr||af&&acr||af&&!wf)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // handle rank by using " for it
  if(((1-acr)|((-af)&(-acr|(wf-1))))<0)R df2(a,w,qq(qq(ds(CROT),v2(1L,RMAX)),v2(acr,wcr)));  // if multiple a-lists per cell, or a has frame and (a cell is not an atom or w has frame) handle rank by using " for it
  if(((wcr-1)&(1-p))<0){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
@@ -116,13 +107,10 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); n=wcr?s[wf]:1;  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
-// obsolete  rot(m,wn/m,n,k,1>=p?AN(a):1L,av,u,v);
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 
   b=0; s+=wf;
-// obsolete   DO(p-1, m*=n; n=*++s; rot(m,wn/m,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
-// obsolete   DO(p-1, m*=n; n=*++s; d/=n; rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);
   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);  // s has moved past the frame
   z=b?y:z;
  } 
@@ -134,7 +122,6 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
 static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  RZ(w);
  ASSERT(!jt->fill,EVNONCE);
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r; RESETRANK;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  m=*(f+AS(w)); wp=PAV(w);
  GA(z,AT(w),1,wr,AS(w)); zp=PAV(z);
@@ -154,7 +141,6 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  RZ(w);
  if(SPARSE&AT(w))R revsp(w);
  if(jt->fill)R rotate(num[-1],w);  // rank is set
-// obsolete  wr=AR(w); r=jt->rank?jt->rank[1]:wr; f=wr-r;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK - we don't call any primitive from here on
  if(!(r&&AN(w))){R RETARG(w);}  // no atoms or reversing atoms - keep input unchanged
  wt=AT(w); ws=AS(w); wv=CAV(w);
@@ -206,7 +192,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
  if(m||an<wcr) R reshapesp(a,irs1(w,0L,wcr,jtravel),wf,1L);
  ASSERT(!jt->fill,EVDOMAIN);
- GA(z,AT(w),1,wf+an,ws); ICPY(wf+AS(z),av,an);
+ GA(z,AT(w),1,wf+an,ws); MCIS(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
  GATV(t,INT,c+d*b[wf],1,0); v=AV(t); 
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
@@ -220,7 +206,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
   SPB(zp,i,stitch(abase2(vec(INT,1+d,av),t),reitem(sc(q),dropr(1L,y))));
   SPB(zp,x,reitem(sc(q),x));
  }else{                   /* dense  */
-  GATV(t,INT,an,1,0); v=AV(t); ICPY(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
+  GATV(t,INT,an,1,0); v=AV(t); MCIS(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
   SPB(zp,i,ca(y));
   SPB(zp,x,irs2(vec(INT,m,v),x,0L,1L,wcr-(an-m),jtreshape));
  }
@@ -230,8 +216,6 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
 F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wcr,wf,wn,wr,* RESTRICT ws,zn;
  F2PREFIP;
  RZ(a&&w);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; ws=AS(w); RESETRANK;
  if((1<acr)|(acr<ar))R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreshape);
@@ -247,17 +231,17 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
    if((I)jtinplace&JTINPLACEW && (m==n||t&DIRECT) && r<=wcr && ASGNINPLACE(w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
-    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISds(ws,u,r) /* obsolete DO(r, ws[i]=u[i];) */ RETF(w);   // Start the copy after the (unchanged) frame
+    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISds(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
 // correct   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) /* obsolete DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) */ RETF(z);}
+   if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
  k=bp(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
- GA(z,t,zn,r+wf,0); s=AS(z); ICPY(s,ws,wf); ICPY(wf+s,u,r);
+ GA(z,t,zn,r+wf,0); s=AS(z); MCISd(s,ws,wf); MCISd(s,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
  if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
@@ -269,9 +253,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
 F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
  F2PREFIP;
  RZ(a&&w);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; m=MIN(1,acr);
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; r=wcr-1; RESETRANK;
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; // obsolete m=MIN(1,acr);
+ ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; r=wcr-1; RESETRANK;
  if((1<acr)|(acr<ar))R rank2ex(a,w,0L,1,RMAX,acr,wcr,jtreitem);  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
@@ -279,10 +261,9 @@ F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
  if(1>=wcr)y=a;  // y is atom or list: $ is the same as ($,)
  else{   // rank y > 1: append the shape of an item of y to x
   RZ(a=vi(a)); an=AN(a); acr=1;  // if a was an atom, now it is a list
-  fauxINT(y,yfaux,an+r,1) /* obsolete  GATV(y,INT,an+r,1,0);*/ v=AV(y);
+  fauxINT(y,yfaux,an+r,1) v=AV(y);
   MCISd(v,AV(a),an); MCISd(v,AS(w)+wr-r,r);
  }
-// obsolete  R ar==acr&&wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,m,wcr,jtreshape);
  R wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,acr,wcr,jtreshape);
 }    /* a $"r w */
 

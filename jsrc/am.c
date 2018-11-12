@@ -82,13 +82,12 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  else{   // slow case
   if(!(INT&AT(b)))RZ(b=cvt(INT,b));  // convert pqr to int if it's not already
   iv=AV(b);    // iv points to the input pqr
-  fauxINT(x,aafaux,m,1) /* obsolete  GATV(x,INT,m,1,0); */ aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
+  fauxINT(x,aafaux,m,1)  aa=AV(x); DO(m, aa[i]=(I)AV(u[i]););  // create x, which is a list of pointers to the values of the names
  }
  // Check to see if we can modify in-place.  We can do so only if abc was one of the two names on the right, and we have the
  // fast (no-error) case; and of course if the use-count is only 1.  But if the assignment is local, we also have to make
  // sure abc is locally defined
  if(p=q&&0<=c&&ACUC1>=AC(u[c])) {  // passes quick check
-// obsolete    p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(AAV(v[m+2])[0], jt->local);  // OK if not in explicit, or not local assignment, or name defined
    p= !jt->local || *CAV(AAV(v[m+2])[1])!=CASGN || probe(NAV(AAV(v[m+2])[0])->m,NAV(AAV(v[m+2])[0])->s,NAV(AAV(v[m+2])[0])->hash, jt->local);  // OK if not in explicit, or not local assignment, or name defined
     // Get the pointer to the parsed sentence; go to its data; take pointer for word[1]; go to its (character) data; take first character
     // then look up the symbol entry for word[0]
@@ -145,27 +144,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  // after this, z cannot be virtual unless it is an inplace memory-mapped boxed array
- else{RZ(z=cvt(t,w)); /* obsolete RELOCATE(w,z); */}
-#if 0  // obsolete mapped boxed
- if(ip&&t&BOX&&AFNJA&waf){A*av,t,x,y;A1*zv;I *tv;
-  // in-placeable boxed memory-mapped array (possibly virtual)
-  // if z is virtual, we have to realize it now, can't inplace
-  realizeifvirtual(z);
-  RELBASEASGN(a,a); av=AAV(a); zv=A1AV(z);  // point to items of x and result
-  GATV(t,INT,in,1,0); tv=AV(t); memset(tv,C0,in*SZI);   // allocate an array of pointers, one per item of x; clear to 0
-  DO(in, y=smmcar(z,AVR(i%an)); if(!y)break; tv[i]=(I)y;);   // copy the items of x (repeated as needed) into the smm area of result
-  if(!y){DO(in, if(!tv[i])break; smmfrr((A)tv[i]);); R 0;}   // if the copy failed, free the blocks in smm area and fail this call
-  DO(in, x=(A)AABS(zv[iv[i]],z); zv[iv[i]]=AREL(tv[i],z); smmfrr(x););  // replace pointer to old block with (relative) pointer to new, then free the (absolute) old in smm area
- }else{
-  // normal assignment (could be inplace) - just copy the items.  Relocate relative blocks
-  if(ARELATIVE(a))RZ(a=rca(a));  // un-relative a before insertion
-  if(ARELATIVE(z)){A*av=AAV(a),*zv=AAV(z);
-   // z is relative.  It may still be in-place, and therefore may have recursive usecount; but never virtual (which are never in-place)
-   if(UCISRECUR(z)){DO(in, A old=(A)AABS(zv[iv[i]],z); A new=av[i%an]; fa(old); ras(new); zv[iv[i]]=(A)AREL(new,z););  // this ras() can never encounter a virtual block
-   }else{DO(in, zv[iv[i]]=(A)AREL(av[i%an],z););}
-  }
-  else{
-#endif
+ else{RZ(z=cvt(t,w));}
  // Here for non-relative blocks.  Could be in-place.  If boxed,
  // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.
  // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
@@ -176,7 +155,6 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  case sizeof(C):
   {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
  case sizeof(I):  // includes BOX and RAT, which may be recursive
-// obsolete    if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A old=zv[iv[i]]; A new=*av; fa(old); ras(new); zv[iv[i]]=new; if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
   if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
   else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
   break;
@@ -187,10 +165,6 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  default:
   {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
  }
-#if 0  // obsolete goes with above
-  }
- }
-#endif
  RETF(z);
 }
 

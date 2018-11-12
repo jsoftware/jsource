@@ -69,7 +69,6 @@ I lnumcw(I j,A w){CW*u;
 }    /* line number in CW corresp. to j */
 
 I lnumsi(DC d){A c;I i;
-// obsolete  if(c=d->dcc){i=*(I*)d->dci; R(MIN(i,AN(c)-1)+(CW*)AV(c))->source;}else R 0;
  if(c=d->dcc){i=d->dcix; R(MIN(i,AN(c)-1)+(CW*)AV(c))->source;}else R 0;
 }    /* source line number from DCCALL-type stack entry */
 
@@ -119,25 +118,19 @@ static void jtsusp(J jt){B t;DC d;I old=jt->tnextpushx;
 static A jtdebug(J jt){A z=0;C e;DC c,d;
  if(jt->dbssd){jt->dbssd->dcss=0; jt->dbssd=0;}
  RZ(d=suspset(jt->sitop));
-// obsolete v=(I*)d->dci; 
-// obsolete if(0>*v)R 0;
  if(d->dcix<0)R 0;  // if the verb has exited, all we can do is return
  e=jt->jerr; jt->jerr=0;
  if(DBERRCAP==jt->uflags.us.cx.cx_c.db)errcap(); else susp();
  switch(jt->dbsusact){
   case SUSRUN:      
-// obsolete    --*v; break;
    DGOTO(d,d->dcix); break;
   case SUSRET:      
-// obsolete    *v=-2; z=jt->dbresult; jt->dbresult=0; break;
    DGOTO(d,-1) z=jt->dbresult; jt->dbresult=0; break;
   case SUSJUMP: 
-// obsolete    *v=lnumcw(jt->dbjump,d->dcc)-1; break;
    DGOTO(d,lnumcw(jt->dbjump,d->dcc)) break;
   case SUSCLEAR:
    jt->jerr=e;    
    c=jt->sitop; 
-// obsolete    while(c){if(DCCALL==c->dctype)*(I*)(c->dci)=-2; c=c->dclnk;} 
    while(c){if(DCCALL==c->dctype)DGOTO(c,-1) c=c->dclnk;} 
  }
  if(jt->dbsusact!=SUSCLEAR)jt->dbsusact=SUSCONT;
@@ -147,30 +140,14 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  R z;
 }
 
-#if 0 // obsolete 
-// Parse line & check for assertion
-static A jtparseas(J jt,B as,A w){A z;
- // If w is 0, we don't parse, but instead raise 'noun result was required' error on the beginning of the sentence
- if(!w){jt->sitop->dci=1; jsignal(EVNONNOUN); R 0;}
- // normal path is to execute the sentence
- z=parsea(AAV(w),AN(w));  /* y is destroyed by parsea ??? */
- if(as&&z)ASSERT(NOUN&AT(z)&&all1(eq(one,z)),EVASSERT);
- R z;
-}
-
-#endif
-
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  ASSERT(!lk,err);  //  locked fn is totally opaque, with no stack
-// obsolete  RZ(d=deba(DCPARSE,queue,(A)m,0L,d));  // create debug frame for the start-of-sentence error
-// obsolete  if(lk<=0){jt->sitop->dcy=(A)queue; jt->sitop->dcn=m; jt->sitop->dci=1;}  // unless locked, indicate failing-sentence info
  if(lk<=0){jt->parserqueue=queue+ci->i; jt->parserqueuelen=(I4)ci->n; jt->parsercurrtok=1;}  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
-// obsolete  debz();
  R z;  // if we entered debug, the error may have been cleared
 }
 
@@ -182,22 +159,11 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 // d - DC area to use in deba
 
 A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
-// obsolete  RZ(w);
-// obsolete  JATTN;
-// obsolete  as=ci->type==CASSERT;
-// obsolete  if((signed char)lk>0)R parsea(queue,m);
-// obsolete RZ(d=deba(DCPARSE,queue,(A)m,0L,d));
-// obsolete  if((signed char)lk<0)w=0;  // If 'signal noun error' mode, pull the rug from under parse
-// obsolete  d->dcy=(A)queue; d->dcn=m;
-// obsolete  if(0==c)z=parsea(queue,m);   /* anonymous or not debug */
-// obsolete  else{                      /* named and debug        */
  if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
  // executed 13!:0]0, and we should continue on outside of debug mode.  Fill in the current si line with the info from the parse
  if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){DC t=jt->sitop->dclnk; t->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); t->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens
-// obsolete  }
-// obsolete debz();
  R z;
 }
 
@@ -207,9 +173,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
  if(CCOLON==sv->id&&t&&NOUN&AT(t)){  /* explicit */
   ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);
  }else{                              /* tacit    */
-// obsolete   i=0; d->dci=(I)&i;
   d->dcix=0;  // set a pseudo-line-number for display purposes for the tacit 
-// obsolete   while(0==i){
   do{
    d->dcnewlineno=0;  // turn off 'reexec requested' flag
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}
@@ -219,7 +183,6 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
    if(!z&&jt->uflags.us.cx.cx_c.db&&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)){d->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
-// obsolete    ++i;
   }while(d->dcnewlineno);  // if suspension tries to reexecute the line, do so (it's the only thing that can be executed)
  }
  if(d->dcss)ssnext(d,d->dcss);

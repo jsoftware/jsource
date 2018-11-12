@@ -55,7 +55,6 @@
 // If the function was marked as BOXATOP, we will do the boxing in the loop.  We wait until here to replace the <@f with a straight call to f, because
 // if there was only 1 cell earlier places might have called the function for <@f so we must leave that intact.
 // Where f is depends on whether the modifier is f@:g or ([: g h)
-// obsolete #define ZZPARMS(oframe,oframelen,iframe,iframelen,ncells,valence) zzcellp=(I)(oframe); zzcelllen=(oframelen); zzboxp=(A*)(iframe); zzframelen=(iframelen); zzncells=(ncells);
 #define ZZPARMSNOFS(framelen,ncells) zzframelen=(framelen); zzncells=(ncells);
 #define ZZPARMS(framelen,ncells,valence) ZZPARMSNOFS(framelen,ncells)  \
  if(ZZFLAGWORD&ZZFLAGBOXATOP){fs=FAV(fs)->fgh[1+((FAV(fs)->flag2>>VF2ISCCAPX)&1)]; f##valence=FAV(fs)->valencefns[valence-1];}
@@ -80,7 +79,6 @@
  I zzncells;   // number of cells in the result (input)
  I zzframelen;  // length of frame of result.
  I zzfauxcellshape[ZZFAUXCELLSHAPEMAXRANK+1+2];  // will be zzcellshape for ranks < 4.  We reserve space only for AN and AS, and don't touch anything earlier.  1 is to leave 1 spare at the end, 2 is the length of AN and AR
-// obsolete not needed because we never try to convert a sparse result RESETRANK;  // needed for cvt ?? scaf
 #ifndef ZZWILLBEOPENEDNEVER
 #define ZZWILLBEOPENEDNEVER 0
 #endif
@@ -99,8 +97,6 @@
 #ifdef ZZBODY
 // result is in z.
 
-// obsolete // if the result is boxed, accumulate the SMREL info
-// obsolete if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
 
 // process according to state.  Ordering is to minimize branch misprediction
 do{
@@ -297,14 +293,10 @@ do{
 #endif
   // Install frame by running user's routine.  zzs must be left pointing to the cell-shape
   ZZINSTALLFRAME(zzs)
-// obsolete   is = (I*)((zzcellp)); MCISds(zzs,is,((zzcelllen)));  // copy outer frame
-// obsolete   is = (I*)((zzboxp)); MCISds(zzs,is,zzwf);  // copy inner frame
   // Install the result shape.  If we encounter a sparse result,  We are going to have to box all the results and open them.  If the sparse result is the first,
   // we are going to have a situation where nothing can ever get moved into zz, so we have to come up with a plausible zz to make that happen.  We create a zz with negative shape
   is = AS(z); zzt=-(zzt&SPARSE); DO(zzr, *zzs++=zzt|*is++;);    // copy result shape; but if SPARSE, make it negative to guarantee miscompare
   // Set up the pointers/sizes for the rest of the operation
-// obsolete   zzwf+=((zzcelllen));  // leave zzwf as the total length of result frame by adding aframelen
-// obsolete    zzcelllen=nbytes;   // cell length, for use in the main body
   zzboxp=AAV(zz); zzboxp=ZZFLAGWORD&ZZFLAGBOXATOP?zzboxp:0;  // zzboxp=0 normally (to count stores), but for BOXATOP is the store pointer
 #if !ZZSTARTATEND  // going forwards
   zzcellp=0;  // init output offset in zz to 0

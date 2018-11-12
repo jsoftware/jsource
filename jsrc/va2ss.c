@@ -45,7 +45,6 @@
 #define SSINGSS SSINGENC(SBT,SBT)
 
 #define SSRDD(w) (*(D *)CAV(w))
-// obsolete #define SSSTORE(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); MODVIRTINPLACE(z);}
 #define SSSTORE(v,z,t,type) {MODBLOCKTYPE(z,t) *((type *)CAV(z)) = (v);}
 #define SSSTORENV(v,z,t,type) {*((type *)CAV(z)) = (v); AT(z)=(t); }  // When we know that if the block is reused, we are not changing the type; but we change the type of a new block
 #define SSSTORENVFL(v,z,t,type) {*((type *)CAV(z)) = (v); }  // When we know the type/shape doesn't change (FL,FL->FL)
@@ -53,10 +52,6 @@
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
 static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
-// obsolete  if(jt->rank[0]>=0){if(0>(fa = ra-jt->rank[0]))fa=0;}  // frame for positive rank
-// obsolete  else{if(0>(fa = ra+jt->rank[0]))fa=0;}   // frame for negative rank
-// obsolete  if(jt->rank[1]>=0){if(0>(fw = rw-jt->rank[1]))fw=0;}  // frame for positive rank
-// obsolete  else{if(0>(fw = rw+jt->rank[1]))fw=0;}   // frame for negative rank
  fa=ra-(ranks>>RANKTX); fa=fa<0?0:fa; 
  fw=rw-(RANKT)ranks; fw=fw<0?0:fw; 
  ca=ra-fa; cw=rw-fw;  // cell ranks
@@ -77,7 +72,6 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
-/* obsolete  if(jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,FL)) */ /* handle frames */ \
  if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
  else if (ar >= wr){  \
   if (AINPLACE){ z = a; } \
@@ -99,7 +93,6 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
 /* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
 {I ar = AR(a); I wr = AR(w); \
-/* obsolete  if((ar+wr)&&jt->rank&&(f=ssingflen(jt,ar,wr))>=0)RZ(z=ssingallo(jt,f,B01)) */ /* handle frames */ \
  if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
  else if (ar >= wr){ \
   if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \

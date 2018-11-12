@@ -10,7 +10,6 @@
 #define PMAX 105097564L /* upper limit of p: ; (_1+2^31) = p: PMAX */
 #define PT   500000L    /* interval size in ptt                    */
 
-// obsolete static A jt->p4792=0;       /* p: i.4792                               */
 
 static I ptt[]={
     7368791L,   15485867L,   23879539L,   32452867L,   41161751L,

@@ -38,7 +38,6 @@
 /* named locales:                                                          */
 /* jt->stloc:  locales symbol table                                        */
 
-// obsolete use hic UI nmhash (I k,UC*v){UI z=*v>>7; DO(k,z=(k-i)^(1000003*z)^*v++;); R z;}
 
 static I symcol=(sizeof(L)+SZI-1)/SZI;
 
@@ -165,21 +164,6 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RETF(z);
 }    /* 18!:31 symbol pool */
 
-#if 0 // obsolete
-// a is A for name, g is symbol table
-// result is L* address of the symbol-table entry for the name, or 0 if not found
-L*jtprobe(J jt,A a,A g){C*s;I*hv,m;L*v;NM*u;
- RZ(a&&g);u=NAV(a);
- m=u->m; s=u->s; hv=AV(g)+SYMHASH(u->hash,AN(g)-SYMLINFOSIZE);  // get bucket number among the hash tables
- if(!*hv)R 0;                            /* (0) empty slot    */
- v=*hv+jt->sympv;
- while(1){
-  u=NAV(v->name);
-  if(m==u->m&&!memcmp(s,u->s,m))R v->val?v:0;     // (1) exact match - if there is a value, use this slot, else say not found
-  if(!v->next)R 0;                       /* (2) link list end */
-  v=v->next+jt->sympv;
-}}
-#else
 // a is A for name, g is symbol table
 // result is L* address of the symbol-table entry for the name, or 0 if not found
 L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
@@ -192,7 +176,7 @@ L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
   symx=sym->next;   // mismatch - step to next
  }
 }
-#endif
+
 // a is A for name; result is L* address of the symbol-table entry in the local symbol table, if there is one
 // If the value is empty, return 0 for not found
 L *jtprobelocal(J jt,A a){NM*u;I b,bx;
@@ -325,7 +309,6 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
 // look up known locative name; return starting locale of locative, or 0 if error
 A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  n=AN(a); v=NAV(a); m=v->m;
-// obsolete  if(n<=m) R (A)1;
  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
  R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx):stfindcre(n-m-2,1+m+v->s,v->bucketx);
 }
@@ -341,32 +324,10 @@ L* jtsyrdfromloc(J jt, A a,A g) {
  R syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
 }
 
-#if 0 // obsolete
-// look up a name (either simple or locative) using the full name resolution
-// result is symbol-table slot for the name if found, or 0 if not found
-// side effect: if symb is nonzero, *symb is set to the symbol table that was the base of the path
-L*jtsyrd(J jt,A a,A*symb){A g;I m,n;NM*v;
- RZ(a);
- n=AN(a); v=NAV(a); m=v->m;
- if(n>m) {
-  // Locative: find the indirect locale to start on, or the named locale, creating the locale if not found
-  RZ(g=NMILOC&v->flag?locindirect(n-m-2,2+m+v->s):stfind(1,n-m-2,1+m+v->s))
-  if(symb)*symb=g;   // save the starting locale if the user wants to
- } else {L *e;
-  g=jt->global;  // Start with the current locale
-  if(symb)*symb=g;  // save the starting locale if the user wants to
-  // If there is a local symbol table, search it first
-  if(e = probelocal(a)){R e;}
- }
- R syrd1(a,g,(B)0);  // Not local: look up the name starting in locale g
-}
-#endif
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found
 L*jtsyrd(J jt,A a){A g;
  RZ(a);
-// obsolete  RZ(g=sybaseloc(a));
-// obsolete  if((I)g&1) {L *e;
  if(!(NAV(a)->flag&(NMLOC|NMILOC))){L *e;
   // If there is a local symbol table, search it first
   if(e = probelocal(a)){R e;}  // return flagging the result if local
@@ -422,10 +383,8 @@ F1(jtsymbrdlock){A y;
 B jtredef(J jt,A w,L*v){A f;DC c,d;
  // find the most recent DCCALL, exit if none
  d=jt->sitop; while(d&&!(DCCALL==d->dctype&&d->dcj))d=d->dclnk; if(!(d&&DCCALL==d->dctype&&d->dcj))R 1;
-// obsolete  oldn=curname();  // save curname
  if(v==(L*)d->dcn){  // if the saved jt->cursymb (from the unquote lookup) matches the name being assigned...
   // insist that the redefinition have the same type, and the same explicit character
-// obsolete   jt->curname=d->dca;
   f=d->dcf;
   ASSERTN(TYPESEQ(AT(f),AT(w))&&(CCOLON==FAV(f)->id)==(CCOLON==FAV(w)->id),EVSTACK,d->dca);
   d->dcf=w;
@@ -436,8 +395,7 @@ B jtredef(J jt,A w,L*v){A f;DC c,d;
   c=jt->sitop; while(c&&DCCALL!=c->dctype){c->dctype=DCJUNK; c=c->dclnk;}
  }
  // Don't allow redefinition of a name that is suspended higher up on the stack
- c=d; while(c=c->dclnk){/* obsolete jt->curname=c->dca; */ ASSERTN(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK,c->dca);}
-// obsolete  jt->curname=oldn;  // restore curname
+ c=d; while(c=c->dclnk){ ASSERTN(!(DCCALL==c->dctype&&v==(L*)c->dcn),EVSTACK,c->dca);}
  R 1;
 }    /* check for changes to stack */
 
@@ -465,7 +423,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->local;
   n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
-// obsolete   if(n==m)ASSERT(!(jt->local&&g==jt->global&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
   if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}
@@ -482,18 +439,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  I xt=0;  // If not assigned, use empty type
  if(x){xaf=AFLAG(x); xt=AT(x);} else {xaf = AFNVRUNFREED; xt=0;}  // if assigned, get the actual flags
-// obsolete ASSERT(!(x&&AFRO&AFLAG(x)),EVRO);   // error if read-only value
-// obsolete if(!(x&&AFNJA&AFLAG(x))){
  if(!((AFRO|AFNJA)&xaf)){
-#if 0  // obsolete - mapped boxed arrays
-  // name to be assigned is undefined, or is defined as a normal J name
-  // If the value is a normal J name, we have to check to see if it is shared (we clone it in that case) or is boxed containing
-  // relative addressing (we clone the boxing).  We do this check only if the name is !NJA, and (SMM or (BOXED and !NOSMREL))
-  // BOX NSM SMM NJA   are  10x0 xx10 ((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOXED|AFNOSMREL))+AFNOSMREL)) & (BOXED<<1)
-  // we are changing the sign of AFNOSMREL and adding to see if the carry through BOXED is set
-  // we are combining all the tests into one here to avoid misprediction, since this code will not be in the branch cache.  We should almost never call this subroutine
-  if((((AFNJA&AFLAG(w))-AFNJA) & ( (-(AFSMM&AFLAG(w))) | ((((AFLAG(w)|AT(w))^AFNOSMREL)&(BOX|AFNOSMREL))+AFNOSMREL) )) & (BOX<<1))RZ(w=rca(w));
-#endif
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.
@@ -508,9 +454,6 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
    // If this is a reassignment, we need to decrement the use count in the old name, since that value is no longer used.
    // But if the value of the name is 'out there' in the sentence (coming from an earlier reference), we'd better not delete
    // that value until its last use.
-// obsolete  We call nvrredef to see whether the name is out there; if it is, nvrredef has scheduled a deferred
-// obsolete     // free (and don't free here); if it isn't, or if it has already been scheduled for a deferred free, we free the block here.
-// obsolete   if(x){if(!nvrredef(x))fa(x);} e->val=w;   // if redefinition, modify the use counts; install the new value
    if(!(xaf&AFNVRUNFREED)){fa(x);} else if(xaf&AFNVR) {AFLAG(x)=(xaf&=~AFNVRUNFREED);}  // x may be 0.  Free if not protected; then unprotect
    e->val=w;   // install the new value
   } else {ACIPNO(w);}  // Set that this value cannot be in-place assigned - needed if the usecount was not incremented above
@@ -520,13 +463,10 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    realizeifvirtual(w);  // realize if virtual.  The copy stored in the mapped array must be real
-#if 0  // obsolete - mapped boxed arrays
-   if(wt&BOX)R smmis(x,w);  // if assigning boxed data to NJA memory, go into boxed-memory-mapped mode   todo BUG: misses assignments after this block
-#endif
    wt=AT(w); wn=AN(w); wr=AR(w); m=wn*bp(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);
-   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; ICPY(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCIS(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined

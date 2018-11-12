@@ -287,7 +287,6 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
   // and there is not invalid region on the right, EXCEPT when m<4096 (about the size of L1 cache) and there is no invalid region on the left:
   // this last exception to keep the cache footprint small for short requests
   if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && hh->invalidhi<hh->currenthi && !(m<4096 && hh->invalidlo>=p)) {  // the right side is a possibility
-//obsolete  if(p <= maxn-hh->currenthi && hh->previousindexend < indexceil && (m>4096 || (hh->invalidlo<p))) {  // the right side is a possibility
    // Allocating right.  Return a region starting at currenthi
    md &= ~(IIMODBASE0|IINOTALLOCATED);  // can't use the fastest code if we didn't clear; but we allocated it
    hh->currentlo=hh->currenthi; hh->currenthi+=p;   // set return value (starting position) and partition
@@ -1202,8 +1201,6 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
  as=AS(a); at=AT(a); an=AN(a);
@@ -1218,8 +1215,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)ICPY(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R zero;
@@ -1278,11 +1275,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  // Allocate the result area
  if(!mk)switch(mode&IIOPMSK){I q;
   case IIDOT: 
-  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)ICPY(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
+  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
+  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCIS(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)ICPY(f+AS(z),ws+wf,f1); break;
+  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
   case INUBI:   q=m+1; GATV(z,INT,q,1,0); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
@@ -1576,7 +1573,6 @@ F2(jtjico2){R indexofsub(IICO,a,w);}
 F1(jtnubsieve){
  RZ(w);
  if(SPARSE&AT(w))R nubsievesp(w); 
-// obsolete  if(jt->rank)jt->rank[0]=jt->rank[1]; 
  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,w,w); 
 }    /* ~:"r w */
@@ -1595,7 +1591,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
- if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); ICPY(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+ if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
@@ -1604,12 +1600,9 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // x e. y
 F2(jteps){I l,r;
  RZ(a&&w);
-// obsolete  rv[0]=r=jt->rank?jt->rank[1]:AR(w);
-// obsolete  rv[1]=l=jt->rank?jt->rank[0]:AR(a); RESETRANK;
  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
  if(SPARSE&AT(a)+AT(w))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
-// obsolete  jt->rank=rv; 
  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,w,a);
 }    /* a e."r w */

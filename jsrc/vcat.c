@@ -51,8 +51,6 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
 
 static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
  RZ(a&&w);
-// obsolete at=AT(a); ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
-// obsolete  wt=AT(w); wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; RESETRANK;
  acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
@@ -111,8 +109,6 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
   if((!n||d)&&!zrel)mvc(k*p,x,k,jt->fillv);
   if(n&&n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
   if(n){
-// obsolete    if(zrel){RELORIGINB(wrel,w); wrel-=zrel; u=(I*)x; v=AV(w); DO(AN(w), *u++=wrel+*v++;);}
-// obsolete   if(zrel){A *u,*v; RELORIGINB(wrel,w); wrel-=zrel; u=(A*)x; v=AAV(w); DO(AN(w), *u++=wrel+*v++;);}
    if(zrel){A * RESTRICT u,* RESTRICT v; RELORIGINB(wrel,w); wrel-=zrel; u=(A*)x; v=AAV(w); RELOCOPY(u,v,AN(w),wrel);}
    else MC(x,AV(w),k*AN(w));
   }
@@ -126,7 +122,6 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
 static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(a&&w);
  RZ(w=setfv(a,w));
-// obsolete RZ(coerce2(&a,&w,0L));
   if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
  RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);   // Allocate list for shape of composite item
@@ -150,9 +145,7 @@ static F2(jtovv){A z;I m,t;
  GA(z,t,AN(a)+AN(w),1,0);  
  if(t&BOX&&AORWRELATIVEB(a,w)){A* RESTRICT u,* RESTRICT v;
   AFLAG(z)=AFREL; v=AAV(z);
-// obsolete  RELORIGINB(arel,a); u=A1AV(a); m=arel-(I)z; DO(AN(a), *v++=m+*u++;);
   RELORIGINB(arel,a); u=AAV(a); m=arel-RELORIGINDEST(z); RELOCOPYT(v,u,AN(a),m);
-// obsolete   RELORIGINB(wrel,w); u=A1AV(w); m=wrel-(I)z; DO(AN(w), *v++=m+*u++;);
   RELORIGINB(wrel,w); u=AAV(w); m=wrel-RELORIGINDEST(z); RELOCOPY(v,u,AN(w),m);
  }else{C*x;I k;
   k=bp(t); m=k*AN(a); x=CAV(z); 
@@ -161,19 +154,6 @@ static F2(jtovv){A z;I m,t;
  }
  INHERITNOREL2(z,a,w); RETF(z);
 }    /* a,w for vectors/scalars with the same type */
-
-#if 0 // obsolete
-static void om(I k,I c,I d,I e,I m,I m1,I n,I r,C*u,C*v){I km,km1,kn;
- km=k*m; km1=k*m1; kn=k*n;
- if(!r&&m1!=n)DO(c, mvc(km1,u,kn,v); u+=km;)
- else if(1<e){
-  if(m1>n)DO(d, DO(e, mvc(km1,u,kn,v); u+=km;); v+=kn;)
-  else    DO(d, DO(e, MC(u,v,kn);      u+=km;); v+=kn;);
- }else{
-  if(m1>n)DO(c,         mvc(km1,u,kn,v); u+=km;   v+=kn;)
-  else    DO(c,         MC(u,v,kn);      u+=km;   v+=kn;); 
-}}   /* move an argument into the result area */
-#endif
 
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
  I arptct=arptreset-1; I wrptct=wrptreset-1;
@@ -214,22 +194,16 @@ static void moveawSV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset
 }
 int (*p[4]) (int x, int y);
 static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
-// obsolete static I overcode = 0;
 F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
-// obsolete  RZ(t=coerce2(&a,&w,0L));
  ar=AR(a); wr=AR(w);
-// obsolete  if(!jt->rank&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
-// obsolete  acr=jt->rank?jt->rank[0]:ar; af=ar-acr; as=AS(a); p=acr?as[ar-1]:1;
-// obsolete  wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; ws=AS(w); q=wcr?ws[wr-1]:1;  // wcr=rank of cell, wf=len of frame, ws->shape, q=len of last axis of cell
  acr=jt->ranks>>RANKTX; as=AS(a); p=as[ar-1]; acr=ar<acr?ar:acr; p=acr?p:1; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
  wcr=(RANKT)jt->ranks; ws=AS(w); q=ws[wr-1]; wcr=wr<wcr?wr:wcr; q=wcr?q:1; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape, p=len of last axis of cell
  // no RESETRANK - not required by ovv or main line gere
  if(!(af|wf)&&2>(ar|wr))R ovv(a,w);  // If appending vectors/atoms at infinite rank, go handle that
 
-// obsolete r=acr+wcr?MAX(acr,wcr):1;
  r=MAX(acr,wcr); r=(r==0)?1:r;  // r=cell-rank, or 1 if both atoms.
  // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case
  if((((2-r)|(AN(a)-1)|(AN(w)-1))<0)||2<acr+wcr&&p!=q){  // r>2, or empty
@@ -238,19 +212,14 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  // joining rows, or table/row with same lengths, or table/atom.  In any case no fill is possible
  acn=1>=acr?p:p*as[ar-2]; ma=!acr&&2==wcr?q:acn;  // acn is #atoms in a cell of a  ma is acn EXCEPT when joining atom a to table w: then length of row of w
  wcn=1>=wcr?q:q*ws[wr-2]; mw=!wcr&&2==acr?p:wcn; m=ma+mw;  // sim for w;  m=total # atoms to move per cell (table/row of a plus table/row of w)
-// obsolete if(af<=wf){f=wf; s=ws; c=wcct;}else{f=af; s=as; c=acct;};
  I f=(wf>=af)?wf:af; I shortf=(wf>=af)?af:wf; I *s=(wf>=af)?ws:as;
  PROD(replct,f-shortf,s+shortf); PROD(framect,shortf,s);  // Number of cells in a and w; known non-empty shapes
-// obsolete c=(wf>=af)?wcct:acct;  // f=frame of longer shape, s->longer shape, c=#cells in longer shape
  RE(zn=mult(replct*framect,m));  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1;   // allocate result; repurpose s to point to END of shape field
  if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
  k=bp(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  moveawtbl[(!acr&&ma>1)*2+(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
-// obsolete  om(k,c,(wf>=af)?1:replct,(wf>=af)?replct:1,m,ma,acn,ar,zv,     CAV(a));   // copy in a data
-// obsolete  om(k,c,(wf>=af)?replct:1,(wf>=af)?1:replct,m,mw,wcn,wr,zv+k*ma,CAV(w));   // copy in w data
-// obsolete  INHERITNORELFILL2(z,a,w);
  RETF(z);
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
@@ -263,9 +232,7 @@ F2(jtstitch){B sp2;I ar,wr;
 
 F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
  RZ(w);
-// obsolete  wr=wcr=AR(w); if(jt->rank){wcr=MIN(wr,jt->rank[1]); RESETRANK;} wf=wr-wcr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
-// obsolete  GATV(x,INT,1+wr,1,0);
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
  s=AS(w); MCISds(v,s,wf); *v++=1; MCISds(v,s,wcr);  // frame, 1, shape - the final shape
  R reshape(x,w);
@@ -273,9 +240,6 @@ F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
 
 F2(jtlamin2){A z;I ar,p,q,wr;
  RZ(a&&w); 
-// obsolete  ar=AR(a); p=jt->rank?jt->rank[0]:ar; 
-// obsolete  wr=AR(w); q=jt->rank?jt->rank[1]:wr; 
-// obsolete  jt->rank = 0;
  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;
  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(p)a=irs1(a,0L,p,jtlamin1);
@@ -314,7 +278,6 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
   // result would increase, and there's no room in the shape)
   // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
-// obsolete   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&!jt->rank){
   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&jt->ranks==(RANK2T)~0){
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill

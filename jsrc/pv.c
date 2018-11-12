@@ -225,16 +225,11 @@ F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*tt
  local=jt->local; tmonad=jt->tmonad; ttab0=jt->ttab; tsubst=jt->tsubst;
  RZ(ttab[0].a=cstr("x")); ttab[0].t=ds(CLEFT);
  RZ(ttab[1].a=cstr("y")); ttab[1].t=RT; c=2;
-// obsolete  if(jt->dotnames){
-// obsolete   RZ(ttab[2].a=spellout(CXDOT)); ttab[2].t=ds(CLEFT);
-// obsolete   RZ(ttab[3].a=spellout(CYDOT)); ttab[3].t=RT; c+=2;
-// obsolete  }
  for(i=0;!z&&2>i;++i){
   RZ(y=vtokens(w));
   jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
   RZ(jt->local=stcreate(2,1L+PTO,0L,0L));
   IS(ynam,one); if(!jt->tmonad)IS(xnam,one); 
-// obsolete   if(jt->dotnames){IS(ds(CYDOT),one); if(!jt->tmonad)IS(ds(CXDOT),one);}
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;
   if(i&&!z)z=colon(num[4-jt->tmonad],w);

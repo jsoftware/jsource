@@ -42,12 +42,10 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   else              DO(m, DO(an, SETJ(av[i]); u=v+j*q; DO(q, *x++=*u++;);); v+=pq;);   \
  }
 
-F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
+F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  F1PREFIP;
  RZ(a&&w);
  // IRS supported.  This has implications for empty arguments.
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
@@ -68,7 +66,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
   PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
-// obsolete  if((zn>1)&&!(wf|(wflag&(AFSMM|AFNJA)))){
 // correct  if(((zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
   if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
@@ -82,7 +79,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
     RZ(z=virtualip(w,index0*k,ar+wr-1));
     // fill in shape and number of atoms.  ar can be anything
-    I* as=AS(a); AN(z)=zn; s=AS(z); DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
+    I* as=AS(a); AN(z)=zn; I *s=AS(z); MCISd(s,as,ar) MCISd(s,ws+1,wr-1)  // obsolete   DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
     RETF(z);
    }
   }
@@ -91,7 +88,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
- s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
+ { I *s=AS(z)+wf; MCISd(s,AS(a),ar); if(wcr)MCISd(s,1+wf+ws,wcr-1); }
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
@@ -166,8 +163,6 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,*s,wcr,wf,wk,wn,wr,*ws,zn;
 // a is boolean
 static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar>acr)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtbfrom);
@@ -183,7 +178,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
   PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);
- s=AS(z); ICPY(s+wf,AS(a),ar); if(wcr)ICPY(s+wf+ar,1+wf+ws,wcr-1);
+ s=AS(z)+wf; MCISd(s,AS(a),ar); MCISd(s,1+wf+ws,wcr-1);
  if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
  switch(k+k+(1==an)){
@@ -246,16 +241,16 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
   v=ws+wf+h; DO(wcr-h, *u++=*v++;);
   R z;
  }
- fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) /* obsolete GATV(p,INT,h,1,0); */ v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
+ fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
  r=wr+1-h;
  if(r==wr)
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  else if(ARELATIVE(w)){
   GATV(q,INT,r,1,0); 
-  v=AV(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
+  v=AV(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }else{
-  RZ(q=gah(r,w)); v=AS(q); ICPY(v,ws,wf); *(v+wf)=m; ICPY(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
+  RZ(q=gah(r,w)); v=AS(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
  RETF(z);
@@ -287,8 +282,6 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  ws=wf+AS(w); c=*(AS(a)+AR(a)-1);   // c = length of 1-cell
  if(((n-1)|(c-1)|-(t&BOX))<0)R 0;  // revert to normal code for empty or boxed a
  ASSERT(c<=AR(w)-wf,EVLENGTH);
-// obsolete  RZ(z=t&INT?ca(a):cvt(INT,a)); v=AV(z);
-// obsolete  DO(n/c, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT(0<=k&&k<ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
  PROD(n,AR(a)-1,AS(a));  v=AV(a); // n now=number of 1-cells of a   v=running pointer through a
  // Go through a fast verification pass.  If all values nonnegative and valid, return original a
  if(t&INT){  // if it's INT already, we don't need to move it.
@@ -322,9 +315,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
  }else{zn=0;}
  GA(z,wt,zn,wf+pr+qr+r-2,ws);
- s=AS(z)+wf; ICPY(s,AS(p),pr); 
- s+=pr;      ICPY(s,AS(q),qr);
- s+=qr;      ICPY(s,ws+wf+2,r-2);
+ s=AS(z)+wf; MCISd(s,AS(p),pr); MCISd(s,AS(q),qr); MCISd(s,ws+wf+2,r-2);
  if(!zn)R z;  // If no data to move, exit with empty.  Rank is right
  wv=CAV(w); zv=CAV(z); 
  switch(k=d*wk){   // k=*bytes in a _2-cell of a cell of w
@@ -356,14 +347,11 @@ static A jtafi(J jt,I n,A w){A x;
 
 static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,*s,t,wcr,wf,wr;
  RZ(a&&w);
-// obsolete  ar=AR(a); acr=  jt->rank?jt->rank[0]:ar;
-// obsolete wr=AR(w); wcr=r=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(ar){
   if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
-// obsolete       df2(rank1ex(a,0L,acr,jtbox),rank1ex(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); RELBASEASGNB(c,c);  // B prob not reqd 
@@ -378,8 +366,8 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
   m+=*AV(p)*prod(wcr-i-1,1+i+s);
  }
  if(i){I*ys;  // TODO use virtual block for this
-  RZ(y=gah(pr+wcr-i,w)); ys=AS(y); DO(pr, *ys++=1;); ICPY(ys,s+i,wcr-i);
-  /* obsolete AM(y)= */AN(y)=prod(AR(y),AS(y));
+  RZ(y=gah(pr+wcr-i,w)); ys=AS(y); DO(pr, *ys++=1;); MCISd(ys,s+i,wcr-i);
+  AN(y)=prod(AR(y),AS(y));
   AK(y)=k*m+CAV(w)-(C*)y;
  }
  for(;i<n;i+=2){

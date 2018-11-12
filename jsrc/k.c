@@ -225,7 +225,6 @@ static KF1(jtXfromQ){Q*v;X*x;
  DO(AN(w), if(!(equ(iv1,v->d)))R 0; *x++=v->n; ++v;);           
  R !jt->jerr;
 }
-// obsolete   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
 
 // Imaginary parts have already been cleared
 static KF1(jtZfromD){
@@ -341,7 +340,6 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   case CVCASE(INTX, FLX): R IfromD(w, yv);
   case CVCASE(XNUMX, FLX): R XfromD(w, yv);
   case CVCASE(RATX, FLX): R QfromD(w, yv);
-// obsolete   case CVCASE(CMPXX, FLX): {Z*x = (Z*)yv; D t, *v = (D*)wv; DO(n, t = *v++; x++->re = t || _isnan(t) ? t : 0.0;); } R 1;  /* -0 to 0*/
   case CVCASE(CMPXX, FLX): R ZfromD(w, yv);
   case CVCASE(B01X, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R BfromD(d, yv);
   case CVCASE(INTX, CMPXX): GATV(d, FL, n, r, s); if(!(DfromZ(w, AV(d))))R 0; R IfromD(d, yv);
@@ -352,13 +350,11 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   case CVCASE(INTX, XNUMX): R IfromX(w, yv);
   case CVCASE(RATX, XNUMX): R QfromX(w, yv);
   case CVCASE(FLX, XNUMX): R DfromX(w, yv);
-// obsolete   case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ccvt(t, d, y);
   case CVCASE(CMPXX, XNUMX): GATV(d, FL, n, r, s); if(!(DfromX(w, AV(d))))R 0; R ZfromD(d, yv);
   case CVCASE(B01X, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R BfromX(d, yv);
   case CVCASE(INTX, RATX): GATV(d, XNUM, n, r, s); if(!(XfromQ(w, AV(d))))R 0; R IfromX(d, yv);
   case CVCASE(XNUMX, RATX): R XfromQ(w, yv);
   case CVCASE(FLX, RATX): R DfromQ(w, yv);
-// obsolete   case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ccvt(t, d, y);
   case CVCASE(CMPXX, RATX): GATV(d, FL, n, r, s); if(!(DfromQ(w, AV(d))))R 0; R ZfromD(d, yv);
   default:                ASSERT(0, EVDOMAIN);
  }
@@ -466,7 +462,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
    b=1&&t&XD;
-   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; ICPY(s,AS(w),r);
+   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; MCISd(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DO(n,         *zv++=v->p;);}
    else    {ZX*v=(ZX*)wv,y; DO(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}

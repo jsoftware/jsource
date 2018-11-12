@@ -34,12 +34,10 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
   default: ASSERTSYS(ado,"charfn2 ado");
  }
  
-// obsolete  df2 on self just produces infinite loop if(!ado)R df2(a,w,self)
  an=AN(a); ar=AR(a); as=AS(a);
  wn=AN(w); wr=AR(w); ws=AS(w);
  ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; I r=b?wr:ar; I *s=b?ws:as; I rs=b?ar:wr; PROD(n,r-rs,s+rs);
-// obsolete n=m?zn/m:0;
  GA(z,zt,zn,r,s); if(!zn)R z;
  ado(jt,b,m,n,CAV(z),CAV(a),CAV(w));
  RETF(z);

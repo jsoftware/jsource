@@ -80,28 +80,14 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 
-// obsolete static A jtstfindnum(J jt,I k){A y;I j;
-// obsolete  if(!(y=indexof(jt->stnum,sc(k))))R 0; j=*AV(y); 
-// obsolete  if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
-// obsolete  else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
-// obsolete  else R 0;
-// obsolete }    /* stfind for numbered locales */
-// obsolete 
 A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  if(!n){n=sizeof(jt->baselocale); u=jt->baselocale;bucketx=jt->baselocalehash;}
-// obsolete if('9'>=*u)R stfindnum(b,strtoI(u,NULL,10));
  if('9'<*u){
-// obsolete   old=jt->tnextpushx; v=probe(nfs(n,u),jt->stloc); tpop(old);
   v=probe(n,u,(UI4)bucketx,jt->stloc);
   if(v)R v->val;   // if there is a symbol, return its value
-// obsolete   R v?v->val:b?stcreate(0,jt->locsize[0]+PTO,n,u):0;
  }else{
-// obsolete   R stfindnum(bucketx);
   // scaf   should do some kind of MRU ordering to speed access to recent locales
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==bucketx)R AAV(jt->stptr)[i];
-// obsolete   A y; if(!(y=indexof(jt->stnum,sc(bucketx))))R 0; j=*AV(y); 
-// obsolete   if(j<AN(jt->stnum))R*(j+AAV(jt->stptr)); 
-// obsolete  else if(b){ASSERT(k>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,k,0L);}
  }
  R 0;  // not found
 }   /* find the symbol table for locale with name u which has length n and hash/number h, create if b and non-existent */
@@ -140,8 +126,6 @@ static I jtindexforloc(J jt,I locno){I i;
 }
 // get index number for a numbered locale, given the name of the locale
 static I jtprobenum(J jt,C*u){
-// obsolete RE(j=i0(indexof(jt->stnum,sc((I)strtoI(u,NULL,(I)10)))));
-// obsolete  R j<AN(jt->stnum)?j:-1;
   R jtindexforloc(jt, (I)strtoI(u,NULL,(I)10)); // scaf error fails if no terminating NUL, if rank used
 }    /* probe for numbered locales */
 
@@ -252,7 +236,6 @@ F1(jtlocswitch){A g;
  jt->global=g;
  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
 
-// obsolete  jt->stswitched=1;
  R mtm;
 }    /* 18!:4  switch locale */
 

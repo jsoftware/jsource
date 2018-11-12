@@ -6,12 +6,8 @@
 #include "j.h"
 
 // create inplace bits as copy of W, or swap A & W
-// obsolete static DF1(swap1){DECLF; F1PREFIP; R jt->rank?irs2(w,w,fs,jt->rank[1],jt->rank[1],f2):((jtinplace=(J)(intptr_t)((I)jtinplace&JTINPLACEW)),(f2)((J)(intptr_t)((I)jt+3*(I)jtinplace),w,w,fs));}
-// obsolete static DF2(swap2){DECLF; F2PREFIP; R jt->rank?irs2(w,a,fs,jt->rank[1],jt->rank[0],f2):((jtinplace=(J)(intptr_t)((I)jtinplace&(JTINPLACEW+JTINPLACEA))),(f2)((J)(intptr_t)((I)jt+(((5*(I)jtinplace)>>1)&(JTINPLACEW+JTINPLACEA))),w,a,fs));}
-// obsolete static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)((I)jt+3*((I)jtinplace&JTINPLACEW)); RANKT mr=(RANKT)jt->ranks;
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW)); RANKT mr=(RANKT)jt->ranks;
  if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else{jt->ranks=(RANK2T)~0; R (f2)(jtinplace,w,w,fs);}}  // must expand infinite rank to dyadic size
-// obsolete static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jt+2*((I)jtinplace&JTINPLACEW)+(((I)jtinplace&JTINPLACEA)>>1)); RANK2T lrr=jt->ranks;
 static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace+((JTINPLACEW+JTINPLACEA)&(4>>((I)jtinplace&JTINPLACEW+JTINPLACEA)))); RANK2T lrr=jt->ranks;
  if(lrr!=(RANK2T)~0)R jtirs2(jtinplace,w,a,fs,(RANKT)lrr,lrr>>RANKTX,f2); else R (f2)(jtinplace,w,a,fs);}
 
@@ -72,29 +68,9 @@ F1(jtbdot){A b,h=0;I j,n,*v;
   case 32: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiserotate, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
   case 33: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshift, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
   case 34: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwiseshifta, w,0L,0L, VASGSAFE|VINPLACEOK2, 0L,0L,0L);
-#if 0 // obsolete
-  case 16: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 17: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0001, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 18: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0010, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 19: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0011, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 20: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0100, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 21: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0101, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 22: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0110, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 23: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise0111, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 24: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1000, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 25: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1001, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 26: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1010, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 27: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1011, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 28: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1100, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 29: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1101, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 30: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1110, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  case 31: R fdef(0,CBDOT,VERB, jtbitwise1,jtbitwise1111, w,0L,0L, VASGSAFE|VIRS2|VINPLACEOK2, 0L,0L,0L);
-  default: ASSERT(0,EVNONCE);
-#else
   // The code uses a VERB with id CBDOT to stand for the derived verb of m b. .  This is used for spellout and for inverses, so we retain it.
   // We copy the other information from the verb that executes the function.  This contains pointers to the routines, and to the function table
   default: {A z=ca(ds(j)); RZ(z); FAV(z)->fgh[0]=w; FAV(z)->id=CBDOT; RETF(z);}
-#endif
  }
 }
 

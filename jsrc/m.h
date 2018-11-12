@@ -27,7 +27,6 @@
 /* j: mfree/msize index                                                    */
 /* blkx: distance to go back to get to the first pool buffer from the allocation (0 for first) */
 
-// obsolete #define mhw (sizeof(MS) / SZI)              /* # words in memory header             */
 
 // Memory-allocation info
 // PMINL is lg2(size of smallest pool buffer).  It must be big enough to hold at least one I. 

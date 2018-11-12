@@ -708,7 +708,6 @@
 #define numx(x,y,z)                 jtnumx(jt,(x),(y),(z))
 #define nvrpop(x)                   jtnvrpop(jt,(x))
 #define nvrpush(x)                  jtnvrpush(jt,(x))
-// obsolete #define nvrredef(x)                 jtnvrredef(jt,(x))
 #define oblique(x,y)                jtoblique(jt,(x),(y))
 #define obqfslash(x,y)              jtobqfslash(jt,(x),(y))
 #define obverse(x,y)                jtobverse(jt,(x),(y))
@@ -734,7 +733,6 @@
 #define pad(x,y,z)                  jtpad(jt,(x),(y),(z))
 #define parse(x)                    jtparse(jt,(x))
 #define parsea(x,y)                 jtparsea(jt,(x),(y))
-// obsolete #define parseas(x,y)                jtparseas(jt,(x),(y))
 #define parseinit()                 jtparseinit(jt)
 #define parsex(x0,x1,x2,x3)         jtparsex(jt,(x0),(x1),(x2),(x3))
 #define partfscan(x0,x1,x2,x3,x4,x5)  jtpartfscan(jt,(x0),(x1),(x2),(x3),(x4),(x5))
@@ -833,8 +831,6 @@
 // ras does rifv followed by ra
 #define ras(x)                      ((x) = jtras(jt,x))
 #define rat(x)                      jtrat(jt,(x))
-// obsolete #define rat1(x)                     {ACINCR(x); tpush1(x);}  // like rat() but only for the top level
-// obsolete #define rat1s(x)                    jtrat1s(jt,(x))  // subroutine version
 #define ravel(x)                    jtravel(jt,(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    
@@ -1049,7 +1045,6 @@
 #define stdnm(x)                    jtstdnm(jt,(x))
 #define stfind(x,y,z)               jtstfind(jt,(x),(y),(z))
 #define stfindcre(x,y,z)            jtstfindcre(jt,(x),(y),(z))
-// obsolete #define stfindnum(x)                jtstfindnum(jt,(x))
 #define stitch(x,y)                 jtstitch(jt,(x),(y)) 
 #define stitchsp2(x,y)              jtstitchsp2(jt,(x),(y)) 
 #define str(x,y)                    jtstr(jt,(x),(y))

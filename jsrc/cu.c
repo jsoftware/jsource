@@ -36,8 +36,8 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
 A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr,*ws;
 // todo kludge should rewrite with single flag word
  RZ(a&&w); 
- an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a)); // obsolete ad=(I)a*ARELATIVE(a);
- wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w)); // obsolete wd=(I)w*ARELATIVE(w);
+ an=AN(a); ar=AR(a); as=AS(a); ab=!!(BOX&AT(a));
+ wn=AN(w); wr=AR(w); ws=AS(w); wb=!!(BOX&AT(w));
  b=!ar||!wr||ar==wr; if(b&&ar&&wr)DO(ar, b&=as[i]==ws[i];);
  if(!b)R df2(a,w,atop(ds(CBOX),amp(fs,ds(COPE))));
  GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
@@ -59,21 +59,14 @@ DF2(jteachr){RZ(a&&w&&self); R rank2ex(a,w,self,FAV(self)->lr,FAV(self)->rr,RMAX
 // under is for when we could not precalculate the inverse
 static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(FAV(hs)->flag&VINPLACEOK1?jtinplace:jt,w,hs);}
-// obsolete static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(FAV(hs)->flag&VINPLACEOK2?jtinplace:jt,a,w,hs);}
-// obsolete static DF1(jtunder1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
-// obsolete static DF2(jtunder2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(invrecur(fix(gs)),amp(fs,gs))); R (VAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
 // underh has the inverse precalculated, and the inplaceability set from it.  It handles &. and &.: which differ only in rank
 static DF1(jtunderh1){F1PREFIP;DECLFGH; R (FAV(hs)->valencefns[0])(jtinplace,w,hs);}
 static DF2(jtunderh2){F2PREFIP;DECLFGH; R (FAV(hs)->valencefns[1])(jtinplace,a,w,hs);}
 // undco is for when we could not precalculate the inverse
 static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[0])(FAV(fullf)->flag&VINPLACEOK1?jtinplace:jt,w,fullf);}
 static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (FAV(fullf)->valencefns[1])(FAV(fullf)->flag&VINPLACEOK2?jtinplace:jt,a,w,fullf);}
-// obsolete static DF1(jtundco1){F1PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->valencefns[0])(jtinplace,w,fullf);}
-// obsolete static DF2(jtundco2){F2PREFIP;DECLFG;A fullf; RZ(fullf=atop(inv(gs),ampco(fs,gs))); R (VAV(fullf)->valencefns[1])(jtinplace,a,w,fullf);}
 
 // u&.> main entry point.  Does not support inplacing.
-// obsolete static DF1(jteach1){DECLF; R every (  w,fs,f1);}
 static DF2(jteach2){DECLF; R every2(a,w,fs,f2);}
 // versions for rank 0 (including each).  Passes inplaceability through
 // if there is only one cell, process it through under[h]1, which understands this type; if more, loop through
@@ -126,18 +119,14 @@ F2(jtunder){A x;AF f1,f2;B b,b1;C c,uid;I m,r;V*u,*v;
  // just in case the calculated verb is not inplaceable
  // The standard verbs start with a rank loop; set the flag indicating that
  if(!f1){f1=r?(h?jtunderh1:jtunder1):(h?jtunderh10:jtunder10); flag2|=VF2RANKATOP1; if(h)flag&=FAV(h)->flag|(~VINPLACEOK1);}  // allow inplace if v is known inplaceable
-// obsolete  if(!f2){f2=h?jtunderh2:jtunder2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}
  if(!f2){f2=r?(h?jtunderh2:jtunder2):(h?jtunderh20:jtunder20); flag2|=VF2RANKATOP2; if(h)flag&=FAV(h)->flag|(~VINPLACEOK2);}  // allow inplace if v is known inplaceable
-// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
  R fdef(flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),(I)(r),(I)(r),(I)(r));
 }
 
 F2(jtundco){AF f1,f2;
  ASSERTVV(a,w); 
  // Set flag with ASGSAFE status of u/v, and inplaceability of f1/f2
-// obsolete  R CDERIV(CUNDCO,jtundco1,jtundco2,((VAV(a)->flag&VAV(w)->flag&VASGSAFE) + (VINPLACEOK1|VINPLACEOK2)), RMAX,RMAX,RMAX);
  A h=0; if(nameless(w)){h=atop(inv(w),ampco(a,w)); ASSERT(h,EVDOMAIN);} // h must be valid for free.  If no names in w, take the inverse
  f1=h?jtunderh1:jtundco1; f2=h?jtunderh2:jtundco2; I flag = (FAV(a)->flag&FAV(w)->flag&VASGSAFE) + (h?FAV(h)->flag&((VINPLACEOK1|VINPLACEOK2)):(VINPLACEOK1|VINPLACEOK2));
-// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
  R fdef(0,CUNDCO,VERB,(AF)(f1),(AF)(f2),a,w,h,flag,RMAX,RMAX,RMAX);
 }

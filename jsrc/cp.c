@@ -27,7 +27,7 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
  av=AV(a); an=AN(a);
  RZ(z=exta(INT,1+wr,wn,20L)); 
  zv=AV(z); zz=zv+AN(z);
- if(1==wn){   // having separate cases for wn==1 seems overkill
+ if(1==wn){   // kludge having separate cases for wn==1 seems overkill
   *zv++=c=*wv; d=1+c;
   while(c!=d){
    if(zv==zz){i=zv-AV(z); RZ(z=ext(0,z)); zv=AV(z)+i; zz=AV(z)+AN(z);}
@@ -43,7 +43,7 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
   }
   d=(zv-AV(z))/wn-1;
  }
- AS(z)[0]=d; AN(z)=d*wn; ICPY(1+AS(z),AS(w),wr); 
+ AS(z)[0]=d; AN(z)=d*wn; MCIS(1+AS(z),AS(w),wr); 
  RETF(z);
 }    /* {&a^:(<_) w */
 
@@ -131,7 +131,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  }
  k=AR(hs); RE(zn=mult(m,AN(y)));
  GA(z,AT(y),zn,k+AR(y),0); zv=CAV(z);
- s=AS(z); ICPY(s,AS(hs),k); ICPY(k+s,AS(y),r);
+ s=AS(z); MCISd(s,AS(hs),k); MCISd(s,AS(y),r);
  n=nv[jv[m-1]]; c=AN(y)*bp(t); s=AS(y);
  k=0; DIST(0,w); DIST(1,y);
  for(i=2;i<=n;++i){
@@ -142,7 +142,6 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  RETF(z);
 }    /* f^:n w, non-negative finite n, well-behaved f */
 
-// obsolete static DF1(jtinvh1){DECLFG;A z; RZ(w);    FDEPINC(1); z=df1(w,inv(fs));        FDEPDEC(1); RETF(z);}
 static DF1(jtinv1){F1PREFIP;DECLFG;A z; RZ(w);A i; RZ(i=inv((fs))); FDEPINC(1);  z=(FAV(i)->valencefns[0])(FAV(i)->flag&VINPLACEOK1?jtinplace:jt,w,i);       FDEPDEC(1); RETF(z);}  // was invrecur(fix(fs))
 static DF1(jtinvh1){F1PREFIP;DECLFGH;A z; RZ(w);    FDEPINC(1); z=(FAV(hs)->valencefns[0])(jtinplace,w,hs);        FDEPDEC(1); RETF(z);}
 static DF2(jtinv2){DECLFG;A z; RZ(a&&w); FDEPINC(1); z=df1(w,inv(amp(a,fs))); FDEPDEC(1); RETF(z);}
@@ -230,10 +229,8 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
     case -1:
      // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
      // must wait until we get arguments
-// obsolete      R CDERIV(CPOWOP,jtinv1,jtinv2,VFLAGNONE, RMAX,RMAX,RMAX);  // create verb to calculate the inverse
      {A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
       I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VINPLACEOK1:VINPLACEOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
-// obsolete R CDERIV(CUNDER,f1,f2,flag,r,r,r);
      R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
      }
    }

@@ -120,12 +120,9 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
  b=BAV(a); p=bsum(m,b);  // p=# 1s in result, i. e. length of result item axis
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); zn=c*k*p;  // c=#cells, k=#atoms per item of cell, zn=#atoms in result
    // no overflow possible unless a is empty; nothing  moved then, and zn is 0
-// obsolete zn=m?p*(AN(w)/m):0;
-// obsolete ASSERT(0<=zn,EVLIMIT);
  GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;  // allocate result, move in length of item axis
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
-// obsolete RE(c=prod(wf,AS(w))); k=AN(w)/(c*m)*bp(AT(w));
  k*=bp(AT(w));
  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;););
  R z;
@@ -199,19 +196,17 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
   else   R repzdx(a,irs2(apv(m,0L,0L),w,0L,1L,0L,jtfrom),wf,1L ); 
  }
- if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier // obsolete B*x=BAV(a);DO(m,p+=x[i];);}
+ if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier
  }else{I*x; 
   RZ(a=vi(a)); x=AV(a); 
   DO(m, ASSERT(0<=x[i],EVDOMAIN); p+=x[i]; ASSERT(0<=p,EVLIMIT););  // p=#items in result
  }
  RE(q=mult(p,n));  // q=length of result item  axis.  +/a copies, each of length n
-// obsolete  RE(zn=n?mult(q,AN(w)/n):0);
  RE(zn=mult(p,AN(w)));
  GA(z,AT(w),zn,AR(w)+!wcr,ws); *(wf+AS(z))=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
-// obsolete RE(c=prod(wf,ws)); k=AN(w)/(c*n)*bp(AT(w));
- PROD(c,wf+(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k *=bp(AT(w));  // c=#cell-items to process  k=#atoms per cell-item // obsolete k=AN(w)/(c*n)*bp(AT(w));
+ PROD(c,wf+(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k *=bp(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
  zk=p*k;  // # bytes to fill per item
  DO(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
  R z;
@@ -273,8 +268,6 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 
 F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  RZ(a&&w);
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; 
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  at=AT(a); ab=1&&at&DENSE;

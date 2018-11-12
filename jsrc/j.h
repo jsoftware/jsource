@@ -407,7 +407,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define F1PREFIP        FPREFIP
 #define F2PREFIP        FPREFIP
 #define F1RANK(m,f,self)    {RZ(   w); if(m<AR(w)         )R rank1ex(  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
-// obsolete #define F2RANK(l,r,f,self)  {RZ(a&&w); if(l<AR(a)||r<AR(w))R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F2RANK(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)R rank2ex(a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
 #define F1RANKIP(m,f,self)    {RZ(   w); if(m<AR(w)         )R jtrank1ex(jtinplpace,  w,(A)self,(I)m,     f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell
 #define F2RANKIP(l,r,f,self)  {RZ(a&&w); if((I)((l-AR(a))|(r-AR(w)))<0)R jtrank2ex(jtinplace,a,w,(A)self,(I)l,(I)r,(I)l,(I)r,f);}  // If there is more than one cell, run rank2ex on them.  l,r=dyad ranks, f=function to call for dyad cell
@@ -438,26 +437,8 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  AR(name)=(RANKT)(rank);     \
- if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if((shaape)/* obsolete &&(rank) */){MCIS(AS(name),shaape,rank) /* obsolete AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1]; )*/}   \
- /* obsolete AM(name)=((I)1<<ALLOBLOCK(bytes))-mhb-akx; */    \
+ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCIS(AS(name),shaape,rank) }   \
 }
-#if 0 // obsolete
-// Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
-#define GATVS(name,type,atoms,rank,shaape,size,erraction) \
-{ I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
- ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
- AD* ZZz = jtgafv(jt, bytes);   \
- I akx=AKXR(rank);   \
- if(ZZz){   \
-  if(!(type&DIRECT))memset((C*)ZZz+akx,C0,bytes-mhb-akx);  \
-  else if(type&LAST0){((I*)((C*)ZZz+((bytes-SZI-mhb)&(-SZI))))[0]=0; }     \
-  AK(ZZz)=akx; AT(ZZz)=type; AN(ZZz)=atoms; AR(ZZz)=rank;     \
-  if((1==(rank))&&!(type&SPARSE))*AS(ZZz)=atoms; else if((shaape)&&(rank)){AS(ZZz)[0]=((I*)(shaape))[0]; DO(rank-1, AS(ZZz)[i+1]=((I*)(shaape))[i+1];)}   \
-  /* obsolete AM(ZZz)=((I)1<<((MS*)ZZz-1)->j)-mhb-akx; */     \
-  name=ZZz;   \
- }else{erraction;} \
-}
-#else
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 #define GATVS(name,type,atoms,rank,shaape,size,erraction) \
@@ -470,12 +451,9 @@ extern unsigned int __cdecl _clearfp (void);
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
- if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if((shaape)/* obsolete &&(rank) */){MCIS(AS(name),shaape,rank) /* obsolete AS(name)[0]=((I*)(shaape))[0]; DO(rank-1, AS(name)[i+1]=((I*)(shaape))[i+1]; )*/}   \
-  /* obsolete AM(name)=((I)1<<((MS*)name-1)->j)-mhb-akx; */     \
-  /* obsolete name=ZZz; */   \
+  if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCIS(AS(name),shaape,rank)}   \
  }else{erraction;} \
 }
-#endif
 
 // see warnings above under GATVS
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
@@ -530,7 +508,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
-// obsolete#define MODVIRTINPLACE(x)  (AFLAG(x) |= (AFLAG(x)&AFVIRTUAL)<<(AFVIRTUALINPLACEX-AFVIRTUALX))
 // change the type of the inplaceable block z to t.  We know or assume that the type is being changed.  If the block is UNINCORPABLE (& therefore virtual), replace it with a clone first.  z is an lvalue
 #define MODBLOCKTYPE(z,t)  {if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));} AT(z)=(t);}
 
@@ -547,7 +524,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-// obsolete #define PROD(result,length,ain) {I _i; if((_i=(length)-1)<0)result=1;else{result=*(ain);if(_i>0){I *_ain=(ain); do{result*=*++_ain;}while(--_i);}}}
 #define PROD(result,length,ain) {I _i; if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
@@ -609,7 +585,6 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define SYMHASH(h,n)    ((UI)(((D)(h)*(D)(n)*(1.0/4294967296.0))+SYMLINFOSIZE))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #endif
-// obsolete #define SYMHASH(h,n)    ((h)%(n)+(SYMLINFOSIZE-0.49999999999))   // h is hash value for symbol; n is number of symbol chains (not including LINFO entries)
 #define SZA             ((I)sizeof(A))
 #define LGSZA    LGSZI  // we always require A and I to have same size
 #define SZD             ((I)sizeof(D))

@@ -323,7 +323,7 @@ __attribute__((constructor)) static void Initializer(int argc, char** argv, char
  J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  if(!jtglobinit(jt)){free(jtnobdy); R;}
- dll_initialized= 1; jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
+ dll_initialized= 1; jt->heap=(void *)jtnobdy;  // save allo address for later free
 }
 
 J JInit(void){
@@ -333,7 +333,7 @@ J JInit(void){
  J jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
- jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
+ jt->heap=(void *)jtnobdy;  // save allo address for later free
  R jt;
 }
 
@@ -350,13 +350,13 @@ J JInit(void){
   g_jt = (J)(((I)g_jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
   memset(g_jt,0,sizeof(JST));
   if(!jtglobinit(g_jt)){free(g_jtnobdy);g_jt=0; R 0;}
-  g_jt->heap=(HANDLE)g_jtnobdy;  // save allo address for later free
+  g_jt->heap=(void *)g_jtnobdy;  // save allo address for later free
  }
  J jtnobdy; RZ(jtnobdy=malloc(sizeof(JST)+JTALIGNBDY-1));
  jt = (J)(((I)jtnobdy+JTALIGNBDY-1)&-JTALIGNBDY);  // force to SDRAM page boundary
  memset(jt,0,sizeof(JST));
  if(!jtjinit2(jt,0,0)){free(jtnobdy); R 0;};
- jt->heap=(HANDLE)jtnobdy;  // save allo address for later free
+ jt->heap=(void *)jtnobdy;  // save allo address for later free
  R jt;
 }
 */

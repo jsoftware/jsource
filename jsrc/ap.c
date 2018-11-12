@@ -130,8 +130,6 @@ PREFIXBFX( eqpfxB, EQ, IEQ, SEQ, BEQ, {B b=1; DO(n, *z++=b=b==*x++;);})
 
 
 static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
-// obsolete d=c/n; memset(z,!p,m*c); 
-// obsolete if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=c; x+=c;)
  memset(z,!p,m*n*d); 
  if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
@@ -234,8 +232,6 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
 
 static DF1(jtprefix){DECLF;I r;
  RZ(w);
-// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtprefix);}
-// obsolete  RESETRANK;
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
  R eachl(apv(IC(w),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
@@ -243,8 +239,6 @@ static DF1(jtprefix){DECLF;I r;
 static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  RZ(w);
  ASSERT(DENSE&AT(w),EVNONCE);
-// obsolete  if(jt->rank&&jt->rank[1]<AR(w)){r=jt->rank[1]; RESETRANK; R rank1ex(w,self,r,jtgprefix);}
-// obsolete  RESETRANK;
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  n=IC(w); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -265,7 +259,6 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
-// obsolete  if(ARELATIVE(w)){RELORIGIN(rl,w); A*u=AAV(z),*v=AAV(w)+m; DO(n, *u++=(A)AABS(*v++,rl););}
  if(ARELATIVE(w)){RELORIGIN(rl,w); A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
  else MC(AV(z),CAV(w)+m*k,n*k);
  R z;
@@ -277,7 +270,6 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  RZ(w);
  // p=|m, n=#items of w, d=#applications of u (depending on overlapping/nonoverlapping)
  p=ABS(m); n=IC(w);
-// obsolete d=0>m?(I)((n+(D)p-1)/p):MAX(0,1+n-m);
  if(m>=0){d=MAX(0,1+n-m);}else{d=1+(n-1)/p; d=(n==0)?n:d;}
  // Allocate result, a dx2 table; install shape
  GATV(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;
@@ -304,7 +296,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
   // with the number of items being the infix-size if positive, or 0 if negative
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
-  r=AR(w); rr=MAX(1,r); GATV(s,INT,rr,1,0); if(r)ICPY(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
+  r=AR(w); rr=MAX(1,r); GATV(s,INT,rr,1,0); if(r)MCIS(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
   // Create fill-cell of shape s; apply u to it
   RZ(x=df1(reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
@@ -318,13 +310,6 @@ static DF2(jtinfix2){PROLOG(0019);A f;I m,n,t;
  RE(m=i0(vib(a))); t=AT(w); n=IC(w); 
  if(!(2==m&&2<=n&&t&DENSE))R infix(a,w,self);
  f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];
-// obsolete  af=vaid(f); d=af&&t&DIRECT;
-// obsolete  c=AN(w)/n; r=AR(w); s=AS(w); n1=n-1;
-// obsolete  if(d             ){RZ(x=gah(r,w)); ICPY(AS(x),s,r); *AS(x)=n1; AN(x)=c*n1;} 
-// obsolete  else RZ(x=curtail(w));
-// obsolete  if(d&!(t&IS1BYTE)){RZ(y=gah(r,w)); ICPY(AS(y),s,r); *AS(y)=n1; AN(y)=c*n1; AK(y)=AK(w)+(I)w+c*bp(t)-(I)y;}
-// obsolete  else RZ(y= behead(w));
-// obsolete  A z=df2(x,y,af?f:qq(f,num[-1]));
  A z=df2(curtail(w),behead(w),vaid(f)?f:qq(f,num[-1]));
  EPILOG(z);
 }    /* 2 f/\w */
@@ -375,7 +360,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    state = vf->flag2>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // Don't touch fs yet, since we might not loop
    state &= ~(vf->flag2>>(VF2ATOPOPEN1X-ZZFLAGBOXATOPX));  // We don't handle &.> here; ignore it
    state &= ZZFLAGBOXATOP;  // we want just the one bit, BOXATOP1 & ~ATOPOPEN1
-// obsolete    state |= (-state) & FAV(self)->flag2 & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
    state |= (-state) & (I)jtinplace & (ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS); // remember if this verb is followed by > or ; - only if we BOXATOP, to avoid invalid flag setting at assembly
   }
  }else{
@@ -439,21 +423,17 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   fauxblock(virtafaux); fauxblock(virtwfaux);
   if(((VAV(fs)->id^CSLASH)|((ilnabs|(wi&((UI)ilnval>>(BW-1))))^2))){   // char==/ and (ilnabs==2, but not if input array is odd and ilnval is neg)
    // normal case, infix/prefix.  Allocate a virtual block
-// obsolete    virtw = virtual(w,0,vr); AFLAG(virtw)|=AFUNINCORPABLE;
    fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);
 
    ilnabs=(ilnabs>wi)?wi:ilnabs;  // ilnabs will be used to allocate virtual arguments - limit to size of w
-   I *virtws=AS(virtw); virtws[0]=ilnabs; MCIS(virtws+1,AS(w)+1,vr-1) /* obsolete DO(vr-1, virtws[i+1]=AS(w)[i+1];) */ AN(virtw)=ilnabs*wc; // shape is (infix size),(shape of cell)  tally is #items*celllength
+   I *virtws=AS(virtw); virtws[0]=ilnabs; MCIS(virtws+1,AS(w)+1,vr-1) AN(virtw)=ilnabs*wc; // shape is (infix size),(shape of cell)  tally is #items*celllength
   }else{
    // 2 f/\ y.  The virtual args are now ITEMS of w rather than subarrays
-// obsolete     virta = virtual(w,0,vr-1);  AFLAG(virta)|=AFUNINCORPABLE;
    fauxvirtual(virta,virtafaux,w,vr-1,ACUC1); // first block is for a
-   MCIS(AS(virta),AS(w)+1,vr-1); /* obsolete I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) */ AN(virta)=wc; // shape is (shape of cell)  tally is celllength
+   MCIS(AS(virta),AS(w)+1,vr-1); AN(virta)=wc; // shape is (shape of cell)  tally is celllength
    fauxvirtual(virtw,virtwfaux,w,vr-1,ACUC1);  // second is w
    AK(virtw) += strideb >> ((UI)ilnval>>(BW-1));  // we want to advance 1 cell.  If ilnval is positive, strideb is 1 cell; otherwise strideb is 2 cells
-   MCIS(AS(virtw),AS(w)+1,vr-1); /* obsolete I *virts=AS(virta); DO(vr-1, virts[i]=AS(w)[i+1];) */ AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
-// obsolete    virtw = virtual(w,wc,vr-1);
-// obsolete    virts=AS(virtw); DO(vr-1, virts[i]=AS(w)[i+1];) AN(virtw)=wc; AFLAG(virtw)|=AFUNINCORPABLE; // shape is (shape of cell)  tally is celllength
+   MCIS(AS(virtw),AS(w)+1,vr-1); AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[1];
    // mark that we are handling this case
@@ -536,8 +516,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
 static DF1(jtinfixprefix1){F1PREFIP;
-// obsolete  I *rankp=jt->rank; RESETRANK;
-// obsolete  if(rankp&&rankp[1]<AR(w)){R rank1ex(w,self,rankp[1],jtinfixprefix1);}
  I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtinplace,w,self,r,jtinfixprefix1);}
  R jtinfixprefix2(jtinplace,mark,w,self);
 }
@@ -548,23 +526,18 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
-// obsolete  wn=AN(w); wr=AR(w); r=jt->rank?jt->rank[1]:wr; RESETRANK; f=wr-r; ws=AS(w);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
-// obsolete PROD(m,f,ws); c=m?wn/m:prod(r,f+ws); n=r?ws[f]:1;  // wn=0 doesn't matter
  PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
-// obsolete  if(2>n||!wn){if(vaid(VAV(y)->fgh[0])){RESETRANK; R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
  VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // analyze f
-// obsolete  if(!adocv.f)R jtinfixprefix1(jt,w,self);
  if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  zt=rtype(adocv.cv); // RESETRANK;
  GA(z,zt,wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
-// obsolete  if(jt->jerr)R (jt->jerr>=EWOV)?(rr[1]=r,jt->rank=rr,pscan(w,self)):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
  if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
@@ -578,7 +551,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
- s=AS(z); *s++=d; *s++=zc; ICPY(s,1+ws,r-2);
+ s=AS(z); *s++=d; *s++=zc; MCISd(s,1+ws,r-2);
  k=c*bp(wt); RELBASEASGNB(w,w);
  if(AN(z))switch((0>m?2:0)+(wd?1:0)){
   case 0: q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);      break;
@@ -763,8 +736,6 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  PREF2(jtmovfslash);
  p=IC(w); wt=AT(w);   // p=#items of w
  RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m0=infx x,  m=abs(m0), handling IMIN 
-// obsolete m=0<=m0?m0:m0==IMIN?p:MIN(p,-m0); 
-//obsolete  if(2==m0)R infix2(a,w,self);
  if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
@@ -781,31 +752,24 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
  VA2 adocv = vains(ds(id),wt);
-// obsolete  if(!ado||!m||m>p)R jtinfixprefix2(jt,a,w,self);
  if(!adocv.f)R jtinfixprefix2(jt,a,w,self);
-// obsolete d=0<=m0?1+p-m:(p+m-1)/m;
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
-// obsolete  c=aii(w); cm=c*m; b=0>m0&&0<p%m;   // b='has shard'
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); *AS(z)=zi;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=bp(zt)*d; 
  wv=CAV(w); wk=bp(wt)*(0<=m0?d:d*m);
-//  obsolete  DO(zi-b, adocv.f(jt,1L,cm,m,zv,wv); zv+=zk; wv+=wk;);
  DO(zi-b, adocv.f(jt,1L,d,m,zv,wv); zv+=zk; wv+=wk;);
-// obsolete  if(b)adocv.f(jt,1L,d*(p%m),p%m,zv,wv);
  if(b)adocv.f(jt,1L,d,p-m*(zi-1),zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 
 static DF1(jtiota1){R apv(IC(w),1L,1L);}
 
-// obsolete F1(jtbslash){A f;AF f1=jtprefix,f2=jtinfix;V*v;
 F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag;
 ;
  RZ(w);
-// obsolete if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtgprefix,jtginfix, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
  if(NOUN&AT(w))R fdef(0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fxeachv(1L,w), VGERL|flag, RMAX,0L,RMAX);
  v=FAV(w); f=FAV(w)->fgh[0];
  switch(v->id){

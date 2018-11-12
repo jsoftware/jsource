@@ -24,7 +24,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GA(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
- if(an<=r){RZ(a=vec(INT,r,s)); ICPY(AV(a),u,an);}
+ if(an<=r){RZ(a=vec(INT,r,s)); MCIS(AV(a),u,an);}  // vec is not virtual
  a1=SPA(wp,a); RZ(q=paxis(r,a1)); m=AN(a1);
  RZ(a=from(q,a       )); u=AV(a);
  RZ(y=from(q,shape(w))); s=AV(y);
@@ -61,21 +61,16 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
   c*=q; p=u[i]; q=ABS(p); m=s[i];  // q=length of take can be IMIN out of this   m=length of axis
   if(q!=m){  // if axis unchanged, skip it.  This includes the first axis
    PROD(itemsize,r-i-1,s+i+1);  // size of item of cell
-// obsolete   RE(d=mult(AN(z)/m,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN: mult error or GA error
    RE(d=mult(c*itemsize,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
    if(q>m)mvc(k*AN(y),CAV(y),k,jt->fillv);   // overtake - fill the whole area
-   /* obsolete d=AN(z)/(m*c)*k; */ itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
+   itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
    dy=itemsize*q; yv=CAV(y);
    dz=itemsize*m; zv=CAV(z);
-// obsolete   if((p&(m-q))<0)yv+=itemsize*(q-m); if((p&(q-m))<0)zv+=itemsize*(m-q);
-// obsolete    if((p&(m-q))<0)yv+=dy-dz; if((p&(q-m))<0)zv+=dz-dy;
    m-=q; I yzdiff=dy-dz; yv+=((p&m)>>(BW-1))&yzdiff; zv-=((p&-m)>>(BW-1))&yzdiff;
    DO(c, MC(yv,zv,e); yv+=dy; zv+=dz;);
-   /* obsolete b=1; */ z=y;
+   z=y;
   }
  }
-// obsolete  if(!b)z=ca(w);   // todo kludge no need to ca()
-// obsolete RELOCATE(w,z);   // if w was relative, rebase the cells on z
  EPILOG(z);
 }
 
@@ -84,8 +79,6 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  RZ(a&&w); I wt = AT(w);  // wt=type of w
  if(SPARSE&AT(a))RZ(a=denseit(a));
  if(!(SPARSE&wt))RZ(w=setfv(w,w)); 
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  if(af||1<acr)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jttake);  // if multiple x values, loop over them
@@ -124,9 +117,9 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  }
  // full processing for more complex a
  if(!wcr||wf){   // if y is an atom, or y has multiple cells:
-  RZ(s=vec(INT,wf+n,AS(w))); v=wf+AV(s);   // s is a block holding shape of a cell of input to the result: w-frame followed by #$a axes, all taken from w
+  RZ(s=vec(INT,wf+n,AS(w))); v=wf+AV(s);   // s is a block holding shape of a cell of input to the result: w-frame followed by #$a axes, all taken from w.  vec is never virtual
   if(!wcr){DO(n,v[i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a
-  ICPY(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
+  MCIS(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
  }
  R tk(s,w);  // go do the general take/drop
 }
@@ -134,8 +127,6 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
 F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
  F2PREFIP;
  RZ((a=vib(a))&&w);  // convert & audit a
-// obsolete  ar=AR(a); acr=jt->rank?jt->rank[0]:ar; af=ar-acr;      // ?r=rank, ?cr=cell rank, ?f=length of frame
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
@@ -164,19 +155,17 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 
    // length error if too many axes
  fauxblockINT(sfaux,4,1);
- // obsolete if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; v[i]=d<-m?0:d<0?d+m:d<m?d-m:0;);}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
  if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=((m^d)>>(BW-1)););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
- else{fauxINT(s,sfaux,wr+n,1) /* obsolete GATV(s,INT,wr+n,1,0); */ v=AV(s); ICPY(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
+ else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCIS(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
  R tk(s,w);
 }
 
 
 // create 1 cell of fill when head/tail of an array with no items (at the given rank)
 static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr; RESETRANK;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
- RZ(x=vec(INT,wr-1,ws)); ICPY(wf+AV(x),ws+wf+1,wcr-1);
+ RZ(x=vec(INT,wr-1,ws)); MCIS(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));
  R reshape(x,y);
 }
@@ -184,10 +173,7 @@ static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
 F1(jthead){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK so that we can pass rank into other code
-// obsolete R !wcr||*(wf+AS(w))? jtfrom(jtinplace,zeroi,w) :
-// obsolete      SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w);
  if(!wcr||AS(w)[wf]){  // if cell is atom, or cell has items
   if(((-wf)|((AT(w)&(DIRECT|RECURSIBLE))-1)|(wr-2))>=0){  // frame=0, and DIRECT|RECURSIBLE, and rank>1.  No gain in virtualizing an atom, and it messes up inplacing and allocation-size counting in the tests
    // just one cell.  Create a virtual block for it, at offset 0
@@ -209,7 +195,6 @@ F1(jthead){I wcr,wf,wr;
 F1(jttail){I wcr,wf,wr;
  F1PREFIP;
  RZ(w);
-// obsolete  wr=AR(w); wcr=jt->rank?jt->rank[1]:wr; wf=wr-wcr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  R !wcr||*(wf+AS(w))?jtfrom(jtinplace,num[-1],w) :  // scaf should generate virtual block here for speed
      SPARSE&AT(w)?irs2(num[0],take(num[-1],w),0L,0L,wcr,jtfrom):rsh0(w);

@@ -279,11 +279,9 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
   RZ(x=apv(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
-// obsolete   DO(c, j=v++->fgh[2]%p; while(0<=hv[j])j=(1+j)%p; hv[j]=i;);
   DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
   fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
   hi=h%p;                               /* new hi wrt new sbh size      */
-// obsolete   while(0<=hv[hi])hi=(1+hi)%p; 
   while(0<=hv[hi]){++hi; if(hi==p)hi=0;} 
  }
  R hi;
@@ -292,7 +290,6 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 static SB jtsbinsert(J jt,S c2,S c0,I n,C*s,UI h,UI hi){I c,m,p;SBU*u;
 // optimize storage if ascii or short
 // c2 new flag; c0 original flag
-// obsolete if(c2!=c0)n/=(c0&SBC4&&c2&SBC2)?2:(c0&SBC4&&!c2&SBC2)?4:2;
  if(c2!=c0)n>>=(c0&SBC4&&!c2&SBC2)?2:1;
  c=jt->sbun;                            /* cardinality                  */
  m=jt->sbsn;                            /* existing # chars in sbs      */
@@ -350,7 +347,6 @@ static SB jtsbprobe(J jt,S c2,I n,C*s,I test){B b;UC*t;I hi,ui;SBU*u;UI h,hn;UC*
     case 8:
     case 0: if(n==u->n&&!memcmp(t,s,n))R(SB)ui; break;
   }}
-// obsolete   hi=(1+hi)%hn;                         /* next hash table index        */
   ++hi; hi&=(hi==hn)-1;                         /* next hash table index        */
   }
  }   /* insert new symbol or get existing symbol */
@@ -391,7 +387,6 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
  ASSERT(1<AR(w),EVRANK);
  c2=AT(w)&C4T?SBC4:AT(w)&C2T?SBC2:0;  // c2=0 for LIT, SBC2 for C2T, SBC4 for C4T
  wr=AR(w); ws=AS(w); wc=ws[wr-1];
-//obsolete  RE(m=wc?AN(w)/wc:prod(wr-1,ws));
  RE(m=prod(wr-1,ws));
  GATV(z,SBT,m,wr-1,ws); zv=SBAV(z);
  if(!wc)memset(zv,C0,m*sizeof(SB));
@@ -534,7 +529,6 @@ static A jtsblit(J jt,C c,A w){A z;S c2=0;I k,m=0,n;SB*v,*v0;SBU*u;
 static F1(jtsbhashstat){A z;I j,k,n,p,*zv;SBU*v;
  n=jt->sbun; v=jt->sbuv; p=AN(jt->sbh);
  GATV(z,INT,n,1,0); zv=AV(z);
-// obsolete DO(n, j=v++->fgh[2]%p; k=1; while(i!=(jt->sbhv)[j]){j=(j+1)%p; ++k;} *zv++=k;);
  DO(n, j=v++->h%p; k=1; while(i!=(jt->sbhv)[j]){++j; if(j==p)j=0; ++k;} *zv++=k;);
  R z;
 }    /* # queries in hash table for each unique symbol */

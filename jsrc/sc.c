@@ -6,11 +6,6 @@
 #include "j.h"
 
 #if 1
-// obsolete // Return last name or errorname entry on the stack; 0 if none.  This will be the name used for error messages
-// obsolete A jtcurname(J jt) {
-// obsolete  DQ(jt->callstacknext-1, if(jt->callstack[i].type&(CALLSTACKNAME|CALLSTACKERRORNAME))R jt->callstack[i].value;)
-// obsolete  R 0;
-// obsolete }
 
 // This function handles both valences: monad as (w,fs,fs), dyad as (a,w,fs)
 //
@@ -74,8 +69,6 @@ static DF2(jtunquote){A z;
   // possible before the branch.  Check the generated code on any change of compiler.
   AF actionfn=v->valencefns[dyadex];
   ++AC(fs);  // protect the entity
-// obsolete  ra(fs);  // protect against reassignment while executing.  Usecount will always be recursive; could ACINCR   scaf should assert recursive, then ACINCR
-// obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}
   // Recursion through $: does not go higher than the name it was defined in.  We make this happen by pushing the name onto the $: stack
   A s=jt->sf; jt->sf=fs; z=(*actionfn)((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;  // keep all flags in jtinplace
   // Undo the protection.  If, most unusually, the usecount goes to 0, back up and do the full recursive decrement
@@ -87,7 +80,6 @@ static DF2(jtunquote){A z;
    jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{
    ra(fs);  // should assert recursive usecount
-// obsolete    if(a){if(!(v->flag&VINPLACEOK2))jtinplace=jt; z=dfs2ip(a,w,fs);}else{if(!(v->flag&VINPLACEOK1))jtinplace=jt; z=dfs1ip(w,fs);}  // scaf make faster
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VINPLACEOK1?jtinplace:jt,a,w,fs); jt->sf=s;
    fa(fs);
   }
@@ -149,13 +141,11 @@ static DF2(jtunquote){A z;
 #else
 
 where is call stack reset?
-// obsolete aa=v->fgh[0]; RE(e=syrd(aa,&g));
  oldn=jt->curname; jt->curname=aa;
  oln =jt->curlocn; jt->curlocn=ll=g?LOCNAME(g):0;  // should get rid of this
  ASSERT(jt->fcalln > jt->fcalli, EVSTACK);  // We will increment fcalli before use; 1+fcalln elements are allocated, so advancing to number fcalln is the limit
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
-// obsolete  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  // Execute.  ra() to protect against deleting the name while it is running.
  // This will be fast because we know any name has a recursive usecount before it is assigned
@@ -173,7 +163,6 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  RE(0);
  JATTN;
  v=FAV(self);
-// obsolete aa=v->fgh[0]; RE(e=syrd(aa,&g));
  A jtg = jt->global;  // fetch current locale
  aa=v->fgh[0]; RZ(g=sybaseloc(aa));   // if the name is a locative, get the explicit locale.  0 if erroneous locale, 1 if non-locative
  RE(e=syrdfromloc(aa,g));   // finish looking up name, which can be undefined (0 return) or error (0 return with error set)
@@ -190,7 +179,6 @@ static DF2(jtunquote){A aa,fs,g,ll,oldn,oln,z;B lk;I d,i;L*e;V*v;
  lk=jt->uflags.us.cx.cx_c.glock||VLOCK&fv->flag;
  i=++jt->fcalli; FDEPINC(d);   // No ASSERTs from here till the FDEPDEC below
  jt->fcallg[i].sw0=jt->stswitched; jt->fcallg[i].og=jtg;   // save previous locale
-// obsolete  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  jt->fcallg[i].flag=0; jt->stswitched=0; jt->fcallg[i].g=jt->global=g;
  if(jt->uflags.us.cx.cx_c.db&&!lk){jt->cursymb=e; z=dbunquote(a,w,fs);}  // if debugging, go do that.  save last sym lookup as debug parm
  // Execute.  ra() to protect against deleting the name while it is running.

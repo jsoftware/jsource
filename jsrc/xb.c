@@ -45,7 +45,6 @@ static I bsize(J jt,B d,B tb,I t,I n,I r,I*s){I c,k,m,w,z;
   R z+w*m*((c+w*BB-1)/(w*BB));
  }else{
   k=t&INT+SBT+BOX+XNUM?w:t&RAT?w+w:bp(t); 
-// obsolete   R z+w*((n*k+(tb&&t&LAST0)+w-1)/w);
   R z+((n*k+(tb&&t&LAST0)+w-1)&(-w));
 }}   /* size in byte of binary representation */
 
@@ -287,7 +286,6 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
  ASSERT(1>=AR(w),EVRANK);
  n=AN(w);
  RE(j=i0(a));
-// obsolete  p=2==j||-2==j?sizeof(D):sizeof(float);
  p=2==j||-2==j?LGSZD:2;
  if(0<j){m=n<<p; zt=LIT; if(!(FL&AT(w)))RZ(w=cvt(FL,w));}
  else   {m=n>>p; zt=FL; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((1LL<<p)-1)),EVLENGTH);} 

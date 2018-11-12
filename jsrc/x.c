@@ -183,8 +183,6 @@ F2(jtforeign){I p,q;
   case XC(9,45):  R CDERIV(CIBEAM, jtrngstates,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,46):  R CDERIV(CIBEAM, jtbreakfnq,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,47):  R CDERIV(CIBEAM, jtbreakfns,   0,            VASGSAFE,RMAX,0,   0   );
-// obsolete   case XC(9,48):  R CDERIV(CIBEAM, jtdotnamesq,  0,            VASGSAFE,RMAX,0,   0   );
-// obsolete   case XC(9,49):  R CDERIV(CIBEAM, jtdotnamess,  0,            VASGSAFE,RMAX,0,   0   );
 #if 0
   case XC(9,50):  R CDERIV(CIBEAM, jtxepq,       0,            VASGSAFE,RMAX,0,   0   );
   case XC(9,51):  R CDERIV(CIBEAM, jtxeps,       0,            VASGSAFE,RMAX,0,   0   );

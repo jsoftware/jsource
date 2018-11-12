@@ -900,7 +900,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  FPREFIP;  // save inplace flag
  n=cc->n;
  if(n&&!(wt&BOX)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}
-// obsolete  CDASSERT(!n||wt&BOX||!(u=memchr(cc->star,C1,n)),DEPARM+256*(((B*)u)-cc->star));
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;
  for(i=0;i<n;++i,++zv){
 #if SY_UNIX64 && defined(__x86_64__)
@@ -1017,7 +1016,6 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
                  dcnt=(dv-data)+12;
                }else{
                  dcnt=MAX(fcnt,dcnt);
-// obsolete                 if(dcnt%2)dcnt++;
                  dcnt = (dcnt+1)&-2;
                  *(D*)(data+dcnt++ -12)=*(D*)xv; dcnt++;
              }}}

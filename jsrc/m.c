@@ -8,6 +8,9 @@
 #else
 #define __cdecl
 #endif
+#ifdef _MSC_VER
+#pragma warning(disable: 4334)
+#endif
 
 #include "j.h"
 

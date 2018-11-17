@@ -69,6 +69,7 @@ static DF1(jtpowseq){A fs,gs,x;I n=IMAX;V*sv;
  R df1(w,powop(fs,IX(n),0));
 }    /* f^:(<n) w */
 
+// u^:n w where n is nonnegative integer atom
 static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
  RZ(w);
  sv=FAV(self); 
@@ -81,8 +82,9 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
    old=jt->tnextpushx; 
    DO(n, RZ(z=CALL1(f1,z,fs)); z=gc(z,old);); 
    RETF(z);
-}}   /* single positive finite exponent */
+}}
 
+// u^:n w where n is any array or scalar infinity or negative
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
  hs=sv->fgh[2]; m=AN(hs); 
  RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);
@@ -118,6 +120,7 @@ static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old
 #define DIST(i,x)  if(i==e){v=CAV(x); \
                      while(k<m&&i==(e=nv[jv[k]])){MC(zv+c*jv[k],v,c); ++k;}}
 
+// u^:n w where n is not empty and is either an array or a negative atom
 static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn;
  RZ(w);
  hs=sv->fgh[2]; m=AN(hs); nv=AV(hs); 
@@ -197,7 +200,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
   case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
   case VV:
    // u^:v.  Create derived verb to handle it.
-   v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;
+   v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v
    // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
    R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
   case VN:
@@ -233,7 +236,7 @@ DF2(jtpowop){A hs;B b,r;I m,n;V*v;
       I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
      R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
      }
-   }
+    }
    }
    // If not special case, fall through to handle general case
    b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ 

@@ -9,9 +9,6 @@
 
 // globals start - set by globinit at dll initialization
 A   a0j1=0;               /* 0j1                                  */
-A   ace=0;                /* a:                                   */
-A   ainf=0;               /* _                                    */
-A   alp=0;                /* a.                                   */
 A   aqq=0;                /* ''                                   */
 A   asgnlocsimp;          // =. flagged as LOCAL+NAME
 A   asgngloname;          // =. flagged as NAME
@@ -20,38 +17,34 @@ C   breakdata=0;
 double dzero=0.0;   // used by gemm
 D   inf=0;                /* _                                    */
 D   infm=0;               /* __                                   */
+A   ace=0;                /* a:                                   */
+A   alp=0;                /* a.                                   */
+A   ainf=0;               /* _                                    */
 A   iv0=0;                /* ,0                                   */
 A   iv1=0;                /* ,1                                   */
-D   jnan=0;               /* _.                                   */
 I   liln=0;               /* 1 iff little endian                  */
 A   mark=0;               /* parser marker                        */
+D   jnan=0;               /* _.                                   */
 C   minus0[8]={0};        /* the abominable minus 0               */
-A   mdot=0;               /* m.                                   */
-A   mnam=0;               /* m as a name                          */
 A   mtm=0;                /* i. 0 0                               */
 A   mtv=0;                /* i.0                                  */
-A   ndot=0;               /* n.                                   */
+A   mnam=0;               /* m as a name                          */
 A   nnam=0;               /* n as a name                          */
-A*  num=0;                /* i=num[i]; see numinit()              */
+A   unam=0;               /* u as a name                          */
+A   vnam=0;               /* v as a name                          */
+A   xnam=0;               /* x as a name                          */
+A   ynam=0;               /* y as a name                          */
 A   numv[NUMMAX-NUMMIN+1]={0};
-A   one=0;                /* 1                                    */
+A   zeroionei[2]={0,0};   // integer 0 and 1
+A   imax=0;               // IMAX as atom
+I   v00[2]={0,0};         // vector value to use for rank 0 0
 A   onehalf;      //  0.5
-A   onei=0;               // integer 1
 D   pf=0;                 /* performance frequency                */
 A   pie=0;                /* o.1                                  */
-A   udot=0;               /* u.                                   */
-A   unam=0;               /* u as a name                          */
-A   vdot=0;               /* v.                                   */
-A   vnam=0;               /* v as a name                          */
-I   v00[2]={0,0};         // vector value to use for rank 0 0
-A   xdot=0;               /* x.                                   */
-A   xnam=0;               /* x as a name                          */
-X   xone=0;               /* extended integer 1                   */
-X   xzero=0;              /* extended integer 0                   */
-A   ydot=0;               /* y.                                   */
-A   ynam=0;               /* y as a name                          */
-A   zero=0;               /* 0                                    */
-A   zeroi=0;              // integer 0
+// obsolete X   xone=0;               /* extended integer 1                   */
+// obsolete X   xzero=0;              /* extended integer 0                   */
+// obsolete A   one=0;                /* 1                                    */
+// obsolete A   zero=0;               /* 0                                    */
 Q   zeroQ={0,0};          /* 0r1                                  */
 DX  zeroDX={0,0,0};       /* 0                                    */
 Z   zeroZ={0,0};          /* 0j0                                  */
@@ -66,6 +59,13 @@ C   bitdisp[256*16]={0};  /* display for each possible byte       */
 A   chr[256]={0};         /* scalar for each character, or 0      */
 B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
+// obsoletes follow
+A   mdot=0;               /* m.                                   */
+A   ndot=0;               /* n.                                   */
+A   udot=0;               /* u.                                   */
+A   vdot=0;               /* v.                                   */
+A   xdot=0;               /* x.                                   */
+A   ydot=0;               /* y.                                   */
  // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
 // block after leaving 2 words for memory header, AH words for A-block header, 1 for rank (not used for symbol tables),

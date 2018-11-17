@@ -90,6 +90,7 @@ A jtapv(J jt,I n,I b,I m){A z;
  R z;
 }    /* b+m*i.n */
 
+// w must be 0 or an atom equal to 0 or 1.  Result is its value
 B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}
 
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
@@ -164,7 +165,7 @@ A jtcstr(J jt,C*s){R rifvs(str((I)strlen(s),s));}  // used only for initializati
 // Return 1 iff w is the evocation of a name.  w must be a FUNC
 B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 
-// Extract the integer value from w, return it.  Set error if non-integral
+// Extract the integer value from w, return it.  Set error if non-integral or non-atomic
 I jti0(J jt,A w){if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R*AV(w);}
 
 A jtifb(J jt,I n,B* RESTRICT b){A z;I m,* RESTRICT zv; 
@@ -198,6 +199,7 @@ A jtifb(J jt,I n,B* RESTRICT b){A z;I m,* RESTRICT zv;
  R z;
 }    /* integer vector from boolean mask */
 
+// i. # w
 static F1(jtii){RZ(w); RETF(IX(IC(w)));}
 
 // Return the higher-priority of the types s and t.  s and t are known to be not equal.
@@ -256,7 +258,8 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?onei:k?num[k]:zeroi; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
+// obsolete A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?zeroionei[1]:k?num[k]:zeroionei[0]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
+A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
 A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}  // create scalar character
@@ -266,6 +269,7 @@ A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}
 // return A-block for the string *s with length n
 A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); RETF(z);}
 
+// w is a LIT string; result is a new block with the same string, with terminating NUL added
 F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
@@ -277,16 +281,18 @@ A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; RETF(z);}
 // return A-block for list of type t, length n, and values *v 
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); RETF(z);}
 
+// Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
 // Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to HIGH_VALUE
 F1(jtvib){A z;D d,e,*wv;I i,n,p=-IMAX,q=IMAX,*zv;
  RZ(w);
+ if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean
+ if(AT(w)&B01){if(!AR(w))R zeroionei[BAV(w)[0]]; R cvt(INT,w);}
+ if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
  RANK2T oqr=jt->ranks; RESETRANK;
  if(AT(w)&SPARSE)RZ(w=denseit(w));
  switch(CTTZNOFLAG(AT(w))){
-  case INTX:  z=w; break;
-  case B01X:  z=cvt(INT,w); break;
   case XNUMX:
   case RATX:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
   default:
@@ -304,7 +310,9 @@ F1(jtvib){A z;D d,e,*wv;I i,n,p=-IMAX,q=IMAX,*zv;
  jt->ranks=oqr; RETF(z);
 }
 
+// Convert w to integer if needed, and verify every atom is nonnegative
 F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSERT(0<=*v++,EVDOMAIN);); RETF(w);}
 
+// Convert w to string, verify it is a list or atom
 F1(jtvs){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
      /* verify string */

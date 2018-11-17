@@ -521,8 +521,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
 #endif
-#define NUMMIN          (-9)    // smallest number represented in num[]
 #define NUMMAX          9    // largest number represented in num[]
+#define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
 #define PROD(result,length,ain) {I _i; if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if

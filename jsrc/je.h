@@ -908,6 +908,7 @@ extern C        breakdata;
 extern A        chr[];
 extern C        ctype[];
 extern double dzero;
+extern A        imax;
 extern D        inf;
 extern D        infm;
 extern A        iv0;
@@ -917,17 +918,13 @@ extern I        liln;
 extern A        mark;
 extern C        minus0[];
 extern A        mnam;
-extern A        mdot;
 extern void     moveparseinfotosi(J);
 extern A        mtm;
 extern A        mtv;
-extern A        ndot;
 extern A        nnam;
-extern A*       num;
 extern A        numv[];
-extern A        one;
+// obsolete extern A        one;
 extern A        onehalf;
-extern A        onei;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
@@ -935,28 +932,30 @@ extern A        pst[];
 extern I        ptab[27];
 #define nptab (sizeof(ptab)/sizeof(ptab[0]))
 extern UI4      shortrange[3][4];
-extern A        udot;
 extern A        unam;           /* "uname" name conflict in Unix           */
-extern A        vdot;
 extern A        vnam;
 extern I        v00[2];
 extern B        testb[];
 extern C        wtype[];
-extern A        xdot;
 extern A        xnam;
-extern X        xone;
-extern X        xzero;
-extern A        ydot;
+// obsolete extern X        xone;
+// obsolete extern X        xzero;
 extern A        ynam;
 extern UI4      yxbuckets[14];
-extern A        zero;
-extern A        zeroi;
+// obsolete extern A        zero;
+extern A        zeroionei[2];
 extern Z        zeroZ;
 extern dcomplex zone;
 extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
 extern int      hwfma;
+// obsolete extern A        mdot;
+// obsolete extern A        ndot;
+// obsolete extern A        udot;
+// obsolete extern A        vdot;
+// obsolete extern A        xdot;
+// obsolete extern A        ydot;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

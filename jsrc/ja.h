@@ -696,6 +696,7 @@
 #define nubi(x)                     jtnubi(jt,(x))     
 #define nubsieve(x)                 jtnubsieve(jt,(x))
 #define nubsievesp(x)               jtnubsievesp(jt,(x))
+#define num                         (numv-NUMMIN)  // the block for number 0
 #define numb(x0,x1,x2,x3)           jtnumb(jt,(x0),(x1),(x2),(x3))
 #define numbpx(x,y,z)               jtnumbpx(jt,(x),(y),(z))
 #define numcase(x0,x1,x2,x3,x4,x5,x6)               jtnumcase(jt,(x0),(x1),(x2),(x3),(x4),(x5),(x6))

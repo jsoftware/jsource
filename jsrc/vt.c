@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,onei,    w);}
+F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei[1],    w);}
 F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num[-1],w);}
 
 F1(jtshift1){R drop(num[-1],over(one,w));}
@@ -185,8 +185,8 @@ F1(jthead){I wcr,wf,wr;
    RETF(z);
   }else{
    // rank not 0, or non-virtualable type, or cell is an atom.  Use from.  Note that jt->ranks is still set, so this may produce multiple cells
-   // left rank is garbage, but since zeroi is an atom it doesn't matter
-   RETF(jtfrom(jtinplace,zeroi,w));  // could call jtfromi directly for non-sparse w
+   // left rank is garbage, but since zeroionei[0] is an atom it doesn't matter
+   RETF(jtfrom(jtinplace,zeroionei[0],w));  // could call jtfromi directly for non-sparse w
   }
  }else{RETF(SPARSE&AT(w)?irs2(num[0],take(num[ 1],w),0L,0L,wcr,jtfrom):rsh0(w));  // cell of w is empty - create a cell of fills  jt->ranks is still set for use in take.  Left rank is garbage, but that's OK
  }

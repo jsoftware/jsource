@@ -28,7 +28,7 @@ F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 void jtfillv(J jt,I t,I n,C*v){I k=bp(t);
  switch(CTTZ(t)){
  case RATX: mvc(n*k,v,k,&zeroQ); break;
- case XNUMX: mvc(n*k,v,k,&xzero); break;
+ case XNUMX: mvc(n*k,v,k,&iv0); break;
  case B01X: case BITX: case INTX: case FLX: case CMPXX: case XDX: case XZX: case SB01X: case SFLX: case SCMPXX: case SBTX:
   memset(v,C0,k*n); break;
  case LITX: memset(v,' ',n); break;

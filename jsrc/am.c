@@ -170,7 +170,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
 
 A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
  wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);
- if(!wr)R from(ind,zero);
+ if(!wr)R from(ind,num[0]);
  if(b&&AR(ind)){
   RE(aindex(ind,w,0L,&j));
   if(!j){
@@ -191,7 +191,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
   ASSERT(1>=r,EVINDEX);
   ASSERT(n<=wr,EVINDEX);
   d=n; DO(n, --d; if(!equ(ace,AADR(id,v[d])))break;); if(n)++d; n=d;
-  j=zero;
+  j=num[0];
   for(i=0;i<n;++i){
    x=AADR(id,v[i]); d=ws[i];
    if(AN(x)&&BOX&AT(x)){

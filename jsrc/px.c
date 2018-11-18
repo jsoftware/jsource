@@ -24,7 +24,7 @@ A jteval(J jt,C*s){R parse(tokens(cstr(s),1+!!jt->local));}
 
 A jtev1(J jt,    A w,C*s){R df1(  w,eval(s));}
 A jtev2(J jt,A a,A w,C*s){R df2(a,w,eval(s));}
-A jteva(J jt,    A w,C*s){R df1(  w,colon(one,   cstr(s)));}
+A jteva(J jt,    A w,C*s){R df1(  w,colon(num[1],   cstr(s)));}
 A jtevc(J jt,A a,A w,C*s){R df2(a,w,colon(num[2],cstr(s)));}
 
 F1(jtexec1){A z;
@@ -46,7 +46,7 @@ F1(jtimmex){A z;
 
 F1(jtimmea){A t,z;
  z=immex(w); 
- ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(one,z),
+ ASSERT(jt->asgn||!z||!(AT(z)&NOUN)||(t=eq(num[1],z),
      all1(AT(z)&SPARSE?df1(t,atop(slash(ds(CSTARDOT)),ds(CCOMMA))):t)),EVASSERT);
  RETF(z);
 }

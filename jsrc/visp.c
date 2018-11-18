@@ -90,7 +90,7 @@ static A jtioe(J jt,I mode,A w){A b,j,p,y;I c,jn,*jv,k,n;P*wp;
  RZ(b=eq(SPA(wp,e),SPA(wp,x)));
  if(2<AR(b)){*(1+AS(b))=aii(b); AR(b)=2;}
  if(1<AR(b))RZ(b=aslash1(CSTARDOT,b));  /* b=. *./@,"_1 (3$.w)=5$.w */
- RZ(y=irs2(zero,y,0L,0L,1L,jtfrom));
+ RZ(y=irs2(num[0],y,0L,0L,1L,jtfrom));
  RZ(p=df2(y,b,sldot(slash(ds(CSTARDOT)))));
  RZ(j=repeat(not(p),repeat(ne(y,curtail(over(num[-1],y))),y)));
  jn=AN(j); jv=AV(j);
@@ -131,7 +131,7 @@ static B jtiopart(J jt,A w,I r,I mm,I*zc,A*zi,A*zj,A*zx){A b,f,wx,x,wy,y;B*bv;
   GATV(x,INT,d,1,0); xv=AV(x); *xv=-1;
   DO(m, bv[i]=0; DO(d, if(xv[i]!=v[i]){bv[i]=1; j=i; DO(d-j, xv[j]=v[j]; ++j;); break;}); v+=n;)
  }
- if(m){RZ(f=cut(ds(CCOMMA),one)); RZ(y=df2(b,dropr(d,wy),f)); RZ(x=df2(b,wx,f));}
+ if(m){RZ(f=cut(ds(CCOMMA),num[1])); RZ(y=df2(b,dropr(d,wy),f)); RZ(x=df2(b,wx,f));}
  else{y=mtm; RZ(x=reshape(v2(0L,prod(r,AS(w)+wr-r)),wx));}
  if(0>c)*zc=c=*(1+AS(y)); 
  else if(c!=*(1+AS(y))){RZ(y=taker(c,y)); RZ(x=taker((c/(n-d))*aii(wx),x));}
@@ -190,8 +190,8 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
  if(m&&vv<yv+m)*vv=j;
  GATV(z,SB01,1,1,&n); p=PAV(z);
  SPB(p,a,iv0);
- SPB(p,e,zero);
+ SPB(p,e,num[0]);
  SPB(p,i,y);
- SPB(p,x,reshape(sc(m),one));
+ SPB(p,x,reshape(sc(m),num[1]));
  R z;
 }

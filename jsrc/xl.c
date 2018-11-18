@@ -78,9 +78,9 @@ F1(jtjlock){B b;I*v;
  v=AV(w); RE(vfn((F)*v)); ASSERT(0<=v[1]&&0<=v[2],EVDOMAIN); 
  if(jt->flkn==*AS(jt->flkd))RZ(jt->flkd=ext(1,jt->flkd));
  RE(b=dolock(1,(F)v[0],v[1],v[2]));
- if(!b)R zero;
+ if(!b)R num[0];
  ICPY(AV(jt->flkd)+LKC*jt->flkn,v,LKC); ++jt->flkn;
- R one;
+ R num[1];
 }    /* w is (number,index,length); lock the specified region */
 
 static A jtunlj(J jt,I j){B b;I*u,*v;
@@ -88,10 +88,10 @@ static A jtunlj(J jt,I j){B b;I*u,*v;
  ASSERT(0<=j&&j<jt->flkn,EVINDEX);
  u=AV(jt->flkd); v=u+j*LKC;
  RE(b=dolock(0,(F)v[0],v[1],v[2]));
- if(!b)R zero;
+ if(!b)R num[0];
  --jt->flkn; 
  if(j<jt->flkn)ICPY(v,u+jt->flkn*LKC,LKC); else *v=0; 
- R one;
+ R num[1];
 }    /* unlock the j-th entry in jt->flkd */
 
 B jtunlk(J jt,I x){I j=0,*v=AV(jt->flkd); 

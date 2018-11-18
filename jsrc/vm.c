@@ -128,5 +128,5 @@ F1(jtrect){A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
- }else R df2(w,zero,qq(ds(CCOMMA),zero));
+ }else R df2(w,num[0],qq(ds(CCOMMA),num[0]));
 }

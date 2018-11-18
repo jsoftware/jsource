@@ -241,8 +241,8 @@ static A jtredsp1a(J jt,C id,A z,A e,I n,I r,I*s){A t;B b,p=0;D d=1;
   case CSTARDOT: R n?lcm(z,e):ca(e);
   case CMIN:     R n?minimum(z,e):ca(e);
   case CMAX:     R n?maximum(z,e):ca(e);
-  case CPLUS:    if(n&&equ(e,zero))R z; DO(r, d*=s[i];); t=tymes(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?plus (z,t):t;
-  case CSTAR:    if(n&&equ(e,one ))R z; DO(r, d*=s[i];); t=expn2(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?tymes(z,t):t;
+  case CPLUS:    if(n&&equ(e,num[0]))R z; DO(r, d*=s[i];); t=tymes(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?plus (z,t):t;
+  case CSTAR:    if(n&&equ(e,num[1] ))R z; DO(r, d*=s[i];); t=expn2(e,d>IMAX?scf(d-n):sc((I)d-n)); R n?tymes(z,t):t;
   case CEQ:      p=1;  /* fall thru */
   case CNE:
    ASSERT(B01&AT(e),EVNONCE); 
@@ -282,10 +282,10 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  GA(zx,zt,AN(x)/n,AR(x)-1,s); MCIS(xf+AS(zx),1+xf+s,xr-1); 
  ado(jt,m,c/n,n,AV(zx),AV(x)); RE(0);
  switch(id){
-  case CPLUS: if(!equ(e,zero))RZ(e=tymes(e,sc(n))); break; 
-  case CSTAR: if(!equ(e,one )&&!equ(e,zero))RZ(e=expn2(e,sc(n))); break;
-  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==(n&1))e=one; break;
-  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==(n&1))e=zero;
+  case CPLUS: if(!equ(e,num[0]))RZ(e=tymes(e,sc(n))); break; 
+  case CSTAR: if(!equ(e,num[1] )&&!equ(e,num[0]))RZ(e=expn2(e,sc(n))); break;
+  case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==(n&1))e=num[1]; break;
+  case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==(n&1))e=num[0];
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
@@ -314,10 +314,10 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
  if(yr){++m; pv[yr1]=1; mm=MAX(mm,yr1-j);}
  if(qv){j=mm*aii(x); GA(xx,AT(x),j,1,0); xxv=CAV(xx);}
  switch(id){
-  case CPLUS: case CPLUSDOT: j=!equ(e,zero); break;
-  case CSTAR: case CSTARDOT: j=!equ(e,one);  break;
-  case CMIN:                 j=!equ(e,zt&B01?one :zt&INT?sc(IMAX):ainf     ); break;
-  case CMAX:                 j=!equ(e,zt&B01?zero:zt&INT?sc(IMIN):scf(infm)); break;
+  case CPLUS: case CPLUSDOT: j=!equ(e,num[0]); break;
+  case CSTAR: case CSTARDOT: j=!equ(e,num[1]);  break;
+  case CMIN:                 j=!equ(e,zt&B01?num[1] :zt&INT?sc(IMAX):ainf     ); break;
+  case CMAX:                 j=!equ(e,zt&B01?num[0]:zt&INT?sc(IMIN):scf(infm)); break;
   case CEQ:                  j=!*BAV(e);     break;
   case CNE:                  j= *BAV(e);     break;
  }
@@ -327,16 +327,16 @@ static B jtredspsprep(J jt,C id,I f,I zt,A a,A e,A x,A y,I*zm,I**zdv,B**zpv,I**z
 }
 
 static B jtredspse(J jt,C id,I wm,I xt,A e,A zx,A sn,A*ze,A*zzx){A b;B nz;I t,zt;
- RZ(b=ne(zero,sn)); nz=!all0(b); zt=AT(zx);
+ RZ(b=ne(num[0],sn)); nz=!all0(b); zt=AT(zx);
  switch(id){
   case CPLUS:    if(nz)RZ(zx=plus (zx,       tymes(e,sn) )); RZ(e=       tymes(e,sc(wm)) ); break; 
   case CSTAR:    if(nz)RZ(zx=tymes(zx,bcvt(1,expn2(e,sn)))); RZ(e=bcvt(1,expn2(e,sc(wm)))); break;
-  case CPLUSDOT: if(nz)RZ(zx=gcd(zx,from(b,over(zero,e))));                 break;
-  case CSTARDOT: if(nz)RZ(zx=lcm(zx,from(b,over(one ,e))));                 break;
-  case CMIN:     if(nz)RZ(zx=minimum(zx,from(b,over(zt&B01?one: zt&INT?sc(IMAX):ainf,     e)))); break;
-  case CMAX:     if(nz)RZ(zx=maximum(zx,from(b,over(zt&B01?zero:zt&INT?sc(IMIN):scf(infm),e)))); break;
-  case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(zero,residue(num[2],sn)))); if(!(wm&1))e=one;  break;
-  case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(one, residue(num[2],sn)))); if(!(wm&1))e=zero; break;
+  case CPLUSDOT: if(nz)RZ(zx=gcd(zx,from(b,over(num[0],e))));                 break;
+  case CSTARDOT: if(nz)RZ(zx=lcm(zx,from(b,over(num[1] ,e))));                 break;
+  case CMIN:     if(nz)RZ(zx=minimum(zx,from(b,over(zt&B01?num[1]: zt&INT?sc(IMAX):ainf,     e)))); break;
+  case CMAX:     if(nz)RZ(zx=maximum(zx,from(b,over(zt&B01?num[0]:zt&INT?sc(IMIN):scf(infm),e)))); break;
+  case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(num[0],residue(num[2],sn)))); if(!(wm&1))e=num[1];  break;
+  case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(num[1], residue(num[2],sn)))); if(!(wm&1))e=num[0]; break;
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  *ze=e; *zzx=zx;
@@ -385,7 +385,7 @@ static DF1(jtreducesp){A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  C id=vaid(g);
  VA2 adocv = vains(g,wt);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
-  A x=irs2(zero,w,0L,0,r,jtfrom); A y=irs2(one,w,0L,0,r,jtfrom);
+  A x=irs2(num[0],w,0L,0,r,jtfrom); A y=irs2(num[1],w,0L,0,r,jtfrom);
   R df2(x,y,g);  // rank has been reset for this call
  }
  // original rank still set
@@ -610,7 +610,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  n=r?ws[f]:1;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
- if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),one));
+ if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),num[1]));
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
@@ -640,7 +640,7 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}
-A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),one));}
+A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),num[1]));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
 

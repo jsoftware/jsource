@@ -9,9 +9,9 @@
 
 QF1(jtqstd){I d,n;Q z;X g;
  QRZ(w.n&&w.d&&!jt->jerr);
- n=XDIG(w.n); d=XDIG(w.d); z.d=xone;
+ n=XDIG(w.n); d=XDIG(w.d); z.d=iv1;
  if(0>d){QRE(w.n=rifvs(negate(w.n))); QRE(w.d=rifvs(negate(w.d))); n=-n; d=-d;}  // w could become the result
- if(!n){z.n=xzero; R z;}
+ if(!n){z.n=iv0; R z;}
  if(!d){z.n=rifvsdebug(vci(0<n?XPINF:XNINF)); R z;}
  if(d==XPINF){QASSERT(n!=XPINF&&n!=XNINF,EVNAN); R zeroQ;}
  if(n==XPINF||n==XNINF){z.n=rifvsdebug(w.n); R z;}
@@ -69,7 +69,7 @@ static QF2(jtqlcm){R qtymes(a,qdiv(w,qgcd(a,w)));}
 
 static QF2(jtqpow){PROLOG(0089);B c;I p,q,s;Q t,z;X d;
  QRE(1);
- t=a; d=w.n; z.n=z.d=xone;
+ t=a; d=w.n; z.n=z.d=iv1;
  p=XDIG(a.n); q=XDIG(w.n); c=QX1(w.d);
  if(p==XPINF||p==XNINF){
   QASSERT(0<p||q!=XPINF,EVDOMAIN); 

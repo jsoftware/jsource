@@ -275,7 +275,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
  PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
- if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
@@ -292,8 +292,8 @@ static F2(jtomask){A c,r,x,y;I m,n,p;
  RZ(a&&w);
  RE(m=i0(a)); p=ABS(m); n=IC(w);
  r=sc(0>m?(n+p-1)/p:MAX(0,1+n-m)); c=tally(w);
- x=reshape(sc(p),  zero);
- y=reshape(0>m?c:r,one );
+ x=reshape(sc(p),  num[0]);
+ y=reshape(0>m?c:r,num[1] );
  R reshape(over(r,c),over(x,y));
 }
 

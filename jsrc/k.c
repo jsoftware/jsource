@@ -181,7 +181,7 @@ static KF1(jtQfromD){B neg,recip;D c,d,t,*wv;I e,i,n,*v;Q q,*x;S*tv;
   ASSERT(!_isnan(t),EVNAN);
   if(neg=0>t)t=-t; q.d=iv1;
   if     (t==inf)q.n=vci(XPINF);
-  else if(t==0.0)q.n=xzero;
+  else if(t==0.0)q.n=iv0;
   else if(1.1102230246251565e-16<t&&t<9.007199254740992e15){
    d=jfloor(0.5+1/dgcd(1.0,t)); c=jfloor(0.5+d*t); 
    q.n=xd1(c); q.d=xd1(d); q=qstd(q);
@@ -271,7 +271,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  // Handle sparse
  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(t,zero))); R 1;
+  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(t,num[0]))); R 1;
   case 3: 
    t1=DTYPE(t);
    GA(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);

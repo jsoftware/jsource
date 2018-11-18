@@ -573,12 +573,12 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*u,*v,*v0,*v1,*z
   case CGE:                             c0=IPBXNW; c1=IPBX1;  break;
   case CPLUSCO:                         c0=IPBXNW; c1=IPBX0;  break;
   case CSTARCO:                         c0=IPBX1;  c1=IPBXNW; break;
-  default: c0=c1=-1; g=ds(d); RZ(x0=df2(zero,w,g)); RZ(x1=df2(zero,w,g));
+  default: c0=c1=-1; g=ds(d); RZ(x0=df2(num[0],w,g)); RZ(x1=df2(num[0],w,g));
  }
  // Set up x0 to be the argument to use for y if the atom of x is 0: 0, 1, y, -.y
  // Set up x1 to be the arg if xatom is 1
- if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),zero):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),one):c0==IPBXW?w:not(w));
- if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),zero):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),one):c1==IPBXW?w:not(w));
+ if(!g)RZ(x0=c0==IPBX0?reshape(sc(n),num[0]):c0==IPBX1?reshape(sc(c==CNE?AN(w):n),num[1]):c0==IPBXW?w:not(w));
+ if(!g)RZ(x1=c1==IPBX0?reshape(sc(n),num[0]):c1==IPBX1?reshape(sc(c==CNE?AN(w):n),num[1]):c1==IPBXW?w:not(w));
  // av->a arg, zv->result, v0->input for 0, v1->input for 1
  av0=BAV(a); zv=BAV(z); v0=BAV(x0); v1=BAV(x1);
 
@@ -623,7 +623,7 @@ static DF2(jtdotprod){A fs,gs;C c,d;I r;V*sv;
 
 static F1(jtminors){A d;
  RZ(d=apv(3L,-1L,1L)); *AV(d)=0;
- R drop(d,df2(one,w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
+ R drop(d,df2(num[1],w,bsdot(ds(CLEFT))));  // 0 0 1 }. 1 [\. w 
 }
 
 static DF1(jtdet){DECLFG;A h=sv->fgh[2];I c,r,*s;

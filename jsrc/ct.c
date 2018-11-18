@@ -16,7 +16,7 @@ static F1(jtcoeff){V*v;
 
 static F1(jttpoly){A z;
  RZ(w);
- RZ(z=atop(amp(ds(CLBRACE),over(AT(w)&CMPX?w:xco1(w),zero)),amp(tally(w),ds(CMIN))));
+ RZ(z=atop(amp(ds(CLBRACE),over(AT(w)&CMPX?w:xco1(w),num[0])),amp(tally(w),ds(CMIN))));
  FAV(z)->flag=VTAYFINITE;
  RETF(z);
 }
@@ -41,11 +41,11 @@ static F1(jtfacit){A c;V*u,*v;
 static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=FAV(h);
  ASSERT(AR(x)<=(nf?v->lr:v->rr),EVRANK);
  switch(v->id){
-  case CPLUS:  R tpoly(over(x,one));
-  case CMINUS: R tpoly(nf?over(x,num[-1]):over(negate(x),one));
-  case CSTAR:  R tpoly(over(zero,x));
-  case CDIV:   ASSERT(ng,EVDOMAIN); R tpoly(over(zero,recip(x)));
-  case CJDOT:  R tpoly(nf?over(x,a0j1):over(jdot1(x),one));
+  case CPLUS:  R tpoly(over(x,num[1]));
+  case CMINUS: R tpoly(nf?over(x,num[-1]):over(negate(x),num[1]));
+  case CSTAR:  R tpoly(over(num[0],x));
+  case CDIV:   ASSERT(ng,EVDOMAIN); R tpoly(over(num[0],recip(x)));
+  case CJDOT:  R tpoly(nf?over(x,a0j1):over(jdot1(x),num[1]));
   case CPOLY:  ASSERT(nf,EVDOMAIN); R tpoly(BOX&AT(x)?poly1(x):x);
   case CHGEOM: ASSERT(nf,EVDOMAIN); RE(j=i0(x)); ASSERT(0<=j,EVDOMAIN);
                y=IX(j);
@@ -54,7 +54,7 @@ static A jttayamp(J jt,A w,B nf,A x,A h){A y;B ng=!nf;I j,n;V*v=FAV(h);
                R tpoly(divide(poly1(box(iota(x))),fact(x)));
   case CEXP:   if(nf)R eva(x,"(^.x)&^ % !");
                RE(n=i0(x));   
-               R 0<=n?tpoly(over(reshape(x,zero),one)):atop(ds(CDIV),amp(h,sc(-n))); 
+               R 0<=n?tpoly(over(reshape(x,num[0]),num[1])):atop(ds(CDIV),amp(h,sc(-n))); 
   case CFIT:   ASSERT(nf&&CPOLY==ID(v->fgh[0]),EVDOMAIN);
                y=over(x,IX(IC(x)));
                R tpoly(mdiv(df2(x,y,h),atab(CEXP,y,IX(IC(x)))));
@@ -102,9 +102,9 @@ static DF1(jttaydiv){A c,f,ft,h,ht,y;I j,m,*u;V*v;
  RZ(y=IX(m)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
  RZ(f=df1(y,ft=tdot(v->fgh[0])));
  RZ(h=df1(y,ht=tdot(v->fgh[2])));
- RZ(c=indexof(ne(zero,h),one));
+ RZ(c=indexof(ne(num[0],h),num[1]));
  if(j=*AV(c)){
-  ASSERT(all1(eq(zero,take(c,f))),EVDOMAIN);
+  ASSERT(all1(eq(num[0],take(c,f))),EVDOMAIN);
   RZ(y=apv(j,m,1L)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
   RZ(f=over(drop(c,f),df1(y,ft)));
   RZ(h=over(drop(c,h),df1(y,ht)));
@@ -167,14 +167,14 @@ static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=FAV(w);
  }
  ft=tdot(f); RZ(c=coeff(ft)); m=AN(c);
  gt=tdot(g); RZ(d=coeff(gt)); n=AN(d);
- if(n&&all1(eq(zero,curtail(d)))){
+ if(n&&all1(eq(num[0],curtail(d)))){
   e=tail(d);
-  if(!equ(one,e))ft=folk(amp(e,ds(CEXP)),ds(CSTAR),ft);
+  if(!equ(num[1],e))ft=folk(amp(e,ds(CEXP)),ds(CSTAR),ft);
   if(2<n)ft=evc(sc(n-1),ft,"0&=@(x&|) * y@<.@(%&x)");
   R !m?ft:tpoly(1==n?df1(e,f):df1(IX(1+n*(m-1)),ft));
  }
  ASSERT(m,EVDOMAIN);
- /* if(2==m&&equ(zero,head(c)))R folk(tail(c),ds(CSTAR),gt)); */
+ /* if(2==m&&equ(num[0],head(c)))R folk(tail(c),ds(CSTAR),gt)); */
  h=eval("4 : '+/x*y([:+//.*/)^:(i.#x) 1'");
  R AN(d)?tpoly(df2(c,d,h)):eva(atco(amp(c,h),gt),"[ { x@:(i.@>:@(>./)@,)");
 }

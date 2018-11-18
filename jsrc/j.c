@@ -41,8 +41,8 @@ I   v00[2]={0,0};         // vector value to use for rank 0 0
 A   onehalf;      //  0.5
 D   pf=0;                 /* performance frequency                */
 A   pie=0;                /* o.1                                  */
-// obsolete X   xone=0;               /* extended integer 1                   */
-// obsolete X   xzero=0;              /* extended integer 0                   */
+// obsolete X   iv1=0;               /* extended integer 1                   */
+// obsolete X   iv0=0;              /* extended integer 0                   */
 // obsolete A   one=0;                /* 1                                    */
 // obsolete A   zero=0;               /* 0                                    */
 Q   zeroQ={0,0};          /* 0r1                                  */

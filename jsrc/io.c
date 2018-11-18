@@ -52,7 +52,7 @@ A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
 #endif
  ASSERT(!*jt->adbreak,EVINPRUPT);
  if(!b){ /* 1==b means literal input */
-  if(n&&COFF==*(s+n-1))joff(zero);
+  if(n&&COFF==*(s+n-1))joff(num[0]);
   c=jt->bx[9]; if((UC)c>127)DO(n, if(' '!=s[i]&&c!=s[i]){k=i; break;});
  }
  R str(n-k,s+k);

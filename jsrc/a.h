@@ -56,4 +56,4 @@
 
 #define SCALARFN(id,w)  (id==ID(w)&&!lr(w)&&!rr(w))
 
-#define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&equ(zero,v->fgh[1]))
+#define FIT0(c,v)       (CFIT==v->id&&c==ID(v->fgh[0])&&equ(num[0],v->fgh[1]))

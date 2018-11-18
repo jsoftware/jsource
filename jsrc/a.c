@@ -36,7 +36,7 @@ static B booltab[64]={
 
 static DF2(jtbdot2){R from(plus(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}
 
-static DF1(jtbdot1){R bdot2(zero,w,self);}
+static DF1(jtbdot1){R bdot2(num[0],w,self);}
 
 static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  PREF1(jtbasis1);

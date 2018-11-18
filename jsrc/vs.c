@@ -28,7 +28,7 @@ B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;
  ASSERTSYS(IC(y)==IC(x),"scheck i/x tally");
  ASSERTSYS(*(1+AS(y))==IC(a),"scheck i/a length");
  ASSERTSYS(equ(y,nub(y)),"scheck i unique");
- ASSERTSYS(all1(le(zero,y)),"scheck i negative");
+ ASSERTSYS(all1(le(num[0],y)),"scheck i negative");
  ASSERTSYS(all1(irs2(y,from(a,shape(w)),0L,1L,1L,jtlt)),"scheck i index");
  ASSERTSYS(equ(grade1(y),IX(*AS(y))),"scheck i sorted");
  ASSERTSYS(AR(x)==1+r-AN(a),"scheck x rank");
@@ -36,7 +36,7 @@ B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;
  R 1;
 }    /* assertions on sparse array w */
 
-static A jtselm(J jt,I t){R t&NUMERIC?cvt(t,zero):t&BOX?ace:chr[' '];}
+static A jtselm(J jt,I t){R t&NUMERIC?cvt(t,num[0]):t&BOX?ace:chr[' '];}
 
 A jtpaxis(J jt,I r,A a){A y,z;B*b;I j,*u,*v;
  RZ(a);
@@ -135,7 +135,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
  u=AV(ax); v=AS(w); DO(r, s[i]=v[u[i]];);
  RE(m=prod(n,s)); b=equ(a,IX(r));
  RZ(x=gah(1+r-n,b?w:cant2(ax,w))); v=AS(x); *v=m; if(r>n)ICPY(1+v,n+s,r-n);
- b=b&&SB01&AT(z)&&equ(e,zero); c=w;
+ b=b&&SB01&AT(z)&&equ(e,num[0]); c=w;
  if(!b)RZ(c=not(irs2(reshape(vec(INT,r-n,n+s),SPA(p,e)),x,VFLAGNONE, RMAX,-1L,jtmatch)));
  cn=AN(c); cv=BAV(c); cm=bsum(cn,cv);
  /* RZ(y=abase2(vec(INT,n,s),repeat(c,IX(cn)))); */
@@ -149,7 +149,7 @@ A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*
    default: DO(cn, if(*--cv){q=k-i; u=sn; DO(n, d=*--u; *--yv=q%d; q/=d;);});
  }}
  SPB(p,i,y);
- SPB(p,x,b?reshape(sc(cm),one):repeat(c,x));
+ SPB(p,x,b?reshape(sc(cm),num[1]):repeat(c,x));
  EPILOG(z);
 }
 

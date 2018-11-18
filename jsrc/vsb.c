@@ -606,7 +606,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
   j=v->up;     ASSERTD(    0<=j&&j<c&&1>=++upv[j]&&(!j||ord<(j+uv)->order),"u successor"  );
  }
  ASSERTD(equ(grade1(x),grade1(y)),"u order");
- EPILOG(one);
+ EPILOG(num[1]);
 }
 
 // minimal check for sbsetdata2
@@ -645,7 +645,7 @@ static A jtsbcheck2(J jt,A una,A sna,A u,A s){PROLOG(0000);
   ASSERTD(0<=vn&&(!c2||(c2&SBC2&&!(vi&1))||(c2&SBC4&&!(vi&3))),"u length");
   ASSERTD(sn>=vi+vn,"u index/length");
  }
- EPILOG(one);
+ EPILOG(num[1]);
 }
 
 static F1(jtsbcheck){R sbcheck1(sc(jt->sbun),sc(jt->sbsn),jt->sbu,jt->sbs,jt->sbh,sc(ROOT),sc(FILLFACTOR),sc(GAP));}
@@ -666,7 +666,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  FILLFACTOR=*AV(WVR(6));
  GAP       =*AV(WVR(7));
  fa(u); fa(s); fa(h);
- R one;
+ R num[1];
 }
 
 static void resetdata(J jt){
@@ -680,7 +680,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  ASSERTD(!AN(w)||BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(!AN(w)||4<=AN(w), "arg length");
- if(!AN(w)){resetdata(jt); R one; }
+ if(!AN(w)){resetdata(jt); R num[1]; }
  wv=AAV(w); RELBASEASGN(w,w);
  RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
  c=*AV(WVR(0));                         // cardinality
@@ -695,7 +695,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
   vc=(UC*)(sv+vi);                      // symbol string
   RE(sbprobe((S)v->flag,vn,vc,0));      // insert symbol
  }
- R one;
+ R num[1];
 }
 
 static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
@@ -746,9 +746,9 @@ F2(jtsb2){A z;I j,k,n;
     case 5:  R sc(ROOT);
     case 6:  R sc(FILLFACTOR);
     case 7:  R sc(GAP);
-    case 10: R sbgetdata(zero);
-    case 11: R sbcheck(zero);
-    case 12: R sbhashstat(zero);
+    case 10: R sbgetdata(num[0]);
+    case 11: R sbcheck(num[0]);
+    case 12: R sbhashstat(num[0]);
    }
   case  1:   R sbstr(1L,w);
   case -1:   R sbunstr(-1L,w);

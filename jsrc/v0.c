@@ -54,7 +54,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
 static F1(jtcfr){A c,r,*wv;I t;
  ASSERT(!AR(w)||2==AN(w),EVLENGTH);
  wv=AAV(w); RELBASEASGN(w,w);
- if(AR(w)){c=WVR(0); r=WVR(1);}else{c=one; r=WVR(0);}
+ if(AR(w)){c=WVR(0); r=WVR(1);}else{c=num[1]; r=WVR(0);}
  ASSERT(!AR(c)&&1>=AR(r),EVRANK);
  ASSERT(NUMERIC&AT(c)&&(!AN(r)||NUMERIC&AT(r)),EVDOMAIN);
  t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; RE(t=maxtype(t,AT(c)));
@@ -127,17 +127,17 @@ static Z jtlaguerre(J jt,I m,Z*a,Z x){D ax,e;I i,j;Z b,c,d,dx,g,g2,h,p,q,s,sq,y,
 }}   // Press et al., "Numerical Recipes in C" with additions from 2d edition
 
 static Q jtmultiple(J jt,D x,Q m){A y;Q q1,q2,q1r2;
- q1r2.n=xone; q1r2.d=xplus(xone,xone);
+ q1r2.n=iv1; q1r2.d=xplus(iv1,iv1);
  QRE(y=cvt(RAT,scf(x)));
  QRE(q1=qplus(q1r2,qtymes(m,*QAV(y))));
- QRE(q2.n=xdiv(q1.n,q1.d,XMFLR)); q2.d=xone;
+ QRE(q2.n=xdiv(q1.n,q1.d,XMFLR)); q2.d=iv1;
  R qdiv(q2,m);
 }    /* nearest multiple of m to x */
 
 static Q jtmaxdenom(J jt,I n,Q*v){Q z;X*u,x,y;
  u=1+(X*)v; x=*u;  // u-> &1st denominator, x=&1st denominator
  DO(n-1, u+=2; y=*u; if(-1==xcompare(x,y))x=y;);  // x=&largest denominator
- z.n=x; z.d=xone; R z;  // set denominator as a rational number
+ z.n=x; z.d=iv1; R z;  // set denominator as a rational number
 }    /* maximum denominator in rational vector v */
 
 /* find all exact rational roots of a rational polynomial w or degree m; return: */
@@ -170,7 +170,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
   // Laguerre came up empty.  Try something else
   if(!b){Q q1;
    // Try adjusting the numerator of the Laguerre result by +-1, and see if they work
-   q1=rq; q1.n=xone;
+   q1=rq; q1.n=iv1;
    rq=qplus (rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
    rq=qminus(rq,q1); while(deflateq(1,m-j,qv,rq)){*zv++=rq; ++j; b=1;}
   }
@@ -224,12 +224,12 @@ static F1(jtrfc){A r,w1;I m=0,n,t;
  n=AN(w); t=AT(w);  // n=#coeffs, t=type
  if(n){
   ASSERT(t&DENSE&&t&NUMERIC,EVDOMAIN);  // coeffs must be dense numeric
-  RZ(r=jico2(ne(w,zero),one)); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
-  ASSERT(m||equ(zero,head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
+  RZ(r=jico2(ne(w,num[0]),num[1])); m=AV(r)[0]; m=(m==n)?0:m;  // r=block for index of last nonzero; m=degree of polynomial (but 0 if all zeros)
+  ASSERT(m||equ(num[0],head(w)),EVDOMAIN);  // error if unsolvable constant polynomial
  }
  // switch based on degree of polynomial
  switch(m){
-  case 0:  R link(zero,mtv);  // degree 0 - return 0;''
+  case 0:  R link(num[0],mtv);  // degree 0 - return 0;''
   case 1:  r=ravel(negate(aslash(CDIV,take(num[2],w)))); break;  // linear - return solution, whatever its type
   default: if(t&CMPX)r=rfcz(m,w);  // higher order - if complex, go straight to complex solutions
            else{RZ(rfcq(m,w,&r,&w1)); if(m>AN(r))r=over(r,rfcz(m-AN(r),w1));} // otherwise, find rational solutions in r, and residual polynomial in w1.
@@ -252,7 +252,7 @@ F1(jtpoly1){A c,e,x;
  ASSERT(2==*(1+AS(x)),EVLENGTH);
  RZ(c=irs1(x,0L,1L,jthead));  // c = {."1>y = list of coefficients
  RZ(e=irs1(x,0L,1L,jttail));  // e = {:"1>y = list of exponents
- ASSERT(equ(e,floor1(e))&&all1(le(zero,e)),EVDOMAIN);  // insist on nonnegative integral exponents
+ ASSERT(equ(e,floor1(e))&&all1(le(num[0],e)),EVDOMAIN);  // insist on nonnegative integral exponents
  R evc(c,e,"x y}(1+>./y)$0");  // evaluate c 2 : 'x y}(1+>./y)$0' e
 }
 
@@ -295,10 +295,10 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  wn=AN(w); wt=AT(w);
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
  ASSERT(!wn||wt&NUMERIC+BOX,EVDOMAIN);
- if(!an)R reshape(shape(w),zero);  // if empty a, return all 0s
+ if(!an)R reshape(shape(w),num[0]);  // if empty a, return all 0s
  if(b){A*av=AAV(a); RELBASEASGN(a,a);
   ASSERT(2>=an,EVLENGTH);
-  c=1==an?one:AVR(0); a=AVR(1!=an); // c=mplr, a=roots
+  c=1==an?num[1]:AVR(0); a=AVR(1!=an); // c=mplr, a=roots
   if(1==an&&2==AR(a))R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);

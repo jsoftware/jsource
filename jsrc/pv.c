@@ -62,7 +62,7 @@ static F1(jtswapc){C c;
  R strchr(ctab,c)?w:c==CLT?ds(CGT):c==CGT?ds(CLT):c==CLE?ds(CGE):c==CGE?ds(CLE):swap(w);
 }    /* w~ or equivalent */
 
-TACT(jtvmonad){A fs;TA y,z={one,0};V*v;
+TACT(jtvmonad){A fs;TA y,z={num[1],0};V*v;
  y=stack[e]; fs=stack[b].a;
  if(!y.t)z.a=df1(y.a,fs);
  else{
@@ -84,7 +84,7 @@ static I jtdcase(J jt,I xi,V*v){
 /* 4   [: f  t  */
 /* 5   s  f  t  */
 
-TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={one,0};V*u=0,*v=0;
+TACT(jtvdyad){A fs,sf,xt,yt;B xl,xr,yl,yr;I xi=-1,yi=-1;TA x,y,z={num[1],0};V*u=0,*v=0;
  fs=stack[e-1].a; x=stack[b]; y=stack[e]; sf=swapc(fs);
  if(xt=tine(x.t)){xi=tvi(x.t); u=FAV(xt); if(0>xi&&CFORK==u->id){xi=tvi(u->fgh[0]); if(0>xi)xi=tvi(u->fgh[2]);}}
  if(yt=tine(y.t)){yi=tvi(y.t); v=FAV(yt); if(0>yi&&CFORK==v->id){yi=tvi(v->fgh[0]); if(0>yi)yi=tvi(v->fgh[2]);}}
@@ -229,7 +229,7 @@ F1(jtvtrans){PROLOG(0053);A local,y,z=0;B tmonad,tsubst;I c,i;TA ttab[NTTAB],*tt
   RZ(y=vtokens(w));
   jt->ttab=ttab; jt->ttabi=jt->ttabi0=c;
   RZ(jt->local=stcreate(2,1L+PTO,0L,0L));
-  IS(ynam,one); if(!jt->tmonad)IS(xnam,one); 
+  IS(ynam,num[1]); if(!jt->tmonad)IS(xnam,num[1]); 
   jt->tsubst=0==i;
   z=tparse(y); RESETERR;
   if(i&&!z)z=colon(num[4-jt->tmonad],w);

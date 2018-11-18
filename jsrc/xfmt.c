@@ -517,7 +517,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  RZ(a&&w); *omode=0;
  if(SPARSE&AT(w)) RZ(w=denseit(w));
  if(!AN(w))       RZ(w=reshape(shape(w),chr[' ']));
- if(JCHAR&AT(w))  R df1(w,qq(atop(ds(CBOX),ds(CCOMMA)),one));
+ if(JCHAR&AT(w))  R df1(w,qq(atop(ds(CBOX),ds(CCOMMA)),num[1]));
  ASSERT(1>=AR(a), EVRANK); 
  ASSERT(!AN(a) || JCHAR+BOX&AT(a), EVDOMAIN);
  if(JCHAR&AT(a)||!AN(a)) RZ(a=fmtbfc(a));
@@ -547,7 +547,7 @@ F2(jtfmt12){A z;I mode,r,*s;
  RZ(z=fmtxi(a,w,1,&mode));
  if(mode==1)R z;
  r=AR(z); s=AS(z);
- z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),one));
+ z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
  R ravel(z);
 } /* 8!:1 dyad */
 
@@ -557,7 +557,7 @@ F2(jtfmt22){A z;I mode,r,*s;
  RZ(z=fmtxi(a,w,2,&mode));
  if(mode==2)R z;
  r=AR(z); s=AS(z);
- z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),one));
+ z=df1(cant1(2==r?z:reshape(v2(1L,r?*s:1L),z)), qq(atco(ds(CBOX),ds(COPE)),num[1]));
  RZ(z=ravel(z));
  R *AS(z)?razeh(z):lamin1(z);
 } /* 8!:2 dyad */

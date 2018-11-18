@@ -9,7 +9,7 @@
 F1(jtbehead ){F1PREFIP; R jtdrop(jtinplace,zeroionei[1],    w);}
 F1(jtcurtail){F1PREFIP; R jtdrop(jtinplace,num[-1],w);}
 
-F1(jtshift1){R drop(num[-1],over(one,w));}
+F1(jtshift1){R drop(num[-1],over(num[1],w));}
 
 static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  r=AR(w); n=AN(a); u=AV(a); 
@@ -49,7 +49,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  EPILOG(z);
 }    /* take on sparse array w */
 
-// general take routine.  a is result frame followed by take values i. e. shape of result, w is array
+// general take routine.  a is result frame followed by signed take values i. e. shape of result, w is array
 static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s,t,*u;
  n=AN(a); u=AV(a); r=AR(w); s=AS(w); t=AT(w);
  if(t&SPARSE)R tks(a,w);
@@ -74,7 +74,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
  EPILOG(z);
 }
 
-F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
+F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  F2PREFIP;
  RZ(a&&w); I wt = AT(w);  // wt=type of w
  if(SPARSE&AT(a))RZ(a=denseit(a));
@@ -86,6 +86,7 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
  n=AN(a);    // n = #axes in a
  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
  I * RESTRICT ws=AS(w);  // ws->shape of w
+#if 0  // obsolete
  if(AT(a)&B01+INT)RZ(s=a=vi(a))  // convert boolean arg to int
  else{
   RZ(t=vib(a));   // convert to int in new buffer
@@ -94,6 +95,16 @@ F2(jttake){A s,t;D*av,d;I acr,af,ar,n,*tv,*v,wcr,wf,wr;
   DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
   s=a=t;
  }
+#else
+ RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
+ // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
+ // to clone the area, because vib might return a canned value
+ if(!(AT(a)&B01+INT)){
+  I i; for(i=0;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)break;}
+  if(i<AN(s)){s=ca(s); for(;i<AN(s);++i){I m=IAV(s)[i]; I ms=m>>(BW-1); if((m^ms)-ms == IMAX)IAV(s)[i]=wcr?ws[wf+i]:1;}}
+ }
+ a=s;
+#endif
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
  if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA|AFSMM)))){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis

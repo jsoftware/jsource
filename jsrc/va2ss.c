@@ -465,7 +465,7 @@ SSINGF2(jtsslt) SSCOMPPREFIX
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
- if(z==0)R zv?one:zero;
+ if(z==0)R zv?num[1]:num[0];
  BAV(z)[0] = zv; R z;
 }
 
@@ -488,7 +488,7 @@ SSINGF2(jtssgt) SSCOMPPREFIX
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
- if(z==0)R zv?one:zero;
+ if(z==0)R zv?num[1]:num[0];
  BAV(z)[0] = zv; R z;
 }
 
@@ -511,7 +511,7 @@ SSINGF2(jtssle) SSCOMPPREFIX
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
- if(z==0)R zv?one:zero;
+ if(z==0)R zv?num[1]:num[0];
  BAV(z)[0] = zv; R z;
 }
 
@@ -534,7 +534,7 @@ SSINGF2(jtssge) SSCOMPPREFIX
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
- if(z==0)R zv?one:zero;
+ if(z==0)R zv?num[1]:num[0];
  BAV(z)[0] = zv; R z;
 }
 
@@ -567,7 +567,7 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result
- if(z==0)R zv^(B)op?one:zero;
+ if(z==0)R zv^(B)op?num[1]:num[0];
  BAV(z)[0] = zv^(B)op; R z;
 }
 

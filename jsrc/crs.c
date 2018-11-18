@@ -20,7 +20,7 @@ static A jtsprinit(J jt,I f,I r,I*s,I t,P*p){A a,a1,z;I n,*u,*v;P*zp;
  SPB(zp,a,a1);
  SPB(zp,e,ca(SPA(p,e)));
  SPB(zp,i,iota(v2(0L,n)));
- SPB(zp,x,repeat(zero,SPA(p,x)));
+ SPB(zp,x,repeat(num[0],SPA(p,x)));
  R z;
 }    /* initialize an argument cell */
 

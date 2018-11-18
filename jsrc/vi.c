@@ -1146,6 +1146,7 @@ CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i; US min0,min1,max0,ma
  ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.min=ret.range=0; R ret;
+fail: ret.min=ret.range=0; R ret;
 }
 #else  // the simpler non-unrolled version
 static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;
@@ -1219,7 +1220,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
-    case IANYEPS: case IALLEPS: case II0EPS: R zero;
+    case IANYEPS: case IALLEPS: case II0EPS: R num[0];
     case ISUMEPS:                            R sc(0L);
     case II1EPS:  case IJ1EPS:               R sc(witems);
     case IJ0EPS:                             R sc(witems-1);
@@ -1301,10 +1302,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
   // in that case the search always fails
   case IIDOT:   R reshape(shape(z),sc(n?m:0  ));
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
-  case INUBSV:  R reshape(shape(z),take(sc(m),one));
+  case INUBSV:  R reshape(shape(z),take(sc(m),num[1]));
   case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
   case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),k1*AN(w)); R z;
-  case IEPS:    R reshape(shape(z),m&&(!n||th)?one:zero);
+  case IEPS:    R reshape(shape(z),num[m&&(!n||th)] /* obsolete ?one:zero */);
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
   case II0EPS:  R sc(n&&zn?0L        :witems         );
@@ -1312,8 +1313,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
   case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
   case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
   case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
-  case IANYEPS: R    n?zero:one;
-  case IALLEPS: R c&&n?zero:one;
+  case IANYEPS: R num[!n] /* obsolete   n?zero:one */;
+  case IALLEPS: R num[!(c&&n)] /* obsolete ?zero:one */ ;
   case IIFBEPS: R n?mtv :IX(c);
  }}
 
@@ -1624,7 +1625,7 @@ F1(jtnubind0){A z;D oldct=jt->ct;
 F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(w);
  // If w is scalar, return 1 1$1
- if(!AR(w))R reshape(v2(1L,1L),one);
+ if(!AR(w))R reshape(v2(1L,1L),num[1]);
  n=IC(w);   // n=#items of y
  RZ(x=indexof(w,w));   // x = i.~ y
  // if w is dense, return ((x = i.n) # x) =/ x
@@ -1638,9 +1639,9 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  GAT(z,SB01,1,2,0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
- SPB(p,e,zero);
+ SPB(p,e,num[0]);
  SPB(p,i,xy);
- SPB(p,x,reshape(sc(c),one));
+ SPB(p,x,reshape(sc(c),num[1]));
  R z;
 }
 

@@ -240,7 +240,7 @@ F2(jtjfatt2){A y,fn;F f;U x;
  RE(x=attu(a));
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(fn=toutf16x(y));
- if(SetFileAttributesW(USAV(fn), x)) R one;
+ if(SetFileAttributesW(USAV(fn), x)) R num[1];
  jsignal(EVFNAME); R 0;
 }
 

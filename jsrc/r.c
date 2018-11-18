@@ -22,7 +22,7 @@ static F1(jtdrr){PROLOG(0055);A df,dg,fs,gs,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(evoke(w))R sfn(0,fs);
  if(fs)RZ(df=fl&VGERL?every(fxeach(fs),0L,jtdrr):drr(fs));
  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs),0L,jtdrr):drr(gs));
- if(ex)RZ(dg=unparsem(zero,w));
+ if(ex)RZ(dg=unparsem(num[0],w));
  m+=!b&&!xop||hs&&xop;
  GATV(z,BOX,m,1,0); x=AAV(z);
  RZ(x[0]=rifvs(df));
@@ -49,7 +49,7 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
  if(NOUN&AT(w)){RZ(x[0]=rifvs(ravel(scc(CNOUN)))); if(AT(w)&NAME)RZ(w=sfn(0,w)); x[1]=INCORPNA(w); RETF(z);}  // if name, must be ".@'name', format name as noun
  GATV(y,BOX,m,1,0); u=AAV(y);
  if(0<m)RZ(u[0]=rifvs(aro(fs)));
- if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(zero,w):xop?hs:gs)));
+ if(1<m)RZ(u[1]=rifvs(aro(ex?unparsem(num[0],w):xop?hs:gs)));
  if(2<m)RZ(u[2]=rifvs(aro(hs)));
  s=xop?aro(gs):VDDOP&v->flag?(hv=AV(hs),aro(foreign(sc(hv[0]),sc(hv[1])))):spellout(id);
  RZ(x[0]=rifvs(s)); x[1]=INCORPNA(y);
@@ -164,7 +164,7 @@ F2(jtunparsem){A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
   ICPY(zv,AAV(ms),mn); zv+=mn; if(p)RZ(*zv++=chr[':']);
   ICPY(zv,AAV(ds),dn);
  }
- if(a==zero){RZ(z=ope(z)); if(1==AR(z))z=table(z);}
+ if(a==num[0]){RZ(z=ope(z)); if(1==AR(z))z=table(z);}
  R z;
 }    /* convert h parameter for : definitions; open if a is 0 */
 

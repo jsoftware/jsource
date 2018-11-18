@@ -121,7 +121,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   case CAT:    /* <"1@[ { ] */
    if(gi==CLBRACE&&hi==CRIGHT){                                   
     p=fv->fgh[0]; q=fv->fgh[1]; 
-    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&equ(one,v->fgh[1]))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
+    if(CLEFT==ID(q)&&CQQ==ID(p)&&(v=VAV(p),x=v->fgh[0],CLT==ID(x)&&equ(num[1],v->fgh[1]))){f2=jtsfrom; flag &=~(VJTFLGOK2);}
    }
  }
  switch(fi==CCAP?gi:hi){
@@ -151,7 +151,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
                 }
  }
  if(0<=m){
-  v=4<=m?hv:fv; b=CFIT==v->id&&equ(zero,v->fgh[1]);
+  v=4<=m?hv:fv; b=CFIT==v->id&&equ(num[0],v->fgh[1]);
   switch(b?ID(v->fgh[0]):v->id){
    case CEQ:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=0+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;
    case CNE:   f2=b?jtfolkcomp0:jtfolkcomp; flag|=1+8*m; flag &=~(VJTFLGOK1|VJTFLGOK2); break;

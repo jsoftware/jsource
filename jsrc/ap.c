@@ -300,7 +300,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // Create fill-cell of shape s; apply u to it
   RZ(x=df1(reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
-  z=reshape(over(zero,shape(x)),x);
+  z=reshape(over(num[0],shape(x)),x);
  } 
  EPILOG(z);
 }
@@ -325,7 +325,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); *AV(s)=ABS(m);
   RZ(x=df1(reshape(s,filler(w)),*hv));
-  R reshape(over(zero,shape(x)),x);
+  R reshape(over(num[0],shape(x)),x);
 }}
 
 #define STATEHASGERUND 0x1000  // f is a gerund
@@ -505,7 +505,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
   if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
   UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
-  RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
+  RZ(zz=reshape(over(num[0],shape(zz?zz:mtv)),z));
  }
 
 // result is now in zz
@@ -531,7 +531,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
- if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),one),w);}else R irs1(w,self,r,jtinfixprefix1);}
+ if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtinfixprefix1);}
  VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // analyze f
  if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));

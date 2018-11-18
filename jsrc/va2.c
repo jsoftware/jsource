@@ -1029,7 +1029,7 @@ F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE)
 // Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
-F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(zero,w):minus(zeroionei[1],w);}
+F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(num[0],w):minus(zeroionei[1],w);}
 F1(jtnegate){R minus(zeroionei[0],  w);}
 F1(jtdecrem){IPSHIFTWA; R minus(w,     zeroionei[1]);}
 F1(jtincrem){R plus(zeroionei[1],   w);}

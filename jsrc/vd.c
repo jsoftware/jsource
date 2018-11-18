@@ -25,9 +25,9 @@ static F1(jtqrr){PROLOG(0067);A a1,q,q0,q1,r,r0,r1,t,*tv,t0,t1,y,z;I m,n,p,*s;
  if(2>AR(w)){p=AN(w); n=m=1;}else{s=AS(w); p=s[0]; n=s[1]; m=(1+n)>>1;} 
  if(1>=n){
   t=norm(ravel(w));
-  ASSERT(!AN(w)||!equ(t,zero),EVDOMAIN);
+  ASSERT(!AN(w)||!equ(t,num[0]),EVDOMAIN);
   RZ(q=divide(w,t));
-  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:one));
+  R link(2>AR(q)?table(q):q,reshape(v2(n,n),p?t:num[1]));
  }
  RZ(t0=qrr(take(v2(p,m),w)));
  tv=AAV(t0); q0=*tv++; r0=*tv;

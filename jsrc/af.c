@@ -36,24 +36,24 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
  RZ(a&&w);
  if(NAME&AT(w))R sfn(0,w);  // only way a name gets here is by ".@noun
  if(NOUN&AT(w)||VFIX&VAV(w)->flag)R w;
- v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); aa=a==zero?num[3]:a;
+ v=VAV(w); f=v->fgh[0]; g=v->fgh[1]; h=v->fgh[2]; wf=ds(v->id); aa=a==num[0]?num[3]:a;
  if(!(f||g))R w;
  switch(v->id){
   case CSLASH: 
    R df1(fixa(num[2],f),wf);
   case CSLDOT: case CBSLASH: case CBSDOT:
-   R df1(fixa(one,f),wf);
+   R df1(fixa(num[1],f),wf);
   case CAT: case CATCO: case CCUT:
-   R df2(fixa(one,f),fixa(aa,g),wf);
+   R df2(fixa(num[1],f),fixa(aa,g),wf);
   case CAMP: case CAMPCO: case CUNDER: case CUNDCO:
-   R df2(fixa(aa,f),fixa(one,g),wf);
+   R df2(fixa(aa,f),fixa(num[1],g),wf);
   case CCOLON:
    // handles only v : v; n : n had VFIX set & never gets here
-   R df2(fixa(one,f),fixa(num[2],g),wf);
+   R df2(fixa(num[1],f),fixa(num[2],g),wf);
   case CADVF:
    R hook(fixa(num[3],f),fixa(num[3],g));
   case CHOOK:
-   R hook(fixa(num[2],f),fixa(one,g));
+   R hook(fixa(num[2],f),fixa(num[1],g));
   case CFORK:
    f=fixa(aa,f); g=fixa(num[ID(f)==CCAP?1:2],g); h=fixa(aa,h); R folk(f,g,h);
   case CATDOT:
@@ -74,7 +74,7 @@ static F2(jtfixa){A aa,f,g,h,wf,x,y,z=w;V*v;
     jt->fxpv[--jt->fxi]=rifvs(y); 
     if(x=symbrdlock(f)){
      RZ(z=fixa(aa,x));
-     if(a!=zero&&selfq(x))RZ(z=fixrecursive(a,z));
+     if(a!=num[0]&&selfq(x))RZ(z=fixrecursive(a,z));
     }
     jt->fxpv[jt->fxi++]=mtv;
     RE(z);
@@ -93,7 +93,7 @@ F1(jtfix){PROLOG(0005);A z;
  RZ(jt->fxpath=rifvs(reshape(sc(jt->fxi=(I)255),ace))); jt->fxpv=AAV(jt->fxpath);
  if(LIT&AT(w)){ASSERT(1>=AR(w),EVRANK); RZ(w=nfs(AN(w),CAV(w)));}
  ASSERT(AT(w)&NAME+VERB,EVDOMAIN);
- RZ(z=fixa(zero,AT(w)&VERB?w:symbrdlock(w)));
+ RZ(z=fixa(num[0],AT(w)&VERB?w:symbrdlock(w)));
  if(AT(z)&VERB+ADV+CONJ){V*v=FAV(z); if(v->fgh[0]){v->flag|=VFIX+VNAMED; v->flag^=VNAMED;}}  // f is clear for anything in the pst
  jt->fxpath=0;
  EPILOG(z);

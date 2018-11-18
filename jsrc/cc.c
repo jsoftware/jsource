@@ -67,13 +67,13 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
  I wr=AR(w);  // rank of w
- if(1>=AR(a))RZ(a=lamin2(zero,a));   // default list to be lengths starting at origin
+ if(1>=AR(a))RZ(a=lamin2(num[0],a));   // default list to be lengths starting at origin
  RZ(a=vib(a));  // audit for valid integers
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
  ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
  if(!n){  /* empty result; figure out result type */
   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
-  if(z==0)z=zero;  // use zero as fill result if error
+  if(z==0)z=num[0];  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
   MCISd(zzs,as,m) MCISd(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
@@ -200,10 +200,10 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  for(i=0;i<an;++i){
   b=AVR(i); bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
-  if(!bn&&m){xv[i]=zero; RZ(yv[i]=sc(m));}
+  if(!bn&&m){xv[i]=num[0]; RZ(yv[i]=sc(m));}
   else{
    if(!(B01&AT(b)))RZ(b=cvt(B01,b));
-   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),0<q?one:zero));}else xv[i]=yv[i]=mtv; continue;}
+   if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),num[0<q]));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
    GATV(t,INT,p,1,0); u=AV(t); xv[i]=t;
@@ -260,7 +260,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
-   if(!m){y=reitem(zero,w); R iota(over(zero,shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
+   if(!m){y=reitem(num[0],w); R iota(over(num[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
    GATV(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
    switch((wd?2:0)+(h?1:0)){A Zz;                                                 \
     case 0: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); break; \
@@ -308,7 +308,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  RZ(a=a==mark?eps(w,take(num[pfx?1:-1],w)):DENSE&AT(a)?sparse1(a):a);
  ASSERT(n==*AS(a),EVLENGTH);
  ap=PAV(a);
- if(!(equ(zero,SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
+ if(!(equ(num[0],SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
@@ -385,7 +385,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
 static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
  *zz=0; 
  fs=sv->fgh[0];
- RE(y=df1(zero,iden(VAV(fs)->fgh[0])));
+ RE(y=df1(num[0],iden(VAV(fs)->fgh[0])));
  if(TYPESLT(zt,AT(y))){*zz=df1(cut2(a,w,cut(ds(CBOX),sv->fgh[1])),amp(fs,ds(COPE))); R 0;}
  if(TYPESGT(zt,AT(y)))RE(y=cvt(zt,y)); 
  R CAV(y);
@@ -411,7 +411,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
 /* v    ptr to a for current cut         */
 /* v1   ptr to w for current cut         */
 /* wd   non0 iff w is relative              */
-#if 1
+
 // the values are 1 byte, either 8 bits or 1 bit
 #define FRETLOOPBYTE(decl,compI,comp) \
 { \
@@ -708,140 +708,13 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
    UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
-   RZ(zz=reshape(over(zero,shape(zz?zz:mtv)),z));
+   RZ(zz=reshape(over(num[0],shape(zz?zz:mtv)),z));
   }
  }
  EPILOG(zz);
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
-#else
-
-// execute stmt on each fret.  Here we are handling special cases so we know the results are well-behaved
-// and stmt can just move its result to the output area
-#define EACHCUT(stmt)  \
- for(i=1;i<=m;++i){                                 \
-  if(pfx&&i==m)q=p;                                 \
-  else{u=memchr(v+pfx,sep,p-pfx); u+=!pfx; q=u-v;}  \
-  d=q-neg; v1=wv+k*(b+n-p);                         \
-  stmt;                                             \
-  p-=q; v=u;                                        \
- }
 
 
-
-// Here for general case, where results must be boxed & reopened. y is a temp name used for the input cell and its result.
-// allbx starts as 1; if all results return atomic boxes, it stays there.  When allbx is set, the contents of the
-// result (a single A) is copied to the result; otherwise the result itself is copied as a cell (& will be unboxed later).
-// If a non-atomic-box result is encountered, previous results are revisited to box them.
-#define EACHCUTG(stmt)  \
- for(i=1;i<=m;++i){                                 \
-  if(pfx&&i==m)q=p;                                 \
-  else{u=memchr(v+pfx,sep,p-pfx); u+=!pfx; q=u-v;}  \
-  d=q-neg; v1=wv+k*(b+n-p);                         \
-  old=jt->tnextpushx;                           \
-  GA(y,wt,d*c,r,s); *AS(y)=d;                       \
-  stmt;                                             \
-  if(allbx&&!AR(y)&&BOX&AT(y))*za++=y=*AAV(y);      \
-  else if(!allbx){rifv(y); *za++=y;}                \
-  else{I ii=i-1;                                    \
-   allbx=0;                                         \
-   za=AAV(z); DO(ii, RZ(*za++=rifvs(box(*za)));); rifv(y); *za++=y; \
-   old=jt->tnextpushx;                          \
-  }                                                 \
-  y=gc(y,old);                                        \
-  p-=q; v=u;                                        \
- }
-
-static DF2(jtcut2){PROLOG(0025);DECLF;A h=0,*hv,y,z=0,*za;B b,neg,pfx;C id,id1,sep,*u,*v,*v1,*wv,*zc;
-     I c,cv,e=0,d,hn,i,k,ke,m=0,n,old,p,q,r,*s,wt,*zi,*zs;V*vf;VF ado;
- PREF2(jtcut2);
- if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
- p=n=IC(w); wt=AT(w); k=*AV(sv->fgh[1]); neg=0>k; pfx=k==1||k==-1; b=neg&&pfx;  // todo kludge combine flag bits
- if(a!=mark){  // dyadic forms
-  if(!AN(a)&&n){  // empty x, do one call if y is non-empty
-   if(VGERL&sv->flag){h=sv->fgh[2]; ASSERT(AN(h),EVLENGTH); h=*AAV(h); R CALL1(VAV(h)->valencefns[0],w,h);}
-   else R CALL1(f1,w,fs);
-  }
-  if(AN(a)&&BOX&AT(a))R cut2bx(a,w,self);  // handle boxed a separately
-  if(!(B01&AT(a)))RZ(a=cvt(B01,a));  // convert other a to binary
-  if(!AR(a))RZ(a=reshape(sc(n),a));   // extend scalar x to length of y
-  v=CAV(a); sep=C1;
- }else if(1>=AR(w)&&wt&IS1BYTE){a=w; v=CAV(a); sep=v[pfx?0:n-1];}  // monadic forms: 1-byte w, use w itself as the fret vector
- else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}  // multibyte w, calculate frets
- // now v->byte vector of frets, sep=fret character
- ASSERT(n==IC(a),EVLENGTH);
- vf=VAV(fs);
- if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(wt); RELBASEASGNB(w,w);
- // count the frets
- switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
-  case 0: if(AT(a)&B01&&C1==sep)m=bsum(n,v); 
-          else{--v;    DO(n, if(sep==*++v) ++m;                    ); v=CAV(a);}    break;
-  case 1: if(AT(a)&B01&&C1==*v )m=bsum(n,v);
-          else{u=v+=n; DO(n, if(sep==*--v){++m;               u=v;}); p-=u-v; v=u;} break;
-  case 2: u=--v;       DO(n, if(sep==*++v){++m; e=MAX(e,v-u); u=v;}); v=CAV(a);     break;
-  case 3: u=v+=n;      DO(n, if(sep==*--v){++m; e=MAX(e,u-v); u=v;}); p-=u-v; v=u;
- }
- // process, handling special cases
- switch(wd?0:id){
-  case CPOUND:
-   GATV(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;); 
-   break;
-  case CDOLLAR:
-   GATV(z,INT,m,1,0); zi=AV(z); EACHCUT(*zi++=d;);
-   R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);
-  case CHEAD:
-   GA(z,wt,m*c,r,s); zc=CAV(z); *AS(z)=m;
-   EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,c,zc); zc+=k;);
-   break;
-  case CTAIL:
-   GA(z,wt,m*c,r,s); zc=CAV(z); *AS(z)=m;
-   EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,c,zc); zc+=k;);
-   break;
-  case CCOMMA:
-  case CLEFT:
-  case CRIGHT:
-   e-=e&&neg; RE(d=mult(m*c,e));
-   GA(z,wt,d,id==CCOMMA?2:1+r,s-1); zc=CAV(z); fillv(wt,d,zc);
-   zs=AS(z); zs[0]=m; zs[1]=id==CCOMMA?e*c:e; ke=k*e;
-   EACHCUT(MC(zc,v1,d*k);  zc+=ke;);
-   break;
-  case CBOX:
-   GA(z,m?BOX:B01,m,1,0); za=AAV(z);
-   EACHCUT(GA(y,wt,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); *za++=y;);
-   break;
-  case CAT: case CATCO: case CAMP: case CAMPCO:
-   if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){
-    GA(z,m?BOX:B01,m,1,0); za=AAV(z);
-    EACHCUT(d=d?d-1:0; GA(y,wt,d*c,r,s); *AS(y)=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);
-   }
-   break;
-  case CSLASH:
-   vains(vaid(vf->fgh[0]),wt,&ado,&cv);  // qualify the operation, returning action routine and conversion info
-   if(ado){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
-    zt=rtype(cv);
-    GA(z,zt,m*c,r,s); *AS(z)=m; 
-    if(!AN(z))R z;
-    zc=CAV(z); zk=c*bp(zt);
-    if((t=atype(cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    EACHCUT(if(d)ado(jt,1L,d*c,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&y); 
-        if(!z0){if(y)R y; else break;}} mvc(zk,zc,zk/c,z0);} zc+=zk;);
-    if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R cv&VRI+VRD?cvz(cv,z):z;
-  }
- }
- if(!z){B allbx=1;
-  if(!m){y=reitem(zero,w); y=h?df1(y,*hv):CALL1(f1,y,fs); RESETERR; R iota(over(zero,shape(y?y:mtv)));}
-  GATV(z,BOX,m,1,0); za=AAV(z);
-  switch((wd?2:0)+(h?1:0)){
-   case 0: EACHCUTG(MC(AV(y),v1,d*k);  RZ(y=CALL1(f1,y,fs));     ); break;
-   case 1: EACHCUTG(MC(AV(y),v1,d*k);  RZ(y=df1(y,hv[(i-1)%hn]));); break;  // todo kludge avoid divide here & above
-   case 2: EACHCUTG(MCREL(AV(y),v1,d); RZ(y=CALL1(f1,y,fs));     ); break;
-   case 3: EACHCUTG(MCREL(AV(y),v1,d); RZ(y=df1(y,hv[(i-1)%hn])););
-  }
-  if(!allbx)RZ(z=ope(z));
- }
- EPILOG(z);
-}    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
-#endif
 static DF1(jtcut1){R cut2(mark,w,self);}
 
 

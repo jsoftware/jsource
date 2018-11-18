@@ -284,7 +284,7 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); RETF(z);}
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}
 
-// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to HIGH_VALUE
+// Audit w to ensure valid integer value(s).  Error if non-integral.  Result is A block for integer array.  Infinities converted to IMAX
 F1(jtvib){A z;D d,e,*wv;I i,n,p=-IMAX,q=IMAX,*zv;
  RZ(w);
  if(AT(w)&INT)R RETARG(w);  // handle common non-failing cases quickly: INT and boolean

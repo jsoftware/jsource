@@ -126,7 +126,7 @@ F1(jtjclose){A*av;I*iv,j;
 #endif
  if(fclose((F)iv[j]))R jerrno();
  --jt->fopn; fa(av[j]); if(j<jt->fopn){av[j]=av[jt->fopn]; iv[j]=iv[jt->fopn];}
- R one;
+ R num[1];
 }    /* close file# w */
 
 F jtstdf(J jt,A w){A y;F f;I n,r,t;

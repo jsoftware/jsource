@@ -289,7 +289,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
 }    /* <.@% or >.@% on integers */
 
 
-static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),one)),bsdot(slash(ds(CSTAR))));}
+static F2(jtweight){RZ(a&&w); R df1(behead(over(AR(w)?w:reshape(a,w),num[1])),bsdot(slash(ds(CSTAR))));}
 
 F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  RZ(w);
@@ -321,10 +321,10 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  ASSERT(t&DENSE,EVNONCE);
  // Result has rank one more than the input.  If there are no atoms,
  // return (($w),0)($,)w; if Boolean, return (($w),1)($,)w
- if(!n||t&B01)R reshape(over(shape(w),n?one:zero),w);
+ if(!n||t&B01)R reshape(over(shape(w),n?num[1]:num[0]),w);
  if(!(t&INT)){
   // Not integer.  Calculate # digits-1 as d = 2 <.@^. >./ | , w  
-  d=df2(num[2],maximum(one,aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
+  d=df2(num[2],maximum(num[1],aslash(CMAX,mag(ravel(w)))),atop(ds(CFLOOR),ds(CLOG)));
   // Calculate z = ((1+d)$2) #: w
   RZ(z=abase2(reshape(increm(d),num[2]),w));
   // If not float, result is exact or complex; either way, keep it
@@ -333,7 +333,7 @@ F1(jtabase1){A d,z;B*zv;I c,n,p,r,t,*v;UI x;
   // calculate that as (0 = >./ ({."1 z)).  If so, return }."1 z ,  otherwise z
   // But we can't delete a digit if any of the values were negative - all are significant then
   // We also can't delete a digit if there is only 1 digit in the numbers
-  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,zero)))))R z;
+  if(AS(z)[AR(z)-1]<=1 || i0(aslash(CPLUSDOT,ravel(lt(w,num[0])))))R z;
   if(0==i0(aslash(CMAX,ravel(irs1(z,0L,1L,jthead)))))R irs1(z,0L,1L,jtbehead);
   RETF(z);
  }

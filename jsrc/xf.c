@@ -233,10 +233,10 @@ F1(jtjmkdir){A y,z;
  ASSERT(AT(w)&BOX,EVDOMAIN);
  RZ(y=str0(vs(AAV0(w))));
 #if (SYS & SYS_UNIX)
- R mkdir(CAV(y),0775)?jerrno():one;
+ R mkdir(CAV(y),0775)?jerrno():num[1];
 #else
  RZ(z=toutf16x(y));
- R _wmkdir(USAV(z))?jerrno():one;
+ R _wmkdir(USAV(z))?jerrno():num[1];
 #endif
 }
 
@@ -247,19 +247,19 @@ F1(jtjferase){A y,fn;US*s;I h;
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
 #if 0
- if(access(CAV(y), F_OK )){R !unlink(CAV(y))?one:jerrno();} /* rmdir2 cannot raise error on non-exist file */
- else {R !unlink(CAV(y))||!rmdir(CAV(y))||!rmdir2(CAV(y))?one:jerrno();}
+ if(access(CAV(y), F_OK )){R !unlink(CAV(y))?num[1]:jerrno();} /* rmdir2 cannot raise error on non-exist file */
+ else {R !unlink(CAV(y))||!rmdir(CAV(y))||!rmdir2(CAV(y))?num[1]:jerrno();}
 #else
- R !unlink(CAV(y))||!rmdir(CAV(y))?one:jerrno();
+ R !unlink(CAV(y))||!rmdir(CAV(y))?num[1]:jerrno();
 #endif
 #else
  RZ(fn=toutf16x(y));
  s=USAV(fn);
 // #if SY_WIN32 && !SY_WINCE
 #if 0
- R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?one:jerrno();
+ R !_wunlink(s)||!_wrmdir(s)||!rmdir2(jt, (wchar_t*)s)?num[1]:jerrno();
 #else
- R !_wunlink(s)||!_wrmdir(s)?one:jerrno();
+ R !_wunlink(s)||!_wrmdir(s)?num[1]:jerrno();
 #endif
 #endif
 }    /* erase file or directory */
@@ -309,20 +309,20 @@ F1(jtjgetenv){
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(w)))?cstr(s):zero;
+  R(s=getenv(CAV(w)))?cstr(s):num[0];
  }
 #else
  {
   A z; US* us;
   RZ(z=toutf16x(w));
   us=_wgetenv(USAV(z));
-  if(!us)R zero;
+  if(!us)R num[0];
   GATV(z,C2T,wcslen(us),1,0);
   MC(USAV(z),us,2*wcslen(us));
   R toutf8(z);
  }
 #endif
- R zero;
+ R num[0];
 }
 
 F1(jtjgetpid){

@@ -49,13 +49,13 @@ static F1(jtscfn){
  RZ(w);
  if(AS(jt->sca)[0]==AN(jt->sca)){I n=AN(jt->sca); RZ(jt->sca=ext(1,jt->sca)); AS(jt->sca)[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
  AAV(jt->sca)[AS(jt->sca)[0]++]=rifvs(w);  // copy in new result pointer
- R zero;
+ R num[0];
 }
 
 static A jtlevs1(J jt,A w,A self){A fs;
  RZ(w&&self);
  if(levelle(w,jt->lmon)){fs=FAV(self)->fgh[0]; RZ(scfn(CALL1(FAV(fs)->valencefns[0],w,fs)));}else RZ(every(w,self,jtlevs1));
- R zero;
+ R num[0];
 }
 
 static A jtlevs2(J jt,A a,A w,A self){A fs;
@@ -66,7 +66,7 @@ static A jtlevs2(J jt,A a,A w,A self){A fs;
  // be achieved by altering the left/right levels, but Roger did it this way.
  if(aready&wready){fs=FAV(self)->fgh[0]; RZ(scfn(CALL2(FAV(fs)->valencefns[1],a,w,fs)));
  }else{RZ(every2(aready?box(a):a,wready?box(w):w,self,jtlevs2));}
-  R zero;
+  R num[0];
 }
 
 static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);

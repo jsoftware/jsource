@@ -43,7 +43,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 
 #define SEEKLEAK 0
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
- if(equ(w,one))R mtm;
+ if(equ(w,num[1]))R mtm;
  RZ(w=vs(w));
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
@@ -67,7 +67,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  jt->dcs=xd; jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
- if(3==ce){z=jt->jerr?zero:one; RESETERR; R z;}else RNE(mtm);
+ if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
 }
 
 static A jtlinf(J jt,A a,A w,C ce,B tso){A x,y,z;B lk=0;C*s;I i=-1,n,oldi=jt->slisti,oldk=jt->uflags.us.cx.cx_c.glock;

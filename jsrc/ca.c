@@ -193,7 +193,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    }
    break;
   case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->fgh[0])){f2=jtpolymult; flag&=~VJTFLGOK2;} break;
-  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(zero,av->fgh[1])){f1=jtdigits10; flag&=~VJTFLGOK1;} break;
+  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(num[0],av->fgh[1])){f1=jtdigits10; flag&=~VJTFLGOK1;} break;
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
   case CAMP:
    x=av->fgh[0]; if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
@@ -209,7 +209,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
   if(c==CICAP)m=7;
   else if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
-  else if(c==CAMP&&(g==zero||g==one)){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;}
+  else if(c==CAMP&&(g==num[0]||g==num[1])){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;}
   switch(0<=m?d:-1){
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
    case CEPS:  f2=b?atcomp0:atcomp; flag+=7+8*m; flag&=~VJTFLGOK2; break;
@@ -248,7 +248,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
   case CICAP:   m=7; if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
-  case CAMP:    if(g==zero||g==one){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
+  case CAMP:    if(g==num[0]||g==num[1]){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
   case CSLASH:  
    if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}
    if(d==CCOMMA){f1=jtredravel; } else m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
@@ -273,7 +273,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
    }
  }
  if(0<=m){
-  b=d==CFIT&&equ(zero,wv->fgh[1]);
+  b=d==CFIT&&equ(num[0],wv->fgh[1]);
   switch(b?ID(wv->fgh[0]):d){
    case CEQ:   f2=b?atcomp0:atcomp; flag+=0+8*m; flag&=~VJTFLGOK2; break;
    case CNE:   f2=b?atcomp0:atcomp; flag+=1+8*m; flag&=~VJTFLGOK2; break;
@@ -368,7 +368,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   if(AN(a)&&AR(a)){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
-   if(b=c==CFIT&&equ(zero,v->fgh[1]))c=ID(v->fgh[0]); 
+   if(b=c==CFIT&&equ(num[0],v->fgh[1]))c=ID(v->fgh[0]); 
    mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
   }
   if(0<=mode){
@@ -390,7 +390,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
   if(AN(w)&&AR(w)){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
-   c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(zero,v->fgh[1]))c=ID(v->fgh[0]);
+   c=v->id; p=v->flag&255; if(b=c==CFIT&&equ(num[0],v->fgh[1]))c=ID(v->fgh[0]);
    if(7==(p&7))mode=II0EPS+(p>>3);  /* (e.i.0:)  etc. */
    else      mode=c==CEPS?IEPS:-1;
   }

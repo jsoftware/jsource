@@ -54,20 +54,20 @@
  static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                             \
   an=AN(a); av=(T0*)AV(a);                                           \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;    \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))R one;);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))R one;);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))R one;);} \
-  R zero;                                                            \
+  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))R num[1];);} \
+  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))R num[1];);} \
+  else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))R num[1];);} \
+  R num[0];                                                            \
  }
 
 #define ALLF(f,T0,T1,F)  \
  static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                               \
   an=AN(a); av=(T0*)AV(a);                                             \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;      \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(!F(x,y))R zero;);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(!F(x,y))R zero;);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(!F(x,y))R zero;);} \
-  R one;                                                               \
+  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(!F(x,y))R num[0];);} \
+  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(!F(x,y))R num[0];);} \
+  else           {       DO(n, x=*av++; y=*wv++; if(!F(x,y))R num[0];);} \
+  R num[1];                                                               \
  }
 
 #define IFB1  \
@@ -152,11 +152,11 @@
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n>>LGSZI; r1=n&(SZI-1);                                                        \
   xv=(B*)&x;                                                                        \
-  if     (!AR(a)){ASSIGNX(av); DO(p, if(   F(x,    *wv++))R one; ); x=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(p, if(   F(*av++,x    ))R one; ); x=F(*av,x  );}  \
-  else           {             DO(p, if(   F(*av++,*wv++))R one; ); x=F(*av,*wv);}  \
-  DO(r1, if(xv[i])R one;);                                                          \
-  R zero;                                                                           \
+  if     (!AR(a)){ASSIGNX(av); DO(p, if(   F(x,    *wv++))R num[1]; ); x=F(x,  *wv);}  \
+  else if(!AR(w)){ASSIGNX(wv); DO(p, if(   F(*av++,x    ))R num[1]; ); x=F(*av,x  );}  \
+  else           {             DO(p, if(   F(*av++,*wv++))R num[1]; ); x=F(*av,*wv);}  \
+  DO(r1, if(xv[i])R num[1];);                                                          \
+  R num[0];                                                                           \
  }
 
 #define ALLB(f,T0,T1,F)  \
@@ -165,11 +165,11 @@
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                        \
   p=n>>LGSZI; r1=n&(SZI-1);                                                               \
   xv=(B*)&x; tv=(C*)&t; DO(SZI, tv[i]=1;);                                          \
-  if     (!AR(a)){ASSIGNX(av); DO(p, if(t!=F(x,    *wv++))R zero;); x=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(p, if(t!=F(*av++,x    ))R zero;); x=F(*av,x  );}  \
-  else           {             DO(p, if(t!=F(*av++,*wv++))R zero;); x=F(*av,*wv);}  \
-  DO(r1, if(!xv[i])R zero;);                                                        \
-  R one;                                                                            \
+  if     (!AR(a)){ASSIGNX(av); DO(p, if(t!=F(x,    *wv++))R num[0];); x=F(x,  *wv);}  \
+  else if(!AR(w)){ASSIGNX(wv); DO(p, if(t!=F(*av++,x    ))R num[0];); x=F(*av,x  );}  \
+  else           {             DO(p, if(t!=F(*av++,*wv++))R num[0];); x=F(*av,*wv);}  \
+  DO(r1, if(!xv[i])R num[0];);                                                        \
+  R num[1];                                                                            \
  }
 
 #if SY_64

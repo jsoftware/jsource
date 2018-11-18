@@ -108,7 +108,7 @@ F2(jtebar){PROLOG(0065);A y,z;B*zv;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
  switch(d){
-  case -1: R reshape(shape(w),zero);
+  case -1: R reshape(shape(w),num[0]);
   case -2: R ebarmat(a,w);
   case -3: R df2(shape(a),w,cut(amp(a,ds(CMATCH)),num[3]));
   case -4: R ebarvec(a,w);
@@ -136,7 +136,7 @@ F2(jti1ebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  wv=CAV(w); n=AN(w); p=n-m;
  switch(d){
   case -1: R sc(n);
-  case -4: R indexof(ebarvec(a,w),one);
+  case -4: R indexof(ebarvec(a,w),num[1]);
  }
  GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(CTTZ(AT(w))){
@@ -158,7 +158,7 @@ F2(jtsumebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,z=0;
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
  switch(d){
-  case -1: R zero;
+  case -1: R num[0];
   case -4: R aslash(CPLUS,ebarvec(a,w));
  }
  GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
@@ -181,21 +181,21 @@ F2(jtanyebar){A y;C*av,*wv;I c,d,i,k=0,m,n,p,*yv;
  av=CAV(a); m=AN(a);
  wv=CAV(w); n=AN(w); p=n-m;
  switch(d){
-  case -1: R zero;
+  case -1: R num[0];
   case -4: R aslash(CPLUSDOT,ebarvec(a,w));
  }
  GATV(y,INT,d,1,0); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(CTTZ(AT(w))){
-  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R one) 
-            else EBLOOP(I, u[i],  v[k+m],   if(i==m)R one); break;
-  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R one) 
-            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R one); break;
-  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R one); break;
-  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R one) 
-            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R one); break;
-  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R one);
+  case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)R num[1]) 
+            else EBLOOP(I, u[i],  v[k+m],   if(i==m)R num[1]); break;
+  case SBTX: if(c)EBLOOP(SB,u[i]-c,v[k+m]-c, if(i==m)R num[1]) 
+            else EBLOOP(SB,u[i],  v[k+m],   if(i==m)R num[1]); break;
+  case C2TX:      EBLOOP(US,u[i],  v[k+m],   if(i==m)R num[1]); break;
+  case C4TX: if(c)EBLOOP(C4,u[i]-c,v[k+m]-c, if(i==m)R num[1]) 
+            else EBLOOP(C4,u[i],  v[k+m],   if(i==m)R num[1]); break;
+  default:       EBLOOP(UC,u[i],  v[k+m],   if(i==m)R num[1]);
  }
- R zero;
+ R num[0];
 }    /* a ([: +./ E.) w where a and w are atoms or lists */
 
 #define IFB1  \

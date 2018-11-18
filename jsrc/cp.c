@@ -166,23 +166,29 @@ static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
 //   with the y arg as the w operand (and self/powop included to provide access to the original u)
 // We allow v to create a gerund, but we do not allow a gerund to create a gerund.
 
-// We could handle the special cases 0 & 1 here, but we don't.  We go ahead and call powop to return the verb (] or a).
-// That way we only have to check for 0&1 in one place, and it picks up u^:v and u^:n
+// We catch the special cases 0  & 1 here, mostly for branch-prediction purposes.  All results of g1/g2 will be nouns, while
+// most instances of u^:v (run through powop) have v as verb
 
 // here for u^:v y
 CS1IP(static,jtpowv1, \
-A u; RZ(u = powop(fs,        CALL1(g1,  w,gs),(A)1));  \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u) \
+A u; RZ(u=CALL1(g1,  w,gs));  /* execute v */ \
+if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
+else{RZ(u = powop(fs,u,(A)1));  \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 ,0108)
 // here for x u^:v y 
 CS2IP(static,jtpowv2, \
-A u; RZ(u = powop(fs,        CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u); \
+A u; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
+if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;} \
+else{RZ(u = powop(fs,u,(A)1));  \
+z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);} \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
-A u; RZ(u = powop(FAV(fs)->fgh[0],CALL2(g2,a,w,gs),(A)1)); \
-z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u); \
+A u; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
+if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,w,fs):w;} \
+else{RZ(u = powop(fs,u,(A)1));  \
+z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 ,0110)
 
 // This executes the conjunction u^:v to produce a derived verb.  If the derived verb
@@ -192,55 +198,56 @@ z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u); \
 // kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
-DF2(jtpowop){A hs;B b,r;I m,n;V*v;
+DF2(jtpowop){A hs;B b;V*v;
  RZ(a&&w);
- switch(CONJCASE(a,w)){
-  default: ASSERTSYS(0,"powop");
-  case NV: ASSERT(0,EVDOMAIN);
-  case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
-  case VV:
-   // u^:v.  Create derived verb to handle it.
-   v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v
-   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
-   R CDERIV(CPOWOP,jtpowv1,b?jtpowv2a:jtpowv2,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
-  case VN:
-   // u^:n.  Check for special types.
-   if(BOX&AT(w)){A x,y;AF f1,f2;
-    // Boxed v.  It could be <n or [v0`]v1`v2.
-    if(ARELATIVEB(w))RZ(w=car(w));   // if relative, make a non-relative copy
-    if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
-     // here for <n or <''.  That will be handled by special code.
-     f1=jtpowseq; f2=jtply2; v=FAV(a);
-     // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
-     if((!AN(x)||FL&AT(x)&&inf==*DAV(x))){
-      if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y
-      else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:_ y
-     }
-     R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
-    }
+ ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
+ if(AT(w)&VERB){
+// obsolete  switch(CONJCASE(a,w)){
+// obsolete   default: ASSERTSYS(0,"powop");
+// obsolete   case NV: ASSERT(0,EVDOMAIN);
+// obsolete   case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
+// obsolete   case VV:
+  // u^:v.  Create derived verb to handle it.
+  v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v
+  // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
+  R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
+ }
+// obsolete   case VN:
+ // u^:n.  Check for special types.
+ if(BOX&AT(w)){A x,y;AF f1,f2;
+  // Boxed v.  It could be <n or [v0`]v1`v2.
+  if(ARELATIVEB(w))RZ(w=car(w));   // if relative, make a non-relative copy
+  if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
+   // here for <n or <''.  That will be handled by special code.
+   f1=jtpowseq; f2=jtply2; v=FAV(a);
+   // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
+   if((!AN(x)||FL&AT(x)&&inf==*DAV(x))){
+    if(CAMP==v->id&&(CFROM==ID(v->fgh[0])&&(y=v->fgh[1],INT&AT(y)&&1==AR(y)))){f1=jtindexseqlim1;}  // {&b^:_ y
+    else if(CTILDE==v->id&&CFROM==ID(v->fgh[0])){f2=jtindexseqlim2;}   // x {~^:_ y
+   }
+   R CDERIV(CPOWOP,f1,f2,VFLAGNONE, RMAX,RMAX,RMAX);  // create the derived verb for <n
+  }
 //    ASSERT(self,EVDOMAIN);  // If gerund returns gerund, error.  This check is removed pending further design
-    R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
-   }
-   // unboxed n.
-   RZ(hs=vib(w));   // hs=n coerced to integer
-   m=AN(hs); n=m?*AV(hs):0; r=0<AR(hs);  // m=#atoms of n; n=1st atom; r=n has rank>0
-   if(!r){
-    // Handle the 3 important cases: atomic _1 (inverse), 0 (nop), and 1 (execute u)
-    switch(n){
-    case 0: R ds(CRIGHT);   //  u^:0 is like ]
-    case 1: R a;  // u^:1 is like u 
-    case -1:
-     // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
-     // must wait until we get arguments
-     {A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-      I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
-     R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
-     }
-    }
-   }
-   // If not special case, fall through to handle general case
-   b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ 
-   R fdef(0,CPOWOP,VERB, b||!m?jtply1:!r&&0<=n?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for (empty or contains _/__), (scalar n>=0)
-      VFLAGNONE, RMAX,RMAX,RMAX);
-   // no reason to inplace this, since it has to keep the old value to check for changes
-}}
+  R gconj(a,w,CPOWOP);  // create the derived verb for [v0`]v1`v2
+ }
+ // unboxed n.
+ RZ(hs=vib(w));   // hs=n coerced to integer
+ if(!AR(w)){  // input is an atom
+  // Handle the 3 important cases: atomic _1 (inverse), 0 (nop), and 1 (execute u)
+  // kludge should have special case for atomic _ too
+  if(!(IAV(hs)[0]&~1))R a=IAV(hs)[0]?a:ds(CRIGHT);  //  u^:0 is like ],  u^:1 is like u 
+  if(IAV(hs)[0]==-1){  //  u^:_1
+   // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names,
+   // must wait until we get arguments
+   A h=0; AF f1=jtinv1; if(nameless(a)){if(h=inv(a)){f1=jtinvh1;}else{f1=jtinverr; RESETERR}} // h must be valid for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+   I flag = (FAV(a)->flag&VASGSAFE) + (h?FAV(h)->flag&VJTFLGOK1:VJTFLGOK1);  // inv1 inplaces and calculates ip for next step; invh has ip from inverse
+   R fdef(0,CPOWOP,VERB,(AF)(f1),jtinv2,a,w,h,flag,RMAX,RMAX,RMAX);
+  }
+ }
+ I m=AN(hs); // m=#atoms of n; n=1st atom; r=n has rank>0
+ // If not special case, fall through to handle general case
+ b=0; if(m&&AT(w)&FL+CMPX)RE(b=!all0(eps(w,over(ainf,scf(infm)))));   // set b if n is nonempty FL or CMPX array containing _ or __ kludge should just use hs
+ R fdef(0,CPOWOP,VERB, b||!m?jtply1:!AR(w)&&0<=IAV(hs)[0]?jtfpown:jtply1s,jtply2, a,w,hs,   // Create derived verb: special cases for (empty or contains _/__), (scalar n>=0)
+    VFLAGNONE, RMAX,RMAX,RMAX);
+ // no reason to inplace this, since it has to keep the old value to check for changes
+}

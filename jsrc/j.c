@@ -20,8 +20,8 @@ D   infm=0;               /* __                                   */
 A   ace=0;                /* a:                                   */
 A   alp=0;                /* a.                                   */
 A   ainf=0;               /* _                                    */
-A   iv0=0;                /* ,0                                   */
-A   iv1=0;                /* ,1                                   */
+A   iv0=0;                /* ,0   also extended integer 0                                */
+A   iv1=0;                /* ,1   also extended integer 1                                */
 I   liln=0;               /* 1 iff little endian                  */
 A   mark=0;               /* parser marker                        */
 D   jnan=0;               /* _.                                   */
@@ -54,18 +54,9 @@ A   zpath=0;              /* default locale search path           */
 uint64_t g_cpuFeatures;   // blis
 int hwfma=0;              // blis cpu tuning
 A   pst[256]={0};
-UC  bitc[256]={0};        /* # 1 bits in each possible byte       */
-C   bitdisp[256*16]={0};  /* display for each possible byte       */
 A   chr[256]={0};         /* scalar for each character, or 0      */
 B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
-// obsoletes follow
-A   mdot=0;               /* m.                                   */
-A   ndot=0;               /* n.                                   */
-A   udot=0;               /* u.                                   */
-A   vdot=0;               /* v.                                   */
-A   xdot=0;               /* x.                                   */
-A   ydot=0;               /* y.                                   */
  // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
 // block after leaving 2 words for memory header, AH words for A-block header, 1 for rank (not used for symbol tables),
@@ -88,6 +79,15 @@ I ptab[]={
 // The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
 // created with size i.  The argument names supported are ynam and xnam.
 UI4 yxbuckets[14];    // bucket positions for x/y (x in high part).  Only 14, because we can't hold more than 16 bits here
+// obsoletes follow
+UC  bitc[256]={0};        /* # 1 bits in each possible byte       */
+C   bitdisp[256*16]={0};  /* display for each possible byte       */
+A   mdot=0;               /* m.                                   */
+A   ndot=0;               /* n.                                   */
+A   udot=0;               /* u.                                   */
+A   vdot=0;               /* v.                                   */
+A   xdot=0;               /* x.                                   */
+A   ydot=0;               /* y.                                   */
 
 // globals end
 

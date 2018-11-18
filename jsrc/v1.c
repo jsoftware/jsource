@@ -61,7 +61,7 @@ B jtequ(J jt,A a,A w){A x;
  RZ(a&&w);F2PREFIP;  // allow inplace request - it has no effect
  if(a==w)R 1;
  if(SPARSE&(AT(a)|AT(w))&&AR(a)&&AR(w)){RZ(x=matchs(a,w)); R*BAV(x);}
- R level(a)==level(w)&&matchsub(0L,0L,1L,1L,a,w,0,C1);
+ R /* obsolete level(a)==level(w)&& */ matchsub(0L,0L,1L,1L,a,w,0,C1);  // don't check level - it takes too long for big arrays
 }
 
 // Return 1 if a and w match intolerantly, 0 if not
@@ -73,13 +73,13 @@ B jtequ0(J jt,A a,A w){
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
 static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
  if(!(TYPESEQ(AT(a),AT(w))&&u->id==v->id))R 0;
- p=u->fgh[0]; q=v->fgh[0]; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;
- p=u->fgh[1]; q=v->fgh[1]; if(!(!p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1)))R 0;
- p=u->fgh[2]; q=v->fgh[2];    R !p&&!q||p&&q&&matchsub(0L,0L,1L,1L,p,q,0,C1);
+ p=u->fgh[0]; q=v->fgh[0]; if(!(!p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
+ p=u->fgh[1]; q=v->fgh[1]; if(!(!p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1))))R 0;
+ p=u->fgh[2]; q=v->fgh[2];    R !p&&!q||p&&q&&(p==q||matchsub(0L,0L,1L,1L,p,q,0,C1));
 }
 
 // compare function for boxes.  Do a test on the single contents of the box.  Reset comparison direction to normal.
-#define EQA(a,w)  matchsub(0L,0L,1L,1L,a,w,0,C1)
+#define EQA(a,w)  (a==w||matchsub(0L,0L,1L,1L,a,w,0,C1))
 // compare rationals
 #define EQQ(a,w)  (equ(a.n,w.n)&&equ(a.d,w.d))
 
@@ -110,6 +110,7 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
 // but return the match status.  We use this when comparing boxed arrays or functions
 // b1 is the value to use for 'match' - 1 normally, but 0 for top level of -.@-:
 static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,*wv;I at,c,j=0,p,q,t,wt;
+ // we tested for a==w before the call, to save on call overhead
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
  p=AR(a)-af; at=UNSAFE(AT(a));
  q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt));

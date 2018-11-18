@@ -1146,7 +1146,6 @@ CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i; US min0,min1,max0,ma
  ret.min=min0; ret.range=(I)((UI)(max0-min0)+1);  // because the tests succeed, this will give the proper range
  R ret;
 fail: ret.min=ret.range=0; R ret;
-fail: ret.min=ret.range=0; R ret;
 }
 #else  // the simpler non-unrolled version
 static CR condrange(I *s,I n,I min,I max,I maxrange){CR ret;I i;I x;

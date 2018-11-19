@@ -105,7 +105,7 @@ static A jtgjoin(J jt,C c,A a,A w){A f;
  RZ(a&&w);
  ASSERT(1>=AR(a)&&1>=AR(w),EVRANK);  // both ranks<2
  ASSERT((!AN(a)||BOX&AT(a))&&(!AN(w)||BOX&AT(w)),EVDOMAIN);  // both boxed or empty
- RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),num[0]));  // f = <@,"0
+ RZ(f=qq(atop(ds(CBOX),ds(CCOMMA)),zeroionei[0]));  // f = <@,"0
  R df2(box(spellout(c)),df2(a,w,f),f);   // gerund: (<c) <@,"0 a <@,"0 w
 }
 
@@ -119,7 +119,7 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  sv=FAV(self); g=sv->fgh[1];
  // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(k=df1(w,g))
- else{RZ(k=df1(w,qq(g,num[0]))); ASSERT(AR(k)==AR(w)&&AN(k)==AN(w),EVRANK);}
+ else{RZ(k=df1(w,qq(g,zeroionei[0]))); ASSERT(AR(k)==AR(w)&&AN(k)==AN(w),EVRANK);}
  if(B01&AT(k)){
   // v produced a binary list.  Pull out the operands for u[0] and u[1], operate on them individually,
   // and interleave the results

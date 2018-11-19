@@ -149,7 +149,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CQCO:     
    if(nf){
     ASSERT(!AR(x),EVRANK);
-    R obverse(eval(all1(lt(x,num[0]))?"*/@(^/)\"2":"(p:@i.@# */ .^ ])\"1"),w);
+    R obverse(eval(all1(lt(x,zeroionei[0]))?"*/@(^/)\"2":"(p:@i.@# */ .^ ])\"1"),w);
    }
    break;
   case CFIT:
@@ -173,7 +173,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
     obverse(evc(x,mag(x),"$&x@>:@(y&(<.@^.))@(1&>.)@(>./)@:|@, #: ]"),w);
   case CBANG:
    ASSERT(!AR(x),EVRANK);
-   ASSERT(all1(lt(num[0],x)),EVDOMAIN);
+   ASSERT(all1(lt(zeroionei[0],x)),EVDOMAIN);
    GAT(y,BOX,9,1,0); q=AAV(y);
    q[0]=cstr("3 :'(-("); q[1]=q[3]=lrep(w);
    q[2]=cstr("-y\"_)%1e_3&* "); q[4]=cstr("\"0 D:1 ])^:_[");
@@ -229,7 +229,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
    }
    break;
   case CPOLY:
-   if(nf&&1==AR(x)&&2==AN(x)&&NUMERIC&AT(x)&&!equ(num[0],tail(x))){
+   if(nf&&1==AR(x)&&2==AN(x)&&NUMERIC&AT(x)&&!equ(zeroionei[0],tail(x))){
     RZ(y=recip(tail(x)));
     R amp(over(tymes(y,negate(head(x))),y),h);
  }}
@@ -338,12 +338,12 @@ static F1(jtneutral){A x,y;B b;V*v;
  RZ(y=v2(0L,1L));
  RZ(x=scf(infm)); b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
  x=ainf;          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
- x=num[0];          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x; 
- x=num[1];           b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R x;
+ x=zeroionei[0];          b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R num[0]; 
+ x=zeroionei[1];           b=equ(y,CALL2(v->valencefns[1],x,y,w)); RESETERR; if(b)R num[1];
  RZ(x=scf(infm)); b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
  x=ainf;          b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
- x=num[0];          b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
- x=num[1];           b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R x;
+ x=zeroionei[0];          b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R num[0];
+ x=zeroionei[1];           b=equ(y,CALL2(v->valencefns[1],y,x,w)); RESETERR; if(b)R num[1];
  ASSERT(0,EVDOMAIN);
 }    /* neutral of arbitrary rank-0 function */
 

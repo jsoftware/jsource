@@ -67,13 +67,13 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   id=0;  // set an invalid pseudochar id for the gerund, to indicate 'not a primitive'
  }
  I wr=AR(w);  // rank of w
- if(1>=AR(a))RZ(a=lamin2(num[0],a));   // default list to be lengths starting at origin
  RZ(a=vib(a));  // audit for valid integers
+ if(1>=AR(a))RZ(a=lamin2(zeroionei[0],a));   // default list to be lengths starting at origin
  as=AS(a); m=AR(a)-2; PROD(n,m,as); c=as[1+m]; u=AV(a);  // n = # 2-cells in a, c = #axes of subarray given, m is index of next-last axis of a, u->1st atom of a
  ASSERT((-(as[m]^2)|(wr-c))>=0,EVLENGTH);    // shapes must end with 2,c where c does not exceed rank of r
  if(!n){  /* empty result; figure out result type */
   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
-  if(z==0)z=num[0];  // use zero as fill result if error
+  if(z==0)z=zeroionei[0];  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
   MCISd(zzs,as,m) MCISd(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
@@ -260,7 +260,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
-   if(!m){y=reitem(num[0],w); R iota(over(num[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
+   if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
    GATV(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
    switch((wd?2:0)+(h?1:0)){A Zz;                                                 \
     case 0: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); break; \
@@ -708,7 +708,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // No frets.  Apply the operand to 0 items; return (0,$result) $ result (or $,'' if error on fill-cell).  The call is non-inplaceable
    RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
    UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
-   RZ(zz=reshape(over(num[0],shape(zz?zz:mtv)),z));
+   RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),z));
   }
  }
  EPILOG(zz);

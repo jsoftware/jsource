@@ -193,7 +193,7 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
    }
    break;
   case CSLDOT:  if(d==CSLASH&&CSLASH==ID(av->fgh[0])){f2=jtpolymult; flag&=~VJTFLGOK2;} break;
-  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(num[0],av->fgh[1])){f1=jtdigits10; flag&=~VJTFLGOK1;} break;
+  case CQQ:     if(d==CTHORN&&CEXEC==ID(av->fgh[0])&&equ(zeroionei[0],av->fgh[1])){f1=jtdigits10; flag&=~VJTFLGOK1;} break;
   case CEXP:    if(d==CCIRCLE){f1=jtexppi; flag&=~VJTFLGOK1;} break;
   case CAMP:
    x=av->fgh[0]; if(RAT&AT(x))RZ(x=pcvt(XNUM,x));

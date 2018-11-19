@@ -215,7 +215,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
 static B jtrep1sa(J jt,A a,I*c,I*d){A x;B b;I*v;
  b=1&&AT(a)&CMPX;
  if(b)RZ(x=rect(a)) else x=a; 
- if(AR(a)){ASSERT(equ(num[1],aslash(CSTARDOT,le(num[0],ravel(x)))),EVDOMAIN); RZ(x=aslash(CPLUS,x));} 
+ if(AR(a)){ASSERT(equ(num[1],aslash(CSTARDOT,le(zeroionei[0],ravel(x)))),EVDOMAIN); RZ(x=aslash(CPLUS,x));} 
  if(!(INT&AT(x)))RZ(x=cvt(INT,x));
  v=AV(x); *c=v[0]; *d=b?v[1]:0;
  ASSERT(0<=*c&&0<=*d,EVDOMAIN);

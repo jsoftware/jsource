@@ -373,15 +373,15 @@ static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
 
 F2(jtqco2){A q,y,z;B b,bb,xt;I c,j,k,m,*qv,wn,wr,*yv,*zv;
  RZ(a&&w);
- wn=AN(w); wr=AR(w); b=all1(lt(a,num[0])); xt=1&&AT(w)&XNUM+RAT;
+ wn=AN(w); wr=AR(w); b=all1(lt(a,zeroionei[0])); xt=1&&AT(w)&XNUM+RAT;
  if(AR(a)||wr&&(b||xt))R rank2ex(a,w,0L,0L,0L,0L,0L,jtqco2);
  if(!b&&xt){RE(m=i0(vib(a))); if(0<=m&&m<1229)R qco2x(m,w);}  /* 1229=p:^:_1 XBASE */
  RZ(q=factor(w)); qv=AV(q);
  if(b)RZ(a=negate(a));
  bb=equ(a,ainf);
  if(b&bb){ /* __ q: w */
-  RZ(y=ne(q,curtail(over(num[0],q))));
-  R lamin2(repeat(y,q),df1(y,cut(ds(CPOUND),num[1])));
+  RZ(y=ne(q,curtail(over(zeroionei[0],q))));
+  R lamin2(repeat(y,q),df1(y,cut(ds(CPOUND),zeroionei[1])));
  }
  RZ(y=vi(plt(q))); yv=AV(y);
  k=-1; DO(AN(y), if(k<yv[i])k=yv[i];); ++k;

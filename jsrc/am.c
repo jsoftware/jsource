@@ -191,7 +191,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
   ASSERT(1>=r,EVINDEX);
   ASSERT(n<=wr,EVINDEX);
   d=n; DO(n, --d; if(!equ(ace,AADR(id,v[d])))break;); if(n)++d; n=d;
-  j=num[0];
+  j=zeroionei[0];
   for(i=0;i<n;++i){
    x=AADR(id,v[i]); d=ws[i];
    if(AN(x)&&BOX&AT(x)){

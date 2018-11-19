@@ -48,13 +48,13 @@ static DF2(jthgeom2){PROLOG(0036);A h,*hv,t,z;B b;I an,*av,j,n;V*sv=FAV(self);
  if(AR(w))R rank2ex(a,w,self,0L,0L,0L,0L,jthgeom2);  // H. is not marked as supporting IRS, so this really doesn't matter
  RZ(a=AT(a)&FL+CMPX?vib(a):vi(a));  // kludge just call vib?
  an=AN(a); av=AV(a); n=0; DO(an, j=av[i]; ASSERT(0<=j,EVDOMAIN); if(n<j)n=j;);
- if(!n)R tymes(num[0],a);
+ if(!n)R tymes(zeroionei[0],a);
  h=sv->fgh[2]; hv=AAV(h);
  b=VERB&(AT(sv->fgh[0])|AT(sv->fgh[1]))||CMPX&(AT(w)|AT(hv[0])|AT(hv[1]));
  if(!b)z=hgd((B)(1<an),n,w,hv[0],hv[1]);
  else if(2000>n)z=hgv((B)(1<an),n,w,self);
  else{
-  j=10; t=mtv; z=num[1];
+  j=10; t=mtv; z=zeroionei[1];
   while(z&&!equ(z,t)){t=z; z=hgv(0,j,w,self); j+=j;} 
   RZ(z); if(1<an)z=hgv(1,j,w,self);
  }
@@ -68,8 +68,8 @@ static F2(jtcancel){A c,d,f,x,y;
  f=eval("#/.~");
  a=ravel(a); x=nub(a); c=df1(a,f);
  w=ravel(w); y=nub(w); d=df1(w,f);
- a=repeat(maximum(num[0],minus(c,from(indexof(y,x),over(d,num[0])))),x);
- w=repeat(maximum(num[0],minus(d,from(indexof(x,y),over(c,num[0])))),y);
+ a=repeat(maximum(num[0],minus(c,from(indexof(y,x),over(d,zeroionei[0])))),x);
+ w=repeat(maximum(num[0],minus(d,from(indexof(x,y),over(c,zeroionei[0])))),y);
  R link(a,w);
 }
 
@@ -90,7 +90,7 @@ F1(jthgdiff){A*hv,p,q,x,y;V*v=FAV(w);
  y=hv[1]; y=1==AN(y)?head(y):y;
  p=divide(aslash(CSTAR,x),aslash(CSTAR,y));
  q=hgeom(increm(x),increm(y));
- R equ(p,num[1])?q:folk(qq(p,num[0]),ds(CSTAR),q);
+ R equ(p,num[1])?q:folk(qq(p,zeroionei[0]),ds(CSTAR),q);
 }    /* a H. w D. 1 */
 
 DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
@@ -114,6 +114,6 @@ DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
    case 2: y=divide(c,ascan(CSTAR,d)); break;
    case 3: y=divide(c,d);
  }}
- RZ(z=from(w,over(num[1],y)));
+ RZ(z=from(w,over(zeroionei[1],y)));
  EPILOG(z);
 }    /* coefficients indexed by w excluding !j */

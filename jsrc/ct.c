@@ -102,9 +102,9 @@ static DF1(jttaydiv){A c,f,ft,h,ht,y;I j,m,*u;V*v;
  RZ(y=IX(m)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
  RZ(f=df1(y,ft=tdot(v->fgh[0])));
  RZ(h=df1(y,ht=tdot(v->fgh[2])));
- RZ(c=indexof(ne(num[0],h),num[1]));
+ RZ(c=indexof(ne(zeroionei[0],h),num[1]));
  if(j=*AV(c)){
-  ASSERT(all1(eq(num[0],take(c,f))),EVDOMAIN);
+  ASSERT(all1(eq(zeroionei[0],take(c,f))),EVDOMAIN);
   RZ(y=apv(j,m,1L)); if(AT(w)&XNUM+RAT)RZ(y=xco1(y));
   RZ(f=over(drop(c,f),df1(y,ft)));
   RZ(h=over(drop(c,h),df1(y,ht)));
@@ -167,9 +167,9 @@ static F1(jttayatop){A c,d,e,f,ft,g,gt,h;I k,m,n;V*v=FAV(w);
  }
  ft=tdot(f); RZ(c=coeff(ft)); m=AN(c);
  gt=tdot(g); RZ(d=coeff(gt)); n=AN(d);
- if(n&&all1(eq(num[0],curtail(d)))){
+ if(n&&all1(eq(zeroionei[0],curtail(d)))){
   e=tail(d);
-  if(!equ(num[1],e))ft=folk(amp(e,ds(CEXP)),ds(CSTAR),ft);
+  if(!equ(zeroionei[1],e))ft=folk(amp(e,ds(CEXP)),ds(CSTAR),ft);
   if(2<n)ft=evc(sc(n-1),ft,"0&=@(x&|) * y@<.@(%&x)");
   R !m?ft:tpoly(1==n?df1(e,f):df1(IX(1+n*(m-1)),ft));
  }

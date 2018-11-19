@@ -610,7 +610,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  n=r?ws[f]:1;
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ace);
- if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),num[1]));
+ if(!(BOX&AT(w)))R df1(cant2(sc(f),w),qq(ds(CBOX),zeroionei[1]));
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
@@ -640,7 +640,7 @@ F1(jtslash){A h;AF f1;C c;V*v;I flag=0;
 }
 
 A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}
-A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),num[1]));}
+A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),zeroionei[1]));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
 

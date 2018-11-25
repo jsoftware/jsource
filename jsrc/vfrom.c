@@ -113,7 +113,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
   }
  }
- RELOCATE(w,z); RETF(z);  // todo kludge should inherit norel
+ /* obsolete RELOCATE(w,z);*/ RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -226,7 +226,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
    else DO(m, b=av; DO(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- RELOCATE(w,z); RETF(z);  // todo kludge should inherit norel
+ /* obsolete RELOCATE(w,z);*/ RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for boolean a */
 
 A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
@@ -340,12 +340,12 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
 // result is list of selectors - complementary if w is boxed
 static A jtafi(J jt,I n,A w){A x;
  if(!(AN(w)&&BOX&AT(w)))R pind(n,w);
- ASSERT(!AR(w),EVINDEX);
+ ASSERT(!AR(w),EVINDEX);  // if boxed, must be an atom
  x=AAV0(w);
  R AN(x)?less(IX(n),pind(n,x)):ace; 
 }
 
-static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j,k,m,n,pr,*s,t,wcr,wf,wr;
+static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,pr,*s,t,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
@@ -355,29 +355,32 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
- k=bp(AT(w)); s=AS(w)+wr-wcr;
+ /* obsolete k=bp(AT(w));*/ s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
  if(wcr==wr)for(i=m=pr=0;i<n;++i){
-  p=afi(s[i],AADR(cd,v[i]));
+  p=afi(s[i],v[i]);
   if(!(p&&1==AN(p)&&INT&AT(p)))break;
   pr+=AR(p); 
   m+=*AV(p)*prod(wcr-i-1,1+i+s);
  }
- if(i){I*ys;  // TODO use virtual block for this
-  RZ(y=gah(pr+wcr-i,w)); ys=AS(y); DO(pr, *ys++=1;); MCISd(ys,s+i,wcr-i);
+ if(i){I*ys;
+// obsolete   RZ(y=gah(pr+wcr-i,w));
+  RZ(y=virtual(w,m,pr+wcr-i));
+  ys=AS(y); DO(pr, *ys++=1;); MCISd(ys,s+i,wcr-i);
   AN(y)=prod(AR(y),AS(y));
-  AK(y)=k*m+CAV(w)-(C*)y;
+// obsolete   AK(y)=k*m+CAV(w)-(C*)y;
  }
+ // take axes 2 at a time, properly handling omitted axes.  First time through p is set
  for(;i<n;i+=2){
-  j=1+i; if(!p)p=afi(s[i],AADR(cd,v[i])); q=j<n?afi(s[j],AADR(cd,v[j])):ace; if(!(p&&q))break;
-  if(p!=ace&&q!=ace){b=0; y=afrom2(p,q,y,wcr-i);}
-  else if(p!=ace)   {b=0; y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
-  else if(q!=ace)   {b=0; y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
+  j=1+i; if(!p)p=afi(s[i],v[i]); q=j<n?afi(s[j],v[j]):ace; if(!(p&&q))break;
+  if(p!=ace&&q!=ace){y=afrom2(p,q,y,wcr-i);}
+  else if(p!=ace)   {y=irs2(p,y,0L,AR(p),wcr-i,jtifrom);}
+  else if(q!=ace)   {y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
   p=0;
  }
- RE(y); if(b){RZ(y=ca(x=y)); RELOCATE(x,y);} EPILOG(y);    // todo kludge should inherit norel
+ RE(y); /* obsolete if(b){ RZ(y=ca(y)); RELOCATE(x,y);}*/ EPILOG(y);    // todo kludge should inherit norel
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;

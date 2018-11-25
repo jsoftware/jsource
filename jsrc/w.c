@@ -329,7 +329,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   RZ(y=raze(m)); r=AR(y); k=AN(y);
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
   GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  
-  DO(c, j=i; t=AADR(md,mv[i]); if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
+  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}
  }

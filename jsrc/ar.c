@@ -617,7 +617,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  GATV(z,BOX,zn,wr-1,ws); MCIS(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
  zv=AAV(z); wv=AAV(w); 
- DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); A Zz; RZ(Zz=raze(x)); rifv(Zz); *zv++ = Zz;); wv+=mn;);
+ DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=*v; v+=m;); A Zz; RZ(Zz=raze(x)); rifv(Zz); *zv++ = Zz;); wv+=mn;);
  RETF(z);
 }    /* ,&.>/"r w */
 

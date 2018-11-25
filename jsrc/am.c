@@ -50,7 +50,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
   default: if(it&B01)DO(c,         MC(zc,wc+k*(*b++?i+c:i),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
- RELOCATE(w,z); R z;
+ /* obsoleteRELOCATE(w,z);*/ R z;
 }
 
 #define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=bv[i]?yv[i]:xv[i];); R z;}
@@ -190,10 +190,10 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
   v=AAV(ind); 
   ASSERT(1>=r,EVINDEX);
   ASSERT(n<=wr,EVINDEX);
-  d=n; DO(n, --d; if(!equ(ace,AADR(id,v[d])))break;); if(n)++d; n=d;
+  d=n; DO(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;
   j=zeroionei[0];
   for(i=0;i<n;++i){
-   x=AADR(id,v[i]); d=ws[i];
+   x=v[i]; d=ws[i];
    if(AN(x)&&BOX&AT(x)){
     ASSERT(!AR(x),EVINDEX); 
     x=AAV0(x); k=IX(d);

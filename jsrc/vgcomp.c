@@ -15,7 +15,7 @@ B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while
 B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-B compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(jt->compw,*a),(A)AABS(jt->compw,*b)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
+B compr(I n, A *a, A *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
 B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
@@ -31,7 +31,7 @@ B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, if(a[cv[i]]!=
 #define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]>y[i])R jt->compgt; else if(x[i]<y[i])R jt->complt;);}
 #define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBGT(x[i],y[i]))R jt->compgt; else if(SBLT(x[i],y[i]))R jt->complt;);}
 #define COMPLOOPF(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R j;);}
-#define COMPLOOPR(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f((A)AABS(x[i],jt->compw),(A)AABS(y[i],jt->compw)))R j;);}
+// obsolete#define COMPLOOPR(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f((A)AABS(x[i],jt->compw),(A)AABS(y[i],jt->compw)))R j;);}
 #define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
 #define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
 

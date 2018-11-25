@@ -510,9 +510,9 @@ static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contents, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 // same but intolerant (used for write probes)
-static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, if(!equ(AADR(c,*u),AADR(d,*v))){res=0;break;}; ++u; ++v;); jt->ct=ct; R res;}
+static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); jt->ct=ct; R res;}
 
 
 /*
@@ -749,8 +749,8 @@ static __forceinline I icmpeq(I *a, I *w, I n) {
 // jtioz01 intolerant CMPX atom
 // jtioz0 intolerant CMPX array
 
-static IOFX(A,US,jtioax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,US,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(A,US,jtioax1,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,US,jtioau, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,US,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,US,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,US,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -761,8 +761,8 @@ static IOFX(Z,US,jtioz01, hic0(2,(UIL*)v),    (v[0].re!=av[hj].re)||(v[0].im!=av
 static IOFX(D,US,jtioc0, hic0(n,(UIL*)v),    fcmp0(v,&av[n*hj],n),           cn) // float array
 static IOFX(Z,US,jtioz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),  cn) // complex array
 
-static IOFX(A,UI4,jtioax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed exact 1-element item */   
-static IOFX(A,UI4,jtioau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),1  )  /* boxed uniform type         */
+static IOFX(A,UI4,jtioax12,hia(1.0,*v),!equ(*v,av[hj]),1  )  /* boxed exact 1-element item */   
+static IOFX(A,UI4,jtioau2, hiau(*v),  !equ(*v,av[hj]),1  )  /* boxed uniform type         */
 static IOFX(X,UI4,jtiox2,  hix(v),            !eqx(n,v,av+n*hj),               cn)  /* extended integer           */   
 static IOFX(Q,UI4,jtioq2,  hiq(v),            !eqq(n,v,av+n*hj),               cn)  /* rational number            */   
 static IOFX(C,UI4,jtioc2,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -848,14 +848,14 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 
 // here comparing boxes.  Consider modifying hia to take a self/neighbor flag rather than a tolerance
 #define TFINDBX(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
+ {HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
  }
 // reflexive.  Because the compare for expa does not force intolerance, we must do so here.  This is required only for boxes, since the other expas are intolerant
 #define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(1.0,AADR(d,*v)))  D ct=jt->ct; jt->ct=0.0; FINDWR(TH,expa); jt->ct=ct; \
- HASHSLOT(hia(tl,AADR(d,*v))) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
- HASHSLOT(hia(tr,AADR(d,*v))) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
+ {HASHSLOT(hia(1.0,*v))  D ct=jt->ct; jt->ct=0.0; FINDWR(TH,expa); jt->ct=ct; \
+ HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
+ HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
  }
 
 
@@ -955,9 +955,9 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !jeqd
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
+static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
 // singleton box
-static IOFT(A,US,jtioa1,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,US,jtioa1,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
 static IOFT(Z,UI4,jtioz2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0((D*)v,(D*)(av+n*hj),n*2), !eqz(n,v,av+n*hj)               )
 // CMPLX atom
@@ -967,9 +967,9 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !je
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
+static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
 // singleton box
-static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -1249,7 +1249,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
    p=0; q=m1;                        \
    while(p<=q){                      \
     t=0; j=(p+q)>>1; v=av+n*hu[j];    \
-    DO(n, if(t=compare(AADR(wd,u[i]),AADR(ad,v[i])))break;);  \
+    DO(n, if(t=compare(u[i],v[i]))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
    }                                 \
    zstmt;                            \
@@ -1365,8 +1365,8 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
   R h;                                                                               \
  }
 
-static IOFXW(A,US,jtiowax1,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,US,jtiowau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed uniform type         */
+static IOFXW(A,US,jtiowax1,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,US,jtiowau, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,US,jtiowx,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,US,jtiowq,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,US,jtiowc,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */
@@ -1377,8 +1377,8 @@ static IOFXW(Z,US,jtiowz01, hic0(2,(UIL*)v),    (v[0].re!=wv[hj].re)||(v[0].im!=
 static IOFXW(D,US,jtiowc0, hic0(n,(UIL*)v),    fcmp0(v,&wv[n*hj],n),           cn) // float array
 static IOFXW(Z,US,jtiowz0, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n),  cn) // complex array
 
-static IOFXW(A,UI4,jtiowax12,hia(1.0,AADR(d,*v)),!equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed exact 1-element item */   
-static IOFXW(A,UI4,jtiowau2, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(wd,wv[hj])),1  )  /* boxed uniform type         */
+static IOFXW(A,UI4,jtiowax12,hia(1.0,*v),!equ(*v,wv[hj]),1  )  /* boxed exact 1-element item */   
+static IOFXW(A,UI4,jtiowau2, hiau(*v),  !equ(*v,wv[hj]),1  )  /* boxed uniform type         */
 static IOFXW(X,UI4,jtiowx2,  hix(v),            !eqx(n,v,wv+n*hj),               cn)  /* extended integer           */   
 static IOFXW(Q,UI4,jtiowq2,  hiq(v),            !eqq(n,v,wv+n*hj),               cn)  /* rational number            */   
 static IOFXW(C,UI4,jtiowc2,  hic(k,(UC*)v),     memcmp(v,wv+k*hj,k),             cn)  /* boolean, char, or integer  */

@@ -31,6 +31,11 @@
 #define RMBX            64L                                  /* max rank for mbx      */
 #define SMMFREE(a)      (I**)((I)(a)+(allosize(a)&-8)-SZI*MLEN)   /* address of free lists */
 
+#define AABS(rel,k)     (k)  // used by Mbx
+#define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */  // used by Mbx
+#define ARELATIVE(w)    0  // used by Mbx
+#define RELBASEASGN(lett,w)
+
 // **** following is the layout of SMM blocks, which keep a header before the allocated area
 typedef struct {I*a;US j;US blkx;} MS;
 

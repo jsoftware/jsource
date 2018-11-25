@@ -15,7 +15,7 @@ extern B compuu(I,US*,US*);
 extern B compud(I,US*,US*);
 extern B comptu(I,C4*,C4*);
 extern B comptd(I,C4*,C4*);
-extern B compr(I,A1*,A1*);
+extern B compr(I,A*,A*);
 extern B comppu(I,D*,D*);
 extern B comppd(I,D*,D*);
 extern B compxu(I,X*,X*);

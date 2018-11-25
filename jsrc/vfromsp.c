@@ -117,10 +117,10 @@ static A jtfrombs1(J jt,A ind,A w,I wf){A*iv,x,y,z;I j,m,n,old,wr,wcr;
  n=AN(ind); iv=AAV(ind);  wr=AR(w); wcr=wr-wf;
  ASSERT(1>=AR(ind),EVRANK);
  ASSERT(n<=wr-wf,EVLENGTH);
- j=n; DO(n, --j; x=AADR(id,iv[j]); if(BOX&AT(x)&&!AR(x)&&(y=AAV0(x),!AN(y)&&1==AR(y)))--n; else break;);
+ j=n; DO(n, --j; x=iv[j]; if(BOX&AT(x)&&!AR(x)&&(y=AAV0(x),!AN(y)&&1==AR(y)))--n; else break;);
  z=w; old=jt->tnextpushx;
  for(j=0;j<n;++j){
-  x=AADR(id,iv[j]); 
+  x=iv[j]; 
   if(BOX&AT(x)){
    ASSERT(!AR(x),EVINDEX);
    x=AAV0(x); m=*(wf+j+AS(w));

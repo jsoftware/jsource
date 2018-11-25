@@ -92,7 +92,7 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
 #endif
  default:        CANTA(C, MC(u,v,cellsizeb); u+=cellsizeb;); break;
  }     
- RELOCATE(w,z); RETF(z);  // should EPILOG?
+ /* obsolete RELOCATE(w,z);*/ RETF(z);  // should EPILOG?
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 

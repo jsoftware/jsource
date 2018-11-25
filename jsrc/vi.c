@@ -138,7 +138,7 @@ static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 
 // test a subset of two boxed arrays for match.  u/v point to pointers to contants, c and d are the relative flags
 // We test n subboxes
-static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(AADR(c,*u),AADR(d,*v)))R 0; ++u; ++v;); R 1;}
+static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 
 /*
  mode one of the following:
@@ -394,8 +394,8 @@ static I hashallo(IH * RESTRICT hh,UI p,UI m,I md){
  }
 
 //
-static IOFX(A,jtioax1,hia(t1,AADR(d,*v)),!equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed exact 1-element item */   
-static IOFX(A,jtioau, hiau(AADR(d,*v)),  !equ(AADR(d,*v),AADR(ad,av[hj])),++v,   --v  )  /* boxed uniform type         */
+static IOFX(A,jtioax1,hia(t1,*v),!equ(*v,av[hj]),++v,   --v  )  /* boxed exact 1-element item */   
+static IOFX(A,jtioau, hiau(*v),  !equ(*v,av[hj]),++v,   --v  )  /* boxed uniform type         */
 static IOFX(X,jtiox,  hix(v),            !eqx(n,v,av+n*hj),               v+=cn, v-=cn)  /* extended integer           */   
 static IOFX(Q,jtioq,  hiq(v),            !eqq(n,v,av+n*hj),               v+=cn, v-=cn)  /* rational number            */   
 static IOFX(C,jtioc,  hic(k,(UC*)v),     memcmp(v,av+k*hj,k),             v+=cn, v-=cn)  /* boolean, char, or integer  */
@@ -415,7 +415,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 #define THASHA(expa)        {x=*(D*)v; MASK(dx,x); j=HID(dx)%pm; FIND(expa); if(m==hj)hv[j]=i;}
 // boxed type.  "hash" the shape only, after performing relative-to-absolute conversion
 // should omit the relative, since only shape is hashed
-#define THASHBX(expa)       {j=hia(t1,AADR(d,*v))%pm;            FIND(expa); if(m==hj)hv[j]=i;}
+#define THASHBX(expa)       {j=hia(t1,*v)%pm;            FIND(expa); if(m==hj)hv[j]=i;}
 
 // functions for searching the hash table
 
@@ -444,8 +444,8 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
  }
 // here comparing boxes
 #define TFINDBX(expa,expw)   \
- {jx=j=hia(tl,AADR(d,*v))%pm;           FIND(expw); il=ir=hj;   \
-     j=hia(tr,AADR(d,*v))%pm; if(j!=jx){FIND(expw);    ir=hj;}  \
+ {jx=j=hia(tl,*v)%pm;           FIND(expw); il=ir=hj;   \
+     j=hia(tr,*v)%pm; if(j!=jx){FIND(expw);    ir=hj;}  \
  }
 
 // loop to search the hash table.  b means self-index, bx means boxed
@@ -526,7 +526,7 @@ static IOFT(D,jtiod1,THASHA, TFINDXY,TFINDY1,x!=av[hj],                       !t
 // boxed array with more than 1 box
 static IOFT(A,jtioa, THASHBX,TFINDBX,TFINDBX,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
 // singleton box
-static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
+static IOFT(A,jtioa1,THASHBX,TFINDBX,TFINDBX,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
 // ********************* third class: small-range arguments ****************************
 
@@ -912,7 +912,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case RATX:               SCDO(Q, *wv,!QEQ(x, av[j])); break;
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
-  case BOXX:  {RDECL;      SCDO(A, AADR(wd,*wv),!equ(x,AADR(ad,av[j])));} break;
+  case BOXX:  {RDECL;      SCDO(A, *wv,!equ(x,av[j]));} break;
   case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
              else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
@@ -983,7 +983,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
    p=0; q=m1;                        \
    while(p<=q){                      \
     t=0; j=(p+q)>>1; v=av+n*hu[j];    \
-    DO(n, if(t=compare(AADR(wd,u[i]),AADR(ad,v[i])))break;);  \
+    DO(n, if(t=compare(u[i],v[i]))break;);  \
     if(0<t)p=j+1; else q=t?j-1:-2;   \
    }                                 \
    zstmt;                            \

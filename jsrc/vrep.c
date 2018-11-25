@@ -109,7 +109,7 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
    }
    if(r){B*c=(B*)iv; DO(r, if(c[i]){MC(zv,u+i*k,k); zv+=k;});}
  }}}
- RELOCATE(w,z); R z;
+ /* obsolete RELOCATE(w,z);*/ R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;

@@ -440,27 +440,19 @@ typedef I SI;
 // same, but use an incrementing pointer for to and from
 #define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)(intptr_t)((I)*from++ +offset);)
 #else
+#if 0
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
-#define AABS(rel,k)     (k)
-#define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */  // used by Mbx
 #define ARELATIVEB(w)   
 #define ARELATIVES(w)   
 #define ARELATIVESB(w)  
-#define ARELATIVE(w)    0  // used by Mbx
 #define AORWRELATIVE(a,w) 
 #define AORWRELATIVEB(a,w) 
-#define AADR(w,z)       (z)
 #define RELORIGIN(asgn,w)  
 #define RELORIGINB(asgn,w)   
 #define RELORIGINBR(asgn,w) 
 #define RELORIGINDEST(w)
 #define RELBASEASGN(lett,w)
 #define RELBASEASGNB(lett,w)
-#define AVR(i)          AADR(ad,av[i])
-#define IVR(i)          AADR(id,iv[i])
-#define WVR(i)          AADR(wd,wv[i])
-#define YVR(i)          AADR(yd,yv[i])
-#define AAV0(w) AAV(w)[0]
 #define RELOCATE(w,z)
 // copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
 #define RELOCOPY(to,from,n,offset) DO(n, to[i]=from[i];)
@@ -470,6 +462,13 @@ typedef I SI;
 #define RELOCOPYF(to,from,n,offset) DO(n, to[i]=*from++;)
 // same, but use an incrementing pointer for to and from
 #define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =*from++;)
+#endif
+#define AADR(w,z)       (z)
+#define AVR(i)          AADR(ad,av[i])
+#define IVR(i)          AADR(id,iv[i])
+#define WVR(i)          AADR(wd,wv[i])
+#define YVR(i)          AADR(yd,yv[i])
+#define AAV0(w) AAV(w)[0]
 #endif
 
 

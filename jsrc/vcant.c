@@ -110,7 +110,7 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
  if(BOX&AT(a)){
   RZ(y=pfill(r,t=raze(a))); v=AV(y);
   GATV(p,INT,AN(y),1,0); pv=AV(p);
-  m=AN(a); n=AN(t); av=AAV(a); RELBASEASGN(a,a);
+  m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta

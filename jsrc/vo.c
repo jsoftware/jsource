@@ -44,7 +44,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m*bp(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z); 
-// obsolete if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y); RELORIGIN(wrel,w); DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
+// obsolete if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y);  DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
 // obsolete  else{
    // The case of interest: non-relative w.  We have allocated the result; now we allocate a block for each cell of w and copy
    // the w values to the new block.  We set NOSMREL in the top block and the new ones if w is boxed or NOSMREL.  
@@ -371,7 +371,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(n&&BOX&AT(w)))RCA(w);
- RELORIGINB(wrel,w);  // wrel is relocation amount for w, 0 if not relative
+   // wrel is relocation amount for w, 0 if not relative
  if(!AR(w)){z=(A)AABS(wrel,*v); ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
  for(i=0;i<n;++i){
@@ -399,7 +399,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
   for(i=0;i<n;++i){
    y=(A)AABS(wrel,v[i]);   // get pointer to contents, relocated if need be
    // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
-// obsolete    if(ARELATIVE(y)){RELORIGIN(yrel,y); RZ(y=relocate(yrel-zrel,ca(y)));}  // todo kludge clone not required - relocation would do
+// obsolete    if(ARELATIVE(y)){ RZ(y=relocate(yrel-zrel,ca(y)));}  // todo kludge clone not required - relocation would do
    if(h&&1>=r)                MC(x,AV(y),k*AN(y));
    else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 
    else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
@@ -412,7 +412,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 // zrel=1 if any of the contents uses relative addressing
 static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,* RESTRICT yv,z,* RESTRICT zv;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
- d=SZI*(r-1); RELORIGINB(wrel,w);   // d=#bytes in (stored shape of result-cell)  b=relocation offset for w (0 if not relative)
+ d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)  b=relocation offset for w (0 if not relative)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
@@ -462,7 +462,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,* RESTRICT yv,z,* RES
  // Now we know the type of the result.  Create the result.
  k=bp(t); p*=k;  // k=#bytes in atom of result; p=#bytes/result cell
  fauxblockINT(h1faux,4,1); fauxINT(h1,h1faux,r,1) v1=AV(h1);  // create place to hold shape of cell after rank extension
- GA(z,t,m,r,s); /* obsolete if(zrel){zrel=RELORIGINDEST(z); AFLAG(z)=AFREL;} */   // create result area, shape s; zrel now is relocation offset for result
+ GA(z,t,m,r,s); /* obsolete if(zrel){zrel= AFLAG(z)=AFREL;} */   // create result area, shape s; zrel now is relocation offset for result
  zu=CAV(z); zv=AAV(z);  // output pointers
  // loop through each contents and copy to the result area
  for(i=0;i<n;++i){
@@ -471,7 +471,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,* RESTRICT yv,z,* RES
   yr=AR(y); ys=AS(y);    // yr=rank of y, ys->shape of y
   if(!yr){
    // atomic contents; perform atomic replication
-   /* obsolete if(t&BOX){RELORIGINB(yrel,y); x=(A)(*AV(y)+yrel-zrel); DO(p>>LGSZA, *zv++=x;);}  // see jtraze; replicate pointer to data
+   /* obsolete if(t&BOX){ x=(A)(*AV(y)+yrel-zrel); DO(p>>LGSZA, *zv++=x;);}  // see jtraze; replicate pointer to data
    else */    {mvc(p,zu,k,AV(y)); zu+=p;}   // copy the data, replicating
   } else {
    // nonatomic contents: rank extension+fill rather than replication
@@ -479,7 +479,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,* RESTRICT yv,z,* RES
    if(j=r-yr){DO(j,v1[i]=1;); MCIS(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
    if(memcmp(1+s,1+AS(y),d)){*s=IC(y); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
-   if(t&BOX){RELORIGINB(yrel,y); yv=AAV(y); /* obsolete yrel-=zrel;*/ RELOCOPYT(zv,yv,AN(y),/*obsolete yrel*/0);}  // copy as above, no replication this time
+   if(t&BOX){ yv=AAV(y); /* obsolete yrel-=zrel;*/ RELOCOPYT(zv,yv,AN(y),/*obsolete yrel*/0);}  // copy as above, no replication this time
    else     {j=k*AN(y); MC(zu,AV(y),j); zu+=j;}
   }
  }
@@ -493,7 +493,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt;
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
-// obsolete  RELORIGINB(wrel,w); zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
+// obsolete   zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
  if(1==n){RZ(z=(A)AABS(wrel,*v)); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
@@ -562,7 +562,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w); y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
+ n=AN(w); wv=AAV(w);  y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
  DO(n, y=WVR(i); r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
  GA(z,t,p*c,2,0); s=AS(z); *s=p; *(1+s)=c; 
  zv=CAV(z); ck=c*k;

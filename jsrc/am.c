@@ -187,7 +187,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
   ind=AAV0(ind); n=AN(ind); r=AR(ind);
   ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);
   if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));
-  v=AAV(ind); RELBASEASGN(i,ind);
+  v=AAV(ind); 
   ASSERT(1>=r,EVINDEX);
   ASSERT(n<=wr,EVINDEX);
   d=n; DO(n, --d; if(!equ(ace,AADR(id,v[d])))break;); if(n)++d; n=d;
@@ -257,7 +257,7 @@ static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 
 static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  DO(AN(w), x=WVR(i); if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
@@ -280,7 +280,7 @@ static B gerar(J jt, A w){A x; C c;
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
   if(!(n==2))R 0;  // verify 2 boxes
-  wv = AAV(w); RELBASEASGN(w,w); x=WVR(0); // point to pointers to boxes; point to first box contents
+  wv = AAV(w);  x=WVR(0); // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
    c = CAV(x)[0];   // fetch that character
@@ -302,7 +302,7 @@ static B gerar(J jt, A w){A x; C c;
 B jtgerexact(J jt, A w){A*wv;
  if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
  if(!(AN(w)))R 0;   // verify there are boxes
- wv = AAV(w); RELBASEASGN(w,w);  // point to pointers to contents
+ wv = AAV(w);   // point to pointers to contents
  DO(AN(w), if(!(gerar(jt, WVR(i))))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */

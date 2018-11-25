@@ -175,7 +175,7 @@ F1(jtsysparms){A*wv;I k,m;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  RE(k=i0(WVR(0)));
  switch(k){
   default: ASSERT(0,EVINDEX);

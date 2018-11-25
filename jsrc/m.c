@@ -172,7 +172,7 @@ B jtspfree(J jt){I i;A p;
 
 static F1(jtspfor1){
  RZ(w);
- if(BOX&AT(w)){A*wv=AAV(w);RELBASEASGN(w,w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
+ if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(!ACISPERM(AC(w))) {
 #if 0 // wrong?
@@ -204,7 +204,7 @@ static F1(jtspfor1){
 
 F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w); v=&jt->spfor;
+ n=AN(w); wv=AAV(w);  v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
@@ -220,7 +220,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
 
 F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w); v=&jt->spfor;
+ n=AN(w); wv=AAV(w);  v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
@@ -1050,7 +1050,7 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;
   case XNUMX:
-  case BOXX:  u=AAV(z); wv=AAV(w); RELBASEASGN(w,w); DO(n, RZ(*u++=car(WVR(i)));); break;
+  case BOXX:  u=AAV(z); wv=AAV(w);  DO(n, RZ(*u++=car(WVR(i)));); break;
   case SB01X: case SLITX: case SINTX: case SFLX: case SCMPXX: case SBOXX:
    p=PAV(z); 
    SPB(p,a,car(SPA(p,a)));

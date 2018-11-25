@@ -107,7 +107,7 @@ static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  for(i=0;i<n;++i){
   y=WVR(i); m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
@@ -132,7 +132,7 @@ static I jtprobenum(J jt,C*u){
 
 F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  for(i=0;i<n;++i){
   y=WVR(i); m=AN(y); u=CAV(y); c=*u; 
@@ -169,7 +169,7 @@ F2(jtlocnl2){UC*u;
 
 static A jtlocale(J jt,B b,A w){A g,*wv,y;
  RZ(vlocnl(1,w));
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  DO(AN(w), y=WVR(i); if(!(g=(b?jtstfindcre:jtstfind)(jt,AN(y),CAV(y),BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none */
@@ -271,7 +271,7 @@ static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
 
 F1(jtlocexmark){A g,*pv,*wv,y,z;B b,*zv;C*u;I i,j,m,n,*nv;L*v;
  RZ(vlocnl(1,w));
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){

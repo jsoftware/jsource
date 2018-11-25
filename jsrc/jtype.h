@@ -430,7 +430,7 @@ typedef I SI;
 #define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
 // if w is relative, relocate the contents of z from w to z.  We must have moved the contents of w into output block z without relocating, and now we are fixing it up
 // z must be known to be relative and nonvirtual.  This has no result.  z is never disturbed.
-#define RELOCATE(w,z)   if(ARELATIVE(w)){RELORIGIN(wrel,w); relocate(wrel-(I)(z),(z));}
+#define RELOCATE(w,z)   if(ARELATIVE(w)){ relocate(wrel-(I)(z),(z));}
 // copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
 #define RELOCOPY(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)from[i]+offset);)
 // same, but use an incrementing pointer for to
@@ -442,7 +442,7 @@ typedef I SI;
 #else
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
 #define AABS(rel,k)     (k)
-#define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
+#define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */  // used by Mbx
 #define ARELATIVEB(w)   
 #define ARELATIVES(w)   
 #define ARELATIVESB(w)  

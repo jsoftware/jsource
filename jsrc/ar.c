@@ -600,7 +600,7 @@ static DF1(jtredstiteach){A*wv,y;I n,p,r,t;
  RZ(w);
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
- wv=AAV(w); RELBASEASGN(w,w); y=WVR(0); p=IC(y); t=AT(y);
+ wv=AAV(w);  y=WVR(0); p=IC(y); t=AT(y);
  DO(n, y=WVR(i); r=AR(y); if(!(r&&r<=2&&p==IC(y)&&TYPESEQ(t,AT(y))))R reduce(w,self););
  R box(razeh(w));
 }    /* ,.&.>/ w */
@@ -616,7 +616,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
  GATV(z,BOX,zn,wr-1,ws); MCIS(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
- zv=AAV(z); wv=AAV(w); RELBASEASGN(w,w);
+ zv=AAV(z); wv=AAV(w); 
  DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=AADR(wd,*v); v+=m;); A Zz; RZ(Zz=raze(x)); rifv(Zz); *zv++ = Zz;); wv+=mn;);
  RETF(z);
 }    /* ,&.>/"r w */

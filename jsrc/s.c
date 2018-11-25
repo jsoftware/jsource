@@ -339,7 +339,7 @@ L*jtsyrd(J jt,A a){A g;
 
 static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){

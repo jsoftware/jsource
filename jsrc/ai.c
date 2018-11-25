@@ -68,7 +68,7 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  RZ(w);
  ASSERT(0,EVNONCE);
  ASSERT(BOX&AT(w),EVDOMAIN);
- wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); RELBASEASGN(w,w);
+ wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),num[0]));
  GATV(x,INT,wr,1,0); u=AV(x); memset(u,C0,wr*SZI);

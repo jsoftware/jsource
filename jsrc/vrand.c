@@ -539,7 +539,7 @@ F1(jtrngstates){A*wv;I k;UI**vv=jt->rngV;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(2<=AN(w),EVLENGTH);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  RZ(rngselects(WVR(0)));  /* changes jt->rng */
  ASSERT(AN(w)==(jt->rng?3:9),EVLENGTH);
  switch(jt->rng){

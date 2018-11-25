@@ -79,7 +79,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  // if string, handle that special case (verb/primitive)
  if(LIT&AT(w))R fxchar(w);
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
- m=AN(w); RELBASEASGN(w,w);  // m=#atoms, wd=relative offset (if any), used by WVR/AADR macro
+ m=AN(w);   // m=#atoms, wd=relative offset (if any), used by WVR/AADR macro
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==m||2==m,EVLENGTH);
@@ -89,7 +89,7 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
-  y=WVR(1); n=AN(y); yv=AAV(y); RELBASEASGN(ty,y);
+  y=WVR(1); n=AN(y); yv=AAV(y); 
   if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);

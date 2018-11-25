@@ -478,11 +478,11 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
  // init flags to 'not found'
  mnuv=xy=0;
  // Loop through monad and dyad
- A *wv=AAV(w); RELBASEASGN(w,w);
+ A *wv=AAV(w); 
  for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
   A w=WVR(k);  // w is now the box containing the words of the expdef
   {A *wv=AAV(w);
-   RELBASEASGN(w,w);
+   
    I in=AN(w);
    // Loop over each word, starting at beginning where the references are more likely
    for(i=0;i<in;++i) {
@@ -543,7 +543,7 @@ static B jtsent12c(J jt,A w,A*m,A*d){C*p,*q,*r,*s,*x;
 
 static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
  DO(AN(w), RZ(yv[i]=vs(WVR(i))););
  RZ(t=indexof(y,link(chr[':'],str(1L,":")))); v=AV(t); j=MIN(*v,*(1+v));

@@ -172,7 +172,7 @@ static F jtixf(J jt,A w){F f;
 }    /* process index file arg for file number; 0 if a file name */
 
 static B jtixin(J jt,A w,I s,I*i,I*n){A in,*wv;I j,k,m,*u;
- if(AT(w)&BOX){wv=AAV(w); RELBASEASGN(w,w); RZ(in=vi(WVR(1))); k=AN(in); u=AV(in);}
+ if(AT(w)&BOX){wv=AAV(w);  RZ(in=vi(WVR(1))); k=AN(in); u=AV(in);}
  else{in=w; k=AN(in)-1; u=1+AV(in);}
  ASSERT(1>=AR(in),EVRANK);
  ASSERT(k&&k<=(n?2:1),EVLENGTH);

@@ -51,7 +51,7 @@ static A jtlcpx(J jt,A w){RZ(w); R CALL2(jt->lcp,lp(w),w,0);}
 
 static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w); RZ(t=spellout(CGRAVE));
+ n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV(y,BOX,n+n,1,0); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=WVR(i); c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
@@ -60,7 +60,7 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
 
 static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w); RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
+ n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV(y,BOX,n+n,1,0); v=AAV(y);
  if(1>=n)x=mtv; else{GATV(x,LIT,n-2,1,0); s=CAV(x); DO(n-2, *s++='(';);}
  DO(n, *v++=0==i?x:1==i?t:pt; x=WVR(i); c=ID(x); RZ(x=lrr(x)); 
@@ -107,7 +107,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
 static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  RZ(w);
  if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  DO(n, x=WVR(i); if(BOX&AT(x)){b=1; break;}); b=b||1==n;
  GATV(y,BOX,n+n-!b,1,0); v=vv=AAV(y);
  if(b){
@@ -244,7 +244,7 @@ static B lnn(A a,A w){C c; if(!(a&&w))R 0; c=cl(a); R ('x'==c||C9==ctype[(UC)c])
 
 static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I n;V*v;
  RZ(a&&w);
- n=AN(a); av=AAV(a); RELBASEASGN(a,a); 
+ n=AN(a); av=AAV(a);  
  vb=VERB==AT(w); v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
  if(1<=n){f=AVR(0); t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||id==CFORK&&NOUN&AT(t)&&lp(f);}

@@ -131,7 +131,7 @@ static struct {
 static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  t=AT(w);
  jt->compk=ai*bp(t); ck=jt->compk*n;
- jt->compn=ai<<((t>>CMPXX)&1); jt->compv=CAV(w); RELORIGINB(crel,w); /* obsolete jt->compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values */
+ jt->compn=ai<<((t>>CMPXX)&1); jt->compv=CAV(w);  /* obsolete jt->compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values */
  jt->comp=sortroutines[CTTZ(t)][jt->compgt==1].comproutine; jt->compusejt = !!(t&BOX+XNUM+RAT);
  void **(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */

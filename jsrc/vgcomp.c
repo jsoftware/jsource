@@ -71,9 +71,9 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
    case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
 // obsolete switch((ARELATIVEB(a)?2:0)+ARELATIVEB(w)){ 
 // obsolete     case 0: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
-// obsolete     case 1: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
-// obsolete     case 2: {COMPDCLQ(A);I j; RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
-// obsolete     case 3: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
+// obsolete     case 1: {COMPDCLQ(A);I j;  DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
+// obsolete     case 2: {COMPDCLQ(A);I j;  DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
+// obsolete     case 3: {COMPDCLQ(A);I j;   DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
 // obsolete }
   }
  }

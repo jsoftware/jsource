@@ -8,7 +8,7 @@
 
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  ASSERT(r>=AR(w),EVRANK);
  ASSERT(n,EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
@@ -178,7 +178,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
  if(NUMERIC&AT(a))R from(a,w);
  else{
   ASSERT(BOX&AT(a),EVDOMAIN);
-  n=AN(a); av=AAV(a); RELBASEASGN(a,a);
+  n=AN(a); av=AAV(a); 
   GATV(z,BOX,n,1,0); v=AAV(z);
   DO(n, RZ(*v++=gerfrom(AVR(i),w)););
   R z;

@@ -302,7 +302,7 @@ F1(jtunzero){A e,q,x,z;I r;P*wp,*zp;
 
 static F1(jtsparsep1){A*wv;I n=0;
  RZ(w);
- ASSERT(1>=AR(w),EVRANK); RELBASEASGNB(w,w);
+ ASSERT(1>=AR(w),EVRANK); 
  if(BOX&AT(w)){n=AN(w); wv=AAV(w); ASSERT(1<=n&&n<=3||5==n,EVLENGTH);}
  R sparse1a(0<n?WVR(0):w,1<n?WVR(1):mark,2<n?WVR(2):mark,3<n?WVR(3):mark,4<n?WVR(4):mark);
 }
@@ -326,7 +326,7 @@ F2(jtsparse2){A*av,q=0;B b;I j,k,t,*v;P*p;
  if(BOX&AT(a)){
   ASSERT(1==AR(a),EVRANK);
   ASSERT(2==AN(a),EVLENGTH);
-  av=AAV(a); RELBASEASGN(a,a); a=AVR(0); q=AVR(1);
+  av=AAV(a);  a=AVR(0); q=AVR(1);
  }
  RZ(a=cvt(INT,a));
  ASSERT(1>=AR(a),EVRANK);

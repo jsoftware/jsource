@@ -141,7 +141,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case XNUMX: INNERT(X,equ); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
-// obsolete    {RELORIGINB(arel,a); RELORIGINB(wrel,w);
+// obsolete    { 
 // obsolete    if(!(arel|wrel)){INNERT(A,EQA);} else {INNERT2(arel,wrel,EQA);}
    INNERT(A,EQA); break;
 // obsolete    }

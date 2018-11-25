@@ -259,7 +259,7 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
- /* obsolete if(ARELATIVE(w)){RELORIGIN(rl,w); A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
+ /* obsolete if(ARELATIVE(w)){ A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
  else */ MC(AV(z),CAV(w)+m*k,n*k);
  R z;
 }
@@ -552,7 +552,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
  s=AS(z); *s++=d; *s++=zc; MCISd(s,1+ws,r-2);
- k=c*bp(wt); RELBASEASGNB(w,w);
+ k=c*bp(wt); 
  if(AN(z)){
 // obsolete switch((0>m?2:0)+(wd?1:0)){
   if(m>=0){ q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);

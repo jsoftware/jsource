@@ -96,7 +96,7 @@ F1(jtonm){A x,y; RZ(x=ope(w)); y=stdnm(x); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x)))
 // w is array of boxed strings; result is name class for each
 F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v; 
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);  // n=#names  wv->first box
+ n=AN(w); wv=AAV(w);   // n=#names  wv->first box
  ASSERT(!n||BOX&AT(w),EVDOMAIN);   // verify boxed input (unless empty)
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
@@ -147,7 +147,7 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
  RZ(w);
  n=AN(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  DO(n, x=WVR(i); RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(AN(x),CAV(x))); v=syrd(y); RESETERR; zv[i]=v?v->sn:-1;);
  RETF(z);
@@ -201,7 +201,7 @@ F1(jtnch){A ch,*pv;B b;I*e,i,m,n;L*d;
 
 F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){

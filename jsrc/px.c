@@ -56,7 +56,7 @@ static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); RESETERR; R z;}
 
 F1(jtexg){A*v,*wv,x,y,z;I n;
  RZ(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  ASSERT(n,EVLENGTH);
  ASSERT(1>=AR(w),EVRANK);
  if(VERB&AT(w))R w;

@@ -579,7 +579,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #endif
 
 // define ad and wd, which are bases to be added to boxed addresses
-#define RDECL      RELBASEASGN(a,a); RELBASEASGN(w,w)
+#define RDECL  // obsolete
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
@@ -1194,7 +1194,7 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
 static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
- av=AAV(a); RELBASEASGN(a,a);
+ av=AAV(a); 
  DO(ac*asct, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
@@ -1268,8 +1268,8 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
  md=mode&IIOPMSK;  // just the operation bits
  I bk=1&(((1<<IICO)|(1<<IJ0EPS)|(1<<IJ1EPS))>>md);  // set if the dup-scan is reverse direction
  if(mode==INUB||mode==INUBI){GATV(y,B01,asct,1,0); yb=BAV(y);}
- av=AAV(a); RELBASEASGN(a,a); acn=ak>>LGSZI;
- wv=AAV(w); RELBASEASGN(w,w); wcn=wk>>LGSZI;
+ av=AAV(a);  acn=ak>>LGSZI;
+ wv=AAV(w);  wcn=wk>>LGSZI;
  zi=zv=AV(z); zb=(B*)zv; zc=(C*)zv;
  // If a has not been sorted already, sort it
  if(!(mode&IPHOFFSET)){  // if we are not using a presorted table...
@@ -1309,7 +1309,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
 
 static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
- m=AN(w)/c; wv=AAV(w); RELBASEASGN(w,w);
+ m=AN(w)/c; wv=AAV(w); 
  DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t){if(!(TYPESEQ(t,AT(x))))R 0;} else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */

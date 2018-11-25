@@ -158,7 +158,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
  ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+BOX+SBT,EVDOMAIN);
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
  zv=A1AV(z); wv=AAV(w);
- if(t&BOX){RELBASEASGN(w,w); DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
+ if(t&BOX){RELBASEASGN(w,w) ; DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
  else MC(zv,wv,n*bp(t));
  RETF (z);
 }    /* make copy of w in SMM area of a */
@@ -170,7 +170,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
  if(smmin(a,w))RZ(w=cpa(1,w));
  AK(a)=SZI*(SMMAH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=(RANKT)wr;
  if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;}
- av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w);
+ av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w) ;
  DO(wn, x=smmcar(a,WVR(i)); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
  ICPY(AS(a),AS(w),wr);
  RETF(a);
@@ -180,7 +180,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
 A jtcpa(J jt,B b,A w){A*wv,z,*zv;
  if(0==b&&AFNJA&AFLAG(w)){R ras(w); }
  if(!(BOX&AT(w)))R ca(w);
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); RELBASEASGN(w,w) ;
  GATV(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);
  DO(AN(w), RZ(zv[i]=cpa(b,WVR(i))););
  R z;

@@ -193,7 +193,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  RZ(a&&w&&self);
  sv=FAV(self); q=*AV(sv->fgh[1]);
- an=AN(a); av=AAV(a); RELBASEASGN(a,a); ws=AS(w);
+ an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
  GATV(x,BOX,an,1,0); xv=AAV(x);  // could be faux
  GATV(y,BOX,an,1,0); yv=AAV(y);
@@ -318,7 +318,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  }
  yu=AV(yy); p=pfx?yu[m]:0;
  if(t&DENSE){C*wv;I c,k,r,*s;
-  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); RELBASEASGNB(w,w);
+  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); 
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
   GATV(z,INT,m,1,0); zi=AV(z); 

@@ -18,7 +18,7 @@ F2(jtsetfv){A q=jt->fill;I t;
 // obsolete   if(ARELATIVE(q))RZ(q=cpa(1,q));
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
-// obsolete  if(ARELATIVE(w)){RELORIGIN(wrel,w); *(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,wrel); jt->fillv=jt->fillv0;}  // relative w, make fillv0 relative to w
+// obsolete  if(ARELATIVE(w)){ *(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,wrel); jt->fillv=jt->fillv0;}  // relative w, make fillv0 relative to w
  R TYPESEQ(t,AT(w))?w:cvt(t,w);  // note if w is boxed this won't change it, so relo is still valid
 }
 

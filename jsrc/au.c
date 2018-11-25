@@ -7,7 +7,7 @@
 
 
 static I jtfdepger(J jt,A w){A*wv;I d=0,k; 
- wv=AAV(w); RELBASEASGN(w,w); 
+ wv=AAV(w);  
  DO(AN(w), k=fdep(fx(WVR(i))); d=MAX(d,k);); 
  R d;
 }

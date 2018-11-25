@@ -118,8 +118,8 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
-   av=AAV(a); wv=AAV(w); /* obsolete RELBASEASGN(ta,a); ad=tad; 
-   RELBASEASGN(tw,w); wd=twd;  // ad, wd needed below  */
+   av=AAV(a); wv=AAV(w); /* obsolete  ad=tad; 
+    wd=twd;  // ad, wd needed below  */
    DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
  }
  ge=cc; gt=-ge;

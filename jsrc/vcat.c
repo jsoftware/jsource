@@ -103,17 +103,17 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
 
 
 static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
- RELORIGINBR(zrel,z);  // z may not be boxed; but if it is, w must be also.  zrel=relocation offset, 0 if not relative
+   // z may not be boxed; but if it is, w must be also.  zrel=relocation offset, 0 if not relative
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
   if((!n||d)/* obsolete&&!zrel*/)mvc(k*p,x,k,jt->fillv);
   if(n&&n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
   if(n){
-   /* obsolete if(zrel){A * RESTRICT u,* RESTRICT v; RELORIGINB(wrel,w); wrel-=zrel; u=(A*)x; v=AAV(w); RELOCOPY(u,v,AN(w),wrel);}
+   /* obsolete if(zrel){A * RESTRICT u,* RESTRICT v;  wrel-=zrel; u=(A*)x; v=AAV(w); RELOCOPY(u,v,AN(w),wrel);}
    else */ MC(x,AV(w),k*AN(w));
   }
  }else{  // scalar replication
-  /* obsolete if(zrel){A *u; RELORIGINB(wrel,w); wrel=*AV(w)+wrel-zrel; u=(A*)x; DO(p, *u++=(A)wrel;);} 
+  /* obsolete if(zrel){A *u;  wrel=*AV(w)+wrel-zrel; u=(A*)x; DO(p, *u++=(A)wrel;);} 
   else */ mvc(k*p,x,k,AV(w));
  }
  R x+k*p;
@@ -134,7 +134,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bp(AT(a));
-// obsolete  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL; RELORIGINB(q,w); q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
+// obsolete  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL;  q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  /* obsolete INHERITNORELFILL2(z,a,w); */ RETF(z);
@@ -145,8 +145,8 @@ static F2(jtovv){A z;I m,t;
  GA(z,t,AN(a)+AN(w),1,0);  
 // obsolete  if(t&BOX&&AORWRELATIVEB(a,w)){A* RESTRICT u,* RESTRICT v;
 // obsolete   AFLAG(z)=AFREL; v=AAV(z);
-// obsolete   RELORIGINB(arel,a); u=AAV(a); m=arel-RELORIGINDEST(z); RELOCOPYT(v,u,AN(a),m);
-// obsolete   RELORIGINB(wrel,w); u=AAV(w); m=wrel-RELORIGINDEST(z); RELOCOPY(v,u,AN(w),m);
+// obsolete    u=AAV(a); m=arel- RELOCOPYT(v,u,AN(a),m);
+// obsolete    u=AAV(w); m=wrel- RELOCOPY(v,u,AN(w),m);
 // obsolete  }else{C*x;I k;
  I k=bp(t); m=k*AN(a); C *x=CAV(z); 
  MC(x,  AV(a),m      ); 

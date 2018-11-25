@@ -412,7 +412,7 @@ static A jtsbunlit(J jt,C cx,A w){A z;S c2;I i,m,wc,wr,*ws;SB*zv;
 static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
- m=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ m=AN(w); wv=AAV(w); 
  GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
   x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
@@ -655,7 +655,7 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ASSERTD(BOX&AT(w),"arg type");
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(8==AN(w), "arg length");
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  RZ(sbcheck1(WVR(0),WVR(1),WVR(2),WVR(3),WVR(4),WVR(5),WVR(6),WVR(7)));
  jt->sbun=*AV(WVR(0));
  jt->sbsn=*AV(WVR(1));
@@ -681,7 +681,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(!AN(w)||4<=AN(w), "arg length");
  if(!AN(w)){resetdata(jt); R num[1]; }
- wv=AAV(w); RELBASEASGN(w,w);
+ wv=AAV(w); 
  RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
  c=*AV(WVR(0));                         // cardinality
  if(1<AN(WVR(0)))offset=*(1+AV(WVR(0)));// offset
@@ -701,7 +701,7 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
 static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
  RZ(w);
  ASSERT(!AN(w)||BOX&AT(w),EVDOMAIN);
- m=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ m=AN(w); wv=AAV(w); 
  GATV(z,B01,m,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<m;++i){
   x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 

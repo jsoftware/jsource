@@ -353,7 +353,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
       // process according to state
       if(state&STATENORM){
        // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
-       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)||ARELATIVE(y)){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
+       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)/*||obsolete ARELATIVE(y)*/){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
        else{
         // Normal path.
         MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot

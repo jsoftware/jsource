@@ -194,7 +194,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
   case XNUMX:
    {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))*(I*)0=0;);} break;
   case BOXX:
-   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w); RELBASEASGN(w,w);
+   if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w); 
     /* obsolete if(AFLAG(w)&AFREL){DO(AN(w), auditblock(WVR(i),nonrecur,0););}
     else*/{DO(AN(w), auditblock(wv[i],nonrecur,0););}
    }

@@ -9,7 +9,7 @@
 F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
- n=AN(w); wv=AAV(w); RELBASEASGN(w,w);
+ n=AN(w); wv=AAV(w); 
  DO(n, x=WVR(i); if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
  RE(t=maxtype(B01,t)); k=bp(t);
  GA(b,t,n,1,0);      bv=CAV(b);
@@ -260,7 +260,7 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  RZ(a&&w);
  an=AN(a); *ind=0;
  if(!an)R 0;
- ws=wf+AS(w); ar=AR(a); av=AAV(a); RELBASEASGN(a,a); q=AVR(0); c=AN(q);
+ ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=AVR(0); c=AN(q);
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
  GATV(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
@@ -354,7 +354,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,x,y=w;B b=1,bb=1;I acr,ar,i=0,j
   R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
- c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c); RELBASEASGNB(c,c);  // B prob not reqd 
+ c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
  k=bp(AT(w)); s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
@@ -425,7 +425,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
   }
   RZ(a=box(a));  // if not special case, box any unboxed a
  }
- n=AN(a); av=AAV(a); RELBASEASGN(a,a);
+ n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
  DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX/* obsolete  && !ARELATIVEB(z)*/){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}

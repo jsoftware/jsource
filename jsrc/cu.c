@@ -29,7 +29,7 @@ A jtevery(J jt,A w,A fs,AF f1){A*wv,x,z,*zv;
  if(!(BOX&AT(w)))RZ(w=box0(w));
  GATV(z,BOX,AN(w),AR(w),AS(w));
  zv=AAV(z); wv=AAV(w); 
- DO(AN(w), EVERYI(CALL1(f1,WVR(i),fs)););
+ DO(AN(w), EVERYI(CALL1(f1,wv[i],fs)););
  R z;
 }
 
@@ -43,9 +43,9 @@ A jtevery2(J jt,A a,A w,A fs,AF f2){A*av,*wv,x,z,*zv;B ab,b,wb;I an,ar,*as,wn,wr
  GATV(z,BOX,ar?an:wn,ar?ar:wr,ar?as:ws);  zv=AAV(z);
  if(ar&&!ab)RZ(a=box0(a)); av=AAV(a); 
  if(wr&&!wb)RZ(w=box0(w)); wv=AAV(w); 
- if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,AVR(i),      WVR(i),      fs))) 
- else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           WVR(i),      fs)));}
- else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,AVR(i),      w,           fs)));}
+ if(ar&&wr)                   DO(an, EVERYI(CALL2(f2,av[i],      wv[i],      fs))) 
+ else if(wr){if(ab)a=AAV0(a); DO(wn, EVERYI(CALL2(f2,a,           wv[i],      fs)));}
+ else if(ar){if(wb)w=AAV0(w); DO(an, EVERYI(CALL2(f2,av[i],      w,           fs)));}
  else                                EVERYI(CALL2(f2,ab?AAV0(a):a,wb?AAV0(w):w,fs)) ;
  R z;
 }

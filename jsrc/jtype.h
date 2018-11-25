@@ -176,6 +176,8 @@ typedef I SI;
 #define SBAV(x)         ((SB*)((C*)(x)+AK(x)))  /* symbol                  */
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 
+#define AAV0(w) AAV(w)[0]
+
 /* Types for AT(x) field of type A                                         */
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
 
@@ -373,13 +375,6 @@ typedef I SI;
 
 #define AFRO            (I)1            /* read only; can't change data    */
 #define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
-#define AFSMM           (I)0            /* SMM managed                     */
-#define AFREL           (I)0            // uses relative addressing.
-#define AFNOSMREL       (I)0   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
-// Note: in s.c we rely on AFNOSMREL's being adjacent to BOX!!  In cr.c we rely on its being exactly what it is (it matches a hole in STATExxx)
-// The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
-// the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
-// block is actually freed
 #define AFNVRX          8
 #define AFNVR           (1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
 #define AFUNIFORMITEMSX 16      // matches SBTX
@@ -423,10 +418,10 @@ typedef I SI;
 #define RELBASEASGN(lett,w) RELORIGINB(lett##d,w)
 // same, but include the test for boxing
 #define RELBASEASGNB(lett,w) RELORIGINBR(lett##d,w)
-#define AVR(i)          AADR(ad,av[i])
-#define IVR(i)          AADR(id,iv[i])
-#define WVR(i)          AADR(wd,wv[i])
-#define YVR(i)          AADR(yd,yv[i])
+#define av[i]          AADR(ad,av[i])
+#define iv[i]          AADR(id,iv[i])
+#define wv[i]          AADR(wd,wv[i])
+#define yv[i]          AADR(yd,yv[i])
 #define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
 // if w is relative, relocate the contents of z from w to z.  We must have moved the contents of w into output block z without relocating, and now we are fixing it up
 // z must be known to be relative and nonvirtual.  This has no result.  z is never disturbed.
@@ -439,6 +434,11 @@ typedef I SI;
 #define RELOCOPYF(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)*from++ +offset);)
 // same, but use an incrementing pointer for to and from
 #define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)(intptr_t)((I)*from++ +offset);)
+#define AFNOSMREL       (I)0   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
+// Note: in s.c we rely on AFNOSMREL's being adjacent to BOX!!  In cr.c we rely on its being exactly what it is (it matches a hole in STATExxx)
+// The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
+// the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
+// block is actually freed
 #else
 #if 0
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
@@ -462,13 +462,12 @@ typedef I SI;
 #define RELOCOPYF(to,from,n,offset) DO(n, to[i]=*from++;)
 // same, but use an incrementing pointer for to and from
 #define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =*from++;)
-#endif
 #define AADR(w,z)       (z)
-#define AVR(i)          AADR(ad,av[i])
-#define IVR(i)          AADR(id,iv[i])
-#define WVR(i)          AADR(wd,wv[i])
-#define YVR(i)          AADR(yd,yv[i])
-#define AAV0(w) AAV(w)[0]
+#define av[i]          AADR(ad,av[i])
+#define iv[i]          AADR(id,iv[i])
+#define wv[i]          AADR(wd,wv[i])
+#define yv[i]          AADR(yd,yv[i])
+#endif
 #endif
 
 

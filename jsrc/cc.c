@@ -198,7 +198,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  GATV(x,BOX,an,1,0); xv=AAV(x);  // could be faux
  GATV(y,BOX,an,1,0); yv=AAV(y);
  for(i=0;i<an;++i){
-  b=AVR(i); bn=AN(b); m=ws[i];
+  b=av[i]; bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
   if(!bn&&m){xv[i]=num[0]; RZ(yv[i]=sc(m));}
   else{

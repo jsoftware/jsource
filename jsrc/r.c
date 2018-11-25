@@ -83,33 +83,33 @@ DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(1==m||2==m,EVLENGTH);
- wv=AAV(w); y=WVR(0);  // set wv->box pointers, y->first box
+ wv=AAV(w); y=wv[0];  // set wv->box pointers, y->first box
  // If the first box contains boxes, they are ARs - go expand them and save as fs
  // id will contains the type of the AR: 0=another AR, '0'=noun
  if(BOX&AT(y)){RZ(fs=fx(y)); id=0;}
  else{RZ(y=vs(y)); ASSERT(id=spellin(AN(y),CAV(y)),EVSPELL);}
  if(1<m){
-  y=WVR(1); n=AN(y); yv=AAV(y); 
+  y=wv[1]; n=AN(y); yv=AAV(y); 
   if(id==CNOUN)R self?box(w):y;
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(BOX&AT(y),EVDOMAIN);
  }
  switch(id){
   case CHOOK: case CADVF:
-   ASSERT(2==n,EVLENGTH); R hook(fx(YVR(0)),fx(YVR(1)));
+   ASSERT(2==n,EVLENGTH); R hook(fx(yv[0]),fx(yv[1]));
   case CFORK:
    ASSERT(3==n,EVLENGTH); 
-   RZ(f=fx(YVR(0))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
-   RZ(g=fx(YVR(1))); ASSERT(AT(g)&VERB,     EVSYNTAX);
-   RZ(h=fx(YVR(2))); ASSERT(AT(h)&VERB,     EVSYNTAX);
+   RZ(f=fx(yv[0])); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
+   RZ(g=fx(yv[1])); ASSERT(AT(g)&VERB,     EVSYNTAX);
+   RZ(h=fx(yv[2])); ASSERT(AT(h)&VERB,     EVSYNTAX);
    R folk(f,g,h);
   default:
    if(id)fs=ds(id);
    ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
    if(!n)R fs;
    ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);
-   if(0<n){RZ(p=fx(YVR(0))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
-   if(1<n){RZ(q=fx(YVR(1))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
+   if(0<n){RZ(p=fx(yv[0])); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
+   if(1<n){RZ(q=fx(yv[1])); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
    R 1==n ? df1(p,fs) : df2(p,q,fs);
 }}
 

@@ -258,7 +258,7 @@ static DF1(mergv1){DECLF; R merge1(w,CALL1(f1,w,fs));}
 static B ger(A w){A*wv,x;
  if(!(BOX&AT(w)))R 0;
  wv=AAV(w); 
- DO(AN(w), x=WVR(i); if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
+ DO(AN(w), x=wv[i]; if(BOX&AT(x)&&1==AR(x)&&2==AN(x))x=AAV0(x); if(!(LIT&AT(x)&&1>=AR(x)&&AN(x)))R 0;);
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
@@ -280,7 +280,7 @@ static B gerar(J jt, A w){A x; C c;
   // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
   // 
   if(!(n==2))R 0;  // verify 2 boxes
-  wv = AAV(w);  x=WVR(0); // point to pointers to boxes; point to first box contents
+  wv = AAV(w);  x=wv[0]; // point to pointers to boxes; point to first box contents
   // see if first box is a special flag
   if(LIT&AT(x) && 1>=AR(x) && 1==AN(x)){
    c = CAV(x)[0];   // fetch that character
@@ -291,7 +291,7 @@ static B gerar(J jt, A w){A x; C c;
   // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
   if(bmin==0){if(!(gerar(jt,x)))R 0; bmin=1,bmax=2;}
   // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
-  x = WVR(1);   // point to second box
+  x = wv[1];   // point to second box
   if(!(BOX&AT(x) && 1==AR(x)))R 0;   // verify it contains a list of boxes
   if(!(bmin<=AN(x)&&bmax>=AN(x)))R 0;  // verify correct number of boxes
   R gerexact(x);  // recursively audit the other ARs in the second box
@@ -303,7 +303,7 @@ B jtgerexact(J jt, A w){A*wv;
  if(!(BOX&AT(w)))R 0;   // verify gerund is boxed
  if(!(AN(w)))R 0;   // verify there are boxes
  wv = AAV(w);   // point to pointers to contents
- DO(AN(w), if(!(gerar(jt, WVR(i))))R 0;);   // fail if any box contains a non-gerund
+ DO(AN(w), if(!(gerar(jt, wv[i])))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 

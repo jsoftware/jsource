@@ -911,7 +911,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #endif
   per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);
   if(wt&BOX){
-   x=WVR(i); xt=AT(x); xn=AN(x); xr=AR(x);
+   x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
    lit=star&&xt&LIT&&(c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}

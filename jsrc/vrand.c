@@ -540,19 +540,19 @@ F1(jtrngstates){A*wv;I k;UI**vv=jt->rngV;
  ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(2<=AN(w),EVLENGTH);
  wv=AAV(w); 
- RZ(rngselects(WVR(0)));  /* changes jt->rng */
+ RZ(rngselects(wv[0]));  /* changes jt->rng */
  ASSERT(AN(w)==(jt->rng?3:9),EVLENGTH);
  switch(jt->rng){
   case SMI: vv=jt->rngV0;
-            RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,0,k,WVR(2),1)); jt->rngI0[GBI]=k;  // We accept 0-55 even though we never produce 55 ourselves
-            RE(k=i0(WVR(3))); RZ(rngstates1(MTI,MTN,vv,0,k,WVR(4),0)); jt->rngI0[MTI]=k;
-            RE(k=i0(WVR(5))); RZ(rngstates1(DXI,DXN,vv,0,k,WVR(6),1)); jt->rngI0[DXI]=k;
-            RE(k=i0(WVR(7))); RZ(rngstates1(MRI,MRN,vv,0,k,WVR(8),0)); jt->rngI0[MRI]=k;
+            RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); jt->rngI0[GBI]=k;  // We accept 0-55 even though we never produce 55 ourselves
+            RE(k=i0(wv[3])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[4],0)); jt->rngI0[MTI]=k;
+            RE(k=i0(wv[5])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[6],1)); jt->rngI0[DXI]=k;
+            RE(k=i0(wv[7])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[8],0)); jt->rngI0[MRI]=k;
             break;
-  case GBI: RE(k=i0(WVR(1))); RZ(rngstates1(GBI,GBN,vv,0,k,WVR(2),1)); break;  // We accept 0-55 even though we never produce 55 ourselves
-  case MTI: RE(k=i0(WVR(1))); RZ(rngstates1(MTI,MTN,vv,0,k,WVR(2),0)); break;
-  case DXI: RE(k=i0(WVR(1))); RZ(rngstates1(DXI,DXN,vv,0,k,WVR(2),1)); break;
-  case MRI: RE(k=i0(WVR(1))); RZ(rngstates1(MRI,MRN,vv,0,k,WVR(2),0));
+  case GBI: RE(k=i0(wv[1])); RZ(rngstates1(GBI,GBN,vv,0,k,wv[2],1)); break;  // We accept 0-55 even though we never produce 55 ourselves
+  case MTI: RE(k=i0(wv[1])); RZ(rngstates1(MTI,MTN,vv,0,k,wv[2],0)); break;
+  case DXI: RE(k=i0(wv[1])); RZ(rngstates1(DXI,DXN,vv,0,k,wv[2],1)); break;
+  case MRI: RE(k=i0(wv[1])); RZ(rngstates1(MRI,MRN,vv,0,k,wv[2],0));
  }
  R mtv;
 }

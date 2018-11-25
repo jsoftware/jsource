@@ -172,7 +172,7 @@ B jtspfree(J jt){I i;A p;
 
 static F1(jtspfor1){
  RZ(w);
- if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
+ if(BOX&AT(w)){A*wv=AAV(w); DO(AN(w), if(wv[i])spfor1(wv[i]););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
  if(!ACISPERM(AC(w))) {
 #if 0 // wrong?
@@ -208,7 +208,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z); 
  for(i=0;i<n;++i){
-  x=WVR(i); m=AN(x); s=CAV(x);
+  x=wv[i]; m=AN(x); s=CAV(x);
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   ASSERT(vnm(m,s),EVILNAME);
@@ -224,7 +224,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
-  x=WVR(i); m=AN(x); s=CAV(x);  // x is the name
+  x=wv[i]; m=AN(x); s=CAV(x);  // x is the name
   if(!m){m=sizeof(jt->baselocale); s=jt->baselocale;}
   ASSERT(LIT&AT(x),EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
@@ -455,7 +455,7 @@ static void jttraverse(J jt,A wd,AF f){
    {A*v=AAV(wd); DO(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
    if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
-    /* obsolete if(AFLAG(wd)&AFREL){DO(AN(wd), if(WVR(i))CALL1(f,WVR(i),0L););}
+    /* obsolete if(AFLAG(wd)&AFREL){DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
     else */{DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
    }
    break;
@@ -1050,7 +1050,7 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;
   case XNUMX:
-  case BOXX:  u=AAV(z); wv=AAV(w);  DO(n, RZ(*u++=car(WVR(i)));); break;
+  case BOXX:  u=AAV(z); wv=AAV(w);  DO(n, RZ(*u++=car(wv[i]));); break;
   case SB01X: case SLITX: case SINTX: case SFLX: case SCMPXX: case SBOXX:
    p=PAV(z); 
    SPB(p,a,car(SPA(p,a)));

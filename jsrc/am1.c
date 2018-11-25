@@ -16,10 +16,10 @@ static A jtistd1(J jt,A z,A ind){A*iv,j,*jv,x;I d,i,n,r,*s;
  if(AN(ind)&&!(BOX&AT(ind))){ASSERT(NUMERIC&AT(ind),EVINDEX); RZ(ind=every(ind,0L,jtright1));}
  s=AS(z); n=AN(ind); iv=AAV(ind); 
  ASSERT(n<=AR(z),EVINDEX);
- d=n; DO(n, --d; x=IVR(d); if(!equ(x,ace))break;); n=n?1+d:d;
+ d=n; DO(n, --d; x=iv[d]; if(!equ(x,ace))break;); n=n?1+d:d;
  GATV(j,BOX,n,1,0); jv=AAV(j);
  for(i=0;i<n;++i){
-  x=IVR(i); d=s[i];
+  x=iv[i]; d=s[i];
   if(BOX&AT(x)){
    ASSERT(!AR(x),EVINDEX); 
    x=AAV0(x); r=AR(x);
@@ -37,7 +37,7 @@ static A jtastd1(J jt,A a,A z,A ind){A*iv,q,r,s,s1,*sv,x;B b;I ar,*as,d,j,m,n,*r
  GATV(r,INT,zr,1,0); rv= AV(r);
  GATV(s,BOX,zr,1,0); sv=AAV(s);
  m=0; j=n;
- DO(n, x=IVR(i); b=x==ace; m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
+ DO(n, x=iv[i]; b=x==ace; m+=rv[i]=b?1:AR(x); RZ(sv[i]=b?sc(zs[i]):shape(x));); 
  DO(zr-n, rv[j]=1; RZ(sv[j]=sc(zs[j])); ++j;);
  d=m+zr-n; ASSERT(ar<=d,EVRANK);
  RZ(s1=raze(s)); s1v=AV(s1);
@@ -55,7 +55,7 @@ static A jtssel(J jt,A z,A ind){A a,*iv,p,q,x,y;B*b;I*av,c,i,j,m,n,*u,*v,*yv;P*z
  GATV(q,INT,m,1,0); v=AV(q); iv=AAV(ind);  
  for(i=0;i<n;++i){
   j=av[i]; if(j>=AN(ind))break;
-  x=IVR(j);
+  x=iv[j];
   if(x!=ace){
    u=yv+i; DO(m, v[i]=b[i]?*u:-1; u+=c;);
    RZ(p=eps(q,1<AR(x)?ravel(x):x)); b=BAV(p);
@@ -69,16 +69,16 @@ static B jtipart(J jt,A z,A ind,A*i1,A*i2){A*iv,p,*pv,q,*qv,x;B*b;I c,d,n;P*zp;
  c=0; DO(n, if(b[i])++c;); d=n-c;
  GATV(p,BOX,c,1,0); pv=AAV(p); *i1=p;
  GATV(q,BOX,d,1,0); qv=AAV(q); *i2=q;
- DO(n, x=IVR(i); if(b[i])*pv++=x; else *qv++=x;);
+ DO(n, x=iv[i]; if(b[i])*pv++=x; else *qv++=x;);
  R 1;
 }    /* partition index into sparse and dense parts */
 
 static A jtdcube(J jt,A z,A i2){A*iv,x,y;I i,m,n,*s;P*zp;
  n=AN(i2); iv=AAV(i2); 
  zp=PAV(z); x=SPA(zp,x); s=1+AS(x);
- m=1; y=IVR(n-1); if(y==ace)RZ(y=IX(s[n-1]));
+ m=1; y=iv[n-1]; if(y==ace)RZ(y=IX(s[n-1]));
  for(i=n-2;0<=i;--i){
-  m*=s[1+i]; x=IVR(i);
+  m*=s[1+i]; x=iv[i];
   RZ(y=irs2(tymes(sc(m),x==ace?IX(s[i]):x),y,VFLAGNONE,0L, RMAX,jtplus));
  }
  R y;
@@ -89,7 +89,7 @@ static A jtscuba(J jt,A z,A i1,B u){A*iv,q=0,x;I c,d,j,n,*s,*v;P*zp;
  if(!n)R mtm;
  iv=AAV(i1);  s=AS(z); zp=PAV(z); x=SPA(zp,a); v=AV(x);
  for(j=n-1;0<=j;--j){
-  x=IVR(j);
+  x=iv[j];
   if(x==ace)RZ(x=IX(s[v[j]]))else{if(1<AR(x))RZ(x=ravel(x)); if(u)RZ(x=nub(x));}
   c=AN(x); 
   if(q){d=*AS(q); RZ(q=stitch(repeat(sc(d),x),reitem(sc(c*d),q)));}
@@ -167,7 +167,7 @@ static A jtzpad1(J jt,A z,A t,B ip){A q,s,x,x0,y,y0;I m;P*zp;
 
 static B mtind(A ind){A*iv,x;
  iv=AAV(ind); 
- DO(AN(ind), x=IVR(i); if(!AN(x))R 1;); 
+ DO(AN(ind), x=iv[i]; if(!AN(x))R 1;); 
  R 0;
 }    /* 1 iff standardized index ind is an empty selection */
 

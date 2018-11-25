@@ -54,7 +54,7 @@ static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
 static F1(jtcfr){A c,r,*wv;I t;
  ASSERT(!AR(w)||2==AN(w),EVLENGTH);
  wv=AAV(w); 
- if(AR(w)){c=WVR(0); r=WVR(1);}else{c=num[1]; r=WVR(0);}
+ if(AR(w)){c=wv[0]; r=wv[1];}else{c=num[1]; r=wv[0];}
  ASSERT(!AR(c)&&1>=AR(r),EVRANK);
  ASSERT(NUMERIC&AT(c)&&(!AN(r)||NUMERIC&AT(r)),EVDOMAIN);
  t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; RE(t=maxtype(t,AT(c)));
@@ -263,7 +263,7 @@ static A jtmnomx(J jt,I m,A w){A s,*wv,x,z=w,*zv;I i,n,r;
   n=AN(w); wv=AAV(w);  RZ(s=sc(m));
   GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
   for(i=0;i<n;++i){
-   x=WVR(i); r=AR(x); 
+   x=wv[i]; r=AR(x); 
    ASSERT(1>=r,EVRANK); 
    ASSERT(!r||m==AN(x),EVLENGTH); 
    zv[i]=1<m==1<r?x:1<m?reshape(s,x):head(x);
@@ -298,7 +298,7 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  if(!an)R reshape(shape(w),num[0]);  // if empty a, return all 0s
  if(b){A*av=AAV(a); 
   ASSERT(2>=an,EVLENGTH);
-  c=1==an?num[1]:AVR(0); a=AVR(1!=an); // c=mplr, a=roots
+  c=1==an?num[1]:av[0]; a=av[1!=an]; // c=mplr, a=roots
   if(1==an&&2==AR(a))R poly2a(a,w);  // if coeff is 1 and exponent-list is a table, go do multinomial
   an=AN(a); at=AT(a);
   ASSERT(NUMERIC&(at|AT(c)),EVDOMAIN);

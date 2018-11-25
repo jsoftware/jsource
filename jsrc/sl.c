@@ -109,7 +109,7 @@ static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
-  y=WVR(i); m=AN(y); s=CAV(y);
+  y=wv[i]; m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(m,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
@@ -135,7 +135,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  for(i=0;i<n;++i){
-  y=WVR(i); m=AN(y); u=CAV(y); c=*u; 
+  y=wv[i]; m=AN(y); u=CAV(y); c=*u; 
   if(!vlocnm(m,u))zv[i]=-2;
   else if(c<='9') zv[i]=0<=probenum(u)?1:-1;
   else            zv[i]=probe(m,u,(UI4)nmhash(m,u),jt->stloc)?0:-1;
@@ -170,7 +170,7 @@ F2(jtlocnl2){UC*u;
 static A jtlocale(J jt,B b,A w){A g,*wv,y;
  RZ(vlocnl(1,w));
  wv=AAV(w); 
- DO(AN(w), y=WVR(i); if(!(g=(b?jtstfindcre:jtstfind)(jt,AN(y),CAV(y),BUCKETXLOC(AN(y),CAV(y)))))R 0;);
+ DO(AN(w), y=wv[i]; if(!(g=(b?jtstfindcre:jtstfind)(jt,AN(y),CAV(y),BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none */
 
@@ -275,7 +275,7 @@ F1(jtlocexmark){A g,*pv,*wv,y,z;B b,*zv;C*u;I i,j,m,n,*nv;L*v;
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
-  zv[i]=1; y=WVR(i); g=0; m=AN(y); u=CAV(y); b='9'>=*u;
+  zv[i]=1; y=wv[i]; g=0; m=AN(y); u=CAV(y); b='9'>=*u;
   if(b){j=probenum(u);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
   else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
   if(g){I k;  // if the specified locale exists in the system...

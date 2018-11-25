@@ -53,7 +53,7 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  RZ(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV(y,BOX,n+n,1,0); v=AAV(y);
- DO(n, *v++=i?t:mtv; x=WVR(i); c=ID(x); RZ(x=lrr(x)); 
+ DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
@@ -63,7 +63,7 @@ static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV(y,BOX,n+n,1,0); v=AAV(y);
  if(1>=n)x=mtv; else{GATV(x,LIT,n-2,1,0); s=CAV(x); DO(n-2, *s++='(';);}
- DO(n, *v++=0==i?x:1==i?t:pt; x=WVR(i); c=ID(x); RZ(x=lrr(x)); 
+ DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
 }
@@ -108,15 +108,15 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  RZ(w);
  if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); 
- DO(n, x=WVR(i); if(BOX&AT(x)){b=1; break;}); b=b||1==n;
+ DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b=b||1==n;
  GATV(y,BOX,n+n-!b,1,0); v=vv=AAV(y);
  if(b){
   RZ(p=cstr("),(<"));
-  DO(n, x=WVR(i); *v++=p; RZ(*v++=lnoun(x)););
+  DO(n, x=wv[i]; *v++=p; RZ(*v++=lnoun(x)););
   RZ(*vv=cstr(1==n?"<":"(<")); if(1<n)RZ(vv[n+n-2]=cstr("),<"));
   R over(lshape(w),raze(y));
  }
- DO(n, x=WVR(i); if(b=1!=AR(x)||!(LIT&AT(x)))break;);
+ DO(n, x=wv[i]; if(b=1!=AR(x)||!(LIT&AT(x)))break;);
  if(!b){C c[256],d,*t;UC*s;
   DO(256,c[i]=1;); 
   RZ(x=raze(w)); s=UAV(x);
@@ -124,13 +124,13 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));
   if(c[d=' ']||c[d='|']||c[d='/']||c[d=',']||c[d=';']){
    GATV(y,LIT,n+AN(x),1,0); t=CAV(y);
-   DO(n, x=WVR(i); *t++=d; MC(t,AV(x),AN(x)); t+=AN(x););
+   DO(n, x=wv[i]; *t++=d; MC(t,AV(x),AN(x)); t+=AN(x););
    RZ(y=lchar(y));
    R over(lshape(w),over(cstr(isdigit(*CAV(y))?"<;.(_1) ":"<;._1 "),y));
  }}
  RZ(p=cstr(";"));
- DO(n-1, RZ(*v++=lcpx(lnoun(WVR(i)))); *v++=p;);
- RZ(*v=lnoun(WVR(n-1)));
+ DO(n-1, RZ(*v++=lcpx(lnoun(wv[i]))); *v++=p;);
+ RZ(*v=lnoun(wv[n-1]));
  R over(lshape(w),raze(y));
 }    /* non-empty boxed array */
 
@@ -247,9 +247,9 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht,vb;C c,id;I n;V*v;
  n=AN(a); av=AAV(a);  
  vb=VERB==AT(w); v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
- if(1<=n){f=AVR(0); t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||id==CFORK&&NOUN&AT(t)&&lp(f);}
- if(2<=n){g=AVR(1); t=v->fgh[1]; c=ID(t); gt=vb    ?c==CHOOK||c==CFORK:lp(g);}
- if(3<=n){h=AVR(2); t=v->fgh[2]; c=ID(t); ht=vb&&!b?c==CHOOK          :lp(h);}
+ if(1<=n){f=av[0]; t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||id==CFORK&&NOUN&AT(t)&&lp(f);}
+ if(2<=n){g=av[1]; t=v->fgh[1]; c=ID(t); gt=vb    ?c==CHOOK||c==CFORK:lp(g);}
+ if(3<=n){h=av[2]; t=v->fgh[2]; c=ID(t); ht=vb&&!b?c==CHOOK          :lp(h);}
  switch(!b?id:2==n?CHOOK:CFORK){
   case CADVF:
   case CHOOK:

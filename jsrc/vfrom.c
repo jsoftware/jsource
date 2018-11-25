@@ -10,15 +10,15 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); 
- DO(n, x=WVR(i); if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
+ DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
  RE(t=maxtype(B01,t)); k=bp(t);
  GA(b,t,n,1,0);      bv=CAV(b);
  GATV(x,INT,n,1,0);    qv=AV(x);
  GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
  RZ(x=apv(n,0L,0L)); cv=AV(x);
- DO(n, x=WVR(i); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
+ DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
  GATV(z,BOX,m,r,0);    zv=AAV(z); s=AS(z); 
- DO(n, x=WVR(i); u=AS(x); DO(AR(x),*s++=*u++;););
+ DO(n, x=wv[i]; u=AS(x); DO(AR(x),*s++=*u++;););
  for(i=0;i<m;i++){
   bu=bv-k;
   DO(n, MC(bu+=k,pv[i]+k*cv[i],k););
@@ -260,12 +260,12 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  RZ(a&&w);
  an=AN(a); *ind=0;
  if(!an)R 0;
- ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=AVR(0); c=AN(q);
+ ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=av[0]; c=AN(q);
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
  GATV(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
  for(j=0;j<an;++j){
-  q=AVR(j); t=AT(q);
+  q=av[j]; t=AT(q);
   if(t&BOX)R 0;
   if(!(t&INT))RZ(q=cvt(INT,q));
   if(!(c==AN(q)&&1>=AR(q)))R 0; 
@@ -430,7 +430,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  }
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
- DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX/* obsolete  && !ARELATIVEB(z)*/){RZ(z=jtquicksel(jt,next,z))}
+ DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX/* obsolete  && !ARELATIVEB(z)*/){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
  if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above

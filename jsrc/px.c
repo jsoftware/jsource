@@ -62,7 +62,7 @@ F1(jtexg){A*v,*wv,x,y,z;I n;
  if(VERB&AT(w))R w;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GATV(z,BOX,n,1,0); v=AAV(z);
- DO(n, x=WVR(i); RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););
+ DO(n, x=wv[i]; RZ(*v++=(y=cex(x,jtfx,0L))?y:exg(x)););
  R parse(z);
 }
 

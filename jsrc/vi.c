@@ -926,7 +926,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
 static B jtusebs(J jt,A a,I ac,I m){A*av,x;I t;
  if(!(BOX&AT(a)&&0==jt->ct))R 0;
  av=AAV(a); 
- DO(ac*m, x=AVR(i); t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
+ DO(ac*m, x=av[i]; t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
 }    /* n (# elements in a target item) is assumed to be 1 */
 
@@ -1037,7 +1037,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
 static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  if(!AN(w))R 1;
  m=AN(w)/c; wv=AAV(w); 
- DO(c, t=0; DO(m, x=WVR(i); if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
+ DO(c, t=0; DO(m, x=wv[i]; if(AN(x)){if(t)RZ(TYPESEQ(t,AT(x))) else{t=AT(x); if(t&FL+CMPX+BOX)R 0;}}););
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 

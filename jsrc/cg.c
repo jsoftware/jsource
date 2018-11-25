@@ -13,7 +13,7 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ASSERT(n,EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
  GATV(z,BOX,n,AR(w),AS(w)); zv=AAV(z);
- DO(n, RZ(zv[i]=x=fx(WVR(i))); ASSERT(VERB&AT(x),EVDOMAIN););
+ DO(n, RZ(zv[i]=x=fx(wv[i])); ASSERT(VERB&AT(x),EVDOMAIN););
  R z;
 }
 
@@ -180,7 +180,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
   GATV(z,BOX,n,1,0); v=AAV(z);
-  DO(n, RZ(*v++=gerfrom(AVR(i),w)););
+  DO(n, RZ(*v++=gerfrom(av[i],w)););
   R z;
 }}
 

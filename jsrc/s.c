@@ -343,7 +343,7 @@ static A jtdllsymaddr(J jt,A w,C flag){A*wv,x,y,z;I i,n,*zv;L*v;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z); 
  for(i=0;i<n;++i){
-  x=WVR(i); v=syrd(nfs(AN(x),CAV(x))); 
+  x=wv[i]; v=syrd(nfs(AN(x),CAV(x))); 
   ASSERT(v,EVVALUE);
   y=v->val;
   ASSERT(NOUN&AT(y),EVDOMAIN);

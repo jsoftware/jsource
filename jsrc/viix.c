@@ -120,7 +120,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u
   case BOXX:  
    av=AAV(a); wv=AAV(w); /* obsolete  ad=tad; 
     wd=twd;  // ad, wd needed below  */
-   DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
+   DO(c, if(cc=compare(av[i],av[i+c*(n-1)]))break;);
  }
  ge=cc; gt=-ge;
  switch(TT(CTTZ(at),CTTZ(wt))){
@@ -155,7 +155,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u
     p=0; q=n-1;
     while(p<=q){
      MID(k,p,q); ck=c*k; b=1; 
-     DO(c, if(cc=compare(AVR(i+ck),WVR(i+j))){b=gt==cc; break;});
+     DO(c, if(cc=compare(av[i+ck],wv[i+j])){b=gt==cc; break;});
      if(b)q=k-1; else p=k+1;
     } 
     *zv++=1+q;

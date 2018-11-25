@@ -36,6 +36,9 @@
 #define ARELATIVE(w)    0  // used by Mbx
 #define RELBASEASGN(lett,w)
 
+#define AFSMM           (I)0            /* SMM managed                     */
+#define AFREL           (I)0            // uses relative addressing.
+
 // **** following is the layout of SMM blocks, which keep a header before the allocated area
 typedef struct {I*a;US j;US blkx;} MS;
 
@@ -153,7 +156,7 @@ static B jtsmmin(J jt,A a,A w){A*wv;I wd;MS*x;
   if((I)a==(I)AABS(x,x->a))R 1;  // here w is a box allocated inside a
  }
  // otherwise, recur on contents
- if(BOX&AT(w)){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(AN(w), if(smmin(a,WVR(i)))R 1;);}
+ if(BOX&AT(w)){wv=AAV(w); wd=(I)w*ARELATIVE(w); DO(AN(w), if(smmin(a,wv[i]))R 1;);}
  R 0;
 }   /* 1 iff any leaf of w is part of SMM array a */
 
@@ -163,7 +166,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
  ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+BOX+SBT,EVDOMAIN);
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
  zv=A1AV(z); wv=AAV(w);
- if(t&BOX){RELBASEASGN(w,w) ; DO(n, RZ(x=smmcar(a,WVR(i))); zv[i]=AREL(x,z););}
+ if(t&BOX){RELBASEASGN(w,w) ; DO(n, RZ(x=smmcar(a,wv[i])); zv[i]=AREL(x,z););}
  else MC(zv,wv,n*bp(t));
  RETF (z);
 }    /* make copy of w in SMM area of a */
@@ -176,7 +179,7 @@ F2(jtsmmis){A*wv,x;A1*av;I wn,wr;
  AK(a)=SZI*(SMMAH+64); AT(a)=AT(w); AN(a)=wn; AR(a)=(RANKT)wr;
  if(!smminit(a)){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;}
  av=A1AV(a); wv=AAV(w); RELBASEASGN(w,w) ;
- DO(wn, x=smmcar(a,WVR(i)); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
+ DO(wn, x=smmcar(a,wv[i]); if(!x){AT(a)=LIT; AN(a)=0; AR(a)=1; *AS(a)=0; R 0;} av[i]=AREL(x,a););
  ICPY(AS(a),AS(w),wr);
  RETF(a);
 }    /* a=:w where a is mapped and w is boxed */
@@ -187,7 +190,7 @@ A jtcpa(J jt,B b,A w){A*wv,z,*zv;
  if(!(BOX&AT(w)))R ca(w);
  wv=AAV(w); RELBASEASGN(w,w) ;
  GATV(z,BOX,AN(w),AR(w),AS(w)); zv=AAV(z);
- DO(AN(w), RZ(zv[i]=cpa(b,WVR(i))););
+ DO(AN(w), RZ(zv[i]=cpa(b,wv[i])););
  R z;
 }    /* copy w down to leaves, recursing on boxed AFNJA iff 1=b */
 

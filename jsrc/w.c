@@ -282,15 +282,15 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
  ASSERT(BOX&AT(a),EVDOMAIN);
  an=AN(a); av=AAV(a); 
  ASSERT(2<=an&&an<=4,EVLENGTH);
- RE(f=i0(AVR(0)));
+ RE(f=i0(av[0]));
  ASSERT(0<=f&&f<=5,EVINDEX);
- RZ(s=vi(AVR(1))); sv=AV(s);
+ RZ(s=vi(av[1])); sv=AV(s);
  ASSERT(3==AR(s),EVRANK);
  v=AS(s); p=v[0]; q=v[1]; ASSERT(2==v[2],EVLENGTH);
  v=sv; DO(p*q, k=*v++; e=*v++; ASSERT(0<=k&&k<p&&0<=e&&e<=6,EVINDEX););
  ijrd[0]=0; ijrd[1]=-1; ijrd[2]=0; ijrd[3]=-1;
  if(4==an){I d,i,j,n,r;
-  RZ(x=vi(AVR(3))); n=AN(x); v=AV(x);
+  RZ(x=vi(av[3])); n=AN(x); v=AV(x);
   ASSERT(1==AR(x),EVRANK);
   ASSERT(4>=n,EVLENGTH);
   if(1<=n) ijrd[0]=i=*v++;
@@ -298,7 +298,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   if(3<=n){ijrd[2]=r=*v++; ASSERT(       0<=r&&r<p,EVINDEX);}
   if(4==n){ijrd[3]=d=*v++; ASSERT(d==-1||0<=d&&d<q,EVINDEX);}
  }
- m=2==an?mtv:AVR(2); c=AN(m);
+ m=2==an?mtv:av[2]; c=AN(m);
  ASSERT(1>=AR(m),EVRANK);
  if(!c&&1==AR(m)){   /* m is empty; w must be integer vector */  }
  else if(NUMERIC&AT(m)){
@@ -314,7 +314,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  RZ(a&&w);
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); 
- f=i0(AVR(0)); s=AVR(1); m=AVR(2); ijrd=AV(AVR(3));
+ f=i0(av[0]); s=av[1]; m=av[2]; ijrd=AV(av[3]);
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT(0<=ijrd[0]&&ijrd[0]<n,EVINDEX);
  b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);

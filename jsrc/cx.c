@@ -480,13 +480,13 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
  // Loop through monad and dyad
  A *wv=AAV(w); 
  for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
-  A w=WVR(k);  // w is now the box containing the words of the expdef
+  A w=wv[k];  // w is now the box containing the words of the expdef
   {A *wv=AAV(w);
    
    I in=AN(w);
    // Loop over each word, starting at beginning where the references are more likely
    for(i=0;i<in;++i) {
-    A w=WVR(i);  // w is box containing a queue value.  If it's a name, we inspect it
+    A w=wv[i];  // w is box containing a queue value.  If it's a name, we inspect it
     if(AT(w)&NAME){
      // Get length/string pointer
      I n=AN(w); C *s=NAV(w)->s;
@@ -545,7 +545,7 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  ASSERT(1>=AR(w),EVRANK);
  wv=AAV(w); 
  GATV(y,BOX,AN(w),AR(w),AS(w)); yv=AAV(y);
- DO(AN(w), RZ(yv[i]=vs(WVR(i))););
+ DO(AN(w), RZ(yv[i]=vs(wv[i])););
  RZ(t=indexof(y,link(chr[':'],str(1L,":")))); v=AV(t); j=MIN(*v,*(1+v));
  *m=take(sc(j  ),y); 
  *d=drop(sc(j+1),y);

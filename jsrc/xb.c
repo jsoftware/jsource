@@ -132,7 +132,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t;
  m=AN(y); wv=AAV(w); 
  GATV(z,BOX,1+e,1,0); zv=AAV(z); 
  *zv++=y;
- DO(e, RZ(*zv++=q=brep(b,d,WVR(i))); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
+ DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
  R raze(z);
 }    /* b iff reverse the bytes; d iff 64-bit */
 
@@ -309,7 +309,7 @@ static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
   else if(t&BOX){
    m=top+n; yv=AAV(y); 
    if(m>AN(y)){GATV(x1,INT,2*m,1,0); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
-   u=xv+top; DO(n, q=YVR(i); if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
+   u=xv+top; DO(n, q=yv[i]; if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
  }}
  R 0;
 }
@@ -321,7 +321,7 @@ F1(jtisnan){A*wv,z;B*u;D*v;I n,t;
  GATV(z,B01,n,AR(w),AS(w)); u=BAV(z);
  if     (t&FL  ){v=DAV(w); DO(n, *u++=_isnan(*v++););}
  else if(t&CMPX){v=DAV(w); DO(n, *u++=_isnan(*v)||_isnan(*(v+1)); v+=2;);}
- else if(t&BOX ){wv=AAV(w);  DO(n, *u++=isnanq(WVR(i));); RE(0);}
+ else if(t&BOX ){wv=AAV(w);  DO(n, *u++=isnanq(wv[i]);); RE(0);}
  else memset(u,C0,n);
  RETF(z);
 }

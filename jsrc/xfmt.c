@@ -527,7 +527,7 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  if(setjmp(((struct dtoa_info*)jt->dtoa)->_env))ASSERTSYS(jt->jerr, "dtoa");
  if(lvl=level(w)){A*wv=AAV(w),x; 
   ASSERT(1>=lvl, EVDOMAIN);
-  DO(AN(w), x=WVR(i); ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
+  DO(AN(w), x=wv[i]; ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);
       ASSERT(!(AR(x)&&AT(x)&NUMERIC),EVRANK);});
   R df2(reitem(shape(w),a),w,amp(foreign(num[8],num[0]), ds(COPE)));
  } else {

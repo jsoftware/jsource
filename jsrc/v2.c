@@ -670,14 +670,14 @@ static F1(test_ecm){A*wv,z;X*ab,n,*zv;
  ASSERT(4==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
- ASSERT(XNUM&AT(WVR(0)),EVDOMAIN); ASSERT(1==AR(WVR(0)),EVRANK); ASSERT(2==AN(WVR(0)),EVLENGTH);
- ASSERT(XNUM&AT(WVR(1)),EVDOMAIN); ASSERT(0==AR(WVR(1)),EVRANK);
- ASSERT(INT&AT(WVR(2)),EVDOMAIN);
- ASSERT(XNUM&AT(WVR(3)),EVDOMAIN);
- n=*XAV(WVR(1));
- ab=XAV(WVR(0));
+ ASSERT(XNUM&AT(wv[0]),EVDOMAIN); ASSERT(1==AR(wv[0]),EVRANK); ASSERT(2==AN(wv[0]),EVLENGTH);
+ ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
+ ASSERT(INT&AT(wv[2]),EVDOMAIN);
+ ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
+ n=*XAV(wv[1]);
+ ab=XAV(wv[0]);
  GAT(z,XNUM,3,1,0); zv=XAV(z);
- RZ(ecm(n,ab[0],ab[1],i0(WVR(2)),XAV(WVR(3)),zv));
+ RZ(ecm(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
  RETF(z);
 }
 
@@ -687,14 +687,14 @@ static F1(test_ecm_s1){A*wv,z;X*ab,n,*zv;
  ASSERT(4==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
- ASSERT(XNUM&AT(WVR(0)),EVDOMAIN); ASSERT(1==AR(WVR(0)),EVRANK); ASSERT(2==AN(WVR(0)),EVLENGTH);
- ASSERT(XNUM&AT(WVR(1)),EVDOMAIN); ASSERT(0==AR(WVR(1)),EVRANK);
- ASSERT(INT&AT(WVR(2)),EVDOMAIN);
- ASSERT(XNUM&AT(WVR(3)),EVDOMAIN);
- n=*XAV(WVR(1));
- ab=XAV(WVR(0));
+ ASSERT(XNUM&AT(wv[0]),EVDOMAIN); ASSERT(1==AR(wv[0]),EVRANK); ASSERT(2==AN(wv[0]),EVLENGTH);
+ ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
+ ASSERT(INT&AT(wv[2]),EVDOMAIN);
+ ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
+ n=*XAV(wv[1]);
+ ab=XAV(wv[0]);
  GAT(z,XNUM,3,1,0); zv=XAV(z);
- RZ(ecm_s1(n,ab[0],ab[1],i0(WVR(2)),XAV(WVR(3)),zv));
+ RZ(ecm_s1(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
  RETF(z);
 }
 
@@ -704,15 +704,15 @@ static F1(test_ecm_s2){A*wv,z;I*b1b2;X*ab,n,*zv;
  ASSERT(4==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
- ASSERT(XNUM&AT(WVR(0)),EVDOMAIN); ASSERT(1==AR(WVR(0)),EVRANK); ASSERT(2==AN(WVR(0)),EVLENGTH);
- ASSERT(XNUM&AT(WVR(1)),EVDOMAIN); ASSERT(0==AR(WVR(1)),EVRANK);
- ASSERT(INT &AT(WVR(2)),EVDOMAIN); ASSERT(1==AR(WVR(2)),EVRANK); ASSERT(2==AN(WVR(0)),EVLENGTH);
- ASSERT(XNUM&AT(WVR(3)),EVDOMAIN);
- n=*XAV(WVR(1));
- ab=XAV(WVR(0));
- b1b2=AV(WVR(2));
+ ASSERT(XNUM&AT(wv[0]),EVDOMAIN); ASSERT(1==AR(wv[0]),EVRANK); ASSERT(2==AN(wv[0]),EVLENGTH);
+ ASSERT(XNUM&AT(wv[1]),EVDOMAIN); ASSERT(0==AR(wv[1]),EVRANK);
+ ASSERT(INT &AT(wv[2]),EVDOMAIN); ASSERT(1==AR(wv[2]),EVRANK); ASSERT(2==AN(wv[0]),EVLENGTH);
+ ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
+ n=*XAV(wv[1]);
+ ab=XAV(wv[0]);
+ b1b2=AV(wv[2]);
  GAT(z,XNUM,3,1,0); zv=XAV(z);
- RZ(ecm_s2(n,ab[0],ab[1],b1b2[0],b1b2[1],XAV(WVR(3)),zv));
+ RZ(ecm_s2(n,ab[0],ab[1],b1b2[0],b1b2[1],XAV(wv[3]),zv));
  RETF(z);
 }
 

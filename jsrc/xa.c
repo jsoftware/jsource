@@ -176,12 +176,12 @@ F1(jtsysparms){A*wv;I k,m;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(2==AN(w),EVLENGTH);
  wv=AAV(w); 
- RE(k=i0(WVR(0)));
+ RE(k=i0(wv[0]));
  switch(k){
   default: ASSERT(0,EVINDEX);
-  case 0:  RE(m=i0(WVR(1))); jt->fdepn =(I4)m; break;
+  case 0:  RE(m=i0(wv[1])); jt->fdepn =(I4)m; break;
   case 1:  ASSERT(0,EVDOMAIN);  /* jt->fdepi  can not be set */
-  case 2:  RE(m=i0(WVR(1))); jt->fcalln=(I4)m; break;
+  case 2:  RE(m=i0(wv[1])); jt->fcalln=(I4)m; break;
   case 3:  ASSERT(0,EVDOMAIN);  /* jt->fcalli can not be set */
  }
  R mtm;

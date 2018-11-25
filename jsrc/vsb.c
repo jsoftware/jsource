@@ -415,7 +415,7 @@ static F1(jtsbunbox){A*wv,x,z;S c2;I i,m,n;SB*zv;
  m=AN(w); wv=AAV(w); 
  GATV(z,SBT,m,AR(w),AS(w)); zv=SBAV(z);
  for(i=0;i<m;++i){
-  x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
+  x=wv[i]; n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   RE(*zv++=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),0));
@@ -656,15 +656,15 @@ static F1(jtsbsetdata){A h,s,u,*wv,x;
  ASSERTD(1==AR(w), "arg rank");
  ASSERTD(8==AN(w), "arg length");
  wv=AAV(w); 
- RZ(sbcheck1(WVR(0),WVR(1),WVR(2),WVR(3),WVR(4),WVR(5),WVR(6),WVR(7)));
- jt->sbun=*AV(WVR(0));
- jt->sbsn=*AV(WVR(1));
- RZ(x=ca(WVR(2))); ras(x); u=jt->sbu; jt->sbu=x; jt->sbuv=(SBU*)AV(x);
- RZ(x=ca(WVR(3))); ras(x); s=jt->sbs; jt->sbs=x; jt->sbsv=     CAV(x);
- RZ(x=ca(WVR(4))); ras(x); h=jt->sbh; jt->sbh=x; jt->sbhv=      AV(x);
- ROOT      =*AV(WVR(5));
- FILLFACTOR=*AV(WVR(6));
- GAP       =*AV(WVR(7));
+ RZ(sbcheck1(wv[0],wv[1],wv[2],wv[3],wv[4],wv[5],wv[6],wv[7]));
+ jt->sbun=*AV(wv[0]);
+ jt->sbsn=*AV(wv[1]);
+ RZ(x=ca(wv[2])); ras(x); u=jt->sbu; jt->sbu=x; jt->sbuv=(SBU*)AV(x);
+ RZ(x=ca(wv[3])); ras(x); s=jt->sbs; jt->sbs=x; jt->sbsv=     CAV(x);
+ RZ(x=ca(wv[4])); ras(x); h=jt->sbh; jt->sbh=x; jt->sbhv=      AV(x);
+ ROOT      =*AV(wv[5]);
+ FILLFACTOR=*AV(wv[6]);
+ GAP       =*AV(wv[7]);
  fa(u); fa(s); fa(h);
  R num[1];
 }
@@ -682,12 +682,12 @@ static F1(jtsbsetdata2){A *wv;I c,i,sn,offset=0;SBU*uv,*v;C*sv;
  ASSERTD(!AN(w)||4<=AN(w), "arg length");
  if(!AN(w)){resetdata(jt); R num[1]; }
  wv=AAV(w); 
- RZ(sbcheck2(WVR(0),WVR(1),WVR(2),WVR(3)));
- c=*AV(WVR(0));                         // cardinality
- if(1<AN(WVR(0)))offset=*(1+AV(WVR(0)));// offset
- sn=*AV(WVR(1));                        // string length
- uv=(SBU*)AV(WVR(2));                   // table of symbols
- sv=CAV(WVR(3));                        // global string table
+ RZ(sbcheck2(wv[0],wv[1],wv[2],wv[3]));
+ c=*AV(wv[0]);                         // cardinality
+ if(1<AN(wv[0]))offset=*(1+AV(wv[0]));// offset
+ sn=*AV(wv[1]);                        // string length
+ uv=(SBU*)AV(wv[2]);                   // table of symbols
+ sv=CAV(wv[3]);                        // global string table
  if(!offset)resetdata(jt);
  for(i=MAX(offset,1),v=((offset)?0:1)+uv;i<c;++i,++v){I vi,vn;UC*vc;  // i==0 is sentinel
   vi=v->i;                              // index into sbs
@@ -704,7 +704,7 @@ static F1(jtsbtestbox){A*wv,x,z;S c2;I i,m,n;B*zv;
  m=AN(w); wv=AAV(w); 
  GATV(z,B01,m,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<m;++i){
-  x=WVR(i); n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
+  x=wv[i]; n=AN(x); c2=AT(x)&C4T?SBC4:AT(x)&C2T?SBC2:0; 
   ASSERT(!n||AT(x)&LIT+C2T+C4T,EVDOMAIN);
   ASSERT(1>=AR(x),EVRANK);
   RE(*zv++=0<=sbprobe(c2,c2&SBC4?(4*n):c2&SBC2?(2*n):n,CAV(x),1));

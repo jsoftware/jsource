@@ -562,12 +562,12 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  if(!AR(w))R ope(w);
- n=AN(w); wv=AAV(w);  y=WVR(0); p=IC(y); t=AT(y); k=bp(t);
- DO(n, y=WVR(i); r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
+ n=AN(w); wv=AAV(w);  y=wv[0]; p=IC(y); t=AT(y); k=bp(t);
+ DO(n, y=wv[i]; r=AR(y); ASSERT(p==IC(y),EVLENGTH); ASSERT(r&&r<=2&&TYPESEQ(t,AT(y)),EVNONCE); c+=1==r?1:*(1+AS(y)););
  GA(z,t,p*c,2,0); s=AS(z); *s=p; *(1+s)=c; 
  zv=CAV(z); ck=c*k;
  for(i=0;i<n;++i){
-  y=WVR(i); dk=1==AR(y)?k:k**(1+AS(y)); xv=zv; zv+=dk;
+  y=wv[i]; dk=1==AR(y)?k:k**(1+AS(y)); xv=zv; zv+=dk;
   if(!dk)continue;
   if(/* obsolete wd&&*/t&BOX)RZ(y=car(y));
   yv=CAV(y);

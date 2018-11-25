@@ -259,8 +259,8 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
- if(ARELATIVE(w)){RELORIGIN(rl,w); A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
- else MC(AV(z),CAV(w)+m*k,n*k);
+ /* obsolete if(ARELATIVE(w)){RELORIGIN(rl,w); A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
+ else */ MC(AV(z),CAV(w)+m*k,n*k);
  R z;
 }
 
@@ -510,7 +510,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 
 // result is now in zz
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 

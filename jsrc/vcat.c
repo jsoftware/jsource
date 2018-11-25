@@ -137,7 +137,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
 // obsolete  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL; RELORIGINB(q,w); q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
- INHERITNORELFILL2(z,a,w); RETF(z);
+ /* obsolete INHERITNORELFILL2(z,a,w); */ RETF(z);
 }    /* a,w general case for array with the same type; jt->rank=0 */
 
 static F2(jtovv){A z;I m,t;
@@ -152,7 +152,7 @@ static F2(jtovv){A z;I m,t;
  MC(x,  AV(a),m      ); 
  MC(x+m,AV(w),k*AN(w));
 // obsolete  }
- INHERITNOREL2(z,a,w); RETF(z);
+ /* obsolete INHERITNOREL2(z,a,w); */ RETF(z);
 }    /* a,w for vectors/scalars with the same type */
 
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){

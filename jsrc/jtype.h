@@ -401,19 +401,19 @@ typedef I SI;
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
 #define AABS(rel,k)     ((I)(rel)+(I)(k))
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
-#define ARELATIVEB(w)   ((AFLAG(w)&AFNJA+AFSMM+AFREL)!=0)  // test if we know w is boxed - may be used in branches or computation
-#define ARELATIVES(w)   ((AT(w)|(~BOX))+(AFLAG(w)&(AFNJA+AFSMM+AFREL)))  // test for relative, leave in sign bit (sign is 0 if RELATIVE)
+#define ARELATIVEB(w)   ((AFLAG(w)&AFNJA)!=0)  // test if we know w is boxed - may be used in branches or computation
+#define ARELATIVES(w)   ((AT(w)|(~BOX))+(AFLAG(w)&(AFNJA)))  // test for relative, leave in sign bit (sign is 0 if RELATIVE)
                                // the test uses the fact that AF* is less than BOX
-#define ARELATIVESB(w)   ((AFLAG(w)&(AFNJA+AFSMM+AFREL))-1)  // test for relative, leave in sign bit (sign is 0 if RELATIVE) - if known boxed
+#define ARELATIVESB(w)   ((AFLAG(w)&(AFNJA))-1)  // test for relative, leave in sign bit (sign is 0 if RELATIVE) - if known boxed
 #define ARELATIVE(w)    (ARELATIVES(w) >= 0)   // test if we don't, branchless
 #define AORWRELATIVE(a,w) ((ARELATIVES(a)&ARELATIVES(w))>=0)  // true if EITHER has sign 0
-#define AORWRELATIVEB(a,w) (((AFLAG(a)|AFLAG(w))&AFNJA+AFSMM+AFREL)!=0)  // same test, but this time known to be boxed.  branches or computation
+#define AORWRELATIVEB(a,w) (((AFLAG(a)|AFLAG(w))&AFNJA)!=0)  // same test, but this time known to be boxed.  branches or computation
 #define AADR(w,z)       (A)(intptr_t)((I)(w)+(I)(z))   // was ((w)?(A)(intptr_t)((I)(w)+(I)(z)):(z))
 // get the base to add to relative refs.  It's the origin of this block unless this block is virtual: then the origin of the backing block
 // here the block is known (or assumed) to be relative and boxed.  asgn is an I name we declare and use for assignment.  Result is I
 #define RELORIGIN(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w);
 // here we know the block is boxed, but its relative status is unknown
-#define RELORIGINB(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(AFLAG(w)&AFNJA+AFSMM+AFREL?asgn:0);
+#define RELORIGINB(asgn,w)    I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(AFLAG(w)&AFNJA?asgn:0);
 // here the block is unknown
 #define RELORIGINBR(asgn,w)   I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(ARELATIVE(w)?asgn:0);
 // use this to indicate the relocation factor for a non-virtual, non-relative block (usually a destination that has been allocated recently)
@@ -427,7 +427,7 @@ typedef I SI;
 #define IVR(i)          AADR(id,iv[i])
 #define WVR(i)          AADR(wd,wv[i])
 #define YVR(i)          AADR(yd,yv[i])
-#define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA+AFSMM+AFREL?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
+#define AAV0(w) ((A)((C*)*AAV(w) + (AFLAG(w)&AFNJA?(I)(AFLAG(w)&AFVIRTUAL?ABACK(w):w):0)))  // fetch first box of w, which must be boxed
 // if w is relative, relocate the contents of z from w to z.  We must have moved the contents of w into output block z without relocating, and now we are fixing it up
 // z must be known to be relative and nonvirtual.  This has no result.  z is never disturbed.
 #define RELOCATE(w,z)   if(ARELATIVE(w)){RELORIGIN(wrel,w); relocate(wrel-(I)(z),(z));}
@@ -443,12 +443,12 @@ typedef I SI;
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
 #define AABS(rel,k)     (k)
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
-#define ARELATIVEB(w)   0
-#define ARELATIVES(w)   0
-#define ARELATIVESB(w)  0
-#define ARELATIVE(w)    0
-#define AORWRELATIVE(a,w) 0
-#define AORWRELATIVEB(a,w) 0
+#define ARELATIVEB(w)   
+#define ARELATIVES(w)   
+#define ARELATIVESB(w)  
+#define ARELATIVE(w)    0  // used by Mbx
+#define AORWRELATIVE(a,w) 
+#define AORWRELATIVEB(a,w) 
 #define AADR(w,z)       (z)
 #define RELORIGIN(asgn,w)  
 #define RELORIGINB(asgn,w)   

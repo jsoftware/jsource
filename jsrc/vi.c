@@ -1580,7 +1580,7 @@ F1(jtnubsieve){
 // ~. y  - does not have IRS
 F1(jtnub){ 
  RZ(w);
- if(SPARSE&AT(w)||AFLAG(w)&AFNJA+AFREL)R repeat(nubsieve(w),w); 
+ if(SPARSE&AT(w)||AFLAG(w)&AFNJA)R repeat(nubsieve(w),w); 
  R indexofsub(INUB,w,w);
 }    /* ~.w */
 
@@ -1593,7 +1593,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
- R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA+AFREL)?indexofsub(ILESS,x,a):
+ R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
 }    /* a-.w */
 

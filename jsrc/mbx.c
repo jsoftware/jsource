@@ -188,9 +188,9 @@ A jtcpa(J jt,B b,A w){A*wv,z,*zv;
 
 static B leafrel(A w){A*v;
  if(BOX&AT(w)){
-  if(AFLAG(w)&(AFNJA|AFNOSMREL))R 0;   // exit fast if we know there's no relative
+  if(AFLAG(w)&(AFNJA))R 0;   // exit fast if we know there's no relative
    // kludge we could improve this by noting that absence of NOSMREL is decisive if recursive usecount
-  if(AFLAG(w)&AFSMM+AFREL)R 1;
+  if(AFLAG(w)&AFREL)R 1;
   v=AAV(w); DO(AN(w), if(leafrel(v[i]))R 1;);
  }
  R 0;

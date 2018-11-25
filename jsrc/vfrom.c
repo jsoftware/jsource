@@ -66,8 +66,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
-// correct  if(((zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
-  if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFSMM|AFNJA))))>=0){  // zn>1 and not (frame or NJA)
+// correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
+  if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
    // result is more than one atom and does not come from multiple cells.  Perhaps it should be virtual.  See if the indexes are consecutive
    I index0 = av[0]; index0+=(index0>>(BW-1))&p;  // index of first item
    // check the last item before checking the middle.
@@ -243,12 +243,12 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
  }
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
  r=wr+1-h;
- if(r==wr)
+ if(r==wr){
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
- else if(ARELATIVE(w)){
-  GATV(q,INT,r,1,0); 
-  v=AV(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
-  z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
+// obsolete  else if(ARELATIVE(w)){
+// obsolete   GATV(q,INT,r,1,0); 
+// obsolete   v=AV(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
+// obsolete   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }else{
   RZ(q=gah(r,w)); v=AS(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
@@ -390,7 +390,7 @@ F2(jtfrom){I at;A z;
   case 2: z=fromsd(a,w); break;
   default: z=fromss(a,w); break;
  }
- RZ(z); INHERITNOREL(z,w); RETF(z);
+ RZ(z); /* obsolete INHERITNOREL(z,w);*/ RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){A ind;
@@ -417,7 +417,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(!AR(a) && AR(w)==1 && AT(w)&BOX && !ARELATIVEB(w)){
+  if(!AR(a) && AR(w)==1 && AT(w)&BOX /* obsolete && !ARELATIVEB(w)*/){
    RZ(z=jtquicksel(jt,a,w));
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
@@ -427,7 +427,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  }
  n=AN(a); av=AAV(a); RELBASEASGN(a,a);
  if(!n)R w; z=w;
- DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX && !ARELATIVEB(z)){RZ(z=jtquicksel(jt,next,z))}
+ DO(n, A next=AVR(i); if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX/* obsolete  && !ARELATIVEB(z)*/){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
  if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above

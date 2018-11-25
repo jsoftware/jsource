@@ -86,7 +86,8 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
  GATV(z,BOX,n,1,0); x=AAV(z);
  DO(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
- AFLAG(z) |= AFNOSMREL; RETF(z);  // always boxed chars, and not relative
+// obsolete  AFLAG(z) |= AFNOSMREL;
+ RETF(z);  // always boxed chars, and not relative
 }
 
 

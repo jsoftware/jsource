@@ -102,7 +102,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 
 // result is now in zz
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -205,7 +205,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 
 // result is now in zz
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -347,8 +347,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #include "result.h"
 
 #if 0
-      // if the result is boxed, accumulate the SMREL info
-      if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
+// obsolete       // if the result is boxed, accumulate the SMREL info
+// obsolete       if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
 
       // process according to state
       if(state&STATENORM){
@@ -367,7 +367,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
        //  In that case, we switch this allocation to be a single box per result-cell.
        //  We also have to do this for sparse results, so that they will be collected into a single result at the end
        yt=AT(y);  // type of the first result
-       if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA|AFSMM|AFREL)) || (yt&SPARSE) ) ){
+       if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA)) || (yt&SPARSE) ) ){
         yr=AR(y); yn=AN(y);
         RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
         state^=(STATEFIRST|STATENORM);  // advance to STATENORM
@@ -446,7 +446,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 
 // result is now in zz
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -588,7 +588,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
 // result is now in zz
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 

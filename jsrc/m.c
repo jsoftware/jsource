@@ -36,7 +36,7 @@
 #define ALLOJBIN(j) ((j)-PMINL)   // convert j (=lg2(size)) to pool bin#
 #define FHRHPOOLBINSIZE(b) (PMIN<<(b))        // convert bin# to size for pool bin#
 #define FHRHSYSSIZE(h) (((I)1)<<((h)>>(PLIML-PMINL+2)))        // convert h to size for system alloc
-#define FHRHSIZE(h) (FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h))
+#define FHRHSIZE(h) ((FHRHBINISPOOL(FHRHPOOLBIN(h)) ? FHRHPOOLBINSIZE(FHRHPOOLBIN(h)) : FHRHSYSSIZE(h)))
 #define FHRHSYSJHDR(j) ((2*j+1)<<(PLIML-PMINL+1))        // convert j (=lg(size)) to h format for a system allo
 #define FHRHBININCR(b) ((I)2<<(b))      // when garbage-collecting bin b, add this much to the root for each free block encountered.  This is also the amount by which the h values of successive blocks in an allocation differ
 #define FHRHBLOCKOFFSETMASK(b) (FHRHROOTFREE - FHRHBININCR(b))  // for blocks in pool b, mask to use to extract offset to root
@@ -48,7 +48,8 @@
 #define FHRHENDVALUE(b) (FHRHROOTFREE + (((I)1)<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
 
 // the size of the total allocation of the block for w, always a power of 2
-#define alloroundsize(w) (AFLAG(w)&AFSMM ? smmallosize(w) : FHRHSIZE(AFHRH(w)))
+// obsolete #define alloroundsize(w) (AFLAG(w)&AFSMM ? smmallosize(w) : FHRHSIZE(AFHRH(w)))
+#define alloroundsize(w)  FHRHSIZE(AFHRH(w))
 
 #if (MEMAUDIT==0 || !_WIN32)
 #define FREECHK(x) FREE(x)
@@ -173,7 +174,7 @@ static F1(jtspfor1){
  RZ(w);
  if(BOX&AT(w)){A*wv=AAV(w);RELBASEASGN(w,w); DO(AN(w), if(WVR(i))spfor1(WVR(i)););}
  else if(AT(w)&TRAVERSIBLE)traverse(w,jtspfor1); 
- if(!ACISPERM(AC(w))||AFSMM&AFLAG(w)) {
+ if(!ACISPERM(AC(w))) {
 #if 0 // wrong?
   if(AFNJA&AFLAG(w)){I j,m,n,p;
    m=SZI*WP(AT(w),AN(w),AR(w)); 
@@ -296,8 +297,8 @@ static void auditsimverify0(A w){
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
-   if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
+   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
+   if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimverify0((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimverify0(v->fgh[0]); auditsimverify0(v->fgh[1]); auditsimverify0(v->fgh[2]);
@@ -325,8 +326,8 @@ static void auditsimdelete(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-   if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
+   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimdelete((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimdelete(v->fgh[0]); auditsimdelete(v->fgh[1]); auditsimdelete(v->fgh[2]);
@@ -348,8 +349,8 @@ static void auditsimreset(A w){I delct;
   if(AT(w)&BOX){
    I n=AN(w); I af=AFLAG(w);
    A* RESTRICT wv=AAV(w);  // pointer to box pointers
-   I wrel = af&AFREL+AFNJA+AFSMM?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-   if((af&AFNJA+AFSMM)||n==0)R;  // no processing if not J-managed memory (rare)
+   I wrel = af&AFNJA?(I)w:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+   if((af&AFNJA)||n==0)R;  // no processing if not J-managed memory (rare)
    DO(n, auditsimreset((A)(intptr_t)((I)wv[i]+(I)wrel)););
   }else if(AT(w)&FUNC) {V* RESTRICT v=VAV(w);
    auditsimreset(v->fgh[0]); auditsimreset(v->fgh[1]); auditsimreset(v->fgh[2]);
@@ -453,9 +454,9 @@ static void jttraverse(J jt,A wd,AF f){
   case RATX:  
    {A*v=AAV(wd); DO(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
-   if(!(AFLAG(wd)&AFNJA+AFSMM)){A*wv=AAV(wd);
-    if(AFLAG(wd)&AFREL){DO(AN(wd), if(WVR(i))CALL1(f,WVR(i),0L););}
-    else{DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
+   if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
+    /* obsolete if(AFLAG(wd)&AFREL){DO(AN(wd), if(WVR(i))CALL1(f,WVR(i),0L););}
+    else */{DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
@@ -512,7 +513,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
-  AFLAG(z)=AFVIRTUAL + (wf&AFNOSMREL) + ((wf&AFNJA+AFSMM+AFREL)?AFREL:0);  // flags: not recursive, not UNINCORPABLE
+  AFLAG(z)=AFVIRTUAL /* obsolete  + (wf&AFNOSMREL) + ((wf&AFNJA)?AFREL:0)*/;  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset*tal; AR(z)=(RANKT)r;  // virtual, not inplaceable
   if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
   ABACK(z)=w;   // set the pointer to the base: w or its base
@@ -531,12 +532,14 @@ A jtrealize(J jt, A w){A z; I t;
  RZ(w);
  t=AT(w);
  GA(z,t,AN(w),AR(w),AS(w));
- // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL.
+// obsolete  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL.
  // new block is not VIRTUAL, not RECURSIBLE
- AFLAG(z) = (AFLAG(w)&AFNOSMREL);
-// copy the contents.  If the block is boxed relative, relocate it
- if(!ARELATIVE(w)){MC(AV(z),AV(w),AN(w)*bp(t));
- }else { AFLAG(z) |= AFREL; I rel = (I)ABACK(w)-(I)z; A * RESTRICT wa=AAV(w), * RESTRICT za=AAV(z); RELOCOPY(za,wa,AN(w),rel); }
+// obsolete  AFLAG(z) = /* obsolete (AFLAG(w)&AFNOSMREL)*/0;
+// copy the contents.
+// obsolete   If the block is boxed relative, relocate it
+// obsolete  if(!ARELATIVE(w)){
+// obsolete  }else { AFLAG(z) |= AFREL; I rel = (I)ABACK(w)-(I)z; A * RESTRICT wa=AAV(w), * RESTRICT za=AAV(z); RELOCOPY(za,wa,AN(w),rel); }
+ MC(AV(z),AV(w),AN(w)*bp(t));
  R z;
 }
 
@@ -635,9 +638,9 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-  I anysmrel=af&(AFREL|AFSMM)?0:AFNOSMREL;   // init with the status for this block
-  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+// obsolete   I anysmrel=af&(AFSMM)?0:AFNOSMREL;   // init with the status for this block
+  if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
   while(1){AD* np0;  // n is always > 0 to start
    if(--n<0)break;
@@ -649,11 +652,11 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    }
    if(np){
     ra(np);  // increment the box, possibly turning it to recursive
-    if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
+// obsolete     if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
    }
    np=np0;  // advance to next box
   }
-  AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
+// obsolete   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   ras(v->fgh[0]); ras(v->fgh[1]); ras(v->fgh[2]);
@@ -672,8 +675,8 @@ I jtfa(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFREL+AFNJA+AFSMM?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-  if((af&AFNJA+AFSMM)||n==0)R 0;  // no processing if not J-managed memory (rare)
+  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
   while(1){AD* np0;
    if(--n<0)break;
@@ -708,7 +711,7 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
 // obsolete   I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
-  if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
+  if((af&AFNJA)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
 // obsolete    A np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
    A np=*wv; ++wv;   // point to block for box
@@ -1028,7 +1031,7 @@ F1(jtca){A z;I t;P*wp,*zp;
  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
  else{GA(z,t,AN(w),AR(w),AS(w));}
  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL
- AFLAG(z) = (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA+AFSMM+AFREL)?AFREL:0);
+// obsolete  AFLAG(z) = /*obsolete (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA)?AFREL:0)*/0;
  if(t&SPARSE){
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));
@@ -1042,7 +1045,7 @@ F1(jtca){A z;I t;P*wp,*zp;
 // clone recursive.  The result is not relative, even if w is
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  RZ(z=ca(w));
- AFLAG(z) &= ~AFREL; // if w was rel/smm/nja, ca() marks the result REL.  Undo that
+// obsolete  AFLAG(z) &= ~AFREL; // if w was rel/smm/nja, ca() marks the result REL.  Undo that
  n=AN(w);
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;

@@ -1007,7 +1007,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   RZ(zz=cant2(xposeaxes,zz));
  }
 
- AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
+// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 
 }

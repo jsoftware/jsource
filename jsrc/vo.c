@@ -44,29 +44,29 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
   k=m*bp(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z); 
-  if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y); RELORIGIN(wrel,w); DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
-  else{
+// obsolete if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y); RELORIGIN(wrel,w); DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
+// obsolete  else{
    // The case of interest: non-relative w.  We have allocated the result; now we allocate a block for each cell of w and copy
    // the w values to the new block.  We set NOSMREL in the top block and the new ones if w is boxed or NOSMREL.  
    // If w is DIRECT, we make the result block recursive and increment the count of the others (we do so here because it saves a traversal of the new blocks
    // if the result block is assigned).  If w is indirect, we just leave everything nonrecursive to avoid traversing w, because
    // that will prove unnecessary if this result is not assigned.
 
-   if(t&DIRECT){
-    // Direct w.
-    AFLAG(z) = newflags|BOX;  // Make result inplaceable and recursive
-    // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
-    // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
-    // inplaceable with a free on the tstack.
-    // To avoid the tstack overhead, we hijack the tstack pointers and set them up to have no effect on the actual tstack.  We restore them when we're
-    // finished.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
-    I pushxsave = jt->tnextpushx; A *tstacksave = jt->tstack;  // save tstack info before allocation
-    jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
-    DO(n, jt->tnextpushx=0; GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k; zv[i]=y;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1
-    jt->tstack=tstacksave; jt->tnextpushx=pushxsave;   // restore tstack pointers
-   }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // boxed w; don't set recursible, but inherit nosm from w
-  }
+  if(t&DIRECT){
+   // Direct w.
+   AFLAG(z) = newflags|BOX;  // Make result inplaceable and recursive
+   // Since we are making the result recursive, we can save a lot of overhead by NOT putting the cells onto the tstack.  As we have marked the result as
+   // recursive, it will free up the cells when it is deleted.  We want to end up with the usecount in the cells being 1, not inplaceable.  The result itself will be
+   // inplaceable with a free on the tstack.
+   // To avoid the tstack overhead, we hijack the tstack pointers and set them up to have no effect on the actual tstack.  We restore them when we're
+   // finished.  If we hit an error, that's OK, because whatever we did get allocated will be freed when the result block is freed.  We use GAE so that we don't abort on error
+   I pushxsave = jt->tnextpushx; A *tstacksave = jt->tstack;  // save tstack info before allocation
+   jt->tstack = (A*)(&jt->tnextpushx);  // use tnextpushx as a temp.  It will be destroyed, which is OK because we are setting it to 0 before every call
+   DO(n, jt->tnextpushx=0; GAE(y,t,m,r,f+ws,break); AFLAG(y)=newflags; AC(y)=ACUC1; MC(CAV(y),wv,k); wv+=k; zv[i]=y;);   // allocate, but don't grow the tstack.  Set usecount of cell to 1
+   jt->tstack=tstacksave; jt->tnextpushx=pushxsave;   // restore tstack pointers
+  }else{AFLAG(z) = newflags; DO(n, GA(y,t,m,r,f+ws); AFLAG(y)=newflags; MC(CAV(y),wv,k); wv+=k; zv[i]=y;); } // boxed w; don't set recursible, but inherit nosm from w
  }
+// obsolete  }
  RETF(z);
 }    /* <"r w */
 
@@ -367,7 +367,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn,zrel;
+F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(n&&BOX&AT(w)))RCA(w);
@@ -395,7 +395,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I d,i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); MCIS(AS(z)+AR(w),u,r); x=CAV(z);
 // obsolete  zrel=(wrel&&t&BOX)?RELORIGINDEST(z):0;   // set if result is relative
-  if(zrel=0){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else fillv(t,zn,x);  // init to a: relative, or fills
+  /* obsolete if(zrel=0){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else */ fillv(t,zn,x);  // init to a:  fills
   for(i=0;i<n;++i){
    y=(A)AABS(wrel,v[i]);   // get pointer to contents, relocated if need be
    // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
@@ -488,12 +488,12 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,* RESTRICT yv,z,* RES
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt,zrel;
+F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt;
  RZ(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
  if(!(BOX&AT(w)))R ravel(w);   // if not boxed, just return ,w
- RELORIGINB(wrel,w); zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
+// obsolete  RELORIGINB(wrel,w); zrel=ARELATIVESB(w);   // wrel is relocation offset for w (0 if nonrel); zrel for now is a sign-bit flag, >= 0 if w or any contents relative
  if(1==n){RZ(z=(A)AABS(wrel,*v)); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
@@ -512,13 +512,13 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt,zr
    if(d){
     yt=AT(y); 
     if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtype(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
-    zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
+// obsolete     zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
    }
   }
   // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
-  zrel = zrel>=0;
+// obsolete   zrel = zrel>=0;
   // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
-  if(1<r)R razeg(w,t,n,r,v,zrel);
+  if(1<r)R razeg(w,t,n,r,v,/* obsolete zrel*/0);
   // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
@@ -551,8 +551,8 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt,zr
   }
  }
 
- // todo kludge should inherit nosmrel
- AFLAG(z)|=AFNOSMREL;  // scaf till removed
+// obsolete  // todo kludge should inherit nosmrel
+// obsolete  AFLAG(z)|=AFNOSMREL;  // scaf till removed
  RETF(z);
 }
 
@@ -589,7 +589,7 @@ F1(jtrazeh){A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;
 F2(jtrazefrom){A*wv,y,z;B b;C*v,*vv;I an,c,d,i,j,k,m,n,r,*s,t,*u,wn;
  RZ(a&&w);
  an=AN(a); wn=AN(w);
- if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)&&!ARELATIVEB(w)&&1==AR(w)&&1<wn&&an>10*wn){
+ if(b=NUMERIC&AT(a)&&1==AR(a)&&BOX&AT(w)/* obsolete &&!ARELATIVEB(w)*/&&1==AR(w)&&1<wn&&an>10*wn){
   wv=AAV(w); y=*wv; r=AR(y); s=1+AS(y); n=B01&AT(a)?2:wn;
   for(i=m=t=0;b&&i<n;++i){
    y=wv[i]; b=r==AR(y)&&!(1<r&&ICMP(s,1+AS(y),r-1));

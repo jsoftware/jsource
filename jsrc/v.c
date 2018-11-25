@@ -25,11 +25,11 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
-  if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
+  if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
 
   // If we have to allocate a new block, do so
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n*bp(wt)); RELOCATE(w,z); INHERITNOREL(z,w); RETF(z); // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),n*bp(wt)); /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
@@ -63,7 +63,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
  MC(AV(z),AV(w),AN(w)*bp(wt));
- RELOCATE(w,z); INHERITNOREL(z,w); RETF(z);
+ /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z);
 }
 
 // ] [ and ]"n ["n, dyadic
@@ -88,7 +88,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
  GA(z,t,zn,of+r,os); MCIS(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
  k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
- INHERITNOREL(z,w); RETF(z);
+ /* obsolete INHERITNOREL(z,w); */ RETF(z);
 } 
 
 F2(jtleft2 ){F2PREFIP;if(jt->ranks==(RANK2T)~0)RETF(a); RETF(lr2(1,a,w));}

@@ -478,13 +478,13 @@ extern unsigned int __cdecl _clearfp (void);
 #define INF(x)          ((x)==inf||(x)==infm)
 // true if a has recursive usecount
 #define UCISRECUR(a)    (AFLAG(a)&RECURSIBLE)
-// Structural verbs (dyads #, $, {., { etc) always inherit the SMNOREL status of their ibput, at least to start with
-#define INHERITNOREL(z,w) (AFLAG(z) |= AFLAG(w)&AFNOSMREL)
-// if the verb may add fill, we have to check the fill as well
-#define INHERITNORELFILL(z,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(w):AFLAG(w))&AFNOSMREL)
-#define INHERITNOREL2(z,a,w) (AFLAG(z) |= AFLAG(a)&AFLAG(w)&AFNOSMREL)
-// if the verb may add fill, we have to check the fill as well
-#define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
+// obsolete // Structural verbs (dyads #, $, {., { etc) always inherit the SMNOREL status of their ibput, at least to start with
+// obsolete #define INHERITNOREL(z,w) (AFLAG(z) |= AFLAG(w)&AFNOSMREL)
+// obsolete // if the verb may add fill, we have to check the fill as well
+// obsolete #define INHERITNORELFILL(z,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(w):AFLAG(w))&AFNOSMREL)
+// obsolete #define INHERITNOREL2(z,a,w) (AFLAG(z) |= AFLAG(a)&AFLAG(w)&AFNOSMREL)
+// obsolete // if the verb may add fill, we have to check the fill as well
+// obsolete #define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
 #define INSTALLBOX(x,xv,k,z) rifv(z); if(UCISRECUR(x)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z

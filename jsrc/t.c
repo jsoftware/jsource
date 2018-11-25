@@ -39,7 +39,7 @@ B jtpinit(J jt){A t;C*s;
  MC(wtype,ctype,256L); wtype['N']=CN; wtype['B']=CB;
  GAT(alp,LIT,NALP,1,0); s=CAV(alp); DO(NALP,*s++=(C)i;); 
  /*  a. */  pst[(UC)CALP ]=t=alp;                 ACX(t);
- /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);  AFLAG(t) |= AFNOSMREL|(AT(t)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
+ /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);  AFLAG(t) |= (AT(t)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  /*  (  */  pst[(UC)CLPAR]=t=sc4(LPAR,0L);        ACX(t);
  /*  )  */  pst[(UC)CRPAR]=t=sc4(RPAR,0L);        ACX(t);
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;

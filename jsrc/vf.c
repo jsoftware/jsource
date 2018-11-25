@@ -15,7 +15,7 @@ F2(jtsetfv){A q=jt->fill;I t;
  if(q&&AN(q)){
   RE(t=maxtype(t,AT(q))); 
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));
-  if(ARELATIVE(q))RZ(q=cpa(1,q));
+// obsolete   if(ARELATIVE(q))RZ(q=cpa(1,q));
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
  }else{if(!t)t=AT(w); fillv(t,1L,jt->fillv0); jt->fillv=jt->fillv0;}    // empty fill.  move 1 std fill atom to fillv0 and point jt->fillv at it
 // obsolete  if(ARELATIVE(w)){RELORIGIN(wrel,w); *(I*)(jt->fillv0)=AREL(*(A*)jt->fillv,wrel); jt->fillv=jt->fillv0;}  // relative w, make fillv0 relative to w
@@ -114,8 +114,8 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
   DO(p-1, m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); rot(m,d,n,k,1L,av+i+1,b?u:v,b?v:u); b=!b;);  // s has moved past the frame
   z=b?y:z;
  } 
- RELOCATE(w,z);
- INHERITNORELFILL(z,w); RETF(z);
+ /* obsolete RELOCATE(w,z);
+ INHERITNORELFILL(z,w);*/ RETF(z);
 }    /* a|.!.f"r w */
 
 
@@ -160,8 +160,8 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
   case sizeof(D): {D*s=(D*)wv,*t,*u=(D*)zv; DO(m, t=s+=n; DO(n, *u++=*--t;););} break;
 #endif
  }
- RELOCATE(w,z);
- INHERITNORELFILL(z,w); RETF(z);
+ /* obsolete RELOCATE(w,z);
+ INHERITNORELFILL(z,w);*/ RETF(z);
 }    /* |."r w */
 
 
@@ -234,8 +234,8 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISds(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
-// correct   if(!(AFLAG(w)&(AFNJA|AFSMM))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if(((-(AFLAG(w)&(AFNJA|AFSMM)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) RETF(z);}
+// correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
+   if(((-(AFLAG(w)&(AFNJA)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
@@ -246,8 +246,8 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
  zv=CAV(z); wv=CAV(w); 
  if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
  else DO(c, mvc(p,zv,q,wv); zv+=p; wv+=q;);
- RELOCATE(w,z);
- INHERITNORELFILL(z,w); RETF(z);
+ /* obsolete RELOCATE(w,z);
+ INHERITNORELFILL(z,w);*/ RETF(z);
 }    /* a ($,)"r w */
 
 F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
@@ -326,7 +326,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
    if(p){ASSERT(wx>=wv+p,EVLENGTH); MC(zv,wv,p); wv+=p;}
  }
  ASSERT(wx==wv,EVLENGTH);
- INHERITNORELFILL(z,w); RETF(z);
+ /* obsolete INHERITNORELFILL(z,w);*/ RETF(z);
 }    /* a&#^:_1 w or a&#^:_1!.f w */
 
 

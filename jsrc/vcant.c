@@ -99,7 +99,7 @@ F1(jtcant1){I r;
  RZ(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
  A z=canta(apv(r,r-1,-1L),w);  // rank is set
- RZ(z);  INHERITNOREL(z,w); RETF(z);
+ RZ(z);  /* obsolete INHERITNOREL(z,w);*/ RETF(z);
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
@@ -114,5 +114,5 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(AVR(i)); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta
- RZ(z);  INHERITNOREL(z,w); RETF(z);
+ RZ(z);  /* obsolete INHERITNOREL(z,w); */ RETF(z);
 }    /* a|:"r w main control */ 

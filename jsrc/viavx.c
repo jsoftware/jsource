@@ -639,7 +639,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
 #if C_AVX
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; d=src##d; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+ {I i, j, hj; T *v; /* obsolete d=src##d;*/ vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
@@ -685,7 +685,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 #define IOFX(T,TH,f,hash,exp,stride)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
-        wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; TH * RESTRICT hv; \
+        wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
@@ -899,7 +899,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),  \
-        wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; \
+        wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
         D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
@@ -916,7 +916,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
      D ct=jt->ct; jt->ct=0.0; if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn); jt->ct=ct;  /* all writes to hash must use intolerant compare */                \
      if(w==mark)break;                                                                \
    }}                                                                                            \
-   d=wd;                                                                    \
+   /* obsolete d=wd; */                                                                    \
    switch(md){                                                                                   \
     /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
     case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
@@ -955,7 +955,7 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !jeqd
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+static IOFT(A,US,jtioa, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
 // singleton box
 static IOFT(A,US,jtioa1,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
@@ -967,7 +967,7 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !je
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,d,ad),          !eqa(n,v,av+n*hj,d,ad)          )
+static IOFT(A,UI4,jtioa2, hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
 // singleton box
 static IOFT(A,UI4,jtioa12,hia(1.0,AADR(d,*v)),TFINDBX,TFINDBY,!equ(AADR(d,*v),AADR(ad,av[hj])),!equ(AADR(d,*v),AADR(ad,av[hj])))
 
@@ -1214,8 +1214,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
   // don't bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with -(length of shortened list).  This will be detected
   // and complemented to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,ad,ad)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
-  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,ad,ad)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
+  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,/*obsolete ad,ad*/0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
+  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,/*obsolete ad,ad*/0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
  }
  R h;
 } 
@@ -1228,7 +1228,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hi; hi+=(hiinc); u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DO(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,ad,ad))zstmt1; else{u=v; zstmt0;}); /* 
+  DO(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,/*obsolete ad,ad*/0,0))zstmt1; else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1276,7 +1276,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
   // look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set.  They don't remove dups.
   // we don't set REFLEX if there is a prehash, because the prehash always removes dups, and we would be left missing some values
   if(a==w&&ac==wc)md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);
-  RZ(h=nodupgrade(a,(I)h,ac,acn,ad,n,asct,md,bk));   // h is used to pass in acr
+  RZ(h=nodupgrade(a,(I)h,ac,acn,/* obsolete ad*/0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
  hv=AV(h)+bk*(asct-1); jt->complt=-1; jt->compgt=1;  // set comparison mode for our comparisons
@@ -1343,7 +1343,7 @@ I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 #define IOFXW(T,TH,f,hash,exp,stride)   \
  IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
-        wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I d,md; TH * RESTRICT hv; \
+        wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \

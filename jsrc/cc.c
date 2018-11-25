@@ -223,10 +223,10 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
 
-#define MCREL(uu,vv,n)   {A*u=(A*)(uu);A*v=(A*)(vv); DO((n), u[i]=AADR(wd,v[i]););}
+// obsolete #define MCREL(uu,vv,n)   {A*u=(A*)(uu);A*v=(A*)(vv); DO((n), u[i]=AADR(wd,v[i]););}
 
 #define CUTSWITCH(EACHC)  \
- switch(wd?0:id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
+ switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
   case CPOUND:                                                               \
    GATV(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;); R z;                          \
   case CDOLLAR:                                                              \
@@ -262,11 +262,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
   default:                                                                   \
    if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
    GATV(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
-   switch((wd?2:0)+(h?1:0)){A Zz;                                                 \
-    case 0: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); break; \
-    case 1: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k);  RZ(Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); break; \
-    case 2: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(Zz = CALL1(f1,y,fs));           rifv(Zz); *za++=Zz;); break; \
-    case 3: EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MCREL(AV(y),v1,d); RZ(Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); break; \
+   if(h){EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ (Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
+   }else{EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
    }                                                                         \
    z=ope(z);                                                                 \
    EPILOG(z);                                                                \

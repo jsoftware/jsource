@@ -93,13 +93,13 @@ static B jteqf(J jt,A a,A w){A p,q;V*u=FAV(a),*v=FAV(w);
   else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
   else          DO(m, DO(n, b=b1; DO(c, if(!f(u[i],v[i])){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
  }
-// use this version for boxed arrays that have relative addressing
-#define INNERT2(aa,ww,f)             \
- {A1* RESTRICT u=(A1*)av,* RESTRICT v=(A1*)wv;           \
-  if(1==n)      DO(m,       b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); if(x)x[j++]=b; u+=c; v+=c;)  \
-  else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
-  else          DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
- }
+// obsolete // use this version for boxed arrays that have relative addressing
+// obsolete #define INNERT2(aa,ww,f)             \
+// obsolete  {A1* RESTRICT u=(A1*)av,* RESTRICT v=(A1*)wv;           \
+// obsolete   if(1==n)      DO(m,       b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); if(x)x[j++]=b; u+=c; v+=c;)  \
+// obsolete   else if(af>wf)DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; u+=c;); v+=c;)  \
+// obsolete   else          DO(m, DO(n, b=b1; DO(c, if(!f((A)AABS(u[i],aa),(A)AABS(v[i],ww))){b^=1; break;}); x[j++]=b; v+=c;); u+=c;)  \
+// obsolete  }
 
 // compare functions for float/complex intolerant comparison
 #define DEQCT0(a,w) ((a)==(w))
@@ -141,9 +141,10 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  case XNUMX: INNERT(X,equ); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:
-  {RELORIGINB(arel,a); RELORIGINB(wrel,w);
-   if(!(arel|wrel)){INNERT(A,EQA);} else {INNERT2(arel,wrel,EQA);}
-  } break;
+// obsolete    {RELORIGINB(arel,a); RELORIGINB(wrel,w);
+// obsolete    if(!(arel|wrel)){INNERT(A,EQA);} else {INNERT2(arel,wrel,EQA);}
+   INNERT(A,EQA); break;
+// obsolete    }
  } R b;
 }
 

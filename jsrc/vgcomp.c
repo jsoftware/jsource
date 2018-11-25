@@ -15,7 +15,7 @@ B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while
 B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-B compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(*a,jt->compw),(A)AABS(*b,jt->compw)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
+B compr(I n, A1 *a, A1 *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare((A)AABS(jt->compw,*a),(A)AABS(jt->compw,*b)))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
 B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
 B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
@@ -68,12 +68,15 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
    case CMPXX: COMPLOOQ (D, m+m);         break;
    case XNUMX: COMPLOOQG(X, m, xcompare); break;
    case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
-   case BOXX:  switch((ARELATIVEB(a)?2:0)+ARELATIVEB(w)){ 
-    case 0: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
-    case 1: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
-    case 2: {COMPDCLQ(A);I j; RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
-    case 3: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
- }}}
+   case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
+// obsolete switch((ARELATIVEB(a)?2:0)+ARELATIVEB(w)){ 
+// obsolete     case 0: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
+// obsolete     case 1: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
+// obsolete     case 2: {COMPDCLQ(A);I j; RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
+// obsolete     case 3: {COMPDCLQ(A);I j; RELORIGIN(wrel,w); RELORIGIN(arel,a); DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
+// obsolete }
+  }
+ }
  if(1>=ar)R an>wn?jt->compgt:an<wn?jt->complt:0;
  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->compgt; else if (c<d)R jt->complt;);
  R 0;

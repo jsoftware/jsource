@@ -187,7 +187,7 @@ typedef struct {
  I    compsyc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
  I*   compsyv;          /* comparison: sparse AV(y)                        */
  C*   compv;            /* comparison: beginning of data area              */
- A    compw;            /* comparison: orig arg. (for relative addressing) */
+// obsolete  A    compw;            /* comparison: orig arg. (for relative addressing) */
  L*   cursymb;          /* current symbol table entry                      */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */

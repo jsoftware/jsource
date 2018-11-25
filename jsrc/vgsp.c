@@ -72,7 +72,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){A c,d,t,x,y,z;I cn,*cv,*dv,i,n,n1,*tv,*
  x=SPA(wp,e); jt->compsev=CAV(x);
  y=SPA(wp,i); jt->compsyv=yv=AV(y); jt->compsyc=yc=*(1+AS(y));
  x=SPA(wp,x); jt->compsxv=CAV(x);   jt->compsxc=aii(x)*(wt&SCMPX?2:1);
- jt->compw=w; jt->compswf=wf; jt->comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->compusejt=1;
+ /* obsolete jt->compw=w; */ jt->compswf=wf; jt->comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
  GATV(x,INT,2+n,1,0);   xv=AV(x);  /* work area for msmerge() */
@@ -198,7 +198,7 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){A c,t,x,y,z,zy;
  x=SPA(wp,e); jt->compsev=CAV(x);
  y=SPA(wp,i); jt->compsyv=yv=AV(y); jt->compsyc=yc=*(1+AS(y));
  x=SPA(wp,x); jt->compsxv=CAV(x);   jt->compsxc=aii(x)*(wt&SCMPX?2:1);
- jt->compw=w; jt->compswf=wf; jt->comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->compusejt=1;
+ /* obsolete jt->compw=w;*/ jt->compswf=wf; jt->comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DO(cn, m=MAX(m,cv[j]); j+=2;);

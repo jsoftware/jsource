@@ -541,7 +541,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-#define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
+// obsolete #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
 
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANK(0,RMAX,jtinfixd,self);
@@ -553,11 +553,13 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
  s=AS(z); *s++=d; *s++=zc; MCISd(s,1+ws,r-2);
  k=c*bp(wt); RELBASEASGNB(w,w);
- if(AN(z))switch((0>m?2:0)+(wd?1:0)){
-  case 0: q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);      break;
-  case 1: q=p*k; DO(d, MCREL(x,y,p); x+=q; y+=k;);      break;  
-  case 2: MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
-  case 3: MCREL(x,y,n); if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
+ if(AN(z)){
+// obsolete switch((0>m?2:0)+(wd?1:0)){
+  if(m>=0){ q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);
+  }else{ MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k);
+  }
+// obsolete   case 1: q=p*k; DO(d, MCREL(x,y,p); x+=q; y+=k;);      break;  
+// obsolete   case 3: MCREL(x,y,n); if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
  }
  RETF(z);
 }    /* a[\w and a]\w and a,\w */

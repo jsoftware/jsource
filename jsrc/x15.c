@@ -1078,8 +1078,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w)); 
  }
  wv=CAV(w); zv=CAV(z); k=bp(wt); RELBASEASGNB(w,w);
- if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,wd))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,wd)); wv+=p; zv+=q;);}
+ if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0))
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 

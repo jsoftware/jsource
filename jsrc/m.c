@@ -707,10 +707,11 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-  I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+// obsolete   I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA+AFSMM)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
-   A np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
+// obsolete    A np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
+   A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
     I tp=AT(np); I flg=AFLAG(np); // fetch type
     *(A*)((I)tstack+pushx)=np;  // put the box on the stack

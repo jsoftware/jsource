@@ -85,7 +85,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define TT(s,t) (((s)<<5)+(t))
 
-F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wd,wr,*ws,wt,* RESTRICT zv;I cc;
+F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
  ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar?ar-1:0;
  wr=AR(w); wt=AT(w); ws=AS(w); b=!AN(a)||!AN(w);
@@ -118,8 +118,8 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ad,ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t
   case XNUMX: COMPVLOOF(X, c, xcompare); break;
   case RATX:  COMPVLOOF(Q, c, qcompare); break;
   case BOXX:  
-   av=AAV(a); RELBASEASGN(ta,a); ad=tad; 
-   wv=AAV(w); RELBASEASGN(tw,w); wd=twd;  // ad, wd needed below
+   av=AAV(a); wv=AAV(w); /* obsolete RELBASEASGN(ta,a); ad=tad; 
+   RELBASEASGN(tw,w); wd=twd;  // ad, wd needed below  */
    DO(c, if(cc=compare(AVR(i),AVR(i+c*(n-1))))break;);
  }
  ge=cc; gt=-ge;

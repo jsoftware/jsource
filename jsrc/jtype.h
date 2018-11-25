@@ -373,11 +373,9 @@ typedef I SI;
 
 #define AFRO            (I)1            /* read only; can't change data    */
 #define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
-#define AFSMM           (I)4            /* SMM managed                     */
-#define AFRELX          3
-#define AFREL           (I)(1<<AFRELX)            // uses relative addressing.
-#define AFNOSMRELX      4
-#define AFNOSMREL       (I)(1<<AFNOSMRELX)   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
+#define AFSMM           (I)0            /* SMM managed                     */
+#define AFREL           (I)0            // uses relative addressing.
+#define AFNOSMREL       (I)0   // this block and its descendants contain NO relative addressing/SMM (set only in boxed nouns)
 // Note: in s.c we rely on AFNOSMREL's being adjacent to BOX!!  In cr.c we rely on its being exactly what it is (it matches a hole in STATExxx)
 // The values of BOX, ADV, CONJ, and VERB may also appear in AFLAG, where they must match the value in AT(), and indicate that the usecount for the block is recursive, i. e. that
 // the usecount for this block, except for the first, has NOT been propagated to its descendants, and thus that it must be propagated only when this
@@ -399,6 +397,7 @@ typedef I SI;
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 
+#if 0 // obsolete 
 // convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
 #define AABS(rel,k)     ((I)(rel)+(I)(k))
 #define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
@@ -419,7 +418,6 @@ typedef I SI;
 #define RELORIGINBR(asgn,w)   I asgn; asgn=(I)ABACK(w); asgn=(AFLAG(w)&AFVIRTUAL?asgn:(I)w); asgn=(ARELATIVE(w)?asgn:0);
 // use this to indicate the relocation factor for a non-virtual, non-relative block (usually a destination that has been allocated recently)
 #define RELORIGINDEST(w) ((I)(w))
-
 // set up the relative base-offset ad,id... lett is a,i... as a reminder that the suffix must be d.  w is the block.  The result is germane
 // only if boxed, but we don't test for boxing here
 #define RELBASEASGN(lett,w) RELORIGINB(lett##d,w)
@@ -441,6 +439,39 @@ typedef I SI;
 #define RELOCOPYF(to,from,n,offset) DO(n, to[i]=(A)(intptr_t)((I)*from++ +offset);)
 // same, but use an incrementing pointer for to and from
 #define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =(A)(intptr_t)((I)*from++ +offset);)
+#else
+// convert relative address to absolute.  k must have been assigned by RELORIGIN*.  k may well be 0 for non-relatives, and that's OK, no relocation is done
+#define AABS(rel,k)     (k)
+#define AREL(abs,k)     ((I)(abs)-(I)(k))   /* relative address from absolute address */
+#define ARELATIVEB(w)   0
+#define ARELATIVES(w)   0
+#define ARELATIVESB(w)  0
+#define ARELATIVE(w)    0
+#define AORWRELATIVE(a,w) 0
+#define AORWRELATIVEB(a,w) 0
+#define AADR(w,z)       (z)
+#define RELORIGIN(asgn,w)  
+#define RELORIGINB(asgn,w)   
+#define RELORIGINBR(asgn,w) 
+#define RELORIGINDEST(w)
+#define RELBASEASGN(lett,w)
+#define RELBASEASGNB(lett,w)
+#define AVR(i)          AADR(ad,av[i])
+#define IVR(i)          AADR(id,iv[i])
+#define WVR(i)          AADR(wd,wv[i])
+#define YVR(i)          AADR(yd,yv[i])
+#define AAV0(w) AAV(w)[0]
+#define RELOCATE(w,z)
+// copy from to to for n boxes, relocating each by offset.  from and to are A* exprs
+#define RELOCOPY(to,from,n,offset) DO(n, to[i]=from[i];)
+// same, but use an incrementing pointer for to
+#define RELOCOPYT(to,from,n,offset) DO(n, *to++ =from[i];)
+// same, but use an incrementing pointer for from
+#define RELOCOPYF(to,from,n,offset) DO(n, to[i]=*from++;)
+// same, but use an incrementing pointer for to and from
+#define RELOCOPYTF(to,from,n,offset) DQ(n, *to++ =*from++;)
+#endif
+
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;
 

@@ -753,8 +753,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
   case CBW1001:  if(wt&    INT   )R movbwneeq(m,w,self,1); break;
   case CBW0110:  if(wt&    INT   )R movbwneeq(m,w,self,0); break;
  }
- VA2 adocv = vains(ds(id),wt);
- if(!adocv.f)R jtinfixprefix2(jt,a,w,self);
+ VA2 adocv;
+ if(!ds(id) || !(adocv = vains(ds(id),wt)).f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;

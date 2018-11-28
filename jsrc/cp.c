@@ -171,23 +171,23 @@ static DF2(jtpowg2){A h=FAV(self)->fgh[2]; R df2(a,w,*AAV(h));}
 
 // here for u^:v y
 CS1IP(static,jtpowv1, \
-A u; RZ(u=CALL1(g1,  w,gs));  /* execute v */ \
-if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
-else{RZ(u = powop(fs,u,(A)1));  \
+A u; A v; RZ(u=CALL1(g1,  w,gs));  /* execute v */ \
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK1?jtinplace:jt,w,fs):w;} \
+else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 ,0108)
 // here for x u^:v y 
 CS2IP(static,jtpowv2, \
-A u; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
-if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;} \
-else{RZ(u = powop(fs,u,(A)1));  \
+A u; A v; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[1])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,a,w,fs):w;} \
+else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
 z=(FAV(u)->valencefns[1])(FAV(u)->flag&VJTFLGOK2?jtinplace:jt,a,w,u);} \
 ,0109)
 // here for x u@:]^:v y and x u@]^:v y
 CS2IP(static,jtpowv2a, \
-A u; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
-if(!AR(u) && (u=vib(u)) && !(IAV(u)[0]&~1)){z=IAV(u)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,w,fs):w;} \
-else{RZ(u = powop(fs,u,(A)1));  \
+A u; A v; fs=FAV(fs)->fgh[0]; RZ(u=CALL2(g2,a,w,gs));  /* execute v */ \
+if(!AR(u) && (v=vib(u)) && !(IAV(v)[0]&~1)){z=IAV(v)[0]?(FAV(fs)->valencefns[0])(FAV(fs)->flag&VJTFLGOK2?jtinplace:jt,w,fs):w;} \
+else{RESETERR; RZ(u = powop(fs,u,(A)1));  \
 z=(FAV(u)->valencefns[0])(FAV(u)->flag&VJTFLGOK1?jtinplace:jt,w,u);} \
 ,0110)
 

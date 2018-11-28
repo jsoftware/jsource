@@ -293,6 +293,11 @@ Expand=: (* +/\)@[ { -@>:@#@] {. ]
 x -: ]&.(   _2&|:) x=: ?2 3 4 5$1000
 x -: ]&.(_2 _3&|:) x
 
+(<<1) -: <^:(<@2:) 1  NB. verify boxed result of v OK
+(<<1) -: 2 <@]^:(<@2:) 1  NB. verify boxed result of v OK
+(<<1) -: 2 ;^:(<@2:) 1  NB. verify boxed result of v OK
+
+
 18!:55 ;:'loc'
 
 

@@ -45,6 +45,7 @@ void setftype(C*v,OSType type,OSType crea){C p[256];FInfo f;
 static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt->dcs;I old;
  if(equ(w,num[1]))R mtm;
  RZ(w=vs(w));
+ UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls
  FDEPINC(1);   // No ASSERTs or returns till the FDEPDEC below
  RZ(d=deba(DCSCRIPT,0L,w,(A)si));
  jt->dcs=d; jt->tostdout=tso&&!jt->seclev;
@@ -67,6 +68,7 @@ static A jtline(J jt,A w,I si,C ce,B tso){A x=mtv,z;B xt=jt->tostdout;DC d,xd=jt
  jt->dcs=xd; jt->tostdout=xt;
   debz();
  FDEPDEC(1);  // ASSERT OK now
+ if(savdebug!=jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=savdebug;  // preserve original debug state.  to avoid messing up write forwarding, write only if changed
  if(3==ce){z=num[jt->jerr==0]; RESETERR; R z;}else RNE(mtm);
 }
 

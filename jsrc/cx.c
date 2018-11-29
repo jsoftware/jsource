@@ -128,6 +128,8 @@ static DF2(jtxdefn){PROLOG(0048);
  I tdi=0;  // index of the next open slot in the try. stack
 
  A savloc=jt->local;  // stack area for local symbol table pointer; must set before we set new symbol table
+ A locsym;  // local symbol table
+ UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls
 
  I isdyad=(a!=0)&(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
@@ -139,11 +141,21 @@ static DF2(jtxdefn){PROLOG(0048);
   if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
    lk=0; LINE(sv);
+   // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
+   // otherwise clone a copy of it.  We have to do this before we create the debug frame
+   locsym=hv[3];  // fetch pointer to preallocated symbol table
+   ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
+   if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
+   else{RZ(jt->local=clonelocalsyms(locsym))}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
    // Read the info for the parsed definition, including control table and number of lines
    LINE(sv);
+   locsym=hv[3];  // fetch pointer to preallocated symbol table
+   ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
+   if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
+   else{RZ(jt->local=clonelocalsyms(locsym))}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
@@ -174,21 +186,14 @@ static DF2(jtxdefn){PROLOG(0048);
   }
   // End of unusual processing
 
-  // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
-  // otherwise clone a copy of it.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
-  A locsym=hv[3];  // fetch pointer to preallocated symbol table
-  ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
-  UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
-  if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-  else{RZ(jt->local=clonelocalsyms(locsym))}
-
-  // Assign the special names x y m n u v
+  // Assign the special names x y m n u v.  Do this late in initialization because it would be bad to fail after assigning to yx (memory leak would result)
   // For low-rank short verbs, this takes a significant amount of time using IS, because the name doesn't have bucket info and is
   // not an assignment-in-place
   // So, we short-circuit the process by assigning directly to the name.  We take advantage of the fact that we know the
   // order in which the symbols were defined: y then x; and we know that insertions are made at the end; so we know
   // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
   // directly.
+  UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
   L *ybuckptr = IAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
   L *xbuckptr = IAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
   if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
@@ -274,16 +279,20 @@ static DF2(jtxdefn){PROLOG(0048);
     // run the sentence
     tpop(old); parseline(z);
     // if there is no error, or ?? debug mode, step to next line
-    if(z||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)bi=i,++i;
+    if(z||!jt->jerr){
+     bi=i,++i;
+    }else if(jt->uflags.us.cx.cx_c.db&(DB1|DBERRCAP)){  // if debug mode, we assume we are ready to execute on
+     RESETERR; bi=i,++i;   // mkae sure error is off if we continue
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
-    else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);}  // z might not be protected if we hit error
+    }else if(EVTHROW==jt->jerr){
+     if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
     // for other error, go to the error location; if that's out of range, keep the error; if not,
     // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
     // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     break;
    case CASSERT:
    case CTBLOCK:
@@ -293,7 +302,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
     parseline(t);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  Sets t to 0
+    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
     if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;  // if no error, or debug (which had a chance to look at it), continue on
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
@@ -359,7 +368,7 @@ static DF2(jtxdefn){PROLOG(0048);
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    i=ci->go; if(tdi)jt->uflags.us.cx.cx_c.db=!!thisframe;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+    i=ci->go; /* obsolete if(tdi)jt->uflags.us.cx.cx_c.db=!!thisframe;*/   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
    case CFCASE:
@@ -432,6 +441,7 @@ static DF2(jtxdefn){PROLOG(0048);
 
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
+ if(savdebug!=jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=savdebug;  // preserve original debug state.  to avoid messing up write forwarding, write only if changed
  // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
  if(cd){

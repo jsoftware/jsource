@@ -148,7 +148,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db&&(DBTRY!=jt->uflags.us.cx.cx_c.db)){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
- R z;  // if we entered debug, the error may have been cleared
+ if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear it now
 }
 
 /* parsex: parse an explicit defn line              */

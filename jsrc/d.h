@@ -8,7 +8,7 @@
 
 #define DB1         1       /* full debug                                   */
 #define DBERRCAP    2       /* stack error info capture                     */
-#define DBTRY       3       /* full debug & try/catch in effect (db only)   */
+#define DBTRY       4       /* full debug & try/catch in effect (db only)   */
 
 
 /* jt->dbsusact values:                                                     */

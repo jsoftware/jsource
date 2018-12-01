@@ -9,15 +9,17 @@ cd ~
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
-CC=`cc --version | head -n 1 | cut -d ' ' -f 1`
+CC=cc
 else
-CC=`gcc --version | head -n 1 | cut -d ' ' -f 1`
-fi
-compiler=$CC
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
 else
-compiler=`$CC --version | head -n 1 | cut -d ' ' -f 1`
+CC=gcc
 fi
-compiler=${compiler:0:3}
+fi
+export CC
+fi
+compiler=`$CC --version | head -n 1`
 echo "CC=$CC"
 echo "compiler=$compiler"
 
@@ -25,14 +27,14 @@ USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ "x$compiler" = x'gcc' ] ; then
+if [ -z "${compiler##*gcc*}" ]; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
 fi
 fi
 
-if [ "x$compiler" = x'gcc' ] ; then
+if [ -z "${compiler##*gcc*}" ]; then
 # gcc
 common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
 OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)

@@ -12,7 +12,7 @@
 #endif
 
 #ifndef BYTE_ORDER
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define LITTLE_ENDIAN 1234
 #define BIG_ENDIAN    4321
 #define BYTE_ORDER LITTLE_ENDIAN

@@ -11,19 +11,18 @@ cd ~
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
 CC=cc
-export CC
+else
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
 else
 CC=gcc
+fi
+fi
 export CC
 fi
-fi
-if [ $($CC -v 2>&1 | grep -c "clang\ version\|Apple\ LLVM\ version") -eq 1 ] ; then
-COMPILER='clang'
-else
-COMPILER='gcc'
-fi
-export COMPILER
-echo "COMPILER $COMPILER"
+compiler=`$CC --version | head -n 1`
+echo "CC=$CC"
+echo "compiler=$compiler"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
@@ -35,9 +34,24 @@ LDOPENMP=" -fopenmp `$CC -print-file-name=libgomp.a` "   # windows -fopenmp for 
 LDOPENMP32=" -fopenmp `$CC -print-file-name=libgomp.a` "
 fi
 
-if [ "x$COMPILER" = x'gcc' ] ; then
+if [ -z "${compiler##*gcc*}" ]; then
 # gcc
-common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
+common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
+OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
+if [ $OVER_GCC_VER6 -eq 1 ] ; then
+common="$common -Wno-shift-negative-value"
+else
+common="$common -Wno-type-limits"
+fi
+# alternatively, add comment /* fall through */
+OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
+if [ $OVER_GCC_VER7 -eq 1 ] ; then
+common="$common -Wno-implicit-fallthrough"
+fi
+OVER_GCC_VER8=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 8 | bc)
+if [ $OVER_GCC_VER8 -eq 1 ] ; then
+common="$common -Wno-cast-function-type"
+fi
 else
 # clang 3.5 .. 5.0
 common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -Wno-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-unsequenced -Wno-string-plus-int"

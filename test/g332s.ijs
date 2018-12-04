@@ -100,6 +100,23 @@ NB. Using the same machine, test ijr
 ('0x30' ;'0x40') -:  (0;sh;mh;4  3 1 0) ;: 'qqq0x30x50x40x0xxxx'
 ('q0x30';'0x40') -:  (0;sh;mh;4  2 1 0) ;: 'qqq0x30x50x40x0xxxx'
 
+NB. Example 5.  This went into a loop when there was a bug in ext() that didn't increase the allo size
+f=: (0;(0 10#:10*".;._2]0 :0);(a.e.'ABCDEF0123456789abcdef')+(2*a.='\')+3*a.e.'Uu')&;:
+ 1.1  1.1  2.1 1.1
+ 1.0  1.0  2.2 1.0
+ 3.0  3.0  3.0 4.0
+ 1.2  1.2  2.2 1.2
+ 1.2  5.0  2.2 1.2
+ 1.2  6.0  2.2 1.2
+ 1.2  7.0  2.2 1.2
+ 1.2  3.0  2.2 1.2
+)
+(,<,'a') -: f ,'a'  NB. SYSTEM HANG !!!!
+
+
+
+
+
 
 f=: ;:
 

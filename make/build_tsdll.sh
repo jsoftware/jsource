@@ -4,21 +4,23 @@ cd ~
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
-CC=`cc --version | head -n 1 | cut -d ' ' -f 1`
+CC=cc
 else
-CC=`gcc --version | head -n 1 | cut -d ' ' -f 1`
-fi
-compiler=$CC
+if [ -f "/usr/bin/clang" ]; then
+CC=clang
 else
-compiler=`$CC --version | head -n 1 | cut -d ' ' -f 1`
+CC=gcc
 fi
-compiler=${compiler:0:3}
+fi
+export CC
+fi
+compiler=`$CC --version | head -n 1`
 echo "CC=$CC"
 echo "compiler=$compiler"
 
 common=" -fPIC -O1 -Werror -Wextra -Wno-unused-parameter"
 
-if [ "x$compiler" = x'gcc' ] ; then
+if [ -z "${compiler##*gcc*}" ]; then
 # gcc
 # alternatively, add comment /* fall through */
 OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)

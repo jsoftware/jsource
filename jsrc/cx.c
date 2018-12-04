@@ -136,7 +136,7 @@ static DF2(jtxdefn){PROLOG(0048);
  {A *hv;  // will hold pointer to the precompiled parts
   V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set
   A u,v;  // pointers to args
-  // If this is adv/conj, it must be 1/2 : executed with no x or y.  Set uv then
+  // If this is adv/conj, it must be (1/2 : n) executed with no x or y.  Set uv then
   u=AT(self)&ADV+CONJ?a:0; v=AT(self)&ADV+CONJ?w:0;
   if(!(jt->uflags.us.cx.cx_us | (sflg&(VLOCK|VXOP|VTRY1|VTRY2)))){
    // Normal case of verbs. Read the info for the parsed definition, including control table and number of lines
@@ -397,7 +397,7 @@ static DF2(jtxdefn){PROLOG(0048);
     //  Start by assuming condition is true; set to move to the next line then
     ++i;
     if(!t)break;  // if t omitted, that's true.  i is set and t is 0
-    {B b=1;
+    {I b=1;
      if(SPARSE&AT(t))BZ(t=denseit(t));   // convert sparse to dense
      
      CHECKNOUN    // if t is not a noun, signal error on the last line executed in the T block
@@ -405,12 +405,12 @@ static DF2(jtxdefn){PROLOG(0048);
      if(AN(t)){
       switch(CTTZ(AT(t))){
       // Check for nonzero.  Nonnumeric types always test true.  Comparisons against 0 are exact.
+      case INTX:  b=*AV(t);                  break;
       case RATX:
       case XNUMX: b=*AV(XAV(t)[0])||1<AN(XAV(t)[0]); break;  // rat/xnum true if first word non0, or multiple words
       case CMPXX: b=0!=*DAV(t)||0!=*(1+DAV(t)); break;  // complex if either part nonzero
       case FLX:   b=0!=*DAV(t);                 break;
-      case INTX:  b=0!=*AV(t);                  break;
-      case B01X:  b=*BAV(t);
+      case B01X:  b=(I)*BAV(t); break;
       }
      }    // If no atoms, that's true too
      t=0;  // Indicate no T block, now that we have processed it
@@ -422,7 +422,8 @@ static DF2(jtxdefn){PROLOG(0048);
       // this is JBREAK0, but we have to finish the loop.  This is double-ATTN, and bypasses the TRY block
     i=ci->go;  // Go to the next sentence, whatever it is
   }
- }
+ }  // end of main loop
+
  FDEPDEC(1);  // OK to ASSERT now
  if(z){
   // There was a result (normal case)

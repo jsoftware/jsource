@@ -78,7 +78,7 @@ static DF1(jtmodpow1){A g=FAV(self)->fgh[1]; R rank2ex(FAV(g)->fgh[0],w,self,0L,
 // TODO: no  need for protw checking?
 CS1IP(,on1, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); \
-A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK1X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),w,gs));  /* inplace g.  jtinplace is set for g */ \
+A gx; RZ(gx=(g1)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK1X)&JTINPLACEW)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),w,gs));  /* inplace g.  jtinplace is set for g */ \
 /* inplace gx unless it is protected */ \
 POPZOMB; \
 jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=protw)*JTINPLACEW));  \
@@ -88,9 +88,9 @@ RZ(z=(f1)(jtinplace,gx,fs));} \
 
 CS2IP(,jtupon2, \
 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); A gx; \
-RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & JTWILLBEOPENED+JTCOUNTITEMS)),a,w,gs));  /* inplace g */ \
+RZ(gx=(g2)((J)(intptr_t)(((I)jtinplace&(~(JTWILLBEOPENED+JTCOUNTITEMS))) + ((-((FAV(gs)->flag>>VJTFLGOK2X)&JTINPLACEW)) & FAV(fs)->flag2 & VF2WILLOPEN1+VF2USESITEMCOUNT1)),a,w,gs));  /* inplace g */ \
 /* inplace gx unless it is protected */ \
-jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+((gx!=prota)&(gx!=protw)*JTINPLACEW));  \
+POPZOMB; jtinplace=(J)(intptr_t)(((I)jtinplace&~(JTINPLACEW))+(((gx!=prota)&(gx!=protw))*JTINPLACEW));  \
 jtinplace=FAV(fs)->flag&VJTFLGOK1?jtinplace:jt; \
 RZ(z=(f1)(jtinplace,gx,fs));} \
 ,0114)

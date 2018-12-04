@@ -544,6 +544,17 @@ a =. <"1 i. 120 100000
 
  ,(2e6 2e6 _2e6 _2e6)  (*/\  0&=@:- */\ @((o.0)&+))@,&> 3e7 _3e7 3e7 _3e7
 
+NB. Verify that WILLOPEN is passed through fork
+a =. 1000000$4
+b =. 1000000 $ 250000 {. 1
+16000 > 7!:2 '(2: 0:&.> b&(<;.1)) a'
+16000 > 7!:2 '(2 0:&.> b&(<;.1)) a'
+16000 > 7!:2 'b (I.@[ 0:&.> (<;.1)) a'
+16000 > 7!:2 'b (2 0:&.> (<;.1)) a'
+
+NB. Now hook
+16000 > 7!:2 '1 2 3 4 (0:&.> b&(<;.1)) a'
+
 
 4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
 randfini''

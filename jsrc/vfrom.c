@@ -28,7 +28,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  EPILOG(z);
 }
 
-#define SETJ(jexp)    {j=(jexp); if(0<=j)ASSERT(j<p,EVINDEX) else{j+=p; ASSERT(0<=j,EVINDEX);}}
+#define SETJ(jexp)    {j=(jexp); if(j<0)j+=p; ASSERT((UI)j<(UI)p,EVINDEX);}
 
 #define IFROMLOOP(T)        \
  {T   * RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
@@ -380,7 +380,8 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   else if(q!=ace)   {y=irs2(q,y,0L,AR(q),wcr-j,jtifrom);}
   p=0;
  }
- RE(y); /* obsolete if(b){ RZ(y=ca(y)); RELOCATE(x,y);}*/ EPILOG(y);    // todo kludge should inherit norel
+ // We have to make sure that a virtual NJA block does not become the result, because x,y and x u}y allow modifying those even when the usecount is 1.  Realize in that case
+ RE(y); if(AFLAG(y)&AFNJA)RZ(y=ca(y));   EPILOG(y);   // If the result is NJA, it must be virtual.
 }    /* a{"r w for boxed index a */
 
 F2(jtfrom){I at;A z;

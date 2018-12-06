@@ -500,6 +500,7 @@ A jtincorp(J jt, A w) {RZ(w); INCORP(w); R w;}
 // result block is never inplaceable, never recursible, virtual.  Can return 0 if allocation error
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->assignsym
 // We fill in everything but AN and AS, which are done in the caller
+// You should be wary of making an NJA block virtual, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
 RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  J jt=(J)(intptr_t)((I)jtip&~JTFLAGMSK);  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);

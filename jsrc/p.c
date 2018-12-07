@@ -128,7 +128,7 @@ static PSTK* jtphook(J jt,A s1, A s2){
 
 static PSTK* jtpparen(J jt, A s1, A s2){
  PSTK* stack=jt->parserstkend1;  // extract the stack base
- if(!(PTISCAVN(stack[1])&&PTISRPAR(stack[2])))R 0;  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
+ ASSERT(PTISCAVN(stack[1])&&PTISRPAR(stack[2]),EVSYNTAX);  // if error, signal so with 0 stack.  Look only at pt since MARK doesn't have an a
  stack[2].pt=stack[1].pt; stack[2].t=stack[0].t; stack[2].a = stack[1].a;  //  Install result over ).  Use value from expr, token # from (
  R stack+2;  // advance stack pointer to result
 }

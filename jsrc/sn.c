@@ -25,11 +25,16 @@ B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
  R 1;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
-B vlocnm(I n,C*s){C c,t;
- if(!n)R 0;  // error is name empty
- DO(n, t=ctype[(UC)(c=s[i])]; if(!(c!='_'&&(t==CA||t==C9)))R 0;);  // error if non-alphameric or _
- if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; if(n>18)R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; <=18 digits; and all chars numeric
- R 1;
+B vlocnm(I n,C*s){
+// obsolete if(!n)R 0;  // error if name empty
+// obsolete  DO(n, t=ctype[(UC)(c=s[i])]; if(!(c!='_'&&(t==CA||t==C9)))R 0;);  // error if non-alphameric or _
+// obsolete if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; if(n>18)R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; <=18 digits; and all chars numeric
+ I accummask=0; DO(n, UC c=s[i]; C t=ctype[c]; t=c=='_'?CX:t; accummask|=(I)1<<t;)  // create mask of types encountered.  Treat  '_' as nonalpha
+ if(accummask&~(((I)1<<CA)|((I)1<<C9)))R 0;  // error if any non-alphameric encountered
+ if(n<2)R (B)n;  // error if n=0; OK if n=1 (any alphameric is OK then)
+ if(s[0]>'9')R 1;  // if nonnumeric locale, alphameric name must be OK
+ if(s[0]=='0'||n>(SZI==8?18:9))R 0;  // numeric locale: if (multi-digit) locale starts with '0', or number is too long for an INt (conservatively), error
+ R accummask==((I)1<<C9);   // if there are any alphabetics, give error
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 
 // s-> a string of length n.  If the name is valid, create a NAME block for it

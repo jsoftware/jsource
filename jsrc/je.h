@@ -887,6 +887,7 @@ extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
+extern I        strtoI10s(I,C*);
 extern D        tod(void);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);

@@ -207,6 +207,12 @@ d =: 0&".&.> e =: 18!:3 ''
 (;:'a bc d')   -: lpath d
 (;:'a bc d')   -: lpath e
 
+NB. Verify numerics OK in path
+f =: 0&".&.> y =: 18!:3 ''
+('a';f,<'d') lpath d 
+(,&.> 'a';y,<'d') -: lpath d
+(,&.> 'a';y,<'d') -: lpath e
+
 
 (,<,'z') -: lpath <'NonExistentLocale'
 (<'NonExistent') lpath <'abc'
@@ -218,7 +224,7 @@ d =: 0&".&.> e =: 18!:3 ''
 (i.0 0) -: (0$a:)lpath <'asdf'
 
 18!:55 ;:'a abc asdf bc cool d first new NonExistent NonExistentLocale'
-18!:55 d,e
+18!:55 e,f
 
 'domain error'    -: lpath etx 0 1 0
 'domain error'    -: lpath etx 'abc'
@@ -395,7 +401,7 @@ a -: 5.4
 lswitch__ <'base'
 
 18!:55 ;:'a b c asdf NonExistent2'
-18!:55 d,e
+18!:55 e
 
 'domain error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
@@ -576,7 +582,7 @@ x=: 4!:5 [1
 x -: /:~ ('sum_',(":>k),'_');;:'a_baker_ k_base_ xy_z_'
 
 
-4!:55 ;:'a a_z_ ab c d f '
+4!:55 ;:'a a_z_ ab c d e f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
 4!:55 ;:'not_a_locative spnow t test x xy_z_ y '
 

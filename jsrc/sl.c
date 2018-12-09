@@ -129,7 +129,11 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  R w;
 }    /* validate namelist of locale names  Returns list if all valid, else 0 for error */
 
+// p points to string of length l.  Result stored in z, which must be a declared lvalue
+// overflow is ignored, much as strtoI did (it clamped, which is similarly invalid).  We expect the user to have audited the length
 #define strtoI10(p,l,z) {z=0; C* p_ = p; DQ(l, z=4*z+z; z=2*z + (*p_++-'0');)}
+// subroutine version
+I strtoI10s(I l,C* p) {I z; strtoI10(p,l,z); R z; }
 
 // get index number for locale with number locno, or -1 if not found
 static I jtindexforloc(J jt,I locno){I i;
@@ -205,7 +209,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
  RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
  RZ(g=locale(1,w));
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
- AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AAV(x)[i])); AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)
+ AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&INT?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)  // ? why so many copies?  test before thorn1 not reqd
  fa(LOCPATH(g)); ras(z); LOCPATH(g)=z;
  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  R mtm;

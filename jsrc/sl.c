@@ -80,9 +80,13 @@ F1(jtlocsizes){I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 
+// find the symbol table for locale with name u which has length n and hash/number bucketx, create if b and non-existent
+// locale name is known to be valid
+// n=0 means 'use base locale'
+// n=-1 means 'numbered locale, don't bother checking digits'
 A jtstfind(J jt,I n,C*u,I bucketx){L*v;
  if(!n){n=sizeof(jt->baselocale); u=jt->baselocale;bucketx=jt->baselocalehash;}
- if('9'<*u){
+ if(n>0&&'9'<*u){  // named locale   > because baselocale is known to be non-empty
   v=probe(n,u,(UI4)bucketx,jt->stloc);
   if(v)R v->val;   // if there is a symbol, return its value
  }else{
@@ -90,33 +94,42 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==bucketx)R AAV(jt->stptr)[i];
  }
  R 0;  // not found
-}   /* find the symbol table for locale with name u which has length n and hash/number h, create if b and non-existent */
+}
 
 // look up locale name, and create the locale if not found
+// bucketx is hash (for named locale) or number (for numeric locale)
+// n=0 means 'use base locale'
+// n=-1 means 'numbered locale, don't bother checking digits'
 A jtstfindcre(J jt,I n,C*u,I bucketx){
  A v = stfind(n,u,bucketx);  // lookup
  if(v)R v;  // return if found
- if('9'<*u){  // nonnumeric locale:
+ if(n>=0&&'9'<*u){  // nonnumeric locale:
   R stcreate(0,jt->locsize[0]+PTO,n,u);  // create it with name
  }else{
   ASSERT(bucketx>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,bucketx,0L);  // numeric locale: create with number
  }
 }
 
-static A jtvlocnl(J jt,B b,A w){A*wv,y;C*s;I i,m,n;
+// b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
+static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
-  y=wv[i]; m=AN(y); s=CAV(y);
+  y=wv[i];  // pointer to box
+  if((!(b&2))&&!AR(y)&&AT(y)&INT)continue;   // scalar numeric locale is ok
+  m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(m,EVLENGTH);
   ASSERT(LIT&AT(y),EVDOMAIN);
-  if(b)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
+  ASSERT(!(b&2) || CAV(y)[0]>'9',EVDOMAIN);  // numeric locale not allowed except when called for in b
+  if(b&1)ASSERTN(vlocnm(m,s),EVILNAME,nfs(m,s));
  }
  R w;
-}    /* validate namelist of locale names */
+}    /* validate namelist of locale names  Returns list if all valid, else 0 for error */
+
+#define strtoI10(p,l,z) {z=0; C* p_ = p; DQ(l, z=4*z+z; z=2*z + (*p_++-'0');)}
 
 // get index number for locale with number locno, or -1 if not found
 static I jtindexforloc(J jt,I locno){I i;
@@ -124,9 +137,9 @@ static I jtindexforloc(J jt,I locno){I i;
  for(i=0; i<n; ++i)if(nv[i]==locno)R i;   // return index of first match
  R -1;   // -1 if no match
 }
-// get index number for a numbered locale, given the name of the locale
-static I jtprobenum(J jt,C*u){
-  R jtindexforloc(jt, (I)strtoI(u,NULL,(I)10)); // scaf error fails if no terminating NUL, if rank used
+// get index number for a numbered locale, given the name of the locale and the length of the name
+static I jtprobenum(J jt,C*u,I n){
+  I z; strtoI10(u,n,z)  R jtindexforloc(jt, z);
 }    /* probe for numbered locales */
 
 
@@ -135,10 +148,16 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
  for(i=0;i<n;++i){
-  y=wv[i]; m=AN(y); u=CAV(y); c=*u; 
-  if(!vlocnm(m,u))zv[i]=-2;
-  else if(c<='9') zv[i]=0<=probenum(u)?1:-1;
-  else            zv[i]=probe(m,u,(UI4)nmhash(m,u),jt->stloc)?0:-1;
+  y=wv[i];
+  if(!AR(y)&&AT(y)&INT){  // atomic numeric locale
+   zv[i]=jtindexforloc(jt,IAV(y)[0])<0?-1:1;
+  }else{
+   // string locale, whether number or numeric
+   m=AN(y); u=CAV(y); c=*u; 
+   if(!vlocnm(m,u))zv[i]=-2;
+   else if(c<='9') zv[i]=0<=probenum(u,m)?1:-1;
+   else            zv[i]=probe(m,u,(UI4)nmhash(m,u),jt->stloc)?0:-1;
+  }
  }
  RETF(z);
 }    /* 18!:0 locale name class */
@@ -170,12 +189,15 @@ F2(jtlocnl2){UC*u;
 static A jtlocale(J jt,B b,A w){A g,*wv,y;
  RZ(vlocnl(1,w));
  wv=AAV(w); 
- DO(AN(w), y=wv[i]; if(!(g=(b?jtstfindcre:jtstfind)(jt,AN(y),CAV(y),BUCKETXLOC(AN(y),CAV(y)))))R 0;);
+ DO(AN(w), y=wv[i]; if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&INT?-1:AN(y),CAV(y),AT(y)&INT?IAV(y)[0]:BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
-}    /* last locale (symbol table) from boxed locale names; 0 if none */
+}    /* last locale (symbol table) from boxed locale names; 0 if none.  if b=1, create locale */
 
-F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); RZ(g=locale(1,w)); g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z; }
+F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); ASSERT(AT(w)&BOX,EVDOMAIN); RZ(g=locale((AT(AAV(w)[0])&LIT)&&CAV(AAV(w)[0])[0]>'9',w));
+ g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z;
+}
  // for paths, the shape holds the bucketx.  We must create a new copy that has the shape restored
+ // Don't create locale if numeric
      /* 18!:2  query locale path */
 
 F2(jtlocpath2){A g; AD * RESTRICT x;
@@ -195,6 +217,7 @@ static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
  if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
  if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
+  // named locale exists.  Verify no defined names
   g=v->val; 
   u=1+AV(g); DO(AN(g)-1, ASSERT(!u[i],EVLOCALE););
   RZ(symfreeh(g,v));
@@ -213,14 +236,14 @@ static F1(jtloccrenum){C s[20];I k=jt->stmax,p;
 
 F1(jtloccre1){
  RZ(w);
- if(AN(w))R rank2ex(mark,vlocnl(1,w),0L,0L,0L,0L,0L,jtloccre);
+ if(AN(w))R rank2ex(mark,vlocnl(2+1,w),0L,0L,0L,0L,0L,jtloccre);
  ASSERT(1==AR(w),EVRANK);
  R loccrenum(mark);
 }    /* 18!:3  create locale */
 
 F2(jtloccre2){
  RZ(a&&w);
- if(AN(w))R rank2ex(a,vlocnl(1,w),0L,0L,0L,0L,0L,jtloccre);
+ if(AN(w))R rank2ex(a,vlocnl(2+1,w),0L,0L,0L,0L,0L,jtloccre);
  ASSERT(1==AR(w),EVRANK);
  R rank1ex(a,0L,0L,jtloccrenum);
 }    /* 18!:3  create locale with specified hash table size */
@@ -269,15 +292,19 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
-F1(jtlocexmark){A g,*pv,*wv,y,z;B b,*zv;C*u;I i,j,m,n,*nv;L*v;
+F1(jtlocexmark){A g,*pv,*wv,y,z;B *zv;C*u;I i,j,m,n,*nv;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); 
  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
-  zv[i]=1; y=wv[i]; g=0; m=AN(y); u=CAV(y); b='9'>=*u;
-  if(b){j=probenum(u);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
-  else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
+  zv[i]=1; y=wv[i]; g=0;
+  if(AT(y)&INT){j=jtindexforloc(jt,IAV(y)[0]); if(0<=j)g=pv[j];}
+  else{
+   m=AN(y); u=CAV(y);
+   if('9'>=*u){j=probenum(u,m);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
+   else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
+  }
   if(g){I k;  // if the specified locale exists in the system...
    // See if we can find the locale on the execution stack.  If so, set the DELETE flag
    for(k=0;k<jt->callstacknext;++k)if(jt->callstack[k].value==g)break;

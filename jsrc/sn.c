@@ -28,7 +28,7 @@ B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
 B vlocnm(I n,C*s){C c,t;
  if(!n)R 0;  // error is name empty
  DO(n, t=ctype[(UC)(c=s[i])]; if(!(c!='_'&&(t==CA||t==C9)))R 0;);  // error if non-alphameric or _
- if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; and all chars numeric
+ if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; if(n>18)R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; <=18 digits; and all chars numeric
  R 1;
 }    /* validate locale name: 1 if locale-name OK, 0 if error */
 

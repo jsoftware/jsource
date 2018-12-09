@@ -227,12 +227,19 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  GATV(z,FL,n,AR(w),AS(w)); zv=DAV(z);   // zv-> results
  for(i=0;i<n;++i){   // loop over each name given...
-  x=wv[i]; m=AN(x); s=CAV(x);  // x is the name
-  if(!m){m=sizeof(jt->baselocale); s=jt->baselocale;}
-  ASSERT(LIT&AT(x),EVDOMAIN);
-  ASSERT(1>=AR(x),EVRANK);
-  ASSERT(vlocnm(m,s),EVILNAME);
-  y=stfind(m,s,BUCKETXLOC(m,s));   // y is the block for the locale
+  x=wv[i];  // x is the name/number
+  I bucketx;  // will be hash/number for the locale
+  if(!AR(x)&&AT(x)&INT){
+   m=-1; bucketx=IAV(x)[0];   // signal numeric-atom locale; fetch number
+  }else{
+   m=AN(x); s=CAV(x);
+   if(!m){m=sizeof(jt->baselocale); s=jt->baselocale;}
+   ASSERT(LIT&AT(x),EVDOMAIN);
+   ASSERT(1>=AR(x),EVRANK);
+   ASSERT(vlocnm(m,s),EVILNAME);
+   bucketx=BUCKETXLOC(m,s);
+  }
+  y=stfind(m,s,bucketx);   // y is the block for the locale
   ASSERT(y,EVLOCALE);
   *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name

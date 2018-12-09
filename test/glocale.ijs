@@ -85,6 +85,18 @@ x -: a__k [ k=: <'huh'
 
 18!:55 ;:'baker charlie huh xyz'
 
+d =: 0&".&.> c =: 18!:3 ''
+a__c =: 5
+5 -: a__d  NB. atomic integer and string access the same locale
+e =: 0&".&.> f =: 18!:3 ''
+c__c =: d__c =: e
+a__e =: 7
+7 -: a__c__c
+7 -: a__c__d
+7 -: a__d__c
+7 -: a__d__d
+
+18!:55 d,e
 
 NB. 18!:0 ---------------------------------------------------------------
 
@@ -94,7 +106,7 @@ ldestroy=: 18!:55
 
 0     -: lnc <'base'
 0 0   -: lnc <;._1 ' base z'
-0 0 1 -: lnc x=:(;:'base z'),lcreate ''
+0 0 1 1 -: lnc x=:(;:'base z'),(, 0&".&.>) lcreate ''
 _1 _1 -: lnc 'nonsuch123';'99999999'
 _2 _2 -: lnc '!!#*@';'01abc'
 
@@ -187,6 +199,15 @@ x -: a_cool_
 (,<,'a')       -: lpath <'cool'
 (;:'a bc d')   -: lpath <'new'
 
+d =: 0&".&.> e =: 18!:3 ''
+(<'a')         lpath e
+(,<,'a')       -: lpath e
+(,<,'a')       -: lpath d
+('a';'bc';'d') lpath d 
+(;:'a bc d')   -: lpath d
+(;:'a bc d')   -: lpath e
+
+
 (,<,'z') -: lpath <'NonExistentLocale'
 (<'NonExistent') lpath <'abc'
 (,<'NonExistent') -: lpath <'abc'
@@ -197,6 +218,7 @@ x -: a_cool_
 (i.0 0) -: (0$a:)lpath <'asdf'
 
 18!:55 ;:'a abc asdf bc cool d first new NonExistent NonExistentLocale'
+18!:55 d,e
 
 'domain error'    -: lpath etx 0 1 0
 'domain error'    -: lpath etx 'abc'
@@ -290,7 +312,8 @@ x_asdf_=: i.1e4
 'domain error'  -: lcreate etx 23x
 
 'domain error'  -: lcreate etx <0 1
-'domain error'  -: lcreate etx <234
+'domain error'  -: lcreate etx < 1 + 0 ". > lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
+'domain error'  -: lcreate etx < ": 1 + 0 ". > lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
 'domain error'  -: lcreate etx <2.4
 'domain error'  -: lcreate etx <2j4
 'domain error'  -: lcreate etx <2r4
@@ -363,7 +386,16 @@ plus_a_=: +
 4 plus_a_ _3
 (<'base') -: 18!:5 ''
 
+d =: 0&".&.> e =: 18!:3 ''
+lswitch e
+a =: 5.4
+lswitch__ <'base'
+lswitch d
+a -: 5.4
+lswitch__ <'base'
+
 18!:55 ;:'a b c asdf NonExistent2'
+18!:55 d,e
 
 'domain error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'

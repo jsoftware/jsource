@@ -8,6 +8,8 @@ linux     implies intel
 darwin    implies intel
 raspberry implies linux/arm
 
+NOTE: This uses clang/llvm. If on Debian you'll also need libedit-dev (libedit-devel on Fedora)
+
 **************************************************************************
 # commands are assumed to run in ~ and depend on jvars.sh
 
@@ -22,7 +24,7 @@ cat jvars.sh
 
 # create clean build folders and build all binaries
 . jvars.sh
-$jmake/buld_all.sh
+$jmake/build_all.sh
 
 # create clean build folders
 . jvars.sh

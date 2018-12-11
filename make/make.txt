@@ -22,7 +22,7 @@ cat jvars.sh
 
 # create clean build folders and build all binaries
 . jvars.sh
-$jmake/buld_all.sh
+$jmake/build_all.sh
 
 # create clean build folders
 . jvars.sh

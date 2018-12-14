@@ -953,8 +953,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
   else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
-     // code for boolean verbs needs it.  But we don't need to set more than just the word containing the trailing NUL (really, just the byte would be OK).
-     // To find that byte, back out the SZI added nulls 
+     // code for boolean verbs needs it.  We set the whole last SZI bytes to 0, so that we can be sure that a boolean can be interpreted as an INT using IAV(x)[0] 
   AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here

@@ -20,7 +20,7 @@ t=: 18!:30 <'base'
 4!:55 <'sum'
 -. (<'sum') e. >1{18!:30 <'base'
 
-'domain error' -: 18!:30 etx 2
+'locale error' -: 18!:30 etx 100
 'domain error' -: 18!:30 etx 2.5
 'domain error' -: 18!:30 etx 2j5
 'domain error' -: 18!:30 etx 2r5

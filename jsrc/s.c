@@ -295,9 +295,10 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
   ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
+  if(AT(y)&((INT|B01)/C_LE)){R stfindcre(-1,0,IAV(y)[0]);}  // if atomic integer, look it up (but don't create) - will fail if locale not found
   ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
   I bucketx;
-  x=AAV0(y); if(!AR(x)&&AT(x)&INT) {
+  x=AAV0(y); if(!AR(x)&&AT(x)&((INT|B01)/C_LE)) {
    // Boxed integer - use that as bucketx
    xn=-1; bucketx=IAV(x)[0];  // signal numeric locale, fetch the number
   }else{

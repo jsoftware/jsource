@@ -51,9 +51,9 @@ x -: a__k [ k=: <'huh'
 'length error'    -: ex 'ab__k' [ k=: <''
 'length error'    -: ex 'ab__k' [ k=: <$0
 
-'domain error'    -: ex 'ab__k' [ k=: 0 
+'locale error'    -: ex 'ab__k' [ k=: 0 
 'domain error'    -: ex 'ab__k' [ k=: 'x'
-'domain error'    -: ex 'ab__k' [ k=: 5
+'locale error'    -: ex 'ab__k' [ k=: 5
 'domain error'    -: ex 'ab__k' [ k=: 5.4
 'domain error'    -: ex 'ab__k' [ k=: 5j4
 'domain error'    -: ex 'ab__k' [ k=: 5x
@@ -85,18 +85,24 @@ x -: a__k [ k=: <'huh'
 
 18!:55 ;:'baker charlie huh xyz'
 
-d =: 0&".&.> c =: 18!:3 ''
+dd =: > d =: 0&".&.> c =: 18!:3 ''
 a__c =: 5
-5 -: a__d  NB. atomic integer and string access the same locale
-e =: 0&".&.> f =: 18!:3 ''
+5 -: a__d  NB. boxed atomic integer and string access the same locale
+5 -: a__dd  NB. atomic integer and string access the same locale
+ee =: > e =: 0&".&.> f =: 18!:3 ''
 c__c =: d__c =: e
 a__e =: 7
 7 -: a__c__c
 7 -: a__c__d
 7 -: a__d__c
 7 -: a__d__d
+a__ee =: 11
+11 -: a__c__c
+11 -: a__c__d
+11 -: a__d__c
+11 -: a__d__d
 
-18!:55 d,e
+18!:55 d,f
 
 NB. 18!:0 ---------------------------------------------------------------
 
@@ -233,7 +239,8 @@ f =: 0&".&.> y =: 18!:3 ''
 'domain error'    -: lpath etx 2 3j4
 'domain error'    -: lpath etx 2 3x
 'domain error'    -: lpath etx 2 3r4
-'domain error'    -: lpath etx 2;3 4
+'locale error'    -: lpath etx 2000;3 4
+'domain error'    -: lpath etx 3 4;2
 
 'domain error'    -: lpath etx <0 1 0
 'domain error'    -: lpath etx <2 3 4
@@ -392,20 +399,28 @@ plus_a_=: +
 4 plus_a_ _3
 (<'base') -: 18!:5 ''
 
+4!:55 ;:'a a_z_'
 d =: 0&".&.> e =: 18!:3 ''
 lswitch e
 a =: 5.4
 lswitch__ <'base'
+_1 -: 4!:0 <'a'
 lswitch d
 a -: 5.4
 lswitch__ <'base'
+_1 -: 4!:0 <'a'
+lswitch >d
+a -: 5.4
+lswitch__ <'base'
+_1 -: 4!:0 <'a'
 
 18!:55 ;:'a b c asdf NonExistent2'
 18!:55 e
 
-'domain error'    -: lswitch etx 0
+'locale error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
-'domain error'    -: lswitch etx 2
+'locale error'    -: lswitch etx 2
+'locale error'    -: lswitch etx 5000
 'domain error'    -: lswitch etx 2.3
 'domain error'    -: lswitch etx 2j3
 'domain error'    -: lswitch etx 2x
@@ -582,7 +597,7 @@ x=: 4!:5 [1
 x -: /:~ ('sum_',(":>k),'_');;:'a_baker_ k_base_ xy_z_'
 
 
-4!:55 ;:'a a_z_ ab c d e f '
+4!:55 ;:'a a_z_ ab c d dd e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '
 4!:55 ;:'not_a_locative spnow t test x xy_z_ y '
 

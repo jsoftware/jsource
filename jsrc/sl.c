@@ -7,6 +7,13 @@
 
 // Interfaces for numbered locales
 
+// Initialize the numbered-locale system
+static A jtinitnl(J jt){A q;
+ RZ(q=apv(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
+ GATV(q,INT,40,1,0);        jt->stptr=q; memset(AV(q),C0,40*SZI);
+ R q;  // return no error
+}
+
 // Get the locale number to use for the next numbered locale.  (0 if error, with error code set) The locale need not be installed, if an error intervenes
 static I jtgetnl(J jt){
  ASSERT(0<=jt->stmax,EVLOCALE);
@@ -38,6 +45,15 @@ static A jtfindnl(J jt, I n){
 static void jterasenl(J jt, I n){
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==n){AAV(jt->stptr)[i]=0; AV(jt->stnum)[i]=-1; --jt->stused; break;};
  }
+
+// return list of active numbered locales, using namelist mask
+static A jtactivenl(J jt){A y;I n=0;C s[20];
+  GATV(y,BOX,jt->stused,1,0); A *yv=AAV(y); A *pv=AAV(jt->stptr); I *nv=AV(jt->stnum);
+  DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
+      if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
+  R take(sc(n),y);
+}
+
 
 // Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
 // n is length of name (or locale# to allocate, for numbered locales), u->name
@@ -75,13 +91,12 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
 
-B jtsymbinit(J jt){A q;I n=40;
+B jtsymbinit(J jt){A q;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
  GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains
- RZ(q=apv(n,-1L,0L));    jt->stnum=q;
- GATV(q,INT,n,1,0);        jt->stptr=q; memset(AV(q),C0,n*SZI);
+ jtinitnl(jt);  // init numbered locales
  RZ(jt->global=stcreate(0,5L+PTO,sizeof(jt->baselocale),jt->baselocale));
  RZ(           stcreate(0,7L+PTO,1L,"z"   ));
  R 1;
@@ -192,15 +207,10 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RETF(z);
 }    /* 18!:0 locale name class */
 
-static F1(jtlocnlx){A*pv,y,*yv,z;B*wv;C s[20];I m=0,n=0,*nv;
+static F1(jtlocnlx){A y,z;B*wv;I m=0;
  RZ(w=cvt(B01,w)); wv=BAV(w); DO(AN(w), m|=1+wv[i];);
  if(1&m)z=nlsym(jt->stloc);
- if(2&m){
-  GATV(y,BOX,jt->stused,1,0); yv=AAV(y); pv=AAV(jt->stptr); nv=AV(jt->stnum);
-  DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
-      if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
-  y=take(sc(n),y);
- }
+ if(2&m)RZ(y=jtactivenl(jt));  // get list of active locales
  z=0==m?mtv:1==m?z:2==m?y:over(y,z);
  R grade2(z,ope(z));
 }
@@ -323,10 +333,10 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
 static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
      /* check for redefinition (erasure) of entire symbol table */
 
-F1(jtlocexmark){A g,*pv,*wv,y,z;B *zv;C*u;I i,m,n,*nv;L*v;
+F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); 
- nv=AV(jt->stnum); pv=AAV(jt->stptr);
+// obsolete  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   g=0;

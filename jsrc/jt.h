@@ -50,8 +50,7 @@ typedef struct {
  A*   nvrav;            /* AAV(jt->nvra)                                   */
  UI4  nvran;            // number of atoms in nvrav
  I4   slisti;           /* index into slist of current script              */ 
- UI4  nvrtop;           /* top of nvr stack; # valid entries               */
- UI4  nvrotop;          // previous top of nvr stack
+ A    stloc;            /* locales symbol table                            */
 // --- end of cache line 3
  PSTK* parserstkbgn;     // &start of parser stack
  PSTK* parserstkend1;    // &end+1 of parser stack
@@ -99,8 +98,9 @@ typedef struct {
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
- A    stloc;            /* locales symbol table                            */
- I    parsercalls;      /* # times parser was called                       */
+ I*   numloctbl;         // pointer to data area for locale-number to locale translation
+ UI4  numlocsize;       // number of BYTES in numloctbl
+ I4   parsercalls;      /* # times parser was called                       */
  UC   typepriority[19];  // priority value for the noun types
 // end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
@@ -116,15 +116,12 @@ typedef struct {
  I    getlasterror;     /* DLL stuff                                       */
  void *dtoa;             /* use internally by dtoa.c                        */
 // end cache line 6.
- UC   disp[7];          /* # different verb displays                       */
- UC   outeol;           /* output: EOL sequence code                       */
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
- A    nvra;             /* data blocks that are in execution somewhere     */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
  A    fill;             /* fill                                            */
- C*   fillv;            /* fill value                                      */
  C    fillv0[sizeof(Z)];/* default fill value                              */
+ C*   fillv;            /* fill value                                      */
  C    typesizes[32];    // the length of an allocated item of each type
 // --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
@@ -133,6 +130,10 @@ typedef struct {
  B    retcomm;          /* 1 iff retain comments and redundant spaces      */
  UC   seclev;           /* security level                                  */
 // 3 bytes here
+ UC   disp[7];          /* # different verb displays                       */
+ UC   outeol;           /* output: EOL sequence code                       */
+// 3 words free
+ I    filler[3];
 // --- end cache line 8
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  D    ct;               /* comparison tolerance                            */
@@ -140,12 +141,10 @@ typedef struct {
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    idothash0;        // 2-byte hash table for use by i.
  A    idothash1;        // 4-byte hash table for use by i.
-#if !C_CRC32C
- I    hin;              /* used in dyad i. & i:                            */
- I*   hiv;              /* used in dyad i. & i:                            */
-#endif
  I    symindex;         /* symbol table index (monotonically increasing)   */
 // -- end cache line 9
+ UI4  nvrtop;           /* top of nvr stack; # valid entries               */
+ UI4  nvrotop;          // previous top of nvr stack
  A    symb;             /* symbol table for assignment                     */
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
@@ -155,9 +154,15 @@ typedef struct {
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
- I    rela;             /* if a is relative, a itself; else 0    slated for removal          */
- I    relw;             /* if w is relative, w itself; else 0    slated for removal          */
+// obsolete  I    rela;             /* if a is relative, a itself; else 0    slated for removal          */
+// obsolete  I    relw;             /* if w is relative, w itself; else 0    slated for removal          */
 
+// unordered symbols follow
+#if !C_CRC32C
+ I    hin;              /* used in dyad i. & i:                            */
+ I*   hiv;              /* used in dyad i. & i:                            */
+#endif
+ A    nvra;             /* data blocks that are in execution somewhere     */
  A    symp;             /* symbol pool array                               */
  L*   sympv;            /* symbol pool array value ptr, (L*)AV(jt->symp)   */
  I    arg;              /* integer argument                                */

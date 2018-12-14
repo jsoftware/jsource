@@ -220,6 +220,9 @@ do{
       // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  This is OK because we stop tpop'ing
       GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
+#if ZZSTARTATEND
+      zzboxp+=nboxes-1;  // when running backwards, start at end
+#endif
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it

@@ -6,7 +6,7 @@
 #include "j.h"
 
 // Interfaces for numbered locales
-#if 1
+#if 0
 // Initialize the numbered-locale system
 static A jtinitnl(J jt){A q;
  RZ(q=apv(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
@@ -60,7 +60,7 @@ static A jtinitnl(J jt){A q;
  GATV(q,INT,1,1,0);
  jt->stnum=q;  // save address of block
  jt->numloctbl=IAV(q);  // address of locale vector
- jt->numlocsize=AN(q)*SZI;  // length of vector in bytes
+ jt->numlocsize=(UI4)(AN(q)*SZI);  // length of vector in bytes
  jt->numlocalloqh=IAV(q);  // pointer to first locale number to allocate
  jt->numlocdelqh=0;  // init deleted queue to empty
  jt->numlocdelqt=(I*)&jt->numlocdelqh;  // start adding deletion to the head of the queue
@@ -70,7 +70,7 @@ static A jtinitnl(J jt){A q;
 
 // Get the locale number to use for the next numbered locale.  (0 if error, with error code set) The locale need not be installed, if an error intervenes
 static I jtgetnl(J jt){
- if(jt->numlocalloqh){
+ if(!jt->numlocalloqh){
   // there is nothing to allocate.  We will have to get some.
   if(jt->numlocdelqh && (jt->numlocsize>>LGSZI)>DELAYBEFOREREUSE) {
    // there are deleted blocks, and it is time to recycle them.  Move them from the delq to the alloq.  Clear the delq; it will not be touched again
@@ -83,9 +83,9 @@ static I jtgetnl(J jt){
    I relodist=(I)IAV(x)-(I)jt->numloctbl;  // relocation factor
    I oldbase=(I)jt->numloctbl; I *reloptr=IAV(x); UI oldsize=jt->numlocsize;
    DQ(oldsize>>LGSZI, if((UI)(*reloptr-oldbase)<oldsize)*reloptr+=relodist; ++reloptr;)  // if the pointer points to within the old block, relocate it to the new
-   if(jt->numlocdelqh){jt->numlocdelqh=(I*)((I)jt->numlocdelqh+relodist; jt->numlocdelqt=(I*)((I)jt->numlocdelqt+relodist;}  // relocate delq too, if there is one
+   if(jt->numlocdelqh){jt->numlocdelqh=(I*)((I)jt->numlocdelqh+relodist); jt->numlocdelqt=(I*)((I)jt->numlocdelqt+relodist);}  // relocate delq too, if there is one
    jt->numlocalloqh=reloptr; DQ(AN(x)-(oldsize>>LGSZI)-1, *reloptr=(I)(reloptr+1); reloptr=reloptr+1;)  *reloptr=(I)reloptr;  // chain added blocks as allocable, in ascending order.  The last one loops to self to indicate end
-   jt->numloctbl=IAV(x); jt->numlocsize=AN(x)*SZI;  // set address and length of new table
+   jt->numloctbl=IAV(x); jt->numlocsize=(UI4)(AN(x)*SZI);  // set address and length of new table
   }
  }
  R jt->numlocalloqh-jt->numloctbl;  // return index of next allocation
@@ -95,15 +95,15 @@ static I jtgetnl(J jt){
 static void jtinstallnl(J jt, A l){
  I nextallo=*jt->numlocalloqh;  // save new head of the allo chain
  ras(l); *jt->numlocalloqh=(I)l;  // protect l and store it as the new locale for its index
- jt->numlocalloqh=(nextallo==(I)jt->numlocalloqh)?0:nextallo;  // save next block; convert end-of-chain in block (i. e. loop to self) to 0 in alloqh
+ jt->numlocalloqh=(I*)((nextallo==(I)jt->numlocalloqh)?0:nextallo);  // save next block; convert end-of-chain in block (i. e. loop to self) to 0 in alloqh
  // If we allocate the last item, we have to housekeep the deletion tail pointer IF it pointed to that item.  If it does, we know we must be into the recycling phase
  if((I)jt->numlocdelqt==nextallo)jt->numlocdelqt=(I*)&jt->numlocalloqh;
 }
 
 // return the address of the locale block for number n, or 0 if not found
-static A jtfindnl(J jt, I n){
+A jtfindnl(J jt, I n){
  if((UI)n>=(jt->numlocsize>>LGSZI))R 0;  // check for index out of bounds
- A l=jt->numloctbl[n];  // fetch the locale/chain pointer
+ A l=(A)(jt->numloctbl[n]);  // fetch the locale/chain pointer
  R ((UI)((I)l-(I)jt->numloctbl)>=jt->numlocsize)?0:l;  // if it's a chain, return 0; otherwise the pointer
 }
 
@@ -226,7 +226,7 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
 // b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
 static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
- if(!AR(w) & AT(w)&(INT|BOX))R w;  // scalar integer is OK
+ if(!AR(w) & AT(w)&(INT|B01))R w;  // scalar integer is OK
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 

@@ -231,7 +231,8 @@ f =: 0&".&.> y =: 18!:3 ''
 (i.0 0) -: (0$a:)lpath <'asdf'
 
 18!:55 ;:'a abc asdf bc cool d first new NonExistent NonExistentLocale'
-18!:55 e,f
+18!:55 e
+18!:55 >f
 
 'domain error'    -: lpath etx 0 1 0
 'domain error'    -: lpath etx 'abc'

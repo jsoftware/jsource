@@ -91,6 +91,7 @@ a__c =: 5
 5 -: a__dd  NB. atomic integer and string access the same locale
 ee =: > e =: 0&".&.> f =: 18!:3 ''
 c__c =: d__c =: e
+dd__c =: ee
 a__e =: 7
 7 -: a__c__c
 7 -: a__c__d
@@ -98,9 +99,9 @@ a__e =: 7
 7 -: a__d__d
 a__ee =: 11
 11 -: a__c__c
-11 -: a__c__d
-11 -: a__d__c
-11 -: a__d__d
+11 -: a__c__dd
+11 -: a__dd__c
+11 -: a__dd__dd
 
 18!:55 d,f
 

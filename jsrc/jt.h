@@ -98,7 +98,7 @@ typedef struct {
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
- I*   numloctbl;         // pointer to data area for locale-number to locale translation
+ I*  numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // number of BYTES in numloctbl
  I4   parsercalls;      /* # times parser was called                       */
  UC   typepriority[19];  // priority value for the noun types
@@ -151,6 +151,9 @@ typedef struct {
  A    stnum;            /* numbered locale numbers                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
+ I*   numlocalloqh;      // pointer to next locale number to allocate
+ I*   numlocdelqh;      // head of queue of blocks deleted before recycling limit reached
+ I*   numlocdelqt;       // tail of deletion queue, which might be the alloq or the deletionq
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale

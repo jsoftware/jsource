@@ -6,7 +6,7 @@
 #include "j.h"
 
 // Interfaces for numbered locales
-
+#if 1
 // Initialize the numbered-locale system
 static A jtinitnl(J jt){A q;
  RZ(q=apv(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
@@ -35,7 +35,7 @@ static void jtinstallnl(J jt, A l){
 }
 
 // return the address of the locale block for number n, or 0 if not found
-static A jtfindnl(J jt, I n){
+A jtfindnl(J jt, I n){
   // scaf   should do some kind of MRU ordering to speed access to recent locales
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==n)R AAV(jt->stptr)[i];
   R 0;
@@ -53,7 +53,81 @@ static A jtactivenl(J jt){A y;I n=0;C s[20];
       if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
   R take(sc(n),y);
 }
+#else
+#define DELAYBEFOREREUSE 5000  // min number of locales to have before we start reusing
+// Initialize the numbered-locale system.  Called during initialization, so no need for ras()
+static A jtinitnl(J jt){A q;
+ GATV(q,INT,1,1,0);
+ jt->stnum=q;  // save address of block
+ jt->numloctbl=IAV(q);  // address of locale vector
+ jt->numlocsize=AN(q)*SZI;  // length of vector in bytes
+ jt->numlocalloqh=IAV(q);  // pointer to first locale number to allocate
+ jt->numlocdelqh=0;  // init deleted queue to empty
+ jt->numlocdelqt=(I*)&jt->numlocdelqh;  // start adding deletion to the head of the queue
+ *jt->numlocalloqh=(I)jt->numlocalloqh;  // Make the sole locale the end-of-chain by looping its chain to itself
+ R q;  // return no error
+}
 
+// Get the locale number to use for the next numbered locale.  (0 if error, with error code set) The locale need not be installed, if an error intervenes
+static I jtgetnl(J jt){
+ if(jt->numlocalloqh){
+  // there is nothing to allocate.  We will have to get some.
+  if(jt->numlocdelqh && (jt->numlocsize>>LGSZI)>DELAYBEFOREREUSE) {
+   // there are deleted blocks, and it is time to recycle them.  Move them from the delq to the alloq.  Clear the delq; it will not be touched again
+   jt->numlocalloqh=jt->numlocdelqh;  // Make the former deletes allocable
+   jt->numlocdelqh=0;  // indicate no more deletes.  There never will be any more
+   // leave the delq tail where it is
+  }else{
+   // We have to extend the allocation.  Do so, relocate the list, and add any new atoms as allocable
+   A x=ext(1,jt->stnum); RZ(x); jt->stnum=x;  // extend & save the allocation.  ext handles the usecount
+   I relodist=(I)IAV(x)-(I)jt->numloctbl;  // relocation factor
+   I oldbase=(I)jt->numloctbl; I *reloptr=IAV(x); UI oldsize=jt->numlocsize;
+   DQ(oldsize>>LGSZI, if((UI)(*reloptr-oldbase)<oldsize)*reloptr+=relodist; ++reloptr;)  // if the pointer points to within the old block, relocate it to the new
+   if(jt->numlocdelqh){jt->numlocdelqh=(I*)((I)jt->numlocdelqh+relodist; jt->numlocdelqt=(I*)((I)jt->numlocdelqt+relodist;}  // relocate delq too, if there is one
+   jt->numlocalloqh=reloptr; DQ(AN(x)-(oldsize>>LGSZI)-1, *reloptr=(I)(reloptr+1); reloptr=reloptr+1;)  *reloptr=(I)reloptr;  // chain added blocks as allocable, in ascending order.  The last one loops to self to indicate end
+   jt->numloctbl=IAV(x); jt->numlocsize=AN(x)*SZI;  // set address and length of new table
+  }
+ }
+ R jt->numlocalloqh-jt->numloctbl;  // return index of next allocation
+}
+
+// Install locale l in the numbered-locale table, at the number returned by the previous jtgetnl.  No error is possible
+static void jtinstallnl(J jt, A l){
+ I nextallo=*jt->numlocalloqh;  // save new head of the allo chain
+ ras(l); *jt->numlocalloqh=(I)l;  // protect l and store it as the new locale for its index
+ jt->numlocalloqh=(nextallo==(I)jt->numlocalloqh)?0:nextallo;  // save next block; convert end-of-chain in block (i. e. loop to self) to 0 in alloqh
+ // If we allocate the last item, we have to housekeep the deletion tail pointer IF it pointed to that item.  If it does, we know we must be into the recycling phase
+ if((I)jt->numlocdelqt==nextallo)jt->numlocdelqt=(I*)&jt->numlocalloqh;
+}
+
+// return the address of the locale block for number n, or 0 if not found
+static A jtfindnl(J jt, I n){
+ if((UI)n>=(jt->numlocsize>>LGSZI))R 0;  // check for index out of bounds
+ A l=jt->numloctbl[n];  // fetch the locale/chain pointer
+ R ((UI)((I)l-(I)jt->numloctbl)>=jt->numlocsize)?0:l;  // if it's a chain, return 0; otherwise the pointer
+}
+
+// delete the locale numbered n, if it exists
+static void jterasenl(J jt, I n){
+ if(jtfindnl(jt,n)){  // if locale exists
+  I newblock=(I)&jt->numloctbl[n];
+  // chain the new block off the old tail
+  *jt->numlocdelqt=newblock;
+  // set end-of-chain (loop to self) in the new block
+  jt->numloctbl[n]=newblock;
+  // set the new block as new tail
+  jt->numlocdelqt=(I*)newblock;
+ }
+}
+
+// return list of active numbered locales, using namelist mask
+static A jtactivenl(J jt){A y;
+ GATV(y,INT,AN(jt->stnum),1,0); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+ I nloc=0; DO(AN(jt->stnum), if(jtfindnl(jt,i)){yv[nloc]=i; ++nloc;})
+ R every(take(sc(nloc),y),0,jtthorn1);  // ".&.> nloc{.y
+}
+
+#endif
 
 // Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
 // n is length of name (or locale# to allocate, for numbered locales), u->name
@@ -129,7 +203,7 @@ A jtstfind(J jt,I n,C*u,I bucketx){L*v;
   v=probe(n,u,(UI4)bucketx,jt->stloc);
   if(v)R v->val;   // if there is a symbol, return its value
  }else{
-  R jtfindnl(jt, bucketx);
+  R findnl(bucketx);
  }
  R 0;  // not found
 }
@@ -191,16 +265,16 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(AT(w)&(INT|B01)){IAV(z)[0]=jtfindnl(jt,IAV(w)[0])?1:-1; RETF(z);}
+ if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(IAV(w)[0])?1:-1; RETF(z);}
  for(i=0;i<n;++i){
   y=wv[i];
   if(!AR(y)&&AT(y)&((INT|B01)/C_LE)){  // atomic numeric locale
-   zv[i]=jtfindnl(jt,IAV(y)[0])?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
+   zv[i]=findnl(IAV(y)[0])?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
   }else{
    // string locale, whether number or numeric
    m=AN(y); u=CAV(y); c=*u; 
    if(!vlocnm(m,u))zv[i]=-2;
-   else if(c<='9') zv[i]=jtfindnl(jt,strtoI10s(m,u))?1:-1;
+   else if(c<='9') zv[i]=findnl(strtoI10s(m,u))?1:-1;
    else            zv[i]=probe(m,u,(UI4)nmhash(m,u),jt->stloc)?0:-1;
   }
  }
@@ -340,13 +414,13 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   g=0;
-  if(AT(w) & ((INT|B01)/C_LE)){g = jtfindnl(jt,IAV(w)[0]);  // obsolete j=jtindexforloc(jt,IAV(w)[0]); if(0<=j)g=pv[j];
+  if(AT(w) & ((INT|B01)/C_LE)){g = findnl(IAV(w)[0]);  // obsolete j=jtindexforloc(jt,IAV(w)[0]); if(0<=j)g=pv[j];
   }else{
    zv[i]=1; y=wv[i];
-   if(AT(y)&((INT|B01)/C_LE)){g = jtfindnl(jt,IAV(y)[0]);  // obsolete j=jtindexforloc(jt,IAV(y)[0]); if(0<=j)g=pv[j];}
+   if(AT(y)&((INT|B01)/C_LE)){g = findnl(IAV(y)[0]);  // obsolete j=jtindexforloc(jt,IAV(y)[0]); if(0<=j)g=pv[j];}
    }else{
     m=AN(y); u=CAV(y);
-    if('9'>=*u){g = jtfindnl(jt,strtoI10s(m,u));}  // obsolete j=probenum(u,m);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
+    if('9'>=*u){g = findnl(strtoI10s(m,u));}  // obsolete j=probenum(u,m);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
     else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
    }
   }

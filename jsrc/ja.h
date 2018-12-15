@@ -354,6 +354,7 @@
 #define fh(x)                       jtfh(jt,(x))
 #define filler(x)                   jtfiller(jt,(x))  
 #define fillv(x,y,z)                jtfillv(jt,(x),(y),(z))
+#define findnl(x)                   jtfindnl(jt, (x))
 #define fit(x,y)                    jtfit(jt,(x),(y))
 #define fitct(x,y)                  jtfitct(jt,(x),(y)) 
 #define fix(x)                      jtfix(jt,(x))     

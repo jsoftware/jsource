@@ -696,6 +696,7 @@ extern A        jtfdef(J,I,C,I,AF,AF,A,A,A,I,I,I,I);
 extern I        jtfdep(J,A);
 extern void     jtfh(J,A);
 extern void     jtfillv(J,I,I,C*);        /* "fill" name conflict on Mac             */
+extern A        jtfindnl(J,I);
 extern I        jtfnum(J,A);
 extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern A        jtfrombsn(J,A,A,I);

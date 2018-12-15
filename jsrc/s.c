@@ -295,21 +295,22 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
   ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
-  if(AT(y)&((INT|B01)/C_LE)){R stfindcre(-1,0,IAV(y)[0]);}  // if atomic integer, look it up (but don't create) - will fail if locale not found
-  ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
-  I bucketx;
-  x=AAV0(y); if(!AR(x)&&AT(x)&((INT|B01)/C_LE)) {
-   // Boxed integer - use that as bucketx
-   xn=-1; bucketx=IAV(x)[0];  // signal numeric locale, fetch the number
+  if(AT(y)&((INT|B01)/C_LE)){g=findnl(IAV(y)[0]); ASSERT(g,EVLOCALE);  // if atomic integer, look it up
   }else{
-   xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
-   ASSERTN(1>=AR(x),EVRANK,nfs(k,v));   // verify list (or atom)
-   ASSERTN(xn,EVLENGTH,nfs(k,v));   // verify not empty
-   ASSERTN(LIT&AT(x),EVDOMAIN,nfs(k,v));  // verify string
-   ASSERTN(vlocnm(xn,xv),EVILNAME,nfs(k,v));  // verify legal name
-   bucketx=BUCKETXLOC(xn,xv);
+   ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
+   x=AAV0(y); if(!AR(x)&&AT(x)&((INT|B01)/C_LE)) {
+    // Boxed integer - use that as bucketx
+    g=findnl(IAV(x)[0]); ASSERT(g,EVLOCALE);  // boxed integer, look it up
+   }else{
+    xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
+    ASSERTN(1>=AR(x),EVRANK,nfs(k,v));   // verify list (or atom)
+    ASSERTN(xn,EVLENGTH,nfs(k,v));   // verify not empty
+    ASSERTN(LIT&AT(x),EVDOMAIN,nfs(k,v));  // verify string
+    ASSERTN(vlocnm(xn,xv),EVILNAME,nfs(k,v));  // verify legal name
+    I bucketx=BUCKETXLOC(xn,xv);
+    RZ(g=stfindcre(xn,xv,bucketx));  // find st for the name
+   }
   }
-  RZ(g=stfindcre(xn,xv,bucketx));  // find st for the name
  }
  R g;
 }

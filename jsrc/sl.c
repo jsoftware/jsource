@@ -6,7 +6,7 @@
 #include "j.h"
 
 // Interfaces for numbered locales
-#if 0
+#if 1
 // Initialize the numbered-locale system
 static A jtinitnl(J jt){A q;
  RZ(q=apv(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
@@ -53,6 +53,11 @@ static A jtactivenl(J jt){A y;I n=0;C s[20];
       if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
   R take(sc(n),y);
 }
+
+// iterator support
+I jtcountnl(J jt) { R AN(jt->stnum); }  // number of locales to reference by index
+A jtindexnl(J jt,I n) { R AAV(jt->stptr)[n]; }  // the locale address, or 0 if none
+
 #else
 #define DELAYBEFOREREUSE 5000  // min number of locales to have before we start reusing
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
@@ -104,7 +109,7 @@ static void jtinstallnl(J jt, A l){
 A jtfindnl(J jt, I n){
  if((UI)n>=(jt->numlocsize>>LGSZI))R 0;  // check for index out of bounds
  A l=(A)(jt->numloctbl[n]);  // fetch the locale/chain pointer
- R ((UI)((I)l-(I)jt->numloctbl)>=jt->numlocsize)?0:l;  // if it's a chain, return 0; otherwise the pointer
+ R ((UI)((I)l-(I)jt->numloctbl)<jt->numlocsize)?0:l;  // if it's a chain, return 0; otherwise the pointer
 }
 
 // delete the locale numbered n, if it exists
@@ -126,6 +131,10 @@ static A jtactivenl(J jt){A y;
  I nloc=0; DO(AN(jt->stnum), if(jtfindnl(jt,i)){yv[nloc]=i; ++nloc;})
  R every(take(sc(nloc),y),0,jtthorn1);  // ".&.> nloc{.y
 }
+
+// iterator support
+I jtcountnl(J jt) { R jt->numlocsize>>LGSZI; }  // number of locales to reference by index
+A jtindexnl(J jt,I n) { R findnl(n); }  // the locale address, or 0 if none
 
 #endif
 
@@ -226,7 +235,7 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
 // b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
 static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
- if(!AR(w) & AT(w)&(INT|B01))R w;  // scalar integer is OK
+ if((!(b&2))&&!AR(w) && AT(w)&(INT|B01))R w;  // scalar integer is OK
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
@@ -414,20 +423,21 @@ F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   g=0;
-  if(AT(w) & ((INT|B01)/C_LE)){g = findnl(IAV(w)[0]);  // obsolete j=jtindexforloc(jt,IAV(w)[0]); if(0<=j)g=pv[j];
+  if(AT(w) & ((INT|B01)/C_LE)){zv[0]=1; g = findnl(IAV(w)[0]);  // obsolete j=jtindexforloc(jt,IAV(w)[0]); if(0<=j)g=pv[j];
   }else{
    zv[i]=1; y=wv[i];
    if(AT(y)&((INT|B01)/C_LE)){g = findnl(IAV(y)[0]);  // obsolete j=jtindexforloc(jt,IAV(y)[0]); if(0<=j)g=pv[j];}
    }else{
     m=AN(y); u=CAV(y);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}  // obsolete j=probenum(u,m);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
-    else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v   )g=v->val;}  // g is locale block for named locale
+    else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v)g=v->val;}  // g is locale block for named locale
    }
   }
   if(g){I k;  // if the specified locale exists in the system...
    // See if we can find the locale on the execution stack.  If so, set the DELETE flag
    for(k=0;k<jt->callstacknext;++k)if(jt->callstack[k].value==g)break;
-   if(k<jt->callstacknext)jt->callstack[k].type|=CALLSTACKDELETE;  // name active on stack; mark for deletion
+   if(k<jt->callstacknext)
+    jt->callstack[k].type|=CALLSTACKDELETE;  // name active on stack; mark for deletion
    else if(g==jt->global){
     // Name is not on stack but it is executing now.  Add a change+delete entry for it.  There may be multiple of these outstanding
     pushcallstack1(CALLSTACKCHANGELOCALE|CALLSTACKDELETE,g);  // mark locale for deletion

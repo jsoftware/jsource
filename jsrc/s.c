@@ -126,7 +126,7 @@ B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
 
-F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
+F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
@@ -152,8 +152,8 @@ F1(jtsympool){A aa,*pu,q,x,y,*yv,z,*zv;I i,j,n,*u,*v,*xv;L*pv;
   RZ(yv[j]=yv[*AV(x)]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- n=AN(jt->stptr); pu=AAV(jt->stptr);
- for(i=0;i<n;++i)if(x=pu[i]){   /* per numbered locales */
+ n=jtcountnl(jt); // obsolete n=AN(jt->stptr); pu=AAV(jt->stptr);
+ for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */
   RZ(      yv[*AV(x)]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }

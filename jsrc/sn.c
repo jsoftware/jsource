@@ -183,11 +183,11 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;I*e,i,k,m,p,wn;L*d;
  R ch;
 }
 
-F1(jtnch){A ch,*pv;B b;I*e,i,m,n;L*d;
+F1(jtnch){A ch;B b;I*e,i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
  GAT(ch,BOX,20,1,0); m=0;
  if(jt->stch){
-  n=AN(jt->stloc); e=1+AV(jt->stloc); pv=AAV(jt->stptr);
+  n=AN(jt->stloc); e=1+AV(jt->stloc); // obsolete pv=AAV(jt->stptr);
   for(i=1;i<n;++i,++e)if(*e){
    d=*e+jt->sympv;
    while(1){
@@ -195,8 +195,8 @@ F1(jtnch){A ch,*pv;B b;I*e,i,m,n;L*d;
     if(!d->next)break;
     d=d->next+jt->sympv;
   }}
-  n=AN(jt->stptr);
-  DO(n, if(pv[i])RZ(ch=nch1(b,pv[i],&m,ch)););
+  // obsolete n=AN(jt->stptr);
+  DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
  jt->stch=b;
  AN(ch)=*AS(ch)=m;

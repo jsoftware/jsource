@@ -1,4 +1,5 @@
 1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glocale.ijs'
+
 NB. locatives -----------------------------------------------------------
 
 ab__=: x=: ?20$1e9
@@ -51,9 +52,8 @@ x -: a__k [ k=: <'huh'
 'length error'    -: ex 'ab__k' [ k=: <''
 'length error'    -: ex 'ab__k' [ k=: <$0
 
-'locale error'    -: ex 'ab__k' [ k=: 0 
 'domain error'    -: ex 'ab__k' [ k=: 'x'
-'locale error'    -: ex 'ab__k' [ k=: 5
+'locale error'    -: ex 'ab__k' [ k=: 1e6
 'domain error'    -: ex 'ab__k' [ k=: 5.4
 'domain error'    -: ex 'ab__k' [ k=: 5j4
 'domain error'    -: ex 'ab__k' [ k=: 5x
@@ -166,10 +166,10 @@ x -: /~x
 (lnl $0) -: lnl ''
 (lnl $0) -: lnl 0$<5
 
-x=: lnl 0 1
-(a lnl 0 1) -: (a e.~ {.&>x)#x [ a=: 'j'
-(a lnl 0 1) -: (a e.~ {.&>x)#x [ a=: 'j0'
-(a lnl 0 1) -: (a e.~ {.&>x)#x [ a=: 'zb'
+x=: lnl 0 [ y =: lnl 1
+(a lnl 0 1) -: y,(a e.~ {.&>x)#x [ a=: 'j'
+(a lnl 0 1) -: y,(a e.~ {.&>x)#x [ a=: 'j0'
+(a lnl 0 1) -: y,(a e.~ {.&>x)#x [ a=: 'zb'
 
 'domain error'  -: lnl etx 'abc'
 'domain error'  -: lnl etx 1 2.3
@@ -234,9 +234,7 @@ f =: 0&".&.> y =: 18!:3 ''
 18!:55 e
 18!:55 >f
 
-'domain error'    -: lpath etx 0 1 0
 'domain error'    -: lpath etx 'abc'
-'domain error'    -: lpath etx 2 3 4
 'domain error'    -: lpath etx 2 3.4
 'domain error'    -: lpath etx 2 3j4
 'domain error'    -: lpath etx 2 3x
@@ -252,6 +250,8 @@ f =: 0&".&.> y =: 18!:3 ''
 'domain error'    -: lpath etx <2 3r4
 'domain error'    -: lpath etx <<'abc'
 'domain error'    -: lpath etx <<'234'
+'locale error'    -: lpath etx 1e6
+
 
 'ill-formed name' -: lpath etx <'!!#+'
 'ill-formed name' -: lpath etx <'abc_ju'
@@ -418,6 +418,7 @@ _1 -: 4!:0 <'a'
 
 18!:55 ;:'a b c asdf NonExistent2'
 18!:55 e
+e e. 18!:1 (1)  NB. Not deleted because still on stack
 
 'locale error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
@@ -598,6 +599,52 @@ x=: 4!:5 [1
 18!:55 k,<'baker'
 x -: /:~ ('sum_',(":>k),'_');;:'a_baker_ k_base_ xy_z_'
 
+NB. Numeric locale allocation.  Works only when not many locales have been allocated
+f=: 3 : 0
+if. 0 = 4!:0 <'HASRUNLOCNAME_z_' do. 1 return. end.
+HASRUNLOCNAME_z_ =: 1
+lastallo =. {: initallo =. allos =. /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
+deldallo =. $0   NB. locales in the order we delete them
+NB. randomly allocate & delete locales, until we see an old number coming back
+while. do.
+  if. 0.5 < ? 0 do.
+    NB. Allocate a new locale, append to list, exit loop if reuse has started
+    allos =. allos , newallo =. 0&". > 18!:3 ''
+    if. newallo < lastallo do. break. end.
+    lastallo =. newallo
+  else.
+    NB. Delete a randomly-chosen locale if there is one
+    if. #allos -. initallo do.
+      delallo =. ({~  ?@#) allos -. initallo  NB. initallo may be on stack, so don't try to delete
+      18!:55 delallo
+      allos =. allos -. delallo
+      deldallo =. deldallo , delallo
+    end.
+  end.
+end.
+NB. Verify our locale list matches the system
+assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
+assert. lastallo > 5000   NB. at least 5000 allos before we recycle anything
+NB. Allocate locales until we have exhausted the recycling
+while. lastallo >: {: allos do. allos =. allos ,  0&". > 18!:3 '' end.
+NB. Verify that the last few allocated match the last few we deleted
+assert. deldallo -:&(_20&{.) }: allos [ 2
+assert. allos -:&(/:~) 0&".@> 18!:1 (1) [ 3
+NB. Delete one locale, and then allocate until we see it back
+18!:55 lastallo
+allos =. allos -. lastallo
+while. lastallo ~: {: allos do. allos =. allos ,  0&". > 18!:3 '' end.
+NB. At this point the locale table should be exactly full.  We can delete/allo and get locales back immediately
+18!:55 lastallo
+allos =. allos -. lastallo
+assert. lastallo -: 0&".@> 18!:3 '' [ 4
+18!:55 (0);1;lastallo
+assert. 0 -: 0&".@> 18!:3 '' [ 5
+assert. 1 -: 0&".@> 18!:3 '' [ 6
+assert. lastallo -: 0&".@> 18!:3 '' [ 7
+assert. 18!:55 <"0 allos [ 8
+)
+NB. only with new allocator f''
 
 4!:55 ;:'a a_z_ ab c d dd e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '

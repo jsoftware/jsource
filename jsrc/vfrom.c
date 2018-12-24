@@ -229,8 +229,11 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
  /* obsolete RELOCATE(w,z);*/ RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for boolean a */
 
-A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
- ar=AR(a); as=AS(a); h=as[ar-1];
+// a is array whose 1-cells are index lists, w is array
+// result is the indexed items
+// the numbers in a have been audited for validity
+A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
+ ar=AR(a); as=AS(a); h=as[ar-1];  // h is number of length of the index list, i. e. number of axes of w that disappear during indexing
  wr=AR(w); ws=AS(w); wcr=wr-wf;
  DO(ar, if(!as[i]){b=1; break;});
  DO(wr, if(!ws[i]){b=1; break;});
@@ -241,8 +244,9 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
   v=ws+wf+h; DO(wcr-h, *u++=*v++;);
   R z;
  }
- fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);
- r=wr+1-h;
+ fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
+ r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1
+ // We will use pdt to create an index to the cell
  if(r==wr){
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
 // obsolete  else if(ARELATIVE(w)){
@@ -250,7 +254,9 @@ A jtfrombu(J jt,A a,A w,I wf){A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
 // obsolete   v=AV(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
 // obsolete   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }else{
-  RZ(q=gah(r,w)); v=AS(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
+  //  reshape w to combine the first h axes of each cell
+// obsolete   RZ(q=gah(r,w)); v=AS(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
+  RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISd(v,ws,wf); *v++=m; MCISd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
  RETF(z);

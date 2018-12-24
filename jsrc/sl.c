@@ -106,10 +106,8 @@ static void jtinstallnl(J jt, A l){
 }
 
 // return the address of the locale block for number n, or 0 if not found
-A jtfindnl(J jt, I n){
- if((UI)n>=(jt->numlocsize>>LGSZI))R 0;  // check for index out of bounds
- A l=(A)(jt->numloctbl[n]);  // fetch the locale/chain pointer
- R ((UI)((I)l-(I)jt->numloctbl)<jt->numlocsize)?0:l;  // if it's a chain, return 0; otherwise the pointer
+A jtfindnl(J jt, I n){A z;
+ findnlz(n,z); R z;
 }
 
 // delete the locale numbered n, if it exists

@@ -551,7 +551,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  R z;
 }    /* ,/"r w for sparse w, 2<r */
 
-static DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
+DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  RZ(w);F1PREFIP;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; s=AS(w); RESETRANK;
  b=1==r&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)

@@ -55,7 +55,7 @@ static DF2(jtunquote){A z;
  I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
- if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // i if locative, switch to it, stacking the prev valuenvalidate any extant lookups of modifier names -
+ if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
  // ************** no errors till the stack has been popped
  FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self

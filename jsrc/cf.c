@@ -265,6 +265,7 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
  R CALL2(f2,w,CALL1(g1,w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
+#if 0 // obsolete
 static DF2(jthkeps){
  RZ(a&&w);
  if(TYPESEQ(AT(a),AT(w))&&AT(a)&IS1BYTE&&1==AN(a)){A z;
@@ -278,6 +279,7 @@ static DF2(jthkeps){
 static DF2(jthkfrom){R from(a,gah(1L,w));}     /* special code for ({ ,) */
 static DF2(jthktake){R take(a,gah(1L,w));}     /* special code for ({.,) */
 static DF2(jthkdrop){R drop(a,gah(1L,w));}     /* special code for (}.,) */
+#endif
 
 static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
  RZ(w&&self);
@@ -310,10 +312,10 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
    flag=((u->flag&v->flag)&VASGSAFE)+(VJTFLGOK1|VJTFLGOK2);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA)switch(c){   // all of this except for $, could be handled by virtual blocks
     case CDOLLAR: f2=jtreshape; flag+=VIRS2; break;  // ($,) is inplace
-    case CFROM:   f2=jthkfrom; flag &=~VJTFLGOK2;  break;
-    case CTAKE:   f2=jthktake; flag &=~VJTFLGOK2;  break;
-    case CDROP:   f2=jthkdrop; flag &=~VJTFLGOK2;  break;
-    case CEPS:    f2=jthkeps; flag &=~VJTFLGOK2; break;
+// obsolete     case CFROM:   f2=jthkfrom; flag &=~VJTFLGOK2;  break;
+// obsolete     case CTAKE:   f2=jthktake; flag &=~VJTFLGOK2;  break;
+// obsolete     case CDROP:   f2=jthkdrop; flag &=~VJTFLGOK2;  break;
+// obsolete     case CEPS:    f2=jthkeps; flag &=~VJTFLGOK2; break;
    }else        switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])&&CBOX==ID(u->fgh[0])){f1=jtgroup; flag &=~VJTFLGOK1;} break;
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;

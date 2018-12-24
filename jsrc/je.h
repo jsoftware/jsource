@@ -573,6 +573,7 @@ extern DF1(jthgcoeff);
 extern DF1(jtmean);
 extern DF1(jtnum1);
 extern DF1(jtrazecut1);
+extern DF1(jtredcat);
 extern DF1(jtredravel);
 extern DF1(jtwd);
 

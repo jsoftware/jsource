@@ -355,9 +355,11 @@
 #define filler(x)                   jtfiller(jt,(x))  
 #define fillv(x,y,z)                jtfillv(jt,(x),(y),(z))
 #define findnl(x)                   jtfindnl(jt, (x))
+// x is locale number, result is address of symbol table, or 0 if nonexistent locale
+#define findnlz(x,z)                {if((UI)(n)>=(jt->numlocsize>>LGSZI))z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I)z-(I)jt->numloctbl)<jt->numlocsize)?0:z;}}
 #define fit(x,y)                    jtfit(jt,(x),(y))
 #define fitct(x,y)                  jtfitct(jt,(x),(y)) 
-#define fix(x)                      jtfix(jt,(x))     
+#define fix(x)                      jtfix(jt,(x))
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))
 #define floor1(x)                   jtfloor1(jt,(x))
@@ -859,6 +861,7 @@
 #define recip(x)                    jtrecip(jt,(x))   
 #define rect(x)                     jtrect(jt,(x))
 #define red0(x,y)                   jtred0(jt,(x),(y))
+#define redcat(x,y)                 jtredcat(jt,(x),(y))
 #define redcatsp(x,y,z)             jtredcatsp(jt,(x),(y),(z))
 #define redef(x,y)                  jtredef(jt,(x),(y))
 #define redefg(x)                   jtredefg(jt,(x))

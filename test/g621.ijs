@@ -87,6 +87,9 @@ f0=: 1: ` - ` *:     @. (3&|) " 0
 f1=: 1: ` - ` square @. (3&|) " 0
 (f0 -: f1) x=: ?13 17 19$1000
 
+t =:  < (+:`*:@.(2&|"0)"2)  i.3 4 5  NB. Used to return gah result, which is not backed
+1: <@i."0 i. 1000
+t -:  < (+:`*:@.(2&|"0)"2)  i.3 4 5
 
 NB. @. -- all size x partitions of y ------------------------------------
 

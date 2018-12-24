@@ -112,10 +112,11 @@ static A jtgjoin(J jt,C c,A a,A w){A f;
 // u@.v y atomic.  Operate on the nub of y and then rearrange the results
 // kludge TODO: Don't do this if the nub is almost as big as y; also find a way to expose this logic
 // to general verbs
-static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
+static DF1(jtcase1a){F1PREFIP;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
  RZ(w);
  r=AR(w);
- if(1<r)RZ(w=gah(1L,w));
+// obsolete if(1<r)RZ(w=gah(1L,w));
+ if(1<r)RZ(w=ravel(w));  // will return virtual block
  sv=FAV(self); g=sv->fgh[1];
  // Calculate v y.  If v is atomic, apply v y, else v"0 y
  if(atomic(1,g))RZ(k=df1(w,g))
@@ -139,7 +140,8 @@ static DF1(jtcase1a){A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }
- if(1<r){RZ(z=gah(r,z)); MCIS(AS(z),AS(w0),r);}
+// obsolete  if(1<r){RZ(z=gah(r,z)); MCIS(AS(z),AS(w0),r);}
+ if(1<r){RZ(z=virtualip(z,0,r)); AN(z)=AN(w0); MCIS(AS(z),AS(w0),r);}
  R z;
 }
 

@@ -87,22 +87,22 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
 // u^:n w where n is any array or scalar infinity or negative
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
  hs=sv->fgh[2]; m=AN(hs); 
- RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);
+ RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);  // j is grading permutation of y; y is sorted powers
  GATV(x,BOX,m,1,0); xv=AAV(x);  // cannot be virtual
- while(p<m&&0>nv[p])p++;
- if(p<m){
+ while(p<m&&0>nv[p])p++;  // find first positive power
+ if(p<m){  // if there is a positive power...
   RZ(z=ca(w));
   n=nv[m-1]; k=p;
-  while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}
+  while(k<m&&!nv[k]){INSTALLBOX(x,xv,k,z); ++k;}  // install the input as the result for any 0 powers
   RZ(b=eq(ainf,from(j,ravel(gs)))); bv=BAV(b); q=k<m?bv[k]:0;
   old=jt->tnextpushx;  // should move this up
   for(i=1;i<=n;++i){
-   RZ(z=CALL1(f1,y=z,fs));
-   if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}
-   while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}
+   RZ(z=CALL1(f1,y=z,fs));  // z=next power, y=previous power
+   if(q&&equ(y,z)){DO(m-k, INSTALLBOX(x,xv,k,z); ++k;); break;}  // if there is an infinity, check for repetition; if any, use it for all higher powers, & be done
+   while(k<m&&i==nv[k]){INSTALLBOX(x,xv,k,z); ++k; q=k<m?bv[k]:0;}  // otherwise use result for all equal powers
    if(!(i&15))if(!gc3((A*)&x,&z,0L,old))R0;
  }}
- if(0<p){
+ if(0<p){  // if there was a negative power...
   RZ(fs=inv(fs)); f1=FAV(fs)->valencefns[0];
   RZ(z=ca(w));
   n=nv[0]; k=p-1;

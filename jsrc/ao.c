@@ -7,14 +7,15 @@
 // TODO: remove idiv from keymean
 
 // This is the derived verb for f/. y
-static DF1(jtoblique){A x,y;I m,n,r,*u,*v;
+static DF1(jtoblique){A x,y;I m,n,r;
  RZ(w);
  r=AR(w);  // r = rank of w
- // create y= ,/ w - the _2-cells of w arranged in a list
- // we just create a header for y, pointing to the data from w
- RZ(y=gah(MAX(r-1,1),w));
- u=AS(w); v=AS(y);   // u,v->shape of y
- if(1>=r){*v=m=AN(w); n=1;}else{m=*u++; n=*u++; *v++=m*n; MCISd(v,u,r-2);}  // set shape of y as _2-cells of w
+ // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
+// obsolete  // we just create a header for y, pointing to the data from w
+// obsolete  RZ(y=gah(MAX(r-1,1),w));
+// obsolete  u=AS(w); v=AS(y);   // u,v->shape of y
+// obsolete  if(1>=r){*v=m=AN(w); n=1;}else{m=*u++; n=*u++; *v++=m*n; MCISd(v,u,r-2);}  // set shape of y as _2-cells of w
+ RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
  // Create x=+"0 1&i./ 2 {. $y
  RZ(x=irs2(IX(m),IX(n),0L,0L,1L,jtplus)); AR(x)=1; *AS(x)=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys

@@ -6,7 +6,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := tsdll
 LOCAL_MODULE_FILENAME    := libtsdll
 
-LOCAL_LDLIBS := 
+LOCAL_LDLIBS := -lm
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_CFLAGS := -fPIC -O1 -fwrapv -Werror -fno-strict-aliasing -march=armv8-a

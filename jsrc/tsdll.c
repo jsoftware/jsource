@@ -17,6 +17,15 @@ typedef unsigned int uc;
 typedef unsigned short wc;
 typedef unsigned int uc;
 #endif
+#include <complex.h>
+#undef I
+#ifdef _MSC_VER
+typedef _Fcomplex float_complex;
+typedef _Dcomplex double_complex;
+#else
+typedef float complex float_complex;
+typedef double complex double_complex;
+#endif
 
 #include <stdio.h>
 
@@ -30,6 +39,7 @@ typedef long I;
 
 #define sum {return a[0]=b+c[0]+c[1];}
 
+typedef unsigned char BYTE;
 typedef double D;
 typedef float F;
 
@@ -38,9 +48,23 @@ typedef float F;
 char    _stdcall cbasic(char*  a,  char  b, char*  c) sum
 wc      _stdcall wbasic(wc*    a,  wc    b, wc*    c) sum
 uc      _stdcall ubasic(uc*    a,  uc    b, uc*    c) sum
+BYTE    _stdcall bbasic(BYTE*  a,  BYTE  b, BYTE*  c) sum
 short   _stdcall sbasic(short* a,  short b, short* c) sum
 int     _stdcall ibasic(int*   a,  int   b, int*   c) sum
 I       _stdcall xbasic(I*     a,  I     b, I*     c) sum
+D       _stdcall dbasic(D*     a,  D     b, D*     c) sum
+F       _stdcall fbasic(F*     a,  F     b, F*     c) sum
+
+#ifdef _MSC_VER
+#define dsum {a[0]=_DCOMPLEX_(creal(b[0])+creal(c[0])+creal(c[1]), cimag(b[0])+cimag(c[0])+cimag(c[1])); return cabs(a[0]);}
+#define fsum {a[0]=_FCOMPLEX_(crealf(b[0])+crealf(c[0])+crealf(c[1]), cimagf(b[0])+cimagf(c[0])+cimagf(c[1])); return cabsf(a[0]);}
+#else
+#define dsum {a[0]=b[0]+c[0]+c[1]; return cabs(a[0]);}
+#define fsum {a[0]=b[0]+c[0]+c[1]; return cabsf(a[0]);}
+#endif
+
+D _stdcall jbasic(double_complex* a, double_complex* b, double_complex* c) dsum
+F _stdcall zbasic(float_complex* a,  float_complex* b,  float_complex* c)  fsum
 
 // test pointer result
 char cd[]="test";
@@ -71,7 +95,21 @@ float _stdcall fipfpf(int c, float* p, float* pr)
 	return f;
 }
 
-double _stdcall complex(int c, double* j){ return j[c];}
+// test b result and *b (convert in place)
+BYTE _stdcall bipbpb(int c, BYTE* p, BYTE* pr)
+{
+	BYTE f=0; int i;
+	for(i=0; i<c; ++i)
+	{
+		*pr=f+=(BYTE)p[i];
+	}
+	return f;
+}
+
+double _stdcall dcomplex0(int c, double* j){ return j[c];}
+float _stdcall fcomplex0(int c, float* j){ return j[c];}
+void _stdcall dcomplex1(int c, double_complex* j, double* a, double* b) {I i; for(i=0;i<c;++i){a[i]=creal(j[i]);b[i]=-cimag(j[i]);}}
+void _stdcall fcomplex1(int c, float_complex* j, float* a, float* b) {I i; for(i=0;i<c;++i){a[i]=crealf(j[i]);b[i]=-cimagf(j[i]);}}
 
 float _stdcall  f(){ return (float)1.5;}
 double _stdcall d(){ return (double)1.5;}

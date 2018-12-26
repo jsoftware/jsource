@@ -1,14 +1,23 @@
 EXPORTS
  cbasic
  wbasic
+ bbasic
  sbasic
  ibasic
  xbasic
+ dbasic
+ fbasic
+ jbasic
+ zbasic
  pc
  altinci
  dipdpd
  fipfpf
- complex
+ bipbpb
+ dcomplex0
+ fcomplex0
+ dcomplex1
+ fcomplex1
  dd
  ddd
  dddd 

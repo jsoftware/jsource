@@ -62,6 +62,7 @@ static A jtvaxis(J jt,I r,A a){A y;B*b;I j,n,*v;
 A jtdaxis(J jt,I r,A a){R less(IX(r),a);}
      /* dense axes relative to sparse axes a */
 
+// e is sparse element
 static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p;
  RZ(s&&a&&e);
  RZ(s=vi(s)); r=AN(s); sv=AV(s); 
@@ -71,10 +72,10 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  DO(r, ASSERT(0<=sv[i],EVDOMAIN););
  RZ(a=vaxis(r,a==mark?IX(r):a)); an=AN(a); av=AV(a);
  if(e==mark)RZ(e=scf(0.0));
- ASSERT(!AR(e),EVRANK);
+ ASSERT(!AR(e),EVRANK);   // e must be an atom
  et=AT(e);
- ASSERT(!(et&LIT+BOX),EVNONCE);
- ASSERT(STYPE(et),EVDOMAIN);
+ ASSERT(!(et&LIT+BOX),EVNONCE);  // e must be numeric
+ ASSERT(STYPE(et),EVDOMAIN);  // e must be dense
  RZ(b=bfi(r,a,0));
  if(y==mark){
   GAT(y,INT,0L,2L,0L); v=AS(y); v[0]=0; v[1]=an;
@@ -123,11 +124,12 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  R z;
 }
 
+// convert w to sparse, with sparse element e (which must be a dense atom)
 A jtsparseit(J jt,A w,A a,A e){PROLOG(0091);A ax,c,x,y,z;B b,*cv;I cm,cn,m,n,r,*s,t,*u,*v,wn;P*p;
  RZ(w&&a&&e);
  r=AR(w); t=AT(w); wn=AN(w); n=AN(a);
- ASSERT(!(t&LIT+BOX),EVNONCE);
- ASSERT(STYPE(t),EVDOMAIN);
+ ASSERT(!(t&LIT+BOX),EVNONCE);  // must not be LIT or BOX
+ ASSERT(STYPE(t),EVDOMAIN);  // w must be dense
  if(!r){ASSERT(!AN(a),EVINDEX); R ca(w);}
  RZ(z=sparse1a(shape(w),a,e,mark,mark)); p=PAV(z);
  RZ(ax=paxis(r,a));

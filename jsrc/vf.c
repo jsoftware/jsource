@@ -199,7 +199,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  SPB(zp,a,t);
  if(b[wf]){I n,q,r,*v0;   /* sparse */
   if(wf!=*AV(a1))R rank2ex(a,w,0L,1L,wcr,1L,wcr,jtreshape);
-  RE(m=prod(1+d,av)); n=IC(y); q=n*(m/ws[wf]); r=m%ws[wf];
+  RE(m=prod(1+d,av)); n=IC(y); if(ws[wf]){q=n*(m/ws[wf]); r=m%ws[wf];} else {q=0; r=0;}
   v=AV(y); DO(n, if(r<=*v)break; ++q; v+=c;);
   GATV(t,INT,q,1,0); u=AV(t); v=v0=AV(y);
   m=j=0; DO(q, u[i]=m+*v; v+=c; ++j; if(j==n){j=0; v=v0; m+=ws[wf];});

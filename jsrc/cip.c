@@ -345,7 +345,7 @@ while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
 
 
 
-
+// +/ . *
 F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  RZ(a&&w);
  // ?r = rank, ?t = type (but set Boolean type for an empty argument)
@@ -356,6 +356,9 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  {t=maxtypeawd(a,w,B01); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
+ // When w has a single column, we could replace +/ . * with +/@:*"1.  But there is no performance benefit currently, because the cache blocking of the +/ . * is good enough to
+ // make up for the fringe effects.  If we can use parallel operations for +/@:*"1, it will pay to switch.
+// if(wr==1&&((ar-1)|(-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1))>=0)R sumattymes1(a,w,0);  // If w is a single column, the matrix-multiply methods give no advantage, so treat it as +/@:*"1.  The long test is to ensure that sumattymes1 does the work, not needing self
  // Allocate result area and calculate loop controls
  // m is # 1-cells of a
  // n is # atoms in an item of w

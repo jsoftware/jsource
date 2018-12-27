@@ -1056,6 +1056,7 @@
 #define str0(x)                     jtstr0(jt,(x))
 #define suffix(x,y)                 jtsuffix(jt,(x),(y))
 #define sumatgbool(x,y,z)           jtsumatgbool(jt,(x),(y),(z))
+#define sumattymes1(x,y,z)          jtsumattymes1(jt,(x),(y),(z))
 #define summag(x)                   jtsummag(jt,(x))
 #define sup(x,y)                    jtsup(jt,(x),(y))
 #define suq(x,y)                    jtsuq(jt,(x),(y))

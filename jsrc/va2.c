@@ -714,7 +714,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
 */
 
 
-// 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vertor inner product
+// 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product
 #define SUMATLOOP(ti,to,oneprod) \
   {ti *av=ti##AV(a),*wv=ti##AV(w); to *zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
 

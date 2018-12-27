@@ -271,7 +271,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  // Handle sparse
  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
   case 1: RZ(w=denseit(w)); break;
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(t,num[0]))); R 1;
+  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num[0]))); R 1;
   case 3: 
    t1=DTYPE(t);
    GA(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);

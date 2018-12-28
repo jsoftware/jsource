@@ -119,6 +119,10 @@ f/+/\?5 10
 0 f 5
 5 f 5
 
+NB. verify that gerund 0: and 1: produce boolean values
+1 -: 3!:0 0:`1:@.1 (5)
+1 -: 3!:0 0:`1:@.0 (5)
+
 
 4!:55 ;:'ack agenda ar c1 c2 c3 basis decr do erf f f0 f1 form from from1 '
 4!:55 ;:'g ifopen ind mask '

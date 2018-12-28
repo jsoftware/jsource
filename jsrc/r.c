@@ -67,7 +67,7 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
  DO(n, d=s[i]; ASSERT(32<=d&&d<127,EVSPELL););  // must be all ASCII
  if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref
  ASSERT(id=spellin(n,s),EVSPELL);  // not name, must be control word or primitive.  Also classify string 
- if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?sc(m):2==n?ainf:sc(-m));} // define 0:, if it's that
+ if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?scib(m):2==n?ainf:scib(-m));} // define 0:, if it's that, using boolean for 0/1
  ASSERT(y&&RHS&AT(y),EVDOMAIN);   // make sure it's a noun/verb
  R y;
 }

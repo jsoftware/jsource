@@ -793,6 +793,7 @@ extern A        jtscc(J,C);
 extern A        jtscf(J,D);
 extern B        jtscheck(J,A);
 extern A        jtscx(J,X);
+extern A        jtscib(J,I);
 extern B        jtsesminit(J);
 extern void     jtsetleakcode(J,I);
 extern A        jtsfn(J,B,A);

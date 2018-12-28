@@ -952,6 +952,7 @@
 #define scf(x)                      jtscf(jt,(x))
 #define scfn(x)                     jtscfn(jt,(x))
 #define scheck(x)                   jtscheck(jt,(x))
+#define scib(x)                     jtscib(jt,(x))
 #define scind(x)                    jtscind(jt,(x))
 #define scuba(x,y,z)                jtscuba(jt,(x),(y),(z))
 #define scubb(x,y)                  jtscubb(jt,(x),(y))

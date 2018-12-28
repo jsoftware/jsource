@@ -259,9 +259,11 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
 // obsolete A jtsc(J jt,I k)     {A z; if(k<=NUMMAX&&k>=NUMMIN)R k==1?zeroionei[1]:k?num[k]:zeroionei[0]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
-A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}
+A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if((k^(k>>(BW-1)))<=NUMMAX)R num[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
-A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
+// obsolete A jtscb(J jt,B b)    {A z; GAT(z,B01, 1,0,0); *BAV(z)=b;     RETF(z);}  // really should be num[b]
+A jtscb(J jt,B b)    {R num[b];}   // A block for boolean
 A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}  // create scalar character
 A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     RETF(z);}
 A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}

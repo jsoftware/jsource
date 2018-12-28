@@ -122,7 +122,8 @@ static A jtsprank2_0w(J jt,A a,A w,A fs,AF f2,I wf,I wcr){PROLOG(0044);A we,ww,y
   if(wj==wn)break;
   wv+=wk*wc; RE(wk=spradv(wn,wb,wf,wcr,wj,wp,&ww)); wj+=wk;
  }
- z=sprz(ope(z),zi,CALL2(f2,a,we,fs),f,ws);
+ RZ(z=ope(z)); AS(z)[0]=wm;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
+ z=sprz(z,zi,CALL2(f2,a,we,fs),f,ws);
  EPILOG(z);
 }
 
@@ -140,7 +141,9 @@ static A jtsprank2_a0(J jt,A a,A w,A fs,AF f2,I af,I acr){PROLOG(0045);A aa,ae,y
   if(aj==an)break;
   av+=ak*ac; RE(ak=spradv(an,ab,af,acr,aj,ap,&aa)); aj+=ak;
  }
- z=sprz(ope(z),zi,CALL2(f2,ae,w,fs),f,as);
+ RZ(z=ope(z)); AS(z)[0]=am;  // we did one cell of aa to get the shape, but now we have to set back to correct # indexes
+ z=sprz(z,zi,CALL2(f2,ae,w,fs),f,as);
+scheck(z);  // scaf
  EPILOG(z);
 }
 
@@ -199,6 +202,7 @@ A jtsprank2(J jt,A a,A w,A fs,I lr,I rr,AF f2){PROLOG(0046);A aa,ae,we,ww,y,zi,z
  }
  AN(z)=*AS(z)=*AS(zi)=j; AN(zi)=j*g;
  z=sprz(ope(z),zi,CALL2(f2,ae,we,fs),g,g==af?as:ws);
+scheck(z);  // scaf
  EPILOG(z);
 }    /* a f"r w on sparse arrays */
 

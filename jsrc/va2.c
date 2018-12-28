@@ -519,7 +519,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    acr=savedranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
    wcr=(RANKT)savedranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
-   // Now that we have used the rank info, clear jt->rank.  All verbs start with jt->rank=0 unless they have "n applied
+   // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
    RESETRANK;  // This is required for xnum/rat/sparse
    // if the frames don't agree, that's always an agreement error

@@ -253,6 +253,9 @@ f=: (3 : 'a1=: 8 $. a1')^:(e.&2) [ (3 : 'a2=: 8 $. a2')^:(e.&1)
 
 1 0 -: $ ,: 1 $. i. i. 0
 
+2 2 1 -: $ ($. 2 2 $ 2-2) +"0 1 (,5)  NB. check rank on empty long arg
+2 2 1 -: $ (,5) +"1 0 ($. 2 2 $ 2-2)  NB. check rank on empty long arg
+
 4!:55 ;:'b c d e f g r s t x'
 
 

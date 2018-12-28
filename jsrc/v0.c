@@ -293,6 +293,7 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); DO(MIN(af,wf), ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);); R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
  an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
  wn=AN(w); wt=AT(w);
+ ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
  ASSERT(!wn||wt&NUMERIC+BOX,EVDOMAIN);
  if(!an)R reshape(shape(w),num[0]);  // if empty a, return all 0s
@@ -320,15 +321,16 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
         DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 
  }
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
- if(!j&&!(t&XNUM+RAT)){
+ if(!j&&!(t&XNUM+RAT+SPARSE)){
   if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else{GA(z,t,AN(w),AR(w),AS(w));}
   zd=DAV(z); zz=ZAV(z);
  }
- switch((b?0:3)+(j||t&XNUM+RAT?0:t&FL?1:2)){
+ switch((b?0:3)+(j||t&XNUM+RAT+SPARSE?0:t&FL?1:2)){
  // mult/roots: d/e are set
  case 0: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
  case 1: NAN0; DO(wn, p=d; x=*wd++; DO(an,p*=x-ad[i];); *zd++=p;); NAN1;                  break;
  case 2: NAN0; DO(wn, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
+
  // coeffs: d/e are not set
  case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
  case 4: NAN0;

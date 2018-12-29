@@ -43,7 +43,7 @@ otherwise the regs may be used and the parameter lost.
 #include <windows.h>
 #include <windowsx.h>
 #define FIXWINUTF8 // possibly should not be defined for MINGW32
-#ifdef __MINGW32__
+#ifndef _MSC_VER
 #ifndef _stdcall
 #define _stdcall __stdcall
 #define _cdecl __cdecl
@@ -57,6 +57,15 @@ typedef unsigned char       BYTE;
 #endif
 #include <stdint.h>
 #include <wchar.h>
+#include <complex.h>
+#undef I
+#ifdef _MSC_VER
+typedef _Fcomplex float_complex;
+typedef _Dcomplex double_complex;
+#else
+typedef float complex float_complex;
+typedef double complex double_complex;
+#endif
 
 #include "j.h"
 
@@ -94,8 +103,8 @@ char *toascbuf(wchar_t *src);
 typedef void *HMODULE;
 typedef char *LPSTR;
 typedef I (*FARPROC)();
-#define __stdcall              
-#define _cdecl                            
+#define __stdcall
+#define _cdecl
 #endif
 
 /* windows has 2 dll calling conventions - __stdcall and _cdecl */
@@ -117,12 +126,12 @@ typedef double             DoF;
 #if SY_64 || defined(__arm__)   /* J64 requires special float result */
 typedef float (__stdcall *STDCALLF)();
 typedef float (_cdecl    *ALTCALLF)();
-#endif 
+#endif
 
 /* error return codes */
 #define DEOK            0
 #define DEBADLIB        1
-#define DEBADFN         2                    
+#define DEBADFN         2
 #define DETOOMANY       3       /* too many dlls loaded                 */
 #define DECOUNT         4       /* too many args or (#args)~:#parms     */
 #define DEDEC           5
@@ -595,12 +604,13 @@ static float NOOPTIMIZE altcallf(ALTCALLF fp,I*d,I cnt,DoF*dd,I dcnt){float r;
 /* alternate - whether to use alternate calling convention */
 
 static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alternate){
- if(strchr("cwusilx*n",zl)){I r;
+ if(strchr("cwubsilx*n",zl)){I r;
   r= alternate ? altcalli((ALTCALLI)fp,d,cnt,dd,dcnt) : stdcalli((STDCALLI)fp,d,cnt,dd,dcnt);
   switch(zl){
    case 'c': *(C*)v=(C)r;  break;
    case 'w': *(US*)v=(US)r;break;
    case 'u': *(C4*)v=(C4)r;break;
+   case 'b': *v=(I)(BYTE)r;break;
    case 's': *v=(I)(S)r;   break;
    case 'i': *v=(I)(int)r; break;
    case 'l':
@@ -628,17 +638,25 @@ static void docall(FARPROC fp, I*d, I cnt, DoF* dd, I dcnt, C zl, I*v, B alterna
 
 static void convertdown(I*pi,I n,C t){
  if(n)switch(t){
+  case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, pt[i]=(BYTE)pi[i];);} break;
   case 's': {short*pt=(short*)pi;             DO(n, pt[i]=(short)pi[i];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, pt[i]=(int)  pi[i];);} break;
   case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[i];);} break;
-}}   /* convert I in place to s or int and d to f */
+#ifdef _MSC_VER
+  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=_FCOMPLEX_((float)pd[2*i],(float)pd[1+2*i]););} break;
+#else
+  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, pt[i]=(float)pd[2*i]+_Complex_I*(float)pd[1+2*i];);} break;
+#endif
+}}   /* convert I in place to s or int and d to f and j to z */
 
 static void convertup(I*pi,I n,C t){I j=n;
  if(n)switch(t){
+  case 'b': {BYTE*pt=(BYTE*)pi;               DO(n, --j; pi[j]=(I)pt[j];);} break;
   case 's': {short*pt=(short*)pi;             DO(n, --j; pi[j]=(I)pt[j];);} break;
   case 'i': {int  *pt=(int  *)pi;             DO(n, --j; pi[j]=(I)pt[j];);} break;
   case 'f': {float*pt=(float*)pi;D*pd=(D*)pi; DO(n, --j; pd[j]=(D)pt[j];);} break;
-}}   /* convert s or int to I and f to d */
+  case 'z': {float_complex*pt=(float_complex*)pi;D*pd=(D*)pi; DO(n, --j; pd[1+2*j]=(D)cimagf(pt[j]); pd[2*j]=(D)crealf(pt[j]););} break;
+}}   /* convert s or int to I and f to d and z to j */
 
 
 /* cache of 15!:0 parsed left arguments                                 */
@@ -682,7 +700,7 @@ static CCT*jtcdlookup(J jt,A a){C*s;CCT*pv;I an,hn,*hv,j,k;UC*av;
 
 static HMODULE jtcdlookupl(J jt,C*av){C*s;CCT*pv;I an,hn,*hv,j,k;
  hn=AN(jt->cdhashl); hv=AV(jt->cdhashl); pv=(CCT*)AV(jt->cdarg); s=CAV(jt->cdstr);
- an=strlen(av); j=hic(an,av)%hn; 
+ an=strlen(av); j=hic(an,av)%hn;
  while(0<=(k=hv[j])){if(an==pv[k].ln&&!memcmp(av,s+pv[k].li,an))R pv[k].h; if((j=(j+1))==hn)j=0;}
  R 0;
 }
@@ -695,7 +713,7 @@ static CCT*jtcdinsert(J jt,A a,CCT*cc){A x;C*s;CCT*pv,*z;I an,hn,*hv,j,k;
  cc->ai=jt->cdns; MC(s+jt->cdns,CAV(a),an); jt->cdns+=an;
  z=pv+jt->cdna; MC(z,cc,sizeof(CCT)); k=jt->cdna++;
  if(AN(jt->cdhash)<=2*jt->cdna){k=0; RZ(x=cdgahash(2*jt->cdna)); fa(jt->cdhash); jt->cdhash=x;}
- hv=AV(jt->cdhash); hn=AN(jt->cdhash); 
+ hv=AV(jt->cdhash); hn=AN(jt->cdhash);
  DO(jt->cdna-k, j=hic(pv[k].an,s+pv[k].ai)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=k; ++k;);
  R z;
 }
@@ -738,7 +756,7 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
   cc->h=h; ha=1;
  }
 #if SY_WIN32 && !SY_WINCE
- f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):proc);    
+ f=GetProcAddress(h,'#'==*proc?(LPCSTR)(I)atoi(proc+1):proc);
 #endif
 #if SY_WINCE
  f=GetProcAddress(h,tounibuf(proc));
@@ -751,13 +769,13 @@ static CCT*jtcdload(J jt,CCT*cc,C*lib,C*proc){B ha=0;FARPROC f;HMODULE h;
  /* assumes the hash table for libraries (jt->cdhashl) is fixed sized */
  /* assumes cc will be cached as entry number jt->cdna                */
  if(ha){I hn,*hv,j;
-  ++jt->cdnl; hv=AV(jt->cdhashl); hn=AN(jt->cdhashl); 
+  ++jt->cdnl; hv=AV(jt->cdhashl); hn=AN(jt->cdhashl);
   j=hic(cc->ln,lib)%hn; while(0<=hv[j])if((j=(j+1))==hn)j=0; hv[j]=jt->cdna;
  }
  R cc;
 }
 
-static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:c=='j'?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}
+static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:(c=='j'||c=='z')?CMPX:(c=='f'||c=='d')?FL:c?INT:0;}
      /* J type from type letter */
 
 /* See "Calling DLLs" chapter in J User Manual                  */
@@ -780,15 +798,17 @@ static I cdjtype(C c){R c=='c'?LIT:c=='w'?C2T:c=='u'?C4T:c=='j'?CMPX:(c=='f'||c=
 /*  c   LIT   char                                              */
 /*  w   C2T   wide char (2 bytes)                               */
 /*  u   C4T   wide char (4 bytes)                               */
+/*  b   INT   unsigned tiny int (1 byte)                        */
 /*  s   INT   short int (2 bytes)                               */
-/*  i   INT   int;  4 byte on 32, 8 byte on 64                  */
+/*  i   INT   int;  4 byte on 32, 4 byte on 64                  */
 /*  l   INT   long; error  on 32, 8 byte on 64                  */
 /*  x   INT   long; 4 byte on 32, 8 byte on 64                  */
 /*  f   FL    4 byte float                                      */
 /*  d   FL    8 byte float                                      */
+/*  z   CMPX  8 byte complex (must be preceded by *)            */
 /*  j   CMPX  16 byte complex (must be preceded by *)           */
-/*  *         pointer (memu will be applied before call)                                           */
-//  &         pointer NOT requiring memu
+/*  *         pointer (memu will be applied before call)        */
+/*  &         pointer NOT requiring memu                        */
 /*  n   INT   no result (integer 0)                             */
 
 static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*cc,cct;I an,der,i,li,pi;
@@ -796,14 +816,14 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(NLEFTARG>=AN(a),EVLIMIT);
  if(cc=cdlookup(a))R cc;
- cc=&cct; cc->an=an=AN(a); s=s0=CAV(a); 
+ cc=&cct; cc->an=an=AN(a); s=s0=CAV(a);
  /* library (module, file) name */
  while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); li=s-s0; cc->ln=p?p-s:0;
  CDASSERT(p&&NPATH>cc->ln,DEBADLIB);
  cc->cc=1==cc->ln&&('0'==*s||'1'==*s)?*s:0;
  /* procedure name */
- s=p+1+(*p=='"'); 
- while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;    
+ s=p+1+(*p=='"');
+ while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;
  CDASSERT(NPATH>cc->pn,DEBADFN);
  /* > + % */
  s=p+1;
@@ -818,12 +838,12 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   CDASSERT(*s,DEDEC);
   cc->zl=c=*s++; cc->zt=cdjtype(c);
  }
- CDASSERT(strchr("cwusilxfd*n",c),DEDEC);
+ CDASSERT(strchr("cwubsilxfd*n",c),DEDEC);
  CDASSERT(SY_64||'l'!=c,DEDEC);
- if(c=='*' && *s && strchr("cwusilxfdj",*s)) ++s;
+ if(c=='*' && *s && strchr("cwubsilxfdzj",*s)) ++s;
  CDASSERT(!*s||*s==' ',DEDEC);
 #ifdef C_CD_NODF // platform does not support f result
- CDASSERT(cc->zl!='f',DEDEC)  
+ CDASSERT(cc->zl!='f',DEDEC)
 #endif
  /* argument type declarations */
  i=-1;
@@ -835,17 +855,17 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
   if('*'==c||'&'==c){cc->star[i]=1+('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
   cc->tletter[i]=c;
-  CDASSERT(strchr("cwusilxfdj",c),der);
-  CDASSERT(c!='j'||cc->star[i],der);
+  CDASSERT(strchr("cwubsilxfdzj",c),der);
+  CDASSERT((c!='z'&&c!='j')||cc->star[i],der);
   if('l'==c){CDASSERT(SY_64,der); cc->tletter[i]='x';}
 #ifdef C_CD_NODF // platform does not support f or d args
  CDASSERT(cc->star[i]==1 || (cc->tletter[i]!='f' && cc->tletter[i]!='d'),der);
-#endif  
+#endif
  }
  CDASSERT(0<=i||'1'!=cc->cc,DEDEC+256);
  MC(lib, s0+li,cc->ln); lib [cc->ln]=0;
  MC(proc,s0+pi,cc->pn); proc[cc->pn]=0;
- 
+
 #if SY_MAC && !SY_64
 // mac osx 32 lseek off_t (64 bit) is not called properly
 // map libc.dylib seek to be libj.dylib x15lseek32
@@ -855,7 +875,7 @@ strcpy(lib,"libj.dylib");
 strcpy(proc,"x15lseek32");
 }
 #endif
- 
+
  RZ(cc=cdload(cc,lib,proc));
  cc->n=1+i; RZ(cc=cdinsert(a,cc)); cc->li=li+cc->ai; cc->pi=pi+cc->ai;
  R cc;
@@ -882,7 +902,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
   case CDT(INTX,INTX): *    v=*(I*)u; break;
   case CDT(INTX,FLX ):
    p=*(D*)u; q=jfloor(p);
-   if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0; 
+   if(p<IMIN*(1+jt->fuzz)||IMAX*(1+jt->fuzz)<p)R 0;
 #if SY_64
    if         (FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
    else if(++q,FEQ(p,q)){k=(I)q; *v=SGN(k)==SGN(q)?k:0>q?IMIN:IMAX;}
@@ -892,7 +912,7 @@ static I*jtconvert0(J jt,I zt,I*v,I wt,C*u){D p,q;I k=0;US s;C4 s4;
 #endif
  }
  R v;
-}    /* convert a single atom. I from D code adapted from IfromD() in k.c */  
+}    /* convert a single atom. I from D code adapted from IfromD() in k.c */
 
 static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B zbx,lit,star;
     C c,cipt[NCDARGS],*u;FARPROC fp;float f;I cipcount=0,cipn[NCDARGS],*cipv[NCDARGS],cv0[2],
@@ -913,12 +933,12 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   if(wt&BOX){
    x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
-   lit=star&&xt&LIT&&(c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
+   lit=star&&xt&LIT&&(c=='b'||c=='s'&&0==(xn&1)||c=='f'&&0==(xn&3));
    if(t&&TYPESNE(t,xt)&&!(lit||star&&!xr&&xt&BOX)){x=cvt(xt=t,x); CDASSERT(x,per);}
    xv=AV(x); if(zbx)*zv=x;
   }else{
    xv=convert0(t,cv0,wt,u); xt=t; u+=wk;
-   CDASSERT(xv,per); 
+   CDASSERT(xv,per);
    if(zbx){GA(y,t,1,0,0); MC(AV(y),xv,bp(t)); *zv=y;}
   }
   if(star&&!xr&&xt&BOX){           /* scalar boxed integer/boolean scalar is a pointer - NOT memu'd */
@@ -931,16 +951,17 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
    if(star&1){RZ(x=jtmemu(jtinplace,x)); if(zbx)*zv=x; xv=AV(x);}
    *dv++=(I)xv;                     /* pointer to J array memory     */
    CDASSERT(xt&LIT+C2T+C4T+INT+FL+CMPX,per);
-   if(!lit&&(c=='s'||c=='f'||SY_64&&c=='i')){
+   if(!lit&&(c=='b'||c=='s'||c=='f'||c=='z'||SY_64&&c=='i')){
     cipv[cipcount]=xv;              /* convert in place arguments */
-    cipn[cipcount]=xn; 
-    cipt[cipcount]=c; 
+    cipn[cipcount]=xn;
+    cipt[cipcount]=c;
     ++cipcount;
    }
   }else switch(c){
    case 'c': *dv++=*(C*)xv;  break;
    case 'w': *dv++=*(US*)xv; break;
    case 'u': *dv++=*(C4*)xv; break;
+   case 'b': *dv++=(BYTE)*xv;break;
    case 's': *dv++=(S)*xv;   break;
    case 'i': *dv++=(int)*xv; break;
    case 'x': *dv++=*xv;      break;
@@ -968,7 +989,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
   #endif
 #else
 #ifdef C_CD_ARMHF
-            {f=(float)*(D*)xv; 
+            {f=(float)*(D*)xv;
              if(fcnt<16&&dcnt<=16){
                dd[fcnt]=0; *(float*)(dd+fcnt++)=f;
                if ((0==(fcnt&1)) && (fcnt<dcnt)) fcnt=dcnt;
@@ -1047,7 +1068,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  if(zbx){GA(x,cc->zt,1,0,0); xv=AV(x); *(A*)zv0=x;}else xv=(I*)zv0;
  if('1'==cc->cc){fp=(FARPROC)*((I)cc->fp+(I*)*(I*)*data); CDASSERT(fp,DEBADFN);}else fp=cc->fp;
  docall(fp, data, dv-data, dd, dcnt, cc->zl, xv, cc->alternate);
-    
+
  DO(cipcount, convertup(cipv[i],cipn[i],cipt[i]);); /* convert s and int to I and f to d as required */
 #if SY_WIN32
  t= GetLastError();
@@ -1068,16 +1089,16 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  ASSERT(wt&DENSE,EVDOMAIN);
  RZ(cc=cdparse(a,0)); // should do outside rank2 loop?
- n=cc->n; 
+ n=cc->n;
  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); *(AS(z)+AR(z)-1)=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
  if(m&&n&&!(wt&BOX)){
   t=0; tv=cc->tletter; DO(n, k=cdjtype(*tv++); t=MAX(t,k););
   CDASSERT(HOMO(t,wt),DEPARM);
-  if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w)); 
+  if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));
  }
- wv=CAV(w); zv=CAV(z); k=bp(wt); 
+ wv=CAV(w); zv=CAV(z); k=bp(wt);
  if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0))
  else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0)); wv+=p; zv+=q;);}
  R z;
@@ -1123,7 +1144,7 @@ F1(jtcderx){I t;C buf[1024];
 #if SY_WINCE
  {
  WCHAR wbuf[1024];
- FormatMessage( 
+ FormatMessage(
     FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
     NULL, (DWORD)t,
     MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),  /* Default language */
@@ -1263,7 +1284,7 @@ static I CALLBACK cbx8(I a,I b,I c,I d,I e,I f,I g,I h){cbxn=8;cbx[0]=a;cbx[1]=b
 static I CALLBACK cbx9(I a,I b,I c,I d,I e,I f,I g,I h,I i){cbxn=9;cbx[0]=a;cbx[1]=b;cbx[2]=c;cbx[3]=d;cbx[4]=e;cbx[5]=f;cbx[6]=g;cbx[7]=h;cbx[8]=i;R cbnew();}
 static I cbvx[]={(I)&cbx0,(I)&cbx1,(I)&cbx2,(I)&cbx3,(I)&cbx4,(I)&cbx5,(I)&cbx6,(I)&cbx7,(I)&cbx8,(I)&cbx9};
 
-#if SY_WIN32 
+#if SY_WIN32
 static I _cdecl cbxalt0(){cbxn=0;R cbnew();}
 static I _cdecl cbxalt1(I a){cbxn=1;cbx[0]=a;R cbnew();}
 static I _cdecl cbxalt2(I a,I b){cbxn=2;cbx[0]=a;cbx[1]=b;R cbnew();}

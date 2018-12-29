@@ -15,6 +15,8 @@ b1=: 10&u: 402 403
 ('&';(,'&');'a';'bc')=   'cbasic c *c c *c' dcd (,'a');'a';'bc'
 (a;(,a);(4 u: 401);b)=   'wbasic w *w w *w' dcd (,4 u: 400);(4 u: 401);4 u: 402 403
 (a1;(,a1);(10&u: 401);b)='ubasic u *u u *u' dcd (,10&u: 400);(10&u: 401);10&u: 402 403
+(9;(,9);2;3 4)=          'bbasic b *b b *b' dcd (,2);2;3 4
+(9;(,9);2;a. {~ 3 4)=    'bbasic b *b b *b' dcd (,2);2;a. {~ 3 4  NB. byte in chars
 (9;(,9);2;3 4)=          'sbasic s *s s *s' dcd (,2);2;3 4
 (9;(,9);2;1 ic 3 4)=     'sbasic s *s s *s' dcd (,2);2;1 ic 3 4  NB. shorts in chars
 (9;(,9);2;3 4)=          'ibasic i *i i *i' dcd (,2);2;3 4
@@ -33,16 +35,11 @@ a-:,2 NB. automatic memu protected a
 (9;(,9);2;3 4)=          'ibasic i &i i *i' dcd a      ;2;3 4
 a-:,9 NB. & avoided the protection
 
-NB. test convert in place down/up
-(9;(- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = }.'downup n x *s *i *f' dcd 9;(_4+i.9);(_4+i.9);(_4.5+i.9)
-(15;(- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = }.'downup n x *s *i *f' dcd 15;(_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
-
-'s i f'=: (_4+i.9);(_4+i.9);(_4.5+i.9)
-0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 9;s;i;f
-((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f [[ 's i f'=: 2}.cdrc
-'s i f'=: (_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
-0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 15;s;i;f
-((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f [[ 's i f'=: 2}.cdrc
+NB. byte and *b results and *b arg - convert in place
+(6;3;1 2 3;,6)= 'bipbpb b i *b *b' dcd 3;1 2 3;,_1
+(6;3;(,.1 2 3);,.6)= 'bipbpb b i *b *b' dcd 3;(,.1 2 3);,._1
+(6;3;(a. {~ 1 2 3);,6)= 'bipbpb b i *b *b' dcd 3;(a. {~ 1 2 3);,_1 NB. byte in chars
+(6;3;(,.a. {~ 1 2 3);,.6)= 'bipbpb b i *b *b' dcd 3;(,.(a. {~ 1 2 3));,._1 NB. byte in chars
 
 NB. declaration (left argument) and parameter (right argument) checking
 'limit error'  -: (lib,'ibasic i *i i *i',2300$' '  ) cd etx (,2);2;3 4

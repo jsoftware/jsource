@@ -13,6 +13,16 @@ load'dll'
 lib=: LIBTSDLL
 
 dcd=: 4 : '(lib,x) cd y'
+d2f2d=: (_1&fc)@:(1&fc)
+j2z2j=: j./@(_1&fc)@:(1&fc)@:+."0
+
+NB. test double/float types
+(9.1;(,9.1);2.1;3 4)=    'dbasic d *d d *d' dcd (,2.1);2.1;3 4
+(({.d2f2d 9.1);(d2f2d ,9.1);2.1;3 4)=  'fbasic f *f f *f' dcd (,2.1);2.1;3 4
+
+NB. test complex types
+((|9.1j1);(,9.1j1);(,2.1j1);3j2 4j_2)=  'jbasic d *j *j *j' dcd (,0j2.1);(,2.1j1);3j2 4j_2
+(({.d2f2d |9.1j1);(j2z2j ,9.1j1);(j2z2j ,2.1j1);j2z2j 3j2 4j_2)=  'zbasic f *z *z *z' dcd (,0j2.1);(,2.1j1);3j2 4j_2
 
 NB. d and *d results and *d arg
 (6.6;3;1.1 2.2 3.3;,6.6)= 'dipdpd d i *d *d' dcd 3;1.1 2.2 3.3;,1.1
@@ -26,14 +36,34 @@ NB. 1.5 2.4 3.5 doubles convert exactly to floats
 (7.5;3;(,.1 fc 1.5 2.5 3.5);,.7.5)= 'fipfpf f i *f *f' dcd 3;(,.(1 fc 1.5 2.5 3.5));,.1.1 NB. shorts in chars
 
 NB. verify that double to float loses bits
-6.6~:         0{::'fipfpf f i *f *f' dcd 3;1.1 2.2 3.3;,1.1
+6.6~:      0{::'fipfpf f i *f *f' dcd 3;1.1 2.2 3.3;,1.1
+
+NB. test convert in place down/up
+(9;(- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = }.'downup n x *s *i *f' dcd 9;(_4+i.9);(_4+i.9);(_4.5+i.9)
+(15;(- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = }.'downup n x *s *i *f' dcd 15;(_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
+
+'s i f'=: (_4+i.9);(_4+i.9);(_4.5+i.9)
+0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 9;s;i;f
+((- _4+i.9);(- _4+i.9);(- _4.5+i.9)) = s;i;f [[ 's i f'=: 2}.cdrc
+'s i f'=: (_7+i.3 5);(_7+i.3 5);(_7.5+i.3 5)
+0 = >@{. cdrc=: 'downup   n x *s *i *f' dcd 15;s;i;f
+((- _7+i.3 5);(- _7+i.3 5);(- _7.5+i.3 5)) = s;i;f [[ 's i f'=: 2}.cdrc
 
 NB. alternate (__cdecl) calling convention
 (24;23) -: 'altinci + i i'  dcd 23
 
 NB. *j
-(1.6;a)= 'complex d i *j' dcd a=.0;,1.6j2.7
-(2.7;a)= 'complex d i *j' dcd a=.1;,1.6j2.7
+(1.6;a)= 'dcomplex0 d i *j' dcd a=.0;,1.6j2.7
+(2.7;a)= 'dcomplex0 d i *j' dcd a=.1;,1.6j2.7
+
+NB. *z
+(({. d2f2d 1.6);0;,j2z2j 1.6j2.7)= 'fcomplex0 f i *z' dcd 0;,1.6j2.7
+(({. d2f2d 2.7);1;,j2z2j 1.6j2.7)= 'fcomplex0 f i *z' dcd 1;,1.6j2.7
+
+NB. match c99 built-in complex type
+(1.6 _3.1;_2.7 _5.5)= _2{. 'dcomplex1 n i *j *d *d' dcd 2;1.6j2.7 _3.1j5.5; 1.1 1.1; 1.1 1.1
+
+(d2f2d&.> 1.6 _3.1;_2.7 _5.5)= _2{. 'fcomplex1 n i *z *f *f' dcd 2;1.6j2.7 _3.1j5.5; 1.1 1.1; 1.1 1.1
 
 NB. test f and d results and scalars
 (<1.5)= 'f f' dcd ''
@@ -270,6 +300,6 @@ obj_add=:    <>{.'obj_add x' dcd ''
 (6 1 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;'2';3
 (6 2 -: cder '') *. 'domain error' -: '1 0      x *  x x' cd etx obj_add   ;2  ;'3'
 
-4!:55 ;:'a add address b dcd f lib obj_add pc s0 s1 td td3 td4 tf tf3'
+4!:55 ;:'a add address b d2f2d dcd f j2z2j lib obj_add pc s0 s1 td td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xx yy z'
 

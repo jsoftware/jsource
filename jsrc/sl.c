@@ -36,7 +36,6 @@ static void jtinstallnl(J jt, A l){
 
 // return the address of the locale block for number n, or 0 if not found
 A jtfindnl(J jt, I n){
-  // scaf   should do some kind of MRU ordering to speed access to recent locales
   I i, iend, *ibgn; for(i=0, iend=AN(jt->stnum), ibgn=IAV(jt->stnum); i<iend; ++i)if(ibgn[i]==n)R AAV(jt->stptr)[i];
   R 0;
 }

@@ -551,8 +551,6 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,k,m=0,n,r=1,t=0,yt;
   }
  }
 
-// obsolete  // todo kludge should inherit nosmrel
-// obsolete  AFLAG(z)|=AFNOSMREL;  // scaf till removed
  RETF(z);
 }
 

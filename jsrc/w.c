@@ -228,7 +228,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 #define ZVAx                {}
 #define ZVA5                {*zv++=i; *zv++=j; *zv++=r; *zv++=c; *zv++=v[0]; *zv++=v[1];}
 
-#define FSMF(T,zt,zr,zm,cexp,EMIT,ZVA)    \
+#define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
  {T*u,*uu;                                                                  \
   RZ(z=exta((zt),(zr),(zm),1==f||5==f?n:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCIS(1+s,1+AS(w0),wr-1);}  \
@@ -241,7 +241,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
     if(r!=vr&&0<=j)EMIT(T,j,n,r,c);                                         \
   }}                                                                        \
   if(5==f)u=(T*)zv;                                                         \
-  i=AN(z); AN(z)=j=u-(T*)AV(z); *AS(z)=j/(zm); if(i>3*j)RZ(z=ca(z));        \
+  i=AN(z); AN(z)=j=(u-(T*)AV(z))/zk; *AS(z)=j/(zm); if(i>3*j)RZ(z=ca(z));        \
  }
 
 static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
@@ -252,26 +252,26 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
  if(t&INT){t0=AT(w0); wr=AR(w0); wm=aii(w0); wk=wm*bp(AT(w0)); wv0=CAV(w0);}
  switch(f+(t&B01?0:t&LIT?10:20)){
-  case  0: {B *wv=BAV(w); FSMF(A,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;
-  case  1: {B *wv=UAV(w); FSMF(B,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
-  case  2: {B *wv=BAV(w); FSMF(I,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case  3: {B *wv=BAV(w); FSMF(I,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case  4: {B *wv=BAV(w); FSMF(I,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case  5: {B *wv=BAV(w); FSMF(I,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
+  case  0: {B *wv=BAV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;
+  case  1: {B *wv=UAV(w); FSMF(B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;
+  case  2: {B *wv=BAV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case  3: {B *wv=BAV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case  4: {B *wv=BAV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case  5: {B *wv=BAV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);} break;
 
-  case 10: {UC*wv=UAV(w); FSMF(A,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;
-  case 11: {UC*wv=UAV(w); FSMF(C,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
-  case 12: {UC*wv=UAV(w); FSMF(I,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
-  case 13: {UC*wv=UAV(w); FSMF(I,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
-  case 14: {UC*wv=UAV(w); FSMF(I,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
-  case 15: {UC*wv=UAV(w); FSMF(I,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
+  case 10: {UC*wv=UAV(w); FSMF(A,1,BOX,1, 1,mv[wv[i]],EMIT0c,ZVAx);} break;
+  case 11: {UC*wv=UAV(w); FSMF(C,1,LIT,1, 1,mv[wv[i]],EMIT1, ZVAx);} break;
+  case 12: {UC*wv=UAV(w); FSMF(I,1,INT,2, 2,mv[wv[i]],EMIT2, ZVAx);} break;
+  case 13: {UC*wv=UAV(w); FSMF(I,1,INT,1, 1,mv[wv[i]],EMIT3, ZVAx);} break;
+  case 14: {UC*wv=UAV(w); FSMF(I,1,INT,2, 3,mv[wv[i]],EMIT4, ZVAx);} break;
+  case 15: {UC*wv=UAV(w); FSMF(I,1,INT,2, 6,mv[wv[i]],EMIT5, ZVA5);} break;
 
-  case 20: {I *wv= AV(w); FSMF(A,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break;
-  case 21: {I *wv= AV(w); FSMF(C,t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
-  case 22: {I *wv= AV(w); FSMF(I,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
-  case 23: {I *wv= AV(w); FSMF(I,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
-  case 24: {I *wv= AV(w); FSMF(I,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
-  case 25: {I *wv= AV(w); FSMF(I,INT,2, 6,   wv[i] ,EMIT5, ZVA5);}
+  case 20: {I *wv= AV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0x,ZVAx);} break;
+  case 21: {I *wv= AV(w); FSMF(C,bp(AT(w0)),t0, wr,wm,  wv[i] ,EMIT1x,ZVAx);} break;
+  case 22: {I *wv= AV(w); FSMF(I,1,INT,2, 2,   wv[i] ,EMIT2, ZVAx);} break;
+  case 23: {I *wv= AV(w); FSMF(I,1,INT,1, 1,   wv[i] ,EMIT3, ZVAx);} break;
+  case 24: {I *wv= AV(w); FSMF(I,1,INT,2, 3,   wv[i] ,EMIT4, ZVAx);} break;
+  case 25: {I *wv= AV(w); FSMF(I,1,INT,2, 6,   wv[i] ,EMIT5, ZVA5);}
  }
  R z;
 }
@@ -317,8 +317,8 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  f=i0(av[0]); s=av[1]; m=av[2]; ijrd=AV(av[3]);
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT(0<=ijrd[0]&&ijrd[0]<n,EVINDEX);
- b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);
- if(!c&&1==AR(m)){
+ b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // c is # columns mapped to input through m
+ if(!c&&1==AR(m)){  // m is omitted or empty, use column numbers in y; audit them first
   ASSERT(1>=AR(w),EVRANK);
   if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
  }else if(NUMERIC&AT(m)){
@@ -326,12 +326,12 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT(1>=AR(w),EVRANK);
  }else{A*mv,t,y;I j,r;
   ASSERT(BOX&AT(m),EVDOMAIN);
-  RZ(y=raze(m)); r=AR(y); k=AN(y);
+  RZ(y=raze(m)); r=AR(y); k=AN(y);  // m = all the input values
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
-  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  
-  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);
+  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers
+  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);  // scaf *v++=c;
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
-  else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}
+  else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1
  }
  A z=fsmdo(f,s,m,ijrd,w,w0);
  EPILOG(z);

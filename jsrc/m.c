@@ -98,6 +98,9 @@ B jtmeminit(J jt){I k,m=MLEN;
  R 1;
 }
 
+// Audit all memory chains to detect overrun
+void jtauditmemchains(J jt){I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)*(I*)0=0; Wx=AFCHAIN(Wx); ++Wj;}}}}
+
 
 F1(jtspcount){A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);
@@ -845,7 +848,7 @@ RESTRICTF A jtgaf(J jt,I blockx){A z;I mfreeb;I n = (I)1<<blockx;
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 // use 6!:5 to start audit I i,j;MS *x; if(jt->peekdata){for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=(MS*)(x->a); ++j;}}}
 #if MEMAUDIT&16
-{I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)*(I*)0=0; Wx=AFCHAIN(Wx); ++Wj;}}}}
+auditmemchains();
 #endif
 #if MEMAUDIT&15
 if((I)jt&3)*(I*)0=0;
@@ -965,7 +968,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 // free a block.  The usecount must make it freeable
 void jtmf(J jt,A w){I mfreeb;
 #if MEMAUDIT&16
-{I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[-PMINL+Wi].pool); while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)||(UI4)AFHRH(Wx)!=Wx->fill)*(I*)0=0; Wx=AFCHAIN(Wx); ++Wj;}}}}
+auditmemchains();
 #endif
 #if MEMAUDIT&15
 if((I)jt&3)*(I*)0=0;

@@ -65,6 +65,7 @@
 #define atop(x,y)                   jtatop(jt,(x),(y))
 #define attu(x)                     jtattu(jt,(x))
 #define attv(x)                     jtattv(jt,(x))
+#define auditmemchains()            jtauditmemchains(jt)
 #define axbytes(x,y)                jtaxbytes(jt,(x),(y))
 #define axbytes1(x0,x1,x2,x3,x4)    jtaxbytes1(jt,(x0),(x1),(x2),(x3),(x4))
 #define axtally(x,y)                jtaxtally(jt,(x),(y))

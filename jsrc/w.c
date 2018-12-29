@@ -230,7 +230,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 
 #define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
  {T*u,*uu;                                                                  \
-  RZ(z=exta((zt),(zr),(zm),1==f||5==f?n:n/3));                              \
+  RZ(z=exta((zt),(zr),(zm),1==f||5==f?n+1:n/3));                              \
   if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCIS(1+s,1+AS(w0),wr-1);}  \
   zv=AV(z); u=(T*)zv; uu=u+AN(z);                                           \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
@@ -317,21 +317,21 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  f=i0(av[0]); s=av[1]; m=av[2]; ijrd=AV(av[3]);
  n=AN(w); v=AS(s); p=v[0]; q=v[1];
  ASSERT(0<=ijrd[0]&&ijrd[0]<n,EVINDEX);
- b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // c is # columns mapped to input through m
+ b=1>=AR(w)&&(!n||LIT&AT(w)); c=AN(m);  // b=w is atom/list, either literal or empty; c is # columns mapped to input through m
  if(!c&&1==AR(m)){  // m is omitted or empty, use column numbers in y; audit them first
   ASSERT(1>=AR(w),EVRANK);
   if(!(B01&AT(w))){RZ(w=w0=vi(w)); v=AV(w); DO(n, k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
- }else if(NUMERIC&AT(m)){
-  ASSERT(b,EVDOMAIN); 
-  ASSERT(1>=AR(w),EVRANK);
+ }else if(NUMERIC&AT(m)){  // m is numeric list
+  ASSERT(b,EVDOMAIN);   // w must be ASCII
+// obsolete  ASSERT(1>=AR(w),EVRANK);
  }else{A*mv,t,y;I j,r;
-  ASSERT(BOX&AT(m),EVDOMAIN);
-  RZ(y=raze(m)); r=AR(y); k=AN(y);  // m = all the input values
-  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);
-  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers
-  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(*AS(t), *v++=j;) else *v++=j;);  // scaf *v++=c;
-  if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}
-  else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1
+  ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
+  RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
+  ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
+  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
+  DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
+  if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
+  else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest
  }
  A z=fsmdo(f,s,m,ijrd,w,w0);
  EPILOG(z);

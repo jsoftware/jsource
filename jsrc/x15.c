@@ -901,7 +901,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
  n=cc->n;
  if(n&&!(wt&BOX)){DO(n, CDASSERT(!cc->star[i],DEPARM+256*i));}
  zbx=cc->zbx; zv=1+(A*)zv0; dv=data; u=wu; xr=0;
- for(i=0;i<n;++i,++zv){
+ for(i=0;i<n;++i,++zv){  // for each input field
 #if SY_UNIX64 && defined(__x86_64__)
   if(dv-data>=6&&dv-data<dcnt-2)dv=data+dcnt-2;
 #elif SY_UNIX64 && defined(__aarch64__)

@@ -648,6 +648,7 @@ extern A        jtaslash(J,C,A);
 extern A        jtaslash1(J,C,A);
 extern A        jtatab(J,C,A,A);
 extern AF       jtatcompf(J,A,A,A);
+extern void     jtauditmemchains(J);
 extern B        jtb0(J,A);
 extern A        jtbcvt(J,C,A);
 extern B*       jtbfi(J,I,A,B);

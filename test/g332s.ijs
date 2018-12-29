@@ -114,11 +114,17 @@ f=: (0;(0 10#:10*".;._2]0 :0);(a.e.'ABCDEF0123456789abcdef')+(2*a.='\')+3*a.e.'U
 (,<,'a') -: f ,'a'  NB. SYSTEM HANG !!!!
 
 NB. Example 6.  Storing items of y
-STATE=: 1 1 ,:&:(,:~) 0 3
+STATE=: 1 1 ,:&:(,:~) 0 3  NB. This time with items that are not atoms
 Y=:i.8
 map=: <@:{.
 FSM=: (1 ; STATE ; <@:map) Y
 0 2 4 6 -: FSM ;: Y
+
+STATE=: 1 1 ,:&:(,:~) 0 3  NB. This time with items that are not atoms
+map =: <@:,:@{.
+Y =: i. 8 2
+FSM=: (1 ; STATE ; <@:map) Y
+(0 2 4 6 { Y) -: FSM ;: Y
 
 
 
@@ -197,6 +203,6 @@ x testj y
 
 
 4!:55 ;:'A f me mh mj mj1 mq mv remq remq1 remq2 se sh sj sq sqx sv'
-4!:55 ;:'t t testj x y'
+4!:55 ;:'t t testj x y STATE Y map FSM'
 
 

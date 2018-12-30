@@ -113,8 +113,10 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   if((-(c^1)|(e=u[1]))>=0){I axislen;  // e=length of 1st axis
    // non-reversed selection along a single axis: calculate length {. start }. w
    axislen=ws[0]; j=u[0];  // axislen=length of axis, j=starting position
-   ASSERT(((-e)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
-   if(j>=0){e=MIN(e,axislen-j);}else{j+=axislen; e=MIN(e,j+1); j-=(e-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
+// obsolete    ASSERT(((-e)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j: 0 always allowed; or if len=0 and j is at end; or j in the middle.  Ignore positive overflow possibilities
+   if(j>=0){e=MIN(e,axislen-j);}  // truncate length to length remaining; if <0, error
+   else{j+=axislen; e=MIN(e,j+1);  j-=(e-1);}  // negative j: convert to positive index of ending item; truncate length to length remaining; back j to first item.  Error if j<0 and e!=0, or j<_1
+   ASSERT(e>=0,EVINDEX);
    // Allocate a virtual block & fill it in
    // locate virtual block
    AK(virtw)=origoffset+j*wcellbytes;
@@ -123,15 +125,15 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
    AN(virtw)=e*wcellsize;  // install # atoms
    z = virtw;  // use the virtual block for the computation
   }else{I axislen;
-   // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input ot {) on grounds of rarity
+   // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input to {) on grounds of rarity
    do{
     if(q){  // if we have already allocated the input area to {, fill it in
      // For each axis, create a boxed vector of boxed indexes to fetch, in the correct order
      for(i=0;i<c;++i){  // for each axis of the cell of a
       axislen=ws[i]; j=u[i]; e=u[i+c]; k=e; e>>=(BW-1); k^=e; k-=e;  // axislen=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
-      ASSERT(((-k)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
+// obsolete       ASSERT(((-k)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
       if(j>=0){k=MIN(k,axislen-j); j+=e&(k-1);}else{j+=axislen; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
-      RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
+      ASSERT(k>=0,EVINDEX); RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
      }
      break;  // this is the loop exit
     }else{  // we have not allocated the input to {; do so now

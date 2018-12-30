@@ -58,8 +58,8 @@ F1(jtaro){A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
 
 F1(jtarep){R box(aro(w));}
 
-// Create AR for a string
-static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
+// Create A for a string - name~, a primitive, or the boxed string
+static DF1(jtfxchar){A y;C c,d,id,*s;I m,n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
  ASSERT(n,EVLENGTH);
@@ -68,16 +68,17 @@ static F1(jtfxchar){A y;C c,d,id,*s;I m,n;
  if(CA==ctype[(UC)*s]&&c!=CESC1&&c!=CESC2)R swap(w);  // If name and not control word, treat as name~, create nameref
  ASSERT(id=spellin(n,s),EVSPELL);  // not name, must be control word or primitive.  Also classify string 
  if(id!=CFCONS)y=ds(id); else{m=s[n-2]-'0'; y=FCONS(CSIGN!=*s?scib(m):2==n?ainf:scib(-m));} // define 0:, if it's that, using boolean for 0/1
- ASSERT(y&&RHS&AT(y),EVDOMAIN);   // make sure it's a noun/verb
- R y;
+ ASSERT(y&&RHS&AT(y),EVDOMAIN);   // make sure it's a noun/verb/adv/conj
+ if(!self || AT(y)&NOUN+VERB)R y;  // return any NV, or AC as well if it's not the top level
+ R box(w);  // If top level, we have to make sure (<,'&')`  doesn't replace the left part with bare &
 }
 
 // Convert an AR to an A block.  w is a gerund that has been opened
-// self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value
+// self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  RZ(w);
  // if string, handle that special case (verb/primitive)
- if(LIT&AT(w))R fxchar(w);
+ if(LIT&AT(w))R fxchar(w,self);
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
  m=AN(w);   // m=#atoms
  ASSERT(BOX&AT(w),EVDOMAIN);

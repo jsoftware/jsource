@@ -410,7 +410,7 @@
 #define ftymes(x,y)                 jtftymes(jt,(x),(y))
 #define fullname(x)                 jtfullname(jt,(x))
 #define fx(x)                       jtfx(jt,(x),0L) 
-#define fxchar(x)                   jtfxchar(jt,(x))
+#define fxchar(x,y)                   jtfxchar(jt,(x),(y))
 #define fxeach(x)                   jtfxeach(jt,(x))
 #define fxeachacv(x)                jtfxeachacv(jt,(x))
 #define fxeachv(x,y)                jtfxeachv(jt,(x),(y))

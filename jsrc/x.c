@@ -79,8 +79,8 @@ F2(jtforeign){I p,q;
   case XC(1,32):  R SDERIV(CIBEAM, jtjunlock,    0,            VASGSAFE,1,   0,   0   );
 #endif
   
-  case XC(1,43):  R CDERIV(CIBEAM, jtpathcwd,    0,            VASGSAFE,RMAX,0,   0   );
-  case XC(1,44):  R CDERIV(CIBEAM, jtpathchdir,  0,            VASGSAFE,RMAX,0,   0   );
+  case XC(1,43):  R SDERIV(CIBEAM, jtpathcwd,    0,            VASGSAFE,RMAX,0,   0   );
+  case XC(1,44):  R SDERIV(CIBEAM, jtpathchdir,  0,            VASGSAFE,RMAX,0,   0   );
   case XC(1,46):  R CDERIV(CIBEAM, jtpathdll,    0,            VASGSAFE,RMAX,0,   0   );
 
   case XC(1,55):  R SDERIV(CIBEAM, jtjferase,    0,            VASGSAFE,0,   0,   0   );
@@ -91,7 +91,7 @@ F2(jtforeign){I p,q;
   case XC(2,3):   R SDERIV(CIBEAM, jtjwait,      0,            VASGSAFE,0,   0,   0   );
   case XC(2,5):   R SDERIV(CIBEAM, jtjgetenv,    0,            VASGSAFE,1,   0,   0   );
   case XC(2,6):   R SDERIV(CIBEAM, jtjgetpid,    0,            VASGSAFE,1,   0,   0   );
-  case XC(2,55):  R SDERIV(CIBEAM, jtjoff,       0,            VASGSAFE,RMAX,0,   0   );
+  case XC(2,55):  R CDERIV(CIBEAM, jtjoff,       0,            VASGSAFE,RMAX,0,   0   );
 
   case XC(3,0):   R CDERIV(CIBEAM, jtstype,      0,            VASGSAFE,RMAX,0,   0  );
   case XC(3,1):   R CDERIV(CIBEAM, jtbinrep1,    jtbinrep2,    VASGSAFE,RMAX,RMAX,RMAX);

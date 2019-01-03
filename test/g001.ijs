@@ -108,6 +108,7 @@ a=:12
 'ill-formed name'   -: ". etx '(''p'';''_ab'') =. 9' 
 'ill-formed name'   -: ". etx '''   '' =. 9'
 'ill-formed name'      -: ". etx '(''p'';'''') =. 9'
+'ill-formed name'   -: ". etx ''' `a'' =. +'
 
 'rank error'        -: ". etx '(<3 4$''a'') =. i.3 4'
 'rank error'        -: ". etx '(''p'';3 4$''a'') =. 9'
@@ -115,6 +116,93 @@ a=:12
 'length error'      -: ". etx '''pqr s'' =. 4 5 6'
 'length error'      -: ". etx '(''p'';''q'';''r'') =. 4 5'
 'length error'      -: ". etx '(,<''abc'') =. i.5'
+
+NB. Check again inside definition
+3 : 0"0 i. 9
+try.
+ select. y
+ case. 0 do. '' =. 5
+ case. 1 do. '' =: 5
+ case. 2 do. ' ' =. 5
+ case. 3 do. ' ' =: 5
+ case. 4 do. ' `a' =: +`''
+ case. 0 do. 'a b' =. i. 3
+ case. 5 do. 'a b' =. <"0 i. 3
+ case. 6 do. 'a b' =. i. 1 3
+ case. 7 do. 'a b___' =. i. 2
+ case. 8 do. 'a+b' =. i. 3
+ end.
+ 0  NB. should have failed
+catch.
+ 1
+end.
+)
+
+NB. successful assignment inside definition
+3 : 0 ''
+z =. $0
+'local' =. 5
+z =. z , local -: 5
+'local1 local2' =. 9 3
+z =. z , local1 -: 9
+z =. z , local2 -: 3
+'`a' =. +`''
+z =. z , 9 -: 7 a 2
+'`a b' =. -`*
+z =. z , _7 -: 3 a 2 b 5
+'local' =. <5
+z =. z , local -: <5
+'local' =. 6 7
+z =. z , local -: 6 7
+'local' =. <8 7 6
+z =. z , local -: <8 7 6
+'local1 local2 local3' =. 4;7;2
+z =. z , local1 -: 4
+z =. z , local2 -: 7
+z =. z , local3 -: 2
+'local1 local2 local3' =. <6
+z =. z , local1 -: 6
+z =. z , local2 -: 6
+z =. z , local3 -: 6
+'local1 local2 local3' =. 'f'
+z =. z , local1 -: 'f'
+z =. z , local2 -: 'f'
+z =. z , local3 -: 'f'
+'local1 local2 local3' =. 'ghi'
+z =. z , local1 -: 'g'
+z =. z , local2 -: 'h'
+z =. z , local3 -: 'i'
+'global' =: 5
+z =. z , global__ -: 5
+'global1 global2' =: 9 3
+z =. z , global1__ -: 9
+z =. z , global2__ -: 3
+'global' =: <5
+z =. z , global__ -: <5
+'global' =: 6 7
+z =. z , global__ -: 6 7
+'global' =: <8 7 6
+z =. z , global__ -: <8 7 6
+'global1 global2 global3' =: 4;7;2
+z =. z , global1__ -: 4
+z =. z , global2__ -: 7
+z =. z , global3__ -: 2
+'global1 global2 global3' =: <6
+z =. z , global1__ -: 6
+z =. z , global2__ -: 6
+z =. z , global3__ -: 6
+'global1 global2 global3' =: 'f'
+z =. z , global1__ -: 'f'
+z =. z , global2__ -: 'f'
+z =. z , global3__ -: 'f'
+'global1 global2 global3' =: 'ghi'
+z =. z , global1__ -: 'g'
+z =. z , global2__ -: 'h'
+z =. z , global3__ -: 'i'
+z
+)
+
+
 
 4!:55 ;:'Cogito a abc ergo p q r sum x'
 4!:55 ;:'Cogito a abc ergo p q r sum x'
@@ -228,7 +316,7 @@ a > 7!:0''
 
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
-4!:55 ;:'fa fb first'
+4!:55 ;:'fa fb first global global1 global2 global3'
 4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r second sscript'
 4!:55 ;:'sum t third write x y'
 

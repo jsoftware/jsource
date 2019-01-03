@@ -108,8 +108,7 @@ static UI4 ptcol[] = {
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
 #define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; z=ptcol[pt];}
-// obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt-=(((t)&ASGN+ASGNTONAME)==ASGN+ASGNTONAME); z=(UI4)pt;}  // clear flag bit if ASGN to name
-#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt-=(((t)>>(CONWX-ASGNX))&(t))>>ASGNX; z=(UI4)pt;}  // clear flag bit if ASGN to name
+#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt=((t)&CONW)?PTASGNNAME:pt; z=(UI4)pt;}  // clear flag bit if ASGN to name
 
 static PSTK* jtpfork(J jt,A s1, A s2, A s3){
  PSTK* stack=jt->parserstkend1;  // extract the stack base (completes while the fork is running)

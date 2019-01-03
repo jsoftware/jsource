@@ -34,7 +34,7 @@ F1(jtexec1){A z;
   F1RANK(1,jtexec1,0);
   FDEPINC(1); z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0; FDEPDEC(1);
  }
- RETF(z&&AT(z)&VERB+ADV+CONJ+MARK?mtv:z);
+ RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }
 
 F1(jtimmex){A z;

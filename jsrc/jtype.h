@@ -293,8 +293,8 @@ typedef I SI;
 // NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
 // BOX type can have the following informational flags set
-#define BOXMULTIASSIGN  ((I)1L<<CONWX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with CONW
-// Requirement on flag bits: no flag except ASGNTONAME may be spaced above its main bit by exactly CONWX-ASGNX bits, because the parser checks that for ASGNTONAME
+#define BOXMULTIASSIGN  ((I)1L<<MARKX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with MARK
+// Restriction: CONW must be reserved for use as ASGNTONAME because of how parser tests for it
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg

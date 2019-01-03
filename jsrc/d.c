@@ -57,23 +57,28 @@ static void jtdspell(J jt,C id,A w){C c,s[5];
   eputs(s+!(c==CESC1||c==CESC2||jt->nflag&&CA==ctype[(UC)c]));
 }}
 
+static F1(jtsfn0){R sfn(0,w);}  // return string form of full name for a NAME block
+
 static void jtdisp(J jt,A w){B b=1&&AT(w)&NAME+NUMERIC;
  if(b&&jt->nflag)eputc(' ');
  switch(CTTZ(AT(w))){
-  case B01X:
-  case INTX:
-  case FLX:
-  case CMPXX: 
-  case XNUMX: 
-  case RATX:  eputv(w);                break;
-  case BOXX:  eputs(" a:"+!jt->nflag); break;
-  case NAMEX: ep(AN(w),NAV(w)->s);     break;
-  case LITX:  eputq(w);                break;
-  case LPARX: eputc('(');              break;
-  case RPARX: eputc(')');              break;
-  case ASGNX: dspell(*CAV(w),w);       break;
-  case MARKX:                          break;
-  default:   dspell(FAV(w)->id,w);
+ case B01X:
+ case INTX:
+ case FLX:
+ case CMPXX: 
+ case XNUMX: 
+ case RATX:  eputv(w);                break;
+ case BOXX:
+  if(!(AT(w)&BOXMULTIASSIGN)){eputs(" a:"+!jt->nflag); break;}
+  // If this is an array of names, turn it back into a character string with spaces between
+  else{w=curtail(raze(every2(every(w,0,jtsfn0),chr[' '],0,jtover)));}  // }: (string&.> names) ,&.> ' '  then fall through to display it
+ case LITX:  eputq(w);                break;
+ case NAMEX: ep(AN(w),NAV(w)->s);     break;
+ case LPARX: eputc('(');              break;
+ case RPARX: eputc(')');              break;
+ case ASGNX: dspell(*CAV(w),w);       break;
+ case MARKX:                          break;
+ default:   dspell(FAV(w)->id,w);     break;
  }
  jt->nflag=b;
 }

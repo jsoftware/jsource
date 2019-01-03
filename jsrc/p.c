@@ -81,7 +81,7 @@ PT cases[] = {
 // { 0x3DF, 0x3C9, 0x3C9, 0x3F9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9, 0x3C9},
 // };
 // Remove bits 8-9
-// Distinguish PSN from PS by not having PSN in stack[3] support the ( CAVN ) ANY production (since it must be preceded by NAME)
+// Distinguish PSN from PS by not having PSN in stack[3] support line 0 (OK since it must be preceded by NAME and thus will run line 7)
 // Put something distictive into LPAR that can be used to create line 8
 static UI4 ptcol[] = {
 0xBE7CC1DF,  // PN
@@ -107,8 +107,9 @@ static UI4 ptcol[] = {
 #define PTISASGNNAME(s)  (!((s).pt&0x1))
 #define PTISRPAR(s)  ((s).pt<0x100)
 // converting type field to pt, store in z
-#define PTFROMTYPE(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; z=ptcol[pt-LASTNOUNX];}
-#define PTFROMTYPEASGN(z,t) {UI pt=CTTZ(t); pt=(t)<NOUN?LASTNOUNX:pt; pt=ptcol[pt-LASTNOUNX]; pt=(t)&CONW?PTASGNNAME:pt; z=(UI4)pt;}
+#define PTFROMTYPE(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; z=ptcol[pt];}
+// obsolete #define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt-=(((t)&ASGN+ASGNTONAME)==ASGN+ASGNTONAME); z=(UI4)pt;}  // clear flag bit if ASGN to name
+#define PTFROMTYPEASGN(z,t) {I pt=CTTZ(t); pt-=LASTNOUNX; pt=pt<0?0:pt; pt=ptcol[pt]; pt-=(((t)>>(CONWX-ASGNX))&(t))>>ASGNX; z=(UI4)pt;}  // clear flag bit if ASGN to name
 
 static PSTK* jtpfork(J jt,A s1, A s2, A s3){
  PSTK* stack=jt->parserstkend1;  // extract the stack base (completes while the fork is running)
@@ -139,6 +140,20 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
  if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
  if(jt->assignsym){symbis(n,v,(A)AT(s1));}   // Assign to the known name.  Pass in the type of the ASGN
  else {
+  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
+  // depending on which type of assignment (but if there is no local symbol table, always use the global)
+  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
+  if((AT(n)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
+   if(AN(n)==1)n=AAV(n)[0];  // if there is only 1 name, treat this like simple assignment, fall through
+   else{
+    // True multiple assignment
+    ASSERT(!AR(v)||AN(n)==AS(v)[0],EVLENGTH);
+    if(AR(v)==1&&AT(v)&BOX){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), symbis(nv[i],vv[i],symtab);)}  // boxed list
+    else {A *nv=AAV(n); DO(AN(n), symbis(nv[i],ope(AR(v)?from(sc(i),v):v),symtab);)}
+    RNE(stack+2);
+   }
+  }
   if(LIT&AT(n)&&1>=AR(n)){
    // lhs is ASCII characters, atom or list.  Convert it to words
    //ASSERT(1>=AR(n),EVRANK); must be true
@@ -150,9 +165,6 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
    }
   }
   ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
-  // Point to the block for the assignment; fetch the assignment pseudochar (=. or =:); choose the starting symbol table
-  // depending on which type of assignment (but if there is no local symbol table, always use the global)
-  f=stack[1].a; c=*CAV(f); A symtab=jt->local&&c==CASGN?jt->local:jt->global;
   // if simple assignment to a name (normal case), do it
   if(NAME&AT(n)){
 #if FORCEVIRTUALINPUTS

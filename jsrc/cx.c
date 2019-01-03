@@ -563,6 +563,24 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
  R 1;
 }    /* boxed sentences into monad/dyad */
 
+// Install bucket info into the NAME type t, if it is a local name
+// actstv points to the chain headers, actstn is the number of chains
+static void jtcalclocalbuckets(J jt, A t, I *actstv, I actstn){I k;
+ if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table
+  I4 compcount=0;  // number of comparisons before match
+  // lv[j] is a simplename.  We will install the bucket/index fields
+  NM *tn = NAV(t);  // point to the NM part of the name block
+  // Get the bucket number by reproducing the calculation in the symbol-table routine
+  tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
+  // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
+  // of the number of items compared before the match.  If we get no match, the bucket index is the number
+  // of items compared (= the number of items in the chain)
+  for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
+   if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
+  }
+  tn->bucketx=compcount;
+ }
+}
 
 // create local-symbol table for a definition
 //
@@ -590,7 +608,7 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
 // flags is the flag field for the verb we are creating; indicates whether uvmn are to be defined
 //
 // We save the symbol chain numbers for y/x in the AM field of the SYMB block
-A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln,tt;
+A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln;
  // Allocate a pro-forma symbol table to hash the names into
  RZ(pfst=stcreate(2,1L+PTO,0L,0L));
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
@@ -602,25 +620,38 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // to the table.  If it is a literal constant, break it into words, convert each to a name, and process.
  ln=AN(l); lv=AAV(l);  // Get # words, address of first box
  for(j=1;j<ln;++j) {   // start at 1 because we look at previous word
+  t=lv[j-1];  // t is the previous word
+  // look for 'names' =./=: .  If found (and the names do not begin with `), replace the string with a special form: a list of boxes where each box contains a name.
+  // This form can appear only in compiled definitions
+  if(AT(lv[j])&ASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
+   A neww=words(t);
+   if(AN(neww)){  // ignore blank string
+    A newt=every(neww,0,jtonm);  // convert every word to a NAME block
+    if(newt){t=lv[j-1]=newt; AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
+   }
+  }
+
   if((AT(lv[j])&ASGN+ASGNLOCAL)==(ASGN+ASGNLOCAL)) {  // local assignment
-   t=lv[j-1];  // t is the previous word
    if(AT(lv[j])&ASGNTONAME){    // preceded by name?
     // Lookup the name, which will create the symbol-table entry for it
     RZ(probeis(t,pfst));
    } else if(AT(t)&LIT) {
-    // LIT followed by =.  Probe each word
+    // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
     s=CAV(t);   // s->1st character; remember if it is `
     if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){  // convert to words (discarding leading ` if present)
      I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
      for(k=0;k<wdsn;++k) {
-      // Convert name to word; if local name, add to symbol table
+      // Convert word to NAME; if local name, add to symbol table
       if((wnm=onm(wdsv[k]))) {
        if(!(NAV(wnm)->flag&(NMLOC|NMILOC)))RZ(probeis(wnm,pfst));
       } else RESETERR
      }
     } else RESETERR  // if invalid words, ignore - we don't catch it here
-   }  // not NAME, not LIT
+   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){  // not NAME, not LIT; is it NAMEs box?
+    // the special form created above.  Add each non-global name to the symbol table
+    A *tv=AAV(t); DO(AN(t), if(!(NAV(tv[i])->flag&(NMLOC|NMILOC)))RZ(probeis(tv[i],pfst));)
+   }
   } // end 'local assignment'
  }  // for each word in sentence
 
@@ -639,7 +670,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   }
  }
 
- // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions.
+ // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
  I pfstn=AN(pfst); I*pfstv=AV(pfst); I asgct=0;
  for(j=1;j<pfstn;++j){  // for each hashchain
@@ -665,27 +696,18 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // Note that variable names must be replaced by clones so they are not overwritten
  // Don't do this if this definition might return a non-noun (i. e. is an adverb/conjunction not operating on xy)
  // In that case, the returned result might contain local names; but these names contain bucket information
- // and are valid only in conjuction with the symbol table for this definition.  To prevent the escape of
+ // and are valid only in conjunction with the symbol table for this definition.  To prevent the escape of
  // incorrect bucket information, don't have any (this is easier than trying to remove it from the returned
  // result).  The definition will still benefit from the preallocation of the symbol table.
  if(type>=3 || flags&VXOPR){  // If this is guaranteed to return a noun...
   for(j=0;j<ln;++j) {
-   if((tt=AT(t=lv[j]))&NAME&&!(NAV(t)->flag&(NMLOC|NMILOC))) {
-    I4 compcount=0;  // number of comparisons before match
-    // lv[j] is a simplename.  We will install the bucket/index fields
-    NM *tn = NAV(t);  // point to the NM part of the name block
-    // Get the bucket number by reproducing the calculation in the symbol-table routine
-    tn->bucket=(I4)SYMHASH(tn->hash,actstn);  // bucket number of name hash
-    // search through the chain, looking for a match on name.  If we get a match, the bucket index is the one's complement
-    // of the number of items compared before the match.  If we get no match, the bucket index is the number
-    // of items compared (= the number of items in the chain)
-    for(k=actstv[tn->bucket];k;++compcount,k=(jt->sympv)[k].next){  // k chases the chain of symbols in selected bucket
-     if(tn->m==NAV((jt->sympv)[k].name)->m&&!memcmp(tn->s,NAV((jt->sympv)[k].name)->s,tn->m)){compcount=~compcount; break;}
-    }
-    tn->bucketx=compcount;
+   if(AT(t=lv[j])&NAME) {
+    jtcalclocalbuckets(jt,t,actstv,actstn);  // install bucket info into name
+   }else if((AT(t)&BOX+BOXMULTIASSIGN)==BOX+BOXMULTIASSIGN){
+    A *tv=AAV(t); DO(AN(t), jtcalclocalbuckets(jt,tv[i],actstv,actstn);)  // install bucket info into boxed names
    }
-  }  // 'noun result guaranteed'
- }
+  }
+ }  // 'noun result guaranteed'
  R actst;
 }
 
@@ -738,8 +760,8 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  // the components of the explicit def, we'd better do it now, so that the usecounts are all identical
  if(4>=n) {
   // Don't bother to create a symbol table for an empty definition, since it is a domain error
-  if(AN(hv[1]))RZ(hv[3] = rifvs(crelocalsyms(hv[0],hv[1],n,0,flag)));  // tokens,cws,type,monad,flag
-  if(AN(hv[HN+1]))RZ(hv[HN+3] = rifvs(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // tokens,cws,type,dyad,flag
+  if(AN(hv[1]))RZ(hv[3] = rifvs(crelocalsyms(hv[0],hv[1],n,0,flag)));  // wordss,cws,type,monad,flag
+  if(AN(hv[HN+1]))RZ(hv[HN+3] = rifvs(crelocalsyms(hv[HN+0], hv[HN+1],n,1,flag)));  // words,cws,type,dyad,flag
  }
 
  switch(n){

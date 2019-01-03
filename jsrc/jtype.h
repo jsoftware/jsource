@@ -271,7 +271,7 @@ typedef I SI;
 #define ADVX 28
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)
-// CONJ must be 1 bit below RPAR, with no parsable type higher than RPAR
+// CONJ must be 1 bit below RPAR, with no parsable type (including any flags that might be set, see below) higher than RPAR
 #define CONJX 29
 #define CONJ            ((I)1L<<CONJX)     /* V  conjunction                  */
 #define CONJSIZE sizeof(V)
@@ -292,6 +292,9 @@ typedef I SI;
 #define NOUNCVTVALIDCT  ((I)1L<<SYMBX)     // Flag for jtcvt: if set, convert only the #atoms given in the parameter   Aliases with SYMB
 // NAME type can have the following information flags set
 #define NAMEBYVALUE     ((I)1L<<SYMBX)     // set if the name is one of x x. m m. etc that is always passed by value, never by name   Aliases with SYMB
+// BOX type can have the following informational flags set
+#define BOXMULTIASSIGN  ((I)1L<<CONWX)     // set for the target of a direct multiple assignment (i. e. 'x y' =.), which is stored as a boxed list whose contents are NAMEs    aliases with CONW
+// Requirement on flag bits: no flag except ASGNTONAME may be spaced above its main bit by exactly CONWX-ASGNX bits, because the parser checks that for ASGNTONAME
 
 // Planned coding to save bits in type
 // Uses bits 24-27 eg

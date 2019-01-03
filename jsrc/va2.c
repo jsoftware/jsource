@@ -473,7 +473,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   I wt=AT(w);
   // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
   //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
-  // when there is an empty - but it guarantees that execution on n empty never fails.
+  // when there is an empty - but it guarantees that execution on an empty never fails.
   // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
   // support nonnumeric sparse now
   if(((-((at|wt)&SPARSE))|(an-1)|(wn-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags

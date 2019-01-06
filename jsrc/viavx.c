@@ -645,13 +645,13 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 #elif defined(__aarch64__)
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; d=src##d; vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
+ {I i, j, hj; T *v; /* obsolete d=src##d;*/ vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=vaddq_s64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=vaddq_s64(vp,vpstride); vpstride=vdupq_n_s64(vgetq_lane_s64(vpstride,0));  \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 #else
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; d=src##d; SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
+ {I i, j, hj; T *v; /* obsolete d=src##d;*/ SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; SSEREGI(vpstride)[1]=SSEREGI(vpstride)[0]; \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1];} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }

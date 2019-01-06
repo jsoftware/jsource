@@ -872,7 +872,7 @@ static inline UINT _clearfp(void){int r=fetestexcept(FE_ALL_EXCEPT);
 #endif
 // end of multiply builtins
 
-// define single+double-recision integer add
+// define single+double-precision integer add
 #if SY_64
 #if defined(_MSC_VER)  // SY_WIN32
 #define SPDPADD(addend, sumlo, sumhi) {C c; c=_addcarry_u64(0,addend,sumlo,&sumlo); _addcarry_u64(c,0,sumhi,&sumhi);}
@@ -911,7 +911,6 @@ static __forceinline void aligned_free(void *ptr) {
  free(((void**)ptr)[-1]);
 #endif
 }
-
 
 // Create (x&y) where x and y are signed, so we can test for overflow.
 #if defined(_MSC_VER)  // SY_WIN32

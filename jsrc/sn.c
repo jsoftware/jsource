@@ -117,10 +117,10 @@ F1(jtnc){A*wv,x,y,z;I i,n,t,*zv;L*v;
 }    /* 4!:0  name class */
 
 
-static SYMWALK(jtnlxxx, A,BOX,20,1, jt->nla[*((UC*)NAV(d->name)->s)]&&jt->nlt&AT(d->val), 
+static SYMWALK(jtnlxxx, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)]&&jt->workareas.namelist.nlt&AT(d->val), 
     RZ(*zv++=rifvs(sfn(1,d->name))) )
 
-       SYMWALK(jtnlsym, A,BOX,20,1, jt->nla[*((UC*)NAV(d->name)->s)],
+       SYMWALK(jtnlsym, A,BOX,20,1, jt->workareas.namelist.nla[*((UC*)NAV(d->name)->s)],
     RZ(*zv++=rifvs(sfn(1,d->name))) )
 
 static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
@@ -128,7 +128,7 @@ static I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
  RZ(w=vi(w)); v=AV(w); 
  DO(AN(w), x=*v++; m|=nlmask[x<0||6<x?7:x];); 
- jt->nlt=m&RHS; b=1&&jt->nlt&RHS;
+ jt->workareas.namelist.nlt=m&RHS; b=1&&jt->workareas.namelist.nlt&RHS;
  ASSERT(!(m&MARK),EVDOMAIN);
  if(b           )RZ(z=nlxxx(jt->global));
  if(b&&jt->local)RZ(z=over(nlxxx(jt->local),z));
@@ -136,14 +136,14 @@ static F1(jtnlx){A z=mtv;B b;I m=0,*v,x;
  R nub(grade2(z,ope(z)));
 }
 
-F1(jtnl1){memset(jt->nla,C1,256L); R nlx(w);}
+F1(jtnl1){memset(jt->workareas.namelist.nla,C1,256L); R nlx(w);}
      /* 4!:1  name list */
 
 F2(jtnl2){UC*u;
  RZ(a&&w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- memset(jt->nla,C0,256L); 
- u=UAV(a); DO(AN(a),jt->nla[*u++]=1;);
+ memset(jt->workareas.namelist.nla,C0,256L); 
+ u=UAV(a); DO(AN(a),jt->workareas.namelist.nla[*u++]=1;);
  R nlx(w);
 }    /* 4!:1  name list */
 

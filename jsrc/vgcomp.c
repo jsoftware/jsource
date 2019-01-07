@@ -15,34 +15,40 @@ B compuu(I n, US *a, US *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while
 B compud(I n, US *a, US *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptu(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a<*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
 B comptd(I n, C4 *a, C4 *b){do{if(*a!=*b)R *a>*b; if(!--n)break; ++a; ++b;}while(1); R a<b;}
-B compr(I n, A *a, A *b){J jt=(J)n; I j; n=jt->compn; do{if(j=compare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value
-B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-B compqd(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->compn; do{if(j=QCOMP(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
-B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->compsyv; DO(jt->compn, if(a[cv[i]]!=b[cv[i]])R a[cv[i]]<b[cv[i]];); R a<b;}
+B compr(I n, A *a, A *b){J jt=(J)n; I j; n=jt->workareas.compare.compn; do{if(j=compare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;}  // compare returns compgt value. a<b makes the sort stable
+B compxu(I n, X *a, X *b){J jt=(J)n; I j; n=jt->workareas.compare.compn; do{if(j=xcompare(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compxd(I n, X *a, X *b){J jt=(J)n; I j; n=jt->workareas.compare.compn; do{if(j=xcompare(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // xcompare returns 1/0/-1
+B compqu(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->workareas.compare.compn; do{if(j=QCOMP(*a,*b))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns 1/0/-1
+B compqd(I n, Q *a, Q *b){J jt=(J)n; I j; n=jt->workareas.compare.compn; do{if(j=QCOMP(*b,*a))R (UI)j>>(BW-1); if(!--n)break; ++a; ++b;}while(1); R a<b;} // QCOMP returns 1/0/-1
+B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->workareas.compare.compsyv; DO(jt->workareas.compare.compn, if(a[cv[i]]!=b[cv[i]])R a[cv[i]]<b[cv[i]];); R a<b;}
 
 #define CF(f)            int f(J jt,I a,I b)
 
-#define COMPDCLP(T)      T*x=(T*)(jt->compv+a*jt->compk),*y=(T*)(jt->compv+b*jt->compk)
+#define COMPDCLP(T)      T*x=(T*)(jt->workareas.compare.compv+a*jt->workareas.compare.compk),*y=(T*)(jt->workareas.compare.compv+b*jt->workareas.compare.compk)
 #define COMPDCLQ(T)      T*x=(T*)av,*y=(T*)wv
 #define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
-#define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]>y[i])R jt->compgt; else if(x[i]<y[i])R jt->complt;);}
-#define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]>y[i])R jt->compgt; else if(x[i]<y[i])R jt->complt;);}
-#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBGT(x[i],y[i]))R jt->compgt; else if(SBLT(x[i],y[i]))R jt->complt;);}
+// obsolete#define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]>y[i])R jt->workareas.compare.compgt; else if(x[i]<y[i])R jt->workareas.compare.complt;);}
+// obsolete#define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]>y[i])R jt->workareas.compare.compgt; else if(x[i]<y[i])R jt->workareas.compare.complt;);}
+// obsolete#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBGT(x[i],y[i]))R jt->workareas.compare.compgt; else if(SBLT(x[i],y[i]))R jt->workareas.compare.complt;);}
+// obsolete#define COMPLOOPF(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R j;);}
+// obsolete#define COMPLOOPR(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f((A)AABS(x[i],jt->workareas.compare.compw),(A)AABS(y[i],jt->workareas.compare.compw)))R j;);}
+// obsolete#define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->workareas.compare.compgt:jt->workareas.compare.complt;);}
+// obsolete#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->workareas.compare.compgt:jt->workareas.compare.complt;);}
+#define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]!=y[i])R jt->workareas.compare.complt*((x[i]>y[i])?-1:1);)}
+#define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]!=y[i])R jt->workareas.compare.complt*((x[i]>y[i])?-1:1);)}
+#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBNE(x[i],y[i]))R jt->workareas.compare.complt*((SBGT(x[i],y[i]))?-1:1););}
 #define COMPLOOPF(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R j;);}
-// obsolete#define COMPLOOPR(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f((A)AABS(x[i],jt->compw),(A)AABS(y[i],jt->compw)))R j;);}
-#define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
-#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->compgt:jt->complt;);}
+#define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R jt->workareas.compare.complt*((j>0)?-1:1););}
+#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R jt->workareas.compare.complt*((j>0)?-1:1););}
 
 // this is used by routines outside of sort/merge & therefore a & w can be dissimilar
 I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
  RZ(a&&w);
  an=AN(a); at=an?AT(a):B01; ar=AR(a); as=AS(a);
  wn=AN(w); wt=wn?AT(w):B01; wr=AR(w); ws=AS(w); RE(t=maxtype(at,wt));
- if(!HOMO(at,wt))R at&BOX?jt->compgt:wt&BOX?jt->complt:at&JCHAR?jt->compgt:wt&JCHAR?jt->complt:
-                   at&SBT?jt->compgt:jt->complt;
- if(ar!=wr)R ar>wr?jt->compgt:jt->complt;
+ if(!HOMO(at,wt))R (at&BOX?-1:wt&BOX?1:at&JCHAR?-1:wt&JCHAR?1:
+                   at&SBT?-1:1)*jt->workareas.compare.complt;
+ if(ar!=wr)R (ar>wr?-1:1)*jt->workareas.compare.complt;
  if(1<ar&&ICMP(1+as,1+ws,ar)){A s;I*v;fauxblockINT(sfaux,4,1);
   fauxINT(s,sfaux,ar,1) v=AV(s);
   DO(ar, v[i]=MAX(as[i],ws[i]);); v[0]=MIN(as[0],ws[0]);
@@ -50,10 +56,11 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   RZ(w=take(s,w));
  }
  m=MIN(an,wn); 
- if(t&XNUM+RAT&&(at&FL+CMPX||wt&FL+CMPX)){A p,q;B*u,*v;
+ if(t&XNUM+RAT&&(at&FL+CMPX||wt&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
-  DO(m, if(u[i])R jt->complt; else if(v[i])R jt->compgt;);
+// obsolete DO(m, if(u[i])R jt->workareas.compare.complt; else if(v[i])R jt->workareas.compare.compgt;);
+  DO(m, if(u[i]|v[i])R (u[i]?1:-1)*jt->workareas.compare.complt;);
  }else{
   if(TYPESNE(t,at))RZ(a=cvt(t,a));
   if(TYPESNE(t,wt))RZ(w=cvt(t,w));
@@ -77,18 +84,20 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
 // obsolete }
   }
  }
- if(1>=ar)R an>wn?jt->compgt:an<wn?jt->complt:0;
- DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->compgt; else if (c<d)R jt->complt;);
+// obsolete  if(1>=ar)R an>wn?jt->workareas.compare.compgt:an<wn?jt->workareas.compare.complt:0;
+// obsolete  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->workareas.compare.compgt; else if (c<d)R jt->workareas.compare.complt;);
+ if(1>=ar)R ((an<wn)-(an>wn))*jt->workareas.compare.complt;
+ DO(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R ((c>d)?-1:1)*jt->workareas.compare.complt;);
  R 0;
 }    /* compare 2 arbitrary dense arrays; _1 0 1 per a<w, a=w, a>w */
 
 
 #define COMPSPSS(f,T,e1init,esel)  \
- CF(f){I c,ia,ib,na,nb,p,*tv,wf,xc,*ya,*yb,yc,*yv;int gt=jt->compgt!=1,lt=1-gt;T e,e1,*xa,*xb,*xv;    \
-  e=*(T*)jt->compsev; e1=e1init;                                                                         \
-  wf=jt->compswf; tv=jt->compstv;                                                                        \
-  yv=jt->compsyv+wf+1; yc=jt->compsyc; p=yc-1-wf;                                                        \
-  xv=(T*)jt->compsxv; xc=jt->compsxc;                                                                    \
+ CF(f){I c,ia,ib,na,nb,p,*tv,wf,xc,*ya,*yb,yc,*yv;T e,e1,*xa,*xb,*xv;    \
+  e=*(T*)jt->workareas.compare.compsev; e1=e1init;                                                                         \
+  wf=jt->workareas.compare.compswf; tv=jt->workareas.compare.compstv;                                                                        \
+  yv=jt->workareas.compare.compsyv+wf+1; yc=jt->workareas.compare.compsyc; p=yc-1-wf;                                                        \
+  xv=(T*)jt->workareas.compare.compsxv; xc=jt->workareas.compare.compsxc;                                                                    \
   ia=tv[a]; na=tv[1+a]; xa=xv+xc*ia;                                                                     \
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
@@ -99,18 +108,18 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
     case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-    case -1: DO(xc, if(xa[i] <(esel))R lt; else if(xa[i] >(esel))R gt;); xa+=xc; ++ia;               break;  \
-    case  1: DO(xc, if((esel)<xb[i] )R lt; else if((esel)>xb[i] )R gt;);               xb+=xc; ++ib; break;  \
-    case  0: DO(xc, if(xa[i] <xb[i] )R lt; else if(xa[i] >xb[i] )R gt;); xa+=xc; ++ia; xb+=xc; ++ib;         \
+    case -1: DO(xc, if(xa[i] <(esel))R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if(xa[i] >(esel))R (int)((jt->workareas.compare.complt+1)>>1);); xa+=xc; ++ia;               break;  \
+    case  1: DO(xc, if((esel)<xb[i] )R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if((esel)>xb[i] )R (int)((jt->workareas.compare.complt+1)>>1););               xb+=xc; ++ib; break;  \
+    case  0: DO(xc, if(xa[i] <xb[i] )R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if(xa[i] >xb[i] )R (int)((jt->workareas.compare.complt+1)>>1);); xa+=xc; ++ia; xb+=xc; ++ib;         \
  }}}
 
 #define COMPSPDS(f,T,e1init,esel)  \
- CF(f){I c,ia,ib,n,na,nb,p,*tv,xc,*ya,*yb,yc,*yv;int gt=jt->compgt!=1,lt=1-gt;T e,e1,*xa,*xb,*xv;     \
-  tv=jt->compstv;                                                                                        \
-  e=*(T*)jt->compsev; e1=e1init;                                                                         \
-  tv=jt->compstv; n=jt->compn;                                                                           \
-  yv=jt->compsyv+1;                yc=jt->compsyc; p=yc-1;                                               \
-  xv=n*jt->compsi+(T*)jt->compsxv; xc=jt->compsxc;                                                       \
+ CF(f){I c,ia,ib,n,na,nb,p,*tv,xc,*ya,*yb,yc,*yv;T e,e1,*xa,*xb,*xv;     \
+  tv=jt->workareas.compare.compstv;                                                                                        \
+  e=*(T*)jt->workareas.compare.compsev; e1=e1init;                                                                         \
+  tv=jt->workareas.compare.compstv; n=jt->workareas.compare.compn;                                                                           \
+  yv=jt->workareas.compare.compsyv+1;                yc=jt->workareas.compare.compsyc; p=yc-1;                                               \
+  xv=n*jt->workareas.compare.compsi+(T*)jt->workareas.compare.compsxv; xc=jt->workareas.compare.compsxc;                                                       \
   ia=tv[a]; na=tv[1+a]; xa=xv+xc*ia;                                                                     \
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
@@ -121,17 +130,17 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
     case 3: c= 0; ya=yv+yc*ia; yb=yv+yc*ib; DO(p, if(c=ya[i]-yb[i]){c=0>c?-1:1; break;});                \
    }                                                                                                     \
    switch(c){                                                                                            \
-    case -1: DO(n, if(xa[i] <(esel))R lt; else if(xa[i] >(esel))R gt;); xa+=xc; ++ia;               break;   \
-    case  1: DO(n, if((esel)<xb[i] )R lt; else if((esel)>xb[i] )R gt;);               xb+=xc; ++ib; break;   \
-    case  0: DO(n, if(xa[i] <xb[i] )R lt; else if(xa[i] >xb[i] )R gt;); xa+=xc; ++ia; xb+=xc; ++ib;          \
+    case -1: DO(n, if(xa[i] <(esel))R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if(xa[i] >(esel))R (int)((jt->workareas.compare.complt+1)>>1);); xa+=xc; ++ia;               break;   \
+    case  1: DO(n, if((esel)<xb[i] )R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if((esel)>xb[i] )R (int)((jt->workareas.compare.complt+1)>>1););               xb+=xc; ++ib; break;   \
+    case  0: DO(n, if(xa[i] <xb[i] )R (int)((UI)jt->workareas.compare.complt>>(BW-1)); else if(xa[i] >xb[i] )R (int)((jt->workareas.compare.complt+1)>>1);); xa+=xc; ++ia; xb+=xc; ++ib;          \
  }}}
 
 COMPSPDS(compspdsB,B,0,                   e       )
 COMPSPDS(compspdsI,I,0,                   e       )
 COMPSPDS(compspdsD,D,0,                   e       )
-COMPSPDS(compspdsZ,D,*(1+(D*)jt->compsev),(i&1)?e1:e)
+COMPSPDS(compspdsZ,D,*(1+(D*)jt->workareas.compare.compsev),(i&1)?e1:e)
 
 COMPSPSS(compspssB,B,0,                   e       )
 COMPSPSS(compspssI,I,0,                   e       )
 COMPSPSS(compspssD,D,0,                   e       )
-COMPSPSS(compspssZ,D,*(1+(D*)jt->compsev),(i&1)?e1:e)
+COMPSPSS(compspssZ,D,*(1+(D*)jt->workareas.compare.compsev),(i&1)?e1:e)

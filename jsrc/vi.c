@@ -1007,7 +1007,7 @@ static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,
  // If a has not been sorted already, sort it
  if(mode<IPHOFFSET)RZ(*hp=h=nodupgrade(a,acr,ac,acn,/*obsolete ad*/0,n,m,b,bk));
  if(w==mark)R mark;
- hv=AV(h)+bk*(m-1); jt->complt=-1; jt->compgt=1;
+ hv=AV(h)+bk*(m-1); jt->workareas.compare.complt=-1;
  for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=m){  // loop for each result in a
   // m1=index of last item, which may be less than m if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-m:m-1]; m1=0>s?-s:m-1; hu=hv-m1*bk;

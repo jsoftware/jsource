@@ -299,13 +299,13 @@ static int ismatch(J jt,C*pat,C*name){
  raw_stat[sizeof(struct stat)-2]=76;
  raw_stat[sizeof(struct stat)-3]=54;
 #endif
- strcpy(jt->dirbase,name); if(stat(jt->dirnamebuf,&jt->dirstatbuf))R 0;
+ strcpy(jt->dirbase,name); if(stat(jt->workareas.dirnamebuf,&jt->dirstatbuf))R 0;
  if('.'!=*pat && ((!strcmp(name,"."))||(!strcmp(name,".."))))R 0;
  if(fnmatch(pat,name,0)) R 0;
 /* Set up dirrwx, diratts, and dirmode for this file */
- jt->dirrwx[0]=access(jt->dirnamebuf,R_OK)?'-':'r';
- jt->dirrwx[1]=access(jt->dirnamebuf,W_OK)?'-':'w';
- jt->dirrwx[2]=access(jt->dirnamebuf,X_OK)?'-':'x';
+ jt->dirrwx[0]=access(jt->workareas.dirnamebuf,R_OK)?'-':'r';
+ jt->dirrwx[1]=access(jt->workareas.dirnamebuf,W_OK)?'-':'w';
+ jt->dirrwx[2]=access(jt->workareas.dirnamebuf,X_OK)?'-':'x';
  strcpy(jt->diratts,"------");
  jt->diratts[0]=(jt->dirrwx[0]=='r'&&jt->dirrwx[1]=='-')?'r':'-';
  jt->diratts[1]=('.'==name[0])?'h':'-';
@@ -351,7 +351,7 @@ F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dire
   * SYSV and BSD have different return types for sprintf(),
   * so we use less efficient but portable code.
   */
- sprintf(jt->dirnamebuf,"%s/",dir); jt->dirbase=jt->dirnamebuf+strlen(jt->dirnamebuf); f=readdir(DP);
+ sprintf(jt->workareas.dirnamebuf,"%s/",dir); jt->dirbase=jt->workareas.dirnamebuf+strlen(jt->workareas.dirnamebuf); f=readdir(DP);
  GATV(z,BOX,n,1,0); zv=AAV(z);
  while(f){
   if(ismatch(jt,pat,f->d_name)){

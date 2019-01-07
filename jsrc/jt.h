@@ -98,7 +98,7 @@ typedef struct {
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
- I*  numloctbl;         // pointer to data area for locale-number to locale translation
+ I*   numloctbl;         // pointer to data area for locale-number to locale translation
  UI4  numlocsize;       // number of BYTES in numloctbl
  I4   parsercalls;      /* # times parser was called                       */
  UC   typepriority[19];  // priority value for the noun types
@@ -180,22 +180,6 @@ typedef struct {
  I    cdnl;             /* # of used entries in cdhashl                    */
  I    cdns;             /* length of used portion of cdstr                 */
  A    cdstr;            /* strings for cdarg                               */
- CMP  comp;             /* comparison function in sort                     */
- int  compgt;           /* comparison: denotes greater than                */
- B    compusejt;        // set if the parameter to comparison function is jt rather than n
- I    compk;            /* comparison: byte size of each item              */
- int  complt;           /* comparison: denotes less    than                */
- I    compn;            /* comparison: number of atoms in each item        */
- C*   compsev;          /* comparison: sparse element value ptr            */
- I    compsi;           /* comparison: sparse current cell index           */
- I*   compstv;          /* comparison: sparse element item indices         */
- I    compswf;          /* comparison: sparse wf value                     */
- I    compsxc;          /* comparison: sparse aii(x)                       */
- C*   compsxv;          /* comparison: sparse AV(x)                        */
- I    compsyc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
- I*   compsyv;          /* comparison: sparse AV(y)                        */
- C*   compv;            /* comparison: beginning of data area              */
-// obsolete  A    compw;            /* comparison: orig arg. (for relative addressing) */
  L*   cursymb;          /* current symbol table entry                      */
  A    dbalpha;          /* left  argument for rerun                        */
  I    dbjump;           /* line to jump to                                 */
@@ -240,7 +224,6 @@ typedef struct {
  I    mtyo;				      /* jsto output type - jfwrite arg to jpr           */
  C*   mtyostr;          /* jsto string                                     */
  I    nfe;              /* 1 for J native front end                        */
- I    nlt;              /* namelist type  mask                             */
  I    oleop;            /* com flag to capture output                      */
  void*opbstr;           /* com ptr to BSTR for captured output             */
  I    outmaxafter;      /* output: maximum # lines after truncation        */
@@ -293,7 +276,6 @@ typedef struct {
 #if MEMAUDIT & 2
  I    audittstackdisabled;   // set to 1 to disable auditing
 #endif
- B    nla[256];         /* namelist names mask                             */
  I    rng;              /* RNG: generator selector                         */
  UF   rngF[5];          /* RNG: function to get the next random number     */
  UI*  rngfxsv;          /* RNG: rngv for fixed seed (?.)                   */
@@ -308,8 +290,34 @@ typedef struct {
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  I    rngw;             /* RNG: # bits in a random #                       */
- C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
+union {
+ struct {
+  B    nla[256];         /* namelist names mask                             */
+  I    nlt;              /* namelist type  mask                             */
+ } namelist;
+#if (SYS & SYS_UNIX)
  C    dirnamebuf[NPATH];/* for directory search                            */
+#endif
+ struct {
+  CMP  comp;             /* comparison function in sort                     */
+// obsolete  int  compgt;           /* comparison: denotes greater than                */
+  B    compusejt;        // set if the parameter to comparison function is jt rather than n
+  I    compk;            /* comparison: byte size of each item              */
+  I    complt;           /* comparison: denotes less    than                */
+  I    compn;            /* comparison: number of atoms in each item        */
+  C*   compsev;          /* comparison: sparse element value ptr            */
+  I    compsi;           /* comparison: sparse current cell index           */
+  I*   compstv;          /* comparison: sparse element item indices         */
+  I    compswf;          /* comparison: sparse wf value                     */
+  I    compsxc;          /* comparison: sparse aii(x)                       */
+  C*   compsxv;          /* comparison: sparse AV(x)                        */
+  I    compsyc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
+  I*   compsyv;          /* comparison: sparse AV(y)                        */
+  C*   compv;            /* comparison: beginning of data area              */
+// obsolete  A    compw;            /* comparison: orig arg. (for relative addressing) */
+ } compare;
+} workareas;
+ C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
  C    breakfn[NPATH];   /* break file name                                 */
 // the offset at this point is about 0x1890, so everything up to here will fit in a single 0x2000-byte DRAM page
  LS   callstack[1+NFCALL]; /* named fn calls: stack                           */

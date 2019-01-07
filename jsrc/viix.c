@@ -103,7 +103,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u
    v=AV(a); r=(D)v[n-1]-(D)v[0]; if(0>r)r=-r;
    if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
  }}
- jt->complt=-1; jt->compgt=1; cc=0; uu=CAV(a); vv=CAV(a)+bp(at)*c*(n-1);
+ jt->workareas.compare.complt=-1; cc=0; uu=CAV(a); vv=CAV(a)+bp(at)*c*(n-1);
  // first decide if the input array is ascending or descending  todo kludge just compare first to last
  switch(CTTZ(at)){
   default:   ASSERT(0,EVNONCE);

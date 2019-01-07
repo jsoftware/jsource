@@ -1279,7 +1279,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
   RZ(h=nodupgrade(a,(I)h,ac,acn,/* obsolete ad*/0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
- hv=AV(h)+bk*(asct-1); jt->complt=-1; jt->compgt=1;  // set comparison mode for our comparisons
+ hv=AV(h)+bk*(asct-1); jt->workareas.compare.complt=-1;  // set comparison mode for our comparisons
  for(l=0;l<ac;++l,av+=acn,wv+=wcn,hv+=asct){  // loop for each result in a
   // m1=index of last item-1, which may be less than m-1 if there were discarded duplicates (signaled by last index <0)
   s=hv[bk?1-asct:asct-1]; m1=0>s?~s:asct-1; hu=hv-m1*bk;

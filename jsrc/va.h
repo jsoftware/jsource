@@ -108,6 +108,7 @@ typedef struct {VA2 p1[6];} UA;
 
 #define SBORDER(v)      (SBUV(v)->order)
 
+#define SBNE(u,v)       (SBORDER(u)!=SBORDER(v))
 #define SBLT(u,v)       (SBORDER(u)< SBORDER(v))
 #define SBLE(u,v)       (SBORDER(u)<=SBORDER(v))
 #define SBGT(u,v)       (SBORDER(u)> SBORDER(v))

@@ -21,7 +21,7 @@
 /* merge sort with special code for n<:5                                */
 /*                                                                      */
 /************************************************************************/
-#define VS(i,j)          (0<CALL1(jt->comp,u[i],u[j]))
+#define VS(i,j)          (0<CALL1(jt->workareas.compare.comp,u[i],u[j]))
 #define XC(i,j)          {q=u[i]; u[i]=u[j]; u[j]=q;}
 #define P3(i,j,k)        {ui=u[i]; uj=u[j]; uk=u[k]; u[0]=ui; u[1]=uj; u[2]=uk;}
 #define P5(i,j,k,l,m)    {ui=u[i]; uj=u[j]; uk=u[k]; ul=u[l]; um=u[m];  \
@@ -85,9 +85,9 @@ static __forceinline B compdd(I n, D *a, D *b){COMPGRADE(D,>)}
 // Perform grade.  zv contains pointers to items, filled in here
 static void jtmsortitems(J jt, void **(*sortfunc)(),  I n, void **zv, void **xv){
  // Initialize the result area to be 'in', with pointers to the input items
- C* item = jt->compv; C*item0=item;  I inc = jt->compk; void **zvv = (void**)zv; DQ(n, *zvv++=item; item+=inc;)
+ C* item = jt->workareas.compare.compv; C*item0=item;  I inc = jt->workareas.compare.compk; void **zvv = (void**)zv; DQ(n, *zvv++=item; item+=inc;)
  // Do the grade
- void **sortres = (*sortfunc)(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
+ void **sortres = (*sortfunc)(jt->workareas.compare.comp, jt->workareas.compare.compusejt?(I)jt:jt->workareas.compare.compn, zv, n, xv);
  // Convert the result to item numbers in the main result area.
  I shift=CTTZI(inc);  // bit number of LSB
  if(inc==((I)1)<<shift){DQ(n, *zv++=(void *)((I)((C*)*sortres++-item0)>>shift););  // use shift for power of 2 itemsize
@@ -102,7 +102,7 @@ static void jtmsortitems(J jt, void **(*sortfunc)(),  I n, void **zv, void **xv)
 // Perform grade when zv contains indexes (or whatever else the caller needs), already filled in
 void jtmsort(J jt, I n, void **zv, void **xv){
  // Do the grade
- void **sortres = jmsortmincomp(jt->comp, jt->compusejt?(I)jt:jt->compn, zv, n, xv);
+ void **sortres = jmsortmincomp(jt->workareas.compare.comp, jt->workareas.compare.compusejt?(I)jt:jt->workareas.compare.compn, zv, n, xv);
  // Convert the result to the main result area, if it's not already there
  if(sortres!=zv)DQ(n, *zv++=*sortres++;);
 }
@@ -130,12 +130,12 @@ static struct {
 
 static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  t=AT(w);
- jt->compk=ai*bp(t); ck=jt->compk*n;
- jt->compn=ai<<((t>>CMPXX)&1); jt->compv=CAV(w);  /* obsolete jt->compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values */
- jt->comp=sortroutines[CTTZ(t)][jt->compgt==1].comproutine; jt->compusejt = !!(t&BOX+XNUM+RAT);
- void **(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
+ jt->workareas.compare.compk=ai*bp(t); ck=jt->workareas.compare.compk*n;
+ jt->workareas.compare.compn=ai<<((t>>CMPXX)&1); jt->workareas.compare.compv=CAV(w);  /* obsolete jt->workareas.compare.compw=(A)crel;  // compw is relocation offset, 0 if non-relative.  Applies only to boxed values */
+ jt->workareas.compare.comp=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine; jt->workareas.compare.compusejt = !!(t&BOX+XNUM+RAT);
+ void **(*sortfunc)() = sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].sortfunc;
  GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
- DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->compv+=ck; zv+=n;);
+ DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->workareas.compare.compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
 
@@ -277,7 +277,7 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
   // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
   // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
-  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,((jt->compgt+1)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
+  colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,((1-jt->workareas.compare.complt)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
   colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   // for the MSB, which is signed, do the same thing, but to save a few cycles tell grcol if all the values are negative or nonnegative.  grcol will
@@ -332,7 +332,7 @@ static GF(jtgri1){A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  for(i=0;i<m;++i){I colflags;
   // process each 16-bit section of input
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,jt->compgt+1);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(I)/sizeof(US),u,1-jt->workareas.compare.complt);  // move 'up' to bit 1
 #if SY_64
   colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),u+=WDINC,colflags);
@@ -351,7 +351,7 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  GATV(x,INT,n,1,0); xv=AV(x);
  for(i=0;i<m;++i){I colflags;
   u=(US*)wv+INTLSBWDX;   // point to LSB
-  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,jt->compgt+1);  // move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,1-jt->workareas.compare.complt);  // move 'up' to bit 1
   grcol(65536,0L,yv,n,xv,zv,sizeof(C4)/sizeof(US),u+=WDINC,colflags);
   wv+=c; zv+=n;
  }
@@ -418,7 +418,7 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
- GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
+ GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
  // should start in correct position to end in z
  if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);
@@ -469,7 +469,7 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=1==jt->compgt;
+ GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
  if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);
  }
  for(i=0;i<m;++i){
@@ -520,7 +520,7 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
 static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
- q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
+ q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
  if(1<q){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
   vv=wv+ai; b=(q&1);
@@ -535,7 +535,7 @@ static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>lgn)R grx(m,ai,n,w,zv);   // TUNE
  ai<<=((AT(w)>>C2TX)&1);
- p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=1==jt->compgt;
+ p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
  q=C2T&AT(w) && C_LE;
  if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);}
  for(i=0;i<m;++i){
@@ -551,8 +551,8 @@ static GF(jtgrs){R gri(m,ai,n,sborder(w),zv);}
      /* grade"r w on symbols w */
 
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
- s=AS(w); n=s[0]; jt->compn=s[1]-1; jt->compk=SZI*s[1];
- jt->comp=compp; jt->compsyv=AV(a); jt->compv=CAV(w); jt->compusejt=1;
+ s=AS(w); n=s[0]; jt->workareas.compare.compn=s[1]-1; jt->workareas.compare.compk=SZI*s[1];
+ jt->workareas.compare.comp=compp; jt->workareas.compare.compsyv=AV(a); jt->workareas.compare.compv=CAV(w); jt->workareas.compare.compusejt=1;
  GATV(z,INT,n,1,0); zv=AV(z);
  GATV(x,INT,n,1,0); xv=AV(x);
  msortitems(jmsort,n,(void**)zv,(void**)xv);
@@ -598,13 +598,13 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-#define GBEGIN(G,L)  A z;int ogt=jt->compgt,olt=jt->complt; jt->compgt=G; jt->complt=L
-#define GEND(z)      jt->compgt=ogt; jt->complt=olt; R z
+#define GBEGIN(L)  A z;I olt=jt->workareas.compare.complt; jt->workareas.compare.complt=L
+#define GEND(z)      jt->workareas.compare.complt=olt;  R z
 
-F1(jtgrade1 ){GBEGIN( 1,-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F1(jtdgrade1){GBEGIN(-1, 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F2(jtgrade2 ){GBEGIN( 1,-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
-F2(jtdgrade2){GBEGIN(-1, 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
+F1(jtgrade1 ){GBEGIN(-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
+F1(jtdgrade1){GBEGIN( 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
+F2(jtgrade2 ){GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
+F2(jtdgrade2){GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
 
 
 #define OSGT(i,j) (u[i]>u[j])

@@ -49,7 +49,7 @@ static void jterasenl(J jt, I n){
 static A jtactivenl(J jt){A y;I n=0;C s[20];
   GATV(y,BOX,jt->stused,1,0); A *yv=AAV(y); A *pv=AAV(jt->stptr); I *nv=AV(jt->stnum);
   DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
-      if(jt->nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
+      if(jt->workareas.namelist.nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
   R take(sc(n),y);
 }
 
@@ -295,14 +295,14 @@ static F1(jtlocnlx){A y,z;B*wv;I m=0;
  R grade2(z,ope(z));
 }
 
-F1(jtlocnl1){memset(jt->nla,C1,256); R locnlx(w);}
+F1(jtlocnl1){memset(jt->workareas.namelist.nla,C1,256); R locnlx(w);}
     /* 18!:1 locale name list */
 
 F2(jtlocnl2){UC*u;
  RZ(a&&w);
  ASSERT(LIT&AT(a),EVDOMAIN);
- memset(jt->nla,C0,256); 
- u=UAV(a); DO(AN(a),jt->nla[*u++]=1;);
+ memset(jt->workareas.namelist.nla,C0,256); 
+ u=UAV(a); DO(AN(a),jt->workareas.namelist.nla[*u++]=1;);
  R locnlx(w); 
 }    /* 18!:1 locale name list */
 

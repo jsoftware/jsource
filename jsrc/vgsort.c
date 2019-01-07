@@ -82,8 +82,8 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
  I bpi=api*bp(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
  void * RESTRICT wv=voidAV(w); void * RESTRICT zv=voidAV(z);
- CMP cmpfunc=sortroutines[CTTZ(t)][jt->compgt==1].comproutine;
- void *(*sortfunc)() = sortroutines[CTTZ(t)][jt->compgt==1].sortfunc;
+ CMP cmpfunc=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine;
+ void *(*sortfunc)() = sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].sortfunc;
  // allocate the merge work area, large enough to hold one sort.  In case this turns out to be the final result,
  // make the shape the same as the result shape (if there is more than one sort, this shape will be wrong, but that
  // won't matter, since the shape will never be used elsewhere)
@@ -112,7 +112,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
 
 static SF(jtsortb){A z;B up,*u,*v;I i,s;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=BAV(z);
- up=1==jt->compgt;  u=BAV(w);
+ up=(UI)jt->workareas.compare.complt>>(BW-1);  u=BAV(w);
  for(i=0;i<m;++i){
   s=bsum(n,u);
   if(up){memset(v,C0,n-s); memset(v+n-s,C1,s  );}
@@ -124,7 +124,7 @@ static SF(jtsortb){A z;B up,*u,*v;I i,s;
 
 static SF(jtsortb2){A z;B up;I i,ii,j,p,yv[4];US*v,*wv,x,zz[4];
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
- wv=USAV(w); p=4; up=1==jt->compgt;
+ wv=USAV(w); p=4; up=(UI)jt->workareas.compare.complt>>(BW-1);
  DO(p, yv[i]=0;); 
  zz[0]=BS00; zz[1]=BS01; zz[2]=BS10; zz[3]=BS11;
  for(i=0;i<m;++i){
@@ -137,7 +137,7 @@ static SF(jtsortb2){A z;B up;I i,ii,j,p,yv[4];US*v,*wv,x,zz[4];
 
 static SF(jtsortb4){A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=(UINT*)AV(z);
- wv=(UINT*)AV(w); p=16; up=1==jt->compgt;
+ wv=(UINT*)AV(w); p=16; up=(UI)jt->workareas.compare.complt>>(BW-1);
  DO(p, yv[i]=0;); 
  zz[ 0]=B0000; zz[ 1]=B0001; zz[ 2]=B0010; zz[ 3]=B0011;
  zz[ 4]=B0100; zz[ 5]=B0101; zz[ 6]=B0110; zz[ 7]=B0111;
@@ -153,7 +153,7 @@ static SF(jtsortb4){A z;B up;I i,ii,j,p,yv[16];UINT*v,*wv,x,zz[16];
 
 static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=UAV(z);
- wv=UAV(w); p=LIT&AT(w)?256:2; up=1==jt->compgt;
+ wv=UAV(w); p=LIT&AT(w)?256:2; up=(UI)jt->workareas.compare.complt>>(BW-1);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
   DO(n, ++yv[*wv++];);
@@ -165,7 +165,7 @@ static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
 
 static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
- wv=USAV(w); p=65536; up=1==jt->compgt;
+ wv=USAV(w); p=65536; up=(UI)jt->workareas.compare.complt>>(BW-1);
  GATV(y,INT,p,1,0); yv=AV(y);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
@@ -197,9 +197,9 @@ static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
   DO(n, ++yv[*wv++];);  // increment total for each input atom
   // run through the totals, copying in the requisite # repetitions of each value
   // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
-  I incr = jt->compgt; I zincr = (incr&1)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>compgt is 1 or -1
+  I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>complt is 1 or -1
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
-//  if(jt->compgt==1){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
+//  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
 //  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DO(s, *zv++=j  ;););}
  }
  R z;
@@ -215,7 +215,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
  GATV(x,INT,n,1,0); xv=AV(x);
  for(i=0;i<m;++i){I colflags;
-  colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+(jt->compgt+1));  // 'sort', and move 'up' to bit 1
+  colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+1-jt->workareas.compare.complt);  // 'sort', and move 'up' to bit 1
 #if SY_64
   colflags=grcol(65536,0L,yv,n,xv,zv,sizeof(I)/sizeof(US),1*WDINC+INTLSBWDX+(US*)xv,colflags);
   colflags=grcol(65536,0L,yv,n,zv,xv,sizeof(I)/sizeof(US),2*WDINC+INTLSBWDX+(US*)zv,colflags);
@@ -240,7 +240,7 @@ static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  for(i=0;i<m;++i){
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
   DO(n, ++yv[*wv++];);
-  I incr = jt->compgt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+((incr>>(BW-1))&(rng.range-1)));
+  I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=(C4)(rng.min+((incr>>(BW-1))&(rng.range-1)));
   DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(C4*)((C*)zv+zincr);) j+=(C4)incr;)
  }
  R z;
@@ -255,7 +255,7 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
  GATV(x,C4T,n,1,0); xu=C4AV(x);
  for(i=0;i<m;++i){I colflags;
-  colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+(jt->compgt+1));  // 'sort' + 'up' moved to bit 1
+  colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+1-jt->workareas.compare.complt);  // 'sort' + 'up' moved to bit 1
   grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
   wv+=n; zu+=n;
  }
@@ -275,7 +275,7 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  for(i=0;i<m;++i){I colflags;
   g=wv; nneg=0; DO(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv
-  colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((nneg==n)<<1)^(jt->compgt+1))); // 'sort', plus 'up' in bit 1, but reversed if all neg
+  colflags=grcol(65536,    0L,      yv,n,(I*)wv,(I*)h,sizeof(D)/sizeof(US),FPLSBWDX+0*WDINC+(US*)wv,4+(((nneg==n)<<1)^(1-jt->workareas.compare.complt))); // 'sort', plus 'up' in bit 1, but reversed if all neg
   colflags=grcol(65536,    0L,      yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+1*WDINC+(US*)h ,colflags);
   colflags=grcol(65536,    0L,      yv,n,(I*)g, (I*)h,sizeof(D)/sizeof(US),FPLSBWDX+2*WDINC+(US*)g ,colflags);
   grcol(32768<<b,(nneg==n)<<15,yv,n,(I*)h, (I*)g,sizeof(D)/sizeof(US),FPLSBWDX+3*WDINC+(US*)h ,colflags);

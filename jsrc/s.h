@@ -4,8 +4,8 @@
 /* For Symbol Tables aka Locales                                           */
 
 // The first L block in a symbol table is used to point to the path and the locale-name rather than hash chains
-#define LOCPATH(g) ((jt->sympv)[AV(g)[SYMLINFO]].val)
-#define LOCNAME(g) ((jt->sympv)[AV(g)[SYMLINFO]].name)
+#define LOCPATH(g) ((jt->sympv)[LXAV(g)[SYMLINFO]].val)
+#define LOCNAME(g) ((jt->sympv)[LXAV(g)[SYMLINFO]].name)
 
 
 /* macro to define a function that walks through a symbol table */
@@ -18,9 +18,9 @@
 /* PROCESS - processing on a selected name                      */
 
 #define SYMWALK(f,T,TYPE,COUNT,COL,SELECT,PROCESS)  \
- F1(f){A z;I*e,i,j,k,m=0,n;L*d;T*zv;                         \
+ F1(f){A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \
   RZ(w);                                                     \
-  n=AN(w); e=1+AV(w);                                  \
+  n=AN(w); e=SYMLINFOSIZE+LXAV(w);                                  \
   GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,R 0);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \

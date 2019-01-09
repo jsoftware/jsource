@@ -159,12 +159,12 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 }    /* 4!:4  script index */
 
 
-static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;I*e,i,k,m,p,wn;L*d;
+static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  RZ(w);
- wn=AN(w); e=AV(w);                                /* locale                */
+ wn=AN(w); e=LXAV(w);                                /* locale                */
  x=(A)(*e+jt->sympv)->name; p=AN(x); s=NAV(x)->s;  /* locale name           */
  m=*pm; v=AAV(ch)+m;                               /* result to appended to */
- for(i=1;i<wn;++i,++e)if(*e){
+ for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
   d=*e+jt->sympv;
   while(1){
    if(LCH&d->flag&&d->name&&d->val){
@@ -183,11 +183,12 @@ static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;I*e,i,k,m,p,wn;L*d;
  R ch;
 }
 
-F1(jtnch){A ch;B b;I*e,i,m,n;L*d;
+F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
  GAT(ch,BOX,20,1,0); m=0;
  if(jt->stch){
-  n=AN(jt->stloc); e=1+AV(jt->stloc); // obsolete pv=AAV(jt->stptr);
+  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV(jt->stloc); // obsolete pv=AAV(jt->stptr);
+  // named locales first
   for(i=1;i<n;++i,++e)if(*e){
    d=*e+jt->sympv;
    while(1){
@@ -196,6 +197,7 @@ F1(jtnch){A ch;B b;I*e,i,m,n;L*d;
     d=d->next+jt->sympv;
   }}
   // obsolete n=AN(jt->stptr);
+  // now numbered locales
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
  jt->stch=b;
@@ -204,7 +206,7 @@ F1(jtnch){A ch;B b;I*e,i,m,n;L*d;
 }    /* 4!:5  names changed */
 
 
-F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
+F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
  RZ(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -214,7 +216,14 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;
   zv[i]=1&&y;
   // If the name is defined and is an ACV, invalidate all looked-up ACVs
   // If the value is at large in the stacks and not deferred-freed, increment the use count and deferred-free it
-  if(y&&(v=syrd(y))){if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v)); if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);} I mod=symfree(v); jt->modifiercounter+=mod&1; RZ(mod); }
+  if(y&&(v=syrd(y))){
+   if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
+   if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);}
+// obsolete  I mod=symfree(v);  RZ(mod);
+   if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
+   probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,syrdforlocale(y));  // delete the name in the locale in which it is defined
+  }
  }
+ jt->modifiercounter+=modifierchg;
  RETF(z);
 }    /* 4!:55 expunge */

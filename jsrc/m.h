@@ -42,3 +42,14 @@
 
 // bp(type) returns the number of bytes in an atom of the type
 #define bp(i) (jt->typesizes[CTTZ(i)])
+// bplg(type) works for NOUN types and returns the lg of the size
+#if BW==64
+#define bplg(i) ((0x008bb6db408d6c60>>3*CTTZ(i))&7)  // 010 001 011   101 101 101 101 101 101 000 000   100 011 011 100 011 011 000 000 = 0 1000 1011 1011 0110 1101 1011   0100 0000 1000 1101 1100 0110 1100 0000
+// bpnoun is like bp but for NOUN types
+#define bpnoun(i) (1LL<<bplg(i))
+#else
+#define bpnoun(i) bp(i)
+#define bplg(i) CTTZ(bpnoun(i))
+#endif
+
+

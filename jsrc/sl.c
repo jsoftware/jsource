@@ -146,7 +146,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
- RZ(v=symnew(&AV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=jt->symindex++;   // allocate at head of chain
+ RZ(v=symnew(&LXAV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));  // this fills in the hash for the name
@@ -175,7 +175,7 @@ B jtsymbinit(J jt){A q;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
- GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains
+ GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains.  No name/val for stloc
  jtinitnl(jt);  // init numbered locales
  RZ(jt->global=stcreate(0,5L+PTO,sizeof(jt->baselocale),jt->baselocale));
  RZ(           stcreate(0,7L+PTO,1L,"z"   ));
@@ -232,13 +232,13 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
 // b is flags: 1=check name for validity, 2=do not allow numeric locales (whether atomic or not)
 static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
  RZ(w);
- if((!(b&2))&&!AR(w) && AT(w)&(INT|B01))R w;  // scalar integer is OK
+ if((!(b&2))&&!AR(w) && AT(w)&(INT|B01)/C_LE)R w;  // scalar integer is OK
  n=AN(w);
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
  wv=AAV(w); 
  for(i=0;i<n;++i){
   y=wv[i];  // pointer to box
-  if((!(b&2))&&!AR(y)&&AT(y)&(INT|B01))continue;   // scalar numeric locale is ok
+  if((!(b&2))&&!AR(y)&&AT(y)&(INT|B01)/C_LE)continue;   // scalar numeric locale is ok
   m=AN(y); s=CAV(y);
   ASSERT(1>=AR(y),EVRANK);
   ASSERT(m,EVLENGTH);
@@ -271,7 +271,7 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(IAV(w)[0])?1:-1; RETF(z);}
+ if(AT(w)&(INT|B01)/C_LE){IAV(z)[0]=findnl(IAV(w)[0])?1:-1; RETF(z);}
  for(i=0;i<n;++i){
   y=wv[i];
   if(!AR(y)&&AT(y)&((INT|B01)/C_LE)){  // atomic numeric locale
@@ -307,7 +307,7 @@ F2(jtlocnl2){UC*u;
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g,*wv,y;
- if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,IAV(w)[0]);  // atomic integer is OK
+ if(!AR(w) && AT(w)&(INT|B01)/C_LE)R (b?jtstfindcre:jtstfind)(jt,-1,0,IAV(w)[0]);  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
  DO(AN(w), y=wv[i]; if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&((INT|B01)/C_LE)?-1:AN(y),CAV(y),AT(y)&((INT|B01)/C_LE)?IAV(y)[0]:BUCKETXLOC(AN(y),CAV(y)))))R 0;);
@@ -332,15 +332,17 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
 }    /* 18!:2  set locale path */
 
 
-static F2(jtloccre){A g,y;C*s;I n,p,*u;L*v;
+static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  RZ(a&&w);
  if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
  if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
-  // named locale exists.  Verify no defined names
+  // named locale exists.  Verify no defined names, then delete it
   g=v->val; 
-  u=1+AV(g); DO(AN(g)-1, ASSERT(!u[i],EVLOCALE););
-  RZ(symfreeh(g,v));
+  LX *u=SYMLINFOSIZE+LXAV(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
+  probedel(n,s,(UI4)nmhash(n,s),jt->stloc);
+// obsolete   RZ(symfreeh(g,v));
+  fr(g);  // delete symbols (of which there are none) and the block itself
  } 
  RZ(stcreate(0,p,n,s));
  R box(ca(y));
@@ -453,11 +455,14 @@ B jtlocdestroy(J jt,A g){
  if(isnum){
   // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
 // obsolete   I i=jtindexforloc(jt,locname->bucketx);  // find the locale in the list of numbered locales
-  RZ(redefg(g)); RZ(symfreeh(g,0L)); jterasenl(jt,locname->bucketx);
+// obsolete   RZ(redefg(g)); RZ(symfreeh(g,0L)); jterasenl(jt,locname->bucketx);
+  RZ(redefg(g)); fr(g); jterasenl(jt,locname->bucketx);  // free the locale and its names
  } else {
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
-  L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
-  RZ(redefg(g)); RZ(symfreeh(g,locsym));
+// obsolete   L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
+  probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale
+// obsolete   RZ(redefg(g)); RZ(symfreeh(g,locsym));
+  RZ(redefg(g)); fr(g);  // free the locale and its names
  }
  if(g==jt->global)jt->global=0;
  R 1;

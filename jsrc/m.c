@@ -228,7 +228,7 @@ F1(jtspfor){A*wv,x,y,z;C*s;D*v,*zv;I i,m,n;
  RETF(z);
 }    /* 7!:5 space for named object; w is <'name' */
 
-F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
+F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
  RZ(w);
  n=AN(w); wv=AAV(w);  v=&jt->spfor;
  ASSERT(!n||BOX&AT(w),EVDOMAIN);
@@ -250,8 +250,8 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I c,i,j,m,n,*yv;L*u;
   ASSERT(y,EVLOCALE);
   *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name
-  m=AN(y); yv=AV(y); 
-  for(j=1;j<m;++j){  // for each name in the locale
+  m=AN(y); yv=LXAV(y); 
+  for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
    while(c){*v+=sizeof(L); u=c+jt->sympv; spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value
   }
@@ -446,21 +446,27 @@ void audittstack(J jt){
 #endif
 }
 
-static void freesymb(J jt, A w){I j,k,kt,wn=AN(w),*wv=AV(w);
+// Free all symbols pointed to by the SYMB block w.
+static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV(w);
+ L *jtsympv=jt->sympv;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
+  // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
+  // we know there will be no allocations during the free process.
  // First, free the path and name (in the SYMLINFO block), and then free the SYMLINFO block itself
- fr(LOCPATH(w));
- fr(LOCNAME(w));
- if(k=wv[SYMLINFO]){  // The LINFO block might not have been allocated
+ if(k=wv[SYMLINFO]){  // The LINFO block might not have been allocated (for local symbol tables)
+  fr(LOCPATH(w));
+  fr(LOCNAME(w));
   // clear the data fields   kludge but this is how it was done (should be done in symnew)
-  (jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;
-  (jt->sympv)[k].next=jt->sympv->next;jt->sympv->next=k;  // Note: must not try to hold chainbase in a register, because this routine is recursive
+  jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+  jtsympv[k].next=jtsympv[0].next;jtsympv[0].next=k;  // jt->sympv[0] is the base of the free chain
  }
+ // loop through each hash chain, clearing the blocks in the chain
  for(j=SYMLINFOSIZE;j<wn;++j){
   // free the chain; kt->last block freed
-  for(k=wv[j];k;k=(jt->sympv)[k].next){kt=k;fr((jt->sympv)[k].name);fa((jt->sympv)[k].val);(jt->sympv)[k].name=0;(jt->sympv)[k].val=0;(jt->sympv)[k].sn=0;(jt->sympv)[k].flag=0;(jt->sympv)[k].prev=0;}  // prev for 18!:31
-  // if the chain is empty, chain previous pool from it & make it the base of the free pool
-  // if the chain is not empty, make it the base of the free pool & chain previous pool from it
-  if(k=wv[j]){(jt->sympv)[kt].next=jt->sympv->next;jt->sympv->next=k;}
+  if(k=wv[j]){
+   do{kt=k;fr(jtsympv[k].name);fa(jtsympv[k].val);jtsympv[k].name=0;jtsympv[k].val=0;jtsympv[k].sn=0;jtsympv[k].flag=0;k=jtsympv[k].next;}while(k);  // prev for 18!:31
+   // if the chain is not empty, make it the base of the free pool & chain previous pool from it
+   jtsympv[kt].next=jtsympv[0].next;jtsympv[0].next=wv[j];
+  }
  }
 }
 

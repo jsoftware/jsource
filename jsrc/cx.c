@@ -194,8 +194,8 @@ static DF2(jtxdefn){PROLOG(0048);
   // the bucketx for xy are 0 or maybe 1.  We have precalculated the buckets for each table size, so we can install the values
   // directly.
   UI4 yxbucks = (UI4)AM(locsym);  // get the yx bucket indexes, stored in AM by crelocalsyms
-  L *ybuckptr = IAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
-  L *xbuckptr = IAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
+  L *ybuckptr = LXAV0(jt->local)[(US)yxbucks]+jt->sympv;  // pointer to sym block for y
+  L *xbuckptr = LXAV0(jt->local)[yxbucks>>16]+jt->sympv;  // pointer to sym block for y
   if(w){ RZ(ras(w)); ybuckptr->val=w; ybuckptr->sn=jt->slisti;}  // If y given, install it & incr usecount as in assignment.  Include the script index of the modification
     // for x (if given), slot is from the beginning of hashchain EXCEPT when that collides with y; then follow y's chain
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
@@ -565,7 +565,7 @@ static B jtsent12b(J jt,A w,A*m,A*d){A t,*wv,y,*yv;I j,*v;
 
 // Install bucket info into the NAME type t, if it is a local name
 // actstv points to the chain headers, actstn is the number of chains
-static void jtcalclocalbuckets(J jt, A t, I *actstv, I actstn){I k;
+static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
  if(!(NAV(t)->flag&(NMLOC|NMILOC))){  // don't store if we KNOW we won't be looking up in the local symbol table
   I4 compcount=0;  // number of comparisons before match
   // lv[j] is a simplename.  We will install the bucket/index fields
@@ -608,7 +608,7 @@ static void jtcalclocalbuckets(J jt, A t, I *actstv, I actstn){I k;
 // flags is the flag field for the verb we are creating; indicates whether uvmn are to be defined
 //
 // We save the symbol chain numbers for y/x in the AM field of the SYMB block
-A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,k,ln;
+A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,ln;LX k;
  // Allocate a pro-forma symbol table to hash the names into
  RZ(pfst=stcreate(2,1L+PTO,0L,0L));
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
@@ -672,9 +672,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
- I pfstn=AN(pfst); I*pfstv=AV(pfst); I asgct=0;
- for(j=1;j<pfstn;++j){  // for each hashchain
-  for(k=pfstv[j];k;k=(jt->sympv)[k].next)++asgct;  // chase the chain and count
+ I pfstn=AN(pfst); LX*pfstv=LXAV(pfst),pfx; I asgct=0;
+ for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
+  for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
  }
  asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct&&j<(sizeof(yxbuckets)/sizeof(yxbuckets[0])-1);++j);  // Find symtab size that has 33% empty space
  RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
@@ -685,12 +685,12 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  // So we add them by hand - just y and possibly x.
  RZ(probeis(ynam,actst));if(!(!dyad&&(type>=3||(flags&VXOPR)))){RZ(probeis(xnam,actst));}
  for(j=1;j<pfstn;++j){  // for each hashchain
-  for(k=pfstv[j];k;k=(jt->sympv)[k].next){L *newsym;
-   RZ(newsym=probeis((jt->sympv)[k].name,actst));  // create new symbol (or possibly overwrite old argument name)
+  for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next){L *newsym;
+   RZ(newsym=probeis((jt->sympv)[pfx].name,actst));  // create new symbol (or possibly overwrite old argument name)
    newsym->flag |= LPERMANENT;   // Mark as permanent
   }
  }
- I actstn=AN(actst)-SYMLINFOSIZE; I*actstv=AV(actst);  // # hashchains in new symbol table, and pointer to hashchain table
+ I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV(actst);  // # hashchains in new symbol table, and pointer to hashchain table
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
@@ -714,10 +714,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // a is a local symbol table, possibly in use
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
-A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
- RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=AV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
+A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV(a),*zv;
+ RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=LXAV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
  // Go through each hashchain of the model
- for(j=1;j<an;++j) {I *zhbase=&zv[j]; I ahx=av[j]; I ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
+ for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...
    RZ(l=symnew(zhbase,ztx)); 
    l->name=(jt->sympv)[ahx].name; ras(l->name);  // point symbol table to the name block, and increment its use count accordingly

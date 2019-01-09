@@ -53,6 +53,7 @@ typedef US                 RANKT;
 #define RANKTX             16   // # bits in a RANKT
 typedef UI4                RANK2T;  // 2 ranks, (l<<16)|r
 typedef I                  FLAGT;
+typedef UI4                LX;  // index of an L block in jt->sympv
 
 typedef struct AD AD;
 typedef AD *A;
@@ -160,10 +161,11 @@ typedef I SI;
 #define UAV(x)          (     (UC*)(x)+AK(x) )  /* unsigned character      */
 #define UIAV(x)         ((UI*)((C*)(x)+AK(x)))  /* unsigned character      */
 #define UI4AV(x)        ((UI4*)((C*)(x)+AK(x)))  /* unsigned 32-bit int      */
+#define LXAV(x)         ((LX*)((C*)(x)+AK(x)))  /* symbol index      */
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
-#define IAV0(x)         ( (I*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
+#define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */
 #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended                */
@@ -258,7 +260,7 @@ typedef I SI;
 #define NAMESIZE sizeof(C)   // when we allocate a NAME type, the length is the length of the name string
 #define SYMBX 24
 #define SYMB            ((I)1L<<SYMBX)     /* I  locale (symbol table)        */
-#define SYMBSIZE sizeof(I)
+#define SYMBSIZE sizeof(LX)
 #define CONWX 25
 #define CONW            ((I)1L<<CONWX)    /* CW control word                 */
 #define CONWSIZE sizeof(CW)
@@ -532,7 +534,7 @@ typedef struct {I e,p;X x;} DX;
 #define SYMLINFO 0  // index of LINFO entry
 #define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT contain symbol chains, but instead are LINFO entries
 
-typedef struct {A name,val;I flag,sn,next,prev;} L;
+typedef struct {A name,val;US flag,sn;LX next;} L;
 
 /* symbol pool entry                           LINFO entry                 */
 /* name - name on LHS of assignment         or locale name                 */
@@ -540,12 +542,13 @@ typedef struct {A name,val;I flag,sn,next,prev;} L;
 /* flag - various flags                                                    */
 /* sn   - script index                                                     */
 /* next - index of successor   in hash list or 0                           */
-/* prev - index of predecessor in hash list or address of hash entry       */
 
 #define LCH             (I)1            /* changed since last exec of 4!:5 */
 #define LHEAD           (I)2            /* head pointer (no predecessor)   */
 #define LINFO           (I)4            /* locale info                     */
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
+#define LHASNAME        (I)16      // name is nonnull
+#define LHASVALUE       (I)32     // value is nonnull
 
 
 

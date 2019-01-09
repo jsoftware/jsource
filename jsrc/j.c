@@ -70,7 +70,7 @@ C   wtype[256]={0};
 // the correct values.  User locale sizes also refer to the original values, and have 3 added before use.
 I ptab[]={
         3,         5,        19,
-       53,       113,       241,       499,     1013, 
+       53,       113,       241,       497,     1013, 
      2029,      4079,      8179,     16369,    32749, 
     65521,    131059,    262133,    524269,  1048559, 
   2097133,   4194287,   8388593,  16777199, 33554393, 

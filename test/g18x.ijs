@@ -65,7 +65,7 @@ NB. Flag is changed,0,LINFO,PERM,hasname,hasvalue
  assert. b +. li +. ((1{"1 p)e.oktypes) +. (perm *. 0 = 1{"1 p)          NB. internal type
  assert. li <: (s e.<'**local**')+.0 32 e.~ 1{"1 p   NB. search path of locales - 0 if local symbol table
  assert. 0<:f                                  NB. flag
- assert. b +. li +. (3{"1 p) e. _1,i.#4!:3 ''  NB. script index
+ assert. b +. li +. (3{"1 p) e. 65535,i.#4!:3 ''  NB. script index
  assert.      i e.~ next=. 4{"1 p              NB. next
  NB. assert. h +. i e.~ prev=. 5{"1 p              NB. prev
  NB. assert. b +. h +. (0=next) +. i = (next*-.h){prev,0

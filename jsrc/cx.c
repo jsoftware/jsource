@@ -608,7 +608,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
 // flags is the flag field for the verb we are creating; indicates whether uvmn are to be defined
 //
 // We save the symbol chain numbers for y/x in the AM field of the SYMB block
-A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,ln;LX k;
+A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,ln;
  // Allocate a pro-forma symbol table to hash the names into
  RZ(pfst=stcreate(2,1L+PTO,0L,0L));
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
@@ -639,11 +639,11 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
     s=CAV(t);   // s->1st character; remember if it is `
-    if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){  // convert to words (discarding leading ` if present)
+    if(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t)){I kk;  // convert to words (discarding leading ` if present)
      I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
-     for(k=0;k<wdsn;++k) {
+     for(kk=0;kk<wdsn;++kk) {
       // Convert word to NAME; if local name, add to symbol table
-      if((wnm=onm(wdsv[k]))) {
+      if((wnm=onm(wdsv[kk]))) {
        if(!(NAV(wnm)->flag&(NMLOC|NMILOC)))RZ(probeis(wnm,pfst));
       } else RESETERR
      }
@@ -661,7 +661,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   if(cwv[j].type==CFOR){  // for.
    I cwlen = AN(lv[cwv[j].i]);
    if(cwlen>4){  // for_xyz.
-    // for_xyz. found.  Lookup xyz and xyz_length
+    // for_xyz. found.  Lookup xyz and xyz_index
     A xyzname = str(cwlen+1,CAV(lv[cwv[j].i])+4);
     RZ(probeis(nfs(cwlen-5,CAV(xyzname)),pfst));  // create xyz
     MC(CAV(xyzname)+cwlen-5,"_index",6L);    // append _index to name

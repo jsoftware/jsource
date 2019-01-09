@@ -253,7 +253,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
   m=AN(y); yv=LXAV(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
-   while(c){*v+=sizeof(L); u=c+jt->sympv; spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value
+   while(c){*v+=sizeof(L); u=c+jt->sympv; spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
   }
   zv[i]=*v;
  }

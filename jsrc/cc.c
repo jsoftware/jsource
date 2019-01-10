@@ -936,6 +936,11 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   GA(strip,wt,stripn,0,0);  // allocate strip - rank immaterial
   // Allocate the virtual block we will use to address subarrays
   fauxvirtual(virtw,virtwfaux,strip,wr,ACUC1);
+  // NOTE: if we use a virtual block, it will ra() the (initially empty) strip which will make it recursive.  Then, when elements are moved in (without ra()), they are subject
+  // to premature free.  To prevent this we set the strip to have no atoms, so that nothing moved into it will be freed.  Since strip is not itself used as an argument to
+  // anything, this is OK.
+  AN(strip)=0;
+
   // Move in the left side of the first strip (the left edge of first column)
   svh=CAV(w); dvh=CAV(strip);   // ?vh=pointer to top-left of first column
   C *svb=svh; C *dvb=dvh;  // running pointers used to fill the strip

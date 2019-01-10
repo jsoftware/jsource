@@ -1145,6 +1145,12 @@ NB. verify f;.1 in place
 (2.2e6 * 8) > 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. 0.5 + i. 1e6  NB. always for FL
 4e4 > | (4 * 16b100000 * IF64 { 3 4) - 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. i. 1e6  NB. for INT, only in 64-bit
 
+
+NB. Check for premature free of strip block
+P -: (<"0 i.7 8) [ 1 2 > ;. _3 P =:  <"0 i.7 8
+P -: (<"0 i.3 4) [ 3 4 > ;. _3 P =:  <"0 i.3 4
+P -: (<"0 i.3 4 1 3 4 5) [ 1 2 > ;. _3 P =:  <"0 i.3 4 1 3 4 5  NB. past the size of faux virtual
+
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m p q size t test testw w x y'
 4!:55 ;: 'a'

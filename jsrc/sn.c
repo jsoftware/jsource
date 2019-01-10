@@ -221,7 +221,7 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
    if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);}
 // obsolete  I mod=symfree(v);  RZ(mod);
    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
-   probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,syrdforlocale(y));  // delete the name in the locale in which it is defined
+   probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,syrdforlocale(y));  // delete the symbol (incl name and value) in the locale in which it is defined
   }
  }
  jt->modifiercounter+=modifierchg;

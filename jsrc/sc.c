@@ -109,7 +109,7 @@ static DF2(jtunquote){A z;
     if(jt->callstack[i].type&(CALLSTACKPOPFROM|CALLSTACKPOPLOCALE))earlyloc=jt->callstack[i].value;  // remember earliest POP[FROM]
    }while(i!=callstackx);
    if(earlyloc&&!fromfound){jt->global=earlyloc; ++jt->modifiercounter;} // If there is a POP to do, do it; invalidate any extant lookups of modifier names
-   // Delete the deletable locales.  If we encounter the current locale, remember that fact and don't delete it.
+   // Delete the deletable locales.  If we encounter the (possibly new) current locale, remember that fact and don't delete it.
    I delcurr=0;  // set if we have to delete jt->global
    i=jt->callstacknext;  // back to front
    do{

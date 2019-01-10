@@ -340,9 +340,8 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
   // named locale exists.  Verify no defined names, then delete it
   g=v->val; 
   LX *u=SYMLINFOSIZE+LXAV(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
-  probedel(n,s,(UI4)nmhash(n,s),jt->stloc);
+  probedel(n,s,(UI4)nmhash(n,s),jt->stloc);  // delete the symbol for the locale, and the locale itself
 // obsolete   RZ(symfreeh(g,v));
-  fr(g);  // delete symbols (of which there are none) and the block itself
  } 
  RZ(stcreate(0,p,n,s));
  R box(ca(y));
@@ -460,9 +459,9 @@ B jtlocdestroy(J jt,A g){
  } else {
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
 // obsolete   L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
-  probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale
+  RZ(redefg(g)); probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale, which frees the locale itself and its names
 // obsolete   RZ(redefg(g)); RZ(symfreeh(g,locsym));
-  RZ(redefg(g)); fr(g);  // free the locale and its names
+// obsolete   fr(g);  // free the locale and its names
  }
  if(g==jt->global)jt->global=0;
  R 1;

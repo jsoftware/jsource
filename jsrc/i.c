@@ -127,8 +127,8 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
  zeroDX.e=0;     zeroDX.x=iv0;
  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
- // ptab is statically initialized
- bucketinit();  // init yxbucket
+// obsolete // ptab is statically initialized
+// obsolete  bucketinit();  // init yxbucket
  pf=qpf();
  pinit();
 

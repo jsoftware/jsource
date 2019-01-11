@@ -106,7 +106,8 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  q=hv[2]; cv=AAV(q); m=AN(q);
  // If the buffer must be extended, allocate a new one
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;I _ttop=jt->tnextpushx;
-  v=ptab+PTO; while(m>=*v)++v; m=*v;
+// obsolete   v=ptab+PTO; while(m>=*v)++v; m=*v;
+  FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
   RZ(jj=rifvs(reshape(v2(m,2L),sc(IMIN)))); jv= AV(jj);  // init arg table to IMIN
   GATV(cc,BOX,m,1,0);                  cv=AAV(cc);
   for(i=0,u=ju;i<n;++i,u+=2){if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
@@ -158,7 +159,7 @@ static DF2(jtmemo2){DECLF;A z;I x,y;
 F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
- v=FAV(w); m=ptab[1+PTO];
+ v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
  GAT(h,BOX,3,1,0); hv=AAV(h);
  GAT(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=rifvs(q));

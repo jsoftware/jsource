@@ -676,8 +676,9 @@ static void convertup(I*pi,I n,C t){I j=n;
 /* cdhashl - hash table for libraries (modules)                         */
 /* cdnl    - # used entries in cdhashl                                  */
 
-static A jtcdgahash(J jt,I n){A z;I hn,*v;
- v=ptab+PTO; while(n>*v)++v; hn=*v;
+static A jtcdgahash(J jt,I n){A z;I hn;
+ FULLHASHSIZE(n,INTSIZE,0,0,hn);
+// obsolete  v=ptab+PTO; while(n>*v)++v; hn=*v;
  GATV(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R ras(z);
 }

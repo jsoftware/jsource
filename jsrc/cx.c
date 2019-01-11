@@ -98,7 +98,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !!thisframe; } }else z=0; \
     break; }
 
-
+#if 0 // obsolete 
 // Emulate bucket calculation for local names.  This is called as part of globinit initialization
 void bucketinit(){I j;
  for(j=0;j<sizeof(yxbuckets)/sizeof(yxbuckets[0]);++j){
@@ -109,7 +109,7 @@ void bucketinit(){I j;
   yxbuckets[j]=(xbuck<<16)|ybuck;  
  }
 }
-
+#endif
 
 
 
@@ -676,9 +676,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
  }
- asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct&&j<(sizeof(yxbuckets)/sizeof(yxbuckets[0])-1);++j);  // Find symtab size that has 33% empty space
+
+ asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct&&j<14;++j);  // Find symtab size that has 33% empty space
  RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
- AM(actst)=(I)yxbuckets[j];  // get the yx bucket indexes for a table of this size, save in AM
+ AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,ptab[j])<<16)+SYMHASH(NAV(ynam)->hash,ptab[j]));  // get the yx bucket indexes for a table of this size, save in AM
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.

@@ -7,7 +7,7 @@
 
 
 /* a symbol table aka locale is a type LX vector                          */
-/* the length is prime and is one of ptab[i]                               */
+/* the length is odd after deducting the leading info entry                               */
 /* zero elements mean unused entry                                         */
 /* non-zero elements are indices in the global symbol pool and             */
 /*     are head pointers to a linked list                                  */

@@ -1314,7 +1314,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 
-I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
+// obsolete I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
 
 // *************************** sixth class: hashing w ***********************
 // used when w is shorter than a and thus more likely to fit into cache.  Also allows early exit when all results found.
@@ -2235,7 +2235,8 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  // allocate hash table and result
- p=hsize(m);
+// obsolete  p=hsize(m);
+ FULLHASHSIZE(m+m,INTSIZE,1,0,p);
  GATV(h,INT,p,1,0);
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported

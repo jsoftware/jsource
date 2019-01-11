@@ -754,11 +754,13 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
-  p=hsize(m); GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
+// obsolete   p=hsize(m); 
+  FULLHASHSIZE(2*m,INTSIZE,1,0,p);
+  GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
   GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
   GATV(z,INT,m,1,0); zv=AV(z);
   for(i=0;i<m;++i){
-   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;
+   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;  // scaf could rewrite this with fewer %
    q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
    q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
    if(hv[q]){++v; *zv++=*v; *v=i1;}

@@ -277,8 +277,10 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
   fa(jt->sbs); ras(x); jt->sbs=x; jt->sbsv=CAV(x);
  }
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
-  p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
-  RZ(x=apv(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
+
+// obsolete   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
+  FULLHASHSIZE(2*AN(jt->sbh),INTSIZE,1,0,p);
+  RZ(x=rifvs(apv(p,-1L,0L))); hv=AV(x); v=jt->sbuv;
   DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
   fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
   hi=h%p;                               /* new hi wrt new sbh size      */
@@ -571,7 +573,7 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  ASSERTD(1==AR(h),"h vector");
  ASSERTD(INT&AT(h),"h integer");
  ASSERTD(c<=AN(h),"c bounded by #h");
- ASSERTD(equ(vec(INT,1L,&hn),factor(sc(hn))),"#h prime");
+// obsolete  ASSERTD(equ(vec(INT,1L,&hn),factor(sc(hn))),"#h prime");
  b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD(0<=j&&j<c,"h index"););
  ASSERTD(b,"h full");
  GATV(x,B01,c,1,0); lfv=BAV(x); memset(lfv,C0,c);
@@ -809,10 +811,11 @@ F2(jtsb2){A z;I j,k,n;
 
 // This is an initialization routine, so memory allocations performed here are NOT
 // automatically freed by tpop()
-B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2];
+B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2],p;
  s[0]=2000; s[1]=c;
  GA(x,LIT,20000,1,0);           jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
- RZ(x=apv(ptab[5+PTO],-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
+ FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
+ RZ(x=apv(p,-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
  GATV(x,INT,*s*c,2,s);          jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;

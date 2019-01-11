@@ -57,6 +57,7 @@ A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
 B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
+// obsoletes follow
  // Table of hash-table sizes
 // These are primes (to reduce collisions), and big enough to just fit into a power-of-2
 // block after leaving 2 words for memory header, AH words for A-block header, 1 for rank (not used for symbol tables),
@@ -78,8 +79,7 @@ I ptab[]={
 };
 // The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
 // created with size i.  The argument names supported are ynam and xnam.
-UI4 yxbuckets[14];    // bucket positions for x/y (x in high part).  Only 14, because we can't hold more than 16 bits here
-// obsoletes follow
+// obsolete UI4 yxbuckets[14];    // bucket positions for x/y (x in high part).  Only 14, because we can't hold more than 16 bits here
 UC  bitc[256]={0};        /* # 1 bits in each possible byte       */
 C   bitdisp[256*16]={0};  /* display for each possible byte       */
 A   mdot=0;               /* m.                                   */

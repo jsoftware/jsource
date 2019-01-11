@@ -939,8 +939,8 @@ extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
 extern A        pst[];
-extern I        ptab[27];
-#define nptab (sizeof(ptab)/sizeof(ptab[0]))
+// obsolete extern I        ptab[27];
+// obsolete #define nptab (sizeof(ptab)/sizeof(ptab[0]))
 extern UI4      shortrange[3][4];
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vnam;

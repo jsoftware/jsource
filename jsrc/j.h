@@ -549,7 +549,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define EPILOGNULL(z)   R z
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
-#define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
+// obsolete #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 // Compounds push zombie to begin with and restore before the last operation, which can execute in place.
 // zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
 // zombieval is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is

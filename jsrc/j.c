@@ -69,14 +69,14 @@ C   wtype[256]={0};
 // The first row of small values was added to allow for small symbol tables to hold local
 // variables.  Hardwired references to ptab in the code have 3 added so that they correspond to
 // the correct values.  User locale sizes also refer to the original values, and have 3 added before use.
-I ptab[]={
-        3,         5,        19,
-       53,       113,       241,       497,     1013, 
-     2029,      4079,      8179,     16369,    32749, 
-    65521,    131059,    262133,    524269,  1048559, 
-  2097133,   4194287,   8388593,  16777199, 33554393, 
- 67108837, 134217689, 268435399, 536870879
-};
+// obsoleteI ptab[]={
+// obsolete        3,         5,        19,
+// obsolete       53,       113,       241,       497,     1013, 
+// obsolete     2029,      4079,      8179,     16369,    32749, 
+// obsolete    65521,    131059,    262133,    524269,  1048559, 
+// obsolete  2097133,   4194287,   8388593,  16777199, 33554393, 
+// obsolete 67108837, 134217689, 268435399, 536870879
+// obsolete};
 // The bucket-size table[i][j] gives the hash-bucket number of argument-name j when the symbol table was
 // created with size i.  The argument names supported are ynam and xnam.
 // obsolete UI4 yxbuckets[14];    // bucket positions for x/y (x in high part).  Only 14, because we can't hold more than 16 bits here

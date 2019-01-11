@@ -610,7 +610,7 @@ static void jtcalclocalbuckets(J jt, A t, LX *actstv, I actstn){LX k;
 // We save the symbol chain numbers for y/x in the AM field of the SYMB block
 A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;C *s;I j,ln;
  // Allocate a pro-forma symbol table to hash the names into
- RZ(pfst=stcreate(2,1L+PTO,0L,0L));
+ RZ(pfst=stcreate(2,40,0L,0L));
  // Do a probe-for-assignment for every name that is locally assigned in this definition.  This will
  // create a symbol-table entry for each such name
  // Start with the argument names.  We always assign y, and x EXCEPT when there is a monadic guaranteed-verb
@@ -677,9 +677,9 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
  }
 
- asgct = asgct + (asgct>>1); for(j=0;ptab[j]<asgct&&j<14;++j);  // Find symtab size that has 33% empty space
- RZ(actst=stcreate(2,j,0L,0L));  // Allocate the symbol table we will use
- AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,ptab[j])<<16)+SYMHASH(NAV(ynam)->hash,ptab[j]));  // get the yx bucket indexes for a table of this size, save in AM
+ asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here  // obsolete for(j=0;ptab[j]<asgct&&j<14;++j);  // Find symtab size that has 33% empty space
+ RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
+ AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in AM
 
  // Transfer the symbols from the pro-forma table to the result table, hashing using the table size
  // For fast argument assignment, we insist that the arguments be the first symbols added to the table.
@@ -716,7 +716,8 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV(a),*zv;
- RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=LXAV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
+// obsolete  RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=LXAV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
+ RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV(z);  // allocate the clone; zv->clone hashchains
  // Go through each hashchain of the model
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...

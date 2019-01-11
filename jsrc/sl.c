@@ -135,14 +135,14 @@ A jtindexnl(J jt,I n) { R findnl(n); }  // the locale address, or 0 if none
 
 #endif
 
-// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; ptab[p] is the number of hash entries;
+// Create symbol table: k is 0 for named, 1 for numbered, 2 for local; p is the number of hash entries including SYMLINFOSIZE;
 // n is length of name (or locale# to allocate, for numbered locales), u->name
 // Result is SYMB type for the symbol table.  For global tables only, ras() has been executed
 // on the result and on the name and path
 // For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the number
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
- GATV(g,SYMB,ptab[p]+SYMLINFOSIZE,0,0);   // have prime number of hashchains, excluding LINFO
+ GATV(g,SYMB,(p+1)&-2,0,0);   // have odd number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
@@ -163,10 +163,11 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    jtinstallnl(jt, g);  // put the locale into the numbered list at the value most recently returned (which must be n)
    break;
   case 2:  /* local symbol table */
-   // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
-   // that was used to create the table
-   AR(g)=(RANKT)p;
+// obsolete    // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
+// obsolete    // that was used to create the table
+// obsolete    AR(g)=(RANKT)p;
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
+   ;
  }
  R g;
 }    /* create locale, named (0==k) or numbered (1==k) */
@@ -175,10 +176,13 @@ B jtsymbinit(J jt){A q;
  jt->locsize[0]=3;  /* default hash table size for named    locales */
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
- GATV(q,SYMB,ptab[3+PTO]+SYMLINFOSIZE,1,0); jt->stloc=q;  // alloc space, leaving ptab[] hashchains.  No name/val for stloc
+ I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
+ GATV(q,SYMB,p,1,0); jt->stloc=q;  // alloc space, clear hashchains.  No name/val for stloc
  jtinitnl(jt);  // init numbered locales
- RZ(jt->global=stcreate(0,5L+PTO,sizeof(jt->baselocale),jt->baselocale));
- RZ(           stcreate(0,7L+PTO,1L,"z"   ));
+ FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
+ RZ(jt->global=stcreate(0,p,sizeof(jt->baselocale),jt->baselocale));
+ FULLHASHSIZE(1LL<<12,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^13 chains
+ RZ(           stcreate(0,p,1L,"z"   ));
  R 1;
 }
 
@@ -192,7 +196,7 @@ F1(jtlocsizes){I p,q,*v;
  ASSERT(2==AN(w),EVLENGTH);
  RZ(w=vi(w)); v=AV(w); p=v[0]; q=v[1];
  ASSERT(0<=p&&0<=q,EVDOMAIN);
- ASSERT(p<nptab-PTO&&q<nptab-PTO,EVLIMIT);
+ ASSERT(p<14&&q<14,EVLIMIT);
  jt->locsize[0]=p;
  jt->locsize[1]=q;
  R mtm;
@@ -222,7 +226,8 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
  A v = stfind(n,u,bucketx);  // lookup
  if(v)R v;  // return if found
  if(n>=0&&'9'<*u){  // nonnumeric locale:
-  R stcreate(0,jt->locsize[0]+PTO,n,u);  // create it with name
+  I p; FULLHASHSIZE(1LL<<(5+jt->locsize[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
+  R stcreate(0,p,n,u);  // create it with name
  }else{
 // obsolete  ASSERT(bucketx>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,bucketx,0L);  // numeric locale: create with number
   ASSERT(0,EVLOCALE); // illegal to create numeric locale explicitly
@@ -334,7 +339,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
 
 static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  RZ(a&&w);
- if(MARK&AT(a))p=PTO+jt->locsize[0]; else{RE(p=PTO+i0(a)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
+ if(MARK&AT(a))p=jt->locsize[0]; else{RE(p=i0(a)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  y=AAV0(w); n=AN(y); s=CAV(y);
  if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
   // named locale exists.  Verify no defined names, then delete it
@@ -342,15 +347,17 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
   LX *u=SYMLINFOSIZE+LXAV(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
   probedel(n,s,(UI4)nmhash(n,s),jt->stloc);  // delete the symbol for the locale, and the locale itself
 // obsolete   RZ(symfreeh(g,v));
- } 
+ }
+ FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(0,p,n,s));
  R box(ca(y));
 }    /* create a locale named w with hash table size a */
 
 static F1(jtloccrenum){C s[20];I k,p;
  RZ(w);
- if(MARK&AT(w))p=PTO+jt->locsize[1]; else{RE(p=PTO+i0(w)); ASSERT(PTO<=p,EVDOMAIN); ASSERT(p<nptab,EVLIMIT);}
+ if(MARK&AT(w))p=jt->locsize[1]; else{RE(p=i0(w)); ASSERT(0<=p,EVDOMAIN); ASSERT(p<14,EVLIMIT);}
  RE(k=jtgetnl(jt));
+ FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(1,p,k,0L));
  sprintf(s,FMTI,k); 
  R box(cstr(s));

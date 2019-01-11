@@ -539,7 +539,13 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
   RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
   AFLAG(z)=AFVIRTUAL /* obsolete  + (wf&AFNOSMREL) + ((wf&AFNJA)?AFREL:0)*/;  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset*tal; AR(z)=(RANKT)r;  // virtual, not inplaceable
-  if(AFLAG(w)&AFVIRTUAL)w=ABACK(w);  // if w is itself virtual, use its original base.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+  // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
+  // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
+  if(AFLAG(w)&AFVIRTUAL){
+   // If w is virtual, me must disallow inplacing for it, since it may be at large in the execution and we are creating an alias to it
+   ACIPNO(w);  // turn off inplacing
+   w=ABACK(w);  // if w is itself virtual, use its original backer.  Otherwise we would have trouble knowing when the backer for z is freed.  Backer is never virtual
+  }
   ABACK(z)=w;   // set the pointer to the base: w or its base
   ra(w);   // ensure that the backer is not deleted while it is a backer.  This means that all backers are RECURSIBLE
   R z;

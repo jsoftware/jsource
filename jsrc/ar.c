@@ -219,6 +219,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
 #define MINGCINTERVAL 8  // max spacing between frees
  I freedist=MIN((n+((1<<LGMINGCS)-1))>>LGMINGCS,MINGCINTERVAL); I freephase=freedist;
  for(i=1;i<n;++i){   // loop through items
+  AC(a)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
   RZ(w=CALL2IP(f2,a,w,fs));
   if(--freephase==0){w=gc(w,old); freephase=freedist;}   // free the buffers we allocated, except for the result
   // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer

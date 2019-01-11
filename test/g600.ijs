@@ -200,6 +200,14 @@ ops =: (0);(4);(1.5);(1j1);(5x);(4r6)
 ops =: ('a');(u:'a');(10 u:'a')
 ((>@([ , 99999 # ])) -: (* i. 100000) (4 : 'x {:: y')"0 _  ,)"0/~ ops
 
+NB. Check virtual block based on INCORPABLE block, which must have inplacing turned off
+(0 10 ,. 2 9$1) -: (}.-}:)"1 (0,.i.2 10)
+(1 1 ,. (>: i. 2 10) ,. i. 2 10) -: (>: , }.)"1 (0,.i.2 10)
+
+NB. Verify successive blocks have inplacing reenabled
+(4500000 * IF64{1 2) < 7!:2 '#@:>:@:}."1 >: a' [ a =: i. 10 100000  NB. Does not inplace >:, because inplace not inherited through virtual block
+(4500000 * IF64{1 2) > 7!:2 '#@:}.@:>:"1 >: a' [ a =: i. 10 100000  NB. Does inplace >: which is then virtualed
+
 NB. f"r zero frames -----------------------------------------------------
 
 (0 7 3 4$0) -: 3 4&$        "1 i.0 7 9 

@@ -92,7 +92,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
  if(c==1){
   PROD(wcellsize,wr-1,ws+1);  // size in atoms of w cell
   // allocate virtual block
-  fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate UNINCORPORABLE block
+  fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate UNINCORPORABLE block, noninplaceable
   // fill in shape
   MCIS(AS(virtw)+1,ws+1,wr-1);
   // remember original offset.  Others will be based on this
@@ -685,6 +685,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
      UI len=*pd++; if(len==255){len=*(UI4*)pd; pd+=SZUI4;} d=len-neg;  /* fetch size, adjust if neg */
      AS(virtw)[0]=d; AN(virtw)=wcn*d; // install the size of the partition into the virtual block, and # atoms
      // call the user's function
+     AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
      if(!(state&STATEHASGERUND)){
       RZ(z=CALL1IP(f1,virtw,fs));  //normal case
      }else{

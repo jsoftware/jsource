@@ -306,7 +306,7 @@ static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m
    if(!e)e=SPA(p,e); else ASSERT(equ(e,SPA(p,e)),EVSPARSE);
    k=wcr-AR(q); DO(k, b[i]=1;); a=SPA(p,a); v=AV(a); DO(AN(a), b[k+*v++]=1;);
   }
- RZ(*za=ifb(wcr,b));    /* union of sparse axes           */
+ RZ(*za=ca(ifb(wcr,b)));    /* union of sparse axes           */ // avoid readonly
  *zb=b;                 /* mask corresp. to sparse axes   */
  *ze=e?e:num[0];          /* sparse element                 */
  *zm=m;                 /* estimate # of non-sparse cells */

@@ -585,7 +585,7 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(1==n)R irs1(w,0L,r,jthead);
  if(1==r)R 2==n?RETARG(w):irs2(irs2(num[-2],w,0L,0L,1L,jtdrop),irs2(num[-2],w,0L,0L,1L,jttake),0L,1L,0L,jtover);
  if(2==r)R irs1(w,0L,2L,jtcant1);
- RZ(c=IX(wr)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
+ RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(SPARSE&AT(w)){A x;
   GATV(x,INT,f+r-1,1,0); v=AV(x); MCIS(v,AS(y),f+1);
   RE(v[f+1]=mult(s[f],s[f+2])); MCIS(v+f+2,s+3+f,r-3);

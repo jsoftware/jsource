@@ -527,7 +527,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
  I xaf = AFNVRUNFREED;  // If name is not assigned, indicate that it is not read-only or memory-mapped.  Also set 'impossible' code of unfreed+not NVR
  I xt=0;  // If not assigned, use empty type
  if(x){xaf=AFLAG(x); xt=AT(x);} else {xaf = AFNVRUNFREED; xt=0;}  // if assigned, get the actual flags
- if(!((AFRO|AFNJA)&xaf)){
+ if(!(AFNJA&xaf)){
   // If we are assigning the same data block that's already there, don't bother with changing use counts or checking for relative
   // addressing - if there was any, it should have been fixed when the original assignment was made.
   // It is possible that a name in an upper execution refers to the block, but we can't do anything about that.

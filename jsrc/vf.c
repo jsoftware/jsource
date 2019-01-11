@@ -172,7 +172,7 @@ static A jtreshapesp0(J jt,A a,A w,I wf,I wcr){A e,p,x,y,z;B*b,*pv;I c,d,r,*v,wr
  v=AS(y); r=v[0]; c=v[1]; d=0; DO(wf, if(b[i])++d;);
  if(!wf){if(r&&c){v=AV(y); DO(c, if(v[i])R e;);} R AN(x)?reshape(mtv,x):e;}
  GA(z,AT(w),1,wf,ws);
- zp=PAV(z); SPB(zp,e,e); SPB(zp,a,ifb(wf,b));
+ zp=PAV(z); SPB(zp,e,e); SPB(zp,a,ca(ifb(wf,b)));  // avoid readonly
  GATV(p,B01,r,1,0); pv=BAV(p);
  v=AV(y); 
  DO(r, *pv=1; DO(c-d, if(v[d+i]){*pv=0; break;}); ++pv; v+=c;);

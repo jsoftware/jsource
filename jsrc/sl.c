@@ -9,7 +9,7 @@
 #if 1
 // Initialize the numbered-locale system
 static A jtinitnl(J jt){A q;
- RZ(q=apv(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
+ RZ(q=apvwr(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
  GATV(q,INT,40,1,0);        jt->stptr=q; memset(AV(q),C0,40*SZI);
  R q;  // return no error
 }

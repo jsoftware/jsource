@@ -276,7 +276,7 @@ XF1(jtxsqrt){I c,m,n,p,q,*wv;X e,x;
  n=AN(w); wv=AV(w); c=wv[n-1];
  ASSERT(0<=c,EWIMAG);
  if(!(1&n))c=wv[n-2]+c*XBASE;
- m=(1+n)>>1; RZ(x=apv(m,0L,0L)); *(AV(x)+m-1)=(I)sqrt((D)c);
+ m=(1+n)>>1; RZ(x=apvwr(m,0L,0L)); *(AV(x)+m-1)=(I)sqrt((D)c);
  RZ(e=xc(2L));
  p=m*XBASEN; q=0; while(p){++q; p>>=1;} 
  DO(1+q, RZ(x=xdiv(xplus(x,xdiv(w,x,XMFLR)),e,XMFLR)););

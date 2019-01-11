@@ -407,6 +407,8 @@ static A virthook(J jtip, A f, A g){
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
+// obsolete  DO(IOTAVECLEN, if(jt->iotavec[i]!=i+IOTAVECBEGIN)*(I*)0=0;)
+
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and
  // others), it must be set at the time the assignment is executed.  We catch it in the action routine,

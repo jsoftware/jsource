@@ -766,7 +766,7 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
    if(hv[q]){++v; *zv++=*v; *v=i1;}
    else{v=yv+d; *zv++=*v++=j; *v=i1; hv[q]=d; d+=2;}
  }}else{
-  RZ(z=apv(n,0L,1L)); zv=AV(z);
+  RZ(z=apvwr(n,0L,1L)); zv=AV(z);
   DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   AN(z)=*AS(z)=m;
  }

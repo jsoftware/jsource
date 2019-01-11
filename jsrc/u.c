@@ -85,10 +85,20 @@ I jtaii(J jt,A w){I m; PROD(m,AR(w)-1,1+AS(w)); R m;}
 
 // return A-block for b+m*i.n
 A jtapv(J jt,I n,I b,I m){A z;
+ // see if we can use the canned ascending integers
+ if(m==1 && b>=IOTAVECBEGIN && b+n<=IOTAVECLEN+IOTAVECBEGIN) {
+  GAT(z,INT,0,1,0); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(jt->iotavec+b-IOTAVECBEGIN)-(C*)z; AC(z)=ACUC1; AFLAG(z)=AFRO;  // mark block readonly
+  R z;
+ }
+ R apvwr(n,b,m);
+}    /* b+m*i.n */
+// same, but never return a readonly block
+A jtapvwr(J jt,I n,I b,I m){A z;
  GATV(z,INT,n,1,0); I *x=AV(z);
   DO(n, x[i]=b; b+=m;)
  R z;
-}    /* b+m*i.n */
+}    /* b+m*i.n writable */
+
 
 // w must be 0 or an atom equal to 0 or 1.  Result is its value
 B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B01,w)); R*BAV(w);}

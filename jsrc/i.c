@@ -216,6 +216,7 @@ jt->assert = 1;
  MC(jt->baselocale,"base",sizeof(jt->baselocale));   // establish value & hash of "base"
  jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
  RESETRANK;  // init both ranks to RMAX
+ DO(IOTAVECLEN, jt->iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
  R 1;
 }
 

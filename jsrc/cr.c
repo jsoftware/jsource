@@ -73,7 +73,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   ZZPARMS(wf,mn,1)
 #define ZZINSTALLFRAME(optr) MCISd(optr,ws,wf)
   for(i0=mn;i0;--i0){
-//   AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
+   AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
    RZ(z=CALL1IP(f1,virtw,fs));
 
 #define ZZBODY  // assemble results

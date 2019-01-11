@@ -131,8 +131,9 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
  // the stack is empty, so if there is a virtual block it must be in a hhigher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
- I waf = AFLAG(w);  // w flags
- I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
+// obsolete  I waf = AFLAG(w);  // w flags
+// obsolete  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
+ I ip = ((I)jtinplace&JTINPLACEW) && ASGNINPLACENJA(w)
       &&TYPESEQ(t,wt)&&(wt&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&RECURSIBLE){
@@ -141,7 +142,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   ip = AC(w)<=oldac;  // turn off inplacing if a referred to w
  } 
 
- if(ip){ASSERT(!(AFRO&waf),EVRO); z=w;}
+ if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  // after this, z cannot be virtual unless it is an inplace memory-mapped boxed array
  else{RZ(z=cvt(t,w));}

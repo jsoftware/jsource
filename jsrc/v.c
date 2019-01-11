@@ -20,7 +20,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
   CPROD(n,m,r,f+ws);   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
-   // the self-virtual-block code in virtual() because we can do it for indirect blocks also, since we know we are not changing
+   // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
    // the number of atoms
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
@@ -39,7 +39,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  if(memchr(b+f,C1,r)){
   if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
-  RZ(a=ifb(1+f,b)); 
+  RZ(a=ca(ifb(1+f,b)));   // avoid readonly block
   GATV(c,INT,r,1L,0L); v=r+AV(c); j=wr; m=1; DO(r, *--v=m; m*=ws[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));

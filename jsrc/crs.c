@@ -19,7 +19,7 @@ static A jtsprinit(J jt,I f,I r,I*s,I t,P*p){A a,a1,z;I n,*u,*v;P*zp;
  a=SPA(p,a); n=AN(a)-f; u=f+AV(a); GATV(a1,INT,n,1,0); v=AV(a1); DO(n, v[i]=u[i]-f;);
  SPB(zp,a,a1);
  SPB(zp,e,ca(SPA(p,e)));
- SPB(zp,i,iota(v2(0L,n)));
+ SPB(zp,i,iota(v2(0L,n)));  // empty so cannot be readonly
  SPB(zp,x,repeat(num[0],SPA(p,x)));
  R z;
 }    /* initialize an argument cell */
@@ -54,7 +54,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  r=AR(z0);
  GA(z,zt,1,f+r-1,s); ICPY(AS(z)+f,AS(z0)+1,r-1);
  zp=PAV(z); SPB(zp,e,TYPESEQ(m,et)?e:cvt(m,e));
- if(d){SPB(zp,a,IX(f)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
+ if(d){SPB(zp,a,apvwr(f,0L,1L)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);
  ASSERT(equ(e,SPA(zq,e)),EVNONCE);
  h=*AS(y); GATV(q,INT,h,1,0); u=AV(q); memset(u,C0,h*SZI); 

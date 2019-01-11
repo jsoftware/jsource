@@ -56,7 +56,7 @@ static A jtvaxis(J jt,I r,A a){A y;B*b;I j,n,*v;
  ASSERT(1>=AR(a),EVRANK);
  GATV(y,B01,r,1,0); b=BAV(y); memset(b,C0,r);
  DO(n, j=v[i]; if(0>j)j+=r; ASSERT(0<=j&&j<r&&!b[j],EVINDEX); b[j]=1;);
- R ifb(r,b);
+ R ca(ifb(r,b));   // avoid readonly
 }    /* standardize axes to be non-negative, sorted */
 
 A jtdaxis(J jt,I r,A a){R less(IX(r),a);}

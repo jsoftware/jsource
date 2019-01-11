@@ -164,7 +164,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy;D*axv,c,d,*dv,*wxv,*zyv;
  NAN1;
  *AS(zx)=AN(zx)=*AS(zi)=n; AN(zi)=n<<1;
  GATV(z,SFL,1,2,AS(a)); *(1+AS(z))=*(1+AS(w));
- zp=PAV(z); SPB(zp,a,IX(2)); SPB(zp,e,scf(0.0)); SPB(zp,i,zi); SPB(zp,x,zx);
+ zp=PAV(z); SPB(zp,a,apvwr(2,0L,1L)); SPB(zp,e,scf(0.0)); SPB(zp,i,zi); SPB(zp,x,zx);
  R z;
 }
 

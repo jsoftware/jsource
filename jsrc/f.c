@@ -129,7 +129,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  else{ 
   c=s[r-1]; m=n/c; k=bp(AT(w));
   y=tv-wd; x=CAV(w)-k; 
-  RZ(d=apv(c,1L,0L)); dv=AV(d);
+  RZ(d=apvwr(c,1L,0L)); dv=AV(d);
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););
   --dv[c-1]; p=0; DO(c, p+=++dv[i];);
   GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
@@ -171,18 +171,18 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
  n=AN(w); r=AR(w); s=AS(w); x=y=SBAV(w); q=jt->sbun;
  if(1>=r){
   c=n; 
-  RZ(d=apv(c,0L,0L)); dv=AV(d);
+  RZ(d=apvwr(c,0L,0L)); dv=AV(d);
   p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++),0););
   GATV(z,LIT,  p,1,   0); zv=CAV(z); memset(zv,' ',AN(z));
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
   if(jt->jprx){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;
    c=s[r-1]; m=n/c; 
-   RZ(d =apv(c,0L,0L)); dv =AV(d);      // col max byte
-   RZ(dw=apv(c,0L,0L)); dwv=AV(dw);     // col max display width
-   RZ(dd=apv(c,0L,0L)); ddv=AV(dd);     // col max element byte - display width
-   RZ(e =apv(n,0L,0L)); ev =AV(e);      // element byte
-   RZ(ew=apv(n,0L,0L)); ewv=AV(ew);     // element display width
+   RZ(d =apvwr(c,0L,0L)); dv =AV(d);      // col max byte
+   RZ(dw=apvwr(c,0L,0L)); dwv=AV(dw);     // col max display width
+   RZ(dd=apvwr(c,0L,0L)); ddv=AV(dd);     // col max element byte - display width
+   RZ(e =apvwr(n,0L,0L)); ev =AV(e);      // element byte
+   RZ(ew=apvwr(n,0L,0L)); ewv=AV(ew);     // element display width
    j=0;
    DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),ewv+j); ev[j]=p; dv[i]=MAX(dv[i],p); dwv[i]=MAX(dwv[i],ewv[j]);j++;););
    j=0;
@@ -224,7 +224,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
                j++;););
 #endif
   }else{
-   c=s[r-1]; m=n/c; RZ(d=apv(c,0L,0L)); dv=AV(d);
+   c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);
    DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
    GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
@@ -271,7 +271,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  n=AN(w); r=AR(w); s=AS(w); wv=AV(w);
  c=r?s[r-1]:1; m=n/c;
  GATV(t,BOX,n,1,0); tv=AAV(t);
- RZ(d=apv(c,1L,0L)); dv=AV(d); v=tv;
+ RZ(d=apvwr(c,1L,0L)); dv=AV(d); v=tv;
  switch(CTTZ(AT(w))){
   case XNUMX: {X*u =(X*) wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
   case RATX:  {Q*u =(Q*) wv; DO(m, DO(c, RZ(*v++=y=thq1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
@@ -302,9 +302,9 @@ static B jtrc(J jt,A w,A*px,A*py, I *t){A*v,x,y;I j=0,k=0,maxt=0,r,*s,xn,*xv,yn,
  // r = rank of w, s->shape of w, v->values
  r=AR(w); s=AS(w); v=AAV(w);
  // xn = #rows in 2-cell of joined table, x=vector of (xn+1) 0s, xv->data for vector
- xn=1<r?s[r-2]:1; RZ(*px=x=apv(xn,0L,0L)); xv=AV(x);
+ xn=1<r?s[r-2]:1; RZ(*px=x=apvwr(xn,0L,0L)); xv=AV(x);
  // yn = #rows in 2-cell of joined table, y=vector of (yn+1) 0s, v->data for vector
- yn=  r?s[r-1]:1; RZ(*py=y=apv(yn,0L,0L)); yv=AV(y);
+ yn=  r?s[r-1]:1; RZ(*py=y=apvwr(yn,0L,0L)); yv=AV(y);
  // for each atom of w, include height/width in the appropriate row/column cells, and take maximum of types
  DO(AN(w), maxt=MAX(maxt,UNSAFE(AT(*v))); s=AS(*v++); xv[j]=MAX(xv[j],s[0]); yv[k]=MAX(yv[k],s[1]); if(++k==yn){k=0; if(++j==xn)j=0;});
  // Add 1 to each max width/height to account for the boxing character before that position

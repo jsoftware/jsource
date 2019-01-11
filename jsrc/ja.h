@@ -50,6 +50,7 @@
 #define apipx(x,y)                  jtapipx(jt,(x),(y))
 #define applystr(x,y)               jtapplystr(jt,(x),(y))
 #define apv(x,y,z)                  jtapv(jt,(x),(y),(z))
+#define apvwr(x,y,z)                jtapvwr(jt,(x),(y),(z))
 #define arep(x)                     jtarep(jt,(x))
 #define aro(x)                      jtaro(jt,(x))
 #define ascan(x,y)                  jtascan(jt,(x),(y))

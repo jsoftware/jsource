@@ -642,6 +642,7 @@ extern A        jtamna(J,A,A,A,B);
 extern A        jtamne(J,A,A,A,B);
 extern A        jtamnsp(J,A,A,A,B);
 extern A        jtapv(J,I,I,I);
+extern A        jtapvwr(J,I,I,I);
 extern A        jtascan(J,C,A);
 extern A        jtaslash(J,C,A);
 extern A        jtaslash1(J,C,A);

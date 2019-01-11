@@ -278,6 +278,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define NFDEP           4000             // fn call depth
 #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 
+// start and length for the stored vector of ascending integers
+#define IOTAVECBEGIN (-20)
+#define IOTAVECLEN 400
 
 // modes for indexofsub()
 #define IIOPMSK         0xf     // operation bits

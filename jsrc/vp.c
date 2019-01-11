@@ -68,7 +68,7 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  RE(n); RZ(w);
  ASSERT(0<=n,EVINDEX);
  GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
- RZ(z=IX(n)); x=AV(z);
+ RZ(z=apvwr(n,0L,1L)); x=AV(z);
  wv=AAV(w); 
  for(j=AN(w)-1;0<=j;j--){
   RZ(q=pind(n,wv[j])); qv=AV(q); qn=AN(q);

@@ -280,7 +280,7 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
 
 // obsolete   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
   FULLHASHSIZE(2*AN(jt->sbh),INTSIZE,1,0,p);
-  RZ(x=rifvs(apv(p,-1L,0L))); hv=AV(x); v=jt->sbuv;
+  RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
   DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
   fa(jt->sbh); ras(x); jt->sbh=x; jt->sbhv= AV(x);
   hi=h%p;                               /* new hi wrt new sbh size      */
@@ -815,7 +815,7 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2],p;
  s[0]=2000; s[1]=c;
  GA(x,LIT,20000,1,0);           jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
  FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
- RZ(x=apv(p,-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
+ RZ(x=apvwr(p,-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
  GATV(x,INT,*s*c,2,s);          jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;

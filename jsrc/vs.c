@@ -56,7 +56,7 @@ static A jtvaxis(J jt,I r,A a){A y;B*b;I j,n,*v;
  ASSERT(1>=AR(a),EVRANK);
  GATV(y,B01,r,1,0); b=BAV(y); memset(b,C0,r);
  DO(n, j=v[i]; if(0>j)j+=r; ASSERT(0<=j&&j<r&&!b[j],EVINDEX); b[j]=1;);
- R ca(ifb(r,b));   // avoid readonly
+ R caro(ifb(r,b));   // avoid readonly
 }    /* standardize axes to be non-negative, sorted */
 
 A jtdaxis(J jt,I r,A a){R less(IX(r),a);}
@@ -167,7 +167,7 @@ F1(jtdenseit){A a,e,q,s1,x,y,z;B b;C*xv,*zv;I an,ck,k,n,r,t,*s,xn,*yv;P*wp;
  RE(n=prod(r,s));
  GA(z,t,n,r,s); zv=CAV(z); xv=CAV(x); 
  if(1<an)RZ(y=base2(vec(INT,an,s),y)); yv=AV(y);
- k=bp(t); ck=k*aii(x); mvc(k*n,zv,k,AV(e));
+ k=bpnoun(t); ck=k*aii(x); mvc(k*n,zv,k,AV(e));
  DO(IC(y), MC(zv+ck**yv,xv,ck); ++yv; xv+=ck;);
  R b?z:cant2(pinv(q),z);
 }    /* $.^:_1 */
@@ -210,7 +210,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
   *u=n; j=1; DO(AN(p), u[j++]=ws[*v++];); RE(h=prod(1+r-d,u));
   GA(x1,AT(x),h,1+r-d,u);                       t=CAV(x1); s=CAV(x);
   GATV(y1,INT,n*d,2,0); *AS(y1)=n; *(1+AS(y1))=d; v= AV(y1); u= AV(y);  
-  k=bp(AT(x)); g=k*aii(x); h=k*aii(x1); mvc(k*AN(x1),t,k,AV(e));
+  k=bpnoun(AT(x)); g=k*aii(x); h=k*aii(x1); mvc(k*AN(x1),t,k,AV(e));
   DO(m, MC(t+g*iv[i],s,g); s+=g; if(b[i]){ICPY(v,u+i*c,d); v+=d; t+=h;});
   SPB(zp,i,y1); SPB(zp,x,cant2(increm(indexof(p,daxis(r,a1))),x1));
   R z;
@@ -219,7 +219,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
 }    /* (2;a)$.w */
 
 static A jtaxbytes1(J jt,I t,I an,I m,I xr,I*xs){I k,z;
-  k=bp(t);
+  k=bpnoun(t);
   z =SZI*NORMAH+SZI*(an+xr)+sizeof(P);
   z+=SZI*NORMAH+k;
   z+=SZI*NORMAH+SZI*(1+xr)+k*m*prod(xr,xs);

@@ -88,7 +88,7 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
 	}}
    break;
   default:
-   k=bp(wt);
+   k=bpnoun(wt);
    if(n>=wn*wd)DO(wn, fmt(jt,y,x); y+=strlen(y); *y++=' '; x+=k;)
    else        DO(wn, fmt(jt,buf,x); p=strlen(buf); if(ov=n4<1+p+y-s)break; strcpy(y,buf); y+=p; *y++=' '; x+=k;);
  }
@@ -127,7 +127,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  GATV(t,LIT,wd*(1+n),1,0); tv=CAV(t);
  if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=*AS(t)=p; z=t;} 
  else{ 
-  c=s[r-1]; m=n/c; k=bp(AT(w));
+  c=s[r-1]; m=n/c; k=bpnoun(AT(w));
   y=tv-wd; x=CAV(w)-k; 
   RZ(d=apvwr(c,1L,0L)); dv=AV(d);
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););
@@ -408,7 +408,7 @@ static void jtfmfill(J jt,I p,I q,I wd,A w,A x,A y,C*zv,I cw){A e,*wv;
     f = xp?(d + wd*((xv[j]-1-r)>>(2-xp))) : d;
     if(yp)f = f + cw*((yv[k]-1-c)>>(2-yp));
     // Move in the data.  If sizes are dissimilar, the target must be larger; do length conversion then
-    if(cw==bp(AT(e))){C* v=CAV(e); C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
+    if(cw==bpnoun(AT(e))){C* v=CAV(e); C* u=zv+f; DO(r, MC(u,v,c*cw); u+=wd; v+=c*cw;)}
     else{  // conversion required
      if(bp(AT(e))==1){UC *v=UAV(e);   // source is bytes
       if(cw==2){   // dest is C2T
@@ -451,7 +451,7 @@ static F1(jtenframe){A x,y,z;C*zv;I ht,m,n,p,q,t,wd,wdb,wr,xn,*xv,yn,*yv,zn;
  if(!n)R z;  // If w has 0 cells, return the empty array
  // Here w has cells.
  zv=CAV(z);  // zv->result area
- wdb=wd*(t=bp(t));  // Replace t with the length of a character of t; get length of line in bytes
+ wdb=wd*(t=bpnoun(t));  // Replace t with the length of a character of t; get length of line in bytes
  // Install the boxing characters in each 2-cell of the result
  fminit(m,ht,wdb,x,y,zv,t);
  // Insert the data for each atom into the result
@@ -484,7 +484,7 @@ F1(jtmat){A z;B b=0;C*v,*x;I c,k,m=1,p,q,qc,r,*s,t,zn;
  // (this could be better: just copy the gap, as part of ENGAP; check k above in case of leading unit axes)
  if(2<r)fillv(t,zn,x);
  // for each 2-cell, leave a gap if required, then copy in the 2-cell.  Change c to size in bytes; qc=size of 2-cell
- if(zn){c*=bp(t); RE(qc=mult(q,c)); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
+ if(zn){c<<=bplg(t); RE(qc=mult(q,c)); DO(m, ENGAP(i*q,r,s,x+=c;); MC(x,v,qc); x+=qc; v+=qc;);}
  R z;
 }
 
@@ -706,7 +706,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
      I c,c1,h,i,j,k,lc,m,nbx,nq,p,q,r,*s,t,zn;
      static C bdc[]="123456789_123456\214\254\220\234\274\244\224\264\230\202\200";
  // Convert w to a character array; set t=1 if it's LIT, t=2 if C2T, 4 if C4T
- jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bp(AT(y));
+ jt->jprx=1; y=thorn1u(w); jt->jprx=0; RZ(y); t=bpnoun(AT(y));
  // set ch iff input w is a character type.
  ch=1&&AT(w)&LIT+C2T+C4T+SBT;
  // r=rank of result (could be anything), s->shape, v->1st char

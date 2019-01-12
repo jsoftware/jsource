@@ -13,7 +13,7 @@ F2(jtsetfv){A q=jt->fill;I t;
  RZ(a&&w);
  t=AN(a)?AT(a):AN(w)?AT(w):0;
  if(q&&AN(q)){
-  RE(t=maxtype(t,AT(q))); 
+  RE(t=t?maxtype(t,AT(q)):AT(q)); 
   if(TYPESNE(t,AT(q)))RZ(q=cvt(t,q));
 // obsolete   if(ARELATIVE(q))RZ(q=cpa(1,q));
   jt->fillv=CAV(q);   // jt->fillv points to the fill atom
@@ -25,7 +25,7 @@ F2(jtsetfv){A q=jt->fill;I t;
 F1(jtfiller){A z; RZ(w); GA(z,AT(w),1,0,0); fillv(AT(w),1L,CAV(z)); R z;}
 
 // move n fills of type t to *v
-void jtfillv(J jt,I t,I n,C*v){I k=bp(t);
+void jtfillv(J jt,I t,I n,C*v){I k=bpnoun(t);
  switch(CTTZ(t)){
  case RATX: mvc(n*k,v,k,&zeroQ); break;
  case XNUMX: mvc(n*k,v,k,&iv0); break;
@@ -103,7 +103,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  if(((wcr-1)&(1-p))<0){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}  // if cell is an atom, extend it up to #axes being rotated   !wcr && p>1
  ASSERT(((-wcr)&(wcr-p))>=0,EVLENGTH);    // !wcr||p<=wcr  !(wcr&&p>wcr)
  av=AV(a);
- RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bp(AT(w));  // set fill value if given
+ RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
  PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); n=wcr?s[wf]:1;  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
@@ -146,7 +146,7 @@ F1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,r,*v,*ws,wt,wr;
  wt=AT(w); ws=AS(w); wv=CAV(w);
  n=ws[f]; 
  m=1; DO(f, m*=ws[i];);
- k=bp(wt); v=1+f+ws; DO(r-1, k*=*v++;); nk=n*k;
+ k=bpnoun(wt); v=1+f+ws; DO(r-1, k*=*v++;); nk=n*k;
  GA(z,wt,AN(w),wr,ws); zv=CAV(z);
  switch(k){
   default:        {C*s=wv-k,*t; DO(m, t=s+=nk; DO(n, MC(zv,t,k); zv+=k; t-=k;););} break;
@@ -172,7 +172,7 @@ static A jtreshapesp0(J jt,A a,A w,I wf,I wcr){A e,p,x,y,z;B*b,*pv;I c,d,r,*v,wr
  v=AS(y); r=v[0]; c=v[1]; d=0; DO(wf, if(b[i])++d;);
  if(!wf){if(r&&c){v=AV(y); DO(c, if(v[i])R e;);} R AN(x)?reshape(mtv,x):e;}
  GA(z,AT(w),1,wf,ws);
- zp=PAV(z); SPB(zp,e,e); SPB(zp,a,ca(ifb(wf,b)));  // avoid readonly
+ zp=PAV(z); SPB(zp,e,e); SPB(zp,a,caro(ifb(wf,b)));  // avoid readonly
  GATV(p,B01,r,1,0); pv=BAV(p);
  v=AV(y); 
  DO(r, *pv=1; DO(c-d, if(v[d+i]){*pv=0; break;}); ++pv; v+=c;);
@@ -239,7 +239,7 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
- k=bp(t); p=k*m; q=k*n;
+ k=bpnoun(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
  GA(z,t,zn,r+wf,0); s=AS(z); MCISd(s,ws,wf); MCISd(s,u,r);
  if(!zn)R z;
@@ -308,7 +308,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
  RZ(w=setfv(w,w)); 
  if(!AR(w))R from(a,take(num[-2],w));
  av=BAV(a); an=AN(a); q=an>>LGSZI; r=an&(SZI-1); au=(I*)av;
- wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bp(wt); wk=k*wc; wx=wv+wk**AS(w);
+ wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk**AS(w);
  RE(zn=mult(an,wc));
  GA(z,wt,zn,AR(w),AS(w)); *AS(z)=an; zv=CAV(z);
  switch(wk){

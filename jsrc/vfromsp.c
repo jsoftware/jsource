@@ -68,7 +68,7 @@ static A jtaaxis(J jt,A w,I wf,A a,I r,I h,I*pp,I*qq,I*rr){A q;B*b,*c,*d;I wr,x,
  x=y=z=0; d=b; DO(wf, if(*d++)++x;); DO(h, if(*d++)++y;); DO(wr-wf-h, if(*d++)++z;);
  *pp=x; *qq=y; *rr=z;
  MC(c,b,wf); memset(c+wf,y?C1:C0,r); MC(c+wf+r,b+wf+h,wr-wf-h);
- R ca(ifb(zr,c));  // avoid readonly
+ R caro(ifb(zr,c));  // avoid readonly
 }
 
 A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;

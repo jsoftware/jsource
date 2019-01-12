@@ -261,7 +261,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
  r=AR(w); ws=AS(w); c=r?ws[r-1]:1; n=c?AN(w)/c:prod(r-1,ws);
  ASSERT(!AR(a)||c==an,EVLENGTH);  // if a is not an atom, it must have the same length as a 1-cell of w
  // k=#bytes in an atom of w, wk=*bytes in a cell of w; wv->first atom of w (prebiased)
- k=bp(t); wk=c*k; wv=CAV(w)-k;
+ k=bpnoun(t); wk=c*k; wv=CAV(w)-k;
  // Analyze a to get info for each format
  RZ(th2ctrl(a,&ea,&ma,&da,&s,&zk));
  // ev->expformat flags, mv->field width, dv->decimal places, sk=length of each sprintf string, sv->sprintf string (prebiased)

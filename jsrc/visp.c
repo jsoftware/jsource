@@ -78,7 +78,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
 
 static F1(jtifdz){I m;
  RZ(w);
- m=bp(AT(w))/sizeof(I); AN(w)*=m; *(1+AS(w))*=m;
+ m=bplg(AT(w))-LGSZI; AN(w)<<=m; *(1+AS(w))<<=m;
  AT(w)=INT;
  R w;
 }    /* INT from FL or CMPX, in place */

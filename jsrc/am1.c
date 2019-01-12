@@ -177,7 +177,7 @@ A jtam1e(J jt,A a,A z,A ind,B ip){A e,i1,i2,p,x,y;B*pv;C*u,*v;I*iv,k,m,n,r,*s,vk
  RZ(p=ssel(z,ind)); pv=BAV(p);
  RZ(ipart(z,ind,&i1,&i2));
  m=AN(p); n=AN(i2); u=CAV(e); v=CAV(x);
- r=AR(x); s=AS(x); k=bp(AT(x)); xk=k*prod(r-(n+1),s+(n+1)); vk=k*prod(r-1,s+1);
+ r=AR(x); s=AS(x); k=bpnoun(AT(x)); xk=k*prod(r-(n+1),s+(n+1)); vk=k*prod(r-1,s+1);
  if(!n)DO(m, if(pv[i])mvc(xk,v,k,u); v+=vk;)
  else{
   RZ(i2=dcube(z,i2)); iv=AV(i2); n=AN(i2);
@@ -194,7 +194,7 @@ A jtam1a(J jt,A a,A z,A ind,B ip){A a0=a,a1,e,i1,i2,t,x,y;C*u,*v,*xv;I ar,c,*iv,
  RZ(z=zpad1(z,scube(z,i1,ssel(z,ind)),ip));
  zp=PAV(z); x=SPA(zp,x); y=SPA(zp,i); e=SPA(zp,e);
  ar=AR(a); n=AN(i2); r=AR(x); s=AS(x);
- k=bp(AT(x)); xk=k*prod(r-1-n,s+1+n); vk=k*prod(r-1,s+1); uk=!ar?k:n?xk:vk;
+ k=bpnoun(AT(x)); xk=k*prod(r-1-n,s+1+n); vk=k*prod(r-1,s+1); uk=!ar?k:n?xk:vk;
  u=CAV(a); xv=v=CAV(x);
  RZ(t=iindx(z,i1)); iv=AV(t); m=AN(t);
  if(!n&&!m){a1=SPA(zp,a); R ar?sparseit(a0,a1,e):sparseit(reshape(shape(z),a),a1,a);}

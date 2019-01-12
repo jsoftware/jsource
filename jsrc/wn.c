@@ -211,7 +211,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
  if(d&1)yv[d++]=n; m=d>>1;
  numcase(n,s,&b,&j,&x,&q,&ii);
  f=q?jtnumq:x?jtnumx:b||j?jtnumbpx:ii?jtnumi:jtnumd; 
- t=q?RAT   :x?XNUM  :b||j?CMPX    :ii?INT   :FL;     k=bp(t);
+ t=q?RAT   :x?XNUM  :b||j?CMPX    :ii?INT   :FL;     k=bpnoun(t);
  GA(z,t,m,1!=m,0); v=CAV(z);
  if(ii){
   DO(m, d=i+i; e=yv[d]; if(!numi(yv[1+d]-e,e+s,v)){ii=0; break;} v+=k;);

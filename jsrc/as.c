@@ -321,7 +321,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[0]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
  if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);
- if(-1<=k){d=m-c;     RZ(i=apv(d,0L, 1L)); RZ(j=apv(d,c,1L));}
+ if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
  // d is (number of result cells)-1; i is indexes of last item of the excluded infix for cells AFTER the first
  // j is indexes of first item AFTER the excluded infix for cells BEFORE the last
@@ -333,8 +333,8 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  // run it.
  //
  // If we modify this code to use this path for other associative verbs, we would need to check the type of (p f s)
- if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {  // simulate overflow if different precisions - will convert everything to float
-  r=AR(p); c=aii(p); t=AT(p); k=bp(t); kc=k*c;
+ if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
+  r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
   ASSERTSYS(adocv.f,"ofxassoc");
   GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);  // allocate result assuming no overflow

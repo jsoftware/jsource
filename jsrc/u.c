@@ -220,7 +220,8 @@ static F1(jtii){RZ(w); RETF(IX(IC(w)));}
 // this code is repeated in result.h
 I jtmaxtype(J jt,I s,I t){
  // If one of the types is 0, return the other
- if(((-s)&(-t))>=0)R s+t;
+ if(((-s)&(-t))>=0)
+  R s+t;
  // If values differ and are both nonzero...
  I resultbit = jt->prioritytype[MAX(jt->typepriority[CTTZ(s)],jt->typepriority[CTTZ(t)])];  // Get the higher-priority type
  if((s|t)&SPARSE){ASSERT(!((s|t)&(C2T|C4T|XNUM|RAT|SBT)),EVDOMAIN); R (I)1 << (resultbit+SB01X-B01X);}  // If either operand sparse, return sparse version

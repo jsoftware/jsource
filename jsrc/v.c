@@ -39,7 +39,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  if(memchr(b+f,C1,r)){
   if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
-  RZ(a=ca(ifb(1+f,b)));   // avoid readonly block
+  RZ(a=caro(ifb(1+f,b)));   // avoid readonly block
   GATV(c,INT,r,1L,0L); v=r+AV(c); j=wr; m=1; DO(r, *--v=m; m*=ws[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));
@@ -87,7 +87,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // The product of these is the number of atoms of the result
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
  GA(z,t,zn,of+r,os); MCIS(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
- k=bp(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
+ k=bpnoun(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
  /* obsolete INHERITNOREL(z,w); */ RETF(z);
 } 
 

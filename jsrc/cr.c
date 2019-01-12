@@ -121,7 +121,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
  // wr=rank, ws->shape
  // Each cell is an atom.  Get # atoms (=#result cells)
  // ?k=#bytes in a cell, ?s->shape
- ws=AS(w); mn=AN(w); wk=bp(wt);
+ ws=AS(w); mn=AN(w); wk=bpnoun(wt);
 
  A zz=0;  // place where we will build up the homogeneous result cells
 
@@ -466,7 +466,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 
  // Calculate strides for inner and outer loop.  Cell-size is known to be 1 atom.  The stride of the inner loop is 1 atom, except for a
  // repeated value, of which there can be at most 1.  For a repeated value, we set the stride to 0 and remember the repetition count and stride
- ak=bp(at); wk=bp(wt);  // stride for 1 atom
+ ak=bpnoun(at); wk=bpnoun(wt);  // stride for 1 atom
  if(ar>=wr) { // a will be the long frame
   mn=AN(a);  // result has shape of longer frame, & same # atoms
   if(ar==wr){  // no surplus frame: common case

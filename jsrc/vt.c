@@ -16,7 +16,7 @@ static A jttk0(J jt,B b,A a,A w){A z;I k,m=0,n,p,r,*s,*u;
  if(!b){RE(m=prod(n,u)); ASSERT(m>IMIN,EVLIMIT); RE(m=mult(ABS(m),prod(r-n,n+AS(w))));}
  GA(z,AT(w),m,r,AS(w)); 
  s=AS(z); DO(n, p=u[i]; ASSERT(p>IMIN,EVLIMIT); *s++=ABS(p););
- if(m){k=bp(AT(w)); mvc(k*m,AV(z),k,jt->fillv);}
+ if(m){k=bpnoun(AT(w)); mvc(k*m,AV(z),k,jt->fillv);}
  R z;
 }
 
@@ -55,7 +55,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
  if(t&SPARSE)R tks(a,w);
  DO(n, if(!u[i]){b=1; break;}); if(!b)DO(r-n, if(!s[n+i]){b=1; break;});  // if empty take, or take from empty cell, set b
  if(((b-1)&AN(w))==0)R tk0(b,a,w);   // this handles empty w, so PROD OK below   b||!AN(w)
- k=bp(t); z=w; c=q=1;  // c will be #cells for this axis
+ k=bpnoun(t); z=w; c=q=1;  // c will be #cells for this axis
  // process take one axis at a time
  for(i=0;i<n;++i){I itemsize;
   c*=q; p=u[i]; q=ABS(p); m=s[i];  // q=length of take can be IMIN out of this   m=length of axis

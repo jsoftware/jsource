@@ -138,7 +138,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){A c,t,x,y,z;I*cv,m,n,n1,p,*tv,*ws,wt,*x
 static A jtgrd1spdd(J jt,A w,I wf,I wcr){A x;I n,*ws;P*wp;
  wp=PAV(w); ws=AS(w); n=wcr?ws[wf]:1;
  x=SPA(wp,x);
- R AN(x)?irs1(from(num[0],x),0L,wcr,jtgr1):reshape(vec(INT,1+wf,ws),apv(n,0L,1L));
+ R AN(x)?irs1(from(num[0],x),0L,wcr,jtgr1):reshape(vec(INT,1+wf,ws),IX(n));
 }    /* grade"r w , dense frame, dense cell */
 
 /* sparse right argument:                               */

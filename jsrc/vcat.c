@@ -45,7 +45,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  }
  GA(z,STYPE(t),1,zr,ws); 
  if(r)++*(f+AS(z)); else *(wr+AS(z))=2;
- zp=PAV(z); SPB(zp,a,ca(ifb(zr,b))); SPB(zp,e,e); SPB(zp,i,y); SPB(zp,x,x);  // avoid readonly
+ zp=PAV(z); SPB(zp,a,caro(ifb(zr,b))); SPB(zp,e,e); SPB(zp,i,y); SPB(zp,x,x);  // avoid readonly
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar */
 
@@ -65,7 +65,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  ap=PAV(a); RZ(ab=bfi(r,SPA(ap,a),1)); ae=SPA(ap,e); at=AT(ae);
  wp=PAV(w); RZ(wb=bfi(r,SPA(wp,a),1)); we=SPA(wp,e); wt=AT(we);
  ASSERT(equ(ae,we),EVNONCE);
- GATV(q,B01,r,1,0); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); RZ(za=ca(ifb(r,zb))); c=AN(za);  // avoid readonly
+ GATV(q,B01,r,1,0); zb=BAV(q); DO(r, zb[i]=ab[i]||wb[i];); RZ(za=caro(ifb(r,zb))); c=AN(za);  // avoid readonly
  GATV(q,INT,r,1,0); zs= AV(q); DO(r, zs[i]=MAX(as[i],ws[i]););
  DO(r, if(zb[i]>ab[i]){RZ(a=reaxis(za,a)); break;});
  DO(r, if(zb[i]>wb[i]){RZ(w=reaxis(za,w)); break;});
@@ -80,7 +80,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
   SPB(zp,x,  over(ax,wx));
   SPBV(zp,i,y,over(ay,wy)); v=AV(y)+AN(ay); m=*as; DO(*AS(wy), *v+=m; v+=c;);
  }else{C*av,*wv,*xv;I am,ak,i,j,k,mn,p,*u,wk,wm,xk,*yv;
-  i=j=p=0; k=bp(t); 
+  i=j=p=0; k=bpnoun(t); 
   m=*AS(ay); u=AV(ay); av=CAV(ax); am=aii(ax); ak=k*am;
   n=*AS(wy); v=AV(wy); wv=CAV(wx); wm=aii(wx); wk=k*wm; mn=m+n; xk=k*(am+wm);
   GATV(y,INT,mn*c,      2,     AS(ay)); yv= AV(y); *AS(y)=mn;                 
@@ -133,7 +133,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  }
  RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
- GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bp(AT(a));
+ GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bpnoun(AT(a));
 // obsolete  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL;  q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
@@ -148,9 +148,9 @@ static F2(jtovv){A z;I m,t;
 // obsolete    u=AAV(a); m=arel- RELOCOPYT(v,u,AN(a),m);
 // obsolete    u=AAV(w); m=wrel- RELOCOPY(v,u,AN(w),m);
 // obsolete  }else{C*x;I k;
- I k=bp(t); m=k*AN(a); C *x=CAV(z); 
+ I klg=bplg(t); m=AN(a)<<klg; C *x=CAV(z); 
  MC(x,  AV(a),m      ); 
- MC(x+m,AV(w),k*AN(w));
+ MC(x+m,AV(w),AN(w)<<klg);
 // obsolete  }
  /* obsolete INHERITNOREL2(z,a,w); */ RETF(z);
 }    /* a,w for vectors/scalars with the same type */
@@ -217,7 +217,7 @@ F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr
  RE(zn=mult(replct*framect,m));  // total # atoms in result
  GA(z,t,zn,f+r,s); zv=CAV(z); s=AS(z)+AR(z)-1;   // allocate result; repurpose s to point to END of shape field
  if(2>r)*s=m; else{*s=acr?p:q; *(s-1)=(1<acr?as[ar-2]:1)+(1<wcr?ws[wr-2]:1);}  // fill in last 2 atoms of shape
- k=bp(t);   // # bytes per atom of result
+ k=bpnoun(t);   // # bytes per atom of result
  // copy in the data, creating the result in order (to avoid page thrashing and to make best use of write buffers)
  moveawtbl[(!acr&&ma>1)*2+(!wcr&&mw>1)](CAV(z),CAV(a),CAV(w),replct*framect,k,ma*k,mw*k,(wf>=af)?replct:1,(wf>=af)?1:replct);
  RETF(z);
@@ -289,7 +289,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
    // items of w (after its conversion to the precision of a)
-   k=bp(at); ak=k*an; wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
+   k=bpnoun(at); ak=k*an; wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
    p=0; DO(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then

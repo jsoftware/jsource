@@ -11,7 +11,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
- RE(t=maxtype(B01,t)); k=bp(t);
+ /* obsolete RE(t=maxtype(B01,t)); */ t=t?t:B01; k=bpnoun(t);
  GA(b,t,n,1,0);      bv=CAV(b);
  GATV(x,INT,n,1,0);    qv=AV(x);
  GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
@@ -84,7 +84,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    }
   }
   // for copying items, we need    k: size in bytes of an item of a cell of w
-  k*=bp(AT(w));
+  k<<=bplg(AT(w));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
@@ -175,7 +175,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
  // We always need zn, the number of result atoms
  if(wn){
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
-  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k*=bp(AT(w)); wk=k*p; RE(zn=mult(an,zn));
+  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(0<wcr),ws);
  s=AS(z)+wf; MCISd(s,AS(a),ar); MCISd(s,1+wf+ws,wcr-1);
@@ -311,8 +311,8 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
 }    /* verify that <"1 a is valid for (<"1 a){w */
 
 static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTRICT pv,
-  qn,qr,* RESTRICT qv,* RESTRICT s,wf,wk,wr,* RESTRICT ws,zn;
- wr=AR(w); ws=AS(w); wf=wr-r; I wt=AT(w); wk=bp(wt);
+  qn,qr,* RESTRICT qv,* RESTRICT s,wf,wr,* RESTRICT ws,zn;
+ wr=AR(w); ws=AS(w); wf=wr-r; 
  pn=AN(p); pr=AR(p); pv=AV(p);
  qn=AN(q); qr=AR(q); qv=AV(q);
  if(AN(w)){
@@ -320,11 +320,11 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   // e=length of axis corresponding to q  n=#_2-cells in a cell of w   m=#cells of w (frame*size of 2-cell*(# _2-cells = pn*qn))
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
  }else{zn=0;}
- GA(z,wt,zn,wf+pr+qr+r-2,ws);
+ GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
  s=AS(z)+wf; MCISd(s,AS(p),pr); MCISd(s,AS(q),qr); MCISd(s,ws+wf+2,r-2);
  if(!zn)R z;  // If no data to move, exit with empty.  Rank is right
  wv=CAV(w); zv=CAV(z); 
- switch(k=d*wk){   // k=*bytes in a _2-cell of a cell of w
+ switch(k=d<<bplg(AT(w))){   // k=*bytes in a _2-cell of a cell of w
 #define INNER2(T) {T* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;   \
    DO(m, DO(pn, j=e*pv[i]; DO(qn, *x++=v[j+qv[i]];         )); v+=n;); R z;}  // n=#_2-cells in a cell of w
   case sizeof(I): INNER2(I);
@@ -334,7 +334,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   case sizeof(I4): INNER2(I4);
 #endif
 #if !SY_64 && SY_WIN32
-  case sizeof(D): if(wt&FL)INNER2(D);
+  case sizeof(D): if(AT(w)&FL)INNER2(D);
    // copy only echt floats using floating-point moves.  Otherwise fall through to...
 #endif
   default:        {C* RESTRICT v=wv,* RESTRICT x=zv-k;n=k*n;   // n=#bytes in a cell of w
@@ -361,7 +361,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
- /* obsolete k=bp(AT(w));*/ s=AS(w)+wr-wcr;
+ /* obsolete k=bpnoun(AT(w));*/ s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}

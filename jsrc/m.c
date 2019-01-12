@@ -525,20 +525,20 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  J jt=(J)(intptr_t)((I)jtip&~JTFLAGMSK);  // get flag-free pointer to J block
  ASSERT(RMAX>=r,EVLIMIT);
  I t=AT(w);  // type of input
- I tal=bp(t);  // length of an atom of t
+ offset<<=bplg(t);  // length of an atom of t
  I c=AC(w);  // count of input
  I wf=AFLAG(w);  // flags in input
   // If this is an inplaceable request for an inplaceable DIRECT block, we don't need to create a new virtual block: just modify the offset in the old block.  Make sure the shape fits
   // if the block is UNINCORPABLE, we don't modify it, because then we would have to check everywhere to see if a parameter block had changed
  if(((I)jtip&JTINPLACEW) && t&DIRECT && AR(w)>=r && ASGNINPLACE(w) && !(wf&AFUNINCORPABLE)){
   // virtual-in-place.  There's nothing to do but change the pointer and fill in the new rank.  AN and AS are handled in the caller
-  AK(w)+=offset*tal; AR(w)=(RANKT)r;
+  AK(w)+=offset; AR(w)=(RANKT)r;
   R w;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
   AFLAG(z)=AFVIRTUAL /* obsolete  + (wf&AFNOSMREL) + ((wf&AFNJA)?AFREL:0)*/;  // flags: not recursive, not UNINCORPABLE
-  AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset*tal; AR(z)=(RANKT)r;  // virtual, not inplaceable
+  AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
   if(AFLAG(w)&AFVIRTUAL){
@@ -1070,6 +1070,8 @@ F1(jtca){A z;I t;P*wp,*zp;
  }else MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0)); 
  R z;
 }
+// clone block only if it is read-only
+F1(jtcaro){ if(AFLAG(w)&AFRO)RETF(ca(w)); RETF(w); }
 
 // clone recursive.  The result is not relative, even if w is
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
@@ -1120,9 +1122,9 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  R z;
 }
 
-A jtexta(J jt,I t,I r,I c,I m){A z;I k,m1; 
+A jtexta(J jt,I t,I r,I c,I m){A z;I m1; 
  GA(z,t,m*c,r,0); 
- k=bp(t); *AS(z)=m1=allosize(z)/(c*k); AN(z)=m1*c;
+ I k=bp(t); *AS(z)=m1=allosize(z)/(c*k); AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!(t&DIRECT))memset(AV(z),C0,k*AN(z));
  R z;

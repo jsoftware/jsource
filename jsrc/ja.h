@@ -128,6 +128,7 @@
 #define cants(x,y,z)                jtcants(jt,(x),(y),(z)) 
 #define cap(x)                      jtcap(jt,(x))
 #define car(x)                      jtcar(jt,(x))
+#define caro(x)                     jtcaro(jt,(x))
 #define case1a(x,y)                 jtcase1a(jt,(x),(y))
 #define casev(x)                    jtcasev(jt,(x))
 #define catalog(x)                  jtcatalog(jt,(x)) 

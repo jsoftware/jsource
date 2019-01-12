@@ -1099,7 +1099,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
   CDASSERT(HOMO(t,wt),DEPARM);
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));
  }
- wv=CAV(w); zv=CAV(z); k=bp(wt);
+ wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
  if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0))
  else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0)); wv+=p; zv+=q;);}
  R z;
@@ -1166,7 +1166,7 @@ F1(jtmema){I k; RE(k=i0(w)); R sc((I)MALLOC(k));} /* ce */
 F1(jtmemf){I k; RE(k=i0(w)); FREE((void*)k); R num[0];}
      /* 15!:4  memory free */
 
-F1(jtmemr){C*u;I k,m,n,t,*v;US*us;C4*c4;
+F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
  RZ(w);
  ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
@@ -1186,15 +1186,15 @@ F1(jtmemr){C*u;I k,m,n,t,*v;US*us;C4*c4;
    else {m=0; c4=(C4*)u; while(*c4++)m++;}
   }
  }
- k=bp(t);
 #if SY_WIN32
 // This function is obsolete and should not be used
+// obsolete k=bpnoun(t);
 // ASSERT(!IsBadReadPtr(u,m*k),EVDOMAIN);
 #endif
  R vec(t,m,u);
 }    /* 15!:1  memory read */
 
-F2(jtmemw){C*u;I k,m,n,t,*v;
+F2(jtmemw){C*u;I m,n,t,*v;
  RZ(a&&w);
  ASSERT(INT&AT(w),EVDOMAIN);
  ASSERT(1==AR(w),EVRANK);
@@ -1202,7 +1202,7 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
  ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
- k=bp(t);
+// obsolete  k=bpshift(t);
  ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
  ASSERT(TYPESEQ(t,AT(a)),EVDOMAIN);
@@ -1210,12 +1210,13 @@ F2(jtmemw){C*u;I k,m,n,t,*v;
 // This function is obsolete and should not be used
 // ASSERT(!IsBadWritePtr(u,m*k),EVDOMAIN);
 #endif
- MC(u,AV(a),m*k);
+ MC(u,AV(a),m<<bplg(t));
  R mtm;
 }    /* 15!:2  memory write */
 
 // 15!:15 memu - make a copy of y if it is not inplaceable
 F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); RETF(w); }
+F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
      /* 15!:8  get header */

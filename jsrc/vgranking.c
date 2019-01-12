@@ -81,14 +81,14 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
 }    /* /:@/: w where w is boolean and items have length 2 or 4 */
 
 // /:@/:
-F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wk,wn,wr,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
+F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
  RZ(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  wt=AT(w); wv=CAV(w); wn=AN(w);
  ws=AS(w); n=wcr?ws[wf]:1;  // n=#cells in w; m is number of atoms in w
  if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),num[0]);}
- wk=bp(wt); PROD(icn,wcr-1,ws+wf+1); k=icn*wk;  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
+ PROD(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
  // if Boolean 2- or 4-byte, go off to handle that special case
  if(wt&B01&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
  // See if the values qualify for small-range processing

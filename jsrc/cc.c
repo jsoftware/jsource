@@ -21,7 +21,7 @@ static DF1(jtcut01){DECLF;A h,x;
 
 #if 0  // special cases no longer used
 static F2(jtcut02v){A z;I*av,e,j,k,m,t,wk;
- m=AN(w); t=AT(w); wk=bp(t);
+ m=AN(w); t=AT(w); wk=bpnoun(t);
  av=AV(a); j=av[0]; e=av[1]; k=ABS(e);
  ASSERT(!e||-m<=j&&j<m,EVINDEX);
  if(0>j){j+=1+m-k; if(0>j){k+=j; j=0;}}else k=MIN(k,m-j);
@@ -31,7 +31,7 @@ static F2(jtcut02v){A z;I*av,e,j,k,m,t,wk;
 }    /* a ];.0 vector */
 
 static F2(jtcut02m){A z;C*u,*v;I*av,c,d,e0,e1,j0,j1,k0,k1,m0,m1,*s,t,wk;
- s=AS(w); m0=s[0]; m1=s[1]; t=AT(w); wk=bp(t);
+ s=AS(w); m0=s[0]; m1=s[1]; t=AT(w); wk=bpnoun(t);
  av=AV(a);    
  if(4==AN(a)){j0=av[0]; e0=av[2]; k0=ABS(e0); j1=av[1]; e1=av[3]; k1=ABS(e1);}
  else        {j0=av[0]; e0=av[1]; k0=ABS(e0); j1=0;     e1=m1;    k1=e1;     }
@@ -649,7 +649,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
     zt=rtype(adocv.cv);
     GA(zz,zt,m*wcn,r,AS(w)); *AS(zz)=m; 
     if(!AN(zz))R zz;
-    I atomsize=bp(zt);
+    I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
     EACHCUT(if(d)adocv.f(jt,1L,wcn,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n

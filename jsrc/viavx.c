@@ -1696,7 +1696,7 @@ static S fnflags[]={  // 0 values reserved for small-range.  They turn off boola
 
 // mode indicates the type of operation, defined in j.h
 A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
-    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,th,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
+    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,klg,n,r,*s,t,th,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;
  RZ(a&&w);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)
@@ -1760,7 +1760,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // m=target axis length, n=target item # atoms
  // c # target items in a left-arg cell, which may include multiple right-arg cells
  // k=target item # bytes, h->hash table or to 0   z=result   p=size of hashtable
- m=acr?as[af]:1; RE(t=(mode&IPHCALC)?at:maxtype(at,wt)); k1=bp(t);   // m=length of target axis; the common type; k1=#bytes/atom of common type
+ m=acr?as[af]:1; RE(t=(mode&IPHCALC)?at:maxtype(at,wt)); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
  // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
@@ -1768,7 +1768,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // wf>af & af>0
  if(((an-1)|(wn-1))>=0){
   // Neither arg is empty.  We can safely count the number of cells
-  PROD(n,acr-1,as+af+1); k=n*k1; // n=number of atoms in a target item; k=number of bytes in a target item
+  PROD(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
   PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell
   RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
   ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
@@ -1776,9 +1776,9 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  }else{
   // An argument is empty.  We must beware of overflow in counting cells.  Just do it the old slow way
   n=acr?prod(acr-1,as+af+1):1; RE(zn=mult(prod(f,s),prod(f1,ws+wf)));
-  k=n*k1;
-  ac=prod(af,as); ak=ac?k1*an/ac:0;  // ac = #cells of a
-  wc=prod(wf,ws); wk=wc?k1*wn/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
+  k=n<<klg;
+  ac=prod(af,as); ak=ac?(an<<klg)/ac:0;  // ac = #cells of a
+  wc=prod(wf,ws); wk=wc?(wn<<klg)/wc:0; c=1<ac?wk/k:zn; wk*=1<wc;
  }
 
  // Convert dissimilar types
@@ -1820,7 +1820,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   case IICO:    R reshape(shape(z),sc(n?m:m-1));
   case INUBSV:  R reshape(shape(z),take(sc(m),num[1]));
   case INUB:    AN(z)=0; *AS(z)=m?1:0; R z;
-  case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),k1*AN(w)); R z;
+  case ILESS:   if(m)AN(z)=*AS(z)=0; else MC(AV(z),AV(w),AN(w)<<klg); R z;
   case IEPS:    R reshape(shape(z),num[m&&(!n||th)]);
   case INUBI:   R m?iv0:mtv;
   // th<0 means that the result of e. would have rank>1 and would never compare against either 0 or 1
@@ -1885,7 +1885,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
    // If the allocated range includes all the possible values for the input, set IIMODFULL to indicate that fact
    if(2==k){
     // if the actual range of the data exceeds p, we revert to hashing.  All 2-byte types are exact
-    CR crres = condrange2(USAV(a),(AN(a)*k1)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
+    CR crres = condrange2(USAV(a),(AN(a)<<klg)>>LGSZS,-1,0,MIN((UI)(IMAX-5)>>booladj,3*m)<<booladj);   // get the range
     if(crres.range){
       datamin=crres.min;
       // If the range is close to the max, we should consider widening the range to use the faster FULL code.  We do this only for boolean hashes, because
@@ -1912,7 +1912,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
       if(mode&IIOREPS){  // if reverse check is possible, see if it is desired
        if((m>>(1))>c){rangearg=w; rangearglen=c; fnprov=FNTBLSMALL4+FNTBLREVERSE; }  // booladj?(m>MAXBYTEBOOL?5:2): omitted now
       }
-      CR crres = condrange(AV(rangearg),(AN(rangearg)*k1)>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
+      CR crres = condrange(AV(rangearg),((AN(rangearg)<<klg))>>LGSZI,IMAX,IMIN,MIN((UI)(IMAX-5)>>booladj,3*rangearglen)<<booladj);
       if(crres.range){datamin=crres.min; p=crres.range; fnx=fnprov;  // use the selected orientation
       }else{fnx=FNTBLONEINT;}  // select integer hashing if range too big...
      }else{fnx=FNTBLONEINT;}   // ... or some other 8-byte length (not float, though)
@@ -1958,10 +1958,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
     if(k==2){
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUS,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange2(USAV(w),(AN(w)*k1)>>LGSZS,datamin,datamin+p-1,allowrange);
+     crres = condrange2(USAV(w),(AN(w)<<klg)>>LGSZS,datamin,datamin+p-1,allowrange);
     }else{
      allowrange=MIN(MAX(L2CACHESIZE>>LGSZUI4,(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange(AV(w),(AN(w)*k1)>>LGSZI,datamin,datamin+p-1,allowrange);
+     crres = condrange(AV(w),(AN(w)<<klg)>>LGSZI,datamin,datamin+p-1,allowrange);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  

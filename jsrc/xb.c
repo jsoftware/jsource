@@ -106,9 +106,9 @@ static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  R raze(z);
 }    /* 3!:1 w for sparse w */
 
-A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t;
+A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
  RZ(w);
- e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); k=bp(t); kk=WS(d);
+ e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); klg=bplg(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
  GATV(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1,0);
  v=brephdr(b,d,w,y);
@@ -125,9 +125,9 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,k,kk,m,n,t;
    // Make sure there is a zero byte if the string is empty
    {I suffsize = MIN(4*SZI,(CAV(y)+AN(y))-(C*)v);  // len of area to clear to 0 
    memset((CAV(y)+AN(y))-suffsize,C0,suffsize);   // clear suffix
-   MC(v,u,n*k); R y;}      // copy the valid part of the data
+   MC(v,u,n<<klg); R y;}      // copy the valid part of the data
  }
- if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n*k);}
+ if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n<<klg);}
  else     RZ(q=1<AR(w)?ravel(w):w);
  m=AN(y); wv=AAV(w); 
  GATV(z,BOX,1+e,1,0); zv=AAV(z); 

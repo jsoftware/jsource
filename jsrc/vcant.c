@@ -15,7 +15,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  ASSERT(wr==zr,EVNONCE);
  RZ(b=bfi(wr,a1,1));
  GATV(q,B01,wr,1,0); c=BAV(q); u=AV(a); DO(wr, c[i]=b[u[i]];);
- SPB(zp,a,ca(ifb(wr,c)));  // avoid readonly
+ SPB(zp,a,caro(ifb(wr,c)));  // avoid readonly
  SPB(zp,e,ca(SPA(wp,e)));
  RZ(y=fromr(grade1(indexof(a,a1)),SPA(wp,i)));
  RZ(q=grade1(y));
@@ -61,7 +61,7 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
  // we include it in the cell size but not in the number of cells for the axis; and we reduce the ranks.  If there are axes run together,
  // ipso facto the largest number in a must be less than the (length of a)-1, and this loop aborts immediately.
  // r will hold number of unelided trailing axes of result
- I noelideend=0; I cellsizeb=bp(AT(w)); r=zr; I scanws=1; j=wr;  // cellsizeb is number of bytes in a cell of the transpose, after deleting trailing axes
+ I noelideend=0; I cellsizeb=bpnoun(AT(w)); r=zr; I scanws=1; j=wr;  // cellsizeb is number of bytes in a cell of the transpose, after deleting trailing axes
  DO(wr, --j; tv[j]=scanws; if(noelideend|=(j^av[j])){scanws*=ws[j];}else{cellsizeb*=ws[j]; --r;});  // tv = */\. ws
  if(!r)R RETARG(w);  // if all the axes are elided, just return the input unchanged
  for(j=0,zn=1;j<zr;++j){  // for each axis of the result...  (must include deleted axes to get the shape of result axis, and total # items)

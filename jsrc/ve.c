@@ -377,7 +377,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  }
  {PROLOG(0070);A y,*zv;C*u,*yv;I k;
   F2RANK(1,0,jtabase2,0);
-  k=bp(at); u=an*k+CAV(a);
+  k=bpnoun(at); u=an*k+CAV(a);
   GA(y,at, 1, 0,0); yv=CAV(y);
   GATV(z,BOX,an,1,0); zv=an+AAV(z);
   DO(an, MC(yv,u-=k,k); RZ(w=divide(minus(w,*--zv=residue(y,w)),y)););

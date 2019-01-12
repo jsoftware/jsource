@@ -101,7 +101,7 @@ A jtamne(J jt,A a,A z,A ind,B ip){A i1,i2,x,y;C*u,*v;I*iv,*jv,k,m,n,vk,xk;P*zp;
  RZ(iaddr(z,ind,&i1,&i2));
  zp=PAV(z); x=SPA(zp,x); y=SPA(zp,i);
  m=*AS(y); n=AN(i1);
- k=bp(AT(x)); xk=k*aii(x); vk=k*csize(z,ind);
+ k=bpnoun(AT(x)); xk=k*aii(x); vk=k*csize(z,ind);
  u=CAV(a); v=CAV(x); iv=AV(i1); jv=AV(i2);
  DO(n, if(m>iv[i])mvc(vk,v+xk*iv[i]+k*jv[i],k,u););
  R z;
@@ -113,7 +113,7 @@ A jtamna(J jt,A a,A z,A ind,B ip){A i1,i2,x;C*u,*v;I*iv,*jv,k,n,vk,xk;P*zp;
  RZ(a=astdn(a,z,ind));
  RZ(iaddr(z,ind,&i1,&i2));
  zp=PAV(z); x=SPA(zp,x); n=AN(i1);
- k=bp(AT(x)); xk=k*aii(x); vk=k*csize(z,ind);
+ k=bpnoun(AT(x)); xk=k*aii(x); vk=k*csize(z,ind);
  u=CAV(a); v=CAV(x); iv=AV(i1); jv=AV(i2); 
  if(AR(a))DO(n, mvc(vk,v+xk*iv[i]+k*jv[i],vk,u); u+=vk;)
  else     DO(n, mvc(vk,v+xk*iv[i]+k*jv[i],k,u););
@@ -130,7 +130,7 @@ A jtamnsp(J jt,A a,A z,A ind,B ip){A i1,i2,t;C*ev,*u,*v,*vv;I c,*dv,i,*iv,j,*jv,
  t=SPA(ap,i); yv= AV(t); m=*AS(t); p=0;
  t=SPA(ap,e); ev=CAV(t);
  t=SPA(ap,x); u =CAV(t);
- t=SPA(zp,x); v =CAV(t); k=bp(AT(t)); zk=k*aii(t);
+ t=SPA(zp,x); v =CAV(t); k=bpnoun(AT(t)); zk=k*aii(t);
  GATV(t,INT,r,1,0); dv=AV(t); memset(dv,C0,SZI*r); dv[r-1]=-1;
  for(i=0;i<n;++i){
   vv=v+zk*iv[i]+k*jv[i];

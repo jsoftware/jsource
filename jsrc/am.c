@@ -14,7 +14,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
  ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
- GA(z,t,c,r,s); x=CAV(z); v=CAV(w); u=AV(ind); k=bp(t);
+ GA(z,t,c,r,s); x=CAV(z); v=CAV(w); u=AV(ind); k=bpnoun(t);
  DO(c, MC(x+k*i,v+k*(i+c*u[i]),k););
  EPILOG(z);
 }
@@ -25,7 +25,7 @@ static A jtmerge1(J jt,A w,A ind){PROLOG(0006);A z;C*v,*x;I c,k,r,*s,t,*u;
 
 static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,*u,*wi,*zi;
  RZ(w&&ind);
- r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bp(t); m=IC(w); c=aii(w);
+ r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); m=IC(w); c=aii(w);
  ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
  ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
@@ -151,7 +151,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
  // free them before we overwrite them, and we must increment the usecount in the block we store into them
  // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
- C* RESTRICT av0=CAV(a); I k=bp(t); C * RESTRICT avn=av0+(an*k);
+ C* RESTRICT av0=CAV(a); I k=bpnoun(t); C * RESTRICT avn=av0+(an*k);
  switch(k){
  case sizeof(C):
   {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data

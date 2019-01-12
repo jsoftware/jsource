@@ -366,14 +366,14 @@ typedef I SI;
 #define ACUSECOUNT      (I)1  // lower bits used for usecount
 #define ACIPNO(a)       (AC(a)&=~ACINPLACE)
 #define ACIPYES(a)      (AC(a)|=ACINPLACE)
-#define ACIPISOK(a)     (AC(a)<0)  // OK to modify if INPLACE set - set only when usecount=1
+#define ACIPISOK(a)     (AC(a)<1)  // OK to modify if INPLACE set - set only when usecount=1
 #define ACUC(a)         (AC(a)&(~ACINPLACE))  // just the usecount portion
 #define ACUC1           (ACUSECOUNT*1) // <= this is usecount==1; > is UC>1
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     (((c)+(c))<0)  // is PERMANENT bit set?
-#define ASGNINPLACE(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1&&!(AFLAG(w)&AFRO)&&notonupperstack(w)))  // OK to inplace ordinary operation
-#define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AFNJA&AFLAG(w)&&AC(w)==2))   // OK to inplace, for ops that have special support for NJA blocks
+#define ASGNINPLACE(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)==1&&!(AFLAG(w)&AFRO)&&notonupperstack(w)))  // OK to inplace ordinary operation
+#define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE

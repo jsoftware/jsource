@@ -250,7 +250,7 @@ static A jtfsmdo(J jt,I f,A s,A m,I*ijrd,A w,A w0){A x,z;C*cc,*wv0;
  q=*(1+AS(s));
  sv=AV(s); mv=AV(m);
  i=ijrd[0]; j=ijrd[1]; r=ijrd[2]; d=ijrd[3]; vi=vj=vr=vc=-1;
- if(t&INT){t0=AT(w0); wr=AR(w0); wm=aii(w0); wk=wm*bp(AT(w0)); wv0=CAV(w0);}
+ if(t&INT){t0=AT(w0); wr=AR(w0); wm=aii(w0); wk=wm<<bplg(AT(w0)); wv0=CAV(w0);}
  switch(f+(t&B01?0:t&LIT?10:20)){
   case  0: {B *wv=BAV(w); FSMF(A,1,BOX,1, 1,   wv[i] ,EMIT0b,ZVAx);} break;
   case  1: {B *wv=UAV(w); FSMF(B,1,B01,1, 1,   wv[i] ,EMIT1, ZVAx);} break;

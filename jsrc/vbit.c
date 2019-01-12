@@ -439,7 +439,7 @@ static F2(jtbitrepeat){A z;I c,c1,m,n,p,wr,wk,wt;UC*av,k;
  ASSERT(BIT&AT(a),EVDOMAIN);
  n=AN(a); av=UAV(a); wr=AR(w); wt=AT(w);
  p=AR(w)?*AS(w):1; m=AN(w)/p; c=wr?*(AS(w)+wr-1):1; c1=(c+BW-1)/BW;
- wk=wt&BIT?SZI*c1*(m/c):m*bp(wt);
+ wk=wt&BIT?SZI*c1*(m/c):m<<bplg(wt);
  ASSERT(n==p,EVLENGTH);
  p=bitsum(n,av);
  GA(z,wt,p*m,AR(w),AS(w)); *AS(z)=p;

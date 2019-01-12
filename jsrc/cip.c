@@ -46,7 +46,7 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
 
 static F2(jtpdtby){A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
  at=AT(a); wt=AT(w); t=at&B01?wt:at;
- RZ(z=ipprep(a,w,t,&m,&n,&p)); zk=n*bp(t); u=BAV(a); v=wv=BAV(w);
+ RZ(z=ipprep(a,w,t,&m,&n,&p)); zk=n<<bplg(t); u=BAV(a); v=wv=BAV(w);
  NAN0;
  switch(CTTZ(t)){
   default:   ASSERT(0,EVDOMAIN);
@@ -366,7 +366,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
  RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));
- if(!p){memset(AV(z),C0,AN(z)*bp(AT(z))); R z;}
+ if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;

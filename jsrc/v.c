@@ -29,7 +29,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
 
   // If we have to allocate a new block, do so
   GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n*bp(wt)); /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z); // if dense, move the data and relocate it as needed
+  MC(AV(z),AV(w),n<<bplg(wt)); /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
@@ -62,7 +62,7 @@ F1(jttable){A z;I f,r,*s,wr,*ws,wt;
  if(wt&SPARSE){z=irs1(w,0L,r?r-1:0,jtravel); R r?z:irs1(z,0L,0L,jtravel);}
  GA(z,wt,AN(w),2+f,ws); s=f+AS(z);
  if(r)*(1+s)=prod(r-1,1+f+ws); else *s=*(1+s)=1;
- MC(AV(z),AV(w),AN(w)*bp(wt));
+ MC(AV(z),AV(w),AN(w)<<bplg(wt));
  /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z);
 }
 

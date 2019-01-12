@@ -499,7 +499,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z;X*u,x;
   case RATX:  m+=n;  /* fall thru */
   case XNUMX: z=-1LL; u=XAV(y); DO(m, x=*u++; v=UAV(x); z=CRC32((UI4)z,(UI4)hicnz(AN(x)*SZI,UAV(x)));); R z;
   case INTX:                                    R hici(n,AV(y));
-  default:   R hic(n*bp(AT(y)),UAV(y));
+  default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
 
 // Comparisons for extended/rational/float/complex types.

@@ -42,7 +42,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   // <"r
   ws=AS(w); I t=AT(w);
   CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
-  k=m*bp(t); wv=CAV(w);
+  k=m<<bplg(t); wv=CAV(w);
   GATV(z,BOX,n,f,ws); zv=AAV(z); 
 // obsolete if(ARELATIVE(w)){GA(y,t,m,r,f+ws); A* RESTRICT v=(A*)wv; A* RESTRICT u=AAV(y);  DO(n, RELOCOPYF(u,v,m,wrel); RZ(zv[i]=ca(y)););}  // relatives through a vanilla path: make absolute in the temp y; clone y; incorporate that into result
 // obsolete  else{
@@ -322,7 +322,7 @@ static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p
  }else{
   if(k){
    GA(x,t,AN(q),wcr,0); s=AS(x); DO(k, *s++=1;); MCISd(s,AS(q),r); 
-   MC(AV(x),AV(q),AN(q)*bp(t)); q=x;
+   MC(AV(x),AV(q),AN(q)<<bplg(t)); q=x;
   }
   RZ(q=sparseit(t&dt?q:cvt(dt,q),a,e));
  }

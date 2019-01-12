@@ -202,7 +202,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block (usually)
- RZ(z=tail(w)); k=AN(z)*bp(AT(z)); // k=length of input cell in bytes
+ RZ(z=tail(w)); k=AN(z)<<bplg(AT(z)); // k=length of input cell in bytes
  // fill in the shape, offset, and item-count of the virtual block
  AN(a)=AN(z); AK(a)+=(n-1)*k; MCIS(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
    // to the last item; the pointer is unused in the first iteration, and we then back up to the second-last item, which is the first one we

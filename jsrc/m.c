@@ -200,7 +200,7 @@ static F1(jtspfor1){
   if(AFNJA&AFLAG(w)) {
    if(AK(w)>0&&AK(w)<=AM(w))jt->spfor += SZI*WP(AT(w),AN(w),64);  // fixed rank of 64 in NJA memory
    else{
-    jt->spfor += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w))*bp(AT(w))+SZI-1)>>LGSZI));  // data size only
+    jt->spfor += SZI*((1&&AT(w)&LAST0)+(((AT(w)&NAME?sizeof(NM):0)+(AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only
     jt->spfor += alloroundsize(w);  // add in the header
    }
   } else {
@@ -569,7 +569,7 @@ A jtrealize(J jt, A w){A z; I t;
 // obsolete   If the block is boxed relative, relocate it
 // obsolete  if(!ARELATIVE(w)){
 // obsolete  }else { AFLAG(z) |= AFREL; I rel = (I)ABACK(w)-(I)z; A * RESTRICT wa=AAV(w), * RESTRICT za=AAV(z); RELOCOPY(za,wa,AN(w),rel); }
- MC(AV(z),AV(w),AN(w)*bp(t));
+ MC(AV(z),AV(w),AN(w)<<bplg(t));
  R z;
 }
 
@@ -1067,7 +1067,7 @@ F1(jtca){A z;I t;P*wp,*zp;
   SPB(zp,e,ca(SPA(wp,e)));
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
- }else MC(AV(z),AV(w),AN(w)*bp(t)+(t&NAME?sizeof(NM):0)); 
+ }else MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0)); 
  R z;
 }
 

@@ -167,7 +167,7 @@ F2(jtsmmcar){A*wv,x,z;A1*zv;I n,t;
  RZ(z=smmga(a,t,n,AR(w),AS(w)));
  zv=A1AV(z); wv=AAV(w);
  if(t&BOX){RELBASEASGN(w,w) ; DO(n, RZ(x=smmcar(a,wv[i])); zv[i]=AREL(x,z););}
- else MC(zv,wv,n*bp(t));
+ else MC(zv,wv,n<<bplg(t));
  RETF (z);
 }    /* make copy of w in SMM area of a */
 

@@ -145,10 +145,10 @@ typedef I SI;
 
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
-#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))  // # I to allocate
+#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))  // # I to allocate
 #else
 #define AKXR(x)         (SZI*(NORMAH+((x)|1)))
-#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+(n)*bp(t)+SZI-1)>>LGSZI))
+#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
 /* r|1 to make sure array values are double-word aligned */
 #endif
 #define AKX(x)          AKXR(AR(x))

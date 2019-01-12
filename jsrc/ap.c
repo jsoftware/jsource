@@ -256,7 +256,7 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  RZ(a&&w);
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
- c=aii(w); k=c*bp(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
+ c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
  /* obsolete if(ARELATIVE(w)){ A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
@@ -394,7 +394,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    stride=ilnabs;  // advance by the stride
    remlen=wi;  // since there are no overlaps, set length-to-do to total length
   }
-  strideb = stride * wc * bp(wt);  // get stride in bytes, for incrementing virtual-block offsets
+  strideb = (stride * wc) <<bplg(wt);  // get stride in bytes, for incrementing virtual-block offsets
  }else{
   // prefix.
   zi=wi;  // one prefix per item
@@ -552,7 +552,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
  s=AS(z); *s++=d; *s++=zc; MCISd(s,1+ws,r-2);
- k=c*bp(wt); 
+ k=c<<bplg(wt); 
  if(AN(z)){
 // obsolete switch((0>m?2:0)+(wd?1:0)){
   if(m>=0){ q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);
@@ -760,8 +760,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); *AS(z)=zi;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
- zv=CAV(z); zk=bp(zt)*d; 
- wv=CAV(w); wk=bp(wt)*(0<=m0?d:d*m);
+ zv=CAV(z); zk=d<<bplg(zt); 
+ wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
  DO(zi-b, adocv.f(jt,1L,d,m,zv,wv); zv+=zk; wv+=wk;);
  if(b)adocv.f(jt,1L,d,p-m*(zi-1),zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;

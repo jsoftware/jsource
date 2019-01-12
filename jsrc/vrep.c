@@ -79,7 +79,7 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;
  wv=CAV(w); zv=CAV(z);
  RE(c=prod(wf,AS(w)));
- if(zn)switch(k=AN(w)/(c*m)*bp(AT(w)),FL&AT(w)||k!=sizeof(D)?k:0){
+ if(zn)switch(k=(AN(w)/(c*m))<<bplg(AT(w)),FL&AT(w)||k!=sizeof(D)?k:0){
   case sizeof(C): REPB(C); break;
   case sizeof(S): REPB(S); break;
 #if SY_64

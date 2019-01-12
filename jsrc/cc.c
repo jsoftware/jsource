@@ -97,7 +97,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   MCIS(AS(virtw)+1,ws+1,wr-1);
   // remember original offset.  Others will be based on this
   origoffset=AK(virtw);
-  wcellbytes=wcellsize*bp(AT(w));  // bytes per cell
+  wcellbytes=wcellsize<<bplg(AT(w));  // bytes per cell
  }
  if(m){
    // There is a frame; we will have to assemble the results, even if there is only one
@@ -186,7 +186,7 @@ DF2(jtrazecut0){A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  I zn; RE(zn=mult(wcn,nitems));  // number of atoms in result
  GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=nitems; zv=CAV(z);  // allocate a list of items of w, fill in length.  zv is running output pointer
  // copy em in.  We use MC because the strings are probably long and unpredictable - think HTML parsing
- I wcb=wcn*bp(wt);  // number of bytes in a cell of w
+ I wcb=wcn<<bplg(wt);  // number of bytes in a cell of w
  DO(m, j=av[i][0]; k=av[i][1]; I jj=j+n; jj=(j>=0)?j:jj; j=n-jj; k=k>j?j:k; k*=wcb; MC(zv,wv+jj*wcb,k); zv+=k;)
  RETF(z);
 }    /* a ;@:(<;.0) vector */
@@ -286,7 +286,7 @@ static F1(jtcps){A z;P*wp,*zp;
 }
 
 static A jtselx(J jt,A x,I r,I i){A z;I c,k;
- c=aii(x); k=c*bp(AT(x));
+ c=aii(x); k=c<<bplg(AT(x));
  GA(z,AT(x),r*c,AR(x),AS(x)); *AS(z)=r;
  MC(CAV(z),CAV(x)+i*k,r*k);
  R z;
@@ -320,7 +320,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  }
  yu=AV(yy); p=pfx?yu[m]:0;
  if(t&DENSE){C*wv;I c,k,r,*s;
-  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c*bp(t); 
+  r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c<<bplg(t); 
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
   GATV(z,INT,m,1,0); zi=AV(z); 
@@ -525,7 +525,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
  I state=0;  // init flags, including zz flags
 
  n=IC(w); wt=AT(w);   // n=#items of w; wt=type of w
- r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn*bp(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
+ r=MAX(1,AR(w)); wv=CAV(w); wcn=aii(w); k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
  // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
  if(!(VGERL&sv->flag)){id=FAV(fs)->id;  // if verb, point to its data and fetch its pseudocharacter
   // not gerund: OK to test fs
@@ -770,11 +770,11 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,
  else{RZ(a=wi?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}
  // v-> byte list of frets, sep is the fret char
  ASSERT(wi==IC(a),EVLENGTH);
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d*bp(wt);
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d<<bplg(wt);
  if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
- zt=rtype(adocv.cv); zk=d*bp(zt);
+ zt=rtype(adocv.cv); zk=d<<bplg(zt);
  if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[pfx?0:wi-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)R z;}
  GA(z,zt,AN(w),r,s); zv=CAV(z);
  while(p){I n;
@@ -846,7 +846,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
  I *ws=AS(w);  // ws-> shape of w
  // get address of end+1 of the source data, so we can avoid out-of-bounds
- C *sdataend=CAV(w)+AN(w)*bp(wt);  // addr+1 of source data
+ C *sdataend=CAV(w)+(AN(w)<<bplg(wt));  // addr+1 of source data
  I inrecursion=(n+256)&512;   // 512 if bit 8 and 9 of n have different values, otherwise 0
  if(axisct>2) {A next2;  // we build the u for the next 2 axes here
   // We do two axes of tessellation at a time.  If there are more than two axes, replace the verb with a verb that will reapply
@@ -894,7 +894,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  // Start preparing for loop
  I axisproc=axisct; axisproc=axisct>2?2:axisproc;  // number of axes to process here: 1 or 2
  vmv=av[0]; vsz=av[axisct+0];  // v movement vector and size
- PROD(cellatoms,wr-axisproc,ws+axisproc); cellbytes = cellatoms*bp(wt);  // get # atoms in cell, then #bytes
+ PROD(cellatoms,wr-axisproc,ws+axisproc); cellbytes = cellatoms<<bplg(wt);  // get # atoms in cell, then #bytes
  // Figure out the size of the cells we will be making blocks of.  They have all but the first 1 or 2 axes of a/w
  fauxblock(virtwfaux);
  if(axisproc==1){

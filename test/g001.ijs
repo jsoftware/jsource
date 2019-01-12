@@ -108,7 +108,8 @@ a=:12
 'ill-formed name'   -: ". etx '(''p'';''_ab'') =. 9' 
 'ill-formed name'   -: ". etx '''   '' =. 9'
 'ill-formed name'      -: ". etx '(''p'';'''') =. 9'
-'ill-formed name'   -: ". etx ''' `a'' =. +'
+'domain error'   -: ". etx ''' `a'' =. +'
+'domain error'   -: ". etx '''a b'' =. +'
 
 'rank error'        -: ". etx '(<3 4$''a'') =. i.3 4'
 'rank error'        -: ". etx '(''p'';3 4$''a'') =. 9'

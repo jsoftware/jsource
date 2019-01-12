@@ -291,7 +291,7 @@ A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; RETF(z);}
 A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; RETF(z);}
 
 // return A-block for list of type t, length n, and values *v 
-A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n*bp(t)); RETF(z);}
+A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z);}
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}

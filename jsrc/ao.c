@@ -46,7 +46,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  y=FAV(self)->fgh[0]; y=VAV(y)->fgh[0]; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
- if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)*bp(wt)); R z;}
+ if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
   case OBQCASE(B01X, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
@@ -423,7 +423,7 @@ UI4 shortrange[3][4] = {{0,65536,65536,0}, {0,2,258,0}, {0,256,65536,0}};  // C2
 F1(jtgroup){PROLOG(0014);A c,d,x,z,*zv;I**cu,*cv,*dv,j,k,m,n,t,*u,*v,*wv,zn=0;CR rng;
  RZ(w);
  if(SPARSE&AT(w))RZ(w=denseit(w));
- n=IC(w); t=AT(w); k=n?aii(w)*bp(t):0;
+ n=IC(w); t=AT(w); k=n?aii(w)<<bplg(t):0;
  if(!AN(w)){GATV(z,BOX,n?1:0,1,0); if(n)RZ(*AAV(z)=IX(n)); R z;}
  if(2>=k){rng.range=shortrange[t&(B01+LIT)][k]; rng.min = 0;}
  else if(k==sizeof(C4)&&t&C4T){rng=condrange4(C4AV(w),n,-1,0,2*n);}

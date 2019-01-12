@@ -33,7 +33,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  if(b){jt->fill=SPA(wp,e); x=irs2(vec(INT,r-m,m+u),SPA(wp,x),0L,1L,-1L,jttake); jt->fill=0; RZ(x);}  // fill cannot be virtual
  else x=SPA(wp,x);
  if(c){A j;C*xv,*yv;I d,i,*iv,*jv,k,n,t;
-  d=0; t=AT(x); k=bp(t)*aii(x);
+  d=0; t=AT(x); k=aii(x)<<bplg(t);
   q=SPA(wp,i); n=IC(q);
   GATV(j,INT,AN(q),AR(q),AS(q)); jv= AV(j); iv= AV(q);
   GA(y,t,  AN(x),AR(x),AS(x)); yv=CAV(y); xv=CAV(x);

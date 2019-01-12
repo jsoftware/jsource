@@ -122,7 +122,7 @@ static UI jthiau(J jt,A y){I m,n;UC*v=UAV(y);UI z=2038074751;X*u,x;
   case RATX:  m+=n;  /* fall thru */
   case XNUMX: u=XAV(y); DO(m, x=*u++; v=UAV(x); z+=hicnz(AN(x)*SZI,UAV(x));); R z;
   case INTX:                                    z =hicnz(n    *SZI,UAV(y));   R z;
-  default:   R hic(n*bp(AT(y)),UAV(y));
+  default:   R hic(n<<bplg(AT(y)),UAV(y));
 }}
 
 // Hashes for extended/rational types.  Hash only the numerator of rationals.  These are

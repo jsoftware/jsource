@@ -103,7 +103,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
    u+=an; v+=an;
   }
   if(n&&0<=j){
-   m=aii(x); k=m*bp(t);
+   m=aii(x); k=m<<bplg(t);
    RZ(q=grade1(y)); qv=AV(q);
    GATV(y1,INT,AN(y),AR(y),AS(y)); yv= AV(y1); yu= AV(y); ICPY(yv,yu+an**qv,an);
    GA(x1,t,  AN(x),AR(x),AS(x)); xv=CAV(x1); xu=CAV(x); MC(xv,xu+k**qv,k);

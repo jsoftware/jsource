@@ -53,7 +53,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
  // gone through the fill path (& caught the overflow)
  RE(mn=prod(wf,ws)); PROD(wcn,rr,ws+wf);   // number of cells, number of atoms in a cell
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
- wk=wcn*bp(wt);
+ wk=wcn<<bplg(wt);
 
  A zz=0;  // place where we will build up the homogeneous result cells
  if(mn){I i0;
@@ -293,8 +293,8 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  PROD(acn,lr,as+af); PROD(wcn,rr,ws+wf);
  // Allocate workarea y? to hold one cell of ?, with uu,vv pointing to the data area y?
  // ?cn=number of atoms in a cell, ?k=#bytes in a cell
- ak=acn*bp(at);    // reshape below will catch any overflow
- wk=wcn*bp(wt);
+ ak=acn<<bplg(at);    // reshape below will catch any overflow
+ wk=wcn<<bplg(wt);
 
  // See how many cells are going to be in the result
  RE(mn=mult(mult(outerframect,outerrptct),mult(innerframect,innerrptct)));
@@ -383,7 +383,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
        is = los; DO(lof, *zs++=*is++;);  // copy outer frame
        is = lis; DO(lif, *zs++=*is++;);  // copy inner frame
        if(!(state&STATEERR)){
-        ys=AS(y); k=yn*bp(yt);   // save info about the first cell for later use
+        ys=AS(y); k=yn<<bplg(yt);   // save info about the first cell for later use
         is = AS(y); DO(yr, *zs++=*is++;);    // copy result shape
         MC(zv,AV(y),k); zv+=k;   // If there was a first cell, copy it in & advance to next output spot
         old=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks

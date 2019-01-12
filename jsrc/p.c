@@ -133,7 +133,7 @@ static PSTK* jtpparen(J jt, A s1, A s2){
  R stack+2;  // advance stack pointer to result
 }
 
-static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R mark;} 
+static F2(jtisf){RZ(symbis(onm(a),CALL1(jt->pre,w,0L),jt->symb)); R num[0];} 
 
 static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserstkend1; 
  if(stack[0].t==1)jt->asgn = 1;  // if the word number of the lhs is 1, it's either (noun)=: or name=: or 'value'=: at the beginning of the line; so indicate
@@ -181,7 +181,7 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
   // Verify rank 1.  For each lhs-rhs pair, do the assignment (in jtisf).
   // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
   // if not AR assignment, just open each box of rhs and assign
-  else {ASSERT(1==AR(n),EVRANK); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
+  else {ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN); jt->symb=symtab; jt->pre=ger?jtfxx:jtope; rank2ex(n,v,0L,-1L,-1L,RMAX,RMAX,jtisf);}
  }
  RNE(stack+2);  // the result is the same value that was assigned
 }

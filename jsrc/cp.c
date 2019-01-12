@@ -135,7 +135,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  k=AR(hs); RE(zn=mult(m,AN(y)));
  GA(z,AT(y),zn,k+AR(y),0); zv=CAV(z);
  s=AS(z); MCISd(s,AS(hs),k); MCISd(s,AS(y),r);
- n=nv[jv[m-1]]; c=AN(y)*bp(t); s=AS(y);
+ n=nv[jv[m-1]]; c=AN(y)<<bplg(t); s=AS(y);
  k=0; DIST(0,w); DIST(1,y);
  for(i=2;i<=n;++i){
   RZ(y=CALL1(f1,y,fs));

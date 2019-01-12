@@ -203,7 +203,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  old=jt->tnextpushx; // save stack mark for subsequent frees.  We keep the a argument over the calls, but allow the w to be deleted
  // w will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, w may be in a virtual block; but we don't rely on that.
- RZ(w=tail(w)); k=AN(w)*bp(AT(w)); // k=length of input cell in bytes
+ RZ(w=tail(w)); k=AN(w)<<bplg(AT(w)); // k=length of input cell in bytes
  // Calculate inplaceability for most of the run.  We can inplace the left arg, which is always virtual, if w is direct inplaceable.
  // We can inplace the right arg the first time if it is direct inplaceable, and always after that.  This is subject to approval by the verb u
  // and the input jtinplace.  We turn off WILLBEOPENED status in jtinplace for the callee.
@@ -353,8 +353,8 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  y=SPA(wp,i); v=AS(y); yr=v[0]; yc=v[1]; yv=AV(y);
  x=SPA(wp,x); xt=AT(x); xc=aii(x);
  RZ(redspsprep(id,f,zt,a,e,x,y,&m,&dv,&pv,&qv,&xxv,&sn));
- xv=CAV(x); xk=xc*bp(xt);
- GA(zx,zt,m*xc,AR(x),AS(x)); *AS(zx)=m; zv=CAV(zx); zk=xc*bp(zt);
+ xv=CAV(x); xk=xc<<bplg(xt);
+ GA(zx,zt,m*xc,AR(x),AS(x)); *AS(zx)=m; zv=CAV(zx); zk=xc<<bplg(zt);
  GATV(zy,INT,m*(yc-1),2,0); v=AS(zy); v[0]=m; v[1]=yc-1; yu=AV(zy);
  v=qv; if(sn)sv=AV(sn);
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;
@@ -537,7 +537,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
   DO(m, *v=p*u[0]+u[1]; v+=n1; u+=n;);
  }else if(!c&&!d){  /* dense dense */
   u=AS(x); GA(q,AT(x),AN(x),xr-1,u); v=k+AS(q); *v=u[k]*u[1+k]; MCIS(1+v,2+k+u,xr-k-2);
-  MC(AV(q),AV(x),AN(x)*bp(AT(x)));
+  MC(AV(q),AV(x),AN(x)<<bplg(AT(x)));
   SPB(zp,x,q); SPB(zp,i,ca(y));
  }else{             /* other */
   GATV(q,INT,xr,1,0); v=AV(q); 

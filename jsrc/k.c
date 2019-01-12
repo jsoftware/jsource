@@ -296,8 +296,8 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   if(inputn>0){  // if converting the leading values, just update the counts
    n=inputn;  // set the counts for local use, and in the block to be converted
   }else{  // if converting trailing values...
-   I offset=bp(t)*(n+inputn);  // byte offset to start of data
-   AK(w)+=bp(wt)*(n+inputn); yv=(I*)((C*)yv+bp(t)*(n+inputn));  // advance input and output pointers to new area
+   I offset=(n+inputn)<<bplg(t);  // byte offset to start of data
+   AK(w)+=(n+inputn)<<bplg(wt); yv=(I*)((C*)yv+((n+inputn)<<bplg(t)));  // advance input and output pointers to new area
    n=-inputn;  // get positive # atoms to convert
   }
   AN(w)=n;  // change atomct of w to # atoms to convert

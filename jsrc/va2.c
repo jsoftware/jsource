@@ -542,7 +542,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
     DO(MIN(acr,wcr), ASSERT(as[af+i]==ws[wf+i],EVLENGTH);)
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
-    {zk=zcn*bp(zt); ak=acn*bp(AT(a)); wk=wcn*bp(AT(w));}//else {ak=wk=zk=0;}
+    {zk=zcn<<bplg(zt); ak=acn<<bplg(AT(a)); wk=wcn<<bplg(AT(w));}//else {ak=wk=zk=0;}
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
    }else{ak=acr; wk=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }
@@ -566,8 +566,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
    if(adocv.cv&VARGMSK&&zn>0){I t=atype(adocv.cv);  // t not 0, and the result is not empty
     // Conversions to XNUM use a routine that pushes/sets/pops jt->mode, which controls the
     // type of conversion to XNUM in use.  Any result of the conversion is automatically inplaceable.  If type changes, change the cell-size too
-    if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEA); ak=acn*bp(AT(a));}
-    if(TYPESNE(t,AT(w))){RZ(w=!(t&XNUM)?cvt(t,w):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEW); wk=wcn*bp(AT(w));}
+    if(TYPESNE(t,AT(a))){RZ(a=!(t&XNUM)?cvt(t,a):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,a));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEA); ak=acn<<bplg(AT(a));}
+    if(TYPESNE(t,AT(w))){RZ(w=!(t&XNUM)?cvt(t,w):xcvt((adocv.cv&VXCVTYPEMSK)>>VXCVTYPEX,w));jtinplace = (J)(intptr_t)((I)jtinplace | JTINPLACEW); wk=wcn<<bplg(AT(w));}
    }  // the function call here inhibits register assignment to temporaries.  It might be better to do the conversion earlier, and defer the error
       // until here.  We will have to look at the generated code when we can use all the registers
    // acn, wcn are not used beyond this point

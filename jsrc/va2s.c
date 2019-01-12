@@ -109,10 +109,10 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  RZ(vaspeqprep(a,w,t,f,r,&ae,&ay,&ax,&we,&wy,&wx,&za));
  if(id==CSTAR||id==CSTARDOT){ab=!equ(ae,num[0]); wb=!equ(we,num[0]);} 
  v=AS(ay); m=v[0]; yc=v[1]; xc=aii(ax); n=*AS(wy);
- aev=CAV(ae); axv=CAV(ax); ak=xc*bp(AT(ax));
- wev=CAV(we); wxv=CAV(wx); wk=xc*bp(AT(wx));
+ aev=CAV(ae); axv=CAV(ax); ak=xc<<bplg(AT(ax));
+ wev=CAV(we); wxv=CAV(wx); wk=xc<<bplg(AT(wx));
  d=zcount(ay,wy,ab,wb);
- GA(zx,zt, d*xc,AR(ax),AS(ax)); *AS(zx)=d; zxv=CAV(zx); zk=xc*bp(zt);
+ GA(zx,zt, d*xc,AR(ax),AS(ax)); *AS(zx)=d; zxv=CAV(zx); zk=xc<<bplg(zt);
  GATV(zy,INT,d*yc,2,     AS(ay)); *AS(zy)=d; zyv= AV(zy);
  i=j=d=0; u=AV(ay); v=AV(wy);
  while(m>i&&n>j){

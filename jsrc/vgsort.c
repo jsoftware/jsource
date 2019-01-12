@@ -79,7 +79,7 @@ static A jtsortdirect(J jt,I m,I api,I n,A w){A x,z;I t;
  // Create putative output area, same size as input.  If there is more than one cell in result, this will always be the result.
  GA(z,AT(w),AN(w),AR(w),AS(w));
  I cpi=api<<((t>>CMPXX)&1);  // compares per item on a sort
- I bpi=api*bp(t);  // bytes per item of a sort
+ I bpi=api<<bplg(t);  // bytes per item of a sort
  I bps=bpi*n;  // bytes per sort
  void * RESTRICT wv=voidAV(w); void * RESTRICT zv=voidAV(z);
  CMP cmpfunc=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine;
@@ -301,7 +301,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w
   f=AR(w)-wcr; s=AS(w); PROD(m,f,s); n=(AR(w))?s[f]:1; PROD(api,wcr-1,1+f+s);
-  d=api*bp(t);
+  d=api<<bplg(t);
    // There are special types supported, but for very short sorts we should just skip the checking and go do a sort-in-place.
    // Test that threshold here
   if(n>5){   //  TUNE

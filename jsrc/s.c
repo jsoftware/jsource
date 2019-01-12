@@ -551,7 +551,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
   ASSERT(!(AFRO&xaf),EVRO);   // error if read-only value
   if(x!=w){  // replacing name with different mapped data.  If data is the same, just leave it alone
    realizeifvirtual(w);  // realize if virtual.  The copy stored in the mapped array must be real
-   wt=AT(w); wn=AN(w); wr=AR(w); m=wn*bp(wt);
+   wt=AT(w); wn=AN(w); wr=AR(w); m=wn<<bplg(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);
    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCIS(AS(x),AS(w),wr); MC(AV(x),AV(w),m);

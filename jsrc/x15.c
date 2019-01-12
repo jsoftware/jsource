@@ -67,6 +67,19 @@ typedef float complex float_complex;
 typedef double complex double_complex;
 #endif
 
+#ifdef ANDROID
+#if __ANDROID_API__ < 23
+#undef creal
+#undef cimag
+#undef crealf
+#undef cimagf
+#define creal(x)  (*(double*)&x)
+#define cimag(x)  (*(1+(double*)&x))
+#define crealf(x)  (*(float*)&x)
+#define cimagf(x)  (*(1+(float*)&x))
+#endif
+#endif
+
 #include "j.h"
 
 #define SY_UNIX64 (SY_64 && (SY_LINUX || SY_MAC || SY_FREEBSD))

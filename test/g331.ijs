@@ -1128,6 +1128,10 @@ f2=: 4 : '{.&.> {. (1,.x) <;._3 ,:y'
 (x=: ?3 4 2 5$9) (<cut3 -: <;. 3)"2 _ i. 11 13 15 12 15
 (x=: ?3 4 2 5$9) (<cutm3 -: <;. _3)"2 _ i. 11 13 15 12 15
 
+NB. Check for premature free of strip block
+P -: (<"0 i.7 8) [ 1 2 > ;. _3 P =:  <"0 i.7 8
+P -: (<"0 i.3 4) [ 3 4 > ;. _3 P =:  <"0 i.3 4
+
 NB. Verify BOXATOP works
 (x=: ?30 40 2 2$9) (<@];.3 -: <;. 3)"2 i. 11 13
 (x=: ?30 40 2 2$9) (<@:];.3 -: <;. 3)"2 i. 11 13
@@ -1146,7 +1150,7 @@ NB. verify f;.1 in place
 4e4 > | (4 * 16b100000 * IF64 { 3 4) - 7!:2 'c +:;.1 +: a' [ c =. 1e6 {. 1 [ a =. i. 1e6  NB. for INT, only in 64-bit
 
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
-4!:55 ;:'i1 i2 m p q size t test testw w x y'
+4!:55 ;:'i1 i2 m P p q size t test testw w x y'
 4!:55 ;: 'a'
 randfini''
 

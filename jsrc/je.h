@@ -488,6 +488,7 @@ extern F2(jtlt);
 extern F2(jtmatch);
 extern F2(jtmaximum);
 extern F2(jtmdiv);
+extern F2(jtmemu2);
 extern F2(jtmemw);
 extern F2(jtminimum);
 extern F2(jtminus);

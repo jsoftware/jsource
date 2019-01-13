@@ -10,7 +10,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  F1RANK(1,jtcatalog,0);
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); 
- DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});
+ DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype
  /* obsolete RE(t=maxtype(B01,t)); */ t=t?t:B01; k=bpnoun(t);
  GA(b,t,n,1,0);      bv=CAV(b);
  GATV(x,INT,n,1,0);    qv=AV(x);

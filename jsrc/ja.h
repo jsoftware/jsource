@@ -638,6 +638,9 @@
 #define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
 // Same, but with default if both empty
 #define maxtypeawd(a,w,d)           ((AN(a)|AN(w))?((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15]):d)
+#define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0:maxtype(x,y) )
+#define maxtypedaw(a,w)             ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeaw(a,w) )
+#define maxtypedawd(a,w,d)          ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeawd(a,w,d) )
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))

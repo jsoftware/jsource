@@ -381,7 +381,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
   // for nonempty contents, check for conformability and save highest-priority type
   if(AN(y)){
    k=AT(y); t=t?t:k; m=t|k;
-   if(TYPESNE(t,k)){h=0; ASSERT(HOMO(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);} // scaf use vector maxtype
+   if(TYPESNE(t,k)){h=0; ASSERT(HOMONE(t,k)&&!(m&SPARSE&&m&XNUM+RAT),EVDOMAIN); t=maxtype(t,k);} // scaf use vector maxtype
  }}
  // if there were no nonempty contents, go back & pick highest-priority type of empty
  if(!t){t=AT(v[n-1]); DO(n-1, y=v[i]; k=AT(y); RE(t=maxtype(t,k)););}  // scaf use vector maxtype
@@ -445,7 +445,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,z;C*zu;I c=0,d,i,j,k,
     for(yr=yr-1,k=r-1;yr>=0&&ys[yr]==s[k];--yr,--k);  // see if unextended cell-shape matches
     if(yr<0)while(k>0&&s[k]==1)--k;   // if all that match, check to see if extended cell-shape==1
     if(k>0) {   // If we compared all the way back to the entire rank or one short (since we only care about CELL shape), there will be no fill
-     ASSERT(HOMO(t, AT(jt->fill)), EVDOMAIN); t = maxtype(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
+     ASSERT(HOMO(t, AT(jt->fill)), EVDOMAIN); t = maxtyped(t, AT(jt->fill));  // Include fill in the result-type.  It better fit in with the others
      break;  // one fill is enough
     }    
    }
@@ -511,7 +511,7 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,yt;
      // the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
    if(d){
     yt=AT(y); 
-    if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtype(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
+    if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtyped(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
 // obsolete     zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
    }
   }

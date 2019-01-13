@@ -1760,7 +1760,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // m=target axis length, n=target item # atoms
  // c # target items in a left-arg cell, which may include multiple right-arg cells
  // k=target item # bytes, h->hash table or to 0   z=result   p=size of hashtable
- m=acr?as[af]:1; RE(t=(mode&IPHCALC)?at:maxtype(at,wt)); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
+ m=acr?as[af]:1; RE(t=(mode&IPHCALC)?at:maxtyped(at,wt)); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
  // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.
@@ -1784,7 +1784,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // Convert dissimilar types
  if(TYPESEQ(at,wt)){th=1;
  }else{
-  th=HOMO(at,wt); /* noavx jt->min=0; */  // are args compatible?
+  th=HOMONE(at,wt); /* noavx jt->min=0; */  // are args compatible?
   if(((th-1)|(TYPESXOR(t,at)-1))>=0)RZ(a=t&XNUM?xcvt(XMEXMT,a):cvt(t,a))  // convert if th and TYPESXOR both nonzero
   if(((th-1)|(TYPESXOR(t,wt)-1))>=0)RZ(w=t&XNUM?xcvt(XMEXMT,w):cvt(t,w))
  }
@@ -2112,7 +2112,7 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // obsolete  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  if(wr&&r!=wr){RZ(x=virtual(w,0,r)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
- R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
+ R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);
 }    /* a-.w */
 

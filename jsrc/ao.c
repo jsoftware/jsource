@@ -107,8 +107,9 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
 
 DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
  RZ(a&&w&&self);
+ ASSERT(!((AT(a)|AT(w))&SPARSE),EVNONCE);
  m=AN(a); n=AN(w); m1=m-1; zn=m+n-1; k=MIN(m,n);
- at=AT(a); wt=AT(w); t=maxtype(at,wt);
+ at=AT(a); wt=AT(w); t=maxtyped(at,wt);
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); at=AT(a); av=CAV(a);
  if(TYPESNE(t,wt))RZ(w=cvt(t,w)); wt=AT(w); wv=CAV(w);
  v=FAV(self);  // f//. 

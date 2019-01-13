@@ -122,7 +122,7 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
 static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(a&&w);
  RZ(w=setfv(a,w));
-  if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
+  if(AT(a)!=(t=AT(w))){t=maxtypedaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ar=AR(a); wr=AR(w); r=ar+wr?MAX(ar,wr):1;
  RZ(s=r?vec(INT,r,r==ar?AS(a):AS(w)):num[2]); sv=AV(s);   // Allocate list for shape of composite item
  // Calculate the shape of the result: the shape of the item, max of input shapes
@@ -138,7 +138,7 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
  /* obsolete INHERITNORELFILL2(z,a,w); */ RETF(z);
-}    /* a,w general case for array with the same type; jt->rank=0 */
+}    /* a,w general case for dense array with the same type; jt->ranks=0 */
 
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
@@ -197,7 +197,7 @@ static void(*moveawtbl[])() = {moveawVV,moveawVS,moveawSV};
 F2(jtover){A z;C*zv;I replct,framect,acn,acr,af,ar,*as,k,m,ma,mw,p,q,r,t,wcn,wcr,wf,wr,*ws,zn;
  RZ(a&&w);
  if(SPARSE&(AT(a)|AT(w))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
- if(AT(a)!=(t=AT(w))){t=maxtypeaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
+ if(AT(a)!=(t=AT(w))){t=maxtypedaw(a,w); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} else {RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed
  ar=AR(a); wr=AR(w);
  acr=jt->ranks>>RANKTX; as=AS(a); p=as[ar-1]; acr=ar<acr?ar:acr; p=acr?p:1; af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape, p=len of last axis of cell
  wcr=(RANKT)jt->ranks; ws=AS(w); q=ws[wr-1]; wcr=wr<wcr?wr:wcr; q=wcr?q:1; wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape, p=len of last axis of cell

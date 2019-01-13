@@ -306,8 +306,8 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
 F2(jtbase2){I ar,*as,at,c,t,wr,*ws,wt;
  RZ(a&&w);
  at=AT(a); ar=AR(a); as=AS(a);
- wt=AT(w); wr=AR(w); ws=AS(w); c=wr?*(ws+wr-1):1; t=maxtype(at,wt);
- ASSERT(at&DENSE&&wt&DENSE,EVNONCE);
+ wt=AT(w); wr=AR(w); ws=AS(w); c=wr?*(ws+wr-1):1;
+ ASSERT(at&DENSE&&wt&DENSE,EVNONCE); t=maxtyped(at,wt);
  if(!(t&at))RZ(a=cvt(t,a));
  if(!(t&wt))RZ(w=cvt(t,w));
  R 1>=ar?pdt(w,weight(sc(c),a)):rank2ex(w,rank2ex(sc(c),a,0L,0L,1L,0L,1L,jtweight),0L,1L,1L,1L,1L,jtpdt);
@@ -355,7 +355,7 @@ F2(jtabase2){A z;I an,ar,at,t,wn,wr,wt,zn;
  if(1>ar)R residue(a,w);
  if(1==ar&&at&B01+INT&&wt&B01+INT){I*av,d,r,*u,*wv,x,*zv;
   // both types are int/boolean, and ar is a list
-  {t=maxtypeawd(a,w,INT); t=(t<INT)?INT:t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  INT if both empty
+  {t=maxtypedawd(a,w,INT); t=(t<INT)?INT:t; if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  INT if both empty
   // If a ends with _1 followed by any number of 1, there will be overflow if w contains any imin.  Detect that very rare case
   av=an+AV(a); wv=wn+AV(w);
   for(zv=av, d=an;d&&*--zv==1;--d);

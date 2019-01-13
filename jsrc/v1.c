@@ -113,7 +113,7 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  // we tested for a==w before the call, to save on call overhead
  // m*n cannot be 0.  If this is a recursive call, m=n=1; while if it is the first call, empty m/n were handled at the top level
  p=AR(a)-af; at=UNSAFE(AT(a));
- q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtype(at,wt));
+ q=AR(w)-wf; wt=UNSAFE(AT(w)); RE(t=maxtyped(at,wt));
  // p=cell-rank of a; q=cell-rank of w; ?t=type; m=#cells of shorter frame, n=#times a cell of shorter frame must be repeated
  // c=#atoms in a cell, b is 1 if rank or cell-shape mismatches, or if cells are not empty and types are incompatible
  // We know that either there is no frame or both arguments are nonempty (Empty arguments with frame can happen only at the top level

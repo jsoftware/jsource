@@ -356,7 +356,8 @@ typedef I SI;
 // Utility: keep the lowest 1 only
 #define LOWESTBIT(x)    ((x)&-(x))
 
-#define HOMO(s,t)       (TYPESEQ((s),(t)) || (s)&NUMERIC&&(t)&NUMERIC || (s)&JCHAR&&(t)&JCHAR)
+#define HOMO(s,t)       (TYPESEQ((s),(t)) || HOMONE((s),(t)) )
+#define HOMONE(s,t)     ( !(((s)|(t))&(BOX|SBT|JCHAR|MARK)) || !(((s)|(t))&(BOX|SBT|NUMERIC|MARK)) )   // if known to be not equal.  One arg may be MARK (in indexofsub) but must show non-HOMO
 #define STYPE(t)        (((t)&(B01|LIT|INT|FL|CMPX|BOX))<<(SB01X-B01X))
 #define DTYPE(t)        (((t)&(SB01|SLIT|SINT|SFL|SCMPX|SBOX))>>(SB01X-B01X))
 

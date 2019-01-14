@@ -1760,7 +1760,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  // m=target axis length, n=target item # atoms
  // c # target items in a left-arg cell, which may include multiple right-arg cells
  // k=target item # bytes, h->hash table or to 0   z=result   p=size of hashtable
- m=acr?as[af]:1; RE(t=(mode&IPHCALC)?at:maxtyped(at,wt)); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
+ m=acr?as[af]:1; t=(mode&IPHCALC)?at:maxtyped(at,wt); klg=bplg(t);   // m=length of target axis; the common type; klg=lg of #bytes/atom of common type
  // Now that we have audited the shape of the cells of a/w to make sure they have commensurate items, we need to revise
  // the frame of w if it has the longer frame.  This can happen only where IRS is supported, namely ~: i. i: e. .
  // For those verbs, we get the effect of repeating a cell of a by having a macrocell of w, which is then broken into target-cell sizes.

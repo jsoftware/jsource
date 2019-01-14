@@ -354,7 +354,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
  if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
- {t=maxtypedawd(a,w,B01); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
+ {/* obsolete t=maxtypedawd(a,w,B01);*/ t=maxtyped(at,wt); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
  // When w has a single column, we could replace +/ . * with +/@:*"1.  But there is no performance benefit currently, because the cache blocking of the +/ . * is good enough to
  // make up for the fringe effects.  If we can use parallel operations for +/@:*"1, it will pay to switch.

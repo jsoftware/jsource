@@ -633,14 +633,24 @@
 #define matth1(x)                   jtmatth1(jt,(x))
 #define maxdenom(x,y)               jtmaxdenom(jt,(x),(y))
 #define maximum(x,y)                jtmaximum(jt,(x),(y))
-#define maxtype(x,y)                (((x)==(y))?(x):jtmaxtype(jt,(x),(y)))
-// Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
-#define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
-// Same, but with default if both empty
-#define maxtypeawd(a,w,d)           ((AN(a)|AN(w))?((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15]):d)
-#define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0:maxtype(x,y) )
-#define maxtypedaw(a,w)             ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeaw(a,w) )
-#define maxtypedawd(a,w,d)          ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeawd(a,w,d) )
+// typepriority is 0, 1, 4, 9, 10, 5, 6, 7, 8, 2, 3
+// prioritytype is B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX
+//                 00000 00001 10001 10010 00010 00101 00110  00111 10000 00011 00100
+// reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
+#define typeprioritymask 0x328765a9410
+#define prioritytypemask 0x1070398a294420
+#define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
+#define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
+// obsolete // Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
+// obsolete #define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
+// obsolete // Same, but with default if both empty
+// obsolete #define maxtypeawd(a,w,d)           ((AN(a)|AN(w))?((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15]):d)
+// obsolete #define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0:maxtype(x,y) )
+// obsolete #define maxtypedaw(a,w)             ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeaw(a,w) )
+// obsolete #define maxtypedawd(a,w,d)          ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeawd(a,w,d) )
+#define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (1LL<<(31&(0x1070398a294420>>(5*MAX(jt->typepriority[CTTZ(x)],jt->typepriority[CTTZ(y)]))))) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )
+#define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0: ((x)==(y))?(x):maxtypedne(x,y))
+// For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))
 #define meanD(x0,x1,x2,x3,x4)       jtmeanD(jt,(x0),(x1),(x2),(x3),(x4))

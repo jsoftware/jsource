@@ -123,7 +123,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  ASSERT(ar<=ir,EVRANK);   // require shape of x to be a suffix of the shape of m
  ASSERT(!ICMP(as,AS(ind)+ir-ar,ar),EVLENGTH);
  if(!wn)RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
- RE(t=an?maxtyped(at,wt):wt);  // get the type of the result: max of types, but if x empty, leave y as is
+ t=an?maxtyped(at,wt):wt;  // get the type of the result: max of types, but if x empty, leave y as is
  if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a

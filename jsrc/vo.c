@@ -367,13 +367,14 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen
 // if y contained inplaceable components (possible if y came from < yy or <"r yy).  In that case, mark the result as non-inplaceable.
 // We don't support inplacing here yet so just do that always
-F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,zn;
+F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u,zn;
  RZ(w);
  n=AN(w); v=AAV(w);
  if(!(n&&BOX&AT(w)))RCA(w);  // return w if empty or open
    // wrel is relocation amount for w, 0 if not relative
  if(!AR(w)){z=*v; ACIPNO(z); R z;}   // scalar box: turn off inplacing if we are using the contents directly
  // set q=min rank of contents, r=max rank of contents
+#if 0  // obsolete
  for(i=0;i<n;++i){
   y=v[i]; 
   q=MIN(q,AR(y)); 
@@ -385,12 +386,31 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
  }}
  // if there were no nonempty contents, go back & pick highest-priority type of empty
  if(!t){t=AT(v[n-1]); DO(n-1, y=v[i]; k=AT(y); RE(t=maxtype(t,k)););}  // scaf use vector maxtype
+#else
+ for(i=0;i<n;++i){
+  y=v[i]; r=MAX(r,AR(y)); q=MIN(q,AR(y));
+  if(AN(y))t|=AT(y); else te|=AT(y);  // accumulate types, either nonempty or empty
+ }
+ // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
+ // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
+ // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
+ // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
+ // So, we don't check compatibility for empty boxes.
+ // The homogeneity flag h is set if max rank is 1 and there is 0 or 1 nonempty type.  In that case fill is 1-dimensional and we just copy into the result area
+ nonh = (r&~1) | (t&(t-1));  // non homogeneous if rank is not 0 or 1, or if there is more than 1 bit set in t
+ if(t){
+  ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+  ASSERT(!(t&SPARSE&&t&XNUM+RAT),EVDOMAIN);  // don't allow a sparse that requires promotion to indirect
+  te=t;  // te holds the type to use
+ }
+ t=te&-te; while(te&=(te-1)){RE(t=maxtypene(t,te&-te));}  // get highest-priority type (which may be sparse)
+#endif
  // allocate place to build shape of result-cell; initialize to 1s above q, zeros below (this is adding leading 1s to missing leading axes)
  fauxblockINT(csfaux,4,1); fauxINT(cs,csfaux,r,1) u=AV(cs); DO(r-q, u[i]=1;); p=u+r-q; DO(q, p[i]=0;);
  // find the shape of a result-cell
  DO(n, y=v[i]; s=AS(y); p=u+r-AR(y); DO(AR(y),p[i]=MAX(p[i],s[i]);););
  if(t&SPARSE)RZ(z=opes(t,cs,w))
- else{I klg;
+ else{I klg; I m;
   RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
   GA(z,t,zn,r+AR(w),AS(w)); MCIS(AS(z)+AR(w),u,r); x=CAV(z);
@@ -398,11 +418,11 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
   /* obsolete if(zrel=0){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else */ fillv(t,zn,x);  // init to a:  fills
   for(i=0;i<n;++i){
    y=v[i];   // get pointer to contents, relocated if need be
-   // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
+// obsolete   // if the contents of y is relative, clone it and relocate the clone, either to absolute (if result is absolute c==0) or relative to z (if result is relative)
 // obsolete    if(ARELATIVE(y)){ RZ(y=relocate(yrel-zrel,ca(y)));}  // todo kludge clone not required - relocation would do
-   if(h&&1>=r)                MC(x,AV(y),AN(y)<<klg);
-   else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q); 
-   else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x)); 
+   if(!nonh)                MC(x,AV(y),AN(y)<<klg);  // homogeneous atomic types: fill only at end, copy the valid part
+   else if(TYPESEQ(t,AT(y))&&m==AN(y))MC(x,AV(y),q);   // cell of maximum size: copy it entire
+   else if(AN(y))             RZ(povtake(jt,cs,TYPESEQ(t,AT(y))?y:cvt(t,y),x));  // otherwise add fill
    x+=q;
  }}
  EPILOG(z);
@@ -411,8 +431,8 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;B h=1;C*x;I i,k,m,n,*p,q=RMAX,r=0,*s,t=0,*u,z
 // ; y general case, where rank > 1 (therefore items are not atoms)
 // w is the data to raze (boxed), t is type of nonempty boxes of w, n=#,w, r=max rank of contents of w, v->w data,
 // zrel=1 if any of the contents uses relative addressing
-static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,z;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
- d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)  b=relocation offset for w (0 if not relative)
+static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,d,i,j,k,m,*s,*v1,yr,*ys;UI p;
+ d=SZI*(r-1);    // d=#bytes in (stored shape of result-cell)
  // Calculate the shape of a result-cell (it has rank r-1); and c, the number of result-cells
  fauxblockINT(hfaux,4,1); fauxINT(h,hfaux,r,1) s=AV(h); memset(s,C0,r*SZI);  // h will hold the shape of the result; s->shape data; clear to 0 for compares below
  for(i=0;i<n;++i){   // loop over all contents
@@ -434,8 +454,8 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,z;C*zu;I c=0,d,i,j,k,
  // If fill has been specified, we include its type in the result-type (a) only if some block gets filled
  // (this will cause all input-blocks to convert to the precision needed; any fill will be promoted to that type)
  // (b) all the blocks are empty (which can be detected because t has not been set yet)
- if(jt->fill) {
-  if(t&&m) {  // Check cell-contents only if there are some nonempty contents, and if the result-cell is nonempty
+ if(jt->fill) {  // if it was ;!.f
+  if(nonempt&&m) {  // Check cell-contents only if there are some nonempty contents, and if the result-cell is nonempty
      // these are different, eg for 0 1$4 which has no cells but they are nonempty, or 1 0 1$4 which has an empty result-cell
    for(i=0;i<n;++i) {   // for each box of contents
     y=v[i]; yr=AR(y);   // y-> A block for contents of w[i]; yr = its rank
@@ -449,14 +469,15 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,z;C*zu;I c=0,d,i,j,k,
      break;  // one fill is enough
     }    
    }
-  } else{t = AT(jt->fill);} // all empty cells (but possibly many of them), use fill type
- } else {
-  // If no fill has been specified, the scan isn't needed, because all blocks will be extended with their
-  // normal fill, which will be enough to hold the highest precision.  But if there are no nonempty blocks,
-  // we have to scan to get a precision from among the empties
-  // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
-//  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}
-  if(!t){DO(n, y=v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
+  }
+// obsolete   } else{t = AT(jt->fill);} // all empty cells (but possibly many of them), use fill type
+// obsolete  } else {
+// obsolete   // If no fill has been specified, the scan isn't needed, because all blocks will be extended with their
+// obsolete   // normal fill, which will be enough to hold the highest precision.  But if there are no nonempty blocks,
+// obsolete   // we have to scan to get a precision from among the empties
+// obsolete   // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
+// obsolete //  if(!t){DO(n, y=b?(A)AABS(v[i],w):v[i]; t=MAX(UNSAFE(t),UNSAFE(AT(y)));)}
+// obsolete   if(!t){DO(n, y=v[i]; t=MAX(UNSAFE(t),SBT&AT(y)?LIT:C4T&AT(y)?LIT:C2T&AT(y)?LIT:UNSAFE(AT(y))););}
  }
 
  // Now we know the type of the result.  Create the result.
@@ -488,7 +509,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I zrel){A h,h1,y,z;C*zu;I c=0,d,i,j,k,
 }    /* raze general case */
 
 // ; y
-F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,yt;
+F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  RZ(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
  if(!n)R mtv;   // if empty operand, return boolean empty
@@ -497,42 +518,48 @@ F1(jtraze){A*v,y,z,* RESTRICT zv;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,yt;
  if(1==n){RZ(z=*v); R AR(z)?z:ravel(z);}  // if just 1 box, return its contents - except ravel if atomic
  // scan the boxes to create the following values:
  // m = total # items in contents; aim=#atoms per item;  r = maximum rank of contents
- // t = type of result (maxtype among types of nonempty contents)
- // zrel set if any of the nonempty contents uses relative addressing
+ // t = OR of types of nonempty blocks, te = OR of types of empties
  // if the block has been flagged as having homogeneous items, we can skip this step.  Such flagging indicates a compound like ;@:(<@f) where we knew during
  // result-assembly that we were going to raze the result, and we took the trouble to inspect the contents' shapes as they were going by.
  if(!(AFLAG(w)&AFUNIFORMITEMS)) {  // normal case
+  for(i=0;i<n;++i){
+   y=v[i]; r=MAX(r,AR(y));
+   if(AN(y)){
+    m+=AN(y);  // accumulate # items.  the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
+    t|=AT(y);  // accumulate types found
+   }else te|=AT(y);
+  }
+  // if there was a nonempty, verify that the nonempties are compatible and find the highest-priority one
   // Fill creates a subtlety: we don't know whether empty boxes are going to contribute to
   // the result or not.  In a case like (0 2$a:),'' the '' will contribute, but the (0 2$a:) will
   // not.  And, we don't want to require compatibility with the fill-cell if nothing is filled.
   // So, we don't check compatibility for empty boxes.
-  for(i=0;i<n;++i){
-   y=v[i]; m+=d=AN(y); r=MAX(r,AR(y));
-     // the only time we use this m is when the item-rank is 0.  In that case AN gives the # atoms too.
-   if(d){
-    yt=AT(y); 
-    if(t){ASSERT(HOMO(t,yt),EVDOMAIN); t=maxtyped(t,yt);}else t=yt;  // detect incompatible datatypes (only if nonempty)
-// obsolete     zrel &= ARELATIVES(y);  // turn sign-bit positive (=rel) if ANYTHING rel
-   }
-  }
-  // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
+  i=t;  // save indicator of nonempties
+  if(t){
+   ASSERT(HOMONE(t,0)||t==BOX||t==SBT,EVDOMAIN);  // no mixed nonempties
+   te=t;  // te holds the type to use
+  }else if(jt->fill){te=AT(jt->fill);}  // all empty: use fill type if given.
+  t=te&-te; while(te&=(te-1)){t=maxtypedne(t,te&-te);}  // get highest-priority type
+  // t is the type to use.  i is 0 if there were no nonempties
+  // if there are only empties, t is the type to use
+// obsolete   // repurpose zrel now, from a sign-bit flag (>=0 if rel) to a bit-0 flag (1 if rel)
 // obsolete   zrel = zrel>=0;
   // if the cell-rank was 2 or higher, there may be reshaping and fill needed - go to the general case
-  if(1<r)R razeg(w,t,n,r,v,/* obsolete zrel*/0);
+  if(1<r)R razeg(w,t,n,r,v,i);
   // fall through for boxes containing lists and atoms, where the result is a list.  No fill possible, but if all inputs are
   // empty the fill-cell will give the type of the result (similar to 0 {.!.f 0$...)
 
-  // If all the contents were empty, rescan and set the result type to the
-  // largest type of the (empty) contents.  Note that this scan takes the simple
-  // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
-  // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
-  // but this is how it was done originally
-   // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
-  if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=v[i]; t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
+// obsolete   // If all the contents were empty, rescan and set the result type to the
+// obsolete   // largest type of the (empty) contents.  Note that this scan takes the simple
+// obsolete   // MAX of types, rather than using maxtype - why?  If fill is specified, it overrides
+// obsolete   // NOTE: arguably this should consider only contents that have cells that will contribute to the result;
+// obsolete   // but this is how it was done originally
+// obsolete    // ensure literal fill consistent, coerce empty symbol to literal type - less surprise
+// obsolete   if(!t){if(jt->fill){t=AT(jt->fill);}else{DO(n, y=v[i]; t=MAX(UNSAFE(t),(AT(y)&(SBT|C4T|C2T))?LIT:UNSAFE(AT(y))););}}
   GA(z,t,m,r,0);  // allocate the result area; mark relative if any contents relative
   // now zrel has been repurposed to relocation offset for z (0 if not relative)
   zu=CAV(z); zv=AAV(z); klg=bplg(t); // input pointers, depending on type; length of an item
-  // loop through the boxes copying: the pointers, if boxed; the data, if not boxed
+  // loop through the boxes copying
   for(i=0;i<n;++i){
    y=v[i]; if(AN(y)){if(TYPESNE(t,AT(y)))RZ(y=cvt(t,y)); d=AN(y)<<klg; MC(zu,AV(y),d); zu+=d;}
   }

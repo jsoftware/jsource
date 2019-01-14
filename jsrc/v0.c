@@ -57,7 +57,7 @@ static F1(jtcfr){A c,r,*wv;I t;
  if(AR(w)){c=wv[0]; r=wv[1];}else{c=num[1]; r=wv[0];}
  ASSERT(!AR(c)&&1>=AR(r),EVRANK);
  ASSERT(NUMERIC&AT(c)&&(!AN(r)||NUMERIC&AT(r)),EVDOMAIN);
- t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; RE(t=maxtyped(t,AT(c)));
+ t=AN(r)?AT(r):B01; if(t&B01+INT)t=XNUM; t=maxtyped(t,AT(c));
  if(TYPESNE(t,AT(c)))RZ(c=cvt(t,c));
  if(TYPESNE(t,AT(r)))RZ(r=cvt(t,r));
  R t&RAT?cfrq(c,r):t&XNUM?cfrx(c,r):t&CMPX?cfrz(c,r):cfrd(c,r);
@@ -306,7 +306,7 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
   ASSERT(!AR(c),EVRANK);
   ASSERT(1>=AR(a),EVRANK); if(!AR(a))RZ(a=ravel(a));  // treat atomic a as list
  }
- RE(t=maxtyped(at,wt)); if(b)RE(t=maxtyped(t,AT(c))); if(!(t&XNUM+RAT))RE(t=maxtyped(t,FL));
+ t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
  if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
  if(b){

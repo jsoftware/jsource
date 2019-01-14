@@ -271,7 +271,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
-  if(jt->jerr<EWOV)R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));;
+  if(jt->jerr<EWOV){/* RE(0);*/ R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;
@@ -288,7 +288,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
   case CEQ:   ASSERT(B01&AT(x),EVNONCE); if(!*BAV(e)&&0==(n&1))e=num[1]; break;
   case CNE:   ASSERT(B01&AT(x),EVNONCE); if( *BAV(e)&&1==(n&1))e=num[0];
  }
- if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
+ if(TYPESNE(AT(e),AT(zx))){t=maxtypene(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
  GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)MCIS(f+AS(z),f+1+ws,wr-1);
  zp=PAV(z);
@@ -339,7 +339,7 @@ static B jtredspse(J jt,C id,I wm,I xt,A e,A zx,A sn,A*ze,A*zzx){A b;B nz;I t,zt
   case CEQ:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=eq(zx,eq(num[0],residue(num[2],sn)))); if(!(wm&1))e=num[1];  break;
   case CNE:      ASSERT(B01&xt,EVNONCE); if(nz)RZ(zx=ne(zx,eq(num[1], residue(num[2],sn)))); if(!(wm&1))e=num[0]; break;
  }
- if(TYPESNE(AT(e),AT(zx))){t=maxtype(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
+ if(TYPESNE(AT(e),AT(zx))){t=maxtypene(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  *ze=e; *zzx=zx;
  R 1;
 }

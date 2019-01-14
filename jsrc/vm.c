@@ -85,7 +85,7 @@ AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
 
 F2(jtlogar2){A z;I t;
  RZ(a&&w); 
- t=maxtype(AT(a),AT(w));
+ RE(t=maxtype(AT(a),AT(w)));
  if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}
  z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,0L,0L,jtxlog2a); 
  if(z)R z;
@@ -95,7 +95,7 @@ F2(jtlogar2){A z;I t;
     
 F2(jtroot){A z;I t;
  RZ(a&&w);
- t=maxtype(AT(a),AT(w));
+ RE(t=maxtype(AT(a),AT(w)));
  if(!(t&XNUM))R expn2(cvt(t,w),recip(cvt(t,a)));
  z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,0L,0L,jtxroota);
  switch(jt->jerr){

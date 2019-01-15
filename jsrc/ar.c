@@ -271,7 +271,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
   if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
-  if(jt->jerr<EWOV){/* RE(0);*/ R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
+  if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 
 static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I c,m,n,*s,t,*v,wr,*ws,xf,xr;P*wp,*zp;

@@ -120,7 +120,7 @@ do{
     if(TYPESNE(zt,zzt)){
      // The type changed.  Convert the types to match.
  // obsolete     I zpri=jt->typepriority[CTTZ(zt)]; I zzpri=jt->typepriority[CTTZ(zzt)]; zt=zzpri>zpri?zzt:zt;  // scaf need vector maxtype // get larger priority   code copied from jtmaxtype but we know not sparse, not 0
-     zt=maxtypedne(zt,zzt); ;  // get larger priority
+     zt=maxtypedne(zt,zzt);  // get larger priority
      if(AN(z)){I zatomct;
       // nonempty cells. we must convert the actual data.  See which we have to change
       if(zt==zzt){

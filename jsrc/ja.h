@@ -637,8 +637,8 @@
 // prioritytype is B01X, LITX, C2TX, C4TX, INTX, BOXX, XNUMX, RATX, SBTX, FLX, CMPXX
 //                 00000 00001 10001 10010 00010 00101 00110  00111 10000 00011 00100
 // reversed        001 0000 0111 0000 0011 1001 1000 1010 0010 1001 0100 0100 0010 0000
-#define typeprioritymask 0x328765a9410
-#define prioritytypemask 0x1070398a294420
+// obsolete #define typeprioritymask 0x328765a9410
+// obsolete #define prioritytypemask 0x1070398a294420
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
 // obsolete // Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
@@ -648,8 +648,11 @@
 // obsolete #define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0:maxtype(x,y) )
 // obsolete #define maxtypedaw(a,w)             ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeaw(a,w) )
 // obsolete #define maxtypedawd(a,w,d)          ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeawd(a,w,d) )
-#define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (1LL<<(31&(0x1070398a294420>>(5*MAX(jt->typepriority[CTTZ(x)],jt->typepriority[CTTZ(y)]))))) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )
-#define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0: ((x)==(y))?(x):maxtypedne(x,y))
+// obsolete #define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (1LL<<(31&(0x1070398a294420>>(5*MAX(jt->typepriority[CTTZ(x)],jt->typepriority[CTTZ(y)]))))) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )
+// obsolete #define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x)&-(x):(y)&-(y)) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )  // scaf &-
+// obsolete #define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0: ((x)==(y))?(x):maxtypedne(x,y))
+#define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))
+#define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
 // For sparse types, we encode here the corresponding dense type
 #define mdiv(x,y)                   jtmdiv(jt,(x),(y))   
 #define mdivsp(x,y)                 jtmdivsp(jt,(x),(y))

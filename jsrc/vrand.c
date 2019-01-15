@@ -31,9 +31,14 @@
 #endif
 
 #if SY_64           /* m<x, greatest multiple of m less than x */
-#define GMOF(m,x)   (            x63+(x63-(2*(x63%m))%m))
+// obsolete #define GMOF(m,x)   (            x63+(x63-(2*(x63%m))%m))
+#define GMOF(m,x)   (((UI)0xffffffffffffffffLL/(m))*(m))
+#define GMOF2(m,x,z,zq)  (zq=(UI)0xffffffffffffffffLL/(m), z=zq*(m))
+#define GMOTHRESH (UI)0xf000000000000000
 #else
 #define GMOF(m,x)   (x ? x-x%m : x31+(x31-(2*(x31%m))%m))
+#define GMOF2(m,x,z,zq)  (zq=(UI)0xffffffffLL/(m), z=zq*(m))
+#define GMOTHRESH (UI)0xf0000000
 #endif
 
 
@@ -745,29 +750,31 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];
+F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
  F2RANK(0,0,jtdeal,0);
- RE(m=i0(a)); RE(c=n=i0(w));
+ RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
- else if(m<n/5.0||x<=(UI)n){
+ else if(m<n/5.0||(x&&x<=(UI)n)){
 // obsolete   p=hsize(m); 
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
   GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
   GATV(z,INT,m,1,0); zv=AV(z);
+  I qp=0; GMOF2(c,x,s,sq);
   for(i=0;i<m;++i){
-   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;  // scaf could rewrite this with fewer %
-   q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
-   q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
+   if(s<GMOTHRESH)GMOF2(c,x,s,sq);
+   t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; s-=sq;
+   q=qp; ++qp; qp=qp==p?0:qp; while(hv[q]&&(v=yv+hv[q],i!=*v))++q, q=q==p?0:q; i1=hv[q]?v[1]:i;
+   q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))++q, q=q==p?0:q;
    if(hv[q]){++v; *zv++=*v; *v=i1;}
    else{v=yv+d; *zv++=*v++=j; *v=i1; hv[q]=d; d+=2;}
  }}else{
-  RZ(z=apvwr(n,0L,1L)); zv=AV(z);
-  DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
+  RZ(z=apvwr(n,0L,1L)); zv=AV(z); GMOF2(c,x,s,sq);
+  DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   AN(z)=*AS(z)=m;
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);

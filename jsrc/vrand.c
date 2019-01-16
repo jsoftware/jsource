@@ -590,13 +590,14 @@ F1(jtrngseeds){I k,r;
 }
 
 
-static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];
+static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt->rng];
  RZ(a&&w);
  an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
  RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
  GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
- if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}
+ if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}  // floating-point output
  else if(2==m){I nslice; I j;
+  // binary output
   p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
   // See how many p-size blocks we can have, and how many single leftovers
   q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
@@ -617,17 +618,27 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[j
   t=NEXT;  // Get random # for bits
   B*c=(B*)u; DO(r&(SZI-1), *c++=1&t; t>>=1;);
  }else{
+  // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
-  k=0; j=1; while(m>j){++k; j<<=1;}
-  if(k&&j==m){  /* m=2^k but is not 1 or 2 */
-   p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;
+// obsolete   k=0; j=1; while(m>j){++k; j<<=1;}
+// obsolete   if(k&&j==m){  /* m=2^k but is not 1 or 2 */  // scaf do better
+  if(m>1&&!(m&(m-1))){
+   // here if w is a power of 2; take bits from each value
+   k=CTTZI(m);  // lg(m)
+   p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;  // r is number of values left after bit processing
    switch((s?2:0)+(1<p)){
     case 0: DO(q,           t=NEXT;         *u++=mk&t;         ); break;
     case 1: DO(q,           t=NEXT;   DO(p, *u++=mk&t; t>>=k;);); break;
     case 2: DO(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
     case 3: DO(q, while(s<=(t=NEXT)); DO(p, *u++=mk&t; t>>=k;););
-  }}
-  if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
+   }
+  }
+  if(BW==64&&m<(1LL<<54)){ 
+   // If we can do the calculation in the floating-point unit, do
+   D md=m*X64; DO(r, *u++=(I)(md*(D)NEXT); ) 
+  }else{
+   if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
+  }
  }
  R z;
 }
@@ -750,7 +761,7 @@ F1(jtroll){A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
+F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
  RZ(a&&w);
  at=AT(a); wt=AT(w);
  ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
@@ -759,7 +770,12 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||(x&&x<=(UI)n)){
-// obsolete   p=hsize(m); 
+#if BW==64
+  // calculate the number of values to deal: m, plus twice the expected number of collisions, plus 2 for good measure.  Will never exceed n.
+  A h=sc(m+2+(I)(2.0*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); R jttake(JTIPW,a,z);
+#else
+// obsolete   p=hsize(m);
+  A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
   GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
@@ -772,9 +788,17 @@ F2(jtdeal){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM
    q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))++q, q=q==p?0:q;
    if(hv[q]){++v; *zv++=*v; *v=i1;}
    else{v=yv+d; *zv++=*v++=j; *v=i1; hv[q]=d; d+=2;}
- }}else{
-  RZ(z=apvwr(n,0L,1L)); zv=AV(z); GMOF2(c,x,s,sq);
-  DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
+  }
+#endif
+ }else{
+  RZ(z=apvwr(n,0L,1L)); zv=AV(z);
+  if(BW==64&&n<(1LL<<54)){ 
+   // If we can do the calculation in the floating-point unit, do
+   D cd=c*X64; DO(m, t=NEXT; j=i+(I)(cd*(D)t); cd-=X64; k=zv[i]; zv[i]=zv[j]; zv[j]=k;)
+  }else{
+   GMOF2(c,x,s,sq); DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
+  }
+  
   AN(z)=*AS(z)=m;
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);

@@ -501,6 +501,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
+#define JTIPW           ((J)((I)jt|JTINPLACEW))
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long

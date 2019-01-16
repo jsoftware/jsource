@@ -42,6 +42,10 @@ var =: <:@# %~ +/@:*:@:(- mean)
 testmean=: 4 : 0
  m=: x
  t=: y
+ if. m do.
+  assert. 0 <: <./ y
+  assert. x > >./ y
+ end.
  c=: zz * (var t)%&%:#t
  d=: (mean t) - |-:<:m
  assert. c > | d 
@@ -111,11 +115,11 @@ rix  =: i.@[ ([ ,. [ + roll@:-~) ]
 deal1=: [ {. <@~."1@|.@rix C. i.@-@]
 deal =: deal1 ` bigdeal @. (< 0.01&*)   NB. pre J 5.03
 
-deal =: [ {. <@~."1@|.@rix C. i.@]      NB. J 5.03 or later
+deal =: [ {. <@~."1@|.@rix C. i.@]      NB. J 5.03 - 8.07.  No model for 9.01 and later
 
-10 (?. -: deal) 100
-10 (?. -: deal) 1000
-10 (?. -: deal) 10000
+NB. nomore 10 (?. -: deal) 100
+NB. nomore 10 (?. -: deal) 1000
+NB. nomore 10 (?. -: deal) 10000
 
 NB. qrl =: 9!:0 ''
 NB. (? -: deal)~ 100
@@ -131,6 +135,8 @@ test1=: 4 : 0
  assert. 0<:r
  assert. r<y
  assert. r -: ~.r
+ assert. 0 <: <./ r
+ assert. y >: >./ r
  1
 )
 
@@ -150,6 +156,9 @@ test1=: 4 : 0
 10 test1 IF64{5+2^10 31
 
 100 test1 100
+1000 test1"0 ] 1000 5000 9000 11000 12000 1e8
+
+1000 (] testmean ?)"0/ 1000 5000 10000 
 
 '' -: 0?0
 '' -: 0?9

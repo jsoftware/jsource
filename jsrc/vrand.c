@@ -623,7 +623,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
 // obsolete   k=0; j=1; while(m>j){++k; j<<=1;}
 // obsolete   if(k&&j==m){  /* m=2^k but is not 1 or 2 */  // scaf do better
   if(m>1&&!(m&(m-1))){
-   // here if w is a power of 2; take bits from each value
+   // here if w is a power of 2, >2; take bits from each value
    k=CTTZI(m);  // lg(m)
    p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;  // r is number of values left after bit processing
    switch((s?2:0)+(1<p)){
@@ -633,7 +633,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
     case 3: DO(q, while(s<=(t=NEXT)); DO(p, *u++=mk&t; t>>=k;););
    }
   }
-  if(BW==64&&m<(1LL<<54)){ 
+  if(BW==64&&m<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
    D md=m*X64; DO(r, *u++=(I)(md*(D)NEXT); ) 
   }else{
@@ -769,10 +769,10 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
  RE(m=i0(a)); RE(c=n=i0(w));  // c starts as max#+1
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
- else if(m<n/5.0||(x&&x<=(UI)n)){
+ else if(m*3.0<n||(x&&x<=(UI)n)){  // TUNE for about m=100000; the cutoff would be higher for smaller n
 #if BW==64
-  // calculate the number of values to deal: m, plus twice the expected number of collisions, plus 2 for good measure.  Will never exceed n.
-  A h=sc(m+2+(I)(2.0*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); R jttake(JTIPW,a,z);
+  // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
+  A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); R jttake(JTIPW,a,z);
 #else
 // obsolete   p=hsize(m);
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
@@ -792,14 +792,14 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
 #endif
  }else{
   RZ(z=apvwr(n,0L,1L)); zv=AV(z);
-  if(BW==64&&n<(1LL<<54)){ 
+  if(BW==64&&n<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
    D cd=c*X64; DO(m, t=NEXT; j=i+(I)(cd*(D)t); cd-=X64; k=zv[i]; zv[i]=zv[j]; zv[j]=k;)
   }else{
    GMOF2(c,x,s,sq); DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   }
   
-  AN(z)=*AS(z)=m;
+  AN(z)=*AS(z)=m;  // lots of wasted space!
  }
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
 }

@@ -635,7 +635,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
   }
   if(BW==64&&m<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
-   D md=m*X64; DO(r, *u++=(I)(md*(D)NEXT); ) 
+   D md=m*X64; DO(r, *u++=(I)(md*((D)(I)NEXT+(D)x63)); )   // avoid unsigned conversion, which requires conditional correction
   }else{
    if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
   }
@@ -772,7 +772,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
  else if(m*3.0<n||(x&&x<=(UI)n)){  // TUNE for about m=100000; the cutoff would be higher for smaller n
 #if BW==64
   // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
-  A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); R jttake(JTIPW,a,z);
+  A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
 // obsolete   p=hsize(m);
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
@@ -794,7 +794,7 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
   RZ(z=apvwr(n,0L,1L)); zv=AV(z);
   if(BW==64&&n<(1LL<<50)){ 
    // If we can do the calculation in the floating-point unit, do
-   D cd=c*X64; DO(m, t=NEXT; j=i+(I)(cd*(D)t); cd-=X64; k=zv[i]; zv[i]=zv[j]; zv[j]=k;)
+   D cd=c*X64; DO(m, j=i+(I)(cd*((D)(I)NEXT+(D)x63)); cd-=X64; k=zv[i]; zv[i]=zv[j]; zv[j]=k;)  // avoid unsigned conversion, which requires conditional correction
   }else{
    GMOF2(c,x,s,sq); DO(m, if(s<GMOTHRESH)GMOF2(c,x,s,sq); t=NEXT; if(s)while(s<=t)t=NEXT; s-=sq; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
   }

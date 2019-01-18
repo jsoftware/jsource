@@ -86,7 +86,7 @@ AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
 F2(jtlogar2){A z;I t;
  RZ(a&&w); 
  RE(t=maxtype(AT(a),AT(w)));
- if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}
+ if(!(t&XNUM)||jt->xmode==XMEXACT){jt->xmode=XMEXACT; R jtdivide(JTIPAW,logar1(w),logar1(a));}  // better to multiply by recip, but not much, & it makes 0 ^. 0 not fail
  z=rank2ex(cvt(XNUM,a),cvt(XNUM,w),0L,0L,0L,0L,0L,jtxlog2a); 
  if(z)R z;
  if(jt->jerr==EWIMAG||jt->jerr==EWIRR){RESETERR; jt->xmode=XMEXACT; R divide(logar1(w),logar1(a));}

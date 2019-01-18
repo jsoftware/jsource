@@ -501,6 +501,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define IX(n)           apv((n),0L,1L)
 #define JATTN           {if(*jt->adbreakr){jsignal(EVATTN); R 0;}}
 #define JBREAK0         {if(2<=*jt->adbreakr){jsignal(EVBREAK); R 0;}}
+#define JTIPA           ((J)((I)jt|JTINPLACEA))
+#define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy

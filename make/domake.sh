@@ -18,7 +18,8 @@ fi
 echo "building  $jbld/$targ/bin/$TARGET $avx"
 echo "output in $jbld/$targ/bin/build_$TARGET$avx.txt"
 make -f $jmake/makefile >$jbld/$targ/bin/build_$TARGET$avx.txt 2>&1
-echo `egrep -w 'warning|error|note' $jbld/$targ/bin/build_$TARGET$avx.txt`
+
+egrep -w 'warning|error|note' -B 2 $jbld/$targ/bin/build_$TARGET$avx.txt
 
 if [ $1 = "j64nonavx" ] ; then
  if [ $TARGET = "libj.dylib" ] ; then

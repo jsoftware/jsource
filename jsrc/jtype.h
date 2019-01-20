@@ -694,6 +694,11 @@ typedef struct {void *localuse;AF valencefns[2];A fgh[3];I4 flag;UI4 fdep; UI4 f
 // for other types, they are defined as follows:
 #define VFATOPL         JTINPLACEW     // (in forks and v0`v1`v2) f/v0 is x@[, so OK to inplace w arg of h
 #define VFATOPR         JTINPLACEA     // (in forks and v0`v1`v2) f/v0 is x@], so OK to inplace a arg of h
+#define VFHKLVLDECX     0   // (in (compare L.) hooks) set for > and <: to indicate increment of x needed before levelle
+#define VFHKLVLDEC      (((I)1)<<VFHKLVLDECX)
+#define VFHKLVLGTX      1   // (in (compare L.) hooks) set for < and <: to indicate complement of result of levelle needed
+#define VFHKLVLGT       (((I)1)<<VFHKLVLGTX)
+
 // bits 8 and above are available for all functions:
 #define VGERLX          8
 #define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */

@@ -299,6 +299,12 @@ static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
  R sc(z);
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
+// (compare L.) dyadic
+static DF2(jthklvl2){
+ F2RANK(0,RMAX,jthklvl2,self);
+ I comparand; RE(comparand=i0(a));  // get value to compare against
+ RETF(num[((VAV(self)->flag>>VFHKLVLGTX)&1)^levelle(w,comparand-(VAV(self)->flag&VFHKLVLDEC))]);  // decrement for < or >:; complement for > >:
+}
 
 F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
  RZ(a&&w);
@@ -316,6 +322,8 @@ F2(jthook){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE;V*u,*v;
 // obsolete     case CTAKE:   f2=jthktake; flag &=~VJTFLGOK2;  break;
 // obsolete     case CDROP:   f2=jthkdrop; flag &=~VJTFLGOK2;  break;
 // obsolete     case CEPS:    f2=jthkeps; flag &=~VJTFLGOK2; break;
+   }else if(d==CLDOT){   // (compare L.)
+    I comptype=c==CLT?VFHKLVLGT:c==CGT?VFHKLVLDEC:c==CLE?VFHKLVLDEC+VFHKLVLGT:c==CGE?4:0; if(comptype){flag|=comptype; f2=jthklvl2; flag &=~VJTFLGOK2;}
    }else        switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])&&CBOX==ID(u->fgh[0])){f1=jtgroup; flag &=~VJTFLGOK1;} break;
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==ID(v->fgh[1])){f1=jthkiota; flag &=~VJTFLGOK1;} break;

@@ -16,8 +16,8 @@ I level(A w){A*wv;I d,j;
 // return 0 if the level of w is greater than l, 1 if <=
 // terminates early if possible
 I levelle(A w,I l){
- if(!(AN(w)&&AT(w)&BOX+SBOX))R 1;  // if arg is unboxed, its level is certainly <= l
- if(l==0)R 0;  // (arg is boxed) if l is 0, arglevel is  > l
+ if(!(AN(w)&&AT(w)&BOX+SBOX))R ((UI)~l)>>(BW-1);  // if arg is unboxed, its level is 0, so return 1 if l>=0
+ if(l<=0)R 0;  // (arg is boxed) if l is <=0, arglevel is  > l
  --l; A *wv=AAV(w);
  DO(AN(w), if(!levelle(wv[i],l))R 0;);  // stop as soon as we see level big enough
  R 1;  // if it never gets big enough, say so, keep looking

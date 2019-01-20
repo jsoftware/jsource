@@ -192,7 +192,6 @@ extern F1(jtmemf);
 extern F1(jtmemo);
 extern F1(jtmemr);
 extern F1(jtmemu);
-extern F2(jtmemu2);
 extern F1(jtminv);
 extern F1(jtmmaxq);
 extern F1(jtmmaxs);

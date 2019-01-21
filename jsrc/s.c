@@ -189,9 +189,10 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  GATV(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=LXAV(jt->stloc); 
- for(i=0;i<n;++i)if(j=v[i]){    /* per named locales ?? does not chase chain   */
-  x=(j+jt->sympv)->val; 
-  RZ(yv[j]=yv[*AV(x)]=aa=rifvs(sfn(1,LOCNAME(x))));
+ for(i=0;i<n;++i)if(j=v[i]){    /* per named locales ?? does not chase chain   */  // j is index to named local entry
+  x=(j+jt->sympv)->val;  // x->symbol table for locale
+  RZ(/*=yv[*AV(x)]*/aa=rifvs(sfn(1,LOCNAME(x))));  // install name in the entry for the locale
+  yv[j]=aa;
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
  n=jtcountnl(jt); // obsolete n=AN(jt->stptr); pu=AAV(jt->stptr);

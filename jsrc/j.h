@@ -558,7 +558,7 @@ extern unsigned int __cdecl _clearfp (void);
 // obsolete #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 // Compounds push zombie to begin with and restore before the last operation, which can execute in place.
 // zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
-// zombieval is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
+// zombieval+AC=1 is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
 // not an argument, but this seems to be more trouble than it's worth, so we don't bother detecting final assignment.
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table

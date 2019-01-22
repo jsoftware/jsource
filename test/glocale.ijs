@@ -220,7 +220,6 @@ f =: 0&".&.> y =: 18!:3 ''
 (,&.> 'a';y,<'d') -: lpath d
 (,&.> 'a';y,<'d') -: lpath e
 
-
 (,<,'z') -: lpath <'NonExistentLocale'
 (<'NonExistent') lpath <'abc'
 (,<'NonExistent') -: lpath <'abc'
@@ -327,8 +326,8 @@ x_asdf_=: i.1e4
 'domain error'  -: lcreate etx 23x
 
 'domain error'  -: lcreate etx <0 1
-'domain error'  -: lcreate etx < 1 + 0 ". > lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
-'domain error'  -: lcreate etx < ": 1 + 0 ". > lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
+'domain error'  -: lcreate etx < 1 + 0 ". > e =: lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
+'domain error'  -: lcreate etx < ": 1 + 0 ". > f =: lcreate ''  NB. Can't create numeric locale explicitly, even if number is high enough
 'domain error'  -: lcreate etx <2.4
 'domain error'  -: lcreate etx <2j4
 'domain error'  -: lcreate etx <2r4
@@ -342,6 +341,8 @@ x_asdf_=: i.1e4
 'domain error'  -: (<4)lcreate etx <'asdf'
 
 'limit error'   -: 256 lcreate etx <'asdf'
+
+18!:55 e,f
 
 
 NB. 18!:4 ---------------------------------------------------------------

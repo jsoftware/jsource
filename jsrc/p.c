@@ -290,6 +290,7 @@ static A virthook(J jtip, A f, A g){
 #define EP goto exitparse;   // exit parser, preserving current status
 #define EPZ(x) if(!(x)){stack=0;EP}   // exit parser if x==0
 
+#if 0  // keep for commentary
 // In-place operations
 //
 // An in-place operation requires an inplaceable argument, which is marked as LSB of AC=0,
@@ -401,6 +402,7 @@ static A virthook(J jtip, A f, A g){
 
 // Closing up the stack
 #define SM(to,from) stack[to]=stack[from]
+#endif
 
 #define BACKMARKS 3   // amount of space to leave for marks at the end.  Because we stack 3 words before we start to parse, we will
  // never see 4 marks on the stack - the most we can have is 1 value + 3 marks.
@@ -584,7 +586,9 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
        // Inplaceable.  If it is an assignment to a known name that has a value, remember the name and the value
        if(PTISASGNNAME(stack[0])&&PTISM(stackfs[2])&&(FAV(fs)->flag&VASGSAFE)   // assignment to name; nothing in the stack to the right of what we are about to execute; well-behaved function (doesn't change locales)
           &&(s=((AT(stack[0].a))&ASGNLOCAL?jtprobelocal:jtprobeisquiet)(jt,queue[m-1])) ){
-        jt->assignsym=s;  // remember the symbol being assigned
+        // It is OK to remember the address of the symbol being assigned, because anything that might conceivably create a new symbol (and thus trigger
+        // a relocation of the symbol table) is marked as not ASGSAFE
+        jt->assignsym=s;  // remember the symbol being assigned.  It may have no value yet, but that's OK - save the lookup
         if(s->val&&AT(stack[0].a)&ASGNLOCAL)jt->zombieval=s->val;  // if the value is being assigned locally & it exists, remember the value.  We have to avoid private/public puns
        }
        jt=(J)(intptr_t)((I)jt+(pline|1));   // set bit 0, and bit 1 if dyadic

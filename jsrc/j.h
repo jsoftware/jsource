@@ -560,7 +560,12 @@ extern unsigned int __cdecl _clearfp (void);
 // zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
 // zombieval is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
 // not an argument, but this seems to be more trouble than it's worth, so we don't bother detecting final assignment.
-#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
+// When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
+// data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
+// (which means the user is fooling around at the keyboard & performance is not as important as transparency)
+// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
+#define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if((UI)jt->asgzomblevel-1>=(UI)jt->local){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||jt->local==0)
+// obsolete #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not

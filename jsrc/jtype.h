@@ -165,6 +165,7 @@ typedef I SI;
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
+#define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
 #define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
 #define DAV(x)          ( (D*)((C*)(x)+AK(x)))  /* double                  */
 #define ZAV(x)          ( (Z*)((C*)(x)+AK(x)))  /* complex                 */

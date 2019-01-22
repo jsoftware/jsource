@@ -126,6 +126,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
   // assigned to a name, which will protects values inside it.
   ACIPNO(f);  // This justifies keeping the result ASGSAFE
   f1=jtnvv1;
+  if(((AT(f)^B01)|AR(f)|BAV0(f)[0])==0&&gi==CEPS&&hi==CDOLLAR)f1=jtisempty;  // 0 e. $, accepting only boolean 0
   if(LIT&AT(f)&&1==AR(f)&&gi==CTILDE&&CFROM==ID(gv->fgh[0])&&hi==CFORK){
    x=hv->fgh[0];
    if(LIT&AT(x)&&1==AR(x)&&CIOTA==ID(hv->fgh[1])&&CRIGHT==ID(hv->fgh[2])){f1=jtcharmapa;  flag &=~(VJTFLGOK1);}
@@ -134,7 +135,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  fv=FAV(f); fi=cap(f)?CCAP:fv->id; // if f is a name defined as [:, detect that now & treat it as if capped fork
  if(fi!=CCAP){
-  // nvv or vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
+  // [:vv or vvv fork.  inplace if f or h can handle it, ASGSAFE only if all 3 verbs can
   flag=((fv->flag|hv->flag)&(VJTFLGOK1|VJTFLGOK2))+((fv->flag&gv->flag&hv->flag)&VASGSAFE);  // We accumulate the flags for the derived verb.  Start with ASGSAFE if all descendants are.
   // if g has WILLOPEN, indicate WILLBEOPENED in f/h
 
@@ -144,6 +145,8 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  }
  switch(fi){
   case CCAP:   if(gi==CBOX)flag2|=VF2BOXATOP1|VF2BOXATOP2|VF2ISCCAP; f1=jtcork1; f2=jtcork2;
+   if(gi==CSLASH&&hi==CDOLLAR&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
+   if(gi==CPOUND){if(hi==CCOMMA){f1=jtnatoms;}else if(hi==CDOLLAR){f1=jtrank;}}  // [: # ,   [: # $
                break; /* [: g h */
   case CSLASH: if(gi==CDIV&&hi==CPOUND&&CPLUS==ID(fv->fgh[0])){f1=jtmean; flag|=VIRS1; flag &=~(VJTFLGOK1);} break;  /* +/%# */
   case CAMP:   /* x&i.     { y"_ */

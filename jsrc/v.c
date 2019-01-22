@@ -8,7 +8,12 @@
 
 F1(jttally ){A z; RZ(w); z=sc(IC(w));            RETF(AT(w)&XNUM+RAT?xco1(z):z);}
 F1(jtshapex){A z; RZ(w); z=vec(INT,AR(w),AS(w)); RETF(AT(w)&XNUM+RAT?xco1(z):z);}
-F1(jtshape ){RZ(w); R vec(INT,AR(w),AS(w));}
+F1(jtshape){RZ(w); R vec(INT,AR(w),AS(w));}
+F1(jtisempty){RZ(w); R num[AN(w)==0];}
+F1(jtisnotempty){RZ(w); R num[AN(w)!=0];}
+F1(jtisitems){RZ(w); R num[!AR(w)||AS(w)[0]];}
+F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}
+F1(jtnatoms){F1PREFIP; RZ(w); R sc(AN(w));}
 
 // ,y and ,"r y - producing virtual blocks
 F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;

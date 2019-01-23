@@ -778,7 +778,12 @@ t =: 5 6 7
 t =: 5 6 7
 5 6 7 -: ([ 3 : 't =: t , 0'@+:) t
 
+NB. The following failed once on nonavx because of error pushing zombieval
+'nmm min max'=. 0.1 _1.99977 1.99977
+min=. nmm ([ * [: <. %~) 1.98
+0.1 1.9 1.99977 -: nmm,min,max
 
-4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast local nb qd t test testa unsafename undefinedname x'
+
+4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast local max min nmm nb qd t test testa unsafename undefinedname x'
 
 

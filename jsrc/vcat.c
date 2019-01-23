@@ -250,7 +250,7 @@ F2(jtlamin2){A z;I ar,p,q,wr;
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,wk,wm,wn,wt,wr,*ws;
+A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  RZ(a&&w);
  // Allow inplacing if we have detected an assignment to a name on the last execution, and the address
  // being assigned is the same as a, and the usecount of a allows inplacing; or
@@ -280,41 +280,41 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,at,ar,*as,k,p,*u,*v,
   // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
 // obsolete   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&jt->ranks==(RANK2T)~0){
-  if(((an-1)|((ar=AR(a))-1)|(ar-(wr=AR(w)))|((at=AT(a))-(wt=AT(w)))|((I)jt->ranks-(I)(RANK2T)~0))>=0){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given
+  if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
    // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis
    // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the
    // shape of an item of result that matters
-   I naxes = MIN(wr,ar-1); u=ar+(as=AS(a))-naxes; v=wr+(ws=AS(w))-naxes;  // point to the axes to compare
+   I naxes = MIN(AR(w),AR(a)); u=AR(a)+(AS(a))-naxes; v=AR(w)+(AS(w))-naxes;  // point to the axes to compare
    // Calculate k, the size of an atom of a; ak, the number of bytes in a; wm, the number of result-items in w
    // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
    // items of w (after its conversion to the precision of a)
-   k=bpnoun(at); ak=k*an; wm=ar==wr?*ws:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
+   k=bpnoun(AT(a)); ak=k*an; wm=AR(a)==AR(w)?AS(w)[0]:1; wn=wm*aii(a); wk=k*wn;  // We don't need this yet but we start the computation early
    // For each axis to compare, see if a is bigger/equal/smaller than w; OR into p
    p=0; DO(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then
    if(p>=0) {
     // See if there is room in a to fit w (including trailing zero byte)
-    if(allosize(a)>=ak+wk+(1&&at&LAST0)){
+    if(allosize(a)>=ak+wk+(1&&AT(a)&LAST0)){
      // We have passed all the tests.  Inplacing is OK.
      // If w must change precision, do.  This is where we catch domain errors.
-     if(TYPESGT(at,wt))RZ(w=cvt(at,w));
+     if(TYPESGT(AT(a),AT(w)))RZ(w=cvt(AT(a),w));
      // If the items of w must be padded to the result item-size, do so.
      // If the items of w are items of the result, we simply extend each to the shape of
      // an item of a, leaving the number of items unchanged.  Otherwise, the whole of w becomes an
      // item of the result, and it is extended to the size of a corresponding cell of a.  The extra
      // rank is implicit in the shape of a.
-     if(p){RZ(h=vec(INT,wr,as+ar-wr)); if(ar==wr)*AV(h)=*ws; RZ(w=take(h,w));}
+     if(p){RZ(h=caro(vec(INT,AR(w),AS(a)+AR(a)-AR(w)))); if(AR(a)==AR(w))AV(h)[0]=AS(w)[0]; RZ(w=take(h,w));}
      av=ak+CAV(a); wv=CAV(w);   // av->end of a data, wv->w data
      // If an item of a is higher-rank than the entire w (except when w is an atom, which gets replicated),
      // copy fill to the output area.  Start the copy after the area that will be filled in by w
      I wlen = k*AN(w); // the length in bytes of the data in w
-     if(wr&&ar>1+wr){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
+     if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
-     if(wr)MC(av,wv,wlen); else mvc(wk,av,k,wv);
+     if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
      // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
-     *as+=wm; AN(a)+=wn; if(at&LAST0)*(av+wk)=0;
+     AS(a)[0]+=wm; AN(a)+=wn; if(AT(a)&LAST0)*(av+wk)=0;
      // if a has recursive usecount, increment the usecount of the added data - including any fill
      // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
      if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ras(aav[i]);)}

@@ -7,42 +7,24 @@ cd ~
 # use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
 # too early to move main linux release package to gcc 5
 
-if [ "x$CC" = x'' ] ; then
-if [ -f "/usr/bin/cc" ]; then
-CC=cc
-else
-if [ -f "/usr/bin/clang" ]; then
-CC=clang
-else
-CC=gcc
-fi
-fi
-export CC
-fi
-compiler=`$CC --version | head -n 1`
-echo "CC=$CC"
-echo "compiler=$compiler"
+compiler=${CC:0:3}
+
+macmin="-mmacosx-version-min=10.6"
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ] ; then
 OPENMP=" -fopenmp "
 LDOPENMP=" -fopenmp "
-if [ -z "${compiler##*gcc*}" ]; then
+if [ "x$compiler" = x'gcc' ] ; then
 LDOPENMP32=" -l:libgomp.so.1 "    # gcc
 else
 LDOPENMP32=" -l:libomp.so.5 "     # clang
 fi
 fi
 
-if [ -z "${compiler##*gcc*}" ]; then
+if [ "x$compiler" = x'gcc' ] ; then
 # gcc
-common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses"
-OVER_GCC_VER6=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 6 | bc)
-if [ $OVER_GCC_VER6 -eq 1 ] ; then
-common="$common -Wno-shift-negative-value"
-else
-common="$common -Wno-type-limits"
-fi
+common="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-maybe-uninitialized -Wno-unused-parameter -Wno-sign-compare -Wno-clobbered -Wno-empty-body -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-shift-negative-value"
 # alternatively, add comment /* fall through */
 OVER_GCC_VER7=$(echo `$CC -dumpversion | cut -f1 -d.` \>= 7 | bc)
 if [ $OVER_GCC_VER7 -eq 1 ] ; then
@@ -97,20 +79,20 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 
 darwin_j32) # darwin x86
 TARGET=libj.dylib
-COMPILE="$darwin -m32 -mmacosx-version-min=10.5"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 -mmacosx-version-min=10.5 -o libj.dylib"
+COMPILE="$darwin -m32 $macmin"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP -m32 $macmin -o libj.dylib"
 ;;
 
 darwin_j64nonavx) # darwin intel 64bit nonavx
 TARGET=libj.dylib
-COMPILE="$darwin -mmacosx-version-min=10.5"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
+COMPILE="$darwin $macmin"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 ;;
 
 darwin_j64) # darwin intel 64bit
 TARGET=libj.dylib
-COMPILE="$darwin -mavx -mmacosx-version-min=10.5 -DC_AVX=1"
-LINK=" -dynamiclib -lm -ldl $LDOPENMP -mmacosx-version-min=10.5 -o libj.dylib"
+COMPILE="$darwin -mavx $macmin -DC_AVX=1"
+LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
@@ -118,8 +100,6 @@ OBJS_FMA=" blis/gemm_int-fma.o "
 echo no case for those parameters
 exit
 esac
-
-echo "COMPILE=$COMPILE"
 
 OBJS="\
  a.o \

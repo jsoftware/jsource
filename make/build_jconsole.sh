@@ -4,6 +4,8 @@ cd ~
 
 common=" -fPIC -O1 -Wextra -Wno-unused-parameter "
 
+macmin="-mmacosx-version-min=10.6"
+
 case $jplatform\_$1 in
 
 linux_j32)
@@ -23,12 +25,13 @@ COMPILE="$common -march=armv8-a+crc -DREADLINE -DRASPI"
 LINK=" -ledit -ldl -o jconsole "
 ;;
 darwin_j32)
-COMPILE="$common -m32 -DREADLINE -mmacosx-version-min=10.5"
-LINK=" -ledit -ldl -lncurses -m32 -mmacosx-version-min=10.5 -o jconsole "
+COMPILE="$common -m32 -DREADLINE $macmin"
+LINK=" -ledit -ldl -lncurses -m32 $macmin -o jconsole "
 ;;
+#-mmacosx-version-min=10.5
 darwin_j64)
-COMPILE="$common -DREADLINE -mmacosx-version-min=10.5"
-LINK=" -ledit -ldl -lncurses -mmacosx-version-min=10.5 -o jconsole "
+COMPILE="$common -DREADLINE $macmin"
+LINK=" -ledit -ldl -lncurses $macmin -o jconsole "
 ;;
 *)
 echo no case for those parameters

@@ -458,7 +458,8 @@ VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 // Employed when one arg is known to be CMPX/XNUM/RAT.  Indexed by
 // bitmask of RAT,CMPX,FL.  Entry 9=CMPX; otherwise entry 8=some FL, otherwise
 // entry 10 for XNUM, 11 for some RAT 
-static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
+// static UC xnumpri[] = {10 ,8 ,9 ,9 ,11 ,8 ,9 ,9};
+#define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
 
 extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 
@@ -467,8 +468,6 @@ extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
 A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,bcip;I ak,f,m,
      mf,n,nf,r,* RESTRICT s,*sf,wk,zk,zn,zt;VA2 adocv;
  RZ(a&&w);F2PREFIP;
-#define an AN(a)
-#define wn AN(w)
  {I at=AT(a);
   I wt=AT(w);
   // If an operand is empty, turn it to Boolean, and if the OTHER operand is non-numeric, turn that to Boolean too (leaving
@@ -476,15 +475,15 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   // when there is an empty - but it guarantees that execution on an empty never fails.
   // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
   // support nonnumeric sparse now
-  if(((-((at|wt)&SPARSE))|(an-1)|(wn-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
+  if(((-((at|wt)&SPARSE))|(AN(a)-1)|(AN(w)-1))<0) { // test for all unusual cases: sparse or empty arg.  This sets FLAGSPARSE if called for & clears other flags
    // if an operand is sparse, replace its type with the corresponding non-sparse type, for purposes of testing operand precisions
    if((at|wt)&SPARSE){
     at=(SPARSE&at)?DTYPE(at):at;
     wt=(SPARSE&wt)?DTYPE(wt):wt;
     jtinplace=0;  // We use jtinplace==0 as a flag meaning 'sparse'
    }
-   if(an==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
-   if(wn==0){wt=B01;if(!(at&NUMERIC))at=B01;}
+   if(AN(a)==0){at=B01;if(!(wt&NUMERIC))wt=B01;}  // switch empty arg to Boolean & ensure compatibility with other arg
+   if(AN(w)==0){wt=B01;if(!(at&NUMERIC))at=B01;}
   }
 
   // Figure out the result type.  Don't signal the error from it yet, because domain has lower priority than agreement
@@ -492,43 +491,42 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
   adocv=var(self,at,wt); zt=rtype(adocv.cv);
  }
 
- I ar = AR(a);
- I wr = AR(w);
-
+// I ar = AR(a);
+// I wr = AR(w);
  // Analyze the rank and calculate cell shapes and counts.  Not byte sizes yet, since there may be conversions
  // We detect agreement error before domain error
  RANK2T savedranks=jt->ranks;   // save original rank before we change it, in case we have to restart the operation
- {I *as = AS(a); I *ws = AS(w);
-  if(savedranks==(RANK2T)~0){I b;I ipa;
+ {//I *as = AS(a); I *ws = AS(w);
+  if(savedranks==(RANK2T)~0){I b;
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit
-   r=an; m=wn; b=wr>=ar; zn=b?m:r; m=b?r:m; r=b?wr:ar; I shortr=b?ar:wr; s=b?ws:as; PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
-   ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((ar==r)*2 + (wr==r));  // inplaceability (see below)
-   bcip=ipa+8*b;  // save the combined bcip for loop control
-   DO(shortr, ASSERT(as[i]==ws[i],EVLENGTH);)  // agreement error if not prefix match
+   b=AR(w)>=AR(a)?8:0; zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
+// obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((AR(a)==r)*2 + (wr==r));  // inplaceability (see below)
+   bcip=((adocv.cv>>VIPOKWX) & ((a==w)-1) & ((AR(a)==r)*2 + (AR(w)==r)))+b;  // save the combined bcip for loop control
+   DO(shortr, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)  // agreement error if not prefix match
    f = 0;  // no frame since we didn't have rank
    if(jtinplace){
-    // Non-sparse setup for copy loop, no rank
+    // Non-spAR(a)se setup for copy loop, no rank
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
     // repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
-    ak=ar; wk=wr; mf=0; nf=0;
+    ak=AR(a); wk=AR(w); mf=0; nf=0;
    }
-  }else{I af,wf,acr,wcr,q,b,c,zcn;I ipa;
+  }else{I af,wf,acr,wcr,q,b,c,zcn;
    // Here, a rank was specified.  That means there must be a frame, according the to IRS rules
-   acr=savedranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr; PROD(acn,acr,as+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
-   wcr=(RANKT)savedranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; PROD(wcn,wcr,ws+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
+   acr=savedranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; af=AR(a)-acr; PROD(acn,acr,AS(a)+af);  // r=left rank of verb, acr=effective rank, af=left frame, acn=left #atoms/cell
+   wcr=(RANKT)savedranks; wcr=AR(w)<wcr?AR(w):wcr; wf=AR(w)-wcr; PROD(wcn,wcr,AS(w)+wf); // r=right rank of verb, wcr=effective rank, wf=right frame, wcn=left #atoms/cell
        // note: the prod above can never fail, because it gives the actual # cells of an existing noun
    // Now that we have used the rank info, clear jt->ranks.
    // we do this before we generate failures
-   RESETRANK;  // This is required for xnum/rat/sparse
+   RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var()
    // if the frames don't agree, that's always an agreement error
-   c=af<=wf; f=c?wf:af; q=c?af:wf; sf=c?ws:as;   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
-   b=acr<=wcr; zcn=b?wcn:acn; m=b?acn:wcn; r=b?wcr:acr; I shortr=b?acr:wcr; I longf=b?wf:af; s=b?ws:as; s+=longf; PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
+   c=af<=wf?4:0; f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a);   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame
+   b=acr<=wcr?8:0; zcn=acr<=wcr?wcn:acn; m=acr<=wcr?acn:wcn; r=acr<=wcr?wcr:acr; {I shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);}   // b='right cell has larger rank'; zcn=#atoms in cell with larger rank;
      // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
-   ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((ar==(f+r))*2 + (wr==(f+r)));  //  calc inplaceability - see below
-   bcip=ipa+c*4+8*b;  // save combined loop control
-   DO(q, ASSERT(as[i]==ws[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
+// obsolete    ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((ar==(f+r))*2 + (AR(w)==(f+r)));  //  calc inplaceability - see below
+   bcip=((adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((AR(a)==(f+r))*2 + (AR(w)==(f+r))))+c+b;  // save combined loop control
+   DO(q, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
     PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
 #ifdef DPMULD
@@ -539,7 +537,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
-    DO(MIN(acr,wcr), ASSERT(as[af+i]==ws[wf+i],EVLENGTH);)
+    DO(MIN(acr,wcr), ASSERT(AS(a)[af+i]==AS(w)[wf+i],EVLENGTH);)
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     {zk=zcn<<bplg(zt); ak=acn<<bplg(AT(a)); wk=wcn<<bplg(AT(w));}//else {ak=wk=zk=0;}
@@ -688,8 +686,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I acn,wcn,b
  // jt->rank, which might have been modified.  All sparse errors come through here, so they can't
  // do overflow recovery in-place
  R NEVM<jt->jerr?irs2(a,w,self,savedranks>>RANKTX,(RANKT)savedranks,jtva2):0;
-#undef an
-#undef wn
 }    /* scalar fn primitive and f"r main control */
 
 /*
@@ -1041,12 +1037,19 @@ F1(jthalve ){if(w&&!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,n
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}
 static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
 
+// table of routines to handle = ~:
+static VF eqnetbl[2][16] = {
+// 11    12    14    BX    21    22    24   x   41    42    44   x  x  x   SB  INHOMO  // char len of aw, or HOMO SB BX
+{ eqCC, eqCS, eqCU, eqAA, eqSC, eqSS, eqSU, 0, eqUC, eqUS, eqUU, 0, 0, 0, eqII, zeroF },
+{ neCC, neCS, neCU, neAA, neSC, neSS, neSU, 0, neUC, neUS, neUU, 0, 0, 0, neII, oneF },
+};
+
 // Analyze the verb and arguments and come up with *ado, address of the routine to handle one
 // list of arguments producing a list of results; and *cv, the conversion control which specifies
 // the precision inputs must be converted to, and what the result type will be.
 // The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
 // result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
-#if 0
+#if 0  // obsolete
 // Returned value is 0 for failure, 1 for success
 B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
@@ -1126,13 +1129,11 @@ B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
  R 1;
 }    /* function and control for rank */
 #else
-VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
+VA2 jtvar(J jt,A self,I at,I wt){I t;
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.
  if(!jt->jerr){
-  VA *vainfo=(VA*)FAV(self)->localuse;  // extract table line from the primitive
-  if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
   // Normal case where we are not retrying: here for numeric arguments
   // vaptr converts the character pseudocode into an entry in va;
   // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
@@ -1140,28 +1141,40 @@ VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
   // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
-  if(t<CMPX) {
+  VA *vainfo=(VA*)FAV(self)->localuse;  // extract table line from the primitive
+  if(!((t=UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily
    jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
-   R vainfo->p2[(UNSAFE(at)>>1)+((UNSAFE(at)+UNSAFE(wt))>>2)];
-  } else {
+   R vainfo->p2[(UNSAFE(at)>>(INTX-1))+((UNSAFE(at)+UNSAFE(wt))>>INTX)];
+  }else if(!(t&(NOUN&~NUMERIC))) {
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
    // the type to use
-   VA2 selva2 = vainfo->p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
+// obsolete    VA2 selva2 = vainfo->p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
+   VA2 selva2 = vainfo->p2[(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15];  // bits: RAT CMPX FL
    // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
    // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
    // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
    if((t&FL)&&!(selva2.cv&(VBB|VII|VDD|VZZ))){selva2.cv = (selva2.cv&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
    R selva2;
-  }
- }else{
-  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-  VA2 retva2;  // where we build the return value
-  UC id=(UC)FAV(self)->id;  // extract the 
-  b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-  switch(id){
+  }else{
+   // Normal case, but something is nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
+   VA2 retva2;  retva2.cv=VB; // where we build the return value   cv indicates no input conversion, boolean result
+   I opx=(UC)FAV(self)->id==CNE; if(opx|((UC)FAV(self)->id==CEQ)){I opcode;
+    // = or ~:, possibly inhomogeneous
+    if(HOMO(at,wt)){
+     opcode=((at>>(C2TX-2))+(wt>>C2TX))|(3*(5&(((t>>(SBTX-(BOXX+2)))+t)>>BOXX))); // bits are a4 a2 w4 w2 if char, 1100 if symbol, 0011 if box.  symbol is 1110, coming from a and symb shift
+    }else opcode=15;  // inhomogeneous line
+    retva2.f=eqnetbl[opx][opcode];  // return the comparison
+    R retva2;
+   }
+   // not = ~:, better be a symbol
+   if(at&wt&SBT)R vainfo->p2[12];  // symbol on symbol - process it through the optbl
+   retva2.f=0; R retva2;  // if not symbol, return not found
+#if 0 // obsolete
+   b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; 
+   switch(id){
     // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
    case CEQ: retva2.f=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
                   at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
@@ -1176,9 +1189,10 @@ VA2 jtvar(J jt,A self,I at,I wt){B b;I t;
     // If not = ~:, it had better be a symbol operation.
     if(!(at&wt&SBT)){retva2.f=0; R retva2;}  // if not symbol, return not found
     R vainfo->p2[12];  // fetch the 'symbol' entry and return it - it may be not found too
+   }
+   R retva2;  // mult be =/~:, return what we created
+#endif
   }
-  R retva2;  // mult be =/~:, return what we created
- }
  }else{VA2 retva2;
   retva2.f=0;  // error if not filled in
   switch((UC)FAV(self)->id){

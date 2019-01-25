@@ -836,7 +836,7 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  CDASSERT(p&&NPATH>cc->ln,DEBADLIB);
  cc->cc=1==cc->ln&&('0'==*s||'1'==*s)?*s:0;
  /* procedure name */
- s=p+1+(*p=='"');
+ s=p+1+(I )(*p=='"');
  while(*s==' ')++s; p=strchr(s,' '); if(!p)p=s+strlen(s);    pi=s-s0; cc->pn=p-s;
  CDASSERT(NPATH>cc->pn,DEBADFN);
  /* > + % */
@@ -867,7 +867,7 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
   CDASSERT(i<NCDARGS,DECOUNT);
   cc->tletter[i]=0; cc->star[i]=0;
   CDASSERT(i||'1'!=cc->cc||'x'==c||'*'==c&&(!*s||' '==*s),der);  // verify result type is allowed
-  if('*'==c||'&'==c){cc->star[i]=1+('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
+  if('*'==c||'&'==c){cc->star[i]=1+(I )('&'==c); c=*s++; if(!c)break; if(' '==c)continue;}
   cc->tletter[i]=c;
   CDASSERT(strchr("cwubsilxfdzj",c),der);
   CDASSERT((c!='z'&&c!='j')||cc->star[i],der);

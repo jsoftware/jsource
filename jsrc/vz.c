@@ -28,8 +28,8 @@ ZF1(jtztrend){D a,b,t;Z z;
  t=hypoth(a,b); 
  if(t<inf){if(!t)++t; z.re=a/t; z.im=b/t;}
  else switch((INF(a)?2:0)+INF(b)){
-  case 1: z.re=0.0;    z.im=SGN(b); break;
-  case 2: z.re=SGN(a); z.im=0.0;    break;
+  case 1: z.re=0.0;    z.im=(D)SGN(b); break;
+  case 2: z.re=(D)SGN(a); z.im=0.0;    break;
   case 3: ZASSERT(0,EVNAN);
  }
  R z;
@@ -46,7 +46,7 @@ ZF2(jtzdiv){ZF2DECL;D t;
  if(ZNZ(v)){
   if(ABS(c)<ABS(d)){t=a; a=-b; b=t;  t=c; c=-d; d=t;}
   a/=c; b/=c; d/=c; t=1+d*d; zr=(a+TYMES(b,d))/t; zi=(b-TYMES(a,d))/t;
- }else if(ZNZ(u))switch(2*(0>a)+(0>b)){
+ }else if(ZNZ(u))switch(2*(I )(0>a)+(I )(0>b)){
    case 0: if(a> b)zr= inf; else zi= inf; break;
    case 1: if(a>-b)zr= inf; else zi=-inf; break;
    case 2: if(a<-b)zr=-inf; else zi= inf; break;
@@ -102,7 +102,7 @@ ZF2(jtzgcd){D a,b;Z t,z;
  ZASSERT(!(ZINF(u)||ZINF(v)),EVNAN);
  while(ZNZ(u)){t=zrem(u,v); v.re=u.re; v.im=u.im; u.re=t.re; u.im=t.im;}
  z.re=a=v.re; z.im=b=v.im;
- switch(2*(0>a)+(0>b)){
+ switch(2*(I )(0>a)+(I )(0>b)){
   case 0: if(!a){z.re= b; z.im=0;}                        break;
   case 1:                              z.re=-b; z.im= a;  break;
   case 2: if(!b){z.re=-a; z.im=0;}else{z.re= b; z.im=-a;} break;

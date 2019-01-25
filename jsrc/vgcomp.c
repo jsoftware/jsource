@@ -86,7 +86,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
  }
 // obsolete  if(1>=ar)R an>wn?jt->workareas.compare.compgt:an<wn?jt->workareas.compare.complt:0;
 // obsolete  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->workareas.compare.compgt; else if (c<d)R jt->workareas.compare.complt;);
- if(1>=ar)R ((an<wn)-(an>wn))*jt->workareas.compare.complt;
+ if(1>=ar)R ((I )(an<wn)-(I )(an>wn))*jt->workareas.compare.complt;
  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R ((c>d)?-1:1)*jt->workareas.compare.complt;);
  R 0;
 }    /* compare 2 arbitrary dense arrays; _1 0 1 per a<w, a=w, a>w */
@@ -101,7 +101,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   ia=tv[a]; na=tv[1+a]; xa=xv+xc*ia;                                                                     \
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
-   switch((ia<na?2:0)+(ib<nb)){                                                                          \
+   switch((ia<na?2:0)+(I )(ib<nb)){                                                                          \
     case 0: R a<b;                                                                                  \
     case 1: c= 1; break;                                                                                 \
     case 2: c=-1; break;                                                                                 \
@@ -123,7 +123,7 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
   ia=tv[a]; na=tv[1+a]; xa=xv+xc*ia;                                                                     \
   ib=tv[b]; nb=tv[1+b]; xb=xv+xc*ib;                                                                     \
   while(1){                                                                                              \
-   switch((ia<na?2:0)+(ib<nb)){                                                                          \
+   switch((ia<na?2:0)+(I )(ib<nb)){                                                                          \
     case 0: R a<b;                                                                                  \
     case 1: c= 1; break;                                                                                 \
     case 2: c=-1; break;                                                                                 \

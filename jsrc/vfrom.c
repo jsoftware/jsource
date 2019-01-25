@@ -87,7 +87,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   k<<=bplg(AT(w));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
+ GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
  { I *s=AS(z)+wf; MCISd(s,AS(a),ar); if(wcr)MCISd(s,1+wf+ws,wcr-1); }
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
@@ -177,11 +177,11 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
   PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
- GA(z,AT(w),zn,ar+wr-(0<wcr),ws);
+ GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);
  s=AS(z)+wf; MCISd(s,AS(a),ar); MCISd(s,1+wf+ws,wcr-1);
  if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
- switch(k+k+(1==an)){
+ switch(k+k+(I )(1==an)){
   case   2*sizeof(I): BNNERN(I);   break;
   case   2*sizeof(C): BNNERM(C,I); break; 
   case 1+2*sizeof(C): INNER1B(C);  break;

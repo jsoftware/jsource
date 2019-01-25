@@ -60,7 +60,7 @@ A jtinpl(J jt,B b,I n,C*s){C c;I k=0;
 
 static I advl(I j,I n,C*s){B b;C c,*v;
  v=j+s; 
- DO(n-j, c=*v++; b=c==CCR; if(b||c==CLF)R j+1+i+(b&&CLF==*v););
+ DO(n-j, c=*v++; b=c==CCR; if(b||c==CLF)R j+1+i+(I )(b&&CLF==*v););
  R n;
 }    /* advance one line on CR, CRLF, or LF */
 

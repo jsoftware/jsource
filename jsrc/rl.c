@@ -301,7 +301,7 @@ static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  if(AT(w)&NOUN)R lnoun(w);
  v=VAV(w); id=v->id; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL)R lrr(hs);
- m=!!fs+(gs&&id!=CBOX)+(id==CFORK)+(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
+ m=(I )!!fs+(I )(gs&&id!=CBOX)+(I )(id==CFORK)+(I )(hs&&id==CCOLON&&VXOP&fl);  // BOX has g for BOXATOP; ignore it
  if(!m)R lsymb(id,w);
  if(evoke(w))R sfn(0,fs);
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);

@@ -112,7 +112,7 @@ static B jtfmtq(J jt,B e,I m,I d,C*s,I t,Q*wv){B b;C*v=jt->th2buf;I c,ex=0,k,n,p
  n=AN(x); xv=AV(x)+n-1; c=*xv; b=0>c; if(b)c=-c;
  q=c>999?4:c>99?3:c>9?2:1; p=q+XBASEN*(n-1); if(c||!e)ex+=p-d-1;
  if(e)R fmtex(m,d,n,xv,b,c,q,ex);
- else if(m&&m<b+d+!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
+ else if(m&&m<b+d+(I )!!d+(0>ex?1:1+ex)){memset(v,'*',m); v[m]=0;}
  else{
   if(jt->th2bufn<4+p+d){A s; jt->th2bufn=4+p+d; GATV(s,LIT,jt->th2bufn,1,0); v=jt->th2buf=CAV(s);}
   if(' '==*s)*v++=' '; if(b)*v++='_';
@@ -196,7 +196,7 @@ static A jtth2a(J jt,B e,I m,I d,C*s,I n,I t,I wk,C*wv,B first){PROLOG(0049);A y
  // Copy the strings from the formatting area (u->) to the result area (yv->)
  // For exponential fields, start copying from the left, leaving one space if there is a negative sign somewhere else
  // in the column but not in this value; advance to next input & output
- if(e){yv+=!first; DO(n, q=strlen(u); MC(yv+(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
+ if(e){yv+=!first; DO(n, q=strlen(u); MC(yv+(I )(!b&&CSIGN!=*u),u,q); yv+=m; u+=1+q;);}
  // For non-exponential, right-justify the data, step to next input & output
  else {yv+=m;      DO(n, q=strlen(u); MC(yv-q,          u,q); yv+=m; u+=1+q;);}
  EPILOG(y);

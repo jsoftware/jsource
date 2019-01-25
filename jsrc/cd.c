@@ -252,7 +252,7 @@ static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
     case CCOMMA:  R folk(df,g,dh);
     case CDIV:    x=fminus(ftymes(df,h),ftymes(f,dh));
                   y=atop(ds(CSTARCO),h);
-                  R folk(b?fpoly(p+q-1-(p==q),x):x,ds(CDIV),q?fpoly(q+q,y):y);
+                  R folk(b?fpoly(p+q-1-(I )(p==q),x):x,ds(CDIV),q?fpoly(q+q,y):y);
     case CEXP:    if(1==q){A k;
                    RZ(k=df1(num[0],h));
                    if(equ(k,zeroionei[0]))R qq(num[0],zeroionei[0]);

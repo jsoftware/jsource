@@ -226,7 +226,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
 #define EXEC2F(f,f1,t,T) \
  A f(J jt,A a,A w,I n,I m,I c){A z;B b;C d,*u,*uu,*x,*y;I i,j,k,mc,r;T a0,*zv;  \
   i=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w); if(mc)*(uu-1)=' ';         \
-  r=AR(w)-(1==c); r=MAX(0,r);                                               \
+  r=AR(w)-(I )(1==c); r=MAX(0,r);                                               \
   GA(z,t,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=(T*)AV(z);            \
   RZ(a=cvt(t,a)); a0=*(T*)AV(a);                                            \
   while(i<mc){                                                              \
@@ -304,7 +304,7 @@ B valueisint; // set if the value we are processing is really an int
  // set end-of-result-row counter j
  k=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w);
  // Rank of result is rank of w, unless the rows have only 1 character; make rows atoms then, removing them from rank
- r=AR(w)-(1==c); r=MAX(0,r); 
+ r=AR(w)-(I )(1==c); r=MAX(0,r); 
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
  GATV(z,FL,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=DAV(z);
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)

@@ -452,7 +452,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // Fxx is a TFIND macro, charged with setting il and ih; stmt tells what to do with il/ir
 // should combine the cases for all ks to save a test?
 #define TDO(FXY,FYY,expa,expw,stmt)  \
- switch(4*bx+2*b+(k==sizeof(D))){                       \
+ switch(4*bx+2*b+(I )(k==sizeof(D))){                       \
   default: DO(c, FXY(expa,expw); stmt; v+=cn;); break;  \
   case 1:  DO(c, FXY(expa,expw); stmt; ++v;  ); break;  \
   case 2:  DO(c, FYY(expa,expw); stmt; v+=cn;); break;  \
@@ -461,7 +461,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // Same, but search from the end of y backwards (e. i: 0 etc)
 #define TDQ(FXY,FYY,expa,expw,stmt)  \
  v+=cn*(c-1);                                           \
- switch(4*bx+2*b+(k==sizeof(D))){                       \
+ switch(4*bx+2*b+(I )(k==sizeof(D))){                       \
   default: DQ(c, FXY(expa,expw); stmt; v-=cn;); break;  \
   case 1:  DQ(c, FXY(expa,expw); stmt; --v;  ); break;  \
   case 2:  DQ(c, FYY(expa,expw); stmt; v-=cn;); break;  \
@@ -469,7 +469,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
  }
 // Version for ~. y and x -. y .  prop is a condition; if true, move the item to *zc++
 #define TMV(FXY,FYY,expa,expw,prop)   \
- switch(4*bx+2*b+(k==sizeof(D))){                                  \
+ switch(4*bx+2*b+(I )(k==sizeof(D))){                                  \
   default: DO(c, FXY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \
   case 1:  DO(c, FXY(expa,expw); if(prop)*zd++=*(D*)v;         ++v;  ); zc=(C*)zd; break;  \
   case 2:  DO(c, FYY(expa,expw); if(prop){MC(zc,v,k); zc+=k;}; v+=cn;);            break;  \

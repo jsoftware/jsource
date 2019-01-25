@@ -77,7 +77,7 @@ AMON(factZ,  Z,Z, *z=zgamma(zplus(z1,*x));)
 
 static D pq(D h,D m,D*c,D*d){D x=*c,y=*d;I n=(I)MIN(m,IMAX);
  if(0>=m)R h;
- switch(2*(0>x)+(0>y)){
+ switch(2*(I )(0>x)+(I )(0>y)){
   case 0: if(x!= y)PQLOOP(x--/y--); break;
   case 1: if(x!=-y)PQLOOP(x--/y++)else if(m>2*jfloor(0.5*m))h=-h; break;
   case 2: if(x!=-y)PQLOOP(x++/y--)else if(m>2*jfloor(0.5*m))h=-h; break;
@@ -128,7 +128,7 @@ D jtbindd(J jt,D x,D y){B id,ix,iy;D d;
  id=d==jfloor(d);
  ix=x==jfloor(x); 
  iy=y==jfloor(y);
- switch(4*(ix&&0>x)+2*(iy&&0>y)+(id&&0>d)){
+ switch(4*(I )(ix&&0>x)+2*(I )(iy&&0>y)+(I )(id&&0>d)){
   default: ASSERTSYS(0,"bindd");
   case 5: /* 1 0 1 */  /* Impossible */
   case 0: /* 0 0 0 */
@@ -146,7 +146,7 @@ static Z jtbinzz(J jt,Z x,Z y){B id,ix,iy;D rd,rx,ry;Z d;
  rd=d.re; id=rd==jfloor(rd)&&0==d.im;
  rx=x.re; ix=rx==jfloor(rx)&&0==x.im; 
  ry=y.re; iy=ry==jfloor(ry)&&0==y.im;
- switch(4*(ix&&0>rx)+2*(iy&&0>ry)+(id&&0>rd)){
+ switch(4*(I )(ix&&0>rx)+2*(I )(iy&&0>ry)+(I )(id&&0>rd)){
   default: ZASSERT(0,EVSYSTEM);
   case 5: /* 1 0 1 */  /* Impossible */
   case 0: /* 0 0 0 */

@@ -444,7 +444,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    else { ib=AV(base); u=AAV(strs)-1; }
   }
   if(j==nc) j=0;
-  k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(1==nf)*j];
+  k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(I )(1==nf)*j];
   nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR);
   cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR);
   subs=AN(uS)?CAV(uS):(C*)"e,.-*";

@@ -131,7 +131,7 @@ static DF2(jtxdefn){PROLOG(0048);
  A locsym;  // local symbol table
  UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls
 
- I isdyad=(a!=0)&(w!=0);   // avoid branches, and relieve pressure on a and w
+ I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
  {A *hv;  // will hold pointer to the precompiled parts
   V *sv=FAV(self); I sflg=sv->flag;   // fetch flags, which are the same even if VXOP is set

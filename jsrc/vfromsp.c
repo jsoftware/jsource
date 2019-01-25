@@ -50,7 +50,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*z
  if(af)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtfromis);
  wn=AN(w); ws=AS(w); wt=AT(w);
  RZ(ind=pind(wcr?*(ws+wf):1,a));
- GA(z,wt,1L,ar+wr-(0<wcr),ws); v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
+ GA(z,wt,1L,ar+wr-(I )(0<wcr),ws); v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
  zp=PAV(z); wp=PAV(w); SPB(zp,e,ca(SPA(wp,e)));
  RZ(a=ca(SPA(wp,a))); av=AV(a); an=AN(a);
  RZ(b=bfi(wr,a,1));
@@ -148,7 +148,7 @@ F2(jtfromsd){A e,x,z;I acr,af,ar,*v,wcr,wf,wr,*ws;P*ap,*zp;
  if(af)R sprank2(a,w,0L,acr,wcr,jtfrom);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); ws=AS(w);
- GA(z,STYPE(AT(w)),1L,ar+wr-(0<wcr),ws); zp=PAV(z);
+ GA(z,STYPE(AT(w)),1L,ar+wr-(I )(0<wcr),ws); zp=PAV(z);
  v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
  RZ(x=irs2(SPA(ap,e),w,0L,0L,wcr,jtifrom)); RZ(e=reshape(mtv,x));
  ASSERT(all1(eq(e,x)),EVSPARSE);
@@ -170,7 +170,7 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  if(af)R sprank2(a,w,0L,acr,wcr,jtfrom);
  ASSERT(DTYPE(AT(w))&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); wp=PAV(w); ws=AS(w);
- GA(z,AT(w),1L,ar+wr-(0<wcr),ws); zp=PAV(z);
+ GA(z,AT(w),1L,ar+wr-(I )(0<wcr),ws); zp=PAV(z);
  v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
  RZ(x=irs2(SPA(ap,e),w,0L,0L,wcr,jtfrom)); RZ(e=reshape(mtv,x));
  ASSERT(all1(denseit(eq(e,x))),EVSPARSE);

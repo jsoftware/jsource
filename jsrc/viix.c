@@ -8,7 +8,7 @@
 
 #define BXLOOP(T)  \
  {T*wv=(T*)AV(w),x;                                                  \
-  switch((4*descend)+(0<=p?2:0)+(0<=q)){                             \
+  switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){                             \
    case 1: DO(m, *zv++=n*(1<*wv++););              break; /*   q */  \
    case 2: DO(m, *zv++=n*(0<*wv++););              break; /* p   */  \
    case 3: DO(m, x=*wv++; *zv++=x<=0?0:x<=1?q:n;); break; /* p q */  \
@@ -24,7 +24,7 @@ static B jtiixBX(J jt,I n,I m,A a,A w,I*zv){B*av,*b,descend;I p,q;
   case FLX:  BXLOOP(D); break;
   case B01X:
    b=BAV(w);
-   switch((4*descend)+(0<=p?2:0)+(0<=q)){
+   switch((4*descend)+(0<=p?2:0)+(I )(0<=q)){
     case 1: memset(zv,C0,m*SZI);   break;  /*   q */
     case 2: DO(m, *zv++=n* *b++;); break;  /* p   */
     case 3: DO(m, *zv++=q* *b++;); break;  /* p q */
@@ -65,7 +65,7 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 #define BSLOOP(Ta,Tw)       \
  {Ta*av=(Ta*)AV(a),*u,x;                                              \
   Tw*wv=(Tw*)AV(w),*v,y;                                              \
-  switch((1==c?0:2)+(1==ge)){                                         \
+  switch((1==c?0:2)+(I )(1==ge)){                                         \
    case 0: DO(m, BSLOOP1(b=av[k]>=y); *zv++=1+q;       ); break;      \
    case 1: DO(m, BSLOOP1(b=av[k]<=y); *zv++=1+q;       ); break;      \
    case 2: DO(m, BSLOOPN(x!=y,b=x>y); *zv++=1+q; wv+=c;); break;      \

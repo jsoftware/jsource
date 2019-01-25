@@ -12,7 +12,7 @@ static I jtioev(J jt,I mode,A a){A ae,ax,ay,p;B*pv;I j,k,m,n,*yv;P*ap;
  ay=SPA(ap,i); yv=AV(ay);
  ax=SPA(ap,x); m=k=AN(ax); n=j=*AS(a); 
  RZ(p=eq(ax,ae)); pv=BAV(p);
- switch((AN(ay)?2:0)+(1==mode)){
+ switch((AN(ay)?2:0)+(I )(1==mode)){
   case 0:  DO(m,           if(          pv[i])R i;); R m;
   case 1:  DO(m,      --k; if(          pv[k])R k;); R n-!m;
   case 2:  DO(m,           if(i!=yv[i]||pv[i])R i;); R m;

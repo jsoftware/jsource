@@ -200,7 +200,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  // The cells must be DIRECT type so that it is OK to write garbage over them
  // We are taking advantage here of the fact that the shape comes before the cells in a standard GA noun
  // We don't have to worry about a==w because a has already been modified
- if((I)jtinplace&((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(AT(w)&DIRECT))&AC(w)&(4-celllen)&((SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
+ if((I)jtinplace&(I )((AFLAG(w)&(AFVIRTUAL|AFNJA))==0)&((UI)((-(I )(AT(w)&DIRECT))&AC(w)&(4-celllen)&((I )(SZI==4)-AR(w)))>>(BW-1-JTINPLACEWX)))frets=w; else GATV(frets,LIT,nitems,0,0);   // 1 byte per fret is adequate
  I *av=IAV(a);  // av->a data
  {I *av2, *avend=av+nitems; for(av2=av;av2!=avend;++av2)++av[*av2];}  // first time the root of the partition points to & increments itself
  // Now each item av[i] is either (1) smaller than i, which means that it is extending a previous key; or (2) greater than i, which

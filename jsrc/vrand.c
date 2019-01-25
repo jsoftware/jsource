@@ -532,7 +532,7 @@ static B jtrngstates1(J jt,I j,I n,UI**vv,I i,I k,A x,B p){D*u;UI*xv;
  RZ(x=vi(x)); xv=AV(x);
  ASSERT(1==AR(x),EVRANK);
  ASSERT(n==AN(x),EVLENGTH); 
- ASSERT(i<=k&&k<n+(j==MTI),EVINDEX); 
+ ASSERT(i<=k&&k<n+(I )(j==MTI),EVINDEX); 
  if(p)DO(n, ASSERT(x31>xv[i],EVDOMAIN););
  if(SY_64||j!=MRI)ICPY(vv[j],xv,n); else{u=(D*)vv[j]; DO(n, u[i]=(D)xv[i];);}
  jt->rngi=k;
@@ -626,7 +626,7 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
    // here if w is a power of 2, >2; take bits from each value
    k=CTTZI(m);  // lg(m)
    p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;  // r is number of values left after bit processing
-   switch((s?2:0)+(1<p)){
+   switch((s?2:0)+(I )(1<p)){
     case 0: DO(q,           t=NEXT;         *u++=mk&t;         ); break;
     case 1: DO(q,           t=NEXT;   DO(p, *u++=mk&t; t>>=k;);); break;
     case 2: DO(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;

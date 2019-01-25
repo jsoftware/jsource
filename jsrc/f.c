@@ -133,7 +133,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););
   --dv[c-1]; p=0; DO(c, p+=++dv[i];);
   GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
-  y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(c>1+i),y,p); y+=wd;););
+  y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(I )(c>1+i),y,p); y+=wd;););
  }
  RETF(z);
 }
@@ -260,7 +260,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
  if(p==DXINF)R cstr("_"); else if(p==DXMINF)R cstr("__");
  sprintf(s1,FMTI,b?-*v:*v); p1=strlen(s1);
  if(e&&*v){s=s2; *s++='e'; if(0>e)*s++=CSIGN; sprintf(s,FMTI,0<e?e:-e); p2=strlen(s2);}else p2=0; 
- GATV(z,LIT,b+p1+(1<p1)+XBASEN*(n-1)+p2,1,0); s=CAV(z);
+ GATV(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1,0); s=CAV(z);
  if(b)*s++=CSIGN; *s++=*s1; if(1<p1){*s++='.'; MC(s,1+s1,p1-1); s+=p1-1;}
  DO(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
  MC(s,s2,p2);
@@ -288,7 +288,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  --dv[c-1];
  p=0; DO(c, p+=++dv[i];);
  GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
- v=tv; DO(m, DO(c, zv+=dv[i]; y=*v++; p=AN(y); MC(zv-p-(c>1+i),AV(y),p);));
+ v=tv; DO(m, DO(c, zv+=dv[i]; y=*v++; p=AN(y); MC(zv-p-(I )(c>1+i),AV(y),p);));
  R z;
 }
 
@@ -686,7 +686,7 @@ static C*dropl(C*zu,C*zv,I lb,I la,C*eol){C ec0,ec1,*u,*v;I n,p,zn=zv-zu;
   u += ec1!=0;  // u points to char after first EOL char; advance, if needed, to the first char of next line
  }
  // count backward until we have passed la+1 EOLs.  Leave v pointing to the first EOL of the suffix
- v=zv-(ec1!=0); p=0; DO(zn, if(ec0==*--v&&(ec1==0||ec1==v[1]))if(++p>la)break;);
+ v=zv-(I )(ec1!=0); p=0; DO(zn, if(ec0==*--v&&(ec1==0||ec1==v[1]))if(++p>la)break;);
  // append ... after the prefix, and then move in the suffix including its leading EOL.
  // But if the amount of data to be removed is less than the length of ..., don't do it, since
  // it would overwrite valid data in the suffix

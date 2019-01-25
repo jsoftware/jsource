@@ -589,7 +589,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
-#define SGN(a)          ((0<(a))-(0>(a)))
+#define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)
 #if SY_64

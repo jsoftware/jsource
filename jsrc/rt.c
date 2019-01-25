@@ -126,7 +126,7 @@ static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  v=FAV(w); id=v->id; fl=v->flag; fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2]; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(fl&VXOPCALL){RETF(trr(hs));}
  xop=1&&VXOP&fl; ex=id==CCOLON&&hs&&!xop;
- m=!!fs+(gs||ex)+(id==CFORK||xop&&hs);
+ m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RETF(tleaf(sfn(0,fs)));}
  GATV(t,BOX,m,1,0); x=AAV(t);

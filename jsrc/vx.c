@@ -129,7 +129,7 @@ XF2(jtxtymes){A z;I an,*av,c,d,e,i,j,m=XBASE,n,*v,wn,*wv,*zv;
 static X jtshift10(J jt,I e,X w){A z;I c,d,k,m,n,q,r,*wv,*zv;
  n=AN(w); wv=AV(w); c=wv[n-1];
  q=e/XBASEN; r=e%XBASEN; d=0==r?1:1==r?10:2==r?100:1000;
- m=n+q+(XBASE<=c*d);
+ m=n+q+(I )(XBASE<=c*d);
  GATV(z,INT,m,1,0); zv=AV(z);
  DO(q, *zv++=0;);
  if(r){c=0; DO(n, k=c+d**wv++; *zv++=k%XBASE; c=k/XBASE;); if(c)*zv=c;}
@@ -166,7 +166,7 @@ X jtxdiv(J jt,X a,X w,I mode){PROLOG(0096);B di;I an,*av,c,c0,d,e,k,s,u[2],u1,wn
   v=AV(q); ++*v; 
   R rifvsdebug(XBASE>*v?q:xstd(q));
  }
- switch((0<=c?2:0)+(0<=d)){
+ switch((0<=c?2:0)+(I )(0<=d)){
   case 0: R rifvsdebug(xdiv(negate(a),negate(w),mode));
   case 1: R rifvsdebug(negate(xdiv(negate(a),w,mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode)));
   case 2: R rifvsdebug(negate(xdiv(a,negate(w),mode==XMFLR?XMCEIL:mode==XMCEIL?XMFLR:mode)));
@@ -198,7 +198,7 @@ XF2(jtxrem){I c,d,e;X q,r,y;
  if(c==XPINF)R 0<=d?w:a;
  if(c==XNINF)R 0>=d?w:a;
  if(1==AN(a)&&c){RZ(xdivrem(w,a,&q,&r)); R rifvsdebug(r);}
- switch((0<=c?2:0)+(0<=d)){
+ switch((0<=c?2:0)+(I )(0<=d)){
   case 0:  R rifvsdebug(negate(xrem(negate(a),negate(w))));
   case 1:  y=xrem(negate(a),w); R rifvsdebug(xcompare(y,iv0)? xplus(a,y):y);
   case 2:  y=xrem(a,negate(w)); R rifvsdebug(xcompare(y,iv0)?xminus(a,y):y);
@@ -326,7 +326,7 @@ static XF1(jtxlog1){B b;I c;
  c=XDIG(w); b=1==c&&1==AN(w);
  ASSERT(0<=c,EWIMAG);
  ASSERT(b||jt->xmode!=XMEXACT,EWIRR);
- R rifvsdebug(xc((I)xlogabs(w)+(!b&&jt->xmode==XMCEIL)));
+ R rifvsdebug(xc((I)xlogabs(w)+(I )(!b&&jt->xmode==XMCEIL)));
 }
 
 static D jtxlogd1(J jt,X w){ASSERT(0<=XDIG(w),EWIMAG); R xlogabs(w);}
@@ -348,7 +348,7 @@ static XF2(jtxlog2){D c,d,x,y;I an,*av,j,k,m,n,wn,*wv;X p,q;
  if(1==c)R rifvsdebug(1==d?iv0:vci(XPINF));
  x=log(c)+XBASEN*(2<an?an-2:0)*2.3025850929940457;
  y=log(d)+XBASEN*(2<wn?wn-2:0)*2.3025850929940457;
- m=n=(I)(y/x+(an<wn));
+ m=n=(I)(y/x+(I )(an<wn));
  RZ(p=q=xpow(a,xc(m))); j=k=xcompare(p,w);
  if     (0<j){--m; RZ(p=xdiv(p,a,XMEXACT)); j=xcompare(p,w); if(0<j)R rifvsdebug(xlog2sub(a,w));}
  else if(0>j){++n; RZ(q=xtymes(p,a));       k=xcompare(q,w); if(0>k)R rifvsdebug(xlog2sub(a,w));}
@@ -390,7 +390,7 @@ static XF2(jtxbinp){PROLOG(0098);D m;I i,n;X c,d,p,q,r,s;
 
 XF2(jtxbin){X d,z;
  RZ(d=xminus(w,a));
- switch(4*(0>XDIG(a))+2*(0>XDIG(w))+(0>XDIG(d))){
+ switch(4*(I )(0>XDIG(a))+2*(I )(0>XDIG(w))+(I )(0>XDIG(d))){
   default:             ASSERTSYS(0,"xbin");
   case 2: /* 0 1 0 */  /* Impossible */
   case 5: /* 1 0 1 */  /* Impossible */

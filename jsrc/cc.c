@@ -312,7 +312,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV(yy,INT,1+yn,1,0); yu=AV(yy); *yu++=p=pfx?n:-1;
- switch(pfx+(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
+ switch(pfx+(I )(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
   case 0:          DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
   case 1: v+=yn-1; DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
   case 2:          DO(yn, if(*v){++m; d=p; *yu++=p=yv[v-u]; e=MAX(e,p-d);} ++v;); break;
@@ -801,7 +801,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
  if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
  }else{GATV(p,INT,c,1,0); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
  if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0;; if(i<c)pv[i]=m;)
- else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
+ else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(I )(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
  R p;
 }    /* tesselation result outer shape */
 

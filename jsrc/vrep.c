@@ -206,7 +206,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  GA(z,AT(w),zn,AR(w)+!wcr,ws); *(wf+AS(z))=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
- PROD(c,wf+(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
+ PROD(c,wf+(I )(wcr!=0),ws); PROD(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
  zk=p*k;  // # bytes to fill per item
  DO(c, mvc(zk,zv,k,wv); zv+=zk; wv+=k;);
  R z;
@@ -243,7 +243,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
     k=0; DO(j1, uu[i]=u[i];);
     for(i=0;i<p;++i,u+=q)
      if(ICMP(uu,u,j1)||i==p-1){
-      h=(i==p-1)+i-k; k=i; m=cd*uu[j]; 
+      h=(I )(i==p-1)+i-k; k=i; m=cd*uu[j]; 
       DO(j1, uu[i]=u[i];);
       DO(h, DO(c, *v=m+i; v+=q;););
      } 

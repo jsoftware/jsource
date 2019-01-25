@@ -366,7 +366,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
   zv+=zk; if(qv)v+=n; else{xv+=n*xk; yv+=n*yc;}
  }
  if(sn)RZ(redspse(id,wm,xt,e,zx,sn,&e,&zx));
- RZ(a1=ca(a)); v=AV(a1); n=0; DO(AN(a), if(f!=v[i])v[n++]=v[i]-(f<v[i]););
+ RZ(a1=ca(a)); v=AV(a1); n=0; DO(AN(a), if(f!=v[i])v[n++]=v[i]-(I )(f<v[i]););
  GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<r)MCIS(f+AS(z),f+1+ws,r-1);
  zp=PAV(z);
  SPB(zp,a,vec(INT,n,v)); 
@@ -529,7 +529,7 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
  j=0; DO(n, if(e==v[i]){j=i; break;}); 
  k=1; DO(f, if(!b[i])++k;);
  zp=PAV(z); SPB(zp,e,ca(SPA(wp,e)));
- GATV(q,INT,n-(c&&d),1,0); v=AV(q); DO(wr, if(b[i])*v++=i-(i>f);); SPB(zp,a,q);
+ GATV(q,INT,n-(I )(c&&d),1,0); v=AV(q); DO(wr, if(b[i])*v++=i-(I )(i>f);); SPB(zp,a,q);
  if(c&&d){          /* sparse sparse */
   SPB(zp,x,ca(x));
   SPB(zp,i,repeatr(ne(a,sc(f)),y)); q=SPA(zp,i);  // allow for virtualization of SPB

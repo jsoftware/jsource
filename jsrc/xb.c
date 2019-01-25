@@ -264,7 +264,7 @@ F2(jtic2){A z;I j,m,n,p,*v,*x,zt;I4*y;UI4*y1;S*s;U short*u;
  ASSERT(ABS(j)<=2,EVDOMAIN);
 #endif
 // long way p=4==j||-4==j?4:3==j||-3==j?8:2==j||-2==j?4:2;
- p=ABS(j); p+=(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
+ p=ABS(j); p+=(I )(p==0)-((p&4)>>1);   // p becomes (|j){1 1 2 3 2
  if(0<j){m=n<<p; zt=LIT; if(!(INT&AT(w)))RZ(w=cvt(INT,w));}
  else   {m=n>>p; zt=INT; ASSERT(!n||LIT&AT(w),EVDOMAIN); ASSERT(!(n&((((I)1)<<p)-1)),EVLENGTH);} 
  GA(z,zt,m,1,0); v=AV(z); x=AV(w); 

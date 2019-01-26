@@ -17,7 +17,7 @@ LD=link
 endif
 
 %.o: %.c
-	$(CC) $(CFLAGS) /I "%JAVA_HOME%/include" /I "%JAVA_HOME%/include/win32" /Fo$@ /c $<
+	$(CC) $(CFLAGS) /I "$(JAVA_HOME)/include" /I "$(JAVA_HOME)/include/win32" /Fo$@ /c $<
 
 ifdef x64
 TARGET= jnative.dll

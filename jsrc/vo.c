@@ -321,7 +321,7 @@ static B jtopes2(J jt,A*zx,A*zy,B*b,A a,A e,A q,I wcr){A x;B*c;I dt,k,r,*s,t;P*p
   DO(r, if(b[k+i]!=c[i]){RZ(q=reaxis(ifb(r,k+b),q)); break;});
  }else{
   if(k){
-   GA(x,t,AN(q),wcr,0); s=AS(x); DO(k, *s++=1;); MCISd(s,AS(q),r); 
+   GA(x,t,AN(q),wcr,0); s=AS(x); DO(k, *s++=1;); MCISH(s,AS(q),r); 
    MC(AV(x),AV(q),AN(q)<<bplg(t)); q=x;
   }
   RZ(q=sparseit(t&dt?q:cvt(dt,q),a,e));
@@ -337,7 +337,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
      p,*s,*v,wcr,wr,xc,xk,yc,*yv,*zs;P*zp;
  n=AN(w); wr=AR(w); wv=AAV(w); wcr=AN(cs); dt=DTYPE(zt); dk=bpnoun(dt);
  RZ(opes1(&b,&a,&e,&m,cs,w)); an=AN(a); av=AV(a);
- GA(z,zt,1L,wr+wcr,0); zs=AS(z); MCIS(zs,AS(w),wr); MCIS(zs+wr,AV(cs),wcr);
+ GA(z,zt,1L,wr+wcr,0); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB
  GATV(t,INT,yc, 1L,0L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
@@ -413,7 +413,7 @@ F1(jtope){PROLOG(0080);A cs,*v,y,z;I nonh;C*x;I i,n,*p,q=RMAX,r=0,*s,t=0,te=0,*u
  else{I klg; I m;
   RE(m=prod(r,u)); RE(zn=mult(n,m)); klg=bplg(t); q=m<<klg;
   // Allocate result area & copy in shape (= frame followed by result-cell shape)
-  GA(z,t,zn,r+AR(w),AS(w)); MCIS(AS(z)+AR(w),u,r); x=CAV(z);
+  GA(z,t,zn,r+AR(w),AS(w)); MCISH(AS(z)+AR(w),u,r); x=CAV(z);
 // obsolete  zrel=(wrel&&t&BOX)?RELORIGINDEST(z):0;   // set if result is relative
   /* obsolete if(zrel=0){AFLAG(z)=AFREL; p=AV(z); d=AREL(mtv,z); DO(zn, *p++=d;);} else */ fillv(t,zn,x);  // init to a:  fills
   for(i=0;i<n;++i){
@@ -497,7 +497,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v,I nonempt){A h,h1,y,z;C*zu;I c=0,d,i,j
   } else {
    // nonatomic contents: rank extension+fill rather than replication
    // if IC(y)==0 this all does nothing, but perhaps not worth checking
-   if(j=r-yr){DO(j,v1[i]=1;); MCIS(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
+   if(j=r-yr){DO(j,v1[i]=1;); MCISH(j+v1,ys,yr); RZ(y=reshape(h1,y)); }  // if rank extension needed, create rank 1 1...,yr and reshape to that shape
    if(memcmp(1+s,1+AS(y),d)){*s=IC(y); RZ(y=take(h,y));}  // if cell of y has different shape from cell of result, install the
      // #items into s (giving #cell,result-cell shape) and fill to that shape.  This destroys *s (#result items) buts leaves the rest of s
    /* obsolete if(t&BOX){ yv=AAV(y); yrel-=zrel; RELOCOPYT(zv,yv,AN(y),yrel);}  // copy as above, no replication this time

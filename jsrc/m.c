@@ -976,7 +976,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
-  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape){MCIS(AS(z),shaape,rank)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape){MCISH(AS(z),shaape,rank)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -1101,7 +1101,7 @@ F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
 // clone virtual block, producing a new virtual block
 F1(jtclonevirtual){
  A z; RZ(z=virtual(w,0,AR(w)));  // allocate a new virtual block
- AN(z)=AN(w); MCIS(AS(z),AS(w),(I)AR(w));  // copy AN and shape; leave AC alone
+ AN(z)=AN(w); MCISH(AS(z),AS(w),(I)AR(w));  // copy AN and shape; leave AC alone
  R z;
 }
 

@@ -231,7 +231,7 @@ A jttokens(J jt,A w,I env){R enqueue(wordil(w),w,env);}
 #define FSMF(T,zk,zt,zr,zm,cexp,EMIT,ZVA)    \
  {T*u,*uu;                                                                  \
   RZ(z=exta((zt),(zr),(zm),1==f||5==f?n+1:n/3));                              \
-  if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCIS(1+s,1+AS(w0),wr-1);}  \
+  if(1<(zr)){I*s=AS(z); s[1]=(zm); if(1==f&&2<wr)MCISH(1+s,1+AS(w0),wr-1);}  \
   zv=AV(z); u=(T*)zv; uu=u+AN(z);                                           \
   for(;i<n;++i,r=*v){c=(cexp); v=sv+2*(c+r*q); ZVA; DO_ONE(T,EMIT);}        \
   if(6!=e){                                                                 \

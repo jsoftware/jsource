@@ -349,7 +349,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
-#define MEMCPYTUNE 8192  // (bytes) blocks shorter than this should just use MCISxx
+#define MEMCPYTUNE 8192  // (bytes) blocks shorter than this should just use MCISHxx
 
 
 // Debugging options
@@ -444,7 +444,7 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  AR(name)=(RANKT)(rank);     \
- if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCIS(AS(name),shaape,rank) }   \
+ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -458,7 +458,7 @@ extern unsigned int __cdecl _clearfp (void);
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCIS(AS(name),shaape,rank)}   \
+  if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
  }else{erraction;} \
 }
 
@@ -511,11 +511,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long
 #define MCI(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // copy items of source
-#define MCIL(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // use when copy expected to bo long
+#define MCIL(dest,src,n) memcpy(dest,src,(n)*sizeof(*src))   // use when copy expected to be long
 #define MCIS(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for short copies.  the tricky stuff is to confound the compiler so it doesn't produce memcpy
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+#define MCISH(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for copies of shape, optimized for no branch when n<3.
+#define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
+#define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
+#define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
 // change the type of the inplaceable block z to t.  We know or assume that the type is being changed.  If the block is UNINCORPABLE (& therefore virtual), replace it with a clone first.  z is an lvalue

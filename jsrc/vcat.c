@@ -234,7 +234,7 @@ F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
  RZ(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
- s=AS(w); MCISds(v,s,wf); *v++=1; MCISds(v,s,wcr);  // frame, 1, shape - the final shape
+ s=AS(w); MCISHd(v,s,wf); *v++=1; MCISH(v,s,wcr);  // frame, 1, shape - the final shape
  R reshape(x,w);
 }    /* ,:"r w */
 

@@ -66,12 +66,12 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // the usecount of the entire backing block - and modifying the virtual contents would leave the usecounts invalid if the backing block is recursive.  Maybe could do this if it isn't?)
   // Don't pass WILLOPEN status - we use that at this level
   jtinplace = (J)((I)jtinplace & (~(JTWILLBEOPENED+JTCOUNTITEMS)) & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW-(JTINPLACEW<<1)));  // turn off inplacing unless DIRECT and w is inplaceable
-  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
   // mark the virtual block inplaceable; this will be ineffective unless the original w was direct inplaceable, and inplacing is allowed by u
 #define ZZDECL
 #include "result.h"
   ZZPARMS(wf,mn,1)
-#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wf)
+#define ZZINSTALLFRAME(optr) MCISHd(optr,ws,wf)
   for(i0=mn;i0;--i0){
    AC(virtw)=ACUC1|ACINPLACE;   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block
    RZ(z=CALL1IP(f1,virtw,fs));
@@ -98,7 +98,7 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
   // indication that anything unusual happened.  So fail then
   d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL1(f1,virtw,fs); jt->uflags.us.cx.cx_c.db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num[0]; RESETERR;}  // use 0 as result if error encountered
-  GA(zz,AT(z),0L,wf+AR(z),0L); zzs=AS(zz); MCISds(zzs,ws,wf); MCIS(zzs,AS(z),AR(z));
+  GA(zz,AT(z),0L,wf+AR(z),0L); zzs=AS(zz); MCISHd(zzs,ws,wf); MCISH(zzs,AS(z),AR(z));
  }
 
 // result is now in zz
@@ -169,7 +169,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
   if(!(state&ZZFLAGATOPOPEN1)||!(wt&BOX)){
    fauxvirtual(virtw,virtwfaux,w,0,ACUC1); AN(virtw)=1; state&=~ZZFLAGATOPOPEN1;
   }else{wav=AAV(w); virtw=*wav++;}
-#define ZZINSTALLFRAME(optr) MCISd(optr,ws,wr)
+#define ZZINSTALLFRAME(optr) MCISHd(optr,ws,wr)
   do{
    RZ(z=CALL1(f1,virtw,fs));
 
@@ -201,7 +201,7 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
    // jmf.ijs unknowingly takes advantage of this fact, and would crash if executed on an empty cell
    z=ace;  // cell 'returned' a:
   }
-  GA(zz,AT(z),0L,wr+AR(z),0L); zzs=AS(zz); MCISds(zzs,ws,wr); MCIS(zzs,AS(z),AR(z));
+  GA(zz,AT(z),0L,wr+AR(z),0L); zzs=AS(zz); MCISHd(zzs,ws,wr); MCISH(zzs,AS(z),AR(z));
  }
 
 // result is now in zz
@@ -314,12 +314,12 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  fauxblock(virtwfaux); fauxblock(virtafaux); 
  if(mn|an){
   jtinplace = (J)(intptr_t)((I)jtinplace & ((((at&TYPEVIPOK)!=0)&(AC(a)>>(BW-1)))*JTINPLACEA+~JTINPLACEA));  // turn off inplacing unless DIRECT and a is inplaceable.
-  fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCIS(AS(virta),as+af,lr); AN(virta)=acn;
+  fauxvirtual(virta,virtafaux,a,lr,ACUC1|ACINPLACE) MCISH(AS(virta),as+af,lr); AN(virta)=acn;
  }else{RZ(virta=reshape(vec(INT,lr,as+af),filler(a)));}
 
  if(mn|wn){  // repeat for w
   jtinplace = (J)(intptr_t)((I)jtinplace & ((((wt&TYPEVIPOK)!=0)&(AC(w)>>(BW-1)))*JTINPLACEW+~JTINPLACEW));  // turn off inplacing unless DIRECT and w is inplaceable.
-  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCIS(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
+  fauxvirtual(virtw,virtwfaux,w,rr,ACUC1|ACINPLACE) MCISH(AS(virtw),ws+wf,rr); AN(virtw)=wcn;
  }else{RZ(virtw=reshape(vec(INT,rr,ws+wf),filler(w)));}
 
  A zz=0;  // place where we will build up the homogeneous result cells
@@ -330,7 +330,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #define ZZDECL
 #include "result.h"
   ZZPARMS(lof+lif,mn,2)
-#define ZZINSTALLFRAME(optr) MCISd(optr,los,lof) MCISd(optr,lis,lif)
+#define ZZINSTALLFRAME(optr) MCISHd(optr,los,lof) MCISHd(optr,lis,lif)
 
   for(i0=outerframect;i0;--i0){
    I outerrptstart=AK(state&STATEOUTERREPEATA?virta:virtw);
@@ -444,7 +444,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; z=CALL2(f2,virta,virtw,fs); jt->uflags.us.cx.cx_c.db=d;
   if(jt->jerr){if(EMSK(jt->jerr)&EXIGENTERROR)RZ(z); z=num[0]; RESETERR;}  // use 0 as result if error encountered
   GA(zz,AT(z),0L,lof+lif+AR(z),0L); zzs=AS(zz);
-  MCISds(zzs,los,lof); MCISds(zzs,lis,lif); MCIS(zzs,AS(z),AR(z));
+  MCISHd(zzs,los,lof); MCISHd(zzs,lis,lif); MCISH(zzs,AS(z),AR(z));
  }
 
 // result is now in zz
@@ -546,7 +546,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 #define ZZDECL
 #include "result.h"
   ZZPARMSNOFS(ar,mn)
-#define ZZINSTALLFRAME(optr) MCISd(optr,as,ar)
+#define ZZINSTALLFRAME(optr) MCISHd(optr,as,ar)
 
   do{I i0=ict;
    do{
@@ -586,7 +586,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
    // If we are executing a BOXATOP on a single cell, we know the result is going to be an atomic box.  We don't bother executing the verb at all then.
    z=ace;  // cell 'returned' a:
   }
-  GA(zz,AT(z),0L,ar+AR(z),0L); zzs=AS(zz); MCISds(zzs,as,ar); MCIS(zzs,AS(z),AR(z));  // allocate result, copy frame and shape
+  GA(zz,AT(z),0L,ar+AR(z),0L); zzs=AS(zz); MCISHd(zzs,as,ar); MCISH(zzs,AS(z),AR(z));  // allocate result, copy frame and shape
  }
 
 // result is now in zz

@@ -210,7 +210,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
  I inplacelaterw = (FAV(fs)->flag>>(VJTFLGOK2X-JTINPLACEWX)) & JTINPLACEW;  // JTINPLACEW if the verb can handle inplacing
  jtinplace = (J)(intptr_t)(((I)jt) + (JTINPLACEW+JTINPLACEA)*(inplacelaterw&(I)jtinplace&((AT(w)&TYPEVIPOK)!=0)&(origwc>>(BW-1))));  // inplace left arg, and first right arg, only if w is direct inplaceable, enabled, and verb can take it
  // fill in the shape, offset, and item-count of the virtual block
- AN(a)=AN(w); AK(a)+=(n-2)*k; MCIS(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
+ AN(a)=AN(w); AK(a)+=(n-2)*k; MCISH(AS(a),AS(w),r-1);  // make the virtual block look like the tail, except for the offset
  // Mark the blocks as inplaceable.  They won't be used as inplaceable unless permitted by jtinplace
  // We need to free memory in case the called routine leaves it unfreed (that's bad form & we shouldn't expect it), and also to free the result of the
  // previous iteration.  We don't want to free every time, though, because that does ra() on w which could be a costly traversal if it's a nonrecusive recursible type.
@@ -223,7 +223,7 @@ static DF1(jtredg){F1PREFIP;PROLOG(0020);DECLF;AD * RESTRICT a;I i,k,n,old,r,wr;
   RZ(w=CALL2IP(f2,a,w,fs));
   if(--freephase==0){w=gc(w,old); freephase=freedist;}   // free the buffers we allocated, except for the result
   // if w happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
-  if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCIS(AS(w),AS(a),AR(a));}
+  if(a==w){RZ(w=virtual(w,0,AR(a))); AN(w)=AN(a); MCISH(AS(w),AS(a),AR(a));}
   // move to next input cell
   AK(a) -= k;
   // set larger inplaceability for iterations after the first
@@ -280,7 +280,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  wp=PAV(w); a=SPA(wp,a); e=SPA(wp,e); x=SPA(wp,x); s=AS(x);
  xr=r; v=AV(a); DO(AN(a), if(f<v[i])--xr;); xf=AR(x)-xr;
  m=prod(xf,s); c=m?AN(x)/m:0; n=s[xf];
- GA(zx,zt,AN(x)/n,AR(x)-1,s); MCIS(xf+AS(zx),1+xf+s,xr-1); 
+ GA(zx,zt,AN(x)/n,AR(x)-1,s); MCISH(xf+AS(zx),1+xf+s,xr-1); 
  ado(jt,m,c/n,n,AV(zx),AV(x)); RE(0);
  switch(id){
   case CPLUS: if(!equ(e,num[0]))RZ(e=tymes(e,sc(n))); break; 
@@ -290,7 +290,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtypene(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
- GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)MCIS(f+AS(z),f+1+ws,wr-1);
+ GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)MCISH(f+AS(z),f+1+ws,wr-1);
  zp=PAV(z);
  RZ(a=ca(a)); v=AV(a); DO(AN(a), if(f<v[i])--v[i];);
  SPB(zp,a,a);
@@ -367,7 +367,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  }
  if(sn)RZ(redspse(id,wm,xt,e,zx,sn,&e,&zx));
  RZ(a1=ca(a)); v=AV(a1); n=0; DO(AN(a), if(f!=v[i])v[n++]=v[i]-(I )(f<v[i]););
- GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<r)MCIS(f+AS(z),f+1+ws,r-1);
+ GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);
  zp=PAV(z);
  SPB(zp,a,vec(INT,n,v)); 
  SPB(zp,e,cvt(AT(zx),e));
@@ -502,7 +502,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   RESETRANK;   // clear rank now that we've used it - not really required here?
   // Allocate the result area
   zt=rtype(adocv.cv);
-  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCIS(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
   // Convert inputs if needed 
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.
@@ -536,13 +536,13 @@ static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v
   v=j+AV(q); u=j+AV(y);
   DO(m, *v=p*u[0]+u[1]; v+=n1; u+=n;);
  }else if(!c&&!d){  /* dense dense */
-  u=AS(x); GA(q,AT(x),AN(x),xr-1,u); v=k+AS(q); *v=u[k]*u[1+k]; MCIS(1+v,2+k+u,xr-k-2);
+  u=AS(x); GA(q,AT(x),AN(x),xr-1,u); v=k+AS(q); *v=u[k]*u[1+k]; MCISH(1+v,2+k+u,xr-k-2);
   MC(AV(q),AV(x),AN(x)<<bplg(AT(x)));
   SPB(zp,x,q); SPB(zp,i,ca(y));
  }else{             /* other */
   GATV(q,INT,xr,1,0); v=AV(q); 
   if(1!=k){*v++=0; *v++=k; e=0; DO(xr-1, ++e; if(e!=k)*v++=e;); RZ(x=cant2(q,x));}
-  v=AV(q); u=AS(x); *v=u[0]*u[1]; MCIS(1+v,2+u,xr-1); RZ(x=reshape(vec(INT,xr-1,v),x));
+  v=AV(q); u=AS(x); *v=u[0]*u[1]; MCISH(1+v,2+u,xr-1); RZ(x=reshape(vec(INT,xr-1,v),x));
   e=ws[f+c]; RZ(y=repeat(sc(e),y)); v=j+AV(y);
   if(c)DO(m, k=p**v; DO(e, *v=k+  i; v+=n;);)
   else DO(m, k=  *v; DO(e, *v=k+p*i; v+=n;);); 
@@ -560,11 +560,11 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  // use virtual block (possibly self-virtual) for all cases except sparse
  if(!(SPARSE&AT(w))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
-  I *zs=AS(z); MCISds(zs,s,f); if(!b){RE(zs[0]=mult(s[0],s[1])); MCIS(zs+1,s+2,r-2);}
+  I *zs=AS(z); MCISHds(zs,s,f); if(!b){RE(zs[0]=mult(s[0],s[1])); MCISH(zs+1,s+2,r-2);}
   R z;
  }else{
   GA(z,AT(w),AN(w),wr-1,s); 
-  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCIS(1+v,2+f+s,r-2);}
+  if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCISH(1+v,2+f+s,r-2);}
   R redcatsp(w,z,r);
  }
 }    /* ,/"r w */
@@ -587,12 +587,12 @@ static DF1(jtredstitch){A c,y;I f,n,r,*s,*v,wr;
  if(2==r)R irs1(w,0L,2L,jtcant1);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(SPARSE&AT(w)){A x;
-  GATV(x,INT,f+r-1,1,0); v=AV(x); MCIS(v,AS(y),f+1);
-  RE(v[f+1]=mult(s[f],s[f+2])); MCIS(v+f+2,s+3+f,r-3);
+  GATV(x,INT,f+r-1,1,0); v=AV(x); MCISH(v,AS(y),f+1);
+  RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
   RETF(reshape(x,y));
  }else{
   v=AS(y); 
-  RE(v[f+1]=mult(s[f],s[f+2])); MCIS(v+f+2,s+3+f,r-3);
+  RE(v[f+1]=mult(s[f],s[f+2])); MCISH(v+f+2,s+3+f,r-3);
   --AR(y); 
   RETF(y);
 }}   /* ,./"r w */
@@ -615,7 +615,7 @@ static DF1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,r,wr,*ws,zm,zn;I n1=0
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DO(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,r-1,ws+f+1); mn=m*n;
- GATV(z,BOX,zn,wr-1,ws); MCIS(AS(z)+f,ws+f+1,r-1);
+ GATV(z,BOX,zn,wr-1,ws); MCISH(AS(z)+f,ws+f+1,r-1);
  GATV(x,BOX,n,1,0); xv=AAV(x);
  zv=AAV(z); wv=AAV(w); 
  DO(zm, u=wv; DO(m, v=u++; DO(n, xv[i]=*v; v+=m;); A Zz; RZ(Zz=raze(x)); rifv(Zz); *zv++ = Zz;); wv+=mn;);
@@ -671,7 +671,7 @@ DF1(jtmean){A z;I d,f,m,n,r,wn,wr,*ws,wt;
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
  // there must be atoms, so it's OK to PROD infixes of shape
  PROD(m,f,ws); PROD(d,r-1,f+ws+1);
- GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCIS(f+AS(z),f+1+ws,r-1);
+ GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);
  if(wt&INT)meanI(m,d,n,DAV(z), AV(w)); 
  else      meanD(m,d,n,DAV(z),DAV(w));
  RE(0); RETF(z);

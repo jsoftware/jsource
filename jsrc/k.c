@@ -462,7 +462,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
    b=1&&t&XD;
-   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; MCISd(s,AS(w),r);
+   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DO(n,         *zv++=v->p;);}
    else    {ZX*v=(ZX*)wv,y; DO(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}

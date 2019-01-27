@@ -43,7 +43,7 @@ static F2(jttclosure){A z;B b;I an,*av,c,d,i,wn,wr,wt,*wv,*zu,*zv,*zz;
   }
   d=(zv-AV(z))/wn-1;
  }
- AS(z)[0]=d; AN(z)=d*wn; MCIS(1+AS(z),AS(w),wr); 
+ AS(z)[0]=d; AN(z)=d*wn; MCISH(1+AS(z),AS(w),wr); 
  RETF(z);
 }    /* {&a^:(<_) w */
 
@@ -134,7 +134,7 @@ static DF1(jtply1s){DECLFG;A hs,j,y,y1,z;C*v,*zv;I c,e,i,*jv,k,m,n,*nv,r,*s,t,zn
  }
  k=AR(hs); RE(zn=mult(m,AN(y)));
  GA(z,AT(y),zn,k+AR(y),0); zv=CAV(z);
- s=AS(z); MCISd(s,AS(hs),k); MCISd(s,AS(y),r);
+ s=AS(z); MCISHd(s,AS(hs),k); MCISH(s,AS(y),r);
  n=nv[jv[m-1]]; c=AN(y)<<bplg(t); s=AS(y);
  k=0; DIST(0,w); DIST(1,y);
  for(i=2;i<=n;++i){

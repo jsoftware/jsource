@@ -24,7 +24,7 @@ static F2(jttks){PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*zp;
  an=AN(a); u=AV(a); r=AR(w); s=AS(w); 
  GA(z,AT(w),1,r,s); v=AS(z); DO(an, v[i]=ABS(u[i]););
  zp=PAV(z); wp=PAV(w);
- if(an<=r){RZ(a=vec(INT,r,s)); MCIS(AV(a),u,an);}  // vec is not virtual
+ if(an<=r){RZ(a=vec(INT,r,s)); MCISH(AV(a),u,an);}  // vec is not virtual
  a1=SPA(wp,a); RZ(q=paxis(r,a1)); m=AN(a1);
  RZ(a=from(q,a       )); u=AV(a);
  RZ(y=from(q,shape(w))); s=AV(y);
@@ -133,7 +133,7 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  if(!wcr||wf){   // if y is an atom, or y has multiple cells:
   RZ(s=vec(INT,wf+n,AS(w))); v=wf+AV(s);   // s is a block holding shape of a cell of input to the result: w-frame followed by #$a axes, all taken from w.  vec is never virtual
   if(!wcr){DO(n,v[i]=1;); RZ(w=reshape(s,w));}  // if w is an atom, change it to a singleton of rank #$a
-  MCIS(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
+  MCISH(v,AV(a),n);   // whether w was an atom or not, replace the axes of w-cell with values from a.  This leaves s with the final shape of the result
  }
  R tk(s,w);  // go do the general take/drop
 }
@@ -170,7 +170,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
    // length error if too many axes
  fauxblockINT(sfaux,4,1);
  if(wcr){ASSERT(n<=wcr,EVLENGTH);RZ(s=shape(w)); v=wf+AV(s); DO(n, d=u[i]; m=v[i]; m=d<0?m:-m; m+=d; v[i]=m&=((m^d)>>(BW-1)););}  // nonatomic w-cell: s is (w frame),(values of a clamped to within size), then convert to equivalent take
- else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCIS(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
+ else{fauxINT(s,sfaux,wr+n,1) v=AV(s); MCISH(v,AS(w),wf); v+=wf; DO(n, v[i]=!u[i];); RZ(w=reshape(s,w));}  // atomic w-cell: reshape w-cell  to result-cell shape, with axis length 0 or 1 as will be in result
  R tk(s,w);
 }
 
@@ -179,7 +179,7 @@ F2(jtdrop){A s;I acr,af,ar,d,m,n,*u,*v,wcr,wf,wr;
 static F1(jtrsh0){A x,y;I wcr,wf,wr,*ws;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  ws=AS(w);
- RZ(x=vec(INT,wr-1,ws)); MCIS(wf+AV(x),ws+wf+1,wcr-1);
+ RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=setfv(w,w)); GA(y,AT(w),1,0,0); MC(AV(y),jt->fillv,bp(AT(w)));
  R reshape(x,y);
 }

@@ -91,7 +91,7 @@ static A jtlr2(J jt,B left,A a,A w){A z;C*v;I acr,af,ar,k,n,of,*os,r,*s,t,
  // Now get size of cell of survivor, and #cells in the other (necessarily longer) frame.
  // The product of these is the number of atoms of the result
  RE(zn=mult(prod(of,os),prod(r,s)));  // #cells in non-survivor * #atoms in cell of survivor
- GA(z,t,zn,of+r,os); MCIS(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
+ GA(z,t,zn,of+r,os); MCISH(of+AS(z),s,r); // allocate result; copy in nonsurviving frame+shape; overwrite cell-shape from survivor
  k=bpnoun(t); mvc(k*zn,AV(z),k*n,v);   // get #bytes/atom, copy&replicate cells
  /* obsolete INHERITNOREL(z,w); */ RETF(z);
 } 

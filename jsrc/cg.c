@@ -140,8 +140,8 @@ static DF1(jtcase1a){F1PREFIP;A g,h,*hv,k,t,u,w0=w,x,y,*yv,z;B b;I r,*xv;V*sv;
   }
   RZ(z=from(grade1(grade1(k)),raze(grade2(y,u))));
  }
-// obsolete  if(1<r){RZ(z=gah(r,z)); MCIS(AS(z),AS(w0),r);}
- if(1<r){RZ(z=virtualip(z,0,r)); AN(z)=AN(w0); MCIS(AS(z),AS(w0),r);}
+// obsolete  if(1<r){RZ(z=gah(r,z)); MCISH(AS(z),AS(w0),r);}
+ if(1<r){RZ(z=virtualip(z,0,r)); AN(z)=AN(w0); MCISH(AS(z),AS(w0),r);}
  R z;
 }
 

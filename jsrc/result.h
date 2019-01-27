@@ -228,7 +228,7 @@ do{
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
       if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV(zzcellshape,INT,AR(zz)-zzframelen+3,0,0);}
-      AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCIS(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
+      AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCISH(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }
     }while(1);

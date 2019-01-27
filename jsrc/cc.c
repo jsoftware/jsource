@@ -75,7 +75,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
   if(z==0)z=zeroionei[0];  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
-  MCISd(zzs,as,m) MCISd(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
+  MCISHd(zzs,as,m) MCISH(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
  }
  // otherwise general case, one axis at a time
@@ -94,7 +94,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   // allocate virtual block
   fauxvirtual(virtw,virtwfaux,w,wr,ACUC1);  // allocate UNINCORPORABLE block, noninplaceable
   // fill in shape
-  MCIS(AS(virtw)+1,ws+1,wr-1);
+  MCISH(AS(virtw)+1,ws+1,wr-1);
   // remember original offset.  Others will be based on this
   origoffset=AK(virtw);
   wcellbytes=wcellsize<<bplg(AT(w));  // bytes per cell
@@ -106,7 +106,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
    state |= STATENEEDSASSEMBLY;  // force us to go through the assembly code
    if(!(state&STATEHASGERUND))ZZFLAGWORD |= ((FAV(fs)->mr>=wr?VF2BOXATOP1:0)&(FAV(fs)->flag2&VF2BOXATOP1))>>(VF2BOXATOP1X-ZZFLAGBOXATOPX);  // If this is BOXATOP, set so for loop.
    ZZPARMS(m,n,1)
-#define ZZINSTALLFRAME(optr) MCISd(optr,as,m)
+#define ZZINSTALLFRAME(optr) MCISHd(optr,as,m)
  }
  I gerundx=0; q=0;  // initialize to first gerund; we haven't allocated the input to {
  for(ii=n;ii;--ii){  // for each 2-cell of a.  u points to the cell
@@ -667,7 +667,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    // Allocate the virtual block we will use for arguments
    A virtw; fauxblock(virtwfaux); fauxvirtual(virtw,virtwfaux,w,r,ACUC1|ACINPLACE);  // allocate UNINCORPORABLE block
    // Copy in the shape of a cell.  The number of cells in a subarray will depend on d
-   MCIS(AS(virtw)+1,AS(w)+1,r-1);
+   MCISH(AS(virtw)+1,AS(w)+1,r-1);
    // Set the offset to the first data
    AK(virtw)=v1-(C*)virtw;  // v1 is set to point to starting cell; transfer that info
    // Remove WILLOPEN for the callee.  We use the caller's WILLOPEN status for the result created here
@@ -956,7 +956,7 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
  // The rest is the same for 1- and 2-axis cut
  I hvirtofst=AK(virtw); I * RESTRICT virtws=AS(virtw);  // save initial offset (to top-left of source)
  // Install shape/item count into the virtual array.  First install height; then width if given; then the rest of the shape of w
- *virtws++=vsz; if(axisproc>1){*virtws++=hsz;} MCISd(virtws,ws+axisproc,wr-axisproc) AN(virtw) = vsz*hsz*cellatoms;
+ *virtws++=vsz; if(axisproc>1){*virtws++=hsz;} MCISH(virtws,ws+axisproc,wr-axisproc) AN(virtw) = vsz*hsz*cellatoms;
  // calculate vertical shard info & see if there are any shards
  if(state&STATETAKE){I space, nfit;  // 3-cut, which may have shards
   // space after first; divide by mv; count how many fit including the first; get vi when we hit truncation; see how many items are valid in 1st truncated cell 

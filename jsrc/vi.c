@@ -1215,8 +1215,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    m=acr?as[af]:1; f0=MAX(0,f1); RE(zn=mult(prod(f,s),prod(f0,ws+wf)));
    switch(mode){
     case IIDOT:  
-    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
-    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCIS(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
+    case IICO:    GATV(z,INT,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); v=AV(z); DO(zn, *v++=m;); R z;
+    case IEPS:    GATV(z,B01,zn,f+f0,s); if(af)MCISH(f+AS(z),ws+wf,f0); memset(BAV(z),C0,zn); R z;
     case ILESS:                              RCA(w);
     case IIFBEPS:                            R mtv;
     case IANYEPS: case IALLEPS: case II0EPS: R num[0];
@@ -1275,11 +1275,11 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  // Allocate the result area
  if(!mk)switch(mode&IIOPMSK){I q;
   case IIDOT: 
-  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
-  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCIS(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
+  case IICO:    GATV(z,INT,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
+  case INUBSV:  GATV(z,B01,zn,f+f1+!acr,s); if(af)MCISH(f+AS(z),ws+wf,f1); if(!acr)*(AS(z)+AR(z)-1)=1; break;
   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
-  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCIS(f+AS(z),ws+wf,f1); break;
+  case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
   case INUBI:   q=m+1; GATV(z,INT,q,1,0); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
@@ -1591,8 +1591,8 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
-// obsolete  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
- if(wr&&r!=wr){RZ(x=virtual(w,0,r)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCIS(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+// obsolete  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
+ if(wr&&r!=wr){RZ(x=virtual(w,0,r)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtype(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
      repeat(not(eps(a,x)),a);

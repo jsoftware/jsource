@@ -192,7 +192,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
  if(m||an<wcr) R reshapesp(a,irs1(w,0L,wcr,jtravel),wf,1L);
  ASSERT(!jt->fill,EVDOMAIN);
- GA(z,AT(w),1,wf+an,ws); MCIS(wf+AS(z),av,an);
+ GA(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
  GATV(t,INT,c+d*b[wf],1,0); v=AV(t); 
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);
@@ -206,7 +206,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
   SPB(zp,i,stitch(abase2(vec(INT,1+d,av),t),reitem(sc(q),dropr(1L,y))));
   SPB(zp,x,reitem(sc(q),x));
  }else{                   /* dense  */
-  GATV(t,INT,an,1,0); v=AV(t); MCIS(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
+  GATV(t,INT,an,1,0); v=AV(t); MCISH(v,av,d); m=d; j=wf; DO(wcr, if(!b[j++])v[m++]=av[i+d];);
   SPB(zp,i,ca(y));
   SPB(zp,x,irs2(vec(INT,m,v),x,0L,1L,wcr-(an-m),jtreshape));
  }
@@ -231,17 +231,17 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those)
    if((I)jtinplace&JTINPLACEW && (m==n||t&DIRECT) && r<=wcr && ASGNINPLACE(w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
-    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISds(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
+    AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
 // correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if(((-(AFLAG(w)&(AFNJA)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISd(zs,ws,wf) MCISd(zs,u,r) RETF(z);}
+   if(((-(AFLAG(w)&(AFNJA)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISHd(zs,ws,wf) MCISH(zs,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
  k=bpnoun(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
- GA(z,t,zn,r+wf,0); s=AS(z); MCISd(s,ws,wf); MCISd(s,u,r);
+ GA(z,t,zn,r+wf,0); s=AS(z); MCISHd(s,ws,wf); MCISH(s,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
  if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
@@ -262,7 +262,7 @@ F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
  else{   // rank y > 1: append the shape of an item of y to x
   RZ(a=vi(a)); an=AN(a); acr=1;  // if a was an atom, now it is a list
   fauxINT(y,yfaux,an+r,1) v=AV(y);
-  MCISd(v,AV(a),an); MCISd(v,AS(w)+wr-r,r);
+  MCISHd(v,AV(a),an); MCISH(v,AS(w)+wr-r,r);
  }
  R wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,acr,wcr,jtreshape);
 }    /* a $"r w */

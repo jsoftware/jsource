@@ -296,7 +296,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
   // with the number of items being the infix-size if positive, or 0 if negative
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
-  r=AR(w); rr=MAX(1,r); GATV(s,INT,rr,1,0); if(r)MCIS(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
+  r=AR(w); rr=MAX(1,r); GATV(s,INT,rr,1,0); if(r)MCISH(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
   // Create fill-cell of shape s; apply u to it
   RZ(x=df1(reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
@@ -426,14 +426,14 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
    fauxvirtual(virtw,virtwfaux,w,vr,ACUC1);
 
    ilnabs=(ilnabs>wi)?wi:ilnabs;  // ilnabs will be used to allocate virtual arguments - limit to size of w
-   I *virtws=AS(virtw); virtws[0]=ilnabs; MCIS(virtws+1,AS(w)+1,vr-1) AN(virtw)=ilnabs*wc; // shape is (infix size),(shape of cell)  tally is #items*celllength
+   I *virtws=AS(virtw); virtws[0]=ilnabs; MCISH(virtws+1,AS(w)+1,vr-1) AN(virtw)=ilnabs*wc; // shape is (infix size),(shape of cell)  tally is #items*celllength
   }else{
    // 2 f/\ y.  The virtual args are now ITEMS of w rather than subarrays
    fauxvirtual(virta,virtafaux,w,vr-1,ACUC1); // first block is for a
-   MCIS(AS(virta),AS(w)+1,vr-1); AN(virta)=wc; // shape is (shape of cell)  tally is celllength
+   MCISH(AS(virta),AS(w)+1,vr-1); AN(virta)=wc; // shape is (shape of cell)  tally is celllength
    fauxvirtual(virtw,virtwfaux,w,vr-1,ACUC1);  // second is w
    AK(virtw) += strideb >> ((UI)ilnval>>(BW-1));  // we want to advance 1 cell.  If ilnval is positive, strideb is 1 cell; otherwise strideb is 2 cells
-   MCIS(AS(virtw),AS(w)+1,vr-1); AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
+   MCISH(AS(virtw),AS(w)+1,vr-1); AN(virtw)=wc; // shape is (shape of cell)  tally is celllength
    // advance from f/ to f and get the function pointer.  Note that 2 <@(f/)\ will go through here too
    fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[1];
    // mark that we are handling this case
@@ -551,7 +551,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  if(fs=FAV(self)->fgh[0],CCOMMA==ID(fs)){RE(c=aii(w)); RE(zc=mult(p,c)); r=2;}
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}
  GA(z,wt,d*p*c,r,0); x=CAV(z); y=CAV(w);
- s=AS(z); *s++=d; *s++=zc; MCISd(s,1+ws,r-2);
+ s=AS(z); *s++=d; *s++=zc; MCISH(s,1+ws,r-2);
  k=c<<bplg(wt); 
  if(AN(z)){
 // obsolete switch((0>m?2:0)+(wd?1:0)){

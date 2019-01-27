@@ -600,7 +600,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
 // more regs, less comp    }else if(((inplaceallow>>=1)&(((zn^an)|(ar^(f+r)))==0)) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; AT(z)=zt;  //  Uses JTINPLACEA==2
   if((bcip&(I)jtinplace&1) && (AC(w)<ACUC1 || AC(w)==ACUC1&&jt->assignsym&&jt->assignsym->val==w&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEW==1
   }else if((bcip&(I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
-  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISds(zs,sf,f);    MCISds(zs,s,r);} 
+  }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISHd(zs,sf,f);    MCISH(zs,s,r);} 
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
   if(!zn)R z;  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
@@ -795,8 +795,8 @@ DF2(jtsumattymes1){
   I zn = ndpo*ndpi*nfro; RE(zn=mult(zn,nfri));  // no error possible till we extend the shape
   GA(z,FL>>(it&B01),zn,af+commonf+wcr-1,0); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
   // install the shape
-  MCISd(zs,longs,af+commonf);
-  MCIS(zs,ws+wr-wcr,wcr-1);
+  MCISHd(zs,longs,af+commonf);
+  MCISH(zs,ws+wr-wcr,wcr-1);
  }
 
  // Convert arguments as required

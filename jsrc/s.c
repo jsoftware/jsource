@@ -554,7 +554,7 @@ A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;V*wv;
    wt=AT(w); wn=AN(w); wr=AR(w); m=wn<<bplg(wt);
    ASSERT(wt&DIRECT,EVDOMAIN);
    ASSERT(allosize(x)>=m,EVALLOC);
-   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCIS(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
+   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);
   }
  }
  e->sn=jt->slisti;  // Save the script in which this name was defined

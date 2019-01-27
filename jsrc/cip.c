@@ -21,8 +21,8 @@ static A jtipprep(J jt,A a,A w,I zt,I*pm,I*pn,I*pp){A z=mark;I*as,ar,ar1,m,mn,n,
  *pp=p=ar?*(as+ar1):wr?*ws:1;  // if a is an array, the length of a 1-cell; otherwise, the number of items of w
  ASSERT(!(ar&&wr)||p==*ws,EVLENGTH);
  GA(z,zt,mn,ar1+wr1,0);   // allocate result area
- MCIS(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
- MCIS(AS(z)+ar1,1+ws,wr1);
+ MCISH(AS(z),      as,ar1);  // Set shape: 1-frame of a followed by shape of item of w
+ MCISH(AS(z)+ar1,1+ws,wr1);
  R z;
 }    /* argument validation & result for an inner product */
 

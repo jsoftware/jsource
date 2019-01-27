@@ -204,7 +204,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
  // Since there are multiple cells, z will be in a virtual block (usually)
  RZ(z=tail(w)); k=AN(z)<<bplg(AT(z)); // k=length of input cell in bytes
  // fill in the shape, offset, and item-count of the virtual block
- AN(a)=AN(z); AK(a)+=(n-1)*k; MCIS(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
+ AN(a)=AN(z); AK(a)+=(n-1)*k; MCISH(AS(a),AS(z),r-1);  // make the virtual block look like the tail, except for the offset.  We start out pointing
    // to the last item; the pointer is unused in the first iteration, and we then back up to the second-last item, which is the first one we
    // process as a
 
@@ -236,7 +236,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
    AAV(boxedz)[0]=z; z=boxedz;  // point boxedz to the previous result, and make that the new argument for next time
   }
   // if result happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
-  else if(a==z){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCIS(AS(z),AS(a),r-1);}
+  else if(a==z){RZ(z=virtual(z,0,AR(a))); AN(z)=AN(a); MCISH(AS(z),AS(a),r-1);}
 
   AK(a)-=k;  // back up to next input
  }

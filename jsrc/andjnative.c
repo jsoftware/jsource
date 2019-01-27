@@ -1,8 +1,12 @@
 #include "j.h"
 #include "jeload.h"
 #include "com_jsoftware_j_JInterface.h"
-#include <strings.h>
 #include <stdint.h>
+#ifdef _MSC_VER
+#pragma warning(disable: 4244)
+#else
+#include <strings.h>
+#endif
 
 #ifdef _WIN32
  #define JDLLNAME "j.dll"
@@ -43,7 +47,7 @@ static jmethodID inputId = 0;
 static jmethodID outputId = 0;
 static jmethodID wdId = 0;
 
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 {
   LOGD("OnLoad");
   jvm = vm;
@@ -93,7 +97,7 @@ static void javaOutput(JNIEnv *env, jclass jcls, int type, const char*chars)
 static int javaWd(JNIEnv *env, jclass jcls, int type, A w, A *pz, const char*locale)
 {
   LOGD("javaWd");
-  int i,j,len,rc=0;
+  int i,j=0,len,rc=0;
   if(wdId == 0) {
     LOGD("failed to get the method id for wd" );
     return 3;
@@ -279,7 +283,11 @@ JNIEXPORT void JNICALL Java_com_jsoftware_j_JInterface_JSetEnv
   LOGD("JSetEnv");
   const char* key =  (*env)->GetStringUTFChars(env, jkey, 0);
   const char* val =  (*env)->GetStringUTFChars(env, jval, 0);
+#ifdef _MSC_VER
+  _putenv_s(key,val);
+#else
   setenv(key,val,0);
+#endif
   (*env)->ReleaseStringUTFChars(env, jkey, key);
   (*env)->ReleaseStringUTFChars(env, jval, val);
 }
@@ -327,7 +335,7 @@ JNIEXPORT jlong JNICALL Java_com_jsoftware_j_JInterface_JInit2
   if(wdId == 0) {
     LOGD("failed to get the method id for " "wd:" "(I[I[Ljava/lang/Object;[Ljava/lang/Object;Ljava/lang/String;)I" );
   }
-  void* callbacks[] = {outputHandler,wdHandler,inputHandler,0,(void*)SMWIN};  // don't use SMJAVA
+  void* callbacks[] = {outputHandler,wdHandler,(void*)inputHandler,0,(void*)SMWIN};  // don't use SMJAVA
   const char *nativeString = (*env)->GetStringUTFChars(env, libpath, 0);
   const char *nativelibj;
   char *arg;
@@ -410,7 +418,7 @@ JNIEXPORT jstring JNICALL Java_com_jsoftware_j_JInterface_JGetc
   const char *name = (*env)->GetStringUTFChars(env, jname, 0);
   char* buf;
   I len;
-  A r = jegeta(strlen(name),(char*)name);
+  A r = jegeta((int)strlen(name),(char*)name);
   AREP p=(AREP)(sizeof(struct A_RECORD) + (char*)r);
   if ((p->t==2)&&(p->r<2)) {
   if (p->r==0) {

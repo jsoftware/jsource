@@ -28,7 +28,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
  r=MAX(0,AR(w)-1); s=1+AS(w); t=AT(w); k=bpnoun(t); m=IC(w); c=aii(w);
  ASSERT(!(t&SPARSE),EVNONCE);
  ASSERT(r==AR(ind),EVRANK);
- ASSERT(!ICMP(s,AS(ind),r),EVLENGTH);
+ ASSERTAGREE(s,AS(ind),r);
  GA(z,t,c,r,s);
  if(!(AT(ind)&B01+INT))RZ(ind=cvt(INT,ind));
  it=AT(ind); u=AV(ind); b=(B*)u;
@@ -121,7 +121,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  in=AN(ind); ir=AR(ind); iv=AV(ind);
  ASSERT(!an||!wn||HOMO(at,wt),EVDOMAIN);  // error if xy not empty and not compatible
  ASSERT(ar<=ir,EVRANK);   // require shape of x to be a suffix of the shape of m
- ASSERT(!ICMP(as,AS(ind)+ir-ar,ar),EVLENGTH);
+ ASSERTAGREE(as,AS(ind)+ir-ar,ar);
  if(!wn)RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  t=an?maxtyped(at,wt):wt;  // get the type of the result: max of types, but if x empty, leave y as is
  if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so

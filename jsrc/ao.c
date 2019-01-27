@@ -187,7 +187,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
  // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
  GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all
- I celllen; PROD(celllen,AR(w)-1,AS(w)+1); celllen <<= bplg(AT(w));  // length of a cell of w, in bytes
+ I celllen; PROD1(celllen,AR(w)-1,AS(w)+1); celllen <<= bplg(AT(w));  // length of a cell of w, in bytes
  I nitems=AN(a);
  I nfrets=0;  // We will accumulate # frets found
  UC *fretp;  // pointer to where frets are built

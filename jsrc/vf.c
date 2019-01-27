@@ -106,7 +106,7 @@ F2(jtrotate){A y,z;B b;C*u,*v;I acr,af,ar,*av,d,k,m,n,p,*s,wcr,wf,wn,wr;
  RZ(w=setfv(w,w)); u=CAV(w); wn=AN(w); s=AS(w); k=bpnoun(AT(w));  // set fill value if given
  GA(z,AT(w),wn,wr,s); v=CAV(z);
  if(!wn)R z;
- PROD(m,wf,s); PROD(d,wr-wf-1,s+wf+1); n=wcr?s[wf]:1;  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
+ PROD(m,wf,s); PROD1(d,wr-wf-1,s+wf+1); n=wcr?s[wf]:1;  // m=#cells of w, n=#items per cell  d=#atoms per item of cell
  rot(m,d,n,k,1>=p?AN(a):1L,av,u,v);
  if(1<p){
   GA(y,AT(w),wn,wr,s); u=CAV(y); 

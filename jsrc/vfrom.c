@@ -63,7 +63,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  I wflag=AFLAG(w);
  if(wn){
   // For virtual results we need: kn: number of atoms in an item of a cell of w;   
-  PROD(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
+  PROD1(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
   // Also m: #cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
@@ -175,7 +175,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
  // We always need zn, the number of result atoms
  if(wn){
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
-  PROD(m,wf,ws); PROD(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
+  PROD(m,wf,ws); PROD1(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);
  s=AS(z)+wf; MCISd(s,AS(a),ar); MCISd(s,1+wf+ws,wcr-1);

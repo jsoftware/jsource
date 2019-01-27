@@ -261,7 +261,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  }else{
   // outerframect is the number of cells in the shorter frame; outerrptct is the number of cells in the residual frame
   if(aof>=wof){wof=wof<0?0:wof; lof=aof; sof=wof; los=as;}else{aof=aof<0?0:aof;  lof=wof; sof=aof; los=ws; state|=STATEOUTERREPEATA;}  // clamp smaller frame at min=0
-  DO(sof, ASSERT(as[i]==ws[i], EVLENGTH);)  // prefixes must agree
+  ASSERTAGREE(as,ws,sof)  // prefixes must agree
   RE(outerframect=prod(sof,los)); RE(outerrptct=prod(lof-sof,los+sof));  // get # cells in frame, and in unmatched frame
  }
 
@@ -279,7 +279,7 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
   lif=af-aof; sif=wf-wof; lis=as+aof;
   state |= STATEINNERREPEATW;
  }
- DO(sif, ASSERT(as[aof+i]==ws[wof+i],EVLENGTH);)  // error if frames are not same as prefix
+ ASSERTAGREE(as+aof,ws+wof,sif)  // error if frames are not same as prefix
  RE(innerrptct=prod(lif-sif,lis+sif));  // number of repetitions per matched-frame cell
  RE(innerframect=prod(sif,lis));   // number of cells in matched frame
 
@@ -462,7 +462,7 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
 #define ZZFLAGWORD state
 
  // Verify agreement
- as=AS(a); ws=AS(w); DO(MIN(ar,wr), ASSERT(as[i]==ws[i], EVLENGTH););
+ as=AS(a); ws=AS(w); ASSERTAGREE(as,ws,MIN(ar,wr))
 
  // Calculate strides for inner and outer loop.  Cell-size is known to be 1 atom.  The stride of the inner loop is 1 atom, except for a
  // repeated value, of which there can be at most 1.  For a repeated value, we set the stride to 0 and remember the repetition count and stride
@@ -632,7 +632,8 @@ A jtirs2(J jt,A a,A w,A fs,I l,I r,AF f2){A z;I ar,wr;
  F2PREFIP; RZ(a&&w);
  wr=AR(w); r=r>=wr?(RANKT)~0:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?(RANKT)~0:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
- DO(MIN(r,l), ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)  // verify agreement before we modify jt->ranks
+ l=MIN(r,l); l=l<0?0:l;  // get length of frame
+ ASSERTAGREE(AS(a),AS(w),l)  // verify agreement before we modify jt->ranks
  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
    // Not all verbs (*f2)() use the fs argument.
@@ -725,7 +726,7 @@ F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
   // Noun v. Extract and turn into 3 values, stored in h
   n=AN(w);
   ASSERT(1>=AR(w),EVRANK);
-  ASSERT(0<n&&n<4,EVLENGTH);
+  ASSERT((UI)(n-1)<3,EVLENGTH);
   RZ(t=vib(w)); v=AV(t);
   hv[0]=v[2==n]; r[0]=DR(hv[0]);
   hv[1]=v[3==n]; r[1]=DR(hv[1]);

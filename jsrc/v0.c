@@ -290,7 +290,7 @@ static F2(jtpoly2a){A c,e,x;I m;
 F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
  RANK2T jtr=jt->ranks; RESETRANK; I acr=jtr>=(1L<<RANKTX); I af=AR(a)-acr;   // acr=1 if requested rank >= 1  af=length of frame of a
- if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); DO(MIN(af,wf), ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);); R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
+ if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); wf=MIN(af,wf); wf=wf<0?0:wf; ASSERTAGREE(AS(a),AS(w),wf) R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
  an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
  wn=AN(w); wt=AT(w);
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported

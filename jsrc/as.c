@@ -273,7 +273,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
- PROD(m,f,ws); PROD(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+ PROD(m,f,ws); PROD1(d,r-1,f+ws+1); n=r?ws[f]:1;  // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtsuffix);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 

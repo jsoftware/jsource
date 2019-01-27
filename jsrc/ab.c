@@ -71,7 +71,7 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d,
   if(!(INT&AT(w)))RZ(w=cvt(INT,w));                                    \
   an=AN(a); ar=AR(a); as=AS(a); av=(I*)AV(a);                          \
   wn=AN(w); wr=AR(w); ws=AS(w); wv=(T*)AV(w); b=ar>wr;                 \
-  DO(MIN(ar,wr), ASSERT(as[i]==ws[i],EVLENGTH););                      \
+  ASSERTAGREE(as,ws,MIN(ar,wr));                      \
   GATV(z,INT,b?an:wn,MAX(ar,wr),b?as:ws); zv=(T*)AV(z);                  \
   if(!AN(z))R z;                                                       \
   if     (ar==wr)DO(an, x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
@@ -108,7 +108,7 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,j,m,n,wn,wr,*ws,wt,zn;VF 
  y=w; wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(a);
  if(!(an&&wn&&at&LIT&&wt&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=zn/m;
- ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
+ ASSERTAGREE(as,ws,MIN(ar,wr));
  j=i0(VAV(fs)->fgh[0])-16;
  GATV(z,LIT,zn,MAX(ar,wr),b?ws:as);   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}

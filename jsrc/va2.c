@@ -506,10 +506,10 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
    bcip=AR(w)>=AR(a)?8:0; zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
 // obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((AR(a)==r)*2 + (wr==r));  // inplaceability (see below)
    bcip+=((adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r)));  // save the combined bcip for loop control
-   DO(shortr, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)  // agreement error if not prefix match
+   ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f = 0;  // no frame since we didn't have rank
    if(jtinplace){
-    // Non-spAR(a)se setup for copy loop, no rank
+    // Non-sparse setup for copy loop, no rank
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
     // Sparse setup: move the block-local variables to longer-lived ones.  We are trying to reduce register pressure
@@ -534,13 +534,13 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-    DO(shortr, ASSERT(AS(a)[af+i]==AS(w)[wf+i],EVLENGTH);)  // now shortr is free
+    ASSERTAGREE(AS(a)+af, AS(w)+wf, shortr)  // now shortr is free
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     ak=ak*bp(AT(a)); wk=wk*bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
     f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a);   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   af/wf free
     bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)|(zt&B01))-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
-    DO(q, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)  // frames must match to the shorter length; agreement error if not
+    ASSERTAGREE(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
     PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
 #ifdef DPMULD
     { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) } zk=zk*bp(zt);  // now create zk, which is used later than ak/wk
@@ -770,7 +770,8 @@ DF2(jtsumattymes1){
  if(acr>wcr){A t=w; I tr=wr; I tcr=wcr; w=a; wr=ar; wcr=acr; a=t; ar=tr; acr=tcr;}
 
  // Verify inner frames match
- DO(acr-1, ASSERT(AS(a)[ar-acr+i]==AS(w)[wr-wcr+i],EVLENGTH);); ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+ ASSERTAGREE(AS(a)+ar-acr, AS(w)+wr-wcr, acr-1) ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
+// obsolete  DO(acr-1, ASSERT(AS(a)[ar-acr+i]==AS(w)[wr-wcr+i],EVLENGTH););
 
  // calculate inner repeat amounts and result shape
  I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
@@ -789,7 +790,7 @@ DF2(jtsumattymes1){
   I af=ar-acr; I wf=wr-wcr; I commonf=wf; I *as=AS(a), *ws=AS(w); I *longs=as;
   repeata=wf>=af; commonf=wf>=af?af:commonf; longs=wf>=af?ws:longs;  // repeat flag, length of common frame, pointer to long shape
   af+=wf; af-=2*commonf;  // repurpose af to be length of surplus frame
-  DO(commonf, ASSERT(as[i]==ws[i],EVLENGTH);)  // verify common frame
+  ASSERTAGREE(as,ws,commonf)  // verify common frame
   PROD(nfri,af,longs+commonf); PROD(nfro,commonf,longs);   // number of outer loops, number of repeats
   I zn = ndpo*ndpi*nfro; RE(zn=mult(zn,nfri));  // no error possible till we extend the shape
   GA(z,FL>>(it&B01),zn,af+commonf+wcr-1,0); I *zs=AS(z);  // type is INT if inputs booleans, otherwise FL
@@ -916,7 +917,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
  an=AN(a); ar=AR(a); as=AS(a); at=an?AT(a):B01; sv=FAV(self); 
  wn=AN(w); wr=AR(w); ws=AS(w); wt=wn?AT(w):B01;
  b=ar<=wr; r=b?wr:ar; rs=b?ar:wr; s=b?ws:as; nn=r?s[0]:1;  // b='w has higher rank'; r=higher rank rs=lower rank s->longer shape  nn=#items in longer-shape arg
- ASSERT(!ICMP(as,ws,MIN(ar,wr)),EVLENGTH);
+ ASSERTAGREE(as,ws,MIN(ar,wr));
  if(SPARSE&(at|wt)||!an||!wn||2>nn){b=CFORK==sv->id; R df1(df2(a,w,b?sv->fgh[2]:sv->fgh[1]),b?sv->fgh[1]:sv->fgh[0]);}  // if sparse or empty, or just 1 item, do it the old-fashioned way
  rs=MAX(1,rs); PROD(m,rs-1,s+1); PROD(n,r-rs,s+rs); zn=m*n;   // zn=#atoms in _1-cell of longer arg = #atoms in result; m=#atoms in _1-cell of shorter arg  n=#times to repeat shorter arg  (*/ surplus longer shape)
    // if the short-frame arg is an atom, move its rank to 1 so we get the lengths of the _1-cells of the replicated arguments

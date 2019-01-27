@@ -1720,7 +1720,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   }
   // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
   // prehash is set if w argument is omitted (we are just prehashing the a arg)
-  f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;
+  f=af?af:wf; s=af?as:ws; r=acr?acr-1:0; f1=wcr-r;  // see below
   if(0>f1||ICMP(as+af+1,ws+wf+f1,r)){I f0,*v;
    // Dyad where shape of an item of a does not match shape of a cell of w.  Return appropriate not-found
    if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // see below for discussion about long frame in w
@@ -1768,8 +1768,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(((af-wf)&-af)<0){f1+=wf-af; wf=af;}  // wf>af & af>0
  if(((an-1)|(wn-1))>=0){
   // Neither arg is empty.  We can safely count the number of cells
-  PROD(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
-  PROD(ac,af,as); PROD(wc,wf,ws); PROD(c,f1,ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell
+  PROD1(n,acr-1,as+af+1); k=n<<klg; // n=number of atoms in a target item; k=number of bytes in a target item
+  PROD(ac,af,as); PROD(wc,wf,ws); PROD1(c,MAX(f1,-1),ws+wf);  // ?c=#cells in a & w;  c=#target items (and therefore #result values) in a result-cell.  -1 so we don't fetch outside the shape
   RE(zn=mult(af?ac:wc,c));   // #results is results/cell * number of cells; number of cells comes from ac if a has frame, otherwise w.  If both have frame, a's must be longer, use it
   ak=(acr?as[af]*k:k)&((1-ac)>>(BW-1)); wk=(c*k)&((1-wc)>>(BW-1));   // # bytes in a cell, but 0 if there are 0 or 1 cells
   if(!af)c=zn;   // if af=0, wc may be >1 if there is w-frame.  In that case, #result/a-cell must include the # w-cells.  This has been included in zn

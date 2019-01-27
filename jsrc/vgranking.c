@@ -88,7 +88,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  ws=AS(w); n=wcr?ws[wf]:1;  // n=#cells in w; m is number of atoms in w
  if(wn){PROD(m,wf,ws);}  // If there are atoms, calculate result-shape the fast way
  else{RE(m=prod(wf,ws)); R m?reitem(vec(INT,wf,ws),iota(v2(1L,n))):reshape(vec(INT,1+wf,ws),num[0]);}
- PROD(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
+ PROD1(icn,wcr-1,ws+wf+1); k=icn<<bplg(wt);  // wk=size of atom in bytes; icn=# atoms in an item of a cell  k = *bytes in an item of a CELL of w
  // if Boolean 2- or 4-byte, go off to handle that special case
  if(wt&B01&&(k==2||k==sizeof(int)))R rankingb(w,wf,wcr,m,n,k);
  // See if the values qualify for small-range processing

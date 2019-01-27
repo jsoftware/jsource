@@ -375,7 +375,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
  I strideb;  // stride*number of bytes per cell (not used for prefix)
 
  I wi=IC(w);  // wi=#items of w
- PROD(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
+ PROD1(wc,AR(w)-1,AS(w)+1);  // #atoms in cell of a.  Overflow possible only if wi==0, which will go to fill
  // set up for prefix/infix.  Calculate # result slots
  if(a!=mark){
   // infix.
@@ -528,7 +528,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
  // m = #cells, c=#atoms/cell, n = #items per cell
- PROD(m,f,ws); PROD(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
+ PROD(m,f,ws); PROD1(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtinfixprefix1);}

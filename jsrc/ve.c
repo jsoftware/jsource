@@ -265,7 +265,7 @@ F2(jtintdiv){A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv
  RZ(a&&w);
  an=AN(a); ar=AR(a); as=AS(a); av=AV(a);
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
- ASSERT(!ICMP(as,ws,r),EVLENGTH);
+ ASSERTAGREE(as,ws,r);
  if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AV(z);
  d=wn?*wv:0; p=0<d?d:-d; p1=d==IMIN?p:p-1; flr=XMFLR==jt->xmode;
@@ -296,7 +296,7 @@ F1(jtbase1){A z;B*v;I c,d,m,n,p,r,*s,t,*x;
  n=AN(w); t=AT(w); r=AR(w); s=AS(w); c=r?*(s+r-1):1;
  ASSERT(t&DENSE,EVNONCE);
  if(c>(SY_64?63:31)||!(t&B01))R pdt(w,weight(sc(c),t&RAT+XNUM?cvt(XNUM,num[2]):num[2]));
- CPROD(n,m,r-1,s);
+ CPROD1(n,m,r-1,s);
  GATV(z,INT,m,r?r-1:0,s); x=m+AV(z); v=n+BAV(w);
  if(c)DO(m, p=0; d=1; DO(c, if(*--v)p+=d; d+=d;); *--x=p;)
  else memset(x-m,C0,m*SZI);

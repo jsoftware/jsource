@@ -385,6 +385,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTN(b,e,nm) {if(!(b)){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTSYS(b,s)  {if(!(b)){jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
+// verify that shapes *x and *y match for l axes
+#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); } 
+
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
 #define CALL1IP(f,w,fs)   ((f)(jtinplace,    (w),(A)(fs)))
@@ -531,10 +534,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-#define PROD(result,length,ain) {I _i; if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
+// obsolete #define PROD(result,length,ain) {I _i; if((length)<0)*(I*)0=0; /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
+// obsolete #define PROD1(result,length,ain) {I _i; if((length)<-1)*(I*)0=0; /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}  // scaf
+#define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
+#define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
 // we don't know that the array isn't empty or will be checked later
 #define CPROD(t,z,x,a)if(t)PROD(z,x,a)else RE(z=prod(x,a))
+#define CPROD1(t,z,x,a)if(t)PROD1(z,x,a)else RE(z=prod(x,a))
 // PROLOG/EPILOG are the main means of memory allocation/free.  jt->tstack contains a pointer to every block that is allocated by GATV(i. e. all blocks).
 // GA causes a pointer to the block to be pushed onto tstack.  PROLOG saves a copy of the stack pointer in _ttop, a local variable in its function.  Later, tpop(_ttop)
 // can be executed to free every block that the function allocated, without requiring bookkeeping in the function.  This may be done from time to time in

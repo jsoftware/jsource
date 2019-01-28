@@ -78,8 +78,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    if((index0|(p-indexn-1))>=0){  // index0>0 and indexn<=p-1
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
     RZ(z=virtualip(w,index0*k,ar+wr-1));
-    // fill in shape and number of atoms.  ar can be anything
-    I* as=AS(a); AN(z)=zn; I *s=AS(z); MCISHd(s,as,ar) MCISH(s,ws+1,wr-1)  // obsolete   DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
+    // fill in shape and number of atoms.  ar can be anything.
+    I* as=AS(a); AN(z)=zn; I *s=AS(z); MCISH(s,as,ar) MCISH(s+ar,ws+1,wr-1)  // obsolete   DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
     RETF(z);
    }
   }
@@ -88,7 +88,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
  GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
- { I *s=AS(z)+wf; MCISHd(s,AS(a),ar); if(wcr)MCISH(s,1+wf+ws,wcr-1); }
+ { I *s=AS(z)+wf; MCISH(s,AS(a),ar); if(wcr)MCISH(s+ar,1+wf+ws,wcr-1); }
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
@@ -178,7 +178,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
   PROD(m,wf,ws); PROD1(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
  GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);
- s=AS(z)+wf; MCISHd(s,AS(a),ar); MCISH(s,1+wf+ws,wcr-1);
+ s=AS(z)+wf; MCISH(s,AS(a),ar); MCISH(s+ar,1+wf+ws,wcr-1);
  if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
  switch(k+k+(I )(1==an)){
@@ -256,7 +256,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  }else{
   //  reshape w to combine the first h axes of each cell
 // obsolete   RZ(q=gah(r,w)); v=AS(q); MCISHd(v,ws,wf); *v++=m; MCISHd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
-  RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISHd(v,ws,wf); *v++=m; MCISH(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
+  RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
  RETF(z);
@@ -321,7 +321,7 @@ static A jtafrom2(J jt,A p,A q,A w,I r){A z;C*wv,*zv;I d,e,j,k,m,n,pn,pr,* RESTR
   PROD(m,wf,ws); PROD(d,r-2,ws+wf+2); e=ws[1+wf]; n=e*ws[wf]; RE(zn=mult(pn,mult(qn,d*m)));
  }else{zn=0;}
  GA(z,AT(w),zn,wf+pr+qr+r-2,ws);
- s=AS(z)+wf; MCISHd(s,AS(p),pr); MCISHd(s,AS(q),qr); MCISH(s,ws+wf+2,r-2);
+ s=AS(z)+wf; MCISH(s,AS(p),pr); MCISH(s+pr,AS(q),qr); MCISH(s+pr+qr,ws+wf+2,r-2);
  if(!zn)R z;  // If no data to move, exit with empty.  Rank is right
  wv=CAV(w); zv=CAV(z); 
  switch(k=d<<bplg(AT(w))){   // k=*bytes in a _2-cell of a cell of w

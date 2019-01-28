@@ -195,15 +195,15 @@ void auditblock(A w, I nonrecurok, I virtok) {
  if(!w)R;
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  I virt = (AFLAG(w)&AFVIRTUAL)!=0;  // any virtual
- if(virt)if(AFLAG(ABACK(w))&AFVIRTUAL)*(volatile I*)0=0;  // make sure backer is valid and not virtual
- if(nonrecur&&!nonrecurok)*(volatile I*)0=0;
- if(virt&&!virtok)*(volatile I*)0=0;
- if(AT(w)==0xdeadbeefdeadbeef)*(volatile I*)0=0;
+ if(virt)if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT  // make sure backer is valid and not virtual
+ if(nonrecur&&!nonrecurok)SEGFAULT
+ if(virt&&!virtok)SEGFAULT
+ if(AT(w)==0xdeadbeefdeadbeef)SEGFAULT
  switch(CTTZ(AT(w))){
   case RATX:  
-   {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))*(volatile I*)0=0;);} break;
+   {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT);} break;
   case XNUMX:
-   {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))*(volatile I*)0=0;);} break;
+   {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT);} break;
   case BOXX:
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w); 
     /* obsolete if(AFLAG(w)&AFREL){DO(AN(w), auditblock(wv[i],nonrecur,0););}
@@ -214,11 +214,11 @@ void auditblock(A w, I nonrecurok, I virtok) {
    {V*v=VAV(w); auditblock(v->fgh[0],nonrecur,0); auditblock(v->fgh[1],nonrecur,0); auditblock(v->fgh[2],nonrecur,0);} break;
   case SB01X: case SINTX: case SFLX: case SCMPXX: case SLITX: case SBOXX:
    {P*v=PAV(w);  A x;
-   x = SPA(v,a); if(!(AT(x)&DIRECT))*(volatile I*)0=0; x = SPA(v,e); if(!(AT(x)&DIRECT))*(volatile I*)0=0; x = SPA(v,i); if(!(AT(x)&DIRECT))*(volatile I*)0=0; x = SPA(v,x); if(!(AT(x)&DIRECT))*(volatile I*)0=0;
+   x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,e); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT
    auditblock(SPA(v,a),nonrecur,0); auditblock(SPA(v,e),nonrecur,0); auditblock(SPA(v,i),nonrecur,0); auditblock(SPA(v,x),nonrecur,0);} break;
-  case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))*(volatile I*)0=0; break;
+  case B01X: case INTX: case FLX: case CMPXX: case LITX: case C2TX: case C4TX: case SBTX: case NAMEX: case SYMBX: case CONWX: if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT break;
   case ASGNX: break;
-  default: break; *(volatile I*)0=0;
+  default: break; SEGFAULT
  }
 }
 #endif
@@ -246,7 +246,7 @@ F1(jtparse){A z;
 A virtifnonip(J jt, I ipok, A buf) {
  RZ(buf);
  if(AT(buf)&NOUN && !(ipok && ACIPISOK(buf)) && !(AT(buf)&SPARSE) && !(AFLAG(buf)&(AFNJA))) {A oldbuf=buf;
-  buf=virtual(buf,0,AR(buf)); if(!buf && jt->jerr!=EVATTN && jt->jerr!=EVBREAK)*(volatile I*)0=0;  // replace non-inplaceable w with virtual block; shouldn't fail except for break testing
+  buf=virtual(buf,0,AR(buf)); if(!buf && jt->jerr!=EVATTN && jt->jerr!=EVBREAK)SEGFAULT  // replace non-inplaceable w with virtual block; shouldn't fail except for break testing
   I* RESTRICT s=AS(buf); I* RESTRICT os=AS(oldbuf); DO(AR(oldbuf), s[i]=os[i];);  // shape of virtual matches shape of w except for #items
     AN(buf)=AN(oldbuf);  // install # atoms
  }
@@ -409,7 +409,7 @@ static A virthook(J jtip, A f, A g){
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
-// obsolete  DO(IOTAVECLEN, if(jt->iotavec[i]!=i+IOTAVECBEGIN)*(volatile I*)0=0;)
+// obsolete  DO(IOTAVECLEN, if(jt->iotavec[i]!=i+IOTAVECBEGIN)SEGFAULT)
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and

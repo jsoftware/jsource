@@ -444,7 +444,7 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  AR(name)=(RANKT)(rank);     \
- if(type&SPARSE)*(volatile I*)0=0; /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
+ if(type&SPARSE)SEGFAULT /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -458,14 +458,14 @@ extern unsigned int __cdecl _clearfp (void);
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(type&SPARSE)*(volatile I*)0=0; /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
+  if(type&SPARSE)SEGFAULT /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
  }else{erraction;} \
 }
 
 // see warnings above under GATVS
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
-#define GASPARSE(n,t,a,r,s) {if(!(t&SPARSE))*(volatile I*)0=0; /* scaf*/ if((r)==1){GA(n,XZ|(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,XZ|(t),a,r,s)}}
+#define GASPARSE(n,t,a,r,s) {if(!(t&SPARSE))SEGFAULT /* scaf*/ if((r)==1){GA(n,XZ|(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,XZ|(t),a,r,s)}}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
@@ -518,10 +518,14 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 #define MCISs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 #define MCISds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
-#define MCISH(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for copies of shape, optimized for no branch when n<3.
-#define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
-#define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
-#define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+// obsolete #define MCISH(dest,src,n) {I * RESTRICT _d=(dest); I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*_s++;}  // use for copies of shape, optimized for no branch when n<3.
+// obsolete #define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
+// obsolete #define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
+// obsolete #define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=(n); _d=_n>0?_d:shapesink; _s=_n>0?_s:shapesink; *_d=*_s; --_n; do{ _d=_n>0?_d:shapesink; _s=_n>0?_s:shapesink; *++_d=*++_s;}while(--_n>0);}  // use for copies of shape, optimized for no branch when n<3.
+#define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
+#define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
+#define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}
 
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
@@ -541,8 +545,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
-// obsolete #define PROD(result,length,ain) {I _i; if((length)<0)*(volatile I*)0=0; /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
-// obsolete #define PROD1(result,length,ain) {I _i; if((length)<-1)*(volatile I*)0=0; /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}  // scaf
+// obsolete #define PROD(result,length,ain) {I _i; if((length)<0)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
+// obsolete #define PROD1(result,length,ain) {I _i; if((length)<-1)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}  // scaf
 #define PROD(result,length,ain) {I _i=(length)-1; result=(ain)[_i]; result=_i<0?1:result; do{--_i; I _r=(ain)[_i]*result; result=_i<0?result:_r;}while(_i>0);} 
 #define PROD1(result,length,ain) PROD(result,length,ain)  // scaf
 // CPROD is to be used to create a test testing #atoms.  Because empty arrays can have cells that have too many atoms, we can't use PROD if
@@ -583,7 +587,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not
-#define R0 {if(jt->jerr)R A0;else *(volatile I*)0=0;}
+#define R0 {if(jt->jerr)R A0;else SEGFAULT}
 #else
 #define R0 R 0;
 #endif
@@ -603,6 +607,7 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))
+#define SEGFAULT        {*(volatile I*)0 = 0;}
 #define SGN(a)          ((I )(0<(a))-(I )(0>(a)))
 #define SMAX            65535
 #define SMIN            (-65536)

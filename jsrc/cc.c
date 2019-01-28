@@ -75,7 +75,7 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   if(!(state&STATEHASGERUND))z=CALL1(f1,w,fs);else z=df1(w,hv[0]);
   if(z==0)z=zeroionei[0];  // use zero as fill result if error
   GA(zz,AT(z),n,m+AR(z),0); I *zzs=AS(zz); I *zs=AS(z); 
-  MCISHd(zzs,as,m) MCISH(zzs,zs,AR(z)) // move in frame of a followed by shape of result-cell
+  MCISH(zzs,as,m) MCISH(zzs+m,zs,AR(z)) // move in frame of a followed by shape of result-cell
   RETF(zz);
  }
  // otherwise general case, one axis at a time

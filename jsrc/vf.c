@@ -235,13 +235,13 @@ F2(jtreshape){A z;B filling;C*wv,*zv;I acr,ar,c,k,m,n,p,q,r,*s,t,* RESTRICT u,wc
    }
    // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
 // correct   if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I *zs=AS(z); DO(wf, *zs++=ws[i];); DO(r, zs[i]=u[i];) RETF(z);}
-   if(((-(AFLAG(w)&(AFNJA)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISHd(zs,ws,wf) MCISH(zs,u,r) RETF(z);}
+   if(((-(AFLAG(w)&(AFNJA)))|((t&(DIRECT|RECURSIBLE))-1))>=0){RZ(z=virtual(w,0,r+wf)); AN(z)=m; I * RESTRICT zs=AS(z); MCISH(zs,ws,wf) MCISH(zs+wf,u,r) RETF(z);}
    // for NJA/SMM, fall through to nonvirtual code
   }
  }else if(filling=jt->fill!=0){RZ(w=setfv(w,w)); t=AT(w);}   // if fill required, set fill value.  Remember if we need to fill
  k=bpnoun(t); p=k*m; q=k*n;
  RE(zn=mult(c,m));
- GA(z,t,zn,r+wf,0); s=AS(z); MCISHd(s,ws,wf); MCISH(s,u,r);
+ GA(z,t,zn,r+wf,0); s=AS(z); MCISH(s,ws,wf); MCISH(s+wf,u,r);
  if(!zn)R z;
  zv=CAV(z); wv=CAV(w); 
  if(filling)DO(c, mvc(q,zv,q,wv); mvc(p-q,q+zv,k,jt->fillv); zv+=p; wv+=q;)
@@ -262,7 +262,7 @@ F2(jtreitem){A y;I acr,an,ar,r,*v,wcr,wr;
  else{   // rank y > 1: append the shape of an item of y to x
   RZ(a=vi(a)); an=AN(a); acr=1;  // if a was an atom, now it is a list
   fauxINT(y,yfaux,an+r,1) v=AV(y);
-  MCISHd(v,AV(a),an); MCISH(v,AS(w)+wr-r,r);
+  MCISH(v,AV(a),an); MCISH(v+an,AS(w)+wr-r,r);
  }
  R wr==wcr?jtreshape(jtinplace,y,w):irs2(y,w,0L,acr,wcr,jtreshape);
 }    /* a $"r w */

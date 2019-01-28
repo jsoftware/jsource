@@ -35,6 +35,7 @@ A   vnam=0;               /* v as a name                          */
 A   xnam=0;               /* x as a name                          */
 A   ynam=0;               /* y as a name                          */
 A   numv[NUMMAX-NUMMIN+1]={0};
+I   shapesink[2];         // destination for unwanted loads and stores
 A   zeroionei[2]={0,0};   // integer 0 and 1
 A   imax=0;               // IMAX as atom
 I   v00[2]={0,0};         // vector value to use for rank 0 0

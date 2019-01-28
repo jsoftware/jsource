@@ -560,7 +560,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
  // use virtual block (possibly self-virtual) for all cases except sparse
  if(!(SPARSE&AT(w))){
   RZ(z=jtvirtual(jtinplace,w,0,wr-1)); AN(z)=AN(w); // Allocate the block.  Then move in AN and shape
-  I *zs=AS(z); MCISHds(zs,s,f); if(!b){RE(zs[0]=mult(s[0],s[1])); MCISH(zs+1,s+2,r-2);}
+  I *zs=AS(z); MCISH(zs,s,f); if(!b){RE(zs[f]=mult(s[f],s[f+1])); MCISH(zs+f+1,s+f+2,r-2);}
   R z;
  }else{
   GASPARSE(z,AT(w),AN(w),wr-1,s); 

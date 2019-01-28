@@ -1040,9 +1040,9 @@ static void  oneF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C1,m*n);}
 
 // table of routines to handle = ~:
 static VF eqnetbl[2][16] = {
-// 11    12    14    BX    21    22    24   x   41    42    44   x  x  x   SB  INHOMO  // char len of aw, or HOMO SB BX
-{ eqCC, eqCS, eqCU, eqAA, eqSC, eqSS, eqSU, 0, eqUC, eqUS, eqUU, 0, 0, 0, eqII, zeroF },
-{ neCC, neCS, neCU, neAA, neSC, neSS, neSU, 0, neUC, neUS, neUU, 0, 0, 0, neII, oneF },
+//    11        12        14        BX        21        22        24       x       41        42        44        x      x      x      SB      INHOMO  // char len of aw, or HOMO SB BX
+{ (VF)eqCC, (VF)eqCS, (VF)eqCU, (VF)eqAA, (VF)eqSC, (VF)eqSS, (VF)eqSU, (VF)0, (VF)eqUC, (VF)eqUS, (VF)eqUU, (VF)0, (VF)0, (VF)0, (VF)eqII, (VF)zeroF },
+{ (VF)neCC, (VF)neCS, (VF)neCU, (VF)neAA, (VF)neSC, (VF)neSS, (VF)neSU, (VF)0, (VF)neUC, (VF)neUS, (VF)neUU, (VF)0, (VF)0, (VF)0, (VF)neII, (VF)oneF },
 };
 
 // Analyze the verb and arguments and come up with *ado, address of the routine to handle one

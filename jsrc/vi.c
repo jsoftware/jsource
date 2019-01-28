@@ -1636,7 +1636,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
  RZ(xy=grade2(xy,xy)); v=AV(xy);
  c=*AS(xy);
  m=j=-1; DO(c, if(j!=*v){j=*v; ++m;} *v=m; v+=2;);
- GAT(z,SB01,1,2,0);  v=AS(z); v[0]=1+m; v[1]=n;
+ GASPARSE(z,SB01,1,2,(I*)0);  v=AS(z); v[0]=1+m; v[1]=n;
  p=PAV(z); 
  SPB(p,a,v2(0L,1L));
  SPB(p,e,num[0]);

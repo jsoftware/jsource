@@ -444,7 +444,7 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  AR(name)=(RANKT)(rank);     \
- if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
+ if(type&SPARSE)*(I*)0=0; /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -458,12 +458,14 @@ extern unsigned int __cdecl _clearfp (void);
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
+  if(type&SPARSE)*(I*)0=0; /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
  }else{erraction;} \
 }
 
 // see warnings above under GATVS
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
+// use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
+#define GASPARSE(n,t,a,r,s) {if(!(t&SPARSE))*(I*)0=0; /* scaf*/ if((r)==1){GA(n,XZ|(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,XZ|(t),a,r,s)}}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)

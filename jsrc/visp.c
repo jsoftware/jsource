@@ -23,7 +23,7 @@ A jtiovxs(J jt,I mode,A a,A w){A e,x,z;B h;I at,t,wt;P*ap=0,*wp,*zp;
  at=AT(a); if(SPARSE&at){at=DTYPE(at); ap=PAV(a);}
  wt=DTYPE(AT(w)); wp=PAV(w); 
  if(h=HOMO(at,wt))t=maxtype(at,wt);
- GATV(z,SINT,1L,AR(w),AS(w)); zp=PAV(z);
+ GASPARSE(z,SINT,1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,SPA(wp,a));
  SPB(zp,i,SPA(wp,i));
  e=SPA(wp,e); if(h&&TYPESNE(t,wt))RZ(e=cvt(t,e));
@@ -167,7 +167,7 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  if(aw)DO(AN(x), u[i]=m>u[i]?v[u[i]]:n;)
  else  DO(AN(x), u[i]=v[u[i]];);
  if(!r)R AN(x)?sc(*u):ioe(mode,a);
- GATV(z,SINT,1,r,AS(w)); zp=PAV(z);
+ GASPARSE(z,SINT,1,r,AS(w)); zp=PAV(z);
  SPB(zp,a,apvwr(r,0L,1L));
  SPB(zp,e,ioe(mode,a));
  SPB(zp,i,aw?wi:ai);
@@ -188,7 +188,7 @@ F1(jtnubsievesp){A e,x,y,z;I c,j,m,n,r,*s,*u,*v,*vv,wr,*yv;P*p;
  GATV(y,INT,m,2,0); s=AS(y); s[0]=m; s[1]=1; vv=yv=AV(y);
  if(c)DO(c, if(u[i]==v[i]){if(j<u[i]){*vv++=j; j=n;} *vv++=u[i];})
  if(m&&vv<yv+m)*vv=j;
- GATV(z,SB01,1,1,&n); p=PAV(z);
+ GASPARSE(z,SB01,1,1,&n); p=PAV(z);
  SPB(p,a,iv0);
  SPB(p,e,num[0]);
  SPB(p,i,y);

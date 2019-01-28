@@ -977,6 +977,9 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
   AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
   if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape){MCISH(AS(z),shaape,rank)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
+ *(I*)0=0;  // scaf
+AT(z)&=~XZ; // scaf
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }
@@ -1057,17 +1060,17 @@ RESTRICTF A jtgah(J jt,I r,A w){A z;
 F1(jtca){A z;I t;P*wp,*zp;
  RZ(w);
  t=AT(w);
- if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
- else{GA(z,t,AN(w),AR(w),AS(w));}
- // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL
-// obsolete  AFLAG(z) = /*obsolete (AFLAG(w)&AFNOSMREL) + ((AFLAG(w)&AFNJA)?AFREL:0)*/0;
  if(t&SPARSE){
+  GASPARSE(z,t,AN(w),AR(w),AS(w))
   wp=PAV(w); zp=PAV(z);
   SPB(zp,a,ca(SPA(wp,a)));
   SPB(zp,e,ca(SPA(wp,e)));
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,ca(SPA(wp,x)));
- }else MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0)); 
+ }else{
+  if(t&NAME){GATV(z,NAME,AN(w),AR(w),AS(w));AT(z)=t;}  // GA does not allow NAME type, for speed
+  else GA(z,t,AN(w),AR(w),AS(w));
+  MC(AV(z),AV(w),(AN(w)*bp(t))+(t&NAME?sizeof(NM):0));}
  R z;
 }
 // clone block only if it is read-only

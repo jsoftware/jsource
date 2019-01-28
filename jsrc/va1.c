@@ -69,7 +69,7 @@ static A jtva1s(J jt,A w,C id,I cv,VF ado){A e,x,z,ze,zx;B c;C ee;I n,t,zt;P*wp,
   ee=jt->jerr; RZ(ze=va1(e,id)); 
   jt->jerr=ee; RZ(zx=va1(x,id)); 
  }else if(cv&VRI+VRD){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
- GA(z,STYPE(AT(ze)),1,AR(w),AS(w)); zp=PAV(z);
+ GASPARSE(z,STYPE(AT(ze)),1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,a,ca(SPA(wp,a)));
  SPB(zp,i,ca(SPA(wp,i)));
  SPB(zp,e,ze);

@@ -15,7 +15,7 @@ static A jtsprarg(J jt,I f,A x){A q;B*b,c;I r;P*xp;
 }    /* ensure frame axes are sparse */
 
 static A jtsprinit(J jt,I f,I r,I*s,I t,P*p){A a,a1,z;I n,*u,*v;P*zp;
- GA(z,t,1,r,f+s); zp=PAV(z); 
+ GASPARSE(z,t,1,r,f+s); zp=PAV(z); 
  a=SPA(p,a); n=AN(a)-f; u=f+AV(a); GATV(a1,INT,n,1,0); v=AV(a1); DO(n, v[i]=u[i]-f;);
  SPB(zp,a,a1);
  SPB(zp,e,ca(SPA(p,e)));
@@ -42,7 +42,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  else{RZ(q=reshape(mtv,e)); ASSERT(all1(eq(q,e)),EVSPARSE);}
  if(!*AS(z0)){
   t=AT(q); zt=STYPE(t);
-  GA(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
+  GASPARSE(z,zt,1L,f+AR(e),s); ICPY(f+AS(z),AS(e),AR(e));
   zp=PAV(z); SPB(zp,e,q); SPB(zp,a,mtv); 
   GATV(q,INT,0L,2L,(I*)&zeroZ); SPB(zp,i,q);   // zeroZ is a pun for 0 0!!
   GA(q,t,0L,1+AR(z),0L); *AS(q)=0; ICPY(1+AS(q),AS(z),AR(z)); SPB(zp,x,q);
@@ -52,7 +52,7 @@ static A jtsprz(J jt,A z0,A y,A e,I f,I*s){A a,a0,q,y0,z;B d;I c,et,h,m,n,r,t,*u
  zt=t=AT(z0); d=t&SPARSE?0:1; if(d)zt=STYPE(t); else t=DTYPE(zt);
  et=AT(e); m=maxtype(et,t); zt=STYPE(m);
  r=AR(z0);
- GA(z,zt,1,f+r-1,s); ICPY(AS(z)+f,AS(z0)+1,r-1);
+ GASPARSE(z,zt,1,f+r-1,s); ICPY(AS(z)+f,AS(z0)+1,r-1);
  zp=PAV(z); SPB(zp,e,TYPESEQ(m,et)?e:cvt(m,e));
  if(d){SPB(zp,a,apvwr(f,0L,1L)); SPB(zp,i,y); SPB(zp,x,TYPESEQ(m,t)?z0:cvt(m,z0)); R z;}
  zq=PAV(z0); y0=SPA(zq,i); v=AS(y0); n=v[0]; c=v[1]; v=AV(y0);

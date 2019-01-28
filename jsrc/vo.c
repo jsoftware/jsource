@@ -337,7 +337,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
      p,*s,*v,wcr,wr,xc,xk,yc,*yv,*zs;P*zp;
  n=AN(w); wr=AR(w); wv=AAV(w); wcr=AN(cs); dt=DTYPE(zt); dk=bpnoun(dt);
  RZ(opes1(&b,&a,&e,&m,cs,w)); an=AN(a); av=AV(a);
- GA(z,zt,1L,wr+wcr,0); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
+ GASPARSE(z,zt,1,wr+wcr,(I*)0); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB
  GATV(t,INT,yc, 1L,0L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
@@ -361,7 +361,7 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  SPB(zp,x,p==m?x:take(sc(p),x));
  SPB(zp,i,p==m?y:take(sc(p),y));
  R z;
-}
+}  // > w when w contains sparse contents, maxtype=zt
 
 // > y (rank is immaterial)
 // If y cannot be inplaced, we have to make sure we don't return an inplaceable reference to a part of y.  This would happen

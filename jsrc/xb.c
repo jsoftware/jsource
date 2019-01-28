@@ -190,7 +190,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  ASSERT(0<=r&&r<=RMAX,EVRANK);
  p=bsize(jt,d,0,t,n,r,0L); e=t&RAT?n+n:t&SPARSE?1+sizeof(P)/SZI:n; 
  ASSERT(m>=p,EVLENGTH);
- GA(z,t,n,r,0); s=AS(z);
+ if(t&DENSE){GA(z,t,n,r,0)}else{GASPARSE(z,t,n,r,(I*)0)} s=AS(z);
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(t&DENSE)j*=s[i];); 
  ASSERT(j==n,EVLENGTH);

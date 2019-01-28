@@ -142,10 +142,10 @@ static REPF(jtrepbsx){A ai,c,d,e,g,q,x,wa,wx,wy,y,y1,z,zy;B*b;I*dv,*gv,j,m,n,*u,
   R irs2(q,w,0L,1L,wcr,jtfrom);
  }
  wp=PAV(w);
- if(DENSE&AT(w)||all0(eq(sc(wf),SPA(wp,a)))){RZ(q=denseit(a)); R irs2(ifb(AN(q),BAV(q)),w,0L,1L,wcr,jtfrom);}
+ if(DENSE&AT(w)||all0(eq(sc(wf),SPA(wp,a)))){RZ(q=denseit(a)); R irs2(ifb(AN(q),BAV(q)),w,0L,1L,wcr,jtfrom);}  // here if dense w
  wa=SPA(wp,a); wy=SPA(wp,i); wx=SPA(wp,x);
  RZ(q=aslash(CPLUS,a));
- GA(z,AT(w),1,AR(w),AS(w)); *(wf+AS(z))=m=*AV(q);
+ GASPARSE(z,AT(w),1,AR(w),AS(w)); *(wf+AS(z))=m=*AV(q);
  RZ(c=indexof(wa,sc(wf)));
  RZ(y1=fromr(c,wy));
  RZ(q=not(eps(y1,ravel(repeat(not(x),y)))));
@@ -226,10 +226,10 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
  RZ(a&&w);
  if(AT(a)&SCMPX)R rep1d(denseit(a),w,wf,wcr);
  RE(rep1sa(a,&c,&d)); cd=c+d;
- if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);
+ if(DENSE&AT(w))R rep1d(d?jdot2(sc(c),sc(d)):sc(c),w,wf,wcr);  // here if dense w
  wr=AR(w); ws=AS(w); n=wcr?*(wf+ws):1; RE(m=mult(n,cd));
  wp=PAV(w); e=SPA(wp,e); ax=SPA(wp,a); y=SPA(wp,i); x=SPA(wp,x);
- GA(z,AT(w),1,wr+!wcr,ws); *(wf+AS(z))=m; zp=PAV(z);
+ GASPARSE(z,AT(w),1,wr+!wcr,ws); *(wf+AS(z))=m; zp=PAV(z);
  RE(b=bfi(wr,ax,1));
  if(wcr&&b[wf]){    /* along sparse axis */
   u=AS(y); p=u[0]; q=u[1]; u=AV(y);

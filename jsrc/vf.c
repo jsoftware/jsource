@@ -54,7 +54,7 @@ static F2(jtrotsp){PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,p,*qv,
  wp=PAV(w); a=SPA(wp,a); RZ(y=ca(SPA(wp,i))); m=IC(y);
  n=AN(a); RZ(a=paxis(wr,a)); av=AV(a);
  RZ(q=from(a,q)); qv=AV(q);
- GA(z,AT(w),1,wr,s); zp=PAV(z);
+ GASPARSE(z,AT(w),1,wr,s); zp=PAV(z);
  by=0; DO(n,    if(qv[  i]){by=1; break;});
  bx=0; DO(wr-n, if(qv[n+i]){bx=1; break;});
  RZ(x=!bx?ca(SPA(wp,x)):irs2(vec(INT,wr-n,n+qv),SPA(wp,x),0L,1L,-1L,jtrotate));
@@ -124,7 +124,7 @@ static F1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,r,*v,wr;P*wp,*zp;
  ASSERT(!jt->fill,EVNONCE);
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  m=*(f+AS(w)); wp=PAV(w);
- GA(z,AT(w),1,wr,AS(w)); zp=PAV(z);
+ GASPARSE(z,AT(w),1,wr,AS(w)); zp=PAV(z);
  a=SPA(wp,a); n=AN(a); RZ(y=ca(SPA(wp,i))); x=SPA(wp,x);
  RZ(q=paxis(wr,a)); v=AV(q); DO(wr, if(f==v[i]){k=i; break;});
  if(!r)       RZ(x=ca(x))
@@ -171,7 +171,7 @@ static A jtreshapesp0(J jt,A a,A w,I wf,I wcr){A e,p,x,y,z;B*b,*pv;I c,d,r,*v,wr
  RZ(e=ca(SPA(wp,e))); x=SPA(wp,x); y=SPA(wp,i);
  v=AS(y); r=v[0]; c=v[1]; d=0; DO(wf, if(b[i])++d;);
  if(!wf){if(r&&c){v=AV(y); DO(c, if(v[i])R e;);} R AN(x)?reshape(mtv,x):e;}
- GA(z,AT(w),1,wf,ws);
+ GASPARSE(z,AT(w),1,wf,ws);
  zp=PAV(z); SPB(zp,e,e); SPB(zp,a,caro(ifb(wf,b)));  // avoid readonly
  GATV(p,B01,r,1,0); pv=BAV(p);
  v=AV(y); 
@@ -192,7 +192,7 @@ static A jtreshapesp(J jt,A a,A w,I wf,I wcr){A a1,e,t,x,y,z;B az,*b,wz;I an,*av
  u=av+an; v=ws+wr; m=0; DO(MIN(an,wcr-1), if(*--u!=*--v){m=1; break;});
  if(m||an<wcr) R reshapesp(a,irs1(w,0L,wcr,jtravel),wf,1L);
  ASSERT(!jt->fill,EVDOMAIN);
- GA(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
+ GASPARSE(z,AT(w),1,wf+an,ws); MCISH(wf+AS(z),av,an);
  zp=PAV(z); SPB(zp,e,e);  
  GATV(t,INT,c+d*b[wf],1,0); v=AV(t); 
  DO(wf, if(b[i])*v++=i;); if(b[wf])DO(d, *v++=wf+i;); j=wf; DO(wcr, if(b[j])*v++=d+j; ++j;);

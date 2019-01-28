@@ -270,11 +270,11 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  r=AR(w); s=AS(w);
  // Handle sparse
  switch((t&SPARSE?2:0)+(AT(w)&SPARSE?1:0)){I t1;P*wp,*yp;
-  case 1: RZ(w=denseit(w)); break;
-  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num[0]))); R 1;
-  case 3: 
+  case 1: RZ(w=denseit(w)); break;  // sparse to dense
+  case 2: RZ(*y=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num[0]))); R 1;  // dense to sparse; convert type first (even if same dtype)
+  case 3: // sparse to sparse
    t1=DTYPE(t);
-   GA(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
+   GASPARSE(*y,t,1,r,s); yp=PAV(*y); wp=PAV(w);
    SPB(yp,a,ca(SPA(wp,a)));
    SPB(yp,i,ca(SPA(wp,i)));
    SPB(yp,e,cvt(t1,SPA(wp,e)));

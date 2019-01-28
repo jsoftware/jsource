@@ -259,7 +259,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
  RZ(x=irs1(x,self,m,sf));
  t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
- GA(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
+ GASPARSE(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
  zp=PAV(z); 
  SPB(zp,e,e); 
  SPB(zp,x,x); 

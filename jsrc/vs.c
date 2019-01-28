@@ -5,7 +5,6 @@
 
 #include "j.h"
 
-
 B jtscheck(J jt,A w){A a,e,x,y;I r,*s,t;P*p;
  RZ(w);
  r=AR(w); s=AS(w); t=AT(w);
@@ -116,7 +115,7 @@ static A jtsparse1a(J jt,A s,A a,A e,A y,A x){A z;B*b;I an,*av,et,r,*sv,t,*v;P*p
  }}
  t=STYPE(AT(x)); 
  ASSERT(t,EVDOMAIN);
- GA(z,t,1,r,sv); p=PAV(z); 
+ GASPARSE(z,t,1,r,sv); p=PAV(z); 
  SPB(p,a,a); 
  SPB(p,e,e); 
  SPB(p,i,y);
@@ -177,7 +176,7 @@ F2(jtreaxis){A a1,e,p,q,x,y,z;B*b;I c,d,j,k,m,r,*u,*v,*ws,wt;P*wp,*zp;
  wt=AT(w);
  if(wt&DENSE)R sparseit(w,a,selm(wt));
  r=AR(w); ws=AS(w); wp=PAV(w);
- GA(z,wt,1L,r,ws); zp=PAV(z); 
+ GASPARSE(z,wt,1L,r,ws); zp=PAV(z); 
  SPBV(zp,a,a1,vaxis(r,a)); 
  SPBV(zp,e,e,ca(SPA(wp,e)));
  a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); m=*AS(y);
@@ -282,7 +281,7 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
  ASSERT(HOMO(at,wt),EVDOMAIN);
  RE(t=maxtype(at,wt)); zt=STYPE(t);
  ASSERT(zt,EVDOMAIN);
- GA(z,zt,1,AR(w),AS(w)); zp=PAV(z);
+ GASPARSE(z,zt,1,AR(w),AS(w)); zp=PAV(z);
  SPB(zp,e,TYPESEQ(t,at)?ca(a):cvt(t,a));
  SPB(zp,a,ca(SPA(wp,a)));
  SPB(zp,i,ca(SPA(wp,i)));
@@ -293,7 +292,7 @@ F2(jtrezero){A x,z;I at,t,wt,zt;P*wp,*zp;
 F1(jtunzero){A e,q,x,z;I r;P*wp,*zp;
  RZ(w);
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x); r=AR(x)-1;
- GA(z,AT(w),1,AR(w),AS(w)); zp=PAV(z);
+ GASPARSE(z,AT(w),1,AR(w),AS(w)); zp=PAV(z);
  RZ(q=not(irs2(x,reshape(vec(INT,r,1+AS(x)),e),0L,r,r,jtmatch)));
  SPB(zp,x,repeat(q,x));
  SPB(zp,i,repeat(q,SPA(wp,i)));

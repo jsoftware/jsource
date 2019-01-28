@@ -279,7 +279,7 @@ do{
   // Get the type to allocate
   I natoms=AN(z);  // number of atoms per result cell
   I zzt=AT(z); I zzr=AR(z); zzt=(ZZFLAGWORD&ZZFLAGBOXATOP)?BOX:zzt; zzr=(ZZFLAGWORD&ZZFLAGBOXATOP)?0:zzr; natoms=(ZZFLAGWORD&ZZFLAGBOXATOP)?1:natoms;
-  // If result is sparse, change the allocation to something that will never match a result (viz a list with negative shape)
+  // If result is sparse, allocate 0 atoms; later, change the allocation to something that will never match a result (viz a list with negative shape)
   zzr=(zzt&SPARSE)?1:zzr; natoms=(zzt&SPARSE)?0:natoms;
   zzcelllen=natoms<<bplg(zzt);  // number of bytes in one cell.
   // # cells in result is passed in as zzncells

@@ -45,7 +45,7 @@ static A jtvasp0(J jt,A a,A w,VF ado,I cv,I t,I zt){A e,x,xx,y,z,ze,zx;B b;I n;P
  GA(ze,zt,1,0,    0    );      ado(jt, 0,1L,1L,AV(ze),b?AV(e):AV(y),b?AV(y):AV(e)); RE(0);
  GA(zx,zt,n,AR(x),AS(x)); if(n)ado(jt,!b,1L,n, AV(zx),b?AV(x):AV(y),b?AV(y):AV(x)); RE(0);
  if(cv&VRI+VRD){RZ(ze=cvz(cv,ze)); RZ(zx=cvz(cv,zx));}
- GA(z,STYPE(AT(zx)),1,AR(xx),AS(xx)); zp=PAV(z);
+ GASPARSE(z,STYPE(AT(zx)),1,AR(xx),AS(xx)); zp=PAV(z);
  SPB(zp,a,ca(SPA(p,a)));
  SPB(zp,i,ca(SPA(p,i)));
  SPB(zp,e,ze);
@@ -127,7 +127,7 @@ static A jtvaspeq(J jt,A a,A w,C id,VF ado,I cv,I t,I zt,I f,I r){A ae,ax,ay,we,
  GA(ze,zt,1,0,0); ado(jt,0,1L,1L,AV(ze),aev,wev);
  RE(0);
  if(cv&VRI+VRD){A e,x; RZ(e=cvz(cv,ze)); RZ(x=cvz(cv,zx)); if(TYPESEQ(AT(e),AT(x))){ze=e; zx=x;}}
- GA(z,STYPE(AT(zx)),1,AR(a),AS(a));
+ GASPARSE(z,STYPE(AT(zx)),1,AR(a),AS(a));
  zp=PAV(z); 
  SPB(zp,a,za); SPB(zp,e,ze); SPB(zp,i,zy); SPB(zp,x,zx);
  R vaspz(z);

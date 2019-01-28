@@ -38,7 +38,7 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
  }
  // the rest handles sparse matrix enfile
  RE(m=prod(r,f+ws));  // # atoms in cell
- GA(z,wt,1,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
+ GASPARSE(z,wt,1,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
  RZ(b=bfi(wr,SPA(wp,a),1)); 
  if(memchr(b+f,C1,r)){

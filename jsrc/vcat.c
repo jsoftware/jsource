@@ -43,7 +43,7 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
    RZ(q=shape(x)); *AV(q)=n; RZ(q=reshape(q,a)); RZ(x=p?over(x,q):over(q,x));
    if(f){RZ(q=grade1(y)); RZ(y=from(q,y)); RZ(x=from(q,x));}
  }
- GA(z,STYPE(t),1,zr,ws); 
+ GASPARSE(z,STYPE(t),1,zr,ws); 
  if(r)++*(f+AS(z)); else *(wr+AS(z))=2;
  zp=PAV(z); SPB(zp,a,caro(ifb(zr,b))); SPB(zp,e,e); SPB(zp,i,y); SPB(zp,x,x);  // avoid readonly
  R z;
@@ -74,7 +74,7 @@ static F2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,
  *zs=*as+*ws; t=maxtype(at,wt);
  ap=PAV(a); ay=SPA(ap,i); ax=SPA(ap,x); if(TYPESNE(t,at))RZ(ax=cvt(t,ax));
  wp=PAV(w); wy=SPA(wp,i); wx=SPA(wp,x); if(TYPESNE(t,at))RZ(wx=cvt(t,wx));
- GA(z,STYPE(t),1,r,zs); zp=PAV(z);
+ GASPARSE(z,STYPE(t),1,r,zs); zp=PAV(z);
  SPB(zp,a,za); SPBV(zp,e,ze,ca(TYPESEQ(t,at)?ae:we));
  if(*zb){
   SPB(zp,x,  over(ax,wx));
@@ -234,7 +234,7 @@ F1(jtlamin1){A x;I* RESTRICT s,* RESTRICT v,wcr,wf,wr;
  RZ(w);
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
  fauxblockINT(wfaux,4,1); fauxINT(x,wfaux,1+wr,1) v=AV(x);
- s=AS(w); MCISHd(v,s,wf); *v++=1; MCISH(v,s,wcr);  // frame, 1, shape - the final shape
+ s=AS(w); MCISHds(v,s,wf); *v++=1; MCISH(v,s,wcr);  // frame, 1, shape - the final shape
  R reshape(x,w);
 }    /* ,:"r w */
 

@@ -60,7 +60,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
  RZ(x=df2(yi,tymes(ax,wx),sldot(slash(ds(CPLUS)))));
  RZ(y=nub(yi));
  RZ(g=grade1(y));
- GA(z,STYPE(AT(x)),1,1,AS(a)); zp=PAV(z);
+ GASPARSE(z,STYPE(AT(x)),1,1,AS(a)); zp=PAV(z);
  SPB(zp,a,iv0);
  SPB(zp,e,scf(0.0));
  SPB(zp,i,from(g,y));
@@ -89,7 +89,7 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
  RZ(x=df2(yj,x,sldot(slash(ds(CPLUS)))));
  RZ(y=nub(yj));
  RZ(g=grade1(y));
- GA(z,STYPE(AT(x)),1,1,1+AS(w)); zp=PAV(z);
+ GASPARSE(z,STYPE(AT(x)),1,1,1+AS(w)); zp=PAV(z);
  SPB(zp,a,iv0);
  SPB(zp,e,scf(0.0));
  SPB(zp,i,from(g,y));
@@ -163,7 +163,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy;D*axv,c,d,*dv,*wxv,*zyv;
  }}}
  NAN1;
  *AS(zx)=AN(zx)=*AS(zi)=n; AN(zi)=n<<1;
- GATV(z,SFL,1,2,AS(a)); *(1+AS(z))=*(1+AS(w));
+ GASPARSE(z,SFL,1,2,AS(a)); *(1+AS(z))=*(1+AS(w));
  zp=PAV(z); SPB(zp,a,apvwr(2,0L,1L)); SPB(zp,e,scf(0.0)); SPB(zp,i,zi); SPB(zp,x,zx);
  R z;
 }

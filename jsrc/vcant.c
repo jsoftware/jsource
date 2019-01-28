@@ -38,7 +38,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
-static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
+static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
  RZ(a&&w);
  av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(r==AN(a),EVLENGTH);
@@ -73,9 +73,8 @@ static F2(jtcanta){A m,s,t,z;B b;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,m
   ASSERT(axislenres!=~0,EVINDEX);  // abort if there is no input axis as source for this result axis
   zn*=(I)axislenres; sv[j]=(I)axislenres; mv[j]=axislenin*cellsizeb;  // accumulate result: axis len multiplies * cells, smallest goes to sv, total stride to mv
  }
- b=1&&SPARSE&AT(w);
- GA(z,AT(w),b?1:zn,zr,sv);  // allocate result
- if(b)R cants(a,w,z); if(!zn)R z;  // if sparse, go to sparse transpose code.  If result is empty, return it now
+ if(SPARSE&AT(w)){GASPARSE(z,AT(w),1,zr,sv); R cants(a,w,z);}  // if sparse, go to sparse transpose code.
+ GA(z,AT(w),zn,zr,sv); if(!zn)R z;  // allocate result.  If result is empty, return it now
  // now run the transpose
  zv=CAV(z); wv=CAV(w);
  memset(tv,C0,r*SZI);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter

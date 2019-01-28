@@ -325,7 +325,7 @@ typedef I SI;
 #define IS1BYTE         (B01+LIT)
 #define LAST0           (B01+LIT+C2T+C4T+NAME)
 // Don't call traverse unless one of these bits is set
-#define TRAVERSIBLE     (XD|RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
+#define TRAVERSIBLE     (RAT|XNUM|BOX|VERB|ADV|CONJ|SB01|SINT|SFL|SCMPX|SLIT|SBOX)
 // Allow recursive usecount in one of these types
 #define RECURSIBLE      (BOX|VERB|ADV|CONJ|RAT|XNUM)
 // Modifiers that operate on subarrays do so with virtual blocks, and those blocks may be marked as inplaceable if the backing block is inplaceable.

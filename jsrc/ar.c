@@ -183,7 +183,7 @@ REDUCEPFX(  mininsS, SB,SB,SBMIN )
 
 static DF1(jtred0){DECLF;A x;I f,r,wr,*s;
  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; s=AS(w);
- GA(x,AT(w),0L,r,f+s);
+ if(AT(w)&DENSE){GA(x,AT(w),0L,r,f+s);}else{GASPARSE(x,AT(w),1,r,f+s);}
  R reitem(vec(INT,f,s),lamin1(df1(x,(AT(w)&SBT)?idensb(fs):iden(fs))));
 }    /* f/"r w identity case */
 
@@ -290,7 +290,7 @@ static A jtredspd(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,e,x,z,zx;I 
  }
  if(TYPESNE(AT(e),AT(zx))){t=maxtypene(AT(e),AT(zx)); if(TYPESNE(t,AT(zx)))RZ(zx=cvt(t,zx));}
  wr=AR(w); ws=AS(w);
- GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)MCISH(f+AS(z),f+1+ws,wr-1);
+ GASPARSE(z,STYPE(AT(zx)),1,wr-1,ws); if(1<wr)MCISH(f+AS(z),f+1+ws,wr-1);
  zp=PAV(z);
  RZ(a=ca(a)); v=AV(a); DO(AN(a), if(f<v[i])--v[i];);
  SPB(zp,a,a);
@@ -367,7 +367,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  }
  if(sn)RZ(redspse(id,wm,xt,e,zx,sn,&e,&zx));
  RZ(a1=ca(a)); v=AV(a1); n=0; DO(AN(a), if(f!=v[i])v[n++]=v[i]-(I )(f<v[i]););
- GA(z,STYPE(AT(zx)),1,wr-1,ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);
+ GASPARSE(z,STYPE(AT(zx)),1,wr-1,ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);
  zp=PAV(z);
  SPB(zp,a,vec(INT,n,v)); 
  SPB(zp,e,cvt(AT(zx),e));
@@ -563,7 +563,7 @@ DF1(jtredcat){A z;B b;I f,r,*s,*v,wr;
   I *zs=AS(z); MCISHds(zs,s,f); if(!b){RE(zs[0]=mult(s[0],s[1])); MCISH(zs+1,s+2,r-2);}
   R z;
  }else{
-  GA(z,AT(w),AN(w),wr-1,s); 
+  GASPARSE(z,AT(w),AN(w),wr-1,s); 
   if(!b){v=f+AS(z); RE(*v=mult(s[f],s[1+f])); MCISH(1+v,2+f+s,r-2);}
   R redcatsp(w,z,r);
  }

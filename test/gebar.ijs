@@ -204,24 +204,24 @@ NB. adot5         (ebar -: E.) s:<'abc'
 
 
 x=: a.{~ ?31$#a.
-y=: x ((?40$y-&#x)+/i.#x)}y=: a.{~ ?9111$#a.
+y=: x (<"0(?40$y-&#x)+/i.#x)}y=: a.{~ ?9111$#a.
 (x E. y) -: x E.&(a.&i.) y
 
 x=: adot1{~ ?31$#adot1
-y=: x ((?40$y-&#x)+/i.#x)}y=: adot1{~ ?9111$#adot1
+y=: x (<"0(?40$y-&#x)+/i.#x)}y=: adot1{~ ?9111$#adot1
 (x E. y) -: x E.&(adot1&i.) y
 
 x=: adot2{~ ?31$#adot2
-y=: x ((?40$y-&#x)+/i.#x)}y=: adot2{~ ?9111$#adot2
+y=: x (<"0(?40$y-&#x)+/i.#x)}y=: adot2{~ ?9111$#adot2
 (x E. y) -: x E.&(adot2&i.) y
 
 x=: sdot0{~ ?31$#sdot0
-y=: x ((?40$y-&#x)+/i.#x)}y=: sdot0{~ ?9111$#sdot0
+y=: x (<"0(?40$y-&#x)+/i.#x)}y=: sdot0{~ ?9111$#sdot0
 (x E. y) -: x E.&(sdot0&i.) y
 
 x=: ?31$1000
 i=: ?40$y-&#x
-y=: x (i+/i.#x)}y=: ?9111$1000
+y=: x (<"0 i+/i.#x)}y=: ?9111$1000
 ((# i.@#)x E. y) e. i
 
 (30$0) -: (<"0 ?35$10) E. <"0 ?30$10

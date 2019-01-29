@@ -170,30 +170,30 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
 }
 
 A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
- wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);
+ wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);  // b=indexes are boxed and nonempty
  if(!wr)R from(ind,num[0]);
- if(b&&AR(ind)){
-  RE(aindex(ind,w,0L,&j));
-  if(!j){
-   RZ(x=from(ind,increm(iota(shape(w))))); u=AV(x); 
-   DO(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;); 
-   R x;
+ if(b&&AR(ind)){   // array of boxed indexes
+  RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
+  if(!j){  // if not...
+   RZ(x=from(ind,increm(iota(shape(w))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes
+   DO(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
+   R x;   // the indexes are what we want
   }
   k=AAV0(ind); n=AN(k);
-  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,wr,1) /* GATV(x,INT,wr,1,0); */ u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);
-  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
+  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,wr,1) /* GATV(x,INT,wr,1,0); */ u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);  // create vector x of sizes of item of each cell (last=1, first=itemsize)
+  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);  // create vector of positions of each indexed cell; if that's more than an atom, add axes to index each atom of the selected cell
  }
- if(!b){n=1; RZ(j=pind(*ws,ind));}
- else{
-  ind=AAV0(ind); n=AN(ind); r=AR(ind);
-  ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);
-  if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));
-  v=AAV(ind); 
-  ASSERT(1>=r,EVINDEX);
-  ASSERT(n<=wr,EVINDEX);
-  d=n; DO(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;
-  j=zeroionei[0];
-  for(i=0;i<n;++i){
+ if(!b){ASSERT(AR(ind)<2,EVNONCE); n=1; RZ(j=pind(*ws,ind));}  // if numeric, convert to list of indexes 
+ else{  // a single box.
+  ind=AAV0(ind); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
+  ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);  // must be empty list or numeric or boxed
+  if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));  // if numeric, box each atom
+  v=AAV(ind);   // now ind is a atom/list of boxes, one per axis
+  ASSERT(1>=r,EVINDEX);  // not a table
+  ASSERT(n<=wr,EVINDEX);  // not too many axes
+  d=n; DO(n, --d; if(!equ(ace,v[d]))break;); if(n)++d; n=d;  // discard trailing (boxed) empty axes
+  j=zeroionei[0];  // init list to a single 0 offset
+  for(i=0;i<n;++i){  // for each axis, grow the cartesian product of the specified offsets
    x=v[i]; d=ws[i];
    if(AN(x)&&BOX&AT(x)){
     ASSERT(!AR(x),EVINDEX); 
@@ -201,9 +201,11 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
     if(AN(x))k=less(k,pind(d,1<AR(x)?ravel(x):x));
    }else k=pind(d,x);
    RZ(j=irs2(tymes(j,sc(d)),k,0L,VFLAGNONE, RMAX,jtplus));
- }}
+  }
+ }
+ // now j is a list of offsets.  If it covers each axis of w, use it; otherwise extend with i. cellsize so that each atom is indexed individually
  R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
-}    /* convert ind in a ind}w into integer positions */
+}    /* convert ind in a ind}w into integer atom-offsets */
 
 /* Reference count for w for amend in place */
 /* 1 jdo     tpop                           */

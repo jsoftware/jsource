@@ -65,18 +65,18 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d,
 
 
 #define BITWISE(f,T,op)  \
- F2(f){A z;B b;I an,ar,*as,*av,k=0,wn,wr,*ws,x;T*wv,y,*zv;             \
+ F2(f){A z;I *av,k=0,x;T*wv,y,*zv;             \
   RZ(a&&w);F2PREFIP;  /* kludge we allow inplace call but we don't honor it yet */ \
   if(!(INT&AT(a)))RZ(a=cvt(INT,a));                                    \
   if(!(INT&AT(w)))RZ(w=cvt(INT,w));                                    \
-  an=AN(a); ar=AR(a); as=AS(a); av=(I*)AV(a);                          \
-  wn=AN(w); wr=AR(w); ws=AS(w); wv=(T*)AV(w); b=ar>wr;                 \
-  ASSERTAGREE(as,ws,MIN(ar,wr));                      \
-  GATV(z,INT,b?an:wn,MAX(ar,wr),b?as:ws); zv=(T*)AV(z);                  \
+  av=(I*)AV(a);                          \
+  wv=(T*)AV(w);                 \
+  ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));                      \
+  GATV(z,INT,AN(AR(a)>AR(w)?a:w),MAX(AR(a),AR(w)),AS(AR(a)>AR(w)?a:w)); zv=(T*)AV(z);                  \
   if(!AN(z))R z;                                                       \
-  if     (ar==wr)DO(an, x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
-  else if(ar< wr)DO(an, x=*av++; DO(wn/an, y=*wv++; *zv++=op(x,y););)  \
-  else           DO(wn, y=*wv++; DO(an/wn, x=*av++; *zv++=op(x,y););); \
+  if     (AR(a)==AR(w))DO(AN(a), x=*av++;           y=*wv++; *zv++=op(x,y);  )  \
+  else if(AR(a)< AR(w))DO(AN(a), x=*av++; DO(AN(w)/AN(a), y=*wv++; *zv++=op(x,y););)  \
+  else           DO(AN(w), y=*wv++; DO(AN(a)/AN(w), x=*av++; *zv++=op(x,y););); \
   RE(0); RETF(z);                                                          \
  }
 
@@ -102,17 +102,17 @@ static VF bwI[16]={(VF)bw0000II,(VF)bw0001II,(VF)bw0010II,(VF)bw0011II, (VF)bw01
 /* a m b.&.(a.i.]) w */
 /* m e. 16+i.16      */
 
-DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I an,ar,*as,at,j,m,n,wn,wr,*ws,wt,zn;VF f;
+DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;VF f;
  RZ(a&&w);
- x=a; an=AN(a); ar=AR(a); as=AS(a); at=AT(a);
- y=w; wn=AN(w); wr=AR(w); ws=AS(w); wt=AT(a);
- if(!(an&&wn&&at&LIT&&wt&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
- b=ar<=wr; zn=b?wn:an; m=b?an:wn; n=zn/m;
- ASSERTAGREE(as,ws,MIN(ar,wr));
+ x=a;
+ y=w;
+ if(!(AN(a)&&AN(w)&&(AT(a)&AT(w))&LIT))R from(df2(indexof(alp,a),indexof(alp,w),fs),alp);
+ b=AR(a)<=AR(w); zn=AN(b?w:a); m=AN(b?a:w); n=zn/m;
+ ASSERTAGREE(AS(a),AS(w),MIN(AR(a),AR(w)));
  j=i0(VAV(fs)->fgh[0])-16;
- GATV(z,LIT,zn,MAX(ar,wr),b?ws:as);   // d is fixed; was d==SZI?LIT:C2T; would need GA then
+ GATV(z,LIT,zn,MAX(AR(a),AR(w)),AS(b?w:a));   // d is fixed; was d==SZI?LIT:C2T; would need GA then
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}
- else if(!ar||!wr||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; RZ(*p=irs2(sc(SZI),*p,0L,0L,0L,jtrepeat));}
+ else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; RZ(*p=irs2(sc(SZI),*p,0L,0L,0L,jtrepeat));}
  else                      f=bwC[j];
  f(jt,b,m,n,AV(z),AV(x),AV(y)); 
  *(zn+CAV(z))=0;

@@ -41,7 +41,7 @@ NB. example 2: names and numbers with vector notation
 
 mv=: (#a.)$0                   NB. X other
 mv=: 1 (a.i.'_0123456789')}mv  NB. 9 digits and _
-mv=: 2 ((a.i.'Aa')+/i.26)}mv   NB. A A-Z a-z
+mv=: 2 (<"0(a.i.'Aa')+/i.26)}mv   NB. A A-Z a-z
 sv=: 0 3 2$0                 
 NB.          X    9    A 
 sv=:sv,_2]\ 0 0  1 1  2 1      NB. 0 other
@@ -53,7 +53,7 @@ NB. example 3: J sentences
 
 mj=: 256$0                     NB. X other
 mj=: 1 (a.i.' ')}mj            NB. S space
-mj=: 2 ((a.i.'Aa')+/i.26)}mj   NB. A A-Z a-z excluding N B
+mj=: 2 (<"0(a.i.'Aa')+/i.26)}mj   NB. A A-Z a-z excluding N B
 mj=: 3 (a.i.'N')}mj            NB. N the letter N
 mj=: 4 (a.i.'B')}mj            NB. B the letter B
 mj=: 5 (a.i.'0123456789_')}mj  NB. 9 digits and _

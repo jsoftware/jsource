@@ -21,11 +21,12 @@ F1(jtpinv){I m=0,n,*v;
  R indexof(pfill(m,w),IX(m));
 }    /* permutation inverse */
 
+// w contains indexes (its shape is immaterial).  n is the length of the axis.  Result is new array, same shape, with equivalent positive indexes
 A jtpind(J jt,I n,A w){A z;I j,m,*v;
  RE(n); RZ(w);
  m=-n;
  RZ(z=ca(vi(w))); v=AV(z);  // force w to integral and make a copy which we will modify
- DO(AN(z), j=v[i]; if(j<0)v[i]=j+=n; ASSERT(((j-n)^j)<0,EVINDEX););  // add n if neg; sign of j-n must differ from sign of j, meaning 0<=j<n
+ DO(AN(z), j=v[i]; if(j<0)v[i]=j+=n; ASSERT((UI)j<(UI)n,EVINDEX););  // add n if neg; sign of j-n must differ from sign of j, meaning 0<=j<n
  R z;
 }    /* positive indices */
 

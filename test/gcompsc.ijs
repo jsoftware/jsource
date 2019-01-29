@@ -434,7 +434,7 @@ testE=: 2 : 0
  xi=: 4  ?@$5
  yi=: 1e5?@$5
  xj=: 4  ?@$1e6
- yj=: xj ((?3$9e4)+/i.#xj)}1e5?@$1e6
+ yj=: xj (<"0(?3$9e4)+/i.#xj)}1e5?@$1e6
  xc=: 'abcd'{~ 4  ?@$4
  yc=: 'abcd'{~ 1e5?@$4
  assert. (u xb v yb) -: xb u@:v yb

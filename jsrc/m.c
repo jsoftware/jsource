@@ -668,7 +668,7 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
  if(t&BOX){AD* np;
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
-  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
+  I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
 // obsolete   I anysmrel=af&(AFSMM)?0:AFNOSMREL;   // init with the status for this block
   if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
@@ -869,11 +869,11 @@ auditmemchains();
 #if MEMAUDIT&15
 if((I)jt&3)SEGFAULT
 #endif
+ z=jt->mfree[-PMINL+blockx].pool;   // tentatively use head of free list as result - normal case, and even if blockx is out of bounds will not segfault
  if(2>*jt->adbreakr){  // this is JBREAK0, done this way so predicted fallthrough will be true
   I pushx=jt->tnextpushx;  // start reads for tpush
   A* tstack=jt->tstack;
   if(blockx<=PLIML){             /* large block: straight malloc    */
-   z=jt->mfree[-PMINL+blockx].pool;   // tentatively use head of free list as result
    mfreeb=jt->mfree[-PMINL+blockx].ballo; // bytes in pool allocations
    if(z){         // allocate from a chain of free blocks
     jt->mfree[-PMINL+blockx].pool = AFCHAIN(z);  // remove & use the head of the free chain
@@ -969,14 +969,15 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
 #endif
   RZ(z = jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
   I akx=AKXR(rank);   // Get offset to data
+  AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
+  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
+  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
+  GACOPYSHAPE(z,type,atoms,rank,shaape)  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
+  // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
   else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
      // code for boolean verbs needs it.  We set the whole last SZI bytes to 0, so that we can be sure that a boolean can be interpreted as an INT using IAV(x)[0] 
-  AK(z)=akx; AT(z)=type; AN(z)=atoms;   // Fill in AK, AT, AN
-  // Set rank, and shape if user gives it.  This might leave the shape unset, but that's OK
-  AR(z)=(RANKT)rank;   // Storing the extra last I (as was done originally) might wipe out rank, so defer storing rank till here
-  if(1==rank&&!(type&SPARSE))AS(z)[0]=atoms; else if(shaape){MCISH(AS(z),shaape,rank)}  /* 1==atoms always if t&SPARSE  */  // copy shape by hand since short
 if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
  SEGFAULT  // scaf
 AT(z)&=~XZ; // scaf

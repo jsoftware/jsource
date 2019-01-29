@@ -429,6 +429,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
+ // obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) {if((1==(RANKT)(rank))&&!(type&SPARSE)){AS(name)[0]=(atoms);} else if(shaape){MCISH(AS(name),shaape,rank)} }
+#define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:shapesink; _d=_r>0?_d:shapesink; *++_d=*++_s;}while(--_r>0);
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
@@ -441,10 +443,10 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  RZ(name);   \
  AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
+ AR(name)=(RANKT)(rank);     \
+ if(type&SPARSE)SEGFAULT /*scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
- AR(name)=(RANKT)(rank);     \
- if(type&SPARSE)SEGFAULT /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank) }   \
 }
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
@@ -455,10 +457,10 @@ extern unsigned int __cdecl _clearfp (void);
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(name){   \
+  AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
+  if(type&SPARSE)SEGFAULT /*scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
-  AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(type&SPARSE)SEGFAULT /*scaf*/ if((1==(RANKT)(rank))&&!(type&SPARSE))AS(name)[0]=(atoms); else if(shaape){MCISH(AS(name),shaape,rank)}   \
  }else{erraction;} \
 }
 

@@ -11,7 +11,7 @@ static I jtord(J jt,A w){I j,n,*v,z;
  n=AN(w); z=-n;
  if(n){if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(n, j=*v++; if(z<j)z=j;); ++z;}
  R z;
-}
+}  // the order of the permutation w: max element of w (could be negative)
 
 F1(jtpinv){I m=0,n,*v;
  F1RANK(1,jtpinv,0);
@@ -22,11 +22,17 @@ F1(jtpinv){I m=0,n,*v;
 }    /* permutation inverse */
 
 // w contains indexes (its shape is immaterial).  n is the length of the axis.  Result is new array, same shape, with equivalent positive indexes
-A jtpind(J jt,I n,A w){A z;I j,m,*v;
+A jtpind(J jt,I n,A w){A z;I j,*v;
  RE(n); RZ(w);
- m=-n;
- RZ(z=ca(vi(w))); v=AV(z);  // force w to integral and make a copy which we will modify
- DO(AN(z), j=v[i]; if(j<0)v[i]=j+=n; ASSERT((UI)j<(UI)n,EVINDEX););  // add n if neg; sign of j-n must differ from sign of j, meaning 0<=j<n
+ RZ(z=AT(w)&INT?w:cvt(INT,w));  // z is now an INT vector, possibly the input argument
+ // Make a quick scan to see if all are positive, as they usually are
+ for(j=AN(z), v=IAV(z);j;--j)if((UI)*v++>=(UI)n)break;
+ if(j==0)R z;  // if all indices in range, keep the original vector
+ // There was an out-of-bounds or negative index.  We may have to modify the index vector.  Reallocate it if we didn't already
+ if(z==w)RZ(z=ca(z));  // Create temp area if we don't have one already
+// obsolete  RZ(z=ca(vi(w))); v=AV(z);  // force w to integral and make a copy which we will modify
+ for(j=AN(z), v=IAV(z);j;--j){if(*v<0)*v+=n; ASSERT((UI)*v++<(UI)n,EVINDEX);}
+// obsolete  DO(AN(z), j=v[i]; if(j<0)v[i]=j+=n; ASSERT((UI)j<(UI)n,EVINDEX););  // add n if neg; sign of j-n must differ from sign of j, meaning 0<=j<n
  R z;
 }    /* positive indices */
 

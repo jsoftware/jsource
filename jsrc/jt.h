@@ -27,39 +27,16 @@ windows the global data that needs scrutiny is in the 0003: section.
 
 
 typedef struct {
-// The first cache line is the hottest real estate in J, because it is brought in by every
-// memory-allocation function.  Put your heaviest-used items here
+// The first 2 cache lines is the hottest real estate in J, because they can be referenced with 
+// single-byte displacement.  Put your heaviest-used items here
  C*   adbreak;			/* must be first! ad mapped shared file break flag */
  C*   adbreakr;         // read location: same as adbreak, except that when we are ignoring interrupts it points to 0
- I    mfreegenallo;        // Amount allocated through malloc, biased
+// things needed by verb execution
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
- void *heap;            // heap handle for large allocations
- I    mmax;             /* space allocation limit                          */
- struct {
-  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
-  A pool;             // pointer to first free block
- }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
-// --- end of cache line 2.  1 qword of the pool table spills over
-// parser values
- A    *parserqueue;   // for error purposes: words of the sentence being parsed
- I4   parserqueuelen;  // number of words in queue
- I4   parsercurrtok;   // the token number of the word to flag if there is an error
- A    zombieval;        // value of assignsym, if it can be reused
- L    *assignsym;       // symbol-table entry for the symbol about to be assigned
- A*   nvrav;            /* AAV(jt->nvra)                                   */
- UI4  nvran;            // number of atoms in nvrav
- I4   slisti;           /* index into slist of current script              */ 
- A    stloc;            /* locales symbol table                            */
-// --- end of cache line 3
- PSTK* parserstkbgn;     // &start of parser stack
- PSTK* parserstkend1;    // &end+1 of parser stack
- A    local;            /* local symbol table                              */
- A    global;           /* global symbol table                             */
- A    sf;               /* for $:                                          */
- A    curname;          // current name, an A block containing an NM
- I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
  UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
+ I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
+// things needed by name lookup (unquote)
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
   struct {
@@ -79,7 +56,39 @@ typedef struct {
    } uq;   // flags needed only by unquote
   } us;   // access as US
  } uflags;
-// --- end cache line 4
+ A    local;            /* local symbol table                              */
+// ----- end of cache line 0
+ A    global;           /* global symbol table                             */
+ A    sf;               /* for $:                                          */
+ I    modifiercounter;  // incremented whenever anything happens that could alter modifier lookup: assignment/deletion of a modifier, or any change to locales or path
+// things needed by parsing
+ A    *parserqueue;   // for error purposes: words of the sentence being parsed
+ I4   parserqueuelen;  // number of words in queue
+ I4   parsercurrtok;   // the token number of the word to flag if there is an error
+ A    zombieval;        // value of assignsym, if it can be reused
+ L    *assignsym;       // symbol-table entry for the symbol about to be assigned
+ A*   nvrav;            /* AAV(jt->nvra)                                   */
+// ----- end of cache line 1
+ UI4  nvran;            // number of atoms in nvrav
+ I4   slisti;           /* index into slist of current script              */
+ A    stloc;            /* locales symbol table                            */
+ PSTK* parserstkbgn;     // &start of parser stack
+ PSTK* parserstkend1;    // &end+1 of parser stack
+// things needed for memory allocation
+ I    mfreegenallo;        // Amount allocated through malloc, biased
+ void *heap;            // heap handle for large allocations
+ I    mmax;             /* space allocation limit                          */
+ struct {
+  I ballo;              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection 
+  A pool;             // pointer to first free block
+ }    mfree[-PMINL+PLIML+1];      // pool info.  Use struct to keep cache footprint small
+// --- end of cache line 3. 1 words carries over
+// things needed by executing explicit defs
+ A    curname;          // current name, an A block containing an NM
+ I4   fdepi;            /* fn calls: current depth                         */
+ I4   fdepn;            /* fn calls: maximum permissible depth             */
+ I4   callstacknext;           /* named fn calls: current depth                   */
+ I4   fcalln;           /* named fn calls: maximum permissible depth       */
  B    asgn;             /* 1 iff last operation on this line is assignment */
  B    stch;             /* enable setting of changed bit                   */
  UC   jerr;             /* error number (0 means no error)                 */
@@ -88,34 +97,27 @@ typedef struct {
  UC   dbuser;           /* user-entered value for db                       */
  UC   jerr1;            /* last non-zero jerr                              */
  C    cxspecials;       // 1 if special testing needed in cx loop (pm or debug)
- I4   fdepi;            /* fn calls: current depth                         */
- I4   fdepn;            /* fn calls: maximum permissible depth             */
- I4   callstacknext;           /* named fn calls: current depth                   */
- I4   fcalln;           /* named fn calls: maximum permissible depth       */
- UC   prioritytype[11];  // type bit for the priority types
-// 1 byte free
  B    iepdo;            /* 1 iff do iep                                    */
  C    dbss;             /* single step mode                                */
  B    pmrec;            /* perf. monitor: 0 entry/exit; 1 all              */
  B    tostdout;         /* 1 if output to stdout                           */
- I*   numloctbl;         // pointer to data area for locale-number to locale translation
- UI4  numlocsize;       // number of BYTES in numloctbl
- I4   parsercalls;      /* # times parser was called                       */
+ UC   prioritytype[11];  // type bit for the priority types
  UC   typepriority[19];  // priority value for the noun types
-// end cache line 5.  11 bytes carry over.  next cache line is junk; we don't expect to use these types much
+// end cache line 4.  10 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    nflag;            /* 1 if space required before name                 */
  B    sesm;             /* whether there is a session manager              */
  B    tmonad;           /* tacit translator: 1 iff monad                   */
  B    tsubst;           /* tacit translator                                */
  B    xco;              /* 1 iff doing x: conversion                       */
+// 1 byte free
  A    flkd;             /* file lock data: number, index, length           */
  I    flkn;             /* file lock count                                 */
  A    fopa;             /* open files boxed names                          */
  A    fopf;             /* open files corresp. file numbers                */
  I    fopn;             /* open files count                                */
  I    getlasterror;     /* DLL stuff                                       */
+// end cache line 5.
  void *dtoa;             /* use internally by dtoa.c                        */
-// end cache line 6.
  I    bytes;            /* bytes currently in use                          */
  I    bytesmax;         /* high-water mark of "bytes"                      */
  I    mulofloloc;       // index of the result at which II multiply overflow occurred
@@ -123,7 +125,7 @@ typedef struct {
  C    fillv0[sizeof(Z)];/* default fill value                              */
  C*   fillv;            /* fill value                                      */
  C    typesizes[32];    // the length of an allocated item of each type
-// --- end cache line 7.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
+// --- end cache line 6.  24 bytes carry over.  next cache line is junk; we don't expect to use these types much
  B    thornuni;         /* 1 iff ": allowed to produce C2T result          */
  B    jprx;             /* 1 iff ": for jprx (jconsole output)             */
  C    unicodex78;       /* 1 iff disallow numeric argument for 7 8 u:      */
@@ -134,7 +136,10 @@ typedef struct {
  UC   outeol;           /* output: EOL sequence code                       */
 // 3 words free
  I    filler[3];
-// --- end cache line 8
+// --- end cache line 7
+ I*   numloctbl;         // pointer to data area for locale-number to locale translation
+ UI4  numlocsize;       // number of BYTES in numloctbl
+ I4   parsercalls;      /* # times parser was called                       */
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
@@ -142,7 +147,6 @@ typedef struct {
  A    idothash0;        // 2-byte hash table for use by i.
  A    idothash1;        // 4-byte hash table for use by i.
  I    symindex;         /* symbol table index (monotonically increasing)   */
-// -- end cache line 9
  UI4  nvrtop;           /* top of nvr stack; # valid entries               */
  UI4  nvrotop;          // previous top of nvr stack
  A    symb;             /* symbol table for assignment                     */

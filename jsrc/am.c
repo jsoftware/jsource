@@ -213,37 +213,34 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
 /* 1 jdo     tpop                           */
 
 // Execution of x m} y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
-static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z;I sa,sw; B b;I at,ir,it,t,t1,wt;P*p;
- A ind=VAV(self)->fgh[0];
+static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
+ AD * RESTRICT ind=VAV(self)->fgh[0];
  RZ(a&&w&&ind);
- // ?t = underlying type of ?, s?=nonzero if sparse
- at=AT(a); sa=at&SPARSE; if(sa)at=DTYPE(at);
- wt=AT(w); sw=wt&SPARSE; if(sw)wt=DTYPE(wt);
- it=AT(ind); ir=AR(ind);
- ASSERT(it&NUMERIC+BOX||!AN(ind),EVDOMAIN);
- ASSERT(it&DENSE,EVNONCE);  // m must be dense, and numeric or boxed
- if(sw){
-  // Sparse w.  a and t must be compatible; sparse w must not be boxed
-  ASSERT(!(wt&BOX),EVNONCE); ASSERT(HOMO(at,wt),EVDOMAIN);
-  // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be
-  RE(t=maxtype(at,wt)); t1=STYPE(t); RZ(a=TYPESEQ(t,at)?a:cvt(sa?t1:t,a));
-  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
-  // DIRECT or this is a boxed memory-mapped array
-  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))
-      &&TYPESEQ(t,wt)&&(t&DIRECT);
-  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
-  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
-  // call the routine to handle the sparse amend
-  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
-  p=PAV(a); if(sa&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); sa=0;}
-  if(it&NUMERIC||!ir)z=(b?jtam1e:sa?jtam1sp:jtam1a)(jt,a,z,it&NUMERIC?box(ind):ope(ind),ip);
-  else{RE(aindex(ind,z,0L,&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:sa?jtamnsp:jtamna)(jt,a,z,ind,ip);}
-  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
- }else{
-  // Dense w.  Convert indexes to integer indexes, transfer to merge2 to do the work
-  z=jtmerge2(jtinplace,sa?denseit(a):a,w,jstd(w,ind));
+ if(!((AT(w)|AT(ind))&SPARSE)){
+  z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,jstd(w,ind));  // convert indexes to cell indexes; dense a if needed; dense amend
   EPILOG(z);
  }
+ // Otherwise, w is sparse
+ // ?t = underlying type of ?, s?=nonzero if sparse
+ atd=AT(a)&SPARSE?DTYPE(AT(a)):AT(a); wtd=AT(w)&SPARSE?DTYPE(AT(w)):AT(w);
+ ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
+ ASSERT(AT(ind)&DENSE,EVNONCE);  // m must be dense, and numeric or boxed
+ // Sparse w.  a and t must be compatible; sparse w must not be boxed
+ ASSERT(!(wtd&BOX),EVNONCE); ASSERT(HOMO(atd,wtd),EVDOMAIN);
+ // set t to dense precision of result; t1=corresponding sparse precision; convert a if need be.  Change a's type but not its sparseness
+ RE(t=maxtyped(atd,wtd)); t1=STYPE(t); RZ(a=TYPESEQ(t,atd)?a:cvt(AT(a)&SPARSE?t1:t,a));
+ // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
+ // DIRECT or this is a boxed memory-mapped array
+ B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))
+     &&TYPESEQ(t,AT(w))&&(t&DIRECT);
+ // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
+ if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
+ // call the routine to handle the sparse amend
+ p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
+ p=PAV(a); if(AT(a)&SPARSE&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); }
+ if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&SPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
+ else{RE(aindex(ind,z,0L,&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}
+ EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
 
 // Execution of x u} y.  Call u to get the indices, then

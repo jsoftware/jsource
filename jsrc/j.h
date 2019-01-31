@@ -430,7 +430,7 @@ extern unsigned int __cdecl _clearfp (void);
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
  // obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) {if((1==(RANKT)(rank))&&!(type&SPARSE)){AS(name)[0]=(atoms);} else if(shaape){MCISH(AS(name),shaape,rank)} }
-#define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:shapesink; _d=_r>0?_d:shapesink; *++_d=*++_s;}while(--_r>0);
+#define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
@@ -476,9 +476,9 @@ extern unsigned int __cdecl _clearfp (void);
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable
 // z is an lvalue
-// Use INCORPNA if you need to tell the caller that the block e sent you has been incoroprated.  If you created the block being incorporated,
+// Use INCORPNA if you need to tell the caller that the block e sent you has been incorporated.  If you created the block being incorporated,
 // even by calling a function that returns it, you can get by using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
-// but that's OK as long as you pass it to some place where it can become an argument to another function
+// but that's OK as long as you don't pass it to some place where it can become an argument to another function
 #define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ACIPNO(z); }
 // same, but for nonassignable argument
 #define INCORPNA(z)     incorp(z)
@@ -524,7 +524,7 @@ extern unsigned int __cdecl _clearfp (void);
 // obsolete #define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 // obsolete #define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 // obsolete #define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
-#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=(n); _d=_n>0?_d:shapesink; _s=_n>0?_s:shapesink; *_d=*_s; --_n; do{ _d=_n>0?_d:shapesink; _s=_n>0?_s:shapesink; *++_d=*++_s;}while(--_n>0);}  // use for copies of shape, optimized for no branch when n<3.
+#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=(n); _d=_n>0?_d:jt->shapesink; _s=_n>0?_s:jt->shapesink; *_d=*_s; --_n; do{ _d=_n>0?_d:jt->shapesink; _s=_n>0?_s:jt->shapesink; *++_d=*++_s;}while(--_n>0);}  // use for copies of shape, optimized for no branch when n<3.
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
 #define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}

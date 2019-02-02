@@ -81,8 +81,9 @@ struct AD {
  } kchain;
  FLAGT flag;
  union {
-  I m;  // Triple-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
-        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x
+  I m;  // Multi-use field. (1) For NJA/SMM blocks, size of allocation. (2) for blocks coming out of a COUNTITEMS verb, holds the number of items in the
+        // raze of the noun (if the types are identical) (3) for SYMB tables for explicit definitions, the symbol positions for y and x (4) for the block
+        // holding the amend offsets in x u} y, the number of axes of y that are built into the indexes in u
   A back; // For VIRTUAL blocks, points to backing block
 } mback;
  union {

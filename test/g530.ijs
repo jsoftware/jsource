@@ -362,6 +362,101 @@ y -: (i.0)  ($0)} y
 y -: (0$0.5)($0)} y
 y -: (0$0j5)($0)} y
 
+NB. Test cell sizes and types
+
+NB. integer indexing
+NB. y is list of atoms to choose from
+NB. x is rank of x, length of item of m, rank of y
+test =: 4 : 0"1
+'rx lim ry'   =: x
+NB. Select agreeing args
+ty   =: y {~ (2 + ry ?@$ 7) ?@$ #y  NB. random draw of atoms of y, with random shape
+tm   =: , (>:@:? ? ]) lim {. $ ty  NB. , is scaf   so is >: use ?@>:
+selshape   =: (#tm) , lim }. $ty
+tx   =: y {~ ((-rx) {. selshape) ?@$ #y
+NB. Verify amend works
+mody   =: tx tm} ty
+assert. tx (] -: (($,)~ $)) tm { mody
+assert. ty -: (tm { ty) tm} mody
+NB. Verify works inplace too
+mody   =: ] (tm { ty) tm} mody  NB. saved value
+mody   =: tx tm} mody
+assert. tx (] -: (($,)~ $)) tm { mody
+assert. ty -: mody   =: (tm { ty) tm} mody
+1
+)
+
+NB. Repeat for all ranks
+test1 =: 3 : 0
+NB. rank of y is 1-5
+NB. length of item of m is <: rank y, constrained to 1 for now
+NB. rank of x is <: (rank of y) - (length of item of m) + 1
+args =. <"1 ,. 1 2 3 4 5  NB. ry
+args =. (1 , ])&.> args  NB. add on lim
+args =. ; ((,~"_ 0   i.@>:@>:@(-~/))&.>) args  NB. add on lim
+args test y
+)
+
+test1 0 1
+test1 'abcdefghijklmno'
+test1 0.4 + i. 10
+test1 5 j. i. 10
+test1 i. 10x
+test1 1r2 + i. 10x
+test1 (1;'a';4x) , <"0 i. 7
+test1 2 u: 'abcdefghijklmno'
+test1 10 u: 'abcdefghijklmno'
+test1 s: ' now is the time for all good men'
+
+NB. boxed-boxed-list indexing
+NB. y is list of atoms to choose from
+NB. x is rank of x, number of leading axes to take in m, rank of y
+test =: 4 : 0"1
+'rx lm ry'   =: x
+NB. Select agreeing args
+ty   =: y {~ (2 + ry ?@$ 7) ?@$ #y  NB. random draw of atoms of y, with random shape
+tm   =: < (?@:>: ?&.> ]) lim {. $ ty  NB. one box per axis, all boxed
+selshape   =: (# S:0 tm) , lim }. $ty
+tx   =: y {~ ((-rx) {. selshape) ?@$ #y
+NB. Verify amend works
+mody   =: tx tm} ty
+assert. tx (] -: (($,)~ $)) tm { mody
+assert. ty -: (tm { ty) tm} mody
+NB. Verify works inplace too
+mody   =: ] (tm { ty) tm} mody  NB. saved value
+mody   =: tx tm} mody
+assert. tx (] -: (($,)~ $)) tm { mody
+assert. ty -: mody   =: (tm { ty) tm} mody
+1
+)
+
+NB. Repeat for all ranks
+test1 =: 3 : 0
+NB. rank of y is 1-5
+NB. length of item of m is <: rank y, constrained to 1 for now
+NB. rank of x is <: (rank of y) - (length of item of m)
+args =. <"1 ,. 1 2 3 4 5  NB. ry
+args =. <"1 ; ((,~"_ 0   i.@>:@{:)&.>) args  NB. add on lim
+args =. ; ((,~"_ 0   i.@>:@(-~/))&.>) args  NB. add on lim
+args test y
+)
+
+2 1 2 test i. 10
+test1 0 1
+test1 'abcdefghijklmno'
+test1 0.4 + i. 10
+test1 5 j. i. 10
+test1 i. 10x
+test1 1r2 + i. 10x
+test1 (1;'a';4x) , <"0 i. 7
+test1 2 u: 'abcdefghijklmno'
+test1 10 u: 'abcdefghijklmno'
+test1 s: ' now is the time for all good men'
+
+NB. lists of boxes get opened and go through the list-of-numbers code
+
+_10 -: (,_10) (,<0$4)} 4
+
 'domain error' -: ex '7  ''a''} 2 3 4'
 'domain error' -: ex '7 (<2.3)} 2 3 4'
 'domain error' -: ex '7 ( 2.1)} 2 3 4'
@@ -549,5 +644,5 @@ x =: "
 4!:55 ;:'a aa ab abc adot1 adot2 sdot0 b b32 C c c1 d d1 dd f f foo f1 '
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
-4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test x xx xyz y yy z z1 zz '
+4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 x xx xyz y yy z z1 zz '
 randfini''

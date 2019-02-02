@@ -533,7 +533,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MLEN            (SY_64?63:31)
 // change the type of the inplaceable block z to t.  We know or assume that the type is being changed.  If the block is UNINCORPABLE (& therefore virtual), replace it with a clone first.  z is an lvalue
 #define MODBLOCKTYPE(z,t)  {if(AFLAG(z)&AFUNINCORPABLE){RZ(z=clonevirtual(z));} AT(z)=(t);}
-
+#define MODIFIABLE(x)   (x)   // indicates that we modify the result, and it had better not be read-only
 #define NAN0            (_clearfp())
 #if defined(_MSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
@@ -605,7 +605,8 @@ extern unsigned int __cdecl _clearfp (void);
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
 #define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
 #else
-#define RETF(exp)       R exp
+// normal #define RETF(exp)       R exp
+#define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT; R retfff; } // scaf
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))
 #define SBUV(x)         (jt->sbuv+(I)(x))

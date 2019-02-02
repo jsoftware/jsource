@@ -802,8 +802,7 @@ DF2(jtsumattymes1){
  if(TYPESNE(it,AT(a))){RZ(a=cvt(it,a));}  // convert to common input type
  if(TYPESNE(it,AT(w))){RZ(w=cvt(it,w));}
 
- RETF(jtsumattymesprods(jt,it,a,w,dplen,nfro,nfri,ndpo,ndpi,repeata,z);
-);
+ RETF(jtsumattymesprods(jt,it,a,w,dplen,nfro,nfri,ndpo,ndpi,repeata,z));
 }
 
 

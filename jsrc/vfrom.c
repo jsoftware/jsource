@@ -263,7 +263,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 // a is boxed list, w is array, wf is frame of operation, *ind will hold the result
-// if the opened boxes have contents with the same item shape, create an array of all the indexes; put that into *ind and return 1.
+// if the opened boxes have contents with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; put that into *ind and return 1.
 // otherwise return 0
 B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  RZ(a&&w);

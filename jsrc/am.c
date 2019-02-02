@@ -113,28 +113,28 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
 // Handle a ind} w after indices have been converted to integer, dense
-static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn,wt;
+static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
  RZ(a&&w&&ind);
- // ?n=#atoms, ?t=type, ?r=rank, ?s->shape where ?=awi for xym
- an=AN(a); at=AT(a); ar=AR(a); as=AS(a); 
- wn=AN(w); wt=AT(w);
- in=AN(ind); ir=AR(ind); iv=AV(ind);
- ASSERT(!an||!wn||HOMO(at,wt),EVDOMAIN);  // error if xy not empty and not compatible
- ASSERT(ar<=ir,EVRANK);   // require shape of x to be a suffix of the shape of m
- ASSERTAGREE(as,AS(ind)+ir-ar,ar);
- if(!wn)RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
- t=an?maxtyped(at,wt):wt;  // get the type of the result: max of types, but if x empty, leave y as is
- if(an&&!TYPESEQ(t,at))RZ(a=cvt(t,a));  // if a must change precision, do so
+ ASSERT(HOMO(AT(a),AT(w))||!AN(a)||!AN(w),EVDOMAIN);  // error if xy not empty and not compatible
+ ASSERT(AR(a)<=AR(w)+AR(ind)-AM(ind),EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
+ //   w w w w w
+ // m m m . w w   the rank of m may be more or less than AM(ind) which is the number of axes that are covered by m.  For single boxed m, AR(ind)=AM(ind)
+ // <---a   a a
+ ASSERTAGREE(AS(a),AS(ind)+AR(ind)-MAX(0,AR(a)-(AR(w)-AM(ind))),MAX(0,AR(a)-(AR(w)-AM(ind))));  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
+ ASSERTAGREE(AS(a)+MAX(0,AR(a)-(AR(w)-AM(ind))),AS(w)+AR(w)-(AR(a)-MAX(0,AR(a)-(AR(w)-AM(ind)))),AR(a)-MAX(0,AR(a)-(AR(w)-AM(ind))));  // the rest of the shape of m{y comes from shape of y
+ if(!AN(w))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
+ t=AN(a)?maxtyped(AT(a),AT(w)):AT(w);  // get the type of the result: max of types, but if x empty, leave y as is
+ if(AN(a)&&!TYPESEQ(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the type is either
  // DIRECT or this is a boxed memory-mapped array; and don't inplace a =: a m} a or a =: x a} a
  // kludge this inplaces boxed mm arrays when usecount>2.  Seems wrong, but that's the way it was done
  // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
- // the stack is empty, so if there is a virtual block it must be in a hhigher sentence, and the backing name must appear on the
+ // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
 // obsolete  I waf = AFLAG(w);  // w flags
 // obsolete  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
  I ip = ((I)jtinplace&JTINPLACEW) && ASGNINPLACENJA(w)
-      &&TYPESEQ(t,wt)&&(wt&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
+      &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
  if(ip&&t&RECURSIBLE){
   I oldac = ACUC(w);  // remember original UC of w
@@ -151,10 +151,38 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
  // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
  // free them before we overwrite them, and we must increment the usecount in the block we store into them
  // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
- C* RESTRICT av0=CAV(a); I k=bpnoun(t); C * RESTRICT avn=av0+(an*k);
+ C* RESTRICT av0=CAV(a); I k=bpnoun(t); C * RESTRICT avn=av0+(AN(a)*k);
+ // Extract the number of axes included in each cell offset; get the cell size
+ I cellsize; PROD(cellsize,AR(w)-AM(ind),AS(w)+AM(ind));  // number of atoms per index in ind
+ I *iv=AV(ind);  // start of the cell-index array
+ if(UCISRECUR(z)){
+  cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
+  {A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(AN(ind), I ix0=iv[i]*cellsize; DO(cellsize, INSTALLBOXRECUR(zv,ix0,*av); ++ix0; if((++av)==(A*)avn)av=(A*)av0;))}
+ }else{
+  if(cellsize<=AN(a)){
+   // there is more than one cell in a.  We can copy entire cells
+   cellsize *= k;   // change cellsize to bytes
+   switch(cellsize){
+   case sizeof(C):
+    {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data, cyclically
+   case sizeof(I):  // includes BOX and RAT, which may be recursive
+    {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
+   default:  // ? should have more cases
+    {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); if((av+=cellsize)==avn)av=av0;);}  // scatter-copy the data, cyclically
+   }
+  }else{
+   // the cellsize is bigger than a.  We will have to repeat a within each cell
+   // We must repeat for each axis between the end of ind and the start of a
+   I abytes=AN(a)*k;  // number of bytes in a
+   cellsize *= k;   // change cellsize to bytes
+   C* RESTRICT zv=CAV(z); DO(AN(ind), mvc(cellsize,zv+iv[i]*cellsize,abytes,av0); )  // scatter-copy the data, cyclically
+  }
+ }
+#if 0 // obsolete
+  cellsize *= k;   // change cellsize to bytes
  switch(k){
  case sizeof(C):
-  {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data
+  {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data, cyclically
  case sizeof(I):  // includes BOX and RAT, which may be recursive
   if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
   else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
@@ -164,24 +192,30 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I an,ar,*as,at,in,ir,*iv,t,wn
   // if not recursive Q, fall through to...
  // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
  default:
-  {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data
+  {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data, cyclically
  }
+#endif
  RETF(z);
 }
 
+// Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
+// The result is modified so that the AM field gives the number of axes of w that have been boiled down to indices in the result
 A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
  wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);  // b=indexes are boxed and nonempty
- if(!wr)R from(ind,num[0]);
+ if(!wr){x=from(ind,num[0]); AM(x)=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if(b&&AR(ind)){   // array of boxed indexes
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...
-   RZ(x=from(ind,increm(iota(shape(w))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes
+   RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
    DO(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
-   R x;   // the indexes are what we want
+   AM(x)=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
-  k=AAV0(ind); n=AN(k);
-  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,wr,1) /* GATV(x,INT,wr,1,0); */ u=wr+AV(x); s=wr+ws; d=1; DO(wr, *--u=d; d*=*--s;);  // create vector x of sizes of item of each cell (last=1, first=itemsize)
-  R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);  // create vector of positions of each indexed cell; if that's more than an atom, add axes to index each atom of the selected cell
+  // Homogeneous boxes.  j has them in a single table.  turn each row into an index
+  // later this can use the code for table m
+  k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
+  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) /* GATV(x,INT,wr,1,0); */ u=n+AV(x); s=n+ws; d=1; DO(n, *--u=d; d*=*--s;);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
+  AS(x)[0]=n; RZ(j=pdt(j,x)); AM(j)=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
+// obsolete   R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);  // create vector of positions of each indexed cell; if that's more than an atom, add axes to index each atom of the selected cell
  }
  if(!b){ASSERT(AR(ind)<2,EVNONCE); n=1; RZ(j=pind(*ws,ind));}  // if numeric, convert to list of indexes 
  else{  // a single box.
@@ -203,8 +237,10 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*s,*u,wr,*ws;
    RZ(j=irs2(tymes(j,sc(d)),k,0L,VFLAGNONE, RMAX,jtplus));
   }
  }
- // now j is a list of offsets.  If it covers each axis of w, use it; otherwise extend with i. cellsize so that each atom is indexed individually
- R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
+ // now j is an array of offsets.  n is the number of axes that went into each atom of j.  Return the offsets
+ AM(j)=n; R j;  // insert the number of axes used in each cell of j
+ 
+// obsolete  R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
 }    /* convert ind in a ind}w into integer atom-offsets */
 
 /* Reference count for w for amend in place */
@@ -232,14 +268,14 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  // Keep the original address if the caller allowed it, precision of y is OK, the usecount allows inplacing, and the dense type is either
  // DIRECT or this is a boxed memory-mapped array
  B ip=((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)<=1||(AFNJA&AFLAG(w)&&AC(w)==2)))
-     &&TYPESEQ(t,AT(w))&&(t&DIRECT);
+     &&TYPESEQ(t,wtd)&&(t&DIRECT);
  // see if inplaceable.  If not, convert w to correct precision (note that cvt makes a copy if the precision is already right)
  if(ip){ASSERT(!(AFRO&AFLAG(w)),EVRO); z=w;}else RZ(z=cvt(t1,w));
  // call the routine to handle the sparse amend
  p=PAV(z); e=SPA(p,e); b=!AR(a)&&equ(a,e);
  p=PAV(a); if(AT(a)&SPARSE&&!equ(e,SPA(p,e))){RZ(a=denseit(a)); }
  if(AT(ind)&NUMERIC||!AR(ind))z=(b?jtam1e:AT(a)&SPARSE?jtam1sp:jtam1a)(jt,a,z,AT(ind)&NUMERIC?box(ind):ope(ind),ip);
- else{RE(aindex(ind,z,0L,&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}
+ else{RE(aindex(ind,z,0L,(A*)&ind)); ASSERT(ind,EVNONCE); z=(b?jtamne:AT(a)&SPARSE?jtamnsp:jtamna)(jt,a,z,ind,ip);}  // A* for the #$&^% type-checking
  EPILOGZOMB(z);   // do the full push/pop since sparse in-place has zombie elements in z
 }
 
@@ -248,7 +284,8 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
 static DF2(amccv2){F2PREFIP;DECLF; 
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);  // u} not supported for sparse
- R jtmerge2(jtinplace,a,w,pind(AN(w),CALL2(f2,a,w,fs)));
+ A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs))); AM(x)=AR(w);  // The atoms of x include all axes of w, since we are addressing atoms
+ R jtmerge2(jtinplace,a,w,x);
 }
 
 

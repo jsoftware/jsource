@@ -353,11 +353,10 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  wr=AR(w); wt=AN(w)?AT(w):B01;
  if((at|wt)&SPARSE)R pdtsp(a,w);  // Transfer to sparse code if either arg sparse
  if((at|wt)&XNUM+RAT)R df2(a,w,atop(slash(ds(CPLUS)),qq(ds(CSTAR),v2(1L,AR(w)))));  // On indirect numeric, execute as +/@(*"(1,(wr)))
- if(ar&&wr&&AN(a)&&AN(w)&&TYPESNE(at,wt)&&B01&(at|wt))R pdtby(a,w);   // If exactly one arg is boolean, handle separately
+ if(B01&(at|wt)&&TYPESNE(at,wt)&&((ar-1)|(wr-1)|(AN(a)-1)|(AN(w)-1))>=0)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  {/* obsolete t=maxtypedawd(a,w,B01);*/ t=maxtyped(at,wt); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
- // When w has a single column, we could replace +/ . * with +/@:*"1.  But there is no performance benefit currently, because the cache blocking of the +/ . * is good enough to
- // make up for the fringe effects.  If we can use parallel operations for +/@:*"1, it will pay to switch.
+ // When w has a single column, we could replace +/ . * with +/@:*"1.  But the special code beloow is about as fast.
 // if(wr==1&&((ar-1)|(-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1))>=0)R sumattymes1(a,w,0);  // If w is a single column, the matrix-multiply methods give no advantage, so treat it as +/@:*"1.  The long test is to ensure that sumattymes1 does the work, not needing self
  // Allocate result area and calculate loop controls
  // m is # 1-cells of a
@@ -365,7 +364,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  // p is number of inner-product muladds (length of a row of a)
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
- RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));
+ RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));  // allocate the result area, with the needed shape and type
  if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
@@ -403,7 +402,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;D * RESTRICT zvd; 
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected
-    I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} if(wvv<0)tot-=wvv;else tot+=wvv; wv++;)
+    I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=wvv<0?-wvv:wvv; tot+=wvv; wv++;)
     if(!er){
      // w fits in 32 bits.  Try to accumulate the products.  If we can be sure that the total will not exceed 32 bits unless
      // an a-value does, do the fastest loop

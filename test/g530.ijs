@@ -457,6 +457,10 @@ NB. lists of boxes get opened and go through the list-of-numbers code
 
 _10 -: (,_10) (,<0$4)} 4
 
+'index error' -:  0 (i. 6)} etx 0
+
+(0 1 (2 3)} i. 6 2) -: (i. 2 2)  ({.@[)`({:@[)`]} i. 6 2  NB. Someday this might result in virtual m}
+
 'domain error' -: ex '7  ''a''} 2 3 4'
 'domain error' -: ex '7 (<2.3)} 2 3 4'
 'domain error' -: ex '7 ( 2.1)} 2 3 4'

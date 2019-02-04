@@ -232,8 +232,9 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
 // a is array whose 1-cells are index lists, w is array
 // result is the indexed items
 // the numbers in a have been audited for validity
+// w is length of the frame
 A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr,*ws;
- ar=AR(a); as=AS(a); h=as[ar-1];  // h is number of length of the index list, i. e. number of axes of w that disappear during indexing
+ ar=AR(a); as=AS(a); h=as[ar-1];  // h is length of the index list, i. e. number of axes of w that disappear during indexing
  wr=AR(w); ws=AS(w); wcr=wr-wf;
  DO(ar, if(!as[i]){b=1; break;});
  DO(wr, if(!ws[i]){b=1; break;});
@@ -245,7 +246,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
   R z;
  }
  fauxblockINT(pfaux,4,1); fauxINT(p,pfaux,h,1) v=AV(p)+h; u=ws+wf+h; m=1; DO(h, *--v=m; m*=*--u;);  // m is number of items in the block of axes that index into w
- r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1
+ r=wr+1-h;  // rank of result is rank of w, minus h axes that go away and are replaced by 1 axis
  // We will use pdt to create an index to the cell
  if(r==wr){
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);

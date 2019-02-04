@@ -137,9 +137,12 @@ typedef struct {
 // 3 words free
  I    filler[3];
 // --- end cache line 7
+ I*   numlocdelqh;      // head of deleted queue, waiting for realloc
+ I    numlocdelqn;      // number of blocks on the deleted queue  could be UI4
+ I*   numlocdelqt;       // tail of deleted queue
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
- UI4  numlocsize;       // number of BYTES in numloctbl
  I4   parsercalls;      /* # times parser was called                       */
+ UI4  numlocsize;       // AN(jt->stnum)
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  D    ct;               /* comparison tolerance                            */
  D    ctdefault;        /* default comparison tolerance                    */
@@ -152,12 +155,10 @@ typedef struct {
  A    symb;             /* symbol table for assignment                     */
  DC   sitop;            /* top of SI stack                                 */
  I    stmax;            /* numbered locales maximum number                 */
- A    stnum;            /* numbered locale numbers                         */
+ A    stnum;            /* numbered locale numbers or hash table                         */
  A    stptr;            /* numbered locale symbol table ptrs               */
  I    stused;           /* entries in stnum/stptr in use                   */
- I*   numlocalloqh;      // pointer to next locale number to allocate
- I*   numlocdelqh;      // head of queue of blocks deleted before recycling limit reached
- I*   numlocdelqt;       // tail of deletion queue, which might be the alloq or the deletionq
+ I    sttsize;          // length of hash table, =AN(jt->stnum)
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
@@ -294,7 +295,7 @@ typedef struct {
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  I    rngw;             /* RNG: # bits in a random #                       */
-union {
+struct {
  struct {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */

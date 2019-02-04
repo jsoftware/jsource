@@ -122,7 +122,7 @@ ldestroy {:x
 'domain error'  -: lnc etx 0 1 0
 'domain error'  -: lnc etx 'abc'
 'domain error'  -: lnc etx '123'
-'domain error'  -: lnc etx 1 2 3
+NB. OK 'domain error'  -: lnc etx 1 2 3
 'domain error'  -: lnc etx 1 2.3
 'domain error'  -: lnc etx 1 2j3
 'domain error'  -: lnc etx 1 2 3x
@@ -264,7 +264,7 @@ f =: 0&".&.> y =: 18!:3 ''
 
 'domain error'    -: 0 1 0            lpath etx <'z'
 'domain error'    -: 'abc'            lpath etx <'z'
-'domain error'    -: 1 2 3            lpath etx <'z'
+'locale error'    -: 1000 2000 3000   lpath etx <'z'
 'domain error'    -: 1 2.3            lpath etx <'z'
 'domain error'    -: 1 2j3            lpath etx <'z'
 'domain error'    -: 1 2 3x           lpath etx <'z'
@@ -424,7 +424,7 @@ e e. 18!:1 (1)  NB. Not deleted because still on stack
 'locale error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
 'locale error'    -: lswitch etx 2
-'locale error'    -: lswitch etx 5000
+'locale error'    -: lswitch etx 15000
 'domain error'    -: lswitch etx 2.3
 'domain error'    -: lswitch etx 2j3
 'domain error'    -: lswitch etx 2x
@@ -555,11 +555,12 @@ f1_locb_ =: 18!:1@i.@2: @ (18!:55)
 (<'locb') e. f1_locb_ <'locb'
 _1 -: 18!:0 <'locb'
 
+ldestroy (0&".@>) (lcreate'') , (lcreate'')
+
 18!:55 ;:'a b loca locb'
 
 'domain error'    -: ldestroy etx 0 1 0
 'domain error'    -: ldestroy etx 'abc'
-'domain error'    -: ldestroy etx 2 3 4
 'domain error'    -: ldestroy etx 2 3.4
 'domain error'    -: ldestroy etx 2 3j4
 'domain error'    -: ldestroy etx 2 3x
@@ -601,11 +602,12 @@ x=: 4!:5 [1
 x -: /:~ ('sum_',(":>k),'_');;:'a_baker_ k_base_ xy_z_'
 
 NB. Numeric locale allocation.  Works only when not many locales have been allocated
+NB. This is the version for locale reuse (not used)
 f=: 3 : 0
 if. 0 = 4!:0 <'HASRUNLOCNAME_z_' do. 1 return. end.
 HASRUNLOCNAME_z_ =: 1
 lastallo =. {: initallo =. allos =. /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
-deldallo =. $0   NB. locales in the order we delete them
+deldallo =. allos -.~ i. 16b1ff8   NB. locales in the order we delete them
 NB. randomly allocate & delete locales, until we see an old number coming back
 while. do.
   if. 0.5 < ? 0 do.
@@ -626,26 +628,65 @@ end.
 NB. Verify our locale list matches the system
 assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
 assert. lastallo > 5000   NB. at least 5000 allos before we recycle anything
-NB. Allocate locales until we have exhausted the recycling
-while. lastallo >: {: allos do. allos =. allos ,  0&". > 18!:3 '' end.
-NB. Verify that the last few allocated match the last few we deleted
-assert. deldallo -:&(_20&{.) }: allos [ 2
-assert. allos -:&(/:~) 0&".@> 18!:1 (1) [ 3
-NB. Delete one locale, and then allocate until we see it back
-18!:55 lastallo
-allos =. allos -. lastallo
-while. lastallo ~: {: allos do. allos =. allos ,  0&". > 18!:3 '' end.
-NB. At this point the locale table should be exactly full.  We can delete/allo and get locales back immediately
-18!:55 lastallo
-allos =. allos -. lastallo
-assert. lastallo -: 0&".@> 18!:3 '' [ 4
-18!:55 (0);1;lastallo
-assert. 0 -: 0&".@> 18!:3 '' [ 5
-assert. 1 -: 0&".@> 18!:3 '' [ 6
-assert. lastallo -: 0&".@> 18!:3 '' [ 7
-assert. 18!:55 <"0 allos [ 8
+NB. Now deldallo has the locales we have deleted, in the order we deleted them.  newallo is the locale we have just allocated
+NB. It should not be among the last 5000 locales we deleted
+assert. newallo -.@e. _5000 {. deldallo
+NB. Go through 10000 more random alloc/delete, verifying that each allocated locale is not within the last 5000
+for. i. 10000 do.
+  if. 0.5 < ? 0 do.
+    NB. Allocate a new locale, append to list
+    allos =. allos , newallo =. 0&". > 18!:3 ''
+    assert. newallo -.@e. _5000 {. deldallo
+  else.
+    NB. Delete a randomly-chosen locale if there is one
+    if. #allos -. initallo do.
+      delallo =. ({~  ?@#) allos -. initallo  NB. initallo may be on stack, so don't try to delete
+      18!:55 delallo
+      allos =. allos -. delallo
+      deldallo =. deldallo , delallo
+    end.
+  end.
+end.
+NB. Even after all that, the largest locale number extant should be less than 16b1ff8
+assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
+assert. 16b1ff8 > >./ allos
+18!:55 allos -. initallo  NB. clean up
+1
 )
-NB. only with new allocator f''
+
+NB. This is the version for hashed allocation
+f=: 3 : 0
+cocurrent =. 18!:4
+lastallo =. {: initallo =. allos =. /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
+deldallo =. $0
+NB. Allocate a starter set of locales
+for. i. 100 do. allos =. allos , lastallo =. 0&".@> 18!:3'' end.
+NB. Do random allocate/delete
+for. i. 10000 do.
+  if. 0.5 < ? 0 do.
+    NB. Allocate a new locale, append to list, exit loop if reuse has started
+    allos =. allos , newallo =. 0&". > 18!:3 ''
+    assert. newallo = lastallo + 1
+    lastallo =. newallo
+  else.
+    NB. Delete a randomly-chosen locale if there is one
+    if. #allos -. initallo do.
+      delallo =. ({~  ?@#) allos -. initallo  NB. initallo may be on stack, so don't try to delete
+      18!:55 delallo
+      allos =. allos -. delallo
+      deldallo =. deldallo , delallo
+      NB. Verify we haven't cut off any of the locales in the hash chain
+      for_loc. allos do. - each__loc 1 end.
+    end.
+  end.
+end.
+NB. Verify our locale list matches the system
+assert. allos -:&(/:~) 0&".@> fnm =. 18!:1 (1) [ 1
+18!:55 allos -. initallo  NB. clean up
+1
+)
+
+f''
 
 4!:55 ;:'a a_z_ ab c d dd e ee f '
 4!:55 ;:'indirect k lcreate ldestroy lname lnc lnl lpath lswitch '

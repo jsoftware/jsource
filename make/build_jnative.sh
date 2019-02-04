@@ -28,12 +28,12 @@ LINK=" -shared -Wl,-soname,libjnative.so -o libjnative.so "
 ;;
 darwin_j32)
 TARGET=libjnative.dylib
-COMPILE="$common -m32 -I$JAVA_HOME/include "
+COMPILE="$common -m32 -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LINK=" -m32 -dynamiclib -o libjnative.dylib "
 ;;
 darwin_j64)
 TARGET=libjnative.dylib
-COMPILE="$common -I$JAVA_HOME/include "
+COMPILE="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
 LINK=" -dynamiclib -o libjnative.dylib "
 ;;
 *)

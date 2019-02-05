@@ -144,6 +144,7 @@
 #define cdot2(x,y)                  jtcdot2(jt,(x),(y))  
 #define cdparse(x,y)                jtcdparse(jt,(x),(y))
 #define ceil1(x)                    jtceil1(jt,(x))
+#define celloffset(x,y)             jtcelloffset(jt,(x),(y))
 #define center(x0,x1,x2,x3)         jtcenter(jt,(x0),(x1),(x2),(x3))
 #define cex(x,y,z)                  jtcex(jt,(x),(y),(z))
 #define cfd(x)                      jtcfd(jt,(x))

@@ -295,7 +295,7 @@ typedef struct {
  UI*  rngV0[5];         /* RNG: state vectors for RNG0                     */
  UI*  rngv;             /* RNG: rngV[rng]                                  */
  I    rngw;             /* RNG: # bits in a random #                       */
-struct {
+union {
  struct {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */

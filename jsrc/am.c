@@ -204,40 +204,40 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
 }
 
 // Convert list/table of indexes to a list of cell offsets (the number of the atom starting the cell)
-// w has rank > 0, must have rank < 3
+// w has rank > 0.  Result has shape }:$ind
 // AM(result) contains the number of axes of w that went into the calculation
 // The indexes are audited for validity and negative values
 // This is like pind followed by pdt, but done in registers and without worrying about checks for overflow, since the result
 // if valid will fit into an integer
 A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
  RZ(w);
- ASSERT(AR(ind)<3,EVRANK);  // higher ranks are reserved for future definition
  if(AR(ind)<2||AS(ind)[1]==1){RZ(z=pind(AS(w)[0],ind)); AM(z)=1;  // if m is a list or atom or 1-column table, pind handles that case quickly and possibly in-place.  NOTE ind cannot be virtual
  }else{
-  // rank of ind=2. process each row to a cell offset
-  I naxes = AS(ind)[1];
-  ASSERT(naxes<=AR(w),EVLENGTH);  // length of rows of table must not exceed rank of w
+  // rank of ind>1. process each row to a cell offset
+  I naxes = AS(ind)[AR(ind)-1];
+  I nzcells; PROD(nzcells,AR(ind)-1,AS(ind));
   RZ(w=AT(w)&INT?w:cvt(INT,w));  // w is now an INT vector, possibly the input argument
-  GATV(z,INT,AS(ind)[0],1,0); I *zv=IAV1(z); AM(z)=naxes; // allocate result area, point to first cell location.  Report # axes used in AM
+  ASSERT(naxes<=AR(w),EVLENGTH);  // length of rows of table must not exceed rank of w
+  GATV(z,INT,nzcells,AR(ind)-1,AS(ind)); I *zv=IAV1(z); AM(z)=naxes; // allocate result area, point to first cell location.  Report # axes used in AM
   I *iv=IAV(ind);// point to first row
   // Do the verify/multiply depending on number of axes by Horner's rule
   if(naxes<3){
    // rank 2
    I ln0=AS(w)[0], ln1=AS(w)[1];
-   DO(AS(ind)[0], I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
+   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
                     in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX) r+=in;
                     *zv++=r; iv+=2;)
   }else if(naxes==3){
    // rank 3
    I ln0=AS(w)[0], ln1=AS(w)[1], ln2=AS(w)[2];
-   DO(AS(ind)[0], I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
+   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
                     in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX) r=(r+in)*ln2;
                     in=iv[2]; if(in<0)in+=ln2; ASSERT((UI)in<(UI)ln2,EVINDEX) r+=in;
                     *zv++=r; iv+=3;)
   }else{
    // rank 4+
    I ln0=AS(w)[0], ln1=AS(w)[1], lnn=AS(w)[naxes-1];
-   DO(AS(ind)[0], I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
+   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
                     in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX)
                     DO(naxes-3,                                               r=(r+in)*AS(w)[i+2];
                     in=iv[i+2]; if(in<0)in+=AS(w)[i+2]; ASSERT((UI)in<(UI)AS(w)[i+2],EVINDEX))

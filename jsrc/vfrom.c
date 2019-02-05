@@ -407,9 +407,27 @@ F2(jtfrom){I at;A z;
  RZ(z); /* obsolete INHERITNOREL(z,w);*/ RETF(z);
 }   /* a{"r w main control */
 
-F2(jtsfrom){A ind;
- RE(aindex1(a,w,0L,&ind));
- R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
+F2(jtsfrom){
+// obsolete  RE(aindex1(a,w,0L,&ind));
+// obsolete  R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
+ if(!(SPARSE&AT(w))){
+  // Not sparse.  Verify the indexes are numeric
+  if(((AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric
+   // Check indexes for validity; if valid, turn each row into a cell offset
+   if(ind=celloffset(w,a)){
+    // Fetch the cells and return.  ind is now an array of cell indexes.  View w as an array of those cells
+    fauxblock(virtwfaux);
+    A virtw; fauxvirtual(virtw,virtwfaux,w,AR(w)-(RANKT)(AS(a)[AR(a)-1]-1),ACUC1); AN(virtw)=AN(w);
+    PROD(AS(virtw)[0],AS(a)[AR(a)-1],AS(w)) MCISH(AS(virtw)+1,AS(w)+AS(a)[AR(a)-1],AR(w)-AS(a)[AR(a)-1]) 
+    R ifrom(ind,virtw);  // this needlessly validates indexes - just move here
+   }
+  }
+ }else{A ind;
+  // sparse.  See if we can audit the index list.  If we can, use it, else execute the slow way
+  RE(aindex1(a,w,0L,&ind)); if(ind)R frombsn(ind,w,0L);
+ }
+ // If we couldn't handle it as a special case, do it the hard way
+ R from(irs1(a,0L,1L,jtbox),w);
 }    /* (<"1 a){w */
 
 static F2(jtmapx){

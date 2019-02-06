@@ -349,7 +349,8 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
-#define MEMCPYTUNE 8192  // (bytes) blocks shorter than this should just use MCISxx.  Keep as power of 2
+#define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
+#define MEMCPYTUNELOOP 64  // (bytes) predictable blocks shorter than this should just use MCISxx.  Keep as power of 2
 
 
 // Debugging options
@@ -434,7 +435,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
-// When the type and all rank/shape are known, use GAT.  The compiler precalculates almost everything
+// When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GAT(name,type,atoms,rank,shaape) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \

@@ -64,7 +64,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  if(wn){
   // For virtual results we need: kn: number of atoms in an item of a cell of w;   
   PROD1(k, wcr-1, ws+wf+1);  // number of atoms in an item of a cell
-  // Also m: #cells in w 
+  // Also m: #wcr-cells in w 
   PROD(m,wf,ws); zn=k*m;  RE(zn=mult(an,zn));
 // correct  if(((zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
   if((((AT(w)&(DIRECT|RECURSIBLE))-1)|(zn-2)|-(wf|(wflag&(AFNJA))))>=0){  // zn>1 and not (frame or NJA)
@@ -408,18 +408,40 @@ F2(jtfrom){I at;A z;
 }   /* a{"r w main control */
 
 F2(jtsfrom){
-// obsolete  RE(aindex1(a,w,0L,&ind));
-// obsolete  R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
+// obsolete A ind; RE(aindex1(a,w,0L,&ind));
+// obsolete R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
  if(!(SPARSE&AT(w))){
-  // Not sparse.  Verify the indexes are numeric
-  if(((AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric
+  // Not sparse.  Verify the indexes are numeric and not empty
+  if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is 
    // Check indexes for validity; if valid, turn each row into a cell offset
    if(ind=celloffset(w,a)){
     // Fetch the cells and return.  ind is now an array of cell indexes.  View w as an array of those cells
-    fauxblock(virtwfaux);
-    A virtw; fauxvirtual(virtw,virtwfaux,w,AR(w)-(RANKT)(AS(a)[AR(a)-1]-1),ACUC1); AN(virtw)=AN(w);
-    PROD(AS(virtw)[0],AS(a)[AR(a)-1],AS(w)) MCISH(AS(virtw)+1,AS(w)+AS(a)[AR(a)-1],AR(w)-AS(a)[AR(a)-1]) 
-    R ifrom(ind,virtw);  // this needlessly validates indexes - just move here
+    // We could do this with ifrom, but it validates the input and checks for virtual, neither of which is germane here.  Also, we would have
+    // to reshape w into an array of cells.  Easier just to copy the data right here
+    // Find the number of axes included in each cell offset; get the cell size
+    I cellsize; PROD(cellsize,AR(w)-AS(a)[AR(a)-1],AS(w)+AS(a)[AR(a)-1]);  // number of atoms per index in ind
+    I * RESTRICT iv=AV(ind);  // start of the cell-index array
+    A z; GA(z,AT(w),cellsize*AN(ind),AR(ind)+AR(w)-AS(a)[AR(a)-1],0)  MCISH(AS(z),AS(ind),AR(ind)) MCISH(AS(z)+AR(ind),AS(w)+AS(a)[AR(a)-1],AR(w)-AS(a)[AR(a)-1])  // shape from ind, then w
+    cellsize <<= bplg(AT(w));   // change cellsize to bytes
+    switch(cellsize){
+    case sizeof(C):
+     {C * RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data
+    case sizeof(I):  // may include D
+     {I * RESTRICT zv=IAV(z); I *RESTRICT wv=IAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data, 8-byte chunks
+    default:
+     // handle small integral number of words with a local loop
+     if(!(cellsize&~(MEMCPYTUNELOOP-SZI))){  // length is an even number of I and not too big
+      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),cellsize>>LGSZI) zv+=cellsize;)  // use local copy
+     }else{
+      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,cellsize); zv+=cellsize;)  // use local copy
+     }
+     break;
+    }
+    RETF(z);
+// obsolete     fauxblock(virtwfaux);
+// obsolete     A virtw; fauxvirtual(virtw,virtwfaux,w,AR(w)-(RANKT)(AS(a)[AR(a)-1]-1),ACUC1); AN(virtw)=AN(w);
+// obsolete     PROD(AS(virtw)[0],AS(a)[AR(a)-1],AS(w)) MCISH(AS(virtw)+1,AS(w)+AS(a)[AR(a)-1],AR(w)-AS(a)[AR(a)-1]) 
+// obsolete     R ifrom(ind,virtw);  // this needlessly validates indexes - just move here
    }
   }
  }else{A ind;
@@ -427,7 +449,7 @@ F2(jtsfrom){
   RE(aindex1(a,w,0L,&ind)); if(ind)R frombsn(ind,w,0L);
  }
  // If we couldn't handle it as a special case, do it the hard way
- R from(irs1(a,0L,1L,jtbox),w);
+ RETF(from(irs1(a,0L,1L,jtbox),w));
 }    /* (<"1 a){w */
 
 static F2(jtmapx){

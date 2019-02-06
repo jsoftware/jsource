@@ -753,7 +753,7 @@ extern A        jtjset(J,C*,A);
 extern void     jtjsigd(J,C*);
 extern void     jtjsignal(J,I);
 extern void     jtjsignal3(J,I,A,I);
-extern A        jtjstd(J,A,A);
+extern A        jtjstd(J,A,A,I*);
 extern A        jtleakblockread(J,A);
 extern A        jtleakblockreset(J,A);
 extern B        jtlocdestroy(J,A);

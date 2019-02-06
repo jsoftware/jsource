@@ -112,16 +112,17 @@ F1(jtcasev){A b,*u,*v,w1,x,y,z;B*bv,p,q;I*aa,c,*iv,j,m,n,r,*s,t;
  }
 }   /* z=:b}x0,x1,x2,...,x(m-2),:x(m-1) */
 
-// Handle a ind} w after indices have been converted to integer, dense
-static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
+// Handle a ind} w after indices have been converted to integer atoms, dense
+// cellframelen is the number of axes of w that were used in computing the cell indexes
+static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  RZ(a&&w&&ind);
  ASSERT(HOMO(AT(a),AT(w))||!AN(a)||!AN(w),EVDOMAIN);  // error if xy not empty and not compatible
- ASSERT(AR(a)<=AR(w)+AR(ind)-AM(ind),EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
+ ASSERT(AR(a)<=AR(w)+AR(ind)-cellframelen,EVRANK);   // max # axes in a is the axes in w, plus any surplus axes of m that did not go into selecting cells
  //   w w w w w
- // m m m . w w   the rank of m may be more or less than AM(ind) which is the number of axes that are covered by m.  For single boxed m, AR(ind)=AM(ind)
+ // m m m . w w   the rank of m may be more or less than cellframelen which is the number of axes that are covered by m.  For single boxed m, AR(ind)=cellframelen
  // <---a   a a
- ASSERTAGREE(AS(a),AS(ind)+AR(ind)-MAX(0,AR(a)-(AR(w)-AM(ind))),MAX(0,AR(a)-(AR(w)-AM(ind))));  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
- ASSERTAGREE(AS(a)+MAX(0,AR(a)-(AR(w)-AM(ind))),AS(w)+AR(w)-(AR(a)-MAX(0,AR(a)-(AR(w)-AM(ind)))),AR(a)-MAX(0,AR(a)-(AR(w)-AM(ind))));  // the rest of the shape of m{y comes from shape of y
+ ASSERTAGREE(AS(a),AS(ind)+AR(ind)-MAX(0,AR(a)-(AR(w)-cellframelen)),MAX(0,AR(a)-(AR(w)-cellframelen)));  // shape of m{y is the shape of m, as far as it goes.  The first part of a may overlap with m
+ ASSERTAGREE(AS(a)+MAX(0,AR(a)-(AR(w)-cellframelen)),AS(w)+AR(w)-(AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen))),AR(a)-MAX(0,AR(a)-(AR(w)-cellframelen)));  // the rest of the shape of m{y comes from shape of y
  if(!AN(w))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  t=AN(a)?maxtyped(AT(a),AT(w)):AT(w);  // get the type of the result: max of types, but if x empty, leave y as is
  if(AN(a)&&!TYPESEQ(t,AT(a)))RZ(a=cvt(t,a));  // if a must change precision, do so
@@ -153,7 +154,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
  // It is possible that the same cell of w will be written multiple times, so we do the fa-then-ra each time we store
  C* RESTRICT av0=CAV(a); I k=bpnoun(t); C * RESTRICT avn=av0+(AN(a)*k);
  // Extract the number of axes included in each cell offset; get the cell size
- I cellsize; PROD(cellsize,AR(w)-AM(ind),AS(w)+AM(ind));  // number of atoms per index in ind
+ I cellsize; PROD(cellsize,AR(w)-cellframelen,AS(w)+cellframelen);  // number of atoms per index in ind
  I *iv=AV(ind);  // start of the cell-index array
  if(UCISRECUR(z)){
   cellsize<<=(t>>RATX);  // RAT has 2 boxes per atom, all others have 1 and are lower
@@ -169,7 +170,7 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
    default:
     // handle small integral number of words with a local loop
-    if(!(cellsize&~(MEMCPYTUNE-SZI))){  // length is an even number of I and not too big
+    if(!(cellsize&~(MEMCPYTUNELOOP-SZI))){  // length is an even number of I and not too big
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MCIS((I*)(zv+(iv[i]*cellsize)),(I*)av,cellsize>>LGSZI); if((av+=cellsize)==avn)av=av0;);  // use local copy
     }else{
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); if((av+=cellsize)==avn)av=av0;);  // scatter-copy the data, cyclically
@@ -205,39 +206,43 @@ static A jtmerge2(J jt,A a,A w,A ind){F2PREFIP;A z;I t;
 
 // Convert list/table of indexes to a list of cell offsets (the number of the atom starting the cell)
 // w has rank > 0.  Result has shape }:$ind
-// AM(result) contains the number of axes of w that went into the calculation
+// This is used by m} and <"1@[ { ]  which have different specs when ind is a list.  Here we follow the spec for m}, in which
+// a list ind is treated like a table with rows of length 1
 // The indexes are audited for validity and negative values
-// This is like pind followed by pdt, but done in registers and without worrying about checks for overflow, since the result
-// if valid will fit into an integer
+// This is like pind/aindex1 followed by pdt, but done in registers and without worrying about checks for overflow, since the result
+// if valid will fit into an integer.  If there are no negative indexes, this method is just a teeny bit faster, because pind/aindex1 do one quick loop at full memory
+// speed to validate the input, and pdt works well for a large number of short vectors - in particular it avoids the carried dependency between axes that
+// Horner's Rule creates.  This version keeps things in registers and has less setup time; and it is much better if there are negative indexes.
 A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
  RZ(w);
- if(AR(ind)<2||AS(ind)[1]==1){RZ(z=pind(AS(w)[0],ind)); AM(z)=1;  // if m is a list or atom or 1-column table, pind handles that case quickly and possibly in-place.  NOTE ind cannot be virtual
+ if(AR(ind)<2){RZ(z=pind(AS(w)[0],ind));  // (m}only) treat a list as a list of independent indexes.  pind handles that case quickly and possibly in-place.
+ }else if(AS(ind)[AR(ind)-1]==1){RZ(z=pind(AS(w)[0],irs1(ind,0L,2L,jtravel)));  // if rows are 1 long, pind handles that too - remove the last axis
  }else{
-  // rank of ind>1. process each row to a cell offset
+  // rank of ind>1, and rows of ind are longer than 1. process each row to a cell offset
   I naxes = AS(ind)[AR(ind)-1];
   I nzcells; PROD(nzcells,AR(ind)-1,AS(ind));
-  RZ(w=AT(w)&INT?w:cvt(INT,w));  // w is now an INT vector, possibly the input argument
+  RZ(ind=AT(ind)&INT?ind:cvt(INT,ind));  // w is now an INT vector, possibly the input argument
   ASSERT(naxes<=AR(w),EVLENGTH);  // length of rows of table must not exceed rank of w
-  GATV(z,INT,nzcells,AR(ind)-1,AS(ind)); I *zv=IAV1(z); AM(z)=naxes; // allocate result area, point to first cell location.  Report # axes used in AM
+  GATV(z,INT,nzcells,AR(ind)-1,AS(ind)); I *zv=IAV(z);  // allocate result area, point to first cell location.
   I *iv=IAV(ind);// point to first row
-  // Do the verify/multiply depending on number of axes by Horner's rule
+  // Do the verify/multiply depending on number of axes.
   if(naxes<3){
    // rank 2
    I ln0=AS(w)[0], ln1=AS(w)[1];
-   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
-                    in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX) r+=in;
+   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln1; ASSERT((UI)in<(UI)ln0,EVINDEX)
+                    in=iv[1]; if(in<0)in+=ln1; r+=in; ASSERT((UI)in<(UI)ln1,EVINDEX)
                     *zv++=r; iv+=2;)
   }else if(naxes==3){
-   // rank 3
-   I ln0=AS(w)[0], ln1=AS(w)[1], ln2=AS(w)[2];
-   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
-                    in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX) r=(r+in)*ln2;
-                    in=iv[2]; if(in<0)in+=ln2; ASSERT((UI)in<(UI)ln2,EVINDEX) r+=in;
+   // rank 3  Avoid Horner's Rule, which creates a carried dependency across the multiplies
+   I ln0=AS(w)[0], ln1=AS(w)[1], ln2=AS(w)[2], ln12=ln1*ln2;
+   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln12; ASSERT((UI)in<(UI)ln0,EVINDEX)
+                    in=iv[1]; if(in<0)in+=ln1; r+=in*ln2; ASSERT((UI)in<(UI)ln1,EVINDEX)
+                    in=iv[2]; if(in<0)in+=ln2; r+=in; ASSERT((UI)in<(UI)ln2,EVINDEX)
                     *zv++=r; iv+=3;)
   }else{
-   // rank 4+
+   // rank 4+.  For simplicity we use Horner's Rule since this case is rare
    I ln0=AS(w)[0], ln1=AS(w)[1], lnn=AS(w)[naxes-1];
-   DO(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
+   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
                     in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX)
                     DO(naxes-3,                                               r=(r+in)*AS(w)[i+2];
                     in=iv[i+2]; if(in<0)in+=AS(w)[i+2]; ASSERT((UI)in<(UI)AS(w)[i+2],EVINDEX))
@@ -250,26 +255,30 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
 }
 
 // Convert ind to a list of cell offsets.  Error if inhomogeneous cells.
-// The result is modified so that the AM field gives the number of axes of w that have been boiled down to indices in the result
-A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr,*ws;
+// Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
+static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr,*ws;
  wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);  // b=indexes are boxed and nonempty
- if(!wr){RZ(x=from(ind,num[0])); AM(x)=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
+ if(!wr){RZ(x=from(ind,num[0])); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if(b&&AR(ind)){   // array of boxed indexes
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...
    RZ(x=MODIFIABLE(from(ind,increm(iota(shape(w)))))); u=AV(x); // go back to the original indexes, select from table of all possible incremented indexes; since it is incremented, it is writable
    DO(AN(x), ASSERT(*u,EVDOMAIN); --*u; ++u;);   // if anything required fill, it will leave a 0.  Fail then, and unincrement the indexes
-   AM(x)=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
+   *cellframelen=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
   // later this can use the code for table m
   k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
   fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) /* GATV(x,INT,wr,1,0); */ d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
-  AS(x)[0]=n; RZ(j=pdt(j,x)); AM(j)=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
+  AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
 // obsolete   R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);  // create vector of positions of each indexed cell; if that's more than an atom, add axes to index each atom of the selected cell
  }
- if(!b){ASSERT(AR(ind)<2,EVNONCE); n=1; RZ(j=pind(*ws,ind));}  // if numeric, convert to list of indexes 
- else{  // a single box.
+ if(!b){
+  // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a list of indexes)
+  ASSERT(AR(ind)<2,EVNONCE);
+  RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
+  n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
+ }else{  // a single box.
   ind=AAV0(ind); n=AN(ind); r=AR(ind);  // ind etc now refer to the CONTENTS of the single box
   ASSERT(!n&&1==r||AT(ind)&BOX+NUMERIC,EVINDEX);  // must be empty list or numeric or boxed
   if(n&&!(BOX&AT(ind)))RZ(ind=every(ind,0L,jtright1));  // if numeric, box each atom
@@ -293,7 +302,7 @@ A jtjstd(J jt,A w,A ind){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr,*ws;
  // It might be good to give a dispensation and allow virtual ind.  In that case, j might have survived this long and thus
  // be virtual.  In that case we must (1) realize it; (2) use the filler field (64-bit only) to pass back the number of axes; (3) use
  // a field in jt to pass back the number of axes.
- AM(j)=n; R j;  // insert the number of axes used in each cell of j
+ *cellframelen=n; R j;  // insert the number of axes used in each cell of j
  
 // obsolete  R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
 }    /* convert ind in a ind}w into integer atom-offsets */
@@ -308,7 +317,8 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
  AD * RESTRICT ind=VAV(self)->fgh[0];
  RZ(a&&w&&ind);
  if(!((AT(w)|AT(ind))&SPARSE)){
-  z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,jstd(w,ind));  // convert indexes to cell indexes; dense a if needed; dense amend
+  I cellframelen; ind=jstd(w,ind,&cellframelen);   // convert indexes to cell indexes; remember how many were converted
+  z=jtmerge2(jtinplace,AT(a)&SPARSE?denseit(a):a,w,ind,cellframelen);  //  dense a if needed; dense amend
   EPILOG(z);
  }
  // Otherwise, w is sparse
@@ -339,8 +349,8 @@ static DF2(jtamendn2){F2PREFIP;PROLOG(0007);A e,z; B b;I atd,wtd,t,t1;P*p;
 static DF2(amccv2){F2PREFIP;DECLF; 
  RZ(a&&w); 
  ASSERT(DENSE&AT(w),EVNONCE);  // u} not supported for sparse
- A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs))); AM(x)=AR(w);  // The atoms of x include all axes of w, since we are addressing atoms
- R jtmerge2(jtinplace,a,w,x);
+ A x;RZ(x=pind(AN(w),CALL2(f2,a,w,fs)));
+ R jtmerge2(jtinplace,a,w,x,AR(w));   // The atoms of x include all axes of w, since we are addressing atoms
 }
 
 

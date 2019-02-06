@@ -16,13 +16,12 @@ F1(jtrank){F1PREFIP; RZ(w); R sc(AR(w));}
 F1(jtnatoms){F1PREFIP; RZ(w); R sc(AN(w));}
 
 // ,y and ,"r y - producing virtual blocks
-F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
+F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  F1PREFIP; RZ(w); 
- n=AN(w); ws=AS(w); wt=AT(w);  // n=#atoms, ws->shape, wt=type, d=1 if dense
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK; // wr=rank, r=effective rank (jt->rank is effective rank from irs1), f=frame
- if(!(wt&SPARSE)){
+ r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; RESETRANK; // r=effective rank (jt->rank is effective rank from irs1), f=frame
+ if(!(AT(w)&SPARSE)){
   if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: rank of sparse array is always 1)
-  CPROD(n,m,r,f+ws);   // m=#atoms in cell
+  CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
   if((I)jtinplace&JTINPLACEW && r && ASGNINPLACE(w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
    // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
    // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
@@ -30,23 +29,23 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,n,r,*u,*v,wr,*ws,wt,*yv;P*wp,*zp;
    AR(w)=(RANKT)(1+f); AS(w)[f]=m; RETF(w);  // if virtual inplace, notify the originator
   }
   // Not inplaceable.  Create a (noninplace) virtual copy, but not if NJA memory
-  if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=n; I *zs=AS(z); DO(f, zs[i]=ws[i];) zs[f]=m; RETF(z);}
+  if(!(AFLAG(w)&(AFNJA))){RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); /* obsolete I *zs=AS(z);*/ MCISH(AS(z),AS(w),f) /* obsolete DO(f, zs[i]=ws[i];) */ AS(z)[f]=m; RETF(z);}
 
   // If we have to allocate a new block, do so
-  GA(z,wt,n,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
-  MC(AV(z),AV(w),n<<bplg(wt)); /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z); // if dense, move the data and relocate it as needed
+  GA(z,AT(w),AN(w),1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
+  MC(AV(z),AV(w),AN(w)<<bplg(AT(w))); /* obsolete RELOCATE(w,z); INHERITNOREL(z,w);*/ RETF(z); // if dense, move the data and relocate it as needed
  }
  // the rest handles sparse matrix enfile
- RE(m=prod(r,f+ws));  // # atoms in cell
- GASPARSE(z,wt,1,1+f,ws); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
+ RE(m=prod(r,f+AS(w)));  // # atoms in cell
+ GASPARSE(z,AT(w),1,1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
- RZ(b=bfi(wr,SPA(wp,a),1)); 
+ RZ(b=bfi(AR(w),SPA(wp,a),1)); 
  if(memchr(b+f,C1,r)){
-  if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w); x=SPA(wp,x);}
+  if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
   RZ(a=caro(ifb(1+f,b)));   // avoid readonly block
-  GATV(c,INT,r,1L,0L); v=r+AV(c); j=wr; m=1; DO(r, *--v=m; m*=ws[--j];);
-  y0=SPA(wp,i); v=AS(y0); m=v[0]; n=v[1];
+  GATV(c,INT,r,1L,0L); v=r+AV(c); j=AR(w); m=1; DO(r, *--v=m; m*=AS(w)[--j];);
+  y0=SPA(wp,i); v=AS(y0); m=v[0]; I n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));
   GATV(y,INT,m*(1+n-r),2,0); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;

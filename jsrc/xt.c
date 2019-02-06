@@ -160,7 +160,7 @@ static A tslu2(J jt,A a,A w,I utc){A x,z;C *zv,*xv;D*d;I m,n,n1,n2=0,ws[2];
  n=(1==AR(a))?1:*AS(a); m=*((AR(a)-1)+AS(a));
  #define MAXSTRFTIME 100
  ws[0]=n;ws[1]=MAXSTRFTIME;
- GATV(x,LIT,n*MAXSTRFTIME,2,ws); xv=CAV(x);
+ GAT(x,LIT,n*MAXSTRFTIME,2,ws); xv=CAV(x);
  t=&t0;
  I i;
 #if 0
@@ -175,7 +175,7 @@ static A tslu2(J jt,A a,A w,I utc){A x,z;C *zv,*xv;D*d;I m,n,n1,n2=0,ws[2];
 #else
  for(i=0;i<n;i++){ 
   n2=strlen("2019-02-03 04:05:06 +0800 HKT");
-  strncpy(xv,"2019-02-03 04:05:06 +0800 HKT",n2+1);
+  strncpy(xv,"2019-02-03 04:05:06 +0800 HKT",n2);
   xv+=MAXSTRFTIME;
  }
 #endif
@@ -184,7 +184,7 @@ static A tslu2(J jt,A a,A w,I utc){A x,z;C *zv,*xv;D*d;I m,n,n1,n2=0,ws[2];
   fprintf(stderr,"verify %s\n",xv);
   xv+=MAXSTRFTIME; };
   ws[0]=(1==AR(a))?n2:n; ws[1]=n2;
-  GATV(z,LIT,n*n2,AR(a),ws);
+  GAT(z,LIT,n*n2,AR(a),ws);
   xv=CAV(x);
  for(i=0;i<n;i++){ 
   fprintf(stderr,"again %s\n",xv);

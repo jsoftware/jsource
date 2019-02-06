@@ -1157,6 +1157,6 @@ P -: (<"0 i.3 4 1 3 4 5) [ 1 2 > ;. _3 P =:  <"0 i.3 4 1 3 4 5  NB. past the siz
 
 4!:55 ;:'a adot1 adot2 sdot0 b bb c cut3 cutm3 f f1 f2 f3 f4 f5'
 4!:55 ;:'i1 i2 m P p q size t test testw w x y'
-4!:55 ;: 'a'
+4!:55 ;: 'a c'
 randfini''
 

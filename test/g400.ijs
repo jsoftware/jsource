@@ -557,5 +557,6 @@ NB. Now hook
 
 
 4!:55 ;:'a a0 a1 abox adot1 adot2 sdot0 b c copy f f1 f2 f3 f4 g m n siz1200 siz12002 tally x xx y '
+4!:55 ;:'a b ' 
 randfini''
 

@@ -649,4 +649,5 @@ x =: "
 4!:55 ;:'f10 f11 f12 f13'
 4!:55 ;:'g g0 g1 g2 g3 g4 g5 g8 g9 g10 g11 goo '
 4!:55 ;:'h h1 hoo i ia j k n p pqr q qqq save size0 size1 sp t t t0 t1 t2 test test1 x xx xyz y yy z z1 zz '
+4!:55 ;:'lim lm mody rx ry selshape tm tx ty' 
 randfini''

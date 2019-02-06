@@ -412,7 +412,7 @@ F2(jtsfrom){
 // obsolete R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
  if(!(SPARSE&AT(w))){
   // Not sparse.  Verify the indexes are numeric and not empty
-  if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is 
+  if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
    // Check indexes for validity; if valid, turn each row into a cell offset
    if(ind=celloffset(w,a)){
     // Fetch the cells and return.  ind is now an array of cell indexes.  View w as an array of those cells

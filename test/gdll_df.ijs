@@ -302,4 +302,4 @@ obj_add=:    <>{.'obj_add x' dcd ''
 
 4!:55 ;:'a add address b d2f2d dcd f j2z2j lib obj_add pc s0 s1 td td3 td4 tf tf3'
 4!:55 ;:'v0 v1 v2 v3 v4 v5 x xx yy z'
-
+4!:55 ;:'cdrc i s' 

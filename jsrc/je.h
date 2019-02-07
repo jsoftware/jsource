@@ -557,6 +557,7 @@ extern F2(jtthorn2);
 extern F2(jttie);
 extern F2(jttsit2);
 extern F2(jttsl2);
+extern F2(jttsp2);
 extern F2(jttsu2);
 extern F2(jttymes);
 extern F2(jtuco2);

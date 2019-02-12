@@ -339,6 +339,19 @@ test=: 2 : 0
 ({.,# ) test (3 : '({.,# )y')
 (# ,{.) test (3 : '(# ,{.)y')
 
+NB. Type of empty result
+4 -: 3!:0 #/.~ ''
+4 -: 3!:0 #/.~ 0$1x  NB. Should be 64
+4 -: 3!:0 #"#/.~ ''
+4 -: 3!:0 #"#/.~ 0$a:
+64 -: 3!:0 #"#/.~ 0$1x
+32 -: 3!:0 </.~ 0$a:
+32 -: 3!:0 </.~ 0$''
+32 -: 3!:0 </.~ 0$1x
+8 -: 3!:0 ^./.~ 0$a:
+8 -: 3!:0 ^./.~ 0$''
+8 -: 3!:0 ^./.~ 0$1x
+
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'

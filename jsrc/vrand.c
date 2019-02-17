@@ -804,6 +804,224 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
  RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
 }
 
+// support for ?.
+// To the extent possible, ?. is frozen.  Changed modules need to be copied here to preserve compatibility
+#undef GMOF
+#if SY_64           /* m<x, greatest multiple of m less than x */
+#define GMOF(m,x)   (            x63+(x63-(2*(x63%m))%m))
+#else
+#define GMOF(m,x)   (x ? x-x%m : x31+(x31-(2*(x31%m))%m))
+#endif
+
+#undef rollksub
+#define rollksub(a,w) jtrollksubdot(jt,(a),(w))
+static F2(jtrollksubdot){A z;I an,*av,k,m1,n,p,q,r,sh;UI j,m,mk,s,t,*u,x=jt->rngM[jt->rng];
+ RZ(a&&w);
+ an=AN(a); RE(m1=i0(w)); ASSERT(0<=m1,EVDOMAIN); m=m1;
+ RZ(a=vip(a)); av=AV(a); RE(n=prod(an,av));
+ GA(z,0==m?FL:2==m?B01:INT,n,an,av); u=(UI*)AV(z);
+ if(!m){D*v=DAV(z); INITD; if(sh)DO(n, *v++=NEXTD1;)else DO(n, *v++=NEXTD0;);}
+ else if(2==m){I nslice; I j;
+  p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+  // See how many p-size blocks we can have, and how many single leftovers
+  q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
+#if SY_64
+  mk=(UI)0x0101010101010101;
+#else
+  mk=0x01010101;
+#endif
+  // Loop to output all the p-size blocks
+  for(j=0;j<q;++j){
+   t=NEXT;
+   DO(nslice, *u++=mk&t; t>>=1;);
+  }
+  // Get a random # for finishing slices, & out them
+  t=NEXT;  // Get random # for slices
+  DO(r>>LGSZI, *u++=mk&t; t>>=1;);
+  // Output the rest, one bit at a time
+  t=NEXT;  // Get random # for bits
+  B*c=(B*)u; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+ }else{
+  r=n; s=GMOF(m,x); if(s==x)s=0;
+  k=0; j=1; while(m>j){++k; j<<=1;}
+  if(k&&j==m){  /* m=2^k but is not 1 or 2 */
+   p=jt->rngw/k; q=n/p; r=n%p; mk=m-1;
+   switch((s?2:0)+(1<p)){
+    case 0: DO(q,           t=NEXT;         *u++=mk&t;         ); break;
+    case 1: DO(q,           t=NEXT;   DO(p, *u++=mk&t; t>>=k;);); break;
+    case 2: DO(q, while(s<=(t=NEXT));       *u++=mk&t;         ); break;
+    case 3: DO(q, while(s<=(t=NEXT)); DO(p, *u++=mk&t; t>>=k;););
+  }}
+  if(r&&s)DO(r, while(s<=(t=NEXT)); *u++=t%m;) else DO(r, *u++=NEXT%m;);
+ }
+ R z;
+}
+
+#undef rollk
+#define rollk(a,w,self) jtrollkdot(jt,(a),(w),(self))
+DF2(jtrollkdot){A g;V*sv;
+ RZ(a&&w&&self);
+ sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
+ if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(df2(a,w,g));
+ RETF(rollksub(a,vi(w)));
+}    /* ?@$ or ?@# or [:?$ or [:?# */
+
+#undef xrand
+#define xrand(w) jtxranddot(jt,(w))
+static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
+ n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
+ m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
+ GATV(q,INT,m,1,0); qv=AV(q);  // allocate place to hold base, qv-> result digits
+ DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
+ // loop to roll random values until we get one that is less than x
+ do{
+  RZ(z=roll(q)); zv=AV(z);  // roll one value in each Digit position
+  DO(j=m, --j; if(xv[j]!=zv[j]){b=xv[j]<zv[j]; break;});  // MS mismatched Digit tells the tale; if no mismatch, that's too high, keep b=1
+ }while(b);  // loop till b=0
+ j=m-1; while(0<j&&!zv[j])--j; AN(z)=*AS(z)=++j;  // remove leading 0s from (tail of) result
+ EPILOG(z);
+}    /* ?x where x is a single strictly positive extended integer */
+
+#undef rollxnum
+#define rollxnum(w) jtrollxnumdot(jt,(w))
+static F1(jtrollxnumdot){A z;B c=0;I d,n;X*u,*v,x;
+ if(!(AT(w)&XNUM))RZ(w=cvt(XNUM,w));  // convert rational to numeric
+ n=AN(w); v=XAV(w);
+ GATV(z,XNUM,n,AR(w),AS(w)); u=XAV(z);
+ // deal an extended random for each input number.  Error if number <0; if 0, put in 0 as a placeholder
+ DO(n, x=*v++; d=XDIG(x); ASSERT(0<=d,EVDOMAIN); if(d)RZ(*u++=rifvs(xrand(x))) else{*u++=iv0; c=1;});
+ // If there was a 0, convert the whole result to float, and go back and fill the original 0s with random floats
+ if(c){D*d;I mk,sh;
+  INITD;
+  RZ(z=cvt(FL,z)); d=DAV(z); v=XAV(w);
+  DO(n, x=*v++; if(!XDIG(x))*d=sh?NEXTD1:NEXTD0; ++d;);
+ } 
+ R z;
+}    /* ?n$x where x is extended integer */
+
+#undef rollbool
+#define rollbool(w) jtrollbooldot(jt,(w))
+static F1(jtrollbooldot){A z;B*v;D*u;I n,sh;UINT mk;
+ n=AN(w); v=BAV(w); INITD;
+ GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ if(sh)DO(n, *u++=*v++?0.0:NEXTD1;)
+ else  DO(n, *u++=*v++?0.0:NEXTD0;)
+ R z;
+}    /* ?n$x where x is boolean */
+
+// If w is all 2, deal Booleans, with each each bit of a random number providing a single Boolean
+// Result is Boolean array, or mark if w is not all 2
+// *b=0 if w contained non-2, 1 otherwise (i. e. result is valid if *b=1)
+#undef roll2
+#define roll2(w,b) jtroll2dot(jt,(w),(b))
+static A jtroll2dot(J jt,A w,B*b){A z;I j,n,nslice,p,q,r,*v;UI mk,t,*zv;
+ *b=0; n=AN(w); v=AV(w);  // init failure return; n=#atoms of w, v->first atom
+ // If w contains non-2, return with error
+ DO(n, if(v[i]!=2)R mark;);   // return fast if not all-Boolean result
+ // See how many RNG values to use.  jt->rngw gives the number of bits in a generated random #
+ // We will shift these out 4 or 8 bits at a time; the number of slices we can get out of
+ // a random number is 8 - the number of non-random bits at the top of a word.  p will be the number
+ // of bits we can get per random number
+ p = (BW/8) * (nslice = (8 - (BW-jt->rngw)));  // #bits/slice, times number of slices
+ // See how many p-size blocks we can have, and how many single leftovers
+ q=n/p; r=n%p;   // q=# p-size blocks, r=#single-bit leftovers
+#if SY_64
+  mk=(UI)0x0101010101010101;
+#else
+  mk=0x01010101;
+#endif
+ GATV(z,B01,n,AR(w),AS(w)); zv=(UI*)AV(z);  // Allocate result area
+ // Loop to output all the p-size blocks
+ for(j=0;j<q;++j){
+  t=NEXT;
+  DO(nslice, *zv++=mk&t; t>>=1;);
+ }
+ // Get a random # for finishing slices, & out them
+ t=NEXT;  // Get random # for slices
+ DO(r>>LGSZI, *zv++=mk&t; t>>=1;);
+ // Output the rest, one bit at a time
+ t=NEXT;  // Get random # for bits
+ B*c=(B*)zv; DO(r&(SZI-1), *c++=1&t; t>>=1;);
+ *b=1; R z;
+}    /* ?n$x where x is 2, maybe */
+
+#undef rollnot0
+#define rollnot0(w,b) jtrollnot0dot(jt,(w),(b))
+static A jtrollnot0dot(J jt,A w,B*b){A z;I j,m1,n,*u,*v;UI m,s,t,x=jt->rngM[jt->rng];
+ *b=0; n=AN(w);
+ if(n){v=AV(w); m1=*v++; j=1; DO(n-1, if(m1!=*v++){j=0; break;});}
+ if(n&&j)RZ(z=rollksub(shape(w),sc(m1)))
+ else{
+  GATV(z,INT,n,AR(w),AS(w));
+  v=AV(w); u=AV(z);
+  for(j=0;j<n;++j){
+   m1=*v++; if(!m1)R mark; ASSERT(0<=m1,EVDOMAIN); m=m1;
+   s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=t%m;
+ }}
+ *b=1; R z;
+}    /* ?n$x where x is not 0, maybe */
+
+#undef rollany
+#define rollany(w,b) jtrollanydot(jt,(w),(b))
+static A jtrollanydot(J jt,A w,B*b){A z;D*u;I j,m1,n,sh,*v;UI m,mk,s,t,x=jt->rngM[jt->rng];
+ *b=0; n=AN(w); v=AV(w); INITD;
+ GATV(z,FL,n,AR(w),AS(w)); u=DAV(z);
+ for(j=0;j<n;++j){
+  m1=*v++; ASSERT(0<=m1,EVDOMAIN); m=m1;
+  if(0==m)*u++=sh?NEXTD1:NEXTD0; 
+  else{s=GMOF(m,x); t=NEXT; if(s)while(s<=t)t=NEXT; *u++=(D)(t%m);}
+ }
+ *b=1; R z;
+}    /* ?s$x where x can be anything and 1<#x */
+
+#undef roll
+#define roll(w) jtrolldot(jt,(w))
+static F1(jtrolldot){A z;B b=0;I m,wt;
+ RZ(w);
+ wt=AT(w);
+ ASSERT(wt&DENSE,EVDOMAIN);
+ if(!AN(w)){GATV(z,B01,0,AR(w),AS(w)); R z;}
+ if(wt&B01)R rollbool(w);
+ if(wt&XNUM+RAT)R rollxnum(w);
+ RZ(w=vi(w)); m=*AV(w);
+ if(    2==m)RZ(z=roll2   (w,&b));
+ if(!b&&0!=m)RZ(z=rollnot0(w,&b));
+ if(!b      )RZ(z=rollany (w,&b));
+ RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
+}
+
+#undef deal
+#define deal(a,w) jtdealdot(jt,(a),(w))
+static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngM[jt->rng];
+ RZ(a&&w);
+ at=AT(a); wt=AT(w);
+ ASSERT(at&DENSE&at&&wt&DENSE,EVDOMAIN);
+ F2RANK(0,0,jtdealdot,0);
+ RE(m=i0(a)); RE(c=n=i0(w));
+ ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
+ if(0==m)z=mtv;
+ else if(m<n/5.0||x<=(UI)n){
+// obsolete   p=hsize(m); 
+  FULLHASHSIZE(2*m,INTSIZE,1,0,p);
+  GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
+  GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
+  GATV(z,INT,m,1,0); zv=AV(z);
+  for(i=0;i<m;++i){
+   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;  // scaf could rewrite this with fewer %
+   q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
+   q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
+   if(hv[q]){++v; *zv++=*v; *v=i1;}
+   else{v=yv+d; *zv++=*v++=j; *v=i1; hv[q]=d; d+=2;}
+ }}else{
+  RZ(z=apvwr(n,0L,1L)); zv=AV(z);
+  DO(m, s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--; k=zv[i]; zv[i]=zv[j]; zv[j]=k;);
+  AN(z)=*AS(z)=m;
+ }
+ RETF(at&XNUM+RAT||wt&XNUM+RAT?xco1(z):z);
+}
+
+
+
 
 #define FXSDECL     A z;I i,j=jt->rng;UI*v=jt->rngV[GBI];
 #define FXSDO       {i=j==GBI?jt->rngi:jt->rngI[GBI];                                \

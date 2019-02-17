@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-
+// returns TRUE if w is a constant verb m"r
 static B jtiscons(J jt,A w){A x;V*v; 
  if(!w)R 0;
  v=VAV(w); x=v->fgh[0];
@@ -137,7 +137,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
  v=VAV(w);
  f=v->fgh[0]; nf=1&&NOUN&AT(f);
  g=v->fgh[1]; ng=1&&NOUN&AT(g);
- h=nf?g:f; id=ID(h); x=nf?f:g; 
+ h=nf?g:f; id=ID(h); x=nf?f:g;   // h is the verb, id is its id; x is the noun
  if(!(!AR(x)||id==CPOLY))R 0;
  switch(id){
   case CPLUS:  R qq(num[1],zeroionei[0]);
@@ -175,7 +175,7 @@ static F1(jtdiffamp0){A f,g,h,x,y;B nf,ng;C id;V*v;
 static F1(jtdiff0){A df,dg,dh,f,g,h,x,y,z;B b,nf,ng,vf,vg;C id;I m,p,q;V*v;
  RZ(w);
  v=VAV(w); id=v->id;
- f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;
+ f=v->fgh[0]; nf=f&&NOUN&AT(f); vf=f&&!nf;  // nf=f is a noun vf=f is a verb same for ng, vg
  g=v->fgh[1]; ng=g&&NOUN&AT(g); vg=g&&!ng;
  if(id==CAMP&&nf!=ng)R diffamp0(w);
  switch(id){

@@ -60,6 +60,6 @@ static void sha3_Init256(void *priv);
 static void sha3_Init384(void *priv);
 static void sha3_Init512(void *priv);
 static void sha3_Update(void *priv, void const *bufIn, size_t len);
-static void const * sha3_Finalize(void *priv);
+static void const * sha3_Finalize(void *priv,int keccak);
 
 #endif /* SHA3_H */

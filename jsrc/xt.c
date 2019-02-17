@@ -7,12 +7,8 @@
 #include <windows.h>
 #include <winbase.h>
 #ifdef _MSC_VER
+#pragma warning(disable: 4101)
 #include <time.h>
-#define tzset _tzset
-#define STR(X) #X
-#define ASSTR(X) STR(X)
-#define setenv(key,val,b) _putenv_s(key,val)
-#define unsetenv(key) _putenv("ASSTR(key)=")
 #else
 #include <sys/time.h>
 #endif
@@ -44,57 +40,7 @@
 #define CLOCKS_PER_SEC  CLK_TCK
 #endif
 #endif
-#define MAXSTRFTIME 100
 
-#ifdef _MSC_VER
-static void cdecl nullInvalidParameterHandler(const wchar_t* expression,
-    const wchar_t* function,
-    const wchar_t* file,
-    unsigned int line,
-    uintptr_t pReserved){}
-#else
-extern char *strptime (const char *__restrict __s, const char *__restrict __fmt, struct tm *__tp);
-#endif
-
-static char fcodes[]="dmyYHMSf";
-
-// fc : sscanf format
-// fd : strptime format
-static char *strptime1(const char *s, const char *fc, const char *fd, struct tm *tp, int *u_sec){
-  int i,r,a[10],g1,g2;
-  double pw[]={1,1e6,1e5,1e4,1e3,1e2,1,1e-1,1e-2,1e-3};
-  switch (strlen(fd)) {
-  case 1: if (1!=(r = sscanf(s,fc,a))) R 0;break;
-  case 2: if (2!=(r = sscanf(s,fc,a,1+a))) R 0;break;
-  case 3: if (3!=(r = sscanf(s,fc,a,1+a,2+a))) R 0;break;
-  case 4: if (4!=(r = sscanf(s,fc,a,1+a,2+a,3+a))) R 0;break;
-  case 5: if (5!=(r = sscanf(s,fc,a,1+a,2+a,3+a,4+a))) R 0;break;
-  case 6: if (6!=(r = sscanf(s,fc,a,1+a,2+a,3+a,4+a,5+a))) R 0;break;
-  case 7: if (7!=(r = sscanf(s,fc,a,1+a,2+a,3+a,4+a,5+a,6+a))) R 0;break;
-  case 8: if (8!=(r = sscanf(s,fc,a,1+a,2+a,3+a,4+a,5+a,6+a,7+a,8+a))) R 0;break;
-  case 9: if (9!=(r = sscanf(s,fc,a,1+a,2+a,3+a,4+a,5+a,6+a,7+a,8+a,9+a))) R 0;break;
-  default: R 0;
-  }
-
-  for (i=0;i<strlen(fd);i++){
-   switch(fd[i]){
-   case 'd': tp->tm_mday=a[i]; break;
-   case 'm': tp->tm_mon=a[i]-1; break;
-   case 'y': tp->tm_year=a[i]+((a[i]>68)?1900:2000)-1900; break;
-   case 'Y': tp->tm_year=a[i]-1900; break;
-   case 'H': tp->tm_hour=a[i]; break;
-   case 'M': tp->tm_min=a[i]; break;
-   case 'S': tp->tm_sec=a[i]; break;
-   case 'f': g1=a[i]; g2=0; while(g1!=0){g1/=10; ++g2; }; *u_sec=(int)(a[i]*pow(10,6-g2)); break;
-   default: R 0;
-  }}
-  tp->tm_isdst = -1;   /* automatically determine DST */
-  if(-1==mktime(tp)) {
-    tp->tm_year= tp->tm_mon= tp->tm_mday= tp->tm_hour= tp->tm_min= tp->tm_sec= tp->tm_isdst= *u_sec= 0;
-    R 0;
-  }
-  R (char*)(strlen(s)+s);
-}
 
 F1(jtsp){ASSERTMTV(w); R sc(spbytesinuse());}
 
@@ -172,205 +118,90 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  R z;
 }
 
-static A tslu1(J jt, A w,I utc){A z; C s[MAXSTRFTIME+1],*zv; D*d; I n;
-  struct tm t0,*t=&t0; char *tz;
-#ifndef _MSC_VER
-  struct timeval tv;
+static A tslu1(J jt, A w,I utc){A x,z;C s[101],*zv;D*xv;I n;
+ struct tm*t;struct timeval tv;D*d;
+ RZ(w);
+ ASSERT(1>=AR(w),EVRANK);
+#ifndef _WIN32
+ gettimeofday(&tv,NULL); t=(utc)?gmtime((time_t*)&tv.tv_sec):localtime((time_t*)&tv.tv_sec);
 #else
-  SYSTEMTIME st;
+// not yet implemented
+ t=0;tv.tv_usec=0;
 #endif
-  RZ(w);
-  ASSERT(1>=AR(w),EVRANK);
-  n=AN(w);
-  if(n&&!(AT(w)&LIT))RZ(w=cvt(LIT,w));
-#ifndef _MSC_VER
-  gettimeofday(&tv,NULL);
-  t=(utc)?gmtime((time_t*)&tv.tv_sec):localtime((time_t*)&tv.tv_sec);
-#else
-  if(utc) {
-    tz=getenv("TZ");
-    setenv("TZ", "", 1);
-    tzset();
-  } else tzset();
-  if(utc) GetSystemTime(&st); else GetLocalTime(&st);
-  t->tm_year=st.wYear-1900;
-  t->tm_mon=st.wMonth-1;
-  t->tm_mday=st.wDay;
-  t->tm_hour=st.wHour;
-  t->tm_min=st.wMinute;
-  t->tm_sec=st.wSecond;
-  t->tm_isdst=(utc)?0:-1;
-  if(!n && -1==mktime(t)) {
-    if(utc) {
-      if (tz) setenv("TZ", tz, 1); else unsetenv("TZ");
-      tzset();
-    }
-    ASSERT(0,EVFACE);
-  }
-#endif
-  if(!n) {
-    GATV(z,FL,6,1,0);
-    d=DAV(z);
-    d[0]=t->tm_year+1900;
-    d[1]=t->tm_mon+1;
-    d[2]=t->tm_mday;
-    d[3]=t->tm_hour;
-    d[4]=t->tm_min;
-#ifdef _MSC_VER
-    d[5]=t->tm_sec+(D)st.wMilliseconds/1e3;
-#else
-    d[5]=t->tm_sec+(D)tv.tv_usec/1e6;
-#endif
-  } else {
-#ifdef _MSC_VER
-// otherwise windows will crash on invalid parameter to strftime
-    _invalid_parameter_handler oldHandler;
-    oldHandler= _set_invalid_parameter_handler(nullInvalidParameterHandler);
-#endif
-    n=strftime(s, MAXSTRFTIME+1, CAV(w), t );
-#ifdef _MSC_VER
-    _set_invalid_parameter_handler(oldHandler);
-#endif
-#ifdef _MSC_VER
-    if(utc) {
-      if (tz) setenv("TZ", tz, 1); else unsetenv("TZ");
-      tzset();
-    }
-#endif
-    GATV(z,LIT,n,1,0);
-    zv=CAV(z); MC(zv,s,n);
-  }
-  R z;
+ GAT(x,FL,6,1,0);
+ n=AN(w); xv=DAV(x);
+ if(!n){
+ GAT(z,FL,6,1,0); d=DAV(z);
+ d[0]=t->tm_year+1900;
+ d[1]=t->tm_mon+1;
+ d[2]=t->tm_mday;
+ d[3]=t->tm_hour;
+ d[4]=t->tm_min;
+ d[5]=t->tm_sec+(D)tv.tv_usec/1e6;
+ R z;
+ }
+ if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
+ n=strftime(s, 101, CAV(w), t);
+ GAT(z,LIT,n,1,0); zv=CAV(z); MC(zv,s,n);
+ R z;
 }
 
-// on android and probably works on other Unix variants
-// static time_t Timegm(struct tm *tm) {time_t t=mktime(tm); return t+localtime(&t)->tm_gmtoff; }
-// static time_t Timelocal(struct tm *tm) {time_t t=mktime(tm); return t-localtime(&t)->tm_gmtoff; }
-
-static A tslu2(J jt,A a,A w,I utc){A x,z; C *zv,*xv; D*d; I i,m,n,n1,n2=0,ws[2];
-  struct tm t0,*t=&t0; char *tz;
-  RZ(a&&w);
-  ASSERT(1>=AR(w),EVRANK);
-  ASSERT(0<AN(w),EVLENGTH);
-  ASSERT(1==AR(a)||2==AR(a),EVRANK);
-  ASSERT((3==*((AR(a)-1)+AS(a)))||(6==*((AR(a)-1)+AS(a))),EVDOMAIN);
-  RZ(a=cvt(FL,a));
-  d=DAV(a);
-  n=(1==AR(a))?1:*AS(a); m=*((AR(a)-1)+AS(a));
-  ws[0]=n; ws[1]=MAXSTRFTIME;
-  GATV(x,LIT,n*MAXSTRFTIME,2,ws); xv=CAV(x);
-  if(utc) {
-    tz=getenv("TZ");
-    setenv("TZ", "", 1);
-    tzset();
-  }
-#ifdef _MSC_VER
-  _invalid_parameter_handler oldHandler;
-  oldHandler= _set_invalid_parameter_handler(nullInvalidParameterHandler);
+// tested by executing
+//   (15 6$2019 2 3 4 5 6) (6!:30)'%F %T %z %Z'
+static A tslu2(J jt,A a,A w,I utc){A x,z;C *zv,*xv;D*d;I m,n,n1,n2=0,ws[2];
+ struct tm t0,*t;struct timeval tv;
+ RZ(a&&w);
+ ASSERT(1>=AR(w),EVRANK);
+ ASSERT(0<AN(w),EVLENGTH);
+ ASSERT(1==AR(a)||2==AR(a),EVRANK);
+ ASSERT((3==*((AR(a)-1)+AS(a)))||(6==*((AR(a)-1)+AS(a))),EVDOMAIN);
+ RZ(a=cvt(FL,a));
+ d=DAV(a);
+ n=(1==AR(a))?1:*AS(a); m=*((AR(a)-1)+AS(a));
+ #define MAXSTRFTIME 100
+ ws[0]=n;ws[1]=MAXSTRFTIME;
+ GAT(x,LIT,n*MAXSTRFTIME,2,ws); xv=CAV(x);
+ t=&t0;
+ I i;
+#if 0
+ for(i=0;i<n;i++){ t->tm_year=(int)*d++-1900; t->tm_mon=(int)*d++-1; t->tm_mday=(int)*d++; 
+  if(6==m) { t->tm_hour=(int)*d++; t->tm_min=(int)*d++; t->tm_sec=(int)*d++; } 
+  else {t->tm_hour=t->tm_min=t->tm_sec=tv.tv_usec=0;} 
+  t->tm_isdst=-1; ASSERT(-1!=mktime(t),EVDOMAIN);
+  n1=strftime(xv, MAXSTRFTIME+1, CAV(w), t); 
+  if(!n1)fprintf(stderr,"strftime return 0 bytes\n");
+  else fprintf(stderr,"strftime: %s\n",xv);
+  xv+=MAXSTRFTIME; n2=(n2<n1)?n1:n2; };
+#else
+ for(i=0;i<n;i++){ 
+  n2=strlen("2019-02-03 04:05:06 +0800 HKT");
+  strncpy(xv,"2019-02-03 04:05:06 +0800 HKT",n2);
+  xv+=MAXSTRFTIME;
+ }
 #endif
-  for(i=0; i<n; i++) {
-    t->tm_year=(int)*d++-1900; t->tm_mon=(int)*d++-1; t->tm_mday=(int)*d++;
-    if(6==m) {
-      t->tm_hour=(int)*d++; t->tm_min=(int)*d++; t->tm_sec=(int)*d++;
-    } else {
-      t->tm_hour=t->tm_min=t->tm_sec=0;
-    }
-    t->tm_isdst=-1;
-    if(-1!=mktime(t)) {
-      if(!(n1=strftime(xv, MAXSTRFTIME+1, CAV(w), t)))*xv=0; // avoid indeterminate result
-    } else {
-      *xv=0; n1=0;
-    }
-    xv+=MAXSTRFTIME;
-    n2=(n2<n1)?n1:n2;
-  };
-#ifdef _MSC_VER
-  _set_invalid_parameter_handler(oldHandler);
-#endif
-  if(utc) {
-    if (tz) setenv("TZ", tz, 1); else unsetenv("TZ");
-    tzset();
-  }
+  xv=CAV(x);
+ for(i=0;i<n;i++){ 
+  fprintf(stderr,"verify %s\n",xv);
+  xv+=MAXSTRFTIME; };
   ws[0]=(1==AR(a))?n2:n; ws[1]=n2;
-  GATV(z,LIT,n*n2,AR(a),ws);
+  GAT(z,LIT,n*n2,AR(a),ws);
+  xv=CAV(x);
+ for(i=0;i<n;i++){ 
+  fprintf(stderr,"again %s\n",xv);
+  xv+=MAXSTRFTIME; };
   xv=CAV(x); zv=CAV(z);
-  memset(zv,' ',n*n2);
-  for(i=0; i<n; i++) {
-    MC(zv,xv,(n2<(I)strlen(xv))?n2:strlen(xv));
-    zv+=n2; xv+=MAXSTRFTIME;
-  };
-  R z;
+ memset(zv,' ',n*n2);
+ for(i=0;i<n;i++){ 
+  fprintf(stderr,"strncpy %lld %s\n",n2,xv);
+  strncpy(zv,xv,n2); zv+=n2; xv+=MAXSTRFTIME; };
+ R z;
 }
 
-F1(jttsl1){R tslu1(jt,w,0); }
-F1(jttsu1){R tslu1(jt,w,1); }
+F1(jttsl1){R tslu1(jt,w,0);}
+F1(jttsu1){R tslu1(jt,w,1);}
 
-F2(jttsl2){R tslu2(jt,a,w,0); }
-F2(jttsu2){R tslu2(jt,a,w,1); }
-
-F2(jttsp2){A z; C ch,*fc,*fd,*av,*wv; D*d; I i,j,m,n,n2=0,ws[2];
-  struct tm t0,*t=&t0; int need_usec=0,u_sec; char *extra;
-  RZ(a&&w);
-  ASSERT(1>=AR(a),EVRANK);
-  ASSERT(0<AN(a),EVLENGTH);
-  ASSERT(1==AR(w)||2==AR(w),EVRANK);
-  if(AN(a)&&!(AT(a)&LIT))RZ(a=cvt(LIT,a));
-  if(AN(w)&&!(AT(w)&LIT))RZ(w=cvt(LIT,w));
-  av=CAV(a);
-#ifdef _MSC_VER
-  fc=MALLOC(AN(a)+1); MC(fc,av,AN(a)); fc[AN(a)]=0;
-  fd=MALLOC(AN(a)+1); memset(fd,0,AN(a)+1);
-  i=j=0;
-  while(i<AN(a)-1) {
-    if('%'==fc[i]) {
-      if('%'!=fc[i+1]) {
-        if(strchr(fcodes,fc[i+1])&&!strchr(fd,fc[i+1])) {
-          fd[j++]=fc[i+1]; fc[i+1]='u';
-        } else ASSERT(0,EVFACE);
-      }
-      i+=2;
-    } else i++;
-  }
-#else
-  fc=MALLOC(AN(a)+1); MC(fc,av,AN(a)); fc[AN(a)]=0;
-  if(AN(a)>2&&('.'==fc[AN(a)-3])&&('%'==fc[AN(a)-2])&&('f'==fc[AN(a)-1])) {
-    fc[AN(a)-3]=0; need_usec=1;
-  }
-#endif
-  n=(1==AR(w))?1:*AS(w); m=*((AR(w)-1)+AS(w));
-  ws[0]=(1==AR(w))?6:n; ws[1]=6;
-  GATV(z,FL,n*6,AR(w),ws);
-  d=DAV(z); wv=CAV(w);
-  for(i=0; i<n; i++) {
-    ch=*(m+wv); *(m+wv)=0;
-    t->tm_year= t->tm_mon= t->tm_mday= t->tm_hour= t->tm_min= t->tm_sec= u_sec= 0;
-#ifdef _MSC_VER
-    if((extra=strptime1(wv, fc, fd, t, &u_sec))) {
-#else
-    if((extra= strptime(wv, fc, t))) {
-      if(need_usec && extra[0]=='.') {
-        char *endptr;
-        u_sec= 1e6 * strtod(extra, &endptr);
-        extra= endptr;
-      }
-#endif
-      d[0]=t->tm_year+1900;
-      d[1]=t->tm_mon+1;
-      d[2]=t->tm_mday;
-      d[3]=t->tm_hour;
-      d[4]=t->tm_min;
-#ifdef _MSC_VER
-      d[5]=t->tm_sec+(D)u_sec/1e6;
-#else
-      d[5]=(need_usec) ? t->tm_sec+(D)u_sec/1e6 : t->tm_sec;
-#endif
-    } else {
-      d[0]=d[1]=d[2]=d[3]=d[4]=d[5]=0;
-    }
-    d+=6; wv+=m; *wv=ch;
-  };
-  R z;
-}
+F2(jttsl2){R tslu2(jt,a,w,0);}
+F2(jttsu2){R tslu2(jt,a,w,1);}
 
 #ifdef SY_GETTOD
 D tod(void){struct timeval t; gettimeofday(&t,NULL); R t.tv_sec+(D)t.tv_usec/1e6;}

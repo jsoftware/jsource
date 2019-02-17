@@ -1393,10 +1393,10 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     // but never increase the range if that would exceed the L2 cache - just pay the 4 instructions
     if(k==2){
      allowrange=MIN(MAX(L2CACHESIZE/(LGSZUS),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange2(USAV(w),AN(w),datamin,datamin+p-1,allowrange);
+     crres = condrange2(USAV(w),(AN(w)*bp(AT(w)))>>LGSZS,datamin,datamin+p-1,allowrange);
     }else{
      allowrange=MIN(MAX(L2CACHESIZE/(LGSZUI4),(I)p),MAX(allowrange,(I)(p+(p>>3))));  // allowed range, with expansion
-     crres = condrange(AV(w),AN(w),datamin,datamin+p-1,allowrange);
+     crres = condrange(AV(w),(AN(w)*bp(AT(w)))>>LGSZI,datamin,datamin+p-1,allowrange);
     }
     if(crres.range){datamin=crres.min; p=crres.range; mode |= IIMODFULL;}
    }  

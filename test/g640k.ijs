@@ -95,9 +95,9 @@ test3=: 4 : 0  NB. tests on ?.
  1
 )
 
-1229 test3"0 >:i.2 10
-1229 test3"0 ] 2^i.10
-1229 test3"0 ]10^i.10
+NB. 1229 test3"0 >:i.2 10  ?. is frozen and no longer matches ? for any seed
+NB. 1229 test3"0 ] 2^i.10
+NB. 1229 test3"0 ]10^i.10
 
 test4=: 4 : 0
  h=: ,0{"2 g

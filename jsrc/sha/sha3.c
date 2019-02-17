@@ -212,7 +212,7 @@ sha3_Update(void *priv, void const *bufIn, size_t len)
  * bytes are always present, but they can be the same byte.
  */
 static void const *
-sha3_Finalize(void *priv)
+sha3_Finalize(void *priv,int keccak)
 {
   sha3_context *ctx = (sha3_context *) priv;
 
@@ -223,17 +223,20 @@ sha3_Finalize(void *priv)
    * Overall, we feed 0, then 1, and finally 1 to start padding. Without
    * M || 01, we would simply use 1 to start padding. */
 
-#ifndef SHA3_USE_KECCAK
+// #ifndef SHA3_USE_KECCAK
+  if (!keccak) {
   /* SHA3 version */
   ctx->s[ctx->wordIndex] ^=
     (ctx->saved ^ ((uint64_t) ((uint64_t) (0x02 | (1 << 2)) <<
                                ((ctx->byteIndex) * 8))));
-#else
+  } else {
+// #else
   /* For testing the "pure" Keccak version */
   ctx->s[ctx->wordIndex] ^=
     (ctx->saved ^ ((uint64_t) ((uint64_t) 1 << (ctx->byteIndex *
                                8))));
-#endif
+  }
+// #endif
 
   ctx->s[SHA3_KECCAK_SPONGE_WORDS - ctx->capacityWords - 1] ^=
     SHA3_CONST(0x8000000000000000UL);

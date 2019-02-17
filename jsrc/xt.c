@@ -338,7 +338,7 @@ F2(jttsp2){A z; C ch,*fc,*fd,*av,*wv; D*d; I i,j,m,n,n2=0,ws[2];
   }
 #endif
   n=(1==AR(w))?1:*AS(w); m=*((AR(w)-1)+AS(w));
-  ws[0]=(1==AR(w))?6:n; ws[1]=6;
+  ws[0]=(1==AR(a))?6:n; ws[1]=6;
   GATV(z,FL,n*6,AR(w),ws);
   d=DAV(z); wv=CAV(w);
   for(i=0; i<n; i++) {

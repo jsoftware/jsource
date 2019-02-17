@@ -76,7 +76,7 @@ static char *strptime1(const char *s, const char *fc, const char *fd, struct tm 
   default: R 0;
   }
 
-  for (i=0;i<(int)strlen(fd);i++){
+  for (i=0;i<strlen(fd);i++){
    switch(fd[i]){
    case 'd': tp->tm_mday=a[i]; break;
    case 'm': tp->tm_mon=a[i]-1; break;

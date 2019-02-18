@@ -115,11 +115,14 @@ rix  =: i.@[ ([ ,. [ + roll@:-~) ]
 deal1=: [ {. <@~."1@|.@rix C. i.@-@]
 deal =: deal1 ` bigdeal @. (< 0.01&*)   NB. pre J 5.03
 
-deal =: [ {. <@~."1@|.@rix C. i.@]      NB. J 5.03 - 8.07.  No model for 9.01 and later
+deal =: [ {. <@~."1@|.@rix C. i.@]      NB. J 5.03 or later
 
-NB. nomore 10 (?. -: deal) 100
-NB. nomore 10 (?. -: deal) 1000
-NB. nomore 10 (?. -: deal) 10000
+10 (?. -: deal) 100
+10 (?. -: deal) 1000
+10 (?. -: deal) 10000
+
+(IF64{::'89551d61c612f81fb7553a355bf932d2d8f78ed7';'6ebe83e54f37c4cdb3cfb617e657af9dd2074c42') -: (128!:6) ": ?.#~1e6
+(IF64{::'ac92c5ac4e7c167de5967296ff90791ea334c39b';'ab5ae709e6f9eb15e197a4cd616a3dd044f31a99') -: (128!:6) ": ?.~1e6
 
 NB. qrl =: 9!:0 ''
 NB. (? -: deal)~ 100

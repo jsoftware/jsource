@@ -7,7 +7,6 @@
 #include <windows.h>
 #include <winbase.h>
 #ifdef _MSC_VER
-#pragma warning(disable: 4101)
 #include <time.h>
 #else
 #include <sys/time.h>
@@ -118,90 +117,6 @@ F1(jtts0){A x,z;C s[9],*u,*v,*zv;D*xv;I n,q;
  R z;
 }
 
-static A tslu1(J jt, A w,I utc){A x,z;C s[101],*zv;D*xv;I n;
- struct tm*t;struct timeval tv;D*d;
- RZ(w);
- ASSERT(1>=AR(w),EVRANK);
-#ifndef _WIN32
- gettimeofday(&tv,NULL); t=(utc)?gmtime((time_t*)&tv.tv_sec):localtime((time_t*)&tv.tv_sec);
-#else
-// not yet implemented
- t=0;tv.tv_usec=0;
-#endif
- GAT(x,FL,6,1,0);
- n=AN(w); xv=DAV(x);
- if(!n){
- GAT(z,FL,6,1,0); d=DAV(z);
- d[0]=t->tm_year+1900;
- d[1]=t->tm_mon+1;
- d[2]=t->tm_mday;
- d[3]=t->tm_hour;
- d[4]=t->tm_min;
- d[5]=t->tm_sec+(D)tv.tv_usec/1e6;
- R z;
- }
- if(!(AT(w)&LIT))RZ(w=cvt(LIT,w));
- n=strftime(s, 101, CAV(w), t);
- GAT(z,LIT,n,1,0); zv=CAV(z); MC(zv,s,n);
- R z;
-}
-
-// tested by executing
-//   (15 6$2019 2 3 4 5 6) (6!:30)'%F %T %z %Z'
-static A tslu2(J jt,A a,A w,I utc){A x,z;C *zv,*xv;D*d;I m,n,n1,n2=0,ws[2];
- struct tm t0,*t;struct timeval tv;
- RZ(a&&w);
- ASSERT(1>=AR(w),EVRANK);
- ASSERT(0<AN(w),EVLENGTH);
- ASSERT(1==AR(a)||2==AR(a),EVRANK);
- ASSERT((3==*((AR(a)-1)+AS(a)))||(6==*((AR(a)-1)+AS(a))),EVDOMAIN);
- RZ(a=cvt(FL,a));
- d=DAV(a);
- n=(1==AR(a))?1:*AS(a); m=*((AR(a)-1)+AS(a));
- #define MAXSTRFTIME 100
- ws[0]=n;ws[1]=MAXSTRFTIME;
- GAT(x,LIT,n*MAXSTRFTIME,2,ws); xv=CAV(x);
- t=&t0;
- I i;
-#if 0
- for(i=0;i<n;i++){ t->tm_year=(int)*d++-1900; t->tm_mon=(int)*d++-1; t->tm_mday=(int)*d++; 
-  if(6==m) { t->tm_hour=(int)*d++; t->tm_min=(int)*d++; t->tm_sec=(int)*d++; } 
-  else {t->tm_hour=t->tm_min=t->tm_sec=tv.tv_usec=0;} 
-  t->tm_isdst=-1; ASSERT(-1!=mktime(t),EVDOMAIN);
-  n1=strftime(xv, MAXSTRFTIME+1, CAV(w), t); 
-  if(!n1)fprintf(stderr,"strftime return 0 bytes\n");
-  else fprintf(stderr,"strftime: %s\n",xv);
-  xv+=MAXSTRFTIME; n2=(n2<n1)?n1:n2; };
-#else
- for(i=0;i<n;i++){ 
-  n2=strlen("2019-02-03 04:05:06 +0800 HKT");
-  strncpy(xv,"2019-02-03 04:05:06 +0800 HKT",n2);
-  xv+=MAXSTRFTIME;
- }
-#endif
-  xv=CAV(x);
- for(i=0;i<n;i++){ 
-  fprintf(stderr,"verify %s\n",xv);
-  xv+=MAXSTRFTIME; };
-  ws[0]=(1==AR(a))?n2:n; ws[1]=n2;
-  GAT(z,LIT,n*n2,AR(a),ws);
-  xv=CAV(x);
- for(i=0;i<n;i++){ 
-  fprintf(stderr,"again %s\n",xv);
-  xv+=MAXSTRFTIME; };
-  xv=CAV(x); zv=CAV(z);
- memset(zv,' ',n*n2);
- for(i=0;i<n;i++){ 
-  fprintf(stderr,"strncpy %lld %s\n",n2,xv);
-  strncpy(zv,xv,n2); zv+=n2; xv+=MAXSTRFTIME; };
- R z;
-}
-
-F1(jttsl1){R tslu1(jt,w,0);}
-F1(jttsu1){R tslu1(jt,w,1);}
-
-F2(jttsl2){R tslu2(jt,a,w,0);}
-F2(jttsu2){R tslu2(jt,a,w,1);}
 
 #ifdef SY_GETTOD
 D tod(void){struct timeval t; gettimeofday(&t,NULL); R t.tv_sec+(D)t.tv_usec/1e6;}

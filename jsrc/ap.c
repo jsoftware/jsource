@@ -505,7 +505,7 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
   RZ(z=reitem(zeroionei[0],w));  // create 0 items of the type of w
   if(ilnval>=0){ilnval=(ilnval==IMAX)?(wi+1):ilnval; RZ(z=take(sc(ilnval),z));}    // if items needed, create them.  For compatibility, treat _ as 1 more than #items in w
   UC d=jt->uflags.us.cx.cx_c.db; jt->uflags.us.cx.cx_c.db=0; zz=(state&STATEHASGERUND)?df1(z,hv[0]):CALL1(f1,z,fs); jt->uflags.us.cx.cx_c.db=d; if(EMSK(jt->jerr)&EXIGENTERROR)RZ(zz); RESETERR;
-  RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),z));
+  RZ(zz=reshape(over(zeroionei[0],shape(zz?zz:mtv)),zz?zz:zeroionei[0]));
  }
 
 // result is now in zz

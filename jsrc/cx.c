@@ -143,10 +143,13 @@ static DF2(jtxdefn){PROLOG(0048);
    lk=0; LINE(sv);
    // Create symbol table for this execution.  If the original symbol table is not in use (rank unflagged), use it;
    // otherwise clone a copy of it.  We have to do this before we create the debug frame
+   // This code duplicated below
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym))}
+   else{RZ(jt->local=clonelocalsyms(locsym)); ra(jt->local);}
+   // it is tricky to get the final result protected properly when all the symbols that it depends on are being deleted at the end of execution.
+   // part of the solution is to ra() any CLONED symbol table here.
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
@@ -155,7 +158,7 @@ static DF2(jtxdefn){PROLOG(0048);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym))}
+   else{RZ(jt->local=clonelocalsyms(locsym)); ra(jt->local);}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;
@@ -432,7 +435,7 @@ static DF2(jtxdefn){PROLOG(0048);
   if((AT(z)&NOUN)||(AT(self)&ADV+CONJ)) {
    // If we are returning a virtual block, we are going to have to realize it.  This is because it might be (indeed, probably is) backed by a local symbol that
    // is going to be summarily freed by the symfreeha() below.  We could modify symfreeha to recognize when we are freeing z, but the case is not common enough
-   // to be worth the trouble.
+   // to be worth the trouble
    realizeifvirtual(z);
   }else {pee(line,&cw[bi],EVNONNOUN,lk,callframe); z=0;}  // signal error, set z to 'no result'
  }else{
@@ -445,14 +448,15 @@ static DF2(jtxdefn){PROLOG(0048);
  if(savdebug!=jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=savdebug;  // preserve original debug state.  to avoid messing up write forwarding, write only if changed
  // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
+  // NOTE: if the symbol table was cloned, the previous line would have deleted it... except that we ra'd the cloned symbol table.  It lives on to allow cleaning up the stack
  if(cd){
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
  }
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
- // Cloned symbol tables are freed by the normal mechanism
- if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+ // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
+ if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}else fa(jt->local);
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=savloc; jt->asgn=0;
  RETF(z);

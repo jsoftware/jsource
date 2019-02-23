@@ -351,7 +351,8 @@ NB. Type of empty result
 8 -: 3!:0 ^./.~ 0$a:
 8 -: 3!:0 ^./.~ 0$''
 8 -: 3!:0 ^./.~ 0$1x
-
+1 -: 3!:0 ] 5 0:\ 'abc'
+2 -: 3!:0 ] 5 ]\ 'abc'
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd conv conv1 em en eq iind infix k '
 4!:55 ;:'kay key n ob oind omask osub outfix pconv pconv1 prefix pru x yx yy'

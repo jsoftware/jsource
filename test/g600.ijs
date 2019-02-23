@@ -205,8 +205,8 @@ NB. Check virtual block based on INCORPABLE block, which must have inplacing tur
 (1 1 ,. (>: i. 2 10) ,. i. 2 10) -: (>: , }.)"1 (0,.i.2 10)
 
 NB. Verify successive blocks have inplacing reenabled
-(4500000 * IF64{1 2) < 7!:2 '#@:>:@:}."1 >: a' [ a =: i. 10 100000  NB. Does not inplace >:, because inplace not inherited through virtual block
-(4500000 * IF64{1 2) > 7!:2 '#@:}.@:>:"1 >: a' [ a =: i. 10 100000  NB. Does inplace >: which is then virtualed
+(4300000 * IF64{1 2) < 7!:2 '#@:>:@:}."1 >: a' [ a =: i. 10 100000  NB. Does not inplace >:, because inplace not inherited through virtual block
+(4300000 * IF64{2 2) > 7!:2 '#@:}.@:>:"1 >: a' [ a =: i. 10 100000  NB. Does inplace >: which is then virtualed; but not for 32-bit because of VIRTIPOK
 
 NB. f"r zero frames -----------------------------------------------------
 

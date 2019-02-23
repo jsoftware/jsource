@@ -147,9 +147,7 @@ static DF2(jtxdefn){PROLOG(0048);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym)); ra(jt->local);}
-   // it is tricky to get the final result protected properly when all the symbols that it depends on are being deleted at the end of execution.
-   // part of the solution is to ra() any CLONED symbol table here.
+   else{RZ(jt->local=clonelocalsyms(locsym));}
   } else {  // something special required
    // If this is a modifier-verb referring to x or y, set u, v to the modifier operands, and sv to the saved text.  The flags don't change
    if(sflg&VXOP){u=sv->fgh[0]; v=sv->fgh[2]; sv=VAV(sv->fgh[1]);}
@@ -446,17 +444,23 @@ static DF2(jtxdefn){PROLOG(0048);
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
  if(savdebug!=jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=savdebug;  // preserve original debug state.  to avoid messing up write forwarding, write only if changed
- // pop all the explicit-entity stack entries, if there are any (could be, if a construct was aborted).  Then delete the block itself
- z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
-  // NOTE: if the symbol table was cloned, the previous line would have deleted it... except that we ra'd the cloned symbol table.  It lives on to allow cleaning up the stack
- if(cd){
+ if(!cd){
+  // Normal path.  protect the result block and free everything allocated here, possibly including jt->local
+  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
+ }else{
+  // Unusual path with an unclosed contruct (e. g. return. from inside for. loop).  We have to free up the for. stack, but the return value might be one of the names
+  // to be deleted on the for. stack, so we must protect the result before we pop the stack.  BUT, EPILOG frees all locally-allocated blocks, which might include the symbol
+  // table that we need to pop from.  So we protect the symbol table during the cleanup of the result and stack.
+  ra(jt->local);  // protect local syms
+  z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like
   CDATA *cvminus1 = (CDATA*)VAV(cd)-1; while(cv!=cvminus1){unstackcv(cv); --cv;}  // clean up any remnants left on the for/select stack
   fa(cd);  // have to delete explicitly, because we had to ext() the block and thus protect it with ra()
+  fa(jt->local);  // unprotect local syms.  This deletes them if they were cloned
  }
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
- if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}else fa(jt->local);
+ if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=savloc; jt->asgn=0;
  RETF(z);

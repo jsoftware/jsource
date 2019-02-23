@@ -275,7 +275,7 @@ extern unsigned int __cdecl _clearfp (void);
 // There are two limits: maximum depth of J functions, and maximum depth of named functions.  The named-function stack is intelligent
 // and stacks only when there is a locale change or deletion; it almost never limits unless locatives are used to an extreme degree.
 // The depth of J function calls will probably limit stack use.
-#define NFDEP           4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow
+#define NFDEP           4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
 #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 
 // start and length for the stored vector of ascending integers

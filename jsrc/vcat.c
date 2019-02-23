@@ -279,8 +279,13 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
   // result would increase, and there's no room in the shape)
   // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
+  // OK to use type as proxy for size, since indirect types are excluded
 // obsolete   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&jt->ranks==(RANK2T)~0){
+#if BW==64
   if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given
+#else
+  if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w)))>=0&&(jt->ranks==(RANK2T)~0)){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given
+#endif
    //  Check the item sizes.  Set p<0 if the
    // items of a require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require fill
    // If there are extra axes in a, they will become unit axes of w.  Check the axes of w that are beyond the first axis

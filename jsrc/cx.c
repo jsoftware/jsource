@@ -283,7 +283,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(z||!jt->jerr){
      bi=i,++i;
     }else if(jt->uflags.us.cx.cx_c.db&(DB1|DBERRCAP)){  // if debug mode, we assume we are ready to execute on
-     RESETERR; bi=i,++i;   // mkae sure error is off if we continue
+     /* obsolete RESETERR;*/ bi=i,++i;   // it is OK to have jerr set if we are in debug mode
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
      if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error

@@ -156,7 +156,7 @@ static DF2(jtxdefn){PROLOG(0048);
    locsym=hv[3];  // fetch pointer to preallocated symbol table
    ASSERT(locsym,EVDOMAIN);  // if the valence is not defined, give valence error
    if(!(AR(locsym)&LSYMINUSE)){jt->local=locsym; AR(locsym)|=LSYMINUSE;}
-   else{RZ(jt->local=clonelocalsyms(locsym)); ra(jt->local);}
+   else{RZ(jt->local=clonelocalsyms(locsym));}
 
    // lk: 0=normal, 1=this definition is locked, -1=debug mode
    lk=jt->uflags.us.cx.cx_c.glock||sv->flag&VLOCK;

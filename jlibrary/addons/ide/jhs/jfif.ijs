@@ -2,9 +2,6 @@ coclass'jfif'
 coinsert'jhs'
 
 HBS=: 0 : 0
-jhma''
-jhjmlink''
-jhmz''
 'find'   jhb'Find'
 'what'   jhtext '';20
 'where'  jhtext '';50
@@ -59,6 +56,10 @@ fiff_find_button''
 jhrajax FIFINFO,>FIFNAMEONLY{JHSFOUNDFILES;FIFFOUND
 )
 
+ev_close_click=: 3 : 0
+jhrajax''
+)
+
 CSS=: 0 : 0
 *{font-family:<PC_FONTFIXED>;}
 )
@@ -101,6 +102,11 @@ function ev_find_click()
  t+=(jform.nameonly.checked?1:0)+JASEP;
  jdoajax([],t);
 }
+
+function ev_matchcase_click(){return true;}
+function ev_subfolders_click(){return true;}
+function ev_nameonly_click(){return true;}
+
 )
 
 NB. ffss version for use from jijs
@@ -630,7 +636,7 @@ j=. j, f (0 : 0)
 
 FIFINSERT=: {."1 each j
 FIFINSTXT=: {:"1 each j
-t=: wpinsert_run
+NB. t=: wpinsert_run
 
 ffssinit=: 3 : 0
 if. (FIFCONTEXTNDX=0) > RX do. 1 return. end.
@@ -1362,8 +1368,9 @@ if. #FIFWHAT do.
 end.
 )
 fifh_open_button=: 3 : 0
-require '~system/extras/util/browser.ijs'
-launch_jbrowser_ FIFHTMFILE
+NB. require '~system/extras/util/browser.ijs'
+NB. launch_jbrowser_ FIFHTMFILE
+browse_j_ FIFHTMFILE
 )
 fifhshow=: 3 : 0
 wd 'set hlook ', todelim j=. {."1 FIFHELPS
@@ -1698,3 +1705,8 @@ JHSFOUNDFILES=: ''
 fiff_find_button''
 jhtml  '<div contenteditable="false">',(>FIFNAMEONLY{JHSFOUNDFILES;FIFFOUND),'</div'
 )
+
+
+
+
+

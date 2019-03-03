@@ -1,6 +1,34 @@
 NB. html templates and utilities
 coclass'jhs'
 
+INC=: CSS=: JS=: HBS=: '' NB. overidden in app locale
+NOCACHE=: 0                NB. use cached js files
+NOPOPUP=: 0                NB. use popups
+
+INC_jquery=: 0 : 0
+~addons/ide/jhs/js/jquery/smoothness/jquery-ui.custom.css
+~addons/ide/jhs/js/jquery/jquery-2.0.3.min.js
+~addons/ide/jhs/js/jquery/jquery-ui.min.js
+~addons/ide/jhs/js/jquery/jquery-ui.css"
+)
+
+INC_d3=: INC_jquery,0 : 0
+~addons/ide/jhs/js/d3/d3.css
+~addons/ide/jhs/js/d3/d3.min.js
+)
+
+INC_d3_basic=: INC_d3,0 : 0
+~addons/ide/jhs/js/jsoftware/d3_basic.js
+)
+
+INC_handsontable=: INC_jquery, 0 : 0
+~addons/ide/jhs/js/handsontable/handsontable.full.min.js
+~addons/ide/jhs/js/handsontable/handsontable.full.min.css
+)
+
+INC_handsontable_basic=: INC_handsontable NB. no jsoftware stuff yet
+
+
 NB.framework styles for all pages
 CSSCORE=: 0 : 0
 *{font-family:<PC_FONTVARIABLE>;}
@@ -36,7 +64,10 @@ div{padding-left:2px;}
  display: none; background: white;
  text-align:center;
 }
+#close{position:absolute;top:0;left:0;width:20px;height:20px;font-size:16px;background-color:firebrick;color:white;font-weight:bold;}
 )
+
+NB.#close{position:absolute;top:0;left:0;width:20px;height:20px;font-size:16px;background-color:firebrick;color:white;font-weight:bold;}
 
 NB. extra html - e.g. <script .... src=...> - included after CSS and before JSCORE,JS
 HEXTRA=: '' 
@@ -46,7 +77,7 @@ NB. apply outer style tags after removing inner ones
 css=: 3 : 0
 t=. 'PC_FONTFIXED PC_FONTVARIABLE PC_FM_COLOR PC_ER_COLOR PC_LOG_COLOR PC_SYS_COLOR PC_FILE_COLOR'
 t=. (CSSCORE,y) hrplc t;PC_FONTFIXED;PC_FONTVARIABLE;PC_FM_COLOR;PC_ER_COLOR;PC_LOG_COLOR;PC_SYS_COLOR;PC_FILE_COLOR
-'<style type="text/css">',t,'</style>'
+'<style type="text/css">',LF,t,'</style>',LF
 )
 
 NB. core plus page js
@@ -101,6 +132,13 @@ jmarka=:     '<!-- j html output a -->'
 jmarkz=:     '<!-- j html output z -->'
 jmarkc=: #jmarka
 
+
+NB. unique query string - avoid cache
+uqs=: 3 : 0
+canvasnum=: >:canvasnum
+'?',((":6!:0'')rplc' ';'_';'.';'_'),'_',":canvasnum
+)
+
 NB. output starting with jmarka and ending with jmarkz,LF
 NB.  is assumed to be html and is not touched
 jhtmlfroma=: 3 : 0
@@ -130,8 +168,10 @@ end.
 htmlresponse=: 3 : 0
 logapp'htmlresponse'
 NB. y 1!:2<jpath'~temp/lastreponse.txt'
+LASTTS=: 6!:1''
 putdata LASTRESPONSE=: y
-sdclose_jsocket_ SKSERVER
+shutdownJ_jsocket_ SKSERVER ; 2
+sdclose_jsocket_ ::0: SKSERVER
 SKSERVER_jhs_=: _1
 i.0 0 NB. nothing to display if final J result
 )
@@ -248,6 +288,18 @@ Connection: close
 </html>
 )
 
+hrxtemplate=: toCRLF 0 : 0
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Connection: close
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title><TITLE></title>
+)
+
 NB. html 204 response (leave the page as is)
 html204=: toCRLF 0 : 0
 HTTP/1.1 204 OK
@@ -340,13 +392,13 @@ NB. HBS is LF delimited list of sentences
 NB. jhbs returns list of sentence results
 jhbs=: 3 : 0
 t=. <;._2 y
-t=. ;jhbsex each t
+t=. ;LF,~each jhbsex each t
 i=. 1 i.~'</div><div id="jresizeb">'E.t
 if. i~:#t do.
  t=. '<div id="jresizea">',t,'</div>'
 end.
 t=. '<div id="status-busy"><br>server busy<br>event ignored<br><br></div>',t
-'<body onload="jevload();" onunload="jevunload();" onfocus="jevfocus();">',(jhform''),t,'</form></body>'
+'<body onload="jevload();" onunload="jevunload();" onfocus="jevfocus();">',LF,(jhform''),LF,t,LF,'</form></body>'
 )
 
 jhbsex=: 3 : 0
@@ -369,9 +421,12 @@ t=. t,' onkeydown="return jmenukeydown(event);"'
 
 jhmx=: 3 : 0
 if. '^'={:y do.
- s=. ' ',_2{y
+ s=. ' ','Esc+',_2{y
  t=. _2}.y
-else.
+elseif. '*'={:y do.
+ s=. ' ','Ctrl+',_2{y
+ t=. _2}.y
+elseif. 1 do.
  s=. '  '
  t=. y
 end.
@@ -394,7 +449,7 @@ NB. standard demo html boilerplate
 jhdemo=: 3 : 0
 c=. '.ijs',~>coname''
 p=. jpath'~addons/ide/jhs/demo/',c
-'<hr>',(JIJSAPP_jhs_,'?mid=open&path=',p)jhref_jhs_ c
+'<hr>',jhref_jhs_ 'jijs';p;c
 )
 
 NB. jgrid - special jht for grid
@@ -403,6 +458,7 @@ t=. '<input type="text" id="<ID>" name="<ID>" class="<CLASS>" <EXTRAS>',jeditatt
 t hrplc 'ID VALUE SIZE CLASS EXTRAS';5{.y,(#y)}.'';'';'';'ht';''
 )
 
+NB.* see ~addons/ide/jhs/utilh.ijs for complete information
 NB.* 
 NB.* HBS verbs with id
 NB.* jhab*id jhab text - anchor button
@@ -416,6 +472,12 @@ NB.* jhb*id jhb text - button
 jhb=: 4 : 0
 t=. '<input type="submit" id="<ID>" name="<ID>" value="<VALUE>" class="jhb" onclick="return jev(event)">'
 t hrplc 'ID VALUE';x;y
+)
+
+
+NB.* jhclose*jhclose'' - cojhs close button and spacer
+jhclose=: 3 : 0
+'close'jhb''
 )
 
 NB.* jhcheckbox*id jhcheckbox text;checked (checked 0 or 1)
@@ -432,6 +494,12 @@ jhdiv=: 4 : 0
 '<div id="',x,'">',y,'</div>'
 )
 
+NB.* jhdivhidden*id jhdivhidden text - <div id...>text</div>
+jhdivhidden=: 4 : 0
+'<div id="',x,'" style="visibility:hidden">',y,'</div>'
+)
+
+
 NB.* jhdiva*id jhdiva text - <div id...>text
 jhdiva=: 4 : 0
 '<div id="',x,'">',y
@@ -440,6 +508,18 @@ jhdiva=: 4 : 0
 NB.* jhdivadlg*id jhdivadlg text - <div id... display:none...>text
 jhdivadlg=: 4 : 0
 '<div id="',x,'" style="display:none;">',y
+)
+
+NB.* jhd3_basic*id jhd3_basic''
+jhd3_basic=: 4 : 0
+r=. 'redspacer'jhdiv'&nbsp;'
+r=. r,LF,(x,'_error')jhdiv''
+r=. r,LF,(x,'_header')jhdiv''
+r=. r,LF,(x,'_title')jhdiv''
+r=. r=. r,LF,x jhdiv''
+r=. r,LF,(x,'_legend')jhdiv''
+r=. r,LF,(x,'_footer')jhdiv''
+(x,'_box')jhdiv LF,r,LF
 )
 
 NB.* jhec*id jhec '' - contenteditable div
@@ -488,14 +568,31 @@ JMWIDTH=: w
 t
 )
 
+jhmgb=: 4 : 0
+t=. x jhab y
+t=. t rplc 'class="jhab"';'class="jhmab"',jmon''
+MSTATE=: 2
+MINDEX=: <:MINDEX
+JMWIDTH=: w
+t
+)
+
+
+
 NB.* jhml*id jhml text - menu anchor link - (shortcut ^s)
+NB. extra y element sets target - but not so useful as it isn't made current
 jhml=: 4 : 0
+if. 1=L.y do.
+ 'y target'=. y
+else.
+ target=. ;('jijs'-:y){y;TARGET
+end.
 't s'=.jhmx y
 value=. t
 text=. ((0>.JMWIDTH-#value)#' '),s
 value=. value rplc ' ';'&nbsp;'
 text=. text rplc ' ';'&nbsp;'
-t=.   '<li><a href="<REF>" target="',TARGET,'" class="jhml" onclick="return jmenuhide();"'
+t=.   '<li><a href="<REF>" target="',target,'" class="jhml" onclick="return jmenuhide();"'
 t=. t,jmon''
 t=. t,'><VALUE></a><TEXT></li>'
 t hrplc 'REF VALUE TEXT';x;value;text
@@ -518,17 +615,16 @@ t=. t,' onclick="return jev(event)"/><label for="<ID>"><VALUE></label>'
 t hrplc 'ID VALUE SET CHECKED';x;value;set;checked
 )
 
-NB.* jhref*id jhref text - <a href="id">text</a>
-jhref=: 4 : 0
+NB.* jhref*jhref page;target;text
+NB.* jhref*id jhref text - <a href="id">text</a> (deprecated - use monadic form)
+jhref=: 3 : 0
+'page target text'=. y
+NB.! if. '~'={.target do. target=. jpath target end.
+t=. '<a href="<REF>?jwid=<TARGET>" target="<TARGET>" class="jhref" ><TEXT></a>'
+t hrplc 'REF TARGET TEXT';page;target;text
+:
 y=. boxopen y
 t=. '<a href="<REF>" target="',TARGET,'" class="jhref" ><VALUE></a>'
-t hrplc 'REF VALUE';x;y
-)
-
-NB.* jhrefx*id jhrefx text - <a href="id" target="_blank">text</a>
-jhrefx_jhs_=: 4 : 0
-y=. boxopen y
-t=. '<a href="<REF>" target="_blank" class="jhref" ><VALUE></a>'
 t hrplc 'REF VALUE';x;y
 )
 
@@ -590,18 +686,6 @@ jhh1=: 3 : 0
 '<h1>',y,'</h1>'
 )
 
-NB.* jhjmlink*jhjmlink'' - ide link menu
-jhjmlink=: 3 : 0
-t=.   'jmlink' jhmg'link';1;8
-t=. t,'jijx'   jhml'jijx     j^'
-t=. t,'jfile'  jhml'jfile    f^'
-t=. t,'jfiles' jhml'jfiles   k^'
-t=. t,JIJSAPP  jhml'jijs     J^'
-t=. t,'jfif'   jhml'jfif     F^'
-t=. t,'jal'    jhml'jal'
-t=. t,'jhelp'  jhml'jhelp    h^'
-)
-
 NB.* jhma*jhma'' - menu start
 jhma=: 3 : 0
 MSTATE=:1[MINDEX=:100
@@ -636,44 +720,6 @@ jhbr=: '<br/>'
 NB.* jhhr*jhhr - <hr/>
 jhhr=: '<hr/>'
 
-NB.* 
-NB.* utilities
-NB.* doch*doch_jhs_'' - framework verbs and nouns
-doch=: 3 : 0
-r=. LF,'see ~addons/ide/jhs/utilh.ijs for complete information',LF
-t=. <;.2 LF,~fread jpath'~addons/ide/jhs/utilh.ijs'
-for_n. t do.
- n=. >n
- if. 'NB.* '-:5{.n do.
-  n=. 5}.n
-  i=. n i.'*'
-  if. i~:#n do.
-   n=.(10{.i{.n),' ',}.i}.n
-  end.
-  r=. r,n
- end.
-end.
-r
-)
-
-NB.* docjs*docjs_jhs_'' - framework javascript overview
-docjs=: 3 : 0
-r=. ''
-t=. <;.2 LF,~fread jpath'~addons/ide/jhs/utiljs.ijs'
-for_n. t do.
- n=. >n
- if. '//* '-:4{.n do.
-  n=. 5}.n
-  i=. n i.'*'
-  if. i~:#n do.
-   n=.(10{.i{.n),' ',}.i}.n
-  end.
-  r=. r,n
- end.
-end.
-r
-)
-
 NB.* jhbshtml*jhbshtml_jdemo1_'' -  show HBS sentences and html
 jhbshtml=: 3 : 0
 s=.<;._2 HBS
@@ -687,18 +733,65 @@ NB.*
 NB.* html response verbs
 
 NB. build html response from page globals CSS JS HBS
-NB. CSS or JS undefined allwed
+NB. CSS or JS undefined allowed
 NB.* jhr*title jhr names;values - names to replace with values
 NB.* *send html response built from HBS CSS JS names values
 jhr=: 4 : 0
-if. _1=nc <'CSS' do. CSS=: '' end.
-if. _1=nc <'JS'  do. JS=: '' end.
+if. _1=nc<'JS'  do. JS=:'' end.
+if. _1=nc<'CSS' do. CSS=:'' end.
 tmpl=. hrtemplate
 if. SETCOOKIE do.
  SETCOOKIE_jhs_=: 0
  tmpl=. tmpl rplc (CRLF,CRLF);CRLF,'Set-Cookie: ',cookie,CRLF,CRLF
 end.
 htmlresponse tmpl hrplc 'TITLE CSS HEXTRA JS BODY';(TIPX,x);(css CSS);HEXTRA;(js JS);(jhbs HBS)hrplc y
+)
+
+NB.* jhrx*title jhrx (getcss'...'),(getjs'...'),getbody'...'
+NB.* *send html response built from INCLUDE, CSS, JS, HBS
+jhrx=: 4 : 0
+JTITLE=: x
+htmlresponse (hrxtemplate hrplc 'TITLE';(TIPX,x)),y
+)
+
+NB.* jhrpage*title jhrpage (getcss'...'),(getjs'...'),getbody'...'
+NB.* *page response to a get
+jhrpage=: 4 : 0
+(hrxtemplate hrplc 'TITLE';(TIPX,x)),y
+)
+
+getincs=: 3 : 0
+t=. ~.<;._2 INC
+t=. (;(<y)-:each (-#y){.each t)#t
+if. 0=#t do. t return. end.
+b=. ;fexist each t
+('INC file not found: ',>{.(-.b)#t)assert b
+t
+)
+
+getcss=: 3 : 0
+'getcss arg not empty'assert ''-:y
+t=. getincs'.css'
+t=. ;(<'<link rel="stylesheet" href="'),each t,each<'" />',LF
+t,css CSS
+)
+
+fixjsi=: 3 : 0
+if. NOCACHE do.
+ '<script type="text/javascript">',LF,'// NOCACHE: ',y,LF,(fread y),LF,'</script>'
+else.
+ '<script src="',y,'"></script>'
+end. 
+)
+
+getjs=: 3 : 0
+t=. getincs'.js'
+jsi=. ;LF,~each fixjsi each t 
+y hrplc~jsi,js JS
+)
+
+gethbs=: 3 : 0
+'</html>',~'</head>',y hrplc~jhbs HBS
 )
 
 NB.* jhrajax*jhrajax data - JASEP delimited data
@@ -727,7 +820,8 @@ putdata chunk y
 NB.* jhrajax_b*jhrajax_z data - last chunk
 jhrajax_z=: 3 : 0
 putdata (chunk y),'0',CRLF,CRLF
-sdclose_jsocket_ SKSERVER
+shutdownJ_jsocket_ SKSERVER ; 2
+sdclose_jsocket_ ::0: SKSERVER
 SKSERVER_jhs_=: _1
 )
 

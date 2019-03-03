@@ -44,7 +44,7 @@ newheader is 1 if 807 header format
 IFBE=: 'a'~:{.2 ic a.i.'a'
 SZI=: IF64{4 8
 'HADK HADFLAG HADM HADT HADC HADN HADR HADS'=: SZI*i.8
-HADRUS=: HADR+IFBE*IF64{2 6 NB. address of rank US bytes
+HADRUS=: HADR+IFBE*IF64{2 6
 HADCN=: <.HADC%SZI
 HSN=: 7+64
 HS=: SZI*HSN

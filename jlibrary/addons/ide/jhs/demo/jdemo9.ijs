@@ -16,8 +16,8 @@ html=: 0 : 0
   <frame src="http://<ADDRESS>/jijs"
    name="ijs",
    scrolling='auto'>
-  <frame src="http://<ADDRESS>/jhelp"
-   name="jhelp",
+  <frame src="http://<ADDRESS>/jfiles"
+   name="files",
    scrolling='auto'>
  </frameset>
  </frameset>

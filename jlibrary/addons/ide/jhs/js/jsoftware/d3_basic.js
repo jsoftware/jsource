@@ -1,128 +1,81 @@
-coclass'jd3'
-coinsert'jhs'
-
-HBS=: 0 : 0
-'<link rel="stylesheet" href="~addons/ide/jhs/js/jquery/smoothness/jquery-ui.custom.css" />'
-'<script src="~addons/ide/jhs/js/jquery/jquery-2.0.3.min.js"></script>'
-'<script src="~addons/ide/jhs/js/d3/d3.min.js"></script>'
-'<div id="d3error"></div>'
-'<div id="ahtml"></div>'
-'<div id="graph"></div>'
-'<div id="legend"></div>'
-'<div id="zhtml"></div>'
-'<div id="dialog" title="D3 Error"></div>'
-)
-
-jev_get=: 3 : 0
-'jd3'jhr''
-)
-
-NB. wid_body_load_data_jtable_ values are not cleaned up
-ev_body_load=: 3 : 0
-try.
- a=. '_ev_body_load_data_jd3_',~getv'jwid' 
- if. 0~:nc<a do. (a)=: '[1,2,3]' end.
- d=. a~
-catch.
- jhrajax'bad argument'
- return.
-end. 
-jhrajax JASEP,d
-)
-
-CSS=: 0 : 0
-path{stroke: steelblue;stroke-width: 1;fill: none;}
-.axis{shape-rendering:crispEdges;}
-.x.axis line{stroke:lightgrey;}
-.x.axis .minor{stroke-opacity:.5;}
-.x.axis path{display:none;}
-.y.axis line, .y.axis path{fill:none;stroke:#000;}
-.slice text{font-size:16pt;}
-#d3error{font-size:24pt;margin-left:20px;margin-top:20px;}
-span{font-size:inherit;}
-)
-
-JS=: 0 : 0 NB. javascript
-// vars set from J with ajax eval
-title= "title";
-titlesize= "24pt"
-type= "line";
-minh= 50;
-maxh= 200;
-linewidth= 1;
-barwidth= 40;
-legend= [];
-label= [];
-data=[[]];  // data matrix - list of lists
-
-
-//window.onresize= plot;
-function color(n){return d3.scaleOrdinal(d3.schemeCategory10).range()[n];}
-function getlabel(i){return (i<label.length)?label[i]:i;}
-
-// must use JHS framework load handler instead of jquery - $(document).ready(function() 
-function ev_body_load()
-{
-document.title= window.name;
-jdoajax([]);
-}
-
-function seterr(t)
-{
-  $("#d3error").html("J D3 error - "+t);
-  type="error"; // prevent resize from drawing
-}
-
-function ajax(ts)
-{
- if(0!=(ts[0].length)){seterr("ajax failed: "+ts[0]); return;}
- var s= ts[1].split('\n');
- for(var i=0;i<s.length;++i)
- {
-  try{eval(s[i]);}catch(e)
-  {
-   seterr("eval failed:<br>"+s[i]);
-  }
- }
- common1(); 
- plot();
- window.onresize= plot; // now we can resize
-}
-
-// vars not set from J with ajax eval
-var datan; // a row from data
-var az;    // height of header+footer
+// globals
+var az;    // height of header+title+legend+footer
 var m;     // margin
-var ww;    // window width
-var wh;    // window height less header+footer\
+var mh;    // height margin
+var ww;    // box container width
+var wh;    // box container height
 var ss;    // slop to avoid scroll bars
 var dmin=0,dmax=0;
 
-function plot()
+function color(n){return d3.scaleOrdinal(d3.schemeCategory10).range()[n];}
+function getlabel(i){return (i<label.length)?label[i]:i;}
+
+function seterr(g,t){jbyid(g+"_error").innerHTML= "D3 error - "+g+" - "+t;}
+
+function plot(g,tabdata)
 {
- $("#graph").html(""); // remove this to see multiple graphs
+ common(g,tabdata);
  switch(type)
  {
- case "line":  plotline();break;
- case "pie":   plotpie();break;
- case "bar":   plotbar();break;
+ case "line":  plotline(g);break;
+ case "pie":   plotpie(g);break;
+ case "bar":   plotbar(g);break;
  case "error": break;
- default:      seterr("plot type not supported"); break;
+ default:      seterr(g,"plot type not supported"); break;
  }
 }
 
-function common1()
+function common(g,tabdata)
 {
- var t= "";
- var s= "";
- 
- var c= ("pie"==type)?data[0].length:data.length;
- for(var i=0;i<c;++i)
+// set default plot parameters before eval of explicit ones
+type= "line";
+header="";
+title= "";
+legend= [];
+label= [];
+footer="";
+linewidth= 1;
+barwidth= 40;
+minh= 200;
+maxh= 400;
+minw= 200;
+maxw= 400;
+data=[[10,100,30]];  // data matrix - list of lists
+
+// vars not set by eval
+datan='';
+az=0;   // height of header+footer
+m= 50;  // margins
+mh= 10; // height margin
+ss= 0;  // slop to avoid scrollbars
+ww=0;   // box container width
+wh=0;   // box container height
+w=0;    // graph width
+h=0;    // graph height
+dmin=0;
+dmax=0;
+
+var s=tabdata.split('\n');
+for(var i=0;i<s.length;++i)
+{
+ try{eval(s[i]);}catch(e)
  {
-  t+= s+"<span style=\"color:"+color(i)+";\">"+legend[i]+"</span>";
-  s= "&nbsp;&bull;&nbsp;";
+  seterr(g,"eval failed:<br>"+s[i]);
  }
- $("#legend").html(t);
+}
+
+var t= ""; var s= "";
+var c=legend.length;
+for(var i=0;i<c;++i)
+{
+ t+= s+"<span style=\"color:"+color(i)+";\">"+legend[i]+"</span>";
+ s= "&nbsp;&bull;&nbsp;";
+}
+
+jbyid(g+"_header").innerHTML=header;
+jbyid(g+"_title").innerHTML=title;
+jbyid(g+"_legend").innerHTML= t;
+jbyid(g+"_footer").innerHTML=footer;
  
  for(var i=0;i<data.length;++i)
   for(var j=0;j<data[0].length;++j)
@@ -130,26 +83,31 @@ function common1()
    dmin= (dmin<data[i][j])?dmin:data[i][j];
    dmax= (dmax>data[i][j])?dmax:data[i][j];
   }
-}
 
-function common()
-{
- $("#graph").html(""); // remove this to see multiple graphs
- az= $("#ahtml").height()+$("#zhtml").height()+$("#legend").height();
- m= 50; // margins
- ww= window.innerWidth;
- wh= window.innerHeight;
- ss= 40;
+ az= $("#"+g+"_header").height()+$("#"+g+"_title").height();
+ az= az+$("#"+g+"_legend").height() + $("#"+g+"_footer").height(); 
+ 
+// ww,wh are for box container
+ww= jbyid(g+"_box").style.width;
+ww= ww.substr(0, ww.length-2);
+
+wh= jbyid(g+"_box").style.height;
+wh= wh.substr(0, wh.length-2);
+ 
+w= ww-(m+m+ss); // width needs more slop than height
+h= wh-(az+mh+mh+ss);
+
+h= (h<minh)?minh:h;
+h= (h>maxh)?maxh:h;
+
+w= (w<minw)?minw:w;
+w= (w>maxw)?maxw:w;
+
+$("#"+g).html(""); // remove this to see multiple graphs
 }
  
-function plotline()
+function plotline(g)
 {
- common();
- var w= ww-(m+m+ss);
- var h= wh-(az+m+m+ss);
- h= (h<minh)?minh:h;
- h= (h>maxh)?maxh:h;
- 
  var x= d3.scaleLinear().domain([0,-1+data[0].length]).range([0,w]);
  var y= d3.scaleLinear().domain([dmin,dmax]).range([h,0]);
 
@@ -157,11 +115,12 @@ function plotline()
    .x(function(d,i){return x(i);})
    .y(function(d){return y(d);})
 
- var graph = d3.select("#graph").append("svg:svg")
+   var graph = d3.select("#"+g).append("svg:svg")
+ 
     .attr("width",w+m+m)
-    .attr("height",h+m+m)
+    .attr("height",h+mh+mh)
     .append("svg:g")
-    .attr("transform","translate("+m+","+m+")");
+    .attr("transform","translate("+m+","+mh+")");
 
  var xAxis = d3.axisBottom().scale(x).tickSize(-h);
    graph.append("svg:g").attr("class", "x axis").attr("transform", "translate(0,"+h+")").call(xAxis);
@@ -177,20 +136,12 @@ function plotline()
   q.style("stroke-width",linewidth);
   q.attr("d",line(datan));
  }
-
- set_title(graph,w/2,0-(m/2),"middle",titlesize,title);
 }
 
-function set_title(g,x,y,anchor,size,title)
+function plotpie(g)
 {
- g.append("text").attr("x",x).attr("y",y).attr("text-anchor",anchor).style("font-size",size).text(title);
-}
-
-function plotpie()
-{
- common();
- var w= ww;
- var h= wh-az;
+ w= w+2*m-mh; // adjust for kludge for line plot width
+ 
  var q= (w>h)?h:w;
  q= (q<minh)?minh:q;
  q= (q>maxh)?maxh:q;
@@ -198,10 +149,11 @@ function plotpie()
  q= q-q%2;
  w = q;
  h = q;
+ 
  var r= q/2;
  datan=data[0];
     
- var vis = d3.select("#graph")
+ var vis = d3.select("#"+g)
   .append("svg:svg")
   .data([datan])
   .attr("width",w+m+m)
@@ -209,7 +161,7 @@ function plotpie()
   .append("svg:g")
   .attr("transform", "translate("+(r+m)+","+(r+m)+")")
  
- var arc = d3.arc().outerRadius(r);
+ var arc = d3.arc().outerRadius(r).innerRadius(0);
  
  //var pie = d3.layout.pie()
  var pie = d3.pie()
@@ -233,15 +185,10 @@ function plotpie()
     })
   .attr("text-anchor", "middle")
   .text(function(d, i) { return getlabel(i); }); 
-  
- set_title(vis,0,-(r+10),"middle",titlesize,title);
 }
 
-
-function plotbar()
+function plotbar(g)
 {
-common();
-
 // d3 examples often use csv file and the code depends on d3.csv data format
 // rather than unravel the code - we make the ajax data conform to that format
 var rows= data.length;
@@ -264,7 +211,7 @@ for(var i=0;i<rows;++i)
 }
 
 w= barwidth*cols;
-var h= wh-(az+m+m+ss);
+// var h= wh-(az+m+m+ss);
 h= (h<minh)?minh:h;
 h= (h>maxh)?maxh:h;
 
@@ -275,7 +222,7 @@ var p= [m,m,m,m], // 20 50 30 20
     y= d3.scaleLinear().range([0, h - p[0] - p[2]])
     z= color;
 
-var svg = d3.select("#graph")
+var svg = d3.select("#"+g)
  .append("svg:svg")
  .attr("width", w)
  .attr("height", h)
@@ -328,5 +275,3 @@ rule.append("svg:text")
  .attr("dy", ".35em")
  .text(d3.format(",d"));
 }
-
-)

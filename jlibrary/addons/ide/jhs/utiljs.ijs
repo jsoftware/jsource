@@ -4,6 +4,39 @@ NB. JS could be src= and with cache would load faster
 NB. JS is small and doing it inline (not src=) is easier
 
 0 : 0
+*** repopen
+Browsers are concerned with javascript action changing tab focus
+as this can be obnoxious from some sites.
+
+It would have been nice if pages from the same domain didn't have this
+restriction.
+
+The JHS solution is to:
+ w=window.open('','id');w.close();window.open('URL','id');
+ 
+This gives a new window with the focus. Drawbacks are that it is probably
+in a new location and is a refresh. But at least it has focus.
+
+
+Different browsers behave differently for window.open() and focus().
+For this code window.open('www.sample.com','mywindow').focus()
+
+Chrome 20 opens a new tab, and focuses on subsequent open() calls regardless if focus() is called or not.
+Chrome >20 behaves more like Firefox
+
+Firefox 13 opens a new tab, focuses on first open(), does not focus on subsequent open() calls/disregards focus().
+
+IE 8 opens a new window, honors focus().
+
+Safari 5 opens a new window, and focuses on subsequent open() calls regardless if focus() is called or not.
+
+*** jquery dialog stuff
+ '<div id="dialog" title="Table Editor Error"></div>'
+ $(function(){$("#dialog").dialog({autoOpen:false,modal:true});});
+ $("#dialog").html(ts[0]);
+ $("#dialog").dialog("open");
+
+*** unload/beforeunload
 onunload/onbeforeunload events would be nice if they worked 'properly'
 would allow app to clean up client side and (ajax) server side
 there are limitations (ajax, etc.) in the handlers
@@ -30,6 +63,43 @@ window.onbeforeunload= xxxclose;
 function xxxclose(){return dirty?""prefered way to leave this page is menu close or close button ×;null;
 
 a page could manage the dirty flag and do proper shutdown in the close handler
+
+
+Jan 2017 - conclusion again that unload/beforeunload are not useful
+start to use standard close button on numbered locale pages
+ this can free locales and resource properly
+
+unload can free locales - but refresh is an unload and thed a reload from the locale that no longer exists
+beforeunload does not ask permission to leave if page has not been touched by user (no good for freeing locale)
+beforeunload can prevent unload of changed page - but gets confusing on if being replaced by J open_jhs_
+
+*** contenteditable to/from text
+IE:
+ <BR>             <-> N (\n)
+ </P>              -> N
+ <P>&nbsp;</P      -> N (can not tell emtpy from 1 blank)
+ can have \r\n !
+
+Chrome:
+ <br>            <-> N
+ <div>            -> N
+ <div><br></div>  -> N
+ saw nested divs, but do not know how to get them
+ starting div so break on div rather than /div
+ 
+FF:
+ <br>            <-> N
+ has (and needs) <br> at end
+
+Portable rules (all case insensitive):
+ remove \r \n
+ <p>&nbsp;</p>    -> N
+ <div><br></div>  -> N
+ <br>            <-> N
+ </p>             -> N
+ </div>           -> N
+ always have <br> at end (read/write)
+ &lt;...         <-> < > & space
 )
 
 JSCORE=: 0 : 0
@@ -49,6 +119,7 @@ var i= LS.indexOf("#");
 if(-1!=i) LS= LS.substring(0,i) // strip off # fragment
 LS+= ".";
 var logit= "";
+var closing=0; // set 1 when page/locale is closing to prevent events 
 
 function jbyid(id){return document.getElementById(id);}
 function jsubmit(s){jform.jdo.value=jevsentence;jform.submit();}
@@ -294,8 +365,7 @@ function jevunload(){jscdo("body","","unload");return false;}
  
 function jevfocus()
 {
- // return false; // IE onfocus before onload
- if(jform=="")return false;
+ if(closing||jform=="")return false;
  jscdo("body","","focus");
  return false;
 }
@@ -321,15 +391,14 @@ function jev(event){
 function jevdo()
 {
  JEV= "ev_"+jform.jmid.value+"_"+jform.jtype.value;
- // alert(JEV);
+ //alert(JEV);
  //try{eval(JEV)}
  //catch(ex)
  if('undefined'==eval("typeof "+JEV))
  {
-  // undef returns true or does jsubmit for buttons 
+  // undef returns true or does alert and returns false for events that should have handlers 
   if(null==jevtarget)return true;
-  var c=jevtarget.getAttribute("class");
-  if(c=="jhb"||c=="jhab"||c=="jhmab")jsubmit();
+  if(jform.jtype.value=="click"||jform.jtype.value=="enter"){alert("not defined: function "+JEV+"()");return false;}
   return true;
  }
  try{var r= eval(JEV+"();")}
@@ -432,22 +501,39 @@ function jdor()
     location="jlogin";
    else
    {
-    var t="ajax request failed\n"
-    t+=   "response code "+rq.status+"\n";
-    t+=   "application did not produce result\n"
-    t+=   "try browsing to url again\n"
-    t+=   "additional info in jijx"
+    var t;
+    var code= rq.status;
+    if(0==code)
+    {
+     // kludge - text copied from core.ijs
+     t= "Your JHS server has exited.\nManually close all pages for that server.\nThey won't work properly without a server\nand will be confused if the server restarts."
+    }
+    else
+    {
+     t="ajax request failed\n"
+     t+=   "response code "+code+"\n";
+     t+=   "application did not produce result\n"
+     t+=   "press enter in jijx for additional info"
+    }
     alert(t);
    }
   }
   else
   {
    d=rq.responseText.split(JASEP);
-   if("function"==eval("typeof "+f))
-    f+="(d)";
+   
+   if(  "undefined"==eval("typeof "+f) && "undefined"==typeof ajax)
+   {
+     alert("not defined: function "+f+"()");
+   }
    else
-    f="ajax(d)";
-   try{eval(f)}catch(e){alert(f+" failed: "+e);}
+   {
+    if("function"==eval("typeof "+f))
+     f+="(d)";
+    else
+     f="ajax(d)";
+    try{eval(f)}catch(e){alert(f+" failed: "+e);}
+   }
   }
   rqstate= 0; rqoffset= 0;
  }
@@ -472,7 +558,6 @@ function jdostdsc(c)
   case 'j': window.open("jijx",TARGET);  break;
   case 'f': window.open("jfile",TARGET); break;
   case 'k': window.open("jfiles",TARGET); break;
-  case 'h': window.open("jhelp",TARGET); break;
   case 'J': window.open("jijs",TARGET); break;
   case 'F': window.open("jfif",TARGET); break;
  }
@@ -489,7 +574,7 @@ function keypress(ev)
  
  var s= String.fromCharCode(c);
  if(!jsc)return true;
- jsc=0;
+  jsc=0;
  try{eval("ev_"+s+"_shortcut()");}
  catch(e){jdostdsc(s);}
  return false;
@@ -501,9 +586,17 @@ function keyup(ev)
  var c=e.keyCode;
  if(e.ctrlKey)
  {
+  if('MacIntel'==navigator.platform)
+  {
+   if(c==188&&e.shiftKey&&'function'==typeof uarrow){uarrow();return false;}
+   if(c==190&&e.shiftKey&&'function'==typeof darrow){darrow();return false;}
+  }
   if(c==188){jscdo(e.shiftKey?"less":"comma",undefined,"ctrl");return false;}
   if(c==190){jscdo(e.shiftKey?"larger":"dot",undefined,"ctrl");return false;}
   if(c==191){jscdo(e.shiftKey?"query":"slash",undefined,"ctrl");return false;}
+  if(c==59){jscdo(e.shiftKey?"colon":"semicolon",undefined,"ctrl");return false;}
+  if(c==222){jscdo(e.shiftKey?"doublequote":"quote",undefined,"ctrl");return false;}
+  if(c==220&&!e.shiftKey){jscdo("close");return false;} // ctrl+\
   if(c==38&&e.shiftKey&&'function'==typeof uarrow){uarrow();return false;}
   if(c==40&&e.shiftKey&&'function'==typeof darrow){darrow();return false;}
  }
@@ -637,6 +730,7 @@ function jmenuclick(ev)
  var e=window.event||ev;
  var tar=(typeof e.target=='undefined')?e.srcElement:e.target;
  var id=tar.id;
+ if(id=="adv"){jscdo("advance");return;}
  var idul= id+"_ul";
  jbyid(id).focus(); // required on mac
  if(jbyid(idul).style.display=="block")
@@ -797,7 +891,6 @@ function jseval(ajax,s)
 {
  var i,j,a,z,q;
  a= "<!-- j html output a --><!-- j js a --><!-- ";
-
  z= " --><!-- j js z --><!-- j html output z -->";
  while(0!=s.length)
  {
@@ -905,63 +998,26 @@ function setlast(id)
   udarrow(a,1);
 }
 
-)
+var pagedirty=0;
 
-docjs=: 3 : 0
-docjsn
-)
+function ev_pageclose_click()
+{
+ var ok=1;
+ if(pagedirty){closing= 1; ok= confirm("Unsaved changes. Confirm close or Cancel.")} // closing - avoid jev_body_focus error
+ if(ok){window.onbeforeunload=null;jdoajax();window.close();}
+ closing= 0;
+}
 
-docjsn=: 0 : 0
+function ev_close_click()
+{
+ if(window.frameElement)
+ {
+  window.top.jscdo("close");
+ }
+ else
+  {jdoajax([],'');window.close();}
+}
 
-see ~addons/ide/jhs/utiljs.ijs for complete information
+function ev_close_click_ajax(ts){;}
 
-html element ids are mid[*sid] (main id and optional sub id)
-
-functions defined by you:
-
-ev_body_load()   - page load (open)
-ev_body_unload() - page unload (close)
-ev_body_focus()  - page focus
-  
-ev_mid_event() - event handler - click, change, keydown, ...
-
-js event handler:
-  jevev is event object
-  event ignored if not defined
-  jsubmit() runs J ev_mid_event and response is new page
-  jdoajax([...],"...") runs J ev_mid_event
-    ajax(ts) (if defined) is run with J ajax response
-    ev_mid_event_ajax(ts) is run if ajax() not defined
-  returns true (to continue processing) or false
-)
-
-0 : 0
-/* contenteditable to/from text
-IE:
- <BR>             <-> N (\n)
- </P>              -> N
- <P>&nbsp;</P      -> N (can not tell emtpy from 1 blank)
- can have \r\n !
-
-Chrome:
- <br>            <-> N
- <div>            -> N
- <div><br></div>  -> N
- saw nested divs, but do not know how to get them
- starting div so break on div rather than /div
- 
-FF:
- <br>            <-> N
- has (and needs) <br> at end
-
-Portable rules (all case insensitive):
- remove \r \n
- <p>&nbsp;</p>    -> N
- <div><br></div>  -> N
- <br>            <-> N
- </p>             -> N
- </div>           -> N
- always have <br> at end (read/write)
- &lt;...         <-> < > & space
-*/
 )

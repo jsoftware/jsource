@@ -1,5 +1,6 @@
 NB. JHS - core services
 require 'socket'
+
 coclass'jhs'
 
 0 : 0
@@ -41,22 +42,17 @@ useful stab poke if confused.
 
 *** login/bind/cookie/security overview
 
-Listening socket can bind localhost or any. What about lan?
-
-Localhost is relatively secure.
-Firewalls provide some any protection.
-
-Localhost is relatively secure and gains little from login.
-
-Non-localhost should require a login.
-
-Login is provided by a cookie.
-The cookie is set in the response to providing a password.
-That cookie is then included in the header of all requests
-and is validated by the server.
-
-The cookie is non-persistent and is deleted when browser closes.
-New tabs do not need to login, but a new browser does.
+listening socket binds to any
+localhost is relatively secure
+firewalls provide protection
+localhost is relatively secure and would gain little from login
+tunnel to localhost provides good security
+non-localhost requires a login
+login is provided by a cookie
+cookie set in the response to providing a valid password
+cookie is then included in the header of all requests - validated by server
+cookie is non-persistent and is deleted when browser closes.
+tabs do not need to login, but a new browser does.
 
 *** app overview
 URL == APP == LOCALE
@@ -143,6 +139,12 @@ JIJSAPP=: 'jijs' NB. 'jijsm' for simple jijs editor
 PROMPT=: '   '
 JZWSPU8=: 226 128 139{a. NB. empty prompt kludge - &#8203; \200B
 
+NB. prevent child inherit - critical with fork
+cloexec=: 3 : 0
+if. -.IFUNIX do. return. end.
+((unxlib 'c'),' fcntl i i i i') cd y,F_SETFD_jsocket_,FD_CLOEXEC_jsocket_
+)
+
 NB. J needs input - y is prompt - '' '   ' '      '
 input=: 3 : 0
 logapp 'jhs input prompt: ',":#y
@@ -151,7 +153,7 @@ if. _1~:SKSERVER do. try. ".'urlresponse_',URL,'_ y' catch. end. end. NB. jijx
 if. _1~:SKSERVER do. jbad'' end.
 getdata'' NB. get and parse http request
 if. 1=NVDEBUG do. smoutput seebox NV end. NB. HNV,NV
-if. (-.(<URL)e.boxopen OKURL)*.(0~:#PASS)*.(1~:+/cookie E. gethv'Cookie:')*.-.LHOK*.PEER-:LOCALHOST
+if. -. ((<URL)e.boxopen OKURL)+.(cookie-:gethv'Cookie:')+.PEER-:LOCALHOST
                        do. r=. 'jev_get_jlogin_ 0'
 elseif. 1=RAW          do. r=. 'jev_post_raw_',URL,'_'''''
 elseif. 'post'-:METHOD do. r=. getv'jdo'
@@ -170,6 +172,13 @@ end.
 
 CHUNKY_jhs_=: 0
 
+jhsexit=: 0 : 0
+Your JHS server has exited.
+Manually close all pages for that server.
+They won't work properly without a server
+and will be confused if the server restarts.
+)
+
 NB. J has output - x is type, y is string
 NB. MTYOFM  1 formatted result array
 NB. MTYOER  2 error
@@ -180,7 +189,12 @@ NB. MTYOFILE 6 output 1!:2[2
 NB. x is type, y is string
 output=: 4 : 0
 logapp 'output type : ',":x
-if. 5=x do. jhrajax 'Your J HTTP Server has exited.<br/><div id="prompt" class="log">&nbsp;&nbsp;&nbsp;</div>'[PROMPT_jhs_=:'   ' end.
+if. 5=x do.
+ NB. jhrajax 'Your J HTTP Server has exited.<br/><div id="prompt" class="log">&nbsp;&nbsp;&nbsp;</div>'[PROMPT_jhs_=:'   '
+ jhrajax'<font style="color:red;"><pre>',jhsexit,'</pre></font>'
+ jfe_jhs_ 0
+ 2!:55[0
+end.
 try.
  s=. y NB. output string
  type=. x NB. MTYO type
@@ -212,10 +226,11 @@ end.
 )
 
 NB. event handler called by js event
+NB. catch. changed to catchd. - december 2017 - for debug step with error
 jev=: 3 : 0
 try.
  ".t=. 'ev_',(getv'jmid'),'_',(getv'jtype'),' 0'
-catch.
+catchd.
  smoutput LF,'*** event handler error',LF,t,LF,(13!:12''),seebox NV
 end.
 )
@@ -227,7 +242,7 @@ getdata=: 3 : 0
 RAW=: 0
 while. 1 do.
  logapp 'getdata loop'
- SKSERVER_jhs_=: 0 pick sdcheck_jsocket_ sdaccept_jsocket_ SKLISTEN
+ cloexec SKSERVER_jhs_=: 0 pick sdcheck_jsocket_ sdaccept_jsocket_ SKLISTEN
 
  NB. JHS runs blocking sockets and uses sdselect for timeouts
  NB. sdioctl_jsocket_ SKSERVER,FIONBIO_jsocket_,1
@@ -244,6 +259,14 @@ while. 1 do.
   d=. i}.h
   h=. i{.h
   parseheader h
+  if. '100-continue'-:gethv'Expect:' do.
+   hr=. 'HTTP/1.1 100 Continue',CRLF,CRLF    NB. inform client to send request body
+   try.
+    while. #hr do. hr=. (ssend hr)}.hr end.
+   catch.
+    logapp '100-continue error: ',13!:12''
+   end.
+  end.
   if. 'POST '-:5{.h do.
    len=.".gethv'Content-Length:'
    while. len>#d do. d=. d,srecv'' end.
@@ -282,7 +305,8 @@ URL=: jurldecode}.(<./t i.' ?'){.t=. gethv y
 
 serror=: 4 : 0
 if. y do.
- sdclose_jsocket_ SKSERVER
+ shutdownJ_jsocket_ SKSERVER ; 2
+ sdclose_jsocket_ ::0: SKSERVER
  logapp x
  x 13!:8[3
 end.
@@ -426,368 +450,21 @@ logapp y,' error : ',13!:12''
 
 logstdout=: 3 : 'i.0 0[(y,LF) 1!:2[4'
 
-NB. z local utilities
-
-dbon_z_=: 3 : 0
-13!:15 'smoutput dbes dbestack_z_=:13!:18'''''
-9!:27 '13!:0[1'
-9!:29 [1
-i.0 0
-)
-
-dboff_z_=: 3 : 0
-13!:15 ''
-9!:27 '13!:0[0'
-9!:29 [1
-i.0 0
-)
-
-dbcutback_z_=: 13!:19
-dbstep_z_=:    13!:20
-dbstepin_z_=:  13!:21
-dbstepout_z_=: 13!:22
-
-NB. display numbered explicit defn
-dbsd_z_=: 3 : 0
-if. -.1 2 3 e.~nc<y do. 'not an explicit definition' return. end.
-raw=. 5!:5<y
-t=.<;.2 LF,~raw
-if. 1=#t do. '0 ',raw return. end.
-i=.t i.<':',LF
-if. ('3'={.raw)*.i~:#t do.
- j=. (_1,i.<:i),_1,(i.<:<:(#t)-i),_1
-else.
- j=. _1,(i._2+#t),_1
-end.
-n=. ":each<"0 j
-n=. a: ((n=<'_1')#i.#n)} n
-n=. <"1 ' ',.~' ',.~>n
-;n,each t
-)
-
-NB. debug stop manager
-NB. dbsm'name'     - display numbered explicit defn
-NB. dbsm'~...'     - remove stops starting with ...
-NB. dbsm'name n:n' - add stops
-NB. dbsm''         - display stops
-dbsm_z_=: 3 : 0
-if. ('~'~:{.y)*.1=#;:y do. dbsd y return. end.
-if.'~'={.y do.
- s=. deb each<;._2 (dbsq''),';'
- a=. }.y
- s=. (-.(<a)=(#a){.each s)#s
-else.
- s=. deb each<;._2 (dbsq''),y,';'
-end.
-s=. ~./:~(s~:a:)#s
-dbss ;s,each<' ; '
-dbsq''
-)
-
-NB. show execution stack as set by last supension
-dbes_z_=: 3 : 0
-len=. >./dbestack i."1 ' '
-t=. |."2[dbestack
-r=. ''
-while. #t do.
- d=. }.dtb{.t
- d=. (len>.#d){.d
- t=. }.t
- if. ' '~:1{d do.
-  n=. dltb}.{.t
-  if. 2~:#t do. n=. n rplc '    ';'' end.
-  r=. r,<d,n
-  t=. }.t
- else.
-  r=. r,<d rplc '    ';''
- end.
-end.
-'_',(>coname''),'_',LF,;|.r,each LF
-)
-
-open_z_=: 3 : 0
-t=. (JIJSAPP_jhs_,'?mid=open&path=',jpath spf y)jhref_jhs_ spf y
-jhtml'<div contenteditable="false">',t,'</div>'
-)
-
-jlogoff_z_=: 3 : 'htmlresponse_jhs_ hajaxlogoff_jhs_'
-
-NB. one very long line as LF is <br>
-jhtml_z_=: 3 : 0
-a=. 9!:36''
-9!:37[ 4$0,1000+#y NB. allow lots of html formatted output
-smoutput jmarka_jhs_,y,jmarkz_jhs_
-9!:37 a
-i.0 0
-)
-
-jaudio_z_=: 3 : 0
+audio=: 3 : 0
 assert fexist y
 jhtml'<audio controls="controls"><source src="',y,'" type="audio/mp3">not supported</audio>'
 )
 
-NB. eval javascript sentences
-NB. starting without ';' is evaluated only in ajax
-NB. starting with ';' is evaluated in ajax and in refresh
-jjs_z_=:3 : 0
-jhtml jmarkjsa_jhs_,y,jmarkjsz_jhs_
-)
+NB. z locale utilities
 
-NB. eval javascript sentences - eval again in refresh
-jjsx_z_=: 3 : 0
-jjs';',y
-)
-
-NB. pop-up window - jtable/jd3
-windowopen=: 4 : 0
-m=. x,' pop-up blocked\nadjust browser settings to allow localhost pop-up\nsee jhelp section pop-up'
-jjs'if(null==window.open("<X>","<Y>"))alert("<M>");'rplc '<X>';x;'<Y>';y;'<M>';m
-)
-
-jtable_z_=: 3 : 0
-require'~addons/ide/jhs/jtable.ijs'
-'t n'=. y
-n=. dltb n
-n=. n,>('_'={:n){'__';''
-validate_jtable_ n
-(t,'_ev_body_load_data_jtable_')=: n
-'jtable' windowopen_jhs_ t
-)
-
-NB. jd3 plots
-
-jd3doc_z_=: 0 : 0
-jd3'help'
-jd3'help options'
-
-jd3'reset'         - jd3x=: '' - clear options  
-jd3'title TITLE'   - add title option to jd3x
-
-jd3 tab;options;data
- tab     - browser tab title
- options - list of jd3 options
- data    - data to plot
-
-example:
-jd3'reset'
-jd3'type line'
-jd3'title My Data'
-jd3'legend ["line one","line two","line three"]'
-jd3'line_plot';jd3x;?3 4$100
-
-jd3'type bar'
-jd3'label ["a","b","c","d"]'
-jd3'bar_plot';jd3x;?3 4$100
-
-jd3'type pie'
-jd3'pie_plot';jd3x;?4$100
-)
-
-jd3docoptions_z_=: 0 : 0
-jd3'option arg'    - add option to jd3x__
- type        line      - line or pie or bar   
- title       Good Data
- titlesize   12pt      - html font size
- minh        100       - min graph pixel height
- maxh        300       - max graph pixel height
- linewidth   2
- barwidth    20
- legend      ["a","b","c"]
- lable       ["s","d","f"]
- header      how now<hr>
- header_css  "font-size":"24pt","margin-left":50
- footer      <hr>how now
- footer_css  "font-size":"24pt","margin-left":50
- data        formatted data - as formatted by jd3data
-)
-
-jd3_z_=: 3 : 0
-require'~addons/ide/jhs/jd3.ijs'
-if. 'literal'-:datatype y do.
- i=. y i.' '
- c=. dltb i{.y
- a=. dltb i}.y
- b=. '"',a,'"'
- select. c
- fcase.'' do.
- case.'help' do.
-  ;(a-:'options'){jd3doc;jd3docoptions return.
- case.'reset' do. jd3x=: '' return.
- case.'header' do.
-  t=. '$("#ahtml").html(',b,')'
- case.'footer' do.
-  t=. '$("#zhtml").html(',b,')'
- case.'header_css' do.
-  t=. '$("#ahtml").css({',a,'})'
- case.'footer_css' do.
-  t=. '$("#zhtml").css({',a,'})'
- case. ;:'type title titlesize minh maxh' do.
-  t=. c,'=',b
- case. ;:'legend label' do.
-  t=. c,'=',a
- case. do. ('jd3 unknown option: ',y)assert 0  
- end.
- jd3x=: jd3x,t,LF
- i.0 0
- return.
-end.
-if. 3=#y do.
- 't p d'=. y
-  p=. p,jd3data d
-else.  
- 't p'=. y
-end. 
-(t,'_ev_body_load_data_jd3_')=: p
-'jd3' windowopen_jhs_ t
-)
-
-jd3data_z_=: 3 : 0
-d=. ":each <"1 y
-d=. d rplc each <' ';','
-d=. d rplc each <'_';'-'
-d=. ']',~each '[',each d
-']',~'data=[',;d,each','
-)
-
-NB. somewhat unique query string - avoid cache - not quaranteed to be unique!
-jhsuqs_z_=: 3 : 0
-canvasnum_jhs_=: >:canvasnum_jhs_
-'?',((":6!:0'')rplc' ';'_';'.';'_'),'_',":canvasnum_jhs_
-)
-
-NB. f file.png
-jhspng_z_=: 3 : 0
-d=. fread y
-w=. 256#.a.i.4{.16}.d
-h=. 256#.a.i.4{.20}.d
-t=. '<img width=<WIDTH>px height=<HEIGHT>px src="<FILE><UQS>" ></img>'
-jhtml t hrplc_jhs_ 'WIDTH HEIGHT FILE UQS';w;h;y;jhsuqs''
-)
-
-NB. TARGET f URL
-jhslink_z_=: 3 : 0
-'_blank' jhslink y
-:
-t=. '<a href="<REF><UQS>" target="<TARGET>" class="jhref" ><TEXT></a>'
-t=. t hrplc_jhs_ 'TARGET REF UQS TEXT';x;y;(jhsuqs'');y
-jhtml'<div contenteditable="false">',t,'</div>'
-)
-
-NB. TARGET f URL
-jhsshow_z_=: 3 : 0
-'_blank' jhsshow y
-:
-jjs 'window.open("',(y,jhsuqs''),'","',x,'");'
-)
-
-plotjijx_z_=: 3 : 0
-canvasnum_jhs_=: >:canvasnum_jhs_
-canvasname=. 'canvas',":canvasnum_jhs_
-d=. fread y
-c=. (('<canvas 'E.d)i.1)}.d
-c=. (9+('</canvas>'E.c)i.1){.c
-c=. c rplc 'canvas1';canvasname
-d=. (('function graph()'E.d)i.1)}.d
-d=. (('</script>'E.d)i.1){.d
-d=. d,'graph();'
-d=. d rplc'canvas1';canvasname
-jhtml c
-jjsx d
-)
-NB. f type;window;width height[;output]
-NB. type selects case in plotcanvas/plotcairo
-plotdef_z_=: 3 : 0
-if. 'cairo'-:_1{::y=. 4{.y,<'canvas' do.
- 'CAIRO_DEFSHOW_jzplot_ CAIRO_DEFWINDOW_jzplot_ CAIRO_DEFSIZE_jzplot_ JHSOUTPUT_jzplot_'=: y
-else.
- 'CANVAS_DEFSHOW_jzplot_ CANVAS_DEFWINDOW_jzplot_ CANVAS_DEFSIZE_jzplot_ JHSOUTPUT_jzplot_'=: y
-NB. default output
- JHSOUTPUT_jzplot_=: 'canvas'
-end.
-i.0 0
-)
-
-plotcanvas_z_=: 3 : 0
-f=. '~temp/plot.html' NB. CANVAS_DEFFILE
-d=. fread f
-d=. d rplc'<h1>plot</h1>';''
-d=. d rplc'#canvas1 { margin-left:80px; margin-top:40px; }';'#canvas1{margin-left:0; margin-top:0;}'
-d fwrite f
-w=. CANVAS_DEFWINDOW_jzplot_
-select. CANVAS_DEFSHOW_jzplot_
- case. 'show' do. w jhsshow f
- case. 'link' do. w jhslink f
- case. 'jijx' do. plotjijx f
- case. 'none' do.
- case.        do. plotjijx f
-end.
-i.0 0
-)
-
-plotcairo_z_=: 3 : 0
-f=. '~temp/plot.png' NB. CAIRO_DEFFILE
-w=. CAIRO_DEFWINDOW_jzplot_
-select. CAIRO_DEFSHOW_jzplot_
- case. 'show' do. w jhsshow f
- case. 'link' do. w jhslink f
- case. 'jijx' do. jhspng f
- case. 'none' do.
- case.        do. jhspng f
-end.
-i.0 0
-)
-
-jhsrefresh_z_=: 3 : 0
-y,'?refresh=',(":6!:0'')rplc' ';'-'
-)
-
-jbd_z_=: 3 : '9!:7[y{Boxes_j_' NB. select boxdraw (PC_BOXDRAW)
-
-decho_z_=: echo_z_
-
-NB. JHS echo to console - should be in JHS core or even stdlib
-echoc_z_=: 3 : 0
-if. IFJHS do.
- try.
-  jbd 1
-  jfe_jhs_ 0
-  echo y
- catch.
- end.
- jfe_jhs_ 1
- jbd 0
-else.
- echo y
-end. 
-)
-
-dechoc_z_=: echoc_z_
-NB. toggle jfe behavior
-jfe=: 3 : 0
-15!:16 y
-i.0 0
-)
 
 console_welcome=: 0 : 0
 
 J HTTP Server - init OK
 
-Requires HTML 5 browser with javascript.
-
-On many systems localhost is the same as <LOCAL>. 
-
 Ctrl+c here signals an interrupt to J.
 
-A : separates ip address from port.
-<REMOTE>
-Start a web browser on this machine and enter URL:
-   http://<LOCAL>:<PORT>/jijx
-)
-
-remoteaccess=: 0 : 0
-
-Access from another machine:
-   http://SERVER_IP_ADDRESS:<PORT>/jijx
+Browse to: http://<LOCAL>:<PORT>/jijx
 )
 
 console_failed=: 0 : 0
@@ -806,11 +483,10 @@ See file "~addons/ide/jhs/config/jhs.cfg" on using another PORT.
 NB. html config parameters
 configdefault=: 3 : 0
 PORT=: 65001       NB. private port range 49152 to 65535
-LHOK=: 1           NB. 0 if localhost requires user/pass login
-BIND=: 'localhost' NB. 'any'  - access from any machine
 USER=: ''          NB. 'john' - login
 PASS=: ''          NB. 'abra' - login
 TIPX=: ''          NB. tab title prefix - distinguish sessions
+AUTO=: (UNAME-:'Linux')*:0-:2!:5'DISPLAY'  NB. startup browse to http:/localhost:PORT/jijx
 
 PC_FONTFIXED=:     '"courier new","courier","monospace"'
 PC_FONTVARIABLE=:  '"sans-serif"'
@@ -864,11 +540,8 @@ end.
 
 dobind=: 3 : 0
 sdcleanup_jsocket_''
-SKLISTEN=: 0 pick sdcheck_jsocket_ sdsocket_jsocket_''
-if. IFUNIX do.
-  ((unxlib 'c'),' fcntl i i i i') cd SKLISTEN,F_SETFD_jsocket_,FD_CLOEXEC_jsocket_
-  sdsetsockopt_jsocket_ SKLISTEN;SOL_SOCKET_jsocket_;SO_REUSEADDR_jsocket_;2-1
-end.
+cloexec SKLISTEN=: 0 pick sdcheck_jsocket_ sdsocket_jsocket_''
+if. IFUNIX do.  sdsetsockopt_jsocket_ SKLISTEN;SOL_SOCKET_jsocket_;SO_REUSEADDR_jsocket_;2-1 end.
 sdbind_jsocket_ SKLISTEN;AF_INET_jsocket_;y;PORT
 )
 
@@ -876,11 +549,21 @@ nextport=: 3 : 0
 while.
  PORT=: >:PORT
  r=.dobind y
- sdclose_jsocket_ SKLISTEN
+ shutdownJ_jsocket_ SKLISTEN ; 2
+ sdclose_jsocket_ ::0: SKLISTEN
  sdcleanup_jsocket_''
  erase'SKLISTEN_jhs_'
  10048=r
 do. end.
+)
+
+addOKURL=: 3 : 0
+rmOKURL y
+OKURL=: OKURL,<y
+)
+
+rmOKURL=: 3 : 0
+OKURL=: OKURL-.<y
 )
 
 lcfg=: 3 : 0
@@ -894,8 +577,6 @@ jhscfg=: 3 : 0
 configdefault''
 if. 3=nc<'config' do. config'' end.
 'PORT invalid' assert (PORT>49151)*.PORT<2^16
-'BIND invalid' assert +./(<BIND)='any';'localhost'
-'LHOK invalid' assert +./LHOK=0 1
 'PASS invalid' assert 2=3!:0 PASS
 if. _1=nc<'USER' do. USER=: '' end. NB. not in JUM config
 'USER invalid' assert 2=3!:0 USER
@@ -907,11 +588,9 @@ TIPX=: TIPX,(0~:#TIPX)#'/'
 'TIPX invalid' assert 2=3!:0 TIPX
 if. _1=nc<'TARGET' do. TARGET=: '_blank' end.
 if. _1=nc<'OKURL' do. OKURL=: '' end. NB. URL allowed without login
-BIND=: >(BIND-:'any'){'127.0.0.1';''
 )
 
 NB. SO_REUSEADDR allows server to kill/exit and restart immediately
-NB. FD_CLOEXEC prevents inheritance by new tasks (JUM startask)
 init=: 3 : 0
 'already initialized' assert _1=nc<'SKLISTEN'
 IFJHS_z_=: 1
@@ -931,7 +610,7 @@ PDFOUTPUT=: 'output pdf "',(jpath'~temp\pdf\plot.pdf'),'" 480 360;'
 DATAS=: ''
 PS=: '/'
 cfgfile=. jpath'~addons/ide/jhs/config/jhs_default.ijs'
-r=. dobind BIND
+r=. dobind''
 if. r=10048 do.
  echo console_failed hrplc 'PORT';":PORT
  'JHS init failed'assert 0
@@ -940,23 +619,42 @@ sdcheck_jsocket_ r
 sdcheck_jsocket_ sdlisten_jsocket_ SKLISTEN,5 NB. queue length
 SKSERVER_jhs_=: _1
 boxdraw_j_ PC_BOXDRAW
-remote=. >(BIND-:''){'';remoteaccess hrplc 'PORT';":PORT
-smoutput console_welcome hrplc 'PORT LOCAL REMOTE';(":PORT);LOCALHOST;remote
+smoutput console_welcome hrplc 'PORT LOCAL';(":PORT);LOCALHOST
 startupjhs''
-if. 0~:#PASS do.
- cookie=: 'jcookie=',0j4":{:6!:0''
-else.
- cookie=: ''
-end.
+cookie=: 'jcookie=',":{:6!:0''
 input_jfe_=: input_jhs_  NB. only use jfe locale to redirect input/output
 output_jfe_=: output_jhs_
+
+if. AUTO do.
+ url=. 'http://localhost:PORT/jijx'rplc'PORT';":PORT
+ try.
+  select. UNAME
+  case. 'Win'    do. shell_jtask_'start ',url
+  case. 'Linux'  do.
+   if. (0;'') -.@e.~ <2!:5 'DISPLAY' do.
+    assert. *#t=. dfltbrowser_j_''
+    2!:1 t,' ',url,' >/dev/null 2>&1 &'
+   end.
+  case. 'Darwin' do. 2!:0'open ',url,' &'
+  end.
+ catch.
+  echo'AUTO failed: ',url
+ end.
+end.
 jfe 1
 )
 
 NB. load rest of JHS core
+load__'~addons/ide/jhs/util.ijs'
 load__'~addons/ide/jhs/utilh.ijs'
 load__'~addons/ide/jhs/utiljs.ijs'
 load__'~addons/ide/jhs/sp.ijs'
+load__'~addons/ide/jhs/tool.ijs'
+load__'~addons/ide/jhs/d3.ijs'
+load__'~addons/ide/jhs/debug.ijs'
+
+NB. load addons, but do not fail init if not found
+load__ :: ['~addons/convert/json/json.ijs'
 
 stub=: 3 : 0
 'jev_get y[load''~addons/ide/jhs/',y,'.ijs'''
@@ -964,28 +662,21 @@ stub=: 3 : 0
 
 NB. app stubs to load app file
 jev_get_jijx_=:    3 : (stub'jijx')
-jev_get_jijxaz_=:  3 : (stub'jijxaz')
 jev_get_jfile_=:   3 : (stub'jfile')
 jev_get_jfiles_=:  3 : (stub'jfiles')
 jev_get_jijs_=:    3 : (stub'jijs')
 jev_get_jfif_=:    3 : (stub'jfif')
 jev_get_jal_=:     3 : (stub'jal')
-jev_get_jtable_=:  3 : (stub'jtable')
-jev_get_jhelp_=:   3 : (stub'jhelp')
 jev_get_jdemo_=:   3 : (stub'jdemo')
 jev_get_jlogin_=:  3 : (stub'jlogin')
-jev_get_jijxh_=:   3 : (stub'jijxh')
-jev_get_jijxm_=:   3 : (stub'jijxm')
 jev_get_jfilesrc_=:3 : (stub'jfilesrc')
-jev_get_jijxipad_=:3 : (stub'jijxipad')
-jev_get_jijsipad_=:3 : (stub'jijsipad')
 
 NB. simple wget with sockets - used to get google charts png
 
 NB. jwget 'host';'file'
 NB. jwget 'chart.apis.google.com';'chart?&cht=p3....'
 NB. simplistic - needs work to be robust and general
-NB.! JHS get/put and jwget should probably share code
+NB. JHS get/put and jwget should probably share code
 wget=: 3 : 0
 'host file'=. y
 ip=. >2{sdgethostbyname_jsocket_ host
@@ -1019,11 +710,13 @@ try.
   end.
  end.
 catch.
- sdclose_jsocket_ sk
+ shutdownJ_jsocket_ sk ; 2
+ sdclose_jsocket_ ::0: sk
  smoutput 13!:12''
  'get error' assert 0
 end.
-sdclose_jsocket_ sk
+shutdownJ_jsocket_ sk ; 2
+sdclose_jsocket_ ::0: sk
 h;d
 )
 
@@ -1040,6 +733,30 @@ Accept-Encoding: gzip, deflate
 User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; WOW64; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729)
 Connection: Keep-Alive
 
+)
+
+NB. return first ip address that is not localhost
+getlanip=: 3 : 0
+if. IFWIN do.
+ r=. deb each<;._2 spawn_jtask_'ipconfig'
+ r=. ((<'IPv4 Address')=12{.each r)#r
+ r=. (>:;r i.each':')}.each r
+elseif. UNAME-:'Darwin' do.
+ r=. <;._2[2!:0'ifconfig'
+ r=. deb each r rplc each <TAB;' ' 
+ r=. ((<'inet ')=5{.each r)#r
+ r=. 5}.each r
+elseif. 1 do.
+ r=. deb each<;._2[2!:0'ifconfig'
+ r=. ((<'inet addr:')=10{.each r)#r
+ r=. 10}.each r
+end.
+r=. deb each r
+r=. deb each(r i.each' '){.each r
+r=. r-.<'127.0.0.1'
+'no lan ip' assert 0<#r
+if. 1<#r do. echo 'multiple lan ips: ',LF,;LF,~each' ',each r end.
+;{.r
 )
 
 getexternalip=: 3 : 0
@@ -1061,131 +778,15 @@ end.
 z
 )
 
-NB. viewmat - previously in jgcp - should come from addon eventually
-coclass'jgcp'
-NB. viewmat stuff - subset borrowed from viewmat addon
-
-viewmat=: 3 : 0
-t=. (<6#16)#: each <"0>1{''getvm_jgcp_ y
-t=. '#',each t{each <'0123456789abcdef'
-a=. (<'<font ',LF,'style="background-color:'),each t
-a=. a,each (<'; color:'),each t
-a=. a,each <';">ww</font>'
-jhtml ;a,.<'<br>'
-)
-
-3 : 0
-if. 803 > ". '.'-.~ 4{. LF -.~ 1!:1<jpath '~system/config/version.txt' do.
-  viewmat_z_=: viewmat_jgcp_
-end.
-''
-)
-
-finite=: x: ^: _1
-intersect=: e. # [
-citemize=: ,: ^: (2: > #@$)
-rndint=: <.@:+&0.5
-tomatrix=: (_2 {. 1 1 , $) $ ,
-
-delinf=: 3 : 0
-if. +:/ _ __ e. ,y do. y return. end.
-sc=. 0.1
-a=. (,y) -. _ __
-max=. >./a
-min=. <./a
-ext=. sc * max - min
-(min-ext) >. y <. max+ext
-)
-
-NB. =========================================================
-NB.*gethue v generate color from color set
-NB. x is color set
-NB. y is values from 0 to 1, selecting color
-gethue=: 4 : 0
-y=. y*<:#x
-b=. x {~ <.y
-t=. x {~ >.y
-k=. y-<.y
-(t*k) + b*-.k
-)
-
-NB. =========================================================
-NB. getvm
-NB.
-NB. form: hue getvm data [;title]
-NB.
-NB. hue may be empty, in which case a default is used
-NB. hue may be a N by 3 matrix of colors or a vector
-NB.     of RGB integers.
-NB.
-NB. returns:
-NB.   original data
-NB.   scaled data matrix
-NB.   angle (if any)
-NB.   title
-getvm=: 4 : 0
-'dat tit'=. 2 {. boxopen y
-tit=. ": tit
-tit=. tit, (0=#tit) # 'viewmat'
-'mat ang'=. x getvm1 dat
-dat ; mat ; ang ; tit
-)
-
-NB. =========================================================
-getvm1=: 4 : 0
-hue=. x
-mat=. y
-ang=. ''
-
-NB. ---------------------------------------------------------
-if. 2 > #$hue do.
-  hue=. |."1 [ 256 256 256 #: ,hue
-end.
-
-NB. ---------------------------------------------------------
-select. 3!:0 mat
-case. 2;32 do.
-  mat=. (, i. ]) mat
-case. 16 do.
-  ang=. * mat
-  mat=. delinf | mat
-case. do.
-  mat=. finite mat
-end.
-
-NB. ---------------------------------------------------------
-select. #$mat
-case. 0 do.
-  mat=. 1 1$mat
-case. 1 do.
-  mat=. citemize mat
-case. 3 do.
-  'mat ang'=. mat
-end.
-
-NB. ---------------------------------------------------------
-if. */ (,mat) e. 0 1 do.
-  if. #hue do.
-    h=. <. 0 _1 { hue
-  else.
-    h=. 0 ,: 255 255 255
-  end.
-  mat=. mat { h
-
-else.
-  if. #hue do.
-    h=. hue
-  else.
-    h=. 255 * #: 7 | 3^i.6
-  end.
-  val=. ,mat
-  max=. >./ val
-  min=. <./ val
-  mat=. <. h gethue (mat - min) % max - min
-end.
-
-mat=. mat +/ .* 65536 256 1
-
-mat ; ang
-
-)
+NB. shutdown JHS
+NB. y: integer return code for 2!:55
+NB.    ''  just shutdown JHS, J not exit
+shutdown=: 3 : 0
+ shutdownJ_jsocket_ SKLISTEN ; 2
+ sdclose_jsocket_ ::0: SKLISTEN
+ sdcleanup_jsocket_''
+ erase'SKLISTEN'
+ IFJHS_z_=: 0
+ jfe 0
+ 2!:55^:(''-.@-:y)y
+) 

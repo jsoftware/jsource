@@ -4,8 +4,7 @@ coinsert'jhs'
 
 HBS=: 0 : 0
 jhma''
-jhjmlink''
-'action'    jhmg'action';1;12
+ 'action'    jhmg'action';1;12
  'edit'     jhmab'edit'
  'del'      jhmab'delete'
  'deltemps' jhmab'delete temps'
@@ -172,7 +171,7 @@ t=. jpath'~temp/deleted/'
 if. PS={:F do. NB. delete folder 
  srcfolder=. F
  snkfolder=. jpath'~temp/deleted/',jgetfile remlev srcfolder
- if. t-:(#t){.srcfolder do.
+ if. '~temp/'-:6{.jshortname srcfolder do.
   deletefolder }:srcfolder
   create ('Delete: deleted ',jshortname srcfolder);newf
   return.
@@ -222,6 +221,10 @@ else.
  require'~addons/ide/jhs/jijs.ijs' NB. ensure loaded
  create_jijs_ F
 end.
+)
+
+ev_close_click=: 3 : 0
+jhrajax''
 )
 
 copy=: _1 NB. _1 not ready, 0 copy, 1 cut 
@@ -401,7 +404,8 @@ function ev_files_click() // file select
 function ev_files_dblclick()
 {
  if('/'!=jform.jsid.value.charAt(jform.jsid.value.length-1))
-  window.open('jijs?mid=open&path='+jform.path.value,TARGET);
+  //window.open('jijs?mid=open&path='+jform.path.value,TARGET);
+  window.open('jijs?jwid='+jform.path.value,jform.path.value);
 } 
 
 function ev_rename_click()     {jdlgshow("renamedlg","renamex");}
@@ -426,6 +430,18 @@ function ajax(ts)
  recall=1;
  jbyid("sel").innerHTML= ts[1];
 }
+
+// handler must be defined - no longer defaults to jsubmit if not defined
+function ev_edit_click(){jsubmit();}
+function ev_deltemps_click(){jsubmit();}
+function ev_copy_click(){jsubmit();}
+function ev_cut_click(){jsubmit();}
+function ev_paste_click(){jsubmit();}
+function ev_newfi_click(){jsubmit();}
+function ev_newfo_click(){jsubmit();}
+function ev_deletedo_click(){jsubmit();}
+function ev_renamedo_click(){jsubmit();}
+function ev_renamex_enter(){jsubmit();}
 
 )
 

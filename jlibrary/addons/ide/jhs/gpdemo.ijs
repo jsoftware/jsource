@@ -3,11 +3,6 @@ NB. gnuplot demos
 require 'numeric trig'
 
 gphelp=: 0 : 0
-requires JAL general/misc and math/misc (numeric and trig)
-jhsshow popup may require being unblocked
-term_canvas - mouse support - left click labels, right drag zoom
-gpd0 to gpd4 create plot files
-
    'd0' gpd0 term_png                  NB. create png file
    'd0' gpd0 term_canvas               NB. create html file
 
@@ -25,10 +20,9 @@ gpd0 to gpd4 create plot files
    'one' jhsshow 'd4' gpd4 term_canvas
 )
 
-term_png             =: 'term png tiny size 400,200 xffffff'
+term_png             =: 'term png tiny size 400,200 background 0xffffff'
 term_canvas          =: gpcanvas 400 200;1;'plot'
 term_canvas_mouseless=: gpcanvas 400 200;0;'plot'
-
 
 gpd0=: 4 : 0
 gpinit''
@@ -64,7 +58,6 @@ gpset 'title "sin(x+sin(y))"'
 gpset 'parametric'
 gpsetwith 'with lines'
 gpsetsurface 1
-smoutput 'asdf'
 x gpplot CP
 )
 

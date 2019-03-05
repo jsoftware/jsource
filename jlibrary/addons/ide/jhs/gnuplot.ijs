@@ -1,15 +1,23 @@
- NB. gnuplot html canvas - based on Fraser Jackson's J601 gnuplot addon
+NB. JHS gnuplot - based on Fraser Jackson's gnuplot addon
 
-gpdemo_z_=: 3 : 0
-load'~addons/ide/jhs/gpdemo.ijs'
-gphelp
-)
+require'numeric trig'
+
+term_png         =: 'term png background 0xffffff '
+term_pngcairo    =: 'term pngcairo background 0xffffff '
+term_canvas      =: 'term canvas standalone title "plot" '
+term_canvas_mouse=: 'term canvas standalone mousing title "plot" '
+
+gpplot_z_      =: gpplot_jgnuplot_
+gpinit_z_      =: gpinit_jgnuplot_
+gpset_z_       =: gpset_jgnuplot_
+gpsetsurface_z_=: gpsetsurface_jgnuplot_
+gpsetwith_z_   =: gpsetwith_jgnuplot_
 
 coclass 'jgnuplot'
 
 gpinit=: 3 : 0
 PATH=: '~temp/gnuplot/'
-1!:5 :: 0:<jpath t
+1!:5 :: 0:<jpath PATH
 DAT=: PATH,'gnu.dat'
 PLT=: PATH,'gnu.plt'
 GNU=: PATH,'gnu'
@@ -75,6 +83,8 @@ else.
 end.
 )
 
+BADEXE=: 'EXE_jgnuplot_ invalid - see current value - set it to be the gnuplot binary'
+
 gpplot=: 4 : 0
 dat=. y
 cmd=. WITH
@@ -85,7 +95,10 @@ dat gpwrite DAT
 txt=. gpsetcommand''
 txt=. txt, gpcommand cmd;shp;jpath DAT
 txt fwrite PLT
-t=. '"',EXE,'" "',(jpath PLT),'"'
+t=. '"',(hostpathsep EXE),'" "',(jpath PLT),'"'
+
+BADEXE   assert fexist EXE
+
 if. IFWIN do.
    e=: spawn_jtask_ t
    if. #e do. smoutput 'error: ',e assert. 0 end.
@@ -107,29 +120,26 @@ if. 137 80 78 71 13 10 26 10 -: a.i.8{.d do. NB. png file
  r=. PATH,x,'.png'
  ferase r
  r frename GNU
-elseif. '<html>'-:6{.d do.
+elseif. '<!DOCTYPE HTML>'-:15{.d do.
  r=. gpadjustcanvas x
 elseif. 1 do.
 end.
 r
 )
 
-NB. excanvas.js supported canvas in IE8 - we require IE9 and do not support IE8
-IE =: '<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->',LF
-IE8=: '<!--[if lt IE 9]><script type="text/javascript" src="/~addons/ide/jhs/js/excanvas.js"></script><![endif]-->',LF
-
 NB. create adjusted canvas output
 gpadjustcanvas=: 3 : 0
 d=. fread GNU
 d=. toJ d
+NB. gnuplot hardwires excanvas.js for IE and we don't need to support that older IE
+d=. d rplc '<!--[if IE]><script type="text/javascript" src="excanvas.js"></script><![endif]-->';''
 
-NB. i=. (IE E. d)i.1
-NB. if. i<#d do. d=. (i{.d),IE8,(i+#IE)}.d end. NB. remove IE8 excanvas.js
-
-d=. d rplc '<!--[if IE]>';'<!--[if lt IE 9]>'
-
-d=. d rplc 'src="excanvas.js"';'src="/~addons/ide/jhs/js/excanvas.js"'
-
+if. IFWIN do.
+ NB. windows needs leading / to do the get from jfilessrc
+ NB. see jfilesrc corresponding kludge to add leading / for linux
+ d=. d rplc '<script src="';'<script src="/'
+ d=. d rplc '<link type="text/css" href="';'<link type="text/css" href="/'
+end. 
 a=. 1 i.~ '<canvas id="gnuplot_canvas"' E. d
 z=. 9+1 i.~ '</canvas>' E. d
 n=. 1 i.~ '<table class="mbleft">' E. d
@@ -141,8 +151,9 @@ if. *./(#d)>a,z,n do.
 else.
  d=. d rplc '<table class="plot">';'<table>'   NB. remove class so canvas at left
 end.
+d=. d rplc '<title>plot</title>';'<title>',y,'</title>'
 f=. PATH,y,'.html'
-('<!DOCTYPE html>',LF,d) fwrite f
+d fwrite f
 f
 )
 
@@ -197,14 +208,6 @@ end.
 r
 )
 
-gpcanvas=: 3 : 0
-'wh mousing title'=. y
-assert. (4-:3!:0 wh)*.2=#wh
-wh=. (":wh)rplc' ';','
-mousing=. (1-:mousing)#'mousing '
-'term canvas size ',wh,' standalone ',mousing,'title "',title,'" jsdir "/',JSDIR,'"'
-)
-
 gpsetwith=: 3 : 0
 WITH=: y
 i.0 0
@@ -225,34 +228,18 @@ dat=. '-' (I. dat='_') } dat
 dat fwrite y
 )
 
-gpplot_z_      =: gpplot_jgnuplot_
-gpinit_z_      =: gpinit_jgnuplot_
-gpset_z_       =: gpset_jgnuplot_
-gpcanvas_z_    =: gpcanvas_jgnuplot_
-gpsetsurface_z_=: gpsetsurface_jgnuplot_
-gpsetwith_z_   =: gpsetwith_jgnuplot_
-
 NB. set EXE   as path to gnuplot binary
-NB. set JSDIR as path to gnuplot javascript scripts
 NB. hardwired OS assumptions that may need tweaking
 3 : 0''
+if. 0=nc<'EXE' do. return. end.
 select. UNAME 
 case. 'Win' do.
- EXE  =: (jpath'~home/gnuplot/binary/gnuplot.exe')rplc'/';'\'
- JSDIR=: '~home/gnuplot/binary/share/gnuplot/4.4/js/'
-case. 'Linux' do.
- EXE  =: '/usr/bin/gnuplot'
- JSDIR=: '~root/usr/share/gnuplot/gnuplot/4.4/js/'
-case. 'Darwin' do.
- EXE  =: '/usr/local/bin/gnuplot'
- JSDIR=: '~root/usr/local/share/gnuplot/4.4/js/'
-case. do. assert. 0['unknown UNAME'
-end.
-if. -.fexist EXE do.
- smoutput EXE,' not found' assert. 0
-end.
-t=. 'canvastext.js',~(5*'~root/'-:6{.JSDIR)}.JSDIR
-if. -.fexist t do.
- smoutput t,' not found' assert. 0
+ EXE=: 'C:/program files (x86)/gnuplot/bin/gnuplot.exe'
+case.      do.
+ try.
+  EXE=: }:2!:0'which gnuplot'
+ catch.
+  'gnuplot not installed'assert 0
+ end. 
 end.
 )

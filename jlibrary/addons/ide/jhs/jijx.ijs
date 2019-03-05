@@ -5,22 +5,34 @@ coinsert'jhs'
 HBS=: 0 : 0
 jhma''
 jhjmlink''
-actionmenu''
-debugmenu''
-'studio'   jhmg'studio';1;14
- 'jdemo'   jhml'demos'
- 'advance' jhmab'advance ctrl+.'
- 'lab'     jhmab'labs...'
+'tool'   jhmg'tool';1;7
+ 'table'   jhmab'table'
+ 'jd3'     jhmab'plot-d3'
+ 'print'   jhmab'print'
+ 'watch'   jhmab'watch'
+ 'sp'      jhmab'sp'
+ 'doc'     jhmab'doc'
+ 'debug'   jhmab'debug'
+'tour'     jhmg'tour';1;5
+ 'plot'    jhmab'plot'
+ 'spx'     jhmab'spx'
+ 'demo'    jhmab'demo'
+ 'app'     jhmab'app'
+ 'labs'    jhmab'labs'
+'help'          jhmg'help';1;10
+ 'helpwikijhs'   jhmab'wiki JHS'
+ 'helpwikinuvoc' jhmab'wiki nuvoc'
+ 'helphelp'      jhmab'help'
+ 'helpinfo'      jhmab'info'
+ 'helpvocab'     jhmab'vocabulary'
+ 'helpconstant'  jhmab'constant'
+ 'helpcontrol'   jhmab'control'
+ 'helpforeign'   jhmab'foreign'
+ 'helpdictionary'jhmab'dictionary'
+ 'helpstdlib'    jhmab'stdlib'
+ 'about'         jhmab'about'
+'adv'jhmg '>';0;10
 jhmz''
-'scratchdlg' jhdivadlg''
-'scratcharea'jhtextarea'';1;1
-'</div>'
-
-'labsdlg'   jhdivadlg''
- 'labrun'   jhb'run'
- labsel''
- 'labsclose'jhb'X'
-'</div>'
 jhresize''
 'log' jhec'<LOG>'
 )
@@ -66,132 +78,115 @@ uplog''
 'jijx' jhr 'LOG';LOG
 )
 
-getlabs=: 3 : 0
-LABTITLES=: LABCATS=: LABFILES=: ''
-t=. jpath'~addons/labs/labs'
-if. -.fexist t,'/lab.ijs' do. LABCATS=: LABFILES=:  LABTITLES=: ''  return. end.
-require__ t,'/lab.ijs'
-labaddons_jlab_''
-labs=. sort labgetfiles_jlab_''
-labs=. labs |.~ 0 i.~ ({."1 labs)=<'Addons'
-LABCATS=: 0{"1 labs
-LABFILES=: 2{"1 labs
-LABTITLES=: LABCATS ,each (<': ') ,each 1{"1 labs
-)
-
-labsel=: 3 : 0
-getlabs''
->(0~:#LABTITLES){'';'labsel'jhselect LABTITLES;1;0
-)
-
-updn=: 3 : 0
-if. IP do. hmga y else. ' ' end.
-)
-
-labopen=: 3 : 0
-ev_dot_ctrl_jijx_=: ev_advance_click
-require__'~addons/labs/labs/lab.ijs'
-smselout_jijs_=: smfocus_jijs_=: [ NB. allow introcourse to run
-labinit_jlab_ y{LABFILES
-)
-
 ev_advance_click=: 3 : 0
-if. #LABFILE_jlab_ do.  labnext_jlab_'' else. smoutput 'No lab open. Do studio|labs...' end.
-)
-
-ev_labrun_click=: 3 : 0
-labopen ".getv'jsid'
+select. ADVANCE
+case. 'spx' do. spx__''
+case. 'lab' do. lab 0
+case.       do. echo 'no open lab/spx to advance'
+end.
 )
 
 jloadnoun_z_=: 0!:100
 
-ev_scratchr_click=: 3 : 0
-try. jloadnoun__ getv'scratcharea' catch. 13!:12'' end.
-)
-
 ev_clearrefresh_click=: 3 : 'LOG_jhs_=: '''''
 
-actionmenu=: 3 : 0
-a=. 'action'   jhmg'action';1;13
-a=. a,'scratch' jhmab'scratch...'
-a=. a,'scratchr'jhmab'scratch r^'
-a=. a,'clearwindow'jhmab'clear window'
-a=. a,'clearrefresh'jhmab'clear refresh'
-a=. a,'clearLS'jhmab'clear LS'
-t=. a
-if. fexist'~user/projects/ja/ja.ijs' do.
- try.
-  load'~user/projects/ja/ja.ijs'
-  amenu=: <;._2 ja_menu
-  for_i. i.#amenu do.
-   t=. t,('actionn*',":i)jhmab(>i{amenu),>(i<3){'';' ',(i{'qwe       '),'^'
-  end.
- catch.
-  t=. a
- end.
+ev_about_click=: 3 : 0
+jhtml'<hr/>'
+echo JVERSION
+echo' '
+echo'Copyright 1994-2017 Jsoftware Inc.'
+jhtml'<hr/>'
+)
+
+rundemo_jhs_=: 3 : 0
+t=. 'jdemo',":y
+require'~addons/ide/jhs/demo/jdemo',(":y),'.ijs'
+select. y
+case. 14 do. 'jdemo14;0 0 800 600;'cojhs 'temp' [ temp__=: ?5 12$200
+case.    do. open t
 end.
-t
 )
 
-ev_action_click=:  3 : 0
-smoutput 'see help ijx menu action for customization info'
+runapp_jhs_=: 3 : 0
+t=. 'app',":y
+a=. t,'.ijs'
+f=. '~temp/app/',a
+1!:5 :: [ <jpath'~temp/app'
+(fread '~addons/ide/jhs/app/',a)fwrite f
+load f
+edit f
+if. y=6 do.
+ 'app6'cojhs'calendar'
+else.
+ open t
+end. 
 )
 
-action=: 3 : 0
-".'''''',~'ja_',(>y{amenu),'_base_'
+tour=: 4 : 0
+jhtml'<hr>'
+echo x
+spx '~addons/ide/jhs/spx/',y
+jhtml'<hr/>'
 )
 
-ev_actionn_click=: 3 : 0
-action ".getv'jsid'
+ev_jijs_click=: 3 : 0
+edit jnew_jhs_''
 )
 
-labmsg=: 0 : 0
-No labs installed.
-Do pacman labs/labs install and try again.
-
-Labs are interactive tutorials and are a good
-way to learn J.
-
-Labs are not always current with the latest system
-and may run with minor errors that can be ignored.
+ev_j1_click=:  3 : 0
+'J 1'tour'j1.ijs'
 )
 
-ev_lab_click=: 3 : 'smoutput labmsg' NB. no labs to select
-
-debugmenu=: 3 : 0
-t=.   'debug'    jhmg'debug';1;8
-t=. t,'dbstep'   jhmab'step     s^'
-t=. t,'dbstepin' jhmab'step in  i^'
-t=. t,'dbstepout'jhmab'step out o^'
-t=. t,'dbcutback'jhmab'cut back'
-t=. t,'dbrun'    jhmab'run'
-t=. t,'dbon'     jhmab'on'
-t=. t,'dboff'    jhmab'off'
+ev_j2_click=:  3 : 0
+'J 2'tour'j2.ijs'
 )
 
-ev_dbon_click=: 3 : 0
-smoutput'debug on'
-dbon''
+ev_j3_click=:  3 : 0
+'J 3'tour'j3.ijs'
 )
 
-ev_dboff_click=:   3 : 0
-smoutput'debug off'
-dboff''
+ev_plot_click=:  3 : 0
+'plot tour'tour'plot.ijs'
 )
 
-ev_dbstep_click=:    3 : 'try. dbstep''''    catch. end. i.0 0'
-ev_dbstepin_click=:  3 : 'try. dbstepin''''  catch. end. i.0 0'
-ev_dbstepout_click=: 3 : 'try. dbstepout'''' catch. end. i.0 0'
-ev_dbcutback_click=: 3 : 'try. dbcutback'''' catch. end. i.0 0'
-ev_dbrun_click=:     3 : 'try. dbrun''''     catch. end. i.0 0'
+ev_spx_click=:  3 : 0
+'spx tour'tour'spx.ijs'
+)
 
 NB. default ctrl+,./ handlers
+ADVANCE=: 'none'
 ev_comma_ctrl =: 3 : 'sp__'''''
-ev_dot_ctrl   =: 3 : 'i.0 0'
+ev_dot_ctrl=: ev_advance_click
 ev_slash_ctrl  =: 3 : 'i.0 0'
 ev_less_ctrl   =: 3 : 'i.0 0'
 ev_larger_ctrl =: 3 : 'i.0 0'
 ev_query_ctrl =: 3 : 'i.0 0'
+ev_semicolon_ctrl =:   3 : 'echo''semicolon'''
+ev_colon_ctrl =:       3 : 'echo''colon'''
+
+ev_quote_ctrl_jijx_=: 3 : 0
+if. -.'*'e.{."1[13!:18'' do. 'not suspended' return. end.
+dbstep''
+)
+
+ev_doublequote_ctrl =: 3 : 0
+if. -.'*'e.{."1[13!:18'' do. 'not suspended' return. end.
+dbstepin''
+)
+
+jhjmlink=: 3 : 0
+t=.   'jmlink' jhmg 'ide';1;12
+t=. t,'jfile'  jhmab'jfile    f^'
+t=. t,'jfiles' jhmab'jfiles   k^'
+t=. t,JIJSAPP  jhmab'jijs     J^'
+t=. t,'jfif'   jhmab'jfif     F^'
+t=. t,'jal'    jhmab'jal'
+t=. t,'jijx'   jhmab'jijx     j^'
+t=. t,'clearwindow'jhmab'clear window'
+t=. t,'clearrefresh'jhmab'clear refresh'
+t=. t,'clearLS'jhmab'clear LS'
+t
+)
 
 CSS=: 0 : 0
 *{font-family:<PC_FONTFIXED>;}
@@ -217,9 +212,6 @@ function ev_body_focus(){if(!jisiX)setTimeout(ev_2_shortcut,TOT);}
 
 function ev_body_load()
 {
-
- jbyid("scratcharea").style.width="100%";
- jbyid("scratcharea").setAttribute("rows","8");
  jseval(false,jbyid("log").innerHTML); // redraw canvas elements
  newpline("   ");
  jresize();
@@ -320,8 +312,6 @@ function ev_log_enter_ajax_chunk()
 
 function ev_2_shortcut(){scrollz();}
 
-function ev_3_shortcut(){jbyid("scratcharea").focus();}
-
 function newpline(t)
 {
  t= t.replace(/&/g,"&amp;");
@@ -419,54 +409,61 @@ function document_recall(v){newpline(v);}
 
 function ev_advance_click(){jdoajax([]);}
 
-function ev_lab_click()
-{
- if(null==jbyid("labsel"))
-  jdoajax([],"");
- else
- jdlgshow("labsdlg","labsel");
-}
-
-function ev_labsclose_click(){jhide("labsdlg");ev_2_shortcut();}
-
-function ev_scratch_click(){jdlgshow("scratchdlg","scratcharea");}
-function ev_scratchclose_click(){jhide("scratchdlg");}
-
-function ev_scratchr_click(){jdoajax(["scratcharea"]);}
-
+function ev_print_click() {jdoajax([]);}
+function ev_app_click() {jdoajax([]);}
+function ev_doc_click() {jdoajax([]);}
+function ev_demo_click(){jdoajax([]);}
+function ev_j1_click(){jdoajax([]);}
+function ev_j2_click(){jdoajax([]);}
+function ev_j3_click(){jdoajax([]);}
+function ev_plot_click(){jdoajax([]);}
+function ev_table_click(){jdoajax([]);}
+function ev_jd3_click(){jdoajax([]);}
+function ev_spx_click(){jdoajax([]);}
+function ev_watch_click(){jdoajax([]);}
+function ev_debug_click(){jdoajax([]);}
+function ev_sp_click(){jdoajax([]);}
+function ev_spx_click(){jdoajax([]);}
+function ev_labs_click(){jdoajax([]);}
+function ev_about_click(){jdoajax([]);}
 function ev_clearwindow_click(){jbyid("log").innerHTML= "";newpline("   ");}
 function ev_clearrefresh_click(){jdoajax([]);}
 function ev_clearLS_click(){localStorage.clear();};
 
-function ev_r_shortcut(){jscdo("scratchr");}
-
-function ev_labrun_click()
+function linkclick(a)
 {
- jhide("labsdlg");
- jform.jsid.value= jbyid("labsel").selectedIndex;
- jdoajax([],"");
+ w=window.open("",a);
+ w.close();
+ window.open(a,a);
 }
 
-function ev_actionn_click(){jdoajax([]);}
+function ev_jfile_click(){linkclick("jfile");}
+function ev_jfiles_click(){linkclick("jfiles");}
+function ev_jfif_click(){linkclick("jfif");}
+function ev_jal_click(){linkclick("jal");}
+function ev_jijs_click(){jdoajax([]);}
+function ev_jijx_click(){linkclick("jijx");}
 
-function ev_q_shortcut(){jscdo("actionn","0");}
-function ev_w_shortcut(){jscdo("actionn","1");}
-function ev_e_shortcut(){jscdo("actionn","2");}
+function ev_helphelp_click(){linkclick("~addons/docs/help/index.htm")};
+function ev_helpinfo_click(){linkclick("~addons/docs/help/user/product.htm")};
+function ev_helpvocab_click(){linkclick("~addons/docs/help/dictionary/vocabul.htm")};
+function ev_helpwikinuvoc_click(){linkclick("http://code.jsoftware.com/wiki/NuVoc")};
+function ev_helpconstant_click(){linkclick("~addons/docs/help/dictionary/dcons.htm")};
+function ev_helpcontrol_click(){linkclick("~addons/docs/help/dictionary/ctrl.htm")};
+function ev_helpforeign_click(){linkclick("~addons/docs/help/dictionary/xmain.htm")};
+function ev_helpdictionary_click(){linkclick("~addons/docs/help/dictionary/contents.htm")};
+function ev_helpstdlib_click(){linkclick("~addons/docs/help/user/library.htm")};
+function ev_helpwikijhs_click(){linkclick("http://code.jsoftware.com/wiki/Guides/JHS")};
 
-function ev_dbstep_click()   {jdoajax([]);}
-function ev_dbstepin_click() {jdoajax([]);}
-function ev_dbstepout_click(){jdoajax([]);}
-function ev_dbcutback_click(){jdoajax([]);}
-function ev_dbrun_click()    {jdoajax([]);}
-function ev_dbon_click()     {jdoajax([]);}
-function ev_dboff_click()    {jdoajax([]);}
-function ev_s_shortcut(){jscdo("dbstep");}
-function ev_i_shortcut(){jscdo("dbstepin");}
-function ev_o_shortcut(){jscdo("dbstepout");}
 function ev_comma_ctrl(){jdoajax([]);}
 function ev_dot_ctrl(){jdoajax([]);}
 function ev_slash_ctrl(){jdoajax([]);}
 function ev_less_ctrl(){jdoajax([]);}
 function ev_larger_ctrl(){jdoajax([]);}
 function ev_query_ctrl(){jdoajax([]);}
+function ev_semicolon_ctrl(){jdoajax([]);}
+function ev_quote_ctrl(){jdoajax([]);}
+function ev_colon_ctrl(){jdoajax([]);}
+function ev_doublequote_ctrl(){jdoajax([]);}
+function ev_close_click(){window.close();} // close ignored if not opened by another window
 )

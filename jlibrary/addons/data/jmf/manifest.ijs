@@ -8,7 +8,9 @@ J Memory Mapped File
 
 VERSION=: '1.0.21'
 
-RELEASE=: 'j802 j803 j804 j805 j806 j807'
+RELEASE=: ''
+
+FOLDER=: 'data/jmf'
 
 PLATFORMS=: ''
 

@@ -13,14 +13,13 @@ HBS=: 0 : 0 rplc 'CMV';'4.2'
 '<link rel="stylesheet" href="~addons/ide/jhs/js/codemirror/j/jtheme.CMV.css">'
 '<script src="~addons/ide/jhs/js/codemirror/j/j.CMV.js"></script>'
 jhma''
-jhjmlink''
-'action'    jhmg'action';1;11
- 'runw'     jhmab'run     r^'
+ 'action'    jhmg'action';1;11
+ 'runw'     jhmab'run     r*'
  'runwd'    jhmab'run display'
- 'save'     jhmab'save    s^'
+ 'save'     jhmab'save    s*'
  'saveas'   jhmab'save as...'
- 'undo'     jhmab'undo    z^'
- 'redo'     jhmab'redo    y^'
+ 'undo'     jhmab'undo    z*'
+ 'redo'     jhmab'redo    y*'
  'search'   jhmab'search/ctrls'
 'option'    jhmg'option';1;8
  'ro'       jhmab'readonly    t^'
@@ -58,12 +57,21 @@ end.
 (jgetfile y) jhr 'FILENAME REP DATA';y;rep;d
 )
 
+NB. new way - jwid=~temp/foo.ijs
+NB. old way - mid=open&path=...
 jev_get=: 3 : 0
-if. 'open'-:getv'mid' do.
+if. #getv'jwid' do.
+ create getv'jwid'
+elseif. 'open'-:getv'mid' do.
  create getv'path' 
-else.
+elseif. 1 do.
  create jnew''
 end.
+)
+
+NB. add dirty handler here
+ev_close_click=: 3 : 0
+jhrajax''
 )
 
 save=: 3 : 0
@@ -111,7 +119,7 @@ NB. should have replace/cancel option if file exists
 ev_saveasx_enter=: 3 : 0
 f=. getv'filename'
 n=. getv'saveasx'
-if. n-:n-.'~/' do.
+if. n-:n-.'~/\' do.
  new=. (jgetpath f),n
 else.
  new=. jpath n

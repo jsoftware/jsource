@@ -2,12 +2,11 @@ NB. J HTTP Server - jbinfo app - show browswer info
 coclass'jbinfo'
 coinsert'jhs'
 
-urlget=: 3 : 0
-NB.      TITLE CSS JS BO BA FORM BZ
-hrbase 'jbinfo';'';'';'';js;'<body>'
+jev_get=: 3 : 0
+'jbinfo'jhrx(getcss''),(getjs''),gethbs''
 )
 
-js=: 0 : 0
+JS=: 0 : 0
 document.onkeyup= kup;
 
 function kup(ev)
@@ -36,4 +35,3 @@ b+= "scrollTo: "+window.scrollTo+"<br>";
 b+= "XMLHttpRequest: "+(new XMLHttpRequest())+'<br>';
 document.write(b);
 )
-

@@ -8,7 +8,6 @@ sp_z_       =: sp_jsp_
 spf_z_      =: spf_jsp_
 spr_z_      =: spr_jsp_
 spx_z_      =: spx_jsp_
-spxinit_z_  =: spx_z_          NB.! kill off when Jd updated
 sprunner_z_ =: 3 : '0!:111 y'
 sprunnerx_z_=: 3 : '0!:110 y'
 sptable_z_  =: sptable_jsp_
@@ -16,8 +15,6 @@ sptable_z_  =: sptable_jsp_
 sphelp_z_=: 0 : 0
 sp (simple project) defined by ~addons/ide/jhs/sp.ijs
 part of JHS and can be loaded in any front end
-
-see spxhelp for managed execution info
 
 simple project:
  sp  f    set SPFILE and load it
@@ -55,15 +52,14 @@ spxhelp_z_=: 0 : 0
 simple project managed execution:
  spx f        set SPXFILE
  crtl+.       JHS advance
+ menu >       JHS advance
  ctrl+j       JQt advance
  spx''        advance
  spx 0        status
  spx n        run line n
  spx n m      run lines n through m
- spx''        advance
-
-managed execution example:
- spx'~addons/ide/jhs/spxdemo.ijs' 
+ spx':'       sections
+ spx'~addons/ide/jhs/spx/spx_tour.ijs' 
 )
 
 MAXRECENT=: 40 NB. max recent files 
@@ -109,8 +105,8 @@ elseif. 1 do.
   r=. ,>{.c#SPFILES
 end.
 assert. fexist r['must exist'
-assert. '.ijs'-:_4{.r['not .ijs'
-addrecent r
+if. '.ijs'-:_4{.r do. addrecent r end. NB. addrecent only for .ijs
+r
 )
 
 shorts=: 3 : 0
@@ -127,8 +123,8 @@ sptable(shorts_jsp_ t),.t
 spxinit=: 3 : 0
 assert. fexist spf y['must exist'
 if. IFJHS do.
- ev_dot_ctrl_jijx_=: 3 : 'spx__'''''
- a=. 'ctrl+. advances'
+ ADVANCE_jijx_=: 'spx'
+ a=. 'ctrl+. or menu > advances'
 elseif. IFQT do.
  if. _1=4!:0<'qtsave' do.
   qtsave=: 5!:1<'labs_run_jqtide_'
@@ -155,13 +151,34 @@ else.
 end. 
 )
 
+
+SECTION=: 'NB.spxsection:'
+SECTIONC=: #SECTION
+
+spxsections=: 3 : 0
+b=.(<SECTION)=SECTIONC{.each y
+i=.b#i.#y
+t=. (#SECTION)}.each i{y
+;t=. (<'spx'':'),each t,each <'''',LF
+)
+
 spx=: 3 : 0
-if. (0~:#y)*.2=3!:0 y do. spxinit y return. end.
+nsec=. -.':'={.y
+if. nsec*.(0~:#y)*.2=3!:0 y do. spxinit y return. end.
 if. -.fexist SPXFILE do. smoutput 'not initialized - do spxinit' return. end.
 if. ''-:y do. spx SEMN return. end.
 if. 0={.y do. status'' return. end.
 d=. SEM
 SEM=:get SPXFILE
+
+if. -.nsec do.
+ if. ':'-:y do. spxsections SEM return. end.
+ a=. SECTION,deb}.y
+ s=. (#a){.each SEM
+ i=. s i.<a
+ if. i<#s do. y=. >:i end.
+end.
+
 if. 2=#y do.
  if. -.(3!:0[4) e. 1 4 do. smoutput 'not integer line numbers' return. end.
  SEMN=: {.y
@@ -184,9 +201,31 @@ ndx=. <:SEMN
 d=. >ndx{SEM
 if. 0=#d-.' ' do. SEMN=:>:SEMN[echo ;IFJHS{'';LF goto_top. end.
 
-if. '0 : ''spx hr'''-:12{.deb d do.
+if. 'NB.spxhr:'-:9{.deb d do.
  SEMN=:>:SEMN
- if. IFJHS do. jhtml'<hr/>' else. echo 80$'_'end.
+ if. IFJHS do. jhtml_jhs_'<hr/>' else. echo 80$'_'end.
+ goto_top.
+end.
+
+if. 'NB.spxhtml:'-:11{.deb d do.
+ SEMN=:>:SEMN
+ d=. 11}.d
+ if. IFJHS do.
+  jhtml_jhs_ d
+ else.
+  echo 'html: ',d
+ end.
+ goto_top.
+end.
+
+if. 'NB.spxlatex:'-:12{.deb d do.
+ SEMN=:>:SEMN
+ d=. 12}.d
+ if. IFJHS do.
+  jhtml_jhs_'<img src="http://latex.codecogs.com/svg.latex?',d,'" border="0"/>'
+ else.
+  echo 'latex: ',d
+ end.
  goto_top.
 end.
 
@@ -215,10 +254,15 @@ end.
   a=. <;.2 d
   b=. ;:}:;{.a
   if. b-:;:'0 : 0' do.
-   echo ;}.}:a
+   NB. foldtext for 0 : 0 that has long lines
+   if. +/80<;#each a do.
+    echo 80 foldtext ;}.}:a
+   else. 
+    echo ;}.}:a
+   end. 
   else.
    if. IFJHS do.
-    jhtml '<font color="blue">',(jhfroma_jhs_ ;a),'</font>'
+    jhtml_jhs_'<font color="blue">',(jhfroma_jhs_ ;a),'</font>'
    else.
     echo ;a
    end.
@@ -229,7 +273,7 @@ end.
   d=. 3}.each dltb each <;.2 d
   d=. ;(*./' '=;{.each d)}.each d
   if. IFJHS do. 
-   jhtml '<font color="green">',(jhfroma_jhs_ d),'</font>'
+   jhtml_jhs_'<font color="green">',(jhfroma_jhs_ d),'</font>'
   else.
    echo d
   end. 

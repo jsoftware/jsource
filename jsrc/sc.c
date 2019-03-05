@@ -45,7 +45,7 @@ static DF2(jtunquote){A z;
   // here for pseudo-named function.  The actual name is in g, and the function itself is pointed to by h.  The verb is an anonymous explicit modifier that has received operands (but not arguments)
   // The name is defined, but it has the value before the modifier operands were given, so ignore it except for the name
   stabent=0;  // no symbol table for pseudo-names, since they aren't looked up
-  thisname=v->fgh[1];  // get the actual name
+  thisname=v->fgh[1];  // get the original name
   explocale=0;  // flag no explicit locale
   fs=v->fgh[2];  // point to the actual executable
   ASSERT(fs,EVVALUE); // make sure the name's value is given also

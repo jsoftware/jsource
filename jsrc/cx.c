@@ -742,9 +742,9 @@ A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV(a),*zv;
 
 F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  RZ(a&&w);
- if(VERB&AT(a)&&VERB&AT(w)){V*va,*vw;
-  va=FAV(a); if(CCOLON==va->id&&VERB&AT(va->fgh[0])&&VERB&AT(va->fgh[1]))a=va->fgh[0];
-  vw=FAV(w); if(CCOLON==vw->id&&VERB&AT(vw->fgh[0])&&VERB&AT(vw->fgh[1]))w=vw->fgh[1];
+ if(VERB&AT(a)&AT(w)){
+  if(CCOLON==FAV(a)->id&&FAV(a)->fgh[0]&&VERB&AT(FAV(a)->fgh[0])&&VERB&AT(FAV(a)->fgh[1]))a=FAV(a)->fgh[0];  // look for v : v; don't fail if fgh[0]==0 (namerefop).  Must test fgh[0] first
+  if(CCOLON==FAV(w)->id&&FAV(w)->fgh[0]&&VERB&AT(FAV(w)->fgh[0])&&VERB&AT(FAV(w)->fgh[1]))w=FAV(w)->fgh[1];
   R fdef(0,CCOLON,VERB,xv1,xv2,a,w,0L,((FAV(a)->flag&FAV(w)->flag)&VASGSAFE),mr(a),lr(w),rr(w));  // derived verb is ASGSAFE if both parents are 
  }
  RE(n=i0(a));

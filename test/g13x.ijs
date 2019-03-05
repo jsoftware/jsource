@@ -171,7 +171,27 @@ expa =: 1 : 'u y'
 fexpa =: 0: expa f.
 '0: (1 : ''u y'')' -: 5!:5 <'fexpa'
 
+
+13!:0 ]1
+
+f=: 2 : 0
+(m g n) : (m g n)
+)
+
+g=: 2 : 0
+m;n;y
+'g1'
+:
+m;n;x;y
+'g2'
+)
+
+'g2' -: 0 (0 f 0) 0
+'g1' -: (0 f 0) 0
+
 13!:0 ]0
+
+
 
 
 4!:55 ;:'commute conj f f1 f2 fac foo expa fexpa '

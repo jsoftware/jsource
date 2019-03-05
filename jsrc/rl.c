@@ -248,7 +248,7 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  v=VAV(w); id=v->id;
  b=id==CCOLON&&VXOP&v->flag;
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=av[0]; t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () is it's hoor fork && or noun left end of nvv or n (op)
+ if(1<=n){f=av[0]; t=v->fgh[0]; c=ID(t); ft=c==CHOOK||c==CFORK||c==CADVF||(b||id==CFORK)&&NOUN&AT(t)&&lp(f);}  // f: () if it's hook fork && or noun left end of nvv or n (op)
  if(2<=n){g=av[1]; t=v->fgh[1]; c=ID(t); gt=VERB&AT(w)    ?c==CHOOK||c==CFORK:lp(g);}
  if(3<=n){h=av[2]; t=v->fgh[2]; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK          :lp(h);}
  switch(!b?id:2==n?CHOOK:CFORK){

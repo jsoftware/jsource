@@ -207,7 +207,7 @@ F1(jtpmctr){D x;I q;
  ASSERT(jt->pma,EVDOMAIN);
  x=q+(D)jt->pmctr;
  ASSERT(IMIN<=x&&x<=IMAX,EVDOMAIN);
- jt->pmctr=q=(I)x; jt->cxspecials=1; jt->uflags.us.uq.uq_c.pmctrb=!!q;  // tell cx and unquote to look for pm
+ jt->pmctr=q=(I)x; jt->cxspecials=1; jt->uflags.us.uq.uq_c.pmctrbstk&=~PMCTRBPMON; jt->uflags.us.uq.uq_c.pmctrbstk|=q?PMCTRBPMON:0;  // tell cx and unquote to look for pm
  R sc(q);
 }    /* add w to pmctr */
 
@@ -238,7 +238,7 @@ F2(jtpmarea2){A x;B a0,a1,*av;C*v;I an,n=0,s=sizeof(PM),s0=sizeof(PM0),wn;PM0*u;
  wn=AN(w);
  ASSERT(!wn||wn>=s+s0,EVLENGTH);
  x=jt->pma;
- jt->pmctr=0; jt->uflags.us.uq.uq_c.pmctrb=0;  // not sure why pmctr is not a boolean, since its value seems unused
+ jt->pmctr=0; jt->uflags.us.uq.uq_c.pmctrbstk&=~PMCTRBPMON;  // not sure why pmctr is not a boolean, since its value seems unused
  if(wn){ras(w); jt->pma=w;}else jt->pma=0;
  if(jt->pma)spstarttracking();else spendtracking();  // track whenever PM is running
  RZ(pmfree(x));

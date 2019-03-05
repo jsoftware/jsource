@@ -50,7 +50,9 @@ typedef struct {
    union {
     US uq_us;       // accessing both flags at once
     struct {
-     C    pmctrb;            /* 0=unlocked, 1=perm lock, 2=temp lock            */
+     C    pmctrbstk;  // pm and stacking info
+#define PMCTRBPMON 1  // set if PM ctr is running
+#define PMCTRBSTKREQD 2   // set if we MUST create a stack entry for each named call
      B    spfreeneeded;     // When set, we should perform a garbage-collection pass
     } uq_c;        // accessing as bytes
    } uq;   // flags needed only by unquote

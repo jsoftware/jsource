@@ -238,7 +238,7 @@ f =: 0&".&.> y =: 18!:3 ''
 'domain error'    -: lpath etx 2 3j4
 'domain error'    -: lpath etx 2 3x
 'domain error'    -: lpath etx 2 3r4
-'locale error'    -: lpath etx 2000;3 4
+'locale error'    -: lpath etx 200000;3 4
 'domain error'    -: lpath etx 3 4;2
 
 'domain error'    -: lpath etx <0 1 0
@@ -264,7 +264,7 @@ f =: 0&".&.> y =: 18!:3 ''
 
 'domain error'    -: 0 1 0            lpath etx <'z'
 'domain error'    -: 'abc'            lpath etx <'z'
-'locale error'    -: 1000 2000 3000   lpath etx <'z'
+'locale error'    -: 100000 200000 300000   lpath etx <'z'
 'domain error'    -: 1 2.3            lpath etx <'z'
 'domain error'    -: 1 2j3            lpath etx <'z'
 'domain error'    -: 1 2 3x           lpath etx <'z'
@@ -419,7 +419,7 @@ _1 -: 4!:0 <'a'
 
 18!:55 ;:'a b c asdf NonExistent2'
 18!:55 e
-e e. 18!:1 (1)  NB. Not deleted because still on stack
+0 = e e. 18!:1 (1)  NB. Deleted because not on stack
 
 'locale error'    -: lswitch etx 0
 'domain error'    -: lswitch etx 'a'
@@ -606,7 +606,7 @@ NB. This is the version for locale reuse (not used)
 f=: 3 : 0
 if. 0 = 4!:0 <'HASRUNLOCNAME_z_' do. 1 return. end.
 HASRUNLOCNAME_z_ =: 1
-lastallo =. {: initallo =. allos =. /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
+lastallo =. {: initallo =. allos =. , /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
 deldallo =. allos -.~ i. 16b1ff8   NB. locales in the order we delete them
 NB. randomly allocate & delete locales, until we see an old number coming back
 while. do.
@@ -657,7 +657,7 @@ assert. 16b1ff8 > >./ allos
 NB. This is the version for hashed allocation
 f=: 3 : 0
 cocurrent =. 18!:4
-lastallo =. {: initallo =. allos =. /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
+lastallo =. {: initallo =. allos =. , /:~ 0&".@> 18!:1 (1)   NB. locales as we see them
 deldallo =. $0
 NB. Allocate a starter set of locales
 for. i. 100 do. allos =. allos , lastallo =. 0&".@> 18!:3'' end.
@@ -672,7 +672,9 @@ for. i. 10000 do.
     NB. Delete a randomly-chosen locale if there is one
     if. #allos -. initallo do.
       delallo =. ({~  ?@#) allos -. initallo  NB. initallo may be on stack, so don't try to delete
+      assert. (<":delallo) e. 18!:1 (1)
       18!:55 delallo
+      assert. (<":delallo) -.@e. 18!:1 (1)
       allos =. allos -. delallo
       deldallo =. deldallo , delallo
       NB. Verify we haven't cut off any of the locales in the hash chain

@@ -82,6 +82,17 @@ p=: 3 : 0
 )
 'stack error' -: ex 'p;:''a b c'''
 
+f =: 3 : 0
+for_loc. i. y do.
+  coclass 'A',": loc
+end.
+coclass 'base'
+for_loc. i. y do.
+  coerase <'A',": loc
+end.
+)
+f 10000
+
 4!:55 ;:'c f f5 f6 g t p'
 
 

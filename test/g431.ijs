@@ -205,7 +205,7 @@ NB. f/\.y ----------------------------------------------------------------
 (%/\.x)  -: */\.&.(^&((#x)$_1^1 0+#x)) x=:>:?101 7$200
 
 NB. Verify boxed results run in the right direction without overwriting
-zzz =. 0 + z =. i. 1e7
+zzz =: 0 + z =: i. 1e7
 9999999 0 -: {: (2 2"_)/\. z
 zzz -: z
 
@@ -292,6 +292,6 @@ xover =: 3 : '~:/y'
 
 4!:55 ;:'a adot1 adot2 sdot0 base bs bsd em en f iind infix '
 4!:55 ;:'kay key max maxover n ob oind omask osub outfix '
-4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover '
+4!:55 ;:'plus prefix product sd seg suffix sum t times x xor xover z zzz'
 randfini''
 

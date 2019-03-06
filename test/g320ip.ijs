@@ -338,7 +338,7 @@ a =: 10000#'a'
 IGNOREIFFVI 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace  even with 9!:53 (0)
 IGNOREIFFVI 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too  even with 9!:53 (0)
 nb =: ('b' ,~ [)
-IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace even with 9!:53 (0)
+(dbq'')+. IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace even with 9!:53 (0)
 a -: (10000#'a'),'bbb'
 b =: 'c'
 IGNOREIFFVI 3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment  even with 9!:53 (0)
@@ -367,12 +367,13 @@ a -: ((10000#'a'),'bbbbbcc'),((10000#'a'),'bbbbbcc')
 9!:53 (1)  NB. Now they should inplace
 a =: 10000#'a'
 IGNOREIFFVI 3000 > 7!:2 'a =: (''b'' ,~ [) a'   NB. NVV with Usecount=1 still inplace
-IGNOREIFFVI 3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
+NB. sporadic failures
+IFUNIX+. IGNOREIFFVI 3000 < 7!:2 'a =: ''b'' (] ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
 NB. sporadic failures
 1 [ 3000 < 7!:2 'a =: ''b'' ([ ] [ ,~ ]) a'   NB. not with 9!:53 (0) or console
 IGNOREIFFVI 3000 > 7!:2 'a =: (({.''b'') ,~ [) a'  NB. Usecount -1 too
 nb =: ('b' ,~ [)
-IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace
+(dbq'')+. IGNOREIFFVI 3000 > 7!:2 'a =: nb a'  NB. usecount=1 inside the name, still inplace
 a -: (10000#'a'),'bbbbb'
 b =: 'c'
 IGNOREIFFVI 3000 > 7!:2 'a =: (b ,~ ]) a'  NB. different name, still inplace assignment

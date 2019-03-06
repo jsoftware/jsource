@@ -74,17 +74,17 @@ J gjt=0; // JPF debug - convenience debug single process
 
 // thread-safe/one-time initialization of all global constants
 // Use GA for all these initializations, to save space since they're done only once
-B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
+B jtglobinit(J jt){A x,y;D*d;I oldpushx=jt->tnextpushx;
  liln=1&&C_LE;
  MC(jt->typesizes,typesizes,sizeof(jt->typesizes));  // required for ma.  Repeated for each thread in jtinit3
  MC(jt->typepriority,typepriority,sizeof(jt->typepriority));  // may not be needed
  MC(jt->prioritytype,prioritytype,sizeof(jt->prioritytype));  // may not be needed
  jt->adbreakr=jt->adbreak=&breakdata; /* required for ma to work */
  meminit();  /* required for ma to work */
- s=bitdisp; 
- DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
- DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
- DO(15, j=1+i; DO(16, bitc[16*j+i]=bitc[j]+bitc[i];););
+// obsolete  s=bitdisp; 
+// obsolete  DO(256, c=(UC)i;      DO(BB, *s++=c&(UC)128?'1':'0'; *s++=' '; c<<=1;);           );
+// obsolete  DO(16,  c=(UC)i; k=0; DO(BB, if(c&(UC)1)++k;                   c>>=1;); bitc[i]=k;);
+// obsolete  DO(15, j=1+i; DO(16, bitc[16*j+i]=bitc[j]+bitc[i];););
  MC(&inf, XINF,SZD); 
  MC(&jnan,XNAN,SZD);
  infm=-inf;
@@ -117,18 +117,16 @@ B jtglobinit(J jt){A x,y;C*s;D*d;I j;UC c,k;I oldpushx=jt->tnextpushx;
  GA(x,BOX, 1,1,0     ); ACX(x); *AAV(x)=y;                zpath      =x;  AFLAG(zpath) |= (AT(zpath)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  GA(x,ASGN+ASGNLOCAL+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CASGN; asgnlocsimp=x;
  GA(x,ASGN+ASGNTONAME, 1,1,0     ); ACX(x); *CAV(x)=CGASGN; asgngloname=x;
- RZ(mnam=makename("m")); // obsolete RZ(mdot=makename("m."));
- RZ(nnam=makename("n")); // obsolete RZ(ndot=makename("n."));
- RZ(unam=makename("u")); // obsolete RZ(udot=makename("u."));
- RZ(vnam=makename("v")); // obsolete RZ(vdot=makename("v."));
- RZ(xnam=makename("x")); // obsolete RZ(xdot=makename("x."));
- RZ(ynam=makename("y")); // obsolete RZ(ydot=makename("y."));
+ RZ(mnam=makename("m"));
+ RZ(nnam=makename("n"));
+ RZ(unam=makename("u"));
+ RZ(vnam=makename("v"));
+ RZ(xnam=makename("x"));
+ RZ(ynam=makename("y"));
  zeroQ.n =iv0; zeroQ.d =iv1;
  zeroDX.e=0;     zeroDX.x=iv0;
  memset(minus0,C0,8L); minus0[C_LE?7:0]='\200';
  // can be left at initial value v00[0]=v00[1]=0;   // vector 0 0, for rank
-// obsolete // ptab is statically initialized
-// obsolete  bucketinit();  // init yxbucket
  pf=qpf();
  pinit();
 

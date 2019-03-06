@@ -431,7 +431,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
- // obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) {if((1==(RANKT)(rank))&&!(type&SPARSE)){AS(name)[0]=(atoms);} else if(shaape){MCISH(AS(name),shaape,rank)} }
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
@@ -491,13 +490,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define INF(x)          ((x)==inf||(x)==infm)
 // true if a has recursive usecount
 #define UCISRECUR(a)    (AFLAG(a)&RECURSIBLE)
-// obsolete // Structural verbs (dyads #, $, {., { etc) always inherit the SMNOREL status of their ibput, at least to start with
-// obsolete #define INHERITNOREL(z,w) (AFLAG(z) |= AFLAG(w)&AFNOSMREL)
-// obsolete // if the verb may add fill, we have to check the fill as well
-// obsolete #define INHERITNORELFILL(z,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(w):AFLAG(w))&AFNOSMREL)
-// obsolete #define INHERITNOREL2(z,a,w) (AFLAG(z) |= AFLAG(a)&AFLAG(w)&AFNOSMREL)
-// obsolete // if the verb may add fill, we have to check the fill as well
-// obsolete #define INHERITNORELFILL2(z,a,w) (AFLAG(z) |= (jt->fill&&(!(AT(jt->fill)&DIRECT))?AFLAG(jt->fill)&AFLAG(a)&AFLAG(w):AFLAG(a)&AFLAG(w))&AFNOSMREL)
 // Install new value z into xv[k], where xv is AAV(x).  If x has recursive usecount, we must increment the usecount of z.
 // This also guarantees that z has recursive usecount whenever x does, and that z is realized
 #define INSTALLBOX(x,xv,k,z) rifv(z); if(UCISRECUR(x)){A zzZ=xv[k]; ra(z); fa(zzZ);} xv[k]=z
@@ -577,7 +569,6 @@ extern unsigned int __cdecl _clearfp (void);
 #define EPILOGNULL(z)   R z
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
-// obsolete #define PTO             3L  // Number of prefix entries of ptab[] that are used only for local symbol tables
 // Compounds push zombie to begin with and restore before the last operation, which can execute in place.
 // zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
 // zombieval+AC=1 is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is
@@ -585,9 +576,7 @@ extern unsigned int __cdecl _clearfp (void);
 // When we push, we are about to execute verbs before the last one, and an inplacement there would lead to the name's being assigned with invalid
 // data.  So, we clear the inplace variables if we don't want to allow that: if the user set zomblevel=0, or if there is no local symbol table
 // (which means the user is fooling around at the keyboard & performance is not as important as transparency)
-// obsolete #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){if(!jt->asgzomblevel||!jt->local){savzombval=jt->zombieval;CLEARZOMBIE}}
 #define PUSHZOMB L*savassignsym = jt->assignsym; A savzombval; if(savassignsym){savzombval=jt->zombieval; if((UI)jt->asgzomblevel-1>=(UI)jt->local){CLEARZOMBIE}}  // test is (jt->asgzomblevel==0||jt->local==0)
-// obsolete #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define POPZOMB if(savassignsym){jt->assignsym=savassignsym;jt->zombieval=savzombval;}
 #define R               return
 #if FINDNULLRET   // When we return 0, we should always have an error code set.  trap if not

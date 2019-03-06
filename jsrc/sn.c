@@ -26,9 +26,6 @@ B jtvnm(J jt,I n,C*s){C c,d,t;I j,k;
 }    /* validate name s, return 1 if name well-formed or 0 if error */
 
 B vlocnm(I n,C*s){
-// obsolete if(!n)R 0;  // error if name empty
-// obsolete  DO(n, t=ctype[(UC)(c=s[i])]; if(!(c!='_'&&(t==CA||t==C9)))R 0;);  // error if non-alphameric or _
-// obsolete if(C9==ctype[(UC)*s]){if(!('0'!=*s||1==n))R 0; if(n>18)R 0; DO(n, c=s[i]; if(!('0'<=c&&c<='9'))R 0;);}  // if numeric locale, verify first char not '0' unless it's just 1 char; <=18 digits; and all chars numeric
  I accummask=0; DO(n, UC c=s[i]; C t=ctype[c]; t=c=='_'?CX:t; accummask|=(I)1<<t;)  // create mask of types encountered.  Treat  '_' as nonalpha
  if(accummask&~(((I)1<<CA)|((I)1<<C9)))R 0;  // error if any non-alphameric encountered
  if(n<2)R (B)n;  // error if n=0; OK if n=1 (any alphameric is OK then)
@@ -45,10 +42,8 @@ A jtnfs(J jt,I n,C*s){A z;C c,f,*t;I m,p;NM*zv;
  t=s+n-1;
  DO(n, if(' '!=*t)break; --t; --n;);
  // If the name is the special x y.. or x. y. ..., return a copy of the preallocated block for that name (we may have to add flags to it)
- c=*s;if((1==n/* obsolete ||2==n&&'.'==s[1]*/)&&strchr("mnuvxy",c)){
-// obsolete   if(1==n){
+ c=*s;if((1==n)&&strchr("mnuvxy",c)){
   R ca(c=='y'?ynam:c=='x'?xnam:c=='v'?vnam:c=='u'?unam:c=='n'?nnam:mnam);
-// obsolete   }else{    R ca(c=='y'?ydot:c=='x'?xdot:c=='v'?vdot:c=='u'?udot:c=='n'?ndot:mdot);}
  }
  ASSERT(n,EVILNAME);   // error if name is empty
  // The name may not be valid, but we will allocate a NAME block for it anyway
@@ -187,7 +182,7 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
  GAT(ch,BOX,20,1,0); m=0;
  if(jt->stch){
-  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV(jt->stloc); // obsolete pv=AAV(jt->stptr);
+  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV(jt->stloc);
   // named locales first
   for(i=1;i<n;++i,++e)if(*e){
    d=*e+jt->sympv;
@@ -196,7 +191,6 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
     if(!d->next)break;
     d=d->next+jt->sympv;
   }}
-  // obsolete n=AN(jt->stptr);
   // now numbered locales
   DO(jtcountnl(jt), A loc=jtindexnl(jt,i); if(loc)RZ(ch=nch1(b,loc,&m,ch)););
  }
@@ -219,7 +213,6 @@ F1(jtex){A*wv,y,z;B*zv;I i,n;L*v;I modifierchg=0;
   if(y&&(v=syrd(y))){
    if(jt->uflags.us.cx.cx_c.db)RZ(redef(mark,v));
    if(AFLAG(v->val)&AFNVRUNFREED){AFLAG(v->val)&=~AFNVRUNFREED; ras(v->val);}
-// obsolete  I mod=symfree(v);  RZ(mod);
    if(!(v->name->flag&NMDOT)&&v->val&&AT(v->val)&(VERB|ADV|CONJ))modifierchg=1;  // if we delete a modifier, remember that fact
    probedel(NAV(v->name)->m,NAV(v->name)->s,NAV(v->name)->hash,syrdforlocale(y));  // delete the symbol (incl name and value) in the locale in which it is defined
   }

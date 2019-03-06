@@ -827,8 +827,6 @@ extern A        jtstr(J,I,C*);
 extern B        jtsymbinit(J);
 extern A        jtsymbis(J,A,A,A);
 extern B        jtsymext(J,B);
-// obsolete extern B        jtsymfree(J,L*);
-// obsolete extern B        jtsymfreeh(J,A,L*);
 extern void     jtsymfreeha(J,A);
 extern L*       jtsymnew(J,LX*,LX);
 extern A        jtsybaseloc(J,A);
@@ -879,7 +877,6 @@ extern I        atoplr(A);
 extern I        atype(I);
 extern I        boxat(A,I,I,I);
 extern I        bsum(I,B*);
-// obsolete extern void     bucketinit();
 extern C        cf(A);
 extern C        cl(A);
 extern CR       condrange(I *,I,I,I,I);
@@ -920,8 +917,8 @@ extern A        aqq;
 extern A        asgnlocsimp;  // points to block with ASGN+ASGNLOCAL+ASGTONNAME
 extern A        asgngloname;  // points to block with ASGN+ASGNTONAME
 extern UC       bit[];
-extern UC       bitc[];
-extern C        bitdisp[];
+// obsolete extern UC       bitc[];
+// obsolete extern C        bitdisp[];
 extern C        breakdata;
 extern A        chr[];
 extern C        ctype[];
@@ -941,14 +938,11 @@ extern A        mtm;
 extern A        mtv;
 extern A        nnam;
 extern A        numv[];
-// obsolete extern A        one;
 extern A        onehalf;
 extern D        pf;
 extern A        pie;            /* "pi" name conflict                      */
 extern I        prokey;
 extern A        pst[];
-// obsolete extern I        ptab[27];
-// obsolete #define nptab (sizeof(ptab)/sizeof(ptab[0]))
 extern UI4      shortrange[3][4];
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vnam;
@@ -956,11 +950,7 @@ extern I        v00[2];
 extern B        testb[];
 extern C        wtype[];
 extern A        xnam;
-// obsolete extern X        iv1;
-// obsolete extern X        iv0;
 extern A        ynam;
-// obsolete extern UI4      yxbuckets[14];
-// obsolete extern A        zero;
 extern A        zeroionei[2];
 extern Z        zeroZ;
 extern dcomplex zone;
@@ -968,12 +958,6 @@ extern dcomplex zzero;
 extern A        zpath;
 /* cpu feature */
 extern int      hwfma;
-// obsolete extern A        mdot;
-// obsolete extern A        ndot;
-// obsolete extern A        udot;
-// obsolete extern A        vdot;
-// obsolete extern A        xdot;
-// obsolete extern A        ydot;
 #if (SYS & SYS_ATARIST+SYS_ATT3B1)
 extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */

@@ -91,14 +91,14 @@ static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4]
 #endif
  default:        CANTA(C, MC(u,v,cellsizeb); u+=cellsizeb;); break;
  }     
- /* obsolete RELOCATE(w,z);*/ RETF(z);  // should EPILOG?
+ RETF(z);  // should EPILOG?
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 F1(jtcant1){I r; 
  RZ(w); 
  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
  A z=canta(apv(r,r-1,-1L),w);  // rank is set
- RZ(z);  /* obsolete INHERITNOREL(z,w);*/ RETF(z);
+ RZ(z);  RETF(z);
 }    /* |:"r w */
 
 F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
@@ -113,5 +113,5 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
  A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta
- RZ(z);  /* obsolete INHERITNOREL(z,w); */ RETF(z);
+ RZ(z);  RETF(z);
 }    /* a|:"r w main control */ 

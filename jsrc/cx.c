@@ -98,20 +98,6 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !!thisframe; } }else z=0; \
     break; }
 
-#if 0 // obsolete 
-// Emulate bucket calculation for local names.  This is called as part of globinit initialization
-void bucketinit(){I j;
- for(j=0;j<sizeof(yxbuckets)/sizeof(yxbuckets[0]);++j){
-  UI4 ybuck=SYMHASH(NAV(ynam)->hash,ptab[j]);
-  UI4 xbuck=SYMHASH(NAV(xnam)->hash,ptab[j]);
-  // The next line will fail is there is a collision betwwen x and y.  In that case we have to run a little more code.  We have found that the
-  // AVX code (which uses CRC) does not have collisions, but the non-AVX does.
-  yxbuckets[j]=(xbuck<<16)|ybuck;  
- }
-}
-#endif
-
-
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);
@@ -283,7 +269,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(z||!jt->jerr){
      bi=i,++i;
     }else if(jt->uflags.us.cx.cx_c.db&(DB1|DBERRCAP)){  // if debug mode, we assume we are ready to execute on
-     /* obsolete RESETERR;*/ bi=i,++i;   // it is OK to have jerr set if we are in debug mode
+     bi=i,++i;   // it is OK to have jerr set if we are in debug mode
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
      if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
@@ -369,7 +355,7 @@ static DF2(jtxdefn){PROLOG(0048);
     break;
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
-    i=ci->go; /* obsolete if(tdi)jt->uflags.us.cx.cx_c.db=!!thisframe;*/   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+    i=ci->go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
     break;
    case CCASE:
    case CFCASE:
@@ -685,7 +671,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
  }
 
- asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here  // obsolete for(j=0;ptab[j]<asgct&&j<14;++j);  // Find symtab size that has 33% empty space
+ asgct = asgct + (asgct>>1); // leave 33% empty space, since we will have resolved most names here
  RZ(actst=stcreate(2,asgct,0L,0L));  // Allocate the symbol table we will use
  AM(actst)=(I)((SYMHASH(NAV(xnam)->hash,AN(actst)-SYMLINFOSIZE)<<16)+SYMHASH(NAV(ynam)->hash,AN(actst)-SYMLINFOSIZE));  // get the yx bucket indexes for a table of this size, save in AM
 
@@ -724,7 +710,6 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
 A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV(a),*zv;
-// obsolete  RZ(z=stcreate(2,AR(a)&~LSYMINUSE,0L,0L)); zv=LXAV(z);  // Extract the original p used to create the table; allocate the clone; zv->clone hashchains
  RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV(z);  // allocate the clone; zv->clone hashchains
  // Go through each hashchain of the model
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after

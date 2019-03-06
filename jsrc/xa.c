@@ -52,7 +52,6 @@ F1(jtevms){A t,*tv,*wv;
  ASSERT(BOX&AT(w),EVDOMAIN);
  GAT(t,BOX,1+NEVM,1,0); tv=AAV(t); 
  *tv++=mtv;
-// obsolete  if(ARELATIVEB(w))RZ(w=car(w));
  wv=AAV(w);
  DO(NEVM, RZ(*tv++=vs(*wv++)););
  ras(t); fa(jt->evm); jt->evm=t;

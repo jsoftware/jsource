@@ -143,7 +143,7 @@ static A jtsmmga(J jt,A a,I t,I n,I r,I*s){A z;I m,w;
  w=WP(t,n,r); m=SZI*w; 
  ASSERT(RMAX>=r&&m>n&&n>=0&&m>w&&w>0,EVLIMIT);   /* beware integer overflow */
  RZ(z=smma(a,m));
- AT(z)=t; ACX(z); AN(z)=n; AR(z)=(RANKT)r; AFLAG(z)=AFSMM; AK(z)=AKX(z); /* obsolete AM(z)=m-AK(z); */
+ AT(z)=t; ACX(z); AN(z)=n; AR(z)=(RANKT)r; AFLAG(z)=AFSMM; AK(z)=AKX(z);
  if(r&&s)ICPY(AS(z),s,r); else *AS(z)=n;
  if(t&LAST0)*((I*)z+w-1)=0;
  R z;

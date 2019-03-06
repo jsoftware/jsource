@@ -86,16 +86,6 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
  n=AN(a);    // n = #axes in a
  ASSERT(!wcr||n<=wcr,EVLENGTH);  // if y is not atomic, a must not have extra axes
  I * RESTRICT ws=AS(w);  // ws->shape of w
-#if 0  // obsolete
- if(AT(a)&B01+INT)RZ(s=a=vi(a))  // convert boolean arg to int
- else{
-  RZ(t=vib(a));   // convert to int in new buffer
-  if(!(AT(a)&FL))RZ(a=cvt(FL,a));  // convert complex to float
-  av=DAV(a); tv=AV(t); v=wf+ws;
-  DO(n, d=av[i]; if(d==IMIN)tv[i]=(I)d; else if(INF(d))tv[i]=wcr?v[i]:1;)  // replace infinities in original with high- or low-value
-  s=a=t;
- }
-#else
  RZ(s=vib(a));  // convert input to integer, auditing for illegal values; and convert infinities to IMAX/-IMAX
  // if the input was not INT/bool, we go through and replace any infinities with the length of the axis.  If we do this, we have
  // to clone the area, because vib might return a canned value
@@ -107,7 +97,6 @@ F2(jttake){A s;I acr,af,ar,n,*v,wcr,wf,wr;
   }
  }
  a=s;
-#endif
 // correct if(!(ar|wf|(SPARSE&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
  if(!(ar|wf|((NOUN&~(DIRECT|RECURSIBLE))&wt)|!wcr|(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic
   // if the length of take is within the bounds of the first axis

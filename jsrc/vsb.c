@@ -278,7 +278,6 @@ static I jtsbextend(J jt,I n,C*s,UI h,I hi){A x;I c,*hv,j,p;SBU*v;
  }
  if(AN(jt->sbh)<2*c){                   /* extend sbh hash table        */
 
-// obsolete   p=2*AN(jt->sbh); DO(64, if(p<=ptab[i]){p=ptab[i]; break;});
   FULLHASHSIZE(2*AN(jt->sbh),INTSIZE,1,0,p);
   RZ(x=apvwr(p,-1L,0L)); hv=AV(x); v=jt->sbuv;
   DO(c, j=v++->h%p; while(0<=hv[j]){++j; if(j==p)j=0;} hv[j]=i;);
@@ -573,7 +572,6 @@ static A jtsbcheck1(J jt,A una,A sna,A u,A s,A h,A roota,A ff,A gp){PROLOG(0003)
  ASSERTD(1==AR(h),"h vector");
  ASSERTD(INT&AT(h),"h integer");
  ASSERTD(c<=AN(h),"c bounded by #h");
-// obsolete  ASSERTD(equ(vec(INT,1L,&hn),factor(sc(hn))),"#h prime");
  b=0; DO(AN(h), j=hv[i]; if(-1==j)b=1; else ASSERTD(0<=j&&j<c,"h index"););
  ASSERTD(b,"h full");
  GATV(x,B01,c,1,0); lfv=BAV(x); memset(lfv,C0,c);

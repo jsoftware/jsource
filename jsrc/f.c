@@ -97,8 +97,10 @@ I jtthv(J jt,A w,I n,C*s){A t;B ov=0;C buf[WZ],*x,*y=s;I k,n4=n-4,p,wd,wn,wt;VF 
  *y=0; R y-s;
 }
 
-static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
- n=AN(w); r=AR(w); s=AS(w);
+static F1(jtthbit){
+ASSERTSYS(0,"thbit");
+#if 0
+A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
  GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
  x=UAV(w); y=CAV(z);
@@ -110,6 +112,7 @@ static F1(jtthbit){A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s;
   x+=r1;
  }
  RETF(z);
+#endif
 }
 
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
@@ -540,7 +543,7 @@ static F1(jtthorn1main){PROLOG(0001);A z;
   case XNUMX: case RATX: case XDX: case XZX:
              z=thxqe(w);                  break;
 #endif
-  case BITX:  z=thbit(w);                  break;
+// obsolete  case BITX:  z=thbit(w);                  break;
   case B01X:  z=thb(w);                    break;
   case LITX:
    // If we are producing byte output, we simply return the input.

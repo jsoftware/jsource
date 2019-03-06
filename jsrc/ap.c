@@ -259,8 +259,7 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
  GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
- /* obsolete if(ARELATIVE(w)){ A* RESTRICT u=AAV(z),* RESTRICT v=AAV(w)+m; RELOCOPY(u,v,n,rl);}
- else */ MC(AV(z),CAV(w)+m*k,n*k);
+ MC(AV(z),CAV(w)+m*k,n*k);
  R z;
 }
 
@@ -510,7 +509,6 @@ static DF2(jtinfixprefix2){F2PREFIP;DECLF;PROLOG(00202);A *hv;
 
 // result is now in zz
 
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -541,8 +539,6 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\"r w atomic f main control */
 
-// obsolete #define MCREL(uu,vv,n)  {A*u=(A*)(uu),*v=(A*)(vv); DO((n), *u++=(A)AABS(*v++,wd););}
-
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANK(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); n=IC(w);
@@ -554,12 +550,9 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
  s=AS(z); *s++=d; *s++=zc; MCISH(s,1+ws,r-2);
  k=c<<bplg(wt); 
  if(AN(z)){
-// obsolete switch((0>m?2:0)+(wd?1:0)){
   if(m>=0){ q=p*k; DO(d, MC(x,y,q);    x+=q; y+=k;);
   }else{ MC(x,y,n*k);  if(q=d*p-n)fillv(wt,q*c,x+n*k);
   }
-// obsolete   case 1: q=p*k; DO(d, MCREL(x,y,p); x+=q; y+=k;);      break;  
-// obsolete   case 3: MCREL(x,y,n); if(q=d*p-n)fillv(wt,q*c,x+n*k); break;
  }
  RETF(z);
 }    /* a[\w and a]\w and a,\w */

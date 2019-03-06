@@ -31,7 +31,7 @@ static void jtinstallnl(J jt, A l){
  ++jt->stused;
  A *pv=AAV(jt->stptr);
  DO(AN(jt->stnum), if(!pv[i]){ras(l); pv[i]=l; *(i+AV(jt->stnum))=jt->stmax; break;});
- ++jt->stmax;  // obsolete =n<IMAX?MAX(jt->stmax,1+jt->stmax):-1;
+ ++jt->stmax;
 }
 
 // return the address of the locale block for number n, or 0 if not found
@@ -253,9 +253,6 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
    jtinstallnl(jt, g);  // put the locale into the numbered list at the value most recently returned (which must be n)
    break;
   case 2:  /* local symbol table */
-// obsolete    // Local symbol tables use the rank as a flag word.  Initialize it with the value of p
-// obsolete    // that was used to create the table
-// obsolete    AR(g)=(RANKT)p;
    // Don't invalidate ACV lookups, since the local symbol table is not in any path
    ;
  }
@@ -319,7 +316,6 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
   I p; FULLHASHSIZE(1LL<<(5+jt->locsize[0]),SYMBSIZE,1,SYMLINFOSIZE,p);
   R stcreate(0,p,n,u);  // create it with name
  }else{
-// obsolete  ASSERT(bucketx>=jt->stmax,EVLOCALE); R stcreate(1,jt->locsize[1]+PTO,bucketx,0L);  // numeric locale: create with number
   ASSERT(0,EVLOCALE); // illegal to create numeric locale explicitly
  }
 }
@@ -350,18 +346,6 @@ static A jtvlocnl(J jt,I b,A w){A*wv,y;C*s;I i,m,n;
 // subroutine version
 I strtoI10s(I l,C* p) {I z; strtoI10(p,l,z); R z; }
 
-// obsolete // get index number for locale with number locno, or -1 if not found
-// obsolete static I jtindexforloc(J jt,I locno){I i;
-// obsolete  I *nv=IAV(jt->stnum); I n=AN(jt->stnum);  // address and length of locale numbers
-// obsolete  for(i=0; i<n; ++i)if(nv[i]==locno)R i;   // return index of first match
-// obsolete  R -1;   // -1 if no match
-// obsolete }
-// obsolete // get index number for a numbered locale, given the name of the locale and the length of the name
-// obsolete static I jtprobenum(J jt,C*u,I n){
-// obsolete   I z; strtoI10(u,n,z)  R jtindexforloc(jt, z);
-// obsolete }    /* probe for numbered locales */
-// obsolete 
-// obsolete 
 F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
@@ -436,7 +420,6 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
   g=v->val; 
   LX *u=SYMLINFOSIZE+LXAV(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
   probedel(n,s,(UI4)nmhash(n,s),jt->stloc);  // delete the symbol for the locale, and the locale itself
-// obsolete   RZ(symfreeh(g,v));
  }
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little
  RZ(stcreate(0,p,n,s));
@@ -514,17 +497,16 @@ static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  RZ(vlocnl(1,w));
  n=AN(w); wv=AAV(w); 
-// obsolete  nv=AV(jt->stnum); pv=AAV(jt->stptr);
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   g=0;
-  if(AT(w) & ((INT|B01)/C_LE)){zv[i]=1; g = findnl(IAV(w)[i]);  // obsolete j=jtindexforloc(jt,IAV(w)[0]); if(0<=j)g=pv[j];
+  if(AT(w) & ((INT|B01)/C_LE)){zv[i]=1; g = findnl(IAV(w)[i]);
   }else{
    zv[i]=1; y=wv[i];
-   if(AT(y)&((INT|B01)/C_LE)){g = findnl(IAV(y)[0]);  // obsolete j=jtindexforloc(jt,IAV(y)[0]); if(0<=j)g=pv[j];}
+   if(AT(y)&((INT|B01)/C_LE)){g = findnl(IAV(y)[0]);
    }else{
     m=AN(y); u=CAV(y);
-    if('9'>=*u){g = findnl(strtoI10s(m,u));}  // obsolete j=probenum(u,m);               if(0<=j)g=pv[j]; }   // g is locale block for numbered locale
+    if('9'>=*u){g = findnl(strtoI10s(m,u));}
     else {v=probe(m,u,(UI4)nmhash(m,u),jt->stloc); if(v)g=v->val;}  // g is locale block for named locale
    }
   }
@@ -550,15 +532,10 @@ B jtlocdestroy(J jt,A g){
  B isnum = '9'>=locname->s[0];  // first char of name tells the type
  if(isnum){
   // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
-// obsolete   I i=jtindexforloc(jt,locname->bucketx);  // find the locale in the list of numbered locales
-// obsolete   RZ(redefg(g)); RZ(symfreeh(g,0L)); jterasenl(jt,locname->bucketx);
   RZ(redefg(g)); jterasenl(jt,locname->bucketx); fr(g);  // remove the locale from the hash table, then free the locale and its names
  } else {
   // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
-// obsolete   L *locsym = probe(locname->m,locname->s,locname->hash,jt->stloc);
   RZ(redefg(g)); probedel(locname->m,locname->s,locname->hash,jt->stloc);  // free the L block for the locale, which frees the locale itself and its names
-// obsolete   RZ(redefg(g)); RZ(symfreeh(g,locsym));
-// obsolete   fr(g);  // free the locale and its names
  }
  if(g==jt->global)jt->global=0;
  R 1;

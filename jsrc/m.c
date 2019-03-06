@@ -51,7 +51,6 @@
 #define FHRHENDVALUE(b) (FHRHROOTFREE + (((I)1)<<(b)))     // value representing last+1 block in allo.  Subtract FHRHBININCR to get to previous
 
 // the size of the total allocation of the block for w, always a power of 2
-// obsolete #define alloroundsize(w) (AFLAG(w)&AFSMM ? smmallosize(w) : FHRHSIZE(AFHRH(w)))
 #define alloroundsize(w)  FHRHSIZE(AFHRH(w))
 
 #if (MEMAUDIT==0 || !_WIN32)
@@ -478,8 +477,7 @@ static void jttraverse(J jt,A wd,AF f){
    {A*v=AAV(wd); DO(2*AN(wd), if(*v)CALL1(f,*v++,0L););} break;
   case XNUMX: case BOXX:
    if(!(AFLAG(wd)&AFNJA)){A*wv=AAV(wd);
-    /* obsolete if(AFLAG(wd)&AFREL){DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
-    else */{DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
+   {DO(AN(wd), if(wv[i])CALL1(f,wv[i],0L););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
@@ -537,7 +535,7 @@ RESTRICTF A jtvirtual(J jtip, AD *RESTRICT w, I offset, I r){AD* RESTRICT z;
  }else{
   // not self-virtual block: allocate a new one
   RZ(z=gafv(SZI*(NORMAH+r)));  // allocate the block
-  AFLAG(z)=AFVIRTUAL /* obsolete  + (wf&AFNOSMREL) + ((wf&AFNJA)?AFREL:0)*/;  // flags: not recursive, not UNINCORPABLE
+  AFLAG(z)=AFVIRTUAL;  // flags: not recursive, not UNINCORPABLE
   AC(z)=ACUC1; AT(z)=t; AK(z)=(CAV(w)-(C*)z)+offset; AR(z)=(RANKT)r;  // virtual, not inplaceable
   // If w is inplaceable and inplacing is enabled, we could transfer the inplaceability to the new virtual block.  We choose not to, because we have already picked up
   // virtual-in-place cases above.  The main case would be an inplaceable UNINCORPABLE block, which might be worth the trouble.
@@ -562,13 +560,8 @@ A jtrealize(J jt, A w){A z; I t;
  RZ(w);
  t=AT(w);
  GA(z,t,AN(w),AR(w),AS(w));
-// obsolete  // carry over the SMNOREL flag; if any non-J memory or REL, make the new block REL.
  // new block is not VIRTUAL, not RECURSIBLE
-// obsolete  AFLAG(z) = /* obsolete (AFLAG(w)&AFNOSMREL)*/0;
 // copy the contents.
-// obsolete   If the block is boxed relative, relocate it
-// obsolete  if(!ARELATIVE(w)){
-// obsolete  }else { AFLAG(z) |= AFREL; I rel = (I)ABACK(w)-(I)z; A * RESTRICT wa=AAV(w), * RESTRICT za=AAV(z); RELOCOPY(za,wa,AN(w),rel); }
  MC(AV(z),AV(w),AN(w)<<bplg(t));
  R z;
 }
@@ -669,7 +662,6 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.  Two passes are intertwined in the loop
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   I wrel = af&AFNJA?(I)wd:0;  // If relative, add wv[] to wd; otherwise wv[] is a direct pointer
-// obsolete   I anysmrel=af&(AFSMM)?0:AFNOSMREL;   // init with the status for this block
   if((af&AFNJA)||n==0)R 0;  // no processing if not J-managed memory (rare)
   np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;  // point to block for the box
   while(1){AD* np0;  // n is always > 0 to start
@@ -682,11 +674,9 @@ I jtra(J jt,AD* RESTRICT wd,I t){I af=AFLAG(wd); I n=AN(wd);
    }
    if(np){
     ra(np);  // increment the box, possibly turning it to recursive
-// obsolete     if(AT(np)&BOX)anysmrel &= AFLAG(np);  // clear smrel if the descendant is boxed and contains smrel
    }
    np=np0;  // advance to next box
   }
-// obsolete   AFLAG(wd)|=anysmrel;   // if we traversed fully and found no relatives, mark the block
  } else if(t&(VERB|ADV|CONJ)){V* RESTRICT v=FAV(wd);
   // ACV.  Recur on each component
   ras(v->fgh[0]); ras(v->fgh[1]); ras(v->fgh[2]);
@@ -740,10 +730,8 @@ I jttpush(J jt,AD* RESTRICT wd,I t,I pushx){I af=AFLAG(wd); I n=AN(wd);
   // boxed.  Loop through each box, recurring if called for.
   A* RESTRICT wv=AAV(wd);  // pointer to box pointers
   A* tstack=jt->tstack;  // base of current output block
-// obsolete   I wrel = ARELATIVEB(wd)?RELORIGINDEST(wd):0;  // If relative, add wv[] to wd; othewrwise wv[] is a direct pointer
   if((af&AFNJA)||n==0)R pushx;  // no processing if not J-managed memory (rare)
   while(n--){
-// obsolete    A np=(A)(intptr_t)((I)*wv+(I)wrel); ++wv;   // point to block for box
    A np=*wv; ++wv;   // point to block for box
    if(np){     // it can be 0 if there was error
     I tp=AT(np); I flg=AFLAG(np); // fetch type
@@ -1080,7 +1068,6 @@ F1(jtcaro){ if(AFLAG(w)&AFRO)RETF(ca(w)); RETF(w); }
 // clone recursive.  The result is not relative, even if w is
 F1(jtcar){A*u,*wv,z;I n;P*p;V*v;
  RZ(z=ca(w));
-// obsolete  AFLAG(z) &= ~AFREL; // if w was rel/smm/nja, ca() marks the result REL.  Undo that
  n=AN(w);
  switch(CTTZ(AT(w))){
   case RATX:  n+=n;

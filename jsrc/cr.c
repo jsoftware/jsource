@@ -103,7 +103,6 @@ A jtrank1ex(J jt,AD * RESTRICT w,A fs,I rr,AF f1){F1PREFIP;PROLOG(0041);A z,virt
 
 // result is now in zz
 
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -206,7 +205,6 @@ A jtrank1ex0(J jt,AD * RESTRICT w,A fs,AF f1){F1PREFIP;PROLOG(0041);A z,virtw;
 
 // result is now in zz
 
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -349,70 +347,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
 #define ZZBODY  // assemble results
 #include "result.h"
 
-#if 0
-// obsolete       // if the result is boxed, accumulate the SMREL info
-// obsolete       if(state&AFNOSMREL)state&=AFLAG(y)|~AFNOSMREL;  // if we ever get an SMREL (or a non-boxed result), stop looking
-
-      // process according to state
-      if(state&STATENORM){
-       // Normal case: not first time, no error found yet.  Move verb result to its resting place.  zv points to the next output location
-       if(TYPESNE(yt,AT(y))||yr!=AR(y)||yr&&ICMP(AS(y),ys,yr)/*||obsolete ARELATIVE(y)*/){state^=(STATENORM|STATEERR0);}  //switch to ERR0 state if there is a change of cell type/rank/shape, or result is relative
-       else{
-        // Normal path.
-        MC(zv,AV(y),k); zv+=k;  // move the result-cell to the output, advance to next output spot
-          // If the result-cells are pointers to boxes, we are adding a nonrecursive reference, which does not require any adjustment to usecounts.
-          // If we anticipate making the result recursive, we will have to increment the usecount and also worry about backing out errors and wrecks.
-        if(!(state&STATENOPOP))tpop(old);  // Now that we have copied to the output area, free what the verb allocated
-       }
-      } else if(state&STATEFIRST){I *is, zn;
-       // Processing the first cell.  Allocate the result area now that we know the shape/type of the result.  If an argument is memory-mapped,
-       // we have to go through the box/unbox drill, because the blocks coming out will have different relocations that must be preserved.
-       //  In that case, we switch this allocation to be a single box per result-cell.
-       //  We also have to do this for sparse results, so that they will be collected into a single result at the end
-       yt=AT(y);  // type of the first result
-       if(!( ((AFLAG(a)|AFLAG(w))&(AFNJA)) || (yt&SPARSE) ) ){
-        yr=AR(y); yn=AN(y);
-        RE(zn=mult(mn,yn));   // zn=number of atoms in all result cells (if they stay homogeneous)
-        state^=(STATEFIRST|STATENORM);  // advance to STATENORM
-        // If the results are not going to be DIRECT, they will be allocated up the stack, and we mustn't pop the stack between results
-        if(!(yt&DIRECT))state |= STATENOPOP;
-       }else{
-        yt=BOX; yr=0; zn=mn; state^=(STATEFIRST|STATEERR);
-       }
-       GA(z,yt,zn,lof+lif+yr,0L); I *zs=AS(z); zv=CAV(z);
-       is = los; DO(lof, *zs++=*is++;);  // copy outer frame
-       is = lis; DO(lif, *zs++=*is++;);  // copy inner frame
-       if(!(state&STATEERR)){
-        ys=AS(y); k=yn<<bplg(yt);   // save info about the first cell for later use
-        is = AS(y); DO(yr, *zs++=*is++;);    // copy result shape
-        MC(zv,AV(y),k); zv+=k;   // If there was a first cell, copy it in & advance to next output spot
-        old=jt->tnextpushx;  // pop back to AFTER where we allocated our result and argument blocks
-       }
-      }
-
-      if(state&(STATEERR0|STATEERR)){
-       if(state&STATEERR0){
-        // We had a wreck.  Either the first cell was not direct/boxed, or there was a change of type.  We cope by boxing
-        // each individual result, so that we can open them at the end to produce a single result (which might fail when opened)
-        // If the result is boxed, it means we detected the wreck before the initial allocation.  The initial allocation
-        // is the boxed area where we build <"0 result, and zv points to the first box pointer.  We have nothing to adjust.
-        C *zv1=CAV(z);   // pointer to cell data
-        A zsav=z; GATV(z,BOX,mn,lof+lif,AS(zsav)); A *x=AAV(z);   // allocate place for boxed result; copy frame part of result-shape.  Note GATV reassigns z early, need zsav
-        // For each previous result, put it into a box and store the address in the result area
-        // We have to calculate the number of cells, rather than using the output address, because the length of a cell may be 0
-        // wrecki does not include the cell that caused the wreck
-        I wrecki = (innerrptct-i3) + innerrptct * ( (innerframect-i2) + innerframect * ( (outerrptct-i1) + outerrptct * (outerframect-i0) ) );
-        DQ(wrecki , A q; GA(q,yt,yn,yr,ys); MC(AV(q),zv1,k); zv1+=k; *x++=q;)  // We know the type/shape/rank of the first result matches them all
-        // from now on the main output pointer, zv, points into the result area for z
-        zv = (C*)x;
-        state^=(STATEERR0|STATEERR);  // advance to STATEERR
-       }
-       // Here for all errors, including the first after it has cleaned up the mess, and for sparse result the very first time with no mess
-       // we are incorporating y into the boxed z, so we have to mark it as such (and possibly reallocate it)
-       INCORP(y);
-       *(A*)zv=y; zv+=sizeof(A*);   // move in the most recent result, advance pointer to next one
-      }
-#endif
       // advance input pointers for next cell.  We keep the same virtual block because it can't be incorporated into anything; but if the virtual block was inplaceable the
    // AK, AN, AR, AS, AT fields may have been modified.  We restore them
       if(!(state&STATEINNERREPEATA)){
@@ -448,8 +382,6 @@ A jtrank2ex(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,I lr,I rr,I lcr,I rcr,AF f
  }
 
 // result is now in zz
-
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 
@@ -590,8 +522,6 @@ A jtrank2ex0(J jt,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F2PREFIP;PROLOG(00
  }
 
 // result is now in zz
-
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 }
 

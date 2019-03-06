@@ -72,7 +72,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){A c,d,t,x,y,z;I cn,*cv,*dv,i,n,n1,*tv,*
  x=SPA(wp,e); jt->workareas.compare.compsev=CAV(x);
  y=SPA(wp,i); jt->workareas.compare.compsyv=yv=AV(y); jt->workareas.compare.compsyc=yc=*(1+AS(y));
  x=SPA(wp,x); jt->workareas.compare.compsxv=CAV(x);   jt->workareas.compare.compsxc=aii(x)*(wt&SCMPX?2:1);
- /* obsolete jt->workareas.compare.compw=w; */ jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
+ jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
  GATV(x,INT,2+n,1,0);   xv=AV(x);  /* work area for msmerge() */
@@ -198,7 +198,7 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){A c,t,x,y,z,zy;
  x=SPA(wp,e); jt->workareas.compare.compsev=CAV(x);
  y=SPA(wp,i); jt->workareas.compare.compsyv=yv=AV(y); jt->workareas.compare.compsyc=yc=*(1+AS(y));
  x=SPA(wp,x); jt->workareas.compare.compsxv=CAV(x);   jt->workareas.compare.compsxc=aii(x)*(wt&SCMPX?2:1);
- /* obsolete jt->workareas.compare.compw=w;*/ jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
+ jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DO(cn, m=MAX(m,cv[j]); j+=2;);

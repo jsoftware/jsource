@@ -106,7 +106,6 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  q=hv[2]; cv=AAV(q); m=AN(q);
  // If the buffer must be extended, allocate a new one
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;I _ttop=jt->tnextpushx;
-// obsolete   v=ptab+PTO; while(m>=*v)++v; m=*v;
   FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
   RZ(jj=rifvs(reshape(v2(m,2L),sc(IMIN)))); jv= AV(jj);  // init arg table to IMIN
   GATV(cc,BOX,m,1,0);                  cv=AAV(cc);

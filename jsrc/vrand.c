@@ -31,7 +31,6 @@
 #endif
 
 #if SY_64           /* m<x, greatest multiple of m less than x */
-// obsolete #define GMOF(m,x)   (            x63+(x63-(2*(x63%m))%m))
 #define GMOF(m,x)   (((UI)0xffffffffffffffffLL/(m))*(m))
 #define GMOF2(m,x,z,zq)  (zq=(UI)0xffffffffffffffffLL/(m), z=zq*(m))
 #define GMOTHRESH (UI)0xf000000000000000
@@ -620,8 +619,6 @@ static F2(jtrollksub){A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt->rngM[jt-
  }else{
   // integer output
   r=n; s=GMOF(m,x); if(s==x)s=0;
-// obsolete   k=0; j=1; while(m>j){++k; j<<=1;}
-// obsolete   if(k&&j==m){  /* m=2^k but is not 1 or 2 */  // scaf do better
   if(m>1&&!(m&(m-1))){
    // here if w is a power of 2, >2; take bits from each value
    k=CTTZI(m);  // lg(m)
@@ -774,7 +771,6 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
   // calculate the number of values to deal: m, plus a factor times the expected number of collisions, plus 2 for good measure.  Will never exceed n.  Repeats a little less than 1% of the time for n between 30 and 300
   A h=sc(m+4+(I)((n<1000?2.4:2.2)*((D)m+(D)n*(pow((((D)(n-1))/(D)n),(D)m)-1)))); do{RZ(z=nub(rollksub(h,w)));}while(AN(z)<m); RZ(z=jttake(JTIPW,a,z));
 #else
-// obsolete   p=hsize(m);
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
@@ -1001,7 +997,6 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
  ASSERT(0<=m&&m<=n,EVDOMAIN);  // m and n must both be positive
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
-// obsolete   p=hsize(m); 
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
   GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
   GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;

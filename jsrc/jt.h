@@ -164,8 +164,6 @@ typedef struct {
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
-// obsolete  I    rela;             /* if a is relative, a itself; else 0    slated for removal          */
-// obsolete  I    relw;             /* if w is relative, w itself; else 0    slated for removal          */
 
 // unordered symbols follow
 #if !C_CRC32C
@@ -307,7 +305,6 @@ union {
 #endif
  struct {
   CMP  comp;             /* comparison function in sort                     */
-// obsolete  int  compgt;           /* comparison: denotes greater than                */
   B    compusejt;        // set if the parameter to comparison function is jt rather than n
   I    compk;            /* comparison: byte size of each item              */
   I    complt;           /* comparison: denotes less    than                */
@@ -321,7 +318,6 @@ union {
   I    compsyc;          /* comparison: sparse aii(y) or *(1+AS(y))         */
   I*   compsyv;          /* comparison: sparse AV(y)                        */
   C*   compv;            /* comparison: beginning of data area              */
-// obsolete  A    compw;            /* comparison: orig arg. (for relative addressing) */
  } compare;
 } workareas;
  I    iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN

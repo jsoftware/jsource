@@ -85,8 +85,7 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  zr=AR(z); zs=AS(z); 
  if(!ar)R a;
  ir=AR(ind); n=*(AS(ind)+ir-1); d=(ir-1)+(zr-n); ASSERT(ar<=d,EVRANK);  // n=shape of item of i; d is # unindexed axes
- GATV(s,INT,d,1,0); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n); // obsolete ICPY(v,AS(ind),ir-1); ICPY(v+ir-1,zs+n,zr-n);
-// obsolete  ASSERT(!ICMP(as,AV(s)+d-ar,ar),EVLENGTH);
+ GATV(s,INT,d,1,0); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
  ASSERTAGREE(as,AV(s)+d-ar,ar);
  if(ar<d)RZ(a=reshape(s,a));
  zp=PAV(z); a1=SPA(zp,a); av=AV(a1); n1=n-1;

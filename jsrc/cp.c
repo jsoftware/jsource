@@ -202,21 +202,14 @@ DF2(jtpowop){A hs;B b;V*v;
  RZ(a&&w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  if(AT(w)&VERB){
-// obsolete  switch(CONJCASE(a,w)){
-// obsolete   default: ASSERTSYS(0,"powop");
-// obsolete   case NV: ASSERT(0,EVDOMAIN);
-// obsolete   case NN: ASSERT(-1==i0(w),EVDOMAIN); R vger2(CPOWOP,a,w);
-// obsolete   case VV:
   // u^:v.  Create derived verb to handle it.
   v=FAV(a); b=(v->id==CAT||v->id==CATCO)&&ID(v->fgh[1])==CRIGHT;  // detect u@]^:v
   // The action routines are inplaceable; take ASGSAFE from u and v, inplaceability from u
   R CDERIV(CPOWOP,jtpowv1cell,b?jtpowv2acell:jtpowv2cell,(v->flag&FAV(w)->flag&VASGSAFE)+(v->flag&(VJTFLGOK1|VJTFLGOK2)), RMAX,RMAX,RMAX);
  }
-// obsolete   case VN:
  // u^:n.  Check for special types.
  if(BOX&AT(w)){A x,y;AF f1,f2;
   // Boxed v.  It could be <n or [v0`]v1`v2.
-// obsolete   if(ARELATIVEB(w))RZ(w=car(w));   // if relative, make a non-relative copy
   if(!AR(w)&&(x=*AAV(w),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){
    // here for <n or <''.  That will be handled by special code.
    f1=jtpowseq; f2=jtply2; v=FAV(a);

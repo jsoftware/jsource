@@ -109,7 +109,7 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
    }
    if(r){B*c=(B*)iv; DO(r, if(c[i]){MC(zv,u+i*k,k); zv+=k;});}
  }}}
- /* obsolete RELOCATE(w,z);*/ R z;
+ R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
@@ -281,8 +281,8 @@ F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);  // loop if multiple cells of a
  ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
- if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); /* obsolete INHERITNOREL(z,w);*/ RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
- if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); /* obsolete INHERITNORELFILL(z,w);*/ RETF(z);}
- if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); /* obsolete INHERITNOREL(z,w);*/ RETF(z);}
- /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); /* obsolete INHERITNOREL(z,w);*/ RETF(z);}
+ if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
+ if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
+ if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
+ /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
 }    /* a#"r w main control */

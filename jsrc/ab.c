@@ -80,7 +80,6 @@ static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DO(m, DO(d,
   RE(0); RETF(z);                                                          \
  }
 
-// obsolete #define BWROT(x,y)      (0>x ? (y>>(-x%WLEN))|(y<<(WLEN+(x%WLEN))) : (y<<(x%WLEN))|(y>>(WLEN-(x%WLEN))) )
 #define BWROT(x,y)      ((y<<(x&(BW-1)))|(y>>(BW-(x&(BW-1)))))
 #define BWSHIFT(x,y)    (0>x ? (x<=-BW?0:y>>-x)           : (x>=BW?0:y<<x)            )
 #define BWSHIFTA(x,y)   (0>x ? (x<=-BW?(y<0?-1:0):y>>-x)  : (x>=BW?0:y<<x)            )

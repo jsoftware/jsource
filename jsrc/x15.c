@@ -691,7 +691,6 @@ static void convertup(I*pi,I n,C t){I j=n;
 
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
-// obsolete  v=ptab+PTO; while(n>*v)++v; hn=*v;
  GATV(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R ras(z);
 }
@@ -1113,8 +1112,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
   if(!(wt&B01+INT+FL+LIT+C2T+C4T))RZ(w=cvt(wt=t,w));
  }
  wv=CAV(w); zv=CAV(z); k=bpnoun(wt);
- if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0))
- else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,/*obsolete wd*/0)); wv+=p; zv+=q;);}
+ if(1==m)RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0))
+ else{p=n*k; q=cc->zbx?sizeof(A)*(1+n):bp(AT(z)); DO(m, RZ(jtcdexec1(jtinplace,cc,zv,wv,k,wt,0)); wv+=p; zv+=q;);}
  R z;
 }    /* 15!:0 */
 
@@ -1201,7 +1200,6 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
  }
 #if SY_WIN32
 // This function is obsolete and should not be used
-// obsolete k=bpnoun(t);
 // ASSERT(!IsBadReadPtr(u,m*k),EVDOMAIN);
 #endif
  R vec(t,m,u);
@@ -1215,7 +1213,6 @@ F2(jtmemw){C*u;I m,n,t,*v;
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
  ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
-// obsolete  k=bpshift(t);
  ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
  ASSERT(TYPESEQ(t,AT(a)),EVDOMAIN);

@@ -79,39 +79,6 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
  R u;
 }    /* allocate a new pool entry and insert into hash table entry hv */
 
-#if 0 // obsolete 
-// u points to an L; free it, and do fa() on the name and value.
-// If the entry is LPERMANENT, don't free it; just fa() the value and clear val pointer to 0
-// Return 0 on error; otherwise 2, and turn on bit 0 if an ACV was freed, provided it was not xyuvmn
-B jtsymfree(J jt,L*u){I q; B z=2;
- if(!(u->name->flag&NMDOT)&&u->val&&AT(u->val)&(VERB|ADV|CONJ))z|=1;  // flag if we are deleting an ACV
- if(!(u->flag&LPERMANENT)){
-  // If the symbol is not PERMANENT, unchain it from its hashchain, install as head of free list, clear the name
-  q=u->next;
-  if(q)(q+jt->sympv)->prev=u->prev;
-  if(LHEAD&u->flag){*(I*)u->prev=q; if(q)(q+jt->sympv)->flag|=LHEAD;}
-  else (u->prev+jt->sympv)->next=q;
-  u->next=jt->sympv->next;                   /* point to old top of stack   */
-  jt->sympv->next=u-jt->sympv;               /* new          top of stack   */
-  fa(u->name); u->name=0;                    /* zero out data fields        */
-  u->sn=u->flag=u->prev=0;      // zero other fields when returning to free pool
- }
- // For all symbols, free the value, clear the pointer to it
- fa(u->val);u->val=0; 
- R z;
-}    /* free pool entry pointed to by u */
-
-
-
-static SYMWALK(jtsymfreehax, B,B01,100,1, 1, {I mod=symfree(d); RZ(mod); jt->arg|=mod;})   /* free pool table entries      */
-// This visits every symbol and frees it.  BUT it doesn't visit symbols that do not have nonnull
-// name and value fields.  But this is OK: You can't have a value without a name; and the only
-// way to have a name without a value is if the name is PERMANENT and either uninitialized or deleted.
-// In either case, we need to leave the name undisturbed.
-// If we freed a non-DOT ACV, invalidate the names
-F1(jtsymfreeha){jt->arg=0; A z=jtsymfreehax(jt,w); jt->modifiercounter+=jt->arg&1; R z;}
-#endif
-
 // free all the symbols in symbol table w.  As long as the symbols are PERMANENT, delete the values but not the name.
 // For non-PERMANENT, delete name and value.
 // Reset the fields in the deleted blocks.  If any modifiers are deleted, increment modifiercounter to reset name lookups
@@ -152,21 +119,6 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV(w);
  if(ortypes&FUNC)++jt->modifiercounter;  // if we encountered an ACV, clear name lookups for next time
 }
 
-#if 0 // obsolete
-// Free the SYMB block w, which frees all the symbols therein
-B jtsymfreeh(J jt,A w,L*v){I*wv;L*u;
- wv=AV(w);
- ASSERTSYS(*wv,"symfreeh");
- u=*wv+jt->sympv; 
- RZ(symfree(u));   // free the locale name and path.  Since these are never modifiers we don't need to increment modifiercounter
- RZ(symfreeha(w));
- memset(wv,C0,AN(w)*SZI);
- fa(w);
- if(v){v->val=0; RZ(symfree(v));}  // no need to inc modifiercounter when freeing a NAME
- R 1;
-}    /* free entire hash table w, (optional) pointed by v */
-#endif
-
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
 
 F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
@@ -194,7 +146,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZ(yv[j]=yv[LXAV(x)[0]]=aa=rifvs(sfn(1,LOCNAME(x))));  // install name in the entry for the locale
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
  }
- n=jtcountnl(jt); // obsolete n=AN(jt->stptr); pu=AAV(jt->stptr);
+ n=jtcountnl(jt);
  for(i=0;i<n;++i)if(x=jtindexnl(jt,i)){   /* per numbered locales */
   RZ(      yv[LXAV(x)[0]]=aa=rifvs(sfn(1,LOCNAME(x))));
   RZ(q=sympoola(x)); u=AV(q); DO(AN(q), yv[u[i]]=aa;);
@@ -392,6 +344,7 @@ A jtsybaseloc(J jt,A a) {I m,n;NM*v;
  R NMILOC&v->flag?locindirect(n-m-2,2+m+v->s,(UI4)v->bucketx):stfindcre(n-m-2,1+m+v->s,v->bucketx);
 }
 
+#if 0 // obsolete 
 // like syrd, but starting with the locale looked up.  Does not set the local-name flag in the result
 // all obsolete, subsumed into unquote
 L* jtsyrdfromloc(J jt, A a,A g) {
@@ -402,6 +355,7 @@ L* jtsyrdfromloc(J jt, A a,A g) {
  }
  R syrd1(NAV(a)->m,NAV(a)->s,NAV(a)->hash,g);  // Not local: look up the name starting in locale g
 }
+#endif
 
 // look up a name (either simple or locative) using the full name resolution
 // result is symbol-table slot for the name if found, or 0 if not found

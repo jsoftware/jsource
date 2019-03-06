@@ -50,7 +50,7 @@ static A jtmerge1(J jt,A w,A ind){A z;B*b;C*wc,*zc;D*wd,*zd;I c,it,j,k,m,r,*s,t,
   default: if(it&B01)DO(c,         MC(zc,wc+k*(*b++?i+c:i),k); zc+=k;)
            else      DO(c, MINDEX; MC(zc,wc+k*(i+c*j     ),k); zc+=k;); break;
  }
- /* obsoleteRELOCATE(w,z);*/ R z;
+ R z;
 }
 
 #define CASE2Z(T)  {T*xv=(T*)AV(x),*yv=(T*)AV(y),*zv=(T*)AV(z); DO(n, zv[i]=bv[i]?yv[i]:xv[i];); R z;}
@@ -132,8 +132,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // It is not possible to inplace a value that is backing a virtual block, because we inplace assigned names only when
  // the stack is empty, so if there is a virtual block it must be in a higher sentence, and the backing name must appear on the
  // stack in that sentence if the usecount is only 1.
-// obsolete  I waf = AFLAG(w);  // w flags
-// obsolete  I ip = ((I)jtinplace&JTINPLACEW) && (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&((AC(w)<=1&&notonupperstack(w))||(AFNJA&waf)))
  I ip = ((I)jtinplace&JTINPLACEW) && ASGNINPLACENJA(w)
       &&TYPESEQ(t,AT(w))&&(AT(w)&(DIRECT|RECURSIBLE))&&w!=a&&w!=ind&&(w!=ABACK(a)||!(AFLAG(a)&AFVIRTUAL));
  // if w is boxed, we have to make one more check, to ensure we don't end up with a loop if we do   (<a) m} a.  Force a to be recursive usecount, then see if the usecount of w is changed
@@ -184,23 +182,6 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
    C* RESTRICT zv=CAV(z); DO(AN(ind), mvc(cellsize,zv+iv[i]*cellsize,abytes,av0); )  // scatter-copy the data, with repeat
   }
  }
-#if 0 // obsolete
-  cellsize *= k;   // change cellsize to bytes
- switch(k){
- case sizeof(C):
-  {C * RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(C*)avn)av=(C*)av0;); break;}  // scatter-copy the data, cyclically
- case sizeof(I):  // includes BOX and RAT, which may be recursive
-  if(UCISRECUR(z)){A * RESTRICT zv=AAV(z); A *RESTRICT av=(A*)av0; DO(in, A new=*av; INSTALLBOXRECUR(zv,iv[i],new);   if((++av)==(A*)avn)av=(A*)av0;);}  // ras() cannot be virtual
-  else{I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(in, zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;);}  // scatter-copy the data
-  break;
- case sizeof(Q):  // includes Q, which may be recursive
-  if(UCISRECUR(z)){Q * RESTRICT zv=QAV(z); Q *RESTRICT av=(Q*)av0; DO(in, Q new=*av; INSTALLRATRECUR(zv,iv[i],new);   if((++av)==(Q*)avn)av=(Q*)av0;); break;}  // ras() cannot be virtual
-  // if not recursive Q, fall through to...
- // no case for D, in case floating-point unit changes bitpatterns.  Safe to use I for D, though
- default:
-  {C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(in, MC(zv+(iv[i]*k),av,k); if((av+=k)==avn)av=av0;);}  // scatter-copy the data, cyclically
- }
-#endif
  RETF(z);
 }
 
@@ -271,7 +252,6 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
   fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) /* GATV(x,INT,wr,1,0); */ d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
   AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
-// obsolete   R n==wr?pdt(j,x):irs2(pdt(j,vec(INT,n,AV(x))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);  // create vector of positions of each indexed cell; if that's more than an atom, add axes to index each atom of the selected cell
  }
  if(!b){
   // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a list of indexes)
@@ -303,8 +283,6 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
  // be virtual.  In that case we must (1) realize it; (2) use the filler field (64-bit only) to pass back the number of axes; (3) use
  // a field in jt to pass back the number of axes.
  *cellframelen=n; R j;  // insert the number of axes used in each cell of j
- 
-// obsolete  R n==wr?j:irs2(tymes(j,sc(prod(wr-n,ws+n))),iota(vec(INT,wr-n,ws+n)),VFLAGNONE,0L, RMAX,jtplus);
 }    /* convert ind in a ind}w into integer atom-offsets */
 
 /* Reference count for w for amend in place */

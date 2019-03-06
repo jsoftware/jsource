@@ -642,16 +642,6 @@
 // obsolete #define prioritytypemask 0x1070398a294420
 #define maxtypene(x,y)              jtmaxtype(jt,(x),(y))
 #define maxtype(x,y)                (((x)==(y))?(x):maxtypene(x,y))
-// obsolete // Return the higher-priority of the types of a and w, but giving priority to non-empty.  The types should have been tested previously
-// obsolete #define maxtypeaw(a,w)              ((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15])
-// obsolete // Same, but with default if both empty
-// obsolete #define maxtypeawd(a,w,d)           ((AN(a)|AN(w))?((I)1<<jt->prioritytype[MAX((UI)(jt->typepriority[CTTZ(AT(a))]|(-AN(a)&IMIN)),(UI)(jt->typepriority[CTTZ(AT(w))]|(-AN(w)&IMIN)))&15]):d)
-// obsolete #define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0:maxtype(x,y) )
-// obsolete #define maxtypedaw(a,w)             ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeaw(a,w) )
-// obsolete #define maxtypedawd(a,w,d)          ( (AT(a)|AT(w))&SPARSE?*(I*)0:maxtypeawd(a,w,d) )
-// obsolete #define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (1LL<<(31&(0x1070398a294420>>(5*MAX(jt->typepriority[CTTZ(x)],jt->typepriority[CTTZ(y)]))))) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )
-// obsolete #define maxtypedne(x,y) ( ((x)|(y))&SPARSE?*(I*)0: (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x)&-(x):(y)&-(y)) == maxtype(x,y) ? maxtype(x,y) : *(I*)0 )  // scaf &-
-// obsolete #define maxtyped(x,y)               ( ((x)|(y))&SPARSE?*(I*)0: ((x)==(y))?(x):maxtypedne(x,y))
 #define maxtypedne(x,y) (jt->typepriority[CTTZ(x)]>jt->typepriority[CTTZ(y)]?(x):(y))
 #define maxtyped(x,y)               (((x)==(y))?(x):maxtypedne(x,y))
 // For sparse types, we encode here the corresponding dense type
@@ -1091,8 +1081,6 @@
 #define symbrdlock(x)               jtsymbrdlock(jt,(x))
 #define symbrdlocknovalerr(x)       jtsymbrdlocknovalerr(jt,(x))
 #define symext(x)                   jtsymext(jt,(x))
-// obsolete #define symfree(x)                  jtsymfree(jt,(x))
-// obsolete #define symfreeh(x,y)               jtsymfreeh(jt,(x),(y))
 #define symfreeha(x)                jtsymfreeha(jt,(x))
 #define symnew(x,y)                 jtsymnew(jt,(x),(y))
 #define sympoola(x)                 jtsympoola(jt,(x))

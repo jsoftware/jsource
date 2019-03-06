@@ -113,7 +113,6 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
   if((-(c^1)|(e=u[1]))>=0){I axislen;  // e=length of 1st axis
    // non-reversed selection along a single axis: calculate length {. start }. w
    axislen=ws[0]; j=u[0];  // axislen=length of axis, j=starting position
-// obsolete    ASSERT(((-e)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j: 0 always allowed; or if len=0 and j is at end; or j in the middle.  Ignore positive overflow possibilities
    if(j>=0){e=MIN(e,axislen-j);}  // truncate length to length remaining; if <0, error
    else{j+=axislen; e=MIN(e,j+1);  j-=(e-1);}  // negative j: convert to positive index of ending item; truncate length to length remaining; back j to first item.  Error if j<0 and e!=0, or j<_1
    ASSERT(e>=0,EVINDEX);
@@ -131,7 +130,6 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
      // For each axis, create a boxed vector of boxed indexes to fetch, in the correct order
      for(i=0;i<c;++i){  // for each axis of the cell of a
       axislen=ws[i]; j=u[i]; e=u[i+c]; k=e; e>>=(BW-1); k^=e; k-=e;  // axislen=length of this axis, j=starting pos, e=sgn(length), k=ABS(length)
-// obsolete       ASSERT(((-k)&((j+axislen)|(axislen-j-1)))>=0,EVINDEX);  // validate j in range if length not zero
       if(j>=0){k=MIN(k,axislen-j); j+=e&(k-1);}else{j+=axislen; k=MIN(k,j+1); j-=(~e)&(k-1);}  // adjust j for negative j; clip endpoint to length of axis; move j to end of interval if reversed
       ASSERT(k>=0,EVINDEX); RZ(qv[i]=apv(k,j,2*e+1));  // create ascending or descending vector.  The increment is 1 or -1
      }
@@ -224,8 +222,6 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
-
-// obsolete #define MCREL(uu,vv,n)   {A*u=(A*)(uu);A*v=(A*)(vv); DO((n), u[i]=AADR(wd,v[i]););}
 
 #define CUTSWITCH(EACHC)  \
  switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
@@ -1015,7 +1011,6 @@ static DF2(jttess2){A z,zz=0,virtw,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   RZ(zz=cant2(xposeaxes,zz));
  }
 
-// obsolete  AFLAG(zz)|=AFNOSMREL;  // obsolete.  We used to check state
  EPILOG(zz);
 
 }

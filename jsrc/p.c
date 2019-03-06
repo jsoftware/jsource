@@ -206,8 +206,7 @@ void auditblock(A w, I nonrecurok, I virtok) {
    {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT);} break;
   case BOXX:
    if(!(AFLAG(w)&AFNJA)){A*wv=AAV(w); 
-    /* obsolete if(AFLAG(w)&AFREL){DO(AN(w), auditblock(wv[i],nonrecur,0););}
-    else*/{DO(AN(w), auditblock(wv[i],nonrecur,0););}
+   {DO(AN(w), auditblock(wv[i],nonrecur,0););}
    }
    break;
   case VERBX: case ADVX:  case CONJX: 
@@ -409,7 +408,6 @@ static A virthook(J jtip, A f, A g){
 #define FRONTMARKS 1  // amount of space to leave for front-of-string mark
 // Parse a J sentence.  Input is the queue of tokens
 A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
-// obsolete  DO(IOTAVECLEN, if(jt->iotavec[i]!=i+IOTAVECBEGIN)SEGFAULT)
 
  // This routine has two global responsibilities in addition to parsing.  jt->asgn must be set to 1
  // if the last thing is an assignment, and since this flag is cleared during execution (by ". and

@@ -106,15 +106,13 @@ static C*jtovgmove(J jt,I k,I c,I m,A s,A w,C*x,A z){I d,n,p=c*m;
    // z may not be boxed; but if it is, w must be also.  zrel=relocation offset, 0 if not relative
  if(AR(w)){
   n=AN(w); d=AN(s)-AR(w);
-  if((!n||d)/* obsolete&&!zrel*/)mvc(k*p,x,k,jt->fillv);
+  if((!n||d))mvc(k*p,x,k,jt->fillv);
   if(n&&n<p){I *v=AV(s); *v=m; RZ(w=take(d?vec(INT,AR(w),d+v):s,w));}
   if(n){
-   /* obsolete if(zrel){A * RESTRICT u,* RESTRICT v;  wrel-=zrel; u=(A*)x; v=AAV(w); RELOCOPY(u,v,AN(w),wrel);}
-   else */ MC(x,AV(w),k*AN(w));
+   MC(x,AV(w),k*AN(w));
   }
  }else{  // scalar replication
-  /* obsolete if(zrel){A *u;  wrel=*AV(w)+wrel-zrel; u=(A*)x; DO(p, *u++=(A)wrel;);} 
-  else */ mvc(k*p,x,k,AV(w));
+  mvc(k*p,x,k,AV(w));
  }
  R x+k*p;
 }    /* move an argument into the result area */
@@ -134,25 +132,18 @@ static F2(jtovg){A s,z;C*x;I ar,*as,c,k,m,n,r,*sv,t,wr,*ws,zn;
  RE(c=prod(r-1,1+sv)); m=r>ar?1:IC(a); n=r>wr?1:IC(w); // verify composite item not too big
  RE(zn=mult(c,m+n)); ASSERT(0<=m+n,EVLIMIT);
  GA(z,AT(a),zn,r,sv); *AS(z)=m+n; x=CAV(z); k=bpnoun(AT(a));
-// obsolete  if(AORWRELATIVE(a,w)){AFLAG(z)=AFREL;  q=(I)jt->fillv+q-(I)z; mvc(k*zn,x,k,&q);}  // if either input REL, make output REL and relocate fill
  RZ(x=ovgmove(k,c,m,s,a,x,z));
  RZ(x=ovgmove(k,c,n,s,w,x,z));
- /* obsolete INHERITNORELFILL2(z,a,w); */ RETF(z);
+ RETF(z);
 }    /* a,w general case for dense array with the same type; jt->ranks=0 */
 
 static F2(jtovv){A z;I m,t;
  t=AT(a); 
  GA(z,t,AN(a)+AN(w),1,0);  
-// obsolete  if(t&BOX&&AORWRELATIVEB(a,w)){A* RESTRICT u,* RESTRICT v;
-// obsolete   AFLAG(z)=AFREL; v=AAV(z);
-// obsolete    u=AAV(a); m=arel- RELOCOPYT(v,u,AN(a),m);
-// obsolete    u=AAV(w); m=wrel- RELOCOPY(v,u,AN(w),m);
-// obsolete  }else{C*x;I k;
  I klg=bplg(t); m=AN(a)<<klg; C *x=CAV(z); 
  MC(x,  AV(a),m      ); 
  MC(x+m,AV(w),AN(w)<<klg);
-// obsolete  }
- /* obsolete INHERITNOREL2(z,a,w); */ RETF(z);
+ RETF(z);
 }    /* a,w for vectors/scalars with the same type */
 
 static void moveawVV(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset){
@@ -268,7 +259,6 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
   if(AT(a)&BOX){
    I oldac = ACUC(a);  // remember original UC of a
    ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
-// obsolete   if(AC(a)>oldac || !((AFLAG(a)&AFLAG(w))&AFNOSMREL))an = 0;  // turn off inplacing if w referred to a, or if anything might be relative (kludge should support relatives)
    if(AC(a)>oldac)an = 0;  // turn off inplacing if w referred to a
   }
 
@@ -280,7 +270,6 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
   // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
   // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
   // OK to use type as proxy for size, since indirect types are excluded
-// obsolete   if(an&&(ar=AR(a))&&ar>=(wr=AR(w))&&!TYPESGT(wt=AT(w),at=AT(a))&&jt->ranks==(RANK2T)~0){
 #if BW==64
   if(((an-1)|(AR(a)-1)|(AR(a)-AR(w))|(AT(a)-AT(w))|((I)jt->ranks-(I)(RANK2T)~0))>=0){  // a not empty, a not atomic, ar>=wr, atype >= wtype, no jt->ranks given
 #else

@@ -27,13 +27,6 @@ B compp(I n,I *a, I *b){J jt=(J)n; I*cv=jt->workareas.compare.compsyv; DO(jt->wo
 #define COMPDCLP(T)      T*x=(T*)(jt->workareas.compare.compv+a*jt->workareas.compare.compk),*y=(T*)(jt->workareas.compare.compv+b*jt->workareas.compare.compk)
 #define COMPDCLQ(T)      T*x=(T*)av,*y=(T*)wv
 #define COMPDCLS(T)      T*x=(T*)SBAV(a),*y=(T*)SBAV(w)
-// obsolete#define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]>y[i])R jt->workareas.compare.compgt; else if(x[i]<y[i])R jt->workareas.compare.complt;);}
-// obsolete#define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]>y[i])R jt->workareas.compare.compgt; else if(x[i]<y[i])R jt->workareas.compare.complt;);}
-// obsolete#define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBGT(x[i],y[i]))R jt->workareas.compare.compgt; else if(SBLT(x[i],y[i]))R jt->workareas.compare.complt;);}
-// obsolete#define COMPLOOPF(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R j;);}
-// obsolete#define COMPLOOPR(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f((A)AABS(x[i],jt->workareas.compare.compw),(A)AABS(y[i],jt->workareas.compare.compw)))R j;);}
-// obsolete#define COMPLOOPG(T,m,f) {COMPDCLP(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->workareas.compare.compgt:jt->workareas.compare.complt;);}
-// obsolete#define COMPLOOQG(T,m,f) {COMPDCLQ(T);I j; DO(m, if(j=f(x[i],y[i]))R 0<j?jt->workareas.compare.compgt:jt->workareas.compare.complt;);}
 #define COMPLOOP(T,m)    {COMPDCLP(T); DO(m, if(x[i]!=y[i])R jt->workareas.compare.complt*((x[i]>y[i])?-1:1);)}
 #define COMPLOOQ(T,m)    {COMPDCLQ(T); DO(m, if(x[i]!=y[i])R jt->workareas.compare.complt*((x[i]>y[i])?-1:1);)}
 #define COMPLOOS(T,m)    {COMPDCLS(T); DO(m, if(SBNE(x[i],y[i]))R jt->workareas.compare.complt*((SBGT(x[i],y[i]))?-1:1););}
@@ -59,7 +52,6 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
  if(t&XNUM+RAT&&(at&FL+CMPX||wt&FL+CMPX)){A p,q;B*u,*v;  // indirect type vs flt/complex: create boolean vector for each value in turn
   RZ(p=lt(a,w)); u=BAV(p);
   RZ(q=gt(a,w)); v=BAV(q);
-// obsolete DO(m, if(u[i])R jt->workareas.compare.complt; else if(v[i])R jt->workareas.compare.compgt;);
   DO(m, if(u[i]|v[i])R (u[i]?1:-1)*jt->workareas.compare.complt;);
  }else{
   if(TYPESNE(t,at))RZ(a=cvt(t,a));
@@ -76,16 +68,8 @@ I jtcompare(J jt,A a,A w){C*av,*wv;I ar,an,*as,at,c,d,j,m,t,wn,wr,*ws,wt;
    case XNUMX: COMPLOOQG(X, m, xcompare); break;
    case RATX:  COMPLOOQG(Q, m, QCOMP   ); break;
    case BOXX:  {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
-// obsolete switch((ARELATIVEB(a)?2:0)+ARELATIVEB(w)){ 
-// obsolete     case 0: {COMPDCLQ(A);I j; DO(m, if(j=compare(        x[i],           y[i]   ))R j;);} break;
-// obsolete     case 1: {COMPDCLQ(A);I j;  DO(m, if(j=compare(        x[i],   (A)AABS(y[i],wrel)))R j;);} break;
-// obsolete     case 2: {COMPDCLQ(A);I j;  DO(m, if(j=compare((A)AABS(x[i],arel),        y[i]   ))R j;);} break;
-// obsolete     case 3: {COMPDCLQ(A);I j;   DO(m, if(j=compare((A)AABS(x[i],arel),(A)AABS(y[i],wrel)))R j;);} break;
-// obsolete }
   }
  }
-// obsolete  if(1>=ar)R an>wn?jt->workareas.compare.compgt:an<wn?jt->workareas.compare.complt:0;
-// obsolete  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c>d)R jt->workareas.compare.compgt; else if (c<d)R jt->workareas.compare.complt;);
  if(1>=ar)R ((I )(an<wn)-(I )(an>wn))*jt->workareas.compare.complt;
  DO(j=ar, --j; c=as[j]; d=ws[j]; if(c!=d)R ((c>d)?-1:1)*jt->workareas.compare.complt;);
  R 0;

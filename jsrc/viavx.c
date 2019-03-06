@@ -578,8 +578,6 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 #define HASHSLOT(hash) j=((hash)*(UIL)(p))>>32;
 #endif
 
-// define ad and wd, which are bases to be added to boxed addresses
-#define RDECL  // obsolete
 // Misc code to set the shape once we see how many results there are, used for ~. y and x -. y
 #define ZISHAPE    *AS(z)=AN(z)=zi-zv
 #define ZCSHAPE    *AS(z)=(zc-(C*)zv)/k; AN(z)=n**AS(z)
@@ -639,19 +637,19 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 // (loopctl) give the stride through the input array, the control for the main loop, and the index of the last value.  These values differ for forward and reverse scans through the input.
 #if C_AVX
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; /* obsolete d=src##d;*/ vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
+ {I i, j, hj; T *v; vp=_mm_insert_epi64(vp,(I)(src##v+vpofst),0); vpstride = _mm_insert_epi64(vp,(stride)*(I)sizeof(T),0); vp=_mm_shuffle_epi32(vp,0x44); vpstride=_mm_insert_epi64(vpstride,0LL,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=_mm_add_epi64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=_mm_add_epi64(vp,vpstride); vpstride=_mm_shuffle_epi32(vpstride,0x44); \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=_mm_add_epi64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 #elif defined(__aarch64__)
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; /* obsolete d=src##d;*/ vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
+ {I i, j, hj; T *v; vp=vsetq_lane_s64((I)(src##v+vpofst),vp,0); vpstride = vsetq_lane_s64((stride)*(I)sizeof(T),vp,0); vp=vdupq_n_s64(vgetq_lane_s64(vp,0)); vpstride=vsetq_lane_s64(0LL,vpstride,1); \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; vp=vaddq_s64(vp,vpstride); j1=j; HASHSLOTP(T,hash) hj=hv[j1]; vp=vaddq_s64(vp,vpstride); vpstride=vdupq_n_s64(vgetq_lane_s64(vpstride,0));  \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride); hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); vp=vaddq_s64(vp,vpstride);} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
 #else
 #define XSEARCH(T,TH,src,hsrc,hash,exp,stride,fstmt,nfstmt,store,vpofst,loopctl,finali) \
- {I i, j, hj; T *v; /* obsolete d=src##d;*/ SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
+ {I i, j, hj; T *v; SSEREGI(vp)[0]=(I)(src##v+vpofst); SSEREGI(vpstride)[0] = (stride)*(I)sizeof(T); SSEREGI(vp)[1]=SSEREGI(vp)[0]; SSEREGI(vpstride)[1]=0LL; \
  HASHSLOTP(T,hash) if(src##sct>1){I j1,j2; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; j1=j; HASHSLOTP(T,hash) hj=hv[j1]; SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; SSEREGI(vpstride)[1]=SSEREGI(vpstride)[0]; \
  for loopctl {j2=j1; j1=j; HASHSLOTP(T,hash) PREFETCH((C*)&hv[j]); FINDP(T,TH,hsrc,j2,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1]; hj=hv[j1];} \
  FINDP(T,TH,hsrc,j1,exp,fstmt,nfstmt,store); SSEREGI(vp)[0]+=SSEREGI(vpstride)[0]; SSEREGI(vp)[1]+=SSEREGI(vpstride)[1];} hj=hv[j]; i=finali; FINDP(T,TH,hsrc,j,exp,fstmt,nfstmt,store); }
@@ -684,7 +682,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, 
 
 // if there is not a prehashed hashtable, we clear the hashtable and fill it from a, then hash & check each item of w
 #define IOFX(T,TH,f,hash,exp,stride)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
+ IOF(f){I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
         wcn=wk/sizeof(T),*zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
@@ -898,7 +896,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 #endif
 // Do the operation.  Build a hash for a except when self-index
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),  \
+ IOF(f){I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
         D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
@@ -916,7 +914,6 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
      D ct=jt->ct; jt->ct=0.0; if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn); jt->ct=ct;  /* all writes to hash must use intolerant compare */                \
      if(w==mark)break;                                                                \
    }}                                                                                            \
-   /* obsolete d=wd; */                                                                    \
    switch(md){                                                                                   \
     /* when we are searching up, we can stop the second search when it gets past the index found in the first search */ \
     case IIDOT: {T * RESTRICT v=wv; I j, hj; I * RESTRICT zi=zv; TDOXY(T,TH,FXY,expa,expw,{},hj>=il,il=hj;,*zi++=il;); zv=zi; } break;  \
@@ -955,7 +952,7 @@ static IOFT(D,US,jtiod, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !jeqd
 // FL atom
 static IOFT(D,US,jtiod1,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
+static IOFT(A,US,jtioa, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,0,0),          !eqa(n,v,av+n*hj,0,0)          )
 // singleton box
 static IOFT(A,US,jtioa1,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
@@ -967,7 +964,7 @@ static IOFT(D,UI4,jtiod2, HIDMSK(v), TFINDXYT,TFINDY1T,fcmp0(v,av+n*hj,n  ), !je
 // FL atom
 static IOFT(D,UI4,jtiod12,HIDMSK(v), TFINDXYT,TFINDY1T,*v!=av[hj],                       !TCMPEQ(tl,x,av[hj] )                 )
 // boxed array with more than 1 box
-static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0),          !eqa(n,v,av+n*hj,/* obsolete d,ad*/0,0)          )
+static IOFT(A,UI4,jtioa2, hia(1.0,*v),TFINDBX,TFINDBY,!eqa(n,v,av+n*hj,0,0),          !eqa(n,v,av+n*hj,0,0)          )
 // singleton box
 static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av[hj]))
 
@@ -1214,8 +1211,8 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
   // don't bother with testing equality if q<index of u (for ascending; reverse for descending)
   // if the list was shortened, replace the last position with -(length of shortened list).  This will be detected
   // and complemented to give (length of list)-1.  0 is OK too, indicating a 1-element list
-  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,/*obsolete ad,ad*/0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
-  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,/*obsolete ad,ad*/0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
+  if(bk){hu=--hi; DO(asct-1, q=*hi--; v=av+n*q; if((u<v)||!eqa(n,u,v,0,0)){u=v; *hu--=q;}); m1=hv-hu; if(asct>m1)hv[1-asct]=-m1;}
+  else  {hu=++hi; DO(asct-1, q=*hi++; v=av+n*q; if((v<u)||!eqa(n,u,v,0,0)){u=v; *hu++=q;}); m1=hu-hv; if(asct>m1)hv[asct-1]=-m1;}
  }
  R h;
 } 
@@ -1228,7 +1225,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I asct,I md,I bk){A*av,
 #define BSLOOPAA(hiinc,zstmti,zstmt1,zstmt0)  \
  {A* RESTRICT u=av,* RESTRICT v;I* RESTRICT hi=hv,p,q;             \
   p=*hi; hi+=(hiinc); u=av+n*p; zstmti;  /* u->first result value, install result for that value to index itself */      \
-  DO(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,/*obsolete ad,ad*/0,0))zstmt1; else{u=v; zstmt0;}); /* 
+  DO(asct-1, q=*hi; hi+=(hiinc); v=av+n*q; if(((hiinc>0&&v>u)||(hiinc<0&&v<u))&&eqa(n,u,v,0,0))zstmt1; else{u=v; zstmt0;}); /* 
    q is input element# that will have result index i, v->it; if *u=*v, v is a duplicate: map the result back to u (index=p)
    if *u!=*p, advance u/p to v/q and use q as the result index */ \
  }
@@ -1276,7 +1273,7 @@ static IOF(jtiobs){A*av,*wv,y;B *yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv
   // look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set.  They don't remove dups.
   // we don't set REFLEX if there is a prehash, because the prehash always removes dups, and we would be left missing some values
   if(a==w&&ac==wc)md+=IIMODREFLEX&((((1<<IIDOT)|(1<<IICO)|(1<<INUBSV)|(1<<INUB)|(1<<INUBI))<<IIMODREFLEXX)>>md);
-  RZ(h=nodupgrade(a,(I)h,ac,acn,/* obsolete ad*/0,n,asct,md,bk));   // h is used to pass in acr
+  RZ(h=nodupgrade(a,(I)h,ac,acn,0,n,asct,md,bk));   // h is used to pass in acr
  }
  if(w==mark)R h;
  hv=AV(h)+bk*(asct-1); jt->workareas.compare.complt=-1;  // set comparison mode for our comparisons
@@ -1314,8 +1311,6 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
  R t;
 }    /* return type if opened atoms of cells of w has uniform type (but not one that may contain -0), else 0. c is # of cells */
 
-// obsolete I hsize(I m){I q=m+m,*v=ptab+PTO; DO(nptab-PTO, if(q<=*v)break; ++v;); R*v;}
-
 // *************************** sixth class: hashing w ***********************
 // used when w is shorter than a and thus more likely to fit into cache.  Also allows early exit when all results found.
 //  Intolerant comparisons only.   Used for i./i:/e. only, and never reflexive
@@ -1342,7 +1337,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
 #define XDQWA(T,TH,TZ,zptr,hash,exp,stride,zvalue,earlyexit) XSEARCH(T,TH,a,w,hash,exp,(-(stride)),XDOWFOUND(TZ,zptr,zvalue,earlyexit),{},2,cn*(asct-1), (i=asct-1;i>1;--i) ,0)
 
 #define IOFXW(T,TH,f,hash,exp,stride)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
+ IOF(f){I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
         wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; TH * RESTRICT hv; \
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
@@ -1437,7 +1432,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
   j=av[i]; j=(j<minimum)?maximum:j; j=(j>maximum)?maximum:j; I bitmsk=((I)1)<<BITNO(j); hj=hvp[BYTENO(j)]; if(!(hj&bitmsk)){hvp[BYTENO(j)]=(UC)(hj^=bitmsk); zv[hv[j]]=i; if(--chainct==0)goto earlyexit;})}
 
 #define IOFXWS(f,T,TH)   \
- IOF(f){RDECL;I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
+ IOF(f){I acn=ak/sizeof(T),cn=k/sizeof(T),l,p,  \
   wcn=wk/sizeof(T);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
   /* establish min/max of data; create biased pointer to table area;  */ \
   /* When we allocated the table we left room for the extra entry */ \
@@ -1829,8 +1824,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   case IJ0EPS:  R sc(n&&zn?MAX(0,witems-1):witems         );
   case IJ1EPS:  R sc(n&&zn?witems         :MAX(0,witems-1));
   case ISUMEPS: R sc(n?0L        :c         );  // must include shape of w
-  case IANYEPS: R num[!n] /* obsolete n?num[0]:num[1] */;
-  case IALLEPS: R num[!(c&&n)] /* obsolete ?num[0]:one  */;
+  case IANYEPS: R num[!n];
+  case IALLEPS: R num[!(c&&n)];
   case IIFBEPS: R n?mtv :IX(c);
  }}
 
@@ -2109,7 +2104,6 @@ F2(jtless){A x=w;I ar,at,k,r,*s,wr,*ws,wt;
  wt=AT(w); wr=AR(w); r=MAX(1,ar);
  if(ar>1+wr)RCA(a);  // if w's rank is smaller than that of a cell of a, nothing can be removed, return a
  // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
-// obsolete  if(wr&&r!=wr){RZ(x=gah(r,w)); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
  if(wr&&r!=wr){RZ(x=virtual(w,0,r)); AN(x)=AN(w); s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; *s=prod(k,ws); MCISH(1+s,k+ws,r-1);}  // bug: should test for error on the prod()
 // if nothing special (like sparse, or incompatible types, or x requires conversion) do the fast way; otherwise (-. x e. y) # y
  R !(at&SPARSE)&&HOMO(at,wt)&&TYPESEQ(at,maxtyped(at,wt))&&!(AFLAG(a)&AFNJA)?indexofsub(ILESS,x,a):
@@ -2235,7 +2229,6 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  if(TYPESNE(t,at))RZ(a=cvt(t,a));
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  // allocate hash table and result
-// obsolete  p=hsize(m);
  FULLHASHSIZE(m+m,INTSIZE,1,0,p);
  GATV(h,INT,p,1,0);
  GATV(z,INT,AN(w),wr,ws);

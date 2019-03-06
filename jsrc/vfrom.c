@@ -11,7 +11,7 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  if(!(AN(w)&&AT(w)&BOX+SBOX))R box(w);
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype
- /* obsolete RE(t=maxtype(B01,t)); */ t=t?t:B01; k=bpnoun(t);
+ t=t?t:B01; k=bpnoun(t);
  GA(b,t,n,1,0);      bv=CAV(b);
  GATV(x,INT,n,1,0);    qv=AV(x);
  GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
@@ -79,7 +79,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
     RZ(z=virtualip(w,index0*k,ar+wr-1));
     // fill in shape and number of atoms.  ar can be anything.
-    I* as=AS(a); AN(z)=zn; I *s=AS(z); MCISH(s,as,ar) MCISH(s+ar,ws+1,wr-1)  // obsolete   DO(ar, *s++=as[i];) DO(wr-1, s[i]=ws[i+1];)
+    I* as=AS(a); AN(z)=zn; I *s=AS(z); MCISH(s,as,ar) MCISH(s+ar,ws+1,wr-1)
     RETF(z);
    }
   }
@@ -113,7 +113,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
   }
  }
- /* obsolete RELOCATE(w,z);*/ RETF(z);  // todo kludge should inherit norel
+ RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
 
 #define BSET(x,y0,y1,y2,y3)     *x++=y0; *x++=y1; *x++=y2; *x++=y3;
@@ -226,7 +226,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
    else DO(m, b=av; DO(an, MC(zv,wv+k**b++,k); zv+=k;); wv+=wk;);
 #endif
  }
- /* obsolete RELOCATE(w,z);*/ RETF(z);  // todo kludge should inherit norel
+ RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for boolean a */
 
 // a is array whose 1-cells are index lists, w is array
@@ -250,13 +250,8 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  // We will use pdt to create an index to the cell
  if(r==wr){
   z=irs2(pdt(a,p),w,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
-// obsolete  else if(ARELATIVE(w)){
-// obsolete   GATV(q,INT,r,1,0); 
-// obsolete   v=AV(q); MCISHd(v,ws,wf); *v++=m; MCISHd(v,ws+wf+h,wcr-h); RZ(q=reshape(q,w));
-// obsolete   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }else{
   //  reshape w to combine the first h axes of each cell
-// obsolete   RZ(q=gah(r,w)); v=AS(q); MCISHd(v,ws,wf); *v++=m; MCISHd(v,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   RZ(q=virtualip(w,0,r)); AN(q)=AN(w); v=AS(q); MCISH(v,ws,wf); v[wf]=m; MCISH(v+wf+1,ws+wf+h,wcr-h);  /* q is reshape(.,w) */
   z=irs2(pdt(a,p),q,VFLAGNONE, RMAX,wcr+1-h,jtifrom);
  }
@@ -365,7 +360,7 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
       df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
- /* obsolete k=bpnoun(AT(w));*/ s=AS(w)+wr-wcr;
+ s=AS(w)+wr-wcr;
  ASSERT(1>=AR(c),EVRANK);
  ASSERT(n<=wcr,EVLENGTH);
  if(n&&!(t&BOX)){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
@@ -376,11 +371,9 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
   m+=*AV(p)*prod(wcr-i-1,1+i+s);
  }
  if(i){I*ys;
-// obsolete   RZ(y=gah(pr+wcr-i,w));
   RZ(y=virtual(w,m,pr+wcr-i));
   ys=AS(y); DO(pr, *ys++=1;); MCISH(ys,s+i,wcr-i);
   AN(y)=prod(AR(y),AS(y));
-// obsolete   AK(y)=k*m+CAV(w)-(C*)y;
  }
  // take axes 2 at a time, properly handling omitted axes.  First time through p is set
  for(;i<n;i+=2){
@@ -404,12 +397,10 @@ F2(jtfrom){I at;A z;
   case 2: z=fromsd(a,w); break;
   default: z=fromss(a,w); break;
  }
- RZ(z); /* obsolete INHERITNOREL(z,w);*/ RETF(z);
+ RZ(z); RETF(z);
 }   /* a{"r w main control */
 
 F2(jtsfrom){
-// obsolete A ind; RE(aindex1(a,w,0L,&ind));
-// obsolete R !ind?from(irs1(a,0L,1L,jtbox),w):SPARSE&AT(w)?frombsn(ind,w,0L):frombu(ind,w,0L);
  if(!(SPARSE&AT(w))){
   // Not sparse.  Verify the indexes are numeric and not empty
   if(((AN(a)-1)|(AR(a)-2)|((AT(a)&NUMERIC)-1))>=0){A ind;   // a is an array with rank>1 and numeric.  Rank 1 is unusual & unimportant & we'll ignore it
@@ -438,10 +429,6 @@ F2(jtsfrom){
      break;
     }
     RETF(z);
-// obsolete     fauxblock(virtwfaux);
-// obsolete     A virtw; fauxvirtual(virtw,virtwfaux,w,AR(w)-(RANKT)(AS(a)[AR(a)-1]-1),ACUC1); AN(virtw)=AN(w);
-// obsolete     PROD(AS(virtw)[0],AS(a)[AR(a)-1],AS(w)) MCISH(AS(virtw)+1,AS(w)+AS(a)[AR(a)-1],AR(w)-AS(a)[AR(a)-1]) 
-// obsolete     R ifrom(ind,virtw);  // this needlessly validates indexes - just move here
    }
   }
  }else{A ind;
@@ -471,7 +458,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  F2RANK(1,RMAX,jtfetch,0);
  if(!(BOX&AT(a))){
   // look for the common special case scalar { boxed vector.  This path doesn't run EPILOG
-  if(!AR(a) && AR(w)==1 && AT(w)&BOX /* obsolete && !ARELATIVEB(w)*/){
+  if(!AR(a) && AR(w)==1 && AT(w)&BOX){
    RZ(z=jtquicksel(jt,a,w));
    // Inplaceability depends on the context.  If the overall operand is either noninplaceable or in a noninplaceable context, we must
    // protect the value we fetch (the overall operand would matter only if it was flagged without a ra())
@@ -481,7 +468,7 @@ F2(jtfetch){A*av, z;I n;F2PREFIP;
  }
  n=AN(a); av=AAV(a); 
  if(!n)R w; z=w;
- DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX/* obsolete  && !ARELATIVEB(z)*/){RZ(z=jtquicksel(jt,next,z))}
+ DO(n, A next=av[i]; if(!AR(next) && !(AT(next)&BOX) && AR(z)==1 && AT(z)&BOX){RZ(z=jtquicksel(jt,next,z))}
       else{RZ(z=afrom(box(next),z)); if(i<n-1)ASSERT(!AR(z),EVRANK); if(!AR(z)&&AT(z)&BOX)RZ(z=ope(z));}
    );
  if(!ACIPISOK(w)||!((I)jtinplace&JTINPLACEW))ACIPNO(z); RETF(z);   // Mark the box as non-inplaceable, as above

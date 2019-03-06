@@ -504,7 +504,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
   if(savedranks==(RANK2T)~0){
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
    bcip=AR(w)>=AR(a)?8:0; zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);   // treat the entire operands as one big cell; get the rest of the values needed
-// obsolete    ipa=(adocv.cv>>VIPOKWX) & ((a==w)-1) & ((AR(a)==r)*2 + (wr==r));  // inplaceability (see below)
    bcip+=((adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r)));  // save the combined bcip for loop control
    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f = 0;  // no frame since we didn't have rank
@@ -529,7 +528,6 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
     I b=acr<=wcr?(I)8:0; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; I shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
-// obsolete    ipa=(adocv.cv>>VIPOKWX) & (((a==w)|(zt&B01))-1) & ((ar==(f+r))*2 + (AR(w)==(f+r)));  //  calc inplaceability - see below
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
@@ -771,7 +769,6 @@ DF2(jtsumattymes1){
 
  // Verify inner frames match
  ASSERTAGREE(AS(a)+ar-acr, AS(w)+wr-wcr, acr-1) ASSERT(AS(a)[ar-1]==AS(w)[wr-1],EVLENGTH);  // agreement error if not prefix match
-// obsolete  DO(acr-1, ASSERT(AS(a)[ar-acr+i]==AS(w)[wr-wcr+i],EVLENGTH););
 
  // calculate inner repeat amounts and result shape
  I dplen = AS(a)[ar-1];  // number of atoms in 1 dot-product
@@ -1048,86 +1045,7 @@ static VF eqnetbl[2][16] = {
 // the precision inputs must be converted to, and what the result type will be.
 // The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
 // result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
-#if 0  // obsolete
-// Returned value is 0 for failure, 1 for success
-B jtvar(J jt,C id,A a,A w,I at,I wt,VF*ado,I*cv){B b;I t,x;VA2 *p;
- // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
- // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
- // for it, and return.
- if(jt->jerr){
-  switch(VARCASE(jt->jerr,id)){
-   default: if(jt->jerr>NEVM){RESETERR ASSERT(0,EVSYSTEM);} R 0;  // Unhandled internal error should not occur.  Force error out
-   case VARCASE(EWIMAG,CCIRCLE ): *ado=(VF)cirZZ;   *cv=VZ+VZZ+VRD; break;
-   case VARCASE(EWIMAG,CEXP    ): *ado=(VF)powZZ;   *cv=VZ+VZZ+VRD; break;
-   case VARCASE(EWIRR ,CBANG   ): *ado=(VF)binDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWIRR ,CEXP    ): *ado=(VF)powDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWRAT ,CDIV    ): *ado=(VF)divQQ;   *cv=VQ+VQQ;     break;
-   case VARCASE(EWRAT ,CEXP    ): *ado=(VF)powQQ;   *cv=VQ+VQQ;     break;
-   case VARCASE(EWDIV0,CDIV    ): *ado=(VF)divDD;   *cv=VD+VDD;     break;
-   case VARCASE(EWOVIP+EWOVIPPLUSII  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSBI  ,CPLUS): case VARCASE(EWOVIP+EWOVIPPLUSIB  ,CPLUS):
-    *ado=(VF)plusIO;  *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOVIP+EWOVIPMINUSII  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSBI  ,CMINUS): case VARCASE(EWOVIP+EWOVIPMINUSIB  ,CMINUS):
-    *ado=(VF)minusIO; *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOVIP+EWOVIPMULII,CSTAR): *ado=(VF)tymesIO; *cv=VD+VII;     break;   // used only for sparse arrays
-   case VARCASE(EWOV  ,CPLUSDOT): *ado=(VF)gcdIO;   *cv=VD+VII;     break;
-   case VARCASE(EWOV  ,CSTARDOT): *ado=(VF)lcmIO;   *cv=VD+VII;     break;
-   case VARCASE(EWOV  ,CSTILE  ): *ado=(VF)remDD;   *cv=VD+VDD+VIP;     break;
-  }
-  RESETERR;
- }else if(!((t=UNSAFE(at|wt))&(NOUN&~NUMERIC))){
-  // Normal case where we are not retrying: here for numeric arguments
-  // vaptr converts the character pseudocode into an entry in va;
-  // that entry contains 34 (ado,cv) pairs, indexed according to verb/argument types.
-  // the first 9 entries [0-8] are a 3x3 array of the combinations of the main numeric types
-  // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
-  // then [13-19] are for verb/, with precisions B I D Z X Q Symb
-  // [20-26] for verb\, and [27-33] for verb\.
-  if(t<CMPX) {
-   // Here for the fast and important case, where the arguments are both B01/INT/FL
-   // The index into va is atype*3 + wtype, calculated sneakily
-   p = &va[vaptr[(UC)id]].p2[((at>>1)+((at+wt)>>2))&(CMPX-1)];
-   *cv = p->cv;
-   jt->mulofloloc = 0;  // Reinit multiplier-overflow count, in case we hit overflow
-  } else {
-   // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
-   // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
-   // the type to use
-   p = &va[vaptr[(UC)id]].p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
-   x = p->cv;
-   // Some entries specify no input conversion in the (DD,DD) slot.  I don't know why.  But if
-   // an input is FL (and remember, the other input is known here to be CMPX, RAT, or XNUM),
-   // we'd better specify an input conversion of VDD, unless one is explicitly given, as it will be for the CMPX slot
-   if((t&FL)&&!(x&(VBB|VII|VDD|VZZ))){x = (x&(~VARGMSK))|VDD;}   // This is part of where XNUM/RAT is promoted to FL
-   *cv = x;
-  }
-  *ado = p->fgh[0];   // finish getting the output values - cv was done above
- }else{
-  // Normal case, but nonnumeric.  This will be a domain error except for = and ~:, and a few symbol operations
-  b=!HOMO(at,wt); *cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; cv indicates no input conversion, boolean result
-  { jt->rela=arel;}  // set flags indicating 'indirect datatype' for use during compare
-  { jt->relw=wrel;}
-  switch(id){
-    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
-   case CEQ: *ado=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
-                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
-                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
-                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
-    // similarly for ~:
-   case CNE: *ado=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
-                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
-                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
-                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
-   default:
-    // If not = ~:, it had better be a symbol operation.
-    ASSERT(at&SBT&&wt&SBT,EVDOMAIN);
-    p = &va[vaptr[(UC)id]].p2[12];  // fetch the 'symbol' entry
-    ASSERT(p->fgh[0],EVDOMAIN);   // not all verbs support symbols - fail if this one doesn't
-    *ado=p->fgh[0]; *cv=p->cv;  // return the values read
-  }
- }
- R 1;
-}    /* function and control for rank */
-#else
+
 VA2 jtvar(J jt,A self,I at,I wt){I t;
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
@@ -1150,7 +1068,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // Here one of the arguments is CMPX/RAT/XNUM  (we don't support XD and XZ yet)
    // They are in priority order CMPX, FL, RAT, XNUM.  Extract those bits and look up
    // the type to use
-// obsolete    VA2 selva2 = vainfo->p2[xnumpri[((t>>3)&3)+((t>>5)&4)]];  // bits: RAT CMPX FL
    I  prix=(xnumpri>>(((t&(FL+CMPX))>>(FLX-2))+((t&RAT)>>(RATX-4))))&15; // routine index, FL/CMPX/XNUM/RAT   bits: RAT CMPX FL
    VA2 selva2 = vainfo->p2[prix];  // 
    // Entries specify no input conversion in the (DD,DD) slot, if they can accept FL arguments directly.  But if we select the FL line,
@@ -1172,26 +1089,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    // not = ~:, better be a symbol
    if(at&wt&SBT)R vainfo->p2[12];  // symbol on symbol - process it through the optbl
    retva2.f=0; R retva2;  // if not symbol, return not found
-#if 0 // obsolete
-   b=!HOMO(at,wt); retva2.cv=VB;  // b = 'inhomogeneous types (always compare not-equal)'; 
-   switch(id){
-    // for =, it's just 0 for inhomogeneous types, or the routines to handle the other comparisons
-   case CEQ: retva2.f=b?(VF)zeroF:at&SBT?(VF)eqII:at&BOX?(VF)eqAA:
-                  at&LIT?(wt&LIT?(VF)eqCC:wt&C2T?(VF)eqCS:(VF)eqCU):
-                  at&C2T?(wt&LIT?(VF)eqSC:wt&C2T?(VF)eqSS:(VF)eqSU):
-                          wt&LIT?(VF)eqUC:wt&C2T?(VF)eqUS:(VF)eqUU; break;
-    // similarly for ~:
-   case CNE: retva2.f=b?(VF) oneF:at&SBT?(VF)neII:at&BOX?(VF)neAA:
-                  at&LIT?(wt&LIT?(VF)neCC:wt&C2T?(VF)neCS:(VF)neCS):
-                  at&C2T?(wt&LIT?(VF)neSC:wt&C2T?(VF)neSS:(VF)neSU):
-                          wt&LIT?(VF)neUC:wt&C2T?(VF)neUS:(VF)neUU; break;
-   default:
-    // If not = ~:, it had better be a symbol operation.
-    if(!(at&wt&SBT)){retva2.f=0; R retva2;}  // if not symbol, return not found
-    R vainfo->p2[12];  // fetch the 'symbol' entry and return it - it may be not found too
-   }
-   R retva2;  // mult be =/~:, return what we created
-#endif
   }
  }else{VA2 retva2;
   retva2.f=0;  // error if not filled in
@@ -1214,4 +1111,3 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   R retva2;
  }
 }    /* function and control for rank */
-#endif

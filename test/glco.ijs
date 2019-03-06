@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glco.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './glco.ijs'
 NB. f L: n --------------------------------------------------------------
 
 Level =: 2 : 0

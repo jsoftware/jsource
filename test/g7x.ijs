@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g7x.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g7x.ijs'
 NB. 7!: -----------------------------------------------------------------
 
 NB. Testing malloc/free; try  f 200  or  g 40000, etc.

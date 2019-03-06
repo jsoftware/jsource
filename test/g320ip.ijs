@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g320ip.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g320ip.ijs'
 NB. ,y ravel in place -----------------------------------------------
 
 (i. 1000) -: , i. 1000

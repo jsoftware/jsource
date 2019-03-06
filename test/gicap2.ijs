@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gicap2.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gicap2.ijs'
 NB. x I. y --------------------------------------------------------------
 
 randuni''

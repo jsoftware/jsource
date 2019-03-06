@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gbpar.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gbpar.ijs'
 NB. byte parallel -------------------------------------------------------
 NB. m-bytes-at-a-time operations on boolean functions
 

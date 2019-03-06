@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g421d.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g421d.ijs'
 NB. x ({.,#)/. y and x (#,{.)/.y ----------------------------------------
 
 randuni''

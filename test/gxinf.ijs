@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gxinf.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gxinf.ijs'
 NB. x: and infinity -----------------------------------------------------
 
 match=: -:&(3!:1)

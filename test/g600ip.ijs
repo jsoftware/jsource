@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g600ip.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g600ip.ijs'
 
 NB. atomic"n in-place and not -------------------------------
 randuni''

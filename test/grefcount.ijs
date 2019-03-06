@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './grefcount.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './grefcount.ijs'
 NB. reference count ------------------------------------------------------
 
 x=: 89$<'x=: 11 22 33'

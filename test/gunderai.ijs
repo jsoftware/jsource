@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gunderai.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gunderai.ijs'
 NB. u&.(a.&i.) ----------------------------------------------------------
 
 s=: 1000  ?@$ 256

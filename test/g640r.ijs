@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g640r.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g640r.ijs'
 NB. ? different RNGs ----------------------------------------------------
 
 NRNG=: 5  NB. number of RNGs

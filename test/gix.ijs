@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gix.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gix.ijs'
 NB. x i.y with wrong rank/shape -----------------------------------------
 
 f0=: 4 : 0

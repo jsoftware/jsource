@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gintovfl.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gintovfl.ijs'
 NB. integer operations --------------------------------------------------
 
 B =: IF64{31 63

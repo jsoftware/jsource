@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g9x.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g9x.ijs'
 NB. 9!:0 and 9!:1 -------------------------------------------------------
 
 rlq =: 9!:0

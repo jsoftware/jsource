@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g120.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g120.ijs'
 NB. -y ------------------------------------------------------------------
 
 'domain error' -: - etx 'abc'

@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gi0.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gi0.ijs'
 NB. x i.y on boolean scalar y -------------------------------------------
 
 f0=: 4 : 0 " 0

@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp600a.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp600a.ijs'
 NB. " agreement ---------------------------------------------------------
 
 f=: 4 : 0

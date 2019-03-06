@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g602.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g602.ijs'
 NB. ":y on non-empty numeric array y ------------------------------------
 
 sprintf =: ":

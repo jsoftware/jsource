@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco2w.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsco2w.ijs'
 NB. s: unicode ------------------------------------------------------------------
 
 NB. create test data set 

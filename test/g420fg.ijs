@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g420fg.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g420fg.ijs'
 NB. f/@:g for atomic verbs ----------------------------------------------
 
 f=: ;: '! % * + - < = > ^ | <. <: >. >: +. +: *. *: ~: o.'

@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gstack.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
 0 0 $  0 : 0

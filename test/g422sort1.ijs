@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g422sort1.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g422sort1.ijs'
 NB. y/:y and y\:y -------------------------------------------------------
 NB. 65536<#elements 
 

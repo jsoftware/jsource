@@ -192,22 +192,29 @@ RECHO=: 13 : '+/ RESUB2 y'
 NB. bill extensions
 
 ECHOFILENAME=: 0   NB. echo file name
+Debug=: 0
 
 RUNN=: 4 : 0
 x123=. x>.1
 y123=. y
-r123=. (#y123)#1
 4!:55 'x';'y'
 while. x123~:0 do.
  echo 'countdown ',":x123
+ Debug=: 0
  RUN y123
- r123=. RB=: r123*.RB
+ r123=. RB=: ((#y123)#1)*.RB
  echo RBAD''
+ Debug=: 1
+ RUN y123
+ r123=. RB=: ((#y123)#1)*.RB +. r123
+ echo RBAD''
+ Debug=: 0
  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
  echo (+/ % #) 0 s: 12
 end.
 echo 'Finish'
+''
 )
 
 RUND1=: 4 : 0
@@ -218,19 +225,30 @@ oldnl=: (nl'')-.;:'x y'
 for_y234. y123 do.
  echo RLAST=: >y234
  for. i.x123 do.
+  Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
+  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  Debug=: 1
+  0!:2 y234
+  Debug=: 0
+  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
+  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
   assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'   NB. no memory leak
-  assert. _1 = 4!:0 ;:'x y'
 NB.  11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
  end.
 end.
+echo 'Finish'
 ''
 )
 
 RUND2=: 4 : 0
-x123=. x
+x123=. x>.1
 y123=. y
 4!:55 'x';'y'
 save_ran_RUND2=:9!:44''
@@ -239,15 +257,26 @@ while. x123~:0 do.
  for_y234. y123{~?~#y123 do.
   echo RLAST=: >y234
   save_ran=:9!:44''
+  Debug=: 0
   0!:2 y234
   assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
+  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST'
+  Debug=: 1
+  0!:2 y234
+  Debug=: 0
+  assert. 0 s: 11  NB. can cause segfault in subsequent scripts if not caught early
+  assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'
+  4!:55 (nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'
   assert. 0=#(nl'')-.oldnl,'oldnl';'y234';'x123';'RLAST';'save_ran'   NB. no memory leak
-  assert. _1 = 4!:0 ;:'x y'
 NB.   11 s: ''    NB. reset symbol
   echo (+/ % #) 0 s: 12
  end.
 x123=. <:x123
 end.
+echo 'Finish'
 ''
 )
 
@@ -257,14 +286,25 @@ y123=. y
 4!:55 'x';'y'
 oldnl=: (nl'')-.;:'x y'
 while. x123~:0 do.
+ Debug=: 0
  0!:2<testpath,y123,'.ijs'
  assert. 0 s: 11
+ assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+ 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
+ 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
+ Debug=: 1
+ 0!:2<testpath,y123,'.ijs'
+ assert. 0 s: 11
+ Debug=: 0
+ assert. _1 = 4!:0 <"0 a.{~,|:(i.26)+/ a.i.'Aa'
+ 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
+ 4!:55 (nl'')-.oldnl,'oldnl';'x123';'RLAST'
  assert. 0=#(nl'')-.oldnl,'oldnl';'x123';'RLAST'
- assert. _1 = 4!:0 ;:'x y'
  x123=. <:x123
 NB.  11 s: ''    NB. reset symbol
  echo (+/ % #) 0 s: 12
 end.
+echo 'Finish'
 ''
 )
 

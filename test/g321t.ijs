@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g321t.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g321t.ijs'
 NB. ,.&.>/y timing tests ------------------------------------------------
 
 f  =: >@(,.&.>/)

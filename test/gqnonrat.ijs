@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gqnonrat.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gqnonrat.ijs'
 NB. rational approximations of non-rational functions -------------------
 
 NB. e f  x -- compute f x within error e

@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './ggoto.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './ggoto.ijs'
 NB. goto ----------------------------------------------------------------
 
 fc =: 3 : 0

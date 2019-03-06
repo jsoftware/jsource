@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp000.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './gsp000.ijs'
 NB. = monad -------------------------------------------------------------
 
 f=: 3 : '(scheck t) *. (=p) -: t=: =s=: (2;y)$.p'

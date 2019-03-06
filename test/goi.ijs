@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './goi.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './goi.ijs'
 NB. o./ B ---------------------------------------------------------------
 
 cir=. 4 : 'x o. y'

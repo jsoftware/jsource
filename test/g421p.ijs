@@ -1,4 +1,4 @@
-1:@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g421p.ijs'
+1:@:(dbr bind Debug)@:(9!:19)2^_44[(echo^:ECHOFILENAME) './g421p.ijs'
 NB.  x +//.@(*/) y special code -----------------------------------------
 
 test=: 4 : 0

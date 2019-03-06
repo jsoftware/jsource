@@ -95,7 +95,7 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     /* Signal post-exec error*/ \
     t=pee(line,&cw[ti],EVNONNOUN,lk,callframe); \
     /* go to error loc; if we are in a try., send this error to the catch.  z may be unprotected, so clear it, to 0 if error shows, mtm otherwise */ \
-    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){ --tdi; jt->uflags.us.cx.cx_c.db = !!thisframe; } }else z=0; \
+    i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug; } }else z=0; \
     break; }
 
 
@@ -109,13 +109,12 @@ static DF2(jtxdefn){PROLOG(0048);
  I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
  DC callframe=0;  // pointer to the debug frame of the caller to this function, but 0 if we are not debugging
 
- A td;   // pointer to try. stack, if any
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
 
  A savloc=jt->local;  // stack area for local symbol table pointer; must set before we set new symbol table
  A locsym;  // local symbol table
- UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls
+ UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls - this remembers starting debug state
 
  I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
@@ -169,7 +168,7 @@ static DF2(jtxdefn){PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it
-   if(sv->flag&VTRY1+VTRY2){GAT(td,INT,NTD*WTD,2,0); AS(td)[0]=NTD; AS(td)[1]=WTD; tdv=(TD*)AV(td);}
+   if(sv->flag&VTRY1+VTRY2){A td; GAT(td,INT,NTD*WTD,1,0); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td);}
   }
   // End of unusual processing
 
@@ -257,7 +256,7 @@ static DF2(jtxdefn){PROLOG(0048);
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
     // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-    if(tdi){--tdi; i=1+(tdv+tdi)->e; jt->uflags.us.cx.cx_c.db=!!thisframe;}else i=ci->go; break;
+    if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug; i=1+(tdv+tdi)->e;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
     BASSERT(0,EVTHROW);
@@ -274,12 +273,13 @@ static DF2(jtxdefn){PROLOG(0048);
     }else if(EVTHROW==jt->jerr){
      if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
     // for other error, go to the error location; if that's out of range, keep the error; if not,
-    // it must be a try. block, so clear the error.  Pop the stack, in case we're continuing
+    // it must be a try. block, so clear the error.  Pop the try. stack, and if it pops back to 0, restore debug mode (since we no longer have a try.)
     // NOTE ERROR: if we are in a for. or select., going to the catch. will leave the stack corrupted,
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug;}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    }
     break;
    case CASSERT:
    case CTBLOCK:
@@ -292,7 +292,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
     if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;  // if no error, or debug (which had a chance to look at it), continue on
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){--tdi; jt->uflags.us.cx.cx_c.db=!!thisframe;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
    case CFOR:

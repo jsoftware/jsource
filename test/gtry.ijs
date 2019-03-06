@@ -35,6 +35,49 @@ fd =: 3 : 0
 (7+x) -: (x=:?100) fd 10&u:'triskaidekaphobia'
 'x and y are both bad' -: 'foo' fd 'bar'
 
+  
+fd =: 3 : 0
+ :
+ try.
+  try. if. 3+y do. 3+y end. catch. 7+x end.
+ catch.
+  'x and y are both bad'
+ end.
+)
+
+(3+y) -: (x=:?100) fd (y=:?100)
+(7+x) -: (x=:?100) fd 'triskaidekaphobia'
+(7+x) -: (x=:?100) fd u:'triskaidekaphobia'
+(7+x) -: (x=:?100) fd 10&u:'triskaidekaphobia'
+'x and y are both bad' -: 'foo' fd 'bar'
+
+fd =: 3 : 0  NB. check non-noun error
+:
+ try.
+  try. if. + do. 3+y end. catch. 7+x end.
+ catch.
+  'x and y are both bad'
+ end.
+)
+
+(7+x) -: (x=:?100) fd 'triskaidekaphobia'
+'x and y are both bad' -: 'foo' fd 'bar'
+
+5 -: 3 : 'try. try. catch. end. 1+a: catch. 5 end.' ''
+
+
+fc =: 3 : 0
+ try.
+  fd''
+ catch.
+  'caught'
+ end.
+)
+
+fd =: 3 : 'try. 1+a: catch. 1+a: end.'
+'caught' -: fc''
+
+
 write =: 1!:2
 erase =: 1!:55
 

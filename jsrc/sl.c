@@ -385,13 +385,13 @@ F2(jtlocnl2){UC*u;
  R locnlx(w); 
 }    /* 18!:1 locale name list */
 
-static A jtlocale(J jt,B b,A w){A g,*wv,y;
+static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
  if(!AR(w) && AT(w)&(INT|B01)/C_LE)R (b?jtstfindcre:jtstfind)(jt,-1,0,IAV(w)[0]);  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
  DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&((INT|B01)/C_LE)?-1:AN(y),CAV(y),AT(y)&((INT|B01)/C_LE)?IAV(y)[0]:BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
-}    /* last locale (symbol table) from boxed locale names; 0 if none.  if b=1, create locale */
+}    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 
 F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); ASSERT(vlocnl(1,w),EVDOMAIN); RZ(g=locale(1,w));
  g=LOCPATH(g); RZ(z=ca(g)); DO(AN(g), A t; RZ(t=ca(AAV(g)[i])); AS(t)[0]=AN(t); AAV(z)[i]=t;) R z;
@@ -401,7 +401,7 @@ F1(jtlocpath1){AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,0); ASSERT(
 
 F2(jtlocpath2){A g; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,0);
- RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));
+ if(AN(a))RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));  // Don't audit empty a
  RZ(g=locale(1,w));
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
  AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01)/C_LE)?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)  // ? why so many copies?  test before thorn1 not reqd

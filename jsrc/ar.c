@@ -156,7 +156,22 @@ REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
 REDUCCPFX(tymesinsO, D, I, TYMESO) 
 
-REDUCENAN( plusinsD, D, D, PLUS  ) 
+// obsolete REDUCENAN( plusinsD, D, D, PLUS  ) 
+AHDRR(plusinsD,D,D){I i;D* RESTRICT y;D * RESTRICT zz;
+  NAN0;
+  // latency of add is 4, so use 4 accumulators
+  if(d==1){x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
+            DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)}
+  else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
+  else{zz=z+=m*d; x+=m*d*n;
+   for(i=0;i<m;++i,zz-=d){
+    y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=PLUS(*x,*y););
+    DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=PLUS(*x,*z);));
+   }
+  }
+  NAN1V;
+}
+
 REDUCENAN( plusinsZ, Z, Z, zplus )
 REDUCEPFX( plusinsX, X, X, xplus )
 

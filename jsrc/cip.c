@@ -356,7 +356,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
  if(B01&(at|wt)&&TYPESNE(at,wt)&&((ar-1)|(wr-1)|(AN(a)-1)|(AN(w)-1))>=0)R pdtby(a,w);   // If exactly one arg is boolean, handle separately
  {t=maxtyped(at,wt); if(!TYPESEQ(t,AT(a))){RZ(a=cvt(t,a));} if(!TYPESEQ(t,AT(w))){RZ(w=cvt(t,w));}}  // convert args to compatible precisions, changing a and w if needed.  B01 if both empty
  ASSERT(t&NUMERIC,EVDOMAIN);
- // When w has a single column, we could replace +/ . * with +/@:*"1.  But the special code beloow is about as fast.
+ // When w has a single column, we could replace +/ . * with +/@:*"1.  But the special code below is about as fast.
 // if(wr==1&&((ar-1)|(-((AT(a)|AT(w))&(NOUN&~(B01|INT|FL))))|(AN(a)-1)|(AN(w)-1))>=0)R sumattymes1(a,w,0);  // If w is a single column, the matrix-multiply methods give no advantage, so treat it as +/@:*"1.  The long test is to ensure that sumattymes1 does the work, not needing self
  // Allocate result area and calculate loop controls
  // m is # 1-cells of a
@@ -487,7 +487,8 @@ oflo2:
    NAN0;
    if(n==1){D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=DAV(a);
-    DO(m, D tot=0; wv=DAV(w); DO(p, tot+=*av++**wv++;) *zv++=tot;)
+    // Floating add has latency of 4.  We can't address operands and do the arithmetic in less than 2 cycles, so 2 totals are enough
+    DO(m, D tot0=0; D tot1=0; wv=DAV(w); if(p&1)tot1=*av++**wv++; DQ(p>>1, tot0+=*av++**wv++; tot1+=*av++**wv++;) *zv++=tot0+tot1;)
     smallprob=0;  // Don't compute it again
    }else {
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation

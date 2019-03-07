@@ -343,6 +343,8 @@ tsu_usage=: 0 : 0
    RF          NB. scripts that were run
    
    RECHO ddall NB. echo script names as run and final count of failures
+
+   Debug=: 1   NB. run test suite in debug mode
 )
 
 echo 0 : 0

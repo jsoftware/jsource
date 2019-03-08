@@ -563,13 +563,13 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 #define MOVSUMAVG(Tw,Ty,ty,Tz,tz,xd,SET)  \
  {Tw*u,*v;Ty*s,x=0,*yv;Tz*zv;                                  \
-  GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,R 0); *AS(z)=1+p;                    \
+  GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,GACOPYSHAPE,R 0); *AS(z)=1+p;                    \
   zv=(Tz*)AV(z); u=v=(Tw*)AV(w);                               \
   if(1==c){                                                    \
    DO(m, x+=*v++;); *zv++=xd;                                  \
    DO(p, x+=(Ty)*v++-(Ty)*u++; *zv++=xd;);                     \
   }else{                                                       \
-   GATVS(y,ty,c,1,0,ty##SIZE,R 0); s=yv=(Ty*)AV(y); DO(c, *s++=0;);            \
+   GATVS(y,ty,c,1,0,ty##SIZE,GACOPYSHAPE,R 0); s=yv=(Ty*)AV(y); DO(c, *s++=0;);            \
    DO(m, s=yv; DO(c, *s+++=*v++;);); SET;                      \
    DO(p, s=yv; DO(c, x=*s+++=(Ty)*v++-(Ty)*u++; *zv++=xd;););  \
  }}
@@ -616,7 +616,7 @@ static DF2(jtmovavg){I m;
     if(d CMP x)x=d; else if(e==x){x=d; t=u; DO(m-1, e=*t++; if(e CMP x)x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
    DO(m, s=yv; DO(c, d=*v++; if(d CMP *s)*s=d; ++s;);); SETZ;  \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \
@@ -637,7 +637,7 @@ static DF2(jtmovavg){I m;
     if(CMP(d,x))x=d; else if(e==x){x=d; t=u; DO(m-1, e=*t++; if(CMP(e,x))x=e;);}  \
     *zv++=x;                                                   \
   }}else{                                                      \
-   GATVS(y,type,c,1,0,type##SIZE,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
+   GATVS(y,type,c,1,0,type##SIZE,GACOPYSHAPE,R 0); s=yv=(T*)AV(y); DO(c, *s++=ie;);          \
    DO(m, s=yv; DO(c, d=*v++; if(CMP(d,*s))*s=d; ++s;);); SETZ;  \
    for(i=0;i<p;++i){                                           \
     for(j=0,s=yv;j<c;++j,++s){                                 \

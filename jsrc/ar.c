@@ -659,7 +659,7 @@ A jtaslash (J jt,C c,    A w){RZ(   w); R df1(  w,   slash(ds(c))     );}
 A jtaslash1(J jt,C c,    A w){RZ(   w); R df1(  w,qq(slash(ds(c)),zeroionei[1]));}
 A jtatab   (J jt,C c,A a,A w){RZ(a&&w); R df2(a,w,   slash(ds(c))     );}
 
-
+#if 0 // obsolete 
 static AHDRR(jtmeanD,D,D){I i;D*y;D v,*zz;
  NAN0;
  if(1==d)DO(m, v=   *x++; DO(n-1, v+=*x++;); *z++=v/n;)
@@ -678,11 +678,18 @@ static AHDRR(jtmeanI,D,I){I i;I*y;D v,*zz;
   DO(n-3,    z=zz; DO(d, *z+++=*x++;        ));
              z=zz; DO(d, *z   =(*z+*x++)/n; ++z;);
 }}   /* based on REDUCEPFX; 2<n */
+#endif
 
-DF1(jtmean){A z;I d,f,m,n,r,wn,wr,*ws,wt;
+DF1(jtmean){
  RZ(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
- wt=AT(w); wn=AN(w); ws=AS(w); n=r?ws[f]:1;
+ I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;
+ I n=r?AS(w)[wr-r]:1;
+ // leave jt->ranks unchanged to pass into +/
+ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
+ RESETRANK;  // back to infinite rank for the divide
+ RZ(sum);
+ RETF(JTIPEX1S(divide,sum,sc(n)));  // take quotient and return it
+#if 0 // obsolete
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
  // there must be atoms, so it's OK to PROD infixes of shape
  PROD(m,f,ws); PROD(d,r-1,f+ws+1);
@@ -690,4 +697,5 @@ DF1(jtmean){A z;I d,f,m,n,r,wn,wr,*ws,wt;
  if(wt&INT)meanI(m,d,n,DAV(z), AV(w)); 
  else      meanD(m,d,n,DAV(z),DAV(w));
  RE(0); RETF(z);
+#endif
 }    /* (+/%#)"r w */

@@ -710,10 +710,17 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
 
 // 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product
 #define SUMATLOOP(ti,to,oneprod) \
-  {ti *av=ti##AV(a),*wv=ti##AV(w); to *zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
+  {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
 
 // routine to do the dot-product calculations.  Brought out to help the compiler allocate registers
-static A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
+// it=type of input, a,w=args dplen=len of each dot-product
+// ndpi is the number of times to repeat each list of a within the inner loop, i. e. # dps to repeat it on
+// ndpo is */ inner frame of w, i. e. the number of times to repeat the inner loop
+// nfri is the number of times to repeat the short-frame operand for the outer loop
+// nfri is */ surplus outer frame
+// repeata is set if a has the shorter outer frame
+// w is never repeated in the inner loop; exchange args to ensure this
+A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
  switch(it){
  case B01:
   SUMATLOOP(B,I,
@@ -723,7 +730,8 @@ static A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndp
   )
   break;
  case INT:
-  SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
+// obsolete   SUMATLOOP(I,D,D total=0.0; DQ(dplen, total+=(D)*av++*(D)*wv++;); *zv++=total;)
+  SUMATLOOP(I,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
   break;
  case FL:
   NAN0;
@@ -960,12 +968,13 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w);
-#define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT))))R f(jt,a,w);
-#define CHECKSSINGOP(a,w,f,op) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w,op);
-#define CHECKSSINGOPSB(a,w,f,op) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT+LIT+C2T+C4T))))R f(jt,a,w,op);
-#define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
-#define CHECKSSINGNZ(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL)))){A z = f(jt,a,w); if(z)R z;}
+#define SINGTEST(a,w,flag) RZ(a&&w); if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&UNSAFE(~(flag)))))
+#define CHECKSSING(a,w,f) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w);
+// obsolete #define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT))))R f(jt,a,w);
+#define CHECKSSINGOP(a,w,f,op) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w,op);
+#define CHECKSSINGOPEQNE(a,w,f,op) SINGTEST(a,w,B01+INT+FL+LIT+C2T+C4T)R f(jt,a,w,op);
+// obsolete #define CHECKSSINGPROV(a,w,f) RZ(a&&w); if(AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL))))R f(jt,a,w)
+#define CHECKSSINGNZ(a,w,f) SINGTEST(a,w,B01+INT+FL){A z = f(jt,a,w); if(z)R z;}
 
 // These are the entry points for the individual verbs.  They pick up the verb-name
 // and transfer to jtva2 which does the work
@@ -994,25 +1003,25 @@ F2(jtbitwiserotate){CHECKSSINGOP(a,w,jtssbitwise,16) R genbitwiserotate(a,w);}
 F2(jtbitwiseshift){CHECKSSINGOP(a,w,jtssbitwise,17) R genbitwiseshift(a,w);}
 F2(jtbitwiseshifta){CHECKSSINGOP(a,w,jtssbitwise,18) R genbitwiseshifta(a,w);}
 
-F2(jteq     ){CHECKSSINGOPSB(a,w,jtsseqne,0) R va2(a,w,ds(CEQ     ));}
-F2(jtlt     ){CHECKSSINGSB(a,w,jtsslt) R va2(a,w,ds(CLT     ));}
-F2(jtminimum){CHECKSSINGSB(a,w,jtssmin) R va2(a,w,ds(CMIN    ));}
-F2(jtle     ){CHECKSSINGSB(a,w,jtssle) R va2(a,w,ds(CLE     ));}
-F2(jtgt     ){CHECKSSINGSB(a,w,jtssgt) R va2(a,w,ds(CGT     ));}
-F2(jtmaximum){CHECKSSINGSB(a,w,jtssmax) R va2(a,w,ds(CMAX    ));}
-F2(jtge     ){CHECKSSINGSB(a,w,jtssge) R va2(a,w,ds(CGE     ));}
-F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,ds(CPLUS   ));}
+F2(jteq     ){CHECKSSINGOPEQNE(a,w,jtsseqne,0) R va2(a,w,ds(CEQ));}
+F2(jtlt     ){CHECKSSING(a,w,jtsslt) R va2(a,w,ds(CLT));}
+F2(jtminimum){CHECKSSING(a,w,jtssmin) R va2(a,w,ds(CMIN));}
+F2(jtle     ){CHECKSSING(a,w,jtssle) R va2(a,w,ds(CLE));}
+F2(jtgt     ){CHECKSSING(a,w,jtssgt) R va2(a,w,ds(CGT));}
+F2(jtmaximum){CHECKSSING(a,w,jtssmax) R va2(a,w,ds(CMAX));}
+F2(jtge     ){CHECKSSING(a,w,jtssge) R va2(a,w,ds(CGE));}
+F2(jtplus   ){CHECKSSING(a,w,jtssplus) R va2(a,w,ds(CPLUS));}
 F2(jtgcd    ){CHECKSSING(a,w,jtssgcd) R va2(a,w,ds(CPLUSDOT));}
-F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,ds(CPLUSCO ));}
-F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,ds(CSTAR   ));}
+F2(jtnor    ){CHECKSSING(a,w,jtssnor) R va2(a,w,ds(CPLUSCO));}
+F2(jttymes  ){CHECKSSING(a,w,jtssmult) R va2(a,w,ds(CSTAR));}
 F2(jtlcm    ){CHECKSSING(a,w,jtsslcm) R va2(a,w,ds(CSTARDOT));}
-F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO ));}
-F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS  ));}
-F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV    ));}
-F2(jtexpn2  ){RZ(w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP    ));}  // use sqrt hardware for sqrt.  Only for atomic w
-F2(jtne     ){CHECKSSINGOPSB(a,w,jtsseqne,1) R va2(a,w,ds(CNE     ));}
-F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG   ));}
-F2(jtcircle ){R va2(a,w,ds(CCIRCLE ));}
+F2(jtnand   ){CHECKSSING(a,w,jtssnand) R va2(a,w,ds(CSTARCO));}
+F2(jtminus  ){CHECKSSING(a,w,jtssminus) R va2(a,w,ds(CMINUS));}
+F2(jtdivide ){CHECKSSING(a,w,jtssdiv) R va2(a,w,ds(CDIV));}
+F2(jtexpn2  ){RZ(w); if(((((I)AR(w)-1)&(AT(w)<<(BW-1-FLX)))<0)&&0.5==*DAV(w))R sqroot(a); CHECKSSINGNZ(a,w,jtsspow) R va2(a,w,ds(CEXP));}  // use sqrt hardware for sqrt.  Only for atomic w
+F2(jtne     ){CHECKSSINGOPEQNE(a,w,jtsseqne,1) R va2(a,w,ds(CNE));}
+F2(jtoutof  ){CHECKSSING(a,w,jtssoutof) R va2(a,w,ds(CBANG));}
+F2(jtcircle ){R va2(a,w,ds(CCIRCLE));}
 F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE));}
 
 

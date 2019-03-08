@@ -23,7 +23,7 @@
 #define WINPLACE ((I)jtf&JTINPLACEW && ((AC(w)<1) || ((AC(w)==1) && (w==jt->zombieval))))
 
 // #define SSINGENC(a,w) (((a)+((w)>>2))&(2*FL-1))   // Mask off SAFE bits
-#define SSINGENC(a,w) ((UNSAFE(a))+((UNSAFE(w))<<2))   // Mask off SAFE bits
+#define SSINGENC(a,w) ((UNSAFE(a))+((UNSAFE(w))*5))   // Mask off SAFE bits
 #define SSINGBB SSINGENC(B01,B01)
 #define SSINGBI SSINGENC(B01,INT)
 #define SSINGBD SSINGENC(B01,FL)
@@ -42,7 +42,8 @@
 #define SSINGUC SSINGENC(C4T,LIT)
 #define SSINGUW SSINGENC(C4T,C2T)
 #define SSINGUU SSINGENC(C4T,C4T)
-#define SSINGSS SSINGENC(SBT,SBT)
+// obsolete #define SSINGSS SSINGENC(SBT,SBT)
+
 
 #define SSRDD(w) (*(D *)CAV(w))
 #define SSSTORE(v,z,t,type) {MODBLOCKTYPE(z,t) *((type *)CAV(z)) = (v);}
@@ -51,6 +52,7 @@
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
+// This doesn't have to be perfect, but it's used only 
 static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
  fa=ra-(ranks>>RANKTX); fa=fa<0?0:fa; 
  fw=rw-(RANKT)ranks; fw=fw<0?0:fw; 
@@ -60,10 +62,18 @@ static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
  if(r!=ra && r!=rw)R r;
  R -1;
 }
+#if 0 // obsolete
 // allocate a singleton block of type t for rank r.
 static A ssingallo(J jt,I r,I t){A z;
  GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
+SSINGALLO(z,r,FL) GAT(z,FL,1,0,0)
 }
+#else
+static A ssingalloFL(J jt,I r){A z; GATV1(z,FL,1,r,0); R z;}  // allocate with rank and shape= all 1
+static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r,0); R z;}
+// allocate a singleton block of type t for rank f.
+#define SSINGALLO(z,f,t) {if(!f)GATS(z,t,1,0,0,t##SIZE)else RZ(z=ssingallo##t(jt,f))}  // normal case is atom; use subroutine for others
+#endif
 
 // MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only
 
@@ -72,7 +82,7 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
- if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,FL)) /* handle frames */ \
+ if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,FL) /* handle frames */ \
  else if (ar >= wr){  \
   if (AINPLACE){ z = a; } \
   else if (WINPLACE && ar == wr){ z = w; } \
@@ -93,7 +103,7 @@ static A ssingallo(J jt,I r,I t){A z;
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
 /* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
 {I ar = AR(a); I wr = AR(w); \
- if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)RZ(z=ssingallo(jt,f,B01)) /* handle frames */ \
+ if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,B01) /* handle frames */ \
  else if (ar >= wr){ \
   if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
   else if (WINPLACE && ar == wr){ z = w; MODBLOCKTYPE(z,B01) } \
@@ -175,7 +185,7 @@ SSINGF2(jtssmin) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: SSSTORENV(SBMIN(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
+// obsolete   case SSINGSS: SSSTORENV(SBMIN(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
   case SSINGBB: SSSTORENV(SSRDB(a)&SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORENV(MIN(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORENV(MIN(SSRDD(a),SSRDB(w)),z,FL,D) R z;
@@ -195,7 +205,7 @@ SSINGF2(jtssmax) SSNUMPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: SSSTORENV(SBMAX(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
+// obsolete   case SSINGSS: SSSTORENV(SBMAX(SSRDS(a),SSRDS(w)),z,SBT,SB) R z;
   case SSINGBB: SSSTORENV(SSRDB(a)|SSRDB(w),z,B01,B) R z;
   case SSINGBD: SSSTORENV(MAX(SSRDB(a),SSRDD(w)),z,FL,D) R z;
   case SSINGDB: SSSTORENV(MAX(SSRDD(a),SSRDB(w)),z,FL,D) R z;
@@ -452,7 +462,7 @@ SSINGF2(jtsslt) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: zv=SBLT(SSRDS(a),SSRDS(w)); break;
+// obsolete   case SSINGSS: zv=SBLT(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)<SSRDB(w); break;
   case SSINGBD: zv=TLT(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TLT(SSRDD(a),SSRDB(w)); break;
@@ -475,7 +485,7 @@ SSINGF2(jtssgt) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: zv=SBGT(SSRDS(a),SSRDS(w)); break;
+// obsolete   case SSINGSS: zv=SBGT(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)>SSRDB(w); break;
   case SSINGBD: zv=TGT(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TGT(SSRDD(a),SSRDB(w)); break;
@@ -498,7 +508,7 @@ SSINGF2(jtssle) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: zv=SBLE(SSRDS(a),SSRDS(w)); break;
+// obsolete   case SSINGSS: zv=SBLE(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)<=SSRDB(w); break;
   case SSINGBD: zv=TLE(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TLE(SSRDD(a),SSRDB(w)); break;
@@ -521,7 +531,7 @@ SSINGF2(jtssge) SSCOMPPREFIX
  // types are 1, 4, or 8
  switch(sw) {
   default: R 0;
-  case SSINGSS: zv=SBGE(SSRDS(a),SSRDS(w)); break;
+// obsolete   case SSINGSS: zv=SBGE(SSRDS(a),SSRDS(w)); break;
   case SSINGBB: zv=SSRDB(a)>=SSRDB(w); break;
   case SSINGBD: zv=TGE(SSRDB(a),SSRDD(w)); break;
   case SSINGDB: zv=TGE(SSRDD(a),SSRDB(w)); break;
@@ -542,28 +552,35 @@ SSINGF2(jtssge) SSCOMPPREFIX
 SSINGF2OP(jtsseqne) SSCOMPPREFIX
 
  // Switch on the types; do the operation, store the result, set the type of result
- // types are 1, 4, or 8
- switch(sw) {
-  default: R 0;
-  case SSINGSS: zv=SSRDS(a)==SSRDS(w); break;
-  case SSINGCC: zv=SSRDC(a)==SSRDC(w); break;
-  case SSINGCW: zv=SSRDC(a)==SSRDW(w); break;
-  case SSINGCU: zv=SSRDC(a)==SSRDU(w); break;
-  case SSINGWC: zv=SSRDW(a)==SSRDC(w); break;
-  case SSINGWW: zv=SSRDW(a)==SSRDW(w); break;
-  case SSINGWU: zv=SSRDW(a)==SSRDU(w); break;
-  case SSINGUC: zv=SSRDU(a)==SSRDC(w); break;
-  case SSINGUW: zv=SSRDU(a)==SSRDW(w); break;
-  case SSINGUU: zv=SSRDU(a)==SSRDU(w); break;
-  case SSINGBB: zv=SSRDB(a)==SSRDB(w); break;
-  case SSINGBD: zv=TEQ(SSRDB(a),SSRDD(w)); break;
-  case SSINGDB: zv=TEQ(SSRDD(a),SSRDB(w)); break;
-  case SSINGID: zv=TEQ((D)SSRDI(a),SSRDD(w)); break;
-  case SSINGDI: zv=TEQ(SSRDD(a),(D)SSRDI(w)); break;
-  case SSINGBI: zv=SSRDB(a)==SSRDI(w); break;
-  case SSINGIB: zv=SSRDI(a)==SSRDB(w); break;
-  case SSINGII: zv=SSRDI(a)==SSRDI(w); break;
-  case SSINGDD: zv=TEQ(SSRDD(a),SSRDD(w)); break;
+ // types are 1, 4, or 8, or here only LIT, C2T and C4T, and SBT
+ if(sw<C2T){
+  switch(sw) {
+   case SSINGCC: zv=SSRDC(a)==SSRDC(w); break;
+   case SSINGBB: zv=SSRDB(a)==SSRDB(w); break;
+   case SSINGBD: zv=TEQ(SSRDB(a),SSRDD(w)); break;
+   case SSINGDB: zv=TEQ(SSRDD(a),SSRDB(w)); break; 
+   case SSINGID: zv=TEQ((D)SSRDI(a),SSRDD(w)); break;
+   case SSINGDI: zv=TEQ(SSRDD(a),(D)SSRDI(w)); break;
+   case SSINGBI: zv=SSRDB(a)==SSRDI(w); break;
+   case SSINGIB: zv=SSRDI(a)==SSRDB(w); break;
+   case SSINGII: zv=SSRDI(a)==SSRDI(w); break;
+   case SSINGDD: zv=TEQ(SSRDD(a),SSRDD(w)); break;
+   default: zv=0; break;   // INHOMO operands come here, eg LIT+B01
+  }
+ }else{
+  if(sw<(C2T*5) && sw&((FL|INT|B01)<<2))zv=0;  // a was C2T/C4T and INHOMO (1/4/8 before *5)
+  else if(sw>=(C2T*5) && sw&(FL|INT|B01))zv=0;  // b was C2T/C4T and INHOMO
+  else switch(sw>>C2TX) {
+   default: R 0;
+   case SSINGCW>>C2TX: zv=SSRDC(a)==SSRDW(w); break;
+   case SSINGCU>>C2TX: zv=SSRDC(a)==SSRDU(w); break;
+   case SSINGWC>>C2TX: zv=SSRDW(a)==SSRDC(w); break;
+   case SSINGWW>>C2TX: zv=SSRDW(a)==SSRDW(w); break;
+   case SSINGWU>>C2TX: zv=SSRDW(a)==SSRDU(w); break;
+   case SSINGUC>>C2TX: zv=SSRDU(a)==SSRDC(w); break;
+   case SSINGUW>>C2TX: zv=SSRDU(a)==SSRDW(w); break;
+   case SSINGUU>>C2TX: zv=SSRDU(a)==SSRDU(w); break;
+  }
  }
  // zv is the Boolean value to return.  If there is an output block, the result must be non-atomic:
  // just store the value in it.  If there is no output block, return zero or one depending on the result

@@ -365,7 +365,7 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
 
  // INT multiplies convert to float, for both 32- and 64-bit systems.  It is converted back if there is no overflow
  RZ(z=ipprep(a,w,t&B01?INT:t&INT?FL:t,&m,&n,&p));  // allocate the result area, with the needed shape and type
- if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}
+ if(!p){memset(AV(z),C0,AN(z)<<bplg(AT(z))); R z;}  // if dot-products are all 0 length, set them all to 0
  // If either arg is atomic, reshape it to a list
  if(!ar!=!wr){if(ar)RZ(w=reshape(sc(p),w)) else RZ(a=reshape(sc(p),a));}
  p1=p-1;
@@ -399,7 +399,8 @@ F2(jtpdt){PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
    // one argument (usually w) has only one item, a list that is reused.  So, we check for that case; if found we go through faster code that just
    // performs vector inner products, accumulating in registers.  And we have multiple versions of that: one when the totals can't get close to
    // overflow, and other belt-and-suspenders variants for arbitrary inputs
-   if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;D * RESTRICT zvd; 
+   if(n==1){DPMULDDECLS I tot;I* RESTRICT zv, * RESTRICT av;  // obsolete D * RESTRICT zvd;
+    // vector products
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected
     I* RESTRICT wv=AV(w); tot=0; DO(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=wvv<0?-wvv:wvv; tot+=wvv; wv++;)
@@ -423,9 +424,11 @@ oflo1:
     AT(z)=INT; break;
 oflo2:
     // Result does not fit in INT.  Do the computation as float, with float result
-    zvd=DAV(z); av=AV(a);
-    DO(m, D tot=0; wv=AV(w); DO(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
+    if(m)z=jtsumattymesprods(jt,INT,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
+// obsolete     zvd=DAV(z); av=AV(a);
+// obsolete     DO(m, D tot=0; wv=AV(w); DO(p, tot+=(D)*av++*(D)*wv++;) *zvd++=tot;)
    }else{
+     // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
      if(probsize < 5000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
      else {
@@ -485,10 +488,15 @@ oflo2:
   {I smallprob; 
    // As for INT, handle the cases where n=1 separately, because they are used internally & don't require as much setup as matrix multiply
    NAN0;
-   if(n==1){D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
+   if(n==1){
+#if 0
+    D* RESTRICT zv, * RESTRICT av, * RESTRICT wv;
     zv=DAV(z); av=DAV(a);
     // Floating add has latency of 4.  We can't address operands and do the arithmetic in less than 2 cycles, so 2 totals are enough
     DO(m, D tot0=0; D tot1=0; wv=DAV(w); if(p&1)tot1=*av++**wv++; DQ(p>>1, tot0+=*av++**wv++; tot1+=*av++**wv++;) *zv++=tot0+tot1;)
+#else
+    if(m)z=jtsumattymesprods(jt,FL,w,a,p,1,1,1,m,0,z);  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z
+#endif
     smallprob=0;  // Don't compute it again
    }else {
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation

@@ -432,14 +432,15 @@ extern unsigned int __cdecl _clearfp (void);
 // GA() is used when the type is unknown.  This routine is in m.c and documents the function of these macros.
 // NEVER use GA() for NAME types - it doesn't honor it.
 #define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
+#define GACOPY1(name,type,atoms,rank,shaape) I _r=(rank); I *_d=AS(name); *_d=1; --_r; do{_d=_r>0?_d:jt->shapesink; *++_d=1;}while(--_r>0);  // copy all 1s to shape
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
 // When the type and all rank/shape are known at compile time, use GAT.  The compiler precalculates almost everything
 // For best results declare name as: AD* RESTRICT name;  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
-#define GAT(name,type,atoms,rank,shaape) \
+#define GATS(name,type,atoms,rank,shaape,size) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
- I bytes = ALLOBYTES(atoms,rank,type##SIZE,(type)&LAST0,(type)&NAME); \
+ I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  RZ(name);   \
@@ -449,9 +450,11 @@ extern unsigned int __cdecl _clearfp (void);
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
 }
+#define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE)\
+
 // Used when type is known and something else is variable.  ##SIZE must be applied before type is substituted, so we have GATVS to use inside other macros.  Normally use GATV
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
-#define GATVS(name,type,atoms,rank,shaape,size,erraction) \
+#define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
  ASSERT(SY_64?((unsigned long long)(atoms))<TOOMANYATOMS:(I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0,EVLIMIT); \
  ASSERT(!((rank)&~RMAX),EVLIMIT); \
@@ -459,14 +462,15 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(type&SPARSE)SEGFAULT /*scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
+  if(type&SPARSE)SEGFAULT /*scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  }else{erraction;} \
 }
 
 // see warnings above under GATVS
-#define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,R 0)
+#define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
+#define  GATV1(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
 #define GASPARSE(n,t,a,r,s) {if(!(t&SPARSE))SEGFAULT /* scaf*/ if((r)==1){GA(n,XZ|(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,XZ|(t),a,r,s)}}
 
@@ -505,6 +509,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define JTIPA           ((J)((I)jt|JTINPLACEA))
 #define JTIPAW          ((J)((I)jt|JTINPLACEA+JTINPLACEW))
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
+#define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
+#define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long

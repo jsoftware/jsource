@@ -824,6 +824,7 @@ extern F        jtstdf(J,A);
 extern A        jtstfind(J,I,C*,I);
 extern A        jtstfindcre(J,I,C*,I);
 extern A        jtstr(J,I,C*);
+extern A        jtsumattymesprods(J,I,A,A,I,I,I,I,I,I,A);
 extern B        jtsymbinit(J);
 extern A        jtsymbis(J,A,A,A);
 extern B        jtsymext(J,B);

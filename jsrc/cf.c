@@ -231,20 +231,29 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
  R CALL2(f2,w,CALL1(g1,w,gs),fs);
 }    /* special code for (#: i.@(* /)) */
 
-static DF1(jthkindexofmaxmin){D*du,*dv;I*iu,*iv,n,t,*wv,z=0;V*sv;
+#define IDOTSEARCH(T,comp)  {T *wv=T##AV(w); I optx0=-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[1]; wv+=2; \
+  DO((n>>1)-1, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[1] comp opt1){opt1=wv[1]; optx1=i;} wv+=2;) \
+  z=(opt0 comp opt1 || (opt0==opt1&&optx0<=optx1))?2*optx0:2*optx1+1; opt0=opt0 comp=opt1?opt0:opt1; z+=2; if(n&1&&wv[0] comp opt0)z=n-1; break;}
+
+#define ICOSEARCH(T,comp)  {T *wv=T##AV(w)+n-1; I optx0=(n>>1)-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[-1]; wv-=2; \
+  DQ(optx0, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[-1] comp opt1){opt1=wv[-1]; optx1=i;} wv-=2;) \
+  z=(opt0 comp opt1 || (opt0==opt1&&optx0>=optx1))?2*optx0+1:2*optx1; opt0=opt0 comp=opt1?opt0:opt1; z+=n&1; if(n&1&&wv[0] comp opt0)z=0; break;}
+
+static DF1(jthkindexofmaxmin){I z=0;
  RZ(w&&self);
- n=AN(w); t=AT(w);
- if(!(1==AR(w)&&t&INT+FL))R hook1(w,self);
- sv=FAV(self); wv=AV(w);
- if(n)switch((t&FL?4:0)+(CICO==ID(sv->fgh[0])?2:0)+(CMAX==ID(FAV(sv->fgh[1])->fgh[0]))){
-  case  0: iu=iv=    wv;     DO(n, if(*iv<*iu)iu=iv; ++iv;); z=iu-    wv; break;
-  case  1: iu=iv=    wv;     DO(n, if(*iv>*iu)iu=iv; ++iv;); z=iu-    wv; break;
-  case  2: iu=iv=    wv+n-1; DO(n, if(*iv<*iu)iu=iv; --iv;); z=iu-    wv; break;
-  case  3: iu=iv=    wv+n-1; DO(n, if(*iv>*iu)iu=iv; --iv;); z=iu-    wv; break;
-  case  4: du=dv=(D*)wv;     DO(n, if(*dv<*du)du=dv; ++dv;); z=du-(D*)wv; break;
-  case  5: du=dv=(D*)wv;     DO(n, if(*dv>*du)du=dv; ++dv;); z=du-(D*)wv; break;
-  case  6: du=dv=(D*)wv+n-1; DO(n, if(*dv<*du)du=dv; --dv;); z=du-(D*)wv; break;
-  case  7: du=dv=(D*)wv+n-1; DO(n, if(*dv>*du)du=dv; --dv;); z=du-(D*)wv;
+ I n=AN(w);
+ if(!(1==AR(w)&&AT(w)&INT+FL))R hook1(w,self);
+ if(n>1){
+  switch((AT(w)&INT)+(CICO==ID(FAV(self)->fgh[0])?2:0)+(CMAX==ID(FAV(FAV(self)->fgh[1])->fgh[0]))){
+  case 0: IDOTSEARCH(D,<)
+  case 1: IDOTSEARCH(D,>)
+  case 2: ICOSEARCH(D,<)
+  case 3: ICOSEARCH(D,>)
+  case 4: IDOTSEARCH(I,<)
+  case 5: IDOTSEARCH(I,>)
+  case 6: ICOSEARCH(I,<)
+  case 7: ICOSEARCH(I,>)
+  }
  }
  R sc(z);
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */

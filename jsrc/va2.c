@@ -1031,12 +1031,12 @@ F2(jtresidue){RZ(a&&w); R INT&AT(w)&&equ(a,num[2])?intmod2(w):va2(a,w,ds(CSTILE)
 #define IPSHIFTWA (jt = (J)(intptr_t)(((I)jt+JTINPLACEW)&-JTINPLACEA))
 
 F1(jtnot   ){R w&&AT(w)&B01+SB01?eq(num[0],w):minus(zeroionei[1],w);}
-F1(jtnegate){R minus(zeroionei[0],  w);}
-F1(jtdecrem){IPSHIFTWA; R minus(w,     zeroionei[1]);}
-F1(jtincrem){R plus(zeroionei[1],   w);}
+F1(jtnegate){R minus(zeroionei[0],w);}
+F1(jtdecrem){IPSHIFTWA; R minus(w,zeroionei[1]);}
+F1(jtincrem){R plus(zeroionei[1],w);}
 F1(jtduble ){R tymes(num[2],w);}
-F1(jtsquare){R tymes(w,     w);}   // leave inplaceable in w only
-F1(jtrecip ){R divide(zeroionei[1],   w);}
+F1(jtsquare){R tymes(w,w);}   // leave inplaceable in w only
+F1(jtrecip ){R divide(zeroionei[1],w);}
 F1(jthalve ){if(w&&!(AT(w)&XNUM+RAT))R tymes(onehalf,w); IPSHIFTWA; R divide(w,num[2]);}
 
 static void zeroF(J jt,B b,I m,I n,B*z,void*x,void*y){memset(z,C0,m*n);}

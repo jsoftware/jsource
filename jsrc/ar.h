@@ -63,6 +63,16 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}}
+// used on idempotent verbs, using 2 accumulators
+#define REDUCEPFXIDEM2(f,Tz,Tx,pfx)  \
+ AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz * RESTRICT zz;                              \
+  if(d==1){x += m*n; z+=m; DQ(m, Tz v0=(Tz)*--x; Tz v1=v0; if(!(n&1))v1=*--x;  DQ((n-1)>>1, x-=2; v0=pfx(x[0],v0); v1=pfx(x[1],v1); ); v0=pfx(v0,v1); *--z=v0;)}  \
+  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
+  else{zz=z+=m*d; x+=m*d*n;                                      \
+   for(i=0;i<m;++i,zz-=d){                                    \
+    y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
+    DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
+  }}}
 
 #define REDUCENAN(f,Tz,Tx,pfx)  \
  AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
@@ -87,6 +97,7 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
     y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=pfx(*x,*y););         \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}}
+
 
 
 

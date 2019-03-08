@@ -29,6 +29,9 @@ test   1e3 $ 1
 test i.0
 test 0$0.5
 test 100 3 ?@$ 4
+
+NB. With new code, test all permutations of smallest element, repeated and not, with different spacings
+*./@:,@:(test"1)@:(|.~"_ 0 i.@#)@> ('';0;0 20;0 20 21;0 20 21 22;0 20 21 22 23) ,&.>/ <@i."0 i. 10
  
 'domain error' -: (i.<./) etx 'abc'
 'domain error' -: (i.<./) etx u:'abc'

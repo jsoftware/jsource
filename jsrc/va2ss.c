@@ -52,7 +52,7 @@
 
 // jt->rank is set; figure out the rank of the result.  If that's not the rank of one of the arguments,
 // return the rank needed.  If it is, return -1; the argument with larger rank will be the one to use
-// This doesn't have to be perfect, but it's used only 
+// This doesn't have to be perfect, but it's used only when a rank is given, which should be rare when an argument is a singleton
 static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
  fa=ra-(ranks>>RANKTX); fa=fa<0?0:fa; 
  fw=rw-(RANKT)ranks; fw=fw<0?0:fw; 
@@ -77,19 +77,20 @@ static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r,0); R z;}
 
 // MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only
 
+// In a normal expression a =. b + c + d the w argument is more likely to be inplaceable than a
 #define SSNUMPREFIX A z; I sw = SSINGENC(AT(a),AT(w));  /* prepare for switch*/ \
 /* Establish the output area.  If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single FL block with the required rank/shape.  We will */ \
 /* change the type of this block when we get the result type */ \
 {I ar = AR(a); I wr = AR(w); I f; /* get rank */ \
  if(jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,FL) /* handle frames */ \
- else if (ar >= wr){  \
-  if (AINPLACE){ z = a; } \
-  else if (WINPLACE && ar == wr){ z = w; } \
-  else {GATV(z, FL, 1, ar, AS(a));} \
- } else { \
+ else if (wr >= ar){  \
   if (WINPLACE){ z = w; } \
+  else if (AINPLACE && ar == wr){ z = a; } \
   else {GATV(z, FL, 1, wr, AS(w));} \
+ } else { \
+  if (AINPLACE){ z = a; } \
+  else {GATV(z, FL, 1, ar, AS(a));} \
  } \
 } /* We have the output block */
 
@@ -97,22 +98,22 @@ static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r,0); R z;}
 
 // We don't bother checking zombieval for comparisons, since usually they're scalar constant results
 #define SSCOMPPREFIX A z; I sw = SSINGENC(AT(a), AT(w)); I f; B zv;  \
-/* Establish the output area.  If this produces an atom, it will be one or zero; */ \
+/* Establish the output area.  If this produces an atom, it will be num[0] or num[1]; */ \
 /* Nevertheless, we try to reuse an inplaceable argument because that allows the result to be inplaced */ \
 /* If this operation is in-placeable, reuse an in-placeable operand if */ \
 /* it has the larger rank.  If not, allocate a single B01 block with the required rank/shape. */ \
 /* It's OK to modify the AT field of an inplaced input because comparisons (unlike computations) never failover to the normal code */ \
 {I ar = AR(a); I wr = AR(w); \
  if((ar+wr)&&jt->ranks!=(RANK2T)~0&&(f=ssingflen(jt,ar,wr,jt->ranks))>=0)SSINGALLO(z,f,B01) /* handle frames */ \
- else if (ar >= wr){ \
-  if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
-  else if (WINPLACE && ar == wr){ z = w; MODBLOCKTYPE(z,B01) } \
-  else if (ar + wr == 0)z = 0; \
-  else {GATV(z, B01, 1, ar, AS(a));} \
- } else { \
+ else if (wr >= ar){ \
   if (WINPLACE){ z = w; MODBLOCKTYPE(z,B01) } \
+  else if (AINPLACE && ar == wr){ z = a; MODBLOCKTYPE(z,B01) } \
   else if (ar + wr == 0)z = 0; \
   else {GATV(z, B01, 1, wr, AS(w));} \
+ } else { \
+  if (AINPLACE){ z = a; MODBLOCKTYPE(z,B01) } \
+  else if (ar + wr == 0)z = 0; \
+  else {GATV(z, B01, 1, ar, AS(a));} \
  } \
 } /* We have the output block, or 0 if we are returning an atom */
 
@@ -565,7 +566,7 @@ SSINGF2OP(jtsseqne) SSCOMPPREFIX
    case SSINGIB: zv=SSRDI(a)==SSRDB(w); break;
    case SSINGII: zv=SSRDI(a)==SSRDI(w); break;
    case SSINGDD: zv=TEQ(SSRDD(a),SSRDD(w)); break;
-   default: zv=0; break;   // INHOMO operands come here, eg LIT+B01
+   default: zv=0; break;   // INHOMO args come here, eg LIT=B01
   }
  }else{
   if(sw<(C2T*5) && sw&((FL|INT|B01)<<2))zv=0;  // a was C2T/C4T and INHOMO (1/4/8 before *5)

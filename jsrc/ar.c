@@ -185,13 +185,13 @@ REDUCEPFX(tymesinsZ, Z, Z, ztymes)
 REDUCENAN(  divinsD, D, D, DIV   )
 REDUCENAN(  divinsZ, Z, Z, zdiv  )
 
-REDUCEPFX(  maxinsI, I, I, MAX   )
-REDUCEPFX(  maxinsD, D, D, MAX   )
+REDUCEPFXIDEM2(  maxinsI, I, I, MAX   )
+REDUCEPFXIDEM2(  maxinsD, D, D, MAX   )
 REDUCEPFX(  maxinsX, X, X, XMAX  )
 REDUCEPFX(  maxinsS, SB,SB,SBMAX )
 
-REDUCEPFX(  mininsI, I, I, MIN   )
-REDUCEPFX(  mininsD, D, D, MIN   )
+REDUCEPFXIDEM2(  mininsI, I, I, MIN   )
+REDUCEPFXIDEM2(  mininsD, D, D, MIN   )
 REDUCEPFX(  mininsX, X, X, XMIN  )
 REDUCEPFX(  mininsS, SB,SB,SBMIN )
 
@@ -688,7 +688,7 @@ DF1(jtmean){
  A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RESETRANK;  // back to infinite rank for the divide
  RZ(sum);
- RETF(JTIPEX1S(divide,sum,sc(n)));  // take quotient and return it
+ RETF(JTIPEX1S(divide,sum,sc(n)));  // take quotient inplace and return it
 #if 0 // obsolete
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
  // there must be atoms, so it's OK to PROD infixes of shape
@@ -698,4 +698,4 @@ DF1(jtmean){
  else      meanD(m,d,n,DAV(z),DAV(w));
  RE(0); RETF(z);
 #endif
-}    /* (+/%#)"r w */
+}    // (+/%#)"r w, implemented as +/"r % cell-length

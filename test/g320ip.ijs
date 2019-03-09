@@ -789,7 +789,7 @@ NB. Verify inplaceable pscan, sscan
 f =: 4 : 0&>
 (1.2 * 7!:5 <'y') > 7!:2 x , ' 15!:15 y'
 )
-('<./\';'>./\';'<./\.';'>./\.') f/ ((1e5#0);(i. 1e5);(0.5+i. 1e5))
+('<./\';'>./\';'<./\.';'>./\.') f/ ((i. 1e5);(0.5+i. 1e5))
 ('+/\';'-/\';'*/\';'+/\.';'-/\.';'*/\.') f/ (<(0.5+i. 1e5))
 
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast local max min nmm nb qd t test testa unsafename undefinedname x'

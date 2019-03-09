@@ -283,8 +283,8 @@ static VA va[]={
   {(VF)maxDB,VD+VIPOKA}, {(VF)maxDI,VD+VIPDI}, {(VF)maxDD,VD+VIP}, 
   {(VF)maxDD,VD+VDD+VIP}, {(VF)maxXX,VX+VXX}, {(VF)maxQQ,VQ+VQQ}, {(VF)maxSS,VSB}},
  {{(VF)orinsB,VB}, {(VF)maxinsI,VI}, {(VF)maxinsD,VD}, {(VF)maxinsD,VD+VDD}, {(VF)maxinsX,VX}, {0,0},        {(VF)maxinsS,VSB}},
- {{(VF)orpfxB,VB+VIPOKW}, {(VF)maxpfxI,VI+VIPOKW}, {(VF)maxpfxD,VD+VIPOKW}, {(VF)maxpfxD,VD+VDD}, {(VF)maxpfxX,VX}, {(VF)maxpfxQ,VQ}, {(VF)maxpfxS,VSB}},
- {{(VF)orsfxB,VB+VIPOKW}, {(VF)maxsfxI,VI+VIPOKW}, {(VF)maxsfxD,VD+VIPOKW}, {(VF)maxsfxD,VD+VDD}, {(VF)maxsfxX,VX}, {(VF)maxsfxQ,VQ}, {(VF)maxsfxS,VSB}}},
+ {{(VF)orpfxB,VB}, {(VF)maxpfxI,VI+VIPOKW}, {(VF)maxpfxD,VD+VIPOKW}, {(VF)maxpfxD,VD+VDD}, {(VF)maxpfxX,VX}, {(VF)maxpfxQ,VQ}, {(VF)maxpfxS,VSB}},
+ {{(VF)orsfxB,VB}, {(VF)maxsfxI,VI+VIPOKW}, {(VF)maxsfxD,VD+VIPOKW}, {(VF)maxsfxD,VD+VDD}, {(VF)maxsfxX,VX}, {(VF)maxsfxQ,VQ}, {(VF)maxsfxS,VSB}}},
 
 /* 85 >: */ {
  {{(VF)geBB,VB+VIP}, {(VF)geBI,VB+VIPOKA}, {(VF)geBD,VB+VIPOKA},

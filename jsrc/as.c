@@ -268,7 +268,7 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
+static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  RZ(w);F1PREFIP;
  wt=AT(w);
  if(SPARSE&wt)R scansp(w,self,jtsscan);
@@ -281,8 +281,7 @@ static DF1(jtsscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  VA2 adocv = vasfx(FAV(y)->fgh[0],wt);  // analyze f
  if(!adocv.f)R irs1ip(w,self,r,jtssg);   // if not supported atomically, go do general suffix
  if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(adocv.cv);
- GA(z,zt,wn,wr,ws);
+ if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
  if(jt->jerr)R jt->jerr>=EWOV?irs1(w,self,r,jtsscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
 }    /* f/\."r w main control */

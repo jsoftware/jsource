@@ -20,8 +20,9 @@
 #define DIVPA(b,r,u,v)    r=b?(DIV(u,(D)v)):TYMES(u,v);
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
+// Don't RESTRICT y since function may be called inplace
 #define PREFIXPFX(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
   if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=    *x++;);                                        \
@@ -29,7 +30,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
   NAN0;                                                               \
   if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
@@ -40,7 +41,7 @@
  }   /* for associative functions only */
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){I i;Tz v,* RESTRICT y;                                    \
+ AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
   if(d==1)DO(m, *z++=v=(Tz)*x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    y=z; DO(d, *z++=(Tz)*x++;);                                        \
@@ -48,7 +49,7 @@
  }}}  /* for associative functions only */
 
 #define PREFIXALT(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=    *x++;); b=0;                                                    \
@@ -56,7 +57,7 @@
  }}}
 
 #define PREALTNAN(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   NAN0;                                                                                \
   if(d==1)DO(m, *z++=v=    *x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
@@ -67,7 +68,7 @@
  }
 
 #define PREFICALT(f,Tz,Tx,pfx)  \
- AHDRP(f,Tz,Tx){B b;I i;Tz v,* RESTRICT y;                                                 \
+ AHDRP(f,Tz,Tx){B b;I i;Tz v,* y;                                                 \
   if(d==1)DO(m, *z++=v=(Tz)*x++; b=0; DO(n-1, b=!b; pfx(b,*z,v,*x); v=*z; ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                                               \
    y=z; DO(d, *z++=(Tz)*x++;); b=0;                                                    \
@@ -75,7 +76,7 @@
  }}}
 
 #define PREFIXOVF(f,Tz,Tx,fp1,fvv)  \
- AHDRP(f,I,I){C er=0;I i,*xx=x,* RESTRICT y,*zz=z;                      \
+ AHDRP(f,I,I){C er=0;I i,*xx=x,* y,*zz=z;                      \
   if(d==1){                                                         \
    if(1==n)DO(m, *z++=*x++;)                                        \
    else {I c=d*n;    DO(m, fp1(n,z,x); RER; z=zz+=c; x=xx+=c;) }               \
@@ -87,13 +88,13 @@
   
 #if SY_ALIGN
 #define PREFIXBFXLOOP(T,pfx)  \
- {T* RESTRICT xx=(T*)x,* RESTRICT yy,* RESTRICT zz=(T*)z;  \
+ {T* xx=(T*)x,* yy,* zz=(T*)z;  \
   q=d/sizeof(T);             \
   DO(m, yy=zz; DO(q, *zz++=*xx++;); DO(n-1, DO(q, *zz++=pfx(*yy,*xx); ++xx; ++yy;)));  \
  }
 
 #define PREFIXBFX(f,pfx,ipfx,spfx,bpfx,vexp)          \
- AHDRP(f,B,B){B* RESTRICT y;I j,q;                        \
+ AHDRP(f,B,B){B* y;I j,q;                        \
   if(1==d)for(j=0;j<m;++j){vexp}                      \
   else if(0==(d&(sizeof(UI  )-1)))PREFIXBFXLOOP(UI,   pfx)  \
   else if(0==(d&(sizeof(UINT)-1)))PREFIXBFXLOOP(UINT,ipfx)  \
@@ -519,8 +520,8 @@ static DF1(jtinfixprefix1){F1PREFIP;
 }
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
- RZ(w);
+static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
+ RZ(w);F1PREFIP;
  wt=AT(w);   // get type of w
  if(SPARSE&wt)R scansp(w,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
@@ -530,13 +531,13 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
  // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtinfixprefix1);}
- VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // analyze f
- if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);
- if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- zt=rtype(adocv.cv); // RESETRANK;
- GA(z,zt,wn,wr,ws);
+ VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // fetch info for f/\ and this type of arg
+ if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);  // if there is no special function for this type, do general reduce
+ if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
+ // if inplaceable, reuse the input area for the result
+ if((I)jtinplace&(adocv.cv>>VIPOKWX)&JTINPLACEW && ASGNINPLACE(w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  adocv.f(jt,m,d,n,AV(z),AV(w));
- if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;
+ if(jt->jerr)R (jt->jerr>=EWOV)?irs1(w,self,r,jtpscan):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,z):z;  // don't need irs since no resetrank?
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
@@ -775,7 +776,7 @@ F1(jtbslash){A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLAS
   case CFORK:  
    if(v->valencefns[0]==(AF)jtmean)f2=jtmovavg; break;
   case CSLASH: 
-   f2=jtmovfslash; if(vaid(f))f1=jtpscan; break;
+   f2=jtmovfslash; if(vaid(f)){f1=jtpscan; flag|=VASGSAFE|VJTFLGOK1;} break;
   default:
    flag |= VJTFLGOK1|VJTFLGOK2; break; // The default u\ looks at WILLBEOPENED
  }

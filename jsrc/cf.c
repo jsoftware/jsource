@@ -233,11 +233,11 @@ static DF1(jthkodom){DECLFG;B b=0;I n,*v;
 
 #define IDOTSEARCH(T,comp)  {T *wv=T##AV(w); I optx0=-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[1]; wv+=2; \
   DO((n>>1)-1, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[1] comp opt1){opt1=wv[1]; optx1=i;} wv+=2;) \
-  z=(opt0 comp opt1 || (opt0==opt1&&optx0<=optx1))?2*optx0:2*optx1+1; opt0=opt0 comp=opt1?opt0:opt1; z+=2; if(n&1&&wv[0] comp opt0)z=n-1; break;}
+  z=((opt0 comp opt1) || (opt0==opt1&&optx0<=optx1))?2*optx0:2*optx1+1; opt0=opt0 comp=opt1?opt0:opt1; z+=2; if(n&1&&wv[0] comp opt0)z=n-1; break;}
 
 #define ICOSEARCH(T,comp)  {T *wv=T##AV(w)+n-1; I optx0=(n>>1)-1; T opt0=wv[0]; I optx1=optx0; T opt1=wv[-1]; wv-=2; \
   DQ(optx0, if(wv[0] comp opt0){opt0=wv[0]; optx0=i;} if(wv[-1] comp opt1){opt1=wv[-1]; optx1=i;} wv-=2;) \
-  z=(opt0 comp opt1 || (opt0==opt1&&optx0>=optx1))?2*optx0+1:2*optx1; opt0=opt0 comp=opt1?opt0:opt1; z+=n&1; if(n&1&&wv[0] comp opt0)z=0; break;}
+  z=((opt0 comp opt1) || (opt0==opt1&&optx0>=optx1))?2*optx0+1:2*optx1; opt0=opt0 comp=opt1?opt0:opt1; z+=n&1; if(n&1&&wv[0] comp opt0)z=0; break;}
 
 static DF1(jthkindexofmaxmin){I z=0;
  RZ(w&&self);

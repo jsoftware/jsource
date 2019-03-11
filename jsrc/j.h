@@ -712,9 +712,6 @@ extern unsigned int __cdecl _clearfp (void);
 // CTTZ(w) counts trailing zeros in low 32 bits of w.  Result is undefined if w is 0.
 // CTTZZ(w) does the same, but returns 32 if w is 0
 // CTTZI(w) counts trailing zeros in an argument of type I (32 or 64 bits depending on architecture)
-// CTLZ would be a better primitive to support, except that LZCNT executes as BSR on some Intel processors,
-// but produces incompatible results! (BSR returns bit# of leading 1, LZCNT returns #leading 0s)
-// since we don't require CTLZ yet, we defer that problem to another day
 
 // CTTZ uses the single-instruction count-trailing-zeros instruction to convert
 // a 1-bit mask to a bit number.  If this instruction is available on your architecture/compiler,

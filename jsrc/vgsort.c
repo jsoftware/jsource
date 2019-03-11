@@ -389,27 +389,33 @@ static void sortdq1(D *v, I n){
   I in0=l; I in1=r-1;  // the last position is notionally the swapped-out pivot
   I xchgx0=0; I xchgx1=r;  // remember the last successful exchange, so that we ignore any step past it
   // loop till partitioning completed
+  // At this point we know that if cstk? is 0, cstklsb? has been set to BW.  Also, at least one cstk? is 0
   while(1){
    // add to each comparison stack.  Use the fixed amount (to avoid misbranches), but not much past halfway between comparison output pointers,
    // and never past the opposite output pointer.  This keeps us in the batch and avoids looking for swaps that have already been passed up.  The next output pointer is in0-(BW-cstklsb0)  or  in1+(BW-cstklsb1)
-   {I midpoint=(in0+cstklsb0+in1-cstklsb1)>>1; UI newstkbit=1LL<<(BW-1);
-    I ncmp0=cstklsb0; ncmp0=ncmp0>in1+(BW-cstklsb1)-in0+1?in1+(BW-cstklsb1)-in0+1:ncmp0; ncmp0=ncmp0>midpoint-in0+8?midpoint-in0+8:ncmp0; ncmp0=ncmp0>((BW*2)/3)?(BW*2)/3:ncmp0; ncmp0=ncmp0<0?0:ncmp0;
-    I ncmp1=cstklsb1; ncmp1=ncmp1>in1-(in0-(BW-cstklsb0))+1?in1-(in0-(BW-cstklsb0))+1:ncmp1; ncmp1=ncmp1>in1-midpoint+8?in1-midpoint+8:ncmp1; ncmp1=ncmp1>((BW*2)/3)?(BW*2)/3:ncmp1; ncmp1=ncmp1<0?0:ncmp1;
-    DQ(ncmp0, UI newbit=v[in0]>=pivot?newstkbit:0; cstk0=(cstk0>>1)+newbit; ++in0;) if(cstk0)cstklsb0=CTTZI(cstk0);else cstklsb0-=ncmp0;
-    DQ(ncmp1, UI newbit=v[in1]<=pivot?newstkbit:0; cstk1=(cstk1>>1)+newbit; --in1;) if(cstk1)cstklsb1=CTTZI(cstk1);else cstklsb1-=ncmp1;
-   }
-   // If we were unable to add to either of the empty stacks, we are done.  The empty stack(s) will point past the end of the block, but the length will be 0
-   if((cstklsb0|cstklsb1)&BW)goto partdone;
+   do{I midpoint=(in0+cstklsb0+in1-cstklsb1)>>1; UI newstkbit=1LL<<(BW-1);
+    // If we were unable to add to either of the empty stacks, we are done.  The empty stack(s) will point past the end of the block, but the length will be 0
+    I ncmp0=cstklsb0; ncmp0=ncmp0>in1+(BW-cstklsb1)-in0+1?in1+(BW-cstklsb1)-in0+1:ncmp0; ncmp0=ncmp0>midpoint-in0+8?midpoint-in0+8:ncmp0; ncmp0=ncmp0>((BW*2)/3)?(BW*2)/3:ncmp0; ncmp0=ncmp0<0?0:ncmp0; if(!(cstk0|ncmp0))goto partdone;
+    I ncmp1=cstklsb1; ncmp1=ncmp1>in1-(in0-(BW-cstklsb0))+1?in1-(in0-(BW-cstklsb0))+1:ncmp1; ncmp1=ncmp1>in1-midpoint+8?in1-midpoint+8:ncmp1; ncmp1=ncmp1>((BW*2)/3)?(BW*2)/3:ncmp1; ncmp1=ncmp1<0?0:ncmp1; if(!(cstk1|ncmp1))goto partdone;
+    // look for swappable values and stack them.  At end, note the position of the first swappable.  If there are none, advance LSB to end of word to leave maximum space
+    DQ(ncmp0, UI newbit=v[in0]>pivot?newstkbit:0; cstk0=(cstk0>>1)+newbit; ++in0;) cstklsb0=CTTZI(cstk0);cstklsb0=(cstk0==0)?BW:cstklsb0;
+    DQ(ncmp1, UI newbit=v[in1]<pivot?newstkbit:0; cstk1=(cstk1>>1)+newbit; --in1;) cstklsb1=CTTZI(cstk1);cstklsb1=(cstk1==0)?BW:cstklsb1;
+   }while((cstk0==0)||(cstk1==0));
+// obsolete    if((cstklsb0|cstklsb1)&BW)goto partdone;
    // process the comparison stack until one of the stacks is empty.  Perform exchanges
-   while((cstk0!=0)&(cstk1!=0)){
+   while(1){
     if(in0-(BW-cstklsb0)>=in1+(BW-cstklsb1))goto partdone;  // if pointers have crossed, we're through
     xchgx0=in0-(BW-cstklsb0); xchgx1=in1+(BW-cstklsb1);  // remember the successful exchange, so that we don't 
     D temp=v[xchgx0]; v[xchgx0]=v[xchgx1]; v[xchgx1]=temp;
-    cstk0&=cstk0-1; cstk1&=cstk1-1; // remove the bits that were processed
-    cstklsb0=CTTZI(cstk0); cstklsb1=CTTZI(cstk1);   // advance the pointer to the next swap; garbage if zero, but that's corrected immediately below
+// obsolete     cstk0&=cstk0-1; cstk1&=cstk1-1; // remove the bits that were processed
+// obsolete     cstklsb0=CTTZI(cstk0); cstklsb1=CTTZI(cstk1);   // advance the pointer to the next swap; garbage if zero, but that's corrected immediately below
+    // Remove the bit we processed, and update the lsb for the next swap.  If there is no swap here, advance LSB to end of word to free up stack space
+    if(cstk0&=cstk0-1)cstklsb0=CTTZI(cstk0); else{cstklsb0=BW; break;}  // We hope the processor predicts these branches to fail always, so that we will get one misbranch to exit the loop
+    if(cstk1&=cstk1-1)cstklsb1=CTTZI(cstk1); else{cstklsb1=BW; goto testcstk1;}
    }
-   // For each stack that is 0, advance the LSB to the end of the word.  This is required to free up space in case there is a long run of no exchanges
-   cstklsb0=(cstk0==0)?BW:cstklsb0; cstklsb1=(cstk1==0)?BW:cstklsb1;
+   // Here when cstk0 ended: we have not updated cstk1 yet
+   cstk1&=cstk1-1; cstklsb1=CTTZI(cstk1); cstklsb1=cstk1==0?BW:cstklsb1;
+testcstk1:
   }
   // At this point we know that indexes BELOW= in0+BW-cstklsb0 are <= the pivot, and those ABOVE= in1-(BW-cstklsb1)  are >= the pivot.  In other words, stklsb gives the location of the exchange that
   // was not made because those values were already in position.  Recursion will be to points including those values.  Any points between those values (exclusive) must be equal to the pivot

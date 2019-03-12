@@ -8,7 +8,8 @@
 // create inplace bits as copy of W, or swap A & W
 static DF1(swap1){DECLF; F1PREFIP; jtinplace = (J)(intptr_t)(((I)jtinplace&~JTINPLACEA)+2*((I)jtinplace&JTINPLACEW)); RANKT mr=(RANKT)jt->ranks;
  if(mr!=RMAX)R jtirs2(jtinplace,w,w,fs,mr,mr,f2); else{jt->ranks=(RANK2T)~0; R (f2)(jtinplace,w,w,fs);}}  // must expand infinite rank to dyadic size
-static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace+((JTINPLACEW+JTINPLACEA)&(4>>((I)jtinplace&JTINPLACEW+JTINPLACEA)))); RANK2T lrr=jt->ranks;
+// obsolete static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace+((JTINPLACEW+JTINPLACEA)&(4>>((I)jtinplace&JTINPLACEW+JTINPLACEA)))); RANK2T lrr=jt->ranks;  // exchange inplace flags
+static DF2(swap2){DECLF; F2PREFIP; jtinplace = (J)(intptr_t)((I)jtinplace^((JTINPLACEW+JTINPLACEA)&(0x3C>>(2*((I)jtinplace&JTINPLACEW+JTINPLACEA))))); RANK2T lrr=jt->ranks;  // exchange inplace flags
  if(lrr!=(RANK2T)~0)R jtirs2(jtinplace,w,a,fs,(RANKT)lrr,lrr>>RANKTX,f2); else R (f2)(jtinplace,w,a,fs);}
 
 // w~, which is either reflexive/passive or evoke

@@ -784,6 +784,8 @@ NB. The following failed once on nonavx because of error pushing zombieval
 min=. nmm ([ * [: <. %~) 1.98
 0.1 1.9 1.99977 -: nmm,min,max
 
+10 -: ([ + 1 * -~)/ +: 2 5  NB. Failed on error in inplacing u~
+
 
 NB. Verify inplaceable pscan, sscan
 f =: 4 : 0&>

@@ -21,7 +21,7 @@ A fx; RZ(fx=(f1)((J)(intptr_t)(((I)jt) + ((-((FAV(fs)->flag>>VJTFLGOK1X)&JTINPLA
 POPZOMB; RZ(z=(g2)((J)(intptr_t)((((I)jtinplace&(~(JTINPLACEA+JTINPLACEW)))|((I )(fx!=protw)*JTINPLACEA+(I )(hx!=protw)*JTINPLACEW))&(FAV(gs)->flag&VJTFLGOK2?~0:~JTFLAGMSK)),fx,hx,gs));}
 
 #define FOLK2 {PUSHZOMB; A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); \
-/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here is a==w, for comp ease */ \
+/* the call to h is not inplaceable, but it may allow WILLOPEN and USESITEMCOUNT.  Inplace h if f is x@], but not if a==w  Actually we turn off all flags here if a==w, for comp ease */ \
 A hx; RZ(hx=(h2)((J)(intptr_t)(((I)jt) + ((-((FAV(hs)->flag>>VJTFLGOK2X)&(I )(a!=w))) & (((I)jtinplace&sv->flag&(VFATOPL|VFATOPR)) + ((FAV(gs)->flag2>>(VF2WILLOPEN2WX-VF2WILLOPEN1X)) & VF2WILLOPEN1+VF2USESITEMCOUNT1)))),a,w,hs)); \
 /* If any result equals protw/prota, it must not be inplaced: if original w/a is inplaceable, protw/prota will not match anything */ \
 /* the call to f is inplaceable if the caller allowed inplacing, and f is inplaceable; but only where hx is NOT the same as x or y.  Both flags in jtinplace are used */ \

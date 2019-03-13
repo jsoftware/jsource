@@ -7,10 +7,15 @@ test=: 3 : 0
  t=. (/:y){y
  assert. t -: y/:y
  assert. t -: /:~ y
+ ips =: y
+ ips =: /:~ ips  NB. test inplace
+ assert. t -: ips
  if. (1=#$y)*.0=1{.0$y do. assert. (}.t)>:}:t end. 
  t=. (\:y){y
  assert. t -: y\:y
  assert. t -: \:~ y
+ ips =: \:~ y
+ assert. t -: ips
  if. (1=#$y)*.0=1{.0$y do. assert. (}.t)<:}:t end. 
  1
 )
@@ -21,10 +26,15 @@ test1=: 3 : 0
  assert. t -: t1 =: y/:"1 y
  assert. t -: t1 =: /:~"1 y
  assert. t -: t1 =: /:"1~ y
+ ips =: y
+ ips =: /:"1~ ips  NB. test inplace
+ assert. t -: ips
  t=: (\:"1 y){"1 y
  assert. t -: t1 =: y\:"1 y
  assert. t -: t1 =: \:~"1 y
  assert. t -: t1 =: \:"1~ y
+ ips =: \:"1~ ips  NB. test inplace
+ assert. t -: ips
  1
 )
 
@@ -151,6 +161,57 @@ test  0.01*(--:n)+ 1002 ?@$ n=: IF64{1e9 1e18
 test  0.01*(--:n)+ 1003 ?@$ n=: IF64{1e9 1e18
 
 
+test        51000 ?@$ 1e4
+test        51001 ?@$ 1e4
+test        51002 ?@$ 1e4
+test        51003 ?@$ 1e4
+
+test    -1+ 51000 ?@$ 1e4
+test    -1+ 51001 ?@$ 1e4
+test    -1+ 51002 ?@$ 1e4
+test    -1+ 51003 ?@$ 1e4
+
+test  _5e3+ 51000 ?@$ 1e4
+test  _5e3+ 51001 ?@$ 1e4
+test  _5e3+ 51002 ?@$ 1e4
+test  _5e3+ 51003 ?@$ 1e4
+
+test        51000 ?@$ 1e9
+test        51001 ?@$ 1e9
+test        51002 ?@$ 1e9
+test        51003 ?@$ 1e9
+
+test        51000 ?@$ IF64{1e9 1e18
+test        51001 ?@$ IF64{1e9 1e18
+test        51002 ?@$ IF64{1e9 1e18
+test        51003 ?@$ IF64{1e9 1e18
+
+test  - 1 + 51000 ?@$ IF64{1e9 1e18
+test  - 1 + 51001 ?@$ IF64{1e9 1e18
+test  - 1 + 51002 ?@$ IF64{1e9 1e18
+test  - 1 + 51003 ?@$ IF64{1e9 1e18
+
+test(--:n)+ 51000 ?@$ n=: IF64{1e9 1e18
+test(--:n)+ 51001 ?@$ n=: IF64{1e9 1e18
+test(--:n)+ 51002 ?@$ n=: IF64{1e9 1e18
+test(--:n)+ 51003 ?@$ n=: IF64{1e9 1e18
+
+test  0.01*     51000 ?@$ IF64{1e9 1e18
+test  0.01*     51001 ?@$ IF64{1e9 1e18
+test  0.01*     51002 ?@$ IF64{1e9 1e18
+test  0.01*     51003 ?@$ IF64{1e9 1e18
+
+test  0.01*  -1+51000 ?@$ IF64{1e9 1e18
+test  0.01*  -1+51001 ?@$ IF64{1e9 1e18
+test  0.01*  -1+51002 ?@$ IF64{1e9 1e18
+test  0.01*  -1+51003 ?@$ IF64{1e9 1e18
+
+test  0.01*(--:n)+ 51000 ?@$ n=: IF64{1e9 1e18
+test  0.01*(--:n)+ 51001 ?@$ n=: IF64{1e9 1e18
+test  0.01*(--:n)+ 51002 ?@$ n=: IF64{1e9 1e18
+test  0.01*(--:n)+ 51003 ?@$ n=: IF64{1e9 1e18
+
+
 test1  a.{~ 3 1000 ?@$ #a.
 test1  a.{~ 3 1001 ?@$ #a.
 test1  a.{~ 3 1002 ?@$ #a.
@@ -245,6 +306,76 @@ test1 0.01*(--:n) + 3 1000 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1001 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1002 ?@$ n=: IF64{1e9 1e18
 test1 0.01*(--:n) + 3 1003 ?@$ n=: IF64{1e9 1e18
+
+
+test1       3 51000 ?@$ 1e4
+test1       3 51001 ?@$ 1e4
+test1       3 51002 ?@$ 1e4
+test1       3 51003 ?@$ 1e4
+
+test1   -1+ 3 51000 ?@$ 1e4
+test1   -1+ 3 51001 ?@$ 1e4
+test1   -1+ 3 51002 ?@$ 1e4
+test1   -1+ 3 51003 ?@$ 1e4
+
+test1 _5e4+ 3 51000 ?@$ 1e4
+test1 _5e4+ 3 51001 ?@$ 1e4
+test1 _5e4+ 3 51002 ?@$ 1e4
+test1 _5e4+ 3 51003 ?@$ 1e4
+
+test1       3 51000 ?@$ 1e9
+test1       3 51001 ?@$ 1e9
+test1       3 51002 ?@$ 1e9
+test1       3 51003 ?@$ 1e9
+
+test1       3 51000 ?@$ IF64{1e9 1e18
+test1       3 51001 ?@$ IF64{1e9 1e18
+test1       3 51002 ?@$ IF64{1e9 1e18
+test1       3 51003 ?@$ IF64{1e9 1e18
+
+test1   -1+ 3 51000 ?@$ 1e9
+test1   -1+ 3 51001 ?@$ 1e9
+test1   -1+ 3 51002 ?@$ 1e9
+test1   -1+ 3 51003 ?@$ 1e9
+
+test1   -1+ 3 51000 ?@$ IF64{1e9 1e18
+test1   -1+ 3 51001 ?@$ IF64{1e9 1e18
+test1   -1+ 3 51002 ?@$ IF64{1e9 1e18
+test1   -1+ 3 51003 ?@$ IF64{1e9 1e18
+
+test1 _5e8+ 3 51000 ?@$ 1e9
+test1 _5e8+ 3 51001 ?@$ 1e9
+test1 _5e8+ 3 51002 ?@$ 1e9
+test1 _5e8+ 3 51003 ?@$ 1e9
+
+test1 (--:n) + 3 51000 ?@$ n=: IF64{1e9 1e18
+test1 (--:n) + 3 51001 ?@$ n=: IF64{1e9 1e18
+test1 (--:n) + 3 51002 ?@$ n=: IF64{1e9 1e18
+test1 (--:n) + 3 51003 ?@$ n=: IF64{1e9 1e18
+
+test1 0.01* 3 51000 ?@$ IF64{1e9 1e18
+test1 0.01* 3 51001 ?@$ IF64{1e9 1e18
+test1 0.01* 3 51002 ?@$ IF64{1e9 1e18
+test1 0.01* 3 51003 ?@$ IF64{1e9 1e18
+
+test1 0.01*  -1+ 3 51000 ?@$ IF64{1e9 1e18
+test1 0.01*  -1+ 3 51001 ?@$ IF64{1e9 1e18
+test1 0.01*  -1+ 3 51002 ?@$ IF64{1e9 1e18
+test1 0.01*  -1+ 3 51003 ?@$ IF64{1e9 1e18
+
+test1 0.01*(--:n) + 3 51000 ?@$ n=: IF64{1e9 1e18
+test1 0.01*(--:n) + 3 51001 ?@$ n=: IF64{1e9 1e18
+test1 0.01*(--:n) + 3 51002 ?@$ n=: IF64{1e9 1e18
+test1 0.01*(--:n) + 3 51003 ?@$ n=: IF64{1e9 1e18
+
+NB. Test all-equal keys, just a few nonequal keys, many equal keys
+test1 100 1000 $ 4
+test1 <. 0.001 + 100 10000 ?@$ 0
+test1 <. 20 * 100 1000 ?@$ 0
+
+test1 1.5 + 100 1000 $ 4
+test1 1.5 + <. 0.001 + 100 10000 ?@$ 0
+test1 1.5 + <. 20 * 100 1000 ?@$ 0
 
 
 4!:55 ;:'adot1 adot2 sdot0 b n t t1 test test1 yy'

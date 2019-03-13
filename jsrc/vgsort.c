@@ -11,6 +11,78 @@
 
 #define CXCHG2(v0,v1) {void *v2=v0; B t=COMPFN(compn,v0,v1); v0=(!t)?v1:v0; v1=(!t)?v2:v1;}
 
+#if 0
+#define CXCHG2D(a,b) {t=a; a=(t<=b)?a:b; b=(t<=b)?b:t;}
+static void sortdq1short(D *v, I n){D a,b,c,d,e,t;
+ switch(n){
+ case 2:  // happens only if original input is 2 long
+  a=v[0]; b=v[1]; CXCHG2D(a,b);
+  goto exitb;
+ case 3:
+  a=v[0]; b=v[1]; c=v[2]; CXCHG2D(b,c); CXCHG2D(a,b); CXCHG2D(b,c);
+  goto exitc;
+ case 4:
+  a=v[0]; b=v[1]; c=v[2]; d=v[3]; CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(a,c); CXCHG2D(b,d); CXCHG2D(b,c);
+  goto exitd;
+ case 5:
+  a=v[0]; b=v[1]; c=v[2]; d=v[3]; e=v[4]; CXCHG2D(b,c); CXCHG2D(d,e); CXCHG2D(b,d); CXCHG2D(a,c); CXCHG2D(a,d); CXCHG2D(c,e); CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(b,c);
+  v[4]=e;
+exitd:
+  v[3]=d;
+exitc:
+  v[2]=c;
+exitb:
+  v[1]=b; v[0]=a;
+ case 0: case 1:;
+ }
+ R;
+}
+#else
+static UC orderfromcomp3[8] = {
+36,24,0,9,33,0,18,6
+};
+
+static UC orderfromcomp4[64] = {
+228,180,0,120,216,0,156,108,0,0,0,57,0,0,0,45,0,0,0,0,201,0,141,0,0,0,0,0,0,0,78,30,
+225,177,0,0,0,0,0,0,0,114,0,54,0,0,0,0,210,0,0,0,198,0,0,0,147,99,0,39,135,0,75,27
+};
+
+static US orderfromcomp5[1024] = {
+18056,14472,0,10440,17608,0,13576,9992,0,0,0,6352,0,0,0,5904,0,0,0,0,17104,0,13072,0,0,0,0,0,0,0,8984,5400,
+18000,14416,0,0,0,0,0,0,0,10328,0,6296,0,0,0,0,17496,0,0,0,17048,0,0,0,13408,9824,0,5792,12960,0,8928,5344,
+0,0,0,0,0,0,0,0,0,0,0,2257,0,0,0,1809,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1305,
+0,0,0,0,0,0,0,0,0,0,0,2201,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1697,0,0,0,1249,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16593,0,12561,0,0,0,0,0,0,0,8473,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16537,0,0,0,0,0,0,0,12449,0,8417,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4378,794,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4322,738,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+17937,14353,0,0,0,0,0,0,0,10265,0,0,0,0,0,0,17433,0,0,0,0,0,0,0,13345,9761,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,6170,0,2138,0,0,0,0,0,0,0,0,0,0,0,0,0,5666,0,1634,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16922,0,0,0,16474,0,0,0,12834,0,0,0,12386,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8739,5155,0,1123,8291,0,4259,675,
+18049,14465,0,10433,17601,0,13569,9985,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,6338,0,0,0,5890,0,0,0,2250,0,0,0,1802,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,17090,0,13058,0,0,0,0,0,0,0,0,0,0,0,0,0,16586,0,12554,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,8963,5379,0,0,0,0,0,0,0,1291,0,0,0,0,0,0,8459,0,0,0,0,0,0,0,4371,787,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+17986,14402,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+17930,14346,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,10307,0,6275,0,0,0,0,0,0,0,2187,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,10251,0,0,0,0,0,0,0,6163,0,2131,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+17475,0,0,0,17027,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16523,0,0,0,0,0,0,0,0,0,0,0,
+17419,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16915,0,0,0,16467,0,0,0,0,0,0,0,0,0,0,0,
+13380,9796,0,5764,12932,0,8900,5316,0,0,0,1676,0,0,0,1228,0,0,0,0,12428,0,8396,0,0,0,0,0,0,0,4308,724,
+13324,9740,0,0,0,0,0,0,0,5652,0,1620,0,0,0,0,12820,0,0,0,12372,0,0,0,8732,5148,0,1116,8284,0,4252,668
+};
+#endif
+
 // Comparison functions.  Do one comparison before the loop for a fast exit if it differs.
 // On VS this sequence, where a single byte is returned, creates a CMP/JE/SETL sequence, performing only one (fused) compare
 // #define COMPGRADE(T,t) T av=*a, bv=*b; if(av!=bv) R av t bv; while(--n){++a; ++b; av=*a, bv=*b; if(av!=bv) R av t bv;} R a<b;
@@ -180,31 +252,6 @@ static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  R z;
 }    /* w grade"1 w on 2-byte character or unicode items */
 
-static SF(jtsorti1);
-
-static SF(jtsorti){A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
- wv=AV(w);
- // figure out whether we should do small-range processing.  Comments in vg.c
- CR rng = condrange(wv,AN(w),IMAX,IMIN,n<<(n>(L2CACHESIZE>>LGSZI)?2:4));
- // smallrange always wins if applicable; otherwise use radix up to 1300 items, merge thereafter
- if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
- // allocate area for the data, and result area
- GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
- GA(z,AT(w),AN(w),AR(w),AS(w)); zv=AV(z);
- // clear all totals to 0, then bias address of area so the data fits
- for(i=0;i<m;++i){  // for each list...
-  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
-  DO(n, ++yv[*wv++];);  // increment total for each input atom
-  // run through the totals, copying in the requisite # repetitions of each value
-  // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
-  I incr = -jt->workareas.compare.complt; I zincr = (incr&1)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>complt is 1 or -1
-  DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
-//  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
-//  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DO(s, *zv++=j  ;););}
- }
- R z;
-}    /* w grade"1 w on small-range integers */
-
 
 // We are known to have 1 atom per item
 static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
@@ -226,10 +273,63 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  R z;
 }    /* w grade"r w on large-range integers */
 
+
+// sort a single real list using quicksort without misprediction, inplace
+#define SORTQNAME sortiq1
+#define SORTQTYPE I
+#include "vgsortq.h"
+
+static SF(jtsortiq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
+ A z; 
+ if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
+ I *zv=IAV(z); DQ(m, sortiq1(zv,n); if(jt->workareas.compare.complt>0){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
+ RETF(z);
+}
+
+
+static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
+ wv=AV(w);
+ // figure out whether we should do small-range processing.  Comments in vg.c
+ // First, decide, based on the length of the list, what the threshold for small-range sorting will be.
+ // This is what we are trying to calculate, based on n:
+ // n<40: if range<5n, use smallrange, otherwise qsort
+ // 40<n<800: if range<5n use smallrange, otherwise mergesort
+ // 800<n<100000: if range<2n use smallrange, otherwise mergesort
+ // 100000<n<600000: if range<3n use smallrange, otherwise radix
+ // 600000<n<1000000: if range<2n use smallrange, otherwise radix
+ // 1000000<n if range<n use smallrange, otherwise radix
+ I nrange=(n>=40)+(n>=800)+(n>=100000)+(n>=600000)+(n>=1000000);  // TUNE
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,n*((0x123255>>(nrange<<2))&7)); // 1 2 3 2 5 5 are the shift amounts for the ranges
+ // smallrange always wins if applicable; otherwise use the table above
+ if(!rng.range){  // range was too large
+  if(n<40)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  It isn't much better than mergesort and could be deleted  TUNE
+  if(n<100000)R jtsortdirect(jt,m,1,n,w);  // 40-99999, mergesort   TUNE
+  R sorti1(m,n,w);  // 100000+, radix  TUNE
+ }
+// obsolete if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
+ // allocate area for the data, and result area
+ GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
+ if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
+ zv=AV(z);
+ // clear all totals to 0, then bias address of area so the data fits
+ for(i=0;i<m;++i){  // for each list...
+  memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
+  DO(n, ++yv[*wv++];);  // increment total for each input atom
+  // run through the totals, copying in the requisite # repetitions of each value
+  // We have to disguise the loop to prevent VS from producing a REP STOS, which we don't want because the loop is usually short
+  I incr = -jt->workareas.compare.complt; I zincr = (incr&1/*always 1*/)*sizeof(*zv); j=rng.min+((incr>>(BW-1))&(rng.range-1));  // jt>complt is 1 or -1
+  DQ(rng.range, s=yv[j]; DQ(s, *zv=j; zv=(I*)((C*)zv+zincr);) j+=incr;)  // Don't zv+=zincr, because VS doesn't pull the *8 out
+//  if((UI)jt->workareas.compare.complt>>(BW-1)){ j=rng.min; DQ(rng.range, s=(I)yv[j]; DO(s, *zv++=j;); ++j;);}  // generates rep stos, which is slow.  should fix
+//  else{j=rng.min+rng.range; DQ(rng.range, --j; s=(I)yv[j]; DO(s, *zv++=j  ;););}
+ }
+ R z;
+}    /* w grade"1 w on small-range integers */
+
+
 static SF(jtsortu1);
 
 // see jtsorti above
-static SF(jtsortu){A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
+static SF(jtsortu){FPREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  wv=C4AV(w);
  I maxrange; CR rng;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
@@ -262,192 +362,25 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  R z;
 }    /* w grade"r w on large-range literal4 */
 
-#if 0
-#define CXCHG2D(a,b) {t=a; a=(t<=b)?a:b; b=(t<=b)?b:t;}
-static void sortdq1short(D *v, I n){D a,b,c,d,e,t;
- switch(n){
- case 2:  // happens only if original input is 2 long
-  a=v[0]; b=v[1]; CXCHG2D(a,b);
-  goto exitb;
- case 3:
-  a=v[0]; b=v[1]; c=v[2]; CXCHG2D(b,c); CXCHG2D(a,b); CXCHG2D(b,c);
-  goto exitc;
- case 4:
-  a=v[0]; b=v[1]; c=v[2]; d=v[3]; CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(a,c); CXCHG2D(b,d); CXCHG2D(b,c);
-  goto exitd;
- case 5:
-  a=v[0]; b=v[1]; c=v[2]; d=v[3]; e=v[4]; CXCHG2D(b,c); CXCHG2D(d,e); CXCHG2D(b,d); CXCHG2D(a,c); CXCHG2D(a,d); CXCHG2D(c,e); CXCHG2D(a,b); CXCHG2D(c,d); CXCHG2D(b,c);
-  v[4]=e;
-exitd:
-  v[3]=d;
-exitc:
-  v[2]=c;
-exitb:
-  v[1]=b; v[0]=a;
- case 0: case 1:;
- }
- R;
-}
-#else
-static UC orderfromcomp3[8] = {
-36,24,0,9,33,0,18,6
-};
-
-static UC orderfromcomp4[64] = {
-228,180,0,120,216,0,156,108,0,0,0,57,0,0,0,45,0,0,0,0,201,0,141,0,0,0,0,0,0,0,78,30,
-225,177,0,0,0,0,0,0,0,114,0,54,0,0,0,0,210,0,0,0,198,0,0,0,147,99,0,39,135,0,75,27
-};
-
-static US orderfromcomp5[1024] = {
-18056,14472,0,10440,17608,0,13576,9992,0,0,0,6352,0,0,0,5904,0,0,0,0,17104,0,13072,0,0,0,0,0,0,0,8984,5400,
-18000,14416,0,0,0,0,0,0,0,10328,0,6296,0,0,0,0,17496,0,0,0,17048,0,0,0,13408,9824,0,5792,12960,0,8928,5344,
-0,0,0,0,0,0,0,0,0,0,0,2257,0,0,0,1809,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1305,
-0,0,0,0,0,0,0,0,0,0,0,2201,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1697,0,0,0,1249,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16593,0,12561,0,0,0,0,0,0,0,8473,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16537,0,0,0,0,0,0,0,12449,0,8417,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4378,794,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4322,738,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-17937,14353,0,0,0,0,0,0,0,10265,0,0,0,0,0,0,17433,0,0,0,0,0,0,0,13345,9761,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,6170,0,2138,0,0,0,0,0,0,0,0,0,0,0,0,0,5666,0,1634,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16922,0,0,0,16474,0,0,0,12834,0,0,0,12386,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8739,5155,0,1123,8291,0,4259,675,
-18049,14465,0,10433,17601,0,13569,9985,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,6338,0,0,0,5890,0,0,0,2250,0,0,0,1802,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,17090,0,13058,0,0,0,0,0,0,0,0,0,0,0,0,0,16586,0,12554,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,8963,5379,0,0,0,0,0,0,0,1291,0,0,0,0,0,0,8459,0,0,0,0,0,0,0,4371,787,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-17986,14402,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-17930,14346,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,10307,0,6275,0,0,0,0,0,0,0,2187,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,10251,0,0,0,0,0,0,0,6163,0,2131,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-17475,0,0,0,17027,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16523,0,0,0,0,0,0,0,0,0,0,0,
-17419,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16915,0,0,0,16467,0,0,0,0,0,0,0,0,0,0,0,
-13380,9796,0,5764,12932,0,8900,5316,0,0,0,1676,0,0,0,1228,0,0,0,0,12428,0,8396,0,0,0,0,0,0,0,4308,724,
-13324,9740,0,0,0,0,0,0,0,5652,0,1620,0,0,0,0,12820,0,0,0,12372,0,0,0,8732,5148,0,1116,8284,0,4252,668
-};
-
-static void sortdq1short(D *v, I n){D a,b,c,d,e;UI f;
- switch(n){
- case 2:
-  a=v[0]; b=v[1]; f=a>b; v[f]=a; v[f^1]=b;
-  break;
- case 3:
-  a=v[0]; b=v[1]; c=v[2];
-  f=orderfromcomp3[((a>b)<<2) + ((a>c)<<1) + (b>c)];
-  v[f&3]=a; v[(f>>2)&3]=b; v[f>>4]=c;
-  break;
- case 4:
-  a=v[0]; b=v[1]; c=v[2]; d=v[3];
-  f=orderfromcomp4[((a>b)<<5) + ((a>c)<<4) + ((a>d)<<3) + ((b>c)<<2) + ((b>d)<<1) + (c>d)];
-  v[f&3]=a; v[(f>>2)&3]=b; v[(f>>4)&3]=c; v[f>>6]=d;
-  break;
- case 5:
-  // read em in
-  a=v[0]; b=v[1]; c=v[2]; d=v[3]; e=v[4];
-  // compare each value against each other value, and assemble the bits into f in order of 0-4
-  // Then read the ordering value from the table.  This read may miss in cache but we don't care too much, since there is no dependency on the result of the read
-  f=orderfromcomp5[((a>b)<<9) + ((a>c)<<8) + ((a>d)<<7) + ((a>e)<<6) + ((b>c)<<5) + ((b>d)<<4) + ((b>e)<<3) + ((c>d)<<2) + ((c>e)<<1) + (d>e)];
-  // Store each value in its correct spot  Code to minimize the # instructions held waiting for the fetch to complete
-  v[f&7]=a; v[(f>>3)&7]=b; v[(f>>6)&7]=c; v[(f>>9)&7]=d; v[f>>12]=e;
-  break;
- case 0: case 1:;
- }
- R;
-}
-#endif
 
 // sort a single real list using quicksort without misprediction, inplace
-// v->first value, n=# values
-static void sortdq1(D *v, I n){
- // loop till tail-recursion finished
- I l=0, r=n-1; I stackp=0; I stack[32][2];
- while(1){
-  // the batch is short, sort it by fixed comparison; then pick up the next batch
-  while(r-l<=4){
-    sortdq1short(v+l,r-l+1); // Because our partitioning here is fast, stay in qsort until the batch is very small
-    if(--stackp<0)R;  // back up stack; if we're finishing the last call, we're through
-    l=stack[stackp][0]; r=stack[stackp][1];  // resume the next 
-  }
-  // long batch: partition it and recur
-  // choose the pivot as the median of first/last/middle, and exchange it with the end of the array
-  D pivot;
-  {I pivotcomp = 0xc6>>(4*(v[l]>v[(l+r)>>1]) + 2*(v[l]>v[r]) + (v[(l+r)>>1]>v[r]));  // l>m, l>r, m>r 000 lmr  001 lrm  010 -  011 rlm  100 mlr  101 -  110 mrl  111 rml
-      // encode l as 00 r as 11 m as 01/10, the sequence is mr-ll-rm 01 11 10 00 00 01 11 10  0 1 1 0 0 0 1 1 0 (LE) -> 011000110  0xc6
-   I pivotx=((pivotcomp&1?r:l)+(pivotcomp&2?r:l))>>1; pivot=v[pivotx]; v[pivotx]=v[r];  // pick the median pivot, swap it (notionally) with the last 
-  }
-  // initialize comparison stacks to empty.  Bits go into the MSB of the comparison stack and are shifted down.  The in pointer is the index of the next value to be compared going in
-  // lsb gives the bit # of the lowest valid value in the stack
-  UI cstk0=0, cstk1=0; I cstklsb0=BW, cstklsb1=BW;
-  // initialize comparison input pointers (input->next value to compare).  Prebias them by BW so that the output pointer is in0+cstklsb0  or  in1-cstklsb0
-  I in0=l-BW; I in1=r-1+BW;  // the last position is notionally the swapped-out pivot
-  I xchgx0=0; I xchgx1=r;  // remember the last successful exchange, so that we ignore any step past it
-  // loop till partitioning completed
-  // At this point we know that if cstk? is 0, cstklsb? has been set to BW.  Also, at least one cstk? is 0
-  while(1){
-   // add to each comparison stack.  Use the fixed amount (to avoid misbranches), but not much past halfway between comparison output pointers,
-   // and never past the opposite output pointer.  This keeps us in the batch and avoids looking for swaps that have already been passed up.
-   do{I midpoint=(in0+cstklsb0+in1-cstklsb1)>>1; UI newstkbit=1LL<<(BW-1);  // halfway between output pointers
-    // If we were unable to add to either of the empty stacks, we are done.  The empty stack(s) will point past the end of the block, but the length of the partition will be 0
-    I ncmp0=cstklsb0; ncmp0=ncmp0>in1-cstklsb1-(in0+BW)+1?in1-cstklsb1-(in0+BW)+1:ncmp0;  // Don't move input pointer0 beyond output pointer 1.
-    ncmp0=ncmp0>midpoint-in0+8?midpoint-in0+8:ncmp0; ncmp0=ncmp0>((BW*2)/3)?(BW*2)/3:ncmp0; ncmp0=ncmp0<0?0:ncmp0; if(!(cstk0|ncmp0))goto partdone;  // Don't move too far past midpoint; never less than 0; if no swaps at all, we're through
-    I ncmp1=cstklsb1; ncmp1=ncmp1>(in1-BW)-(in0+cstklsb0)+1?(in1-BW)-(in0+cstklsb0)+1:ncmp1;
-    ncmp1=ncmp1>in1-midpoint+8?in1-midpoint+8:ncmp1; ncmp1=ncmp1>((BW*2)/3)?(BW*2)/3:ncmp1; ncmp1=ncmp1<0?0:ncmp1; if(!(cstk1|ncmp1))goto partdone;
-    // look for swappable values and stack them.  At end, note the position of the first swappable.  If there are none, advance LSB to end of word to leave maximum space
-    DQ(ncmp0, UI newbit=v[in0+BW]>pivot?newstkbit:0; cstk0=(cstk0>>1)+newbit; ++in0;) cstklsb0=CTTZI(cstk0);cstklsb0=(cstk0==0)?BW:cstklsb0;
-    DQ(ncmp1, UI newbit=v[in1-BW]<pivot?newstkbit:0; cstk1=(cstk1>>1)+newbit; --in1;) cstklsb1=CTTZI(cstk1);cstklsb1=(cstk1==0)?BW:cstklsb1;
-   }while((cstk0==0)||(cstk1==0));
-// obsolete    if((cstklsb0|cstklsb1)&BW)goto partdone;
-   // process the comparison stack until one of the stacks is empty.  Perform exchanges
-   while(1){
-    if(in0+cstklsb0>=in1-cstklsb1)goto partdone;  // if pointers have crossed, we're through
-    xchgx0=in0+cstklsb0; xchgx1=in1-cstklsb1;  // remember the successful exchange, so that we don't 
-    D temp=v[xchgx0]; v[xchgx0]=v[xchgx1]; v[xchgx1]=temp;
-// obsolete     cstk0&=cstk0-1; cstk1&=cstk1-1; // remove the bits that were processed
-// obsolete     cstklsb0=CTTZI(cstk0); cstklsb1=CTTZI(cstk1);   // advance the pointer to the next swap; garbage if zero, but that's corrected immediately below
-    // Remove the bit we processed, and update the lsb for the next swap.  If there is no swap here, advance LSB to end of word to free up stack space
-    if(cstk0&=cstk0-1)cstklsb0=CTTZI(cstk0); else{cstklsb0=BW; break;}  // We hope the processor predicts these branches to fail always, so that we will get one misbranch to exit the loop
-    if(cstk1&=cstk1-1)cstklsb1=CTTZI(cstk1); else{cstklsb1=BW; goto testcstk1;}
-   }
-   // Here when cstk0 ended: we have not updated cstk1 yet
-   cstk1&=cstk1-1; cstklsb1=CTTZI(cstk1); cstklsb1=cstk1==0?BW:cstklsb1;
-testcstk1:;
-  }
-  // At this point we know that indexes BELOW= in0+BW-cstklsb0 are <= the pivot, and those ABOVE= in1-(BW-cstklsb1)  are >= the pivot.  In other words, stklsb gives the location of the exchange that
-  // was not made because those values were already in position.  Recursion will be to points including those values.  Any points between those values (exclusive) must be equal to the pivot
-partdone:
-  // back up the pointers to the last successful exchange if any, since that exchange is known to have stored a value for that side
-  xchgx0=MAX(xchgx0,in1-cstklsb1); xchgx1=MIN(xchgx1,in0+cstklsb0);  // Now xchgx0 is the end of the left side, and xchgx1 of the right
-  // exchange the end of the array with the start of the right side
-  v[r]=v[xchgx1]; v[xchgx1]=pivot;
+#define SORTQNAME sortdq1
+#define SORTQTYPE D
+#include "vgsortq.h"
 
-  // push stack for the larger partition; modify batch pointers for the smaller
-  // recursions are l..in1-(BW-cstklsb1) and in0-(BW-cstklsb0)+1..r    the +1 to step over the pivot from this pass
-  if(xchgx0-l > r-xchgx1){stack[stackp][0]=l; stack[stackp][1]=xchgx0; l=xchgx1+1;
-  }else{stack[stackp][0]=xchgx1+1; stack[stackp][1]=r; r=xchgx0;
-  }
-  ++stackp;
- }
-}
-
-
-static SF(jtsortdq){  // m=#sorts, n=#items in each sort, w is block
- A z; RZ(z=ca(w));  // until we inplace, we have to copy the input
+static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
+ A z; 
+ if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
  D *zv=DAV(z); DQ(m, sortdq1(zv,n); if(jt->workareas.compare.complt>0){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }
 
 // We are known to have 1 atom per item
-static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
- // Radix sort almost always wins, presumably because filling the radix table is so fast
- if(n<50000)R jtsortdq(jt,m,n,w);  // TUNE
-// never wins if(n&2)R jtsortdirect(jt,m,1,n,w);  // TUNE
+static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
+ // Use quicksort for normal-sized lists
+if(n<50000)R jtsortdq(jtinplace,m,n,w);  // TUNE
+// testing if(n&1)R jtsortdq(jtinplace,m,n,w);
+// testing if(n&2)R jtsortdirect(jt,m,1,n,w);  // TUNE - it never wins
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
@@ -473,7 +406,7 @@ static SF(jtsortd){A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 
 
 // x /:"r y, not sparse
-F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr; 
+F2(jtgr2){F2PREFIP;PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr; 
  RZ(a&&w);
  // ?cr= rank of the cells being sorted; t= type of w
  acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
@@ -489,7 +422,7 @@ F2(jtgr2){PROLOG(0076);A z=0;I acr,api,d,f,m,n,*s,t,wcr;
   if(n>5){   //  TUNE
    if(t&(C4T+INT+FL)){
     // If this datatype supports smallrange or radix sorting, go try that
-    if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jt,m,n,w))   // Lists of INT/FL/C4T
+    if(1==api)RZ(z=(t&INT?jtsorti:t&FL?jtsortd:jtsortu)(jtinplace,m,n,w))   // Lists of INT/FL/C4T
    else if(d==2){
     // 2-byte types, which must be B01/LIT/C2T.  Use special code, unless strings too short
     if(t&B01)             RZ(z=sortb2(m,n,w))  // Booleans with cell-items 2 bytes long

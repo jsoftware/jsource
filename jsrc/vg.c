@@ -603,8 +603,8 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
 
 F1(jtgrade1 ){GBEGIN(-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
 F1(jtdgrade1){GBEGIN( 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F2(jtgrade2 ){GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
-F2(jtdgrade2){GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):gr2(a,w); GEND(z);}
+F2(jtgrade2 ){F2PREFIP;GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND(z);}
+F2(jtdgrade2){F2PREFIP;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND(z);}
 
 
 #define OSGT(i,j) (u[i]>u[j])

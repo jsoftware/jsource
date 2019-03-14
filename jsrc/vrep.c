@@ -112,19 +112,45 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
-static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,k,m,p,zn;
+static REPF(jtrepbdx){A z;I c,k,m,p,zn;
  // wf and wcr are set
  RZ(a&&w);
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);
- b=BAV(a); p=bsum(m,b);  // p=# 1s in result, i. e. length of result item axis
+ p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); zn=c*k*p;  // c=#cells, k=#atoms per item of cell, zn=#atoms in result
    // no overflow possible unless a is empty; nothing  moved then, and zn is 0
  GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;  // allocate result, move in length of item axis
  if(!zn)R z;
- wv=CAV(w); zv=CAV(z);
- k<<=bplg(AT(w));
- DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;););
+ k<<=bplg(AT(w));  // #bytes per item of cell
+
+// original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
+
+ void *zvv=voidAV(z); void *wvv=voidAV(w);
+ I i;for(i=0;i<c;++i){
+  I unskippedct=m;
+  I remwords=(m+SZI-1)>>LGSZI; UI *avv=IAV(a);
+  do{UI bits;  // where we load bits SZI at a time
+   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
+   while(1){if(bits=*avv++)break; if(remwords==1)break; unskippedct-=SZI; wvv=(C*)wvv+(k<<LGSZI); --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+   I batchsizem1=MIN(BB,remwords)-1;
+   UI bitstack=0; while(batchsizem1>0){PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=*avv++; --batchsizem1;};
+   // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
+   bits&=VALIDBOOLEAN; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits;
+   // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
+   if(remwords<=BB){bitstack<<=(-unskippedct)&(SZI-1); bitstack>>=((-unskippedct)&(SZI-1))+((SZI-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0
+   switch(k){  // copy the words
+   case sizeof(C): while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(US): while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI4): while(bitstack){I bitx=CTTZI(bitstack); *(UI4*)zvv=((UI4*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   case sizeof(UI): while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
+   }
+   wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
+  }while((remwords-=BB)>0);
+  wvv=(C*)wvv-(k*((BW-1)&-unskippedct));  // in case we loop back, back wvv to start of next input area, taking away the part of the last BW section we didn't use
+ } 
+
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #endif
@@ -266,23 +292,21 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 
-F2(jtrepeat){A z;B ab,wb;I acr,ar,at,m,wcr,wf,wr,wt,*ws;
+F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
- at=AT(a); ab=1&&at&DENSE;
- wt=AT(w); wb=1&&wt&DENSE; ws=AS(w);
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path
- if(wcr&&!ar&&at&(B01|INT)) {I aval = at&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
+ if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
-   if(!(wt&SPARSE)){GA(z,wt,0,AR(w),AS(w)); AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
+   if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),AS(w)); AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);  // loop if multiple cells of a
- ASSERT(!acr||!wcr||(m=*AS(a),m==*(wf+ws)),EVLENGTH);
- if(!acr||!wcr){RZ(z=ab&&wb?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
- if(at&CMPX+SCMPX){RZ(z=ab?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
- if(at&B01 +SB01 ){RZ(z=ab?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
- /* integer */    {RZ(z=ab?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
+ ASSERT(!acr||!wcr||(AS(a)[0]==AS(w)[wf]),EVLENGTH);
+ if(!acr||!wcr){RZ(z=!((AT(a)|AT(w))&SPARSE)?rep1d(a,w,wf,wcr):rep1s(a,w,wf,wcr)); RETF(z);}   // a is atom, or w is an atom and a has rank <= 1
+ if(AT(a)&B01 +SB01 ){RZ(z=AT(a)&DENSE?repbdx(a,w,wf,wcr):repbsx(a,w,wf,wcr)); RETF(z);}
+ if(AT(a)&CMPX+SCMPX){RZ(z=AT(a)&DENSE?repzdx(a,w,wf,wcr):repzsx(a,w,wf,wcr)); RETF(z);}
+ /* integer */    {RZ(z=AT(a)&DENSE?repidx(a,w,wf,wcr):repisx(a,w,wf,wcr)); RETF(z);}
 }    /* a#"r w main control */

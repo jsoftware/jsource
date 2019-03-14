@@ -118,6 +118,14 @@ m=: o.?4 5$100
 (3#x) -: (3.5-0.5)#x=:10&u:'asdf'
 (3#x) -: (3.5-0.5)#x=:s:@<"0 'asdf'
 
+NB. check for long sequences of 0 in boolean x
+((0.05 > ?@$&0) f ?@$&0)"0 (1000) + i. 300
+((0.01 > ?@$&0) f ?@$&0)"0 (1000) + i. 300
+
+NB. check different lengths of x/y
+((0.5 > ?@$&0) f ?@$&0)"0 (1000) + i. 2000
+
+
 NB. NaN related tests
 (2#_1e6 _1e6)    -: _1e6 _1e6 _1e6 _1e6
 (3 2$_834524)    -: 1 0 1 0 1 # 5 2$_834524

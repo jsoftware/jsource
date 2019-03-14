@@ -373,9 +373,11 @@ extern unsigned int __cdecl _clearfp (void);
 #define ALTBYTES 0x00ff00ff00ff00ffLL
 // t has totals per byte-lane, result combines them into single total.  t must be an lvalue
 #define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>32) + t, t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff01ff01ff, then xxxxxxxx03ff03ff, then xxxxxxxxxxxx07ff, then 00000000000007ff
+#define VALIDBOOLEAN 0x0101010101010101LL   // valid bits in a Boolean
 #else
 #define ALTBYTES 0x00ff00ffLL
 #define ADDBYTESINI(t) (t=(t&ALTBYTES)+((t>>8)&ALTBYTES), t = (t>>16) + t, t&=0xffff) // sig in 01ff01ff, then xxxx03ff, then 000003ff
+#define VALIDBOOLEAN 0x01010101   // valid bits in a Boolean
 #endif
 
 #define A0              0   // a nonexistent A-block
@@ -546,6 +548,14 @@ extern unsigned int __cdecl _clearfp (void);
 #endif
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
+// Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
+#if C_LE  // if anybody makes a bigendian CPU we'll have to recode
+#if BW==64
+#define PACKBITS(p) (p|=p>>7,p|=p>>14,p|=p>>28,p<<=56)
+#else
+#define PACKBITS(p) (p|=p>>7,p|=p>>14,p<<=28)
+#endif
+#endif
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)
 // obsolete #define PROD(result,length,ain) {I _i; if((length)<0)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}
 // obsolete #define PROD1(result,length,ain) {I _i; if((length)<-1)SEGFAULT /*scaf*/ if((_i=(length))<=0)result=1;else{result=(ain)[0];while(--_i>0){result*=(ain)[_i];}}}  // scaf

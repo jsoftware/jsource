@@ -120,25 +120,25 @@ static REPF(jtrepbdx){A z;I c,k,m,p,zn;
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
  PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); zn=c*k*p;  // c=#cells, k=#atoms per item of cell, zn=#atoms in result
    // no overflow possible unless a is empty; nothing  moved then, and zn is 0
- GA(z,AT(w),zn,AR(w),AS(w)); *(wf+AS(z))=p;  // allocate result, move in length of item axis
+ GA(z,AT(w),zn,AR(w),AS(w)); AS(z)[wf]=p;  // allocate result, move in length of item axis
  if(!zn)R z;
  k<<=bplg(AT(w));  // #bytes per item of cell
 
 // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
 
  void *zvv=voidAV(z); void *wvv=voidAV(w);
- I i;for(i=0;i<c;++i){
+ while(--c>=0){
   I unskippedct=m;
-  I remwords=(m+SZI-1)>>LGSZI; UI *avv=IAV(a);
-  do{UI bits;  // where we load bits SZI at a time
+  I remwords=(m+SZI-1)>>LGSZI; UI *avv=IAV(a); UI bits=*avv++;  // prime the pipeline for top of loop
+  do{    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-   while(1){if(bits=*avv++)break; if(remwords==1)break; unskippedct-=SZI; wvv=(C*)wvv+(k<<LGSZI); --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+   while(bits==0 && remwords>1){bits=*avv++; unskippedct-=SZI; wvv=(C*)wvv+(k<<LGSZI); --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
    I batchsizem1=MIN(BB,remwords)-1;
-   UI bitstack=0; while(batchsizem1>0){PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=*avv++; --batchsizem1;};
+   UI bitstack=0; while(batchsizem1>0){I bits2=*avv++; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=bits2; --batchsizem1;};  // keep read pipe ahead
    // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
    bits&=VALIDBOOLEAN; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits;
    // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
-   if(remwords<=BB){bitstack<<=(-unskippedct)&(SZI-1); bitstack>>=((-unskippedct)&(SZI-1))+((SZI-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0
+   if(remwords>BB)bits=*avv++;else {bitstack<<=(-unskippedct)&(SZI-1); bitstack>>=((-unskippedct)&(SZI-1))+((SZI-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
    switch(k){  // copy the words
    case sizeof(C): while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    case sizeof(US): while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;

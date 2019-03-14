@@ -209,8 +209,8 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
 // if(d==CEBAR||(b=FIT0(CEPS,wv))){
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
   f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
-  if(c==CICAP)m=7;
-  else if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
+  /* obsolete if(c==CICAP)m=7;
+  else */if(c==CSLASH)m=e==CPLUS?4:e==CPLUSDOT?5:e==CSTARDOT?6:-1;
   else if(c==CAMP&&(g==num[0]||g==num[1])){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;}
   switch(0<=m?d:-1){
    case CEBAR: f2=b?atcomp0:atcomp; flag+=6+8*m; flag&=~VJTFLGOK2; break;
@@ -250,7 +250,7 @@ F2(jtatco){A f,g;AF f1=on1cell,f2=jtupon2cell;B b=0;C c,d,e;I flag, flag2=0,j,m=
   case CFLOOR:  f1=jtonf1; f2=jtuponf2; flag=VFLR; flag&=~(VJTFLGOK1|VJTFLGOK2); break;
   case CQUERY:  if(d==CDOLLAR||d==CPOUND){f2=jtrollk; flag&=~VJTFLGOK2;}  break;
   case CQRYDOT: if(d==CDOLLAR||d==CPOUND){f2=jtrollkx; flag&=~VJTFLGOK2;} break;
-  case CICAP:   m=7; if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
+  case CICAP:   /* obsolete m=7; */if(d==CNE){f1=jtnubind; flag&=~VJTFLGOK1;} else if(FIT0(CNE,wv)){f1=jtnubind0; flag&=~VJTFLGOK1;} break;
   case CAMP:    if(g==num[0]||g==num[1]){j=*BAV(g); m=e==CIOTA?j:e==CICO?2+j:-1;} break;
   case CSLASH:  
    if(vaid(f)&&vaid(w)){f2=jtfslashatg; flag&=~VJTFLGOK2;}

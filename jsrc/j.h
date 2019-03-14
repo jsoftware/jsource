@@ -551,9 +551,9 @@ extern unsigned int __cdecl _clearfp (void);
 // Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
 #if C_LE  // if anybody makes a bigendian CPU we'll have to recode
 #if BW==64
-#define PACKBITS(p) (p|=p>>7,p|=p>>14,p|=p>>28,p<<=56)
+#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;;p|=p>>28LL;p<<=56LL;}
 #else
-#define PACKBITS(p) (p|=p>>7,p|=p>>14,p<<=28)
+#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
 #endif
 #endif
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a dense array)

@@ -182,8 +182,6 @@ NB. Verify that y can have the long frame
 (i.&1@e.&(i. 2 3) i. 5 2 3) -: i."i.&1@e.&(i. 2 3) i. 5 2 3
 ((i. 4 3 3 3 3) i:&0@:e. i. 3 3 3) -: (i. 4 3 3 3 3) i:"i:&1@:e. i. 3 3 3
 (i:&1@e.&(i. 2 3) i. 5 2 3) -: i:"i:&1@e.&(i. 2 3) i. 5 2 3
-'nonce error' -: (i. 4 3 3 3 3) I.@:e. etx i. 3 3 3
-'nonce error' -: I.@e.&(i. 2 3) etx i. 5 2 3
 'nonce error' -: (i. 3 3 3 3 3) +./@:e. etx i. 3 3 3
 'nonce error' -: +./@e.&(i. 2 3) etx i. 5 2 3
 'nonce error' -: (i. 3 3 3 3 3) *./@:e. etx i. 3 3 3

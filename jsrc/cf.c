@@ -146,7 +146,7 @@ A jtfolk(J jt,A f,A g,A h){A p,q,x,y;AF f1=jtfolk1,f2=jtfolk2;B b;C c,fi,gi,hi;I
  switch(fi==CCAP?gi:hi){
   case CQUERY:  if(hi==CDOLLAR||hi==CPOUND){f2=jtrollk; flag &=~(VJTFLGOK2);}  break;
   case CQRYDOT: if(hi==CDOLLAR||hi==CPOUND){f2=jtrollkx; flag &=~(VJTFLGOK2);} break;
-  case CICAP:   m=7; if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}} break;
+  case CICAP:   /* obsolete m=7; */ if(fi==CCAP){if(hi==CNE)f1=jtnubind; else if(FIT0(CNE,hv)){f1=jtnubind0; flag &=~(VJTFLGOK1);}} break;
   case CSLASH:  c=ID(gv->fgh[0]); m=c==CPLUS?4:c==CPLUSDOT?5:c==CSTARDOT?6:-1; 
                 if(fi==CCAP&&vaid(gv->fgh[0])&&vaid(h)){f2=jtfslashatg; flag &=~(VJTFLGOK2);}
                 break;

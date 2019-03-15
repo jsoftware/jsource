@@ -172,7 +172,7 @@ NB. Verify that y can have the long frame
 ((i. 3 0 4) i:&1@e. i. 2 4)  -: (i. 3 0 4) i:"i:&1@e. i. 2 4
 ((i. 3 0 4) i.&0@e. i. 2 4)  -: (i. 3 0 4) i."i.&0@e. i. 2 4
 ((i. 3 0 4) i.&1@e. i. 2 4)  -: (i. 3 0 4) i."i.&1@e. i. 2 4
-'nonce error' -: (i. 3 3 3 3 3) +/@:e. etx i. 3 3 3
+(1 0 0 */ 1 1 1) -: (i. 3 3 3 3 3) +/@:e. etx i. 3 3 3
 'nonce error' -:  (+/@e.&(i. 2 3)) etx i. 2 2 3
 ((i. 4 3 3 3 3) i.&0@:e. i. 3 3 3) -: (i. 4 3 3 3 3) i."i.&0@:e. i. 3 3 3
 (i.&0@e.&(i. 2 3) i. 5 2 3) -: i."i.&0@e.&(i. 2 3) i. 5 2 3
@@ -182,9 +182,9 @@ NB. Verify that y can have the long frame
 (i.&1@e.&(i. 2 3) i. 5 2 3) -: i."i.&1@e.&(i. 2 3) i. 5 2 3
 ((i. 4 3 3 3 3) i:&0@:e. i. 3 3 3) -: (i. 4 3 3 3 3) i:"i:&1@:e. i. 3 3 3
 (i:&1@e.&(i. 2 3) i. 5 2 3) -: i:"i:&1@e.&(i. 2 3) i. 5 2 3
-'nonce error' -: (i. 3 3 3 3 3) +./@:e. etx i. 3 3 3
+(1 0 0 */ 1 1 1) -: (i. 3 3 3 3 3) +./@:e. etx i. 3 3 3
 'nonce error' -: +./@e.&(i. 2 3) etx i. 5 2 3
-'nonce error' -: (i. 3 3 3 3 3) *./@:e. etx i. 3 3 3
+(0 0 0 */ 1 1 1) -: (i. 3 3 3 3 3) *./@:e. etx i. 3 3 3
 'nonce error' -: *./@e.&(i. 2 3) etx i. 5 2 3
 
 ((i. 2 3 4)&i. i. 5) -:  (i. 2 3 4)&(i."i.) i. 5

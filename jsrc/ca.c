@@ -205,8 +205,6 @@ F2(jtatop){A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=0,m=-1
   }
  }
  // special cases of v
-// bug: +/@e.&m y does ,@e. not e.
-// if(d==CEBAR||(b=FIT0(CEPS,wv))){
  if(d==CEBAR||d==CEPS||(b=FIT0(CEPS,wv))){
   f=av->fgh[0]; g=av->fgh[1]; e=ID(f); if(b)d=ID(wv->fgh[0]);
   /* obsolete if(c==CICAP)m=7;

@@ -11,7 +11,7 @@
 /*    [: + / comp         + /@:comp                                        */
 /*    [: +./ comp         +./@:comp   1: e. comp                           */
 /*    0: e. comp                                                           */
-/*    [: I. comp          I.@:comp                                         */
+// obsolete /*    [: I. comp          I.@:comp                                         */
 /* where comp is one of the following:                                     */
 /*    = ~: < <: >: > E. e.                                                 */
 
@@ -34,9 +34,9 @@
  static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                                          \
   an=AN(a); av=(T0*)AV(a);                                                        \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
-  if     (!AR(a)){x=*av; wv+=n; DO(n,          y=*--wv; if(F(x,y))R sc(n-1-i););} \
-  else if(!AR(w)){y=*wv; av+=n; DO(n, x=*--av;          if(F(x,y))R sc(n-1-i););} \
-  else           {av+=n; wv+=n; DO(n, x=*--av; y=*--wv; if(F(x,y))R sc(n-1-i););} \
+  if     (!AR(a)){x=*av; wv+=n; DQ(n,          y=*--wv; if(F(x,y))R sc(i););} \
+  else if(!AR(w)){y=*wv; av+=n; DQ(n, x=*--av;          if(F(x,y))R sc(i););} \
+  else           {av+=n; wv+=n; DQ(n, x=*--av; y=*--wv; if(F(x,y))R sc(i););} \
   R sc(n);                                                                        \
  }
 
@@ -44,9 +44,9 @@
  static F2(f){I an,m=0,n,wn;T0*av,x;T1*wv,y;                       \
   an=AN(a); av=(T0*)AV(a);                                         \
   wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;  \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))++m;);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))++m;);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))++m;);} \
+  if     (!AR(a)){x=*av; DO(n,          y=*wv++; m+=(F(x,y)););} \
+  else if(!AR(w)){y=*wv; DO(n, x=*av++;          m+=(F(x,y)););} \
+  else           {       DO(n, x=*av++; y=*wv++; m+=(F(x,y)););} \
   R sc(m);                                                         \
  }
 
@@ -70,6 +70,8 @@
   R num[1];                                                               \
  }
 
+// i. no longer used
+#if 0
 #define IFB1  \
   {if(zu==zv){I m=zv-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=i;}
 
@@ -83,21 +85,24 @@
   else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))IFB1;);} \
   AN(z)=*AS(z)=zv-AV(z); R z;                                       \
  }
-
+#endif
 
 /* Now define byte-parallel (4 bytes at a time) versions of above  */
 
 #define JNDBR(yy)      if(r&&(y=yy))DO(r, if(yv[r-1-i])R sc(n-1-i););
 
-#if SY_64
-#define ASSIGNX(v)     {x=*v; xv[1]=xv[2]=xv[3]=xv[4]=xv[5]=xv[6]=xv[7]=xv[0];}
-#define INDB3          R sc(       i*SZI+(yv[0]?0:yv[1]?1:yv[2]?2:yv[3]?3:yv[4]?4:yv[5]?5:yv[6]?6:7) );
-#define JNDB3          R sc(n-1-(r+i*SZI+(yv[7]?0:yv[6]?1:yv[5]?2:yv[4]?3:yv[3]?4:yv[2]?5:yv[1]?6:7)));
-#else
-#define ASSIGNX(v)     {x=*v; xv[1]=xv[2]=xv[3]=xv[0];}
-#define INDB3          R sc(       i*SZI+(yv[0]?0:yv[1]?1:yv[2]?2:3) );
-#define JNDB3          R sc(n-1-(r+i*SZI+(yv[3]?0:yv[2]?1:yv[1]?2:3)));
-#endif
+#define ASSIGNX(v)     {x=*v; x|=x<<8; x|=x<<16; x|=x<<(32&(BW-1)); }
+#define INDB3          R sc(       i*SZI+(CTTZI(y)>>LGBB) );
+#define JNDB3          {UI4 bitno; CTLZI(y,bitno); R sc(n-1-(r+i*SZI+SZI-1-(bitno>>LGBB)));}
+// obsolete #if SY_64
+// obsolete #define ASSIGNX(v)     {x=*v; xv[1]=xv[2]=xv[3]=xv[4]=xv[5]=xv[6]=xv[7]=xv[0];}
+// obsolete #define INDB3          R sc(       i*SZI+(yv[0]?0:yv[1]?1:yv[2]?2:yv[3]?3:yv[4]?4:yv[5]?5:yv[6]?6:7) );
+// obsolete #define JNDB3          R sc(n-1-(r+i*SZI+(yv[7]?0:yv[6]?1:yv[5]?2:yv[4]?3:yv[3]?4:yv[2]?5:yv[1]?6:7)));
+// obsolete #else
+// obsolete #define ASSIGNX(v)     {x=*v; xv[1]=xv[2]=xv[3]=xv[0];}
+// obsolete #define INDB3          R sc(       i*SZI+(yv[0]?0:yv[1]?1:yv[2]?2:3) );
+// obsolete #define JNDB3          R sc(n-1-(r+i*SZI+(yv[3]?0:yv[2]?1:yv[1]?2:3)));
+// obsolete #endif
 
 #define INDB(f,T0,T1,F)  \
  static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                 \
@@ -125,24 +130,24 @@
  }
 
 #define SUMB(f,T0,T1,F)  \
- static F2(f){B*xv;I an,*av,n,p,r1,wn,*wv,x,z=0;UC*tu;UI t;              \
+ static F2(f){I an,*av,n,p,r1,wn,*wv,z=0;UI t,x;              \
   an=AN(a); av=AV(a);                                                        \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
   p=n>>LGSZI; r1=n&(SZI-1);                                       \
-  xv=(B*)&x; tu=(UC*)&t;                                                     \
+  /* obsolete xv=(B*)&x; tu=(UC*)&t;  */                                                   \
   if     (!AR(a)){                                                           \
    ASSIGNX(av);                                                              \
-   while((p-=255)>0){t=0; DO(255, t+=F(x,    *wv++);); DO(SZI,z+=tu[i];);}              \
-         t=0; DO(p+255,   t+=F(x,    *wv++);); DO(SZI,z+=tu[i];); x=F(x,  *wv);  \
+   while((p-=255)>0){t=0; DO(255, t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t;}              \
+         t=0; DO(p+255,   t+=F(x,    *wv++);); ADDBYTESINI(t); z+=t; x=F(x,  *wv);  \
   }else if(!AR(w)){                                                          \
    ASSIGNX(wv);                                                              \
-   while((p-=255)>0){t=0; DO(255, t+=F(*av++,x    );); DO(SZI,z+=tu[i];);}              \
-         t=0; DO(p+255,   t+=F(*av++,x    );); DO(SZI,z+=tu[i];); x=F(*av,x  );  \
+   while((p-=255)>0){t=0; DO(255, t+=F(*av++,x    );); ADDBYTESINI(t); z+=t;}              \
+         t=0; DO(p+255,   t+=F(*av++,x    );); ADDBYTESINI(t); z+=t; x=F(*av,x  );  \
   }else{                                                                     \
-   while((p-=255)>0){t=0; DO(255, t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];);}              \
-         t=0; DO(p+255,   t+=F(*av++,*wv++);); DO(SZI,z+=tu[i];); x=F(*av,*wv);  \
+   while((p-=255)>0){t=0; DO(255, t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t;}              \
+         t=0; DO(p+255,   t+=F(*av++,*wv++);); ADDBYTESINI(t); z+=t; x=F(*av,*wv);  \
   }                                                                          \
-  DO(r1, z+=xv[i];);                                                         \
+  x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
   R sc(z);                                                                   \
  }
 
@@ -172,6 +177,7 @@
   R num[1];                                                                            \
  }
 
+#if 0  // no longer used
 #if SY_64
 #define IFB3           \
   {if(zu<zv){I c=zv-AV(z); RZ(z=ext(0,z)); zv=c+AV(z); zu=AV(z)+AN(z)-SZI;}  \
@@ -219,6 +225,7 @@
   if(r&&y){DO(SZI-r, yv[r+i]=0;); IFB3;};                                                \
   AN(z)=*AS(z)=zv-AV(z); R z;                                                            \
  }
+#endif
 
 INDB( i0eqBB,B,B,NE   )  INDF( i0eqBI,B,I,ANE  )  INDF( i0eqBD,B,D,TNEXD)  /* =  */
 INDF( i0eqIB,I,B,ANE  )  INDF( i0eqII,I,I,ANE  )  INDF( i0eqID,I,D,TNEXD)
@@ -248,9 +255,9 @@ ALLB(alleqBB,B,B,EQ   )  ALLF(alleqBI,B,I,AEQ  )  ALLF(alleqBD,B,D,TEQXD)
 ALLF(alleqIB,I,B,AEQ  )  ALLF(alleqII,I,I,AEQ  )  ALLF(alleqID,I,D,TEQXD)
 ALLF(alleqDB,D,B,TEQDX)  ALLF(alleqDI,D,I,TEQDX)  ALLF(alleqDD,D,D,TEQ  )
 
-IFBB(ifbeqBB,B,B,EQ   )  IFBF(ifbeqBI,B,I,AEQ  )  IFBF(ifbeqBD,B,D,TEQXD)
-IFBF(ifbeqIB,I,B,AEQ  )  IFBF(ifbeqII,I,I,AEQ  )  IFBF(ifbeqID,I,D,TEQXD)
-IFBF(ifbeqDB,D,B,TEQDX)  IFBF(ifbeqDI,D,I,TEQDX)  IFBF(ifbeqDD,D,D,TEQ  )
+// obsolete IFBB(ifbeqBB,B,B,EQ   )  IFBF(ifbeqBI,B,I,AEQ  )  IFBF(ifbeqBD,B,D,TEQXD)
+// obsolete IFBF(ifbeqIB,I,B,AEQ  )  IFBF(ifbeqII,I,I,AEQ  )  IFBF(ifbeqID,I,D,TEQXD)
+// obsolete IFBF(ifbeqDB,D,B,TEQDX)  IFBF(ifbeqDI,D,I,TEQDX)  IFBF(ifbeqDD,D,D,TEQ  )
 
 INDB( i0neBB,B,B,EQ   )  INDF( i0neBI,B,I,AEQ  )  INDF( i0neBD,B,D,TEQXD)  /* ~: */
 INDF( i0neIB,I,B,AEQ  )  INDF( i0neII,I,I,AEQ  )  INDF( i0neID,I,D,TEQXD)
@@ -280,9 +287,9 @@ ALLB(allneBB,B,B,NE   )  ALLF(allneBI,B,I,ANE  )  ALLF(allneBD,B,D,TNEXD)
 ALLF(allneIB,I,B,ANE  )  ALLF(allneII,I,I,ANE  )  ALLF(allneID,I,D,TNEXD)
 ALLF(allneDB,D,B,TNEDX)  ALLF(allneDI,D,I,TNEDX)  ALLF(allneDD,D,D,TNE  )
 
-IFBB(ifbneBB,B,B,NE   )  IFBF(ifbneBI,B,I,ANE  )  IFBF(ifbneBD,B,D,TNEXD)
-IFBF(ifbneIB,I,B,ANE  )  IFBF(ifbneII,I,I,ANE  )  IFBF(ifbneID,I,D,TNEXD)
-IFBF(ifbneDB,D,B,TNEDX)  IFBF(ifbneDI,D,I,TNEDX)  IFBF(ifbneDD,D,D,TNE  )
+// obsolete IFBB(ifbneBB,B,B,NE   )  IFBF(ifbneBI,B,I,ANE  )  IFBF(ifbneBD,B,D,TNEXD)
+// obsolete IFBF(ifbneIB,I,B,ANE  )  IFBF(ifbneII,I,I,ANE  )  IFBF(ifbneID,I,D,TNEXD)
+// obsolete IFBF(ifbneDB,D,B,TNEDX)  IFBF(ifbneDI,D,I,TNEDX)  IFBF(ifbneDD,D,D,TNE  )
 
 INDB( i0ltBB,B,B,GE   )  INDF( i0ltBI,B,I,AGE  )  INDF( i0ltBD,B,D,TGEXD)  /* <  */
 INDF( i0ltIB,I,B,AGE  )  INDF( i0ltII,I,I,AGE  )  INDF( i0ltID,I,D,TGEXD)
@@ -312,9 +319,9 @@ ALLB(allltBB,B,B,LT   )  ALLF(allltBI,B,I,ALT  )  ALLF(allltBD,B,D,TLTXD)
 ALLF(allltIB,I,B,ALT  )  ALLF(allltII,I,I,ALT  )  ALLF(allltID,I,D,TLTXD)
 ALLF(allltDB,D,B,TLTDX)  ALLF(allltDI,D,I,TLTDX)  ALLF(allltDD,D,D,TLT  )
 
-IFBB(ifbltBB,B,B,LT   )  IFBF(ifbltBI,B,I,ALT  )  IFBF(ifbltBD,B,D,TLTXD)
-IFBF(ifbltIB,I,B,ALT  )  IFBF(ifbltII,I,I,ALT  )  IFBF(ifbltID,I,D,TLTXD)
-IFBF(ifbltDB,D,B,TLTDX)  IFBF(ifbltDI,D,I,TLTDX)  IFBF(ifbltDD,D,D,TLT  )
+// obsolete IFBB(ifbltBB,B,B,LT   )  IFBF(ifbltBI,B,I,ALT  )  IFBF(ifbltBD,B,D,TLTXD)
+// obsolete IFBF(ifbltIB,I,B,ALT  )  IFBF(ifbltII,I,I,ALT  )  IFBF(ifbltID,I,D,TLTXD)
+// obsolete IFBF(ifbltDB,D,B,TLTDX)  IFBF(ifbltDI,D,I,TLTDX)  IFBF(ifbltDD,D,D,TLT  )
 
 INDB( i0leBB,B,B,GT   )  INDF( i0leBI,B,I,AGT  )  INDF( i0leBD,B,D,TGTXD)  /* <: */
 INDF( i0leIB,I,B,AGT  )  INDF( i0leII,I,I,AGT  )  INDF( i0leID,I,D,TGTXD)
@@ -344,9 +351,9 @@ ALLB(allleBB,B,B,LE   )  ALLF(allleBI,B,I,ALE  )  ALLF(allleBD,B,D,TLEXD)
 ALLF(allleIB,I,B,ALE  )  ALLF(allleII,I,I,ALE  )  ALLF(allleID,I,D,TLEXD)
 ALLF(allleDB,D,B,TLEDX)  ALLF(allleDI,D,I,TLEDX)  ALLF(allleDD,D,D,TLE  )
 
-IFBB(ifbleBB,B,B,LE   )  IFBF(ifbleBI,B,I,ALE  )  IFBF(ifbleBD,B,D,TLEXD)
-IFBF(ifbleIB,I,B,ALE  )  IFBF(ifbleII,I,I,ALE  )  IFBF(ifbleID,I,D,TLEXD)
-IFBF(ifbleDB,D,B,TLEDX)  IFBF(ifbleDI,D,I,TLEDX)  IFBF(ifbleDD,D,D,TLE  )
+// obsolete IFBB(ifbleBB,B,B,LE   )  IFBF(ifbleBI,B,I,ALE  )  IFBF(ifbleBD,B,D,TLEXD)
+// obsolete IFBF(ifbleIB,I,B,ALE  )  IFBF(ifbleII,I,I,ALE  )  IFBF(ifbleID,I,D,TLEXD)
+// obsolete IFBF(ifbleDB,D,B,TLEDX)  IFBF(ifbleDI,D,I,TLEDX)  IFBF(ifbleDD,D,D,TLE  )
 
 INDB( i0geBB,B,B,LT   )  INDF( i0geBI,B,I,ALT  )  INDF( i0geBD,B,D,TLTXD)  /* >: */
 INDF( i0geIB,I,B,ALT  )  INDF( i0geII,I,I,ALT  )  INDF( i0geID,I,D,TLTXD)
@@ -376,9 +383,9 @@ ALLB(allgeBB,B,B,GE   )  ALLF(allgeBI,B,I,AGE  )  ALLF(allgeBD,B,D,TGEXD)
 ALLF(allgeIB,I,B,AGE  )  ALLF(allgeII,I,I,AGE  )  ALLF(allgeID,I,D,TGEXD)
 ALLF(allgeDB,D,B,TGEDX)  ALLF(allgeDI,D,I,TGEDX)  ALLF(allgeDD,D,D,TGE  )
 
-IFBB(ifbgeBB,B,B,GE   )  IFBF(ifbgeBI,B,I,AGE  )  IFBF(ifbgeBD,B,D,TGEXD)
-IFBF(ifbgeIB,I,B,AGE  )  IFBF(ifbgeII,I,I,AGE  )  IFBF(ifbgeID,I,D,TGEXD)
-IFBF(ifbgeDB,D,B,TGEDX)  IFBF(ifbgeDI,D,I,TGEDX)  IFBF(ifbgeDD,D,D,TGE  )
+// obsolete IFBB(ifbgeBB,B,B,GE   )  IFBF(ifbgeBI,B,I,AGE  )  IFBF(ifbgeBD,B,D,TGEXD)
+// obsolete IFBF(ifbgeIB,I,B,AGE  )  IFBF(ifbgeII,I,I,AGE  )  IFBF(ifbgeID,I,D,TGEXD)
+// obsolete IFBF(ifbgeDB,D,B,TGEDX)  IFBF(ifbgeDI,D,I,TGEDX)  IFBF(ifbgeDD,D,D,TGE  )
 
 INDB( i0gtBB,B,B,LE   )  INDF( i0gtBI,B,I,ALE  )  INDF( i0gtBD,B,D,TLEXD)  /* >  */
 INDF( i0gtIB,I,B,ALE  )  INDF( i0gtII,I,I,ALE  )  INDF( i0gtID,I,D,TLEXD)
@@ -408,9 +415,9 @@ ANYB(anygtBB,B,B,GT   )  ANYF(anygtBI,B,I,AGT  )  ANYF(anygtBD,B,D,TGTXD)
 ANYF(anygtIB,I,B,AGT  )  ANYF(anygtII,I,I,AGT  )  ANYF(anygtID,I,D,TGTXD)
 ANYF(anygtDB,D,B,TGTDX)  ANYF(anygtDI,D,I,TGTDX)  ANYF(anygtDD,D,D,TGT  )
 
-IFBB(ifbgtBB,B,B,GT   )  IFBF(ifbgtBI,B,I,AGT  )  IFBF(ifbgtBD,B,D,TGTXD)
-IFBF(ifbgtIB,I,B,AGT  )  IFBF(ifbgtII,I,I,AGT  )  IFBF(ifbgtID,I,D,TGTXD)
-IFBF(ifbgtDB,D,B,TGTDX)  IFBF(ifbgtDI,D,I,TGTDX)  IFBF(ifbgtDD,D,D,TGT  )
+// obsolete IFBB(ifbgtBB,B,B,GT   )  IFBF(ifbgtBI,B,I,AGT  )  IFBF(ifbgtBD,B,D,TGTXD)
+// obsoleteIFBF(ifbgtIB,I,B,AGT  )  IFBF(ifbgtII,I,I,AGT  )  IFBF(ifbgtID,I,D,TGTXD)
+// obsolete IFBF(ifbgtDB,D,B,TGTDX)  IFBF(ifbgtDI,D,I,TGTDX)  IFBF(ifbgtDD,D,D,TGT  )
 
 
 static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
@@ -477,14 +484,14 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
 
- ifbeqBB,ifbeqBI,ifbeqBD,  ifbeqIB,ifbeqII,ifbeqID,  ifbeqDB,ifbeqDI,ifbeqDD,  /* 7 */
- ifbneBB,ifbneBI,ifbneBD,  ifbneIB,ifbneII,ifbneID,  ifbneDB,ifbneDI,ifbneDD,
- ifbltBB,ifbltBI,ifbltBD,  ifbltIB,ifbltII,ifbltID,  ifbltDB,ifbltDI,ifbltDD,
- ifbleBB,ifbleBI,ifbleBD,  ifbleIB,ifbleII,ifbleID,  ifbleDB,ifbleDI,ifbleDD,
- ifbgeBB,ifbgeBI,ifbgeBD,  ifbgeIB,ifbgeII,ifbgeID,  ifbgeDB,ifbgeDI,ifbgeDD,
- ifbgtBB,ifbgtBI,ifbgtBD,  ifbgtIB,ifbgtII,ifbgtID,  ifbgtDB,ifbgtDI,ifbgtDD,
- 0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
- 0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
+ // obsolete ifbeqBB,ifbeqBI,ifbeqBD,  ifbeqIB,ifbeqII,ifbeqID,  ifbeqDB,ifbeqDI,ifbeqDD,  /* 7 */
+ // obsolete  ifbneBB,ifbneBI,ifbneBD,  ifbneIB,ifbneII,ifbneID,  ifbneDB,ifbneDI,ifbneDD,
+ // obsolete  ifbltBB,ifbltBI,ifbltBD,  ifbltIB,ifbltII,ifbltID,  ifbltDB,ifbltDI,ifbltDD,
+ // obsolete  ifbleBB,ifbleBI,ifbleBD,  ifbleIB,ifbleII,ifbleID,  ifbleDB,ifbleDI,ifbleDD,
+ // obsolete  ifbgeBB,ifbgeBI,ifbgeBD,  ifbgeIB,ifbgeII,ifbgeID,  ifbgeDB,ifbgeDI,ifbgeDD,
+ // obsolete  ifbgtBB,ifbgtBI,ifbgtBD,  ifbgtIB,ifbgtII,ifbgtID,  ifbgtDB,ifbgtDI,ifbgtDD,
+ // obsolete  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
+ // obsolete  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
 };
 
 INDF( i0eqC,C,C,ANE)  INDF( i0neC,C,C,AEQ)
@@ -494,7 +501,7 @@ JNDF( j1eqC,C,C,AEQ)  JNDF( j1neC,C,C,ANE)
 SUMF(sumeqC,C,C,AEQ)  SUMF(sumneC,C,C,ANE)
 ALLF(alleqC,C,C,AEQ)  ALLF(allneC,C,C,ANE)
 ANYF(anyeqC,C,C,AEQ)  ANYF(anyneC,C,C,ANE)
-IFBF(ifbeqC,C,C,AEQ)  IFBF(ifbneC,C,C,ANE)
+// obsolete IFBF(ifbeqC,C,C,AEQ)  IFBF(ifbneC,C,C,ANE)
 
 static AF atcompC[]={   /* table for LIT vs. LIT */
   i0eqC,  i0neC, 0L,0L,0L,0L,0L,0L,
@@ -504,7 +511,7 @@ static AF atcompC[]={   /* table for LIT vs. LIT */
  sumeqC, sumneC, 0L,0L,0L,0L,0L,0L,
  anyeqC, anyneC, 0L,0L,0L,0L,0L,0L,
  alleqC, allneC, 0L,0L,0L,0L,0L,0L,
- ifbeqC, ifbneC, 0L,0L,0L,0L,0L,0L,
+// obsolete  ifbeqC, ifbneC, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqUS,US,US,ANE)  INDF( i0neUS,US,US,AEQ)
@@ -514,7 +521,7 @@ JNDF( j1eqUS,US,US,AEQ)  JNDF( j1neUS,US,US,ANE)
 SUMF(sumeqUS,US,US,AEQ)  SUMF(sumneUS,US,US,ANE)
 ALLF(alleqUS,US,US,AEQ)  ALLF(allneUS,US,US,ANE)
 ANYF(anyeqUS,US,US,AEQ)  ANYF(anyneUS,US,US,ANE)
-IFBF(ifbeqUS,US,US,AEQ)  IFBF(ifbneUS,US,US,ANE)
+// obsolete IFBF(ifbeqUS,US,US,AEQ)  IFBF(ifbneUS,US,US,ANE)
 
 static AF atcompUS[]={   /* table for C2T vs. C2T */
   i0eqUS,  i0neUS, 0L,0L,0L,0L,0L,0L,
@@ -524,7 +531,7 @@ static AF atcompUS[]={   /* table for C2T vs. C2T */
  sumeqUS, sumneUS, 0L,0L,0L,0L,0L,0L,
  anyeqUS, anyneUS, 0L,0L,0L,0L,0L,0L,
  alleqUS, allneUS, 0L,0L,0L,0L,0L,0L,
- ifbeqUS, ifbneUS, 0L,0L,0L,0L,0L,0L,
+// obsolete  ifbeqUS, ifbneUS, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqC4,C4,C4,ANE)  INDF( i0neC4,C4,C4,AEQ)
@@ -534,7 +541,7 @@ JNDF( j1eqC4,C4,C4,AEQ)  JNDF( j1neC4,C4,C4,ANE)
 SUMF(sumeqC4,C4,C4,AEQ)  SUMF(sumneC4,C4,C4,ANE)
 ALLF(alleqC4,C4,C4,AEQ)  ALLF(allneC4,C4,C4,ANE)
 ANYF(anyeqC4,C4,C4,AEQ)  ANYF(anyneC4,C4,C4,ANE)
-IFBF(ifbeqC4,C4,C4,AEQ)  IFBF(ifbneC4,C4,C4,ANE)
+// obsolete IFBF(ifbeqC4,C4,C4,AEQ)  IFBF(ifbneC4,C4,C4,ANE)
 
 static AF atcompC4[]={   /* table for C4T vs. C4T */
   i0eqC4,  i0neC4, 0L,0L,0L,0L,0L,0L,
@@ -544,7 +551,7 @@ static AF atcompC4[]={   /* table for C4T vs. C4T */
  sumeqC4, sumneC4, 0L,0L,0L,0L,0L,0L,
  anyeqC4, anyneC4, 0L,0L,0L,0L,0L,0L,
  alleqC4, allneC4, 0L,0L,0L,0L,0L,0L,
- ifbeqC4, ifbneC4, 0L,0L,0L,0L,0L,0L,
+// obsolete  ifbeqC4, ifbneC4, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
@@ -554,7 +561,7 @@ JNDF( j1eqS,SB,SB,AEQ) JNDF( j1neS,SB,SB,ANE)
 SUMF(sumeqS,SB,SB,AEQ) SUMF(sumneS,SB,SB,ANE)
 ALLF(alleqS,SB,SB,AEQ) ALLF(allneS,SB,SB,ANE) 
 ANYF(anyeqS,SB,SB,AEQ) ANYF(anyneS,SB,SB,ANE)
-IFBF(ifbeqS,SB,SB,AEQ) IFBF(ifbneS,SB,SB,ANE) 
+// obsolete IFBF(ifbeqS,SB,SB,AEQ) IFBF(ifbneS,SB,SB,ANE) 
 
 INDF( i0ltS,SB,SB,SBGE) INDF( i0leS,SB,SB,SBGT) INDF( i0geS,SB,SB,SBLT) INDF( i0gtS,SB,SB,SBLE)
 INDF( i1ltS,SB,SB,SBLT) INDF( i1leS,SB,SB,SBLE) INDF( i1geS,SB,SB,SBGE) INDF( i1gtS,SB,SB,SBGT)
@@ -563,7 +570,7 @@ JNDF( j1ltS,SB,SB,SBLT) JNDF( j1leS,SB,SB,SBLE) JNDF( j1geS,SB,SB,SBGE) JNDF( j1
 SUMF(sumltS,SB,SB,SBLT) SUMF(sumleS,SB,SB,SBLE) SUMF(sumgeS,SB,SB,SBGE) SUMF(sumgtS,SB,SB,SBGT)
 ALLF(allltS,SB,SB,SBLT) ALLF(allleS,SB,SB,SBLE) ALLF(allgeS,SB,SB,SBGE) ALLF(allgtS,SB,SB,SBGT)
 ANYF(anyltS,SB,SB,SBLT) ANYF(anyleS,SB,SB,SBLE) ANYF(anygeS,SB,SB,SBGE) ANYF(anygtS,SB,SB,SBGT)
-IFBF(ifbltS,SB,SB,SBLT) IFBF(ifbleS,SB,SB,SBLE) IFBF(ifbgeS,SB,SB,SBGE) IFBF(ifbgtS,SB,SB,SBGT)
+// obsolete IFBF(ifbltS,SB,SB,SBLT) IFBF(ifbleS,SB,SB,SBLE) IFBF(ifbgeS,SB,SB,SBGE) IFBF(ifbgtS,SB,SB,SBGT)
 
 
 static AF atcompSB[]={  /* table for SBT vs. SBT */
@@ -574,7 +581,7 @@ static AF atcompSB[]={  /* table for SBT vs. SBT */
  sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS, 0L,0L,
  anyeqS,anyneS,anyltS,anyleS,anygeS,anygtS, 0L,0L,
  alleqS,allneS,allltS,allleS,allgeS,allgtS, 0L,0L,
- ifbeqS,ifbneS,ifbltS,ifbleS,ifbgeS,ifbgtS, 0L,0L,
+// obsolete  ifbeqS,ifbneS,ifbltS,ifbleS,ifbgeS,ifbgtS, 0L,0L,
 };
 
 // the special case for compounds like +/@e.
@@ -585,20 +592,22 @@ static F2( jtj1eps){R indexofsub( IJ1EPS,w,a);}
 static F2(jtsumeps){R indexofsub(ISUMEPS,w,a);}
 static F2(jtanyeps){R indexofsub(IANYEPS,w,a);}
 static F2(jtalleps){R indexofsub(IALLEPS,w,a);}
-static F2(jtifbeps){R indexofsub(IIFBEPS,w,a);}
+// obsolete static F2(jtifbeps){R indexofsub(IIFBEPS,w,a);}
 
+// This table is indexed by m[5 4 3 0]
 static AF atcompX[]={   /* table for any vs. any */
-  0L,0L,0L,0L,0L,0L,        0L,  jti0eps,
-  0L,0L,0L,0L,0L,0L,  jti1ebar,  jti1eps,
-  0L,0L,0L,0L,0L,0L,        0L,  jtj0eps,
-  0L,0L,0L,0L,0L,0L,        0L,  jtj1eps,
-  0L,0L,0L,0L,0L,0L, jtsumebar, jtsumeps,
-  0L,0L,0L,0L,0L,0L, jtanyebar, jtanyeps,
-  0L,0L,0L,0L,0L,0L,        0L, jtalleps,
-  0L,0L,0L,0L,0L,0L, jtifbebar, jtifbeps,
+          0L,  jti0eps,
+    jti1ebar,  jti1eps,
+          0L,  jtj0eps,
+          0L,  jtj1eps,
+   jtsumebar, jtsumeps,
+   jtanyebar, jtanyeps,
+          0L, jtalleps,
+// obsolete   0L,0L,0L,0L,0L,0L, jtifbebar, jtifbeps,
 };
 
 
+// f (the comparison op) is bits 0-2 of m, the combining op is 3-5 of m
 /*            f  0   1   2   3   4   5   6   7  */
 /* m             =   ~:  <   <:  >:  >   E.  e. */
 /* 0 f i. 0:     0   1   2   3   4   5   6   7  */
@@ -608,23 +617,33 @@ static AF atcompX[]={   /* table for any vs. any */
 /* 4 [: + / f   32  33  34  35  36  37  38  39  */
 /* 5 [: +./ f   40  41  42  43  44  45  46  47  */
 /* 6 [: *./ f   48  49  50  51  52  53  54  55  */
-/* 7 [: I.  f   56  57  58  59  60  61  62  63  */
+// obsolete /* 7 [: I.  f   56  57  58  59  60  61  62  63  */
 
-AF jtatcompf(J jt,A a,A w,A self){AF f;I ar,at,m,wr,wt;
+// Here to choose the function to use, after the arguments are known.
+// We require the ranks to be <2 for processing here except for @e., which requires that the result of e. have rank<2
+// If the form is [: f/ g  and g is a simple comparison, use f/@g code for higher ranks
+// If no routine found, return 0 to failover to normal path
+AF jtatcompf(J jt,A a,A w,A self){I m;
  RZ(a&&w);
- at=AT(a); ar=AR(a);
- wt=AT(w); wr=AR(w);
  m=FAV(self)->flag&255;
- if(1<ar||1<wr){if(32<=m&&m<=37||40<=m&&m<=45||48<=m&&m<=53)R(AF)jtfslashatg; RZ(7==(m&7));}
- ASSERT(AN(a)==AN(w)||!ar||!wr||5<(m&7),EVLENGTH);
- f=atcompX[m];
- if(!f){
-  if(at&B01+INT+FL&&wt&B01+INT+FL)f=atcompxy[9*m+3*(at&B01?0:at&INT?1:2)+(wt&B01?0:wt&INT?1:2)];
-  else if(at&LIT&&wt&LIT)         f=atcompC[m];
-  else if(at&C2T&&wt&C2T)         f=atcompUS[m];
-  else if(at&C4T&&wt&C4T)         f=atcompC4[m];
-  else if(at&SBT&&wt&SBT)         f=atcompSB[m];
+ if((m&6)!=6){   // normal comparison
+  // verify rank is OK, based on operation
+  if((AR(a)|AR(w))>1)R (m>=(4<<3))?(AF)jtfslashatg:0;   // If an operand has rank>1, reject it unless it can be turned to f/@g special
+  ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom
+  if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01))))R atcompxy[9*m+3*(AT(a)>>INTX)+(AT(w)>>INTX)];
+ // Other types have a chance only if they are equal types; fetch from the appropriate table then
+  else if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT)))R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[m];
+// obsolete   else if(at&LIT&&wt&LIT)         f=atcompC[m];
+// obsolete   else if(at&C2T&&wt&C2T)         f=atcompUS[m];
+// obsolete   else if(at&C4T&&wt&C4T)         f=atcompC4[m];
+// obsolete  else if(at&SBT&&wt&SBT)         f=atcompSB[m];
+  R 0;
+ }else{  // e./E.
+  if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
+  R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine
  }
- R f;
+// obsolete  ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0)||5<(m&7),EVLENGTH)
+// obsolete if(1<ar||1<wr){if(32<=m&&m<=37||40<=m&&m<=45||48<=m&&m<=53)R(AF)jtfslashatg; RZ(7==(m&7));}
+// obsolete  ASSERT(AN(a)==AN(w)||!ar||!wr||5<(m&7),EVLENGTH);
 }    /* function table look-up for  comp i. 1:  and  i.&1@:comp  etc. */
 

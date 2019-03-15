@@ -464,6 +464,17 @@ testE=: 2 : 0
 i.&1 testE E.
 I.   testE E.
 
+NB. Verify excluded-rank cases work
+2 2 2 2 2 -: (i.4 5) +/@e. i. 10
+10 -: (i. 10) i.&0@:= (i. 10 5)
+10 -: (i. 1 10) i."_&0@:E. (i. 10 5)
+
+NB. Verify reversion for other types
+4 -: (i. 10x) +/@:> 5x
+4 -: (i. 10x) +/@:> 11r2
+4 -: 'abcdefegehie' +/@:= 'e'
+'domain error' -: 'abcdefegehie' +/@:> etx 'e'
+
 
 
 4!:55 ;:'ad ai as data expression f ftab sp SPTOLER'

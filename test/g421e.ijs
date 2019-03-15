@@ -3,9 +3,9 @@ NB. f//. y --------------------------------------------------------------
 
 randuni''
 
-NB. test with zero tolerance - no, can't, because +/ may reorder the inputs
+NB. test with zero tolerance - no, can't, because +/ may reorder the inputs.  In fact, we have to INCREASE the tolerance
 ct   =: 9!:18''
-NB. no 9!:19[0
+9!:19[1e_12
 
 data=: 4 : 0
  select. x 

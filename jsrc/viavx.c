@@ -1796,12 +1796,12 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
                 if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,0,0); break;
-  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) work only if e. produces rank 0 or 1.  Nonce error otherwise
-  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c+1,1,0); break;  // +1 because we speculatively overwrite
+  // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) come here only if e. produces rank 0 or 1.
+  case IIFBEPS: /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GATV(z,INT,c+1,1,0); break;  // +1 because we speculatively overwrite
   case IANYEPS: case IALLEPS:
-                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,0,0); break;
+                /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GAT(z,B01,1,0,0); break;
   case ISUMEPS:
-                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,0,0); break;
+                /* obsolete ASSERT(wr<=MAX(ar,1),EVNONCE); */GAT(z,INT,1,0,0); break;
  }
 
  // Create result for empty/inhomogeneous arguments

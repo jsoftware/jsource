@@ -551,7 +551,8 @@ extern unsigned int __cdecl _clearfp (void);
 // Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
 #if C_LE  // if anybody makes a bigendian CPU we'll have to recode
 #if BW==64
-#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;;p|=p>>28LL;p<<=56LL;}
+// this is what it should be #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p>>28LL;p<<=56LL;}
+#define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p<<28LL;p&=0xff0000000; p<<=28LL;}  // this generates one extra instruction, rather than the 3 for the correct version
 #else
 #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
 #endif

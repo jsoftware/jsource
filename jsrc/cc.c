@@ -550,7 +550,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    ak=1; at=B01;  // cell of a is 1 byte, and it's Boolean
   }else{
    // monadic forms.  If we can handle the type/length here, leave it; otherwise convert to Boolean.
-   // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than 1
+   // If w is Boolean, we have to pretend it's LIT so we use the correct fret value rather than hardwired 1
    if(wt&(B01|LIT|INT|FL|C2T|C4T|SBT)&&k&&((BW==32&&wt&FL&&k==SZD)||(k<=SZI&&(k&-k)==k))){a=w; ak=k; at=(wt+B01)&~B01;  // monadic forms: if w is an immediate type we can handle, and the length is a machine-word length, use w unchanged
    }else{RZ(a=n?eps(w,take(num[pfx?1:-1],w)):mtv); ak=1; at=B01;}  // any other w, replace by w e. {.w (or {: w).  Set ak to the length of a cell of a, in bytes.  Empty cells of w go through here to convert to list
   }
@@ -580,29 +580,33 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   case 4: // single-byte Boolean, looking for 1s
    /* obsolete FRETLOOPBYTE( , , *avv)*/
    {
-    // In this loop d holds the position of the previous fret, except at the end where it holds a length
-    I remwords=(n+SZI-1)>>LGSZI; I zbase=0; UI *wvv=(UI*)av; UI bits=*wvv++;  // prime the pipeline for top of loop
-    d=pfx-1; // location of notional previous fret: 0 for prefix, -1 for suffix
-    do{    // where we load bits SZI at a time
+    // In this loop d is the length of the fret
+    // n bits 0..LGSZI-1 are from original n & are the number of valid bits overflowing into a partial word.  Bits LGSZI..LGSZI+LGBB-1 are the (shifted) # words to process
+    n+=(n&(SZI-1))?SZI:0; UI *wvv=(UI*)av; UI bits=*wvv++;  // prime the pipeline for top of loop.  Bias n to have the number of words we need to visit, even partially
+    d=1-pfx; // If first fret is in position 0, that's length 0 for prefix, length 1 for suffix
+    while(n>0){    // where we load bits SZI at a time
      // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-     while(bits==0 && remwords>1){bits=*wvv++; zbase+=SZI; --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
-     I batchsizem1=MIN(BB,remwords)-1;
-     UI bitstack=0; while(batchsizem1>0){I bits2=*wvv++; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=bits2; --batchsizem1;};  // keep read pipe ahead
-     // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-     bits&=VALIDBOOLEAN; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits;
+     while(bits==0 && n>=(2*SZI)){bits=*wvv++; d+=SZI; n-=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+     UI bitstack;  // the bits packed together and processed one by one
+     {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
+     bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
+     }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
+     bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
      // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
-     if(remwords>BB)bits=*wvv++;else {bitstack<<=(-n)&(SZI-1); bitstack>>=((-n)&(SZI-1))+((BB-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
+     if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // Unbias n back to actual count (always in [1,64]); discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch. (Don't fetch outside block!)
      while(bitstack){
-      {I newend=zbase+CTTZI(bitstack); newend-=d; d+=newend;  // d=length of new partition; prevend=location of new partition
-      if(newend<255)*pd++ = (UC)newend; else{*pd++ = 255; *(UI4*)pd=(UI4)newend; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */ \
-      if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */ \
+      {I bitfound=CTTZI(bitstack); d+=bitfound;   // d=length of new partition; prevend=location of new partition
+      if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */
+      d=-bitfound;  // save the position of the found bit.  Do this before the subroutine, so bitfound doesn't need to be saved
+      if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */
       }
       bitstack&=bitstack-1;
      }
-     zbase+=BW;  // advance base to next batch of 64
-    }while((remwords-=BB)>0);
+     d+=BW;  // trailing zeros add to d, but the count wraps around.  Net, add the batch to d
+     n-=BW;  // account for 1 batch of bits
+    };
     // end with d=length of last partition, 
-    d=zbase-(((-n)&(SZI-1))+((-remwords)<<LGSZI))-1-d;  // the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
+    d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
    }
    break;
   case 5: // float (tolerant)

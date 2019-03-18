@@ -128,17 +128,16 @@ static REPF(jtrepbdx){A z;I c,k,m,p,zn;
 
  void *zvv=voidAV(z); void *wvv=voidAV(w);
  while(--c>=0){
-  I unskippedct=m;
-  I remwords=(m+SZI-1)>>LGSZI; UI *avv=IAV(a); UI bits=*avv++;  // prime the pipeline for top of loop
-  do{    // where we load bits SZI at a time
+  I n=m+((m&(SZI-1))?SZI:0); UI *avv=IAV(a); UI bits=*avv++;  // prime the pipeline for top of loop
+  while(n>0){    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-   while(bits==0 && remwords>1){bits=*avv++; unskippedct-=SZI; wvv=(C*)wvv+(k<<LGSZI); --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
-   I batchsizem1=MIN(BB,remwords)-1;
-   UI bitstack=0; while(batchsizem1>0){I bits2=*avv++; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=bits2; --batchsizem1;};  // keep read pipe ahead
+   while(bits==0 && n>=(2*SZI)){bits=*avv++; n-=SZI; wvv=(C*)wvv+(k<<LGSZI);}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+   I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
+   UI bitstack=0; while(--batchsize>0){I bits2=*avv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
    // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-   bits&=VALIDBOOLEAN; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits;
+   bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
    // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
-   if(remwords>BB)bits=*avv++;else {bitstack<<=(-unskippedct)&(SZI-1); bitstack>>=((-unskippedct)&(SZI-1))+((BB-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
+   if(n>=BW+SZI)bits=*avv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
    switch(k){  // copy the words
    case sizeof(C): while(bitstack){I bitx=CTTZI(bitstack); *(C*)zvv=((C*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    case sizeof(US): while(bitstack){I bitx=CTTZI(bitstack); *(US*)zvv=((US*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
@@ -149,8 +148,9 @@ static REPF(jtrepbdx){A z;I c,k,m,p,zn;
    default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    }
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
-  }while((remwords-=BB)>0);
-  wvv=(C*)wvv-(k*((BW-1)&-unskippedct));  // in case we loop back, back wvv to start of next input area, taking away the part of the last BW section we didn't use
+   n-=BW;  // decr count left
+  }
+  wvv=(C*)wvv+(k*n);  // in case we loop back, back wvv to start of next input area, taking away the part of the last BW section we didn't use
  } 
 
  R z;

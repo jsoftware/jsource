@@ -178,13 +178,13 @@ B evoke(A w){V*v=FAV(w); R CTILDE==v->id&&v->fgh[0]&&NAME&AT(v->fgh[0]);}
 // Extract the integer value from w, return it.  Set error if non-integral or non-atomic
 I jti0(J jt,A w){RZ(w); if(AT(w)&INT+B01){ASSERT(!AR(w),EVRANK); I m=AT(w)&(B01/C_LE)?0xff:~0; R AV(w)[0]&m;} if(!(w=vi(w)))R 0; ASSERT(!AR(w),EVRANK); R AV(w)[0];}  // can't move the ASSERT earlier without breaking a lot of tests
 
-A jtifb(J jt,I m,B* RESTRICT b){A z;I p,* RESTRICT zv; 
- p=bsum(m,b); 
- if(p==m)R IX(m);
+A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv; 
+ p=bsum(n,b); 
+ if(p==n)R IX(n);
  GATV(z,INT,p,1,0); zv=AV(z);
 #if 0
 #if !SY_64 && SY_WIN32
- {I i,q=m&-SZI,*u=(I*)b;
+ {I i,q=n&-SZI,*u=(I*)b;
   for(i=0;i<q;i+=SZI)switch(*u++){
     case B0001:                                *zv++=i+3; break;
     case B0010:                     *zv++=i+2;            break;
@@ -202,25 +202,26 @@ A jtifb(J jt,I m,B* RESTRICT b){A z;I p,* RESTRICT zv;
     case B1110: *zv++=i; *zv++=i+1; *zv++=i+2;            break;
     case B1111: *zv++=i; *zv++=i+1; *zv++=i+2; *zv++=i+3;
   }
-  b=(B*)u; DO(m&(SZI-1), if(*b++)*zv++=q+i;);
+  b=(B*)u; DO(n&(SZI-1), if(*b++)*zv++=q+i;);
  }
 #else
- DO(m, if(b[i])*zv++=i;);
+ DO(n, if(b[i])*zv++=i;);
 #endif
 #else
- I remwords=(m+SZI-1)>>LGSZI; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
- do{    // where we load bits SZI at a time
+ n+=(n&(SZI-1))?SZI:0; I zbase=0; UI *wvv=(UI*)b; UI bits=*wvv++;  // prime the pipeline for top of loop
+ while(n>0){    // where we load bits SZI at a time
   // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
-  while(bits==0 && remwords>1){bits=*wvv++; /* obsolete m-=SZI; */zbase+=SZI; --remwords;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
-  I batchsizem1=MIN(BB,remwords)-1;
-  UI bitstack=0; while(batchsizem1>0){I bits2=*wvv++; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits; bits=bits2; --batchsizem1;};  // keep read pipe ahead
+  while(bits==0 && n>=(2*SZI)){bits=*wvv++; n-=SZI; zbase+=SZI;}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
+  I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);
+  UI bitstack=0; while(--batchsize>0){I bits2=*wvv++; PACKBITSINTO(bits,bitstack); bits=bits2;};  // keep read pipe ahead
   // Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
-  bits&=VALIDBOOLEAN; PACKBITS(bits); bitstack>>=SZI; bitstack|=bits;
+  bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
   // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
-  if(remwords>BB)bits=*wvv++;else {bitstack<<=(-m)&(SZI-1); bitstack>>=((-m)&(SZI-1))+((BB-remwords)<<LGSZI);}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
+  if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch
   while(bitstack){I bitx=CTTZI(bitstack); *zv++=zbase+bitx; bitstack&=bitstack-1;}
   zbase+=BW;  // advance base to next batch of 64
- }while((remwords-=BB)>0);
+  n-=BW;  // decr count left
+ }
 #endif
  R z;
 }    /* integer vector from boolean mask */

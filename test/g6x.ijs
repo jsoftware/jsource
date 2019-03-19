@@ -89,7 +89,7 @@ s=: pmstats ''
 t=: pmunpack ''
 
 4 = type s
-(dbq'')+. s -: 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. 3 not 4: the first EXIT record is not emitted
+(dbq'')+. 2 >: +/ 100 100 100 1 100 100 * | s - 0 0 200,(200<.3+2*n),(200<:3+2*n),0   NB. 3 not 4: the first EXIT record is not emitted.  Allow leeway in case we get into slow-name path
 
 f=: 4 : 0
  if. dbq'' do. 1 return. end.  NB. skip if Debug

@@ -229,6 +229,20 @@ typedef struct {VA2 p1[6];} UA;
   else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
  }
 #endif
+// support intolerant comparisons explicitly
+#define ACMP0(f,Tz,Tx,Ty,pfx,pfx0)   \
+ AHDR2(f,B,Tx,Ty){D u,v;                                             \
+  if(jt->ct!=0.0){ \
+   if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
+   else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
+   else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  }else{ \
+   if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
+   else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z=u pfx0 v; z++;))    \
+   else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
+  } \
+ }
+
 
 
 #define BFSUB(xb,yi,pfx,bpfx)  \

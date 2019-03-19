@@ -146,8 +146,8 @@ typedef struct {
  I4   parsercalls;      /* # times parser was called                       */
  UI4  numlocsize;       // AN(jt->stnum)
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
- D    ct;               /* comparison tolerance                            */
- D    ctdefault;        /* default comparison tolerance                    */
+ D    cct;               /* complementary comparison tolerance                            */
+ D    cctdefault;        /* default complementary comparison tolerance                    */
  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
  A    idothash0;        // 2-byte hash table for use by i.
  A    idothash1;        // 4-byte hash table for use by i.

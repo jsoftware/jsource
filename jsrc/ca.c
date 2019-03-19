@@ -123,10 +123,10 @@ static DF2(atcomp){AF f;
  R f?f(jt,a,w,self):upon2(a,w,self);
 }
 
-static DF2(atcomp0){A z;AF f;D oldct=jt->ct;
+static DF2(atcomp0){A z;AF f;
  RZ(a&&w);
  f=atcompf(a,w,self);
- jt->ct=0; z=f?f(jt,a,w,self):upon2(a,w,self); jt->ct=oldct; 
+ PUSHCCT(1.0) z=f?f(jt,a,w,self):upon2(a,w,self); POPCCT
  RETF(z);
 }
 
@@ -343,20 +343,20 @@ static DF1(ixfixedleft  ){V*v=FAV(self); R indexofprehashed(v->fgh[0],w,v->fgh[2
 static DF1(ixfixedright ){V*v=FAV(self); R indexofprehashed(v->fgh[1],w,v->fgh[2]);}
 
 // Here if ct was 0 when the compound was created - we must keep it 0
-static DF1(ixfixedleft0 ){A z;D old=jt->ct;V*v=FAV(self); 
- jt->ct=0.0; z=indexofprehashed(v->fgh[0],w,v->fgh[2]); jt->ct=old; 
+static DF1(ixfixedleft0 ){A z;V*v=FAV(self); 
+ PUSHCCT(1.0) z=indexofprehashed(v->fgh[0],w,v->fgh[2]); POPCCT
  R z;
 }
 
-static DF1(ixfixedright0){A z;D old=jt->ct;V*v=FAV(self); 
- jt->ct=0.0; z=indexofprehashed(v->fgh[1],w,v->fgh[2]); jt->ct=old; 
+static DF1(ixfixedright0){A z;V*v=FAV(self); 
+ PUSHCCT(1.0) z=indexofprehashed(v->fgh[1],w,v->fgh[2]); POPCCT 
  R z;
 }
 
 static DF2(with2){R df1(w,powop(self,a,0));}
 
 // u&v
-F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u,*v;
+F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
  RZ(a&&w);
  switch(CONJCASE(a,w)){
  default: ASSERTSYS(0,"amp");
@@ -375,7 +375,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    mode=c==CIOTA?IIDOT:c==CICO?IICO:-1;
   }
   if(0<=mode){
-   if(b){jt->ct=0.0; h=indexofsub(mode,a,mark); jt->ct=old; f1=ixfixedleft0; flag&=~VJTFLGOK1;}
+   if(b){PUSHCCT(1.0) h=indexofsub(mode,a,mark); POPCCT f1=ixfixedleft0; flag&=~VJTFLGOK1;}
    else {            h=indexofsub(mode,a,mark);             f1=ixfixedleft ; flag&=~VJTFLGOK1;}
   }else switch(c){
    case CWORDS: RZ(a=fsmvfya(a)); f1=jtfsmfx; flag&=~VJTFLGOK1; break;
@@ -398,7 +398,7 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;D old=jt->ct;I flag,flag2=0,mode=-1,p,r;V*u
    else      mode=c==CEPS?IEPS:-1;
   }
   if(0<=mode){
-   if(b){jt->ct=0.0; h=indexofsub(mode,w,mark); jt->ct=old; f1=ixfixedright0; flag&=~VJTFLGOK1;}
+   if(b){PUSHCCT(1.0) h=indexofsub(mode,w,mark); POPCCT f1=ixfixedright0; flag&=~VJTFLGOK1;}
    else {            h=indexofsub(mode,w,mark);             f1=ixfixedright ; flag&=~VJTFLGOK1;}
   }
   R fdef(0,CAMP,VERB, f1,with2, a,w,h, flag, RMAX,RMAX,RMAX);

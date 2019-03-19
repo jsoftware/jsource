@@ -158,9 +158,9 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  switch(aw?(FL+CMPX&maxtype(AT(ax),AT(wx))?3:1):FL+CMPX&AT(ax)?2:0){
   case 0: x=stitch(aj,ax);                           break;
   case 1: x=stitch(aj,ax); y=stitch(wj,wx);          break;
-  case 2: x=stitch(aj,jt->ct?iocol(mode,ax,ax):ifdz(ax)); break;
-  case 3: x=stitch(aj,jt->ct?iocol(mode,ax,ax):ifdz(ax)); 
-          y=stitch(wj,jt->ct?iocol(mode,ax,wx):ifdz(wx));
+  case 2: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); break;
+  case 3: x=stitch(aj,1.0!=jt->cct?iocol(mode,ax,ax):ifdz(ax)); 
+          y=stitch(wj,1.0!=jt->cct?iocol(mode,ax,wx):ifdz(wx));
  }
  RZ(x=indexofsub(mode,x,aw?y:x)); u=AV(x);
  m=*AS(ai); v=AV(ai); 

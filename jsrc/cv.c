@@ -6,15 +6,16 @@
 #include "j.h"
 
 
-static DF1(jtfitct1){DECLFG;F1PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL1IP(f1,  w,fs); jt->ct=old; RETF(z);}
-static DF2(jtfitct2){DECLFG;F2PREFIP;A z;D old=jt->ct; jt->ct=*DAV(gs); z=CALL2IP(f2,a,w,fs); jt->ct=old; RETF(z);}
+static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
+static DF2(jtfitct2){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL2IP(f2,a,w,fs); POPCCT RETF(z);}
 
 static F2(jtfitct){D d;V*sv;
  RZ(a&&w);
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- R fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb
 }
 
 static DF2(jtfitexp2){

@@ -18,8 +18,8 @@ static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
 static AMON(sgnI,   I,I, *z=SGN(*x);)
-static AMON(sgnD,   I,D, *z=jt->ct>ABS(*x)?0:SGN(*x);)
-static AMON(sgnZ,   Z,Z, if(jt->ct>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
+static AMON(sgnD,   I,D, *z=(1.0-jt->cct)>ABS(*x)?0:SGN(*x);)
+static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
 
 static AMON(sqrtI,  D,I, ASSERTW(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)

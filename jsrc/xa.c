@@ -20,14 +20,14 @@ F1(jtboxs){A x;
  R mtv;
 }  // box-display characters
 
-F1(jtctq){ASSERTMTV(w); R scf(jt->ct);}
+F1(jtctq){ASSERTMTV(w); R scf(1.0-jt->cct);}
 
 F1(jtcts){D d;
  ASSERT(!AR(w),EVRANK);
  RZ(w=cvt(FL,w)); d=*DAV(w);
  ASSERT(0<=d,EVDOMAIN); 
  ASSERT(d<=5.820766091e-11,EVDOMAIN);
- jt->ctdefault=jt->ct=d;
+ jt->cctdefault=jt->cct=1.0-d;
  R mtv;
 }
 

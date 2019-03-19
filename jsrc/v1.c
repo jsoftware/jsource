@@ -67,7 +67,7 @@ B jtequ(J jt,A a,A w){A x;
 // Return 1 if a and w match intolerantly, 0 if not
 B jtequ0(J jt,A a,A w){
  F2PREFIP;  // allow inplace request - it has no effect
- D ct=jt->ct; jt->ct=0; B res=equ(a,w); jt->ct=ct; R res;
+ PUSHCCT(1.0) B res=equ(a,w); POPCCT R res;
 }
 
 // Test for equality of functions, 1 if they match.  To match, the functions must have the same pseudocharacter and fgh
@@ -132,8 +132,8 @@ static B jtmatchsub(J jt,I af,I wf,I m,I n,A a,A w,B* RESTRICT x,B b1){B b;C*av,
  switch(CTTZ(t)){
   // Take the case of no frame quickly, because it happens on each recursion and also in much user code
  default:   c <<= bplg(t); if(af|wf){b = eqv(af,wf,m,n,c,av,wv,x,b1);}else{b = (!!memcmp(av,wv,c))^b1; if(x)x[0]=b;} break; // change c to number of bytes in cell
- case FLX:   if(jt->ct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break;
- case CMPXX: if(jt->ct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break;
+ case FLX:   if(1.0!=jt->cct)INNERT(D,TEQ)else INNERT(D,DEQCT0) break;
+ case CMPXX: if(1.0!=jt->cct)INNERT(Z,zeq)else INNERT(Z,ZEQCT0) break;
  case XNUMX: INNERT(X,equ); break;
  case RATX:  INNERT(Q,EQQ); break;
  case BOXX:

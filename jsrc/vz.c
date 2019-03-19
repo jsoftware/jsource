@@ -61,18 +61,18 @@ D zmag(Z v){R hypoth(v.re,v.im);}
 
 B jtzeq(J jt,Z u,Z v){D a=u.re,b=u.im,c=v.re,d=v.im,p,q;
  if(a==c&&b==d)R 1;
- if(ZEZ(u)||ZEZ(v)||!jt->ct||(0>a!=0>c&&0>b!=0>d))R 0;
+ if(ZEZ(u)||ZEZ(v)||1.0==jt->cct||(0>a!=0>c&&0>b!=0>d))R 0;
  if(ZOV(u)||ZOV(v)){a/=2; b/=2; c/=2; d/=2;}
  if(ZUN(u)||ZUN(v)){a*=2; b*=2; c*=2; d*=2;}
  p=hypoth(a,b); q=hypoth(c,d);
- R p!=inf && q!=inf && hypoth(a-c,b-d)<=jt->ct*MAX(p,q);
+ R p!=inf && q!=inf && hypoth(a-c,b-d)<=(1.0-jt->cct)*MAX(p,q);
 }
 
 ZF1(jtzfloor){D p,q;
  ZF1DECL;
  zr=jfloor(a); p=a-zr;
  zi=jfloor(b); q=b-zi;
- if(1<=p+q+jt->ct)if(p>=q)++zr; else ++zi;
+ if(1<=p+q+(1.0-jt->cct))if(p>=q)++zr; else ++zi;   // could improve this test
  ZEPILOG;
 }
 

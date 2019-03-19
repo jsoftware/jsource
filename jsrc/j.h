@@ -588,6 +588,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define EPILOGNULL(z)   R z
 // Routines that do not return A
 #define EPILOG0         tpop(_ttop)
+// Routines that modify the comparison tolerance must stack it
+#define PUSHCCT(value) D cctstack = jt->cct; jt->cct=(value);   // declare the stacked value where it can be popped
+#define POPCCT jt->cct=cctstack;
 // Compounds push zombie to begin with and restore before the last operation, which can execute in place.
 // zombieval is used as a way of flagging reusable blocks.  They are reused only if they are marked as inplaceable; in other words,
 // zombieval+AC=1 is an alternative to AC<0.  We could try to overwrite the zombieval during final assignment, even if it is

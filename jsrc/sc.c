@@ -21,9 +21,9 @@ static DF2(jtunquote){A z;
  A thisname=v->fgh[0]; A fs; A explocale; L *stabent;// the A block for the name of the function (holding an NM) - unless it's a pseudo-name   fs is the 'named' function itself  explocale=explicit locale if any stabent=symbol-table entry if any
  if(thisname){
   // normal path for named functions
-  if(AM(self)==jt->modifiercounter&&v->localuse){
+  if(AM(self)==jt->modifiercounter&&v->localuse.lvp){
    // The most recent lookup is still valid, and it is nonzero.  Use it
-   fs=v->localuse;
+   fs=v->localuse.lvp;
    explocale=0;  // flag no explicit locale
   }else{
    NM* thisnameinfo=NAV(thisname);  // the NM block for the current name
@@ -38,7 +38,7 @@ static DF2(jtunquote){A z;
    fs=stabent->val;  // fetch the value of the name
    ASSERT(fs,EVVALUE); // make sure the name's value is given also
    // Remember the resolved value and the current modifiercounter, UNLESS the name does not permit remembering the lookup
-   if(v->localuse){v->localuse=fs; AM(self)=jt->modifiercounter;}
+   if(v->localuse.lvp){v->localuse.lvp=fs; AM(self)=jt->modifiercounter;}
    ASSERT(TYPESEQ(AT(self),AT(fs)),EVDOMAIN);   // make sure its part of speech has not changed since the name was parsed
   }
  }else{
@@ -237,7 +237,7 @@ A jtnamerefacv(J jt, A a, L* w){A y;V*v;
  // old lookups on locatives or canned names like xyuvmn, and we leave localuse 0 as a flag of that condition.
  // If the original name was not defined (w==0), don't set a value so that it will be looked up again to produce value error
  if(w&&!(NAV(a)->flag&(NMLOC|NMILOC|NMDOT))){
-  FAV(z)->localuse=y; AM(z)=jt->modifiercounter;
+  FAV(z)->localuse.lvp=y; AM(z)=jt->modifiercounter;
  }
  R z;
 }

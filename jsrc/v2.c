@@ -230,7 +230,7 @@ static F1(jtxprimetest){A z;B*b,rat;I d,j,q,n,old,*pv,*v,wn,wt,*yv;X r,*wv,x,xma
  RETF(z);
 }    /* prime test for extended integers or rationals */
 
-static F1(jtprimetest){A x;D oct;I t;
+static F1(jtprimetest){A x;I t;
  RZ(w);
  t=AT(w);
  if(!AN(w)||t&B01)R reshape(shape(w),num[0]);
@@ -239,7 +239,7 @@ static F1(jtprimetest){A x;D oct;I t;
   case INTX:            R iprimetest(w);
   case RATX: case XNUMX: R xprimetest(w);
   case FLX:  case CMPXX:
-   oct=jt->ct; jt->ct=jt->fuzz; x=eq(t&FL?w:conjug(w),floor1(w)); jt->ct=oct;
+   {PUSHCCT(1.0-jt->fuzz) x=eq(t&FL?w:conjug(w),floor1(w)); POPCCT}
    R xprimetest(cvt(XNUM,tymes(w,x))); 
 }}   /* primality test */
 

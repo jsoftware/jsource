@@ -30,8 +30,8 @@
 // above the bits that are changed by ct is considered significant
 static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  p.d=PI;                      /* pi itself                */
- x.d=PI*(1-jt->ct);           /* lower bound              */
- y.d=PI/(1-jt->ct);           /* upper bound              */
+ x.d=PI*(jt->cct);           /* lower bound              */
+ y.d=PI/(jt->cct);           /* upper bound              */
  c=p.i[MSW]; d=p.i[LSW]; m=0;
  if(c==x.i[MSW]){e=x.i[LSW]; m =(d&~e)|(~d&e);}
  if(c==y.i[MSW]){e=y.i[LSW]; m|=(d&~e)|(~d&e);}
@@ -431,7 +431,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // other value tequal to y.  -0 will always get hashed as +0, and possibly -0 as well
 #define TFINDYY(expa,expw)  \
  {x=*(D*)v;                                                                             \
-  MASK(dx,x   ); j=jx=HID(dx)%pm; jt->ct=0.0; FIND(expa); jt->ct=ct; if(m==hj)hv[j]=i;  \
+  MASK(dx,x   ); j=jx=HID(dx)%pm; PUSHCCT(1.0) FIND(expa); POPCCT if(m==hj)hv[j]=i;  \
   MASK(dl,x*tl);                j=dl.d==dx.d?jx:HID(dl)%pm; FIND(expw); il=ir=hj;       \
   MASK(dr,x*tr); if(dr.d!=dl.d){j=dr.d==dx.d?jx:HID(dr)%pm; FIND(expw);    ir=hj;}      \
  }
@@ -478,7 +478,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 
 // Do the operation.  Build a hash for a except when unboxed self-index
 #define IOFT(T,f,FA,FXY,FYY,expa,expw)   \
- IOF(f){RDECL;IODECL(T);B b,bx;D ct=jt->ct,tl=1-jt->ct,tr=1/tl,x,*zd;DI dl,dr,dx;I e,il,ir,jx,md,s;  \
+ IOF(f){RDECL;IODECL(T);B b,bx;D tl=jt->cct,tr=1/tl,x,*zd;DI dl,dr,dx;I e,il,ir,jx,md,s;  \
   md=mode<IPHOFFSET?mode:mode-IPHOFFSET;                                                         \
   b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUBSV||mode==INUB||mode==INUBI);              \
   zb=(B*)zv; zc=(C*)zv; zd=(D*)zv; zi=zv; e=cn*(m-1); bx=1&&BOX&AT(a);                           \
@@ -487,9 +487,9 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
    if(mode<IPHOFFSET){                                                                           \
     DO(p,hv[i]=m;);                                                                              \
     if(bx||!b){                                                                                  \
-     v=av; jt->ct=0.0;                                                                     \
+     v=av; PUSHCCT(1.0)                                                                     \
      if(IICO==mode){v+=e; DQ(m, FA(expa); v-=cn;);}else DO(m, FA(expa); v+=cn;);                 \
-     jt->ct=ct; if(w==mark)break;                                                                \
+     POPCCT if(w==mark)break;                                                                \
    }}                                                                                            \
    v=wv;                                                                                   \
    switch(md){                                                                                   \
@@ -913,8 +913,8 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
   case BOXX:  {RDECL;      SCDO(A, *wv,!equ(x,av[j]));} break;
-  case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
-             else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
+  case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
+             else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
  }
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
 
@@ -924,7 +924,7 @@ static void jtiosc(J jt,I mode,I m,I c,I ac,I wc,A a,A w,A z){B*zb;I j,p,q,*u,*v
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
 static B jtusebs(J jt,A a,I ac,I m){A*av,x;I t;
- if(!(BOX&AT(a)&&0==jt->ct))R 0;
+ if(!(BOX&AT(a)&&1.0==jt->cct))R 0;
  av=AAV(a); 
  DO(ac*m, x=av[i]; t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
@@ -1326,7 +1326,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
  // (full hashing is considerably more expensive)
  if(1==acr&&(1==wc||ac==wc)&&a!=w&&!mk&&((D)m*(D)zn<(4*m)+2.5*(D)zn)&&(mode==IIDOT||mode==IICO||mode==IEPS)){
   jtiosc(jt,mode,m,c,ac,wc,a,w,z); // simple sequential search without hashing.
- }else{B b=0==jt->ct;I t1;
+ }else{B b=1.0==jt->cct;I t1;
   AF fn=0; // we haven't figured it out yet
   UI booladj = (mode&(IIOPMSK&~(IIDOT^IICO)))?5:0; // init table length not found; booladj = 5 if boolean hashvalue is OK, 0 if full index needed
   p = (UI)MIN(IMAX-5,(2.1*MAX(m,c)));  // length we will use for hashtable, if small-range not used.
@@ -1612,10 +1612,10 @@ F1(jtnubind){
  R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
-// i.@(~:"0) y     does not have IRS
-F1(jtnubind0){A z;D oldct=jt->ct;
+// i.@(~:!.0) y     does not have IRS
+F1(jtnubind0){A z;
  RZ(w);
- jt->ct=0.0; z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); jt->ct=oldct;
+ PUSHCCT(1.0) z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
@@ -1648,7 +1648,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 
 // function definition
 #define IOCOLF(f)     void f(J jt,I m,I c,I d,A a,A w,A z,A h)
-#define IOCOLDECL(T)  D tl=1-jt->ct,tr=1/tl,x;                           \
+#define IOCOLDECL(T)  D tl=jt->cct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
 
@@ -1701,7 +1701,7 @@ static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[c*hj]))
 A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  RZ(a&&w);
  // require ct!=0   why??
- ASSERT(0!=jt->ct,EVNONCE);
+ ASSERT(1.0!=jt->cct,EVNONCE);
  at=AT(a); ar=AR(a); m=*AS(a); c=aii(a);  // a: at=type ar=rank m=#items c=#atoms in an item
  wt=AT(w); wr=AR(w); ws=AS(w); 
  d=1; DO(1+wr-ar, d*=ws[i];);

@@ -175,12 +175,12 @@ static DF2(jtkeysp){PROLOG(0008);A b,by,e,q,x,y,z;I j,k,n,*u,*v;P*p;
 }
 
 // a u/. w.  Self-classify a, then rearrange w and call cut
-static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
+static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
  RZ(a&&w);
  ASSERT(IC(a)==IC(w),EVLENGTH);  // verify agreement
  if(SPARSE&AT(a))R keysp(a,w,self);  // if sparse, go handle it
- RZ(a=indexof(a,a));  rifv(a); // self-classify the input; we are going to modify a, so make sure it's not virtual
- jt->ct=jt->ctdefault;  // now that partitioning is over, reset ct
+ RZ(a=indexof(a,a));  rifv(a); // self-classify the input using ct set before this verb; we are going to modify a, so make sure it's not virtual
+ PUSHCCT(jt->cctdefault);  // now that partitioning is over, reset ct for the executions of u
  // Allocate the area for the reordered copy of the input.  Do these calls early to free up registers for the main loop
  GA(wperm,AT(w),AN(w),AR(w),AS(w)); // Note we could avoid initialization of indirect types, since we are filling it all
  I celllen; PROD1(celllen,AR(w)-1,AS(w)+1); celllen <<= bplg(AT(w));  // length of a cell of w, in bytes
@@ -240,7 +240,7 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;D ctold=jt->ct;
  // wperm is always inplaceable.  If u is inplaceable, make the call to cut inplaceable
  // We pass the self pointer for /. into cut, as it uses that fact to interpret a
  z=jtcut2((J)(intptr_t)((I)jt+((FAV(self)->flag&VGERL)?0:(FAV(FAV(self)->fgh[0])->flag>>(VJTFLGOK1X-JTINPLACEWX))&JTINPLACEW)),frets,wperm,self);
- jt->ct=ctold;
+ POPCCT
  EPILOG(z);
 }    /* a f/. w for dense x & w */
 
@@ -290,7 +290,7 @@ static CRT jtkeyrs(J jt,A a,UI maxrange){I ac; CRT res;
    else    DO(n, v=zv+c**xv++; DO(c, y=*wv++; *v=F; ++v;););     \
  }}
 
-static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;D ctold=jt->ct;
+static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,j,m,*qv0,r,s,*u,wr,wt,*wv0,*xv,zt,*zv0;
  RZ(a&&w);
  at=AT(a); av0=AV(a); n=IC(a); 
  wt=AT(w); wv0=AV(w); wr=AR(w);
@@ -309,7 +309,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
  }else{RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}
  GA(z,zt,m*c,wr,AS(w)); *AS(z)=m; zv0=AV(z);
  if(wt&FL)NAN0;
- jt->ct=jt->ctdefault;
+ PUSHCCT(jt->cctdefault)
  switch(KCASE(d,CTTZ(wt))){
   case KCASE(CEQ,     B01X): KACC(*v==y,    B, B, 1   ); break;
   case KCASE(CPLUSDOT,B01X): KACC(*v||y,    B, B, 0   ); break;
@@ -329,7 +329,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
   case KCASE(23,      INTX): KACC(*v|y,     UI,UI,0   ); break;
   case KCASE(25,      INTX): KACC(~(*v^y),  UI,UI,-1  );
  }
- jt->ct=ctold;
+ POPCCT
  if(wt&FL)NAN1;
  *AS(z)=m; AN(z)=m*c; if(pp)RZ(z=pcvt(INT,z));
  EPILOG(z);

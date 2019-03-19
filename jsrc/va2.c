@@ -398,7 +398,7 @@ C jtvaid(J jt,A w){A x;C c;I k;V*v;
 // if the verb is atomic, we fill in the h field with a pointer to the va row for the verb
 void va2primsetup(A w){
  UC xlatedid = vaptr[(UC)FAV(w)->id];  // see which line it is
- FAV(w)->localuse=(xlatedid?&va[xlatedid]:0);  // point to the line, or 0 if invalid
+ FAV(w)->localuse.lvp=(xlatedid?&va[xlatedid]:0);  // point to the line, or 0 if invalid
  if(xlatedid)FAV(w)->flag |= VISATOMIC2;  // indicate that localuse contains AV pointer
 }
 
@@ -435,7 +435,7 @@ A jtcvz(J jt,I cv,A w){I t;
  VA2 jt##fname(J jt,A self,I t){  \
   if(!(jt->jerr>=EWOV)){                          \
    if((t&=(NUMERIC+SBT)&(~SPARSE))&&FAV(self)->flag&VISATOMIC2){  /* numeric input, verb with dataline */        \
-    R ((VA*)(FAV(self)->localuse))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
+    R ((VA*)(FAV(self)->localuse.lvp))->ptr[t<=FL?(t>>INTX):t<=RAT?(3+(t>>XNUMX)):6];  \
    }else R fname##EWOV[3];                                \
   }else{ \
    jt->jerr=0;                                 \
@@ -1067,7 +1067,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // B,I,D; then [9] CMPX [10] XINT (but not RAT) [11] RAT [12] SBT (symbol)
   // then [13-19] are for verb/, with precisions B I D Z X Q Symb
   // [20-26] for verb\, and [27-33] for verb\.
-  VA *vainfo=(VA*)FAV(self)->localuse;  // extract table line from the primitive
+  VA *vainfo=(VA*)FAV(self)->localuse.lvp;  // extract table line from the primitive
   if(!((t=UNSAFE(at|wt))&(NOUN&~(B01|INT|FL)))){
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    // The index into va is atype*3 + wtype, calculated sneakily

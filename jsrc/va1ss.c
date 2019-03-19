@@ -74,7 +74,8 @@ SSINGF1(jtsssignum) SSNUMPREFIX
   case INTX: SSSTORENV(SSRDI(w)>0?1:SSRDI(w)>>(BW-1),z,INT,I) R z;
   case FLX:
    f = SSRDD(w);
-   SSSTORE(f>=jt->ct?1:f<=-jt->ct?-1:0,z,INT,I)
+// obsolete   SSSTORE(f>=1.0-jt->cct?1:f<=-(1.0-jt->cct)?-1:0,z,INT,I)
+   SSSTORE((f>=1.0-jt->cct)-(-f>=1.0-jt->cct),z,INT,I)
    R z;
  }
 }

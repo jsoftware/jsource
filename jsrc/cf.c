@@ -86,11 +86,11 @@ static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  EPILOG(z);
 }
 
-static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;D oldct=jt->ct;
+static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;
  RZ(a&&w);
- jt->ct=0;
+ PUSHCCT(1.0)
  if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
- jt->ct=oldct;
+ POPCCT
  EPILOG(z);
 }
 

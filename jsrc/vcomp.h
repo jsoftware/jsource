@@ -15,7 +15,7 @@
 /*   tfloor(v)  x=floor(0.5+v), x-tgt(x,v)                                 */
 /*   tceil(v)   x=floor(0.5+v), x+tlt(x,v)                                 */
 
-// cct is complementary comp tolerance (1-jt->ct).  Result is 1 if tolerantly equal
+// cct is complementary comp tolerance (jt->cct).  Result is 1 if tolerantly equal
 // If a==b with ct!=0 the comparisons will have opposite results: if a,b are positive,
 //  a is > cct*b and b is not <= cct*a: result ==.  If a,b negative, a is < cct*b and b is
 //  <= cct*a: again result ==
@@ -38,16 +38,16 @@
 // This version to produce a boolean result
 #define TCMPEQB(cct,a,b) ((((a)>(cct)*(b))?1:0) ^ (((b)<=(cct)*(a))?1:0))
 
-#define TEQ(u,v)       TCMPEQ(1-jt->ct,(u),(v))
+#define TEQ(u,v)       TCMPEQ(jt->cct,(u),(v))
 #define TEQXD(u,v)     TEQ((D)u,   v)
 #define TEQDX(u,v)     TEQ(   u,(D)v)
-#define TNE(u,v)       TCMPNE(1-jt->ct,(u),(v))
+#define TNE(u,v)       TCMPNE(jt->cct,(u),(v))
 #define TNEXD(u,v)     TNE((D)u,   v)
 #define TNEDX(u,v)     TNE(   u,(D)v)
-#define TLT(u,v)       TCMPLT(1-jt->ct,(u),(v))
+#define TLT(u,v)       TCMPLT(jt->cct,(u),(v))
 #define TLTXD(u,v)     TLT((D)(u),   v )
 #define TLTDX(u,v)     TLT(    u,(D)(v))
-#define TLE(u,v)       TCMPLE(1-jt->ct,(u),(v))
+#define TLE(u,v)       TCMPLE(jt->cct,(u),(v))
 #define TLEXD(u,v)     TLE((D)(u),    v )
 #define TLEDX(u,v)     TLE(    u ,(D)(v))
 #define TGT(u,v)       TLT(    v ,    u )

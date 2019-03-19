@@ -141,8 +141,8 @@ static void ctmask(J jt){
  // and the sum of the two must not exceed the mask size.  We calculate the mask in floating point as 2 - 2 * 2*(t/(t+1)) which will
  // give its floating-point representation.  We then adjust the mask by forcing the exponent to be masked, and clearing any bits below the
  // highest clear bit
- if(jt->ct!=0){
-  D p=2.0 - (4.0*jt->ct)/(1.0+jt->ct);
+ if(jt->cct!=1.0){
+  D p=2.0 - (4.0*(1.0-jt->cct))/(2.0-jt->cct);
   IL q=0xffffffff00000000LL | *(UIL*)&p;
   q&=q>>1; q&=q>>2; q&=q>>4; q&=q>>8; q&=q>>16;
   jt->ctmask=(UIL)q;
@@ -512,7 +512,7 @@ static B jteqz(J jt,I n,Z*u,Z*v){DO(n, if(!zeq(*u,*v))R 0; ++u; ++v;); R 1;}
 // We test n subboxes
 static B jteqa(J jt,I n,A*u,A*v,I c,I d){DO(n, if(!equ(*u,*v))R 0; ++u; ++v;); R 1;}
 // same but intolerant (used for write probes)
-static B jteqa0(J jt,I n,A*u,A*v,I c,I d){D ct=jt->ct; jt->ct=0; B res=1; DO(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); jt->ct=ct; R res;}
+static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DO(n, if(!equ(*u,*v)){res=0;break;}; ++u; ++v;); POPCCT R res;}
 
 
 /*
@@ -851,7 +851,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
  }
 // reflexive.  Because the compare for expa does not force intolerance, we must do so here.  This is required only for boxes, since the other expas are intolerant
 #define TFINDBY(TH,expa,expw,fstmt0,endtest1,fstmt1)   \
- {HASHSLOT(hia(1.0,*v))  D ct=jt->ct; jt->ct=0.0; FINDWR(TH,expa); jt->ct=ct; \
+ {HASHSLOT(hia(1.0,*v))  PUSHCCT(1.0) FINDWR(TH,expa); POPCCT \
  HASHSLOT(hia(tl,*v)) jx=j; FINDRD(expw,j,asct==hj,fstmt0); il=hj;   \
  HASHSLOT(hia(tr,*v)) if(j!=jx){FINDRD(expw,j,endtest1,fstmt1);}  \
  }
@@ -898,7 +898,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 #define IOFT(T,TH,f,hash,FXY,FYY,expa,expw)   \
  IOF(f){I acn=ak/sizeof(T),  \
         wcn=wk/sizeof(T),* RESTRICT zv=AV(z);T* RESTRICT av=(T*)AV(a),* RESTRICT wv=(T*)AV(w);I md; \
-        D tl=1-jt->ct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
+        D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
   _mm256_zeroupper(VOID);  \
@@ -911,7 +911,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
    if(!(mode&IPHOFFSET)){  /* if we are not using a prehashed table */                                        \
     hashallo(hh,p,asct,mode);                                                           \
     if(!(IIMODREFLEX&md)){I cn= k/sizeof(T);  /* not reflexive */                                            \
-     D ct=jt->ct; jt->ct=0.0; if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn); jt->ct=ct;  /* all writes to hash must use intolerant compare */                \
+     PUSHCCT(1.0) if(md==IICO)XDQAP(T,TH,hash,expa,cn) else XDOAP(T,TH,hash,expa,cn); POPCCT  /* all writes to hash must use intolerant compare */                \
      if(w==mark)break;                                                                \
    }}                                                                                            \
    switch(md){                                                                                   \
@@ -1168,8 +1168,8 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j
   case INTX:               SCDO(I, *wv,x!=av[j]      ); break;
   case SBTX:               SCDO(SB,*wv,x!=av[j]      ); break;
   case BOXX:               SCDO(A, *wv,!equ(x,av[j])); break;
-  case FLX:   if(0==jt->ct)SCDO(D, *wv,x!=av[j]) 
-             else{D cct=1.0-jt->ct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
+  case FLX:   if(1.0==jt->cct)SCDO(D, *wv,x!=av[j]) 
+             else{D cct=jt->cct;    SCDO(D, *wv,!TCMPEQ(cct,x,av[j]));} break; 
   case XDX+B01X: case XDX+LITX: SCDON(C,wvv[jj]!=avv[jj]      ); break;
   case XDX+C2TX:               SCDON(S, wvv[jj]!=avv[jj]      ); break;
   case XDX+C4TX:               SCDON(C4,wvv[jj]!=avv[jj]      ); break;
@@ -1179,8 +1179,8 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j
   case XDX+INTX:               SCDON(I, wvv[jj]!=avv[jj]      ); break;
   case XDX+SBTX:               SCDON(SB,wvv[jj]!=avv[jj]      ); break;
   case XDX+BOXX:               SCDON(A, !equ(wvv[jj],avv[jj])); break;
-  case XDX+FLX:   if(0==jt->ct)SCDON(D, wvv[jj]!=avv[jj]) 
-             else{D cct=1.0-jt->ct;    SCDON(D, !TCMPEQ(cct,wvv[jj],avv[jj]));} break; 
+  case XDX+FLX:   if(1.0==jt->cct)SCDON(D, wvv[jj]!=avv[jj]) 
+             else{D cct=jt->cct;    SCDON(D, !TCMPEQ(cct,wvv[jj],avv[jj]));} break; 
   default:  break;  // scaf should fail
  }
 }    /* right argument cell is scalar; only for modes IIDOT IICO IEPS */
@@ -1190,7 +1190,7 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){B*zb;I j
 
 // return 1 if a is boxed, and ct==0, and a contains a box whose contents are boxed, or complex, or numeric with more than one atom
 static B jtusebs(J jt,A a,I ac,I asct){A*av,x;I t;
- if(!(BOX&AT(a)&&0==jt->ct))R 0;
+ if(!(BOX&AT(a)&&1.0==jt->cct))R 0;
  av=AAV(a); 
  DO(ac*asct, x=av[i]; t=AT(x); if(t&BOX+CMPX||1<AN(x)&&t&NUMERIC)R 1;);
  R 0;
@@ -1838,7 +1838,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,z=mtv;
  if(((((-(wc^1))&(-(wc^ac)))|((mode&IIOREPS)-1))>=0)&&((wcr<acr)||((D)m*(D)zn<(COMPARESPERHASHWRITE*m)+COMPARESPERHASHREAD*zn+OVERHEADHASHALLO))){  // wc==1 or ac, IOREPS, small enough operation
     // this will not choose sequential search enough when the cells are large (comparisons then are cheap because of early exit)
   jtiosc(jt,mode,n,m,c,ac,wc,a,w,z); // simple sequential search without hashing
- }else{B b=0==jt->ct;  // b means 'intolerant comparison'
+ }else{B b=1.0==jt->cct;  // b means 'intolerant comparison'
 // jtioa* BOX
 // jtiox  XNUM
 // jtioq  RAT
@@ -2126,10 +2126,10 @@ F1(jtnubind){
  R SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
-// i.@(~:"0) y     does not have IRS
-F1(jtnubind0){A z;D oldct=jt->ct;
+// i.@(~:!.0) y     does not have IRS
+F1(jtnubind0){A z;
  RZ(w);
- jt->ct=0.0; z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); jt->ct=oldct;
+ PUSHCCT(1.0) z=SPARSE&AT(w)?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
@@ -2162,7 +2162,7 @@ F1(jtsclass){A e,x,xy,y,z;I c,j,m,n,*v;P*p;
 
 // function definition
 #define IOCOLF(f)     void f(J jt,I asct,I wsct,I d,A a,A w,A z,A h)
-#define IOCOLDECL(T)  D tl=1-jt->ct,tr=1/tl,x;                           \
+#define IOCOLDECL(T)  D tl=jt->cct,tr=1/tl,x;                           \
                           I hj,*hv=AV(h),i,j,jr,l,p=AN(h),*u,*zv=AV(z);  \
                           T*av=(T*)AV(a),*v,*wv=(T*)AV(w);UI pm=p
 
@@ -2220,7 +2220,7 @@ static JOCOLFT(Z,jtjocolz,hid(*(D*)v),hid(tl*x),hid(tr*x),!zeq(*v,av[wsct*hj]))
 A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  RZ(a&&w);
  // require ct!=0   why??
- ASSERT(0!=jt->ct,EVNONCE);
+ ASSERT(1.0!=jt->cct,EVNONCE);
  at=AT(a); ar=AR(a); m=*AS(a); c=aii(a);  // a: at=type ar=rank m=#items c=#atoms in an item
  wt=AT(w); wr=AR(w); ws=AS(w); 
  d=1; DO(1+wr-ar, d*=ws[i];);

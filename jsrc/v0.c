@@ -29,12 +29,12 @@ static CFR(jtcfrd,D,FL,  dplus,dtymes,dnegate)
 static CFR(jtcfrx,X,XNUM,xplus,xtymes, negate)
 static CFR(jtcfrq,Q,RAT, qplus,qtymes,QNEGATE)
 
-static F1(jtrsort){A t,z;D d=jt->ct;
+static F1(jtrsort){A t,z;
  RZ(w);
- jt->ct=jt->fuzz;
+ PUSHCCT(1.0-jt->fuzz)
  t=over(mag(w),cant1(rect(w)));
  z=dgrade2(w,cant1(irs2(irs2(t,t,0L,1L,1L,jtindexof),t,0L,1L,1L,jtfrom)));
- jt->ct=d;
+ POPCCT
  RETF(z);
 }
 

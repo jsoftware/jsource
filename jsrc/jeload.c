@@ -214,7 +214,7 @@ void jepath(char* arg,char* lib,int forceavx)
   strcpy(path,arg3);
  else
  {
-  getcwd(path,sizeof(path));
+  if(!getcwd(path,sizeof(path)))path[0]=0;
   strcat(path,"/");
   strcat(path,arg3);
  }

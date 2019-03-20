@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 {
 	void* callbacks[] = {Joutput,Jwd,Jinput,0,(void*)SMCON};
 	char pathdll[1000];
-	_getcwd(pathdll,sizeof(pathdll));
+	if(!_getcwd(pathdll,sizeof(pathdll)))pathdll[0]=0;
 	strcat(pathdll,JDLLNAME);
 #ifdef _WIN32
 	hjdll=LoadLibraryA(pathdll);

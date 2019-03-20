@@ -59,7 +59,7 @@ static void SORTQNAME(SORTQTYPE *v, I n){
    do{I midpoint=(in0+cstklsb0+in1-cstklsb1)>>1; UI newstkbit=1LL<<(BW-1);  // halfway between output pointers
     // If we were unable to add to either of the empty stacks, we are done.  The empty stack(s) will point past the end of the block, but the length of the partition will be 0
     I ncmp0=cstklsb0; ncmp0=ncmp0>in1-cstklsb1-(in0+BW)+1?in1-cstklsb1-(in0+BW)+1:ncmp0;  // Don't move input pointer0 beyond output pointer 1.
-    ncmp0=ncmp0>midpoint-in0+8?midpoint-in0+8:ncmp0; ncmp0=ncmp0<0?0:ncmp0; if(!(cstk0|ncmp0))goto partdone;  // Don't move too far past midpoint; never less than 0; if no swaps at all, we're through
+    ncmp0=ncmp0>midpoint-in0+8?midpoint-in0+8:ncmp0; ncmp0=ncmp0<0?0:ncmp0; if(!(cstk0|ncmp0))goto partdone;  // Don't move too far past midpoint (8 here); never less than 0; if no swaps at all, we're through
     I ncmp1=cstklsb1; ncmp1=ncmp1>(in1-BW)-(in0+cstklsb0)+1?(in1-BW)-(in0+cstklsb0)+1:ncmp1;
     ncmp1=ncmp1>in1-midpoint+8?in1-midpoint+8:ncmp1; ncmp1=ncmp1<0?0:ncmp1; if(!(cstk1|ncmp1))goto partdone;
     // look for swappable values and stack them.  At end, note the position of the first swappable.  If there are none, advance LSB to end of word to leave maximum space

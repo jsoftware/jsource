@@ -619,6 +619,18 @@ extern unsigned int __cdecl _clearfp (void);
 #define RETF(exp)       A ZZZz = (exp); auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz
 #else
 #define RETF(exp)       R exp
+// Input is a byte.  It is replicated to all lanes of a UI
+#if BW==64
+#define REPLBYTETOW(in,out) (out=(UC)(in),out|=out<<8,out|=out<<16,out|=out<<32)
+#else
+#define REPLBYTETOW(in,out) (out=(UC)(in),out|=out<<8,out|=out<<16)
+#endif
+// Input is I/UI, count is # bytes to store to output pointer.  Input value is destroyed
+#if C_LE
+#define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
+#endif
+// Input is a word of bytes.  Result is 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
+#define ZBYTESTOZBITS(b) (b|=b>>4,b|=b>>2,b|=b>>1)
 // to verify gah conversion #define RETF(exp)       { A retfff=(exp);  if ((retfff) && ((AT(retfff)&SPARSE && AN(retfff)!=1) || (AT(retfff)&DENSE && AN(retfff)!=prod(AR(retfff),AS(retfff)))))SEGFAULT; R retfff; } // scaf
 #endif
 #define SBSV(x)         (jt->sbsv+(I)(x))

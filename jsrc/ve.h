@@ -133,7 +133,7 @@ extern ADECL2(   eqAA,B,A,A);
 extern ADECL2(   eqBB,B,B,B);
 extern ADECL2(   eqBD,B,B,D);
 extern ADECL2(   eqBI,B,B,I);
-extern ADECL2(   eqCC,B,C,C);
+extern ADECL2(   eqCC,B,B,B);  // really B,C,C
 extern ADECL2(   eqCS,B,UC,US);
 extern ADECL2(   eqDB,B,D,B);
 extern ADECL2(   eqDD,B,D,D);
@@ -248,7 +248,7 @@ extern ADECL2(   neAA,B,A,A);
 extern ADECL2(   neBB,B,B,B);
 extern ADECL2(   neBD,B,B,D);
 extern ADECL2(   neBI,B,B,I);
-extern ADECL2(   neCC,B,C,C);
+extern ADECL2(   neCC,B,B,B);  // really B,C,C
 extern ADECL2(   neCS,B,UC,US);
 extern ADECL2(   neDB,B,D,B);
 extern ADECL2(   neDD,B,D,D);

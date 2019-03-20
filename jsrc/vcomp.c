@@ -35,6 +35,7 @@ BPFX(ltBB, LT,BLT,GT,BGT)
 BPFX(leBB, LE,BLE,GE,BGE)
 BPFX(geBB, GE,BGE,LE,BLE)
 BPFX(gtBB, GT,BGT,LT,BLT)
+ 
 
 // AIFX with == compiles down to CMP/jne.  APFX with CMPEQ compiles down to cmp/sete.  On the Intel Core i3-3120M that I am testing on,
 // the test for integer equality seems to be moved up in the pipeline far enough to avoid branch misprediction, and becomes the winner (by 5%).
@@ -48,7 +49,7 @@ ACMP0(eqDB, B,D,B, TEQ, ==  )  ACMP0(eqDI, B,D,I, TEQ, ==  )  ACMP0(eqDD, B,D,D,
 APFX(eqZZ, B,Z,Z, zeq  )   
 APFX(eqXX, B,X,X, equ  )   
 APFX(eqQQ, B,Q,Q, QEQ  )
-EQTEMPLATE(eqCC, B,C,C, CMPEQ   )  EQTEMPLATE(eqCS, B,UC,US, CMPEQ )  EQTEMPLATE(eqSC, B,US,UC, CMPEQ )  EQTEMPLATE(eqSS, B,S,S, CMPEQ)
+BPFX(eqCC, CMPEQCC,x, CMPEQCC, x   ) EQTEMPLATE(eqCS, B,UC,US, CMPEQ )  EQTEMPLATE(eqSC, B,US,UC, CMPEQ )  EQTEMPLATE(eqSS, B,S,S, CMPEQ)
 EQTEMPLATE(eqUU, B,C4,C4, CMPEQ )  EQTEMPLATE(eqUS, B,C4,US, CMPEQ )  EQTEMPLATE(eqSU, B,US,C4, CMPEQ )
 EQTEMPLATE(eqCU, B,UC,C4, CMPEQ )  EQTEMPLATE(eqUC, B,C4,UC, CMPEQ )
 APFX(eqAA, B,A,A, equ  )
@@ -59,7 +60,7 @@ ACMP0(neDB, B,D,B, TNE, != )  ACMP0(neDI, B,D,I, TNE, != )  ACMP0(neDD, B,D,D, T
 APFX(neZZ, B,Z,Z, !zeq )  
 APFX(neXX, B,X,X, !equ )
 APFX(neQQ, B,Q,Q, !QEQ )
-NETEMPLATE(neCC, B,C,C, CMPNE   )  NETEMPLATE(neCS, B,UC,US, CMPNE )  NETEMPLATE(neSC, B,US,UC, CMPNE )  NETEMPLATE(neSS, B,S,S, CMPNE)
+BPFX(neCC, CMPNECC,x, CMPNECC, x   )  NETEMPLATE(neCS, B,UC,US, CMPNE )  NETEMPLATE(neSC, B,US,UC, CMPNE )  NETEMPLATE(neSS, B,S,S, CMPNE)
 NETEMPLATE(neUU, B,C4,C4, CMPNE )  NETEMPLATE(neUS, B,C4,US, CMPNE )  NETEMPLATE(neSU, B,US,C4, CMPNE )
 NETEMPLATE(neCU, B,UC,C4, CMPNE )  NETEMPLATE(neUC, B,C4,UC, CMPNE )
 APFX(neAA, B,A,A, !equ )

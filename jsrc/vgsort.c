@@ -274,7 +274,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 }    /* w grade"r w on large-range integers */
 
 
-// sort a single real list using quicksort without misprediction, inplace
+// sort a single integer list using quicksort without misprediction, inplace
 #define SORTQNAME sortiq1
 #define SORTQTYPE I
 #include "vgsortq.h"

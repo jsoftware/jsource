@@ -87,6 +87,7 @@ typedef struct {VA2 p1[6];} UA;
 #define SNOR(u,v)       SNOT(IOR(u,v))
 #define SNAND(u,v)      SNOT(IAND(u,v))
 
+// comparisons one value at a time
 #define BAND(u,v)       (u && v)
 #define BGT(u,v)        (u >  v)
 #define BLT(u,v)        (u <  v)
@@ -97,6 +98,10 @@ typedef struct {VA2 p1[6];} UA;
 #define BEQ(u,v)        (u == v)
 #define BNOR(u,v)       (!(u||v))
 #define BNAND(u,v)      (!(u&&v))
+
+// comparisons between LIT types, one word at a time producing bits in v.  Input v is destroyed
+#define CMPEQCC(u,v)    (v^=(u), ZBYTESTOZBITS(v), v=~v, v&=VALIDBOOLEAN)
+#define CMPNECC(u,v)    (v^=(u), ZBYTESTOZBITS(v), v&=VALIDBOOLEAN)
 
 #define PLUS(u,v)       ((u)+   (v))
 #define PLUSO(u,v)      ((u)+(D)(v))
@@ -244,7 +249,7 @@ typedef struct {VA2 p1[6];} UA;
  }
 
 
-
+#if 0 // obsolete original.  It tries to keep alignment, but doesn't handle buffers that are originally unaligned
 #define BFSUB(xb,yi,pfx,bpfx)  \
  {B*a,*p,*yb,*zb;I j,k;                                        \
   a=xb; p=(B*)&u; k=0;                                         \
@@ -274,3 +279,21 @@ typedef struct {VA2 p1[6];} UA;
   }else if(b)BFSUB(x,yy,pfx, bpfx)                      \
   else       BFSUB(y,xx,pfyx,bpfyx)                     \
  }
+#else
+#define BFSUB(xb,yi,pfx,bpfx)  \
+ {I j;                                        \
+  for(j=0;j<m;++j){                                    \
+   REPLBYTETOW(*xb++,u); DQ(n>>LGSZI, v=*yi++; *zz++=pfx(u,v););  \
+   if(n&(SZI-1)){v=*yi; I dd=pfx(u,v); STOREBYTES(zz,dd,n&(SZI-1)); yi=(I*)((UC*)yi+(n&(SZI-1))); zz=(I*)((UC*)zz+(n&(SZI-1)));} \
+ }}
+
+#define BPFX(f,pfx,bpfx,pfyx,bpfyx)  \
+ AHDR2(f,B,B,B){I u,v,*xx,*yy,*zz;       \
+  xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
+  if(1==n){                                             \
+   DQ(m>>LGSZI, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
+   if(m&(SZI-1)){u=*xx++; v=*yy++; I dd=pfx(u,v); STOREBYTES(zz,dd,m&(SZI-1));} /* avoid overfetch */  \
+  }else if(b)BFSUB(x,yy,pfx, bpfx)                      \
+  else       BFSUB(y,xx,pfyx,bpfyx)                     \
+ }
+#endif

@@ -564,11 +564,45 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
   // The type of a is always one we can handle here - other types have been converted to B01.  B01 types look for 1, others look for fret value.  Select routine based on length/tolerance/byte-boolean
   I rtnx = CTTZ(k); rtnx=(at&B01)?4:rtnx; rtnx=(at&FL)?5:rtnx;  // 0-3=bytes, 4=B01, 5=FL
   switch(rtnx){
-  case 0: // single bytes
-   FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
-    I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
-    val==*avv
-    ) break;
+  case 0: // single bytes.  This is like the B01 case below but we cleverly detect noncomparing words by word-wide methods, and then convert the equality test into B01 format a word at a time
+// obsolete    FRETLOOPBYTE(I valI=val|((UI)val<<8); valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);   ,
+// obsolete     I avvdiff=valI^avvI; avvI=((~avvdiff)&(avvdiff-(I)0x0101010101010101))&(I)0x8080808080808080;    ,
+// obsolete     val==*avv
+// obsolete     ) break;
+   {
+    // In this loop d is the length of the fret
+    I valI=((UC *)fret)[0]; valI|=valI<<8; valI|=valI<<16; if(BW==64)valI|=valI<<(BW/2);  // the fret value, replicated in each byte of the word
+    // n bits 0..LGSZI-1 are from original n & are the number of valid bits overflowing into a partial word.  Bits LGSZI..LGSZI+LGBB-1 are the (shifted) # words to process
+    n+=(n&(SZI-1))?SZI:0; UI *wvv=(UI*)av; UI bits=*wvv++;  // prime the pipeline for top of loop.  Bias n to have the number of words we need to visit, even partially
+    d=1-pfx; // If first fret is in position 0, that's length 0 for prefix, length 1 for suffix
+    while(n>0){    // where we load bits SZI at a time
+     // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits.  The test XORs the target with bits, then looks for presence of any 0 byte.
+     // 0 byte is detected by subtracting 1 from each byte's LSB and seeing if that causes the byte's MSB to switch from 0 to 1.  If any does, stop & process.  If not, skip the word.  Always leave 1 word so we have a batch to process
+     while(1){if(n<(2*SZI))break; I bytecomp=valI^bits; if(((~bytecomp)&(bytecomp-(I)0x0101010101010101))&(I)0x8080808080808080)break;    bits=*wvv++; d+=SZI; n-=SZI;}
+     UI bitstack;  // the bits packed together and processed one by one
+     {I batchsize=n>>LGSZI; batchsize=MIN(BB,batchsize);  // batch size, never 0
+     // XOR to put 0 bytes on frets; combine bits so that a boolean bit is 0 only if all bits of its byte are 0, i. e. 0 only if fret
+     bitstack=0; while(--batchsize>0){I bits2=*wvv++; bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack); bits=bits2;};  // process all but the last in batch; keep read pipe ahead. There is a carried dependency over PACKBITS, but the next word's bits can overlap it
+     }// Handle the last word of the batch.  It might have non-Boolean data at the end, AFTER the Boolean padding.  Just clear the non-boolean part in this line
+     bits ^=valI; ZBYTESTOZBITS(bits); bits&=VALIDBOOLEAN; PACKBITSINTO(bits,bitstack);
+     bitstack=~bitstack;     // Convert not-a-fret bits to fret bits
+     // Now handle the last batch, by discarding garbage bits at the end and then shifting the lead bit down to bit 0
+     if(n>=BW+SZI)bits=*wvv++;else {n-=n&(SZI-1)?SZI:0; bitstack<<=(BW-n)&(SZI-1); bitstack>>=BW-n;}  // Unbias n back to actual count (always in [1,64]); discard invalid trailing bits; shift leading byte to position 0.  For non-last batches, start on next batch. (Don't fetch outside block!)
+     while(bitstack){
+      {I bitfound=CTTZI(bitstack); d+=bitfound;   // d=length of new partition; prevend=location of new partition
+      if(d<255)*pd++ = (UC)d; else{*pd++ = 255; *(UI4*)pd=(UI4)d; pd+=SZUI4; m-=SZUI4;}  /* write out encoded length; keep track of # long fields emitted */
+      d=-bitfound;  // save the position of the found bit.  Do this before the subroutine, so bitfound doesn't need to be saved
+      if(pd>=pdend){RZ(pd0=jtgetnewpd(jt,pd,pd0)); pdend=(C*)CUTFRETEND(pd0); pd=CUTFRETFRETS(pd0);}  /* if we filled the current buffer, get a new one */
+      }
+      bitstack&=bitstack-1;
+     }
+     d+=BW;  // trailing zeros add to d, but the count wraps around.  Net, add the batch to d
+     n-=BW;  // account for 1 batch of bits
+    };
+    // end with d=length of last partition, 
+    d+=n-1;  // n is nonpositive.  This removes from d the nonexistent bits of the batch.  the -1 is for compatibility with other branches, which end with the length of the last partition 1 short, corrected for below.  This changes d back to length of fret
+   }
+   break;
   case 1: // 2 bytes
    FRETLOOPSGL(US) break;
   case 2: // 4 bytes

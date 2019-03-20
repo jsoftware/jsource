@@ -362,7 +362,7 @@
 // x is locale number, result is address of symbol table, or 0 if nonexistent locale
 // only for non-reuse #define findnlz(x,z)                {if((UI)(n)>=jt->numlocsize)z=0; else {z=(A)(jt->numloctbl[n]); z=((UI)((I*)z-jt->numloctbl)<jt->numlocsize)?0:z;}}
 #define fit(x,y)                    jtfit(jt,(x),(y))
-#define fitct(x,y)                  jtfitct(jt,(x),(y)) 
+#define fitct(x,y,n)                jtfitct(jt,(x),(y),(n)) 
 #define fix(x)                      jtfix(jt,(x))
 #define fixa(x,y)                   jtfixa(jt,(x),(y))
 #define fixrecursive(x,y)           jtfixrecursive(jt,(x),(y))

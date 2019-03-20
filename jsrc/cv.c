@@ -7,14 +7,25 @@
 
 
 static DF1(jtfitct1){DECLFG;F1PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL1IP(f1,  w,fs); POPCCT RETF(z);}  // lD has the complementary ct
-static DF2(jtfitct2){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL2IP(f2,a,w,fs); POPCCT RETF(z);}
 
-static F2(jtfitct){D d;V*sv;
+#define fitctvector(name,vector) static DF2(name){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=vector; POPCCT RETF(z);}
+fitctvector(jtfitct2,CALL2IP(f2,a,w,fs))
+fitctvector(jtfitcteq,jteq(jtinplace,a,w))
+fitctvector(jtfitctne,jtne(jtinplace,a,w))
+fitctvector(jtfitctgt,jtgt(jtinplace,a,w))
+fitctvector(jtfitctge,jtge(jtinplace,a,w))
+fitctvector(jtfitctlt,jtlt(jtinplace,a,w))
+fitctvector(jtfitctle,jtle(jtinplace,a,w))
+// obsolete static DF2(jtfitct2){DECLFG;F2PREFIP;A z; PUSHCCT(FAV(self)->localuse.lD) z=CALL2IP(f2,a,w,fs); POPCCT RETF(z);}
+
+// To avoid multiple indirect branches, we vector the common comparisons to a routine that jumps directly to them
+static AF aff2[] = {jtfitct2, jtfitcteq, jtfitctne, jtfitctgt, jtfitctge, jtfitctlt, jtfitctle};
+static A jtfitct(J jt,A a,A w,I cno){D d;V*sv;
  RZ(a&&w);
  ASSERT(!AR(w),EVRANK);
  sv=FAV(a);
  RZ(w=cvt(FL,w)); d=*DAV(w); ASSERT(0<=d&&d<5.82076609134675e-11,EVDOMAIN);
- A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),(AF)(jtfitct2),a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
+ A fn = fdef(0,CFIT,VERB,(AF)(jtfitct1),aff2[cno],a,w ,0L,sv->flag&(VIRS1|VIRS2|VJTFLGOK1|VJTFLGOK2|VISATOMIC1),(I)(sv->mr),(I)(sv->lr),(I)(sv->rr));  // preserve INPLACE flags
  RZ(fn); FAV(fn)->localuse.lD = 1.0-d; R fn;  // save the fit value in this verb
 }
 
@@ -48,12 +59,13 @@ static DF2(jtfitf2){V*sv=FAV(self); R df2(a,w,fit(fix(sv->fgh[0]),sv->fgh[1]));}
 F2(jtfit){A f;C c;I k,l,m,r;V*sv;
  ASSERTVN(a,w);
  sv=FAV(a); m=sv->mr; l=sv->lr; r=sv->rr;
+ I cno=0;
  switch(sv->id){
-  case CLE:    case CLT:    case CGE:    case CGT:       case CNE:      case CEQ:
+  case CLE: ++cno; case CLT: ++cno; case CGE: ++cno; case CGT: ++cno; case CNE: ++cno; case CEQ: ++cno;
   case CMATCH: case CEPS:   case CIOTA:  case CICO:      case CNUB:     case CSTAR:  
   case CFLOOR: case CCEIL:  case CSTILE: case CPLUSDOT:  case CSTARDOT: case CABASE:
   case CNOT:   case CXCO:   case CSLDOT: case CSPARSE:   case CEBAR:
-   R fitct(a,w);
+   R fitct(a,w,cno);
   case CEXP:
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitexp2,0L, m,l,r);
@@ -61,7 +73,7 @@ F2(jtfit){A f;C c;I k,l,m,r;V*sv;
    ASSERT(AT(w)&NUMERIC,EVDOMAIN);
    R CDERIV(CFIT,0L,jtfitpoly2,0L, m,l,r);   // CPOLY has no VIRS
   case CPOWOP:  // support for #^:_1!.n
-   if(VERB&AT(sv->fgh[1])||!equ(num[-1],sv->fgh[1]))R fitct(a,w);
+   if(VERB&AT(sv->fgh[1])||!equ(num[-1],sv->fgh[1]))R fitct(a,w,0);
    f=sv->fgh[0]; c=ID(f);
    if(c==CPOUND){ASSERT(!AR(w),EVRANK); R CDERIV(CFIT,0,jtfitfill2,VFLAGNONE,m,l,r);}  // CPOWOP has no VIRS
    ASSERT(c==CAMP,EVDOMAIN);

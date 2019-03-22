@@ -68,7 +68,7 @@ static REPF(jtrepzsx){A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
    if(r){B*c=(B*)iv; DO(r, if(c[i])*v++=u[i];);}                      \
  }}
 
-#if !SY_64 && SY_WIN32
+#if 0 && !SY_64 && SY_WIN32  // obsolete - bit-oriented version is better
 static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  RZ(a&&w);
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
@@ -112,23 +112,44 @@ static REPF(jtrepbdx){A z;B*b;C*wv,*zv;I c,i,*iv,j,k,m,p,q,r,zn;
  R z;
 }    /* (dense boolean)#"r (dense or sparse) */
 #else
-static REPF(jtrepbdx){A z;I c,k,m,p,zn;
+static REPF(jtrepbdx){A z;I c,k,m,p;
  // wf and wcr are set
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  if(SPARSE&AT(w))R irs2(ifb(AN(a),BAV(a)),w,0L,1L,wcr,jtfrom);
  m=AN(a);
+ void *zvv; void *wvv=voidAV(w); I n=0; // pointer to output area; pointer to input data; number of prefix bytes to skip in first cell
  p=bsum(m,BAV(a));  // p=# 1s in result, i. e. length of result item axis
- PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); zn=c*k*p;  // c=#cells, k=#atoms per item of cell, zn=#atoms in result
-   // no overflow possible unless a is empty; nothing  moved then, and zn is 0
- GA(z,AT(w),zn,AR(w),AS(w)); AS(z)[wf]=p;  // allocate result, move in length of item axis
- if(!zn)R z;
- k<<=bplg(AT(w));  // #bytes per item of cell
+ PROD(c,wf,AS(w)); PROD(k,wcr-1,AS(w)+wf+1); // c=#cells, k=#atoms per item of cell
+ I zn=c*k*p;  // zn=#atoms in result
+ k<<=bplg(AT(w));   // k is now # bytes/cell
+ // if the result is inplaceable, AND it is not getting much shorter, keep the same result area
+ // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
+ // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
+ // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
+ if(!(((I)jtinplace&(((UI)(m-2*p))>>((BW-1)-JTINPLACEWX))) && ASGNINPLACENJA(w) && AT(w)&DIRECT)) {
+  // normal non-in-place copy
+    // no overflow possible unless a is empty; nothing  moved then, and zn is 0
+  GA(z,AT(w),zn,AR(w),AS(w));  // allocate result
+   zvv=voidAV(z);  // point to the output area
+ }else{
+  z=w; // inplace
+  if(m==p)R z;  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.
+  AN(z)=zn;  // Install the correct atom count
+  // see how many leading values of the result are already in position.  We don't need to copy them in the first cell
+  UI *avv=IAV(a); for(;n<(m>>LGSZI);++n)if(avv[n]!=VALIDBOOLEAN)break;
+  // now n has the number of words to skip.  Convert that to bytes, and advance wvv to point to the first cell that may move
+  n<<=LGSZI; wvv=(C*)wvv+k*n;
+  zvv=CAV(z)+k*n;   // step the output pointer over the initial items left in place
+ }
+ AS(z)[wf]=p;  // move in length of item axis, #bytes per item of cell
+ if(!zn)R z;  // If no atoms to process, return empty
 
 // original  DO(c, DO(m, if(b[i]){MC(zv,wv,k); zv+=k;} wv+=k;);); break;
 
- void *zvv=voidAV(z); void *wvv=voidAV(w);
+ 
  while(--c>=0){
-  I n=m+((m&(SZI-1))?SZI:0); UI *avv=IAV(a); UI bits=*avv++;  // prime the pipeline for top of loop
+  // at top of loop n is biased by the number of leading bytes to skip. wvv points to the first byte to process
+  UI *avv=(UI*)(CAV(a)+n); n=m-n+((m&(SZI-1))?SZI:0); UI bits=*avv++;  // prime the pipeline for top of loop
   while(n>0){    // where we load bits SZI at a time
    // skip empty words, to get best speed on near-zero a.  This exits with the first unskipped word in bits
    while(bits==0 && n>=(2*SZI)){bits=*avv++; n-=SZI; wvv=(C*)wvv+(k<<LGSZI);}  // fast-forward over zeros.  Always leave 1 word so we have a batch to process
@@ -147,10 +168,12 @@ static REPF(jtrepbdx){A z;I c,k,m,p,zn;
    case sizeof(UI): while(bitstack){I bitx=CTTZI(bitstack); *(UI*)zvv=((UI*)wvv)[bitx]; zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    default: while(bitstack){I bitx=CTTZI(bitstack); MC(zvv,(C*)wvv+k*bitx,k); zvv=(C*)zvv+k; bitstack&=bitstack-1;} break;
    }
+
    wvv=(C*)wvv+(k<<LGBW);  // advance base to next batch of 64
    n-=BW;  // decr count left
   }
   wvv=(C*)wvv+(k*n);  // in case we loop back, back wvv to start of next input area, taking away the part of the last BW section we didn't use
+  n=0;  // no bias for cells after the first
  } 
 
  R z;
@@ -295,7 +318,7 @@ static REPF(jtrep1s){A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*wp,*zp
 
 
 F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
- RZ(a&&w);
+ RZ(a&&w);F2PREFIP;
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK; 
  // special case: if a is atomic 1, and cells of w are not atomic.  a=0 is fast in the normal path

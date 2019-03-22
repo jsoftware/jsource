@@ -800,6 +800,13 @@ f =: 4 : 0&>
 ('<./\';'>./\';'<./\.';'>./\.') f/ ((i. 1e5);(0.5+i. 1e5))
 ('+/\';'-/\';'*/\';'+/\.';'-/\.';'*/\.') f/ (<(0.5+i. 1e5))
 
+NB. Verify inplaceable #
+l0 =. 1002 > i. 2000
+l1 =. 999 > i. 2000
+(9000 * >:IF64) > 7!:2 'l0 # i. 2000'
+(9000 * >:IF64) < 7!:2 'l1 # i. 2000'
+
+
 4!:55 ;:'a a1 b f f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 global i ipexp jdlast local max min nmm nb qd t test testa unsafename undefinedname x'
 
 

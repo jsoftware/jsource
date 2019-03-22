@@ -125,6 +125,16 @@ NB. check for long sequences of 0 in boolean x
 NB. check different lengths of x/y
 ((0.5 > ?@$&0) f ?@$&0)"0 (1000) + i. 2000
 
+NB. Inplaceable arguments
+(?@$&2 (4 : 'res =. x (# -: (# >:@<:)) y if. -.res do. xx=:x [ yy=:y end. res') ?@$&0)"0 i. 100
+(?@$&2 (4 : 'x (# -: (# >:@<:)) y') ?@$&1000)"0 i. 100
+(?@$&2 (4 : 'x (# -: (# >:@<:)) y') [: ?@$&1000 ,&5)"0 i. 100
+((0.95 > ?@$&0) (4 : 'x (# -: (# >:@<:)) y') ?@$&1000)"0 i. 100   NB. Include long runs of 1s
+((0.95 > ?@$&0) (4 : 'x (# -: (# >:@<:)) y') [: ?@$&1000 ,&5)"0 i. 100
+NB. Verify long leading 1s are fast
+l1 =. (9999#1),0
+l0 =. 0 (0}) l1
+((1000) 6!:2 'l0 # i. 10000') (> 1.25&*)&(-&((1000) 6!:2 'i. 10000')) ((1000) 6!:2 'l1 # i. 10000')  NB. occasionally miscompares
 
 NB. NaN related tests
 (2#_1e6 _1e6)    -: _1e6 _1e6 _1e6 _1e6
@@ -170,6 +180,8 @@ f1=: 3 : 0
  assert. (b=: ?n$2) (# -: copy) xx=: sdot0{~?(n,7)$#sdot0
  assert. (b=: ?n$2) (# -: copy) xx=: ?n$1e9
  assert. (b=: ?n$2) (# -: copy) xx=: o.?n$1e9
+ assert. (b=: 0.95 > ?n$0) (# -: copy) xx=: ?n$1e9  NB. include long runs of 1
+ assert. (b=: 0.95 > ?n$0) (# -: copy) xx=: o.?n$1e9
  assert. (b=: ?n$2) (# -: copy) xx=: j./?(2,n)$1e9
  assert. (b=: ?n$2) (# -: copy) xx=: <"0 ?n$1e9
  assert. (b=: ?n$2) (# -: copy) xx=:    ?   n $100000x
@@ -184,6 +196,8 @@ f2=: 3 : 0
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: ?(3,n)$2
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: a.{~?(3,n)$#a.
  assert. (b=: ?n$2) (#"2 -: copy"2) xx=: a.{~?(3,n,7)$#a.
+ assert. (b=: 0.95 > ?n$0) (#"1 -: copy"1) xx=: a.{~?(3,n)$#a.  NB. include long runs of 1
+ assert. (b=: 0.95 > ?n$0) (#"2 -: copy"2) xx=: a.{~?(3,n,7)$#a.
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: adot1{~?(3,n)$#adot1
  assert. (b=: ?n$2) (#"2 -: copy"2) xx=: adot1{~?(3,n,7)$#adot1
  assert. (b=: ?n$2) (#"1 -: copy"1) xx=: adot2{~?(3,n)$#adot2

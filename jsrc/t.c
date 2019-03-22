@@ -106,7 +106,7 @@ B jtpinit(J jt){A t;C*s;
  /*  ;  */  pdef(CSEMICO, VERB, jtraze,    jtlink,   RMAX,RMAX,RMAX,VASGSAFE);
  /*  ;. */  pdef(CCUT,    CONJ, 0L,        jtcut,    0,   0,   0   ,VFLAGNONE);
  /*  ;: */  pdef(CWORDS,  VERB, jtwords,   jtfsm,    1,   RMAX,RMAX,VASGSAFE);
- /*  #  */  pdef(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2);
+ /*  #  */  pdef(CPOUND,  VERB, jttally,   jtrepeat, RMAX,1,   RMAX,VASGSAFE|VIRS2|VJTFLGOK2);
  /*  #. */  pdef(CBASE,   VERB, jtbase1,   jtbase2,  1,   1,   1   ,VASGSAFE);
  /*  #: */  pdef(CABASE,  VERB, jtabase1,  jtabase2, RMAX,1,   0   ,VASGSAFE);
  /*  !  */  pdef(CBANG,   VERB, jtfact,    jtoutof,  0,   0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);

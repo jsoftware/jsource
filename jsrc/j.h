@@ -403,6 +403,9 @@ extern unsigned int __cdecl _clearfp (void);
 #define DO(n,stm)       {I i=0,_n=(n); for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm)       {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
 #define DQ(n,stm)       {I i=(I)(n)-1;    for(;i>=0;--i){stm}}  // i runs from n-1 downto 0
+#define DOU(n,stm)      {I i=0,_n=(n); do{stm}while(++i<_n);}  // i runs from 0 to n-1, always at least once
+#define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
+#define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)           pst[(UC)(c)]
 #define FDEPDEC(d)      {jt->fdepi-=(I4)d;}
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)d,EVSTACK); jt->fdepi+=(I4)d;}
@@ -448,7 +451,7 @@ extern unsigned int __cdecl _clearfp (void);
  RZ(name);   \
  AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- if(type&SPARSE)SEGFAULT /*scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
+ /*if(type&SPARSE)SEGFAULT scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
 }
@@ -464,7 +467,7 @@ extern unsigned int __cdecl _clearfp (void);
  I akx=AKXR(rank);   \
  if(name){   \
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  if(type&SPARSE)SEGFAULT /*scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+  /*if(type&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
   else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
  }else{erraction;} \
@@ -474,7 +477,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define  GATV(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE,R 0)
 #define  GATV1(name,type,atoms,rank,shaape) GATVS(name,type,atoms,rank,shaape,type##SIZE,GACOPY1,R 0)  // this version copies 1 to the entire shape
 // use this version when you are allocating a sparse matrix.  It handles the AS[0] field correctly
-#define GASPARSE(n,t,a,r,s) {if(!(t&SPARSE))SEGFAULT /* scaf*/ if((r)==1){GA(n,XZ|(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,XZ|(t),a,r,s)}}
+#define GASPARSE(n,t,a,r,s) {/*if(!(t&SPARSE))SEGFAULT  scaf*/ if((r)==1){GA(n,/* obsolete XZ|*/(t),a,1,0); if(s)AS(n)[0]=(s)[0];}else{GA(n,/* obsolete XZ|*/(t),a,r,s)}}
 
 #define HN              4L  // number of boxes per valence to hold exp-def info (words, control words, original (opt.), symbol table)
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
@@ -530,6 +533,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
 #define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}
+#define MCISU(dest,src,n) {I * RESTRICT _d=(I*)(dest); I * RESTRICT _s=(I*)(src); I _n=-(n); do{*_d++=*_s++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
 
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)

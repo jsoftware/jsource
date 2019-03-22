@@ -892,7 +892,7 @@
 #define rep1d(x0,x1,x2,x3)          jtrep1d(jt,(x0),(x1),(x2),(x3))
 #define rep1s(x0,x1,x2,x3)          jtrep1s(jt,(x0),(x1),(x2),(x3))
 #define rep1sa(x,y,z)               jtrep1sa(jt,(x),(y),(z))
-#define repbdx(x0,x1,x2,x3)         jtrepbdx(jt,(x0),(x1),(x2),(x3))
+#define repbdx(x0,x1,x2,x3)         jtrepbdx(jtinplace,(x0),(x1),(x2),(x3))
 #define repbsx(x0,x1,x2,x3)         jtrepbsx(jt,(x0),(x1),(x2),(x3))
 #define repeat(x,y)                 jtrepeat(jt,(x),(y)) 
 #define repeatr(x,y)                jtrepeatr(jt,(x),(y))

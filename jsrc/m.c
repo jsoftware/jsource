@@ -966,9 +966,9 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
   else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
      // code for boolean verbs needs it.  We set the whole last SZI bytes to 0, so that we can be sure that a boolean can be interpreted as an INT using IAV(x)[0] 
-if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
- SEGFAULT  // scaf
-AT(z)&=~XZ; // scaf
+// obsolete if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
+// obsolete  SEGFAULT  // scaf
+// obsolete AT(z)&=~XZ; // scaf
   R z;
  }else{jsignal(EVLIMIT); R 0;}  // do it this way for branch-prediction
 }

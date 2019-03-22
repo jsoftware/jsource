@@ -155,22 +155,22 @@ do{
      // Here there are cells to move
      if(AFLAG(zz)&RECURSIBLE){
       // The result being built is recursive.  It has recursive count, so we have to increment the usecount of any blocks we add.
-      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by noting the special case when z is recursive inplaceable:
+      // And, we want to remove the blocks from the source so that we can free the source block immediately.  We get a small edge by handling here the special case when z is recursive inplaceable:
       // then we can get the desired effect by just marking z as nonrecursible.  That has the effect of raising the usecount of the elements of zt by 1, so we don't
       // actually have to touch them.  This is a transfer of ownership, and would fail if the new block is not inplaceable: for example, if the block is in a name, with
       // no frees on the tstack, it could have usecount of 1.  Transferring ownership would then leave the block in the name without an owner, and when zz is deleted the
       // name would be corrupted
-//      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
+// obsolete      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
       if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive
        AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
-       MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
+       if(!(zzcelllen&~(MEMCPYTUNELOOP-SZI))){MCISU(CAV(zz)+zzcellp,AV(z),zzcelllen>>LGSZI)}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}  // move the result-cell to the output
       }else{
        // copy and raise the elements (normal path).  We copy the references as A types, since there may be 1 or 2 per atom of z
        // because these are cells of an ordinary array (i. e. not WILLBEOPENED) the elements cannot be virtual
-       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DO(zzcelllen>>LGSZI, A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
+       A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DOU(zzcelllen>>LGSZI, A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
       }
      }else{  // not recursible
-      MC(CAV(zz)+zzcellp,AV(z),zzcelllen);  // move the result-cell to the output, advance to next output spot
+      if(!(zzcelllen&~(MEMCPYTUNELOOP-SZI))){MCISU(CAV(zz)+zzcellp,AV(z),zzcelllen>>LGSZI)}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}  // move the result-cell to the output
      }
 #if !ZZSTARTATEND
      zzcellp+=zzcelllen;  // advance to next cell

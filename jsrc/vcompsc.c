@@ -21,52 +21,52 @@
 
 
 #define INDF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                                      \
-  an=AN(a); av=(T0*)AV(a);                                                    \
-  wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;             \
-  if     (!AR(a)){x=*av;        DO(n,          y=*wv++; if(F(x,y))R sc(i););} \
-  else if(!AR(w)){y=*wv;        DO(n, x=*av++;          if(F(x,y))R sc(i););} \
-  else           {              DO(n, x=*av++; y=*wv++; if(F(x,y))R sc(i););} \
+ static F2(f){I n;T0*av,x;T1*wv,y;                                      \
+  av=(T0*)AV(a);                                                    \
+  wv=(T1*)AV(w);             \
+  if     (!AR(a)){x=*av;        DP(n=AN(w),          y=*wv++; if(F(x,y))R sc(n+i););} \
+  else if(!AR(w)){y=*wv;        DP(n=AN(a), x=*av++;          if(F(x,y))R sc(n+i););} \
+  else           {              DP(n=AN(w), x=*av++; y=*wv++; if(F(x,y))R sc(n+i););} \
   R sc(n);                                                                    \
  }
 
 #define JNDF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                                          \
-  an=AN(a); av=(T0*)AV(a);                                                        \
-  wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                 \
-  if     (!AR(a)){x=*av; wv+=n; DQ(n,          y=*--wv; if(F(x,y))R sc(i););} \
-  else if(!AR(w)){y=*wv; av+=n; DQ(n, x=*--av;          if(F(x,y))R sc(i););} \
-  else           {av+=n; wv+=n; DQ(n, x=*--av; y=*--wv; if(F(x,y))R sc(i););} \
+ static F2(f){I n;T0*av,x;T1*wv,y;                                          \
+  av=(T0*)AV(a);                                                        \
+  wv=(T1*)AV(w);                  \
+  if     (!AR(a)){x=*av; wv+=AN(w); DQ(n=AN(w),          y=*--wv; if(F(x,y))R sc(i););} \
+  else if(!AR(w)){y=*wv; av+=AN(a); DQ(n=AN(a), x=*--av;          if(F(x,y))R sc(i););} \
+  else           {av+=AN(w); wv+=AN(w); DQ(n=AN(w), x=*--av; y=*--wv; if(F(x,y))R sc(i););} \
   R sc(n);                                                                        \
  }
 
 #define SUMF(f,T0,T1,F)  \
- static F2(f){I an,m=0,n,wn;T0*av,x;T1*wv,y;                       \
-  an=AN(a); av=(T0*)AV(a);                                         \
-  wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;  \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; m+=(F(x,y)););} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          m+=(F(x,y)););} \
-  else           {       DO(n, x=*av++; y=*wv++; m+=(F(x,y)););} \
+ static F2(f){I m=0,n;T0*av,x;T1*wv,y;                       \
+  av=(T0*)AV(a);                                         \
+  wv=(T1*)AV(w);   \
+  if     (!AR(a)){x=*av; DQ(n=AN(w),          y=*wv++; m+=(F(x,y)););} \
+  else if(!AR(w)){y=*wv; DQ(n=AN(a), x=*av++;          m+=(F(x,y)););} \
+  else           {       DQ(n=AN(w), x=*av++; y=*wv++; m+=(F(x,y)););} \
   R sc(m);                                                         \
  }
 
 #define ANYF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                             \
-  an=AN(a); av=(T0*)AV(a);                                           \
-  wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;    \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(F(x,y))R num[1];);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(F(x,y))R num[1];);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(F(x,y))R num[1];);} \
+ static F2(f){I n;T0*av,x;T1*wv,y;                             \
+  av=(T0*)AV(a);                                           \
+  wv=(T1*)AV(w);    \
+  if     (!AR(a)){x=*av; DQ(n=AN(w),          y=*wv++; if(F(x,y))R num[1];);} \
+  else if(!AR(w)){y=*wv; DQ(n=AN(a), x=*av++;          if(F(x,y))R num[1];);} \
+  else           {       DQ(n=AN(w), x=*av++; y=*wv++; if(F(x,y))R num[1];);} \
   R num[0];                                                            \
  }
 
 #define ALLF(f,T0,T1,F)  \
- static F2(f){I an,n,wn;T0*av,x;T1*wv,y;                               \
-  an=AN(a); av=(T0*)AV(a);                                             \
-  wn=AN(w); wv=(T1*)AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;      \
-  if     (!AR(a)){x=*av; DO(n,          y=*wv++; if(!F(x,y))R num[0];);} \
-  else if(!AR(w)){y=*wv; DO(n, x=*av++;          if(!F(x,y))R num[0];);} \
-  else           {       DO(n, x=*av++; y=*wv++; if(!F(x,y))R num[0];);} \
+ static F2(f){I n;T0*av,x;T1*wv,y;                               \
+  av=(T0*)AV(a);                                             \
+  wv=(T1*)AV(w);      \
+  if     (!AR(a)){x=*av; DO(n=AN(w),          y=*wv++; if(!F(x,y))R num[0];);} \
+  else if(!AR(w)){y=*wv; DO(n=AN(a), x=*av++;          if(!F(x,y))R num[0];);} \
+  else           {       DO(n=AN(w), x=*av++; y=*wv++; if(!F(x,y))R num[0];);} \
   R num[1];                                                               \
  }
 

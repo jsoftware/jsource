@@ -117,16 +117,24 @@ CS2IP(static,on2, \
 ,0023)
 static DF2(on20){R jtrank2ex0(jt,a,w,self,on2cell);}  // pass inplaceability through
 
-static DF2(atcomp){AF f;
+static DF2(atcomp){AF f;A z;
  RZ(a&&w); 
- f=atcompf(a,w,self); 
- R f?f(jt,a,w,self):upon2(a,w,self);
+ f=atcompf(a,w,self);
+ if(f){
+  z=((AF)((I)f&~3))(jt,a,w,self);
+  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+ }else z=upon2(a,w,self);
+ RETF(z);
 }
 
 static DF2(atcomp0){A z;AF f;
  RZ(a&&w);
  f=atcompf(a,w,self);
- PUSHCCT(1.0) z=f?f(jt,a,w,self):upon2(a,w,self); POPCCT
+ PUSHCCT(1.0)
+ if(f){
+  z=((AF)((I)f&~3))(jt,a,w,self);
+  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+ }else z=upon2(a,w,self);
  RETF(z);
 }
 

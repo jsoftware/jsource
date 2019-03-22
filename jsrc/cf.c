@@ -82,15 +82,23 @@ EPILOG(z);}
 
 static DF2(jtfolkcomp){F2PREFIP;DECLFGH;PROLOG(0034);A z;AF f;
  RZ(a&&w);
- if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
+ f=atcompf(a,w,self);
+ if(f){
+  z=((AF)((I)f&~3))(jt,a,w,self);
+  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+ }else if(cap(fs))CAP2 else FOLK2;
  EPILOG(z);
 }
 
 static DF2(jtfolkcomp0){F2PREFIP;DECLFGH;PROLOG(0035);A z;AF f;
  RZ(a&&w);
  PUSHCCT(1.0)
- if(f=atcompf(a,w,self))z=f(jt,a,w,self); else if(cap(fs))CAP2 else FOLK2;
- POPCCT
+ f=atcompf(a,w,self);
+ if(f){
+  z=((AF)((I)f&~3))(jt,a,w,self);
+  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+ }else if(cap(fs))CAP2 else FOLK2;
+ POPCCT  //  bug: if we RZd early we leave ct unpopped
  EPILOG(z);
 }
 

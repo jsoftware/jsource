@@ -427,6 +427,7 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  i0leBB, i0leBI, i0leBD,   i0leIB, i0leII, i0leID,   i0leDB, i0leDI, i0leDD,
  i0geBB, i0geBI, i0geBD,   i0geIB, i0geII, i0geID,   i0geDB, i0geDI, i0geDD,
  i0gtBB, i0gtBI, i0gtBD,   i0gtIB, i0gtII, i0gtID,   i0gtDB, i0gtDI, i0gtDD,
+#if 0 // obsolete 
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
 
@@ -438,13 +439,14 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  i1gtBB, i1gtBI, i1gtBD,   i1gtIB, i1gtII, i1gtID,   i1gtDB, i1gtDI, i1gtDD,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
-
+#endif
  j0eqBB, j0eqBI, j0eqBD,   j0eqIB, j0eqII, j0eqID,   j0eqDB, j0eqDI, j0eqDD,   /* 2 */
  j0neBB, j0neBI, j0neBD,   j0neIB, j0neII, j0neID,   j0neDB, j0neDI, j0neDD,
  j0ltBB, j0ltBI, j0ltBD,   j0ltIB, j0ltII, j0ltID,   j0ltDB, j0ltDI, j0ltDD,
  j0leBB, j0leBI, j0leBD,   j0leIB, j0leII, j0leID,   j0leDB, j0leDI, j0leDD,
  j0geBB, j0geBI, j0geBD,   j0geIB, j0geII, j0geID,   j0geDB, j0geDI, j0geDD,
  j0gtBB, j0gtBI, j0gtBD,   j0gtIB, j0gtII, j0gtID,   j0gtDB, j0gtDI, j0gtDD,
+#if 0 // obsolete 
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
 
@@ -456,13 +458,14 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  j1gtBB, j1gtBI, j1gtBD,   j1gtIB, j1gtII, j1gtID,   j1gtDB, j1gtDI, j1gtDD,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
-
+#endif
  sumeqBB,sumeqBI,sumeqBD,  sumeqIB,sumeqII,sumeqID,  sumeqDB,sumeqDI,sumeqDD,  /* 4 */
  sumneBB,sumneBI,sumneBD,  sumneIB,sumneII,sumneID,  sumneDB,sumneDI,sumneDD,
  sumltBB,sumltBI,sumltBD,  sumltIB,sumltII,sumltID,  sumltDB,sumltDI,sumltDD,
  sumleBB,sumleBI,sumleBD,  sumleIB,sumleII,sumleID,  sumleDB,sumleDI,sumleDD,
  sumgeBB,sumgeBI,sumgeBD,  sumgeIB,sumgeII,sumgeID,  sumgeDB,sumgeDI,sumgeDD,
  sumgtBB,sumgtBI,sumgtBD,  sumgtIB,sumgtII,sumgtID,  sumgtDB,sumgtDI,sumgtDD,
+#if 0 // obsolete 
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
 
@@ -483,6 +486,7 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
  allgtBB,allgtBI,allgtBD,  allgtIB,allgtII,allgtID,  allgtDB,allgtDI,allgtDD,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
  0L,     0L,     0L,       0L,     0L,     0L,       0L,     0L,     0L,
+#endif
 
  // obsolete ifbeqBB,ifbeqBI,ifbeqBD,  ifbeqIB,ifbeqII,ifbeqID,  ifbeqDB,ifbeqDI,ifbeqDD,  /* 7 */
  // obsolete  ifbneBB,ifbneBI,ifbneBD,  ifbneIB,ifbneII,ifbneID,  ifbneDB,ifbneDI,ifbneDD,
@@ -623,6 +627,7 @@ static AF atcompX[]={   /* table for any vs. any */
 // We require the ranks to be <2 for processing here except for @e., which requires that the result of e. have rank<2
 // If the form is [: f/ g  and g is a simple comparison, use f/@g code for higher ranks
 // If no routine found, return 0 to failover to normal path
+// In the return address bits0-1 indicate postprocessing needed: 00=none, 10=+./ (result is binary 0 if search completed), 11=*./ (result is binary 1 if search completed)
 AF jtatcompf(J jt,A a,A w,A self){I m;
  RZ(a&&w);
  m=FAV(self)->flag&255;
@@ -630,9 +635,18 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // verify rank is OK, based on operation
   if((AR(a)|AR(w))>1)R (m>=(4<<3))?(AF)jtfslashatg:0;   // If an operand has rank>1, reject it unless it can be turned to f/@g special
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom
-  if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01))))R atcompxy[9*m+3*(AT(a)>>INTX)+(AT(w)>>INTX)];
- // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  else if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT)))R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[m];
+  if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01)))){
+   // numeric types that we can handle here, for sure
+   // split m into search and comparison
+   I search=m>>3; I comp=m&7;
+   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
+   I postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
+   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
+   R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
+  }
+  // Other types have a chance only if they are equal types; fetch from the appropriate table then
+  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT)))R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[m];
 // obsolete   else if(at&LIT&&wt&LIT)         f=atcompC[m];
 // obsolete   else if(at&C2T&&wt&C2T)         f=atcompUS[m];
 // obsolete   else if(at&C4T&&wt&C4T)         f=atcompC4[m];

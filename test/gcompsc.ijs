@@ -27,9 +27,9 @@ ftab=: 2 : 0
 )
 
 data=: 3 : 0
- xb=:               1000?@$2   [ yb=:               1000?@$2
- xi=:        _5e8 + 1000?@$1e9 [ yi=:        _5e8 + 1000?@$1e9
- xd=: 0.01 * _5e8 + 1000?@$1e9 [ yd=: 0.01 * _5e8 + 1000?@$1e9
+ xb=:               10000?@$2   [ yb=:               10000?@$2
+ xi=:        _5e5 + 10000?@$1e6 [ yi=:        _5e5 + 10000?@$1e6
+ xd=: (*   [: >: 2e_13 * _0.5 + $ ?@$ 0:) 0.01 * _5e5 + 10000?@$1e6 [ yd=: (*   [: >: 2e_13 * _0.5 + $ ?@$ 0:) 0.01 * _5e5 + 10000?@$1e6  NB. Have some overlap if tolerant
  xs=: s: ' ',": 1000?@$4000    [ ys=: s: ' ',":1000?@$4000
  ai=:        _5e8 + ?1e9
  ad=: 0.01 * _5e8 + ?1e9
@@ -328,6 +328,14 @@ test=: 2 : 0
  u testbsv v
  u testbvs v
  u testsp  v
+ u testvv  (v!.0)
+ u testsv  (v!.0)
+ u testvs  (v!.0)
+ u testss  (v!.0)
+ u testbvv (v!.0)
+ u testbsv (v!.0)
+ u testbvs (v!.0)
+ u testsp  (v!.0)
  1
 )
 

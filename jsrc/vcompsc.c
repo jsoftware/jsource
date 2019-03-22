@@ -29,6 +29,15 @@
   else           {              DP(n=AN(w), x=*av++; y=*wv++; if(F(x,y))R sc(n+i););} \
   R sc(n);                                                                    \
  }
+#define INDF0(f,T0,T1,F,C)  \
+ static F2(f){I n;T0*av,x;T1*wv,y;                                      \
+  av=(T0*)AV(a);                                                    \
+  wv=(T1*)AV(w);             \
+  if     (!AR(a)){x=*av;        if(1.0==jt->cct)DP(n=AN(w),          y=*wv++; if(C(x,y))R sc(n+i);)else DP(n=AN(w),          y=*wv++; if(F(x,y))R sc(n+i);)} \
+  else if(!AR(w)){y=*wv;        if(1.0==jt->cct)DP(n=AN(a), x=*av++;          if(C(x,y))R sc(n+i);)else DP(n=AN(a), x=*av++;          if(F(x,y))R sc(n+i);)} \
+  else           {              if(1.0==jt->cct)DP(n=AN(w), x=*av++; y=*wv++; if(C(x,y))R sc(n+i);)else DP(n=AN(w), x=*av++; y=*wv++; if(F(x,y))R sc(n+i);)} \
+  R sc(n);                                                                    \
+ }
 
 #define JNDF(f,T0,T1,F)  \
  static F2(f){I n;T0*av,x;T1*wv,y;                                          \
@@ -37,6 +46,15 @@
   if     (!AR(a)){x=*av; wv+=AN(w); DQ(n=AN(w),          y=*--wv; if(F(x,y))R sc(i););} \
   else if(!AR(w)){y=*wv; av+=AN(a); DQ(n=AN(a), x=*--av;          if(F(x,y))R sc(i););} \
   else           {av+=AN(w); wv+=AN(w); DQ(n=AN(w), x=*--av; y=*--wv; if(F(x,y))R sc(i););} \
+  R sc(n);                                                                        \
+ }
+#define JNDF0(f,T0,T1,F,C)  \
+ static F2(f){I n;T0*av,x;T1*wv,y;                                          \
+  av=(T0*)AV(a);                                                        \
+  wv=(T1*)AV(w);                  \
+  if     (!AR(a)){x=*av; wv+=AN(w); if(1.0==jt->cct)DQ(n=AN(w),          y=*--wv; if(C(x,y))R sc(i);)else DQ(n=AN(w),          y=*--wv; if(F(x,y))R sc(i);)} \
+  else if(!AR(w)){y=*wv; av+=AN(a); if(1.0==jt->cct)DQ(n=AN(a), x=*--av;          if(C(x,y))R sc(i);)else DQ(n=AN(a), x=*--av;          if(F(x,y))R sc(i);)} \
+  else           {av+=AN(w); wv+=AN(w); if(1.0==jt->cct)DQ(n=AN(w), x=*--av; y=*--wv; if(C(x,y))R sc(i);)else DQ(n=AN(w), x=*--av; y=*--wv; if(F(x,y))R sc(i);)} \
   R sc(n);                                                                        \
  }
 
@@ -49,7 +67,17 @@
   else           {       DQ(n=AN(w), x=*av++; y=*wv++; m+=(F(x,y)););} \
   R sc(m);                                                         \
  }
+#define SUMF0(f,T0,T1,F,C)  \
+ static F2(f){I m=0,n;T0*av,x;T1*wv,y;                       \
+  av=(T0*)AV(a);                                         \
+  wv=(T1*)AV(w);   \
+  if     (!AR(a)){x=*av; if(1.0==jt->cct)DQ(n=AN(w),          y=*wv++; m+=(C(x,y));)else DQ(n=AN(w),          y=*wv++; m+=(F(x,y));)} \
+  else if(!AR(w)){y=*wv; if(1.0==jt->cct)DQ(n=AN(a), x=*av++;          m+=(C(x,y));)else DQ(n=AN(a), x=*av++;          m+=(F(x,y));)} \
+  else           {       if(1.0==jt->cct)DQ(n=AN(w), x=*av++; y=*wv++; m+=(C(x,y));)else DQ(n=AN(w), x=*av++; y=*wv++; m+=(F(x,y));)} \
+  R sc(m);                                                         \
+ }
 
+#if 0 // obsolete
 #define ANYF(f,T0,T1,F)  \
  static F2(f){I n;T0*av,x;T1*wv,y;                             \
   av=(T0*)AV(a);                                           \
@@ -71,7 +99,6 @@
  }
 
 // i. no longer used
-#if 0
 #define IFB1  \
   {if(zu==zv){I m=zv-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=i;}
 
@@ -150,6 +177,7 @@
   x &= ((I)1<<(r1<<LGBB))-1; ADDBYTESINI(x); z+=x;    /* C_LE */                                                       \
   R sc(z);                                                                   \
  }
+#if 0  // obsolete
 
 #define ANYB(f,T0,T1,F)  \
  static F2(f){B*xv;     I an,*av,n,p,r1,  wn,*wv,x;                                 \
@@ -177,7 +205,6 @@
   R num[1];                                                                            \
  }
 
-#if 0  // no longer used
 #if SY_64
 #define IFB3           \
   {if(zu<zv){I c=zv-AV(z); RZ(z=ext(0,z)); zv=c+AV(z); zu=AV(z)+AN(z)-SZI;}  \
@@ -227,26 +254,29 @@
  }
 #endif
 
-INDB( i0eqBB,B,B,NE   )  INDF( i0eqBI,B,I,ANE  )  INDF( i0eqBD,B,D,TNEXD)  /* =  */
-INDF( i0eqIB,I,B,ANE  )  INDF( i0eqII,I,I,ANE  )  INDF( i0eqID,I,D,TNEXD)
-INDF( i0eqDB,D,B,TNEDX)  INDF( i0eqDI,D,I,TNEDX)  INDF( i0eqDD,D,D,TNE  )
-
+INDB( i0eqBB,B,B,NE   )  INDF( i0eqBI,B,I,ANE  )  INDF0( i0eqBD,B,D,TNEXD,NEXD0)  /* =  */
+INDF( i0eqIB,I,B,ANE  )  INDF( i0eqII,I,I,ANE  )  INDF0( i0eqID,I,D,TNEXD,NEXD0)
+INDF0( i0eqDB,D,B,TNEDX,NEDX0)  INDF0( i0eqDI,D,I,TNEDX,NEDX0)  INDF0( i0eqDD,D,D,TNE,NE0  )
+#if 0 // obsolete
 INDB( i1eqBB,B,B,EQ   )  INDF( i1eqBI,B,I,AEQ  )  INDF( i1eqBD,B,D,TEQXD)
 INDF( i1eqIB,I,B,AEQ  )  INDF( i1eqII,I,I,AEQ  )  INDF( i1eqID,I,D,TEQXD)
 INDF( i1eqDB,D,B,TEQDX)  INDF( i1eqDI,D,I,TEQDX)  INDF( i1eqDD,D,D,TEQ  )
-
-JNDB( j0eqBB,B,B,NE   )  JNDF( j0eqBI,B,I,ANE  )  JNDF( j0eqBD,B,D,TNEXD)
-JNDF( j0eqIB,I,B,ANE  )  JNDF( j0eqII,I,I,ANE  )  JNDF( j0eqID,I,D,TNEXD)
-JNDF( j0eqDB,D,B,TNEDX)  JNDF( j0eqDI,D,I,TNEDX)  JNDF( j0eqDD,D,D,TNE  )
+#endif
+JNDB( j0eqBB,B,B,NE   )  JNDF( j0eqBI,B,I,ANE  )  JNDF0( j0eqBD,B,D,TNEXD,NEXD0)
+JNDF( j0eqIB,I,B,ANE  )  JNDF( j0eqII,I,I,ANE  )  JNDF0( j0eqID,I,D,TNEXD,NEXD0)
+JNDF0( j0eqDB,D,B,TNEDX,NEDX0)  JNDF0( j0eqDI,D,I,TNEDX,NEDX0)  JNDF0( j0eqDD,D,D,TNE,NE0  )
+#if 0 // obsolete
 
 JNDB( j1eqBB,B,B,EQ   )  JNDF( j1eqBI,B,I,AEQ  )  JNDF( j1eqBD,B,D,TEQXD)
 JNDF( j1eqIB,I,B,AEQ  )  JNDF( j1eqII,I,I,AEQ  )  JNDF( j1eqID,I,D,TEQXD)
 JNDF( j1eqDB,D,B,TEQDX)  JNDF( j1eqDI,D,I,TEQDX)  JNDF( j1eqDD,D,D,TEQ  )
+#endif
 
-SUMB(sumeqBB,B,B,EQ   )  SUMF(sumeqBI,B,I,AEQ  )  SUMF(sumeqBD,B,D,TEQXD)
-SUMF(sumeqIB,I,B,AEQ  )  SUMF(sumeqII,I,I,AEQ  )  SUMF(sumeqID,I,D,TEQXD)
-SUMF(sumeqDB,D,B,TEQDX)  SUMF(sumeqDI,D,I,TEQDX)  SUMF(sumeqDD,D,D,TEQ  )
+SUMB(sumeqBB,B,B,EQ   )  SUMF(sumeqBI,B,I,AEQ  )  SUMF0(sumeqBD,B,D,TEQXD,EQXD0)
+SUMF(sumeqIB,I,B,AEQ  )  SUMF(sumeqII,I,I,AEQ  )  SUMF0(sumeqID,I,D,TEQXD,EQXD0)
+SUMF0(sumeqDB,D,B,TEQDX,EQDX0)  SUMF0(sumeqDI,D,I,TEQDX,EQDX0)  SUMF0(sumeqDD,D,D,TEQ,EQ0  )
 
+#if 0 // obsolete
 ANYB(anyeqBB,B,B,EQ   )  ANYF(anyeqBI,B,I,AEQ  )  ANYF(anyeqBD,B,D,TEQXD)
 ANYF(anyeqIB,I,B,AEQ  )  ANYF(anyeqII,I,I,AEQ  )  ANYF(anyeqID,I,D,TEQXD)
 ANYF(anyeqDB,D,B,TEQDX)  ANYF(anyeqDI,D,I,TEQDX)  ANYF(anyeqDD,D,D,TEQ  )
@@ -254,31 +284,37 @@ ANYF(anyeqDB,D,B,TEQDX)  ANYF(anyeqDI,D,I,TEQDX)  ANYF(anyeqDD,D,D,TEQ  )
 ALLB(alleqBB,B,B,EQ   )  ALLF(alleqBI,B,I,AEQ  )  ALLF(alleqBD,B,D,TEQXD)
 ALLF(alleqIB,I,B,AEQ  )  ALLF(alleqII,I,I,AEQ  )  ALLF(alleqID,I,D,TEQXD)
 ALLF(alleqDB,D,B,TEQDX)  ALLF(alleqDI,D,I,TEQDX)  ALLF(alleqDD,D,D,TEQ  )
+#endif
 
 // obsolete IFBB(ifbeqBB,B,B,EQ   )  IFBF(ifbeqBI,B,I,AEQ  )  IFBF(ifbeqBD,B,D,TEQXD)
 // obsolete IFBF(ifbeqIB,I,B,AEQ  )  IFBF(ifbeqII,I,I,AEQ  )  IFBF(ifbeqID,I,D,TEQXD)
 // obsolete IFBF(ifbeqDB,D,B,TEQDX)  IFBF(ifbeqDI,D,I,TEQDX)  IFBF(ifbeqDD,D,D,TEQ  )
 
-INDB( i0neBB,B,B,EQ   )  INDF( i0neBI,B,I,AEQ  )  INDF( i0neBD,B,D,TEQXD)  /* ~: */
-INDF( i0neIB,I,B,AEQ  )  INDF( i0neII,I,I,AEQ  )  INDF( i0neID,I,D,TEQXD)
-INDF( i0neDB,D,B,TEQDX)  INDF( i0neDI,D,I,TEQDX)  INDF( i0neDD,D,D,TEQ  )
+INDB( i0neBB,B,B,EQ   )  INDF( i0neBI,B,I,AEQ  )  INDF0( i0neBD,B,D,TEQXD,EQXD0)  /* ~: */
+INDF( i0neIB,I,B,AEQ  )  INDF( i0neII,I,I,AEQ  )  INDF0( i0neID,I,D,TEQXD,EQXD0)
+INDF0( i0neDB,D,B,TEQDX,EQDX0)  INDF0( i0neDI,D,I,TEQDX,EQDX0)  INDF0( i0neDD,D,D,TEQ,EQ0  )
 
+#if 0 // obsolete
 INDB( i1neBB,B,B,NE   )  INDF( i1neBI,B,I,ANE  )  INDF( i1neBD,B,D,TNEXD)
 INDF( i1neIB,I,B,ANE  )  INDF( i1neII,I,I,ANE  )  INDF( i1neID,I,D,TNEXD)
 INDF( i1neDB,D,B,TNEDX)  INDF( i1neDI,D,I,TNEDX)  INDF( i1neDD,D,D,TNE  )
+#endif
 
-JNDB( j0neBB,B,B,EQ   )  JNDF( j0neBI,B,I,AEQ  )  JNDF( j0neBD,B,D,TEQXD)
-JNDF( j0neIB,I,B,AEQ  )  JNDF( j0neII,I,I,AEQ  )  JNDF( j0neID,I,D,TEQXD)
-JNDF( j0neDB,D,B,TEQDX)  JNDF( j0neDI,D,I,TEQDX)  JNDF( j0neDD,D,D,TEQ  )
+JNDB( j0neBB,B,B,EQ   )  JNDF( j0neBI,B,I,AEQ  )  JNDF0( j0neBD,B,D,TEQXD,EQXD0)
+JNDF( j0neIB,I,B,AEQ  )  JNDF( j0neII,I,I,AEQ  )  JNDF0( j0neID,I,D,TEQXD,EQXD0)
+JNDF0( j0neDB,D,B,TEQDX,EQDX0)  JNDF0( j0neDI,D,I,TEQDX,EQDX0)  JNDF0( j0neDD,D,D,TEQ,EQ0  )
 
+#if 0 // obsolete
 JNDB( j1neBB,B,B,NE   )  JNDF( j1neBI,B,I,ANE  )  JNDF( j1neBD,B,D,TNEXD)
 JNDF( j1neIB,I,B,ANE  )  JNDF( j1neII,I,I,ANE  )  JNDF( j1neID,I,D,TNEXD)
 JNDF( j1neDB,D,B,TNEDX)  JNDF( j1neDI,D,I,TNEDX)  JNDF( j1neDD,D,D,TNE  )
+#endif
 
-SUMB(sumneBB,B,B,NE   )  SUMF(sumneBI,B,I,ANE  )  SUMF(sumneBD,B,D,TNEXD)
-SUMF(sumneIB,I,B,ANE  )  SUMF(sumneII,I,I,ANE  )  SUMF(sumneID,I,D,TNEXD)
-SUMF(sumneDB,D,B,TNEDX)  SUMF(sumneDI,D,I,TNEDX)  SUMF(sumneDD,D,D,TNE  )
+SUMB(sumneBB,B,B,NE   )  SUMF(sumneBI,B,I,ANE  )  SUMF0(sumneBD,B,D,TNEXD,NEXD0)
+SUMF(sumneIB,I,B,ANE  )  SUMF(sumneII,I,I,ANE  )  SUMF0(sumneID,I,D,TNEXD,NEXD0)
+SUMF0(sumneDB,D,B,TNEDX,NEDX0)  SUMF0(sumneDI,D,I,TNEDX,NEDX0)  SUMF0(sumneDD,D,D,TNE,NE0  )
 
+#if 0 // obsolete
 ANYB(anyneBB,B,B,NE   )  ANYF(anyneBI,B,I,ANE  )  ANYF(anyneBD,B,D,TNEXD)
 ANYF(anyneIB,I,B,ANE  )  ANYF(anyneII,I,I,ANE  )  ANYF(anyneID,I,D,TNEXD)
 ANYF(anyneDB,D,B,TNEDX)  ANYF(anyneDI,D,I,TNEDX)  ANYF(anyneDD,D,D,TNE  )
@@ -286,31 +322,37 @@ ANYF(anyneDB,D,B,TNEDX)  ANYF(anyneDI,D,I,TNEDX)  ANYF(anyneDD,D,D,TNE  )
 ALLB(allneBB,B,B,NE   )  ALLF(allneBI,B,I,ANE  )  ALLF(allneBD,B,D,TNEXD)
 ALLF(allneIB,I,B,ANE  )  ALLF(allneII,I,I,ANE  )  ALLF(allneID,I,D,TNEXD)
 ALLF(allneDB,D,B,TNEDX)  ALLF(allneDI,D,I,TNEDX)  ALLF(allneDD,D,D,TNE  )
+#endif
 
 // obsolete IFBB(ifbneBB,B,B,NE   )  IFBF(ifbneBI,B,I,ANE  )  IFBF(ifbneBD,B,D,TNEXD)
 // obsolete IFBF(ifbneIB,I,B,ANE  )  IFBF(ifbneII,I,I,ANE  )  IFBF(ifbneID,I,D,TNEXD)
 // obsolete IFBF(ifbneDB,D,B,TNEDX)  IFBF(ifbneDI,D,I,TNEDX)  IFBF(ifbneDD,D,D,TNE  )
 
-INDB( i0ltBB,B,B,GE   )  INDF( i0ltBI,B,I,AGE  )  INDF( i0ltBD,B,D,TGEXD)  /* <  */
-INDF( i0ltIB,I,B,AGE  )  INDF( i0ltII,I,I,AGE  )  INDF( i0ltID,I,D,TGEXD)
-INDF( i0ltDB,D,B,TGEDX)  INDF( i0ltDI,D,I,TGEDX)  INDF( i0ltDD,D,D,TGE  )
+INDB( i0ltBB,B,B,GE   )  INDF( i0ltBI,B,I,AGE  )  INDF0( i0ltBD,B,D,TGEXD,GEXD0)  /* <  */
+INDF( i0ltIB,I,B,AGE  )  INDF( i0ltII,I,I,AGE  )  INDF0( i0ltID,I,D,TGEXD,GEXD0)
+INDF0( i0ltDB,D,B,TGEDX,GEDX0)  INDF0( i0ltDI,D,I,TGEDX,GEDX0)  INDF0( i0ltDD,D,D,TGE,GE0  )
 
+#if 0 // obsolete
 INDB( i1ltBB,B,B,LT   )  INDF( i1ltBI,B,I,ALT  )  INDF( i1ltBD,B,D,TLTXD)
 INDF( i1ltIB,I,B,ALT  )  INDF( i1ltII,I,I,ALT  )  INDF( i1ltID,I,D,TLTXD)
 INDF( i1ltDB,D,B,TLTDX)  INDF( i1ltDI,D,I,TLTDX)  INDF( i1ltDD,D,D,TLT  )
+#endif
 
-JNDB( j0ltBB,B,B,GE   )  JNDF( j0ltBI,B,I,AGE  )  JNDF( j0ltBD,B,D,TGEXD)
-JNDF( j0ltIB,I,B,AGE  )  JNDF( j0ltII,I,I,AGE  )  JNDF( j0ltID,I,D,TGEXD)
-JNDF( j0ltDB,D,B,TGEDX)  JNDF( j0ltDI,D,I,TGEDX)  JNDF( j0ltDD,D,D,TGE  )
+JNDB( j0ltBB,B,B,GE   )  JNDF( j0ltBI,B,I,AGE  )  JNDF0( j0ltBD,B,D,TGEXD,GEXD0)
+JNDF( j0ltIB,I,B,AGE  )  JNDF( j0ltII,I,I,AGE  )  JNDF0( j0ltID,I,D,TGEXD,GEXD0)
+JNDF0( j0ltDB,D,B,TGEDX,GEDX0)  JNDF0( j0ltDI,D,I,TGEDX,GEDX0)  JNDF0( j0ltDD,D,D,TGE,GE0  )
 
+#if 0 // obsolete
 JNDB( j1ltBB,B,B,LT   )  JNDF( j1ltBI,B,I,ALT  )  JNDF( j1ltBD,B,D,TLTXD)
 JNDF( j1ltIB,I,B,ALT  )  JNDF( j1ltII,I,I,ALT  )  JNDF( j1ltID,I,D,TLTXD)
 JNDF( j1ltDB,D,B,TLTDX)  JNDF( j1ltDI,D,I,TLTDX)  JNDF( j1ltDD,D,D,TLT  )
+#endif
 
-SUMB(sumltBB,B,B,LT   )  SUMF(sumltBI,B,I,ALT  )  SUMF(sumltBD,B,D,TLTXD)
-SUMF(sumltIB,I,B,ALT  )  SUMF(sumltII,I,I,ALT  )  SUMF(sumltID,I,D,TLTXD)
-SUMF(sumltDB,D,B,TLTDX)  SUMF(sumltDI,D,I,TLTDX)  SUMF(sumltDD,D,D,TLT  )
+SUMB(sumltBB,B,B,LT   )  SUMF(sumltBI,B,I,ALT  )  SUMF0(sumltBD,B,D,TLTXD,LTXD0)
+SUMF(sumltIB,I,B,ALT  )  SUMF(sumltII,I,I,ALT  )  SUMF0(sumltID,I,D,TLTXD,LTXD0)
+SUMF0(sumltDB,D,B,TLTDX,LTDX0)  SUMF0(sumltDI,D,I,TLTDX,LTDX0)  SUMF0(sumltDD,D,D,TLT,LT0  )
 
+#if 0 // obsolete
 ANYB(anyltBB,B,B,LT   )  ANYF(anyltBI,B,I,ALT  )  ANYF(anyltBD,B,D,TLTXD)
 ANYF(anyltIB,I,B,ALT  )  ANYF(anyltII,I,I,ALT  )  ANYF(anyltID,I,D,TLTXD)
 ANYF(anyltDB,D,B,TLTDX)  ANYF(anyltDI,D,I,TLTDX)  ANYF(anyltDD,D,D,TLT  )
@@ -318,31 +360,37 @@ ANYF(anyltDB,D,B,TLTDX)  ANYF(anyltDI,D,I,TLTDX)  ANYF(anyltDD,D,D,TLT  )
 ALLB(allltBB,B,B,LT   )  ALLF(allltBI,B,I,ALT  )  ALLF(allltBD,B,D,TLTXD)
 ALLF(allltIB,I,B,ALT  )  ALLF(allltII,I,I,ALT  )  ALLF(allltID,I,D,TLTXD)
 ALLF(allltDB,D,B,TLTDX)  ALLF(allltDI,D,I,TLTDX)  ALLF(allltDD,D,D,TLT  )
+#endif
 
 // obsolete IFBB(ifbltBB,B,B,LT   )  IFBF(ifbltBI,B,I,ALT  )  IFBF(ifbltBD,B,D,TLTXD)
 // obsolete IFBF(ifbltIB,I,B,ALT  )  IFBF(ifbltII,I,I,ALT  )  IFBF(ifbltID,I,D,TLTXD)
 // obsolete IFBF(ifbltDB,D,B,TLTDX)  IFBF(ifbltDI,D,I,TLTDX)  IFBF(ifbltDD,D,D,TLT  )
 
-INDB( i0leBB,B,B,GT   )  INDF( i0leBI,B,I,AGT  )  INDF( i0leBD,B,D,TGTXD)  /* <: */
-INDF( i0leIB,I,B,AGT  )  INDF( i0leII,I,I,AGT  )  INDF( i0leID,I,D,TGTXD)
-INDF( i0leDB,D,B,TGTDX)  INDF( i0leDI,D,I,TGTDX)  INDF( i0leDD,D,D,TGT  )
+INDB( i0leBB,B,B,GT   )  INDF( i0leBI,B,I,AGT  )  INDF0( i0leBD,B,D,TGTXD,GTXD0)  /* <: */
+INDF( i0leIB,I,B,AGT  )  INDF( i0leII,I,I,AGT  )  INDF0( i0leID,I,D,TGTXD,GTXD0)
+INDF0( i0leDB,D,B,TGTDX,GTDX0)  INDF0( i0leDI,D,I,TGTDX,GTDX0)  INDF0( i0leDD,D,D,TGT,GT0  )
 
+#if 0 // obsolete
 INDB( i1leBB,B,B,LE   )  INDF( i1leBI,B,I,ALE  )  INDF( i1leBD,B,D,TLEXD)
 INDF( i1leIB,I,B,ALE  )  INDF( i1leII,I,I,ALE  )  INDF( i1leID,I,D,TLEXD)
 INDF( i1leDB,D,B,TLEDX)  INDF( i1leDI,D,I,TLEDX)  INDF( i1leDD,D,D,TLE  )
+#endif
 
-JNDB( j0leBB,B,B,GT   )  JNDF( j0leBI,B,I,AGT  )  JNDF( j0leBD,B,D,TGTXD)
-JNDF( j0leIB,I,B,AGT  )  JNDF( j0leII,I,I,AGT  )  JNDF( j0leID,I,D,TGTXD)
-JNDF( j0leDB,D,B,TGTDX)  JNDF( j0leDI,D,I,TGTDX)  JNDF( j0leDD,D,D,TGT  )
+JNDB( j0leBB,B,B,GT   )  JNDF( j0leBI,B,I,AGT  )  JNDF0( j0leBD,B,D,TGTXD,GTXD0)
+JNDF( j0leIB,I,B,AGT  )  JNDF( j0leII,I,I,AGT  )  JNDF0( j0leID,I,D,TGTXD,GTXD0)
+JNDF0( j0leDB,D,B,TGTDX,GTDX0)  JNDF0( j0leDI,D,I,TGTDX,GTDX0)  JNDF0( j0leDD,D,D,TGT,GT0  )
 
+#if 0 // obsolete
 JNDB( j1leBB,B,B,LE   )  JNDF( j1leBI,B,I,ALE  )  JNDF( j1leBD,B,D,TLEXD)
 JNDF( j1leIB,I,B,ALE  )  JNDF( j1leII,I,I,ALE  )  JNDF( j1leID,I,D,TLEXD)
 JNDF( j1leDB,D,B,TLEDX)  JNDF( j1leDI,D,I,TLEDX)  JNDF( j1leDD,D,D,TLE  )
+#endif
 
-SUMB(sumleBB,B,B,LE   )  SUMF(sumleBI,B,I,ALE  )  SUMF(sumleBD,B,D,TLEXD)
-SUMF(sumleIB,I,B,ALE  )  SUMF(sumleII,I,I,ALE  )  SUMF(sumleID,I,D,TLEXD)
-SUMF(sumleDB,D,B,TLEDX)  SUMF(sumleDI,D,I,TLEDX)  SUMF(sumleDD,D,D,TLE  )
+SUMB(sumleBB,B,B,LE   )  SUMF(sumleBI,B,I,ALE  )  SUMF0(sumleBD,B,D,TLEXD,LEXD0)
+SUMF(sumleIB,I,B,ALE  )  SUMF(sumleII,I,I,ALE  )  SUMF0(sumleID,I,D,TLEXD,LEXD0)
+SUMF0(sumleDB,D,B,TLEDX,LEDX0)  SUMF0(sumleDI,D,I,TLEDX,LEDX0)  SUMF0(sumleDD,D,D,TLE,LE0  )
 
+#if 0 // obsolete
 ANYB(anyleBB,B,B,LE   )  ANYF(anyleBI,B,I,ALE  )  ANYF(anyleBD,B,D,TLEXD)
 ANYF(anyleIB,I,B,ALE  )  ANYF(anyleII,I,I,ALE  )  ANYF(anyleID,I,D,TLEXD)
 ANYF(anyleDB,D,B,TLEDX)  ANYF(anyleDI,D,I,TLEDX)  ANYF(anyleDD,D,D,TLE  )
@@ -350,31 +398,37 @@ ANYF(anyleDB,D,B,TLEDX)  ANYF(anyleDI,D,I,TLEDX)  ANYF(anyleDD,D,D,TLE  )
 ALLB(allleBB,B,B,LE   )  ALLF(allleBI,B,I,ALE  )  ALLF(allleBD,B,D,TLEXD)
 ALLF(allleIB,I,B,ALE  )  ALLF(allleII,I,I,ALE  )  ALLF(allleID,I,D,TLEXD)
 ALLF(allleDB,D,B,TLEDX)  ALLF(allleDI,D,I,TLEDX)  ALLF(allleDD,D,D,TLE  )
+#endif
 
 // obsolete IFBB(ifbleBB,B,B,LE   )  IFBF(ifbleBI,B,I,ALE  )  IFBF(ifbleBD,B,D,TLEXD)
 // obsolete IFBF(ifbleIB,I,B,ALE  )  IFBF(ifbleII,I,I,ALE  )  IFBF(ifbleID,I,D,TLEXD)
 // obsolete IFBF(ifbleDB,D,B,TLEDX)  IFBF(ifbleDI,D,I,TLEDX)  IFBF(ifbleDD,D,D,TLE  )
 
-INDB( i0geBB,B,B,LT   )  INDF( i0geBI,B,I,ALT  )  INDF( i0geBD,B,D,TLTXD)  /* >: */
-INDF( i0geIB,I,B,ALT  )  INDF( i0geII,I,I,ALT  )  INDF( i0geID,I,D,TLTXD)
-INDF( i0geDB,D,B,TLTDX)  INDF( i0geDI,D,I,TLTDX)  INDF( i0geDD,D,D,TLT  )
+INDB( i0geBB,B,B,LT   )  INDF( i0geBI,B,I,ALT  )  INDF0( i0geBD,B,D,TLTXD,LTXD0)  /* >: */
+INDF( i0geIB,I,B,ALT  )  INDF( i0geII,I,I,ALT  )  INDF0( i0geID,I,D,TLTXD,LTXD0)
+INDF0( i0geDB,D,B,TLTDX,LTDX0)  INDF0( i0geDI,D,I,TLTDX,LTDX0)  INDF0( i0geDD,D,D,TLT ,LT0 )
 
+#if 0 // obsolete
 INDB( i1geBB,B,B,GE   )  INDF( i1geBI,B,I,AGE  )  INDF( i1geBD,B,D,TGEXD)
 INDF( i1geIB,I,B,AGE  )  INDF( i1geII,I,I,AGE  )  INDF( i1geID,I,D,TGEXD)
 INDF( i1geDB,D,B,TGEDX)  INDF( i1geDI,D,I,TGEDX)  INDF( i1geDD,D,D,TGE  )
+#endif
 
-JNDB( j0geBB,B,B,LT   )  JNDF( j0geBI,B,I,ALT  )  JNDF( j0geBD,B,D,TLTXD)
-JNDF( j0geIB,I,B,ALT  )  JNDF( j0geII,I,I,ALT  )  JNDF( j0geID,I,D,TLTXD)
-JNDF( j0geDB,D,B,TLTDX)  JNDF( j0geDI,D,I,TLTDX)  JNDF( j0geDD,D,D,TLT  )
+JNDB( j0geBB,B,B,LT   )  JNDF( j0geBI,B,I,ALT  )  JNDF0( j0geBD,B,D,TLTXD,LTXD0)
+JNDF( j0geIB,I,B,ALT  )  JNDF( j0geII,I,I,ALT  )  JNDF0( j0geID,I,D,TLTXD,LTXD0)
+JNDF0( j0geDB,D,B,TLTDX,LTDX0)  JNDF0( j0geDI,D,I,TLTDX,LTDX0)  JNDF0( j0geDD,D,D,TLT,LT0  )
 
+#if 0 // obsolete
 JNDB( j1geBB,B,B,GE   )  JNDF( j1geBI,B,I,AGE  )  JNDF( j1geBD,B,D,TGEXD)
 JNDF( j1geIB,I,B,AGE  )  JNDF( j1geII,I,I,AGE  )  JNDF( j1geID,I,D,TGEXD)
 JNDF( j1geDB,D,B,TGEDX)  JNDF( j1geDI,D,I,TGEDX)  JNDF( j1geDD,D,D,TGE  )
+#endif
 
-SUMB(sumgeBB,B,B,GE   )  SUMF(sumgeBI,B,I,AGE  )  SUMF(sumgeBD,B,D,TGEXD)
-SUMF(sumgeIB,I,B,AGE  )  SUMF(sumgeII,I,I,AGE  )  SUMF(sumgeID,I,D,TGEXD)
-SUMF(sumgeDB,D,B,TGEDX)  SUMF(sumgeDI,D,I,TGEDX)  SUMF(sumgeDD,D,D,TGE  )
+SUMB(sumgeBB,B,B,GE   )  SUMF(sumgeBI,B,I,AGE  )  SUMF0(sumgeBD,B,D,TGEXD,GEXD0)
+SUMF(sumgeIB,I,B,AGE  )  SUMF(sumgeII,I,I,AGE  )  SUMF0(sumgeID,I,D,TGEXD,GEXD0)
+SUMF0(sumgeDB,D,B,TGEDX,GEDX0)  SUMF0(sumgeDI,D,I,TGEDX,GEDX0)  SUMF0(sumgeDD,D,D,TGE,GE0  )
 
+#if 0 // obsolete
 ANYB(anygeBB,B,B,GE   )  ANYF(anygeBI,B,I,AGE  )  ANYF(anygeBD,B,D,TGEXD)
 ANYF(anygeIB,I,B,AGE  )  ANYF(anygeII,I,I,AGE  )  ANYF(anygeID,I,D,TGEXD)
 ANYF(anygeDB,D,B,TGEDX)  ANYF(anygeDI,D,I,TGEDX)  ANYF(anygeDD,D,D,TGE  )
@@ -382,31 +436,37 @@ ANYF(anygeDB,D,B,TGEDX)  ANYF(anygeDI,D,I,TGEDX)  ANYF(anygeDD,D,D,TGE  )
 ALLB(allgeBB,B,B,GE   )  ALLF(allgeBI,B,I,AGE  )  ALLF(allgeBD,B,D,TGEXD)
 ALLF(allgeIB,I,B,AGE  )  ALLF(allgeII,I,I,AGE  )  ALLF(allgeID,I,D,TGEXD)
 ALLF(allgeDB,D,B,TGEDX)  ALLF(allgeDI,D,I,TGEDX)  ALLF(allgeDD,D,D,TGE  )
+#endif
 
 // obsolete IFBB(ifbgeBB,B,B,GE   )  IFBF(ifbgeBI,B,I,AGE  )  IFBF(ifbgeBD,B,D,TGEXD)
 // obsolete IFBF(ifbgeIB,I,B,AGE  )  IFBF(ifbgeII,I,I,AGE  )  IFBF(ifbgeID,I,D,TGEXD)
 // obsolete IFBF(ifbgeDB,D,B,TGEDX)  IFBF(ifbgeDI,D,I,TGEDX)  IFBF(ifbgeDD,D,D,TGE  )
 
-INDB( i0gtBB,B,B,LE   )  INDF( i0gtBI,B,I,ALE  )  INDF( i0gtBD,B,D,TLEXD)  /* >  */
-INDF( i0gtIB,I,B,ALE  )  INDF( i0gtII,I,I,ALE  )  INDF( i0gtID,I,D,TLEXD)
-INDF( i0gtDB,D,B,TLEDX)  INDF( i0gtDI,D,I,TLEDX)  INDF( i0gtDD,D,D,TLE  )
+INDB( i0gtBB,B,B,LE   )  INDF( i0gtBI,B,I,ALE  )  INDF0( i0gtBD,B,D,TLEXD,LEXD0)  /* >  */
+INDF( i0gtIB,I,B,ALE  )  INDF( i0gtII,I,I,ALE  )  INDF0( i0gtID,I,D,TLEXD,LEXD0)
+INDF0( i0gtDB,D,B,TLEDX,LEDX0)  INDF0( i0gtDI,D,I,TLEDX,LEDX0)  INDF0( i0gtDD,D,D,TLE,LE0  )
 
+#if 0 // obsolete
 INDB( i1gtBB,B,B,GT   )  INDF( i1gtBI,B,I,AGT  )  INDF( i1gtBD,B,D,TGTXD)
 INDF( i1gtIB,I,B,AGT  )  INDF( i1gtII,I,I,AGT  )  INDF( i1gtID,I,D,TGTXD)
 INDF( i1gtDB,D,B,TGTDX)  INDF( i1gtDI,D,I,TGTDX)  INDF( i1gtDD,D,D,TGT  )
+#endif
 
-JNDB( j0gtBB,B,B,LE   )  JNDF( j0gtBI,B,I,ALE  )  JNDF( j0gtBD,B,D,TLEXD)
-JNDF( j0gtIB,I,B,ALE  )  JNDF( j0gtII,I,I,ALE  )  JNDF( j0gtID,I,D,TLEXD)
-JNDF( j0gtDB,D,B,TLEDX)  JNDF( j0gtDI,D,I,TLEDX)  JNDF( j0gtDD,D,D,TLE  )
+JNDB( j0gtBB,B,B,LE   )  JNDF( j0gtBI,B,I,ALE  )  JNDF0( j0gtBD,B,D,TLEXD,LEXD0)
+JNDF( j0gtIB,I,B,ALE  )  JNDF( j0gtII,I,I,ALE  )  JNDF0( j0gtID,I,D,TLEXD,LEXD0)
+JNDF0( j0gtDB,D,B,TLEDX,LEDX0)  JNDF0( j0gtDI,D,I,TLEDX,LEDX0)  JNDF0( j0gtDD,D,D,TLE,LE0  )
 
+#if 0 // obsolete
 JNDB( j1gtBB,B,B,GT   )  JNDF( j1gtBI,B,I,AGT  )  JNDF( j1gtBD,B,D,TGTXD)
 JNDF( j1gtIB,I,B,AGT  )  JNDF( j1gtII,I,I,AGT  )  JNDF( j1gtID,I,D,TGTXD)
 JNDF( j1gtDB,D,B,TGTDX)  JNDF( j1gtDI,D,I,TGTDX)  JNDF( j1gtDD,D,D,TGT  )
+#endif
 
-SUMB(sumgtBB,B,B,GT   )  SUMF(sumgtBI,B,I,AGT  )  SUMF(sumgtBD,B,D,TGTXD)
-SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF(sumgtID,I,D,TGTXD)
-SUMF(sumgtDB,D,B,TGTDX)  SUMF(sumgtDI,D,I,TGTDX)  SUMF(sumgtDD,D,D,TGT  )
+SUMB(sumgtBB,B,B,GT   )  SUMF(sumgtBI,B,I,AGT  )  SUMF0(sumgtBD,B,D,TGTXD,GTXD0)
+SUMF(sumgtIB,I,B,AGT  )  SUMF(sumgtII,I,I,AGT  )  SUMF0(sumgtID,I,D,TGTXD,GTXD0)
+SUMF0(sumgtDB,D,B,TGTDX,GTDX0)  SUMF0(sumgtDI,D,I,TGTDX,GTDX0)  SUMF0(sumgtDD,D,D,TGT,GT0  )
 
+#if 0 // obsolete
 ALLB(allgtBB,B,B,GT   )  ALLF(allgtBI,B,I,AGT  )  ALLF(allgtBD,B,D,TGTXD)
 ALLF(allgtIB,I,B,AGT  )  ALLF(allgtII,I,I,AGT  )  ALLF(allgtID,I,D,TGTXD)
 ALLF(allgtDB,D,B,TGTDX)  ALLF(allgtDI,D,I,TGTDX)  ALLF(allgtDD,D,D,TGT  )
@@ -414,6 +474,7 @@ ALLF(allgtDB,D,B,TGTDX)  ALLF(allgtDI,D,I,TGTDX)  ALLF(allgtDD,D,D,TGT  )
 ANYB(anygtBB,B,B,GT   )  ANYF(anygtBI,B,I,AGT  )  ANYF(anygtBD,B,D,TGTXD)
 ANYF(anygtIB,I,B,AGT  )  ANYF(anygtII,I,I,AGT  )  ANYF(anygtID,I,D,TGTXD)
 ANYF(anygtDB,D,B,TGTDX)  ANYF(anygtDI,D,I,TGTDX)  ANYF(anygtDD,D,D,TGT  )
+#endif
 
 // obsolete IFBB(ifbgtBB,B,B,GT   )  IFBF(ifbgtBI,B,I,AGT  )  IFBF(ifbgtBD,B,D,TGTXD)
 // obsoleteIFBF(ifbgtIB,I,B,AGT  )  IFBF(ifbgtII,I,I,AGT  )  IFBF(ifbgtID,I,D,TGTXD)
@@ -499,92 +560,56 @@ static AF atcompxy[]={  /* table for (B01,INT,FL) vs. (B01,INT,FL) */
 };
 
 INDF( i0eqC,C,C,ANE)  INDF( i0neC,C,C,AEQ)
-INDF( i1eqC,C,C,AEQ)  INDF( i1neC,C,C,ANE)
 JNDF( j0eqC,C,C,ANE)  JNDF( j0neC,C,C,AEQ)
-JNDF( j1eqC,C,C,AEQ)  JNDF( j1neC,C,C,ANE)
 SUMF(sumeqC,C,C,AEQ)  SUMF(sumneC,C,C,ANE)
-ALLF(alleqC,C,C,AEQ)  ALLF(allneC,C,C,ANE)
-ANYF(anyeqC,C,C,AEQ)  ANYF(anyneC,C,C,ANE)
 // obsolete IFBF(ifbeqC,C,C,AEQ)  IFBF(ifbneC,C,C,ANE)
 
 static AF atcompC[]={   /* table for LIT vs. LIT */
-  i0eqC,  i0neC, 0L,0L,0L,0L,0L,0L,
-  i1eqC,  i1neC, 0L,0L,0L,0L,0L,0L,
-  j0eqC,  j0neC, 0L,0L,0L,0L,0L,0L,
-  j1eqC,  j1neC, 0L,0L,0L,0L,0L,0L,
- sumeqC, sumneC, 0L,0L,0L,0L,0L,0L,
- anyeqC, anyneC, 0L,0L,0L,0L,0L,0L,
- alleqC, allneC, 0L,0L,0L,0L,0L,0L,
+  i0eqC,  i0neC, 0L,0L,0L,0L,
+  j0eqC,  j0neC, 0L,0L,0L,0L,
+ sumeqC, sumneC, 0L,0L,0L,0L,
 // obsolete  ifbeqC, ifbneC, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqUS,US,US,ANE)  INDF( i0neUS,US,US,AEQ)
-INDF( i1eqUS,US,US,AEQ)  INDF( i1neUS,US,US,ANE)
 JNDF( j0eqUS,US,US,ANE)  JNDF( j0neUS,US,US,AEQ)
-JNDF( j1eqUS,US,US,AEQ)  JNDF( j1neUS,US,US,ANE)
 SUMF(sumeqUS,US,US,AEQ)  SUMF(sumneUS,US,US,ANE)
-ALLF(alleqUS,US,US,AEQ)  ALLF(allneUS,US,US,ANE)
-ANYF(anyeqUS,US,US,AEQ)  ANYF(anyneUS,US,US,ANE)
 // obsolete IFBF(ifbeqUS,US,US,AEQ)  IFBF(ifbneUS,US,US,ANE)
 
 static AF atcompUS[]={   /* table for C2T vs. C2T */
-  i0eqUS,  i0neUS, 0L,0L,0L,0L,0L,0L,
-  i1eqUS,  i1neUS, 0L,0L,0L,0L,0L,0L,
-  j0eqUS,  j0neUS, 0L,0L,0L,0L,0L,0L,
-  j1eqUS,  j1neUS, 0L,0L,0L,0L,0L,0L,
- sumeqUS, sumneUS, 0L,0L,0L,0L,0L,0L,
- anyeqUS, anyneUS, 0L,0L,0L,0L,0L,0L,
- alleqUS, allneUS, 0L,0L,0L,0L,0L,0L,
+  i0eqUS,  i0neUS, 0L,0L,0L,0L,
+  j0eqUS,  j0neUS, 0L,0L,0L,0L,
+ sumeqUS, sumneUS, 0L,0L,0L,0L,
 // obsolete  ifbeqUS, ifbneUS, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqC4,C4,C4,ANE)  INDF( i0neC4,C4,C4,AEQ)
-INDF( i1eqC4,C4,C4,AEQ)  INDF( i1neC4,C4,C4,ANE)
 JNDF( j0eqC4,C4,C4,ANE)  JNDF( j0neC4,C4,C4,AEQ)
-JNDF( j1eqC4,C4,C4,AEQ)  JNDF( j1neC4,C4,C4,ANE)
 SUMF(sumeqC4,C4,C4,AEQ)  SUMF(sumneC4,C4,C4,ANE)
-ALLF(alleqC4,C4,C4,AEQ)  ALLF(allneC4,C4,C4,ANE)
-ANYF(anyeqC4,C4,C4,AEQ)  ANYF(anyneC4,C4,C4,ANE)
 // obsolete IFBF(ifbeqC4,C4,C4,AEQ)  IFBF(ifbneC4,C4,C4,ANE)
 
 static AF atcompC4[]={   /* table for C4T vs. C4T */
-  i0eqC4,  i0neC4, 0L,0L,0L,0L,0L,0L,
-  i1eqC4,  i1neC4, 0L,0L,0L,0L,0L,0L,
-  j0eqC4,  j0neC4, 0L,0L,0L,0L,0L,0L,
-  j1eqC4,  j1neC4, 0L,0L,0L,0L,0L,0L,
- sumeqC4, sumneC4, 0L,0L,0L,0L,0L,0L,
- anyeqC4, anyneC4, 0L,0L,0L,0L,0L,0L,
- alleqC4, allneC4, 0L,0L,0L,0L,0L,0L,
+  i0eqC4,  i0neC4, 0L,0L,0L,0L,
+  j0eqC4,  j0neC4, 0L,0L,0L,0L,
+ sumeqC4, sumneC4, 0L,0L,0L,0L,
 // obsolete  ifbeqC4, ifbneC4, 0L,0L,0L,0L,0L,0L,
 };
 
 INDF( i0eqS,SB,SB,ANE) INDF( i0neS,SB,SB,AEQ) 
-INDF( i1eqS,SB,SB,AEQ) INDF( i1neS,SB,SB,ANE) 
 JNDF( j0eqS,SB,SB,ANE) JNDF( j0neS,SB,SB,AEQ) 
-JNDF( j1eqS,SB,SB,AEQ) JNDF( j1neS,SB,SB,ANE) 
 SUMF(sumeqS,SB,SB,AEQ) SUMF(sumneS,SB,SB,ANE)
-ALLF(alleqS,SB,SB,AEQ) ALLF(allneS,SB,SB,ANE) 
-ANYF(anyeqS,SB,SB,AEQ) ANYF(anyneS,SB,SB,ANE)
 // obsolete IFBF(ifbeqS,SB,SB,AEQ) IFBF(ifbneS,SB,SB,ANE) 
 
 INDF( i0ltS,SB,SB,SBGE) INDF( i0leS,SB,SB,SBGT) INDF( i0geS,SB,SB,SBLT) INDF( i0gtS,SB,SB,SBLE)
-INDF( i1ltS,SB,SB,SBLT) INDF( i1leS,SB,SB,SBLE) INDF( i1geS,SB,SB,SBGE) INDF( i1gtS,SB,SB,SBGT)
 JNDF( j0ltS,SB,SB,SBGE) JNDF( j0leS,SB,SB,SBGT) JNDF( j0geS,SB,SB,SBLT) JNDF( j0gtS,SB,SB,SBLE)
-JNDF( j1ltS,SB,SB,SBLT) JNDF( j1leS,SB,SB,SBLE) JNDF( j1geS,SB,SB,SBGE) JNDF( j1gtS,SB,SB,SBGT)
 SUMF(sumltS,SB,SB,SBLT) SUMF(sumleS,SB,SB,SBLE) SUMF(sumgeS,SB,SB,SBGE) SUMF(sumgtS,SB,SB,SBGT)
-ALLF(allltS,SB,SB,SBLT) ALLF(allleS,SB,SB,SBLE) ALLF(allgeS,SB,SB,SBGE) ALLF(allgtS,SB,SB,SBGT)
-ANYF(anyltS,SB,SB,SBLT) ANYF(anyleS,SB,SB,SBLE) ANYF(anygeS,SB,SB,SBGE) ANYF(anygtS,SB,SB,SBGT)
 // obsolete IFBF(ifbltS,SB,SB,SBLT) IFBF(ifbleS,SB,SB,SBLE) IFBF(ifbgeS,SB,SB,SBGE) IFBF(ifbgtS,SB,SB,SBGT)
 
 
 static AF atcompSB[]={  /* table for SBT vs. SBT */
-  i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS, 0L,0L,
-  i1eqS, i1neS, i1ltS, i1leS, i1geS, i1gtS, 0L,0L,
-  j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS, 0L,0L,
-  j1eqS, j1neS, j1ltS, j1leS, j1geS, j1gtS, 0L,0L,
- sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS, 0L,0L,
- anyeqS,anyneS,anyltS,anyleS,anygeS,anygtS, 0L,0L,
- alleqS,allneS,allltS,allleS,allgeS,allgtS, 0L,0L,
+  i0eqS, i0neS, i0ltS, i0leS, i0geS, i0gtS,
+  j0eqS, j0neS, j0ltS, j0leS, j0geS, j0gtS,
+ sumeqS,sumneS,sumltS,sumleS,sumgeS,sumgtS,
 // obsolete  ifbeqS,ifbneS,ifbltS,ifbleS,ifbgeS,ifbgtS, 0L,0L,
 };
 
@@ -635,18 +660,18 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // verify rank is OK, based on operation
   if((AR(a)|AR(w))>1)R (m>=(4<<3))?(AF)jtfslashatg:0;   // If an operand has rank>1, reject it unless it can be turned to f/@g special
   ASSERT(AN(a)==AN(w)||((AR(a)&AR(w))==0),EVLENGTH)   // agreement is same length or one an atom
+  // split m into search and comparison
+  I search=m>>3; I comp=m&7;
+  // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
+  I postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+  // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
+  comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01)))){
    // numeric types that we can handle here, for sure
-   // split m into search and comparison
-   I search=m>>3; I comp=m&7;
-   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
-   I postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
-   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
-   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
    R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT)))R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[m];
+  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){m=(I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp];R m?(AF)(m+postflags):0;}
 // obsolete   else if(at&LIT&&wt&LIT)         f=atcompC[m];
 // obsolete   else if(at&C2T&&wt&C2T)         f=atcompUS[m];
 // obsolete   else if(at&C4T&&wt&C4T)         f=atcompC4[m];

@@ -42,6 +42,8 @@ load^:IFJA '~addons/ide/ja/ja.ijs'
 load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet'
 load^:((;:'jwin32 jjava')e.~<11!:0 ::0:'qwd') 'ide/jnet/util/jadefull'
 
+18!:4 <'z' NB. restore locale changes during load
+
 NB. ---------------------------------------------------------
 NB. JVERSION_z_ (used in about box)
 v=. 9!:14''

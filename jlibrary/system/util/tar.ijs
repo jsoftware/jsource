@@ -18,7 +18,7 @@ J tar
 
 for example,
  on computer
-  $> tar -c -f ~/j8/temp/math.tar -C ~/j8/addons finance
+  $> tar -c -f ~/j9/temp/math.tar -C ~/j9/addons finance
   iTunes connect - move math.tar to J app folder
 
  on J
@@ -243,7 +243,7 @@ gzip=: 3 : 0
 r=. ''
 d=. (128*1024)$' '
 h=. gzopen y;'rb'
-while. c=. (libz,' gzread >',cv,' i x *c i') cd h;d;#d do.
+while. 0{:: 'c h d nd'=. (libz,' gzread ',cv,' i x *c i') cd h;d;#d do.
   assert. _1~:c
   r=. r,c{.d
 end.

@@ -113,6 +113,7 @@ line
 dellb=: #~ +./\ @: -. @ e.&(' ',TAB)
 deltb=: #~ +./\.@: -. @ e.&(' ',TAB)
 indent1=: 3 : 0
+if. 0=L.y do. 0 return. end.
 tok=. y
 x=. I. findfor &> tok
 tok=. (<'for.') x} tok
@@ -170,7 +171,7 @@ txt=. msk#y
 com=. (-.msk)#y
 
 if. #txt do.
-  tok=. words txt
+  tok=. words1 txt
   if. tok -: 0 do. return. end.
   if. #tok do.
     in=. indent1 tok
@@ -189,7 +190,8 @@ end.
 
 in;bgn;<<txt,com
 )
-words=: 7&u:&.>@:;:@(8&u:) :: 0:
+words=: 7&u:&.>@:;:@(8&u:) :: ]
+words1=: 7&u:&.>@:;:@(8&u:) :: 0:
 f=. #~ (=&' ') *: 1: |. notquotes *. '=:'&E. +. '=.'&E.
 noblankbefore=: f f. ^: _
 
@@ -257,8 +259,13 @@ if. (<0) e. indat do.
   else.
     msg=. 'Could not parse line'
   end.
-  lin;msg
-  return.
+  if. 2>fmt do.
+    lin;msg return.
+  else.
+    txt=. dat{~ g=. I.indat=<0
+    indat=. ((0;0)&,@<@<@]&.> txt) g} indat
+    echo lin;msg
+  end.
 end.
 
 'in begin dat'=. |: > indat
@@ -277,11 +284,15 @@ if. 0 ~: +/ in do.
       msg=. 'Mismatched control words'
     end.
   end.
-  lin;msg return.
+  if. 2>fmt do.
+    lin;msg return.
+  else.
+    echo lin;msg
+  end.
 end.
 res=. ppval dat
-if. -. res -: 0 do. return. end.
-if. -. fmt do. '' return. end.
+if. -. res -: 0 do. if. 2>fmt do. return. else. echo res end. end.
+if. 0=fmt do. '' return. end.
 in=. +/\ in
 ins=. _1 |. in
 ins=. 0 >. ins - begin
@@ -307,7 +318,7 @@ utf8 dat
 ppval=: 3 : 0
 dat=. words each y
 pos=. <: +/\ # &> dat
-dat=. ; dat
+dat=. ; boxxopen&.> dat
 bgn=. (dat e. CONTROLB) +. findfor &> dat
 end=. dat = <'end.'
 lvl=. +/\bgn-end

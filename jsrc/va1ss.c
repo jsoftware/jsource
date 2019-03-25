@@ -71,7 +71,7 @@ SSINGF1(jtsssignum) SSNUMPREFIX
  switch(wtc) {D f;
   default: R 0;
   case B01X: SSSTORENV(SSRDB(w),z,B01,B) R z;
-  case INTX: SSSTORENV(SSRDI(w)>0?1:SSRDI(w)>>(BW-1),z,INT,I) R z;
+  case INTX: SSSTORENV((SSRDI(w)>0)-((UI)SSRDI(w)>>(BW-1)),z,INT,I) R z;
   case FLX:
    f = SSRDD(w);
 // obsolete   SSSTORE(f>=1.0-jt->cct?1:f<=-(1.0-jt->cct)?-1:0,z,INT,I)
@@ -136,9 +136,9 @@ SSINGF1(jtssmag) SSNUMPREFIX
   default: R 0;
   case B01X: SSSTORENV(SSRDB(w),z,INT,I) R z;   // return INT rather than normal B01
   case INTX:
-    if((i = SSRDI(w))>IMIN){SSSTORENV(i>=0?i:-i,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
+    i = SSRDI(w); i=(i^(i>>(BW-1)))-(i>>(BW-1)); if(i>=0){SSSTORENV(i,z,INT,I)}else SSSTORE(-(D)IMIN,z,FL,D) R z;
   case FLX:
-    f = SSRDD(w); SSSTORENVFL(ABS(f),z,FL,D) R z;
+    f = SSRDD(w); f=(f<0)?-f:f; SSSTORENVFL(f,z,FL,D) R z;
  }
 }
 

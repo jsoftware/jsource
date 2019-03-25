@@ -36,7 +36,7 @@ F1(jtdbcall){A y,*yv,z,*zv;DC si,s0=0;I c=9,m=0,*s;
  GATV(z,BOX,m*c,2,0); s=AS(z); s[0]=m; s[1]=c;
  si=jt->sitop; zv=AAV(z);
  while(si){if(DCCALL==si->dctype){RZ(drow(si,s0,zv)); zv+=c;} s0=si; si=si->dclnk;}
- RZ(y=from(scind(irs1(z,0L,1L,jthead)),over(snl(mtv),ace)));
+ RZ(y=from(scind(irs1(z,0L,1L,jthead)),over(snl(mtv),ace)));  // get script index for each line of stack; then fetch the name
  yv=AAV(y); zv=5+AAV(z);
  DO(m, *zv=incorp(*yv); yv++; zv+=c;);
  RETF(z);

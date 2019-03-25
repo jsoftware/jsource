@@ -968,7 +968,7 @@ DF2(jtfslashatg){A fs,gs,y,z;B b,bb,sb=0;C*av,c,d,*wv;I ak,an,ar,*as,at,m,
 
 
 // If each argument has a single direct-numeric atom, go process through speedy-singleton code
-#define SINGTEST(a,w,flag) RZ(a&&w); if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&UNSAFE(~(flag)))))
+#define SINGTEST(a,w,flag) RZ(a&&w); if(!((AN(a)-1)|(AN(w)-1)|((AT(a)|AT(w))&(NOUN&UNSAFE(~(flag))))))
 #define CHECKSSING(a,w,f) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w);
 // obsolete #define CHECKSSINGSB(a,w,f) RZ(a&&w); if(HOMO(AT(a),AT(w)) && AN(a)==1 && AN(w)==1 && !((AT(a)|AT(w))&UNSAFE(~(B01+INT+FL+SBT))))R f(jt,a,w);
 #define CHECKSSINGOP(a,w,f,op) SINGTEST(a,w,B01+INT+FL)R f(jt,a,w,op);

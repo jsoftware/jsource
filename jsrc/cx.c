@@ -98,6 +98,22 @@ static I trypopgoto(TD* tdv, I tdi, I dest){
     i = cw[ti].go; if (i<SMAX){ RESETERR; z=mtm; if (tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug; } }else z=0; \
     break; }
 
+// Return next line to execute, in case debug changed it
+// If debug is running we have to check for a new line to run, after any execution with error or on any line in case the debugger interrupted something
+// result is line to continue on
+static I debugnewi(I i, DC thisframe, A self){
+ if(thisframe){DC siparent;
+  // debug mode was on when this execution started.  See if the execution pointer was changed by debug.
+  if((siparent=thisframe->dclnk)&&siparent->dctype==DCCALL&&self==siparent->dcf){   // if prev stack frame is a call to here
+   if(siparent->dcnewlineno){  // the debugger has asked for a jump
+    i=siparent->dcix;  // get the jump-to line
+    siparent->dcnewlineno=0;  // reset semaphore
+   }
+   siparent->dcix=i;  // notify the debugger of the line we are on, in case we stop  
+  }
+ }
+ R i;  // return the current line, possibly modified
+}
 
 // Processing of explicit definitions, line by line
 static DF2(jtxdefn){PROLOG(0048);
@@ -218,17 +234,9 @@ static DF2(jtxdefn){PROLOG(0048);
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
-   if(thisframe){DC siparent;
-    // debug mode was on when this execution started.  See if the execution pointer was changed by debug.
-    if((siparent=thisframe->dclnk)&&siparent->dctype==DCCALL&&self==siparent->dcf){   // if prev stack frame is a call to here
-     if(siparent->dcnewlineno){  // the debugger has asked for a jump
-      i=siparent->dcix;  // get the jump-to line
-      if(!((UI)i<(UI)n))break;  // if it jumped out of the function, exit
-      siparent->dcnewlineno=0;  // reset semaphore
-     }
-     siparent->dcix=i;  // notify the debugger of the line we are on, in case we stop  
-    }
-   }
+   i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
+   if(!((UI)i<(UI)n))break;  // if it jumped out of the function, exit
+
    // if performance monitor is on, collect data for it
    if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
@@ -268,7 +276,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(z||!jt->jerr){
      bi=i,++i;
     }else if(jt->uflags.us.cx.cx_c.db&(DB1|DBERRCAP)){  // if debug mode, we assume we are ready to execute on
-     bi=i,++i;   // it is OK to have jerr set if we are in debug mode
+     bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any it is OK to have jerr set if we are in debug mode
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
      if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
@@ -290,7 +298,8 @@ static DF2(jtxdefn){PROLOG(0048);
     parseline(t);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
-    if(t||DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db||!jt->jerr)ti=i,++i;  // if no error, or debug (which had a chance to look at it), continue on
+    if(t||!jt->jerr)ti=i,++i;  // if no error, continue on
+    else if(DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug, go to new line if any
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.

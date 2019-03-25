@@ -462,7 +462,7 @@ typedef struct {I e,p;X x;} DX;
 #define SYMLINFO 0  // index of LINFO entry
 #define SYMLINFOSIZE 1     // Number of symbol-table entries that DO NOT contain symbol chains, but instead are LINFO entries
 
-typedef struct {A name,val;US flag,sn;LX next;} L;
+typedef struct {A name,val;US flag;S sn;LX next;} L;
 
 /* symbol pool entry                           LINFO entry                 */
 /* name - name on LHS of assignment         or locale name                 */

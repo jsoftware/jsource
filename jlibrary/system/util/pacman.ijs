@@ -63,20 +63,37 @@ else.
 end.
 )
 3 : 0''
+HTTPCMD=: ''
 nc=. '--no-cache'
 if. IFUNIX do.
-  if. UNAME-:'Darwin' do.
-    HTTPCMD=: 'curl -o %O --stderr %L -f -s -S %U'
-  elseif. do.
+  IFWGET=. IFCURL=. 0
+  if. -. IFIOS +. UNAME-:'Android' do.
+    try.
+      2!:0'which wget 2>/dev/null'
+      IFWGET=. 1 catch. end.
+    try.
+      2!:0'which curl 2>/dev/null'
+      IFCURL=. 1 catch. end.
+  end.
+  if. IFCURL>IFWGET do.
+    HTTPCMD=: 'curl -L -o %O --stderr %L -f -s -S %U'
+  elseif. IFWGET do.
     if. 'Android'-:UNAME do. nc=. ''
     else. try. nc=. nc #~ 1 e. nc E. shell 'wget --help' catch. nc=. '' end. end.
     HTTPCMD=: 'wget ',nc,' -O %O -o %L -t %t %U'
   end.
 else.
-  if. fexist exe=. jpath '~tools/ftp/wget.exe' do. exe=. '"',exe,'"' else. exe=. 'wget.exe' end.
-  try. nc=. nc #~ 1 e. nc E. shell exe,' --help' catch. nc=. '' end.
-  HTTPCMD=: exe,' ',nc,' -O %O -o %L -t %t -T %T %U'
-  if. fexist UNZIP=: jpath '~tools/zip/unzip.exe' do. UNZIP=: '"',UNZIP,'" -o -C ' else. UNZIP=: 'unzip.exe -o -C ' end.
+  busybox=. 0
+  if. fexist exe=. jpath '~tools/ftp/wget.exe' do. exe=. '"',exe,'"'
+  elseif. fexist exe=. jpath '~tools/ftp/busybox.exe' do. exe=. '"',exe,'" wget' [ busybox=. 1
+  elseif. do. exe=. '' end.
+  if. #exe do.
+    try. nc=. nc #~ 1 e. nc E. shell exe,' --help' catch. nc=. '' end.
+    HTTPCMD=: exe,' ',nc,busybox{::' -O %O -o %L -t %t -T %T %U';' -q -O %O %U'
+  end.
+  if. fexist UNZIP=: jpath '~tools/zip/unzip.exe' do. UNZIP=: '"',UNZIP,'" -o -C '
+  elseif. fexist UNZIP=: jpath '~tools/ftp/busybox.exe' do. UNZIP=: '"',UNZIP,'" unzip -q -o '
+  elseif. do. UNZIP=: 'unzip.exe -o -C ' end.
 end.
 )
 setfiles=: 3 : 0
@@ -106,17 +123,29 @@ Reinstalling or upgrading this library will overwrite files in the system subdir
 
 Files outside the system subdirectory, such as profile.ijs, are not changed.
 )
+addsep=: , '/' -. {:
+remsep=: }.~ [: - '/' = {:
 cutjal=: ([: (* 4 > +/\) ' ' = ]) <;._1 ]
 cutjsp=: ([: (* 5 > +/\) ' ' = ]) <;._1 ]
 fname=: #~ ([: *./\. ~:&'/')
 hostcmd=: [: 2!:0 '(' , ] , ' || true)'"_
+intersect=: e. # [
 ischar=: 2 = 3!:0
+noundef=: (1 e. (,each '0:0')&E.) &>
 rnd=: [ * [: <. 0.5 + %~
 sep2under=: '/' & (I.@('_' = ])})
 termLF=: , (0 < #) # LF -. {:
 isjpkgout=: ((4 = {:) *. 2 = #)@$ *. 1 = L.
 getintro=: ('...' ,~ -&3@[ {. ])^:(<#)
 info=: smoutput
+dircopy=: 3 : 0
+'fm to'=. y
+p=. (#fm) }. each dirpath fm
+mkdir_j_ each to&, each p
+f=. dtree fm
+t=. to&, each (#fm) }. each f
+t fcopynew &> f
+)
 getnames=: 3 : 0
 select. L.y
 case. 0 do.
@@ -145,6 +174,17 @@ try.
   res=. 0< ferase {."1 dirtree y
   *./ res,0<ferase |.dirpath y
 catch. 0 end.
+)
+dtree=: 3 : 0
+p=. y #~ (+./\ *. +./\.) y~:' '
+p=. jpath p,'/' -. {:p
+d=. 1!:0 p,'*'
+if. 0 = #d do. '' return. end.
+d=. d #~ 'h' ~: 1 {"1 > 4 {"1 d
+if. 0 = #d do. '' return. end.
+m=. 'd' = 4 {"1 > 4 {"1 d
+d=. (<p) ,each {."1 d
+((-.m) # d), ;dtree each m # d
 )
 fixjal=: 3 : 0
 if. 2 > #y do. i.0 5 return. end.
@@ -294,7 +334,7 @@ else.
 end.
 )
 getjqtversion=: 3 : 0
-suffix=. (IFUNIX>'/'e.LIBFILE)#'-8.07'
+suffix=. (IFUNIX>'/'e.LIBFILE)#'-9.01'
 dat=. fread '~bin/jqt',suffix,IFWIN#'.exe'
 if. dat-:_1 do. '' return. end.
 ndx=. I. 'jqtversion:' E. dat
@@ -332,6 +372,10 @@ else.
   spawn_jtask_ y
 end.
 )
+splitrep=: 3 : 0
+rep=. <;.1 '/',y
+(}. ; 2 {. rep);;2 }. rep
+)
 subdir=: 3 : 0
 if. 0=#y do. '' return. end.
 a=. 1!:0 y,'*'
@@ -359,7 +403,7 @@ e=. 'Unexpected unzip error'
 if. IFUNIX do.
   notarcmd=. IFIOS
   if. UNAME-:'Android' do.
-    notarcmd=. _1-: 2!:0 ::_1: 'which tar'
+    notarcmd=. _1-: 2!:0 ::_1: 'which tar 2>/dev/null'
     if. (UNAME-:'Android') > '/mnt/sdcard'-:2!:5'EXTERNAL_STORAGE' do. notarcmd=. 1 end.
   end.
   if. notarcmd do.
@@ -381,6 +425,28 @@ e
 )
 zipext=: 3 : 0
 y, IFUNIX pick '.zip';'.tar.gz'
+)
+busyboxget=: 3 : 0
+'f p'=. 2 {. (boxxopen y),a:
+if. 0=#p do.
+  p=. jpath '~temp/',f #~ -. +./\. f = '/'
+end.
+ferase p
+cmd=. '"','"',~jpath '~tools/ftp/busybox.exe'
+cmd=. cmd,' wget -O ',p,' ',f
+fail=. 0
+try.
+  fail=. _1-: e=. shellcmd cmd
+catch. fail=. 1 end.
+if. fail +. 0 >: fsize p do.
+  msg=. 'Connection failed'
+  log msg
+  r=. 1;msg
+  ferase p
+else.
+  r=. 0;p
+end.
+r
 )
 CHECKADDONSDIR=: 0 : 0
 The addons directory does not exist and cannot be created.
@@ -540,16 +606,105 @@ whilst. -. res-:old do.
 end.
 /:~ ~. y, res -. a:, (0=x)# {."1 ADDINS
 )
+REPOS=: ;:'github'
+cutrepo=: 3 : 0
+t=. remsep jpathsep deb y
+ndx=. t i. ':'
+tag=. ndx {. t
+t=. (ndx+1) }. t
+ndx=. t i. '@'
+rep=. ndx {. t
+cmt=. (ndx+1) }. t
+cmt=. cmt,(0=#cmt)#'master'
+tag;rep;cmt
+)
+getpackageurl=: 3 : 0
+'tag rep cmt'=. y
+select. tag
+case. 'github' do.
+  ball=. IFUNIX pick 'zipball';'tarball'
+  p=. <;.2 rep,'/'
+  rpo=. ;2 {. p
+  'https://github.com/',rpo,ball,'/',cmt
+case. do.
+  ''
+end.
+)
+getpacsub=: 3 : 0
+t=. 1!:0 y,'/*'
+d=. , t #~ 'd'= 4 {"1 > 4 {"1 t
+if. 0=#d do. 0 return. end.
+y,'/',0 pick d
+)
+gettempdir=: 3 : 0
+tmp=. jpath '~temp/pacmandownload'
+rmdir_j_ tmp
+mkdir_j_ tmp
+tmp
+)
+gitrepoget=: 3 : 0
+'f p'=. 2 {. (boxxopen y),a:
+if. IFWIN do.
+  busyboxget f;p
+else.
+  httpget f;3;p
+end.
+)
+install_gitrepo=: 3 : 0
+'tag rep cmt'=. cutrepo y
+if. -. (<tag) e. REPOS do.
+  echo 'Unsupported repo host: ',tag return.
+end.
+if. 0 -: readmanifest tag;rep;cmt do. 0 return. end.
+if. 0 -: readpackage tag;rep;cmt do. 0 return. end.
+frm=. 0 pick splitrep rep
+msg=. 'installed: ',frm,' ',cmt
+if. -. frm -: FOLDER do.
+  msg, ' into folder: ',FOLDER
+end.
+)
+readpackage=: 3 : 0
+url=. getpackageurl y
+if. 0=#url do. 0 return. end.
+tmp=. gettempdir''
+p=. tmp,'/t1.',IFUNIX pick 'zip';'tar.gz'
+'rc msg'=. gitrepoget url;p
+if. rc do.
+  0[echo 'Could not download addon: ',msg return.
+end.
+if. 0 >: fsize p do.
+  0[echo 'Could not download addon' return.
+end.
+unzip p;tmp
+sub=. getpacsub tmp
+if. 0-:sub do. return. end.
+removeextras sub
+replacepackage sub;FOLDER
+rmdir_j_ tmp
+1
+)
+removeextras=: 3 : 0
+p=. addsep y
+ferase p&, each FILES -.~ (#p) }. each dtree p
+)
+replacepackage=: 3 : 0
+'tmp rep'=. y
+'add sub'=. splitrep rep
+fm=. tmp,sub
+to=. jpath '~addons/',add
+dircopy fm;to
+1
+)
 httpget=: 3 : 0
-'f t'=. 2 {. (boxxopen y),a:
+'f t p'=. 3 {. (boxxopen y),a:
 n=. f #~ -. +./\. f e. '=/'
-p=. jpath '~temp/',n
+if. 0=#p do. p=. jpath '~temp/',n end.
 q=. jpath '~temp/httpget.log'
 t=. ":{.t,3
 ferase p;q
 fail=. 0
 cmd=. HTTPCMD rplc '%O';(dquote p);'%L';(dquote q);'%t';t;'%T';(":TIMEOUT);'%U';f
-if. IFIOS +. UNAME-:'Android' do.
+if. ''-:HTTPCMD do.
   require 'socket'
   1!:55 ::0: <p
   rc=. 0 [ e=. pp=. ''
@@ -559,7 +714,7 @@ if. IFIOS +. UNAME-:'Android' do.
     ip=. >2{sdgethostbyname_jsocket_ 'www.jsoftware.com'
     rc=. sdconnect_jsocket_ sk;PF_INET_jsocket_;ip;80
     if. 0~:rc do. break. end.
-    'rc sent'=. ('GET ',f,' HTTP/1.0',LF2) sdsend_jsocket_ sk;0
+    'rc sent'=. ('GET ',f,' HTTP/1.0',CRLF,CRLF) sdsend_jsocket_ sk;0
     if. 0~:rc do. break. end.
     while. ((0=rc)*.(*#m)) [[ 'rc m'=. sdrecv_jsocket_ sk,4096 do.
       pp=. pp,m
@@ -579,12 +734,12 @@ if. IFIOS +. UNAME-:'Android' do.
   end.
 elseif. do.
   try.
-    e=. shellcmd cmd
+    fail=. _1-: e=. shellcmd cmd
   catch. fail=. 1 end.
 end.
 if. fail +. 0 >: fsize p do.
   if. _1-:msg=. freads q do.
-    if. 0=#msg=. e do. msg=. 'Unexpected error' end. end.
+    if. (_1-:msg) +. 0=#msg=. e do. msg=. 'Unexpected error' end. end.
   log 'Connection failed: ',msg
   info 'Connection failed:',LF2,msg
   r=. 1;msg
@@ -711,6 +866,115 @@ write_config=: 3 : 0
 txt=. 'NB. Addon configuration',LF2
 txt=. txt,'ADDLABS=: 0 : 0',LF,ADDLABS,')',LF
 txt fwrites ADDCFGIJS
+)
+getmanifesturl=: 3 : 0
+'tag rep cmt'=. y
+select. tag
+case. 'github' do.
+  p=. <;.2 rep,'/'
+  rpo=. ;2 {. p
+  sub=. ;2 }. p
+  'https://raw.githubusercontent.com/',rpo,cmt,'/',sub,'manifest.ijs'
+case. do.
+  ''
+end.
+)
+readmanifest=: 3 : 0
+url=. getmanifesturl y
+if. 0=#url do. 0 return. end.
+'rc man'=. gitrepoget url
+if. rc do. 0 return. end.
+dat=. freads man
+if. dat -: _1 do.
+  0[log 'could not read manifest for ',y return.
+end.
+ferase man
+if. 0=valmanifest dat do. 0 return. end.
+defmanifest dat
+)
+defmanifest=: 3 : 0
+defmanifest1 y
+pfm=. (tolower UNAME)&, each '';IF64{'32';'64'
+files=. 'FILES'&, each '';toupper each pfm
+other=. ;: 'DEPENDS FOLDER PLATFORMS RELEASE VERSION'
+all=. files,other
+(all)=: <''
+n=. all intersect nl_jpacmandef_ 0
+(n)=: ". each n ,each <'_jpacmandef_'
+coerase <'jpacmandef'
+
+FILES=: ~. cutLF ;LF ,each ". each files
+if. 0=#FILES do. 0[echo 'Files not given' return. end.
+FILES=: ~. FILES, <'manifest.ijs'
+
+if. 0=#FOLDER do. 0[echo 'Folder not given' return. end.
+if. #PLATFORMS do.
+  if. 0=#pfm intersect ;: PLATFORMS do.
+    0[echo 'Platform not supported for this addon' return.
+  end.
+end.
+if. #RELEASE do.
+  rel=. <./0 ". 'j' -.~ RELEASE
+  ver=. 0 ". 'j' -.~ ({.~i.&'/')9!:14''
+  if. rel > ver do.
+    0[echo 'Release not supported for this addon: ',9!:14'' return.
+  end.
+end.
+if. #DEPENDS do.
+  dependcheck a: -.~ deb each <;._2 termLF DEPENDS
+end.
+
+1
+)
+defmanifest1=: 3 : 0
+coerase <'jpacmandef'
+cocurrent 'jpacmandef'
+0!:100 y
+)
+dependcheck=: 3 : 0
+m=. (0 = #@(1!:0)) &> (<jpath '~addons/') ,each y , each <'/*'
+if. 1 e. m do.
+  echo 'This addon requires addons to be installed:',;' ',each m#y
+end.
+)
+valmanifest=: 3 : 0
+b=. <;._2 y
+b=. dlb each b
+b=. b -. a:
+b=. b #~ (<'NB.') ~: 3 {.each b
+c=. ;: :: 0: each b
+msk=. c ~: <0
+c=. msk # c
+bgn=. noundef c
+ndx=. bgn i. 1
+hdr=. ndx {. c
+c=. bgn <;.1 c
+len=. # &> c
+ndx=. c i. &> <<,<,')'
+if. 1 e. ndx = len do.
+  txt=. towords 0 pick ((ndx=len) i. 1) pick c
+  log 'invalid manifest for ',x,' at definition: ',txt
+  0 return.
+end.
+c=. hdr, ; (ndx+1) }.each c
+c
+msk=. (<'NB.') = (3: {. >@{:) each c
+c=. (-msk) }.each c
+msk=. 3 ~: # &> c
+if. 1 e. msk do.
+  txt=. towords (msk i. 1) pick c
+  log 'invalid manifest for ',x,' at line: ',txt
+  0 return.
+end.
+c3=. > c
+ass=. (<'=:') = 1 {"1 c3
+chr=. '''' = {. &> 2 {"1 c3
+if. 0 e. ass *. chr do.
+  txt=. towords ((0 = ass *.chr) i. 1) pick c
+  echo 'invalid manifest for ',x,' at line: ',txt
+  0 return.
+end.
+1
 )
 show_console=: 4 : 0
 if. -. init_console 'read' do. '' return. end.
@@ -848,6 +1112,7 @@ readlocal''
 1
 )
 refreshaddins=: 3 : 0
+setfiles''
 ADDLABS=: ''
 f=. ADDCFG,'addins.txt'
 p=. jpath '~addons/'
@@ -1004,8 +1269,137 @@ case. do.
   msg,'  update, upgrade'
 end.
 )
+jef=: '~temp/je_update/'
+
+je_update=: 3 : 0
+if. IFIOS+.UNAME-:'Android' do. 'update not supported for this platform' return. end.
+mkdir_j_ jef
+sh=. 'update.',;(UNAME-:'Win'){'sh';'bat'
+ferase jef,sh
+'plat name bname'=. je_sub''
+old=. fread bname
+old fwrite jef,name,'.old'
+if. #msg=. je_get'' do. echo msg return. end.
+if. (-.'force'-:y) *. old-:fread jef,name,'.new' do.
+  echo 'the current JE is already up to date' return.
+end.
+OLD=. hostpathsep jpath bname
+NEW=. hostpathsep jpath jef,name,'.new'
+if. UNAME-:'Win' do.
+  (win_update rplc 'OLD';OLD;'NEW';NEW) fwrite jef,sh
+else.
+  if. FHS*.UNAME-:'Linux' do.
+    d=. deb_update
+  else.
+    d=. unix_update
+  end.
+  (d rplc 'OLD';OLD;'NEW';NEW) fwrite jef,sh
+  2!:0 'chmod +x ',jpath jef,sh
+end.
+echo shutdown rplc 'CMD';hostpathsep jpath jef,sh
+)
+je_get=: 3 : 0
+mkdir_j_ jef
+'plat name bname'=. je_sub''
+t=. <;._1 '/',9!:14''
+version=. ;{.t
+br=. ;3{t
+i=. ('beta';'rele')i. <4{.br
+if. i=2 do. 'current JE is not beta or release' return. end.
+type=. ;i{'beta';'release'
+if. 1~:ftype bname do. 'update not supported for this type of install' return. end.
+erase'JENEW'
+jeold=. fread bname
+path=. 'http://www.jsoftware.com/download/jengine/',version,'-',type,'/'
+avxname=. name
+avx=. 'nonavx'-:_6{.;1{t
+if. avx do.
+  avxname=. avxname rplc '.';'-nonavx.'
+end.
+tname=. '~temp/',avxname
+ferase tname
+arg=. path,'P/jX/N' rplc 'P';plat;'N';avxname;'X';;IF64{'32';'64'
+echo arg
+httpget_jpacman_ arg
+(fread tname)fwrite jef,name,'.new'
+echo 'saved as:    ',jef,name,'.new'
+echo 'new version: ',jengine_version tname
+''
+)
+
+je_sub=: 3 : 0
+i=. ('Win';'Darwin')i.<UNAME
+plat=. ;i{'windows';'darwin';IFRASPI{::'linux';'raspberry'
+name=. ;i{'j.dll';'libj.dylib';'libj.so'
+bname=. '~bin/',name
+if. FHS*.UNAME-:'Linux' do.
+  v=. ({.~i.&'/')}.9!:14''
+  sub=. '.',({.v),'.',}.v
+  if. fexist '/etc/redhat-release' do.
+    d1=. IF64{::'/usr/lib/';'/usr/lib64/'
+  else.
+    if. IFRASPI do.
+      d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/';'/usr/lib/aarch64-linux-gnu/'
+    elseif. do.
+      d1=. IF64{::'/usr/lib/i386-linux-gnu/';'/usr/lib/x86_64-linux-gnu/'
+    end.
+  end.
+  bname=. d1,name,sub
+end.
+plat;name;bname
+)
+jengine_version=: 3 : 0
+d=. fread y
+'not a file'assert _1~:d
+'not a JE' assert (1 i.~'non-unique sparse elements' E. d)<#d
+i=. 1 i.~'je9!:14' E. d
+if. i=#d do. 'unknown' return. end.
+d=. d}.~8+i
+s=. d{.~d i. {.a.
+s=. s-.LF,12{a.
+dt=. _20{.s
+date=. 11{.dt
+m=. 2":>:(;:'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')i.<3{.date
+date=. ((_4{.date),'-',m,'-',4 5{date)rplc' ';'0'
+(_20}.s),date,11}.dt
+)
+
+unix_update=: 0 : 0
+#!/bin/sh
+cp "NEW" "OLD"
+echo restart J and check JVERSION
+)
+
+deb_update=: 0 : 0
+#!/bin/sh
+sudo cp "NEW" "OLD"
+sudo chmod 644 "OLD"
+sudo chown root:root "OLD"
+sudo ldconfig
+)
+
+win_update=: 0 : 0
+@ECHO OFF
+copy "NEW" "OLD"
+echo restart J and check JVERSION
+)
+
+shutdown=: 0 : 0
+
+hint: copy command so you can paste it in terminal/command window
+
+!!! shutdown J (all copies running this version) !!!
+
+in a terminal/command window run the following:
+
+"CMD"
+
+note: command may require admin/sudo priviliege
+
+)
 do_install=: 3 : 0
 if. -. checkaccess_jpacman_ '' do. return. end.
+if. ':' e. y do. install_gitrepo y return. end.
 'update' jpkg ''
 if. y -: 'addons' do. y=. 'all' end.
 if. -. (<y) e. 'full';'qtide';'slim' do.
@@ -1042,7 +1436,7 @@ elseif. do.
   z=. 'jqt-mac',((y-:'slim')#'slim'),'-',(IF64 pick 'x86';'x64'),'.zip'
   z1=. 'libjqt.dylib'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j807/qtide/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j901/qtide/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1053,15 +1447,19 @@ if. IFWIN do.
 else.
   if. 'Linux'-:UNAME do.
     if. fhs do.
-      if. IFRASPI do.
-        d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/.';'/usr/lib/aarch64-linux-gnu/.'
-      elseif. do.
-        d1=. IF64{::'/usr/lib/i386-linux-gnu/.';'/usr/lib/x86_64-linux-gnu/.'
+      if. fexist '/etc/redhat-release' do.
+        d1=. IF64{::'/usr/lib/.';'/usr/lib64/.'
+      else.
+        if. IFRASPI do.
+          d1=. IF64{::'/usr/lib/arm-linux-gnueabihf/.';'/usr/lib/aarch64-linux-gnu/.'
+        elseif. do.
+          d1=. IF64{::'/usr/lib/i386-linux-gnu/.';'/usr/lib/x86_64-linux-gnu/.'
+        end.
       end.
       echo 'install libjqt.so to ',d1
       hostcmd_jpacman_ 'rm -f /usr/bin/jqt'
-      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-8.07 && chmod 644 libjqt.so && mv libjqt.so ',d1,'/libjqt.so.8.07 && ldconfig'
-      hostcmd_jpacman_ 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-8.07 807'
+      hostcmd_jpacman_ 'cd ',(dquote jpath '~temp'),' && tar --no-same-owner --no-same-permissions -xzf ',(dquote p), ' && chmod 755 jqt && mv jqt /usr/bin/jqt-9.01 && chmod 644 libjqt.so && mv libjqt.so ',d1,'/libjqt.so.9.01 && ldconfig'
+      hostcmd_jpacman_ 'update-alternatives --install /usr/bin/jqt jqt /usr/bin/jqt-9.01 901'
     else.
       hostcmd_jpacman_ 'cd ',(dquote d),' && tar xzf ',(dquote p)
     end.
@@ -1088,7 +1486,7 @@ if. IFWIN do.
 else.
   z=. 'qt59-mac-',((y-:'slim')#'slim-'),(IF64 pick 'x86';'x64'),'.zip'
 end.
-'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j807/qtlib/',z
+'rc p'=. httpget_jpacman_ 'http://www.jsoftware.com/download/j901/qtlib/',z
 if. rc do.
   smoutput 'unable to download: ',z return.
 end.
@@ -1117,3 +1515,4 @@ destroy__a''
 res
 )
 jpkgv_z_=: (<@:>"1@|:^:(0 ~: #))@jpkg
+je_update_z_=: je_update_jpacman_

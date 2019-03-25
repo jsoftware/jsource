@@ -19,6 +19,7 @@ gl2        ~addons/graphics/gl2/gl2.ijs
 gles       ~addons/api/gles/gles.ijs
 graph      ~addons/graphics/graph/graph.ijs
 guid       ~addons/general/misc/guid.ijs
+inverted   ~addons/general/misc/inverted.ijs
 ja         ~addons/ide/ja/ja.ijs
 jd         ~addons/data/jd/jd.ijs
 jfiles     ~addons/data/jfiles/jfiles.ijs

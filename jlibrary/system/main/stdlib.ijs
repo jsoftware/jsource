@@ -1,7 +1,7 @@
 18!:4 <'z'
 3 : 0 ''
 
-JLIB=: '8.07.07'
+JLIB=: '9.01.01'
 
 notdef=. 0: ~: 4!:0 @ <
 hostpathsep=: ('/\'{~6=9!:12'')&(I. @ (e.&'/\')@] })
@@ -43,7 +43,7 @@ end.
 if. notdef 'FHS' do.
   FHS=: IFUNIX>'/'e.LIBFILE
 end.
-'libc.so.6 setlocale > x i *c'&(15!:0)^:(UNAME-:'Linux') 1;,'C'
+'libc.so.6 setlocale > x i *c'&(15!:0) ::0:^:(UNAME-:'Linux') 1;,'C'
 if. notdef 'IFRASPI' do.
   if. UNAME -: 'Linux' do.
     cpu=. 2!:0 'cat /proc/cpuinfo'
@@ -132,14 +132,14 @@ end.
 18!:4 <'z'
 18!:4 <'z'
 UNXLIB=: ([: <;._1 ' ',]);._2 (0 : 0)
-libc.so.6 libc.so libc.dylib libc.dylib
-libz.so.1 libz.so libz.dylib libz.dylib
-libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.dylib
-libxml2.so.2 libxml2.so libxml2.dylib libxml2.dylib
+libc.so.6 libc.so libc.dylib libc.so
+libz.so.1 libz.so libz.dylib libz.so
+libsqlite3.so.0 libsqlite.so libsqlite3.dylib libsqlite3.so
+libxml2.so.2 libxml2.so libxml2.dylib libxml2.so
 )
 unxlib=: 3 : 0
-r=. (;: 'c z sqlite3') i. <,y
-c=. IFIOS + (;: 'Linux Android Darwin') i. <UNAME_z_
+r=. (;: 'c z sqlite3 libxml2') i. <,y
+c=. (;: 'Linux Android Darwin') i. <UNAME_z_
 (<r,c) {:: UNXLIB_z_
 )
 18!:4 <'z'
@@ -189,8 +189,8 @@ getalpha=: 16bff (17 b.) _24&(34 b.)
 abspath=: 3 : 0
 if. (1 e. '://'&E.) y=. ,jpathsep y do. y return. end.
 if. IFWIN do.
-  assert. 0<rc=. 'kernel32 GetFullPathNameW > i *w i *w *w'&cd (uucp y);((#;])f=. 1024$u:' '),<<0
-  y=. jpathsep utf8 rc{.f
+  assert. 0<rc=. >@{. cdrc=. 'kernel32 GetFullPathNameW   i *w i *w *w'&cd (uucp y);((#;])1024$u:' '),<<0
+  y=. jpathsep utf8 rc{.3{::cdrc
 elseif. ('/' ~: {.) y do.
   y=. iospath^:IFIOS (1!:43'') , '/' , utf8 y
 end.
@@ -230,7 +230,6 @@ hfd=: h {~ 16 #.^:_1 ]
 do=: ".
 drop=: }.
 each=: &.>
-echo=: 0 0&$ @ (1!:2&2)
 empty=: EMPTY"_
 erase=: [: 4!:55 ;: ::]
 every=: &>
@@ -336,12 +335,14 @@ stderr=: 1!:2&5
 stdin=: 1!:1@3: :. stdout
 sign=: *
 sminfo=: 3 : 0
-if. IFQT do. wdinfo_jqtide_ y
+if. IFJHS do. smoutput >{:boxopen y
+elseif. IFQT do. wdinfo_jqtide_ y
 elseif. IFJA do. wdinfo_ja_ y
 elseif. IFJNET do. wdinfo_jnet_ y
 elseif. (0-:11!:0 ::0:'qwd') < 3=4!:0<'wdinfo' do. wdinfo y
 elseif. do. smoutput >{:boxopen y end.
 )
+echo=: 0 0 $ 1!:2&2
 smoutput=: 0 0 $ 1!:2&2
 tmoutput=: 0 0 $ 1!:2&4
 sort=: /:~ : /:
@@ -491,6 +492,7 @@ memr=: 15!:1
 memw=: 15!:2
 mema=: 15!:3
 memf=: 15!:4
+memu=: '' 1 : 'try. 15!:15 m catch. a: { ] return. end. 15!:15'
 cdf=: 15!:5
 cder=: 15!:10
 cderx=: 15!:11
@@ -733,6 +735,10 @@ dblxs=: 13!:15
 dbtrace=: 13!:16
 dbq=: 13!:17
 dbst=: 13!:18
+dbcut=: 13!:19
+dbover=: 13!:20
+dbinto=: 13!:21
+dbout=: 13!:22
 dbctx=: 3 3&$: : (4 : 0)
 if. -.13!:17'' do. 0 0$'' return. end.
 try.
@@ -835,6 +841,7 @@ if. y do.
 end.
 )
 dbview=: 3 : 0
+if. -.IFQT do. return. end.
 if. _1 = 4!:0 <'jdbview_jdbview_' do.
   'require'~'~addons/ide/qt/dbview.ijs'
 end.
@@ -876,6 +883,11 @@ dblxs   latent expression set
 dbtrace trace control
 dbq     queries suspension mode (set by dbr)
 dbst    returns stack text
+(these 4 verbs are subject to change without notice)
+dbcut   cut back
+dbover  step over
+dbinto  step into
+dbout   step out
 
 dbctx       display context
 dbg         turn debug window on/off
@@ -1099,7 +1111,7 @@ dirtree=: 3 : 0
 0 dirtree y
 :
 if. 0=4!:0 <'DirTreeX_j_' do.
-  ex=. boxxopen DirTreeX_j_
+  ex=. cutopen DirTreeX_j_
 else.
   ex=. ''
 end.
@@ -1511,6 +1523,7 @@ ind=. ; bgn + each hnx { cnt # i.each newlen
 rep=. ; hnx { cnt # new
 rep ind} exp # txt
 )
+undquote=: (#~ -.@('""'&E.))@}:@}.^:(('"' = {.) *. '"' = {:)
 cutpara=: 3 : 0
 txt=. topara y
 txt=. txt,LF -. {:txt
@@ -1717,7 +1730,7 @@ if. 'd' ~: 4 { 4 pick {. d do. r return. end.
 if. IFWIN do.
   shell_jtask_ 'rmdir "',y,'" /S /Q'
 else.
-  hostcmd_j_ 'rm -rf --preserve-root ',y
+  hostcmd_j_ 'rm -rf ',((-.UNAME-:'Darwin')#'--preserve-root '),y
 end.
 (#1!:0 y);''
 )
@@ -1794,7 +1807,7 @@ f=. jpath '~addons/docs/help/',y
 if. fexist ({.~ i:&'#') f do.
   browse file2url f
 else.
-  f=. 'http://www.jsoftware.com/docs/help', '807'
+  f=. 'http://www.jsoftware.com/docs/help', '901'
   browse f,'/',y
 end.
 )
@@ -1855,20 +1868,26 @@ case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
   try.
-    2!:0'which google-chrome'
+    2!:0'which x-www-browser 2>/dev/null'
+    'x-www-browser' return. catch. end.
+  try.
+    2!:0'which google-chrome 2>/dev/null'
     'google-chrome' return. catch. end.
   try.
-    2!:0'which chromium'
+    2!:0'which chromium 2>/dev/null'
     'chromium' return. catch. end.
   try.
-    2!:0'which firefox'
+    2!:0'which chromium-browser 2>/dev/null'
+    'chromium-browser' return. catch. end.
+  try.
+    2!:0'which firefox 2>/dev/null'
     'firefox' return. catch. end.
   try.
-    2!:0'which konqueror'
+    2!:0'which konqueror 2>/dev/null'
     'konqueror' return. catch. end.
   try.
-    2!:0'which netscape'
-    'netscape' return. catch. end.
+    2!:0'which opera 2>/dev/null'
+    'opera' return. catch. end.
   '' return.
 end.
 )
@@ -1923,19 +1942,19 @@ case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
   try.
-    2!:0'which evince'
+    2!:0'which evince 2>/dev/null'
     'evince' return. catch. end.
   try.
-    2!:0'which kpdf'
+    2!:0'which kpdf 2>/dev/null'
     'kpdf' return. catch. end.
   try.
-    2!:0'which xpdf'
+    2!:0'which xpdf 2>/dev/null'
     'xpdf' return. catch. end.
   try.
-    2!:0'which okular'
+    2!:0'which okular 2>/dev/null'
     'okular' return. catch. end.
   try.
-    2!:0'which acroread'
+    2!:0'which acroread 2>/dev/null'
     'acroread' return. catch. end.
   '' return.
 end.
@@ -2091,7 +2110,9 @@ if. #ind do.
   ind=. (-.msk)#ind
   if. #ind do.
     bal=. (-.msk)#bal
-    msk=. -. '.' e. &> bal
+    msk=. -. '.'&e.@(}.~i:&'/') &> bal
+    msk=. msk *. *./@:((a.{~, 65 97 +/i.26)e.~])@:({.~i.&'/') &> bal
+    msk=. msk > isroot &> bal
     cnt=. ('/' +/ .= ]) &> bal
     ndx=. I. msk *. cnt=1
     bal=. (addfname each ndx { bal) ndx } bal
@@ -2166,7 +2187,7 @@ case. 'Win' do.
   ShellExecute=. 'shell32 ShellExecuteW > i x *w *w *w *w i'&cd
   SW_SHOWNORMAL=. 1
   NULL=. <0
-  r=. ShellExecute 0;(uucp 'open');(uucp winpathsep cmd);NULL;NULL;SW_SHOWNORMAL
+  r=. ShellExecute 0;NULL;(uucp winpathsep cmd);NULL;NULL;SW_SHOWNORMAL
   if. r<33 do. sminfo 'view image error: ',cmd,LF2,1{::cderx'' end.
 case. 'Android' do.
   android_exec_host 'android.intent.action.VIEW';(utf8 ('file://'&,)@abspath^:(-.@isURL) cmd);'image/*';0
@@ -2204,7 +2225,7 @@ case. 'Win' do. ''
 case. 'Darwin' do. 'open'
 case. do.
   try.
-    2!:0'which eog'
+    2!:0'which eog 2>/dev/null'
     'eog' return. catch. end.
   '' return.
 end.

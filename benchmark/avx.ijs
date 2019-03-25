@@ -1,12 +1,12 @@
 NB. do not use - latest vertsion is in JHS misc folder
 
-NB. j64-805
+NB. j64-807
 NB.  load avx.ijs
 NB.  run'' - save results in ~temp/avxrun.dat
-NB. j64avx-806
+NB. j64avx-901
 NB.  load avx.ijs
 NB.  run'' - save results in ~temp/avxrun.dat
-NB.  rep'' - report ~temp/avxrun.dat vs j805-user-temp/avxrun.dat
+NB.  rep'' - report ~temp/avxrun.dat vs j807-user-temp/avxrun.dat
 NB.  rep p - report ~temp/avxrun.dat vs p,'/temp/avxrun.dat' 
 
 0 : 0
@@ -112,7 +112,7 @@ i.0 0
 )
 
 rep=: 3 : 0
-y=. ;(y-:''){y;'j64-805-user'
+y=. ;(y-:''){y;'j64-807-user'
 old=: 3!:2 fread y,'/temp/avxrun.dat'
 new=: 3!:2 fread '~temp/avxrun.dat'
 'versions differ'  assert (0{old)=0{new
@@ -123,7 +123,7 @@ r=. (":5{.6!:0''),LF,(;2{old),LF,(;1{old),LF,;1{new
 d=. (".each}:(<'datas_'),each types),.(<' NB. '),each }:types
 r=. r,LF,'intsr (small range) special code avoids hash - intbr (big range)'
 r=. r,LF,'float0 tests use !.0 where appropriate'
-r=. r,LF,'N in tables below indicate avx JE runs N times faster than 805',LF
+r=. r,LF,'N in tables below indicate avx JE runs N times faster than 807',LF
 r=. r,LF,'   ''type'' set ',":;0{counts
 a=. ;5{new
 b=. ;5{old

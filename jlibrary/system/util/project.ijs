@@ -29,7 +29,7 @@ x=. ('/' e. p) + p i. '/'
 )
 fixNB=: 3 : 0
 x=. I. 'nb.' E. y
-'NB' (0 1 +/~ x) } y
+'NB' (<"0 (0 1) +/~ x) } y
 )
 getprojfile=: 3 : 0
 if. 0=#y do. '' return. end.

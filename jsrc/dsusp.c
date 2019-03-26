@@ -18,7 +18,6 @@ void moveparseinfotosi(J jt){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop
 /*    d=deba(...);                                       */
 /*    ASSERT(blah,EVDOMAIN);                             */
 /*    debz()                                             */
-// d, if given, is the block to use for the debug stack; otherwise allocated
 
 DC jtdeba(J jt,C t,void *x,void *y,A fs){DC d;
  {A q; GAT(q,LIT,sizeof(DST),1,0); d=(DC)AV(q);}

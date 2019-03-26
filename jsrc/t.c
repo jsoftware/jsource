@@ -30,6 +30,7 @@ static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
  v->id=(C)id;                  /* spelling         */
  v->flag=(UI4)flag;              // flags
  v->flag2=(UI4)(id>>8);
+ va1primsetup(z);  // install info, if any, needed by va1
  va2primsetup(z);  // install info, if any, needed by va2
  ds(id)=z;             /* other fields are zeroed in ga() */
  R 1;

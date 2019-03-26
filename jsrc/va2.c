@@ -390,7 +390,7 @@ static UC vaptr[256]={
 // return atomic2 ID for the verb w.  If w is b., look for its u operand and return the appropriate 
 C jtvaid(J jt,A w){A x;C c;I k;V*v;
  v=FAV(w); c=v->id;
- if(c==CBDOT){x=v->fgh[0]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),16<=k&&k<=31))c=(C)k;}
+ if(c==CBDOT){x=v->fgh[0]; if(INT&AT(x)&&!AR(x)&&(k=*AV(x),(k&-16)==16))c=(C)k;}
  R vaptr[(UC)c]?c:0;
 }
 

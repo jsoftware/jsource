@@ -904,6 +904,7 @@ extern I        smmallosize(A);
 extern void     smmfrr(A);
 extern I        strtoI10s(I,C*);
 extern D        tod(void);
+extern void     va1primsetup(A);
 extern void     va2primsetup(A);
 extern B        vlocnm(I,C*);
 extern D        xdouble(X);

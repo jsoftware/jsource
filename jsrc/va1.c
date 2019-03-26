@@ -42,7 +42,19 @@ static AMON(absZ,   D,Z, *z=zmag(*x);)
 static AHDR1(oneB,C,C){memset(z,C1,n);}
 static AHDR1(idf ,C,C){}  /* dummy */
 
-static UC va1fns[]={CFLOOR, CCEIL, CPLUS, CSTAR, CSQRT, CEXP, CLOG, CSTILE, CBANG, CCIRCLE, C0};
+#define CFLOORva1 0
+#define CCEILva1 1
+#define CPLUSva1 2
+#define CSTARva1 3
+#define CSQRTva1 4
+#define CEXPva1 5
+#define CLOGva1 6
+#define CSTILEva1 7 
+#define CBANGva1 8
+#define CCIRCLEva1 9
+
+#define VIP (VIPOKW)   // inplace is OK
+#define VIP64 ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace if D is same length as I
 
 static UA va1tab[]={
  /* <. */ {{{ idf,VB}, {  idf,VI}, {floorDI,VI}, {floorZ,VZ}, {  idf,VX}, {floorQ,VX}}},
@@ -77,57 +89,68 @@ static A jtva1s(J jt,A w,C id,I cv,VF ado){A e,x,z,ze,zx;B c;C ee;I n,t,zt;P*wp,
  R z;
 }
 
-#define VA1CASE(e,f) (256*(e)+(f))
+#define VA1CASE(e,f) (10*(e)+(f))
 
-static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VA2 p;VF ado;
+// prepare a primitive atomic verb for lookups using var()
+// if the verb is atomic, we fill in the lc field with the index to the va row for the verb
+void va1primsetup(A w){
+// obsolete  C *idaddr=(C*)strchr(va1fns,(UC)FAV(w)->id);  // see which line it is
+// obsolete  FAV(w)->lc=idaddr?(UC)(idaddr-(C*)va1fns):0;  // save it.  immaterial if no match
+}
+
+static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
  RZ(w);F1PREFIP;
  n=AN(w); wt=n?AT(w):B01;
  ASSERT(wt&NUMERIC,EVDOMAIN);
  if(b=1&&wt&SPARSE){wp=PAV(w); e=SPA(wp,e); wt=AT(e);}
- if(jt->jerr){
+ VA2 *p=&va1tab[id].p1[(0x54032100>>(CTTZ(wt)<<2))&7];  // from MSB, we need 101 100 xxx 011 010 001 xxx 000
+ if(!jt->jerr){
+// obsolete   p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
+  ado=p->f; cv=p->cv;
+ }else{
   m=!(wt&XNUM+RAT);
   switch(VA1CASE(jt->jerr,id)){
    default:     R 0;
-   case VA1CASE(EWOV,  CFLOOR): cv=VD;       ado=floorD;               break;
-   case VA1CASE(EWOV,  CCEIL ): cv=VD;       ado=ceilD;                break;
-   case VA1CASE(EWOV,  CSTILE): cv=VD+VDD;   ado=absD;                 break;
-   case VA1CASE(EWIRR, CSQRT ): cv=VD+VDD;   ado=sqrtD;                break;
-   case VA1CASE(EWIRR, CEXP  ): cv=VD+VDD;   ado=expD;                 break;
-   case VA1CASE(EWIRR, CBANG ): cv=VD+VDD;   ado=factD;                break;
-   case VA1CASE(EWIRR, CLOG  ): cv=VD+VDD*m; ado=m?(VF)logD:(VF)logXD; break;
-   case VA1CASE(EWIMAG,CSQRT ): cv=VZ+VZZ;   ado=sqrtZ;                break;
-   case VA1CASE(EWIMAG,CLOG  ): cv=VZ+VZZ*m; ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;
+   case VA1CASE(EWOV,  CFLOORva1): cv=VD;       ado=floorD;               break;
+   case VA1CASE(EWOV,  CCEILva1 ): cv=VD;       ado=ceilD;                break;
+   case VA1CASE(EWOV,  CSTILEva1): cv=VD+VDD;   ado=absD;                 break;
+   case VA1CASE(EWIRR, CSQRTva1 ): cv=VD+VDD;   ado=sqrtD;                break;
+   case VA1CASE(EWIRR, CEXPva1  ): cv=VD+VDD;   ado=expD;                 break;
+   case VA1CASE(EWIRR, CBANGva1 ): cv=VD+VDD;   ado=factD;                break;
+   case VA1CASE(EWIRR, CLOGva1  ): cv=VD+VDD*m; ado=m?(VF)logD:(VF)logXD; break;
+   case VA1CASE(EWIMAG,CSQRTva1 ): cv=VZ+VZZ;   ado=sqrtZ;                break;
+   case VA1CASE(EWIMAG,CLOGva1  ): cv=VZ+VZZ*m; ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;
   }
   RESETERR;
- }else{
-  p=((va1tab+((C*)strchr(va1fns,id)-(C*)va1fns))->p1)[wt&B01?0:wt&INT?1:wt&FL?2:wt&CMPX?3:wt&XNUM?4:5];
-  ado=p.f; cv=p.cv;
  }
- if(ado==idf)R w;  // no need to rat, really, but harmless since always DIRECT type
- if(b)R va1s(w,id,cv,ado);
- t=atype(cv); zt=rtype(cv);
- if(t&&TYPESNE(t,wt))RZ(w=cvt(t,w));
- GA(z,zt,n,AR(w),AS(w));
- ado(jt,n,AV(z),AV(w));
- if(jt->jerr)R NEVM<jt->jerr?va1(w,id):0; 
- else    {RETF(cv&VRI+VRD?cvz(cv,z):z);}
+ if(ado==idf)R w;  // if function is identity, return arg
+ if(b)R va1s(w,id,cv,ado);  // branch off to do sparse
+ // from here on is dense va1
+ t=atype(cv); zt=rtype(cv);  // extract required type of input and result
+ if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable
+ if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
+ ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
+ if(jt->jerr)R NEVM<jt->jerr?va1(w,id):0; // if recoverable error, recur to do recovery; if other error, fail
+ else    {RETF(cv&VRI+VRD?cvz(cv,z):z);}  // if no error, convert the result if necessary
 }
 
 
 // If argument has a single direct-numeric atom, go process through speedy-singleton code
-#define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w);
-#define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
+// obsolete #define CHECKSSING(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL)))R f(jt,w);
+// obsolete #define CHECKSSINGNZ(w,f) RZ(w); if(AN(w)==1 && (AT(w)&(B01+INT+FL))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
+#define CHECKSSING(w,f) RZ(w); if(!((AN(w)-1)|(AT(w)&(NOUN&~(B01+INT+FL)))))R f(jt,w);
+#define CHECKSSINGNZ(w,f) RZ(w); if(!((AN(w)-1)|(AT(w)&(NOUN&~(B01+INT+FL))))){A z = f(jt,w); if(z)R z;}  // fall through if returns 0
 
 
-F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOOR);}
-F1(jtceil1 ){CHECKSSING(w,jtssceil) R va1(w,CCEIL );}
-F1(jtconjug){R va1(w,CPLUS );}
-F1(jtsignum){CHECKSSING(w,jtsssignum) R va1(w,CSTAR );}
-F1(jtsqroot){CHECKSSINGNZ(w,jtsssqrt) R va1(w,CSQRT );}
-F1(jtexpn1 ){CHECKSSING(w,jtssexp) R va1(w,CEXP  );}
-F1(jtlogar1){CHECKSSINGNZ(w,jtsslog) R va1(w,CLOG  );}
-F1(jtmag   ){CHECKSSING(w,jtssmag) R va1(w,CSTILE);}
-F1(jtfact  ){CHECKSSING(w,jtssfact) R va1(w,CBANG );}
-F1(jtpix   ){CHECKSSING(w,jtsspix) R XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL)?va1(w,CCIRCLE):tymes(pie,w);}
+F1(jtfloor1){CHECKSSING(w,jtssfloor) R va1(w,CFLOORva1);}
+F1(jtceil1 ){CHECKSSING(w,jtssceil) R va1(w,CCEILva1 );}
+F1(jtconjug){R va1(w,CPLUSva1 );}
+F1(jtsignum){CHECKSSING(w,jtsssignum) R va1(w,CSTARva1 );}
+F1(jtsqroot){CHECKSSINGNZ(w,jtsssqrt) R va1(w,CSQRTva1 );}
+F1(jtexpn1 ){CHECKSSING(w,jtssexp) R va1(w,CEXPva1  );}
+F1(jtlogar1){CHECKSSINGNZ(w,jtsslog) R va1(w,CLOGva1  );}
+F1(jtmag   ){CHECKSSING(w,jtssmag) R va1(w,CSTILEva1);}
+F1(jtfact  ){CHECKSSING(w,jtssfact) R va1(w,CBANGva1 );}
+F1(jtpix   ){CHECKSSING(w,jtsspix) R XNUM&AT(w)&&(jt->xmode==XMFLR||jt->xmode==XMCEIL)?va1(w,CCIRCLEva1):tymes(pie,w);}
 
 extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self){R va2(a,w,self);}  // put in this module so compiler doesn't know it's recursive

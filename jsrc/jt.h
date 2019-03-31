@@ -300,6 +300,12 @@ union {
   B    nla[256];         /* namelist names mask                             */
   I    nlt;              /* namelist type  mask                             */
  } namelist;
+ struct {
+  I    oflondx;  // index at which overflow happened
+ } ceilfloor;
+ struct {
+  I    postflags;  // what to do with the result
+ } compsc;
 #if (SYS & SYS_UNIX)
  C    dirnamebuf[NPATH];/* for directory search                            */
 #endif

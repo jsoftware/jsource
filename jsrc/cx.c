@@ -130,7 +130,7 @@ static DF2(jtxdefn){PROLOG(0048);
 
  A savloc=jt->local;  // stack area for local symbol table pointer; must set before we set new symbol table
  A locsym;  // local symbol table
- UC savdebug = jt->uflags.us.cx.cx_c.db; // preserve debug state over calls - this remembers starting debug state
+ UC savdebug; // preserve debug state over calls - this remembers starting debug state.  Needed only if there is a try. stack
 
  I isdyad=(I )(a!=0)&(I )(w!=0);   // avoid branches, and relieve pressure on a and w
  DC thisframe=0;   // if we allocate a parser-stack frame, this is it
@@ -175,16 +175,14 @@ static DF2(jtxdefn){PROLOG(0048);
       jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1];  // install info about the exec
      }
     }
-    // Allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.  We have to have 1 debug
-    // frame to hold parse-error information in.
-    RZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
+
     // With debug on, we will save pointers to the sentence being executed in the stack frame we just allocated
     // We will keep cxspecials set as long as savdcy is 0, i. e. in all levels where debug was set at the start of the frame
     jt->cxspecials=1;
    }
 
-   // If the verb contains try., allocate a try-stack area for it
-   if(sv->flag&VTRY1+VTRY2){A td; GAT(td,INT,NTD*WTD,1,0); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td);}
+   // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
+   if(sv->flag&VTRY1+VTRY2){A td; GAT(td,INT,NTD*WTD,1,0); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
   }
   // End of unusual processing
 
@@ -213,7 +211,8 @@ static DF2(jtxdefn){PROLOG(0048);
 
  FDEPINC(1);   // do not use error exit after this point; use BASSERT, BGA, BZ
  // remember tnextpushx.  We will tpop after every sentence to free blocks.  Do this AFTER any memory
- // allocation that has to remain throughout this routine
+ // allocation that has to remain throughout this routine.
+ // If the user turns on debugging in the middle of a definition, we will raise old when he does
  I old=jt->tnextpushx;
 
  // Push parser-related information.  Since we call the parse repeatedly from this level we move pushes to here rather than doing them for each parse
@@ -234,13 +233,22 @@ static DF2(jtxdefn){PROLOG(0048);
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
+   if(!thisframe&&lk<=0&&jt->uflags.us.cx.cx_c.db){
+    // If we haven't done so already, allocate an area to use for the SI entries for sentences executed here, if needed.  We need a new area only if we are debugging.
+    // We have to have 1 debug frame to hold parse-error information in, but it is allocated earlier if debug is off
+    // We check before every sentence in case the user turns on debug in the middle of this definition
+    // NOTE: this stack frame could be put on the C stack, but that would reduce the recursion limit because the frame is pretty  big
+    BZ(thisframe=deba(DCPARSE,0L,0L,0L));  // if deba fails it will be before it modifies sitop.  Remember our stack frame
+    old=jt->tnextpushx;  // protect the stack frame against free
+   }
+
    i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
    if(!((UI)i<(UI)n))break;  // if it jumped out of the function, exit
 
    // if performance monitor is on, collect data for it
    if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
    // If the executing verb was reloaded during debug, switch over to the modified definition
-   if(jt->redefined){DC siparent;A *hv;
+   if(thisframe&&jt->redefined){DC siparent;A *hv;
     if((siparent=thisframe->dclnk)&&jt->redefined==siparent->dcn&&DCCALL==siparent->dctype&&self!=siparent->dcf){
      self=siparent->dcf; V *sv=FAV(self); LINE(sv); siparent->dcc=hv[1];
      // Clear all local bucket info in the definition, since it doesn't match the symbol table now
@@ -259,12 +267,14 @@ static DF2(jtxdefn){PROLOG(0048);
     // try.  create a try-stack entry, step to next line
     BASSERT(tdi<NTD,EVLIMIT);
     tryinit(tdv+tdi,i,cw);
-    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=(UC)(tdv+tdi)->d?jt->dbuser:DBTRY;
-    ++tdi; ++i; 
+    // turn off debugging UNLESS there is a catchd; then turn on only if user set debug mode
+    // if debugging is already off, it stays off
+    if(jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=thisframe&&(UC)(tdv+tdi)->d?jt->dbuser:/* obsolete DBTRY*/0;
+    ++tdi; ++i;
     break;
    case CCATCH: case CCATCHD: case CCATCHT:
     // catch.  pop the try-stack, go to end., reset debug state.  There should always be a try. stack here
-    if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug; i=1+(tdv+tdi)->e;}else i=ci->go; break;
+    if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug; i=1+(tdv+tdi)->e;}else i=ci->go; break;
    case CTHROW:
     // throw.  Create a faux error
     BASSERT(0,EVTHROW);
@@ -275,7 +285,7 @@ static DF2(jtxdefn){PROLOG(0048);
     // if there is no error, or ?? debug mode, step to next line
     if(z||!jt->jerr){
      bi=i,++i;
-    }else if(jt->uflags.us.cx.cx_c.db&(DB1|DBERRCAP)){  // if debug mode, we assume we are ready to execute on
+    }else if(thisframe&&jt->uflags.us.cx.cx_c.db&(DB1/* obsolete |DBERRCAP*/)){  // if debug mode, we assume we are ready to execute on
      bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any it is OK to have jerr set if we are in debug mode
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
@@ -286,7 +296,7 @@ static DF2(jtxdefn){PROLOG(0048);
     // with the for./select. structures hanging on.  Solution would be to save the for/select stackpointer in the
     // try. stack, so that when we go to the catch. we can cut the for/select stack back to where it
     // was when the try. was encountered
-    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug;}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
+    }else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;}}  // z might not have been protected: keep it safe. This is B1 try. error catch. return. end.
     }
     break;
    case CASSERT:
@@ -299,9 +309,9 @@ static DF2(jtxdefn){PROLOG(0048);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
     if(t||!jt->jerr)ti=i,++i;  // if no error, continue on
-    else if(DB1==jt->uflags.us.cx.cx_c.db||DBERRCAP==jt->uflags.us.cx.cx_c.db)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug, go to new line if any
+    else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db/* obsolete ||DBERRCAP==jt->uflags.us.cx.cx_c.db*/)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug, go to new line if any
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
-    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
+    else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.
     break;
    case CFOR:
@@ -365,6 +375,7 @@ static DF2(jtxdefn){PROLOG(0048);
    case CRETURN:
     // return.  Protect the result during free, pop the stack back to empty, set i (which will exit)
     i=ci->go;   // If there is a try stack, restore to initial debug state.  Probably safe to  do unconditionally
+    if(tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;  // if we had an unfinished try. struct, restore original debug state
     break;
    case CCASE:
    case CFCASE:
@@ -433,12 +444,12 @@ static DF2(jtxdefn){PROLOG(0048);
   }else {pee(line,&cw[bi],EVNONNOUN,lk,callframe); z=0;}  // signal error, set z to 'no result'
  }else{
   // No result.  Must be an error
+  if(tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;  // if we had an unfinished try. struct, restore original debug state
   // Since we initialized z to i. 0 0, there's nothing more to do
  }
 
  jt->parserqueue = savqueue; jt->parserqueuelen = savqueuelen;  // restore error info for the caller
  if(thisframe){debz();}   // pair with the deba if we did one
- if(savdebug!=jt->uflags.us.cx.cx_c.db)jt->uflags.us.cx.cx_c.db=savdebug;  // preserve original debug state.  to avoid messing up write forwarding, write only if changed
  if(!cd){
   // Normal path.  protect the result block and free everything allocated here, possibly including jt->local
   z=EPILOGNORET(z);  // protect return value from being freed when the symbol table is.  Must also be before stack cleanup, in case the return value is xyz_index or the like

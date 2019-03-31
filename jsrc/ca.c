@@ -121,8 +121,9 @@ static DF2(atcomp){AF f;A z;
  RZ(a&&w); 
  f=atcompf(a,w,self);
  if(f){
-  z=((AF)((I)f&~3))(jt,a,w,self);
-  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+  I postflags=jt->workareas.compsc.postflags;
+  z=f(jt,a,w,self);
+  if(z){if(postflags&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^(postflags&1)];}}
  }else z=upon2(a,w,self);
  RETF(z);
 }
@@ -132,8 +133,9 @@ static DF2(atcomp0){A z;AF f;
  f=atcompf(a,w,self);
  PUSHCCT(1.0)
  if(f){
-  z=((AF)((I)f&~3))(jt,a,w,self);
-  if(z){if((I)f&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^((I)f&1)];}}
+  I postflags=jt->workareas.compsc.postflags;
+  z=f(jt,a,w,self);
+  if(z){if(postflags&2){z=num[(IAV(z)[0]!=(AR(a)>=AR(w)?AN(a):AN(w)))^(postflags&1)];}}
  }else z=upon2(a,w,self);
  RETF(z);
 }

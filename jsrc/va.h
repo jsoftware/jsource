@@ -159,7 +159,8 @@ typedef struct {VA2 p1[6];} UA;
  y    pointer to w      atoms
 */
 
-#define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DO(n, {stmt} ++z; ++x;);}
+#define AMON(f,Tz,Tx,stmt)      AHDR1(f,Tz,Tx){DQ(n, {stmt} ++z; ++x;);}
+#define AMONPS(f,Tz,Tx,prefix,stmt,suffix)      AHDR1(f,Tz,Tx){prefix DQ(n, {stmt} ++z; ++x;) suffix}
 
 #define AIFX(f,Tz,Tx,Ty,symb)  \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                            \

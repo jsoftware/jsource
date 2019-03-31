@@ -165,11 +165,11 @@ I jdo(J jt, C* lp){I e,old;A x;
  if(!jt->jerr)immex(x);
  e=jt->jerr;
  if(savcallstack==0)CALLSTACKRESET jt->jerr=0;
- if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
-  jt->uflags.us.cx.cx_c.db=0;
-  immex(jt->dbtrap);
-  if(savcallstack==0)CALLSTACKRESET jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
- }
+// obsolete  if(e&&DBERRCAP==jt->uflags.us.cx.cx_c.db&&jt->dbtrap){
+// obsolete   jt->uflags.us.cx.cx_c.db=0;
+// obsolete   immex(jt->dbtrap);
+// obsolete   if(savcallstack==0)CALLSTACKRESET jt->jerr=0;  // whenever we call immex from console level we reset the callstack in case the user tried something that can't be completed, like deleting the running locale
+// obsolete  }
  while(jt->iepdo&&jt->iep){jt->iepdo=0; immex(jt->iep); if(savcallstack==0)CALLSTACKRESET jt->jerr=0; tpop(old);}
  showerr();
  spfree();

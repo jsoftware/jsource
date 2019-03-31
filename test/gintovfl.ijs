@@ -139,7 +139,7 @@ x      *  CI xi imin >.@% x: x=: 1+20 ?@$ 10
 x      *  CI xi imin >.@% x: x=: 1+100 ?@$ 100
 
 imax   *. CI 1,q: imax 
-imin   *. CI <. 2^ 10 ?@$ IF64{30 62
+imin   *. CI <. 1 (33 b.)~ 10 ?@$ IF64{30 62  NB. ^ did not always produce an exact power of 2
 
 imax   |  EI imin
 imin   |  EI imax
@@ -195,6 +195,8 @@ x   +/ .* E y  [ x=: 4 1 1 1  2 (?7)}7 5 ?@$ 100 [ y=: (0  0 0  0,imax) (<a:;?11
 x   +/ .* E y  [ x=: 4 1 1 1  1 (?7)}7 5 ?@$ 100 [ y=: (0 _1 0 _1,imin) (<a:;?11)}5 11 ?@$ 100
 x   +/ .* E y  [ x=: 4 1 1 1 _1 (?7)}7 5 ?@$ 100 [ y=: (0  0 0  0,imin) (<a:;?11)}5 11 ?@$ 100
 
+8 = 3!:0 | imin,imin,imax,i. 3
+((imax+1),(imax+1),imax,0 1 2) -:!.0 | imin,imin,imax,i. 3
 
 NB. integers overflowing into doubles, asm routines ---------------------
 

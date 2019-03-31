@@ -24,6 +24,47 @@ _ __ -: <. _ __
 0 < <.   2 ^ 31 63
 0 > <. - 2 ^ 31 63
 
+NB. tolerance cases, singleton & otherwise
+
+f =: 3 : 0
+ints =. i: 5
+fracs =. (, -) (1 % 16b40000000) % (20+i.6) (33 b.) 1
+assert. ints (<.@:(+/) -: ([ - ([ > +/) ))"0/ fracs
+assert. ints (<.@:(+/) -: ([ - ([ > +/) )) fracs
+assert. 0 0 -: <. 1 % _ __
+1
+)
+f ''
+f =: 3 : 0"0
+ints =. i: 5
+fracs =. (, -) (1 % 16b40000000) % (20+i.6) (33 b.) 1
+assert. ints (<.!.y@:(+/) -: ([ - ([ >!.y +/) ))"0/ fracs
+assert. ints (<.!.y@:(+/) -: ([ - ([ >!.y +/) )) fracs
+assert. 0 0 -: <.!.y 1 % _ __
+1
+)
+
+f 0 , 2^_35 _44 _48
+NB. Now >.
+f =: 3 : 0
+ints =. i: 5
+fracs =. (, -) (1 % 16b40000000) % (20+i.6) (33 b.) 1
+assert. ints (>.@:(+/) -: ([ + ([ < +/) ))"0/ fracs
+assert. ints (>.@:(+/) -: ([ + ([ < +/) )) fracs
+assert. 0 0 -: >. 1 % _ __
+1
+)
+f ''
+f =: 3 : 0"0
+ints =. i: 5
+fracs =. (, -) (1 % 16b40000000) % (20+i.6) (33 b.) 1
+assert. ints (>.!.y@:(+/) -: ([ + ([ <!.y +/) ))"0/ fracs
+assert. ints (>.!.y@:(+/) -: ([ + ([ <!.y +/) )) fracs
+assert. 0 0 -: >.!.y 1 % _ __
+1
+)
+f 0 , 2^_35 _44 _48
+
 
 NB. <.z complex floor ---------------------------------------------------
 
@@ -90,6 +131,6 @@ NB. symbol
 'length error' -: (i.3 4) <. etx i.5 4 
 'length error' -: (i.3 4) <.~etx i.5 4 
 
-4!:55 ;:'a b inc ir p q x y zfl zfloor '
+4!:55 ;:'a b f inc ir p q x y zfl zfloor '
 
 

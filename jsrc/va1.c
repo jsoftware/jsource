@@ -7,22 +7,41 @@
 #include "ve.h"
 
 
+#if BW==64
+static AMONPS(floorDI,I,D,
+ D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
+ {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I neg=((*(UI*)x)-(*(UI*)x>>(BW-1)))>>(BW-1); *z=(I)(*x*mplrs[neg])-neg;}  // -0 is NOT neg
+  else{D d=tfloor(*x); if(d!=(I)d){jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; R;} *z=(I)d;}} ,
+ ; )  // x100 0011 0001 =>2^50
+#else
 static AMON(floorDI,I,D, {D d=tfloor(*x); *z=(I)d; ASSERTW(d==*z,EWOV);})
+#endif
 static AMON(floorD, D,D, *z=tfloor(*x);)
 static AMON(floorZ, Z,Z, *z=zfloor(*x);)
 
+#if BW==64
+static AMONPS(ceilDI,I,D,
+ D mplrs[2]; mplrs[0]=2.0-jt->cct; mplrs[1]=jt->cct-0.00000000000000011; ,
+ {if((*(UI*)x&0x7fffffffffffffff)<0x4310000000000000){I pos=((-*(UI*)x)-(-*(UI*)x>>(BW-1)))>>(BW-1); *z=(I)(*x*mplrs[pos])+pos;}  // 0 is NOT pos
+  else{D d=tceil(*x); if(d!=(I)d){jt->workareas.ceilfloor.oflondx=n+~i; jt->jerr=EWOV; R;} *z=(I)d;}} ,
+ ; )  // x100 0011 0001 =>2^50
+#else
 static AMON(ceilDI, I,D, {D d=tceil(*x);  *z=(I)d; ASSERTW(d==*z,EWOV);})
+#endif
 static AMON(ceilD,  D,D, *z=tceil(*x);)
 static AMON(ceilZ,  Z,Z, *z=zceil(*x);)
 
 static AMON(cjugZ,  Z,Z, *z=zconjug(*x);)
 
-static AMON(sgnI,   I,I, *z=SGN(*x);)
-static AMON(sgnD,   I,D, *z=(1.0-jt->cct)>ABS(*x)?0:SGN(*x);)
+// obsolete static AMON(sgnI,   I,I, *z=SGN(*x);)
+static AMON(sgnI,   I,I, I xx=*x; *z=(xx>>(BW-1))|(((UI)-xx)>>(BW-1));)
+// obsolete static AMON(sgnD,   I,D, *z=(1.0-jt->cct)>ABS(*x)?0:SGN(*x);)
+static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
 
 static AMON(sqrtI,  D,I, ASSERTW(0<=*x,EWIMAG); *z=sqrt((D)*x);)
-static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
+// obsolete static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
+static AMON(sqrtD,  D,D, if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); jt->jerr=EWIMAG;})  // if input is negative, leave sqrt as negative
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)
@@ -35,12 +54,17 @@ static AMON(logI,   D,I, ASSERTW(0<=*x,EWIMAG); *z=log((D)*x);)
 static AMON(logD,   D,D, ASSERTW(0<=*x,EWIMAG); *z=log(   *x);)
 static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
-static AMON(absI,   I,I, if(0<=*x)*z=*x; else{ASSERTW(IMIN<*x,EWOV); *z=-*x;})
+// obsolete static AMON(absI,   I,I, if(0<=*x)*z=*x; else{ASSERTW(IMIN<*x,EWOV); *z=-*x;})
+static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^(val>>(BW-1)))-(val>>(BW-1)); vtot |= val; *z=val; , if(vtot<0)jt->jerr=EWOV;)
+#if BW==64
+static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
+#else
 static AMON(absD,   D,D, *z= ABS(*x);)
+#endif
 static AMON(absZ,   D,Z, *z=zmag(*x);)
 
 static AHDR1(oneB,C,C){memset(z,C1,n);}
-static AHDR1(idf ,C,C){}  /* dummy */
+// obsolete static AHDR1(idf ,C,C){}  /* dummy */
 
 #define CFLOORva1 0
 #define CCEILva1 1
@@ -57,14 +81,14 @@ static AHDR1(idf ,C,C){}  /* dummy */
 #define VIP64 ((VIPOKW*(sizeof(I)==sizeof(D))))  // inplace if D is same length as I
 
 static UA va1tab[]={
- /* <. */ {{{ idf,VB}, {  idf,VI}, {floorDI,VI}, {floorZ,VZ}, {  idf,VX}, {floorQ,VX}}},
- /* >. */ {{{ idf,VB}, {  idf,VI}, { ceilDI,VI}, { ceilZ,VZ}, {  idf,VX}, { ceilQ,VX}}},
- /* +  */ {{{ idf,VB}, {  idf,VI}, {    idf,VD}, { cjugZ,VZ}, {  idf,VX}, {   idf,VQ}}},
- /* *  */ {{{ idf,VB}, { sgnI,VI}, {   sgnD,VI}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}}},
- /* %: */ {{{ idf,VB}, {sqrtI,VD}, {  sqrtD,VD}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}}},
- /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}}},
+ /* <. */ {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}}},
+ /* >. */ {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}}},
+ /* +  */ {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}}},
+ /* *  */ {{{ 0,VB}, { sgnI,VI+VIP}, {   sgnD,VI+VIP64}, {  sgnZ,VZ}, { sgnX,VX}, {  sgnQ,VX}}},
+ /* %: */ {{{ 0,VB}, {sqrtI,VD}, {  sqrtD,VD+VIP}, { sqrtZ,VZ}, {sqrtX,VX}, { sqrtQ,VQ}}},
+ /* ^  */ {{{expB,VD}, { expI,VD}, {   expD,VD+VIP}, {  expZ,VZ}, { expX,VX}, {  expD,VD+VDD}}},
  /* ^. */ {{{logB,VD}, { logI,VD}, {   logD,VD}, {  logZ,VZ}, { logX,VX}, { logQD,VD}}},
- /* |  */ {{{ idf,VB}, { absI,VI}, {   absD,VD}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}}},
+ /* |  */ {{{ 0,VB}, { absI,VI+VIP}, {   absD,VD+VIP}, {  absZ,VD}, { absX,VX}, {  absQ,VQ}}},
  /* !  */ {{{oneB,VB}, {factI,VD}, {  factD,VD}, { factZ,VZ}, {factX,VX}, { factQ,VX}}},
  /* o. */ {{{  0L,0L}, {   0L,0L}, {     0L,0L}, {    0L,0L}, { pixX,VX}, {    0L,0L}}}
 };
@@ -110,7 +134,8 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
  }else{
   m=!(wt&XNUM+RAT);
   switch(VA1CASE(jt->jerr,id)){
-   default:     R 0;
+   default:     R 0;  // unknown type - impossible
+   // all these cases are needed because sparse code may fail over to them
    case VA1CASE(EWOV,  CFLOORva1): cv=VD;       ado=floorD;               break;
    case VA1CASE(EWOV,  CCEILva1 ): cv=VD;       ado=ceilD;                break;
    case VA1CASE(EWOV,  CSTILEva1): cv=VD+VDD;   ado=absD;                 break;
@@ -118,20 +143,33 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
    case VA1CASE(EWIRR, CEXPva1  ): cv=VD+VDD;   ado=expD;                 break;
    case VA1CASE(EWIRR, CBANGva1 ): cv=VD+VDD;   ado=factD;                break;
    case VA1CASE(EWIRR, CLOGva1  ): cv=VD+VDD*m; ado=m?(VF)logD:(VF)logXD; break;
-   case VA1CASE(EWIMAG,CSQRTva1 ): cv=VZ+VZZ;   ado=sqrtZ;                break;
-   case VA1CASE(EWIMAG,CLOGva1  ): cv=VZ+VZZ*m; ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;
+   case VA1CASE(EWIMAG,CSQRTva1 ): cv=VZ+VZZ;   ado=sqrtZ;                break;  // this case remains because singleton code fails over to it
+   case VA1CASE(EWIMAG,CLOGva1  ): cv=VZ+VZZ*m; ado=m?(VF)logZ:wt&XNUM?(VF)logXZ:(VF)logQZ;   // singleton code fails over to this too
   }
   RESETERR;
  }
- if(ado==idf)R w;  // if function is identity, return arg
+ if(ado==0)R w;  // if function is identity, return arg
  if(b)R va1s(w,id,cv,ado);  // branch off to do sparse
  // from here on is dense va1
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable
  if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
  ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
- if(jt->jerr)R NEVM<jt->jerr?va1(w,id):0; // if recoverable error, recur to do recovery; if other error, fail
- else    {RETF(cv&VRI+VRD?cvz(cv,z):z);}  // if no error, convert the result if necessary
+ if(jt->jerr){
+  // There was an error.  If it is recoverable in place, handle the cases here
+  // integer abs: convert everything to float, changing IMIN to IMAX+1
+  if(ado==absI){RESETERR; A zz=z; if(VIP64){MODBLOCKTYPE(zz,FL)}else{GATV(zz,FL,n,AR(z),AS(z))}; I *zv=IAV(z); D *zzv=DAV(zz); DQ(n, if(*zv<0)*zzv=-(D)*zv;else*zzv=(D)*zv; ++zv; ++zzv;) RETF(zz);}
+  // float sqrt: reallocate as complex, scan to make positive results real and negative ones imaginary
+  if(ado==sqrtD){RESETERR; A zz; GATV(zz,CMPX,n,AR(z),AS(z)); D *zv=DAV(z); Z *zzv=ZAV(zz); DQ(n, if(*zv>=0){zzv->re=*zv;zzv->im=0.0;}else{zzv->im=-*zv;zzv->re=0.0;} ++zv; ++zzv;) RETF(zz);}
+  // float floor: copy everything that was successfully converted, converting to float; then floor the rest as float
+  if(VIP64&&ado==floorDI){RESETERR; A zz=z; MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(jt->workareas.ceilfloor.oflondx, *zzv++=(D)*zv++;)
+   D *wv=DAV(w)+jt->workareas.ceilfloor.oflondx; DQ(n-jt->workareas.ceilfloor.oflondx, *zzv++=tfloor(*wv++);) RETF(zz);}
+  // float ceil, similarly
+  if(VIP64&&ado==ceilDI){RESETERR; A zz=z; MODBLOCKTYPE(zz,FL) I *zv=IAV(z); D *zzv=DAV(zz); DQ(jt->workareas.ceilfloor.oflondx, *zzv++=(D)*zv++;)
+   D *wv=DAV(w)+jt->workareas.ceilfloor.oflondx; DQ(n-jt->workareas.ceilfloor.oflondx, *zzv++=tceil(*wv++);) RETF(zz);}
+  // not recoverable in place.  If recoverable with a retry, do the retry; otherwise fail
+  R NEVM<jt->jerr?va1(w,id):0; // if recoverable error, recur to do recovery; if other error, fail
+ }else    {RETF(cv&VRI+VRD?cvz(cv,z):z);}  // if no error, convert the result if necessary
 }
 
 

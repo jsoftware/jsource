@@ -663,21 +663,22 @@ AF jtatcompf(J jt,A a,A w,A self){I m;
   // split m into search and comparison
   I search=m>>3; I comp=m&7;
   // Change +./ to i.&1, *./ to i.&0; save flag bits to include in return address
-  I postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
+  jt->workareas.compsc.postflags=(0xc0>>search)&3; search=(0x0143210>>(search<<2))&15;  // flags: 00 00 00 00 00 10 11, rev/overlap to 11000000   search: 0 1 2 3 4 1 0
   // Change i.&1@:comp to i.&0@:compx, sim for i:  XOR comp with 000 001 000 110 000 110
   comp^=(0x606010>>(((search&1)+(comp&6))<<2))&7; search>>=1;  // complement comp if search is i&1; then the only search values are 0, 2, 4 so map them to 012.  Could reorder compares to = ~: < >: > <: to save code here
   if(!((AT(a)|AT(w))&(NOUN&~(INT+FL+B01)))){
    // numeric types that we can handle here, for sure
-   R (AF)((I)atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)]+postflags);
+   R atcompxy[6*9*search+9*comp+3*(AT(a)>>INTX)+(AT(w)>>INTX)];
   }
   // Other types have a chance only if they are equal types; fetch from the appropriate table then
-  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){m=(I)(AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp];R m?(AF)(m+postflags):0;}
+  if((AT(a)&AT(w)&(LIT+C2T+C4T+SBT))){R (AT(a)&LIT?atcompC:AT(a)&C2T?atcompUS:AT(a)&C4T?atcompC4:atcompSB)[6*search+comp];}
 // obsolete   else if(at&LIT&&wt&LIT)         f=atcompC[m];
 // obsolete   else if(at&C2T&&wt&C2T)         f=atcompUS[m];
 // obsolete   else if(at&C4T&&wt&C4T)         f=atcompC4[m];
 // obsolete  else if(at&SBT&&wt&SBT)         f=atcompSB[m];
   R 0;
  }else{  // e./E.
+  jt->workareas.compsc.postflags=0;
   if((AR(a)|AR(w))>1){if(!(m&1)||AR(a)>(AR(w)?AR(w):1))R0;}  // some rank > 1, fail if E. or e. returns rank>1
   R atcompX[((m>>2)&~1)+(m&1)];  // choose i.-family routine
  }

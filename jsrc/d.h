@@ -7,8 +7,8 @@
 /* jt->uflags.us.cx.cx_c.db and jt->dbuser values; 0 means no debug                           */
 
 #define DB1         1       /* full debug                                   */
-#define DBERRCAP    2       /* stack error info capture                     */
-#define DBTRY       4       /* full debug & try/catch in effect (db only)   */
+// obsolete #define DBERRCAP    2       /* stack error info capture                     */
+// obsolete #define DBTRY       4       /* full debug & try/catch in effect (db only)   */
 
 
 /* jt->dbsusact values:                                                     */

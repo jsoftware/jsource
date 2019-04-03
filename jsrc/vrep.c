@@ -126,7 +126,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  // We retain the old block as long as the new one is at least half as big, without looking at total size of the allocation,
  // This could result in a very small block's remaining in a large allocation after repeated trimming.  We will accept the risk.
  // Accept only DIRECT blocks so we don't have to worry about explicitly freeing uncopied cells
- if(!(((I)jtinplace&(((UI)(m-2*p))>>((BW-1)-JTINPLACEWX))) && ASGNINPLACENJA(w) && AT(w)&DIRECT)) {
+ if(!(((I)jtinplace&(((UI)(m-2*p))>>((BW-1)-JTINPLACEWX))) && ASGNINPLACE(w) && AT(w)&DIRECT)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   GA(z,AT(w),zn,AR(w),AS(w));  // allocate result

@@ -377,8 +377,9 @@ typedef I SI;
 #define ACINCR(a)       if(!ACISPERM(AC(a)))(AC(a)=(AC(a)+1)&~ACINPLACE)
 #define ACX(a)          {AC(a)=ACPERMANENT;}
 #define ACISPERM(c)     (((c)+(c))<0)  // is PERMANENT bit set?
-#define ASGNINPLACE(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)==1&&!(AFLAG(w)&AFRO)&&notonupperstack(w)))  // OK to inplace ordinary operation
-#define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
+#define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+// obsolete #define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
+#define ASGNINPLACENJA(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE

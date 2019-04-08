@@ -20,7 +20,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  RZ(y=fromr(grade1(indexof(a,a1)),SPA(wp,i)));
  RZ(q=grade1(y));
  SPB(zp,i,from(q,y));
- SPB(zp,x,from(q,canta(over(num[0],increm(grade1(less(a,a1)))),SPA(wp,x))));
+ SPB(zp,x,from(q,canta(over(zeroionei[0],increm(grade1(less(a,a1)))),SPA(wp,x))));
  R z;
 }    /* w is sparse */
 
@@ -35,7 +35,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
   }while(j>=0); \
  }
 
-// a[i] is the axis of the result that axis i of w contributes to - known to be valid
+// a[i] is the axis of the result that axis i of w contributes to - known to be valid and INT type
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
 static F2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
@@ -112,6 +112,6 @@ F2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(av[i]); DO(k,pv[*v++]=j;); if(k)++j;);
  }else p=pinv(pfill(r,a));
- A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta
+ A z= r<AR(w) ? irs2(p,w,0L,1L,r,jtcanta) : canta(p,w);  // Handle rank for a - w is in canta.  p is now INT type
  RZ(z);  RETF(z);
 }    /* a|:"r w main control */ 

@@ -430,7 +430,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Because the Boolean dyads write beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI):(NORMAH*SZI+SZI) : (NORMAH*SZI)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
-#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms))))  // # bytes to allocate
+#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))))  // # bytes to allocate
 #define ALLOBLOCK(n) ((n)<=2*PMIN?((n)<=PMIN?PMINL:PMINL+1) : (n)<=8*PMIN?((n)<=4*PMIN?PMINL+2:PMINL+3) : (n)<=32*PMIN?PMINL+4:IMIN)   // lg2(#bytes to allocate)
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
@@ -453,7 +453,7 @@ extern unsigned int __cdecl _clearfp (void);
  AR(name)=(RANKT)(rank);     \
  /*if(type&SPARSE)SEGFAULT scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
- else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
+ else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x0101010101010101 /* scaf */; }     \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE)\
 
@@ -469,7 +469,7 @@ extern unsigned int __cdecl _clearfp (void);
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
   /*if(type&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
-  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=0; }     \
+  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x0101010101010101 /* scaf */; }     \
  }else{erraction;} \
 }
 
@@ -516,6 +516,8 @@ extern unsigned int __cdecl _clearfp (void);
 #define JTIPW           ((J)((I)jt|JTINPLACEW))
 #define JTIPEX1(name,arg) jt##name(JTIPW,arg)   // like name(arg) but inplace
 #define JTIPEX1S(name,arg,self) jt##name(JTIPW,arg,self)   // like name(arg,self) but inplace
+#define JTIPAEX2(name,arga,argw) jt##name(JTIPA,arga,argw)   // like name(arga,argw) but inplace on a
+#define JTIPAEX2S(name,arga,argw,self) jt##name(JTIPA,arga,argw,self)   // like name(arga,argw,self) but inplace on a
 #define MAX(a,b)        ((a)>(b)?(a):(b))
 #define MC              memcpy
 #define MCL(dest,src,n) memcpy(dest,src,n)  // use when copy is expected to be long

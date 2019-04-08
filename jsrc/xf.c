@@ -235,7 +235,7 @@ F1(jtjmkdir){A y,z;
 #if (SYS & SYS_UNIX)
  R mkdir(CAV(y),0775)?jerrno():num[1];
 #else
- RZ(z=toutf16x(y));
+ RZ(z=toutf16x(y)); USAV(z)[AN(z)]=0;  // install termination
  R _wmkdir(USAV(z))?jerrno():num[1];
 #endif
 }
@@ -253,7 +253,7 @@ F1(jtjferase){A y,fn;US*s;I h;
  R !unlink(CAV(y))||!rmdir(CAV(y))?num[1]:jerrno();
 #endif
 #else
- RZ(fn=toutf16x(y));
+ RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=USAV(fn);
 // #if SY_WIN32 && !SY_WINCE
 #if 0
@@ -292,7 +292,7 @@ F1(jtpathchdir){A z;
 #if (SYS & SYS_UNIX)
  ASSERT(!chdir(CAV(w)),EVFACE);
 #else
- RZ(z=toutf16x(w));
+ RZ(z=toutf16x(w)); USAV(z)[AN(z)]=0;  // install termination
  _wchdir(USAV(z));
 #endif
  R mtv;
@@ -309,12 +309,12 @@ F1(jtjgetenv){
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(w)))?cstr(s):num[0];
+  R(s=getenv(CAV(str0(w))))?cstr(s):num[0];
  }
 #else
  {
   A z; US* us;
-  RZ(z=toutf16x(w));
+  RZ(z=toutf16x(w)); USAV(z)[AN(z)]=0;  // install termination
   us=_wgetenv(USAV(z));
   if(!us)R num[0];
   GATV(z,C2T,wcslen(us),1,0);

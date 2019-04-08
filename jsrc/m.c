@@ -964,7 +964,7 @@ RESTRICTF A jtga(J jt,I type,I atoms,I rank,I* shaape){A z;
   // because COPYSHAPE will always write one shape value, we have to delay the memset to handle the case of rank 0 with atoms (used internally only)
   if(!(type&DIRECT))memset((C*)z+akx,C0,bytes-akx);  // For indirect types, zero the data area.  Needed in case an indirect array has an error before it is valid
     // All non-DIRECT types have items that are multiples of I, so no need to round the length
-  else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=0;}  // We allocated a full SZI for the trailing NUL, because the
+  else if(type&LAST0){((I*)((C*)z+((bytes-SZI)&(-SZI))))[0]=(I)0x0101010101010101 /* scaf */;}  // We allocated a full SZI for the trailing NUL, because the
      // code for boolean verbs needs it.  We set the whole last SZI bytes to 0, so that we can be sure that a boolean can be interpreted as an INT using IAV(x)[0] 
 // obsolete if((1==rank&&type&SPARSE&&shaape) || (type&SPARSE && atoms && !(type&XZ)))
 // obsolete  SEGFAULT  // scaf

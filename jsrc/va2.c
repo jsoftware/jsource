@@ -462,6 +462,13 @@ VA2F(vasfx,psfx, plussfxO,minussfxO,tymessfxO)
 #define xnumpri 0x998B998AU   // we use shift to select 4-bit sections
 
 extern A jtva2recur(J jt, AD * RESTRICT a, AD * RESTRICT w, AD * RESTRICT self);
+#if 0 // for debug, to display info about a sparse block
+if(AT(a)&SPARSE){
+printf("va2a: shape="); A spt=a; DO(AR(spt), printf(" %d",AS(spt)[i]);) printf("\n"); //scaf
+printf("va2a: axes="); spt=SPA(PAV(spt),a); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n"); 
+printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n");
+}
+#endif
 
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, id
 // is the pseudocharacter indicating what operation is to be performed

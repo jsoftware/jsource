@@ -350,11 +350,11 @@ F1(jtlocnc){A*wv,y,z;C c,*u;I i,m,n,*zv;
  RZ(vlocnl(0,w));
  n=AN(w); wv=AAV(w); 
  GATV(z,INT,n,AR(w),AS(w)); zv=AV(z);
- if(AT(w)&(INT|B01)/C_LE){IAV(z)[0]=findnl(IAV(w)[0])?1:-1; RETF(z);}
+ if(AT(w)&(INT|B01)){IAV(z)[0]=findnl(BIV0(w))?1:-1; RETF(z);}
  for(i=0;i<n;++i){
   y=wv[i];
-  if(!AR(y)&&AT(y)&((INT|B01)/C_LE)){  // atomic numeric locale
-   zv[i]=findnl(IAV(y)[0])?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
+  if(!AR(y)&&AT(y)&((INT|B01))){  // atomic numeric locale
+   zv[i]=findnl(BIV0(y))?1:-1;  // OK because the boxed value cannot be virtual, thus must have padding
   }else{
    // string locale, whether number or numeric
    m=AN(y); u=CAV(y); c=*u; 
@@ -386,10 +386,10 @@ F2(jtlocnl2){UC*u;
 }    /* 18!:1 locale name list */
 
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
- if(!AR(w) && AT(w)&(INT|B01)/C_LE)R (b?jtstfindcre:jtstfind)(jt,-1,0,IAV(w)[0]);  // atomic integer is OK
+ if(!AR(w) && AT(w)&(INT|B01))R (b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w));  // atomic integer is OK
  RZ(vlocnl(1,w));
  wv=AAV(w); 
- DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&((INT|B01)/C_LE)?-1:AN(y),CAV(y),AT(y)&((INT|B01)/C_LE)?IAV(y)[0]:BUCKETXLOC(AN(y),CAV(y)))))R 0;);
+ DO(AN(w), y=AT(w)&BOX?AAV(w)[i]:sc(IAV(w)[i]); if(!(g=(b?jtstfindcre:jtstfind)(jt,AT(y)&((INT|B01))?-1:AN(y),CAV(y),AT(y)&((INT|B01))?BIV0(y):BUCKETXLOC(AN(y),CAV(y)))))R 0;);
  R g;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale */
 
@@ -404,7 +404,7 @@ F2(jtlocpath2){A g; AD * RESTRICT x;
  if(AN(a))RZ(  locale(1,a)); RZ(x=every(ravel(a),0L,jtravel));  // Don't audit empty a
  RZ(g=locale(1,w));
  // paths are special: the shape of each string holds the bucketx for the string.  Install that.
- AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01)/C_LE)?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)  // ? why so many copies?  test before thorn1 not reqd
+ AD * RESTRICT z; RZ(z=ca(x)); DO(AN(x), A t; RZ(t=ca(AT(AAV(x)[i])&((INT|B01))?thorn1(AAV(x)[i]):AAV(x)[i]));  AS(t)[0]=BUCKETXLOC(AN(t),CAV(t)); AAV(z)[i]=t;)  // ? why so many copies?  test before thorn1 not reqd
  fa(LOCPATH(g)); ras(z); LOCPATH(g)=z;
  ++jt->modifiercounter;  // invalidate any extant lookups of modifier names
  R mtm;
@@ -496,14 +496,15 @@ static SYMWALK(jtredefg,B,B01,100,1,1,RZ(redef(mark,d)))
 
 F1(jtlocexmark){A g,*wv,y,z;B *zv;C*u;I i,m,n;L*v;
  RZ(vlocnl(1,w));
+ if(AT(w)&B01)RZ(w=cvt(INT,w));  // Since we have an array, we must convert b01 to INT
  n=AN(w); wv=AAV(w); 
  GATV(z,B01,n,AR(w),AS(w)); zv=BAV(z);
  for(i=0;i<n;++i){
   g=0;
-  if(AT(w) & ((INT|B01)/C_LE)){zv[i]=1; g = findnl(IAV(w)[i]);
+  if(AT(w) & (INT)){zv[i]=1; g = findnl(IAV(w)[i]);
   }else{
    zv[i]=1; y=wv[i];
-   if(AT(y)&((INT|B01)/C_LE)){g = findnl(IAV(y)[0]);
+   if(AT(y)&(INT|B01)){g = findnl(BIV0(y));
    }else{
     m=AN(y); u=CAV(y);
     if('9'>=*u){g = findnl(strtoI10s(m,u));}

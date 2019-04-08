@@ -942,7 +942,7 @@ static B jtcdexec1(J jt,CCT*cc,C*zv0,C*wu,I wk,I wt,I wd){A*wv=(A*)wu,x,y,*zv;B 
 #elif defined(C_CD_ARMHF)
   if((fcnt>16||dcnt>16)&&dv-data==4)dv=data+MAX(fcnt,dcnt)-12;  /* v0 to v15 fully filled before x0 to x3 */
 #endif
-  per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);
+  per=DEPARM+i*256; star=cc->star[i]; c=cc->tletter[i]; t=cdjtype(c);  // c is type in the call, t is the J type for that.  star in the *& qualifier
   if(wt&BOX){
    x=wv[i]; xt=AT(x); xn=AN(x); xr=AR(x);
    CDASSERT(!xr||star,per);         /* non-pointers must be scalars */
@@ -1101,7 +1101,8 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  if(1<AR(a))R rank2ex(a,w,0L,1L,1L,1L,1L,jtcd);
  wt=AT(w); wr=AR(w); ws=AS(w); m=wr?prod(wr-1,ws):1;
  ASSERT(wt&DENSE,EVDOMAIN);
- RZ(cc=cdparse(a,0)); // should do outside rank2 loop?
+ ASSERT(LIT&AT(a),EVDOMAIN);
+ C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;
  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
  if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); *(AS(z)+AR(z)-1)=1+n;}
@@ -1184,7 +1185,7 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
  ASSERT(1==AR(w),EVRANK);
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
- m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
+ m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);  // m=length in items; t=type to create; u=address to read from
  ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  if(-1==m){
   ASSERT(t&LIT+C2T+C4T,EVDOMAIN);
@@ -1225,7 +1226,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 }    /* 15!:2  memory write */
 
 // 15!:15 memu - make a copy of y if it is not inplaceable
-F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); RETF(w); }
+F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bp(AT(w))]=0;  RETF(w); }  // scaf for zero testing
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}
@@ -1384,7 +1385,8 @@ F1(jtcdproc1){CCT*cc;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
  if(!jt->cdarg)RE(cdinit());
- RE(cc=cdparse(w,1));
+ C* enda=&CAV(w)[AN(w)]; C endc=*enda; *enda=0; cc=cdparse(w,1); *enda=endc; RE(cc); // should do outside rank2 loop?
+// obsolete  RE(cc=cdparse(w,1));
  R sc((I)cc->fp);
 }    /* 15!:21 return proc address */
 

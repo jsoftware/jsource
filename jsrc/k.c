@@ -360,7 +360,7 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
  }
 }
 
-// clear rank before calling ccvt - needed for sparse arrays only
+// clear rank before calling ccvt - needed for sparse arrays only but returns the block as the result
 A jtcvt(J jt,I t,A w){A y;B b; 
  RANK2T oqr=jt->ranks; RESETRANK; b=ccvt(t,w,&y); jt->ranks=oqr;
  ASSERT(b,EVDOMAIN);

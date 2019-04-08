@@ -121,7 +121,7 @@ F1(jtfullname){C*s; C dirpath[1000];
 F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
  F1RANK(0,jtjfperm1,0);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
- RZ(fn=toutf16x(y));
+ RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  p=USAV(fn); q=p+AN(fn)-3;
  GAT(z,LIT,3,1,0); s=CAV(z);
  x=_waccess(p,R_OK); if(0>x)R jerrno();
@@ -135,7 +135,7 @@ F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
  F2RANK(1,0,jtjfperm2,0);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
  RZ(a=vs(a)); ASSERT(3==AN(a),EVLENGTH); 
- RZ(fn=toutf16x(y));
+ RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=CAV(y);
  p=USAV(fn);;
  s=CAV(a);
@@ -208,15 +208,15 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
 F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffer[10000]; C* name;
  RZ(w);
  RZ(w=vs(!AR(w)&&BOX&AT(w)?ope(w):w));
- RZ(fn=jttoutf16x(jt,w));
+ RZ(fn=jttoutf16x(jt,w)); USAV(fn)[AN(fn)]=0;
  fh=FindFirstFileW(USAV(fn),&f);
- GATV(z,BOX,n,1,0); zv=AAV(z);
+ GATV(z,BOX,n,1,0); zv=AAV(z);  // allocate result area
  if (fh!=INVALID_HANDLE_VALUE) {
   do {
    jttoutf8x(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
    name = fnbuffer;
-   if(strcmp(name,".")&&strcmp(name,"..")){
-    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}
+   if(strcmp(name,".")&&strcmp(name,"..")){  // do not inckude . and .. as results
+    if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}  // if result area full, extend
     RZ(zv[j++]=rifvs(jtdir1(jt,&f,fnbuffer))); 
    }
   } while (FindNextFileW(fh,&f));
@@ -229,7 +229,7 @@ F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C f
 F1(jtjfatt1){A y,fn;F f;U x;
  F1RANK(0,jtjfatt1,0);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
- RZ(fn=toutf16x(y));
+ RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  x=GetFileAttributesW(USAV(fn));
  if(-1!=x) R attv(x);
  jsignal(EVFNAME); R 0; 
@@ -239,7 +239,7 @@ F2(jtjfatt2){A y,fn;F f;U x;
  F2RANK(1,0,jtjfatt2,0);
  RE(x=attu(a));
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
- RZ(fn=toutf16x(y));
+ RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  if(SetFileAttributesW(USAV(fn), x)) R num[1];
  jsignal(EVFNAME); R 0;
 }

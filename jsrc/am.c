@@ -239,7 +239,7 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
 // Result *cellframelen gives the number of axes of w that have been boiled down to indices in the result
 static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr,*ws;
  wr=AR(w); ws=AS(w); b=AN(ind)&&BOX&AT(ind);  // b=indexes are boxed and nonempty
- if(!wr){RZ(x=from(ind,num[0])); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
+ if(!wr){x=from(ind,zeroionei[0]); *cellframelen=0; R x;}  // if w is an atom, the best you can get is indexes of 0.  No axes are used
  if(b&&AR(ind)){   // array of boxed indexes
   RE(aindex(ind,w,0L,&j));  // see if the boxes are homogeneous
   if(!j){  // if not...

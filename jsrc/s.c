@@ -317,12 +317,12 @@ static A jtlocindirect(J jt,I n,C*u,UI4 hash){A x,y;C*s,*v,*xv;I k,xn;
   ASSERTN(e,EVVALUE,nfs(k,v));  // verify found
   y=e->val;    // y->A block for locale
   ASSERTN(!AR(y),EVRANK,nfs(k,v));   // verify atomic
-  if(AT(y)&((INT|B01)/C_LE)){g=findnl(IAV(y)[0]); ASSERT(g,EVLOCALE);  // if atomic integer, look it up
+  if(AT(y)&(INT|B01)){g=findnl(BIV0(y)); ASSERT(g,EVLOCALE);  // if atomic integer, look it up
   }else{
    ASSERTN(BOX&AT(y),EVDOMAIN,nfs(k,v));  // verify box
-   x=AAV0(y); if(!AR(x)&&AT(x)&((INT|B01)/C_LE)) {
+   x=AAV0(y); if(!AR(x)&&AT(x)&(INT|B01)) {
     // Boxed integer - use that as bucketx
-    g=findnl(IAV(x)[0]); ASSERT(g,EVLOCALE);  // boxed integer, look it up
+    g=findnl(BIV0(x)); ASSERT(g,EVLOCALE);  // boxed integer, look it up
    }else{
     xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
     ASSERTN(1>=AR(x),EVRANK,nfs(k,v));   // verify list (or atom)

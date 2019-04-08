@@ -250,16 +250,20 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has assignsym set, will inplace only the last append
  // This is 'loose' inplacing, which doesn't scruple about globals appearing on the stack elsewhere
  // Allow only DIRECT and BOX types, to simplify usecounting
- if((((I)jtinplace&JTINPLACEA) && ASGNINPLACENJA(a)) && AT(a)&(DIRECT|BOX)) {I an=AN(a);
+ I virtreqd=0;  // the inplacing test sets this if the result must be virtual
+ // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
+ // would push a over a power-of-2 boundary, skip  the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
+ if((((I)jtinplace&JTINPLACEA) && EXTENDINPLACENJA(a,w)) && AT(a)&(DIRECT|BOX)) {I an=AN(a);
   // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
   // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
-  // crawl through w looking for a; but then we would still need to know whether w is NOSMREL so we could set the NOSMREL flag correctly in the result.
-  // So, we simply convert w to recursive-usecount.  This may take some time if w is complex, but it will (1) get the NOSMREL flag right (2) increment the
+  // crawl through w looking for a.
+  // Instead, we simply convert w to recursive-usecount.  This may take some time if w is complex, but it will (1) increment the
   // usecount of a if any part of w refers to a (3) make the eventual incrementing of usecount in a quicker.  After we have resolved w we see if the usecount of a has budged.  If not, we can proceed with inplacing.
   if(AT(a)&BOX){
    I oldac = ACUC(a);  // remember original UC of a
    ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
    if(AC(a)>oldac)an = 0;  // turn off inplacing if w referred to a
+   an&=virtreqd-1;  // turn off inplacing if the result must be virtual
   }
 
   // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
@@ -307,11 +311,19 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
-     // Update the # items in a, and the # atoms, and append the NUL byte if that's called for
-     AS(a)[0]+=wm; AN(a)+=wn; if(AT(a)&LAST0)*(av+wk)=0;
-     // if a has recursive usecount, increment the usecount of the added data - including any fill
-     // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
-     if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ras(aav[i]);)}
+     if(AT(a)&LAST0)*(av+wk)=0;   // append the NUL byte if that's called for
+     // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
+     if(!virtreqd){
+      // Normal append-in-place.
+      // Update the # items in a, and the # atoms
+      AS(a)[0]+=wm; AN(a)+=wn;
+      // if a has recursive usecount, increment the usecount of the added data - including any fill
+      // convert wn to be the number of indirect pointers in the added data (RAT types have 2, the rest have 1)
+      if(UCISRECUR(a)){wn*=k>>LGSZI; A* aav=(A*)av; DO(wn, ras(aav[i]);)}
+     }else{
+      // virtual extension.  Allocate a virtual block, which will extend past the original block.  Fill in AN and AS for the block
+      A oa=a; RZ(a=virtual(a,0,AR(a))); AN(a)=AN(oa)+wn; AS(a)[0]=AS(oa)[0]+wm; MCISH(&AS(a)[1],&AS(oa)[1],AR(oa)-1);
+     }
      RETF(a);
     }
    }

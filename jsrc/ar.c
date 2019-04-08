@@ -685,10 +685,11 @@ DF1(jtmean){
  I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;
  I n=r?AS(w)[wr-r]:1;
  // leave jt->ranks unchanged to pass into +/
- A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
+A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RESETRANK;  // back to infinite rank for the divide
  RZ(sum);
- RETF(JTIPEX1S(divide,sum,sc(n)));  // take quotient inplace and return it
+ RZ(w=JTIPAEX2(divide,sum,sc(n)));  // take quotient inplace and return it
+ RETF(w);
 #if 0 // obsolete
  if(!(wn&&2<n&&wt&INT+FL))R divide(df1(w,qq(slash(ds(CPLUS)),sc(r))),sc(n));
  // there must be atoms, so it's OK to PROD infixes of shape

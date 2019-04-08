@@ -166,7 +166,7 @@ typedef I SI;
 #define C4AV(x)         ((C4*)((C*)(x)+AK(x)))  /* literal4                */
 #define NAV(x)          ((NM*)((C*)(x)+AKXR(1)))  // name, which is always allocated as rank 1, for some reason
 #define IAV(x)          AV(x)                   /* integer                 */
-#define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated list (rank 0 - used for internal tables)
+#define IAV0(x)         ((I*)((C*)(x)+AKXR(0)))  // integer in a stack- or heap-allocated atom (rank 0 - used for internal tables)
 #define IAV1(x)         ((I*)((C*)(x)+AKXR(1)))  // integer in a stack- or heap-allocated list (rank 1)
 #define BAV0(x)         ( (C*)((C*)(x)+AKXR(0)) )  // Boolean when rank is 0 - fixed position (known to avoid segfault)
 #define LXAV0(x)        ( (LX*)((C*)(x)+AKXR(0)) )  // Integer when rank is 0 - fixed position (for SYMB tables)
@@ -183,6 +183,9 @@ typedef I SI;
 #define voidAV(x)       ((void*)((C*)(x)+AK(x)))  // unknown
 
 #define AAV0(w) AAV(w)[0]
+#if C_LE
+#define BIV0(w) (IAV(w)[0]&(1-(AT(w)>>1)))  // the first (presumably only) value in w, when w is an INT or B01 type
+#endif
 
 /* Types for AT(x) field of type A                                         */
 /* Note: BOOL name conflict with ???; SCHAR name conflict with sqltypes.h  */
@@ -380,6 +383,10 @@ typedef I SI;
 #define ASGNINPLACE(w)  (ACIPISOK(w) || AC(w)==1&&jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
 // obsolete #define ASGNINPLACENJA(w)  (ASGNINPLACE(w)||(AC(w)==2&&AFLAG(w)&AFNJA))   // OK to inplace, for ops that have special support for NJA blocks
 #define ASGNINPLACENJA(w)  (ACIPISOK(w) || jt->assignsym&&jt->assignsym->val==w&&(AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&!(AFLAG(w)&AFRO)&&notonupperstack(w))  // OK to inplace ordinary operation
+// define virtreqd and set it to 0 to start   scaf no LIT B01 C2T etc
+// This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
+// obsolete #define EXTENDINPLACENJA(w)  (ACIPISOK(a) || (AC(w)==1||(AC(w)==2&&AFLAG(w)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==w&&!(AFLAG(w)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(w)&(AFRO|AFVIRTUAL)))))&&notonupperstack(w))  // OK to inplace ordinary operation
+#define EXTENDINPLACENJA(a,w)  ( ((AC(a)&(((AN(a)+AN(w))^AN(a))-AN(a)))<0) || (AC(a)==1||(AC(a)==2&&AFLAG(a)&AFNJA))&&((jt->assignsym&&jt->assignsym->val==a&&!(AFLAG(a)&AFRO))||(!jt->assignsym&&(virtreqd=1,!(AFLAG(a)&(AFRO|AFVIRTUAL)))))&&notonupperstack(a))  // OK to inplace ordinary operation
 
 /* Values for AFLAG(x) field of type A                                     */
 // the flags defined here must be mutually exclusive with TRAVERSIBLE

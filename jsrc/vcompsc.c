@@ -118,7 +118,7 @@
 
 #define JNDBR(yy)      if(r&&(y=yy))DO(r, if(yv[r-1-i])R sc(n-1-i););
 
-#define ASSIGNX(v)     {x=*v; x|=x<<8; x|=x<<16; x|=x<<(32&(BW-1)); }
+#define ASSIGNX(v)     {x=*(C*)v; x|=x<<8; x|=x<<16; x|=x<<(32&(BW-1)); }
 #define INDB3          R sc(       i*SZI+(CTTZI(y)>>LGBB) );
 #define JNDB3          {UI4 bitno; CTLZI(y,bitno); R sc(n-1-(r+i*SZI+SZI-1-(bitno>>LGBB)));}
 // obsolete #if SY_64

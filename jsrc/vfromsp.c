@@ -9,8 +9,10 @@
 static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*xv;I an,*av,c,d,
      h=0,i,*iv,j,*jv,k,m,n,*pv,*qu,*qv,r,s,*u,*v,xk,*yu,*yv;P*wp,*zp;  // init h to stifle warning
  zp=PAV(z); wp=PAV(w); r=AR(ind); n=AN(ind); 
- a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});
- y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));
+ // figure the axes of the result.  wf is the number of axes before the axis of the selection, i. e. the axis number of the selection.
+ // That axis is replaced by axes coming from the shape of ind.  Set h to the index of the sparse axis that is being selected on
+ a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});  // an=#sparse axes
+ y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));  // (h{"_ 1 indexes) e. ,ind
  GATV(a1,INT,r+an-1,1,0); v=AV(a1); SPB(zp,a,a1);
  k=av[h]; u=av; DO(h, *v++=*u++;); DO(r, *v++=k++;); u++; DO(an-1-h, *v++=*u+++r-1;);
  if(!r) 
@@ -49,12 +51,14 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*z
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
  if(af)R rank2ex(a,w,0L,acr,wcr,acr,wcr,jtfromis);
  wn=AN(w); ws=AS(w); wt=AT(w);
- RZ(ind=pind(wcr?*(ws+wf):1,a));
+ RZ(ind=pind(wcr?*(ws+wf):1,a));  // ind is the INT list of indexes being selected
+ // Allocate the result, which has one axis for each axis of a, and one for each axis of w EXCEPT the selection axis - unless the selection rank is 0, which isn't really an axis
  GASPARSE(z,wt,1,ar+wr-(I )(0<wcr),ws); v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
  zp=PAV(z); wp=PAV(w); SPB(zp,e,ca(SPA(wp,e)));
  RZ(a=ca(SPA(wp,a))); av=AV(a); an=AN(a);
- RZ(b=bfi(wr,a,1));
- if(b[wf])R fromis1(ind,w,z,wf);
+ RZ(b=bfi(wr+1,a,1));  // get boolean mask with a 1 for every axis that is sparse
+ if(b[wf])R fromis1(ind,w,z,wf);  // if the selection is along a sparse axis, go do it
+ // selection is along a dense axis...
  m=wcr; DO(wcr, m-=b[wf+i];); RZ(x=irs2(ind,SPA(wp,x),0L,ar,m,jtifrom));
  if(k=ar-1)DO(an, if(av[i]>=wf)av[i]+=k;);
  if(AR(z)){SPB(zp,a,a); SPB(zp,x,x); SPB(zp,i,ca(SPA(wp,i))); R z;}

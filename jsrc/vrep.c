@@ -130,7 +130,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
   GA(z,AT(w),zn,AR(w),AS(w));  // allocate result
-   zvv=voidAV(z);  // point to the output area
+  zvv=voidAV(z);  // point to the output area
  }else{
   z=w; // inplace
   if(m==p)R z;  // if all the bits are 1, we can return very quickly.  It's rare, but so cheap to test for.

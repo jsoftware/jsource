@@ -295,6 +295,23 @@ IGNOREIFFVI 2000 > 7!:2 'a =: a , <b'
 IGNOREIFFVI 40000 < 7!:2 'a =: a , <a'  NB. Would loop, not inplace
 IGNOREIFFVI 40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
 
+NB. Verify that virtual extension inplaces
+a =: i. 1e6
+2000 > 7!:2 '_5 {. a , _1'
+a -: i. 1e6
+999996 999997 999998 999999 _1 -: _5 {. a , _1
+NB. float
+a =: 0.5 + i. 1e5
+2000 > 7!:2 '_5 {. a , _1'
+a -: 0.5 + i. 1e5
+99996.5 99997.5 99998.5 99999.5 _1 -: _5 {. a , _1
+NB. Not boxed
+a =: <"0 i. 1e5
+2000 < 7!:2 '_5 {. a , a:'
+a -: <"0 i. 1e5
+NB. Not extended
+a =: i. 100000x
+2000 < 7!:2 '_5 {. a , _1'
 
 NB. Verify no local-to-global aliasing
 f10 =: 3 : 'a =. a , 8'
@@ -505,7 +522,9 @@ NB. u@v
 IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
 9!:53 (0)
 a =: 10000#'c'
-IGNOREIFFVI 3000 < 7!:2 'a =: {.@(({.''b'') ,~ ]) a'
+IGNOREIFFVI 5000 < 7!:2 'a =: ]@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then realized
+a =: 10000#'c'
+IGNOREIFFVI 5000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then truncated
 a =: 10000#'c'
 IGNOREIFFVI 3000 < 7!:2 'a =: a ]@, ''b'''
 
@@ -526,7 +545,9 @@ NB. u@:v
 IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
 9!:53 (0)
 a =: 10000#'c'
-IGNOREIFFVI 3000 < 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
+IGNOREIFFVI 5000 < 7!:2 'a =: ]@:(({.''b'') ,~ ]) a'
+a =: 10000#'c'
+IGNOREIFFVI 5000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
 a =: 10000#'c'
 IGNOREIFFVI 3000 < 7!:2 'a =: a ]@:, ''b'''
 
@@ -547,14 +568,14 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@< 5 ,~ ]) a'  NB. realize any virtual block
 
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&(5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&([: >@< 5 ,~ ]) a'
 a =: i. 1000
-assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&(5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&([: >@< 5 ,~ unsafename) a'
 1
 )
 f''
@@ -565,13 +586,13 @@ a =: i. 1000
 0 1 2 3 4 -: ($0) {.&:(5 ,~ ]) a
 9!:53 (0)
 a =: i. 1000
-IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
+IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ ]) a'
 f =: 3 : 0
 9!:53 (1)
 a =: i. 1000
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:(5 ,~ ]) a'
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ ]) a'
 a =: i. 1000
-assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:(5 ,~ unsafename) a'
+assert. IGNOREIFFVI 3000 < 7!:2 'a =: ($0) {.&:([: >@< 5 ,~ unsafename) a'
 1
 )
 f''

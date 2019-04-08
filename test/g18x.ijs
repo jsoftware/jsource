@@ -34,6 +34,7 @@ t=: 18!:30 <'base'
 NB. 18!:31 y ------------------------------------------------------------
 
 pcheck=: 3 : 0
+ if. 13!:17'' do. 1 return. end.   NB. parameters not applicable when dbr 1
  yy=: y
  assert. ((,3)-:$y) *. 32=type y
  'p a s'=. y

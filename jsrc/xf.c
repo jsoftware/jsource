@@ -246,12 +246,7 @@ F1(jtjferase){A y,fn;US*s;I h;
  if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=AAV0(w),EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
-#if 0
- if(access(CAV(y), F_OK )){R !unlink(CAV(y))?num[1]:jerrno();} /* rmdir2 cannot raise error on non-exist file */
- else {R !unlink(CAV(y))||!rmdir(CAV(y))||!rmdir2(CAV(y))?num[1]:jerrno();}
-#else
- R !unlink(CAV(y))||!rmdir(CAV(y))?num[1]:jerrno();
-#endif
+ A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num[1]:jerrno();
 #else
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=USAV(fn);

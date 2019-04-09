@@ -261,10 +261,6 @@ F1(jtjferase){A y,fn;US*s;I h;
 
 F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
  ASSERTMTV(w);
-#if SY_WINCE
- &path;&wpath; /* avoid compiler warnings */
- R cstr("\\");
-#else
 #if (SYS & SYS_UNIX)
  ASSERT(getcwd(path,NPATH),EVFACE);
 #else
@@ -272,7 +268,6 @@ F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
  jttoutf8x(jt,path,NPATH,wpath);
 #endif
  R cstr(path);
-#endif
 }
 
 F1(jtpathchdir){A z;
@@ -280,22 +275,17 @@ F1(jtpathchdir){A z;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
  ASSERT(LIT&AT(w),EVDOMAIN);
-#if SY_WINCE
- &z; /* avoid compiler warning */
- ASSERT(0,EVFACE);
-#else
 #if (SYS & SYS_UNIX)
- ASSERT(!chdir(CAV(w)),EVFACE);
+ ASSERT(!chdir(CAV(str0(w))),EVFACE);
 #else
  RZ(z=toutf16x(w)); USAV(z)[AN(z)]=0;  // install termination
  _wchdir(USAV(z));
 #endif
  R mtv;
-#endif
 }
 
 #if SY_WINCE
-#define _wgetenv(s)		(0)
+#define _wgetenv(s)  (0)
 #endif
 
 F1(jtjgetenv){

@@ -295,7 +295,7 @@ A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}  // scala
 A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); RETF(z);}
 
 // w is a LIT string; result is a new block with the same string, with terminating NUL added
-F1(jtstr0){A z;C*x;I n; RZ(w); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
+F1(jtstr0){A z;C*x;I n; RZ(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
 A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; RETF(z);}

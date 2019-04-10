@@ -373,7 +373,7 @@ F2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 F1(jtjfperm1){A y;F f;C b[11];
  F1RANK(0,jtjfperm1,0);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=str0(AAV0(w)),EVFNUM)
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(AAV0(w)),EVFNUM)
  if(0!=stat(CAV(y),&jt->dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(jt->dirstatbuf.st_mode,b));
 }
@@ -393,7 +393,7 @@ static struct tperms {C*c;I p[4];} permtab[]=
 
 F2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
  F2RANK(1,0,jtjfperm2,0);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=str0(AAV0(w)),EVFNUM)
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(AAV0(w)),EVFNUM)
  RZ(a=vs(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);
  for(i=0;i<9;i++)
     {ASSERT(NULL!=(m=strchr(permtab[i].c,s[i])),EVDOMAIN);

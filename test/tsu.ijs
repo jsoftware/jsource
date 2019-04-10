@@ -347,8 +347,19 @@ tsu_usage=: 0 : 0
    Debug=: 1   NB. run test suite in debug mode
 )
 
+tsu_jd=: 0 : 0
+Jd tests require updated addons
+   load'pacman'
+   'update'jpkg''
+   'install'jpkg'all'
+NB. if new base library - shutdown and restart
+   load'jd'
+   jdtests_jd_''
+NB. report failures to Eric or Bill Lam
+)
+
 echo 0 : 0
-see tsu_notes for caveats and tsu_usage for details
+see tsu_notes for caveats, tsu_usage for details, and tsu_jd for jdtests
 
    RUN  ddall  NB. report scripts that fail
    RECHO ddall NB. echo script names as run and final count of failures

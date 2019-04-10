@@ -179,7 +179,7 @@ I jdo(J jt, C* lp){I e,old;A x;
 
 #define SZINT             ((I)sizeof(int))
 
-C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); (CAV(y))[AN(y)]=0; R CAV(y);}
+C* getlocale(J jt){A y=locname(mtv); y=*AAV(y); y=str0(y); (CAV(y))[AN(y)]=0; R CAV(y);}
 
 DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   F1PREFIP;

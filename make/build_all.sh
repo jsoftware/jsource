@@ -2,7 +2,9 @@
 # build all binaries
 cd ~
 
-$jmake/install.sh
+# install.sh should only be done for clean install
+# pacman may have update base library and addons
+# $jmake/install.sh
 
 $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64

@@ -89,7 +89,7 @@ static A jtattv(J jt,U x){A z;C*s;
 }    /* convert from 16-bit attributes x into 6-element string */
 
 static S jtattu(J jt,A w){C*s;I i,n;S z=0;
- RZ(w=vs(w)); 
+ RZ(w=vslit(w)); 
  n=AN(w); s=CAV(w);
  for(i=0;i<n;++i)switch(s[i]){
   case 'r': z^=_A_RDONLY; break;
@@ -105,7 +105,7 @@ static S jtattu(J jt,A w){C*s;I i,n;S z=0;
 }    /* convert from 6-element string into 16-bit attributes */
 
 F1(jtfullname){C*s; C dirpath[1000];
- RZ(w=str0(w));
+ RZ(w=str0(vslit(w)));
  s=CAV(w); DO(AN(w), if(' '!=*s)break; ++s;);
 #if SY_WINCE
  if(*s=='\\'||*s=='/') strcpy(dirpath,s);
@@ -134,7 +134,7 @@ F1(jtjfperm1){A y,fn,z;C *s;F f;int x; US *p,*q;
 F2(jtjfperm2){A y,fn;C*s;F f;int x=0;US *p;
  F2RANK(1,0,jtjfperm2,0);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
- RZ(a=vs(a)); ASSERT(3==AN(a),EVLENGTH); 
+ RZ(a=vslit(a)); ASSERT(3==AN(a),EVLENGTH); 
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  s=CAV(y);
  p=USAV(fn);;
@@ -207,13 +207,13 @@ static A jtdir1(J jt,LPWIN32_FIND_DATAW f,C* fn) {A z,*zv;C rwx[3],*s,*t;I n,ts[
 
 F1(jtjdir){PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW f; C fnbuffer[10000]; C* name;
  RZ(w);
- RZ(w=vs(!AR(w)&&BOX&AT(w)?ope(w):w));
+ RZ(w=vslit(!AR(w)&&BOX&AT(w)?ope(w):w));
  RZ(fn=jttoutf16x(jt,w)); USAV(fn)[AN(fn)]=0;
  fh=FindFirstFileW(USAV(fn),&f);
  GATV(z,BOX,n,1,0); zv=AAV(z);  // allocate result area
  if (fh!=INVALID_HANDLE_VALUE) {
   do {
-   jttoutf8x(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
+   jttoutf8w(jt,fnbuffer,sizeof fnbuffer,f.cFileName);
    name = fnbuffer;
    if(strcmp(name,".")&&strcmp(name,"..")){  // do not inckude . and .. as results
     if(j==n){RZ(z=ext(0,z)); n=AN(z); zv=AAV(z);}  // if result area full, extend
@@ -238,7 +238,7 @@ F1(jtjfatt1){A y,fn;F f;U x;
 F2(jtjfatt2){A y,fn;F f;U x;
  F2RANK(1,0,jtjfatt2,0);
  RE(x=attu(a));
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=AAV0(w),EVFNUM)
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=vslit(AAV0(w)),EVFNUM)
  RZ(fn=toutf16x(y)); USAV(fn)[AN(fn)]=0;  // install termination
  if(SetFileAttributesW(USAV(fn), x)) R num[1];
  jsignal(EVFNAME); R 0;
@@ -343,7 +343,7 @@ static A jtdir1(J jt,struct dirent*f){A z,*zv;C*s,att[16];I n,ts[6],i,m,sz;S x;s
 
 F1(jtjdir){PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struct dirent *f;
  RZ(w);
- RZ(w=str0(vs(!AR(w)&&BOX&AT(w)?ope(w):w)));
+ RZ(w=str0(vslit(!AR(w)&&BOX&AT(w)?ope(w):w)));
  s=CAV(w);
  if(x=strrchr(s,'/')){dir=s==x?(C*)"/":s; pat=x+1; *x=0;}else{dir="."; pat=s;}
  if(NULL==(DP=opendir(dir)))R reshape(v2(0L,6L),ace);
@@ -373,7 +373,7 @@ F2(jtjfatt2){ASSERT(0,EVNONCE);}
 
 F1(jtjfperm1){A y;F f;C b[11];
  F1RANK(0,jtjfperm1,0);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(AAV0(w)),EVFNUM)
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(AAV0(w))),EVFNUM)
  if(0!=stat(CAV(y),&jt->dirstatbuf))R jerrno();
  R vec(LIT,9L,1+modebuf(jt->dirstatbuf.st_mode,b));
 }
@@ -393,8 +393,8 @@ static struct tperms {C*c;I p[4];} permtab[]=
 
 F2(jtjfperm2){A y;C*s;F f;int x=0,i;C*m;
  F2RANK(1,0,jtjfperm2,0);
- RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(AAV0(w)),EVFNUM)
- RZ(a=vs(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);
+ RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(AAV0(w))),EVFNUM)
+ RZ(a=vslit(a)); ASSERT(9==AN(a),EVLENGTH); s=CAV(a);
  for(i=0;i<9;i++)
     {ASSERT(NULL!=(m=strchr(permtab[i].c,s[i])),EVDOMAIN);
      x|=permtab[i].p[m-permtab[i].c];}

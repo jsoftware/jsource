@@ -36,7 +36,7 @@ I jtfnum(J jt,A w){A y;I h,j;
  y=AAV0(w);
  ASSERT(AN(y),EVLENGTH);
  if(AT(y)&B01+INT){ASSERT(h=i0(y),EVFNUM); R h;}
- RE(j=i0(indexof(vec(BOX,jt->fopn,AAV(jt->fopa)),box(fullname(vs(y)))))); 
+ RE(j=i0(indexof(vec(BOX,jt->fopn,AAV(jt->fopa)),box(fullname(vslit(y)))))); 
  R j<jt->fopn?*(j+AV(jt->fopf)):0;
 }    /* file# corresp. to standard argument w */
 
@@ -55,7 +55,7 @@ F1(jtjfiles){A y;
 F jtjope(J jt,A w,C*mode){A t;F f;I n;static I nf=25; A z;
  RZ(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
- RZ(t=str0(vs(AAV0(w))));
+ RZ(t=str0(vslit(AAV0(w))));
  n=AN(t)-1;
  ASSERT(n,EVLENGTH);
 #if (SYS&SYS_UNIX)
@@ -97,7 +97,7 @@ F1(jtjopen){A z;I h;
  else{A ww;
   if(jt->fopn==AN(jt->fopf)){RZ(jt->fopa=ext(1,jt->fopa)); RZ(jt->fopf=ext(1,jt->fopf));}
   RZ(*(jt->fopn+IAV(jt->fopf))=h=(I)jope(w,FUPDATE_O));
-  RZ(ww=fullname(AAV0(w))); RZ(ras(ww));
+  RZ(ww=fullname(vslit(AAV0(w)))); RZ(ras(ww));
   RZ(*(jt->fopn+AAV(jt->fopa))=ww);
  
   ++jt->fopn;
@@ -135,7 +135,7 @@ F jtstdf(J jt,A w){A y;F f;I n,r,t;
  ASSERT(!AR(w),EVRANK);
  if(BOX&AT(w)){
   y=AAV0(w); t=AT(y); n=AN(y); r=AR(y);
-  if(t&LIT){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); R 0;}
+  if(t&(LIT+C2T+C4T)){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); R 0;}
 /*!
   if(t&C2T){ASSERT(1>=r,EVRANK); ASSERT(n,EVLENGTH); ASSERT(vc1(n,USAV(y)),EVDOMAIN); R 0;}
      vc1 can now be killed off

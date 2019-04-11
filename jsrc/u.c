@@ -341,3 +341,7 @@ F1(jtvip){I*v; RZ(w); if(!(INT&AT(w)))RZ(w=cvt(INT,w)); v=AV(w); DO(AN(w), ASSER
 // Convert w to string, verify it is a list or atom
 F1(jtvs){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:cvt(LIT,w);}    
      /* verify string */
+
+// Convert w to utf8 string, verify it is a list or atom
+F1(jtvslit){RZ(w); ASSERT(1>=AR(w),EVRANK); R LIT&AT(w)?w:(C2T+C4T)&AT(w)?toutf8(w):cvt(LIT,w);}    
+     /* verify string */

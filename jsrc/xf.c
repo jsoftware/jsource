@@ -231,7 +231,7 @@ static B rmdir(C*v){R!rmdir1(v);}
 F1(jtjmkdir){A y,z;
  F1RANK(0,jtjmkdir,0);
  ASSERT(AT(w)&BOX,EVDOMAIN);
- RZ(y=str0(vs(AAV0(w))));
+ RZ(y=str0(vslit(AAV0(w))));
 #if (SYS & SYS_UNIX)
  R mkdir(CAV(y),0775)?jerrno():num[1];
 #else
@@ -243,7 +243,7 @@ F1(jtjmkdir){A y,z;
 F1(jtjferase){A y,fn;US*s;I h;
  F1RANK(0,jtjferase,0);
  RE(h=fnum(w));
- if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=AAV0(w),EVFNUM);
+ if(h) {RZ(y=str0(fname(sc(h))))} else ASSERT(y=vslit(AAV0(w)),EVFNUM);
  if(h)RZ(jclose(sc(h)));
 #if (SYS&SYS_UNIX)
  A y0=str0(y); R !unlink(CAV(y0))||!rmdir(CAV(y0))?num[1]:jerrno();
@@ -265,7 +265,7 @@ F1(jtpathcwd){C path[1+NPATH];US wpath[1+NPATH];
  ASSERT(getcwd(path,NPATH),EVFACE);
 #else
  ASSERT(_wgetcwd(wpath,NPATH),EVFACE);
- jttoutf8x(jt,path,NPATH,wpath);
+ jttoutf8w(jt,path,NPATH,wpath);
 #endif
  R cstr(path);
 }
@@ -274,11 +274,11 @@ F1(jtpathchdir){A z;
  RZ(w);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
- ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
 #if (SYS & SYS_UNIX)
- ASSERT(!chdir(CAV(str0(w))),EVFACE);
+ ASSERT(!chdir(CAV(toutf8x(w))),EVFACE);
 #else
- RZ(z=toutf16x(w)); USAV(z)[AN(z)]=0;  // install termination
+ RZ(z=toutf16x(toutf8(w))); USAV(z)[AN(z)]=0;  // install termination
  _wchdir(USAV(z));
 #endif
  R mtv;
@@ -290,16 +290,16 @@ F1(jtpathchdir){A z;
 
 F1(jtjgetenv){
  F1RANK(1,jtjgetenv,0);
- ASSERT(LIT&AT(w),EVDOMAIN);
+ ASSERT((LIT+C2T+C4T)&AT(w),EVDOMAIN);
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(str0(w))))?cstr(s):num[0];
+  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num[0];
  }
 #else
  {
   A z; US* us;
-  RZ(z=toutf16x(w)); USAV(z)[AN(z)]=0;  // install termination
+  RZ(z=toutf16x(toutf8(w))); USAV(z)[AN(z)]=0;  // install termination
   us=_wgetenv(USAV(z));
   if(!us)R num[0];
   GATV(z,C2T,wcslen(us),1,0);

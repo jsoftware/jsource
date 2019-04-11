@@ -41,7 +41,7 @@ F1(jthostne){ASSERT(0,EVDOMAIN);}
 
 F1(jthost){A z;
  F1RANK(1,jthost,0);
- RZ(w=vs(w));
+ RZ(w=vslit(w));
 // #if SY_WINCE
 #if SY_WINCE || SY_WIN32
  ASSERT(0,EVDOMAIN);
@@ -52,7 +52,7 @@ F1(jthost){A z;
  const char*ftmp=getenv("TMPDIR");  /* android always define TMPDIR in jeload */
 #endif
  n=AN(w);
- GATV(t,LIT,n+5+L_tmpnam,1,0); s=CAV(t);
+ GATV(t,LIT,n+5+L_tmpnam+1,1,0); s=CAV(t);  // +1 for trailing nul
  fn=5+n+s; MC(s,AV(w),n);
  MC(n+s,"   > ",5L);
 #ifdef _MSC_VER
@@ -63,7 +63,7 @@ F1(jthost){A z;
  }
 #else
 #if defined(ANDROID) || defined(TARGET_OS_IPHONE)
- strcpy(fn,ftmp);
+ strcpy(fn,ftmp);   // s now got trailing nul from by ftmp or "/tmp"
 #else
  strcpy(fn,"/tmp");
 #endif
@@ -105,8 +105,7 @@ F1(jthost){A z;
 
 F1(jthostne){C*s;
  F1RANK(1,jthostne,0);
- RZ(w=vs(w));
- s=CAV(w);
+ RZ(w=vslit(w));
 // #if SY_WINCE
 #if SY_WINCE || SY_WIN32
  ASSERT(0,EVNONCE);
@@ -118,7 +117,7 @@ F1(jthostne){C*s;
   RZ(fz=toutf16x(w));
   b=_wsystem(USAV(fz));
 #else
-  b=system(s);
+  b=system(CAV(str0(w)));
 #endif
 #if !SY_64 && (SYS&SYS_LINUX)
   //Java-jnative-j.so system always returns -1
@@ -149,7 +148,7 @@ F1(jthostio){C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  fii[0]=fi[0];fii[1]=fi[1];foi[0]=fo[0];foi[1]=fo[1];
  F1RANK(1,jthostio,0);
  RZ(w=vs(w));
- s=CAV(w); GAT(z,INT,3,1,0); pz=(F*)AV(z);
+ s=CAV(str0(w)); GAT(z,INT,3,1,0); pz=(F*)AV(z);
  if((r=pipe(fii))==-1||pipe(foi)==-1){if(r!=-1)CL(fi); ASSERT(0,EVFACE);}
  if(!((pz[1]=fdopen(fi[0],"r"))&&(pz[2]=fdopen(fo[1],"w")))){
   if(pz[1])fclose(pz[1]); CL(fi);CL(fo);}

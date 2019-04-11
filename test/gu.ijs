@@ -439,6 +439,44 @@ t=: 1!:21 <8 u: u: 'asdf'
 
 1!:55 <8 u: u: 'asdf'
 
+NB. unicode
+
+(1!:0 '*.*') -: 1!:0 u: '*.*'
+x=: ' triskaidekaphobia deipnosophist boustrophedonic octothorpe'
+(8 u: u: x) 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
+x -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
+
+x=: u: ?237$65536
+x 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
+x -: 6 u: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
+x -: 6 u: 1!:1 <8 u: 10 u: 100000 + a.i.'asdf'
+
+x=: 'everything not forbidden is mandatory'
+x 1!:2 <7 u: 10 u: 100000 + a.i.'asdf'
+x -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
+'01234' 1!:3 <7 u: 10 u: 100000 + a.i.'asdf'
+(x,'01234') -: 1!:1 <7 u: 10 u: 100000 + a.i.'asdf'
+(5+#x) -: 1!:4 <7 u: 10 u: 100000 + a.i.'asdf'
+
+3 : 0 ''
+ if. (9!:12 '') e. 6 do.  NB. do only if PC
+  assert. (1!:6@< -: 1!:6@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'asdf'
+  assert. (1!:6 <8 u: 10 u: 100000 + a.i.'asdf') 1!:6 <7 u: 10 u: 100000 + a.i.'asdf'
+  assert. (1!:7@< -: 1!:7@<@(8&u:)@u:) 7 u: 10 u: 100000 + a.i.'asdf'
+  assert. (1!:7 <8 u: 10 u: 100000 + a.i.'asdf') -: 1!:7 <7 u: 10 u: 100000 + a.i.'asdf'
+ end.
+ 1
+)
+
+'01234' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'asdf');(#x),5
+'abcde' 1!:12 (8 u: 10 u: 100000 + a.i. 'asdf');#x
+'abcde' -: 1!:11 (7 u: 10 u: 100000 + a.i. 'asdf');(#x),5
+
+t=: 1!:21 <7 u: 10 u: 100000 + a.i. 'asdf'
++./@((8 u: 10 u: 100000 + a.i. 'asdf')&E.)&> {:"1 (1!:20) ''
+1!:22 t
+
+1!:55 <7 u: 10 u: 100000 + a.i. 'asdf'
 
 NB. 3!:n ----------------------------------------------------------------
 

@@ -878,8 +878,14 @@ mtow(UAV(w),n,USAV(z));
 EPILOG(z);
 }
 
+// Similar to jttoutf8a, allow invalid unicode
+// w is C2T C4T or LIT.  Result is U8 string and null-terminate
+F1(jttoutf8x){A z;
+R str0(toutf8a(w));
+}
+
 // External function - just convert wide-char fw[] to U8 in f[], and null-terminate
-void jttoutf8x(J jt,C* f, I n, US* fw){I q;
+void jttoutf8w(J jt,C* f, I n, US* fw){I q;
 q=wtomsize(fw,wcslen((wchar_t*)fw));
 q=(q<0)?(-q):q;
 wtom(fw,wcslen((wchar_t*)fw),f);

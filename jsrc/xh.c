@@ -103,7 +103,7 @@ F1(jthost){A z;
  R z;
 }
 
-F1(jthostne){C*s;
+F1(jthostne){
  F1RANK(1,jthostne,0);
  RZ(w=vslit(w));
 // #if SY_WINCE

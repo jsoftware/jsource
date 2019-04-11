@@ -880,7 +880,7 @@ EPILOG(z);
 
 // Similar to jttoutf8a, allow invalid unicode
 // w is C2T C4T or LIT.  Result is U8 string and null-terminate
-F1(jttoutf8x){A z;
+F1(jttoutf8x){
 R str0(toutf8a(w));
 }
 

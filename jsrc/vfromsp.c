@@ -56,7 +56,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*z
  GASPARSE(z,wt,1,ar+wr-(I )(0<wcr),ws); v=AS(z); ICPY(v+wf,AS(a),ar); if(wcr)ICPY(v+wf+ar,1+wf+ws,wcr-1);
  zp=PAV(z); wp=PAV(w); SPB(zp,e,ca(SPA(wp,e)));
  RZ(a=ca(SPA(wp,a))); av=AV(a); an=AN(a);
- RZ(b=bfi(wr+1,a,1));  // get boolean mask with a 1 for every axis that is sparse
+ RZ(b=bfi(wr,a,1));  // get boolean mask with a 1 for every axis that is sparse
  if(b[wf])R fromis1(ind,w,z,wf);  // if the selection is along a sparse axis, go do it
  // selection is along a dense axis...
  m=wcr; DO(wcr, m-=b[wf+i];); RZ(x=irs2(ind,SPA(wp,x),0L,ar,m,jtifrom));

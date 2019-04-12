@@ -313,6 +313,12 @@ NB. Not extended
 a =: i. 100000x
 2000 < 7!:2 '_5 {. a , _1'
 
+NB. Verify forms for indexing
+a =: i. 1e6
+10000 > 7!:2 '3 : ''a =: }:@:(,&8) a'''  NB. must be in an explicit to inplace
+5000 > 7!:2 '1 2 3 _1 { a , 7'
+1 2 3 7 -: 1 2 3 _1 { a , 7
+
 NB. Verify no local-to-global aliasing
 f10 =: 3 : 'a =. a , 8'
 f11 =: 3 : 'a =: a , 8'

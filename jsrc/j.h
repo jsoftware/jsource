@@ -453,7 +453,7 @@ extern unsigned int __cdecl _clearfp (void);
  AR(name)=(RANKT)(rank);     \
  /*if(type&SPARSE)SEGFAULT scaf*/ GACOPYSHAPE(name,type,atoms,rank,shaape)   \
  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
- else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x0101010101010101 /* scaf */; }     \
+ else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92 /* scaf */; }     \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE)\
 
@@ -469,7 +469,7 @@ extern unsigned int __cdecl _clearfp (void);
   AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
   /*if(type&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
   if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
-  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x0101010101010101 /* scaf */; }     \
+  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9 /* scaf */; }     \
  }else{erraction;} \
 }
 

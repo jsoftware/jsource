@@ -293,8 +293,8 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
    p=0; DO(naxes, p |= *u++-*v++;);
    // Now p<0 if ANY axis of a needs extension - can't inplace then
    if(p>=0) {
-    // See if there is room in a to fit w (including trailing zero byte)
-    if(allosize(a)>=ak+wk+(1&&AT(a)&LAST0)){
+    // See if there is room in a to fit w (including trailing pad)
+    if(allosize(a)>=ak+wk+(AT(a)&LAST0?SZI:0)){
      // We have passed all the tests.  Inplacing is OK.
      // If w must change precision, do.  This is where we catch domain errors.
      if(TYPESGT(AT(a),AT(w)))RZ(w=cvt(AT(a),w));
@@ -311,7 +311,7 @@ A jtapip(J jt, A a, A w, A self){F2PREFIP;A h;C*av,*wv;I ak,k,p,*u,*v,wk,wm,wn;
      if(AR(w)&&AR(a)>1+AR(w)){RZ(setfv(a,w)); mvc(wk-wlen,av+wlen,k,jt->fillv);}
      // Copy in the actual data, replicating if w is atomic
      if(AR(w))MC(av,wv,wlen); else mvc(wk,av,k,wv);
-     if(AT(a)&LAST0)*(av+wk)=0;   // append the NUL byte if that's called for
+// obsolete      if(AT(a)&LAST0)*(av+wk)=0;   // append the NUL byte if that's called for
      // The data has been copied.  Now adjust the result block to match.  If the operation is virtual extension we have to allocate a new block for the result
      if(!virtreqd){
       // Normal append-in-place.

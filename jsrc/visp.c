@@ -71,7 +71,7 @@ A jtindexofxx(J jt,I mode,A a,A w){A x;B*b,*c,s;I ar,d,j,m,n,wr;P*p;
  else {p=PAV(w); m=wr; n=ar;}
  RZ(b=bfi(m,SPA(p,a),1)); b[0]=1;
  GATV(x,B01,n,1,0); c=BAV(x);
- if(s)DO(d, c[i]=1;);
+ DO(ABS(d), c[i]=s;);  // initialize unfilled part of c
  j=0; DO(MIN(ar,wr), ++j; c[n-j]=b[m-j];);
  R indexofss(mode,s?a:reaxis(ifb(n,c),a),s?reaxis(ifb(n,c),w):w);
 }    /* dense i. sparse   or   sparse i. dense;  1<AR(a) */ 

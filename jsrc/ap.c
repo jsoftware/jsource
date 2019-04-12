@@ -189,7 +189,25 @@ PREFICPFX(tymespfxO, D, I,  TYMES  )
 PREFICALT(minuspfxO, D, I,  MINUSPA)
 
 PREFIXPFX( pluspfxB, I, B,  PLUS   )
+#if 1
+AHDRP(pluspfxD,D,D){I i;
+ NAN0;
+ if(d==1){
+  I n3=n/3; I rem=n-n3*3;  // number of triplets, number of extras
+  DQ(m, D t0; D t1; D t2; D t12; D t01; if(rem<1){t0=0.0; t12=t1=0.0;}else {*z++=t0=*x++; if(rem==1){t12=t1=0.0;}else{t12=t1=*x++; *z++=t0+t1;}} t2=0.0;
+    DQ(n3, t0+=*x++; *z++ =t0+t12; t1+=*x++; t01=t0+t1; *z++ =t01+t2; t2+=*x++; *z++ =t2+t01; t12=t1+t2;)
+  )
+ }else{
+  for(i=0;i<m;++i){D *y;
+   y=z; DO(d, *z++=    *x++;);
+   DO(n-1, DO(d, *z=*y+*x; ++z; ++x; ++y;));
+  }
+ }
+ NAN1V;
+}   /* for associative functions only */
+#else  // obsolete 
 PREFIXNAN( pluspfxD, D, D,  PLUS   )
+#endif
 PREFIXNAN( pluspfxZ, Z, Z,  zplus  )
 PREFIXPFX( pluspfxX, X, X,  xplus  )
 PREFIXPFX( pluspfxQ, Q, Q,  qplus  )

@@ -119,8 +119,9 @@
 #define JNDBR(yy)      if(r&&(y=yy))DO(r, if(yv[r-1-i])R sc(n-1-i););
 
 #define ASSIGNX(v)     {x=*(C*)v; x|=x<<8; x|=x<<16; x|=x<<(32&(BW-1)); }
-#define INDB3          R sc(       i*SZI+(CTTZI(y)>>LGBB) );
-#define JNDB3          {UI4 bitno; CTLZI(y,bitno); R sc(n-1-(r+i*SZI+SZI-1-(bitno>>LGBB)));}
+// obsolete #define INDB3          R sc(       i*SZI+(CTTZI(y)>>LGBB) );
+#define INDB3          {n=(UI)n>i*SZI+(CTTZI(y)>>LGBB)?i*SZI+(CTTZI(y)>>LGBB):n; break;}
+#define JNDB3          {UI4 bitno; CTLZI(y,bitno); n=(i*SZI+(bitno>>LGBB)); break;}
 // obsolete #if SY_64
 // obsolete #define ASSIGNX(v)     {x=*v; xv[1]=xv[2]=xv[3]=xv[4]=xv[5]=xv[6]=xv[7]=xv[0];}
 // obsolete #define INDB3          R sc(       i*SZI+(yv[0]?0:yv[1]?1:yv[2]?2:yv[3]?3:yv[4]?4:yv[5]?5:yv[6]?6:7) );
@@ -132,27 +133,25 @@
 // obsolete #endif
 
 #define INDB(f,T0,T1,F)  \
- static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                 \
+ static F2(f){I an,*av,n,q,wn,*wv,x,y;                                 \
   an=AN(a); av=AV(a);                                                             \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                      \
-  q=n>>LGSZI; r=n&(SZI-1);                                                               \
-  xv=(B*)&x; yv=(B*)&y;                                                           \
-  if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))INDB3;); y=F(x,  *wv);}  \
-  else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))INDB3;); y=F(*av,x  );}  \
-  else           {             DO(q, if(y=F(*av++,*wv++))INDB3;); y=F(*av,*wv);}  \
-  if(y)DO(r, if(yv[i])R sc(i+q*SZI););                                            \
+  q=(n+(SZI-1))>>LGSZI;                                           \
+  if     (!AR(a)){ASSIGNX(av); DO(q, if(y=F(x,    *wv++))INDB3;);}  \
+  else if(!AR(w)){ASSIGNX(wv); DO(q, if(y=F(*av++,x    ))INDB3;);}  \
+  else           {             DO(q, if(y=F(*av++,*wv++))INDB3;);}  \
   R sc(n);                                                                        \
  }
 
 #define JNDB(f,T0,T1,F)  \
- static F2(f){B*xv,*yv;I an,*av,n,q,r,wn,*wv,x,y;                                             \
+ static F2(f){I an,*av,n,q,r,wn,*wv,x,y;                                             \
   an=AN(a); av=AV(a);                                                                         \
   wn=AN(w); wv=AV(w); n=AR(a)&&AR(w)?MAX(an,wn):AR(a)?an:wn;                                  \
-  q=n>>LGSZI; r=n&(SZI-1);                                                                           \
-  xv=(B*)&x; yv=(B*)&y;                                                                       \
-  if     (!AR(a)){ASSIGNX(av); wv+=q; JNDBR(F(x,  *wv)); DO(q, if(y=F(x,    *--wv))JNDB3;);}  \
-  else if(!AR(w)){ASSIGNX(wv); av+=q; JNDBR(F(*av,x  )); DO(q, if(y=F(*--av,x    ))JNDB3;);}  \
-  else           {av+=q;       wv+=q; JNDBR(F(*av,*wv)); DO(q, if(y=F(*--av,*--wv))JNDB3;);}  \
+  if((q=(n-1)>>LGSZI)<0)R zeroionei[0]; r=((n-1)&(SZI-1));  /* # first bytes to do minus 1 */                                                                           \
+  I i=q;                                                                       \
+  if     (!AR(a)){ASSIGNX(av); wv+=q; y=(F(x,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(x,*--wv);} }  \
+  else if(!AR(w)){ASSIGNX(wv); av+=q; y=(F(*av,x))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(*--av,x);} }  \
+  else           {av+=q;       wv+=q; y=(F(*av,*wv))&(((I)0x100<<(r<<3))-1); while(1){if(y)JNDB3; if(--i<0)break; y=F(*--av,*--wv);} }  \
   R sc(n);                                                                                    \
  }
 

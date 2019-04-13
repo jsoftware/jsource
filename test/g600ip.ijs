@@ -66,11 +66,12 @@ iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
 
 NB. x is selection;shapes;prediction
 NB.  selection selects a prediction
-NB.  prediction is string, 27 predictors separated by '/'
+NB.  prediction is string, 27 predictors separated by '/'; 1st  9 are for noninplace args, 2d for w in place, 3d for a in place
 NB.   predictor contains the following chars:
 NB.    k,l,L  allocate B01/INT/FL block for conversion of left arg
 NB.    q,r,R  allocate B01/INT/FL block for conversion of right arg
 NB.    B,b,I,D,d   allocate B01/INT/FL for result; d means (FL only if FL is bigger than INT); b is removed by caller if inplacing allowed
+NB.     empty means 'no allocation', i.e. inplace result
 NB.  shapes is (xshape,yshape,resultshape)
 NB. y is # of bytes used in execution of the sentence
 NB. Result is 1 if in range
@@ -394,17 +395,17 @@ u"1 testinplace (resultprec;predr)"1 (10 1600;10 1600)
 NB. Full test with everything allowed
 9!:53 (2)
 
-+. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
-*. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R//   b/lI/L/rI/I/L/R/R//'
++. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    /lI/L/rI/I/L/R/R//   /lI/L/rI/I/L/R/R//'
+*. testinplacer 'VBID';'B/lI/L/rI/I/L/R/R/D/    /lI/L/rI/I/L/R/R//   /lI/L/rI/I/L/R/R//'
 
 27 b. testinplacer 'VBI';'lr/l/lr/r/I/r/lr/l/lr/    lr/l/lr/r//r/lr/l/lr/   lr/l/lr/r//r/lr/l/lr/'
 
-! testinplacer 'VBID';'B/LRI/L/LRI/LRI/L/R/R/D/    b/LRI/L/LRI/LRI/L/R/R//   b/LRI/L/LRI/LRI/L/R/R//'
+! testinplacer 'VBID';'B/LRI/L/LRI/LRI/L/R/R/D/    /LRI/L/LRI/LRI/L/R/R//   /LRI/L/LRI/LRI/L/R/R//'
 
 % testinplacer 'VBID';'D/D/D/D/D/D/D/D/D/    D/D/D/d/d/d////   D/d//D/d//D/d//'
 
-* testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'  NB. non-overflow
-* testinplacer 'VO';'B/I/D/I/Id/D/D/D/D/    b/I/D//d/d////   b///I/d//D/d//'  NB. overflow
+* testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    /I/D///d////   ///I///D/d//'  NB. non-overflow
+* testinplacer 'VO';'B/I/D/I/Id/D/D/D/D/    /I/D//d/d////   ///I/d//D/d//'  NB. overflow
 NB. mulinasm * testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D//I/d////   b///I/I//D/d//'  NB. non-overflow
 NB. mulinasm * testinplacer 'VO';'B/I/D/I/ID/D/D/D/D/    b/I/D//ID/d////   b///I/ID//D/d//'  NB. overflow
 
@@ -413,26 +414,27 @@ NB. mulinasm * testinplacer 'VO';'B/I/D/I/ID/D/D/D/D/    b/I/D//ID/d////   b///I
 - testinplacer 'VBID';'I/I/D/I/I/D/D/D/D/    I/I/D///d////   I///I///D/d//'
 - testinplacer 'VO';'I/Id/D/Id/Id/D/D/D/D/    I/Id/D/d/d/d////   I/d//Id/d//D/d//'   NB. overflow
 
-< testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-= testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-> testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-<: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
->: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
-~: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    b/b/b/B/B/B/B/B/B/   b/B/B/b/B/B/b/B/B/'
+< testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
+= testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
+> testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
+<: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
+>: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
+~: testinplacer 'VBID';'B/B/B/B/B/B/B/B/B/    ///B/B/B/B/B/B/   /B/B//B/B//B/B/'
 
-+: testinplacer 'VB';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
-*: testinplacer 'VB';'B/qb/qb/kb/kqb/kqb/kb/kqb/kqb/    b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/   b/qb/qb/kb/kqb/kqb/kb/kqb/kqb/'
++: testinplacer 'VB';'B/q/q/k/kq/kq/k/kq/kq/    /q/q/k/kq/kq/k/kq/kq/   /q/q/k/kq/kq/k/kq/kq/'
+*: testinplacer 'VB';'B/q/q/k/kq/kq/k/kq/kq/    /q/q/k/kq/kq/k/kq/kq/   /q/q/k/kq/kq/k/kq/kq/'
 
 NB. INT ^ INT produces slightly different values than INT ^ FL on 902753 ^ 39  which is close to the IEEE limit.  So don't check those values
-^ testinplacer 'VBD';'B/D/D/I/D/D/D/D/D/    b/D/D/I/D/D/D/D/D/   b/D/D/I/D/D/D/D/D/'
+^ testinplacer 'VBD';'B/D/D/I/D/D/D/D/D/    /D/D/I/D/D/D/D/D/   /D/D/I/D/D/D/D/D/'
 
 NB. 0|0 allocates an extra FL output buffer.  We ensure that we go through this code
-| testinplacer 'VBID';'B/l/L/r/I/ID/R/R/D/    b/l/L/r//ID/R/R//   b/l/L/r//ID/R/R//'  NB. I | D fails, then runs in-place
+| testinplacer 'VBID';'B/l/L/r/I/ID/R/R/D/    /l/L/r//ID/R/R//   /l/L/r//ID/R/R//'  NB. I | D fails, then runs in-place
 
-<. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
->. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    b/I/D///d////   b///I///D/d//'
+<. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    /I/D///d////   ///I///D/d//'
+>. testinplacer 'VBID';'B/I/D/I/I/D/D/D/D/    /I/D///d////   ///I///D/d//'
 
 NB. Go back and recheck with partial execution not allowed.  No need for checking overlap again, or binary, or overflow
+NB. Note that the flags here have not been updated for inplace booleans, because we don't test booleans here
 9!:53 (1)
 +. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'
 *. testinplacer 'ID';'B/lI/L/rI/I/L/R/R/D/    b/lI/L/rI/I/L/R/R/D/   b/lI/L/rI/I/L/R/R/D/'

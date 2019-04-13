@@ -631,9 +631,10 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define REPLBYTETOW(in,out) (out=(UC)(in),out|=out<<8,out|=out<<16)
 #endif
-// Input is I/UI, count is # bytes to store to output pointer.  Input value is destroyed
+// Input is I/UI, count is # bytes to store to output pointer (never 0).  Input value is destroyed
 #if C_LE
-#define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
+// obsolete #define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
+#define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&((UI)~(I)0 << ((n)<<3))) | ((in)&~((UI)~(I)0 << ((n)<<3)));}
 #endif
 // Input is a word of bytes.  Result is 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.
 #define ZBYTESTOZBITS(b) (b|=b>>4,b|=b>>2,b|=b>>1)

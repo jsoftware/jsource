@@ -281,6 +281,7 @@ typedef struct {VA2 p1[6];} UA;
   else       BFSUB(y,xx,pfyx,bpfyx)                     \
  }
 #else
+// n and m are never 0.
 #define BFSUB(xb,yi,pfx,bpfx)  \
  {I j;                                        \
   for(j=0;j<m;++j){                                    \

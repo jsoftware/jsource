@@ -7,8 +7,27 @@
 #include "x.h"
 
 
-F1(jtstype){RZ(w); R sc(UNSAFE(AT(w)));}
+F1(jtstype){RZ(w); R sc(AT(w)&-AT(w));}
      /* 3!:0 w */
+
+// a is integer atom or list, values indicating the desired result
+// atom values in x: 0=NJA, others reserved
+F2(jtnouninfo2){A z;
+ RZ(a&&w);
+ RZ(a=vi(a)); // convert to integer, error if can't
+ ASSERT(AR(a)<2,EVRANK);  // must be atom or list
+ GATV(z,INT,AN(a),AR(a),AS(a));  // allocate result
+ I *av=IAV(a), *zv=IAV(z);
+ DQ(AN(z),   // install the requested info
+  switch(*av++){
+  default: ASSERT(0,EVDOMAIN); break;
+  case 0: *zv++=(AFLAG(w)>>AFNJAX)&1; break;
+  }
+ )
+ RETF(z);
+}
+// a 3!:9 w   noun info
+
 
 /* binary and hex representation formats differ per J version              */
 /* pre J6.01                                                               */

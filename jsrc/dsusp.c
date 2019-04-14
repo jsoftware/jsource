@@ -9,7 +9,8 @@
 
 // When we move off of a parser frame, or when we go into debug with a new parser frame, fill the frame with
 // the info for the parse that was interrupted
-void moveparseinfotosi(J jt){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)jt->parserqueue; jt->sitop->dcn=(I)jt->parserqueuelen; jt->sitop->dcix=(I)jt->parsercurrtok; }}
+static void movesentencetosi(J jt,void *wds,I nwds,I errwd){if(jt->sitop&&jt->sitop->dctype==DCPARSE){jt->sitop->dcy=(A)wds; jt->sitop->dcn=(I)nwds; jt->sitop->dcix=(I)errwd; }}
+void moveparseinfotosi(J jt){movesentencetosi(jt,jt->parserqueue,jt->parserqueuelen,jt->parsercurrtok);}
 
 
 /* deba() and debz() must be coded and executed in pairs */
@@ -135,7 +136,7 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
  if(jt->dbsusact!=SUSCLEAR)jt->dbsusact=SUSCONT;
  d->dcsusp=0;
  // If there is an error, set z=0; if not, make sure z is nonzero (use i. 0 0)
-  if(jt->jerr)z=0; else z=z?z:mtm;
+  if(jt->jerr)z=0; // return z=0 to cause us to look for resumption address
  R z;
 }
 
@@ -158,6 +159,7 @@ A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
 // d - DC area to use in deba
 
 A jtparsex(J jt,A* queue,I m,CW*ci,DC c){A z;B s;
+ movesentencetosi(jt,queue,m,0);  // install sentence-to-be-executed for stop purposes
  if(s=dbstop(c,ci->source)){z=0; jsignal(EVSTOP);}
  else                      {z=parsea(queue,m);     }
  // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just

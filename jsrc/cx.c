@@ -29,8 +29,8 @@
                         hv=AAV(sv->fgh[2])+4*isdyad;  \
                         line=AAV(hv[0]); x=hv[1]; n=AN(x); cw=(CW*)AV(x);}
 
-// Parse/execute a line, result in z.  If locked, reveal nothing
-#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(lk>=0)z=parsea(queue,m);else z=parsex(queue,m,ci,callframe);}else{jsignal(EVATTN); z=0;} }
+// Parse/execute a line, result in z.  If locked, reveal nothing.  Save current line number in case we reexecute
+#define parseline(z) {C attnval=*jt->adbreakr; A *queue=line+ci->i; I m=ci->n; if(!attnval){if(lk>=0)z=parsea(queue,m);else {thisframe->dclnk->dcix=i; z=parsex(queue,m,ci,callframe);}}else{jsignal(EVATTN); z=0;} }
 
 typedef struct{A t,x,line;C*iv,*xv;I j,k,n,w;} CDATA;
 /* for_xyz. t do. control data   */
@@ -283,7 +283,8 @@ static DF2(jtxdefn){PROLOG(0048);
     // run the sentence
     tpop(old); parseline(z);
     // if there is no error, or ?? debug mode, step to next line
-    if(z||!jt->jerr){
+// obsolete     if(z||!jt->jerr){
+    if(z){
      bi=i,++i;
     }else if(thisframe&&jt->uflags.us.cx.cx_c.db&(DB1/* obsolete |DBERRCAP*/)){  // if debug mode, we assume we are ready to execute on
      bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any it is OK to have jerr set if we are in debug mode

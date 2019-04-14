@@ -504,6 +504,7 @@ extern F2(jtne);
 extern F2(jtnl2);
 extern F2(jtnor);
 extern F2(jtnotmatch);
+extern F2(jtnouninfo2);
 extern F2(jtobverse);
 extern F2(jtodd);
 extern F2(jtordstat);

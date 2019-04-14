@@ -161,6 +161,15 @@ map_jmf_ (<'q'),f,'';0   NB. map q to jmf file
 (fmapped -: gmapped) q [ q=:x=: s: <"0 adot1{~(?1e4)?@$#adot1
 (fmapped -: gmapped) q [ q=:x=: s: <"0 adot2{~(?1e4)?@$#adot2
 
+'domain error' -: 3!:9 etx q
+'domain error' -: (1) 3!:9 etx q
+'rank error' -: (,.0) 3!:9 etx q
+1 -: (0) 3!:9 q
+(,1) -: (,0) 3!:9 q
+0 -: (0) 3!:9 a:
+(,0) -: (,0) 3!:9 a:
+
+
 1 [ unmap_jmf_ 'q'
 
 NB. Test usecount on mapped arrays

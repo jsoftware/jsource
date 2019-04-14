@@ -392,20 +392,21 @@ typedef I SI;
 // the flags defined here must be mutually exclusive with TRAVERSIBLE
 
 #define AFRO            (I)1            /* read only; can't change data    */
-#define AFNJA           (I)2            /* non-J alloc; i.e. mem mapped    */
+#define AFNJAX          1            /* non-J alloc; i.e. mem mapped    */
+#define AFNJA           ((I)1<<AFNJAX)
 #define AFNVRX          8
-#define AFNVR           (1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
+#define AFNVR           ((I)1<<AFNVRX)  // This value is on the parser's execution stack, and must not be freed until it is removed
 #define AFUNIFORMITEMSX 16      // matches SBTX
-#define AFUNIFORMITEMS  (1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
+#define AFUNIFORMITEMS  ((I)1<<AFUNIFORMITEMSX)  // It is known that this boxed array has contents whose items are of uniform shape and type
 #define AFNVRUNFREEDX   18
-#define AFNVRUNFREED    (1<<AFNVRUNFREEDX)  // This value does NOT need to be freed by the parser, even though it was stacked
+#define AFNVRUNFREED    ((I)1<<AFNVRUNFREEDX)  // This value does NOT need to be freed by the parser, even though it was stacked
 #define AFVIRTUALX      17      // matches C2TX
-#define AFVIRTUAL       (1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
+#define AFVIRTUAL       ((I)1<<AFVIRTUALX)  // this block is a VIRTUAL block: a subsequence of another block.  The data pointer points to the actual data, and the
                                  // m field points to the start of the block containing the actual data.  A VIRTUAL block cannot be incorporated into another block, and it
                                  // cannot be assigned, unless it is 'realized' by creating another block and copying the data.  We realize whenever we call ra() on the block,
                                  // except during the EPILOG, where we don't realize the block unless the real block is about to be freed.
 #define AFUNINCORPABLEX 19      // matches XDX
-#define AFUNINCORPABLE  (1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
+#define AFUNINCORPABLE  ((I)1<<AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block

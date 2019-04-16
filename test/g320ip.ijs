@@ -625,6 +625,13 @@ f''
 
 NB. m&v
 (5,.i.4) -: (6-1)&,"0 i. 4  NB. Verify constant not overwritten
+a =: 5 6
+15 17 -: 3 : 'a =: 5 (a&+)@:+ a' ''  NB. Verify not inplace
+a =: i. 10000
+40000 < 7!:2 '3 : ''a =: 5 (5&+)@:+ a'' 0'  NB. Not safe with usecount 1
+40000 < 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
+9!:53 (1)
+9000 > 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
 
 NB. u&.v
 IGNOREIFFVI 20000 > 7!:2 ',&''b''&.] 10000#''a'''
@@ -639,9 +646,9 @@ IGNOREIFFVI 17000 < 7!:2 'a =: ]&.(,&(''b'')) a'
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#5
-assert. (6 ,~ 10000#5) -: a =: ,&6&.] a
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.] a'
-assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.] a'  NB. Verify assignment need not be first word
+assert. (6 ,~ 10000#5) -: a =: ,&((15!:15) 6)&.] a
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&((15!:15) 6)&.] a'
+assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&((15!:15) 6)&.] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
 assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.(,&({.''b'')) a'
 assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.(,&(''b'')) a'
@@ -655,9 +662,9 @@ NB. u&.:v
 IGNOREIFFVI 20000 > 7!:2 ',&''b''&.:] 10000#''a'''
 9!:53 (0)
 a =: 10000#5
-(6 ,~ 10000#5) -: a =: ,&6&.:] a
-IGNOREIFFVI 3000 < 7!:2 'a =: ,&6&.:] a'
-IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+(6 ,~ 10000#5) -: a =: ,&((15!:15) 6)&.:] a
+IGNOREIFFVI 3000 < 7!:2 'a =: ,&((15!:15) 6)&.:] a'
+IGNOREIFFVI 3000 < 7!:2 '{. a =: ,&((15!:15) 6)&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
 IGNOREIFFVI 17000 < 7!:2 'a =: ]&.:(,&({.''b'')) a'
 IGNOREIFFVI 17000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
@@ -665,9 +672,9 @@ IGNOREIFFVI 17000 < 7!:2 'a =: ]&.:(,&(''b'')) a'
 f =: 3 : 0
 9!:53 (1)
 a =: 10000#5
-assert. (6 ,~ 10000#5) -: a =: ,&6&.:] a
-assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&6&.:] a'
-assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&6&.:] a'  NB. Verify assignment need not be first word
+assert. (6 ,~ 10000#5) -: a =: ,&((15!:15) 6)&.:] a
+assert. IGNOREIFFVI 3000 > 7!:2 'a =: ,&((15!:15) 6)&.:] a'
+assert. IGNOREIFFVI 3000 > 7!:2 '{. a =: ,&((15!:15) 6)&.:] a'  NB. Verify assignment need not be first word
 a =: 10000#'a'
 assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.:(,&({.''b'')) a'
 assert. IGNOREIFFVI 20000 > 7!:2 'a =: ]&.:(,&(''b'')) a'

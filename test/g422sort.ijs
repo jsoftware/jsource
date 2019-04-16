@@ -28,13 +28,13 @@ test1=: 3 : 0
  assert. t -: t1 =: /:"1~ y
  ips =: y
  ips =: /:"1~ ips  NB. test inplace
- assert. t -: ips
+ assert. t -: ips [  0
  t=: (\:"1 y){"1 y
  assert. t -: t1 =: y\:"1 y
  assert. t -: t1 =: \:~"1 y
  assert. t -: t1 =: \:"1~ y
  ips =: \:"1~ ips  NB. test inplace
- assert. t -: ips
+ assert. t -: ips [ 1
  1
 )
 

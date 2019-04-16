@@ -292,18 +292,17 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  // figure out whether we should do small-range processing.  Comments in vg.c
  // First, decide, based on the length of the list, what the threshold for small-range sorting will be.
  // This is what we are trying to calculate, based on n:
- // n<40: if range<5n, use smallrange, otherwise qsort
- // 40<n<800: if range<5n use smallrange, otherwise mergesort
+ // n<800: if range<5n, use smallrange, otherwise qsort
  // 800<n<100000: if range<2n use smallrange, otherwise mergesort
  // 100000<n<600000: if range<3n use smallrange, otherwise radix
  // 600000<n<1000000: if range<2n use smallrange, otherwise radix
  // 1000000<n if range<n use smallrange, otherwise radix
- I nrange=(n>=40)+(n>=800)+(n>=100000)+(n>=600000)+(n>=1000000);  // TUNE
- CR rng = condrange(wv,AN(w),IMAX,IMIN,n*((0x123255>>(nrange<<2))&7)); // 1 2 3 2 5 5 are the shift amounts for the ranges
+ I nrange=(n>=800)+(n>=100000)+(n>=600000)+(n>=1000000);  // TUNE
+ CR rng = condrange(wv,AN(w),IMAX,IMIN,n*((0x12325>>(nrange<<2))&7)); // 1 2 3 2 5 5 are the shift amounts for the ranges
  // smallrange always wins if applicable; otherwise use the table above
  if(!rng.range){  // range was too large
-  if(n<40)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  It isn't much better than mergesort and could be deleted  TUNE
-  if(n<100000)R jtsortdirect(jt,m,1,n,w);  // 40-99999, mergesort   TUNE
+  if(n<800)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  TUNE
+  if(n<100000)R jtsortdirect(jt,m,1,n,w);  // 800-99999, mergesort   TUNE
   R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
 // obsolete if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE

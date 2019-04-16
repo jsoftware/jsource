@@ -375,9 +375,12 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   f1=withl; v=FAV(w); c=v->id;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
+  // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
+  // a improperly.  If the noun is isnplaceable there's no way it can get assigned to a name after m&v
+  // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
   // assigned to a name, which will protect values inside it.
-  ACIPNO(a);
+  if(AC(a)>=0){flag &= ~VASGSAFE;}else{ACIPNO(a);}
+  
   if(AN(a)&&AR(a)){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0
@@ -397,9 +400,11 @@ F2(jtamp){A h=0;AF f1,f2;B b;C c,d=0;I flag,flag2=0,mode=-1,p,r;V*u,*v;
   // set flag according to ASGSAFE of verb, and INPLACE and IRS from the dyad of the verb 
   // kludge mark it not ASGSAFE in case it is a name that is being reassigned.  We could use nvr stack to check for that.
   flag=((v->flag&(VJTFLGOK2|VIRS2))>>1)+(v->flag&VASGSAFE);
-  // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-  // assigned to a name, which will protects values inside it.
-  ACIPNO(w);
+  // If the noun is not inplaceable now, we have to turn off ASGSAFE, because we may have a form like a =: 5 (a&+)@:+ a which would inplace
+  // a improperly.  If the noun is isnplaceable there's no way it can get assigned to a name after m&v
+  // Otherwise, mark the noun as non-inplaceable (so it will not be modified during use).  If the derived verb is used in another sentence, it must first be
+  // assigned to a name, which will protect values inside it.
+  if(AC(w)>=0){flag &= ~VASGSAFE;}else{ACIPNO(w);}
   if(AN(w)&&AR(w)){
     // c holds the pseudochar for the v op.  If v is u!.n, replace c with the pseudochar for n
     // Also set b if the fit is !.0

@@ -71,8 +71,8 @@ static void SORTQNAME(SORTQTYPE *v, I n){
      if(!(cstk&(cstk+1))) {
       // There are still no exchanges.  Find the partition sizes.
       UI4 xchgx04; CTLZI(cstk,xchgx04); xchgx0=xchgx04; xchgx1=xchgx0+1;  // low partition always ends right below the high - no middle partition
-      if(xchgx1!=r-l)goto finmedxchg;  // there are no exchanges, but we have to process both partition
-      l=r=0; continue;  // all equal -- abort this partition and go to the next one
+      if(xchgx1!=r-l)goto finmedxchg;  // there are no exchanges, but we have to process both partitions (one of which might be empty)
+      r=l; continue;  // all equal -- abort this partition and go to the next one
      }
      // ...falling through if there are exchanges after a rescan
     } else {
@@ -150,10 +150,14 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
 
   // push stack for the larger partition; modify batch pointers for the smaller
   // recursions are l..xchgx0 and xchgx1+1..r    the +1 to step over the pivot from this pass
-  if(xchgx0-l > r-xchgx1){stack[stackp][0]=l; stack[stackp][1]=xchgx0; l=xchgx1+1;
-  }else{stack[stackp][0]=xchgx1+1; stack[stackp][1]=r; r=xchgx0;
-  }
-  ++stackp;
+  ++xchgx1;  // the upper partition starts AFTER the pivot
+// obsolete   if(xchgx0-l > r-xchgx1){stack[stackp][0]=l; stack[stackp][1]=xchgx0; l=xchgx1;
+// obsolete   }else{stack[stackp][0]=xchgx1; stack[stackp][1]=r; r=xchgx0;
+// obsolete   }
+  I lenl=xchgx0-l, lenr=r-xchgx1, l0=l, r0=r;
+  // make l,r the smaller partition and l0,r0 the larger;  then stack l0,r0
+  l0=lenl>lenr?l0:xchgx1; l=lenl>lenr?xchgx1:l; r0=lenl>lenr?xchgx0:r0; r=lenl>lenr?r:xchgx0; 
+  stack[stackp][0]=l0; stack[stackp][1]=r0; ++stackp;
  }
 }
 #undef SORTQNAME

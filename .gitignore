@@ -45,3 +45,8 @@ pcre/
 
 release
 /test/temp.ijs
+
+# build folders
+bin/
+make2/
+jlibrary/

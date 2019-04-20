@@ -1,0 +1,39 @@
+how to build/test j32/64/j64nonavx for linux/darwin/raspberry/...
+
+**************************************************************************
+# commands are assumed to run in make2 folder
+
+# make sure shell scripts are executable
+chmod +x *.sh
+
+# ensure proper jsrc/jversion.h (jversion-x.h template)
+
+# !!! makefiles do not have h file dependencies !!!
+# after h file changes, run clean.sh to rm all *.o fles for clean build
+./clean.sh
+
+# general format for build_... commands 
+# don't miss the ./ part when typing commands
+jplatform=(..) j64=(..) ./build_libj.sh
+
+where 
+jplatform : linux darwin raspberry
+j64 : j64 j64nonavx j32
+
+# binaries generated inside the bin folder under jsource
+
+# eg. build j64 binaries
+jplatform=linux j64=j64 ./build_libj.sh
+
+#linux and j64 is the default, so this is fine
+./build_libj.sh
+
+#to build all binaries for linux j64
+./build_all.sh
+
+# test
+# cp jconsole libj.so libtsdll.so to the folder jlibrary/bin
+# cd the jlibrary/bin folder and run 
+./jconsole ../../test/tsu.ijs
+
+# and follow instructions there

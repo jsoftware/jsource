@@ -348,18 +348,22 @@ tsu_usage=: 0 : 0
 )
 
 tsu_jd=: 0 : 0
-Jd tests require updated addons
-   load'pacman'
-   'update'jpkg''
-   'install'jpkg'all'
-NB. if new base library - shutdown and restart
-   load'jd'
-   jdtests_jd_''
-NB. report failures to Eric or Bill Lam
+   NB. first run takes a while as it updates everything
+   NB. subsequent runs update only what has changed
+   jdrun'' NB. update addons and run Jd jdtests
+)
+
+jdrun=: 3 : 0
+load'pacman'
+'update'jpkg''
+'install'jpkg'all'
+load'jmf' NB. use possibly new jmf
+load'jd'
+jdtests_jd_''
 )
 
 echo 0 : 0
-see tsu_notes for caveats, tsu_usage for details, and tsu_jd for jdtests
+see tsu_notes for caveats, tsu_usage for details, and tsu_jd for Jd
 
    RUN  ddall  NB. report scripts that fail
    RECHO ddall NB. echo script names as run and final count of failures

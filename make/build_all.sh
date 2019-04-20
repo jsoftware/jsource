@@ -2,9 +2,10 @@
 # build all binaries
 cd ~
 
-# install.sh should only be done for clean install
-# pacman may have update base library and addons
-# $jmake/install.sh
+if [ ! -d jbld ]; then
+ echo "~/jbld does not exist - running install.sh"
+ $jmake/install.sh
+fi
 
 $jmake/clean.sh
 

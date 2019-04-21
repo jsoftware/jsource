@@ -25,10 +25,10 @@ j64 : j64 j64nonavx j32
 # eg. build j64 binaries
 jplatform=linux j64=j64 ./build_libj.sh
 
-#linux and j64 is the default, so this is fine
+# linux and j64 is the default, so this is fine
 ./build_libj.sh
 
-#to build all binaries for linux j64
+# to build all binaries for linux j64
 ./build_all.sh
 
 # test

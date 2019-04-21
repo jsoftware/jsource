@@ -37,3 +37,4 @@ jplatform=linux j64=j64 ./build_libj.sh
 ./jconsole ../../test/tsu.ijs
 
 # and follow instructions there
+

@@ -354,6 +354,12 @@ tsu_jd=: 0 : 0
 )
 
 jdrun=: 3 : 0
+if. IFWIN do.
+ if. -.fexist'~tools/ftp/busybox.exe' do.
+  echo'copy production J ~tools/ftp folder to jbld/j64/tools'
+  'need ~tools/ftp/busybox.exe'assert 0
+ end.
+end.
 load'pacman'
 'update'jpkg''
 'install'jpkg'all'

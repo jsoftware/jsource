@@ -115,8 +115,9 @@ esac
 echo "CFLAGS=$CFLAGS"
 
 mkdir -p ../bin/$jplatform/$j64
+mkdir -p obj/$jplatform/$j64/
+cp makefile-tsdll obj/$jplatform/$j64/.
 export CFLAGS LDFLAGS TARGET jplatform j64
-cd tsdll
-make -f makefile clean
-make -f makefile
-cd ..
+cd obj/$jplatform/$j64/
+make -f makefile-tsdll
+cd -

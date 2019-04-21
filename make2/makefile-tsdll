@@ -1,4 +1,4 @@
-vpath % ../../jsrc
+vpath % ../../../../jsrc
 
 ifndef jplatform
 jplatform=linux
@@ -7,7 +7,7 @@ ifndef j64
 j64=j64
 endif
 
-ODIR=../../bin/$(jplatform)/$(j64)
+ODIR=../../../../bin/$(jplatform)/$(j64)
 
 .SUFFIXES: .o
 

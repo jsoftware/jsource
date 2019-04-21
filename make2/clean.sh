@@ -3,4 +3,4 @@
 
 cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
-find . -name "*.o" -type f -delete
+find obj -name "*.o" -type f -delete

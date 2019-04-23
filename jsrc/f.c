@@ -740,10 +740,11 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
  h=lba<nq+(q?p:0)?lb:IMAX;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data
- I remqi=1;  // 1+number of lines before we put out an intercell spacing.  Could start at q+1, which would simplify ENGAP.  Later.
+ // obsolete I remqi=1;  // 1+number of lines before we put out an intercell spacing.  Could start at q+1, which would simplify ENGAP.  Later.
  for(i=lc=0;i<nq;++i){
   // Emit leading EOLs according to number of boundary crossings - only when we cross a 2-cell boundary
-  if(0==--remqi){remqi=q; ENGAP(i,r,s,EOLC(zv));}  // put out a gap every q lines
+// obsolete   if(0==--remqi){remqi=q; ENGAP(i,r,s,EOLC(zv));}  // put out a gap every q lines
+  ENGAP(i,r,s,EOLC(zv));  // put out a gap as required
   // If we have emitted all the beginning lines, and the suffix isn't big enough to hold all the lines,
   // emit ..., advance v and i to the suffix, and set h so we don't come here again.
   // NOTE this test is imperfect.  The nq>la is needed only because internal EOLs in character data

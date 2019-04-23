@@ -44,11 +44,13 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
 #define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 static I valmask[8] = {-1, -1, -1, -1, 0, 0, 0, };
-#if 0&&C_AVX&&SY_64
+#if C_AVX&&SY_64
 // D + D, never 0 times
 AHDR2(plusDD,D,D,D){
  // install the length mask for the last word
  __m256i endmask; 
+ _mm256_zeroupper(VOIDARG);
+ NAN0;
  if(1==n){
   // vector-to-vector add, no repetitions
   endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
@@ -60,18 +62,129 @@ AHDR2(plusDD,D,D,D){
   if(b){
    // atom+vector
    DQ(m, __m256d u; u=_mm256_set_pd(*x,*x,*x,*x); ++x;
-     DO((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_add_pd(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_add_pd(u,_mm256_maskload_pd(y,endmask)));
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_add_pd(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_add_pd(u,_mm256_maskload_pd(y,endmask)));
      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;)
   }else{
    // vector+atom
    DQ(m, __m256d v; v=_mm256_set_pd(*y,*y,*y,*y); ++y;
-     DO((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_add_pd(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_add_pd(_mm256_maskload_pd(x,endmask),v));
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_add_pd(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_add_pd(_mm256_maskload_pd(x,endmask),v));
      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;)
   }
  }
+ NAN1V;
+}
+AHDR2(minusDD,D,D,D){
+ // install the length mask for the last word
+ __m256i endmask; 
+ _mm256_zeroupper(VOIDARG);
+ NAN0;
+ if(1==n){
+  // vector-to-vector subtract, no repetitions
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_sub_pd(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;)
+  // runout, using mask
+  _mm256_maskstore_pd(z, endmask, _mm256_sub_pd(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask)));
+ }else{
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  if(b){
+   // atom-vector
+   DQ(m, __m256d u; u=_mm256_set_pd(*x,*x,*x,*x); ++x;
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_sub_pd(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_sub_pd(u,_mm256_maskload_pd(y,endmask)));
+     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;)
+  }else{
+   // vector-atom
+   DQ(m, __m256d v; v=_mm256_set_pd(*y,*y,*y,*y); ++y;
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_sub_pd(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, _mm256_sub_pd(_mm256_maskload_pd(x,endmask),v));
+     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;)
+  }
+ }
+ NAN1V;
+}
+AHDR2(tymesDD,D,D,D){
+ // install the length mask for the last word
+ __m256i endmask;
+ __m256d zero; zero=_mm256_set_pd(0.0,0.0,0.0,0.0);
+ __m256d u, v, unonzero, vnonzero;  // mask: all ones unless the arg is 0.  AND with OTHER arg to turn 0*inf into 0*0
+ _mm256_zeroupper(VOIDARG);
+ NAN0;
+ if(1==n){
+  // vector-to-vector *, no repetitions
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  DQ((m-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_loadu_pd(y); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
+                    _mm256_storeu_pd(z, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero))); x+=NPAR; y+=NPAR; z+=NPAR;)
+  // runout, using mask
+  u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_maskload_pd(y,endmask); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
+  _mm256_maskstore_pd(z, endmask, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero)));
+ }else{
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  if(b){
+   // atom*vector
+   DQ(m, u=_mm256_set_pd(*x,*x,*x,*x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); ++x;
+     DQ((n-1)>>LGNPAR, v=_mm256_loadu_pd(y); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
+                       _mm256_storeu_pd(z, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero))); y+=NPAR; z+=NPAR;)
+     v=_mm256_maskload_pd(y,endmask); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
+     _mm256_maskstore_pd(z, endmask, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero)));
+     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
+   )
+  }else{
+   // vector*atom
+   DQ(m, v=_mm256_set_pd(*y,*y,*y,*y); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ); ++y;
+     DQ((n-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ);
+                       _mm256_storeu_pd(z, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero))); x+=NPAR; z+=NPAR;)
+     u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ);
+     _mm256_maskstore_pd(z, endmask, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero)));
+     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
+   )
+  }
+ }
+ NAN1V;
+}
+AHDR2(divDD,D,D,D){
+ // install the length mask for the last word
+ __m256i endmask;
+ __m256d zero; zero=_mm256_set_pd(0.0,0.0,0.0,0.0);
+ __m256d one; one=_mm256_set_pd(1.0,1.0,1.0,1.0);
+
+ __m256d u, v, unonzero;  // mask: all ones unless the arg is 0.  AND with OTHER arg to turn 0*inf into 0*0
+ _mm256_zeroupper(VOIDARG);
+ NAN0;
+ if(1==n){
+  // vector-to-vector %, no repetitions
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  DQ((m-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_loadu_pd(y);
+                    _mm256_storeu_pd(z, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero))); x+=NPAR; y+=NPAR; z+=NPAR;)
+  // runout, using mask
+  u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_maskload_pd(y,endmask);
+  _mm256_maskstore_pd(z, endmask, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero)));
+ }else{
+  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  if(b){
+   // atom%vector
+   DQ(m, u=_mm256_set_pd(*x,*x,*x,*x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); ++x;
+     DQ((n-1)>>LGNPAR, v=_mm256_loadu_pd(y);
+                       _mm256_storeu_pd(z, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero))); y+=NPAR; z+=NPAR;)
+     v=_mm256_maskload_pd(y,endmask);
+     _mm256_maskstore_pd(z, endmask, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero)));
+     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
+   )
+  }else{
+   // vector%atom
+   DQ(m, v=_mm256_set_pd(*y,*y,*y,*y); ++y;
+     DQ((n-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ);
+                       _mm256_storeu_pd(z, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero))); x+=NPAR; z+=NPAR;)
+     u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ);
+     _mm256_maskstore_pd(z, endmask, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero)));
+     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;
+   )
+  }
+ }
+ NAN1V;
 }
 #else
 ANAN( plusDD, D,D,D, PLUS)
+ANAN(minusDD, D,D,D, MINUS)
+APFX(tymesDD, D,D,D, TYMESDD)
+ANAN(  divDD, D,D,D, DIV)
 #endif
 // BD DB add similarly?
 
@@ -196,17 +309,17 @@ ANAN( plusZZ, Z,Z,Z, zplus )
 
 AIFX(minusBB, I,B,B, -     )    /* minusBI */               AIFX(minusBD, D,B,D, -    )
   /* minusIB */                 /* minusII */               AIFX(minusID, D,I,D, -    )
-AIFX(minusDB, D,D,B, -     )  AIFX(minusDI, D,D,I, -)       ANAN(minusDD, D,D,D, MINUS)
+AIFX(minusDB, D,D,B, -     )  AIFX(minusDI, D,D,I, -)       /* minusDD */
 ANAN(minusZZ, Z,Z,Z, zminus)
 
     /* andBB */                 /* tymesBI */                   /* tymesBD */            
     /* tymesIB */               /* tymesII */               APFX(tymesID, D,I,D, TYMESID)  
-    /* tymesDB */             APFX(tymesDI, D,D,I, TYMESDI) APFX(tymesDD, D,D,D, TYMESDD) 
+    /* tymesDB */             APFX(tymesDI, D,D,I, TYMESDI)    /* tymesDD */ 
 ANAN(tymesZZ, Z,Z,Z, ztymes )
 
 APFX(  divBB, D,B,B, DIVBB)   APFX(  divBI, D,B,I, DIVI)    APFX(  divBD, D,B,D, DIV)
 APFX(  divIB, D,I,B, DIVI )   APFX(  divII, D,I,I, DIVI)    APFX(  divID, D,I,D, DIV)
-APFX(  divDB, D,D,B, DIVI )   APFX(  divDI, D,D,I, DIVI)    ANAN(  divDD, D,D,D, DIV)
+APFX(  divDB, D,D,B, DIVI )   APFX(  divDI, D,D,I, DIVI)       /* divDD */
 ANAN(  divZZ, Z,Z,Z, zdiv )
 
      /* orBB */               APFX(  minBI, I,B,I, MIN)     APFX(  minBD, D,B,D, MIN)    

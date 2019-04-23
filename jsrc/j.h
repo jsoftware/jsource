@@ -1018,6 +1018,7 @@ static __forceinline void aligned_free(void *ptr) {
 
 
 // platform-dependent stuff for AVX
+#if C_CRC32C  // these definitions don't work without AVX
 #if C_AVX&&SY_64
 #define VOIDARG
 #define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
@@ -1123,3 +1124,4 @@ static __forceinline __m128i _mm_set1_epi32_(int a) {
 #endif
 
 #endif  /* !C_AVX */
+#endif  // C_CRC32C

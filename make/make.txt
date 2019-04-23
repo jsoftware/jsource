@@ -20,30 +20,26 @@ cat jvars.sh
 
 # read jvars.sh and edit as appropriate - other steps depend on jvars.sh
 
-# create clean build folders and build all binaries
+# ensure proper jsrc/jversion.h (jversion-x.h template)
+
+# create jbld folder (if not already created) and build binaries
 . jvars.sh
 $jmake/build_all.sh
 
-# create clean build folders
+# test j64 ($j64nonavx or $j32)
 . jvars.sh
-$jmake/install.sh
+$j64
 
-# copy changes to git jlibrary to jbld folders
-$jmake/copy_jlibrary.sh
+# the above are build steps for standard binaries
 
-# ensure proper jsrc/jversion.h (jversion-x.h template)
-
+# the following steps are for building specific ones
 # !!! makefiles do not have h file dependencies !!!
-# after h file changes, run clean.sh to rm all *.o fles for clean build
+# after h file changes, run clean.sh to rm all *.o fles
 $jmake/clean.sh
 
 # build j64 binaries
 $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64
 $jmake/build_tsdll.sh    j64
-
-# test j64 ($j64nonavx or $j32)
-$j64
-   RUN ddall
 
 # build/test j32 j64nonavx binaries the same way (j32 or j64nonavx)

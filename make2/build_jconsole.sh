@@ -1,9 +1,17 @@
-#!/bin/bash
-# $1 is j32 or j64
-cd ~
+#!/bin/sh
+
+cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
+
+jplatform="${jplatform:=linux}"
+j64="${j64:=j64}"
+USE_LINENOISE="${USE_LINENOISE:=1}"
+
+# gcc 5 vs 4 - killing off linux asm routines (overflow detection)
+# new fast code uses builtins not available in gcc 4
+# use -DC_NOMULTINTRINSIC to continue to use more standard c in version 4
+# too early to move main linux release package to gcc 5
 
 macmin="-mmacosx-version-min=10.6"
-USE_LINENOISE="${USE_LINENOISE:=1}"
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
@@ -46,64 +54,74 @@ common=" -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -W
 fi
 darwin=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
-case $jplatform\_$1 in
+case $jplatform\_$j64 in
 
 linux_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
-COMPILE="$common -m32 -DREADLINE"
-LINK=" -l:libedit.so.2 -m32 -ldl -o jconsole "
+CFLAGS="$common -m32 -DREADLINE"
+LDFLAGS=" -l:libedit.so.2 -m32 -ldl "
 else
-COMPILE="$common -m32 -DREADLINE -DUSE_LINENOISE"
-LINK=" -m32 -ldl -o jconsole "
+CFLAGS="$common -m32 -DREADLINE -DUSE_LINENOISE"
+LDFLAGS=" -m32 -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
 linux_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
-COMPILE="$common -DREADLINE"
-LINK=" -ledit -ldl -o jconsole "
+CFLAGS="$common -DREADLINE"
+LDFLAGS=" -ledit -ldl "
 else
-COMPILE="$common -DREADLINE -DUSE_LINENOISE"
-LINK=" -ldl -o jconsole "
+CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
+LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
 raspberry_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
-COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
-LINK=" -ledit -ldl -o jconsole "
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
+LDFLAGS=" -ledit -ldl "
 else
-COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DUSE_LINENOISE -DRASPI"
-LINK=" -ldl -o jconsole "
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DUSE_LINENOISE -DRASPI"
+LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
 raspberry_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
-COMPILE="$common -march=armv8-a+crc -DREADLINE -DRASPI"
-LINK=" -ledit -ldl -o jconsole "
+CFLAGS="$common -march=armv8-a+crc -DREADLINE -DRASPI"
+LDFLAGS=" -ledit -ldl "
 else
-COMPILE="$common -march=armv8-a+crc -DREADLINE -DUSE_LINENOISE -DRASPI"
-LINK=" -ldl -o jconsole "
+CFLAGS="$common -march=armv8-a+crc -DREADLINE -DUSE_LINENOISE -DRASPI"
+LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
 darwin_j32)
-COMPILE="$darwin -m32 -DREADLINE $macmin"
-LINK=" -ledit -ldl -lncurses -m32 $macmin -o jconsole "
+CFLAGS="$darwin -m32 -DREADLINE $macmin"
+LDFLAGS=" -ledit -ldl -lncurses -m32 $macmin "
 ;;
 #-mmacosx-version-min=10.5
 darwin_j64)
-COMPILE="$darwin -DREADLINE $macmin"
-LINK=" -ledit -ldl -lncurses $macmin -o jconsole "
+CFLAGS="$darwin -DREADLINE $macmin"
+LDFLAGS=" -ledit -ldl -lncurses $macmin "
 ;;
 *)
 echo no case for those parameters
 exit
 esac
 
-OBJS="jconsole.o jeload.o ${OBJSLN}"
-TARGET=jconsole
-export OBJS COMPILE LINK TARGET
-$jmake/domake.sh $1
+echo "CFLAGS=$CFLAGS"
 
+TARGET=jconsole
+
+if [ ! -f ../jsrc/jversion.h ] ; then
+  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
+fi
+
+mkdir -p ../bin/$jplatform/$j64
+mkdir -p obj/$jplatform/$j64/
+cp makefile-jconsole obj/$jplatform/$j64/.
+export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64
+cd obj/$jplatform/$j64/
+make -f makefile-jconsole
+cd -

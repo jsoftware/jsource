@@ -3,7 +3,7 @@
 
 J SOURCE is all files in the distributed jsource folder.
 
-J SOURCE is Copyright 1990-2018, Jsoftware Inc.  All rights reserved.
+J SOURCE is Copyright 1990-2019, Jsoftware Inc.  All rights reserved.
 
 J SOURCE can be used under a commercial license from Jsoftware,
 in which case the terms and conditions of that license apply.

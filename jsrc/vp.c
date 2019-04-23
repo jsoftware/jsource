@@ -30,7 +30,7 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
  if(j==0)R z;  // if all indices in range, keep the original vector
  // There was an out-of-bounds or negative index.  We may have to modify the index vector.  Reallocate it if we didn't already
  if(z==w)RZ(z=ca(z));  // Create temp area if we don't have one already
- for(j=AN(z), v=IAV(z);j;--j){if(*v<0)*v+=n; ASSERT((UI)*v++<(UI)n,EVINDEX);}
+ for(j=AN(z), v=IAV(z);j;--j){if((UI)*v>=(UI)n){*v+=n; ASSERT((UI)*v<(UI)n,EVINDEX);} ++v;}  // replace negative indexes
  R z;
 }    /* positive indices */
 

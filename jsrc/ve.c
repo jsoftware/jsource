@@ -41,6 +41,18 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSIB;
 }
 
+#if 0&&C_AVX&&SY_64
+AHDR2(plusDD,D,D,D){I u;I v;I oflo=0;
+ if(1==n)  DO(m, u=*x; v=(I)*y; if(u==IMAX)oflo+=v; u=u+v; *z++=u; x++; y++; )
+ if(1==n){
+ }
+ else if(b)DO(m, u=*x++; DO(n, v=(I)*y; if(u==IMAX)oflo+=v; v=u+v; *z++=v; y++;))
+ else      DO(m, v=(I)*y++; if(v){DO(n, u=*x; if(u==IMAX)oflo=1; u=u+1; *z++=u; x++;)}else{if(z!=x)MC(z,x,n<<LGSZI); z+=n; x+=n;})
+ if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSIB;
+}
+#else
+ANAN( plusDD, D,D,D, PLUS)
+#endif
 // BD DB add similarly?
 
 // II subtract, noting overflow and leaving it, possibly in place
@@ -158,7 +170,7 @@ APFX(tymesIO, D,I,I, TYMESO)
 
 AIFX( plusBB, I,B,B, +     )    /* plusBI */                AIFX( plusBD, D,B,D, +   )
    /* plusIB */                 /* plusII */                AIFX( plusID, D,I,D, +   )
-AIFX( plusDB, D,D,B, +     )  AIFX( plusDI, D,D,I, +)       ANAN( plusDD, D,D,D, PLUS)
+AIFX( plusDB, D,D,B, +     )  AIFX( plusDI, D,D,I, +)       /* plusDD */
 ANAN( plusZZ, Z,Z,Z, zplus )
 
 

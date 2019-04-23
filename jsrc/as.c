@@ -117,7 +117,7 @@ AHDRS(plussfxD,D,D){I i;
   )
  }else{D *y;
   for(i=0;i<m;++i){
-   y=z; DO(d, *--z=    *--x;);
+   y=z; DQ(d, *--z=    *--x;);
    DQ(n-1, DQ(d, --x; --y; --z; *z=*x+*y;));
   }
  }

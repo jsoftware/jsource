@@ -1015,3 +1015,111 @@ static __forceinline void aligned_free(void *ptr) {
 #endif
 #define CRC32LL CRC32L                 // takes UIL (8 bytes), return UI
 #endif
+
+
+// platform-dependent stuff for AVX
+#if C_AVX&&SY_64
+#define VOIDARG
+#define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
+
+#elif defined(__aarch64__)
+#define VOIDARG void
+#define _mm256_zeroupper(x)
+typedef int64x2_t __m128i;
+typedef float64x2_t __m128d;
+#define _mm_set1_epi32_ vdupq_n_s64
+// #if !defined(__clang__) && __GNUC__ < 6
+#if !defined(__clang__) && ((__GNUC__ < 4)||((__GNUC__ == 4) && (__GNUC_MINOR__ < 9)))
+#define __ai static inline __attribute__((__always_inline__))
+__ai uint64x2_t vreinterpretq_u64_f64(float64x2_t __p0) {
+  uint64x2_t __ret;
+  __ret = (uint64x2_t)(__p0);
+  return __ret;
+}
+__ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
+  float64x2_t __ret;
+  __ret = (float64x2_t)(__p0);
+  return __ret;
+}
+#endif /* clang */
+
+#else   /* android with hardware crc32 */
+#define VOIDARG void
+#define _mm256_zeroupper(x)
+#ifdef _MSC_VER
+typedef union __declspec(align(16)) __m128i {
+   __int8 m128i_i8[16];
+   __int16 m128i_i16[8];
+   __int32 m128i_i32[4];
+   __int64 m128i_i64[2];
+   unsigned __int8 m128i_u8[16];
+   unsigned __int16 m128i_u16[8];
+   unsigned __int32 m128i_u32[4];
+   unsigned __int64 m128i_u64[2];
+} __m128i;
+typedef struct __declspec(align(16)) __m128d {
+    double              m128d_f64[2];
+} __m128d;
+
+#if SY_64
+#define SSEREGI(x) x##.m128i_i64
+#else
+#define SSEREGI(x) x##.m128i_i32
+#endif
+#define SSEREGD(x) x##.m128d_f64
+#define SSEREGDI(x) ((UIL*)&(x##.m128d_f64))
+
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    z.m128i_i32[0]=
+    z.m128i_i32[1]=
+    z.m128i_i32[2]=
+    z.m128i_i32[3]=a;
+    return z;
+  }
+#else
+#if SY_64
+typedef long long __m128i __attribute__ ((__vector_size__ (16), __may_alias__));
+typedef union __attribute__ ((aligned (16))) st__m128i {
+   signed char m128i_i8[16];
+   int16_t m128i_i16[8];
+   int32_t m128i_i32[4];
+   int64_t m128i_i64[2];
+   unsigned char m128i_u8[16];
+   uint16_t m128i_u16[8];
+   uint32_t m128i_u32[4];
+   uint64_t m128i_u64[2];
+} st__m128i;
+#else
+typedef      long __m128i __attribute__ ((__vector_size__ ( 8), __may_alias__));
+typedef union __attribute__ ((aligned ( 8))) st__m128i {
+   int32_t m128i_i64[2];
+   uint32_t m128i_u64[2];
+} st__m128i;
+#endif
+typedef double __m128d __attribute__ ((__vector_size__ (16), __may_alias__));
+
+#define SSEREGI(x) (x)
+#define SSEREGD(x) (x)
+#define SSEREGDI(x) ((UIL*)&(x))
+
+#if SY_64
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    (*(st__m128i*)&z).m128i_i32[0]=
+    (*(st__m128i*)&z).m128i_i32[1]=
+    (*(st__m128i*)&z).m128i_i32[2]=
+    (*(st__m128i*)&z).m128i_i32[3]=a;
+    return z;
+  }
+#else
+static __forceinline __m128i _mm_set1_epi32_(int a) {
+    __m128i z;
+    (*(st__m128i*)&z).m128i_i64[0]=
+    (*(st__m128i*)&z).m128i_i64[1]=a;
+    return z;
+  }
+#endif
+#endif
+
+#endif  /* !C_AVX */

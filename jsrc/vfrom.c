@@ -28,18 +28,22 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  EPILOG(z);
 }
 
-#define SETJ(jexp)    {j=(jexp); if(j<0)j+=p; ASSERT((UI)j<(UI)p,EVINDEX);}
+// obsolete #define SETJ(jexp)    {j=(jexp); if(j<0)j+=p; ASSERT((UI)j<(UI)p,EVINDEX);}
+
+#define SETNDX(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // if ndxvbl>p, adding p can never make it OK
+#define SETNDXRW(ndxvbl,ndxexp,limexp)    {ndxvbl=(ndxexp); if((UI)ndxvbl>=(UI)limexp){(ndxexp)=ndxvbl+=(limexp); ASSERT((UI)ndxvbl<(UI)limexp,EVINDEX);}}  // this version write to input if the value was negative
+#define SETJ(jexp) SETNDX(j,jexp,p)
 
 #define IFROMLOOP(T)        \
  {T   * RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
-  if(1==an){v+=j;   DO(m,                                    *x++=*v;       v+=p; );}  \
-  else              DO(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
+  if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
+  else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
 #define IFROMLOOP2(T,qexp)  \
  {T* RESTRICT u,* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
   q=(qexp); pq=p*q;         \
-  if(1==an){v+=j*q; DO(m,                     u=v;     DO(q, *x++=*u++;);   v+=pq;);}  \
-  else              DO(m, DO(an, SETJ(av[i]); u=v+j*q; DO(q, *x++=*u++;);); v+=pq;);   \
+  if(1==an){v+=j*q; DQ(m,                     u=v;     DQ(q, *x++=*u++;);   v+=pq;);}  \
+  else              DQ(m, DO(an, SETJ(av[i]); u=v+j*q; DQ(q, *x++=*u++;);); v+=pq;);   \
  }
 
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
@@ -109,8 +113,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    else if(0==(k&(SZS-1)))IFROMLOOP2(S,k>>LGSZS)
    else{S*x,*u;
     q=1+(k>>LGSZS);
-    if(1==an){wv+=k*j; DO(m,                     x=(S*)zv; u=(S*) wv;      DO(q, *x++=*u++;); zv+=k;   wv+=wk;);}
-    else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DO(q, *x++=*u++;); zv+=k;); wv+=wk;);
+    if(1==an){wv+=k*j; DQ(m,                     x=(S*)zv; u=(S*) wv;      DQ(q, *x++=*u++;); zv+=k;   wv+=wk;);}
+    else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DQ(q, *x++=*u++;); zv+=k;); wv+=wk;);
   }
  }
  RETF(z);  // todo kludge should inherit norel
@@ -154,11 +158,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
    b=(B*)u; x=(T*)y; DO(r, *x++=*b++?v1:v0;); v+=p;);                                  \
  }
 #else
-#define BNNERN(T)       {T*v=(T*)wv,*x=(T*)zv; DO(m, b=av; DO(an, *x++=*(v+*b++);); v+=p;);}
+#define BNNERN(T)       {T*v=(T*)wv,*x=(T*)zv; DQ(m, b=av; DQ(an, *x++=*(v+*b++);); v+=p;);}
 #define BNNERM(T,T1)    BNNERN(T)
 #endif
 
-#define INNER1B(T)  {T*v=(T*)wv,*x=(T*)zv; v+=*av; DO(m, *x++=*v; v+=p;);}
+#define INNER1B(T)  {T*v=(T*)wv,*x=(T*)zv; v+=*av; DQ(m, *x++=*v; v+=p;);}
 
 // a is boolean
 static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
@@ -191,7 +195,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
 #endif
   case 1+2*sizeof(I): INNER1B(I);  break;
   default:
-   if(1==an){wv+=k**av; DO(m, MC(zv,wv,k); zv+=k; wv+=wk;);}
+   if(1==an){wv+=k**av; DQ(m, MC(zv,wv,k); zv+=k; wv+=wk;);}
 #if !SY_64 && SY_WIN32
    else{A x;C*v,*xv,*xv00,*xv01,*xv02,*xv03,*xv04,*xv05,*xv06,*xv07,*xv08,*xv09,*xv10,*xv11,
          *xv12,*xv13,*xv14,*xv15;I i,j,k4=k*4;
@@ -258,6 +262,7 @@ A jtfrombu(J jt,A a,A w,I wf){F1PREFIP;A p,q,z;B b=0;I ar,*as,h,m,r,*u,*v,wcr,wr
  RETF(z);
 }    /* (<"1 a){"r w, dense w, integer array a */
 
+#define AUDITPOSINDEX(x,lim) if((UI)(x)>=(UI)(lim)){if((x)<0)break; ASSERT(0,EVINDEX);}
 // a is boxed list, w is array, wf is frame of operation, *ind will hold the result
 // if the opened boxes have contents with the same item shape (treating atoms as same as singleton lists), create an array of all the indexes; put that into *ind and return 1.
 // otherwise return 0
@@ -275,7 +280,8 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
   if(!(t&INT))RZ(q=cvt(INT,q));
   if(!(c==AN(q)&&1>=AR(q)))R 0; 
   u=AV(q);
-  DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); *v++=k;);
+// obsolete   DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); *v++=k;);
+  DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);
  }
  *ind=z;
  R 1;
@@ -292,18 +298,19 @@ static B jtaindex1(J jt,A a,A w,I wf,A*ind){A z;I c,i,k,n,t,*v,*ws;
  if(t&INT){  // if it's INT already, we don't need to move it.
   switch(c){I c0,c1,c2;
   case 2:
-   c0=ws[0], c1=ws[1]; for(i=n;i>0;--i){if(v[0]<0)break; ASSERT(c0>v[0],EVINDEX); if(v[1]<0)break; ASSERT(c1>v[1],EVINDEX); v+=2;} break;
+   c0=ws[0], c1=ws[1]; for(i=n;i>0;--i){AUDITPOSINDEX(v[0],c0) AUDITPOSINDEX(v[1],c1)  v+=2;} break;
   case 3:
-   c0=ws[0], c1=ws[1], c2=ws[2]; for(i=n;i>0;--i){if(v[0]<0)break; ASSERT(c0>v[0],EVINDEX); if(v[1]<0)break; ASSERT(c1>v[1],EVINDEX); if(v[2]<0)break; ASSERT(c2>v[2],EVINDEX); v+=3;} break;
+   c0=ws[0], c1=ws[1], c2=ws[2]; for(i=n;i>0;--i){AUDITPOSINDEX(v[0],c0) AUDITPOSINDEX(v[1],c1) AUDITPOSINDEX(v[2],c2) v+=3;} break;
   default:
-   for(i=n;i>0;--i){DO(c, k=*v; if(k<0)break; ASSERT(k<ws[i],EVINDEX); ++v;); if(k<0)break;} break; 
+   for(i=n;i>0;--i){DO(c, k=*v; AUDITPOSINDEX(k,ws[i]) ++v;); if(k<0)break;} break; 
   }
  }else i=1;  // if not INT to begin with, we must convert
  if(i==0){z=a;  // If all indexes OK, return the original block
  }else{
   // There was a negative index.  Allocate a new block for a and copy to it.
   RZ(z=t&INT?ca(a):cvt(INT,a));  v=AV(z);
-  DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+// obsolete   DO(n, DO(c, k=*v; if(0>k)*v=k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); ++v;););  // convert indexes to nonnegative & check for in-range
+  DQ(n, DO(c, SETNDXRW(k,*v,ws[i]) ++v;););  // convert indexes to nonnegative & check for in-range
  }
  *ind=z;
  R 1;
@@ -354,10 +361,11 @@ static F2(jtafrom){PROLOG(0073);A c,ind,p=0,q,*v,y=w;B bb=1;I acr,ar,i=0,j,m,n,p
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
- if(ar){
-  if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
-  R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):
-      df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));
+ if(ar){  // if there is an array of boxes
+// obsolete  if(ar==acr&&wr==wcr){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}
+  if(((ar^acr)|(wr^wcr))==0){RE(aindex(a,w,wf,&ind)); if(ind)R frombu(ind,w,wf);}  // if boxing doesn't contribute to shape, open the boxes of a and copy the values
+  R wr==wcr?rank2ex(a,w,0L,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
+      df2(irs1(a,0L,acr,jtbox),irs1(w,0L,wcr,jtbox),amp(ds(CLBRACE),ds(COPE)));  // (<"0 a) {&> <"0 w
  }
  c=AAV0(a); t=AT(c); n=IC(c); v=AAV(c);   // B prob not reqd 
  s=AS(w)+wr-wcr;
@@ -450,7 +458,8 @@ F1(jtmap){R mapx(ace,w);}
 // extract the single box a from w and open it.  Don't mark it no-inplace.
 static F2(jtquicksel){I index;
  RE(index=i0(a));  // extract the index
- if(index<0)index += AN(w); ASSERT((UI)index<(UI)AN(w),EVINDEX);   // remap negative index, check range
+// obsolete  index=index+((index>>(BW-1))&AN(w)); ASSERT((UI)index<(UI)AN(w),EVINDEX);   // remap negative index, check range
+ SETNDX(index,index,AN(w))   // remap negative index, check range
  R AAV(w)[index];  // select the box
 }
 

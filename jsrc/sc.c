@@ -75,7 +75,7 @@ static DF2(jtunquote){A z;
   if(--AC(fs)<=0){++AC(fs); fa(fs);}
  } else {
   // Extra processing is required.  Check each option individually
-  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL1:VAL2);  // Record the call to the name, if perf monitoring on
+  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already)
   if(jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)){  // The verb is locked if it is marked as locked, or if the script is locked
@@ -85,7 +85,7 @@ static DF2(jtunquote){A z;
    A s=jt->sf; jt->sf=fs; z=v->valencefns[dyadex]((v->flag>>dyadex)&VJTFLGOK1?jtinplace:jt,a,w,fs); jt->sf=s;
    fa(fs);
   }
-  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL1:VAL2);  // record the return from call
+  if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-2L,dyadex?VAL2:VAL1);  // record the return from call
   if(jt->uflags.us.uq.uq_c.spfreeneeded)spfree();   // if garbage collection required, do it
  }
  FDEPDEC(d);

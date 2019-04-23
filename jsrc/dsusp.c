@@ -143,12 +143,12 @@ static A jtdebug(J jt){A z=0;C e;DC c,d;
 // post-execution error.  Used to signal an error on sentences whose result is bad only in context, i. e. non-nouns or assertions
 // we reconstruct conditions at the beginning of the parse, and set an error on token 1.
 A jtpee(J jt,A *queue,CW*ci,I err,I lk,DC c){A z=0;
- ASSERT(!lk,err);  //  locked fn is totally opaque, with no stack
- if(lk<=0){jt->parserqueue=queue+ci->i; jt->parserqueuelen=(I4)ci->n; jt->parsercurrtok=1;}  // unless locked, indicate failing-sentence info
+ ASSERT(lk<=0,err);  //  locked fn is totally opaque, with no stack.  Exit with 0 result, indicating error
+ jt->parserqueue=queue+ci->i; jt->parserqueuelen=(I4)ci->n; jt->parsercurrtok=1;  // unless locked, indicate failing-sentence info
  jsignal(err);   // signal the requested error
  // enter debug mode if that is enabled
  if(c&&jt->uflags.us.cx.cx_c.db/*&&( obsolete DBTRY!=jt->uflags.us.cx.cx_c.db)*/){DC prevtop=jt->sitop->dclnk; prevtop->dcj=jt->sitop->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); prevtop->dcj=0;} //  d is PARSE type; set d->dcj=err#; d->dcn must remain # tokens debz();  not sure why we change previous frame
- if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear it now
+ if(jt->jerr)z=0; R z;  // if we entered debug, the error may have been cleared.  If not, clear the result.  Return debug result, which is result to use or 0 to indicate jump
 }
 
 /* parsex: parse an explicit defn line              */
@@ -180,7 +180,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
    if(s=dbstop(d,0L)){z=0; jsignal(EVSTOP);}
    else              {ras(self); z=a?dfs2(a,w,self):dfs1(w,self); fa(self);}
    // If we hit a stop, or if we hit an error outside of try./catch., enter debug mode.  But if debug mode is off now, we must have just
-   // executed 13!:8]0, and we should continue on outwide of debug mode
+   // executed 13!:8]0, and we should continue on outside of debug mode
    if(!z&&jt->uflags.us.cx.cx_c.db/* obsolete &&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)*/){d->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}

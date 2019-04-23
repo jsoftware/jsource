@@ -309,8 +309,8 @@ static DF2(jtxdefn){PROLOG(0048);
     parseline(t);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
     if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
-    if(t||!jt->jerr)ti=i,++i;  // if no error, continue on
-    else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db/* obsolete ||DBERRCAP==jt->uflags.us.cx.cx_c.db*/)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug, go to new line if any
+    if(t)ti=i,++i;  // if no error, continue on
+    else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db/* obsolete ||DBERRCAP==jt->uflags.us.cx.cx_c.db*/)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so
     else{i=ci->go; if(i<SMAX){RESETERR; z=mtm; if(tdi){if(!--tdi)jt->uflags.us.cx.cx_c.db=thisframe&&savdebug;}}else z=0;}  // if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.  This is B1 try. if. error do. end. catch. return. end.

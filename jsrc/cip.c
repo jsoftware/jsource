@@ -186,7 +186,7 @@ while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
      if(nextprefetch==(D*)((C*)w1next+6*CACHELINESIZE)){nextprefetch = w1next += n;}else{nextprefetch+=(3*CACHELINESIZE)/sizeof(*nextprefetch);}  // next col, or next row after 9 prefetches
     }
 #endif
-    // process each 16x4 section of cache, accumulating into z  (this holds 16x2 complex values, if cmpx)
+    // process each 16x4 section of cache, accumulating into z (this holds 16x2 complex values, if cmpx)
     I a3rem=MIN(w0rem,CACHEWIDTH);
     D* RESTRICT z3base=z2base; D* c3base=c2base;
     for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH,z3base+=OPWIDTH){

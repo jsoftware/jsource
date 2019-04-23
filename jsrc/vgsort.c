@@ -377,9 +377,10 @@ static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
 // We are known to have 1 atom per item
 static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  // Use quicksort for normal-sized lists
-if(n<50000)R jtsortdq(jtinplace,m,n,w);  // TUNE
+ if(n<50000)R jtsortdq(jtinplace,m,n,w);  // TUNE
 // testing if(n&1)R jtsortdq(jtinplace,m,n,w);
 // testing if(n&2)R jtsortdirect(jt,m,1,n,w);  // TUNE - it never wins
+ // falling through for radix sort
  GA(z,AT(w),AN(w),AR(w),AS(w));
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area

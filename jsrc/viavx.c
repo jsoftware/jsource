@@ -11,111 +11,6 @@
 // platforms with hardware crc32c
 #if C_CRC32C
 
-#if C_AVX&&SY_64
-#define VOID
-#define _mm_set1_epi32_ _mm_set1_epi32   // msvc does not allow redefine intrinsic
-
-#elif defined(__aarch64__)
-#define VOID void
-#define _mm256_zeroupper(x)
-typedef int64x2_t __m128i;
-typedef float64x2_t __m128d;
-#define _mm_set1_epi32_ vdupq_n_s64
-// #if !defined(__clang__) && __GNUC__ < 6
-#if !defined(__clang__) && ((__GNUC__ < 4)||((__GNUC__ == 4) && (__GNUC_MINOR__ < 9)))
-#define __ai static inline __attribute__((__always_inline__))
-__ai uint64x2_t vreinterpretq_u64_f64(float64x2_t __p0) {
-  uint64x2_t __ret;
-  __ret = (uint64x2_t)(__p0);
-  return __ret;
-}
-__ai float64x2_t vreinterpretq_f64_u64(uint64x2_t __p0) {
-  float64x2_t __ret;
-  __ret = (float64x2_t)(__p0);
-  return __ret;
-}
-#endif /* clang */
-
-#else   /* android with hardware crc32 */
-#define VOID void
-#define _mm256_zeroupper(x)
-#ifdef _MSC_VER
-typedef union __declspec(align(16)) __m128i {
-   __int8 m128i_i8[16];
-   __int16 m128i_i16[8];
-   __int32 m128i_i32[4];
-   __int64 m128i_i64[2];
-   unsigned __int8 m128i_u8[16];
-   unsigned __int16 m128i_u16[8];
-   unsigned __int32 m128i_u32[4];
-   unsigned __int64 m128i_u64[2];
-} __m128i;
-typedef struct __declspec(align(16)) __m128d {
-    double              m128d_f64[2];
-} __m128d;
-
-#if SY_64
-#define SSEREGI(x) x##.m128i_i64
-#else
-#define SSEREGI(x) x##.m128i_i32
-#endif
-#define SSEREGD(x) x##.m128d_f64
-#define SSEREGDI(x) ((UIL*)&(x##.m128d_f64))
-
-static __forceinline __m128i _mm_set1_epi32_(int a) {
-    __m128i z;
-    z.m128i_i32[0]=
-    z.m128i_i32[1]=
-    z.m128i_i32[2]=
-    z.m128i_i32[3]=a;
-    return z;
-  }
-#else
-#if SY_64
-typedef long long __m128i __attribute__ ((__vector_size__ (16), __may_alias__));
-typedef union __attribute__ ((aligned (16))) st__m128i {
-   signed char m128i_i8[16];
-   int16_t m128i_i16[8];
-   int32_t m128i_i32[4];
-   int64_t m128i_i64[2];
-   unsigned char m128i_u8[16];
-   uint16_t m128i_u16[8];
-   uint32_t m128i_u32[4];
-   uint64_t m128i_u64[2];
-} st__m128i;
-#else
-typedef      long __m128i __attribute__ ((__vector_size__ ( 8), __may_alias__));
-typedef union __attribute__ ((aligned ( 8))) st__m128i {
-   int32_t m128i_i64[2];
-   uint32_t m128i_u64[2];
-} st__m128i;
-#endif
-typedef double __m128d __attribute__ ((__vector_size__ (16), __may_alias__));
-
-#define SSEREGI(x) (x)
-#define SSEREGD(x) (x)
-#define SSEREGDI(x) ((UIL*)&(x))
-
-#if SY_64
-static __forceinline __m128i _mm_set1_epi32_(int a) {
-    __m128i z;
-    (*(st__m128i*)&z).m128i_i32[0]=
-    (*(st__m128i*)&z).m128i_i32[1]=
-    (*(st__m128i*)&z).m128i_i32[2]=
-    (*(st__m128i*)&z).m128i_i32[3]=a;
-    return z;
-  }
-#else
-static __forceinline __m128i _mm_set1_epi32_(int a) {
-    __m128i z;
-    (*(st__m128i*)&z).m128i_i64[0]=
-    (*(st__m128i*)&z).m128i_i64[1]=a;
-    return z;
-  }
-#endif
-#endif
-
-#endif  /* !C_AVX */
 
 /* Floating point (type D) byte order:               */
 /* Archimedes              3 2 1 0 7 6 5 4           */
@@ -687,7 +582,7 @@ static B jteqa0(J jt,I n,A*u,A*v,I c,I d){PUSHCCT(1.0) B res=1; DO(n, if(!equ(*u
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOID);  \
+  _mm256_zeroupper(VOIDARG);  \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                                            \
     /* look for IIDOT/IICO/INUBSV/INUB/INUBI - we set IIMODREFLEX if one of those is set */ \
@@ -901,7 +796,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
         D tl=jt->cct,tr=1/tl;I il,jx; D x=0.0;  /* =0.0 to stifle warning */    \
         IH *hh=IHAV(h); I p=hh->datarange; TH * RESTRICT hv=hh->data.TH; UIL ctmask=jt->ctmask;   \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOID);  \
+  _mm256_zeroupper(VOIDARG);  \
   __m128d xval, xnew, xrot; SETXNEW \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */                            \
@@ -1059,7 +954,7 @@ static IOFT(A,UI4,jtioa12,hia(1.0,*v),TFINDBX,TFINDBY,!equ(*v,av[hj]),!equ(*v,av
 #define IOFSMALLRANGE(f,T,Ttype)    \
  IOF(f){IH *hh=IHAV(h);I e,l;T* RESTRICT av,* RESTRICT wv;T max,min; UI p; \
   mode|=((mode&(IIOPMSK&~(IIDOT^IICO)))|((I)a^(I)w)|(ac^wc))?0:IIMODREFLEX; \
-  _mm256_zeroupper(VOID);  \
+  _mm256_zeroupper(VOIDARG);  \
   av=(T*)AV(a); wv=(T*)AV(w); \
   min=(T)hh->datamin; p=hh->datarange; max=min+(T)p-1; \
   e=1==wc?0:wsct; if(w==mark){wsct=0;} \
@@ -1342,7 +1237,7 @@ static I jtutype(J jt,A w,I c){A*wv,x;I m,t;
         IH *hh=IHAV(h); p=hh->datarange;  hv=hh->data.TH;  \
  \
   __m128i vp, vpstride;   /* v for hash/v for search; stride for each */ \
-  _mm256_zeroupper(VOID);  \
+  _mm256_zeroupper(VOIDARG);  \
   vp=_mm_set1_epi32_(0);  /* to avoid warnings */ \
   md=mode&IIOPMSK;   /* clear upper flags including REFLEX bit */  \
   A indtbl; GATV(indtbl,INT,((asct*sizeof(TH)+SZI)>>LGSZI),0,0); TH * RESTRICT indtdd=TH##AV(indtbl); \
@@ -1441,7 +1336,7 @@ static IOFXW(Z,UI4,jtiowz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&wv[n*hj],2*n
   We will compress the hashtable after self-classifying w.  We compare against L2 size; there is value in staying in L1 too */ \
   UC *hvp; if((p<(L2CACHESIZE>>hh->hashelelgsize))||(mode&(IIOPMSK^(IICO|IIDOT)))){hvp=0;}else{A hvpa; GATV(hvpa,INT,3+(p>>LGBW),0,0); hvp=UCAV(hvpa)-BYTENO(minimum)+SZI;} \
   \
-  _mm256_zeroupper(VOID);  \
+  _mm256_zeroupper(VOIDARG);  \
   md=mode&(IIOPMSK|IIMODPACK);   /* clear upper flags including REFLEX bit */  \
   for(l=0;l<ac;++l,av+=acn,wv+=wcn){I chainct=0;  /* number of chains in w */   \
    /* zv progresses through the result - for those versions that support IRS */ \

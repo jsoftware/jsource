@@ -31,6 +31,11 @@ jplatform=linux j64=j64 ./build_libj.sh
 # to build all binaries for linux j64
 ./build_all.sh
 
+# linenoise is used as default for jconsole,
+# if you want to use libedit instead
+# export USE_LINENOISE=0 before building jconsole, eg
+USE_LINENOISE=0 ./build_jconsole.sh
+
 # test
 # cp jconsole libj.so libtsdll.so to the folder jlibrary/bin
 # cd the jlibrary/bin folder and run 

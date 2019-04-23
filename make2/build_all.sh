@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # build all binaries
 
 cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"

@@ -6,7 +6,7 @@ how to build/test j32/64/j64nonavx for linux/darwin/raspberry/...
 # make sure shell scripts are executable
 chmod +x *.sh
 
-# ensure proper jsrc/jversion.h (jversion-x.h template)
+# ensure proper jsrc/jversion.h (default jversion-x.h template)
 
 # !!! makefiles do not have h file dependencies !!!
 # after h file changes, run clean.sh to rm all *.o fles for clean build

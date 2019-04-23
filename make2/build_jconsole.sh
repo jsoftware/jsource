@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
@@ -112,6 +112,10 @@ esac
 echo "CFLAGS=$CFLAGS"
 
 TARGET=jconsole
+
+if [ ! -f ../jsrc/jversion.h ] ; then
+  cp ../jsrc/jversion-x.h ../jsrc/jversion.h
+fi
 
 mkdir -p ../bin/$jplatform/$j64
 mkdir -p obj/$jplatform/$j64/

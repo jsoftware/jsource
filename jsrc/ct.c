@@ -263,5 +263,5 @@ F2(jttcap){A c,p,s,t;I n;
  if(AN(c))R amp(c,ds(CPOLY));
  RZ(s=cstr("3 : ('g=:p.&y@:(("));
  RZ(s=over(s,over(lrep(a),cstr(") t.)@i.';'g +:^:(g ~: g@+:)^:_ ] 1') \" 0"))));
- R eval(CAV(s));
+ R eval(CAV(str0(s)));
 }

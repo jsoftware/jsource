@@ -8,27 +8,29 @@ chmod +x *.sh
 
 # ensure proper jsrc/jversion.h (default jversion-x.h template)
 
+# !!! make2 build commands will be confused if there are *.o files in jsrc
 # !!! makefiles do not have h file dependencies !!!
-# after h file changes, run clean.sh to rm all *.o fles for clean build
+# after h file changes, run ./clean.sh to rm all *.o files for clean build
 ./clean.sh
 
 # general format for build_... commands 
 # don't miss the ./ part when typing commands
-jplatform=(..) j64=(..) ./build_libj.sh
+jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
 jplatform : linux darwin raspberry
-j64 : j64 j64nonavx j32
+j64x : j64 j64nonavx j32
 
 # binaries generated inside the bin folder under jsource
 
 # eg. build j64 binaries
-jplatform=linux j64=j64 ./build_libj.sh
+jplatform=linux j64x=j64 ./build_libj.sh
 
 # linux and j64 is the default, so this is fine
 ./build_libj.sh
 
-# to build all binaries for linux j64
+# the easiest way to build all binaries
+# this will run ./clean.sh and can detect the host platform
 ./build_all.sh
 
 # linenoise is used as default for jconsole,

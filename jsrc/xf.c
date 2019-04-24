@@ -294,7 +294,7 @@ F1(jtjgetenv){
 #if (SYS & SYS_UNIX)
  {
   C*s;
-  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num[0];
+  R(s=getenv(CAV(toutf8x(w))))?cstr(s):num[0]; // toutf8x has trailing nul
  }
 #else
  {

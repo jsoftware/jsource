@@ -388,6 +388,7 @@ F1(jtbreakfns){A z;I *fh,*mh=0; void* ad;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(!AN(w)||AT(w)&LIT,EVDOMAIN);
  ASSERT(AN(w)<NPATH,EVDOMAIN);
+ w=str0(w);
  if(!strcmp(jt->breakfn,CAV(w))) R mtm;
  breakclose(jt);
 #if SYS&SYS_UNIX

@@ -338,7 +338,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  n=2**v++;                 // n=# ints in (index,length) pairs, v->index0
  n=0>n?-(2+n):n;                   /* remove NB. pair            */
  GATV(z,BOX,n>>1,1,0); z0=zv=AAV(z);  // allocate one box per word
- s=CAV(w);                         // s-> original text
+ s=CAV(str0(w));                         // s-> original text
  for(i=0;i<n;i+=2){     // for each word...
   j=v[i]; m=v[1+i];         // j=index, m=length of word
   if(0>k)k=j;              // k=index of start of sentence, set at start or when we have processed a control word
@@ -376,7 +376,7 @@ B jtpreparse(J jt,A w,A*zl,A*zc){PROLOG(0004);A c,l,*lv,*v,w0,w1,*wv,x,y;B b=0,t
    if(n==AN(c)){RZ(c=ext(0,c)); cv=(CW*)AV(c);}  // if result buffer is full, reallocate it, reset pointer to first CW
    w0=v[j];                             // w0 is A block for sentence j
    RZ(w1=wordil(w0));                   // w1 is A block for (# words), (index,length) pairs
-   s=CAV(w0);                           // s->start of sentence
+   s=CAV(str0(w0));                           // s->start of sentence
    k=conword(*(2+AV(w1)),s);            // classify first word, using length0.  0 means 'not CW', otherwise control type
    if(k==CTRY)try=1;                    // remember if we see a try.
    if(k==CASSERT){ASSERTCW(!as,i  ); as=1;}   // if assert., verify not preceded by assert.; go to post-assert. state

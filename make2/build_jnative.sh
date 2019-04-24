@@ -55,58 +55,36 @@ darwin="-fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-b
 
 case $jplatform\_$j64x in
 
-linux_j32) # linux x86
-TARGET=libtsdll.so
-# faster, but sse2 not available for 32-bit amd cpu
-# sse does not support mfpmath=sse in 32-bit gcc
-CFLAGS="$common -m32 -msse2 -mfpmath=sse -DC_NOMULTINTRINSIC "
-# slower, use 387 fpu and truncate extra precision
-# CFLAGS="$common -m32 -ffloat-store "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl"
+linux_j32)
+TARGET=libjnative.so
+CFLAGS="$common -m32 -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
-
-linux_j64nonavx) # linux intel 64bit nonavx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+linux_j64)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
-
-linux_j64) # linux intel 64bit avx
-TARGET=libtsdll.so
-CFLAGS="$common "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+raspberry_j32)
+TARGET=libjnative.so
+CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
-
-raspberry_j32) # linux raspbian arm
-TARGET=libtsdll.so
-CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI -DC_NOMULTINTRINSIC "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+raspberry_j64)
+TARGET=libjnative.so
+CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
 ;;
-
-raspberry_j64) # linux arm64
-TARGET=libtsdll.so
-CFLAGS="$common -march=armv8-a+crc -DRASPI "
-LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl"
+darwin_j32)
+TARGET=libjnative.dylib
+CFLAGS="$darwin -m32 $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" -m32 $macmin -dynamiclib "
 ;;
-
-darwin_j32) # darwin x86
-TARGET=libtsdll.dylib
-CFLAGS="$darwin -m32 $macmin"
-LDFLAGS=" -dynamiclib -lm -ldl -m32 $macmin"
+darwin_j64)
+TARGET=libjnative.dylib
+CFLAGS="$darwin $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
+LDFLAGS=" $macmin -dynamiclib "
 ;;
-
-darwin_j64nonavx) # darwin intel 64bit nonavx
-TARGET=libtsdll.dylib
-CFLAGS="$darwin $macmin"
-LDFLAGS=" -dynamiclib -lm -ldl $macmin"
-;;
-
-darwin_j64) # darwin intel 64bit
-TARGET=libtsdll.dylib
-CFLAGS="$darwin $macmin "
-LDFLAGS=" -dynamiclib -lm -ldl $macmin"
-;;
-
 *)
 echo no case for those parameters
 exit
@@ -116,8 +94,8 @@ echo "CFLAGS=$CFLAGS"
 
 mkdir -p ../bin/$jplatform/$j64x
 mkdir -p obj/$jplatform/$j64x/
-cp makefile-tsdll obj/$jplatform/$j64x/.
+cp makefile-jnative obj/$jplatform/$j64x/.
 export CFLAGS LDFLAGS TARGET jplatform j64x
 cd obj/$jplatform/$j64x/
-make -f makefile-tsdll
+make -f makefile-jnative
 cd -

@@ -3,11 +3,11 @@ vpath % ../../../../jsrc:../../../../jsrc/blis
 ifndef jplatform
 jplatform=linux
 endif
-ifndef j64
-j64=j64
+ifndef j64x
+j64x=j64
 endif
 
-ODIR=../../../../bin/$(jplatform)/$(j64)
+ODIR=../../../../bin/$(jplatform)/$(j64x)
 
 .SUFFIXES: .o
 

@@ -3,7 +3,7 @@
 cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
 jplatform="${jplatform:=linux}"
-j64="${j64:=j64}"
+j64x="${j64x:=j64}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -64,7 +64,7 @@ common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-cons
 fi
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
-case $jplatform\_$j64 in
+case $jplatform\_$j64x in
 
 linux_j32) # linux x86
 TARGET=libj.so
@@ -131,10 +131,10 @@ if [ ! -f ../jsrc/jversion.h ] ; then
   cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform/$j64
-mkdir -p obj/$jplatform/$j64/
-cp makefile-libj obj/$jplatform/$j64/.
-export CFLAGS LDFLAGS TARGET OBJS_FMA jplatform j64
-cd obj/$jplatform/$j64/
+mkdir -p ../bin/$jplatform/$j64x
+mkdir -p obj/$jplatform/$j64x/
+cp makefile-libj obj/$jplatform/$j64x/.
+export CFLAGS LDFLAGS TARGET OBJS_FMA jplatform j64x
+cd obj/$jplatform/$j64x/
 make -f makefile-libj
 cd -

@@ -12,7 +12,8 @@ ODIR=../../../../bin/$(jplatform)/$(j64x)
 .SUFFIXES: .o
 
 OBJS=  \
- tsdll.o
+ andjnative.o \
+ jeload.o
 
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)

@@ -3,7 +3,7 @@
 cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
 jplatform="${jplatform:=linux}"
-j64="${j64:=j64}"
+j64x="${j64x:=j64}"
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
@@ -54,7 +54,7 @@ common=" -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-consumed -W
 fi
 darwin=" -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
-case $jplatform\_$j64 in
+case $jplatform\_$j64x in
 
 linux_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
@@ -118,10 +118,10 @@ if [ ! -f ../jsrc/jversion.h ] ; then
   cp ../jsrc/jversion-x.h ../jsrc/jversion.h
 fi
 
-mkdir -p ../bin/$jplatform/$j64
-mkdir -p obj/$jplatform/$j64/
-cp makefile-jconsole obj/$jplatform/$j64/.
-export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64
-cd obj/$jplatform/$j64/
+mkdir -p ../bin/$jplatform/$j64x
+mkdir -p obj/$jplatform/$j64x/
+cp makefile-jconsole obj/$jplatform/$j64x/.
+export CFLAGS LDFLAGS TARGET OBJSLN jplatform j64x
+cd obj/$jplatform/$j64x/
 make -f makefile-jconsole
 cd -

@@ -40,8 +40,34 @@ static AMON(sgnD,   I,D, *z=((1.0-jt->cct)<=*x) - (-(1.0-jt->cct)>=*x);)
 static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);)
 
 static AMON(sqrtI,  D,I, ASSERTW(0<=*x,EWIMAG); *z=sqrt((D)*x);)
+
+#define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
+#define LGNPAR 2  // no good automatic way to do this
+static I valmask[8] = {-1, -1, -1, -1, 0, 0, 0, };
+#if C_AVX&&SY_64
+AHDR1(sqrtD,D,D){
+ // install the length mask for the last word
+ __m256i endmask; 
+ _mm256_zeroupper(VOIDARG);
+ __m256d zero; zero=_mm256_set_pd(0.0,0.0,0.0,0.0);
+ __m256d u; __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
+
+ // vector-to-vector add, no repetitions
+ endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+ DQ((n-1)>>LGNPAR, u=_mm256_loadu_pd(x); neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg); // convert to positive; than back to negative
+  anyneg=_mm256_or_pd(anyneg,neg);
+  u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); _mm256_storeu_pd(z, _mm256_blendv_pd(u,comp,neg)); x+=NPAR; z+=NPAR;
+ )
+ // runout, using mask
+ u=_mm256_maskload_pd(x,endmask); neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);
+ anyneg=_mm256_or_pd(anyneg,neg);
+ u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); _mm256_maskstore_pd(z, endmask, _mm256_blendv_pd(u,comp,neg));
+ if(_mm256_movemask_pd(anyneg)&0xf)jt->jerr=EWIMAG;  // if there are any negative values, call for a postpass
+}
+#else
 // obsolete static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
 static AMON(sqrtD,  D,D, if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); jt->jerr=EWIMAG;})  // if input is negative, leave sqrt as negative
+#endif
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 
 static AMON(expB,   D,B, *z=*x?2.71828182845904523536:1;)

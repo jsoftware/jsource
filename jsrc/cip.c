@@ -109,7 +109,7 @@ l1:
 // Floating-point matrix multiply, hived off to a subroutine to get fresh register allocation
 // *zv=*av * *wv, with *cv being a cache-aligned region big enough to hold CACHEWIDTH*CACHEHEIGHT floats
 // a is shape mxp, w is shape pxn.  Result is 0 if OK, 1 if overflow
-static void cachedmmult (D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
+static void cachedmmult (J jt,D* av,D* wv,D* zv,I m,I n,I p,I cmpx){D c[(CACHEHEIGHT+1)*CACHEWIDTH + (CACHEHEIGHT+1)*OPHEIGHT*OPWIDTH*2 + 2*CACHELINESIZE/sizeof(D)];  // 2 in case complex
  // m is # 1-cells of a
  // n is # values in an item of w (and result)
  // p is number of inner-product muladds (length of a row of a, and # items of w)
@@ -192,13 +192,15 @@ while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
     for(;a3rem>0;a3rem-=OPWIDTH,c3base+=OPWIDTH,z3base+=OPWIDTH){
      // initialize accumulator with the z values accumulated so far.
 #if C_AVX
-     __m256d z00,z01,z10,z11,z20,z21,z30,z31; static I valmask[8]={0, 0,0,0,-1,-1,-1,-1};
+     __m256d z00,z01,z10,z11,z20,z21,z30,z31;
      z31 = z30 = z21 = z20 = z11 = z10 = _mm256_set_pd(0.0,0.0,0.0,0.0);
      // We have to use masked load at the edges of the array, to make sure we don't fetch from undefined memory.  Fill anything not loaded with 0
      if(a3rem>3){z00 = _mm256_loadu_pd(z3base);if(a2rem>1)z01 = _mm256_loadu_pd(z3base+n); else z01=z21;   // In the main area, do normal (unaligned) loads
      }else{z01 = z00 = z20;
-           z00 = _mm256_maskload_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]));
-           I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_set_epi64x(valmask[vx],valmask[vx+1],valmask[vx+2],valmask[vx+3]));
+// obsolete            z00 = _mm256_maskload_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]));
+// obsolete            I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_set_epi64x(valmask[vx],valmask[vx+1],valmask[vx+2],valmask[vx+3]));
+           z00 = _mm256_maskload_pd(z3base,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)));
+           I vx= (a2rem>1)?a3rem:0; z01 = _mm256_maskload_pd(z3base+n,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-vx)));
      }
 #else
      D z00,z01,z02,z03,z10,z11,z12,z13;
@@ -275,8 +277,10 @@ while(k--);  // copy in 1 or 2 elements of *a; advance a0x to next element
 
      // Store accumulator into z.  Don't store outside the array
      if(a3rem>3){_mm256_storeu_pd(z3base,z00);if(a2rem>1)_mm256_storeu_pd(z3base+n,z01);
-     }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
-           if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z01);
+// obsolete      }else{_mm256_maskstore_pd(z3base,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z00);
+// obsolete            if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_set_epi64x(valmask[a3rem],valmask[a3rem+1],valmask[a3rem+2],valmask[a3rem+3]),z01);
+     }else{_mm256_maskstore_pd(z3base,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)),z00);
+           if(a2rem>1)_mm256_maskstore_pd(z3base+n,_mm256_loadu_si256((__m256i*)(jt->validitymask+4-a3rem)),z01);
      }
 
 #else   // If no AVX instructions
@@ -430,7 +434,7 @@ oflo2:
    }else{
      // full matrix products
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if(probsize < 5000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
+     if(probsize < 5000000)cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,2);  // Do our one-core matrix multiply - converting   TUNE this is 160x160 times 160x160
      else {
       // for large problem, use BLAS
       memset(DAV(z),C0,m*n*sizeof(D));
@@ -501,7 +505,7 @@ oflo2:
    }else {
      I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
      if(!(smallprob = probsize<1000LL)){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-       if(probsize < 5000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160
+       if(probsize < 5000000)cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160
        else{
          // If the problem is really big, use BLAS
          memset(DAV(z),C0,m*n*sizeof(D));
@@ -525,7 +529,7 @@ oflo2:
  case CMPXX:
   {NAN0;
    I probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-   if(probsize<2000000)cachedmmult(DAV(a),DAV(w),DAV(z),m,n*2,p*2,1);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+   if(probsize<2000000)cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,1);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
    else {
      // Large problem - start up BLAS
      memset(DAV(z),C0,2*m*n*sizeof(D));

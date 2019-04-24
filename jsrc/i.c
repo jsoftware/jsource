@@ -215,6 +215,10 @@ jt->assert = 1;
  jt->baselocalehash=(UI4)nmhash(sizeof(jt->baselocale),jt->baselocale);
  RESETRANK;  // init both ranks to RMAX
  DO(IOTAVECLEN, jt->iotavec[i]=i+IOTAVECBEGIN;)  // init our vector of ascending integers
+#if C_AVX&&SY_64
+ memset(&jt->validitymask[0],-1,4*sizeof(I)); memset(&jt->validitymask[4],0,4*sizeof(I));  // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
+#endif
+
  R 1;
 }
 

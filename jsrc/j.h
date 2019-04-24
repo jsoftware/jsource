@@ -552,6 +552,25 @@ extern unsigned int __cdecl _clearfp (void);
 #define NAN1V           {if(_SW_INVALID&_clearfp()){jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_clearfp())
 #endif
+#if C_AVX&&SY_64
+#define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
+#define LGNPAR 2  // no good automatic way to do this
+// loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
+#define AVXATOMLOOP(preloop,loopbody,postloop) \
+ __m256i endmask;  __m256d u; \
+ _mm256_zeroupper(VOIDARG); \
+ endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
+ preloop \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 1 1 1 2 */ \
+ while(1){ u=i?_mm256_loadu_pd(x):_mm256_maskload_pd(x,endmask); \
+  loopbody \
+  if(--i<0)break; \
+  _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
+ } \
+ _mm256_maskstore_pd(z, endmask, u); \
+ postloop
+#endif
+
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 // Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p

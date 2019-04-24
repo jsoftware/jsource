@@ -607,7 +607,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
   }else if((bcip&(I)jtinplace&2) && (AC(a)<ACUC1 || AC(a)==ACUC1&&jt->assignsym&&jt->assignsym->val==a&&!(adocv.cv&VCANHALT && jt->asgzomblevel<2))){z=a; if(TYPESNE(AT(a),zt))MODBLOCKTYPE(z,zt)  //  Uses JTINPLACEA==2
   }else{GA(z,zt,zn,f+r,0); I *zs=AS(z); MCISH(zs,sf,f);    MCISH(zs+f,s,r);} 
   // s, r, f, and sf ARE NOT USED FROM HERE ON in this branch to reduce register pressure.  They have been destroyed in the loops above
-  if(!zn)R z;  // If the result is empty, the allocated area says it all
+  if(!zn)RETF(z);  // If the result is empty, the allocated area says it all
   // zn  NOT USED FROM HERE ON
 
   // End of setup phase.  The execution phase:

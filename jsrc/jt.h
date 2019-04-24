@@ -139,12 +139,18 @@ typedef struct {
 // 3 words free
  I    filler[3];
 // --- end cache line 7
+#if C_AVX&&SY_64
+ I validitymask[8]; // -1, -1, -1, -1, 0, 0, 0, 0   used to prepare for mask load/store
+#endif
+// --- end cache line 7/8
+#if 0 // used only for direct locale numbering
  I*   numlocdelqh;      // head of deleted queue, waiting for realloc
  I    numlocdelqn;      // number of blocks on the deleted queue  could be UI4
  I*   numlocdelqt;       // tail of deleted queue
  I*   numloctbl;         // pointer to data area for locale-number to locale translation
- I4   parsercalls;      /* # times parser was called                       */
  UI4  numlocsize;       // AN(jt->stnum)
+#endif
+ I4   parsercalls;      /* # times parser was called                       */
  A*   tstacknext;       // if not 0, points to the recently-used tstack buffer, whose chain field points to tstack (sort of, because of bias)
  D    cct;               /* complementary comparison tolerance                            */
  D    cctdefault;        /* default complementary comparison tolerance                    */

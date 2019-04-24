@@ -41,28 +41,22 @@ static AMON(sgnZ,   Z,Z, if((1.0-jt->cct)>zmag(*x))*z=zeroZ; else *z=ztrend(*x);
 
 static AMON(sqrtI,  D,I, ASSERTW(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 
-#define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
-#define LGNPAR 2  // no good automatic way to do this
-static I valmask[8] = {-1, -1, -1, -1, 0, 0, 0, };
 #if C_AVX&&SY_64
 AHDR1(sqrtD,D,D){
+ AVXATOMLOOP(
  // install the length mask for the last word
- __m256i endmask; 
- _mm256_zeroupper(VOIDARG);
  __m256d zero; zero=_mm256_set_pd(0.0,0.0,0.0,0.0);
- __m256d u; __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
+ __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
 
+,
  // vector-to-vector add, no repetitions
- endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
- DQ((n-1)>>LGNPAR, u=_mm256_loadu_pd(x); neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg); // convert to positive; than back to negative
+  neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg); // convert to positive; than back to negative
   anyneg=_mm256_or_pd(anyneg,neg);
-  u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); _mm256_storeu_pd(z, _mm256_blendv_pd(u,comp,neg)); x+=NPAR; z+=NPAR;
- )
- // runout, using mask
- u=_mm256_maskload_pd(x,endmask); neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);
- anyneg=_mm256_or_pd(anyneg,neg);
- u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); _mm256_maskstore_pd(z, endmask, _mm256_blendv_pd(u,comp,neg));
+  u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);
+
+ ,
  if(_mm256_movemask_pd(anyneg)&0xf)jt->jerr=EWIMAG;  // if there are any negative values, call for a postpass
+ )
 }
 #else
 // obsolete static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
@@ -180,7 +174,7 @@ static A jtva1(J jt,A w,C id){A e,z;B b,m;I cv,n,t,wt,zt;P*wp;VF ado;
  t=atype(cv); zt=rtype(cv);  // extract required type of input and result
  if(t&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)((I)jtinplace|JTINPLACEW);}  // convert input if necessary; if we converted, converted result is ipso facto inplaceable
  if(((I)jtinplace&(cv>>VIPOKWX)&JTINPLACEW) && ASGNINPLACE(w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w));}
- ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
+ if(!n)RETF(z); ado(jt,n,AV(z),AV(w));  // perform the operation on all the atoms
  if(jt->jerr){
   // There was an error.  If it is recoverable in place, handle the cases here
   // integer abs: convert everything to float, changing IMIN to IMAX+1

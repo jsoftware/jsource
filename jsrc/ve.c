@@ -41,9 +41,6 @@ AHDR2(plusIB,I,I,B){I u;I v;I oflo=0;
  if(oflo)jt->jerr=EWOVIP+EWOVIPPLUSIB;
 }
 
-#define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
-#define LGNPAR 2  // no good automatic way to do this
-static I valmask[8] = {-1, -1, -1, -1, 0, 0, 0, };
 #if C_AVX&&SY_64
 // D + D, never 0 times
 AHDR2(plusDD,D,D,D){
@@ -53,12 +50,12 @@ AHDR2(plusDD,D,D,D){
  NAN0;
  if(1==n){
   // vector-to-vector add, no repetitions
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_add_pd(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;)
   // runout, using mask
   _mm256_maskstore_pd(z, endmask, _mm256_add_pd(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask)));
  }else{
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   if(b){
    // atom+vector
    DQ(m, __m256d u; u=_mm256_set_pd(*x,*x,*x,*x); ++x;
@@ -80,12 +77,12 @@ AHDR2(minusDD,D,D,D){
  NAN0;
  if(1==n){
   // vector-to-vector subtract, no repetitions
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, _mm256_sub_pd(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;)
   // runout, using mask
   _mm256_maskstore_pd(z, endmask, _mm256_sub_pd(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask)));
  }else{
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   if(b){
    // atom-vector
    DQ(m, __m256d u; u=_mm256_set_pd(*x,*x,*x,*x); ++x;
@@ -109,14 +106,14 @@ AHDR2(tymesDD,D,D,D){
  NAN0;
  if(1==n){
   // vector-to-vector *, no repetitions
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   DQ((m-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_loadu_pd(y); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
                     _mm256_storeu_pd(z, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero))); x+=NPAR; y+=NPAR; z+=NPAR;)
   // runout, using mask
   u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_maskload_pd(y,endmask); vnonzero=_mm256_cmp_pd(v,zero,_CMP_NEQ_OQ);
   _mm256_maskstore_pd(z, endmask, _mm256_mul_pd(_mm256_and_pd(u,vnonzero),_mm256_and_pd(v,unonzero)));
  }else{
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   if(b){
    // atom*vector
    DQ(m, u=_mm256_set_pd(*x,*x,*x,*x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); ++x;
@@ -150,14 +147,14 @@ AHDR2(divDD,D,D,D){
  NAN0;
  if(1==n){
   // vector-to-vector %, no repetitions
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   DQ((m-1)>>LGNPAR, u=_mm256_loadu_pd(x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_loadu_pd(y);
                     _mm256_storeu_pd(z, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero))); x+=NPAR; y+=NPAR; z+=NPAR;)
   // runout, using mask
   u=_mm256_maskload_pd(x,endmask); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); v=_mm256_maskload_pd(y,endmask);
   _mm256_maskstore_pd(z, endmask, _mm256_div_pd(u,_mm256_blendv_pd(one,v,unonzero)));
  }else{
-  endmask = _mm256_loadu_si256((__m256i*)(valmask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  // mask for 00=1111, 01=1000, 10=1100, 11=1110
   if(b){
    // atom%vector
    DQ(m, u=_mm256_set_pd(*x,*x,*x,*x); unonzero=_mm256_cmp_pd(u,zero,_CMP_NEQ_OQ); ++x;

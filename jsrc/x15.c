@@ -829,7 +829,7 @@ static CCT*jtcdparse(J jt,A a,I empty){C c,lib[NPATH],*p,proc[NPATH],*s,*s0;CCT*
  ASSERT(1>=AR(a),EVRANK);
  ASSERT(NLEFTARG>=AN(a),EVLIMIT);
  if(cc=cdlookup(a))R cc;
- cc=&cct; cc->an=an=AN(a); s=s0=CAV(a);
+ cc=&cct; cc->an=an=AN(a); s=s0=CAV(str0(a));
  /* library (module, file) name */
  while(*s==' ')++s; p=*s=='"'?strchr(++s,'"'):strchr(s,' '); li=s-s0; cc->ln=p?p-s:0;
  CDASSERT(p&&NPATH>cc->ln,DEBADLIB);
@@ -1319,7 +1319,7 @@ F1(jtcallback){
  {
   I cnt,alt;C c;C* s;
   ASSERT(1>=AR(w),EVRANK);
-  s=CAV(w);
+  s=CAV(str0(w));
   alt=0; while(*s==' ')++s; if('+'==*s){alt=1; ++s;}
 #if !SY_WIN32
   ASSERT(0==alt,EVDOMAIN);

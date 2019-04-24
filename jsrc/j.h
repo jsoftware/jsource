@@ -407,7 +407,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)           pst[(UC)(c)]
-#define FDEPDEC(d)      {jt->fdepi-=(I4)d;}
+#define FDEPDEC(d)      jt->fdepi-=(I4)d  // can be used in conditional expressions
 #define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)d,EVSTACK); jt->fdepi+=(I4)d;}
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))

@@ -55,9 +55,9 @@ static DF2(jtunquote){A z;
  I dyadex = w!=(A)self;   // if we were called with w,fs,fs, we are a monad.  Otherwise (a,w,fs) dyad
  v=FAV(fs);  // repurpose v to point to the resolved verb block
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
- if(explocale){ pushcallstack1(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
+ FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
+ if(explocale){ pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
  // ************** no errors till the stack has been popped
- FDEPINC(d);  // scaf bug this has an ASSERT which can mess up the call stack
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self
 
  // Execute the name.  First check 4 flags at once to see if anything special is afoot
@@ -77,7 +77,7 @@ static DF2(jtunquote){A z;
   // Extra processing is required.  Check each option individually
   if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk)pmrecord(thisname,jt->global?LOCNAME(jt->global):0,-1L,dyadex?VAL2:VAL1);  // Record the call to the name, if perf monitoring on
   // If we are required to insert a marker for each call, do so (if it hasn't been done already)
-  if(jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
+  if(jt->uflags.us.uq.uq_c.pmctrbstk&PMCTRBSTKREQD && callstackx==jt->callstacknext){pushcallstack1d(CALLSTACKPOPLOCALE,jt->global);}  //  If cocurrent is about, make every call visible
   if(jt->uflags.us.cx.cx_c.db&&!(jt->uflags.us.cx.cx_c.glock||VLOCK&v->flag)){  // The verb is locked if it is marked as locked, or if the script is locked
    jt->cursymb=stabent; z=dbunquote(dyadex?a:0,dyadex?w:a,fs);  // if debugging, go do that.  save last sym lookup as debug parm
   }else{

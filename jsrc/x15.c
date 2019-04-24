@@ -1226,7 +1226,7 @@ F2(jtmemw){C*u;I m,n,t,*v;
 }    /* 15!:2  memory write */
 
 // 15!:15 memu - make a copy of y if it is not inplaceable
-F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bp(AT(w))]=0;  RETF(w); }  // scaf for zero testing
+F1(jtmemu) { F1PREFIP; RZ(w); if(!((I)jtinplace&JTINPLACEW && ACIPISOK(w)))w=ca(w); if(AT(w)&LAST0)*(C4*)&CAV(w)[AN(w)*bp(AT(w))]=0;  RETF(w); }  // append 0 so that calls from cd append NUL termination
 F2(jtmemu2) { RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 F1(jtgh15){A z;I k; RE(k=i0(w)); RZ(z=gah(k,0L)); ACINCR(z); R sc((I)z);}

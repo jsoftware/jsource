@@ -338,7 +338,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  n=2**v++;                 // n=# ints in (index,length) pairs, v->index0
  n=0>n?-(2+n):n;                   /* remove NB. pair            */
  GATV(z,BOX,n>>1,1,0); z0=zv=AAV(z);  // allocate one box per word
- s=CAV(str0(w));                         // s-> original text
+ s=CAV(w);                         // s-> original text
  for(i=0;i<n;i+=2){     // for each word...
   j=v[i]; m=v[1+i];         // j=index, m=length of word
   if(0>k)k=j;              // k=index of start of sentence, set at start or when we have processed a control word

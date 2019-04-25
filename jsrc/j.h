@@ -650,7 +650,7 @@ extern unsigned int __cdecl _clearfp (void);
 #else
 #define REPLBYTETOW(in,out) (out=(UC)(in),out|=out<<8,out|=out<<16)
 #endif
-// Input is I/UI, count is # bytes to store to output pointer (never 0).  Input value is destroyed
+// Input is I/UI, count is # bytes to store to output pointer (1-7, never 0).  Input value is destroyed
 #if C_LE
 // obsolete #define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
 #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&((UI)~(I)0 << ((n)<<3))) | ((in)&~((UI)~(I)0 << ((n)<<3)));}

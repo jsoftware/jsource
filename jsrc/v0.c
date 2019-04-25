@@ -287,15 +287,15 @@ static F2(jtpoly2a){A c,e,x;I m;
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace
-F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz,y,*zz;
+F2(jtpoly2){F2PREFIP;A c,za;B b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
  RZ(a&&w);
  RANK2T jtr=jt->ranks; RESETRANK; I acr=jtr>=(1L<<RANKTX); I af=AR(a)-acr;   // acr=1 if requested rank >= 1  af=length of frame of a
  if(af>0){jtr=jtr==(RANK2T)~0?0:jtr; I wf=(I)AR(w)-(jtr&RMAX); wf=MIN(af,wf); wf=wf<0?0:wf; ASSERTAGREE(AS(a),AS(w),wf) R rank2ex(a,w,0L,acr,RMAX,acr,RMAX,jtpoly2);}  // if right rank not given, use 0
  an=AN(a); at=AT(a); b=1&&BOX&at;   // b if mplr/roots form; otherwise coeff
- wn=AN(w); wt=AT(w);
+ n=AN(w); wt=AT(w);
  ASSERT(!(at&SPARSE),EVNONCE);  // sparse polynomial not supported
  ASSERT(!an||at&NUMERIC+BOX,EVDOMAIN);
- ASSERT(!wn||wt&NUMERIC+BOX,EVDOMAIN);
+ ASSERT(!n||wt&NUMERIC+BOX,EVDOMAIN);
  if(!an)R reshape(shape(w),num[0]);  // if empty a, return all 0s
  if(b){A*av=AAV(a); 
   ASSERT(2>=an,EVLENGTH);
@@ -308,7 +308,7 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  }
  t=maxtyped(at,wt); if(b)t=maxtyped(t,AT(c)); if(!(t&XNUM+RAT))t=maxtyped(t,FL);
  if(TYPESNE(t,at))RZ(a=cvt(t,a)); ad=DAV(a); az=ZAV(a);
- if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} wd=DAV(w); wz=ZAV(w);
+ if(TYPESNE(t,wt)){RZ(w=cvt(t,w)); jtinplace=(J)(intptr_t)((I)jtinplace|JTINPLACEW);} x=DAV(w); wz=ZAV(w);
  if(b){
   // mult/roots: convert and extract the coeff
   RZ(c=cvt(t,c)); d=*DAV(c); e=*ZAV(c);
@@ -318,36 +318,87 @@ F2(jtpoly2){F2PREFIP;A c,z;B b;D*ad,d,p,*wd,x,*zd;I an,at,j,t,wn,wt;Z*az,e,q,*wz
  }
  j=0;  // Set j=1 if there is an infinity in the coeffs/roots.  In that case we can't use Horner's rule (could do this only if !b&&FL?)
  if(t&FL+CMPX){
-        DO(t&FL?an:an+an, x=ad[i]; if(x==inf||x==infm){j=1; break;}); 
+        DO(t&FL?an:an+an, u=ad[i]; if(u==inf||u==infm){j=1; break;}); 
  }
  // if we are going to use the fast loop here, allocate space for it.  Inplace if possible
  if(!j&&!(t&XNUM+RAT+SPARSE)){
-  if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else{GA(z,t,AN(w),AR(w),AS(w));}
-  zd=DAV(z); zz=ZAV(z);
+  if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))za=w;else{GA(za,t,AN(w),AR(w),AS(w));}
+  z=DAV(za); zz=ZAV(za);
  }
  switch((b?0:3)+(j||t&XNUM+RAT+SPARSE?0:t&FL?1:2)){
  // mult/roots: d/e are set
  case 0: R tymes(c,df2(negate(a),w,eval("*/@(+/)")));
- case 1: NAN0; DO(wn, p=d; x=*wd++; DO(an,p*=x-ad[i];); *zd++=p;); NAN1;                  break;
- case 2: NAN0; DO(wn, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
+ case 1: NAN0; DO(n, p=d; u=*x++; DO(an,p*=u-ad[i];); *z++=p;); NAN1;                  break;
+ case 2: NAN0; DO(n, q=e; y=*wz++; DO(an,q=ztymes(q,zminus(y,az[i]));); *zz++=q;); NAN1; break;
 
  // coeffs: d/e are not set
- case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));
- case 4: NAN0;
+ case 3: R df2(w,a,eval("(^/i.@#) +/ .* ]"));  // XNUM/RAT/SPARSE
+ case 4: NAN0;  // FL
+#if C_AVX&&SY_64
+// loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
+  switch(an){
+   
+  case 1: mvc(n*sizeof(D),z,sizeof(D),ad); break;
+  case 2:
+   {AVXATOMLOOP(
+    __m256d a0;__m256d t0;  t0=_mm256_set_pd(ad[1],ad[1],ad[1],ad[1]);
+    a0=_mm256_set_pd(ad[0],ad[0],ad[0],ad[0]);
+,
+    u=_mm256_add_pd(a0,_mm256_mul_pd(u,t0));
+,
+   )} break;
+  case 3:
+   {AVXATOMLOOP(
+    __m256d a0;__m256d a1;__m256d t0;__m256d t;  t0=_mm256_set_pd(ad[2],ad[2],ad[2],ad[2]);
+    a1=_mm256_set_pd(ad[1],ad[1],ad[1],ad[1]); a0=_mm256_set_pd(ad[0],ad[0],ad[0],ad[0]);
+,
+    t=t0; t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+,
+   )} break;
+  case 4:
+   {AVXATOMLOOP(
+    __m256d a0;__m256d a1;__m256d a2;__m256d t0;__m256d t;  t0=_mm256_set_pd(ad[3],ad[3],ad[3],ad[3]);
+    a2=_mm256_set_pd(ad[2],ad[2],ad[2],ad[2]); a1=_mm256_set_pd(ad[1],ad[1],ad[1],ad[1]); a0=_mm256_set_pd(ad[0],ad[0],ad[0],ad[0]);
+,
+    t=t0; t=_mm256_add_pd(a2,_mm256_mul_pd(u,t)); t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+,
+   )} break;
+  case 5:
+   {AVXATOMLOOP(
+    __m256d a0;__m256d a1;__m256d a2;__m256d a3;__m256d t0;__m256d t;  t0=_mm256_set_pd(ad[4],ad[4],ad[4],ad[4]);
+    a3=_mm256_set_pd(ad[3],ad[3],ad[3],ad[3]); a2=_mm256_set_pd(ad[2],ad[2],ad[2],ad[2]);
+    a1=_mm256_set_pd(ad[1],ad[1],ad[1],ad[1]); a0=_mm256_set_pd(ad[0],ad[0],ad[0],ad[0]);
+,
+    t=t0; t=_mm256_add_pd(a3,_mm256_mul_pd(u,t)); t=_mm256_add_pd(a2,_mm256_mul_pd(u,t));
+    t=_mm256_add_pd(a1,_mm256_mul_pd(u,t)); u=_mm256_add_pd(a0,_mm256_mul_pd(u,t));
+,
+    ;
+   )} break;
+  default:
+    {AVXATOMLOOP(
+    __m256d t0;__m256d t;  t0=_mm256_set_pd(ad[an-1],ad[an-1],ad[an-1],ad[an-1]);
+,
+    t=t0; DQ(an-1, t=_mm256_add_pd(_mm256_set_pd(ad[i],ad[i],ad[i],ad[i]),_mm256_mul_pd(u,t));); u=t;
+,
+    ;
+   )} break;
+ }
+#else
   switch(an){  // special cases for linear, quadratic, cubic
   case 2:
-   {D c0=ad[0],c1=ad[1]; DO(wn, x=*wd++; *zd++=c0+x*c1;);} break;
+   {D c0=ad[0],c1=ad[1]; DO(n, u=*x++; *z++=c0+u*c1;);} break;
   case 3:
-   {D c0=ad[0],c1=ad[1],c2=ad[2]; DO(wn, x=*wd++; *zd++=c0+x*(c1+x*c2););} break; 
+   {D c0=ad[0],c1=ad[1],c2=ad[2]; DO(n, u=*x++; *z++=c0+u*(c1+u*c2););} break; 
   case 4:
-   {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DO(wn, x=*wd++; *zd++=c0+x*(c1+x*(c2+x*c3)););} break;
+   {D c0=ad[0],c1=ad[1],c2=ad[2],c3=ad[3]; DO(n, u=*x++; *z++=c0+u*(c1+u*(c2+u*c3)););} break;
   default:
-   DO(wn, p=ad[an-1]; x=*wd++; DQ(an-1,p=ad[i]+x*p;); *zd++=p;); break;
+   DO(n, p=ad[an-1]; u=*x++; DQ(an-1,p=ad[i]+u*p;); *z++=p;); break;
   }
+#endif
   NAN1; break;  // Horner's rule.  First multiply is never 0*_
- case 5: NAN0; DO(wn, q=zeroZ; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;
+ case 5: NAN0; DO(n, q=zeroZ; y=*wz++; j=an; DO(an,q=zplus(az[--j],ztymes(y,q));); *zz++=q;); NAN1; break;  // CMPX
  }
- RETF(z);
+ RETF(za);
 }    /* a p."r w */
 
 

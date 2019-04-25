@@ -26,7 +26,7 @@ div=: 4 : 'x%y'
 
 NB. %/ D ----------------------------------------------------------------
 
-div=: 4 : 'x%y'
+div=: 4 : 'x%y'"0  NB. %/ is inaccurate in its treatment of -0 intermediate values.  The singleton code preserves this inaccuracy, so we match against that
 
 (%/   -: div/  ) x=:0.1*_1e2+?    23$2e2
 (%/   -: div/  ) x=:0.1*_1e2+?4   23$2e2

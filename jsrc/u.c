@@ -153,16 +153,17 @@ I CTLZI_(UI w, UI4*out){
  R 0;
 }
 
-I bsum(I n,B*b){I q=n>>LGSZI,z=0;UC*u;UI t,*v;
+I bsum(I n,B*b){I q=(n-1)>>LGSZI,z=0;UI t,*v;
+ if(n==0)R z;
  v=(UI*)b;
  // Do word-size sections, max 255 at a time, till all finished
  while(q>0){
-  t=0; DO(MIN(q,255), t+=*v++;); q-=255;  // sig in ffffffffffffffff
+  t=0; DQ(MIN(q,255), t+=*v++;); q-=255;  // sig in ffffffffffffffff
   ADDBYTESINI(t);  // convert byte-lane total to single total
   z = z + t;   // clear garbage, add sig
  }
-// finish up any remnant, 7 bytes or less
- u=(UC*)v;DO(n&((1<<LGSZI)-1), z+=*u++;);
+// finish up any remnant, 1-8 bytes
+ t=*v&((UI)~(I)0 >> (((-n)&(SZI-1))<<3)); ADDBYTESINI(t); z+=t;
  R z;
 }    /* sum of boolean vector b */
 
@@ -244,7 +245,7 @@ I jtmaxtype(J jt,I s,I t){
 }
 
 // Copy m bytes from w to z, repeating every n bytes if n<m
-void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);
+void mvc(I m,void*z,I n,void*w){I p=n,r;static I k=sizeof(D);  // ???
  // first copy n bytes; thereafter p is the number of bytes we have copied; copy that amount again
  MC(z,w,MIN(p,m)); while(m>p){r=m-p; MC(p+(C*)z,z,MIN(p,r)); p+=p;}
 }

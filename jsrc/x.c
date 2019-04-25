@@ -21,6 +21,7 @@
 static DF1(secf1){F1PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL1IP((AF)*   AV(h) ,  w,self);}
 static DF2(secf2){F2PREFIP; A h=FAV(self)->fgh[2]; ASSERT(!jt->seclev,EVSECURE); R CALL2IP((AF)*(1+AV(h)),a,w,self);}
 
+// undocumented 13!:80 functions, used to test condrange
 static DF2(jtfindrange){
  RZ(a&&w);
  I *av = AV(a);

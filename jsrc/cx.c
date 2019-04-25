@@ -123,7 +123,7 @@ static DF2(jtxdefn){PROLOG(0048);
  CW *cw;  // pointer to control-word info for the definition.  Filled in by LINE
 
  I lk;  // lock/debug flag: 1=locked function; 0=normal operation; -1=this function is being debugged
- DC callframe=0;  // pointer to the debug frame of the caller to this function, but 0 if we are not debugging
+ DC callframe=0;  // pointer to the debug frame of the caller to this function (only if it's named), but 0 if we are not debugging
 
  TD*tdv=0;  // pointer to base of try. stack
  I tdi=0;  // index of the next open slot in the try. stack
@@ -165,12 +165,12 @@ static DF2(jtxdefn){PROLOG(0048);
    // stack frame, which functions as a flag to indicate that we are debugging.  If the function is locked we ignore debug mode
    if(!lk&&jt->uflags.us.cx.cx_c.db){
     if(jt->sitop&&jt->sitop->dctype==DCCALL){   // if current stack frame is a call
+     lk=-1;    // indicate we are debugging
      if(sv->flag&VNAMED){
-      callframe=jt->sitop; lk=-1;  // indicate we are debugging, and point to the stack entry for this exec
+      callframe=jt->sitop;  // if this is a named (rather than anonymous call like 3 : 0"1), there is a tight link with the caller.  Indicate that
      }
      // If we are in debug mode, and the current stack frame has the DCCALL type, pass the debugger
-     // information about this execution: the local symbols,
-     // the control-word table, and where we store the currently-executing line number
+     // information about this execution: the local symbols and the control-word table
      if(self==jt->sitop->dcf){  // if the stack frame is for this exec
       jt->sitop->dcloc=jt->local; jt->sitop->dcc=hv[1];  // install info about the exec
      }

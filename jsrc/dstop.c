@@ -28,6 +28,7 @@ static B stopsub(C*p,C*nw,I md){C*q,*s;I n;
 }
 
 B jtdbstop(J jt,DC d,I i){A a;B b,c=0,e;C nw[11],*s,*t,*u,*v;I md,n,p,q;
+ if(!d)R 0;  // if we are in an unnamed function, there can be no stop
  if(!jt->dbss&&d->dcss){d->dcss=0; jt->dbssd=0; c=i!=d->dcstop; d->dcstop=i; R c;}
  switch(jt->dbss){
   case SSSTEPOVER:  jt->dbss=0;           break;  

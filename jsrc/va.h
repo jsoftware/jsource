@@ -164,34 +164,35 @@ typedef struct {VA2 p1[6];} UA;
 
 #define AIFX(f,Tz,Tx,Ty,symb)  \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                            \
-  if(1==n)  DO(m,               *z++=*x++ symb *y++; )   \
-  else if(b)DO(m, u=*x++; DO(n, *z++=u    symb *y++;))   \
-  else      DO(m, v=*y++; DO(n, *z++=*x++ symb v;   ));  \
+  if(1==n)  DQ(m,               *z++=*x++ symb *y++; )   \
+  else if(b)DQ(m, u=*x++; DQ(n, *z++=u    symb *y++;))   \
+  else      DQ(m, v=*y++; DQ(n, *z++=*x++ symb v;   ));  \
  }
 
 #define AOVF(f,Tz,Tx,Ty,fvv,f1v,fv1)  \
  AHDR2(f,I,I,I){C er=0;I u,v,*x1,*y1,*z1;                                       \
   if(1==n)  {fvv(m,z,x,y); RER;}                                                \
-  else if(b){z1=z; y1=y; DO(m, u=*x++; f1v(n,z,u,y); RER; z=z1+=n; y=y1+=n;);}  \
-  else      {z1=z; x1=x; DO(m, v=*y++; fv1(n,z,x,v); RER; z=z1+=n; x=x1+=n;);}  \
+  else if(b){z1=z; y1=y; DQ(m, u=*x++; f1v(n,z,u,y); RER; z=z1+=n; y=y1+=n;);}  \
+  else      {z1=z; x1=x; DQ(m, v=*y++; fv1(n,z,x,v); RER; z=z1+=n; x=x1+=n;);}  \
  }
 
 #define APFX(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
-  if(1==n)  DO(m,               *z++=pfx(*x,*y); x++; y++; )   \
-  else if(b)DO(m, u=*x++; DO(n, *z++=pfx( u,*y);      y++;))   \
-  else      DO(m, v=*y++; DO(n, *z++=pfx(*x, v); x++;     ));  \
+  if(1==n)  DQ(m,               *z++=pfx(*x,*y); x++; y++; )   \
+  else if(b)DQ(m, u=*x++; DQ(n, *z++=pfx( u,*y);      y++;))   \
+  else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
  }
 
 #define ANAN(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
   NAN0;                                                        \
-  if(1==n)  DO(m,               *z++=pfx(*x,*y); x++; y++; )   \
-  else if(b)DO(m, u=*x++; DO(n, *z++=pfx( u,*y);      y++;))   \
-  else      DO(m, v=*y++; DO(n, *z++=pfx(*x, v); x++;     ));  \
+  if(1==n)  DQ(m,               *z++=pfx(*x,*y); x++; y++; )   \
+  else if(b)DQ(m, u=*x++; DQ(n, *z++=pfx( u,*y);      y++;))   \
+  else      DQ(m, v=*y++; DQ(n, *z++=pfx(*x, v); x++;     ));  \
   NAN1V;                                                       \
  }
 
+#if 0 // obsolete
 #define APFY(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,Tz,A,A){A u,v;I c,d;                                                                  \
   c=jt->rela;                                                                                  \
@@ -217,35 +218,35 @@ typedef struct {VA2 p1[6];} UA;
     else if(b)DO(m, u=(A)(c+(I)*x++); DO(n, *z++=pfx(u,           (A)(d+(I)*y));      y++;))   \
     else      DO(m, v=(A)(d+(I)*y++); DO(n, *z++=pfx((A)(c+(I)*x),v           ); x++;     ));  \
  }}
-
+#endif
 
 /* Embedded visual tools v3.0 fails perform the z++ on all wince platforms. -KBI */
 #if SY_WINCE
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                          \
-  if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z++=pfx(u,v); )    \
-  else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z++=pfx(u,v);))    \
-  else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z++=pfx(u,v);));   \
+  if(1==n)  DQ(m, u=(D)*x++;       v=(D)*y++; *z++=pfx(u,v); )    \
+  else if(b)DQ(m, u=(D)*x++; DQ(n, v=(D)*y++; *z++=pfx(u,v);))    \
+  else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z++=pfx(u,v);));   \
  }
 #else
 #define ACMP(f,Tz,Tx,Ty,pfx)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
-  if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-  else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
-  else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+  if(1==n)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
+  else if(b)DQ(m, u=(D)*x++; DQ(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
+  else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
  }
 #endif
 // support intolerant comparisons explicitly
 #define ACMP0(f,Tz,Tx,Ty,pfx,pfx0)   \
  AHDR2(f,B,Tx,Ty){D u,v;                                             \
   if(jt->cct!=1.0){ \
-   if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
-   else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
-   else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
+   if(1==n)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=pfx(u,v); z++; )    \
+   else if(b)DQ(m, u=(D)*x++; DQ(n, v=(D)*y++; *z=pfx(u,v); z++;))    \
+   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=pfx(u,v); z++;));   \
   }else{ \
-   if(1==n)  DO(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
-   else if(b)DO(m, u=(D)*x++; DO(n, v=(D)*y++; *z=u pfx0 v; z++;))    \
-   else      DO(m, v=(D)*y++; DO(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
+   if(1==n)  DQ(m, u=(D)*x++;       v=(D)*y++; *z=u pfx0 v; z++; )    \
+   else if(b)DQ(m, u=(D)*x++; DQ(n, v=(D)*y++; *z=u pfx0 v; z++;))    \
+   else      DQ(m, v=(D)*y++; DQ(n, u=(D)*x++; *z=u pfx0 v; z++;));   \
   } \
  }
 
@@ -285,16 +286,16 @@ typedef struct {VA2 p1[6];} UA;
 #define BFSUB(xb,yi,pfx,bpfx)  \
  {I j;                                        \
   for(j=0;j<m;++j){                                    \
-   REPLBYTETOW(*xb++,u); DQ(n>>LGSZI, v=*yi++; *zz++=pfx(u,v););  \
-   if(n&(SZI-1)){v=*yi; I dd=pfx(u,v); STOREBYTES(zz,dd,n&(SZI-1)); yi=(I*)((UC*)yi+(n&(SZI-1))); zz=(I*)((UC*)zz+(n&(SZI-1)));} \
+   REPLBYTETOW(*xb++,u); DQ((n-1)>>LGSZI, v=*yi++; *zz++=pfx(u,v););  \
+   v=*yi; I dd=pfx(u,v); STOREBYTES(zz,dd,(-n)&(SZI-1)); yi=(I*)((UC*)yi+(((n-1)&(SZI-1))+1)); zz=(I*)((UC*)zz+(((n-1)&(SZI-1))+1)); \
  }}
 
 #define BPFX(f,pfx,bpfx,pfyx,bpfyx)  \
  AHDR2(f,B,B,B){I u,v,*xx,*yy,*zz;       \
   xx=(I*)x; yy=(I*)y; zz=(I*)z;                         \
   if(1==n){                                             \
-   DQ(m>>LGSZI, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
-   if(m&(SZI-1)){u=*xx++; v=*yy++; I dd=pfx(u,v); STOREBYTES(zz,dd,m&(SZI-1));} /* avoid overfetch */  \
+   DQ((m-1)>>LGSZI, u=*xx++; v=*yy++; *zz++=pfx(u,v););            \
+   u=*xx; v=*yy; I dd=pfx(u,v); STOREBYTES(zz,dd,(-m)&(SZI-1));  \
   }else if(b)BFSUB(x,yy,pfx, bpfx)                      \
   else       BFSUB(y,xx,pfyx,bpfyx)                     \
  }

@@ -184,7 +184,7 @@ DF2(jtdbunquote){A t,z;B b=0,s;DC d;V*sv;
    if(!z&&jt->uflags.us.cx.cx_c.db/* obsolete &&(s||DBTRY!=jt->uflags.us.cx.cx_c.db)*/){d->dcj=jt->jerr; moveparseinfotosi(jt); z=debug(); if(self!=jt->sitop->dcf)self=jt->sitop->dcf;}
    if(b){fa(a); fa(w);}
    if(b=jt->dbalpha||jt->dbomega){a=jt->dbalpha; w=jt->dbomega; jt->dbalpha=jt->dbomega=0;}
-  }while(d->dcnewlineno);  // if suspension tries to reexecute the line, do so (it's the only thing that can be executed)
+  }while(d->dcnewlineno&&d->dcix!=-1);  // if suspension tries to reexecute a line other than -1 (which means 'exit'), reexecute
  }
  if(d->dcss)ssnext(d,d->dcss);
  if(jt->dbss==SSSTEPINTOs)jt->dbss=0;

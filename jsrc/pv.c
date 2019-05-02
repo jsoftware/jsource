@@ -27,7 +27,7 @@ static TA zz={0,0};
 static F1(jtvtokens){A t,*y,z;I n,*s;TA*x;
  RZ(t=tokens(vs(w),0)); n=AN(t); y=AAV(t);
  jt->tmonad=1; 
- GATV(z,BOX,WTA*(5+n),2,0); s=AS(z); *s++=5+n; *s=WTA;
+ GATV0(z,BOX,WTA*(5+n),2); s=AS(z); *s++=5+n; *s=WTA;
  x=(TA*)AV(z);
  x->a=mark; x->t=0; ++x;
  DO(n, x->a=t=*y++; x->t=0; ++x; if(AT(t)&NAME&&NAV(t)->flag&NMDOT&&NAV(t)->s[0]=='x')jt->tmonad=0;);

@@ -183,7 +183,7 @@ static DF1(jtgsuffix){A h,*hv,z,*zv;I m,n,r;
  r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
  n=IC(w); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(drop(sc(i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\."r w for gerund g */
@@ -251,7 +251,7 @@ static DF1(jtssg){F1PREFIP;PROLOG(0020);A a,z;I i,k,n,r,wr;
   if(state&ZZFLAGBOXATOP){
    // If boxedz itself has been incorporated into the result, we have to reallocate it.  We don't need the usual check for z==boxedz, because we know we INCORPed z into
    // the boxed result, so if it was the same as boxedz, the usecount of boxedz was incremented then
-   if(!ACIPISOK(boxedz))GAT(boxedz,BOX,1,0,0);   // reallocate boxedz if needed
+   if(!ACIPISOK(boxedz))GAT0(boxedz,BOX,1,0);   // reallocate boxedz if needed
    AAV(boxedz)[0]=z; z=boxedz;  // point boxedz to the previous result, and make that the new argument for next time
   }
   // if result happens to be the same virtual block that we passed in, we have to clone it before we change the pointer
@@ -319,7 +319,7 @@ static DF2(jtgoutfix){A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  n=IC(x);
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(repeat(from(sc(i),x),w),hv[i%m])); ++imod;);
  R ope(z);
 }

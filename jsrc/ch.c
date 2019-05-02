@@ -32,7 +32,7 @@ static A jthgd(J jt,B b,I n,A w,A p,A q){A c,d,e,z;D r,s,t,*u,*v,x,*zv;I j,pn,qn
  RZ(c=cvt(FL,p)); u=DAV(c); pn=AN(c);
  RZ(d=cvt(FL,q)); v=DAV(d); qn=AN(d);
  RZ(e=cvt(FL,w)); x=*DAV(e); r=s=1; t=0; z=0;
- if(b&&2000>n){GATV(z,FL,1+n,1,0); zv=DAV(z); *zv++=0; *zv++=1;}
+ if(b&&2000>n){GATV0(z,FL,1+n,1); zv=DAV(z); *zv++=0; *zv++=1;}
  NAN0;
  for(j=1;j<n&&t!=s&&!_isnan(s);++j){
   DO(pn, r*=u[i]; ++u[i];);  /* r*=u[i]++; compiler error on 3B1 */
@@ -102,7 +102,7 @@ DF1(jthgcoeff){PROLOG(0037);A c,d,h,*hv,y,z;B b;I j,n,pn,qn,*v;V*sv=FAV(self);
  if(!b){D r=1.0,*u,*v,*yv;
   RZ(c=cvt(FL,hv[0])); u=DAV(c); pn=AN(c);
   RZ(d=cvt(FL,hv[1])); v=DAV(d); qn=AN(d);
-  GATV(y,FL,n,1,0); yv=DAV(y);
+  GATV0(y,FL,n,1); yv=DAV(y);
   DO(n, DO(pn, r*=u[i]; ++u[i];); DO(qn, r/=v[i]; ++v[i];); yv[i]=r;); 
  }else{A j;
   RZ(j=IX(n));

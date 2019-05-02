@@ -435,7 +435,7 @@ F2(jtddot){A x,*xv,y,z;AF f;I j,n,p,q,r,*wv;
   f=0<=p?jtdiff0:jtintg0; y=a; DO(ABS(p), ASSERT(y=CALL1(f,y,0L),EVDOMAIN);); R y;
  }
  q+=p-1; p=0>p?p:0; q=0<q?q:0;
- GATV(x,BOX,1+q-p,1,0); xv=AAV(x); xv[-p]=incorp(a);
+ GATV0(x,BOX,1+q-p,1); xv=AAV(x); xv[-p]=incorp(a);
  if(0>p){y=a; j=-p; DO(-p, ASSERT(y=intg0(y),EVDOMAIN); xv[--j]=incorp(y););}
  if(0<q){y=a; j=-p; DO( q, ASSERT(y=diff0(y),EVDOMAIN); xv[++j]=incorp(y););}
  j=n; z=xv[wv[--j]-p]; DO(n-1, RZ(z=folk(xv[wv[--j]-p],ds(CCOMMA),z)););
@@ -560,7 +560,7 @@ static DF1(jtderiv1){A e,ff,fs,gs,s,t,z,*zv;I*gv,d,n,*tv;V*v;
  v=VAV(self); RZ(fs=fix(v->fgh[0])); gs=v->fgh[1]; n=AN(gs); gv=AV(gs); 
  if(!(AT(w)&FL+CMPX))RZ(w=cvt(FL,w));
  RZ(e=scf((D)1e-7));
- GAT(t,INT,1,0,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
+ GAT0(t,INT,1,0); tv=AV(t);   // no need to INCORP t, since no one cares and it's not virtual
  RZ(s=ca(self)); v=VAV(s); v->fgh[1]=t; v->lr=v->mr;
  GATV(z,BOX,n,AR(gs),AS(gs)); zv=AAV(z);
  DO(n, *tv=d=gv[i]; zv[i]=incorp((ff=dtab(fs,d))?df1(w,ff):sslope(tymes(e,w),w,s)););

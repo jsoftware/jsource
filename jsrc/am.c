@@ -250,7 +250,7 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
   // later this can use the code for table m
   k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
-  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) /* GATV(x,INT,wr,1,0); */ d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
+  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
   AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
  }
  if(!b){

@@ -71,9 +71,9 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AAV(w); 
  if(1>=wr)R raze(w);
  if(!wn)R iota(reshape(sc(wr),num[0]));
- GATV(x,INT,wr,1,0); u=AV(x); memset(u,C0,wr*SZI);
- GATV(x,INT,wr,1,0); v=(I**)AV(x);
- DO(wr, m=ws[i]; GATV(x,INT,m,1,0); memset(v[i]=AV(x),CFF,m*SZI););
+ GATV0(x,INT,wr,1); u=AV(x); memset(u,C0,wr*SZI);
+ GATV0(x,INT,wr,1); v=(I**)AV(x);
+ DO(wr, m=ws[i]; GATV0(x,INT,m,1); memset(v[i]=AV(x),CFF,m*SZI););
  for(i=0;i<wn;++i){
   x=wv[i]; r=AR(x); s=AS(x);
   if(AN(x)){if(!t)t=AT(x); ASSERT(HOMO(t,AT(x)),EVDOMAIN);}
@@ -83,8 +83,8 @@ static F1(jtbminv){A*wv,x,z=w;I i,j,m,r,*s,t=0,*u,**v,*y,wn,wr,*ws;
   j=wr; while(1){--j; ++u[j]; if(ws[j]>u[j])break; u[j]=0;}
  }
  if(!z){A f,h,*zv;I*hv;
-  GATV(z,BOX,wn,2,ws); zv=AAV(z);
-  GATV(h,INT,wr,1,0); hv=AV(h);
+  GATVR(z,BOX,wn,2,ws); zv=AAV(z);
+  GATV0(h,INT,wr,1); hv=AV(h);
   GA(f,t,1,1,0); RZ(f=filler(f)); memset(u,C0,wr*SZI);
   for(i=0;i<wn;++i){
    zv[i]=x=wv[i];
@@ -174,7 +174,7 @@ static F1(jtinvamp){A f,ff,g,h,*q,x,y;B nf,ng;C c,d,*yv;I n;V*u,*v;
   case CBANG:
    ASSERT(!AR(x),EVRANK);
    ASSERT(all1(lt(zeroionei[0],x)),EVDOMAIN);
-   GAT(y,BOX,9,1,0); q=AAV(y);
+   GAT0(y,BOX,9,1); q=AAV(y);
    q[0]=cstr("3 :'(-("); q[1]=q[3]=lrep(w);
    q[2]=cstr("-y\"_)%1e_3&* "); q[4]=cstr("\"0 D:1 ])^:_[");
    h=lrep(x);
@@ -392,8 +392,8 @@ F1(jtidensb){A f,g,x=0,w0=w;V*v;
  v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
  switch(v->id){
   default:      R iden(w0);
-  case CMAX:    GATV(x,SBT,1,0,0);*SBAV(x)=0; break;
-  case CMIN:    GATV(x,SBT,1,0,0);*SBAV(x)=jt->sbuv[0].down; break;
+  case CMAX:    GATV0(x,SBT,1,0);*SBAV(x)=0; break;
+  case CMIN:    GATV0(x,SBT,1,0);*SBAV(x)=jt->sbuv[0].down; break;
  }
  ASSERT(x,EVDOMAIN);
  R folk(x,swap(ds(CDOLLAR)),atop(ds(CBEHEAD),ds(CDOLLAR)));

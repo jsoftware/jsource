@@ -125,10 +125,10 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  RZ(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- GAT(z,BOX,3,1,0); zv=AAV(z);
+ GAT0(z,BOX,3,1); zv=AAV(z);
  n=*AS(jt->symp); pv=jt->sympv;
- GATV(x,INT,n*5,2,0); *AS(x)=n; *(1+AS(x))=5; xv= AV(x); zv[0]=x;
- GATV(y,BOX,n,  1,0);                         yv=AAV(y); zv[1]=y;
+ GATV0(x,INT,n*5,2); *AS(x)=n; *(1+AS(x))=5; xv= AV(x); zv[0]=x;
+ GATV0(y,BOX,n,  1);                         yv=AAV(y); zv[1]=y;
  for(i=0;i<n;++i,++pv){         /* per pool entry       */
   *xv++=i;   // sym number
   *xv++=(q=pv->val)?LOWESTBIT(AT(pv->val)):0;  // type: only the lowest bit.  Must allow SYMB through
@@ -138,7 +138,7 @@ F1(jtsympool){A aa,q,x,y,*yv,z,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
   RZ(*yv++=(q=pv->name)?rifvs(sfn(1,q)):mtv);
  }
  // Allocate box 3: locale name
- GATV(y,BOX,n,1,0); yv=AAV(y); zv[2]=y;
+ GATV0(y,BOX,n,1); yv=AAV(y); zv[2]=y;
  DO(n, yv[i]=mtv;);
  n=AN(jt->stloc); v=LXAV(jt->stloc); 
  for(i=0;i<n;++i)if(j=v[i]){    /* per named locales ?? does not chase chain   */  // j is index to named local entry

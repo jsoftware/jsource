@@ -33,7 +33,7 @@ F1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  if(!f){
   // single box: fast path.  Allocate a scalar box and point it to w.  Mark w as incorporated
   // DO NOT take potentially expensive pass through w to find recursibility, because it may never be needed if this result expires without being assigned
-  GAT(z,BOX,1,0,0); INCORP(w); *(AAV(z))=w;
+  GAT0(z,BOX,1,0); INCORP(w); *(AAV(z))=w;
   if((waf&RECURSIBLE)||(wt&DIRECT)){newflags|=BOX; ACINCR(w);}  // if w is recursible or direct, mark new box recursible and correspondingly incr usecount of w.  We do this because w is already in cache now.
   AFLAG(z) = newflags;  // set NOSMREL if w is not boxed, or known to contain no relatives
  } else {
@@ -294,7 +294,7 @@ static B povtake(J jt,A a,A w,C*x){B b;C*v;I d,i,j,k,m,n,p,q,r,*s,*ss,*u,*uu,y;
 
 static B jtopes1(J jt,B**zb,A*za,A*ze,I*zm,A cs,A w){A a,e=0,q,*wv,x;B*b;I i,k,m=0,n,*v,wcr;P*p;
  n=AN(w); wcr=AN(cs); wv=AAV(w);
- GATV(x,B01,wcr,1,0); b=BAV(x); memset(b,C0,wcr);
+ GATV0(x,B01,wcr,1); b=BAV(x); memset(b,C0,wcr);
  for(i=0;i<n;++i)
   if(q=wv[i],SPARSE&AT(q)){
    p=PAV(q); x=SPA(p,x); m+=*AS(x);
@@ -335,12 +335,12 @@ static A jtopes(J jt,I zt,A cs,A w){A a,d,e,sh,t,*wv,x,x1,y,y1,z;B*b;C*xv;I an,*
  GASPARSE(z,zt,1,wr+wcr,(I*)0); zs=AS(z); MCISH(zs,AS(w),wr); MCISH(zs+wr,AV(cs),wcr);
  zp=PAV(z); c=wcr-an; yc=wr+an;
  SPB(zp,e,cvt(dt,e)); e = SPA(zp,e);  // in case of reassignment by SPB
- GATV(t,INT,yc, 1L,0L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
- GATV(sh,INT,1+c,1L,0L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
+ GATV0(t,INT,yc, 1L); v=AV(t); DO(wr, v[i]=i;); DO(an, v[wr+i]=wr+av[i];); SPB(zp,a,t);
+ GATV0(sh,INT,1+c,1L); s=AV(sh); s[0]=m; j=1; DO(wcr, if(!b[i])s[j++]=zs[wr+i];); 
  RE(xc=prod(c,1+s)); xk=xc*dk;
- GATV(d,INT,wr,1,0); dv=AV(d); memset(dv,C0,wr*SZI);
+ GATV0(d,INT,wr,1); dv=AV(d); memset(dv,C0,wr*SZI);
  RE(i=mult(m,xc)); GA(x,dt, i,1+c,s); xv=CAV(x); mvc(m*xk,xv,dk,AV(e));
- RE(i=mult(m,yc)); GATV(y,INT,i,2L, 0L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); memset(yv,C0,SZI*i);
+ RE(i=mult(m,yc)); GATV0(y,INT,i,2L); v=AS(y); *v=m; v[1]=yc; yv=AV(y); memset(yv,C0,SZI*i);
  for(i=p=0;i<n;++i){
   RZ(opes2(&x1,&y1,b,a,e,wv[i],wcr)); v=AS(y1); m1=v[0]; k=v[1];
   if(m<p+m1){

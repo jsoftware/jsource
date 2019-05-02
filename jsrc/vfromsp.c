@@ -13,22 +13,22 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  // That axis is replaced by axes coming from the shape of ind.  Set h to the index of the sparse axis that is being selected on
  a=SPA(wp,a); an=AN(a); av=AV(a); DO(an, if(wf==av[i]){h=i; break;});  // an=#sparse axes
  y=SPA(wp,i); RZ(q=eps(fromr(sc(h),y),ravel(ind))); RZ(y=repeat(q,y)); RZ(x=repeat(q,SPA(wp,x)));  // (h{"_ 1 indexes) e. ,ind
- GATV(a1,INT,r+an-1,1,0); v=AV(a1); SPB(zp,a,a1);
+ GATV0(a1,INT,r+an-1,1); v=AV(a1); SPB(zp,a,a1);
  k=av[h]; u=av; DO(h, *v++=*u++;); DO(r, *v++=k++;); u++; DO(an-1-h, *v++=*u+++r-1;);
  if(!r) 
-  if(AR(z)){GATV(q,INT,an-1,1,0); v=AV(q); DO(an, if(i!=h)*v++=i;); SPB(zp,i,fromr(q,y)); SPB(zp,x,x); R z;}
+  if(AR(z)){GATV0(q,INT,an-1,1); v=AV(q); DO(an, if(i!=h)*v++=i;); SPB(zp,i,fromr(q,y)); SPB(zp,x,x); R z;}
   else R reshape(mtv,AN(x)?x:SPA(zp,e));
  if(h){q=grade1(fromr(sc(h),y)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  RZ(q=odom(2L,r,AS(ind))); iv=AV(q);
  m=*AS(y); s=0; j=-1; u=h+AV(y); v=u+an;
- GATV(p,INT,m,1,0); pv=AV(p); memset(pv,CFF,SZI*m);
- GATV(q,INT,m,1,0); qu=AV(q);
- GATV(q,INT,m,1,0); qv=AV(q);
+ GATV0(p,INT,m,1); pv=AV(p); memset(pv,CFF,SZI*m);
+ GATV0(q,INT,m,1); qu=AV(q);
+ GATV0(q,INT,m,1); qv=AV(q);
  DO(m-1, if(*u!=*v){pv[s]=*u; qu[s]=1+j; qv[s++]=i-j; j=i;} u=v; v+=an;); 
  if(m){i=m-1;       pv[s]=*u; qu[s]=1+j; qv[s++]=i-j;}
  RZ(j1=indexof(p,ind)); jv=AV(j1);
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); i=aii(x); xk=i<<bplg(AT(x)); d=AN(a1);
- GATV(y1,INT,  c*d,2,    0    ); v=AS(y1); v[0]=c; v[1]=d; yv= AV(y1); yu= AV(y);
+ GATV0(y1,INT,  c*d,2); v=AS(y1); v[0]=c; v[1]=d; yv= AV(y1); yu= AV(y);
  GA(x1,AT(x),c*i,AR(x),AS(x)); *AS(x1)=c;                xv=CAV(x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; 
@@ -68,7 +68,7 @@ F2(jtfromis){A ind,x,z;B*b;I acr,af,an,ar,*av,k,m,*v,wcr,wf,wn,wr,*ws,wt;P*wp,*z
 static A jtaaxis(J jt,A w,I wf,A a,I r,I h,I*pp,I*qq,I*rr){A q;B*b,*c,*d;I wr,x,y,z,zr;
  wr=AR(w); zr=wr+r-h;
  RZ(b=bfi(wr,a,1));
- GATV(q,B01,zr,1,0); c=BAV(q); 
+ GATV0(q,B01,zr,1); c=BAV(q); 
  x=y=z=0; d=b; DO(wf, if(*d++)++x;); DO(h, if(*d++)++y;); DO(wr-wf-h, if(*d++)++z;);
  *pp=x; *qq=y; *rr=z;
  MC(c,b,wf); memset(c+wf,y?C1:C0,r); MC(c+wf+r,b+wf+h,wr-wf-h);
@@ -93,14 +93,14 @@ A jtfrombsn(J jt,A ind,A w,I wf){A a,j1,p,q,x,x1,y,y1,ys,z;C*xu,*xuu,*xv;
  if(!all1(q)){RZ(ys=repeat(q,ys)); RZ(y=repeat(q,y)); RZ(x=repeat(q,x));}
  if(wf){q=grade1(ys); RZ(ys=ifrom(q,ys)); RZ(y=ifrom(q,y)); RZ(x=ifrom(q,x));}
  m=*AS(y);
- GATV(p,INT,m,1,0); pv=AV(p);
- GATV(q,INT,m,1,0); qv=AV(q);
+ GATV0(p,INT,m,1); pv=AV(p);
+ GATV0(q,INT,m,1); qv=AV(q);
  s=0; j=-1; u=AV(ys); v=u+h;
  DO(m-1, if(ICMP(u,v,h)){pv[s]=1+j; qv[s++]=i-j; j=i;} u=v; v+=h;); if(m){pv[s]=1+j; qv[s++]=m-1-j;}
  RZ(j1=indexof(ifrom(vec(INT,s,pv),ys),ind)); jv=AV(j1);
  c=0; DO(n, if(s>jv[i])c+=qv[jv[i]];); 
  i=aii(x); j=AN(SPA(zp,a)); xk=i<<bplg(AT(x));
- GATV(y1,INT,  c*j,2,    0    ); v=AS(y1); v[0]=c; v[1]=j; yv= AV(y1); yu= AV(y);
+ GATV0(y1,INT,  c*j,2); v=AS(y1); v[0]=c; v[1]=j; yv= AV(y1); yu= AV(y);
  GA(x1,AT(x),c*i,AR(x),AS(x)); *AS(x1)=c;                xv=CAV(x1); xu=CAV(x);
  for(i=0;i<n;++i){
   k=jv[i]; iv+=r;
@@ -182,13 +182,13 @@ F2(jtfromss){A e,x,y,z;B*b;I acr,af,ar,c,d,k,m,n,p,*u,*v,wcr,wf,wr,*ws,*yv;P*ap,
  x=SPA(ap,a); if(ar>AN(x)){RZ(a=reaxis(IX(ar),a)); ap=PAV(a);}
  x=SPA(wp,a); n=AN(x); RZ(b=bfi(wr,x,1));
  if(wcr&&!b[wf]){b[wf]=1; ++n; RZ(w=reaxis(ifb(wr,b),w)); wp=PAV(w);}
- GATV(x,INT,ar+n-!!wcr,1,0); v=AV(x);
+ GATV0(x,INT,ar+n-!!wcr,1); v=AV(x);
  DO(wf, if(b[i])*v++=i;); DO(ar, *v++=wf+i;); DO(wcr-1, if(b[i+wf+1])*v++=wf+ar+i;);
  SPB(zp,a,x);
  RZ(x=irs2(SPA(ap,x),w,VFLAGNONE, RMAX,wcr,jtfrom)); xp=PAV(x); 
  y=SPA(xp,i); u=AV(y); c=*(1+AS(y)); m=*AS(y); k=0; DO(wf, if(b[i])++k;);
  y=SPA(ap,i); v=AV(y); d=*(1+AS(y)); n=c+d-1; p=c-(1+k);
- GATV(y,INT,m*n,2,0); *AS(y)=m; *(1+AS(y))=n; yv=AV(y);
+ GATV0(y,INT,m*n,2); *AS(y)=m; *(1+AS(y))=n; yv=AV(y);
  DO(m, if(k)ICPY(yv,u,k); ICPY(yv+k,v+d*u[k],d); if(p)ICPY(yv+k+d,u+1+k,p); yv+=n; u+=c;);
  SPB(zp,i,y);
  SPB(zp,x,SPA(xp,x));

@@ -134,7 +134,7 @@ static GF(jtgrx){A x;I ck,t,*xv;I c=ai*n;
  jt->workareas.compare.compn=ai<<((t>>CMPXX)&1); jt->workareas.compare.compv=CAV(w);
  jt->workareas.compare.comp=sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].comproutine; jt->workareas.compare.compusejt = !!(t&BOX+XNUM+RAT);
  void **(*sortfunc)() = sortroutines[CTTZ(t)][(UI)jt->workareas.compare.complt>>(BW-1)].sortfunc;
- GATV(x,INT,n,1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,n,1); xv=AV(x);  /* work area for msmerge() */
  DO(m, msortitems(sortfunc,n,(void**)zv,(void**)xv); jt->workareas.compare.compv+=ck; zv+=n;);
  R !jt->jerr;
 }    /* grade"r w on general w */
@@ -265,8 +265,8 @@ static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
  wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
- GATV(x,INT,n,1,0); xv=AV(x);  // allocate a ping-pong buffer for the result
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
+ GATV0(x,INT,n,1); xv=AV(x);  // allocate a ping-pong buffer for the result
  for(i=0;i<m;++i){I colflags;  // loop over each cell of input
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
   // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
@@ -325,9 +325,9 @@ static GF(jtgri1){A x,y;I*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  wv=AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
  // allocate ping-pong for output area
- GATV(x,INT,n,1,0); xv=AV(x);
+ GATV0(x,INT,n,1); xv=AV(x);
  // for each sort...
  for(i=0;i<m;++i){I colflags;
   // process each 16-bit section of input
@@ -347,8 +347,8 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  wv=C4AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
- GATV(x,INT,n,1,0); xv=AV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
+ GATV0(x,INT,n,1); xv=AV(x);
  for(i=0;i<m;++i){I colflags;
   u=(US*)wv+INTLSBWDX;   // point to LSB
   colflags=grcol(65536,0L,yv,n,0L,xv,sizeof(C4)/sizeof(US),u,1-jt->workareas.compare.complt);  // move 'up' to bit 1
@@ -418,10 +418,10 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
- GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
+ GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea
  // should start in correct position to end in z
- if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);
+ if(1<ai){GATV0(x,INT,n,1); xv=AV(x);
  }
  for(i=0;i<m;++i){  // Loop over each cell of w
   // if d>1, we will use zv and xv as alternate output pointers, leaving the final result in *zv.
@@ -469,8 +469,8 @@ static GF(jtgru){A x,y;B up;I e,i,*xv;UI4 *yv,*yvb;C4 *v,*wv;I c=ai*n;
  if(ai<=6){rng = condrange4(wv,AN(w),-1,0,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);   //  TUNE
  }else rng.range=0;
  if(!rng.range)R c==n&&n>1500?gru1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range    TUNE
- GATV(y,C4T,rng.range,1,0); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
- if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);
+ GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
+ if(1<ai){GATV0(x,INT,n,1); xv=AV(x);
  }
  for(i=0;i<m;++i){
   if(!(ai&1)){I *tv=zv; zv=xv; xv=tv;}
@@ -521,7 +521,7 @@ static GF(jtgrb){A x;B b,up;I i,p,ps,q,*xv,yv[16];UC*vv,*wv;I c=ai*n;
  UI4 lgn; CTLZI(n,lgn);
  if((UI)ai>4*lgn)R grx(m,ai,n,w,zv);     // TUNE
  q=ai>>2; p=16; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
- if(1<q){GATV(x,INT,n,1,0); xv=AV(x);}
+ if(1<q){GATV0(x,INT,n,1); xv=AV(x);}
  for(i=0;i<m;++i){
   vv=wv+ai; b=(q&1);
   if(q){   vv-=4; DOCOL4(p, *(int*)v, *(int*)v,         i,   v+=ai);}
@@ -537,7 +537,7 @@ static GF(jtgrc){A x;B b,q,up;I e,i,p,ps,*xv,yv[256];UC*vv,*wv;
  ai<<=((AT(w)>>C2TX)&1);
  p=B01&AT(w)?2:256; ps=p*SZI; wv=UAV(w); up=(UI)jt->workareas.compare.complt>>(BW-1);
  q=C2T&AT(w) && C_LE;
- if(1<ai){GATV(x,INT,n,1,0); xv=AV(x);}
+ if(1<ai){GATV0(x,INT,n,1); xv=AV(x);}
  for(i=0;i<m;++i){
   b=(B)(ai&1); if(q){e=-3; vv=wv+ai-2;}else{e=-1; vv=wv+ai-1;}
                  DOCOL1(p,*v,*v,       i,   v+=ai); if(q)e=1==e?(q==1?-3:-5):1; 
@@ -553,8 +553,8 @@ static GF(jtgrs){R gri(m,ai,n,sborder(w),zv);}
 F2(jtgrade1p){PROLOG(0074);A x,z;I n,*s,*xv,*zv;
  s=AS(w); n=s[0]; jt->workareas.compare.compn=s[1]-1; jt->workareas.compare.compk=SZI*s[1];
  jt->workareas.compare.comp=compp; jt->workareas.compare.compsyv=AV(a); jt->workareas.compare.compv=CAV(w); jt->workareas.compare.compusejt=1;
- GATV(z,INT,n,1,0); zv=AV(z);
- GATV(x,INT,n,1,0); xv=AV(x);
+ GATV0(z,INT,n,1); zv=AV(z);
+ GATV0(x,INT,n,1); xv=AV(x);
  msortitems(jmsort,n,(void**)zv,(void**)xv);
  EPILOG(z);
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */

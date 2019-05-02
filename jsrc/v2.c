@@ -87,7 +87,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  }
  if(n==k){RETF(z);} 
  j=3; p=0; e=PT; q=1+(I)sqrt((D)m); x=wv[dv[k]]; 
- GATV(t,B01,q,1,0);         u=BAV(t); sieve(0L,q,u,u); 
+ GATV0(t,B01,q,1);         u=BAV(t); sieve(0L,q,u,u); 
  GATV(y,B01,MIN(m,MM),1,0); b=BAV(y); 
  for(;(UI)p<(UI)m;p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
@@ -159,7 +159,7 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  if(!(INT&AT(w)))RZ(w=vi(ceil1(w))); wv=AV(w); JBREAK0;
  j=3; k=p=c=0; e=*ptt; n=AN(w); 
  RE(m=suq(n,wv)); ASSERT(m<=0x7fffffff,EVLIMIT); q=1+(I)sqrt((D)m); 
- GATV(t,B01,q,1,0);         u =BAV(t); sieve(0L,q,u,u);
+ GATV0(t,B01,q,1);         u =BAV(t); sieve(0L,q,u,u);
  GATV(y,B01,MIN(m,MM),1,0); b =BAV(y); 
  GATV(z,INT,n,AR(w),AS(w)); zv= AV(z);
  RZ(d=grade1(ravel(w)));  dv= AV(d);
@@ -362,7 +362,7 @@ static A jtqco2x(J jt,I m,A w){A y;I c,*dv,i,*pv,*yv;X d,q,r,x;
  RZ(init4792(jt));
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  x=*XAV(w); pv=AV(jt->p4792); RZ(d=xc(2L)); dv=AV(d);
- GATV(y,INT,m,1,0); yv=AV(y); memset(yv,C0,m*SZI);
+ GATV0(y,INT,m,1); yv=AV(y); memset(yv,C0,m*SZI);
  for(i=0;i<m;++i){
   c=0; *dv=pv[i];
   while(1){RZ(xdivrem(x,d,&q,&r)); if(*AV(r))break; ++c; x=q;}
@@ -440,7 +440,7 @@ F1(jtfactor){PROLOG(0063);A y,z;I c,d,i,k,m,n,q,*u,*v,wn,*wv,*zv;
 static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
  ASSERT(n<=1229&&n<=AN(jt->p4792),EVLIMIT);
  pv=AV(jt->p4792); m=(I)(3.322*XBASEN*AN(x)); 
- GATV(s,INT,m,1,0); v=sv=AV(s);
+ GATV0(s,INT,m,1); v=sv=AV(s);
  old=jt->tnextpushx;
  for(i=0;i<n;++i){
   RZ(d=xc(pv[i])); 
@@ -461,10 +461,10 @@ static B jtsmallprimes(J jt,I n,X x,A*zs,X*zx){A s;I i,m,old,*pv,*sv,*v;X d,q,r;
 static B jtxprimeq(J jt,I n,X y){A h,om=jt->xmod;B b;I*dv,i,k,old,*pv;X d,m,t,x,y1;
  ASSERT(n<=AN(jt->p4792),EVLIMIT);
  pv=AV(jt->p4792);
- GAT(h,XNUM,1,0,0); *XAV(h)=y; jt->xmod=h; 
+ GAT0(h,XNUM,1,0); *XAV(h)=y; jt->xmod=h; 
  k=0; RZ(t=xc(2L)); RZ(m=y1=xminus(y,iv1)); 
  while(0==(*AV(m)&1)){++k; RZ(m=xdiv(m,t,XMFLR));}
- GAT(d,INT,1,1,0); dv=AV(d);
+ GAT0(d,INT,1,1); dv=AV(d);
  old=jt->tnextpushx;
  for(i=0;i<n;++i){
   *dv=pv[i]; RZ(x=xpow(d,m)); b=1==AN(x)&&1==*AV(x);
@@ -604,7 +604,7 @@ static B jtecm_s2(J jt,X n,X a,X b,I b1,I b2,X*q,X*z){A sda,tt;I d,di,i,k,m,old,
  RZ(tt=plt(v2(b1,b2))); v=AV(tt); m=(v[1]-v[0])-1;
  RZ(tt=prime1(apv(1+m,v[0],1L))); pd=v=AV(tt); p0=*v;
  d=0; DO(m, v[0]=k=-1+((v[1]-v[0])>>1); ++v; d=MAX(d,k);); d=MIN(100,1+d);
- GATV(sda,XNUM,3*d,2,0); sd0=sd=XAV(sda); v=AS(sda); v[0]=d; v[1]=3;
+ GATV0(sda,XNUM,3*d,2); sd0=sd=XAV(sda); v=AS(sda); v[0]=d; v[1]=3;
  RZ(ecd(n,a,b,q,sd)); s1=t=sd; sd+=3;
  DO(d-1, eca(n,a,b,s1,t,sd); t=sd; sd+=3;); sd=sd0; sdd=t;
  RZ(ecm(n,a,b,p0,q,x));
@@ -646,10 +646,10 @@ static F1(jtxfactor){PROLOG(0064);A st,z;B b=0;I k,m;X g,*sv,*sv0,x;
  ASSERT(m!=XPINF&&m!=XNINF&&0<m,EVDOMAIN);
  if(1>xcompare(x,xc(2147483647L)))R xco1(factor(sc(xint(x))));
  RZ(smallprimes(1229L,x,&z,&x));
- GAT(st,XNUM,20,1,0); sv=sv0=XAV(st); *sv++=x;
+ GAT0(st,XNUM,20,1); sv=sv0=XAV(st); *sv++=x;
  while(sv-sv0){
   x=*--sv; 
-  if(2>(k=sv-sv0)){A stsav = st; GATV(st,XNUM,2*AN(stsav),1,0); MC(XAV(st),sv0,k*sizeof(A)); sv0=XAV(st); sv=k+sv0;}
+  if(2>(k=sv-sv0)){A stsav = st; GATV0(st,XNUM,2*AN(stsav),1); MC(XAV(st),sv0,k*sizeof(A)); sv0=XAV(st); sv=k+sv0;}
   if(1>xcompare(x,xc(2147483647L))){RZ(z=over(z,factor(sc(xint(x))))); continue;}
   if(xprimeq(100L,x)){RZ(z=over(z,scx(x))); continue;}
   RZ(g=pollard_p_1(x)); if(g!=iv1){*sv++=g; RZ(*sv++=xdiv(x,g,XMFLR)); continue;}
@@ -676,7 +676,7 @@ static F1(test_ecm){A*wv,z;X*ab,n,*zv;
  ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
  n=*XAV(wv[1]);
  ab=XAV(wv[0]);
- GAT(z,XNUM,3,1,0); zv=XAV(z);
+ GAT0(z,XNUM,3,1); zv=XAV(z);
  RZ(ecm(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
  RETF(z);
 }
@@ -693,7 +693,7 @@ static F1(test_ecm_s1){A*wv,z;X*ab,n,*zv;
  ASSERT(XNUM&AT(wv[3]),EVDOMAIN);
  n=*XAV(wv[1]);
  ab=XAV(wv[0]);
- GAT(z,XNUM,3,1,0); zv=XAV(z);
+ GAT0(z,XNUM,3,1); zv=XAV(z);
  RZ(ecm_s1(n,ab[0],ab[1],i0(wv[2]),XAV(wv[3]),zv));
  RETF(z);
 }
@@ -711,7 +711,7 @@ static F1(test_ecm_s2){A*wv,z;I*b1b2;X*ab,n,*zv;
  n=*XAV(wv[1]);
  ab=XAV(wv[0]);
  b1b2=AV(wv[2]);
- GAT(z,XNUM,3,1,0); zv=XAV(z);
+ GAT0(z,XNUM,3,1); zv=XAV(z);
  RZ(ecm_s2(n,ab[0],ab[1],b1b2[0],b1b2[1],XAV(wv[3]),zv));
  RETF(z);
 }

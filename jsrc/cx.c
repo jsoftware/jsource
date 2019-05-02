@@ -20,7 +20,7 @@
 #define LSYMINUSE 256  // This bit is set in the rank of the original symbol table when it is in use
 
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
-#define BGATV(v,t,n,r,s) BZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
+#define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
 
 // h is the array of saved info for the definition; hv->pointers to boxes;
@@ -182,7 +182,7 @@ static DF2(jtxdefn){PROLOG(0048);
    }
 
    // If the verb contains try., allocate a try-stack area for it.  Remember debug state coming in so we can restore on exit
-   if(sv->flag&VTRY1+VTRY2){A td; GAT(td,INT,NTD*WTD,1,0); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
+   if(sv->flag&VTRY1+VTRY2){A td; GAT0(td,INT,NTD*WTD,1); /* obsolete AS(td)[0]=NTD; AS(td)[1]=WTD; */ tdv=(TD*)AV(td); savdebug = jt->uflags.us.cx.cx_c.db;}
   }
   // End of unusual processing
 
@@ -201,8 +201,10 @@ static DF2(jtxdefn){PROLOG(0048);
     // We have verified that hardware CRC32 never results in collision, but the software hashes do (needs to be confirmed on ARM CPU hardware CRC32C)
   if(a){ if(!ras(a)&&w){ybuckptr->val=0; fa(w); R0;} if(!C_CRC32C&&xbuckptr==ybuckptr)xbuckptr=xbuckptr->next+jt->sympv; xbuckptr->val=a; xbuckptr->sn=jt->slisti;}
   // Do the other assignments, which occur less frequently, with IS
-  if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
-  if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
+  if((I)u|(I)v){
+   if(u){IS(unam,u); if(NOUN&AT(u))IS(mnam,u);}  // bug errors here must be detected
+   if(v){IS(vnam,v); if(NOUN&AT(v))IS(nnam,v);}
+  }
  }
  // assignsym etc should never be set here; if it is, there must have been a pun-in-ASGSAFE that caused us to mark a
  // derived verb as ASGSAFE and it was later overwritten with an unsafe verb.  That would be a major mess; we'll invest 2 stores
@@ -321,7 +323,7 @@ static DF2(jtxdefn){PROLOG(0048);
     // if it fills up, double it as required
     if(!r)
      if(cd){I m=AN(cd)/WCD; BZ(cd=ext(1,cd)); cv=(CDATA*)AV(cd)+m-1; r=AN(cd)/WCD-m;}
-     else  {r=9; BGATV(cd,INT,r*WCD,1,0); ras(cd); cv=(CDATA*)AV(cd)-1;}
+     else  {r=9; BGATV0(cd,INT,r*WCD,1); ras(cd); cv=(CDATA*)AV(cd)-1;}
     ++cv; --r; 
     // indicate no t result (test value for select., iteration array for for.) and clear iteration index
     // remember the line number of the for./select.
@@ -760,7 +762,7 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
  else{
   RZ(BOX&AT(w)?sent12b(w,&m,&d):sent12c(w,&m,&d)); INCORP(m); INCORP(d);  // get monad & dyad parts; we are incorporating them into hv[]
   if(4==n){if(AN(m)&&!AN(d))d=m; m=mtv;}  //  for 4 :, make the single def given the monadic one
-  GAT(h,BOX,2*HN,1,0); hv=AAV(h);
+  GAT0(h,BOX,2*HN,1); hv=AAV(h);
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }

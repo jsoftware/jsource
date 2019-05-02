@@ -691,7 +691,7 @@ static void convertup(I*pi,I n,C t){I j=n;
 
 static A jtcdgahash(J jt,I n){A z;I hn;
  FULLHASHSIZE(n,INTSIZE,0,0,hn);
- GATV(z,INT,hn,0,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
+ GATV0(z,INT,hn,0); memset(AV(z),CFF,hn*SZI);  // no rank - use all words for table
  R ras(z);
 }
 

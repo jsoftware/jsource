@@ -128,7 +128,7 @@ static X jtxd1(J jt,D p){PROLOG(0052);A t;D d,e=tfloor(p),q,r;I m,*u;
  }
  if(p== inf)R vci(XPINF);
  if(p==-inf)R vci(XNINF);
- GAT(t,INT,30,1,0); u=AV(t); m=0; d=ABS(p); 
+ GAT0(t,INT,30,1); u=AV(t); m=0; d=ABS(p); 
  while(0<d){
   q=jfloor(d/XBASE); r=d-q*XBASE; u[m++]=(I)r; d=q;
   if(m==AN(t)){RZ(t=ext(0,t)); u=AV(t);}
@@ -250,7 +250,7 @@ static B jtDXfI(J jt,I p,A w,DX*x){A y;I b,c,d,dd,e,i,m,n,q,r,*wv,*yv;
  for(i=0;i<n;++i){
   c=wv[i]; d=dd=c==IMIN?-(1+c):ABS(c); 
   if(d){e=0; while(d){++e; r=d%10; d=d/10;}}else e=1;
-  GATV(y,INT,m,1,0); yv=AV(y);
+  GATV0(y,INT,m,1); yv=AV(y);
   r=p%XBASEN; q=!!r+((e-r)+XBASEN-1)/XBASEN; 
   if(d=(e-r)%XBASEN){b=1; DO(XBASEN, b*=10; --d; if(!d)break;);}else b=XBASE;
   DO(m-q, *yv++=0;);
@@ -462,7 +462,7 @@ F2(jtxco2){A z;B b;I j,n,r,*s,t,*wv,*zu,*zv;
   case  3:
    ASSERT(t&XD+XZ,EVDOMAIN);
    b=1&&t&XD;
-   GATV(z,INT,b?n:2*n,b?r:1+r,0); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
+   GATV0(z,INT,b?n:2*n,b?r:1+r); s=AS(z); if(!b)*s++=2; MCISH(s,AS(w),r);
    zv=AV(z); zu=n+zv; wv=AV(w);
    if(t&XD){DX*v=(DX*)wv;   DO(n,         *zv++=v->p;);}
    else    {ZX*v=(ZX*)wv,y; DO(n, y=*v++; *zv++=y.re.p; *zu++=y.im.p;);}

@@ -135,8 +135,8 @@ static DF2(jtcut02){F2PREFIP;DECLF;A *hv,q,qq,*qv,z,zz=0;C id;I*as,c,e,hn,i,ii,j
      }
      break;  // this is the loop exit
     }else{  // we have not allocated the input to {; do so now
-     GATV(q,BOX,c,1,0); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
-     GAT(qq,BOX,1,0,0); *AAV(qq)=q;  // enclose that vector of boxes in a box to pass into {
+     GATV0(q,BOX,c,1); qv=AAV(q);   // allocate a vector of boxes, which will contain the selectors
+     GAT0(qq,BOX,1,0); *AAV(qq)=q;  // enclose that vector of boxes in a box to pass into {
     }
    }while(1);
    RZ(z=from(qq,w));
@@ -195,8 +195,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
  sv=FAV(self); q=*AV(sv->fgh[1]);
  an=AN(a); av=AAV(a);  ws=AS(w);
  ASSERT(an<=AR(w),EVLENGTH);
- GATV(x,BOX,an,1,0); xv=AAV(x);  // could be faux
- GATV(y,BOX,an,1,0); yv=AAV(y);
+ GATV0(x,BOX,an,1); xv=AAV(x);  // could be faux
+ GATV0(y,BOX,an,1); yv=AAV(y);
  for(i=0;i<an;++i){
   b=av[i]; bn=AN(b); m=ws[i];
   ASSERT(1>=AR(b),EVRANK);
@@ -206,8 +206,8 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    if(!AR(b)){if(*BAV(b)){RZ(xv[i]=IX(m)); RZ(yv[i]=reshape(sc(m),num[0<q]));}else xv[i]=yv[i]=mtv; continue;}
    ASSERT(bn==m,EVLENGTH);
    bv=BAV(b); p=0; DO(bn, p+=bv[i];); 
-   GATV(t,INT,p,1,0); u=AV(t); xv[i]=t;
-   GATV(t,INT,p,1,0); v=AV(t); yv[i]=t; j=-1;
+   GATV0(t,INT,p,1); u=AV(t); xv[i]=t;
+   GATV0(t,INT,p,1); v=AV(t); yv[i]=t; j=-1;
    if(p)switch(q){
     case  1: DO(bn, if(bv[i]){*u++=i  ; if(0<=j)*v++=i-j  ; j=i;}); *v=bn-j;   break;
     case -1: DO(bn, if(bv[i]){*u++=i+1; if(0<=j)*v++=i-j-1; j=i;}); *v=bn-j-1; break;
@@ -226,9 +226,9 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
 #define CUTSWITCH(EACHC)  \
  switch(id){A z,*za;C id1,*v1,*zc;I d,i,j,ke,q,*zi,*zs;                 \
   case CPOUND:                                                               \
-   GATV(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;); R z;                          \
+   GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;); R z;                          \
   case CDOLLAR:                                                              \
-   GATV(z,INT,m,1,0); zi=AV(z); EACHC(*zi++=d;);                               \
+   GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
    R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);                        \
   case CHEAD:                                                                \
    GA(z,t,m*c,r,s); zc=CAV(z); *AS(z)=m;                                     \
@@ -259,7 +259,7 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    /* note: fall through */                                                  \
   default:                                                                   \
    if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
-   GATV(z,BOX,m,1,0); za=AAV(z); j=0;                                          \
+   GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
    if(h){EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ (Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
    }else{EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
    }                                                                         \
@@ -290,7 +290,7 @@ static A jtselx(J jt,A x,I r,I i){A z;I c,k;
 
 static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  c=*(1+AS(y));
- GATV(z,INT,r*c,2,0); s=AS(z); s[0]=r; s[1]=c;
+ GATV0(z,INT,r*c,2); s=AS(z); s[0]=r; s[1]=c;
  v=AV(z);
  ICPY(v,AV(y)+i*c,r*c);
  DO(r, *v-=j; v+=c;);
@@ -307,7 +307,7 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
  vf=VAV(fs);
  if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
- GATV(yy,INT,1+yn,1,0); yu=AV(yy); *yu++=p=pfx?n:-1;
+ GATV0(yy,INT,yn+1,1); yu=AV(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(I )(id==CLEFT||id==CRIGHT||id==CCOMMA?2:0)){
   case 0:          DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } ++v;); break;
   case 1: v+=yn-1; DO(yn, if(*v){++m;      *yu++=  yv[v-u];              } --v;); break;
@@ -319,14 +319,14 @@ static DF2(jtcut2sx){PROLOG(0024);DECLF;A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I 
   r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); c=aii(w); k=c<<bplg(t); 
   CUTSWITCH(EACHCUTSP)
  }else if(id==CPOUND){A z;I i,*zi; 
-  GATV(z,INT,m,1,0); zi=AV(z); 
+  GATV0(z,INT,m,1); zi=AV(z); 
   if(pfx)for(i=m;i>=1;--i)*zi++=(yu[i-1]-yu[i  ])-neg;
   else   for(i=1;i<=m;++i)*zi++=(yu[i  ]-yu[i-1])-neg;
   EPILOG(z);
  }else{A a,ww,x,y,z,*za,zz;I c,i,j,q,qn,r;P*wp,*wwp;
   wp=PAV(w); a=SPA(wp,a); x=SPA(wp,x); y=SPA(wp,i); yv=AV(y); r=*AS(y); c=*(1+AS(y));
   RZ(ww=cps(w)); wwp=PAV(ww);
-  GATV(z,BOX,m,1,0); za=AAV(z);
+  GATV0(z,BOX,m,1); za=AAV(z);
   switch(AN(a)&&*AV(a)?2+pfx:pfx){
    case 0:
     p=yu[0]; DO(r, if(p<=yv[c*i]){p=i; break;});
@@ -505,7 +505,7 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y;
    // items long, we can store 4 or 8 times as many
 static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
  CUTFRETEND(pd0)=(I)pd;  // fill in size of current buffer
- GATV(new,INT,FRETALLOSIZE,0,0);  // get a new buffer.  rank immaterial.  Use GATV because of large size
+ GATV0(new,INT,FRETALLOSIZE,0);  // get a new buffer.  rank immaterial.  Use GATV because of large size
  CUTFRETCHAIN(pd0)=new;  // chain the new block to the old
  pd0=new;  // step pd0 to new block
  CUTFRETEND(pd0)=(I)(CUTFRETFRETS(pd0)+(FRETALLOSIZE*SZI)-10);  // return value: endptr of new buffer
@@ -687,10 +687,10 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
  zz=0;   // indicate no result from special cases
  switch(id){
   case CPOUND:
-   GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;); 
+   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;); 
    break;
   case CDOLLAR:
-   GATV(zz,INT,m,1,0); zi=AV(zz); EACHCUT(*zi++=d;);
+   GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;);
    R irs2(zz,vec(INT,MAX(0,r-1),AS(w)+1),0L,0L,1L,jtover);
   case CHEAD:
    GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); *AS(zz)=m;
@@ -859,7 +859,7 @@ static A jttesos(J jt,A a,A w,I n, I *pv){A p;I*av,c,axisct,k,m,s,*ws;
  RZ(a&&w);
  axisct=c=AS(a)[1]; av=AV(a); ws=AS(w);
  if(pv){c=(c>2)?2:c; p=0; // if more than 2 axes requested, limit the return to that
- }else{GATV(p,INT,c,1,0); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
+ }else{GATV0(p,INT,c,1); pv=AV(p); AS(p)[0]=c;}  // all requested, make an A block for it
  if(n>0)DO(axisct, m=av[i]; s=ws[i]; if(!((I)p|(m = m?(s+m-1)/m:1&&s)))pv[0]=0;; if(i<c)pv[i]=m;)
  else   DO(axisct, m=av[i]; k=av[axisct+i]; s=ws[i]-ABS(k); if(!((I)p|(m = 0>s?0:m?(I )(k||s%m)+s/m:1)))pv[0]=0; if(i<c)pv[i]=m;);
  R p;
@@ -874,7 +874,7 @@ static F2(jttesa){A x;I*av,ac,c,d,k,p=IMAX,r,*s,t,*u,*v;
  ASSERT(d>=c&&(2>r||2==s[0]),EVLENGTH);  // x must not be bigger than called for by rank of w, and must be a list or 2-item table
  if(2<=r)DO(c, ASSERT(0<=av[i],EVDOMAIN););  // if movement vector given, it must be nonnegative
  if(2==r&&t&INT){RETF(a);}  // if we can use a as given, return a as is
- GATV(x,INT,2*c,2,0); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
+ GATV0(x,INT,2*c,2); s=AS(x); s[0]=2; s[1]=c;  // allocate space for start/stride, only for axes that will be modified.  We will modify it
  u=AV(x); v=u+c; s=AS(w);
  if(2==r)DO(c,   *u++=av[i]; k=av[i+ac]; *v++=k==p?s[i]:k==-p?-s[i]:k;);
  if(2> r)DO(c,   *u++=1;     k=av[i];   *v++=k==p?s[i]:k==-p?-s[i]:k;);

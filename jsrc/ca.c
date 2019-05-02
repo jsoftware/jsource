@@ -30,7 +30,7 @@ static X jtxmodpow(J jt,A a,A w,A h){A ox,z;
  if(!(XNUM&AT(w)))RZ(w=cvt(XNUM,w));
  if(!(XNUM&AT(h)))RZ(h=cvt(XNUM,h));
  ox=jt->xmod; jt->xmod=h;
- GAT(z,XNUM,1,0,0); *XAV(z)=xpow(*XAV(a),*XAV(w));
+ GAT0(z,XNUM,1,0); *XAV(z)=xpow(*XAV(a),*XAV(w));
  jt->xmod=ox;
  RNE(z);
 }

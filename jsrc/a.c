@@ -44,7 +44,7 @@ static DF1(jtbasis1){DECLF;A z;D*x;I j;V*v;
  RZ(w=vi(w));
  switch(*AV(w)){
   case 0:
-   GAT(z,FL,3,1,0); x=DAV(z); v=FAV(fs);
+   GAT0(z,FL,3,1); x=DAV(z); v=FAV(fs);
    j=v->mr; x[0]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->lr; x[1]=j<=-RMAX?-inf:j>=RMAX?inf:j;
    j=v->rr; x[2]=j<=-RMAX?-inf:j>=RMAX?inf:j;
@@ -62,7 +62,7 @@ F1(jtbdot){A b,h=0;I j,n,*v;
  if(1==n){j=*v; ASSERT(-16<=j&&j<=34,EVINDEX);}
  else DO(n, j=*v++; ASSERT(-16<=j&&j<16,EVINDEX););
  if(1!=n||j<16){
-  GAT(b,B01,64,2,0); *AS(b)=16; *(1+AS(b))=4; MC(AV(b),booltab,64L);
+  GAT0(b,B01,64,2); AS(b)[0]=16; AS(b)[1]=4; MC(AV(b),booltab,64L);
   RZ(h=cant2(IX(AR(w)),from(w,b)));
   R fdef(0,CBDOT,VERB, jtbdot1,jtbdot2, w,0L,h, VFLAGNONE, RMAX,0L,0L);
  }else switch(j){
@@ -109,7 +109,7 @@ static A jtmemoput(J jt,I x,I y,A self,A z){A*cv,h,*hv,q;I *jv,k,m,*mv,*v;
  if(m<=2**mv){A cc,*cu=cv,jj;I i,*ju=jv,n=m,*u;I _ttop=jt->tnextpushx;
   FULLHASHSIZE(2**mv,BOXSIZE,1,0,m);  // # boxes to allocate to get at least 2**mv slots
   RZ(jj=rifvs(reshape(v2(m,2L),sc(IMIN)))); jv= AV(jj);  // init arg table to IMIN
-  GATV(cc,BOX,m,1,0);                  cv=AAV(cc);
+  GATV0(cc,BOX,m,1);                  cv=AAV(cc);
   for(i=0,u=ju;i<n;++i,u+=2){if(IMIN!=*u){  // copy the hash - does this lose the buffer for an arg of IMIN?
    // the current slot in the memo table is filled.  Rehash it, and move the args into *jv and the values into *cv
    k=HIC(x,y)%m; v=jv+2*k; while(IMIN!=*v){v+=2; if(v==jv+2*m)v=jv;}
@@ -160,10 +160,10 @@ F1(jtmemo){PROLOG(300);A h,*hv,q;I m;V*v;
  RZ(w);
  ASSERT(VERB&AT(w),EVDOMAIN);
  v=FAV(w); FULLHASHSIZE(30,BOXSIZE,1,0,m);  // m = # items to allocate
- GAT(h,BOX,3,1,0); hv=AAV(h);
- GAT(q,INT,1,0,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
+ GAT0(h,BOX,3,1); hv=AAV(h);
+ GAT0(q,INT,1,0); *AV(q)=0;        hv[0]=q;  // is modified; musn't use sc()
  RZ(q=reshape(v2(m,2L),sc(IMIN)));  RZ(hv[1]=rifvs(q));
- GATV(q,BOX,m,1,0);                 hv[2]=q;
+ GATV0(q,BOX,m,1);                 hv[2]=q;
  EPILOG(fdef(0,CMCAP,VERB,jtmemo1,jtmemo2,w,0L,h,0L,v->mr,v->lr,v->rr));
  // Now we have converted the verb result to recursive usecount, and gotten rid of the pending tpops for the components of h
 }

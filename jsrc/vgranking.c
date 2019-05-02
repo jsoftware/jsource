@@ -110,7 +110,7 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  }
  // here for small-range ordinals, processed through the ranking loop
  GATV(z,INT,m*n,1+wf,ws); if(!wcr)*(AS(z)+wf)=1; zv=AV(z);
- GATV(y,C4T,rng.range,1,0); yv=C4AV(y); yu=yv-rng.min;
+ GATV0(y,C4T,rng.range,1); yv=C4AV(y); yu=yv-rng.min;
  for(i=0;i<m;++i){
   memset(yv,C0,rng.range*sizeof(*yv));
   switch(k){

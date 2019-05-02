@@ -25,7 +25,7 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  m=*AS(y); yv=AV(y);      
  RZ(ai=IX(h));
  RZ(as=less(IX(AR(z)),a)); u=AV(as); n=AN(as);         /* dense axes                  */
- GATV(t,INT,n,1,0); v=AV(t);                             /* shape of indexed dense axes */
+ GATV0(t,INT,n,1); v=AV(t);                             /* shape of indexed dense axes */
  e=0; d=1; DO(n, if(h>u[i])v[e++]=s[i]; else d*=s[i];);
  RZ(*i2=jj=tymes(sc(d),base2(vec(INT,e,v),repeatr(eps(ai,as),ind))));
  c=*(1+AS(y));
@@ -38,14 +38,14 @@ static B jtiaddr(J jt,A z,A ind,A*i1,A*i2){A a,ai,as,ii,jj,q,t,x,y;I c,d,e,h,i,*
  RZ(*i1=ii=indexof(y,repeatr(eps(ai,a),ind)));         /* group indices in index mat  */
  if(c==AN(a))R 1;
  n=AN(ii); iv=AV(ii); jv=AV(jj);                       /* do progressive iota         */
- GATV(q,INT,n,1,0); qv=AV(q);                            /* group sizes                 */
+ GATV0(q,INT,n,1); qv=AV(q);                            /* group sizes                 */
  for(i=h=0;i<n;++i){
   e=1; d=iv[i]; v=yv+c*d;
   DO(m-d-1, if(ICMP(v,v+c,c))break; ++e; v+=c;);
   qv[i]=e; h+=e;                                       /* # elements in group i       */
  }
- GATV(t,INT,h,1,0); u=AV(t); *i1=t;
- GATV(t,INT,h,1,0); v=AV(t); *i2=t;
+ GATV0(t,INT,h,1); u=AV(t); *i1=t;
+ GATV0(t,INT,h,1); v=AV(t); *i2=t;
  DO(n, e=qv[i]; d=iv[i]; p=jv[i]; DO(e, *u++=d++; *v++=p;););
  R 1;
 }    /* index i1 (in index matrix) and address i2 (in data array) from index array */
@@ -85,13 +85,13 @@ static A jtastdn(J jt,A a,A z,A ind){A a1,q,r,s;B*b;I ar,*as,*av,d,ir,n,n1,*v,zr
  zr=AR(z); zs=AS(z); 
  if(!ar)R a;
  ir=AR(ind); n=*(AS(ind)+ir-1); d=(ir-1)+(zr-n); ASSERT(ar<=d,EVRANK);  // n=shape of item of i; d is # unindexed axes
- GATV(s,INT,d,1,0); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
+ GATV0(s,INT,d,1); v=AV(s); MCISH(v,AS(ind),ir-1); MCISH(v+ir-1,zs+n,zr-n);
  ASSERTAGREE(as,AV(s)+d-ar,ar);
  if(ar<d)RZ(a=reshape(s,a));
  zp=PAV(z); a1=SPA(zp,a); av=AV(a1); n1=n-1;
- GATV(s,B01,zr,1,0); b=BAV(s); 
+ GATV0(s,B01,zr,1); b=BAV(s); 
  memset(b,C0,zr); DO(AN(a1), b[av[i]]=1;); memset(b,!memchr(b,C1,n)?C0:C1,n);
- GATV(r,INT,zr-n1,1,0); v=AV(r); *v++=ar-(zr-n); DO(zr-n, *v++=1;);
+ GATV0(r,INT,zr-n1,1); v=AV(r); *v++=ar-(zr-n); DO(zr-n, *v++=1;);
  RZ(q=dgrade1(repeat(r,vec(B01,zr-n1,b+n1))));
  R equ(q,IX(ar))?a:cant2(q,a);
 }    /* convert replacement array a into standard form relative to index array ind */
@@ -131,7 +131,7 @@ A jtamnsp(J jt,A a,A z,A ind,B ip){A i1,i2,t;C*ev,*u,*v,*vv;I c,*dv,i,*iv,j,*jv,
  t=SPA(ap,e); ev=CAV(t);
  t=SPA(ap,x); u =CAV(t);
  t=SPA(zp,x); v =CAV(t); k=bpnoun(AT(t)); zk=k*aii(t);
- GATV(t,INT,r,1,0); dv=AV(t); memset(dv,C0,SZI*r); dv[r-1]=-1;
+ GATV0(t,INT,r,1); dv=AV(t); memset(dv,C0,SZI*r); dv[r-1]=-1;
  for(i=0;i<n;++i){
   vv=v+zk*iv[i]+k*jv[i];
   for(j=0;j<c;++j){

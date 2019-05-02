@@ -26,7 +26,7 @@
 // from the queue to the stack. 
 
 B jtparseinit(J jt){A x;
- GAT(x,INT,20,1,0); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
+ GAT0(x,INT,20,1); ras(x); jt->nvra=x; jt->nvrav=AAV(x); jt->nvran=(UI4)AN(x);  // Initial stack.  Size is doubled as needed
  R 1;
 }
 
@@ -428,7 +428,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   else{A y;  // this is the alternative, much less likely, branch
     PSTK *obgn=jt->parserstkbgn;  // push the parser stack.  The only reason to stack the bgn pointer is so when we return to console level the stack shows empty
     I allo = MAX((m+BACKMARKS+FRONTMARKS)*sizeof(PSTK),PARSERSTKALLO); // number of bytes to allocate.  Allow 4 marks: 1 at beginning, 3 at end
-    GATV(y,B01,allo,1,0);
+    GATV0(y,B01,allo,1);
     jt->parserstkbgn=(PSTK*)AV(y);   // save start of data area
     // must guarantee stack stays aligned to size boundary; & that SM doesn't use 32-B instructions to copy 2 at a time
      // We are taking advantage of the fact the NORMAH is 7, and thus a rank-1 array is aligned on a boundary of its size

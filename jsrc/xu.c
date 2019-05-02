@@ -746,11 +746,11 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
  {
   RZ(w=vi(w));
   n=AN(w); v=(I*)AV(w);
-  GATV(c4,C4T,n,1,0); c4v=C4AV(c4);
+  GATV0(c4,C4T,n,1); c4v=C4AV(c4);
   DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
   q=utowsize(C4AV(c4),AN(c4));
   q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
-  GATV(z,C2T,q,1,0);
+  GATV0(z,C2T,q,1);
   utow(C4AV(c4),AN(c4),USAV(z));
  }
  else if(LIT&t) // u16 from u8
@@ -759,7 +759,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtowsize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
-  GATV(z,C2T,q,1,0);
+  GATV0(z,C2T,q,1);
   mtow(UAV(w),n,USAV(z));
  }
  else if(C2T&t)
@@ -767,7 +767,7 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   c2v=USAV(w);
   DO(n, if(127<*c2v++){b=1;break;});
   if(b)RCA(w); // u16 unchanged
-  GATV(z,LIT,n,1,0);
+  GATV0(z,LIT,n,1);
   wv=UAV(z);
   c2v=USAV(w);
   DO(n, *wv++=(UC)*c2v++;);   // fallback to ascii
@@ -779,12 +779,12 @@ F1(jttoutf16){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; A c4; I *v;
   if(b){
   q=utowsize(C4AV(w),n);
   ASSERT(q>=0,EVDOMAIN);
-  GATV(z,C2T,q,1,0);
+  GATV0(z,C2T,q,1);
   utow(C4AV(w),n,USAV(z));
   }
   else
   {
-  GATV(z,LIT,n,1,0);
+  GATV0(z,LIT,n,1);
   wv=UAV(z);
   c4v=C4AV(w);
   DO(n, *wv++=(char)*c4v++;);   // fallback to ascii
@@ -805,14 +805,14 @@ if(t&C2T)
 {
 q=wtomsize(USAV(w),n);
 q=(q<0)?(-q):q;
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 wtom(USAV(w),n,UAV(z));
 }
 else
 {
 q=utomsize(C4AV(w),n);
 q=(q<0)?(-q):q;
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 utom(C4AV(w),n,UAV(z));
 }
 EPILOG(z);
@@ -830,25 +830,25 @@ if(NUMERIC&t)
 {
 RZ(w=vi(w));
 n=AN(w); v=(I*)AV(w);
-GATV(c4,C4T,n,1,0); c4v=C4AV(c4);
+GATV0(c4,C4T,n,1); c4v=C4AV(c4);
 DO(n, j=*v++; ASSERT(0<=j&&j<=0x10ffff,EVINDEX); *c4v++=(C4)j;);
 q=utomsize(C4AV(c4),AN(c4));
 q=(q<0)?(-q):q;   // allow unpaired surrogate as in 10&u:
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 utom(C4AV(c4),AN(c4),UAV(z));
 }
 else if(t&C4T)
 {
 q=utomsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 utom(C4AV(w),n,UAV(z));
 }
 else
 {
 q=wtomsize(USAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 wtom(USAV(w),n,UAV(z));
 }
 EPILOG(z);
@@ -865,14 +865,14 @@ if(t&C4T)
 {
 q=utowsize(C4AV(w),n);
 ASSERT(q>=0,EVDOMAIN);
-GATV(z,C2T,q,1,0);
+GATV0(z,C2T,q,1);
 utow(C4AV(w),n,USAV(z));
 }
 else // u16 from u8
 {
 q=mtowsize(UAV(w),n);
 ASSERT(q>=0,EVDOMAIN);
-GATV(z,C2T,q,1,0);
+GATV0(z,C2T,q,1);
 mtow(UAV(w),n,USAV(z));
 }
 EPILOG(z);
@@ -910,7 +910,7 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   if(!b)RCA(w);  // ascii list unchanged ascii scalar as list
   q=mtousize(UAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
-  GATV(z,C4T,q,1,0);
+  GATV0(z,C4T,q,1);
   mtou(UAV(w),n,C4AV(z));
  }
  else if(C2T&t)
@@ -920,12 +920,12 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   if(b){
   q=wtousize(USAV(w),n);
   ASSERT(q>=0,EVDOMAIN);
-  GATV(z,C4T,q,1,0);
+  GATV0(z,C4T,q,1);
   wtou(USAV(w),n,C4AV(z));
   }
   else
   {
-  GATV(z,LIT,n,1,0);
+  GATV0(z,LIT,n,1);
   wv=UAV(z);
   c2v=USAV(w);
   DO(n, *wv++=(char)*c2v++;);
@@ -937,12 +937,12 @@ F1(jttoutf32){A z;I n,t,q,b=0,j; UC* wv; US* c2v; C4* c4v; I* v;
   DO(n, if(127<*c4v++){b=1;break;});
   if(b){
    q=utousize(C4AV(w),n);
-   GATV(z,C4T,q,1,0);
+   GATV0(z,C4T,q,1);
    utou(C4AV(w),n,C4AV(z));
   }
   else
   {
-  GATV(z,LIT,n,AR(w),0);
+  GATV0(z,LIT,n,AR(w));
   wv=UAV(z);
   c4v=C4AV(w);
   DO(n, *wv++=(UC)*c4v++;);
@@ -995,12 +995,12 @@ ASSERT(t&LIT,EVDOMAIN);
 // convert to utf-16
 q=mtowsize(wv,n);
 if(q<0)RCA(w);
-GATV(z,C2T,q,1,0);
+GATV0(z,C2T,q,1);
 c2v=USAV(z);
 mtow(wv,n,c2v);
 // promote wchar to literal4
 // change 0 to its over long version
-GATV(z1,C4T,q,1,0);
+GATV0(z1,C4T,q,1);
 c4v=C4AV(z1);
 if(cnul){
  DO(q, if(*c2v)*c4v++=(C4)*c2v++;else{*c4v++=(C4)0xc080;c2v++;});
@@ -1010,7 +1010,7 @@ if(cnul){
 // convert to utf-8
 q=utomsize(C4AV(z1),AN(z1));
 q=(q<0)?(-q):q;
-GATV(z,LIT,q,1,0);
+GATV0(z,LIT,q,1);
 utom(C4AV(z1),AN(z1),UAV(z));
 EPILOG(z);
 }

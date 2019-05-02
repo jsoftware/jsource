@@ -642,10 +642,10 @@ static DF2(jtrank20){R jtrank2ex0(jt,a,w,self,jtrank20atom);}  // pass inplaceab
 F2(jtqq){A h,t;AF f1,f2;D*d;I *hv,n,r[3],vf,flag2=0,*v;
  RZ(a&&w);
  // The h value in the function will hold the ranks from w.  Allocate it
- GAT(h,INT,3,1,0); hv=AV(h);  // hv->rank[0]
+ GAT0(h,INT,3,1); hv=AV(h);  // hv->rank[0]
  if(VERB&AT(w)){
   // verb v.  Extract the ranks into a floating-point list
-  GAT(t,FL,3,1,0); d=DAV(t);
+  GAT0(t,FL,3,1); d=DAV(t);
   n=r[0]=hv[0]=mr(w); d[0]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[1]=hv[1]=lr(w); d[1]=n<=-RMAX?-inf:RMAX<=n?inf:n;
   n=r[2]=hv[2]=rr(w); d[2]=n<=-RMAX?-inf:RMAX<=n?inf:n;

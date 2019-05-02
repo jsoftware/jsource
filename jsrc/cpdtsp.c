@@ -74,7 +74,7 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
  if(DENSE&AT(a)){
   GATV(yj,INT,n,2,s); v=AV(yj); 
   av=DAV(a); x=SPA(wp,x); wv=DAV(x);
-  GATV(x,FL,n,1,0); xv=DAV(x);
+  GATV0(x,FL,n,1); xv=DAV(x);
   DO(n, c=av[*yv++]; *v++=*yv++; d=*wv++; *xv++=c&&d?c*d:0;);
  }else{
   GATV(yi,INT,n,2,s); u=AV(yi);
@@ -108,7 +108,7 @@ static B jtmmprep(J jt,P*p,I*n,I**iv,I*m,I**nv,D**xv){A x;I j,k,q,*u,*v;
  x=SPA(p,i); *iv=u=AV(x); *n=AN(x);
  if(m&&nv){
   q=*AS(x); k=q?2+u[(q-1)<<1]-*u:1;
-  GATV(x,INT,k,1,0); *nv=v=AV(x);
+  GATV0(x,INT,k,1); *nv=v=AV(x);
   k=-1; DO(q, j=*u++; u++; if(j>k){*v++=i; k=j;});
   *v++=q; AN(x)=*AS(x)=k=v-*nv; *m=k-1;
  }
@@ -137,7 +137,7 @@ static F2(jtpdtspmm){A z,zi,zj,zx,zy;D*axv,c,d,*dv,*wxv,*zyv;
  RZ(a&&w);
  RZ(mmprep(PAV(a),&m,&aiv,0L ,0L  ,&axv)); aivm=m+aiv;
  RZ(mmprep(PAV(w),&m,&wiv,&wm,&wnv,&wxv));
- GATV(zy,FL,*(1+AS(w)),1,0); zyv=DAV(zy); memset(zyv,C0,AN(zy)*sizeof(D));
+ GATV0(zy,FL,AS(w)[1],1); zyv=DAV(zy); memset(zyv,C0,AN(zy)*sizeof(D));
  old=jt->tnextpushx; 
  RZ(zj=exta(INT,1L,1L,1000L)); zjv0=AV(zj);
  RZ(zi=exta(INT,2L,2L,1000L));

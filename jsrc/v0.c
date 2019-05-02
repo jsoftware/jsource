@@ -41,7 +41,7 @@ static F1(jtrsort){A t,z;
 static F2(jtcfrz){A z;B b=0,p;I j,n;Z c,d,*t,*u,*v;
  RZ(w=rsort(w)); 
  n=AN(w); u=ZAV(w); 
- GATV(z,CMPX,1+n,1,0); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
+ GATV0(z,CMPX,1+n,1); v=ZAV(z); *v=c=*ZAV(a); p=!c.im;
  for(j=0;j<n;++j){
   d=znegate(u[j]); t=j+v; *(1+t)=*t; 
   DO(j, *t=zplus(*(t-1),ztymes(d,*t)); --t;); 
@@ -153,7 +153,7 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
  RZ(x=cvt(CMPX,w)); xv=ZAV(x); // set x = complex form of w, xv->first complex coeff
  RZ(y=take(sc(1+m),x)); realizeifvirtual(y); yv=ZAV(y);  // y = complex form with degree m, yv->first coeff.  These are modified by deflate[q]() and must not be virtual
  RZ(q=take(sc(1+m),w)); realizeifvirtual(q); qv=QAV(q);  // q = rational form with degree m, qv->first coeff
- GATV(z,RAT,m,1,0); zv=QAV(z);        // allocate space for exact rational roots, zv->first result location
+ GATV0(z,RAT,m,1); zv=QAV(z);        // allocate space for exact rational roots, zv->first result location
  i=j=0;
  // loop to find each root by Laguerre's method
  while(i<m){
@@ -192,8 +192,8 @@ static B jtrfcq(J jt,I m,A w,A*zz,A*ww){A q,x,y,z;B b;I i,j,wt;Q*qv,rdx,rq,*wv,*
 
 static A jtrfcz(J jt,I m,A w){A x,y,z;B bb=0,real;D c,d;I i;Z r,*xv,*yv,*zv;
  real=!(CMPX&AT(w)); RZ(x=cvt(CMPX,w)); xv=ZAV(x); 
- GATV(y,CMPX,1+m,1,0); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
- GATV(z,CMPX,  m,1,0); zv=ZAV(z);
+ GATV0(y,CMPX,1+m,1); yv=ZAV(y); MC(yv,xv,(1+m)*sizeof(Z));
+ GATV0(z,CMPX,  m,1); zv=ZAV(z);
  if(2==m){Z a2,b,c,d,z2={2,0};
   a2=ztymes(z2,xv[2]); b=znegate(xv[1]); c=xv[0]; 
   d=zsqrt(zminus(ztymes(b,b),ztymes(z2,ztymes(a2,c))));

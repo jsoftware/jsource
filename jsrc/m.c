@@ -107,7 +107,7 @@ I Wi,Wj;A Wx; if(jt->peekdata){for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mfree[
 
 F1(jtspcount){A z;I c=0,i,j,*v;A x;
  ASSERTMTV(w);
- GATV(z,INT,2*(-PMINL+PLIML+1),2,0); v=AV(z);
+ GATV0(z,INT,2*(-PMINL+PLIML+1),2); v=AV(z);
  for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mfree[-PMINL+i].pool); while(x){x=AFCHAIN(x); ++j;} if(j){++c; *v++=(I)1<<i; *v++=j;}}
  v=AS(z); v[0]=c; v[1]=2; AN(z)=2*c;
  RETF(z);
@@ -381,7 +381,7 @@ static void auditsimreset(A w){I delct;
 // Register the value to insert into leak-sniff records
 void jtsetleakcode(J jt, I code) {
 #if LEAKSNIFF
- if(!leakblock)GAT(leakblock,INT,10000,1,0); ras(leakblock);
+ if(!leakblock)GAT0(leakblock,INT,10000,1); ras(leakblock);
  leakcode = code;
 #endif
 }

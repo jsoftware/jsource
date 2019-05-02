@@ -179,7 +179,7 @@ static F2(jtgerfrom){A*av,*v,z;I n;
  else{
   ASSERT(BOX&AT(a),EVDOMAIN);
   n=AN(a); av=AAV(a); 
-  GATV(z,BOX,n,1,0); v=AAV(z);
+  GATV0(z,BOX,n,1); v=AAV(z);
   DO(n, RZ(*v++=gerfrom(av[i],w)););
   R z;
 }}

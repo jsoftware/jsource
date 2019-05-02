@@ -110,7 +110,7 @@ static F1(jtbitslplus){A t,z;I i,m,mm,n,n1,p,q,*u,wr,*ws,*zv;UC c,*vc,*wv;UI*v,*
  }
 #endif
  n1=(n+BW-1)/BW; n1*=SZI; q=(n+BB-1)/BB;
- GATV(t,INT,q,1,0); v=v0=(UI*)AV(t); wv=UAV(w);
+ GATV0(t,INT,q,1); v=v0=(UI*)AV(t); wv=UAV(w);
  for(i=(m+mm-1)/mm-1;i>=0;--i){
   v=v0; DO(q, *v++=0;);
   p=i?mm:m%mm;
@@ -281,7 +281,7 @@ static F2(jtbitfrom){A z;I an,ar,*as,c,i,j,m,n,q,r,rc,r1,wr,*ws;UC k,*v,*zv;
    DO(r1, *zv++=0;);
  }}else{A x;I*u,*v,zn,zr,*zv;
   zr=ar+wr-1;
-  GATV(x,INT,zr,1,0); u=AV(x); 
+  GATV0(x,INT,zr,1); u=AV(x); 
   ICPY(u,as,ar); ICPY(u+ar,1+ws,wr-1); RE(zn=prod(zr,u));
   GA(z,BIT,zn,zr,u); zv=AV(z);
   n=*ws; c=(ws[wr-1]+BW-1)/BW; RE(m=mult(prod(wr-2,1+ws),c));

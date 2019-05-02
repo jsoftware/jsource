@@ -44,10 +44,10 @@ F1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   if(memchr(b+f,C0,r)){memset(b+f,C1,r); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
   RZ(a=caro(ifb(1+f,b)));   // avoid readonly block
-  GATV(c,INT,r,1L,0L); v=r+AV(c); j=AR(w); m=1; DO(r, *--v=m; m*=AS(w)[--j];);
+  GATV0(c,INT,r,1L); v=r+AV(c); j=AR(w); m=1; DO(r, *--v=m; m*=AS(w)[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; I n=v[1];
   RZ(q=pdt(dropr(n-r,y0),c));
-  GATV(y,INT,m*(1+n-r),2,0); v=AS(y); v[0]=m; v[1]=1+n-r;
+  GATV0(y,INT,m*(1+n-r),2); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DO(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
  }else{RZ(a=ca(SPA(wp,a))); RZ(x=irs1(SPA(wp,x),0L,r,jtravel)); RZ(y=ca(SPA(wp,i)));}

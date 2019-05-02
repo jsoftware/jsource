@@ -13,11 +13,11 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
  DO(n, x=wv[i]; if(AN(x)){p=AT(x); t=t?t:p; ASSERT(HOMO(t,p),EVDOMAIN); RE(t=maxtype(t,p));});  // use vector maxtype
  t=t?t:B01; k=bpnoun(t);
  GA(b,t,n,1,0);      bv=CAV(b);
- GATV(x,INT,n,1,0);    qv=AV(x);
- GATV(x,BOX,n,1,0);    pv=(C**)AV(x);
+ GATV0(x,INT,n,1);    qv=AV(x);
+ GATV0(x,BOX,n,1);    pv=(C**)AV(x);
  RZ(x=apvwr(n,0L,0L)); cv=AV(x);
  DO(n, x=wv[i]; if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x)); r+=AR(x); qv[i]=p=AN(x); RE(m=mult(m,p)); pv[i]=CAV(x););
- GATV(z,BOX,m,r,0);    zv=AAV(z); s=AS(z); 
+ GATV0(z,BOX,m,r);    zv=AAV(z); s=AS(z); 
  DO(n, x=wv[i]; u=AS(x); DO(AR(x),*s++=*u++;););
  for(i=0;i<m;i++){
   bu=bv-k;
@@ -199,7 +199,7 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
 #if !SY_64 && SY_WIN32
    else{A x;C*v,*xv,*xv00,*xv01,*xv02,*xv03,*xv04,*xv05,*xv06,*xv07,*xv08,*xv09,*xv10,*xv11,
          *xv12,*xv13,*xv14,*xv15;I i,j,k4=k*4;
-    GATV(x,LIT,16*k4,1,0); xv=CAV(x);
+    GATV0(x,LIT,16*k4,1); xv=CAV(x);
     xv00=xv;       xv01=xv+   k4; xv02=xv+ 2*k4; xv03=xv+ 3*k4;
     xv04=xv+ 4*k4; xv05=xv+ 5*k4; xv06=xv+ 6*k4; xv07=xv+ 7*k4;
     xv08=xv+ 8*k4; xv09=xv+ 9*k4; xv10=xv+10*k4; xv11=xv+11*k4;

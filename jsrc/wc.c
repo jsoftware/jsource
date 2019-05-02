@@ -12,7 +12,7 @@
 
 
 static A jtcongotoblk(J jt,I n,CW*con){A z;CW*d=con;I i,j,k,*u,*v;
- GATV(z,INT,2*n,2,0); v=AS(z); v[0]=n; v[1]=2;
+ GATV0(z,INT,2*n,2); v=AS(z); v[0]=n; v[1]=2;
  u=v=AV(z);
  for(i=j=0;i<n;++i,++d){
   *u++=-1; *u++=-1; 
@@ -143,7 +143,7 @@ static I conendsel(I endline,I top,I stack[],CW*con){I c=endline-1,d=0,j,ot=top,
 // n is number of control words, con points to them
 static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack,tb=0,top=0,wb=0;
  // We process the words through a stack to match up control sequences.  Initialize to empty
- GATV(y,INT,n,1,0); stack=AV(y);
+ GATV0(y,INT,n,1); stack=AV(y);
  for(i=0;i<n;++i){
   // top is the top of the stack (i. e. the place to add the next entry)
   // b, c, d -> con entries, p, q, r are cw-types   for current cw, previous cw on stack, 2d-previous cw on stack
@@ -337,7 +337,7 @@ static F1(jtgetsen){A y,z,*z0,*zv;C*s;I i,j,k=-1,m,n,*v;
  v=AV(y);   // v-> (#words),(index,length) for each word; #words neg if last is NB.
  n=2**v++;                 // n=# ints in (index,length) pairs, v->index0
  n=0>n?-(2+n):n;                   /* remove NB. pair            */
- GATV(z,BOX,n>>1,1,0); z0=zv=AAV(z);  // allocate one box per word
+ GATV0(z,BOX,n>>1,1); z0=zv=AAV(z);  // allocate one box per word
  s=CAV(w);                         // s-> original text
  for(i=0;i<n;i+=2){     // for each word...
   j=v[i]; m=v[1+i];         // j=index, m=length of word

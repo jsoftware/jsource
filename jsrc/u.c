@@ -87,14 +87,14 @@ I jtaii(J jt,A w){I m; PROD1(m,AR(w)-1,1+AS(w)); R m;}
 A jtapv(J jt,I n,I b,I m){A z;
  // see if we can use the canned ascending integers
  if(m==1 && b>=IOTAVECBEGIN && b+n<=IOTAVECLEN+IOTAVECBEGIN) {
-  GAT(z,INT,0,1,0); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(jt->iotavec+b-IOTAVECBEGIN)-(C*)z; AC(z)=ACUC1; AFLAG(z)=AFRO;  // mark block readonly
+  GAT0(z,INT,0,1); AS(z)[0]=n; AN(z)=n; AK(z)=(C*)(jt->iotavec+b-IOTAVECBEGIN)-(C*)z; AC(z)=ACUC1; AFLAG(z)=AFRO;  // mark block readonly
   R z;
  }
  R apvwr(n,b,m);
 }    /* b+m*i.n */
 // same, but never return a readonly block
 A jtapvwr(J jt,I n,I b,I m){A z;
- GATV(z,INT,n,1,0); I *x=AV(z);
+ GATV0(z,INT,n,1); I *x=AV(z);
   DO(n, x[i]=b; b+=m;)
  R z;
 }    /* b+m*i.n writable */
@@ -105,7 +105,7 @@ B jtb0(J jt,A w){if(!(w))R 0; ASSERT(!AR(w),EVRANK); if(!(B01&AT(w)))RZ(w=cvt(B0
 
 // NOTE: the caller modifies this result inplace, so it must not be shared or readonly
 B*jtbfi(J jt,I n,A w,B p){A t;B* RESTRICT b;I* RESTRICT v;
- GATV(t,B01,n+1,1,0); b=BAV(t);  // allo n+1 slots
+ GATV0(t,B01,n+1,1); b=BAV(t);  // allo n+1 slots
  memset(b,!p,(n|(SZI-1))+1); v=AV(w); DO(AN(w), b[v[i]]=p;);
  R b;
 }    // boolean mask from integers: p=(i.>:n)e.w  where *./w<n
@@ -183,7 +183,7 @@ I jti0(J jt,A w){RZ(w); if(AT(w)&INT+B01){ASSERT(!AR(w),EVRANK); R BIV0(w);} if(
 A jtifb(J jt,I n,B* RESTRICT b){A z;I p,* RESTRICT zv; 
  p=bsum(n,b); 
  if(p==n)R IX(n);
- GATV(z,INT,p,1,0); zv=AV(z);
+ GATV0(z,INT,p,1); zv=AV(z);
 #if 0
 #if !SY_64 && SY_WIN32
  {I i,q=n&-SZI,*u=(I*)b;
@@ -285,25 +285,25 @@ A jtodom(J jt,I r,I n,I* RESTRICT s){A z;I m,mn,*u,*zv;
 
 F1(jtrankle){R!w||AR(w)?w:ravel(w);}
 
-A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}  // always return I
-A jtscib(J jt,I k)   {A z; if((k^(k>>(BW-1)))<=NUMMAX)R num[k]; GAT(z,INT, 1,0,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
+A jtsc(J jt,I k)     {A z; if((k^(k>>(BW-1)))<=NUMMAX)R (k&~1?num:zeroionei)[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // always return I
+A jtscib(J jt,I k)   {A z; if((k^(k>>(BW-1)))<=NUMMAX)R num[k]; GAT0(z,INT, 1,0); *IAV(z)=k;     RETF(z);}  // return b if 0 or 1, else I
 A jtsc4(J jt,I t,I v){A z; GA(z,t,   1,0,0); *IAV(z)=v;     RETF(z);}  // return scalar with a given I-length type (numeric or box)
 A jtscb(J jt,B b)    {R num[b];}   // A block for boolean
-A jtscc(J jt,C c)    {A z; GAT(z,LIT, 1,0,0); *CAV(z)=c;     RETF(z);}  // create scalar character
-A jtscf(J jt,D x)    {A z; GAT(z,FL,  1,0,0); *DAV(z)=x;     RETF(z);}   // scalar float
-A jtscx(J jt,X x)    {A z; GAT(z,XNUM,1,0,0); *XAV(z)=ca(x); RETF(z);}  // scalar extended
+A jtscc(J jt,C c)    {A z; GAT0(z,LIT, 1,0); *CAV(z)=c;     RETF(z);}  // create scalar character
+A jtscf(J jt,D x)    {A z; GAT0(z,FL,  1,0); *DAV(z)=x;     RETF(z);}   // scalar float
+A jtscx(J jt,X x)    {A z; GAT0(z,XNUM,1,0); *XAV(z)=ca(x); RETF(z);}  // scalar extended
 
 // return A-block for the string *s with length n
-A jtstr(J jt,I n,C*s){A z; GATV(z,LIT,n,1,0); MC(AV(z),s,n); RETF(z);}
+A jtstr(J jt,I n,C*s){A z; GATV0(z,LIT,n,1); MC(AV(z),s,n); RETF(z);}
 
 // w is a LIT string; result is a new block with the same string, with terminating NUL added
-F1(jtstr0){A z;C*x;I n; RZ(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV(z,LIT,1+n,1,0); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
+F1(jtstr0){A z;C*x;I n; RZ(w); ASSERT(LIT&AT(w),EVDOMAIN); n=AN(w); GATV0(z,LIT,n+1,1); x=CAV(z); MC(x,AV(w),n); x[n]=0; RETF(z);}
 
 // return A-block for a 2-atom integer vector containing a,b
-A jtv2(J jt,I a,I b){A z;I*x; GAT(z,INT,2,1,0); x=AV(z); *x++=a; *x=b; RETF(z);}
+A jtv2(J jt,I a,I b){A z;I*x; GAT0(z,INT,2,1); x=AV(z); *x++=a; *x=b; RETF(z);}
 
 // return A-block for singleton integer list whose value is k
-A jtvci(J jt,I k){A z; GAT(z,INT,1,1,0); *IAV(z)=k; RETF(z);}
+A jtvci(J jt,I k){A z; GAT0(z,INT,1,1); *IAV(z)=k; RETF(z);}
 
 // return A-block for list of type t, length n, and values *v 
 A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z);}

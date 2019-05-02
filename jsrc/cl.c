@@ -72,7 +72,7 @@ static A jtlevs2(J jt,A a,A w,A self){A fs;
 static DF1(jtscapco1){PROLOG(555);A x,z=0;I m;V*v=FAV(self);
  RZ(w);
  A scastk=jt->sca; m=jt->lmon; jt->lmon=efflev(0L,v->fgh[2],w);  // stack level of any executing L:/S:, get level to use
- GAT(x,INT,100,1,0); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
+ GAT0(x,INT,100,1); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0] holds # valid results
  // jt->sca will be used to collect results during the execution of the verb.  Since we don't know how many results there will be, jt->sca may be extended
  // in the middle of processing some other verb, and that verb might EPILOG and free the new buffer allocated by the extension.  Thus, we have to ra() the later buffers, and the easiest way to handle
  // things is to ra() the first one too.  When we fa() at the end we may be freeing a different buffer, but that's OK since all have been raised.
@@ -88,7 +88,7 @@ static DF2(jtscapco2){PROLOG(556);A x,z=0;I l,r;V*v=FAV(self);
  RZ(a&&w); 
  A scastk=jt->sca; l=jt->lleft;  jt->lleft =efflev(1L,v->fgh[2],a);
  r=jt->lright; jt->lright=efflev(2L,v->fgh[2],w);
- GAT(x,INT,100,1,0); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0]=# valid results
+ GAT0(x,INT,100,1); jt->sca=x; AS(x)[0]=0;    // allocate place to save results. this will hold boxes, but it is allocated as INTs so it won't be freed on error.  AS[0]=# valid results
  ras(jt->sca); 
  x=levs2(a,w,self);
  if(x){AT(jt->sca)=BOX; AN(jt->sca)=AS(jt->sca)[0]; z=ope(jt->sca); AT(jt->sca)=INT;} // if no error, turn the extendable list into a list of boxes (fixing AN), and open it
@@ -105,7 +105,7 @@ static A jtlsub(J jt,C id,A a,A w){A h,t;B b=id==CLCAPCO;I*hv,n,*v;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(0<n&&n<4,EVLENGTH);
  RZ(t=vib(w)); v=AV(t);
- GAT(h,INT,3,1,0); hv=AV(h);  // save levels in h
+ GAT0(h,INT,3,1); hv=AV(h);  // save levels in h
  hv[0]=v[2==n]; hv[1]=v[3==n]; hv[2]=v[n-1];  // monad, left, right
  R fdef(0,id,VERB, b?jtlcapco1:jtscapco1,b?jtlcapco2:jtscapco2, a,w,h, VFLAGNONE, RMAX,RMAX,RMAX);
 }

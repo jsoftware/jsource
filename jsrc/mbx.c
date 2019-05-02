@@ -219,7 +219,7 @@ static F1(jtsmmblkf){A z;I**mfree,p,q,*v,*zv;MS*x;
  mfree=SMMFREE(w);
  p=MLEN; q=0; 
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); ++q;                           v=x->a;});
- GATV(z,INT,2*q,2,0); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
+ GATV0(z,INT,2*q,2); *AS(z)=q; *(1+AS(z))=2; zv=AV(z);
  DO(p, v=mfree[i]; while(v){x=(MS*)AABS(v,w); *zv++=(I)x; *zv++=(I)1<<(x->j); v=x->a;});
  RETF(z);
 }    /* blocks free as a 2-column matrix of (address,size) */
@@ -241,7 +241,7 @@ static I* smmblku1(B b,I*zv,A w){A1*wv;MS*x;
 static A jtsmmblku(J jt,A w){A z;I n;
  RZ(w);
  n=smmblkun(0,w);
- GATV(z,INT,2*n,2,0); *AS(z)=n; *(1+AS(z))=2;
+ GATV0(z,INT,2*n,2); *AS(z)=n; *(1+AS(z))=2;
  smmblku1(0,AV(z),w);
  R z;
 }    /* blocks in use */
@@ -257,7 +257,7 @@ F1(jtsmmblks){A x,y,z;I n,t,*v,*zv;
  RZ(x=smmblku(w));
  RZ(y=smmblkf(w));
  n=1+*AS(x)+*AS(y);
- GATV(z,INT,3*n,2,0); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
+ GATV0(z,INT,3*n,2); *AS(z)=n; *(1+AS(z))=3; zv=AV(z); 
  *zv++=IMIN; *zv++=IMIN; *zv++=IMIN;
  v=AV(x); DO(*AS(x), *zv++=*v++; *zv++=*v++; *zv++=SMMCINUSE;);
  v=AV(y); DO(*AS(y), *zv++=*v++; *zv++=*v++; *zv++=SMMCFREE; );

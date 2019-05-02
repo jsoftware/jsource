@@ -66,7 +66,7 @@ static I ssingflen(J jt, I ra, I rw, RANK2T ranks){I ca,cw,fa,fw,r;
 // allocate a singleton block of type t for rank r.
 static A ssingallo(J jt,I r,I t){A z;
  GA(z,t,1,r,0); DO(r, AS(z)[i]=1;); R z;  // not inplaceable since we don't have jt (? we do)
-SSINGALLO(z,r,FL) GAT(z,FL,1,0,0)
+SSINGALLO(z,r,FL) GAT0(z,FL,1,0)
 }
 #else
 static A ssingalloFL(J jt,I r){A z; GATV1(z,FL,1,r,0); R z;}  // allocate with rank and shape= all 1

@@ -193,7 +193,7 @@ do{
       I zcsr=AR(zzcellshape);  // z cell rank
       if(zr>zcsr){  // the new shape is longer than what was stored.  We have to extend the old shape with 1s
        I *zcsold=AS(zzcellshape)+zcsr;  // save pointer to end+1 of current cell size
-       if(zr>=AN(zzcellshape)){GATV(zzcellshape,INT,zr+3,0,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
+       if(zr>=AN(zzcellshape)){GATV0(zzcellshape,INT,zr+3,0);}   // If old cell not big enough to hold new, reallocate with a little headroom.  >= to leave 1 extra for later
        AR(zzcellshape)=(RANKT)zr;   // set the new result-cell rank
        I *zcsnew=AS(zzcellshape)+zr;  // pointer to end+1 of new cell size
        DO(zcsr, *--zcsnew=*--zcsold;) DO(zr-zcsr, *--zcsnew=1;)   // move the old axes, followed by 1s for extra axes
@@ -218,7 +218,7 @@ do{
       // Allocate the boxed-result area.  Every result that doesn't match zz will be stored here, and we leave zeros for the places that DID match zz,
       // so that we can tell which result-cells come from zz and which from zzbox.
       // We DO NOT make zzbox recursive, so there will be no overhead on the usecount when zzbox is freed.  This is OK because we stop tpop'ing
-      GATV(zzbox,BOX,nboxes,0,0);   // rank/shape immaterial
+      GATV0(zzbox,BOX,nboxes,0);   // rank/shape immaterial
       zzboxp=AAV(zzbox);  // init pointer to filled boxes, will be the running storage pointer
 #if ZZSTARTATEND
       zzboxp+=nboxes-1;  // when running backwards, start at end
@@ -226,7 +226,7 @@ do{
       zzresultpri=0;  // initialize the result type to low-value
       // init the vector where we will accumulate the maximum shape along each axis.  The AN field holds the allocated size and AR holds the actual size; AS[] is the data
       // We use a faux-A block to catch most of the cases.  The part before AN is not allocated on the stack and we don't refer to it
-      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV(zzcellshape,INT,AR(zz)-zzframelen+3,0,0);}
+      if(AR(zz)-zzframelen<=ZZFAUXCELLSHAPEMAXRANK){zzcellshape=(A)((I)zzfauxcellshape-offsetof(AD,n)); AN(zzcellshape)=ZZFAUXCELLSHAPEMAXRANK+1;} else {GATV0(zzcellshape,INT,AR(zz)-zzframelen+3,0);}
       AR(zzcellshape)=(RANKT)(AR(zz)-zzframelen); MCISH(AS(zzcellshape),AS(zz)+zzframelen,AR(zz)-zzframelen);
       ZZFLAGWORD|=(ZZFLAGBOXALLO|ZZFLAGNOPOP);  // indicate we have allocated the boxed area, and that we can no longer pop back to our input, because those results are stored in a nonrecursive boxed array
      }

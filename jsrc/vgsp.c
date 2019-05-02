@@ -20,8 +20,8 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
  u0=AV(y); u=u0+n; 
  v0=u0+wf; v=v0+n;
  if(!m){*zt=*zc=mtv; R 1;}
- GATV(t,INT,2+2*m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GATV(c,INT,  2*m,2,0); cv=AV(c); cv[0]=0;       cn=0; *(1+AS(c))=2;
+ GATV0(t,INT,2+2*m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
+ GATV0(c,INT,  2*m,2); cv=AV(c); cv[0]=0;       cn=0; *(1+AS(c))=2;
  for(j=1;j<m;++j){
   b=1;
   for(k=0;k<wf;++k)
@@ -75,7 +75,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){A c,d,t,x,y,z;I cn,*cv,*dv,i,n,n1,*tv,*
  jt->workareas.compare.compswf=wf; jt->workareas.compare.comp=(CMP)(wt&SB01?compspssB:wt&SINT?compspssI:wt&SFL?compspssD:compspssZ); jt->workareas.compare.compusejt=1;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c); 
- GATV(x,INT,2+n,1,0);   xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,2+n,1);   xv=AV(x);  /* work area for msmerge() */
  RZ(d=apvwr(wf,0L,0L)); dv=AV(d);  /* odometer for frame      */
  for(i=0;i<cn;i+=2){
   jt->workareas.compare.compstv=u=tv+cv[i]; n1=cv[1+i]-1;
@@ -109,8 +109,8 @@ static B jtspdscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;I*cv,m,n,p,*s,tn,*tv,
  y=SPA(wp,i); s=AS(y); m=s[0]; n=s[1];
  v0=AV(y); v=v0+n; 
  if(!m){*zt=*zc=mtv; R 1;}
- GATV(t,INT,2+m,1,0); tv=AV(t); tv[0]=tv[1]=0; tn=2;
- GAT(c,INT,2,  2,0); cv=AV(c); cv[0]=0;       *(1+AS(c))=2;
+ GATV0(t,INT,2+m,1); tv=AV(t); tv[0]=tv[1]=0; tn=2;
+ GAT0(c,INT,2,  2); cv=AV(c); cv[0]=0;       *(1+AS(c))=2;
  DO(m-1, if(*v0!=*v){tv[tn++]=1+i; v0=v;} v+=n;);
  tv[tn++]=m; tv[tn++]=m; cv[1]=tn;
  if(p==tn){++cv[0]; cv[1]-=2;}
@@ -202,8 +202,8 @@ static A jtgrd2spss(J jt,A w,I wf,I wcr){A c,t,x,y,z,zy;
  RZ(spsscell(w,wf,wcr,&c,&t));
  tv=AV(t); cv=AV(c); cn=AN(c);
  m=0; j=1; DO(cn, m=MAX(m,cv[j]); j+=2;);
- GATV(x,INT,m,1,0); xu=AV(x);  /* work area for msmerge() */
- GATV(x,INT,m,1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,m,1); xu=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,m,1); xv=AV(x);  /* work area for msmerge() */
  zy=SPA(zp,i); zyv=AV(zy);
  for(i=0;i<cn;i+=2){
   jt->workareas.compare.compstv=u=tv+cv[i]; n1=cv[1+i]-1; m=0;

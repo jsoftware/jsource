@@ -10,7 +10,7 @@
 // Initialize the numbered-locale system
 static A jtinitnl(J jt){A q;
  RZ(q=apvwr(40,-1L,0L));    jt->stnum=q;  //  start with 40 locales
- GATV(q,INT,40,1,0);        jt->stptr=q; memset(AV(q),C0,40*SZI);
+ GATV0(q,INT,40,1);        jt->stptr=q; memset(AV(q),C0,40*SZI);
  R q;  // return no error
 }
 
@@ -47,7 +47,7 @@ static void jterasenl(J jt, I n){
 
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;I n=0;C s[20];
-  GATV(y,BOX,jt->stused,1,0); A *yv=AAV(y); A *pv=AAV(jt->stptr); I *nv=AV(jt->stnum);
+  GATV0(y,BOX,jt->stused,1); A *yv=AAV(y); A *pv=AAV(jt->stptr); I *nv=AV(jt->stnum);
   DO(AN(jt->stptr), if(pv[i]){sprintf(s,FMTI,nv[i]); 
       if(jt->workareas.namelist.nla[*s]){RZ(yv[n++]=cstr(s)); if(n==jt->stused)break;}});
   R take(sc(n),y);
@@ -61,7 +61,7 @@ A jtindexnl(J jt,I n) { R AAV(jt->stptr)[n]; }  // the locale address, or 0 if n
 #define DELAYBEFOREREUSE 5000  // min number of locales to have before we start reusing
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
 static A jtinitnl(J jt){A q;
- GATV(q,INT,1,1,0);
+ GATV0(q,INT,1,1);
  jt->stnum=q;  // save address of block
  jt->numloctbl=IAV(q);  // address of locale vector
  jt->numlocsize=1;  // length of locale vector
@@ -123,7 +123,7 @@ static void jterasenl(J jt, I n){
 
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;
- GATV(y,INT,AN(jt->stnum),1,0); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+ GATV0(y,INT,AN(jt->stnum),1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
  I nloc=0; DO(AN(jt->stnum), if(jtfindnl(jt,i)){yv[nloc]=i; ++nloc;})
  R every(take(sc(nloc),y),0,jtthorn1);  // ".&.> nloc{.y
 }
@@ -141,7 +141,7 @@ A jtindexnl(J jt,I n) { R findnl(n); }  // the locale address, or 0 if none
 // Initialize the numbered-locale system.  Called during initialization, so no need for ras()
 static A jtinitnl(J jt){A q;
  I s; FULLHASHSIZE(5*1,INTSIZE,0,0,s);  // at least 5 slots, so we always have at least 2 empties
- GATV(q,INT,s,0,0); memset(IAV(q),0,s*SZI);  // allocate hashtable and clear to 0
+ GATV0(q,INT,s,0); memset(IAV(q),0,s*SZI);  // allocate hashtable and clear to 0
  jt->stnum=q;  // save address of block
  jt->stmax=0;  // set next number to allocate
  jt->stused=0;  // set number in use
@@ -157,7 +157,7 @@ static I jtgetnl(J jt){
  if(2*jt->stused>jt->sttsize){
   // Allocate a new block.  Don't use ext because we have to keep the old one for rehashing
   I s; FULLHASHSIZE(2*jt->stused+2,INTSIZE,0,0,s);
-  A new; GATV(new,INT,s,0,0); memset(IAV(new),0,s*SZI);  // allocate hashtable and clear to 0
+  A new; GATV0(new,INT,s,0); memset(IAV(new),0,s*SZI);  // allocate hashtable and clear to 0
   // rehash the old table into the new
   I i; for(i=0;i<jt->sttsize;++i){
    A st; if(st=(A)IAV(jt->stnum)[i]){  // if there is a value hashed...
@@ -214,7 +214,7 @@ static void jterasenl(J jt, I n){
 
 // return list of active numbered locales, using namelist mask
 static A jtactivenl(J jt){A y;
- GATV(y,INT,jt->sttsize,1,0); I *yv=IAV(y);   // allocate place to hold numbers of active locales
+ GATV0(y,INT,jt->sttsize,1); I *yv=IAV(y);   // allocate place to hold numbers of active locales
  I nloc=0; DO(jt->sttsize, if(IAV0(jt->stnum)[i]){yv[nloc]=NAV(LOCNAME((A)IAV0(jt->stnum)[i]))->bucketx; ++nloc;})
  R every(take(sc(nloc),y),0,jtthorn1);  // ".&.> nloc{.y
 }
@@ -232,7 +232,7 @@ A jtindexnl(J jt,I n) { R (A)IAV0(jt->stnum)[n]; }  // the locale address, or 0 
 // For named/numbered types, SYMLINFO (hash chain #0) is filled in to point to the name and path
 //   the name is an A type holding an NM, which has hash filled in, and, for numbered locales, the bucketx filled in with the locale number
 A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
- GATV(g,SYMB,(p+1)&-2,0,0);   // have odd number of hashchains, excluding LINFO
+ GATV0(g,SYMB,(p+1)&-2,0);   // have odd number of hashchains, excluding LINFO
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
@@ -264,7 +264,7 @@ B jtsymbinit(J jt){A q;
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
  I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
- GATV(q,SYMB,p,1,0); jt->stloc=q;  // alloc space, clear hashchains.  No name/val for stloc
+ GATV0(q,SYMB,p,1); jt->stloc=q;  // alloc space, clear hashchains.  No name/val for stloc
  jtinitnl(jt);  // init numbered locales
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
  RZ(jt->global=stcreate(0,p,sizeof(jt->baselocale),jt->baselocale));
@@ -485,9 +485,9 @@ F1(jtlocmap){A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  m=*AS(q);
  // split the q result between two boxes
  GATV(x,INT,m*3,2,AS(q)); xv= AV(x);
- GATV(y,BOX,m,  1,0    ); yv=AAV(y);
+ GATV0(y,BOX,m,  1); yv=AAV(y);
  DO(m, *xv++=d=*qv++; *xv++=j=c==d?1+j:0; *xv++=*qv++; c=d; *yv++=(A)*qv++;);
- GAT(z,BOX,2,1,0); zv=AAV(z); zv[0]=x; zv[1]=y;
+ GAT0(z,BOX,2,1); zv=AAV(z); zv[0]=x; zv[1]=y;
  R z;
 }    /* 18!:30 locale map */
 

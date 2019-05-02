@@ -38,13 +38,13 @@ static B jtpdef(J jt,I id,I t,AF f1,AF f2,I m,I l,I r,I flag){A z;V*v;
 
 B jtpinit(J jt){A t;C*s;
  MC(wtype,ctype,256L); wtype['N']=CN; wtype['B']=CB;
- GAT(alp,LIT,NALP,1,0); s=CAV(alp); DO(NALP,*s++=(C)i;); 
+ GAT0(alp,LIT,NALP,1); s=CAV(alp); DO(NALP,*s++=(C)i;); 
  /*  a. */  pst[(UC)CALP ]=t=alp;                 ACX(t);
  /*  a: */  pst[(UC)CACE ]=t=ace=sc4(BOX,(I)mtv); ACX(t);  AFLAG(t) |= (AT(t)&TRAVERSIBLE);  // ensure that traversible types in pst are marked traversible, so tpush/ra/fa will not recur on them
  /*  (  */  pst[(UC)CLPAR]=t=sc4(LPAR,0L);        ACX(t);
  /*  )  */  pst[(UC)CRPAR]=t=sc4(RPAR,0L);        ACX(t);
  /*  =. */  GA(t,ASGN+ASGNLOCAL,1,0,0); ACX(t); *CAV(t)=CASGN;  pst[(UC)CASGN ]=t;
- /*  =: */  GAT(t,ASGN,1,0,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
+ /*  =: */  GAT0(t,ASGN,1,0); ACX(t); *CAV(t)=CGASGN; pst[(UC)CGASGN]=t;
 
  /*  bw */  pdef(CBW0000, VERB, jtbitwise1,  jtbitwise0000,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);
  /*  bw */  pdef(CBW0001, VERB, jtbitwise1,  jtbitwise0001,   RMAX,0,   0   ,VISATOMIC1|VIRS2|VASGSAFE|VJTFLGOK1|VJTFLGOK2);

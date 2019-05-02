@@ -196,7 +196,7 @@ DF1(jtwd){A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
       break;
     case FL:
       pd=DAV(w);
-      {A wsav=w; GATV(w,INT,AN(wsav),AR(wsav),0); }
+      {A wsav=w; GATV0(w,INT,AN(wsav),AR(wsav)); }
       pi=AV(w);
       DO(AN(w),*pi++=(I)(jfloor(0.5+*pd++)););
       break;

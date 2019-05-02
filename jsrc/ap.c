@@ -134,7 +134,7 @@ static B jtpscanlt(J jt,I m,I d,I n,B*z,B*x,B p){A t;B*v;I i;
  memset(z,!p,m*n*d); 
  if(1==d)DO(m, if(v=memchr(x,p,n))*(z+(v-x))=p; z+=n; x+=n;)
  else{
-  GATV(t,B01,d,1,0); v=BAV(t);
+  GATV0(t,B01,d,1); v=BAV(t);
   for(i=0;i<m;++i){
    memset(v,C1,d);
    DO(n, DO(d, if(v[i]&&p==x[i]){v[i]=0; z[i]=p;};); z+=d; x+=d;); 
@@ -155,7 +155,7 @@ static B jtpscangt(J jt,I m,I d,I n,B*z,B*x,B a,B pp,B pa,B ps){
   }else mvc(n,z,2L,p);
   z+=n; x+=n;
  }else{
-  GATV(t,B01,d,1,0); u=BAV(t);
+  GATV0(t,B01,d,1); u=BAV(t);
   for(i=0;i<m;++i){
    e=pp; memset(u,C0,d);
    DO(n, j=i; DO(d, if(u[i])z[i]='1'==u[i]; else 
@@ -261,7 +261,7 @@ static DF1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
  r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  n=IC(w); 
  h=VAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
- GATV(z,BOX,n,1,0); zv=AAV(z); I imod=0;
+ GATV0(z,BOX,n,1); zv=AAV(z); I imod=0;
  DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=df1(take(sc(1+i),w),hv[imod])); ++imod;);
  R ope(z);
 }    /* g\"r w for gerund g */
@@ -290,7 +290,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  p=ABS(m); n=IC(w);
  if(m>=0){d=MAX(0,1+n-m);}else{d=1+(n-1)/p; d=(n==0)?n:d;}
  // Allocate result, a dx2 table; install shape
- GATV(z,INT,2*d,2,0); *AS(z)=d; *(1+AS(z))=2;
+ GATV0(z,INT,2*d,2); *AS(z)=d; *(1+AS(z))=2;
  // x->result area; k=stride between infixes; j=starting index (prebiased); copy (index,length) for each infix;
  // repair last length if it runs off the end
  x=AV(z); k=0>m?p:1; j=-k; DO(d, *x++=j+=k; *x++=p;); if(d)*--x=MIN(p,n-j);
@@ -314,7 +314,7 @@ static DF2(jtinfix){PROLOG(0018);DECLF;A x,z;I m;
   // create a block containing the shape of the fill-cell.  The fill-cell is a list of items of y,
   // with the number of items being the infix-size if positive, or 0 if negative
   // r = rank of w, rr=rank of list of items of w, s is block for list of length rr; copy shape of r; override #items of infix
-  r=AR(w); rr=MAX(1,r); GATV(s,INT,rr,1,0); if(r)MCISH(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
+  r=AR(w); rr=MAX(1,r); GATV0(s,INT,rr,1); if(r)MCISH(AV(s),AS(w),r); *AV(s)=0>m?0:m==IMAX?1+IC(w):m;
   // Create fill-cell of shape s; apply u to it
   RZ(x=df1(reshape(s,filler(w)),fs));
   // Prepend leading axis of 0 to the result
@@ -337,7 +337,7 @@ static DF2(jtginfix){A h,*hv,x,z,*zv;I d,m,n;
  RZ(x=ifxi(m,w));
  h=VAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(n=IC(x)){
-  GATV(z,BOX,n,1,0); zv=AAV(z);
+  GATV0(z,BOX,n,1); zv=AAV(z);
   DO(n, RZ(zv[i]=df1(seg(from(sc(i),x),w),hv[i%d])););
   R ope(z);
  }else{A s;
@@ -692,7 +692,7 @@ static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,
    if(d==b1)x=d; else if(e==b1){x=d; t=u; DO(m-1, if(b1==*t++){x=b1; break;});}
    *zv++=x;
  }}else{
-  GATV(y,B01,c,1,0); s=yv=BAV(y); DO(c, *s++=b0;);
+  GATV0(y,B01,c,1); s=yv=BAV(y); DO(c, *s++=b0;);
   DO(m, s=yv; DO(c, if(b1==*v++)*s=b1; ++s;);); SETZ;
   for(i=0;i<p;++i){
    for(j=0,s=yv;j<c;++j,++s){
@@ -722,7 +722,7 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
  p=IC(w)-m; c=aii(w); x=eq;
  GATV(z,B01,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
  zv=BAV(z); u=v=BAV(w);
- if(1<c){GATV(y,B01,c,1,0); s=yv=BAV(y); DO(c, *s++=eq;);}
+ if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DO(c, *s++=eq;);}
  switch(eq+(1<c?2:0)){
   case 0: DO(m,                   x   ^=   *v++;  ); *zv++=x; DO(p,                   *zv++=x   ^=   *u++^ *v++;  ); break;
   case 1: DO(m,                   x    =x==*v++;  ); *zv++=x; DO(p,                   *zv++=x    =x==*u++==*v++;  ); break;
@@ -736,7 +736,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  p=IC(w)-m; c=aii(w); x=eq?-1:0;
  GATV(z,INT,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
  zv=AV(z); u=v=AV(w);
- if(1<c){GATV(y,INT,c,1,0); s=yv=AV(y); DO(c, *s++=x;);}
+ if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DO(c, *s++=x;);}
  switch(eq+(1<c?2:0)){
   case 0: DO(m,                   x   ^=    *v++ ;  ); *zv++=x; DO(p,                   *zv++=x   ^=      *u++^*v++  ;  ); break;
   case 1: DO(m,                   x    =~(x^*v++);  ); *zv++=x; DO(p,                   *zv++=x    =~(x^~(*u++^*v++));  ); break;

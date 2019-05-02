@@ -13,7 +13,7 @@
 
 
 B jtxsinit(J jt){A x;
- GAT(x,BOX,10,1,0); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->slist=x;
+ GAT0(x,BOX,10,1); memset(AV(x),C0,AN(x)*SZI); ras(x); jt->slist=x;
  jt->slisti=-1;
  R 1;
 }

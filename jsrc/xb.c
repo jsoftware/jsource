@@ -113,8 +113,8 @@ static C*jtbrephdr(J jt,B b,B d,A w,A y){A q;I f,r;I extt = UNSAFE(AT(w));
 static A jtbreps(J jt,B b,B d,A w){A q,y,z,*zv;C*v;I c=0,kk,m,n;P*wp;
  wp=PAV(w);
  n=1+sizeof(P)/SZI; kk=WS(d);
- GATV(z,BOX,n,1,0); zv=AAV(z);
- GATV(y,LIT,bsize(jt,d,1,INT,n,AR(w),AS(w)),1,0);
+ GATV0(z,BOX,n,1); zv=AAV(z);
+ GATV0(y,LIT,bsize(jt,d,1,INT,n,AR(w),AS(w)),1);
  v=brephdr(b,d,w,y);
  RZ(mvw(v,(C*)&c,1L,BU,b,d,SY_64));  /* reserved for flag */
  zv[0]=y; m=AN(y);
@@ -146,10 +146,10 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
    memset((CAV(y)+AN(y))-suffsize,C0,suffsize);   // clear suffix
    MC(v,u,n<<klg); R y;}      // copy the valid part of the data
  }
- if(t&RAT){e+=n; GATV(q,XNUM,e,1,0); MC(AV(q),u,n<<klg);}
+ if(t&RAT){e+=n; GATV0(q,XNUM,e,1); MC(AV(q),u,n<<klg);}
  else     RZ(q=1<AR(w)?ravel(w):w);
  m=AN(y); wv=AAV(w); 
- GATV(z,BOX,1+e,1,0); zv=AAV(z); 
+ GATV0(z,BOX,1+e,1); zv=AAV(z); 
  *zv++=y;
  DO(e, RZ(*zv++=q=brep(b,d,wv[i])); RZ(mvw(v+i*kk,(C*)&m,1L,b,BU,d,SY_64)); m+=AN(q););
  R raze(z);
@@ -193,7 +193,7 @@ static F1(jtunhex){A z;C*u;I c,n;UC p,q,*v;
  c=*(1+AS(w));
  ASSERT(c==8||c==16,EVLENGTH);  
  n=AN(w)>>1; u=CAV(w);
- GATV(z,LIT,n,1,0); v=UAV(z);
+ GATV0(z,LIT,n,1); v=UAV(z);
  DO(n, p=*u++; q=*u++; *v++=16*unh(p)+unh(q););
  RE(z); RETF(z);
 }
@@ -213,7 +213,7 @@ static A jtunbinr(J jt,B b,B d,B pre601,I m,A w){A y,z;C*u=(C*)w,*v;I e,j,kk,n,p
  RZ(mvw((C*)s,BS(d,w),r,BU,b,SY_64,d)); 
  j=1; DO(r, ASSERT(0<=s[i],EVLENGTH); if(t&DENSE)j*=s[i];); 
  ASSERT(j==n,EVLENGTH);
- if(t&BOX+XNUM+RAT+SPARSE){GATV(y,INT,e,1,0); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
+ if(t&BOX+XNUM+RAT+SPARSE){GATV0(y,INT,e,1); vv=AV(y); RZ(mvw((C*)vv,v,e,BU,b,SY_64,d));}
  if(t&BOX+XNUM+RAT){A*zv=AAV(z);I i,k=0,*iv;
   RZ(y=indexof(y,y)); iv=AV(y);
   for(i=0;i<e;++i){
@@ -320,14 +320,14 @@ F2(jtfc2){A z;D*x,*v;I j,m,n,p,zt;float*s;
 
 static B jtisnanq(J jt,A w){A q,*u,x,x1,*xv,y,*yv;D*v;I m,n,t,top;
  RZ(w);
- GATV(x,INT,BOX&AT(w)?2*AN(w):1,1,0); xv=AAV(x);
+ GATV0(x,INT,BOX&AT(w)?2*AN(w):1,1); xv=AAV(x);
  *xv=w; top=1;
  while(top){
   --top; y=xv[top]; n=AN(y); t=AT(y);
   if(t&FL+CMPX){v=DAV(y); DO(t&CMPX?n+n:n, if(_isnan(*v++))R 1;);}
   else if(t&BOX){
    m=top+n; yv=AAV(y); 
-   if(m>AN(y)){GATV(x1,INT,2*m,1,0); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
+   if(m>AN(y)){GATV0(x1,INT,2*m,1); u=AAV(x1); ICPY(u,xv,top); fa(x); x=x1; xv=u;}
    u=xv+top; DO(n, q=yv[i]; if(AT(q)&FL+CMPX+BOX)*u++=q;); top=u-xv;
  }}
  R 0;

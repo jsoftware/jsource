@@ -999,7 +999,7 @@ static A jtnodupgrade(J jt,A a,I acr,I ac,I acn,I ad,I n,I m,B b,B bk){A*av,h,*u
 static IOF(jtiobs){A*av,h=*hp,*wv,y;B b,bk,*yb,*zb;C*zc;I acn,*hu,*hv,l,m1,md,s,wcn,*zi,*zv;
  bk=mode==IICO||mode==IJ0EPS||mode==IJ1EPS||mode==IPHICO||mode==IPHJ0EPS||mode==IPHJ1EPS;
  b=a==w&&ac==wc&&(mode==IIDOT||mode==IICO||mode==INUB||mode==INUBSV||mode==INUBI); 
- if(mode==INUB||mode==INUBI){GATV(y,B01,m,1,0); yb=BAV(y);}
+ if(mode==INUB||mode==INUBI){GATV0(y,B01,m,1); yb=BAV(y);}
  md=w==mark?-1:mode<IPHOFFSET?mode:mode-IPHOFFSET;
  av=AAV(a);  acn=ak/sizeof(A);
  wv=AAV(w);  wcn=wk/sizeof(A);
@@ -1279,16 +1279,16 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
   case INUB:    q=m+1; GA(z,t,mult(q,aii(a)),MAX(1,wr),ws); *AS(z)=q; break;  // +1 because we speculatively overwrite.  Was MIN(m,p) but we don't have the range yet
   case ILESS:   GA(z,t,AN(w),MAX(1,wr),ws); break;
   case IEPS:    GATV(z,B01,zn,f+f1,     s); if(af)MCISH(f+AS(z),ws+wf,f1); break;
-  case INUBI:   q=m+1; GATV(z,INT,q,1,0); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
+  case INUBI:   q=m+1; GATV0(z,INT,q,1); break;  // +1 because we speculatively overwrite  Was MIN(m,p) but we don't have the range yet
   // (e. i. 0:) and friends don't do anything useful if e. produces rank > 1.  The search for 0/1 always fails
   case II0EPS: case II1EPS: case IJ0EPS: case IJ1EPS:
-                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,0,0); break;
+                if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,0); break;
   // ([: I. e.) ([: +/ e.) ([: +./ e.) ([: *./ e.) work only if e. produces rank 0 or 1.  Nonce error otherwise
-  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c+1,1,0); break;  // +1 because we speculatively overwrite
+  case IIFBEPS: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV0(z,INT,c+1,1); break;  // +1 because we speculatively overwrite
   case IANYEPS: case IALLEPS:
-                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,0,0); break;
+                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,0); break;
   case ISUMEPS:
-                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,0,0); break;
+                ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,0); break;
  }
 
  // Handle empty/inhomogeneous arguments
@@ -1407,7 +1407,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
     // Clearing also saves 1 clock per input word
     mode |= ((c*3+m)<(p>>(LGSZI-LGSZUS-1)))<<IIMODFORCE0X;  // 3 cycles per atom of w, 1 cycle per atom of m, versus 2/4 cycle per atom to clear (without wide insts)
     if(mk||!(h=jt->idothash0)){
-     GATV(h,INT,((65536*sizeof(US)-((NORMAH*SZI)))>>LGSZI),0,0);  // size too big for GAT
+     GATV0(h,INT,((65536*sizeof(US)-((NORMAH*SZI)))>>LGSZI),0);  // size too big for GAT
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
@@ -1445,7 +1445,7 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
      // if we have to reallocate, free the old one
      if(!mk&&h){fr(h); jt->idothash1=0;}  // free old, and clear pointer in case of allo error
      // allocate the new one and fill it in
-     GATV(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0,0);
+     GATV0(h,INT,(psizeinbytes+sizeof(IH)+(SZI-1))>>LGSZI,0);
      // Fill in the header
      hh=IHAV(h);  // point to the header
      hh->datasize=allosize(h)-sizeof(IH);  // number of bytes in data area
@@ -1479,17 +1479,17 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    }
    // Pass the min/range into the action routine, using result values in the hashtable
    hh=IHAV(h); hh->datamin=datamin; hh->datarange=p;  // max will be inferred
-  }else{if(fn!=jtiobs)GATV(h,INT,p,1,0);}  // hash allocation old-style, now always INT
+  }else{if(fn!=jtiobs)GATV0(h,INT,p,1);}  // hash allocation old-style, now always INT
 
   if(fn==jtioc){A x;B*b;C*u,*v;I*d,q;
    // exact types (including intolerant comparison of FL/CMPX)
    // Allocate bitmask (as a B01) for each byte in an item of rimatand, init to true.  This will indicate which bytes need to be indexed
    // should get rid of this - cheaper to hash than to check for need-to-hash
-   GATV(x,B01,k,1,0); b=BAV(x); memset(b,C1,k);
+   GATV0(x,B01,k,1); b=BAV(x); memset(b,C1,k);
    q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
    DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
    // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
-   if(q){jt->hin=k-q; GATV(hi,INT,k-q,1,0); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
+   if(q){jt->hin=k-q; GATV0(hi,INT,k-q,1); jt->hiv=d=AV(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
   }
 
   // Call the routine to perform the operation
@@ -1498,8 +1498,8 @@ A jtindexofsub(J jt,I mode,A a,A w){PROLOG(0079);A h=0,hi=mtv,z=mtv;B mk=w==mark
    // If w was omitted (indicating prehashing), return the information for that special case
    // result is an array of 3 boxes, containing (info vector),(hashtable),(mask of hashed bytes if applicable)
    // The caller must ras() this result to protect it, if it is going to be saved
-   GAT(z,BOX,3,1,0); zv=AAV(z);
-   GAT(x,INT,6,1,0); xv=AV(x);
+   GAT0(z,BOX,3,1); zv=AAV(z);
+   GAT0(x,INT,6,1); xv=AV(x);
 // should use a lookup
    switch(mode&IIOPMSK){
     default:                    ztype=PREHRESIV; break;  /* integer vector      */
@@ -1544,9 +1544,9 @@ A jtindexofprehashed(J jt,A a,A w,A hs){A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,
   case PREHRESIVN: ASSERT(wr<=MAX(ar,1),EVNONCE); GATV(z,INT,c,    f1, ws); break;
   case PREHRESVAR: GA(z,wt, AN(w),1+r,ws); break;
   case PREHRESBV: GATV(z,B01,c,    f1, ws); break;
-  case PREHRESBAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,B01,1,    0,  0 ); break;
-  case PREHRESIA: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT(z,INT,1,    0,  0 ); break;
-  case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT(z,INT,1,    0,  0 ); break;
+  case PREHRESBAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,B01,1,    0); break;
+  case PREHRESIA: if(wr>MAX(ar,1))R sc(wr>r?ws[0]:1); GAT0(z,INT,1,    0); break;
+  case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,    0); break;
  }
  // save info used by the routines
  jt->hin=AN(hi); jt->hiv=AV(hi);
@@ -1711,7 +1711,7 @@ A jtiocol(J jt,I mode,A a,A w){A h,z;I ar,at,c,d,m,p,t,wr,*ws,wt;void(*fn)();
  if(TYPESNE(t,wt))RZ(w=cvt(t,w));
  // allocate hash table and result
  FULLHASHSIZE(m+m,INTSIZE,1,0,p);
- GATV(h,INT,p,1,0);
+ GATV0(h,INT,p,1);
  GATV(z,INT,AN(w),wr,ws);
  // call routine based on types.  Only float and CMPX are supported
  switch(CTTZ(t)){

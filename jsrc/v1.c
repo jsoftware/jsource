@@ -147,15 +147,15 @@ static F2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,0L,RMAX,RMAX,acr,wcr,jtmatchs);
  if(ar!=wr||memcmp(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num[0];
- GATV(x,B01,r,1L,0L); b=BAV(x); memset(b,C0,r);
+ GATV0(x,B01,r,1L); b=BAV(x); memset(b,C0,r);
  if(SPARSE&AT(a)){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
  if(SPARSE&AT(w)){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
  c=0; DO(r, c+=b[i];);
  if(an<c||DENSE&AT(a))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=*AS(ax);
  if(wn<c||DENSE&AT(w))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=*AS(wx);
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
- GATV(p,B01,m,1,0); pv=BAV(p);
- GATV(q,B01,n,1,0); qv=BAV(q); 
+ GATV0(p,B01,m,1); pv=BAV(p);
+ GATV0(q,B01,n,1); qv=BAV(q); 
  memset(pv,C1,m); DO(n, j=*v++; if(j<m)pv[j]=qv[i]=0; else qv[i]=1;);
  if(memchr(pv,C1,m)&&!all1(eq(we,repeat(p,ax))))R num[0];
  if(memchr(qv,C1,n)&&!all1(eq(ae,repeat(q,wx))))R num[0];

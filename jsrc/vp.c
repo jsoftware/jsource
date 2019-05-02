@@ -39,8 +39,8 @@ A jtpind(J jt,I n,A w){A z;I j,*v;
 // if w has negative indexes, they are first made positive
 A jtpfill(J jt,I n,A w){PROLOG(0081);A b,z;B*bv;I*wv,*zv;
  RZ(w=pind(n,w));  wv=AV(w);  // convert to positive indexes, wv-> indexes
- GATV(z,INT,n,1,0); zv=AV(z);  // allocate result area
- GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);   // binary vector, init to 1
+ GATV0(z,INT,n,1); zv=AV(z);  // allocate result area
+ GATV0(b,B01,n,1); bv=BAV(b); memset(bv,C1,n);   // binary vector, init to 1
  DO(AN(w), bv[wv[i]]=0;);  // clear flag in indexes that appear
  DO(n, *zv=i; zv+=bv[i];); ASSERT((zv-AV(z))+AN(w)==n,EVINDEX); ICPY(zv,wv,AN(w));  // prefix result with missing indexes; verify the result accounts for all indexes
  EPILOG(z);
@@ -50,14 +50,14 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
  RZ(w);
  if(c=1&&INT&AT(w)){
   n=AN(w); v=AV(w);
-  GATV(b,B01,1+n,1,0); bv=BAV(b); memset(bv,C0,n);
+  GATV0(b,B01,1+n,1); bv=BAV(b); memset(bv,C0,n);
   DO(n, j=v[i]; if(j<0||n<=j||bv[j]){c=0; break;} bv[j]=1;);
  }
- if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV(b,B01,1+n,1,0);}
+ if(!c){n=ord(w); RZ(w=pfill(n,w)); v=AV(w); GATV0(b,B01,1+n,1);}
  bv=BAV(b); memset(bv,C0,1+n); ++bv;
  i=0; j=n-1; zn=(I)(log((D)n)+1.6); 
- GATV(q,INT,n, 1,0); qv= AV(q);
- GATV(z,BOX,zn,1,0); zv=AAV(z);
+ GATV0(q,INT,n, 1); qv= AV(q);
+ GATV0(z,BOX,zn,1); zv=AAV(z);
  while(1){
   while(bv[j])--j; if(0>j)break;
   u=qv; c=j;
@@ -72,7 +72,7 @@ static F1(jtcfd){A b,q,x,z,*zv;B*bv;I c,i,j,n,*qv,*u,*v,zn;
 static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
  RE(n); RZ(w);
  ASSERT(0<=n,EVINDEX);
- GATV(b,B01,n,1,0); bv=BAV(b); memset(bv,C1,n);
+ GATV0(b,B01,n,1); bv=BAV(b); memset(bv,C1,n);
  RZ(z=apvwr(n,0L,1L)); x=AV(z);
  wv=AAV(w); 
  for(j=AN(w)-1;0<=j;j--){
@@ -95,7 +95,7 @@ F2(jtcdot2){A p;
 F1(jtpparity){A x,y,z;B p,*u;I i,j,k,m,n,r,*s,*v,*zv;
  RZ(x=cvt(INT,w));
  r=AR(x); s=AS(x); n=r?*(s+r-1):1; RE(m=prod(r-1,s)); v=AV(x);
- GATV(y,B01,n,1,0); u=BAV(y);
+ GATV0(y,B01,n,1); u=BAV(y);
  GATV(z,INT,m,r?r-1:0,s); zv=AV(z);
  for(i=0;i<m;++i){
   j=p=0; memset(u,C1,n);

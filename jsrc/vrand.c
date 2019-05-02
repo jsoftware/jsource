@@ -52,7 +52,7 @@ static void lcg(I n,I*v,I seed){D c=16807.0,p=2147483647.0,x=(D)seed;
 
 F1(jtlcg_test){A x;I n=1597,*v;
  ASSERTMTV(w);
- GATV(x,INT,n,1,0); v=AV(x);
+ GATV0(x,INT,n,1); v=AV(x);
  lcg(n,v,1L);
  ASSERTSYS(v[   0]==     16807L, "lcg_test 0");
  ASSERTSYS(v[   1]== 282475249L, "lcg_test 1");
@@ -442,7 +442,7 @@ static void jtsm_init(J jt,UI s){
 F1(jtrngraw){A z;I n,*v;
  RE(n=i0(w));
  ASSERT(0<=n,EVDOMAIN);
- GATV(z,INT,n,1,0); v=AV(z);
+ GATV0(z,INT,n,1); v=AV(z);
  DO(n, *v++=NEXT;);
  R z;
 }
@@ -501,7 +501,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
  ASSERTMTV(w);
  switch(jt->rng){
   case SMI: 
-   GAT(z,BOX,9,1,0); zv=AAV(z);
+   GAT0(z,BOX,9,1); zv=AAV(z);
    RZ(*zv++=num[0]);
    RZ(*zv++=rifvs(sc(jt->rngI0[GBI]))); RZ(*zv++=rifvs(vec(INT,GBN,jt->rngV0[GBI])));
    RZ(*zv++=rifvs(sc(jt->rngI0[MTI]))); RZ(*zv++=rifvs(vec(INT,MTN,jt->rngV0[MTI])));
@@ -509,7 +509,7 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
    RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); RZ(*zv++=rifvs(vec(INT,MRN,jt->rngV0[MRI])));
 #else
-   u=(D*)jt->rngV0[MRI]; GAT(x,INT,MRN,1,0); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
+   u=(D*)jt->rngV0[MRI]; GAT0(x,INT,MRN,1); v=AV(x); DO(MRN, v[i]=(UI)u[i];);
    RZ(*zv++=rifvs(sc(jt->rngI0[MRI]))); *zv++=x;
 #endif
    R z;
@@ -519,10 +519,10 @@ F1(jtrngstateq){A x=0,z,*zv;D*u=0;I n;UI*v;
 #if SY_64
   case MRI: n=MRN; v=jt->rngv; break;
 #else
-  case MRI: n=MRN; u=(D*)jt->rngv; GATV(x,INT,n,1,0); v=AV(x); DO(n, v[i]=(UI)u[i];);
+  case MRI: n=MRN; u=(D*)jt->rngv; GATV0(x,INT,n,1); v=AV(x); DO(n, v[i]=(UI)u[i];);
 #endif
  }
- GAT(z,BOX,3,1,0); zv=AAV(z);
+ GAT0(z,BOX,3,1); zv=AAV(z);
  RZ(*zv++=rifvs(sc(jt->rng))); RZ(*zv++=rifvs(sc(jt->rngi))); RZ(*zv++=rifvs(vec(INT,n,v)));
  R z;
 }
@@ -650,7 +650,7 @@ DF2(jtrollk){A g;V*sv;
 static X jtxrand(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
  m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
- GATV(q,INT,m,1,0); qv=AV(q);  // allocate place to hold base, qv-> result digits
+ GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
  do{
@@ -773,9 +773,9 @@ F2(jtdeal){A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngM[jt->rng];UI sq;
 #else
   A h,y; I d,*hv,i,i1,p,q,*v,*yv;
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
-  GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
-  GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
-  GATV(z,INT,m,1,0); zv=AV(z);
+  GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);
+  GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
+  GATV0(z,INT,m,1); zv=AV(z);
   I qp=0; GMOF2(c,x,s,sq);
   for(i=0;i<m;++i){
    if(s<GMOTHRESH)GMOF2(c,x,s,sq);
@@ -867,7 +867,7 @@ DF2(jtrollkdot){A g;V*sv;
 static X jtxranddot(J jt,X x){PROLOG(0090);A q,z;B b=1;I j,m,n,*qv,*xv,*zv;
  n=AN(x); xv=AV(x);  // number of Digits in x, &first digit
  m=n;  // m is number of result digits, same as input.  If input is 10000... this will always be 1 digit too many, but that's not worth checking for
- GATV(q,INT,m,1,0); qv=AV(q);  // allocate place to hold base, qv-> result digits
+ GATV0(q,INT,m,1); qv=AV(q);  // allocate place to hold base, qv-> result digits
  DO(m-1, qv[i]=XBASE;); qv[m-1]=xv[n-1]+1;  // init base to the largest possible value in each Digit
  // loop to roll random values until we get one that is less than x
  do{
@@ -998,9 +998,9 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
  if(0==m)z=mtv;
  else if(m<n/5.0||x<=(UI)n){
   FULLHASHSIZE(2*m,INTSIZE,1,0,p);
-  GATV(h,INT,p,1,0); hv=AV(h); DO(p, hv[i]=0;);
-  GATV(y,INT,2+2*m,1,0); yv=AV(y); d=2;
-  GATV(z,INT,m,1,0); zv=AV(z);
+  GATV0(h,INT,p,1); hv=AV(h); DO(p, hv[i]=0;);
+  GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
+  GATV0(z,INT,m,1); zv=AV(z);
   for(i=0;i<m;++i){
    s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;  // scaf could rewrite this with fewer %
    q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
@@ -1020,7 +1020,7 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
 
 #define FXSDECL     A z;I i,j=jt->rng;UI*v=jt->rngV[GBI];
 #define FXSDO       {i=j==GBI?jt->rngi:jt->rngI[GBI];                                \
-                     if(!jt->rngfxsv){GAT(z,INT,GBN,1,0); ras(z); jt->rngfxsv=AV(z);}  \
+                     if(!jt->rngfxsv){GAT0(z,INT,GBN,1); ras(z); jt->rngfxsv=AV(z);}  \
                      jt->rngV[GBI]=jt->rngfxsv; rngselects(sc(GBI)); gb_init(16807);}
 #define FXSOD       {jt->rngV[GBI]=v; jt->rngI[GBI]=jt->rngi=i; rngselects(sc(j));}
 

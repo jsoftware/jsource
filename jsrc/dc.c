@@ -13,7 +13,7 @@ static SYMWALK(jtdloc,A,BOX,5,2,1,{RZ(*zv++=rifvs(sfn(0,d->name))); RZ(*zv++=rif
 
 static B jtdrow(J jt,DC si,DC s0,A*zv){A fs,q,*qv,y;C c;
  fs=si->dcf;
- GATV(q,BOX,si->dcx&&si->dcy?2:1,1,0); qv=AAV(q);  // allo place to store arg list
+ GATV0(q,BOX,si->dcx&&si->dcy?2:1,1); qv=AAV(q);  // allo place to store arg list
  if(si->dcx)*qv++=incorp(dfrep(si->dcx));   // fill in x if any
  if(si->dcy)*qv++=incorp(dfrep(si->dcy));  // fill in y if any
  *zv++=incorp(sfn(0,si->dca));                     /* 0 name                     */
@@ -34,7 +34,7 @@ F1(jtdbcall){A y,*yv,z,*zv;DC si,s0=0;I c=9,m=0,*s;
  ASSERTMTV(w);
  si=jt->sitop;
  while(si){if(DCCALL==si->dctype)++m; si=si->dclnk;}  // count # rows in result
- GATV(z,BOX,m*c,2,0); s=AS(z); s[0]=m; s[1]=c;  // allocate result, install shape
+ GATV0(z,BOX,m*c,2); s=AS(z); s[0]=m; s[1]=c;  // allocate result, install shape
  si=jt->sitop; zv=AAV(z);
  while(si){if(DCCALL==si->dctype){RZ(drow(si,s0,zv)); zv+=c;} s0=si; si=si->dclnk;}  // create one row for each CALL, in z
  RZ(y=from(scind(irs1(z,0L,1L,jthead)),over(snl(mtv),ace)));  // get script index for each line of stack; then fetch the name, or a: if no name

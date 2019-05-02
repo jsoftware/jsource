@@ -88,7 +88,7 @@ static DF1(jtfpown){A fs,z;AF f1;I n,old;V*sv;
 static DF1(jtply1){PROLOG(0040);DECLFG;A b,hs,j,*xv,y,z;B*bv,q;I i,k,m,n,*nv,old,p=0;AD * RESTRICT x;  // RESTRICT on x fails in VS2013
  hs=sv->fgh[2]; m=AN(hs); 
  RZ(y=ravel(hs)); RZ(y=from(j=grade1(y),y)); nv=AV(y);  // j is grading permutation of y; y is sorted powers
- GATV(x,BOX,m,1,0); xv=AAV(x);  // cannot be virtual
+ GATV0(x,BOX,m,1); xv=AAV(x);  // cannot be virtual
  while(p<m&&0>nv[p])p++;  // find first positive power
  if(p<m){  // if there is a positive power...
   RZ(z=ca(w));

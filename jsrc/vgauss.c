@@ -53,7 +53,7 @@ static F1(jtdetr){A z;I c,e,g=1,i,j,k,old,r,*s;Q d,p,*u,*v,*x;
  }
  d=0<g?*v:qminus(zeroQ,*v); u=v+1+c; DO(r-1, d=qtymes(d,*u); u+=1+c;);
  RE(0);
- GAT(z,RAT,1,0,0); *QAV(z)=d; R z;
+ GAT0(z,RAT,1,0); *QAV(z)=d; R z;
 }    /* determinant on rational matrix; works in place */
 
 static F1(jtdetd){D g,h,p,q,*u,*v,*x,*y,z=1.0;I c,d,e,i,j,k,r,*s;
@@ -96,7 +96,7 @@ static F1(jtdetz){A t;D g,h;I c,d,e,i,j,k,r,*s;Z p,q,*u,*v,*x,*y,z;
    if(ZNZ(u[j])){p=zdiv(u[j],q); for(k=j+1;k<r;++k)u[k]=zminus(u[k],ztymes(p,x[k]));}
  }}
  NAN1; RE(0);
- GAT(t,CMPX,1,0,0); *ZAV(t)=z; R t;
+ GAT0(t,CMPX,1,0); *ZAV(t)=z; R t;
 }    /* determinant on complex  matrix; works in place */
 
 F1(jtgaussdet){A z;I*s;

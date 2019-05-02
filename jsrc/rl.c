@@ -29,7 +29,7 @@ static B jtlp(J jt,A w){B b=1,p=0;C c,d,q=CQUOTE,*v;I j=0,n;
 
 static A jtlcpa(J jt,B b,A w){A z=w;C*zv;I n;
  RZ(w);
- if(b){n=AN(w); GATV(z,LIT,2+n,1,0); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
+ if(b){n=AN(w); GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,AV(w),n); zv[1+n]=')';}
  R z;
 }    /* if b then (w) otherwise just w */
 
@@ -43,7 +43,7 @@ static A jtlcpb(J jt,B b,A w){A z=w;B p;C c,*v,*wv,*zv;I n;
   else          DO(n-1, c=      *++v ; if(!(c==CESC1||c==CESC2)){b=1; break;});
   if(b&&vnm(n,wv))b=0;
  }
- if(b){GATV(z,LIT,2+n,1,0); zv=CAV(z); *zv='('; MC(1+zv,wv,n); zv[1+n]=')';}
+ if(b){GATV0(z,LIT,2+n,1); zv=CAV(z); *zv='('; MC(1+zv,wv,n); zv[1+n]=')';}
  R z;
 }
 
@@ -52,7 +52,7 @@ static A jtlcpx(J jt,A w){RZ(w); R CALL2(jt->lcp,lp(w),w,0);}
 static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
  RZ(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
- GATV(y,BOX,n+n,1,0); v=AAV(y);
+ GATV0(y,BOX,n+n,1); v=AAV(y);
  DO(n, *v++=i?t:mtv; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
@@ -61,8 +61,8 @@ static F1(jtltiea){A t,*v,*wv,x,y;B b;C c;I n;
 static F1(jtltieb){A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  RZ(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
- GATV(y,BOX,n+n,1,0); v=AAV(y);
- if(1>=n)x=mtv; else{GATV(x,LIT,n-2,1,0); s=CAV(x); DO(n-2, *s++='(';);}
+ GATV0(y,BOX,n+n,1); v=AAV(y);
+ if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV(x); DO(n-2, *s++='(';);}
  DO(n, *v++=0==i?x:1==i?t:pt; x=wv[i]; c=ID(x); RZ(x=lrr(x)); 
      b=c==CHOOK||c==CFORK||i&&lp(x); RZ(*v++=CALL2(jt->lcp,b,x,0)););
  R raze(y);
@@ -98,7 +98,7 @@ static F1(jtlchar){A y;B b,p=1,r1;C c,d,*u,*v;I j,k,m,n;
   RZ(y=lnum(y));
   R lp(y)?over(cstr("a.{~"),y):over(y,cstr("{a.")); 
  }
- GATV(y,LIT,n+j,1,0); v=CAV(y);
+ GATV0(y,LIT,n+j,1); v=CAV(y);
  *v=*(v+n+j-1)=CQUOTE; ++v;
  if(2==j)MC(v,u,n); else DO(n, *v++=c=*u++; if(c==CQUOTE)*v++=c;);
  R over(b?lsh(w):lshape(w),y);
@@ -109,7 +109,7 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
  if(equ(ace,w)&&B01&AT(AAV0(w)))R cstr("a:");
  n=AN(w); wv=AAV(w); 
  DO(n, x=wv[i]; if(BOX&AT(x)){b=1; break;}); b=b||1==n;
- GATV(y,BOX,n+n-!b,1,0); v=vv=AAV(y);
+ GATV0(y,BOX,n+n-!b,1); v=vv=AAV(y);
  if(b){
   RZ(p=cstr("),(<"));
   DO(n, x=wv[i]; *v++=p; RZ(*v++=lnoun(x)););
@@ -123,7 +123,7 @@ static F1(jtlbox){A p,*v,*vv,*wv,x,y;B b=0;I n;
   DO(AN(x), c[*s++]=0;);
   if(c[CQUOTE]&&equ(w,words(x)))R over(cstr(";:"),lchar(x));
   if(c[d=' ']||c[d='|']||c[d='/']||c[d=',']||c[d=';']){
-   GATV(y,LIT,n+AN(x),1,0); t=CAV(y);
+   GATV0(y,LIT,n+AN(x),1); t=CAV(y);
    DO(n, x=wv[i]; *t++=d; MC(t,AV(x),AN(x)); t+=AN(x););
    RZ(y=lchar(y));
    R over(lshape(w),over(cstr(isdigit(*CAV(y))?"<;.(_1) ":"<;._1 "),y));
@@ -150,7 +150,7 @@ static F1(jtlnum){A b,d,t,*v,y;B p;I n;
   p=equ(t,plus(b,tymes(d,IX(n))));
   if(p){
    if(equ(d,num[0]))R over(lsh(w),lnum1(b));
-   GAT(y,BOX,6,1,0); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;
+   GAT0(y,BOX,6,1); v=AAV(y); v[0]=v[1]=v[2]=v[3]=mtv;
    if(p=!(equ(b,sc(n-1))&&equ(d,num[-1]))){
     if     (!equ(b,num[0]   )){v[0]=lnum1(b); v[1]=spellout(CPLUS);}
     if     ( equ(d,num[-1])) v[1]=spellout(CMINUS);
@@ -254,13 +254,13 @@ static F2(jtlinsert){A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V*v;
  switch(!b?id:2==n?CHOOK:CFORK){
   case CADVF:
   case CHOOK:
-   GAT(y,BOX,3,1,0); u=AAV(y);
+   GAT0(y,BOX,3,1); u=AAV(y);
    u[0]=f=CALL2(jt->lcp,ft||lnn(f,g),f,0);
    u[2]=g=CALL2(jt->lcp,gt||b,       g,0);
    u[1]=str(' '==cf(g)||id==CADVF&&!laa(f,g)&&!(lp(f)&&lp(g))?0L:1L," ");
    RE(0); R raze(y);
   case CFORK:
-   GAT(y,BOX,5,1,0); u=AAV(y);
+   GAT0(y,BOX,5,1); u=AAV(y);
    RZ(u[0]=f=CALL2(jt->lcp,ft||lnn(f,g),   f,0));
    RZ(u[2]=g=CALL2(jt->lcp,gt||lnn(g,h)||b,g,0)); RZ(u[1]=str(' '==cf(g)?0L:1L," "));
    RZ(u[4]=h=CALL2(jt->lcp,ht,             h,0)); RZ(u[3]=str(' '==cf(h)?0L:1L," "));
@@ -284,7 +284,7 @@ static F1(jtlcolon){A*v,x,y;C*s,*s0;I m,n;
   R over(over(x,str(3L," : ")),lcpx(y));
  }
  m=0; DO(n, m+=AN(v[i]););
- GATV(y,LIT,2+n+m,1,0);
+ GATV0(y,LIT,2+n+m,1);
  s=s0=CAV(y);
  DO(n, *s++=CLF; y=v[i]; m=AN(y); MC(s,CAV(y),m); s+=m;);
  *s++=CLF; *s++=')'; 
@@ -305,7 +305,7 @@ static DF1(jtlrr){A fs,gs,hs,t,*tv;C id;I fl,m;V*v;
  if(!m)R lsymb(id,w);
  if(evoke(w))R sfn(0,fs);
  if(!(VXOP&fl)&&hs&&BOX&AT(hs)&&id==CCOLON)R lcolon(w);
- GATV(t,BOX,m,1,0); tv=AAV(t);
+ GATV0(t,BOX,m,1); tv=AAV(t);
  if(2<m)RZ(tv[2]=lrr(hs));
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
  if(1<m)RZ(tv[1]=fl&VGERR?CALL1(jt->ltie,self?fxeachacv(gs):fxeach(gs),0L):lrr(gs));

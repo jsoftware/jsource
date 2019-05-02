@@ -14,7 +14,7 @@ static F1(jttrc){A bot,p,*v,x,y;B b;C*bv,c,ul,ll,*pv;I j,k,m,*s,xn,*xv,yn,*yv;
  xn=s[0]; RZ(x=apvwr(xn,0L,0L)); xv=AV(x);
  yn=s[1]; RZ(y=apvwr(yn,0L,0L)); yv=AV(y);
  j=0; DO(xn, xv[i]=IC(v[j]); j+=yn;);
- GATV(bot,LIT,yn,1,0); bv=CAV(bot);
+ GATV0(bot,LIT,yn,1); bv=CAV(bot);
  ul=jt->bx[0]; ll=jt->bx[6];
  for(j=b=0;j<xn;++j,b=0<j)
   for(k=0;k<yn;++k){
@@ -47,10 +47,10 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
  x=u[0]; xn=AN(x); xv=AV(x); m=0; DO(xn,m+=xv[i];);
  y=u[1]; yn=AN(y); yv=AV(y);
  RZ(p=v2(0L,0L));  pv=AV(p);
- GATV(z,BOX,yn,1,0); zv=AAV(z);
+ GATV0(z,BOX,yn,1); zv=AAV(z);
  u=AAV(w);
  for(j=0;j<yn;++j){
-  RE(k=mult(m,yv[j])); GATV(q,LIT,k,2,0); s=AS(q); *s=m; *++s=yv[j];
+  RE(k=mult(m,yv[j])); GATV0(q,LIT,k,2); s=AS(q); *s=m; *++s=yv[j];
   v=CAV(q); memset(v,' ',AN(q));
   pv[1]=yv[j]; k=j-yn; DO(xn, *pv=xv[i]; RE(v+=pad(p,u[k+=yn],v)););
   zv[j]=q;
@@ -61,7 +61,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
   v=CAV(t);         DO(m, if(' '!=*v){j=i;   break;} v+=n;);
   v=CAV(t)+AN(t)-n; DO(m, if(' '!=*v){k=m-i; break;} v-=n;);
   d=k-j;
-  GATV(p,LIT,m,1,0); v=CAV(p); memset(v,' ',m);
+  GATV0(p,LIT,m,1); v=CAV(p); memset(v,' ',m);
   if(1==d)*(v+j)=jt->bx[10]; else{memset(v+j,jt->bx[9],d); *(v+j)=*jt->bx; *(v+k-1)=jt->bx[6];}
  }
  RZ(zv[0]=rifvs(stitch(p,t)));
@@ -70,7 +70,7 @@ static F1(jtgraft){A p,q,t,*u,x,y,z,*zv;C*v;I d,j,k,m,n,*pv,*s,xn,*xv,yn,*yv;
 
 static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
  RZ(a);
- n=AN(a); RE(zn=mult(m,n)); GATV(z,LIT,zn,2,0); s=AS(z); *s=m; *++s=n;
+ n=AN(a); RE(zn=mult(m,n)); GATV0(z,LIT,zn,2); s=AS(z); *s=m; *++s=n;
  x=CAV(z); memset(x,' ',AN(z)); MC(x+n*(j+((m-(j+k))>>1)),AV(a),n);
  R z;
 }
@@ -78,7 +78,7 @@ static A jtcenter(J jt,A a,I j,I k,I m){A z;C*x;I n,*s,zn;
 static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
  RZ(a&&w);
  m=AN(a); u=CAV(a); b=!m||1==m&&'0'<=*u&&*u<='9';
- GATV(x,LIT,b?1:4+m,1,0); v=CAV(x);
+ GATV0(x,LIT,b?1:4+m,1); v=CAV(x);
  *v=jt->bx[10]; if(!b){v[3+m]=jt->bx[10]; v[1]=v[2+m]=' '; MC(2+v,u,m);}
  t=*AAV(w); s=AS(t); m=*s; n=*(1+s);
  u=CAV(t);         DO(m, if(' '!=*u){j=i; break;} u+=n;);
@@ -89,9 +89,9 @@ static F2(jttroot){A t,x;B b;C*u,*v;I j=0,k=0,m,n,*s;
 static F1(jttleaf){A t,z;C*v;I n,*s;
  RZ(w);
  n=AN(w);
- GATV(t,LIT,2+n,2,0); s=AS(t); s[0]=1; s[1]=2+n;
+ GATV0(t,LIT,2+n,2); s=AS(t); s[0]=1; s[1]=2+n;
  v=CAV(t); v[0]=jt->bx[10]; v[1]=' '; MC(2+v,AV(w),n);
- GAT(z,BOX,1,1,0); *AAV(z)=t;
+ GAT0(z,BOX,1,1); *AAV(z)=t;
  R z;
 }
 
@@ -129,7 +129,7 @@ static F1(jttrr){PROLOG(0058);A fs,gs,hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  m=(I )!!fs+(I )(gs||ex)+(I )(id==CFORK||xop&&hs);
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RETF(tleaf(sfn(0,fs)));}
- GATV(t,BOX,m,1,0); x=AAV(t);
+ GATV0(t,BOX,m,1); x=AAV(t);
  if(0<m)RZ(x[0]=rifvs(fl&VGERL?treach(fxeach(fs)):trr(fs)));
  if(1<m)RZ(x[1]=rifvs(fl&VGERR?treach(fxeach(gs)):ex?trr(unparsem(num[0],w)):trr(gs)));
  if(2<m)RZ(x[2]=rifvs(trr(hs)));

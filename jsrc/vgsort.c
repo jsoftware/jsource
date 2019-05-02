@@ -238,7 +238,7 @@ static SF(jtsortc){A z;B up;I i,p,yv[256];UC j,*wv,*v;
 static SF(jtsortc2){A y,z;B up;I i,p,*yv;US j,k,*wv,*v;
  GA(z,AT(w),AN(w),AR(w),AS(w)); v=USAV(z);
  wv=USAV(w); p=65536; up=(UI)jt->workareas.compare.complt>>(BW-1);
- GATV(y,INT,p,1,0); yv=AV(y);
+ GATV0(y,INT,p,1); yv=AV(y);
  DO(p, yv[i]=0;);
  for(i=0;i<m;++i){
   DO(n, ++yv[*wv++];);
@@ -259,8 +259,8 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  wv=AV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
- GATV(x,INT,n,1,0); xv=AV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
+ GATV0(x,INT,n,1); xv=AV(x);
  for(i=0;i<m;++i){I colflags;
   colflags=grcol(65536,0L,yv,n,wv,xv,sizeof(I)/sizeof(US),    INTLSBWDX+(US*)wv,4+1-jt->workareas.compare.complt);  // 'sort', and move 'up' to bit 1
 #if SY_64
@@ -307,7 +307,7 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  }
 // obsolete if(!rng.range)R n>1300?sorti1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
  // allocate area for the data, and result area
- GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;  // yv->totals area
+ GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;  // yv->totals area
  if(((I)jtinplace&JTINPLACEW) && ASGNINPLACE(w))z=w;else GA(z,AT(w),AN(w),AR(w),AS(w));
  zv=AV(z);
  // clear all totals to 0, then bias address of area so the data fits
@@ -334,7 +334,7 @@ static SF(jtsortu){FPREFIP;A y,z;I i;UI4 *yv;C4 j,s,*wv,*zv;
  if(0<(maxrange=16*(n-32))){rng = condrange4(wv,AN(w),-1,0,maxrange);
  }else rng.range=0;
  if(!rng.range)R n>700?sortu1(m,n,w):jtsortdirect(jt,m,1,n,w);  // TUNE
- GATV(y,C4T,rng.range,1,0); yv=C4AV(y)-rng.min;
+ GATV0(y,C4T,rng.range,1); yv=C4AV(y)-rng.min;
  GA(z,AT(w),AN(w),AR(w),AS(w)); zv=C4AV(z);
  for(i=0;i<m;++i){
   memset(yv+rng.min,C0,rng.range*sizeof(UI4)); 
@@ -351,8 +351,8 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
  wv=C4AV(w); zu=C4AV(z);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
- GATV(x,C4T,n,1,0); xu=C4AV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
+ GATV0(x,C4T,n,1); xu=C4AV(x);
  for(i=0;i<m;++i){I colflags;
   colflags=grcol(65536, 0L, yv,n,(UI*)wv,(UI*)xu,sizeof(C4)/sizeof(US),INTLSBWDX+0*WDINC+(US*)wv,4+1-jt->workareas.compare.complt);  // 'sort' + 'up' moved to bit 1
   grcol(65536, 0L, yv,n,(UI*)xu, (UI*)zu,sizeof(C4)/sizeof(US),INTLSBWDX+1*WDINC+(US*)xu ,colflags);
@@ -385,8 +385,8 @@ static SF(jtsortd){FPREFIP;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
  wv=DAV(w); zu=DAV(z);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
- { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1,0); yv=AV(y);}
- GATV(x,FL, n,1,0); xu=DAV(x);
+ { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
+ GATV0(x,FL, n,1); xu=DAV(x);
  for(i=0;i<m;++i){I colflags;  // for each cell to be sorted...
   g=wv; nneg=0; DO(n, nneg+=(0>*g++);); b=0<nneg&&nneg<n;
   g=b?xu:zu; h=b?zu:xu;  // select correct alignment to end with result in zv

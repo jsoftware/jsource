@@ -127,7 +127,7 @@ static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
 static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
  n=AN(w); r=AR(w); s=AS(w);
  thcase(AT(w),&wd,&fmt);
- GATV(t,LIT,wd*(1+n),1,0); tv=CAV(t);
+ GATV0(t,LIT,wd*(1+n),1); tv=CAV(t);
  if(1>=r){p=thv(w,AN(t),tv); ASSERTSYS(p,"thn"); AN(t)=*AS(t)=p; z=t;} 
  else{ 
   c=s[r-1]; m=n/c; k=bpnoun(AT(w));
@@ -176,7 +176,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
   c=n; 
   RZ(d=apvwr(c,0L,0L)); dv=AV(d);
   p=2*n-1; DO(c, p+=dv[i]=sbtou8size(jt,SBUV(*x++),0););
-  GATV(z,LIT,  p,1,   0); zv=CAV(z); memset(zv,' ',AN(z));
+  GATV0(z,LIT,  p,1); zv=CAV(z); memset(zv,' ',AN(z));
         DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=2+dv[i];);
  }else{
   if(jt->jprx){I j;A dd,dw,e,ew;I *ddv,*dwv,*ev,*ewv;C*zv1;
@@ -242,7 +242,7 @@ static F1(jtthx1){A z;B b;C*s,s1[2+XBASEN];I n,p,p1,*v;
  p=*v; if(p==XPINF)R cstr("_"); else if(p==XNINF)R cstr("__");
  sprintf(s1,FMTI,*v); p1=strlen(s1);
  p=p1+XBASEN*(n-1);
- GATV(z,LIT,p,1,0); s=CAV(z); 
+ GATV0(z,LIT,p,1); s=CAV(z); 
  MC(s,s1,p1); if(b)*s=CSIGN; s+=p1; 
  DO(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
  R z;           
@@ -252,7 +252,7 @@ static A jtthq1(J jt,Q y){A c,d,z;B b;C*zv;I m,n=-1;
  RZ(c=thx1(y.n)); m=AN(c);
  d=y.d;
  if(b=1<AN(d)||1!=*AV(d)){RZ(d=thx1(y.d)); n=AN(d);}
- GATV(z,LIT,m+n+1,1,0); zv=CAV(z);
+ GATV0(z,LIT,m+n+1,1); zv=CAV(z);
  MC(zv,AV(c),m); if(b){*(zv+m)='r'; MC(zv+m+1,AV(d),n);}
  R z;
 }
@@ -263,7 +263,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
  if(p==DXINF)R cstr("_"); else if(p==DXMINF)R cstr("__");
  sprintf(s1,FMTI,b?-*v:*v); p1=strlen(s1);
  if(e&&*v){s=s2; *s++='e'; if(0>e)*s++=CSIGN; sprintf(s,FMTI,0<e?e:-e); p2=strlen(s2);}else p2=0; 
- GATV(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1,0); s=CAV(z);
+ GATV0(z,LIT,b+p1+(I )(1<p1)+XBASEN*(n-1)+p2,1); s=CAV(z);
  if(b)*s++=CSIGN; *s++=*s1; if(1<p1){*s++='.'; MC(s,1+s1,p1-1); s+=p1-1;}
  DO(n-1, --v; sprintf(s,FMTI04,b?-*v:*v); s+=XBASEN;);
  MC(s,s2,p2);
@@ -273,7 +273,7 @@ static A jtthdx1(J jt,DX y){A x,z;B b;C*s,s1[2+XBASEN],s2[20];I e,n,p,p1,p2,*v;
 static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  n=AN(w); r=AR(w); s=AS(w); wv=AV(w);
  c=r?s[r-1]:1; m=n/c;
- GATV(t,BOX,n,1,0); tv=AAV(t);
+ GATV0(t,BOX,n,1); tv=AAV(t);
  RZ(d=apvwr(c,1L,0L)); dv=AV(d); v=tv;
  switch(CTTZ(AT(w))){
   case XNUMX: {X*u =(X*) wv; DO(m, DO(c, RZ(*v++=y=thx1(*u++));  dv[i]=MAX(dv[i],AN(y));));} break;
@@ -736,7 +736,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // If the input is another type, there can be no UTF-8 in the string
  nbx=0; if(ch||AT(w)&BOX+SPARSE)zn+=nbx=countonlines(scanbdc,t,v,h,nq,c,lb,la);
  // Now we can allocate the result array.  Set zu,zv->beginning of the data area
- GATV(z,LIT,zn,1,0); zu=zv=CAV(z);
+ GATV0(z,LIT,zn,1); zu=zv=CAV(z);
  // h=# beginning lines to output.  If all the lines, including spacing, fit in the user's limit, accept them all; otherwise use the user's starting number
  h=lba<nq+(q?p:0)?lb:IMAX;
  // Loop for each line of output.  lc gives number of lines emitted so far, including ones called for by EOL inside character data

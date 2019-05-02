@@ -63,7 +63,7 @@ static B jtdolock(J jt,B lk,F f,I i,I n){I e;
 #define LKC  3      /* number of columns in jt->flkd table       */
 
 B jtxlinit(J jt){A x;I*s;
- GAT(x,INT,20*LKC,2,0); ras(x); s=AS(x); s[0]=20; s[1]=LKC;
+ GAT0(x,INT,20*LKC,2); ras(x); s=AS(x); s[0]=20; s[1]=LKC;
  jt->flkd=x;
  R 1;
 }

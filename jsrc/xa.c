@@ -31,7 +31,7 @@ F1(jtcts){D d;
  R mtv;
 }
 
-F1(jtdispq){A z; ASSERTMTV(w); GATV(z,INT,*jt->disp,1,0); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
+F1(jtdispq){A z; ASSERTMTV(w); GATV0(z,INT,*jt->disp,1); ICPY(AV(z),1+jt->disp,*jt->disp); R z;}
 
 F1(jtdisps){UC n;
  RZ(w=vi(w));
@@ -50,7 +50,7 @@ F1(jtevms){A t,*tv,*wv;
  ASSERT(1==AR(w),EVRANK);
  ASSERT(NEVM==AN(w),EVLENGTH);
  ASSERT(BOX&AT(w),EVDOMAIN);
- GAT(t,BOX,1+NEVM,1,0); tv=AAV(t); 
+ GAT0(t,BOX,1+NEVM,1); tv=AAV(t); 
  *tv++=mtv;
  wv=AAV(w);
  DO(NEVM, RZ(*tv++=vs(*wv++)););
@@ -90,13 +90,13 @@ I prokey=1; /* enabled for 5.01 beta */
 F1(jtoutparmq){A z;D*u,x;I*v;
  ASSERTMTV(w);
  if(IMAX==jt->outmaxlen||IMAX==jt->outmaxbefore||IMAX==jt->outmaxafter){
-  GAT(z,FL, 4,1,0); u=DAV(z);
+  GAT0(z,FL, 4,1); u=DAV(z);
   u[0]=(D)jt->outeol;
   x=(D)jt->outmaxlen;    u[1]=x==IMAX?inf:x;
   x=(D)jt->outmaxbefore; u[2]=x==IMAX?inf:x;
   x=(D)jt->outmaxafter;  u[3]=x==IMAX?inf:x;
  }else{
-  GAT(z,INT,4,1,0); v= AV(z);
+  GAT0(z,INT,4,1); v= AV(z);
   v[0]=jt->outeol;
   v[1]=jt->outmaxlen;
   v[2]=jt->outmaxbefore;

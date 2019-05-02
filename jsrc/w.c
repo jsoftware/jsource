@@ -42,7 +42,7 @@ static ST state[10][9]={
 F1(jtwordil){A z;C e,nv,s,t=0;I b,i,m,n,*x,xb,xe;ST p;UC*v;
  RZ(w);  // if no string, could be empty line from keyboard; return null A in that case
  nv=0; s=SS;   // set not creating numeric constant; init state (after space)
- n=AN(w); v=UAV(w); GATV(z,INT,1+n+n,1,0); x=1+AV(z);  // get count of characters n and address v;
+ n=AN(w); v=UAV(w); GATV0(z,INT,1+n+n,1); x=1+AV(z);  // get count of characters n and address v;
   // allocate absolute worst-case output area (each char is 1 word, plus 1 for count); point x to output indexes
  for(i=0;i<n;++i){   // run the state machine
   p=state[s][wtype[v[i]]]; e=p.effect;    // go to next state
@@ -84,7 +84,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
  RZ(w=vs(w));
  RZ(t=wordil(w));
  s=CAV(w); y=AV(t); n=*y++; n=0>n?-n:n;
- GATV(z,BOX,n,1,0); x=AAV(z);
+ GATV0(z,BOX,n,1); x=AAV(z);
  DO(n, k=*y++; RZ(*x++=rifvs(str(*y++,s+k))););
  RETF(z);  // always boxed chars, and not relative
 }
@@ -93,7 +93,7 @@ F1(jtwords){A t,*x,z;C*s;I k,n,*y;
 static A jtconstr(J jt,I n,C*s){A z;C b,c,p,*t,*x;I m=0;
  p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)m++;    p=b&&!p;);
  if(0==m)R aqq; else if(1==m&&(z=chr[(UC)s[1]]))R z;
- GATV(z,LIT,m,1!=m,0); x=CAV(z);
+ GATV0(z,LIT,m,1!=m); x=CAV(z);
  p=0; t=s; DO(n-2, c=*++t; b=c==CQUOTE; if(!b||p)*x++=c; p=b&&!p;);
  R z;
 }
@@ -115,7 +115,7 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
  RZ(a&&w);
  s=CAV(w); u=AV(a); n=*u++; n=(n>>(BW-1))^n;  // point s to start of string; set u as running pointer pointer in a; fetch # words;
     // if negative (meaning last word is NB.), discard the NB. from the count; step u to point to first (i0,l0) pair
- GATV(z,BOX,n,1,0); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
+ GATV0(z,BOX,n,1); x=v=AAV(z);   //  allocate list of words; set running word pointer x, and static
    // beginning-of-list pointer v, to start of list of output pointers
  for(i=0;i<n;i++,x++){  // for each word
   wi=s+*u++; wl=*u++; c=e=*wi; p=ctype[(UC)c]; b=0;   // wi=first char, wl=length, c=e=first char, p=type of first char, b='no inflections'
@@ -168,8 +168,8 @@ A jtenqueue(J jt,A a,A w,I env){A*v,*x,y,z;B b;C d,e,p,*s,*wi;I i,n,*u,wl;UC c;
     // The sentence is abc =: CCASEV (new argument)
     // The new argument is (the list of names), then
     // (_3) the name pqr, (_2) the position if any of abc in the right-hand list (-1 if absent), (_1) the parsed queue before this replacement
-    GAT(z1,BOX,4,1,0); x=AAV(z1);   // Allocate the sentence, point to its data
-    GATV(y,BOX,m+3,1,0); yv=AAV(y);   // Allocate the argument
+    GAT0(z1,BOX,4,1); x=AAV(z1);   // Allocate the sentence, point to its data
+    GATV0(y,BOX,m+3,1); yv=AAV(y);   // Allocate the argument
     c=-1; k=AN(v[0]); s=NAV(v[0])->s;   // get length and address of abc
     j=4; DO(m, yv[i]=p=v[j]; j+=2; if(AN(p)==k&&!memcmp(s,NAV(p)->s,k))c=i;);  // move name into argument, remember if matched abc
     yv[m]=v[2]; RZ(yv[m+1]=rifvs(sc(c))); yv[m+2]=z;    // add the 3 ending elements
@@ -304,7 +304,7 @@ F1(jtfsmvfya){PROLOG(0099);A a,*av,m,s,x,z,*zv;I an,c,e,f,ijrd[4],k,p,q,*sv,*v;
   ASSERT(c==AN(alp),EVLENGTH);
   RZ(m=vi(m)); v=AV(m); DO(c, k=v[i]; ASSERT(0<=k&&k<q,EVINDEX););
  }else ASSERT(BOX&AT(m),EVDOMAIN);
- GAT(z,BOX,4,1,0); zv=AAV(z);
+ GAT0(z,BOX,4,1); zv=AAV(z);
  RZ(zv[0]=rifvs(sc(f))); RZ(zv[1]=rifvs(s)); RZ(zv[2]=rifvs(m)); RZ(zv[3]=rifvs(vec(INT,4L,ijrd)));
  EPILOG(z);
 }    /* check left argument of x;:y */
@@ -326,7 +326,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
   ASSERT(BOX&AT(m),EVDOMAIN);  // otherwise m must be boxes
   RZ(y=raze(m)); r=AR(y); k=AS(y)[0];  // y = all the input values run together, k=# input values
   ASSERT(r==AR(w)||r==1+AR(w),EVRANK);  // items of m must match rank of w, or the entire w (which will be treated as a single input)
-  GATV(x,INT,1+k,1,0); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
+  GATV0(x,INT,1+k,1); v=AV(x); v[k]=c; mv=AAV(m);  // x will hold translated column numbers.  Install 'not found' value at the end
   DO(c, j=i; t=mv[i]; if(r&&r==AR(t))DO(AS(t)[0], *v++=j;) else *v++=j;);  // go through m; for each box, install index for that box for each item in that box.
   if(b){RZ(m=from(indexof(y,alp),x)); v=AV(m); DO(AN(alp), k=v[i]; ASSERT((UI)k<(UI)q,EVINDEX););}  // for ASCII input, translate & check size
   else {ASSERT(q>c,EVINDEX); RZ(w=from(indexof(y,w),x));}  // # columns of machine must be at least c+1; look up the rest

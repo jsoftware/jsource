@@ -252,12 +252,12 @@ xx=: lib,'f1 f ',16$'f '
 s0=: 7!:0 ''
 9 = # xx 15!:0 <"0 ]8 ?@$ 0
 s1=: 7!:0 ''
-s0 -: s1
+s0 < 256 + s1  NB. uncertainty from caching of !:
 
 s0=: 7!:0 ''
 1 [ 100 (6!:2) 'xx 15!:0 <"0 ]8 ?@$ 0'
 s1=: 7!:0 ''
-s0 -: s1
+s0 < 256 + s1  NB. uncertainty from caching of !:
 
 s0=: 7!:0 ''
 yy=: <"0 ] 8 ?.@$ 0
@@ -265,7 +265,7 @@ yy=: <"0 ] 8 ?.@$ 0
 yy -: <"0 ] 8 ?.@$ 0
 4!:55 ;:'yy'
 s1=: 7!:0 ''
-s0 -: s1
+s0 < 256 + s1  NB. uncertainty from caching of !:
 
 NB. 1 procindex - 0 is objxxx and 1 is objddd
 obj_add=:    <>{.'obj_add x' dcd ''

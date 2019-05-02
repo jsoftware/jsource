@@ -41,11 +41,11 @@ static DF2(jtfindrange2){
  R v2(rng.min,rng.range);
 }
 
-F2(jtforeign){I p,q;
+static F2(jtforeigncreate){I p,q;
  RZ(a&&w);
  p=i0(a); q=i0(w); RE(0);
  if(11==p)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);
- if(q<0||XCC<=q)R CDERIV(CIBEAM, 0,0,  VASGSAFE,RMAX,RMAX,RMAX);
+// obsolete  if(q<0||XCC<=q)R CDERIV(CIBEAM, 0,0,  VASGSAFE,RMAX,RMAX,RMAX);
  switch(XC(p,q)){
   case XC(0,  0): 
   case XC(0,100): R SDERI2(CIBEAM, jtscm00,      jtscm002,     VASGSAFE,RMAX,RMAX,RMAX);
@@ -212,11 +212,13 @@ F2(jtforeign){I p,q;
   case XC(13,7):  R CDERIV(CIBEAM, jtdbjump,     0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,8):  R CDERIV(CIBEAM, jtdbsig1,     jtdbsig2,     VFLAGNONE,RMAX,RMAX,RMAX);
   case XC(13,9):  R CDERIV(CIBEAM, jtdbrr1,      jtdbrr2,      VFLAGNONE,RMAX,RMAX,RMAX);
+  case XC(13,10):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // obsolete but still in stdlib
   case XC(13,11): R CDERIV(CIBEAM, jtdberr,      0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,12): R CDERIV(CIBEAM, jtdbetx,      0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,13): R CDERIV(CIBEAM, jtdbcall,     0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,14): R CDERIV(CIBEAM, jtdbtrapq,    0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,15): R CDERIV(CIBEAM, jtdbtraps,    0,            VFLAGNONE,RMAX,0,   0   );
+  case XC(13,16):  R CDERIV(CIBEAM, 0,0, VFLAGNONE,RMAX,RMAX,RMAX);  // obsolete but still in stdlib
   case XC(13,17): R CDERIV(CIBEAM, jtdbq,        0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,18): R CDERIV(CIBEAM, jtdbstackz,   0,            VFLAGNONE,RMAX,0,   0   );
   case XC(13,19): R CDERIV(CIBEAM, jtdbcutback,  0,            VFLAGNONE,RMAX,0,   0   );
@@ -268,11 +270,44 @@ F2(jtforeign){I p,q;
   case XC(128,3): R CDERIV(CIBEAM, jtcrc1,       jtcrc2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(128,4): R CDERIV(CIBEAM, jtrngraw,     0,            VASGSAFE,RMAX,0,   0   );
   case XC(128,5): R CDERIV(CIBEAM, jtisnan,      0,            VASGSAFE,RMAX,0,   0   );
-  case XC(128,6): R CDERIV(CIBEAM, jtshasum1,    jtshasum2,    VASGSAFE,1,0,1);
+  case XC(128,6): R CDERIV(CIBEAM, jtshasum1,    jtshasum2,    VASGSAFE,1,1,RMAX);
+#ifdef LOCALFOREIGNS
+  case XC(128,20): R CDERIV(CIBEAM, 0,    jtpartitiongrades,    VASGSAFE,1,1,RMAX);
+  case XC(128,21): R CDERIV(CIBEAM, jtfindsplit,    0,    VASGSAFE,1,0,0);
+#endif
 //  case XC(128,110): R CDERIV(CIBEAM, jttest1,    0,            VASGSAFE,RMAX,RMAX,RMAX);
 
-  default:        R foreignextra(a,w);
+//  default:        R foreignextra(a,w);
+  default:        ASSERT(0,EVDOMAIN);  // any unknown combination is a domain error right away
 }}
+
+// Look up the function to apply for a foreign
+// To avoid the long switch statement (and the cost of building the verb), we keep a hash of the recent combinations used.
+// (The localuse field in the verb holds the actual m,n, and we keep only 2 values per hashslot)
+// This may be a stupid idea since most people use cover names for foreigns, but now that it's implemented we'll keep it
+F2(jtforeign){
+ RZ(a&&w);
+ I p=i0(a); I q=i0(w); RE(0);
+ ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
+ if(p==11 && q!=0)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);  // 11!:n special: hash 11!:0, do the rest individually
+ I hash=(p*3+q)&(sizeof(jt->foreignhash)/sizeof(jt->foreignhash[0])-1);  // hash m,n
+ I mn = (p<<8)+q;  // unique value for the foreign
+ A ha=jt->foreignhash[hash][0];
+ // 2-way set-associative cache.  element 0 is MRU
+ // if either bucket has the right value, use it.
+ if(ha){
+  if(mn==FAV(ha)->localuse.lI)R ha;  // use it if match
+  if(ha=jt->foreignhash[hash][1]){  // there is a second set, try it
+   if(mn==FAV(ha)->localuse.lI)R ha;  // use it if match
+   // Free the bucket if it has the wrong value
+   fa(ha);  // the incumbent is about to be removed - take away its protection
+  }
+  jt->foreignhash[hash][1]=jt->foreignhash[hash][0];  // no match - we will replace the second set
+ }
+ // create the correct entity and save it in the table (must ra)
+ RZ(jt->foreignhash[hash][0]=ha=jtforeigncreate(jt,a,w)); FAV(ha)->localuse.lI=mn; ras(ha);  // create the block, save it, protect from free
+ R ha;
+}
 
 /* SY_64 double trick - null routines here to avoid optimization */
 #if SY_64 & SY_WIN32

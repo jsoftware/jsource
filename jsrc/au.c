@@ -54,7 +54,7 @@ F2(jtdomainerr2){ASSERT(0,EVDOMAIN);}
 // if there has been a previous error this function returns 0
 A jtfdef(J jt,I flag2,C id,I t,AF f1,AF f2,A fs,A gs,A hs,I flag,I m,I l,I r){A z;V*v;
  RE(0);
- GAT(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will bew all filled in
+ GAT(z,INT,(VERBSIZE+SZI-1)>>LGSZI,0,0); v=FAV(z);  // allocate as fixed size, and as INT to avoid clearing the area, which will be all filled in
  AT(z)=t;  // install actual type
  if(fs)INCORP(fs); if(gs)INCORP(gs); if(hs)INCORP(hs);   // indicate fgh are about to be incorporated
  v->localuse.lvp=0;  // clear the private field

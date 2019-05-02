@@ -72,7 +72,7 @@ SSINGALLO(z,r,FL) GAT(z,FL,1,0,0)
 static A ssingalloFL(J jt,I r){A z; GATV1(z,FL,1,r,0); R z;}  // allocate with rank and shape= all 1
 static A ssingalloB01(J jt,I r){A z; GATV1(z,B01,1,r,0); R z;}
 // allocate a singleton block of type t for rank f.
-#define SSINGALLO(z,f,t) {if(!f)GATS(z,t,1,0,0,t##SIZE)else RZ(z=ssingallo##t(jt,f))}  // normal case is atom; use subroutine for others
+#define SSINGALLO(z,f,t) {if(!f)GATS(z,t,1,0,0,t##SIZE,GACOPYSHAPE0)else RZ(z=ssingallo##t(jt,f))}  // normal case is atom; use subroutine for others
 #endif
 
 // MUST NOT USE AT after SSNUMPREFIX!  We overwrite the type.  Use sw only

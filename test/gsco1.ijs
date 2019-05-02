@@ -59,7 +59,7 @@ d=:p=:s=: 911
 s1=: 7!:3 ''
 b1=: 7!:0 ''
 
-b0 -: b1
+b0 < 512 + b1  NB. uncertainty from caching of !:
 NB. IF64 +. s0 -: s1
 
 0 s: 11

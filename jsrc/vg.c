@@ -590,7 +590,7 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
   RE(zn=mult(prod(f,s),n));
  }
  // allocate the entire result area, one int per item in each input cell
- GATV(z,INT,zn,1+f,s); if(!r)*(AS(z)+f)=1;
+ GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;
  // if there are no atoms, or we are sorting things with 0-1 item, return an index vector of the appropriate shape 
  if(!wn||1>=n)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible

@@ -43,9 +43,9 @@ static F2(jtpdtspvv){A x;D*av,s,t,*wv,z;I i,*u,*u0,*uu,*v,*v0,*vv;P*ap,*wp;
 static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,*zp;
  RZ(a&&w);
  ap=PAV(a); y=SPA(ap,i); yv=AV(y); s[0]=n=*AS(y); s[1]=1;
- GATV(yj,INT,n,2,s);
+ GATVR(yj,INT,n,2,s);
  if(DENSE&AT(w)){
-  GATV(yi,INT,n,2,s); u=AV(yi); AR(yj)=1; v=AV(yj);
+  GATVR(yi,INT,n,2,s); u=AV(yi); AR(yj)=1; v=AV(yj);
   DO(n, *u++=*yv++; *v++=*yv++;);
   ax=SPA(ap,x); RZ(wx=from(yj,w));
  }else{
@@ -53,7 +53,7 @@ static F2(jtpdtspmv){A ax,b,g,x,wx,y,yi,yj,z;B*bv;I m,n,s[2],*u,*v,*yv;P*ap,*wp,
   DO(n, yv++; *v++=*yv++;);
   wp=PAV(w); RZ(b=eps(yj,SPA(wp,i))); bv=BAV(b); 
   AN(yj)=*AS(yj)=*s=m=bsum(n,bv); v=AV(yj); yv=AV(y);
-  GATV(yi,INT,m,2,s); u=AV(yi);
+  GATVR(yi,INT,m,2,s); u=AV(yi);
   DO(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=repeat(b,SPA(ap,x))); RZ(wx=from(indexof(SPA(wp,i),yj),SPA(wp,x))); 
  }
@@ -72,16 +72,16 @@ static F2(jtpdtspvm){A ax,b,g,x,wx,y,yi,yj,z;B*bv;D*av,c,d,*wv,*xv;I m,n,s[2],*u
  RZ(a&&w);
  wp=PAV(w); y=SPA(wp,i); yv=AV(y); s[0]=n=*AS(y); s[1]=1;
  if(DENSE&AT(a)){
-  GATV(yj,INT,n,2,s); v=AV(yj); 
+  GATVR(yj,INT,n,2,s); v=AV(yj); 
   av=DAV(a); x=SPA(wp,x); wv=DAV(x);
   GATV0(x,FL,n,1); xv=DAV(x);
   DO(n, c=av[*yv++]; *v++=*yv++; d=*wv++; *xv++=c&&d?c*d:0;);
  }else{
-  GATV(yi,INT,n,2,s); u=AV(yi);
+  GATVR(yi,INT,n,2,s); u=AV(yi);
   DO(n, *u++=*yv++; yv++;);
   ap=PAV(a); RZ(b=eps(yi,SPA(ap,i))); bv=BAV(b); 
   AN(yi)=*AS(yi)=*s=m=bsum(n,bv); u=AV(yi); yv=AV(y);
-  GATV(yj,INT,m,2,s); v=AV(yj);
+  GATVR(yj,INT,m,2,s); v=AV(yj);
   DO(n, if(*bv++){*u++=*yv++; *v++=*yv++;}else yv+=2;);
   RZ(ax=from(indexof(SPA(ap,i),yi),SPA(ap,x))); RZ(wx=repeat(b,SPA(wp,x)));
   RZ(x=tymes(ax,wx));

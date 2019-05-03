@@ -415,7 +415,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    DO(nc,
     if(0<ib[0]) zs[1]=ib[0]; 
     else zs[1]=ib[3+(1<nf?0:i)]; 
-    GATV(*a1v, LIT, zs[0]*zs[1], 2, zs); 
+    GATVR(*a1v, LIT, zs[0]*zs[1], 2, zs); 
     memset(CAV(*a1v), ' ', AN(*a1v)); 
     *cvv++=CAV(*a1v);
     a1v++; if(1<nf) ib+=4; 
@@ -427,7 +427,7 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    DO(nc, if(0<ib[0]) coll+=ib[0]; else coll+=ib[3+(1<nf?0:i)];
           if(1<nf) ib+=4; );
    zs[0]=prod(wr-1,ws); zs[1]=coll;
-   GATV(x, LIT, zs[0]*zs[1], 2, zs);
+   GATVR(x, LIT, zs[0]*zs[1], 2, zs);
    memset(CAV(x), ' ', AN(x));
    break;
   default: ASSERTSYS(0, "jtfmtallcol: mode");

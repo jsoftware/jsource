@@ -16,7 +16,7 @@
 #define CFR(f,T,TYPE,fplus,ftymes,fnegate)  \
  F2(f){PROLOG(0060);A z;I j,n;T d,*t,*u,*v;            \
   n=AN(w); u=(T*)AV(w);                          \
-  GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
+  GATVS(z,TYPE,1+n,1,0,TYPE##SIZE,GACOPYSHAPE0,R 0); v=(T*)AV(z); *v=*(T*)AV(a);  \
   for(j=0;j<n;++j){                              \
    d=fnegate(u[j]); t=j+v; *(1+t)=*t;            \
    DO(j, *t=fplus(*(t-1),ftymes(d,*t)); --t;);   \

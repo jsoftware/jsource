@@ -273,7 +273,7 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=av[0]; c=AN(q);
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
- GATV(z,INT,an*c,1+ar,AS(a)); *(ar+AS(z))=c; v=AV(z);
+ GATV(z,INT,an*c,1+ar,AS(a)); AS(z)[ar]=c; v=AV(z);
  for(j=0;j<an;++j){
   q=av[j]; t=AT(q);
   if(t&BOX)R 0;

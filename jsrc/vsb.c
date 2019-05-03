@@ -814,7 +814,7 @@ B jtsbtypeinit(J jt){A x;I c=sizeof(SBU)/SZI,s[2],p;
  GA(x,LIT,20000,1,0);           jt->sbs=x; jt->sbsv=     CAV(x); jt->sbsn=0;  // size too big for GAT; initialization anyway
  FULLHASHSIZE(2000,INTSIZE,1,0,p);  // initial allo
  RZ(x=apvwr(p,-1L,0L)); jt->sbh=x; jt->sbhv=      AV(x);
- GATV(x,INT,*s*c,2,s);          jt->sbu=x; jt->sbuv=(SBU*)AV(x);
+ GATVR(x,INT,s[0]*c,2,s);          jt->sbu=x; jt->sbuv=(SBU*)AV(x);
  GAP=15;                /* TWICE the difference in order numbers we want after re-ordering */
  FILLFACTOR=1024;
  ROOT=0;                /* initialize binary tree; initialize the empty symbol (used as fill) */

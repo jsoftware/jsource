@@ -129,7 +129,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
  RZ(w);
  e=n=AN(w); t=UNSAFE(AT(w)); u=CAV(w); klg=bplg(t); kk=WS(d);
  if(t&SPARSE)R breps(b,d,w);
- GATV(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1,0);
+ GATV0(y,LIT,bsize(jt,d,1,t,n,AR(w),AS(w)),1);
  v=brephdr(b,d,w,y);
  if(t&DIRECT)switch(CTTZ(t)){
   case SBTX:
@@ -158,7 +158,7 @@ A jtbrep(J jt,B b,B d,A w){A q,*wv,y,z,*zv;C*u,*v;I e,klg,kk,m,n,t;
 static A jthrep(J jt,B b,B d,A w){A y,z;C c,*hex="0123456789abcdef",*u,*v;I n,s[2];
  RZ(y=brep(b,d,w));
  n=AN(y); s[0]=n>>LGWS(d); s[1]=2*WS(d); 
- GATV(z,LIT,2*n,2,s);  
+ GATVR(z,LIT,2*n,2,s);  
  u=CAV(y); v=CAV(z); 
  DO(n, c=*u++; *v++=hex[(c&0xf0)>>4]; *v++=hex[c&0x0f];); 
  RETF(z);

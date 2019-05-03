@@ -46,7 +46,7 @@ static B jtspsscell(J jt,A w,I wf,I wcr,A*zc,A*zt){A c,t,y;B b;
 static A jtgrd1spz(J jt,A w,I wf,I wcr){A z;I*ws,zn;
  ws=AS(w);
  RE(zn=prod(wf+!!wcr,ws)); 
- GATV(z,INT,zn,1+wf,ws); if(!wcr)*(AS(z)+wf)=1;
+ GATV(z,INT,zn,1+wf,ws); if(!wcr)AS(z)[wf]=1;
  R z;
 }    /* allocate result for grd1sp__ */
 
@@ -129,7 +129,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){A c,t,x,y,z;I*cv,m,n,n1,p,*tv,*ws,wt,*x
  RZ(spdscell(w,wf,wcr,&c,&t));
  if(!AN(c)){DO(m, DO(n, zv[i]=i;); zv+=n;); R z;}
  cv=AV(c); n1=cv[1]-1; jt->workareas.compare.compstv=tv=cv[0]+AV(t);
- GATV(x,INT,MAX(n,1+n1),1,0); xv=AV(x);  /* work area for msmerge() */
+ GATV0(x,INT,MAX(n,1+n1),1); xv=AV(x);  /* work area for msmerge() */
  if(cv[0])DO(m, jt->workareas.compare.compsi=i; DO(n1, zv[i]=i;); msort(n1,(void**)zv,(void**)xv);                                 zv+=n;)
  else     DO(m, jt->workareas.compare.compsi=i; DO(n1, xv[i]=i;); msort(n1,(void**)xv,(void**)zv); sp1merge0(n,n1,yc,zv,xv,yv,tv); zv+=n;);
  R z;

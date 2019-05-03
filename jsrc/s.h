@@ -21,7 +21,7 @@
  F1(f){A z;LX *e,j,k;I i,m=0,n;L*d;T*zv;                         \
   RZ(w);                                                     \
   n=AN(w); e=SYMLINFOSIZE+LXAV(w);                                  \
-  GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE,R 0);                \
+  GATVS(z,(TYPE),(COUNT)*(COL),(1<(COL))?2:1,0,TYPE##SIZE,GACOPYSHAPE0,R 0);                \
   if(1<(COL)){*AS(z)=(COUNT); *(1+AS(z))=(COL);}             \
   zv=(T*)AV(z);                                              \
   for(i=1;i<n;++i){                  \

@@ -88,7 +88,7 @@ static F1(jtprime1){A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  if(n==k){RETF(z);} 
  j=3; p=0; e=PT; q=1+(I)sqrt((D)m); x=wv[dv[k]]; 
  GATV0(t,B01,q,1);         u=BAV(t); sieve(0L,q,u,u); 
- GATV(y,B01,MIN(m,MM),1,0); b=BAV(y); 
+ GATV0(y,B01,MIN(m,MM),1); b=BAV(y); 
  for(;(UI)p<(UI)m;p+=q){
   if(x>=e){c=x/PT; e=PT*(1+c); c=MIN(c,ptn); if(j<c*PT){j=c*PT; p=ptt[c-1];}}
   JBREAK0; q=MIN(MM,m-p); sieve(p,q,b,u); c=j+q/3;
@@ -160,7 +160,7 @@ F1(jtplt){PROLOG(0062);A d,t,y,z;B*b,*u,xt;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  j=3; k=p=c=0; e=*ptt; n=AN(w); 
  RE(m=suq(n,wv)); ASSERT(m<=0x7fffffff,EVLIMIT); q=1+(I)sqrt((D)m); 
  GATV0(t,B01,q,1);         u =BAV(t); sieve(0L,q,u,u);
- GATV(y,B01,MIN(m,MM),1,0); b =BAV(y); 
+ GATV0(y,B01,MIN(m,MM),1); b =BAV(y); 
  GATV(z,INT,n,AR(w),AS(w)); zv= AV(z);
  RZ(d=grade1(ravel(w)));  dv= AV(d);
  while(n>k&&2>=wv[dv[k]])zv[dv[k++]]=0; 
@@ -521,7 +521,7 @@ static B jtranec(J jt,X w,X*zg,X*za,X*zb,X*zx,X*zy){A mm,t;I*tv;X a,aa,b,bb,g,x,
 }    /* random elliptic curve */
 
 static A jtdb1b2(J jt,I n,X w){A t,z;D c,d,lg,n1=(D)n-1,p,r;I m,s[2],*v,*zv;
- s[0]=n; s[1]=2; GATV(z,INT,2*n,2,s); zv=v=AV(z);
+ s[0]=n; s[1]=2; GATVR(z,INT,2*n,2,s); zv=v=AV(z);
  RZ(t=cvt(FL,scx(w))); d=*DAV(t); 
  lg=log(d); c=log(sqrt(d)); r=exp(sqrt(0.5)+sqrt(c*log(c)))/lg;
  DO(n, c=lg*pow(r,i/n1); p=c*log(c); if(p>=2147483647)break; *v++=(I)jfloor(c); *v++=(I)p;);

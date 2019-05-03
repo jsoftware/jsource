@@ -17,7 +17,7 @@
 
 static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYPE yv[16];
  p=2==k?4:16; wv=CAV(w);
- GATV(z,INT,m*n,1+wf,AS(w)); if(!wcr)*(AS(z)+wf)=1; zv=AV(z);
+ GATV(z,INT,m*n,1+wf,AS(w)); if(!wcr)AS(z)[wf]=1; zv=AV(z);
  if(2==k){US*v;
   for(i=0;i<m;++i){
    memset(yv,C0,p*sizeof(*yv)); 
@@ -104,12 +104,12 @@ F1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wcr,wf,wn,wr,*ws,wt,*zv;CR rng;TTYPE *y
  if(!rng.range){I *yv;
   // small-range not possible.  Do the grade and install each value into its location
   RZ(y=irs1(w,0L,wcr,jtgrade1)); yv=AV(y); 
-  GATV(z,INT,m*n,1+wf,ws); if(!wcr)*(AS(z)+wf)=1; zv=AV(z); 
+  GATV(z,INT,m*n,1+wf,ws); if(!wcr)AS(z)[wf]=1; zv=AV(z); 
   DO(m, DO(n, zv[*yv++]=i;); zv+=n;);
   RETF(z);
  }
  // here for small-range ordinals, processed through the ranking loop
- GATV(z,INT,m*n,1+wf,ws); if(!wcr)*(AS(z)+wf)=1; zv=AV(z);
+ GATV(z,INT,m*n,1+wf,ws); if(!wcr)AS(z)[wf]=1; zv=AV(z);
  GATV0(y,C4T,rng.range,1); yv=C4AV(y); yu=yv-rng.min;
  for(i=0;i<m;++i){
   memset(yv,C0,rng.range*sizeof(*yv));

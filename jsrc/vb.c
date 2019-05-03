@@ -23,7 +23,7 @@ static F2(jtebarmat){A ya,yw,z;B b,*zv;C*au,*av,*u,*v,*v0,*wu,*wv;I*as,c,i,k,m,n
  si=as[0]; m=1+ws[0]-si;
  sj=as[1]; n=1+ws[1]-sj;
  t=AT(w); k=bpnoun(t); c=ws[1]; r=k*c; s=k*sj;
- GATV(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
+ GATVR(z,B01,AN(w),2,ws); zv=BAV(z); memset(zv,C0,AN(z));
  if(t&B01+LIT+C2T+C4T+INT+SBT||1.0==jt->cct&&t&FL+CMPX)
   for(i=0;i<m;++i){
    DO(n, u=av; b=0; DO(si,                         if(b=!!memcmp(u,v,s))break; u+=s; v+=r;); v=v0+=k; zv[i]=!b;);
@@ -211,7 +211,7 @@ F2(jtifbebar){A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
   case -1: R mtv;
   case -4: R icap(ebarvec(a,w));
  }
- GATV(z,INT,MAX(22,n>>7),1,0); zv=AV(z); zu=zv+AN(z);
+ GATV0(z,INT,MAX(22,n>>7),1); zv=AV(z); zu=zv+AN(z);
  GATV0(y,INT,d,1); yv=AV(y); DO(d, yv[i]=1+m;); 
  switch(CTTZ(AT(w))){
   case INTX: if(c)EBLOOP(I, u[i]-c,v[k+m]-c, if(i==m)IFB1)

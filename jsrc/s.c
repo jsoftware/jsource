@@ -48,7 +48,7 @@ B jtsymext(J jt,B b){A x,y;I j,m,n,s[2],*v,xn,yn;L*u;
  m-=SZI*(NORMAH+2);                  /* less array overhead         */
  m/=symcol*SZI;                             /* new # rows                  */
  s[0]=m; s[1]=symcol; xn=m*symcol;          /* new pool array shape        */
- GATV(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
+ GATVR(x,INT,xn,2,s); v=AV(x);                 /* new pool array              */
  if(b)ICPY(v,AV(y),yn);                     /* copy old data to new array  */
  memset(v+yn,C0,SZI*(xn-yn));               /* 0 unused area for safety    */
  u=n+(L*)v; j=1+n;

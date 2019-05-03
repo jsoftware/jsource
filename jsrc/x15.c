@@ -1105,7 +1105,7 @@ F2(jtcd){A z;C*tv,*wv,*zv;CCT*cc;I k,m,n,p,q,t,wr,*ws,wt;
  C* enda=&CAV(a)[AN(a)]; C endc=*enda; *enda=0; cc=cdparse(a,0); *enda=endc; RZ(cc); // should do outside rank2 loop?
  n=cc->n;
  CDASSERT(n==(wr?ws[wr-1]:1),DECOUNT);
- if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); *(AS(z)+AR(z)-1)=1+n;}
+ if(cc->zbx){GATV(z,BOX,m*(1+n),MAX(1,wr),ws); AS(z)[AR(z)-1]=1+n;}
  else{CDASSERT('*'!=cc->zl,DEDEC); GA(z,cc->zt,m,MAX(0,wr-1),ws);}
  if(m&&n&&!(wt&BOX)){
   t=0; tv=cc->tletter; DO(n, k=cdjtype(*tv++); t=MAX(t,k););

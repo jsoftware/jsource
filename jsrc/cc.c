@@ -231,11 +231,11 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    GATV0(z,INT,m,1); zi=AV(z); EACHC(*zi++=d;);                               \
    R irs2(z,vec(INT,MAX(0,r-1),1+s),0L,0L,1L,jtover);                        \
   case CHEAD:                                                                \
-   GA(z,t,m*c,r,s); zc=CAV(z); *AS(z)=m;                                     \
+   GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
    EACHC(ASSERT(d,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
    R z;                                                                      \
   case CTAIL:                                                                \
-   GA(z,t,m*c,r,s); zc=CAV(z); *AS(z)=m;                                     \
+   GA(z,t,m*c,r,s); zc=CAV(z); AS(z)[0]=m;                                     \
    EACHC(ASSERT(d,EVINDEX); MC(zc,v1+k*(d-1),k); zc+=k;);                    \
    R z;                                                                      \
   case CCOMMA:                                                               \
@@ -248,20 +248,20 @@ static DF2(jtcut2bx){A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;V*sv;
    R z;                                                                      \
   case CBOX:                                                                 \
    GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                         \
-   EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); *za++=y;);             \
+   EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); *za++=y;);             \
    R z;                                                                      \
   case CAT: case CATCO: case CAMP: case CAMPCO:                              \
    if(CBOX==ID(vf->fgh[0])&&(id1=ID(vf->fgh[1]),id1==CBEHEAD||id1==CCTAIL)){           \
     GA(z,m?BOX:B01,m,1,0); za=AAV(z);                                        \
-    EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);               \
+    EACHC(d=d?d-1:0; GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),id1==CBEHEAD?v1+k:v1,d*k); *za++=y;);               \
     R z;                                                                     \
    }                                                                         \
    /* note: fall through */                                                  \
   default:                                                                   \
    if(!m){y=reitem(zeroionei[0],w); R iota(over(zeroionei[0],shape(h?df1(y,*hv):CALL1(f1,y,fs))));}                            \
    GATV0(z,BOX,m,1); za=AAV(z); j=0;                                          \
-   if(h){EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ (Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
-   }else{EACHC(GA(y,t,d*c,r,s); *AS(y)=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
+   if(h){EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ (Zz = df1(y,hv[j])); j=(1+j)%hn; rifv(Zz); *za++=Zz;); \
+   }else{EACHC(GA(y,t,d*c,r,s); AS(y)[0]=d; MC(AV(y),v1,d*k); A Zz; RZ(Zz = CALL1(f1,y,fs)); rifv(Zz); *za++=Zz; ); \
    }                                                                         \
    z=ope(z);                                                                 \
    EPILOG(z);                                                                \
@@ -283,7 +283,7 @@ static F1(jtcps){A z;P*wp,*zp;
 
 static A jtselx(J jt,A x,I r,I i){A z;I c,k;
  c=aii(x); k=c<<bplg(AT(x));
- GA(z,AT(x),r*c,AR(x),AS(x)); *AS(z)=r;
+ GA(z,AT(x),r*c,AR(x),AS(x)); AS(z)[0]=r;
  MC(CAV(z),CAV(x)+i*k,r*k);
  R z;
 }    /* (i+i.r){x */
@@ -693,11 +693,11 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    GATV0(zz,INT,m,1); zi=AV(zz); EACHCUT(*zi++=d;);
    R irs2(zz,vec(INT,MAX(0,r-1),AS(w)+1),0L,0L,1L,jtover);
   case CHEAD:
-   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); *AS(zz)=m;
+   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
    EACHCUT(if(d)MC(zc,v1,k); else fillv(wt,wcn,zc); zc+=k;);
    break;
   case CTAIL:
-   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); *AS(zz)=m;
+   GA(zz,wt,m*wcn,r,AS(w)); zc=CAV(zz); AS(zz)[0]=m;
    EACHCUT(if(d)MC(zc,v1+k*(d-1),k); else fillv(wt,wcn,zc); zc+=k;);
    break;
 // scaf MUST CALCULATE e or discard this, which might be better
@@ -707,7 +707,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    VA2 adocv = vains(FAV(fs)->fgh[0],wt);  // qualify the operation, returning action routine and conversion info
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
-    GA(zz,zt,m*wcn,r,AS(w)); *AS(zz)=m; 
+    GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
     if(!AN(zz))R zz;
     I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;

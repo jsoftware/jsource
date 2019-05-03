@@ -227,7 +227,7 @@ A jtconnum(J jt,I n,C*s){PROLOG(0101);A y,z;B b,(*f)(),ii,j,p=1,q,x;C c,*v;I d=0
  A f(J jt,A a,A w,I n,I m,I c){A z;B b;C d,*u,*uu,*x,*y;I i,j,k,mc,r;T a0,*zv;  \
   i=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w); if(mc)*(uu-1)=' ';         \
   r=AR(w)-(I )(1==c); r=MAX(0,r);                                               \
-  GA(z,t,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=(T*)AV(z);            \
+  GA(z,t,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=(T*)AV(z);            \
   RZ(a=cvt(t,a)); a0=*(T*)AV(a);                                            \
   while(i<mc){                                                              \
    while(u<uu&&C0==*u)++u;                                                  \
@@ -303,10 +303,10 @@ B valueisint; // set if the value we are processing is really an int
   // Calculate total # result values; set input scan pointer u; set &next row of input y; set end-of-input pointer uu
  // set end-of-result-row counter j
  k=0; mc=m*c; u=CAV(w); y=u+n; j=c; uu=u+AN(w);
- // Rank of result is rank of w, unless the rows have only 1 character; make rows atoms then, removing them from rank
+ // Rank of result is rank of w, unless the rows have only 1 value; make rows atoms then, removing them from rank
  r=AR(w)-(I )(1==c); r=MAX(0,r); 
  // Allocate the result array, as floats.  If the last atom of shape was not removed, replace it with c, the output length per list
- GATV(z,FL,mc,r,AS(w)); if(1<r&&1!=c)*(AS(z)+r-1)=c; zv=DAV(z);
+ GATV(z,FL,mc,r,AS(w)); if(0<r&&1!=c)AS(z)[r-1]=c; zv=DAV(z);
  if(!mc)R z;  // If no fields at all, exit with empty result (avoids infinite loop below)
  // Convert the default to float, unless we are trying big integers.  We try ints if the default is int,
  // but only on 64-bit systems where int and float have the same size

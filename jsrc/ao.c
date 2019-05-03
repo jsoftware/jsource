@@ -29,7 +29,7 @@ static DF1(jtoblique){A x,y;I m,n,r;
 #define OBQLOOP(Tw,Tz,zt,init,expr)  \
  {Tw* RESTRICT u,*v,*ww=(Tw*)wv;Tz x,* RESTRICT zz;                  \
   b=1; k=n1;                                     \
-  GA(z,zt,d*c,r-1,1+s); *AS(z)=d; zz=(Tz*)AV(z); \
+  GA(z,zt,d*c,r-1,1+s); AS(z)[0]=d; zz=(Tz*)AV(z); \
   DO(n,  v=ww+i;      u=v+n1*MIN(i,m1);     init; while(v<=(u-=n1))expr; *zz++=x;);  \
   DO(m1, v=ww+(k+=n); u=v+n1*MIN(m-i-2,n1); init; while(v<=(u-=n1))expr; *zz++=x;);  \
  }
@@ -42,7 +42,7 @@ static DF1(jtobqfslash){A y,z;B b=0,p;C er,id,*wv;I c,d,k,m,m1,mn,n,n1,r,*s,wt;
  y=FAV(self)->fgh[0]; y=VAV(y)->fgh[0]; id=vaid(y);
  m=s[0]; m1=m-1;
  n=s[1]; n1=n-1; mn=m*n; d=m+n-1; PROD(c,r-2,2+s);
- if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); *AS(z)=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
+ if(1==m||1==n){GA(z,wt,AN(w),r-1,1+s); AS(z)[0]=d; MC(AV(z),wv,AN(w)<<bplg(wt)); R z;}
  if(wt&FL+CMPX)NAN0;
  if(1==c)switch(OBQCASE(CTTZ(wt),id)){
   case OBQCASE(B01X, CNE     ): OBQLOOP(B,B,wt,x=*u, x^=*u        ); break;
@@ -307,7 +307,7 @@ static DF2(jtkeyslash){PROLOG(0012);A b,q,x,z=0;B bb,*bv,pp=0;C d;I at,*av0,c,n,
   GATV0(b,B01,s,  1); bv=BAV(b); memset(bv,C1,s); bv-=r;
   GA(q,zt, s*c,1,0); qv0=AV(q);
  }else{RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);}
- GA(z,zt,m*c,wr,AS(w)); *AS(z)=m; zv0=AV(z);
+ GA(z,zt,m*c,wr,AS(w)); AS(z)[0]=m; zv0=AV(z);
  if(wt&FL)NAN0;
  PUSHCCT(jt->cctdefault)
  switch(KCASE(d,CTTZ(wt))){
@@ -393,11 +393,11 @@ static DF2(jtkeymean){PROLOG(0013);A p,q,x,z;D d,*qv,*vv,*zv;I at,*av,c,j,m=0,n,
    case SBTX: KMSET(SB); break;
    case INTX: KMSET(I ); break;
   }
-  *AS(z)=m; AN(z)=m*c;
+  AS(z)[0]=m; AN(z)=m*c;
  }else{
   RZ(x=indexof(a,a)); xv=AV(x); m=0; u=xv; DO(n, *u=i==*u?m++:xv[*u]; ++u;);
   GATV0(p,INT,m,  1);           pv= AV(p); memset(pv,C0,m*  SZI);
-  GATV(z,FL, m*c,wr,AS(w)); *AS(z)=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
+  GATV(z,FL, m*c,wr,AS(w)); AS(z)[0]=m; zv=DAV(z); memset(zv,C0,m*c*SZD);
   switch(CTTZNOFLAG(wt)){
    case B01X: KMFUN(B); break;
    case INTX: KMFUN(I); break;

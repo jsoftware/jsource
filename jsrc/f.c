@@ -118,7 +118,7 @@ A z;UC*x;C*y;I c,i,m,n,p,q,r,r1,*s; n=AN(w); r=AR(w); s=AS(w);
 static F1(jtthb){A z;B*x;C*y;I c,m,n,p,r,*s;
  n=AN(w); r=AR(w); s=AS(w);
  c=r?s[r-1]:1; m=n/c; p=2*c-1;
- GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; 
+ GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; 
  x=BAV(w); y=CAV(z);
  DO(m, DO(c-1, *y++=*x++?'1':'0'; *y++=' ';); *y++=*x++?'1':'0';);
  RETF(z);
@@ -135,7 +135,7 @@ static F1(jtthn){A d,t,z;C*tv,*x,*y,*zv;I c,*dv,k,m,n,p,r,*s,wd;VF fmt;
   RZ(d=apvwr(c,1L,0L)); dv=AV(d);
   DO(m, DO(c, fmt(jt,y+=wd,x+=k); p=strlen(y); dv[i]=MAX(dv[i],p);););
   --dv[c-1]; p=0; DO(c, p+=++dv[i];);
-  GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
+  GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); memset(zv,' ',AN(z));
   y=tv; DO(m, DO(c, zv+=dv[i]; p=strlen(y); MC(zv-p-(I )(c>1+i),y,p); y+=wd;););
  }
  RETF(z);
@@ -193,7 +193,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
          DO(c, dv[i]+=ddv[i];);         // add col padding space
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
 #if 0
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); AS(z)[AR(z)-1]=p;
    j=0;
    DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
          DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
@@ -216,7 +216,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
                j++;););
 // second pass real work
    p-=q==IMAX?0:q;
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); AS(z)[AR(z)-1]=p;
    j=0;
    DO(m, zv1=zv=CAV(z)+p*i;   // starting address of each row
          DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); 
@@ -230,7 +230,7 @@ static F1(jtthsb){A d,z;C*zv;I c,*dv,m,n,p,q,r,*s;SB*x,*y;SBU*u;
    c=s[r-1]; m=n/c; RZ(d=apvwr(c,0L,0L)); dv=AV(d);
    DO(m, DO(c, p =sbtou8size(jt,SBUV(*x++),0); dv[i]=MAX(dv[i],p);););
    p=-1; DO(c, p+=dv[i]+=2;); --dv[c-1];
-   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); *(AS(z)+AR(z)-1)=p;
+   GATV(z,LIT,m*p,r+!r,s); zv=CAV(z); memset(zv,' ',AN(z)); AS(z)[AR(z)-1]=p;
    DO(m, DO(c, u=SBUV(*y++); *zv='`'; sbtou8(jt,u,1+zv); zv+=dv[i];););
   }
  }
@@ -290,7 +290,7 @@ static F1(jtthxqe){A d,t,*tv,*v,y,z;C*zv;I c,*dv,m,n,p,r,*s,*wv;
  }
  --dv[c-1];
  p=0; DO(c, p+=++dv[i];);
- GATV(z,LIT,m*p,r+!r,s); *(AS(z)+AR(z)-1)=p; zv=CAV(z); memset(zv,' ',AN(z));
+ GATV(z,LIT,m*p,r+!r,s); AS(z)[AR(z)-1]=p; zv=CAV(z); memset(zv,' ',AN(z));
  v=tv; DO(m, DO(c, zv+=dv[i]; y=*v++; p=AN(y); MC(zv-p-(I )(c>1+i),AV(y),p);));
  R z;
 }

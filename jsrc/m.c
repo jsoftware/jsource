@@ -1104,11 +1104,12 @@ B jtspc(J jt){A z; RZ(z=MALLOC(1000)); FREECHK(z); R 1; }
 A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
  RZ(w);                               /* assume AR(w)&&AN(w)    */
  m=*AS(w); PROD(c,AR(w)-1,AS(w)+1); t=AT(w); k=c*bp(t);
- GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),AS(w));  // ensure we allocate SOMETHING to make progress
+ GA(z,t,2*AN(w)+(AN(w)?0:c),AR(w),0);  // ensure we allocate SOMETHING to make progress
  m1=allosize(z)/k;  // start this divide before the copy
  MC(AV(z),AV(w),AN(w)*bp(t));                 /* copy old contents      */
+ MCISH(&AS(z)[1],&AS(w)[1],AR(w)-1);
  if(b){RZ(ras(z)); fa(w);}                 /* 1=b iff w is permanent.  This frees up the old space */
- *AS(z)=m1; AN(z)=m1*c;       /* "optimal" use of space */
+ AS(z)[0]=m1; AN(z)=m1*c;       /* "optimal" use of space */
  if(!(t&DIRECT))memset(CAV(z)+m*k,C0,k*(m1-m));  // if non-DIRECT type, zero out new values to make them NULL
  R z;
 }

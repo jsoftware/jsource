@@ -91,8 +91,8 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
   k<<=bplg(AT(w));
  } else {zn=0;}  // No data to move
  // Allocate the result area and fill in the shape
- GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
- { I *s=AS(z)+wf; MCISH(s,AS(a),ar); if(wcr)MCISH(s+ar,1+wf+ws,wcr-1); }
+ GA(z,AT(w),zn,ar+wr-(I )(0<wcr),0);  // result-shape is frame of w followed by shape of a followed by shape of item of cell of w; start with w-shape, which gets the frame
+ MCISH(AS(z),AS(w),wf); MCISH(&AS(z)[wf],AS(a),ar); if(wcr)MCISH(&AS(z)[wf+ar],1+wf+ws,wcr-1);
  if(!zn){DO(an, SETJ(av[i])) R z;}  // If no data to move, just audit the indexes and quit
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
@@ -165,7 +165,7 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 #define INNER1B(T)  {T*v=(T*)wv,*x=(T*)zv; v+=*av; DQ(m, *x++=*v; v+=p;);}
 
 // a is boolean
-static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
+static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*u=0,wcr,wf,wk,wn,wr,*ws,zn;
  RZ(a&&w);
  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
@@ -181,8 +181,9 @@ static F2(jtbfrom){A z;B*av,*b;C*wv,*zv;I acr,an,ar,k,m,p,q,r,*s,*u=0,wcr,wf,wk,
   // If there is data to move, we also need m: #cells of w   k: #bytes in an items of a cell of w   wk: #bytes in a cell of w
   PROD(m,wf,ws); PROD1(k, wcr-1, ws+wf+1); zn=k*m; k<<=bplg(AT(w)); wk=k*p; RE(zn=mult(an,zn));
  }else{zn=0;}
- GA(z,AT(w),zn,ar+wr-(I )(0<wcr),ws);
- s=AS(z)+wf; MCISH(s,AS(a),ar); MCISH(s+ar,1+wf+ws,wcr-1);
+ GA(z,AT(w),zn,ar+wr-(I )(0<wcr),0);
+ MCISH(AS(z),AS(w),wf); MCISH(&AS(z)[wf],AS(a),ar); if(wcr)MCISH(&AS(z)[wf+ar],1+wf+ws,wcr-1);
+// obsolete  s=AS(z)+wf; MCISH(s,AS(a),ar); MCISH(s+ar,1+wf+ws,wcr-1);
  if(!zn)R z;  // If no data to move, just return the shape
  av=BAV(a); wv=CAV(w); zv=CAV(z);
  switch(k+k+(I )(1==an)){

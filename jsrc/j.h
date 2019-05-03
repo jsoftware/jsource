@@ -356,7 +356,7 @@ extern unsigned int __cdecl _clearfp (void);
 // Debugging options
 
 // Use MEMAUDIT to sniff out errant memory alloc/free
-#define MEMAUDIT 0x00  // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
+#define MEMAUDIT 0x00    // Bitmask for memory audits: 1=check headers 2=full audit of tpush/tpop 4=write garbage to memory before freeing it 8=write garbage to memory after getting it
                      // 16=audit freelist at every alloc/free (starting after you have run 6!:5 (1) to turn it on)
  // 13 (0xD) will verify that there are no blocks being used after they are freed, or freed prematurely.  If you get a wild free, turn on bit 0x2
  // 2 will detect double-frees before they happen, at the time of the erroneous tpush
@@ -427,7 +427,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define FULLHASHSIZE(n,s,r,w,z) {UI4 zzz;  CTLZI((((n)|1)+(w))*(s) + AKXR(r) - 1,zzz); z = (((1LL<<(zzz+1)) - AKXR(r)) / (s) - 1) | (1&~(w)); }
 // Memory-allocation macros
 // Size-of-block calculations.  VSZ when size is constant or variable
-// Because the Boolean dyads write beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
+// Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI for islast (which includes B01), rather than adding 1
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI):(NORMAH*SZI+SZI) : (NORMAH*SZI)) + (atoms)*(size)))  )  // # bytes to allocate allowing only 1 byte for string pad - include mem hdr
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))))  // # bytes to allocate
@@ -441,11 +441,12 @@ extern unsigned int __cdecl _clearfp (void);
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
 // General shape copy, branchless when rank<3  One value is always written to shape
-#define GACOPYSHAPEG(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
+// obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
+#define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=(shaape)?_s:_d; I cp=*_s; I _r=1-(rank); cp=_r==0?(atoms):cp; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
 // Use when shape is known to be present but rank is unknown.  One value is always written to shape
 // obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(rank); I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
-#define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(rank); I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; _r-=2; do{_s+=(1+(_r>>(BW-1))); _d+=(1+(_r>>(BW-1))); *_d=*_s;}while(--_r>=0);
-#define GACOPY1(name,type,atoms,rank,shaape) I _r=(rank); I *_d=AS(name); *_d=1; --_r; do{_d=_r>0?_d:jt->shapesink; *++_d=1;}while(--_r>0);  // copy all 1s to shape
+#define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
+#define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); do{_d+=(UI)_r>>(BW-1); *_d=1;}while(++_r<0);} // copy all 1s to shape
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
 #define GAE(v,t,n,r,s,erraction)   if(!(v=ga(t,(I)(n),(I)(r),(I*)(s))))erraction;
@@ -457,11 +458,11 @@ extern unsigned int __cdecl _clearfp (void);
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
  RZ(name);   \
- AK(name)=akx; AT(name)=type; AN(name)=atoms;   \
+ AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  AR(name)=(RANKT)(rank);     \
- /*if(type&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
- if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
- else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92 /* scaf */; }     \
+ /*if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+ if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
+ else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x285d9a62c08a4f92 /* scaf */; }     \
 }
 #define GAT(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPE)
 #define GATR(name,type,atoms,rank,shaape)  GATS(name,type,atoms,rank,shaape,type##SIZE,GACOPYSHAPER)
@@ -476,10 +477,10 @@ extern unsigned int __cdecl _clearfp (void);
  name = jtgafv(jt, bytes);   \
  I akx=AKXR(rank);   \
  if(name){   \
-  AK(name)=akx; AT(name)=type; AN(name)=atoms; AR(name)=(RANKT)(rank);     \
-  /*if(type&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
-  if(!(type&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
-  else if(type&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9 /* scaf */; }     \
+  AK(name)=akx; AT(name)=(type); AN(name)=atoms; AR(name)=(RANKT)(rank);     \
+  /*if((type)&SPARSE)SEGFAULT scaf*/ shapecopier(name,type,atoms,rank,shaape)   \
+  if(!((type)&DIRECT))memset((C*)name+akx,C0,bytes-akx);  \
+  else if((type)&LAST0){((I*)((C*)name+((bytes-SZI)&(-SZI))))[0]=(I)0x5285d9a62c08a4f9 /* scaf */; }     \
  }else{erraction;} \
 }
 
@@ -543,7 +544,7 @@ extern unsigned int __cdecl _clearfp (void);
 // obsolete #define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 // obsolete #define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 // obsolete #define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
-#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=(n); _d=_n>0?_d:jt->shapesink; _s=_n>0?_s:jt->shapesink; *_d=*_s; --_n; do{ _d=_n>0?_d:jt->shapesink; _s=_n>0?_s:jt->shapesink; *++_d=*++_s;}while(--_n>0);}  // use for copies of shape, optimized for no branch when n<3.
+#define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=(UI)_n>>(BW-1); _d+=(UI)_n>>(BW-1); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
 #define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}

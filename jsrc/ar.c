@@ -369,7 +369,7 @@ static A jtredsps(J jt,A w,A self,C id,VF ado,I cv,I f,I r,I zt){A a,a1,e,sn,x,x
  x=SPA(wp,x); xt=AT(x); xc=aii(x);
  RZ(redspsprep(id,f,zt,a,e,x,y,&m,&dv,&pv,&qv,&xxv,&sn));
  xv=CAV(x); xk=xc<<bplg(xt);
- GA(zx,zt,m*xc,AR(x),AS(x)); *AS(zx)=m; zv=CAV(zx); zk=xc<<bplg(zt);
+ GA(zx,zt,m*xc,AR(x),AS(x)); AS(zx)[0]=m; zv=CAV(zx); zk=xc<<bplg(zt);
  GATV0(zy,INT,m*(yc-1),2); v=AS(zy); v[0]=m; v[1]=yc-1; yu=AV(zy);
  v=qv; if(sn)sv=AV(sn);
  for(i=0;i<m;++i){A y;B*p1;C*u;I*vv;

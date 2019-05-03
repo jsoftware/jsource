@@ -544,7 +544,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
     ak=ak*bp(AT(a)); wk=wk*bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
     f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a);   // c='right frame is longer'; f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   af/wf free
-    bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*scaf |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
+    bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*obsolete |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
     ASSERTAGREE(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
     PROD(mf,q,sf); PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells
 #ifdef DPMULD

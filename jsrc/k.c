@@ -302,6 +302,8 @@ B jtccvt(J jt,I tflagged,A w,A*y){A d;I n,r,*s,wt; void *wv,*yv;I t=tflagged&~NO
   }
   AN(w)=n;  // change atomct of w to # atoms to convert
  }
+ // If n and AN have been modified, it doesn't matter for rank-1 arguments whether the shape of the result is listed as n or s[0] since only n atoms will
+ // be used.  For higher ranks, we need the shape from s.  So it's just as well that we take the shape from s now
  *y=d;  wv=voidAV(w); // return the address of the new block
  if(t&CMPX)fillv(t,n,(C*)yv);   // why??  just fill in imaginary parts as we need to
  if(!n)R 1;

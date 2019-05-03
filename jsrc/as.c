@@ -354,8 +354,8 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  if(!TYPESEQ(AT(p),AT(s))){jt->jerr=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); c=aii(p); t=AT(p); klg=bplg(t); kc=c<<klg;
   adocv=var(x,t,t); // analyze the u operand
-  ASSERTSYS(adocv.f,"ofxassoc");
-  GA(z,t,c*(1+d),r,AS(p)); *AS(z)=1+d; zv=CAV(z);  // allocate result assuming no overflow
+  ASSERTSYS(adocv.f,"ofxassoc");  // scaf
+  GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
   if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix

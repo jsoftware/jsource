@@ -305,7 +305,7 @@ F2(jtexpand){A z;B*av;C*wv,*wx,*zv;I an,*au,i,k,p,q,r,wc,wk,wn,wt,zn;
  av=BAV(a); an=AN(a); q=an>>LGSZI; r=an&(SZI-1); au=(I*)av;
  wv=CAV(w); wn=AN(w); wc=aii(w); wt=AT(w); k=bpnoun(wt); wk=k*wc; wx=wv+wk**AS(w);
  RE(zn=mult(an,wc));
- GA(z,wt,zn,AR(w),AS(w)); *AS(z)=an; zv=CAV(z);
+ GA(z,wt,zn,AR(w),AS(w)); AS(z)[0]=an; zv=CAV(z);
  switch(wk){
   case sizeof(C): EXPAND(C); break;
   case sizeof(S): EXPAND(S); break;

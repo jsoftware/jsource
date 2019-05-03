@@ -276,7 +276,7 @@ static F2(jtseg){A z;I c,k,m,n,*u,zn;
  // The (start,length) had better be integers.  Extract them into m,n
  if(INT&AT(a)){u=AV(a); m=*u; n=*(1+u);} else m=n=0;
  c=aii(w); k=c<<bplg(AT(w)); RE(zn=mult(n,c));  // c=#atoms per item, k=#bytes/item, zn=atoms/infix
- GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); *AS(z)=n;  // Allocate array of items, move in shape, override # items
+ GA(z,AT(w),zn,MAX(1,AR(w)),AS(w)); AS(z)[0]=n;  // Allocate array of items, move in shape, override # items
  // Copy the selected items to the new block and return the new block
  MC(AV(z),CAV(w)+m*k,n*k);
  R z;
@@ -582,7 +582,7 @@ static DF2(jtinfixd){A fs,z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc;
 
 #define MOVSUMAVG(Tw,Ty,ty,Tz,tz,xd,SET)  \
  {Tw*u,*v;Ty*s,x=0,*yv;Tz*zv;                                  \
-  GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,GACOPYSHAPE,R 0); *AS(z)=1+p;                    \
+  GATVS(z,tz,c*(1+p),AR(w),AS(w),tz##SIZE,GACOPYSHAPE,R 0); AS(z)[0]=1+p;                    \
   zv=(Tz*)AV(z); u=v=(Tw*)AV(w);                               \
   if(1==c){                                                    \
    DO(m, x+=*v++;); *zv++=xd;                                  \
@@ -669,7 +669,7 @@ static DF2(jtmovavg){I m;
 
 static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
  p=IC(w)-m; wt=AT(w); c=aii(w);
- GA(z,AT(w),c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
+ GA(z,AT(w),c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  switch(max+(wt&SBT?0:wt&INT?2:4)){
   case 0: MOVMINMAXS(SB,SBT,jt->sbuv[0].down,SBLE); break;
   case 1: MOVMINMAXS(SB,SBT,0,SBGE); break;
@@ -683,7 +683,7 @@ static A jtmovminmax(J jt,I m,A w,A fs,B max){A y,z;I c,i,j,p,wt;
 
 static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,*zv;I c,i,j,p;
  p=IC(w)-m; c=aii(w); x=b0=!or; b1=or;
- GATV(z,B01,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
+ GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
  if(1==c){
   DO(m, if(b1==*v++){x=b1; break;}); *zv++=x; v=u+m;
@@ -707,7 +707,7 @@ static A jtmovandor(J jt,I m,A w,A fs,B or){A y,z;B b0,b1,d,e,*s,*t,*u,*v,x,*yv,
 
 static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
  p=IC(w)-m; c=aii(w);
- GATV(z,INT,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
+ GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=AV(w);
  if(c)switch(or+(1==c?0:2)){
   case 0: DO(1+p, x=*u++; t=u; DO(m-1, x&=*t++;); *zv++=x;); break;
@@ -720,7 +720,7 @@ static A jtmovbwandor(J jt,I m,A w,A fs,B or){A z;I c,p,*s,*t,*u,x,*zv;
 
 static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
  p=IC(w)-m; c=aii(w); x=eq;
- GATV(z,B01,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
+ GATV(z,B01,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=BAV(z); u=v=BAV(w);
  if(1<c){GATV0(y,B01,c,1); s=yv=BAV(y); DO(c, *s++=eq;);}
  switch(eq+(1<c?2:0)){
@@ -734,7 +734,7 @@ static A jtmovneeq(J jt,I m,A w,A fs,B eq){A y,z;B*s,*u,*v,x,*yv,*zv;I c,p;
 
 static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  p=IC(w)-m; c=aii(w); x=eq?-1:0;
- GATV(z,INT,c*(1+p),AR(w),AS(w)); *AS(z)=1+p;
+ GATV(z,INT,c*(1+p),AR(w),AS(w)); AS(z)[0]=1+p;
  zv=AV(z); u=v=AV(w);
  if(1<c){GATV0(y,INT,c,1); s=yv=AV(y); DO(c, *s++=x;);}
  switch(eq+(1<c?2:0)){
@@ -770,7 +770,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
- GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); *AS(z)=zi;
+ GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);

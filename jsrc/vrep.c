@@ -129,7 +129,7 @@ static REPF(jtrepbdx){A z;I c,k,m,p;
  if(!(((I)jtinplace&(((UI)(m-2*p))>>((BW-1)-JTINPLACEWX))) && ASGNINPLACE(w) && AT(w)&DIRECT)) {
   // normal non-in-place copy
     // no overflow possible unless a is empty; nothing  moved then, and zn is 0
-  GA(z,AT(w),zn,AR(w),AS(w));  // allocate result
+  GA(z,AT(w),zn,AR(w),0); MCISH(AS(z),AS(w),AR(w)) // allocate result
   zvv=voidAV(z);  // point to the output area
  }else{
   z=w; // inplace
@@ -254,7 +254,7 @@ static REPF(jtrep1d){A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  }
  RE(q=mult(p,n));  // q=length of result item  axis.  +/a copies, each of length n
  RE(zn=mult(p,AN(w)));
- GA(z,AT(w),zn,AR(w)+!wcr,ws); *(wf+AS(z))=q;
+ GA(z,AT(w),zn,AR(w)+!wcr,0); MCISH(AS(z),AS(w),AR(z)) AS(z)[wf]=q;
  if(!zn)R z;
  wv=CAV(w); zv=CAV(z);
  PROD(c,wf+(I )(wcr!=0),ws); PROD1(k,wcr-1,ws+wf+1); k <<=bplg(AT(w));  // c=#cell-items to process  k=#atoms per cell-item
@@ -325,7 +325,7 @@ F2(jtrepeat){A z;I acr,ar,wcr,wf,wr;
  if(wcr&&!ar&&AT(a)&(B01|INT)) {I aval = AT(a)&B01?(I)BAV(a)[0]:IAV(a)[0];  // no fast support for float
   if(!(aval&-2LL)){  // 0 or 1
    if(aval==1)R RETARG(w);   // 1 # y, return y
-   if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),AS(w)); AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
+   if(!(AT(w)&SPARSE)){GA(z,AT(w),0,AR(w),0); MCISH(AS(z),AS(w),AR(w)) AS(z)[wf]=0; RETF(z);}  // 0 # y, return empty
   }
  }
  if(1<acr||acr<ar)R rank2ex(a,w,0L,1L,RMAX,acr,wcr,jtrepeat);  // loop if multiple cells of a

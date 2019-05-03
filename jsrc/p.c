@@ -640,7 +640,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
   // so we don't free the names quite yet: we put them on the tpush stack to be freed after we know
   // we are through with the result
   v=jt->nvrotop+jt->nvrav;  // point to our region of the nvr area
-  DO(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
+  DQ(jt->nvrtop-jt->nvrotop, A vv = *v; I vf = AFLAG(vv); if(!(vf&AFNVRUNFREED))tpush(vv); AFLAG(vv) = vf &= ~(AFNVR|AFNVRUNFREED); ++v;);   // schedule deferred frees.
   jt->nvrtop=jt->nvrotop; jt->nvrotop=ootop;  // deallocate the region used in this routine
 
   jt->parserstkend1=oend1; // restore the stack-top

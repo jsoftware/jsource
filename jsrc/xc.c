@@ -5,7 +5,7 @@
 
 #include "j.h"
 #ifdef LOCALFOREIGNS
-#include "xcl.h"
+#include "../../licensed addons/xcl.h"
 #endif
 
 

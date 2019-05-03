@@ -277,7 +277,7 @@ typedef I SI;
 #define LPARSIZE sizeof(I)
 #define VERBX 27
 #define VERB            ((I)1L<<VERBX)      /* V  verb                         */
-#define VERBSIZE sizeof(V)
+#define VERBSIZE sizeof(V)  // Note: size of ACV in bp() is INTSIZE because the allocation in fdef() is of INTs
 #define ADVX 28
 #define ADV             ((I)1L<<ADVX)      /* V  adverb                       */
 #define ADVSIZE sizeof(V)

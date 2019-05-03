@@ -269,7 +269,7 @@ F2(jtthorn2){PROLOG(0050);A da,ea,h,ma,s,y,*yv,z;B e,*ev;C*sv,*wv,*zv;I an,c,d,*
  if(zk||!AN(w)){
   // We know the width, or there is nothing to format.  Create the lines one by one
   if(1==an)zk*=c;   // If only one atom in a, replicate it to match a line of w
-  GATV(z,LIT,n*zk,r?r:1,ws); *(AS(z)+AR(z)-1)=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
+  GATV(z,LIT,n*zk,r?r:1,ws); AS(z)[AR(z)-1]=zk; zv=CAV(z);  // Allocate table for result; init shape to shape of w; replace 1-cell length with length of line; zv->result area
   // Format the fields one by one, appending the new string to the accumulated old.  We process each field specifier for the entire
   // w before moving to the next field.
   DO(c, if(i<an){e=ev[i]; m=mv[i]; d=dv[i];} th2c(e,m,d,sv+=sk,n,t,wk,wv+=k,zk,zv); zv+=m;);  // Set e,m,d (if atomic a, keep the same values each time

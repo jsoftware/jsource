@@ -61,7 +61,7 @@ static F2(jttk){PROLOG(0093);A y,z;B b=0;C*yv,*zv;I c,d,dy,dz,e,i,k,m,n,p,q,r,*s
   c*=q; p=u[i]; q=ABS(p); m=s[i];  // q=length of take can be IMIN out of this   m=length of axis
   if(q!=m){  // if axis unchanged, skip it.  This includes the first axis
    PROD(itemsize,r-i-1,s+i+1);  // size of item of cell
-   RE(d=mult(c*itemsize,q)); GA(y,t,d,r,AS(z)); *(i+AS(y))=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
+   RE(d=mult(c*itemsize,q)); GA(y,t,d,r,AS(z)); AS(y)[i]=q;  // this catches q=IMIN: mult error or GA error   d=#cells*itemsize*#taken items
    if(q>m)mvc(k*AN(y),CAV(y),k,jt->fillv);   // overtake - fill the whole area
    itemsize *= k; e=itemsize*MIN(m,q);  //  itemsize=in bytes; e=total bytes moved per item
    dy=itemsize*q; yv=CAV(y);

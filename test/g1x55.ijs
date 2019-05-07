@@ -4,7 +4,6 @@ NB. 1!:55 ---------------------------------------------------------------
 write =. 1!:2
 files =. 1!:20
 open  =. 1!:21
-lock  =. 1!:31
 erase =. 1!:55
 
 f =. <jpath '~temp/foo1x55.x'
@@ -64,6 +63,6 @@ f   =. mac{'no/such/dir/or/file';':no:such:dir:or:file'
 (<erase etx <'NoSuch.943') e. 'file name error';'interface error'
 (<erase etx f            ) e. 'file name error';'interface error' 
 
-4!:55 ;:'erase f files g h lock mac open q write '
+4!:55 ;:'erase f files g h mac open q write '
 
 

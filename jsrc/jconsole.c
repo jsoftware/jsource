@@ -158,6 +158,14 @@ int main(int argc, char* argv[])
 	 argc=argc-n;
  }
 
+#if !defined(WIN32) && !defined(ANDROID)
+// set stack size to get limit error instead of crash
+ struct rlimit lim;
+ getrlimit(RLIMIT_STACK,&lim);
+ lim.rlim_cur=0x1000000; // 0xc000000 12mb works, but let's be safe with 16mb
+ setrlimit(RLIMIT_STACK,&lim);
+#endif
+
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata

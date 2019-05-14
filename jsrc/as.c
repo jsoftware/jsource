@@ -10,23 +10,23 @@
 #include "result.h"
 
 
-#define SUFFIXPFX(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
+#define SUFFIXPFX(f,Tz,Tx,pfx,vecfn)  \
+ AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *--z=    *--x;);                                        \
-   DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
+   DQ(d, *--z=    *--x;);                                        \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,0,d,1,z,x,y););                     \
  }}}
 
-#define SUFFIXNAN(f,Tz,Tx,pfx)  \
- AHDRS(f,Tz,Tx){I i;Tz v,*y;                                        \
+#define SUFFIXNAN(f,Tz,Tx,pfx,vecfn)  \
+ AHDRS(f,Tz,Tx){I i;Tz v;if(m*d*n==0)SEGFAULT; /* scaf */                                        \
   NAN0;                                                               \
   x+=m*d*n; z+=m*d*n;                                              \
   if(d==1)DO(m, *--z=v=    *--x; DO(n-1, --x; --z; *z=v=pfx(*x,v);))  \
   else{for(i=0;i<m;++i){                                              \
-   y=z; DO(d, *--z=    *--x;);                                        \
-   DO(n-1, DO(d, --x; --y; --z; *z=pfx(*x,*y);));                     \
+   DQ(d, *--z=    *--x;);                                        \
+   DQ(n-1, Tz *y=z; z-=d; x-=d; vecfn(jt,0,d,1,z,x,y););                     \
   }}                                                                   \
   NAN1V;                                                              \
  }
@@ -105,7 +105,7 @@ SUFFICPFX( plussfxO, D, I, PLUS  )
 SUFFICPFX(minussfxO, D, I, MINUS )
 SUFFICPFX(tymessfxO, D, I, TYMES )
 
-SUFFIXPFX( plussfxB, I, B, PLUS  )
+SUFFIXPFX( plussfxB, I, B, PLUS, plusBI  )
 #if 1
 AHDRS(plussfxD,D,D){I i;
  NAN0;
@@ -115,10 +115,10 @@ AHDRS(plussfxD,D,D){I i;
   DQ(m, D t0; D t1; D t2; D t12; D t01; if(rem<1){t0=0.0; t12=t1=0.0;}else {*--z=t0=*--x; if(rem==1){t12=t1=0.0;}else{t12=t1=*--x; *--z=t0+t1;}} t2=0.0;
     DQ(n3, t0+=*--x; *--z =t0+t12; t1+=*--x; t01=t0+t1; *--z =t01+t2; t2+=*--x; *--z =t2+t01; t12=t1+t2;)
   )
- }else{D *y;
+ }else{
   for(i=0;i<m;++i){
-   y=z; DQ(d, *--z=    *--x;);
-   DQ(n-1, DQ(d, --x; --y; --z; *z=*x+*y;));
+   DQ(d, *--z=    *--x;);                                        \
+   DQ(n-1, D *y=z; z-=d; x-=d; plusDD(jt,0,d,1,z,x,y););                     \
   }
  }
  NAN1V;
@@ -126,50 +126,50 @@ AHDRS(plussfxD,D,D){I i;
 #else  // obsolete 
 SUFFIXNAN( plussfxD, D, D, PLUS  )
 #endif
-SUFFIXNAN( plussfxZ, Z, Z, zplus )
-SUFFIXPFX( plussfxX, X, X, xplus )
-SUFFIXPFX( plussfxQ, Q, Q, qplus )
+SUFFIXNAN( plussfxZ, Z, Z, zplus, plusZZ )
+SUFFIXPFX( plussfxX, X, X, xplus, plusXX )
+SUFFIXPFX( plussfxQ, Q, Q, qplus, plusQQ )
 
-SUFFIXPFX(minussfxB, I, B, MINUS )
-SUFFIXNAN(minussfxD, D, D, MINUS )
-SUFFIXNAN(minussfxZ, Z, Z, zminus)
+SUFFIXPFX(minussfxB, I, B, MINUS, minusBI )
+SUFFIXNAN(minussfxD, D, D, MINUS, minusDD )
+SUFFIXNAN(minussfxZ, Z, Z, zminus, minusZZ)
 
-SUFFIXPFX(tymessfxD, D, D, TYMES )
-SUFFIXPFX(tymessfxZ, Z, Z, ztymes)
-SUFFIXPFX(tymessfxX, X, X, xtymes)
-SUFFIXPFX(tymessfxQ, Q, Q, qtymes)
+SUFFIXPFX(tymessfxD, D, D, TYMES, tymesDD )
+SUFFIXPFX(tymessfxZ, Z, Z, ztymes, tymesZZ)
+SUFFIXPFX(tymessfxX, X, X, xtymes, tymesXX)
+SUFFIXPFX(tymessfxQ, Q, Q, qtymes, tymesQQ)
 
-SUFFIXNAN(  divsfxD, D, D, DIV   )
-SUFFIXNAN(  divsfxZ, Z, Z, zdiv  )
+SUFFIXNAN(  divsfxD, D, D, DIV, divDD   )
+SUFFIXNAN(  divsfxZ, Z, Z, zdiv, divZZ  )
 
-SUFFIXPFX(  maxsfxI, I, I, MAX   )
-SUFFIXPFX(  maxsfxD, D, D, MAX   )
-SUFFIXPFX(  maxsfxX, X, X, XMAX  )
-SUFFIXPFX(  maxsfxQ, Q, Q, QMAX  )
-SUFFIXPFX(  maxsfxS, SB,SB,SBMAX )
+SUFFIXPFX(  maxsfxI, I, I, MAX, maxII   )
+SUFFIXPFX(  maxsfxD, D, D, MAX, maxDD   )
+SUFFIXPFX(  maxsfxX, X, X, XMAX, maxXX  )
+SUFFIXPFX(  maxsfxQ, Q, Q, QMAX, maxQQ  )
+SUFFIXPFX(  maxsfxS, SB,SB,SBMAX, maxSS )
 
-SUFFIXPFX(  minsfxI, I, I, MIN   )
-SUFFIXPFX(  minsfxD, D, D, MIN   )
-SUFFIXPFX(  minsfxX, X, X, XMIN  )
-SUFFIXPFX(  minsfxQ, Q, Q, QMIN  )
-SUFFIXPFX(  minsfxS, SB,SB,SBMIN )
+SUFFIXPFX(  minsfxI, I, I, MIN, minII  )
+SUFFIXPFX(  minsfxD, D, D, MIN, minDD  )
+SUFFIXPFX(  minsfxX, X, X, XMIN, minXX  )
+SUFFIXPFX(  minsfxQ, Q, Q, QMIN, minQQ  )
+SUFFIXPFX(  minsfxS, SB,SB,SBMIN, minSS )
 
-SUFFIXPFX(bw0000sfxI, UI,UI, BW0000)
-SUFFIXPFX(bw0001sfxI, UI,UI, BW0001)
-SUFFIXPFX(bw0010sfxI, UI,UI, BW0010)
-SUFFIXPFX(bw0011sfxI, UI,UI, BW0011)
-SUFFIXPFX(bw0100sfxI, UI,UI, BW0100)
-SUFFIXPFX(bw0101sfxI, UI,UI, BW0101)
-SUFFIXPFX(bw0110sfxI, UI,UI, BW0110)
-SUFFIXPFX(bw0111sfxI, UI,UI, BW0111)
-SUFFIXPFX(bw1000sfxI, UI,UI, BW1000)
-SUFFIXPFX(bw1001sfxI, UI,UI, BW1001)
-SUFFIXPFX(bw1010sfxI, UI,UI, BW1010)
-SUFFIXPFX(bw1011sfxI, UI,UI, BW1011)
-SUFFIXPFX(bw1100sfxI, UI,UI, BW1100)
-SUFFIXPFX(bw1101sfxI, UI,UI, BW1101)
-SUFFIXPFX(bw1110sfxI, UI,UI, BW1110)
-SUFFIXPFX(bw1111sfxI, UI,UI, BW1111)
+SUFFIXPFX(bw0000sfxI, UI,UI, BW0000, bw0000II)
+SUFFIXPFX(bw0001sfxI, UI,UI, BW0001, bw0001II)
+SUFFIXPFX(bw0010sfxI, UI,UI, BW0010, bw0010II)
+SUFFIXPFX(bw0011sfxI, UI,UI, BW0011, bw0011II)
+SUFFIXPFX(bw0100sfxI, UI,UI, BW0100, bw0100II)
+SUFFIXPFX(bw0101sfxI, UI,UI, BW0101, bw0101II)
+SUFFIXPFX(bw0110sfxI, UI,UI, BW0110, bw0110II)
+SUFFIXPFX(bw0111sfxI, UI,UI, BW0111, bw0111II)
+SUFFIXPFX(bw1000sfxI, UI,UI, BW1000, bw1000II)
+SUFFIXPFX(bw1001sfxI, UI,UI, BW1001, bw1001II)
+SUFFIXPFX(bw1010sfxI, UI,UI, BW1010, bw1010II)
+SUFFIXPFX(bw1011sfxI, UI,UI, BW1011, bw1011II)
+SUFFIXPFX(bw1100sfxI, UI,UI, BW1100, bw1100II)
+SUFFIXPFX(bw1101sfxI, UI,UI, BW1101, bw1101II)
+SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II)
+SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II)
 
 
 static DF1(jtsuffix){DECLF;I r;
@@ -338,7 +338,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANK(0,RMAX,jtofxassoc,self);
  m=IC(w); RE(k=i0(a)); c=ABS(k);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)*AV(v->fgh[0]):v->id;  // self = f/\. f = f/  x = f  v = verb info for f
- if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);
+ if(k==IMIN||m<=c||id==CSTARDOT&&!(B01&AT(w)))R outfix(a,w,self);  // if there is not >1 outfix, do general code which handles empties
  if(-1<=k){d=m-c;     RZ(i=IX(d)); RZ(j=apv(d,c,1L));}
  else     {d=(m-1)/c; RZ(i=apv(d,c-1,c )); RZ(j=apv(d,c,c ));}
  // d is (number of result cells)-1; i is indexes of last item of the excluded infix for cells AFTER the first
@@ -357,7 +357,7 @@ static DF2(jtofxassoc){A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
   ASSERTSYS(adocv.f,"ofxassoc");  // scaf
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAV(z);  // allocate result assuming no overflow
   MC(zv,     AV(s),          kc);                     // first cell is {.s, i. e. all but the first infix
-  if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */
+  if(1<d)adocv.f(jt,1,c*(d-1),1L,zv+kc,AV(p),kc+CAV(s));  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!
   MC(zv+kc*d,CAV(p)+kc*(d-1),kc);                     // last cell is {:p, i. e. all but the last infix
   // If there was overflow on the ado, we have to redo the operation as a float.
   // We also have to redo if the types of p and s were different (for example, if one overflowed to float and the other didn't)

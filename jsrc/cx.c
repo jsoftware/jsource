@@ -231,7 +231,7 @@ static DF2(jtxdefn){PROLOG(0048);
  A t=0;  // last T-block result
  I bi;   // cw number of last B-block result.  Needed only if it gets a NONNOUN error
  I ti;   // cw number of last T-block result.  Needed only if it gets a NONNOUN error
- while((UI)i<(UI)n){CW *ci;
+ while(1){CW *ci;
   // i holds the control-word number of the current control word
   // Check for debug and other modes
   if(jt->cxspecials){  // fast check to see if we have overhead functions to perform
@@ -245,7 +245,7 @@ static DF2(jtxdefn){PROLOG(0048);
    }
 
    i=debugnewi(i,thisframe,self);  // get possibly-changed execution line
-   if(!((UI)i<(UI)n))break;  // if it jumped out of the function, exit
+   if((UI)i>=(UI)n)break;
 
    // if performance monitor is on, collect data for it
    if(PMCTRBPMON&jt->uflags.us.uq.uq_c.pmctrbstk&&C1==jt->pmrec&&FAV(self)->flag&VNAMED)pmrecord(jt->curname,jt->global?LOCNAME(jt->global):0,i,isdyad?VAL2:VAL1);
@@ -257,10 +257,10 @@ static DF2(jtxdefn){PROLOG(0048);
      DO(AN(hv[0]), if(AT(line[i])&NAME){NAV(line[i])->bucket=0;});
     }
     jt->redefined=0;
-    if((UI)i>=(UI)n)break;
    }
    if(!((I)jt->redefined|(I)jt->pmctr|(I)thisframe))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
+  if((UI)i>=(UI)n)break;
 
   ci=i+cw;   // ci->control-word info
   // process the control word according to its type
@@ -289,7 +289,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(z){
      bi=i,++i;
     }else if(thisframe&&jt->uflags.us.cx.cx_c.db&(DB1/* obsolete |DBERRCAP*/)){  // if debug mode, we assume we are ready to execute on
-     bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any it is OK to have jerr set if we are in debug mode
+     z=mtm,bi=i,i=debugnewi(i+1,thisframe,self);   // Remember the line w/error; fetch continuation line if any. it is OK to have jerr set if we are in debug mode, but z must be a harmless value to avoid error protecting it
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     }else if(EVTHROW==jt->jerr){
      if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR; z=mtm;}else BASSERT(0,EVTHROW);  // z might not be protected if we hit error
@@ -310,7 +310,7 @@ static DF2(jtxdefn){PROLOG(0048);
     if(ci->canend&2)tpop(old);else z=gc(z,old);   // 2 means previous B can't be the result
     parseline(t);
     // Check for assert.  Since this is only for T-blocks we tolerate the test (rather than duplicating code)
-    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to to result after debug
+    if(ci->type==CASSERT&&jt->assert&&t&&!(NOUN&AT(t)&&all1(eq(num[1],t))))t=pee(line,ci,EVASSERT,lk,callframe);  // if assert., signal post-execution error if result not all 1s.  May go into debug; sets to result after debug
     if(t)ti=i,++i;  // if no error, continue on
     else if(thisframe&&DB1&jt->uflags.us.cx.cx_c.db/* obsolete ||DBERRCAP==jt->uflags.us.cx.cx_c.db*/)ti=i,i=debugnewi(i+1,thisframe,self);  // if coming out of debug with error: go to new line (there had better be one)
     else if(EVTHROW==jt->jerr){if(tdi&&(tdv+tdi-1)->t){i=(tdv+tdi-1)->t+1; RESETERR;}else BASSERT(0,EVTHROW);}  // if throw., and there is a catch., do so

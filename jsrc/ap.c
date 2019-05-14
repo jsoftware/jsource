@@ -21,6 +21,26 @@
 #define DIVPZ(b,r,u,v)    if(b)r=zdiv(u,v); else r=ztymes(u,v);
 
 // Don't RESTRICT y since function may be called inplace
+#if 1
+#define PREFIXPFX(f,Tz,Tx,pfx,vecfn)  \
+ AHDRP(f,Tz,Tx){I i;Tz v;if(d*m*n==0)SEGFAULT; /* scaf */                                    \
+  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                              \
+   DO(d, z[i]=    x[i];); x+=d;                                        \
+   DQ(n-1, vecfn(jt,0,d,1,z+d,z,x); z+=d; x+=d; ); z+=d;                     \
+ }}}  /* for associative functions only */
+
+#define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
+ AHDRP(f,Tz,Tx){I i;Tz v;if(d*m*n==0)SEGFAULT; /* scaf */                                    \
+  NAN0;                                                               \
+  if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
+  else{for(i=0;i<m;++i){                                              \
+   MC(z,x,d*sizeof(Tx)); x+=d;                                        \
+   DQ(n-1, vecfn(jt,0,d,1,z+d,z,x); z+=d; x+=d; ); z+=d;                     \
+  }}                                                                   \
+  NAN1V;                                                              \
+ }   /* for associative functions only */
+#else // obsolete
 #define PREFIXPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
   if(d==1)DO(m, *z++=v=    *x++; DO(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
@@ -39,6 +59,7 @@
   }}                                                                   \
   NAN1V;                                                              \
  }   /* for associative functions only */
+#endif
 
 #define PREFICPFX(f,Tz,Tx,pfx)  \
  AHDRP(f,Tz,Tx){I i;Tz v,* y;                                    \
@@ -188,7 +209,7 @@ PREFICPFX( pluspfxO, D, I,  PLUS   )
 PREFICPFX(tymespfxO, D, I,  TYMES  )
 PREFICALT(minuspfxO, D, I,  MINUSPA)
 
-PREFIXPFX( pluspfxB, I, B,  PLUS   )
+PREFIXPFX( pluspfxB, I, B,  PLUS, plusIB   )
 #if 1
 AHDRP(pluspfxD,D,D){I i;
  NAN0;
@@ -198,24 +219,24 @@ AHDRP(pluspfxD,D,D){I i;
     DQ(n3, t0+=*x++; *z++ =t0+t12; t1+=*x++; t01=t0+t1; *z++ =t01+t2; t2+=*x++; *z++ =t2+t01; t12=t1+t2;)
   )
  }else{
-  for(i=0;i<m;++i){D *y;
-   y=z; DO(d, *z++=    *x++;);
-   DO(n-1, DO(d, *z=*y+*x; ++z; ++x; ++y;));
+  for(i=0;i<m;++i){                                              \
+   MC(z,x,d*sizeof(D)); x+=d;                                        \
+   DQ(n-1, plusDD(jt,0,d,1,z+d,z,x); z+=d; x+=d;); z+=d;                    \
   }
  }
  NAN1V;
 }   /* for associative functions only */
 #else  // obsolete 
-PREFIXNAN( pluspfxD, D, D,  PLUS   )
+PREFIXNAN( pluspfxD, D, D,  PLUS, plusDD   )
 #endif
-PREFIXNAN( pluspfxZ, Z, Z,  zplus  )
-PREFIXPFX( pluspfxX, X, X,  xplus  )
-PREFIXPFX( pluspfxQ, Q, Q,  qplus  )
+PREFIXNAN( pluspfxZ, Z, Z,  zplus, plusZZ  )
+PREFIXPFX( pluspfxX, X, X,  xplus, plusXX  )
+PREFIXPFX( pluspfxQ, Q, Q,  qplus, plusQQ  )
 
-PREFIXPFX(tymespfxD, D, D,  TYMES  )
-PREFIXPFX(tymespfxZ, Z, Z,  ztymes )
-PREFIXPFX(tymespfxX, X, X,  xtymes )
-PREFIXPFX(tymespfxQ, Q, Q,  qtymes )
+PREFIXPFX(tymespfxD, D, D,  TYMES, tymesDD  )
+PREFIXPFX(tymespfxZ, Z, Z,  ztymes, tymesZZ )
+PREFIXPFX(tymespfxX, X, X,  xtymes, tymesXX )
+PREFIXPFX(tymespfxQ, Q, Q,  qtymes, tymesQQ )
 
 PREFIXALT(minuspfxB, I, B,  MINUSPA)
 PREALTNAN(minuspfxD, D, D,  MINUSPA)
@@ -226,26 +247,26 @@ PREFIXALT(minuspfxQ, Q, Q,  MINUSPQ)
 PREALTNAN(  divpfxD, D, D,  DIVPA  )
 PREALTNAN(  divpfxZ, Z, Z,  DIVPZ  )
 
-PREFIXPFX(  maxpfxI, I, I,  MAX    )
-PREFIXPFX(  maxpfxD, D, D,  MAX    )
-PREFIXPFX(  maxpfxX, X, X,  XMAX   )
-PREFIXPFX(  maxpfxQ, Q, Q,  QMAX   )
-PREFIXPFX(  maxpfxS, SB,SB, SBMAX  )
+PREFIXPFX(  maxpfxI, I, I,  MAX , maxII   )
+PREFIXPFX(  maxpfxD, D, D,  MAX , maxDD   )
+PREFIXPFX(  maxpfxX, X, X,  XMAX, maxXX   )
+PREFIXPFX(  maxpfxQ, Q, Q,  QMAX, maxQQ   )
+PREFIXPFX(  maxpfxS, SB,SB, SBMAX, maxSS  )
 
-PREFIXPFX(  minpfxI, I, I,  MIN    )
-PREFIXPFX(  minpfxD, D, D,  MIN    )
-PREFIXPFX(  minpfxX, X, X,  XMIN   )
-PREFIXPFX(  minpfxQ, Q, Q,  QMIN   )
-PREFIXPFX(  minpfxS, SB,SB, SBMIN  )
+PREFIXPFX(  minpfxI, I, I,  MIN, minII    )
+PREFIXPFX(  minpfxD, D, D,  MIN, minDD    )
+PREFIXPFX(  minpfxX, X, X,  XMIN, minXX   )
+PREFIXPFX(  minpfxQ, Q, Q,  QMIN, minQQ   )
+PREFIXPFX(  minpfxS, SB,SB, SBMIN, minSS  )
 
-PREFIXPFX(bw0000pfxI, UI,UI, BW0000)
-PREFIXPFX(bw0001pfxI, UI,UI, BW0001)
-PREFIXPFX(bw0011pfxI, UI,UI, BW0011)
-PREFIXPFX(bw0101pfxI, UI,UI, BW0101)
-PREFIXPFX(bw0110pfxI, UI,UI, BW0110)
-PREFIXPFX(bw0111pfxI, UI,UI, BW0111)
-PREFIXPFX(bw1001pfxI, UI,UI, BW1001)
-PREFIXPFX(bw1111pfxI, UI,UI, BW1111)
+PREFIXPFX(bw0000pfxI, UI,UI, BW0000, bw0000II)
+PREFIXPFX(bw0001pfxI, UI,UI, BW0001, bw0001II)
+PREFIXPFX(bw0011pfxI, UI,UI, BW0011, bw0011II)
+PREFIXPFX(bw0101pfxI, UI,UI, BW0101, bw0101II)
+PREFIXPFX(bw0110pfxI, UI,UI, BW0110, bw0110II)
+PREFIXPFX(bw0111pfxI, UI,UI, BW0111, bw0111II)
+PREFIXPFX(bw1001pfxI, UI,UI, BW1001, bw1001II)
+PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II)
 
 // This old prefix support is needed for sparse matrices
 
@@ -547,7 +568,7 @@ static DF1(jtpscan){A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
  // m = #cells, c=#atoms/cell, n = #items per cell
  PROD(m,f,ws); PROD1(d,r-1,ws+f+1); n=r?ws[f]:1;  // wn=0 doesn't matter
  y=FAV(self)->fgh[0]; // y is the verb u, which is f/
- // If there are 0 or 1 items, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
+ // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(2>n||!wn){if(vaid(FAV(y)->fgh[0])){R r?RETARG(w):reshape(over(shape(w),num[1]),w);}else R irs1(w,self,r,jtinfixprefix1);}
  VA2 adocv = vapfx(FAV(y)->fgh[0],wt);  // fetch info for f/\ and this type of arg
  if(!adocv.f)R irs1(w,self,r,jtinfixprefix1);  // if there is no special function for this type, do general reduce
@@ -750,7 +771,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  PREF2(jtmovfslash);
  p=IC(w); wt=AT(w);   // p=#items of w
  RE(m0=i0(vib(a))); m=m0>>(BW-1); m=(m^m0)-m; m^=(m>>(BW-1));  // m0=infx x,  m=abs(m0), handling IMIN 
- if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);
+ if((((2^m)-1)|(m-1)|(p-m))<0)R jtinfixprefix2(jt,a,w,self);  // If m is 0-2, go to general case
  x=FAV(self)->fgh[0]; x=FAV(x)->fgh[0]; id=ID(x); 
  if(wt&B01)id=id==CMIN?CSTARDOT:id==CMAX?CPLUSDOT:id; 
  if(id==CBDOT&&(x=VAV(x)->fgh[0],INT&AT(x)&&!AR(x)))id=(C)*AV(x);
@@ -771,6 +792,7 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  d=aii(w); b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv); RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
+ if(d*zi==0)RETF(z);  // mustn't call adocv on empty arg!
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);

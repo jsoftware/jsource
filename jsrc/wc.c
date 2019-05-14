@@ -218,9 +218,9 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
  }}}
  // when it's over, the stack should be empty.  If not, return the index of the top control on the stack
  if(top)R stack[top-1];
- // Fill in the canend field, which is 1 if the previous B-block result can become the overall result.  It is used only
- // in T blocks
- // Clear canend to 0, meaning 'don't know'
+ // Fill in the canend field, which tells whether the previous B-block result can become the overall result.  It is used only
+ // in T blocks and end./continue./break.
+ // Clear canend to 0, meaning 'don't know'.  1=must return, 2=won't return, 4/8=provisional values of same
  DO(n, con[i].canend=0;);
  // Go through in reverse order, filling in a line if we have the status of its successors
  // Repeat until there are no more changes
@@ -228,40 +228,43 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
  do{
   madechange=0;  // init to no change
   for(i=n-1;i>=0;--i){
-   if(!con[i].canend){  // if the value is filled in already, we won't change it
+   I origcanend=con[i].canend;
+   if(!(origcanend&3)){  // if the value is filled in with a final already, we won't change it
     switch(con[i].type) {
      case CBBLOCK: case CTHROW:
-      con[i].canend = 2; break;  // These are by definition not an end
+      con[i].canend = 8+2; break;  // These are by definition not an end
      case CRETURN:
-      con[i].canend = 1; break;  // These by definition ARE an end
+      con[i].canend = 4+1; break;  // These by definition ARE an end
      case CFOR: case CSELECTN: case CSELECT: case CLABEL:
       // These blocks inherit only from NSI
-      if(i>=n-1)con[i].canend = 1;  // The last line of the function is the end
+      if(i>=n-1)con[i].canend = 4+1;  // The last line of the function is the end
       else con[i].canend = con[i+1].canend;  // Only successor is NSI, use that
       break;
      case CTBLOCK: case CASSERT:
       // These blocks inherit from NSI only, but if go is NOT off the end, they also inherit from go, which is
       // catch. or the like.  If go is off the end, the function is taking an error and the result is immaterial
-      if(i>=n-1)con[i].canend = 1;  // The last line of the function is the end
+      if(i>=n-1)con[i].canend = 4+1;  // The last line of the function is the end
       else if(con[i].go>=n)con[i].canend = con[i+1].canend;   // if go is off the end, use NSI
-      else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
+// obsolete       else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if both successors must end, so must this line
       else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
       break;
      case CTRY: case CCATCH: case CCATCHD: case CCATCHT: case CDOF: case CDOSEL: case CDO:
       // These blocks inherit either from NSI or from go
-      if(i==n-1)con[i].canend = 1;  // The last line of the function is the end
-      else if(con[i].go>=n)con[i].canend = 1;   // if go is off the end, use that
-      else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if either successor can end, so can this line
+      if(i==n-1)con[i].canend = 4+1;  // The last line of the function is the end
+      else if(con[i].go>=n)con[i].canend = 4+1;   // if go is off the end, use that
+// obsolete       else if(con[con[i].go].canend==1 && con[i+1].canend==1)con[i].canend = 1;  // if both successors must end, so must this line
       else con[i].canend = con[con[i].go].canend & con[i+1].canend;  // otherwise, make 2 only if both successors are 2
       break;
      case CENDSEL: case CBREAK: case CCONT: case CBREAKS: case CCONTS: case CBREAKF: case CCASE: case CFCASE:
      case CIF: case CELSE: case CWHILE: case CWHILST: case CELSEIF: case CGOTO: case CEND:
-       // These blocks inherit only from GO
-      if(con[i].go>=n)con[i].canend = 1;  // If jump off the end, that's end
-      else con[i].canend = con[con[i].go].canend;  // Only successor is go, use that
+       // These blocks inherit only from GO, but on a backward branch they provisionally inherit from NSI
+      if(con[i].go>=n)con[i].canend = 4+1;  // If jump off the end, that's end
+      else if(con[i].go>=i)con[i].canend = con[con[i].go].canend;  // Only successor is go, use that
+      else if(i==n-1)con[i].canend = 4+1;  // backward branch but NSI is off the end: end
+      else con[i].canend = (con[i+1].canend&0xc) | ((con[i+1].canend&con[con[i].go].canend)>>2); // backward branch: provisionally accept NSI; ratify it if go matches
       break;
     }
-    if(con[i].canend)madechange=1;
+    madechange|=origcanend^con[i].canend;  // remember if we made a change
    }
   }
  }while(madechange);

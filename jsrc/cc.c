@@ -514,7 +514,7 @@ static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
 
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[128]; A pd0; UC *pd, *pdend;
+     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[16]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space  scaf
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state
@@ -708,7 +708,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
    if(adocv.f){C*z0=0,*zc;I t,zk,zt;  // if the operation is a primitive that we can  apply / to...
     zt=rtype(adocv.cv);
     GA(zz,zt,m*wcn,r,AS(w)); AS(zz)[0]=m; 
-    if(!AN(zz))R zz;
+    if(!AN(zz))R zz;  // don't run function on empty arg
     I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
@@ -830,18 +830,18 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,
  else{RZ(a=wi?eps(w,take(num[pfx?1:-1],w)):mtv); v=CAV(a); sep=C1;}
  // v-> byte list of frets, sep is the fret char
  ASSERT(wi==IC(a),EVLENGTH);
- r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d<<bplg(wt);
+ r=MAX(1,AR(w)); s=AS(w); wv=CAV(w); d=aii(w); k=d<<bplg(wt);  // d=#atoms in an item of w
  if(pfx){u=v+wi; while(u>v&&sep!=*v)++v; p=u-v;}
  I t,zk,zt;                     /* atomic function f/\ or f/\. */
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
  zt=rtype(adocv.cv); zk=d<<bplg(zt);
  if(1==r&&!neg&&B01&AT(a)&&p==wi&&v[pfx?0:wi-1]){RE(z=partfscan(a,w,adocv.cv,pfx,id,vaid(VAV(fs)->fgh[0]))); if(z)R z;}
- GA(z,zt,AN(w),r,s); zv=CAV(z);
+ GA(z,zt,AN(w),r,s); zv=CAV(z); // allocate size of w, which is as big as it can get if there are no discarded items
  while(p){I n;
   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
   q=u-v;
-  if(n=q-neg){
-   adocv.f(jt,1L,d,n,zv,wv+k*(b+wi-p));
+  if(n=q-neg){  // number of items in this section
+   if(d)adocv.f(jt,1L,d,n,zv,wv+k*(b+wi-p));  // do the prefix, but not if items empty
    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
    m+=n; zv+=n*zk; 
   }

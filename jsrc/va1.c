@@ -44,13 +44,11 @@ static AMON(sqrtI,  D,I, ASSERTW(0<=*x,EWIMAG); *z=sqrt((D)*x);)
 #if C_AVX&&SY_64
 AHDR1(sqrtD,D,D){
  AVXATOMLOOP(
- // install the length mask for the last word
  __m256d zero; zero=_mm256_set_pd(0.0,0.0,0.0,0.0);
  __m256d neg; __m256d comp; __m256d anyneg; anyneg=zero;
 
 ,
- // vector-to-vector add, no repetitions
-  neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg); // convert to positive; than back to negative
+  neg=_mm256_cmp_pd(u,zero,_CMP_LT_OQ); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg); // convert to positive; then back to negative
   anyneg=_mm256_or_pd(anyneg,neg);
   u=_mm256_sqrt_pd(_mm256_blendv_pd(u,comp,neg)); comp=_mm256_sub_pd(zero,u); u=_mm256_blendv_pd(u,comp,neg);
 
@@ -58,9 +56,24 @@ AHDR1(sqrtD,D,D){
  if(_mm256_movemask_pd(anyneg)&0xf)jt->jerr=EWIMAG;  // if there are any negative values, call for a postpass
  )
 }
+
+AHDR1(absD,D,D){
+ AVXATOMLOOP(
+  __m256d absmask; absmask=_mm256_castsi256_pd(_mm256_set1_epi64x (0x7fffffffffffffff));
+ ,
+  u=_mm256_and_pd(u,absmask);
+ ,
+ )
+}
+
 #else
 // obsolete static AMON(sqrtD,  D,D, ASSERTW(0<=*x,EWIMAG); *z=sqrt(   *x);)
 static AMON(sqrtD,  D,D, if(*x>=0)*z=sqrt(*x);else{*z=-sqrt(-*x); jt->jerr=EWIMAG;})  // if input is negative, leave sqrt as negative
+#if BW==64
+static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
+#else
+static AMON(absD,   D,D, *z= ABS(*x);)
+#endif
 #endif
 static AMON(sqrtZ,  Z,Z, *z=zsqrt(*x);)
 
@@ -76,11 +89,6 @@ static AMON(logZ,   Z,Z, *z=zlog(*x);)
 
 // obsolete static AMON(absI,   I,I, if(0<=*x)*z=*x; else{ASSERTW(IMIN<*x,EWOV); *z=-*x;})
 static AMONPS(absI,   I,I, I vtot=0; , I val=*x; val=(val^(val>>(BW-1)))-(val>>(BW-1)); vtot |= val; *z=val; , if(vtot<0)jt->jerr=EWOV;)
-#if BW==64
-static AMON(absD,   I,I, *z= *x&0x7fffffffffffffff;)
-#else
-static AMON(absD,   D,D, *z= ABS(*x);)
-#endif
 static AMON(absZ,   D,Z, *z=zmag(*x);)
 
 static AHDR1(oneB,C,C){memset(z,C1,n);}

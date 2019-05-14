@@ -156,34 +156,37 @@ REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
 REDUCCPFX(tymesinsO, D, I, TYMESO) 
 
-// obsolete REDUCENAN( plusinsD, D, D, PLUS  ) 
-AHDRR(plusinsD,D,D){I i;D* RESTRICT y;D * RESTRICT zz;
-  NAN0;
+#if 1 // scaf
+AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
+  NAN0;if(d*m*n==0)SEGFAULT; /* scaf*/ 
   // latency of add is 4, so use 4 accumulators
   if(d==1){x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
             DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)}
   else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
-  else{zz=z+=m*d; x+=m*d*n;
-   for(i=0;i<m;++i,zz-=d){
-    y=x; x-=d; z=zz; DQ(d, --z; --x; --y; *z=PLUS(*x,*y););
-    DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=PLUS(*x,*z);));
+  else{z+=(m-1)*d; x+=(m*n-1)*d;
+   for(i=0;i<m;++i,z-=d){
+    y=x; x-=d; plusDD(jt,0,d,1,z,x,y); x-=d;
+    DQ(n-2,    plusDD(jt,0,d,1,z,x,z); x-=d; );
    }
   }
   NAN1V;
 }
+#else
+REDUCENAN( plusinsD, D, D, PLUS, plusDD  ) 
+#endif
 
-REDUCENAN( plusinsZ, Z, Z, zplus )
+REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
 REDUCEPFX( plusinsX, X, X, xplus )
 
 REDUCEPFX(minusinsB, I, B, MINUS ) 
-REDUCENAN(minusinsD, D, D, MINUS ) 
-REDUCENAN(minusinsZ, Z, Z, zminus) 
+REDUCENAN(minusinsD, D, D, MINUS, minusDD ) 
+REDUCENAN(minusinsZ, Z, Z, zminus, minusZZ) 
 
 REDUCEPFX(tymesinsD, D, D, TYMES ) 
 REDUCEPFX(tymesinsZ, Z, Z, ztymes) 
 
-REDUCENAN(  divinsD, D, D, DIV   )
-REDUCENAN(  divinsZ, Z, Z, zdiv  )
+REDUCENAN(  divinsD, D, D, DIV, divDD   )
+REDUCENAN(  divinsZ, Z, Z, zdiv, divZZ  )
 
 REDUCEPFXIDEM2(  maxinsI, I, I, MAX   )
 REDUCEPFXIDEM2(  maxinsD, D, D, MAX   )
@@ -285,7 +288,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   VA2 adocv = vains(FAV(f)->fgh[0],AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
-  if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));
+  if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));  // mustn't adocv on empty
   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 
@@ -518,6 +521,7 @@ static DF1(jtreduce){A z;I d,f,m,n,r,t,wn,wr,*ws,wt,zt;
   // Allocate the result area
   zt=rtype(adocv.cv);
   GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape
+  if(m*d==0)RETF(z);  // mustn't call the function on an empty argument!
   // Convert inputs if needed 
   if((t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
   // call the selected reduce routine.

@@ -8,7 +8,7 @@
 // c=#atoms in a cell
 // d=#atoms in an item of a cell of w (thus c=d*n)
 
-#if 0
+#if 0 // obsolete
 #define REDUCEPFX(f,Tz,Tx,pfx)  \
 AHDRR(f,Tz,Tx){I d,i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
 d=c/n; x+=m*c; zz=z+=m*d;                              \
@@ -74,7 +74,8 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
     DQ(n-2,    z=zz; DQ(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}}
 
-#define REDUCENAN(f,Tz,Tx,pfx)  \
+#if 0 // obsolete
+#define REDUCENAN(f,Tz,Tx,pfx,vecfn)  \
  AHDRR(f,Tz,Tx){I i;Tx* RESTRICT y;Tz v,* RESTRICT zz;                              \
   NAN0;                                                           \
   if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
@@ -86,6 +87,20 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   }}                                                               \
   NAN1V;                                                          \
 }
+#else
+#define REDUCENAN(f,Tz,Tx,pfx,vecfn)  \
+ AHDRR(f,Tz,Tx){I i;Tz v;                              \
+  NAN0; if(d*m*n==0)SEGFAULT; /* scaf*/                                                          \
+  if(d==1){x += m*n; z+=m; DQ(m, v=*--x; DQ(n-1, --x; v=pfx(*x,v);); *--z=v;)}  \
+  else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
+  else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
+   for(i=0;i<m;++i,z-=d){                                    \
+    Tx* RESTRICT y=x; x-=d; vecfn(jt,0,d,1,z,x,y); x-=d;        \
+    DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
+  }}                                                               \
+  NAN1V;                                                          \
+}
+#endif
 #endif
 
 #define REDUCCPFX(f,Tz,Tx,pfx)  \

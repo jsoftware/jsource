@@ -278,8 +278,8 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NFDEP           4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
 // #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 // increase OS stack limit instead of restricting NFDEP/NFCALL
-#define NFDEP           20000L  // 4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
-#define NFCALL          10000L  // (NFDEP/10)      // call depth for named calls, not important
+#define NFDEP           2000L  // 4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
+#define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)
@@ -571,18 +571,19 @@ extern unsigned int __cdecl _clearfp (void);
 #if C_AVX&&SY_64
 #define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
-// loop for atomic parallel ops.  // fixed: n is #atoms, x->input, z->result, u=input atom4 and result
+// loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 #define AVXATOMLOOP(preloop,loopbody,postloop) \
  __m256i endmask;  __m256d u; \
  _mm256_zeroupper(VOIDARG); \
  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 0 1 2 3 4 5 is xxxx 0001 0011 0111 1111 0001 */ \
  preloop \
- I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 1 1 1 1 2 */ \
- while(1){ u=i?_mm256_loadu_pd(x):_mm256_maskload_pd(x,endmask); \
+ I i=(n-1)>>LGNPAR;  /* # loops for 0 1 2 3 4 5 is x 0 0 0 0 1 */ \
+ while(--i>=0){ u=_mm256_loadu_pd(x); \
   loopbody \
-  if(--i<0)break; \
   _mm256_storeu_pd(z, u); x+=NPAR; z+=NPAR; \
  } \
+ u=_mm256_maskload_pd(x,endmask); \
+ loopbody \
  _mm256_maskstore_pd(z, endmask, u); \
  postloop
 #endif

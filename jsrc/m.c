@@ -336,7 +336,7 @@ static void auditsimdelete(A w){I delct;
   // handle nonrecursive children.  All recursible types will be recursive
   if(AFLAG(w)&AFVIRTUAL && (AT(wb)^AFLAG(wb))&RECURSIBLE)SEGFAULT
   auditsimdelete(wb);  // delete backer of virtual block, recursibly
-  if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
+// obsolete   if(AT(wb)&(RAT|XNUM)) {A* v=AAV(wb);  DO(AT(wb)&RAT?2*AN(wb):AN(wb), if(*v)auditsimdelete(*v); ++v;)}  // finish fa() if nonrecursive
  }
  if(delct==ACUC(w)&&(UCISRECUR(w))){  // we deleted down to 0.  process children
   if(AT(w)&BOX){

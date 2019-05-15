@@ -260,6 +260,8 @@ static DF2(jtxdefn){PROLOG(0048);
    }
    if(!((I)jt->redefined|(I)jt->pmctr|(I)thisframe))jt->cxspecials=0;  // if no more special work to do, close the gate
   }
+
+  // Don't do the loop-exit test until debug has had the chance to update the execution line.  For example, we might be asked to reexecute the last line of the definition
   if((UI)i>=(UI)n)break;
 
   ci=i+cw;   // ci->control-word info

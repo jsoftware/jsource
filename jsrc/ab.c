@@ -28,20 +28,20 @@ APFX(bw1110II, UI,UI,UI, BW1110)       static APFX(bw1110CC, UC,UC,UC, BW1110)
 APFX(bw1111II, UI,UI,UI, BW1111)       static APFX(bw1111CC, UC,UC,UC, BW1111)
 
 /* see below */                        /* see below */
-REDUCEPFX(bw0001insI, UI,UI, BW0001)   static REDUCEPFX(bw0001insC, UC,UC, BW0001)
-REDUCEPFX(bw0010insI, UI,UI, BW0010)   static REDUCEPFX(bw0010insC, UC,UC, BW0010)
+REDUCEPFX(bw0001insI, UI,UI, BW0001, bw0001II, bw0001II)   static REDUCEPFX(bw0001insC, UC,UC, BW0001, bw0001CC, bw0001CC)
+REDUCEPFX(bw0010insI, UI,UI, BW0010, bw0010II, bw0010II)   static REDUCEPFX(bw0010insC, UC,UC, BW0010, bw0010CC, bw0010CC)
 /* see below */                        /* see below */
-REDUCEPFX(bw0100insI, UI,UI, BW0100)   static REDUCEPFX(bw0100insC, UC,UC, BW0100)  
+REDUCEPFX(bw0100insI, UI,UI, BW0100, bw0100II, bw0100II)   static REDUCEPFX(bw0100insC, UC,UC, BW0100, bw0100CC, bw0100CC)  
 /* see below */                        /* see below */
-REDUCEPFX(bw0110insI, UI,UI, BW0110)   static REDUCEPFX(bw0110insC, UC,UC, BW0110)
-REDUCEPFX(bw0111insI, UI,UI, BW0111)   static REDUCEPFX(bw0111insC, UC,UC, BW0111)
-REDUCEPFX(bw1000insI, UI,UI, BW1000)   static REDUCEPFX(bw1000insC, UC,UC, BW1000)
-REDUCEPFX(bw1001insI, UI,UI, BW1001)   static REDUCEPFX(bw1001insC, UC,UC, BW1001)
+REDUCEPFX(bw0110insI, UI,UI, BW0110, bw0110II, bw0110II)   static REDUCEPFX(bw0110insC, UC,UC, BW0110, bw0110CC, bw0110CC)
+REDUCEPFX(bw0111insI, UI,UI, BW0111, bw0111II, bw0111II)   static REDUCEPFX(bw0111insC, UC,UC, BW0111, bw0111CC, bw0111CC)
+REDUCEPFX(bw1000insI, UI,UI, BW1000, bw1000II, bw1000II)   static REDUCEPFX(bw1000insC, UC,UC, BW1000, bw1000CC, bw1000CC)
+REDUCEPFX(bw1001insI, UI,UI, BW1001, bw1001II, bw1001II)   static REDUCEPFX(bw1001insC, UC,UC, BW1001, bw1001CC, bw1001CC)
 /* see below */                        /* see below */
-REDUCEPFX(bw1011insI, UI,UI, BW1011)   static REDUCEPFX(bw1011insC, UC,UC, BW1011)
+REDUCEPFX(bw1011insI, UI,UI, BW1011, bw1011II, bw1011II)   static REDUCEPFX(bw1011insC, UC,UC, BW1011, bw1011CC, bw1011CC)
 /* see below */                        /* see below */
-REDUCEPFX(bw1101insI, UI,UI, BW1101)   static REDUCEPFX(bw1101insC, UC,UC, BW1101)
-REDUCEPFX(bw1110insI, UI,UI, BW1110)   static REDUCEPFX(bw1110insC, UC,UC, BW1110)
+REDUCEPFX(bw1101insI, UI,UI, BW1101, bw1101II, bw1101II)   static REDUCEPFX(bw1101insC, UC,UC, BW1101, bw1101CC, bw1101CC)
+REDUCEPFX(bw1110insI, UI,UI, BW1110, bw1110II, bw1110II)   static REDUCEPFX(bw1110insC, UC,UC, BW1110, bw1110CC, bw1110CC)
 /* see below */                        /* see below */
 
        AHDRR(bw0000insI,UI,UI){I k=SZI*m*d; if(1<n)memset(z,C0 ,k); else MC(z,x,k);}

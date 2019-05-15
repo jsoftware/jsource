@@ -715,9 +715,37 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
 */
 
 
-// 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product
+// 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product *zv++ = *av++ dot *wv++
 #define SUMATLOOP(ti,to,oneprod) \
   {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
+
+#if C_AVX&&SY_64
+#define ONEPRODD \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+ /* +/ vectors */ \
+ __m256d idreg=_mm256_set1_pd(0.0); \
+ endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-dplen)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+ __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+ DQ((dplen-1)>>(2+LGNPAR), \
+  acc0=_mm256_add_pd(acc0,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); \
+  acc1=_mm256_add_pd(acc1,_mm256_mul_pd(_mm256_loadu_pd(av+1*NPAR),_mm256_loadu_pd(wv+1*NPAR))); \
+  acc2=_mm256_add_pd(acc2,_mm256_mul_pd(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR))); \
+  acc3=_mm256_add_pd(acc3,_mm256_mul_pd(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR))); av+=4*NPAR;  wv+=4*NPAR; \
+ ) \
+ if((dplen-1)&((4-1)<<LGNPAR)){acc0=_mm256_add_pd(acc0,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR; \
+  if(((dplen-1)&((4-1)<<LGNPAR))>NPAR){acc1=_mm256_add_pd(acc1,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR; \
+   if(((dplen-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=_mm256_add_pd(acc2,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR;} \
+  } \
+ } \
+ acc3=_mm256_add_pd(acc3,_mm256_mul_pd(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask))); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
+ acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
+ acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0xee)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+ _mm_storel_pd(zv++,_mm256_castpd256_pd128 (acc0));/* store the single result */
+
+#else
+#define ONEPRODD D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;
+#endif
 
 // routine to do the dot-product calculations.  Brought out to help the compiler allocate registers
 // it=type of input, a,w=args dplen=len of each dot-product
@@ -742,7 +770,7 @@ A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I rep
   break;
  case FL:
   NAN0;
-  SUMATLOOP(D,D,D total0=0.0; D total1=0.0; if(dplen&1)total1=(D)*av++*(D)*wv++; DQ(dplen>>1, total0+=(D)*av++*(D)*wv++; total1+=(D)*av++*(D)*wv++;); *zv++=total0+total1;)
+  SUMATLOOP(D,D,ONEPRODD)
   if(NANTEST){  // if there was an error, it might be 0 * _ which we will turn to 0.  So rerun, checking for that.
    NAN0;
    SUMATLOOP(D,D,D total=0.0; DQ(dplen, D u=*av++; D v=*wv++; if(u&&v)total+=dmul2(u,v);); *zv++=total;)
@@ -758,8 +786,6 @@ A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I rep
 // +/@:*"1 with IRS
 DF2(jtsumattymes1){
  RZ(a&&w);
- // Order so the rank of a is <= rank of w.  Since we do not handle outer frames here, this will guarantee that only the
- // a argument below can have repeated cells
  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
  // get the cell-ranks to use 
  acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank

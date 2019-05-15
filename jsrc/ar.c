@@ -124,7 +124,7 @@ REDUCEBFX(nandinsB, NAND,INAND,SNAND,BNAND,{I c=d*n; DO(m, y=memchr(x,C0,n); d=y
 
 
 #if SY_ALIGN
-REDUCEPFX(plusinsB,I,B,PLUS)
+REDUCEPFX(plusinsB,I,B,PLUS, plusBB, plusBI)
 #else
 AHDRR(plusinsB,I,B){I dw,i,p,q,r,r1,s;UC*tu;UI*v;
  if(d==1&n<SZI)DO(m, s=0; DO(n, s+=*x++;); *z++=s;)
@@ -156,12 +156,37 @@ REDUCCPFX( plusinsO, D, I,  PLUSO)
 REDUCCPFX(minusinsO, D, I, MINUSO) 
 REDUCCPFX(tymesinsO, D, I, TYMESO) 
 
+#define redprim256rk1(prim,identity) \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+  /* +/ vectors */ \
+  __m256d idreg=_mm256_set1_pd(identity); \
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
+   DQ((n-1)>>(2+LGNPAR), acc0=prim(acc0,_mm256_loadu_pd(x)); acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); x+=4*NPAR; ) \
+   if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x)); x+=NPAR; \
+    if(((n-1)&((4-1)<<LGNPAR))>NPAR){acc1=prim(acc1,_mm256_loadu_pd(x)); x+=NPAR; \
+     if(((n-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=prim(acc2,_mm256_loadu_pd(x)); x+=NPAR;} \
+    } \
+   } \
+   acc3=prim(acc3,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd (endmask))); x+=((n-1)&(NPAR-1))+1; \
+   acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
+   acc0=prim(acc0,_mm256_permute4x64_pd(acc0,0xee)); acc0=prim(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+   _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
+  )
+
 #if 1 // scaf
 AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   NAN0;if(d*m*n==0)SEGFAULT; /* scaf*/ 
   // latency of add is 4, so use 4 accumulators
-  if(d==1){x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
-            DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)}
+  if(d==1){
+#if C_AVX&&SY_64
+   redprim256rk1(_mm256_add_pd,0.0)
+#else
+   x += m*n; z+=m; DQ(m, D v0=0.0; D v1=0.0; if(((n+1)&3)==0)v1=*--x; D v2=0.0; if(n&2)v2=*--x; D v3=0.0; if(n&3)v3=*--x;
+                       DQ(n>>2, v0=PLUS(*--x,v0); v1=PLUS(*--x,v1); v2=PLUS(*--x,v2); v3=PLUS(*--x,v3);); v0+=v1; v2+=v3;*--z=v0+v2;)
+#endif
+  }
   else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){
@@ -176,27 +201,27 @@ REDUCENAN( plusinsD, D, D, PLUS, plusDD  )
 #endif
 
 REDUCENAN( plusinsZ, Z, Z, zplus, plusZZ )
-REDUCEPFX( plusinsX, X, X, xplus )
+REDUCEPFX( plusinsX, X, X, xplus, plusXX, plusXX )
 
-REDUCEPFX(minusinsB, I, B, MINUS ) 
+REDUCEPFX(minusinsB, I, B, MINUS, minusBB, minusBI ) 
 REDUCENAN(minusinsD, D, D, MINUS, minusDD ) 
 REDUCENAN(minusinsZ, Z, Z, zminus, minusZZ) 
 
-REDUCEPFX(tymesinsD, D, D, TYMES ) 
-REDUCEPFX(tymesinsZ, Z, Z, ztymes) 
+REDUCEPFX(tymesinsD, D, D, TYMES, tymesDD, tymesDD ) 
+REDUCEPFX(tymesinsZ, Z, Z, ztymes, tymesZZ, tymesZZ) 
 
 REDUCENAN(  divinsD, D, D, DIV, divDD   )
 REDUCENAN(  divinsZ, Z, Z, zdiv, divZZ  )
 
-REDUCEPFXIDEM2(  maxinsI, I, I, MAX   )
-REDUCEPFXIDEM2(  maxinsD, D, D, MAX   )
-REDUCEPFX(  maxinsX, X, X, XMAX  )
-REDUCEPFX(  maxinsS, SB,SB,SBMAX )
+REDUCEPFXIDEM2(  maxinsI, I, I, MAX, maxII   )
+REDUCEPFXIDEM2PRIM256(  maxinsD, D, D, MAX, maxDD, _mm256_max_pd, infm  )
+REDUCEPFX(  maxinsX, X, X, XMAX, maxXX , maxXX )
+REDUCEPFX(  maxinsS, SB,SB,SBMAX, maxSS, maxSS )
 
-REDUCEPFXIDEM2(  mininsI, I, I, MIN   )
-REDUCEPFXIDEM2(  mininsD, D, D, MIN   )
-REDUCEPFX(  mininsX, X, X, XMIN  )
-REDUCEPFX(  mininsS, SB,SB,SBMIN )
+REDUCEPFXIDEM2(  mininsI, I, I, MIN, minII   )
+REDUCEPFXIDEM2PRIM256(  mininsD, D, D, MIN, minDD, _mm256_min_pd, inf   )
+REDUCEPFX(  mininsX, X, X, XMIN, minXX, minXX  )
+REDUCEPFX(  mininsS, SB,SB,SBMIN, minSS, minSS )
 
 
 static DF1(jtred0){DECLF;A x;I f,r,wr,*s;

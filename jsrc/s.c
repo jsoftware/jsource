@@ -454,17 +454,17 @@ L* jtprobeisquiet(J jt,A a){A g;
 
 // assign symbol: assign name a in symbol table g to the value w (but g is special if jt->assignsym is nonnull)
 // Non-error result is unused (mark)
-A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;NM*v;L*e;
+A jtsymbis(J jt,A a,A w,A g){A x;I m,n,wn,wr,wt;L*e;
  RZ(a&&w&&g);
  // If we have an assignsym, we have looked this name up already, so just use the symbol-table entry found then
  // in this case g is the type field of the name being assigned; and jt->local must exist, since it comes from
  // an explicit definition
  if(jt->assignsym) {
-  ASSERT(((I)g&ASGNLOCAL||!probelocal(a)),EVDOMAIN)  //  if global assignment, verify non locally defined
+  ASSERT(((I)g&ASGNLOCAL||NAV(a)->flag&(NMLOC|NMILOC)||!probelocal(a)),EVDOMAIN)  //  if global assignment not to locative, verify non locally defined
   e = jt->assignsym;   // point to the symbol-table entry being assigned
   CLEARZOMBIE   // clear until next use.
  } else {A jtlocal=jt->local;
-  n=AN(a); v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
+  n=AN(a); NM *v=NAV(a); m=v->m;  // n is length of name, v points to string value of name, m is length of non-locale part of name
   if(n==m)ASSERT(!(jtlocal&&g!=jtlocal&&probelocal(a)),EVDOMAIN)  // if non-locative, give error if there is a local
     // symbol table, and we are assigning to the global symbol table, and the name is defined in the local table
   else{C*s=1+m+v->s; RZ(g=NMILOC&v->flag?locindirect(n-m-2,1+s,(UI4)v->bucketx):stfindcre(n-m-2,s,v->bucketx));}

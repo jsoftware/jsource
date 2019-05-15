@@ -203,6 +203,17 @@ z =. z , global3__ -: 'i'
 z
 )
 
+NB. Assigning to local name OK if to locative
+3 : 0 ''
+s =: cocreate''
+n =. 4
+n__s =: 5
+n__s =: 5 + 6
+n__s =: 0$<''
+coerase s
+1
+)
+
 
 
 4!:55 ;:'Cogito a abc ergo p q r sum x'
@@ -318,7 +329,7 @@ a > 7!:0''
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'
-4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r second sscript'
+4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript'
 4!:55 ;:'sum t third write x y'
 
 

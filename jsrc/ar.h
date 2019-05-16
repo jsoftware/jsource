@@ -87,7 +87,7 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
     DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
   }}}
 #else
-#define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim) REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)
+#define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity) REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)
 #endif
 
 #if 0 // obsolete

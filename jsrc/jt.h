@@ -335,8 +335,8 @@ union {
 } workareas;
  I    iotavec[IOTAVECLEN];  // ascending integers, starting at IOTAVECBEGIN
 // the offset at this point is about 0x14E8, so everything up to here will fit in a single 0x2000-byte DRAM page
- LS   callstack[1+NFCALL]; /* named fn calls: stack                           */
- C    etx[1+NETX];      /* display text for last error (+1 for trailing 0) */
+ C    etx[1+NETX];      // display text for last error (+1 for trailing 0)  fits in main page
+ LS   callstack[1+NFCALL]; // named fn calls: stack.  Usually only a little is used; the rest overflows onto a new DRAM page
  C    breakfn[NPATH];   /* break file name                                 */
 } JST;
 

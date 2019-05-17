@@ -279,7 +279,9 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 // increase OS stack limit instead of restricting NFDEP/NFCALL
 #define NFDEP           2000L  // 4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
-#define NFCALL          (NFDEP/10)      // call depth for named calls, not important
+// The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
+// Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
+#define NFCALL          (NFDEP/2)      // call depth for named calls, not important
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)

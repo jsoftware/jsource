@@ -32,7 +32,7 @@ F1(jtexec1){A z;
  if(AT(w)&NAME){z=nameref(w);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
   F1RANK(1,jtexec1,0);
-  FDEPINC(1); z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0; FDEPDEC(1);
+  z=parse(tokens(vs(w),1+!!jt->local)); jt->asgn=0;
  }
  RETF(z&&!(AT(z)&NOUN)?mtv:z);  // if non-noun result, return empty $0
 }

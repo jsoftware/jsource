@@ -75,7 +75,7 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
     DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
   }}}
 
-// used on idempotent verbs, using 2 accumulators but using the 256-bit instructions if available
+// used on idempotent verbs, using 4 accumulators but using the 256-bit instructions if available
 #if C_AVX&&SY_64
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity)  \
  AHDRR(f,Tz,Tx){I i;                              \

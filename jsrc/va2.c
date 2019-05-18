@@ -733,10 +733,11 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I bcip;I ak
   acc2=_mm256_add_pd(acc2,_mm256_mul_pd(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR))); \
   acc3=_mm256_add_pd(acc3,_mm256_mul_pd(_mm256_loadu_pd(av+3*NPAR),_mm256_loadu_pd(wv+3*NPAR))); av+=4*NPAR;  wv+=4*NPAR; \
  ) \
- if((dplen-1)&((4-1)<<LGNPAR)){acc0=_mm256_add_pd(acc0,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR; \
-  if(((dplen-1)&((4-1)<<LGNPAR))>NPAR){acc1=_mm256_add_pd(acc1,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR; \
-   if(((dplen-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=_mm256_add_pd(acc2,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); av+=NPAR; wv+=NPAR;} \
+ if((dplen-1)&((4-1)<<LGNPAR)){acc0=_mm256_add_pd(acc0,_mm256_mul_pd(_mm256_loadu_pd(av),_mm256_loadu_pd(wv))); \
+  if(((dplen-1)&((4-1)<<LGNPAR))>=2*NPAR){acc1=_mm256_add_pd(acc1,_mm256_mul_pd(_mm256_loadu_pd(av+NPAR),_mm256_loadu_pd(wv+NPAR))); \
+   if(((dplen-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=_mm256_add_pd(acc2,_mm256_mul_pd(_mm256_loadu_pd(av+2*NPAR),_mm256_loadu_pd(wv+2*NPAR)));} \
   } \
+  av+=(dplen-1)&((4-1)<<LGNPAR); wv+=(dplen-1)&((4-1)<<LGNPAR);  \
  } \
  acc3=_mm256_add_pd(acc3,_mm256_mul_pd(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask))); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \

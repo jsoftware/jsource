@@ -269,6 +269,7 @@ extern unsigned int __cdecl _clearfp (void);
 
 #define NTSTACK         16384L          // number of BYTES in an allocated block of tstack - pointers to allocated blocks
 
+// OBSOLETE OLD WAY (with USECSTACK off)
 // Sizes for the internal stacks.  The goal here is to detect a runaway recursion before it creates a segfault.  This cannot
 // be done with precision because we don't know how much C stack we have, or how much is used by a recursion (and anyway it depends on
 // what J functions are running).
@@ -279,13 +280,16 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 // increase OS stack limit instead of restricting NFDEP/NFCALL
 #define NFDEP           2000L  // 4000             // (obsolete) fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
+
+
+// NEW WAY
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
 #define NFCALL          (NFDEP/2)      // call depth for named calls, not important
 // Now we are trying to watch the C stack directly
 #define CSTACKSIZE      (SY_64?12000000:1000000)  // size we allocate in the calling function
 #define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
-#define USECSTACK       1   // 0 to go ack to counting J recursions    
+#define USECSTACK       1   // 0 to go back to counting J recursions    
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)

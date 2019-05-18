@@ -164,10 +164,11 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \
    DQ((n-1)>>(2+LGNPAR), acc0=prim(acc0,_mm256_loadu_pd(x)); acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR)); acc3=prim(acc3,_mm256_loadu_pd(x+3*NPAR)); x+=4*NPAR; ) \
-   if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x)); x+=NPAR; \
-    if(((n-1)&((4-1)<<LGNPAR))>NPAR){acc1=prim(acc1,_mm256_loadu_pd(x)); x+=NPAR; \
-     if(((n-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=prim(acc2,_mm256_loadu_pd(x)); x+=NPAR;} \
+   if((n-1)&((4-1)<<LGNPAR)){acc0=prim(acc0,_mm256_loadu_pd(x));\
+    if(((n-1)&((4-1)<<LGNPAR))>=2*NPAR){acc1=prim(acc1,_mm256_loadu_pd(x+NPAR)); \
+     if(((n-1)&((4-1)<<LGNPAR))>2*NPAR){acc2=prim(acc2,_mm256_loadu_pd(x+2*NPAR));} \
     } \
+    x += (n-1)&((4-1)<<LGNPAR); \
    } \
    acc3=prim(acc3,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd (endmask))); x+=((n-1)&(NPAR-1))+1; \
    acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \

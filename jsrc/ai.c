@@ -250,7 +250,7 @@ static C invf[2][29] = {
 // Return inverse of monad w.  recur is a recursion indicator, always forced to 0 for the initial call, and
 // set to 1 here for recursive calls
 A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
- RZ(w);
+ RZ(w); STACKCHKOFL  // make sure we don't have a recursion loop through inv
  ASSERT(VERB&AT(w),EVDOMAIN); 
  id=ID(w); v=FAV(w);  // id=pseudochar for w, v->verb info
  if(s=strchr(invf[0],id))R ds(invf[1][s-invf[0]]);   // quickly handle verbs that have primitive inverses
@@ -273,7 +273,7 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id,*s;I p,q;V*v;
   case CUCO:     R amp(num[3],w);
   case CUNDER:   R under(invrecur(f),g);
   case CFORK:    R invfork(w);
-  case CAMP:     if(nf!=ng)R invamp(w);  /* fall thru */
+  case CAMP:     if(nf!=ng){A z=invamp(w); if(nf^ng)R z;}  // may fall through... but avoid tail-recursion so we get out of loop
   case CAT:      if(vf&&vg)R atop(invrecur(g),invrecur(f));   break;
   case CAMPCO:
   case CATCO:    if(vf&&vg)R atco(invrecur(g),invrecur(f));   break;

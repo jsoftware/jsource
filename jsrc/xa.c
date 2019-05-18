@@ -159,6 +159,7 @@ F1(jtseclevs){I k;
  R mtm;
 }
 
+#if 0  // not implemented
 F1(jtsysparmq){I k;
  RE(k=i0(w));
  switch(k){
@@ -185,6 +186,7 @@ F1(jtsysparms){A*wv;I k,m;
  }
  R mtm;
 }
+#endif
 
 F1(jtsysq){I j;
  ASSERTMTV(w);

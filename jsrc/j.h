@@ -278,10 +278,14 @@ extern unsigned int __cdecl _clearfp (void);
 // #define NFDEP           4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
 // #define NFCALL          (NFDEP/10)      // call depth for named calls, not important
 // increase OS stack limit instead of restricting NFDEP/NFCALL
-#define NFDEP           2000L  // 4000             // fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
+#define NFDEP           2000L  // 4000             // (obsolete) fn call depth - for debug builds, must be small (<0xa00) to avoid stack overflow, even smaller for non-AVX
 // The named-call stack is used only when there is a locative, EXCEPT that after a call to 18!:4 it is used until the function calling 18!:4 returns.
 // Since startup calls 18!:4 without a name, we have to allow for the possibility of deep recursion in the name stack.  Normally only a little of the stack is used
 #define NFCALL          (NFDEP/2)      // call depth for named calls, not important
+// Now we are trying to watch the C stack directly
+#define CSTACKSIZE      (SY_64?12000000:1000000)  // size we allocate in the calling function
+#define CSTACKRESERVE   100000  // amount we allow for slop before we sample the stackpointer, and after the last check
+#define USECSTACK       1   // 0 to go ack to counting J recursions    
 
 // start and length for the stored vector of ascending integers
 #define IOTAVECBEGIN (-20)
@@ -412,8 +416,15 @@ extern unsigned int __cdecl _clearfp (void);
 #define DPU(n,stm)      {I i=-(n);    do{stm}while(++i<0);}   // i runs from -n to -1 (faster than DO), always at least once
 #define DQU(n,stm)      {I i=(I)(n)-1;  do{stm}while(--i>=0);}  // i runs from n-1 downto 0, always at least once
 #define ds(c)           pst[(UC)(c)]
-#define FDEPDEC(d)      jt->fdepi-=(I4)d  // can be used in conditional expressions
-#define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)d,EVSTACK); jt->fdepi+=(I4)d;}
+#if USECSTACK
+#define FDEPDEC(d)
+#define FDEPINC(d)
+#define STACKCHKOFL {D stackpos; ASSERT((I)&stackpos-jt->cstackmin>=0,EVSTACK);}
+#else  // old style counting J recursion levels
+#define FDEPDEC(d)      jt->fdepi-=(I4)(d)  // can be used in conditional expressions
+#define FDEPINC(d)      {ASSERT(jt->fdepn>=jt->fdepi+(I4)(d),EVSTACK); jt->fdepi+=(I4)(d);}
+#define STACKVERIFY
+#endif
 #define FCONS(x)        fdef(0,CFCONS,VERB,jtnum1,jtnum2,0L,0L,(x),VFLAGNONE, RMAX,RMAX,RMAX)
 #define FEQ(u,v)        (ABS((u)-(v))<=jt->fuzz*MAX(ABS(u),ABS(v)))
 #define F1(f)           A f(J jt,    A w)

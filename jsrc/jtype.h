@@ -505,7 +505,7 @@ typedef struct {
 // Add an entry to the call stack, and increment the index variable
 #define pushcallstack(i,t,v) (jt->callstack[i].type=(t), jt->callstack[i].value=(v), ++i)
 #define pushcallstack1(t,v) {ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
-#define pushcallstack1d(t,v) {ASSERT(jt->callstacknext<jt->fcalln,(FDEPDEC(d),EVSTACK));  pushcallstack(jt->callstacknext,(t),(v));}
+#define pushcallstack1d(t,v) {FDEPDEC(d); ASSERT(jt->callstacknext<jt->fcalln,EVSTACK);  pushcallstack(jt->callstacknext,(t),(v));}
 
 
 typedef struct{UI4 hash;I4 bucket;I bucketx;UC m;C flag,s[1];} NM;

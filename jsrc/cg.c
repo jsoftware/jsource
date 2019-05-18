@@ -200,8 +200,8 @@ F2(jtagenda){I flag;
 //                gs=sv->fgh[1] (the A block for the g operand); g1=f1 in sv->fgh[1] (0 if sv->fgh[1]==0); g2=f2 in sv->fgh[1] (0 if sv->fgh[1]==0)
 
 
-static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d;
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
+static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL FDEPINC(d=fdep(hv[1])); ff=df2(df1(w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
@@ -213,18 +213,18 @@ static DF1(jtgcl1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d;
 //     this is a conjunction execution, executing a u^:n form, and creates a derived verb to perform that function; call that verb ff
 // then we execute gerund v2 on y (with self set to v2)
 // then we execute ff on the result of (v2 y), with self set to ff
-static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
+static DF1(jtgcr1){DECLFG;A ff,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL FDEPINC(d=fdep(hv[1])); ff=df2(fs,df1(w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df1(df1(w,hv[2]),ff);
 }
 
-static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
+static DF2(jtgcl2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL FDEPINC(d=fdep(hv[1])); ff=df2(df2(a,w,hv[1]),gs,ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
-static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);I d; 
- RE(d=fdep(hv[1])); FDEPINC(d); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
+static DF2(jtgcr2){DECLFG;A ff,*hv=AAV(sv->fgh[2]);
+ STACKCHKOFL FDEPINC(d=fdep(hv[1])); ff=df2(fs,df2(a,w,hv[1]),ds(sv->id)); FDEPDEC(d);
  R df2(df2(a,w,hv[0]),df2(a,w,hv[2]),ff);
 }
 
@@ -244,11 +244,11 @@ A jtgconj(J jt,A a,A w,C id){A hs,y;B na;I n;
 }
 
 // verb executed for v0`v1`v2} y
-static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);I d;
+static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- RE(d=fdep(hv[1])); FDEPINC(d);
+ FDEPINC(d=fdep(hv[1]));
  ffm = df1(w,hv[1]);  // x v1 y - no inplacing
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC
@@ -257,12 +257,12 @@ static DF1(jtgav1){DECLF;A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);I d;
  R df1(ffx,ff);
 }
 
-static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);I d;   // hv->gerunds
+static DF2(jtgav2){F2PREFIP;DECLF;A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->gerunds
 A protw = (A)(intptr_t)((I)w+((I)jtinplace&JTINPLACEW)); A prota = (A)(intptr_t)((I)a+((I)jtinplace&JTINPLACEA)); // protected addresses
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
- RE(d=fdep(hv[1])); FDEPINC(d);
+ FDEPINC(d=fdep(hv[1]));
  ffm = df2(a,w,hv[1]);  // x v1 y - no inplacing.
  FDEPDEC(d);
  RZ(ffm);  // OK to fail after FDEPDEC

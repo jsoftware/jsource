@@ -34,8 +34,8 @@ typedef struct {
 // things needed by verb execution
  I    tnextpushx;       // running byte index of next store into tstack.  Mask off upper bits to get offset into current frame
  A*   tstack;           // current frame, holding NTSTACK bytes.  First entry is to next-lower bloc.  This value has been biased back by subtracting the offset of the first element, so that *(tstack+nextpushx) is the actual next element
- UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
  I    shapesink[2];     // garbage area used as load/store targets of operations we don't want to branch around
+ UI4  ranks;            // low half: rank of w high half: rank of a  for IRS
 // things needed by name lookup (unquote)
  union {
   UI4 ui4;    // all 4 flags at once, access as ui4
@@ -87,8 +87,7 @@ typedef struct {
 // --- end of cache line 3. 1 words carries over
 // things needed by executing explicit defs
  A    curname;          // current name, an A block containing an NM
- I4   fdepi;            /* fn calls: current depth                         */
- I4   fdepn;            /* fn calls: maximum permissible depth             */
+ I    cstackmin;        // red warning for C stack pointer
  I4   callstacknext;           /* named fn calls: current depth                   */
  I4   fcalln;           /* named fn calls: maximum permissible depth       */
  B    asgn;             /* 1 iff last operation on this line is assignment */
@@ -171,6 +170,9 @@ typedef struct {
  I    pmctr;            /* perf. monitor: ctr>0 means do monitoring        */
  C    baselocale[4];    // will be "base"
  UI4  baselocalehash;   // name hash for base locale
+ I4   fdepi;            /* fn calls: current depth                         */
+ I4   fdepn;            /* fn calls: maximum permissible depth             */
+ I    cstackinit;       // C stack pointer at beginning of execution
 
 // unordered symbols follow
 #if !C_CRC32C

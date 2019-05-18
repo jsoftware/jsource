@@ -56,6 +56,7 @@ static DF2(jtunquote){A z;
  v=FAV(fs);  // repurpose v to point to the resolved verb block
  I d=v->fdep; if(!d)RE(d=fdep(fs));  // get stack depth of this function, for overrun prevention
  FDEPINC(d);  // verify sufficient stack space - NO ERRORS until FDEPDEC below
+ STACKCHKOFL
  if(explocale){ pushcallstack1d(CALLSTACKPOPLOCALE,jt->global); jt->global=explocale;  ++jt->modifiercounter;}  // if locative, switch to it, stacking the prev value. invalidate any extant lookups of modifier names -
  // ************** no errors till the stack has been popped
  w=dyadex?w:(A)fs;  // set up the bivalent argument with the new self

@@ -201,7 +201,12 @@ jt->assert = 1;
  y=1.0; DO(44, y*=0.5;); jt->cctdefault=jt->cct= 1.0-y; jt->fuzz=y;
  jt->disp[0]=1; jt->disp[1]=5;
  jt->fcalln=NFCALL;
+#if USECSTACK
+ jt->cstackinit=(I)&y;  // use a static variable to get the stack address
+ jt->cstackmin=jt->cstackinit-(CSTACKSIZE-CSTACKRESERVE);
+#else
  jt->fdepn=NFDEP;
+#endif
  jt->outmaxafter=222;
  jt->outmaxlen=256;
  strcpy(jt->outseq,"\x0a");

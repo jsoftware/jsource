@@ -191,8 +191,8 @@ AHDRR(plusinsD,D,D){I i;D* RESTRICT y;
   else if(1==n){if(sizeof(D)!=sizeof(D)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(D));}}
   else{z+=(m-1)*d; x+=(m*n-1)*d;
    for(i=0;i<m;++i,z-=d){
-    y=x; x-=d; plusDD(jt,0,d,1,z,x,y); x-=d;
-    DQ(n-2,    plusDD(jt,0,d,1,z,x,z); x-=d; );
+    y=x; x-=d; plusDD(jt,d,z,x,y,1); x-=d;
+    DQ(n-2,    plusDD(jt,d,z,x,z,1); x-=d; );
    }
   }
   NAN1V;
@@ -314,7 +314,7 @@ DF1(jtredravel){A f,x,z;I n;P*wp;
   VA2 adocv = vains(FAV(f)->fgh[0],AT(x));
   ASSERT(adocv.f,EVNONCE);
   GA(z,rtype(adocv.cv),1,0,0);
-  if(n)adocv.f(jt,1L,1L,n,AV(z),AV(x));  // mustn't adocv on empty
+  if(n)adocv.f(jt,(I)1,(I)1,n,AV(z),AV(x));  // mustn't adocv on empty
   if(jt->jerr<EWOV){RE(0); R redsp1a(vaid(FAV(f)->fgh[0]),z,SPA(wp,e),n,AR(w),AS(w));}
 }}  /* f/@, w */
 

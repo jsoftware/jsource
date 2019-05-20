@@ -134,6 +134,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
 /*
    er=0; PMLOOP(I,I,INT, TYMESF(x), ACCUMF);
 */
+  // here for +//.@(*/)
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv,adocvsum;
    b=1;
    adocv=var(ds(CSTAR),at,wt); adocvsum=vains(ds(CPLUS),wt);
@@ -143,7 +144,7 @@ DF2(jtpolymult){A f,g,y,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v;
    for(i=0;i<zn;++i){
     j=MIN(i,m1); u=aa+m1-j; v=ww+i-j;
     p=MIN(1+i,zn-i); p=MIN(p,k);
-    adocv.f(jt,1,p,1,yv,u,v); adocvsum.f(jt,1,1,p,zv,yv);
+    adocv.f(jt,p,yv,u,v,(I)1); adocvsum.f(jt,(I)1,(I)1,p,zv,yv);
     ++zv;
    }
    if(EWOV<=jt->jerr){RESETERR; PMLOOP(I,D,FL, x=*u--*(D)*v++, x+=*u--*(D)*v++);}  // erroneous fa(z) removed; any error >= EWOV will be an overflow

@@ -73,13 +73,16 @@ static void jtcirx(J jt,I n,I k,D*z,D*y){D p,t;
  NAN1V;
 }
 
-AHDR2(cirBD,D,B,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,(I)*x,z,y);}
-AHDR2(cirID,D,I,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,   *x,z,y);}
+// obsolete AHDR2(cirBD,D,B,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,(I)*x,z,y);}
+AHDR2(cirBD,D,B,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=n>>(BW-1); cirx(n,   (I)*x,z,y);}
+// obsolete AHDR2(cirBD,D,B,D){ASSERTW(b&&1==m,EWIMAG); cirx(n,(I)*x,z,y);}
+AHDR2(cirID,D,I,D){ASSERTW(n<=1&&1==m,EWIMAG); n^=n>>(BW-1); cirx(n,   *x,z,y);}
 
 AHDR2(cirDD,D,D,D){I k=(I)jfloor(0.5+*x);
  ASSERTW(k==*x,EVDOMAIN); 
- ASSERTW(b&&1==m,EWIMAG); 
- cirx(n,k,z,y);
+// obsolete  ASSERTW(b&&1==m,EWIMAG); 
+ ASSERTW(n<=1&&1==m,EWIMAG); 
+ n^=n>>(BW-1); cirx(n,k,z,y);
 }
 
 

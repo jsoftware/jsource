@@ -60,8 +60,8 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn1(jt,0,d,1,z,x,y); x-=d;        \
-    DQ(n-2,    vecfnn(jt,0,d,1,z,x,z); x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; vecfn1(jt,d,z,x,y,1); x-=d;        \
+    DQ(n-2,    vecfnn(jt,d,z,x,z,1); x-=d;);        \
   }}}
 
 // used on idempotent verbs, using 2 accumulators
@@ -71,8 +71,8 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(jt,0,d,1,z,x,y); x-=d;        \
-    DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; vecfn(jt,d,z,x,y,1); x-=d;        \
+    DQ(n-2,    vecfn(jt,d,z,x,z,1); x-=d;);        \
   }}}
 
 // used on idempotent verbs, using 4 accumulators but using the 256-bit instructions if available
@@ -83,8 +83,8 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(d, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(jt,0,d,1,z,x,y); x-=d;        \
-    DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; vecfn(jt,d,z,x,y,1); x-=d;        \
+    DQ(n-2,    vecfn(jt,d,z,x,z,1); x-=d;);        \
   }}}
 #else
 #define REDUCEPFXIDEM2PRIM256(f,Tz,Tx,pfx,vecfn,prim,identity) REDUCEPFXIDEM2(f,Tz,Tx,pfx,vecfn)
@@ -111,8 +111,8 @@ DO(n-2,    z=zz; DO(d, --z; --x;      *z=pfx(*x,*z);));        \
   else if(1==n){if(sizeof(Tz)!=sizeof(Tx)){DQ(n, *z++=    *x++;)}else{MC((C*)z,(C*)x,d*sizeof(Tz));}}          \
   else{z+=(m-1)*d; x+=(m*n-1)*d;                                        \
    for(i=0;i<m;++i,z-=d){                                    \
-    Tx* RESTRICT y=x; x-=d; vecfn(jt,0,d,1,z,x,y); x-=d;        \
-    DQ(n-2,    vecfn(jt,0,d,1,z,x,z); x-=d;);        \
+    Tx* RESTRICT y=x; x-=d; vecfn(jt,d,z,x,y,1); x-=d;        \
+    DQ(n-2,    vecfn(jt,d,z,x,z,1); x-=d;);        \
   }}                                                               \
   NAN1V;                                                          \
 }

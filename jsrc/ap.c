@@ -27,7 +27,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    DO(d, z[i]=    x[i];); x+=d;                                        \
-   DQ(n-1, vecfn(jt,0,d,1,z+d,z,x); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(jt,d,z+d,z,x,1); z+=d; x+=d; ); z+=d;                     \
  }}}  /* for associative functions only */
 
 #define PREFIXNAN(f,Tz,Tx,pfx,vecfn)  \
@@ -36,7 +36,7 @@
   if(d==1)DQ(m, *z++=v=    *x++; DQ(n-1, *z=v=pfx(v,*x); ++z; ++x;))  \
   else{for(i=0;i<m;++i){                                              \
    MC(z,x,d*sizeof(Tx)); x+=d;                                        \
-   DQ(n-1, vecfn(jt,0,d,1,z+d,z,x); z+=d; x+=d; ); z+=d;                     \
+   DQ(n-1, vecfn(jt,d,z+d,z,x,1); z+=d; x+=d; ); z+=d;                     \
   }}                                                                   \
   NAN1V;                                                              \
  }   /* for associative functions only */
@@ -221,7 +221,7 @@ AHDRP(pluspfxD,D,D){I i;
  }else{
   for(i=0;i<m;++i){                                              \
    MC(z,x,d*sizeof(D)); x+=d;                                        \
-   DQ(n-1, plusDD(jt,0,d,1,z+d,z,x); z+=d; x+=d;); z+=d;                    \
+   DQ(n-1, plusDD(jt,d,z+d,z,x,1); z+=d; x+=d;); z+=d;                    \
   }
  }
  NAN1V;
@@ -796,8 +796,8 @@ static DF2(jtmovfslash){A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}
  zv=CAV(z); zk=d<<bplg(zt); 
  wv=CAV(w); wk=(0<=m0?d:d*m)<<bplg(wt);
- DO(zi-b, adocv.f(jt,1L,d,m,zv,wv); zv+=zk; wv+=wk;);
- if(b)adocv.f(jt,1L,d,p-m*(zi-1),zv,wv);
+ DO(zi-b, adocv.f(jt,(I)1,d,m,zv,wv); zv+=zk; wv+=wk;);
+ if(b)adocv.f(jt,(I)1,d,p-m*(zi-1),zv,wv);
  if(jt->jerr>=EWOV){RESETERR; R movfslash(a,cvt(FL,w),self);}else R z;
 }    /* a f/\w */
 

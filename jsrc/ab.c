@@ -113,7 +113,8 @@ DF2(jtbitwisechar){DECLFG;A*p,x,y,z;B b;I j,m,n,zn;VF f;
  if(1==n)                 {f=bwI[j]; m=(m+SZI-1)>>LGSZI;}
  else if(!AR(a)||!AR(w)||0==(n&(SZI-1))){f=bwI[j]; n=(n+SZI-1)>>LGSZI; p=b?&x:&y; RZ(*p=irs2(sc(SZI),*p,0L,0L,0L,jtrepeat));}
  else                      f=bwC[j];
- f(jt,b,m,n,AV(z),AV(x),AV(y)); 
+ n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
+ f(jt,m,AV(z),AV(x),AV(y),n); 
  *(zn+CAV(z))=0;
  RETF(z);
 }
@@ -131,10 +132,12 @@ B jtbitwisecharamp(J jt,UC*t,I n,UC*wv,UC*zv){I p;UC c,i,j,*pv,s[256];VF f;
  else if(i==255  ){c=j; f=(VF)bw1011II;}
  else R 0;
  pv=(UC*)&p; DO(SZI, pv[i]=c;);
- f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;
- f(jt,1,1L,(n+SZI-1)>>LGSZI,zv,pv,wv); zv[n]=0;
+// obsolete  f(jt,1,1L,256L/SZI,s,pv,AV(alp)); if(memcmp(s,t,256L))R 0;
+// obsolete  f(jt,1,1L,(n+SZI-1)>>LGSZI,zv,pv,wv); zv[n]=0;
+ f(jt,(I)1,s,AV(alp),pv,(I)(256/SZI)); if(memcmp(s,t,256L))R 0;
+ f(jt,(I)1,zv,wv,pv,(n+SZI-1)>>LGSZI); zv[n]=0;
  R 1;
-}
+}  // kludge this should be scrapped in favor of wordlong ops
 
 
 static VF bwinsC[16]={bw0000insC,bw0001insC,bw0010insC,bw0011insC, bw0100insC,bw0101insC,bw0110insC,bw0111insC,

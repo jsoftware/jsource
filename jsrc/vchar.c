@@ -39,6 +39,7 @@ DF2(jtcharfn2){A z;B b;C c;I an,ar,*as,m,n,wn,wr,*ws,zn,zt;V*v;VF ado=0;
  ASSERTAGREE(as,ws,MIN(ar,wr))
  b=ar<=wr; zn=b?wn:an; m=b?an:wn; I r=b?wr:ar; I *s=b?ws:as; I rs=b?ar:wr; PROD(n,r-rs,s+rs);
  GA(z,zt,zn,r,s); if(!zn)R z;
- ado(jt,b,m,n,CAV(z),CAV(a),CAV(w));
+ n^=-b; n=(n==~1)?1:n;  // encode b flag in sign of n
+ ado(jt,m,CAV(z),CAV(a),CAV(w),n);
  RETF(z);
 }

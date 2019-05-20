@@ -712,7 +712,7 @@ DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
     I atomsize=bpnoun(zt);
     zc=CAV(zz); zk=wcn*atomsize;
     if((t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wv=CAV(w);}
-    EACHCUT(if(d)adocv.f(jt,1L,wcn,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n
+    EACHCUT(if(d)adocv.f(jt,(I)1,wcn,d,zc,v1); else{if(!z0){z0=idenv0(a,w,sv,zt,&z); // compared to normal prefixes, c means d and d means n
         if(!z0){if(z)R z; else break;}} mvc(zk,zc,atomsize,z0);} zc+=zk;);
     if(jt->jerr)R jt->jerr>=EWOV?cut2(a,w,self):0; else R adocv.cv&VRI+VRD?cvz(adocv.cv,zz):zz;
     break;
@@ -841,7 +841,7 @@ DF2(jtrazecut2){A fs,gs,y,z=0;B b,neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,
   if(u=memchr(v+pfx,sep,p-pfx))u+=!pfx; else{if(!pfx)break; u=v+p;}
   q=u-v;
   if(n=q-neg){  // number of items in this section
-   if(d)adocv.f(jt,1L,d,n,zv,wv+k*(b+wi-p));  // do the prefix, but not if items empty
+   if(d)adocv.f(jt,(I)1,d,n,zv,wv+k*(b+wi-p));  // do the prefix, but not if items empty
    if(jt->jerr)R jt->jerr>=EWOV?razecut2(a,w,self):0;  // if overflow, restart the whole thing with conversion to float
    m+=n; zv+=n*zk; 
   }

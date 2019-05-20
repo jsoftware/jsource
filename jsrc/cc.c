@@ -514,7 +514,7 @@ static A jtgetnewpd(J jt, UC* pd, A pd0){A new;
 
 
 DF2(jtcut2){F2PREFIP;PROLOG(0025);DECLF;A *hv,z,zz;I neg,pfx;C id,*v1,*wv,*zc;
-     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[16]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space  scaf
+     I ak,at,wcn,d,hn,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  PREF2(jtcut2);
  if(SB01&AT(a)||SPARSE&AT(w))R cut2sx(a,w,self);
 #define ZZFLAGWORD state

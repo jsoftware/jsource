@@ -163,7 +163,7 @@ static PSTK* jtis(J jt,A s1,A v,A n){A f;B ger=0;C c,*s;PSTK* stack=jt->parserst
     if(!ger){RZ(n=head(n));}   // One-name normal assignment: make it a scalar, so we go through the name-assignment path & avoid unboxing
    }
   }
-  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty
+  ASSERT(AN(n)||!IC(v),EVILNAME);  // error if name empty or multiple assignment to no names, if there is something to be assigned
   // if simple assignment to a name (normal case), do it
   if(NAME&AT(n)){
 #if FORCEVIRTUALINPUTS

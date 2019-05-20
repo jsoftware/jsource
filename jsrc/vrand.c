@@ -1002,7 +1002,7 @@ static F2(jtdealdot){A h,y,z;I at,d,*hv,i,i1,j,k,m,n,p,q,*v,wt,*yv,*zv;UI c,s,t,
   GATV0(y,INT,2+2*m,1); yv=AV(y); d=2;
   GATV0(z,INT,m,1); zv=AV(z);
   for(i=0;i<m;++i){
-   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;  // scaf could rewrite this with fewer %
+   s=GMOF(c,x); t=NEXT; if(s)while(s<=t)t=NEXT; j=i+t%c--;
    q=i%p; while(hv[q]&&(v=yv+hv[q],i!=*v))q=(1+q)%p; i1=hv[q]?v[1]:i;
    q=j%p; while(hv[q]&&(v=yv+hv[q],j!=*v))q=(1+q)%p;
    if(hv[q]){++v; *zv++=*v; *v=i1;}

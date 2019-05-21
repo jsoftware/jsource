@@ -4,7 +4,7 @@ cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
 jplatform="${jplatform:=linux}"
 j64x="${j64x:=j64}"
-USE_LINENOISE="${USE_LINENOISE:=1}"
+USE_LINENOISE="${USE_LINENOISE:=0}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4

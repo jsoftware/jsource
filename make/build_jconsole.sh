@@ -3,7 +3,7 @@
 cd ~
 
 macmin="-mmacosx-version-min=10.6"
-USE_LINENOISE="${USE_LINENOISE:=1}"
+USE_LINENOISE="${USE_LINENOISE:=0}"
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then

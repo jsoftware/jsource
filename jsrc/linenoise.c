@@ -2253,8 +2253,9 @@ static int linenoiseEdit(struct current *current) {
             }
             return sb_len(current->buf);
         case ctrl('C'):     /* ctrl-c */
-            errno = EAGAIN;
-            return -1;
+//            errno = EAGAIN;
+//            return -1;
+            break;       // jconsole signal
         case ctrl('Z'):     /* ctrl-z */
 #ifdef SIGTSTP
             /* send ourselves SIGSUSP */

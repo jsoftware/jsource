@@ -15,7 +15,7 @@
 #include <signal.h>
 #include <stdint.h>
 
-#if defined(READLINE) && (defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE))
+#if defined(READLINE) && (defined(ANDROID)||defined(__MINGW32__)||defined(USE_LINENOISE))
 #define SIGACTION
 #endif
 
@@ -102,7 +102,7 @@ char* Jinput_stdio(char* prompt)
 
 C* _stdcall Jinput(J jt,C* prompt){
 #ifdef READLINE
-    if(isatty(0)){
+    if(_isatty(0)){
 		return (C*)Jinput_rl((char*)prompt);
     } else 
 #endif

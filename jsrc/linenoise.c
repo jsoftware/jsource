@@ -1,5 +1,9 @@
 #define USE_UTF8
 
+#if defined(_MSC_VER)
+#define inline __inline
+#endif
+
 #ifndef UTF8_UTIL_H
 #define UTF8_UTIL_H
 
@@ -171,7 +175,7 @@ int utf8_strlen(const char *str, int bytelen)
 {
     int charlen = 0;
     if (bytelen < 0) {
-        bytelen = strlen(str);
+        bytelen = (int)strlen(str);
     }
     while (bytelen > 0) {
         int c;
@@ -203,7 +207,7 @@ int utf8_index(const char *str, int index)
         int c;
         s += utf8_tounicode(s, &c);
     }
-    return s - str;
+    return (int)(s - str);
 }
 
 int utf8_tounicode(const char *str, int *uc)
@@ -318,7 +322,7 @@ static const struct utf8range unicode_range_wide[] = {
         { 0x1f9c0, 0x1f9c0 },   { 0x1f9d0, 0x1f9e6 },   { 0x20000, 0x2fffd },   { 0x30000, 0x3fffd },
 };
 
-#define ARRAYSIZE(A) sizeof(A) / sizeof(*(A))
+#define aRRAYSIZE(A) sizeof(A) / sizeof(*(A))
 
 static int cmp_range(const void *key, const void *cm)
 {
@@ -350,10 +354,10 @@ int utf8_width(int ch)
     if (isascii(ch)) {
         return 1;
     }
-    if (utf8_in_range(unicode_range_combining, ARRAYSIZE(unicode_range_combining), ch)) {
+    if (utf8_in_range(unicode_range_combining, aRRAYSIZE(unicode_range_combining), ch)) {
         return 0;
     }
-    if (utf8_in_range(unicode_range_wide, ARRAYSIZE(unicode_range_wide), ch)) {
+    if (utf8_in_range(unicode_range_wide, aRRAYSIZE(unicode_range_wide), ch)) {
         return 2;
     }
     return 1;
@@ -536,7 +540,7 @@ void sb_realloc(stringbuf *sb, int newlen)
 
 void sb_append(stringbuf *sb, const char *str)
 {
-	sb_append_len(sb, str, strlen(str));
+	sb_append_len(sb, str, (int)strlen(str));
 }
 
 void sb_append_len(stringbuf *sb, const char *str, int len)
@@ -558,7 +562,11 @@ char *sb_to_string(stringbuf *sb)
 {
 	if (sb->data == NULL) {
 		/* Return an allocated empty string, not null */
+#if defined(_MSC_VER)
+		return _strdup("");
+#else
 		return strdup("");
+#endif
 	}
 	else {
 		/* Just return the data and free the stringbuf structure */
@@ -619,7 +627,7 @@ void sb_insert(stringbuf *sb, int index, const char *str)
 		sb_append(sb, str);
 	}
 	else {
-		int len = strlen(str);
+		int len = (int)strlen(str);
 
 		sb_insert_space(sb, index, len);
 		memcpy(sb->data + index, str, len);
@@ -641,7 +649,7 @@ void sb_delete(stringbuf *sb, int index, int len)
 			len = sb->last;
 		}
 
-		sb_delete_space(sb, pos - sb->data, len);
+		sb_delete_space(sb, (int)(pos - sb->data), len);
 	}
 }
 
@@ -1000,7 +1008,7 @@ static void DRL_STR(const char *str)
     }
 }
 #else
-#define DRL(ARGS...)
+#define DRL(ARGS, ...)
 #define DRL_CHAR(ch)
 #define DRL_STR(str)
 #endif
@@ -2121,7 +2129,7 @@ static int reverseIncrementalSearch(struct current *current)
             if (rchars) {
                 int p = utf8_index(rbuf, --rchars);
                 rbuf[p] = 0;
-                rlen = strlen(rbuf);
+                rlen = (int)strlen(rbuf);
             }
             continue;
         }
@@ -2175,7 +2183,7 @@ static int reverseIncrementalSearch(struct current *current)
                 }
                 /* Copy the matching line and set the cursor position */
                 set_current(current,history[searchpos]);
-                current->pos = utf8_strlen(history[searchpos], p - history[searchpos]);
+                current->pos = utf8_strlen(history[searchpos], (int)(p - history[searchpos]));
                 break;
             }
         }

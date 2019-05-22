@@ -66,6 +66,16 @@ LDFLAGS=" -m32 -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;
+linux_j64nonavx)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
+CFLAGS="$common -DREADLINE"
+LDFLAGS=" -ledit -ldl "
+else
+CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
+LDFLAGS=" -ldl "
+OBJSLN="linenoise.o"
+fi
+;;
 linux_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -DREADLINE"

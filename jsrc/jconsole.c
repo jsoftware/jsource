@@ -67,7 +67,11 @@ if(hist)
 		if(s)
 		{
 			strcpy(histfile,s);
+#if defined(READLINE) && (defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE))
+			strcat(histfile,"/.jshistory");
+#else
 			strcat(histfile,"/.jhistory");
+#endif
 			using_history();
 			read_history(histfile);
 		}

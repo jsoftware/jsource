@@ -288,8 +288,8 @@ static F2(jtforeigncreate){I p,q;
 F2(jtforeign){
  RZ(a&&w);
  I p=i0(a); I q=i0(w); RE(0);
- ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
  if(p==11 && q!=0)R fdef(0,CIBEAM,VERB, jtwd,0L, a,w,0L, VASGSAFE, 1L,RMAX,RMAX);  // 11!:n special: hash 11!:0, do the rest individually
+ ASSERT((UI)p<=(UI)128 && (UI)q<XCC,EVDOMAIN);
  I hash=(p*3+q)&(sizeof(jt->foreignhash)/sizeof(jt->foreignhash[0])-1);  // hash m,n
  I mn = (p<<8)+q;  // unique value for the foreign
  A ha=jt->foreignhash[hash][0];

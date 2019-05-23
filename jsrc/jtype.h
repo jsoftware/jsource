@@ -251,7 +251,7 @@ typedef I SI;
 #define C4T             ((I)1L<<C4TX)         /* C4 unicode (4-byte characters)  */
 #define C4TSIZE sizeof(C4)
 #define XDX 19
-#define XD              ((I)1L<<XDX)   /* DX extended floating point      */
+#define XD              ((I)1L<<XDX)   // DX extended floating point   used to represent intolerant compare in jtiosc
 #define XDSIZE sizeof(DX)
 #define XZX 20
 #define XZ              ((I)1L<<XZX)   /* ZX extended complex             */

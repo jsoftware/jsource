@@ -511,14 +511,16 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
   if(savedranks==(RANK2T)~0){
    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk/sf are not needed and are garbage
    // n is not needed for sparse, but we start it early to get it finished
-   nf=AR(w)>=AR(a)?-1:0; zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
+   mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
+   nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
    f=0;  // no rank means no frame
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
-    n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
-    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+    n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
+// scaf    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==r)*2 + (I)(AR(w)==r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
+    nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & (mf*2 + nf);  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+16);  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4 set to be non-sparse
     mf=nf=1;  // suppress the outer loop, leaving only the loop over m and n
    }else{
@@ -536,8 +538,8 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
    RESETRANK;  // This is required for xnum/rat/sparse, which call IRS-enabled routines internally.  We could suppress this for mainline types, perhaps in var()
    // if the frames don't agree, that's always an agreement error
    if(jtinplace){  // If not sparse... This block isn't needed for sparse arguments, and may fail on them.  We move it here to reduce register pressure
-    nf=acr<=wcr?(I)-1:0; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; I shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
-    n^=((1-n)>>(BW-1))&nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
+    nf=acr<=wcr; zk=acr<=wcr?wk:ak; m=acr<=wcr?ak:wk; r=acr<=wcr?wcr:acr; I shortr=acr<=wcr?acr:wcr; s=AS(acr<=wcr?w:a)+(acr<=wcr?wf:af); PROD(n,r-shortr,s+shortr);   // b='right cell has larger rank'; zk=#atoms in cell with larger rank;
+    n^=((1-n)>>(BW-1))&-nf;  // encode 'w has long frame, so a is repeated' as complementary n; but if n<2, leave it alone
     // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated; r=larger of cell-ranks; s->shape of larger-rank cell
     // now shortr has the smaller cell-rank, and acr/wcr are free
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
@@ -547,20 +549,22 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
     ASSERTAGREE(AS(a)+af, AS(w)+wf, shortr)  // now shortr is free
     // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
     // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping
-    ak<<=bplg(AT(a)); wk<<=bplg(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
-    f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf?-1:0;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
+    ak*=bp(AT(a)); wk*=bp(AT(w));  // calculate early, using bp, to minimize ALU time & allow time for load/mul to settle.  zt may still be settling
+    f=af<=wf?wf:af; q=af<=wf?af:wf; sf=AS(af<=wf?w:a); mf=af<=wf;   // f=#longer frame; q=#shorter frame; sf->shape of arg with longer frame   mf holds -1 if wf is longer   af/wf free
     nf=(adocv.cv>>VIPOKWX) & ((I)(a==w)-1) & ((I)(AR(a)==f+r)*2 + (I)(AR(w)==f+r));  // set inplaceability here: not if addresses equal (in case of retry); only if op supports; only if nonrepeated cell
     jtinplace = (J)(((I)jtinplace&nf)+4*nf+16);  // bits 0-1 of jtinplace are combined input+local; 2-3 just local; 4 set to be non-sparse
 // obsolete     bcip=((adocv.cv>>VIPOKWX) & (((I)(a==w)/*obsolete |(zt&B01)*/)-1) & ((I)(AR(a)==(f+r))*2 + (I)(AR(w)==(f+r))))+b+(af<=wf?(I)4:0);  // save combined loop control
     ASSERTAGREE(AS(a), AS(w), q)  // frames must match to the shorter length; agreement error if not
     PROD(nf,f-q,q+sf);    // mf=#cells in common frame, nf=#times shorter-frame cell must be repeated.  Not needed if no cells.  First, encode 'wf longer' in sign of nf
 #ifdef DPMULD
-    { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) nf^=((1-nf)>>(BW-1))&mf; PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) } zk<<=bplg(zt);  // now create zk, which is used later than ak/wk
+    { DPMULDDECLS DPMULD(nf,zk,zn,{jsignal(EVLIMIT);R 0;}) nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); DPMULD(zn,mf,zn,{jsignal(EVLIMIT);R 0;}) }
 #else
-    RE(zn=mult(nf,zk)); nf^=((1-nf)>>(BW-1))&mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
+    RE(zn=mult(nf,zk)); nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
 #endif
+    zk<<=bplg(zt);  // now create zk, which is used later than ak/wk.  Use << to save latency
    }else{DO(af<=wf?af:wf, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);) ak=acr; wk=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }
+  // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }
 
  // Signal domain error if appropriate. Must do this after agreement tests

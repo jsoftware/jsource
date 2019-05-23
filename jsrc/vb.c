@@ -7,10 +7,10 @@
 #include "ve.h"
 
 
-BPFX( andBB, AND ,BAND, AND, BAND )    
-BPFX(  orBB, OR  ,BOR,  OR,  BOR  )    
-BPFX(nandBB, NAND,BNAND,NAND,BNAND)
-BPFX( norBB, NOR ,BNOR, NOR, BNOR )
+BPFX( andBB, AND ,BAND, AND, BAND, _mm256_and_si256(u256,v256) , , )    
+BPFX(  orBB, OR  ,BOR,  OR,  BOR, _mm256_or_si256(u256,v256) , , )    
+BPFX(nandBB, NAND,BNAND,NAND,BNAND, _mm256_xor_si256(bool256,_mm256_and_si256(u256,v256)) , , __m256i bool256=_mm256_set_epi64x(0x0101010101010101,0x0101010101010101,0x0101010101010101,0x0101010101010101); )
+BPFX( norBB, NOR ,BNOR, NOR, BNOR, _mm256_xor_si256(bool256,_mm256_or_si256(u256,v256)) , , __m256i bool256=_mm256_set_epi64x(0x0101010101010101,0x0101010101010101,0x0101010101010101,0x0101010101010101); )
 
 
 F1(jtrazein){R df2(w,box(raze(w)),amp(swap(ds(CEPS)),ds(COPE)));}

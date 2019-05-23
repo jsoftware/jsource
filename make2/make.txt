@@ -33,10 +33,10 @@ jplatform=linux j64x=j64 ./build_libj.sh
 # this will run ./clean.sh and can detect the host platform
 ./build_all.sh
 
-# linenoise is used as default for jconsole,
-# if you want to use libedit instead
-# export USE_LINENOISE=0 before building jconsole, eg
-USE_LINENOISE=0 ./build_jconsole.sh
+# libedit is used as default for jconsole,
+# if you want to use linenoise instead
+# export USE_LINENOISE=1 before building jconsole, eg
+USE_LINENOISE=1 ./build_jconsole.sh
 
 # test
 # cp jconsole libj.so libtsdll.so to the folder jlibrary/bin

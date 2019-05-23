@@ -14,11 +14,20 @@
 #endif
 #include <signal.h>
 #include <stdint.h>
+
+#if defined(READLINE) && (defined(ANDROID)||defined(__MINGW32__)||defined(USE_LINENOISE))
+#define SIGACTION
+#endif
+
 #include "j.h"
 #include "jeload.h"
 
 static char **adadbreak;
+#ifdef SIGACTION
+static void sigint(int k){**adadbreak+=1;}
+#else
 static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
+#endif
 static char input[30000];
 
 /* J calls for keyboard input (debug suspension and 1!:1[1) */
@@ -93,7 +102,7 @@ char* Jinput_stdio(char* prompt)
 
 C* _stdcall Jinput(J jt,C* prompt){
 #ifdef READLINE
-    if(isatty(0)){
+    if(_isatty(0)){
 		return (C*)Jinput_rl((char*)prompt);
     } else 
 #endif
@@ -170,10 +179,22 @@ int main(int argc, char* argv[])
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata
+#ifdef SIGACTION
+ struct sigaction sa;
+ sa.sa_flags = 0;
+ sa.sa_handler = sigint;
+ sigemptyset(&(sa.sa_mask));
+ sigaddset(&(sa.sa_mask), SIGINT);
+ sigaction(SIGINT, &sa, NULL);
+#else
  signal(SIGINT,sigint);
+#endif
  
 #ifdef READLINE
  char* rl_readline_name="jconsole"; /* argv[0] varies too much*/
+#endif
+#if defined(READLINE) && (defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE))
+ linenoiseSetMultiLine(1);
 #endif
 
  if(argc==2&&!strcmp(argv[1],"-jprofile"))

@@ -60,6 +60,11 @@ TARGET=libjnative.so
 CFLAGS="$common -m32 -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
 LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
 ;;
+linux_j64nonavx)
+TARGET=libjnative.so
+CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+LDFLAGS=" -shared -Wl,-soname,libjnative.so "
+;;
 linux_j64)
 TARGET=libjnative.so
 CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "

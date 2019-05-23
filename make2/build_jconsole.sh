@@ -4,7 +4,7 @@ cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
 jplatform="${jplatform:=linux}"
 j64x="${j64x:=j64}"
-USE_LINENOISE="${USE_LINENOISE:=1}"
+USE_LINENOISE="${USE_LINENOISE:=0}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -63,6 +63,16 @@ LDFLAGS=" -l:libedit.so.2 -m32 -ldl "
 else
 CFLAGS="$common -m32 -DREADLINE -DUSE_LINENOISE"
 LDFLAGS=" -m32 -ldl "
+OBJSLN="linenoise.o"
+fi
+;;
+linux_j64nonavx)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
+CFLAGS="$common -DREADLINE"
+LDFLAGS=" -ledit -ldl "
+else
+CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
+LDFLAGS=" -ldl "
 OBJSLN="linenoise.o"
 fi
 ;;

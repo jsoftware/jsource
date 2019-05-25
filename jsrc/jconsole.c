@@ -61,11 +61,15 @@ char histfile[512];
 #ifndef __MACH__
 static int readlineinit()
 {
+#ifndef ANDROID
  if(hreadline)return 0; // already run
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
    if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
+#else
+    {
+#endif
 #if defined(USE_LINENOISE)
     add_history=linenoiseHistoryAdd;
     read_history=linenoiseHistoryLoad;

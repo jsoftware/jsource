@@ -51,7 +51,7 @@ case $jplatform\_$1 in
 linux_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$common -m32 -DREADLINE"
-LINK=" -l:libedit.so.2 -m32 -ldl -o jconsole "
+LINK=" -m32 -ldl -o jconsole "
 else
 COMPILE="$common -m32 -DREADLINE -DUSE_LINENOISE"
 LINK=" -m32 -ldl -o jconsole "

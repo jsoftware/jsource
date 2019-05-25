@@ -11,47 +11,79 @@
 #include <sys/resource.h>
 #define _isatty isatty
 #define _fileno fileno
+#include <dlfcn.h>
+#define GETPROCADDRESS(h,p) dlsym(h,p)
 #endif
 #include <signal.h>
 #include <stdint.h>
 
-#if defined(READLINE) && (defined(ANDROID)||defined(__MINGW32__)||defined(USE_LINENOISE))
-#define SIGACTION
-#endif
-
 #include "j.h"
 #include "jeload.h"
 
+static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
 static char **adadbreak;
-#ifdef SIGACTION
-static void sigint(int k){**adadbreak+=1;}
-#else
 static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
-#endif
+static void sigint2(int k){**adadbreak+=1;}
 static char input[30000];
 
 /* J calls for keyboard input (debug suspension and 1!:1[1) */
 /* we call to get next input */
 #ifdef READLINE
 /* readlin.h */
-#if defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE)
 /* if not working properly, export TERM=dumb */
+#if defined(USE_LINENOISE)
 #include "linenoise.h"
-#define add_history    linenoiseHistoryAdd
-#define read_history   linenoiseHistoryLoad
-#define write_history  linenoiseHistorySave
-#define readline       linenoise
-#define using_history()
-#else
-int   add_history(const char *);
-int   read_history(const char *);
-int   write_history(const char *);
-char* readline(const char *);
-void  using_history(void);
 #endif
+#ifndef __MACH__
+typedef int (*ADD_HISTORY) (const char *);
+typedef int (*READ_HISTORY) (const char *);
+typedef int (*WRITE_HISTORY) (const char *);
+typedef char* (*PREADLINE) (const char *);
+typedef void (*USING_HISTORY) (void);
+static void *hreadline=0;
+static ADD_HISTORY add_history;
+static READ_HISTORY read_history;
+static WRITE_HISTORY write_history;
+static PREADLINE readline;
+static USING_HISTORY using_history;
+#else
+extern int   add_history(const char *);
+extern int   read_history(const char *);
+extern int   write_history(const char *);
+extern char* readline(const char *);
+extern void  using_history(void);
+#endif
+char* rl_readline_name;
 
 int hist=1;
-char histfile[256];
+char histfile[512];
+
+#ifndef __MACH__
+static int readlineinit()
+{
+ if(hreadline)return 0; // already run
+ if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
+ if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
+  if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
+   if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
+#if defined(USE_LINENOISE)
+    add_history=linenoiseHistoryAdd;
+    read_history=linenoiseHistoryLoad;
+    write_history=linenoiseHistorySave;
+    readline=linenoise;
+    return 2;
+#else
+    return 0;
+#endif
+   }
+ add_history=(ADD_HISTORY)GETPROCADDRESS(hreadline,"add_history");
+ read_history=(READ_HISTORY)GETPROCADDRESS(hreadline,"read_history");
+ write_history=(WRITE_HISTORY)GETPROCADDRESS(hreadline,"write_history");
+ readline=(PREADLINE)GETPROCADDRESS(hreadline,"readline");
+ using_history=(USING_HISTORY)GETPROCADDRESS(hreadline,"using_history");
+ return 1;
+}
+#endif
 
 void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
 
@@ -67,12 +99,11 @@ if(hist)
 		if(s)
 		{
 			strcpy(histfile,s);
-#if defined(READLINE) && (defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE))
-			strcat(histfile,"/.jshistory");
-#else
-			strcat(histfile,"/.jhistory");
-#endif
-			using_history();
+			if(1==breadline){
+			  strcat(histfile,"/.jhistory");
+			  using_history();
+			}else
+			  strcat(histfile,"/.jshistory");
 			read_history(histfile);
 		}
 	}
@@ -179,26 +210,34 @@ int main(int argc, char* argv[])
  lim.rlim_cur=0x10000000; // 0xc000000 12mb works, but let's be safe with 16mb
  setrlimit(RLIMIT_STACK,&lim);
 #endif
+#ifdef READLINE
+#ifndef __MACH__
+ breadline=readlineinit();
+#else
+ breadline=1;
+#endif
+#endif
 
  jt=jeload(callbacks);
  if(!jt){char m[1000]; jefail(m), fputs(m,stderr); exit(1);}
  adadbreak=(char**)jt; // first address in jt is address of breakdata
-#ifdef SIGACTION
- struct sigaction sa;
- sa.sa_flags = 0;
- sa.sa_handler = sigint;
- sigemptyset(&(sa.sa_mask));
- sigaddset(&(sa.sa_mask), SIGINT);
- sigaction(SIGINT, &sa, NULL);
-#else
- signal(SIGINT,sigint);
+#ifndef _MSC_VER
+ if(2==breadline){
+  struct sigaction sa;
+  sa.sa_flags = 0;
+  sa.sa_handler = sigint2;
+  sigemptyset(&(sa.sa_mask));
+  sigaddset(&(sa.sa_mask), SIGINT);
+  sigaction(SIGINT, &sa, NULL);
+ }else
 #endif
+  signal(SIGINT,sigint);
  
 #ifdef READLINE
- char* rl_readline_name="jconsole"; /* argv[0] varies too much*/
+ rl_readline_name="jconsole"; /* argv[0] varies too much*/
+#if defined(USE_LINENOISE)
+ if(2==breadline)linenoiseSetMultiLine(1);
 #endif
-#if defined(READLINE) && (defined(ANDROID)||defined(_WIN32)||defined(USE_LINENOISE))
- linenoiseSetMultiLine(1);
 #endif
 
  if(argc==2&&!strcmp(argv[1],"-jprofile"))

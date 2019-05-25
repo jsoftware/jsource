@@ -273,10 +273,20 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
  R z;
 }    /* w grade"r w on large-range integers */
 
+static I validitymask[8]={-1, -1, -1, -1, 0, 0, 0, 0};
 
 // sort a single integer list using quicksort without misprediction, inplace
 #define SORTQNAME sortiq1
 #define SORTQTYPE I
+#define SORTQSCOPE
+#define SORTQSET256 _mm256_set_epi64x
+#define SORTQTYPE256 __m256i
+#define SORTQCASTTOPD _mm256_castsi256_pd
+#define SORTQCMP256 _mm256_cmpgt_epi64
+#define SORTQCMPTYPE 
+#define SORTQMASKLOAD _mm256_maskload_epi64
+#define SORTQULOAD _mm256_loadu_si256
+#define SORTQULOADTYPE __m256i*
 #include "vgsortq.h"
 
 static SF(jtsortiq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block
@@ -293,15 +303,15 @@ static SF(jtsorti){FPREFIP;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  // First, decide, based on the length of the list, what the threshold for small-range sorting will be.
  // This is what we are trying to calculate, based on n:
  // n<800: if range<5n, use smallrange, otherwise qsort
- // 800<n<100000: if range<2n use smallrange, otherwise mergesort
+ // 800<n<50000: if range<2n use smallrange, otherwise qsort
  // 100000<n<600000: if range<3n use smallrange, otherwise radix
  // 600000<n<1000000: if range<2n use smallrange, otherwise radix
  // 1000000<n if range<n use smallrange, otherwise radix
- I nrange=(n>=800)+(n>=100000)+(n>=600000)+(n>=1000000);  // TUNE
+ I nrange=(n>=800)+(n>=50000)+(n>=600000)+(n>=1000000);  // TUNE
  CR rng = condrange(wv,AN(w),IMAX,IMIN,n*((0x12325>>(nrange<<2))&7)); // 1 2 3 2 5 5 are the shift amounts for the ranges
  // smallrange always wins if applicable; otherwise use the table above
  if(!rng.range){  // range was too large
-  if(n<800)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  TUNE
+  if(n<50000)R jtsortiq(jtinplace,m,n,w);  // qsort for very short lists.  TUNE
   if(n<100000)R jtsortdirect(jt,m,1,n,w);  // 800-99999, mergesort   TUNE
   R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
@@ -365,6 +375,15 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 // sort a single real list using quicksort without misprediction, inplace
 #define SORTQNAME sortdq1
 #define SORTQTYPE D
+#define SORTQSCOPE static
+#define SORTQCASTTOPD 
+#define SORTQSET256 _mm256_set_pd
+#define SORTQTYPE256 __m256d
+#define SORTQCMP256 _mm256_cmp_pd
+#define SORTQCMPTYPE ,_CMP_GT_OQ
+#define SORTQMASKLOAD _mm256_maskload_pd
+#define SORTQULOAD _mm256_loadu_pd
+#define SORTQULOADTYPE D*
 #include "vgsortq.h"
 
 static SF(jtsortdq){FPREFIP;  // m=#sorts, n=#items in each sort, w is block

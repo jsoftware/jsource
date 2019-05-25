@@ -593,7 +593,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define NANTEST         (_SW_INVALID&_clearfp())
 #endif
 #if C_AVX&&SY_64
-#define NPAR (sizeof(__m256)/sizeof(D)) // number of Ds processed in parallel
+#define NPAR ((I)(sizeof(__m256)/sizeof(D))) // number of Ds processed in parallel
 #define LGNPAR 2  // no good automatic way to do this
 // loop for atomic parallel ops.  // fixed: n is #atoms (never 0), x->input, z->result, u=input atom4 and result
 #define AVXATOMLOOP(preloop,loopbody,postloop) \

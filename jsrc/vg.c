@@ -7,6 +7,9 @@
 #include "vg.h"
 // Places marked TUNE have parameters that must be tuned to the hardware
 
+#define GBEGIN(L)  I olt=jt->workareas.compare.complt; jt->workareas.compare.complt=L
+#define GEND      jt->workareas.compare.complt=olt;
+
 // Ideas for work:
 // Sort/grade 2-integer lists by radix?
 // check whether testing 6 at a time would help
@@ -258,16 +261,66 @@ I grcol2(I d,I c,US*yv,I n,I*xv,I*zv,const I m,US*u,I flags){
 
 
 // grade doubles
-static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,i,nneg,*xv;US*u;void *yv;I c=ai*n;
+#if BW==64
+// grade doubles by hiding the item number in the value and sorting.  Requires ai==1.
+// We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
+static GF(jtgrdq){
+ GBEGIN(-1);  // subsorts will always be ascending
+ I sortdown63=(~olt)&IMIN;  // sign bit set if sorting down; other bits 0
+ // See how many bits we must reserve for the item number, and make a mask for the item number
+ unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ // Loop over each grade
+ I *wv=IAV(w);  // we interpret the floats in w as if they were integers.
+ while(--m>=0){
+  // zv points to the output area, wv points to the input
+  // Create the values to be sorted, in the result area
+  // if sorting down, change sign of input
+  // convert -0 to 0
+  // if input neg, complement low bits to make correct sort order
+  // install item number
+  DO(n, I v=wv[i]^sortdown63; v^=(UI)(v>>(BW-1))>>1; v=(v==0)?-1:v; zv[i]=(v&(~itemmask))+i;)
+  // sort the result area in place
+  sortiq1(zv,n);
+  // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
+  // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
+  // remove the upper bits from that sorted result
+  I nextv=zv[0];  // always has first value with a new key
+  I i;for(i=0;i<n;++i){
+   I currv=nextv;
+   if(i==n-1 || (((nextv=zv[i+1])^currv)&~itemmask)){zv[i]=currv&itemmask;  // normal case with no repetition
+   }else{  // reprocess the repeated block
+    I j=i;do{
+     I v=wv[zv[j]&itemmask]^sortdown63; v^=(UI)(v>>(BW-1))>>1; v=(v==0)?-1:v; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in uppper bits 
+    }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
+    sortiq1(zv+i,j-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
+    while(i<j){zv[i]&=itemmask; ++i;}
+    i=j-1;  // pick up after the batch
+   }
+  }
+  // advance to next sort
+  wv+=n; zv+= n;
+ }
+ GEND  // restore from GBEGIN
+ R 1;
+}
+
+#endif
+
+
+static GF(jtgrd){A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
+#if BW==64
+ if(ai==1){R jtgrdq(jt,m,ai,n,w,zv);}  // if fast list code is available, always use it
+#endif
   // if not large and 1 atom per key, go do general grade
  if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
+ // The rest of this routine is not used when the fast list code is available
  // grade float by radix sort of halfwords.  Save some control parameters
  wv=DAV(w);
  // choose bucket table size & function; allocate the bucket area
  I (*grcol)(I,I,void*,I,I*,I*,const I,US*,I);  // prototype for either size of buffer
  { I use4 = n>65535; grcol=use4?(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol4:(I (*)(I,I,void*,I,I*,I*,const I,US*,I))grcol2; GATV0(y,INT,((65536*sizeof(US))>>LGSZI)<<use4,1); yv=AV(y);}
  GATV0(x,INT,n,1); xv=AV(x);  // allocate a ping-pong buffer for the result
- for(i=0;i<m;++i){I colflags;  // loop over each cell of input
+ while(--m>=0){I colflags;  // loop over each cell of input
   u=(US*)wv+FPLSBWDX;   // point to LSB of input
   // count the number of negative values, call it nneg.  Set b to mean 'both negative and nonnegative are present'
   // If we are doing all negative values, just change the direction and return the sorted values without reversal
@@ -598,13 +651,10 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-#define GBEGIN(L)  A z;I olt=jt->workareas.compare.complt; jt->workareas.compare.complt=L
-#define GEND(z)      jt->workareas.compare.complt=olt;  R z
-
-F1(jtgrade1 ){GBEGIN(-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F1(jtdgrade1){GBEGIN( 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND(z);}
-F2(jtgrade2 ){F2PREFIP;GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND(z);}
-F2(jtdgrade2){F2PREFIP;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND(z);}
+F1(jtgrade1 ){A z;GBEGIN(-1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND RETF(z);}
+F1(jtdgrade1){A z;GBEGIN( 1); RZ(   w); z=SPARSE&AT(w)?grd1sp(  w):gr1(  w); GEND RETF(z);}
+F2(jtgrade2 ){F2PREFIP;A z;GBEGIN(-1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND RETF(z);}
+F2(jtdgrade2){F2PREFIP;A z;GBEGIN( 1); RZ(a&&w); z=SPARSE&AT(w)?grd2sp(a,w):jtgr2(jtinplace,a,w); GEND RETF(z);}
 
 
 #define OSGT(i,j) (u[i]>u[j])

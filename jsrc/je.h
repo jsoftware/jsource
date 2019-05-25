@@ -905,6 +905,7 @@ extern C        spellin(I,C*);
 extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
+extern void     sortiq1(I*,I);
 extern I        strtoI10s(I,C*);
 extern D        tod(void);
 extern void     va1primsetup(A);

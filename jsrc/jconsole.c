@@ -59,17 +59,14 @@ int hist=1;
 char histfile[512];
 
 #ifndef __MACH__
+#if !defined(ANDROID) && !defined(_WIN32)
 static int readlineinit()
 {
-#ifndef ANDROID
  if(hreadline)return 0; // already run
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
    if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
-#else
-    {
-#endif
 #if defined(USE_LINENOISE)
     add_history=linenoiseHistoryAdd;
     read_history=linenoiseHistoryLoad;
@@ -87,6 +84,20 @@ static int readlineinit()
  using_history=(USING_HISTORY)GETPROCADDRESS(hreadline,"using_history");
  return 1;
 }
+#else
+static int readlineinit()
+{
+#if defined(USE_LINENOISE)
+    add_history=linenoiseHistoryAdd;
+    read_history=linenoiseHistoryLoad;
+    write_history=linenoiseHistorySave;
+    readline=linenoise;
+    return 2;
+#else
+    return 0;
+#endif
+}
+#endif
 #endif
 
 void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}

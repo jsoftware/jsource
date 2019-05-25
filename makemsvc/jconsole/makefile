@@ -12,6 +12,11 @@ OBJS=  \
  ../../jsrc/jconsole.o \
  ../../jsrc/jeload.o
 
+ifdef READLINE
+OBJSLN=  ../../jsrc/linenoise.o
+CFLAGSLN= -DREADLINE -DUSE_LINENOISE
+endif
+
 RCS= ../../makevs/jconsole/jconsole.rc
 
 ifndef LD
@@ -19,7 +24,7 @@ LD=link
 endif
 
 %.o: %.c
-	$(CC) $(CFLAGS) /Fo$@ /c $<
+	$(CC) $(CFLAGS) $(CFLAGSLN) /Fo$@ /c $<
 
 ifdef x64
 TARGET= jconsole.exe
@@ -27,8 +32,8 @@ else
 TARGET= jconsole32.exe
 endif
 
-$(TARGET) : $(OBJS) jconsole.res
-	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) jconsole.res
+$(TARGET) : $(OBJS) $(OBJSLN) jconsole.res
+	$(LD) /NOLOGO $(FLAGS) /out:$@ $(OBJS) $(OBJSLN) jconsole.res
 
 jconsole.res : $(RCS)
 	$(RC) /L 0x409 /D NDEBUG /D _USING_V110_SDK71_ -R -FO$@ $(RCS)
@@ -36,6 +41,6 @@ jconsole.res : $(RCS)
 all: $(TARGET)
 
 clean:
-	rm -f *.res $(OBJS)
+	rm -f *.res $(OBJS) $(OBJSLN)
 
 .PHONY: all clean

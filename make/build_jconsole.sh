@@ -3,7 +3,7 @@
 cd ~
 
 macmin="-mmacosx-version-min=10.6"
-USE_LINENOISE="${USE_LINENOISE:=0}"
+USE_LINENOISE="${USE_LINENOISE:=1}"
 
 if [ "x$CC" = x'' ] ; then
 if [ -f "/usr/bin/cc" ]; then
@@ -51,7 +51,7 @@ case $jplatform\_$1 in
 linux_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$common -m32 -DREADLINE"
-LINK=" -l:libedit.so.2 -m32 -ldl -o jconsole "
+LINK=" -m32 -ldl -o jconsole "
 else
 COMPILE="$common -m32 -DREADLINE -DUSE_LINENOISE"
 LINK=" -m32 -ldl -o jconsole "
@@ -61,7 +61,7 @@ fi
 linux_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$common -DREADLINE"
-LINK=" -ledit -ldl -o jconsole "
+LINK=" -ldl -o jconsole "
 else
 COMPILE="$common -DREADLINE -DUSE_LINENOISE"
 LINK=" -ldl -o jconsole "
@@ -71,7 +71,7 @@ fi
 raspberry_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
-LINK=" -ledit -ldl -o jconsole "
+LINK=" -ldl -o jconsole "
 else
 COMPILE="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DUSE_LINENOISE -DRASPI"
 LINK=" -ldl -o jconsole "
@@ -81,7 +81,7 @@ fi
 raspberry_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$common -march=armv8-a+crc -DREADLINE -DRASPI"
-LINK=" -ledit -ldl -o jconsole "
+LINK=" -ldl -o jconsole "
 else
 COMPILE="$common -march=armv8-a+crc -DREADLINE -DUSE_LINENOISE -DRASPI"
 LINK=" -ldl -o jconsole "

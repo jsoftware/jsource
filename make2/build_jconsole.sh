@@ -4,7 +4,7 @@ cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
 
 jplatform="${jplatform:=linux}"
 j64x="${j64x:=j64}"
-USE_LINENOISE="${USE_LINENOISE:=0}"
+USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -69,7 +69,7 @@ fi
 linux_j64nonavx)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -DREADLINE"
-LDFLAGS=" -ledit -ldl "
+LDFLAGS=" -ldl "
 else
 CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
 LDFLAGS=" -ldl "
@@ -79,7 +79,7 @@ fi
 linux_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -DREADLINE"
-LDFLAGS=" -ledit -ldl "
+LDFLAGS=" -ldl "
 else
 CFLAGS="$common -DREADLINE -DUSE_LINENOISE"
 LDFLAGS=" -ldl "
@@ -89,7 +89,7 @@ fi
 raspberry_j32)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DRASPI"
-LDFLAGS=" -ledit -ldl "
+LDFLAGS=" -ldl "
 else
 CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DREADLINE -DUSE_LINENOISE -DRASPI"
 LDFLAGS=" -ldl "
@@ -99,7 +99,7 @@ fi
 raspberry_j64)
 if [ "$USE_LINENOISE" -ne "1" ] ; then
 CFLAGS="$common -march=armv8-a+crc -DREADLINE -DRASPI"
-LDFLAGS=" -ledit -ldl "
+LDFLAGS=" -ldl "
 else
 CFLAGS="$common -march=armv8-a+crc -DREADLINE -DUSE_LINENOISE -DRASPI"
 LDFLAGS=" -ldl "

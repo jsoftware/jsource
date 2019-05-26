@@ -132,8 +132,10 @@ if(hist)
 
 char* Jinput_stdio(char* prompt)
 {
+  if(_isatty(_fileno(stdin))){
 	fputs(prompt,stdout);
 	fflush(stdout); /* windows emacs */
+  }
 	if(!fgets(input, sizeof(input), stdin))
 	{
 #ifdef _WIN32

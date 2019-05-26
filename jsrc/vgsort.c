@@ -379,7 +379,7 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 #define SORTQCASTTOPD 
 #define SORTQSET256 _mm256_set_pd
 #define SORTQTYPE256 __m256d
-#define SORTQCMP256 _mm256_cmp_pd
+#define SORTQCMP256(a,b) _mm256_cmp_pd(a,b)
 #define SORTQCMPTYPE ,_CMP_GT_OQ
 #define SORTQMASKLOAD _mm256_maskload_pd
 #define SORTQULOAD _mm256_loadu_pd

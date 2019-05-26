@@ -154,7 +154,7 @@ char* Jinput_stdio(char* prompt)
 
 C* _stdcall Jinput(J jt,C* prompt){
 #ifdef READLINE
-    if(_isatty(0)){
+    if(_isatty(_fileno(stdin))){
 		return (C*)Jinput_rl((char*)prompt);
     } else 
 #endif
@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
  setrlimit(RLIMIT_STACK,&lim);
 #endif
 #ifdef READLINE
+ if(_isatty(_fileno(stdin)))
 #ifndef __MACH__
  breadline=readlineinit();
 #else

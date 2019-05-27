@@ -50,7 +50,7 @@ fi
 export CC
 fi
 # compiler=`$CC --version | head -n 1`
-compiler=`readlink $(command -v $CC)`
+compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
 

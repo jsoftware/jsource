@@ -21,6 +21,7 @@
 #include "jeload.h"
 
 static int breadline=0;    /* 0: none  1: libedit  2: linenoise */
+static int norl=0;         /* disable readline/linenoise */
 static char **adadbreak;
 static void sigint(int k){**adadbreak+=1;signal(SIGINT,sigint);}
 static void sigint2(int k){**adadbreak+=1;}
@@ -34,7 +35,6 @@ static char input[30000];
 #if defined(USE_LINENOISE)
 #include "linenoise.h"
 #endif
-#ifndef __MACH__
 typedef int (*ADD_HISTORY) (const char *);
 typedef int (*READ_HISTORY) (const char *);
 typedef int (*WRITE_HISTORY) (const char *);
@@ -46,27 +46,23 @@ static READ_HISTORY read_history;
 static WRITE_HISTORY write_history;
 static PREADLINE readline;
 static USING_HISTORY using_history;
-#else
-extern int   add_history(const char *);
-extern int   read_history(const char *);
-extern int   write_history(const char *);
-extern char* readline(const char *);
-extern void  using_history(void);
-#endif
 char* rl_readline_name;
 
 int hist=1;
 char histfile[512];
 
-#ifndef __MACH__
 #if !defined(ANDROID) && !defined(_WIN32)
 static int readlineinit()
 {
  if(hreadline)return 0; // already run
+#ifndef __MACH__
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
    if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
+#else
+ if(!(hreadline=dlopen("libedit.dylib",RTLD_LAZY))){
+#endif
 #if defined(USE_LINENOISE)
     add_history=linenoiseHistoryAdd;
     read_history=linenoiseHistoryLoad;
@@ -97,7 +93,6 @@ static int readlineinit()
     return 0;
 #endif
 }
-#endif
 #endif
 
 void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
@@ -154,7 +149,7 @@ char* Jinput_stdio(char* prompt)
 
 C* _stdcall Jinput(J jt,C* prompt){
 #ifdef READLINE
-    if(_isatty(_fileno(stdin))){
+    if(!norl&&_isatty(_fileno(stdin))){
 		return (C*)Jinput_rl((char*)prompt);
     } else 
 #endif
@@ -168,7 +163,7 @@ void _stdcall Joutput(J jt,int type, C* s)
  {
   jefree();
 #ifdef READLINE
-  rlexit((int)(intptr_t)s);
+  if(!norl)rlexit((int)(intptr_t)s);
 #endif
   exit((int)(intptr_t)s);
  }
@@ -202,22 +197,40 @@ J jt;
 
 int main(int argc, char* argv[])
 {
- void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0; int forceavx=0;
+ void* callbacks[] ={Joutput,0,Jinput,0,(void*)SMCON}; int type; int flag=0,remove=0; int forceavx=0;
 
  if(argc>=3&&!strcmp(argv[1],"-lib")&&'-'!=*(argv[2])) flag=1;
-// something like the following to eventuaully allow autodetection
-// else if(!flag&&argc>=2&&!strcmp(argv[1],"-avx")) forceavx=1;  // avx
-// else if(!flag&&argc>=2&&!strcmp(argv[1],"-noavx")) forceavx=2;  // no avx
- jepath(argv[0],flag?argv[2]:"",forceavx);
- if(argc>=2&&(!strcmp(argv[1],"-lib")||forceavx)) // remove processed arg
- {
-	 int i;
-	 int n=(flag)?2:1;
-	 for(i=1;i<argc-n;++i)
-	 {
-		 argv[i]=argv[i+n];
-	 }
-	 argc=argc-n;
+ else if(argc>=3&&!strcmp(argv[1],"-lib")&&!strcmp(argv[2],"-norl")) norl=1;
+ else if(argc>=2&&!strcmp(argv[1],"-norl")) norl=1;
+ if(1==flag){
+  if(argc>=4&&!strcmp(argv[3],"-norl")) norl=1;
+ } else if(1==norl&&!strcmp(argv[1],"-norl")){
+  if(argc>=4&&!strcmp(argv[2],"-lib")&&'-'!=*(argv[3])) flag=1;
+ }
+ jepath(argv[0],(0==flag)?"":('-'!=*(argv[2]))?argv[2]:argv[3],forceavx);
+ // remove processed arg
+ if(argc>=2&&(!strcmp(argv[1],"-norl"))){
+  remove+=1;
+  if(argc>=3&&(!strcmp(argv[2],"-lib"))){
+   remove+=1;
+   if(argc>=4&&'-'!=*(argv[3]))remove+=1;
+  }
+ }else if(argc>=2&&(!strcmp(argv[1],"-lib"))){
+  remove+=1;
+  if(argc>=3&&'-'!=*(argv[2])){
+   remove+=1;
+   if(argc>=4&&(!strcmp(argv[3],"-norl")))remove+=1;
+  }else
+    if(argc>=3&&(!strcmp(argv[2],"-norl")))remove+=1;
+ }
+ if(remove){
+ int i;
+ int n=remove;
+  for(i=1;i<argc-n;++i)
+  {
+   argv[i]=argv[i+n];
+  }
+  argc=argc-n;
  }
 
 #if !defined(WIN32)
@@ -228,12 +241,8 @@ int main(int argc, char* argv[])
  setrlimit(RLIMIT_STACK,&lim);
 #endif
 #ifdef READLINE
- if(_isatty(_fileno(stdin)))
-#ifndef __MACH__
- breadline=readlineinit();
-#else
- breadline=1;
-#endif
+  if(!norl&&_isatty(_fileno(stdin)))
+   breadline=readlineinit();
 #endif
 
  jt=jeload(callbacks);
@@ -252,10 +261,12 @@ int main(int argc, char* argv[])
   signal(SIGINT,sigint);
  
 #ifdef READLINE
+ if(!norl){
  rl_readline_name="jconsole"; /* argv[0] varies too much*/
 #if defined(USE_LINENOISE)
  if(2==breadline)linenoiseSetMultiLine(1);
 #endif
+ }
 #endif
 
  if(argc==2&&!strcmp(argv[1],"-jprofile"))
@@ -266,6 +277,7 @@ int main(int argc, char* argv[])
 	 type=0;
  addargv(argc,argv,input+strlen(input));
 #if !defined(READLINE) && defined(__MINGW32__)
+  if(!norl)
   _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
 #endif
  jefirst(type,input);

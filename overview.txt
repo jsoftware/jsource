@@ -16,7 +16,7 @@ copy jversion-x.h to jversion.h and edit this local copy as appropriate
 read license.txt and note that the jsource folder can be used under
 either a Jsoftware commercial license or under the GPL3 license.
 
-unix:    read make/make.txt - or somewhat simpler, make2/make.txt
+unix/mac:read make/make.txt - or somewhat simpler, make2/make.txt
 windows: read makevs/makevs.txt
 
 be sure you can do a clean build on a supported platform

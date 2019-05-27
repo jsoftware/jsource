@@ -1,9 +1,32 @@
 #!/bin/sh
 
-cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
+realpath()
+{
+ oldpath=`pwd`
+ if ! cd $1 > /dev/null 2>&1; then
+  cd ${1##*/} > /dev/null 2>&1
+  echo $( pwd -P )/${1%/*}
+ else
+  pwd -P
+ fi
+ cd $oldpath > /dev/null 2>&1
+}
 
+cd "$(realpath "$0")"
+echo "entering `pwd`"
+
+if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
+jplatform="${jplatform:=raspberry}"
+elif [ "`uname`" = "Darwin" ]; then
+jplatform="${jplatform:=darwin}"
+else
 jplatform="${jplatform:=linux}"
+fi
+if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
 j64x="${j64x:=j64}"
+else
+j64x="${j64x:=j32}"
+fi
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -25,7 +48,7 @@ fi
 export CC
 fi
 # compiler=`$CC --version | head -n 1`
-compiler=`readlink -f $(command -v $CC)`
+compiler=$(readlink -f $(command -v $CC) 2> /dev/null || echo $CC)
 echo "CC=$CC"
 echo "compiler=$compiler"
 

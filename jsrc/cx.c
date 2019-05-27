@@ -17,8 +17,6 @@
 #include "p.h"
 #include "w.h"
 
-#define LSYMINUSE 256  // This bit is set in the rank of the original symbol table when it is in use
-
 #define BASSERT(b,e)   {if(!(b)){jsignal(e); i=-1; z=0; continue;}}
 #define BGATV0(v,t,n,r) BZ(v=ga(t,(I)(n),(I)(r),0))
 #define BZ(e)          if(!(e)){i=-1; z=0; continue;}
@@ -471,7 +469,8 @@ static DF2(jtxdefn){PROLOG(0048);
  // If we are using the original local symbol table, clear it (free all values, free non-permanent names) for next use
  // We detect original symbol table by rank LSYMINUSE - other symbol tables are assigned rank 0.
  // Cloned symbol tables are still hanging on because of the initial ra() - we kill them off here
- if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~LSYMINUSE; symfreeha(jt->local);}
+ // Tables are born with NAMEADDED off.  It gets set when a name is added.  Setting back to initial state here, we clear NAMEADDED
+ if(AR(jt->local)&LSYMINUSE){AR(jt->local)&=~(LSYMINUSE|LNAMEADDED); symfreeha(jt->local);}
  // Pop the private-area stack; set no assignment (to call for result display)
  jt->local=savloc; jt->asgn=0;
  RETF(z);
@@ -691,7 +690,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
  // Count the assigned names, and allocate a symbol table of the right size to hold them.  We won't worry too much about collisions, since we will be assigning indexes in the definition.
  // We choose the smallest feasible table to reduce the expense of clearing it at the end of executing the verb
- I pfstn=AN(pfst); LX*pfstv=LXAV(pfst),pfx; I asgct=0;
+ I pfstn=AN(pfst); LX*pfstv=LXAV0(pfst),pfx; I asgct=0;
  for(j=SYMLINFOSIZE;j<pfstn;++j){  // for each hashchain
   for(pfx=pfstv[j];pfx;pfx=(jt->sympv)[pfx].next)++asgct;  // chase the chain and count
  }
@@ -710,7 +709,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
    newsym->flag |= LPERMANENT;   // Mark as permanent
   }
  }
- I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV(actst);  // # hashchains in new symbol table, and pointer to hashchain table
+ I actstn=AN(actst)-SYMLINFOSIZE; LX*actstv=LXAV0(actst);  // # hashchains in new symbol table, and pointer to hashchain table
 
  // Go back through the words of the definition, and add bucket/index information for each simplename
  // Note that variable names must be replaced by clones so they are not overwritten
@@ -733,9 +732,10 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 
 // a is a local symbol table, possibly in use
 // result is a copy of it, ready to use.  All PERMANENT symbols are copied over and given empty values
+// The rank-flag of the table is 'not modified'
 // static A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); I *av=AV(a);I *zv;
-A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV(a),*zv;
- RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV(z);  // allocate the clone; zv->clone hashchains
+A jtclonelocalsyms(J jt, A a){A z;I j;I an=AN(a); LX *av=LXAV0(a),*zv;
+ RZ(z=stcreate(2,AN(a),0L,0L)); zv=LXAV0(z);  // allocate the clone; zv->clone hashchains
  // Go through each hashchain of the model
  for(j=SYMLINFOSIZE;j<an;++j) {LX *zhbase=&zv[j]; LX ahx=av[j]; LX ztx=0; // hbase->chain base, hx=index of current element, tx is element to insert after
   while(ahx&&(jt->sympv)[ahx].flag&LPERMANENT) {L *l;  // for each permanent entry...

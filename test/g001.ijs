@@ -313,6 +313,20 @@ fb 3
 fb 4
 fb 5  
 
+
+NB. lookups of nonassigned names skip local lookup if there have been no assignments
+'noun result was required' -: 3 : '(y) =. 1 [ one =. 1 if. do. end. two' etx 'one'
+1 -: 3 : '(y) =. 1 [ one =. 1 if. do. end. two' 'two'
+2 -: 3 : '(y) =. 2 [ one =. 1 if. do. end. one' 'one'
+1 -: 3 : '(y) =. 2 [ one =. 1 if. do. end. one' 'two'
+2 -: 'one' 4 : '(x) =. 2 [ (y) =. 1 [ one =. 1 if. do. end. one' 'one'
+2 -: 'two' 4 : '(x) =. 2 [ (y) =. 1 [ one =. 1 if. do. end. two' 'two'
+1 -: 'one' 4 : '(x) =. 2 [ (y) =. 1 [ one =. 1 if. do. end. two' 'two'
+
+gval_z_ =: 0
+fa =. 3 : '(y) =. 1 [ one =. 1 for. i. 10000 do. gval ] gval ] gval  ] gval  ] gval  ] gval  ] gval  ] gval  ] gval end. gval'
+(100 (6!:2) 'fa ''one''') < (100 (6!:2) 'fa ''two''')  NB. Not much difference, but it should be faster
+
 NB. leaks that have been fixed
 NB. a =. 4 - 3  NB. allocate a as an integer
 a =. 300 + 7!:0''  NB. 300 is slop to allow in memory alloc
@@ -329,7 +343,7 @@ a > 7!:0''
 
 4!:55 ;:'Cogito Ich_liebe_dich a a_man aa abc alta b def erase ergo'
 4!:55 ;:'fa fb first global global1 global2 global3'
-4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript'
+4!:55 ;:'ghi global j_k j_k_l j_k_l_m lf local names p pqr q r s second sscript gval_z_'
 4!:55 ;:'sum t third write x y'
 
 

@@ -156,7 +156,7 @@ F1(jtscind){A*wv,x,y,z;I n,*zv;L*v;
 
 static A jtnch1(J jt,B b,A w,I*pm,A ch){A*v,x,y;C*s,*yv;LX *e;I i,k,m,p,wn;L*d;
  RZ(w);
- wn=AN(w); e=LXAV(w);                                /* locale                */
+ wn=AN(w); e=LXAV0(w);                                /* locale                */
  x=(A)(*e+jt->sympv)->name; p=AN(x); s=NAV(x)->s;  /* locale name           */
  m=*pm; v=AAV(ch)+m;                               /* result to appended to */
  for(i=SYMLINFOSIZE;i<wn;++i,++e)if(*e){
@@ -182,7 +182,7 @@ F1(jtnch){A ch;B b;LX *e;I i,m,n;L*d;
  RZ(w=cvt(B01,w)); ASSERT(!AR(w),EVRANK); b=*BAV(w);
  GAT0(ch,BOX,20,1); m=0;
  if(jt->stch){
-  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV(jt->stloc);
+  n=AN(jt->stloc); e=SYMLINFOSIZE+LXAV0(jt->stloc);
   // named locales first
   for(i=1;i<n;++i,++e)if(*e){
    d=*e+jt->sympv;

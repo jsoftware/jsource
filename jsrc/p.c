@@ -600,11 +600,11 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
       AF actionfn=FAV(fs)->valencefns[pline>>1];  // the routine we will execute.  It's going to take longer to read this than we can fill before the branch is mispredicted, usually
       // There is no need to set the token number in the result, since it must be a noun and will never be executed
       // Close up the stack.  For lines 0&2 we don't need two writes, so they are duplicates
-      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 2 3
+      A arg2=stack[pline+1].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
       stackfs[0]=stackfs[-1];    // overwrite the verb with the previous cell - 0->1  1->2  1->2
-      A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 1 1   0110
+      A arg1=stack[(0x6>>pline)&3].a;   // 1st arg, monad or left dyad  2 3 1 (1 1)   0110  0 1 2 -> 2 3 1   1 11 111
       stack[pline]=stack[0];  // close up the stack  0->0(NOP)  0->1   0->2
-      stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 1 2
+      stack+=(pline>>1)+1;   // finish relocating stack   1 1 2 (1 2)
       y=(*actionfn)(jt,arg1,arg2,fs);
       jt=(J)(intptr_t)((I)jt&~JTFLAGMSK);
       // jt is OK again
@@ -627,7 +627,7 @@ A jtparsea(J jt, A *queue, I m){PSTK *stack;A z,*v;I es; UI4 maxnvrlen;
      PSTK * (*actionfn)()=lines58[pline-5];  // fetch the routine that will handle this line
      // We will call the action routine with stack 1 2 3 (line 5) or 1 2 0 (line 7).  It will fetch the stackpointer from jt->endstk.
      // It will run its function, and return the new stackpointer to use, with the stack all filled in.  If there is an error, the returned stackpointer will be 0.
-     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)&3].a);  // 00011 00000 produces 5-8-> 11 01 00 00
+     stack=(*actionfn)(jt,stack[1].a,stack[2].a,stack[(0x60>>pline)/* obsolete&3*/].a);  // 00011 00000 produces 5-8-> 11 01 00 00
      if(!stack)EP
     }
    }

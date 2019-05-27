@@ -249,7 +249,7 @@ F1(jtspforloc){A*wv,x,y,z;C*s;D*v,*zv;I i,j,m,n;L*u;LX *yv,c;
   ASSERT(y,EVLOCALE);
   *v=(D)(FHRHSIZE(AFHRH(y)));  // start with the size of the locale block (always a normal block)
   spfor1(LOCPATH(y)); spfor1(LOCNAME(y));  // add in the size of the path and name
-  m=AN(y); yv=LXAV(y); 
+  m=AN(y); yv=LXAV0(y); 
   for(j=SYMLINFOSIZE;j<m;++j){  // for each name in the locale
    c=yv[j];
    while(c){*v+=sizeof(L); u=c+jt->sympv; spfor1(u->name); spfor1(u->val); c=u->next;}  // add in the size of the name itself and the value, and the L block for the name
@@ -446,7 +446,7 @@ void audittstack(J jt){
 }
 
 // Free all symbols pointed to by the SYMB block w.
-static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV(w);
+static void freesymb(J jt, A w){I j,wn=AN(w); LX k,kt,* RESTRICT wv=LXAV0(w);
  L *jtsympv=jt->sympv;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
   // we know there will be no allocations during the free process.

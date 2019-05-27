@@ -412,6 +412,9 @@ typedef I SI;
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       ((I)1<<AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block
 
+// Flags in the AR field of local symbol tables
+#define LSYMINUSE 1  // This bit is set in the rank of the original symbol table when it is in use
+#define LNAMEADDED LPERMANENT  // Set in rank when a new name is added to the local symbol table.  We transfer the bit from the L flags to the rank-flag
 
 
 typedef struct {I i;US n,go,source;C type;C canend;} CW;
@@ -475,9 +478,10 @@ typedef struct {I e,p;X x;} DX;
 typedef struct {A name,val;US flag;S sn;LX next;} L;
 
 /* symbol pool entry                           LINFO entry                 */
+//---------------------------------------------------------------------------
 /* name - name on LHS of assignment         or locale name                 */
 /* val  - value                             or locale search path          */
-/* flag - various flags                                                    */
+// flag - various flags                        locale flags
 /* sn   - script index                                                     */
 /* next - index of successor   in hash list or 0                           */
 
@@ -487,7 +491,8 @@ typedef struct {A name,val;US flag;S sn;LX next;} L;
 #define LPERMANENT      (I)8            // This is a permanent entry in a local symbol table; don't delete, just leave val=0
 #define LHASNAME        (I)16      // name is nonnull
 #define LHASVALUE       (I)32     // value is nonnull
-
+// in LINFO entry
+#define LMOD            (I)1          // table has had new entries added (used for local symbol tables only)
 
 
 // Definition of callstack

@@ -236,7 +236,7 @@ A jtstcreate(J jt,C k,I p,I n,C*u){A g,x,xx;C s[20];L*v;
  // Allocate a symbol for the locale info, install in special hashchain 0.  Set flag; set sn to the symindex at time of allocation
  // (it is queried by 18!:31)
  // The allocation clears all the hash chain bases, including the one used for SYMLINFO
- RZ(v=symnew(&LXAV(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
+ RZ(v=symnew(&LXAV0(g)[SYMLINFO],0)); v->flag|=LINFO; v->sn=(US)jt->symindex++;   // allocate at head of chain
  switch(k){
   case 0:  /* named    locale */
    RZ(x=nfs(n,u));  // this fills in the hash for the name
@@ -264,7 +264,7 @@ B jtsymbinit(J jt){A q;
  jt->locsize[1]=2;  /* default hash table size for numbered locales */
  RZ(symext(0));     /* initialize symbol pool                       */
  I p; FULLHASHSIZE(400,SYMBSIZE,1,SYMLINFOSIZE,p);
- GATV0(q,SYMB,p,1); jt->stloc=q;  // alloc space, clear hashchains.  No name/val for stloc
+ GATV0(q,SYMB,p,0); jt->stloc=q;  // alloc space, clear hashchains.  No name/val for stloc
  jtinitnl(jt);  // init numbered locales
  FULLHASHSIZE(1LL<<10,SYMBSIZE,1,SYMLINFOSIZE,p);  // about 2^11 chains
  RZ(jt->global=stcreate(0,p,sizeof(jt->baselocale),jt->baselocale));
@@ -418,7 +418,7 @@ static F2(jtloccre){A g,y;C*s;I n,p;L*v;
  if(v=probe(n,s,(UI4)nmhash(n,s),jt->stloc)){   // scaf this is disastrous if the named locale is on the stack
   // named locale exists.  Verify no defined names, then delete it
   g=v->val; 
-  LX *u=SYMLINFOSIZE+LXAV(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
+  LX *u=SYMLINFOSIZE+LXAV0(g); DO(AN(g)-SYMLINFOSIZE, ASSERT(!u[i],EVLOCALE););
   probedel(n,s,(UI4)nmhash(n,s),jt->stloc);  // delete the symbol for the locale, and the locale itself
  }
  FULLHASHSIZE(1LL<<(p+5),SYMBSIZE,1,SYMLINFOSIZE,p);  // get table, size 2^p+6 minus a little

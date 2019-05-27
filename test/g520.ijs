@@ -963,8 +963,36 @@ x=: ?s$1e9
 (i=: <((?6$5){.&.><7$1)$&.>?&.>6{.s) ({ -: f) x
 (i=: <((?7$5){.&.><7$1)$&.>?&.>7{.s) ({ -: f) x
 
+NB. test long names
+abcdefghijabcdefghijabcdefghij0 =. 1
+abcdefghijabcdefghijabcdefghij1 =. 2
+abcdefghijabcdefghijabcdefghij00 =. 3
+abcdefghijabcdefghijabcdefghij01 =. 4
+abcdefghijabcdefghijabcdefghij000 =. 5
+abcdefghijabcdefghijabcdefghij001 =. 6
+abcdefghijabcdefghijabcdefghij0000 =. 7
+abcdefghijabcdefghijabcdefghij0001 =. 8
+abcdefghijabcdefghijabcdefghij0 -: 1
+abcdefghijabcdefghijabcdefghij1 -: 2
+abcdefghijabcdefghijabcdefghij00 -: 3
+abcdefghijabcdefghijabcdefghij01 -: 4
+abcdefghijabcdefghijabcdefghij000 -: 5
+abcdefghijabcdefghijabcdefghij001 -: 6
+abcdefghijabcdefghijabcdefghij0000 -: 7
+abcdefghijabcdefghijabcdefghij0001 -: 8
+
+
  
 4!:55 ;:'a adot1 adot2 sdot0 b catalog copy count f fr from i j '
 4!:55 ;:'jot k l n p prod q r s v x y '
+4!:55 <'abcdefghijabcdefghijabcdefghij0'
+4!:55 <'abcdefghijabcdefghijabcdefghij1'
+4!:55 <'abcdefghijabcdefghijabcdefghij00'
+4!:55 <'abcdefghijabcdefghijabcdefghij01'
+4!:55 <'abcdefghijabcdefghijabcdefghij000'
+4!:55 <'abcdefghijabcdefghijabcdefghij001'
+4!:55 <'abcdefghijabcdefghijabcdefghij0000'
+4!:55 <'abcdefghijabcdefghijabcdefghij0001'
+
 randfini''
 

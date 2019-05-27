@@ -167,9 +167,11 @@ L* jtprobedel(J jt,I l,C*string,UI4 hash,A g){
   LX delblockx=*asymx;
   if(!delblockx)R 0;  // if chain empty or ended, not found
   L *sym=jt->sympv+delblockx;
-  if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l)){
-   fa(sym->val); sym->val=0; if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=jt->sympv[0].next; jt->sympv[0].next=delblockx;} R sym;
-  }     // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
+  IFCMPNAME(NAV(sym->name),string,l,     // (1) exact match - if there is a value, use this slot, else say not found
+// obsolete   if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l)){
+    {fa(sym->val); sym->val=0; if(!(sym->flag&LPERMANENT)){*asymx=sym->next; fr(sym->name); sym->name=0; sym->flag=0; sym->sn=0; sym->next=jt->sympv[0].next; jt->sympv[0].next=delblockx;} R sym;}
+   // if match, bend predecessor around deleted block, return address of match (now deleted but still points to value)
+  )
   asymx=&sym->next;   // mismatch - step to next
  }
 }
@@ -182,7 +184,8 @@ L*jtprobe(J jt,I l,C*string,UI4 hash,A g){
  while(1){
   if(!symx)R 0;  // if chain empty or ended, not found
   L *sym=jt->sympv+symx;
-  if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l))R sym->val?sym:0;     // (1) exact match - if there is a value, use this slot, else say not found
+// obsolete   if(l==NAV(sym->name)->m&&!memcmp(string,NAV(sym->name)->s,l))R sym->val?sym:0;     // (1) exact match - if there is a value, use this slot, else say not found
+  IFCMPNAME(NAV(sym->name),string,l,R sym->val?sym:0;)     // (1) exact match - if there is a value, use this slot, else say not found
   symx=sym->next;   // mismatch - step to next
  }
 }
@@ -203,8 +206,9 @@ L *jtprobelocal(J jt,A a){NM*u;I b,bx;
    while(0>++bx){lx = jt->sympv[lx].next;}
    // Now lx is the index of the first name that might match.  Do the compares
    while(lx) {L* l = lx+jt->sympv;  // symbol entry
-    if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m))
-     {R l->val?l : 0;}
+    IFCMPNAME(NAV(l->name),s,m,R l->val?l : 0;)
+// obsolete     if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m))
+// obsolete      {R l->val?l : 0;}
     lx = l->next;
    }
    R 0;  // no match.
@@ -239,7 +243,8 @@ L *jtprobeislocal(J jt,A a){NM*u;I b,bx;
    // Now lx is the index of the first name that might match.  Do the compares
    while(lx) {
     l = lx+jt->sympv;  // symbol entry
-    if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m)){R l;}  // return if name match
+    IFCMPNAME(NAV(l->name),s,m,R l;)
+// obsolete     if(m==NAV(l->name)->m&&!memcmp(s,NAV(l->name)->s,m)){R l;}  // return if name match
     tx = lx; lx = l->next;
    }
    // not found, create new symbol.  If tx is 0, the queue is empty, so adding at the head is OK; otherwise add after tx
@@ -273,7 +278,8 @@ L*jtprobeis(J jt,A a,A g){C*s;LX *hv,tx;I m;L*v;NM*u;
   v=tx+jt->sympv;
   while(1){                               
    u=NAV(v->name);
-   if(m==u->m&&!memcmp(s,u->s,m))R v;    // (1) exact match - may or may not have value
+   IFCMPNAME(u,s,m,R v;)    // (1) exact match - may or may not have value
+// obsolete    if(m==u->m&&!memcmp(s,u->s,m))R v;
    if(!v->next)break;                                /* (2) link list end */
    v=(tx=v->next)+jt->sympv;
   }

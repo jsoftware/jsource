@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
 // set stack size to get limit error instead of crash
  struct rlimit lim;
  getrlimit(RLIMIT_STACK,&lim);
- lim.rlim_cur=0x10000000; // 0xc000000 12mb works, but let's be safe with 16mb
+ lim.rlim_cur= 0x1000000; // 16mb
  setrlimit(RLIMIT_STACK,&lim);
 #endif
 #ifdef READLINE

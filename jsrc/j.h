@@ -523,6 +523,25 @@ extern unsigned int __cdecl _clearfp (void);
 #define IC(w)           (AR(w) ? *AS(w) : 1L)
 #define ICMP(z,w,n)     memcmp((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)
+#if C_AVX&&SY_64
+// Name comparison using wide instructions.   Run stmt if the names match
+#define IFCMPNAME(name,string,len,stmt) \
+ if((name)->m==(len)){ \
+  __m256i endmask, readmask, zero, accumdiff; I *in0=(I*)((name)->s), *in1=(I*)(string);  /* length mask for the last word */ \
+  accumdiff=zero=_mm256_xor_si256(zero,zero); \
+  endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*sizeof(I))-1))));  \
+  readmask=_mm256_slli_epi64(endmask,8*(SZI-1)); /* shift low byte to high byte, to read if there is any significance in the word */ \
+  DQ(((len)-1)>>(LGNPAR+LGSZI), \
+    accumdiff=_mm256_or_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i*)in0),_mm256_loadu_si256((__m256i*)in1)),accumdiff); \
+    in0+=NPAR; in1+=NPAR; \
+  ) \
+  accumdiff=_mm256_or_si256(_mm256_and_si256(endmask,_mm256_xor_si256(_mm256_maskload_epi64(in0,readmask),_mm256_maskload_epi64(in1,readmask))),accumdiff); \
+  if(_mm256_testz_si256(accumdiff,accumdiff))stmt \
+ }
+#else
+#define IFCMPNAME(name,string,len,stmt) if((name)->m==(len) && !memcmp((name)->s,string,len))stmt
+#endif
+
 // Mark a block as incorporated by removing its inplaceability.  The blocks that are tested for incorporation are ones that are allocated by partitioning, and they will always start out as inplaceable
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable
 // z is an lvalue

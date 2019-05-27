@@ -89,13 +89,25 @@ OBJSLN="linenoise.o"
 fi
 ;;
 darwin_j32)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$darwin -m32 -DREADLINE $macmin"
-LINK=" -ledit -ldl -lncurses -m32 $macmin -o jconsole "
+LINK=" -ldl -m32 $macmin -o jconsole "
+else
+COMPILE="$darwin -m32 -DREADLINE -DUSE_LINENOISE $macmin"
+LINK=" -ldl -m32 $macmin -o jconsole "
+OBJSLN="linenoise.o"
+fi
 ;;
 #-mmacosx-version-min=10.5
 darwin_j64)
+if [ "$USE_LINENOISE" -ne "1" ] ; then
 COMPILE="$darwin -DREADLINE $macmin"
-LINK=" -ledit -ldl -lncurses $macmin -o jconsole "
+LINK=" -ldl $macmin -o jconsole "
+else
+COMPILE="$darwin -DREADLINE -DUSE_LINENOISE $macmin"
+LINK=" -ldl $macmin -o jconsole "
+OBJSLN="linenoise.o"
+fi
 ;;
 *)
 echo no case for those parameters

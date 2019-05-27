@@ -34,7 +34,6 @@ static char input[30000];
 #if defined(USE_LINENOISE)
 #include "linenoise.h"
 #endif
-#ifndef __MACH__
 typedef int (*ADD_HISTORY) (const char *);
 typedef int (*READ_HISTORY) (const char *);
 typedef int (*WRITE_HISTORY) (const char *);
@@ -46,27 +45,23 @@ static READ_HISTORY read_history;
 static WRITE_HISTORY write_history;
 static PREADLINE readline;
 static USING_HISTORY using_history;
-#else
-extern int   add_history(const char *);
-extern int   read_history(const char *);
-extern int   write_history(const char *);
-extern char* readline(const char *);
-extern void  using_history(void);
-#endif
 char* rl_readline_name;
 
 int hist=1;
 char histfile[512];
 
-#ifndef __MACH__
 #if !defined(ANDROID) && !defined(_WIN32)
 static int readlineinit()
 {
  if(hreadline)return 0; // already run
+#ifndef __MACH__
  if(!(hreadline=dlopen("libedit.so.3",RTLD_LAZY)))
  if(!(hreadline=dlopen("libedit.so.2",RTLD_LAZY)))
   if(!(hreadline=dlopen("libedit.so.1",RTLD_LAZY)))
    if(!(hreadline=dlopen("libedit.so.0",RTLD_LAZY))){
+#else
+ if(!(hreadline=dlopen("libedit.dylib",RTLD_LAZY))){
+#endif
 #if defined(USE_LINENOISE)
     add_history=linenoiseHistoryAdd;
     read_history=linenoiseHistoryLoad;
@@ -97,7 +92,6 @@ static int readlineinit()
     return 0;
 #endif
 }
-#endif
 #endif
 
 void rlexit(int c){	if(!hist&&histfile[0]) write_history(histfile);}
@@ -229,11 +223,7 @@ int main(int argc, char* argv[])
 #endif
 #ifdef READLINE
  if(_isatty(_fileno(stdin)))
-#ifndef __MACH__
  breadline=readlineinit();
-#else
- breadline=1;
-#endif
 #endif
 
  jt=jeload(callbacks);

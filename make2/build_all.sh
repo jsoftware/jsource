@@ -1,27 +1,35 @@
 #!/bin/sh
 # build all binaries
 
-cd "$(dirname "$(readlink -f "$0" || realpath "$0")")"
+realpath()
+{
+ oldpath=`pwd`
+ if ! cd $1 &> /dev/null; then
+  cd ${1##*/} &> /dev/null
+  echo $( pwd -P )/${1%/*}
+ else
+  pwd -P
+ fi
+ cd $oldpath > /dev/null
+}
+
+cd "$(realpath "$0")"
+echo "entering `pwd`"
 
 ./clean.sh
 
 if [ "`uname -m`" = "armv6l" ] || [ "`uname -m`" = "aarch64" ] || [ "$RASPI" = 1 ]; then
-platform=raspberry
+jplatform="${jplatform:=raspberry}"
 elif [ "`uname`" = "Darwin" ]; then
-platform=darwin
+jplatform="${jplatform:=darwin}"
 else
-platform=linux
+jplatform="${jplatform:=linux}"
 fi
-
-jplatform="${jplatform:=$platform}"
 if [ "`uname -m`" = "x86_64" ] || [ "`uname -m`" = "aarch64" ]; then
-cpu=j64
+j64x="${j64x:=j64}"
 else
-cpu=j32
+j64x="${j64x:=j32}"
 fi
-
-jplatform="${jplatform:=$platform}"
-j64x="${j64x:=$cpu}"
 
 jplatform=$jplatform j64x=$j64x ./build_jconsole.sh
 jplatform=$jplatform j64x=$j64x ./build_libj.sh

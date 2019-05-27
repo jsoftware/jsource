@@ -29,12 +29,12 @@ LINK=" -ldl -o jconsole "
 darwin_j32)
 TARGET=jconsole
 COMPILE="$common -m32 -DREADLINE -mmacosx-version-min=10.5"
-LINK=" -ledit -ldl -lncurses -m32 -mmacosx-version-min=10.5 -o jconsole "
+LINK=" -ldl -m32 -mmacosx-version-min=10.5 -o jconsole "
 ;;
 darwin_j64)
 TARGET=jconsole
 COMPILE="$common -DREADLINE -mmacosx-version-min=10.5"
-LINK=" -ledit -ldl -lncurses -mmacosx-version-min=10.5 -o jconsole "
+LINK=" -ldl -mmacosx-version-min=10.5 -o jconsole "
 ;;
 windows_j32)
 TARGET=jconsole.exe

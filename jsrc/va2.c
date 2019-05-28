@@ -749,7 +749,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
  } \
  acc3=_mm256_add_pd(acc3,_mm256_mul_pd(_mm256_maskload_pd(av,endmask),_mm256_maskload_pd(wv,endmask))); av+=((dplen-1)&(NPAR-1))+1;  wv+=((dplen-1)&(NPAR-1))+1; \
  acc0=_mm256_add_pd(acc0,acc1); acc2=_mm256_add_pd(acc2,acc3); acc0=_mm256_add_pd(acc0,acc2); /* combine accumulators vertically */ \
- acc0=_mm256_add_pd(acc0,_mm256_permute4x64_pd(acc0,0xee)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+ acc0=_mm256_add_pd(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=_mm256_add_pd(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
  _mm_storel_pd(zv++,_mm256_castpd256_pd128 (acc0));/* store the single result */
 
 #else

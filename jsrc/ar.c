@@ -159,7 +159,7 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
 #define redprim256rk1(prim,identity) \
  __m256i endmask; /* length mask for the last word */ \
  _mm256_zeroupper(VOIDARG); \
-  /* +/ vectors */ \
+  /* prim/ vectors */ \
   __m256d idreg=_mm256_set1_pd(identity); \
   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
   DQ(m, __m256d acc0=idreg; __m256d acc1=idreg; __m256d acc2=idreg; __m256d acc3=idreg; \

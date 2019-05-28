@@ -531,10 +531,10 @@ extern unsigned int __cdecl _clearfp (void);
 // Name comparison using wide instructions.   Run stmt if the names match
 #define IFCMPNAME(name,string,len,stmt) \
  if((name)->m==(len)){ \
-  __m256i endmask, readmask; __m256d accumdiff; D *in0=(D*)((name)->s), *in1=(D*)(string);  /* length mask for the last word */ \
-  accumdiff=_mm256_set1_pd(0.0); \
-  endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*SZI)-1))));  \
-  readmask=_mm256_loadu_si256((__m256i*)(jt->validitymask+(((-len)>>LGSZI)&(NPAR-1))));  \
+  __m256i readmask=_mm256_loadu_si256((__m256i*)(jt->validitymask+(((-len)>>LGSZI)&(NPAR-1)))); /* the words we read */ \
+  __m256i endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*SZI)-1))));  /* the valid bytes */\
+  __m256d accumdiff=_mm256_xor_pd(_mm256_castsi256_pd(readmask),_mm256_castsi256_pd(readmask)); /* will hold total xor result */ \
+  D *in0=(D*)((name)->s), *in1=(D*)(string); \
   DQ(((len)-1)>>(LGNPAR+LGSZI), \
     accumdiff=_mm256_or_pd(_mm256_xor_pd(_mm256_loadu_pd(in0),_mm256_loadu_pd(in1)),accumdiff); \
     in0+=NPAR; in1+=NPAR; \
@@ -550,7 +550,7 @@ extern unsigned int __cdecl _clearfp (void);
 // If a block is virtual, it must be realized before it can be incorporated.  realized blocks always start off inplaceable
 // z is an lvalue
 // Use INCORPNA if you need to tell the caller that the block e sent you has been incorporated.  If you created the block being incorporated,
-// even by calling a function that returns it, you can get by using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
+// even by calling a function that returns it, you can be OK just using rifv() or rifvs().  This may leave an incorporated block marked inplaceable,
 // but that's OK as long as you don't pass it to some place where it can become an argument to another function
 #define INCORP(z)       {if(AFLAG(z)&AFVIRTUAL)RZ((z)=realize(z)); ACIPNO(z); }
 // same, but for nonassignable argument

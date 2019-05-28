@@ -170,9 +170,9 @@ REDUCCPFX(tymesinsO, D, I, TYMESO)
     } \
     x += (n-1)&((4-1)<<LGNPAR); \
    } \
-   acc3=prim(acc3,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd (endmask))); x+=((n-1)&(NPAR-1))+1; \
+   acc3=prim(acc3,_mm256_blendv_pd(idreg,_mm256_maskload_pd(x,endmask),_mm256_castsi256_pd(endmask))); x+=((n-1)&(NPAR-1))+1; \
    acc0=prim(acc0,acc1); acc2=prim(acc2,acc3); acc0=prim(acc0,acc2); /* combine accumulators vertically */ \
-   acc0=prim(acc0,_mm256_permute4x64_pd(acc0,0xee)); acc0=prim(acc0,_mm256_permute_pd (acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
+   acc0=prim(acc0,_mm256_permute2f128_pd(acc0,acc0,0x01)); acc0=prim(acc0,_mm256_permute_pd(acc0,0xf));   /* combine accumulators horizontally  01+=23, 0+=1 */ \
    _mm_storel_pd(z++,_mm256_castpd256_pd128 (acc0)); /* store the single result */ \
   )
 

@@ -707,7 +707,7 @@ static IOFX(Z,UI4,jtioz02, hic0(2*n,(UIL*)v),    fcmp0((D*)v,(D*)&av[n*hj],2*n),
 //
 // At the end of this calculation il contains the index of a match, or asct if no match.
 #if C_AVX
-#define SETXVAL  xval=_mm_set_pd(*(D*)v,*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
+#define SETXVAL  xval=_mm_set1_pd(*(D*)v); xnew=_mm_mul_pd(xval,tltr); xrot=_mm_permute_pd(xnew,0x1); xnew=_mm_xor_pd(xnew,xval); xnew=_mm_xor_pd(xnew,xrot); dx=_mm_extract_epi64(_mm_castpd_si128(xnew),0);
 #elif defined(__aarch64__)
 #define SETXVAL  xval=vdupq_n_f64(*(D*)v); xnew=vmulq_f64(xval,tltr); xrot=vcombine_f64(vget_high_f64(xnew), vget_low_f64(xnew)); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xval))); xnew=vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(xnew),vreinterpretq_u64_f64(xrot))); dx=vgetq_lane_u64(vreinterpretq_u64_f64(xnew),0);
 #else

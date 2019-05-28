@@ -531,16 +531,16 @@ extern unsigned int __cdecl _clearfp (void);
 // Name comparison using wide instructions.   Run stmt if the names match
 #define IFCMPNAME(name,string,len,stmt) \
  if((name)->m==(len)){ \
-  __m256i endmask, readmask, zero, accumdiff; I *in0=(I*)((name)->s), *in1=(I*)(string);  /* length mask for the last word */ \
-  accumdiff=zero=_mm256_set1_epi64x(0); \
-  endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*sizeof(I))-1))));  \
-  readmask=_mm256_slli_epi64(endmask,8*(SZI-1)); /* shift low byte to high byte, to read if there is any significance in the word */ \
+  __m256i endmask, readmask; __m256d accumdiff; D *in0=(D*)((name)->s), *in1=(D*)(string);  /* length mask for the last word */ \
+  accumdiff=_mm256_set1_pd(0.0); \
+  endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*SZI)-1))));  \
+  readmask=_mm256_loadu_si256((__m256i*)(jt->validitymask+(((-len)>>LGSZI)&(NPAR-1))));  \
   DQ(((len)-1)>>(LGNPAR+LGSZI), \
-    accumdiff=_mm256_or_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i*)in0),_mm256_loadu_si256((__m256i*)in1)),accumdiff); \
+    accumdiff=_mm256_or_pd(_mm256_xor_pd(_mm256_loadu_pd(in0),_mm256_loadu_pd(in1)),accumdiff); \
     in0+=NPAR; in1+=NPAR; \
   ) \
-  accumdiff=_mm256_or_si256(_mm256_and_si256(endmask,_mm256_xor_si256(_mm256_maskload_epi64(in0,readmask),_mm256_maskload_epi64(in1,readmask))),accumdiff); \
-  if(_mm256_testz_si256(accumdiff,accumdiff))stmt \
+  accumdiff=_mm256_or_pd(_mm256_and_pd(_mm256_castsi256_pd(endmask),_mm256_xor_pd(_mm256_maskload_pd(in0,readmask),_mm256_maskload_pd(in1,readmask))),accumdiff); \
+  if(_mm256_testz_si256(_mm256_castpd_si256(accumdiff),_mm256_castpd_si256(accumdiff)))stmt \
  }
 #else
 #define IFCMPNAME(name,string,len,stmt) if((name)->m==(len) && !memcmp((name)->s,string,len))stmt

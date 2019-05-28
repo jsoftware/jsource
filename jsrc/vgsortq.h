@@ -45,7 +45,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
       // encode l as 00 r as 11 m as 01/10, the sequence is mr-ll-rm 01 11 10 00 00 01 11 10  0 1 1 0 0 0 1 1 0 (LE) -> 011000110  0xc6
    I pivotx=((pivotcomp&1?r:l)+(pivotcomp&2?r:l))>>1; pivot=v[pivotx]; v[pivotx]=v[r];  // pick the median pivot, swap it (notionally) with the last 
   }
-#if C_AVX&&SY_64
+#if SORTQCOND
    SORTQTYPE256 pivot256=SORTQSET256(pivot,pivot,pivot,pivot);  // copy pivot across regs
 #endif
 
@@ -58,7 +58,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
    // bit 0 is the lowest bit & corresponds to the beginning of the partition
    SORTQTYPE *v0=v+l;  // base of the partitioned region
    UI cstk=0;  // will hold comparison results.  Init to 0 for MSBs so as not to interfere with finding highest 1
-#if C_AVX&&SY_64
+#if SORTQCOND
    // go back to front, shifting bits up from the bottom
    {
    __m256i endmask;
@@ -132,7 +132,7 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
      I ncmp1=cstklsb1; ncmp1=ncmp1>(in1-BW)-(in0+cstklsb0)+1?(in1-BW)-(in0+cstklsb0)+1:ncmp1;
      ncmp1=ncmp1>in1-midpoint+8?in1-midpoint+8:ncmp1; ncmp1=ncmp1<0?0:ncmp1; if(!(cstk1|ncmp1))goto partdone;
      // look for swappable values and stack them.  At end, note the position of the first swappable.  If there are none, advance LSB to end of word to leave maximum space
-#if C_AVX&&SY_64
+#if SORTQCOND
      // the LSB is the earliest bit in the compare order.  For side 0 it is the lowest address, for side 1 the highest.
      // Therefore chunks of side 1 must be reversed
      if(ncmp0){  // it is possible that there is nothing to do (if one side didn't move much).  In that case, leave everything set
@@ -206,6 +206,7 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
   stack[stackp][0]=l0; stack[stackp][1]=r0; ++stackp;
  }
 }
+#undef SORTQCOND
 #undef SORTQSCOPE
 #undef SORTQNAME
 #undef SORTQTYPE

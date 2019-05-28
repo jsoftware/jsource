@@ -276,6 +276,7 @@ static SF(jtsorti1){A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 static I validitymask[8]={-1, -1, -1, -1, 0, 0, 0, 0};
 
 // sort a single integer list using quicksort without misprediction, inplace
+#define SORTQCOND C_AVX2&&SY_64
 #define SORTQNAME sortiq1
 #define SORTQTYPE I
 #define SORTQSCOPE
@@ -373,6 +374,7 @@ static SF(jtsortu1){A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 
 
 // sort a single real list using quicksort without misprediction, inplace
+#define SORTQCOND C_AVX&&SY_64
 #define SORTQNAME sortdq1
 #define SORTQTYPE D
 #define SORTQSCOPE static

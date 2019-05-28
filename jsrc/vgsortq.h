@@ -150,7 +150,7 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
      }
      if(ncmp1){  // it is possible that there is nothing to do (if one side didn't move much).  In that case, leave everything set
       __m256i endmask;
-      endmask = _mm256_permute4x64_epi64(_mm256_loadu_si256((__m256i*)(validitymask+((-ncmp1)&(NPAR-1)))),0x1b);  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+      endmask = _mm256_loadu_si256((__m256i*)(validitymask+5+((ncmp1-1)&(NPAR-1))));  /* mask for 00=1111, 01=0001, 10=0011, 11=0111 */
       cstk1>>=ncmp1;  // put the preexisting bits below the space where new bits will go.  If this shifts too much, OK because reg is 0 then
       I bittofill=BW-ncmp1;  // get the running index of where we will put new bits
       SORTQTYPE *vv=v+in1-BW-(NPAR-1);  // pointer to beginning of the 4-word section ending at in1 

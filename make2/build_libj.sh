@@ -107,7 +107,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 
 linux_j64) # linux intel 64bit avx
 TARGET=libj.so
-CFLAGS="$common -mavx2 -DC_AVX=1 "
+CFLAGS="$common -mavx -DC_AVX=1 "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 OBJS_FMA=" gemm_int-fma.o "
 ;;
@@ -138,7 +138,7 @@ LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 
 darwin_j64) # darwin intel 64bit
 TARGET=libj.dylib
-CFLAGS="$darwin -mavx2 $macmin -DC_AVX=1 "
+CFLAGS="$darwin -mavx $macmin -DC_AVX=1 "
 LDFLAGS=" -dynamiclib -lm -ldl $LDOPENMP $macmin"
 OBJS_FMA=" gemm_int-fma.o "
 ;;

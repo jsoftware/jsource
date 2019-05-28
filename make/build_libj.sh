@@ -81,7 +81,7 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 
 linux_j64) # linux intel 64bit avx
 TARGET=libj.so
-COMPILE="$common -mavx2 -DC_AVX=1 "
+COMPILE="$common -mavx -DC_AVX=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
@@ -112,7 +112,7 @@ LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 
 darwin_j64) # darwin intel 64bit
 TARGET=libj.dylib
-COMPILE="$darwin -mavx2 $macmin -DC_AVX=1"
+COMPILE="$darwin -mavx $macmin -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 OBJS_FMA=" blis/gemm_int-fma.o "
 ;;

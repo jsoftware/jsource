@@ -1106,8 +1106,13 @@ fnd022: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd023: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
+#else
+  SCDO(XDX,D,x!=av[j])
+  SCDO(FLX,D,!TCMPEQ(jt->cct,x,av[j]));
+#endif
 
 
+#if C_AVX2&&SY_64
    case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
        DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
@@ -1130,13 +1135,11 @@ fnd012: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==
 fnd013: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(I*)v:wv;);} break;
 
-
-
 #else
-  SCDO(XDX,D,x!=av[j])
   SCDO(INTX,I,x!=av[j]      );
-  SCDO(FLX,D,!TCMPEQ(jt->cct,x,av[j]));
 #endif
+
+
   SCDON(B01X,C,wvv[jj]!=avv[jj]      );
   SCDON(LITX,C,wvv[jj]!=avv[jj]      );
   SCDON(C2TX,S, wvv[jj]!=avv[jj]      );

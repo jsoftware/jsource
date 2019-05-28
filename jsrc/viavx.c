@@ -1062,46 +1062,46 @@ static void jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q;
   // The instruction set is too quirky to do this with macros
    case IOSCCASE(XDX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd001; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd001: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(XDX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))))goto fnd002; 
         while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd002;} 
 fnd002: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(XDX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_cmp_pd(x,_mm256_loadu_pd(avv),_CMP_EQ_OQ)))goto fnd003; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_cmp_pd(x,_mm256_maskload_pd(avv,endmask),_CMP_EQ_OQ))); 
 fnd003: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;); 
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
 
    case IOSCCASE(FLX,0,IIDOT): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1))));
-      __m256d cct=_mm256_set_pd(jt->cct,jt->cct,jt->cct,jt->cct);
+      __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd021; avv+=NPAR;} 
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd021: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(FLX,0,IICO): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
-      __m256d cct=_mm256_set_pd(jt->cct,jt->cct,jt->cct,jt->cct);
+      __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avend=av; D*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         y=_mm256_maskload_pd(avv,endmask); if(cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))))goto fnd022; 
         while(1){if(avv==avend)break; avv-=NPAR; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd022;} 
 fnd022: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(D*)v:wv;);} break; 
    case IOSCCASE(FLX,0,IEPS): {D *wv=(D*)v; D*av=(D*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
-      __m256d cct=_mm256_set_pd(jt->cct,jt->cct,jt->cct,jt->cct);
+      __m256d cct=_mm256_set1_pd(jt->cct);
       DQ(ac, 
-       DQ(wsct, __m256d x=_mm256_set_pd(*wv,*wv,*wv,*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256d x=_mm256_set1_pd(*wv); __m256d y; __m256d tolx=_mm256_mul_pd(x,cct); D*avv=av; D*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; y=_mm256_loadu_pd(avv); if(cmps=_mm256_movemask_pd(_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ))))goto fnd023; avv+=NPAR;} 
         y=_mm256_maskload_pd(avv,endmask); cmps=_mm256_movemask_pd(_mm256_and_pd(_mm256_castsi256_pd (endmask),_mm256_xor_pd(_mm256_cmp_pd(x,_mm256_mul_pd(cct,y),_CMP_GT_OQ),_mm256_cmp_pd(tolx,y,_CMP_GE_OQ)))); 
 fnd023: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;); 
@@ -1110,21 +1110,21 @@ fnd023: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;);
 
    case IOSCCASE(INTX,0,IIDOT): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_set_epi64x(*wv,*wv,*wv,*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd011; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
 fnd011: ; I res=(avv-av)+CTTZ(cmps); res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
    case IOSCCASE(INTX,0,IICO): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_set_epi64x(*wv,*wv,*wv,*wv); I*avend=av; I*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
+       DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avend=av; I*avv=av+((asct-1)&(-(I)NPAR)); int cmps;  
         if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))))goto fnd012; 
         while(1){if(avv==avend)break; avv-=NPAR; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd012;} 
 fnd012: ; unsigned long temp; CTLZI(cmps,temp); I res=(avv-av)+temp; res=(cmps==0)?asct:res; *(I*)zv=res; zv=(I*)zv+1;      wv+=q;);
       av+=p; wv=(1==wc)?(I*)v:wv;);} break; 
    case IOSCCASE(INTX,0,IEPS): {I *wv=(I*)v; I*av=(I*)u; __m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-asct)&(NPAR-1)))); 
       DQ(ac, 
-       DQ(wsct, __m256i x=_mm256_set_epi64x(*wv,*wv,*wv,*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
+       DQ(wsct, __m256i x=_mm256_set1_epi64x(*wv); I*avv=av; I*avend=av+((asct-1)&(-(I)NPAR)); int cmps; 
         while(1){if(avv==avend)break; if(cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_cmpeq_epi64(x,_mm256_loadu_si256((__m256i*)avv)))))goto fnd013; avv+=NPAR;} 
         cmps=_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_and_si256(endmask,_mm256_cmpeq_epi64(x,_mm256_maskload_epi64(avv,endmask))))); 
 fnd013: *(C*)zv=(UI)(-cmps)>>(BW-1); zv=(C*)zv+1;      wv+=q;); 

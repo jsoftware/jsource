@@ -287,7 +287,7 @@ typedef struct {VA2 p1[6];} UA;
 #if 0 // waiting till me learn how to XCTL
 static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y){I u,v; \
  if(C_AVX&&SY_64){__m256i u256,v256; \
-  __m256i bool256=_mm256_set_epi64x(0x0101010101010101,0x0101010101010101,0x0101010101010101,0x0101010101010101); /* valid boolean bits */ \
+  __m256i bool256=_mm256_set1_epi64x(0x0101010101010101); /* valid boolean bits */ \
   __m256i workarea; workarea=_mm256_xor_si256(bool256,bool256); /* temp, init to avoid warning */ \
   DQ((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); v256=_mm256_loadu_si256((__m256i*)y); \
    _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
@@ -298,46 +298,7 @@ static void f##1(J jt,I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y)
 }
 #endif
 #if 1
-#if C_AVX&&SY_64
-#define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
-AHDR2(f,void,void,void){ I u,v;       \
- decls  \
- if(n-1==0){                                             \
-  if((m-1)>>(LGSZI+LGNPAR)){__m256i u256,v256; decls256 \
-   DQU((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); v256=_mm256_loadu_si256((__m256i*)y); \
-    _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
-   ) \
-  } \
-  DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
-  u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
- }else if(n-1<0){n=~n;                      \
-  DQ(m, \
-   REPLBYTETOW(*(C*)x,u); x=(C*)x+1; \
-   if((n-1)>>(LGSZI+LGNPAR)){__m256i u256;__m256i v256; decls256 \
-    u256=_mm256_set_epi64x(u,u,u,u); \
-    DQU((n-1)>>(LGSZI+LGNPAR), v256=_mm256_loadu_si256((__m256i*)y); \
-     _mm256_storeu_si256((__m256i*)z, fuv); y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
-    ) \
-   } \
-   DQ(((n-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
-   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); y=(I*)((UC*)y+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
-  ) \
- }else{  \
-  DQ(m, \
-   REPLBYTETOW(*(C*)y,v); y=(C*)y+1; \
-   if((n-1)>>(LGSZI+LGNPAR)){__m256i u256;__m256i v256; decls256 \
-    v256=_mm256_set_epi64x(v,v,v,v); \
-    DQU((n-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_si256((__m256i*)x); \
-     _mm256_storeu_si256((__m256i*)z, fuv); x=(C*)x+NPAR*SZI; z=(C*)z+NPAR*SZI; \
-    ) \
-   } \
-   DQ(((n-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
-   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
-  ) \
- } \
-}
-#else
-#define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
+#define BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
 AHDR2(f,void,void,void){ I u,v;       \
  decls \
  if(n-1==0){                                             \
@@ -357,6 +318,52 @@ AHDR2(f,void,void,void){ I u,v;       \
   ) \
  } \
 }
+
+#if C_AVX&&SY_64
+#define BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)  \
+AHDR2(f,void,void,void){ I u,v;       \
+ decls  \
+ if(n-1==0){                                             \
+  if((m-1)>>(LGSZI+LGNPAR)){__m256d u256,v256; decls256 \
+   DQU((m-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); v256=_mm256_loadu_pd(y); \
+    _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
+   ) \
+  } \
+  DQ(((m-1)>>LGSZI)&(NPAR-1), u=*(I*)x; v=*(I*)y; *(I*)z=pfx(u,v); x=(C*)x+SZI; y=(C*)y+SZI; z=(C*)z+SZI;);           \
+  u=*(I*)x; v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-m)&(SZI-1));  \
+ }else if(n-1<0){n=~n;                      \
+  DQ(m, \
+   REPLBYTETOW(*(C*)x,u); x=(C*)x+1; \
+   if((n-1)>>(LGSZI+LGNPAR)){__m256d u256;__m256d v256; decls256 \
+    u256=_mm256_castsi256_pd(_mm256_set1_epi64x(u)); \
+    DQU((n-1)>>(LGSZI+LGNPAR), v256=_mm256_loadu_pd(y); \
+     _mm256_storeu_pd(z, fuv); y=(C*)y+NPAR*SZI; z=(C*)z+NPAR*SZI; \
+    ) \
+   } \
+   DQ(((n-1)>>LGSZI)&(NPAR-1), v=*(I*)y; *(I*)z=pfx(u,v); y=(C*)y+SZI; z=(C*)z+SZI;)           \
+   v=*(I*)y; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); y=(I*)((UC*)y+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+  ) \
+ }else{  \
+  DQ(m, \
+   REPLBYTETOW(*(C*)y,v); y=(C*)y+1; \
+   if((n-1)>>(LGSZI+LGNPAR)){__m256d u256;__m256d v256; decls256 \
+    v256=_mm256_castsi256_pd(_mm256_set1_epi64x(v)); \
+    DQU((n-1)>>(LGSZI+LGNPAR), u256=_mm256_loadu_pd(x); \
+     _mm256_storeu_pd(z, fuv); x=(C*)x+NPAR*SZI; z=(C*)z+NPAR*SZI; \
+    ) \
+   } \
+   DQ(((n-1)>>LGSZI)&(NPAR-1), u=*(I*)x; *(I*)z=pfx(u,v); x=(C*)x+SZI; z=(C*)z+SZI;)         \
+   u=*(I*)x; u=pfx(u,v); STOREBYTES(z,u,(-n)&(SZI-1)); x=(I*)((UC*)x+(((n-1)&(SZI-1))+1)); z=(I*)((UC*)z+(((n-1)&(SZI-1))+1)); \
+  ) \
+ } \
+}
+
+#if C_AVX2
+#define BPFXAVX2(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)
+#else
+#define BPFXAVX2(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256) BPFXNOAVX(f,pfx,bpfx,pfyx,bpfyx,fuv,decls,decls256)
+#endif
+#else
 #endif
 #else  // obsolete 
 // n and m are never 0.

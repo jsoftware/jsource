@@ -245,6 +245,10 @@ extern unsigned int __cdecl _clearfp (void);
 #include <immintrin.h>
 #endif
 
+#ifndef C_AVX2
+#define C_AVX2 0
+#endif
+
 #if defined(__aarch64__)
 #include <arm_neon.h>
 #endif
@@ -528,7 +532,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define IFCMPNAME(name,string,len,stmt) \
  if((name)->m==(len)){ \
   __m256i endmask, readmask, zero, accumdiff; I *in0=(I*)((name)->s), *in1=(I*)(string);  /* length mask for the last word */ \
-  accumdiff=zero=_mm256_xor_si256(zero,zero); \
+  accumdiff=zero=_mm256_set1_epi64x(0); \
   endmask=_mm256_loadu_si256((__m256i*)((C*)jt->validitymask+((-(len))&((NPAR*sizeof(I))-1))));  \
   readmask=_mm256_slli_epi64(endmask,8*(SZI-1)); /* shift low byte to high byte, to read if there is any significance in the word */ \
   DQ(((len)-1)>>(LGNPAR+LGSZI), \

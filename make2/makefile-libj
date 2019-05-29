@@ -147,7 +147,7 @@ OBJS=  \
  xu.o
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_FMA)
+	$(CC) -c -o $@ $< $(CFLAGS) $(CFLAGS_SIMD) $(CFLAGS_FMA)
 
 $(OBJS_FMA) : CFLAGS_FMA := -mfma
 $(ODIR)/$(TARGET) : $(OBJS) $(OBJS_FMA)

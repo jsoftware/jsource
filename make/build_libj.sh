@@ -61,6 +61,8 @@ common="$OPENMP -Werror -fPIC -O1 -fwrapv -fno-strict-aliasing -Wextra -Wno-cons
 fi
 darwin="$OPENMP -fPIC -O1 -fwrapv -fno-strict-aliasing -Wno-string-plus-int -Wno-empty-body -Wno-unsequenced -Wno-unused-value -Wno-pointer-sign -Wno-parentheses -Wno-return-type -Wno-constant-logical-operand -Wno-comment -Wno-unsequenced"
 
+javx2="${javx2:=0}"
+
 case $jplatform\_$1 in
 
 linux_j32) # linux x86
@@ -81,8 +83,13 @@ LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 
 linux_j64) # linux intel 64bit avx
 TARGET=libj.so
-COMPILE="$common -mavx -DC_AVX=1 "
+COMPILE="$common -DC_AVX=1 "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
+if [ "x$javx2" != x'1' ] ; then
+CFLAGS_SIMD=" -mavx "
+else
+CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
+fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
@@ -112,8 +119,13 @@ LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
 
 darwin_j64) # darwin intel 64bit
 TARGET=libj.dylib
-COMPILE="$darwin -mavx $macmin -DC_AVX=1"
+COMPILE="$darwin $macmin -DC_AVX=1"
 LINK=" -dynamiclib -lm -ldl $LDOPENMP $macmin -o libj.dylib"
+if [ "x$javx2" != x'1' ] ; then
+CFLAGS_SIMD=" -mavx "
+else
+CFLAGS_SIMD=" -DC_AVX2=1 -mavx2 "
+fi
 OBJS_FMA=" blis/gemm_int-fma.o "
 ;;
 
@@ -259,6 +271,6 @@ OBJS="\
  xt.o \
  xu.o "
 
-export OBJS OBJS_FMA COMPILE LINK TARGET
+export OBJS OBJS_FMA COMPILE CFLAGS_SIMD LINK TARGET
 $jmake/domake.sh $1
 

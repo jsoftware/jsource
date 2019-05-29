@@ -15,18 +15,19 @@ chmod +x *.sh
 
 # general format for build_... commands 
 # don't miss the ./ part when typing commands
-jplatform=(..) j64x=(..) ./build_libj.sh
+javx2=(..) jplatform=(..) j64x=(..) ./build_libj.sh
 
 where 
-jplatform : linux darwin raspberry
-j64x : j64 j64nonavx j32
+jplatform : linux darwin raspberry  (default host)
+j64x : j64 j64nonavx j32  (default host but can't detect j64nonavx)
+javx2 : 0 1  (default 0)
 
 # binaries generated inside the bin folder under jsource
 
 # eg. build j64 binaries
 jplatform=linux j64x=j64 ./build_libj.sh
 
-# linux and j64 is the default, so this is fine
+# linux and j64 is the default on 64-bit linux, so this is fine
 ./build_libj.sh
 
 # the easiest way to build all binaries

@@ -158,8 +158,8 @@ finmedxchg:  // exchanges if any are done, and xchgx0/xchgx1 are set
 // obsolete       while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute4x64_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),0x1b))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
 // obsolete       cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute4x64_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),0x1b))<<bittofill);
       // if AVX2, use permute4x rather than the 2 insts here
-      while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),pivot256,0x01),0x5))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
-      cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),pivot256,0x01),0x5))<<bittofill);
+      while(bittofill<BW-NPAR){cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQULOAD((SORTQULOADTYPE)vv) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill); vv-=NPAR; bittofill+=NPAR;}
+      cstk1=cstk1+((I)_mm256_movemask_pd(_mm256_permute_pd(_mm256_permute2f128_pd(SORTQCASTTOPD(SORTQCMP256(pivot256,SORTQMASKLOAD(vv,endmask) SORTQCMPTYPE)),SORTQCASTTOPD(pivot256),0x01),0x5))<<bittofill);
 
       // advance input pointer over the comparisons we made; get index of lowest 1-bit (handling the case of none specially)
       in1-=ncmp1; cstklsb1=CTTZI(cstk1);cstklsb1=(cstk1==0)?BW:cstklsb1;

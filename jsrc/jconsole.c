@@ -239,8 +239,8 @@ int main(int argc, char* argv[])
 // set stack size to get limit error instead of crash
  struct rlimit lim;
  if(!getrlimit(RLIMIT_STACK,&lim)){
-  if(lim.rlim_cur!=RLIM_INFINITY && lim.rlim_cur<J_STACK && (lim.rlim_max==RLIM_INFINITY || lim.rlim_max>=J_STACK)){
-   lim.rlim_cur=J_STACK;
+  if(lim.rlim_cur!=RLIM_INFINITY && lim.rlim_cur<J_STACK){
+   lim.rlim_cur=(lim.rlim_max==RLIM_INFINITY)?J_STACK:(lim.rlim_max<J_STACK)?lim.rlim_max:J_STACK;
    setrlimit(RLIMIT_STACK,&lim);
   }
  }

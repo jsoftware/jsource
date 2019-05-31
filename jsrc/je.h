@@ -139,6 +139,7 @@ extern F1(jtimmea);
 extern F1(jtimmex);
 extern F1(jtincrem);
 extern F1(jtintmod2);
+extern F1(jtinttoe);
 extern F1(jtiota);
 extern F1(jtisnan);
 extern F1(jtisempty);

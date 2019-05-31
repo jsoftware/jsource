@@ -410,13 +410,13 @@ static I eft(I n,UI* e,UI* t)
   if(Y>2099){
    D+=(Y/400)-(Y/100);  // 2100 2200 2300 2500 etc are NOT leapyears
   }
-  // Add in extra days for earlier 31-day months in this CALENDAR year (so add 1 in March)
-  D+=(0x77655443221100>>(4*M))&0xf;  // starting with month 0, this is x x 1 1 2 2 3 4 4 5 5 6 7 7
+  // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
+  D+=(0x765544322110000>>(4*M))&0xf;  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
   // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999
-  k=365*Y + 30*M + D - 730532;  // day# from epoch
+  k=365*Y + 30*M + D - 730531;  // day# from epoch
   // Combine everythine into one # and store
- 	e[i]=(NANOS*24LL*60LL*60LL)*k + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Hoerner's Rule because of multiply latency
+ 	e[i]=(NANOS*24LL*60LL*60LL)*k + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
 	}
 	return 0;
 }
@@ -594,7 +594,7 @@ bad:
 return r;
 }
 
-// Convert a block of integer yyyymmddHHMMSS to nanoseconds from year 2000
+// 3!:10 Convert a block of integer yyyymmddHHMMSS to nanoseconds from year 2000
 F1(jtinttoe){A z;I n;
  RZ(w);
  n=AN(w);

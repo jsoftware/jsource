@@ -39,12 +39,23 @@ F1(jtcatalog){PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,
   if(1==an){v+=j;   DQ(m,                                    *x++=*v;       v+=p; );}  \
   else              DQ(m, DO(an, SETJ(av[i]);                *x++=v[j];);   v+=p; );   \
  }
-#define IFROMLOOP2(T,qexp)  \
+#if 0 // obsolete
+# define IFROMLOOP2(T,qexp)  \
  {T* RESTRICT u,* RESTRICT v=(T*)wv,* RESTRICT x=(T*)zv;  \
   q=(qexp); pq=p*q;         \
   if(1==an){v+=j*q; DQ(m,                     u=v;     DQ(q, *x++=*u++;);   v+=pq;);}  \
   else              DQ(m, DO(an, SETJ(av[i]); u=v+j*q; DQ(q, *x++=*u++;);); v+=pq;);   \
  }
+#else
+#define MVMC(d,s,l) MC(d,s,l); d=(I*)((C*)d+(l)); s=(I*)((C*)s+(l));
+#define MVLOOP(d,s,l) I n=(l); do{*d++=*s++;}while((n-=SZI)>0); d=(I*)((C*)d+n);
+#define IFROMLOOP2(qexp,mvlp)  \
+ {I* RESTRICT u,* RESTRICT v=(I*)wv,* RESTRICT x=(I*)zv;  \
+  q=(qexp); pq=p*k;         \
+  if(1==an){v=(I*)((C*)v+j*k); DQ(m,                     u=v;     mvlp(x,u,k)  v=(I*)((C*)v+pq););}  \
+  else              DQ(m, DO(an, SETJ(av[i]); u=(I*)((C*)v+j*k); mvlp(x,u,k) ); v=(I*)((C*)v+pq););   \
+ }
+#endif
 
 F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  F1PREFIP;
@@ -97,8 +108,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
  // from here on we are moving items
  wk=k*p;   // stride between cells of w
  wv=CAV(w); zv=CAV(z); SETJ(*av);
- if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(D,k>>LGSZD);}
- else switch(k){
+#if 0 // obsolete No need to bother moving Ds unless they are longer than Is
+ if(AT(w)&FL+CMPX){if(k==sizeof(D))IFROMLOOP(D) else IFROMLOOP2(k>>LGSZD);}
+ else
+#endif
+  switch(k){
   case sizeof(C): IFROMLOOP(C); break; 
   case sizeof(S): IFROMLOOP(S); break;  
 #if SY_64
@@ -106,6 +120,11 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 #endif
   case sizeof(I): IFROMLOOP(I); break;
   default:
+  // cells are not simple items.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
+   if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
+   else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
+    break;
+#if 0 // obsolete
    if     (0==(k&(SZI-1)))IFROMLOOP2(I,k>>LGSZI)
 #if SY_64
    else if(0==(k&(SZI4-1)))IFROMLOOP2(int,k>>LGSZI4)
@@ -115,8 +134,9 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
     q=1+(k>>LGSZS);
     if(1==an){wv+=k*j; DQ(m,                     x=(S*)zv; u=(S*) wv;      DQ(q, *x++=*u++;); zv+=k;   wv+=wk;);}
     else               DO(m, DO(an, SETJ(av[i]); x=(S*)zv; u=(S*)(wv+k*j); DQ(q, *x++=*u++;); zv+=k;); wv+=wk;);
+   }
+#endif
   }
- }
  RETF(z);  // todo kludge should inherit norel
 }    /* a{"r w for numeric a */
 
@@ -430,10 +450,11 @@ F2(jtsfrom){
      {I * RESTRICT zv=IAV(z); I *RESTRICT wv=IAV(w); DQ(AN(ind), *zv++=wv[*iv++];) break;}  // scatter-copy the data, 8-byte chunks
     default:
      // handle small integral number of words with a local loop
-     if(!(cellsize&~(MEMCPYTUNELOOP-SZI))){  // length is an even number of I and not too big
-      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),cellsize>>LGSZI) zv+=cellsize;)  // use local copy
+     // It is OK to pad to an I boundary, because any block with cells not a multiple of I is padded to an I
+     if(cellsize<MEMCPYTUNELOOP){
+      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MCIS((I*)zv,(I*)(wv+*iv++*cellsize),(cellsize+SZI-1)>>LGSZI) zv+=cellsize;)  // use local copy
      }else{
-      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,cellsize); zv+=cellsize;)  // use local copy
+      C* RESTRICT zv=CAV(z); C *RESTRICT wv=CAV(w); DQ(AN(ind), MC(zv,wv+*iv++*cellsize,cellsize); zv+=cellsize;)  // use memcpy
      }
      break;
     }

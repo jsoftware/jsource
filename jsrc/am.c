@@ -168,7 +168,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
    default:
     // handle small integral number of words with a local loop
-    if(!(cellsize&~(MEMCPYTUNELOOP-SZI))){  // length is an even number of I and not too big
+    if((((cellsize&(SZI-1))-1)&(cellsize-MEMCPYTUNELOOP))<0){  // length is an even number of I and not too big.  We must not copy outside cells boundaries here
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MCIS((I*)(zv+(iv[i]*cellsize)),(I*)av,cellsize>>LGSZI); if((av+=cellsize)==avn)av=av0;);  // use local copy
     }else{
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); if((av+=cellsize)==avn)av=av0;);  // scatter-copy the data, cyclically

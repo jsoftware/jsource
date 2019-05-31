@@ -376,7 +376,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define TOOMANYATOMS 0x01000000000000LL  // more atoms than this is considered overflow (64-bit)
 
 #define MEMCPYTUNE 4096  // (bytes) unpredictable blocks shorter than this should just use MCISxx.  Keep as power of 2
-#define MEMCPYTUNELOOP 64  // (bytes) predictable blocks shorter than this should just use MCISxx.  Keep as power of 2
+#define MEMCPYTUNELOOP 350  // (bytes) predictable blocks shorter than this should just use MCISxx.
 
 
 // Debugging options
@@ -608,6 +608,7 @@ extern unsigned int __cdecl _clearfp (void);
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
 #define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}
 #define MCISU(dest,src,n) {I * RESTRICT _d=(I*)(dest); I * RESTRICT _s=(I*)(src); I _n=-(n); do{*_d++=*_s++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
+#define MCISUds(dest,src,n) {I _n=-(n); do{*dest++=*src++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
 
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)
@@ -727,7 +728,7 @@ extern unsigned int __cdecl _clearfp (void);
 #if C_LE
 // obsolete #define STOREBYTES(out,in,n) {UC *sboptr=(UC*)(out); DQ(n, *sboptr++=(UC)in; in>>=8;)}
 // obsolete #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&((UI)~(I)0 << ((n)<<3))) | ((in)&~((UI)~(I)0 << ((n)<<3)));}
-// Input is I/UI, count is # bytes to NOT store to output pointer (0-7).
+// Output is pointer, Input is I/UI, count is # bytes to NOT store to output pointer (0-7).
 #define STOREBYTES(out,in,n) {*(UI*)(out) = (*(UI*)(out)&~((UI)~(I)0 >> ((n)<<3))) | ((in)&((UI)~(I)0 >> ((n)<<3)));}
 #endif
 // Input is a word of bytes.  Result is 1 bit per input byte, spaced like B01s, with the bit 0 iff the corresponding input byte was all 0.  Non-boolean bits of result are garbage.

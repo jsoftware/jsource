@@ -391,6 +391,7 @@ F2(jtbit2){
 // e from yyyymmddhhmnss.  The argument is assumed to be well-formed
 static I eft(I n,UI* e,UI* t)
 {
+#if SY_64
 	I i; UI k; UI4 kk; UI hh,mm,ss,M,D,Y;  // use unsigned to make / and % generate better code
 	for(i=0;i<n;++i){
 	 k=t[i];  // read the yyyymmddhhmnss value
@@ -404,7 +405,7 @@ static I eft(I n,UI* e,UI* t)
   // Now calculate number of days from epoch.  First reorder months so that the irregular February comes last, i. e. make the year start Mar 1
   UI janfeb=(I)(M-3)>>(BW-1);   // -1 if jan/feb
   Y+=janfeb; M+=janfeb&12;  // if janfeb, subtract 1 from year and add 12 to month
-  // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s
+  // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
   D+=Y>>2;
   // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
   if(Y>2099){
@@ -418,6 +419,7 @@ static I eft(I n,UI* e,UI* t)
   // Combine everythine into one # and store
  	e[i]=(NANOS*24LL*60LL*60LL)*k + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
 	}
+#endif
 	return 0;
 }
 

@@ -222,15 +222,20 @@ static DF2(jtkey){F2PREFIP;PROLOG(0009);A frets,wperm,z;
   }
 
   // copy the data to the end of its partition and advance the partition pointer
-  if(celllen<MEMCPYTUNE) {
-   MCISds(partitionptr,wv,celllen>>LGSZI);  // move full words
-   if(celllen&(SZI-1)){
+  if((UI)(celllen-1)<MEMCPYTUNELOOP) {  // cells have to be nonempty for us to copy them here
+   I n=celllen; while((n-=SZI)>0){*partitionptr++=*wv++;}
+     // move full words.  Must not overwrite the area, since we are scatter-writing
+#if 1
+   STOREBYTES(partitionptr,*wv,-n); partitionptr = (I*)((C*)partitionptr+SZI+n); wv = (I*)((C*)wv+SZI+n);
+#else   // obsolete
+   if(celllen&(SZI-1)){  // copy in any remnant
 #if LGSZI>2
     if(celllen&4){*(I4*)partitionptr=*(I4*)wv; partitionptr=(I*)((C*)partitionptr+SZI4); wv=(I*)((C*)wv+SZI4);}
 #endif
     if(celllen&2){*(S*)partitionptr=*(S*)wv; partitionptr=(I*)((C*)partitionptr+SZS); wv=(I*)((C*)wv+SZS);}
     if(celllen&1){*(C*)partitionptr=*(C*)wv; partitionptr=(I*)((C*)partitionptr+1); wv=(I*)((C*)wv+1);}
    }
+#endif
   }else{MC(partitionptr,wv,celllen); partitionptr = (I*)((C*)partitionptr+celllen); wv = (I*)((C*)wv+celllen);}
 
   av[avvalue]=(I)partitionptr;  // store updated end-of-partition after move

@@ -145,7 +145,7 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
  // If not inplaceable, create a new block (cvt always allocates a new block) with the common precision.  Relocate it if necessary.
  // after this, z cannot be virtual unless it is an inplace memory-mapped boxed array
  else{RZ(z=cvt(t,w));}
- // Here for non-relative blocks.  Could be in-place.  If boxed,
+ // Could be in-place.  If boxed,
  // a has been forced to be recursive usecount, so any block referred to by a will not be freed by a free of w.
  // If w has recursive usecount, all the blocks referred to in w have had their usecount incremented; we must
  // free them before we overwrite them, and we must increment the usecount in the block we store into them
@@ -168,8 +168,10 @@ static A jtmerge2(J jt,A a,A w,A ind,I cellframelen){F2PREFIP;A z;I t;
     {I * RESTRICT zv=AV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), zv[iv[i]]=*av; if((++av)==(I*)avn)av=(I*)av0;); break;}  // scatter-copy the data
    default:
     // handle small integral number of words with a local loop
-    if(!(cellsize&~(MEMCPYTUNELOOP-SZI))){  // length is an even number of I and not too big
-     C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MCIS((I*)(zv+(iv[i]*cellsize)),(I*)av,cellsize>>LGSZI); if((av+=cellsize)==avn)av=av0;);  // use local copy
+    if((UI)(cellsize-1)<(UI)MEMCPYTUNELOOP){  // length is nonzero and not too big.  We must not copy outside cells boundaries here
+     // move full words followed by the remnant.  Must not overwrite the area, since we are scatter-writing
+// obsolete      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MCIS((I*)(zv+(iv[i]*cellsize)),(I*)av,cellsize>>LGSZI); if((av+=cellsize)==avn)av=av0;);  // use local copy
+     C* RESTRICT zv=CAV(z); I *RESTRICT av=(I*)av0; DO(AN(ind), I * RESTRICT d=(I*)(zv+(iv[i]*cellsize)); I n=cellsize; while((n-=SZI)>0){*d++=*av++;} STOREBYTES(d,*av,-n); av=(I*)((C*)av+SZI+n); av=av==(I*)avn?(I*)av0:av;);  // use local copy
     }else{
      C* RESTRICT zv=CAV(z); C *RESTRICT av=(C*)av0; DO(AN(ind), MC(zv+(iv[i]*cellsize),av,cellsize); if((av+=cellsize)==avn)av=av0;);  // scatter-copy the data, cyclically
     }

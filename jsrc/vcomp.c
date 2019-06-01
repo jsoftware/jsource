@@ -97,3 +97,36 @@ ACMP0(gtDB, B,D,B, TGT, >  )   ACMP0(gtDI, B,D,I, TGT, > )  ACMP0(gtDD, B,D,D, T
 APFX(gtXX, B,X,X,  1==xcompare)
 APFX(gtQQ, B,Q,Q, QGT  )
 APFX(gtSS, B,SB,SB, SBGT)
+
+#if C_AVX2&&SY_64
+#define primcmpD256(name,primop) \
+AHDR2(name,D,D,D){ \
+ __m256i endmask; /* length mask for the last word */ \
+ _mm256_zeroupper(VOIDARG); \
+ NAN0; \
+ if(n-1==0){ \
+  /* vector-to-vector, no repetitions */ \
+  endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+  DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;) \
+  /* runout, using mask */ \
+  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask))); \
+ }else{ \
+  if(n-1<0){n=~n; \
+   /* atom+vector */ \
+   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   DQ(m, __m256d u; u=_mm256_set1_pd(*x); ++x; \
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(u,_mm256_maskload_pd(y,endmask))); \
+     y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+  }else{ \
+   /* vector+atom */ \
+   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+   DQ(m, __m256d v; v=_mm256_set1_pd(*y); ++y; \
+     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),v)); \
+     x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+  } \
+ } \
+ NAN1V; \
+}
+
+#else
+#endif

@@ -372,3 +372,237 @@ F1(jtbit1){A z;B*wv;BT*zv;I c,i,j,n,p,q,r,*s;UI x,y;
 F2(jtbit2){
  ASSERT(0,EVNONCE);
 }    /* convert byte booleans to bit booleans */
+
+/* Copyright 2014, Jsoftware Inc.  All rights reserved. */
+// datetime epoch routines
+
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <math.h>
+#include <ctype.h>
+
+#define MINY  1800
+#define MAXY  2200
+#define BASE  946684800
+#define NANOS 1000000000LL
+#define SECS  86400
+
+// e from yyyymmddhhmnss.  The argument is assumed to be well-formed
+static I eft(I n,UI* e,UI* t)
+{
+#if SY_64
+	I i; UI k; UI4 kk; UI hh,mm,ss,M,D,Y;  // use unsigned to make / and % generate better code
+	for(i=0;i<n;++i){
+	 k=t[i];  // read the yyyymmddhhmnss value
+	 ss=k%100U; k=k/100U;  // ss yyyymmddhhmn
+	 mm=k%100U; k=k/100U;  // ss mn yyyymmddhh
+	 hh=k%100U; kk=(UI4)(k/100U);  // ss mn hh yyyymmdd.  yyyymmdd fits in UI4, so switch to that (faster /, %)
+	 D=kk%100U; kk=kk/100U;  // ss mn hh D yyyymm
+	 M=kk%100U;   // ss mn hh D M
+  Y=kk/100U;  // ss mn hh D M Y
+
+  // Now calculate number of days from epoch.  First reorder months so that the irregular February comes last, i. e. make the year start Mar 1
+  UI janfeb=(I)(M-3)>>(BW-1);   // -1 if jan/feb
+  Y+=janfeb; M+=janfeb&12;  // if janfeb, subtract 1 from year and add 12 to month
+  // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
+  D+=Y>>2;
+  // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
+  if(Y>2099){
+   D+=(Y/400)-(Y/100);  // 2100 2200 2300 2500 etc are NOT leapyears
+  }
+  // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
+  D+=(0x765544322110000>>(4*M))&0xf;  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
+  // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
+  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999
+  k=365*Y + 30*M + D - 730531;  // day# from epoch
+  // Combine everythine into one # and store
+ 	e[i]=(NANOS*24LL*60LL*60LL)*k + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
+	}
+#endif
+	return 0;
+}
+
+// iso 8601 from e (epoch date time)
+// sz - separator , or . and zulu 'Z' or ' '
+static I sfe(I rows,I cols,char* s,I* e,char* sz)
+{
+	I k; int i,M,v,d,j,g,m,t,y,hh,mm,ss; char b[1000];char* q;
+	for(i=0;i<rows;++i)
+	{
+		k= e[i];
+		M=k%NANOS;
+		k=k/NANOS;
+		v=k%SECS;
+		k= k/SECS;
+		if(e[i]<0)
+		{
+			if(M<0)
+			{
+				v=v-1;
+				M=M+NANOS;
+				if(M<0) M=-M;
+			}
+			if(v<0)
+			{
+				k=k-1;
+				v=v+24*60*60;
+				if(v<0) v=-v;
+			}
+		}
+		memset(b,0,(int)cols+1);
+		memset(s,' ',(int)cols);		
+		j=(int)k+2451545;
+		g=(int)floor(3*floor((4*j+274277)/146097)/4)-38;
+		j+=1401+g;
+		t=4*j+3;
+		y=(int)floor(t/1461);
+		t=(t%1461)>>2;
+		m=(int)floor((t*5+461)/153);
+		d=(int)floor(((t*5+2)%153)/5);
+		if (m>12) {
+		  y++;
+		  m-=12;
+		}
+		y=y-4716;
+		++d;
+
+		hh= v/3600;
+		v= v%3600;
+		mm= v/60;
+		ss= v%60;
+		sprintf(b,"%04d-%02d-%02dT%02d:%02d:%02d",y,m,d,hh,mm,ss);
+		q=b+strlen(b);
+		*q++=sz[0];
+		sprintf(q,"%09d",(int)M);
+		if(y>=MINY && y<=MAXY)
+			strncpy(s,b,cols);
+		else
+			s[0]='?';
+		if(sz[1]=='Z') s[cols-1]='Z';
+		s+=cols;
+	}
+	return 0;
+}
+
+
+static int gi(I n, char* q)
+{
+ char b[10]; I i;
+ for(i=0; i<n; ++i)
+ {
+  if(isdigit(*q)) b[i]=*q++; else return -1;
+ }
+ if(isdigit(*q)) return -1;
+ b[i]=0;
+ return (int)strtol(b,0,10);
+}
+
+// convert iso 8601 to epoch 2000 nanoseconds
+// return count of bad conversions
+static  I efs(I rows,I cols, char* s,I* e,I* offset,I ignoreoffset)
+{
+	int Y,M,D,hh,mm,ss,hho,mmo,v,signn;
+	I k,i,N,r=0; char b[1000]; char* q; C sign;
+	for(i=0;i<rows;++i)
+	{
+     e[i]=IMIN;
+	 if(offset) offset[i]=-1;
+	 ++r; // assume failure
+	 M=D=1;
+	 hh=mm=ss=hho=mmo=0;
+	 N=0;
+	 q= b;
+	 strncpy(q,s,cols);
+	 b[cols]= ' '; b[cols+1]= 0;
+	 if(-1==(v= gi(4, q))) goto bad; q+= 4;
+	 Y= v;
+	 if('-'==*q)
+	 {
+		 ++q;
+		 if(-1==(v= gi(2, q))) goto bad; q+=2;
+		 M= v;
+		 if('-'==*q)
+		 {
+			 ++q;
+			 if(-1==(v= gi(2, q))) goto bad; q+=2;
+			 D=v ;
+		 }
+	}
+	if(*q=='T' || (*q==' '&&isdigit(*(q+1))) ) // T or blank allowed delimiter for time fields
+	{
+		++q;
+		if(-1==(v= gi(2, q))) goto bad; q+=2;
+		hh=v;
+		if(':'==*q)
+		{
+			++q;
+			if(-1==(v= gi(2, q))) goto bad; q+=2;
+			mm= v;
+			if(':'==*q)
+			{
+				++q;
+				if(-1==(v= gi(2, q))) goto bad; q+=2;
+				ss= v;
+				if(*q=='.'||*q==',')
+				{
+					char b[]= "000000000";
+					++q;
+					for(k=0; k<9; ++k){if(isdigit(*q))b[k]=*q++;  else  break;}
+					N=strtol(b,0,10);
+				}
+			}
+		}
+		sign= *q;
+		signn= (sign=='+')?1:-1;
+		if(sign=='+'||sign=='-')
+		{
+		   ++q;
+		   if(-1==(v= gi(2, q))) goto bad; q+=2;
+		   hho= v;
+		   if(*q==':')
+		   {
+			++q;
+			if(-1==(v= gi(2, q))) goto bad; q+=2;
+			mmo= v;
+		   }
+		   if(!ignoreoffset)
+		   {
+            hh-= hho*signn;
+            mm-= mmo*signn;
+		   }
+		}
+	}
+	if(*q=='Z')++q;
+	while(' '==*q)++q;
+	if(0==*q)
+	{
+		if(offset!=0) offset[i]= (hho*60+mmo)*signn;
+		if(Y>=MINY && Y<=MAXY)
+		{
+			if(M<3){Y=Y-1;M=M+12;		}
+			k= (int)floor(365.25*Y)-(int)floor(Y/100)+(int)floor(Y/400)+(int)floor(30.6*(M+1))+D-730548; // seconds since 2000
+			k= 24*60*60*k;
+			k= k+(hh*3600)+(mm*60)+ss;
+			e[i]=N+NANOS*k;
+			--r;
+		}
+		else
+			e[i]=IMIN;
+	}
+bad:
+	s+=cols;
+}
+return r;
+}
+
+// 3!:10 Convert a block of integer yyyymmddHHMMSS to nanoseconds from year 2000
+F1(jtinttoe){A z;I n;
+ RZ(w);
+ n=AN(w);
+ ASSERT(SY_64,EVNONCE);
+ ASSERT(AT(w)&INT,EVDOMAIN);
+ GATV(z,INT,n,AR(w),AS(w));
+ eft(n,IAV(z),IAV(w));
+ RETF(z);
+}

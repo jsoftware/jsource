@@ -103,6 +103,7 @@ static F2(jtforeigncreate){I p,q;
   case XC(3,6):   R CDERIV(CIBEAM, jtlock1,      jtlock2,      VASGSAFE,RMAX,RMAX,RMAX);
 // obsolete   case XC(3,7):   R CDERIV(CIBEAM, jtbit1,       jtbit2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(3,9):   R CDERIV(CIBEAM, 0,            jtnouninfo2,  VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(3,10):   R CDERIV(CIBEAM, jtinttoe,    0,      VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(4,0):   R CDERIV(CIBEAM, jtnc,         0,            VASGSAFE,0,   0,   0   );
   case XC(4,1):   R CDERIV(CIBEAM, jtnl1,        jtnl2,        VASGSAFE,RMAX,RMAX,RMAX);

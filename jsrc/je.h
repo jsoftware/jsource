@@ -431,6 +431,7 @@ extern F2(jtdrop);
 extern F2(jtebar);
 extern F2(jteps);
 extern F2(jteq);
+extern F2(jtetoiso8601);
 extern F2(jteven);
 extern F2(jtevger);
 extern F2(jtexec2);

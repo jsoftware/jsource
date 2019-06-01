@@ -163,15 +163,15 @@ do{
 // obsolete      if(ACIPISOK(z)&&AFLAG(z)&RECURSIBLE){
       if((AC(z)&(-(AFLAG(z)&RECURSIBLE)))<0){  // if z has AC <0 (inplaceable) and is recursive
        AFLAG(z)&=~RECURSIBLE;  // mark as nonrecursive, transferring ownership to the new block
-       if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>0){*d++=*s++;} STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
-        // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards
+       if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
+        // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards.  Use test on STOREBYTES because this is repeated
       }else{
        // copy and raise the elements (normal path).  We copy the references as A types, since there may be 1 or 2 per atom of z
        // because these are cells of an ordinary array (i. e. not WILLBEOPENED) the elements cannot be virtual
        A *zzbase=(A*)(CAV(zz)+zzcellp), *zbase=AAV(z); DOU(zzcelllen>>LGSZI, A zblk=zbase[i]; ra(zblk); zzbase[i]=zblk;)
       }
      }else{  // not recursible
-       if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>0){*d++=*s++;} STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
+       if(zzcelllen<MEMCPYTUNELOOP){I * RESTRICT d=(I*)(CAV(zz)+zzcellp); I * RESTRICT s=IAV(z); I n=zzcelllen; while((n-=SZI)>=0){*d++=*s++;} if(n&(SZI-1))STOREBYTES(d,*s,-n);}else{MC(CAV(zz)+zzcellp,AV(z),zzcelllen);}
         // move the result-cell to the output.  Must not write outside cell boundaries in case we are going backwards
      }
 #if !ZZSTARTATEND

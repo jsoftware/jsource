@@ -408,13 +408,13 @@ static I eft(I n,UI* e,UI* t)
   // Add in leap-years (since the year 0, for comp. ease).  Year 2000 eg, which starts Mar 1, is a leap year and has 1 added to its day#s (since they come after Feb 29)
   D+=Y>>2;
   // Gregorian correction.  Since it is very unlikely we will encounter a date that needs correcting, we use an IF
-  if(Y>2099){
-   D+=(Y/400)-(Y/100);  // 2100 2200 2300 2500 etc are NOT leapyears
+  if((UI)(Y-1901)>(2100-1901)){  // date is outside 1901-2099
+   D+=((Y/400)-(Y/100))-((2000/400)-(2000/100));  // 1900 2100 2200 2300 2500 etc are NOT leapyears.  Create correction from Y2000 count
   }
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
   D+=(0x765544322110000>>(4*M))&0xf;  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
-  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999
+  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gergorian leapyears up to 2000
   k=365*Y + 30*M + D - 730531;  // day# from epoch
   // Combine everythine into one # and store
  	e[i]=(NANOS*24LL*60LL*60LL)*k + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
@@ -483,6 +483,89 @@ static I sfe(I rows,I cols,char* s,I* e,char* sz)
 		s+=cols;
 	}
 	return 0;
+}
+static UC char2tbl[200] = {
+'0','0' , '0','1' , '0','2' , '0','3' , '0','4' , '0','5' , '0','6' , '0','7' , '0','8' , '0','9' ,
+'1','0' , '1','1' , '1','2' , '1','3' , '1','4' , '1','5' , '1','6' , '1','7' , '1','8' , '1','9' ,
+'2','0' , '2','1' , '2','2' , '2','3' , '2','4' , '2','5' , '2','6' , '2','7' , '2','8' , '2','9' ,
+'3','0' , '3','1' , '3','2' , '3','3' , '3','4' , '3','5' , '3','6' , '3','7' , '3','8' , '3','9' ,
+'4','0' , '4','1' , '4','2' , '4','3' , '4','4' , '4','5' , '4','6' , '4','7' , '4','8' , '4','9' ,
+'5','0' , '5','1' , '5','2' , '5','3' , '5','4' , '5','5' , '5','6' , '5','7' , '5','8' , '5','9' ,
+'6','0' , '6','1' , '6','2' , '6','3' , '6','4' , '6','5' , '6','6' , '6','7' , '6','8' , '6','9' ,
+'7','0' , '7','1' , '7','2' , '7','3' , '7','4' , '7','5' , '7','6' , '7','7' , '7','8' , '7','9' ,
+'8','0' , '8','1' , '8','2' , '8','3' , '8','4' , '8','5' , '8','6' , '8','7' , '8','8' , '8','9' ,
+'9','0' , '9','1' , '9','2' , '9','3' , '9','4' , '9','5' , '9','6' , '9','7' , '9','8' , '9','9'
+};
+
+#define ROWLEN8601 30
+static A sfe2(J jt,A w,UC decimalpt,UC zuluflag)
+{
+#if SY_64
+	UI k; UI4 ymd,E,N,M,HMS,d,j,g,m,t,y;I i;A z;  // unsigned for faster / %
+ // Validate input.  We will accept FL input, but it's not going to have nanosecond precision
+ RZ(w=vi(w));  // convert to INT
+ // Allocate result area, one 30-char row per input value
+ GATV0(z,LIT,AN(w)*ROWLEN8601,AR(w)+1) MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=ROWLEN8601;
+ if(AN(w)==0)RETF(z);  // handle empty return
+ I rows=AN(w);  // number of rows to process
+ I *e=IAV(w);  // pointer to nanosecond data
+ C *s=CAV(z);  // pointer to result
+	for(i=0;i<rows;++i)
+	{
+  // fetch the time.  If it is negative, add days amounting to 290 years which we will take away later.  -290 years is just about the
+  // earliest time we can handle in nanosecond form.  We will get off-by-one results on the few representable dates before 1710 - bfd
+		k= e[i] + ((e[i]>>(BW-1))&((I)290*(I)365*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
+  N=(UI4)(k%NANOS); k=k/NANOS;  // can't fast-divide by more than 32 bits.  k=ymdHMS N=nanosec
+		HMS=(UI4)(k%((I)24*(I)3600));	ymd=(UI4)(k/((I)24*(I)3600));
+  ymd-=((e[i]>>(BW-1))&(290*365));  // remove negative-year bias if given
+  E=HMS%60; HMS/=60;  // sec
+  M=HMS%60; HMS/=60;  // minutes; HMS now=hours
+  // Now the leap-year calculations.  We follow Richards at https://en.wikipedia.org/wiki/Julian_day#Julian_or_Gregorian_calendar_from_Julian_day_number
+		j=ymd+2451545;  // Julian day number, by adding day-from-epoch to JD of epoch
+		g=((3*((4*j+274277)/146097))>>2)-38;  // Gregorian correction for leapyears from year 0
+		j+=1401+g;  // Julian day, plus 1401 (Julian leapyears to year 0), plus Gregorian leapyears
+  // now find position within 1461-day 4-year cycle
+		t=4*j+3;   // temp
+		y=t/1461-4716;  // year number from Julian epoch, plus starting year of Julian epoch
+		t=(t%1461)>>2;  // day number within year, which starts Mar 1
+		m=(t*5+461)/153;  // razzmatazz to convert day# to month, 3-14
+// Richards version		d=((t*5+2)%153)/5;
+  d=(t+((0x444332221100000>>(m<<2))&0xf))%31+1;  // # days start-of-month must advance to be on 31-day multiple, by month: x x x 0(Mar) 0(Apr) 1 1 2 2 2 3 3 4 4 4
+  I4 janfeb=(I)(m-13)>>(BW-1); y-=janfeb; m-=janfeb&12;  // move jan-feb into next year number
+  // Now write the result yyyy-mm-ddThh:mm:ss.nnnnnnnnn   but ? if the year is out of range
+  if((UI4)(y-MINY)<(UI4)(MAXY-MINY)){
+   // normal result
+#if 0
+    // This is the straightforward way to write the result.  I have gone to a different method because this version releases 32 integer multiplies,
+    // of which 8 have a chained dependency which might amount to 32 clocks.  I'm not sure the whole loop will take 32 clocks - it'll be close -
+    // so I have gone to a version that doesn't use the multiply unit as much
+   s[3]='0'+y%10; y/=10; s[2]='0'+y%10; y/=10; s[1]='0'+y%10; s[0]='0'+y/10;
+   s[4]='-'; s[5]='0'+m/10; s[6]='0'+m%10;
+   s[7]='-'; s[8]='0'+d/10; s[9]='0'+d%10;
+   s[10]='T'; s[11]='0'+HMS/10; s[12]='0'+HMS%10;
+   s[13]='-'; s[14]='0'+M/10; s[15]='0'+M%10;
+   s[16]='-'; s[17]='0'+E/10; s[18]='0'+E%10;
+   s[19]='.'; DQ(8, s[21+i]='0'+N%10; N/=10;) s[20]='0'+N;
+#endif
+   // Store bytes two at a time using a lookup.  The lookup fits in 4 cache lines & so should be available for most of the loop.
+   // This uses the load/store unit heavily but it's OK if it backs up, since it is idle during the first half of the loop
+   // This ends with 4 dependent integer multiples but that should be OK
+   *(S*)(s+0) = ((S*)char2tbl)[y/100]; *(S*)(s+2) = ((S*)char2tbl)[y%100];
+   s[4]='-'; *(S*)(s+5) = ((S*)char2tbl)[m];
+   s[7]='-'; *(S*)(s+8) = ((S*)char2tbl)[d];
+   s[10]='T'; *(S*)(s+11) = ((S*)char2tbl)[HMS];
+   s[13]=':'; *(S*)(s+14) = ((S*)char2tbl)[M];
+   s[16]=':'; *(S*)(s+17) = ((S*)char2tbl)[E];
+   s[19]=decimalpt; DQ(4, ((S*)(s+21))[i] = ((S*)char2tbl)[N%10]; N/=10;)  s[20]='0'+N; // user delimiter for .
+  }else{
+   // year out of range (rare)
+   DO(ROWLEN8601, s[i]=' ';) s[0]='?'; 
+  }
+  s[29]=zuluflag;
+		s+=ROWLEN8601;  // move to next row
+	}
+#endif
+	RETF(z);;
 }
 
 
@@ -605,4 +688,22 @@ F1(jtinttoe){A z;I n;
  GATV(z,INT,n,AR(w),AS(w));
  eft(n,IAV(z),IAV(w));
  RETF(z);
+}
+
+// 3!:11 convert a block of nanoseconds times to iso8601 format.  Result has an extra axis, 30 bytes long
+// Bivalent.  left arg is 2 characters, one to use as the decimal point and one to store just after the value (usually ' ' or 'Z').
+// Default is '. '
+F2(jtetoiso8601){UC decimalpt,zuluflag;
+ RZ(w);
+ ASSERT(SY_64,EVNONCE);
+ // If monad, supply defaults; if dyad, audit
+ if(AT(w)&NOUN){  // dyad
+  ASSERT(AT(a)&LIT,EVDOMAIN);
+  ASSERT(AN(a)==2,EVLENGTH);
+  ASSERT(AR(a)==1,EVRANK);  // a must be a 2-character list
+  decimalpt=CAV(a)[0]; zuluflag=CAV(a)[1];
+ }else{
+  w=a; decimalpt='.'; zuluflag=' ';  // monad: switch argument, set defaults
+ }
+ RETF(sfe2(jt,w,decimalpt,zuluflag));
 }

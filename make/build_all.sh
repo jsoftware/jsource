@@ -11,6 +11,7 @@ $jmake/clean.sh
 
 $jmake/build_jconsole.sh j64
 $jmake/build_libj.sh     j64
+$jmake/build_libj.sh     j64nonavx
 $jmake/build_tsdll.sh    j64
 
 

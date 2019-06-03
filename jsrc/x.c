@@ -103,8 +103,6 @@ static F2(jtforeigncreate){I p,q;
   case XC(3,6):   R CDERIV(CIBEAM, jtlock1,      jtlock2,      VASGSAFE,RMAX,RMAX,RMAX);
 // obsolete   case XC(3,7):   R CDERIV(CIBEAM, jtbit1,       jtbit2,       VASGSAFE,RMAX,RMAX,RMAX);
   case XC(3,9):   R CDERIV(CIBEAM, 0,            jtnouninfo2,  VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(3,10):   R CDERIV(CIBEAM, jtinttoe,    0,      VASGSAFE,RMAX,RMAX,RMAX);
-  case XC(3,11):   R CDERIV(CIBEAM, jtetoiso8601,jtetoiso8601,  VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(4,0):   R CDERIV(CIBEAM, jtnc,         0,            VASGSAFE,0,   0,   0   );
   case XC(4,1):   R CDERIV(CIBEAM, jtnl1,        jtnl2,        VASGSAFE,RMAX,RMAX,RMAX);
@@ -136,6 +134,10 @@ static F2(jtforeigncreate){I p,q;
   case XC(6,11):  R CDERIV(CIBEAM, jtpmunpack,   0,            VASGSAFE,RMAX,0,   0   );
   case XC(6,12):  R CDERIV(CIBEAM, jtpmctr,      0,            VASGSAFE,RMAX,0,   0   );
   case XC(6,13):  R CDERIV(CIBEAM, jtpmstats,    0,            VASGSAFE,RMAX,0,   0   );
+  case XC(6,14):  R CDERIV(CIBEAM, jtinttoe,    0,      VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(6,15):  R CDERIV(CIBEAM, jtetoint,    0,      VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(6,16):  R CDERIV(CIBEAM, jtetoiso8601,jtetoiso8601,  VASGSAFE,RMAX,RMAX,RMAX);
+  case XC(6,17):  R CDERIV(CIBEAM, jtiso8601toe,0      ,  VASGSAFE,RMAX,RMAX,RMAX);
 
   case XC(7,0):   R CDERIV(CIBEAM, jtsp,         0,            VASGSAFE,RMAX,0,   0   );
   case XC(7,2):   R CDERIV(CIBEAM, jtspit,       0,            VFLAGNONE,1,   0,   0   );

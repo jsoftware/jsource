@@ -514,7 +514,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
  // Validate input.  We will accept FL input, but it's not going to have nanosecond precision
  RZ(w=vi(w));  // convert to INT
  // Figure out size of result. 10 for date, 9 for time, 1 for binary point (opt), 1 for each fractional digit (opt), 1 for timezone
- I linelen=(10+9+1)-((prec>>(BW-1))&9)+prec+(prec!=0);  // bytes per line of result: 21, but 11 if no date, plus one per frac digit, plus decimal point if any frac digits
+ I linelen=(10+9)-((prec>>(BW-1))&9)+prec+(prec!=0)+(zuluflag=='Z');  // bytes per line of result: 20, but 10 if no date, plus one per frac digit, plus decimal point if any frac digits, 1 if Z
    // if we are running for 6!:15, linelen will come out 56 and the store will be 7 INTs
  // Allocate result area, one row per input value
  GATV0(z,LIT,AN(w)*linelen,AR(w)+1) MCISH(AS(z),AS(w),AR(w)) AS(z)[AR(w)]=linelen==7*SZI?7:linelen;
@@ -530,7 +530,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
   // fetch the time.  If it is negative, add days amounting to the earliest allowed time so that the modulus calculations can always
   // be positive to get hmsn.  We will add the days back for all the day calculations, since they are in the Julian epoch anyway
 		k= e[i] + ((e[i]>>(BW-1))&(MIND*(I)24*(I)3600*(I)NANOS));  // ymdHMSN
-  if((UI)k>=(UI)(MAXD*(I)24*(I)3600*(I)NANOS)){DO(linelen, s[i]=' ';) s[0]='?'; continue;}  // input too low - probably DATAFILL(=IMIN) - return fast unknown
+  if((UI)k>=(UI)(MAXD*(I)24*(I)3600*(I)NANOS)){if(linelen==7*SZI)DO(7, ((I*)s)[i]=0;)else{DO(linelen, s[i]=' ';) s[0]='?';} continue;}  // input too low - probably DATAFILL(=IMIN) - return fast unknown
     // we use the fact that MAXD>MIND to get the out-of-bounds test right
   N=(UI4)(k%NANOS); k=k/NANOS;  // can't fast-divide by more than 32 bits.  k=ymdHMS N=nanosec
 		HMS=(UI4)(k%((I)24*(I)3600));	ymd=(UI4)(k/((I)24*(I)3600));
@@ -566,7 +566,7 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
    // Store bytes two at a time using a lookup.  The lookup fits in 4 cache lines & so should be available for most of the loop.
    // (actually, at this time only the values 0-31 will be used much, just 1 cache line)
    // This uses the load/store unit heavily but it's OK if it backs up, since it is idle during the first half of the loop
-   // This ends with 4 dependent integer multiplies but that should be OK
+   // This ends with 5 dependent integer multiplies; hope that's OK
    *(S*)(s+0) = ((S*)char2tbl)[y/100]; *(S*)(s+2) = ((S*)char2tbl)[y%100];
    s[4]='-'; *(S*)(s+5) = ((S*)char2tbl)[m];
    s[7]='-'; *(S*)(s+8) = ((S*)char2tbl)[d];
@@ -577,14 +577,14 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
     if(linelen>(19+1)){  // if fractional nanosec requested
      s[19]=decimalpt;
      // We have to store a variable number of high-order digits.  We will format all 9 digits and optionally
-     // store what we want to keep.  After the one's digit we store in pairs, possibly storing one digit extra.
-     // That's OK, because we are going to write the timezone over it.
+     // store what we want to keep.  To reduce the length of the multiply chain we split the nanos into 
      // NOTE we do not round the nanoseconds
-     I sdig=N%10; N/=10; if(linelen>(28+1))s[28]=(UC)sdig+'0';  // low digit if necessary
-     DQ(4,sdig=N%100; N/=100; if(linelen-1>20+2*i)*(S*)(s+20+2*i) = ((S*)char2tbl)[sdig];)   // the branches should predict correctly after a while
+     UI4 nano4=N/100000; N%=100000;   // reduce dependency
+     if(linelen>24)DQ(5, I sdig=N%10; N/=10; if(linelen>24+i)s[24+i]=(C)('0'+sdig);)   // the branches should predict correctly after a while
+     DQ(4, I sdig=nano4%10; nano4/=10; if(linelen>20+i)s[20+i]=(C)('0'+sdig);)
     }
    }
-   s[linelen-1]=zuluflag;
+   if(zuluflag=='Z')s[linelen-1]=zuluflag;
   }else{
    // 6!:15, store results as INTs
    ((I*)s)[0]=y; ((I*)s)[1]=m; ((I*)s)[2]=d; ((I*)s)[3]=HMS; ((I*)s)[4]=M; ((I*)s)[5]=E; ((I*)s)[6]=N;
@@ -711,7 +711,7 @@ return r;
 // w is LIT array of ISO strings (rank>0, not empty), result is array of INTs with nanosecond time for each string
 // We don't bother to support a boxed-string version because the strings are shorter than the boxes & it is probably just about as good to just open the boxed strings
 static A efs(J jt,A w){
-#if SYS_64
+#if SY_64
 	I i;A z;
  // Allocate result area
  I n; PROD(n,AR(w)-1,AS(w)); GATV(z,INT,n,AR(w)-1,AS(w))
@@ -731,23 +731,26 @@ static A efs(J jt,A w){
   UI N=0;  // init nanosec accum to 0
   RDTWO(Y); RDTWO(M); Y=100*Y+M;  // fetch YYYY.  M is a temp
   if((UI4)(Y-MINY)>(UI4)(MAXY-MINY))DOERR
-  if(!sp[0]){M=D=1; hh=mm=ss=0; goto gottime;}   // YYYY alone.  Default the rest
-  if((sp[0]=='T')|(sp[0]==' ')){M=D=1; goto gotdate;}    // YYYYT.  Default MD
+  if(!(sp[0]&~' ')){M=D=1; hh=mm=ss=0; goto gottime;}   // YYYY alone.  Default the rest
+  if(sp[0]=='T'){M=D=1; goto gotdate;}    // YYYYT.  Default MD
   // normal case
   sp+=(sp[0]=='-');  // skip '-' if present
   RDTWO(M);
-  if(!sp[0]){D=1; hh=mm=ss=0; goto gottime;}   // YYYY-MM alone.  Default the rest
-  if((sp[0]=='T')|(sp[0]==' ')){D=1; goto gotdate;}    // YYYY-MMT.  Default D
+  if(!(sp[0]&~' ')){D=1; hh=mm=ss=0; goto gottime;}   // YYYY-MM alone.  Default the rest
+  if(sp[0]=='T'){D=1; goto gotdate;}    // YYYY-MMT.  Default D
   sp+=(sp[0]=='-');  // skip '-' if present
   RDTWO(D);
-  if(!sp[0]){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone.  Default the rest
+  if(!sp[0]){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone.  Default the rest.  space here is a delimiter
 gotdate: ;
   if((sp[0]=='T')|(sp[0]==' '))++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
+  if(!(sp[0]&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
   RDTWO(hh);
-  if(!sp[0]){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
+  if(!(sp[0]&~' ')){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
+  if((sp[0]=='+')|(sp[0]=='-')){mm=ss=0; goto hittz;}
   sp+=(sp[0]==':');  // skip ':' if present
   RDTWO(mm);
-  if(!sp[0]){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
+  if(!(sp[0]&~' ')){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
+  if((sp[0]=='+')|(sp[0]=='-')){ss=0; goto hittz;}
   sp+=(sp[0]==':');  // skip ':' if present
   RDTWO(ss);
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 
@@ -755,6 +758,7 @@ gotdate: ;
    ++sp;  // skip decimal point
    DO(9, if(!ISDIGIT(sp[0]))break; N+=nanopowers[i]*((UI)sp[0]-(UI)'0'); ++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
   }
+hittz:
   // Timezone [+-]HH[[:]MM]  or Z
   if((sp[0]=='+')|(sp[0]=='-')){
    I4 tzisplus=2*(sp[0]=='+')-1;   // +1 for +, -1 for -
@@ -854,6 +858,6 @@ F2(jtiso8601toe){
  }
  ASSERT(AT(w)&LIT,EVDOMAIN);  // must be LIT
  ASSERT(AR(w),EVRANK);    // must not be an atom
- if(!AN(w))RETF(irs1(w,0L,1L,jttally););   // return #"1 w on empty w - equivalent
+ if(!AN(w))RETF(dfs1(w,qq(sc(IMIN),zeroionei[1])));   // return _"1 w on empty w - equivalent
  RETF(efs(jt,w));
 }

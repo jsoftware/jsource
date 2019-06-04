@@ -285,9 +285,9 @@ static GF(jtgrdq){
   // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
   // remove the upper bits from that sorted result
   I nextv=zv[0];  // always has first value with a new key
-  I i;for(i=0;i<n;++i){
+  I i;for(i=0;i<n-1;++i){
    I currv=nextv;
-   if(i==n-1 || (((nextv=zv[i+1])^currv)&~itemmask)){zv[i]=currv&itemmask;  // normal case with no repetition
+   if(((nextv=zv[i+1])^currv)&~itemmask){zv[i]=currv&itemmask;  // normal case with no repetition
    }else{  // reprocess the repeated block
     I j=i;do{
      I v=wv[zv[j]&itemmask]^sortdown63; v^=(UI)(v>>(BW-1))>>1; v=(v==0)?-1:v; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in uppper bits 
@@ -297,6 +297,8 @@ static GF(jtgrdq){
     i=j-1;  // pick up after the batch
    }
   }
+  // We handled all the starting items up to the next-last.  The last item may be unprocessed, if it was not part of a batch.  Handle it now.
+  zv[n-1]&=itemmask;
   // advance to next sort
   wv+=n; zv+= n;
  }
@@ -411,6 +413,64 @@ static GF(jtgru1){A x,y;C4*wv;I i,*xv;US*u;void *yv;I c=ai*n;
  R 1;
 }    /* grade"r w on c4t w where c==n */
 
+#if BW==64
+// grade INTs by hiding the item number in the value and sorting.  Requires ai==1.
+// We interpret the input as integer form so that we can hide the item number in an infinity without turning it into a NaN
+static GF(jtgriq){
+ GBEGIN(-1);  // subsorts will always be ascending
+ I gradedown=(~olt)>>(BW-1);  // ~0 if sorting down, else 0
+ // See how many bits we must reserve for the item number, and make a mask for the item number
+ unsigned long hbit; CTLZI(n-1,hbit); ++hbit; I itemmask=((I)1<<hbit)-1;  // mask where the item number will go
+ I itemmsb=(I)1<<(BW-1-hbit); I itemsigmsk=2*-itemmsb;  // get bit at place we will shift into sign bit, and a mask for all higher bits
+ // Loop over each grade
+ I *wv=IAV(w);  // we interpret the floats in w as if they were integers.
+ while(--m>=0){
+  // Sort one list.  zv points to the output area, wv points to the input
+  // Create the values to be sorted, in the result area
+  // if sorting down,complement input
+  // shift value to clear space for item number; abort if that would lose significance
+  // install item number
+  I siglost=0;  // init to no signifiance lost
+  DO(n, I v=wv[i]^gradedown; if(siglost|=itemsigmsk&((v&-itemmsb)+itemmsb))break; zv[i]=(v<<hbit)+i;)
+  // If there was no loss of significance, just sort the values and return the indexes
+  if(!siglost){
+   sortiq1(zv,n);  // sort em (in place)
+   DO(n, zv[i]&=itemmask;)   // the indexes are right
+  }else{
+   // We encountered significance when we tried to shift the values to make room for the indexes.  We will have to sort
+   // and then go back to re-sort equal partitions.  At least there is a lot of significance and probably not many collisions
+   // First, install the item number in the LSBs
+   DO(n, I v=wv[i]^gradedown; zv[i]=(v&~itemmask)+i;)
+   // sort the result area in place
+   sortiq1(zv,n);
+   // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
+   // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
+   // remove the upper bits from that sorted result
+   I nextv=zv[0];  // always has first value with a new key
+   I i;for(i=0;i<n-1;++i){
+    I currv=nextv;
+    if(((nextv=zv[i+1])^currv)&~itemmask){zv[i]=currv&itemmask;  // normal case with no repetition   scaf remove first compare
+    }else{  // reprocess the repeated block
+     I j=i;do{
+      I v=wv[zv[j]&itemmask]^gradedown; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in upper bits 
+     }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
+     sortiq1(zv+i,j-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
+     while(i<j){zv[i]&=itemmask; ++i;}
+     i=j-1;  // pick up after the batch
+    }
+   }
+   // We handled all the starting items up to the next-last.  The last item may be unprocessed, if it was not part of a batch.  Handle it now.
+   zv[n-1]&=itemmask;
+  }
+  // advance to next sort
+  wv+=n; zv+= n;
+ }
+ GEND  // restore from GBEGIN
+ R 1;
+}
+
+#endif
+
 
 static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
  wv=AV(w);
@@ -462,9 +522,20 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 
 
  // figure out what algorithm to use
- // smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
+ // for atoms, quicksort always wins, except for length 5500-500000 when there are <= two bytes of significance: then radix wins
+ // for lists, smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
  // (80>>keylength)*(n), smaller if the range would exceed cache size
  CR rng;
+#if SY_64  // no quickgrade unless INTs are 64 bits
+ if(ai==1){  // for atoms, usually use quicksort
+  if((UI)(n-5500)>(UI)(500000-5500))R jtgriq(jt,m,ai,n,w,zv);  // quicksort except for 5500-500000
+  // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
+  // because the main appl is sorting timestamps, which are ALL big
+  DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jt,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
+  R gri1(m,ai,n,w,zv);  // moderate-range middle lengths use radix sort
+ }
+#endif
+// testing  R (((n&3)==1)?jtgri1:((n&3)==2)?jtgrx:jtgriq)(jt,m,ai,n,w,zv);
  if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
  // tweak this line to select path for timing
@@ -645,7 +716,8 @@ F1(jtgr1){PROLOG(0075);A z;I c,f,ai,m,n,r,*s,t,wn,wr,zn;
  // allocate the entire result area, one int per item in each input cell
  GATV(z,INT,zn,1+f,s); if(!r)AS(z)[f]=1;
  // if there are no atoms, or we are sorting things with 0-1 item, return an index vector of the appropriate shape 
- if(!wn||1>=n)R reshape(shape(z),IX(n));
+// obsolete if(!wn||1>=n)R reshape(shape(z),IX(n));
+ if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
  RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jt,m,ai,n,w,AV(z)))
  EPILOG(z);

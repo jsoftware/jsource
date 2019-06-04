@@ -416,10 +416,10 @@ static I eft(I n,UI* e,UI* t)
   // Add in extra days for earlier 31-day months in this adjusted year (so add 0 in March)
   D+=(0x765544322110000>>(4*M))&0xf;  // starting with month 0, this is x x x 0 1 1 2 2 3 4 4 5 5 6 7
   // Calculate day from YMD.  Bias from day# of 20000101, accounting for leap-years from year 0 to that date.  Note 20000101 is NOT in a leapyear - it is in year 1999 here
-  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gergorian leapyears up to 2000
-  I t=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch - can be negative
+  // The bias includes: subtracting 1 from day#; subtracting 1 from month#; Jan/Feb of 1999; Gregorian leapyears up to 2000
+  I temp=(I)(365*Y + 30*M + D) - 730531;  // day# from epoch - can be negative
   // Combine everythine into one # and store
- 	e[i]=(NANOS*24LL*60LL*60LL)*t + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
+ 	e[i]=(NANOS*24LL*60LL*60LL)*temp + (NANOS*3600LL)*hh + (NANOS*60LL)*mm + NANOS*ss;  // eschew Horner's Rule because of multiply latency
 	}
 #endif
 	return 0;
@@ -590,8 +590,10 @@ static A sfe(J jt,A w,I prec,UC decimalpt,UC zuluflag){
    ((I*)s)[0]=y; ((I*)s)[1]=m; ((I*)s)[2]=d; ((I*)s)[3]=HMS; ((I*)s)[4]=M; ((I*)s)[5]=E; ((I*)s)[6]=N;
   }
  }
-#endif
 	RETF(z);
+#else
+R 0;
+#endif
 }
 
 #if 0  // obsolete
@@ -709,6 +711,7 @@ return r;
 // w is LIT array of ISO strings (rank>0, not empty), result is array of INTs with nanosecond time for each string
 // We don't bother to support a boxed-string version because the strings are shorter than the boxes & it is probably just about as good to just open the boxed strings
 static A efs(J jt,A w){
+#if SYS_64
 	I i;A z;
  // Allocate result area
  I n; PROD(n,AR(w)-1,AS(w)); GATV(z,INT,n,AR(w)-1,AS(w))
@@ -792,6 +795,9 @@ err:
   s[strglen]=savesentinel;  // restore end-of-string marker
  }
  RETF(z);
+#else
+R 0;
+#endif
 }
 
 

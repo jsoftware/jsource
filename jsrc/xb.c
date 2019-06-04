@@ -727,7 +727,7 @@ static A efs(J jt,A w){
   // We code this on the assumption that the format is constant throughout, and therefore branches will not be mispredicted after the first loop
 #define DOERR {IAV(z)[i]=IMIN; goto err;}
 #define ISDIGIT(d) (((UI4)d-(UI4)'0')<=((UI4)'9'-(UI4)'0'))
-#define RDTWO(z) if(!ISDIGIT(sp[0])||!ISDIGIT(sp[1]))DOERR z=(UI4)(((UI4)sp[0]-(UI4)'0')*10+((UI4)sp[1]-(UI4)'0')); sp+=2;
+#define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI)z>(UI)99)DOERR sp+=2;
   UI N=0;  // init nanosec accum to 0
   RDTWO(Y); RDTWO(M); Y=100*Y+M;  // fetch YYYY.  M is a temp
   if((UI4)(Y-MINY)>(UI4)(MAXY-MINY))DOERR
@@ -745,12 +745,14 @@ gotdate: ;
   if((sp[0]=='T')|(sp[0]==' '))++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
   if(!(sp[0]&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
   RDTWO(hh);
-  if(!(sp[0]&~' ')){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
-  if((sp[0]=='+')|(sp[0]=='-')){mm=ss=0; goto hittz;}
+  if((sp[0]<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>sp[0]){mm=ss=0; if((sp[0]&~' '))goto hittz; goto gottime;}
+// obsolete   if(!(sp[0]&~' ')){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
+// obsolete   if((sp[0]=='+')|(sp[0]=='-')){mm=ss=0; goto hittz;}
   sp+=(sp[0]==':');  // skip ':' if present
   RDTWO(mm);
-  if(!(sp[0]&~' ')){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
-  if((sp[0]=='+')|(sp[0]=='-')){ss=0; goto hittz;}
+  if((sp[0]<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>sp[0]){ss=0; if((sp[0]&~' '))goto hittz; goto gottime;}
+// obsolete  if(!(sp[0]&~' ')){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
+// obsolete  if((sp[0]=='+')|(sp[0]=='-')){ss=0; goto hittz;}
   sp+=(sp[0]==':');  // skip ':' if present
   RDTWO(ss);
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 

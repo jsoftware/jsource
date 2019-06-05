@@ -36,6 +36,7 @@ NB. blacklist=: blacklist, (IFRASPI+.UNAME-:'Android')#(<testpath),each <'g600ip
 blacklist=: blacklist, (IFRASPI)#(<testpath),each <'g600ip.ijs'
 blacklist=: blacklist, (IFRASPI)#(<testpath),each 'gsco1u.ijs';'gsco1w.ijs'
 blacklist=: blacklist, (<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
+blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs' NB. require 64-bit
 
 ddall    =: blacklist -.~ testfiles 'g'
 ddgmbx   =: blacklist -.~ testfiles 'gmbx'    NB. map boxed arrays

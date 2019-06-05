@@ -728,54 +728,58 @@ static A efs(J jt,A w){
 #define DOERR {IAV(z)[i]=IMIN; goto err;}
 #define ISDIGIT(d) (((UI4)d-(UI4)'0')<=((UI4)'9'-(UI4)'0'))
 #define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI)z>(UI)99)DOERR sp+=2;
+// same, but use c for the first digit
+#define RDTWOC(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI)z>(UI)99)DOERR sp+=2; c=*sp;
   UI N=0;  // init nanosec accum to 0
-  RDTWO(Y); RDTWO(M); Y=100*Y+M;  // fetch YYYY.  M is a temp
+  // throughout this stretch we may have c set to 'next character'
+  UC c=*sp;
+  RDTWOC(Y); RDTWOC(M); Y=100*Y+M;  // fetch YYYY.  M is a temp
   if((UI4)(Y-MINY)>(UI4)(MAXY-MINY))DOERR
-  if(!(sp[0]&~' ')){M=D=1; hh=mm=ss=0; goto gottime;}   // YYYY alone.  Default the rest
-  if(sp[0]=='T'){M=D=1; goto gotdate;}    // YYYYT.  Default MD
+  if(!(c&~' ')){M=D=1; hh=mm=ss=0; goto gottime;}   // YYYY alone.  Default the rest
+  if(c=='T'){M=D=1; goto gotdate;}    // YYYYT.  Default MD
   // normal case
-  sp+=(sp[0]=='-');  // skip '-' if present
-  RDTWO(M);
-  if(!(sp[0]&~' ')){D=1; hh=mm=ss=0; goto gottime;}   // YYYY-MM alone.  Default the rest
-  if(sp[0]=='T'){D=1; goto gotdate;}    // YYYY-MMT.  Default D
-  sp+=(sp[0]=='-');  // skip '-' if present
-  RDTWO(D);
-  if(!sp[0]){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone.  Default the rest.  space here is a delimiter
+  if(c=='-')c=*++sp;  // skip '-' if present
+  RDTWOC(M);
+  if(!(c&~' ')){D=1; hh=mm=ss=0; goto gottime;}   // YYYY-MM alone.  Default the rest
+  if(c=='T'){D=1; goto gotdate;}    // YYYY-MMT.  Default D
+  if(c=='-')c=*++sp;  // skip '-' if present
+  RDTWOC(D);
+  if(!c){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DD alone.  Default the rest.  space here is a delimiter
 gotdate: ;
-  if((sp[0]=='T')|(sp[0]==' '))++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
-  if(!(sp[0]&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
-  RDTWO(hh);
-  if((sp[0]<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>sp[0]){mm=ss=0; if((sp[0]&~' '))goto hittz; goto gottime;}
+  if((c=='T')|(c==' '))c=*++sp;  // Consume the T/sp if present.  It must be followed by HH.  sp as a separator is not ISO 8601
+  if(!(c&~' ')){hh=mm=ss=0; goto gottime;}   // YYYY-MM-DDTbb treat this as ending the year, default the rest
+  RDTWOC(hh);
+  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){mm=ss=0; if((c&~' '))goto hittz; goto gottime;}
 // obsolete   if(!(sp[0]&~' ')){mm=ss=0; goto gottime;}   // YYYY-MM-DDTHH.  default the rest
 // obsolete   if((sp[0]=='+')|(sp[0]=='-')){mm=ss=0; goto hittz;}
-  sp+=(sp[0]==':');  // skip ':' if present
-  RDTWO(mm);
-  if((sp[0]<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>sp[0]){ss=0; if((sp[0]&~' '))goto hittz; goto gottime;}
+  if(c==':')c=*++sp;  // skip ':' if present
+  RDTWOC(mm);
+  if((c<0x40) & (((I)1<<'+')|((I)1<<'-')|((I)1<<' ')|((I)1<<0))>>c){ss=0; if((c&~' '))goto hittz; goto gottime;}
 // obsolete  if(!(sp[0]&~' ')){ss=0; goto gottime;}   // YYYY-MM-DDTHH:MM.  default the rest
 // obsolete  if((sp[0]=='+')|(sp[0]=='-')){ss=0; goto hittz;}
-  sp+=(sp[0]==':');  // skip ':' if present
-  RDTWO(ss);
+  if(c==':')c=*++sp;  // skip ':' if present
+  RDTWOC(ss);
   // If the seconds have decimal extension, turn it to nanoseconds.  ISO8601 allows fractional extension on the last time component even if it's not SS, but we don't support that 
-  if((sp[0]=='.')|(sp[0]==',')){
-   ++sp;  // skip decimal point
-   DO(9, if(!ISDIGIT(sp[0]))break; N+=nanopowers[i]*((UI)sp[0]-(UI)'0'); ++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
+  if((c=='.')|(c==',')){
+   c=*++sp;  // skip decimal point
+   DO(9, if(!ISDIGIT(c))break; N+=nanopowers[i]*((UI)c-(UI)'0'); c=*++sp;)  // harder than it looks!  We use memory to avoid long carried dependency from the multiply chain
   }
 hittz:
   // Timezone [+-]HH[[:]MM]  or Z
-  if((sp[0]=='+')|(sp[0]=='-')){
-   I4 tzisplus=2*(sp[0]=='+')-1;   // +1 for +, -1 for -
-   ++sp;  // skip tz indic
-   I4 tzhm; RDTWO(tzhm);
+  if((c=='+')|(c=='-')){
+   I4 tzisplus=2*(c=='+')-1;   // +1 for +, -1 for -
+   c=*++sp;  // skip tz indic
+   I4 tzhm; RDTWOC(tzhm);
    // Apply tz adjustment to hours.  This may make hours negative; that's OK
    hh-=tzisplus*tzhm;    // +tz means UTC was advanced by tz hours; undo it
-   sp+=(sp[0]==':');  // skip ':' if present
-   if(ISDIGIT(sp[0])){
-    RDTWO(tzhm);
+   if(c==':')c=*++sp;  // skip ':' if present
+   if(ISDIGIT(c)){
+    RDTWOC(tzhm);
     mm-=tzisplus*tzhm;    // same for minutes, may go negative
    }
-  }else sp+=(sp[0]=='Z');  // no numbered timezone; skip Zulu timezone if given
+  }else if(c=='Z')c=*++sp;  // no numbered timezone; skip Zulu timezone if given
   // Verify no significance after end
-  while(sp[0]){if(sp[0]!=' ')DOERR; ++sp;}
+  while(c){if(c!=' ')DOERR; c=*++sp;}
 gottime: ;
   // We have all the components.  Combine Y M D hh mm ss N into nanosec time
   // This copies the computation in eft except that we have N here.  eft uses unsigned vbls for hh,mm, we don't - no problem
@@ -814,7 +818,7 @@ F1(jtinttoe){A z;I n;
  RZ(w);
  n=AN(w);
  ASSERT(SY_64,EVNONCE);
- ASSERT(AT(w)&INT,EVDOMAIN);
+ RZ(w=vi(w));  // verify valid integer
  GATV(z,INT,n,AR(w),AS(w));
  eft(n,IAV(z),IAV(w));
  RETF(z);

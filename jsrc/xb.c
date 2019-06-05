@@ -828,7 +828,7 @@ F1(jtinttoe){A z;I n;
 F1(jtetoint){
  RZ(w);
  ASSERT(SY_64,EVNONCE);
- RETF(sfe(jt,w,7*SZI-21,0,0));  // special precision meaning 'store INTs'
+ RETF(sfe(jt,w,7*SZI-20,0,0));  // special precision meaning 'store INTs'
 }
 
 // 6!:16 convert a block of nanoseconds times to iso8601 format.  Result has an extra axis, 30 bytes long

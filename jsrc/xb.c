@@ -727,9 +727,9 @@ static A efs(J jt,A w){
   // We code this on the assumption that the format is constant throughout, and therefore branches will not be mispredicted after the first loop
 #define DOERR {IAV(z)[i]=IMIN; goto err;}
 #define ISDIGIT(d) (((UI4)d-(UI4)'0')<=((UI4)'9'-(UI4)'0'))
-#define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI)z>(UI)99)DOERR sp+=2;
+#define RDTWO(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)sp[0]*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2;
 // same, but use c for the first digit
-#define RDTWOC(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI)z>(UI)99)DOERR sp+=2; c=*sp;
+#define RDTWOC(z) if(!ISDIGIT(sp[1]))DOERR z=(UI4)c*10+((UI4)sp[1]-(UI4)'0')-((UI4)'0'*(UI4)10); if((UI4)z>(UI4)99)DOERR sp+=2; c=*sp;
   UI N=0;  // init nanosec accum to 0
   // throughout this stretch we may have c set to 'next character'
   UC c=*sp;
@@ -828,10 +828,10 @@ F1(jtinttoe){A z;I n;
 F1(jtetoint){
  RZ(w);
  ASSERT(SY_64,EVNONCE);
- RETF(sfe(jt,w,7*SZI-20,0,0));  // special precision meaning 'store INTs'
+ RETF(sfe(jt,w,7*SZI-20,0,0));  // special precision meaning 'store INTs'.  Turns into linelen=56
 }
 
-// 6!:16 convert a block of nanoseconds times to iso8601 format.  Result has an extra axis, 30 bytes long
+// 6!:16 convert a block of nanoseconds times to iso8601 format.  Result has an extra axis, long enough to hold the result
 // Bivalent.  left arg is 3 characters, one to use as the decimal point, one to store just after the value (usually ' ' or 'Z'),
 // one for result precision ('d'=date only, '0'-'9' give # fractional digits)
 // Default is '. 0'

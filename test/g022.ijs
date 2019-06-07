@@ -43,6 +43,40 @@ NB. symbol
 'length error' -: (i.3 4) >: etx i.5 4      
 'length error' -: (i.3 4) >:~etx i.5 4  
 
-4!:55 ;:'t'
+NB. Verify all comparisons work for arguments of any length, including exact comparisons
+t1 =. 1&<.&.(0.05&+)&.> <@((?@$)&0)"1 (3+i.3) ,"0/ 1+i.50
+t2 =. 1&<.&.(0.05&+)&.> <@((?@$)&0)"1 $@> t1
+f =. 1 : 0
+:
+assert. x (u"0"0 -: u)&> y
+assert. ({."1&.> x) (u"0"0 -: u)&> y
+assert. x (u"0"0 -: u)&> ({."1&.> y)
+assert. x (u!.0"0"0 -: u!.0)&> y
+assert. ({."1&.> x) (u!.0"0"0 -: u!.0)&> y
+assert. x (u!.0"0"0 -: u!.0)&> ({."1&.> y)
+)
+t1 >: f t2
+t1 > f t2
+t1 <: f t2
+t1 < f t2
+t1 = f t2
+t1 ~: f t2
+
+t1 =. 1e4&<.&.(500&+)&.> <@((?@$)&1e4)"1 (3+i.3) ,"0/ 1+i.50
+t2 =. 1e4&<.&.(500&+)&.> <@((?@$)&1e4)"1 $@> t1
+f =. 1 : 0
+:
+assert. x (u"0"0 -: u)&> y
+assert. ({."1&.> x) (u"0"0 -: u)&> y
+assert. x (u"0"0 -: u)&> ({."1&.> y)
+)
+t1 >: f t2
+t1 > f t2
+t1 <: f t2
+t1 < f t2
+t1 = f t2
+t1 ~: f t2
+
+4!:55 ;:'t t1 t2 f'
 
 

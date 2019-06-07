@@ -37,8 +37,8 @@ BPFX(gtBB, GT,BGT,LT,BLT, _mm256_andnot_pd(v256,u256) , , )
  
 
                           EQTEMPLATE(eqBI, B,B,I, CMPEQ   )  ACMP0(eqBD, B,B,D, TEQ, ==  )
-EQTEMPLATE(eqIB, B,I,B, CMPEQ   )  EQTEMPLATE(eqII, B,I,I, CMPEQ   )  ACMP0(eqID, B,I,D, TEQ, ==  )
-ACMP0(eqDB, B,D,B, TEQ, ==  )  ACMP0(eqDI, B,D,I, TEQ, ==  )  ACMP0(eqDD, B,D,D, TEQ, ==  )
+EQTEMPLATE(eqIB, B,I,B, CMPEQ   )    ACMP0(eqID, B,I,D, TEQ, ==  )
+ACMP0(eqDB, B,D,B, TEQ, ==  )  ACMP0(eqDI, B,D,I, TEQ, ==  )  
 APFX(eqZZ, B,Z,Z, zeq  )   
 APFX(eqXX, B,X,X, equ  )   
 APFX(eqQQ, B,Q,Q, QEQ  )
@@ -54,8 +54,8 @@ EQTEMPLATE(eqCU, B,UC,C4, CMPEQ )  EQTEMPLATE(eqUC, B,C4,UC, CMPEQ )
 APFX(eqAA, B,A,A, equ  )
 
                           NETEMPLATE(neBI, B,B,I, CMPNE   )  ACMP0(neBD, B,B,D, TNE, != )
-NETEMPLATE(neIB, B,I,B, CMPNE   )  NETEMPLATE(neII, B,I,I, CMPNE   )  ACMP0(neID, B,I,D, TNE, != )
-ACMP0(neDB, B,D,B, TNE, != )  ACMP0(neDI, B,D,I, TNE, != )  ACMP0(neDD, B,D,D, TNE, != )
+NETEMPLATE(neIB, B,I,B, CMPNE   )    ACMP0(neID, B,I,D, TNE, != )
+ACMP0(neDB, B,D,B, TNE, != )  ACMP0(neDI, B,D,I, TNE, != )  
 APFX(neZZ, B,Z,Z, !zeq )  
 APFX(neXX, B,X,X, !equ )
 APFX(neQQ, B,Q,Q, !QEQ )
@@ -71,62 +71,219 @@ NETEMPLATE(neCU, B,UC,C4, CMPNE )  NETEMPLATE(neUC, B,C4,UC, CMPNE )
 APFX(neAA, B,A,A, !equ )
 
                           APFX(ltBI, B,B,I, CMPLT    )  ACMP0(ltBD, B,B,D, TLT, <  )
-APFX(ltIB, B,I,B, CMPLT    )  APFX(ltII, B,I,I, CMPLT    )  ACMP0(ltID, B,I,D, TLT, <  )
-ACMP0(ltDB, B,D,B, TLT, <  )  ACMP0(ltDI, B,D,I, TLT, <  )  ACMP0(ltDD, B,D,D, TLT, <  )
+APFX(ltIB, B,I,B, CMPLT    )    ACMP0(ltID, B,I,D, TLT, <  )
+ACMP0(ltDB, B,D,B, TLT, <  )  ACMP0(ltDI, B,D,I, TLT, <  )  
 APFX(ltXX, B,X,X, -1==xcompare)
 APFX(ltQQ, B,Q,Q, QLT  )
 APFX(ltSS, B,SB,SB, SBLT)
 
                           APFX(leBI, B,B,I, CMPLE   )  ACMP0(leBD, B,B,D, TLE, <=  )
-APFX(leIB, B,I,B, CMPLE   )  APFX(leII, B,I,I, CMPLE   )  ACMP0(leID, B,I,D, TLE, <=  )
-ACMP0(leDB, B,D,B, TLE, <=  )  ACMP0(leDI, B,D,I, TLE, <=  )  ACMP0(leDD, B,D,D, TLE, <=  )
+APFX(leIB, B,I,B, CMPLE   )   ACMP0(leID, B,I,D, TLE, <=  )
+ACMP0(leDB, B,D,B, TLE, <=  )  ACMP0(leDI, B,D,I, TLE, <=  )  
 APFX(leXX, B,X,X,  1!=xcompare)
 APFX(leQQ, B,Q,Q, QLE  )
 APFX(leSS, B,SB,SB, SBLE)
 
                           APFX(geBI, B,B,I, CMPGE   )  ACMP0(geBD, B,B,D, TGE, >=  )
-APFX(geIB, B,I,B, CMPGE   )  APFX(geII, B,I,I, CMPGE   )  ACMP0(geID, B,I,D, TGE, >=  )
-ACMP0(geDB, B,D,B, TGE, >=  )  ACMP0(geDI, B,D,I, TGE, >=  )  ACMP0(geDD, B,D,D, TGE, >=  )
+APFX(geIB, B,I,B, CMPGE   )    ACMP0(geID, B,I,D, TGE, >=  )
+ACMP0(geDB, B,D,B, TGE, >=  )  ACMP0(geDI, B,D,I, TGE, >=  )  
 APFX(geXX, B,X,X, -1!=xcompare)
 APFX(geQQ, B,Q,Q, QGE  )
 APFX(geSS, B,SB,SB, SBGE)
 
                            APFX(gtBI, B,B,I, CMPGT   )  ACMP0(gtBD, B,B,D, TGT, >  )
-APFX(gtIB, B,I,B, CMPGT    )   APFX(gtII, B,I,I, CMPGT   )  ACMP0(gtID, B,I,D, TGT, >  )
-ACMP0(gtDB, B,D,B, TGT, >  )   ACMP0(gtDI, B,D,I, TGT, > )  ACMP0(gtDD, B,D,D, TGT, >  )
+APFX(gtIB, B,I,B, CMPGT    )     ACMP0(gtID, B,I,D, TGT, >  )
+ACMP0(gtDB, B,D,B, TGT, >  )   ACMP0(gtDI, B,D,I, TGT, > )  
 APFX(gtXX, B,X,X,  1==xcompare)
 APFX(gtQQ, B,Q,Q, QGT  )
 APFX(gtSS, B,SB,SB, SBGT)
 
+// 
 #if C_AVX2&&SY_64
-#define primcmpD256(name,primop) \
-AHDR2(name,D,D,D){ \
+#define primcmpD256(name,tolres,intolres,decls) \
+AHDR2(name,B,D,D){ \
  __m256i endmask; /* length mask for the last word */ \
+ __m256d u,v,cct,ctop,eq; /* args, ct, eq result and also main result */ \
+ decls \
  _mm256_zeroupper(VOIDARG); \
- NAN0; \
+ if(jt->cct!=1.0){ \
+  cct=_mm256_set1_pd(jt->cct); \
+  if(n-1==0){ \
+   /* vector-to-vector, no repetitions */ \
+   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   DQ((m-1)>>LGNPAR, \
+     u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
+     eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
+     eq=tolres; \
+     *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+     x+=NPAR; y+=NPAR; z+=NPAR;) \
+   /* runout, using mask */ \
+   u=_mm256_maskload_pd(x,endmask);v=_mm256_maskload_pd(y,endmask); \
+   eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
+   eq=tolres; \
+   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+  }else{ \
+   if(n-1<0){n=~n; \
+    /* atom+vector */ \
+    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    DQ(m, u=_mm256_set1_pd(*x); ++x; \
+      ctop=_mm256_mul_pd(u,cct); \
+      DQ((n-1)>>LGNPAR, \
+        v=_mm256_loadu_pd(y); \
+        eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
+        eq=tolres; \
+        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+        y+=NPAR; z+=NPAR;) \
+      v=_mm256_maskload_pd(y,endmask); \
+      eq=_mm256_xor_pd(_mm256_cmp_pd(u,_mm256_mul_pd(v,cct),_CMP_GT_OQ),_mm256_cmp_pd(v,ctop,_CMP_LE_OQ)); \
+      eq=tolres; \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+   }else{ \
+    /* vector+atom */ \
+    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    DQ(m, v=_mm256_set1_pd(*y); ++y; \
+      ctop=_mm256_mul_pd(v,cct); \
+      DQ((n-1)>>LGNPAR, \
+        u=_mm256_loadu_pd(x); \
+        eq=_mm256_xor_pd(_mm256_cmp_pd(u,ctop,_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
+        eq=tolres; \
+        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+        x+=NPAR; z+=NPAR;) \
+      u=_mm256_maskload_pd(x,endmask); \
+      eq=_mm256_xor_pd(_mm256_cmp_pd(u,ctop,_CMP_GT_OQ),_mm256_cmp_pd(v,_mm256_mul_pd(u,cct),_CMP_LE_OQ)); \
+      eq=tolres; \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+   } \
+  } \
+ }else{ \
+  if(n-1==0){ \
+   /* vector-to-vector, no repetitions */ \
+   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
+   DQ((m-1)>>LGNPAR, \
+     u=_mm256_loadu_pd(x);v=_mm256_loadu_pd(y); \
+     eq=intolres; \
+     *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+     x+=NPAR; y+=NPAR; z+=NPAR;) \
+   /* runout, using mask */ \
+   u=_mm256_maskload_pd(x,endmask);v=_mm256_maskload_pd(y,endmask); \
+   eq=intolres; \
+   STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
+  }else{ \
+   if(n-1<0){n=~n; \
+    /* atom+vector */ \
+    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    DQ(m,; u=_mm256_set1_pd(*x); ++x; \
+      DQ((n-1)>>LGNPAR, \
+        v=_mm256_loadu_pd(y); \
+        eq=intolres; \
+        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+        y+=NPAR; z+=NPAR;) \
+      v=_mm256_maskload_pd(y,endmask); \
+      eq=intolres; \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+   }else{ \
+    /* vector+atom */ \
+    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
+    DQ(m, v=_mm256_set1_pd(*y); ++y; \
+      DQ((n-1)>>LGNPAR, \
+        u=_mm256_loadu_pd(x); \
+        eq=intolres; \
+        *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)); \
+        x+=NPAR; z+=NPAR;) \
+      u=_mm256_maskload_pd(x,endmask); \
+      eq=intolres; \
+      STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(_mm256_castpd_si256(eq)),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
+      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
+   } \
+  } \
+ } \
+}
+
+primcmpD256(geDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GE_OQ) , )
+primcmpD256(gtDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_GT_OQ)) , _mm256_cmp_pd(u,v,_CMP_GT_OQ) , )
+primcmpD256(leDD, _mm256_or_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LE_OQ) , )
+primcmpD256(ltDD, _mm256_andnot_pd(eq,_mm256_cmp_pd(u,v,_CMP_LT_OQ)) , _mm256_cmp_pd(u,v,_CMP_LT_OQ) , )
+primcmpD256(eqDD, eq , _mm256_cmp_pd(u,v,_CMP_EQ_OQ) , )
+primcmpD256(neDD, _mm256_xor_pd(eq,one) , _mm256_cmp_pd(u,v,_CMP_NEQ_OQ) , __m256d one=_mm256_castsi256_pd(_mm256_set1_epi64x(0xffffffffffffffff));)   // warnings from one=_mm256_cmp_pd(cct,cct,_CMP_TRUE_UQ);
+
+#define primcmpI256(name,result,decls) \
+AHDR2(name,B,I,I){ \
+ __m256i endmask; /* length mask for the last word */ \
+ __m256i u,v,eq; /* args, ct, main result */ \
+ decls \
+ _mm256_zeroupper(VOIDARG); \
  if(n-1==0){ \
   /* vector-to-vector, no repetitions */ \
   endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */ \
-  DQ((m-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),_mm256_loadu_pd(y))); x+=NPAR; y+=NPAR; z+=NPAR;) \
+  DQ((m-1)>>LGNPAR, \
+    u=_mm256_loadu_si256((__m256i*)x);v=_mm256_loadu_si256((__m256i*)y); \
+    eq=result; \
+    *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(eq); \
+    x+=NPAR; y+=NPAR; z+=NPAR;) \
   /* runout, using mask */ \
-  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),_mm256_maskload_pd(y,endmask))); \
+  u=_mm256_maskload_epi64(x,endmask);v=_mm256_maskload_epi64(y,endmask); \
+  eq=result; \
+  STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-m)&(NPAR-1))+NPAR);  /* could just overstore */ \
  }else{ \
   if(n-1<0){n=~n; \
    /* atom+vector */ \
    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, __m256d u; u=_mm256_set1_pd(*x); ++x; \
-     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(u,_mm256_loadu_pd(y))); y+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(u,_mm256_maskload_pd(y,endmask))); \
+   DQ(m,; u=_mm256_set1_epi64x(*x); ++x; \
+     DQ((n-1)>>LGNPAR, \
+       v=_mm256_loadu_si256((__m256i*)y); \
+       eq=result; \
+       *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(eq); \
+       y+=NPAR; z+=NPAR;) \
+     v=_mm256_maskload_epi64(y,endmask); \
+     eq=result; \
+     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
      y+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   }else{ \
    /* vector+atom */ \
    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-n)&(NPAR-1)))); \
-   DQ(m, __m256d v; v=_mm256_set1_pd(*y); ++y; \
-     DQ((n-1)>>LGNPAR, _mm256_storeu_pd(z, primop(_mm256_loadu_pd(x),v)); x+=NPAR; z+=NPAR;)  _mm256_maskstore_pd(z, endmask, primop(_mm256_maskload_pd(x,endmask),v)); \
+   DQ(m, v=_mm256_set1_epi64x(*y); ++y; \
+     DQ((n-1)>>LGNPAR, \
+       u=_mm256_loadu_si256((__m256i*)x); \
+       eq=result; \
+       *(I4*)z=VALIDBOOLEAN&_mm256_movemask_epi8(eq); \
+       x+=NPAR; z+=NPAR;) \
+     u=_mm256_maskload_epi64(x,endmask); \
+     eq=result; \
+     STOREBYTES(z,VALIDBOOLEAN&_mm256_movemask_epi8(eq),((-n)&(NPAR-1))+NPAR);  /* could just overstore */ \
      x+=((n-1)&(NPAR-1))+1; z+=((n-1)&(NPAR-1))+1;) \
   } \
  } \
- NAN1V; \
 }
 
+primcmpI256(eqII, _mm256_cmpeq_epi64(u,v) , )
+primcmpI256(neII, _mm256_xor_si256(one,_mm256_cmpeq_epi64(u,v)) , __m256i one=_mm256_set1_epi64x(0xffffffffffffffff);)
+primcmpI256(gtII, _mm256_cmpgt_epi64(u,v) , )
+primcmpI256(geII, _mm256_or_si256(_mm256_cmpeq_epi64(u,v),_mm256_cmpgt_epi64(u,v)) , )
+primcmpI256(ltII, _mm256_cmpgt_epi64(v,u) , )
+primcmpI256(leII, _mm256_or_si256(_mm256_cmpeq_epi64(u,v),_mm256_cmpgt_epi64(v,u)) , )
+
+#if 0  // time these with the following differential test to remove parsing overhead
+l=.1000 ?@$ 0
+r=.1000 ?@$ 0
+r2=.2 ?@$ 0
+l2=.2 ?@$ 0
+(1000000 (6!:2) 'l =!.0 r') -  (1000000 (6!:2) 'l2 =!.0 r2')
+#endif
 #else
+ACMP0(geDD, B,D,D, TGE, >=  )
+ACMP0(gtDD, B,D,D, TGT, >  )
+ACMP0(leDD, B,D,D, TLE, <=  )
+ACMP0(ltDD, B,D,D, TLT, <  )
+ACMP0(neDD, B,D,D, TNE, != )
+ACMP0(eqDD, B,D,D, TEQ, ==  )
+
+APFX(gtII, B,I,I, CMPGT   )
+APFX(geII, B,I,I, CMPGE   )
+APFX(leII, B,I,I, CMPLE   )
+APFX(ltII, B,I,I, CMPLT    )
+NETEMPLATE(neII, B,I,I, CMPNE   )
+EQTEMPLATE(eqII, B,I,I, CMPEQ   )
 #endif

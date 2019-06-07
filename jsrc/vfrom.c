@@ -118,12 +118,52 @@ F2(jtifrom){A z;C*wv,*zv;I acr,an,ar,*av,j,k,m,p,pq,q,wcr,wf,wk,wn,wr,*ws,zn;
 #if SY_64
   case sizeof(int):IFROMLOOP(int); break;
 #endif
-  case sizeof(I): IFROMLOOP(I); break;
+  case sizeof(I):
+#if C_AVX2
+  {__m256i endmask; /* length mask for the last word */ 
+   _mm256_zeroupper(VOIDARG);
+   __m256i wstride=_mm256_set1_epi64x(p);  // atoms between cells
+   I * RESTRICT v=(I*)wv; I* RESTRICT x=(I*)zv;  // input and output pointers
+   if(an==1){  // special case of atom {"1 y
+    if(m==1){  // the atom { list case is pretty common
+     *x=v[j];  // just move the one value
+    }else{
+     __m256i lanestride=_mm256_mul_epu32(wstride,_mm256_set_epi64x(3,2,1,0));  // each lane accesses a different cell
+     endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-m)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+     v+=j;  // advance base pointer to the column we are fetching
+     wstride=_mm256_slli_epi64(wstride,LGNPAR);  // repurpose wstride to be stride between groups of 4 cells
+     DQ((m-1)>>LGNPAR, _mm256_storeu_si256((__m256i*)x, _mm256_i64gather_epi64(v,lanestride,SZI)); lanestride=_mm256_add_epi64(lanestride,wstride);  x+=NPAR;)
+     /* runout, using mask */ 
+     _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(wstride,v,lanestride,endmask,SZI));   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+    }
+   }else{  // Normal case: a list of indexes for each cell
+    I *avv; // input pointer
+    endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+((-an)&(NPAR-1))));  /* mask for 00=1111, 01=1000, 10=1100, 11=1110 */
+    DQ(m, avv=av;  // init input pointer to start of a
+      DQ((an-1)>>LGNPAR,
+        __m256i indexes=_mm256_loadu_si256((__m256i*)avv);  // fetch a block of indexes
+        indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg
+        ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+        _mm256_storeu_si256((__m256i*)x, _mm256_i64gather_epi64(v,indexes,SZI)); avv+=NPAR;  x+=NPAR;
+        )
+        // runout using mask
+      __m256i indexes=_mm256_maskload_epi64(avv,endmask);  // fetch a block of indexes
+      indexes=_mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(indexes),_mm256_castsi256_pd(_mm256_add_epi64(indexes,wstride)),_mm256_castsi256_pd(indexes)));  // get indexes, add axis len if neg.  unfetched indexes are 0
+      ASSERT(_mm256_movemask_pd(_mm256_castsi256_pd(_mm256_andnot_si256(indexes,_mm256_sub_epi64(indexes,wstride))))==0xf,EVINDEX);  // positive, and negative if you subtract axis length
+      _mm256_maskstore_epi64(x, endmask, _mm256_mask_i64gather_epi64(wstride,v,indexes,endmask,SZI)); x+=((an-1)&(NPAR-1))+1;   // must use a different reg for source and index, lest VS2013 create an illegal instruction
+      v+=p;  // advance to next input cell
+      ;)
+   }
+  }
+#else
+   IFROMLOOP(I);
+#endif
+   break;
   default:
   // cells are not simple items.  We can safely move full words, since there is always extra buffer space at the end of any type that is not a word-multiple
    if(k<MEMCPYTUNELOOP)IFROMLOOP2((k+SZI-1)>>LGSZI,MVLOOP)
    else IFROMLOOP2((k+SZI-1)>>LGSZI,MVMC)
-    break;
+   break;
 #if 0 // obsolete
    if     (0==(k&(SZI-1)))IFROMLOOP2(I,k>>LGSZI)
 #if SY_64

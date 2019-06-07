@@ -449,13 +449,13 @@ static GF(jtgriq){
    I nextv=zv[0];  // always has first value with a new key
    I i;for(i=0;i<n-1;++i){
     I currv=nextv;
-    if(((nextv=zv[i+1])^currv)&~itemmask){zv[i]=currv&itemmask;  // normal case with no repetition   scaf remove first compare
+    if(((nextv=zv[i+1])^currv)&~itemmask){zv[i]=currv&itemmask;  // normal case with no repetition
     }else{  // reprocess the repeated block
      I j=i;do{
       I v=wv[zv[j]&itemmask]^gradedown; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in upper bits 
      }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
      sortiq1(zv+i,j-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
-     while(i<j){zv[i]&=itemmask; ++i;}
+     while(i<j){zv[i]&=itemmask; ++i;}  // the item numbers are guaranteed right after this sort
      i=j-1;  // pick up after the batch
     }
    }
@@ -522,25 +522,39 @@ static GF(jtgri){A x,y;B up;I e,i,*v,*wv,*xv;UI4 *yv,*yvb;I c=ai*n;
 
 
  // figure out what algorithm to use
- // for atoms, quicksort always wins, except for length 5500-500000 when there are <= two bytes of significance: then radix wins
+ // for atoms, smallrange wins if the range is less than (2n lgn) unless that exceeds L2; then 4n.  quicksort wins otherwise, except for length 5500-500000 when there are <= two bytes of significance: then radix wins
  // for lists, smallrange always beats radix, but loses to merge if the range is too high.  We assess the max acceptable range as
  // (80>>keylength)*(n), smaller if the range would exceed cache size
  CR rng;
+#if 0 // turn this on for performance measurements selecting algorithm on length
+ if((n&3)==0)R gri1(m,ai,n,w,zv);  // radix
+ if((n&3)==1)R grx(m,ai,n,w,zv);  // merge
+ if((n&3)==2)R jtgriq(jt,m,ai,n,w,zv);  // quicksort
+ // otherwise smallrange
+ rng = condrange(wv,AN(w),IMAX,IMIN,IMAX);
+#else
 #if SY_64  // no quickgrade unless INTs are 64 bits
- if(ai==1){  // for atoms, usually use quicksort
-  if((UI)(n-5500)>(UI)(500000-5500))R jtgriq(jt,m,ai,n,w,zv);  // quicksort except for 5500-500000
-  // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
-  // because the main appl is sorting timestamps, which are ALL big
-  DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jt,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
-  R gri1(m,ai,n,w,zv);  // moderate-range middle lengths use radix sort
- }
+ if(ai==1){  // for atoms, usually use smallrange or quicksort
+  if(n<10)R jtgriq(jt,m,ai,n,w,zv);  // for short lists just use qsort
+  UI4 lgn3; CTLZI(n,lgn3); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
+  rng = condrange(wv,AN(w),IMAX,IMIN,MIN((L2CACHESIZE>>LGSZI),(n*lgn3)>>(3-1)));  // let range go up to 2n lgn, but never more than L2 size
+  if(!rng.range){
+   if((UI)(n-5500)>(UI)(500000-5500))R jtgriq(jt,m,ai,n,w,zv);  // quicksort except for 5500-500000
+   // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
+   // because the main appl is sorting timestamps, which are ALL big
+   DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jt,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
+   R gri1(m,ai,n,w,zv);  // moderate-range middle lengths use radix sort
+  }
+  // fall through to small-range
+ }else  // ! we already have range, don't calculate it again
 #endif
-// testing  R (((n&3)==1)?jtgri1:((n&3)==2)?jtgrx:jtgriq)(jt,m,ai,n,w,zv);
+ // watch out! an else clause is active
  if(ai<=6){rng = condrange(wv,AN(w),IMAX,IMIN,(MIN(((ai*n<(L2CACHESIZE>>LGSZI))?16:4),80>>ai))*n);  // test may overflow; OK   TUNE
  }else rng.range=0;  // if smallrange impossible
  // tweak this line to select path for timing
  // If there is only 1 item, radix beats merge for n>1300 or so (all positive) or more (mixed signed small numbers)
  if(!rng.range)R c==n&&n>2000?gri1(m,ai,n,w,zv):grx(m,ai,n,w,zv);  // revert to other methods if not small-range   TUNE
+#endif
  // doing small-range grade.  Allocate a hashtable area.  We will access it as UI4
  GATV0(y,C4T,rng.range,1); yvb=C4AV(y); yv=yvb-rng.min; up=(UI)jt->workareas.compare.complt>>(BW-1);
  // if there are multiple ints per item, we have to do multiple passes.  Allocate a workarea

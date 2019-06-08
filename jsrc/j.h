@@ -414,8 +414,16 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTN(b,e,nm) {if(!(b)){jt->curname=(nm); jsignal(e); R 0;}}  // set name for display (only if error)
 #define ASSERTSYS(b,s)  {if(!(b)){jsignal(EVSYSTEM); jtwri(jt,MTYOSYS,"",(I)strlen(s),s); R 0;}}
 #define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
-// verify that shapes *x and *y match for l axes
-#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); } 
+// verify that shapes *x and *y match for l axes, with no mispredicted branches
+#if C_AVX&&SY_64
+#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=4-(l); \
+ do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(aai>=0?aai:0))); \
+  endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
+  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(aai>=0)break; aaa+=NPAR; aab+=NPAR; aai+=NPAR; \
+ }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
+#else
+#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
+#endif
 
 #define CALL1(f,w,fs)   ((f)(jt,    (w),(A)(fs)))
 #define CALL2(f,a,w,fs) ((f)(jt,(a),(w),(A)(fs)))
@@ -480,12 +488,17 @@ extern unsigned int __cdecl _clearfp (void);
 #define GACOPYSHAPER(name,type,atoms,rank,shaape) if((rank)>0)AS(name)[0]=(shaape)[0]; if((rank)>1)AS(name)[1]=(shaape)[1]; if((rank)>2)AS(name)[2]=(shaape)[2];
 // SHAPE0 is used when the shape is 0 - write shape only if rank==1
 #define GACOPYSHAPE0(name,type,atoms,rank,shaape) if((rank)==1)AS(name)[0]=(atoms);
-// General shape copy, branchless when rank<3  One value is always written to shape
+// General shape copy, branchless when rank<3  One value is always written to shape: #atoms if rank=1.  Used in jtga()
 // obsolete #define GACOPYSHAPEG(name,type,atoms,rank,shaape) I _r=(shaape)?(rank):1; I *_s=(shaape)?(I*)(shaape):jt->shapesink; I cp=*_s; cp=_r==1?(atoms):cp; I *_d=AS(name); *_d=cp; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
 #define GACOPYSHAPEG(name,type,atoms,rank,shaape)  {I *_d=AS(name); I *_s=(shaape); _s=(shaape)?_s:_d; I cp=*_s; I _r=1-(rank); cp=_r==0?(atoms):cp; *_d=cp; do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
-// Use when shape is known to be present but rank is unknown.  One value is always written to shape
+// Use when shape is known to be present but rank is not SDT.  One value is always written to shape
 // obsolete #define GACOPYSHAPE(name,type,atoms,rank,shaape) I _r=(rank); I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; --_r; do{_s=_r>0?_s:jt->shapesink; _d=_r>0?_d:jt->shapesink; *++_d=*++_s;}while(--_r>0);
+#if C_AVX&SY_64
+#define GACOPYSHAPE(name,type,atoms,rank,shaape) MCISH(AS(name),shaape,rank)
+#else
+// in this version one value is always written to shape
 #define GACOPYSHAPE(name,type,atoms,rank,shaape)  {I *_s=(I*)(shaape); I *_d=AS(name); *_d=*_s; I _r=1-(rank); do{_s+=(UI)_r>>(BW-1); _d+=(UI)_r>>(BW-1); *_d=*_s;}while(++_r<0);}
+#endif
 #define GACOPY1(name,type,atoms,rank,shaape) {I *_d=AS(name); *_d=1; I _r=1-(rank); do{_d+=(UI)_r>>(BW-1); *_d=1;}while(++_r<0);} // copy all 1s to shape
 #define GA(v,t,n,r,s)   RZ(v=ga(t,(I)(n),(I)(r),(I*)(s)))
 // GAE executes the given expression when there is an error
@@ -603,12 +616,22 @@ extern unsigned int __cdecl _clearfp (void);
 // obsolete #define MCISHd(dest,src,n) {I * RESTRICT _s=(src); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*_s++;}  // ... this version when d increments through the loop
 // obsolete #define MCISHs(dest,src,n) {I * RESTRICT _d=(dest); I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*_d++=*src++;}  // ... this when s increments through the loop
 // obsolete #define MCISHds(dest,src,n) {I _n=~(n); while((_n-=(_n>>(BW-1)))<0)*dest++=*src++;}  // ...this when both
+// Copy shapes.  Optimized for length <2, to eliminate branches then
+// For AVX, we can profitably use the MASKMOV instruction to do all the  testing
+#if C_AVX&&SY_64
+#define MCISH(dest,src,n) {I *_d=(dest), *_s=(src), _n=4-(n); \
+ do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(_n>=0?_n:0))); \
+  _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
+  if(_n>=0)break; _d+=NPAR; _s+=NPAR; _n+=NPAR; \
+ }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
+#else
 #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=(UI)_n>>(BW-1); _d+=(UI)_n>>(BW-1); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.
+#endif
 #define MCISHd(dest,src,n) {MCISH(dest,src,n) dest+=(n);}  // ... this version when d increments through the loop
 #define MCISHs(dest,src,n) {MCISH(dest,src,n) src+=(n);}
 #define MCISHds(dest,src,n) {MCISH(dest,src,n) dest+=(n); src+=(n);}
-#define MCISU(dest,src,n) {I * RESTRICT _d=(I*)(dest); I * RESTRICT _s=(I*)(src); I _n=-(n); do{*_d++=*_s++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
-#define MCISUds(dest,src,n) {I _n=-(n); do{*dest++=*src++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
+// not used #define MCISU(dest,src,n) {I * RESTRICT _d=(I*)(dest); I * RESTRICT _s=(I*)(src); I _n=-(n); do{*_d++=*_s++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
+// not used #define MCISUds(dest,src,n) {I _n=-(n); do{*dest++=*src++;}while((_n-=(_n>>(BW-1)))<0);}  // always runs once
 
 #define MIN(a,b)        ((a)<(b)?(a):(b))
 #define MLEN            (SY_64?63:31)

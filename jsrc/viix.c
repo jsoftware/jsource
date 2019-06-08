@@ -85,12 +85,13 @@ static B jtiixI(J jt,I n,I m,A a,A w,I*zv){A t;B ascend;I*av,j,p,q,*tv,*u,*v,*vv
 // 1111 would not generate spurious accepted cases because only one of them is HOMO.
 #define TT(s,t) (((s)<<5)+(t))
 
-F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u,*v,wr,*ws,wt,* RESTRICT zv;I cc;
+F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,/*obsolete *u,*v,*/wr,*ws,wt,* RESTRICT zv;I cc;
  RZ(a&&w);
  ar=AR(a); at=AT(a); as=AS(a); n=ar?*as:1; r=ar?ar-1:0;
  wr=AR(w); wt=AT(w); ws=AS(w); b=!AN(a)||!AN(w);  // b if something is empty
  ASSERT(r<=wr,EVRANK);
- u=as+ar; v=ws+wr; DO(r, ASSERT(*--u==*--v,EVLENGTH););
+// obsolete u=as+ar; v=ws+wr; DO(r, ASSERT(*--u==*--v,EVLENGTH););
+ /*obsolete u=as; v=ws;*/ ASSERTAGREE(as+ar-r,ws+wr-r,r)
  ASSERT(b||HOMO(at,wt),EVDOMAIN);
  ASSERT(b||at&DENSE&&wt&DENSE,EVNONCE);
  CPROD(AN(a),m,wr-r,ws); CPROD(AN(w),c,r,ws+wr-r);
@@ -100,7 +101,7 @@ F2(jticap2){A*av,*wv,z;B b;C*uu,*vv;I ar,*as,at,c,ck,cm,ge,gt,j,k,m,n,p,q,r,t,*u
  if(1==c){
   if(at&B01&&wt&B01+INT+FL){RZ(iixBX(n,m,a,w,zv)); R z;}
   if(at&INT&&wt&INT){D r;
-   v=AV(a); r=(D)v[n-1]-(D)v[0]; if(0>r)r=-r;
+   /*obsoletev=AV(a); */r=(D)IAV(a)[n-1]-(D)IAV(a)[0]; if(0>r)r=-r;
    if(m+r<1.4*m*log((D)n)){RZ(iixI(n,m,a,w,zv)); R z;}
  }}
  jt->workareas.compare.complt=-1; cc=0; uu=CAV(a); vv=CAV(a)+(c*(n-1)<<bplg(at));

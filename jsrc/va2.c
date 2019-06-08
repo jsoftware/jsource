@@ -562,7 +562,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
     RE(zn=mult(nf,zk)); nf^=((1-nf)>>(BW-1))&-mf; PROD(mf,q,sf); RE(zn=mult(mf,zn));  // zn=total # result atoms  (only if non-sparse)
 #endif
     zk<<=bplg(zt);  // now create zk, which is used later than ak/wk.  Use << to save latency
-   }else{DO(af<=wf?af:wf, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);) ak=acr; wk=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
+   }else{ASSERTAGREE(AS(a),AS(w),af<=wf?af:wf) /*obsoleteDO(af<=wf?af:wf, ASSERT(AS(a)[i]==AS(w)[i],EVLENGTH);)*/ ak=acr; wk=wcr; mf=af; nf=wf;}  // For sparse, repurpose ak/wk/mf/nf to hold acr/wcr/af/wf, which we will pass into vasp.  This allows acr/wcr/af/wf to be block-local
   }
   // TODO: for 64-bit, we could move f and r into upper jtinplace; use bit 4 of jtinplace for testing below; make f/r block-local; extract f/r below as needed
  }

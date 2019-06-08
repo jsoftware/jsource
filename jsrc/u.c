@@ -310,7 +310,20 @@ A jtvec(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0); MC(AV(z),v,n<<bplg(t)); RETF(z)
 
 // return A-block for list of type t, length n, and values *v
 // with special handling to coerce boolean type
-A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v;DO(n<<bplg(t), *p++=!!(*q++);)}else MC(AV(z),v,n<<bplg(t)); RETF(z);}
+// gcc/clang pragma unclear improvement
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC push_options
+#pragma GCC optimize ("unroll-loops")
+#endif
+A jtvecb01(J jt,I t,I n,void*v){A z; GA(z,t,n,1,0);if(t&B01){C*p=(C*)AV(z),*q=v; 
+#if defined(__clang__)
+#pragma clang loop vectorize(enable) interleave_count(4)
+#endif
+for(int i=0;i<n<<bplg(t);i++)*p++=!!(*q++);
+}else MC(AV(z),v,n<<bplg(t)); RETF(z);}
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC pop_options
+#endif
 
 // Convert w to integer if it isn't integer already (the usual conversion errors apply)
 F1(jtvi){RZ(w); R INT&AT(w)?w:cvt(INT,w);}

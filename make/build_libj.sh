@@ -77,7 +77,7 @@ LINK=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32 -o libj.so "
 
 linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
-COMPILE="$common "
+COMPILE="$common -msse2 -mfpmath=sse "
 LINK=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP -o libj.so "
 ;;
 

@@ -1224,6 +1224,7 @@
 #define vc1(x,y)                    jtvc1(jt,(x),(y))
 #define vci(x)                      jtvci(jt,(x))
 #define vec(x,y,z)                  jtvec(jt,(x),(y),(z))
+#define vecb01(x,y,z)               jtvecb01(jt,(x),(y),(z))
 #define vfinal(x)                   jtvfinal(jt,(x))
 #define vfn(x)                      jtvfn(jt,(x))
 #define vger2(x,y,z)                jtvger2(jt,(x),(y),(z))

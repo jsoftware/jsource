@@ -868,6 +868,7 @@ extern A        jtvasp(J,A,A,C,VF,I,I,I,I,I,I,I,I,I);
 extern B        jtvc1(J,I,US*);
 extern A        jtvci(J,I);
 extern A        jtvec(J,I,I,void*);
+extern A        jtvecb01(J,I,I,void*);
 extern F        jtvfn(J,F);
 extern A        jtvger2(J,C,A,A);
 extern A        jtvirtual(J,AD * RESTRICT,I,I);

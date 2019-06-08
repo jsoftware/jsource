@@ -75,6 +75,24 @@ add=: mema 2*IF64{4 8
 (9;(,9);2;<<add)=         'xbasic x *x x *x' dcd (,2);2;<<add
 0=memf add
 
+NB. memr/memw boolean
+add=: mema 8*1024
+(a=: ,32#,:a.) memw add,0,(8*1024),JCHAR
+a -: memr add,0,(8*1024),JCHAR
+NB. noise margin for memr
+(0~:a.i.a) -: memr add,0,8192,JB01
+(0~:a.i.a) = memr add,0,8192,JB01
+32 = +/ 0= memr add,0,8192,JB01
+(8192-32) = +/ 1= memr add,0,8192,JB01
+NB. no noise margin for memw
+'domain error' -: (a.i.a) memw etx add,0,8192,JB01
+(0~:a.i.a) memw add,0,8192,JB01
+(0~:a.i.a) -: memr add,0,8192,JB01
+NB. int looks like boolean is ok
+((2-2)+0~:a.i.a) memw add,0,8192,JB01
+((2-2)+0~:a.i.a) -: memr add,0,8192,JB01
+0=memf add
+
 NB. l type is same as x on J64 and and error on J32
 3 : 0''
 if. IF64 do.

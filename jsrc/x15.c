@@ -1186,7 +1186,7 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);  // m=length in items; t=type to create; u=address to read from
- ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
+ ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  if(-1==m){
   ASSERT(t&LIT+C2T+C4T,EVDOMAIN);
   if(t&LIT) m=strlen(u);
@@ -1203,7 +1203,7 @@ F1(jtmemr){C*u;I m,n,t,*v;US*us;C4*c4;
 // This function is obsolete and should not be used
 // ASSERT(!IsBadReadPtr(u,m*k),EVDOMAIN);
 #endif
- R vec(t,m,u);
+ R vecb01(t,m,u);
 }    /* 15!:1  memory read */
 
 F2(jtmemw){C*u;I m,n,t,*v;
@@ -1213,9 +1213,10 @@ F2(jtmemw){C*u;I m,n,t,*v;
  n=AN(w); v=AV(w);
  ASSERT(3==n||4==n,EVLENGTH);
  m=v[2]; t=3==n?LIT:v[3]; u=(C*)(v[0]+v[1]);
- ASSERT(t&LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
+ ASSERT(t&B01+LIT+C2T+C4T+INT+FL+CMPX+SBT,EVDOMAIN);
  ASSERT(m==AN(a)||t&LIT+C2T+C4T&&1==AR(a)&&(m-1)==AN(a),EVLENGTH);
  if(B01&AT(a)&&t&INT) RZ(a=cvt(INT,a));
+ if(INT&AT(a)&&t&B01) RZ(a=cvt(B01,a));
  ASSERT(TYPESEQ(t,AT(a)),EVDOMAIN);
 #if SY_WIN32
 // This function is obsolete and should not be used

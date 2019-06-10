@@ -514,7 +514,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
    mf=AR(w)<=AR(a);  // mf='a is not shorter than w'  nf='w is not shorter than a'
    nf=AR(w)>=AR(a); zn=AN(AR(w)>=AR(a)?w:a); r=AR(AR(w)>=AR(a)?w:a); s=AS(AR(w)>=AR(a)?w:a); I shortr=AR(AR(w)>=AR(a)?a:w); m=AN(AR(w)>=AR(a)?a:w); PROD(n,r-shortr,s+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
    ASSERTAGREE(AS(a),AS(w),shortr)  // agreement error if not prefix match
-   f=0;  // no rank means no frame
+   f=0;  // no rank means no outer frame
    if(jtinplace){
     // Non-sparse setup for copy loop, no rank
       // get number of inner cells
@@ -724,6 +724,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
 
 
 // 4-nested loop for dot-products.  Handles repeats for inner and outer frame.  oneprod is the code for calculating a single vector inner product *zv++ = *av++ dot *wv++
+// If there is inner frame, it is the a arg that is repeated
 #define SUMATLOOP(ti,to,oneprod) \
   {ti * RESTRICT av=ti##AV(a),* RESTRICT wv=ti##AV(w); to * RESTRICT zv=to##AV(z); DQ(nfro, I jj=nfri; ti *ov0=repeata?av:wv; while(1){DQ(ndpo, I j=ndpi; ti *av0=av; while(1){oneprod if(!--j)break; av=av0;}) if(!--jj)break; if(repeata)av=ov0;else wv=ov0; })}
 
@@ -763,7 +764,7 @@ A jtva2(J jt,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self){A z;I ak,f,m,
 // nfri is the number of times to repeat the short-frame operand for the outer loop
 // nfri is */ surplus outer frame
 // repeata is set if a has the shorter outer frame
-// w is never repeated in the inner loop; exchange args to ensure this
+// w is never repeated in the inner loop (i. e. you can have multiple w but not multiple a; exchange args to ensure this
 A jtsumattymesprods(J jt,I it,A a, A w,I dplen,I nfro,I nfri,I ndpo,I ndpi,I repeata,A z){
  switch(it){
  case B01:

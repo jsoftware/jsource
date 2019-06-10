@@ -958,7 +958,7 @@ extern UI4      shortrange[3][4];
 extern A        unam;           /* "uname" name conflict in Unix           */
 extern A        vnam;
 extern I        v00[2];
-extern B        testb[];
+// obsolete extern B        testb[];
 extern C        wtype[];
 extern A        xnam;
 extern A        ynam;

@@ -186,7 +186,9 @@ static I jtconall(J jt,I n,CW*con){A y;CW*b=0,*c=0,*d=0;I e,i,j,k,p=0,q,r,*stack
     }
     stack[top++]=i; ++tb;  break;            // push addr of cw, increment t-block count
    case CDO:                                   // do. - classify according to what structure we are in
-    CWASSERT(testb[q]);                       // first, make sure do. is allowed here
+// obsolete  testb[CIF]=testb[CELSEIF]=testb[CSELECT]=testb[CWHILE]=testb[CWHILST]=testb[CFOR]=testb[CCASE]=testb[CFCASE]=1;
+    CWASSERT(((((I)1<<CIF)|((I)1<<CELSEIF)|((I)1<<CSELECT)|((I)1<<CWHILE)|((I)1<<CWHILST)|((I)1<<CFOR)|((I)1<<CCASE)|((I)1<<CFCASE))>>q)&1);   // first, make sure do. is allowed here
+// obsolete     CWASSERT(testb[q]);                       
      // classify the do. based on struct: if for. do., call it DOF; if [f]case. do, call it DOSEL;
      // otherwise (if./elseif., while./whilst.) leave it as DO
     b->type=q==CFOR?CDOF:q==CCASE||q==CFCASE?CDOSEL:CDO;

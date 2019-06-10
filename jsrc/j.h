@@ -416,10 +416,10 @@ extern unsigned int __cdecl _clearfp (void);
 #define ASSERTW(b,e)    {if(!(b)){if((e)<=NEVM)jsignal(e); else jt->jerr=(e); R;}}
 // verify that shapes *x and *y match for l axes, with no mispredicted branches
 #if C_AVX&&SY_64
-#define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=4-(l); \
+#define ASSERTAGREE(x,y,l) {D *aaa=(D*)(x), *aab=(D*)(y); I aai=4-(l); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(aai>=0?aai:0))); \
-  endmask=_mm256_xor_si256(_mm256_maskload_epi64(aaa,endmask),_mm256_maskload_epi64(aab,endmask)); \
-  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(aai>=0)break; aaa+=NPAR; aab+=NPAR; aai+=NPAR; \
+  endmask=_mm256_castpd_si256(_mm256_xor_pd(_mm256_maskload_pd(aaa,endmask),_mm256_maskload_pd(aab,endmask))); \
+  ASSERT(_mm256_testz_si256(endmask,endmask),EVLENGTH); if(aai>=0)break; aaa+=NPAR; aab+=((UI)aai>>(BW-1))<<LGNPAR; aai+=NPAR; /* prevent compiler from doing address offset */\
  }while(aai<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define ASSERTAGREE(x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai; aab=aai<0?aaa:aab; ASSERT(aaa[aai]==aab[aai],EVLENGTH); --aai;}while(aai>=0); }
@@ -619,10 +619,10 @@ extern unsigned int __cdecl _clearfp (void);
 // Copy shapes.  Optimized for length <2, to eliminate branches then
 // For AVX, we can profitably use the MASKMOV instruction to do all the  testing
 #if C_AVX&&SY_64
-#define MCISH(dest,src,n) {I *_d=(dest), *_s=(src), _n=4-(n); \
+#define MCISH(dest,src,n) {D *_d=(D*)(dest), *_s=(D*)(src); I _n=4-(n); \
  do{__m256i endmask = _mm256_loadu_si256((__m256i*)(jt->validitymask+(_n>=0?_n:0))); \
-  _mm256_maskstore_epi64(_d,endmask,_mm256_maskload_epi64(_s,endmask)); \
-  if(_n>=0)break; _d+=NPAR; _s+=NPAR; _n+=NPAR; \
+  _mm256_maskstore_pd(_d,endmask,_mm256_maskload_pd(_s,endmask)); \
+  if(_n>=0)break; _d+=NPAR; _s+=((UI)_n>>(BW-1))<<LGNPAR; _n+=NPAR;  /* prevent compiler from calculating offsets */ \
  }while(_n<4); }  // the test at end is to prevent the compiler from duplicating the loop.  It is almost never executed.
 #else
 #define MCISH(dest,src,n) {I *_d=(I*)(dest); I *_s=(I*)(src); I _n=1-(n); _d=_n>0?jt->shapesink:_d; _s=_n>0?_d:_s; *_d=*_s; do{_s+=(UI)_n>>(BW-1); _d+=(UI)_n>>(BW-1); *_d=*_s;}while(++_n<0);}  // use for copies of shape, optimized for no branch when n<3.

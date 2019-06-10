@@ -51,7 +51,7 @@ uint64_t g_cpuFeatures;   // blis
 int hwfma=0;              // blis cpu tuning
 A   pst[256]={0};
 A   chr[256]={0};         /* scalar for each character, or 0      */
-B   testb[256]={0};       /* 1 iff test block follows             */
+// obsolete B   testb[256]={0};       /* 1 iff test block follows             */
 C   wtype[256]={0};
 // obsoletes follow
 

@@ -457,6 +457,44 @@ NB. lists of boxes get opened and go through the list-of-numbers code
 
 _10 -: (,_10) (,<0$4)} 4
 
+NB. if m is numeric table it is treated as index lists
+test1 =: 1 : 0
+:
+NB. x is x arg, m is m, y is y
+val1 =. x m} y
+mb =. <"1 m
+rs =. (#@$y) - {:@$ m  NB. rank of selection
+xb =. ($mb) ($,) <"rs x
+for_l. xb ,.&, mb do.
+ 'xo mo' =. l
+ y =. xo (<mo)} y
+end.
+val1 -: y
+)
+4 (5)test1 i. 20
+4 (2 1$5)test1 i. 20
+4 5 (2 1$5)test1 i. 20
+4 5 (2 1$5 6)test1 i. 20
+'length error' -: 4 5 (2 1$5 6)test1 etx i. 8 9
+4 (1 2$5 6)test1 i. 8 9
+'length error' -: 4 5 (1 2$5 6)test1 etx i. 8 9
+(1$4) (1 2$5 6)test1 i. 8 9
+'length error' -: 4 5 (3 2$1 2 3 4 5 6)test1 etx i. 8 9
+4 5 6 (3 2$1 2 3 4 5 6)test1 i. 8 9
+4 5 6 (3 2$_1 2 3 _4 _5 _6)test1 i. 8 9
+4 5 6 1 2 (3 2$_1 2 3 _4 _5 _6)test1 i. 8 9 5
+(i. 3 5) (3 2$_1 2 3 _4 _5 _6)test1 i. 8 9 5
+'length error' -: (i. 1 5) (3 2$_1 2 3 _4 _5 _6)test1 etx i. 8 9 5
+'length error' -: (i. 4 5) (3 2$_1 2 3 _4 _5 _6)test1 etx i. 8 9 5
+'rank error' -: (i. 1 4 5) (3 2$_1 2 3 _4 _5 _6)test1 etx i. 8 9 5
+4 (] -: (i. 0 1)}) i. 20
+4 (] -: (i. 0 1 1)}) i. 20
+'length error' -: 4 (i.0 2)} etx i. 20
+'length error' -: (i. 1 5) (2 4$_1 2 3 _4 1 1 1 1)test1 etx i. 8 9 5
+(100 ?@$ 100) (? 100 4 $ 6 7 8 9)test1 i. 6 7 8 9 
+
+
+
 'index error' -:  0 (i. 6)} etx 0
 
 (0 1 (2 3)} i. 6 2) -: (i. 2 2)  ({.@[)`({:@[)`]} i. 6 2  NB. Someday this might result in virtual m}

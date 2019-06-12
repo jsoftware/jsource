@@ -213,25 +213,26 @@ A jtcelloffset(J jt,AD * RESTRICT w,AD * RESTRICT ind){A z;
   if(naxes<3){
    // rank 2
    I ln0=AS(w)[0], ln1=AS(w)[1];
-   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln1; ASSERT((UI)in<(UI)ln0,EVINDEX)
-                    in=iv[1]; if(in<0)in+=ln1; r+=in; ASSERT((UI)in<(UI)ln1,EVINDEX)
+// obsolete    DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln1; ASSERT((UI)in<(UI)ln0,EVINDEX)
+   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln1;
+                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);} r+=in;
                     *zv++=r; iv+=2;)
   }else if(naxes==3){
    // rank 3  Avoid Horner's Rule, which creates a carried dependency across the multiplies
    I ln0=AS(w)[0], ln1=AS(w)[1], ln2=AS(w)[2], ln12=ln1*ln2;
-   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; I r=in*ln12; ASSERT((UI)in<(UI)ln0,EVINDEX)
-                    in=iv[1]; if(in<0)in+=ln1; r+=in*ln2; ASSERT((UI)in<(UI)ln1,EVINDEX)
-                    in=iv[2]; if(in<0)in+=ln2; r+=in; ASSERT((UI)in<(UI)ln2,EVINDEX)
+   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln12;
+                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);} r+=in*ln2;
+                    in=iv[2]; if((UI)in>=(UI)ln2){in+=ln2; ASSERT((UI)in<(UI)ln2,EVINDEX);} r+=in;
                     *zv++=r; iv+=3;)
   }else{
    // rank 4+.  For simplicity we use Horner's Rule since this case is rare
    I ln0=AS(w)[0], ln1=AS(w)[1], lnn=AS(w)[naxes-1];
-   DQ(nzcells, I in=iv[0]; if(in<0)in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX) I r=in*ln1;
-                    in=iv[1]; if(in<0)in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX)
+   DQ(nzcells, I in=iv[0]; if((UI)in>=(UI)ln0){in+=ln0; ASSERT((UI)in<(UI)ln0,EVINDEX);} I r=in*ln1;
+                    in=iv[1]; if((UI)in>=(UI)ln1){in+=ln1; ASSERT((UI)in<(UI)ln1,EVINDEX);}
                     DO(naxes-3,                                               r=(r+in)*AS(w)[i+2];
-                    in=iv[i+2]; if(in<0)in+=AS(w)[i+2]; ASSERT((UI)in<(UI)AS(w)[i+2],EVINDEX))
+                    in=iv[i+2]; if((UI)in>=(UI)AS(w)[i+2]){in+=AS(w)[i+2]; ASSERT((UI)in<(UI)AS(w)[i+2],EVINDEX);})
                                                                               r=(r+in)*lnn;
-                    in=iv[naxes-1]; if(in<0)in+=lnn; ASSERT((UI)in<(UI)lnn,EVINDEX) r+=in;
+                    in=iv[naxes-1]; if((UI)in>=(UI)lnn){in+=lnn; ASSERT((UI)in<(UI)lnn,EVINDEX);} r+=in;
                     *zv++=r; iv+=naxes;)
   }
  }
@@ -251,14 +252,15 @@ static A jtjstd(J jt,A w,A ind,I *cellframelen){A j=0,k,*v,x;B b;I d,i,n,r,*u,wr
    *cellframelen=AR(w); R x;   // the indexes are what we want, and they include all the axes of w
   }
   // Homogeneous boxes.  j has them in a single table.  turn each row into an index
+  b=0; ind=j;  // use the code for numeric array
   // later this can use the code for table m
-  k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
-  fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
-  AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
+// obsolete   k=AAV0(ind); n=AN(k);  // k->contents of box 0, n=#atoms there.  Shouldn't we use AS(j)[1]?
+// obsolete   fauxblockINT(xfaux,4,1); fauxINT(x,xfaux,n,1) d=1; DQ(n, IAV1(x)[i]=d; d*=AS(w)[i];);  // create vector x of sizes of each k-cell, but only within the axes used by the table 
+// obsolete   AS(x)[0]=n; RZ(j=pdt(j,x)); *cellframelen=n; R j;  // shorten cell-size list to the ones we need; convert each index-list to an offset; remember the size of the cells
  }
  if(!b){
   // Numeric m.  Each 1-cell is a list of indexes (if m is a list, each atom is a list of indexes)
-  ASSERT(AR(ind)<2,EVNONCE);
+// obsolete   ASSERT(AR(ind)<2,EVNONCE);
   RZ(j=celloffset(w,ind));  // convert list/table to list of indexes, possibly in place
   n=AR(ind)<2?1:AS(ind)[AR(ind)-1];  // n=#axes used: 1, if m is a list; otherwise {:$m
  }else{  // a single box.

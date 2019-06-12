@@ -331,18 +331,18 @@ B jtaindex(J jt,A a,A w,I wf,A*ind){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  RZ(a&&w);
  an=AN(a); *ind=0;
  if(!an)R 0;
- ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=av[0]; c=AN(q);
+ ws=wf+AS(w); ar=AR(a); av=AAV(a);  q=av[0]; c=AN(q);   // q=addr, c=length of first box
  if(!c)R 0;
  ASSERT(c<=AR(w)-wf,EVLENGTH);
- GATV(z,INT,an*c,1+ar,AS(a)); AS(z)[ar]=c; v=AV(z);
+ GATV(z,INT,an*c,1+ar,AS(a)); AS(z)[ar]=c; v=AV(z);  // allocate array for result
  for(j=0;j<an;++j){
   q=av[j]; t=AT(q);
-  if(t&BOX)R 0;
-  if(!(t&INT))RZ(q=cvt(INT,q));
-  if(!(c==AN(q)&&1>=AR(q)))R 0; 
+  if(t&BOX)R 0;   // if empty boxed array, error
+  if(!(t&INT))RZ(q=cvt(INT,q));  // if can't convert to INT, error
+  if(!(c==AN(q)&&1>=AR(q)))R 0;   // if not the same length, or rank>1, error
   u=AV(q);
 // obsolete   DO(c, k=u[i]; if(0>k)k+=ws[i]; ASSERT((UI)k<(UI)ws[i],EVINDEX); *v++=k;);
-  DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);
+  DO(c, SETNDX(k,u[i],ws[i]) *v++=k;);   // copy in the indexes, with correction for negative indexes
  }
  *ind=z;
  R 1;

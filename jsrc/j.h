@@ -255,6 +255,8 @@ extern unsigned int __cdecl _clearfp (void);
 
 #if C_AVX
 #include <immintrin.h>
+#elif __SSE2__
+#include <emmintrin.h>
 #endif
 #endif
 

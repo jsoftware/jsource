@@ -103,7 +103,7 @@ LDFLAGS=" -shared -Wl,-soname,libj.so -m32 -lm -ldl $LDOPENMP32"
 
 linux_j64nonavx) # linux intel 64bit nonavx
 TARGET=libj.so
-CFLAGS="$common -msse2 -mfpmath=sse "
+CFLAGS="$common "
 LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDOPENMP"
 ;;
 

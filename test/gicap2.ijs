@@ -146,6 +146,8 @@ test4=: 1 : 0
  assert. (i.~ -: u~) i.  6 3
  assert. (i.~ -: u~) i. _6 3
  1
+:
+''
 )
 
 I  test4 0

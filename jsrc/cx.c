@@ -501,11 +501,11 @@ static DF2(xop2){A ff,x;
 
 // h is the compiled form of an explicit function: an array of 2*HN boxes.
 // Boxes 0&HN contain the enqueued words  for the sentences, jammed together
-// We return 1 if this function refers to its x/y arguments (which also requires
-// a reference to mnuv operands)
-static B jtxop(J jt,A w){B mnuv,xy;I i,k;
+// Return code indicating what we found:
+// 4: mnuv found 2: x found 1: y found
+static I jtxop(J jt,A w){I i,k;
  // init flags to 'not found'
- mnuv=xy=0;
+ I fndflag=0;
  // Loop through monad and dyad
  A *wv=AAV(w); 
  for(k=0;k<=HN+0;k+=HN){    // for monad and dyad cases...
@@ -522,18 +522,18 @@ static B jtxop(J jt,A w){B mnuv,xy;I i,k;
      if(n){
       // Set flags if this is a special name, or an indirect locative referring to a special name in the last position
       if(n==1||(n>=3&&s[n-3]=='_'&&s[n-2]=='_')){
-       if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')mnuv=1;
-       else if(s[n-1]=='x'||s[n-1]=='y')xy=1;
-        // exit if we have seen enough
-       if(mnuv&&xy)R 1;
+       if(s[n-1]=='m'||s[n-1]=='n'||s[n-1]=='u'||s[n-1]=='v')fndflag|=4;
+       else if(s[n-1]=='x')fndflag|=2;
+       else if(s[n-1]=='y')fndflag|=1;
+        // exit if we have seen enough: mnuv plus x.  No need to wait for y.  If we have seen only y, keep looking for x
+       if(fndflag>=4+2)R fndflag;
       }   // 'one-character name'
      }  // 'name is not empty'
     } // 'is name'
    }  // loop for each word
   }  // namescope of new w
  }  // loop for each valence
- // If we didn't see xy and mnuv, it's not a derived function
- R 0;
+ R fndflag;  // return what we found
 }
 
 static F1(jtcolon0){A l,z;C*p,*q,*s;I m,n;
@@ -768,11 +768,15 @@ F2(jtcolon){A d,h,*hv,m;B b;C*s;I flag=VFLAGNONE,n,p;
   RE(b=preparse(m,hv,hv+1)); if(b)flag|=VTRY1; hv[2   ]=jt->retcomm?m:mtv;
   RE(b=preparse(d,hv+HN,hv+HN+1)); if(b)flag|=VTRY2; hv[2+HN]=jt->retcomm?d:mtv;
  }
- if(!n)RCA(w);
- if(2>=n){
-  RE(b=xop(h)); 
+ if(!n)RCA(w);  // noun - return it
+ if(n<=2){  // adv/conj
+  I fndflag=xop(h);   // 4=mnuv 2=x 1=y
+  b=fndflag>4;   // set if there is mnuv and xy
   if(b)flag|=VXOPR;   // if this def refers to xy, set VXOPR
-  else if(2==n&&AN(m)&&!AN(d)){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+  // if there is only one valence defined, that will be the monad.  Swap it over to the dyad in two cases: (1) it is a conjunction with uv only: the operands will be the two verbs;
+  // (2) it is an operator with a reference to x
+  if(((-AN(m))&(AN(d)-1)&(((fndflag-5)&(1-n))|(5-fndflag)))<0){A*u=hv,*v=hv+HN,x; DO(HN, x=*u; *u++=*v; *v++=x;);}  // if not, it executes on uv only; if conjunction, make the default the 'dyad' by swapping monad/dyad
+  // for adv/conj, b has operator status from here on
  }
  flag|=VFIX;  // ensures that f. will not look inside n : n
  // Create a symbol table for the locals that are assigned in this definition.  It would be better to wait until the
